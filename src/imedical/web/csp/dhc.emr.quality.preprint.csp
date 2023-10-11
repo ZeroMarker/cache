@@ -1,0 +1,129 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<html>
+<head>
+<title>打印预览</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>    
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+ <style type="text/css">
+body{background:white;margin:0px;padding:0px;font-size:13px;text-align:left;}
+.pb{font-size:13px;border-collapse:collapse;}
+.pb th{font-weight:bold;text-align:center;border:1px solid #333333;padding:2px;}
+.pb td{border:1px solid #333333;padding:2px;}
+font{display:inlineblock;margin-right:8%}
+p{margin:5% 5% 0 5%;font-weight:bold}
+li{margin-left:5%;font-weight:bold}
+@media print{
+ body{background:white;margin:0px;padding:0px;font-size:13px;text-align:left;height:80%}
+.pb{font-size:13px;border-collapse:collapse;}
+.pb th{font-weight:bold;text-align:center;border:1px solid #333333;padding:2px;}
+.pb td{border:1px solid #333333;padding:2px;}
+table{min-width:700px}
+font{display:inlineblock;size:2;margin-right:5%}
+p{margin:5% 5% 0 5%;font-weight:bold}
+li{margin-left:5%;font-weight:bold}
+	}
+</style>
+
+</head>
+
+<body>
+<script language="cache" runat="server">
+		s patientName=$Get(%request.Data("patientName",1))
+		s MedicareNo=$Get(%request.Data("MedicareNo",1))
+		s BedNo=$Get(%request.Data("BedNo",1))
+		s locName=$Get(%request.Data("locName",1))
+		s DocName=$Get(%request.Data("DocName",1))
+		s HospID=$Get(%session.Data("LOGON.HOSPID"))
+		s HospName=##class(EPRservice.Quality.DataGather.Hospital).GetHospNameById(HospID)
+ 	</script>
+ 	<script type="text/javascript">
+		var patientName='#(patientName)#'
+		var MedicareNo='#(MedicareNo)#'
+		var BedNo='#(BedNo)#'
+		var locName='#(locName)#'
+		var DocName='#(DocName)#'
+		var HospName='#(HospName)#'
+	</script>
+<!--startprint-->
+<h2 style="margin-left:30%" id="HospName">终末质控评分表</h2>
+<p><font id="name">病人姓名:</font><font id="loc">科室:</font><font id="pNumber">病案号:</font><font id="bNumber">床号:</font><font id="doctor">责任医生:</font></p>
+	
+   <div style="margin-top:2%;margin-left:5%;margin-right:5%" id="table"></div>
+	<script type="text/javascript">
+	var pName=document.getElementById('name')
+	pName.innerHTML=pName.innerHTML+patientName
+	
+	
+	var loc=document.getElementById('loc')
+	loc.innerHTML=loc.innerHTML+locName
+	
+	
+	var pNumber=document.getElementById('pNumber')
+	pNumber.innerHTML=pNumber.innerHTML+MedicareNo
+	
+	
+	var bNumber=document.getElementById('bNumber')
+	bNumber.innerHTML=bNumber.innerHTML+BedNo
+	
+	
+	var doctor=document.getElementById('doctor')
+	doctor.innerHTML=doctor.innerHTML+DocName
+	
+	
+	var HName=document.getElementById('HospName')
+	HName.innerHTML=HospName+HName.innerHTML
+	
+	var tableData=window.opener.getTableData()
+	//alert(tableData)  //部署1
+    var div=document.getElementById('table')
+    div.innerHTML=tableData
+   </script>
+<p>说明:
+</p>
+<ol>
+<li>本评分表用于终末病历质量评分</li>
+<li>对每个书写项目的扣分采取累加的计分办法，最高不得超过本书写的项目的总分值</li>
+<li>扣分&lt;25分为合格病历，扣分>=25为不合格病历</li>
+<!--endprint-->
+<button class="np" style="display:block;margin:0 auto" onclick="preview()">打印</button>
+</ol>
+<script type="text/javascript">
+/**
+ * 打印文本内容
+ * */
+function preview(){
+  //$('.printBox').css({padding: '30px'}); //针对打印部分进行样式调整，打印完后恢复原内容
+  bdhtml = window.document.body.innerHTML;
+  sprnstr = "<!--startprint-->";
+  eprnstr = "<!--endprint-->";
+  prnhtml = bdhtml.substr(bdhtml.indexOf(sprnstr) + 17);
+  prnhtml = prnhtml.substring(0, prnhtml.indexOf(eprnstr));
+  window.document.body.innerHTML = prnhtml;
+  if(!!window.ActiveXObject || "ActiveXObject" in window) { //是否ie
+    remove_ie_header_and_footer();
+  }
+  window.print();
+  window.document.body.innerHTML = bdhtml;
+}
+/**
+ * 移除页眉页脚
+ * */
+function remove_ie_header_and_footer(){
+  var hkey_path;
+  //hkey_root="HKEY_CURRENT_USER"; 
+  hkey_path = "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\PageSetup\\";
+  try {
+    var RegWsh = new ActiveXObject("WScript.Shell");
+    RegWsh.RegWrite(hkey_path + "header", "");
+    RegWsh.RegWrite(hkey_path + "footer", "");
+  } catch(e) {
+  }
+ 
+}
+</script>
+</body>
+</html>

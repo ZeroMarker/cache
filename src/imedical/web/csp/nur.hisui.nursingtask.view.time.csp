@@ -1,0 +1,627 @@
+<style>
+.lzc_timeline { margin:10px 0 0 0; padding: 0; list-style: none; position: relative; }
+.lzc_timeline:before { content: ''; position: absolute; top: 0; bottom: 0; width: 5px; background: #afdcf8; left: 20px; margin-left: -10px; }
+.lzc_timeline > li { position: relative; }
+.lzc_timeline > li .lzc_time { display: block;   position: absolute;}
+.lzc_timeline > li .lzc_time span { display: block; text-align: right; }
+.lzc_timeline > li .lzc_time span:first-child { font-size: 8px; color: #bdd0db; }
+.lzc_timeline > li .lzc_time span:last-child { font-size: 12px; color: #3594cb; }
+.lzc_timeline > li:nth-child(odd) .lzc_time span:last-child { color: #6cbfee; }
+.lzc_timeline > li .lzc_label {cursor: pointer; margin: 0 8px 8px 30px; /*background: #afdcf8;*/  padding: 10px; padding-bottom: 5px;position: relative; border-radius: 5px; min-height: 25px; }
+.lzc_timeline > li:nth-child(odd) .label { background: #579dc5; }
+.lzc_timeline > li .lzc_label h2 {font-size: 16px; text-shadow: rgba(7, 84, 152, 0.71) 1px 1px 1px; }
+.lzc_timeline > li .lzc_label:after { right: 100%; border: solid transparent; content: " "; height: 0; width: 0; position: absolute; pointer-events: none; /*border-right-color: #afdcf8;*/ border-width: 10px; top: 10px; }
+.lzc_timeline > li:nth-child(odd) .lzc_label:after { /*border-right-color: #afdcf8; */}
+.lzc_timeline > li .lzc_icon { width: 10px; height: 10px; font-family: 'ecoico'; speak: none; font-style: normal; font-weight: normal; font-variant: normal; text-transform: none; font-size: 1.4em; line-height: 40px; -webkit-font-smoothing: antialiased; position: absolute; color: #fff; background: #fff; border-radius: 50%; box-shadow: 0 0 0 3px #afdcf8; text-align: center; left: 32px; top: 15px; margin: 0 0 0 -25px; }
+.lzc_blogpic { width: 200px; height: 120px; overflow: hidden; display: block; float: left; margin-right: 20px; }
+.lzc_timeline li .lzc_time { -webkit-transition: all 1s; -moz-transition: all 1s; -o-transition: all 1s; }
+
+.lzc_timeline li:hover .lzc_time { background: #afdcf8; border-radius: 20px 0 0 20px; }
+.lzc_timeline li:hover .lzc_time span { color: #fff; }
+.lzc_timeline .time-str{font-weight:bold;}
+.lzc_timeline .time-line-item{ min-height: 20px;}
+.lzc_timeline .boxshadow{box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.19)}
+/*.lzc_timeline li:hover .lzc_label { background: #46a4da; }
+.lzc_timeline > li .lzc_label:hover {  border-color: red; }
+.lzc_timeline > li:hover .lzc_label:after { border-right-color: #46a4da; }
+.lzc_timeline li:hover .lzc_icon { box-shadow: 0 0 0 3px #46a4da; }
+*/
+
+.itemHover .lzc_label { background: #46a4da !important; }
+.itemHover .lzc_icon { box-shadow: 0 0 0 3px #46a4da !important; }
+.itemHover .lzc_label:after { border-right-color: #46a4da !important; }
+.itemHover .lzc_label .content{
+	 margin-left: 0px;
+	border-bottom: 1px dashed #ccc;	
+	color:#fff;
+}
+</style>
+
+<!--<li class="time-line-item" >
+    <div class="lzc_icon"></div>
+    <div class="lzc_label" data-scroll-reveal="enter right over 1s" >
+		<span class="time-str">12:00</span>
+		<div style="margin-top:8px">天气晴朗</div>
+	    <div style="margin-top:8px">适合跑步</div>
+		<div style="position:absolute;right: 8px;bottom:10px">查看更多>></div>
+    </div>
+</li>-->
+
+<div>
+
+	<ul id = "sale_list" class="lzc_timeline">
+	     
+	</ul>
+</div>
+
+<script type="text/javascript">
+$(function(){
+		setGenral()
+})
+
+function setGenral(){
+	
+$('#execStDate').datebox({});
+$('#execEndDate').datebox({});
+$("#execStTime").timespinner({});
+$("#execEndTime").timespinner({});
+	///时间区域-开始时间
+	setInputValue("sortStartTime")
+	///时间区域-结束时间
+	setInputValue("sortEndTime")
+	///搜索区域-开始时间
+	setInputValue("startTime")
+	///搜索区域-结束时间
+	setInputValue("endTime")
+	///搜索区域-开始时间与结束时间的间隔天数
+	setInputValue("dayNum")
+	$("#execStTime").timespinner("setValue",obj_parmas.startTime)
+	$("#execEndTime").timespinner("setValue",obj_parmas.endTime)
+	setDateValue(obj_parmas.dayNum)
+	$(".spinner").width("85px")
+	leftMB()
+	
+}
+function mdate(date){
+	var myear=date.split("-")[0]
+	var mmonth=date.split("-")[1]
+	var mday=date.split("-")[2]
+	return myear+""+mmonth+""+mday
+}
+
+function leftMB(){
+	$(".lzc_timeline").html("")
+	var souDate={
+		StartDate:$("#execStDate").datebox("getValue"),
+		StartTime:$("#execStTime").timespinner("getValue"),
+		EndDate:$("#execEndDate").datebox("getValue"),
+		EndTime:$("#execEndTime").timespinner("getValue")
+	}
+	var exeStartDate=mdate(souDate.StartDate)
+	var exeStartTime=souDate.StartTime.split(":")[0]
+	var exeEndDate=mdate(souDate.EndDate)
+	var exeEndTime=souDate.EndTime.split(":")[0]
+	
+	
+	var parmas={
+		hospID:session['LOGON.HOSPID'],
+		wardID:session['LOGON.WARDID'],
+		code:"sortNo"
+		}
+	runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","getSeleteNursingTask",parmas,function(rtn){
+		
+		console.log(rtn)
+		 var isAsc=rtn.value	
+	
+		obj_parmas.sortStartTime;
+		obj_parmas.sortEndTime
+		if(isAsc==1){
+			var timeST=parseInt(obj_parmas.sortEndTime.split(":")[0])
+			var timeI=parseInt(obj_parmas.sortStartTime.split(":")[0])
+			for(timeI;timeI<=timeST;timeI++){
+				timelineAppendHtml(timeI)
+			}
+		}else{
+			var timeI=parseInt(obj_parmas.sortEndTime.split(":")[0])
+			var timeIMinue=parseInt(obj_parmas.sortEndTime.split(":")[1])
+			var timeST=parseInt(obj_parmas.sortStartTime.split(":")[0])
+			var timeSTMinue=parseInt(obj_parmas.sortStartTime.split(":")[1])
+			var time=timeI
+			var num=0
+			for(timeI;timeI>=timeST;timeI--){
+				var miune=""
+				if(time==timeI){
+					miune=timeIMinue
+				}
+				if(timeI==timeST){
+					miune=timeSTMinue
+				}
+				timelineAppendHtml(timeI,miune)
+			}
+		}
+	
+	},'json',false);
+}
+
+function timelineAppendHtml(timeI,miune){
+	var idstr=timeI
+	if(timeI<10){
+		idstr="0"+timeI
+	}
+	var souDate={
+		StartDate:$("#execStDate").datebox("getValue"),
+		StartTime:$("#execStTime").timespinner("getValue"),
+		EndDate:$("#execEndDate").datebox("getValue"),
+		EndTime:$("#execEndTime").timespinner("getValue")
+	}
+	var time=idstr+':00'
+	/*if(miune!=""){
+		if(miune<10){
+			miune="0"+miune
+		}
+		
+		time=idstr+':'+miune
+	}*/
+	var style="position: absolute;right: 0px;font-weight: bold;color: red;font-size: 18px;bottom: 0px;"
+	var html='<li class="time-line-item" >'
+	html+='<div class="lzc_icon"></div>'
+	html+='<div class="lzc_label" data-scroll-reveal="enter right over 1s" >'
+	html+='<div><span class="time-str" endTime="'+time+'" endDate="'+souDate.EndDate+'" stDate="'+souDate.StartDate+'" stTime="'+time+'">'+$g(time)+'</span></div>'
+	html+='<div class="content" tabId="tabsDoctorOrderExe" style="margin-top:8px;position: relative;"><span>#(..Get("医嘱未执行"))#</span><span style="'+style+'" class="timeTaskCount" id="tabsDoctorOrderExe-WZX-'+idstr+'">0</span></div>'
+	//html+='<div class="content" tabId="tabsDoctorOrderExe" style="margin-top:8px;position: relative;"><span>#(..Get("医嘱需处理"))#</span><span style="'+style+'" class="timeTaskCount" id="tabsDoctorOrderExe-DefaultSee-'+idstr+'">0</span></div>'
+	html+='<div class="content" tabId="tabsDoctorOrderCzzl" style="margin-top:8px;position: relative;"><span>#(..Get("治疗处置"))#</span><span style="'+style+'" class="timeTaskCount" id="tabsDoctorOrderCzzl-'+idstr+'">0</span></div>'
+	html+='<div class="content" tabId="tabsNurseOrderExe" style="margin-top:8px;position: relative;"><span>#(..Get("护理计划"))#</span><span style="'+style+'" class="timeTaskCount" id="tabsNurseOrderExe-'+idstr+'">0</span></div>'
+	html+='<div class="content" tabId="tabsEduTask" style="margin-top:8px;position: relative;"><span>#(..Get("健康宣教"))#</span><span style="'+style+'" class="timeTaskCount" id="tabsEduTask-'+idstr+'">0</span></div>'
+	html+='<div class="content" tabId="tabsTasksAssess" onmouseover="ShowPatList(this)" style="margin-top:8px;position: relative;"><span>#(..Get("护理评估"))#</span><span style="'+style+'" class="timeTaskCount" id="tabsTasksAssess-'+idstr+'">0</span></div>'
+	//if(timeI==14)
+	//{
+	html+='<div class="content" tabId="tabsTasksSign" onmouseover="ShowPatList(this)" style="margin-top:8px;position: relative;"><span>#(..Get("体征录入"))#</span><span style="'+style+'" class="timeTaskCount" id="tabsTasksSign-'+idstr+'">0</span></div>'
+	//}
+	html+='</div>'
+	html+='</li>'
+	$(".lzc_timeline").append(html)	
+	
+}
+
+function leftM(){
+	return leftMB()
+	$(".lzc_timeline").html("")
+	var souDate={
+		StartDate:$("#execStDate").datebox("getValue"),
+		StartTime:$("#execStTime").timespinner("getValue"),
+		EndDate:$("#execEndDate").datebox("getValue"),
+		EndTime:$("#execEndTime").timespinner("getValue")
+	}
+	
+	var exeStartDate=mdate(souDate.StartDate)
+	var exeStartTime=souDate.StartTime.split(":")[0]
+	var exeEndDate=mdate(souDate.EndDate)
+	var exeEndTime=souDate.EndTime.split(":")[0]
+	
+	var stdate=parseInt(exeStartDate)
+	var sttime=parseInt(exeStartTime)
+    var enddate=parseInt(exeEndDate)
+	var endtime=parseInt(exeEndTime)
+	var dateArr={}
+	if(stdate==enddate){
+		var hourList=[]
+		if(sttime==endtime){
+			hourList.push(endtime)
+		}else{
+			for(var time=sttime;time<endtime;time++){
+				hourList.push(time)
+			}
+		}
+		dateArr[stdate]=hourList	
+		
+	}else{
+	    for(var date=stdate;date<=enddate;date++){
+			var hour=24
+			if(date==stdate){
+				var hourList=[]
+				for(var time=sttime;time<hour;time++){
+					hourList.push(time)
+				}
+				dateArr[date]=hourList
+			}else if(date==enddate){
+				var hourList=[]
+				for(var time=0;time<endtime;time++){
+					hourList.push(time)
+				}
+				dateArr[date]=hourList
+			}else{
+				var hourList=[]
+				for(var time=0;time<hour;time++){
+					hourList.push(time)
+				}
+				dateArr[date]=hourList
+			}
+		}
+	}
+	for(var date in dateArr){
+		var hours=dateArr[date]
+		
+		var year=date.substring(0,4)
+		var month=date.substring(4,6)
+		var day=date.substring(6,8)
+  		var dateStr=year+"/"+month+"/"+day
+		
+		for(var timeI=0;timeI<hours.length;timeI++){
+			var time=hours[timeI]
+			
+			if(time<10){
+				time="0"+time+":00"
+			}else{
+				time=time+":00"	
+			}
+			var timestr=time
+			if(timeI==0){
+				timestr=dateStr+" "+time
+			}
+			var idstr=""
+			var time2=hours[timeI]
+			if(time2<10){
+				idstr=date+"-0"+time2
+			}else{
+				idstr=date+"-"+time2
+			}
+			
+			var startDateStr=dateStr
+			var startTimeStr=time
+			var endDateStr=dateStr
+			var endTimeStr=time.split(":")[0]+":59"
+			
+			
+			var html='<li class="time-line-item" >'
+			html+='<div class="lzc_icon"></div>'
+			html+='<div class="lzc_label" data-scroll-reveal="enter right over 1s" >'
+			html+='<div><span class="time-str" endTime="'+endTimeStr+'" endDate="'+endDateStr+'" stDate="'+startDateStr+'" stTime="'+startTimeStr+'">'+timestr+'</span></div>'
+			html+='<div class="content" tabId="tabsDoctorOrderExe" style="margin-top:8px;position: relative;"><span>护士执行</span><span style="position: absolute;right: 5px;" class="timeTaskCount" id="tabsDoctorOrderExe-'+idstr+'">0</span></div>'
+			html+='<div class="content" tabId="tabsNurseOrderExe" style="margin-top:8px;position: relative;"><span>护理计划</span><span style="position: absolute;right: 5px;" class="timeTaskCount" id="tabsNurseOrderExe-'+idstr+'">0</span></div>'
+			html+='<div class="content" tabId="tabsEduTask" style="margin-top:8px;position: relative;"><span>健康宣教</span><span style="position: absolute;right: 5px;" class="timeTaskCount" id="tabsEduTask-'+idstr+'">0</span></div>'
+			html+='<div class="content" tabId="tabsTasksAssess" style="margin-top:8px;position: relative;"><span>护理评估</span><span style="position: absolute;right: 5px;" class="timeTaskCount" id="tabsTasksAssess-'+idstr+'">0</span></div>'
+			html+='<div class="content" tabId="tabsTasksSign" style="margin-top:8px;position: relative;" onmouseover="ShowPatList(this)"><span>体征录入</span><span style="position: absolute;right: 5px;" class="timeTaskCount" id="tabsTasksSign-'+idstr+'">0</span></div>'
+			html+='</div>'
+			html+='</li>'
+			$(".lzc_timeline").append(html)
+			//$(html).find(".lzc_label").append('<div class="content" style="margin-top:8px;position: relative;"><span>护士执行</span><span style="position: absolute;right: 5px;" >20</span></div>')
+			//$(html).find(".lzc_label").append('<div class="content" style="margin-top:8px;position: relative;"><span>护理计划</span><span style="position: absolute;right: 5px;">20</span></div>')
+			//$(html).find(".lzc_label").append('<div class="content" style="margin-top:8px;position: relative;"><span>健康宣教</span><span style="position: absolute;right: 5px;">20</span></div>')
+			//$(html).find(".lzc_label").append('<div class="content" style="margin-top:8px;position: relative;"><span>护理评估</span><span style="position: absolute;right: 5px;">20</span></div>')
+			//$(html).find(".lzc_label").append('<div class="content" style="margin-top:8px;position: relative;"><span>体征录入</span><span style="position: absolute;right: 5px;">20</span></div>')
+			var barCode = $(this).attr("code")
+			
+		}
+
+	}
+}
+
+function rtnSignOrAssessData(TaskType,time){
+	var patRecord={}
+	var episodeIDStr = resultPatIds()  
+	var data = {
+		EpisodeIDs:episodeIDStr,
+		WardID:session['LOGON.WARDID'],
+		UserId:session['LOGON.USERID'],
+		LocID:session['LOGON.CTLOCID'],
+		HospDR:session['LOGON.HOSPID'],
+		GroupID: session['LOGON.GROUPID'],
+		StartDate:date_obj.startDate,
+	 	StartTime:date_obj.startTime,
+	 	EndDate:date_obj.endDate,
+	 	EndTime:date_obj.endTime,
+	 	TaskType:TaskType,
+	 	ItemId:""
+	}
+	var tabId=$(that).attr("tabId")
+	var param = JSON.stringify(data)
+	runClassMethod("Nur.NIS.Service.NursingTask.Controller","GetNursingTaskRecord",{data:param},function(rtn){
+		
+		var alllist=[]
+		for(var i=0;i<rtn.length;i++){
+			var rtnCode = rtn[i].exeItemId
+			var rtnDesc = rtn[i].exeItemName
+			var list = rtn[i].list
+			alllist.push.apply(alllist,list)
+
+		}
+	
+		
+		for(var i=0;i<alllist.length;i++){
+			var row=alllist[i]
+			var exeDate=row.exeDate
+			var exeTime=row.exeTime
+			exeDate=mdate(exeDate)
+			exeTime=exeTime.split(":")[0]
+		
+			var exeId=tabId+"-"+exeTime
+			
+			var timeExeList = dataReocrdList[exeId]
+			if(isUndefined(dataReocrdList[exeId])){
+				dataReocrdList[exeId]=[]
+			}
+			dataReocrdList[exeId].push(row)
+			
+		}
+		
+		
+		var contentId=$(that).find(".timeTaskCount").attr("id")
+		var list=dataReocrdList[contentId]
+		
+		
+		for(var i=0;i<list.length;i++){
+			var patId= list[i].patId
+			var patName=list[i].patName
+			var pat=patId+"/"+patName
+			if(isUndefined(patRecord[pat])){
+				patRecord[pat]=[]
+			}
+			patRecord[pat].push(list[i])
+		}
+	},'json',false);
+	return patRecord
+}
+
+
+function ShowPatList(that){
+	return false
+	var html=[];
+	var patRecord={}
+	var height=31;
+	$(that).webuiPopover('destroy');
+	// 来源 触发因素 状态 触发时间 记录ID
+	$(that).webuiPopover({
+		title:'',
+		content:function(){
+			console.log(leftTimeRecordList)
+			var patRecord={}
+			var contentId=$(that).find(".timeTaskCount").attr("id")
+			var list=leftTimeRecordList[contentId]
+			for(var i=0;i<list.length;i++){
+				var patId= list[i].patId
+				var patName=list[i].patName
+				var bedCode=list[i].bedCode
+				var pat=bedCode+"/"+patName
+				if(isUndefined(patRecord[pat])){
+					patRecord[pat]=[]
+				}
+				patRecord[pat].push(list[i])
+			}
+			
+			
+			for(var pat in patRecord){
+				var records=patRecord[pat]
+				var dateReocrd={}
+				for(var r=0;r<records.length;r++){
+					var dateStr=records[r].dateStr
+					var timeStr=records[r].exeTime	
+					if(isUndefined(dateReocrd[dateStr])){
+						dateReocrd[dateStr]=[]
+					}
+					dateReocrd[dateStr].push(records[r])
+				}
+				patRecord[pat]=[]
+				patRecord[pat].push(dateReocrd)
+			}
+			console.log(patRecord)
+			
+			
+			var html=[];
+			html.push('<table class="related-factors">');
+			//html.push('<tr class="title"><td>'+$g("ID")+'</td><td class="assess-source">'+$g("来源")+'</td><td class="assess-factors">'+$g("触发因素")+'</td><td class="assess-trggerTime">'+$g("触发时间")+'</td><td class="assess-status">'+$g("触发值")+'</td></tr>');
+			
+			var thHtml=[]
+			var tdHtml=[]
+			for(var pat in patRecord){
+				 thHtml.push("<td>"+pat+"</td>")
+				 var patList=patRecord[pat]
+				 var phtml=""
+				 for(var d=0;d<patList.length;d++){
+					var dateArr=patList[d]
+					
+					for(date in dateArr){
+						var timeData=dateArr[date]
+						phtml=phtml+"<div style='color:red;font-weight: bold;white-space: nowrap;'>"+date+"</div>"
+					
+						for(var t=0;t<timeData.length;t++){
+						
+							var timeStr=timeData[t].exeTime	
+							var exeItemName=timeData[t].exeItemName
+							phtml=phtml+"<div style='white-space: nowrap;'>"+timeStr+" "+exeItemName+"</div>"
+						}	
+					} 
+					 
+				 }
+				 tdHtml.push("<td>"+phtml+"</td>")
+			}
+			html.push('<tr class="title">'+thHtml.join("")+'</tr>')
+			html.push('<tr class="title" style="vertical-align: top;">'+tdHtml.join("")+'</tr>')
+			html.push('</table>');
+			var htmlCode= html.join('');
+			delete html;
+			return htmlCode;
+			
+			
+			
+
+			return "";
+		},
+		trigger:'hover',
+		placement:'right',
+		style:'inverse',
+		height:'100%',
+		maxWidth:864,
+		maxHeight:660,
+	});
+	$(that).webuiPopover('show');
+}
+$("body").on("click","li.time-line-item",function(){
+	
+	var $item=$(this)
+	var len=$item.find("div.contentShow").length
+	if(len==0){
+		return false;	
+	}
+	
+	if($(this).hasClass("itemHover")){
+		$(this).removeClass("itemHover")
+		InitGridData()
+	}else{
+		$(".itemHover").removeClass("itemHover")
+		$(this).addClass("itemHover")	
+		var showTabID=[],hideTabID=[]
+		$(this).find("div.content").each(function(){
+			var tabID=$(this).attr("tabId")
+			if($(this).hasClass("contentShow")){
+				$("div#"+tabID).show()
+				$("#"+tabID).tabs('select',1);
+				showTabID.push(tabID)
+				
+				if(typeof(GetTabs[tabID])!="undefined"){
+					GetTabs[tabID].data(tabID)
+				}
+
+
+				
+				
+			}else{
+				$("div#"+tabID).hide()
+			}
+		})
+		
+		
+	}
+})
+
+
+
+$("body").on("click","li.time-line-itembak",function(){
+	
+	var $item=$(this)
+	var len=$item.find("div.contentShow").length
+	if(len==0){
+		return false;	
+	}
+	
+	//timeScrollOffset($item)
+	if($(this).hasClass("itemHover")){
+		$(this).removeClass("itemHover")
+		$(".tabpanel .hisui-tabs").show()
+		$(".tabpanel").html("")
+		$("#Loading").show();
+		setTimeout(function(){
+				
+			getTabsGrid("")
+			$("#Loading").hide();
+		},1000)
+		
+	}else{
+	
+		$(".itemHover").removeClass("itemHover")
+		$(this).addClass("itemHover")
+		$("#Loading").show();
+		$(".tabpanel .hisui-tabs").hide()
+		$(".tabpanel").html("")
+		$item.find("div.contentShow").each(function(){
+			var $con=$(this)
+			var $span=$con.parent().find("span.time-str")
+			var tabId=$con.attr("tabId")
+			var time=$span.text()
+			if(!$item.hasClass("itemHover")){
+				time=""
+			}
+			setTimeout(function(){
+				
+				//signClick(tabId,time)
+				getTabsGrid(tabId)
+				$("#"+tabId).show()
+				
+				$("#Loading").hide();
+			},1000)
+			
+		})
+	}
+	
+})
+
+$("body").on("click",".lzc_timeline .contentA",function(){
+	$("#Loading").show();
+	var $span=$(this).parent().find("span.time-str")
+	var stDate=$span.attr("stDate"),stTime=$span.attr("stTime"),endDate=$span.attr("endDate"),endTime=$span.attr("endTime")
+	var tabId=$(this).attr("tabId")
+	//$(".itemHover").removeClass("itemHover")
+	//$(this).parents("li.time-line-item").addClass("itemHover")
+	var $item=$(this).parents("li.time-line-item")
+	timeScrollOffset($item)
+	var time=""
+	if($item.hasClass("itemHover")){
+		time=""
+		$item.removeClass("itemHover")
+		scrollOffset(tabId);
+	
+		
+	}else{
+		$item.addClass("itemHover")
+		time=$span.text()
+    	scrollOffset(tabId);
+		
+		
+	}
+	setTimeout(function(){
+		
+	
+		signClick(tabId,time)
+		
+		
+		
+		$("#Loading").hide();
+	},1000)
+})
+
+function timeScrollOffset(offset) {
+	
+    var tab = $('.waitTask');
+    tab.scrollTop(
+        offset.offset().top - tab.offset().top + tab.scrollTop()
+    );
+}
+
+function scrollOffset(tabId) {
+	var offset =  $("#"+tabId).eq(0);
+    var tab = $('.tabpanel');
+    tab.scrollTop(
+        offset.offset().top - tab.offset().top + tab.scrollTop()
+    );
+}
+
+
+function signClick(tabsId,time){
+	//var tab = $('#'+tabsId).tabs('getSelected');
+	//var title = tab.panel('options').title
+	//var key = $(title).attr("key")
+	//var tableId = $(title).attr("tableId")
+	//var tabId = $(title).attr("tabId")
+	/*$HUI.tabs("#"+tabId).update({
+		tab:tab,
+		options:{
+			content:'<table id="'+tableId+'"></table>'
+		}	
+	});
+	*/
+	//getGridData.list(tabId,tableId,key)
+	getTabsGrid(tabsId)
+	//json[tabsId].gridData(tabId,tableId,key,time)
+	
+	
+}
+
+$("body").find(".lzc_timeline li .lzc_label").hover(function(){
+	$(".itemHover").removeClass("itemHover")
+	$(this).find(".content").remove()
+	$(this).parents("li.time-line-item").addClass("itemHover")
+},function (){
+	//$(".itemHover").removeClass("itemHover")
+	//$(".lzc_timeline li .lzc_label .content").remove()
+
+})
+</script>

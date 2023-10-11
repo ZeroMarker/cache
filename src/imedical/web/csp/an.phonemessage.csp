@@ -1,0 +1,193 @@
+<csp:method name=OnPerHttp arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q l
+	quit l
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>发送短信</title>
+<HISUI css="wesys.menugroup.css"></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<style>
+.item-title {
+	color:#444;	
+}
+.hisui-validatebox{border-radius:2px;}
+
+ul li
+{
+	list-style-type: none;
+	align-items: center;
+	float:left;
+}
+</style>
+</head>
+<body style="height:100%;padding:0;background-color:#fff">
+  <form class='message-form'>
+	<input type='hidden' name='OPSID' >
+	<input type='hidden' name='PhoneNumber' >
+	<div style="position:relative">
+		<div style="height:20px;margin-top:15px">
+		 	  <ul style="padding:0">
+	     		<li style="margin-left:10px;"><label id="patSeximg" name="patSeximg"></label></li>
+	     		<li><label id="PatName"  name="PatName" style="font-size:16px;padding-left:10px;">-</label></li>
+				<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+				<li><label id="PatGender"  name="PatGender">-</label></li>
+				<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+				<li><label id="PatAge"  name="PatAge">-</label></li>
+				<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+				<li><font style="color:#666666">登记号:</font>
+				<label id="RegNo"  name="RegNo"></label></li>
+				<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+				<li><font style="color:#666666">病案号:</font>
+				<label id="MedcareNo"  name="MedcareNo"></label></li>	
+			  </ul>
+		</div>
+		<div style="position:relative;height:460px">
+		<ul style="padding:0;margin-left:10px;">
+			<li style="margin-top:5px;margin-left:0px;">
+				<label>手术名称</label>
+			</li>
+			<li>
+				<input style="margin-left:10px;width:705px;" id="operDesc"  name="operDesc" class="hisui-validatebox"></label>
+			</li>
+		
+			<li style="margin-left:0px;margin-top:10px;">
+					<label >短信内容</label>
+			</li>
+			<li  style="margin-top:10px;">
+					<textarea type="text" style="height:420px;width:705px;margin-left:10px" name='Content' id="Content" class="hisui-validatebox" ></textarea>
+			</li>
+		</ul>
+		</div>
+	</div>
+	<div style="text-align:center;position:relative;margin:20px 0 20px 0">
+		<span>
+			<a href="#" id="btnSend" class="hisui-linkbutton" >确定</a>
+		</span>
+		<span style="margin-left:40px">
+			<a href="#" id="btnCancel" class="hisui-linkbutton" >取消</a>
+		</span>
+	</div>
+	</form>
+  <script type="text/javascript">
+    function initPage(){
+      var operList=getOperList();
+      generateMessageForm(operList);
+    }
+
+    function generateMessageForm(operList){
+	        for(var i=0;i<operList.length;i++){
+          var operSchedule=operList[i];
+          $("#operDesc").val(operSchedule.OperDesc);
+          $("#OPSID").val(operSchedule.OPSID);
+          $("#PhoneNumber").val(operSchedule.PatPhoneNumber);
+	      $("#PatName").prop("innerText",operSchedule.PatName);
+	      $("#RegNo").prop("innerText",operSchedule.RegNo);
+	      $("#PatGender").prop("innerText",operSchedule.PatGender);
+	      $("#MedcareNo").prop("innerText",operSchedule.MedcareNo);
+	      $("#PatAge").prop("innerText",operSchedule.PatAge);
+	      var PatGender=operSchedule.PatGender;
+	      $("#patSeximg").prop("innerText","");
+          if(PatGender=="男"){
+                var imghtml="<img src='../service/dhcanop/img/man.png' style='margin-top:-5px'/>";
+                $("#patSeximg").append(imghtml);
+            }else if(PatGender=="女"){
+                var imghtml="<img src='../service/dhcanop/img/woman.png' />";
+                $("#patSeximg").append(imghtml);
+            }
+             $("#Content").val(operSchedule.MessageText);
+	        }
+	      /*
+        var htmlArr=[];
+        for(var i=0;i<operList.length;i++){
+          var operSchedule=operList[i];
+          
+          htmlArr.push("<div class='form-row-group'>");
+		  htmlArr.push("<form class='message-form'>");
+          htmlArr.push("<input type='hidden' name='OPSID' value='"+operSchedule.OPSID+"'>");
+          htmlArr.push("<input type='hidden' name='PhoneNumber' value='"+operSchedule.PatPhoneNumber+"'>");
+          
+          htmlArr.push("<div><div class='form-row'><div class='form-title-right4 item-title'>患者姓名</div><div class='form-item-normal'>"+operSchedule.PatName+"</div>");
+          htmlArr.push("<div class='form-title-right2 item-title'>性别</div><div class='form-item-normal'>"+operSchedule.PatGender+"</div>");
+          htmlArr.push("<div class='form-title-right3 item-title'>登记号</div><div class='form-item-normal'>"+operSchedule.RegNo+"</div>");
+          htmlArr.push("<div class='form-title-right3 item-title'>手机号</div><div class='form-item-normal'>"+operSchedule.PatPhoneNumber+"</div>");
+          htmlArr.push("<div class='form-title-right4 item-title'>手术日期</div><div class='form-item-normal'>"+operSchedule.OperDate+"</div>");
+          htmlArr.push("</div></div>");
+          
+          htmlArr.push("<div><div class='form-row'><div class='form-title-right4 item-title'>手术名称</div><div class='form-item-normal'>"+operSchedule.OperDesc+"</div>");
+          htmlArr.push("</div></div>");
+
+          htmlArr.push("<div><div class='form-row'><div class='form-title-right4 item-title'>短信内容</div><div class='form-item-normal'><textarea name='Content' class='message-text'>"+operSchedule.MessageText+"</textarea></div>");
+          htmlArr.push("</div></div>");
+		  htmlArr.push("</form>");
+          htmlArr.push("</div>");
+          
+        }
+        
+        htmlArr.push("<div class='form-row-group'>");
+        htmlArr.push("<div style='text-align:center;padding:10px;'><span class='form-btn'><a href='#' id='btnSend'>发送</a></span><span class='form-btn'><a href='#' id='btnCancel'>取消</a></span></div>")
+        htmlArr.push("</div>");
+        
+
+        $(htmlArr.join("")).appendTo(".message-container");
+        
+        $("#message-text").validatebox({
+          validType:"length[0,200]",
+          required:true
+        });
+	*/
+        $("#btnSend").linkbutton({
+          onClick:function(){
+            var messageList=[];
+            $(".message-form").each(function(index,element){
+              var jsonData=$(this).serializeJson();
+              jsonData.BusinessCode="PatPhoneMessage";
+              jsonData.CreateUser=session.UserID;
+              jsonData.MessageId="";
+              jsonData.OPSID=operSchedule.OPSID;
+              jsonData.PhoneNumber=operSchedule.PhoneNumber;
+              messageList.push(jsonData);
+            });
+
+            var messageStr=JSON.stringify(messageList);
+            //alert(messageStr)
+            //var ret=dhccl.runServerMethod(ANCLS.BLL.PhoneMessage,"SendMessageList",messageStr);
+            var ret = AIS.Action({action:"AN/SendMessageList",messageList:messageStr});
+            if(ret.indexOf("S^")===0){
+             $.messager.popover({
+               msg:"发送短信成功",
+               type:"success",
+               timeout:2000
+             }); 
+            }else{
+              $.messager.alert("提示","发送短信失败，原因："+ret,"error");
+            }
+          }
+        });
+
+        $("#btnCancel").linkbutton({
+          onClick:function(){
+            websys_showModal("close");
+          }
+        });
+    }
+
+    function getOperList(){
+      var opsIdStr=dhccl.getQueryString("opsIdStr");
+      var operList=dhccl.getDatas(ANCSP.MethodService,{
+        ClassName:ANCLS.BLL.PhoneMessage,
+        MethodName:"GetPatMessageList",
+        Arg1:opsIdStr,
+        ArgCnt:1
+      },"json");
+      return operList;
+    }
+
+    $(document).ready(initPage);
+  </script>
+</body>
+</html>

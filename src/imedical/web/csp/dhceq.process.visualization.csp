@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="../scripts/dhceq/easyui/themes/icon.css" type="text/css">
 <style type="text/css">
 html,body{
-	font-family: microsoft yahei;
+	font-family: Arial; /*/Modify by zx 2022-06-30 BUG:2762075*/
 	font-size:14px; 
 	width: 99.4%;
 	height: 98%;
@@ -332,21 +332,31 @@ ul,li{
 	<div class="div1"></div>
 </div>
 <div id="content" style='width:100%;height:88%;margin-top:3px;'>
-	<!--左部-->
+	<!--左部  //Modify by zx 2022-06-30 BUG:2762075-->
 	<div style='float:left;width:27%;height:100%'>
 		<div class="border-style box-shadow" title="维修数量统计" style='width:97%;height:50%;color:#F3E3EE;'>
 			<div class="border-corner row1"></div>
 			<div class="border-corner row2"></div>
 			<div class="border-corner col1"></div>
 			<div class="border-corner col2"></div>
-			<div style='width:100%;height:50%; border-bottom: 1px solid #3187DA;'>
-				<div id="Statistics" style='width:70%;height:100%;float:left'></div>
-				<div style='width:30%;height:100%;float:left'>
-					<div style="padding-top:20%;text-align:center;font-size:18px;color:#EDEB05;"><p>设备完好率</p></div>
-					<div style="text-align:center;color:#EDEB05;"><font id="maintstatistics"></font></div>
+			<div style='width:100%;height:50%;'>
+				<div id="Statistics" style='width:60%;height:100%;float:left'></div>
+				<div style='width:40%;height:100%;float:left'>
+					<div style="padding-top:20%;text-align:center;font-size:14px;color:#00BBD3;"><span>报修中设备数</span></div>
+					<div style="text-align:center;color:#EDEB05;font-weight:bold;font-size:22px;"><font id="MaintNum">0</font><span style="color:#e0e0e0;font-weight:bold;font-size:14px;">台</span></div>
+					<div style="padding-top:20%;text-align:center;font-size:14px;color:#00BBD3;"><span>维修中设备数</span></div>
+					<div style="text-align:center;color:#EDEB05;font-weight:bold;font-size:22px;"><font id="RepairNum">0</font><span style="color:#e0e0e0;font-weight:bold;font-size:14px;">台</span></div>
 				</div>
 			</div>
-			<div id="Action" style='width:100%;height:50%;'></div>
+			<div style='width:100%;height:50%;'>
+				<div id="Action" style='width:60%;height:100%;float:left'></div>
+				<div style='width:40%;height:100%;float:left'>
+					<div style="padding-top:10%;text-align:center;font-size:14px;color:#00BBD3;"><span>设备平均维修工时</span></div>
+					<div style="text-align:center;color:#EDEB05;font-weight:bold;font-size:22px;"><font id="AveWorkHour">0.00</font><span style="color:#e0e0e0;font-weight:bold;font-size:14px;">小时</span></div>
+					<div style="padding-top:20%;text-align:center;font-size:14px;color:#00BBD3;"><span>月平均响应工时</span></div>
+					<div style="text-align:center;color:#EDEB05;font-weight:bold;font-size:22px;"><font id="AveAcceptHour">0.00</font><span style="color:#e0e0e0;font-weight:bold;font-size:14px;">小时</span></div>
+				</div>
+			</div>
 		</div>
 		<div class="border-style box-shadow" title="维修分布统计" style='width:97%;height:50%;color:#F3E3EE;'>
 			<div class="border-corner row1"></div>
@@ -357,8 +367,52 @@ ul,li{
 		</div>
 	</div>
 	<!--中部-->
-	<div style='float:left;width:44%;margin-left:10px;height:100%'>
-		<div class="border-style box-shadow" title="待受理列表" style='margin:10px;width:100%;height:40%;color:#F3E3EE;'>
+	<div style='float:left;width:44%;margin-left:10px;height:100%'> <!--//Modify by zx 2022-06-30 BUG:2762075-->
+		<div class="border-style box-shadow" style='width:100%;height:10%;color:#F3E3EE;'>
+			<div class="border-corner row1"></div>
+			<div class="border-corner row2"></div>
+			<div class="border-corner col1"></div>
+			<div class="border-corner col2"></div>
+			<!--//Modify by zx 2022-06-30 BUG:2762075-->
+			<ul style="list-style:none;margin:0;padding:0;">
+				<li style="float:left;text-align:center;width:18.2%;margin:15px 0;border-right:1px solid #008060;">
+					<span style="display:block;color:#e0e0e0;font-size:14px;">原值合计</span>
+					<span style="display:inline-block;font-size:20px;font-weight:bold;color:#DF5F21;" id="TotalOriginalFee">0</span>
+					<span style="display:inline-block;color:#ffffff;font-size:12px;font-weight:bold;">万元</span>
+				</li>
+				<li style="float:left;text-align:center;width:12.2%;margin:15px 0;border-right:1px solid #008060;">
+					<span style="display:block;color:#e0e0e0;font-size:14px;">本月新增数</span>
+					<span style="display:inline-block;font-size:20px;font-weight:bold;color:#259FD2;" id="AddNum">0</span>
+					<span style="display:inline-block;color:#ffffff;font-size:12px;font-weight:bold;">台</span>
+				</li>
+				<li style="float:left;text-align:center;width:13.2%;margin:15px 0;border-right:1px solid #008060;">
+					<span style="display:block;color:#e0e0e0;font-size:14px;">本月报废数</span>
+					<span style="display:inline-block;font-size:20px;font-weight:bold;color:#008B45;" id="DisuseNum">0</span>
+					<span style="display:inline-block;color:#ffffff;font-size:12px;font-weight:bold;">台</span>
+				</li>
+				<li style="float:left;text-align:center;width:12.2%;margin:15px 0;border-right:1px solid #008060;">
+					<span style="display:block;color:#e0e0e0;font-size:14px;">待验收数</span>
+					<span style="display:inline-block;font-size:20px;font-weight:bold;color:#7828CE;" id="OpencheckNum">0</span>
+					<span style="display:inline-block;color:#ffffff;font-size:12px;font-weight:bold;">台</span>
+				</li>
+				<li style="float:left;text-align:center;width:14.2%;margin:15px 0;border-right:1px solid #008060;">
+					<span style="display:block;color:#e0e0e0;font-size:14px;">支持类设备完好率</span>
+					<span style="display:inline-block;font-size:20px;font-weight:bold;color:#2551BB;" id="FirstAidtNumper">0.00</span>
+					<span style="display:inline-block;color:#ffffff;font-size:12px;font-weight:bold;">%</span>
+				</li>
+				<li style="float:left;text-align:center;width:14.2%;margin:15px 0;border-right:1px solid #008060;">
+					<span style="display:block;color:#e0e0e0;font-size:14px;">正常使用率</span>
+					<span style="display:inline-block;font-size:20px;font-weight:bold;color:#DDA803;" id="WholeNumper">0.00</span>
+					<span style="display:inline-block;color:#ffffff;font-size:12px;font-weight:bold;">%</span>
+				</li>
+				<li style="float:left;text-align:center;width:14.2%;margin:15px 0;">
+					<span style="display:block;color:#e0e0e0;font-size:14px;">大型设备完好率</span>
+					<span style="display:inline-block;font-size:20px;font-weight:bold;color:#8B2323;" id="BenefitAnalyNumper">0.00</span>
+					<span style="display:inline-block;color:#ffffff;font-size:12px;font-weight:bold;;">%</span>
+				</li>
+			</ul>
+		</div>
+		<div class="border-style box-shadow" title="待受理列表" style='margin:10px;width:100%;height:35%;color:#F3E3EE;'>
 			<div class="border-corner row1"></div>
 			<div class="border-corner row2"></div>
 			<div class="border-corner col1"></div>
@@ -382,7 +436,8 @@ ul,li{
 			</div>
 			
 		</div>
-		<div class="border-style box-shadow" title="待维修列表" style='margin:10px;width:100%;height:60%;color:#F3E3EE;'>
+		<!--//Modify by zx 2022-06-30 BUG:2762075-->
+		<div class="border-style box-shadow" title="待维修列表" style='margin:10px;width:100%;height:calc(55% - 12px);height:-webkit-calc(55% - 12px);height:-moz-calc(55% - 12px);color:#F3E3EE;'>
 			<div class="border-corner row1"></div>
 			<div class="border-corner row2"></div>
 			<div class="border-corner col1"></div>
@@ -496,7 +551,7 @@ ul,li{
 	<input id="GroupID" type="hidden" value=#(GroupID)#>
 <script type="text/javascript" src="../scripts/dhceq/easyui/jquery.min.js"></script>
 <script type="text/javascript" src="../scripts/dhceq/easyui/jquery.easyui.min.js"></script>
-<script type="text/javascript" src="../scripts/dhceq/echarts/echarts.min.js"></script>
+<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script> <!--  //Modify by zx 2022-06-30 BUG:2762075-->
 <script type="text/javascript" src="../scripts/dhceq/function/common.js"></script>
 <script type="text/javascript" src="../scripts/dhceq/js/dhceqvisualization.js"></script>
 <script type="text/javascript">
@@ -514,14 +569,24 @@ jQuery(document).ready(function(){
     getVisualization("GetMaintAction",5,"N");
     getVisualizationList("GetMaintRequestDetail","0","",6);
     getVisualizationList("GetMaintRequestDetail","1","",7);
+    getVisualization("GetEquipInfo",8,"N");  //Modify by zx 2022-06-30 BUG:2762075
+    getVisualization("GetMaintInfo",9,"N");  //Modify by zx 2022-06-30 BUG:2762075
     setInterval(function(){IntervalNext()},120000);
     jQuery("#scrollDiv").Scroll({line:1,speed:800,timer:3000,up:"but_up",down:"but_down"});
     jQuery("#acceptScrollDiv").Scroll({line:1,speed:800,timer:3000,up:"but_up",down:"but_down"});
-    setInterval(function(){window.location.href="dhceq.process.visualizationrentcentre.csp";},1800000);
+    var url="dhceq.process.visualizationrentcentre.csp";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+    setInterval(function(){window.location.href=url;},1800000);
 });
 jQuery("#Change").click(function(){
-		window.location.href="dhceq.process.visualizationrentcentre.csp";
-	});
+	var url="dhceq.process.visualizationrentcentre.csp";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href=url;
+});
 jQuery("#Exit").click(function(){
 		 window.open("","_self").close();
 	});

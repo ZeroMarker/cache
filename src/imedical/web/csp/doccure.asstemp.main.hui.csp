@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--设置 doccure.asstemp.main.hui.csp 治疗评估展示-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCDOCCURE></DHCDOCCURE>
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/asscom.css" rel="stylesheet">
+<server>
+s PageShowFromWay=%request.Get("PageShowFromWay")
+s DCARowId=%request.Get("DCARowId")
+s DCRowIDStr=%request.Get("DCRowIDStr") ;批量评估传进来的id串，格式：DCAARowId_!_DCAARowId
+s DCRowIDStr=$tr(DCRowIDStr,"^",$c(1))
+s EpisodeID=%request.Get("DCAdmID")
+s CureLocUseAssTemp="N"
+s CureLocRelateAssTemp=##class(DHCDoc.DHCDocCure.Config).GetCureLocRelateAssTemp(%session.Get("LOGON.CTLOCID"))
+if +CureLocRelateAssTemp>0{
+	s CureLocUseAssTemp="Y"
+}
+</server>
+</head>
+<body style="padding:10px;background-color:#fff">
+	<csp:Include Page="doccure.asstemp.main.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			DCARowId:"#(DCARowId)#",
+			DCRowIDStr:"#(DCRowIDStr)#",
+			CureLocUseAssTemp:"#(CureLocUseAssTemp)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OPDocPatInfoBar.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/assTempMain.js"></script>
+</body>
+</html>

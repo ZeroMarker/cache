@@ -17,7 +17,7 @@
     <HISUI/>
     <link href="../scripts/nurse/hisui/css/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
-    <script type="text/javascript" src="../scripts/nurse/hisui/wardbedmanage.js"></script>
+    <script type="text/javascript" charset="GB2312" src="../scripts/nurse/hisui/wardbedmanage.js"></script>
 
     <STYLE type='text/css'>
     .rowBtnLocation{	    
@@ -51,45 +51,57 @@
 	{
 	    color:red;
 	}
+	#releaseDlg .combo-text {
+		width:118px !important;
+	}
     </STYLE>
+    <Server>
+	s bedSetting=##class(Nur.NIS.Service.Base.BedConfig).GetBedSetting(%session.Get("LOGON.HOSPID"))
+</Server>
 </head>
 
-<body>
-    <div id="cc" class="hisui-layout" fit=true>   
-    	<div  fit=true data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="padding:0 0 5px 0;border-color:#cccccc">
-	    	 <table fit=true id="wardBedGrid" class="hisui-datagrid" title="床位列表">   
-	    		<thead>   
-	    			<tr>	    			
-	    				<th data-options="field:'ck',checkbox:true,width:10" ></th>   
-	    				<th data-options="field:'BedCode',width:40">床号</th>   
-	    				<th data-options="field:'BedStatus',width:70">床位状态</th> 
-	    				<th data-options="field:'BedSexDesc',width:70">床位性别</th> 
-	    				<th data-options="field:'EmptyDate',width:100">预空日期</th> 
-	    				<th data-options="field:'BedBill',width:100">床位费</th> 
-	    				<th data-options="field:'CurrPatName',width:100">当前患者</th> 
-	    				<th data-options="field:'CurrRegNO',width:100">当前登记号</th> 
-	    				<th data-options="field:'CurrPatInHosDate',width:150">入院时间</th>	    				 
-	    				<th data-options="field:'AppPat',width:110">预约患者</th> 
-	    				<th data-options="field:'AppRegNo',width:110">预约登记号</th> 
-	    				<th data-options="field:'IPBookNo',width:120">住院证号</th> 
-	    				<th data-options="field:'AppDate',width:100">预约日期</th>
-	    				<th data-options="field:'Operate',align:'left',width:100"><span style="margin:0 20px">操&nbsp;作</span></th>
-	    			</tr>   
-	    		</thead> 
-	    	</table>
-	    	<div id="releaseDlg" class="hisui-dialog" title="确认释放?" style="width:400px;height:200px;padding:10px;" data-options="iconCls:'icon-save',modal:true,closed:true">   
-		    	<div align="center">
-		    		<div style="margin:10px">
-		    			<span style="color:red">释放日期</span>
-		    			<input id="releaseDateBox" class="hisui-datebox textbox" style="width:140px;"></input>			    		
-                    </div>
-                    <div>
-                    	<a href="#" id="confirmReleaseBtn" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-ok'">确认</a>
-                    	<a href="#" id="closeDlgBtn" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-close'">关闭</a>
-					</div>
-				</div>
-			  </div>
-    	   </div>
-    </div>
+<body style="padding:4px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',title:'',border:false">
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',title:'病区床位管理',iconCls:'icon-bed'">
+				<table id="wardBedGrid" class="hisui-datagrid" data-options="border:false,fit:true">   
+		    		<thead>   
+		    			<tr>	    			
+		    				<th data-options="field:'ck',checkbox:true,width:10" ></th>   
+		    				<th data-options="field:'BedCode',width:40">床号</th>   
+		    				<th data-options="field:'BedStatus',width:70,formatter:translateFormate">床位状态</th> 
+		    				<th data-options="field:'BedSexDesc',width:70,formatter:translateFormate">床位性别</th> 
+		    				<th data-options="field:'EmptyDate',width:100">预空日期</th> 
+		    				<th data-options="field:'bedTypeDesc',width:100">床位类型</th>
+		    				<th data-options="field:'bedRoomDesc',width:100">房间类型</th>
+		    				<th data-options="field:'BedBill',width:100">床位费</th> 
+		    				<th data-options="field:'CurrPatName',width:100">当前患者</th> 
+		    				<th data-options="field:'CurrRegNO',width:100">当前登记号</th> 
+		    				<th data-options="field:'CurrPatInHosDate',width:150">入院时间</th>	    				 
+		    				<th data-options="field:'AppPat',width:110">预约患者</th> 
+		    				<th data-options="field:'AppRegNo',width:110">预约登记号</th> 
+		    				<th data-options="field:'IPBookNo',width:120">住院证号</th> 
+		    				<th data-options="field:'AppDate',width:100">预约日期</th>
+		    				<th data-options="field:'Operate',align:'center',width:100">操作</th>
+		    			</tr>   
+		    		</thead> 
+		    	</table>
+			</div>
+		</div>
+	</div>
+	<div id="releaseDlg" class="hisui-dialog" title="确认释放?" style="width:300px;height:150px;padding:10px;" data-options="iconCls:'icon-w-edit',modal:true,closed:true">   
+	<div align="center">
+		<div style="margin:0 10px 33px 10px;">
+			<label class="clsRequired" style="margin-right:10px;">#(..Get("释放日期"))#</label><input id="releaseDateBox" class="hisui-datebox textbox"/>			    		
+        </div>
+        <div style="font-size:0;">
+        	<a href="#" id="confirmReleaseBtn" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-ok'" style="margin-right:10px;">确认</a>
+        	<a href="#" id="closeDlgBtn" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-close'">关闭</a>
+		</div>
+	</div>
+  </div>
+  <script type="text/javascript">
+		var bedSetting=#(bedSetting)#
+	</SCRIPT>
 </body>
 </html>

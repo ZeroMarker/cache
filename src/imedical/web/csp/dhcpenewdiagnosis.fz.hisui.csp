@@ -1,9 +1,17 @@
-<!--dhcpenewdiagnosis.fz.hisui.csp-->
+
+<!-- 
+ * FileName: dhcpenewdiagnosis.fz.hisui.csp
+ * Anchor: xueying
+ * Date: 2021-01-21  
+ * Description: 发证管理
+-->
+<!DOCTYPE html>
+
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
 </csp:method>
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
@@ -12,14 +20,25 @@
 <script language="JavaScript"> 
 
 </script>
+
 <SCRIPT language="Cache" RUNAT="SERVER"> 
 s MainDoctor=%request.Get("MainDoctor")
 s OnlyRead=%request.Get("OnlyRead")
+
+s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+i UIVersion="lite" s LineColor="border-top:1px solid #E2E2E2;border-radius:0px; background: url(../images/no_data_lite.png) center center no-repeat;"
+e  s LineColor="border-top:1px solid #CCCCCC;border-radius:0px; background: url(../images/no_data.png) center center no-repeat;"
+
+i UIVersion="lite" s LineColor1="border:1px solid #E2E2E2; border-radius:4px;"
+e  s LineColor1="border:1px solid #CCCCCC; border-radius:4px;"
+
 </SCRIPT> 
+
 <script type="text/javascript">
 var MainDoctor="#(MainDoctor)#"
 var OnlyRead="#(OnlyRead)#"
 </script>
+
  <style type="text/css">
 /* 病人卡片#036bc2 */
 .celllabel{ font-family: "微软雅黑";height:50px; color:#666; padding: 0; margin: 0; line-height: 25px;} 
@@ -69,161 +88,162 @@ var OnlyRead="#(OnlyRead)#"
 	top: 4px;
 	left: 20px;
 }
-
+.man_lite {
+ 	background:url(../images/man_lite.png) no-repeat;
+	background-size:cover;
+	position: absolute;
+	left:10px;
+	top:5px;
+	width:30px;
+	height:30px;
+	border-radius:30px;
+	border:none;
+}
+.woman_lite {
+ 	background: url(../images/woman_lite.png) no-repeat;
+ 	background-size:cover;
+	position: absolute;
+	left:10px;
+	top:5px;
+	width:30px;
+	height:30px;
+	border-radius:30px;
+	border:none;
+}
 .icon-w-update{
 background:url("") no-repeat;
 }
 
+.r-label{
+    padding-left: 10px;
+}
 </style>
+
 <server>
 		
     d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-   w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+   w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
 </server>
 
 </head>
+
+
 <body>
-<div class="hisui-layout" data-options="fit:true" border="false" style="border-radius:0;">
-<input type="hidden" id="PAADM"/>
-
-
-
-
-<div data-options="region:'west'" border="false" style="width:280px;border-radius:0;padding:4px 4px 4px 4px;">
-
-
- <div class="hisui-panel" data-options="fit:true" style="border-radius:0;">
-
-
-	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true" style="border-radius:0;">
-	
-	
-    <div data-options="region:'north',split:false,collapsible:false,title:'患者列表',border:false" style="height:230px;border-radius:0;padding:4px;">
-        
-
-      <table style="width:100%;border-collapse:separate; border-spacing:10px 4px;">
-      <tr>
-      <td align="right" style="width:100px;">
-         <label for="RegNo">登记号</label></td>
-      <td align="left">
-        <div><input class="textbox" type="text" Id="RegNo" data-options="prompt:'登记号'" style="width:151px;" /></div> </td>
-       <td align="right" style="width:10px;"></td>
-      </tr>
-      <tr>
-       <td align="right" style="width:100px;">
-         <label for="VIP">VIP等级</label></td>
-      <td align="left">
-     	<div><input class="hisui-combobox" type="text" Id="VIP" data-options="prompt:'VIP等级'" style="width:158px;" /></div> </td>
-      </tr>
-      
-       <tr>
-      <td align="right" style="width:100px;">
-         <label for="BDate">开始日期</label></td>
-      <td align="left">
-        <div><input class="hisui-datebox" type="text" Id="BDate" style="width:158px;" data-options="prompt:'开始日期'" /></div></div> </td>
-      
-      </tr>
-      <tr>
-      <td align="right" style="width:100px;">
-         <label for="EDate">结束日期</label></td>
-      <td align="left">
-        <div><input class="hisui-datebox" type="text" Id="EDate" style="width:158px;" data-options="prompt:'结束日期'" /></div></div> </td>
-      
-      </tr>
-       <tr>
-       </tr>
-        <tr>
-        </tr>
-        <tr>
-       <td colspan="2" align="center">
-       <div><a id="Query" href="#" class="hisui-linkbutton" style="width:80px;">查询</a></div></td>
-       </tr>
-  	  </table>
-  	 </div>	
+<div class="hisui-layout" data-options="fit:true" border="false">
+    <input type="hidden" id="PAADM"/>
+    <div data-options="region:'west',onCollapse:function(){setFramSize(1);},onExpand:function(){setFramSize(0);}" border="false" style="width:275px;padding:4px 4px 6px 4px;background-color: inherit;">
+        <div class="hisui-panel" data-options="fit:true" style="#(LineColor1)#">
+	        <div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+                <div data-options="region:'north',split:false,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',collapsible:false,title:'患者列表',border:false" style="height:245px;background-color: inherit;">       
+                    <table style="width:100%;border-collapse:separate; border-spacing:0px 10px">
+					    <tr>
+						    <td class="r-label"><label for="RegNo">#(..Get("登记号"))#</label></td>   
+						    <td> 
+							    <input class="textbox" type="text" Id="RegNo" data-options="prompt:'登记号'" style="width:143px;" />
+						    </td>
+					    </tr>
+					    <tr>
+					        <td class="r-label"><label for="VIP">#(..Get("VIP等级"))#</label></td> 
+					        <td>
+						        <input class="hisui-combobox" type="text" Id="VIP" data-options="prompt:'VIP等级'" style="width:150px;" /> 
+							</td>
+					    </tr>					  
+					    <tr>
+					        <td class="r-label"> <label for="BDate">#(..Get("开始日期"))#</label></td>
+					        <td>
+						       <input class="hisui-datebox" type="text" Id="BDate" style="width:150px;" data-options="prompt:'开始日期'" />
+							</td>					  
+					    </tr>
+					    <tr>
+					        <td class="r-label"> <label for="EDate">#(..Get("结束日期"))#</label></td>
+					        <td>
+						       <input class="hisui-datebox" type="text" Id="EDate" style="width:150px;" data-options="prompt:'结束日期'" />
+							</td>					  
+					    </tr>
+						<tr>
+					        <td colspan="2" align="center">
+					           <a id="Query" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					        </td>
+					    </tr>
+					</table>
+  	            </div>	
   	 
-  	 
-  	  <div data-options="region:'center',border:false">
-      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray',border:false" style="border-radius:0;">
-		<table class="hisui-datagrid" id="CanDiagnosisList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>	
-		</div>
-     
-      </div>
-  	  
-  	</div>
-  	</div>
-   </div>
- <div class="hisui-layout" data-options="region:'center',border:false" style="padding:4px 0px 0px 4px;border-radius:0;">
+  	  		    <div data-options="region:'center',border:false">
+      			    <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray',border:false">
+					     <table class="hisui-datagrid" id="CanDiagnosisList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>	
+				    </div>
+     	 	    </div>
+  		    </div>
+  	    </div>
+    </div>
+    <div class="hisui-layout" data-options="region:'center',border:false" style="padding:4px 10px 10px 0px;background-color: inherit;">
+		<div class="hisui-layout" fit="true" style="#(LineColor1)#">
+			<div class="hisui-panel" data-options="region:'north',headerCls:'panel-header-gray',collapsible:false,border:false">
+				<div class="hisui-panel" data-options="border:false" style="height:40px;border-bottom:1px solid #E2E2E2">
+					<div id="sex" style="position:absolute;left:10px;"></div>
+					<div class="patientInfo">
+						<span class="patName" id="patName"></span>
+						<span class="infoLabel">#(..Get("性别"))#:</span><span id="sexName"></span>
+						<span class="sline">/</span>
+						<span class="infoLabel">#(..Get("年龄"))#:</span><span id="Age"></span>
+						<span class="sline">/</span>
+						<span class="infoLabel" id="PatNoName">#(..Get("登记号"))#:</span><span id="PatNo"></span>
+						<span class="sline">/</span>
+						<span class="infoLabel">#(..Get("体检日期"))#:</span><span id="PEDate"></span>
+						<span class="sline">/</span>
+						<span class="infoLabel">#(..Get("VIP等级"))#:</span><span id="VIPLevel"></span>
+					</div>
+				</div>
+			</div>  
   
-    <div class="hisui-panel" data-options="region:'north',headerCls:'panel-header-gray',collapsible:false,border:false" style="height:40px;border-radius:0;">
-	<div class="hisui-panel" data-options="border:false" style="height:20px;border-radius:0;">	
-		
-		<div id="sex" style="position:absolute;left:10px;"></div>
-		<div class="patientInfo">
-		<span class="patName" id="patName"></span>
-		<span class="infoLabel">性别:</span><span id="sexName"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">年龄:</span><span id="Age"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel" id="PatNoName">登记号:</span><span id="PatNo"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">体检日期:</span><span id="PEDate"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">VIP等级:</span><span id="VIPLevel"></span>
+			<div data-options="region:'center',headerCls:'panel-header-gray',iconCls:'icon-stamp',title:'发证管理',border:false">
+				<div class="hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-stamp',fit:true,border:false">
+			 
+					<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+				
+						<div data-options="region:'north',headerCls:'panel-header-gray'" style="height:50px;padding:10px 0px 0px 0px;border:0;">
+							<table style="border-collapse:separate; border-spacing:10px 0px;">
+								<tr>
+									<td><label for="Conclusion">#(..Get("结论"))#</label></td>
+									<td>
+										<input class="hisui-combobox" type="text" id="Conclusion" name="Conclusion" style="width:220px;"/>
+									</td>
+									
+									<td><label for="Suggestions">#(..Get("处理意见"))#</label></td>
+									<td>
+										<input class="textbox" type="text" id="Suggestions" style="width:220px;"/>
+									</td>
+									
+									<td>
+										<a id="BSave" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-save',stopAllEventOnDisabled:'true'">保存</a>
+									</td>						
+									<!--td>
+										<a id="BCancel" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">撤销保存</a>
+									</td-->
+									<td>
+										<a id="BPrint" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-print',stopAllEventOnDisabled:'true'">打印</a>
+									</td>
+								</tr>	
+							</table>
+				
+						</div>
+			  
+						<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:1px 0px 0px 0px;">
+				
+							<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border:1px solid #E2E2E2;border-left:0;border-bottom:0;border-right:0;">
+								<table class="hisui-datagrid" id="CardManager" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>	
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
     </div>
-  </div>  
-  
- <div data-options="region:'center',headerCls:'panel-header-gray',iconCls:'icon-stamp',title:'发证管理'" style="padding:0px 0px 0px 0px;border-radius:0 4px 4px 4px;">
-  <div class="hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-stamp',fit:true,border:false" style="border-radius:0;">
- 
-  <div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
-	
-	<div data-options="region:'north',headerCls:'panel-header-gray'" style="height:50px;padding:10px 0px 0px 0px;border:0;">
-  	<table style="border-collapse:separate; border-spacing:10px 0px;">
-       <tr>
-        <td><label for="Conclusion">结论</label></td>
-		<td>
-  		 <div>
-          <select class="hisui-combobox" type="text" Id="Conclusion" name="Conclusion" style="width:220px;"></select>
-          </div>
-        <td>
-        <td><label for="Suggestions">处理意见</label></td>
-        <td>
-  		  <div><input class="textbox" type="text" Id="Suggestions" style="width:220px;" /></div> 
-  		</td>
-      	<td style="width:20px;"></td>
-        <td>
-		 <div><a id="BSave" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">保存</a></div>
-		</td>
-		<td>
-		 <div><a id="BCancel" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">撤销保存</a></div>
-		</td>
-		
-		<td>
-		<a id="BPrint" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">打印</a>
-		</td>
-		</tr>
-		
-		
-	</table>
-	
-	</div>
-  
-	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:1px 0px 0px 0px;">
-	
- 	<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border:1px solid #ccc;border-left:0;border-bottom:0;border-right:0;border-radius:0;">
-		<table class="hisui-datagrid" id="CardManager" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>	
-		</div>
-  	</div>
-  	</div>
-   </div>
-  </div>
-  </div>
-
- </div>
+</div>
 	
   <script type="text/javascript" src="../scripts/dhcpediagnosispatient.fz.hisui.js"></script>
   <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
   <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
   <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
   <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>

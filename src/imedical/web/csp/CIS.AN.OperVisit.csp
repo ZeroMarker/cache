@@ -1,14 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
 <html>
 <head>
 <!-- 厦门大学附属翔安医院手术访视单-->
 <title>手术访视</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<HISUI css="wesys.menugroup.css"></HISUI>
 <dhcclinic:head></dhcclinic:head>
+<dhcclinic:ca></dhcclinic:ca>
 <style>
 	.form-item-checkboxlist {width:120px;}
 	.form-row-group > .panel { margin-bottom:10px;}
-	.hisui-linkbutton {box-shadow:1px 1px 1px 1px rgba(0,0,0,0.1)}
+	
+	div.form-row .form-item-textnormal {
+    	width: 130px;
+    	margin-right: 10px;
+	}
+	div.form-row .form-item-textnormal:last-child {
+    	width: 110px;
+		margin-right:0px;	
+	}
+	div.form-row .form-title-text1 {
+    	width: 600px;
+    	margin-right: 20px;
+	}
+	div.form-row .form-title-text2 {
+    	width: 520px;
+    	margin-right: 10px;
+	}
+	.btnList{
+		text-align: center;
+		margin:10px 10px 8px 10px;
+		width:1245px;
+	}
+	.btnList>span {
+    	padding: 0 10px;
+	}
+	.sign-img {
+		border-radius: 2px;
+	}
 </style>
 </head>
 <body class="hisui-layout">
@@ -16,263 +49,213 @@
     <form id="visitForm" method="post">
     	<div class="form-row-grouptitle">术前访视</div>
         <div class="form-row-group" style="padding:10px;">
-        	<div class="hisui-panel" title="查阅病历" style="padding:10px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
-	            <div>
-	                <div class="form-row">
-	                	
-	                    <div class="form-title-right4">体温</div>
-	                    <div class="form-item-textshort">
-	                        <input type="text" id="Temperature" data-title="体温" class="textbox operdata" style="width:80px"> ℃
-	                    </div>
-	                    
-	                    <div class="form-title-normal">脉搏</div>
-	                    <div class="form-item-textshort">
-	                        <input type="text" id="Pulse" data-title="脉搏" class="textbox operdata" style="width:80px"> 次/分
-	                    </div>
-	                    <div class="form-title-normal" style="margin-left:10px;">呼吸</div>
-	                    <div class="form-item-textshort">
-	                        <input type="text" id="Respiration" data-title="呼吸" class="textbox operdata" style="width:80px"> 次/分
-	                    </div>
-	                    
-	                    
+        	<div id="Pre1" class="hisui-panel" title="查阅病历" style="padding:5px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
+	            <div class="form-row">
+	                <div class="form-title-right4">体温</div>
+	                <div class="form-item-textnormal">
+	                    <input type="text" id="Temperature" data-title="体温" class="hisui-validatebox operdata" style="width:80px"> ℃
+	                </div>
+	                <div class="form-title-right355">脉搏</div>
+	                <div class="form-item-textnormal">
+	                    <input type="text" id="Pulse" data-title="脉搏" class="hisui-validatebox operdata" style="width:80px"> 次/分
+	                </div>
+	                <div class="form-title-right355">呼吸</div>
+	                <div class="form-item-textnormal">
+	                    <input type="text" id="Respiration" data-title="呼吸" class="hisui-validatebox operdata" style="width:80px"> 次/分
+	                </div>
+	                <div class="form-title-right4">血压</div>
+	                <div class="form-item-textnormal" style="width: 140px;">
+	                    <input type="text" id="BloodPressure" data-title="血压" class="hisui-validatebox operdata" style="width:80px"> mmHg
+	                </div>
+	                <div class="form-title-right355">身高</div>
+	                <div class="form-item-textnormal">
+	                    <input type="text" id="PatHeight" data-title="身高" class="hisui-validatebox operdata" style="width:80px"> cm
+	                </div>
+	                <div class="form-title-right355">体重</div>
+	                <div class="form-item-textnormal">
+	                    <input type="text" id="PatWeight" data-title="体重" class="hisui-validatebox operdata" style="width:80px"> kg
 	                </div>
 	            </div>
-	            <div>
-	                <div class="form-row">
-	                	<div class="form-title-right4">血压</div>
-	                    <div class="form-item-textshort">
-	                        <input type="text" id="BloodPressure" data-title="血压" class="textbox operdata" style="width:80px"> mmHg
-	                    </div>
-	                	<div class="form-title-normal">身高</div>
-	                    <div class="form-item-textshort">
-	                        <input type="text" id="PatHeight" data-title="身高" class="textbox operdata" style="width:80px"> cm
-	                    </div>
-	                	<div class="form-title-normal" style="margin-left:10px;">体重</div>
-	                    <div class="form-item-textshort">
-	                        <input type="text" id="PatWeight" data-title="体重" class="textbox operdata" style="width:80px"> kg
-	                    </div>
+	            <div class="form-row">
+	                <div class="form-title-right4">既往病史</div>
+	                <div class="form-item-normal" style="margin-right: 53px;">
+	                	<!--<input type="checkbox" id="PastMedHistoryCHK1" data-formitem="PastMedHistory" class="hisui-checkbox" label="无">
+	                	<input type="checkbox" id="PastMedHistoryCHK2" data-formitem="PastMedHistory" class="hisui-checkbox" label="有">
+	                	<input type="hidden" id="PastMedHistory" class="operdata" data-multiple="N">-->
+	                	<input type="text" id="PastHistory" data-title="既往病史" class="hisui-validatebox operdata" value="无" style="width:482px;">
+	                </div>
+	                <div class="form-title-right4">手术史</div>
+	                <div class="form-item-normal">
+	                    <!--<input type="checkbox" id="OperHistoryCHK1" data-formitem="OperHistory" class="hisui-checkbox" label="无">
+	                    <input type="checkbox" id="OperHistoryCHK2" data-formitem="OperHistory" class="hisui-checkbox" label="有">
+	                    <input type="hidden" id="OperHistory" class="operdata" data-multiple="N">-->
+	                    <input type="text" id="OperHistory" data-title="手术史" class="hisui-validatebox operdata" value="无" style="width:492px;">
 	                </div>
 	            </div>
-	            <div>
-	                <div class="form-row">
-	                    <div class="form-title-right4">既往病史</div>
-	                    <div class="form-item-normal">
-	                    	<!--<input type="checkbox" id="PastMedHistoryCHK1" data-formitem="PastMedHistory" class="hisui-checkbox" label="无">
-	                        <input type="checkbox" id="PastMedHistoryCHK2" data-formitem="PastMedHistory" class="hisui-checkbox" label="有">
-	                        <input type="hidden" id="PastMedHistory" class="operdata" data-multiple="N">-->
-	                        <input type="text" id="PastHistory" data-title="既往病史" class="textbox operdata" value="无" style="width:200px;">
-	                    </div>
-	                    <div class="form-title-right5">手术史</div>
-	                    <div class="form-item-normal">
-	                    	<!--<input type="checkbox" id="OperHistoryCHK1" data-formitem="OperHistory" class="hisui-checkbox" label="无">
-	                        <input type="checkbox" id="OperHistoryCHK2" data-formitem="OperHistory" class="hisui-checkbox" label="有">
-	                        <input type="hidden" id="OperHistory" class="operdata" data-multiple="N">-->
-	                        <input type="text" id="OperHistory" data-title="手术史" class="textbox operdata" value="无" style="width:200px;">
-	                    </div>
+	            <div class="form-row">
+	                <div class="form-title-right4">过敏史</div>
+	                <div class="form-item-normal" style="margin-right: 39px;">
+	                    <!--<input type="checkbox" id="AllergiesCHK1" data-formitem="Allergies" class="hisui-checkbox" label="无">
+	                    <input type="checkbox" id="AllergiesCHK2" data-formitem="Allergies" class="hisui-checkbox" label="有">
+	                    <input type="hidden" id="Allergies" class="operdata" data-multiple="N">-->
+	                    <input type="text" id="AllergyHistory" data-title="过敏史" class="hisui-validatebox operdata" value="无" style="width:482px;">
 	                </div>
-	            </div>
-	            <div>
-	                <div class="form-row">
-	                    <div class="form-title-right4">过敏史</div>
-	                    <div class="form-item-normal">
-	                    	<!--<input type="checkbox" id="AllergiesCHK1" data-formitem="Allergies" class="hisui-checkbox" label="无">
-	                        <input type="checkbox" id="AllergiesCHK2" data-formitem="Allergies" class="hisui-checkbox" label="有">
-	                        <input type="hidden" id="Allergies" class="operdata" data-multiple="N">-->
-	                        <input type="text" id="AllergyHistory" data-title="过敏史" class="textbox operdata" value="无" style="width:200px;">
-	                    </div>
-	                    <div class="form-title-right5">传染病系列</div>
-	                    <div class="form-item-normal">
-	                    	<!--<input type="checkbox" id="OperHistoryCHK1" data-formitem="OperHistory" class="hisui-checkbox" label="无">
-	                        <input type="checkbox" id="OperHistoryCHK2" data-formitem="OperHistory" class="hisui-checkbox" label="有">
-	                        <input type="hidden" id="OperHistory" class="operdata" data-multiple="N">-->
-	                        <input type="text" id="InfectionHistory" data-title="传染病系列" class="textbox operdata" value="无" style="width:200px;">
-	                    </div>
+	                <div class="form-title-right5">传染病系列</div>
+	                <div class="form-item-normal">
+	                    <!--<input type="checkbox" id="OperHistoryCHK1" data-formitem="OperHistory" class="hisui-checkbox" label="无">
+	                    <input type="checkbox" id="OperHistoryCHK2" data-formitem="OperHistory" class="hisui-checkbox" label="有">
+	                    <input type="hidden" id="OperHistory" class="operdata" data-multiple="N">-->
+	                    <input type="text" id="InfectionHistory" data-title="传染病系列" class="hisui-validatebox operdata" value="无" style="width:492px;">
 	                </div>
 	            </div>
             </div>
-            
-            <div class="hisui-panel" title="评估患者" style="padding:10px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
-	            <div>
-	                <div class="form-row">
-	                    <div class="form-title-right4">皮肤情况</div>
-	                    <div class="form-item" style="width:212px;margin-left:-5px;">
-	                        <input type="checkbox" id="SkinConditionCHK1" data-title="完好" data-formitem="SkinCondition" class="hisui-checkbox" label="完好">
-	                        <input type="checkbox" id="SkinConditionCHK2" data-title="破损" data-formitem="SkinCondition" class="hisui-checkbox" label="破损">
-	                        <input type="hidden" id="SkinCondition" data-title="皮肤情况" class="operdata" data-multiple="N">
-	                    </div>
-	                    <div class="form-title-right5">心理状况</div>
-	                    <div class="form-item" style="width:212px;margin-left:-5px;">
-	                        <input type="checkbox" id="MentalStateCHK1" data-title="乐观" data-formitem="MentalState" class="hisui-checkbox" label="乐观">
-	                        <input type="checkbox" id="MentalStateCHK2" data-title="平静" data-formitem="MentalState" class="hisui-checkbox" label="平静">
-	                        <input type="checkbox" id="MentalStateCHK3" data-title="紧张" data-formitem="MentalState" class="hisui-checkbox" label="紧张">
-	                        <input type="hidden" id="MentalState" data-title="心理状况" class="operdata" data-multiple="N">
-	                    </div>
-	                </div>
-	            </div>
-	            <div>
-	                <div class="form-row">
-	                    <div class="form-title-right4">肢体活动</div>
-	                    <div class="form-item" style="width:212px;margin-left:-5px;">
-	                        <input type="checkbox" id="PhysicalActivityCHK1" data-title="正常" data-formitem="PhysicalActivity" class="hisui-checkbox" label="正常">
-	                        <input type="checkbox" id="PhysicalActivityCHK2" data-title="障碍" data-formitem="PhysicalActivity" class="hisui-checkbox" label="障碍">
-	                        <input type="hidden" id="PhysicalActivity" data-title="肢体活动" class="operdata" data-multiple="N">
-	                    </div>
-	                    <div class="form-title-right5">血管情况</div>
-	                    <div class="form-item" style="width:212px;margin-left:-5px;">
-	                        <input type="checkbox" id="VascularConditionCHK1" data-title="显露明显" data-formitem="VascularCondition" class="hisui-checkbox" label="显露明显">
-	                        <input type="checkbox" id="VascularConditionCHK2" data-title="显露不明显" data-formitem="VascularCondition" class="hisui-checkbox" label="显露不明显">
-	                        <input type="hidden" id="VascularCondition" data-title="血管情况" class="operdata" data-multiple="N">
-	                    </div>
-	                </div>
-	            </div>
+            <div id="pre2" class="hisui-panel" title="评估患者" style="padding:5px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
+	            <div class="form-row">
+	                <div class="form-title-right4">皮肤情况</div>
+					<div class="form-item" style="width:212px;">
+						<input type="checkbox" id="SkinConditionCHK1" data-title="完好" data-formitem="SkinCondition" class="hisui-checkbox" label="完好">
+						<input type="checkbox" id="SkinConditionCHK2" data-title="破损" data-formitem="SkinCondition" class="hisui-checkbox" label="破损">
+						<input type="hidden" id="SkinCondition" data-title="皮肤情况" class="operdata" data-multiple="N">
+					</div>
+					<div class="form-title-right5">心理状况</div>
+					<div class="form-item" style="width:210px;">
+						<input type="checkbox" id="MentalStateCHK1" data-title="乐观" data-formitem="MentalState" class="hisui-checkbox" label="乐观">
+						<input type="checkbox" id="MentalStateCHK2" data-title="平静" data-formitem="MentalState" class="hisui-checkbox" label="平静">
+						<input type="checkbox" id="MentalStateCHK3" data-title="紧张" data-formitem="MentalState" class="hisui-checkbox" label="紧张">
+						<input type="hidden" id="MentalState" data-title="心理状况" class="operdata" data-multiple="N">
+					</div>
+					<div class="form-title-right4">肢体活动</div>
+					<div class="form-item" style="width:212px;">
+						<input type="checkbox" id="PhysicalActivityCHK1" data-title="正常" data-formitem="PhysicalActivity" class="hisui-checkbox" label="正常">
+						<input type="checkbox" id="PhysicalActivityCHK2" data-title="障碍" data-formitem="PhysicalActivity" class="hisui-checkbox" label="障碍">
+						<input type="hidden" id="PhysicalActivity" data-title="肢体活动" class="operdata" data-multiple="N">
+					</div>
+					<div class="form-title-right5">血管情况</div>
+					<div class="form-item" style="width:212px;">
+						<input type="checkbox" id="VascularConditionCHK1" data-title="显露明显" data-formitem="VascularCondition" class="hisui-checkbox" label="显露明显">
+						<input type="checkbox" id="VascularConditionCHK2" data-title="显露不明显" data-formitem="VascularCondition" class="hisui-checkbox" label="显露不明显">
+						<input type="hidden" id="VascularCondition" data-title="血管情况" class="operdata" data-multiple="N">
+					</div>
+				</div>
             </div>
-            
-            <div class="hisui-panel" title="术前宣教" style="padding:10px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
+            <div id="pre3" class="hisui-panel" title="术前宣教" style="padding:5px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
 	            <div>
-	                <div class="form-row">
+	            	<div class="form-row">
 	                	<div class="form-title-right4">术前宣教</div>
-	                    <div class="form-item-normal">
-	                        1、自我介绍
-	                    </div>
-	                </div>
+	                	<div class="form-title-text1">
+	                		1、自我介绍
+	                	</div>
+	                	<div class="form-title-text2">
+	                    	5、术前请您做好个人卫生：洗脸、刷牙、梳头，更换清洁病服，不穿内衣裤、袜子
+	                	</div>
+	            	</div>
 	            </div>
 	            <div>
-	                <div class="form-row">
+	            	<div class="form-row">
 	                	<div class="form-title-right4"></div>
-	                    <div class="form-item-normal">
-	                        2、术前一日正常沐浴，着重清洁以下部位皮肤：手术部位、双侧上肢、下肢、颈部及锁骨周围等
-	                    </div>
-	                </div>
+	                	<div class="form-title-text1">
+	                    	2、术前一日正常沐浴，着重清洁以下部位皮肤：手术部位、双侧上肢、下肢、颈部及锁骨周围等
+	                	</div>
+	                	<div class="form-title-text2">
+	                    	6、术前静脉留置针、留置导尿的告知
+	                	</div>
+	            	</div>
 	            </div>
 	            <div>
-	                <div class="form-row">
+	            	<div class="form-row">
 	                	<div class="form-title-right4"></div>
-	                    <div class="form-item-normal">
-	                        3、术前禁食、禁饮，忌化妆，请勿将贵重物品及现金带入手术室
-	                    </div>
-	                </div>
+	                	<div class="form-title-text1">
+	                    	3、术前禁食、禁饮，忌化妆，请勿将贵重物品及现金带入手术室
+	                	</div>
+	                	<div class="form-title-text2">
+	                    	7、介绍手术环境，麻醉体位的配合方法及重要性
+	                	</div>
+	            	</div>
 	            </div>
 	            <div>
-	                <div class="form-row">
+	            	<div class="form-row">
 	                	<div class="form-title-right4"></div>
-	                    <div class="form-item-normal">
-	                        4、佩戴腕带、手术标识及携带物品
-	                    </div>
-	                </div>
+	                	<div class="form-title-text1">
+	                    	4、佩戴腕带、手术标识及携带物品
+	                	</div>
+	                	<div class="form-title-text2">
+	                    	8、做好术前准备，注意休息，迎接手术
+	                	</div>
+	            	</div>
 	            </div>
-	            <div>
-	                <div class="form-row">
-	                	<div class="form-title-right4"></div>
-	                    <div class="form-item-normal">
-	                        5、术晨请您做好个人卫生：洗脸、刷牙、梳头，更换清洁病服，不穿内衣裤、袜子
-	                    </div>
-	                </div>
-	            </div>
-	            <div>
-	                <div class="form-row">
-	                	<div class="form-title-right4"></div>
-	                    <div class="form-item-normal">
-	                        6、术前静脉留置针、留置导尿的告知
-	                    </div>
-	                </div>
-	            </div>
-	            <div>
-	                <div class="form-row">
-	                	<div class="form-title-right4"></div>
-	                    <div class="form-item-normal">
-	                        7、介绍手术环境，麻醉体位的配合方法及重要性
-	                    </div>
-	                </div>
-	            </div>
-	            <div>
-	                <div class="form-row">
-	                	<div class="form-title-right4"></div>
-	                    <div class="form-item-normal">
-	                        8、做好术前准备，注意休息，迎接手术
-	                    </div>
+            </div>
+            <div id="pre4" class="hisui-panel" title="特殊问题及注意事项" style="padding:5px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
+	            <div class="form-row">
+	                <div class="form-item-normal" style="margin-right:0px">
+	                    <textarea id="SpecialCondition" data-title="特殊问题及注意事项" class="textbox operdata" style="width:1210px;height:50px;" value="无"></textarea>
 	                </div>
 	            </div>
             </div>
-            
-            <div class="hisui-panel" title="特殊问题及注意事项" style="padding:10px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
-	            <div>
-	                <div class="form-row">
-	                    <div class="form-item-normal">
-	                        <textarea id="SpecialCondition" data-title="特殊问题及注意事项" class="textbox operdata" style="width:693px;height:100px;" value="无"></textarea>
-	                    </div>
-	                </div>
-	            </div>
-            </div>
-            <div>
-                <div class="form-row" style="margin-left:0px;margin-top:0">
+            <div id="pre5" class="hisui-panel" title="签名信息" style="padding:5px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
+                <div class="form-row">
                 	<div class="form-title-right4">患方签名</div>
-                    <div class="form-item-normal">
-                        <input type="text" id="PreOpPatSign" data-title="术前患方签名" class="textbox operdata" data-options="prompt:'患者/家属签名'">
+                	<div class="form-item-normal" style="margin-right:10px">
+                    	<img id="PreOpPatSign" class="sign-img" width="200" height="50">
                     </div>
-                    <div class="form-title-right4">访视签名</div>
+                    <!--div class="form-item-normal">
+                        <input type="text" id="PreOpPatSign" data-title="术前患方签名" class="textbox operdata" data-options="prompt:'患者/家属签名'">
+                    </div-->
+                    <div class="form-title-right4" style="margin-right: 8px;">访视签名</div>
                     <div class="form-item-normal">
                         <input id="PreOpVisitorSign" data-title="术前访视签名" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'访视者签名',CareProvType:'NURSE'">
-                    </div>
+						<a href="#" id="btnPreOpVisitorSubmit" class="hisui-linkbutton" data-submitCode="PreOpVisitorSign">提交</a>
+						<a href="#" id="btnPreOpVisitorRevokeSubmit" class="hisui-linkbutton" data-revokeSubmitCode="PreOpVisitorSign">撤销提交</a>
+					</div>
                     <div class="form-title-right2">日期</div>
                     <div class="form-item-normal">
                         <input type="text" id="PreOpSignDate" data-title="术前访视日期" class="hisui-datebox operdata">
                     </div>
                 </div>
-                
             </div>
         </div>
         <div class="form-row-grouptitle">术后访视</div>
-        <div class="form-row-group" style="padding:10px;">
-        	<div class="hisui-panel" title="术后访视" style="padding:10px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
-            <div>
-                <div class="form-row">
-                    <div class="form-title-right4">回访日期</div>
-                    <div class="form-item-normal">
-                        <input type="text" id="PostVisitDate" data-title="回访日期" class="hisui-datebox operdata" style="width:173px;">
-                    </div>
-                    <div class="form-title-right4">术后第</div>
-                    <div class="form-item-normal">
-                        <input type="text" id="PostOpDays" data-title="术后第" class="textbox operdata" style="width:80px;"> 天
-                    </div>
-                </div>
-            </div>
-           
-            <div>
+        <div class="form-row-group" style="padding:10px 10px 0 10px;">
+        	<div id="post1" class="hisui-panel" title="回访信息" style="padding:5px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
+            	<div class="form-row">
+                	<div class="form-title-right4">回访日期</div>
+                	<div class="form-item-normal">
+                    	<input type="text" id="PostVisitDate" data-title="回访日期" class="hisui-datebox operdata" style="width:173px;">
+                	</div>
+                	<div class="form-title-right4">术后第</div>
+                	<div class="form-item-normal">
+                    	<input type="text" id="PostOpDays" data-title="术后第" class="hisui-validatebox operdata" style="width:80px;"> 天
+                	</div>
+            	</div>
                 <div class="form-row">
                     <div class="form-title-right4">精神</div>
-                    <div class="form-item" style="width:212px;margin-left:-5px;">
+                    <div class="form-item" style="width:193px;">
                         <input type="checkbox" id="SpiritCHK1" data-title="好" data-formitem="Spirit" class="hisui-checkbox" label="好">
                         <input type="checkbox" id="SpiritCHK2" data-title="欠佳" data-formitem="Spirit" class="hisui-checkbox" label="欠佳">
                         <input type="checkbox" id="SpiritCHK3" data-title="萎靡" data-formitem="Spirit" class="hisui-checkbox" label="萎靡">
                         <input type="hidden" id="Spirit" data-title="精神" class="operdata" data-multiple="N">
                     </div>
                     <div class="form-title-right4">体温</div>
-                    <div class="form-item" style="width:212px;margin-left:-5px;">
+                    <div class="form-item" style="width:221px;">
                         <input type="checkbox" id="PostOpTemperCHK1" data-title="正常" data-formitem="PostOpTemper" class="hisui-checkbox" label="正常">
                         <input type="checkbox" id="PostOpTemperCHK2" data-title="较高" data-formitem="PostOpTemper" class="hisui-checkbox" label="较高">
                         <input type="checkbox" id="PostOpTemperCHK3" data-title="高热" data-formitem="PostOpTemper" class="hisui-checkbox" label="高热">
                         <input type="hidden" id="PostOpTemper" data-title="体温" class="operdata" data-multiple="N">
                     </div>
-                </div>
-            </div>
-            <div>
-                <div class="form-row">
                     <div class="form-title-right4" >疼痛</div>
-                    <div class="form-item" style="width:212px;margin-left:-5px;">
+                    <div class="form-item" style="width:212px;">
                         <input type="checkbox" id="PainCHK1" data-title="有" data-formitem="Pain" class="hisui-checkbox" label="有">
                         <input type="checkbox" id="PainCHK2" data-title="无" data-formitem="Pain" class="hisui-checkbox" label="无">
                         <input type="hidden" id="Pain" data-title="疼痛" class="operdata" data-multiple="N">
                     </div>
                     <div class="form-title-right4">伤口愈合</div>
-                    <div class="form-item" style="width:212px;margin-left:-5px;">
+                    <div class="form-item" style="width:193px;">
                         <input type="checkbox" id="WoundHealingCHK1" data-title="良好" data-formitem="WoundHealing" class="hisui-checkbox" label="良好">
                         <input type="checkbox" id="WoundHealingCHK2" data-title="较差" data-formitem="WoundHealing" class="hisui-checkbox" label="较差">
                         <input type="hidden" id="WoundHealing" data-title="伤口愈合" class="operdata" data-multiple="N">
                     </div>
                 </div>
-            </div>
-            <div>
                 <div class="form-row">
+                    <div class="form-title-text1" style="width:520px;">您希望我们的工作在哪些方面需要改进，请提出您的宝贵意见，祝您早日康复！</div>
                     <div class="form-title-normal">对手术室工作评价</div>
                     <div class="form-item-normal">
                         <input type="checkbox" id="EvaluationCHK1" data-title="很好" data-formitem="Evaluation" class="hisui-checkbox" label="很好">
@@ -281,60 +264,163 @@
                         <input type="hidden" id="Evaluation" data-title="对手术室工作评价" class="operdata" data-multiple="N">
                     </div>
                 </div>
-            </div>
-            <div>
                 <div class="form-row">
-                    <div class="form-title-normal">您希望我们的工作在哪些方面需要改进，请提出您的宝贵意见，祝您早日康复！</div>
-                </div>
-            </div>
-            <div>
-                <div class="form-row">
-                    <div class="form-item-normal">
-                    	<textarea id="Opinion" data-title="您希望我们的工作在哪些方面需要改进，请提出您的宝贵意见，祝您早日康复！" class="textbox operdata" style="width:693px;height:100px;">无</textarea>
+                    <div class="form-item-normal" style="margin-right:0px">
+                    	<textarea id="Opinion" data-title="您希望我们的工作在哪些方面需要改进，请提出您的宝贵意见，祝您早日康复！" class="textbox operdata" style="width:1210px;height:50px;">无</textarea>
                     </div>
                 </div>
             </div>
-            </div>
-            <div>
-                <div class="form-row" style="margin-left:0px;margin-top:0">
+            <div id="post2" class="hisui-panel" title="签名信息" style="padding:5px 0;width:1240px;" data-options="headerCls:'panel-header-card'">
+                <div class="form-row">
                     <div class="form-title-right4">患方签名</div>
-                    <div class="form-item-normal">
-                        <input type="text" id="PostOpPatSign" data-title="患方签名" class="textbox operdata" data-options="prompt:'患者/家属签名'">
+                    <div class="form-item-normal" style="margin-right:10px">
+                    	<img id="PostOpPatSign" class="sign-img" width="200" height="50">
                     </div>
-                    <div class="form-title-right4">访视签名</div>
+                    <!--div class="form-item-normal">
+                        <input type="text" id="PostOpPatSign" data-title="患方签名" class="textbox operdata" data-options="prompt:'患者/家属签名'">
+                    </div-->
+                    <div class="form-title-right4" style="margin-right: 8px;">访视签名</div>
                     <div class="form-item-normal">
                         <input id="PostOpVisitorSign" data-title="访视签名" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'访视者签名',CareProvType:'NURSE'">
-                    </div>
+						<a href="#" id="btnPostOpVisitorSubmit" class="hisui-linkbutton" data-submitCode="PostOpVisitorSign">提交</a>
+						<a href="#" id="btnPostOpVisitorRevokeSubmit" class="hisui-linkbutton" data-revokeSubmitCode="PostOpVisitorSign">撤销提交</a>
+					</div>
                     <!--<div class="form-title-normal">日期</div>
                     <div class="form-item-normal">
                         <input type="text" id="PostOpSignDate" class="hisui-datebox operdata">
                     </div>-->
                 </div>
-                
             </div>
         </div>
     </form>
     </div>
-    <div data-options="region:'south',border:false" style="height:40px;">
-        <div class="button-list" style="width:1260px;">
-            <a href="#" id="btnSave" class="hisui-linkbutton" data-title="保存" data-options="iconCls:'icon-w-save'" data-permission="All">保存</a>
-            <a href="#" id="btnPrint" class="hisui-linkbutton" data-title="打印" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a>
-            <!--<a href="#" id="btnPrintNoData" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">打印（空白）</a>-->
-            <a href="#" id="btnRefresh" class="hisui-linkbutton" data-title="刷新" data-options="iconCls:'icon-w-update'" data-permission="All">刷新</a>
-            <a href="#" id="btnSheetSetting" class="hisui-linkbutton" data-title="设置" data-options="iconCls:'icon-w-update'" data-permission="All">设置</a>
-            <a href="#" id="btnArchive" class="hisui-linkbutton" data-title="归档" data-options="iconCls:'icon-w-submit'" data-permission="All">归档</a>
-        </div>
+    <div id="buttonBox" data-options="region:'south',border:false" style="height:48px;background-color:#f2f2f2;">
+        <div class="btnList">
+	    	<span>
+				<a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" data-permission="All">保存</a>
+			</span>
+	    	<span>
+				<a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a>
+			</span>
+	    	<span>
+				<a href="#" id="btnArchive" class="hisui-linkbutton" data-options="iconCls:'icon-w-file'" data-permission="All">归档</a>
+			</span>
+	    	<span>
+				<a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" data-permission="All">刷新</a>
+			</span>
+	    	<!--span>
+				<<a href="#" id="btnSubmit" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'" data-permission="All">提交</a>
+			</span>
+	    	<span>
+				<a href="#" id="btnRevokeSubmit" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" data-permission="All">撤销提交</a>
+			</span>
+	    	<span>
+				<a href="#" id="btnLocalPrint" class="hisui-linkbutton" data-options="iconCls:'icon-reprint-inv'" data-permission="All">本地打印</a>
+			</span>
+	    	<span>
+				<a href="#" id="btnSelectTemplate" class="hisui-linkbutton" data-permission="All">选择模板</a>
+			</span>
+	    	<span>
+            	<a href="#" id="btnSaveTemplate" class="hisui-linkbutton" data-permission="All">保存模板</a>
+            </span>-->
+		</div>
     </div>
-	<div id="signContainer">
-	</div>
-	<div id="printContent"></div>
-	<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
-	<script type="text/javascript" src="../service/dhcanop/js/dhcan.lodop.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.canvas.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.SheetTemplate.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.pagenotabsview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.displaysheet.js"></script>
+
 	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
-	<!-- <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CA.js"></script> -->
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CASignature.js"></script>
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.SheetSettings.js"></script>
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperVisit.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DrawContext.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CA/CIS.AN.CA.Signature.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.SubmitSheetView.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.ArchiveRecord.js"></script>
 </body>
+<script type="text/javascript">
+
+$(function(){
+	
+	if(typeof HISUIStyleCode=='string' && HISUIStyleCode=='lite'){
+		//炫彩模式与极简模式的打印保存刷新等按钮高度不同，炫彩按钮高度30px;极简按钮高度28px
+		document.getElementById("buttonBox").style.height="46px";
+	}
+	
+	archiveRecordManager.initPage("PreOpVisitorSign^PostOpVisitorSign");
+	
+	$("#btnSave").linkbutton({
+        onClick: function() {
+            archiveRecordManager.save();
+        }
+    });
+
+	//术前访视
+    $("#btnPreOpVisitorSubmit").linkbutton({
+        onClick: function() {
+	        var archiveCode = $(this).attr("data-submitCode");
+            archiveRecordManager.submitSheet(archiveCode,"#pre1,#pre2,#pre3,#pre4,#pre5");
+        }
+    });
+    
+    $("#btnPreOpVisitorRevokeSubmit").linkbutton({
+        onClick: function() {
+	        var archiveCode = $(this).attr("data-revokeSubmitCode");
+            archiveRecordManager.revokeSubmitSheet(archiveCode);
+        }
+    });
+
+	//术后访视
+    $("#btnPostOpVisitorSubmit").linkbutton({
+        onClick: function() {
+	        var archiveCode = $(this).attr("data-submitCode");
+            archiveRecordManager.submitSheet(archiveCode,"#post1,#post2");
+        }
+    });
+    
+    $("#btnPostOpVisitorRevokeSubmit").linkbutton({
+        onClick: function() {
+	        var archiveCode = $(this).attr("data-revokeSubmitCode");
+            archiveRecordManager.revokeSubmitSheet(archiveCode);
+        }
+    });
+    
+    $("#btnPrint").linkbutton({
+	    onClick: function() {
+	        archiveRecordManager.print();
+	    }
+    });
+
+    $("#btnArchive").linkbutton({
+        onClick: function() {
+            archiveRecordManager.archive();
+        }
+    });
+
+    $("#btnRefresh").linkbutton({
+        onClick: function() {
+            window.location.reload();
+        }
+    });
+    
+    $("#btnSelectTemplate").linkbutton({
+        onClick: function() {
+            archiveRecordManager.selectTemplate();
+        }
+    });
+
+    $("#btnSaveTemplate").linkbutton({
+        onClick: function() {
+            archiveRecordManager.saveTemplate();
+        }
+    });
+    
+    $("#btnLocalPrint").linkbutton({
+	    onClick: function() {
+	        archiveRecordManager.lodopPrint();
+	    }
+    });
+	
+});
+</script>
 </html>
 

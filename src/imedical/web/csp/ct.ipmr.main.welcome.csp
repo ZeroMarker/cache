@@ -1,0 +1,60 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!--ct.ipmr.main.welcome.csp-->
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<HISUI css="ipmr.base.css"></HISUI>
+		<IPMR:LOGON/>
+		<link type="text/css" rel="styleSheet"  href="../scripts/ipmr/css/base.css" />
+	</head>
+	<body style="padding:10px 10px 10px 10px;">
+		<csp:Include Page="ct.ipmr.main.welcome.show.csp">
+		<script language="cache" runat="server">
+			Set ^MA.IPMR.SysVersion = "4.1.0"
+			Set auditReCallUrl = ##Class(MA.IPMR.SSService.CommonSrv).GetMenuByName("ma.ipmr.ss.volrecall.ipmrcheck")
+			Set auditReCallStatus=""
+			Set Expression = $p(auditReCallUrl,"?",2)
+			For ind = 1:1:$length(Expression,"&") {
+				Set item = $p(Expression,"&",ind)
+				Continue:item=""
+				Set itemCode = $p(item,"=",1)
+				Set itemValue = $p(item,"=",2)
+				Set:itemCode="ApplyStatus" auditReCallStatus=itemValue
+			}
+			Set auditBorrowUrl = ##Class(MA.IPMR.SSService.CommonSrv).GetMenuByName("ma.ipmr.ss.borrow.ipmraudit")
+	  		Set auditBorrowStatusID=""
+			Set Expression = $p(auditBorrowUrl,"?",2)
+			For ind = 1:1:$length(Expression,"&") {
+				Set item = $p(Expression,"&",ind)
+				Continue:item=""
+				Set itemCode = $p(item,"=",1)
+				Set itemValue = $p(item,"=",2)
+				If itemCode="AuditCode" {
+					Set auditBorrowStatus=itemValue
+					Set objDic = ##class(CT.IPMR.BT.Dictionary).GetByTypeCode("LendRequestStatus",auditBorrowStatus)
+					Set:$isobject(objDic) auditBorrowStatusID = objDic.%Id()
+				}
+			}
+	  	</script>
+		<SCRIPT language = 'javascript' >
+			//全局请求后台服务对象
+			var ServerObj = {
+				auditReCallUrl	: '#(auditReCallUrl)#',
+				auditBorrowUrl	: '#(auditBorrowUrl)#',
+				auditReCallStatus	: '#(auditReCallStatus)#',
+				auditBorrowStatusID	: '#(auditBorrowStatusID)#'
+			};
+		</SCRIPT>
+		<script type="text/javascript"  src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+		<script type="text/javascript"  src="../scripts/websys.js"></script>
+		<script type="text/javascript"  src="../scripts/ipmr/common.js"></script>
+		<script type="text/javascript"  src="../scripts/ipmr/extend.js"></script>
+		<script type="text/javascript"  src="../scripts/ipmr/plugins/datagrid-export.js"></script>
+		<script type="text/javascript"  src="../scripts/ipmr/ss/welcome.js"></script>
+	</body>
+</html>

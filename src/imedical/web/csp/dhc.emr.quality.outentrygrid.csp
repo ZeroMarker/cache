@@ -1,0 +1,89 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<html>
+	<head>
+        <title>门诊手工质控</title>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        
+	</head>
+	
+	<body class="hisui-layout" data-options="fit:true,border:false" style="border-top:none;">
+	<div data-options="region:'center',fit:true,headerCls:'panel-header-gray',border:false" style="height:45px;padding:5px">
+		<div class="hisui-panel" title="手工评分" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-star'">
+			<div id="TableTBar" style="padding:5px;height:30">	
+				<div style="float:left;">
+					<select id="comboQualiytStruct" name="qualiytStruct" class="hisui-combobox" style="width:200px;"></select>
+ 				</div>
+ 				<div style="float:right;">
+	 				<!--a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="GetProblemList()" data-options="" style="width:150px;">自动缺陷查看</a-->	
+	 			</div>
+	 			<div style="float:right;margin-right:5px;">
+		    		<!--a id="revision" href="#" class="hisui-linkbutton hover-dark" onclick="changeRevisionStatus()"  data-options=""  style="width:100px;" >关闭留痕</a-->
+				</div>
+			</div>
+			<div data-options="border:false" style="height:50%;border: 1px #cccccc solid;border-left:none;border-right:none;">
+				<div class="hisui-datagrid" id="dgStructEntry" data-options="border:false,fit:true"></div>
+			</div>
+			<div id="TableTBar" style="padding:5px;height:30">	
+				<div style="float:left;">
+					<span style="color:red;font-size:15px">病案得分：</span>
+					<span id="score"></span>
+ 				</div>
+ 				<div style="float:right;">
+	 				<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="CommitEntryItems()"  style="width:100px;">评分</a>	
+	 			</div>
+			</div>
+			<div data-options="border:false" style="height:31%;border: 1px #cccccc solid;border-left:none;border-right:none;">
+				<div class="hisui-datagrid" id="dgCurQualityResult"  data-options="border:false,fit:true"></div>
+			</div>
+			<div id="TableTBar" style="padding:5px;height:30">	
+				<div style="float:right;">
+	 				<a id="btnSendMsg" href="#" class="hisui-linkbutton hover-dark" onclick="SendMsg()"  style="width:150px ;">发送质控消息</a>	
+	 				<td></td>
+ 				    <a id="btnSureZeroError" href="#" class="hisui-linkbutton hover-dark" onclick="SureZeroError()" style="width:200px;background:#2db46a">确认本次门诊质控无缺陷</a>	
+ 				</div>
+			</div>
+		</div>
+	</div>
+
+ 	<script language="cache" runat="server">
+ 		s RuleID=1
+		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+		s SignUserID = $g(%session.Data("LOGON.USERID"))
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s CTLocatID = $g(%session.Data("LOGON.CTLOCID"))
+		s action = $Get(%request.Data("action",1))
+		s TriggerDate = $zd(+$h,3)
+		s Score = ##Class(EPRservice.Quality.BOManualCheck).GetScoreByEpisodeID(EpisodeID,SSGroupID,CTLocatID,action)
+		s InstanceId = $Get(%request.Data("InstanceId",1),"")
+		s emrDocId = $Get(%request.Data("emrDocId",1),"")
+		s YSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("YSSGroup")
+		s KSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("KSSGroup")
+ 	</script>
+ 	<script type="text/javascript">
+		var RuleID = '#(RuleID)#'
+		var EpisodeID = '#(EpisodeID)#'
+		var SignUserID = '#(SignUserID)#'
+		var SSGroupID = '#(SSGroupID)#'
+		var CTLocatID = '#(CTLocatID)#'
+		var TriggerDate = '#(TriggerDate)#'
+		var Score = '#(Score)#'
+		var action = '#(action)#'
+		var InstanceId = '#(InstanceId)#'
+		var emrDocId = '#(emrDocId)#'
+		var YSSGroup = '#(YSSGroup)#'
+		var KSSGroup = '#(KSSGroup)#'
+	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.EntryGrid.js"></script>
+<div class="hisui-window" title="时效性质控缺陷" id="gridParaStateWin" closed="true" style="width:675px;height:585px;top:10px;left:10px;"	
+		data-options="iconCls:'icon-save',resizable:true,modal:false,isTopZindex:true">		
+		<iframe id = "frameoutPat" frameborder="0" style="width:100%; height:99%;scrolling:no;" src="dhc.emr.quality.qualityresult.csp?RuleID='+ 2 +'&EpisodeID='+EpisodeID+'"></iframe>
+	</div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+﻿<html>
+    <head>
+        <ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
+        <HISUI/>
+		<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+		<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+		
+		<style type="text/css">
+			*{
+				margin:0px;
+				padding:0px;
+				list-style-type:none;
+				text-decoration:none;
+			}
+
+			a,img{
+				border:0;
+			}
+
+			.display{
+				font-family:"Microsoft Yahei";
+				border-left:1px solid #cccccc;
+				padding:10px;
+			}
+
+			.display li{
+			  	display: block;
+				float: left;
+				position: relative;
+				text-align:left;
+				list-style:none;
+				margin:5px 0 5px 0;
+			}
+			
+			.imagecontent{
+				width:260px;
+				height:285px;
+				margin:0 11px 0 11px;
+				border:#D9D9D9 1px solid;
+			}
+		
+			.imagecontent .image{
+				width:260px;
+				height:260px; 
+			}
+			
+			.imagecontent .title{
+				text-align:center;
+				line-height:25px;
+				background-color:#cccccc;
+			}
+		</style>
+		
+		<server>
+    		s MobileSignDocID = $Get(%request.Data("MobileSignDocID",1),"")
+    	</server>
+        <script language="javascript">
+        	var MobileSignDocID = "#(MobileSignDocID)#";
+			debugger;
+			function GetImage(MobileSignDocID){
+	            var data = ajaxDATA('Stream', 'CA.BL.Config', 'GetPatSignImageByMSDocID', MobileSignDocID);
+		        ajaxPOSTSync(data, function (ret) {
+			        if (ret != "[]")
+			        {
+			            ImageInfo = $.parseJSON(ret);
+						ShowImageData(ImageInfo);
+			        }
+			        else
+			        {
+				        $.messager.alert("提示","获取相关证据图片信息为空,MobileSignDocID为:"+MobileSignDocID);
+				    }
+		        }, function (ret) {
+		            $.messager.alert("提示","CA.BL.Config GetPatSignImageByMSDocID error:" + ret);
+		        });
+			}
+			
+			function ShowImageData(data)
+			{
+				var content = $('<div style="width:99%;height:99%;padding-top:5px;"></div>');
+				for (var i=0;i<data.length;i++)
+				{
+					var link = $('<div style="display:flex;margin-bottom:5px;"></div>');
+					for (var j=0;j<data[i].length;j++)
+					{
+						var div = $('<div class="imagecontent" style="float:left"></div>');
+						var imagedata = "data:image/jpg;base64," + data[i][j].Image;
+						var image = $('<img class="image" type="image" ondblclick=insertImage("'+data[i][j].Image+'") />');
+						$(image).attr({"src":imagedata});
+						$(div).append(image);
+						var table = $('<div></div>');
+						$(table).append('<div class="title">' +data[i][j].Desc+ '</div>');
+						$(table).attr("title",data[i][j].Desc);
+						$(div).append(table);
+						$(link).append(div);
+					}
+					$(content).append(link);
+				}
+				$('#content').append(content);
+			}
+			
+        	$(function(){
+	        	GetImage(MobileSignDocID);
+        	})
+            </script>
+       
+    </head>
+ 			
+	<body class="hisui-layout">
+        <div id="content" data-options="region:'center',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" >
+        </div>
+    </body>
+</html>

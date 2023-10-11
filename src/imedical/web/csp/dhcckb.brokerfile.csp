@@ -1,0 +1,21 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+	Set ContentType=%request.ContentType
+	
+	q:ContentType'="multipart/form-data" "{code:500,msg:'Content-Type not multipart/form-data'}"
+	
+	Set ClassName = %request.Data("ClassName",1)
+	Set MethodName = %request.Data("MethodName",1)
+	Quit:'##class(websys.Conversions).IsValidClassName(ClassName) "{code:500,msg:'Not Find Class: "_ClassName_"'}"
+	Quit:'##class(websys.Conversions).IsValidMethodName(ClassName,MethodName) "{code:500,msg:'Not Find Method: "_ClassName_":"_MethodName_"'}"
+	Set Myobj=##class(%Dictionary.CompiledMethod).%OpenId(ClassName_"||"_MethodName,0)
+	If '$IsObject(Myobj) quit "{code:500,msg:'Not Open "_ClassName_":"_MethodName_" Object'}"
+	Set Code="Set Rs=##class("_ClassName_")."_MethodName_"()"
+	XECUTE Code
+	Write Rs
+	
+</script>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>

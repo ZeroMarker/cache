@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--药库-库存查询
+	csp:pha.in.v3.query.locitmstk.csp
+	js: pha/in/v3/query/locitmstk.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI/>
+    <PHALIBV1 />
+	<PHAPRINTCOM/>
+	<script language="cache" runat="server">
+		s gOnlyResFlag = $Get(%request.Data("gOnlyResFlag",1))	// 仅有在途
+	</script>
+	<script type="text/javascript">
+		var gOnlyResFlag = '#(gOnlyResFlag)#' || "N";
+	</script>
+    <style type="text/css">
+	    .pha-grid-a {
+			cursor:pointer;    
+		}
+		.icon {
+		    width: 24px;
+		    height: 16px;
+		    display: inline-block;
+		}
+		.tabs-tool {
+			border-left-width: 0;
+			border-right-width: 0;
+		}
+		#lcBtTabs .kw-section-list>li {
+			float: left;
+			margin: 4px 4px 4px 0;
+		}
+		#centerPanel .datagrid .datagrid-pager {
+			display: block;
+			margin: 0;
+			border-width: 0;
+			border-style: solid;
+		}
+    </style>
+
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+        <div data-options="region:'center'" class="pha-body" border="false">
+			<div class="hisui-layout" data-options="fit:true,border:false">   
+				<div id="centerPanel" data-options="region:'north',title:'库存查询',height:450,border:true,split:true,showCollapsedTitle:true,bodyCls:'panel-body-gray',headerCls:'panel-header-gray'">
+					<table id="gridIncItmLoc"></table>
+				</div> 
+				<div data-options="region:'center',title:'',border:false">
+					<div id="lcBtTabs" class="hisui-tabs tabs-gray" fit="true" data-options="isBrandTabs:true,tools:'#gridIncItmLcBtTool'">   
+						<div title="批次列表"></div>   
+						<div title="有库存" data-options="closable:false">
+							<table id="gridIncItmLcBtNotEmpty"></table>
+						</div>  
+						<div title="无库存" data-options="closable:false">
+							<table id="gridIncItmLcBtEmpty"></table>
+						</div>
+						<div title="全部" data-options="closable:false">
+							<table id="gridIncItmLcBt"></table>
+						</div>
+					</div>
+				</div> 
+			</div> 
+		</div>
+	</div>
+	<div id="gridIncItmLcBtTool">
+		<div id="btFilterKw"></div>
+	</div>
+	<div id="gridIncItmLocTool">
+		<table id="con-form" class="pha-con-table">
+			<tr>
+				<td class="r-label">
+		            <label for="locId">#(..Get("科室"))#</label>
+		        </td>
+		        <td>
+		            <input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',required:true,query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="date">#(..Get("日期"))#</label>
+		        </td>
+		        <td>
+		            <input id="date" class="hisui-datebox" data-pha='class:"hisui-datebox",required:true,query:true' style="width:120px;"/>
+		        </td>
+		        <td class="r-label">
+		            <label for="scg">#(..Get("类组"))#</label>
+		        </td>
+		        <td>
+		            <input id="scg" class="hisui-combobox" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="stkCat">#(..Get("库存分类"))#</label>
+		        </td>
+		        <td>
+		            <input id="stkCat" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="inciDesc">#(..Get("药品别名"))#</label>
+		        </td>
+		        <td >
+		            <input id="inciDesc" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+				<td>
+            		<input id="onlyResFlag" class="hisui-checkbox" label="仅有在途" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+				</td>
+		        <td>
+					<a id="btnFind" href="#" class="hisui-linkbutton" plain="false">查询</a>
+				</td>
+				<td>
+		       		<a id="btnClear" href="#" class="hisui-linkbutton" plain="false">清屏</a>
+				</td>
+				<td class="r-label">
+					<div id="queBtnToggle"></div>
+				</td>
+			</tr>
+		</table>
+		
+    </div> 
+    <csp:include page="pha.in.v3.query.com.component.csp">
+</body>
+	<script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>	
+	<script type="text/javascript" src="../scripts/pha/com/v1/js/log.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/com.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/component.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/locitmstk.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/locitmstk.operate.js"></script>
+</html>
+
+
+	

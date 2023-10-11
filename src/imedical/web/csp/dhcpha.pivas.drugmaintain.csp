@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液药品信息维护
-	csp:dhcpha.pivas.drugmaintain.csp
-	js: scripts/pharmacy/pivas/drugmaintain.js
+<!--
+    配液药品信息维护
+	csp: dhcpha.pivas.drugmaintain.csp
+	js:  scripts/pharmacy/pivas/drugmaintain.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -10,137 +15,177 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD> </TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
     <style>
-	.panel-header-card-gray + .panel-body {
-	    border-color:#cccccc;
-	}
+        .panel-header-card-gray+.panel-body {
+            border-color: #cccccc;
+        }
+
+        .hisui-validatebox {
+            width: 147px;
+        }
+
+        .r-label {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .pha-con-table {
+            padding-right: 10px;
+            margin: auto;
+        }
+
+        .pha-body {
+            background-color: #fff;
+        }
+
+        .layout {
+            background-color: #fff;
+        }
     </style>
 </HEAD>
 
-<body>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
-            <div class="hisui-layout" fit="true" border="false">
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
+            <div class="hisui-layout js-pha-layout-fit" fit="true" border="false">
                 <div data-options="region:'center',title:'配液药品',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-drug'">
                     <table id="gridIncItm"></table>
                 </div>
-                <div data-options="region:'east',title:'配液药品信息维护',split:true,width:300,headerCls:'panel-header-gray',iconCls:'icon-panel-pivas-drug'" style="overflow:hidden;padding:10px;">
-                    <div class="hisui-panel" title="科室药品信息" style="width:100%;" data-options="headerCls:'panel-header-card'" style="padding-top:10px;">
-                        <table class="dhcpha-north-tbl" cellspacing=0 cellpadding=0 style="padding-left:13px">
+                <div data-options="region:'east',title:'配液药品信息维护',split:true,width:275,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-panel-pivas-drug'" style="overflow:hidden;padding:10px;">
+                    <div class="hisui-panel js-pha-panel-fit" title="科室药品信息" data-options="headerCls:'panel-header-gray'">
+                        <table class="pha-con-table">
                             <tr>
-                                <td>
-                                    <label for="cmbConTable">配置台</label>
+                                <td class="r-label">
+                                    <label for="cmbConTable">#(..Get("配置台"))#</label>
                                 </td>
-                                <td>
+                                <td colspan="3">
                                     <input id="cmbConTable" class="hisui-validatebox" />
                                 </td>
                             </tr>
                             <tr>
-                                <td>
-                                    <label for="txtStoreInfo">储存条件</label>
+                                <td class="r-label">
+                                    <label for="txtStoreInfo">#(..Get("储存条件"))#</label>
                                 </td>
-                                <td>
-                                    <input id="txtStoreInfo" class="hisui-validatebox" />
+                                <td colspan="3">
+                                    <input id="txtStoreInfo" class="hisui-validatebox" style="width:147px;" />
                                 </td>
                             </tr>
                             <tr>
-                                <td>
-                                    <label for="txtUseInfo">用药说明</label>
+                                <td class="r-label">
+                                    <label for="txtUseInfo">#(..Get("用药说明"))#</label>
                                 </td>
-                                <td>
+                                <td colspan="3">
                                     <input id="txtUseInfo" class="hisui-validatebox" />
                                 </td>
                             </tr>
                             <tr>
-                                <td>
-                                    <label for="txtCoef">配置系数</label>
+                                <td class="r-label">
+                                    <label for="txtCoef">#(..Get("配置系数"))#</label>
                                 </td>
                                 <td>
-                                    <input id="txtCoef" class="hisui-numberbox" style="width:41px" data-options="precision:2"/>~
-                                    <input id="txtConCoef" class="hisui-numberbox" style="width:41px" data-options="precision:2"/>~
-                                    <input id="txtSameCoef" class="hisui-numberbox" style="width:41px" data-options="precision:2"/>
+                                    <input id="txtCoef" class="hisui-numberbox" style="width:42px" data-options="precision:2" />
+                                </td>
+                                <td><input id="txtConCoef" class="hisui-numberbox" style="width:42px" data-options="precision:2" />
+                                </td>
+                                <td>
+                                    <input id="txtSameCoef" class="hisui-numberbox" style="width:43px" data-options="precision:2" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">
+                                    <label for="txtOrdCode">#(..Get("显示顺序"))#</label>
+                                </td>
+                                <td colspan="3">
+                                    <input id="txtOrdCode" class="hisui-validatebox" />
                                 </td>
                             </tr>
                         </table>
                     </div>
                     <div style="height:10px"></div>
-                    <div class="hisui-panel" title="药品公共信息" style="width:270px;" data-options="headerCls:'panel-header-card'" style="padding-top:10px;">
-                        <table class="dhcpha-north-tbl" cellspacing=0 cellpadding=0 style="padding-left:13px">
+                    <div class="hisui-panel js-pha-panel-fit" title="药品公共信息" data-options="headerCls:'panel-header-gray'">
+                        <table class="pha-con-table">
                             <tr>
-                                <td>
-                                    <label for="cmbPhcDrugType">主辅用药 </label>
+                                <td class="r-label">
+                                    <label for="cmbPhcDrugType">#(..Get("主辅用药"))# </label>
                                 </td>
                                 <td>
                                     <input id="cmbPhcDrugType" />
                                 </td>
                             </tr>
                             <tr>
-                                <td>
-                                    <label for="chkMenstr">溶媒</label>
+                                <td class="r-label">
+                                    <label for="chkMenstr">#(..Get("溶媒"))#</label>
                                 </td>
-                                <td style="text-align:left;padding-left:6px">
+                                <td>
                                     <input id="chkMenstr" type="checkbox" class="hisui-checkbox" />
                                 </td>
                             </tr>
                             <tr>
-                                <td>
-                                    <label for="txtIvgttSpeed">滴速 </label>
+                                <td class="r-label">
+                                    <label for="txtIvgttSpeed">#(..Get("滴速"))# </label>
                                 </td>
                                 <td>
                                     <input id="txtIvgttSpeed" class="hisui-validatebox" />
                                 </td>
                             </tr>
                             <tr>
-                                <td>
-                                    <label for="txtLabelSign">标签标识 </label>
+                                <td class="r-label">
+                                    <label for="txtLabelSign">#(..Get("标签标识"))# </label>
                                 </td>
                                 <td>
                                     <input id="txtLabelSign" class="hisui-validatebox" />
                                 </td>
                             </tr>
                             <tr>
-                                <td>
-                                    <label for="cmbPhcPivaCat">配液小类 </label>
+                                <td class="r-label">
+                                    <label for="cmbPhcPivaCat">#(..Get("配液小类"))# </label>
                                 </td>
                                 <td>
                                     <input id="cmbPhcPivaCat" />
                                 </td>
                             </tr>
+                            <tr>
+                                <td colspan="2" style="text-align: center;">
+                                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-save" id="btnSave">保存</a>
+                                </td>
+                            </tr>
                         </table>
-                    </div>
-                    <div style="text-align:center;margin-top:10px">
-                        <a class="hisui-linkbutton" plain='false' iconCls="icon-w-save" id="btnSave">保存</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="gridIncItmBar">
-        <table class="dhcpha-north-tbl" cellspacing=0 cellpadding=0>
+    <div id="gridIncItmBar" class="pha-con-datagrid-toolbar ">
+        <table class="pha-con-table" style="margin:0">
             <tr>
                 <td>
-                    <input id="cmbPivaLoc" placeholder="配液中心..." />
+                    <input id="cmbPivaLoc" placeholder="#(..Get(" 配液中心"))#..." />
                 </td>
                 <td>
-                    <input id="cmbStkCat" placeholder="库存分类..." />
+                    <input id="cmbStkCat" placeholder="#(..Get(" 库存分类"))#..." />
                 </td>
                 <td>
-                    <input id="txtAlias" class="hisui-validatebox" placeholder="别名..." />
+                    <input id="txtAlias" class="hisui-validatebox" placeholder="#(..Get(" 别名"))#..." />
                 </td>
                 <td>
-                    <input id="chkMyLoc" type="checkbox" class="hisui-checkbox" checked/><label for="chkMyLoc">仅本科室</label>
+                    <input id="chkMyLoc" type="checkbox" class="hisui-checkbox" checked label="仅本科室" />
+
                 </td>
                 <td>
-                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-find" id="btnFind" >查询</a>
+                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-find" id="btnFind">查询</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='false' name="js-col-filter" iconCls="icon-w-filter" handle="enableFilterAll">开启列搜索</a>
+                    <a class="hisui-linkbutton" plain='false' name="js-col-filter" iconCls="icon-w-filter" handle="disableFilter" style="display:none;">关闭列搜索</a>
                 </td>
             </tr>
         </table>
     </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-filter/datagrid-filter.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/drugmaintain.js"></script>
 </body>
 

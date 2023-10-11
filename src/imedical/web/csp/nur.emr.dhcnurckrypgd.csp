@@ -1,0 +1,1101 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    s isPermission = ##Class(NurMp.Service.Template.Model).editAuthority(%request.Get("EpisodeID"),$g(%session.Data("LOGON.CTLOCID")),"DHCNURCKRYPGD")
+    i isPermission'="0"
+    {
+    s utfo = $ZCONVERT(isPermission,"O","UTF8")
+    s urlo = $ZCONVERT(utfo,"O","URL")
+    s %response.ServerSideRedirect = "nur.emr.permissiondenied.csp?isPermission="_urlo
+    q 1
+    }
+    else
+    {
+    q 1
+    }
+</csp:method>
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type = "text/css" href = "../skin/default/css/websys.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts/nurse/hisui-0.1.0/dist/css/jquery.contextMenu.css" />
+
+<style type="text/css">.datagrid-row-mp-printed
+{
+background:#CDC9A5;
+}
+.marker
+{
+position:absolute;border-radius:50%;z-index:999;
+}
+body * 
+{
+font-family:微软雅黑;font-size:14px
+}
+.commonModalDialog .dialog-content
+{
+overflow:hidden;
+}
+#element_Ul li label.checkbox
+{
+display:inline;
+}
+.datagrid-row-selected
+{
+background: #fced89 !important;color: #000000;
+}
+.datagrid-row-editting
+{
+background: #abbd65;color: #000000;
+}
+.tooltipTable
+{
+border-collapse:collapse;border: 1px solid #509de1;
+}
+.tooltipTable td
+{
+border: 1px solid #509de1;
+}
+.tooltipTable th
+{
+border: 1px solid #509de1;
+}
+img[src = ""]
+{
+opacity: 0;
+}
+ </style></head>
+   <body style="background-color:white;padding:0px;width:100%">
+<div LineNo="1" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_2" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:978px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_2" style="height:58.48px;width:978px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_3" style="float:left;height:20.53px;padding-Top:0px;padding-bottom:0px;width:968px;padding-left:0px;padding-right:0px">
+<div id="LableElement_3" style="height:20.53px;width:968px;text-align:center;font-family:宋体;font-size:18px;padding:0px;color:#000000;font-weight:bold">#(..Get("东华标准版数字化医院[总院]"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_4" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:968px;padding-left:0px;padding-right:0px">
+<div id="LableElement_4" style="height:23.76px;width:968px;text-align:center;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000;font-weight:bold">#(..Get("产科入院评估单"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_5" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:978px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_5" style="height:71px;width:978px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_6" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_6" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("科室："))#</div>
+</div>
+<div id="div_TextElement_7" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:296.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_7" name="TextElement_7" class="textbox" oldVal="" dhccLableFor="TextElement_9" Signature="None" SaveField="Item1" ToolTipContent="False" style="height:28px;width:289.24px" />
+</div>
+<div id="div_LableElement_8" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:15.61008px;padding-right:0px">
+<div id="LableElement_8" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("病区："))#</div>
+</div>
+<div id="div_TextElement_9" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:304.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_9" name="TextElement_9" class="textbox" oldVal="" dhccLableFor="ContainerElement_25" Signature="None" Explanation="病区：" SaveField="Item2" ToolTipContent="False" style="height:28px;width:297.24px" />
+</div>
+<div id="div_LableElement_10" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:45.23987px;padding-right:0px">
+<div id="LableElement_10" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("住院号："))#</div>
+</div>
+<div id="div_TextElement_11" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:145.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_11" name="TextElement_11" class="textbox" oldVal="" dhccLableFor="TextElement_21" Signature="None" SaveField="Item3" ToolTipContent="False" style="height:28px;width:138.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_12" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_12" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("床号："))#</div>
+</div>
+<div id="div_TextElement_13" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:94.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_13" name="TextElement_13" class="textbox" oldVal="" dhccLableFor="TextElement_11" Signature="None" SaveField="Item4" ToolTipContent="False" style="height:28px;width:87.24001px" />
+</div>
+<div id="div_LableElement_14" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:5px;padding-right:0px">
+<div id="LableElement_14" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("姓名："))#</div>
+</div>
+<div id="div_TextElement_15" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_15" name="TextElement_15" class="textbox" oldVal="" dhccLableFor="TextElement_13" Signature="None" SaveField="Item5" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div id="div_LableElement_18" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:15.37003px;padding-right:0px">
+<div id="LableElement_18" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("性别："))#</div>
+</div>
+<div id="div_TextElement_19" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_19" name="TextElement_19" class="textbox" oldVal="" dhccLableFor="LableElement_29" Signature="None" Explanation="性别：" SaveField="Item7" ToolTipContent="False" style="height:28px;width:81.24001px" />
+</div>
+<div id="div_LableElement_20" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:50px;padding-right:0px">
+<div id="LableElement_20" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("年龄："))#</div>
+</div>
+<div id="div_TextElement_21" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:123.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_21" name="TextElement_21" class="textbox" oldVal="" dhccLableFor="TextElement_19" Signature="None" SaveField="Item8" ToolTipContent="False" style="height:28px;width:116.24px" />
+</div>
+<div id="div_LableElement_16" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:45.99988px;padding-right:0px">
+<div id="LableElement_16" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("登记号："))#</div>
+</div>
+<div id="div_TextElement_17" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:145.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_17" name="TextElement_17" class="textbox" oldVal="" dhccLableFor="TextElement_15" Signature="None" SaveField="Item6" ToolTipContent="False" style="height:28px;width:138.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_25" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:979px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_25" style="height:301px;width:979px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_26" style="float:left;height:21.12px;padding-Top:0px;padding-bottom:0px;width:64px;padding-left:0px;padding-right:0px">
+<div id="LableElement_26" style="height:21.12px;width:64px;text-align:left;font-family:微软雅黑;font-size:16px;padding:0px;color:#000000;font-weight:bold">#(..Get("一般资料"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_184" style="float:left;height:18.48px;padding-Top:30.98px;padding-bottom:30.98px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_184" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("入院诊断"))#</div>
+</div>
+<div id="div_TextareaElement_183" style="float:left;height:80.44px;padding-Top:0px;padding-bottom:0px;width:916px;padding-left:0px;padding-right:0px">
+<textarea class="hisui-validatebox" id="TextareaElement_183" name="TextareaElement_183" SaveField="Item72" ToolTipContent="False" oldVal="" dhccLableFor="LableElement_184" style="height:74.44px;width:910px;"></textarea>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:3px">
+<div id="div_LableElement_29" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_29" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("入住时间"))#</div>
+</div>
+<div id="div_DateElement_30" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:115px;padding-left:0px;padding-right:0px">
+<input id="DateElement_30" name="DateElement_30" oldVal="" dhccLableFor="ContainerElement_25" SaveField="Item10" format="yyyy-MM-dd" style="height:30px;width:115px" />
+</div>
+<div id="div_TimeElement_31" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:94.21px;padding-left:0px;padding-right:0px">
+<input id="TimeElement_31" name="TimeElement_31" oldVal="" SaveField="Item11" style="height:30px;width:94.21px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:3px">
+<div id="div_LableElement_32" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_32" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("国籍"))#</div>
+</div>
+<div id="div_TextElement_33" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:28px;padding-right:0px">
+<input id="TextElement_33" name="TextElement_33" class="textbox" oldVal="" Signature="None" Explanation="国籍" SaveField="Item12" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div id="div_LableElement_34" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:35px;padding-right:0px">
+<div id="LableElement_34" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("籍贯"))#</div>
+</div>
+<div id="div_TextElement_35" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_35" name="TextElement_35" class="textbox" oldVal="" dhccLableFor="DateElement_30" Signature="None" Explanation="籍贯" SaveField="Item13" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div id="div_LableElement_36" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:70px;padding-right:0px">
+<div id="LableElement_36" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("民族"))#</div>
+</div>
+<div id="div_TextElement_37" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:130.24px;padding-left:28px;padding-right:0px">
+<input id="TextElement_37" name="TextElement_37" class="textbox" oldVal="" dhccLableFor="LableElement_32" Signature="None" SaveField="Item14" ToolTipContent="False" style="height:28px;width:123.24px" />
+</div>
+<div id="div_LableElement_38" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:23.47998px;padding-right:0px">
+<div id="LableElement_38" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("语言沟通"))#</div>
+</div>
+<div id="div_DropRadioElement_39" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:76px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_39' name='DropRadioElement_39' oldVal='' dhccLableFor='LableElement_34' SaveField='Item15' style='height:30px;width:76px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="5" style="padding:3px">
+<div id="div_LableElement_181" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_181" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("职业"))#</div>
+</div>
+<div id="div_TextElement_180" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:28px;padding-right:0px">
+<input id="TextElement_180" name="TextElement_180" class="textbox" oldVal="" dhccLableFor="LableElement_181" Signature="None" SaveField="Item71" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div id="div_LableElement_42" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:35px;padding-right:0px">
+<div id="LableElement_42" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("婚姻"))#</div>
+</div>
+<div id="div_DropRadioElement_43" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:154px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_43' name='DropRadioElement_43' oldVal='' dhccLableFor='LableElement_38' SaveField='Item17'Explanation='婚姻' style='height:30px;width:154px;'></select>
+</div>
+<div id="div_LableElement_44" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:61px;padding-right:0px">
+<div id="LableElement_44" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("文化程度"))#</div>
+</div>
+<div id="div_DropRadioElement_45" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:159px;padding-left:10.47998px;padding-right:0px">
+<select id='DropRadioElement_45' name='DropRadioElement_45' oldVal='' SaveField='Item18' style='height:30px;width:159px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="6" style="padding:3px">
+<div id="div_LableElement_46" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_46" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("入院方式"))#</div>
+</div>
+<div id="div_DropRadioElement_47" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:93px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_47' name='DropRadioElement_47' oldVal='' dhccLableFor='LableElement_42' SaveField='Item19' style='height:30px;width:93px;'></select>
+</div>
+<div id="div_ContainerElement_48" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:134px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_48" style="height:36px;width:134px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_49" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:124.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_49" name="TextElement_49" class="textbox" oldVal="" Signature="None" SaveField="Item20" ToolTipContent="False" style="height:28px;width:117.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div id="div_LableElement_50" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:70px;padding-left:15px;padding-right:0px">
+<div id="LableElement_50" style="height:18.48px;width:70px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("入病房方式"))#</div>
+</div>
+<div id="div_DropRadioElement_51" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:75px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_51' name='DropRadioElement_51' oldVal='' dhccLableFor='LableElement_46' SaveField='Item21' style='height:30px;width:75px;'></select>
+</div>
+<div id="div_LableElement_52" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:46px;padding-right:0px">
+<div id="LableElement_52" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("患者带入"))#</div>
+</div>
+<div id="div_CheckElement_53" style="float:left;height:24px;padding-Top:6px;padding-bottom:6px;width:42.14px;padding-left:10.47998px;padding-right:0px">
+<input  id='CheckElement_53'  class='hisui-checkbox'  name='CheckElement_53'  oldVal='' dhccLableFor='ContainerElement_48'  SaveField='Item22'  type='checkbox'  label='#(..Get("无 "))#'  value='1'  NumberValue='#(..Get("1"))#'  /> 
+</div>
+<div id="div_CheckElement_54" style="float:left;height:24px;padding-Top:6px;padding-bottom:6px;width:52px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_54'  class='hisui-checkbox'  name='CheckElement_53'  dhccLableFor='ContainerElement_48'  SaveField='Item22'  type='checkbox'  label='#(..Get("输液"))#'  value='2'  NumberValue='#(..Get("2"))#'  /> 
+</div>
+<div id="div_CheckElement_56" style="float:left;height:24px;padding-Top:6px;padding-bottom:6px;width:94px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_56'  class='hisui-checkbox'  name='CheckElement_53'  dhccLableFor='ContainerElement_48'  SaveField='Item22'  type='checkbox'  label='#(..Get("鼻导管吸氧"))#'  value='4'  NumberValue='#(..Get("4"))#'  /> 
+</div>
+<div id="div_CheckElement_57" style="float:left;height:24px;padding-Top:6px;padding-bottom:6px;width:52px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_57'  class='hisui-checkbox'  name='CheckElement_53'  dhccLableFor='ContainerElement_48'  SaveField='Item22'  type='checkbox'  label='#(..Get("尿管"))#'  value='5'  NumberValue='#(..Get("5"))#'  /> 
+</div>
+<div id="div_CheckElement_58" style="float:left;height:24px;padding-Top:6px;padding-bottom:6px;width:52px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_58'  class='hisui-checkbox'  name='CheckElement_53'  dhccLableFor='ContainerElement_48'  SaveField='Item22'  type='checkbox'  label='#(..Get("引流"))#'  value='6'  NumberValue='#(..Get("6"))#'  /> 
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="7" style="padding:3px">
+<div id="div_CheckElement_61" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:66px;padding-left:555px;padding-right:0px">
+<input  id='CheckElement_61'  class='hisui-checkbox'  name='CheckElement_53'  dhccLableFor='ContainerElement_48'  SaveField='Item22'  type='checkbox'  label='#(..Get("其他："))#'  value='9'  NumberValue='#(..Get("9"))#'  /> 
+</div>
+<div id="div_TextElement_62" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:350.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_62" name="TextElement_62" class="textbox" oldVal="" Signature="None" SaveField="Item23" ToolTipContent="False" style="height:28px;width:343.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_63" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:970px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_63" style="height:225px;width:970px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_64" style="float:left;height:21.12px;padding-Top:0px;padding-bottom:0px;width:64px;padding-left:0px;padding-right:0px">
+<div id="LableElement_64" style="height:21.12px;width:64px;text-align:left;font-family:微软雅黑;font-size:16px;padding:0px;color:#000000;font-weight:bold">#(..Get("身体评估"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_79" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_79" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("神志"))#</div>
+</div>
+<div id="div_DropRadioElement_80" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:118px;padding-left:28px;padding-right:0px">
+<select id='DropRadioElement_80' name='DropRadioElement_80' oldVal='' SaveField='Item29'Explanation='神志' style='height:30px;width:118px;'></select>
+</div>
+<div id="div_LableElement_81" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:28px;padding-left:86.98001px;padding-right:0px">
+<div id="LableElement_81" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("面容"))#</div>
+</div>
+<div id="div_DropRadioElement_82" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:110px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_82' name='DropRadioElement_82' oldVal='' SaveField='Item30'Explanation='面容' style='height:30px;width:110px;'></select>
+</div>
+<div id="div_ContainerElement_83" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:100px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_83" style="height:36px;width:100px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_84" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:95.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_84" name="TextElement_84" class="textbox" oldVal="" Signature="None" SaveField="Item31" ToolTipContent="False" style="height:28px;width:88.24001px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div id="div_LableElement_85" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:225.2px;padding-right:0px">
+<div id="LableElement_85" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("皮肤粘膜"))#</div>
+</div>
+<div id="div_DropRadioElement_86" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:84px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_86' name='DropRadioElement_86' oldVal='' dhccLableFor='DropRadioElement_80' SaveField='Item32' style='height:30px;width:84px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:3px">
+<div id="div_LableElement_87" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_87" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("排便"))#</div>
+</div>
+<div id="div_DropRadioElement_88" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:79px;padding-left:28px;padding-right:0px">
+<select id='DropRadioElement_88' name='DropRadioElement_88' oldVal='' dhccLableFor='DropRadioElement_82' SaveField='Item33' style='height:30px;width:79px;'></select>
+</div>
+<div id="div_ContainerElement_89" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:97px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_89" style="height:36px;width:97px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_90" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:87.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_90" name="TextElement_90" class="textbox" oldVal="" Signature="None" SaveField="Item34" ToolTipContent="False" style="height:28px;width:80.24001px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div id="div_LableElement_91" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:28px;padding-left:28.98001px;padding-right:0px">
+<div id="LableElement_91" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("排尿"))#</div>
+</div>
+<div id="div_DropRadioElement_92" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:66px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_92' name='DropRadioElement_92' oldVal='' dhccLableFor='DropRadioElement_86' SaveField='Item35' style='height:30px;width:66px;'></select>
+</div>
+<div id="div_LableElement_93" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:369.2px;padding-right:0px">
+<div id="LableElement_93" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("阴道流血"))#</div>
+</div>
+<div id="div_DropRadioElement_94" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:125px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_94' name='DropRadioElement_94' oldVal='' dhccLableFor='DropRadioElement_88' SaveField='Item36'Explanation='阴道流血' style='height:30px;width:125px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:3px">
+<div id="div_LableElement_95" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_95" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("胎心"))#</div>
+</div>
+<div id="div_TextElement_96" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:127.24px;padding-left:28px;padding-right:0px">
+<input id="TextElement_96" name="TextElement_96" class="textbox" oldVal="" dhccLableFor="TextElement_90" Signature="None" Explanation="胎心" SaveField="Item37" ToolTipContent="False" style="height:28px;width:120.24px" />
+</div>
+<div id="div_LableElement_182" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:33.98px;padding-left:0px;padding-right:0px">
+<div id="LableElement_182" style="height:18.48px;width:33.98px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("次/分"))#</div>
+</div>
+<div id="div_LableElement_97" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:28px;padding-left:43.76px;padding-right:0px">
+<div id="LableElement_97" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("胎动"))#</div>
+</div>
+<div id="div_DropRadioElement_98" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:84px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_98' name='DropRadioElement_98' oldVal='' dhccLableFor='TextElement_96' SaveField='Item38' style='height:30px;width:84px;'></select>
+</div>
+<div id="div_ContainerElement_99" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:107px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_99" style="height:36px;width:107px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_100" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:92.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_100" name="TextElement_100" class="textbox" oldVal="" Signature="None" SaveField="Item39" ToolTipContent="False" style="height:28px;width:85.24001px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div id="div_LableElement_101" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:84px;padding-left:216.2001px;padding-right:0px">
+<div id="LableElement_101" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("产后子宫收缩"))#</div>
+</div>
+<div id="div_DropRadioElement_102" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:107px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_102' name='DropRadioElement_102' oldVal='' dhccLableFor='TextElement_100' SaveField='Item40'Explanation='产后子宫收缩' style='height:30px;width:107px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="5" style="padding:3px">
+<div id="div_LableElement_179" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_179" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("宫缩"))#</div>
+</div>
+<div id="div_DropRadioElement_178" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:104px;padding-left:28px;padding-right:0px">
+<select id='DropRadioElement_178' name='DropRadioElement_178' oldVal='' dhccLableFor='LableElement_179' SaveField='Item70' style='height:30px;width:104px;'></select>
+</div>
+<div id="div_LableElement_105" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:100.98px;padding-right:0px">
+<div id="LableElement_105" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("胎膜"))#</div>
+</div>
+<div id="div_DropRadioElement_106" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:102px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_106' name='DropRadioElement_106' oldVal='' SaveField='Item42' style='height:30px;width:102px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="5" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_107" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:980px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_107" style="height:153px;width:980px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_108" style="float:left;height:21.12px;padding-Top:0px;padding-bottom:0px;width:199.56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_108" style="height:21.12px;width:199.56px;text-align:left;font-family:微软雅黑;font-size:16px;padding:0px;color:#000000;font-weight:bold">#(..Get("跌倒/坠床、压疮和疼痛评估"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_109" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:89.98px;padding-left:0px;padding-right:0px">
+<div id="LableElement_109" style="height:18.48px;width:89.98px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("跌倒/坠床风险"))#</div>
+</div>
+<div id="div_TextElement_196" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:78.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_196" name="TextElement_196" class="textbox" oldVal="" dhccLableFor="LableElement_197" Signature="None" SaveField="Item79" ToolTipContent="False" style="height:28px;width:71.24001px" />
+</div>
+<div id="div_LableElement_197" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:14px;padding-left:0px;padding-right:0px">
+<div id="LableElement_197" style="height:18.48px;width:14px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("分"))#</div>
+</div>
+<div id="div_ButtonElement_185" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:137.36px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_185" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_185" style="height:30px;width:137.36px">#(..Get("摩尔斯评分(成人)"))#</a>
+</div>
+<div id="div_HiddenTextElement_187" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:80.24001px;padding-left:0px;padding-right:0px">
+<input id="HiddenTextElement_187" name="HiddenTextElement_187" class="textbox" oldVal="" Signature="None" SaveField="Item73" ToolTipContent="False" style="height:28px;width:73.24001px" />
+</div>
+<div id="div_TextElement_195" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_195" name="TextElement_195" class="textbox" oldVal="" Signature="None" SaveField="Item78" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:3px">
+<div id="div_LableElement_115" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_115" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("压疮风险"))#</div>
+</div>
+<div id="div_TextElement_198" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:96.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_198" name="TextElement_198" class="textbox" oldVal="" dhccLableFor="LableElement_199" Signature="None" SaveField="Item80" ToolTipContent="False" style="height:28px;width:89.24001px" />
+</div>
+<div id="div_LableElement_199" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:14px;padding-left:0px;padding-right:0px">
+<div id="LableElement_199" style="height:18.48px;width:14px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("分"))#</div>
+</div>
+<div id="div_ButtonElement_186" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:86px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_186" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_186" style="height:30px;width:86px">#(..Get("诺顿评分"))#</a>
+</div>
+<div id="div_HiddenTextElement_188" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:79.24001px;padding-left:0px;padding-right:0px">
+<input id="HiddenTextElement_188" name="HiddenTextElement_188" class="textbox" oldVal="" Signature="None" SaveField="Item74" ToolTipContent="False" style="height:28px;width:72.24001px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:3px">
+<div id="div_LableElement_120" style="float:left;height:18.48px;padding-Top:10.26px;padding-bottom:10.26px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_120" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("疼痛"))#</div>
+</div>
+<div id="div_TextElement_164" style="float:left;height:30px;padding-Top:4.5px;padding-bottom:4.5px;width:75.24px;padding-left:61.98px;padding-right:0px">
+<input id="TextElement_164" name="TextElement_164" class="textbox" oldVal="" Signature="None" SaveField="Item66" ToolTipContent="False" style="height:28px;width:68.24px" />
+</div>
+<div id="div_LableElement_165" style="float:left;height:18.48px;padding-Top:10.26px;padding-bottom:10.26px;width:14px;padding-left:0px;padding-right:0px">
+<div id="LableElement_165" style="height:18.48px;width:14px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("分"))#</div>
+</div>
+<div id="div_ContainerElement_176" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:447px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_176" style="height:39px;width:447px">
+<div LineNo="1" style="padding:3px">
+<div id="div_ButtonElement_177" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:128px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_177" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_177" style="height:30px;width:128px">#(..Get("患者疼痛评估单"))#</a>
+</div>
+<div id="div_HiddenTextElement_189" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:87.24001px;padding-left:0px;padding-right:0px">
+<input id="HiddenTextElement_189" name="HiddenTextElement_189" class="textbox" oldVal="" Signature="None" SaveField="Item75" ToolTipContent="False" style="height:28px;width:80.24001px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="6" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_122" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:974px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_122" style="height:180px;width:974px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_123" style="float:left;height:21.12px;padding-Top:0px;padding-bottom:0px;width:96px;padding-left:0px;padding-right:0px">
+<div id="LableElement_123" style="height:21.12px;width:96px;text-align:left;font-family:微软雅黑;font-size:16px;padding:0px;color:#000000;font-weight:bold">#(..Get("社会心理评估"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_124" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_124" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("特殊人群"))#</div>
+</div>
+<div id="div_DropRadioElement_125" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:91px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_125' name='DropRadioElement_125' oldVal='' dhccLableFor='DropRadioElement_125' SaveField='Item48' style='height:30px;width:91px;'></select>
+</div>
+<div id="div_ContainerElement_126" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:223px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_126" style="height:36px;width:223px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_127" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:215.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_127" name="TextElement_127" class="textbox" oldVal="" Signature="None" SaveField="Item49" ToolTipContent="False" style="height:28px;width:208.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div id="div_LableElement_128" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:45.01999px;padding-right:0px">
+<div id="LableElement_128" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("社会支持"))#</div>
+</div>
+<div id="div_DropRadioElement_129" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:96px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_129' name='DropRadioElement_129' oldVal='' dhccLableFor='DropRadioElement_129' SaveField='Item50'Explanation='社会支持' style='height:30px;width:96px;'></select>
+</div>
+<div id="div_ContainerElement_130" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:223px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_130" style="height:36px;width:223px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_131" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:215.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_131" name="TextElement_131" class="textbox" oldVal="" Signature="None" SaveField="Item51" ToolTipContent="False" style="height:28px;width:208.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:3px">
+<div id="div_LableElement_132" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_132" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("心理状况"))#</div>
+</div>
+<div id="div_DropRadioElement_133" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:91px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_133' name='DropRadioElement_133' oldVal='' dhccLableFor='DropRadioElement_133' SaveField='Item52' style='height:30px;width:91px;'></select>
+</div>
+<div id="div_ContainerElement_134" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:223px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_134" style="height:36px;width:223px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_135" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:215.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_135" name="TextElement_135" class="textbox" oldVal="" Signature="None" SaveField="Item53" ToolTipContent="False" style="height:28px;width:208.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div id="div_LableElement_136" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:45.01999px;padding-right:0px">
+<div id="LableElement_136" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("宗教信仰"))#</div>
+</div>
+<div id="div_DropRadioElement_137" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:96px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_137' name='DropRadioElement_137' oldVal='' dhccLableFor='DropRadioElement_137' SaveField='Item54'Explanation='宗教信仰' style='height:30px;width:96px;'></select>
+</div>
+<div id="div_ContainerElement_138" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:223px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_138" style="height:36px;width:223px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_139" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:215.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_139" name="TextElement_139" class="textbox" oldVal="" Signature="None" SaveField="Item55" ToolTipContent="False" style="height:28px;width:208.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:3px">
+<div id="div_LableElement_140" style="float:left;height:21.12px;padding-Top:0px;padding-bottom:0px;width:32px;padding-left:0px;padding-right:0px">
+<div id="LableElement_140" style="height:21.12px;width:32px;text-align:left;font-family:微软雅黑;font-size:16px;padding:0px;color:#000000;font-weight:bold">#(..Get("其他"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="5" style="padding:3px">
+<div id="div_LableElement_141" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_141" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("睡眠状况"))#</div>
+</div>
+<div id="div_DropRadioElement_142" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:91px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_142' name='DropRadioElement_142' oldVal='' dhccLableFor='DropRadioElement_142' SaveField='Item56'Explanation='睡眠状况' style='height:30px;width:91px;'></select>
+</div>
+<div id="div_ContainerElement_143" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:223px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_143" style="height:36px;width:223px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_144" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:215.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_144" name="TextElement_144" class="textbox" oldVal="" Signature="None" SaveField="Item57" ToolTipContent="False" style="height:28px;width:208.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div id="div_LableElement_145" style="float:left;height:18.48px;padding-Top:8.76px;padding-bottom:8.76px;width:56px;padding-left:45.01999px;padding-right:0px">
+<div id="LableElement_145" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("活动状况"))#</div>
+</div>
+<div id="div_DropRadioElement_146" style="float:left;height:30px;padding-Top:3px;padding-bottom:3px;width:96px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_146' name='DropRadioElement_146' oldVal='' dhccLableFor='DropRadioElement_146' SaveField='Item58' style='height:30px;width:96px;'></select>
+</div>
+<div id="div_ContainerElement_147" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:223px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_147" style="height:36px;width:223px">
+<div LineNo="1" style="padding:3px">
+<div id="div_TextElement_148" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:215.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_148" name="TextElement_148" class="textbox" oldVal="" Signature="None" SaveField="Item59" ToolTipContent="False" style="height:28px;width:208.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="7" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_150" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:974px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_150" style="height:135px;width:974px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_151" style="float:left;height:21.12px;padding-Top:0px;padding-bottom:0px;width:96px;padding-left:0px;padding-right:0px">
+<div id="LableElement_151" style="height:21.12px;width:96px;text-align:left;font-family:微软雅黑;font-size:16px;padding:0px;color:#000000;font-weight:bold">#(..Get("出院预期评估"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_153" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_153" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("生活自理能力"))#</div>
+</div>
+<div id="div_DropRadioElement_152" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:106px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_152' name='DropRadioElement_152' oldVal='' dhccLableFor='LableElement_153' SaveField='Item61' style='height:30px;width:106px;'></select>
+</div>
+<div id="div_LableElement_155" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:109.02px;padding-right:0px">
+<div id="LableElement_155" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("居家条件"))#</div>
+</div>
+<div id="div_DropRadioElement_154" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:106px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_154' name='DropRadioElement_154' oldVal='' dhccLableFor='LableElement_155' SaveField='Item62' style='height:30px;width:106px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:3px">
+<div id="div_LableElement_157" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:709.2px;padding-right:0px">
+<div id="LableElement_157" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("签名"))#</div>
+</div>
+<div id="div_TextElement_156" title="回车签名" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:124.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_156" name="TextElement_156" class="textbox" oldVal="" dhccLableFor="LableElement_157" Signature="Common" SignatureAuto="False" SignatureShow="FIFO" SignatureSplit="," SaveField="Item63" ToolTipContent="False" style="height:28px;width:117.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:3px">
+<div id="div_LableElement_159" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:709.2px;padding-right:0px">
+<div id="LableElement_159" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("时间"))#</div>
+</div>
+<div id="div_DateElement_158" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:118.8px;padding-left:0px;padding-right:0px">
+<input id="DateElement_158" name="DateElement_158" oldVal="" dhccLableFor="LableElement_159" SaveField="Item64" format="yyyy-MM-dd" style="height:30px;width:118.8px" />
+</div>
+<div id="div_TimeElement_160" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:76px;padding-left:0px;padding-right:0px">
+<input id="TimeElement_160" name="TimeElement_160" oldVal="" SaveField="Item65" style="height:30px;width:76px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="8" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_161" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:976px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_161" style="height:37px;width:976px">
+<div LineNo="1" style="padding:3px">
+<div id="div_ButtonElement_162" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:403.02px;padding-right:10px">
+<a id="ButtonElement_162" href="javascript:void();" class="hisui-linkbutton hover-dark" buttonType="savebutton" GatherSpecifyFiledsData="" gatherFun="" style="height:30px;width:58px">#(..Get("保存"))#</a>
+</div>
+<div id="div_ButtonElement_163" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:95px;padding-right:10px">
+<a id="ButtonElement_163" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="" style="height:30px;width:58px">#(..Get("打印"))#</a>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/plugin/datagrid-cellediting.js?ver=2023-04-11_133439" ></script>
+
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </SCRIPT>
+   <SCRIPT Language="Javascript">
+  var HighRiskReportEnable='#(##class(NurMp.Template.EventSet).isReport("6003e0d1ba474501a5b3528eddec1e1b"))#';
+  var WebIp='';
+  var EpisodeID='#(%request.Get("EpisodeID"))#';
+  var TemplateGUID="6003e0d1ba474501a5b3528eddec1e1b";
+  var TemplateIndentity="DHCNURCKRYPGD";
+  var CAPatientPDF = false;
+  var dtformat = "";
+  var WindowCompleted = false;
+  var HiddenNoSubmit = false;
+  var RequiredAlter = false;
+  var HideSavedAlter = false;
+  var ShowLeaveMark = false;
+   </SCRIPT>
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Service.Template.Model).InitEnvironment(%request.Get("ModelId"),%session.Data("LOGON.CTLOCID"))
+   </SCRIPT>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/HisUITableEdit.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/rightClickHandler.js?ver=2023-04-11_133439" charset="gbk" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/validateboxType.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/ElementUtility.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Foundation.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Condition.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Cascading.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript">
+var LoadFormElements = [
+'TextElement_7','TextElement_9','TextElement_11','TextElement_13','TextElement_15','TextElement_19','TextElement_21','TextElement_17','TextareaElement_183','DateElement_30','TimeElement_31','TextElement_33','TextElement_35','TextElement_37','DropRadioElement_39','TextElement_180','DropRadioElement_43','DropRadioElement_45','DropRadioElement_47','TextElement_49','DropRadioElement_51','CheckElement_53','TextElement_62','DropRadioElement_80','DropRadioElement_82','TextElement_84','DropRadioElement_86','DropRadioElement_88','TextElement_90','DropRadioElement_92','DropRadioElement_94','TextElement_96','DropRadioElement_98','TextElement_100','DropRadioElement_102','DropRadioElement_178','DropRadioElement_106','TextElement_196','HiddenTextElement_187','TextElement_195','TextElement_198','HiddenTextElement_188','HiddenTextElement_189','TextElement_164','DropRadioElement_125','TextElement_127','DropRadioElement_129','TextElement_131','DropRadioElement_133','TextElement_135','DropRadioElement_137','TextElement_139','DropRadioElement_142','TextElement_144','DropRadioElement_146','TextElement_148','DropRadioElement_152','DropRadioElement_154','TextElement_156','DateElement_158','TimeElement_160'
+];
+
+
+
+$(document).ready(function () {InnerNetDebug();
+CallItemBeforeInit();
+ $('#TextElement_7').validatebox({ID:'TextElement_7' });
+RefHandler('TextElement_7',false,false,true);
+ $('#TextElement_9').validatebox({ID:'TextElement_9' });
+RefHandler('TextElement_9',false,false,true);
+ $('#TextElement_11').validatebox({ID:'TextElement_11' });
+RefHandler('TextElement_11',false,false,true);
+ $('#TextElement_13').validatebox({ID:'TextElement_13' });
+RefHandler('TextElement_13',false,false,true);
+ $('#TextElement_15').validatebox({ID:'TextElement_15' });
+RefHandler('TextElement_15',false,false,true);
+ $('#TextElement_19').validatebox({ID:'TextElement_19' });
+RefHandler('TextElement_19',false,false,true);
+ $('#TextElement_21').validatebox({ID:'TextElement_21' });
+RefHandler('TextElement_21',false,false,true);
+ $('#TextElement_17').validatebox({ID:'TextElement_17' });
+RefHandler('TextElement_17',false,false,true);
+RefHandler('TextareaElement_183',false,false,true);
+ $('#DateElement_30').dateboxq({ID:'DateElement_30' });
+ $('#TimeElement_31').timespinner({ID:'TimeElement_31' });
+if (/^edit/.test('TimeElement_31') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_31'))) {
+$('#TimeElement_31').unbind("keydown.spinner");
+}
+
+ $('#TextElement_33').validatebox({ID:'TextElement_33' });
+RefHandler('TextElement_33',false,false,true);
+ $('#TextElement_35').validatebox({ID:'TextElement_35' });
+RefHandler('TextElement_35',false,false,true);
+ $('#TextElement_37').validatebox({ID:'TextElement_37' });
+RefHandler('TextElement_37',false,false,true);
+ $('#DropRadioElement_39').DropDropRadio({ID:'DropRadioElement_39',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_39').data('NumberValues',{1:'1',2:'2'});
+ $('#TextElement_180').validatebox({ID:'TextElement_180' });
+RefHandler('TextElement_180',false,false,true);
+ $('#DropRadioElement_43').DropDropRadio({ID:'DropRadioElement_43',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_43').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5'});
+ $('#DropRadioElement_45').DropDropRadio({ID:'DropRadioElement_45',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_45').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'11'});
+ $('#DropRadioElement_47').DropDropRadio({ID:'DropRadioElement_47',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_47').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+ $('#TextElement_49').validatebox({ID:'TextElement_49' });
+RefHandler('TextElement_49',false,false,true);
+ $('#DropRadioElement_51').DropDropRadio({ID:'DropRadioElement_51',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_51').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6'});
+ $('#TextElement_62').validatebox({ID:'TextElement_62' });
+RefHandler('TextElement_62',false,false,true);
+ $('#DropRadioElement_80').DropDropRadio({ID:'DropRadioElement_80',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_80').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5'});
+ $('#DropRadioElement_82').DropDropRadio({ID:'DropRadioElement_82',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_82').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6'});
+ $('#TextElement_84').validatebox({ID:'TextElement_84' });
+RefHandler('TextElement_84',false,false,true);
+ $('#DropRadioElement_86').DropDropRadio({ID:'DropRadioElement_86',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_86').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5'});
+ $('#DropRadioElement_88').DropDropRadio({ID:'DropRadioElement_88',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_88').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+ $('#TextElement_90').validatebox({ID:'TextElement_90' });
+RefHandler('TextElement_90',false,false,true);
+ $('#DropRadioElement_92').DropDropRadio({ID:'DropRadioElement_92',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_92').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7'});
+ $('#DropRadioElement_94').DropDropRadio({ID:'DropRadioElement_94',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_94').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5'});
+ $('#TextElement_96').validatebox({ID:'TextElement_96' });
+RefHandler('TextElement_96',false,false,true);
+ $('#DropRadioElement_98').DropDropRadio({ID:'DropRadioElement_98',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_98').data('NumberValues',{1:'1',2:'2',3:'3'});
+ $('#TextElement_100').validatebox({ID:'TextElement_100' });
+RefHandler('TextElement_100',false,false,true);
+ $('#DropRadioElement_102').DropDropRadio({ID:'DropRadioElement_102',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_102').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+ $('#DropRadioElement_178').DropDropRadio({ID:'DropRadioElement_178',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_178').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+ $('#DropRadioElement_106').DropDropRadio({ID:'DropRadioElement_106',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_106').data('NumberValues',{1:'1',2:'2',3:'3'});
+ $('#TextElement_196').validatebox({ID:'TextElement_196' });
+RefHandler('TextElement_196',false,false,true);
+$('#ButtonElement_185').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_185').click(function () {OpenNewWindowByNurMPDataID('Gather_ButtonElement_185','Callback_ButtonElement_185','DHCNURMESBRDDPFLR',{"width":"1000","height":"1000"}); });
+ $('#HiddenTextElement_187').validatebox({ID:'HiddenTextElement_187' });
+RefHandler('HiddenTextElement_187',false,false,true);
+ $('#TextElement_195').validatebox({ID:'TextElement_195' });
+RefHandler('TextElement_195',false,false,true);
+ $('#TextElement_198').validatebox({ID:'TextElement_198' });
+RefHandler('TextElement_198',false,false,true);
+$('#ButtonElement_186').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_186').click(function () {OpenNewWindowByNurMPDataID('Gather_ButtonElement_186','Callback_ButtonElement_186','DHCNURNYCFXPGLB',{"width":"1000","height":"1000"}); });
+ $('#HiddenTextElement_188').validatebox({ID:'HiddenTextElement_188' });
+RefHandler('HiddenTextElement_188',false,false,true);
+ $('#TextElement_164').validatebox({ID:'TextElement_164' });
+RefHandler('TextElement_164',false,false,true);
+$('#ButtonElement_177').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_177').click(function () {OpenNewWindowByNurMPDataID('Gather_ButtonElement_177','Callback_ButtonElement_177','DHCNURTTZHPDB',{"width":"1000","height":"1000"}); });
+ $('#HiddenTextElement_189').validatebox({ID:'HiddenTextElement_189' });
+RefHandler('HiddenTextElement_189',false,false,true);
+ $('#DropRadioElement_125').DropDropRadio({ID:'DropRadioElement_125',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_125').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6'});
+ $('#TextElement_127').validatebox({ID:'TextElement_127' });
+RefHandler('TextElement_127',false,false,true);
+ $('#DropRadioElement_129').DropDropRadio({ID:'DropRadioElement_129',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_129').data('NumberValues',{1:'1',2:'2',3:'3'});
+ $('#TextElement_131').validatebox({ID:'TextElement_131' });
+RefHandler('TextElement_131',false,false,true);
+ $('#DropRadioElement_133').DropDropRadio({ID:'DropRadioElement_133',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_133').data('NumberValues',{1:'1',2:'2',3:'3'});
+ $('#TextElement_135').validatebox({ID:'TextElement_135' });
+RefHandler('TextElement_135',false,false,true);
+ $('#DropRadioElement_137').DropDropRadio({ID:'DropRadioElement_137',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_137').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6'});
+ $('#TextElement_139').validatebox({ID:'TextElement_139' });
+RefHandler('TextElement_139',false,false,true);
+ $('#DropRadioElement_142').DropDropRadio({ID:'DropRadioElement_142',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_142').data('NumberValues',{1:'1',2:'2',3:'3'});
+ $('#TextElement_144').validatebox({ID:'TextElement_144' });
+RefHandler('TextElement_144',false,false,true);
+ $('#DropRadioElement_146').DropDropRadio({ID:'DropRadioElement_146',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_146').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6'});
+ $('#TextElement_148').validatebox({ID:'TextElement_148' });
+RefHandler('TextElement_148',false,false,true);
+ $('#DropRadioElement_152').DropDropRadio({ID:'DropRadioElement_152',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_152').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+ $('#DropRadioElement_154').DropDropRadio({ID:'DropRadioElement_154',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_154').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+ $('#TextElement_156').validatebox({ID:'TextElement_156',Signature:'Common',SignatureAuto:'False',toolTip:'回车签名' });
+ $('#TextElement_156').on('blur', function(){ElementUtility.TextElement.banding('TextElement_156', $(this).attr('SignatureFullVal'),true); });
+ $('#TextElement_156').on('focus', function(){$(this).val(''); });
+ $('#TextElement_156').on('keyup', function(event){if (event.keyCode == 13 || event.keyCode == 46) {} else {RestrictNumerical($(this));} });
+ $('#TextElement_156').keydown(function(event){if (event.keyCode == 13)  JobNumEnterToName($(this),false);if (event.keyCode == 46)  ClearSign($(this)); });
+ $('#DateElement_158').dateboxq({ID:'DateElement_158' });
+ $('#TimeElement_160').timespinner({ID:'TimeElement_160' });
+if (/^edit/.test('TimeElement_160') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_160'))) {
+$('#TimeElement_160').unbind("keydown.spinner");
+}
+
+$('#ButtonElement_162').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_162').click(function () {Save('','','',null); });
+$('#ButtonElement_163').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_163').click(function () {PrintAll('','','DHCNURMoudPrnckry',null); });
+CallItemAfterInit();
+CallItemBeforeSetValue();
+SetOneValue('DateElement_30',GetCurrentDate());
+
+SetOneValue('TimeElement_31',GetServerNowTime());
+
+SetOneValue('DropRadioElement_39',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("障碍"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_43',{source:[{Text: $g("已婚"),Value: '1'},{Text: $g("未婚"),Value: '2'},{Text: $g("离异"),Value: '3'},{Text: $g("丧偶"),Value: '4'},{Text: $g("不确定"),Value: '5'}],values:[]});
+SetOneValue('DropRadioElement_45',{source:[{Text: $g("文盲"),Value: '1'},{Text: $g("半文盲"),Value: '2'},{Text: $g("小学"),Value: '3'},{Text: $g("初中"),Value: '4'},{Text: $g("高中"),Value: '5'},{Text: $g("技工学校"),Value: '6'},{Text: $g("中专"),Value: '7'},{Text: $g("大专"),Value: '8'},{Text: $g("本科"),Value: '9'},{Text: $g("硕士"),Value: '10'},{Text: $g("博士"),Value: '11'}],values:[]});
+SetOneValue('DropRadioElement_47',{source:[{Text: $g("1.急诊"),Value: '1'},{Text: $g("2.门诊"),Value: '2'},{Text: $g("3.转诊"),Value: '3'},{Text: $g("其他："),Value: '4'}],values:[]});
+SetOneValue('DropRadioElement_51',{source:[{Text: $g("步行"),Value: '1'},{Text: $g("扶行"),Value: '2'},{Text: $g("轮椅"),Value: '3'},{Text: $g("平车"),Value: '4'},{Text: $g("担架"),Value: '5'},{Text: $g("其他"),Value: '6'}],values:[]});
+SetOneValue('DropRadioElement_80',{source:[{Text: $g("清醒"),Value: '1'},{Text: $g("嗜睡"),Value: '2'},{Text: $g("意识昏迷"),Value: '3'},{Text: $g("昏睡"),Value: '4'},{Text: $g("昏迷"),Value: '5'}],values:[]});
+SetOneValue('DropRadioElement_82',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("急性病容"),Value: '2'},{Text: $g("慢性病容"),Value: '3'},{Text: $g("贫血病容"),Value: '4'},{Text: $g("二尖瓣病容"),Value: '5'},{Text: $g("其他："),Value: '6'}],values:[]});
+SetOneValue('DropRadioElement_86',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("苍白"),Value: '2'},{Text: $g("出血点"),Value: '3'},{Text: $g("水肿"),Value: '4'},{Text: $g("皮疹"),Value: '5'}],values:[]});
+SetOneValue('DropRadioElement_88',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("便秘"),Value: '2'},{Text: $g("腹泻"),Value: '3'},{Text: $g("其他："),Value: '4'}],values:[]});
+SetOneValue('DropRadioElement_92',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("尿频"),Value: '2'},{Text: $g("尿急"),Value: '3'},{Text: $g("尿痛"),Value: '4'},{Text: $g("少尿"),Value: '5'},{Text: $g("无尿"),Value: '6'},{Text: $g("失禁"),Value: '7'}],values:[]});
+SetOneValue('DropRadioElement_94',{source:[{Text: $g("无 "),Value: '1'},{Text: $g("有 "),Value: '2'},{Text: $g("少于月经量"),Value: '3'},{Text: $g("似月经量"),Value: '4'},{Text: $g("多于月经量"),Value: '5'}],values:[]});
+SetOneValue('DropRadioElement_98',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("其他："),Value: '2'},{Text: $g("/ "),Value: '3'}],values:[]});
+SetOneValue('DropRadioElement_102',{source:[{Text: $g("好 "),Value: '1'},{Text: $g("不好"),Value: '2'},{Text: $g("不涉及"),Value: '3'},{Text: $g("/ "),Value: '4'}],values:[]});
+SetOneValue('DropRadioElement_178',{source:[{Text: $g("无"),Value: '1'},{Text: $g("不规律"),Value: '2'},{Text: $g("规律"),Value: '3'},{Text: $g("不涉及"),Value: '4'}],values:[]});
+SetOneValue('DropRadioElement_106',{source:[{Text: $g("已破"),Value: '1'},{Text: $g("未破"),Value: '2'},{Text: $g("/ "),Value: '3'}],values:[]});
+SetOneValue('DropRadioElement_125',{source:[{Text: $g("否 "),Value: '1'},{Text: $g("吸毒"),Value: '2'},{Text: $g("酗酒"),Value: '3'},{Text: $g("吸烟"),Value: '4'},{Text: $g("吸烟、吸毒"),Value: '5'},{Text: $g("其他："),Value: '6'}],values:[]});
+SetOneValue('DropRadioElement_129',{source:[{Text: $g("无 "),Value: '1'},{Text: $g("家庭"),Value: '2'},{Text: $g("其他："),Value: '3'}],values:[]});
+SetOneValue('DropRadioElement_133',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("紧张"),Value: '2'},{Text: $g("其他："),Value: '3'}],values:[]});
+SetOneValue('DropRadioElement_137',{source:[{Text: $g("无 "),Value: '1'},{Text: $g("基督教"),Value: '2'},{Text: $g("佛教"),Value: '3'},{Text: $g("伊斯兰教"),Value: '4'},{Text: $g("天主教"),Value: '5'},{Text: $g("其他："),Value: '6'}],values:[]});
+SetOneValue('DropRadioElement_142',{source:[{Text: $g("正常"),Value: '1'},{Text: $g("失眠"),Value: '2'},{Text: $g("其他："),Value: '3'}],values:[]});
+SetOneValue('DropRadioElement_146',{source:[{Text: $g("自如"),Value: '1'},{Text: $g("障碍左上"),Value: '2'},{Text: $g("障碍左下"),Value: '3'},{Text: $g("障碍右上"),Value: '4'},{Text: $g("障碍右下"),Value: '5'},{Text: $g("其他 ："),Value: '6'}],values:[]});
+SetOneValue('DropRadioElement_152',{source:[{Text: $g("无需依赖"),Value: '1'},{Text: $g("轻度依赖"),Value: '2'},{Text: $g("中度依赖"),Value: '3'},{Text: $g("重度依赖"),Value: '4'}],values:[]});
+SetOneValue('DropRadioElement_154',{source:[{Text: $g("无人照顾"),Value: '1'},{Text: $g("家人照顾"),Value: '2'},{Text: $g("请人照顾"),Value: '3'},{Text: $g("其他"),Value: '4'}],values:[]});
+SetOneValue('DateElement_158',GetCurrentDate());
+
+SetOneValue('TimeElement_160',GetServerNowTime());
+
+
+InitHiddenField();
+InitDynamicTableTitleLabel();
+DisEnableList(['TextElement_7','TextElement_9','TextElement_11','TextElement_13','TextElement_15','TextElement_19','TextElement_21','TextElement_17'],true);
+HideList(['HiddenTextElement_187','HiddenTextElement_188','HiddenTextElement_189'],true);
+ShortcutFormElementFocus();
+setTimeout(function(){
+$('#RadioElement_29').next().css('font-Size','14px');
+$('#RadioElement_29').next().css('font-family','微软雅黑');
+$('#RadioElement_29').next().css('font-weight','bold');
+$('#RadioElement_30').next().css('font-Size','14px');
+$('#RadioElement_30').next().css('font-family','微软雅黑');
+$('#RadioElement_30').next().css('font-weight','bold');
+$('#RadioElement_31').next().css('font-Size','14px');
+$('#RadioElement_31').next().css('font-family','微软雅黑');
+$('#RadioElement_31').next().css('font-weight','bold');
+if (window.HISUIStyleCode == 'lite'){
+$('#DateElement_30').css('width',($('#DateElement_30').css('width').replace('px','')-7)+'px');
+$('#DateElement_158').css('width',($('#DateElement_158').css('width').replace('px','')-7)+'px');
+}
+GetDataFromService(null,null,null,null,false);
+CallItemAfterSetValue();
+
+InitPatientPDF();
+InitHandover();
+InitHighRiskReport();
+setTimeout(function(){
+UpdateCAOldFormData();
+InitAutoSignature();
+InitTableCellPopover();
+InitSignDomain();
+BindingLeaveMarkLogEvent();
+WindowCompleted = true;
+setTimeout(PrintActivexUpgrade, 100); 
+setTimeout(function(){
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/shim.min.js?ver=2023-04-11_133439');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js?ver=2023-04-11_133439');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/clipboard.min.js?ver=2023-04-11_133439');
+}, 100); 
+RealTimeSave(+0*1000);
+GetLeaveMarkLogs();
+}, 10); 
+}, 0); 
+ });
+$(window).load(function () {
+$('body').append('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+if ($.type(window.WindowLoadCallBack) === 'function') { window.WindowLoadCallBack(); }
+ });
+function Callback_ButtonElement_185()
+{
+var resultReturnObject = arguments[0];
+var callbackElements = ['TextElement_196','HiddenTextElement_187'];
+var callbackReturnMap = 'TextElement_196^TextElement_45,HiddenTextElement_187^HiddenTextElement_54';
+return CallbackReturnAssemble(resultReturnObject,callbackElements,callbackReturnMap);
+}
+function Gather_ButtonElement_185()
+{
+var gatherElements = ['HiddenTextElement_187'];
+var gatherImportMap = 'HiddenTextElement_187^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_186()
+{
+var resultReturnObject = arguments[0];
+var callbackElements = ['TextElement_198','HiddenTextElement_188'];
+var callbackReturnMap = 'TextElement_198^TextElement_48,HiddenTextElement_188^HiddenTextElement_58';
+return CallbackReturnAssemble(resultReturnObject,callbackElements,callbackReturnMap);
+}
+function Gather_ButtonElement_186()
+{
+var gatherElements = ['HiddenTextElement_188'];
+var gatherImportMap = 'HiddenTextElement_188^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_177()
+{
+var resultReturnObject = arguments[0];
+var callbackElements = ['TextElement_164','HiddenTextElement_189'];
+var callbackReturnMap = 'TextElement_164^TextElement_221,HiddenTextElement_189^TextElement_220';
+return CallbackReturnAssemble(resultReturnObject,callbackElements,callbackReturnMap);
+}
+function Gather_ButtonElement_177()
+{
+var gatherElements = ['HiddenTextElement_189'];
+var gatherImportMap = 'HiddenTextElement_189^HiddenTextElement_109';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+
+</script> <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/custom.js?ver=2023-04-11_133439" ></script>
+ <script type="text/javascript" src="../scripts_gen/DHCNURCKRYPGD.js?ver=2023-04-11_133439" ></script>
+<script for="PrintActiveX" event="CheckUpgradeEvent(msg)" language="javascript">
+function PrintActiveX::CheckUpgradeEvent(msg) {
+console.log(msg);
+var reMsg = JSON.parse(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+else if (reMsg.status == "-1") {//升级失败
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+}
+</script>
+<script type='text/template' id='dialogReferTemplate'>
+<div id="dialogRefer" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose'
+	},{
+		text:'清屏',
+		iconCls:'icon-w-clean',
+		id: 'btnClear'
+	},{
+		text:'引用',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='dialogSpecialCharTemplate'>
+<div id="dialogSpecialChar" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnCharClose'
+	},{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnCharRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='menuTemplate'>
+<div id="menu" class="hisui-menu" style="width:100px;"></div>
+</script>
+<script type='text/template' id='HisUITableMenuTemplate'>
+<div id="hisUITableMenu" class="hisui-menu" data-options="onClick:OnHisUiTableMenuHandler" style="width:100px;"></div>
+</script>
+<script type='text/template' id='RePrintSetDialogTemplate'>
+<div id="rePrintDialog" class="hisui-dialog" title="补打设置" style="width:350px;height:300px;" data-options="closed:true,onOpen:function(){RePrintGetPrintinfo();},modal:true,
+	buttons:[
+	{text:'确定',handler:function(){RePrint();}},
+	{text:'取消',handler:function(){$HUI.dialog('#rePrintDialog').close();}}
+	]">
+    <div style="width:350px;height:213px;display:table-cell;vertical-align:middle;text-align:center;">
+        <div style="display:inline-block;">
+            <span id="IsPrint">#(..Get("未打印"))#</span>  <br>
+            #(..Get("打印信息："))#<span id="PrintInfo">#(..Get("无"))#</span>
+            <br>
+            <br>
+            #(..Get("开始页："))#<input id="startPageNo" class="hisui-numberbox textbox" data-options="required:true">
+            <br>
+            <br>
+            #(..Get("开始行："))#<input id="startRowNo" class="hisui-numberbox textbox" data-options="required:true">
+        </div>
+    </div>
+</div>
+</script>
+<script type='text/template' id='CancelHighRisKReportDialogTemplate'>
+<div id='cancelReportDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		撤销原因：
+	   <select id='reasonBox' name='reason' class='hisui-combobox' style='width:200px;'>
+	   	    <option value='撤销'>撤销</option>
+	    		<option value='出院'>出院</option>
+	    		<option value='死亡'>死亡</option>
+	    		<option value='转出'>转出</option>
+	    </select>
+	   <br/>
+	   撤销日期：
+	   <input id="cancelReportDate" class="hisui-datebox textbox datebox-f combo-f" data-options="">
+	   <br/>
+	   撤销时间：
+	   <input id="cancelReportTime" class="hisui-timespinner" data-options="" style="border-radius: 2px;">
+  </div>
+</div>
+</script>
+<script type='text/template' id='SignPWDVerifyDialogTemplate'>
+<div id='signPWDVerifyDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		 密码：<input id="signPWD" class="textbox" type="password">
+  </div>
+</div>
+</script>
+</body>
+</html>

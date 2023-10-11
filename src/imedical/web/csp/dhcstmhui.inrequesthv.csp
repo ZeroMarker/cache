@@ -8,11 +8,13 @@
 <SERVER>
 	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
 	s RowId = $G(%request.Data("RowId",1))
+	s TabParams=$G(%request.Data("TabParams",1))
 </SERVER>
 <head>
 	<script language=javascript>
 		var gHVInRequest=true;	//高值制单
 		var gReqId = "#(RowId)#";
+		var gTabParams='#(TabParams)#';
 	</script>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -20,42 +22,52 @@
 	<DHCSTMHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+	<div data-options="region:'north',headerCls:'panel-header-gray'" class="BorderLine">
 		<table id="MainConditions" class="Condition">
 			<input id="RowId" name="RowId" type="hidden">
-			<input id="ReqType" name="ReqType" type="hidden">
 			<tr>
 				<td>请求科室</td>
-				<td><input id="ReqLoc" name="ReqLoc" class="textbox hisui-combobox" ></td>
+				<td><input id="ReqLoc" name="ReqLoc" class="textbox hisui-combobox"></td>
 				<td>制单人</td>
-				<td><input id="User" name="User" class="textbox hisui-combobox" data-options="disabled:true" ></td>
+				<td><input id="User" name="User" class="textbox hisui-combobox" data-options="disabled:true"></td>
 				<td>单号</td>
-				<td><input id="ReqNo" name="ReqNo" class="textbox" disabled="true" ></td>
+				<td><input id="ReqNo" name="ReqNo" class="textbox" disabled="true"></td>
 				<td><input id="Template" name="Template" class='hisui-checkbox' type="checkbox" value="Y" label="模板标志"></td>
 				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
 				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
-				<td><a href="#" id="FindTemBT" class="hisui-linkbutton" >查询模板</a></td>
+				<td><a href="#" id="FindTemBT" class="hisui-linkbutton" style="width:100px">查询模板</a></td>
 			</tr>
 			<tr>
 				<td>供应科室</td>
-				<td><input id="SupLoc" name="SupLoc" class="textbox hisui-combobox" ></td>
+				<td><input id="SupLoc" name="SupLoc" class="textbox hisui-combobox"></td>
 				<td>制单日期</td>
-				<td><input id="Date" name="Date" class="textbox hisui-datebox" data-options="disabled:true" ></td>
-				<td valign="top" rowspan="2">备注</td>
-				<td valign="top" rowspan="2"><textarea style="width:151px" id="ReqRemarks" rows="4" cols="10" name="ReqRemarks"></textarea>
+				<td><input id="Date" name="Date" class="textbox hisui-dateboxq" data-options="disabled:true"></td>
+				<td>单据类型</td>
+				<td><input id="ReqType" name="ReqType" class="textbox hisui-combobox"></td>
 				<td><input id="Comp" name="Comp" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="完成标志"></td>
 				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:86px">完成</a></td>
-				<td><a href="#" id="PrintBT" class="hisui-linkbutton" style="width:86px">打印</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'">完成</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton" style="width:100px">取消完成</a></td>
 			</tr>
 			<tr>
 				<td>类组</td>
-				<td><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree" ></td>
+				<td><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree" style=""></td>
 				<td>制单时间</td>
-				<td><input id="Time" name="Time" class="textbox hisui-timespinner" data-options="disabled:true" style="width:156px"></td>
+				<td><input id="Time" name="Time" class="textbox" disabled></td>
+				<td>备注</td>
+				<td valign="top" rowspan="2"><textarea id="ReqRemarks" rows="3" cols="10" name="ReqRemarks"></textarea></td>
 				<td></td>
-				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:88px">删除</a></td>
-				<td><a href="#" id="CanComBT" class="hisui-linkbutton">取消完成</a></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				<td><a href="#" id="SaveAsTemBT" class="hisui-linkbutton">另存为模板</a></td>
+			</tr>
+			<tr>
+				<td><label>病案号</label></td>	
+				<td><input id="Medicare" name="Medicare" class="textbox"></td>
+				<td>病人姓名</td>
+				<td><input id="PatientName" name="PatientName" class="textbox" disabled></td>
+				<td hidden><label>登记号</label></td>	
+				<td><input id="RegNo" name="RegNo" class="textbox" type="hidden"></td>
 				
 			</tr>
 		</table>
@@ -66,31 +78,28 @@
 	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询请求单">
 		<div class="hisui-layout" data-options="fit:true">
 			<div class="" data-options="region:'north',border:false">
-				<table id="FindConditions" class="Condition">
+				<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){FQueryBT.click()}">
 					<input id="HvFlag" name="HvFlag" class="textbox" type="hidden">
 					<tr>
-						<td>起始日期</td>
-						<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox" ></td>
-						<td>请求科室</td>
-						<td><input id="FReqLoc" name="ReqLoc" class="textbox hisui-combobox" ></td>
-						<td colspan="2">
-						完成标志
-						<input id="Complate" name="Complate" class='textbox hisui-simplecombobox' >
+						<td><label>起始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-dateboxq" style=""></td>
+						<td><label>请求科室</label><input id="FReqLoc" name="ReqLoc" class="textbox hisui-combobox" style=""></td>
+						<td><label>完成标志</label><input id="Complate" name="Complate" class='textbox hisui-simplecombobox' style=""></td>
+						<td>
+							<input id="AllTransfer" name="AllTransfer" class='hisui-checkbox' type="checkbox" value="Y"  label="全部转移">
 						</td>
-						<td><a href="#" id="FQueryBT" class="hisui-linkbutton">查询</a></td>
-						<td><a href="#" id="FClearBT" class="hisui-linkbutton">清屏</a></td>
+						<td>
+							<input id="NoTransfer" name="NoTransfer" class='hisui-checkbox' type="checkbox" value="Y" label="未转移">
+						</td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="FComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">选取</a></td>
 					</tr>
 					<tr>
-						<td>截止日期</td>
-						<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox" ></td>
-						<td>供应科室</td>
-						<td><input id="FSupLoc" name="SupLoc" class="textbox hisui-combobox" ></td>
-						<td colspan="2">
-						<input id="AllTransfer" name="AllTransfer" class='hisui-checkbox' type="checkbox" value="Y"  label="全部转移">
-						<input id="PartTransfer" name="PartTransfer" class='hisui-checkbox' type="checkbox" value="Y" label="部分转移">
-						<input id="NoTransfer" name="NoTransfer" class='hisui-checkbox' type="checkbox" value="Y" label="未转移">
-						</td>
-						<td><a href="#" id="FComBT" class="hisui-linkbutton">选取</a></td>
+						<td><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-dateboxq" style=""></td>
+						<td><label>供应科室</label><input id="FSupLoc" name="SupLoc" class="textbox hisui-combobox" style=""></td>
+						<td><label>单据类型</label><input id="FReqType" name="ReqType" class="textbox hisui-combobox"></td>
+						<td><input id="PartTransfer" name="PartTransfer" class='hisui-checkbox' type="checkbox" value="Y" label="部分转移"></td>
+						<td></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
 					</tr>
 				</table>
 			</div>
@@ -109,12 +118,13 @@
 	<div id="TemWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="请求单模板">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
-				<table id="TConditions" class="Condition">
+				<table id="TConditions" class="Condition" onkeydown="if(event.keyCode==13){TQueryBT.click()}">
 					<input id="HvFlag" name="HvFlag" class="textbox" type="hidden">
-					<input id="ReqType" name="ReqType" class="textbox" type="hidden">
 					<tr>
 						<td>请求科室</td>
 						<td><input id="TReqLoc" name="ReqLoc" class="textbox hisui-combobox"></td>
+						<td>单据类型</td>
+						<td><input id="TReqType" name="ReqType" class="textbox hisui-combobox"></td>
 						<td><a href="#" id="TQueryBT" class="hisui-linkbutton">查询</a></td>
 						<td><a href="#" id="TClearBT" class="hisui-linkbutton">清屏</a></td>
 						<td><a href="#" id="TModBT" class="hisui-linkbutton">选取修改</a></td>
@@ -122,12 +132,12 @@
 					</tr>
 				</table>
 			</div>
-			<div class="GridPadding" data-options="region:'west',border:false" style="width:500px;">
+			<div class="GridPadding" data-options="region:'west',border:false" style="padding-top:0px;width:500px;">
 				<div class="hisui-panel" data-options="title:'请求单模板',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
 					<table id="TRequestMainGrid"></table>
 				</div>
 			</div>
-			<div class="GridPadding" data-options="region:'center',border:false" style="padding-left: 0px;">
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-top:0px;padding-left: 0px;">
 				<div class="hisui-panel" data-options="title:'请求单模板明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
 					<table id="TRequestDetailGrid"></table>
 				</div>
@@ -136,7 +146,7 @@
 	</div>
 
 	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/INRequestCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/InRequestCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/INRequest.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/findWin.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/INRequestPrint.js"></script>

@@ -1,0 +1,127 @@
+<!--opdoc.patient.list.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard"/>
+<DOCCARD medStepCode="AdmQuery"></DOCCARD>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></SCRIPT>
+<script type="text/javascript" src="../scripts_lib/mary-btnbar/marybtnbar.js"></SCRIPT>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/mary-btnbar/marybtnbar.css"/>
+<style type='text/css'>
+.r-label{
+	padding-left: 10px;
+}
+.layout>.panel>.panel-body{
+	border-radius: 4px;
+}
+.btn-bar-btn{
+	width:100%;
+	height:50px;
+	line-height:50px;
+	background-color:#ffffff;
+	color:#000;
+	font-size:14px;
+}
+.btn-bar-btn .l-btn-text{
+	height:50px;
+	width:100px;
+	line-height:50px;
+	border-bottom:1px solid #E1E1E1;
+}
+.btn-bar-btn .l-btn-icon{
+	left:20px;
+}
+.btn-bar-btn:hover{
+	background-color:#E2F4FF;
+	color:#31B1FF;
+}
+.condition-show-btn{
+	position:absolute;
+	top:15px;
+	right:15px;
+	color:#31B1FF;
+	font-size:12px;
+}
+.condition-show-btn span{
+	display:inline-block;
+	font-stretch: wider;
+	position:absolute;
+	right:-12px;
+}
+.call-pat-name li{
+	font-size:30px;
+}
+.datagrid-row-selected{
+	background:#ffe48d!important;
+	color:#000!important;
+}
+.datagrid>.panel-body.panel-body-noheader{
+	border-radius: 0px;
+}
+</style>
+</head>
+<server>
+s UserRowID=%session.Get("LOGON.USERID")
+s GroupRowID=%session.Get("LOGON.GROUPID")
+s NotShowBtnBar=%request.Get("NotShowBtnBar")
+s InitPatListType=%request.Get("InitPatListType")
+s:InitPatListType="" InitPatListType="RegQue"
+s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+s PageCfgObj=##class(web.DHCDocConfig).GetUserPageSetting("OutPatList","obj")
+s OPDefDisplayMoreContions=PageCfgObj.DefDispMoreCond
+s ClickNameCall=PageCfgObj.ClickNameCall
+//医生站设置-常规设置： 允许门诊医生诊间修改加号限额
+s AllowOPDocChangeAddNum=##class(web.DHCDocConfig).GetConfigNode("AllowOPDocChangeAddNum",%session.Get("LOGON.HOSPID"))
+s AllowWebColumnManagerFlag =##Class(web.SSGroup).GetAllowWebColumnManager(GroupRowID)
+s ListColSetCls="DHCDoc.OPDoc.PatientList"
+s ListColSetMth="GetOutPatientListColSet"
+s XCONTEXT="WOPDocPatList"
+k colNames,colModelAry,ParamAry
+s colNames=""
+d ##class(DHCDoc.OPDoc.PatientList).ReadListColSet(ListColSetCls,ListColSetMth,.colNames,.colModelAry,.ParamAry,XCONTEXT,"DHCDoc.OPDoc.PatientList","GetOutPatientListColSet")
+w "<SCRIPT Language=""Javascript"">",!
+w "var ServerObj={};",!
+w "var Columns=new Array();",!
+for i=1:1:$l(colNames,",") {
+	s colName=$p(colNames,",",i)
+	continue:colName=""
+	s colModel=$G(colModelAry(colName))
+	w "Columns.push("_colModel_");",!
+}
+w "ServerObj.Columns=Columns;",!
+w "</SCRIPT>",!
+w "<SCRIPT Language=""Javascript"">"
+	d ##class(web.DHCDocOrderListCommon).GetMessageArray("oupatientlist.csp",%session.Get("LOGON.LANGID"))
+w "</SCRIPT>"
+/*&html<
+	<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='#(##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno")))#'>
+	<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='#(##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType")))#'>
+	<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='#(##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker")))#'>
+>
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
+</server>
+<csp:Include Page="opdoc.patient.list.show.csp">
+<SCRIPT language = 'javascript' >
+	$.extend(ServerObj,{
+	    DoctorID:'#(##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID")))#',
+	    OPDefDisplayMoreContions:'#(OPDefDisplayMoreContions)#',
+	    ClickNameCall:'#(ClickNameCall)#',
+		lookupListComponetId:1872,
+		AllowWebColumnManagerFlag:'#(AllowWebColumnManagerFlag)#',
+		ListColSetCls:'#(ListColSetCls)#',
+		ListColSetMth:'#(ListColSetMth)#',	
+		XCONTEXT:'#(XCONTEXT)#',
+		CurrentDate:"#(CurrentDate)#",
+		AllowOPDocChangeAddNum:"#(AllowOPDocChangeAddNum)#",
+		InitPatListType:'#(InitPatListType)#'
+	});
+</SCRIPT>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/patient.list.js"></script>
+</html>

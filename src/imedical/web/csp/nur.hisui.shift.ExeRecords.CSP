@@ -1,0 +1,356 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<NURHISUI />
+<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+        }
+ 		.panel-body, .panel-header {
+			border-color: #ccc;
+		}
+		.datagrid-wrap.panel-body.panel-body-noheader{
+	        border-color:#ccc;
+	        border-top-right-radius:0;
+	        border-top-left-radius:0;
+        }
+	    .btn_left {
+	    	float: left;
+	    }
+	    .rowCheckbox {
+			display: none;
+		} 	
+		.searchGrid {
+			border-color:#ccc
+		}
+		#groupExec {
+			height: 40px;
+		} 
+		.searchForm {
+			border-collapse:separate;
+			border-spacing:0px 2px;
+			border:none;
+			width:100%;
+			height:100%;
+			padding: 0 4px;
+		}
+	</STYLE>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+<script language="cache" runat="SERVER">
+     s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',split:true,border:false" style="height:83px">
+			<table class="searchForm">
+				<tr>
+					<td>#(..Get("开始"))#</td>
+					<td><input id="startDate" class="hisui-datebox textbox" style="width:114px"></input></td>
+					<td>#(..Get("结束"))#</td>
+					<td><input id="endDate" class="hisui-datebox textbox" style="width:114px"></input></td>
+					<td>
+						<input class='hisui-radio' id="ckIsMedicine" type="radio" label=#(..Get("药品"))# name='ckIsMedicine' data-options="checked:true,radioClass:'hischeckbox_square-blue'">
+					</td>
+					<td>
+						<input class='hisui-radio' id="ckNotMedicine" type="radio" label='非药品' name='ckNotMedicine' data-options="checked:true,radioClass:'hischeckbox_square-blue'">
+					</td>
+					<td><a id="btnSearch" data-options="iconCls:'icon-w-find' " class="hisui-linkbutton btn_left">#(..Get("查询"))#</a></td>
+					<td><a id="btnWriteIn" class="hisui-linkbutton btn_left" data-options="iconCls:'icon-w-edit'">#(..Get("写入"))#</a></td>
+				</tr>
+				<tr>
+					<td>#(..Get("类型"))#</td>
+					<td><select id="orderType" class="hisui-combobox" style="width:114px;"></select></td>
+					<td style="text-align:center">#(..Get("用法"))#</td>
+					<td><select class="hisui-combobox" id="orderMeth" style="width:114px;"></select></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',split:true,border:false">
+					<table class="searchGrid" id="dataGrid" data-options="fit:true"></table>
+				</div>
+			</div>	
+		</div>
+	</div>		
+</body>
+<script type="text/javascript">
+ var ModelId = "null";
+ var EpisodeID = "#(EpisodeID)#";
+  $(function() {
+	// 定义全局变量
+	var GLOBAL = {
+		code: 'Exec',
+		groupID: 'groupExec',
+		hospitalID: session['LOGON.HOSPID'],
+	    className: 'Nur.SHIFT.Emr.RefHandle',
+		pageRowNum: screen.width > 1600 ? 9 : 7
+	};
+/**
+ * @description: 初始化界面
+ */
+	function initUI() {
+		initCondition();
+		initData();
+		listenEvents();
+	}
+
+/**
+* @description: 获取入院时间
+* @param {episodeID} 
+* @return: inDate
+*/
+	function getInHospDateTime(episodeID) {
+		var inDate = 'Today';
+		var inDate = $m({
+		    ClassName: 'Nur.SHIFT.Emr.RefSetting',
+		    MethodName: 'GetInHospDate',
+		    EpisodeID: episodeID
+		}, false);
+		return inDate == '' ? 'Today' : inDate;
+	};
+	/**
+	 * @description: 初始化查询条件
+	 */
+	function initCondition() {
+		var inHospDate = getInHospDateTime(EpisodeID);
+	    $('#startDate').datebox('setValue', inHospDate);
+	    $('#endDate').datebox('setValue', 'Today');
+		$("#orderType").combobox({  
+			valueField: 'key',
+			textField: 'desc',
+			value: 'A',
+			data:[{key:'A',desc:$g("全部医嘱")},{key:'L',desc:$g("长期医嘱")},{key:'T',desc:$g("临时医嘱")},{key:'O',desc:$g("出院带药")}],
+			defaultFilter:4
+		});
+//		var url = $URL + '?ClassName=' + GLOBAL.className + '&MethodName=getOrderMeths';
+//		if('undefined'!==typeof websys_getMWToken)
+//		{
+//			url+="&MWToken="+websys_getMWToken()
+//		} 
+		$("#orderMeth").combobox({  
+			valueField: 'id',
+			textField: 'desc',
+			url: $URL + '?ClassName=' + GLOBAL.className + '&MethodName=getOrderMeths',
+			defaultFilter:4
+		}); 
+	}
+	/**
+	 * @description: 执行记录加载
+	 */
+	function initData() {
+		$cm({
+	        ClassName: "Nur.SHIFT.Emr.RefSetting",
+	        MethodName: "getReferTabConfig",
+	        HospitalID: GLOBAL.hospitalID,
+	        Code: GLOBAL.code
+	    }, function (jsonData) {
+	    	var proper={}
+	    	proper = $cm({
+			ClassName: "Nur.SHIFT.Emr.RefSetting",
+			MethodName: "GetProperList",
+			ID:"5"
+				},false);
+			var columns = {}
+			columns=jsonData.columns[0]
+			var Columns=[]
+			data = columns.filter(function(rtn){
+				return proper.find(function(rtn1){
+					return rtn1.ContentID==rtn.field
+					})
+				})	
+			Columns.push(data)
+//			var url = $URL;
+//			if('undefined'!==typeof websys_getMWToken)
+//			{
+//				url+="&MWToken="+websys_getMWToken()
+//			} 
+	        $HUI.datagrid('#dataGrid', {
+	            url: $URL,
+	            queryParams: initParameter(jsonData, 'startDate', 'endDate','orderType','orderMeth','medicineFlag'),
+	            rownumbers: true,
+	            singleSelect: false,
+	            pagination: true,
+	            pageSize: GLOBAL.pageRowNum,
+	            pageList: [GLOBAL.pageRowNum, 20, 30],
+	            frozenColumns: jsonData.frozenColumns,
+	            columns: Columns,
+//	            nowrap: jsonData.gridProperty.nowrap == "true",
+	        });     
+	    });
+	}
+	/**
+	 * @description: 组织入参
+	 */
+	function initParameter() {
+	    var jsonData = arguments[0];
+	    var startDate = !!arguments[1] ? $('#' + arguments[1]).datebox('getValue') : '';
+	    var endDate = !!arguments[2] ? $('#' + arguments[2]).datebox('getValue') : '';
+	    var orderType = !!arguments[3] ? $('#' + arguments[3]).combobox('getValue') : 'A';
+		var orderMeth = !!arguments[4] ? $('#' + arguments[4]).combobox('getValue') : '';
+		var medicineFlag =  arguments[5];
+		if (!!medicineFlag) {
+			var isMedicine = $("#ckIsMedicine").radio('getValue');
+		    var notMedicine = $("#ckNotMedicine").radio('getValue');
+		    if (isMedicine && notMedicine) {
+				medicineFlag = 'A';
+			}else if (isMedicine && !notMedicine) {
+				medicineFlag = 'R';
+			}else if (!isMedicine && notMedicine) {
+				medicineFlag = 'N';
+			}else if (!isMedicine && !notMedicine) {
+				medicineFlag = '';
+			}
+		}
+		var modelId = !!arguments[6] ? ModelId : '';
+	    eval(jsonData.paramsCommand);
+	    return jsonData.queryParams;
+	}
+	/**
+	 * @description: 选中内容,带入右侧内容Pannel
+	 */
+	function writeIn() {
+		var gridID = 'dataGrid';
+		var groupID = GLOBAL.groupID;
+		var rows = $('#' + gridID).datagrid('getSelections');
+		if (rows.length == 0) {
+			$.messager.popover({msg: $g('请选择需要引入的内容！'), type: 'error'});
+			return;
+		}
+		var tmp=[];
+		var tmp1=[];
+		for(var i=0;i<rows.length;i++){
+			for(var j in rows[i])
+			{
+				tmp.push(j)
+				tmp1.push(rows[i][j])
+			}
+		}
+		var data=[];
+		tmp.forEach(function(item,i){
+			var arr=[];
+			arr.push(item)
+			arr.push(tmp1[i])
+			data.push(arr)
+			})	
+		var content={}
+		 content = $cm({
+			ClassName: "Nur.SHIFT.Emr.RefSetting",
+			MethodName: "GetShiftDataTabTemplate",
+			dataType: "text",
+			HospitalID:GLOBAL.hospitalID,
+			id:"5"
+			},false)
+		var result = "";
+		if(content=="")
+		{
+			$.messager.popover({msg: $g('模板为空,请配置模板！'), type: 'alert'});
+		}else{
+			result=evaluate(content,data)
+		}
+//		$('#textEdit', parent.document).val(result);
+		updatePreview($("#textEdit", parent.document)[0], result, getCursortPosition($("#textEdit", parent.document)[0]));	}
+			/**
+	 * @description: 获取选中元素的文本
+	 * @param {obj} 
+	 * @return: 光标位置 
+	 */
+	function getCursortPosition(obj) {
+	    var cursorIndex = 0;
+	    if (document.selection) {
+	        // IE Support
+	        obj.focus();
+	        var range = document.selection.createRange();
+	        range.moveStart('character', -obj.value.length);
+	        cursorIndex = range.text.length;
+	    } else if (obj.selectionStart || obj.selectionStart == 0) {
+	        // another support
+	        cursorIndex = obj.selectionStart;
+	    }
+	    return cursorIndex;
+	}
+	/**
+	 * @description: 更新引用信息
+	 * @param {curElement, editContent, curPosition} 
+	 */
+	function updatePreview(curElement, editContent, curPosition) {
+		var startText = curPosition == 0 ? '' : curElement.value.substring(0, curPosition);
+	    if (startText.trim() == '/') {
+	        startText = '';
+	    }
+	    var endText = curElement.value.substring(curPosition);
+	    $("#textEdit",parent.document).val(startText + editContent + endText);  //在原有文本追加
+	}
+
+	/**
+	 * @description: 写入预览
+	 * @param {content} 
+	 */
+	function writToPreview(content) {
+		updatePreview($("#textEdit", parent.document)[0], content, getCursortPosition($("#textEdit", parent.document)[0]));
+	}
+	
+	function evaluate(content,data){
+		var k1={}
+		for(var n=0;n<data.length;n++){
+			k1[data[n][0]]=data[n][1];
+			}
+		var flag = 0;
+		var tmp='';
+		var result='';
+		for(var j=0;j<content.length;j++)
+		{
+			if(content[j]=='{'){
+				flag=1;
+			}else if(content[j]=='}'){
+				flag=0;
+				if(k1[tmp]==""){
+					result=result+"?"
+					}
+				result = result+k1[tmp]
+			  tmp='';
+			}else{
+				if(flag==1){
+					tmp = tmp+content[j];
+				}else{
+					result=result+content[j];
+				}
+			}
+				
+		}
+		var tmp1 = result.trim().split("@")
+		var tmp2=''
+		for(var i = 0; i<tmp1.length;i++)
+		{
+			if(tmp1[i]==""||tmp1[i].includes("?"))
+			{
+				tmp2=tmp2+""
+			}else
+			{
+				tmp2=tmp2+tmp1[i]
+			}
+		}
+		return tmp2;
+		}
+	/**
+	 * @description: 监听事件
+	 */
+	function listenEvents() {
+		$('#btnSearch').bind('click',function(e) {
+			initData();
+		}); 
+		$('#btnWriteIn').bind('click',writeIn);
+	}
+	initUI();});
+</script>	
+</html>

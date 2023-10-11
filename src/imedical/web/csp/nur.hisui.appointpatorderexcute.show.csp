@@ -1,0 +1,162 @@
+<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-panel" data-options="fit:true,border:false">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'west',border:false,split:true" style="width:422px;">
+			<div id="patSearch-Panel" class="hisui-panel" title="患者查询" style="border: 1px solid #CCC;border-top: 0;font-size: 0;overflow: hidden;"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+		        <div class="hisui-layout" fit="true">
+		        	<div data-options="region:'north',split:false,border:false" style="height:211px;border-bottom: 1px solid #ccc;">
+		        		<table class="search-table" style="padding:0;">
+			        		<tr>
+								<td class="r-label">
+									<label for="appStartDate">#(..Get("开始日期"))#</label>
+								</td>
+								<td>
+									<input id="appStartDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser" style="width:129px;"/>
+								</td>
+			                    <td class="r-label">
+			                        <label for="appStartDate">#(..Get("结束日期"))#</label>
+			                    </td>
+			                    <td>
+									<input id="appEndDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser" style="width:129px;"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">
+									<label for="regNO">#(..Get("登记号"))#</label>
+								</td>
+								<td>
+									<input class="textbox" id="regNO" placeholder="#(..Get("请输入患者登记号"))#" style="width:129px;height:30px;"/>
+								</td>
+			                    <td class="r-label">
+									<label for="PatName">#(..Get("姓名"))#</label>
+								</td>
+								<td>
+									<input class="textbox" id="PatName" placeholder="#(..Get("请输入患者姓名"))#" style="height:30px;width:129px;"/>
+								</td>
+							</tr>
+							<tr>
+			                    <td class="r-label">
+									<label for="BookNo">#(..Get("住院证号"))#</label>
+								</td>
+								<td>
+									<input class="textbox" id="BookNo" style="width:129px;height:30px;"/>
+								</td>
+								<td class="r-label">
+									<label for="appLocBox">#(..Get("预约科室"))#</label>
+								</td>
+								<td>
+									<input class="hisui-combobox textbox" id="appLocBox" style="width:129px;"/>
+								</td>
+							</tr>
+							<tr>
+			                    <td class="r-label">
+									<label for="appWardBox">#(..Get("预约病区"))#</label>
+								</td>
+								<td>
+									<input class="hisui-combobox textbox" id="appWardBox" style="width:129px;"/>
+								</td>
+								<td class="r-label">
+									<label for="bookDocBox">#(..Get("预约医生"))#</label>
+								</td>
+								<td>
+									<input class="hisui-combobox textbox" id="bookDocBox" style="width:129px;"/>
+								</td>
+							</tr>
+			                <tr>
+			                    <td colspan="4" style="text-align:center;">
+			                        <a class="hisui-linkbutton" id="readCardBtn" data-options="iconCls:'icon-w-card'">读卡</a>
+			                        <a class="hisui-linkbutton" id="BBookFind" data-options="iconCls:'icon-w-find'" style="margin-left:20px;">查询</a>
+			                    </td>
+			                </tr>
+			        	</table>
+		        	</div>
+		        	<div data-options="region:'center',split:false,border:false">
+		        		<table id="appPatGrid"></table>
+		        	</div>
+		        </div>
+		    </div>
+		</div>
+		<div class="right" data-options="region:'center',split:true,border:false" style="">
+			<div class="hisui-panel" data-options="bodyCls:'panel-body-gray',fit:true" style="border-top:0;border-radius:4px;">
+				<div id="opeTabs" class="hisui-tabs tabs-gray" style="height: 37px;" data-options="isBrandTabs:true"></div>
+	       		<div class="content" style="border-bottom:1px solid #ccc;">
+		            <div class="operate">
+		                <div class="dynamic"></div>
+		                <input id="fuzzyKeyword" class="hisui-searchbox" type="text" prompt="#(..Get("模糊搜索"))#" style="width:120px;padding: 0 10px;" />
+		                <span style="height: 30px;display: inline-block;border-left: 1px dashed #cccccc;margin: 0 10px;vertical-align: middle;"></span>
+		                <select id="titleBox" class="hisui-combobox" name="state" style="width:120px;" data-options="enterNullValueClear:false,blurValidValue:true" placeholder="请选择搜索列">
+		                </select>
+						<span style="display: inline-block;width:10px;"></span>
+		                <input id="keyword" class="hisui-searchbox" type="text" prompt="#(..Get("精确搜索"))#" style="width:130px;" />
+
+		                <input class='hisui-checkbox' type="checkbox" data-options="onCheckChange:getSheetColumns" label="已执行" id="excuteCheck">
+		                <input class='hisui-checkbox' type="checkbox" data-options="onCheckChange:getSheetColumns" label="已打印" id="printCheck">
+		                <input class='hisui-checkbox' type="checkbox" data-options="onCheckChange:selectAll" label="全选" id="selectAll">
+		                <div class="helpInfo">
+		                    <a href="javascript:void(0);" class="helpFlag">
+		                        <span class="icon icon-help" style="margin-right:5px;">&nbsp;</span><span>#(..Get("帮助"))#</span>
+		                    </a>
+		                    <div class="helpDetail">
+		                    	<server>
+		                    		s key=PrintFlagArr.Next("")
+									while(key'=""){
+										s value=PrintFlagArr.GetAt(key)
+										w "<p><span>"_key_"：</span><span>"_value_"</span></p>"
+										s key= PrintFlagArr.Next(.key)
+									}
+		                    	</server>
+		                    </div>
+		                </div>
+		                    
+		            </div>
+		        </div>
+	            <table class='hisui-treegrid' id="orderTable"></table>
+			</div>
+        </div>
+	</div>
+</div>
+</div>
+<div id="exeModal" class="hisui-dialog" title="执行医嘱" style="width:268px;max-height:280px;"
+        data-options="iconCls:'icon-w-run',resizable:true,modal:true,closed:true,buttons:[{
+                text:'保存',
+                handler:function(){eval(functionName+'(true)');}
+            },{
+                text:'关闭',
+                handler:function(){$HUI.dialog('#exeModal').close();}
+            }]">   
+        <table class="search-table">
+            <tr>
+                <td class="r-label">日期</td>
+                <td>
+                    <input id="exeDate" class="hisui-datebox textbox" style="width: 210px;" data-options="onSelect:recordExeDateTime">
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">时间</td>
+                <td>
+                    <input id="exeTime" class="hisui-timespinner" style="width: 210px;" data-options="onChange:recordExeDateTime">
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">备注</td>
+                <td>
+                    <input id="remark" class="textbox" style="width: 210px;">
+                </td>
+            </tr>
+            <tr class="workNo">
+                <td class="r-label">工号</td>
+                <td>
+                    <input id="workNo" class="textbox" style="width: 210px;">
+                </td>
+            </tr>
+            <tr class="password">
+                <td class="r-label">密码</td>
+                <td>
+                    <input id="exePassword" type="password" class="textbox" style="width: 210px;">
+                </td>
+            </tr>
+        </table>
+    </div>
+

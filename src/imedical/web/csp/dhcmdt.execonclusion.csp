@@ -10,6 +10,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<ADDINS/> 
 	<HISUI/>
 	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
 	<link href="../scripts/dhcnewpro/dhcmdt/css/execonclusion.css" rel="stylesheet">
@@ -20,53 +21,70 @@
 	<!-- 配置 -->
 	<server>
 	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  s LgLocID=%session.Get("LOGON.CTLOCID")
+	  s LgUserID=%session.Get("LOGON.USERID")
+	  s LgGroupID=%session.Get("LOGON.GROUPID")
+	  s LgParams=LgHospID_"^"_LgLocID_"^"_LgUserID_"^"_LgGroupID
 	  /// 是否启用 CA签名
-	  s isCaFlag=##Class(web.DHCEMConsultCom).GetEmSysConfig("CAFlag",LgHospID)
+	  s CAFLAG=##Class(web.DHCMDTCom).GetEmSysConfig("CAFLAG",LgParams)
+	  /// 是否联络人填写会诊意见
+	  s MDCONTACTSFLAG=##Class(web.DHCMDTCom).GetEmSysConfig("MDCONTACTSFLAG",LgParams)
+	  /// 完成时是否自动打开MDT电子病历
+	  s COMPISOPEEMR=##Class(web.DHCMDTCom).GetEmSysConfig("COMPISOPEEMR",LgParams)
+	  /// 会诊讨论填写方式
+	  s CONSDISRUL=##Class(web.DHCMDTCom).GetEmSysConfig("CONSDISRUL",LgParams)
+	  ///是否多屏幕
+	  s IsOpenMoreScreen=##Class(web.DHCMDTConsultQuery).IsOpenMoreScreen()
+	  
 	  w "<script Language=""JavaScript"">"_$c(13,10)
-	  w "var isCaFlag="""_$g(isCaFlag)_""";"_$c(13,10)
+	  w "var CAFLAG ="""_$g(CAFLAG)_""";"_$c(13,10)
+	  w "var MDCONTACTSFLAG="""_$g(MDCONTACTSFLAG)_""";"_$c(13,10)
+	  w "var COMPISOPEEMR="""_$g(COMPISOPEEMR)_""";"_$c(13,10)
+	  w "var CONSDISRUL="""_$g(CONSDISRUL)_""";"_$c(13,10)
+	  w "var IsOpenMoreScreen="""_IsOpenMoreScreen_""";"_$c(13,10)
 	  w "</script>"
 	</server>
 </head>
 
 <body>
 	<div class="hisui-layout" fit="true">
-		<div data-options="region:'center',border:true,title:'',headerCls:'panel-header-gray',collapsible:false" style="overflow:hidden;border:0">
+		<div data-options="region:'center',border:true,title:'',headerCls:'panel-header-gray',collapsible:false" style="overflow:hidden;border:0;height:100%;">
 			<!-- 申请单内容区 -->
 			<div class="container">
 				<!-- 申请单操作区 -->
 				<div class="p-content">
 					<div class="ph-title">
-						<span>多学科（MDT）会诊记录</span><span class="tip"></span>
+						<span>#(..Get("多学科（MDT）会诊记录"))#</span><span class="tip"></span>
 					</div>
 					<div style="margin:10px 0px;">
-						<label style="margin-left:14px;">患者姓名</label>
+						<label style="margin-left:14px;">#(..Get("患者姓名"))#</label>
 						<input id="patName" class="hisui-validatebox" style="width:150px;" disabled>
-						<label style="margin-left:58px;">性别</label>
+						<label style="margin-left:58px;">#(..Get("性别"))#</label>
 						<input id="patSex" class="hisui-validatebox" style="width:165px;" disabled>
-						<label style="margin-left:67px;">年龄</label>
+						<label style="margin-left:67px;">#(..Get("年龄"))#</label>
 						<input id="patAge" class="hisui-validatebox" style="width:150px;" disabled>
-						<label style="margin-left:38px;">病案号</label>
+						<label style="margin-left:38px;">#(..Get("病案号"))#</label>
 						<input id="medicalNo" class="hisui-validatebox" style="width:143px;" disabled>
 					</div>
 					<div style="margin:10px 0px;">
-						<label style="margin-left:14px;">联系电话</label>
+						<label style="margin-left:14px;">#(..Get("联系电话"))#</label>
 						<input id="patTelH" class="hisui-validatebox" style="width:150px;" disabled>
-						<label style="margin-left:57px;">ID号</label>
+						<label style="margin-left:57px;">#(..Get("ID号"))#</label>
 						<input id="patNo" class="hisui-validatebox" style="width:165px;" disabled>
-						<label style="margin-left:40px;">会诊日期</label>
+						<label style="margin-left:40px;">#(..Get("会诊日期"))#</label>
 						<input id="CstDate" class="hisui-datebox textbox" style="width:157px;" disabled>
 					</div>
 					<div style="margin:10px 0px;">
-						<label style="margin-left:14px;">会诊地点</label>
+						<label style="margin-left:14px;">#(..Get("会诊地点"))#</label>
 						<input id="mdtAddr" class="hisui-validatebox" style="width:698px;" disabled>
 					</div>
 					<div style="margin:10px 0px;">
-						<label style="margin-left:14px;">初步诊断</label>
+						<label style="margin-left:14px;">#(..Get("初步诊断"))#</label>
 						<input id="mdtDiag" class="hisui-validatebox" style="width:698px;" disabled>
 					</div>
 					
 					<div style="margin:10px 0px;">
-						<label style="font-weight:bold;">组内科室</label>
+						<label style="font-weight:bold;">#(..Get("组内科室"))#</label>
 						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AddLocWin()" id="bt_grpaddloc">添加</a>
 						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="Clear('G')" id="bt_grpcencel">清空</a>
 						<div style="min-height:90px;padding-top:5px;">
@@ -74,38 +92,52 @@
 			            </div>
 			        </div>
 		            <div style="margin:10px 0px;">
-			            <label style="font-weight:bold;">院内科室</label>
+			            <label style="font-weight:bold;">#(..Get("院内科室"))#</label>
 						<div style="min-height:90px;padding-top:10px;">
 							<table id="dgCstDetList"></table>
 			            </div>
 		            </div>
+		            <div data-grp="locgroup" style="margin:10px 0px;">
+				            <label style="font-weight:bold;">#(..Get("外院专家"))#</label>
+				           	<div style="min-height:90px;padding-top:5px;">
+								<table id="OuterExpList"></table>
+				            </div>
+			            </div>
 		            <div style="margin:10px 0px;">
-			            <label style="font-weight:bold;">病情摘要</label>
+			            <label style="font-weight:bold;">#(..Get("病情摘要"))#</label>
 						<div style="height:100px;padding-top:10px;">
 							<textarea id="mdtTrePro" class="textbox" style="width:100%;height:100px;resize:none;"></textarea>
 			            </div>
 		            </div>
 		            <div style="margin:10px 0px;">
-			            <label style="font-weight:bold;">会诊目的</label>
+			            <label style="font-weight:bold;">#(..Get("会诊目的"))#</label>
 						<div style="height:80px;padding-top:10px;">
 							<textarea id="mdtPurpose" class="textbox" style="width:100%;height:80px;resize:none;" required></textarea>
 			            </div>
 		            </div>
 		            <div id="Opinion" style="margin:10px 0px;">
-			            <label style="font-weight:bold;">会诊讨论</label>
+			            <label style="font-weight:bold;">#(..Get("会诊讨论"))#<span style="font-size: 12px;color: blue;display:none;">&nbsp;&nbsp;#(..Get("【暂存】会存储此信息"))#</span></label> 
 						<div style="height:200px;padding-top:10px;">
-							<textarea id="mdtDiscuss" class="textbox" style="width:100%;height:200px;resize:none;"></textarea>
+							<textarea id="mdtDiscuss" class="textbox" placeholder=#(..Get("记录会诊专家讨论内容,可通过下方暂存按钮进行临时保存!"))# style="width:100%;height:200px;resize:none;"></textarea>
 			            </div>
 		            </div>
+					<div id="Opinion" style="margin:10px 0px;">
+						<div style="height:30px;padding-top:5px;">
+							<label style="font-weight:bold;">#(..Get("肿瘤状态"))#</label>
+							<input class='hisui-radio' type="radio" label='早期' name='mdtTumorFlag' value='1'>
+							<input class='hisui-radio' type="radio" label='局部晚期' name='mdtTumorFlag' value='2'>
+							<input class='hisui-radio' type="radio" label='晚期' name='mdtTumorFlag' value='3'>
+						</div>
+					</div>
 		            <div id="Opinion" style="margin:10px 0px;">
-			            <label style="font-weight:bold;">会诊意见</label>
+			            <label style="font-weight:bold;">#(..Get("会诊意见"))#</label>
 						<div style="height:160px;padding-top:10px;">
-							<textarea id="mdtOpinion" class="textbox" style="width:100%;height:140px;resize:none;"></textarea>
+							<textarea id="mdtOpinion" class="textbox" placeholder=#(..Get("总结会诊治疗方案,可通过下方暂存按钮进行临时保存!"))# style="width:100%;height:140px;resize:none;"></textarea>
 			            </div>
 		            </div>
 		            
 		            <div id="Suppsnotes" style="margin:10px 0px;display:none">
-			            <label style="font-weight:bold;">补充说明</label>
+			            <label style="font-weight:bold;">#(..Get("补充说明"))#</label>
 						<div style="height:160px;padding-top:10px;">
 							<textarea id="mdtSuppsnote" class="textbox" style="width:100%;height:140px;resize:none;"></textarea>
 			            </div>
@@ -115,13 +147,10 @@
 			</div>
 			<!-- 按钮区 -->
 			<div id="OpBtns" class="p-toolbar">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-camera'" onclick="mdtOpenVc()" id="bt_openVc">开启视频</a>
 				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="mdtCancel()" id="bt_cancel">取消</a>
-				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="mdtCompCs()" id="bt_send">确认</a>
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="mdtCompCs()" id="bt_send">完成</a>
 				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="mdtSave()" id="bt_save">暂存</a>
-				<SERVER>
-					i isCaFlag=1 D
-					.w "<a href='#' class='hisui-linkbutton' data-options='iconCls:"""_"icon-w-save"_"""' onclick='mdtSignCs()' id='bt_sign'>签名</a>"
-			   </SERVER>
 			</div>
 		</div>
 	</div>

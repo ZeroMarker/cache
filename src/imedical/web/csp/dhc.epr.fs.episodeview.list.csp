@@ -1,0 +1,43 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>病案浏览</title>
+	<script language="cache" runat="server">
+		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+		s IDCard = $Get(%request.Data("IDCard",1),"")
+		s PatientID = ##class(DHCEPRFS.BL.HISInfo.BLPatientInfo).GetPapmiDR(EpisodeID)
+		s enableViewFlag = "1"
+		s hospitalFlag = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("HospitalFlag")
+		if (hospitalFlag = "HYDYY")
+		{
+			s currEpisodeID = "",currAdmStatus = ""
+			s currEpisodeID = $o(^PAPERdr(PatientID,"ADM","I",currEpisodeID),-1)
+			s:(currEpisodeID '= "") currAdmStatus = $p($g(^PAADM(currEpisodeID)),"^",20)
+			s:(currAdmStatus '= "A") enableViewFlag = "0"
+		}
+	</script>
+	<script type="text/javascript">
+		var episodeID = '#(EpisodeID)#';
+		var idCard = '#(IDCard)#';
+		var enableViewFlag = '#(enableViewFlag)#';
+	</script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+	<script src="../scripts/epr/JQuery/jquery.min.js"></script>
+	<script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+	<script src="../scripts/epr/JQuery/easyui-lang-zh_cn.js"></script>
+	<script src="../scripts/epr/js/fs.episodeview.list.js"></script>
+</head>
+<body class="easyui-layout">
+	<div data-options="region:'west',border:false" style="width:400px;">
+		<table id="episodeListTable"></table>
+	</div>
+	<div data-options="region:'center',title:'病案浏览'">
+		<iframe id="iframeView" src="" frameBorder="0" scrolling="no" style="height:100%;width:100%"></iframe>
+	</div>
+</body>
+</html>

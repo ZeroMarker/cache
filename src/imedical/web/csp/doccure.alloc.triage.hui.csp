@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--doccure.alloc.triage.hui.csp HISUI 治疗护士报道--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard,CmdShell"/> 
+<DHCDOCCURE></DHCDOCCURE>
+<DOCCARD medStepCode="Cure"></DOCCARD>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
+<style>
+.r-label{
+	padding: 0px 10px 0px 20px;
+}
+.td-chk{
+	text-align: left;
+}
+</style>
+<Server>
+/*w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+s XMLObject=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+s sysDateFormat=##class("websys.Conversions").DateFormat()
+s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+s CureAllocDefState=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAllocDefState",%session.Get("LOGON.HOSPID"))
+s DefPerState=##class(DHCDoc.DHCDocCure.CureCall).GetCurePerStateId(CureAllocDefState)
+s CureAppVersion=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAppVersion",%session.Get("LOGON.HOSPID"))
+</Server>
+</head>
+<body>
+
+	<csp:Include Page="doccure.alloc.triage.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			sysDateFormat:"#(sysDateFormat)#",
+			CurrDateHtml:"#(CurrentDate)#",
+			DefPerState:"#(DefPerState)#",
+			CureAppVersion:"#(CureAppVersion)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.readcard.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.inittab.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/alloc.triage.js"></script>
+
+	
+</body>
+</html>

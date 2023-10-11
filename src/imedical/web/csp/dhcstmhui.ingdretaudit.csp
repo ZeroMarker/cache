@@ -7,8 +7,12 @@
 <SERVER>
  d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
  d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+ s TabParams=$G(%request.Data("TabParams",1))
 </SERVER>
 <head>
+	<script language=javascript>
+		var gTabParams='#(TabParams)#';
+	</script>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
@@ -18,30 +22,55 @@
 	<div data-options="region:'center',border:false" class="GridPadding">
 		<div class="hisui-panel" data-options="title:'退货单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
 			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',border:false">
-					<table id="Conditions" class="Condition">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table id="Conditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<input id="Completed" name="Completed" type="hidden" value="Y">
 						<tr>
-							<td>起始日期</td>
-							<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
 							<td>退货科室</td>
 							<td><input id="RetLoc" name="RetLoc" class="textbox hisui-combobox"></td>
-							<td>审核状态</td>
-							<td><input id="AuditFlag" name="AuditFlag" class='textbox hisui-simplecombobox' style="width:100px;"></td>
-							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-							<td><a href="#" id="AuditBT" class="hisui-linkbutton" style="width:100px">审核</a></td>
-							<td><a href="#" id="PrintBT" class="hisui-linkbutton" style="width:86px">打印</a></td>
+							<td><input id="VirtualFlag" name="VirtualFlag" class="hisui-checkbox" type="checkbox" label="暂存库"></td>
+							<td>起始日期</td>
+							<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
+							<td>
+								<input class="hisui-radio" type="radio" label="全部" name="AuditFlag" value="">
+								<input class="hisui-radio" type="radio" label="已审核" name="AuditFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="未审核" name="AuditFlag" value="N" data-options="checked:true">
+							</td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:88px">查询</a></td>
+							<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:88px">打印</a></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:120px;">清屏</a></td>
+							<td><a href="#" id="SendIngRetBT" class="hisui-linkbutton">同步至阳光平台</a></td>
 						</tr>
 						<tr>
-							<td>截止日期</td>
-							<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
 							<td>供应商</td>
 							<td><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
-							<td>推送状态</td>
-							<td><input id="SendFlag" name="SendFlag" class='textbox hisui-combobox' style="width:100px;"></td>
-							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-							<td><a href="#" id="SendBT" class="hisui-linkbutton">推送至平台</a></td>
-							<td><a href="#" id="PrintHVBT" class="hisui-linkbutton">打印高值</a></td>
+							<td></td>
+							<td>截止日期</td>
+							<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
+							<td align="left">
+								<input class="hisui-radio" type="radio" label="全部" name="HvFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="高值" name="HvFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="非高值" name="HvFlag" value="N">
+							</td>
+							<td><a href="#" id="AuditBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'" style="width:88px">审核</a></td>
+							<td><a href="#" id="CancelAuditBT" class="hisui-linkbutton" style="width:88px;">取消审核</a></td>
+							<td><a href="#" id="PrintHVBT" class="hisui-linkbutton" style="width:120px;">打印汇总</a></td>
+						</tr>
+						<tr class="SCIShow">
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td >
+								<input class="hisui-radio" type="radio" label="全部" name="SendFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="已推送" name="SendFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="未推送" name="SendFlag" value="N">
+							</td>
+							<td><a href="#" id="SendBT" class="hisui-linkbutton" style="width:88px;">推送平台</a></td>
+							<td><a href="#" id="CancelSendBT" class="hisui-linkbutton" style="width:88px;">撤销推送</a></td>
+							<td><a href="#" id="GetPlatState" class="hisui-linkbutton" data-options="iconCls:''" style="width:120px;">获取平台状态</a></td>
+							<td><a href="#" id="ReturnQueryBT" class="hisui-linkbutton" style="width:145px">阳光平台退货状态</a></td>
 						</tr>
 					</table>
 				</div>
@@ -56,9 +85,28 @@
 			<table id="RetDetailGrid"></table>
 		</div>
 	</div>
-
+	<!-- 四川阳光采购平台退货情况查询弹窗 -->
+	<div id="SCUpIngrtStatusWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="阳光采购平台退货情况查询">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',border:false">
+				<table id="SCIngrtStatusConditions" class="Condition">
+					<tr>
+						<td><label>当前页码</label><input id="SCIngrtStatusCurPageNumber" name="SCIngrtStatusCurPageNumber" class="textbox" style="width:130px;"></td>
+						<td><label>总页数</label><input id="SCIngrtStatusTotalPageCount" name="SCIngrtStatusTotalPageCount" class="textbox" style="width:123px;" disabled></td>
+						<td><label>总行数</label><input id="SCIngrtStatusTotalRecordCount" name="SCIngrtStatusTotalRecordCount" class="textbox" style="width:123px;" disabled></td>
+						<td><a href="#" id="SCIngrtStatusSearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">查询</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="headerCls:'panel-header-gray',region:'center'">
+				<table id="SCUpIngrtStatusGrid"></table>
+			</div>
+		</div>
+	</div>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/IngDretCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SunPurPlanSC/QueryInGdRetSendStatus.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/IngDretPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/IngDretAudit.js"></script>
 </body>

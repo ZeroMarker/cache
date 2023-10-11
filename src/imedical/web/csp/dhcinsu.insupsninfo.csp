@@ -1,0 +1,153 @@
+<!-- 
+ * FileName:	dhcinsu.insupsninfo.csp
+ * User:		DingSH
+ * Date:		2021-01-07
+ * Function:	人员信息查询
+ * MianCSP：dhcinsu.insuservqry.csp
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<script type="text/javascript" src="../scripts/jsonfun.js" ></script>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insuservqrycom.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+    <server>
+	 	set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+	</server>
+    <style>
+        .panel-noscroll {
+            background: white;
+        }
+        .tabs-panels {
+            margin: 0;
+            padding: 0;
+            border-width: 0 0px 0px;
+            border-style: solid;
+            overflow: hidden;
+}
+    </style>
+</head>
+<body style="padding:10px;">
+<div class="hisui-layout" data-options="fit:true">
+    <div data-options="region:'center',border:false" style='padding-right:10px;'>
+        <div class="hisui-layout" data-options="fit:true">
+           <div data-options="region:'north',border:false" style='height:445px'>
+            <div class="hisui-panel" title="人员基本信息" id="PsnInfoPanel"
+                data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+                <table class="search-table" id='psnInfo'>
+                    <tr>
+                        <td class="r-label td-first-col"><label class="clsRequired">医保类型</label></td>
+                        <td><input id="PsnINSUType" class="textbox" /></td>
+                        <td class="r-label" style="padding-left:40px"><label >人员姓名</label></td>
+                        <td><input id="psn_name" class="textbox" readonly= "true"/></td>
+                        <td class="r-label" style="padding-left:60px"><label>性别</label></td>
+                        <td><input id="gend" class="textbox" readonly= "true"/></td>
+                    </tr>
+                    <tr>
+                        <td class="r-label td-first-col"><label class="clsRequired">凭证类型</label></td>
+                        <td><input id="psn_mdtrt_cert_type" class="textbox" /></td>
+                        <td class="r-label"><label class="clsRequired">凭证编号</label></td>
+                        <td><input id="psn_mdtrt_cert_no" class="textbox" /></td>
+                          <td class="r-label td-first-col"><label>民族</label></td>
+                        <td><input id="naty" class="textbox" readonly= "true"/></td>
+                    </tr>
+                    <tr>
+                       <td class="r-label td-first-col"><label>参保地区</label></td>
+                        <td><input id="insuplc_admdvs" class="textbox" /></td>
+                        <td class="r-label"><label>年龄</label></td>
+                        <td><input id="age" class="textbox" readonly= "true"/></td>
+                        <td class="r-label"><label> 出生日期</label></td>
+                        <td><input id="brdy" class="textbox" readonly= "true"/></td>
+                    </tr>
+                    <tr>
+                        <td class="r-label td-first-col"><label>人员编号</label></td>
+                        <td><input id="psnNo" class="textbox" readonly= "true"/></td>
+                        <td class="r-label "><label>证件类型</label></td>
+                        <td><input id="psn_psn_cert_type" class="textbox" readonly= "true"/></td>
+                        <td class="r-label"><label>证件号码</label></td>
+                        <td><input id="certno" class="textbox" readonly= "true" /></td>
+                    </tr>
+                    <tr>
+                        <td class="r-label td-first-col"><label>医保卡号</label></td>
+                        <td><input id="psn_card_no" class="textbox" /></td>
+                        <td class="r-label"><label>保障号码</label></td>
+                        <td><input id="psn_certno" class="textbox hisui-validatebox" /></td>
+                        <td class="r-label"><label>医保余额</label></td>
+                        <td><input id="psn_account" class="textbox" readonly= "true" style="font-size:20px;color:red;font-weight: bold;" /></td>
+                    </tr>
+                    <tr>
+                        <td class="r-label td-first-col"><label>社保卡状态</label></td>
+                        <td><input id="certno" class="textbox" readonly= "true" /></td>
+                        <td class="r-label "><label>医保就诊ID</label></td>
+                        <td><input id="psn_mdtrtId" class="textbox" readonly= "true"/></td>
+                        <td class="r-label"><label>就诊状态</label></td>
+                        <td><input id="psn_actFlag" class="textbox" readonly= "true"style="font-size:20px;color:red;font-weight: bold;"/></td>  
+                    </tr>
+                     <tr>
+                        <td class="r-label td-first-col"><label>就诊日期</label></td>
+                        <td><input id="psn_admDate" class="textbox" readonly= "true"/></td>
+                        <td class="r-label"><label>就诊科室</label></td>
+                        <td><input id="psn_admLoc" class="textbox" readonly= "true" /></td>
+                        <td class="r-label"><label>AdmDr</label></td>
+                        <td><input id="psn_admDr" class="textbox" readonly= "true" /></td>
+                    </tr>
+                   <tr>
+                        <td class="r-label td-first-col"><label>医保结算ID</label></td>
+                        <td><input id="psn_DivDjlsh0" class="textbox" readonly= "true" /></td>
+                        <td class="r-label"><label>结算状态</label></td>
+                        <td><input id="psn_DivFlag" class="textbox" readonly= "true" style="font-size:20px;color:red;font-weight: bold;"/></td>
+                        <td class="r-label"><label>InDivDr</label></td>
+                        <td><input id="psn_inDivDr" class="textbox" readonly= "true"/></td>
+                    </tr>
+                    <tr>
+                        <td class="r-label td-first-col"><label>InAdmDr</label></td>
+                        <td><input id="psn_inAdmDr" class="textbox" readonly= "true" /></td>
+                    </tr>
+                     <tr >
+                     <td style='text-align:center' colspan='6'>
+                            <a id="btnPsnQry" href="#"  class="hisui-linkbutton"
+                                data-options="iconCls:'icon-w-find'" style="margin-left:25px">查询</a>
+     
+                            <a id="btnPsnClear" href="#"  class="hisui-linkbutton" style="margin-left:20px"
+                                data-options="iconCls:'icon-w-clean'">清屏</a>
+                       </td>
+                    </tr>
+                </table>
+             </div>
+            </div>
+            <div data-options="region:'center',title:''" style="border:0;padding-top:10px;border-radius:0px;">	
+            <div id="ttstmt" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools',fit:true,headerCls:'panel-header-gray'">  
+             <div data-options="headerCls:'panel-header-gray'" style="overflow:auto;border-radius:0px;" title="参保基本记录">
+                <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #E2E2E2;border-top:10;border-radius:0px;"> 
+                <div id="insudg"></div>
+                 </div>
+             </div>
+              <div data-options="headerCls:'panel-header-gray'" style="overflow:auto;border-radius:0px;" title="人员身份信息">
+                 <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #E2E2E2;border-top:10;border-radius:0px;"> 
+                <div id="insuIdenDg"></div>
+                </div>
+             </div>
+            </div>
+            </div> 
+        </div>
+    </div>
+    <div data-options="region:'east',border:false" style='width:405px;border-radius:4px' >
+    	<div class="hisui-panel" title="人员累计记录"
+        	data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+        	<div id="cuminfodg"></div>	
+       </div>
+    </div>
+</div>
+<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insupsninfo.js"></script>
+</body>
+</html>

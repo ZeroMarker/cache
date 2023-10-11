@@ -1,8 +1,13 @@
-﻿<!DOCTYPE html>
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
 <html>
 <head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
 	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.navigation.template.css">
 	<script language="cache" runat="server">
 		s docId = $Get(%request.Data("DocID",1),"")
@@ -17,6 +22,9 @@
 		s action = $Get(%request.Data("Action",1),"")
 		s titleCode = $Get(%request.Data("TitleCode",1),"")
 		s titlePrefix = $Get(%request.Data("TitlePrefix",1),"")
+		s eventID = $Get(%request.Data("EventID",1),"")
+		s eventType = $Get(%request.Data("EventType",1),"")
+		s instanceID = $Get(%request.Data("InstanceID",1),"")
 		s userID = %session.Get("LOGON.USERID")
 		//判断患者是否下了诊断
 		s DiagnosInfo=""
@@ -25,9 +33,9 @@
 		s isLoadDocument = ##Class(EMRservice.SystemParameter).IsLoadDocument()
 		//病种关联模板
 		s openDiseaseTemp = ##Class(EMRservice.SystemParameter).openDiseaseTemp()
-		//控制创建病程记录不受入出院时间限制
-		s openDocCode = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("openDocCode")
-		s:(openDocCode="") openDocCode = "[]"
+		s createDateTime = ##Class(EMRservice.BL.BLClientCategory).GetCreateDateTimeByInstanceID(instanceID)
+        //标题弹窗有选择医生下拉框时，医生框内为空则不能点确定按钮来修改病历标题
+        s isCanModifyTitle = ##Class(EMRservice.SystemParameter).IsCanModifyTitle()
 	</script>
 	<script language="javascript">
 		var docId = '#(docId)#';
@@ -46,7 +54,12 @@
 		var DiagnosInfo='#(DiagnosInfo)#';
 		var isLoadDocument='#(isLoadDocument)#';
 		var openDiseaseTemp ='#(openDiseaseTemp)#';
-		var openDocCode = eval(#(openDocCode)#);
+		var strXml = "";
+		var eventID = '#(eventID)#';
+		var eventType = '#(eventType)#';
+		var instanceID = '#(instanceID)#';
+		var createDateTime = '#(createDateTime)#';
+        var isCanModifyTitle = '#(isCanModifyTitle)#';
 	</script>
 	<script language = "javascript">
 		function Dateformatter(date)
@@ -91,10 +104,10 @@
 </head>
 <body >
 	<div id="list" class="hisui-layout" data-options="border:false,fit:true">
-		<div data-options="region:'center',border:false" style="padding:5px;">
-			<div class="hisui-panel" title="模板库" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+		<div data-options="region:'center',border:false" style="padding:10px;">
+			<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
 				<div class="hisui-layout" data-options="border:false,fit:true">
-				<div data-options="region:'north',border:false" style="height:136px;border-bottom:1px solid #ccc;">
+				<div data-options="region:'north',border:false" style="height:166px;border-bottom:1px solid #ccc;border-radius:0px;overflow:hidden">
 					<div class="pic">
 						<img class="tlogoimg" style="width:100%;height:100%;"></img>
 					</div>
@@ -105,15 +118,18 @@
 						</div>
 						
 						<div class="tab_search">
-							<input type="text" class="hisui-searchbox" id="search" data-options="width:280,prompt:'输入病历名称搜索!'" />
+							<input type="text" class="hisui-searchbox" id="search" data-options="width:415,prompt:'输入病历名称搜索!'" />
 				        </div>
 				        <div class="toolradio">
-				        	<input class='hisui-radio' id="rdoLoc" value="rdoLoc" type="radio" name='rdoLoc' label='按科室'>
+				        	<input class='hisui-radio' id="rdoLoc" value="rdoLoc" type="radio" name='rdoLoc' label='按科室' data-options="checked:true">
+							<span style="margin-right:10px"></span>
 							<input class='hisui-radio' id="rdoAll" value="rdoAll" type="radio" name='rdoLoc' label='搜全院'>
+							<span style="margin-right:10px"></span>
+							<input class='hisui-radio' id="rdoPerson" value="rdoPerson" type="radio" name='rdoLoc' label='按个人'>
 						 </div>
 			        </div>
 				</div>
-				<div data-options="region:'center',border:false" style="overflow:auto;" >
+				<div data-options="region:'center',border:false" style="overflow:auto;padding-top:10px" >
 					<ul id="templates"></ul>
 				</div>
 				</div>
@@ -121,29 +137,34 @@
 		</div>
 	</div>
 	<div id="title" class="hisui-layout" data-options="border:false,fit:true">
-		<div data-options="region:'center',border:false" style="padding:5px;">
-		<div class="hisui-panel" title="修改标题" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-write-order'" style="padding-top:10px;">
+		<div data-options="region:'center',border:false" style="padding-left:20px;">
+		<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-write-order',border:false" style="padding-top:20px;">
 			<div class="titlename">
-				<span>#(..Get("当前病历"))#</span>
+				<span class="spanALL">#(..Get("当前病历"))#</span>
 				<lable id="lbDateTime"></lable>
 				<lable id="lbTitleName"></lable>
 			</div>
 			<div class="modifytime">
-				<span>#(..Get("修改时间"))#</span>
-				<input class="hisui-datetimebox" id="dateTime" data-options="formatter:Dateformatter,parser:Dateparser"/>
+				<span class="spanALL">#(..Get("修改时间"))#</span>
+				<input class="hisui-datetimebox" id="dateTime" data-options="formatter:Dateformatter,parser:Dateparser" editable="false"/>
 			</div>	
 			<div class="doctor">
-				<span>#(..Get("选择医师"))#</span>
+				<span class="spanALL">#(..Get("选择医师"))#</span>
 				<input id="doctorInfo"></input>
 			</div>
 			<div class="modifytitle">
-				<span>#(..Get("修改标题"))#</span>
+				<span class="spanALL">#(..Get("修改标题"))#</span>
 				<input type="text" id="titlebefore"/>
 				<span id="titleName"></span>
 				<input type="text" id="titleafter"/>
 			</div>
-			<div class="tool">
+			<div class="event">
+				<span class="spanALL">#(..Get("选择关联"))#</span>
+				<select class="hisui-combogrid" id="eventValues" style="width:405px" data-options="panelHeight:250,panelWidth:510, idField:'ID',textField:'ID'"></select>
+			</div>
+			<div class="tool" style="position:absolute;bottom:0px">
 				<a id="sure" href="#"  title="确定" href="#" class="hisui-linkbutton">#(..Get("确定"))#</a>
+				<span style="margin-right:20px"></span>
 				<a id="cancel" title="取消" href="#" class="hisui-linkbutton">#(..Get("取消"))#</a>
 			</div>
 		</div>

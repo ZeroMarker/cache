@@ -1,0 +1,367 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.ordersheetset.csp 医嘱单设置--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	.wrap{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;
+    	background-color: #fff;	
+    	padding:10px;
+    	overflow:hidden;
+	}
+	.wrap>table td{
+		padding-bottom:10px;	
+	}
+	#main{
+		height:calc(100% - 40px);
+		display:flex;
+	}
+	/* 内容显示设置 */	
+	#main .conSet{
+		padding:10px 10px 0;	
+	}
+	#main .conSet>table td{
+		padding-bottom:10px;	
+	}
+	#main .conSet>div{
+		padding-bottom:10px;
+		display:flex;	
+		align-items:center;	
+	}
+	#main .conSet>div>label{
+		margin-right:10px;
+	}
+	#main .orderNameSuffix{
+		height:calc(100% - 313px);	
+	}
+	#main .orderNameSuffix .panel-header{
+		border-radius:0;
+		border-left:0;
+		border-right:0;	
+	}
+	#main .orderNameSuffix .panel-body{
+		border-left:0;
+		border-right:0;
+		border-bottom:0;
+		border-radius:0;
+		border-color:#ccc;	
+	}
+	/* 医嘱单设置 */
+	#orderSheetSet{
+		height:calc(60% - 5px);	
+		padding-bottom:5px;
+	}
+	#accordion{
+		height:40%;	
+	}
+	#orderSheetSet .panel-body>div.conList{
+		height:100%;
+		float:left;
+		margin-left:10px;
+	}
+	.oecprList{
+		width:140px;					
+	}
+	.skipList{
+		width:410px;	
+	}
+	.skipList2{
+		width:calc(100% - 160px);	
+	}
+	.tempList{
+		width:calc(100% - 140px - 410px - 30px);	
+	}
+	.tempList>div{
+		height:100%;	
+	}
+	.tempList>div .hisui-panel{
+		height:calc(100% - 35px)!important;	
+	}
+	.tempList .list{
+		height:calc(50% - 3px);	
+	}
+	.tempList .list:first-child{
+		padding-bottom:3px;	
+	}
+	.tempList .list:last-child{
+		padding-top:3px;	
+	}
+	.tempList .list .datagrid-wrap{
+		border-radius:0;
+		border-left:0;
+		border-right:0;
+		border-color:#ccc;
+	}
+	.tempList .list:first-child .datagrid-wrap{
+		border-top:0;	
+	}
+	.tempList .list:last-child .datagrid-wrap{
+		border-bottom:0;	
+	}
+	/* 屏蔽设置 */
+	.shieldArea{
+		display:flex;
+		height:100%;	
+	}
+	.shieldArea>div{
+		flex:1;
+		padding-right:10px;	
+		height:100%;
+	}
+	.shieldArea>div:last-child{
+		padding-right:0;	
+	}
+	.shieldArea>div>div{
+		height:100%;	
+	}
+	.shieldArea>div>div .hisui-panel{
+		height:calc(100% - 15px)!important;	
+	}
+	.shieldArea .datagrid-wrap{
+		/*
+		border-radius:0;
+		border:0;
+		*/
+	}
+	/* 表头图片设置 */
+	.imgSet td{
+		padding-top:10px;	
+	}
+	.show-img{
+		width:100px;
+		height:110px;
+		border:1px dashed #ccc;	
+		margin-left:60px;
+		position:relative;
+		display:none;
+	}
+	.show-img>img, .show-img .bg-layer{
+		width:88px;
+		height:98px;
+		margin:6px;	
+	}
+	.show-img .bg-layer{
+		left:6px;
+		top:6px;
+		position:absolute;
+		background:rgba(0,0,0,.5);	
+		margin:0;
+		/*
+		display:flex;
+		align-items:center;
+		justify-content:center;
+		*/
+	}
+	.show-img .bg-layer a{
+		width:20px;
+		height:20px;
+		display:block;
+		text-align:center;
+		cursor:pointer;	
+		top:0;
+		right:0;
+		position:absolute;
+	}
+	.show-img .bg-layer a:first-child{
+		/*margin-right:6px;*/	
+	}
+	.btnCls {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        padding: 0 5px 0 0;
+    }
+    .layout>.panel.layout-panel>.panel-header, .accordion>.panel>.panel-header{
+		border-radius:4px 4px 0 0;    
+	}
+	.panel-body{
+		border-color:#ccc;	
+	}
+</style>
+</head>
+
+<body>
+	<div class="wrap">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="r-label">所属医院</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="saveSet()">保存</a>
+				</td>
+			</tr>
+		</table>
+		<div id="main">
+			<div class="hisui-layout" data-options="fit:true">   
+				<div data-options="region:'west',title:'内容显示设置',collapsible:false,split:true,headerCls:'panel-header-gray'" style="width:360px;border-radius:0 0 4px 4px;">
+					<div class="conSet">
+						<table cellpadding="0" cellspacing="0">
+							<tr>
+								<td class="r-label">是否显示撤销的临时医嘱</td>
+								<td><div id="switch" class="hisui-switchbox" data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'"></div></td>
+							</tr>
+							<tr>
+								<td class="r-label">撤销医嘱提示显示</td>
+								<td><input class="hisui-validatebox textbox" id="undo-name" style="width:140px;" /></td>
+							</tr>
+							<tr>
+								<td class="r-label">是否显示成组标志</td>
+								<td><div id="switch2" class="hisui-switchbox" data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'"></div></td>
+							</tr>
+							<tr>
+								<td class="r-label">日期格式</td>
+								<td><select id="date-format" style="width:147px;"></select></td>
+							</tr>
+							<tr>
+								<td class="r-label">时间格式</td>
+								<td><select id="time-format" style="width:147px;"></select></td>
+							</tr>
+							<tr>
+								<td class="r-label" style="padding-bottom:5px;">每页医嘱数</td>
+								<td style="padding-bottom:5px;"><input class="hisui-numberbox textbox" id="orderNums" data-options="min:1" style="width:147px;" /></td>
+							</tr>
+							<tr>
+								<td class="r-label">是否显示CA签名</td>
+								<td><div id="switch3" class="hisui-switchbox" data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'"></div></td>
+							</tr>
+							<tr>
+								<td class="r-label">草药是否全部显示</td>
+								<td><div id="switch4" class="hisui-switchbox" data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'"></div></td>
+							</tr>
+							<tr>
+								<td colspan="2" style="padding-bottom:6px;">
+									<input id="radio_0" class="hisui-radio" type="radio" label="医嘱显示顺序 开医嘱时间" name="radio" value="0" data-options="radioClass:'hischeckbox_square-blue',boxPosition:'right'">
+									<input id="radio_1" class="hisui-radio" type="radio" label="医嘱开始时间" name="radio" value="1" data-options="radioClass:'hischeckbox_square-blue',boxPosition:'right'">
+								</td>
+							</tr>
+						</table>
+						<!--
+						<div><input id="cb" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="是否显示撤销的临时医嘱"></div>
+						<div>
+							<label for="undo-name">撤销医嘱提示显示</label>
+							<input class="hisui-validatebox textbox" id="undo-name" />
+						</div>
+						<div><input id="cb2" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="是否显示成组标志"></div>
+						<div>
+							<label for="date-format">日期格式</label>
+							<select id="date-format" style="width:130px;"></select>
+						</div>
+						<div>
+							<label for="time-format">时间格式</label>
+							<select id="time-format" style="width:130px;"></select>
+						</div>
+						<div>
+							<label>医嘱显示顺序</label>
+							<input id="radio_0" class="hisui-radio" type="radio" label="开医嘱时间" name="radio" value="0" data-options="radioClass:'hischeckbox_square-blue',boxPosition:'right'">
+							<input id="radio_1" class="hisui-radio" type="radio" label="医嘱开始时间" name="radio" value="1" data-options="radioClass:'hischeckbox_square-blue',boxPosition:'right'">
+						</div>
+						-->
+					</div>
+					<div class="orderNameSuffix">
+						<table id="dg" data-options="headerCls:'panel-header-gray',fit:true,autoSizeColumn:false"></table>
+					</div>
+				</div>   
+				<div data-options="region:'center',title:'',split:true" style="border:0;">
+					<div id="orderSheetSet">
+						<div id="tabs" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true,fit:true">
+							<div title="医嘱单设置" data-options="iconCls:'icon-batch-cfg'"></div> 
+							<div title="长期医嘱单" style="padding:10px 10px 10px 0;">
+								<div class="conList oecprList">
+									<table id="dgOecprL" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>	
+								<div class="conList skipList">
+									<table id="dgSkipL" title="医嘱单换页划线设置" data-options="headerCls:'panel-header-gray',fit:true,autoSizeColumn:false,toolbar:[]"></table>
+								</div>	
+								<div class="conList tempList">
+									<div class="hisui-panel" title="显示在长期医嘱单上的临时医嘱" data-options="fit:true,headerCls:'panel-header-gray'">
+										<div class="list">
+											<table id="dgArcCat" data-options="fit:true,autoSizeColumn:false,toolbar:[]"></table>
+										</div>
+										<div class="list">
+											<table id="dgArcItm" data-options="fit:true,autoSizeColumn:false"></table>
+										</div>
+									</div>
+								</div>								
+							</div>   
+							<div title="临时医嘱单" style="padding:10px 10px 10px 0;">
+								<div class="conList oecprList">
+									<table id="dgOecprT" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>	
+								<div class="conList skipList2">
+									<table id="dgSkipT" title="医嘱单换页划线设置" data-options="headerCls:'panel-header-gray',fit:true,autoSizeColumn:false,toolbar:[]"></table>
+								</div>	
+							</div>  
+						</div>
+					</div>
+					<div id="accordion"> 
+						<div class="hisui-accordion accordion-gray" data-options="border:false,fit:true">   
+							<div title="屏蔽设置" data-options="iconCls:'icon-batch-cfg'" style="padding:10px;border-radius:0 0 4px 4px;">   
+								<div class="shieldArea">
+									<div>
+										<table id="dgOrderCat" data-options="fit:true,autoSizeColumn:false"></table>
+									</div>
+									<div>
+										<table id="dgArcCat2" data-options="fit:true,autoSizeColumn:false"></table>
+									</div>
+									<div>
+										<table id="dgLoc" data-options="fit:true,autoSizeColumn:false"></table>
+									</div>
+								</div>								
+							</div>
+							<div title="表头图片设置" data-options="iconCls:'icon-batch-cfg'" style="padding:0 10px 10px 10px;border-radius:0 0 4px 4px;">   
+								<table class="imgSet" cellpadding="0" cellspacing="0">
+									<tr>
+										<td class="r-label">图片</td>
+										<td colspan="3" class="td-img"></td>
+										<td rowspan="3">
+											<div class="show-img" onmouseover="$('.bg-layer').show()" onmouseout="$('.bg-layer').hide()">
+												<img src="" alt="表头图片"/>
+												<div class="bg-layer">
+													<!--a class="icon-w-eye"></a-->
+													<a class="icon-w-close" onclick="deleteImg()"></a>
+												</div>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td class="r-label">尺寸 长</td>
+										<td class="r-label"><input class="hisui-numberbox textbox" id="height" data-options="min:0" style="width:120px"></td>
+										<td class="r-label">宽</td>
+										<td><input class="hisui-numberbox textbox" id="width" data-options="min:0" style="width:120px"></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td class="r-label">打印坐标 X</td>
+										<td class="r-label"><input class="hisui-numberbox textbox" id="xAxis" data-options="min:0" style="width:120px"></td>
+										<td class="r-label">Y</td>
+										<td><input class="hisui-numberbox textbox" id="yAxis" data-options="min:0" style="width:120px"></td>
+										<td></td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>	
+				</div> 
+			</div> 
+		</div>	
+				
+		<!--div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+			<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+		</div-->
+	</div>	
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.ordersheetset.js"></script>
+</body>
+</html>

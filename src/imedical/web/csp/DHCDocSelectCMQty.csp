@@ -10,8 +10,11 @@
 	s RecLoc=%request.Get("RecLoc")
 	s minNear=%request.Get("minNear")
 	s maxNear=%request.Get("maxNear")
+	Set langid=##class(DHCDoc.Util.RegisteredObject).%LanguageID()
 	s OrderARCIMDesc=$P(^ARCIM(+OrderARCIMRowid,1,1),"^",2) ;##class(web.DHCDocService).GetARCIMDescByID(OrderARCIMRowid)
+	s OrderARCIMDesc=##class(User.ARCItmMast).GetTranByDesc("ARCIMDesc",OrderARCIMDesc,langid)
 	s RecLocDesc=$p(^CTLOC(RecLoc),"^",2) ;##class(web.DHCDocService).GetDepDescByID(RecLoc)
+	s RecLocDesc=##class(User.CTLoc).GetTranByDesc("CTLOCDesc",RecLocDesc,langid)
 </server>
 <STYLE type='text/css'>
 body
@@ -39,9 +42,9 @@ li {border-bottom:1px solid #ddd;padding:5px 10px ;}
 		<ul >
 			<li>
 				&nbsp;&nbsp;&nbsp;&nbsp;
-				<a id="minNearBtn"class="hisui-linkbutton">最小值</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<a id="maxNearBtn"class="hisui-linkbutton">最大值</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				<a id="ExitBtn"class="hisui-linkbutton">取消</a>
+				<a id="minNearBtn"class="hisui-linkbutton">#(..Get("最小值"))#</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<a id="maxNearBtn"class="hisui-linkbutton">#(..Get("最大值"))#</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<a id="ExitBtn"class="hisui-linkbutton">#(..Get("取消"))#</a>
 			</li>
 		<ul >
 	</table>
@@ -60,15 +63,15 @@ li {border-bottom:1px solid #ddd;padding:5px 10px ;}
 		if (obj) obj.onclick=ExitBtnClickHandler;
 
 		var obj=document.getElementById("text1");
-		if (obj) obj.innerHTML="<b>"+OrderARCIMDesc+"</b>&nbsp;&nbsp;&nbsp;&nbsp;"+RecLocDesc+"目前只能提供整包装"
+		if (obj) obj.innerHTML="<b>"+OrderARCIMDesc+"</b>&nbsp;&nbsp;&nbsp;&nbsp;"+RecLocDesc+$g("目前只能提供整包装")
 		var obj=document.getElementById("text2");
 		if (obj) {
 			if (minNear==0){
 				minNear=maxNear
-				obj.innerHTML="请选择小包装组合数.最邻近的小值为【"+minNear+"】";
+				obj.innerHTML=$g("请选择小包装组合数.最邻近的小值为【")+minNear+"】";
 				document.getElementById("maxNearBtn").style.display='none';
 			}else{
-				obj.innerHTML="请选择小包装组合数.最邻近的小值为【"+minNear+"】,大值为【"+maxNear+"】";	
+				obj.innerHTML=$g("请选择小包装组合数.最邻近的小值为【")+minNear+$g("】,大值为【")+maxNear+"】";	
 			}
 		}
 	}

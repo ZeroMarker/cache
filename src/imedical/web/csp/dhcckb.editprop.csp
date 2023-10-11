@@ -1,0 +1,209 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+<title>临床知识库实体添加属性维护</title>
+<HISUI/>
+<DHCCKB/>
+	<script Language="Javascript">
+	var SessionID= "#(%session.SessionId)#";
+	var UserId = "#($g(%session.Data("LOGON.USERID")))#;"		
+	</script>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/util/uploadify/uploadify.css" />
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/util/imgshow/css/boxImg.css" />
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/util/imgshow/js/boxImg.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/util/uploadify/jquery.uploadify.min.js" ></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/editprop.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/tinyopen.js"></script>
+	<style type="text/css">	
+	.layout-panel-center{
+		padding: 10px;
+	}
+	.layout-panel-west{
+		padding: 10px 0px 10px 10px;
+	}	
+   </style>
+</head>
+
+<body>	
+	<div class="hisui-layout"  fit="true" id="mainPanel">
+		<!--查询条件区-->
+		<div data-options="region:'west',title:'',split:true,split:false,showCollapsedTitle:true"  style="width:600px;" border=0>	
+				
+			<div class="hisui-panel" data-options="title:'药品分类',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="overflow:hidden;">	
+				<div id="toolbar" style="padding:10px 0px 10px 5px;">
+					<table>
+						<tr>
+							<td style="text-align:right;"><span style="margin-right:4px">医院</span><input style="width:170px;" id="hospId"  class="hisui-combobox"/></td>
+							<td style="text-align:right;"><span style="margin-right:4px;margin-left:10px">药品分类</span><input style="width:170px;" id="dicType" href="#" class="hisui-combobox" prompt='请输入代码/名称/拼音码'/></td>
+							<td style="text-align:right;"><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick = "QueryDicList()" id="search">查询</a> </td>
+						</tr>
+						<tr>
+							<td style="text-align:right;padding-top:10px"><span style="margin-right:4px">通用名</span><input style="width:170px;" id="genername" class="hisui-combobox" /></td>
+							<td style="text-align:right;padding-top:10px"><span style="margin-right:4px">检索</span><input id="queryCode" href="#" class="hisui-searchbox" style="width:170px;" prompt='请输入代码/名称/拼音码'/></td>
+							<td><a style="margin-left:10px;padding-top:10px" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-format-line',plain:true" onclick = "ShowMoreBtn()" id="searchmore">更多</a></td>
+							<!--<td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a> </td>-->
+						</tr>
+						
+						<tr id="showtr" data-options="display:none;" hidden="true">
+							<td style="text-align:right;padding-top:10px"><span>检索条件</span><input style="width:170px;" id="queryDic" class="hisui-combobox" /></td>
+						</tr>
+					</table>
+					<!-- <div style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div> -->
+					<table cellspacing="0" cellpadding="0" style="display:none">
+						<tr>
+					      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="release">发布</a></td>					     
+					    </tr>
+					</table>
+					<table cellspacing="0" cellpadding="0" style="display:none">
+						<tr>
+					      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="insert">新增</a></td>
+					      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="save">保存</a> </td>
+					      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="delete">删除</a></td>	
+					    </tr>
+					</table>
+					<!-- <div style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>	 -->
+				</div>
+				<div id="diclist" toolbar="#toolbar"  border="false"></div>
+	    	</div>			
+						
+		</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="">
+			<div class="hisui-panel" data-options="title:'药品属性维护<font color=red font-weight=bold font-size=12pt >【双击进行编辑】</font>',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-top:0;border-radius:0px;">	
+				<div id="griddiv" style="height:100%;">
+					<div id="linkattrlist" border="false" toolbar="#subtoolbar"></div>
+				</div>
+	    	</div>		
+		</div> 
+	</div>	
+</body>
+<div id="subtoolbar" style="padding:10px 0px 10px 10px; ">
+	<div>							
+		<table>
+			<!-- <input id="subQueryCode" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/>	 -->
+			<td style="padding-left:5px;padding-right:5px">属性</td>
+			<td>
+					<input id="propertyComBox" class="hisui-combobox textbox"/>
+			</td>
+			
+			<td style="padding-left:20px;">
+					<input class="hisui-checkbox" type="checkbox" value="1" label="是否为空" id="genMatch">
+			</td>
+		</table>
+	</div>
+	<div style="margin:10px 0 0 -10px;border-bottom:1px dashed #ccc;">	</div>	
+	<div style="margin:5px 0 0 0px;">
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="InsertComOrigin">新增同源药品</a>
+	</div>
+</div>
+<!-- 属性值编辑弹窗 -->	
+<div id="myWin" style="display:none;">  
+
+	<!--textArea方式-->
+	<div id="mytextarea" class="div-common" style="display:none;">
+		<div data-options="region:'north',title:'',border:false,collapsible:false" style='height:200px;'>
+			<div class="hisui-layout" fit="true" border="false">
+				<div id="linklist"></div>
+			</div>
+		</div>
+		<div data-options="region:'center',title:'',border:false,collapsible:false">
+			<input id="linkID" type="text" style="display:none"></input>
+			<textarea id="myarea" type="text" border="1" class="hisui-validatebox" placeholder="请编辑要保存的内容..." style="width:94%;height:80px;resize:none;overflow:hidden;margin:10px;" data-options="required:true"></textarea>
+		</div>
+	</div>
+	
+	<!-- datagrid和tree方式(使用treegrid)-->
+	<div id="mytree" class="div-common" style="height:390px;padding:10px;display:none;">   
+		<div class="hisui-panel" data-options="title:'属性列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+			<table>
+			    <tr>
+			        <td class="tdlabel">检索</td>
+			        <td><input id="myChecktreeDesc" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/></td>
+			        <td>
+			        	<input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+			            <input id="myChecktreeFilterCK0" class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+			            <!-- <input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'> -->
+			       		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" onclick="InsertDsource(1)">新增数据源</a>
+			        </td>
+			    </tr>                    
+			</table>  
+			<ul id="mygrid"></ul>
+	    </div>	
+	</div>
+	
+	<!-- datagrid -->
+	<div id="mydatagrid" class="div-common" style="height:402px;padding:10px 10px 0px 10px;display:none;">   
+		<div class="hisui-panel" data-options="title:'属性列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+			<div id="addgrid" toolbar="#gridbar" data-options="fit:true" border="false"></div>
+	    </div>	
+	</div>
+	
+	<!-- CheckBox形式-->
+	<div id="mycheckbox" class="div-common" style="width:360px;height:400px;padding:10px;display:none;"> 
+		
+	</div>
+	
+	<!--treegrid工具栏-->
+    <div id="treegridbar" style="display:none;">
+		<table>
+		    <tr>
+		        <td class="tdlabel">检索</td>
+		        <td><input id="myChecktreeDesc" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/></td>
+		        <td>
+		        	<input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+		            <input id="myChecktreeFilterCK0" class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+		        </td>
+		        
+		    </tr>                    
+		 </table>                     	
+    </div> 
+    
+	<!--grid工具栏-->
+    <div id="gridbar" class="toolbar" style="padding:2px 0px 2px 2px;display:none;">
+    	<div style="padding:10px 0px 0 10px">
+    		<input id="dsou"  type="text" class="textbox" placeholder="请录入要新增的数据源！"/>
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save',stopAllEventOnDisabled:true" onclick="InsertDsource(2)" style="margin-left:10px;">新增数据源</a>
+	    </div>
+	    <div style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>	
+    	<table>
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+	    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a> 
+    	</table>    	   	
+    </div> 
+	<!-- 添加同源药品窗口 -->
+	<div id="InsertComDicWin" style="display:none; ">   
+		<div style="position: relative;">
+			<div  style="margin:10px 10px;">
+				<table style="position: relative;left: 0;right: 0;margin: auto;">
+					<tr>
+						<td colspan="2"><label style="margin:0px 10px 0px 0px;">药品名称</label><input id="dicName" type="text" class="textbox" style="width:440px;" /></td>
+					</tr>
+					<tr>
+						<td colspan="2" style="padding-top:10px;"><label style="margin:0px 10px 0px 0px;">药品规格</label><input id="dicSpec" type="text" class="textbox" style="width:440px;"  /></td> 
+					</tr>
+					<tr>
+						<td style="padding-top:10px;"><label style="margin:0px 10px 0px 0px;">批准文号</label><input id="dicAppNum" type="text" class="textbox" /></td>
+						<td style="padding-top:10px;text-align:right"><label style="margin:0px 10px 0px 0px;">等效数量</label><input id="dicEqunitNum" type="text" class="textbox" /></td>
+					</tr>
+					<tr>
+						<td style="padding-top:10px;"><label style="margin:0px 10px 0px 0px;">等从单位</label><input id="dicEqunitA" type="text" class="hisui-combobox" style="width:155px"/></td>
+						<td style="padding-top:10px;text-align:right"><label style="margin:0px 10px 0px 0px;">等到单位</label><input id="dicEqunitB" type="text" class="hisui-combobox" style="width:155px"/></td>
+					</tr>
+				</table>
+			</div>
+	    </div>
+	    <div style="position:absolute;left:0;right:0;margin:auto;display:flex;justify-content:center;">
+	    	<a href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="saveComDrug()">保存</a>
+			<a href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="closeDicWin()" style="margin-left:30px;">取消</a>
+	    </div>
+	</div>
+</div>
+</html>

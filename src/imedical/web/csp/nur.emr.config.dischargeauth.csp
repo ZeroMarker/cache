@@ -1,0 +1,302 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<!--nur.emr.config.dischargeauth.csp-->
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+	<style type='text/css'>
+		body {
+			padding: 0px;
+		}
+		.switchTable td:first-child {
+			width: 278px !important;
+		}
+		.switchTable td:nth-child(3) {
+			width: 254px !important;
+			text-align:right;
+		}
+		.switchTable td:nth-child(4) {
+			width: 20px !important;
+			text-align:left;
+		}
+	</style>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/switch/func.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/dischargeauth.js" charset=gbk></script>
+</head>
+
+<body> 
+	<!--等候加载提示-->
+	<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true">
+		<div class="single_row_layout_north nc_bottom_dashed_border_north_region" data-options="region:'north',border:false,bodyCls:'panel-header-gray'">
+			<table class="search_table">
+				<tr>
+					<td>
+						<label id="_HospListLabel">所属医院</label>
+					</td>
+					<td>
+						<input id="_HospList" class="hisui-combobox" style="width:120px;height:28px;"/>
+					</td>
+					<td>
+						<a id="btnSave" class="hisui-linkbutton hover-dark btntext">保存</a>
+					</td>
+					<td>
+						<a href="#" id="a_help">
+							<i class="icon icon-help">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<table class="form_table" data-options="fit:true" >
+				<tr class="form_table_title_tr">
+					<td style="width:196px !important;">
+						<label>病案归档限制</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>病案归档限制</label>
+					</td>
+					<td>
+						<div id="DAFileControl" class="hisui-switchbox" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td class="form_table_label_td" style="width:56px;"><label>限制接口</label></td>
+					<td colspan=2>
+						<input id="DAFileControlInterface" class="hisui-textbox textbox xxl_textbox" type="textbox" disabled="true" placeholder="限制接口类方法">
+					</td>
+				</tr>
+				<tr class="form_table_title_tr">
+					<td style="width:196px !important;">
+						<label>出院病历控制</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>出院护理病历控制</label>
+					</td>
+					<td>
+						<div id="DAEmrControl" class="hisui-switchbox" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td></td>
+					<td class="form_table_label_td"><label>出院天数</label></td>
+					<td>
+						<input id="DAEmrControlDays" class="hisui-numberbox textbox" type="numberbox" data-options="isKeyupChange:true,disabled:true" style="width:100px;">
+					</td>
+					<td style="width:240px;"></td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>出院体征控制</label>
+					</td>
+					<td>
+						<div id="DAObsControl" class="hisui-switchbox" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td class="form_table_label_td"></td>
+					<td class="form_table_label_td"><label>出院天数</label></td>
+					<td>
+						<input id="DAObsControlDays" class="hisui-numberbox textbox" type="numberbox" data-options="isKeyupChange:true,disabled:true" style="width:100px;">
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>出院血糖单控制</label>
+					</td>
+					<td>
+						<div id="DABloodSugarControl" class="hisui-switchbox" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td></td>
+					<td class="form_table_label_td"><label>出院天数</label></td>
+					<td>
+						<input id="DABloodSugarControlDays" class="hisui-numberbox textbox" type="numberbox" data-options="isKeyupChange:true,disabled:true" style="width:100px;">
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>出院产程图控制</label>
+					</td>
+					<td>
+						<div id="DABirthDiagramControl" class="hisui-switchbox" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td></td>
+					<td class="form_table_label_td"><label>出院天数</label></td>
+					<td>
+						<input id="DABirthDiagramControlDays" class="hisui-numberbox textbox" type="numberbox" data-options="isKeyupChange:true,disabled:true" style="width:100px;">
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>出院健康宣教控制</label>
+					</td>
+					<td>
+						<div id="DAHealthEduControl" class="hisui-switchbox" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td></td>
+					<td class="form_table_label_td"><label>出院天数</label></td>
+					<td>
+						<input id="DAHealthEduControlDays" class="hisui-numberbox textbox" type="numberbox" data-options="isKeyupChange:true,disabled:true" style="width:100px;">
+					</td>
+					<td></td>
+				</tr>
+				<tr class="form_table_title_tr">
+					<td>
+						<label>权限控制</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>护理病历控制操作类型</label>
+					</td>
+					<td colspan=5>
+						<ul class="horizon_ul">
+							<li>
+								<input id="DAEmrControlOpTypeSave" class='hisui-checkbox' type="checkbox" label='修改' name='DAEmrControlOpType' value="S" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DAEmrControlOpTypNew" class='hisui-checkbox' type="checkbox" label='新建' name='DAEmrControlOpType' value="N" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DAEmrControlOpTypeDelete" class='hisui-checkbox' type="checkbox" label='作废' name='DAEmrControlOpType' value="C" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<!--li>
+								<input id="DAEmrControlOpTypeView" class='hisui-checkbox' type="checkbox" label='查看' name='DAEmrControlOpType' value="view" defValue="" data-options="boxPosition:'left'">
+							</li-->
+							<li>
+								<input id="DAEmrControlOpTypePrint" class='hisui-checkbox' type="checkbox" label='打印' name='DAEmrControlOpType' value="P" defValue="" data-options="boxPosition:'left'">
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>生命体征可控制操作类型</label>
+					</td>
+					<td colspan=5>
+						<ul class="horizon_ul">
+							<li>
+								<input id="DAObsControlOpTypeSave" class='hisui-checkbox' type="checkbox" label='修改' name='DAObsControlOpType' value="S" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DAObsControlOpTypePrint" class='hisui-checkbox' type="checkbox" label='打印' name='DAObsControlOpType' value="P" defValue="" data-options="boxPosition:'left'">
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>血糖单控制操作类型</label>
+					</td>
+					<td colspan=5>
+						<ul class="horizon_ul">
+							<li>
+								<input id="DABloodSugarControlOpTypeSave" class='hisui-checkbox' type="checkbox" label='修改' name='DABloodSugarControlOpType' value="S" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DABloodSugarControlOpTypPrint" class='hisui-checkbox' type="checkbox" label='打印' name='DABloodSugarControlOpType' value="P" defValue="" data-options="boxPosition:'left'">
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>产程图控制操作类型</label>
+					</td>
+					<td colspan=5>
+						<ul class="horizon_ul">
+							<li>
+								<input id="DABirthDiagramControlOpTypeSave" class='hisui-checkbox' type="checkbox" label='修改' name='DABirthDiagramControlOpType' value="S" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DDABirthDiagramControlOpTypeNew" class='hisui-checkbox' type="checkbox" label='新建' name='DABirthDiagramControlOpType' value="N" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DABirthDiagramControlOpTypeDelete" class='hisui-checkbox' type="checkbox" label='删除' name='DABirthDiagramControlOpType' value="D" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DABirthDiagramControlOpTypePrint" class='hisui-checkbox' type="checkbox" label='打印' name='DABirthDiagramControlOpType' value="P" defValue="" data-options="boxPosition:'left'">
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>健康宣教控制操作类型</label>
+					</td>
+					<td colspan=5>
+						<ul class="horizon_ul">
+							<li>
+								<input id="DAHealthEduControlOpTypeSave" class='hisui-checkbox' type="checkbox" label='修改' name='DAHealthEduControlOpType' value="S" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DAHealthEduControlOpTypeNew" class='hisui-checkbox' type="checkbox" label='新建' name='DAHealthEduControlOpType' value="N" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DAHealthEduControlOpTypeCancelExecute" class='hisui-checkbox' type="checkbox" label='撤销执行' name='DAHealthEduControlOpType' value="U" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DAHealthEduControlOpTypePrint" class='hisui-checkbox' type="checkbox" label='打印' name='DAHealthEduControlOpType' value="P" defValue="" data-options="boxPosition:'left'">
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr class="form_table_title_tr">
+					<td>
+						<label>授权申请</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>出院体征申请模式</label>
+					</td>
+					<td colspan=5>
+						<ul class="horizon_ul">
+							<li>
+								<input id="DADischObsApplyModeWhole" class='hisui-checkbox' type="checkbox" label='整体' name='DADischObsApplyMode' value="whole" defValue="" data-options="boxPosition:'left'">
+							</li>
+							<li>
+								<input id="DADischObsApplyModeSingleTime" class='hisui-checkbox' type="checkbox" label='单时间点' name='DADischObsApplyMode' value="singleTime" defValue="" data-options="boxPosition:'left'">
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr class="form_table_title_tr">
+					<td>
+						<label>授权限制</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="form_table_label_td">
+						<label>病案归档限制出院病历授权</label>
+					</td>
+					<td>
+						<div id="DAFileControlDischAuth" class="hisui-switchbox" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td></td>
+					<td class="form_table_label_td"><label>限制接口</label></td>
+					<td colspan=2>
+						<input id="DAFileControlDischAuthInterface" class="hisui-textbox textbox xxl_textbox" type="textbox" disabled="true" placeholder="限制接口类方法">
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id="dgAuth" data-options="iconCls:'icon-w-home',shadow:false,modal:true,closed:true"></div>
+	</div>
+</body>
+
+</html>

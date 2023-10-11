@@ -1,0 +1,83 @@
+<!-- 
+ * FileName: dhcbill.conf.page.interfacetest.csp
+ * Author: tangzf
+ * Date: 2021-06-15
+ * Description: 第三方接口测试
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.panel.datagrid {
+			border-top: 1px solid #cccccc;
+		}
+		.layout>.panel>.panel-header {
+		    -moz-border-radius: 4px 4px 0 0;
+		    -webkit-border-radius: 4px 4px 0 0;
+		    border-radius: 4px 4px 0 0;
+		}
+	</style>
+	<server>
+		set pageId=+%request.Get("PageId")
+		set site="HOSPITAL"
+		set delPayCode="DELPAY"
+		set noTransPMCode="NOTRANSPM"
+		set transPMCode="TRANSPM"
+		set updateInsTypeCode="UPDATEINSTYPE"
+		set babyUnPayAllowMotherPayCode="BABYUNPAYALLOWMOTHERPAY"
+		kill codeAry
+		set codeAry(1)=delPayCode
+		set codeAry(2)=updateInsTypeCode
+		set codeAry(3)=babyUnPayAllowMotherPayCode
+		set codeStr=##class(ext.util.String).Join(.codeAry, "^")
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		PageId: "_pageId_",",!
+		w "		Site: """_site_""",",!
+		w "		CodeStr: """_codeStr_""",",!
+		w "		DelPayCode: """_delPayCode_""",",!
+		w "		NoTransPMCode: """_noTransPMCode_""",",!
+		w "		TransPMCode: """_transPMCode_""",",!
+		w "		UpdateInsTypeCode: """_updateInsTypeCode_""",",!
+		w "		BabyUnPayAllowMotherPayCode: """_babyUnPayAllowMotherPayCode_""",",!
+		w "		EditRowIndex: undefined",!
+		w "	};",!
+		w "</script>"
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+			<table class='search-table'>
+				<tr>
+					<td class='r-label td-first-col'><label>医院</label></td>
+					<td colspan='6'><input id="hospital" class="textbox"/></td>
+				</tr>
+				<tr>
+					<td class='r-label td-first-col'><label class="clsRequired">接口代码</label></td>
+					<td><input id="PortCode" class="hisui-validatebox textbox" data-options="validType:['checkCodeExist']"/></td>
+					<td class='r-label'><label class="clsRequired">接口名称</label></td>
+					<td><input id="PortDesc" class="textbox"/></td>
+					<td class='r-label'><a id="btn-save" href="javascript:;" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+					<td class='r-label'><a id="btn-delete" href="javascript:;" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a></td>
+					<td class='r-label'><a id="btn-clear" href="javascript:;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				</tr>
+				<tr>
+					<td class='r-label'><label class="clsRequired">接口入参</label></td>
+					<td colspan='9'><textarea id="PortInput" class="textbox" style="width:700px;height:100px;"/></textarea>
+				</tr>
+			</table>
+			<table id="edg"></table>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.page.interfacetest.js"></script>
+</body>
+</html>

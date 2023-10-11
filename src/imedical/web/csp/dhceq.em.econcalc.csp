@@ -7,8 +7,10 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 </head>
 <script language=Cache runat=server>
 	s SourceType=$Get(%request.Data("SourceType",1))
@@ -17,8 +19,9 @@
 	s ReadOnly=$Get(%request.Data("ReadOnly",1))
 	s title="既往工作量数据"
 	s PurchaseTypeCode=""
+	s ECEquipDR=""  //modified by zy ZY0291 20220120
 	s UseYearsNum=""
-	i SourceType=1
+	if SourceType=1
 	{
 		s title="经济预测表"
 		Set BRDRowID=$Order(^DHCEQBuyRequestDetail(0,"BuyRequestList",SourceID,""))
@@ -35,11 +38,17 @@
 		i (CalcFlag="N")&&(PurchaseTypeCode="01") s title="既往工作量信息表"
 		i (CalcFlag="N")&&(PurchaseTypeCode="02") s title="淘汰设备信息表"
 	}
+	elseif SourceType=2
+	{
+		s title="经济预测表"
+		s CalcFlag="Y"
+		s ECEquipDR=SourceID
+	}
 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025") 
 </script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'#(title)#'">
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
 				<div data-options="region:'center',border:false">
 					<table id="tDHCEQEconCalc"  data-options="border:false"></table>
@@ -52,6 +61,7 @@
 		<form name="DHCEQ">
 			<INPUT type="hidden" id="SourceType" value="#(SourceType)#">
 			<INPUT type="hidden" id="SourceID" value="#(SourceID)#">
+			<INPUT type="hidden" id="ECEquipDR" value="#(ECEquipDR)#">
 			<INPUT type="hidden" id="CalcFlag" value="#(CalcFlag)#">
 			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
 			<INPUT type="hidden" id="UseYearsNum" value="#(UseYearsNum)#">

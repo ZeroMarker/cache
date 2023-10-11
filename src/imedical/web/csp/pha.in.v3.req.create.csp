@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--库存请求制单
+	csp:  csp/pha.in.v3.req.create.csp
+	js:   scripts/pha/in/v3/req/create.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+	<!-- 样式扩展 -->
+    <style>
+    	.button-width {
+			width: 90px;
+		}
+		.icon {
+		    width: 24px;
+		    height: 16px;
+		    display: inline-block;
+		}
+    </style>
+    
+    <!-- 接收参数 -->
+    <server>
+		s skipType = $G(%request.Data("skipType", 1))
+	</server>
+	<script type="text/javascript">
+		var skipType = "#(skipType)#";
+	</script>
+</head>
+
+<body>
+    <!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" id="lyMainView" >
+         <div data-options="region:'center'" class="pha-body" border="false">
+         	<div class="hisui-layout" fit="true">
+	            <div data-options="region:'center',border:false,split:true">
+                    <div id="panelInrq">
+						<table id="gridInrq"></table>
+					</div>	
+				</div>
+			</div>
+		</div>
+	</div>
+    
+    <!-- 请求工具栏 -->
+	<div id="gridInrqBar" >
+		<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="recLocId">#(..Get("请求科室"))#</label></td>
+                <td><input id="recLocId"   data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="scg">#(..Get("类组"))#</label></td>
+                <td><input id="scg"  class="hisui-combobox text-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td class="r-label"><label for="remarks">#(..Get("备注"))#</label></td>
+                <td><input id="remarks" class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+            	<td><a id="btnFind" class="hisui-linkbutton button-width" data-pha-event='click:Find'>#(..Get("查询单据"))#</a></td>
+            	<td><a id="btnRefresh" class="hisui-linkbutton button-width" data-pha-event='click:Refresh' >#(..Get("刷新单据"))#</a></td>
+            	<td><a id="btnSave" class="hisui-linkbutton button-width" data-pha-event='click:Save' >#(..Get("保存"))#</a></td>
+            	<td><a id="btnComp" class="hisui-linkbutton button-width" data-pha-event='click:Comp'>#(..Get("完成"))#</a></td>
+            	<td><a id="btnDelete" class="hisui-linkbutton button-width"  data-pha-event='click:Delete'>#(..Get("删除"))#</a></td>
+            	<td><input id="compFlag"  type="hidden" class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+            </tr>
+            <tr>
+		 		<td class="r-label"><label for="proLocId">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId"   data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="reqTypeId">#(..Get("申请类型"))#</label></td>
+                <td><input id="reqTypeId"  class="hisui-combobox text-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>            	
+                <td />
+                <td />
+                <td><a id="btnFindCopy" class="hisui-linkbutton button-width" data-pha-event='click:FindCopy' >#(..Get("复制单据"))#</a></td>
+                <td><a id="btnPrint" class="hisui-linkbutton button-width" data-pha-event='click:Print' >#(..Get("打印"))#</a></td>
+                <td><a id="btnSelectDurg" class="hisui-linkbutton button-width" data-pha-event='click:SelectDurg' >#(..Get("选取药品"))#</a></td>
+            	<td><a id="btnClear" class="hisui-linkbutton button-width" data-pha-event='click:Clear'>#(..Get("清屏"))#</a>
+            	<td><input id="compFlag" type="hidden" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true'/></td>
+            </tr>
+        </table>
+        <div data-options="region:'south'" border="false" style="text-align:center;padding:0 10px 10px 10px">
+			<div id="infoArea" style = "width:100%" ></div>
+		</div>	
+        <div class="pha-line"></div>
+        <div>
+        	<a id="btnAddi" class="hisui-linkbutton" plain='true' iconCls="icon-add" data-pha-event='click:Addi'>新增一行</a>
+        	<a id="btnDeletei" class="hisui-linkbutton" plain='true' iconCls="icon-cancel" data-pha-event='click:Deletei'>删除勾选行</a>
+		</div>
+	</div>
+	
+	<!-- 查询弹框 -->
+    <div id="diagFind" class="hisui-dialog " data-options="closed:true,title:'查询库存请求单'" style="padding:10px">
+        <div class="hisui-layout" fit="true" border="false">
+        	<div class="hisui-panel" data-options="region:'north',height:400,split:true,title:'库存请求单',collapsible:true,showCollapsedTitle:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper'" >
+                <table id="gridInrq_f"></table>
+            </div>
+            <div data-options="region:'center',border:true,title:'请求单明细',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper-info'" >
+            	<table id="gridInrqi_f"></table>   
+            </div>
+        </div>
+    </div>
+    
+    <!-- 查询弹框工具栏 -->
+	<div id="gridInrqBar_f" >
+		<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="recLocId_f">#(..Get("请求科室"))#</label></td>
+                <td><input id="recLocId_f"   data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td><label for="startDate_f">#(..Get("开始日期"))#</label></td>
+                <td><input id="startDate_f" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+		 		<td class="r-label"><label for="reqStatus_f">#(..Get("请求状态"))#</label></td>
+                <td><input id="reqStatus_f"   data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+                <td><a id="btnQueryInrq_f" class="hisui-linkbutton button-width" data-pha-event='click:QueryInrq_f' >查询</a></td>
+            	<td><a id="btnSelect_f" class="hisui-linkbutton button-width" data-pha-event='click:Select_f' >选取</a></td>
+            	<td><a id="btnDeleteRefuse_f" class="hisui-linkbutton button-width red" data-pha-event='click:DeleteRefuse_f' >删除拒绝</a></td>
+            </tr>
+            <tr>
+		 		<td class="r-label"><label for="proLocId_f">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId_f"   data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td><label for="endDate_f">#(..Get("结束日期"))#</label></td>
+                <td><input id="endDate_f" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="reqTypeId_f">#(..Get("申请类型"))#</label></td>
+                <td><input id="reqTypeId_f"  class="hisui-combobox text-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+            	<td><a id="btnClear_f" class="hisui-linkbutton button-width" data-pha-event='click:Clear_f' >清屏</a></td>
+            	<td><a id="btnDelete_f" class="hisui-linkbutton button-width red" data-pha-event='click:Delete_f'>删除</a></td>
+            </tr>
+        </table>
+	</div>
+	
+	<!-- 复制请求单时弹出的条件选择框 -->
+    <div id="diagCopyInrqCondition" class="hisui-dialog" data-options="closed:true,title:'选择复制条件'" style="padding:10px">
+        <div class="hisui-layout" fit="true">
+        	<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="recLocId_copy">#(..Get("请求科室"))#</label></td>
+                <td><input id="recLocId_copy"   data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+                <td class="r-label"><label for="proLocId_copy">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId_copy"   data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+            </tr>
+        </table>
+        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+		    <a id="btnCopyInrq" class="hisui-linkbutton button-width" >#(..Get("复制"))#</a>
+		</div>
+        </div>
+    </div>
+
+    <!-- 加载本页面js -->
+    
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/compoment.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/create.js"></script>
+</body>
+
+</html>

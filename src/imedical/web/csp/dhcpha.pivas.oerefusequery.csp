@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <!--配液拒绝医嘱查询,给医生站/护士站展示
-	csp:dhcpha.pivas.oerefusequery.csp
-	js: scripts/pharmacy/pivas/oerefusequery.js
+	csp: csp/dhcpha.pivas.oerefusequery.csp
+	js:  scripts/pharmacy/pivas/oerefusequery.js
 -->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-    d ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
 </csp:method>
 <HTML XMLNS=TRAK>
 
@@ -15,14 +16,25 @@
     <TRAK:HEAD>
     </TRAK:HEAD>
     <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    
+	<!-- 请求参数 -->
 	<Server language="CACHE" runat="Server">
-   	s admId = $G(%request.Data("EpisodeID",1))
-   </Server> 
+		s admId = $G(%request.Data("EpisodeID",1))
+   </Server>
     <SCRIPT Language="Javascript">
-	// 接收参数
-	var LoadAdmId="#(admId)#"||"";
+		var LoadAdmId = "#(admId)#" || "";
 	</script>
+	
+	<!-- 兼容极简UI样式 -->
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+	<script language=javascript>
+		if (typeof HISUIStyleCode == 'string' && HISUIStyleCode == 'lite') {
+			$(function(){
+				$('body').append('<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.lite.css"></link>');
+			});
+		}
+	</script>
+	
 </HEAD>
 
 <body>
@@ -39,12 +51,13 @@
         <table class="dhcpha-north-tbl" cellpadding=0 cellspacing=0>
 	        <tr>
 	            <td>
-	                <label for="dateOrdStart">用药日期</label>
+	                <label for="dateOrdStart" style="margin-right:5px;">#(..Get("用药日期"))#</label>
 	                <input id="dateOrdStart" class="hisui-datebox" data-options="width:120">
+	                <label style="margin-left:1px;margin-right:2px;">#(..Get("至"))#</label>
 	                <input id="dateOrdEnd" class="hisui-datebox" data-options="width:120">
 	            </td>
 	            <td>
-	            	<label for="txtPatNo">登记号</label>
+	            	<label for="txtPatNo" style="margin-right:5px;">#(..Get("登记号"))#</label>
 	                <input id="txtPatNo" class="hisui-validatebox" placeholder="登记号...">
 	            </td>
 	            <td>

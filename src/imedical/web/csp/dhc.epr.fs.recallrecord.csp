@@ -1,0 +1,125 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>归档病历召回</title>
+	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")
+		s:(userID = "") userID = "159"
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s:(userLocID = "") userLocID = "9"
+		s clinicFlag = ##class(DHCEPRFS.BL.HISInfo.BLHISInfo).CheckCTLocType(userLocID)
+		s reasonFlag = "0"
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var userLocID = '#(userLocID)#';
+		var clinicFlag = '#(clinicFlag)#';
+		var reasonFlag = '#(reasonFlag)#';
+	</script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+	<script src="../scripts/epr/JQuery/jquery.min.js"></script>
+	<script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+	<script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
+	<script src="../scripts/epr/js/fs.recallrecord.js"></script>
+	<style type="text/css">
+	label {
+		display: inline-block;
+		font-size: 14px;
+		font-family: microsoft yahei;
+		width: 60px;
+		text-align: right;
+	}
+	.tbtextbox {
+		border: 1px solid #95B8E7;
+		padding: 0 2px;
+		font-size: 14px;
+		line-height: 24px;
+		vertical-align: middle;
+	}
+	p {
+		font-size: 14px;
+		font-family: microsoft yahei;
+		margin: 10px 0;
+	}
+	textarea {
+		border: 1px solid #95B8E7;
+		font-size: 14px;
+		resize: none;
+	}
+	</style>
+</head>
+<body class="easyui-layout">
+	<div data-options="region:'north'" style="height:84px;padding:5px;">
+		<table cellpadding="5" cellspacing="0" border="0" style="width:1000px;">
+			<tr>
+				<td>
+					<label for="inputStartDate">起始日期</label>
+					<input id="inputStartDate" class="easyui-datebox" style="width:120px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputEndDate">截止日期</label>
+					<input id="inputEndDate" class="easyui-datebox" style="width:120px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputDocCommit">医生提交</label>
+					<input id="inputDocCommit" class="easyui-combobox" style="width:120px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputNurCommit">护士提交</label>
+					<input id="inputNurCommit" class="easyui-combobox" style="width:120px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputPDFCreated">是否生成</label>
+					<input id="inputPDFCreated" class="easyui-combobox" style="width:120px;height:24px;" />
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="inputMedRecord">病案号</label>
+					<input id="inputMedRecord" class="tbtextbox" style="width:120px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputRegNo">登记号</label>
+					<input id="inputRegNo" class="tbtextbox" style="width:120px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputName">姓名</label>
+					<input id="inputName" class="tbtextbox" style="width:120px;height:24px;" />
+				</td>
+				<td>
+					<a href="#" id="btnSearch" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width:80px;">查询</a>
+					<a href="#" id="btnReset" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" style="width:80px;">重置</a>
+				</td>
+				<td>
+					<a href="#" id="btnRecall" class="easyui-linkbutton" data-options="iconCls:'icon-back'">病历召回</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="episodeListTable" data-options="fit:true"></table>
+	</div>
+	<div id="dlgRecall" style="width:400px;height:340px;padding:10px;">
+		<p>申请流程：选择患者->发起召回申请->上级审批</p>
+		<p>申请原因：</p>
+		<div>
+			<input id="cboRecallReason" class="easyui-combobox" style="width:270px;" />
+			<a href="#" id="btnAddReason" class="easyui-linkbutton" data-options="iconCls:'icon-add'"></a>
+			<a href="#" id="btnSaveReason" class="easyui-linkbutton" data-options="iconCls:'icon-save'"></a>
+			<a href="#" id="btnRemoveReason" class="easyui-linkbutton" data-options="iconCls:'icon-remove'"></a>
+		</div>
+		<div style="padding:10px 0;">
+			<textarea id="inputRecallReason" style="width:360px;height:120px;"></textarea>
+		</div>
+		<div id="dlgRecallToolbar">
+			<a href="#" id="btnSubmit" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:70px;">提交</a>
+			<a href="#" id="btnClose" class="easyui-linkbutton" data-options="iconCls:'icon-no'" style="width:70px;">关闭</a>
+		</div>
+	</div>
+</body>
+</html>

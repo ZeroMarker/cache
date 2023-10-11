@@ -7,9 +7,8 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
 	<HISUI/>
-	<!--modify by zc0054 2019-12-02 begin 设备属性相关样式 -->
+	<DHCEQ:HISUI></DHCEQ:HISUI>
 	<style type="text/css">
 	.AttributeLabel{
 		vertical-align:middle;
@@ -26,13 +25,19 @@
 	.AttributeList{
 		position:absolute;
 	}
+	.eqbutton
+	{
+		margin-left: 15px;
+	}
 </style>
-<!--modify by zc0054 2019-12-02 end 设备属性相关样式 -->
 </head>
 <body class="hisui-layout">
 	<script language=Cache runat=server>
 		s RowID=$Get(%request.Data("RowID",1))
-		s ModelOperMethod=##class(web.DHCEQCommon).GetSysInfo("201004")  //add by zx 2019-01-22 简易台账机型保存
+		s ModelOperMethod=##class(web.DHCEQCommon).GetSysInfo("201004")
+		s ManuFactoryOperMethod=##class(web.DHCEQCommon).GetSysInfo("201005")
+		s ProviderOperMethod=##class(web.DHCEQCommon).GetSysInfo("201006")
+		s LocationOperMethod=##class(web.DHCEQCommon).GetSysInfo("201008")
 	</script>
 		<div data-options="region:'center',border:false">
 			<div class="hisui-panel" data-options="border:false" style="padding:10px;">
@@ -42,7 +47,6 @@
 					</div>
 				</div>
 				<div class="eq-table">
-					<!--modify by lmm 2019-09-20 输入框统一添加样式textbox-->
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label for="EQNo">资产编号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQNo" disabled="true"></div>
@@ -56,11 +60,11 @@
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label for="EQModelDR_MDesc">规格型号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Model'" id="EQModelDR_MDesc"></div>
-						<div class="eq-table-td eq-table-label"><label for="EQUnitDR_UOMDesc">资产单位</label></div>
+						<div class="eq-table-td eq-table-label"><label for="EQUnitDR_UOMDesc">单位</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.UOM'" id="EQUnitDR_UOMDesc"></div>
 						<div class="eq-table-td eq-table-label"><label for="EQStatusDisplay">状态</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQStatusDisplay" disabled="true" value="启用"></div>
-						<div class="eq-table-td eq-table-label"><label for="EQOriginDR_ODesc">资产来源</label></div>
+						<div class="eq-table-td eq-table-label"><label for="EQOriginDR_ODesc">来源</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Origin'" id="EQOriginDR_ODesc"></div>
 					</div>
 					<div class="eq-table-tr">
@@ -74,21 +78,19 @@
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.PurposeType'" id="EQPurposeTypeDR_PTDesc"></div>
 					</div>
 					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label id="cEQEquipTypeDR_ETDesc" for="EQEquipTypeDR_ETDesc">类组</label></div> <!--modified by wy 2020-3-31 需求1249945-->
+						<div class="eq-table-td eq-table-label"><label id="cEQEquipTypeDR_ETDesc" for="EQEquipTypeDR_ETDesc">类组</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQEquipTypeDR_ETDesc" disabled="true"></div>
 						<div class="eq-table-td eq-table-label"><label for="EQStatCatDR_SCDesc">类型</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQStatCatDR_SCDesc" disabled="true"></div>
 						<div class="eq-table-td eq-table-label"><label for="EQEquiCatDR_ECDesc">资产分类</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.EquipCat'" id="EQEquiCatDR_ECDesc"></div>
-						<div class="eq-table-td eq-table-label"><label for="EQClassFlag">范类标志</label></div>
+						<div class="eq-table-td eq-table-label"><label for="EQClassFlag">泛类标志</label></div>
 						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQClassFlag"></div>
 					</div>
-					<!--modify by zc0054 2019-12-02 begin 设备属性关键字 -->
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label AttributeLabel">设备属性</div>
-						<div id="EquipAttributeList" class="AttributeList"></div>
+						<div id="EquipAttributeList" class="AttributeList" style="padding: 5px;"></div>	<!--	MZY0157	3220853		2023-03-29	-->
 					</div>
-					<!--modify by zc0054 2019-12-02 end 设备属性关键字 -->
 				</div>
 				<div class="eq-table">
 					<div class="eq-table-tr">
@@ -101,10 +103,10 @@
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="precision:2,decimalSeparator:'.'" id="EQOriginalFee"></div>
 						<div class="eq-table-td eq-table-label"><label for="EQProviderDR_VName">供货商</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Vendor'" id="EQProviderDR_VName"></div>
-						<div class="eq-table-td eq-table-label"><label for="EQProviderHandler">供方经办人</label></div> <!--modify hly 2019/5/29-->
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQProviderHandler"></div> <!--modify hly 2019/5/29-->
-						<div class="eq-table-td eq-table-label"><label for="EQProviderTel">联系方式</label></div> <!--modify hly 2019/5/29-->
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQProviderTel"></div> <!--modify hly 2019/5/29-->
+						<div class="eq-table-td eq-table-label"><label for="EQProviderHandler">供方经办人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQProviderHandler"></div>
+						<div class="eq-table-td eq-table-label"><label for="EQProviderTel">联系方式</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQProviderTel"></div>
 					</div>
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label for="">保修期(月)</label></div>
@@ -113,7 +115,6 @@
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" type="text" id="EQContractNo"></div>
 						<div class="eq-table-td eq-table-label"><label for="EQFileNo">档案号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQFileNo"></div>
-						<!--	// Mozy0251	826982		2020-3-2	-->
 						<div class="eq-table-td eq-table-label"><label for="EQTransAssetDate">入库日期</label></div>
 						<div class="eq-table-td"><input type="text" class="hisui-datebox textbox" id="EQTransAssetDate"></div>
 						<!--div class="eq-table-td eq-table-label"><label for="EQNum">数量</label></div>
@@ -152,9 +153,9 @@
 						<div class="eq-table-td"><textarea id="EQRemark" class="textbox"></textarea></div>
 					</div>
 				</div>
-				<div data-options="region:'south',border:false" style="text-align: center;"> <!--add by sjh UI改造-->
-				     <div style="display: inline-block;padding:10px;"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
-				     <div style="display: inline-block;padding:10px;"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a></div>
+				<div data-options="region:'south',border:false" style="margin:0 auto;text-align: center;">
+				    <a id="BSave" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+				    <a id="BDelete" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">删除</a>
 				</div>
 			</div>
 		</div>
@@ -193,13 +194,15 @@
 			<INPUT type="hidden" id="EQCountryDR">
 			<INPUT type="hidden" id="EQCode">
 			<INPUT type="hidden" id="EQInvalidFlag" value="false">
-			<!--	// Mozy0251	826982		2020-3-2	-->
 			<INPUT type="hidden" id="EQAddDate">
 			<INPUT type="hidden" id="EQAddTime">
 			<INPUT type="hidden" id="EQAddUserDR">
 		</form>
 	</div>
-	<input type="hidden" id="ModelOperMethod" value=#(ModelOperMethod)#> <!--add by zx 2019-01-22 简易台账机型保存-->
+	<input type="hidden" id="ModelOperMethod" value=#(ModelOperMethod)#>
+	<input type="hidden" id="ProviderOperMethod" value=#(ProviderOperMethod)#>
+	<input type="hidden" id="ManuFactoryOperMethod" value=#(ManuFactoryOperMethod)#>
+	<input type="hidden" id="LocationOperMethod" value=#(LocationOperMethod)#>
 	<script type='text/javascript' src='../scripts/dhceq/em/equipfacility.js'></script>
 </body>
 </html> 

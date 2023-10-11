@@ -1,0 +1,128 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.qlrelatefactor.csp 护理计划->问题配置->问题非评估相关因素配置--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+#QLRelateFactorEditWin .textbox {
+	width:240px;
+}
+</style>
+ </head> 
+ <body>
+  <server>
+ s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+ s versionNewFlag=##class(websys.Conversions).IsValidClassName("csp.csp.nur.hisui.nursequestiongoalconfig")
+</server>  
+  <div class="hisui-layout" data-options="fit:true,border:false" style=""> 
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:51px;border-bottom:1px dashed #ccc;">
+		<table class="search-table" >
+			<tr>
+			<csp:if condition='versionNewFlag="0"'>
+				<td class="r-label">
+					<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+				</td>
+				<td>
+					<input id="_HospList"/>
+				</td>
+			</csp:if>
+				<td class="r-label">
+					<input class="textbox" id="SearchDesc" style="width:270px;" placeholder="请输入护理问题/问题编码/非评估相关因素"/>
+				</td>
+				<td>
+					<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>  
+				</td>
+			</tr>
+		</table>
+    </div>
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+    	<table id="tabQLRelateFactorList"></table>
+    </div>
+</div>
+<!--增加/修改弹框-->
+<div id="QLRelateFactorEditWin" class="hisui-window" title="问题非评估相关因素" style="height:600px;width:738px" data-options="iconCls:'icon-w-batch-cfg',closed:true">   
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		 <div data-options="region:'north',split:false,title:'',border:false" style="height:173px;border-bottom:1px solid #ccc;">
+    		<table class="search-table">
+				<tr>
+					<td class="r-label">
+						<label for="Question" class="clsRequired">护理问题</label>
+					</td>
+					<td>
+						<input id="Question" class="hisui-combobox textbox" style="width:247px;"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label for="QuestionType" class="clsRequired">问题分类</label>
+					</td>
+					<td>
+						<input class="textbox" id="QuestionType" disabled/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label for="QuestionCode" class="clsRequired">问题编码</label>
+					</td>
+					<td>
+						<input class="textbox" id="QuestionCode" disabled/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label for="QLRelateFactorDesc" class="clsRequired" placeholder="请输入非评估相关因素">非评估相关因素</label>
+					</td>
+					<td>
+						<input class="textbox" id="QLRelateFactorDesc"/>
+					</td>
+					<td class="r-label">
+						<a class="hisui-linkbutton" id="BAddQLRelateFactor" data-options="iconCls:'icon-w-add'">增加</a>  
+						<a href="#" id="tip_Btn" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+					</td>
+				</tr>
+			</table>
+	    </div>
+	    <div class="hisui-panel" data-options="region:'center',split:true,border:false" > 
+	    	<table id="tabQLRelateFactorEdit"></table>
+	    </div>
+	    <div data-options="region:'south',split:false,border:false" style="height:51px;line-height:50px;text-align:center;border-top:1px solid #ccc;">
+	    	<a class="hisui-linkbutton" id="BSaveQLRelateFactor" data-options="iconCls:'icon-w-ok'">确定</a>
+	    	<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+	    </div>
+	</div>
+</div>
+
+<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		CurrentDate:"#(CurrentDate)#",
+		versionNewFlag:"#(versionNewFlag)#"
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/QLRelateFactor.js"></script>
+</body>
+</html>

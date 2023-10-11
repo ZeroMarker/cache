@@ -1,37 +1,76 @@
+<script language="cache" runat="SERVER">
+	Set vsGenelConfig=##class(Nur.NIS.Service.VitalSign.MRCObservationItem).getVSGenelConfig()
+	Set vsGenelConfig=##class(Nur.JSON).Encode(vsGenelConfig)
+</script>
+<script language="javascript">
+ var vsGenelConfig = JSON.parse('#(vsGenelConfig)#');
+</script>
 <script type="text/javascript" src="../scripts/nurse/nis/config/index.js" charset='utf-8'></script>
 <script type="text/javascript" src="../scripts/nurse/hisui/singleEntry.js" charset="gbk"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
 <link rel="stylesheet" href="../scripts/nurse/hisui/css/singleEntry.css">
 <!-- <div class="singleEntry"> -->
-<div class="hisui-panel" data-options="fit:true" style="padding: 10px;display: flex;flex-flow: column;">
-    <div>
-        <!-- <span>时间</span> -->
-        <span>#(..Get("时间"))#</span>
-        <input id="logDate" class="hisui-datebox textbox" style="width:115px;" data-options="onSelect:findTempDataByDay"></input>
-        <input id="logTime" class="hisui-timespinner" style="width:65px;border-radius: 2px;" data-options="onChange:findTempDataByDay">
-        <a href="#" class="hisui-linkbutton" style="margin-left: 5px;" onclick="saveVitalSigns()">保存</a>
-        <div class="helpInfo">
-            <a href="#" class="helpFlag">
-                <span class="icon icon-help">&nbsp;</span>
-                <!-- <span>帮助</span> -->
-                <span>#(..Get("帮助"))#</span>
-            </a>
-			<div class="helpDetail">
-				<!-- <p><span>红色框：</span><span>非有效数据</span></p>
-				<p><span>黄色框：</span><span>非正常数据</span></p> -->
-                <table>
-                  <tr>
-                    <td>#(..Get("红色框："))#</td>
-                    <td>#(..Get("非有效数据"))#</td>
-                  </tr>
-                  <tr>
-                    <td>#(..Get("黄色框："))#</td>
-                    <td>#(..Get("非正常数据"))#</td>
-                  </tr>
-                </table>
-			</div>
-        </div>
-    </div>
-    <div class="vitalTable">
-        <table id="vitalSigns"></table>
-    </div>
+<div class="hisui-panel" data-options="fit:true" style="padding: 10px 0 10px 10px;display: flex;flex-flow: column;border:1px solid #ccc;">
+	 <div>
+			 <!-- <span>时间</span> -->
+			 <span style="margin-right:6px;">#(..Get("时间"))#</span>
+			 <input id="logDate" class="hisui-datebox textbox" style="width:115px;" data-options="onSelect:onSelectDate"></input>
+			 <input id="logTime" class="hisui-timespinner" style="width:75px;border-radius: 2px;" data-options="onChange:findTempDataByDay">
+				<!--  <div style="height: 10px;" id="dividingLine"></div> -->
+			 <!-- <a href="#" class="hisui-linkbutton" onclick="changeDay(-1)">上一日</a>
+			 <a href="#" class="hisui-linkbutton" style="margin-left: 5px;" onclick="changeDay(1)">下一日</a> -->
+			 <a href="#" class="hisui-linkbutton" style="margin-left: 5px;" onclick="saveVitalSigns()">#(..Get("保存"))#</a>
+			 <!-- <div class="helpInfo">
+					 <a href="#" class="helpFlag">
+							 <span class="icon icon-help">&nbsp;</span>
+					 </a>
+					 <div class="helpDetail">
+							 <table>
+								 <tr>
+									 <td>#(..Get("红色框："))#</td>
+									 <td>#(..Get("非有效数据"))#</td>
+								 </tr>
+								 <tr>
+									 <td>#(..Get("黄色框："))#</td>
+									 <td>#(..Get("非正常数据"))#</td>
+								 </tr>
+							 </table>
+					 </div>
+			 </div> -->
+			 <csp:if condition='1=ifHasEventPage'>
+			 	<a id="moreMenu" href="javascript:void(0)" class="hisui-menubutton" data-options="menu:'#mm3',plain:true" style="padding: 0;margin-left: 0;">更多</a>
+			 	<div id="mm3" class='menu-no-icon'>
+					 <div onclick="openVsddModal()">数据明细</div>   
+					 <div onclick="openPatEvtModal()">患者事件</div>     
+					 <!--div onclick="openBptcModal()">血压趋势图</div-->   
+					 <div onclick="openVsmlModal()">修改记录</div>  
+				</div>
+			 </csp:if>
+			 <a href="#" class="hisui-linkbutton" style="margin-top: 10px;margin-right: 6px;" onclick="setInHospDateTime()">#(..Get("入院时间"))#</a>
+			 <a href="#" class="hisui-linkbutton hover-dark timePointBtn" onclick="setTimeVal(this);">2</a>
+			 <a href="#" class="hisui-linkbutton hover-dark timePointBtn" onclick="setTimeVal(this);">6</a>
+			 <a href="#" class="hisui-linkbutton hover-dark timePointBtn" onclick="setTimeVal(this);">10</a>
+			 <a href="#" class="hisui-linkbutton hover-dark timePointBtn" onclick="setTimeVal(this);">14</a>
+			 <a href="#" class="hisui-linkbutton hover-dark timePointBtn" onclick="setTimeVal(this);">18</a>
+			 <a href="#" class="hisui-linkbutton hover-dark timePointBtn" onclick="setTimeVal(this);">22</a>
+			 <div style="display:none;height: 20px;margin: 5px 0;">
+					 <a href="#" class="hisui-linkbutton" style="margin-top: 10px;margin-right: 6px;" onclick="openVsddModal()">数据明细</a>
+					 <a href="#" class="hisui-linkbutton" style="margin-top: 10px;margin-right: 6px;" onclick="openPatEvtModal()">患者事件</a>
+				<a href="#" class="hisui-linkbutton" style="margin-right: 2px;" onclick="openBptcModal()">血压趋势</a>
+			 <a href="#" class="hisui-linkbutton" onclick="openVsmlModal()">修改记录</a>
+			 </div>
+	 </div>
+	 <div class="vitalTable">
+			 <table id="vitalSigns" cellpadding="0" cellspacing="0"></table>
+	 </div>
 </div>
+<div style="display:none" id="toolTips"></div>
+<style>
+.l-btn-text {
+	 padding: 0 10px;
+}
+td.datagrid-value-changed{background: transparent;}
+#moreMenu .l-btn-text{padding: 0;margin: 0;}
+#moreMenu .m-btn-downarrow{display: none;}
+.timePointBtn{vertical-align: bottom;margin-right: 5px;}
+</style>

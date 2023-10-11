@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<!--
+	description: 移动药房 - 扫码下载APP
+	creator:     Huxt 2021-03-05
+	csp:         pha.mob.v2.downloadapk.csp
+	xml:         csp/version.xml
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    	.layout-expand, .layout-expand-over {
+			background-color: #f9f9fa;
+		}
+		.pha-body {
+    		padding: 10px;
+		}
+		.pha-panel-body-add {
+    		background-color: white;
+		}
+    </style>
+</head>
+
+<body>
+	<!-- 整体布局 -->
+	<div class="hisui-layout" fit="true" border="false">
+		<div data-options="region:'center',border:false" class="pha-body">
+			<!-- layout start -->
+			<div class="hisui-layout" fit="true" border="false" data-options="clickExpand:true">
+				<div data-options="region:'center', split:true,border:false">
+					<div id="panel-main" class="hisui-panel" title="移动药房APP - 扫码下载"
+						data-options="iconCls:'icon-scanning',headerCls:'panel-header-gray',fit:true,bodyCls:'pha-panel-body-add'">
+						<center><div id="download-qrcode" style='background-color:#cfcfff;height:200px;width:200px; margin-top:200px'> </div></center>
+						<!-- center><div style='width:500px;margin-top:10px;border-bottom: 1px dashed #ccc;'></div></center -->
+						<center><div id="kw-appType" style='width:431px;margin-top:20px'> 扫码下载移动药房APP </div></center>
+					</div>
+				</div>
+			</div>
+			<!-- layout end -->
+		</div>
+	</div>
+</body>
+
+</html>
+
+
+<!-- 二维码插件 -->
+<script type="text/javascript" src="../scripts/pha/plugins/qrcode/qrcode.min.js"></script>
+<script type="text/javascript">
+	// 调用
+	window.onload = function() {
+		jsGetServerXml({
+			url: 'version.xml',
+			success: function(xmlDoc){
+				InitPage(xmlDoc);
+			},
+			error: function(errInfo){
+				alert(errInfo);
+			}
+		});
+	}
+	
+	// =========================
+	// 初始化页面内容
+	function InitPage(xmlDoc){
+		var updData = getUpdateData(xmlDoc); // 解析XML
+		var defaultUrl = "";
+		var appItems = [];
+		for (var i = 0; i < updData.length; i++) {
+			var iData = updData[i];
+			var oneAppItem = {};
+			oneAppItem.text = iData["description"];
+			oneAppItem.id = iData["tagName"];
+			for (var k in iData) {
+				oneAppItem[k] = iData[k];
+			}
+			// 重新获取url
+			var retUrl = '';
+			var tmpUrl = oneAppItem.url || '';
+			if ((tmpUrl.indexOf('http') < 0) && (tmpUrl != '')) {
+				var winUrl = window.location.href;
+				var winUrlArr = winUrl.split('web/');
+				var tmpUrlArr = tmpUrl.split('web/');
+				retUrl = winUrlArr[0] + 'web/' + tmpUrlArr[1];
+			} else {
+				retUrl = tmpUrl;
+			}
+			oneAppItem.url = retUrl;
+			// 设置默认url
+			if (defaultUrl == '') {
+				if (updData.length < 3) {
+					defaultUrl = oneAppItem["url"] || "";
+					oneAppItem.selected = true;
+				}
+				if (i == 2) {
+					defaultUrl = oneAppItem["url"] || "";
+					oneAppItem.selected = true;
+				}
+			}
+			// 过滤无效的
+			if (!oneAppItem.text || oneAppItem.text == '') {
+				continue;
+			}
+			if (!oneAppItem.id || oneAppItem.id == '') {
+				continue;
+			}
+			appItems.push(oneAppItem);
+		}
+		
+		$("#kw-appType").keywords({
+			singleSelect: true,
+			items: appItems,
+			onClick: function(item) {
+				showQRCode(item.url);
+			}
+		});
+		if (defaultUrl != "" ) {
+			showQRCode(defaultUrl);
+		}
+		ResetLayout(updData);
+	}
+	
+	// 改变位置
+	function ResetLayout(updData){
+		var $panelMainBody = $('#panel-main').panel('body')
+		var bodyHeight = $panelMainBody.height();
+		var bodyWidth = $panelMainBody.width();
+		$('#download-qrcode').css('margin-top', ((bodyHeight - 200) / 2) - 70);
+		
+		var rowWidthArr = [];
+		var rowMaxWidth = 0;
+		var cols = 5;
+		var rows = Math.ceil(updData.length / cols);
+		for (var i = 0; i < rows; i++) {
+			var iRowStIndex = i * cols;
+			var iRowEdIndex = iRowStIndex + 4;
+			if (i == rows - 1) {
+				iRowEdIndex = updData.length - 1;
+			}
+			var rowWidth = 0;
+			for (var j = iRowStIndex; j <= iRowEdIndex; j++){
+				var $item = $('#kw-appType').children().eq(0).children().eq(j);
+				var colWidth = $item.width() + 9;
+				rowWidth = rowWidth + colWidth;
+			}
+			rowWidthArr.push(rowWidth);
+			if (rowMaxWidth == 0) {
+				rowMaxWidth = rowWidth;
+			} else {
+				if (rowWidth > rowMaxWidth) {
+					rowMaxWidth = rowWidth;
+				}
+			}
+		}
+		$("#kw-appType").width(rowMaxWidth);
+		
+		for (var i = 0; i < rows; i++) {
+			var iRowStIndex = i * cols;
+			var iRowEdIndex = iRowStIndex + 4;
+			if (i == rows - 1) {
+				iRowEdIndex = updData.length - 1;
+			}
+			var rowWidth = rowWidthArr[i];
+			var marginLeft = (rowMaxWidth - rowWidth) / 2;
+			for (var j = iRowStIndex; j <= iRowEdIndex; j++){
+				if (j == iRowStIndex) {
+					$("#kw-appType").children().eq(0).children().eq(j).css('margin-left', marginLeft + 'px');
+				}
+			}
+		}
+	}
+	
+	// 解析XML中的数据,转换为JSON
+	function getUpdateData(xmlDoc){
+		if (!xmlDoc) {
+			return null;
+		}
+		var updateNode = xmlDoc.getElementsByTagName('update')[0];
+		
+		// 谷歌浏览器解析xml
+		if (updateNode.children) {
+			var retJsonArr = [];
+			var oldVersion = null;
+			var updateNodeChildren = updateNode.children;
+			for (var i = 0; i < updateNodeChildren.length; i++) {
+				var oneRow = {};
+				var appNode = updateNodeChildren[i];
+				var appNodeChildren = appNode.children;
+				if (!appNodeChildren.length || appNodeChildren.length == 0) {
+					if (['description', 'version', 'name', 'url'].indexOf(appNode.tagName) >= 0) {
+						if (oldVersion == null) {
+							oldVersion = {};
+						}
+						oldVersion[appNode.tagName] = appNode.textContent;
+					}
+					continue;
+				}
+				var tagName = appNode.tagName;
+				oneRow["tagName"] = tagName;
+				for (var j = 0; j < appNodeChildren.length; j++) {
+					var appPropNode = appNodeChildren[j];
+					var txt = appPropNode.textContent;
+					tagName = appPropNode.tagName;
+					if (!tagName || !txt) {
+						continue;
+					}
+					oneRow[tagName] = txt;
+				}
+				retJsonArr.push(oneRow);
+			}
+			if (oldVersion != null) {
+				retJsonArr.push(oldVersion);
+			}
+			return retJsonArr;
+		}
+		
+		// IE浏览器解析xml
+		if (updateNode.childNodes) {
+			var retJsonArr = [];
+			var oldVersion = null;
+			var updateNodeChildren = updateNode.childNodes;
+			for (var i = 0; i < updateNodeChildren.length; i++) {
+				var oneRow = {};
+				var appNode = updateNodeChildren[i];
+				var appNodeChildren = appNode.childNodes;
+				if (!appNodeChildren.length || appNodeChildren.length == 0) {
+					continue;
+				}
+				if (['description', 'version', 'name', 'url'].indexOf(appNode.tagName) >= 0) {
+					if (oldVersion == null) {
+						oldVersion = {};
+					}
+					oldVersion[appNode.tagName] = appNode.textContent;
+					continue;
+				}
+				var tagName = appNode.tagName;
+				oneRow["tagName"] = tagName;
+				for (var j = 0; j < appNodeChildren.length; j++) {
+					var appPropNode = appNodeChildren[j];
+					var txt = appPropNode.textContent;
+					tagName = appPropNode.tagName;
+					if (!tagName || !txt) {
+						continue;
+					}
+					oneRow[tagName] = txt;
+				}
+				retJsonArr.push(oneRow);
+			}
+			if (oldVersion != null) {
+				retJsonArr.push(oldVersion);
+			}
+			return retJsonArr;
+		}
+	}
+	
+	// 获取服务器上的xml数据
+	function jsGetServerXml(_options){
+		try {
+			// 创建HTTP
+			if (window.XMLHttpRequest) {
+				var xhr = new XMLHttpRequest();
+			} else {
+				var xhr = new ActiveXObject('Microsoft.XMLHTTP'); // IE6及其以下版本浏览器
+			}
+			xhr.open("GET", _options.url, false);
+			xhr.send(null);
+			if(xhr.readyState == 4){   
+				if (xhr.status == 200) {
+					var xmlDoc = xhr.responseXML;
+					_options.success && _options.success(xmlDoc);
+					
+				} else if(xhr.status == 404) {
+					var errInfo = xmlFileName + ", 此文件在服务器上不存在!";
+					_options.error && _options.error(errInfo);
+				} else {
+					var errInfo = xmlFileName + ", 网络错误!";
+					_options.error && _options.error(errInfo);
+				}  
+			}
+		} catch(e){
+			console.log(e);
+			_options.error && _options.error(e.message);
+		}
+	}
+	
+	// 显示二维码
+	function showQRCode(url){
+		$('#download-qrcode').children().remove();
+	    var qrcode = new QRCode(document.getElementById('download-qrcode'), {
+	        text: url,
+	        width: 200,
+	        height: 200,
+	        colorDark: '#000000',
+	        colorLight: '#ffffff',
+	        correctLevel: QRCode.CorrectLevel.L
+	    });
+	}
+	
+</script>

@@ -1,0 +1,262 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s comboxType = $G(%request.Data("comboxType", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+    s ProjectType=$G(%request.Data("ProjectType", 1))
+    s saveFlag=$G(%request.Data("saveFlag", 1))
+    
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var comboxType="#(comboxType)#";
+	   var hospID="#(hospID)#";
+	   var ProjectType="#(ProjectType)#"
+	   var saveFlag="#(saveFlag)#"
+	   
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<!--div class="hisui-panel" title="基本配置" style="" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="ProjectTable" style="width:100%"></table>
+	</div-->
+	<div class="hisui-panel" style="height:99%;border:1px solid #ccc" title="" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+	
+	<table id="ProjectTable" style="width:100%"></table>
+	</div>
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+
+<script type="text/javascript">
+
+
+var entity=""
+var xcTopContors=""
+var contors=""
+$(function(){
+	$('body').addClass('active')
+	if(id!=""){
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftProjectById",{id:id},function(rtn){
+			entity=rtn
+		},'json',false);
+	}
+	
+	
+	var ProjectTypeData=[
+		{"text":"交班项目","value":"1"},
+		{"text":"交班术语","value":"2"}
+		]
+	var isCysjy=[
+		{"text":"否","value":"0"},
+		{"text":"是","value":"1"}
+		]
+	var ProjectCategory=[]
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetProjectCategory",{ProjectType:ProjectType},function(rtn){
+		console.log(rtn)
+		ProjectCategory=rtn
+		
+	},'json',false);
+	var ProjectTips=[]
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetClassMethod",{Type:ProjectType},function(rtn){
+			console.log(rtn)
+			ProjectTips=rtn
+			for(var i=0;i<rtn.length;i++){
+				//rtn[i].ClassName	
+			}
+		},'json',false);
+	if(ProjectType==1){
+		contors=[
+		
+		{'id':'ProjectCode','type':'text','required':'true','title':'code'},
+		{'id':'ProjectName','type':'text','title':'名称','required':'true'},
+		
+		{'id':'ProjectClassName','type':'text','title':'类名','required':'true'},
+		{'id':'ProjectMethodName','type':'text','title':'方法名','required':'true'},
+		{'id':'ProjectParameter','type':'text','title':'参数'},
+		{'id':'ProjectRemark','type':'text','title':'描述'}
+	]
+	}else{
+		contors=[
+			{'id':'ProjectCategory','type':'combox','objData':ProjectCategory,'title':'项目类型','required':'true'},
+			{'id':'IsCategory','type':'combox','objData':isCysjy,'title':'常用数据源','required':'true','defaultValue':"0"},
+			
+			{'id':'ProjectCode','type':'text','required':'true','title':'code'},
+			{'id':'ProjectName','type':'text','title':'名称','required':'true'},
+			
+			{'id':'ProjectClassName','type':'text','title':'类名','required':'true'},
+			{'id':'ProjectMethodName','type':'text','title':'方法名','required':'true'},
+			{'id':'ProjectParameter','type':'text','title':'参数'},
+			{'id':'ProjectRemark','type':'text','title':'描述'}
+		]
+	}
+	
+	
+	for(var i=0;i<contors.length;i++){
+		var key = contors[i].id
+		createInputHtml("ProjectTable",contors,key,0)
+	}
+	var inputw=0
+		for(var i=0;i<contors.length;i++){
+			var obj = contors[i]
+			var thisw=$("#"+obj.id).parents("td").outerWidth()-17
+			if(thisw>inputw) inputw=thisw
+		}
+		
+		for(var i=0;i<contors.length;i++){
+			var obj = contors[i]
+			$("#"+obj.id).width(inputw)
+			if(obj.type=="combox"){
+				getComboxLocalData(obj)
+			}
+		}
+
+})
+var xcChange={}
+xcChange.ProjectTip=function(value){
+	var a=value.split(":")[0]
+	var b=value.split(":")[1]
+	var c=value.split(":")[2]	
+	$("#ProjectClassName").val(a)
+	$("#ProjectMethodName").val(b)
+	if(a!=""){
+		//$("#ProjectClassName").attr("readonly","readonly").css("background","#ddd")
+	}else{
+		//$("#ProjectClassName").removeAttr("readonly").css("background","#fff")	
+	}
+	if(b!=""){
+		//$("#ProjectMethodName").attr("readonly","readonly").css("background","#ddd")
+	}else{
+		//$("#ProjectMethodName").removeAttr("readonly").css("background","#fff")	
+	}
+	
+	
+	if(c==""){
+		//$("#ProjectParameter").attr("readonly","readonly").css("background","#ddd").attr("placeholder","")
+		$("#ProjectParameter").attr("placeholder","")
+	}else{
+		//$("#ProjectParameter").removeAttr("readonly").css("background","#fff")
+		$("#ProjectParameter").attr("placeholder",c)
+	}
+}
+function saveFunLib(){
+	var parms = ""
+	var topParms = resultParms(contors)
+	var downParms = ""
+	var rsTxt=""
+	if(topParms!=""){
+		var rtnParms=setAllParms([parms,topParms,downParms])
+
+		rtnParms.id=id
+		if(saveFlag==3){
+			rtnParms.id=""
+		}
+		rtnParms.ProjectType=ProjectType
+		console.log(rtnParms)
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","InsertShiftProject",{data:JSON.stringify(rtnParms)},function(rtn){
+			if(rtn == 0) {
+				
+		
+			} else if(rtn == 1){
+				//$.messager.alert('提示','保存失败！'+ rtn , "info");
+				rsTxt = "保存失败！"
+			}else if(rtn == 2){
+				rsTxt = "保存失败，项目code重复！"
+			}
+			
+		
+		},'json',false);
+	
+		
+	}else{
+		rsTxt = "保存失败,存在必填项为空！"
+	}
+	return rsTxt
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

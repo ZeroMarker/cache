@@ -5,6 +5,7 @@
  i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
  .d ##Class(CA.DigitalSignatureService).CASessionDataInit()
  //-------------------end初始化CA服务环境session--------
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
  q 1
  </csp:method>
 <HTML lang="zh-CN">
@@ -19,14 +20,23 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <!--DHCDOC:JSCOMMON></DHCDOC:JSCOMMON-->
 <HISUI></HISUI>
+<DOCHEAD></DOCHEAD>
 <style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
 .tabs-header{
 	border-top-width: 0px !important;
 }
 #MessageMarquee{
     position: absolute;
     top: 8px;
-    left: 500px;
+    left: 550px;
     font-size: 14px;
     z-index: 1;
     font-family: "Microsoft Yahei",verdana,helvetica,arial,sans-serif;
@@ -36,12 +46,19 @@
 {
 	padding:0px 5px 0px 31px;
 }
-
+#DocToDoListView{
+	position: absolute;
+    overflow: hidden;
+    background-color: #ffffff;
+    /*border: 1px solid #509de1;*/
+    z-index:8000;
+}
 </style>
 <Server>
 	s EpisodeID=%request.Get("EpisodeID")
 	s PageShowFromWay=%request.Get("PageShowFromWay")
-	if (PageShowFromWay="") s PageShowFromWay="ShowFromEmr" //ShowFromEmr 病人信息展示 ShowFromOrdEntry  医嘱录入界面展示医嘱
+	//ShowFromEmr:病人信息展示;ShowFromOrdEntry:医嘱录入界面展示医嘱;ShowFromEmrList:病历浏览界面
+	if (PageShowFromWay="") s PageShowFromWay="ShowFromEmr" 
 	s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
 	s NextDate=##class(websys.Conversions).DateLogicalToHtml(+$h+1)
 	s group=%session.Get("LOGON.GROUPID")
@@ -116,42 +133,54 @@
 	s ViewNurderBillJson=##Class(web.DHCDocInPatUICommon).GetViewNurderBillJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
 	//滚动加载
 	s OrderViewScrollView=##Class(web.DHCDocConfig).GetConfigNode("OrderViewScrollView")
-	s execBarExecNum=##class(web.DHCDocConfig).GetConfigNode1("execBarExecNum_User",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
-	s:execBarExecNum="" execBarExecNum=##class(web.DHCDocConfig).GetConfigNode1("execBarExecNum_Group",%session.Get("LOGON.GROUPID"))
+	;医嘱列表中强制【成组医嘱】一页显示
+	s GroupOrderOnePage=$G(^DHCDocOrderBillConfig("HospDr_"_%session.Get("LOGON.HOSPID"),"Main","GroupOrderOnePage"))
+	//信息总览的页面设置
+	s InPatViewCfgObj=##class(web.DHCDocConfig).GetUserPageSetting("InPatView","obj")
+	s ViewIPDocPatInfoLayOut=$case(InPatViewCfgObj.ViewIPDocPatInfoLayOut,1:1,:2)
+	//医嘱浏览的页面设置
+	s InPatOrderViewCfgObj=##class(web.DHCDocConfig).GetUserPageSetting("InPatOrderView","obj")
+	s IPDefDisplayMoreContions=InPatOrderViewCfgObj.IPDefDisplayMoreContions
+	s execBarExecNum=InPatOrderViewCfgObj.execBarExecStNum_"-"_InPatOrderViewCfgObj.execBarExecEndNum
+	
 	;CA:数字签名加载JS  ---START---
 	s CAInit=0
 	i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
 	.s CAInit=1
 	.d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
 	;得到CA认证的XML信息串
-	s GetOEORIItemXMLMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
+	s GetOEORIItemXMLMethod=##Class(websys.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
 	;插入CA认证后的信息串
-	s InsertCASignInfoMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
+	s InsertCASignInfoMethod=##Class(websys.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
 	;------END-----
-	s OrdrightKeyMenuHidden ="false",ExecrightKeyMenuHidden="false"
+	s OrdrightKeyMenuHidden =0,ExecrightKeyMenuHidden=0
 	s flag =##class(web.DHCDocMain).isHiddenMenu(EpisodeID,%session.Get("LOGON.CTLOCID"))
     if (flag'=0)&&(flag'=2){
-		s OrdrightKeyMenuHidden="true"
-		s ExecrightKeyMenuHidden="true"
+		s OrdrightKeyMenuHidden=1
+		s ExecrightKeyMenuHidden=1
 	}
-	///
-	///环节质控和时效性缺陷数量
-	s EmrQualityQtyJson=##class(web.DHCDocInPatPortalCommon).GetEmrQualityQty(EpisodeID,"2_"_%session.Get("LOGON.GROUPID")_"_"_%session.Get("LOGON.CTLOCID"))
-	
 	///与选中病人相关的变量集
 	s EpisPatInfo=##Class(web.DHCDocViewDataInit).InitPatInfoView(EpisodeID)
 	
 	///是否为实习生
 	s DoctorID=##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
  	s PracticeFlag=##class(web.DHCOEOrdItem).practice(DoctorID)
+ 	///加载合理用药,初始化;
+ 	s HLYYConfigObj=##class(web.DHCDocHLYYInterface).Init(%session.Get("LOGON.CTLOCID"),"OrderView")
+ 	//对外接口接入,初始化
+ 	s SessionStr=##class(DHCDoc.Util.RegisteredObject).%SessionStr()
+ 	d ##class(DHCDoc.Interface.AccessManage).LoadJS(SessionStr,"OrderView")
+
 </Server>
 </head>
-<body style="background-color:#fff;height:calc(100vh - 20px);width:calc(100vw - 20px);">
+<body>
 	<csp:Include Page="ipdoc.patinfoview.show.csp">
 	
 
 	<SCRIPT language = 'javascript' >
-		var EpisPatInfo="#(EpisPatInfo)#";
+		var EpisPatInfo=JSON.stringify(#(EpisPatInfo)#);
+		//合理用药对象	
+		var HLYYConfigObj=#(HLYYConfigObj)#;
 		//全局请求后台服务对象
 		var ServerObj={
 			PageShowFromWay:"#(PageShowFromWay)#",
@@ -162,9 +191,9 @@
 			orderSOSRightMenuJson:"",
 			execMenuJson:"",
 			execSOSMenuJson:"",
-			OrdReSubCatListJson:"#(OrdReSubCatListJson)#",
-			IntervalTimeListJson:"#(IntervalTimeListJson)#",
-			OECStatusChReasonJson:"#(OECStatusChReasonJson)#",
+			OrdReSubCatListJson:'#(OrdReSubCatListJson)#',
+			IntervalTimeListJson:'#(IntervalTimeListJson)#',
+			OECStatusChReasonJson:'#(OECStatusChReasonJson)#',
 			isNurseLogin:"#(isNurseLogin)#",
 			OrdrightKeyMenuHidden:"#(OrdrightKeyMenuHidden)#",
 			ExecrightKeyMenuHidden:"#(ExecrightKeyMenuHidden)#",
@@ -177,15 +206,17 @@
 			strServerSignedData:"#($g(%session.Data("ServerSignedData")))#",
 			IsCAWin:"",
 			//-------------------------------
-			ViewOrderSortData:eval("(#(ViewOrderSortJson)#)"),
-			ViewLocDescData:eval("(#(ViewLocDescJson)#)"),
-			ViewScopeDescData:eval("(#(ViewScopeDescJson)#)"),
-			ViewNurderBillData:eval("(#(ViewNurderBillJson)#)"),
+			ViewOrderSortData:#(ViewOrderSortJson)#,
+			ViewLocDescData:#(ViewLocDescJson)#,
+			ViewScopeDescData:#(ViewScopeDescJson)#,
+			ViewNurderBillData:#(ViewNurderBillJson)#,
 			
 			OrderViewScrollView:"#(OrderViewScrollView)#",
+			GroupOrderOnePage:"#(GroupOrderOnePage)#",
 			execBarExecNum:"#(execBarExecNum)#",
-			PracticeFlag:"#(PracticeFlag)#"
-			
+			PracticeFlag:"#(PracticeFlag)#",
+			ViewIPDocPatInfoLayOut:"#(ViewIPDocPatInfoLayOut)#",
+			IPDefDisplayMoreContions:"#(IPDefDisplayMoreContions)#"
 		};
 		function GetList_pnp(){
 		   var strTemp =GetUserList();
@@ -220,10 +251,19 @@
 	<echarts362/>
 	<script type="text/javascript" src="../scripts_lib/echarts3.6.2/echarts.js" charset="utf-8" defer async></script>
 	-->
+	<!--
+	移交给电子病历质控组
     <script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatEmrQuality.js"></script>
+	-->
+	<!--初始化CA服务环境-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.QualityInfoShow.js"></script>
     <script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatOrderView.js"></script>
     <script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatTreatInfo.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.service.js"></script>
 	<!-- this page js -->
 	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatInfoView.js"></script>
+	<!--东华CDSS交互-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
 </body>
 </html>

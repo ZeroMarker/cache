@@ -1,0 +1,171 @@
+<!-- 
+ * FileName: dhcbill.opbill.unpayaftertreat.csp
+ * Author: ZhYW
+ * Date: 2022-06-27
+ * Description: 先诊疗后付费患者未结算明细报表
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+	.layout>.panel>.panel-header {
+		-moz-border-radius: 4px 4px 0 0;
+		-webkit-border-radius: 4px 4px 0 0;
+		border-radius: 4px 4px 0 0;
+	}
+
+	.layout>.panel>.panel-body {
+		-moz-border-radius: 0 0 4px 4px;
+		-webkit-border-radius: 0 0 4px 4px;
+		border-radius: 0 0 4px 4px;
+	}
+
+	.layout-panel-west {
+		padding-right: 10px;
+	}
+
+	.textbox.tb190 {
+		width: 235px;
+	}
+	</style>
+</head>
+
+<body>
+	<div class="hisui-panel" fit="true" border="false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'west',collapsible:false,title:'查询条件',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="padding-right:10px;width:340px;">
+				<table class="search-table" style="margin:0 auto;">
+					<tr>
+						<td class="r-label"><label>#(..Get("开始时间"))#</label></td>
+						<td><input id="stDate" class="hisui-datebox textbox tb190"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("结束日期"))#</label></td>
+						<td><input id="endDate" class="hisui-datebox textbox tb190"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("就诊科室"))#</label></td>
+						<td><input id="admDept" class="hisui-combobox textbox tb190"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+						<td><input id="patientNo" class="textbox tb190"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+						<td><input id="patientName" class="textbox tb190"/></td>
+					</tr>
+					<tr>
+						<td colspan="2" style="text-align:center;">
+							<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询</a>
+							<a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'" style="margin-left:20px;">清屏</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',title:'先诊疗后付费患者未结算明细表',headerCls:'panel-header-gray',iconCls:'icon-report-eye'" style="border-radius:0 0 4px 4px;overflow:hidden;">
+				<iframe id="report" scrolling="auto" width="100%" height="100%" frameborder="0" src="dhccpmrunqianreport.csp?reportName=DHCBILL-OPBILL-TFMX.rpx"></iframe>
+		  	</div>
+		</div>
+		<script type="text/javascript">
+			//常量
+			var CV = {
+				DefDate: "#(##class(websys.Conversions).DateLogicalToHtml(+$h))#",
+				SRC: "dhccpmrunqianreport.csp?reportName=DHCBILL-OPBILL-XZLHFFWJSMX.rpx"
+			};
+			
+			$(function () {
+				var _patientId = "";  //患者主索引
+				
+				$(".datebox-f").datebox("setValue", CV.DefDate);
+				
+				$("#report").attr("src", CV.SRC);
+				
+				//登记号回车查询事件
+				$("#patientNo").keydown(function (e) {
+					var key = websys_getKey(e);
+					if (key != 13) {
+						_patientId = "";
+						return;
+					}
+					if (!$(e.target).val()) {
+						return;
+					}
+					_patientId = getPAPMIByRegNo($(e.target).val());
+					if (!_patientId) {
+						$.messager.popover({msg: "登记号错误，请重新输入", type: "info"});
+						focusById("patientNo");
+						return;
+					}
+					var patientNo = getPropValById("PA_PatMas", _patientId, "PAPMI_No");
+					setValueById("patientNo", patientNo);
+					reloadframe();				
+				});
+				
+				//就诊科室
+				$HUI.combobox("#admDept", {
+					panelHeight: 150,
+					url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryDept&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+					valueField: 'id',
+					textField: 'text',
+					defaultFilter: 5,
+					blurValidValue: true,
+					filter: function(q, row) {
+						var opts = $(this).combobox("options");
+						var mCode = false;
+						if (row.contactName) {
+							mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+						}
+						var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+						return mCode || mValue;
+					}
+				});
+				
+				$HUI.linkbutton("#btn-find", {
+					onClick: function () {
+						reloadframe();
+					}
+				});
+				
+				$HUI.linkbutton("#btn-clear", {
+					onClick: function () {
+						_patientId = "";
+						$(":text:not(.pagination-num,.combo-text)").val("");
+						$(".datebox-f").datebox("setValue", CV.DefDate);
+						$(".combobox-f").combobox("clear");
+						$("#report").attr("src", CV.SRC);
+					}
+				});
+				
+				/**
+				* 根据登记号查询患者主索引
+				*/
+				function getPAPMIByRegNo(patientNo) {
+					return (patientNo != "") ? $.m({ClassName: "web.DHCOPCashierIF", MethodName: "GetPAPMIByNo", PAPMINo: patientNo, ExpStr: ""}, false) : "";
+				}
+				
+				/**
+				* 加载iframe内容
+				*/
+				function reloadframe() {
+					var stDate = getValueById("stDate");
+				    var endDate = getValueById("endDate");
+				    var patName = getValueById("patientName");
+					var admDeptId = getValueById("admDept");
+					var url = CV.SRC + "&stDate=" + stDate + "&endDate=" + endDate + "&patientId=" + _patientId + "&patientName=" + patName
+						+ "&admDeptId=" + admDeptId + "&sessionStr=" + getSessionStr();
+					$("#report").attr("src", url);
+				}
+			});
+		</script>
+	</div>
+</body>
+</html>

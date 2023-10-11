@@ -7,8 +7,8 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
 <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 </SCRIPT>
@@ -27,96 +27,108 @@
 	s MaintTypeDR=$g(%request.Data("MaintTypeDR",1))
 	s QXType=$g(%request.Data("QXType",1))
 	s MaintLocDR=$g(%request.Data("MaintLocDR",1))  //modify by lmm 2019-11-12 LMM0049
+	s EquipRangeDR=$g(%request.Data("EquipRangeDR",1))	//CZF0134 2021-02-23
 	/// modify by zc0053 2019-11-25 begin  	
 	s vStatus=""
 	i RowID'="" s vStatus=$p(^DHCEQMaintPlan(RowID),"^",26)
-	///modify by zc0053 2019-11-25 end 
+	s CancelFlag=$g(%request.Data("CancelFlag",1))		;MZY0112	2434030		2022-01-21
 </server>
-	<!--modify by zc0053 2019-11-25 调整引入js位置 -->
-    <script type='text/javascript' src='../scripts/dhceq/em/maintplan.js'></script>
 <body class="hisui-layout" >
-	<div data-options="region:'center',border:false" style="padding:10px;width:100%">
-		<div class="hisui-panel" title="选择保养设备" data-options="eqtitle:'listtitle',fit:true">
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px;width:100%">
+		<div class="hisui-panel" data-options="eqtitle:'listtitle',fit:true">
 		<a id="sumTotal" href="#" onclick="javascript:AppendFileDetail()" style="float:right;position:absolute;right:20px;top:15px;"><u>设备明细</u></a>
-			<!--modify by zc0053 2019-11-25 在dhceq.plat.equiprange.csp?中添加参数vStatus控制按钮灰化 -->
-			<iframe id="equiprange" frameborder="0" src="dhceq.plat.equiprange.csp?SourceID=#(RowID)#&vStatus=#(vStatus)#&SourceType=2&SourceName=MaintPlan" style="width:100%;height:99%"></iframe>
+			<iframe id="equiprange" frameborder="0" src="dhceq.plat.equiprange.csp?SourceID=#(RowID)#&vStatus=#(vStatus)#&SourceType=2&SourceName=MaintPlan&EquipRangeDR=#(EquipRangeDR)#&CancelFlag=#(CancelFlag)#" style="width:100%;height:99%"></iframe>
 		</div>
 	</div>
-	<div data-options="region:'east',border:false" style="padding:10px 10px 10px 0px;width:400px">
-		<div class="hisui-panel" title="设备保养计划" data-options="eqtitle:'listtitle',fit:true">
+	<div data-options="region:'east',headerCls:'panel-header-gray',border:false" style="padding:10px 10px 10px 0px;width:300px"><!--Modefied by zc0132 2023-03-15 页面布局调整 -->
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'listtitle',fit:true">
 		<!--modify by lmm 2020-01-03 1040240 布局调整及输入框宽度调整-->
 			<!--modify by lmm 2020-02-10 1040239-->
 			<div class="eq-table" style="width:95%;margin:5px 10px">
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cPlanNo" for="PlanNo">计划单号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="PlanNo" disabled="true"></div>					
-				
+					<div class="eq-table-td eq-table-label-first"><label id="cPlanNo" for="PlanNo">计划单号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PlanNo" disabled="true"></div>			
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cName" for="Name">计划名称</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="Name"></div>										
+					<div class="eq-table-td eq-table-label-first"><label id="cName" for="Name">计划名称</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Name"></div>										
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cMaintLoc" for="MaintLoc">保养科室</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="MaintLoc" data-options="'component':'PLAT.L.Loc'" style="width:238px"></div>										
+					<div class="eq-table-td eq-table-label-first"><label id="cMaintLoc" for="MaintLoc">保养科室</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintLoc" data-options="'component':'PLAT.L.Loc'" ></div>										
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cCycleNum" for="CycleNum">保养周期</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CycleNum" style="width:180px"><input class="hisui-validatebox" id="CycleUnit" style="width:50px" data-options="'component':'PLAT.L.CycleUnit'" value="月"></div>					
+					<div class="eq-table-td eq-table-label-first"><lable id="cCycleType" for="CycleType"></lable>周期类型</div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="CycleType" ></div>
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cMaintUser" for="MaintUser">负责人</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="MaintUser" data-options="'component':'PLAT.L.EQUser'" style="width:238px"></div>					
+					<div class="eq-table-td eq-table-label-first"><label id="cCycleNum" for="CycleNum">保养周期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CycleNum" style="width:80px"><input class="hisui-validatebox textbox" id="CycleUnit" style="width:58px;margin-left:10px" data-options="'component':'PLAT.L.CycleUnit'" value="月"></div>					
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cPreWarnDaysNum" for="PreWarnDaysNum">预警天数</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="PreWarnDaysNum"></div>					
+					<div class="eq-table-td eq-table-label-first"><label id="cMaintUser" for="MaintUser">负责人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintUser" data-options="'component':'PLAT.L.EQUser'" ></div>				
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cFromDate" for="FromDate">启用日期</label></div>
-					<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox inputwidth" id="FromDate" style="width:238px" data-required="true" data-options="prompt:'必填项'"></div>
+					<div class="eq-table-td eq-table-label-first"><label id="cPreWarnDaysNum" for="PreWarnDaysNum">预警天数</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PreWarnDaysNum"></div>				
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cMaintFee" for="MaintFee">单台保养费用</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="MaintFee"></div>									
+					<div class="eq-table-td eq-table-label-first"><label id="cFromDate" for="FromDate">启用日期</label></div>
+					<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="FromDate"  data-required="true" data-options="prompt:'必填项'"></div>
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cService" for="Service">服务商</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="Service" data-options="'component':'EM.L.Service'" style="width:238px"></div>									
+					<div class="eq-table-td eq-table-label-first"><label id="cMonthStr" for="MonthStr">执行月份</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MonthStr"  data-options='validParams:"YM"'></div>
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cServiceHandler" for="ServiceHandler">服务联系人</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="ServiceHandler"></div>									
+					<div class="eq-table-td eq-table-label-first"><label id="cSDate" for="SDate">固定时间范围</label></div>
+					<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="SDate"  disabled="true"></div>
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cServiceTel" for="ServiceTel">服务联系电话</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="ServiceTel"></div>									
+					<div class="eq-table-td eq-table-label-first"><label id="cEDate" for="EDate">至</label></div>
+					<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EDate"  disabled="true"></div>
+				</div>
+				<!--div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cMaintFee" for="MaintFee">单台保养费用</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintFee"></div>								
+				</div-->
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cService" for="Service">服务商</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Service" data-options="'component':'EM.L.Service'" ></div>								
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cContent" for="Content">检查内容</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="Content"></div>					
+					<div class="eq-table-td eq-table-label-first"><label id="cServiceHandler" for="ServiceHandler">服务联系人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ServiceHandler"></div>							
 				</div>
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cRemark" for="Remark">备注</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="Remark"></div>					
+					<div class="eq-table-td eq-table-label-first"><label id="cServiceTel" for="ServiceTel">服务联系电话</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ServiceTel"></div>								
+				</div>
+				<!--div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cContent" for="Content">检查内容</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Content"></div>				
+				</div-->
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cRemark" for="Remark">备注</label></div><!--Modefied by zc0132 2023-03-15 页面布局调整 end-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Remark"></div>			
 				</div>
 	    	</div>	
     	</div>	
 	</div>	
 	<div data-options="region:'south',border:false" style="height:40px">
 		<div style="text-align:center;">
-				<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-search">保存</a>
-				<a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-save">提交</a>
-				<a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-save">删除</a>
-				<!--add by lmm 2020-04-27 1285572-->
-				<a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-save">作废</a>
+				<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a>
+				<a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a>
+				<a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a>
+				<a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">作废</a>
 		</div>
 	</div>
 	<!--隐藏元素-->
 	<div id="hiddenEncrypt" style="display:hidden">
 		<form name="DHCEQ">
 				<div class="eq-table-td eq-table-label"><label id="cMaintLoc" for="MaintLoc">计量科室</label></div>
-				<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MaintLoc"></div>	<!--modify by lmm 2019-08-01 965695-->				
+				<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MaintLoc"></div>
 				<input type="hidden" name="RowID" id="RowID" value=#(RowID)#>
 				<input type="hidden" name="BussType" id="BussType" value=#(BussType)#>
 				<input type="hidden" name="SourceType" id="SourceType" value=#(SourceType)#>
@@ -131,16 +143,23 @@
 				<input type="hidden" name="MeasureTel" id="MeasureTel">
 				<input type="hidden" name="ServiceDR" id="ServiceDR">
 				<input type="hidden" name="Status" id="Status" >   <!--modify by zc0053 2019-11-25 单据状态根据数据状态来不需要重请求参数中取-->
-				<input type="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>    <!--modify by lmm 2020-05-22 1329000-->
-				<input type="hidden" name="InvalidFlag" id="InvalidFlag">  <!--modify by zc0053 2019-11-25 请求参数没有-->
+				<input type="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>
+				<input type="hidden" name="InvalidFlag" id="InvalidFlag">
 				<input type="hidden" name="Hold1" id="Hold1">
 				<input type="hidden" name="Hold2" id="Hold2">
 				<input type="hidden" name="Hold3" id="Hold3">
 				<input type="hidden" name="Hold4" id="Hold4">
 				<input type="hidden" name="Hold5" id="Hold5">
-				<input type="hidden" name="vStatus" id="vStatus" value=#(vStatus)#>  <!--modify by zc0053 2019-11-25 在dhceq.plat.equiprange.csp?中添加参数vStatus控制按钮灰化 -->
+				<input type="hidden" name="vStatus" id="vStatus" value=#(vStatus)#>
+				<input type="hidden" id="EquipRangeDR" value=#(EquipRangeDR)#>
+				<input type="hidden" name="Service" id="Service">
+				<input type="hidden" name="ServiceHandler" id="ServiceHandler">
+				<input type="hidden" name="ServiceTel" id="ServiceTel">
+				<input type="hidden" id="CancelFlag" value=#(CancelFlag)#>
 		</form>
 	</div>
     <script type='text/javascript' src='../scripts/DHCEQCommon.js'></script>
+    <script type='text/javascript' src='../scripts/dhceq/em/maintplan.js'></script>
+    <script type='text/javascript'>MonthBox('MonthStr');</script>
 </body>
 </html>

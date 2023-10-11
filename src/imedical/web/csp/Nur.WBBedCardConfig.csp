@@ -7,89 +7,144 @@
 <head>
 
 <!-- Put your page Title here -->
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8"/>
     <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
     <HISUI />
+    <style>
+    .panel-body.panel-body-noheader
+    {
+	   border-radius:0px; 
+    }
+    .topline{
+		border-bottom: 1px dashed #ccc;
+		width:100%;
+	}
+    #itemEditDialog .tipText{
+		text-align:right;
+		width:84px;
+		height:28px;
+		line-height:28px;
+		padding-right:10px;
+	}
+	#itemEditDialog .tipText .mastFill{
+		color:red;
+	}
+	#itemEditDialog .oneline{
+		width:calc(100% - 20px);
+		display:flex;
+		margin:10px 0px 0px 10px;
+		flex-wrap: nowrap;
+	}
+	#itemEditDialog .dialog-button{
+		padding-top:0px;
+	}
+	#itemEditDialog .textbox:disabled, #itemEditDialog input:not([type]):disabled{
+		border-color:lightgray;	
+	}
+	
+    </style>
+    <script language="cache" RUNAT="SERVER">
+    	s multiFlag=1
+	</script>
 </head>
 
-<body style="background-color:white">
-	<div style="display:flex;">
-		<div data-options="region:'north',border:false" style="height: 44px;padding:10px 10px 0 10px">
-	 		<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
-	 	</div>
-	 	<div style="margin-top:12px;display:flex;">
-	 		<div style="height:30px;line-height:30px;margin-right:5px">病区</div>
-	 		<select id="wardComb" class="hisui-combobox" name="dept" style="width:280px;" data-options="
-	 		enterNullValueClear:false,onSelect:selectWardHandler,blurValidValue:true,
-	 		valueField:'wardid',textField: 'warddesc'"></select>
-	 	</div>
+<body style="background-color:white;">
+	<div class="hisui-layout" fit="true">
+		<div id="hospWard" data-options="region:'north',border:false" style="">
+			<div style="display:flex;flex-wrap:wrap;padding:10px;">
+				<csp:if condition='1=multiFlag'>
+					<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+					<div style="display:flex;padding-top:2px;">
+						<div style="height:32px;line-height:32px;margin:0px 10px">病区</div>
+	 					<select id="wardComb" class="hisui-combobox" name="dept" style="width:280px;height:32px;" data-options="enterNullValueClear:false,onSelect:selectWardHandler,blurValidValue:true,valueField:'wardid',textField: 'warddesc',defaultFilter:6"></select>
+					</div>
+				<csp:else>
+	 				<div style="height:32px;line-height:32px;margin-right:10px">病区</div>
+	 				<select id="wardComb" class="hisui-combobox" name="dept" style="width:280px;height:32px;" data-options="enterNullValueClear:false,onSelect:selectWardHandler,blurValidValue:true,valueField:'wardid',textField: 'warddesc',defaultFilter:6"></select>	
+				</csp:if>
+			</div>
+			<div class="topline"></div>
+		</div>
+		<div data-options="region:'center',border:false"> 
+			<table id="cardTable" class="hisui-datagrid" border="false" data-options="toolbar: '#tb',fit:true,onClickRow: onClickTableRow"></table>
+		</div>
+		<div id="tb">
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="append()">新增</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="editOne()">修改</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeit()">删除</a>
+			</div>
+    </div>
+	
+	<div id="itemEditDialog" class="hisui-dialog" title="修改" style="width:350px;height:245px;padding:0px;"
+		data-options="closed:'true',buttons:[{text:'保存',handler:function(){itemEditDialogSave()}},{text:'关闭',handler:function(){$HUI.dialog('#itemEditDialog').close();}}]">   
+		<div class="oneline">
+			<div class="tipText"><span class="mastFill">*</span>项目名称</div>
+			<select id="itemNameDom" class="hisui-combobox" style="width:236px;" data-options="defaultFilter:6,textField:'name',enterNullValueClear:false,onSelect:selectItemNameHandler,onChange:itemNameChange,blurValidValue:true,">
+			</select>
+		</div>
+		<div class="oneline">
+			<div class="tipText"><span class="mastFill">*</span>项目代码</div>
+			<input id="itemCode" style="width:229px;height:28px" disabled class="textbox">
+			
+		</div>
+		<div class="oneline">
+			<div class="tipText">项目内容描述</div>
+			<input id="itemDesc" style="width:229px;height:28px" class="textbox">
+		</div>
+		<div class="oneline">
+			<div class="tipText"><span class="mastFill">*</span>所在行位置</div>
+			<input id="itemOrder" class="hisui-numberbox textbox" style="width:236px;height:28px" data-options="isKeyupChange:true,min:1,precision:0">
+		</div>
 	</div>
-	<table id="dg" class="hisui-datagrid" title="床位卡显示项目配置" style="width:1200px;height:700px" data-options="
-			iconCls: 'icon-edit',
-			singleSelect: true,
-			toolbar: '#tb',
-			method: 'get',
-			onClickRow: onClickRow
-		">		
-	</table>
-	<div id="tb" style="height:auto">
-		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="append()">新增</a>
-		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="accept()">保存行</a>
-		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="removeit()">删除行</a>
-	</div>
-	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	
 <script type="text/javascript">
+	var multiFlag = "#($g(multiFlag))#";
+	var isNurHead = false;
+	var hospComp;
 	var editIndex = undefined;
 	var wardId,patientKeys,sourceArr;
-	
 	baseSetup();
 	function baseSetup(){
+		var groupDesc = session['LOGON.GROUPDESC']
+		if(groupDesc == "住院护士长" || groupDesc == "ICU护士长" || groupDesc == "Inpatient Nurse" ||groupDesc == "产科护士长"){
+			isNurHead = true;
+		}
 		//病区下拉框显示样式
-		$('#wardComb').combobox({
-			formatter: function(row){
-				var opts = $(this).combobox('options');
-				return row[opts.textField];
-			}
-		});
-
-		hospCompSelected();//初始化院区
-		getAllWard();//获取所有病区
+		if (parseInt(multiFlag) && !isNurHead) {
+			hospCompSelected();//初始化院区
+		}
+		if(!isNurHead){
+			getAllWard();//获取所有病区
+		}
+		
+		$('#itemNameDom').combobox({textField: 'description',valueField:'description'});
+		
 		getPatientKeys();//获取下拉框数据
+		$('#cardTable').datagrid({
+			columns:[[
+				{field:'itemname',title: '项目名称',width:200,formatter:function(value,row){return row.name;}},
+				{field:'code',title: '项目代码',width:200},
+				{field:'desc',title: '项目内容描述',width:300},
+				{field:'order',title: '所在行位置',width:100}]]	
+		});
+		if(isNurHead){
+			wardId = session['LOGON.WARDID']
+			document.getElementById('hospWard').style.display="none"
+			getBedCardList();
+		}
 	}
-	//检测是否已经结束编辑
-	function endEditing(){
-		if (editIndex == undefined){return true}
-		if ($('#dg').datagrid('validateRow', editIndex)){
-			$('#dg').datagrid('unselectRow', editIndex);
-			//var ed = $('#dg').datagrid('getEditor', {index:editIndex,field:'itemname'});
-			//var itemname = $(ed.target).combobox('getText');
-			var dict = sourceArr[editIndex];
-			$('#dg').datagrid('getRows')[editIndex]['itemname'] = dict.name;
-			$('#dg').datagrid('endEdit', editIndex);
+	//床位卡显示表点击
+	function onClickTableRow(index){
+		if(editIndex != undefined && editIndex != index){
+			$('#cardTable').datagrid('unselectRow', editIndex);
+		}
+		if($('#cardTable').datagrid('getSelected') == null){
 			editIndex = undefined;
-			return true;
-		} else {
-			return false;
+		}else{
+			editIndex = index;
 		}
 	}
-	//行点击方法
-	function onClickRow(index){
-		if (editIndex != index){
-			if (endEditing()){
-				$('#dg').datagrid('selectRow', index)
-						.datagrid('beginEdit', index);
-				editIndex = index;
-				var dict = sourceArr[index];
-				var ed = $('#dg').datagrid('getEditor', {index:editIndex,field:'itemname'});
-				if(ed){
-					var itemname = $(ed.target).combobox('setText',dict.name);
-				}
-			} else {
-				$('#dg').datagrid('selectRow', editIndex);
-			}
-		}
-	}
-	//新增一行
+	//新增
 	function append(){
 		if(wardId == undefined){
 			$.messager.popover({msg: '请选择病区！',type:'alert'});
@@ -99,122 +154,182 @@
 			$.messager.popover({msg: '最多只能维护6条数据',type:'alert'});
 			return;
 		}
-		
-		if (endEditing()){
-			$('#dg').datagrid('appendRow',{});
-			editIndex = $('#dg').datagrid('getRows').length-1;
-			$('#dg').datagrid('selectRow', editIndex)
-					.datagrid('beginEdit', editIndex);
-			sourceArr[editIndex] = {name:'',code:'',desc:'',order:''}
-		}
-	}
-	
-	//删除一行
-	function removeit(){
-		if (editIndex == undefined){
-			$.messager.popover({msg: '请选择需要保存的行！',type:'alert'});
-			return}
-		var dict = sourceArr[editIndex];
-		if(dict.id == undefined){
-			deleteOneCell();
-			return;
-		}
-		$cm({
-			ClassName:'CF.NUR.DWB.BedCard',
-			MethodName:"DeleteRecord",
-			rowid:dict.id
-		},function(jsonData){
-			//console.log('DeleteRecord',jsonData)
-			if(jsonData.flag){
-				//deleteOneCell();
-				getBedCardList();
-				editIndex = undefined;
-				$.messager.popover({msg: '删除成功！',type:'success',timeout: 800});	
-			}else{
-				$.messager.popover({msg: '删除失败！',type:'error',timeout: 800});
-			}
-			
-		});
-		
-	}
-	
-	function deleteOneCell(){
-		$('#dg').datagrid('cancelEdit', editIndex)
-				.datagrid('deleteRow', editIndex);
+		$('#cardTable').datagrid('unselectRow', editIndex);
 		editIndex = undefined;
-		
+		clearOrUpdateDialog(undefined);
+		$HUI.dialog("#itemEditDialog",{
+			iconCls:'icon-w-add',
+			title:'新增',
+			modal:true,
+			buttonAlign : 'center'
+		});
+		$('#itemEditDialog').dialog('open');
 	}
-	//保存一行
-	function accept(){
-		if(editIndex == undefined){
-			$.messager.popover({msg: '请选择需要保存的行！',type:'alert'});
-			return;
-		}
+	//编辑
+	function editOne(){
 		if(wardId == undefined){
 			$.messager.popover({msg: '请选择病区！',type:'alert'});
 			return;
 		}
-
-		var dict = sourceArr[editIndex]
-		var eddesc = $('#dg').datagrid('getEditor',{index:editIndex,field:'desc'});
-		var edorder = $('#dg').datagrid('getEditor',{index:editIndex,field:'order'});
-		var desc = eddesc.target[0].value;
-		var order = edorder.target[0].value;
-		var code = dict.code
-		if(code == 'bedCode' || code == 'inDays' || code == 'name'){
-			$.messager.popover({msg: '病人姓名,住院天数,床号为固定位置,不可配置',type:'alert',style:{left:100,top:200}});
-		}else if(dict.name == '' || code == ''){
-			$.messager.popover({msg: '项目和code为必填项',type:'alert',style:{left:100,top:200}});
-			return;
-		}else if(order == ''){
-			$.messager.popover({msg: '所在行位置为必填项',type:'alert',style:{left:400,top:200}});
+		if(editIndex == undefined){
+			$.messager.popover({msg: '请选择要修改的行！',type:'alert'});
 			return;
 		}
-		else{
-			saveOneCell(dict.name, desc, code, order, dict['id']);
-		}
+		clearOrUpdateDialog(editIndex);
+		$HUI.dialog("#itemEditDialog",{
+			iconCls:'icon-w-edit',
+			title:'修改',
+			modal:true,
+			buttonAlign : 'center'
+		});
+		$('#itemEditDialog').dialog('open');
 	}
+	//删除
+	function removeit(){
+		if (editIndex == undefined){
+			$.messager.popover({msg: '请选择需要删除的行！',type:'alert'});
+			return;
+		}
+		var dict = sourceArr[editIndex];
+		$.messager.confirm("删除", "确定删除吗?", function (r) {
+			if (r) {
+				$cm({
+					ClassName:'CF.NUR.DWB.BedCard',
+					MethodName:"DeleteRecord",
+					rowid:dict.id
+				},function(jsonData){
+					if(jsonData.flag){
+						getBedCardList();
+						editIndex = undefined;
+						$.messager.popover({msg: '删除成功！',type:'success',timeout: 800});	
+					}else{
+						$.messager.popover({msg: '删除失败！',type:'error',timeout: 800});
+					}
+				});
+			}
+		});
+	}
+	//清空或者填充dialog
+	function clearOrUpdateDialog(index){
+		if(patientKeys == undefined){
+			getPatientKeys();
+		}
+		var itemCode = document.getElementById('itemCode');
+		var itemDesc = document.getElementById('itemDesc');
+		var order = 1;
+		if (index == undefined && sourceArr.length > 0){
+			order = parseInt(sourceArr[sourceArr.length -1]['order']) + 1	
+		}else if(sourceArr.length > 0){
+			order = parseInt(sourceArr[index]['order'])
+		}
+		if(index == undefined){
+			$('#itemNameDom').combobox("setValue",'');
+			itemCode.value = '';
+			itemDesc.value = '';
+		}else{
+			var dict = sourceArr[index]
+			$('#itemNameDom').combobox("setValue",dict['name']);
+			itemCode.value = dict['code'];
+			itemDesc.value = dict['desc'];;
+		}
+		$('#itemOrder').numberbox('setValue',order);
+	}
+	//项目名下拉框点击
+	function selectItemNameHandler(item){
+		var code = item.key;
+		console.log(item);
+		var itemCode = document.getElementById('itemCode');
+		if(code == 'bedCode' || code == 'inDays' || code == 'name'){
+			$.messager.popover({msg: '病人姓名,住院天数,床号为固定位置,不可配置',type:'alert'});
+			$('#itemNameDom').combobox("setValue",'');
+			itemCode.value = '';
+			return;
+		}
+		if(sourceArr && sourceArr.length > 0){
+			for(var i = 0; i < sourceArr.length;i++){
+				var description = sourceArr[i]['name'];
+				if(description == item.description && i != editIndex){
+					if(code == sourceArr[i]['code']){
+						$.messager.popover({msg: '项目不能重复',type:'alert'});
+						$('#itemNameDom').combobox("setValue",'');
+						itemCode.value = '';
+						return
+					}
+					
+				}
+			}
+		}
+		itemCode.value = code;
+	}
+	//dialog保存
+	function itemEditDialogSave(){
+		var id = '';
+		if(editIndex != undefined){
+			id = sourceArr[editIndex]['id'];
+		}
+		var itemName = $('#itemNameDom').combobox("getValue");
+		var itemCode = document.getElementById('itemCode').value;
+		var itemDesc = document.getElementById('itemDesc').value;
+		var itemOrder = document.getElementById('itemOrder').value;
+		if(itemName == '' || itemCode == ''){
+			$.messager.popover({msg: '项目名称和项目代码为必填项',type:'alert'});
+			return;
+		}else if(itemOrder == ''){
+			$.messager.popover({msg: '所在行位置为必填项',type:'alert'});
+			return;
+		}else if(sourceArr && sourceArr.length > 0){//order重复
+			for(var i = 0; i < sourceArr.length;i++){
+				var order = sourceArr[i]['order'] + '';
+				var name = sourceArr[i]['name'];
+				if(order == itemOrder && i != editIndex){
+					$.messager.popover({msg: '所在行不能重复',type:'alert'});
+					return
+				}
+				if(name == itemName && i != editIndex && itemCode == sourceArr[i]['code']){
+					$.messager.popover({msg: '项目不能重复',type:'alert'});
+					return
+				}
+			}
+		}
+		saveOneCell(itemName, itemDesc, itemCode, itemOrder, id);
+	}
+	
 	//获取下拉框数据
 	function getPatientKeys(){
 		$cm({
 			ClassName:'Nur.NIS.Service.Base.Patient',
 			MethodName:"GetPatientKeys"
 		},function(jsonData){
-			patientKeys = jsonData;
-			$('#dg').datagrid({
-				columns:[[
-				 	{field:'itemname',title: '项目',width:200,formatter:function(value,row){return row.name;},
-						editor:{type:'combobox',options:{valueField:'key',required:true,textField:'description',data:patientKeys,onSelect:editorSelectItem}}},
-					{field:'code',title: 'Code',width:150,editor:'text'},
-					{field:'desc',title: '项目内容描述',align:'center',width:300,editor:{type:'text',options:{precision:1}}},
-					{field:'order',title: '所在行位置',align:'center',width:100,editor:'numberbox'}]]	
-			});
+			if(!jsonData.msg){
+				patientKeys = jsonData;		
+				$('#itemNameDom').combobox("loadData",jsonData);
+			}
 		});
-		
 	}
 	
 	//选择院区
 	function hospCompSelected(){ 
-		var hospComp = GenHospComp("ARC_ItemCat"); 
+		hospComp = GenHospComp("Nur_IP_BedCard"); 
 		$('#_HospList').combogrid({
 	   		onSelect:function(value){
 		   		$('#wardComb').combobox('clear');
-		   		$('#dg').datagrid({
+		   		$('#cardTable').datagrid({
 					data: []
 				});
 				wardId = undefined
 		   		getAllWard();
-	   		}	 
+	   		}
    		});
 	}
 	//获取院区所有病房
 	function getAllWard(){
-		var hospid=$HUI.combogrid('#_HospList').getValue();
+		var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
 		$cm({
 			ClassName:'Nur.DWB.Service.BedChartService',
 			QueryName:"GetallWard",
 			desc:'',
-			hospid:hospid
+			hospid:hospid,
+			rows:99999
 		},function(jsonData){
 			if(jsonData.msg){
 				return		
@@ -231,42 +346,36 @@
 	}
 	
 	function getBedCardList(){
-		var hospid=$HUI.combogrid('#_HospList').getValue();
+		var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
 		$cm({
 			ClassName:'CF.NUR.DWB.BedCard',
 			QueryName:"QueryBedCard",
 			WardID:wardId,
 			HospID:hospid
 		},function(jsonData){
-			//console.log('getBedCardList',jsonData)
+			console.log('getBedCardList',jsonData,'wardId',wardId)
 			if(jsonData.msg){
+				$('#cardTable').datagrid({
+					data:[]
+				});
 				return		
 			}
+		
 			sourceArr = jsonData.rows;
-			$('#dg').datagrid({
+			sourceArr.sort(function(a,b){
+					var orderA = parseInt(a.order);
+					var orderB = parseInt(b.order);
+					return orderA - orderB;
+				});
+			$('#cardTable').datagrid({
 				data: sourceArr
 			});
-			
 		});
-		
-	}
-	
-	function editorSelectItem(item){
-		var name = item.description;
-		var code = item.key;
-		var ed = $('#dg').datagrid('getEditor',{index:editIndex,field:'code'});
-		ed.target[0].value = code;
-		sourceArr[editIndex]['name'] = name;
-		sourceArr[editIndex]['code'] = code;
-		if(code == 'bedCode' || code == 'inDays' || code == 'name'){
-			$.messager.popover({msg: '病人姓名,住院天数,床号为固定位置,不可配置',type:'alert',style:{left:100,top:200}});
-		}
 	}
 	
 	function saveOneCell(BCName, BCDesc, BCCode, BCOrder, rowid){
-		var hospid=$HUI.combogrid('#_HospList').getValue();
-		console.log('saveOneCell',BCName, BCDesc, BCCode,'order', BCOrder,'rowid', rowid,wardId,hospid);
-		
+		console.log('saveOneCell','BCName',BCName,'BCDesc', BCDesc,'BCCode', BCCode,'BCOrder', BCOrder,'rowid', rowid,'wardId',wardId);
+		var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
 		$cm({
 			ClassName:'CF.NUR.DWB.BedCard',
 			MethodName:"SaveRecord",
@@ -282,11 +391,20 @@
 			if(jsonData.flag){
 				$.messager.popover({msg: '保存成功！',type:'success',timeout: 800});
 				editIndex = undefined;
+				$('#itemEditDialog').dialog('close');
 				getBedCardList();	
 			}else{
 				$.messager.popover({msg: '保存失败！',type:'error',timeout: 800});
 			}
 		});
+	}
+	
+	function itemNameChange(newValue,oldValue){
+		if((newValue==undefined && oldValue=="")||(newValue=="" && oldValue==undefined)){
+			document.getElementById('itemCode').value = "";
+			var itemNameDom = document.getElementById('itemNameDom');
+			itemNameDom.setAttribute('data-text',"");
+		}
 	}
 
 		</script>

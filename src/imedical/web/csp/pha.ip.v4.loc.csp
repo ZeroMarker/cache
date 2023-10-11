@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 发药科室维护
+	csp: csp/pha.ip.v4.loc.csp
+	js:  scripts/pha/ip/v4/loc.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+        .pha-col-cell {
+            width: 25%;
+            float: left;
+        }
+
+        .pha-clear {
+            clear: both;
+        }
+
+        .pha-label {
+            width: 112px;
+            text-align: right;
+        }
+
+        input.hisui-validatebox {
+            width: 90px
+        }
+
+        input.hisui-timespinner {
+            width: 92px
+        }
+
+        #layout-center tbody td:hover {
+            cursor: pointer;
+        }
+
+        .pha-body {
+            background-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',width:275,split:true,border:false">
+                    <div class="hisui-panel" title="住院发药科室维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-house-maint',fit:true,bodyCls:''">
+                        <table id="gridLoc"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true" id="lyDetail">
+                        <div data-options="region:'north',split:true,border:false">
+                            <div class="hisui-panel" title="配置信息" id="panelSortItm" data-options="headerCls:'panel-header-gray',iconCls:'icon-batch-cfg',fit:true,bodyCls:''" style="overflow:hidden">
+                                <div class="js-data-detail">
+                                    <div class="pha-row">
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="nurAuditFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药前需护士领药审核'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="outOrdNeedNurAudit" type="checkbox" class="hisui-checkbox" data-options="label:'出院带药需护士领药审核'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="dealOrdFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药前需护士医嘱处理'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="phaAuditFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药前需药师医嘱审核'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-row">
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="typeDefaultFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药界面默认选择发药类别'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="localFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药界面默认勾选客户端配置'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="priorityFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药界面长期临时勾选是否互斥'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="auditBillFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药时是否欠费控制'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-row">
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="operateUserFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药时是否录入配药人'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="collectUserFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药时是否录入发药人'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="auditUserFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药时是否录入核对人'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col">
+                                                <input id="sendMachineFlag" type="checkbox" class="hisui-checkbox" data-options="label:'发药时是否发送数据到包药机'" data-pha='class:"hisui-checkbox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-line"></div>
+                                    <div class="pha-row">
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("冲减默认开始日期"))#</div>
+                                            <div class="pha-col"><input id="resStartDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("冲减默认结束日期"))#</div>
+                                            <div class="pha-col"><input id="resEndDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">
+                                                <label for="resFlag">#(..Get("冲减退药"))#</label>
+                                            </div>
+                                            <div class="pha-col">
+                                                <div id="resFlag" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',checked:false" data-pha='class:"hisui-switchbox"'>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-line"></div>
+                                    <div class="pha-row">
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("发药默认开始日期"))#</div>
+                                            <div class="pha-col">
+                                                <input id="dispStartDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("发药默认开始时间"))#</div>
+                                            <div class="pha-col"><input id="dispStartTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("发药默认结束日期"))#</div>
+                                            <div class="pha-col"><input id="dispEndDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("发药默认结束时间"))#</div>
+                                            <div class="pha-col"><input id="dispEndTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-row">
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("基数发药开始日期"))#</div>
+                                            <div class="pha-col">
+                                                <input id="baseDispStartDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("基数发药开始时间"))#</div>
+                                            <div class="pha-col"><input id="baseDispStartTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("基数发药结束日期"))#</div>
+                                            <div class="pha-col"><input id="baseDispEndDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("基数发药结束时间"))#</div>
+                                            <div class="pha-col"><input id="baseDispEndTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-row">
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("查询默认开始日期"))#</div>
+                                            <div class="pha-col">
+                                                <input id="statStartDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'>
+                                            </div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("查询默认开始时间"))#</div>
+                                            <div class="pha-col"><input id="statStartTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("查询默认结束日期"))#</div>
+                                            <div class="pha-col"><input id="statEndDate" class="hisui-validatebox" data-pha='class:"hisui-validatebox",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-col-cell">
+                                            <div class="pha-col pha-label">#(..Get("查询默认结束时间"))#</div>
+                                            <div class="pha-col"><input id="statEndTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",clear:true,save:true'></div>
+                                        </div>
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-row">
+                                        <!-- <div class="pha-col-cell"> -->
+                                        <div class="pha-col pha-label">#(..Get("病区发药默认显示"))#</div>
+                                        <div class="pha-col" style="padding-left:5px">
+                                            <div id="dispDefaultFlag" data-pha='class:"hisui-keywords"'></div>
+                                        </div>
+                                        <!-- </div> -->
+                                        <div class="pha-clear"></div>
+                                    </div>
+                                    <div class="pha-row" style="text-align: center;margin-top: -10px;">
+                                        <a class="hisui-linkbutton" plain='false' iconCls="icon-w-save" id="btnSavePhaLocation">#(..Get("保存"))#</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div class="hisui-layout" fit="true">
+                                <div data-options="region:'west',width:510,split:true,border:false">
+                                    <div class="hisui-panel" title="关联发药类别" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'',iconCls:'icon-ref'">
+                                        <table id="gridLocDispType"></table>
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',border:false" id="layout-center">
+                                    <div class="hisui-panel" title="不需要领药审核医嘱子类 - 双击设置" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'',iconCls:'icon-no-conatin'">
+                                        <table id="gridLocArcCat"></table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div id="gridLocBar">
+        <div class="pha-row">
+            <div class="pha-col" style="display:none">
+                <label id="_HospListLabel">#(..Get("医院"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="_HospList" style="width:100px">
+            </div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">#(..Get("新增"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">#(..Get("保存"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">#(..Get("删除"))#</a>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script src="../scripts/hisui/websys.comm.js"></script>
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/loc.js"></script>
+</body>
+
+</html>

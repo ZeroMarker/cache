@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.conf.group.prttasklist.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-23
  * Description: 单据打印列表
 -->
@@ -12,20 +12,34 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
 	<server>
-		w "<input id='InitGSPrintTaskEncrypt' name='InitGSPrintTaskEncrypt' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.OPGS.GSPrintTask")_"'>",$c(13,10)
-		w "<input id='GSPTRowID' name='GSPTRowID' type='hidden'/>",$c(13,10)
-		w "<input id='XmlTemplateName' name='XmlTemplateName' type='hidden'/>",$c(13,10)
-		w "<input id='ClassName' name='ClassName' type='hidden'/>",$c(13,10)
-		w "<input id='MethodName' name='MethodName' type='hidden'/>",$c(13,10)
-		w "<input id='TaskType' name='TaskType' type='hidden' value='"_$g(%request.Data("TaskType",1))_"'/>",$c(13,10)
-		w "<input id='PrintMode' name='PrintMode' type='hidden'/>",$c(13,10)
-		w "<input id='HardEquipDR' name='HardEquipDR' type='hidden'/>",$c(13,10)
+		set groupId=+%request.Get("GroupId")
+		set hospId=+%request.Get("HospId")
+		
+		w "<input id='InitGSPrintTaskEncrypt' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.OPGS.GSPrintTask")_"'/>",!
+		w "<input id='GSPTRowID' type='hidden'/>",!
+		w "<input id='XmlTemplateName' type='hidden'/>",!
+		w "<input id='ClassName' type='hidden'/>",!
+		w "<input id='MethodName' type='hidden'/>",!
+		w "<input id='TaskType' type='hidden' value='"_%request.Get("TaskType")_"'/>",!
+		w "<input id='PrintMode' type='hidden'/>",!
+		w "<input id='HardEquipDR' type='hidden'/>",!
 	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			GroupId: "#(groupId)#",
+			HospId: "#(hospId)#"
+		};
+		//全局变量
+		var GV = {
+			EditRowIndex: undefined
+		};
+	</script>
 </head>
 
 <body style="padding:10px;">

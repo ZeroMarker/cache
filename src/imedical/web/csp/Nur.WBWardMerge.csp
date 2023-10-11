@@ -1,0 +1,603 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+	<title>	Cache Server Page </title>
+	<meta charset="utf-8"/>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<style type="text/css">
+		body{
+			background-color:white;	
+		}
+    	.topline{
+			border-bottom: 1px dashed #ccc;
+			width:100%;
+		}
+		.panel-title span{
+			color:red;
+			padding-left:20px;	
+		}
+		.panel.datagrid:focus,.panel.datagrid :focus{
+			outline-width:0px;
+		}
+		td[field="dataCombDesc"] td{
+			text-align:center;
+		}
+	</style>
+	 <script language="cache" RUNAT="SERVER">
+  		s multiFlag=1
+	</script>
+</head>
+
+<body>
+	<div class="hisui-layout" fit="true">
+		<csp:if condition='1=multiFlag'>
+		<div data-options="region:'north',border:false" style="">
+			<div style="padding:10px;height:34px;">
+				<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+			</div>
+		</div>
+		</csp:if>
+		<div data-options="region:'west',border:false,headerCls:'panel-header-gray'" style="width:450px;padding:0px 5px 10px 10px">
+			<table id="groupTable" title="合并组" class="hisui-datagrid" style="height:100%"
+			data-options="fitColumns:true,rownumbers:true,fit: true,toolbar:'#tb',onClickRow: onClickGroupTableRow,headerCls:'panel-header-gray',iconCls:'icon-paper-group'">
+				<thead><tr><th data-options="field:'groupDesc',width:250,editor:{type:'validatebox',options:{placeholder:'请填写合并组名称',required:true,validType:'length[1,20]'}}">合并组名称</th>
+					<th data-options="field:'dataCombDesc',width:150,align:'center',editor:{type:'switchbox',options:{onClass:'primary',offClass:'red',onText:'启用',offText:'禁用',onSwitchChange:combSwitchChange}}">启用数据合并</th>
+					</tr></thead>
+			</table>
+			<div id="tb" >
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="appendGroup()">新增</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="editGroup()">修改</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="saveGroup()">保存</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeGroup()">删除</a>
+			</div>
+		</div>  
+		<div data-options="region:'center',border:false,headerCls:'panel-header-gray'" style="padding:0px 10px 10px 5px;"> 
+			<table id="wardTable" class="hisui-datagrid" title="合并组明细<span>请确保合并组内各病区床号不重复</span>"
+			data-options="fit: true,iconCls:'icon-paper',headerCls:'panel-header-gray',toolbar: '#tb2',onClickRow: onClickWardTableRow">
+				<thead><tr><th data-options="textField:'wardDesc',width:450,editor:{type:'combobox',options:{valueField:'wardid',textField:'warddesc',required:true,blurValidValue:true}}">合并病区</th></tr></thead>
+			</table>
+			<div id="tb2">
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="appendWard()">新增</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeWard()">删除</a>
+			</div>
+		</div>
+    </div>
+
+	<script type="text/javascript">
+	var multiFlag = "#($g(multiFlag))#";
+	var hospComp,groupIndex = undefined,wardIndex=undefined;
+	var tableArr = undefined,wardArr = undefined;
+	$(document).ready(function () {
+		baseSetup();
+	});
+	function baseSetup(){
+		if (parseInt(multiFlag)) {
+			//院区初始化和选择院区
+			hospComp = GenHospComp("Nur_IP_WardMerge"); 
+			$('#_HospList').combogrid({
+	   			onSelect:function(value){
+		   			if(wardIndex != undefined){
+						$('#wardTable').datagrid('endEdit',wardIndex)
+						$('#wardTable').datagrid('unselectRow', wardIndex);
+						wardIndex = undefined
+					}
+					if(groupIndex != undefined){
+						$('#groupTable').datagrid('endEdit',groupIndex)
+						$('#groupTable').datagrid('unselectRow', groupIndex);
+						groupIndex = undefined
+					}
+		   			$('#groupTable').datagrid({
+						data:[]
+					});
+		   			$('#wardTable').datagrid({
+						data:[]
+					});
+					getTableList();
+		   			getAllWard();//获取所有病区
+	   			}	 
+   			});
+		}
+		getTableList();
+		getAllWard();//获取所有病区
+	}
+	
+	//合并组点击
+	function onClickGroupTableRow(index){
+		if(groupIndex == index){
+			$('#groupTable').datagrid('selectRow', index)
+			return;
+		}
+		
+		if(groupIndex != undefined && groupIndex != index){
+			var editors = $('#groupTable').datagrid('getEditors', groupIndex);
+			if(editors.length > 0 && !$(editors[0].target).validatebox('isValid')){
+				tableArr[groupIndex]['groupDesc'] = '';
+				$('#groupTable').datagrid('unselectRow', index);
+				$.messager.popover({msg: '合并组名称不合法~',type:'alert'});
+				return;	
+			}
+			$('#groupTable').datagrid('endEdit',groupIndex)
+			$('#groupTable').datagrid('unselectRow', groupIndex);	
+		}
+		
+		if(wardIndex != undefined){
+			$('#wardTable').datagrid('endEdit',wardIndex)
+			$('#wardTable').datagrid('unselectRow', wardIndex);
+			wardIndex = undefined
+			var wardArr = tableArr[groupIndex]['wardIds']
+			for(var i = wardArr.length-1; i >= 0;i--){
+				var id = wardArr[i]['wardId']
+				if(id == ''){
+					$('#wardTable').datagrid('deleteRow', i);
+				}
+			}
+		}
+		groupIndex = index;
+		/*
+		$('#groupTable').datagrid('selectRow', index)
+		.datagrid('beginEdit', index);
+		*/
+		updateWardAreaUI()
+	}
+	//合并组新增
+	function appendGroup(){
+		if(isActionError('group','新增')){
+			return;	
+		}
+		if(groupIndex != undefined){
+			$('#groupTable').datagrid('endEdit',groupIndex)	
+		}
+		var index = tableArr.length;
+		for(var i = 0;i < index;i++){
+			var desc = tableArr[i]['groupDesc']
+			if(desc == ''){
+				$.messager.popover({msg: '合并组名称不合法~',type:'alert'});
+				return;
+			}
+		}
+		if(wardIndex != undefined){
+			$('#wardTable').datagrid('endEdit',wardIndex)
+			$('#wardTable').datagrid('unselectRow', wardIndex);
+			wardIndex = undefined
+			var wardArr = tableArr[groupIndex]['wardIds']
+			for(var i = wardArr.length-1; i >= 0;i--){
+				var id = wardArr[i]['wardId']
+				if(id == ''){
+					$('#wardTable').datagrid('deleteRow', i);
+				}
+			}
+		}
+		if(groupIndex != undefined){
+			$('#groupTable').datagrid('endEdit',groupIndex)
+			$('#groupTable').datagrid('unselectRow', groupIndex);
+		}
+		//会自动插入数据
+		$('#groupTable').datagrid('insertRow',{
+			index: index,	// index start with 0
+			row: {
+				groupDesc: '',
+				id: '',
+				wardIds:[]
+			}
+		});
+		$('#groupTable').datagrid('selectRow', index)
+				.datagrid('beginEdit', index);
+		groupIndex = index
+		$('#wardTable').datagrid({
+			data:[]
+		});
+	}
+	//合并组修改
+	function editGroup(){
+		if(isActionError('group','修改')){
+			return;	
+		}
+		var editors = $('#groupTable').datagrid('getEditors', groupIndex);
+		if(editors.length > 0 && !$(editors[0].target).validatebox('isValid')){
+			tableArr[groupIndex]['groupDesc'] = '';
+			$('#groupTable').datagrid('unselectRow', index);
+			$.messager.popover({msg: '合并组名称不合法~',type:'alert'});
+			return;	
+		}
+		$('#groupTable').datagrid('beginEdit', groupIndex);
+	}
+	//合并组保存
+	function saveGroup(){
+		if(isActionError('group','保存')){
+			return;	
+		}
+		var editors = $('#groupTable').datagrid('getEditors', groupIndex);
+		if(editors.length > 0 && !$(editors[0].target).validatebox('isValid')){
+			tableArr[groupIndex]['groupDesc'] = '';
+			$('#groupTable').datagrid('unselectRow', index);
+			$.messager.popover({msg: '合并组名称不合法~',type:'alert'});
+			return;	
+		}
+		
+		$('#groupTable').datagrid('endEdit',groupIndex)
+		saveOneGroup('保存');
+	}
+	//合并组删除
+	function removeGroup(){
+		if(isActionError('group','删除')){
+			return;	
+		}
+		
+		$.messager.confirm("删除", "确定删除吗?", function (r) {
+			if(!r){
+				return;
+			}
+			var id = tableArr[groupIndex]['id']
+			if(id == ""){
+				$('#groupTable').datagrid('endEdit', groupIndex);
+				$('#groupTable').datagrid('deleteRow', groupIndex);
+				groupIndex = undefined
+				//清空右边
+				if(wardIndex != undefined){
+					$('#wardTable').datagrid({
+						data:[]
+					});
+					wardIndex = undefined
+					wardArr = [];
+				}
+				return;
+			}		
+			deleteOneGroup(id);
+		});
+	}
+	
+	
+	//病区部分更新
+	function updateWardAreaUI(){
+		if(groupIndex == undefined){
+			$('#wardTable').datagrid({
+				data:[]
+			});
+			return;
+		}
+		var dict = tableArr[groupIndex]
+		$('#wardTable').datagrid({
+			data:dict['wardIds']
+		});
+	}
+	
+	function selectWardHandler(item){
+		var editors = $('#groupTable').datagrid('getEditors', groupIndex);
+		if(editors.length > 0){
+			var value = $(editors[0].target).val();
+			if($(editors[0].target).validatebox('isValid')){//数据合法
+				tableArr[groupIndex]['groupDesc'] = value;
+			}else{//数据不合法
+				tableArr[groupIndex]['groupDesc'] = '';
+				$.messager.popover({msg: '合并组名称不合法~',type:'alert'});
+				var editor = $('#wardTable').datagrid('getEditor', {index:wardIndex,field:'wardDesc'});
+				$(editor.target).combobox('setValue', '');
+				return;	
+			}
+		}
+		
+		var wardArr = tableArr[groupIndex]['wardIds']
+		for(var i = 0; i < tableArr.length;i++){
+			var wardArr = tableArr[i]['wardIds']
+			for(var j = 0; j < wardArr.length;j++){
+				var id = wardArr[j]['wardId']
+				if(i==groupIndex && j== wardIndex){//当前行
+					continue	
+				}
+				if(id==item.wardid){
+					var editor = $('#wardTable').datagrid('getEditor', {index:wardIndex,field:'wardDesc'});
+					$(editor.target).combobox('setValue', '');
+					
+					$.messager.popover({msg: '病区重复了~',type:'alert'});
+					return;
+				}
+			}
+		}
+		tableArr[groupIndex]['wardIds'][wardIndex]['wardId'] = item.wardid
+		tableArr[groupIndex]['wardIds'][wardIndex]['wardDesc'] = item.warddesc
+
+		saveOneGroup('保存');
+	}
+	
+	//病区点击
+	function onClickWardTableRow(index){
+		var wardArr = tableArr[groupIndex]['wardIds']
+		for(var i = 0; i < wardArr.length;i++){
+			var id = wardArr[i]['wardId']
+			if(id == ''&& i !=index ){
+				$('#wardTable').datagrid('unselectRow', index);
+				$.messager.popover({msg: '病区不能为空~',type:'alert'});
+				return;
+			}
+		}
+		if(wardIndex != undefined){
+			$('#wardTable').datagrid('endEdit',wardIndex)
+			$('#wardTable').datagrid('unselectRow', wardIndex);
+		}
+		$('#wardTable').datagrid('selectRow', index)
+				.datagrid('beginEdit', index);
+		wardIndex = index;	
+	}
+	//病区新增
+	function appendWard(){
+		if(isActionError('ward','新增')){
+			return;	
+		}
+		var wardArr = tableArr[groupIndex]['wardIds']
+		var index  = wardArr.length;
+		for(var i = 0; i < wardArr.length;i++){
+			var id = wardArr[i]['wardId']
+			if(id == ''){
+				$.messager.popover({msg: '病区不能为空~',type:'alert'});
+				return;
+			}
+		}
+		if(wardIndex != undefined){
+			$('#wardTable').datagrid('endEdit',wardIndex)
+			$('#wardTable').datagrid('unselectRow', wardIndex);
+			wardIndex = undefined
+		}
+		
+		//会自动插入数据
+		$('#wardTable').datagrid('insertRow',{
+			index: index,	// index start with 0
+			row: {
+				wardDesc: '',
+				wardId: ''
+			}
+		});
+		tableArr[groupIndex]['wardIds'][index]={wardDesc: '',wardId: ''}
+		$('#wardTable').datagrid('selectRow', index)
+				.datagrid('beginEdit', index);
+		wardIndex = index;
+	}
+	//病区修改
+	function editWard(){
+		if(isActionError('ward','修改')){
+			return;	
+		}
+		var wardArr = tableArr[groupIndex]['wardIds']
+		var index  = wardArr.length;
+		for(var i = 0; i < wardArr.length;i++){
+			var id = wardArr[i]['wardId']
+			if(id == ''){
+				$.messager.popover({msg: '病区不能为空~',type:'alert'});
+				return;
+			}
+		}
+		$('#wardTable').datagrid('beginEdit', wardIndex);
+	}
+	//病区保存
+	function saveWard(){
+		if(isActionError('ward','保存')){
+			return;	
+		}
+		var wardArr = tableArr[groupIndex]['wardIds']
+		for(var i = 0; i < wardArr.length;i++){
+			var id = wardArr[i]['wardId']
+			if(id == ''){
+				$.messager.popover({msg: '病区不能为~',type:'alert'});
+				return;
+			}
+		}
+		if(wardIndex != undefined){
+			$('#wardTable').datagrid('endEdit',wardIndex)
+			$('#wardTable').datagrid('unselectRow', wardIndex);
+			wardIndex = undefined
+		}
+		saveOneGroup('保存');
+	}
+	//病区删除
+	function removeWard(){
+		if(isActionError('ward','删除')){
+			return;	
+		}
+		$('#wardTable').datagrid('endEdit',wardIndex)
+		if(tableArr[groupIndex]['id'] == ''){
+			$('#wardTable').datagrid({
+				data:[]
+			});
+			tableArr[groupIndex]['wardIds'] = [];
+			wardIndex = undefined
+			wardArr = [];
+			return;
+		}
+		var editors = $('#groupTable').datagrid('getEditors', groupIndex);
+		if(editors.length > 0){
+			var value = $(editors[0].target).val();
+			if($(editors[0].target).validatebox('isValid')){//数据合法
+				tableArr[groupIndex]['groupDesc'] = value;
+			}else{//数据不合法
+				tableArr[groupIndex]['groupDesc'] = '';
+				$.messager.popover({msg: '合并组名称不合法~',type:'alert'});
+				return;	
+			}
+		}
+		$('#wardTable').datagrid('unselectRow', wardIndex);	
+		$('#wardTable').datagrid('deleteRow',wardIndex)
+		wardIndex = undefined
+		saveOneGroup('删除');
+	}
+	
+	function isActionError(type,tipStr){
+		console.log(type,tipStr)
+		var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
+		if(hospid == ""){
+			$.messager.popover({msg: '请选择院区！',type:'alert'});
+			return
+		}
+		if(tipStr != '新增' && groupIndex == undefined){//修改-保存-删除
+			var msg = '请先选择合并组！'
+			if(type=="group"){
+				msg = '请选择要'+tipStr+'的合并组！';
+			}
+			$.messager.popover({msg: msg,type:'alert'});
+			return true;
+		}else if(type == "ward" && tipStr != '新增'){//病区修改-删除
+			if(wardIndex == undefined){
+				tipStr = '请选择要'+tipStr+'的病区！';
+				$.messager.popover({msg: tipStr,type:'alert'});
+				return true;
+			}	
+		}else if(type == "ward" && groupIndex == undefined){//新增病区
+			var msg = '请先选择合并组！'
+			$.messager.popover({msg: msg,type:'alert'});
+			return true;
+		}
+		return false;
+	}
+	
+	//保存接口
+	function saveOneGroup(type){
+		var dict = tableArr[groupIndex]
+		var wardArr = dict['wardIds']
+		var ids = [];
+		for(var i=0; i < wardArr.length;i++){
+			if(wardArr[i]['wardId'] != ''){
+				ids.push(wardArr[i]['wardId']);
+			}
+		}
+		var groupDesc = dict['groupDesc']
+		var dataCombFlag=dict['dataCombFlag']==undefined?"0":dict['dataCombFlag']
+		var wardIDs = ids.join('@');
+		var rowId = dict['id'];
+		console.log(groupDesc,wardIDs,rowId);
+		var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
+		$cm({
+			ClassName:'CF.NUR.DWB.WardMerge',
+			MethodName:"Save",
+			HospID:hospid,
+			GroupDesc:groupDesc,
+			WardIDs:wardIDs,
+			RowId:rowId,
+			DataCombFlag:dataCombFlag
+		},function(jsonData){
+			//console.log(type,jsonData)
+			if(jsonData.flag != 'true'){
+				if(jsonData.msg != undefined){
+					$.messager.popover({msg: jsonData.msg,type:'alert'});
+				}else{
+					$.messager.popover({msg: type+'失败',type:'alert'});
+				}
+				return
+			}
+			$.messager.popover({msg: type+'成功',type:'success'});
+			$('#groupTable').datagrid('endEdit', groupIndex);
+			$('#groupTable').datagrid('unselectRow', groupIndex);
+			if(wardIndex != undefined){
+				$('#wardTable').datagrid('endEdit',wardIndex)
+				$('#wardTable').datagrid('unselectRow', wardIndex);
+				wardIndex = undefined
+			}
+			$('#wardTable').datagrid({
+				data:[]
+			});
+			getTableList();
+		});
+	}
+	//删除接口
+	function deleteOneGroup(rowId){
+		$cm({
+			ClassName:'CF.NUR.DWB.WardMerge',
+			MethodName:"Delete",
+			RowId:rowId
+		},function(jsonData){
+			//console.log('删除',jsonData)
+			if(jsonData.flag == 'false'){
+				$.messager.popover({msg: '删除失败',type:'alert'});
+				return
+			}
+			$('#groupTable').datagrid('endEdit', groupIndex);
+			$('#groupTable').datagrid('deleteRow', groupIndex);
+			groupIndex = undefined;
+			if(wardIndex != undefined){
+				$('#wardTable').datagrid('endEdit',wardIndex)
+				$('#wardTable').datagrid('unselectRow', wardIndex);
+				wardIndex = undefined
+			}
+			$('#wardTable').datagrid({
+				data:[]
+			});
+			getTableList();
+			
+		});
+	}
+	
+	//获取配置的table
+	function getTableList(){
+		var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
+		$cm({
+			ClassName:'CF.NUR.DWB.WardMerge',
+			MethodName:"Get",
+			HospID:hospid
+		},function(jsonData){
+			//console.log('list',jsonData)
+			if(jsonData.msg){
+				tableArr = [];
+				$('#groupTable').datagrid({
+					data:[]
+				});
+				return
+			}
+		
+			tableArr = jsonData;
+			$('#groupTable').datagrid({
+				data: tableArr
+			});
+			if(tableArr.length == 0){
+				groupIndex == undefined;
+				updateWardAreaUI()
+				return;
+			}
+				
+			if(groupIndex == undefined || groupIndex >= tableArr.length){
+				groupIndex = 0;
+			}
+			$('#groupTable').datagrid('selectRow', groupIndex);
+			updateWardAreaUI()
+		});
+	}
+	
+	//获取所有病区
+	function getAllWard(){
+		var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
+		$cm({
+			ClassName:'Nur.DWB.Service.BedChartService',
+			QueryName:"GetallWard",
+			desc:"",
+			hospid:hospid,
+			rows:99999
+		},function(jsonData){
+			if(jsonData.msg){
+				return		
+			}
+			wardArr = []
+			for(var i = 0; i < jsonData.rows.length;i++){
+				var dict = jsonData.rows[i];
+				if(dict['warddesc']=='全院' || dict['wardid'] == -1){
+					continue;
+				}
+				wardArr.push(dict);
+			}
+			
+			$('#wardTable').datagrid({
+    			columns:[[
+    				{field:'wardDesc',title:'合并病区', width:400,
+    				editor:{type:'combobox',options:{valueField:'warddesc',textField:'warddesc',required:true,blurValidValue:true,data:wardArr,onSelect:selectWardHandler,}}
+    				}
+    			]]
+    		}); 
+			
+		});	
+	}
+	function combSwitchChange(e,obj){
+		console.log(e,obj)
+		console.log(tableArr[groupIndex]['dataCombFlag'])
+		tableArr[groupIndex]['dataCombFlag'] = (obj.value==true?"1":"0")
+
+	}
+	</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<HTML>
+
+<HEAD>
+
+<!-- Put your page Title here -->
+
+<TITLE>	Cache Server Page </TITLE>
+</head>
+
+<SCRIPT SRC="../scripts/websys.DateTime.Tools.js"></SCRIPT>
+<SCRIPT SRC="/csp/broker/cspbroker.js"></SCRIPT>
+<SCRIPT SRC="/csp/broker/cspxmlhttp.js"></SCRIPT>
+<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<SCRIPT SRC="../scripts/DHCFBCommon.js"></SCRIPT>
+<SCRIPT SRC="../scripts/DHCFImportData.js"></SCRIPT>
+<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
+
+<script language="cache" runat="server">
+ 
+ s TableListOptions = $Get(%request.Data("TableListOptions",1))
+</script>
+<body>
+	<table width="1150" height="329" border="1">
+	  	<tr>
+	    	<th width="1" height="26" scope="row">&nbsp;</th>
+	    	<td width="213">&nbsp;</td>
+	    	<td width="900">
+		  		<table width="200" border="1">
+			     	<tr>
+			       		 <th scope="row"><input name="OpenFile" type="file" id="OpenFile" value="按钮" size="30"></th>
+			       		 <td><input name="LoadFile" type="button" id="LoadFile" onclick="javascript:LoadFile()" value="装载文件"></td>
+			       		 <td><input name="BTestData" type="button" id="BTestData" onclick="javascript:TestData()" value="数据测试"></td>
+			       		 <td><input name="BAppendData" type="button" id="BAppendData" onclick="javascript:AppendData()" value="追加数据"></td>
+						 <td><input name="BInitData" type="button" id="BInitData" onclick="javascript:InitData()" value="新装数据"></td>
+			    	     <td>&nbsp;</td>
+			      	</tr>
+	    		</table>
+	    	</td>
+	    	<td width="8">&nbsp;</td>
+	  	</tr>
+  		<tr>
+    		<th scope="row">&nbsp;</th>
+    		<td rowspan="4" valign="top">
+      			<select style="font-size:28px" name="TableList" id="TableList" size="33" style="width:200;height:500">
+				
+      			</select>
+    		</td>
+
+    		<td rowspan="3" valign="top">
+      			<div id="aaa" style="overflow:auto;width:900;height:500">
+      				<table id="TableDataTitle" border="1"></table>
+	      			<div id="bbb" style="overflow:auto;width:300;height=200">
+		  				<table id="TableData" border="1"></table>
+      				</div>
+      			</div>
+			</td>
+    		<td valign="top">&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<th scope="row">&nbsp;</th>
+    		<td>&nbsp;</td>
+  		</tr>
+  		<tr>
+    		<th scope="row">&nbsp;</th>
+				<td></td>
+  		</tr>
+  		<tr>
+  			<th scope="row">&nbsp;</th>
+  				<td height=100>
+  					<textarea style="width:800" name="ErrorText" id="ErrorText" cols="" rows=6></textarea>
+				<td>
+  		</tr>
+  		
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="TableListOptions" value=#(TableListOptions)#>
+		</form>
+	</div>
+
+</table>
+
+<p>&nbsp; </p>
+
+<script language="javascript">
+
+	var ErrorTextObj=document.all.ErrorText
+	var ErrorText=""
+	
+	var select = document.getElementById("TableList");
+	var options=document.getElementById("TableListOptions").value
+	var optionsInfo=options.split(",")
+	var len=optionsInfo.length
+	for (var i = 0; i < len; i++) 
+	{
+		var oneOptions=optionsInfo[i]
+		oneOptions=oneOptions.split("^")
+		var value=oneOptions[0]
+		var text=oneOptions[1]
+		select.options[i]=new Option( text, value );
+	}
+
+	function SetGloble(TmpStr)
+	{
+		#server(web.DHCEQImportDataForAna.SetGloble(TmpStr))#;
+	}
+
+	function DisplayError(RetClass,i)
+	{
+		window.status="插入数据:"+i+"行"
+		if ((RetClass!="")&&(RetClass!="Ok"))
+		{
+			RetStr=ConvertEnter("第"+(i+1)+"行"+RetClass);
+			if (ErrorText=="") {ErrorText=RetStr;}
+			else {ErrorText=ErrorText+"\n"+RetStr;}
+		}
+	}
+	
+	function AppendData()
+	{ReadTable("Append")}
+
+	function InitData()
+	{ReadTable("Init")}
+
+	function TestData()
+	{ReadTable("Test")}
+
+	function ReadTable(ChangeType)
+	{
+		window.status="程序进行中";
+		if ((ChangeType=="")||(ChangeType==undefined)) {ChangeType="Test"}
+		ErrorTextObj.value=""
+		ErrorText=""
+		var TableListObj=document.all.TableList;		
+		if (TableListObj.value=="") 
+		{
+			alert("没有选中相应的数据");
+			TableListObj.focus();
+			return;
+		}
+		if (!TableListObj) {window.status="完毕";return}
+		//var TmpArray=TableRead("TableData")
+		var RetStr=""
+		var RetClass=""
+		var TableObj=document.getElementById("TableData")
+		var TableRows=TableObj.rows.length
+		var CircleNum=TableRows/FetchRows
+		var CircleNum=Math.ceil(CircleNum);   
+		for (var m=0;m<CircleNum;m++)
+		{
+			var TmpArray=TableRead("TableData",m)
+			if ((m==0)&&(ChangeType=="Init")) 
+			{
+				RetClass=#server(web.DHCEQImportDataForAna.UpData("Clear","",TableListObj.value))#;
+				ErrorTextObj.value=RetClass
+			}
+			for (var i=0;i<TmpArray.length;i++)
+			{	
+				RetClass=#server(web.DHCEQImportDataForAna.UpData(ChangeType,TmpArray[i],TableListObj.value))#;
+				delete TmpArray[i];
+				DisplayError(RetClass,m*FetchRows+i)
+			}
+		}
+		ErrorTextObj.value=ErrorText;
+		ErrorText=""
+		window.status="完毕"
+	}
+</script>
+</body>
+</HTML>
+

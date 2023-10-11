@@ -1,0 +1,723 @@
+<!--nur.hisui.common.patientlistnew.csp 护士站-患者列表公共csp(最新)-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<style>
+	.layout-panel-west {
+		height:100%;
+	}
+	.west_patients {
+		width: 225px;
+		border: none;
+	}
+	.west_north_search {
+		padding: 5px;
+		height: 61px;
+		border-bottom: 0;
+		border-radius:0 !important;
+	}
+	#wardPatientCondition {
+		display:inline-block;
+		padding-right:1px;
+	}
+	#maternalBabyCondition {
+		margin-top: 5px;
+		width: 206px;
+		padding:0 1px;
+	}
+	.west_center_list {
+		padding: 0;
+		border-radius:0  !important;
+	}
+	.center_templates {
+		border: none;
+	}
+	.center_north_patinfo {
+		height:38px;
+		border: none;
+	}
+	.center_center_list {
+		border: none;
+		border-radius: 4px;
+	}
+	.center_center_tree {
+		border: none;
+		padding: 4px;
+	}
+	.PatInfoItem{
+        top:0 !important;
+        left:0 !important;
+        margin-left:0 !important;
+    }
+	.searchbox .searchbox-prompt {
+		padding-left: 5px !important;
+	}
+	.unman {
+		background: url(../images/unman.png) no-repeat;
+		background-size: contain;
+	}
+	.man {
+		background: url(../images/man.png) no-repeat;
+		background-size: contain;
+	}
+	.woman {
+		background: url(../images/woman.png) no-repeat;
+		background-size: contain;
+	}
+	.unman_lite {
+		background: url(../images/unman_lite.png) no-repeat;
+		background-size: contain;
+		border-radius:50%;
+	}
+	.man_lite {
+		background: url(../images/man_lite.png) no-repeat;
+		background-size: contain;
+		border-radius:50%;
+	}
+	.woman_lite {
+		background: url(../images/woman_lite.png) no-repeat;
+		background-size: contain;
+		border-radius:50%;
+	}
+	.layout-panel-north{
+		border-bottom: 0;	
+	}
+	span.showNums{
+		margin-left: 5px;
+	    padding: 0 2px;
+	    background-color: #F16E57;
+	    color: #fff;
+	    border-radius: 4px;
+	}
+	.tree-checkbox, .tree-collapsed, .tree-expanded, .tree-file, .tree-folder, .tree-indent{
+		height:16px;
+		margin-top:6px;	
+	}
+	#patSignOrIconFilter {
+		width:175px;
+	}
+	.panel-body .panel-body-noheader {
+		
+	}
+	.signNums {
+		margin-left:5px;
+		border-radius:4px;
+		padding:0 2px;
+		background-color:#e06666;
+		color:#f3f3f3;
+	}
+	/*.layout>.panel.layout-panel>.panel-header {
+		border-bottom:0;
+	}*/
+</style>
+<script language="cache" runat="SERVER">
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	if (EpisodeID ="undefined") s EpisodeID=""
+	s locID=$g(%session.Data("LOGON.CTLOCID"))
+	s wardID=$g(%session.Data("LOGON.WARDID"))
+ 	s hospID=$g(%session.Data("LOGON.HOSPID"))
+ 	s userID=$g(%session.Data("LOGON.USERID"))
+	s groupFlag=$g(^NurGroupSetting("switch",hospID)) //护士分组(按床位)-demo->护理分组配置
+	s ifNurseGroupPat=$g(^IfNurseGroupPat("switch",hospID)) //是否启用护士分管患者(护士分组-按患者)
+	s pageConfigCode=$G(%request.Data("pageConfigCode", 1)) // demo-患者列表配置-代码
+	if (pageConfigCode="") s pageConfigCode="Default"
+	s menuConfig=##class(Nur.NIS.Service.Base.PatListSettings).getMenuPatListSet(pageConfigCode,wardID,hospID) //获取患者列表配置
+	s maternalBabyWadSub=""
+	if (wardID'="") {
+		s maternalBabyWadSub=$o(^DHCBed("MaternalBaby",0,"Ward",wardID,""))  //母婴同室判断
+	}
+	//loadBedByWardGroup
+	s ifBaby = $G(%request.Data("ifBaby", 1)) //是否是婴儿 1:只显示婴儿列表 0:只显示母亲列表 空:母婴都显示
+	if ($g(maternalBabyWadSub)="") s ifBaby="" //登录病区非母婴同室的,ifBaby默认为空
+	s ifMultiCheck = $G(%request.Data("ifMultiCheck", 1)) //患者树是否多选 1:支持多选 0:单选
+	s IsSelectedAllPatient= $G(%request.Data("IsShowAllPatient", 1)) //患者树是否默认全部选中(portal弹出页面后需要) Y:全选 其他:不全选
+	if (IsSelectedAllPatient=1) s ifMultiCheck=1
+	s fixedEpisodeIDStr= $G(%request.Data("fixedEpisodeIDStr", 1)) //固定查询的就诊ID串,多个以^分割。不为空时患者列表只显示传入的就诊ID对应的患者
+	s locType=$p(^CTLOC(locID),"^",13)
+	s curDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	k menuConfigArr
+    d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(menuConfig,.menuConfigArr)
+    if (menuConfigArr("loadBedByWardGroup")="Y"){
+		s wardGroupList=##class(Nur.NIS.Service.Base.WardProGroupPatSetting).GetWardGroupList(wardID,userID)
+		s wardGroupNum=wardGroupList.Count()
+		s wardGroupJson=##class(Nur.JSON).Encode(wardGroupList)
+	}else{
+		s wardGroupNum=0
+		s wardGroupJson=##class(Nur.JSON).Encode(##class(%ListOfDataTypes).%New())
+	}
+</script>
+<script language="javascript">
+	var _PatListGV={
+		EpisodeID:"#(EpisodeID)#",
+		groupFlag:"#(groupFlag)#",
+		ifNurseGroupPat:"#(ifNurseGroupPat)#",
+		ifMultiCheck:"#(ifMultiCheck)#", 
+		ifBaby: "#(ifBaby)#",
+		pageConfigCode: "#(pageConfigCode)#",
+		maternalBabyWadSub: "#(maternalBabyWadSub)#",
+		IsSelectedAllPatient:"#(IsSelectedAllPatient)#",
+		wardGroupJson:#(wardGroupJson)#,
+		fixedEpisodeIDStr:"#(fixedEpisodeIDStr)#"
+    }
+</script>
+<div id="patient_search" data-options="region:'west',title:'患者列表',split:true,onCollapse: collapsePatPanel,onExpand: expandPatPanel" class="west_patients">
+	<div id="divPatients" class="hisui-layout"
+		 data-options="fit:true">
+		 <csp:if condition=(locType="OP")>
+		 	<div data-options="region:'north',split:true" class="west_north_search" style="height:112px;">
+				<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、登记号、床号"))#'" style="width:121px;"/>
+				<div id="wardPatientCondition" class="hisui-switchbox" 
+					 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("术间"))#',size:'small',animated:true,onClass:'primary',offClass:'primary'">
+				</div>
+				<div style="margin-top:5px;">
+					<input id="filterOperDate" class="hisui-datebox" style="width:206px">
+				</div>
+				<div style="margin-top:5px;">
+					<input id="patSignOrIconFilter" class="hisui-combobox"/>  
+				</div>
+			</div>
+		 <csp:else>
+		 	<csp:if condition=((maternalBabyWadSub'="")&&(ifBaby=""))>
+		 		<csp:if condition=((wardGroupNum'=0))>
+		 			<div data-options="region:'north',split:true" class="west_north_search" style="height:143px;">
+						<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、登记号、床号"))#'" style="width:207px;"/>
+						<div id="wardPatientCondition" class="hisui-switchbox" style="display:none;"
+							 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+						<div id="maternalBabyCondition" class="hisui-switchbox" 
+							 data-options="onText:'#(..Get("母婴组合显示"))#',offText:'#(..Get("母婴拆分显示"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+						<div style="margin-top:5px;">
+							<input id="patSignOrIconFilter" class="hisui-combobox"/>  
+						</div>
+						<div style="margin-top:5px;">
+							<span style="margin-right:5px;">#(..Get("责组"))#</span><input id="patWardGroupFilter" class="hisui-combobox"/>  
+						</div>
+					</div>
+		 		<csp:else>
+		 			<div data-options="region:'north',split:true" class="west_north_search" style="height:108px;">
+						<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、登记号、床号"))#'" style="width:121px;"/>
+						<div id="wardPatientCondition" class="hisui-switchbox" 
+							 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+						<div id="maternalBabyCondition" class="hisui-switchbox" 
+							 data-options="onText:'#(..Get("母婴组合显示"))#',offText:'#(..Get("母婴拆分显示"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+						<div style="margin-top:5px;">
+							<input id="patSignOrIconFilter" class="hisui-combobox"/>  
+						</div>
+					</div>
+		 		</csp:if>
+	      	 <csp:else>
+	      	 	<csp:if condition=((wardGroupNum'=0))>
+	      	 		<div data-options="region:'north',split:true" class="west_north_search" style="height:112px;">
+						<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、登记号、床号"))#'" style="width:207px;"/>
+						<div id="wardPatientCondition" class="hisui-switchbox" style="display:none;"
+							 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+						<div style="margin-top:5px;">
+							<input id="patSignOrIconFilter" class="hisui-combobox"/>  
+						</div>
+						<div style="margin-top:5px;">
+							<span style="margin-right:5px;">#(..Get("责组"))#</span><input id="patWardGroupFilter" class="hisui-combobox"/>  
+						</div>
+					</div> 
+	      	 	<csp:else>
+	      	 		<div data-options="region:'north',split:true" class="west_north_search" style="height:77px;">
+						<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、登记号、床号"))#'" style="width:121px;"/>
+						<div id="wardPatientCondition" class="hisui-switchbox" 
+							 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+						<div style="margin-top:5px;">
+							<input id="patSignOrIconFilter" class="hisui-combobox"/>  
+						</div>
+					</div> 
+	      	 	</csp:if>
+	    	 </csp:if>
+		 </csp:if>
+		<div data-options="region:'center',split:true"
+			 class="west_center_list">
+			<ul id="patientTree" 
+				data-options="animate:true,lines: true">
+			</ul>
+		</div> 
+	</div> 
+</div>
+<script type="text/javascript">
+var EpisodeIDStr="";
+var reLoadPatAdditionalInfoFlag=0;
+$(function() {
+	$("#patient_search").prev().css("border-bottom","0")
+	$(".west_patients").height($("body").height()-36);
+	//初始化患者列表配置
+	InitPatListGV(#(menuConfig)#);
+	//初始化查询条件
+	initSearchCondition();
+	initFilterOperDate();
+	//初始化患者列表树
+	initPatientTree();	
+	initTip();
+	// 患者列表刷新间隔
+	if (_PatListGV.refreshIntervalTime > 0){	
+		intervalAdditionalInfoHandle = setInterval(getPatAdditionalInfo, _PatListGV.refreshIntervalTime*1000);
+	}
+	reLoadPatAdditionalInfoFlag=0;
+	addLoadEvent(function(){
+		setTimeout(function() { 
+	  		getPatAdditionalInfo();
+	 	}, 3000)
+	});
+});
+function InitPatListGV(menuConfigObj){
+	try {
+		//var menuConfigObj=eval("("+menuConfig+")");
+		EpisodeIDStr="";
+		$.extend(_PatListGV,menuConfigObj);
+		if (_PatListGV.patListFold=="Y"){
+			$("#patient_search").parents(".hisui-layout").layout("collapse","west");
+		}
+	}catch(e) {
+		$.messager.alert("提示","调用InitPatListGV函数异常,错误信息："+e.message); 
+		return false;
+	}
+}
+/**
+* @description 初始化查询条件
+*/
+function initSearchCondition() {
+	// 护理分组权限开启时，默认显示责组
+	if(_PatListGV.groupFlag=="Y" && _PatListGV.ifNurseGroupPat!="Y") $("#wardPatientCondition").switchbox("setValue",false);
+	$('#wardPatientSearchBox').searchbox({
+		searcher: function(value) {
+			reLoadPatAdditionalInfoFlag=1;
+			$HUI.tree('#patientTree','reload');
+		}
+	});
+	$('#wardPatientCondition').switchbox('options').onSwitchChange = function(){
+		reLoadPatAdditionalInfoFlag=1;
+		$("#patSignOrIconFilter").combobox("setValues","").combobox("disable");
+		$HUI.tree('#patientTree','reload');
+	};
+	if ((_PatListGV.maternalBabyWadSub!="")&&(_PatListGV.ifBaby=="")){
+		$('#maternalBabyCondition').switchbox('options').onSwitchChange = function(){
+			reLoadPatAdditionalInfoFlag=1;
+			$("#patSignOrIconFilter").combobox("setValues","").combobox("disable");
+			$HUI.tree('#patientTree','reload');
+		};
+	}
+	var data=[];
+	var patSignSetsArr=eval("("+_PatListGV.patSignSets+")");
+	for (var i=0;i<patSignSetsArr.length;i++){
+		if (patSignSetsArr[i].filter=="Y"){
+			data.push({"id":patSignSetsArr[i].id,"name":$g(patSignSetsArr[i].name)})
+		}
+	}
+	$("#patSignOrIconFilter").combobox({
+		disabled:true,
+		valueField:'id',
+		textField:'name',
+		multiple:true,
+		rowStyle:'checkbox', //显示成勾选行形式
+		data:data,
+		onSelect:function(rec){
+			patSignOrIconFilterHandle();
+		},
+		onUnselect:function(rec){
+			patSignOrIconFilterHandle();
+		},
+		onChange:function(newValue, oldValue){
+			if (!newValue){
+				patSignOrIconFilterHandle();
+			}
+		},
+		onAllSelectClick:function(e){
+			patSignOrIconFilterHandle();
+		}
+	})
+	$("#patWardGroupFilter").combobox({
+		valueField:'groupId',
+		textField:'groupDesc',
+		data:_PatListGV.wardGroupJson,
+		width:175,
+		editable:false,
+		onSelect:function(rec){
+			reLoadPatAdditionalInfoFlag=1;
+			$("#patSignOrIconFilter").combobox("setValues","").combobox("disable");
+			$HUI.tree('#patientTree','reload');
+		},
+		onLoadSuccess:function(){
+			$("#patWardGroupFilter").combobox("setValue",_PatListGV.wardGroupJson[0].groupId);
+			initPatientTree();
+		}
+	})
+}
+function initTip(){
+	var content="";
+	var patInfoColorSetsArr=eval("("+_PatListGV.patInfoColorSets+")");
+	for (var i=0;i<patInfoColorSetsArr.length;i++){
+		content = content+"<p style='color:"+patInfoColorSetsArr[i].color+";'>"+$g(patInfoColorSetsArr[i].name)+"</p>"
+	}
+	if (content=="") content=$g("暂未配置患者信息颜色！")
+	$('#patSignOrIconFilter').next().after($('<a></a>').linkbutton({
+		id:"colorTip",
+        plain:true,
+        iconCls:'icon-help'
+    }).tooltip({
+        content:content
+    }));
+}
+/**
+* @description 初始化患者树
+*/
+function initPatientTree() {
+	$HUI.tree('#patientTree', {
+		checkbox: _PatListGV.ifMultiCheck==1 ? true : false,
+		loader: function(param, success, error) {
+			var maternalBabySplit="N";
+			if ($("#maternalBabyCondition").length>0){
+				maternalBabySplit=$("#maternalBabyCondition").switchbox('getValue')?"N":"Y";
+			}
+			var filterOperDate="";
+			if ($("#filterOperDate").length>0) filterOperDate=$("#filterOperDate").datebox("getValue");
+			//(_PatListGV.maternalBabyWadSub!="")?($("#maternalBabyCondition").switchbox('getValue')?"N":"Y"):"N"
+			
+			var wardrGroupId="";
+			if ($("#patWardGroupFilter").length>0){
+				wardrGroupId=$("#patWardGroupFilter").combobox('getValue');
+			}
+			var searchParamObj={
+				adm: _PatListGV.EpisodeID,
+				groupSort: !$('#wardPatientCondition').switchbox('getValue')?"Y":"N",
+				babyFlag: _PatListGV.ifBaby,
+				searchInfo: $HUI.searchbox('#wardPatientSearchBox').getValue(),
+				transInHospFlag:_PatListGV.transInHospPatShow,
+				transInHospPatShowDays:_PatListGV.transInHospPatShowDays,
+				consultationFlag:_PatListGV.consultPatShow,
+				consultPatShowDays:_PatListGV.consultPatShowDays,
+				disChargeFlag:_PatListGV.disChargeShow,
+				disChargeShowDays:_PatListGV.disChargeShowDays,
+				waitingAreaPatFlag:_PatListGV.waitingAreaPatShow,
+				transAreaPatShow:_PatListGV.transAreaPatShow,
+				mulWardPatGroupByWard:_PatListGV.mulWardPatGroupByWard,
+				wardID:session['LOGON.WARDID']|"",
+				locID:session['LOGON.CTLOCID']||"",
+				langID:session['LOGON.LANGID']||"",
+				userID:session['LOGON.USERID']||"",
+				hospID:session['LOGON.HOSPID']||"",
+				maternalBabySplit:maternalBabySplit,
+				filterOperDate:filterOperDate,
+				wardrGroupId:wardrGroupId,
+				fixedEpisodeIDStr:_PatListGV.fixedEpisodeIDStr,
+				HISUIStyleCode:HISUIStyleCode || ""
+			}
+			$cm({
+				ClassName: "Nur.NIS.Service.Base.Ward",
+				MethodName: "GetWardPatientsList",
+				searchParamObj:JSON.stringify(searchParamObj)
+			}, function(data) {
+				var addIDAndText = function(node) {
+					node.id = node.ID;
+					node.text = node.label ;
+					if (node.id === _PatListGV.EpisodeID) {
+						node.checked = true;
+					}
+					if (node.children) {
+						node.children.forEach(addIDAndText);
+					}
+					getSelectedPatient(node)
+				}
+				data.forEach(addIDAndText);
+				success(data);
+			});
+		},
+		onBeforeLoad:function(node, param){
+			var wardrGroupId="";
+			if ($("#patWardGroupFilter").length>0){
+				wardrGroupId=$("#patWardGroupFilter").combobox('getValue');
+				if (!wardrGroupId) return false;
+			}
+		},
+		onLoadSuccess: function(node, data) {
+			EpisodeIDStr="";
+			if (!!_PatListGV.EpisodeID) {
+				var selNode = $('#patientTree').tree('find', _PatListGV.EpisodeID);
+				if (selNode){
+					$('#patientTree').tree('select', selNode.target);
+					$('#patientTree').tree('check', selNode.target);
+					//修复婴儿在母亲节点下时,获取到的EpisodeIDStr未包含婴儿就诊串
+					if(_PatListGV.ifMultiCheck==1){
+						getAllCheckedPatient();
+					}else{
+						EpisodeIDStr=_PatListGV.EpisodeID;
+					}
+				}
+			}
+			if(_PatListGV.IsSelectedAllPatient=="Y"){
+				getAllCheckedPatient();
+			}
+			if ((typeof(patientTreeLoadSuccessCallBack) === 'function')) {
+				patientTreeLoadSuccessCallBack();
+			}
+			if ((_PatListGV.disChargeShow=="Y")&&(_PatListGV.disChargePatExpand=="N")){
+				var node = $('#patientTree').tree('find', $g("出院患者"));
+				$('#patientTree').tree('collapse', node.target);
+			}
+			if ((_PatListGV.transInHospPatShow=="Y")&&(_PatListGV.transInHospPatExpand=="N")){
+				var node = $('#patientTree').tree('find', $g("在院转科"));
+				$('#patientTree').tree('collapse', node.target);
+			}
+			if (reLoadPatAdditionalInfoFlag==1) getPatAdditionalInfo();
+		},
+		lines: true,
+		onClick: function (node) {	
+			if(_PatListGV.ifMultiCheck==1){
+				if(node.checked){
+					$('#patientTree').tree("uncheck", node.target)	
+				}else{
+					$('#patientTree').tree("check", node.target)
+				}
+				getAllCheckedPatient();		
+			}else{
+				EpisodeIDStr=node.episodeID;
+			}		
+			if ((typeof(patientTreeCheckChangeHandle) === 'function')) {
+				patientTreeCheckChangeHandle();
+			}
+			if ((typeof(searchOrder) === 'function')) {
+				delay_till_last('searchOrd', function() {
+					searchOrder();
+				}, 1000);
+			}
+		},
+		onCheck:function(node,checked){
+			node.checked=checked;
+			getAllCheckedPatient();
+			if ((typeof(patientTreeCheckChangeHandle) === 'function')) {
+				patientTreeCheckChangeHandle();
+			}
+			if ((typeof(searchOrder) === 'function')) {
+				delay_till_last('searchOrd', function() {
+					searchOrder();
+				}, 1000);
+			}
+			
+		}
+	});
+}
+function getSelectedPatient(node){
+	if(_PatListGV.IsSelectedAllPatient=="Y"){ 
+		node.checked = true;
+	}
+}
+// 获取当前所有选中的患者
+function getAllCheckedPatient(){	
+	var array=[];
+	var nodes = $('#patientTree').tree('getChecked');
+	if(nodes.length > 0){
+		for(var i = 0; i < nodes.length; i++){
+			if ((nodes[i].episodeID)&&($(nodes[i].target).css('display')!="none")) array.push(nodes[i].episodeID);	
+		}
+		EpisodeIDStr = array.join("^");	
+	}else{
+		EpisodeIDStr="";
+	}
+	return EpisodeIDStr;
+}
+function getPatAdditionalInfo(){
+	var nodes = $('#patientTree').tree('getChildren');
+	var episodeIDStr="";
+	if(nodes.length>0){
+		nodes.forEach(function(val){
+			if(val.episodeID){
+				episodeIDStr=episodeIDStr=="" ? val.episodeID : episodeIDStr+"^"+val.episodeID;
+			}
+		})
+		MessageQueue.FireAjax("patList.getPatAdditionalInfo");
+		MessageQueue.Add("patList.getPatAdditionalInfo",$cm({
+			ClassName: "Nur.NIS.Service.Base.Ward",
+			MethodName: "getPatsAdditionalInfo",
+			episodeIDStr: episodeIDStr,
+			patSignSetsObj:_PatListGV.patSignSets,
+			patInfoColorSetsObj:_PatListGV.patInfoColorSets
+		},function(data){
+			if ((data.msg)&&(_PatListGV.refreshIntervalTime > 0)){
+				clearInterval(intervalAdditionalInfoHandle);
+			}
+			var patSignNumsObj={};
+			var filterData=$("#patSignOrIconFilter").combobox("getData");
+			//更新tree节点
+			for(var i=0;i<data.length;i++){
+				var PatLabel=data[i].PatLabel;
+				if (PatLabel!=""){
+					var node = $('#patientTree').tree('find', data[i].EpisodeID);
+					if (node){
+						$('#patientTree').tree('update', {
+							target: node.target,
+							text: PatLabel,
+							attributes:data[i].patSignSets
+						});
+					}
+				}
+				var patSignSets=data[i].patSignSets;
+				for (var j=0;j<patSignSets.length;j++){
+					if (patSignSets[j].filter !== "Y") continue;
+					var signSetId=patSignSets[j].signSetId;
+					var index=$.hisui.indexOfArray(filterData,"id",signSetId);
+					if (!patSignNumsObj[signSetId]) {
+						patSignNumsObj[signSetId]={};
+						patSignNumsObj[signSetId]["nums"]=1;
+						patSignNumsObj[signSetId]["index"]=index;
+					}else{
+						patSignNumsObj[signSetId]["nums"]=patSignNumsObj[signSetId]["nums"]+1;
+					}
+				}
+			}
+			$(".signNums").remove();
+			var _$filterPanel=$("#patSignOrIconFilter").combobox("panel")[0].children;
+			for (signSetId in patSignNumsObj){
+				var signNums = patSignNumsObj[signSetId]["nums"];
+				var index= patSignNumsObj[signSetId]["index"];
+				$(_$filterPanel[index]).append("<span class='signNums'>"+signNums+"</span>")
+			}
+			$("#patSignOrIconFilter").combobox("enable");
+		}))
+	}
+}
+function getPatBedByEpisodeID(episodeID){
+	var node = $('#patientTree').tree('find', episodeID);
+	if (node) {
+		return node.bedCode;
+	}
+	return "";
+}
+//图标/附加标识筛选患者树
+function patSignOrIconFilterHandle(){
+	EpisodeIDStr="";
+	var filters=$("#patSignOrIconFilter").combobox("getValues").join("^");
+	if (filters!="") filters="^"+filters+"^"
+	var nodes = $('#patientTree').tree('getChildren');
+	if(nodes.length>0){
+		nodes.forEach(function(val){
+			if(val.episodeID){
+				var nodeId=val.episodeID;
+				var node = $('#patientTree').tree('find', nodeId);
+				$(node.target).show();
+				if (filters!=""){
+					var findFlag=0;
+					var attributes=node.attributes;
+					if ((attributes)&&(attributes.length>0)){
+						for (var k=0;k<attributes.length;k++){
+							if (filters.indexOf("^"+attributes[k].signSetId+"^")>=0){
+								findFlag=1;
+								break;
+							}
+						}
+					}
+					if (findFlag==0){
+						$(node.target).hide();
+						$('#patientTree').tree('uncheck', node.target);
+						checkChg=1;
+					}else{
+						var parent=$('#patientTree').tree('getParent', node.target);
+						var parentNode = $('#patientTree').tree('find', parent.ID);
+						$(parentNode.target).show();
+					}
+				}else{
+					var parent=$('#patientTree').tree('getParent', node.target);
+					var parentNode = $('#patientTree').tree('find', parent.ID);
+					$(parentNode.target).show();
+				}
+			}
+		})
+		getAllCheckedPatient();
+		if ((typeof(patientTreeCheckChangeHandle) === 'function')) {
+			patientTreeCheckChangeHandle();
+		}
+		if ((typeof(searchOrder) === 'function')) {
+			delay_till_last('searchOrd', function() {
+				searchOrder();
+			}, 1000);
+		}
+	}
+}
+/**
+* @description 折叠患者列表
+*/
+function collapsePatPanel() {
+}
+/**
+* @description 展开患者列表
+*/
+function expandPatPanel() {
+}
+var MessageQueue={
+	Queue: {},
+	Add: function(MsgType,$Msg){
+		if ((typeof MsgType=="undefined")||(typeof $Msg=="undefined")){
+			return;   
+		}
+		if (this.Queue[MsgType] instanceof Array ===false){
+		   this.Queue[MsgType]=new Array();
+		}
+		this.Queue[MsgType].push($Msg);
+		return $Msg;
+	},
+	///批量停止执行Ajax请求，防止相同的请求对同一DOM操作，导致界面数据异常
+	FireAjax:   function (MsgType) {
+		this.EachDel(MsgType,function($Ajax){
+			if($Ajax.readyState == 4 && $Ajax.status == 200) {
+				return;
+			}
+			$Ajax.abort();
+		});
+	},
+	EachDel:   function (MsgType,callBack) {
+		if (this.Queue[MsgType] instanceof Array ===false){
+			return;
+		}
+	    var $Msg;
+		for(var i=0; i<this.Queue[MsgType].length; i++){
+			$Msg=this.Queue[MsgType][i];
+			this.Queue[MsgType].splice(i--, 1);
+			if (callBack($Msg)===false){
+				break;
+			}
+		}
+     }
+}
+
+function initFilterOperDate(){
+	if ($("#filterOperDate").length>0){
+		$("#filterOperDate").datebox({
+				value:"#(curDate)#",
+				onChange:function(newValue, oldValue){
+					$HUI.tree('#patientTree','reload');
+				}
+		});
+	}
+}
+var _timer = {}; 
+function delay_till_last(id, fn, wait) { 
+	if (_timer[id]) { 
+  		window.clearTimeout(_timer[id]); 
+  		delete _timer[id]; 
+ 	} 
+ 	return _timer[id] = window.setTimeout(function() { 
+  		fn(); 
+  		delete _timer[id]; 
+ 	}, wait); 
+}
+function addLoadEvent(func) {
+    var oldonload = window.onload;
+    if (typeof window.onload !== 'function') {
+        window.onload = func;
+    } else {
+	    $(window).load(function(){})
+        window.onload = function () {
+            oldonload();
+            func();
+        }
+    }
+}
+</script>

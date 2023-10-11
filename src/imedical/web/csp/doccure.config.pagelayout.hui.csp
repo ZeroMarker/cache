@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--doccure.config.pagelayout.hui.csp HISUI治疗站界面设置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.l-label{
+	text-align:left;
+}
+form table td{
+	padding: 0;
+}
+</style>
+<Server>
+//若不为空,则按照安全组设置
+s GroupRowId=%request.Get("GroupRowId")
+s LoginGroupRowId=%session.Get("LOGON.GROUPID")
+s LoginUserRowId=%session.Get("LOGON.USERID")
+s page=%request.Get("page")
+s DefaultGroupRowId=GroupRowId
+i DefaultGroupRowId="" {
+	///说明是用户点进来的
+	s DefaultGroupRowId=LoginGroupRowId
+}
+s CureAppVersion=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAppVersion",%session.Get("LOGON.HOSPID"))
+s DocCureUseBase=+(##class(DHCDoc.DHCDocCure.VersionControl).UseBaseControl(%session.Get("LOGON.HOSPID")))
+</Server>
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true,split:false">
+	<div data-options="region:'center'" style="border:0px;padding:10px;">
+		<form id="fUIConfig" method="post">
+			<div class="hisui-panel" title="界面布局" data-options="headerCls:'panel-header-gray'">
+				<table class="search-table">
+					<tr>
+						<td class="r-label">#(..Get("操作方式设置"))#</td>
+						<td>
+							<input id="layoutConfig1" class='hisui-radio' type="radio" label='页签展示业务操作列表(默认)' name='layoutConfig'>
+						</td>
+						<td class="r-label l-label">
+							<input id="layoutConfig2" class='hisui-radio' type="radio" label='按钮弹窗展示业务操作列表' name='layoutConfig'>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">#(..Get("申请单列表高度占比"))#</td>
+						<td colspan="3" style="height:60px;">
+							<input id="AppListScale" class="hisui-slider" data-options="showTip:true,rule:[10,20,30,40,50,60,70,80,90,100],min:10,max:100,tipFormatter:tipFormatter" />
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div style="height:10px"></div>
+			<div class="hisui-panel" title="模式设置" data-options="headerCls:'panel-header-gray'">
+				<table class="search-table">
+					<csp:if condition='CureAppVersion="V1"'>
+				    <tr>
+						<td class="r-label"><a id="label_SingleAppointMode" href="#" title="基础版本不可用！操作方式为【按钮弹窗展示业务操作列表】时无效！启用后治疗预约界面预约时本次预约成功后若仍存在可预约的数量，则可弹出日期选择框继续按照本次预约的资源、时段、服务组进行预约，但申请单只能单选一条记录." class="hisui-tooltip" data-options="position:'right'"><label for="SingleAppointMode">#(..Get("预约启用单申请单预约模式"))#</label></a></td>
+						<td>
+							<div id="SingleAppointMode" class='hisui-switchbox checkusebase' data-options="size:'small',onText:'#(..Get("开启"))#',offText:'#(..Get("关闭"))#',offClass:'gray',onClass:'primary',checked:false"></div>
+						</td> 
+					</tr>
+					</csp:if>
+					<tr>
+						<td class="r-label"><a id="label_ScheuleGridListOrTab" href="#" title="基础版本不可用！治疗预约界面-若开启预约资源排程信息以周日历展示,双击单元格预约,否则每个可示日期以页签形式展示,选中行点击按钮预约." class="hisui-tooltip" data-options="position:'right'"><label for="ScheuleGridListOrTab">#(..Get("预约资源列表以周日历展示"))#</label></a></td>
+						<td>
+							<div id="ScheuleGridListOrTab" class='hisui-switchbox checkusebase' data-options="size:'small',onText:'#(..Get("开启"))#',offText:'#(..Get("关闭"))#',offClass:'gray',onClass:'primary',checked:false"></div>
+						</td> 
+					</tr>
+				</table>
+			</div>
+			<div style="height:10px;"></div>
+		</form>
+		<div style="text-align:center;margin-top:10px;">
+			<a href="#" id="BSave" class="hisui-linkbutton">保存</a>
+			<a href="#" id="BRestoreDefault" class="hisui-linkbutton" style="margin-left:20px;">还原默认</a>
+		</div>
+	</div>
+</div>
+	<SCRIPT language = 'javascript' >	
+		//全局请求后台服务对象
+		var ServerObj={
+			DocCureUseBase:"#(DocCureUseBase)#",
+			GroupRowId:"#(GroupRowId)#",
+			LoginGroupRowId:"#(LoginGroupRowId)#",
+			page:"#(page)#"
+		};
+		function changeURLArg(url,arg,arg_val){
+			var pattern=arg+'=([^&]*)';
+			var replaceText=arg+'='+arg_val; 
+			if(url.match(pattern)){
+				var tmp='/('+ arg+'=)([^&]*)/gi';
+				tmp=url.replace(eval(tmp),replaceText);
+				return tmp;
+			}else{ 
+				if(url.match('[\?]')){ 
+				   return url+'&'+replaceText; 
+				}else{ 
+				   return url+'?'+replaceText; 
+				} 
+			}
+		}
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/config.pagelayout.js"></script>
+</body>
+</html>

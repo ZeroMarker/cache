@@ -8,37 +8,39 @@
 	<DHCSTMHISUI/>
 <link href="../scripts/dhcstmhisui/Common/css/Tab.css" type="text/css" rel="stylesheet"/>
 </head>
+<style>
+	.panel-body {
+		overflow: hidden; 
+	}
+</style>
+
 <body class="hisui-layout" data-options="fit:true">
-	<div data-options="region:'north',border:false"  class="GridPadding" style="height:300px">
+	<div data-options="region:'north',border:false"  class="GridPadding" style="height:400px">
 		<div class="hisui-panel" data-options="iconCls:'icon-paper',bodyCls:'panel-header-gray',fit:true">
 			<div class="hisui-layout" data-options="fit:true">
 				<div data-options="region:'north',border:false">
-					<table class="Condition" id="Conditions">
-						<input id="FInci" name="FInci" type="hidden">
+					<table class="Condition" id="Conditions" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="FInciId" name="FInciId" type="hidden">
 						<tr>
 							<td>科室</td>
-							<td><input id="FLocId" name="FLocId" class="textbox hisui-combobox"></td>
+							<td><input id="FLoc" name="FLoc" class="textbox hisui-mulcombobox"></td>
 							<td>起始日期</td>
-							<td><input id="FStartDate" name="FStartDate" class="hisui-datebox textbox"></td>
-							<td ></td>
-							<td align="left"> <input id="FInstComp" name="FInstComp" class='hisui-checkbox' label="账盘完成"  type="checkbox"  value="Y"></td>
-							<td ></td>
-							<td align="left"><input id="FStkTkComp" name="FStkTkComp" class='hisui-checkbox' type="checkbox" label="实盘完成" value="Y"></td>
-							<td align="left"> <input id="FFreezeNonzero" name="FFreezeNonzero" class='hisui-checkbox' label="账盘非零"  type="checkbox"  value="Y"></td>
+							<td><input id="FStartDate" name="FStartDate" class="hisui-dateboxq textbox"></td>
+							<td>盘点状态</td>
+							<td><input id="FCompBox" name="FCompBox" class="textbox hisui-combobox"></td>
+							<td align="left"> <input id="FFreezeNonzero" name="FFreezeNonzero" class='hisui-checkbox' label="账盘非零" type="checkbox"  value="Y"></td>
 							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-							<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+							<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">按批次打印</a></td>
 						</tr>
 						<tr>
 							<td>物资名称</td>
 							<td><input id="FInciDesc" name="FInciDesc" class="textbox"></td>
 							<td>截止日期</td>
-							<td><input id="FEndDate" name="FEndDate" class="hisui-datebox textbox"></td>
-							<td > </td>
-							<td align="left"><input id="FAdjComp" name="FAdjComp" class='hisui-checkbox' label="调整完成" type="checkbox" value="Y"></td>
-							<td></td>
-							<td></td>
+							<td><input id="FEndDate" name="FEndDate" class="hisui-dateboxq textbox"></td>
+							<td></td><td></td>
 							<td align="left"> <input id="FCountNonzero" name="FCountNonzero" class='hisui-checkbox' label="实盘非零"  type="checkbox"  value="Y"></td>
 							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							<td><a href="#" id="PrintInciBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">按品种打印</a></td>
 						</tr>
 					</table>
 				</div>
@@ -53,7 +55,8 @@
 		<div class="hisui-panel" data-options="iconCls:'icon-paper',bodyCls:'panel-header-gray',fit:true">
 			<div class="hisui-layout" data-options="fit:true">
 				<div data-options="region:'north',border:false"> 
-					<table id="DetailConditions" class="Condition">
+					<table id="DetailConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryDetailBT.click()}">
+					<input id="InciId" name="InciId" type="hidden">
 						<tr>
 							<td id="StatFlag" >
 								<input class='hisui-radio' type="radio" label='全部' data-options='checked:true' name='StatFlag' value='0'>
@@ -71,10 +74,10 @@
 				</div>
 				<div data-options="region:'center',border:false,fit:true" style="padding-bottom:50px">
 					<div id="detailtype" class="hisui-tabs tabs-gray"  data-options="border:false,fit:true" >
-						<div title="明细" data-options="closable:false" style="border-left:0px,fit:true">
+						<div title="明细" data-options="closable:false" style="border-left:0px;fit:true">
 							<table id="DetailGrid"></table>
 						</div>
-						<div title="按品种汇总"  class="ReportImage">
+						<div id ="Report" title="按品种汇总"  class="ReportImage">
 							<iframe id="frameInstktkInciPanel" src="" frameborder="0" scrolling="yes" height="99.4%" width="99.8%" noresize="noresize"></iframe>
 						</div>
 					</div>
@@ -82,8 +85,9 @@
 			</div>
 		</div>
 	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/encode.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/InStkTkCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/InStkTkQuery.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/InStkTkPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/INStkTkPrint.js"></script>
 </body>
 </html>

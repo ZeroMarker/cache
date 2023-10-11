@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<!--opdoc.schedule.calendar.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></SCRIPT>
+<style type='text/css'>
+body{
+	background:RGBA(0,0,0,0.5);
+}
+.panel-body,.combo,.combo input{
+	background:RGBA(0,0,0,0);
+	color:white;
+}
+.combo-panel{
+	background:RGBA(0,0,0,0.6);
+}
+.panel.combo-p>.combo-panel,.combo{
+	border-color:#999;
+	border:0;
+	background:rgba(0,0,0,.5);
+}
+.combo:hover{
+	border-color:#aaa;
+}
+.combo:hover input, .combo:hover span>span{
+  	border-color: #339EFF;
+	background-color:rgba(0,0,0,.8);
+}
+.panel.combo-p>.combo-panel,.combo:hover input{
+	border-radius:0px;
+}
+nput.validatebox-text:active,input.validatebox-text:focus{
+	background-color:rgba(0,0,0,.8);
+}
+#Month{
+	font-size:24px;
+	line-height:40px;
+	display:inline-block;
+	margin:0px 5px;
+	color:white;
+}
+.next-month,.last-month{
+	cursor: pointer;
+	font-size: 30px;
+	line-height: 40px;
+	font-weight: bolder;
+	color: #fff;
+	padding:0 5px;
+}
+.next-month:hover,.last-month:hover{
+	background-color:rgba(0,0,0,.5);
+}
+.schedule-calendar{
+	width:100%;
+	height:100%;
+	table-layout:fixed;
+	border-collapse: separate;
+	border-spacing: 0;
+}
+.schedule-calendar th{
+	height:40px;
+	text-align:center;
+	background-color:RGBA(0,0,0,0.2);
+	color:white;
+	font-size:16px;
+	font-weight:bold;
+}
+.schedule-calendar tr td{
+	position:relative;
+	border-right:1px solid #888;
+	border-bottom:1px solid #888;
+}
+.schedule-calendar tr th:last-child,.schedule-calendar tr td:last-child{
+	border-right:0px;
+}
+.schedule-calendar tr:last-child td{
+	border-bottom:0px;
+}
+.date-tip{
+	position:absolute;
+	right:3px;
+	top:3px;
+	font-size:12px;
+	cursor:default;
+	color:white;
+}
+.not-same-month {
+    color: #aaa;
+    font-weight: normal;
+}
+.one-schedule{
+	box-sizing: border-box;
+	width:100%;
+	text-align:center;
+	border-radius:8px;
+	font-weight:bold;
+    color: rgba(226, 255, 222, 1);
+    background-color: rgba(154, 255, 141, 0.7);
+}
+.schedule-calendar td .one-schedule:not(:last-child){
+	border-bottom:1px solid RGBA(0,0,0,0.5);
+}
+.one-schedule:hover{
+	cursor:pointer;
+	font-size:16px;
+	background-color: rgba(154, 255, 141, 0.9);
+}
+.one-schedule:active{
+	border-radius:10px;
+	font-size:14px;
+}
+.one-schedule.stop{
+	background-color:rgba(255, 134, 134, 0.7);
+	color:rgba(255, 229, 229, 1);
+}
+.one-schedule.stop:hover{
+	background-color:rgba(255, 134, 134, 0.9);
+}
+.one-schedule.no-seqno{
+	background-color:rgba(204, 204, 204, 0.7);
+	color:rgba(254, 254, 254, 1);
+}
+.one-schedule.no-seqno:hover{
+	background-color:rgba(204, 204, 204, 0.9);
+}
+</style>
+<Server>
+	s AppMethodCode=$g(%request.Data("AppMethodCode",1))
+	s:AppMethodCode="" AppMethodCode="DOC"
+	s AppMethodID=$O(^RBC("APTM",0,"Code",AppMethodCode,0))
+	s LogLocID=%session.Get("LOGON.CTLOCID")
+	s LogUserID=%session.Get("LOGON.USERID")
+	s DoctorID=$P(^SSU("SSUSR",LogUserID),"^",14)
+	s LogResID=$O(^RB("RES",0,"CTPCP",DoctorID,LogLocID,0))
+	s CurDate=$ZD(+$H,3)
+</server>
+</head>
+<body class="hisui-layout" fit="true">
+	<div data-options="region:'north',bodyCls:'panel-body-gray',collapsible:false,border:false" style="height:40px;overflow:hidden;padding:0 5px;">
+		<a class="last-month">&lt;</a>
+		<div id="Month">#($P(CurDate,"-",1,2))#</div>
+		<a class="next-month">&gt;</a>
+		<div style="position: absolute;top:7px;right:10px;color:white;">
+			<label>号别</label>
+			<input id="ResComb" class="textbox" style="background:RGBA(0,0,0,.5);color:white;">
+		</div>
+	</div>
+	<div id="pCalendar" data-options="region:'center',border:true,bodyCls:'panel-body-gray',border:false" style="overflow:hidden;">
+		<table class="schedule-calendar">
+			<thead>
+				<tr><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th><th>日</th></tr>
+			<thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+</body>
+<SCRIPT language = 'javascript' >
+	var ServerObj={
+		CurDate:'#(CurDate)#',
+		LogResID:'#(LogResID)#',
+		AppMethodID:'#(AppMethodID)#'
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/ScheduleCalendar.js"></script>
+</html>

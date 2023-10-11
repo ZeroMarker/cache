@@ -1,0 +1,270 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<TITLE>#(..Get("患者示踪"))#</TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+	html,body{
+		height:100%;
+		width:100%;
+		padding:0;
+		margin:0;
+		background-color:#fff;
+	}
+
+	.episodeview-process-ul li{
+	    position: relative;
+	    padding: 0 0 0 15px;
+	    line-height: 26px;
+	    border-left: 1px solid #18af66;
+	    list-style: none;
+	    color:#686868;
+	    min-height:46px;
+	}
+	
+	.episodeview-process-ul li.episodeview-process-ap{
+		min-height:1px;
+		height:1px;
+	}
+	.episodeview-process-ul li.episodeview-process-ap.episodeview-process-loc-sep>div{
+		width:250px;
+		
+		border-bottom:1px dashed #bbb;
+	}
+	.episodeview-process-ul li.episodeview-process-ap.episodeview-process-adm-sep>div{
+		width:250px;
+	
+		border-bottom:1px solid #bbb;
+	}
+	.episodeview-process-ul li.episodeview-process-ap.episodeview-process-loc-sep,
+	.episodeview-process-ul li.episodeview-process-ap.episodeview-process-adm-sep{
+		padding-bottom:5px;
+	}
+	
+	.episodeview-process-ul .episodeview-process-event.has-detail>span{
+		cursor: pointer;
+	}
+	.episodeview-process-ul .episodeview-process-event:hover>span{
+		color:#1584D2;
+	}
+	.episodeview-process-ul li .ev-ev-desc{
+		color:#18af66;
+		padding-left:10px;
+	}
+	.episodeview-process-ul li .ev-ev-note{
+		 color:#686868;
+		padding-left:10px;
+	}
+	.episodeview-process-ul .circle {
+	    width: 12px;
+	    height: 12px;
+	    background: #18af66;
+	    border-radius: 50px;
+	    float: left;
+	    margin-left: -21px;
+	    margin-top: 7px;
+	}
+	.episodeview-process-ul .playcircle {
+
+	    background: url(../scripts/dhcnewpro/images/playcircle.gif);
+	    width: 23px;
+	    height: 23px;
+	    float: left;
+	    margin-left: -27px;
+	    margin-top: 1px;
+	}
+	
+	
+	.has-detail .playcircle,
+	.has-detail .playcircle  {
+		cursor: pointer;
+	}
+	
+	.episodeview-process-ul .episodeview-process-event-details{
+		padding:10px 0 10px 15px;	
+	}
+	.episodeview-process-ul .episodeview-process-event-details span{
+		padding:2px 4px;
+	}
+	
+	
+		.episodeview{
+			width:100%;
+			height:100%;
+			box-sizing:border-box;
+			overflow-y:auto;
+			position:relative;
+		}
+		.episodeview-noscroll,
+		.episodeview.episodeview-noscroll{
+			overflow: hidden;
+		}
+		/* ??labels */
+		.episodeview-labels-wrap{
+			padding:10px 10px 0;
+		}
+		.episodeview-labels{
+			position: relative;
+			background-color: #eeeeee;
+			padding-left: 50px;
+			padding-top:5px;
+			padding-bottom: 5px;  /* 总高度40px */
+		}
+		.episodeview-labels-no-icon{
+			padding-left: 10px;
+		}
+		.episodeview-labels-icon{
+			position: absolute;
+			background-image: url('../images/TimeLine/new/sex3_big.png');
+			background-position: center center;
+		    background-size: contain;
+			left: 10px;
+			top: 5px;
+			width: 30px;
+			height: 30px;
+
+		}
+		.episodeview-labels-icon-woman{
+			background-image: url('../images/TimeLine/new/woman_big.png');
+		}
+		.episodeview-labels-icon-man{
+			background-image: url('../images/TimeLine/new/man_big.png');
+		}
+
+		.episodeview-labels-buttons{
+			position: absolute;
+			right: 10px;
+			bottom: 5px;
+		}
+		.episodeview-labels-buttons-cell{
+			margin-left: 10px;
+			height: 25px;
+			line-height: 25px;
+		}
+		.episodeview-labels-buttons-cell .l-btn-text{
+			line-height: 25px;
+			padding:0 10px;
+		}
+
+		.episodeview-labels-row{
+			line-height:30px;
+		}
+		.episodeview-labels-row>span{
+			line-height:30px;
+			vertical-align: top;	
+		}
+		.episodeview-labels-cell-label{
+			color: #999;
+		}
+		.episodeview-labels-cell-value{
+			color:#000000;
+		}
+		.episodeview-labels-cell-sep{
+			color: #bbb;
+		    padding:0 8px;
+		}
+		.episodeview-process-wrap{
+			padding:10px 10px 10px 10px;
+			overflow-y:auto;
+			position:relative;
+		}
+		.episodeview-process{
+			position:relative;	
+			padding-left:5px;
+		}
+		
+		.episodeview-process-nav-wrap{
+			position:absolute;	
+			top:80px;
+			right:30px;
+			width:200px;	
+			overflow:auto;
+		}
+
+		.episodeview-process-nav-ul>li>.episodeview-process-nav-item {
+			padding-left:18px;
+			font-size:16px;
+			font-weight:500;
+			line-height:30px;
+			cursor:pointer;
+			color:#767676;
+		}
+		.episodeview-process-nav-ul>li > ul > li >.episodeview-process-nav-item {
+			padding-left:28px;
+			font-size:14px;
+			line-height:25px;
+			cursor:pointer;
+			color:#767676;
+		}
+		.episodeview-process-nav-ul> li.active >.episodeview-process-nav-item,
+		.episodeview-process-nav-ul>li > ul > li.active >.episodeview-process-nav-item,
+		.episodeview-process-nav-ul> li >.episodeview-process-nav-item:hover,
+		.episodeview-process-nav-ul>li > ul > li >.episodeview-process-nav-item:hover  {
+		    color: #563d7c;
+   			background-color: transparent;
+   			border-left: 2px solid #563d7c;
+   			
+		}
+		
+
+		.episodeview-ver-lite .episodeview-labels{
+			background-color: #ffffff;
+			border: 1px solid #e1e1e1	;
+			border-radius:5px;
+			padding-top: 4px;
+			padding-bottom: 4px;
+
+		}
+
+		.episodeview-ver-lite .episodeview-labels-icon{
+			border-radius: 30px; /*极简的需要自己实现圆形*/
+			background-image: url('../images/unman_lite.png');
+		}
+
+		.episodeview-ver-lite .episodeview-labels-icon-woman{
+			background-image: url('../images/woman_lite.png');
+		}
+		.episodeview-ver-lite .episodeview-labels-icon-man{
+			background-image: url('../images/man_lite.png');
+		}
+
+		.episodeview-ver-lite .episodeview-labels-biz{ 
+			padding-left: 0 ;
+		}
+		
+	</style>
+   <server>
+   		s EpisodeID=%request.Get("EpisodeID")
+   		if EpisodeID=""	s EpisodeID=%request.Get("adm")
+   		if EpisodeID>0 s PatientID=$p(^PAADM(EpisodeID),"^",1)
+   		else  s PatientID=%request.Get("PatientID")
+   		s ViewType=%request.Get("ViewType")
+
+   </server>
+</head>
+<body>
+	<script type="text/javascript" src="../scripts/dhc.episodeview.js"></script>
+	<script type="text/javascript">
+		var GV={req:{}}
+		GV.req.EpisodeID='#($zcvt(EpisodeID,"O","JS"))#';
+		GV.req.PatientID='#($zcvt(PatientID,"O","JS"))#';
+		GV.req.ViewType='#($zcvt(ViewType,"O","JS"))#';
+		
+				
+		$(function(){
+			$('body').episodeview({
+				queryParams:$.extend({},GV.req)
+			})
+		})
+		
+	</script>
+	
+	
+</body>
+</html>

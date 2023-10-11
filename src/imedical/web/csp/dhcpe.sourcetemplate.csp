@@ -1,0 +1,113 @@
+<!--
+* Description: 号源模板
+* FileName: dhcpe.sourcetemplate.csp
+* Creator: wangguoying
+* Date: 2022-10-10
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	if ##class(websys.SessionEvents).SessionExpired() quit 1
+	quit 1
+</csp:method>
+<html>
+
+<head>
+	<TITLE>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+
+	<style>
+		.search-table {
+			border-collapse: separate;
+			border-spacing: 0 10px;
+			/*padding: 0 10px;*/
+		}
+		.radio.checked {
+            font-weight: bold;
+            color: red;
+        }
+		.r-label {
+			padding-left: 10px;
+		}
+
+		.r-label-r {
+			padding-right: 5px;
+		}
+		.red-tip {
+			color : red;
+		}
+		.datagrid-header-row .datagrid-cell-group{
+			font-weight: bolder;
+		}
+		.datagrid-header-row td[field*=NUM_I]{
+			background-color: antiquewhite;
+		}
+		.datagrid-header-row td[field*=NUM_O]{
+			background-color: #c2f4e3;
+		}
+		.datagrid-body .datagrid-cell-c1-TCategory{
+			font-weight: bolder;
+			color: red;
+		}
+		.datagrid-body [class*="datagrid-cell-c1-NUM"]:hover{
+			cursor: pointer;
+			text-decoration: underline;
+			font-weight: bolder;
+			color: blue;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'north',split:false,border:false,title:'',collapsible:false"
+			style="height:62px;padding:10px 10px 0 10px;">
+			<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+				style="border:1px solid #ccc;border-radius:4px 4px 0 0;">
+				<table class="search-table">
+					<tr>
+						<td class="r-label"><label for="DateStr">日期范围</label></td>
+						<td class="r-label-r">
+							<input class="hisui-datebox" type="text" id="StartDate">
+						</td>
+						<td class="r-label"><label for="NewDate">至</label></td>
+						<td class="r-label-r">
+							<input class="hisui-datebox" type="text" id="EndDate">
+						</td>
+						<td>
+							<input type="radio" class='hisui-radio' label="直接覆盖" name="CreateMode" data-options="requiredSel:true" value="COVER">
+                			<label style="width:1px;display:inline-block;"></label>
+                			<input type="radio" class='hisui-radio' label="跳过已有记录" checked name="CreateMode" data-options="requiredSel:true" value="SKIP">
+						</td>
+						<td class="r-label">
+							<a id="BCreate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">创建</a>
+						</td>
+						
+						<td class="r-label red-tip">
+							★ 单击单元格修改对应星期的时段模板！
+						</td>
+
+					</tr>
+
+
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'"
+			style="padding:0 10px;">
+			<div class="hisui-panel" fit="true"
+				style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+				<table data-options="bodyCls:'panel-header-gray'" id="template-list"></table>
+			</div>
+		</div>
+
+
+	</div>
+	<div id="TemplateTimeDialog" style="overflow: hidden;"></div>
+	<script type="text/javascript" src="../scripts/dhcpe.sourcetemplate.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+</body>
+
+</html>

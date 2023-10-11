@@ -1,0 +1,106 @@
+<!--
+ * FileName: dhcpe.occu.symptomsinfo.csp
+ * Anchor: zhongricheng
+ * Date: 2021-07-12
+ * Description: HISUI Ö°Òµ½¡¿µ Ö¢×´
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+	<style>
+	.c-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	label.checkbox {
+		white-space: nowrap;
+	}
+	</style>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s paadm=$g(%request.Data("PAADM",1))
+	s preIADM=""
+	q:paadm="" ""
+	s iadm=$o(^DHCPEIADM(0,"PAADM",paadm,0))
+	s:iadm'="" preIADM=$p($g(^DHCPEIADM(iadm)),"^",4)
+	s showColNums=$g(%request.Data("showColNums",1))
+	s:showColNums="" showColNums=4
+	</SCRIPT>
+	
+	<script type="text/javascript">
+		var PreIADM="#(preIADM)#"
+		var PAADM="#(paadm)#"
+	</script>
+</head>
+<body id="SysptomsBody" class="hisui-layout" border="false" style="padding:10px;">
+	<div data-options="region:'center'" border="false">
+		<SCRIPT language="Cache" RUNAT="SERVER">
+			s SympData = ##class(web.DHCPE.Occu.Common).GetSymptomByIDForPage(preIADM)
+			q:SympData.%Size()=0
+			s arrData=SympData.Symptom
+			
+			s showColNums=$g(showColNums)
+			s:showColNums="" showColNums=4
+			w "<table style='border-spacing:10px;'>"
+			f ind=0:1:(arrData.%Size()-1) {
+				s Obj=arrData.%Get(ind)
+				
+				s Code=Obj.Code
+				s Desc=Obj.Desc
+				s SelFlag=Obj.SelFlag
+				s Remark=Obj.Remark
+				s tdStyle=""
+				if ((ind#showColNums)=0) {
+					w "<tr>"
+				} else {
+					s tdStyle=" style='padding: 0 0 0 25px;'"
+				}
+				s checked="",disable=""
+				if (SelFlag="Y") {
+					s checked=" checked"
+				} else {
+					s disable=" disabled"
+				}
+				
+				w "<td"_tdStyle_">"
+				w "<input class='hisui-checkbox' name='SymptomChk' type='checkbox' label='"_Desc_"' id='"_Code_"'"_checked_"/>"
+				w "</td>"
+				w "<td>"
+				w "<input class='hisui-validatebox textbox' type='text' id='Remark"_Code_"' value='"_Remark_"' style='width:90px;'"_disable_"/>"
+				w "</td>"
+				
+				if ((ind#showColNums)=(showColNums-1)) {
+					w "</tr>"
+				}
+			}
+			w "</table>"
+			s PreSymptomUser=SympData.SymptomUser
+			s PreSymptomUserD=SympData.SymptomUserDesc
+			s PreSymptomTime=SympData.SymptomDate
+		</SCRIPT>
+	</div>
+	<div data-options="region:'south'" border="false" style="border-top:1px solid #E2E2E2; border-bottom:1px solid #E2E2E2; height:52px; text-align:center; border-radius: 0 0 4px 4px;">
+		<table style="border-spacing:10px;">
+			<tr>
+				<td><input class="hisui-validatebox textbox" type="text" id="SymptomUser" style="width:100px;" disabled value="#(PreSymptomUserD)#"/></td>
+				<td><input class="hisui-validatebox textbox" type="text" id="SymptomDate" style="width:100px;" disabled value="#(PreSymptomTime)#"/></td>
+				
+				<td><a id="SaveSymptom" href="#" class="hisui-linkbutton" style="width:100px;">±£´æ</a></td>
+			</tr>
+		</table>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcpe.occu.symptomsinfo.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+</body>
+</html>

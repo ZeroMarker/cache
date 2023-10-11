@@ -1,0 +1,77 @@
+<!--VTE风险评估量表csp,csp:dhc.vte.risk.eval.csp--> 
+<html XMLNS=TRAK>
+	<head>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body style="padding:0px;">
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		Set EpisodeID = $g(%request.Data("EpisodeID",1))
+		Set LinkType = $g(%request.Data("LinkType",1)) 
+		</SCRIPT>
+		
+		 <script language="javascript" type="text/javascript">
+		var patientid = '#(EpisodeID)#';
+		var LinkType = '#(LinkType)#';
+		//登陆角色
+		var Role = session["LOGON.GROUPDESC"];
+		if(Role.indexOf("医生")>-1||Role.indexOf("医师")>-1||Role.indexOf("Doctor")>-1){
+			Role = "doctor";
+		}else{
+			Role = "nurse";
+		}
+		if(LinkType==null||LinkType=="undefined"){
+			LinkType=1;
+		}
+		 //登陆科室ID
+		var locId = session["LOGON.CTLOCID"];
+		//登陆用户ID
+		var userId = session["LOGON.USERID"];
+		var userName = session["LOGON.USERNAME"];
+		userName = encodeURI(userName);  //进行汉字编码集转换 否则乱码
+		var hisWebIp = location.host;//把当前访问的HIS的web服务器ip传给vte，以便后续医嘱一键录入
+		
+		var CACertNo = session["CACertNo"];
+ 		var CALogonType = session["CALogonType"];
+ 		var CAToken = session["CAToken"];
+ 		var ContainerName = session["ContainerName"];
+ 		var CAUserCertCode = session["CAUserCertCode"];
+
+		
+		var iFrameSrc = "https://114.251.193.139:8443/api/docEval?EpisodeID="+patientid+"&LocID="+locId+"&UserID="+userId+"&Role="+Role+
+		"&UserName="+userName+"&hisWebIp="+hisWebIp+"&LinkType="+LinkType+"&CACertNo="+CACertNo+"&CALogonType="+CALogonType+"&CAToken="+CAToken+"&ContainerName="+ContainerName+"&CAUserCertCode="+CAUserCertCode;
+
+		
+
+		</script>
+		
+		<iframe src="" frameborder="0" name="vtelist" id="vtelist" height="100%" width="100%" style ="display:block;position:absolute;"></iframe>
+		
+		<script language="javascript" type="text/javascript">
+			document.getElementById("vtelist").src = iFrameSrc;
+			window.resizeTo(1400,600);
+			function fMain(pid,caseId,mradm){
+				if(pid==null||pid==""){
+					alert("未找到当前病人")
+					return
+				}
+				alert("医嘱带入成功,请打开医嘱录入界面审核医嘱");
+				
+				/*if (typeof parent.switchTabByEMR =="function"){
+					//若已打开 先关闭医嘱录入页签
+					if(typeof parent.closeTabByEMR =="function"){
+						parent.closeTabByEMR("dhc_side_oe_oerecord");
+					}
+					parent.switchTabByEMR("dhc_side_oe_oerecord");
+				}else{
+					alert("医嘱带入成功,请打开医嘱录入界面审核医嘱");
+				}*/
+			}
+			
+	   </script>
+		
+	</body>
+</html>
+

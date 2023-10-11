@@ -1,3 +1,12 @@
+
+<!-- 
+ * FileName: dhcpenewgssdetail.hisui.csp
+ * Anchor: 
+ * Date: 
+ * Description: 总检建议csp
+-->
+
+
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
@@ -5,84 +14,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
 
 <SCRIPT language="Cache" RUNAT="SERVER"> 
 set GSID=$g(%request.Data("GSID",1))
 set ButtonFlag=$g(%request.Data("ButtonFlag",1))
 set MainDoctor=$g(%request.Data("MainDoctor",1))
-</SCRIPT> 
-<script type="text/javascript">	
-var GSID="#(GSID)#"
+Set ExpStr=$g(%request.Data("ExpStr",1))
 
+</SCRIPT> 
+<script type="text/javascript"> 
+var GSID="#(GSID)#"
+var MainDoctor="#(MainDoctor)#"
+var ExpStr="#(ExpStr)#"
 </script>
  
   <style type="text/css">
- 		table
-        {
-            border-collapse: collapse;
-            margin: 0 auto;
-            text-align: center;
-        }
-        table td
-        {
-            color: #666;
-        }
-        
-        table thead th
-        {
-            background-color: #EDEDED;
-            height: 30px;
-            border: 1px solid #cad9ea;
-            color: #666;
-        }
-        table tr:nth-child(odd)
-        {
-            
-        }
-        table tr:nth-child(even)
-        {
-            
-        }
+       
 
-
+    .search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    
+    }
+    .r-label{
+        padding-left: 10px;
+    }
+    .r-label-1{
+        padding-left: 20px;
+    }
 </style>
  
 </head>
-<body class="hisui-layout">
+<body>
+
+<div class="hisui-layout" fit="true">
+
+
 <input type="hidden" id="GSID"/>
 <input type="hidden" id="GSIID"/>
 <input type="hidden" id="CloseFlag"/>
- <div data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false">
-	 	 <SERVER>
- 		    d ##class(web.DHCPE.ResultDiagnosisNew).OutGSSDetailHISUI(GSID,ButtonFlag,MainDoctor)
-        </SERVER>
- </div>
- <div data-options="region:'east',headerCls:'panel-header-gray',title:'疾病列表',iconCls:'icon-add-note'" style="width:220px;">
- 	<table id="GSIllness" data-options="fit:true,border:false"></table>
 
+ <div data-options="region:'north', title:'',headerCls:'panel-header-gray',border:false" style="hight:13px;">
+    <table class="search-table">
+        <tr>
+         <td class="r-label">
+          <label for="fuperson">#(..Get("随访人"))#</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="fuperson" style="width:160px" />
+        </td>
+        
+        <td class="r-label r-label-1">
+          <label for="fusbDate">#(..Get("随访日期"))#</label>
+        </td>
+        <td>
+          <input id="fusbDate" class="hisui-datebox textbox" style="width:130px" />
+        </td>
+        <!--td class="r-label">
+          <label for="fusbEndDate">结束日期</label>
+        </td>
+        <td>
+          <input id="fusbEndDate" class="hisui-datebox textbox" style="width:130px" />
+        </td-->
+        
+        <td class="r-label r-label-1">
+          <label for="fusubject">#(..Get("主题"))#</label>
+        </td>
+        <td>
+            <input class="hisui-combotree" id="fusubject" style="width:160px"/>
+        </td>
+        <td class="r-label r-label-1">
+          <label for="fudays">#(..Get("周期"))#</label>
+        </td>
+        <td>
+          <input class="hisui-numberbox textbox" id="fudays" style="width:40px"/>
+        </td>
+        
+        <td class="r-label r-label-1">
+          <label for="funums">#(..Get("次数"))#</label>
+        </td>
+        <td>
+          <input class="hisui-numberbox textbox" id="funums" style="width:40px"/>
+        </td>
+        
+        <td class="r-label r-label-1">
+          <a id="CreatePlan" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save',stopAllEventOnDisabled:'true'">生成计划</a>
+        </td>
+        </tr>
+    </table>
+   
  </div>
+ 
+
+    <div data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false">
+         <SERVER>
+            d ##class(web.DHCPE.ResultDiagnosisNew).OutGSSDetailHISUI(GSID,ButtonFlag,MainDoctor)
+            
+        </SERVER>
+    </div>
+     <div data-options="region:'east',headerCls:'panel-header-gray',title:'疾病列表',iconCls:'icon-add-note'" style="width:220px;">
+        <table id="GSIllness" data-options="fit:true,border:false"></table>
+    </div>
+</div>
  
 
 
   <script type="text/javascript" src="../scripts/DHCPENewGSSDetailHISUI.js"></script>
   <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
-  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
-  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
-  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
-  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
-  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
   <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
   <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
-  
   <script type="text/javascript" src="../scripts/websys.js"></script>
   <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
   <script type="text/javascript" src="../scripts/websys.List.js"></script>
   <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
-  <script type="text/javascript" src="../scripts/DHCPrtComm.JS"></script>
-  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.JS"></script>
+  <!--script type="text/javascript" src="../scripts/DHCPrtComm.JS"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script-->
 </body>
  
 </html>

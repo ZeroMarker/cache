@@ -1,0 +1,97 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s CATypes=$Get(%request.Data("CATypes",1))
+	s CAHold2=$Get(%request.Data("CAHold2",1))
+	s Status=$Get(%request.Data("Status",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s CARowID=$Get(%request.Data("CARowID",1))
+	if (CAHold2'="")
+	{
+		i (CARowID="")
+		{
+			s (flag,CARowID)=""
+			if $Data(^DHCEQCostAllot(0,"SourceType",CATypes,CAHold2))
+			{
+				s rowid=0
+				f  s rowid=$o(^DHCEQCostAllot(0,"SourceType",CATypes,CAHold2,rowid))  q:(rowid="")||(flag'="")  d
+				.s DataList=$g(^DHCEQCostAllot(rowid))
+				.q:$p(DataList,"^",5)="Y"
+				.s flag=rowid
+			}
+			s CARowID=flag
+		}
+		i CATypes=1
+		{
+			s CAHold1=$p($g(^DHCEQEquip(CAHold2)),"^",27)
+		}
+		elseif CATypes=2
+		{
+			s CAHold1=$p($g(^DHCEQMMaintRequest(CAHold2)),"^",60)
+		}
+		elseif CATypes=3
+		{
+			s CAHold1=$p($g(^DHCEQStoreMoveList(CAHold2)),"^",7)
+		}
+	}
+	else
+	{
+		s CAHold1=0
+	}
+	
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</script>
+<style>
+.eqbutton{
+	margin-left:15px;
+}
+ </style>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-4-9 界面首先加载loading bug WY0060-->
+	<div data-options="region:'center',border:false">
+		<div class="hisui-panel panel-header-gray" data-options="eqtitle:'maintitle',fit:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cCAHold1" for="CAHold1">分摊总值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CAHold1" value="#(CAHold1)#" disabled="true"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cCAAllotType" for="CAAllotType">分摊方式</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="CAAllotType"></div>
+							<div class="eq-table-td eq-table-label-button" style="padding-left: 10px;"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">保存</a></div>
+							<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" >
+					<table id="tDHCEQCostAllot" class="hisui-datagrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="CATypes" value="#(CATypes)#">
+			<INPUT type="hidden" id="CAHold2" value="#(CAHold2)#">
+			<INPUT type="hidden" id="Status" value="#(Status)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="CARowID" value="#(CARowID)#">
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/costallot.js'></script>
+</body>
+</html> 

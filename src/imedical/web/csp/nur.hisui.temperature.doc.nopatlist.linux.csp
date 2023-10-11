@@ -1,0 +1,623 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- nur.hisui.temperature.doc.linux.csp -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>
+            <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+        </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <HISUI />
+        <script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
+        <!--script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" ></script> 
+        <script type="text/JavaScript" src="../scripts/nurse/temperature/svg/jQuery.print.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="../scripts/nurse/temperature/svg/print.css"-->
+	    
+        <!--script type="text/javascript" src="../scripts/nurse/hisui/nur.orderexcute.js" charset='gbk'></script-->
+        <style type="text/css" media="screen">
+        	#ViewArea,#ViewArea>div>div{
+                width: 100%!important;
+                box-sizing:border-box;
+            }
+        	#ViewArea>.panel>.panel-header>.panel-tool{
+                top: 1px;
+                margin-top: 0;
+                height: auto;
+            }
+            #ViewArea>.panel>.panel-header>.panel-tool #totalPageSpan~a{
+                margin-top: 7px;	
+            }
+            .iframeshow {
+                display: block;
+                display: initial;
+            }
+            .iframehidden {
+                display: none;
+            }   
+            label.radio{
+	        	background-position-x:-6px;    
+	        }           
+        </style>
+    </head>
+    <!--ADDINS require="PrintChart"/-->
+    <server>
+    Set ifColorPrint = "false"    
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page="",QueryDate=""
+	if EpisodeID'="" {
+		set chartID=##class(Nur.NIS.Service.Chart.API.TemperatureChart).getChartID("1",EpisodeID)
+		set ifColorPrint=##class(Nur.NIS.Service.Chart.DAO.Chart).getIfColorPrint(chartID)
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+		Set Page=$g(%request.Data("page",1))
+		Set QueryDate=$g(%request.Data("Date",1))
+	}
+    d ##class(web.DHCXMLPConfig).LODOPInit()
+	</server>
+    <body class="hisui-layout">
+    	<!--csp:Include Page="ipdoc.nursepatlist.panel.csp"-->
+        <div id="ViewArea" data-options="region:'center',border:true" style="border:0px;padding:4px;">
+            <div id="pageView" class="hisui-panel" style="position:relative;" title="预览"  data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:'#chartToolBar'">
+                <iframe id="iframePicture" name="iframePicture" width="100%" height="100%" style="position:absolute;z-index:2;border:0;"></iframe>
+            </div>
+            <div id="chartToolBar">
+                <!--input id="pageBox" class="hisui-combobox" name="state" style="width:80px;" data-options="enterNullValueClear:false,blurValidValue:true"></input--> 
+                <sapn title="跳转" class="hisui-tooltip" data-options="position:'left'">
+                	<input id="pageInput" name="pageInput" type="number" class="hisui-triggerbox textbox" style="width:60px;" data-options="icon:'icon-paper-arrow-up',plain:true,handler:jumpPage"/>
+                </span>
+                <span id="totalPageSpan" style="margin:0 10px;color:red"></span>
+                <a id="viewRefreshBtn" title="刷新预览" href="javascript:void(0)" class="hisui-tooltip icon-reload" data-options="position:'bottom'"></a>
+                <a id="viewAddBtn" title="预览界面放大" href="javascript:void(0)" class="hisui-tooltip icon-add" data-options="position:'bottom'"></a>
+                <a id="viewMinusBtn" title="预览界面缩小" href="javascript:void(0)" class="hisui-tooltip icon-minus" data-options="position:'bottom'"></a>
+                <a id="firstPageBtn" title="首页" href="javascript:void(0)" class="hisui-tooltip icon-trian-recta-left" data-options="position:'bottom'"></a>
+                <a id="prePageBtn" title="上一页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-up" data-options="position:'bottom'"></a>
+                <a id="nextPageBtn" title="下一页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-down" data-options="position:'bottom'"></a>
+                <a id="lastPageBtn" title="末页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-trian-recta-right" data-options="position:'bottom'"></a>
+                <!--a id="printAllPageBtn" title="预览打印全部" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-print" data-options="position:'bottom'"></a>
+                <a id="printCurrPageBtn" title="打印当前页" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-reprint-inv" data-options="position:'bottom'"></a-->
+                <a id="printOutAllPageBtn" title="直接打印全部" class="hisui-tooltip" href="javascript:void(0)" class="hisui-tooltip icon-print-arr-bo" data-options="position:'bottom'"></a>
+            </div>
+        </div>
+        <!-- 打印弹窗 -->
+        <div id="print-dialog" class="hisui-dialog dialog" title="打印" style="width:338px;height:180px;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,
+			buttons:[
+				{
+					text:'预览',
+					handler:function(){ printOut(true); }
+				},
+				{
+					text:'打印',
+					handler:function(){ printOut(false); }
+				},
+				{
+					text:'取消',
+					handler:function(){$HUI.dialog('#print-dialog').close();}
+				}
+			]">
+			<div class="hisui-panel" title="" style="padding:10px 10px 0 10px" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<td class="r-label">
+							<input id="radio_0" class="hisui-radio" type="radio" label="全部" name="parity" value="A" data-options="checked:true" style="margin-right:10px;">
+						</td>
+						<td class="r-label">
+							<input id="radio_1" class="hisui-radio" type="radio" label="当前页面" name="parity" value="C" style="margin-right:10px;">
+						</td>
+						<td class="r-label">
+							<input id="radio_2" class="hisui-radio" type="radio" label="页面" name="parity" value="R" style="margin-right:10px;">
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox" id="rangeFrom" data-options="min:1" style="width:40px;" />
+							<span>—</span>
+							<input class="hisui-numberbox textbox" id="rangeTo" data-options="min:1" style="width:40px;" />
+						</td>
+					</tr>	
+					<tr>
+						<td colspan="4" style="padding-top:10px;">
+							<label style="padding-right:6px;">#(..Get("奇偶页"))#</label>
+							<select name="Parity" id="parity" style="width:100px;"></select> 
+						</td>
+					</tr>		
+				</table>
+			</div>
+		</div>
+
+        <!-- 出院病历控制弹窗 -->
+        <div id="disControl-dialog" class="hisui-dialog dialog" title="提示" style="width:330px;height:120px;" data-options="shadow:false,modal:true,closed:true,
+			buttons:[
+				{
+					text:'申请授权',
+					handler:function(){ ApplyAuthority(); }
+				},
+				{
+					text:'取消',
+					handler:function(){$HUI.dialog('#disControl-dialog').close();}
+				}
+			]">
+			<div class="hisui-panel" title="" style="padding:10px 10px 0 10px" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+				<p><span class="icon icon-tip" style="width:16px;height:16px;display:inline-block;float:left;margin:2px 10px 0 0;"></span>病人已出院，限制操作，请申请出院病历授权</p>
+			</div>
+		</div>
+        
+        <script type="text/javascript">
+            var episodeID="#(EpisodeID)#";
+            var chartID="#(chartID)#";    
+            var ifColorPrint="#(ifColorPrint)#";
+            var userID = session['LOGON.USERID'];
+            var locID = session['LOGON.CTLOCID'];
+            var webIP=window.location.href.split('/imedical/web')[0]; 
+            var page="#(Page)#"==""?1:"#(Page)#";
+            var QueryDate="#(QueryDate)#";
+            var currPage=0;
+            var totalPage="";
+            var iframeUrl="";
+            var currPageBase64="";
+            var rate=16;  //图片清晰度
+            var fontRate=4;
+            var enteredBy=$g("录入人")  // 折线悬浮录入人标题翻译
+            var enteredTime=$g("时间")
+            $.parser.onComplete = function(context){
+                if (!!context) return ;
+                init();
+                initEvent();
+            }
+            function init(){
+	            
+                var frm = dhcsys_getmenuform();
+                if(!episodeID){
+	                if(frm){
+	                    episodeID=frm.EpisodeID.value;
+	                }
+                }
+                //initPageBox(episodeID);
+                //initEvent();
+            }
+            function initEvent(){	 
+            	loading("正在绘制体温单");
+                $('#viewAddBtn').bind('click', viewAddBtnClick);  
+                $('#viewMinusBtn').bind('click', viewMinusBtnClick);  	
+                $('#firstPageBtn').bind('click', firstPageBtnClick); 	 
+                $('#prePageBtn').bind('click', prePageBtnClick); 
+                $('#nextPageBtn').bind('click', nextPageBtnClick);  
+                $('#lastPageBtn').bind('click', lastPageBtnClick);  
+                //$('#printAllPageBtn').bind('click', printAllPageBtnClick);  
+                //$('#printCurrPageBtn').bind('click', printCurrPageBtnClick);
+                $('#viewRefreshBtn').bind('click', hrefRefresh);    
+                $('#printOutAllPageBtn').bind('click', printOutAllPageBtnClick);     
+                $('input[name="pageInput"]').bind('keydown',switchPage);
+                initPageBox(episodeID);          	
+            }
+            function initPageBox(episodeId){
+                $cm({
+                        ClassName:"Nur.NIS.Service.Chart.DAO.Chart",
+                        MethodName:"getChartPages",
+                        EpisodeID: episodeId
+                    },function(pageNum){
+                        totalPage=pageNum;
+                        $("#totalPageSpan").html($g("共")+pageNum+$g("页"));
+                        if(!QueryDate || QueryDate=="undefined"){
+	                        $("#pageInput").triggerbox('setValue',pageNum);
+                        	page=pageNum;				         
+					    } else {
+						   runClassMethod("Nur.NIS.Service.Chart.DAO.PatInfo","getPageNum",{"EpisodeID":episodeId,"MeasureDate":QueryDate,"ChartDr":chartID},function(curPage){
+								if(page==curPage) return;								
+								$("#pageInput").triggerbox('setValue',curPage);
+								page=curPage; 
+							},'json',false)    
+					    }				
+                        loadChart();
+                        //hrefRefresh(true);
+                    });
+            }
+		    function switchPatient(rowData){
+                //$('#pageView').html("");
+				var patientId=rowData["PatientID"]
+				var adm=rowData["EpisodeID"]
+				var mradm=rowData["mradm"]
+            	//function switchPatient(patientId,adm,mradm,age){
+                //$("#InpatListDiv").data("AutoOpen",0);
+                episodeID=adm;
+                setEprMenuForm(adm,patientId,mradm,"");
+                //console.log(episodeId,patientId,mradm,"");
+                //hrefRefresh();
+                //updatePatientInfo(rowData);
+                initPageBox(adm)
+            }
+            function loadChart(){
+                createPage(page,true); 
+                //loading();                        
+                /*$(document.getElementById("iframePicture")).load(function(){
+                    disLoad();                  
+                })*/
+            }
+            function hrefRefresh(ifLoad){
+	            if(!document.getElementById("iframePicture").contentWindow) return;
+                document.getElementById("iframePicture").contentWindow.page=page;              
+	            document.getElementById("iframePicture").contentWindow.getCurData(page);
+            }
+            function createPage(pageNum,ifShow){             
+                var srcUrl="./nur.svg.temperature.csp?EpisodeID="+episodeID
+                        +"&webIP="+webIP+"&userID="+userID+"&locID="+locID+"&v="+new Date().getTime()+"&rate="+rate+"&fontRate="+fontRate
+                        +"&page="+pageNum+"&chartID=&ifColorPrint="+ifColorPrint;
+                $("#iframePicture").attr("src",srcUrl); 
+            }
+            function setEprMenuForm(adm,papmi,mradm,canGiveBirth){
+                var frm = dhcsys_getmenuform();
+                if((frm) &&(frm.EpisodeID.value != adm)){
+                    frm.EpisodeID.value = adm;
+                    frm.PatientID.value = papmi;
+                    frm.mradm.value = mradm;
+                }
+            }
+            function printCurrPageBtnClick(ifPreview){
+                var LODOP=getLodop();
+                LODOP.PRINT_INIT("体温单");
+                var printData = document.getElementById('iframePicture').contentWindow.document.getElementById("drawing").innerHTML;
+                if(ifColorPrint=="false") {
+                	printData=printData.replace(/#.{6}/g,'#000000');
+                	printData=printData.replace(/red/g,'#000000');
+                }
+                LODOP.SET_PRINT_PAGESIZE(1, 2100,2970,"A4");
+                LODOP.ADD_PRINT_HTML(0,0,"100%", "100%",printData);                
+                LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT", "Full-Page");
+                if(ifPreview){
+			        LODOP.PREVIEW();
+			    }
+			    else{
+			        LODOP.PRINT();
+			        //LODOP.PRINTA();
+			    }	
+            }
+            function printAllPageBtnClick(){
+                if(totalPage==1){
+		            printCurrPageBtnClick(true);
+		        }else{
+			        printAll(true);
+			    }
+            }
+            function printOutAllPageBtnClick(){
+	            $("#print-dialog").dialog("open");
+	            var list=[
+		            {value:"A",label:$g("全部")},
+		            {value:"O",label:$g("奇数页")},
+		            {value:"E",label:$g("偶数页")}
+		        ];
+	            $HUI.combobox("#parity",{
+					valueField:"value",
+					textField:"label",
+					data:list
+				});	
+				$("#rangeFrom").numberbox('setValue',1);
+				$("#rangeTo").numberbox('setValue',totalPage);
+				$HUI.radio("[name='parity']",{
+			        onChecked:function(e,value){
+				        if($(e.target).val()=="C"){
+					    	$("#parity").combobox("disable");   
+					    }else{
+						    $("#parity").combobox("enable"); 
+						}
+			        }
+			    });
+	        }
+	        // 打印
+	        function printOut(ifPreview){
+		        var ret=tkMakeServerCall("Nur.NIS.Service.Chart.DAO.Chart","IfControlPrint",episodeID,userID);
+		        if(ret=="Y"){
+			        $("#print-dialog").dialog("close");
+			        $("#disControl-dialog").dialog("open");
+			    	return;    
+			    }
+		    	var radioValue=$("input[name=parity]:checked").val();  
+		    	var parity=$("#parity").combobox("getValue");
+		    	// 全部
+		    	if(radioValue=="A"){
+			    	if(totalPage==1){
+				    	if(parity=="E") return $.messager.popover({msg: "共一页，不能选择偶数页！",type:'alert'});
+			            /// printCurrPageBtnClick(ifPreview);
+			            printCurrPage(ifPreview);
+			        }else{
+				        /// printAll(ifPreview,radioValue,1,totalPage,parity);
+				        printAllNew(ifPreview,radioValue,1,totalPage,parity);
+				    }				    
+			   	}
+			   	// 当前页面
+			   	if(radioValue=="C"){
+			    	/// printCurrPageBtnClick(ifPreview);
+			    	printCurrPage(ifPreview);
+			   	}
+			   	// 页面范围
+			   	if(radioValue=="R"){
+				   	var rangeFrom=parseInt($("#rangeFrom").numberbox('getValue'));				   	
+				   	var rangeTo=parseInt($("#rangeTo").numberbox('getValue'));
+				   	if(rangeFrom>totalPage) return $.messager.popover({msg: "页码起始范围不能大于总页数！",type:'alert'});
+				   	if(rangeTo>totalPage) return $.messager.popover({msg: "页码截止范围不能大于总页数！",type:'alert'});
+				   	if(rangeFrom>rangeTo) return $.messager.popover({msg: "页码起始范围不能大于截止范围！",type:'alert'});
+				   	if((rangeTo-rangeFrom)==0){
+				    	if(parity=="E" && (rangeFrom%2)!=0) return $.messager.popover({msg: "页码范围无偶数页！",type:'alert'});
+				    	if(parity=="O" && (rangeFrom%2)!=1) return $.messager.popover({msg: "页码范围无奇数页！",type:'alert'});
+			        	if(totalPage==1){
+				        	printCurrPage(ifPreview);
+				        	return;	
+				        }
+			        }
+				    /// printAll(ifPreview,radioValue,rangeFrom,rangeTo,parity);
+				    printAllNew(ifPreview,radioValue,rangeFrom,rangeTo,parity);			    	
+			   	}
+			   	$("#print-dialog").dialog("close");
+		    }
+	        function printAll(ifPreview,printRange,rangeFrom,rangeTo,parity,loadSuccess){
+		        loading("正在绘制体温单");	        
+		        var printElem=$("#iframePicture").contents().find("#print");
+		        if(printElem.length>0){
+			    	$("#iframePicture").contents().find("#print").remove();    
+			    }
+		        var loadFlag=loadSuccess ? loadSuccess : document.getElementById("iframePicture").contentWindow.loadSuccess;
+	            if(!loadFlag){
+		        	document.getElementById("iframePicture").contentWindow.multiRequest(totalPage-1,3,ifPreview,printRange,rangeFrom,rangeTo,parity);		
+		        }else{		        
+			        var drawing=$("#iframePicture").contents().find("#drawing");
+			        drawing.after(drawing.clone().attr("id","print").hide());
+			        var LODOP=getLodop();
+					LODOP.PRINT_INIT("体温单");
+					LODOP.SET_PRINT_PAGESIZE(1, 2100,2970,"A4");
+					LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT", "Full-Page");            
+					for(var i=rangeFrom;i<=rangeTo;i++){
+						if((parity=="E" && (i%2)===0) || (parity=="O" && (i%2)==1) || (parity=="A") || (parity=="")){
+						$("#iframePicture").contents().find("#print .content").css("visibility",'hidden');
+							if($("#iframePicture").contents().find("#print #content-"+i).length>0){
+								$("#iframePicture").contents().find("#print #content-"+i).css("visibility","visible");	
+				                var printData = document.getElementById('iframePicture').contentWindow.document.getElementById("print").innerHTML;
+				                if(ifColorPrint=="false") {
+				                	printData=printData.replace(/#.{6}/g,'#000000');
+				                	printData=printData.replace(/red/g,'#000000');
+				                }		                
+				                LODOP.ADD_PRINT_HTML(0,0,"100%", "100%",printData);   
+					            LODOP.NewPage();
+					            $("#iframePicture").contents().find("#print #content-"+i).remove();
+							}
+						}						
+				    }
+				    if(ifPreview){
+				        LODOP.PREVIEW();
+				    }
+				    else{
+				        LODOP.PRINT();
+				        //LODOP.PRINTA();
+				    }					
+			    }
+			    document.getElementById("iframePicture").contentWindow.loadSuccess=false;
+			    disLoad();
+		    }
+            /*function printOutAllPageBtnClick(){
+	            if(totalPage==1){
+		            printCurrPageBtnClick(false);
+		        }else{
+			        printAll(false);
+			    }
+	        }
+	        function printAll(ifPreview){
+                loading("正在绘制体温单");	        
+		        var printElem=$("#iframePicture").contents().find("#print");
+		        if(printElem.length>0){
+			    	$("#iframePicture").contents().find("#print").remove();    
+			    }
+		        var loadFlag=loadSuccess ? loadSuccess : document.getElementById("iframePicture").contentWindow.loadSuccess;
+	            if(!loadFlag){
+		        	document.getElementById("iframePicture").contentWindow.multiRequest(totalPage-1,3,ifPreview);		
+		        }else{		        
+			        var drawing=$("#iframePicture").contents().find("#drawing");
+			        drawing.after(drawing.clone().attr("id","print").hide());
+					var LODOP=getLodop();
+					LODOP.PRINT_INIT("体温单");
+					LODOP.SET_PRINT_PAGESIZE(1, 2100,2970,"A4");
+					LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT", "Full-Page");            
+					for(var i=0;i<totalPage;i++){
+						$("#iframePicture").contents().find("#print .content").css("visibility",'hidden');
+						$("#iframePicture").contents().find("#print #content-"+(i+1)).css("visibility","");	
+		                var printData = document.getElementById('iframePicture').contentWindow.document.getElementById("print").innerHTML;
+		                if(ifColorPrint=="false") {
+		                	printData=printData.replace(/#.{6}/g,'#000000');
+		                }		                
+		                LODOP.ADD_PRINT_HTML(0,0,"100%", "100%",printData);   
+			            LODOP.NewPage();
+			            $("#iframePicture").contents().find("#print #content-"+(i+1)).remove();
+				    }
+				    if(ifPreview){
+				        LODOP.PREVIEW();
+				    }
+				    else{
+				        LODOP.PRINT();
+				        //LODOP.PRINTA();
+				    }					
+			    }
+			    disLoad();
+		    }*/
+            function jumpPage(){
+                if(page>totalPage){
+                    $.messager.popover({msg: '共'+totalPage+'页，无法跳转到'+page+'页^_^',type:'alert'});
+                    return;
+                }
+                page=$("#pageInput").triggerbox('getValue');
+                hrefRefresh();
+            }
+            function firstPageBtnClick(){
+                page=1;
+                $("#pageInput").triggerbox('setValue',page);
+                jumpPage();
+            }
+            function lastPageBtnClick(){
+                page=totalPage;
+                $("#pageInput").triggerbox('setValue',page);
+                //hrefRefresh(true);
+                jumpPage();
+            }
+            function prePageBtnClick(){
+                if(page>1){
+                    page=parseInt(page)-1
+                }
+                else{
+                    $.messager.popover({msg: '已经是首页，无法往前咯^_^',type:'alert'});
+                    return;
+                }
+                $("#pageInput").triggerbox('setValue',page);
+                jumpPage();
+                //hrefRefresh(true);
+            }
+            function nextPageBtnClick(){
+                if(page<totalPage){
+	                page=parseInt(page)+1
+	            }
+                else{
+                    $.messager.popover({msg: '已经是最后一页，无法往后咯^_^',type:'alert'});
+                    return;
+                }
+                $("#pageInput").triggerbox('setValue',page);
+                jumpPage(); //hrefRefresh(true);
+            }
+            function viewAddBtnClick(){	
+                resizePicture(1.05);
+                
+            }
+            function viewMinusBtnClick(){
+                resizePicture(0.95);
+            }
+
+            function resizePicture(percent){
+                //var iframeWidth=iframePicture.innerWidth;
+                //var iframePage=iframePicture.document；
+                //iframePage.getElementsByTagName("img")[0];
+                var chartImg=document.getElementById('iframePicture').contentWindow.document.getElementById("drawing")
+                if(chartImg){
+	                var str=chartImg.style.width.replace("%","");
+	                chartImg.style.width=str*percent+"%";
+    				chartImg.style.height=str*percent+"%";
+	                //chartImg.height=chartImg.height*percent;
+	                //chartImg.width=chartImg.width*percent;
+	                //var marginLeft=(iframeWidth-chartImg.width)/2-10;
+	                //chartImg.style.marginLeft=marginLeft;
+                }
+            }
+            
+            //弹出加载层
+			function loading(msg) {
+				$.messager.progress({
+					title: "提示",
+					msg: msg,
+					text: '请稍微耐心等待一下下哦....'
+				});
+			}
+			//取消加载层  
+			function disLoad() {
+				$.messager.progress("close");
+				//getImageBase64();
+				//currPageBase64=image2Base64();
+				//console.log(image2Base64());
+			}  
+			
+			function importClodop(){
+				var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+				var oscript = document.createElement("script");
+				oscript.src ="http://localhost:8000/CLodopfuncs.js?priority=1";
+				head.insertBefore( oscript,head.firstChild );
+
+				//引用双端口(8000和18000）避免其中某个被占用：
+				oscript = document.createElement("script");
+				oscript.src ="http://localhost:18000/CLodopfuncs.js?priority=0";
+				head.insertBefore( oscript,head.firstChild );
+			}
+			function image2Base64() {
+				var img=document.getElementById('iframePicture');
+			    var canvas = document.createElement("canvas");
+			    canvas.width = img.width;
+			    canvas.height = img.height;
+			    var ctx = canvas.getContext("2d");
+			    ctx.drawImage(img, 0, 0, img.width, img.height);
+			    var dataURL = canvas.toDataURL("image/gif");
+			    return dataURL;
+			}
+			function getImageBase64() {
+				var d=document.getElementById('pagesBase64');				
+				var postUrl="../../../dhcmg/webchart/GetBase64.ashx?chartType=1&episodeID="+episodeID
+                        +"&webIP="+webIP+"&userID="+userID+"&locID="+locID+"&v="+new Date().getTime()+"&page="+page+"&chartID=&ifColorPrint="+ifColorPrint;
+				$.ajax({
+					url:postUrl,
+					type:"GET",	
+					dataType:"text",
+					success:function(data){						
+						currPageBase64=data;
+						var storage=window.localStorage;
+			            storage.setItem("base64Page"+page,data);
+						//console.log(data);//返回的json数据
+						var pageBase64=document.createElement("div");
+						pageBase64.id="base64Page"+page;
+						pageBase64.innerText=data;
+						d.appendChild(pageBase64);
+					},
+					error:function(err){
+						console.log(err.responseText);//查看错误信息
+					}
+				})
+			}
+			function switchPage(){
+				var evt = window.event || e;
+		        if (evt.keyCode == 13) {
+			        var value=$('input[name="pageInput"]').val();
+			        if(value=="") return $.messager.popover({msg: '页码不能为空，请重新输入...',type:'alert'});
+			        if(value<1) return $.messager.popover({msg: '页码不能小于1，请重新输入...',type:'alert'});
+			        if(value>totalPage) return $.messager.popover({msg: '页码不能大于总页数，请重新输入...',type:'alert'});
+			        $("#pageInput").triggerbox('setValue',value);
+		        	jumpPage();
+		        }
+			}
+			
+			if(websys_on) {
+				websys_on("vitalSignChange",function(data){
+					hrefRefresh();
+				});
+			}
+			
+			/// 申请打印授权
+			function ApplyAuthority(){
+				$("#disControl-dialog").dialog("close");
+				var regNo=tkMakeServerCall("Nur.NIS.Service.Chart.Base.Patient","GetRegNo",episodeID)
+				var url = "nur.emr.dischargerecordauthorizeapply.csp?mouldType=SMTZ&regNo="+regNo;
+				if ("undefined" != typeof websys_getMWToken) {
+					url += "&MWToken=" + websys_getMWToken();
+				}
+				// http://192.168.1.108/imedical/web/csp/nur.hisui.temperature.linux.csp?EpisodeID=112
+				var width, height, left, top;
+				if (window.screen.availWidth > 1900) {
+					width = Math.floor(window.screen.availWidth * 0.79);
+					height = Math.floor(window.screen.availHeight * 0.83);
+					left = (window.screen.availWidth - width) / 2;
+					top = (window.screen.availHeight - height) / 3;
+				} else {
+					width = Math.floor(window.screen.availWidth * 0.98);
+					height = Math.floor(window.screen.availHeight * 0.83);
+					left = (window.screen.availWidth - width) / 3;
+					top = (window.screen.availHeight - height) / 3;
+				}
+				window.open(
+					url,
+					"newwindow",
+					"width=" +
+					width +
+					",height=" +
+					height +
+					",top=" +
+					top +
+					",left=" +
+					left +
+					",toolbar=no,menubar=yes,scrollbars=yes,resizable=yes,location=no,status=no"
+				);
+			}
+        </script>
+        <script type="text/javascript" src="../scripts/nurse/temperature/svg/printChart.js" charset="gbk"></script>
+    </body>
+</html>

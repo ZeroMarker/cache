@@ -1,8 +1,13 @@
 	
-
+<!--
+ * FileName: dhcpeireport.normal.result.lis.new.csp
+ * Description: 打印LIS类的项目（包含职业病报告）
+-->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	q 1
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
 </csp:method>
+
 <SCRIPT language="Cache" RUNAT="SERVER">	
 		i "SummarizeGather"=$G(ReultOutType) d
 		.s DIVClass="LISReport"
@@ -15,6 +20,12 @@
 		i (AuditUser="")&&(Checker'="") d
 		.s Checker=""_Checker
 		s Checker=Checker_"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;审核者:"_AuditUser
+		
+		if '$d(ServerPath) {
+			s ServerPath="../"
+		} else {
+			s ServerPath=ServerPath_"web/"
+		}
 	</SCRIPT>
 	<!--DIV class='#(DIVClass)#'-->
 		<TABLE width=655 border=0 cellspacing=0>
@@ -159,11 +170,11 @@
 		..s Arrow=$P(CurData,"^",6)
 		..s CTTCSynonym=$P(CurData,"^",8)
 		..s ArrowName=""
-		..i Arrow="1" s ArrowName="../images/dhcpe/NoArrow.gif"
-		..i Arrow="0" s ArrowName="../images/dhcpe/DownArrow.gif"
-		..i Arrow="2" s ArrowName="../images/dhcpe/UpArrow.gif"
-		..i Arrow="3" s ArrowName="../images/dhcpe/Star.gif"
-		..s:ArrowName="" ArrowName="../images/dhcpe/NoArrow.gif"
+		..i Arrow="1" s ArrowName=ServerPath_"images/dhcpe/NoArrow.GIF"
+		..i Arrow="0" s ArrowName=ServerPath_"images/dhcpe/DownArrow.GIF"
+		..i Arrow="2" s ArrowName=ServerPath_"images/dhcpe/UpArrow.GIF"
+		..i Arrow="3" s ArrowName=ServerPath_"images/dhcpe/Star.GIF"
+		..s:ArrowName="" ArrowName=ServerPath_"images/dhcpe/NoArrow.GIF"
 		..s SortNum=SortNum+1
 		..w "<TR>"
 		..w "<TD class=LISResultName>"_SortNum_"</TD>"
@@ -179,10 +190,10 @@
 		....s idata=$g(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OD",OrdDeID,ind1))
 		....s iArrow=$p(idata,"^",2)
 		....s:iArrow="" iArrow="1"
-		....i iArrow="1" s iArrowName="../images/dhcpe/NoArrow.gif"
-		....i iArrow="0" s iArrowName="../images/dhcpe/DownArrow.gif"
-		....i iArrow="2" s iArrowName="../images/dhcpe/UpArrow.gif"
-		....i iArrow="3" s iArrowName="../images/dhcpe/Star.gif"
+		....i iArrow="1" s iArrowName=ServerPath_"images/dhcpe/NoArrow.GIF"
+		....i iArrow="0" s iArrowName=ServerPath_"images/dhcpe/DownArrow.GIF"
+		....i iArrow="2" s iArrowName=ServerPath_"images/dhcpe/UpArrow.GIF"
+		....i iArrow="3" s iArrowName=ServerPath_"images/dhcpe/Star.GIF"
 		....w "<TD class=LISResultValue>"_$p(idata,"^",1)_"</TD>"
 		....w "<TD class=LISResultNormal><IMG id='Arrow"_ind1_"' name='Arrow' src='"_iArrowName_"'></TD>"
 		

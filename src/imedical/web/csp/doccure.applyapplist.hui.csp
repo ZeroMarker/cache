@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!--治疗站预约列表 doccure.applyapplist.hui.csp--> 
+<!--治疗预约v2.0 doccure.applyapplist.hui.csp--> 
 <HTML lang="zh-CN">
 <HEAD>
 <meta charset="utf-8">
@@ -8,15 +8,110 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
+<ADDINS require="RWCard,CmdShell"/> 
+<DHCDOCCURE></DHCDOCCURE>
+<DOCCARD medStepCode="Cure"></DOCCARD>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
 <Server>
-	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-	s XMLObject=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+/*w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+s XMLObject=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+s DHCDocCureLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureLinkPage",%session.Get("LOGON.HOSPID"))
+s DHCDocCureRecordLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureRecordLinkPage",%session.Get("LOGON.HOSPID"))
+s DHCDocCureAssLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAssLinkPage",%session.Get("LOGON.HOSPID"))
+s DocCureUseBase=+(##class(DHCDoc.DHCDocCure.VersionControl).UseBaseControl(%session.Get("LOGON.HOSPID")))
+s CureAppVersion=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAppVersion",%session.Get("LOGON.HOSPID"))
+s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+s AppEndDate=##class(websys.Conversions).DateLogicalToHtml(+$h+7)
+s DateFormat=##class(websys.Conversions).DateFormat()
+s PrintBath=##class(web.UDHCJFCOMMON).getpath()
+s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("DocCure_UIConfigObj",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+ i UIConfigObj="" {
+	 //若用户没有设置过，则走默认设置
+	 s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("DocCure_UIConfigObj_Group",%session.Get("LOGON.GROUPID"))
+ }
+ i UIConfigObj="" s UIConfigObj="{}"
+ d ##class(web.DHCDocUtil).GetArrayByObjStr(UIConfigObj,.UIConfigArray)
+ s LayoutConfig=##class(web.DHCDocConfig).GetConfigNode1("DocCure_layoutConfig",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+ if LayoutConfig=""{
+	 s LayoutConfig=1
+ }
+ s ScheuleGridListOrTab=+$g(UIConfigArray("DocCure_ScheuleGridListOrTab")) ;预约资源页签还是表格 0 页签，1表格
 </Server>
+<style>
+.first-r-label{
+	text-align:right;
+}
+.fr-label{
+	padding: 0px 10px;
+}
+.schegrid-in-div{	
+	background-color:#fff;
+	margin-top:2px;
+	border-top-style:solid;
+	border-left-style:none;
+	border-right-style:none;
+	border-bottom-style:none;
+}
+.panel-header-cure-high{
+	height:35px!important;
+}
+div.panel-header-cure-high .panel-title{
+	line-height: 35px;
+}
+div.panel-header-cure-high .panel-tool{
+	top: 35%;
+    height: 30px;
+}
+span.menu-container .span-b-btn a{
+	width:80px;height:28px;
+	color:#fff;background-color:#339EFF	
+}
+.app-table label.checkbox{
+	padding-left:15px;
+}
+.app-table label.radio{
+	padding-left:15px;
+}
+.layout-expand > .panel-header.panel-header-gray .panel-tool a:hover, .layout-panel > .panel-header.panel-header-gray .panel-tool a:hover{background:#0063a7;color:#fff;border:0 solid #0063a7;filter:none}
+div label.list-split-line{
+	border-bottom: 1px dotted #ccc;
+}
+.icon{width: 20px;height: 20px;margin-right: 10px;float: right;}
+</style>
 </head> 
-<body>
+<body id="main_layout" class="hisui-layout" data-options="fit:true,border:false">
 	<csp:Include Page="doccure.applyapplist.show.hui.csp">
-	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/appoint.applyapplist.js"></script>
-	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			DocCureUseBase:"#(DocCureUseBase)#",
+			CurrentDate:"#(CurrentDate)#",
+			AppEndDate:"#(AppEndDate)#",
+			DateFormat:"#(DateFormat)#",
+			PrintBath:"#(PrintBath)#",
+			UIConfigObj:"#(UIConfigObj)#",
+			LayoutConfig:"#(LayoutConfig)#",
+			ScheuleGridListOrTab:"#(ScheuleGridListOrTab)#",
+			DHCDocCureLinkPage:"#(DHCDocCureLinkPage)#",
+			DHCDocCureRecordLinkPage:"#(DHCDocCureRecordLinkPage)#",
+			DHCDocCureAssLinkPage:"#(DHCDocCureAssLinkPage)#",
+			CureAppVersion:"#(CureAppVersion)#"
+		};
+	</SCRIPT>	
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.readcard.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.openwin.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.applyreslist.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/appoint.applyreslist.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/appoint.main.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/LodopPrintCommonFun.js"></script>
 </body>
 </html>

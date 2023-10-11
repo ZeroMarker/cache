@@ -1,0 +1,636 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcem.special.quality.csp 急诊专项报表 -->
+<html>
+<head>
+
+<title>	hos门户使用-急诊十大专项报表 </title>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script><!--hxy 2022-11-11-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/echarts.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/format.echarts.js" charset="gb2312"></script>
+
+<style type="text/css">
+
+	.echarts-box{display: inline-block;width: 19.5%;height: 100%;}
+	.hos-charts-box{background:rgba(0,0,0,0);width:100%;height:100%;}
+	.full-parent{width:100%;height:100%;}
+	.rowView{background: rgba(0,0,0,.5);}
+	.viewTitle{width: 16.6%;height: 100%;float: left;}
+	.rowView{display: flex;justify-content: space-between;background:rgba(0,0,0,0);}
+	.rowItem{height:100%;background:rgba(0,0,0,0.5);}
+	.oneItemPlain{width:100%;height:100%;float:center}
+	.twoRowItem{display: flex;justify-content: space-between;}
+	.full{height:100% !important}
+	
+	.hosnews{font-size: 0;height: 40px;display: inline-block;background-color:rgba(0, 0, 0, 0.5);box-shadow:0px 3px 6px rgba(0, 0, 0, 0.16);cursor: pointer;display: flex;justify-content: center;align-items: center;}
+	.hosnews:last-of-type{margin-right: 0;}
+	.hosnews>img{margin-right: 15px;vertical-align: middle;margin-left: 20px;width:54px}
+	.hosnews>div{display: inline-block;vertical-align: middle;}
+	.hosnews>div>p{font-family: 'Source Han Sans CN';color: #ffffff;font-size: 16px;line-height: 0px;normal:400}
+	.hosnews>div>p:first-of-type{font-size: 26px;}
+	
+</style>
+</head>
+
+<body style="width:99.8%;height:100%;margin: 0;overflow:hidden;">
+	<div class="layout-north" style="height:110px;">
+		<!--<div style="height:50px"></div>-->
+		<div id="viewHeader" style="height:100px;display: flex;justify-content: space-between;">
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelOne.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevOne">2</p>
+			      <p>Ⅰ级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelTwo.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevTwo">8</p>
+			      <p>Ⅱ级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelThree.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevThr">16</p>
+			      <p>Ⅲ级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelFour.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevFou">22</p>
+			      <p>Ⅳa级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelFive.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevFiv">11</p>
+			      <p>Ⅳb级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/TriageAll.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevAll">59</p>
+			      <p>分诊总计人数</p>
+			    </div>
+			</div>
+		</div>
+	</div>  
+	<div id="layout-center" class="layout-center">
+		<div id="viewContent" class="full-parent">
+			<div style="height:33.33%;">
+				<div id="oneRow" class="rowView">
+					<div class="oneRowItem rowItem">
+						<div id="main3" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main4" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main5" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main6" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main7" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main8" class="oneItemPlain"></div>
+					</div>
+				</div>
+			</div>
+			<div style="height:33.33%;">
+				<div class="rowView">
+					<div class="twoRowItem rowItem" id="threeRowItem">
+						<div class="threeItem">
+							<div id="GreChaChart" class="echarts-box hos-charts-box"></div>
+						</div>
+					</div>
+					<div class="twoRowItem rowItem" id="threeRowItem">
+						<div class="threeItem">
+							<div id="NoPerChart" class="echarts-box hos-charts-box"></div>
+						</div>
+					</div>
+					<div class="twoRowItem rowItem" id="threeRowItem">
+						<div class="threeItem">
+							<div id="main2" class="echarts-box hos-charts-box"></div>
+						</div>
+					</div>
+					<div class="twoRowItem rowItem">
+						<div class="threeItem">
+							<div id="main1" class="echarts-box hos-charts-box"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div style="height:33.33%;">
+				<div class="rowView full" >
+					<div class="threeLeftRowItem rowItem">
+						<div id="DeptPatNumChart" class="echarts-box hos-charts-box"></div>
+					</div>
+					<div class="threeRightRowItem rowItem">
+						<div id="TrsInHosDeptChart" class="echarts-box hos-charts-box"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+<script type="text/javascript">
+	
+	$(function(){
+		initViewPage();	
+		
+		initCharts();
+		
+		initData(); //初始化数据
+	})
+
+	function initViewPage(){
+		var bodyHeight = $("body").height();
+		var centerHeight = bodyHeight-110+'px';
+		$('#layout-center').css({'height':centerHeight});
+		
+		var parHeight = $('#viewContent').height();
+		var headerWidth = $('#viewHeader').width();
+		
+		var rowViewHeight=parseInt(parHeight/3)-10+'px';
+		var oneViewWidht = parseInt(headerWidth/6)-10+'px';
+		var oneRowWidth = $('#oneRow').width();
+		var oneRowItemWidth = parseInt(oneRowWidth/6)-10+'px';
+		var twoRowItemWidth = parseInt(oneRowWidth/4)-10+'px';
+		var threeLeftRowItemWidth = parseInt(oneRowWidth/2)-6+'px';
+		//var threeRightRowItemWidth = parseInt(oneRowWidth/2)-225+'px';
+		
+		$('.rowView').css({'height':rowViewHeight});
+		$('.viewItem').css({'width':oneViewWidht});
+		$('.oneRowItem').css({'width':oneRowItemWidth});
+		$('.twoRowItem').css({'width':twoRowItemWidth});
+		$('.threeLeftRowItem').css({'width':threeLeftRowItemWidth});
+		$('.threeRightRowItem').css({'width':threeLeftRowItemWidth});
+		
+		$('.threeItem').css({'width':twoRowItemWidth});
+	}
+	function initData(){
+		//获取病人信息
+		runClassMethod("web.DHCEMDocMessageInterface","getLevNum",{},function (data){
+			if(data == null){
+				return;
+			}else{
+				$('.lev-num').each(function(){
+					$(this).text(data[this.id]);
+				})
+			}
+		})
+		
+	}
+	function initCharts(){
+		runClassMethod("web.DHCEMDocMessageInterface","getStatisNum",{},function (data){
+			if(data == null){
+				return;
+			}else{
+				ChartsViewDial('main3','医患比',data.Ratio);
+				ChartsViewDial('main4','护患比',data.NurRatio);
+				ChartsViewDial('main5','ROSC成功率',data.ROSCRatio);
+				ChartsViewDial('main6','手术死亡率',data.SurDeathRatio);
+				ChartsViewDial('main7','抢救死亡率',data.SalDeaRatio);
+				ChartsViewDial('main8','非计划重返率',data.ReturnRatio);
+			}
+		})
+		
+		//showEchartsBar('main1','本周工作量',['周一', '周二', '周三', '周四', '周五', '周六' ,'周末'],[66, 59, 0, 0, 0, 0 ,0]);	
+		
+		//showEchartsLine('main2','留观患者',['22年1月', '22年2月', '22年3月', '22年4月', '22年5月', '22年6月' ,'22年7月','22年8月','22年9月','22年10月'],[330, 217, 199, 219, 321, 201 ,161,220,281,391,171]);
+		runClassMethod("web.DHCEMNurMessageInterface","GetObsAreaAnaData",{},function(data){
+		
+			// 留观患者统计
+			StaPatChart(data.StaPat,data.StaPatNum)
+			
+			// 分诊人数统计
+			GreenChannelChart(data.QsPatNum);
+			
+			// 重点病种分布
+			NoPersonChart(data.KeyDiseasePatNum);
+			
+			// 本周工作量
+			NurWorLoadChart(data.NurWorLoadNum);
+			
+			// 在科状态统计
+			TrsInHosDeptChart(data.InLocPat,data.InLocPatNum);
+			
+			// 转入院科室统计
+			DeptPatNumChart(data.ParseInPat,data.ParseInPatNum);
+		
+		
+		})
+		
+		
+	}
+	// 留观患者统计
+	function StaPatChart(StaPat,data){
+		option = {
+			title: {
+	          text: "留观患者",
+			  left: 'center',
+				top: "5%",
+				textStyle:{
+					color:'white',
+					fontWeight:'normal',
+					fontSize:20,
+				}
+	       },
+		  xAxis: {
+		    type: 'category',
+		    axisLabel:{
+				color:'#fff'
+			},
+			axisLine: {
+		        lineStyle: {
+		            color:  'rgba(255,255,255,0.2)',
+		                width: 1,
+		        }
+		    },
+		    data: StaPat //['22年1月', '22年2月', '22年3月', '22年4月', '22年5月', '22年6月' ,'22年7月','22年8月','22年9月','22年10月']
+		  },
+		  yAxis: {
+		    type: 'value',
+		    axisLabel:{
+				color:'#fff'
+			},
+			splitLine: {
+		      lineStyle: {
+		         color: "rgba(255,255,255, 0.2)"
+		      }
+			}
+		  },
+		  series: [
+		    {
+		      data: data, ///[330, 217, 199, 219, 321, 201 ,161,220,281,391,171],
+		      type: 'line',
+		      itemStyle: {
+		        color:'#2cebc999'
+		      }
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#main2")[0]);
+		option&&myChart.setOption(option);
+	
+	}
+
+	// 转入院科室统计
+	function DeptPatNumChart(ParseInPat,data){
+
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		option = {
+			title: {
+	          text: "转入院科室统计",
+			  left: 'center',
+				top: "5%",
+				textStyle:{
+					color:'white',
+					fontWeight:'normal',
+					fontSize:20,
+				}
+	       },
+		  xAxis: {
+		    type: 'category',
+		    axisLabel:{
+				color:'#fff'
+			},
+			axisLine: {
+		        lineStyle: {
+		            color:  'rgba(255,255,255,0.2)',
+		                width: 1,
+		        }
+		    },
+		    data: ParseInPat //['骨科', '心内科', '产科', '儿科', '胸外科', '普外科' ,'神经内科']
+		  },
+		  yAxis: {
+		    type: 'value',
+		    axisLabel:{
+				color:'#fff'
+			},
+			splitLine: {
+		      lineStyle: {
+		         color: "rgba(255,255,255, 0.2)"
+		      }
+			}
+		  },
+		  series: [
+		    {
+		      data: data, ///[66, 59, 10, 20, 12, 54 ,32],
+		      type: 'bar',
+		      barWidth : 40, //柱图宽度
+		      itemStyle: {
+		        color:'#2CEBC999'
+		      }
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#DeptPatNumChart")[0]);
+		option&&myChart.setOption(option);
+	}
+	
+	// 在科状态统计
+	function TrsInHosDeptChart(InLocPat,data){
+
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		option = {
+			title: {
+	          text: "在科状态统计",
+			  left: 'center',
+				top: "5%",
+				textStyle:{
+					color:'white',
+					fontWeight:'normal',
+					fontSize:20,
+				}
+	       },
+		  xAxis: {
+		    type: 'category',
+		    axisLabel:{
+				color:'#fff'
+			},
+			axisLine: {
+		        lineStyle: {
+		            color:  'rgba(255,255,255,0.2)',
+		                width: 1,
+		        }
+		    },
+		    data: InLocPat //['急诊抢救室', '急诊留观室一', '急诊留观室二']
+		  },
+		  yAxis: {
+		    type: 'value',
+		    axisLabel:{
+				color:'#fff'
+			},
+			splitLine: {
+		      lineStyle: {
+		         color: "rgba(255,255,255, 0.2)"
+		      }
+			}
+		  },
+		  series: [
+		    {
+		      data: data, ///[11, 32, 25],
+		      type: 'bar',
+		      barWidth : 65, //柱图宽度
+		      itemStyle: {
+		        color:'#2CEBC999'
+		      }
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#TrsInHosDeptChart")[0]);
+		option&&myChart.setOption(option);
+	}
+	
+	// 本周工作量
+	function NurWorLoadChart(data){
+
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		option = {
+			title: {
+	          text: "本周工作量",
+			  left: 'center',
+				top: "5%",
+				textStyle:{
+					color:'white',
+					fontWeight:'normal',
+					fontSize:20,
+				}
+	       },
+		  xAxis: {
+		    type: 'category',
+		    axisLabel:{
+				color:'#fff'
+			},
+			axisLine: {
+		        lineStyle: {
+		            color:  'rgba(255,255,255,0.2)',
+		                width: 1,
+		        }
+		    },
+		    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+		  },
+		  yAxis: {
+		    type: 'value',
+		    axisLabel:{
+				color:'#fff'
+			},
+			splitLine: {
+		      lineStyle: {
+		         color: "rgba(255,255,255, 0.2)"
+		      }
+			}
+		  },
+		  series: [
+		    {
+		      data:data, /// [120, 200, 150, 80, 70, 110, 130],
+		      type: 'bar',
+		      barWidth : 40, //柱图宽度
+		      itemStyle: {
+		        color:'#2CEBC999'
+		      }
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#main1")[0]);
+		option&&myChart.setOption(option);
+	}
+
+	// 分级人数统计
+	function GreenChannelChart(data){
+
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		option = {
+			title: {
+	          text: "分区人数统计",
+			  left: 'center',
+				top: "5%",
+				textStyle:{
+					color:'white',
+					fontWeight:'normal',
+					fontSize:20,
+				}
+	       },
+		  tooltip: {
+		    trigger: 'item'
+		  },
+		  legend: {
+//		    orient: 'vertical',
+//		    left: 'right',
+//	        textStyle: {
+//	            color: '#FFF',
+//	            fontSize: '14px',
+//	            fontWeight: 700
+//	        }
+		    x:'center',
+		    y:'bottom',
+		    textStyle: {
+	            color: '#FFF',
+	            fontSize: '14px'
+	        }
+		  },
+		  series: [
+		    {
+		      name: 'Access From',
+		      type: 'pie',
+		      radius: ['40%', '70%'],
+		      avoidLabelOverlap: false,
+		      itemStyle: {
+		        borderRadius: 10,
+		        borderColor: '#fff',
+		        borderWidth: 2
+		      },
+		      label: {
+		        show: false,
+		        position: 'center'
+		      },
+		      emphasis: {
+		        label: {
+		          show: true,
+		          fontSize: '40',
+		          fontWeight: 'bold'
+		        }
+		      },
+		      labelLine: {
+		        show: false
+		      },
+		      itemStyle: {
+			    normal: {
+			      color: function (colors) {
+			         var colorList = [
+			           //'#38c1ff99','#2CEBC999','#7ADD7A99','#D7DB7499','#FFB16E99','#33FFFF99'
+			           '#39c2ff99','#2cebc999','#d8da7599','#feb06e99'
+
+			         ];
+			         return colorList[colors.dataIndex];
+			       }
+			     },
+			   },
+		      data:data /* [
+		        { value: 1048, name: '红区' },
+		        { value: 735, name: '橙区' },
+		        { value: 580, name: '黄区' },
+		        { value: 484, name: '绿区' }
+		      ] */
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#GreChaChart")[0]);
+		option&&myChart.setOption(option);
+	}
+	
+	// 重点病种分布
+	function NoPersonChart(data){
+
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		option = {
+		   title: {
+	          text: "重点病种分布",
+			  left: 'center',
+				top: "5%",
+				textStyle:{
+					color:'white',
+					fontWeight:'normal',
+					fontSize:20,
+				}
+	      },
+		  tooltip: {
+		    trigger: 'item'
+		  },
+		  legend: {
+//		    orient: 'vertical',
+//		    left: 'right',
+//	        textStyle: {
+//	            color: '#FFF',
+//	            fontSize: '14px',
+//	            fontWeight: 700
+//	        }
+		    x:'center',
+		    y:'bottom',
+		    //padding: 10,
+		    textStyle: {
+	            color: '#FFF',
+	            fontSize: '14px'
+	        }
+		  },
+		  series: [
+		    {
+		      name: 'Access From',
+		      type: 'pie',
+		      radius: ['40%', '70%'],
+		      avoidLabelOverlap: false,
+		      itemStyle: {
+		        borderRadius: 10,
+		        borderColor: '#fff',
+		        borderWidth: 2
+		      },
+		      label: {
+		        show: false,
+		        position: 'center'
+		      },
+		      emphasis: {
+		        label: {
+		          show: true,
+		          fontSize: '40',
+		          fontWeight: 'bold'
+		        }
+		      },
+		      labelLine: {
+		        show: false
+		      },
+		      itemStyle: {
+			    normal: {
+			      color: function (colors) {
+			         var colorList = [
+			           /// '#38c1ff99','#2CEBC999','#7ADD7A99','#D7DB7499','#FFB16E99','#33FFFF99'
+			           '#39c2ff99','#2cebc999','#7bdd7a99','#d8da7599','#9e72ff99','#feb06e99'
+			         ];
+			         return colorList[colors.dataIndex];
+			       }
+			     },
+			   },
+		      data: data/* [
+		        { value: 8, name: '急性心力衰竭' },
+		        { value: 2, name: '急性脑卒死' },
+		        { value: 3, name: '急性呼吸衰竭' },
+		        { value: 1, name: '急性创伤' },
+		        { value: 13, name: '急性颅脑外伤' },
+		        { value: 34, name: '急诊多发伤' }
+		      ] */
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#NoPerChart")[0]);
+		option&&myChart.setOption(option);
+	}
+</script>
+</html>

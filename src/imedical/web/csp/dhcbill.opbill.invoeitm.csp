@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.opbill.invoeitm.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-12-15
  * Description: 发票医嘱明细
 -->
@@ -12,17 +12,34 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.opbill.invoeitm.css"/>
+	<server>
+		set args=%request.Get("arguments")
+		set argsObj={}.%FromJSON(args)
+		set invRowId=argsObj.invRowId
+		set invType=argsObj.invType
+	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			InvRowId: "#(invRowId)#",
+			InvType: "#(invType)#"
+		};
+		
+		//全局变量
+		var GV = {};
+	</script>
 </head>
 
 <body style="padding:10px;">
 	<div class="hisui-layout" data-options="fit:true">
 		<div data-options="region:'center',border:false">
-			<table class="hisui-datagrid" id="oeitmList"></table>
+			<table id="oeitmList"></table>
 	  	</div>
 	</div>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.invoeitm.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.invoeitm.js"></script>
 </body>
 </html>

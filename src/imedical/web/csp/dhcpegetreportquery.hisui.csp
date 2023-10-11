@@ -1,5 +1,9 @@
-
-<!--dhcpegetreportquery.hisui.csp-->
+<!-- 
+ * FileName: dhcpegetreportquery.hisui.csp
+ * Anchor: 
+ * Date: 
+ * Description: HISUI 到期报告
+-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  if ##class(websys.SessionEvents).SessionExpired() quit 1
@@ -10,80 +14,64 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
-	
-<style>
-.search-table{
-	border-collapse:separate;
-	border-spacing:0 10px;
-	/*padding: 0 10px;*/
-}
-.r-label{
-	padding-left: 10px;
-}
-.r-label-1{
-	padding-left: 30px;
-}
-.newclsInvalid{
-	border-color: red;
-	color: red;
-}
-.panel-header{
-	border-bottom: 0;
-}
 
-
-</style>
+	<style>
+		.td-r-align{
+			text-align: right;
+		}
+		.td-l-padding{
+			padding-left: 10px;
+		}
+		/*处理炫彩/极简五方布局中自定义增加的边框颜色问题*/
+		.inherit-border>div:first-child {
+			border-color: inherit!important;
+		}
+		.inherit-border-div {
+			border-bottom-width: 1px!important;
+			border-radius:0!important;
+			border-color: inherit!important;
+		}
+	</style>
 </head>
 <body>
-<div class="hisui-layout" fit="true">
-	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:95px;padding:10px 10px 0 10px;">
-		<div class="hisui-panel" data-options="title:'到期报告',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
-			<table class="search-table">
-				<tr>
-				  <td class="r-label"><label for="RegNo">登记号</label></td>
-					<td>
-						<input class="textbox" id="RegNo">
-					</td>
-					<td class="r-label r-label-1"><label for="Name">名称</label></td>
-					<td>
-						<input class="textbox" id="Name">
-					</td>
+	<div class="hisui-panel" border="false" fit="true" style="padding:10px; background-color: inherit;">
+		<div class="hisui-layout" data-options="border:false,fit:true,">
+			<div class="hisui-layout inherit-border" data-options="region:'center',title:'#(..Get("到期报告"))#',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false">
+				<div class="inherit-border-div" data-options="region:'north',collapsible:false,border:false" style="height:51px;">
+					<!-- 查询条件 north start -->
+					<table style="border-spacing: 10px;">
+						<tr>
+				  			<td class="td-r-align"><label for="RegNo">#(..Get("登记号"))#</label></td>
+							<td><input class="textbox" id="RegNo"></td>
+							
+							<td class="td-r-align td-l-padding"><label for="Name">#(..Get("名称"))#</label></td>
+							<td><input class="textbox" id="Name"></td>
 					
-					<td class="r-label r-label-1"><label for="StartDate">开始日期</label></td>
-					<td>
-						<input id="StartDate" class="hisui-datebox textbox">
-					</td>
-					<td class="r-label r-label-1" ><label for="EndDate">结束时间</label></td>
-					<td>
-						<input id="EndDate" class="hisui-datebox textbox">
-					</td>
-					<td class="l-label r-label-1">
-						<input class='hisui-checkbox' id="IsGroup" type="checkbox" label="团体报告">
-					</td>
+							<td class="td-r-align td-l-padding"><label for="StartDate">#(..Get("开始日期"))#</label></td>
+							<td><input id="StartDate" class="hisui-datebox textbox"></td>
+							
+							<td class="td-r-align td-l-padding" ><label for="EndDate">#(..Get("结束时间"))#</label></td>
+							<td><input id="EndDate" class="hisui-datebox textbox"></td>
+							
+							<td class="td-l-padding">
+								<input class='hisui-checkbox' id="IsGroup" type="checkbox" label='#(..Get("团体报告"))#'>
+							</td>
 					
-					<td class="r-label r-label-1">
-						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-					</td>
-				</tr>
-				
-						
-			</table>
+							<td class="td-l-padding">
+								<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table class="hisui-datagrid" id="GetReportQueryTab"></table>
+				</div>
+			</div>
 		</div>
 	</div>
-		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
-			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-					<table data-options="bodyCls:'panel-header-gray'" id="GetReportQueryTab"></table>
-				</div>
-        	</div>
-</div>
 
-
-<script type="text/javascript" src="../scripts/DHCPEGetReportQuery.hisui.js"></script>
-<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
-<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
-  
-  
-</body>		
+	<script type="text/javascript" src="../scripts/DHCPEGetReportQuery.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+</body>
 </html>
-			
-		

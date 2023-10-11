@@ -1,0 +1,163 @@
+
+<!-- 
+ * FileName: dhcpe.cashiersetting.csp
+ * Anchor: xueying
+ * Date: 2021.02.20
+ * Description: 体检收费配置
+-->	
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0px 10px;
+	
+}
+.r-label{
+	padding-left: 10px;
+}
+
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-header{
+	border-bottom: 0;
+}
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false" id="layout">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " title="" border="false" style="height:210px">
+	    	 <table class='search-table'>
+				
+				<tr>
+					<td class="r-label"><label for="NowLoc">科室</label></td>
+					<td>
+						<input class="hisui-combogrid" type="text" Id="NowLoc" style="width:155px">
+					</td>
+					
+					<td class="r-label"><label for="CashierMode">体检收费支付方式</label></td>
+          			<td>
+            			<input class="hisui-combobox" type="text" Id="CashierMode" style="width:155px">
+         			</td>		
+					
+					<td class="r-label"><label for="CardMode">体检卡支付方式</label></td>
+          			<td>
+            			<input class="hisui-combobox" type="text" Id="CardMode" style="width:155px">
+         			</td>	
+         			
+         			<td class="r-label"><label for="RefundMode">体检退费支付方式</label></td>
+          			<td>
+            			<input class="hisui-combobox" type="text" Id="RefundMode" style="width:155px">
+         			</td>	 	
+				</tr>
+		       <tr>		
+          			<td class="r-label"><label for="InvDefaultPayMode">默认支付方式</label></td>
+          			<td>
+            			<input class="hisui-combobox" type="text" Id="InvDefaultPayMode" style="width:155px">
+         			</td>	 
+          			
+          			<td class="r-label"><label for="ExtPayMode">第三方支付方式</label></td>
+          			<td>
+            			<input class="hisui-combobox" type="text" Id="ExtPayMode" style="width:155px">
+         			</td>
+          			
+          			<td class="r-label"><label for="DHCScanCode">东华互联网支付</label></td>
+          			<td>
+            			<input class="hisui-combobox" type="text" Id="DHCScanCode" style="width:155px">
+         			</td>
+          		
+          		 	 <td class="r-label"><label for="AdmReason">医保费别</label></td>
+          			<td>
+            			<input class="hisui-combobox" type="text" Id="AdmReason" style="width:155px">
+         			</td>
+          			
+		       </tr>
+		       <tr>
+		       
+		      		<td class="r-label"><label for="InvListFlag">发票打印明细</label></td>	
+          			<td>
+          				<div id="InvListFlag" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+          			</td>
+          			
+          			<td class="r-label"><label for="InvMaxListCount">发票明细数</label></td>
+          			<td>
+            			<input class="hisui-validatebox" type="text" Id="InvMaxListCount"/>
+          			</td>
+          			
+          			<td class="r-label"><label for="InvCol">发票打印列数</label></td>
+          			<td>
+            			<input class="hisui-validatebox" type="text" Id="InvCol"/>
+          			</td>
+          			
+          			<td class="r-label"><label for="InvPrintCatInfo">打印费用类别</label></td>	
+          			<td>
+          				<div id="InvPrintCatInfo" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+          			</td>
+          			
+		       </tr>
+		       <tr>
+		       		<td class="r-label"><label for="AllowCharge">团体允许收费功能</label></td>	
+          			<td>
+          				<div id="AllowCharge" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+          			</td>
+          			
+		      		<td class="r-label"><label for="IfPrintMinusInv">退费打印负票</label></td>	
+          			<td>
+          				<div id="IfPrintMinusInv" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+          			</td>
+          			
+          			<td class="r-label"><label for="RoundManager">自动分币误差</label></td>
+          			<td>
+            			<select id="RoundManager" class="hisui-combobox" style="width:155px;" editable="false">
+						<option value="0">无</option>
+						<option value="5">四舍五入</option>
+						<option value="6">五舍六入</option>
+						</select>
+         			 </td>
+         			 
+         			 <td class="r-label"><label for="IsCardPassWord">体检卡设置密码</label></td>	
+          			<td>
+          				<div id="IsCardPassWord" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+          			</td>
+          			
+		       </tr>
+		       
+				<tr>
+					<td colspan='8' align="center" >
+						<a id="BSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					</td>
+				
+				</tr>	
+						
+			</table>
+			
+		 </div>      
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false" style="border-top:1px solid #ddd;">
+			<table data-options="fit:true" id="CashierSettingGrid"></table> 
+		</div>      
+ 	</div> 
+ 			
+<script type="text/javascript" src="../scripts/DHCPECashierSetting.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  
+</body>		
+</html>
+			
+		
+
+
+

@@ -1,0 +1,69 @@
+﻿<html>
+    <head>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title> 验证用户 </title>
+    </head>
+    <script language="javascript">
+        var modalDialogArgs = parent.modalDialogArgs;
+        var returnValue = false;
+        $(function(){
+            $("#creatorName").text(emrTrans("创建者：") + modalDialogArgs.creatorInfo.creatorName);
+            $("#passWord").focus();
+        });
+        function confirm()
+        {
+            returnValue = document.getElementById("passWord").value;
+            closeWindow();
+        }
+        
+        function cancel()
+        {
+            returnValue = false;
+            closeWindow();
+        }
+        //关闭窗口
+        function closeWindow()
+        {
+            parent.closeDialog(modalDialogArgs.dialogID);
+        }
+        //国际化改造获取翻译
+        function emrTrans(value)
+        {
+            if (typeof $g == "function") 
+            {
+                value = $g(value)
+            }
+            return value;
+        }
+        //封装基础平台websys_getMWToken()方法
+        function getMWToken()
+        {
+            try{
+                if (typeof(websys_getMWToken) != "undefined")
+                    return websys_getMWToken();
+                return "";
+            }catch(e) {
+                return "";
+            }
+        }
+    </script>
+    <body ondragstart="return false" style="overflow:hidden;width:210px;margin:0px auto;">
+        <div class="hisui-panel" data-options="fit:true,border:false" style="overflow:hidden;">
+            <div style="margin-top:15px;">
+                <span id="creatorName"style="font-size:18px;font-weight:bold;"></span>
+            </div>
+            <div style="margin-top:15px;">#(..Get("删除前，请输入创建者密码:"))#</div>
+            <input id="passWord" class="hisui-validatebox textbox" onkeydown= "if(event.keyCode==13){confirm();return false;}" style="margin-top:15px;width:203px;" placeholder="请输入创建者密码..." />
+            <div style="width:131px;margin:15px auto 0px;">
+                <a href="#" class="hisui-linkbutton" onclick="confirm()">#(..Get("确认"))#</a>
+                <a href="#" class="hisui-linkbutton" style="margin-left: 10px;" onclick="cancel()">#(..Get("取消"))#</a>
+            </div>
+        </div>
+    </body>
+</html>

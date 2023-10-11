@@ -1,0 +1,418 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbknowledgepoint.csp
+    @JS:
+    @Title：知识点
+    @Creator:程和贵
+    @Description:医为百科入口
+    @CreateDate：2018-05-12
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/browserscroll.css" /> 
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<style>
+/*#layoutcenter{
+	overflow-y:hidden;
+	border-bottom:1px #ccc solid;
+	border-radius:4px;
+}*/
+
+</style>
+
+</HEAD>
+<BODY style="padding:4px;">
+     <div class="hisui-layout" data-options="fit:true" border="false">
+        <!--左侧区-->
+        <div id="layoutwest"  data-options="region:'west',split:true"  style="width:560px;" border="false">
+           <table title="知识库" toolbar="#westTools" id="westgrid" data-options="iconCls:'icon-w-paper',fit:true"></table> 
+        </div>     
+        <!--右侧列表展示-->
+         <div id="layoutcenter" data-options="region:'center',split:true" border="false"> 
+         	 <!--<div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0" /></div>-->
+             <!--<table title="知识条目" id="centergrid" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" >
+                 <div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0" /></div>
+             </table> -->
+             
+        </div>
+    </div>
+    <div id="westTools">
+          <input id="westTextDesc" style="width:200px" class="searchbox searchbox-prompt">
+         <span class="searchbox-button" style="margin:1px 0 0 -34px;" id="btnSearch"></span>
+         <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-refresh" data-options="stopAllEventOnDisabled:true" id="btnWestRefresh" plain="true">清屏</a>
+    </div>
+    <!--<div id="centerTools">
+         <input id="CenterTextDesc" style="width:200px" class="searchbox searchbox-prompt">
+         <span class="searchbox-button" style="margin:1px 0 0 -34px;" id="btnCentSearch"></span>
+         <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-refresh" data-options="stopAllEventOnDisabled:true" id="btnCenterRefresh" plain="true">清屏</a>
+    </div>-->
+</BODY>
+<script type="text/javascript">
+    $(function(){
+	    $("#layoutcenter").html('<div class="panel datagrid" style="height:inherit" ><div class="panel-header panel-header-gray""><div class="panel-title panel-with-icon">知识条目</div><div class="panel-icon icon-paper"></div><div class="panel-tool"></div></div><div class="datagrid-wrap panel-body" title="" ><div id="div-img" style="width:100%;overflow-y:hidden;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0"></div></div></div>')
+        var titleheight = $('.panel-header.panel-header-gray').outerHeight();
+        var panelheight = $('#layoutcenter').height();
+        var heightdata = panelheight - titleheight-1
+        //alert(panelheight);
+        $("#layoutcenter").html('<div class="panel datagrid" style="height:inherit" ><div class="panel-header panel-header-gray""><div class="panel-title panel-with-icon">知识条目</div><div class="panel-icon icon-paper"></div><div class="panel-tool"></div></div><div class="datagrid-wrap panel-body" title="" style="height:'+heightdata+'px" ><div id="div-img" style="width:100%;overflow-y:hidden;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0"></div></div></div>')
+        GotoMenu = function(rowid,desc,id,base0){
+            var menuid=tkMakeServerCall("web.DHCBL.BDP.BDPMenuDefine","GetID","dhc.bdp.mkb.mkbencyclopedia");
+            var parentid=tkMakeServerCall("web.DHCBL.BDP.BDPMenuDefine","GetID","dhc.bdp.mkb.mtm");
+            var menuimg=tkMakeServerCall("web.DHCBL.BDP.BDPMenuDefine","GetIconByID",menuid);
+            //判断浏览器版本
+            var Sys = {};
+            var ua = navigator.userAgent.toLowerCase();
+            var s;
+            (s = ua.match(/msie ([\d.]+)/)) ? Sys.ie = s[1] :
+            (s = ua.match(/firefox\/([\d.]+)/)) ? Sys.firefox = s[1] :
+            (s = ua.match(/chrome\/([\d.]+)/)) ? Sys.chrome = s[1] :
+            (s = ua.match(/opera.([\d.]+)/)) ? Sys.opera = s[1] :
+            (s = ua.match(/version\/([\d.]+).*safari/)) ? Sys.safari = s[1] : 0;
+            //双击时跳转到对应界面
+            if(!Sys.ie){
+                window.parent.showNavTab(rowid,desc,'dhc.bdp.ext.sys.csp?BDPMENU='+menuid+"&id="+id+"&base="+base0,parentid,menuimg)
+            }else{
+                parent.PopToTab(rowid,desc,'dhc.bdp.ext.sys.csp?BDPMENU='+menuid+"&id="+id+"&base="+base0,menuimg);
+            }
+        }         
+      var basetype="";
+      var base=0;
+     //知识列
+    var columns =[[  
+                  {field:'MKBTBRowId',title:'MKBTBRowId',width:80,sortable:true,hidden:true},
+                  {field:'MKBTBCode',title:'术语ID',width:150,sortable:true,hidden:true},
+                  {field:'MKBTBDesc',title:'术语名',width:250,sortable:true,
+                    formatter:function(value,row,index){  
+                        //鼠标悬浮显示备注信息
+                        return '<span class="hisui-tooltip" title="'+row.MKBTBNote+'">'+value+'</span>'
+                    }},
+                  {field:'MKBTBCatDr',title:'分类Id',width:150,sortable:true,hidden:true},
+                  {field:'MKBTDesc',title:'分类',width:150,sortable:true},
+                  {field:'MKBTBType',title:'类型',width:80,sortable:true,
+                    formatter:function(value,row,index){  
+                        if(value=="L"){
+                            return "列表";
+                        }
+                        if(value=="T"){
+                            return "树形";
+                        }
+                    }},
+                  {field:'MKBTBFlag',title:'标识',width:80,sortable:true,
+			  		formatter:function(value,row,index){  
+							if(value=="Diagnose"){
+								return "诊断";
+							}
+							if(value=="Drug"){
+								return "药品";
+							}
+							if(value=="Lab"){
+								return "检验";
+							}
+							if(value=="Check"){
+								return "检查";
+							}
+							if(value=="Operation"){
+								return "手术";
+							}
+							if(value=="Cat"){
+								return "分类";
+							}
+							if(value=="Part"){
+								return "部位";
+							}
+							if(value=="Pathogeny"){
+								return "病因";
+							}
+							if(value=="GenDesc"){
+								return "通用描述";
+							}
+							if(value=="Loc"){
+								return "科室";
+							}
+							if(value=="ICD10Inter"){
+								return "ICD10国际码";
+							}
+							if(value=="ICD10BJ"){
+								return "ICD10北京码";
+							}
+							if(value=="DiagMark"){
+								return "诊断标记";
+							}
+							if(value=="ICD11"){
+								return "ICD11";
+							}
+                        }},
+                    {field:'MKBTBVersion',title:'版本',width:150,sortable:true,hidden:true},
+                    {field:'MKBTBSource',title:'出处',width:150,sortable:true,hidden:true},
+                    {field:'MKBTBPYCode',title:'拼音检索码',width:150,sortable:true,hidden:true},
+                    {field:'MKBTBSequence',title:'菜单顺序',width:150,sortable:true,hidden:true},
+                    {field:'MKBTBNote',title:'备注',width:150,sortable:true,hidden:true}
+       ]]
+        var mygrid = $HUI.datagrid("#westgrid",{
+        url:$URL,
+        queryParams:{
+            ClassName:"web.DHCBL.MKB.MKBTermBase",         ///调用Query时
+            QueryName:"GetList"
+        },
+        columns: columns,  //列信息
+        pagination: true,   //pagination    boolean 设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+        pageSize:20,
+        pageList:[5,10,15,20,25,30,50,75,100,200,300,500,1000], 
+        singleSelect:true,
+        scrollbarSize:8,
+        ClassTableName:'User.MKBTermBase2',
+        SQLTableName:'MKB_TermBase2',
+        idField:'MKBTBRowId', 
+        rownumbers:true,    //设置为 true，则显示带有行号的列。
+        fitColumns:true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+        remoteSort:false,  //定义是否从服务器排序数据。true
+        onLoadSuccess:function(data){
+              $(this).datagrid('columnMoving');
+        },   
+        onClickRow:function(index,row){
+			//document.getElementById('centergrid').style.display='';  //显示mygrid
+			$("#div-img").hide();		 //初始图片消失
+            basetype =row.MKBTBType;
+            base=row.MKBTBRowId;
+            RefreshSearchData("User.MKBTermBase22",row.MKBTBRowId,"A",row.MKBTBDesc);
+            if(basetype=="T")  //树形
+            {
+                var centerColumns =[[  
+                      {field:'MKBTRowId',title:'MKBTRowId',width:80,sortable:true,hidden:true},
+                      {field:'MKBTDesc',title:'中心词',width:200,sortable:true},
+                      {field:'MKBTSequence',title:'顺序',width:150,sortable:true,hidden:true },
+                      {field:'MKBTLastLevel',title:'上级节点',width:80,hidden:true}
+                      ]];
+                $("#layoutcenter").empty()
+                $("#layoutcenter").html('<table data-options="fit:true" title="知识条目" id="centergrid" ></table>')
+               
+               var centertreegrid= $("#centergrid").treegrid({
+	                headerCls:'panel-header-gray',
+	                iconCls:'icon-paper',
+                    url:"../csp/dhc.bdp.ext.datatrans.csp?pClassName=web.DHCBL.MKB.MKBAssInterface&pClassMethod=GetTreeJson&base="+base,
+                    columns: centerColumns,  //列信息
+                    //height:$(window).height()-105,   ///需要设置高度，不然数据展开太多时，列头就滚动上去了。
+                    idField: 'MKBTRowId',
+                    treeField:'MKBTDesc',  //树形列表必须定义 'treeField' 属性，指明哪个字段作为树节点。
+                    autoSizeColumn:false,
+                    //scrollbarSize:8,
+                    ClassTableName:'User.MKBTermT2'+base,
+                    SQLTableName:'MKB_TermT2'+base,
+                    //toolbar:'#centerTools',
+                    toolbar:[{ 
+			            text: '<input id="CenterTextDesc" style="width:200px" class="searchbox searchbox-prompt"><span class="searchbox-button" style="margin:1px 0 0 -34px;" id="btnCentSearch"></span>' 
+			        },  {
+				        text: '清屏', 
+				        iconCls: 'icon-refresh', 
+				        id:'btnCenterRefresh'
+				    }],
+                    animate:false,     //是否树展开折叠的动画效果
+                    fitColumns:true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+                    remoteSort:false,  //定义是否从服务器排序数据。true
+                    onDblClickRow:function(rowIndex,rowData){
+                        GotoMenu(rowData.MKBTRowId,rowData.MKBTDesc,rowData.MKBTRowId,base);
+                        RefreshSearchData("User.MKBTermT2"+base,rowData.MKBTRowId,"A",rowData.MKBTDesc);
+                    },
+                    onClickRow:function(rowIndex,rowData){
+                        RefreshSearchData("User.MKBTermT2"+base,rowData.MKBTRowId,"A",rowData.MKBTDesc);   
+                    }
+                    
+                });
+                 
+           		$('#CenterTextDesc').parent().css({"padding":"0 5px 0 2px","background":"#fff"});  //检索框样式
+                //ShowUserHabit("centergrid");
+                $("#CenterTextDesc").searchcombobox({
+                       url:$URL+"?ClassName=web.DHCBL.BDP.BDPDataHistory&QueryName=GetDataForCmb1&ResultSetType=array&tablename=User.MKBTermT2"+base,
+                       onSelect:function () 
+						{	
+							$(this).combobox('textbox').focus();
+							var desc=$("#CenterTextDesc").combobox('getText');
+							$("#centergrid").treegrid("search", desc);
+									
+						}
+                 });
+                $('#CenterTextDesc').combobox('textbox').bind('keyup',function(e){ 
+                    if (e.keyCode==13){ 
+                        SearchFunLibT() 
+                    }
+                }); 
+                $("#btnCentSearch").click(function(e) { 
+                    SearchFunLibT();
+                });
+                SearchFunLibT=function(){
+                    var desc=$("#CenterTextDesc").combobox('getText')
+                   $("#centergrid").treegrid("search",desc);
+                    $('#centergrid').treegrid('unselectAll');
+                }
+                $("#btnCenterRefresh").click(function(e){
+                           $('#centergrid').treegrid('load',  { 
+                                ClassName:"web.DHCBL.MKB.MKBAssInterface",
+                                QueryName:"GetTreeJson",
+                                base: base
+                            });
+                          $('#centergrid').treegrid('unselectAll');
+                          $('#CenterTextDesc').searchcombobox('setValue',"")
+                })
+            }
+            else  //列表型
+            {
+                var centerColumns = [[{
+                    field: 'MKBTDesc',
+                    title: '中心词',
+                    sortable:true,
+                    width: 100
+                },{
+                    field: 'MKBTRowId',
+                    title: 'MKBTRowId',
+                    sortable:true,
+                    hidden:true
+                }]];   
+                $("#layoutcenter").empty()
+                $("#layoutcenter").html('<table data-options="fit:true" title="知识条目" id="centergrid" ></table>')      
+          
+               var centerlistgrid =$("#centergrid").datagrid({
+	               	headerCls:'panel-header-gray',
+	                iconCls:'icon-paper',
+                    url:$URL,   //QUERY_ACTION_URL
+                    queryParams: {
+                        ClassName: "web.DHCBL.MKB.MKBTerm",
+                        QueryName: "GetList",
+                        'base': base
+                    },
+                    //toolbar:'#centerTools',
+                    toolbar:[{ 
+			            text: '<input id="CenterTextDesc" style="width:200px" class="searchbox searchbox-prompt"><span class="searchbox-button" style="margin:1px 0 0 -34px;" id="btnCentSearch"></span>' 
+			        },  {
+				        text: '清屏', 
+				        iconCls: 'icon-refresh', 
+				        id:'btnCenterRefresh'
+				    }],
+                    //scrollbarSize:0,
+                    pagination: true,
+                    fitColumns: true,
+                    //loadMsg: '数据装载中......',
+                    autoRowHeight: true,
+                    singleSelect: true,
+                    pageSize:20,
+                    ClassTableName:'User.MKBTerm97'+base,
+                    SQLTableName:'MKB_Term97'+base,
+                    idField: 'MKBTRowId',
+                    fit: true,
+                    remoteSort: false,
+                    columns: centerColumns,
+                    onLoadSuccess:function(data){
+                         $(this).datagrid('columnMoving');
+                     },
+                    onDblClickRow:function(rowIndex,rowData){
+                          GotoMenu(rowData.MKBTRowId,rowData.MKBTDesc,rowData.MKBTRowId,base);
+                           RefreshSearchData("User.MKBTerm97"+base,rowData.MKBTRowId,"A",rowData.MKBTDesc);
+                    },
+                    onClickRow:function(rowIndex,rowData){
+                          RefreshSearchData("User.MKBTerm97"+base,rowData.MKBTRowId,"A",rowData.MKBTDesc);
+                    }
+                 });
+                 
+                 $('#CenterTextDesc').parent().css({"padding":"0 5px 0 2px","background":"#fff"});  //检索框样式
+				 //$('#centerTools').appendTo('#centergrid .datagrid-toolbar');
+            
+                  //ShowUserHabit("centergrid");
+                 $("#CenterTextDesc").searchcombobox({
+                       url:$URL+"?ClassName=web.DHCBL.BDP.BDPDataHistory&QueryName=GetDataForCmb1&ResultSetType=array&tablename=User.MKBTerm97"+base,
+                        onSelect:function () 
+						{	
+							$(this).combobox('textbox').focus();
+							SearchFunLibL() 
+									
+						}
+                       
+                 });
+                  $('#CenterTextDesc').combobox('textbox').bind('keyup',function(e){ 
+                    if (e.keyCode==13){ 
+                        SearchFunLibL() 
+                    }
+                }); 
+                $("#btnCentSearch").click(function(e) { 
+                    SearchFunLibL();
+                });
+                SearchFunLibL=function(){
+                    var desc=$("#CenterTextDesc").combobox('getText')
+                    $('#centergrid').datagrid('load', { 
+                        ClassName:"web.DHCBL.MKB.MKBTerm",
+                        QueryName:"GetList",
+                        base:base,
+                        desc:desc
+                    });
+                    $('#centergrid').datagrid('unselectAll');
+                }
+               $("#btnCenterRefresh").click(function(e){
+                           $('#centergrid').datagrid('load',  { 
+                                ClassName:"web.DHCBL.MKB.MKBTerm",
+                                QueryName:"GetList",
+                                base: base
+                            });
+                          $('#centergrid').datagrid('unselectAll');
+                          $('#CenterTextDesc').searchcombobox('setValue',"")
+               })
+            }
+        }
+
+    });
+    ShowUserHabit("westgrid");
+   $("#westTextDesc").searchcombobox({
+         url:$URL+"?ClassName=web.DHCBL.BDP.BDPDataHistory&QueryName=GetDataForCmb1&ResultSetType=array&tablename=User.MKBTermBase22",
+     	 onSelect:function () 
+		 {	
+			$(this).combobox('textbox').focus();
+			SearchFunLib1()
+	        
+         }
+       });
+         $('#westTextDesc').combobox('textbox').bind('keyup',function(e){ 
+            if (e.keyCode==13){ 
+                SearchFunLib1() 
+            }
+        }); 
+        $("#btnSearch").click(function(e) { 
+
+            SearchFunLib1();
+        });
+        SearchFunLib1=function(){
+            var desc=$("#westTextDesc").combobox('getText')
+         
+            $('#westgrid').datagrid('load', { 
+                ClassName:"web.DHCBL.MKB.MKBTermBase",
+                QueryName:"GetList",
+                'desc':desc
+            });
+            $('#westgrid').datagrid('unselectAll');
+        }
+      $("#btnWestRefresh").click(function(e){
+	      //document.getElementById('centergrid').style.display='none';  //隐藏mygrid
+		  //$("#div-img").show();  //展示初始图片	
+		  //$("#layoutcenter").empty()
+          //$("#layoutcenter").html('<div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0" /></div>')
+          $("#layoutcenter").empty()
+          //$("#layoutcenter").html('<div class="panel datagrid" style="width:100%;"><div class="panel-header panel-header-gray" style="width: 100%;"><div class="panel-title panel-with-icon">知识条目</div><div class="panel-icon icon-paper"></div><div class="panel-tool"></div></div><div class="datagrid-wrap panel-body" title="" style="width: 100%; height: 100%;"><div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0"></div></div></div>')
+          $("#layoutcenter").html('<div class="panel datagrid" style="height:inherit" ><div class="panel-header panel-header-gray""><div class="panel-title panel-with-icon">知识条目</div><div class="panel-icon icon-paper"></div><div class="panel-tool"></div></div><div class="datagrid-wrap panel-body" title="" style="height:'+heightdata+'px" ><div id="div-img" style="width:100%;overflow-y:hidden;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0"></div></div></div>')
+          $('#westgrid').datagrid('load',  { 
+            ClassName:"web.DHCBL.MKB.MKBTermBase",
+            QueryName:"GetList"
+        });
+          //$("#westgrid").datagrid('selectRow',0);
+          $('#westgrid').datagrid('unselectAll');
+          $('#westTextDesc').searchcombobox('setValue',"")
+          //$("#layoutcenter").html("")
+      })
+})
+</script>
+</HTML>

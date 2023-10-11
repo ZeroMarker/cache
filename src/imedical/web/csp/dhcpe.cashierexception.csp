@@ -17,124 +17,132 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<ADDINS/>
+	<DOCCARD medStepCode="PEBill"></DOCCARD>
 	<SCRIPT language="Cache" RUNAT="SERVER"> 
 		s CashierStat=%request.Get("CashierStat")
 	</SCRIPT>
 <style>
+body{
+	background: backgroundcolor;
+}
 .search-table{
 	border-collapse:separate;
 	border-spacing:0 10px;
 	/*padding: 0 10px;*/
 }
 .r-label{
+	padding-left: 20px;
+}
+.r-labelnew{
 	padding-left: 10px;
 }
-.r-label-1{
+/*
+.{
 	padding-left: 50px;
 }
+*/
 .newclsInvalid{
 	border-color: red;
 	color: red;
 }
-.panel-header{
-	border-bottom: 0;
-}
-/*弹出框里标签右对齐 并且有10px内边距*/
 
-.tdlabel
-{
-  padding-left: 10px;
-  padding-right: 10px;
-  text-align:right;
-}
-.addtable{
-	border-collapse:separate;
-	border-spacing:0 6px;
-	/*padding: 0 10px;*/
-}
+
+
 
 
 </style>
 
 	<server>
-		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+		//do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		//w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
 		w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+		//w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+		//w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
         d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
 	</server>
+	<script type="text/javascript">
+if (("undefined"==typeof HISUIStyleCode)||(HISUIStyleCode==null)){
+	var backgroundcolor="#fff"
+}else{
+	if(HISUIStyleCode=="lite") {
+		var backgroundcolor="#F5F5F5"
+	}else{
+		var backgroundcolor="#fff"
+	}
+}
+</script>
 </head>
-<body>
-<div class="hisui-layout" fit="true">
-	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:175px;padding:10px 10px 0 10px;">
-		<div class="hisui-panel" data-options="title:'体检收费异常处理',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
+<body style="padding:10px;box-sizing: border-box;">
+<div class="hisui-panel" fit="true" data-options="title:'体检收费异常处理',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:132px;border-bottom:1px solid #e2e2e2;border-radius:0">
+
 			<table class="search-table">
 				<tr>
 				
-				  <td class="r-label"><label for="InvNo">发票号</label></td>
-					<td>
+				  <td class="r-labelnew"><label for="InvNo">#(..Get("发票号"))#</label></td>
+					<td class="r-labelnew">
 						<input class="textbox" id="InvNo">
 					</td>
 					
-					<td class="r-label r-label-1"><label for="BeginDate">开始日期</label></td>
+					<td class="r-label "><label for="BeginDate">#(..Get("开始日期"))#</label></td>
 					<td>
 						<input id="BeginDate" class="hisui-datebox textbox">
 					</td>
-					<td class="r-label r-label-1"><label for="CardTypeNew">卡类型</label></td>
+					<td class="r-label "><label for="CardTypeNew">#(..Get("卡类型"))#</label></td>
 					<td>
 						<input class="textbox" disabled id="CardTypeNew"/> 
 					</td>
 					
-					<td class="r-label r-label-1">
+					<td class="r-label ">
 						<a id="BReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
 					</td>
-					<td class="r-label r-label-1">
+					<td class="r-label ">
 						
 					</td>
 				</tr>
 				<tr>
-				   <td class="r-label"><label for="RegNo">登记号</label></td>
-					<td>
+				   <td class="r-labelnew"><label for="RegNo">#(..Get("登记号"))#</label></td>
+					<td class="r-labelnew">
 						<input class="textbox" id="RegNo">
 					</td>
 					
-					<td class="r-label r-label-1"><label for="EndDate">结束日期</label></td>
+					<td class="r-label "><label for="EndDate">#(..Get("结束日期"))#</label></td>
 					<td>
 						<input id="EndDate" class="hisui-datebox textbox">
 					</td>
-					<td class="r-label r-label-1"><label for="CardNo">卡号</label></td>
+					<td class="r-label "><label for="CardNo">#(..Get("卡号"))#</label></td>
 					<td>
 						<input class="textbox" id="CardNo"/>
 					</td>
 					
-					<td class="r-label r-label-1">
+					<td class="r-label ">
 						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
 					</td>
-					<td class="r-label r-label-1">
+					<td class="r-label ">
 						
 					</td>
 		
 				</tr>
 				<tr>
-					<td class="r-label"><label for="PatName">姓名</label></td>
-					<td>
+					<td class="r-labelnew"><label for="PatName">#(..Get("姓名"))#</label></td>
+					<td class="r-labelnew">
 						<input class="textbox" id="PatName" >
 					</td>
-					<td class="r-label r-label-1"><label for="User">收费员</label></td>
+					<td class="r-label "><label for="User">#(..Get("收费员"))#</label></td>
 					<td>
 						<input class="textbox" id="User" value="#(%session.Get("LOGON.USERNAME"))#">
 					</td>
-					 <td class="r-label r-label-1"><label for="CashierStat">状态</label></td>
+					 <td class="r-label "><label for="CashierStat">#(..Get("状态"))#</label></td>
 					<td>
 						<select id="CashierStat" class="hisui-combobox" name="state" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true">
-							<option value="ALL">全部</option>
-							<option value="SE" selected >收费异常</option>
-							<option value="TE">退费异常</option>
+							<option value="ALL">#(..Get("全部"))#</option>
+							<option value="SE" selected >#(..Get("收费异常"))#</option>
+							<option value="TE">#(..Get("退费异常"))#</option>
 						</select>
 					</td>
-					<td class="r-label r-label-1">
+					<td class="r-label ">
 						<a id="BRelate" href="#" class="hisui-linkbutton" style="display:none" data-options="">关联订单</a>
 					</td>
 					<td><input type="hidden" id="RPFInvNo"/><input type="hidden" id="RPFRowId"/></td>
@@ -143,12 +151,12 @@
 						
 			</table>
 		</div>
-	</div>
-		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
-			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-					<table data-options="bodyCls:'panel-header-gray'" id="InvListQueryTab"></table>
-				</div>
-        	</div>
+	
+		<div data-options="region:'center',title:'',border:false" >
+				<table id="InvListQueryTab"></table>
+			</div>
+		
+      </div>
 </div>
 <script type="text/javascript" src="../scripts/dhcpe.cashierexception.js"></script>
 <script type="text/javascript" src="../scripts/websys.jquery.js"></script>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--opdoc.suspendrecent.hui.csp 医生暂时离开--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+</style>
+<Server>
+s sysDateFormat=##class("websys.Conversions").DateFormat()
+s PersonFlag=%request.Get("PersonFlag")
+s InitDocID=%request.Get("InitDocID")
+s InitLocID=%request.Get("InitLocID")
+s SuspendStatusFlag=##class(DHCDoc.OPDoc.SuspendRecentDoc).CheckSuspendStatus(InitLocID,InitDocID)
+s InitRowID=$P(SuspendStatusFlag,"^",2)
+s InitFlag=$P(SuspendStatusFlag,"^",1)
+</Server>
+</head>
+<body>
+	<csp:Include Page="opdoc.suspendrecent.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			sysDateFormat:"#(sysDateFormat)#",
+			PersonFlag:"#(PersonFlag)#",
+			InitDocID:"#(InitDocID)#",
+			InitLocID:"#(InitLocID)#",
+			InitRowID:"#(InitRowID)#",
+			InitFlag:"#(InitFlag)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/SuspendRecent.hui.js"></script>
+</body>
+</html>

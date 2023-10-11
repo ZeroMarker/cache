@@ -1,0 +1,380 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.nursereferconfig.csp -->
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:482px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:496px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+			border:1px solid transparent;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+			height:32px;
+			/* white-space:nowrap !important; */
+			overflow:hidden;
+			border:1px solid transparent;
+		}
+		.form-table td:first-child {
+			width: 70px;
+			text-align: right;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		#textArea {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.gridglobal {
+			width:100%;
+			border-collapse: separate;
+			border-spacing: 10px 10px;
+			border:1px solid transparent;
+		}
+		.size {
+			width: 75px !important;
+		}
+		.tdsize {
+			padding:0px;
+		}
+		.gridglobal tr td span {
+			margin-left:5px;
+		}
+		#btn-create {
+			display: none;
+		}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/nursereferconfig.js" charset=gbk></script>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:40px;">
+			<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+			<input id="_HospList" class="textbox"/>
+		</div>
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'west',border:false,split:true" style="width:700px;">
+					<div class="hisui-layout" data-options="fit:true,border:false">
+						<div data-options="region:'north',split:true,border:false" style="height:96px;">
+							<div class="hisui-panel"  title="页面布局" data-options="fit:true,iconCls:'icon-gear-gray',headerCls:'panel-header-gray'">
+								<form id="view-form" method="post">
+									<table class="gridglobal">
+										<tr>	
+											<td class="r-label tdsize">左侧页签区比例</td>
+											<td><input class="hisui-numberbox textbox size" id="RVPanelTab" name="RVPanelTab" placeholder="50"><span>%</span></td>
+											<td class="r-label tdsize">页签内左侧面板比例</td>
+											<td><input class="hisui-numberbox textbox size" id="RVTabList" name="RVTabList" placeholder="50"><span>%</span></td>
+											<td><input class="hisui-numberbox textbox size" id="RowID" name="RowID" style="display:none;"></td>
+											<td>
+												<a href="#" title="如果未配置比例，分别默认为'50%、50%'" class="hisui-tooltip emrtip" data-options="position:'top'">
+													<i class="icon-help">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+												</a>
+											</td>
+											<td style="width:150px;text-align:right;">
+												<a id="btnsave" class="hisui-linkbutton hover-dark">保存</a>
+											</td>
+										</tr>
+									</table>
+								</form>
+							</div>
+						</div>
+						<div data-options="region:'center',split:true,border:false" style="padding-top:5px;">
+							<div class="hisui-panel"  title="页签" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+								<div id="toolbar_Tab">
+									<div class="button-group">
+										<a id="btn-add" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="addTab()">新增</a>
+										<a id="btn-update" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="updateTab()">修改</a>
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-arrow-top',plain:true" onclick="moveTab('UP')">上移</a>
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-arrow-bottom',plain:true" onclick="moveTab('Down')">下移</a>
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeTab()">删除</a>
+										<a id="btn-create" class="hisui-linkbutton" data-options="iconCls:'icon-update',plain:true" onclick="autoCreateTab()">生成默认数据</a>
+									</div>
+								</div>	
+								<table id="tabgrid"></table>
+								<div id="add-dialog" class="hisui-dialog" data-options="shadow:false,modal:true,closed:true,
+									buttons:[
+										{
+											id: 'btn-dialog-save',
+											text:'保存',
+											handler: function(){ saveTab(); }
+										},
+										{
+											id: 'btn-dialog-cancel',
+											text:'取消',
+											handler: function(){$HUI.dialog('#add-dialog').close();}
+										}
+									]">
+									<div class="hisui-panel" data-options="border:false,fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+										<form id="add-form" method="post" >
+											<table class="form-table" data-options="fit:true">
+												<tr>
+													<td class="r-label" style="width:65px;">名称</td>
+													<td>
+														<input placeholder="请输入页签名称" name="Name" class="textbox" id="Name"> 
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">代码</td>
+													<td>
+														<input placeholder="请输入页签代码" name="Code" class="hisui-validatebox textbox" id="Code" data-options="required:true">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">CSP</td>
+													<td>
+														<input name="Url" class="textbox" id="Url">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">主接口方法</td>
+													<td>
+														<input placeholder="例如：NurMp.Service.Refer.Interface:FindDiagnosis" name="MainFun" class="textbox" id="MainFun">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">主方法参数</td>
+													<td>
+														<input name="MainParemeter" class="textbox" id="MainParemeter">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">次接口方法</td>
+													<td>
+														<input name="SubFun" class="textbox" id="SubFun">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">次方法参数</td>
+													<td>
+														<input name="SubParemeter" class="textbox" id="SubParemeter">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">引用格式</td>
+													<td>
+														<input name="FormatPrefix" class="textbox textFormat" id="FormatPrefix" placeholder="前缀" style="width:62px;">
+														<input name="ReferFormat" class="textbox textFormat" id="ReferFormat" placeholder="内容" style="width:202px;">
+														<input name="FormatSuffix" class="textbox textFormat" id="FormatSuffix" placeholder="后缀" style="width:62px;">
+														<a class="hisui-tooltip" href="#" title="右键菜单可以选择配置格式，可以创建各种组合，举例如下：<br>1. 内容配置“{列名}：{值}；”，效果会是“名称：维生素C片；类型：取药医嘱；”; <br>2. 前缀配置“{列名}：”，内容配置“{值}；”，效果会是“名称,类型：维生素C片；取药医嘱；”; <br>3. 前缀输入“医嘱信息：”，内容配置“{值}；”，后缀输入“（备注）”，效果会是“医嘱信息：维生素C片；取药医嘱；（备注）”; <br>可根据实际情况尝试配置模板。" data-options="position:'top'">
+															<i class="icon icon-help">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+														</a>
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">自动换行</td>
+													<td>
+														<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsNowrap" name="IsNowrap">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">倒序查询</td>
+													<td>
+														<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsRever" name="IsRever">
+														<span style="font-size:12px;color:red;">（仅用于护理记录）</span>
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">是否停用</td>
+													<td>
+														<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsStop" name="IsStop">
+														<input name="RowID" id="rowid" type="hidden" value="">
+													</td>
+												</tr>
+											</table>
+										</form>
+									</div>
+								</div>
+								<div id="menu-format" class="hisui-menu" data-options="onClick:menuHandler" style="border:1px solid #ccc;">
+									<div data-options="name:'value'">{值}</div>
+									<div data-options="name:'name'">{列名}</div>
+									<div data-options="name:'enter'">{换行符}</div>
+									<div data-options="name:'blank'">{空格}</div>
+									<div data-options="name:'（'">（</div>
+									<div data-options="name:'）'">）</div>
+									<div data-options="name:'：'">：</div>
+									<div data-options="name:'；'">；</div>
+									<div data-options="name:'，'">，</div>
+									<div data-options="name:'.'">.</div>
+									<div data-options="name:'。'">。</div>
+									<div data-options="name:'、'">、</div>
+									<div data-options="name:'+'">+</div>
+									<div data-options="name:'-'">-</div>
+									<div data-options="name:'='">=</div>
+									<div data-options="name:'——'">——</div>
+									<div data-options="name:'/'">/</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+				<div data-options="region:'center',border:false,split:true" style="padding-left:5px;">
+					<div class="hisui-panel" title="列属性" data-options="fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+						<div id="toolbar_TabSub">
+							<div class="button-group">
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="addProperty()">新增</a>
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="updateProperty()">修改</a>
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-arrow-top',plain:true" onclick="moveProperty('UP')">上移</a>
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-arrow-bottom',plain:true" onclick="moveProperty('Down')">下移</a>
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeProperty()">删除</a>
+							</div>
+						</div>	
+						<table id="propertygrid"></table>
+						<div id="property-dialog" class="hisui-dialog" data-options="shadow:false,modal:true,closed:true,
+							buttons:[
+								{
+									id: 'btn-property-save',
+									text:'保存',
+									handler: function(){ saveProperty(); }
+								},
+								{
+									id: 'btn-property-cancel',
+									text:'取消',
+									handler: function(){$HUI.dialog('#property-dialog').close();}
+								}
+							]">
+							<div class="hisui-panel" data-options="border:false,fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+								<form id="property-form" method="post" >
+									<table class="form-table">
+										<tr>
+											<td class="r-label" style="width:60px;">名称</td>
+											<td colspan=3>
+												<input placeholder="请输入属性名称" name="Name" class="hisui-validatebox textbox" id="Name" data-options="required:true"> 
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">代码</td>
+											<td colspan=3>
+												<input placeholder="请输入属性代码" name="Code" class="hisui-validatebox textbox" id="Code" data-options="required:true">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">宽度</td>
+											<td colspan=3>
+												<input name="Width" class="textbox" id="Width">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">对齐方式</td>
+											<td colspan=3> 
+												<select id="Align" class="hisui-combobox" name="Align">
+													<option value="L" selected>Left</option>
+													<option value="C">Center</option>
+													<option value="R">Right</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">固定列</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsFrozen" name="IsFrozen">
+											</td>
+											<td class="r-label">是否隐藏</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsHidden" name="IsHidden">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">医嘱ID</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsOrderId" name="IsOrderId">
+												<span style="font-size:12px;color:red;">（检验、检查）</span>
+											</td>
+											<td class="r-label">项目编号</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsItemNo" name="IsItemNo">
+												<span style="font-size:12px;color:red;">（检验）</span>
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">结果标记</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsResult" name="IsResult">
+												<span style="font-size:12px;color:red;">（检验、检查）</span>
+											</td>
+											<td class="r-label">异常提示</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="IsAbnormal" name="IsAbnormal">
+												<span style="font-size:12px;color:red;">（检验）</span>
+											</td>
+										</tr>
+										<tr>
+											<td colspan=4><input name="RowID" id="rowid" type="hidden" value=""></td>
+										</tr>
+									</table>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

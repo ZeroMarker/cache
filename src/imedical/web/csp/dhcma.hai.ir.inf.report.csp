@@ -20,19 +20,584 @@
 		    }
 			//确诊未报的感染诊断
 			Set DiagList = ##class(DHCHAI.IRS.CCScreeningSrv).GetUnRepDiag(EpisodeID)
+		    Set LabAntiOprVal = ##class(DHCHAI.BT.Config).GetValByCode("LabAntOprIsRequired")
+		    Set LabIsNeed = $p(LabAntiOprVal,"-",1)
+			Set AntIsNeed = $p(LabAntiOprVal,"-",2)
+			Set OprIsNeed =$p(LabAntiOprVal,"-",3)
+			Set OpIsShow = ##class(DHCHAI.BT.Config).GetValByCode("InfRepOpinionIsShow")
+			Set BasisNeed = ##class(DHCHAI.BT.Config).GetValByCode("InfDiagBasisIsRequired")
    	   </server>
 	</head>
 	
 	<body>  
+	<!-- 主页面-->
+	<div id="INFReport" class="hisui-layout" data-options="fit:true" style="width:100%;height:100%;">
+		<div data-options="region:'center',fit:true,border:false,collapsible:false">
+			<div class="page-body" id="divbody" style="width:1285px;">
+				<div class="report-header">
+					<span>#(..Get("医院感染报告"))#</span>
+				</div>
+				<div class="report-content">
+					<div class="hisui-panel" id="BaseInfo" data-options="title:'基本信息',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<div id="Sex"></div>
+						<div class="PatInfo">				    
+							<span class="patName"></span><span id="txtPatName"></span>
+							<span class="sline">/</span>
+							<span class="infoLabel"></span><span id="Age"></span>
+							<span class="sline">/</span>
+							<span class="infoLabel">#(..Get("登记号"))#:</span><span id="txtPapmiNo"></span>
+							<span class="sline">/</span>
+							<span class="infoLabel">#(..Get("病案号"))#:</span><span id="txtMrNo"></span>
+							<span class="sline">/</span>
+							<span class="infoLabel">#(..Get("入院日期"))#:</span><span id="txtAdmDate"></span>
+							<span class="sline">/</span>
+							<span class="infoLabel">#(..Get("出院日期"))#:</span><span id="txtDisDate"></span>
+                            <span><a href="#" id="btnAbstractMsg" >#(..Get("摘要"))#</a></span>
+						</div>
+						
+						<div id="TransInfo" style="padding:10px;"></div>
+						
+						<table id="PatInfoTab"  class="report-tab">
+							<tr class="report-tr">
+								<td  style="padding-left:10px;">#(..Get("入院诊断"))#:</td>				
+								<td><input class="textbox readonly-noborder" id="txtAdmitDiag" style="width:200px;" /></td>
+								<td class="report-td">#(..Get("主要诊断"))#:</td>				
+								<td><input class="textbox readonly-noborder" id="txtMainDiag"  style="width:200px;" /></td>
+								<td class="report-td">#(..Get("其他诊断"))#:</td>					
+								<td colspan="3"><input class="textbox readonly-noborder" id="txtOtherDiag"  style="width:580px;"  /></td>
+							</tr>
+							<tr class="report-tr">
+							    <td style="padding-left:10px;">#(..Get("报告时间"))#:</td>				
+								<td><input class="textbox readonly-noborder" id="txtRepDate"  style="width:200px;" /></td>
+								<td class="report-td">#(..Get("报告科室"))#:</td>					
+								<td><input class="textbox readonly-noborder" id="txtRepLoc"  style="width:200px;"  /></td>					
+								<td class="report-td">#(..Get("报告人"))#:</td>				
+								<td><input class="textbox readonly-noborder" id="txtRepUser"  style="width:200px;" /></td>
+								<td class="report-td">#(..Get("报告状态"))#:</td>					
+								<td><input class="textbox readonly-noborder" id="txtRepStatus"  style="width:180px;color:red;font-weight: bold;"  /></td>
+							</tr>
+						</table>
+					</div>
+                    <table class="hisui-datagrid" title="已报记录" id="gridReport" style="width:auto;height:160px"></table>
+					<div class="hisui-panel" id="InfPreFactor" data-options="title:'易感因素',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:3px">
+						<div id="chkPreFactor" style="margin-left:3px;">
+						</div>
+					</div>
+					<div class="hisui-panel" id="InfInvasOper" data-options="title:'侵害性操作',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:3px">
+						<div id="chkInvasOper" style="margin-left:3px;">
+						</div>
+					</div>
+					<div class="hisui-panel" id="INFDiagnos" data-options="title:'感染诊断',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table id="INFDiagnosTab1"  class="report-tab"style="padding-top: 5px;">
+							<tr class="report-tr">
+								<td class="report-td"><font color='red'>*</font>#(..Get("感染类型"))#</td>				
+								<td>
+									<input class='hisui-radio' type="radio"  label='医院感染' name="radInfType" id="radInfType-1" value="1" data-options="checked:true">
+									<input class='hisui-radio' type="radio"  label='社区感染' name="radInfType" id="radInfType-0" value="0" >					
+							
+								</td>
+								<td class="report-td"><font color='red'>*</font>#(..Get("感染诊断"))#</td>				
+								<td><input class="textbox hisui-combotree" id="cboInfPos" style="width:300px;" /></td>
+								<td class="report-td"><font color='red'>*</font>#(..Get("感染日期"))#</td>					
+								<td><input class="hisui-datebox textbox" id="txtInfDate" style="width:180px;" /></td>	
+								<td class="report-td" style="width:100px;">#(..Get("感染转归日期"))#</td>				
+								<td><input class="hisui-datebox textbox " id="txtInfXDate" style="width:194px;"  /></td>					
+							</tr>
+							<tr class="report-tr">
+									
+								<td class="report-td ">#(..Get("感染转归"))#</td>					
+								<td><input class="textbox" id="cboInfEffect" style="width:180px;" /></td>
+								<td class="report-td">#(..Get("与死亡关系"))#</td>					
+								<td><input class="textbox" id="cboDeathRelation" style="width:300px;" /></td>
+								<td class="r-label">
+									<label for="cboLoc">#(..Get("感染科室"))#</label>
+								</td>
+								<td>
+									<input class="textbox" id="txtInfLoc"  type='hidden' value="" />
+									<input class="textbox" id="cboInfLoc" style="width:180px" disabled />
+								</td>
+							</tr>
+							<tr class="report-tr">
+								<td class="report-td" style="width:100px;">
+									<span id="LabDiagBasis"><font color='red'>*</font></span>#(..Get("诊断依据"))#
+									<div> 
+										<a class="hisui-linkbutton" id="btnDiagBasis"  data-options="iconCls:'icon-resort',plain:true,"></a>				 
+									</div>
+								</td>				
+								<td  colspan="7" style="padding-right: 10px;">
+									<textarea class="textbox" id="txtDiagnosisBasis" style="margin-top: 5px;width:1170px;height:80px;margin-bottom:6px;" placeholder="#(..Get("请填写诊断依据"))#"></textarea> 
+								</td>
+							</tr>
+						
+							<tr class="report-tr">
+								<td class="report-td"  style="width:100px;">						
+									<div> 
+										#(..Get("感染性疾病</br>病程"))#<a class="hisui-linkbutton" id="btnDiagCourse"  data-options="iconCls:'icon-resort',plain:true,"></a>				 
+									</div>
+								</td>				
+								<td colspan="7">
+									<textarea class="textbox" id="txtDiseaseCourse" style="width:1170px;height:80px;margin-bottom:6px;" placeholder="#(..Get("请填写感染性疾病病程"))#"></textarea> 
+								</td>					
+							</tr>
+						</table>		
+					</div>
+					
+					
+					<div class="hisui-panel " data-options="title:'病原学检验',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table id="TabLabMsg">
+							<tr>
+								<td style="padding:5px 10px;">
+									<span><font color='red'>*</font>#(..Get("是否存在与此次感染相关病原学检验信息"))#：</span>
+								</td>
+								<td>
+									<input class='hisui-radio' type="radio"  label='是' name="radInfLab" id="radInfLab-1" value="1" data-options="radioClass:'hischeckbox_square-blue',required:true" />
+									<input class='hisui-radio' type="radio"  label='否' name="radInfLab" id="radInfLab-0" value="0" data-options="radioClass:'hischeckbox_square-blue',required:true" />
+								</td>
+							</tr>
+						</table>	
+						<div id="divINFLab">
+							<div style="margin-top:-10px;">	
+								<table id="gridINFLab" data-options="toolbar:'#InfLabBar',border:false"  style="height:180px;"></table>
+								<div id="InfLabBar">	
+									<span id="TabLabLine" ></span>													
+									<a class="hisui-linkbutton" id="btnINFLabSync"  data-options="iconCls:'icon-import',plain:true,stopAllEventOnDisabled:true"> 提取数据 </a>				 
+									<a class="hisui-linkbutton" id="btnINFLabAdd" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true">  新增 </a>
+									<a class="hisui-linkbutton" id="btnINFLabDel"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" >删除 </a>		
+								</div>						
+							</div>
+						</div>	
+					</div>
+					
+					<div class="hisui-panel " data-options="title:'手术信息',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table  id="TabOprMsg">
+							<tr>
+								<td style="padding:5px 10px;">
+									<span><font color='red'>*</font>#(..Get("是否存在与此次感染有相关性的手术信息"))#：</span>
+								</td>
+								<td>
+									<input class='hisui-radio' type="radio"  label='是' name="radInfOpr" id="radInfOpr-1" value="1" data-options="radioClass:'hischeckbox_square-blue',required:true" />
+									<input class='hisui-radio' type="radio"  label='否' name="radInfOpr" id="radInfOpr-0" value="0" data-options="radioClass:'hischeckbox_square-blue',required:true" />
+								</td>
+							</tr>
+						</table>	
+						<div id="divINFOPS">
+							<div style="margin-top:-10px;">						
+								<table id="gridINFOPS" data-options="toolbar:'#InfOPSBar',border:false"  style="height:180px;"></table>
+								<div id="InfOPSBar" >
+									<span  id="TabOprLine" ></span>
+									<a class="hisui-linkbutton" id="btnINFOPSSync"  data-options="iconCls:'icon-import',plain:true,stopAllEventOnDisabled:true"> 提取数据 </a>				 
+									<a class="hisui-linkbutton" id="btnINFOPSAdd" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true">  新增 </a>
+									<a class="hisui-linkbutton" id="btnINFOPSDel"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" >删除 </a>		
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="hisui-panel " data-options="title:'抗菌用药',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table id="TabAntiMsg">
+							<tr>
+								<td style="padding:5px 10px;">
+									<span><font color='red'>*</font>#(..Get("是否存在与此次感染相关的抗菌用药信息"))#：</span>
+								</td>
+								<td>
+									<input class='hisui-radio' type="radio"  label='是' name="radInfAnti" id="radInfAnti-1" value="1" data-options="radioClass:'hischeckbox_square-blue',required:true" />
+									<input class='hisui-radio' type="radio"  label='否' name="radInfAnti" id="radInfAnti-0" value="0" data-options="radioClass:'hischeckbox_square-blue',required:true" />
+								</td>
+							</tr>
+						</table>
+						<div id="divINFAnti">
+							<div style="margin-top:-10px;">	
+								<table id="gridINFAnti" data-options="toolbar:'#InfAntiBar',border:false"  style="height:180px;"></table>
+								<div id="InfAntiBar">	
+									<span  id="TabAntiLine" ></span>
+									<a class="hisui-linkbutton" id="btnINFAntiSync"  data-options="iconCls:'icon-import',plain:true,stopAllEventOnDisabled:true"> 提取数据 </a>				 
+									<a class="hisui-linkbutton" id="btnINFAntiAdd" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true">  新增 </a>
+									<a class="hisui-linkbutton" id="btnINFAntiDel"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" >删除 </a>		
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id="INFOpinion" style="display:none;">
+						<div class="hisui-panel" data-options="title:'管理科室评价',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+							<table>
+								<tr>
+									<td style="padding-left:10px;padding-right:10px">#(..Get("评价"))#<div><a class="hisui-linkbutton" id="btnOpinion" data-options="iconCls:'icon-resort',plain:true,"></a></div></td>				
+									<td >
+										<textarea class="textbox" id="txtOpinion" style="width:1220px;height:80px;margin-top:8px;margin-bottom:5px;" placeholder="#(..Get("请填写指导意见或评价"))#"></textarea> 
+									</td>					
+								</tr>
+							</table>		
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="page-footer">
+				<a id="btnSubmit"  class="hisui-linkbutton">提交</a>
+				<a id="btnCheck"  class="hisui-linkbutton">审核</a>
+				<a id="btnUnCheck"  class="hisui-linkbutton">取消审核</a>
+				<a id="btnDelete"  class="hisui-linkbutton">删除</a>
+				<a id="btnReturn"  class="hisui-linkbutton">退回</a>
+				<a id="btnExport"  class="hisui-linkbutton">导出</a>
+				<a id="btnClose"  class="hisui-linkbutton">关闭</a>
+			</div>
+		</div>
+	</div>
+
+	<!--诊断依据-->
+	<div id="LayerDiagBasis" style="overflow:hidden;display:none;" >
+		<div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 0px 10px;height:450px">  
+	    	<table id="gridDiagBasis" data-options="checkbox:true" ></table>
+		</div>
+	</div>	
+
+	<!--感染性疾病病程-->
+	<div id="LayerDiagCourse" style="overflow:hidden;display:none;">  
+		<div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 0px 10px;height:350px">  
+			<table id="gridDiagCourse"></table>
+		</div>
+	</div>	
+
+	<!--评价意见-->
+	<div id="LayerOpinion" style="overflow:hidden;display:none;">  
+		<div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 0px 10px;height:350px">  
+			<table id="gridOpinion"></table>
+		</div>
+	</div>	
+
+	<!-- 手术信息提取层 -->
+	<div id="LayerOpenINFOPSSync" style="overflow:hidden;padding:10px;display:none;">  
+		<table id="gridINFOPSSync"></table>
+	</div>	
+
+	<!-- 手术信息编辑层 -->
+	<div id="LayerOpenINFOPSEdit" style="overflow:hidden;display:none;">  
+		<table class="search-table" >
+			<tr>
+				<td class="r-label">
+					<label for="cboOperType"><font color='red'>*</font>#(..Get("手术类型"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboOperType" style="width:260px"/>
+				</td>
+				<td class="r-label">
+					<label for="cboOper"><font color='red'>*</font>#(..Get("手术名称"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="cboOper" style="width:260px" placeholder="请输入一个字符后查询" />
+				</td>
+			</tr>	
+			<tr>
+				<td class="r-label">
+					<label for="cboOperLoc"><font color='red'>*</font>#(..Get("手术科室"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="cboOperLoc" style="width:260px" placeholder="请输入一个字符后查询" />
+				</td>
+				<td class="r-label">
+					<label for="txtOperSttDateTime"><font color='red'>*</font>#(..Get("开始时间"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datetimebox textbox" id="txtOperSttDateTime" style="width:260px" data-options="showSeconds:false"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="txtOperEndDateTime"><font color='red'>*</font>#(..Get("结束时间"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datetimebox textbox" id="txtOperEndDateTime" style="width:260px" data-options="showSeconds:false"/>
+				</td>
+				<td class="r-label">
+					<label for="cboOperDoctor"><font color='red'>*</font>#(..Get("手术医生"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="cboOperDoctor" style="width:260px" placeholder="请输入一个字符后查询" />
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="cboAnesMethod"><font color='red'>*</font>#(..Get("麻醉方式"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboAnesMethod" style="width:260px"/>
+				</td>
+				<td class="r-label">
+					<label for="cboIncisionr"><font color='red'>*</font>#(..Get("切口类型"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboIncisionr" style="width:260px"/>
+				</td>
+			</tr>	
+			<tr>
+				<td class="r-label">
+					<label for="cboHealing">#(..Get("愈合情况"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboHealing" style="width:260px" />
+				</td>
+				<td class="r-label">
+					<label for="cboNNISLevel"><font color='red'>*</font>#(..Get("NNIS分级"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboNNISLevel" style="width:260px"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="cboASAScore">#(..Get("ASA评分"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboASAScore" style="width:260px"/>
+				</td>
+				<td class="r-label">
+					<label for="txtOperMin">#(..Get("手术时长(时)"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="txtOperHour"  style="width:254px;" />
+				</td>
+			</tr>	
+			<tr>
+				<td class="r-label">#(..Get("手术部位"))#</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboInfType" style="width:260px;" />
+				</td>
+				<td class="r-label"></td>
+				<td>
+					<input style="padding-left:20px" class='hisui-checkbox' type="checkbox"  label='引起院感' id="chkIsInHospInf">
+					<input style="padding-left:20px" class='hisui-checkbox' type="checkbox"  label='切口感染' id="chkIsOperInf">
+					<input  class='hisui-checkbox' type="checkbox"  label='植入物' id="chkImplants">
+				</td>
+			</tr>
+		</table>
+	</div>	
+
+	<!-- 病原学检验提取 -->
+	<div id="LayerOpenINFLabSync" style="overflow:hidden;padding:10px;display:none;">  
+		<table id="gridINFLabSync"></table>
+	</div>
+
+	<!-- 病原学检验编辑 -->
+	<div id="LayerOpenINFLabEdit" style="overflow:hidden;display:none;">  
+		<table class="search-table" >
+			<tr>
+				<td class="r-label">
+					<label for="cboTestSet"><font color='red'>*</font>#(..Get("检验医嘱"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="cboTestSet"   style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="cboSubmissLoc"><font color='red'>*</font>#(..Get("送检科室"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="cboSubmissLoc"  style="width:240px" placeholder="请输入一个字符后查询"/>
+				</td>
+				<td class="r-label">
+					<label for="cboAssayMethod"><font color='red'>*</font>#(..Get("检验方法"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboAssayMethod"  style="width:240px" />
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="cboSpecimen"><font color='red'>*</font>#(..Get("标本"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="cboSpecimen"   style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="cboPathogenTest"><font color='red'>*</font>#(..Get("病原学检验"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboPathogenTest"  style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="txtSubmissDate"><font color='red'>*</font>#(..Get("送检日期"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox" id="txtSubmissDate"  style="width:240px" />
+				</td>
+			</tr>
+	      	
+			<tr>
+				<td class="r-label">
+					<label for="cboLABIsEPD">#(..Get("传染病病原"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboLABIsEPD"   style="width:240px" />
+				</td>
+			</tr>	
+		</table>
+		<div data-options="region:'center',border:false,collapsible:false" style="padding:0px 10px;">
+			<table id="gridRstSen" data-options="toolbar:'#ToolBar'" style="height:360px;"></table>
+				<div id="ToolBar" style="height:85px;" >
+					<table class="search-table">
+						<tr>
+							<td class="r-label">
+								<label for="cboBacteria">#(..Get("病原体"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="cboBacteria"  style="width:220px" />
+							</td>
+							<td class="r-label">
+								<label for="cboAntibiotic">#(..Get("抗生素"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="cboAntibiotic"  style="width:220px" />
+							</td>
+							<td class="r-label">
+								<label for="cboRstSen">#(..Get("药敏结果"))#</label>
+							</td>
+							<td>
+								<input class="hisui-combobox textbox" id="cboRstSen" />
+							</td>
+
+						</tr>							
+					</table>
+					<span class="line" style="display: block;border-bottom: 1px dashed rgb(204, 204, 204);margin: 1px 0px;clear: both;/* padding-bottom: 5px; */"></span>
+					<div style="padding: 0px 0 10px 0px;">
+						<a class="hisui-linkbutton" id="btnAddSen"  data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true"> 新增 </a>				 
+						<a class="hisui-linkbutton" id="btnDelSen"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" >删除 </a>		
+					</div>
+				</div>
+				
+			</table>
+		</div>
+	</div>		
+
+	<!-- 抗菌药物提取 -->
+	<div id="LayerOpenINFAntiSync" style="overflow:hidden;padding:10px;display:none;">  
+		<table id="gridINFAntiSync"></table>
+	</div>	
+
+	<!-- 抗菌药物编辑  -->
+	<div id="LayerOpenINFAntiEdit" style="overflow:hidden;padding-right:10px;display:none; margin-bottom: -10px">  
+		<table class="search-table" >
+			<tr>
+				<td class="r-label">
+					<label for="cboAnti"><font color='red'>*</font>#(..Get("医嘱名"))#</label>
+				</td>
+				<td colspan="3">
+					<input class="textbox" id="cboAnti" style="width:650px"/>
+				</td>
+			</tr>	
+			<tr>
+				<td class="r-label">
+					<label for="txtDoseQty"><font color='red'>*</font>#(..Get("剂量"))#</label>
+				</td>
+				<td>
+					<input class="hisui-numberbox textbox" id="txtDoseQty" data-options="precision:2,fix:false,max:200,min:0" style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="cboDoseUnit"><font color='red'>*</font>#(..Get("剂量单位"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboDoseUnit"  style="width:240px" />
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="cboPhcFreq"><font color='red'>*</font>#(..Get("频次"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboPhcFreq"  style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="cboAdminRoute"><font color='red'>*</font>#(..Get("给药途径"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboAdminRoute" style="width:240px" />
+				</td>
+			</tr>
+			<tr>
+				
+				<td class="r-label">
+					<label for="cboMedPurpose"><font color='red'>*</font>#(..Get("目的"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboMedPurpose" style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="cboTreatmentMode">#(..Get("治疗用药方式"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboTreatmentMode" style="width:240px" />
+				</td>
+			</tr>	
+			<tr>
+				
+				<td class="r-label">
+					<label for="cboPreMedEffect">#(..Get("预防用药效果"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboPreMedEffect" style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="cboPreMedIndicat">#(..Get("预防用药指征"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboPreMedIndicat" style="width:240px" />
+				</td>
+			</tr>	
+			<tr>
+				
+				<td class="r-label">
+					<label for="cboCombinedMed"><font color='red'>*</font>#(..Get("联合用药"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboCombinedMed"  style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="txtSttDate"><font color='red'>*</font>#(..Get("开始日期"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox" id="txtSttDate" style="width:240px" />
+				</td>
+			</tr>	
+			<tr>
+				
+				<td class="r-label">
+					<label for="txtEndDate">#(..Get("结束日期"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox" id="txtEndDate" style="width:240px"  />
+				</td>
+				<td class="r-label" style="width:150px">
+					<label for="txtPreMedTime">#(..Get("术前用药时间(分钟)"))#</label>
+				</td>
+				<td>
+					<input class="hisui-numberbox textbox" id="txtPreMedTime"  style="width:240px" />
+				</td>
+			</tr>	
+			<tr>
+				
+				<td class="r-label" style="width:140px">
+					<label for="txtPostMedDays" >#(..Get("术后用药天数(天)"))#</label>
+				</td>
+				<td>
+					<input class="hisui-numberbox textbox" id="txtPostMedDays" style="width:240px" />
+				</td>
+				<td class="r-label">
+					<label for="cboSenAna">#(..Get("敏感度"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" id="cboSenAna" style="width:240px" />
+				</td>
+			</tr>	
+		</table>
+	</div>	
+
 		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
-	  	<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/Report_Gui.js"></script>
-		<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/Report_Event.js"></script>
-		<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/InfModule_BASE.js"></script>
-		<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/InfModule_REP.js"></script>
-		<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/InfModule_DIAG.js"></script>
-		<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/InfModule_OPR.js"></script>
-		<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/InfModule_LAB.js"></script>
-		<script type="text/javascript" src="../Scripts/DHCMA/HAI/IR/Inf/report/InfModule_ANT.js"></script>
+	  	<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/Report_Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/Report_Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/InfModule_BASE.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/InfModule_REP.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/InfModule_DIAG.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/InfModule_OPR.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/InfModule_LAB.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/report/InfModule_ANT.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/datagrid-groupview.js"></script>
+		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 		
 		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 			Set Paadm      = $g(%request.Data("Paadm",1))	//HIS就诊ID
@@ -42,6 +607,7 @@
 			Set DiagnosID  = $g(%request.Data("DiagnosID",1))     //感染诊断信息，用于确诊后上报
 			Set Bacterias  = $g(%request.Data("Bacterias",1))      //检出菌，用于确诊后上报
 			Set EpisodeIDx = ""
+			Set ReplaceFlag= $g(%request.Data("ReplaceFlag",1))		//代报标志
 			
 			If ReportID'="" {
 				Set objReport = ##class(DHCHAI.IR.INFReport).GetObjById(ReportID)
@@ -107,8 +673,11 @@
 			var EmrOpen=#(EmrOpen)#;
 			var DiagnosID  = "#(DiagnosID)#";     
 			var Bacterias   = "#(Bacterias)#";    
+			var ReplaceFlag   = "#(ReplaceFlag)#"; 
+			
 			$(document).ready(function(){
-				var url = "../Scripts/DHCMA/HAI/IR/Inf/report/Layout.html"
+				/*
+				var url = "../scripts/DHCMA/HAI/IR/Inf/report/Layout.html"
         		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
    					if(statusTxt=="success") {
 	   					$.parser.parse(); // 解析整个页面  	
@@ -117,11 +686,21 @@
 	   					alert("Error: "+xhr.status+": "+xhr.statusText);
 	   				}
 	        	});
+	        	*/
+	        	$.parser.parse(); // 解析整个页面  	
+	   			InitReportWin();
 			});
+			
 			//全局请求后台服务对象
 			var ServerObj={
 				DiagList:"#(DiagList)#",
+				LabIsNeed:"#(LabIsNeed)#",
+				AntIsNeed:"#(AntIsNeed)#",
+				OprIsNeed:"#(OprIsNeed)#",
+				OpIsShow:"#(OpIsShow)#",
+				BasisNeed:"#(BasisNeed)#"
 			}
+			
 		</script>
 	</body>
 </html>

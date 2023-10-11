@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<!-- 
+ * FileName: dhcinsu.interfacemgrdetail.csp
+ * Creator: lizhi
+ * Date: 2022-7-6
+ * Description: 接口注册调试修改弹框
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcinsu/interfacemgrcommon.js"></script> 
+	<script type="text/javascript" src="../scripts/bsp.sys.commedit.js"></script>
+	<script type="text/javascript" src="../scripts/bsp.sys.keyvaluebox.js"></script>
+	<style>
+	.datagrid-row-selected .editcls{
+		color:#fff;
+	}
+	.editcls{
+		display: block;
+		width: 18px;
+		height: 18px;
+		text-align: center;
+		border-radius: 5px;
+		background-color: #F06D55;
+		color: #fff;
+	}
+	.combo2-arrow {
+	    display: inline-block;
+	    width: 28px;
+	    height: 28px;
+	    margin-left: 10px;
+	    background: url(../images/uiimages/input-btn-expand.png)	no-repeat center center;
+	    background-color: #abddff;
+	    cursor: pointer;
+	    border: 1px solid #40a2de;
+	    vertical-align: top;
+	}
+	.l-btn-text{
+		padding-left:10px
+	}
+	/*对入参表格里的表单外间距2px*/
+	.datagrid-row .datagrid-cell-c4-ARGNAME .datagrid-editable-input{
+		margin-left:1px;
+		width: 112px !important; 
+		height: 28px !important;
+	}
+	.datagrid-row .datagrid-cell-c4-Memo .datagrid-editable-input{
+		/*margin-left:1px !important;*/
+		width: 238px !important; 
+		height: 28px !important;
+	}
+	.datagrid-row .datagrid-cell-c4-ARGTYPE .combo{
+		margin-left:1px;
+		width: 118px !important;
+	}
+	.panel-body.panel-body-noheader.panel-body-noborder.dialog-content{
+		height: 398px !important;
+	}
+	
+	</style>
+	<DHCBILL/>
+	<server>
+		do ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_TARITEMS")
+	</server>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css'/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+</head>
+
+<body>
+		<!--详细信息-->
+		<div id="interfaceDetail" class="hisui-layout" data-options="fit:true" style="overflow:hidden">
+		<table class="search-table">
+		            <tr>     
+		            	<td class="r-label"><label class="clsRequired">产品线</label></td>
+		                <td>
+							<input class="hisui-combobox textbox" id="ProductLine" style="width:188px"/>
+		                </td>
+		                <td class="r-label" ><label class="clsRequired">业务类型</label></td>   
+		                <td>
+		                	<input class="textbox" type="text" id="BusinessType" name="BusinessType" style="width:188px"></input>
+		                </td>
+		                <td class="r-label"><label class="clsRequired">功能点</label></td>
+		                <td>
+		                	<input class="textbox" type="text" id="FunPoint" name="FunPoint" style="width:188px"></input>
+		                </td>
+		            </tr>
+		            <tr>
+		            	<td class="r-label">
+ 							<label for="interfaceType"><label class="clsRequired">接口类型</label></label> 
+						</td>
+						<td>
+							<select class="hisui-combobox" id="interfaceType" editable="false" style="width:188px" data-options="onChange:InterfaceType">
+								<option value="HIS">HIS</option>
+								<option value="SOAP">SOAP</option>
+								<option value="HTTP">HTTP</option>
+							</select>
+						</td>  
+		                <td class="r-label"><label class="clsRequired">调用类型</label></td>
+		                <td>
+							<select class="hisui-combobox" id="methodInvokType" editable="false" style="width:188px" data-options="onChange:ChagemethodInvokType">
+								<option value="S">服务</option>
+								<option value="C">调用</option>
+							</select>
+		                </td>
+		                <td class="r-label">
+							<label for="Active"><label class="clsRequired">生效标志</label></label>
+						</td>
+						<td>
+							<select class="hisui-combobox" id="Active" editable="false" style="width:188px">
+								<option value="Y">运行</option>
+								<option value="N">停用</option>
+							</select>
+						</td>
+					</tr>
+					<tr>  
+		             	<td class="r-label"><label class="clsRequired">接口名称</label></td>
+		                <td>
+		                	<input class="textbox" type="text" id="interfaceName" name="interfaceName"  style="width:181px" ></input>
+		                </td>
+		            	<td class="r-label"><label class="clsRequired">接口代码</label></td>
+		                <td>
+		                	<input class="textbox" type="text" id="interfaceCode" name="interfaceCode" style="width:181px" placeholder="接口名称填入后回车生成"></input>
+		                </td>
+		                <td><a href="#" class="hisui-linkbutton" iconCls="icon-copy" id="copy" plain="true" onClick='CopyInterfaceCode()' ></a></td>
+					</tr>
+		            <tr class="HisServer">  
+		            	<td class="r-label" ><label class="clsRequired" for="methodClassName">类名称</label></td>
+		                <td>
+		                	<input class="textbox r-label3" type="text" id="methodClassName" name="methodClassName" placeholder="输入前五位自动检索" style="width:188px;"></input>
+						</td>
+						<td class="r-label"><label class="clsRequired" for="methodName">方法名</label></td>
+		                <td> 
+		                	<input class="textbox" id="methodName"style="width:188px"/>
+						</td>
+						<td class="r-label">
+							<label for="methodType"><label class="clsRequired">方法类型</label></label> 
+						</td>
+		                <td>
+		                	<input class="textbox" type="text" id="methodType" name="methodType" style="width:181px;" disabled="disabled"></input>
+		                </td>
+					</tr> 
+		            <tr>  
+		            	<td class="r-label"><label class="clsRequired">关联产品组</label></td>
+		                <td colspan="3">
+		                	<input id="ProductLinkGroup"  class="hisui-validatebox textbox" required="required"  style="width:475px " placeholder="请选择产品组" missingMessage="请选择产品组"/>
+		                </td>
+		                <td colspan="2" class="r-label" style="text-align:left">
+		                	<input id="LogFlag" class='hisui-checkbox' type="checkbox" data-options="label:'记录日志'">
+						</td>
+					</tr>
+					<tr style="display:none">
+						<td class="r-label">出参分隔符</td>
+		                <td>
+		                	<input class="textbox r-label3" type="text" id="DATASPLIT" name="DATASPLIT" style="width:181px;"></input>
+						</td>
+						<td class="r-label">出参多行符</td>
+		                <td>
+		                	<input class="textbox r-label3" type="text" id="MULTSPLIT" name="MULTSPLIT" style="width:181px;"></input>
+						</td>
+					</tr> 
+					<tr class="SOAPService">
+		                <td class="r-label">异常返回串</td>
+		                <td >
+		                	<input type="text" class="textbox r-label5" id="HReturnStr" style="width:181px" disabled/></td>
+		                </td>
+		                <td class="r-label">超时(秒)</td>
+						<td colspan="4"><input class="textbox hisui-numberbox" type="text" data-options="min:1,max:60" id="HTimeout" style="width:188px"></input></td>
+		            </tr>
+<!-- 					<tr class="SOAPService">
+						<td class="r-label">超时(秒)</td>
+						<td ><input class="textbox hisui-numberbox" type="text" data-options="min:1,max:60" id="HTimeout" style="width:188px"></input></td>
+		                <td class="r-label">允许超时次数</td>
+		                <td>
+		                	<input class="hisui-numberbox textbox" id="HTimeOutNum" data-options="fix:false,max:10,min:0,isKeyupChange:true" style="width:188px">
+		                </td>
+		                <td colspan="2" class="r-label" style="text-align:left;">
+		                	<input id="HAutoSwitch" class='hisui-checkbox' type="checkbox" data-options="label:'超过次数自动关闭'">
+						</td>
+					</tr> -->
+		           	<!-- 增加HTTP需要的参数 Start-->
+		            <tr class="httpService SOAPService">
+		            	<td class="r-label"><label class="clsRequired">服务IP/域名</label></td>
+		            	<td><input class="textbox" type="text" id="HServer" name="HServer" style="width:181px"></input></td>
+		            	<td class="r-label"><label >端口</label></td>
+		            	<td><input class="textbox" type="text" id="HPort" name="HPort"style="width:181px"></input></td>
+						<td colspan="2" class="r-label" style="text-align:left;">
+		                	<input id="HHttps" class='hisui-checkbox' type="checkbox" data-options="label:'是否HTTPS'">
+						</td>
+<!-- 		            	<td colspan="2" class="r-label" style="text-align:left;">
+		                	<input id="HDomainFlag" class='hisui-checkbox' type="checkbox" data-options="label:'域名'">
+						</td> -->
+					</tr>
+					<tr class="httpService SOAPService">
+						<td class="r-label"><label class="clsRequired">请求路径</label></td>
+						<td ><input type="text" class="textbox hisui-validatebox r-label3" id="HPath"  style="width:181px" onchange="HPathChange()"/></td>
+						<td class="r-label" >SSL配置名</td>
+						<td ><input type="text" class="textbox" id="HSSLConfiguration" style="width:181px;"/></td>
+						<td colspan="2" class="r-label" style="text-align:left;">
+		                	<input id="HSSLCheckServerIdentity" class='hisui-checkbox' type="checkbox" data-options="label:'验证服务器身份'">
+						</td>
+					</tr>
+					<tr class="httpService">
+						<td class="r-label">Header参数</td>
+						<td  colspan="4"><input type="text" class="textbox r-label3" id="HHeadParmams" disabled style="width:481px"/></td>
+					</tr>
+					<tr class="httpService">
+						<td class="r-label">HTTP方法</td>
+						<td>
+							<select class="hisui-combobox" id="HMethodType" style="width:188px;" data-options="required:true,editable:false,panelHeight:'auto',onChange:httpMethodType"/>
+								<option value="POST">POST</option>
+								<option value="GET">GET</option>
+							</select>
+						</td>
+						<td class="r-label" >数据类型</td>
+						<td >
+							<select type="text" class="textbox hisui-combobox" id="HContentType"style="width:188px;" data-options="required:true,editable:false,panelHeight:'auto'"/>
+								<option value="form-urlencoded">form-urlencoded</option>
+								<option value="application/json">application/json</option>
+								<option value="text/xml">text/xml</option>
+							</select>
+						</td>
+						<td class="r-label" >编码格式</td>
+						<td >
+							<select type="text" class="textbox hisui-combobox" id="HContentCharset"style="width:188px;" data-options="required:true,editable:false,panelHeight:'auto'"/>
+								<option value="UTF-8">UTF-8</option>
+								<option value="UTF-32">UTF-32</option>
+							</select>
+						</td>
+					</tr>
+					<!-- 增加HTTP需要的参数 End-->
+		            <tr>              
+		            	<td class="r-label">入参</td>
+		                <td  style="height:120px;padding-right: 5px" colspan="5"> <!-- colspan="5" style="height:140px;width:75%" >-->
+							<table id="inputListTab" class="hisui-datagrid"></table>
+		                </td>
+		            </tr>
+		            <tr>   
+		                <td class="r-label">出参</td>
+		                <td colspan="5" style="height:120px;padding-right: 5px" >
+							<table id="outputListTab" class="hisui-datagrid" ></table>						
+		                </td>
+		            </tr> 
+					<tr>
+					<!--  <td><a href="#" class="hisui-linkbutton" iconCls="icon-help" id="methodNote" plain="true" onClick='InitmethodNote()' >函数说明</a></td>  -->
+				    <td class="r-label">函数说明</td>
+		                <td colspan="5">
+		                	<textarea class="textbox" id="methodNoteTxt" name="methodNoteTxt" placeholder="双击可弹框编辑" style="width:98.5%;height:100px;margin-top:0px;resize:none;white-space:normal" onDblclick="DemoDialogShow()"></textarea><!--overflow:scroll;overflow-x:hidden;-->
+		                </td> 
+		            </tr>
+		        </table>
+			<div style="text-align:center;padding-top:6px;">
+				<a class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" id="methodDataSaveBtn">保存</a>
+			</div>
+		</div>
+		<form data-options="isTopZindex:true">
+				<div id="inputDescDialog" style="text-align:center;">
+					<table style="margin-top: 8px;">
+						<tr>
+							<td class="r-label" style="padding-left: 8px;padding-right: 7px;">数据类型</td>
+							<td >
+								<select class="hisui-combobox" id="datatype" editable="false" style="width:100px" data-options="onChange:datatypechange" >
+										<option value="">默认</option>
+										<option value="json">json</option>
+										<option value="xml">xml</option>
+										<option value="separator">分隔符</option>
+								</select>
+							</td>
+							<td  class="r-label" id="dataformat">
+							<!-- 	<a class="hisui-linkbutton" data-options="" onclick="dataformat()">格式化</a> -->
+							</td>
+							<td  class="r-label" id="datacompress">
+							<!-- 	<a class="hisui-linkbutton" data-options="" onclick="dataformat()">格式化</a> -->
+							</td>
+							<td  class="r-label">
+								<input class="textbox" type="text" id="datatypeinput" name="datatypeinput" style="display:none">
+							</td>
+						</tr>
+					</table>
+					<table style="margin-top: 6px;margin-right: 8px;">
+						<tr>
+							<td class="r-label" style="padding-left: 8px;padding-right: 7px;">参数模板</td>
+							<td>
+								<textarea class="textbox" style="height:250px;width:450px;border-radius:4px;"></textarea>
+							</td>
+						<tr>
+					</table>
+				</div>
+		</form>
+		<form  data-options="isTopZindex:true">
+				<div id="DemoDialog" style="text-align:center;height: 473px !important;">
+					<textarea class="textbox" style="height:370px;width:674px; margin-top: 10px;"></textarea>
+				</div>
+		</form>
+	<script type="text/javascript" src="../scripts/dhcinsu/interfacemgrdetail.js"></script>
+</body>
+</html>

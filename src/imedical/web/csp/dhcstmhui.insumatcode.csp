@@ -1,0 +1,108 @@
+<!--国家医保分类代码-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+	<style>
+		.CheckPadding{
+			text-align:left;
+			padding: 0px 0px 0px 10px;
+		}
+		.datagrid-toolbar {
+			padding: 0px;
+			border-width: 1px;
+		}
+	</style>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+		<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+			<tr>
+				<td><label>医用耗材代码</label><input id="MecialCode" name="MecialCode" class="textbox"></td>
+				<td><label>通用名</label><input id="GenericName" name="GenericName" class="textbox"></td>
+				<td><label>生产企业</label><input id="phmanf" name="phmanf" class="textbox"></td>
+				<td align="left"><input class="hisui-filebox" id="File" name="File" data-options="width:180,buttonText:'',buttonIcon:'icon-folder',plain:true,prompt:'请选择要匹配的Excel文件'"></td>
+				<td><a href="#" id="ReadBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'" style="width:88px">读取</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>	
+			</tr>
+			<tr>
+				<td><label>一级分类</label><input id="FScg" name="FScg" class="textbox"></td>
+				<td><label>二级分类</label><input id="SScg" name="SScg" class="textbox"></td>
+				<td><label>三级分类</label><input id="TScg" name="TScg" class="textbox"></td>
+				<td></td>
+				<td><a href="#" id="DownExcelTemplet" class="hisui-linkbutton" style="width:88px">下载模板</a></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="MatInsuCodeGrid"></table>
+	</div>
+
+	<div id="FindWin" class="hisui-dialog hisui-layout" data-options="closed:'true',modal:true" title="详情">
+		<div class="hisui-panel GridPadding" data-options="region:'center',border:false,fit:true">
+			<div class="hisui-panel" data-options="title:'',iconCls:'icon-paper',fit:true,bodyCls:'panel-body-gray'">
+				<table id="DetailGrid"></table>
+			</div>
+		</div>
+	</div>
+
+	<div id="AddWin" class="hisui-dialog AddWin" data-options="closed:'true',modal:true,buttons:'#AddWinTB'" title="信息" style="height: 440px;width: 270px;">
+		<div data-options="fit:true">
+			<table id="AddConditions" data-options="border:false" class="Condition">
+				<input id="Rowid" name="Rowid" type="hidden">
+				<tr>
+					<td>医用耗材代码</td>
+					<td><input id="aMecialCode" name="InsuCode" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>一级分类</td>
+					<td><input id="ascg1" name="scg1" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>二级分类</td>
+					<td><input id="ascg2" name="scg2" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>三级分类</td>
+					<td><input id="ascg3" name="scg3" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>医保通用名</td>
+					<td><input id="aGenericName" name="GenericName" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>耗材材质</td>
+					<td><input id="aQuality" name="Quality" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>规格特征参数</td>
+					<td><input id="amSpec" name="mSpec" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>生产企业</td>
+					<td><input id="aManfName" name="ManfName" class="textbox"></td>
+				</tr>
+				<tr>
+					<td>停用标志</td>
+					<td class="CheckPadding"><input id="stopflag" name="stopflag" class='hisui-checkbox' type="checkbox" value="Y"></td>
+				</tr>
+			</table>
+		</div>
+		<div id="AddWinTB" style="padding-top:0px;">
+			<a href="#" id="AddItemBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/XLSX/xlsx.full.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InsuMatCode/InsuMatCode.js"></script>
+</body>
+</html>

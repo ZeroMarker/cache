@@ -1,0 +1,80 @@
+<div class="nurPatBar">
+  <csp:Include Page="dhcdoc.in.patient.banner.csp">
+</div>
+<style type="text/css">
+	.patientbar {
+		position: relative!important;
+		height: 60px!important;
+		border-radius: 4px;
+		margin-bottom: 4px;
+	}
+	.PatInfoItem {
+		margin-left: 0 !important;
+		height: auto!important;
+		padding: 0 5px!important;
+		padding-left: 75px!important;
+		line-height: 1.8!important;
+		position: static!important;
+		position: absolute!important;
+		top:50%!important;
+		transform: translate(0, -50%)!important;
+    overflow: visible!important;
+	}
+	.patientbar>div:first-of-type {
+		width: 50px!important;
+		height: 50px!important;
+	}
+	.PatInfoItem>div {
+		margin: 0 5px!important;
+	}
+	.PatInfoItem span, .patinfo-hover-content span{
+		line-height: 1.8!important;
+	}
+	.PatInfoItem a img {
+    margin-top: 0!important;
+    height: 16px!important;
+	}
+</style>
+<script language="javascript">
+  /**
+  * @description 展示病人标题信息
+  * @param {EpisodeID} 患者就诊号 
+  */
+  function setPatientInfo(EpisodeID,callback) {
+    $m({
+      ClassName: "web.DHCDoc.OP.AjaxInterface",
+      MethodName: "GetOPInfoBar",
+      CONTEXT: "",
+      EpisodeID: EpisodeID
+    }, function(html) {
+      if (html != "") {
+        $(".PatInfoItem").prevAll().remove();
+        $(".PatInfoItem").html(reservedToHtml(html));
+        var $clone=$(".PatInfoItem>div:eq(0)").clone();
+        $(".PatInfoItem>div:first-of-type").remove();
+        $(".PatInfoItem").before($clone);
+        if (callback) callback();
+      } else {
+        $(".PatInfoItem").html($g("获取病人信息失败。请检查【患者信息展示】配置。"));
+      }
+    });
+  
+    function reservedToHtml(str) {
+      var replacements = {
+        "&lt;": "<",
+        "&#60;": "<",
+        "&gt;": ">",
+        "&#62;": ">",
+        "&quot;": "\"",
+        "&#34;": "\"",
+        "&apos;": "'",
+        "&#39;": "'",
+        "&amp;": "&",
+        "&#38;": "&"
+      };
+      return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g, function(v) {
+        return replacements[v];
+      });
+    }
+  }
+</script>

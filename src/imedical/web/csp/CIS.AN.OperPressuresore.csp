@@ -5,6 +5,7 @@
 <csp:content charset="UTF-8">
 <dhcclinic:easyui></dhcclinic:easyui>
 <dhcclinic:head></dhcclinic:head>
+<dhcclinic:ca></dhcclinic:ca>
 <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/recordsheet.css" />
 <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operpressuresoresxzl.css" />
 <style>
@@ -282,7 +283,7 @@
 					    </div>
 					    <div class="form-row pressurescore-description" style="display:none;">
 							<span class="form-row-title" style="margin-right:5px;">随访时间</span>
-					        <input id="PressuerSoreDate" name="PressuerSoreDate" type="text" class="operdata textbox" style="width:167px;margin-right:10px;">
+					        <input id="PressuerSoreDate" name="PressuerSoreDate" type="text" class="hisui-datetimebox operdata" style="width:175px;margin-right:10px;">
 					    </div>
 					</form>
 				</div>
@@ -293,25 +294,103 @@
 						<div class="form-row">
 							<span class="form-row-title" style="margin-right:5px">随访护士</span>
 							<input id="VisitNurseSign" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'随访护士签名',CareProvType:'NURSE'">
+							<a href="#" id="btnVisitNurseSubmit" class="hisui-linkbutton" data-submitCode="VisitNurseSign">提交</a>
+							<a href="#" id="btnVisitNurseRevokeSubmit" class="hisui-linkbutton" data-revokeSubmitCode="VisitNurseSign">撤销提交</a>
+							
 							<label style="margin-right:5px;margin-left:20px">评估护士</label>
 							<input id="AssessNurseSign" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'评估护士签名',CareProvType:'NURSE'">
+							<a href="#" id="btnAssessNurseSubmit" class="hisui-linkbutton" data-submitCode="AssessNurseSign">提交</a>
+							<a href="#" id="btnAssessNurseRevokeSubmit" class="hisui-linkbutton" data-revokeSubmitCode="AssessNurseSign">撤销提交</a>
 						</div>
 					</form>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div data-options="region:'south',border:false" style="height:50px;padding:10px 10px 10px 10px;">
+	<div data-options="region:'south',border:false" style="height:45px;padding:5px 10px 10px 10px;">
 		<div class="button-list" style="padding:0">
-			<a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			<a href="#" id="btnSave" class="hisui-linkbutton" data-permission="All">暂存</a>
+			<a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a>
+			<a href="#" id="btnArchive" class="hisui-linkbutton" data-options="iconCls:'icon-w-file'" data-permission="All">归档</a>
+			<a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" data-permission="All">刷新</a>
 		</div>
 	</div>
-	<div id="signContainer">
-	</div>
 	<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
-	<!--script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CA.js"></script-->
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CASignature.js"></script>
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.Operdata.js"></script>
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperPressureSore.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.canvas.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.pagenotabsview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.displaysheet.js"></script>
+
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DrawContext.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CA/CIS.AN.CA.Signature.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.SubmitSheetView.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.ArchiveRecord.js"></script>
 </body>
+<script type="text/javascript">
+
+$(function(){
+	
+	archiveRecordManager.initPage("VisitNurseSign^AssessNurseSign");
+	
+	$("#btnSave").linkbutton({
+        onClick: function() {
+            archiveRecordManager.save();
+        }
+    });
+
+	//随访护士 评估护士
+    $("#btnVisitNurseSubmit,#btnAssessNurseSubmit").linkbutton({
+        onClick: function() {
+	        var archiveCode = $(this).attr("data-submitCode");
+            archiveRecordManager.submitSheet(archiveCode,"");
+        }
+    });
+    
+    $("#btnVisitNurseRevokeSubmit,#btnAssessNurseRevokeSubmit").linkbutton({
+        onClick: function() {
+	        var archiveCode = $(this).attr("data-revokeSubmitCode");
+            archiveRecordManager.revokeSubmitSheet(archiveCode);
+        }
+    });
+    
+    $("#btnPrint").linkbutton({
+	    onClick: function() {
+	        archiveRecordManager.print();
+	    }
+    });
+
+    $("#btnArchive").linkbutton({
+        onClick: function() {
+            archiveRecordManager.archive();
+        }
+    });
+
+    $("#btnRefresh").linkbutton({
+        onClick: function() {
+            window.location.reload();
+        }
+    });
+    
+    $("#btnSelectTemplate").linkbutton({
+        onClick: function() {
+            archiveRecordManager.selectTemplate();
+        }
+    });
+
+    $("#btnSaveTemplate").linkbutton({
+        onClick: function() {
+            archiveRecordManager.saveTemplate();
+        }
+    });
+    
+    $("#btnLocalPrint").linkbutton({
+	    onClick: function() {
+	        archiveRecordManager.lodopPrint();
+	    }
+    });
+	
+});
+
+
+</script>
 </html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!--dhcdoc.admhistoryarcimdoseline.csp--> 
+<html>
+<head>
+		<title></title>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+		<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+		<HISUI></HISUI>
+		 <script src="../scripts_lib/echarts/build/dist/echarts.js" type="text/javascript" charset="utf-8"></script>
+    	 <script src="../scripts_lib/echarts/myEcharts.js" type="text/javascript" charset="utf-8"></script>
+</head>
+
+<body style="background: white;">
+	<input type="hidden" id="ARCIMDR"  value=#(%request.Get("ARCIMDR"))#>
+	<input type="hidden" id="EpisodeID"  value=#(%request.Get("EpisodeID"))#>
+	<div id="div_ResultCharts" style="width:600px;height:600px;background:#FFFFFF" ></div>
+</body>
+<script language="JavaScript">
+$(function(){
+	  var EpisodeID=$("#EpisodeID").val();
+	  var ARCIMDR=$("#ARCIMDR").val();
+	  $cm({
+		    ClassName : "DHCDoc.Order.History",
+			QueryName:"GetOPAdmHistoryArcim",
+			EpisodeID:EpisodeID,
+			ARCIMDR:ARCIMDR,
+		    Pagerows:9999,rows:99999
+		},function(GridData){
+			if (GridData.rows.length==0){
+				$.messager.alert("提示","没有历次药品记录。","info",function(){
+					if (websys_showModal("close")) {
+							websys_showModal("close");
+						}else{
+							window.returnValue ="";
+				    		window.close();	
+						}
+					});
+				}
+			var max = '';
+            var min = '';
+			var rows=GridData.rows
+			var xAxisArr = new Array();
+			var lineData = new Array();
+            var GridDate = new Array();
+            var legenData = ""
+            var unit=""
+			for (var i=rows.length-1;i>=0;i--) {
+				var xcol=rows[i].TDate
+				xAxisArr.push(xcol);
+				var ycol=rows[i].doseQty
+				ycol=parseFloat(ycol)
+				lineData.push(ycol);
+				if ((min=="")||(min>ycol)){
+					min=ycol
+					}
+				if ((max=="")||(max<ycol)){
+					max=ycol
+				}
+				unit=rows[i].doseUOM
+				legenData=rows[i].ARCIMDesc
+			}
+			/*var DatagridData = new Array();
+            $("#div_ResultCharts").html("<table id='dg_historyResultList'></table>");
+            $("#dg_historyResultList").datagrid({
+                fit: true,
+                fitColumns: true,
+                columns: [[
+                { field: 'Date', title: '时间', width: 100, align: "center" },
+                { field: 'Result', title: '结果', width: 300, align: "center" },
+            ]]
+            });
+            $("#dg_historyResultList").datagrid("loadData", GridData)
+            if ($("#dg_historyResultList").length > 0) {
+                $("#dg_historyResultList").remove();
+            }*/
+            var TlegenData = [legenData];
+            if (lineData.length == 0) return;
+            lineCharts('div_ResultCharts', legenData, unit, xAxisArr, lineData, TlegenData, max, min, 3);
+
+		});
+	})
+</script>
+</html>
+

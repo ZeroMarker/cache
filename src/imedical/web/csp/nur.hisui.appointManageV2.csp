@@ -1,0 +1,140 @@
+<!--nur.hisui.appointManageV2.csp 预住院-预约管理-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<HTML lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI />
+    <ADDINS require="RWCard,CmdShell"/>
+    <DOCCARD medStepCode="Other"></DOCCARD>
+    <link href="../scripts/nurse/hisui/css/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui/css/appointManage.css" />
+    <server>
+    	Set bookingOperation=$g(%request.Data("bookingOperation",1)) //是否可操作住院证 N:不可 其它:可
+    	Set isShowWardList=$g(%request.Data("isShowWardList",1)) //是否显示左侧病区列表 N:不显示 其它:显示
+    	Set isShowPatInfoBar = $g(%request.Data("isShowPatInfoBar",1))
+        Set BookingtNo = $g(%request.Data("BookingtNo",1))
+        Set NeedRegist = $g(%request.Data("NeedRegist",1))
+    	s WARDBeforehand="",WardLinkLocId=""
+    	s LoginWardId=%session.Get("LOGON.WARDID")
+    	if (LoginWardId){
+	    	s WARDBeforehand=$p(^PAWARD(LoginWardId),"^",13) //是否是预住院病区
+	    	s WardLinkLocId=$o(^CTLOC(%session.Get("LOGON.CTLOCID"),"LINK",0,"Loc",""))
+	    }
+	    s IllLevelColorJson=##class(Nur.InService.AppointManageV2).GetIllLevelColor()
+    </server>
+    <style>
+    .search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+		.datagrid-row-selected .editcls{
+		color:#fff;
+	}
+	.editcls{
+		display: inline-block;
+		text-align: center;
+		border-radius: 4px;
+		background-color: #0E8BDD;
+		color: #fff;
+		padding:2px 5px;
+	}
+	.editcls:hover,.editcls1:hover{
+		cursor: pointer;
+	}
+	.editcls:not(:last-child){
+		margin-right:10px;
+	}
+	.editcls-finish {
+		background-color: #8F999D;
+	}
+	.editcls1{
+		text-decoration:underline;
+	}
+	.editcls-assesPass {
+		background-color:#27B148;
+	}
+	.editcls-assesNotPass{
+		background-color:#FF2525;
+	}
+	.line{
+		display:inline-block;
+		height:21px;
+		border-right:1px solid #ccc;
+		vertical-align:middle;
+		margin-right:10px;
+	}
+	.webui-popover .webui-popover-content{
+		padding:0;
+	}
+	.tip_class .panel,.tip_class p {
+		margin:10px;
+	}
+	.illness-div{
+		display:inline-block;
+		padding:5px 10px;
+		margin:10px;
+		color:#fff;
+	}
+	div[class$="BookNO"],div[class$="JCOrdRate"],div[class$="LabOrdRate"]{
+		height:auto;
+	}
+	#wardlist .panel-header{
+		padding: 4px 5px;
+		border-radius:4px 4px 0 0;
+	}
+	#SearchDateFrom+.datebox>input, #SearchDateTo+.datebox>input{
+		width:82px!important;
+	}
+	label.checkbox,label.radio {
+		padding-right:10px;
+	}
+	label.radio,label.checkbox {
+		background-position-x:-6px;
+	}
+	.webui-arrow {
+		left:auto !important;
+		right:1px;
+	}
+	.layout-split-west {
+		border-right-width:4px;
+	}
+	</style>
+</head>
+<body style="padding:4px;">
+	<csp:Include Page="nur.hisui.appointManageV2.show.csp">
+</body>
+	<script type="text/javascript">
+	    var bookingtNo = "#(BookingtNo)#"; 
+	    var needRegist = "#(NeedRegist)#" == "" ? "Y" : "#(NeedRegist)#"; //Y:需要登记，N:不登记直接预约床位
+	    var isShowPatInfoBar = "#(isShowPatInfoBar)#"; //是否显示患者信息条 N 不显示 其他显示
+	    var bookingNum=bookingtNo;
+	    var singlePat = false;
+	    if (bookingtNo != "") {
+	        singlePat = true;
+	        needRegist = "N";
+	    }
+	    var WARDBeforehand="#(WARDBeforehand)#";
+	    var WardLinkLocId="#(WardLinkLocId)#";
+	    var IllLevelColorJson=#(IllLevelColorJson)#;
+	    var isShowWardList="#(isShowWardList)#";
+	    var bookingOperation="#(bookingOperation)#";
+    </script>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/resize.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/appointManageV2.js" charset='gbk'></script>
+</html>

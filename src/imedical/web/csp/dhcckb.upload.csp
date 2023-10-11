@@ -1,0 +1,42 @@
+<script runat="server" language="cache">        
+	Set dirName = $g(%request.Data("dirname",1))   //文件的路径
+	Set fileName= $g(%request.Data("fileName",1))
+	Set fileNamePress= $g(%request.Data("fileNamePress",1))  //有些文件名需要从后台动态的获取
+	If $g(fileNamePress)'=""{
+		Set fileNamePress = "Set fileName="_fileNamePress
+		x fileNamePress
+	}
+
+	If ($data(%request.MimeData("FileStream",1))){
+		New fileStream
+		Set fileStream = %request.MimeData("FileStream",1)
+		if $g(fileName)=""{
+			try{ ;前台是file提交fileStream是File对象  ;用Uploadfiy提交fileStream是%CSP.BinaryStream对象 
+				Set fileName = fileStream.FileName    ;fileStream.FileName   //这个是保存文件的名字
+			}catch(e){
+				Set fileName = "undefined.dat"
+			}
+		}else{
+			Set fileName = fileName_"."_$p(fileStream.FileName,".",2)              //文件格式保留原文件格式
+		}
+		set rtn ="" //##class(web.DHCADVFile).FTPUpload(fileStream,dirName,fileName)
+		
+		if (+rtn>0){
+			Write "{""fileFullName"":"""_##class(ext.util.String).EvalJSON($p(rtn,"^",2))_"""}"   ;
+		}else{
+			Write "{""fileFullName"":"""",""msg"":"""_##class(ext.util.String).EvalJSON(rtn)_"""}"  ;
+		}
+	}
+	Quit "" 
+</script>
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+	; 附件服务器与消息服务器是同一台服务器时 flash上传文件,新起会话,破坏旧会话,导致会话超时
+	Set sessionid = $g(%request.Data("CSPSESSIONID",1))
+	Set sessionobj = ##class(%CSP.Session).%OpenId(sessionid)
+	If $IsObject(sessionobj){
+		Set %session = sessionobj
+		If ##Class(websys.SessionEvents).SessionExpired() q 1
+	}
+	Quit 1
+</script>
+<csp:content charset="utf-8">

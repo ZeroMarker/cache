@@ -1,43 +1,72 @@
-<!---->
+<!--物资门诊发放-->
+<!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  q 1
 </csp:method>
-<SERVER>
- //s menuParm = %request.Data("menu",1)
- s Rowid =$Get(%request.Data("Rowid",1))
- s QueryFlag=$Get(%request.Data("QueryFlag",1))
+<html lang="zh-CN">
+ <SERVER>
  d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
- d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+ d ##class(web.DHCSTMHUI.Common.UtilCommon).GetCardHardJS()
+ d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+ w ##class(web.DHCSTMHUI.Common.UtilCommon).EncryptInput()
+ w ##class(web.DHCSTMHUI.Common.UtilCommon).ReadAccExpEncryptInput()
+ w ##class(web.DHCSTMHUI.Common.UtilCommon).GetCardTypeEncryptInput()
+ w ##class(web.DHCSTMHUI.Common.UtilCommon).ReadCardTypeEncryptInput()
 </SERVER>
-<HTML XMLNS=TRAK>
-<HEAD>
-<script language=javascript>
-	var gIngrRowid="#(Rowid)#";     
-	var gFlag="#(QueryFlag)#";
-	var gHVINGdRec=false;	//高值入库菜单标志
-</script>
-
-<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
-<!-- <TRAK:HEAD></TRAK:HEAD> -->
-<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<EXTHEALTH:EXT330></EXTHEALTH:EXT330>
-<DHCSTM:EXTCOMMONJS></DHCSTM:EXTCOMMONJS>
-
-<!-- 加载页面的JS -->
-<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
-<script type="text/javascript" src="../scripts/dhcstm/Common/DrugUtil.js"></script>
-<script type="text/javascript" src="../scripts/dhcstm/Common/OrgUtil.js"></script>
-<script type="text/javascript" src="../scripts/dhcstm/Common/OtherUtil.js"></script>
-<script type="text/javascript" src="../scripts/dhcstm/ExtUX/StkGrpComboBox.js"></script>
-<script type="text/javascript" src="../scripts/dhcstm/Common/PhaOrderWindow.js"></script>
-<script type="text/javascript" src="../scripts/dhcstm/ItmDistribute/ItmDistribute.js"></script>
-<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
-</HEAD>
-<BODY>
- <div id ="mainPanel"> </div>
-
-</BODY>
-
-
-</HTML>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false"> 
+		<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+			<input id="Inci" name="Inci" type="hidden">
+			<tr>
+				<td><label>开始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-dateboxq"></td>
+				<td><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-dateboxq"></td>
+				<td><label>登记号</label><input id="PatNo" name="PatNo" class="textbox"></td>
+				<td><label>卡类型</label><input id="CardType" name="CardType" class="textbox hisui-combobox" disabled></td>
+				<td class="CkPadding"><label>已发放</label><input id="DispFlag" name="DispFlag" class='hisui-checkbox' type="checkbox" value="Y"></td>
+				<td><a href="#" id="DispBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">发放</a></td>
+				<td><a href="#" id="ReadCardBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></td>
+			</tr>
+			<tr>
+				<td>
+					<input class='hisui-radio' type="radio" label='开单日期' name='DateFlag' value='0' data-options="checked:true">
+					<input class='hisui-radio' type="radio" label='收费日期' name='DateFlag' value='1'>
+				</td>
+				<td><label>就诊科室</label><input id="AdmLoc" name="AdmLoc" class="textbox hisui-combobox"></td>
+				<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
+				<td ><label>卡号</label><input id="CardNo" name="CardNo" class="textbox"></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false" class="GridPadding" style="padding-top:0px;">
+		<div class="hisui-panel" data-options="title:'待发放列表',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+			<table id="DispMainGrid" ></table>
+		</div>
+	</div>
+	<div data-options="region:'east',border:false" style="padding-top:0px;padding-left:0px;width:230px;" class="GridPadding">
+		<div class="hisui-panel" data-options="title:'待发放人员列表',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+			<table id="NeedDispGrid"></table>
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" style="padding-top:0px;height:250px;" class="GridPadding">
+		<div class="hisui-panel" data-options="title:'待发放明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+			<table id="DispDetailGrid"></table>
+		</div>
+	</div>
+	
+	
+	<script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmDistribute/ItmDistributeCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmDistribute/ItmDistribute.js"></script>
+</body>
+</html>

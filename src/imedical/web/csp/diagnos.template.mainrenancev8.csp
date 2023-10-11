@@ -9,6 +9,9 @@
 <!--EXTHEALTH:EXT321></EXTHEALTH:EXT321-->
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/MKB/SDS/StructDiagnosExpCss.css" />
+<script type="text/javascript" src="../scripts/bdp/MKB/SDS/StructDiagnosCommon.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/SDS/StructDiagnosExpEditor.js"></script>
 <!--script type='text/javascript' src='../scripts/framework/ext.icare.Lookup.js'></script-->
 <style>
  a{
@@ -36,12 +39,14 @@
 }
 </style>
 <Server>
+;是否启用结构化诊断维护
+s CDSSEnableFlag=%request.Get("CDSSEnableFlag") 
 s UserLogonLocStr=##class(web.DHCDocDiagnosEntryV8).GetUserLogonLocList(%session.Get("LOGON.USERID"),"")
 if (UserLogonLocStr'="") s UserLogonLocStr="^"_UserLogonLocStr_"^"
 s MenuName = "System.DiagFav.Save.SaveAsLoc"
 ;得到安全组是否有医嘱模板维护某一个保存菜单权限
 s IsHaveMenuAuthDiagFav=##class(web.DHCDocDiagnosNew).IsHaveMenuAuthDiagFav(%session.Get("LOGON.GROUPID"),MenuName)
-s SaveTemplICDDiagNotesMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosNew.SaveTemplICDDiagNotes"))
+s SaveTemplICDDiagNotesMethod=##class(websys.Page).Encrypt($lb("web.DHCDocDiagnosNew.SaveTemplICDDiagNotes"))
 </Server>
 </head>
 <body>
@@ -51,7 +56,8 @@ s SaveTemplICDDiagNotesMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocDiagnosN
 		var ServerObj={
 			UserLogonLocStr:"#(UserLogonLocStr)#",
 			IsHaveMenuAuthDiagFav:"#(IsHaveMenuAuthDiagFav)#",
-			SaveTemplICDDiagNotesMethod:"#(SaveTemplICDDiagNotesMethod)#"
+			SaveTemplICDDiagNotesMethod:"#(SaveTemplICDDiagNotesMethod)#",
+			CDSSEnableFlag:"#(CDSSEnableFlag)#"
 		}
 		//页面加载完之后在赋值，防止事件未定义导致报错
 		$(function(){

@@ -16,31 +16,45 @@
 	margin-right: 7px;
 }
 .unman {
- 	background:url(../images/unman.png) no-repeat;
+ 	background-image: url(../images/unman.png);
  	background-position: center center;
+	background-size: contain;
+	background-repeat: no-repeat;
  	width: 30px;
  	height: 30px;
+ 	border-radius: 30px;
  	position: absolute;
  	top: 3px;
     left: 10px;
 }
 .man {
- 	background:url(../images/man.png) no-repeat;
+ 	background-image: url(../images/man.png);
  	background-position: center center;
+	background-size: contain;
+ 	background-repeat: no-repeat;
  	width: 30px;
  	height: 30px;
+ 	border-radius: 30px;
  	position: absolute;
  	top: 3px;
     left: 10px;
 }
 .woman {
- 	background: url(../images/woman.png) no-repeat;
+ 	background-image: url(../images/woman.png);
  	background-position: center center;
+	background-size: contain;
+	background-repeat: no-repeat;
  	width: 30px;
  	height: 30px;
+ 	border-radius: 30px;
  	position: absolute;
  	top: 3px;
 	left: 10px;
+}
+.i-btn-right{
+ 	position: absolute;
+    right: 10px;
+    top: 3px;
 }
 </style>
 
@@ -51,26 +65,31 @@
  * @author ZhYW
  */
 function getPatInfoByAdm(episodeId) {
-	$.m({
-		ClassName: 'web.DHCIPBillPatOrdFee',
-		MethodName: 'GetPatInfoByAdm',
+	$.cm({
+		ClassName: "web.DHCIPBillPatOrdFee",
+		MethodName: "GetPatInfoByAdm",
 		episodeId: episodeId
-	}, function (rtn) {
-		var myAry = rtn.split('^');
-		var patName = myAry[1];
-		var sex = myAry[2];
-		var patientNo = myAry[3];
-		var medicareNo = myAry[4];
-		if (sex == '男') {
-			$('#sex').removeClass('unman man woman').addClass('man');
-		} else if (sex == '女') {
-			$('#sex').removeClass('unman man woman').addClass('woman');
-		}else {
-			$('#sex').removeClass('unman man woman').addClass('unman');
+	}, function (json) {
+		if ($("#sex").length > 0) {
+			$sex = $("#sex");
+			$sex.removeClass("unman man woman").addClass(json.SexIconCls);
+			if (HISUIStyleCode == "lite") {
+				//极简样式的图标
+				$sex.css({"background-image": "url(" + "../images/" + json.SexIconCls + "_lite.png" + ")"});
+			}
+			if (!episodeId != ""){
+				showPatSexBGImg();
+			}
 		}
-		$('#patName').text(patName);
-		$('#patientNo').val(patientNo);
-		$('#medicareNo').val(medicareNo);
+		if ($("#patName").length > 0) {
+			$("#patName").text(json.PatName || "");
+		}
+		if ($("#patientNo").length > 0) {
+			$("#patientNo").val(json.PatientNo || "");
+		}
+		if ($("#medicareNo").length > 0) {
+			$("#medicareNo").val(json.MedicareNo || "");
+		}
 		initPatPayInfo(episodeId);
 	});
 }
@@ -82,11 +101,11 @@ function getPatInfoByAdm(episodeId) {
  */
 function initPatPayInfo(episodeId) {
 	$.m({
-		ClassName: 'web.DHCIPBillPatOrdFee',
-		MethodName: 'GetPatPayInfoByAdm',
+		ClassName: "web.DHCIPBillPatOrdFee",
+		MethodName: "GetPatPayInfoByAdm",
 		episodeId: episodeId
 	}, function (rtn) {
-		var myAry = rtn.split('^');
+		var myAry = rtn.split("^");
 		var deposit = myAry[0];
 		var totalAmt = myAry[1];
 		var balance = myAry[2];
@@ -95,37 +114,136 @@ function initPatPayInfo(episodeId) {
 		var payOrShareAmt = myAry[5];
 		var patShareAmt = myAry[6];
 		var warrantAmt = myAry[7];
-		$('#deposit').text(deposit);
-		$('#totalAmt').text(totalAmt);
-		$('#balance').text(balance);
-		$('#insuPayAmt').text(insuPayAmt);
-		$('#discAmt').text(discAmt);
-		$('#payOrShareAmt').text(payOrShareAmt);
-		$('#patShareAmt').text(patShareAmt);
-		$('#warrantAmt').text(warrantAmt);
+		$("#deposit").text(deposit);
+		$("#totalAmt").text(totalAmt);
+		$("#balance").text(balance);
+		$("#insuPayAmt").text(insuPayAmt);
+		$("#discAmt").text(discAmt);
+		$("#payOrShareAmt").text(payOrShareAmt);
+		$("#patShareAmt").text(patShareAmt);
+		$("#warrantAmt").text(warrantAmt);
 	});
 }
 </script>
 
 <!--dhcbill.inpatient.banner.csp-->
+<csp:if condition=$g(PatientListPage)'="">
+ <script type="text/javascript">
+/**
+ * ShangXuehao 2020-12-04 患者列表弹出
+ */
+$(function() {
+	$(".window-mask.alldom").hide();
+	$("#InPatListBtn").click(showPatListWin);
+});
+
+function showPatListWin() {
+	if ($("#InpatListDiv .panel").css('display') !== "none") {
+		return;
+	}
+	if ($("#InpatListDiv").data("AutoOpen") == 1) {
+		$("#patlist").panel({
+			closable: false
+		});
+	} else {
+		$("#patlist").panel({
+			closable: true
+		});
+	}
+	$("#patlist").panel("open");
+}
+
+function hidePatListWin() {
+	if ($("#InpatListDiv").data("AutoOpen") == 1) {
+		// 未选患者时,不允许隐藏患者列表
+	} else {
+		$("#patlist").panel("close");
+	}
+}
+	
+function onOpenPatListWin() {
+	if ($("#patlist").find("iframe").get(0).src == "about:blank") {
+		var url = ("undefined" == typeof patientListPage) ? "dhcbill.ipbill.inpatlist.csp" : patientListPage;
+		$("#patlist").find("iframe").get(0).src = websys_writeMWToken(url);
+	}
+	var opt = {
+		'z-index': 9085,
+		'position': 'fixed'
+	};
+	var panelJObj = $("#InpatListDiv .panel");
+	var patListJObj = $("#patlist");
+	if ($("#InpatListDiv").data("AutoOpen") == 1) {
+		panelJObj.css($.extend({}, opt, {
+				right: '0px',
+				top: '0px'
+			}));
+		patListJObj.panel('resize', {
+			width: $(document.body).width(),
+			height: $(document.body).height()
+		});
+	} else {
+		panelJObj.css($.extend({}, opt, {
+				right: '10px',
+				top: '46px'
+			}));
+		patListJObj.panel('resize', {
+			width: 1200,
+			height: $(document.body).height() - 56
+		});
+	}
+	$(".window-mask.alldom").show();
+}
+
+function onClosePatListWin() {
+	$(".window-mask.alldom").hide();
+}
+
+/**
+* 2023-04-24
+* WangXQ
+*/
+function showPatSexBGImg() {
+	var $sex = $("#sex");
+	var bgImg = "unman";
+	$sex.removeClass().addClass(bgImg);
+	if (HISUIStyleCode == "lite") {
+		//极简样式的图标
+		$sex.css({"background-image": "url(" + "../images/" + bgImg + "_lite.png" + ")"});
+	}
+}
+
+</script>
+</csp:if>
 <div>
 	<div id="sex"></div>
 	<div class="patientInfo">
 		<span class="patName" id="patName"></span>
-		<span class="infoLabel">预缴款:</span><span id="deposit"></span>
+		<span class="infoLabel">#(..Get("预缴款"))#:</span><span id="deposit"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">总费用:</span><span id="totalAmt"></span>
+		<span class="infoLabel">#(..Get("总费用"))#:</span><span id="totalAmt"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">自付金额:</span><span id="patShareAmt"></span>
+		<span class="infoLabel">#(..Get("自付金额"))#:</span><span id="patShareAmt"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">折扣金额:</span><span id="discAmt"></span>
+		<span class="infoLabel">#(..Get("折扣金额"))#:</span><span id="discAmt"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">记账金额:</span><span id="payOrShareAmt"></span>
+		<span class="infoLabel">#(..Get("记账金额"))#:</span><span id="payOrShareAmt"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">担保金额:</span><span id="warrantAmt"></span>
+		<span class="infoLabel">#(..Get("担保金额"))#:</span><span id="warrantAmt"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">医保费用:</span><span id="insuPayAmt"></span>
+		<span class="infoLabel">#(..Get("医保费用"))#:</span><span id="insuPayAmt"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">余额:</span><span id="balance"></span>
+		<span class="infoLabel">#(..Get("余额"))#:</span><span id="balance"></span>
 	</div>
+	<csp:if condition=$g(PatientListPage)'="">
+		<div class="i-btn-right">
+			<div id="InpatListDiv" style="display:inline;">
+				<a id="InPatListBtn" href="#" class="hisui-linkbutton" style="background:#21BA45;">患者列表</a>
+				<div id="patlist" class="hisui-panel" title="患者列表" iconCls="icon-paper"
+					style="width:990px;height:560px;overflow:hidden;"
+					data-options="resizable:true,modal:true,closed:true,closable:true,onOpen:onOpenPatListWin,onClose:onClosePatListWin,headerCls:'panel-header-gray'">  
+			    	<iframe src="about:blank" width="100%" min-height="350px" height="100%" frameborder="0"></iframe>
+				</div>
+			</div>
+		</div>
+	</csp:if>
 </div>

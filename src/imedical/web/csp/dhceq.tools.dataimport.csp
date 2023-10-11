@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<ADDINS required="CmdShell"></ADDINS>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+s BussType=%request.Data("BussType",1)
+s BussType="11"
+s title="数据导入"
+i BussType="11" s title="验收单导入"
+s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</SCRIPT>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title=#(title)# data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div  class="eq-total-sum" data-options="region:'center',border:false" style="position:relative;padding:0x;">
+					<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,border:false">
+						<table id="tDHCEQImportData" class="hisui-datagrid"></table>
+						<span id="sumTotal" style="position:absolute;right:10px;top:-3px;"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="Job" value="#($Job)#">
+			<INPUT type="hidden" id="BussType" value="#(BussType)#">
+			<INPUT type="hidden" id="SplitNumCode" value="#(SplitNumCode)#">
+			<INPUT type="hidden" id="SplitRowCode" value="#(SplitRowCode)#">
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/tools/dataimport.js"></script>
+</body>
+</html>

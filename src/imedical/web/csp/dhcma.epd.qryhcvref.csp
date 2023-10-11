@@ -1,0 +1,94 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
+			if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+		</SCRIPT>
+		<CSP:IF CONDITION="IsADDINS=1">
+			<ADDINS require="CmdShell"></ADDINS>
+		</CSP:IF>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+	</head>
+	<body>
+		<!-- 主页面-->
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false,collapsible:false" style="padding:10px;">
+				<table id="HcvQuery" data-options="toolbar:'#QueryToolBar'"></table>
+		        <div id="QueryToolBar" style="height:50px;" >			
+					<table class="search-table">
+						<tr>
+							<td class="r-label">
+								<label for="cboHospital">医院</label>
+							</td>
+							<td>
+								<input class="hisui-combobox textbox" id="cboHospital" style="width:200px;"/>
+							</td>
+							<td class="r-label">
+								<label for="dtStaDate" >开始日期</label>
+							</td>
+							<td>
+								<input class="hisui-datebox textbox" id="dtStaDate" style="width:120px"/>
+							</td>
+
+							<td class="r-label">
+								<label for="dtEndDate">结束日期</label>
+							</td>
+							<td>
+								<input class="hisui-datebox textbox" id="dtEndDate" style="width:120px"/>
+							</td>
+							<td class="r-label">
+								<label for="chkStatus">报告状态</label>
+							</td>
+							<td colspan="3" style="width:250px;"> 
+								<input class="hisui-checkbox" type="checkbox" name="chkStatus" data-options="checked:true" label="上报" id="chkStatus-1" value=1>
+								<input class="hisui-checkbox" type="checkbox" name="chkStatus" data-options="checked:true" label="审核" id="chkStatus-2" value=2>
+								<input class="hisui-checkbox" type="checkbox" name="chkStatus" data-options="checked:false" label="作废" id="chkStatus-3" value=3>	
+							</td>
+							<td class="r-label">
+								<a id="btnQuery" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+							<td class="r-label">
+								<a id="btnExport" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" >导出</a>
+							</td>
+			      		<tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	  	<script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/Util/datagrid-export.js"></script>
+		<script type="text/javascript"  src="../scripts/DHCMA/EPD/qryhcvref/Gui.js"></script>
+		<script type="text/javascript"  src="../scripts/DHCMA/EPD/qryhcvref/Event.js"></script>
+		<script language="Cache" RUNAT="SERVER">		
+			Set LocFlag=+$g(%request.Data("LocFlag",1))		//上报权限的标记
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
+			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"EPD")
+			Set IsSecret=##class(DHCMed.SSIO.FromSecSrv).CheckIsSecret(LogonHospID)
+			Set SSHospCode=""""_SSHospCode_""""
+			Set IsSecret=""""_IsSecret_""""
+	   </script>
+	    <script language="javascript" type="text/javascript">
+	    	var t = new Object();			
+			var LocFlag=#(LocFlag)#;
+			var SSHospCode=#(SSHospCode)#;
+			var IsSecret=#(IsSecret)#;
+            var LocFlag=#(LocFlag)#;
+			
+			$(window).load(function() {
+				InitviewScreen();
+			});
+
+        </script>
+	</body>
+</html>

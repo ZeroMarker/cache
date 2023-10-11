@@ -1,0 +1,737 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.ordersheetsetV3.csp 医嘱单设置-->
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta http-equiv="Content-Type" content="text/html;" />
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI></HISUI>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<style>
+		.panel-body,
+		.panel-header {
+			border-color: #ccc;
+		}
+
+		.label-request::before {
+			content: '\2A';
+			color: red;
+		}
+
+		.pa_10 {
+			padding: 10px 10px 10px 10px;
+		}
+
+		.font_bold {
+			font-weight: bold;
+			font-size: 14px;
+		}
+
+		.thinLine {
+			border-bottom: 1px dashed rgb(204, 204, 204);
+			height: 6px;
+		}
+
+		.solidLine {
+			border-bottom: 1px solid #ddd;
+		}
+
+		.align_l {
+			text-align: left;
+		}
+
+		.align_r {
+			text-align: right;
+		}
+
+		.ma_t_10 {
+			margin-top: 10px;
+		}
+
+		.ma_b_10 {
+			margin-bottom: 10px;
+		}
+
+		.wrap {
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			position: absolute;
+			background-color: #fff;
+			padding: 10px 10px 13px 10px;
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.main {
+			padding-top: 10px;
+			width: 100%;
+			flex: 1;
+			overflow: visible;
+		}
+
+		#accordion {
+			height: 100%;
+		}
+
+		.pageConfig {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.pageConfig .pageConfig-main {
+			flex-grow: 1;
+		}
+
+		.sheetConfig .header>table,
+		.imageSet table,
+		.displaySet table,
+		.printSet table,
+		.tableLocation table,
+		.configTableWin table,
+		.specialSheetSet table,
+		.chineseDrugSet table{
+			border-collapse: separate;
+			border-spacing: 10px;
+		}
+
+		.sheetConfig .header>table td {
+			text-align: right;
+		}
+
+		.sheetConfig>.main {
+			height: 500px;
+		}
+
+		.sheetConfig>.bottom {
+			height: 600px;
+		}
+
+		.dispalyConfig {
+			display: flex;
+		}
+
+		.dispalyConfig>div+div {
+			margin-left: 10px;
+		}
+
+		.dispalyConfig>.left {
+			width: 300px;
+		}
+
+		.dispalyConfig>.center {
+			flex: 1;
+		}
+
+		.dispalyConfig>.right {
+			width: 400px;
+		}
+
+		.dispalyConfig>.right .list {
+			height: 50%;
+		}
+
+		.specialOrdSet {
+			height: 300px;
+			display: flex;
+		}
+
+		.shieldSet {
+			height: 300px;
+			display: flex;
+		}
+
+		.shieldSet>div,
+		.specialOrdSet>div {
+			flex: 1;
+		}
+
+		.shieldSet>div:not(:last-child),
+		.specialOrdSet>div:not(:last-child) {
+			padding-right: 15px;
+		}
+
+		.shieldSet>div:last-child,
+		.specialOrdSet>div:last-child {
+			padding-right: 10px;
+		}
+
+		.btnCls {
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			padding: 0 5px 0 0;
+		}
+
+		.TSheetTab,
+		.NSheetTab {
+			border-width: 0px 1px 0px 0px;
+			border-top-style: initial;
+			border-bottom-style: initial;
+			border-left-style: initial;
+			border-top-color: initial;
+			border-bottom-color: initial;
+			border-left-color: initial;
+			border-image: initial;
+			height: 35px;
+			overflow: hidden;
+			border-right-style: solid;
+			border-right-color: rgb(204, 204, 204);
+
+		}
+
+		.TSheetTab.tabs-selected,
+		.NSheetTab.tabs-selected {
+			height: 36px;
+		}
+
+		.tabs-container.tabs-gray .tabs div a.tabs-inner {
+			height: 33px;
+			line-height: 33px;
+			color: rgb(0, 0, 0);
+			background-color: rgb(247, 247, 247);
+			border-color: rgb(247, 247, 247);
+			display: inline-block;
+			margin: 0px;
+			padding: 0px 10px;
+			text-align: center;
+			white-space: nowrap;
+			border-style: solid;
+			border-width: 3px 0px 0px;
+		}
+
+		.tabs-container.tabs-gray .tabs div a.tabs-inner:hover {
+			color: rgb(0, 0, 0);
+			filter: none;
+			background: rgb(204, 204, 204);
+			border-color: rgb(204, 204, 204);
+		}
+
+		.tabs-container.tabs-gray .tabs div.tabs-selected a.tabs-inner {
+			color: rgb(21, 132, 210);
+			background-color: rgb(255, 255, 255);
+			border-color: rgb(1, 123, 206);
+			border-left: 0px solid rgb(255, 255, 255);
+			border-right: 0px solid rgb(255, 255, 255);
+			border-bottom: 0px solid rgb(255, 255, 255);
+			border-top: 3px solid rgb(0, 99, 167);
+		}
+
+
+		.TSheetTabLite,
+		.NSheetTabLite {
+			border-width: 0px 1px 0px 0px;
+			border-top-style: initial;
+			border-bottom-style: initial;
+			border-left-style: initial;
+			border-top-color: initial;
+			border-bottom-color: initial;
+			border-left-color: initial;
+			border-image: initial;
+			height: 35px;
+			overflow: hidden;
+
+		}
+
+		.TSheetTabLite.tabs-selected,
+		.NSheetTabLite.tabs-selected {
+			height: 36px;
+		}
+
+		.tabs-container.tabs-gray .tabs div a.tabs-lite {
+			height: 33px;
+			line-height: 33px;
+			border-radius: 0;
+			color: #000;
+			background: #FFF;
+			border-width: 0;
+			border-bottom: 3px solid #FFF;
+			filter: none;
+			display: inline-block;
+			text-decoration: none;
+			margin: 0;
+			padding: 0 10px;
+			text-align: center;
+			white-space: nowrap;
+			border-style: solid;
+		}
+
+
+		.tabs-container.tabs-gray .tabs div a.tabs-lite:hover {
+			border-top-color: #FFF;
+			background: #FFF;
+			color: #339EFF;
+			filter: none;
+		}
+
+		.tabs-container.tabs-gray .tabs div.tabs-selected a.tabs-lite {
+			background: #FFF;
+			border: 0 solid;
+			border-bottom: 3px solid #339EFF;
+			color: #339EFF;
+			font-weight: 400;
+		}
+
+		/* 表头图片设置 */
+		.imgSet td {
+			/* padding-top:10px;	 */
+		}
+
+		.show-img {
+			width: 100px;
+			height: 110px;
+			border: 1px dashed #ccc;
+			margin-left: 60px;
+			position: relative;
+			display: none;
+		}
+
+		.show-img>img,
+		.show-img .bg-layer {
+			width: 88px;
+			height: 98px;
+			margin: 6px;
+		}
+
+		.show-img .bg-layer {
+			left: 6px;
+			top: 6px;
+			position: absolute;
+			background: rgba(0, 0, 0, .5);
+			margin: 0;
+			/*
+		display:flex;
+		align-items:center;
+		justify-content:center;
+		*/
+		}
+
+		.show-img .bg-layer a {
+			width: 20px;
+			height: 20px;
+			display: block;
+			text-align: center;
+			cursor: pointer;
+			top: 0;
+			right: 0;
+			position: absolute;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="wrap">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="r-label">所属医院</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+				<td class="r-label">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="saveSet()">保存</a>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'" onclick="opensheetDataSourceWin()">表格配置-基础数据类型维护</a>
+				</td>
+			</tr>
+		</table>
+		<div class="main">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'west',border:false" style="width: 250px;">
+					<div class="hisui-panel" fit="true" data-options="title:'医嘱单配置列表',headerCls:'panel-header-gray'">
+						<table id="configTable" class="hisui-datagrid" data-options="fit:true"></table>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="padding-left: 5px;">
+					<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true">
+						<div title="表格外内容" class="pageConfig pa_10">
+							<div class="ma_b_10"> <span class="font_bold">文本配置</span></div>
+							<div class="pageConfig-main">
+								<table id="textConfigTable" class="hisui-datagrid"
+									data-options="fit:true,autoSizeColumn:false,bodyCls:'table-splitline'"></table>
+							</div>
+						</div>
+						<div title="表格内容" class="sheetConfig pa_10">
+							<div class="ma_b_10"> <span class="font_bold">表格配置</span></div>
+							<div class="main">
+								<table id="sheetConfigTable" class="hisui-datagrid"
+									data-options="fit:true,autoSizeColumn:false,bodyCls:'table-splitline'"></table>
+							</div>
+							<div class="thinLine ma_t_10"></div>
+							<div class="ma_b_10 ma_t_10"> <span class="font_bold">医嘱附加信息设置</span>&nbsp;<span
+									style="color:red">(拖动调整顺序)</span></div>
+							<div class="bottom">
+								<table id="OrdSuffixConfigTable" class="hisui-datagrid"
+									data-options="fit:true,autoSizeColumn:false"></table>
+							</div>
+						</div>
+						<div title="显示规则" class="dispalyConfig pa_10">
+							<div class="left">
+								<table id="oecprTable" data-options="fit:true,autoSizeColumn:false"></table>
+							</div>
+							<div class="center">
+								<table id="skipTable" title="医嘱单换页划线设置"
+									data-options="iconCls:'icon-batch-cfg',headerCls:'panel-header-gray',fit:true,autoSizeColumn:false,toolbar:[]">
+								</table>
+							</div>
+							<div class="right">
+								<div class="hisui-panel" title="显示在长期医嘱单上的临时医嘱" id="right_panel"
+									data-options="iconCls:'icon-batch-cfg',fit:true,headerCls:'panel-header-gray'"
+									style="overflow: hidden;">
+									<div class="list">
+										<table id="dgArcCat"
+											data-options="border:false,fit:true,autoSizeColumn:false,toolbar:[]">
+										</table>
+									</div>
+									<div class="solidLine"></div>
+									<div class="list">
+										<table id="dgArcItm" data-options="border:false,fit:true,autoSizeColumn:false">
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div title="通用设置" class="pa_10">
+							<div id="ruleConfig">
+								<div> <span class="font_bold">logo图片配置</span></div>
+								<div class="imageSet">
+									<table class="imgSet" cellpadding="0" cellspacing="0">
+										<tr>
+											<td class="align_r">图片</td>
+											<td colspan="3" class="td-img"></td>
+											<td rowspan="3">
+												<div class="show-img" onmouseover="$('.bg-layer').show()"
+													onmouseout="$('.bg-layer').hide()">
+													<img src="" alt="表头图片" />
+													<div class="bg-layer">
+														<a class="icon-w-close" onclick="deleteImg()"></a>
+													</div>
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">尺寸 长</td>
+											<td><input class="hisui-numberbox textbox" id="ImgHeight" name="ImgHeight"
+													data-options="min:0" style="width:120px"></td>
+											<td class="align_r">宽</td>
+											<td><input class="hisui-numberbox textbox" id="ImgWidth" name="ImgWidth"
+													data-options="min:0" style="width:120px"></td>
+											<td></td>
+										</tr>
+										<tr>
+											<td class="align_r">打印坐标 X</td>
+											<td><input class="hisui-numberbox textbox" id="ImgXAxis" name="ImgXAxis"
+													data-options="min:0" style="width:120px"></td>
+											<td class="align_r">Y</td>
+											<td><input class="hisui-numberbox textbox" id="ImgYAxis" name="ImgYAxis"
+													data-options="min:0" style="width:120px"></td>
+											<td></td>
+										</tr>
+									</table>
+								</div>
+								<div class="thinLine ma_b_10"></div>
+								<div> <span class="font_bold">表格打印设置</span></div>
+								<div class="tableLocation">
+									<table cellpadding="0" cellspacing="0">
+										<tr>
+											<td class="align_r">表格起始 X</td>
+											<td><input class="hisui-numberbox textbox" id="tableX" name="tableX"
+													data-options="min:0" style="width:120px"></td>
+											<td class="align_r">Y</td>
+											<td><input class="hisui-numberbox textbox" id="tableY" name="tableY"
+													data-options="min:0" style="width:120px"></td>
+											<td></td>
+										</tr>
+										<tr>
+											<td class="align_r">表格行高</td>
+											<td><input class="hisui-numberbox textbox" id="rowHeight" name="rowHeight"
+													data-options="min:0" style="width:120px"></td>
+										</tr>
+									</table>
+								</div>
+								<div class="thinLine ma_b_10"></div>
+								<div> <span class="font_bold">内容显示设置</span></div>
+								<div class="displaySet">
+									<table cellpadding="0" cellspacing="0">
+										<tr>
+											<td class="align_r">是否显示撤销的临时医嘱</td>
+											<td>
+												<div id="IfShowCancelTempOrder" name="IfShowCancelTempOrder"
+													class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">是否显示成组标志</td>
+											<td>
+												<div id="IfShowGroupFlag" name="IfShowGroupFlag" class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">是否显示CA签名</td>
+											<td>
+												<div id="IfShowCASign" name="IfShowCASign" class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">成组医嘱整体换页</td>
+											<td>
+												<div id="IfGroupOrderPageFeed" name="IfGroupOrderPageFeed"
+													class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">是否默认首页</td>
+											<td>
+												<div id="IfDefFrontPageFlag" name="IfDefFrontPageFlag" class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">医嘱显示顺序</td>
+											<td>
+												<input id="ShowOrder_1" class="hisui-radio" type="radio" label="开医嘱时间"
+													name="ShowOrder" value="1"
+													data-options="radioClass:'hischeckbox_square-blue'">
+												<input id="ShowOrder_2" class="hisui-radio" type="radio" label="医嘱开始时间"
+													name="ShowOrder" value="2"
+													data-options="radioClass:'hischeckbox_square-blue'">
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">撤销医嘱提示显示</td>
+											<td><input class="hisui-validatebox textbox" id="CancelOrderShowText"
+													name="CancelOrderShowText" style="width:140px;" /></td>
+										</tr>
+										<tr>
+											<td class="align_r">日期格式</td>
+											<td><select id="DateFormat" comboName="DateFormat"
+													style="width:147px;"></select></td>
+										</tr>
+										<tr>
+											<td class="align_r">时间格式</td>
+											<td><select id="TimeFormat" comboName="TimeFormat"
+													style="width:147px;"></select></td>
+										</tr>
+										<tr>
+											<td class="align_r">日期时间显示样式</td>
+											<td><select id="DateTimeStyle" comboName="DateTimeStyle"
+													style="width:147px;"></select></td>
+										</tr>
+										<tr>
+											<td class="align_r" style="padding-bottom:5px;">每页医嘱数</td>
+											<td style="padding-bottom:5px;"><input class="hisui-numberbox textbox"
+													id="OrderNums" name="OrderNums" data-options="min:1"
+													style="width:147px;" /></td>
+										</tr>
+										<tr>
+											<td class="align_r" style="padding-bottom:5px;">页码:</td>
+											<td style="padding-bottom:5px;"><input class="hisui-validatebox textbox"
+													id="PageNumShow" name="PageNumShow"
+													style="width:147px;" />
+													<font style="color:red">例: 第{currentPage}页/ 总{totalPage}页</font>
+												</td>
+											
+										</tr>
+									</table>
+								</div>
+								<div class="thinLine ma_b_10"></div>
+								<div> <span class="font_bold">中草药相关设置</span></div>
+								<div class="chineseDrugSet">
+									<table cellpadding="0" cellspacing="0">
+									<tr>
+											<td class="align_r">草药普通处方是否全部显示</td>
+											<td>
+												<div id="IfShowAllCY" name="IfShowAllCY" class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">草药协定处方是否全部显示</td>
+											<td>
+												<div id="IfShowAllXDCY" name="IfShowAllXDCY" class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr style="display:none">
+											<td class="align_r">草药显示全部时是否显示处方头</td>
+											<td>
+												<div id="IfShowPresHead" name="IfShowPresHead" class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div class="thinLine ma_b_10"></div>
+								<div> <span class="font_bold">特殊医嘱单相关设置</span></div>
+								<div class="specialSheetSet">
+									<table cellpadding="0" cellspacing="0">
+										<tr>
+											<td class="align_r">只显示护士医嘱(护嘱单)</td>
+											<td>
+												<div id="IfOnlyShowNurOrd" name="IfOnlyShowNurOrd"
+													class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checkedws:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">只显示中草药医嘱(中草药单)</td>
+											<td>
+												<div id="IfOnlyShowCYOrd" name="IfOnlyShowCYOrd"
+													class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checkedws:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td class="align_r">只显示患者留观状态的医嘱(急诊留观医嘱单)</td>
+											<td>
+												<div id="IfOnlyShowEROrd" name="IfOnlyShowEROrd"
+													class="hisui-switchbox"
+													data-options="onText:'是',offText:'否',checkedws:false,animated:true,onClass:'primary',offClass:'gray'">
+												</div>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+							<div class="thinLine ma_b_10"></div>
+							<div class="ma_b_10"> <span class="font_bold">特殊医嘱显示</span><span style="color:red">执行人 对应
+									【执行护士】、执行时间 对应 【执行日期时间】</span></div>
+							<div class="specialOrdSet">
+								<div>
+									<table id="specialArcMastTable" data-options="fit:true,autoSizeColumn:false">
+									</table>
+								</div>
+								<div>
+									<table id="specialArcCatTable" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>
+							</div>
+							<div class="thinLine ma_t_10 ma_b_10"></div>
+							<div class="ma_b_10"> <span class="font_bold">屏蔽设置</span></div>
+							<div class="shieldSet">
+								<div>
+									<table id="dgOrderCat" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>
+								<div>
+									<table id="dgArcCat2" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>
+								<div>
+									<table id="dgArcItm2" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>
+								<div>
+									<table id="dgLoc" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>
+								<div>
+									<table id="dgBindSource" data-options="fit:true,autoSizeColumn:false"></table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--医嘱单配置列表弹窗-->
+	<div id="configTableWin" class="configTableWin">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="align_r">是否启用</td>
+				<td>
+					<div id="IfActive" name="IfActive" class="hisui-switchbox"
+						data-options="onText:'是',offText:'否',checkedws:false,animated:true,onClass:'primary',offClass:'gray'">
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="align_r label-request">描述</td>
+				<td>
+					<input class="hisui-validatebox textbox" id="Name" name="Name" style="width: 300px;">
+				</td>
+			</tr>
+			<tr>
+				<td class="align_r">是否是长期医嘱单</td>
+				<td>
+					<div id="IfLongSheet" name="IfLongSheet" class="hisui-switchbox"
+						data-options="onText:'是',offText:'否',checkedws:false,animated:true,onClass:'primary',offClass:'gray'">
+					</div>
+				</td>
+				<td>
+					<input class="hisui-validatebox textbox" id="Mark" name="Mark" style="width: 300px;display:none">
+				</td>
+			</tr>
+			<tr>
+				<td class="align_r">是否归档</td>
+				<td>
+					<div id="IfArchive" name="IfArchive" class="hisui-switchbox"
+						data-options="onText:'是',offText:'否',checkedws:false,animated:true,onClass:'primary',offClass:'gray'">
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="align_r">有效科室</td>
+				<td>
+					<select id="AreaLoc" name="AreaLoc" multiple="true" class="hisui-combobox" style="width: 306px;"></select>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input class="textbox" id="id" name="id" style="display: none;"></input>
+				</td>
+			</tr>
+		</table>
+		<div style="text-align: center;margin-bottom: 10px;" >
+			<a href="#"  id="saveConfigTableWinBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:90px;height:30px;" onclick="configTableHandler.save()">保存</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="#"  id="closeConfigTableWinBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="width:90px;height:30px;">关闭</a>
+		</div>
+	</div>
+	<!--表格配置-基础数据类型维护弹窗-->
+	<div id="sheetDataSourceWin" class="sheetDataSourceWin">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<table id="sheetDataSourceTable" class="hisui-datagrid" data-options="fit:true,autoSizeColumn:false"></table>
+			</div>
+		</div>
+	</div>
+	<!--跨院区复制 弹窗-->
+	<div id="configCopyWin" class="configCopyWin">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<table id="configCopyTable" class="hisui-datagrid" data-options="fit:true,autoSizeColumn:false"></table>
+			</div>
+			<div data-options="region:'south',border:false" style="height:50px;">
+				<div style="text-align: center;margin: 10px 0;" >
+					<a href="#"  id="copyConfigCopyWinBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:90px;height:30px;" onclick="configTableHandler.copy()">引用</a>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<a href="#"  id="closeConfigCopyWinBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="width:90px;height:30px;">关闭</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.ordersheetsetV3.js"></script>
+</body>
+
+</html>

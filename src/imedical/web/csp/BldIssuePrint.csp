@@ -1,0 +1,97 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+ 
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/default/easyui.css" />
+ <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/icon.css" />
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/jquery-1.8.0.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/jquery.easyui.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+<script src="../scripts_lib/echarts/build/dist/echarts.js" type="text/javascript" charset="utf-8"></script>
+ <script src="../scripts_lib/echarts/myEcharts.js" type="text/javascript" charset="utf-8"></script>
+ <script src="../scripts/websys.jquery.js" type="text/javascript"></script>
+    	 
+<SERVER>  
+ s AdmNo=%request.Get("EpisodeID")
+//s PatientID=%request.Get("PatientID") 
+ //s PatientID="0000129643"
+ s webIP=##Class(DHCLIS.DHCOrderList).getDllWebIP()
+  s dllstr="http://"_webIP_"/imedicallis/download/data/TRAK/print/LISPrint.cab"
+ w "<OBJECT id=""objPrintPreview""  style=""display:none"" classid=""clsid:22A5C29D-2131-4209-96BA-92B3C58EB849"" codebase="""_dllstr_""" VIEWASTEXT></OBJECT>"
+ s IssueRecords=##Class(DHCLIS.BLD.DHCIssue).GetIssueRecordDRsByAdm(AdmNo)
+  s rtn=##Class(DHCLIS.DHCOrderList).GetConnectString(1) 
+  s rtn=$p(rtn,"$LIS.SP$",1)
+ //s rtn="http://172.26.204.32/imedicallis/LIS.WS.DHCLISService.cls?wsdl=1&amp;CacheUserName=dhsuper&amp;CachePassword=dhsuper"	
+</SERVER>
+
+<script type="text/javascript">
+var IssueRecords="#((IssueRecords))#"
+var webIP="#((webIP))#" 
+var rtn= "#((rtn))#"
+</script>
+
+<script Language="JavaScript">
+  //页面加载
+var me = { 
+	ConnectString:""
+}
+  $(function() {
+	var ID="1"; 
+	 if (rtn != "") {
+			me.ConnectString=rtn; 
+			//me.ConnectString="http://114.251.235.30/csp/lis/LIS.WS.DHCLISService.cls"
+			var arrIssueDR= IssueRecords.split(",")
+			for(var i=0;i<arrIssueDR.length;i++)
+			{
+			  PrintIssueRec(arrIssueDR[i]);
+			}
+			//setTimeout("parent.printNext();",3000);
+	 }
+		 
+});
+
+function PrintIssueRec(IssueRecord)  
+{
+    param="DOCTOR"
+	connectString=me.ConnectString
+	//var UserParam=UserId + "^" + HospID;
+	
+	var printFlag = "0";
+    var rowids = IssueRecord;
+   // var userCode = USERCODE;
+    var paramList = param;
+    var UserParam="";
+    var connectString = me.ConnectString;
+    var printType = "PrintOut";
+    var clsName = "HIS.DHCReportPrintXM";
+    var funName = "QueryPrintData";
+	var Param = printFlag + "@" + connectString + "@" + rowids + "@demo@" + printType + "@" + paramList +"@"+clsName+"@"+funName;
+	
+	
+	objPrintPreview.PrintOut(rowids, UserParam, param, connectString,clsName,funName);  
+	
+	//PrintCommon(IssueRecord,Param);
+}
+
+//新的打印方式
+function PrintCommon(IssueRecord,Param) {
+	
+	//var Param = printFlag + "@" + connectString + "@" + reportDRs + "@" + UserParam + "@" + printType + "@" + paramList;
+	var printUrl="http://"+ webIP +"/imedicallis/lisprint/print2HIS/ResultPrintForHis.application?Param="+Param;
+	document.location.href=printUrl;
+	//document.location.href="imedicallis://0@http://"+webIP +"/csp/lis/LIS.WS.DHCLISService.cls?wsdl=1&CacheUserName=dhwebservice&CachePassword=dhwebservice@65@bld01@PrintPreview@1@HIS.DHCReportPrintXM@QueryPrintData"
+	//window.open("imedicallis://0@" + me.ConnectString +"?wsdl=1&CacheUserName=_system&CachePassword=sys@"+IssueRecord+"@bld01@PrintPreview@1@HIS.DHCReportPrintXM@QueryPrintData")
+   // objPrintPreview.PrintOut(IssueRecord, "", "", rtn,"HIS.DHCReportPrintXM","QueryPrintData");  
+   //setTimeout("parent.printNext();",30000);
+}
+
+
+</script>
+
+</HTML>

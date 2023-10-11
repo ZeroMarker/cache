@@ -1,0 +1,171 @@
+<!--<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbassessmentview.csp
+    @JS:MKB_AssessmentView.js
+    @Title：评估表预览
+    @Creator:chenghegui
+    @Description:评估分值
+    @CreateDate：2018-05-09
+*/
+</csp:method>-->
+<!--<!DOCTYPE html>
+<html lang="en">-->
+
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //s %session.Data("LOGON.USERID")=6505  ///visitor
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+ 	
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <!--<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>-->
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<server>
+if ##class(websys.Conversions).IsValidMethodName("web.DHCXMLPConfig","LODOPInit")
+{
+	d ##class(web.DHCXMLPConfig).LODOPInit() //lodop打印
+}
+</server>
+<style id="styleLable">
+ *{
+     padding:0;
+     margin:0;
+ }
+ ul{   
+    list-style: none;
+  }
+ a{ text-decoration:none} 
+.assesshead{
+    padding: 5px 30px 5px 30px;
+    margin-bottom: 10px;
+    margin-top: 0;
+    font-size: 30px !important;
+    color: #333;
+    font-weight: 400;
+    height: auto;
+}
+.contentul li{
+    float:left;  
+    padding:5px 10px 5px 30px;
+    margin:5px  
+}
+.contentul{
+    overflow:hidden;
+    padding:10px 5px 20px 5px;
+}
+.txtcontentul li{
+    float:left;  
+    padding:5px 30px 5px 30px;
+    margin:5px  
+}
+.txtcontentul{
+    overflow:hidden;
+    padding:5px 5px 0 5px;
+}
+
+.titleh3
+{
+     font-size: 16px;
+     font-weight: 400;
+     background-color:#ffffff;
+     color:#000;
+     border-left:0px solid #85c8ff;
+}
+.assesscontent
+{
+  padding:30px 10px 0 10px;
+  margin: 0px 30px 0 30px;
+}
+.divul
+{
+    padding:0;
+    border-bottom:2px solid #FFFFFF
+}
+.allcontent
+{
+    background-color:#FFFFFF;
+    padding:0;
+    overflow:hidden;
+    width:80%;
+    margin:10px 110px;
+    -moz-box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+    -webkit-box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+.welcome{
+  margin:0 0 5px 50px;
+}
+#footer{
+   padding:0;
+   margin:0 10px 10px 0;
+   border-top:1px dashed #c0c0c0;
+   border-left:1px none #333;
+   border-right:1px none #333;
+   border-bottom:1px none #c0c0c0;
+}
+#header{
+    border-top:1px none #333;
+    border-left:1px none #333;
+    border-right:1px none #333;
+    border-bottom:1px solid #c0c0c0;
+    height:35px;
+    overflow:hidden;
+}
+#divassess span{
+      margin:10px 40px 10px 5px;
+    }
+ .pagination-info,.pagination-page-list{
+         display:none;
+     }
+.titlelabel{
+	min-width:180px;
+    width:28%;
+    padding-right:20px;
+  }
+.titlelabel2{
+	min-width:130px;
+    width:20%;
+    padding-right:20px;
+  }
+.tabletitle{
+  margin: 10px 10px 0 10px;
+}         
+</style>
+</head>
+<body style="padding:4px;background-color: white;">
+
+     <div  class="hisui-layout" data-options="fit:true" id="hisuilayout" >
+        <!--中心操作区-->
+        <div  data-options="region:'center',split:true,headerCls:'panel-header-gray'"  style="border-color:#cccccc;">
+            <div  class="hisui-layout" data-options="fit:true">
+       <!--e5eff7-->
+                <div id="layoutcenter" style="background-color:#FFFFFF" data-options="region:'center',border:false" >
+                </div>
+                <!--<div id="footer"  style="height:40px" data-options="region:'south'">
+                    <div style="float:left;margin-right:50px"><a href="#" class="hisui-linkbutton" iconCls="icon-totalscore" data-options="plain:true" id="btnSave" style="">计算总分</a></div>
+                    <div style="float:left;padding:5px;background:url(../scripts/bdp/Framework/icons/mkb/assessmentbg.png) repeat-x center center;" id="divassess"><p>总分:<span id="allscore"></span>风险评估:<span id="grade"></span>结论:<span id="result"></span></p></div>
+                    <input type="hidden" id="allvalue"></input>
+                </div>-->
+                <div id="footer"   data-options="region:'south',minHeight:'90',split:true">
+                    <!--<div style="float:left;margin-right:50px"><a href="#" class="hisui-linkbutton" iconCls="icon-totalscore" data-options="plain:true" id="btnSave" style="">计算总分</a></div>-->
+                    <!--<div style="padding:5px;   background:url(../scripts/bdp/Framework/icons/mkb/assessmentbg.png)   repeat-x center center;" id="divassess"><p>总分:<span id="allscore"></span>风险评估:<span id="grade"></span>结论:<span id="result"></span></p></div>-->
+                    <div style="min-height:21px;   background:url(../scripts/bdp/Framework/icons/mkb/assessmentbg.png)   repeat-x center center;" id="divassess"><div id="ScoreCont" style="float:left">总分:<span id="allscore"></span></div><div id="GradeCont" style="float:left">风险评估:<span id="grade"></span></div><div id="ResultCont">结论:<span id="result"></span></div></div>
+                    <div id="Savebtn" style="padding:5px;float:left" ><p style="padding-top:5px;float:left">描述:<input type="text" id="desc" style="margin-left:40px;width:700px;border:none;" placeholder="可编辑补充信息"></input></p></div>
+                    <input type="hidden" id="allvalue"></input>
+                </div>
+            </div>
+        </div> 
+        
+        <!--左侧列表展示-->
+         
+    </div>
+     <script type="text/javascript" src="../scripts/bdp/CDSSVue/Public/MKB_AssessmentView.js"> </script>
+</body>
+</html>
+

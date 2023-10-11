@@ -17,6 +17,7 @@
    	   </server>
 	</head>
 	<body>  
+	    <csp:Include Page="dhcma.epd.reportili.show.csp">  
 	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/EPD/reportili/Gui.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/EPD/reportili/Event.js"></script>
@@ -34,12 +35,16 @@
 			Set PatientID=$g(%request.Data("PatientID",1))
 			Set EpisodeID=$g(%request.Data("EpisodeID",1))
 			set LogonHospID=$g(%session.Data("LOGON.HOSPID"))
+		    set LagCode = $g(%session("LOGON.LANGCODE"))
 		    set objHosp=##class(DHCMed.Base.Hospital).GetObjById(LogonHospID)
 		    Set HospDesc=""
 		    If ($IsObject(objHosp)) {
 		    	Set HospDesc=objHosp.Descs
+				Set HospDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTHospital","HOSPDesc",LagCode,HospDesc)
 		    }
 		    Set DefaultProvince=##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("DefaultProvinces","")
+		    set DocName=$g(%session.Data("LOGON.USERNAME"))
+			Set:DocName'="" DocName = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTCareProv","CTPCPDesc",LagCode,DocName)
 		    
 			Set ReportID=""""_$g(ReportID)_""""
 			Set PatientID=""""_$g(PatientID)_""""
@@ -48,6 +53,7 @@
 			Set DefaultProvince=""""_$g(DefaultProvince)_""""
 			Set EmrOpen=+$g(%request.Data("EmrOpen",1))   //是否由病历浏览打开
 			Set:EmrOpen="" EmrOpen=""""""
+			Set DocName=""""_$g(DocName)_""""
 	   </script>
 	  
 	    <script language="javascript" type="text/javascript">
@@ -55,16 +61,11 @@
             var PatientID=#(PatientID)#;
             var EpisodeID=#(EpisodeID)#;
             var HospDesc=#(HospDesc)#;
-            var EmrOpen=#(EmrOpen)#
-			$(document).ready(function(){
-				var url = "../scripts/DHCMA/EPD/reportili/Layout.html"
-        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
-   					if(statusTxt=="success") {
-	   					InitReportWin();
-   					} else if (statusTxt=="error") {
-	   					alert("Error: "+xhr.status+": "+xhr.statusText);
-	   				}
-	        	});
+            var EmrOpen=#(EmrOpen)#;
+            var DocName=#(DocName)#;
+            
+		    $(window).load(function() {
+				InitReportWin();
 			});
 		</script>
 	</body>

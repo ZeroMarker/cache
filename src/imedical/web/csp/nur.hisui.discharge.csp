@@ -8,7 +8,12 @@
         runat="SERVER">
         s EpisodeID = $G(%request.Data("EpisodeID", 1))
         s type = $G(%request.Data("type", 1))
-        </script>
+        s recallLimitDays=""
+        if (type="R"){
+	        s hospId=##class(Nur.NIS.Common.Utils).GetHospitalID("Nur_IP_NeedCareOrderSet",%session.Get("LOGON.HOSPID"))
+			s recallLimitDays=$g(^DHCDishChargeSet("Disch","recallLimitDays",hospId))
+	    }
+</script>
 <HTML lang="zh-CN">
 
 <head>
@@ -25,13 +30,26 @@
             src="../scripts/nurse/hisui/utils.js"></script>
     <script type="text/javascript"
             src="../scripts/nurse/hisui/discharge.js"></script>
+    <script type="text/javascript">
+    function DeleteLock()
+	{
+		var ret=tkMakeServerCall("Nur.DHCADTDischarge","setPatUnLockDischarge");		
+	}
+   </script>
     <STYLE type='text/css'>
         body {
             background-color: #fff;
             padding:0;
             margin:0;
         }
-        .discharge {
+        .search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.r-label{
+			padding-left: 10px;
+		}
+        /*.discharge {
             position: absolute;
             top:0;
             left:0;
@@ -61,13 +79,141 @@
 		}
 		tr{
 			height:35px;
+		}*/
+		.babyNameLink {
+			font-weight:bold;
 		}
-		
     </STYLE>
 </head>
 
-<body>
-    <div  class="hisui-layout discharge">
+<body onbeforeunload="DeleteLock()">
+	<div class="hisui-layout discharge" fit="true">
+		<div data-options="region:'north',border:false" style="height:185px;border:none;padding:10px;">
+			<div class="hisui-panel"  title="登记" style="" 
+				data-options="headerCls:'panel-header-gray',iconCls:'icon-write-order',fit:true">
+				<table class="search-table">
+					<tr>
+						<td class="r-label" >
+                            #(..Get("预计出院日期"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="EstimDischargeDate"></input>
+						</td>
+						<td class="r-label">
+                            #(..Get("死亡日期"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="DeceasedDate"></input>
+						</td>
+						<td class="r-label">
+                            #(..Get("病人"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="PatInfo"></input>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label" >
+                            #(..Get("预计出院时间"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled  id="EstimDischargeTime"></input>
+						</td>
+						<td class="r-label">
+                            #(..Get("死亡时间"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled  id="DeceasedTime"></input>
+						</td>
+						<td class="r-label">
+                            #(..Get("登记号"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled  id="PatRegNo"></input>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label" >
+                            #(..Get("出院条件"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="DischCond"></input>
+						</td>
+						<td class="r-label">
+                            #(..Get("操作医生"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="EstimDischargeDoctor"></input>
+						</td>
+						<td class="r-label">
+                            #(..Get("入院时间"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="PatAdminDateTime"></input>
+						</td>
+					</tr>
+				</table>	
+			</div>
+		</div>
+		<div data-options="region:'center',border:false" style="border:none;padding:0 10px;">
+			<div class="hisui-panel" title="护士" style="" 
+				data-options="headerCls:'panel-header-gray',iconCls:'icon-write-order',fit:true">
+				<table class="search-table">
+					<tr>
+						<td class="r-label"  style="width:84px;">
+                            #(..Get("出院日期"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="DischgDate"></input>
+						</td>
+						<td class="r-label" >
+                            #(..Get("出院时间"))#
+                        </td>
+						<td>
+							<input class="hisui-timeboxq textbox" disabled id="DischgTime"></input>
+						</td>
+						<td class="r-label">
+                            #(..Get("操作护士"))#
+                        </td>
+						<td>
+							<input class="textbox" disabled id="DischNurse"></input>
+						</td>
+					</tr>
+				</table>	
+			</div>
+		</div>
+		<div data-options="region:'south',border:false" style="height:105px;border:none;padding:10px;">
+			<div class="hisui-panel" title="更新" style="" 
+				data-options="headerCls:'panel-header-gray',iconCls:'icon-save',fit:true">
+				<table class="search-table">
+					<tr>
+						<td class="r-label" style="width:84px;">
+                            #(..Get("用户名"))#
+                        </td>
+						<td>
+							<input class="textbox" id="UserCode"></input>
+						</td>
+						<td class="r-label" style="width:56px;">
+                            #(..Get("密码"))#
+                        </td>
+						<td>
+							<input type="password" class="textbox" id="UserPassword"></input>
+						</td>
+						<td class="r-label" style="padding-left:80px;">
+                             <a href="#"
+			                   id="Update"
+			                   class="hisui-linkbutton hover-dark"
+			                   data-options="iconCls:'icon-w-ok'"
+			                  >
+			                    #(..Get("更新"))#
+			                </a>
+                        </td>
+					</tr>
+				</table>	
+			</div>
+		</div>
+	</div>
+    <!--div  class="hisui-layout discharge">
         <div data-options="region:'center'" style="border:none">
            <div class="discharge__body">
 	           <div class="hisui-panel"  title="登记" style="padding:10px;" 
@@ -149,7 +295,7 @@
 	                            &nbsp&nbsp#(..Get("出院时间"))#
 	                        </td>
 							<td style="padding:0 5px 0 0;">
-								<input class="textbox" disabled id="DischgTime"></input>
+								<input class="hisui-timeboxq textbox" disabled id="DischgTime"></input>
 							</td>
 							<td class="r-label">
 	                            #(..Get("操作护士"))#
@@ -190,16 +336,17 @@
 				</div>
            </div>
         </div>
+    </div-->
+    <div id="needCareOrderDlg"
+         class="hisui-dialog"
+         title="#(..Get("需关注信息"))#"
+         style="width:250px;padding:10px;"
+         data-options="iconCls:'icon-w-save',modal:true,buttons:[{id:'confirmBtn',text:'立即处理'},{id:'cancelBtn',text:'关闭'}]">
     </div>
-            <div id="needCareOrderDlg"
-             class="hisui-dialog"
-             title="#(..Get("需关注信息"))#"
-             style="width:250px;height:150px;padding:10px;"
-             data-options="iconCls:'icon-w-save',modal:true,buttons:[{id:'confirmBtn',text:'是'},{id:'cancelBtn',text:'否'}]">
-        </div>
     <script language="javascript">
     var EpisodeID = "#(EpisodeID)#";
     var type = "#(type)#";
+    var recallLimitDays = "#(recallLimitDays)#";
     </script>
 </body>
 

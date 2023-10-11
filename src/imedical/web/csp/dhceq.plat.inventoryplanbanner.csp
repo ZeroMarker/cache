@@ -1,0 +1,81 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<style type="text/css">
+        .spanclass{color:#008FF0; margin-right:0 10px 0 0;font-size:16px;}
+	    .parentspan{color:#666;}
+		.parentspan:before{content: "/";margin:0 10px 0 0;color: #000;}
+	    ul{height:40px;line-height:40px;margin-left:10px;}
+	    li{float:left;height:30px;line-height:30px;margin:0px 10px 0 0;}
+	    li span{color:#000;}
+    </style>
+</head>
+<body id="banner" style="padding:0;background-color:#fff;">
+	<script language=Cache runat=server>
+		s InventoryPlanDR=$Get(%request.Data("InventoryPlanDR",1))
+		s InventoryDR=$Get(%request.Data("InventoryDR",1))
+	</script>
+    <ul id="bannerContent">
+		<li id="EQIcon"><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/big/paper_gray.png"></li>
+    	<li id="PLabel" name="content"><span class="spanclass"></span></li>
+    	<li id="PCaption" name="content"><span class="spanclass"></span></li>
+    	<li id="ExpectDate" style="color:#666;" name="content">计划完成日期 : <span></span></li>
+    	<li id="ManageLoc" class="parentspan" name="content">管理科室 : <span></span></li>
+    	<li id="HOSP" class="parentspan" name="content">院区 : <span></span></li>
+    	<li id="EquipTypeDesc" class="parentspan" name="content">管理类组 : <span></span></li>
+		<li id="EquipTypeTitle" class="parentspan" name="content">管理类组 : <span></span></li>
+    	<li id="FreezeDate" class="parentspan" name="content">确认时间 : <span></span></li>
+    </ul>
+	<input type="hidden" id="InventoryPlanDR" value=#(InventoryPlanDR)#>
+	<input type="hidden" id="InventoryDR" value=#(InventoryDR)#>
+	<script type='text/javascript'>
+	
+	$(function(){
+			var InfoList=tkMakeServerCall("web.DHCEQ.EM.BUSInventory","GetInventoryInfo",getElementValue("InventoryPlanDR"),getElementValue("InventoryDR"));
+			InfoList=InfoList.replace(/\\n/g,"\n");
+			var totalInfo=InfoList.split("^");
+			//alert(totalInfo[2])
+			$("#PLabel span").text(totalInfo[0]);
+			$("#PCaption span").text(totalInfo[1]);
+			$("#ExpectDate span").text(totalInfo[2]);
+			$("#ManageLoc span").text(totalInfo[3]);
+			$("#HOSP span").text(totalInfo[4]);
+			if (totalInfo[5]==totalInfo[17])
+			{
+				$("#EquipTypeDesc span").text(totalInfo[5]);
+				$("#EquipTypeTitle").remove();
+			}
+			else
+			{
+				$("#EquipTypeTitle span").text(totalInfo[5]);
+				$HUI.tooltip("#EquipTypeTitle",{position:"bottom",tipWidth:"400",content:totalInfo[17]})
+				$("#EquipTypeDesc").remove();
+			}
+			$("#FreezeDate span").text(totalInfo[6]);
+			minSize(); //根据内容位置获取内容允许最小字体
+	});
+	
+	function minSize(){
+		var startTop=$('#EQIcon').offset().top;
+	    var endTop=$('#FreezeDate').offset().top;
+	    //比对首尾元素高度判断浮动是否塌陷
+	    if(endTop != startTop){
+		    $("li[name='content']").each(function(){
+				var oldSize=$(this).children("span").css("font-size");
+				$(this).css("font-size",parseInt(oldSize)-1 +'px');
+		     	$(this).children("span").css("font-size",parseInt(oldSize)-1 +'px');
+			});
+	        arguments.callee();  //callee表示对函数对象本身的引用,这有利于实现无名函数的递归或者保证函数的封装性
+	    }
+	}
+</script>
+</body>
+</html>

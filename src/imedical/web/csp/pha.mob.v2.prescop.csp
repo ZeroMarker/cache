@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+	description: 移动药房 - 门诊中草药处方查询
+	creator:     Huxt 2021-03-05
+	csp:         pha.mob.v2.prescop.csp
+	js:          pha/mob/v2/prescop.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    </style>
+</head>
+
+<body>
+	<!-- 整体布局 -->
+	<div class="hisui-layout" fit="true" border="false">
+		<div data-options="region:'center',border:false" class="pha-body">
+			<!-- layout start -->
+			<div id="layout-main" class="hisui-layout" fit="true">
+				<div data-options="region:'center',height:300, split:true,border:false">
+					<div class="hisui-panel" title="门诊处方查询"
+						data-options="iconCls:'icon-house',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+						<table id="gridPresc"></table>
+					</div>
+				</div>
+				<div data-options="region:'south', split:true,border:false">
+					<div class="hisui-panel" title="处方明细列表"
+						data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+						<table id="gridPrescDetail"></table>
+					</div>
+				</div>
+			</div>
+			<!-- layout end -->
+		</div>
+	</div>
+	
+	<!-- 工具栏 -->
+	<div id="gridPrescBar">
+		<div class="pha-row">
+			<div class="pha-col" style="width:63px;text-align:right">
+				<label for="startDate" title="日期为收费日期" class="hisui-tooltip" data-options="position:'bottom'"><span style="color:red">*</span>开始日期</label>
+			</div>
+			<div class="pha-col">
+				<input id="startDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" />
+			</div>
+			<div class="pha-col" style="width:63px;text-align:right">
+                <label for="phLoc"><span style="color:red">*</span>发药科室</label>
+            </div>
+            <div class="pha-col">
+                <input id="phLoc" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:false" />
+            </div>
+            <div class="pha-col">
+                <label for="patNo" style="width:42px;text-align:right">登记号</label>
+            </div>
+            <div class="pha-col">
+                <input id="patNo" class="hisui-validatebox" style="width:130px;" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" />
+            </div>
+            <div class="pha-col">
+                <label for="refuseFlag" style="width:63px;text-align:right">拒绝标志</label>
+            </div>
+            <div class="pha-col">
+                <input id="refuseFlag" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+            </div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">查询</a>
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-edit" id="btnAllowRet">允许退药</a>
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrinLabel">代煎标签</a>
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrint">打印配药单</a>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col" style="width:63px;text-align:right">
+				<label for="endDate" title="日期为收费日期" class="hisui-tooltip" data-options="position:'bottom'"><span style="color:red">*</span>截止日期</label>
+			</div>
+			<div class="pha-col">
+				<input id="endDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" />
+			</div>
+			<div class="pha-col" style="width:63px;text-align:right">
+                <label for="prescStatus">处方状态</label>
+            </div>
+            <div class="pha-col">
+                <input id="prescStatus" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+            </div>
+            <div class="pha-col" style="width:42px;text-align:right">
+                <label for="prescNo">处方号</label>
+            </div>
+            <div class="pha-col">
+                <input id="prescNo" class="hisui-validatebox" style="width:130px;" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" />
+            </div>
+            <div class="pha-col">
+                <label for="cookType" style="width:63px;text-align:right">煎药类型</label>
+            </div>
+            <div class="pha-col">
+                <input id="cookType" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+            </div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" id="btnClear">清屏</a>
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-edit" id="btnEmergency">设置优先</a>
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-edit" id="btnCancelRefuse">撤消拒绝</a>
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrintHPLabel">贵重药标签</a>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/pha/herb/v2/store.js"></script>
+	<!-- 加载本页面js -->
+	<script type="text/javascript" src="../scripts/pha/mob/v2/print.js"></script>
+	<script type="text/javascript" src="../scripts/pha/mob/v2/prescop.js"></script>
+</body>
+
+</html>

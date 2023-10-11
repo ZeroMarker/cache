@@ -10,8 +10,8 @@
 
 <TITLE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 	<style type="text/css">
 	.eq-table {display:table; width:100%; border-collapse:collapse; margin-bottom:5px;}
 	.eq-table-tr {display:table-row;}
@@ -25,20 +25,30 @@
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
 	Set RowID=$Get(%request.Data("RowID",1))
+	s HospFlag=##class(web.DHCEQCommon).GetSysInfo("990051")	//CZF0138
 </Script>
 <body class="hisui-layout" style="height:100%;">
+		<csp:if condition='HospFlag="2"'>	<!--CZF0138-->
+			<div data-options="region:'north',border:false,split:true" style="height:45px;padding:10px 10px 0 10px;">
+				<label id="_HospListLabel" style="color:red;padding-left:10px;" class='r-label'>医院</label>
+				<input class="hisui-validatebox"  id="_HospList" type="text">
+				<a id="_HospBtn" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">数据关联医院</a>	
+			</div>
+		</csp:if>
 		<div data-options="region:'center',border:false" style="padding:10px">
 			<div class="hisui-panel" title="人员" data-options="eqtitle:'maintitle',fit:true">
 				<div class="eq-table">
 					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label id="cULoginName" for="ULoginName">登陆名</label></div>
+						<div class="eq-table-td eq-table-label"><label id="cULoginName" for="ULoginName">登录名</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ULoginName"></div>
-						<div class="eq-table-td eq-table-label"><label id="cULogoinPassword" for="ULogoinPassword">密码</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ULogoinPassword" type="password"></div>
+						<!--<div class="eq-table-td eq-table-label"><label id="cULogoinPassword" for="ULogoinPassword">密码</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ULogoinPassword" type="password"></div>-->
 						<div class="eq-table-td eq-table-label"><label id="cUCode" for="UCode">姓名首字母</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UCode"></div>
 						<div class="eq-table-td eq-table-label"><label id="cUName" for="UName">姓名</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UName"></div>
+						<div class="eq-table-td eq-table-label"></div>	<!--MZY0153	3211414		2023-02-20-->
+						<div class="eq-table-td eq-table-input"></div>
 						<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">查询</a></div>	<!--MZY0025	1318612	2020-05-13-->
 					</div>
 					<div class="eq-table-tr">
@@ -82,7 +92,7 @@
 						<div class="eq-table-td eq-table-label"><label id="cUExTypeDesc" for="UExTypeDesc">关联系统</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UExTypeDesc" data-options="component:'PLAT.L.TypeDefine',paras:[{name:'Desc',type:1,value:'UExTypeDesc'},{name:'Lookupname',type:2,value:'ExType'}]"></div>
 						<div class="eq-table-td eq-table-label"><label id="cUExIDDesc" for="UExIDDesc">关联用户</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UExIDDesc" data-options="component:'PLAT.L.SSUser'"></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UExIDDesc" data-options="component:'PLAT.L.SSUser',jsfunction:GetSSUser"></div>   <!--CZF	2020-11-13 添加回调函数调用-->
 						<div class="eq-table-td eq-table-button"><a id="BClear" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">清屏</a></div>		<!--MZY0025	1318612	2020-05-13-->
 					</div>
 					<div class="eq-table-tr">
@@ -118,6 +128,7 @@
 			<INPUT type="hidden" id="USex">
 		</form>
 	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>		<!--CZF0138-->
 	<script type='text/javascript' src='../scripts/dhceq/plat/ctuser.js'></script>
 </body>
 </HTML>

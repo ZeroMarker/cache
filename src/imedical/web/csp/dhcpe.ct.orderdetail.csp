@@ -1,0 +1,249 @@
+
+<!--
+ * FileName: dhcpe.ct.orderdetail.csp 
+ * Author: xy
+ * Date: 2021-08-13
+ * Description: 细项维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.panel-header{
+	border-bottom: 0;
+}
+.r-label{
+	padding-left: 10px;
+}
+/*弹出框里标签右对齐 并且有10px内边距*/
+.tdlabel
+{
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align:right;
+}
+.addtable{
+	border-collapse:separate;
+	border-spacing:0 6px;
+	/*padding: 0 10px;*/
+}
+
+</style>
+</head>
+
+<body>
+
+	<div class="hisui-layout" data-options="fit:true" id="layout">
+	
+		<div  data-options="region:'north',split:true"  style="height:440px;padding:4px 4px 4px 0px;"  border="false">
+			<div class="hisui-layout" data-options="fit:true"  border="false">
+				<!--站点 start-->
+				<div data-options="region:'west',split:true"  style="width:370px;padding:0px 4px 0px 4px;" border="false">
+					<div class="hisui-panel" fit="true" data-options="title:'站点',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 				<div class="hisui-layout" fit="true">
+		 					<div data-options="region:'north',border:false,collapsible:false" style="height:92px;border-bottom:1px solid #C0C0C0;">
+		 						<table class="search-table">
+		 							<tr>
+		 								<td class="r-label"><label>#(..Get("科室"))#</label></td>
+	    	 							<td colspan='3'><input id="LocList" class="hisui-combobox textbox" style="width:254px;"></td>
+		 							</tr>
+		 							<tr>
+		 								<td class="r-label"><label>#(..Get("描述"))#</label></td>
+										<td>
+											<input class="textbox" id="Desc"/>
+										</td>	
+										<td class="r-label">
+											<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+										</td>
+										<td><input type="hidden" id="StationID" /></td>
+										<td><input type="hidden" id="StaionDesc" /></td>
+										
+									</tr>	
+                   				</table>
+		 					</div>
+		 		
+		 					<div data-options="region:'center',border:false">
+		 						<table id="StaionGrid"></table>
+		 					</div>
+		 					
+						</div>							
+				 	</div>
+				</div>
+				<!--站点 end-->
+				<!--细项 start-->
+				<div data-options="region:'center',split:true"  style="padding:0px 4px 0px 0px" style="" border="false">
+					<div class="hisui-panel" fit="true" data-options="title:'细项维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 				<div class="hisui-layout" fit="true">
+		 					<div data-options="region:'north',border:false,collapsible:false" style="height:52px;border-bottom:1px dashed #ccc;">
+		 						<table class="search-table">
+		 							<tr>
+		 								
+		 								<td class="r-label"><label>#(..Get("细项名称"))#</label></td>
+										<td>
+											<input class="textbox" id="OrdDetailDesc"/>
+										</td>	
+										<td class="r-label">
+											<a id="BODFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+										</td>
+								
+										<td><input type="hidden" id="OrdDetailID" /></td>
+										<td><input type="hidden" id="DetailDesc" /></td>
+										<td><input type="hidden" id="OrdDetailSetID" /></td>
+											
+									</tr>	
+                   				</table>
+		 					</div>
+		 		
+		 					<div data-options="region:'center',border:false">
+		 						<table id="OrderDetailGrid" toolbar="#orderdetailbar"></table>
+		 						
+		 					</div>
+		 					
+						</div>							
+				 	</div>
+				</div>
+				<!--细项 end--> 
+			</div>
+		</div>
+		<div  data-options="region:'center',split:true"  style="padding:0px 4px 4px 4px;"  border="false">
+			<!--细项详情 start--> 
+			<div class="hisui-panel" fit="true" data-options="title:'细项详情维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 		
+		 		<div class="hisui-layout" fit="true">
+		 			
+		 			<div data-options="region:'center',border:false">
+		 				<table id="OrderDetailSetGrid" toolbar="#orderdetailsetrbar"></table>
+		 			</div>
+		 					
+				</div>							
+			</div>
+			<!--细项详情 end--> 
+		</div>
+			
+	</div>
+	
+	
+	<!--细项 start-->
+    <div id="orderdetailbar">
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="BAdd">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="BUpdate">修改</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="BSave">保存</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-key',plain:true,stopAllEventOnDisabled:true" id="BRelateLoc" disabled>数据关联科室</a> 
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star',plain:true,stopAllEventOnDisabled:true" id="RelateStandard" disabled>标准化对照</a>
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-undo',plain:true,stopAllEventOnDisabled:true" id="RelateCancel" disabled>撤销对照</a>
+
+    </div>
+	<!--细项 end-->    
+	
+	
+	<!--细项详情 start-->
+    <div id="orderdetailsetrbar">
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="BODSAdd">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="BODSUpdate">修改</a> 
+    </div>
+	<!--细项详情 end-->    
+	
+	
+	<!--关联科室授权弹窗 start-->
+	<div id="LocListWin"  style="display:none;">
+		<div data-options="region:'north',split:false,border:true" style="height:290px;padding:10px;">
+			<div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+				<table data-options="bodyCls:'panel-header-gray'" id="LocListGrid"></table>
+			</div>
+        </div>
+	</div>
+	<!--关联科室授权弹窗 end-->
+	
+	
+	<!--增改弹窗 start-->
+    <!--增改弹窗-->
+     <div id="myWin" style="width:770px;height:230px;padding:3px 10px 10px 10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+
+			<table class="addtable">
+				 <tr>
+					 <td class="tdlabel"><label>#(..Get("站点名称"))#</label></td>
+					 <td>
+						<input class="textbox" id="ODStaionDesc" disabled/>
+					 </td>
+					 
+					  <td class="tdlabel"><label>#(..Get("细项描述"))#</label></td>
+					  <td>
+						<input class="textbox" id="ODSDetailDesc" disabled/>
+					  </td>
+					 
+					 <td class="tdlabel"><label>#(..Get("英文对照"))#</label></td>
+					 <td>
+						<input class="textbox" id="ZhToEng"/>
+					 </td>
+					
+				</tr>
+				<tr>
+					<td class="tdlabel"><label>#(..Get("特殊范围"))#</label></td>
+					<td>
+						<input class="textbox" id="SpecialNature"/>
+					</td>
+					
+					 <td class="tdlabel"><label>#(..Get("进入小结"))#</label></td>
+					<td>
+            			<input class='hisui-checkbox' type="checkbox" Id="Summary" data-options="checked:true" value="1">
+         			 </td>
+         			 
+					<td class="tdlabel"><label>#(..Get("不打印"))#</label></td>
+					<td>
+            			<input class='hisui-checkbox' type="checkbox" Id="NoPrint" data-options="checked:true" value="1">
+         			 </td>
+				
+				</tr>
+				<tr>
+					<td class="tdlabel"><label>#(..Get("婚姻"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="Married_DR_Name" style="width:154px;"/>
+					</td>
+					
+					<td class="tdlabel"><label>#(..Get("报告中对比"))#</label></td>
+					<td>
+            			<input class='hisui-checkbox' type="checkbox" Id="HistoryFlag" data-options="checked:true" value="1">
+         			 </td>
+					
+				</tr>
+	             								
+			</table >
+		</form>
+	</div>    
+
+	<!--增改弹窗 end-->
+	
+	<!--标准化对照弹窗-->
+    <div id="StandardWin"  style="display:none;">
+        <div data-options="region:'north',split:false,border:true" style="height:350px;padding:10px;padding-bottom:0px">
+        	<div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+                <table id="gridBTExamItemDetail" data-options="border:false,toolbar:'#gridBTExamItemDetail_custtb'"></table>
+				<div id="gridBTExamItemDetail_custtb" style="float: right;" >
+					<input id="gridBTExamItemDetail_search" data-options="prompt:'#(..Get("搜索"))#'" class="hisui-searchbox"/>
+				</div>
+            </div>
+        </div>
+    </div>
+    
+	<script type="text/javascript" src="../scripts/dhcpe/ct/orderdetail.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	
+	   
+</body>
+</html>

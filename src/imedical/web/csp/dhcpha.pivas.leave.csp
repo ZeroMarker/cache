@@ -1,57 +1,73 @@
 <!DOCTYPE html>
-<!--排班管理-请假管理-申请请假
-	csp: dhcpha.pivas.leave.csp
+<!--
+    排班管理-请假管理-申请请假
+	csp: csp/dhcpha.pivas.leave.csp
 	js:  scripts/pharmacy/pivas/leave.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
+
 <HEAD>
     <title>
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
-<style>
-</style>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <style>
+        .dialog-button{
+            margin-top: -12px;;
+        }
+        #gridLeaveWin .pha-con-table{
+            /* margin:auto; */
+        }
+        .pha-con-table .r-label{
+            white-space: nowrap;
+        }
+        textarea{
+            border-radius: 2px
+        }
+    </style>
 </HEAD>
-<body >
-    <div class="hisui-layout"  fit="true" border="false">
-        <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-        	<div class="hisui-layout" fit="true" border="false">
-        		<div data-options="region:'center',split:true,headerCls:'panel-header-gray',title:''" class="dhcpha-hisui-border"  style="border-radius: 4px;">
-        			<table id="gridLeave"></table>
-				</div>
-			</div>
-        </div> 
+
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-side-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                    <table id="gridLeave">
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
- 	<div id="gridLeaveBar">
-    	<table>
-    		<tr>
-    		<td>
-    		<input id="cmbLeaveStatus"/>
-    		</td>
-		        <td>
-		        	<div class="datagrid-btn-separator"></div>
-				</td>
-	    		<td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
-		        </td>
-		        <td>
-		        	<div class="datagrid-btn-separator"></div>
-				</td>
-				<td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnEdit">编辑</a>
-		        </td>
-		        <td>
-		        	<div class="datagrid-btn-separator"></div>
-				</td>
-		        <td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
-		        </td>
-		    </tr>
-		</table>   
- 	</div>
-    <div id="gridLeaveWin" class="hisui-dialog" title="请假信息" closed="true" style="width:430px;height:340px;" data-options="iconCls:'',modal:true,
+    <div id="gridLeaveBar" class="pha-con-datagrid-toolbar">
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="cmbLeaveStatus">#(..Get("状态"))#</label>
+                </td>
+                <td>
+                    <input id="cmbLeaveStatus" />
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEdit">修改</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+        </div>
+    </div>
+    <div id="gridLeaveWin" class="hisui-dialog" title="请假信息" closed="true" style="width:822px;" data-options="iconCls:'',modal:true,
 	buttons:[{
 		text:'确定',
 		handler:function(){
@@ -63,50 +79,38 @@
 			$('#gridLeaveWin').window('close');
 		}
 	}]">
-	    <div class="hisui-layout" fit="true" >
-        <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
-        <div class="hisui-layout" data-options="fit:true" >
-            <div data-options="region:'center'" border="false">
-            <table class="dhcpha-north-tbl">
-            	<tr>
-            	<td>
-					 <span style="color:red">*</span>请假类型
-				</td>
-            	<td>
-					 <input id="cmbLeaveType" class='hisui-combobox'/>
-				</td>
-				</tr>
-            	<tr>
-            	<td>
-            		<span style="color:red">*</span>日期范围
-            	</td>
-            	<td>
-					 <input id="dateStart" class='hisui-datebox' style="width:154px" data-options="validType:'validDate[\'yyyy-MM-dd\']'"/>
-					 至
-					 <input id="dateEnd" class='hisui-datebox' style="width:154px" data-options="validType:'validDate[\'yyyy-MM-dd\']'"/>
-				</td>
-				</tr>
-          	<tr>
-            	<td>
-            		<span style="color:red">*</span>请假原因
-            	</td>
-            	<td>
-					 <textarea id="txtReason" style="width:325px;height:150px;"/></textarea>
-				</td>
-				</tr>
-
-	         </table>
-	         </div>
-        </div>
-        </div>
-        </div>
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <span style="color:red">*</span>#(..Get("请假类型"))#
+                </td>
+                <td colspan="3">
+                    <input id="cmbLeaveType" class='hisui-combobox' />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <span style="color:red">*</span>#(..Get("日期范围"))#
+                </td>
+                <td>
+                    <input id="dateStart" class='hisui-datebox' style="width:142px" data-options="validType:'validDate[\'yyyy-MM-dd\']'" />
+                </td>
+                <td class="r-label"><label>#(..Get("至"))#</label></td>
+                <td>
+                    <input id="dateEnd" class='hisui-datebox' style="" data-options="validType:'validDate[\'yyyy-MM-dd\']'" />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label" style="vertical-align: top;">
+                    <span style="color:red">*</span>#(..Get("请假原因"))#
+                </td>
+                <td colspan="3">
+                    <textarea id="txtReason" style="width:calc(100% - 6px);height:150px;" /></textarea>
+                </td>
+            </tr>
+        </table>
     </div>
-
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.store.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.tools.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/pivas/leave.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/leave.js"></script>
 </body>
+
 </HTML>

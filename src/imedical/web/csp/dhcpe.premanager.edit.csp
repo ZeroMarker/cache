@@ -1,0 +1,249 @@
+<!--
+ * Description: 限额维护-全程医疗
+ * FileName: dhcpe.premanager.edit.csp
+ * Anchor: wangguoying
+ * Date: 2021-10-12
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link href="../scripts/dhcpe/lib/fullcalendar/5.9.0/main.min.css" rel="stylesheet">
+ 	<style>
+
+  body {
+	background: #ffff;
+    margin-top: 40px;
+    font-size: 14px;
+    font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+  }
+
+  #external-events {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    width: 150px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    background: #eee;
+    text-align: left;
+  }
+
+  #external-events h4 {
+    font-size: 16px;
+    margin-top: 0;
+    padding-top: 1em;
+  }
+
+  #external-events .fc-event {
+    margin: 3px 0;
+    cursor: move;
+  }
+
+  #external-events p {
+    margin: 1.5em 0;
+    font-size: 11px;
+    color: #666;
+  }
+
+  #external-events p input {
+    margin: 0;
+    vertical-align: middle;
+  }
+
+  #calendar-wrap {
+    /*margin-left: 200px;*/
+  }
+
+  #calendar {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .expire-cell{
+  	background: #fff2f2;
+  }
+  .plain-td a{
+    background: white;
+    color: #40A2DE;
+    border: 1px solid #40A2DE !important;
+    border-radius: 4px;
+  }
+ </style>
+</head>
+<body>
+	<div id='wrap'>
+	    <div id='calendar-wrap'>
+	      <div id='calendar'></div>
+	    </div>
+
+	  </div>
+	 
+	 
+	 
+	 <!-- 添加或编辑限额信息 -->
+	 <div id="manager-edit-win" class="hisui-dialog" title="编辑限额" 
+			style="width:900px;height:705px;padding:10px 10px 10px 10px;" 
+			data-options="iconCls:'icon-w-copy',resizable:true,modal:true,closed:true,buttons:[{
+				text:'保存',
+				iconCls:'icon-w-save',
+				handler:update_premanager},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				handler:function(){$HUI.dialog('#manager-edit-win').close();}
+				}]"> 
+		<input id="w_h_dateStr" type="hidden">  
+		<table>
+		<tr>
+		<td>
+		<div class="hisui-panel" title="按照预约总数" style="width:400px;padding:10px;height:190px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-sum'">
+	 		<table style="border-collapse:separate; border-spacing:10px 10px;">
+				<tr>
+					<td>状态：</td>
+					<td>
+						<div id="w_total_status" class="hisui-switchbox" data-options="checked:false,onText:'开启',offText:'关闭',
+							size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+				</tr>
+				<tr>
+				
+					<td>总量：</td>
+					<td><input id="w_total_input" type="text" class="hisui-numberbox" data-options="min:0"></td>
+				</tr>
+			</table>
+	 	</div>
+	 	
+	 	<div style="margin-top:10px;">
+		 	<div class="hisui-panel" title="按照性别" style="width:400px;padding:10px;height:190px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-person'">
+		 		<table style="border-collapse:separate; border-spacing:10px 10px;">
+					<tr>
+						<td>状态：</td>
+						<td >
+							<div id="w_sex_status" class="hisui-switchbox" data-options="checked:false,onText:'开启',offText:'关闭',
+								size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>男：</td>
+						<td><input id="w_male_input" type="text" class="hisui-numberbox" data-options="min:0"></td>
+					</tr>
+					<tr>
+						<td>女：</td>
+						<td><input id="w_female_input" type="text" class="hisui-numberbox" data-options="min:0"></td>
+					</tr>
+				</table>
+		 	</div>
+	 	</div>		
+		
+		<div style="margin-top:10px;">
+		 	<div class="hisui-panel" title="按照个团" style="width:400px;padding:10px;height:190px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group'">
+		 		<table style="border-collapse:separate; border-spacing:10px 10px;">
+					<tr>
+						<td>状态：</td>
+						<td >
+							<div id="w_gi_status" class="hisui-switchbox" data-options="checked:false,onText:'开启',offText:'关闭',
+								size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>个人：</td>
+						<td><input id="w_person_input" type="text" class="hisui-numberbox"  data-options="min:0"></td>
+					</tr>
+					<tr>
+						<td>团体：</td>
+						<td><input id="w_group_input" type="text" class="hisui-numberbox" data-options="min:0"></td>
+					</tr>
+				</table>
+		 	</div>
+	 	</div>
+	</div>
+	</td>
+	<td style="padding-left:10px;vertical-align: top;">
+		<div class="hisui-panel" title="按照年龄段" style="width:460px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-big-meterage'">
+	 		<table style="border-collapse:separate;">
+				<tr>
+					<td style="padding:10px 0 0 10px;width:60px;">状态：</td>
+					<td style="padding-top:10px;text-align:left;width:100px;">
+						<div id="w_age_status" class="hisui-switchbox" data-options="checked:false,onText:'开启',offText:'关闭',
+							size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td class="plain-td" style="padding:10px 0 0 10px;">
+						<a  href="#"  onclick="add_grid_row('w_age_grid');" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增一行</a>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3" style="padding-top:10px;">
+						<table id='w_age_grid' class="hisui-datagrid" style="width:454px;height:200px" 
+							data-options="bodyCls:'panel-header-gray',iconCls:'icon-paper',pagination:true,showRefresh:false,
+							columns:[[
+								{field:'TID',hidden:true},
+								{field:'TOp',width:100,align:'center',title:'操作',
+									formatter:function(value,row,index){return formatter_win_grid('w_age_grid',value,row,index)}
+								},
+								{field:'TMin',width:100,title:'下限',editor:{type:'numberbox',options:{min:0}}},
+								{field:'TMax',width:100,title:'上限',editor:{type:'numberbox',options:{min:0}}},
+								{field:'TNum',width:100,title:'限额',editor:{type:'numberbox',options:{min:0}}}]]
+							">   
+						</table> 
+					</td>
+				</tr>
+			</table>
+	 	</div>
+	 	
+	 	<div style="margin-top:10px;">
+	 		<div class="hisui-panel" title="按照项目金额" style="width:460px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-money'">
+		 		<table style="border-collapse:separate;">
+					<tr>
+						<td style="padding:10px 0 0 10px;width:60px;">状态：</td>
+						<td style="padding-top:10px;text-align:left;width:100px;">
+							<div id="w_money_status" class="hisui-switchbox" data-options="checked:false,onText:'开启',offText:'关闭',
+								size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+						</td>
+						<td class="plain-td" style="padding:10px 0 0 10px;">
+							<a  href="#"  onclick="add_grid_row('w_money_grid');" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增一行</a>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3" style="padding-top:10px;">
+							<table id='w_money_grid' class="hisui-datagrid" style="width:454px;height:200px" 
+								data-options="bodyCls:'panel-header-gray',iconCls:'icon-paper',pagination:true,showRefresh:false,
+							columns:[[
+								{field:'TID',hidden:true},
+								{field:'TOp',width:100,align:'center',title:'操作',
+									formatter:function(value,row,index){return formatter_win_grid('w_money_grid',value,row,index)}
+								},
+								{field:'TMin',width:100,title:'下限',editor:{type:'numberbox',options:{min:0}}},
+								{field:'TMax',width:100,title:'上限',editor:{type:'numberbox',options:{min:0}}},
+								{field:'TNum',width:100,title:'限额',editor:{type:'numberbox',options:{min:0}}}]]
+							">     
+							</table> 
+							
+						</td>
+					</tr>
+				</table>
+	 		</div>
+	 	</div>
+	 	
+	 	
+	</td>
+	</tr>
+	</table>
+	<!-- //按条件复制 -->
+	 
+	 
+	 
+	 <script type="text/javascript" src="../scripts/dhcpe/lib/fullcalendar/5.9.0/main.min.js"></script>
+	 <script type="text/javascript" src="../scripts/dhcpe/lib/fullcalendar/5.9.0/locales-all.js"></script>
+	 <script type="text/javascript" src="../scripts/dhcpe.premanager.edit.js"></script>
+</body>		
+</html>

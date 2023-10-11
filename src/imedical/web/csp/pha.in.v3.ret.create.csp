@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+    退货 - 制单
+    csp:  csp/pha.in.v3.ret.create.csp
+    js:   scripts/pha/in/v3/ret/create.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        #remarks {
+            width: calc(100% - 7px);
+            text-align: left;
+        }
+
+        .pha-ret-create-hide {
+            display: none;
+            padding: 0;
+            border: 0;
+        }
+        #qCondition a{
+            min-width:90px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',title:'退货 / 制单'" id="layout-ret-create-panel">
+                    <table id="gridItm"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridItmBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="loc">#(..Get("退货科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="operateType">#(..Get("退货类型"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="operateType" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="stkCatGrp">#(..Get("类组"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="stkCatGrp" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:false">
+                </td>
+
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnSelect">查询单据</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnClean">清屏</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnPrint">打印</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnSelectRec">查询入库单</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="vendor">#(..Get("经营企业"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="vendor" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="remarks">#(..Get("备注"))#</label>
+                </td>
+                <td class="r-label" colspan="3">
+                    <input type="text" id="remarks" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnSave">保存</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnFinish">完成</a>
+                    <a data-pha-btn class="hisui-linkbutton pha-btn-cancel" id="btnFinishCancel">取消完成</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnDelete">删除</a>
+                </td>
+            </tr>
+            <tr style="display:none;">
+                <td>
+                    <input type="text" id="dataLinkFrom" class="hisui-validatebox" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true,required:false">
+                </td>
+            </tr>
+        </table>
+        <div class="pha-banner-container">
+            <div id="retBanner"></div>
+        </div>
+        <div class="pha-line"></div>
+        <div class="pha-table-toolbar-button">
+            <div style="float: left;">
+                <a data-pha-btn class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-add'" id="btnAddItm">新增一行</a>
+                <a data-pha-btn class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'" id="btnDeleteItm">删除勾选行</a>
+                <a data-pha-btn class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-write-order'" id="btnModify">修改勾选数据</a>
+            </div>
+            <div style="float:right">
+                <div id="keyToolInput" class="hisui-keywords" data-options="items:[{text:'退货原因默认取上一条记录',id:'reason',selected:true}]"></div>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+    <div id="winRetQuickModify" class="hisui-window" data-options="title:'修改勾选数据',closed:true" >
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label"><input type="checkbox" class="hisui-checkbox" for="reason-quick"></td>
+                <td class="r-label"><label>#(..Get("退货原因"))#</label></td>
+                <td class="r-label"><input type="text" class="hisui-combobox" id="reason-quick" linkField="reason"></td>
+            </tr>
+            <tr>
+                <td class="r-label"><input type="checkbox" class="hisui-checkbox" for="invNo-quick"></td>
+                <td class="r-label"><label>#(..Get("发票号"))#</label></td>
+                <td class="r-label"><input type="text" class="hisui-validatebox" id="invNo-quick" linkField="invNo"></td>
+
+            </tr>
+            <tr>
+                <td class="r-label"><input type="checkbox" class="hisui-checkbox"  for="invDate-quick"></td>
+                <td class="r-label"><label>#(..Get("发票日期"))#</label></td>
+                <td class="r-label"><input type="text" class="hisui-datebox" id="invDate-quick" linkField="invDate" data-options="width:160"></td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align:center">
+                    <a class="hisui-linkbutton" id="btnSa1ve" style="width:100%" id="btnModify-quick">修改未填数据</a>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align:center">
+                    <a class="hisui-linkbutton green" id="bt2nSave" style="width:100%" id="btnModifyAll-quick">修改所有数据</a>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" style="text-align:center">
+                    <a class="hisui-linkbutton red" id="btn3Save" style="width:100%" id="btnClose-quick">关闭</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/create.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/quickmodify.js"></script>
+    <!-- 查询 -->
+
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/query.js"></script>
+    <csp:Include Page="pha.in.v3.ret.query.template.csp"></csp:Include>
+    <script type="text/javascript">
+        $('body').append('<div id="winQueryRet" class="js-pha-com-window-sign"></div>')
+        $('#winQueryRet').append($('#template-ret-query').html())
+        $('#mainDiv-q').css('background-color', 'white');
+        $.parser.parse($('#lyMainView-q').parent());
+    </script>
+</body>
+
+</html>

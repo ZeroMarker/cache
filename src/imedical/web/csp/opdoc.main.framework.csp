@@ -1,0 +1,82 @@
+<!--opdoc.main.framework.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+<DOCCARD medStepCode="Order"></DOCCARD>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></SCRIPT>
+<script type="text/javascript" src="../scripts_lib/mary-step/marystep.js"></SCRIPT>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/mary-step/marystep.css"/>
+<script type="text/javascript" src="../scripts_lib/mary-btnbar/marybtnbar.js"></SCRIPT>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/mary-btnbar/marybtnbar.css"/>
+<csp:if condition='$G(%request.CgiEnvs("HTTP_USER_AGENT"))["Trident"'>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/bluebird.min.js"></SCRIPT>
+</csp:if>
+<style type='text/css'>
+.pat-info-container{
+	padding:0 5px;
+}
+.pat-info-bar,.pat-info-bar .panel-body{
+	overflow:hidden;
+	background: #eeeeee;
+}
+#tabMenuFrame>.tabs-panels>.panel>.panel-body{
+	overflow: hidden;
+}
+.btn-bar-btn{
+	margin-top:14px!important;
+	width:140px;
+	font-size:12px;
+}
+.btn-bar-btn-lite{
+	margin-top:14px!important;
+	background-color:#EFF9FF;
+	color:#31B1FF;
+	width:140px;
+	font-size:12px;
+}
+.btn-bar-btn-lite:hover{
+	background-color:#EFF9FF;
+	font-weight:bolder;
+	color:#31B1FF;
+}
+.r-label{
+	white-space:nowrap;
+}
+</style>
+</head>
+<server>
+	/*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)*/
+	w "<input id='CardBillCardTypeValue' name='CardBillCardTypeValue' type='hidden' value=''>",$C(13,10)
+	w "<SCRIPT Language=""Javascript"">"
+	d ##class(web.DHCDocOrderListCommon).GetMessageArray("opdoc.outpatrecadm.csp",%session.Get("LOGON.LANGID"))
+ 	w "</SCRIPT>"
+	s SessionStr=##class(DHCDoc.Util.RegisteredObject).%SessionStr()
+ 	s NewDocGotoWhere=##Class(DHCDoc.OPDoc.Workflow).GetDefaultWorkflowItem(SessionStr)
+	s PersonBanner="dhcdoc.patinfo.banner.csp"
+	s PatientListPage="opdoc.patient.list.csp"
+</server>
+<csp:Include Page="opdoc.main.framework.show.csp">
+<SCRIPT language = 'javascript' >
+	var ServerObj={
+	    PatientID:'',
+	    EpisodeID:'',
+	    mradm:'',
+	    RegNo:'',
+	    NewDocGotoWhere:'#(NewDocGotoWhere)#'
+	};
+</SCRIPT>
+<script defer="defer" type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+<script type="text/javascript" src="../scripts/DHCOPBillLocCheckOut.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/main.framework.js"></script>
+<!--¶«»ªCDSS½»»¥-->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
+</html>

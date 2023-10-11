@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--药库-效期报警、查询
+	csp:pha.in.v3.query.expdate.csp
+	js: pha/in/v3/query/expdate.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI/>
+    <PHALIBV1 />
+	<PHAPRINTCOM/>
+    <Server language="CACHE" runat="Server">
+		s conserveFlag = $g(%request.Data("conserveFlag",1))
+	</Server>
+	<script language=javascript>
+		var conserveFlag = "#(conserveFlag)#"
+	</script>
+    <style type="text/css">
+    	.pha-con-toggle {
+	    	display: none;	
+	    }
+	    .pha-grid-a {
+			cursor:pointer;    
+		}		
+    </style>
+
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center'" class="pha-body" border="false">
+			<div class="hisui-panel" data-options="border:true,fit:true,bodyCls:'panel-body-gray',headrCls:'panel-header-gray'">   
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'center',border:false">
+						<div id="expTabs" class="hisui-tabs tabs-gray" fit="true" border="false">
+							<div title="近效期">
+								<table id="gridIncItmLcBtNearlyExp"></table>
+							</div>
+							<div title="已过期">
+								<table id="gridIncItmLcBtExpired"></table>
+							</div>
+							<div title="全部">
+								<table id="gridIncItmLcBt"></table>
+							</div>
+						</div>
+					</div> 
+					<div data-options="region:'north',border:true,bodyCls:'panel-body-gray',headrCls:'panel-header-gray'" style="height:51px;border-bottom-right-radius: 0px;border-bottom-left-radius: 0px;border-width:0 0 1px 0;">
+						<div id="">
+							<table id="con-form" class="pha-con-table">
+								<tr>
+									<td class="r-label">
+										<label for="locId">#(..Get("科室"))#</label>
+									</td>
+									<td>
+										<input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',required:true,query:true,clear:true" />
+									</td>
+									<td class="r-label">
+										<label for="endExpDate">#(..Get("截止效期"))#</label>
+									<td>
+										<input class="hisui-datebox pha-datebox" id="endExpDate" data-options="disabled:true,width:120" data-pha="class:'hisui-datebox',required:true,query:true,clear:true">
+									</td>
+									<td class="r-label">
+										<label for="scg">#(..Get("类组"))#</label>
+									</td>
+									<td>
+										<input id="scg" class="hisui-combobox" style="width:80px;" data-pha="class:'hisui-combobox',query:true,clear:true" />
+									</td>
+									<td class="r-label">
+										<label for="inciDesc">#(..Get("药品别名"))#</label>
+									</td>
+									<td >
+										<input id="inciDesc" data-pha="class:'hisui-combobox',query:true,clear:true" />
+									</td>
+									<td>
+										<input id="stkActiveFlag" checked class="hisui-checkbox" label="库存可用" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+									</td>
+									<td>
+										<input id="ordActiveFlag" checked class="hisui-checkbox" label="医嘱可用" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+									</td>
+									<td>
+										<a id="btnFind" href="#" class="hisui-linkbutton" plain="false">查询</a>
+									</td>
+									<td>
+										<a id="btnClear" href="#" class="hisui-linkbutton" plain="false">清屏</a>
+									</td>
+									<td class="r-label">
+										<div id="queBtnToggle"></div>
+									</td>
+								</tr>
+							</table>
+							<Server language="CACHE" runat="Server">
+								if (conserveFlag){
+									w "<div class='pha-line'></div>"
+									w "<div>"
+									w "<a class="_$c(34)_"hisui-linkbutton"_$c(34)_" data-options="_$c(34)_"plain:true,iconCls:'icon-add'"_$c(34)_" id="_$c(34)_"btnAddConserve"_$c(34)_" data-pha-btn>药品养护</a>"
+									w "</div>"
+								}
+							</Server>
+						</div>
+					</div>
+				</div> 
+			</div>
+		</div>
+	</div> 
+	<div id="gridIncItmLcBtTool">
+		<div id="incExpFilter" class="pha-row">
+			<div class="pha-col">
+				<label for="expRangeSt">#(..Get("距离截止效期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="expRangeSt" class="hisui-numberbox" title="回车筛选" data-options="width:60" data-pha="class:'hisui-numberbox',query:true,clear:true" />
+				-
+				<input id="expRangeEd" class="hisui-numberbox" title="回车筛选" data-options="width:60" data-pha="class:'hisui-numberbox',query:true,clear:true" />
+				<input id="expRangeType" class="hisui-combobox" data-pha="class:'hisui-combobox',query:true,clear:true" />
+			</div>
+		</div>
+	</div>
+    <!-- 更多条件，默认折叠 -->
+	<csp:include page="pha.in.v3.query.com.component.csp">
+</body>
+	<script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>	
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/com.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/component.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/expdate.js"></script>
+</html>
+
+
+	

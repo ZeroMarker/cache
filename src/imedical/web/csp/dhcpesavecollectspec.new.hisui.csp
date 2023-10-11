@@ -1,0 +1,210 @@
+<!-- 
+ * FileName:    dhcpesavecollectspec.new.hisui.csp
+ * Author:      xueying
+ * Date:        20230310
+ * Description: 采集标本
+-->
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER"> 
+	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+    w "<input id='GetRoomIDClass'  type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCPE.RoomManager.GetRoomIDByCompute"))_"'>",$c(13,10) 
+    w "<input id='GetMinFlagClass'  type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCPE.RoomManagerEx.GetMinFlag"))_"'>",$c(13,10) 
+    w "<input id='GetRoomRecordListClass'  type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCPE.RoomManagerEx.OutRoomPersonDiv"))_"'>",$c(13,10)  
+	s SpecNoType=%request.Get("SpecNoType")
+	s ConsultingRoom=$g(^DHCPESetting("DHCPE","ConsultingRoom",%session.Get("LOGON.CTLOCID")))
+	</SCRIPT> 
+	<script type="text/javascript">
+	var SpecNoType="#(SpecNoType)#"
+	var title="采集标本"
+	if((SpecNoType.indexOf("尿")>"-1")||(SpecNoType.indexOf("便")>"-1")) {var title="采集尿便"}
+    var ConsultingRoom="#(ConsultingRoom)#"
+	</script>
+
+<style>
+.show-hidden{
+	display:displayed
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+
+.r-label{
+	padding-left: 10px;
+}
+.splitWidth [class*="layout-split-"] {
+	border-width: 10px; /* 自定义边距 */
+   }
+.datagrid-cell-c1-PatLabel {
+    width: 294px;
+}
+
+/* 病人卡片#036bc2 */
+.celllabel{ font-family: "微软雅黑";height:50px; color:#666; padding: 0; margin: 0; line-height: 25px;} 
+.celllabel h3{color:#000; font-size: 14px; font-weight: normal;  padding: 0; margin: 0;}
+.celllabel h3 span{font-size:14px;padding-right:5px;color:#666}
+.celllabel h4{font-size:14px;font-weight: normal;color:#999;padding: 0,margin: 0.3em;-webkit-margin-before: 0.3em;-webkit-margin-after: 0.3em;margin-bottom: 2px;margin-top: 2px;}
+.celllabel h4 span{font-size:14px;padding-right:5px;margin: 0;margin-bottom: 2px;margin-top: 2px;}
+
+
+</style>
+</head>
+
+<body>
+
+
+<div class="hisui-panel" border="false" fit="true" style="padding:10px; background-color:inherit;">
+	<div id="CallDiv" class="hisui-layout splitWidth" data-options="collapsible:false,fit:true,border:false">
+	   
+    	<!-- 叫号区域 start -->
+        <div   data-options="region:'west',collapsible:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-ring-blue',title:'叫号'"  style="width:360px;">
+        	<table class="search-table">
+        		<tr>
+            		<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+                    <td>
+                        <input class="textbox" id="CallRegNo"/>
+                    </td>
+        			<td class="r-label">
+                        <a id="CallQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:''">查询</a>
+                    </td>
+                </tr> 
+                <tr>
+                	<td class="r-label"><label>#(..Get("信息"))#</label></td>
+                	<td colspan="2"><input class="textbox" style="color:#FF5809;width:217px;" id="WaitInfo"/></td>
+                </tr>
+                
+            </table >  
+       		<div style="height:87.3%;border-top:1px dashed #e2e2e2;border-radius:0;"> 
+        		<table class="textbox" id="CallVoiceList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" toolbar="#CallVoiceBar" ></table>
+       	 	</div> 
+                 
+    	 </div>
+        <!-- 叫号区域 end -->
+  
+        <!-- 采集标本区域 start -->
+        <div data-options="region:'center',collapsible:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-tube-add',title:'采集标本'">
+        	<table class="search-table">
+        	
+					<input type="hidden" id="PAADM"/>
+					<input type="hidden" id="RoomID"/>
+					<input type="hidden" id="RoomRecordID"/>
+					
+        		<tr>
+				 	<td class="r-label"><label>#(..Get("标本号"))#</label></td>
+					<td>
+						<input class="textbox" id="SpecNo"/>
+					</td>
+					
+				  	<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+					<td>
+						<input class="textbox" id="RegNo"/>
+					</td>
+					
+					<td class="r-label"><label>#(..Get("姓名"))#</label></td>
+					<td>
+						<input class="textbox" id="Name"  style="width:90px" disabled/>
+					</td>
+					
+					<td class="r-label"><label>#(..Get("性别"))#</label></td>
+					<td>
+						<input class="textbox" id="Sex" style="width:60px" disabled/>
+					</td>
+		
+					<td style="padding-left:10px">
+						<a id="BSRRef" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px">全部启用</a>
+					</td>
+					
+					<td>
+						<a id="BSARef" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" style="width:118px">全部取消</a>
+					</td>
+					
+
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("备注"))#</td>
+					<td colspan='3'>
+						<input class="textbox" id="CheckInfo" style="width:365px"/>
+					</td>
+					
+					<td class="r-label"><label>#(..Get("证件号"))#</label></td>
+					<td colspan='3'>
+						<input class="textbox" id="CardID"  style="width:205px" disabled/>
+					</td>
+		            <td class="r-label">
+						<a id="BCancelPlacerNo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="width:130px">撤销预制号</a>
+					</td>
+					
+					 <td>
+						<a id="BSave" href="#" class="hisui-linkbutton"  style="width:118px" data-options="iconCls:'icon-w-save'">保存</a>
+					</td>
+				
+					
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("预制号"))#</td>
+					<td td colspan='3'>
+						<input class="textbox" id="PlacerNo" style="width:365px"/>
+					</td>
+					
+					<td class="r-label">#(..Get("条码打印"))#</td>
+					
+					<td>
+						<input class='hisui-checkbox' id="PrintBarCode" type="checkbox"  data-options="checked:true" value="1"/>
+					</td>
+	                
+	                <td></td> <td></td>
+					
+					<td class="r-label">
+						<a id="BPrint" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px">打印</a>
+					</td>
+					
+				</tr>
+                         
+        	</table>
+                    
+        	<div style="height:81.5%;border:1px solid #e2e2e2;border-left:0;border-right:0;border-radius:0;"> 
+            	<table  id="SaveCollectSpecGrid" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+            </div> 
+                 
+      	</div>
+        <!-- 采集标本区域 end -->
+     </div>
+</div>
+
+ 
+<!--叫号面板工具栏 start-->
+<div id="CallVoiceBar" style="border-bottom:0px;">
+	<a onclick="Call();" class="hisui-linkbutton" data-options="iconCls:'icon-ring-blue',plain:true,stopAllEventOnDisabled:true">呼叫</a>
+    <a onclick="Delay();" class="hisui-linkbutton" data-options="iconCls:'icon-mtpaper-redo',plain:true,stopAllEventOnDisabled:true">顺延</a>
+    <a onclick="Pass();" class="hisui-linkbutton" data-options="iconCls:'icon-skip-no',plain:true,stopAllEventOnDisabled:true">过号</a>
+    <a onclick="BComplete();" class="hisui-linkbutton" data-options="iconCls:'icon-house-posi-maint',plain:true,stopAllEventOnDisabled:true">科室确认</a>
+</div>  
+<!--叫号面板工具栏 end-->   
+
+<!--就诊记录弹窗 start -->
+<div id="PAADMRecordWin" data-options="iconCls:'icon-w-paper'" style="padding:10px;display:none;">
+     <table id="PAADMRecordList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true"></table>     
+</div>
+<!--就诊记录弹窗 end -->
+
+<script type="text/javascript" src="../scripts/DHCPESaveCollectSpec.new.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPrintCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+
+</body>
+</html>

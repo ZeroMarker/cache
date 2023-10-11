@@ -1,0 +1,81 @@
+<!doctype html>
+<!--dhcdoc.insusupervison.advice.detail.csp 国家医保监管事前提醒、事中警醒明细-->
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<style>
+	html,body{
+		margin:0;
+		padding:0;	
+		height:100%;
+	}
+</style>
+<Server>
+	s DetailJson=%request.Get("DetailJson")
+	s ^fxn("detailjsonstr")=DetailJson
+</Server>
+</head>
+<body>
+	<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+		<table id='tabOrdDetailInfo1' style=''></table>
+	</div>
+	<script type="text/javascript">
+		var DetailJson=#(DetailJson)#
+		$(function(){
+			var OrdDetailColumns=[[
+				{field:'jrd_id',title:'违规明细标识',hidden:true},
+				{field:'patn_id',title:'参保人标识',hidden:true},
+				{field:'mdtrt_id',title:'就诊标识',hidden:true},
+				
+		 		{field:'vola_item_type',title:'违规明细类型',align:'center',width:285,auto:false,
+						formatter:function(value,rec){ 
+							var Display=value
+				   			switch(value)
+							{
+								case "1":
+									Display="违规项"
+									break;
+								case "2":
+									Display="涉及项"	
+									break;
+								default:
+									break;
+							}
+		 				    return Display;
+						}
+		 		},
+				{field:'rx_id',title:'处方(医嘱)标识',align:'center',width:285,auto:false,
+					formatter:function(value,rec){
+						if(value==""){return value;}
+						var OrderItemRowid=rx_id.split("!")[0]
+						var OrdName=tkMakeServerCall("DHCDoc.Interface.YiBaoJianGuan.Business","GetOrderInfo",OrderItemRowid)
+						return OrdName
+					}
+				
+				},
+				{field:'vola_amt',title:'违规金额',align:'center',width:350,auto:false},
+			]]
+			OrdDetailInfoDataGrid=$("#tabOrdDetailInfo1").datagrid({  
+				fit : true,
+				border : true,
+				striped : true,
+				singleSelect : true,
+				fitColumns : true,
+				autoRowHeight : false,
+				rownumbers:false,
+				pagination : false, 
+				showGroup: true,
+				pageSize: 9999, 
+				idField:'rx_id',
+				data:DetailJson,
+				columns :OrdDetailColumns
+			});
+		})
+
+	</script>
+</body>
+</html>

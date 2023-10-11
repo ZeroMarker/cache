@@ -5,171 +5,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
-	<HISUI/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
-<style type="text/css">
-.eq-total-sum{
-	font-size:120%;
-	color:#F00;
-	float:right;
+<Style>
+.messager-popover
+{
+	font-weight: normal;
 }
-</style>
+</Style>
 <script language=Cache runat=server>
-	s IFBStatus=$Get(%request.Data("Status",1))
-	s QXType=$Get(%request.Data("QXType",1))
-	s Type=$Get(%request.Data("Type",1))
-	s IFBRowID=$Get(%request.Data("RowID",1))
-	s CurRole=$Get(%request.Data("CurRole",1))
-	s WaitAD=$Get(%request.Data("WaitAD",1))
-	s ReadOnly=$Get(%request.Data("ReadOnly",1))
-	s Action=$Get(%request.Data("Action",1))
-	s ManageLocDR=$Get(%request.Data("ManageLocDR",1))
-	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("17",IFBRowID),CurRole,Action)
-	s GetSourceType=##class(web.DHCEQCommon).GetSysInfo("103003")
-	s PlanListIDs=$Get(%request.Data("PlanListIDs",1))
-	//start by csj 20191024 从已审核采购计划跳转过来的计划明细
-	s PlanListIDs=$Get(%request.Data("PlanListIDs",1))	//采购计划明细ID串
-	i PlanListIDs'="" s PlanListID=$Piece(PlanListIDs,",",1)	
-	s SourceType=$Get(%request.Data("SourceType",1))
-	//判断是否已生成招标单据 modfied by 2019-12-14 需求1136400
-	i (SourceType'="")&&(PlanListIDs'="")  d
-	.s IFBBRowID = $o(^DHCEQIFBBag(0,"Extend",SourceType,PlanListID,0)) ;招标明细ID 
-	.i IFBBRowID'="" d 
-	..s IFBRowID = $p($g(^DHCEQIFBBag(IFBBRowID)),"^",1)
-	//end by csj 20191024
+    s IFBStatus=$Get(%request.Data("Status",1))
+    s QXType=$Get(%request.Data("QXType",1))
+    s Type=$Get(%request.Data("Type",1))
+    s IFBRowID=$Get(%request.Data("RowID",1))
+    s CurRole=$Get(%request.Data("CurRole",1))
+    s WaitAD=$Get(%request.Data("WaitAD",1))
+    s ReadOnly=$Get(%request.Data("ReadOnly",1))
+    s Action=$Get(%request.Data("Action",1))
+    s ManageLocDR=$Get(%request.Data("ManageLocDR",1))
+    s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("17",IFBRowID),CurRole,Action)
+    s GetSourceType=##class(web.DHCEQCommon).GetSysInfo("103003")
+    s PlanListIDs=$Get(%request.Data("PlanListIDs",1))
+    //start by csj 20191024 从已审核采购计划跳转过来的计划明细
+    s PlanListIDs=$Get(%request.Data("PlanListIDs",1))  //采购计划明细ID串
+    i PlanListIDs'="" s PlanListID=$Piece(PlanListIDs,",",1)    
+    s SourceType=$Get(%request.Data("SourceType",1))
+    //判断是否已生成招标单据 modfied by 2019-12-14 需求1136400
+    i (SourceType'="")&&(PlanListIDs'="")  d
+    .s IFBBRowID = $o(^DHCEQIFBBag(0,"Extend",SourceType,PlanListID,0)) ;招标明细ID 
+    .i IFBBRowID'="" d 
+    ..s IFBRowID = $p($g(^DHCEQIFBBag(IFBBRowID)),"^",1)
+    //end by csj 20191024
 </script>
 <body class="hisui-layout" >
-	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-1-10 界面首先加载loading bug WY0054-->
-	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" title="设备招标" data-options="eqtitle:'maintitle',fit:true">
-			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:320px;">
-					<!--modify by lmm 2019-09-09 必填项提示修改 modify by wy 20191225必填项改为js控制-->
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label for="IFBPrjName" id="cIFBPrjName">项目名称</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options=" prompt:'必填项'" id="IFBPrjName"></div> <!-- modify by wy 1286190-->
-						<div class="eq-table-td eq-table-label"><label for="IFBNo" id="cIFBNo">招标编号</label></div>
-						<div class="eq-table-td eq-table-input"><input  class="hisui-validatebox textbox" data-options=" prompt:'必填项'" id="IFBNo"></div><!-- modify by wy 1286190-->
-						<div class="eq-table-td eq-table-label"><label for="IFBModeDR_IFBMDesc">招标方式</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.IFBMode'" id="IFBModeDR_IFBMDesc"></div>
-				        <!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" >保存</a></div>	
-					</div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label for="IFBBuyTypeDR_BTDesc">采购方式</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.BuyType'" id="IFBBuyTypeDR_BTDesc" ></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBBuyFilePrice">采购文件售价</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBBuyFilePrice"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBDeposit">保证金</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBDeposit"></div>
-				        <!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">提交</a></div>
-					</div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label for="IFBBuyFileFromDate">购买标书开始</label></div>
-						<div class="eq-table-td eq-table-input"><input style="WIDTH:91px;TEXT-ALIGN:right" class="hisui-datebox textbox" id="IFBBuyFileFromDate"><input style="WIDTH:64px;TEXT-ALIGN:right" class="hisui-timespinner textbox" id="IFBBuyFileFromTime"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBBuyFileToDate">购买标书结束</label></div>
-						<div class="eq-table-td eq-table-input"><input style="WIDTH:91px;TEXT-ALIGN:right" class="hisui-datebox textbox " id="IFBBuyFileToDate"><input style="WIDTH:64px;TEXT-ALIGN:right" class="hisui-timespinner textbox" id="IFBBuyFileToTime"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBBuyFilePlace">买标书地点</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBBuyFilePlace"></div>
-				        <!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">删除</a></div>
-					</div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label for="IFBAgencyDR_IFBADesc">招标代理</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.IFBAgency'"  id="IFBAgencyDR_IFBADesc"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBAgencyConPerson">招标代理联系人</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBAgencyConPerson"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBAgencyTel">招标代理电话</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBAgencyTel"></div>
-				        <!--modify by lmm 2019-05-29 892873-->
-						<!--modify by lmm 2019-11-22 LMM0050-->
-						<div class="eq-table-td eq-table-label"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">退回</a></div>
+    <div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-1-10 界面首先加载loading bug WY0054-->
+    <div data-options="region:'center',border:false" style="padding:10px;">
+        <div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true">
+            <div class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;">
+                    <!--modify by lmm 2019-09-09 必填项提示修改 modify by wy 20191225必填项改为js控制-->
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label for="IFBPrjName" id="cIFBPrjName">项目名称</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options=" prompt:'必填项'" id="IFBPrjName"></div> <!-- modify by wy 1286190-->
+                        <div class="eq-table-td eq-table-label"><label for="IFBNo" id="cIFBNo">招标编号</label></div>
+                        <div class="eq-table-td eq-table-input"><input  class="hisui-validatebox textbox" data-options=" prompt:'必填项'" id="IFBNo"></div><!-- modify by wy 1286190-->
+                        <div class="eq-table-td eq-table-label"><label for="IFBModeDR_IFBMDesc">招标方式</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.IFBMode'" id="IFBModeDR_IFBMDesc"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cIFBManageLocDRR_CTLOCDesc" for="IFBManageLocDRR_CTLOCDesc">管理科室</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBManageLocDRR_CTLOCDesc"></div>
+                        <!--modify by lmm 2019-05-29 892873-->
+                        <div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div> 
+                    </div>
+                    <div class="eq-table-tr">
+                        
+                        <div class="eq-table-td eq-table-label"><label for="IFBBuyTypeDR_BTDesc">采购方式</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.BuyType'" id="IFBBuyTypeDR_BTDesc" ></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBBuyFilePrice">采购文件售价</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBBuyFilePrice"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBBuyFileFromDate">购买标书开始</label></div>
+                        <div class="eq-table-td eq-table-input"><input style="WIDTH:91px;TEXT-ALIGN:right" class="hisui-datebox textbox" id="IFBBuyFileFromDate"><a style="margin-left: 4px;margin-right: 0px;"></a><input style="WIDTH:60px;TEXT-ALIGN:right" class="hisui-timespinner textbox" id="IFBBuyFileFromTime"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBBuyFileToDate">购买标书结束</label></div>
+                        <div class="eq-table-td eq-table-input"><input style="WIDTH:91px;TEXT-ALIGN:right" class="hisui-datebox textbox " id="IFBBuyFileToDate"><a style="margin-left: 4px;margin-right: 0px;"></a><input style="WIDTH:60px;TEXT-ALIGN:right" class="hisui-timespinner textbox" id="IFBBuyFileToTime"></div>
+                        <!--modify by lmm 2019-05-29 892873-->
+                        <div class="eq-table-td eq-table-label"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">提交</a></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label for="IFBBuyFilePlace">买标书地点</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBBuyFilePlace"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBAgencyDR_IFBADesc">招标代理</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.IFBAgency'"  id="IFBAgencyDR_IFBADesc"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBAgencyConPerson">招标代理联系人</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBAgencyConPerson"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBAgencyTel">招标代理电话</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBAgencyTel"></div>
+                        <!--modify by lmm 2019-05-29 892873-->
+                        <div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">删除</a></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label for="IFBDeposit">保证金</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBDeposit"></div>
+                        <!--div class="eq-table-td eq-table-label"><label for="IFBDisabuseDate">答疑日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox"  id="IFBDisabuseDate"></div-->
+                        <div class="eq-table-td eq-table-label"><label for="IFBDeterminationDate">定标日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="IFBDeterminationDate"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBAgencyFax">招标代理传真</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBAgencyFax"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBAnnouncementDate">公告日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox"  id="IFBAnnouncementDate"></div>
+                        <!--modify by lmm 2019-05-29 892873-->
+                        <!--modify by lmm 2019-11-22 LMM0050-->
+                        <div class="eq-table-td eq-table-label"><a id="showOpinion" href="#" class="hisui-linkbutton" iconCls="icon-w-pen-paper" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审批记录</a></div>
+                        
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label for="IFBAnnouncementMedia">公告媒介</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBAnnouncementMedia"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBOpenPlace">开标地点</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBOpenPlace"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBDeadlineDate" id="cIFBDeadlineDate">投标截止日期</label></div><!-- modify by wy 1286190-->
+                        <div class="eq-table-td eq-table-input"><input style="WIDTH: 91px; TEXT-ALIGN: right" class="hisui-datebox textbox" data-options=" prompt:'必填项'" id="IFBDeadlineDate" ><a style="margin-left: 4px;margin-right: 0px;"></a><input style="WIDTH: 60px; TEXT-ALIGN: right" class="hisui-timespinner textbox" id="IFBDeadlineTime"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBOpenDate" id="cIFBOpenDate">开标日期</label></div><!-- modify by wy 1286190-->
+                        <div class="eq-table-td eq-table-input"><input style="WIDTH: 91px; TEXT-ALIGN: right" class="hisui-datebox textbox" data-options=" prompt:'必填项'" id="IFBOpenDate" ><a style="margin-left: 4px;margin-right: 0px;"></a><input style="WIDTH: 60px; TEXT-ALIGN: right" class="hisui-timespinner textbox"  id="IFBOpenTime"></div>
+                        <!--modify by lmm 2019-05-29 892873-->
+                        <div class="eq-table-td eq-table-label"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">退回</a></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label for="IFBTendereeAddress">招标人地址</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBTendereeAddress"></div>
+                        <div class="eq-table-td eq-table-label" ><label for="IFBTenderee" >招标人</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBTenderee"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBEvaluationCommittee">评标委员会人员</label></div> <!--modified by wy 2019-5-25 836794-->
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBEvaluationCommittee"></div>
+                        <div class="eq-table-td eq-table-label"><label for="IFBCondition">投标条件  </label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBCondition"></div>
+                        <!--modify by lmm 2019-05-29 892873-->
+                        <div class="eq-table-td eq-table-label"><a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核1</a></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <!--modfied by wy 2019-12-14--><!--modify by wy 20191225必填项改为js控制-->
+                        <div class="eq-table-td eq-table-label"><label for="IFBRemark">备注</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBRemark"></div>
+                        <!--add by csj 2020-10-13 需求号：1557788-->
+                        <div class="eq-table-td eq-table-label"><label for="IFBReservePrice">标底</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBReservePrice"></div>
+                        <!--add by csj 2020-10-13 需求号：1557680-->
+                        <div class="eq-table-td eq-table-label"><label for="IFBConPerson">招标联系人</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBConPerson"></div>
+                        <div class="eq-table-td eq-table-label"></div>
+                        <div class="eq-table-td eq-table-input"></div>
+                        <div class="eq-table-td eq-table-label"><a id="BApprove2" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核2</a></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cEditOpinion" for="EditOpinion">审批意见</label>
+                        </div>
+                        <div class="eq-table-td eq-table-input"><textarea id="EditOpinion" class="textbox"></textarea>
+                        </div>
+                        <div class="eq-table-td eq-table-label"><label id="cRejectReason"
+                                for="RejectReason">拒绝原因</label></div>
+                        <div class="eq-table-td eq-table-input"><textarea id="RejectReason" class="textbox"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="padding:0px;position:relative">
+                    <table id="DHCEQIFB" class="hisui-datagrid"  data-options="onClickRow:onClickRow"></table>
+                    <div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 5px 2px 0;padding:5px 10px;">
+					    <span id="sumTotalicon" class="messager-popover-icon info"></span>
+					    <span id="sumTotal">合计</span>
 				    </div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label for="IFBDisabuseDate">答疑日期</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox"  id="IFBDisabuseDate"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBDeterminationDate">定标日期</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="IFBDeterminationDate"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBAgencyFax">招标代理传真</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBAgencyFax"></div>
-				        <!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label"><a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核1</a></div>
-					</div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label for="IFBAnnouncementDate">公告日期</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox"  id="IFBAnnouncementDate"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBAnnouncementMedia">公告媒介</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBAnnouncementMedia"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBOpenPlace">开标地点</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBOpenPlace"></div>
-				        <!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label"><a id="BApprove2" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核2</a></div>
-					</div>
-					<div class="eq-table-tr">
-				        <!--modfied by wy 2019-12-14--><!--modify by wy 20191225必填项改为js控制-->
-						<div class="eq-table-td eq-table-label"><label for="IFBDeadlineDate" id="cIFBDeadlineDate">投标截止日期</label></div><!-- modify by wy 1286190-->
-						<div class="eq-table-td eq-table-input"><input style="WIDTH: 91px; TEXT-ALIGN: right" class="hisui-datebox textbox" data-options=" prompt:'必填项'" id="IFBDeadlineDate" ><input style="WIDTH: 63px; TEXT-ALIGN: right" class="hisui-timespinner textbox" id="IFBDeadlineTime"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBOpenDate" id="cIFBOpenDate">开标日期</label></div><!-- modify by wy 1286190-->
-						<div class="eq-table-td eq-table-input"><input style="WIDTH: 91px; TEXT-ALIGN: right" class="hisui-datebox textbox" data-options=" prompt:'必填项'" id="IFBOpenDate" ><input style="WIDTH: 64px; TEXT-ALIGN: right" class="hisui-timespinner textbox"  id="IFBOpenTime"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBTendereeAddress">招标人地址</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBTendereeAddress"></div>
-					</div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label" ><label for="IFBTenderee" >招标人</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBTenderee"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBEvaluationCommittee">评标委员会人员</label></div> <!--modified by wy 2019-5-25 836794-->
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBEvaluationCommittee"></div>
-						<div class="eq-table-td eq-table-label"><label for="IFBCondition">投标条件	</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IFBCondition"></div>
-					</div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label for="IFBRemark">备注</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="IFBRemark"></div>
-					</div>
-				</div>
-				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
-					<table id="DHCEQIFB" class="hisui-datagrid"  data-options="onClickRow:onClickRow"></table>
-					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!--隐藏元素-->
-	<div id="hiddenEncrypt" style="display:hidden">
-		<form name="DHCEQ">
-			<INPUT type="hidden" id="IFBStatus" value="#(IFBStatus)#">
-			<INPUT type="hidden" id="QXType" value="#(QXType)#">
-			<INPUT type="hidden" id="Type" value=#(Type)#>	
-			<INPUT type="hidden" id="IFBRowID" value="#(IFBRowID)#">
-			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
-			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
-			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
-			<INPUT type="hidden" id="GetSourceType" value="#(GetSourceType)#">
-			<INPUT type="hidden" id="Action" value=#(Action)#>
-			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
-			<INPUT type="hidden" id="PlanListIDs" value=#(PlanListIDs)#>
-			<INPUT type="hidden" id="IFBManageLocDR" value=#(ManageLocDR)#>
-			<INPUT type="hidden" id="ApproveSetDR" >
-			<INPUT type="hidden" id="NextRoleDR">
-			<INPUT type="hidden" id="NextFlowStep">	
-			<INPUT type="hidden" id="CancelFlag">
-			<INPUT type="hidden" id="CancelToFlowDR">
-			<INPUT type="hidden" id="IFBModeDR">	
-		    <INPUT type="hidden" id="IFBBuyTypeDR">	
-			<INPUT type="hidden" id="IFBAgencyDR">
-			<INPUT type="hidden" id="IFBBExtendType">	
-			<INPUT type="hidden" id="IFBBExtendType_Desc">
-			<INPUT type="hidden" id="IFBBExtendID">	
-			<INPUT type="hidden" id="IFBBRowID">
-			<INPUT type="hidden" id="EQItemDR"> <!--add by wl 2019-11-27 WL0017-->
-			
-		</form>
-	</div>
-	<script type='text/javascript' src='../scripts/dhceq/em/ifb.js'></script>
-	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--隐藏元素-->
+    <div id="hiddenEncrypt" style="display:hidden">
+        <form name="DHCEQ">
+            <INPUT type="hidden" id="IFBStatus" value="#(IFBStatus)#">
+            <INPUT type="hidden" id="QXType" value="#(QXType)#">
+            <INPUT type="hidden" id="Type" value=#(Type)#>  
+            <INPUT type="hidden" id="IFBRowID" value="#(IFBRowID)#">
+            <INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+            <INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+            <INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+            <INPUT type="hidden" id="GetSourceType" value="#(GetSourceType)#">
+            <INPUT type="hidden" id="Action" value=#(Action)#>
+            <INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+            <INPUT type="hidden" id="PlanListIDs" value=#(PlanListIDs)#>
+            <INPUT type="hidden" id="IFBManageLocDR" value=#(ManageLocDR)#>
+            <INPUT type="hidden" id="ApproveSetDR" >
+            <INPUT type="hidden" id="NextRoleDR">
+            <INPUT type="hidden" id="NextFlowStep"> 
+            <INPUT type="hidden" id="CancelFlag">
+            <INPUT type="hidden" id="CancelToFlowDR">
+            <INPUT type="hidden" id="IFBModeDR">    
+            <INPUT type="hidden" id="IFBBuyTypeDR"> 
+            <INPUT type="hidden" id="IFBAgencyDR">
+            <INPUT type="hidden" id="IFBBExtendType">   
+            <INPUT type="hidden" id="IFBBExtendType_Desc">
+            <INPUT type="hidden" id="IFBBExtendID"> 
+            <INPUT type="hidden" id="IFBBRowID">
+            <INPUT type="hidden" id="EQItemDR">
+            
+        </form>
+    </div>
+    <script type='text/javascript' src='../scripts/dhceq/em/ifb.js'></script>
+    <script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
 </body>
 </html>

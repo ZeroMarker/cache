@@ -1,0 +1,184 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html XMLNS=TRAK>
+<head>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<!-- <TRAK:HEAD></TRAK:HEAD> -->
+	<meta http-equiv="Content-Type" content="text/html; ">
+	<HISUI/>
+	<DHCCKB/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/hos_fist.css">	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/grantauth.copy.js"></script> 
+	<style type="text/css">
+		.datagrid-toolbar{display:none}/**/
+		/*.combo-arrow{position:relative;left:-4}hxy 2018-10-08*/
+		.panel-margin{
+			margin:10px 10px 0px 0;
+		}
+		.panel-header, .panel-body {
+		    border-color: #ccc;
+		  
+		}
+		.layout-panel-center{
+			padding: 10px 10px 10px 0;
+		}
+		.layout-panel-west{
+			padding: 10px 5px 10px 10px;
+		}
+		.div-panel{
+			
+		    font-size: 14px;
+		    font-weight: 700;
+		    color: #000;
+		    /*height: 30px;
+		    line-height: 30px;*/
+		    padding-left: 5px;
+			border-radius:2px;
+			background-color:#FFF;
+			
+			margin:0 0 10px 0;
+		}
+		#btntoolbar{
+			float:left;
+			padding:5px;
+			margin:0 0 10px 0;
+			border-radius: 2px 0px 0px 2px;
+		}
+		.datagrid .datagrid-pager-top
+		{
+			position:relative;
+			top:-15px;
+		}
+		.datagrid-view{
+			/*top:-10px;*/
+		}
+		
+		/*分页样式 start*/
+        #pag_li_ ,#page_first,#page_last{
+            /*分页页码 <li> 的样式*/
+            display: inline-block;
+            min-width: 30px;
+            height: 28px;
+            cursor: pointer;
+            color: black;
+            line-height: 28px;
+            background-color: white;
+            border: 1px solid rgba(217, 217, 217, 1);
+            text-align: center;
+            margin: 0 4px;
+            border-radius: 3px;
+            
+        }
+ 
+        #pag_li_:hover {
+            /*悬停样式*/
+            background-color: #D1A85F;
+            border-color: #D1A85F;
+            color: #FFF
+        }
+ 
+        li.xl-disabled:hover {
+            /*省略的页码按钮 ...按钮*/
+            background-color: #f9f9f9 !important;
+            border: 1px solid #dce0e0 !important;
+            color: #666 !important;
+        }
+ 
+        li.xl-jumpText:hover {
+            background-color: rgba(0, 0, 0, 0) !important;
+            border-color: rgba(0, 0, 0, 0) !important;
+        }
+ 
+        #xlJumpNum {
+            width: 50px;
+            border-radius: 4px;
+            border: 1px solid rgba(217, 217, 217, 1);
+            height: 27px;
+            text-align: center;
+            outline: none;
+        }
+ 
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+        }
+ 
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+ 
+        /*分页样式 end*/
+
+	</style>
+	
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false" >
+	<div data-options="region:'west',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="width:480px;">
+		<div class="div-panel">
+			<span>选择授权对象</span>
+		</div>
+		<table class="hisui-table" cellspacing="0" cellpadding="0" style="margin:10px;">
+			<tr style="display:none;">
+			   <td align="right" style="padding-right:10px">知识库</td>
+			   <td><select id="libcombo"  class="hisui-combobox" style="width:150px;"></select></td>				   
+			</tr>
+		</table>
+		<div class="hisui-accordion accordion-gray" style="width:300px;float:left; padding:0 10px 60px 10px" data-options="border:false,fit:true">   
+		    <div title="按医院" data-options="selected:true">   
+		       <table  id="hospgrid" border="false" ></table>
+		    </div>   
+		    <div title="按职称" >   
+		    	<table  id="cptgrid" border="false" ></table>
+		    </div>   
+		    <div title="按科室" >   
+		        <table  id="doclocgrid" border="false" ></table>
+		    </div>   
+		     <div title="按医生" >   
+		        <table  id="docgrid" border="false" ></table>
+		    </div>  
+		</div>
+	</div>
+	<div data-options="region:'center'" border="false" > 
+		<table  style="height:560px;" toolbar="#btntoolbar" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',toolbar:[],checkbox:true" class="hisui-treegrid" id="accitmgrid"  title=""></table>  
+	</div>
+</div>
+<div id="doclocbar" style="height: auto; "  >
+	<div style="margin-bottom:1px">
+		<table cellspacing="0" cellpadding="0" style="margin-top:10px;margin-bottom:10px;;">
+			<tr>
+		       <td align="right" style="padding-left:10px;padding-right:10px;">科室</td>
+			   <td ><input id="doclocbarid" type="text" class="hisui-validatebox textbox"  style="width:150px;" ></td>
+			</tr>
+		</table>
+	</div>    
+</div> 
+<div id="doctorbar" style="height: auto; "  >
+	<div style="margin-bottom:1px">
+		<table cellspacing="0" cellpadding="0" style="margin-top:10px;margin-bottom:10px;;">
+			<tr>
+		       <td align="right" style="padding-left:10px;padding-right:10px;">工号</td>
+			   <td ><input id="doctorno" type="text" class="hisui-validatebox textbox"  style="width:150px;" placeholder="请输入工号..."></td>
+			</tr>
+		</table>
+	</div>
+</div> 
+<div id="btntoolbar" style="width:100%" >	
+	
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true"></a></td>
+	      <td colspan="5"><div id="pageSea"></div></td>
+	    </tr>
+	    
+	</table>
+	
+</div>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!--dhcdoc.ct.define.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></SCRIPT>
+<style>
+	.tip-info li{
+	    border-bottom: 1px solid #ddd;
+	    padding: 5px 10px;
+	}
+	#tipInfo{
+		position:absolute;
+		top:110px;
+		left:8px;
+		overflow:auto;
+		height:auto;
+		width:auto;
+	}
+	#tipInfo>div{
+		width:650px;
+		border:1px solid #ccc;
+		border-radius:5px;
+		float:left;
+		background:white;
+	}
+	.tip-title{
+		background:#509de1;
+		color:#fff;
+		height:30px;
+		line-height:30px;
+		padding-left:10px;
+	}
+</style>
+</head>
+<body class="hisui-layout" fit="true" style="padding:0px;background-color:white;">
+	<div data-options="region:'west',border:false,collapsible:false" style="width:300px;padding:5px 4px;">
+		<div class="hisui-panel" data-options="fit:true,title:'模块代码',headerCls:'panel-header-gray'" style="border-radius:5px;">
+			<ul id="tCTDefine"></ul>
+			<div style="position:absolute;top:6px;right:8px;">
+				<a class="hisui-linkbutton" id="btnGroupAuth" data-options="plain:true" style="color:#017bce;">安全组批量授权</a>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="border-radius:5px;padding:5px 4px;">
+		<table id="tabCTDefineData"></table>
+		<div style="position:absolute;top:6px;right:8px;">
+			<a class="hisui-linkbutton" id="btnHelp" data-options="plain:true" style="color:#017bce;">使用说明</a>
+		</div>
+		<div id='tipInfo'>
+			<div>
+				<div class="tip-title">操作说明</div>
+				<ul class='tip-info'>
+					<li style="color:#008FF0;">一、左侧：模块代码</li>
+					<li>1、可以使用鼠标右键选择节点进行添加、修改、删除、安全组授权功能</li>
+					<li>2、点击查看该模块代码数据信息</li>
+					<li>3、可使用鼠标点击代码节点进行拖动到其他分类上去</li>
+					<li style="color:#008FF0;">二、右侧：模块代码表数据</li>
+					<li>1、首先，从左侧中选择代码节点</li>
+					<li>2、选择之后，右侧就会展示出相关列表</li>
+					<li>3、展现出的列表，有添加、修改、删除三种功能</li>
+					<li style='color:#008FF0;'>三、列扩展设定</li>
+					<li>1、进入列扩展设定可对模块代码数据的列进行增加或减少</li>
+					<li>2、控件类型下拉选择HISUI表单控件</li>
+					<li>3、控件属性参考HISUI控件属性，如：</li>
+					<li style="padding-left:20px;">numberbox: "min":0,"max":9</li>
+					<li style="padding-left:20px;">combobox: "url":"","editable":false,"data":[{"id":"测试1","text":"测试1"},{"id":"测试2","text":"测试2"}]</li>
+					<li style="padding-left:20px;">datebox: "editable":false</li>
+				</ul>
+			</div>
+			<div>
+				<div class="tip-title">使用说明</div>
+				<ul class='tip-info'>
+					<li style='color:#008FF0;'>一、相关表名称</li>
+					<li>1、模块名称：<font color='red'>DHCDoc_CT_Module</font></li>
+					<li>2、模块代码：<font color='red'>DHCDoc_CT_Define</font></li>
+					<li>3、模块代码数据：<font color='red'>DHCDoc_CT_DefineData</font></li>
+					<li style='color:#008FF0;'>二、获取模块代码数据 (<font color='blue'>DHCDoc_CT_DefineData</font>)</li>
+					<li>1、ClassName：<font color='red'>DHCDoc.DHCDocConfig.CodeTable</font></li>
+					<li>2、QueryName：<font color='red'>QueryDefineData</font></li>
+					<li>3、Input：<font color='red'>DefineRowID</font>-><font color='blue'>(模块代码id--DHCDoc_CT_Define);</font><font color='red'>DefineCode</font>-><font color='blue'>(模块代码Code--DHCDoc_CT_Define);</font><font color='red'>DefineDesc</font>-><font color='blue'>(模块描述Desc--DHCDoc_CT_Define);</font> <font color='red'>GroupID</font>-><font color='blue'>(授权安全组ID)</font>(前面三个入参不能同时为空,GroupID可以为空)</li>
+					<li>4、Output：<font color='red'>SubRowID,SubCode,SubDesc,SubStDate,SubEndDate</font>分别对应</li>
+					<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;表<font color='blue'>DHCDoc_CT_DefineData</font>中字段：<font color='blue'>rowid, 代码, 描述, 开始日期, 结束日期</font></li>
+					<li style='color:#008FF0;'>三、获取模块代码数据 (<font color='blue'>Json数据串，包含列扩展设定数据</font>)</li>
+					<li>1、ClassName：<font color='red'>DHCDoc.DHCDocConfig.CodeTable</font></li>
+					<li>2、MethodName：<font color='red'>GetDefineData</font></li>
+					<li>3、Input：<font color='red'>DefineRowID</font>-><font color='blue'>(模块代码id--DHCDoc_CT_Define);</font><font color='red'>DefineCode</font>-><font color='blue'>(模块代码Code--DHCDoc_CT_Define);</font><font color='red'>DefineDesc</font>-><font color='blue'>(模块描述Desc--DHCDoc_CT_Define);</font> <font color='red'>GroupID</font>-><font color='blue'>(授权安全组ID)</font>(前面三个入参不能同时为空,GroupID可以为空)</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div id="menu" class="hisui-menu" style="width:160px; display: none;">
+	    <div data-options="iconCls:'icon-add'" id="menu_add_model">增加模块分类</div>
+	    <div class="menu-sep"></div>
+	    <div data-options="iconCls:'icon-batch-add'" id="menu_add">增加模块</div>
+	    <div class="menu-sep"></div>
+	    <div data-options="iconCls:'icon-edit'" id="menu_edit">修改</div>
+	    <div class="menu-sep"></div>
+	    <div data-options="iconCls:'icon-no'" id="menu_delete">删除</div>
+	    <div class="menu-sep"></div>
+	    <div data-options="iconCls:'icon-set-paper'" id="menu_auth">授权安全组</div>
+	</div>
+	<div id="TreeNodeWin" class="hisui-window" data-options="modal:true,maximizable:false,minimizable:false,collapsible:false,closed:true,title:'模块代码维护'" style="width:320px;">   
+		<table ALIGN="center" style="border-collapse:separate;border-spacing:10px 10px;"> 
+			<tr>
+				<td ALIGN="right">代码</td>
+				<td><input id="TreeNodeCode" class="hisui-validatebox textbox" data-options="required:true"></td>	  
+			</tr>
+			<tr>
+				<td ALIGN="right">描述</td>
+				<td><input id="TreeNodeDesc" type="text" class="hisui-validatebox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td ALIGN="center" colSpan="2"><a class="hisui-linkbutton" id="SaveTreeNode" data-options="iconCls:'icon-w-save'">保存</a></td>
+			</tr>
+		</table> 
+	</div>
+	<div id="AuthGroupWin" class="hisui-window" data-options="modal:true,maximizable:false,minimizable:false,collapsible:false,closed:true,title:'安全组授权'" style="width:320px;height:550px">   
+		<div class="hisui-layout" fit="true" style="padding:0px;background-color:white;">
+			<div data-options="region:'north',collapsible:false" style="height:48px;padding:8px 0px;border-color:#cccccc;overflow:hidden;text-align:center;">
+				<input id="filtGroup" class="textbox" placeholder="请输入安全组别名检索..." style="width:90%;"/>
+			</div>
+			<div data-options="region:'center'" style="padding:5px 4px;border-color:#cccccc;">
+				<table id="tabGroup"></table>
+			</div>
+			<div data-options="region:'south',collapsible:false" style="height:48px;padding:8px 0px;border-color:#cccccc;overflow:hidden;text-align:center;">
+				<a class="hisui-linkbutton" id="AuthSave" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="../scripts/dhcdocconfig/ct.define.js"></script>
+</html>

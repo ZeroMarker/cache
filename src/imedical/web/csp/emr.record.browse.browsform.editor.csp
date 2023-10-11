@@ -1,12 +1,6 @@
-﻿<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-	<script type="text/javascript" src="../scripts/websys.js"></script>
-	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
-	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
-	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
-	<title>在编辑器浏览病历</title>
-	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	
 	s needPrint=$Get(%request.Data("Print",1),"N")
 	if (needPrint '= "N")
 	{
@@ -19,7 +13,17 @@
 		}
 	}
 	q 1
-	</csp:method>
+	
+</csp:method>
+<html>
+<head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<title>在编辑器浏览病历</title>
 </head>
 <body style="margin:0px;">
 	<script language="cache" runat="server">
@@ -27,6 +31,7 @@
 	    s status = $Get(%request.Data("status",1),"")
 		s episodeId = $Get(%request.Data("episodeId",1),"")
 		s id = $Get(%request.Data("id",1),"")
+		s viewType = $Get(%request.Data("viewType",1),"PDF")
 		s (text,pluginType,chartItemType,characteristic,emrDocId)=""
 		if (id '= "") 
 		{ 
@@ -37,8 +42,11 @@
 				s pluginType = objInstance.TheECRecord.DocumentType
 				s chartItemType = objInstance.TheECRecord.ChartItemType
 				s characteristic = objInstance.TheECRecord.DocumentCharacteristic
-			    s:(episodeId="") episodeId = objInstance.EpisodeID
-				s emrDocId = objInstance.TheECRecord.ChartItemID
+			    s:(episodeId="") episodeId = objInstance.RealEpisodeID
+				s emrDocId = objInstance.TheECRecord.RealChartItemID
+				
+				s pdfStatus = ##class(EMRservice.BL.BLPDFAuditSignLog).GetPDFStatus(id,episodeId)
+				s pdfDocType = $Case($zcvt(pdfStatus,"U"),"SIGNED":"PDF",:"XML")
 			}
 		}else{ 
 			s text = $Get(%request.Data("text",1),"")
@@ -47,7 +55,12 @@
 			s characteristic = $Get(%request.Data("characteristic",1),"")
 			s episodeId = $Get(%request.Data("episodeId",1),"")
 			s emrDocId = $Get(%request.Data("emrDocId",1),"")
+			s pdfDocType = $Get(%request.Data("pdfDocType",1),"")
 		 }
+		 
+		///如果外部传入标识，则强制展示编辑器状态文档
+		s:(viewType = "Editor") pdfDocType = "XML"
+		 
 		s patientId = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeId)
 		s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
    		s needPrint=$Get(%request.Data("Print",1),"N")
@@ -56,6 +69,7 @@
 		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
 		s userName = %session.Get("LOGON.USERNAME")
 		s userID = %session.Get("LOGON.USERID")
+        s:(needPrint = "Y") userID = $Get(%request.Data("userID",1),"")
 		s action = $Get(%request.Data("Action",1),"")
 		s visitType=$Get(%request.Data("VisitType",1),"")
 		if (visitType="OP") 
@@ -67,6 +81,9 @@
 			s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
 		}
 		s userLocID = %session.Get("LOGON.CTLOCID")
+        s ipAddress = ""
+        s:(needPrint = "Y") ipAddress = $Get(%request.Data("ipAddress",1),"")
+        s loadDocMode = ##Class(EMRservice.SystemParameter).GetLoadDocMode()
    </script>
 	<script language="javascript">
 		var param = "";
@@ -76,6 +93,7 @@
 		var pluginType = '#(pluginType)#';
 		var emrDocId = '#(emrDocId)#';
 		var characteristic = '#(characteristic)#';
+		var pdfDocType = '#(pdfDocType)#';
 		var status = '#(status)#';
 		var iword = false;
 		var igrid = false;
@@ -91,9 +109,13 @@
 		var setDefaultFontStyle = "#(setDefaultFontStyle)#";
 		var action = '#(action)#';
 		var ipAddress = getIpAddress();
+        if (needPrint == "Y") ipAddress = '#(ipAddress)#';
 		var userLocID = '#(userLocID)#';
-   </script>
-    <div id="promptMessage" style="display:none;font-size:20px;font-weight:bold;padding:10px 0 0 5px;"></div>
+        var loadDocMode = $.parseJSON('#(loadDocMode)#'.replace(/\'/g, "\""));
+		var userCode = '#(%session.Get("LOGON.USERCODE"))#';
+   		var viewType = '#(viewType)#';
+	</script>
+    <div id="promptMessage" style="display:none;font-size:20px;font-weight:bold;padding:10px 0 0 5px;position:relative;width:100%;height:100%"></div>
 	<div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
 	<div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
         <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="border:0px;display:none;"/>

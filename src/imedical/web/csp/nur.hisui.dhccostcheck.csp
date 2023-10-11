@@ -10,6 +10,13 @@
 <HISUI/>
 </head>
 <style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding: 0 10px;
+}
 .title_R{
 	height:30px;
 	padding:5px;
@@ -34,9 +41,9 @@
 	border-bottom:1px solid #ccc;
 }
 .title_L{
-	height:30px;
-	padding:5px 0;
-	border-bottom:1px solid #cccccc;
+	height:36px;
+	padding:5px 0 5px 8px;
+	border-bottom:1px dashed #cccccc;
 	background:#f9f9fa;	
 	display:flex;
 	flex-direction:row;
@@ -55,9 +62,6 @@ td[field="TOrderName"] div.datagrid-cell, .datagrid-cell-group{
 	justify-content:flex-start;
 	margin-left:-5px;
 }
-label.checkbox, label.radio{
-	padding-left:22px!important;	
-}
 #model{
 	position:fixed;
 	width:100%;
@@ -65,10 +69,159 @@ label.checkbox, label.radio{
 	/*background:pink;*/
 	z-index:100000;
 }
+#rightDiv {
+	border-radius:4px;
+	border-color:#ccc;
+}
+.layout-split-east{
+	border-left-width:4px;
+}
+#content .layout-panel-east .panel-header{
+	border-bottom:0;
+	border-radius:4px 4px 0 0;
+}
+#content .panel-tool{
+	left:10px;
+}
+.panel-tool {
+	overflow:inherit;
+}
+.panel-tool input,.panel-tool label{
+	height:21px;
+	margin-top:-8px;
+	
+}
+.layout-button-right{
+	margin-left:125px !important;
+}
+.layout>.panel.layout-panel>.panel-header{
+	padding:6px 5px;
+}
+#stopModal .panel-body{
+	padding-bottom:0;
+	overflow:hidden;
+}
+#lock::before{
+	vertical-align:bottom;
+}
 </style>
-<body style="background-color:#fff;">
+<body style="background-color:#fff;padding:4px;">
 	<div id="model"></div>
-	<div id="content" style="width:100%;height:100%">
+	<div id="content" class="hisui-layout" fit="true">
+		<div data-options="region:'center',collapsible:false,split:true,bodyCls:'panel-header-gray'" style="border-radius:4px;">
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',collapsible:false,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" style="height:91px;border-top:0;border-left:0;border-right:0;border-radius:0;">
+					<table class="search-table">
+						<tr>
+							<td class="r-label">
+								<input id="all" class='hisui-radio' type="radio" label='全部' name='doctor' value='ALL'>
+							</td>
+							<td>
+								<input id="longorder" class='hisui-radio' type="radio" label='长嘱' name='doctor' value='S'>
+							</td>
+							<td class="r-label">
+								<input id="snaporder" class='hisui-radio' type="radio" label='临嘱' name='doctor' value='OM'>
+							</td>
+							<!--td style="padding-left:10px;">
+								<div class="radio_box">
+									<input id="all" class='hisui-radio' type="radio" label='全部' name='doctor' value='ALL'>
+									<input id="longorder" class='hisui-radio' type="radio" label='长嘱' name='doctor' value='S'>
+									<input id="snaporder" class='hisui-radio' type="radio" label='临嘱' name='doctor' value='OM'>
+								</div>
+							</td-->
+							<td>#(..Get("范围"))#</td>
+							<td class="r-label">
+								<select id="area"></select>
+							</td>
+							<td>#(..Get("医嘱单型"))#</td>
+							<td  class="r-label">
+								<select id="Docorder" ></select>
+							</td>
+							<td>#(..Get("用法"))#</td>
+							<td class="r-label">
+								<select id="InstrDesc" ></select>
+							</td>
+							
+						</tr>
+						<tr>
+							<td class="r-label">#(..Get("分类"))#</td>
+							<td colspan="2">
+								<select id="diff" style="width: 105px; height: 28px;"></select>
+							</td>
+							<td style="text-align:right;">#(..Get("排序"))#</td>
+							<td class="r-label"> 
+								<select id="SortTime"></select>
+							</td>
+							<td>#(..Get("日期范围"))#</td>
+							<td class="r-label">
+								<input id="OrderStartDate" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17" data-options="required:true" style="display: none;width: 100.4px;">	
+							</td>
+							<td>#(..Get("至"))#</td>
+							<td class="r-label">
+								<input id="OrderEndDate" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17" data-options="required:true" style="display: none;width: 100.4px;">	
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,border:false,collapsible:false">
+					<table id="table_L"></table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'east',title:'ceshi',split:true,headerCls:'panel-header-gray',collapsible:true,tools:'#tt'" style="width:480px;border-top-width:1px;border-radius:0 0 4px 4px;">
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',border:false,collapsible:false" style="height:92px;overflow:hidden;">
+					<table class="search-table" style="border-bottom:1px dashed #ccc;">
+						<tr>
+							<td class="r-label">
+								<input id="startTime" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17" data-options="required:true,width:110" style="display: none;">
+							</td>
+							<td>#(..Get("至"))#</td>
+							<td class="r-label">
+								<input id="endTime" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17" data-options="required:true,width:110" style="display: none;">
+							</td>
+							<td>
+								<input id="" class='hisui-radio' type="radio" label='当天' name='daterange' value='0' checked data-options="onChecked:dateRangeRadioChange">
+							</td>
+							<td class="r-label">
+								<input id="" class='hisui-radio' type="radio" label='入院起' name='daterange' value='1' data-options="onChecked:dateRangeRadioChange">
+							</td>
+							<td style="width:58px;">
+							</td>
+						</tr>
+					</table>
+					<table class="search-table">
+						<tr>
+							<td class="r-label" style="">
+								<input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:changeBind" label="显示自动插入" id="checkbox1">
+							</td>
+							<td style="">
+								<span id="stopTd" href="javascript:;" style="cursor:pointer;">
+									<span class="icon icon-stop-order">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+									<span>#(..Get("停止"))#</span>
+								</span>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',collapsible:false,bodyCls:'panel-header-gray'" style="border-bottom:0;border-left:0;border-right:0;border-radius:0;">
+					<table id="table_r"></table>
+				</div>
+			</div>
+		</div>
+		<div id="tt">
+			<input id="total" class='hisui-radio' type="radio" label='汇总' name='wantEat' value='total'>
+			<div style="display:inline-block;width:10px;"></div>
+            <input id="doc" class='hisui-radio' type="radio" label='医嘱' name='wantEat' value='doc'>
+            <div style="display:inline-block;width:10px;"></div>
+            <input id="record" class='hisui-radio' type="radio" label='明细记录' name='wantEat' value='record'>
+            <div style="display:inline-block;width:10px;"></div>
+			<input id="TarIC" class='hisui-radio' type="radio" label='费用小计' name='wantEat' value='TarIC'>
+			<span id="lock" style="cursor:pointer;width:16px;height:16px;display:inline-block;margin:0 10px;" class="icon icon-lock" onclick="changeLock(!lockStatus)"></span>
+		</div>
+
+	</div>
+	<!--div id="content" style="width:100%;height:100%">
 		<div id="cc2" class="hisui-layout" data-options="clickExpand:false,fit:true">
 			<div id="rightDiv" data-options="region:'east',title:'',tools:'#leftTools',clickExpand:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',onCollapse:resizeLeftTable,onResize:resizeRightTabel" 
 				style="width:480px;">
@@ -78,6 +231,7 @@ label.checkbox, label.radio{
 							<input id="total" class='hisui-radio' type="radio" label='汇总' name='wantEat' value='total'>
 				            <input id="doc" class='hisui-radio' type="radio" label='医嘱' name='wantEat' value='doc'>
 				            <input id="record" class='hisui-radio' type="radio" label='明细记录' name='wantEat' value='record'>
+							<input id="TarIC" class='hisui-radio' type="radio" label='费用小计' name='wantEat' value='TarIC'>
 						</div>
 					</div>
 					<div class="right" style="padding-top:7px;">
@@ -88,7 +242,6 @@ label.checkbox, label.radio{
 					<table style="width:457px">
 						<tbody>
 							<tr>
-								<!-- <td class="r-label" style="padding-right:5px;">日期</td> -->
 								<td class="r-label" style="padding-right:0px;">
 									<input id="startTime" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17" data-options="required:true,width:110" style="display: none;">
 								</td>
@@ -112,12 +265,12 @@ label.checkbox, label.radio{
 						</tbody>
 					</table>
 				</div>
-				<div class="tableRDiv" style="padding:4px;">
+				<div class="tableRDiv">
 					<table id="table_r"  class="hisui-datagrid"></table>
 				</div>
 			</div>   
-			<div id="leftDiv" style="overflow-x:auto;" data-options="region:'center',title:'',split:true,bodyCls:'panel-header-gray',onResize:resizeLeftTable">
-				<div class="title_L"  style="margin-bottom:5px;min-width:810px;">
+			<div id="leftDiv" style="overflow:hidden;border-radius:4px;" data-options="region:'center',title:'',split:true,bodyCls:'panel-header-gray',onResize:resizeLeftTable">
+				<div class="title_L">
 					<table>
 						<tbody>
 							<tr>
@@ -151,14 +304,14 @@ label.checkbox, label.radio{
 				<table id="table_L"  class="hisui-datagrid"></table>
 			</div>   
 		</div>  
-	</div>
+	</div-->
 	<div id="modal" >
 		<table id="detailsTab"></table>
 	</div>
 	<div id="stopModal" style="padding:10px;">
 		<table>
 			<tr>
-				<td style="padding-left:30px;padding-right:5px;">#(..Get("选择原因"))#</td>
+				<td style="padding-right:10px;;">#(..Get("选择原因"))#</td>
 				<td><div id="selectBox"></div></td>
 			</tr>
 		</table>
@@ -195,21 +348,41 @@ scope="1";//
 nursebill="ALL";
 SortType="DT"
 CatType="ALL"; // 左侧表格默认分类为全部
+InstrID=""; //用法默认全部
+
 var initArgs="";
 var papmi="";
 var adm="";
 var startDate="" // getDate()获取当前时间
 var endDate=""
 var ifBind=false;
+
+function GetAdmInHospDateTime(){
+	var AdmInHospDateTime=$cm({
+		ClassName:'Nur.NIS.Service.Base.Patient',
+		MethodName:'GetInHospDateTime',
+		EpisodeID:adm,
+		dataType:"text"
+	},false)
+	return AdmInHospDateTime.split(" ")[0];
+}
+function dateRangeRadioChange(e,value){
+	if (e.target.value =="1"){
+		$("#startTime").datebox('setValue',GetAdmInHospDateTime());
+	}else{
+		$("#startTime").datebox('setValue',currentDate);
+	}
+	//FnRight();
+	$("#table_r").datagrid("load");
+}
 function changeBind(e,value){
 	if(value){
 		ifBind='Y';
 	}else{
 		ifBind='N';	
 	}
-	
-	//$("#table_r").datagrid('load');
-	FnRight();
+	$("#table_r").datagrid('load');
+	//FnRight();
 }
 function xhrRefresh(p,a,c){
 	// 点击左侧病人列表执行的函数
@@ -220,14 +393,40 @@ function xhrRefresh(p,a,c){
 	 papmi=p.papmi;
 	 adm=p.adm;
 	 mradm:p.mradm;
-	 //console.log('init',p);
+	 var SelectVal = $("input[name='daterange']:checked").val();
+	 if (SelectVal ==1){
+		 $("#startTime").datebox('setValue',GetAdmInHospDateTime());
+     }
+	 refreshPatInstr();
 	 leftTable();
 	 FnRight();
 }
+function loadPatInstr(){
+	InstrID="";
+	var data = $cm({
+		ClassName: "web.DHCDocInPatUICommon",
+		MethodName: "GetAdmInstrJson",
+		Adm: adm
+	},false)
+	data.splice(0,1)
+	$HUI.combobox("#InstrDesc", {
+		data:data,
+		valueField: 'id',
+		textField: 'text',
+		multiple:true,
+		width:115,
+		rowStyle:'checkbox',
+		onChange:function(newValue, oldValue){
+			InstrID=newValue.join("^");
+			leftTable();
+		}
+		
+   });
+}
 function switchPatient(patientId,episodeId,mradm,age){
 	$("#InpatListDiv").data("AutoOpen",0);
-	setEprMenuForm(episodeId,patientId,mradm,"");
-	console.log(episodeId,patientId,mradm,"ceshishuju");
+	setEprMenuForm(episodeId,patientId,mradm,"");	
+	// console.log(episodeId,patientId,mradm,"ceshishuju");
 	// updatePatientInfo(episodeId,age);
 }
 function setEprMenuForm(adm,papmi,mradm,canGiveBirth){
@@ -239,6 +438,29 @@ function setEprMenuForm(adm,papmi,mradm,canGiveBirth){
 	}
 }
 var currentDate=getDate();// 获取当前的日期
+
+function setLeftDate() {
+	$("#OrderStartDate").datebox({
+		 width:115,
+		 onSelect: function(date){
+	        startDate=$("#OrderStartDate").datebox('getValue');// 开始日期（左侧）
+	        endDate=$("#OrderEndDate").datebox('getValue'); // 结束日期（左侧）
+	       	leftTable();
+	        
+	    }
+	})
+	$("#OrderEndDate").datebox({
+		 width:115,
+		 onSelect: function(date){
+	        startDate=$("#OrderStartDate").datebox('getValue');// 开始日期（左侧）
+	        endDate=$("#OrderEndDate").datebox('getValue');// 结束日期（左侧）
+	       	leftTable();
+	    }
+	})
+	$("#OrderStartDate").datebox('setValue',currentDate);
+	$("#OrderEndDate").datebox('setValue',currentDate);
+}
+
 // 查询本地存储的锁的状态
 var lockStatus=""; // false是锁定状态，true是未锁定状态
 var currentRadio="total";
@@ -257,7 +479,7 @@ function changeLock(val){
 	// val:true  为开
 	// val:false 为锁
 	lockStatus=val
-	console.log(val);
+	// console.log(val);
 	if(val){
 		$("#lock").removeClass("icon-lock").addClass("icon-unlock");
 		$cm({
@@ -266,14 +488,16 @@ function changeLock(val){
 			summaryStatus:'N',// 汇总
 			detailStatus:'N', // 医嘱
 			recordStatus:'N', // 记录明细
+			TarICStatus: 'N',
 			userId:session['LOGON.USERID']
 		},function(res){
-			FnClearLocalStorage();	
+			////FnClearLocalStorage();	
 		})
 	}else{
 		$("#lock").removeClass("icon-unlock").addClass("icon-lock");
 		// 存储数据
 		var currentVal=selectObjR.currentVal;
+		// console.log(currentVal)
 		var localObj={
 			lock:val,
 			statusKey:currentVal	
@@ -286,7 +510,8 @@ function FnLocalStorage(val){
 	var summary='N';
 	var detail='N';
 	var record='N';
-	console.log('songzmin','suji');
+	var TarIC='N';
+	//console.log('songzmin','suji');
 	if(!val.lock){
 		if(val.statusKey=='total'){
 			// 汇总
@@ -297,6 +522,9 @@ function FnLocalStorage(val){
 		}else if(val.statusKey=='record'){
 			// 明细记录
 			record='Y';
+		}else if(val.statusKey=='TarIC'){
+			// 明细记录
+			TarIC='Y';
 		}
 		$cm({
 			ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
@@ -304,6 +532,7 @@ function FnLocalStorage(val){
 			summaryStatus:summary,// 汇总
 			detailStatus:detail, // 医嘱
 			recordStatus:record, // 记录明细
+			TarICStatus:TarIC, // 费用小计
 			userId:session['LOGON.USERID']
 		},function(res){
 			// var tmpVal=JSON.stringify(val)
@@ -312,7 +541,7 @@ function FnLocalStorage(val){
 	}
 }
 function FnClearLocalStorage(){
-	// 清楚本地存储的数据
+	// 清除本地存储的数据
 	localStorage.removeItem("LockStatus")
 }
 var selectObjR={}
@@ -349,7 +578,7 @@ Object.defineProperty(selectObjL,"currentVal",{
 	set:function(newVal){
 		currentVal=newVal;
 		// 这里是全部，长医嘱切换的时候出发的业务逻辑
-		console.log(newVal,'left');
+		// console.log(newVal,'left');
 		PriorType=currentVal;
 		leftTable();
 	}
@@ -394,9 +623,9 @@ function stopOrder(){
 		$("#stopModal").dialog({
 			title:$g('停止执行'),
 			resizable:true,
-			width:340,
-			height:160,
-			iconCls:'icon-paper-table',
+			width:250,
+			height:130,
+			iconCls:'icon-w-edit',
 			modal:true,
 			buttons:[
 				{
@@ -420,7 +649,7 @@ function stopOrder(){
 								return item.TOrdExcRowID;	
 							})
 							var tmpExeRowIDStr=tmpExeRowID.join('^');
-							console.log(tmpExeRowIDStr);
+							// console.log(tmpExeRowIDStr);
 							$.messager.confirm("撤销执行", "有已执行的执行记录，是否撤销执行记录？", function (r) {
 								if (r) {
 									$cm({
@@ -492,7 +721,7 @@ function stopOrder(){
 																				$.messager.popover({msg: '密码不能为空！',type:'alert'});
 																				return;	
 																			}
-																			console.log(pwd,inputVal,selectVal);
+																			// console.log(pwd,inputVal,selectVal);
 																			var TmpExpStr="";
 																			if(selectVal){
 																				TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
@@ -592,7 +821,7 @@ function stopOrder(){
 																	$.messager.popover({msg: '密码不能为空！',type:'alert'});
 																	return;	
 																}
-																console.log(pwd,inputVal,selectVal);
+																// console.log(pwd,inputVal,selectVal);
 																var TmpExpStr="";
 																if(selectVal){
 																	TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
@@ -695,7 +924,7 @@ function stopOrder(){
 																$.messager.popover({msg: '密码不能为空！',type:'alert'});
 																return;	
 															}
-															console.log(pwd,inputVal,selectVal);
+															// console.log(pwd,inputVal,selectVal);
 															var TmpExpStr="";
 															if(selectVal){
 																TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
@@ -759,6 +988,8 @@ function stopOrder(){
 										$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
 										$("#stopModal").dialog('close');
 										$("#table_r").datagrid('reload');
+									}else{
+										$.messager.alert("停止执行记录失败", res, "info");	
 									}	
 								})
 							}else if(longDataArr.length==0 && lsDataArr.length>0){
@@ -796,7 +1027,7 @@ function stopOrder(){
 													$.messager.popover({msg: '密码不能为空！',type:'alert'});
 													return;	
 												}
-												console.log(pwd,inputVal,selectVal);
+												// console.log(pwd,inputVal,selectVal);
 												var TmpExpStr="";
 												if(selectVal){
 													TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
@@ -844,7 +1075,7 @@ function stopOrder(){
 		// 初始化选择框
 		$HUI.combobox("#selectBox",{
 			valueField:'id', textField:'text',panelHeight:"auto",
-			width:140,
+			width:158,
 			data:[
 				{id:'1',text:$g('药物过敏')}
 				,{id:'2',text:$g('重复用药')}
@@ -922,7 +1153,7 @@ function FnArea(){
 			nursebill=record.id;
 			leftTable();
 		},
-		width:72,
+		width:115,
 		data:[
 			{id:'ALL',text:$g('全部')},
 			{id:'N',text:$g('医嘱单')},
@@ -943,7 +1174,6 @@ function FnDocorder(){
 		editable:false,
 		allowNull:true,
 		onSelect:function(record){
-			// console.log(record);
 			scope=record.id;
 			leftTable();
 		},
@@ -975,7 +1205,7 @@ function FnTimeSort(){
 			SortType=record.id;
 			leftTable();
 		},
-		width:88,
+		width:70,
 		data:[
 			{id:'AT',text:$g('时间正序')},
 			{id:'DT',text:$g('时间倒序')},
@@ -986,6 +1216,7 @@ function FnTimeSort(){
 function fnDiff(){
 	// 分类的函数	
 	$HUI.combobox("#diff",{
+		url:$URL+"?ClassName=web.DHCDocInPatUICommon&MethodName=GetOrdReSubCatListJson",
 		valueField:'id',
 		textField:'text',
 		multiple:false,
@@ -994,12 +1225,11 @@ function fnDiff(){
 		editable:false,
 		allowNull:true,
 		onSelect:function(record){
-			console.log(record);
 			CatType=record.id;
 			leftTable();
 		},
-		width:87,
-		data:[
+		width:105,
+		/*data:[
 			{id:'ALL',text:$g('全部')},
 			{id:'29||1',text:$g('药品')},
 			{id:'29||2',text:$g('检验')},
@@ -1007,8 +1237,7 @@ function fnDiff(){
 			{id:'29||4',text:$g('材料')},
 			{id:'29||5',text:$g('处置治疗')},
 			{id:'29||6',text:$g('其他')},
-		]
-		
+		]*/
 	})
 	$("#diff").combobox('setValue','ALL')
 }
@@ -1020,7 +1249,7 @@ function FnRight(){
             	var SelectVal = $("input[name='wantEat']:checked").val();
             	var columns=[[ 
             		{field:"ck", checkbox:"true"},  
-			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:180},    
+			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:'auto'},    
 			        //{field:'TUom',title:'单位',width:60,}, 
 			        {field:'TQty',title:'数量',width:80,}, 
 			        {field:'TPrice',title:'单价',width:80},
@@ -1045,10 +1274,10 @@ function FnRight(){
 				var columns=[[    
             		{field:"ck", checkbox:"true"},
 			        {field:'PriorityDesc',title:'医嘱类型',width:100},     
-			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:180},   
+			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:'auto'},   
 			        {field:'TQty',title:'数量',width:100},
-			        {field:'SttDate',title:'医嘱开始时间',width:160,},
-			        {field:'XDate',title:'停止时间',width:160,},
+			        {field:'SttDate',title:'医嘱开始时间',width:170,},
+			        {field:'XDate',title:'停止时间',width:180,},
 			        {field:'doc',title:'医嘱',hidden:true}       
 			    ]]
             	selectObjR.currentVal=SelectVal;
@@ -1069,7 +1298,7 @@ function FnRight(){
 				var columns=[[    
             		{field:"ck", checkbox:"true"},
 			        {field:'TExStDate',title:'要求执行时间',width:160,},    
-			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:180},   
+			        {field:'TArcimDesc',title:'医嘱',width:200,showTip:true,tipWidth:'auto'},   
 			        //{field:'TAmt',title:'数量',width:80}, 
 			        {field:'TQty',title:'数量',width:80},
 			        {field:'OrderStatus',title:'状态',width:80},
@@ -1087,7 +1316,27 @@ function FnRight(){
 			}	
 		}
 	});
-	console.log(currentRadio,"init");
+// 点击费用小计触发的逻辑
+$HUI.radio("#TarIC",{
+		onCheckChange:function(e,value){
+			if(value){
+            	var SelectVal = $("input[name='wantEat']:checked").val();
+				var columns=[[    
+            		{field:"ck", checkbox:"true"},
+			        {field:'tarICDesc',title:'分类',width:160,},    
+			        {field:'TAmt',title:'总价',width:200},       
+			    ]]
+            	selectObjR.currentVal=SelectVal;
+            	if(lockStatus){
+	            	currentRadio=SelectVal
+	            }
+            	var QueryName='FindIPPatNurseOrderTarIC';
+            	var ClassName='Nur.NIS.Service.Bill.BillCostCheck';
+				rightTable(columns,ClassName,QueryName)
+			}	
+		}
+	});
+	// console.log(currentRadio,"init");
 	// 设置选中汇总
 	if(currentRadio=="total"){
 		$HUI.radio("#total").setValue(true); // 初始选中汇总
@@ -1095,6 +1344,8 @@ function FnRight(){
 		$HUI.radio("#doc").setValue(true); // 初始选中医嘱
 	}else if(currentRadio=="record"){
 		$HUI.radio("#record").setValue(true); // 初始选中明细记录
+	}else if(currentRadio=="TarIC"){
+		$HUI.radio("#TarIC").setValue(true); // 初始选中费用小计
 	}
 }
 function FnLeft(){
@@ -1138,41 +1389,41 @@ function getDate(){
 	return Y+"-"+M+"-"+D	
 }
 function setDate(){
-	// 设置当前的日历日期为今天
 	$("#startTime").datebox({
 		 width:115,
 		 onSelect: function(date){
-			        //alert(date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate());
-			        startDate=$("#startTime").datebox('getValue');// 开始日期
-			        endDate=$("#endTime").datebox('getValue'); // 结束日期
-			        FnRight();
-			       	// console.log(tmpEndDate,tmpStartDate)
-			    }
+	        startDate=$("#startTime").datebox('getValue');// 开始日期（右侧）
+	        endDate=$("#endTime").datebox('getValue'); // 结束日期（右侧）
+	        FnRight();
+	    }
 	})
 	$("#endTime").datebox({
 		 width:115,
 		 onSelect: function(date){
-			        //alert(date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate());
-			        startDate=$("#startTime").datebox('getValue');// 开始日期
-			        endDate=$("#endTime").datebox('getValue');// 结束日期
-			        FnRight();
-			        // console.log(tmpStartDate,tmpEndDate)
-			    }
+	        startDate=$("#startTime").datebox('getValue');// 开始日期（右侧）
+	        endDate=$("#endTime").datebox('getValue');// 结束日期（右侧）
+	        FnRight();
+	    }
 	})
 	$("#startTime").datebox('setValue',currentDate);
 	$("#endTime").datebox('setValue',currentDate);
 }
+
 function leftTable(){
 	if(papmi=="" || adm=="" ){
 		papmi=getParam("PatientID");
 		adm=getParam("EpisodeID");
 	}
+	orderStartDate=$("#OrderStartDate").datebox('getValue');
+	orderEndDate=$("#OrderEndDate").datebox('getValue');
+	
 	try{
 		var DIvH=$("#leftDiv").height();
 		var DIvW=$("#leftDiv").width();
 		// console.log(DIvH,DIvW,'lll')
 		// 左侧表格数据
 		$('#table_L').datagrid({
+			border:false,
 			url:$URL,
 			queryParams:{
 				// 旧的className:'web.DHCDocInPatPortalCommon'
@@ -1185,12 +1436,14 @@ function leftTable(){
 				scope:scope,
 				stloc:'1',
 				nursebill:nursebill,
+				startDate:orderStartDate,
+				endDate:orderEndDate,
 				inputOrderDesc:'',
 				PriorType:PriorType,
 				CatType:CatType,
 				SortType:SortType,
 				OrderPriorType:'',
-				InstrID:'',
+				InstrID:InstrID,
 				Pagerows:99999,
 				ScrollView:1,
 				rows:99999
@@ -1198,27 +1451,27 @@ function leftTable(){
 			fitColumns:true,
 			rownumbers:true,
 		    columns:[[    
-		        {field:'TStDate',title:'医嘱开始时间',width:100},    
-		        {field:'Priority',title:'医嘱类型',width:50},    
-		        {field:'TOrderName',title:'医嘱',width:220,showTip:true,tipWidth:320},
-		        {field:'TStopDate',title:'停止时间',width:85}    
+		        {field:'TStDate',title:'医嘱开始时间',width:150},    
+		        {field:'Priority',title:'医嘱类型',width:90},    
+		        {field:'TOrderName',title:'医嘱',width:250,showTip:true,tipWidth:'auto'},
+		        {field:'TStopDate',title:'停止时间',width:140}    
 		    ]],
-		    height:DIvH-46-8,
-		    width:DIvW-8,
-		    style:{marginLeft:'4px'},			
+		    fit:true,
+		    //height:DIvH-46,
+		    //width:DIvW,
 		    onLoadSuccess:function(){
 			    setTimeout(function(){
 				   $("#model").css("display","none") 
-				   },1000)
+				},1000)
 		    },
 		    onBeforeLoad:function(){
 			    $("#model").css("display","block")
 		    }
 		})
-		}catch(err){
-			 
-			// console.log(tmpEpisodeID,tmpPatientID)	
-		}
+	}catch(err){
+		// console.log(tmpEpisodeID,tmpPatientID)	
+	}
+	//resizeLeftTable();
 }
 function resizeRightTabel(){
 	// 重置右侧表格的尺寸
@@ -1226,8 +1479,8 @@ function resizeRightTabel(){
 		var DIvW=$("#rightDiv").width();
 		var DIvH=$("#leftDiv").height();
 		var targetObj=$("#table_r").datagrid('options');
-		targetObj.width=DIvW-8;
-		targetObj.height=DIvH-46-47-8;
+		targetObj.width=DIvW;
+		targetObj.height=DIvH-41-47;
 		$("#table_r").datagrid('resize');
 	} catch(err) {
 		return true;
@@ -1239,15 +1492,13 @@ function resizeLeftTable(){
 		var DIvH=$("#leftDiv").height();
 		var DIvW=$("#leftDiv").width();
 		var targetObj=$("#table_L").datagrid('options');
-		
 		var tmpsdf=$("#cc2").layout("panel","east")[0].clientWidth
-		// console.log("testData",tmpsdf[0].clientWidth);
 		if(tmpsdf>0){
-			targetObj.width=805;
-			targetObj.height=DIvH-46-20;
+			targetObj.width=DIvW;
+			targetObj.height=DIvH-46;
 		}else{
-			targetObj.width=DIvW-8;
-			targetObj.height=DIvH-46-8;
+			targetObj.width=DIvW;
+			targetObj.height=DIvH-46;
 		}
 		$("#table_L").datagrid('resize')
 	}catch(err){
@@ -1261,7 +1512,7 @@ function reloadRightTable(ColVal,DataVal){
 		var targetObj=$("#table_r").datagrid('options');
 		targetObj.columns=ColVal;
 		$("#table_r").datagrid('refresh');
-		console.log(targetObj,'newFn')
+		// console.log(targetObj,'newFn')
 		resizeRightTabel()
 	}catch(err){
 		return true;	
@@ -1295,6 +1546,8 @@ function rightTable(val,ClassName,QueryName){
 	var DIvH=$("#leftDiv").height();
 	try{
 		$("#table_r").datagrid({
+			fit:true,
+			border:false,
 			url:$URL,
 			queryParams:{
 				// ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
@@ -1317,17 +1570,17 @@ function rightTable(val,ClassName,QueryName){
 				    return;
 				  }
 			    var tmpTOEORI=rowData.TOEORI;
-			    var tmpTARCIM=rowData.TARCIM;
-			    // console.log(rowData,tmpTARCIM);
-			    modal(tmpTOEORI,tmpTARCIM);
+			    modal(tmpTOEORI);
 			},			
 			onLoadSuccess:function(){
 			    setTimeout(function(){
 				   $("#model").css("display","none") 
 				   },1000)
 		    },
-		    onBeforeLoad:function(){
-			    $("#model").css("display","block")
+		    onBeforeLoad:function(param){
+			    $("#model").css("display","block");
+			    param.ifBind=ifBind;
+		        param.stDate=$("#startTime").datebox('getValue');
 		    }
 		})
 	}catch(err){
@@ -1335,7 +1588,7 @@ function rightTable(val,ClassName,QueryName){
 	}
 	// $("#table_r").datagrid('reload')
 	$("#table_r").datagrid('clearChecked')
-	resizeRightTabel();
+	//resizeRightTabel();
 }
 function stopModalShowTemporary(){
 	$("#stopModal").show();
@@ -1364,12 +1617,12 @@ function stopModalShow(str,userId,localId,wardId,isRightTable){
 						
 					var inputVal=$('#selectBox').combobox('getText');
 					var selectVal=$('#selectBox').combobox('getValue');
-					console.log(selectVal)
+					// console.log(selectVal)
 					if(!inputVal && !selectVal){
 						$.messager.alert("简单提示", "原因不能为空！", "info");
 						return;
 					}
-					console.log(str,userId,localId,wardId);
+					// console.log(str,userId,localId,wardId);
 					if(selectVal){
 					// 
 						$cm({
@@ -1439,7 +1692,7 @@ function stopModalShow(str,userId,localId,wardId,isRightTable){
 		defaultFilter:4
 	});
 }
-function modal(tmpTOEORI,tmpTARCIM){
+function modal(tmpTOEORI){
 	// 模态框内容 modal(tmpTOEORI,tmpTARCIM);
 	$("#modal").show();
 	$("#modal").dialog({
@@ -1467,14 +1720,13 @@ function modal(tmpTOEORI,tmpTARCIM){
 			ClassName:'Nur.NIS.Service.Bill.BillCostCheck',
 			QueryName:'FindNurOrdExecInfo',
 			ordItmStr:tmpTOEORI,
-			arcimid:tmpTARCIM,
 			stDate:startDate,
 			endDate:endDate
 		},
 		columns:[[
             {field:"ck", checkbox:"true"},
 			{field:'TordPrior',title:'医嘱类型',width:70},
-			{field:'TArcimDesc',title:'医嘱名称',width:220,showTip:true,tipWidth:180},
+			{field:'TArcimDesc',title:'医嘱名称',width:220,showTip:true,tipWidth:'auto'},
 			{field:'TExStDate',title:'要求执行时间',width:160},
 			{field:'OrderStatus',title:'状态',width:60},
 			{field:'SttDate',title:'医嘱开始时间',width:180},
@@ -1534,9 +1786,9 @@ function NewStopModalShow(recordArr,orderTypeLong,dataFrom){
 	$("#stopModal").dialog({
 		title:$g('停止执行'),
 		resizable:true,
-		width:340,
-		height:160,
-		iconCls:'icon-paper-table',
+		width:250,
+		height:130,
+		iconCls:'icon-w-edit',
 		modal:true,
 		buttons:[
 			{
@@ -1634,7 +1886,7 @@ function NewStopModalShow(recordArr,orderTypeLong,dataFrom){
 														iconCls:'icon-save',
 														handler:function(){
 															var pwd=$("#pdCX").val();
-															console.log(pwd,inputVal,selectVal);
+															// console.log(pwd,inputVal,selectVal);
 															var TmpExpStr="";
 															if(selectVal){
 																TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
@@ -1669,6 +1921,8 @@ function NewStopModalShow(recordArr,orderTypeLong,dataFrom){
 																		$("#table_r").datagrid('reload');
 																	}
 																	//$("#detailsTab").datagrid('reload');
+																}else{
+																	$.messager.alert("提示", res, "info");
 																}
 															})
 															
@@ -1735,7 +1989,7 @@ function NewStopModalShow(recordArr,orderTypeLong,dataFrom){
 																			iconCls:'icon-save',
 																			handler:function(){
 																				var pwd=$("#pdCX").val();
-																				console.log(pwd,inputVal,selectVal);
+																				// console.log(pwd,inputVal,selectVal);
 																				var TmpExpStr="";
 																				if(selectVal){
 																					TmpExpStr=session['LOGON.USERID']+'^'+session['LOGON.CTLOCID']+'^'+session['LOGON.GROUPID']+'^'+selectVal+'^'
@@ -1933,7 +2187,7 @@ function NewStopModalShow(recordArr,orderTypeLong,dataFrom){
 	
 	$HUI.combobox("#selectBox",{
 		valueField:'id', textField:'text',panelHeight:"auto",
-		width:140,
+		width:158,
 		data:[
 			{id:'1',text:$g('药物过敏')}
 			,{id:'2',text:$g('重复用药')}
@@ -1950,10 +2204,11 @@ $(function(){
 		MethodName:'GetBindConfig',
 		userId:session['LOGON.USERID']
 	},function(res){
-		// console.log(res);
+		
 		lockStatus=true; // 锁默认是开的
 		currentRadio="total"; // 默认是汇总
-		for(item in res){
+		for(var item in res){
+			
 			if(res[item]=='Y'){
 				lockStatus=false;
 				if(item=='summary'){
@@ -1962,6 +2217,8 @@ $(function(){
 					currentRadio='doc';
 				}else if(item=='record'){
 					currentRadio='record'
+				}else if(item=='TarIC'){
+					currentRadio='TarIC'
 				}
 			}	
 		}
@@ -1978,7 +2235,6 @@ $(function(){
 		$("#cliHid").click(function(){
 			$("#cc2").layout("collapse","east")
 			var DIvH=$("#leftDiv").width();
-			console.log(DIvH)
 		})
 		if(lockStatus){
 			$("#lock").removeClass("icon-lock").addClass("icon-unlock")
@@ -1995,19 +2251,21 @@ $(function(){
 		FnRight()// 右侧表头逻辑函数
 		FnLeft()// 左侧表头逻辑函数
 		fnDiff()// 分类函数执行
+		loadPatInstr() //用法
+		setLeftDate();
 		setDate();
+
 		leftTable();
 		stopOrder();	
 		
-		var DIvH=$("#leftDiv").height();
+		/*var DIvH=$("#leftDiv").height();
 		var DIvW=$("#leftDiv").width();
 		var targetObj=$("#table_L").datagrid('options');
-		//targetObj.width=DIvW-8;
-		//targetObj.height=DIvH-46-8;
-		targetObj.width=795;
-		targetObj.height=DIvH-46-18;
-		$("#table_L").datagrid('resize')
-		$("#table_L").datagrid('resize')
+		targetObj.width=DIvW;
+		targetObj.height=DIvH-46;
+		$("#table_L").datagrid('resize');
+		//$("#table_L").datagrid('resize');*/
+		$(".panel-title").html("");
 	})
 })
 </script>

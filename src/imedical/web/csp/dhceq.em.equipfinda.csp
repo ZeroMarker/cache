@@ -9,96 +9,97 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
-<style type="text/css">
-	.eq-total-sum{
-	font-size:120%;
-	color:#F00;
-	float:right;
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<Style>
+.messager-popover
+{
+	font-weight: normal;
 }
-</style>
-<script type='text/javascript' src='../scripts/dhceq/em/equipfind.js'></script>
-<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</Style>
 <SCRIPT language="Cache" RUNAT="SERVER">
  s ReadOnly=%request.Data("ReadOnly",1)
  s QXType=%request.Data("QXType",1)
  s colsets=##Class(web.DHCEQCColSet).GetColSets("","2","","Equip") //用户级设置
  if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","1","","Equip") //安全组级设置
  if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","0","","Equip") //系统设置
+ s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+ s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+ if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+ s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
 </Script>
 </HEAD>
 
 <body class="hisui-layout">
-		<div data-options="region:'center',border:false" style="padding:10px">
-		<div class="hisui-panel"  title="设备综合查询" data-options="fit:true,eqtitle:'maintitle'">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel" title="设备综合查询" data-options="fit:true,eqtitle:'maintitle',headerCls:'panel-header-gray'">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:200px;">
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label for="No">设备编号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="No" ></div>
-					<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Name" ></div>
-					<div class="eq-table-td eq-table-label"><label for="Model">规格型号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Model" ></div>
-					<div class="eq-table-td eq-table-label"><label id="cEquipType" for="EquipType">管理类组</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType'" id="EquipType" ></div>
-					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #e2e2e2;padding-bottom:10px;border-radius:0px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="No">设备编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="No" ></div>
+						<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Name" ></div>
+						<div class="eq-table-td eq-table-label"><label for="CommonName">通用名</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CommonName" ></div>
+						<div class="eq-table-td eq-table-label"><label id="cEquipType" for="EquipType">管理类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EquipType'" id="EquipType" ></div>
+						<div class="eq-table-td eq-table-label"><label for="ContractNo">合同号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ContractNo" ></div>
+						<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="OldNo">旧系统唯一号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OldNo" ></div>
+						<div class="eq-table-td eq-table-label"><label for="FileNo">档案号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FileNo" ></div>
+						<div class="eq-table-td eq-table-label"><label for="cModel">规格型号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Model'" id="Model" ></div>
+						<div class="eq-table-td eq-table-label"><label id="cStatCat" for="StatCat">设备类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="StatCat" ></div>
+						<div class="eq-table-td eq-table-label"><label id="cUseLoc" for="UseLoc">使用科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Loc'" id="UseLoc"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="BeginInStockDate">入库日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BeginInStockDate" ></div>
+						<div class="eq-table-td eq-table-label"><label id="cManuFactory" for="ManuFactory">生产厂商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.ManuFacturer'" id="ManuFactory" ></div>
+						<div class="eq-table-td eq-table-label"><label for="LeaveFactoryNo">出厂编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="LeaveFactoryNo" ></div>
+						<div class="eq-table-td eq-table-label"><label id="cEquipCat" for="EquipCat">设备分类</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.EquipCat'" id="EquipCat" ></div>
+						<div class="eq-table-td eq-table-label"><label for="IncludeFlag">包含子类</label></div>
+						<div class="eq-table-td eq-table-input"><input class='hisui-checkbox textbox' type="checkbox"  id="IncludeFlag" ></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="EndInStockDate">至</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndInStockDate" ></div>
+						<div class="eq-table-td eq-table-label"><lable id="cProvider" for="Provider">供应商</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.Vendor'" id="Provider"></div>
+						<div class="eq-table-td eq-table-label"><label id="cPurposeType" for="PurposeType">用途</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.PurposeType'" id="PurposeType" ></div>
+						<!--<div class="eq-table-td eq-table-label"><label id="cOrigin" for="Origin">设备来源</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Origin'" id="Origin" ></div>-->
+						<div class="eq-table-td eq-table-label"><lable id="cPurchaseType" for="PurchaseType">申购类别</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.PurchaseType'" id="PurchaseType"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="Status">状态</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="Status" ></div>
+						<div class="eq-table-td eq-table-label"><label for="InvoiceNo">发票号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="InvoiceNo" ></div>
+					</div>
 				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><lable id="cProvider" for="Provider">供应商</lable></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Vendor'" id="Provider"></div>
-					<div class="eq-table-td eq-table-label"><label for="CommonName">通用名</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CommonName" ></div>
-					<div class="eq-table-td eq-table-label"><label for="BeginInStockDate">入库日期</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BeginInStockDate" ></div>
-					<div class="eq-table-td eq-table-label"><label id="cStatCat" for="StatCat">设备类型</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="StatCat" ></div>
-				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cManuFactory" for="ManuFactory">生产厂商</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.ManuFacturer'" id="ManuFactory" ></div>
-					<div class="eq-table-td eq-table-label"><label for="Status">状态</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="Status" ></div>
-					<div class="eq-table-td eq-table-label"><label for="EndInStockDate">至</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndInStockDate" ></div>
-					<!--<div class="eq-table-td eq-table-label"><label id="cOrigin" for="Origin">设备来源</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Origin'" id="Origin" ></div>-->
-					<div class="eq-table-td eq-table-label"><label id="cPurposeType" for="PurposeType">用途</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.PurposeType'" id="PurposeType" ></div>	
-				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label for="LeaveFactoryNo">出厂编号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LeaveFactoryNo" ></div>
-					<div class="eq-table-td eq-table-label"><label for="ContractNo">合同号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ContractNo" ></div>
-					<div class="eq-table-td eq-table-label"><label for="InvoiceNo">发票号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceNo" ></div>
-					<div class="eq-table-td eq-table-label"><label id="cEquipCat" for="EquipCat">设备分类</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.EquipCat'" id="EquipCat" ></div>
-				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cUseLoc" for="UseLoc">使用科室</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="UseLoc"></div>
-					<div class="eq-table-td eq-table-label"><lable id="cPurchaseType" for="PurchaseType">申购类别</lable></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.PurchaseType'" id="PurchaseType"></div>
-					<div class="eq-table-td eq-table-label"><label for="FileNo">档案号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="FileNo" ></div>
-					<!--add hly 20200527-->
-					<div class="eq-table-td eq-table-label"><label for="OldNo">旧系统唯一号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="OldNo" ></div>
-				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label for="IncludeFlag">包含子类</label></div>
-					<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox"  id="IncludeFlag" ></div>
-				</div>
-		</div>
-		<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
 					<table id="tDHCEQEquipList" data-options="border:false"></table>
-					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;"></span>		
-			</div>
-    	</div>
-	</div>
+					<div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 5px 2px 0;padding:5px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
+					</div>
+				</div>
+	    	</div>
+		</div>
 	</div>
 	<!--隐藏元素-->
 	<div id="hiddenEncrypt" style="width:0;height:0;">
@@ -113,6 +114,7 @@
 			<INPUT type="hidden" id="ProviderDR">
 			<INPUT type="hidden" id="ManuFactoryDR">
 			<INPUT type="hidden" id="PurposeTypeDR">
+			<INPUT TYPE="hidden" id="AppendFileInclude">
 			<INPUT TYPE="hidden" name="Type" id="Type" value=#(QXType)#>
 			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
 			<INPUT TYPE="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>
@@ -120,13 +122,18 @@
 			<INPUT type="hidden" id="Flag" value="1">
 			<INPUT type="hidden" id="IsOut" value="N">
 			<INPUT type="hidden" id="IsDisused" value="N">
-			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQEquipSave.GetNum")))#>
-			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQEquipSave.GetList")))#>
-			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
-			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
-			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
-			
+			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQEquipSave.GetNum")))#>
+			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQEquipSave.GetList")))#>
+			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="ModelDR">
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
 		</form>
 	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/equipfind.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
 </body>
 </HTML>

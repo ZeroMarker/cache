@@ -1,0 +1,97 @@
+<html>
+
+<head>
+	<HISUI />
+	<title>牙位图</title>
+	<link rel="stylesheet" href="../scripts/emr/css/ip.tool.toothimg.css">
+	<script language="cache" runat="server">
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		//默认选中恒牙，配置选中其他类型的科室
+		s defaultRadio=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ToothDefaultRadio")
+   		//默认不能选中牙根牙冠，配置能够显示牙根牙冠的科室
+   		s defaultRT = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ToothRTDefault")
+   </script>
+   <script language="javascript">
+   		var userLocID = "#(userLocID)#";
+   		var defaultRadio = "#(defaultRadio)#";
+   		var defaultRT = "#(defaultRT)#";
+   		var reg = new RegExp("\\b"+userLocID+"\\b","g");
+   		var isClickRT = (defaultRT.search(reg)===-1)?false:true;
+   </script>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="height:65px;padding:10px 10px 0 10px;">
+			<span> #(..Get("类型"))# </span>
+			<input class='hisui-radio' data-options="requiredSel:true" type="radio" label="恒牙" name="toothRadio"
+				id="ToothPermanent" value="ToothPermanent">
+			<input class='hisui-radio' data-options="requiredSel:true" type="radio" label="乳牙" name="toothRadio"
+				id="ToothDeciduous" value="ToothDeciduous">
+			<input class='hisui-radio' data-options="requiredSel:true" type="radio" label="混合牙" name="toothRadio"
+				id="ToothAll" value="ToothAll">
+			<span style="padding-right:10px;margin-left:200px;">#(..Get("当前"))#</span><input id="toothMethod" type="text"
+				class="hisui-combobox" style="width:240px;">
+			<a href="#" style="margin-left:10px;" id="resetTooth" class="hisui-linkbutton">#(..Get("重置"))#</a>
+		</div>
+		<div data-options="region:'center',border:false" style="padding:5px 10px;">
+			<div class="tooth-main">
+				<div id="FlagRight" class="flag-rl" style="width:72px;">
+					<div class="flag-rl-middle">
+						<div class="radio-display">
+							<span class="flagPermanent">
+								<a id="flagRightTop" class="hisui-linkbutton">右上区</a>
+							</span>
+						</div>
+						<div id="righttext">
+							#(..Get("右"))#
+						</div>
+						<div class="radio-display">
+							<span class="flagPermanent">
+								<a id="flagRightBottom" class="hisui-linkbutton">右下区</a>
+							</span>
+						</div>
+					</div>
+				</div>
+				<div class="tooth-layout">
+					<!-- 乳牙上 -->
+					<div class="deciduous top">
+					</div>
+					<!-- 恒牙上 -->
+					<div class="permanent top">
+					</div>
+					<hr id="line" class="cross-line" />
+					<!-- 恒牙下 -->
+					<div class="permanent bottom">
+					</div>
+					<!-- 乳牙下 -->
+					<div class="deciduous bottom">
+					</div>
+				</div>
+				<div id="FlagLeft" class="flag-rl" style="width:72px;">
+					<div class="flag-rl-middle">
+						<div>
+							<span class="flagPermanent">
+								<a id="flagLeftTop" class="hisui-linkbutton">左上区</a>
+							</span>
+						</div>
+						<div id="lefttext">
+							#(..Get("左"))#
+						</div>
+						<div class="radio-display">
+							<span class="flagPermanent">
+								<a id="flagLeftBottom" class="hisui-linkbutton">左下区</a>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'south',border:false" style="height:50px;margin-left:501px;margin-top:10px;">
+			<div><a href="#" id="addToRecord" class="hisui-linkbutton">#(..Get("保存"))#</a></div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="../scripts/emr/js/ip.tool.toothimg.js"></script>
+
+</html>

@@ -1,0 +1,79 @@
+<!-- 
+ * FileName: dhcinsu.divmonstmtmx.csp
+ * Date: 2021-07-12
+ * Creator DingSH
+ * Description: 对账明细分析
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html;"-->
+<!--<title>医保对账</title>-->
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCBILL/>
+<server>
+	set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+</server>
+<script type="text/javascript" src="../scripts/jsonfun.js" ></script>
+<link rel="stylesheet" type="text/css" href="#(##class(INSU.Util.Library).#CSSPath)#dhcinsu.divmonstmtmx.css"/>
+</head>
+<body style='padding:10px'>
+	<div class="hisui-layout" data-options="fit:true">
+		<!--查询条件-->
+		<div data-options="region:'north',title:'对账明细分析',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false,split:true," style="height:138px;border-radius:0 0 4px 4px;">
+			<table class='search-table'>
+				<tr>
+					<td class="r-label"><label>开始日期</lable></td>
+					<td><input id="stdate" class="hisui-datebox" name="stdate" style='width:120px'/></td>
+					<td class="r-label "><label>医保类别</label></td>
+					<td><input id="hiType" class="hisui-combobox" style='width:120px'/></td>
+					<td class="r-label "><label>结算经办机构</label></td>
+					<td><input id="setlOptins" class="hisui-combobox" /></td>
+					<td class="r-label "><label>对平标识</label></td>
+					<td><input id="errFlag" class="hisui-combobox" /></td>
+					<td class="r-label " style='padding-left:20px'><a id="btnDivQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >查询</a></td>
+					<td class="r-label "><a id="btnSynHisDiv" href="#" class="hisui-linkbutton" style='width:150px' data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >同步HIS数据</a></td>
+					<td class="r-label "><a id="btnImportThirdDet" href="#" class="hisui-linkbutton" style='width:160px' data-options="iconCls:'icon-w-import',stopAllEventOnDisabled:true" >导入第三方明细</a></td>
+				</tr>
+				<tr>	
+					<td class="r-label"><label>结束日期</label></td>
+					<td><input id="endate" class="hisui-datebox"  name="endate" style='width:120px' /></td>
+					<td class="r-label "><label>清算类别</label></td>
+					<td><input id="clrType" class="hisui-combobox" style='width:120px' /></td>
+					<td class="r-label "><label>险种类型</label></td>
+					<td><input id="insutype" class="hisui-combobox" /></td>
+					<td class="r-label "><label>退费结算标识</label></td>
+					<td><input id="refdSetlFlag" class="hisui-combobox"/></td>
+					<td class="r-label "><a id="btnDivStmt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit',stopAllEventOnDisabled:true" >对账</a></td>
+					<td class="r-label "><a id="btnCenterDivDL" href="#" class="hisui-linkbutton" style='width:150px' data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >医保明细下载</a></td>
+					<td class="r-label "><a id="btnImportCenterDiv" href="#" class="hisui-linkbutton" style='width:160px' data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >导入医保明细</a></td>
+				</tr>
+			</table>
+		</div>
+		<!--查询展示-->
+		<div data-options="region:'center',title:'医院端结算明细',headerCls:'panel-header-gray',iconCls:'icon-compare'" style="border-radius:0 0 4px 4px">
+			<table id="HisDivDetDg" class="hisui-datagrid" data-options="toolbar:'#histb'"></table>
+			<div id="histb" >
+				<a id="btnHisDivEpot" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-export',plain:true">导出</a>
+				<a id="btnStrikeForHis" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-audit-x',plain:true">处理HIS异常</a>
+			</div>
+		</div>
+		<div data-options="region:'east',title:'医保端结算明细',split:true,#($s((defUIVersion="lite"):"",1:"headerCls:'panel-header-gray',"))#iconCls:'icon-compare-yes',showCollapsedTitle:'true'" style="width:710px;border-radius:0 0 4px 4px">
+			<table id="CenterDivDetDg" class="hisui-datagrid" data-options="toolbar:'#centertb'"></table>
+			<div id="centertb">
+				<a id="btnCenterDivEpot" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-export',plain:true" >导出</a>
+				<a id="btnStrikeForInsu" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-audit-x',plain:true" >处理中心异常</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcinsu/divmonstmtmx.js" ></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js" ></script>
+</body>
+</html>
+

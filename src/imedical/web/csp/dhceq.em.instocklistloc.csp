@@ -1,0 +1,58 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	s InStockListID=$Get(%request.Data("InStockListID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s TotalNum=0
+	s ISStatus=""
+	i InStockListID'=""
+	{
+		s TotalNum=$p($g(^DHCEQInStockList(InStockListID)),"^",8)
+		s ISRowID=$p($g(^DHCEQInStockList(InStockListID)),"^",1)
+		s ISStatus=$p($g(^DHCEQInStock(ISRowID)),"^",10)
+	}
+	
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109") 
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</SCRIPT>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div class="" data-options="region:'center',border:false" style="position:relative;padding:0x;">
+					<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,border:false">
+						<table id="tDHCEQInStockListLoc" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"></table>
+						<div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 5px 2px 0;padding:5px 10px;font-weight: normal;">
+							<span id="sumTotalicon" class="messager-popover-icon info"></span>
+							<span id="sumTotal"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--вўВидЊЫи-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="ISLLBuyLocDR">
+			<INPUT type="hidden" id="InStockListID" value="#(InStockListID)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="TotalNum" value="#(TotalNum)#">
+			<INPUT type="hidden" id="ISStatus" value="#(ISStatus)#">			
+			<INPUT type="hidden" id="ChromeFlag" value="#(ChromeFlag)#">
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/em/instocklistloc.js"></script>
+</body>
+</html>

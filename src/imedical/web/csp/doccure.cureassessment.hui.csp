@@ -8,37 +8,35 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
+<DHCDOCCURE></DHCDOCCURE>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
 <STYLE type='text/css'>
-.form_table {
-	margin: 0px 0px;
+.search-table td{
+	white-space:nowrap;
 }
-.form_table th {
-	 padding: 5px 10px; font-size: 12px; text-align: right;
-}
-
-.form_table td {
-	padding: 5px 0px; 
-}
-
-.form_table td.btn {
+.search-table td.btn {
 	text-align: center;
 }
-
-textarea{
-	width:655px	
+.search-table .r-label {
+	padding-right: 10px;
+	text-align: right;
+	width:10%
 }
-#dpan div{
-	margin: 0px auto;
-	padding:10px;
-	height: 30px;
-	width: 500px;
+.m-btn-l-10{margin-left:10px}
+.m-btn-l-20{margin-left:20px}
+textarea{
+	width:100%
 }
 </STYLE>
 <Server>
+	s EpisodeID=$g(%request.Data("EpisodeID",1))
 	s DCARowId=$g(%request.Data("DCARowId",1))
-	s DCAccRowId=$g(%request.Data("DCAccRowId",1))
+	s DCAssRowId=$g(%request.Data("DCAccRowId",1))
 	s OperateType=$g(%request.Data("OperateType",1))
-	s SourceFlag=$g(%request.Data("SourceFlag",1))
+	s DCRowIdStr=$g(%request.Data("DCRowIdStr",1))
+	s PageShowFromWay=$g(%request.Data("PageShowFromWay",1))
+	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
 </Server>
 </head> 
 <body>
@@ -46,12 +44,20 @@ textarea{
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
 			OperateType:"#(OperateType)#",
 			DCARowId:"#(DCARowId)#",
-			DCAccRowId:"#(DCAccRowId)#",
-			SourceFlag:"#(SourceFlag)#"
+			DCAssRowId:"#(DCAssRowId)#",
+			DCRowIdStr:"#(DCRowIdStr)#"
 		}
 	</SCRIPT>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+	<script type='text/javascript' src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/assTempPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/comAssConsTrePro.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureassessment.js"></script>
+	<!--初始化CA服务环境-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
 </body>
 </html>

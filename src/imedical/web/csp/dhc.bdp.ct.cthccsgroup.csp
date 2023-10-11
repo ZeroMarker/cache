@@ -1,0 +1,145 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+/*
+    @CSP：dhc.bdp.ct.cthccsgroup.csp
+    @JS:CT_HCCSGroupLinkContList.js
+    @Title：群组通讯录维护
+    @Creator:杨帆
+    @Editor:丁亚男
+    @CreateDate：2020-12-24
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/CTHCCS/CT_HCCSGroupLinkContList.js"></script>
+
+</HEAD>
+<style>
+	.tbclass{
+	    text-align: right;
+   }
+   .dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break: keep-all;	
+    word-wrap:break-word;
+    white-space: nowrap;
+}
+</style>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+		<div data-options="region:'north',border:false" style="">
+			<table style="padding-top:10px;" >
+			    <tr>
+				 	<td class="tdlabel" id="_HospListLabel" for="_HospList"><font color=red>*</font>医院</td>
+				    <td><input id="_HospList" class="hisui-combobox" data-options="required:true"></td>
+			    </tr>
+			</table>
+		</div>
+		<div data-options="region:'center',split:true,collapsible:false" style="" border="false" >
+			<table  cellspacing=10 style="width:100%;height:100%">
+				<tr>
+					<td style="width:550px;">
+						<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="groupgrid" border="true" toolbar="#mybar" title="群组维护"></table>
+					</td>
+					<td >
+						<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="contlistgrid" border="true" toolbar="#contlistmybar" title="个人通讯录"></table>
+					</td>				
+				</tr>
+			</table>
+		</div>
+
+	</div>
+    <!--群组工具条-->
+    <div id="mybar">
+	  <table style="padding-top:5px;padding-bottom:5px;" >
+	    	<td class="tdlabel">群组</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="groupDesc"></td>		
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="groupsearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="groupRefresh" >重置</a>
+			</td>
+	  </table>
+	  <div style="border-bottom: 1px dashed #C0C0C0;"></div>	
+	  	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a> 
+	</div>  
+	</div>
+	
+	<!--个人通讯录工具条-->
+	<div id="contlistmybar">
+	  <table style="padding-top:5px;padding-bottom:5px;" >
+	    	<td class="tdlabel">用户</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="contlistDesc"></td>	
+			<td class="tdlabel">科室</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="contlistLocDesc"></td>		
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="contlistSearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="contlistRefresh" >重置</a>
+			</td>
+	  </table>
+	  <div  style="border-bottom: 1px dashed #C0C0C0;"></div>
+	  	<table>
+	  		<tr>
+	  			<td ><input class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0' id="CheckALL"></td> 
+	  			<td style="padding-left:10px"><input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'></td>  
+	  			<td style="padding-left:10px"><input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'></td> 
+	  			<td style="padding-left:10px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="saveButton">保存</a></td>
+	  		</tr>
+	  	</table>
+	  </div>  
+	</div>
+	
+	<!--群组增改弹窗-->
+	<div id="myWin" style="width:auto;height:auto;resizable:true;display:none;padding:0px 10px 10px 10px"> 
+        <form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+            <table cellspacing=10 >
+            	<tr style="display:none">
+		 			<td></td>
+		   			<td><input id="GROUPRowId" name="GROUPRowId"  class="hisui-validatebox" ></td>
+		 		 </tr>
+		 		 <tr>
+	               <td class="tbclass"><font color=red>*</font>群组代码</td>
+	    		   <td><input id="GROUPCode" name="GROUPCode"  class="hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass"><font color=red>*</font>群组名称</td>
+	    		   <td><input id="GROUPDesc" name="GROUPDesc"  class="hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass"><font color=red>*</font>开始日期</td>
+	    		   <td><input id="GROUPDateFrom" name="GROUPDateFrom"  class="hisui-datebox" style="width:257px" data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass">结束日期</td>
+	    		   <td><input id="GROUPDateTo" name="GROUPDateTo"  class="hisui-datebox" style="width:257px" data-options=""></td>
+	    		 </tr>
+			 </table>
+		</form>  
+	 </div>	
+     
+	
+</BODY>
+</HTML>
+																						

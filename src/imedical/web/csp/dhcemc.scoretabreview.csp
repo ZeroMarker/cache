@@ -8,34 +8,54 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<HISUI/>
-	<link href="../scripts/dhcnewpro/dhcemc/css/base.css" rel="stylesheet">
+	<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
+	<link href="../scripts/dhcnewpro/dhcem/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcem/css/patchecklev.hisui.css" rel="stylesheet">
 	<link href="../scripts/dhcnewpro/dhcemc/css/scoretabreview.css" rel="stylesheet">
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcemc/scoretabreview.js"></script>
+<script Language="Javascript">
+	if(HISUIStyleCode==="lite"){///2023-02-03 极简风格样式修改
+	document.write("<style>.list-panel,.list-title{border-color: #e2e2e2;}</style>");
+	}
+</script>
 </head>
 <body class="background-warp">
-	<div class="container">
-		<div class="tabform">
-			<server>
-				s LgUserID=%session.Get("LOGON.USERID")
-				s ScoreID=$Get(%request.Data("ScoreID",1))     /// 评分表ID
-			    s ScoreCode=$Get(%request.Data("ScoreCode",1)) /// 评分表代码
-			    i ScoreID="" s ScoreID=$o(^DHCEMCSS(0,"Code",$$ALPHAUP^SSUTIL4(ScoreCode),""))
-				w "<script Language=""JavaScript"">"_$c(13,10)
-				w "var ScoreID="""_$g(ScoreID)_""";"_$c(13,10)
-				w "var ScoreCode="""_$g(ScoreCode)_""";"_$c(13,10)
-				w "var LgUserID="""_$g(LgUserID)_""";"_$c(13,10)
-				w "</script>"
-  				w ##Class(web.DHCEMCScoreTabMain).GetScoreTabHtml(ScoreID, ScoreCode)
-			</server>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center'" style="border:0px;">
+	
+				<div class="tabform">
+					<server>
+						s LangId=%session.Get("LOGON.LANGID") //hxy 2022-10-12
+						s LgUserID=%session.Get("LOGON.USERID")
+						s ScoreID=$Get(%request.Data("ScoreID",1))     /// 评分表ID
+					    s ScoreCode=$Get(%request.Data("ScoreCode",1)) /// 评分表代码
+					    i ScoreID="" s ScoreID=$o(^DHCEMCSS(0,"Code",$$ALPHAUP^SSUTIL4(ScoreCode),""))
+						w "<script Language=""JavaScript"">"_$c(13,10)
+						w "var ScoreID="""_$g(ScoreID)_""";"_$c(13,10)
+						w "var ScoreCode="""_$g(ScoreCode)_""";"_$c(13,10)
+						w "var LgUserID="""_$g(LgUserID)_""";"_$c(13,10)
+						w "</script>"
+		  				w ##Class(web.DHCEMCScoreTabMain).GetScoreTabHtml(ScoreID, ScoreCode,LangId)
+					</server>
+				</div>
 		</div>
-		<div class="tabtools">
-			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="TakClsWin()" style="margin-left:15px" id="cancel">取消</a>
-			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" onclick="TakScore()" style="margin-left:30px" id="sure">确认</a>
+		<div data-options="region:'south',border:false" style="padding:10px;">
+			<div style="padding-bottom:10px;height:20px">
+				<a class="dhc-score">#(..Get("总分"))#:<span id="count">0</span>#(..Get("分"))#</a> 
+			</div>
+			<div style="text-align:center;">			   
+				<a href="#" class="hisui-linkbutton" data-options="" onclick="TakClsWin()"  id="cancel">取消</a>
+				<a href="#" class="hisui-linkbutton" data-options="" onclick="TakScore()" style="margin-left:5px" id="sure">确认</a>
+			</div>
 		</div>
-	</div>
-	<div class="page-foot">
-		<label>总分：</label><label id="count" style="font-size:20px;font-weight:bold;">0</label><label>分</label>
-	</div>
+	</div>	
 </body>
+<script Language="Javascript">
+	/// cy  2022-07-20 极简风格样式修改
+	if(HISUIStyleCode==="lite"){
+		document.write('<link href="../scripts/dhcnewpro/dhcem/css/patchecklev.lite.css" rel="stylesheet">');
+	}
+</script>
+
 </html>

@@ -1,0 +1,156 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+/*
+    @CSP：dhc.bdp.asr.asrcompany.csp
+    @JS:
+    @Title：语音HIS厂商界面
+    @Creator:likefan
+    @Description:语音HIS厂商主界面
+    @CreateDate：2020-09-24
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/ASR/ASR_Company.js"></script>
+<style>   
+.tbclass{
+    text-align: right;
+}
+.dialog-button {
+	padding: 0 10px 20px 10px;
+	text-align: center;
+	border: none;
+	background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break:keep-all;
+    word-wrap:break-word;
+    white-space:nowrap;
+}
+/*#myChecktreeWin .dialog-button{
+	box-shadow: 0px -1px 10px 0px rgba(0,0,0,0.2);
+	padding-top: 10px;
+} */
+</style>
+
+</HEAD>
+<BODY>
+
+	<div class="hisui-layout" data-options="fit:true" border="false" >
+		<div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom:1px dashed #C0C0C0;" title="" border="false">
+			<table style="padding-top:10px;padding-bottom:10px" >
+				<tr>
+					<td class="tdlabel">厂商</td>
+					<td><input style="width:165px;" class='hisui-validatebox' id="textCompany"></td>	
+					<td class="tdlabel-b">
+						<a href="#" id="btnSearch" class="hisui-linkbutton" iconCls="icon-w-find">查询</a>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnRefresh" class="hisui-linkbutton" iconCls="icon-w-reset">重置</a>
+					</td>
+				</tr> 
+			</table >
+		</div>
+		<div data-options="region:'center'" border="false"> 
+			<table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
+		</div>
+	</div>
+
+	<!--厂商界面增改弹窗-->
+     <div id="myWin" style="width:auto;height:auto;resizable:true;display:none;">
+     	<div style="padding:0px 10px 10px 10px;">
+		       <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    <table id="addtable" cellspacing=10>
+			    <tr style="display:none">
+		 			<td class="tbclass"></td>
+		   			<td><input id="ASRCID" name="ASRCID" type="text" class="textbox hisui-validatebox" ></td>
+		 		</tr>
+		 		<tr>
+	               <td class="tbclass"><font color=red>*</font>厂商</td>
+	    		   <td><input id="ASRCCompany" name="ASRCCompany" type="text" class="textbox hisui-validatebox" style="width:200px" data-options="required:true"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass">应用版本</td>
+	    		   <td><input id="ASRCAppVersion" name="ASRCAppVersion" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+	    		 </tr>
+				<tr>
+	               <td class="tbclass">应用名</td>
+	    		   <td><input id="ASRCAppName" name="ASRCAppName" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+	    		 </tr>
+	    		<tr>
+	    		   <td class="tbclass">公司名</td>
+	    		   <td><input id="ASRCCompanyName" name="ASRCCompanyName" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass">通信模块协议版本</td>
+	    		   <td><input id="ASRCProtocolVersion" name="ASRCProtocolVersion" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass">厂商初始化命令串</td>
+	    		   <td><input id="ASRCCompanyCmd" name="ASRCCompanyCmd" type="text" class="textbox hisui-validatebox" style="width:200px" data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass">服务路径</td>
+	    		   <td><input id="ASRCServicePath" name="ASRCServicePath" type="text" class="textbox hisui-validatebox" style="width:200px" data-options=""></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass"><font color=red>*</font>开始日期</td>
+	    		   <td><input id="ASRCStartDate" name="ASRCStartDate" type="text" class="hisui-datebox textbox" style="width:207px" data-options="required:true"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tbclass">结束日期</td>
+	    		   <td><input id="ASRCEndDate" name="ASRCEndDate" type="text" class="hisui-datebox textbox" style="width:207px" data-options=""></td>
+	    		 </tr>
+				 </table>
+			</form>  
+		</div>
+	</div>
+	
+	<!--工具栏-->
+	<div id="mybar">
+    	<a   href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a> 
+        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true"id="update_btn">修改</a> 
+        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true"  id="del_btn">删除</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true,stopAllEventOnDisabled:true" id="BtnCompanyScenes">关联场景</a>
+    </div>
+	
+	<!--厂商关联场景-->
+    <div id="myChecktreeWin" style="width:600px;height:500px;padding:10px;display:none;">   
+		<div id="layout" class="hisui-layout" data-options="fit:true" border="false" >
+	       	<div id="north" data-options="region:'north',collapsible:false,border:false" style="height:75px">
+		    	 <table>
+				    <tr>
+		    			<td><input id="myChecktreeDesc" type="text" class="hisui-validatebox"></td>
+		    			<td class="tdlabel">
+		    				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="treesearch">查询</a>
+		    			</td>
+		    		</tr>
+				   	 <tr>
+						<td style="padding-top:8px">
+							<input id="myChecktreeFilterCK0" class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+							<input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+							<input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>
+						</td>
+					</tr>			    	 
+				 </table >	
+			 </div>
+			 <div id="treeLayoutCenter" data-options="region:'center',border:false">
+				<table id="myChecktree" data-options="border:false" style="width:100%;"></table> 
+			 </div>	 
+	     </div> 
+     </div> 
+	
+</BODY>
+</HTML>
+																						

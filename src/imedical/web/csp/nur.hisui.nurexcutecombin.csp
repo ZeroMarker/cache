@@ -1,0 +1,189 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.nurexcutecombin.csp 组合查询配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	body{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;	
+    	overflow:hidden;
+	}
+	.wrap{
+		height:100%;	
+	}
+	.wrap>table td{
+		padding-bottom:10px;	
+	}
+	#main{
+		height:100%;
+		display:flex;
+	}
+	#main>div{
+		flex:1;
+		margin-right:10px;	
+	}
+	#main>div:last-child{
+		margin-right:0;	
+	}
+	.order{
+		display:none;	
+	}
+	#conditionList,#itemList{
+		height:calc(100% - 50px);	
+	}
+	#conditionList .datagrid-wrap,#itemList .datagrid-wrap{
+		border-radius:0;
+		border-left: 0;
+	    border-right: 0;
+	    border-bottom: 0;
+	    border-color: #ddd;	
+	}
+	.datagrid-header-row td, .datagrid-row td{
+		border-right:1px solid #ddd;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+</style>
+</head>
+
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'west',border:false,collapsible:false" style="width:720px;padding:4px;">
+			<div class="hisui-panel" title="条件配置" data-options="iconCls:'icon-paper-info',headerCls:'panel-header-gray',fit:true">
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'north',collapsible:false,bodyCls:'panel-body-gray'" style="height:51px;border-top:0;border-left:0;border-right:0;">
+						<form id="conditionset">
+							<table class="search-table">
+								<tr>
+									<td class="r-label">#(..Get("单据"))#</td>
+									<td>
+										<select name="Sheet" id="sheet" style="width:124px;"></select>
+									</td>
+									<td class="r-label">#(..Get("条件"))#</td>
+									<td>
+										<input class="hisui-validatebox textbox" name="Condition" id="condition" style="width:190px;" /></select>
+									</td>
+									<td class="r-label">
+										<a href="#" class="hisui-linkbutton" onclick="handleCondition('SAVE',1)">新增</a>
+									</td>
+									<td>
+										<a href="#" class="hisui-linkbutton" onclick="handleCondition('SAVE','')">修改</a>
+									</td>
+									<td class="r-label">
+										<a href="#" class="hisui-linkbutton" onclick="handleCondition('DELETE','')">删除</a>
+									</td>
+									<td>
+										<a href="#" class="hisui-linkbutton" onclick="copy()">复制</a>
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+					<div data-options="region:'center',title:'',border:false" style="">
+						<table id="dg" data-options="fit:true,border:false"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',title:'',border:false" style="padding:4px 4px 4px 0;">
+			<div class="hisui-panel" title="项目配置" data-options="iconCls:'icon-paper-info',headerCls:'panel-header-gray',fit:true">
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'north',collapsible:false,bodyCls:'panel-body-gray'" style="height:51px;border-top:0;border-left:0;border-right:0;">
+						<form id="itemset">
+							<table class="search-table">
+								<tr>
+									<td class="r-label">#(..Get("类型"))#</td>
+									<td>
+										<input name="Type" id="type" class="hisui-combobox textbox" style="width:100px;">
+									</td>
+									<td class="r-label">#(..Get("项目"))#</td>
+									<td>
+										<span name="Item" class="item"><select name="Item" id="item" style="width:149px;"></select></span><span class="order"><select name="Order" id="order" style="width:129px;"></select></span>
+									</td>
+									<td class="r-label">#(..Get("操作"))#</td>
+									<td>
+										<input name="operType" id="operType" class="hisui-combobox textbox" style="width:70px;"></input>
+									</td>
+									<td class="r-label">
+										<a href="#" class="hisui-linkbutton" onclick="handleCombinedQuerySub('SAVE',1)">新增</a>
+									</td>
+									<td class="r-label">
+										<a href="#" class="hisui-linkbutton" onclick="handleCombinedQuerySub('SAVE','')">修改</a>
+									</td>
+									<td class="r-label">
+										<a href="#" class="hisui-linkbutton" onclick="handleCombinedQuerySub('DELETE','')">删除</a>
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+					<div data-options="region:'center',title:'',border:false" style="">
+						<table id="dg2" data-options="fit:true,border:false"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--div class="wrap">
+		<div id="main">
+			<div class="hisui-panel" title="条件配置" data-options="iconCls:'icon-paper-info',headerCls:'panel-header-gray',fit:true">
+				<form id="conditionset">
+					<table cellpadding="0" cellspacing="0" style="padding:8px 10px;">
+						<tr>
+							<td class="r-label">#(..Get("单据"))#</td>
+							<td class="r-label"><select name="Sheet" id="sheet" style="width:124px;"></select></td>
+							<td class="r-label">#(..Get("条件"))#</td>
+							<td class="r-label"><input class="hisui-validatebox textbox" name="Condition" id="condition" style="width:190px;" /></select></td>
+							<td class="r-label"><a href="#" class="hisui-linkbutton" onclick="handleCondition('SAVE',1)">新增</a></td>
+							<td class="r-label"><a href="#" class="hisui-linkbutton" onclick="handleCondition('SAVE','')">修改</a></td>
+							<td class="r-label"><a href="#" class="hisui-linkbutton" onclick="handleCondition('DELETE','')">删除</a></td>
+							<td><a href="#" class="hisui-linkbutton" onclick="copy()">复制</a></td>
+						</tr>
+					</table>
+				</form>
+				<div id="conditionList"><table id="dg" data-options="fit:true"></table></div>		
+			</div>
+			<div id="right" class="hisui-panel" title="项目配置" data-options="iconCls:'icon-paper-info',headerCls:'panel-header-gray',fit:true">
+				<form id="itemset">
+					<table cellpadding="0" cellspacing="0" style="padding:8px 10px;">
+						<tr>
+							<td class="r-label">#(..Get("类型"))#</td>
+							<td class="r-label"><select name="Type" id="type" style="width:100px;"></select></td>
+							<td class="r-label">#(..Get("项目"))#</td>
+							<td class="r-label"><span class="item"><select name="Item" id="item" style="width:149px;"></select></span><span class="order"><select name="Order" id="order" style="width:129px;"></select></span></td>
+							<td class="r-label">#(..Get("操作"))#</td>
+							<td class="r-label"><span class=""><select name="operType" id="operType" style="width:70px;"></select></span></td>
+							<td class="r-label"><a href="#" class="hisui-linkbutton" onclick="handleCombinedQuerySub('SAVE',1)">新增</a></td>
+							<td class="r-label"><a href="#" class="hisui-linkbutton" onclick="handleCombinedQuerySub('SAVE','')">修改</a></td>
+							<td><a href="#" class="hisui-linkbutton" onclick="handleCombinedQuerySub('DELETE','')">删除</a></td>
+						</tr>
+					</table>
+				</form>
+				<div id="itemList"><table id="dg2"data-options="fit:true"></table></div>	
+			</div>
+		</div>		
+	</div-->
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.nurexcutecombin.js"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<body class="hisui-layout">
+    <script language=Cache runat=server>
+        s IASourceType=$Get(%request.Data("IASourceType",1))
+        s IASourceID=$Get(%request.Data("IASourceID",1))
+        s ReadOnly=$Get(%request.Data("ReadOnly",1))
+        s IARowID=$Order(^DHCEQIntangibleAssets(0,"Source",IASourceType,IASourceID,0))
+        s (IAEquipDR,EQName)=""
+        if IASourceType=0
+        {
+            s EQName=$p($g(^DHCEQOpenCheckList(IASourceID)),"^",2)
+        }
+        elseif IASourceType=1
+        {
+            s IAEquipDR=IASourceID
+            s EQName=$Piece($Get(^DHCEQEquip(IAEquipDR)),"^",1)
+        }
+    </script>
+    <div data-options="region:'center',border:false">
+        <div class="hisui-panel" data-options="border:false" style="padding:10px;">
+            <div>
+                <!--div class="eq-table">
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-item">基本信息</div>
+                    </div>
+                </div-->
+                <div class="eq-table">
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cBDEquipDR_EQName" for="BDEquipDR_EQName">无形资产名称</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BDEquipDR_EQName" disabled="true" value="#(EQName)#"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cIATitleOfInvention" for="IATitleOfInvention">发明名称</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IATitleOfInvention"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cIAInventor" for="IAInventor">发明人</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IAInventor"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cIACertificateNo" for="IACertificateNo">证书编号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IACertificateNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cIARegistrationDept" for="IARegistrationDept">注册登记机关</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IARegistrationDept"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cIARegistrationDate" for="IARegistrationDate">注册登记日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="IARegistrationDate"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cIAApprovalNo" for="IAApprovalNo">批准文号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IAApprovalNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cIAPatentNo" for="IAPatentNo">专利号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IAPatentNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cIAFeatureInfo" for="IAFeatureInfo">特征信息</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IAFeatureInfo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'south',border:false" class="footer">
+        <div class="footer-box">
+            <div style="float:left;width:100%;"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+        </div>
+    </div>
+
+    <!--隐藏元素-->
+    <div id="hiddenEncrypt" style="display:hidden">
+        <form name="DHCEQ">
+            <INPUT type="hidden" id="IASourceType" value="#(IASourceType)#">
+            <INPUT type="hidden" id="IASourceID" value="#(IASourceID)#">
+            <INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+            <INPUT type="hidden" id="IARowID" value="#(IARowID)#">
+        </form>
+    </div>
+    <script type='text/javascript' src='../scripts/dhceq/em/intangibleassets.js'></script>
+</body>
+</html>

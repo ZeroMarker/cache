@@ -2,6 +2,7 @@
 <head>
 <title></title>
 <HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
@@ -16,6 +17,8 @@
 		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
 	</script>
 	<style>
 		.floatLeft{
@@ -25,17 +28,17 @@
 			background:#fff;	
 		}
 		#allItmTableDiv{
-			width:43%;	
+			width:30%;	
 			height:100%;
 		}
 		
 		#setItmTableDiv{
-			width:45%;
+			width:55%;
 			height:100%;	
 		}
 		
 		#cuidDiv{
-			width:12%;
+			width:15%;
 			height:100%;
 		}
 		
@@ -47,21 +50,28 @@
 		#cuidTable tr{
 			height:60px;	
 		}
+		/*多院区改造 cy 2021-04-09 */
+		#_HospList+span{max-width:234px}
+		#_HospList+span >input{max-width:200px}
 	</style>
 </head>
-<body class="" data-options=""style="border:0px;padding:10px 10px 10px 10px;">  
-
-	<div class="hisui-layout" data-options="fit:true">
-	 	<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style="height:auto;border:0px">
+<body >  
+	<div id="mainpanel" class="hisui-layout"  fit="true">
+	 	<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style="height:auto;border:0px;padding:10px;">
 			<table cellspacing="0" cellpadding="0" style="height:auto;">
 				<tr>
-					<td class="textLabel"><span style="margin-left:10px;"></span>报告类型<span style="margin-left:10px;"></span><input type="text" id="reportType" class="hisui-combobox" name="reportType" ></input> </td>
+					<td class="textLabel"><span style="margin-left:10px;"></span><label id="_HospListLabel">医院</label><span style="margin-left:10px;"></span><input type="text" id="_HospList" name="hosp"></input> </td> <!--多院区改造 cy 2021-04-09 -->
+					<td><a href="#" id="_HospBtn" data-options="iconCls:'icon-w-key'" class="hisui-linkbutton" style="margin-left:10px;">数据关联医院</a></td>
+					<td class="textLabel" style="display:none;"><span style="margin-left:10px;"></span>报告类型<span style="margin-left:10px;"></span><input type="text" id="reportType" class="hisui-combobox" name="reportType" ></input> </td>
 				<tr>
 			</table>
 	 	</div>
-	 	
-	 	<div data-options="region:'center',title:''" style="border:0px;padding:10px 0px 0px 0px;">
-	 		
+		<div data-options="region:'center'" style="border:0px;padding:10px;">
+	        <table id="linkdg" toolbar="#tb" iconCls="icon-paper" headerCls="panel-header-gray"></table> 
+		</div>
+		
+		<div id="tabs" class="hisui-tabs  tabs-gray" data-options="region:'east'" style='width:850px;height:500px;border:0px;padding:10px 10px 10px 0px;'>
+			<div  title="导出模板维护"  style="border:0px;padding:10px;"> 
 	 		<div class="floatLeft" id="allItmTableDiv">
 	 			<table id="allItmTable" toolbar="#alltb" iconCls="icon-paper" headerCls="panel-header-gray"></table>
 	 		</div>
@@ -89,9 +99,13 @@
 	 		<div class="floatLeft" id="setItmTableDiv">
 	 			<table id="setItmTable" toolbar="#settb" iconCls="icon-paper" headerCls="panel-header-gray" style="padding-top:2px;"></table>
 	 		</div>
-	 	</div>
+		 		
+   			</div>   
+		</div>
+		
 	</div>
-			 
+	
+	
 	<div id="alltb" style="height:auto">
 		<table cellspacing="0" cellpadding="0">
 			<tr>
@@ -100,7 +114,16 @@
 		    </tr>
 		</table>
 	</div>
-	<div id="settb" style="height:0px;">
+	<div id="settb" style="height:0px;"></div>
+	<div id="tb" style="height:auto">
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="inslink">新增</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="dellink">删除</a> </td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="savelink">保存</a> </td>
+		    </tr>
+		</table>
 	</div>
+	
 </body>
 </html>

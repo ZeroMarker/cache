@@ -1,0 +1,160 @@
+<!-- 
+ * FileName: dhcbill.ipbill.nursefee.csp
+ * Author: WangXQ
+ * Date: 2022-12-26
+ * Description: 医嘱费用查询
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<DOCCARD medStepCode="Other"/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.ipbill.nursefee.css"/>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<server>
+		set EpisodeID=%request.Get("EpisodeID")
+		set PatientID=$s((+EpisodeID'=0):$p(^PAADM(EpisodeID),"^",1),1:"")
+		set PatientListPage=%request.Get("PatientListPage")
+		set PatientListPage="dhcbill.ipbill.inpatlist.csp"
+		do ##class(BILL.Util.Library).LoadReadCardLib()  //引入读卡公共js
+		
+		w "<input id='CardTypeRowId' type='hidden'/>",!
+	</server>
+	<script type="text/javascript">
+		var patientListPage = "#(PatientListPage)#";
+		
+		//常量
+		var CV = {
+			EpisodeID: "#(EpisodeID)#",
+			PatientID: "#(PatientID)#",
+			OuterHeight: 630
+		};
+		
+		//全局变量
+		var GV = {
+			EpisodeID: CV.EpisodeID,
+			PatientID: CV.PatientID,
+			DetailSummaryFlag: "1"
+		};
+	</script>
+</head>
+
+<body class="hisui-layout">
+	<csp:if condition=(PatientListPage'="")>
+		<div class="window-mask alldom" style="width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;"></div>
+	</csp:if>
+	<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;">
+		<csp:Include Page="dhcbill.inpatient.banner.csp">
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<div class="hisui-layout" id="head-menu" data-options="fit:true">
+					<div data-options="region:'north',border:false" style="padding:0 10px 10px 0;height:135px;overflow:hidden;">
+						<div class="hisui-panel" data-options="title:'医嘱费用查询',fit:true,tools:'#search-panel-tools',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+							<table class="search-table">
+								<tr>
+									<td class="r-label"><label>#(..Get("卡类型"))#</label></td>
+									<td><input id="CardTypeNew" class="textbox tb130" disabled/></td>
+									<td class="r-label r-label-20"><label>#(..Get("卡号"))#</label></td>
+									<td><input id="CardNo" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("登记号"))#</label></td>
+									<td><input id="patientNo" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><a href="javascript:;" class="hisui-linkbutton query-panel-btn" id="btn-readCard" data-options="iconCls:'icon-w-card'">#(..Get("读卡"))#</a></td>
+									<td><a href="javascript:;" class="hisui-linkbutton query-panel-btn" id="btn-find" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+								</tr>
+								<tr>
+									<td class="r-label"><label>#(..Get("病案号"))#</label></td>
+									<td><input id="medicareNo" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("就诊号"))#</label></td>
+									<td><input id="episodeId" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("接收科室"))#</label></td>
+									<td><input id="ordRecDept" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><a href="javascript:;" class="hisui-linkbutton query-panel-btn" id="btn-bill">#(..Get("账单"))#</a></td>
+									<td><a href="javascript:;" class="hisui-linkbutton query-panel-btn" id="btn-clean" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a></td>
+								<tr class="display-more-tr">
+									<td class="r-label"><label>#(..Get("所在科室"))#</label></td>
+									<td><input id="localDept" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("医嘱项"))#</label></td>
+									<td><input id="arcItm" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("开单科室"))#</label></td>
+									<td><input id="userDept" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><a href="javascript:;" class="hisui-linkbutton query-panel-btn" id="btn-feeDtl">#(..Get("费用明细"))#</a></td>
+									<td><a href="javascript:;" class="hisui-linkbutton query-panel-btn" id="btn-depDtl">#(..Get("押金明细"))#</a></td>
+								</tr>
+								<tr class="display-more-tr">
+									<td class="r-label"><label>#(..Get("账单状态"))#</label></td>
+									<td><input id="billStatus" class="textbox tb130"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("开始日期"))#</label></td>
+									<td><input id="stDate" class="hisui-datebox textbox tb130"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("结束日期"))#</label></td>
+									<td><input id="endDate" class="hisui-datebox textbox tb130"/></td>
+								</tr>
+								<tr class="display-more-tr">
+									<td class="r-label"><label>#(..Get("开始时间"))#</label></td>
+									<td><input id="stTime" class="hisui-timespinner textbox tb132" data-options="showSeconds:true"/></td>
+									<td class="r-label r-label-20"><label>#(..Get("结束时间"))#</label></td>
+									<td><input id="endTime" class="hisui-timespinner textbox tb132" data-options="showSeconds:true"/></td>
+								</tr>
+							</table>
+						</div>
+						<div id="search-panel-tools">
+							<span id="more-container" class="menu-container">
+								<span class="spread-b-down"></span>
+								<span class="arrows-b-text">#(..Get("更多"))#</span>
+							</span>
+						</div>
+        			</div>
+        			<div data-options="region:'center',border:false" style="padding-right:10px;">
+						<div class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'west',title:'分类汇总',headerCls:'panel-header-gray',iconCls:'icon-paper',split:true" style="width:250px;">
+								<table id="cateList"></table>
+							</div>
+							<div data-options="region:'center',title:'医嘱明细',headerCls:'panel-header-gray',iconCls:'icon-paper',tools:'#details-tools'">
+								<table id="ordItmList"></table>
+							</div>
+							<span id="details-tools">
+	    						<div id="merge-switch" style="margin-bottom:5.5px;"></div>
+							</span>
+						</div>
+        			</div>
+				</div>
+			</div>
+        	<div data-options="region:'east',border:false" style="width:450px;">
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'north',collapsible:false,title:'医嘱执行记录',headerCls:'panel-header-gray',iconCls:'icon-paper-tri'" style="height:87px;border-bottom:1px dashed #e2e2e2;">
+						<table class="search-table">
+							<tr>
+								<td class="r-label"><label>#(..Get("日期"))#</label></td>
+								<td><input id="execStDate" class="hisui-datebox textbox tb130"></td>
+								<td class="r-label"><label>#(..Get("至"))#</label></td>
+								<td><input id="execEndDate" class="hisui-datebox textbox tb130"></td>
+								<td><a href="javascript:;" class="hisui-linkbutton" id="btn-execFind" style="margin-left:22px;">#(..Get("查询"))#</a></td>
+							</tr>
+						</table>
+					</div>
+					<div data-options="region:'center',bodyCls:'panel-body-gray'" style="border-top-style:none;border-radius:0 0 4px 4px;">
+						<table id="oeItmList"></table>
+					</div>
+        			<div data-options="region:'south',border:false" style="height:230px;padding-top:10px;">
+						<table id="tarItmList"></table>
+        			</div>
+    			</div>
+			</div>
+			<div id="oeItmToolBar" style="padding-left:10px;">
+				<td><a href="javascript:;" class="Btnyellow" id="btn-stop">#(..Get("停止"))#</a></td>
+				<td><a href="javascript:;" class="Btnyellow" id="btn-cancel">#(..Get("撤销执行及处理"))#</a></td>
+			</div>
+        </div>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.nursefee.js"></script>
+</body>
+</html>

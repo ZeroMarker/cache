@@ -1,0 +1,2421 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN" style="overflow: hidden;">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.shift.book.csp -->
+	<title>#(..Get("交班本"))#</title>
+	<script language="cache" runat="SERVER">
+		s chromePrintFlag="false"
+		s emrPrintFlag=1
+	</script>
+		 <script type="text/javascript" src="../scripts/websys.js"></script>
+	<!--判断病历是否兼容Chrome和IE打印 start-->   
+	<script language="cache" runat="SERVER">
+	 // init Chrome print
+	 d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+	</script>
+	<!-- init IE print -->
+	<ainurprint></ainurprint>
+	<!-- end -->
+	
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script language="cache" runat="SERVER">
+	      w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+	      d ##class(web.DHCXMLPConfig).LODOPInit()
+	</script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		.detail-table{
+			border-spacing:0;
+			border-collapse:collapse;
+		}
+		.detail-project{
+			overflow: auto;
+    		display: inline-block;
+   			height: 100%;
+    		width: 100%;	
+		}
+		.detail-project li{
+			
+			height: 30px;
+    		line-height: 30px;
+    		text-align: center;
+    		position: relative;
+    		font-weight:normal;
+    		margin-top: 10px;
+    		 cursor:pointer;
+		}
+		.detail-project li.libgselect span.text{
+			background-color:#40A2DE !important;
+			color:#fff !important;
+		}
+		ul{
+			padding:0;
+			margin:0;	
+		}
+		li{
+			list-style:none;
+		}
+		.detail-project li span.text{
+			
+			width: 90%;
+    		display: inline-block;
+    		border-radius: 4px;
+    		background: #eee;
+			
+		}
+		.ant-form-item-required:before {
+    display: inline-block;
+    margin-right: 4px;
+    color: #f5222d;
+    font-size: 14px;
+    font-family: SimSun,sans-serif;
+    line-height: 1;
+    content: "*";
+}
+		.detail-project li span.count{
+			position: absolute;
+    		right: 10px;
+    		top: 7px;
+    		display: inline-block;
+    		height: 16px;
+    		width: 16px;
+    		line-height: 16px;
+    		border-radius: 14px;
+    		background: red;
+    		color: #fff;
+    		font-weight: normal;
+    		font-size:11px;
+		}
+		.detail-project tr:hover{
+			background:#bcf0ff;	
+		}
+		.detailProjectArea .detail-project li span.text:hover{
+			background:#D8EFFF;	
+			color: #017BCE;
+		}
+		.libgselecta{
+			background:#ffe48d !important;
+		}
+		#Loading{
+			display:none;	
+		}
+		span.shiftName,span.projectName{
+    		
+    		height: 24px;
+    		display: inline-block;
+    		margin: 2px 0px;
+    		line-height: 24px;	
+    		border-radius: 3px;
+    		min-width: 50px;
+    		text-align: center;
+    		white-space: nowrap;
+    		padding: 0px 3px;
+		}
+		.shiftDialog table,.detail-project table{
+			border-spacing:0;
+			border-collapse:collapse;
+			
+		}
+		.shiftDialog table td,.detail-project table td{
+			border-spacing:0;
+			border-collapse:collapse;
+			padding:5px;
+			white-space: nowrap;
+		}
+	
+		.detail-project table td{
+			text-align:center;
+			height:35px;	
+		}
+		
+		.shiftDialog td.project {
+		    padding: 10px;
+		    background: #F9F9F9;
+		    height:28px;
+		    width:70px;
+		}
+		
+		.table-shift td{
+			text-align:center;
+			color:#ddd;
+			cursor: pointer;
+		}
+		
+		.table-shift td.shiftSelect{
+			color:#000 !important;
+		}
+		.table-shift td.bgfff{
+			background: #fff !important;
+		}
+		#area .datagrid-body{
+			overflow-y:hidden!important;
+		}
+		.detail-table-patient li {
+		    border-bottom: 1px solid #ddd;
+		    text-align: left;
+		    height: 34px;
+		    line-height: 34px;
+		    position: relative;
+		}
+		.detail-table-patient li:hover{
+			background:#bcf0ff;	
+		}
+		.datagrid-toolbar span.sort-list span:hover{
+			
+		}
+		.patient-bgselect{
+			background:#ffe48d !important;
+		}
+		body{opacity: 0; transition: opacity 0.2s}
+        body.active{opacity: 1}
+        div#northTable .datagrid-header-row td {
+		    text-align: center;
+		}
+		td.shiftAreaTd.panel-noscroll .datagrid-header-row td {
+		    text-align: center;
+		}
+		td.shiftDetail .datagrid-header-row td {
+		    text-align: left;
+		}
+		span.projectName a.panel-tool-close{
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			margin: 0 0 0 2px;
+			vertical-align: top;
+			margin-top: 4px;
+			visibility: hidden;
+		}
+		
+        .switch-off .switch-small{
+	        margin-left:0.3px;
+	       }
+	       .switch-off{
+	       white-space: nowrap;
+	       }
+	       div.window-shadow{
+		      display:none !important;; 
+		      }
+	     div.panel.window{
+		     position: fixed;
+    flex-direction: column;
+    margin:0 !important;
+    position:absolute;
+    top:49% !important;
+    left:50% !important;
+    transform:translate(-50%,-50%);
+    /*height:600px;*/
+    max-height:calc(100% - 30px);
+    max-width:calc(100% - 30px);
+		    }
+
+BODY TEXTAREA:focus{
+	-webkit-box-shadow: 0 0 0 0 #95B8E7;
+    box-shadow: 0 0 0 0 #95B8E7;
+}
+.combo .combo-text{
+	
+    vertical-align: top;
+}
+.shiftAreaTd .datagrid-body{
+	overflow-y: hidden;
+}
+.souInput {
+    display: inline-block;
+    margin-right: 7px;
+    padding: 0px;
+    vertical-align: top;
+}
+table#table-patient td {
+    padding-left: 0px;
+}
+
+#patient-project td,table#signNurse td,table#signHeadNurse td{
+	padding-top: 10px;
+}
+.shiftDetail textarea{
+	padding-left:8px;	
+}
+.custom-content-table td{border-color: #ddd;border-style: solid;border-width: 1px;height: 35px;border: 0px;}
+table.custom-content-table {
+    border:solid 0px #cccccc;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+table.custom-content-table .custominput{
+	height:100%;	
+	
+}
+.shiftDetail .datagrid-cell, .shiftDetail .datagrid-cell-group{
+	display: inline-block;
+	overflow: hidden;
+	white-space: normal;
+	text-overflow: ellipsis;
+	word-wrap: break-word;
+}
+	</STYLE>
+
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-cellediting.js"></script>
+	
+
+	<script language="cache" runat="SERVER">
+       if ##class(websys.Conversions).IsValidMethodName("websys.StandardTypeItem","GetIdFromCodeOrDescription"){
+	   		Set EnableToken =##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableToken")
+			If EnableToken { // 启用token后，必须传入用效token才可以请求数据\
+			}else{
+				w "<script type=""text/javascript"" >function websys_on(){} function websys_getMWToken(){return  """"}<"_"/"_"script>"
+			}
+	            
+	    }else{
+		    w " <script type=""text/javascript"" >function websys_on(){} function websys_getMWToken(){return """"}<"_"/"_"script>"
+		} 
+  </script>
+	<SCRIPT language="cache" RUNAT="SERVER">
+ 		n (%request,%session,%response)
+
+ 		s WardID=$g(%session.Data("LOGON.WARDID"))
+ 		s UserID=$g(%session.Data("LOGON.USERID"))
+ 		s ThisWardID = $G(%request.Data("WardID", 1))
+ 		s:ThisWardID'="" WardID=ThisWardID
+ 		s LocID = $G(%request.Data("LocID", 1))
+ 		s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+ 		s ClassID = $G(%request.Data("ClassID", 1))
+		s ShiftDate = $G(%request.Data("ShiftDate", 1))
+ 		s IsCaSign=0
+ 		s DefalutSort=$g(^DefalutSort(WardID))
+ 		s IsSelect = $G(%request.Data("IsSelect", 1))
+ 		s WardName=$p($g(^PAWARD(WardID)),"^",2)
+		//s ShiftDate="2022-12-12"
+ 	</SCRIPT>
+
+
+ 	
+ 	<script language="javascript">
+       
+	   var WardID="#(WardID)#";
+	   var IsCaSign="#(IsCaSign)#"
+	   var GLOBAL={
+		   WardID:"#(WardID)#",
+		   WardName:"#WardName#",
+		   UserID:"#(UserID)#",
+	 	   LocID:"#(LocID)#",
+	 	   ShiftBookID:"#(ShiftBookID)#",
+	   	   ClassID:"#(ClassID)#",
+		   ShiftDate:"#(ShiftDate)#",
+		   TimeID:"",
+		   Style:1,  
+		   IsCaSign:"#(IsCaSign)#", //是否CA签名
+		   OpenZd:0,
+		   ShowCustom:0,
+		   HospID:session['LOGON.HOSPID'],
+		   DefalutSort:"#(DefalutSort)#",
+		   IsSelect:"#{IsSelect}#"
+	   }
+	   
+	</script>
+</head>
+<body style="overflow: hidden;">
+	<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:0.5;">
+		<div class="msg">正在加载数据……</div>
+	</div>
+	<table class="main-layout"  border="0" cellspacing="0" style="width:100%;height:100%;">
+		<tr style="height:74px;" class="tr-layout">
+			<td class="souInputArea" style="padding: 0 0 10 0;">
+				<div class="hisui-layout" data-options="fit:true,border:false" style="line-height: 74px;height: 74px;">
+					<div style="height:32px;position: relative;">
+						
+							
+							<div class="souInput" style="margin-left:0px;"><span style="line-height: 32px;">#(..Get("交班日期"))#</span></div>
+							
+							<div class="souInput" >
+								<input id="datecombo" style="vertical-align: top;margin-left:5px;" class="hisui-datebox" type="text">
+							</div>
+							
+							<div class="souInput ShiftBook"><span style="line-height: 32px;">#(..Get("交班本"))#</span></div>
+							<div class="souInput ShiftBook">
+							
+								<select class="hisui-combogrid" id="ShiftBookList" style="vertical-align: top;width:150px" data-options="
+									            panelWidth: 350,
+									            blurValidValue:true,
+									            idField: 'ID',
+									            textField: 'ShiftBookName',
+									            method: 'get',
+									            onClickRow:function(rowIndex, rowData){
+										            LoadWardAndLoc()
+										            IsFirstInit=0
+										        	initLoad()
+										        },
+									            columns: [[
+									                {field:'ShiftBookName',title:$g('名称'),width:150,
+									                	 formatter:function(value,row,index){
+										                 	return $g(value)
+										                 }
+									                },
+									                {field:'ShiftBookType',title:$g('类型'),width:80,
+										                formatter:function(value,row,index){
+											                var text=''
+											                if(value==1){
+												               text='病区' 
+												            }else if(value==2){
+													           text='科室'  
+													        }else if(value==3){
+													           text='产房'  
+													        }else if(value==4){
+													           text='新生儿'  
+													        }else{
+													           text='其他'  
+													        }
+																return $g(text)
+										                }
+									                },
+									                {field:'Remarks',title:$g('备注'),width:80,
+									                	formatter:function(value,row,index){
+										                 	return $g(value)
+										                 }
+									                
+									                },
+									                
+									            ]],
+									            fitColumns: true
+									        ">    
+									</select>
+							
+							</div>
+							<div class="souInput Wards"><span style="line-height: 32px;">#(..Get("交班病区"))#</span></div>
+							<div class="souInput Wards">
+								<input id="Wards" style="vertical-align: top;width:200px;height:30px;margin-top: 1px;"> 	
+							</div>
+							<div class="souInput Locs"><span style="line-height: 32px;">#(..Get("交班科室"))#</span></div>
+							<div class="souInput Locs">
+								<input id="Locs"  style="vertical-align: top;width:200px;height:30px;margin-top: 1px;"> 
+									
+							</div>
+							<div class="souInput ShiftClass"><span style="line-height: 32px;">#(..Get("交班班制"))#</span></div>
+							<div class="souInput ShiftClass"> 
+								<select class="hisui-combogrid" id="ShiftClassList" style="vertical-align: top;width:150px" data-options="
+									            panelWidth: 350,
+									            blurValidValue:true,
+									            idField: 'ID',
+									            textField: 'ShiftClassName',
+									            method: 'get',
+									            onClickRow:function(rowIndex, rowData){
+										        	LoadWardAndLoc()
+										            IsFirstInit=0
+										        	initLoad()
+										        },
+									            columns: [[
+									                {field:'ShiftClassName',title:$g('名称'),width:150,
+									                formatter:function(value,row,index){
+										                 	return $g(value)
+										                 }},
+									                {field:'ShiftClassType',title:$g('类型'),width:80,
+										                formatter:function(value,row,index){
+											                var text=''
+											                if(value==1){
+												               text='单班' 
+												            }else if(value==2){
+													           text='两班'  
+													        }else if(value==3){
+													           text='三班'  
+													        }else if(value==4){
+													           text='四班'  
+													        }else{
+													           text='其他'  
+													        }
+																return $g(text)
+										                }
+									                },
+									                {field:'ShiftIsDefalut',title:$g('默认交班'),width:80,
+										                formatter:function(value,row,index){
+												                var text='否'
+												                if(value==1){
+													               text='是' 
+													            }
+														        return $g(text)
+										                }
+									                },
+									                {field:'isWard',title:$g('全院'),width:80,
+									                	formatter:function(value,row,index){
+												                var text='否'
+												                if(value==0){
+													               text='是' 
+													            }
+														        return $g(text)
+										                }
+									                
+									                }
+									            ]],
+									            fitColumns: true
+									        ">    
+									</select>
+							
+							</div>
+							
+							
+							
+						</div>
+						
+						<div  style="position: absolute;right: 0px;top: 0px;">
+						
+							<div class="souInput souWards"><span style="line-height: 32px;">#(..Get("患者所在病区"))#</span></div>
+							<div class="souInput souWards">
+								<input id="souWards"  style="vertical-align: top;width:150px;height:30px;margin-top: 1px;"> 
+							</div>
+							<div class="souInput souLocs"><span style="line-height: 32px;">#(..Get("患者所在科室"))#</span></div>
+							<div class="souInput souLocs">
+								<input id="souLocs"  style="vertical-align: top;width:150px;height:30px;margin-top: 1px;"> 
+							</div>
+							
+							
+							
+						</div>
+									
+						<div style="height:32px;padding-top: 10px;">
+							<div class="souInput isNotCASign" id="saveSignNurseA"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" onclick="OpenSignNurse(1);">#(..Get("交班签名"))#</a></div>
+							<div class="souInput isNotCASign" id="saveSignNurseB"><a href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" onclick="OpenSignNurse(2);">#(..Get("接班签名"))#</a></div>
+							
+							<div class="souInput isNotCASign" id="saveSignNurseC"><a href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" onclick="OpenSignHeadNurse();">#(..Get("护士长签名"))#</a></div>
+							
+							
+							<div class="souInput isCASign" id="saveSignNurseACA"><a href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-ca'" onclick="signAndLogon(1);">#(..Get("交接签名"))#</a></div>
+							<div class="souInput isCASign" id="saveSignNurseBCA"><a href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-ca'" onclick="signAndLogon(2);">#(..Get("接班签名"))#</a></div>
+							<div class="souInput isCASign" id="saveSignNurseCCA"><a href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-ca'" onclick="signAndLogon(3);">#(..Get("护士长签名"))#</a></div>
+							<div class="souInput" style="display:none;"><a href="javascript:void(0)" id="printShift" class="hisui-menubutton menubutton-blue"  data-options="menu:'#print-toolbar',iconCls:'icon-print'">#(..Get("打印交班"))#</a></div>
+							<div id="print-toolbar" style="width:100px;"></div>			
+							<div class="souInput" id="settingBtn"><a href="javascript:void(0)" style="width:100px" class="hisui-menubutton menubutton-blue"  data-options="menu:'#sort-toolbar',iconCls:'icon-sort'">#(..Get("设置"))#</a></div>
+							<div id="sort-toolbar" style="width:100px;">  
+								<div onclick="settingBtn(1)">#(..Get("统计排序"))#</div> 
+								<div onclick="settingBtn(2)">#(..Get("明细排序"))#</div>
+								<div onclick="settingShuyu()">#(..Get("病区术语"))#</div> 
+							</div>
+							<!--a style="display:none;" href="javascript:void(0)" id="againBtn" class="hisui-menubutton menubutton-toolbar"  data-options="menu:'#again-toolbar',iconCls:'icon-show-set'">重新统计</a-->
+							<a href="javascript:void(0)" style="display:none;" id="export" class="export" class="l-btn l-btn-small l-btn-plain" onclick="exportShift();"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">#(..Get("导出"))#</span><span class="l-btn-icon icon-export">&nbsp;</span></span></a>
+							<div class="souInput" ><a href="#" id="ShiftModifyLog" class="hisui-linkbutton" data-options="iconCls:'icon-w-pen-paper'" onclick="ShiftModifyLog();">#(..Get("修改记录"))#</a></div>
+							
+							<div class="souInput"><a href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick="prn1_preview();">#(..Get("打印"))#</a></div>
+							
+							<div class="souInput hsz" style="position: absolute;right: 0px;">
+								<span style="line-height: 32px;display: inline-block;vertical-align: top;padding-right: 10px;">#(..Get("签名护士长"))#</span>
+								<span style="line-height: 32px;display: inline-block;vertical-align: top;border-bottom: 1px solid #ccc;" class="hszname"></span>
+							</div>
+						
+				
+				</div>
+				</div>
+
+			
+			</td>
+		</tr>
+		
+		<tr style="height:20px" class="tr-layout">
+			<td class="shiftAreaTd" style="vertical-align: top;border: 1px solid #ddd;border-bottom: 0px;border-radius: 4px 4px 0px 0px;">
+				<table id="shiftBookArea" style="overflow: hidden;"></table>
+				
+			</td>
+		</tr>
+		<tr class="tr-layout-a">
+			<td class="customDetailArea" style="border: 1px solid #ddd;vertical-align: top;">
+				<table class="detail-table" border="0" borderColor="#000" style="width:100%;height:100%;">
+					<tr class="tr-customArea">
+						
+						<td colspan="2" class="customAreaTd" style="border-bottom: 1px solid #ddd;">
+						<table id="customArea" border="0"  cellpadding="0" cellspacing="0" style="border-collapse: collapse;overflow: hidden;width: 100%;height: 100%;overflow: hidden;"></table>
+
+						</td>
+					</tr>
+					
+					<tr>
+						<td  style="border-right: 1px solid #ddd;width:130px;min-width:130px;max-width:130px;height:30px;text-align: center;line-height: 28px;border-bottom: 1px solid #ddd;">#(..Get("交班项目"))#</td>
+						<td class="detailToobarArea" style="height:30px;border-bottom: 1px solid #ddd;">
+							<div class="datagrid-toolbar" style="position: relative;border:0px !important;padding-top: 3px">
+								
+								<span>
+									
+									<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" onclick="InsertPatient();"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">#(..Get("新增患者"))#<span class="l-btn-icon icon-add">&nbsp;</span></span></span></a>
+									<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" onclick="DeletePatient();"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">#(..Get("删除患者"))#<span class="l-btn-icon icon-cancel">&nbsp;</span></span></span></a>
+									<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" onclick="UpdatePatientData();"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">#(..Get("隐藏/恢复患者"))#</span><span class="l-btn-icon icon-show-set">&nbsp;</span></span></a>
+									
+									<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" onclick="InsertProject();"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">#(..Get("修改项目"))#<span class="l-btn-icon icon-write-order">&nbsp;</span></span></span></a>
+							
+									
+									<div id="switch3" class="hisui-switchbox" style="display:none;padding: 0 1px 0 0;width: 120px;white-space: nowrap;" data-options="onText:$g('全部'),offText:$g('非空记录'),size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:GetDetailGridDataNotNull"></div>
+								
+									<div id="switch2" class="hisui-switchbox" style="display:none;padding: 0 1px 0 0;" data-options="onText:$g('显示中间'),offText:$g('隐藏中间'),size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:GetOpen2"></div>
+									<span style="height: 28px;display: inline-block;margin-right: 7px;">
+										<input id="isnull-switch" class="hisui-checkbox" type="checkbox" label="#(..Get("显示无项目记录"))#" 
+										data-options="onChecked:GetDetailNotNull,
+													  onUnchecked:GetDetailNotNull">
+									</span>
+									<span style="height: 28px;display: inline-block;margin-right: 7px;">
+										<input id="custom-switch" class="hisui-checkbox" type="checkbox" label="#(..Get("显示中间区域"))#" 
+										data-options="onChecked:GetOpen2,
+													  onUnchecked:GetOpen2" >
+									</span>
+								</span>
+								
+								<span style="position: absolute;right: 10px;line-height: 28px;margin-right: 7px;">
+									<span style="height: 28px;display: inline-block;">
+										<input id="FildName" placeholder="#(..Get("请选择"))#" style="vertical-align: top;width:100px;height:28px;margin-top: 1px;"> 
+									
+									</span>
+									<span style="height: 28px;display: inline-block;">
+											<input class="hisui-searchbox" placeholder="#(..Get("Enter键进行查询"))#" style="height:28px;border-radius: 2px;border-radius: 2px;border-color: #9ed2f2;" name="souInput" onkeydown="keyup_submit(event);">  
+									
+									
+									</span>
+									<span class="SortFildName" style="height: 28px;display: inline-block;line-height:28px;padding-right: 10px;padding-left: 10px;">#(..Get("列表排序"))#</span>
+									<span class="SortFildName sort-list" style="height: 28px;display: inline-block;" >
+										<input id="SortFildName" placeholder="#(..Get("根据选中顺序进行排序"))#" style="width:200px;height:28px;margin-top: 1px;"> 
+
+									</span>
+									<span class="SortFildName" style="height: 28px;display: inline-block;">
+										<input class="hisui-checkbox" type="checkbox" data-options="onChecked:function(event,val){setWardSort(val)},
+onUnchecked:function(event,val){setWardSort(val)}" label="#(..Get("设置默认排序"))#" id="checkbox1">
+									</span>
+								</span>
+							</div>
+							
+						</td>
+					</tr>
+					<tr>
+						<td class="detailProjectArea" style="width:130px;min-width:130px;max-width:130px;border-right: 1px solid #ddd;vertical-align: top;">
+							<div class="detail-project" style="width:130px;min-width:130px;max-width:130px;">
+								<ul style="padding: 0;margin: 0px;"></ul>
+							</div>
+						</td>
+						<td class="shiftDetail" style="vertical-align: top;border-bottom: 1px solid #ddd;">
+							<div class="detail-list" style="height:100%;">
+								<table id="shiftBookDetail" style="width:100%;height:100%;"></table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+<div id="dialogRefer"></div>
+
+
+<div class="vsReminder" style="display:none;"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a></div>
+
+
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.ward.shift.book.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/datagrid-export.js" charset=gbk></script>
+<div id="Insert-Dialog" class="hisui-dialog" title="#(..Get("修改项目"))#" style="width:530px;padding:10px;padding:0px 10px 0px 10px;" data-options="iconCls:'icon-w-edit',resizable:false,modal:true,closed:true,
+buttons:[{
+			text: $g('保存'),
+			iconCls:'icon-w-save',
+			id: 'btnRefer',
+			handler:function(){
+				SaveProject()
+			}
+		},{
+			text: $g('关闭'),
+			iconCls:'icon-w-close',
+			id: 'btnClose',
+			handler:function(){
+				CloseDialog('Insert-Dialog')
+			}
+		}
+		]
+
+">
+	
+	<div id="project-list">
+		<table class="table-project" id="patient-project" style="width:100%;"></table>
+		
+	</div>
+</div>
+
+<div id="modalSign" 
+class="hisui-dialog" title="#(..Get("护士签名"))#" style="width:530px;padding:0px 10px 0px 10px;" data-options="iconCls:'icon-w-edit',resizable:false,modal:true,closed:true,
+
+buttons:[{
+			text: $g('保存'),
+			iconCls:'icon-w-save',
+			id: 'btnRefer',
+			handler:function(){
+				saveSignNurse()
+			}
+		},{
+			text: $g('关闭'),
+			iconCls:'icon-w-close',
+			id: 'btnClose',
+			handler:function(){
+				CloseDialog('modalSign')
+			}
+		}] 
+">
+    <div id="nurse-list">
+    			
+    	<table cellpadding="0" id="signNurse" style="width:100%"></table>
+
+	</div>
+   
+</div>
+<div id="modalHeadSign" 
+class="hisui-dialog" title="#(..Get("护士长签名"))#" style="width:530px;padding:0px 10px 0px 10px;" data-options="iconCls:'icon-w-edit',resizable:false,modal:true,closed:true,
+ buttons:[{
+			text: $g('保存'),
+			iconCls:'icon-w-save',
+			id: 'btnRefer',
+			handler:function(){
+				saveSignHeadNurse()
+			}
+		},{
+			text: $g('关闭'),
+			iconCls:'icon-w-close',
+			id: 'btnClose',
+			handler:function(){
+				CloseDialog('modalHeadSign')
+			}
+		}] 
+"> <div id="nurse-list">
+    		<table cellpadding="0" id="signHeadNurse" style="width:100%"> </table>	
+	</div>
+
+</div>
+
+
+
+<div id="insert-patient-dialog" class="hisui-dialog shiftDialog" title="#(..Get("新增交班患者"))#" style="width:600px;padding:10px;" data-options="iconCls:'icon-w-add',resizable:false,modal:true,closed:true">
+    <div id="patient-list">
+    		<input class="hisui-searchbox" placeholder="#(..Get("请输入术语内容……"))#" name="projectdesc">  
+    		<table id="topCondionA" style="width:100%;height:100%;"> </table>
+    	
+    		<table id="table-patient" class="table-patient" border="1" borderColor="#ddd" style="width:100%;height:100%;">
+    		
+    		</table>
+    	
+	</div>
+    <div style="text-align:center;margin-top:10px;">
+    	<a href="#" class="hisui-linkbutton" onclick="InsertPatientProject()">#(..Get("添加患者"))#</a>
+    	<a href="#" class="hisui-linkbutton" onclick="CloseDialog('insert-patient-dialog')">#(..Get("关闭"))#</a>
+    </div>
+</div>
+<div id="update-patient-dialog" class="hisui-dialog shiftDialog" title="#(..Get("隐藏/恢复交班患者"))#" style="width:600px;padding:10px;" data-options="iconCls:'icon-w-edit',resizable:false,modal:true,closed:true">
+    <div id="update-patient-list">
+   	 <input style="width:100%;" class='hisui-searchbox' id='souPatient' style="padding-left:5px;margin-left:0px;width:580px;" type='text'>
+    	<div class="all-patient" style="display:inline-block;width:100%;overflow-y: auto;margin-top: 5px;">
+    	<table id="table-patient" class="table-all-patient" border="0" borderColor="#ddd" style="width:100%;height:100%;padding-bottom:20px">
+    	
+    		<tr>
+    			<th style="height: 30px;">#(..Get("交班患者"))#</th>
+    			<th style="height: 30px;"></th>
+    			<th style="height: 30px;">#(..Get("隐藏患者"))#</th>
+    		</tr>
+    		<tr>
+    			<td style="width: 35%;margin:0;padding:0"><div class="detail-table-patient left"></div></td>
+    			<td style="margin:0;padding:0">
+    				<div style="margin-bottom:10px;text-align: center;">
+						<a class="hisui-linkbutton red" onclick="serachRightBtn()" data-options="iconCls:'icon-w-arrow-right'">#(..Get("隐藏"))#</a>
+					</div>
+    				<div style="margin-bottom:10px;text-align: center;">
+					<a class="hisui-linkbutton" onclick="serachLeftBtn()" data-options="iconCls:'icon-w-arrow-left'">#(..Get("恢复"))#</a>
+					</div>
+    			</td>
+    			<td style="width: 35%;margin:0;padding:0"><div class="detail-table-patient right"></div></td>
+    		</tr>
+    	</table>
+    	</div>
+    	
+    	
+	</div>
+</div>
+
+
+<div id="rightClickMenu" class="easyui-menu" style="width: 80px; display: none;">              
+    <div id="btn_intro" data-options="iconCls:'icon-ok'" onClick="referHandler()">#(..Get("引用"))#</div>
+    <div id="btn_copy" data-options="iconCls:'icon-copy'" onClick="copyHandler()">#(..Get("复制"))#</div>
+    <div id="btn_paste" data-options="iconCls:'icon-paste'" onClick="pasteHandler()">#(..Get("粘贴"))#</div>
+    
+</div>
+<div style="margin-bottom: 5px;display:none; " id="comboxSearch">
+	<table>
+		<tr>
+			<td>
+				<input type="text" class="textbox hisui-validatebox startDayReport" style="width:170px;" />
+			</td>
+
+			<td>
+				<a class="hisui-linkbutton btnTaskSearch"  data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>  
+			</td>
+		</tr>
+	</table>
+</div>
+
+
+
+<div id="insert-projectnum-dialog" class="hisui-dialog shiftDialog" title="#(..Get("编辑项目值"))#" style="width:350px;padding:10px;" data-options="iconCls:'icon-w-add',resizable:false,modal:true,closed:true">
+    <div>
+    	<div>
+    		<table id="project-num" style="width:100%"> </table>
+    	</div>
+	</div>
+    <div style="text-align:center;margin-top:10px;">
+    	<a href="#" class="hisui-linkbutton" onclick="Insertprojectnum(0)">#(..Get("保存"))#</a>
+    	<a href="#" class="hisui-linkbutton" onclick="Insertprojectnum(1)">#(..Get("清除"))#</a>
+    	<a href="#" class="hisui-linkbutton" onclick="Closeprojectnum()">#(..Get("关闭"))#</a>
+    </div>
+</div>
+
+<div id="print-dialog" class="hisui-dialog shiftDialog" title="#(..Get("打印设置"))#" style="width:530px;padding:10px;" data-options="iconCls:'icon-w-print',resizable:false,modal:true,closed:true,
+
+
+buttons:[{
+			text: $g('全部'),
+			iconCls:'icon-print',
+			id: 'btnRefer',
+			handler:function(){
+				printShift(1)
+			}
+		},{
+			text: $g('非空记录'),
+			iconCls:'icon-print',
+			id: 'btnRefer',
+			handler:function(){
+				printShift(2)
+			}
+		},{
+			text: $g('选中记录'),
+			iconCls:'icon-print',
+			id: 'btnRefer',
+			handler:function(){
+				printShift(3)
+			}
+		},{
+			text: $g('关闭'),
+			iconCls:'icon-w-close',
+			id: 'btnClose',
+			handler:function(){
+				CloseDialog('print-dialog')
+			}
+		}] 
+	">
+    <div style="padding-bottom: 20px;">
+    	<table id="print-content" style="width:100%;">
+    	
+    			<tr style="height:28px;"><td style="">#(..Get("排序方式"))#</td><td class="print-combox"><input id="sortFilde" style="width:420px;"> </td></tr>
+				<tr style="height:28px;"><td style="">#(..Get("打印项目"))#</td><td class="print-combox"><input id="printProject" style="width:420px;"> </td></tr>
+				<tr style="height:28px;"><td style="">#(..Get("打印范围"))#</td><td class="print-combox"><input id="printFw" style="width:420px;"> </td></tr>
+				
+				
+				<tr style="height:28px;display:none;"><td style="width:110px;">#(..Get("打印表单:"))#</td><td class="tempCode"></td></tr>
+			
+    	</table>
+	</div>
+    <!--div style="text-align:center;margin-top:10px;">
+    	<a href="#" class="hisui-linkbutton" onclick="printShift(1)">#(..Get("打印全部"))#</a>
+    	<a href="#" class="hisui-linkbutton" onclick="printShift(2)">#(..Get("打印非空记录"))#</a>
+    	<a href="#" class="hisui-linkbutton" onclick="printShift(3)">#(..Get("打印选中记录"))#</a>
+    	<a href="#" class="hisui-linkbutton" onclick="CloseDialog('print-dialog')">#(..Get("关闭"))#</a>
+    	GLOBAL.bookGenral
+    </div-->
+</div>
+
+
+<script type="text/javascript">
+var DetailMsg=$g("请在明细区域选择一条交班班次记录！")
+var AreaMsg=$g("请在统计区域选择一条交班班次记录！")
+var TiShi=$g("提示")
+function CloseDialog(id){
+	$HUI.dialog("#"+id).close()	
+}
+ 
+ 
+	
+ 
+
+
+//隐藏/显示患者input检索
+$(function(){
+	$("#souPatient").watch(function(value,oldval,ele) {
+		//$method.ShuyuTable()
+	})
+	$('#souPatient').searchbox({ 
+		searcher:function(value,name){ 
+			findPatientData()
+		},  
+		prompt:$g('请输入患者姓名(按Enter键检索)') 
+	});
+})
+
+
+
+
+
+
+</script>
+
+
+
+<script type="text/javascript">
+var bookGenral=""
+var ShiftTimes=""
+$(function(){
+	 
+	var curr_time = new Date()
+	var nowDate=curr_time.getFullYear()+"-"+(curr_time.getMonth()+1)+"-"+curr_time.getDate()
+	$('#datecombo').datebox("setValue", nowDate);
+	
+	LoadShiftBook()
+	LoadShiftClass()
+	LoadWardAndLoc()
+	if(GLOBAL.ShiftDate!=""){
+		$('#datecombo').datebox("setValue", GLOBAL.ShiftDate);
+	}
+	$("#bright").css({opacity: "1"})
+	 	$('body').addClass('active') 
+	 	$("#Loading").hide()	
+	if(GLOBAL.LocID!=""){
+		$("#Locs").combobox("setValue",GLOBAL.LocID)
+	}
+
+	if(GLOBAL.ShiftBookID!=""){
+		var data =  $('#ShiftBookList').combogrid('grid').datagrid("getRows");
+		var selectRow=0
+		for(var i=0;i<data.length;i++){
+			if(data[i].ID==GLOBAL.ShiftBookID){
+				selectRow=i
+			}
+		}
+		var trObj = $HUI.combogrid("#ShiftBookList");
+	    var grid = trObj.grid();
+	 	grid.datagrid('selectRow',selectRow);
+	}
+	if(GLOBAL.ClassID!=""){
+		var data =  $('#ShiftClassList').combogrid('grid').datagrid("getRows");
+		var selectRow=0
+		for(var i=0;i<data.length;i++){
+			if(data[i].ID==GLOBAL.ClassID){
+				selectRow=i
+			}
+		}
+		var trObj = $HUI.combogrid("#ShiftClassList");
+	    var grid = trObj.grid();
+	 	grid.datagrid('selectRow',selectRow);
+	}
+	var souAll=[{"value":"","text":"全部"}]
+	setComboboxData(souAll,"souWards")
+	setComboboxData(souAll,"souLocs")
+	
+	
+	initLoad()
+	
+	$("body").on("click",".searchbox-button",function(){
+		detailArea.Data()
+	})
+})
+var IsSelectAll=false
+var IsFirstInit=0
+function GetDetailNotNull(e,value){
+	////debugger
+	IsSelectAll=value
+	if(IsFirstInit==1){
+		detailArea.Data()
+	}
+}
+var $H={}
+function initLoad(){
+	$("#Loading").show()
+	setTimeout(function(){
+		GLOBAL.bookGenral=LoadBookGenral()
+		if(typeof(GLOBAL.bookGenral.IsDefalutNotNull)=="undefined" || GLOBAL.bookGenral.IsDefalutNotNull=="2"){
+			$("#isnull-switch").checkbox("check"); 
+		}else{
+			$("#isnull-switch").checkbox("uncheck"); 
+		}
+		
+			///先同步当天数据
+		GLOBAL.ShiftDate=LoadShiftDate()
+		$('#datecombo').datebox("setValue", GLOBAL.ShiftDate);
+		GLOBAL.ShiftID=GetShiftID()
+		GLOBAL.ShiftTimes=LoadShiftTime()
+		///加载打印
+		ShiftTimePrint()
+		//加载统计区域表头
+		shiftBookArea.Columns();
+		var mainH=$(".main-layout").outerHeight()
+		if(typeof($H.mainH)!="undefined"){
+			mainH=$H.mainH
+		}else{
+			$H.mainH=mainH
+		}
+		
+	    var souInputAreaH=$(".souInputArea").outerHeight()
+	    if(typeof($H.souInputAreaH)!="undefined"){
+			souInputAreaH=$H.souInputAreaH
+		}else{
+			$H.souInputAreaH=souInputAreaH
+		}
+	    var shiftAreaTdH=$(".shiftAreaTd").outerHeight()
+	    if(typeof($H.shiftAreaTdH)!="undefined"){
+			shiftAreaTdH=$H.shiftAreaTdH
+		}else{
+			$H.shiftAreaTdH=shiftAreaTdH
+		}
+	    
+	    $(".customDetailArea").height(mainH-souInputAreaH-shiftAreaTdH-10)
+	    $(".detail-table").height(mainH-souInputAreaH-shiftAreaTdH-10)
+	    //加载中间区域
+		customArea.Columns()
+		customArea.Data()
+		$("#custom-switch").checkbox("uncheck"); 
+		$("tr.tr-customArea").hide()
+		/*if(GLOBAL.bookGenral.ShowCustom=="1"){
+	    	$("tr.tr-customArea").hide()
+	    }else{
+			$("tr.tr-customArea").show() 
+		}*/
+	    var customDetailAreaH=$(".customDetailArea").outerHeight()
+	    var customAreaTdH=$(".customAreaTd").outerHeight()
+	    if($(".tr-customArea").css("display") == 'none'){  
+	    	var customAreaTdH=0
+	    }
+	    var detailToobarAreaH=$(".detailToobarArea").outerHeight()
+	    
+	    
+	    if(typeof($H.customDetailAreaH)!="undefined"){
+			customDetailAreaH=$H.customDetailAreaH
+		}else{
+			$H.customDetailAreaH=customDetailAreaH
+		}
+		if(typeof($H.customAreaTdH)!="undefined"){
+			customAreaTdH=$H.customAreaTdH
+		}else{
+			$H.customAreaTdH=customAreaTdH
+		}
+		if(typeof($H.detailToobarAreaH)!="undefined"){
+			detailToobarAreaH=$H.detailToobarAreaH
+		}else{
+			$H.detailToobarAreaH=detailToobarAreaH
+		}
+	    
+	    $(".shiftDetail").height(customDetailAreaH-customAreaTdH-detailToobarAreaH)
+	    $(".detailProjectArea").height(customDetailAreaH-customAreaTdH-detailToobarAreaH)
+	    $(".detail-project").height(customDetailAreaH-customAreaTdH-detailToobarAreaH)
+	    $(".shiftBookDetail").height(customDetailAreaH-customAreaTdH-detailToobarAreaH)
+		
+		
+		//加载明细区域表头数据
+		detailArea.Columns()
+		//加载明细区域上方搜索框
+		//GetDetailSelectData()
+		////debugger
+		//加载排序列字段
+		GetDetailSortMenu("SortFildName")
+		var ShiftBookID=GetShiftBookID()
+		runClassMethod("Nur.SHIFT.Service.ShiftDetailController","GetDefalutSort",{WardID:GLOBAL.WardID,ShiftBookID:ShiftBookID},function(DefalutSort){
+			if(DefalutSort!=""){
+				$("#SortFildName").combobox("setValues",DefalutSort.split(","))
+				//$("#checkbox1").checkbox("check"); 
+			}
+		},'text',false)
+		
+		
+		//加载左侧交班项目记录
+		detailArea.LeftArea()
+		//加载明细区域数据
+		detailArea.Data()
+		//加载统计区域数据
+		shiftBookArea.Data()
+		
+		//中间区域隐藏/显示
+		if(GLOBAL.bookGenral.ShowCustom!="1"){
+			$("#custom-switch").checkbox("check"); 
+			//GetOpen2()   
+		}
+		var groupDesc=session['LOGON.GROUPDESC']
+		if(GLOBAL.bookGenral.OpenCA==2){
+			
+			$(".isNotCASign").show()
+			$(".isCASign").hide()
+			
+			//护士长签名禁用时，或者登录安全组非护士长时，隐藏护士长签名按钮
+		    if(GLOBAL.bookGenral.OpenSignC==2 || groupDesc.indexOf("护士长")==-1){
+			    $("#saveSignNurseC").hide()
+			}
+			//交班签名被禁用时，隐藏交班签名按钮
+			if(GLOBAL.bookGenral.OpenSignA==2){
+			    $("#saveSignNurseA").hide()
+			}
+			//接班签名被禁用时，隐藏接班签名按钮
+			if(GLOBAL.bookGenral.OpenSignB==2){
+			    $("#saveSignNurseB").hide()
+			}
+		}else{
+			$(".isCASign").show()
+			$(".isNotCASign").hide()
+			var groupDesc=session['LOGON.GROUPDESC']
+			//护士长签名禁用时，或者登录安全组非护士长时，隐藏护士长签名按钮
+		    if(GLOBAL.bookGenral.OpenSignC==2 || groupDesc.indexOf("护士长")==-1){
+			    $("#saveSignNurseCCA").hide()
+			}
+			//交班签名被禁用时，隐藏交班签名按钮
+			if(GLOBAL.bookGenral.OpenSignA==2){
+			    $("#saveSignNurseACA").hide()
+			}
+			//接班签名被禁用时，隐藏接班签名按钮
+			if(GLOBAL.bookGenral.OpenSignB==2){
+			    $("#saveSignNurseBCA").hide()
+			}
+		}
+		//1 护士长权限登录才显示设置按钮
+		if(GLOBAL.bookGenral.SettingRole==1){
+			if(groupDesc.indexOf("护士长")!=-1){
+				$("#settingBtn").show()
+			}else{
+				$("#settingBtn").hide()
+			}
+		}else{
+			$("#settingBtn").show()
+		}
+		
+		//取护士长签名
+		GetShiftHeadSign()
+		//清除明细区域选中情况
+		$("#shiftBookDetail").datagrid("clearSelections");
+		$("#shiftBookDetail").datagrid("unselectAll");
+		
+		
+		//判断交班本是否开启了补签功能
+		GetOpenSupplementarySign()
+		
+		
+		$("#bright").css({opacity: "1"})
+	 	$('body').addClass('active') 
+	 	$("#Loading").hide()
+	 	IsFirstInit=1	
+	},20)
+}
+function GetOpenSupplementarySign(){
+	
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetOpenSupplementarySign",{"ShiftID":GLOBAL.ShiftID},function(rtn){
+		if(rtn=="2"){
+			$("#saveSignNurseA").hide()
+			$("#saveSignNurseB").hide()
+			$("#saveSignNurseC").hide()
+		}
+	},'text',true);	
+
+}
+function initData(){
+	shiftBookArea.Data()
+	detailArea.Data()
+	detailArea.LeftArea()
+}
+//刷新明细区域内容时，遮罩层
+function detailLoadData(gridData){
+	$("#shiftBookDetail").datagrid("loading");
+	$("#shiftBookDetail").datagrid("unselectAll");
+	$("#shiftBookDetail").datagrid('loadData', gridData)
+	setTimeout(function(){
+		$("#shiftBookDetail").datagrid("loaded");	
+	},1000)	
+}
+
+var detailArea={
+	SignData:function(ShiftSignList,SignName){
+		var texts=[]
+		for(var i=0;i<ShiftSignList.length;i++){
+			var ShiftName=ShiftSignList[i].ShiftName
+			var ShiftColor=ShiftSignList[i].ShiftColor
+			var ShiftSignName=SignName+"Name"
+			ShiftSignName=ShiftSignList[i][ShiftSignName]
+			var SignRowID=ShiftSignList[i].SignRowID
+			if(typeof(ShiftSignName)!="undefined"){
+				var value=ShiftSignName
+				var values=value.split("|")
+				var userIds=[],userNames=[]
+				for(var j=0;j<values.length;j++){
+					var userID=values[j].split("*")[1]
+					var userName=values[j].split("*")[0]
+					userIds.push(userID)
+					var closeHtml='<a class="panel-tool-close" SignName="'+SignName+'" SignRowID="'+SignRowID+'" UserID="'+userID+'" NurseID="'+GLOBAL.UserID+'"   href="javascript:void(0)" onclick="hzqmcx(this)" style="visibility: hidden;display: inline-block;width: 16px;    height: 16px;margin: 0 0 0 2px;vertical-align: top;    margin-top: 4px;"></a>'
+					userName='<span class="shiftName" onmouseover="ccc(this)">'+userName+closeHtml+"</span>"
+
+					userNames.push(userName)
+				}
+						
+				
+				var text="<div><span class='shiftName' style='background:"+ShiftColor+"'>"+ShiftName+"</span>"+userNames.join("")+"</div>"
+				texts.push(text)
+			}
+		}
+		return texts
+	},
+	Data:function(){
+		var DetailGridData=GetDetailGridData("0")
+		
+		//var rows=getProjectFildHtml(DetailGridData)
+		var rows=DetailGridData.data
+		///用于过滤筛选
+		var text=$("input[name=souInput]").val()
+		text=text.replace(/\s*/g,"");
+		var gridData=[]
+		if(text!=""){
+			 var FildName = $("#FildName").combo("getValue")
+			 for(var i=0;i<rows.length;i++){
+				 var row=rows[i]
+				 var content=row[FildName]
+				 if(typeof(content)!="undefined"){
+					 if(content.indexOf(text)>-1){
+						 gridData.push(row)
+					 }
+				 }
+				
+			}
+		 }else{
+			gridData=rows  
+		 }
+		 ///用于加载左侧项目数
+		detailLoadData(gridData)
+	},
+
+	LeftArea:function(){
+		var parmas={
+			ShiftID:GLOBAL.ShiftID,
+			TimeID:GetTimeID(),
+			WardID:GetSouWardLoc(1),
+			LocID:GetSouWardLoc(2)
+			}
+		runClassMethod("Nur.SHIFT.Service.ShiftDetailController","GetDetailLeftProject",parmas,function(rtn){
+		
+			$(".detail-project ul").html('<li class="libgselect" projectId=""><span class="text">'+$g("全部患者")+'</span></li>')
+		    for(var i=0;i<rtn.data.length;i++){
+				var text=rtn.data[i].ProjectName
+				var ProjectID=rtn.data[i].ProjectID
+				var count=rtn.LeftData[ProjectID]
+				if(count==0){
+					$(".detail-project ul").append("<li ProjectID='"+ProjectID+"'><span class='text'>"+$g(text)+"</span><span></span><span class='count' style='display:none;'>"+count+"</span></li>")
+				}else{
+					$(".detail-project ul").append("<li ProjectID='"+ProjectID+"'><span class='text'>"+$g(text)+"</span><span></span><span class='count'>"+count+"</span></li>")
+				}
+			}
+		},'json',false);
+		
+	    
+	},
+	ColumnsSign:function(){
+		//取签名列	
+		var SignColumn=[]
+		///加载签名列
+		if(GLOBAL.bookGenral.SignType==2){
+			if(GLOBAL.bookGenral.OpenSignA==1){
+				var column={
+					field:"ShiftSignName",
+					title:$g("交班护士"),
+					width:200,
+					formatter:function(value,row,index){
+						var SignList=row.TimeSignArrs
+						if(typeof(SignList)=="undefined"){
+							return ""	
+						}
+						var texts=[]
+						for(var i=0;i<SignList.length;i++){
+							var ShiftName=SignList[i].ShiftName
+							var ShiftColor=SignList[i].ShiftColor
+							var SignID=SignList[i].ShiftSignID
+							var SignName=SignList[i].ShiftSignName
+							row.ShiftSign=SignID
+							if(typeof(SignID)!="undefined"&&typeof(SignName)!="undefined"){
+								var SignUserIDs=SignID.split(",")
+								var SignUserNames=SignName.split(",")
+								var SignUsers=[]
+								for(var j=0;j<SignUserNames.length;j++){
+									var SignUserName=SignUserNames[j]
+									if(SignUserName!=""){
+										var SignUserID=SignUserIDs[j]
+										var closeHtml='<a class="panel-tool-close" patientID="'+row.PatientID+'" SignName="ShiftSign" TimeID="'+SignList[i].TimeID+'" UserID="'+SignUserID+'" NurseID="'+GLOBAL.UserID+'"   href="javascript:void(0)" onclick="hzqmcx(this)" style="visibility: hidden;display: inline-block;width: 16px;    height: 16px;margin: 0 0 0 2px;vertical-align: top;    margin-top: 4px;"></a>'
+									
+										SignUsers.push('<span class="shiftName" onmouseover="ccc(this)">'+SignUserName+closeHtml+"</span>")
+									}
+								}
+								if(SignUsers.length>0){
+									var text="<div><span class='shiftName' style='background:"+ShiftColor+"'>"+ShiftName+"</span>"+SignUsers.join("")+"</div>"
+									texts.push(text)
+								}
+							}
+						}
+						
+						return texts.join("") 
+					}
+				}
+				//var column=shiftBookArea.AddColumn("ShiftSignName",$g("交班护士"))
+				
+				
+				SignColumn.push(column)
+			}
+			if(GLOBAL.bookGenral.OpenSignB==1){
+				var column={
+					field:"ShiftTakeSignName",
+					title:$g("接班护士"),
+					width:200,
+					formatter:function(value,row,index){
+						
+						var SignList=row.TimeSignArrs
+						if(typeof(SignList)=="undefined"){
+							return ""	
+						}
+						var texts=[]
+						for(var i=0;i<SignList.length;i++){
+							var ShiftName=SignList[i].ShiftName
+							var ShiftColor=SignList[i].ShiftColor
+							var SignID=SignList[i].ShiftTakeSignID
+							var SignName=SignList[i].ShiftTakeSignName
+							row.ShiftTakeSign=SignID
+							if(typeof(SignID)!="undefined"&&typeof(SignName)!="undefined"){
+								var SignUserIDs=SignID.split(",")
+								var SignUserNames=SignName.split(",")
+								var SignUsers=[]
+								for(var j=0;j<SignUserNames.length;j++){
+									var SignUserName=SignUserNames[j]
+									if(SignUserName!=""){
+										var SignUserID=SignUserIDs[j]
+										var closeHtml='<a class="panel-tool-close" patientID="'+row.PatientID+'" SignName="ShiftTakeSign" TimeID="'+SignList[i].TimeID+'" UserID="'+SignUserID+'" NurseID="'+GLOBAL.UserID+'"   href="javascript:void(0)" onclick="hzqmcx(this)" style="visibility: hidden;display: inline-block;width: 16px;    height: 16px;margin: 0 0 0 2px;vertical-align: top;    margin-top: 4px;"></a>'
+									
+										SignUsers.push('<span class="shiftName" onmouseover="ccc(this)">'+SignUserName+closeHtml+"</span>")
+									}
+								}
+								if(SignUsers.length>0){
+									var text="<div><span class='shiftName' style='background:"+ShiftColor+"'>"+ShiftName+"</span>"+SignUsers.join("")+"</div>"
+									texts.push(text)
+								}
+							}
+						}
+						
+						return texts.join("") 
+					}
+				}
+				//var column=shiftBookArea.AddColumn("ShiftTakeSignName",$g("接班护士"))
+				SignColumn.push(column)	
+			}
+		}
+		return SignColumn
+	},
+	
+	Columns:function(){
+		var ContentColumns=GetContentColumns()
+		var allColumns=[]
+		//查询明细区域表头
+		var DetailGridColumns=GetDetailGridColumns()
+		//加载明细区域右上角搜索控件
+		GetDetailSelectData(DetailGridColumns)
+		//初始化交班项目列需要显示的格式
+		var maxWidth=$(".shiftDetail").width()-50
+		//取交班内容列，有选中班次时，就显示指定班次列
+		var ContentColumns=GetContentColumns()
+		//存储所有的列内容
+		var firstColumns=[]
+		var ContentNum=0
+		for(var i=0;i<DetailGridColumns.data.length;i++){
+			var Column=DetailGridColumns.data[i]
+			//列为可编辑状态时
+			if(Column.editor=="1"){
+				Column.editor={type:'textarea'}
+			}
+			//列为不可编辑状态，当前时间之后的班次，是不可以编辑的，判断的逻辑在后台代码
+			if(Column.editor=="3"){
+				Column.styler= function (value, row, index) {
+                 return 'background-color:#eee;';
+            	}
+			}
+			Column.title=Column.ListAreaColName
+			//列内容显示的格式
+			Column.formatter=function(value,row,index){
+				return value ? '<span style="display:inline-block;width:100%;overflow:hidden;white-space:normal;text-overflow:ellipsis">'+value+'</span>' : ''    
+			}
+			firstColumns.push(Column)
+			if(typeof(Column.width)!="undefined"){
+				//每列占用的宽度
+				maxWidth=maxWidth-Column.width
+			}
+			
+		}
+		runClassMethod("Nur.SHIFT.Service.ShiftDetailController","GetShiftGroupList",{ShiftID:GLOBAL.ShiftID},function(groupList){
+				if(groupList.length>0){
+					console.log(groupList)
+					var $tbody=$(".detail-list .datagrid-view .datagrid-view2 .datagrid-htable tbody")
+					var html=$tbody.html()
+					
+					//查询明细区域表头
+					var DetailGridColumns=allColumns[0]
+					console.log(DetailGridColumns)
+					var ColIndex={},groupAllArrs={}
+					//取一级表头对应的列号
+					for(var i=0;i<firstColumns.length;i++){
+						var Column=firstColumns[i]
+						var colID=Column.LogID
+						if(typeof(ColIndex[colID])=="undefined"){
+							ColIndex[colID]=i
+						}
+					}
+					
+					var isExit=0,twoColumns=[],indexCls={}
+					for(var j=0;j<groupList.length;j++){
+						//二级表头内容
+						var groupTitle=groupList[j].GroupColName	
+						//二级表头合并的开始列号在一级表头的位置
+						var colStartIndex=ColIndex[groupList[j].GroupStartCol]
+						//二级表头合并的结束列号在一级表头的位置
+						var colEndIndex=ColIndex[groupList[j].GroupEndCol]
+						var ColNames=[]
+						//取一级表头对应的二级表头内容
+						//例如：开始列号=A 结束列号=D 合并后名称="测试",那么A、B、C、D列的二级表头都是"测试"
+						var colspanNum=0
+						for(var k=colStartIndex;k<=colEndIndex;k++){
+							groupAllArrs[firstColumns[k].LogID]=groupTitle
+							if(firstColumns[colStartIndex].FildNameType=="5"){
+								colspanNum=colspanNum+ContentColumns.length
+							}else{
+								colspanNum=colspanNum+1
+							}
+							
+						}
+						indexCls[colEndIndex]={title:$g(groupTitle),colspan:(colspanNum)}
+					}
+					var NewfirstColumns=[]
+					for(var i=0;i<firstColumns.length;i++){
+						var Column=firstColumns[i]
+						//一级表头的项目名称
+						var title=Column.title
+						var LogID=Column.LogID
+						if(typeof(groupAllArrs[Column.LogID])=="undefined"){
+							Column.rowspan=2
+							indexCls[i]=Column
+						}else{
+							NewfirstColumns.push(Column)
+						}
+					}
+					for(var key in indexCls){
+						twoColumns.push(indexCls[key]) 
+					}
+					
+					firstColumns=NewfirstColumns
+					allColumns.push(twoColumns)
+					allColumns.push(firstColumns)
+					
+					return false
+					
+
+			}else{
+				allColumns.push(firstColumns)	
+			}
+		
+		},"json",false)
+		////debugger
+		if(1==1){
+			var count=0
+			for(var i=0;i<allColumns.length;i++){
+				var Columns=allColumns[i]
+				for(var j=0;j<Columns.length;j++){
+					var Column=Columns[j]
+					
+					if(Column.FildNameType=="5"){
+						count=count+1
+					}
+				}
+			}
+			debugger;
+			
+			//取交班内容列，有选中班次时，就显示指定班次列
+			var ContentColumns=GetContentColumns()
+			NewAllColumns=[],t=0
+			for(var i=0;i<allColumns.length;i++){
+				var Columns=allColumns[i]
+				var NewColumns=[]
+				for(var j=0;j<Columns.length;j++){
+					var Column=Columns[j]
+					
+					
+					if(Column.FildNameType=="5" && GLOBAL.bookGenral.ContentStyle=="2"){
+							Column.editor={type:'textarea'}
+							Column.width=maxWidth/count
+							NewColumns.push(Column)
+						
+					}else if(Column.FildNameType=="5" && GLOBAL.bookGenral.ContentStyle=="1"){
+						t=t+1
+						var newContentColums=JSON.parse(JSON.stringify(ContentColumns))	
+						///加载交班内容列
+						for(var m=0;m<newContentColums.length;m++){
+							var ContentColumn=newContentColums[m]
+						
+							ContentColumn.field=ContentColumn.field+"-"+t
+							if(ContentColumn.editor=="1"){
+								ContentColumn.editor={type:'textarea'}
+							}
+							if(ContentColumn.editor=="3"){
+								ContentColumn.styler= function (value, row, index) {
+				                 return 'background-color:#eee;';
+				            	}
+							}
+							if(maxWidth<300){
+								maxWidth=300
+							}
+							if(GetTimeID()!=""){
+								ContentColumn.width=maxWidth
+							}else{
+								if(maxWidth/newContentColums.length>300){
+								ContentColumn.width=maxWidth/newContentColums.length
+								}else{
+									ContentColumn.width=300
+								}
+							}
+							ContentColumn.formatter=function(value,row,index){
+								if(typeof(row.ShiftColor)=="undefined"){
+									row.ShiftColor="#000"
+								}
+								if(typeof(value)=="undefined"){
+									value=""
+								}
+								row.ShiftColor="#000"
+								var TimeContent=row["TimeContent"+$(this)[0].TimeID]
+								if(typeof(TimeContent)=="undefined"){
+								 	TimeContent=""
+								}
+								TimeContent='<div>'+TimeContent+'</div>'
+								return TimeContent+value ? TimeContent+'<span style="color:'+row.ShiftColor+';display:inline-block;width:100%;overflow:hidden;white-space:normal;text-overflow:ellipsis">'+value+'</span>' : ''    
+					
+								//return value ? '<span style="color:'+row.ShiftColor+';display:inline-block;width:100%;overflow:hidden;white-space:normal;text-overflow:ellipsis">'+value+'</span>' : ''    
+							}	
+							ContentColumn.colspan=Column.colspan
+							ContentColumn.rowspan=Column.rowspan
+							NewColumns.push(ContentColumn)
+						}
+					}else{
+						NewColumns.push(Column)
+					}	
+					
+					
+					
+					
+				}
+				NewAllColumns.push(NewColumns)
+			}
+			allColumns=NewAllColumns
+		}
+		
+		var ColumnsSigns=detailArea.ColumnsSign()
+		
+		for(var i=0;i<ColumnsSigns.length;i++){
+			var ColumnsSign=ColumnsSigns[i]
+			allColumns[0].push(ColumnsSign)
+		}
+		
+		var detailW=$("td.shiftDetail").width()
+		var detailH=$("td.shiftDetail").height()
+		console.log(detailH)
+		var thisfield=""
+		$("#shiftBookDetail").datagrid({
+			fit:false,
+			height:detailH,
+			width:detailW,
+			singleSelect : false,
+			rownumbers : true,
+			idField:"ID",
+			onDblClickCell:onDBClickCell,
+			onAfterEdit:afterEdit,
+			onClickCell:function(index, field,value){
+				onClickCell()	
+				console.log(index+"="+field+"="+value)
+			},
+			
+           onLoadSuccess: function (data) {
+	        	 if (data.rows.length > 0) {
+                    //调用mergeCellsByField()合并单元格
+                    var colList=[]
+       				for(var i=0;i<allColumns.length;i++){
+	       				var Columns=allColumns[i]
+	       				for(var j=0;j<Columns.length;j++){
+	       					var Column=Columns[j]
+	       					if(typeof(Column.IsMergeColumn)!="undefined"){
+		       					if(Column.IsMergeColumn=="1"){
+		       						colList.push(Column.field)
+		       					}
+		       					
+		       				}
+	       				}
+	       			}
+	       			if(colList.length>0){
+		       			////debugger
+                    	detailArea.mergeCellsByField("shiftBookDetail", colList.join(","));
+	       			}
+                }
+	        }
+
+		})
+		$('#shiftBookDetail').datagrid('loadData',{rows:[]});
+		$('#shiftBookDetail').datagrid({columns:allColumns});
+		
+	},
+	
+
+ mergeCellsByField:function(tableID, colList) {
+	 	//参数 tableID 要合并table的id
+    var ColArray = colList.split(",");
+    var tTable = $("#" + tableID);
+    var TableRowCnts = tTable.datagrid("getRows").length;
+    var tmpA;
+    var tmpB;
+    var PerTxt = "";
+    var CurTxt = "";
+    var alertStr = "";
+    for (j = ColArray.length - 1; j >= 0; j--) {
+        PerTxt = "";
+        tmpA = 1;
+        tmpB = 0;
+ 
+        for (i = 0; i <= TableRowCnts; i++) {
+            if (i == TableRowCnts) {
+                CurTxt = "";
+            }
+            else {
+                CurTxt = tTable.datagrid("getRows")[i]["ID"];
+            }
+            if (PerTxt == CurTxt) {
+                tmpA += 1;
+            }
+            else {
+                tmpB += tmpA;
+ 
+                tTable.datagrid("mergeCells", { //根据ColArray[j]进行合并
+                    index: i - tmpA,
+                    field: ColArray[j],
+                    rowspan: tmpA,
+                    colspan: null
+                });
+ 
+                tmpA = 1;
+            }
+            PerTxt = CurTxt;
+        }
+    }
+},
+	DataFilter:function(FildName,text){
+		
+		 detailArea.Data()
+		 var rows = $("#shiftBookDetail").datagrid('getRows');
+		 var gridData=[]
+		 if(text!=""){
+			 
+			 for(var i=0;i<rows.length;i++){
+				 var row=rows[i]
+				 var content=row[FildName]
+				 if(typeof(content)!="undefined"){
+					 if(content.indexOf(text)>-1){
+						 gridData.push(row)
+					 }
+				 }
+				
+			}
+		 }else{
+			gridData=rows  
+		 }
+
+		detailLoadData(gridData)
+		
+	},
+	
+}
+
+var ShiftItemRecord={}
+function getProjectFildHtml(rtn){
+	var gidData=[]
+	//var ProjectFildData=$method.GetProjectFild()
+	
+	var ProjectFildData=""
+	runClassMethod("Nur.SHIFT.Service.ShiftController","GetProjectFild",{"ShiftID":GLOBAL.ShiftID},function(rtnFild){
+		ProjectFildData=rtnFild
+	},'json',false);
+	
+	var genral=GLOBAL.bookGenral
+	for(var i=0;i<rtn.data.length;i++){
+		
+		var Records=rtn.data[i].PatItemRecords;
+		
+		
+		
+		//患者签名
+		
+		var ShiftSignDateTime=""
+		var ShiftTimeSign={}
+		
+		if(genral.SignType==2){
+			var ShiftSignList=rtn.data[i].ShiftSignList
+			for (var signI=0;signI<ShiftSignList.length;signI++){
+				var ShiftSignDate=ShiftSignList[signI].ShiftSignDate
+				var ShiftSignTime=ShiftSignList[signI].ShiftSignTime
+				var ShiftTimeID=ShiftSignList[signI].TimeID
+				if(typeof(ShiftSignDate)!="undefined"){
+					//ShiftSignDateTime=ShiftSignDate+" "+ShiftSignTime
+					
+					ShiftTimeSign[TimeID]=ShiftSignDate+" "+ShiftSignTime
+				}
+			}
+		}else if(genral.SignType==1){
+			//班次签名
+			
+			var rows = $("#shiftBookArea").datagrid("getRows");
+			
+			for(var AreaI=0;AreaI<rows.length;AreaI++){
+				var TimeID=rows[AreaI].TimeID
+				var ShiftSignDate=rows[AreaI].ShiftSignDate
+				var ShiftSignTime=rows[AreaI].ShiftSignTime
+				if(typeof(ShiftSignDate)!="undefined"){
+					ShiftTimeSign[TimeID]=ShiftSignDate+" "+ShiftSignTime
+				}
+				
+			}
+		}
+		
+				
+		
+		if(Records.length>0){
+			var TimeArr={}
+			var TimeProject={}
+			var ProjectArr={}
+			var otherProject={}
+			
+			
+			for(var j=0;j<Records.length;j++){
+				var Time			=	Records[j].Time
+				var TimeID			=	Time.ID
+				//var ProjectID		=	Project.ID	
+				var ItemRecordID	=	Records[j].ItemRecordID
+				var IsMark=Records[j].IsMark
+				var Arrays=[]
+				if(typeof(TimeProject[TimeID])!="undefined"){
+					Arrays=TimeProject[TimeID]
+					
+				}
+				
+				TimeArr[TimeID]=Time
+				
+				TimeProject[TimeID]=Arrays
+				
+				if(typeof(IsMark)!="undefined"){
+					if(IsMark==1){
+						
+						var other=[]
+						if(typeof(otherProject[TimeID])!="undefined"){
+							other=otherProject[TimeID]
+						}
+						other.push(Records[j].ItemRecordID)
+						otherProject[TimeID]=other
+						
+						ShiftItemRecord[Records[j].ItemRecordID]=Records[j]
+						continue;
+					}
+					if(IsMark==2){
+						continue;
+					}
+				}
+				
+				var closeHtml=""
+				var CreateDateTime="("+Records[j].CreateDate+" "+Records[j].CreateTime+")"
+				CreateDateTime=""
+				var ProjectName=Records[j].ProjectName+CreateDateTime
+				
+				ShiftSignDateTime=ShiftTimeSign[TimeID]
+				
+				if(ShiftSignDateTime=="" || typeof(ShiftSignDateTime)=="undefined"){
+					//closeHtml="<a class='panel-tool-close' href='javascript:void(0)' onclick='bbb("+ItemRecordID+")'></a>"
+	
+				}
+				
+				
+				Arrays.push("<span class='projectName' style='padding:0px;min-width: 40px;text-align:left;' onmouseover='aaa(this)'>"+$g(ProjectName)+closeHtml+"</span>")
+
+				TimeProject[TimeID]=Arrays
+				
+			}
+			var html=""
+			for(TimeID in TimeProject){
+				var Time=TimeArr[TimeID]
+				var TimeName=Time.ShiftName
+				var ProjectNames=TimeProject[TimeID]
+				
+				var vsReminder=""
+				
+				if(typeof(otherProject[TimeID])!="undefined"){
+					$(".vsReminder").find("a.hisui-linkbutton").addClass("ShiftStopTip")
+					
+					//$(".vsReminder").find("a.hisui-linkbutton").attr("patientID","")
+					$(".vsReminder").find("a.hisui-linkbutton").attr("ItemRecordID",otherProject[TimeID].join(","))
+					
+					$(".vsReminder").find("a.hisui-linkbutton").attr("onClick","GetShiftStopTip(this)")
+					$(".vsReminder").find("a.hisui-linkbutton").attr("onmouseover","GetShiftTip(this)")
+					vsReminder = $(".vsReminder").html()
+					//vsReminder='<a href="#" onmouseover="GetShiftStopTip(this)" class="hisui-linkbutton" data-options="iconCls:\'icon-tip\',plain:true"></a>'
+					
+				}
+				if(genral.SignType==1){
+					ShiftSignDateTime=ShiftTimeSign[TimeID]
+				}
+				
+				if(typeof(ShiftSignDateTime)=="undefined"){
+					ShiftSignDateTime=""
+				}
+				ShiftSignDateTime=""
+				TimeName=TimeName+ShiftSignDateTime
+				
+				var shtml="<td style='border:none;vertical-align: top;'><div style=' white-space: nowrap;'><span class='shiftName' style='white-space: nowrap;word-break:break-all;vertical-align: top;background:"+Time.ShiftColor+"'>"+$g(TimeName)+"</span></div></td>"
+					shtml=shtml+"<td style='border:none;'>"+ProjectNames.join("")+"</td>"
+					shtml=shtml+"<td style='border:none;'>"+vsReminder+"</td>"
+					html=html+"<tr>"+shtml+"</tr>"	
+					
+					
+				
+				
+			}
+			
+			var ProjectFild=ProjectFildData.data
+			for(var j=0;j<ProjectFild.length;j++){
+				rtn.data[i][ProjectFild[j]]="<table>"+html+"</table>"
+			}
+			gidData.push(rtn.data[i])
+		}else{
+			gidData.push(rtn.data[i])
+		}
+		
+		
+	}
+
+	return gidData
+}
+
+
+var shiftBookArea={
+	Data:function(){
+		var AreaGridData=""
+		runClassMethod("Nur.SHIFT.Service.ShiftProjectController","GetAreaGridData",
+		{"ShiftID":GLOBAL.ShiftID,
+		"WardID":GetSouWardLoc(1),
+		"LocID":GetSouWardLoc(2)
+		},function(rtn){
+			AreaGridData=rtn
+		},'json',false);
+		
+		//取前一天的交班记录
+		runClassMethod("Nur.SHIFT.Service.ShiftProjectController","GetLastAreaGridData",
+		{"ShiftID":GLOBAL.ShiftID,
+		"WardID":GetSouWardLoc(1),
+		"LocID":GetSouWardLoc(2)
+		},function(rtn){
+			if(AreaGridData!=""&&rtn!=""){
+				for(var key in rtn){
+					AreaGridData.data[0][key]=rtn[key]
+				}
+			}
+			
+		},'json',false);   
+		
+		console.log(AreaGridData.data)
+		
+		$("#shiftBookArea").datagrid("unselectAll");
+		$("#shiftBookArea").datagrid('loadData', AreaGridData.data)
+	},
+	GetColumns:function(){
+		var rtnData=""
+		runClassMethod("Nur.SHIFT.Service.ShiftProjectController","GetAreaGridColumns",{"ShiftID":GLOBAL.ShiftID},function(rtn){
+			rtnData=rtn
+		},'json',false);
+		return rtnData
+	},
+	AddColumn:function(field,title){
+		///格式化交接班
+		var shiftSign={
+			field:field,
+			title:$g(title),
+			formatter:function(value,row,index){
+				if(typeof(value)=="undefined" || value==""){
+					return ""
+				}
+				
+				var values=value.split("|")
+				var userIds=[],userNames=[]
+				for(var i=0;i<values.length;i++){
+					var userID=values[i].split("*")[1]
+					var userName=values[i].split("*")[0]
+					userIds.push(userID)
+					var closeHtml='<a class="panel-tool-close" shiftTimeID="'+row.ShiftTimeID+'" nurseID="'+userID+'" field="'+field+'" href="javascript:void(0)" onclick="ddd(this)" style="visibility: hidden;display: inline-block;width: 16px;    height: 16px;margin: 0 0 0 2px;vertical-align: top;    margin-top: 4px;"></a>'
+					userName='<span class="shiftName" onmouseover="ccc(this)">'+userName+closeHtml+"</span>"
+
+					
+					userNames.push(userName)
+				}
+				row[field]=userIds.join(",")
+				return userNames.join("")
+			}
+		}
+		return shiftSign
+	},
+	Columns:function(){
+		var shiftTimeList=GLOBAL.ShiftTimes
+		var ht=shiftTimeList.length*35+50
+		
+		if(GLOBAL.bookGenral.OpenAllShift=="1"){
+			ht=ht+35
+		}
+		
+		
+		$(".shiftAreaTd").css("height",ht)
+		var AreaGridColumns=shiftBookArea.GetColumns()
+		//1、加载交班班次列
+		var frozenColumns=[{field:"ShiftName",title:$g("交班班次"),
+			formatter: function(value,row,index){
+				var TimeRecord=row.TimeRecord
+				if(typeof(TimeRecord)=="undefined"){
+					return $g(value)	
+				}
+				var ShiftColor=TimeRecord.ShiftColor
+				var ShiftStartTime=$g(TimeRecord.ShiftStartTime)
+				var ShiftStartSymbol=TimeRecord.ShiftStartSymbol
+				var ShiftEndTime=$g(TimeRecord.ShiftEndTime)
+				var ShiftEndSymbol=TimeRecord.ShiftEndSymbol
+				var ShiftName=$g(TimeRecord.ShiftName)
+				if(ShiftStartSymbol==0){
+					ShiftStartSymbol=""	
+				}else{
+					ShiftStartSymbol="<span style='color:red;'>+"+ShiftStartSymbol+"</span>"	
+				}
+				if(ShiftEndSymbol==0){
+					ShiftEndSymbol=""	
+				}else{
+					ShiftEndSymbol="<span style='color:red;'>+"+ShiftEndSymbol+"</span>"
+				}
+				var text="<div ShiftTimeRecordID='"+row.ShiftTimeID+"' TimeID='"+row.TimeID+"'><span class='shiftName' style='background:"+ShiftColor+"'>"+ShiftName+"</span><span style='margin-left: 10px;color:"+ShiftColor+"'>"+ShiftStartTime+ShiftStartSymbol+"~"+ShiftEndTime+ShiftEndSymbol+"</span></div>"
+				return text
+			}
+		
+		}]
+		var columns=[]
+		//3、加载交班项目列
+		var FildKeyText={}
+		for(var i=0;i<AreaGridColumns.data.length;i++){
+			var Column=AreaGridColumns.data[i]
+			Column.styler= function (value, row, index) {
+				
+                 return 'text-align: center;';
+            	}
+			Column.formatter=function(value,row,index){
+	            if(value==0){
+		         	return "<span style='color:#ddd'>"+value+"</span>"   
+		        }
+		        console.log(index)
+		        console.log($('#shiftBookArea').datagrid("options").columns)
+		        value=value+""
+		        if(value.indexOf("+")>-1){
+			    	var valueA=value.split("+")[0]
+			    	var valueB=value.split("+")[1]  
+			    	
+			    	var valueB="<span style='position: absolute;font-size: 10px;top: -2px;color: red;'>+"+valueB+"</span>"
+			    	return "<span style='position:relative;'>"+valueA+valueB+"</span>"   
+			    }
+				return "<span style='position:relative;'>"+value+"</span>" 
+			}	
+			columns.push(Column)
+			FildKeyText[Column.field]=Column
+		}
+
+		//2、加载交班签名
+		if(GLOBAL.bookGenral.SignType==1){
+			if(GLOBAL.bookGenral.OpenSignA==1){
+				var column=shiftBookArea.AddColumn("ShiftSign",$g("交班护士"))
+				columns.push(column)
+			}
+			if(GLOBAL.bookGenral.OpenSignB==1){
+				var column=shiftBookArea.AddColumn("ShiftTakeSign",$g("接班护士"))
+				columns.push(column)	
+			}
+		}
+		///加载表格
+		var thisfield=""
+	    $("#shiftBookArea").datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:false,
+			idField:"ID",
+			frozenColumns:[frozenColumns],
+			columns :[columns],
+			onLoadSuccess:function(){
+				for(var i=0;i<AreaGridColumns.data.length;i++){
+					var Column=AreaGridColumns.data[i]
+					$(".datagrid-body td[field="+Column.field+"]").css({"color":Column.AreaColor})
+				}
+			},
+			onClickCell:function(index, field,value){
+				thisfield=field
+			},
+			onClickRow:function(index,rowData){
+				//防止点击撤销签名操作时，加载数据
+				if(thisfield=="ShiftTakeSign" || thisfield=="ShiftSign"){
+					return false;
+				}
+				
+				if(rowData.isValid==1){
+					$.messager.popover({msg:$g('请选中有效班次时间进行查询'),type:'error'});
+					$("#shiftBookArea").datagrid("clearSelections");
+					
+					return false;	
+				}
+				customArea.Columns()
+				customArea.Data()
+			    //var customDetailAreaH=$(".customDetailArea").outerHeight()
+			    var customAreaTdH=$(".customAreaTd").outerHeight()
+			    if($(".tr-customArea").css("display") == 'none'){  
+			    	var customAreaTdH=0
+			    }
+			    //var detailToobarAreaH=$(".detailToobarArea").outerHeight()
+			    var customDetailAreaH=$H.customDetailAreaH
+				var detailToobarAreaH=$H.detailToobarAreaH
+				var DetailH=customDetailAreaH-customAreaTdH-detailToobarAreaH
+			    $(".shiftDetail").height(DetailH)
+			    $(".detailProjectArea").height(DetailH)
+			    $(".detail-project").height(DetailH)
+			    $(".shiftBookDetail").height(DetailH)
+				detailArea.Columns()
+				detailArea.Data()
+				detailArea.LeftArea()
+				
+			}
+	    })
+		
+	}
+}
+function successMsg(msg){
+	$.messager.popover({msg:$g(msg),type:'success'});
+	
+}
+
+
+function GetTimeID(){
+	var row = $("#shiftBookArea").datagrid("getSelected");
+	var TimeID=""
+	if (row) {
+		TimeID=row.TimeID; //row.TimeID; //$(row.ShiftName).attr("TimeID")
+		if(typeof(TimeID)=="undefined"){
+			TimeID=""
+		}
+	}
+	return TimeID
+}
+var customArea={
+	Data:function(){
+		var parms={"ShiftID":GLOBAL.ShiftID,"TimeID":GetTimeID()}
+		runClassMethod("Nur.SHIFT.Service.ShiftCustomController","GetCustomData",parms,function(rtn){
+			for(var i=0;i<rtn.length;i++){
+				var LogCustomID=rtn[i].LogCustomID
+				var ShiftContent=rtn[i].ShiftContent
+				var CustomList=rtn[i].CustomList
+				
+				var len=CustomList.length
+				for(var j=0;j<CustomList.length;j++){
+					var Custom=CustomList[j]
+					var ShiftContent=Custom.ShiftContent
+					var TimeID=Custom.TimeID
+					
+					$("input.custominput[timeid="+TimeID+"][logcustomid="+LogCustomID+"]").val(ShiftContent)
+						
+			
+				}
+				
+				
+			}
+		},'json',false);
+		
+	},
+	Columns:function(){
+		var Custom=""
+		
+		var rtnData=""
+		runClassMethod("Nur.SHIFT.Service.ShiftCustomController","GetCustom",{"ShiftID":GLOBAL.ShiftID},function(rtn){
+			Custom=rtn
+		},'json',false);
+		var maxRow=Custom.maxRow
+		var customData=Custom.data
+		var maxCol=Custom.maxCol
+		//$("#switch2").css("visibility","hidden")
+		$("#customArea").html("")
+		
+		if(maxRow>0){
+			
+			var ht=maxRow*35
+			$(".customAreaTd").css("height",ht)
+			$(".customAreaTd").css("padding",0)
+			$(".customAreaTd").css("padding-left",0)
+			var w=$("#customArea").width()
+			w=w/maxCol
+			
+			
+			var shiftTimeList=GLOBAL.ShiftTimes
+			
+
+			var TimeID=GetTimeID()
+			console.log("maxCol="+maxCol+",maxRow="+maxRow)
+			var trs=[]
+			///列号
+			for(var row=1;row<=maxRow;row++){
+				//班次数
+				for(var k=1;k<=shiftTimeList.length;k++){
+					
+					var BookTime=shiftTimeList[k-1]
+					if(TimeID!=""&&TimeID!=BookTime.ID){
+						continue;
+					}
+					var ShiftColor=BookTime.ShiftColor
+					var TimeName=$g(BookTime.ShiftName)
+					
+					
+					var tds=[]
+					//行号
+					for(var j=1;j<=maxCol;j++){
+						var test=""
+						if(TimeID==""){
+						
+							if(k==1){	
+								tds.push('<td x='+row+' y='+j+' class="area-name" rowspan="'+shiftTimeList.length+'" style="border-collapse:collapse;width:100px;border:1px solid #ddd">'+test+'</td>')
+							}else{
+								tds.push('<td x='+row+' y='+j+' class="area-name" style="border-collapse:collapse;width:100px;display:none;border:1px solid #ddd">'+test+'</td>')
+							}
+						}else{
+							tds.push('<td x='+row+' y='+j+' class="area-name" style="text-align: center;border-collapse:collapse;width:100px;border:1px solid #ddd">'+test+'</td>')
+							
+						}
+						var TimeNameHtml='<span class="shiftName" style="background:'+ShiftColor+'">'+TimeName+'</span>'
+						tds.push('<td x='+row+' y='+j+' style="border-collapse:collapse;width:10px;border:1px solid #ddd;background:'+ShiftColor+';">'+TimeNameHtml+'</td>')
+						
+						var ContentHtml='<input class="custominput"  TimeID="'+BookTime.ID+'"  type="text" style="height: 100%;overflow-y: hidden;resize:none;width: 100%;border: 0px;" value="'+test+'">'
+					
+						tds.push('<td class="area-content" x='+row+' y='+j+' style="height:28px;border:1px solid #ddd;border-collapse:collapse;">'+ContentHtml+'</td>')
+					}	
+					$("#customArea").append('<tr class="tr-first">'+tds.join("")+'</tr>')
+				}		
+			}
+			$("tr.tr-first td").each(function(){
+				var thisW=$(this).width()
+				
+				
+				$(this).css({"width":thisW+"px"})
+				
+			})
+			
+			for(var i=0;i<customData.length;i++){
+				var custom=customData[i]
+				var AreaName=custom.AreaName
+				var AreaRow=parseInt(custom.AreaRow)
+				var AreaCol=parseInt(custom.AreaCol)
+				var colspan=parseInt(custom.ColSpan) //横向合并
+				var rowspan=parseInt(custom.RowSpan)  //纵向合并
+				var LogCustomID=custom.LogCustomID
+				
+				var EditorFlag=custom.EditorFlag
+				var IsDisabled=false
+				if(EditorFlag=="0"){IsDisabled=true}
+				
+				
+				$("td[x="+AreaRow+"][y="+AreaCol+"]").addClass("isCustomTd")
+				$("td.area-name[x="+AreaRow+"][y="+AreaCol+"]").text(AreaName)
+				$("td.area-content[x="+AreaRow+"][y="+AreaCol+"] input.custominput").attr("LogCustomID",LogCustomID).prop('disabled', IsDisabled)
+				
+				
+				//if(TimeID==""){
+					if(colspan>0 &&rowspan==0){
+						$("td.area-content[x="+AreaRow+"][y="+AreaCol+"]").attr("colspan",(colspan*3)+1)
+					}
+					for(var c=1;c<=colspan;c++){
+						$("td[x="+AreaRow+"][y="+(AreaCol+c)+"]").hide()
+					}
+				//}
+				
+				/*if(TimeID==""){
+					if(colspan>0 &&rowspan==0){
+						$("td.area-content[x="+AreaRow+"][y="+AreaCol+"]").each(function(){
+							$(this).attr("colspan",colspan+3)	
+							$(this).next().hide()
+							$(this).next().next().hide()
+							$(this).next().next().next().hide()
+						})
+					}else if(colspan==0&&rowspan>0){
+						
+						$("td[x="+AreaRow+"][y="+AreaCol+"]").each(function(index){
+							//$(this).attr("rowspan",rowspan)
+							
+						})
+						
+						for(var r=1;r<=rowspan;r++){
+							$("td[x="+(AreaRow+r)+"][y="+AreaCol+"]").hide()
+						}
+					}
+				}*/
+				
+			}
+			$("tr.tr-first").find("td").each(function(){
+				if(!$(this).hasClass("isCustomTd")){
+					var thisX=$(this).attr("x")
+					var thisY=$(this).attr("y")
+					var text=thisX+"="+thisY
+					text=""
+					$(this).text(text).css({"border":"1px solid #ddd","background":"#FFF"})
+				}
+				
+			})
+			$("tr.tr-first").eq(0).find("td").each(function(){
+				$(this).css({"border-top":"0px solid #ddd"})
+			})
+			$("tr.tr-first").each(function(){
+				$(this).find("td").eq(0).css({"border-left":"0px solid #ddd"})
+			})
+			$("tr.tr-first").each(function(){
+				
+				$(this).find("td").last().css({"border-right":"0px solid #ddd"})
+			})
+			$("tr.tr-first").last().each(function(){
+				
+				$(this).find("td").css({"border-bottom":"0px solid #ddd"})
+			})
+			$("td.area-name").css({"text-align":"center"})
+			
+		}
+
+		$("input.custominput").blur(function(){
+				
+			var value = $(this).val()
+			var LogCustomID = $(this).attr("LogCustomID")
+			var TimeID = $(this).attr("TimeID")
+			var params={
+				"ShiftID":GLOBAL.ShiftID,
+				"TimeID":TimeID,
+				"ShiftContent":value,
+				"LogCustomID":LogCustomID,
+				"UserID":session["LOGON.USERID"]
+			}
+			
+			runClassMethod("Nur.SHIFT.Service.ShiftCustomController","SaveCustom",{data:JSON.stringify(params)},function(rtn){
+				//successMsg("修改成功")
+			},'json',false);
+		})
+		
+		
+		
+		
+		
+		return false;
+		//$(".tr-customArea").hide()
+		if(maxRow>0){
+			
+			var ht=maxRow*35
+			$(".customAreaTd").css("height",ht)
+			$(".customAreaTd").css("padding",0)
+			$(".customAreaTd").css("padding-left",0)
+			var w=$("#customArea").width()
+			w=w/maxCol
+			//$("#switch2").css("visibility","visible")
+			
+			for(var row=1;row<=maxRow;row++){
+				var tds=[]
+				var col=0
+				for(var j=1;j<=maxCol;j++){
+					col=col+1
+					var html="1"
+					//html=html+'<span class="text"  style="position: relative;vertical-align: top;display: inline-block;width: 100px;height: 100%;"></span>'
+					//html=html+'<span class="value"  style="display: inline-block;width: calc(100% - 105px);height: 100%;"></span>'
+					if(col>1){
+						tds.push('<td class="td-first" x="'+row+'" y="'+col+'" style="width:'+w+'px;height:28px;padding:0px;padding-right: 0px;border-left:1px solid #ddd;">'+html+'</td>')
+					}else{
+						tds.push('<td class="td-first" x="'+row+'" y="'+col+'" style="width:'+w+'px;height:28px;padding:0px;padding-right: 0px;">'+html+'</td>')
+					}
+				}
+				$("#customArea").append('<tr class="tr-first">'+tds.join("")+'</tr>')
+			}
+			
+			for(var i=0;i<customData.length;i++){
+				var custom=customData[i]
+				var AreaName=custom.AreaName
+				var AreaRow=custom.AreaRow
+				var AreaCol=custom.AreaCol
+				var colspan=custom.ColSpan  //横向合并
+				var rowspan=custom.RowSpan  //纵向合并
+				AreaCol=parseInt(AreaCol)
+				AreaRow=parseInt(AreaRow)
+				colspan=parseInt(colspan)
+				rowspan=parseInt(rowspan)
+				if(colspan>0 &&rowspan==0){
+					$('td[x="'+AreaRow+'"][y="'+AreaCol+'"]').attr("colspan",colspan)
+					for(var f=1;f<colspan;f++){
+						
+						$('td[x="'+AreaRow+'"][y="'+(AreaCol+f)+'"]').hide()
+					}
+				}else if(rowspan>0&&colspan==0 ){
+					$('td[x="'+AreaRow+'"][y="'+AreaCol+'"]').attr("rowspan",rowspan)
+					for(var g=1;g<rowspan;g++){
+						
+						$('td[x="'+(AreaRow+g)+'"][y="'+AreaCol+'"]').hide()
+					}
+					
+				}else if(colspan>0&&rowspan>0){
+					AreaCol=parseInt(AreaCol)
+					AreaRow=parseInt(AreaRow)
+					for(var m=0;m<rowspan;m++){
+						$('td[x="'+(AreaRow+m)+'"][y="'+AreaCol+'"]').attr("colspan",colspan)
+						for(var f=1;f<colspan;f++){
+							$('td[x="'+(AreaRow+m)+'"][y="'+(AreaCol+f)+'"]').hide()
+						}
+					}
+					$('td[x="'+AreaRow+'"][y="'+AreaCol+'"]').attr("rowspan",rowspan)
+					for(var g=1;g<rowspan;g++){
+						$('td[x="'+(AreaRow+g)+'"][y="'+AreaCol+'"]').hide()
+					}
+				}
+			}
+			
+			//return false;
+			var TimeID=GetTimeID()
+			
+			var shiftTimeList=GLOBAL.ShiftTimes
+			console.log(shiftTimeList)
+			
+			for(var i=0;i<customData.length;i++){
+				var custom=customData[i]
+				var AreaCode=custom.AreaCode
+				var AreaName=$g(custom.AreaName)
+				var AreaRow=custom.AreaRow
+				var AreaCol=custom.AreaCol
+				var EditorFlag=custom.EditorFlag
+				var LogCustomID=custom.LogCustomID
+				var IsDisabled=""
+				if(EditorFlag=="0"){IsDisabled="disabled"}
+				var trArrs=[],x=0
+				for(var j=0;j<shiftTimeList.length;j++){
+					var BookTime=shiftTimeList[j]
+					if(TimeID!=""&&TimeID!=BookTime.ID){
+						continue;
+					}
+					var ShiftColor=BookTime.ShiftColor
+					var TimeName=$g(BookTime.ShiftName)
+					var TimeNameHtml='<span class="shiftName" style="background:'+ShiftColor+'">'+TimeName+'</span>'
+					var ContentHtml='<input class="custominput" '+IsDisabled+' TimeID="'+BookTime.ID+'" LogCustomID="'+LogCustomID+'" type="text" style="overflow-y: hidden;resize:none;width: 100%;border: 0px;" value="">'
+					var tdstyle=''
+					if(x==0){
+						var rowspan=shiftTimeList.length
+						if(TimeID!=""){
+							rowspan=1
+						}
+						
+						trArrs.push('<tr><td class="area-name" rowspan="'+rowspan+'" style="width:100px;text-align:center;padding-right: 10px;padding-left: 10px;">'+AreaName+'</td><td style="width:10px;background:'+ShiftColor+';">'+TimeNameHtml+'</td><td style="border-top:1px solid #ddd">'+ContentHtml+'</td></tr>')
+						
+					}else{
+						trArrs.push('<tr><td style="width:10px;background:'+ShiftColor+';border-top:1px solid #ddd">'+TimeNameHtml+'</td><td style="border-top:1px solid #ddd">'+ContentHtml+'</td></tr>')
+					}
+					x=x+1
+					
+				}
+				var input=("<table class='datagrid-btable custom-content-table' style='width:100%;height:100%;table-layout: auto;' collapse='0' cellpadding='0'>"+trArrs.join("")+"</table>")
+				
+				$('td[x="'+AreaRow+'"][y="'+AreaCol+'"]').html(input)
+				$('td[y="'+AreaCol+'"]').find("tr").each(function(index){
+					if(index>0){
+					$(this).find("td.area-name").css({"border-top":"1px solid #ddd"})
+					}
+				})
+				$('td[x=1] .custom-content-table').each(function(){
+					$(this).find("tr").eq(0).find("input.custominput").parent().css({"border":"0px solid #ddd"})
+					
+				})
+			}
+			
+			$("td.xc-first").each(function(){
+				var text=$(this).text()	
+				if(!$(this).is(":hidden")){
+					if(text=="1"){
+						$(this).css({"border":"1px solid #ddd"})
+					}
+				}
+			})
+			
+			
+			
+			$("input.custominput").blur(function(){
+				
+				var value = $(this).val()
+				var LogCustomID = $(this).attr("LogCustomID")
+				var TimeID = $(this).attr("TimeID")
+				var params={
+					"ShiftID":GLOBAL.ShiftID,
+					"TimeID":TimeID,
+					"ShiftContent":value,
+					"LogCustomID":LogCustomID,
+					"UserID":session["LOGON.USERID"]
+				}
+				
+				runClassMethod("Nur.SHIFT.Service.ShiftCustomController","SaveCustom",{data:JSON.stringify(params)},function(rtn){
+					//successMsg("修改成功")
+				},'json',false);
+			})
+				
+			return false;
+			
+			
+			
+			
+			
+		}else{
+			$(".customAreaTd").parents("tr.tr-customArea").hide()
+		}	
+		
+	}
+}
+
+
+
+
+</script>
+<script type="text/javascript">
+
+</script>
+<csp:Include Page="nur.ward.shift.book.print.csp">
+<script type="text/javascript">
+	//处理文本域无法输入尖括号的问题
+	document.onkeydown = function(e) {
+        var keyCode = e.keyCode || e.which || e.charCode;
+        var shiftKey= e.shiftKey 
+        var key=e.key
+        if((shiftKey && keyCode == 54)||((e.key=="^"))) {
+        	//赋值到文本框中
+       		var curPosition = getCursortPosition($(e.target)[0]);
+	    	updateRefer($(e.target)[0], "^", curPosition);
+	    	 //文本框获取焦点
+			$(e.target)[0].focus();
+			// 选中从start到end间的文本,若start=end,则光标定位到start处
+			$(e.target)[0].setSelectionRange(curPosition+1,curPosition+1); 
+        }
+	}
+</script>
+
+</body>
+</html>

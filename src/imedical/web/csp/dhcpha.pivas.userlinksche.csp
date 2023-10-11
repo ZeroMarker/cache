@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--排班管理-人员班次对照
-	csp:dhcpha.pivas.userlinksche.csp
-	js: scripts/pharmacy/pivas/userlinksche.js
+<!--
+    排班管理-人员班次对照
+	csp: csp/dhcpha.pivas.userlinksche.csp
+	js:  scripts/pharmacy/pivas/userlinksche.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,9 +16,10 @@
     </title>
     <TRAK:HEAD>
     </TRAK:HEAD>
-    <HISUI/>
+    <HISUI />
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/kalendae/build/kalendae.css">
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
     <style type="text/css">
         .kalendae {
             background: white;
@@ -23,17 +29,17 @@
             font-size: 14px;
             font-family: 'Microsoft YaHei', 'Helvetica';
         }
-        
+
         .kalendae .k-calendar {
             width: 250px;
         }
-        
+
         .kalendae .k-title {
             text-align: center;
             height: 18px;
             font-weight: bold;
         }
-        
+
         .kalendae .k-header span {
             text-align: center;
             font-weight: bold;
@@ -42,18 +48,18 @@
             line-height: 32px;
             color: rgb(102, 102, 102)；
         }
-        
+
         .kalendae .k-title,
         .kalendae .k-header,
         .kalendae .k-days {
             width: 250px;
         }
-        
+
         .kalendae .k-caption {
             font-size: 14px;
             line-height: 18px;
         }
-        
+
         .kalendae .k-days span {
             width: 30px;
             height: 30px;
@@ -61,12 +67,12 @@
             padding: 0px;
             text-align: center;
         }
-        
+
         .kalendae .k-days span.k-selected.k-active {
             background: #00A3DD;
             color: white;
         }
-        
+
         .kalendae .k-separator {
             display: inline-block;
             zoom: 1;
@@ -76,18 +82,28 @@
             height: 230px;
             margin: 0px 10px 0px 0px;
         }
-        
+
         .kalendae .k-days span.k-out-of-month {
             visibility: hidden;
         }
+        .dialog-button{
+            padding-top: 0px;
+        }
+        .pha-body {
+		    background-color: #fff;
+		}
+		.layout-split-east {
+			border-left: 10px solid #fff;
+		}
     </style>
 </HEAD>
 
-<body>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true">
-                <div data-options="region:'center',title:'人员列表',headerCls:'panel-header-gray',iconCls:'icon-panel-work'" class="dhcpha-hisui-border" style="border-top:none">
+                <div data-options="region:'center',title:'人员列表',headerCls:'panel-header-gray',iconCls:'icon-panel-work'">
                     <div id="gridUser" data-options="fit:true" border="false">
                     </div>
                 </div>
@@ -119,64 +135,33 @@
             </div>
         </div>
     </div>
-    <div id="gridUserBar">
-        <table>
+    <div id="gridUserBar" class="pha-con-datagrid-toolbar">
+        <table class="pha-con-table">
             <tr>
-                <td  style="height:30px">
+                <td>
                     <input id="cmbPivaLoc" />
                 </td>
-            </tr>
-           <tr>
-                <td  style="height:30px">
-                    <input id="txtAlias" style="width:323px" placeholder=" 模糊检索..."/>
+                <td>
+                    <input id="txtAlias" class="hisui-validatebox" style="width: 189px;border-radius: 2px;" placeholder="模糊检索..." />
                 </td>
             </tr>
         </table>
     </div>
     <div id="gridUserScheBar">
-        <table>
-            <tr>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">选择</a>
-                </td>
-
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
-                </td>
-            </tr>
-        </table>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">选择</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+        </div>
     </div>
     <div id="gridUserScheFixBar">
-        <table>
-            <tr>
-                <!--td>
-        			 <input id="cmbYear"/>
-                </td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td-->
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddFix">新增</a>
-                </td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnEditFix">编辑</a>
-                </td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDeleteFix">删除</a>
-                </td>
-            </tr>
-        </table>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddFix">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditFix">修改</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDeleteFix">删除</a>
+
+        </div>
     </div>
-    <div id="gridUserScheFixWin" class="hisui-dialog" title="固定班次规则" closed="true" style="width:315px;height:300px;" data-options="modal:true,
+    <div id="gridUserScheFixWin" class="hisui-dialog" title="固定班次规则" closed="true" style="width:310px;" data-options="modal:true,
 	buttons:[{
 		text:'确定',
 		handler:function(){
@@ -188,67 +173,63 @@
 			$('#gridUserScheFixWin').window('close');
 		}
 	}]">
-        <div class="hisui-layout" fit="true">
-            <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
-                <div class="hisui-layout" data-options="fit:true">
-                    <div data-options="region:'center'" border="false">
-                        <table class="dhcpha-north-tbl">
-                            <tr>
-                                <td>
-                                    固定班次
-                                </td>
-                                <td>
-                                    <input id="cmbSchedul" class='hisui-combobox' />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    每月初第<input id="idMonthDays" type="text" style="display:none" />
-                                </td>
-                                <td>
-                                    <input id="cmbMonthDays" class='hisui-combobox' />
-                                </td>
-                                <td>
-                                    天
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    每月末第<input id="idMonthEndDays" type="text" style="display:none" />
-                                </td>
-                                <td>
-                                    <input id="cmbMonthEndDays" class='hisui-combobox' />
-                                </td>
-                                <td>
-                                    天
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    每周第<input id="idWeekDays" type="text" style="display:none" />
-                                </td>
-                                <td>
-                                    <input id="cmbWeekDays" class='hisui-combobox' />
-                                </td>
-                                <td>
-                                    天
-                                </td>
-                                <tr>
-                                    <td>
-                                        指定日期<input id="idDays" type="text" style="display:none" />
-                                    </td>
-                                    <td>
-                                        <input class='hisui-validatebox' id="kalSelect" readonly  style="width:193px" />
-                                    </td>
-                                </tr>
 
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    固定班次
+                </td>
+                <td>
+                    <input id="cmbSchedul" class='hisui-combobox' />
+                </td>
+                <td>
+
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    每月初第<input id="idMonthDays" type="text" style="display:none" />
+                </td>
+                <td>
+                    <input id="cmbMonthDays" class='hisui-combobox' />
+                </td>
+                <td>
+                    天
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    每月末第<input id="idMonthEndDays" type="text" style="display:none" />
+                </td>
+                <td>
+                    <input id="cmbMonthEndDays" class='hisui-combobox' />
+                </td>
+                <td>
+                    天
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    每周第<input id="idWeekDays" type="text" style="display:none" />
+                </td>
+                <td>
+                    <input id="cmbWeekDays" class='hisui-combobox' />
+                </td>
+                <td>
+                    天
+                </td>
+            <tr>
+                <td class="r-label">
+                    指定日期<input id="idDays" type="text" style="display:none" />
+                </td>
+                <td>
+                    <input class='hisui-validatebox' id="kalSelect" readonly style="width:193px" />
+                </td>
+            </tr>
+
+        </table>
     </div>
-    <div id="gridScheWin" class="hisui-dialog" title="选择班次规则" closed="true" style="width:310px;height:500px;" data-options="modal:true,
+    <div id="gridScheWin" class="hisui-dialog" title="选择班次规则" closed="true" style="width:310px;height: 450px;" data-options="modal:true,
 	buttons:[{
 		text:'确定',
 		handler:function(){
@@ -261,41 +242,24 @@
 		}
 	}]">
         <div class="hisui-layout" fit="true">
-            <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:10px">
+            <div data-options="region:'center',border:false" class="pha-body">
                 <div class="hisui-layout" data-options="fit:true">
-                    <div data-options="region:'center'" class="dhcpha-hisui-border" style="">
-                        <table id="gridSche">
-                        </table>
+                    <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" >
+                        <table id="gridSche"></table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-	<div id="gridUserScheDateBar">
-        <table>
-            <tr>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddDate">新增</a>
-                </td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveDate">保存</a>
-                </td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDeleteDate">删除</a>
-                </td>
-            </tr>
-        </table>
+    <div id="gridUserScheDateBar">
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddDate">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveDate">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDeleteDate">删除</a>
+
+        </div>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/kalendae/build/kalendae.standalone.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/userlinksche.js"></script>
 </body>
 

@@ -3,6 +3,7 @@
  * Anchor: ln
  * Date: 2020-03-06
  * Description: HISUI+润乾  疾病统计
+ * Query：web.DHCPE.Statistic.IllnessStatistic.cls  TotalStatistic
 -->
 
 <!DOCTYPE html>
@@ -15,46 +16,74 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
+
+	<SCRIPT language="Cache" RUNAT="SERVER">
+ 		s curDate=+$h
+	</SCRIPT>
+	
 	<script language="JavaScript"> 
 		self.moveTo(0,0) 
 		self.resizeTo(screen.availWidth,screen.availHeight)
 	</script>
-	<SCRIPT language="Cache" RUNAT="SERVER">
- 		s curDate=+$h
-	</SCRIPT>
+	<script type="text/javascript">
+		var bodyCls1 = ""
+		var bodyCls2 = "panel-header"
+		var borderColor1 = "#ccc"
+		if (HISUIStyleCode == "lite") {
+			bodyCls1 = "panel-header-gray"
+			bodyCls2 = "panel-header-gray"
+			borderColor1 = "#E2E2E2"
+		}
+	</script>
+
 	<style>
-	.paddingtd{
-		padding: 0 0 0 10px;
-	}
-	.paddingtd1{
-		padding: 0 0 0 6px;
-	}
-	.heard-border {
-		border: 1px solid #ccc;
-		border-radius:4px;
-	}
+		.paddingtd{
+			padding: 0 0 0 10px;
+		}
+		.paddingtd1{
+			padding: 0 0 0 6px;
+		}
+		.heard-border {
+			border: 1px solid #ccc;
+			border-radius:4px;
+		}
+		/*处理炫彩/极简五方布局中自定义增加的边框颜色问题*/
+		.inherit-border, .inherit-border>div:first-child  {
+			
+		}
+		.inherit-border-div {
+			border-bottom-width: 1px;
+			border-radius:0!important;
+			border-color: inherit!important;
+		}
+		/*重写 手风琴中 边框样式*/
+		.accordion.accordion-noborder .panel .accordion-header {
+			border-radius: inherit!important;
+			border-right-width: 0;
+			border-left-width: 0;
+		}
 	</style>
 </head>
 <body>
 	<!-- 主页面 start -->
-	<div class="hisui-panel" border="false" fit="true" style="padding:10px;">
-		<div class="hisui-layout" border="false" data-options="collapsible:false,fit:true">			
-			<div class="hisui-layout" data-options="region:'center'" border="false">
+	<div class="hisui-panel" border="false" fit="true" style="padding:10px; background-color: inherit;">
+		<div class="hisui-layout" data-options="collapsible:false,fit:true,border:false" style="background-color: inherit;">			
+			<div class="hisui-layout" data-options="region:'center',border:false" style="background-color: inherit;">
 				<!-- 分析查询 west start -->
-				<div class="hisui-layout" data-options="region:'west'" style="width:241px; border-radius:0 0 0 0; border:1px solid #509de1;">
-					<div data-options="region:'north',title:'查询条件',headerCls:'panel-header',collapsible:false" border="false" style="height:288px;">
+				<div class="hisui-layout" data-options="region:'west',bodyCls:bodyCls1" style="width:241px; margin-bottom:1px;">
+					<div data-options="region:'north',title:'#(..Get("查询条件"))#',headerCls:bodyCls2,collapsible:false" border="false" style="height:243px; overflow: hidden;">
 						<!-- 查询条件 north start -->
 						<table style="border-spacing: 10px;">
 							<tr>
-								<td align="right"><label for="BeginDate">开始日期</label></td>
+								<td align="right"><label for="BeginDate">#(..Get("开始日期"))#</label></td>
 								<td style=""><input class="hisui-datebox textbox" id="BeginDate" name="BeginDate" style="width:152px;"/></td>
 							</tr>	
 							<tr>	
-								<td align="right"><label for="EndDate">截止日期</label></td>
+								<td align="right"><label for="EndDate">#(..Get("截止日期"))#</label></td>
 								<td style=""><input class="hisui-datebox textbox" id="EndDate" name="EndDate" style="width:152px;"/></td>
 							</tr>	
 							<!--tr>
-								<td align="right"><label for="AgeFrom">年龄范围</label></td>
+								<td align="right"><label for="AgeFrom">#(..Get("年龄范围"))#</label></td>
 								<td style="">
 									<input class="hisui-numberbox textbox" id="AgeFrom" name="AgeFrom" data-options="isKeyupChange:true" style="width:69px;"/>
 									-
@@ -62,32 +91,36 @@
 								</td>
 							</tr-->
 							<tr>	
-								<td align="right"><label for="MarriedDR">婚姻</label></td>
+								<td align="right"><label for="MarriedDR">#(..Get("婚姻"))#</label></td>
 								<td style=""><input class="hisui-combobox" id="MarriedDR" name="MarriedDR" style="width:152px;"/></td>
 							</tr>
 							<tr>
-								<td align="right"><label for="SexDR">性别</label></td>
+								<td align="right"><label for="SexDR">#(..Get("性别"))#</label></td>
 								<td style=""><input class="hisui-combobox" id="SexDR" name="SexDR" style="width:152px;"/></td>
-							</tr>	
-							<tr>		
-								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BFind" data-options="iconCls:'icon-w-find'" href="#" style="width: 145px;">查询</a></td>
+							</tr>
+							<tr>
+								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BFind" data-options="iconCls:'icon-w-find'" href="#">#(..Get("查询"))#</a></td>
 							</tr>								
 						</table>
 					</div>
 					<!-- 查询条件 north end -->
 							
 					<!-- 疾病、团体 accordion start -->
-					<div data-options="region:'center'" border="false" style="">
-		 				<div class="hisui-accordion" fit="true" border="false" style="float:left;">	
-		 				    <div title="疾病选择" data-options="iconCls:'icon-w-list',selected:true" border="false" style="background-color:#EBEBEB;">
-						    	<div class="hisui-layout" fit="true">
-							        <div data-options="region:'north'" border="false" style="height:52px;border-bottom:1px solid #C0C0C0;overflow:hidden;">
+					<div data-options="region:'center',border:false" style="border-radius: 0;">
+		 				<div class="hisui-accordion" fit="true" border="false" style="float:left; padding-bottom:1px;">	
+		 				    <div title='#(..Get("疾病选择"))#' data-options="iconCls:'icon-w-list',selected:true" style="border-right-width: 0; border-left-width: 0;">
+						    	<div class="hisui-layout inherit-border" fit="true" border="false">
+							        <div data-options="region:'north',border:false" class="inherit-border-div" style="height:83px;">
 										<table style="border-spacing: 10px;">
 											<tr>
-												<td align="right"><label for="IllDesc">疾病</label></td>
+												<td align="right"><label for="IllDesc">#(..Get("疾病"))#</label></td>
 												<td style=""><input class="hisui-validatebox textbox" id="IllDesc" name="IllDesc" oninput="SearchIllDesc()" onpropertychange="OnPropChanged(event,'IllDescs')" style="width:136px;"/>
 												<!--input class='hisui-checkbox' type="checkbox" Id="CommonIllness" oncheck="SearchIllDesc()" onpropertychange="OnPropChanged(event,'CommonIllness')" style="width:20px;"/></td-->
-												<input class='hisui-checkbox' type="checkbox" Id="CommonIllness" /></div>
+												<!--input class='hisui-checkbox' type="checkbox" Id="CommonIllness" /-->
+											</tr>
+											<tr>
+												<td align="right"><label for="CommonIllness">#(..Get("常见病"))#</label></td>
+												<td><input class="hisui-checkbox" type="checkbox" id="CommonIllness"/></td>
 											</tr>
 										</table>
 									</div>
@@ -95,18 +128,18 @@
 						        		<table id="IllDescs"></table>
 							        </div>
 						        </div> 
-						    </div> 			 			
-						    <div title="团体选择" data-options="iconCls:'icon-w-list'" border="false" style="background-color:#EBEBEB;">   
-						        <div class="hisui-layout" fit="true">
-							        <div data-options="region:'north'" border="false" style="height:91px;border-bottom:1px solid #C0C0C0;overflow:hidden;">
+						    </div>
+							<div title='#(..Get("团体选择"))#' data-options="iconCls:'icon-w-list'" style="border-right-width: 0; border-left-width: 0;">
+						    	<div class="hisui-layout inherit-border" fit="true" border="false">
+							        <div data-options="region:'north',border:false" class="inherit-border-div" style="height:91px; overflow: hidden;">
 										<table style="border-spacing: 10px;">
 											<tr>
-												<td align="right"><label for="GBIDesc">团体名称</label></td>
-												<td style=""><input class="hisui-validatebox textbox" id="GBIDesc" name="GBIDesc" oninput="SearchGBIDesc()" onpropertychange="OnPropChanged(event,'Groups')" style="width:146px;"/></td>
+												<td align="right"><label for="GBIDesc">#(..Get("团体名称"))#</label></td>
+												<td style=""><input class="hisui-validatebox textbox" id="GBIDesc" name="GBIDesc" oninput="SearchGBIDesc()" onpropertychange="OnPropChanged(event,'Groups')" style="width:145px;"/></td>
 											</tr>	
 											<tr>	
-												<td align="right"><label for="ContractID">团体合同</label></td>
-												<td style=""><input class="hisui-combogrid" id="ContractID" name="ContractID" style="width:153px;"/></td>
+												<td align="right"><label for="ContractID">#(..Get("团体合同"))#</label></td>
+												<td style=""><input class="hisui-combogrid" id="ContractID" name="ContractID" style="width:152px;"/></td>
 											</tr>
 										</table>
 									</div>
@@ -121,25 +154,27 @@
 				</div>	
 				<!-- 分析查询 west end -->
 				
-				<!-- 结果分析 润乾iframe start -->
-				<div class="hisui-layout ResizeDiv1" data-options="region:'center'" border="false" style="">
-					<div data-options="region:'center'" border="false" style="padding:0 2px 2px 10px;">
-						<div class="hisui-layout" fit="true" border="false" style="border:1px solid #C0C0C0; border-radius:4px;">
-							<div data-options="title:'疾病统计',region:'center',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" border="false" style="overflow:hidden;"> 
-								<div id="ReportFileDiv" style="width:100%; height:100%;">
-						 			<iframe id="ReportFile" name="ReportFile" src="dhccpmrunqianreport.csp?reportName=DHCPEIllnessStatistic.raq" width="100%" height="100%" frameborder="0" border="0" hspace="0" vspace="0" marginwidth="0" marginheight="0" scrolling="auto" allowtransparency="yes"></iframe>
-						 		</div>
+				<!-- 疾病统计 润乾iframe start -->
+				<div class="ResizeDiv1" data-options="region:'center',border:false" style="padding-left:10px; background-color: inherit;">
+					<div class="hisui-panel" data-options="border:false,fit:true">
+						<div class="hisui-layout" data-options="border:false,fit:true">
+							<div data-options="region:'center',title:'#(..Get("疾病统计"))#',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,tools:'#search-panel-tools'" style="overflow: hidden;">
+								<iframe id="ReportFile" name="ReportFile" src="" width="100%" height="100%" frameborder="0" border="0" hspace="0" vspace="0" marginwidth="0" marginheight="0" scrolling="auto" allowtransparency="yes"></iframe>
 							</div>
 						</div>
 					</div>
+				</div>
+				<div id="search-panel-tools">
+					<span href="#" style="cursor:pointer;padding:10px;" onclick="description_click();"><font color="#339EFF">统计说明</font></span>
 				</div>
 			 	<!-- 疾病统计 润乾iframe end -->
 		 	</div>
 		</div>
 	</div>
 	<!-- 主页面 end -->
-								
+	
 	<script type="text/javascript" src="../scripts/DHCPEIllnessStatistic.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPEStatisticDescription.hisui.js"></script> 
 	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
 	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>

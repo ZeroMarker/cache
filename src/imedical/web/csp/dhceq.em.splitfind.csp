@@ -1,0 +1,92 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	s RowID=$Get(%request.Data("RowID",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CurRole=$Get(%request.Data("ApproveRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s Type=$Get(%request.Data("Type",1))
+	s flag=$Get(%request.Data("flag",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s StatusDR=$Get(%request.Data("StatusDR",1))
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+ 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+ 	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")	
+</script>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true" title="设备拆分查询">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;border-bottom:solid 1px #ccc;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cRequestNo" for="RequestNo">拆分单号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="RequestNo"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cEquipName" for="EquipName">设备名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipName"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cEquipNo" for="EquipNo">设备编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipNo"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cEquipTypeDR_ETDesc" for="EquipTypeDR_ETDesc">设备类组</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipTypeDR_ETDesc" data-options="component:'PLAT.L.EquipType'"></div>
+							<div class="eq-table-td eq-table-label-button"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+							<!--div class="eq-table-td"><a id="BSaveExcel" href="#" class="hisui-linkbutton" iconCls="icon-export" data-options="stopAllEventOnDisabled:true">导出</a></div-->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label for="StartDate">申请日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox"  id="StartDate"></div>
+							<div class="eq-table-td eq-table-label-new"><label for="EndDate">至</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox"  id="EndDate"></div>
+							<div class="eq-table-td eq-table-label-new"><label for="Status">状态</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox"  id="Status" ></div>
+                        	<div class="eq-table-td eq-table-label-new"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label-button"><a id="BAdd" href="#" class="hisui-linkbutton" iconCls="icon-w-add" data-options="stopAllEventOnDisabled:true">新增</a></div>
+							<!--div class="eq-table-td"><a id="BColSet" href="#" class="hisui-linkbutton" iconCls="icon-set-col" data-options="stopAllEventOnDisabled:true">导出列设置</a></div-->
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;">
+					 <table id="tDHCEQSplitFind" class="hisui-datagrid" data-options="border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+			<INPUT type="hidden" id="Type" value=#(Type)#>
+			<INPUT type="hidden" id="flag" value=#(flag)#>
+			<INPUT type="hidden" id="WaitAD" value=#(WaitAD)#>
+			<INPUT type="hidden" id="CurRole" value=#(CurRole)#>
+			<INPUT type="hidden" id="Action" value=#(Action)#>
+			<INPUT type="hidden" id="StatusDR" value=#(StatusDR)#>
+			<INPUT TYPE="hidden" id="GetColSets" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" id="GetRepPath" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" id="GetNum" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetNum")))#>
+			<INPUT TYPE="hidden" id="GetList" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetList")))#>
+			<INPUT TYPE="hidden" id="GetHospitalDesc" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<INPUT type="hidden" id="EquipTypeDR">
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/em/splitfind.js"></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</body>
+</html>

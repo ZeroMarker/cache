@@ -1,0 +1,140 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--dhcckb.checkrule.csp -->
+<head>
+	<HISUI/>
+	<DHCCKB/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/checkrule.js"></script>	
+</head>
+	<style>
+	.tdlabel{
+	  padding-left: 10px;
+	  padding-right: 5px;
+	  padding-bottom:10px;
+	  text-align:right;
+	}
+	.tdcol {
+		padding-bottom:10px;
+	}
+	/*弹出框里标签左对齐 并且有10px内边距*/
+	.tdleftlabel		{
+	  padding-left: 10px;
+	  padding-right: 10px;
+	  text-align:left;
+	}
+	.tdlabel-b		{
+	  padding-left: 10px;
+	  text-align:right;
+	}
+	.layout-panel-center{
+		padding: 10px;
+	}
+	.layout-panel-west{
+		padding: 10px 0px 10px 10px;
+	}
+	body .layout-panel-center .layout-panel-center {
+		padding: 0px !important;
+	}
+	form table td {
+		padding:0 !important;	
+	}
+	</style>
+<body>
+	<script language="Cache" runat="server">
+	w $$$cspStrictJavaScriptStart
+	w "var catData="_##class(web.DHCCKBCommon).GetDrugCategoryData()_";"
+	w $$$cspJavaScriptEnd					
+	</script>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'west',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='width:650px;' border="false">
+			<div class="hisui-panel" data-options="title:'项目字典',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+				<div id="dicTable" toolbar="#toolbar"></div>
+				<div id="toolbar" style="">
+					<table style="padding:10px 10px 10px 0px">
+						<tr>		 
+							<td class="tdlabel">医院</td>
+							<td class="tdcol"><input id="hospId"  class="hisui-combobox textbox" style="width:150px;"/></td>
+							<td class="tdlabel" >字典类型</td>
+							<td  class="tdcol tdcol"><input id="dicType" href="#" class="hisui-combobox" style="width:150px;"></td>	
+							<td class="tdcol">
+								<a id="search" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:10px">查询</a>									
+							</td>
+						</tr>
+						<tr>
+							<td class="tdlabel">分类</td>				
+							<td  class="tdcol"><input id="cattree" type="text" class="textbox hisui-combotree" style="width:150px;"/></td>		
+							<td class="tdlabel tdcol" >His药品名称</td>
+							<td  class="tdcol tdcol"><input id="queryCode" href="#" class="hisui-searchbox"  style="width:150px;" prompt='请输入代码/名称/拼音码'/></td>	
+							<td class="tdcol">
+								<a id="reset"  class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'"  style="margin-left:10px">重置</a>								
+							</td>
+
+						</tr>
+						<tr>
+							<td class="tdlabel">目录</td>				
+							<td class="tdcol"><input id="ruleList" type="text" class="textbox hisui-combobox" style="width:150px;"/></td>		
+							<td class="tdlabel" >规则名称</td>
+							<td class="tdcol"><input id="queryRuleCode" href="#" class="hisui-searchbox"  style="width:150px;" prompt='请输入规则包含内容'/></td>	
+						</tr>
+						
+						<tr>
+							<td colspan=5 style="padding-left:0px;">
+								<span style="margin-left:10px;vertical-align: middle;">级别</span>
+								<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="提示" name="queryLevel" value="normal"></span>
+								<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="提醒" name="queryLevel" value="tips"></span>
+								<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="警示" name="queryLevel" value="warn"></span>
+								<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="禁止" name="queryLevel" value="forbid"></span>
+							</td>	
+						</tr>
+					</table>	
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',title:'规则',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false,border:0" style='height:55px;'>
+						<table style="padding:10px;">							
+							<tr>		 
+								<td style="">
+									<span style="vertical-align: middle;">级别</span>
+									<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="提示" name="level" value="normal"></span>
+									<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="提醒" name="level" value="tips"></span>
+									<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="警示" name="level" value="warn"></span>
+									<span style="margin-left:10px"><input class="hisui-checkbox" type="checkbox" label="禁止" name="level" value="forbid"></span>
+								</td>	
+								<td class="tdlabel-b"><a id="searchrule"  class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+								<td style="display:none" class="tdlabel-b"><a id="editrule"  class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改内容</a> </td>	
+								<td class="tdlabel-b"><a id="editLevel"  class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改级别</a> </td>
+								<td class="tdlabel-b"><a id="editMsg"  class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改消息</a> </td>																
+							</tr>			
+						</table>	
+ 					
+				</div>
+				<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper',border:0,collapsible:false">						
+					<ul id="ruleTree"  style="padding:0px 10px 0px 10px"></ul>								
+				</div>
+			</div>		
+		</div>		
+	</div>
+	
+	<div id="levelDiv" style="width:360px;height:131px;padding:10px;padding-bottom:0px;display:none;">   
+		<form> 
+			<table style="text-align:right;margin:auto">
+				<tr >
+					<td style="padding-right:10px !important">修改级别</td> 
+					<td><input class="hisui-combobox"  style="width:200px" href="#" id="initlevel" /></td>   
+				</tr>
+			</table >
+		</form>
+	</div>
+</body>
+</html>

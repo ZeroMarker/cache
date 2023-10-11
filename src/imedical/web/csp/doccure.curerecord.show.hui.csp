@@ -1,13 +1,17 @@
 <div class="hisui-layout" data-options="fit:true,border:false">
-	<div id="dregion" data-options="region:'center',border:false,split:true" style="padding:10px 10px 10px 10px">
+	<div data-options="region:'north',border:false,headerCls:'panel-header-gray'" style='height:40px;'>
+		<div class="item-label">
+			<div style="line-height:35px;margin-left:10px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;" class="PatInfoItem"></div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false,split:true" style="padding:0px 0px 10px 10px">
 		<input name="DCAARowId" id="DCAARowId" type="hidden"  value="#($g(%request.Data("DCAARowId",1)))#">
 		<input name="DCRRowId" id="DCRRowId" type="hidden"  value="#($g(%request.Data("DCRRowId",1)))#">
 		<input name="OEORERowID" id="OEORERowID" type="hidden"  value="#($g(%request.Data("OEORERowID",1)))#">
 		<input name="source" id="source" type="hidden"  value="#($g(%request.Data("source",1)))#">
 		<input name="OperateType" id="OperateType" type="hidden"  value="#($g(%request.Data("OperateType",1)))#">
-		<div id="dpan" class="hisui-panel"  title="" style="padding:0px"
-		data-options="border:true,iconCls:'icon-edit',headerCls:'panel-header-card',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">   			
-			<table  class="form_table" width="100%" height="100%" cellspacing="0" cellpadding="0" border="0">
+		<div id="tab-panel" class="hisui-panel panel-header-gray" data-options="fit:true,closable:false">   			
+			<table class="form_table" width="100%" height="100%" cellspacing="0" cellpadding="0" border="0">
 				<tbody>
 					<tr>
 						<th>治疗标题</th>
@@ -16,19 +20,28 @@
 						</td>
 					</tr>
 					<tr>
-						<th>治疗开始时间</th>
-						<td>  
-							<input type="text" class="hisui-datetimebox textbox" name="DCRCureDate" id="DCRCureDate" style="width:180px"/>     
-						</td>
-						<th>治疗结束时间</th>
-						<td>       
-							<input type="text" class="hisui-datetimebox textbox" name="DCRCureEndDate" id="DCRCureEndDate" style="width:180px"/>     
+						<th>治疗记录</th>
+						<td colspan="3">       
+							<textarea rows="4" id="DCRContent" name="DCRContent"></textarea>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"  id="QueEmr"></a>
 						</td>
 					</tr>
 					<tr>
-						<th>治疗记录</th>
-						<td colspan="3">       
-							<textarea rows="6" id="DCRContent" name="DCRContent"></textarea>
+						<th>治疗执行时间</th>
+						<td>  
+							<input type="text" class="hisui-datetimebox" name="DCRCureExecDate" id="DCRCureExecDate" style="width:180px" data-options="showSeconds:false"/>
+						</td>
+						<th>治疗起止时间</th>
+						<td>  
+							<input type="text" class="hisui-datetimebox" name="DCRCureDate" id="DCRCureDate" style="width:154px" data-options="showSeconds:false"/>
+							<label style="font-weight:bold">-</label>
+							<input type="text" class="hisui-datetimebox" name="DCRCureEndDate" id="DCRCureEndDate" style="width:154px" data-options="showSeconds:false"/>     
+						</td>
+					</tr>
+					<tr>
+						<th>部位/穴位</th>
+						<td colspan="3">  
+							<input type="text" class="hisui-combobox" name="DCRCurePOA" id="DCRCurePOA" style="width:180px"/>
 						</td>
 					</tr>
 					<tr>
@@ -44,25 +57,45 @@
 						</td>
 					</tr>
 					<tr class="ifhidden">
-						<th class="ifhidden">记录创建人</th>
-					<td class="ifhidden"><input type="text" name="CreateUser" id="CreateUser" class="textbox" style="width:150px" disabled/></td>		
+						<th>记录创建人</th>
+						<td>
+							<input type="text" name="CreateUser" id="CreateUser" class="textbox" style="width:180px" disabled/>
+						</td>		
 						<th class="ifhidden">记录创建时间</th>
-					<td class="ifhidden"><input type="text" name="CreateDate" id="CreateDate" class="textbox" style="width:145px" disabled/></td>
+						<td class="ifhidden"><input type="text" name="CreateDate" id="CreateDate" class="textbox" style="width:155px" disabled/></td>
 					</tr>
-					
-					<tr class="ifhidden">
-						<th class="ifhidden">最后更新人</th>
-					<td class="ifhidden"><input type="text" id="UpdateUser" name="UpdateUser" class="textbox" style="width:150px" disabled/></td>
-						<th class="ifhidden">最后更新时间</th>
-					<td class="ifhidden"><input type="text" id="UpdateDate" name="UpdateDate" class="textbox" style="width:145px" disabled/></td> 		
+					<tr class="t-psd-hidden">
+						<th class="t-psd-hidden">复核人工号</th>
+						<td class="t-psd-hidden"><input type="text" id="ReConfirmUser" name="ReConfirmUser" class="textbox" style="width:180px"/></td>
+						<th class="t-psd-hidden">复核人密码</th>
+						<td class="t-psd-hidden"><input type="password" id="ReConfirmUserPin" name="ReConfirmUserPin" class="textbox" style="width:155px"/></td> 		
+					</tr>
+					<tr class="t-hidden">
+						<th class="t-hidden">最后更新人</th>
+						<td class="t-hidden"><input type="text" id="UpdateUser" name="UpdateUser" class="textbox" style="width:180px" disabled/></td>
+						<th class="t-hidden">最后更新时间</th>
+						<td class="t-hidden"><input type="text" id="UpdateDate" name="UpdateDate" class="textbox" style="width:155px" disabled/></td> 		
 					</tr>
 					<tr>
 						<td class="btn" colspan="4">       
 							<a href="javascript:void(0)"id="btnSave" data-options="iconCls:'icon-w-save'"  class="hisui-linkbutton">保存</a> 
+							<a id="SaveModel" href="#" class="hisui-linkbutton btn-lightgreen" style="margin-left:100px">保存模板</a>
 						</td>
 					</tr>
 				</tbody>
 			</table>
+		</div>
+	</div>
+	<div data-options="region:'east',border:false,split:true" style="padding:0px 10px 10px 0px;width:350px">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:true,split:false" style="border-color: #cccccc;border-radius:4px 4px 0 0 ;padding:0px;height:28px">
+				<div id="ModalType"></div>
+			</div>
+			<div data-options="region:'center',border:true" style="border-color: #cccccc;border-radius:0 0 4px 4px;">
+				<div class="hisui-panel" data-options="fit:true,border:false,headerCls:'panel-header-gray',closable:false,collapsible:false,minimizable:false,maximizable:false">  
+					<table id="ModalListDataGrid"></table> 
+				</div>
+			</div>
 		</div>
 	</div>
  </div>

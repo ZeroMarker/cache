@@ -1,0 +1,174 @@
+<!-- 
+ * FileName: dhcbill.opbill.refdtlreport.csp
+ * Author: ZhYW
+ * Date: 2022-06-13
+ * Description: 门诊退费明细报表
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+	.layout>.panel>.panel-header {
+		-moz-border-radius: 4px 4px 0 0;
+		-webkit-border-radius: 4px 4px 0 0;
+		border-radius: 4px 4px 0 0;
+	}
+
+	.layout>.panel>.panel-body {
+		-moz-border-radius: 0 0 4px 4px;
+		-webkit-border-radius: 0 0 4px 4px;
+		border-radius: 0 0 4px 4px;
+	}
+
+	.layout-panel-west {
+		padding-right: 10px;
+	}
+	.textbox.tb190 {
+		width: 235px;
+	}
+	</style>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',collapsible:false,title:'查询条件',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="padding-right:10px;width:340px;">
+			<table class="search-table" style="margin:0 auto;">
+				<tr>
+					<td class="r-label"><label>#(..Get("开始时间"))#</label></td>
+					<td><input id="stDate" class="hisui-datebox textbox tb190"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("结束日期"))#</label></td>
+					<td><input id="endDate" class="hisui-datebox textbox tb190"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("日期类型"))#</label></td>
+					<td><input id="dateType" class="hisui-combobox textbox tb190"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("操作员"))#</label></td>
+					<td><input id="user" class="hisui-combobox textbox tb190" placeHolder="#(..Get("请输入姓名拼音首字母检索"))#"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("开单科室"))#</label></td>
+					<td><input id="userDept" class="hisui-combobox textbox tb190"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("退费原因"))#</label></td>
+					<td><input id="refReason" class="hisui-combobox textbox tb190"/></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align:center;">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询</a>
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'" style="margin-left:20px;">清屏</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',title:'门诊退费明细报表',headerCls:'panel-header-gray',iconCls:'icon-report-eye'" style="border-radius:0 0 4px 4px;overflow:hidden;">
+			<iframe id="report" scrolling="auto" width="100%" height="100%" frameborder="0" src="dhccpmrunqianreport.csp?reportName=DHCBILL-OPBILL-TFMX.rpx"></iframe>
+	  	</div>
+	</div>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			DefDate: "#(##class(websys.Conversions).DateLogicalToHtml(+$h))#",
+			SRC: "dhccpmrunqianreport.csp?reportName=DHCBILL-OPBILL-TFMX.rpx"
+		};
+
+		//全局变量
+		var GV = {};
+		
+		$(function () {
+			$(".datebox-f").datebox("setValue", CV.DefDate);
+			
+			$("#report").attr("src", CV.SRC);
+			
+			$HUI.combobox("#dateType", {
+				panelHeight: 'auto',
+				data: [{value: '1', text: $g('收费日期'), selected: true},
+					   {value: '0', text: $g('日结日期')}
+					],
+				editable: false,
+				valueField: 'value',
+				textField: 'text'
+			});
+
+			//操作员
+			$HUI.combobox("#user", {
+				panelHeight: 150,
+				method: 'GET',
+				url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QrySSUser&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+				mode: 'remote',
+				valueField: 'id',
+				textField: 'text',
+				blurValidValue: true,
+				onBeforeLoad: function (param) {
+					param.desc = param.q;
+				}
+			});
+			
+			//开单科室
+			$HUI.combobox("#userDept", {
+				panelHeight: 150,
+				url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryDept&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+				valueField: 'id',
+				textField: 'text',
+				defaultFilter: 5,
+				blurValidValue: true,
+				filter: function(q, row) {
+					var opts = $(this).combobox("options");
+					var mCode = false;
+					if (row.contactName) {
+						mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+					}
+					var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+					return mCode || mValue;
+				}
+			});
+			
+			//退费原因
+			$HUI.combobox("#refReason", {
+				panelHeight: 150,
+				url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryRefReason&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+				valueField: 'id',
+				textField: 'text',
+				defaultFilter: 5,
+				blurValidValue: true
+			});
+			
+			$HUI.linkbutton("#btn-find", {
+				onClick: function () {
+					var stDate = getValueById("stDate");
+				    var endDate = getValueById("endDate");
+				    var dateType = getValueById("dateType");
+				    var userId = getValueById("user");
+					var userDeptId = getValueById("userDept");
+				    var refReaId = getValueById("refReason");
+					var url = CV.SRC + "&StDate=" + stDate + "&EndDate=" + endDate + "&DateType=" + dateType + "&UserId=" + userId
+						+ "&UserDeptId=" + userDeptId + "&RefReaId=" + refReaId + "&SessionStr=" + getSessionStr();
+					$("#report").attr("src", url);
+				}
+			});
+			
+			$HUI.linkbutton("#btn-clear", {
+				onClick: function () {
+					$(".datebox-f").datebox("setValue", CV.DefDate);
+					$("#dateType").combobox("setValue", 1);
+					$(".combobox-f:not(#user,#dateType)").combobox("clear");
+					$("#user").combobox("clear").combobox("loadData", []);
+					$("#report").attr("src", CV.SRC);
+				}
+			});
+		});
+	</script>
+</body>
+</html>

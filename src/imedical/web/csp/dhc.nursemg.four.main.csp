@@ -1,0 +1,95 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	s base=$SYSTEM.CSP.GetDefaultApp("dhc-app")
+    if ((base="/imedical/web")||(base="/dthealth/web"))&&('$SYSTEM.CSP.IsUpToDate(base_"/csp/dhc.nursemg.four.main.csp")) {
+      d $SYSTEM.CSP.LoadPage(base_"/csp/dhc.nursemg.four.main.csp","ck")
+      s %response.ServerSideRedirect="dhc.nursemg.four.main.csp"
+      q 1
+    }
+    if ##class(websys.Conversions).IsValidClassName("BSP.SYS.SRV.Token"){
+      s MWTokenKey=##class(BSP.SYS.SRV.Token).GetTokenReqKey()
+      if ($g(%request.Data(MWTokenKey,1))="")&&($g(%session.Data("NM_MV_TOKEN"))="") {
+	      s BSPSYSTokenId=##class(BSP.SYS.SRV.Token).GenTokenFromSessionId(%session.SessionId)
+	      s %request.Data(MWTokenKey,1)=BSPSYSTokenId
+	      s %session.Data("NM_MV_TOKEN")=BSPSYSTokenId
+	      q 1
+      }else {
+	      s:$g(%session.Data("NM_MV_TOKEN"))'="" BSPSYSTokenId=%session.Data("NM_MV_TOKEN")
+	      s:$g(%request.Data(MWTokenKey,1))'="" BSPSYSTokenId=%request.Data(MWTokenKey,1)
+	      ;s BSPSYSTokenId=##class(BSP.SYS.SRV.Token).GenTokenFromSessionId(%session.SessionId,BSPSYSTokenId)
+	      s %request.Data(MWTokenKey,1)=BSPSYSTokenId
+	      s %session.Data("NM_MV_TOKEN")=BSPSYSTokenId
+      }
+    }
+    if ##Class(websys.SessionEvents).SessionExpired() q 1
+     Q 1
+    </csp:method>
+    <!DOCTYPE html>
+    <html>
+	<head>
+		<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+		<meta name=viewport content="width=device-width,initial-scale=1">
+		<link rel=icon type=image/x-icon href=static/16.png>
+		<title>#(##class(websys.Translation).Get("dhc.nursemg.four.main.csp","护理管理"))#</title>
+		<script type=text/javascript>
+			var SESSIONHL4_1 = new Object();
+			SESSIONHL4_1['LOGON.TIMEOUT'] = "#($g(%session.Data("LOGON.TIMEOUT")))#";
+			SESSIONHL4_1['LOGON.SITECODE'] = "#($g(%session.Data("LOGON.SITECODE")))#";
+			SESSIONHL4_1['LOGON.REGION'] = "#($g(%session.Data("LOGON.REGION")))#";
+			SESSIONHL4_1['LOGON.USERID'] = "#($g(%session.Data("LOGON.USERID")))#";
+			SESSIONHL4_1['LOGON.USERCODE'] = "#($g(%session.Data("LOGON.USERCODE")))#";
+			SESSIONHL4_1['LOGON.USERNAME'] = "#($g(%session.Data("LOGON.USERNAME")))#";
+			SESSIONHL4_1['LOGON.GROUPID'] = "#($g(%session.Data("LOGON.GROUPID")))#";
+			SESSIONHL4_1['LOGON.GROUPDESC'] = "#($g(%session.Data("LOGON.GROUPDESC")))#";
+			SESSIONHL4_1['LOGON.LANGID'] = "#($g(%session.Data("LOGON.LANGID")))#";
+			SESSIONHL4_1['LOGON.CTLOCID'] = "#($g(%session.Data("LOGON.CTLOCID")))#";
+			SESSIONHL4_1['XMONTHSSHORT'] = "#($g(%session.Data("XMONTHSSHORT")))#";
+			SESSIONHL4_1['CONTEXT'] = "#($g(%session.Data("CONTEXT",1)))#";
+			SESSIONHL4_1['LOGON.WARDID'] = "#($g(%session.Data("LOGON.WARDID")))#";
+			SESSIONHL4_1['LOGON.HOSPID'] = "#($g(%session.Data("LOGON.HOSPID")))#";
+			SESSIONHL4_1['ContainerName'] = "#($g(%session.Data("ContainerName")))#";
+			SESSIONHL4_1['MWToken'] = "#($g(BSPSYSTokenId))#";
+			if("#($g(%request.Data("USERNAME",1)))#"!=""){
+				SESSIONHL4_1['LOGON.USERCODE'] = "#($g(%request.Data("USERNAME",1)))#";
+			}
+			if("#($g(%request.Data("SingleCode",1)))#"!=""){
+				SESSIONHL4_1['SingleCode'] = "#($g(%request.Data("SingleCode",1)))#";
+			}
+			if("#($g(%request.Data("Router",1)))#"!=""){
+				SESSIONHL4_1['Router'] = "#($g(%request.Data("Router",1)))#";
+			}
+			if("#($g(%request.Data("GloType",1)))#"!=""){
+				SESSIONHL4_1['GloType'] = "#($g(%request.Data("GloType",1)))#";
+			}
+			if("#($g(%request.Data("parr",1)))#"!=""){
+				SESSIONHL4_1['parr'] = "#($g(%request.Data("parr",1)))#";
+			}
+			if("#($g(%request.Data("InnerType",1)))#"!=""){
+				SESSIONHL4_1['InnerType'] = "#($g(%request.Data("InnerType",1)))#";
+			}
+			if("#($g(%request.Data("SeriesName",1)))#"!=""){
+				SESSIONHL4_1['SeriesName'] = "#($g(%request.Data("SeriesName",1)))#";
+			}
+			if("#($g(%request.Data("type",1)))#"!=""){
+				SESSIONHL4_1['type'] = "#($g(%request.Data("type",1)))#";
+			}
+			if("#($g(%request.Data("KeyID",1)))#"!=""){
+				SESSIONHL4_1["KeyID"]= "#($g(%request.Data("KeyID",1)))#";
+			}
+			if("#($g(%request.Data("DealtID",1)))#"!=""){
+				SESSIONHL4_1["DealtID"]= "#($g(%request.Data("DealtID",1)))#";
+			}
+		</script>
+		<link href=./nurmg/static/css/app.5768a3559adf527512a7e1b3810baafc.css rel=stylesheet>
+	</head>
+	<body>
+		<div id=app></div>
+		<script type=text/javascript src=./nurmg/static/js/manifest.7050dd30e87838f7a23e.js></script>
+		<script type=text/javascript src=./nurmg/static/js/vendor.17edb157b5edeaea2ef3.js></script>
+		<script type=text/javascript src=./nurmg/static/js/vendor.core-js.6effbf8c43b49f467d34.js></script>
+		<script type=text/javascript src=./nurmg/static/js/vendor.vue.3d891996ceeafdfcfa68.js></script>
+		<script type=text/javascript src=./nurmg/static/js/vendor.element-ui.405b2723b6985cb135bc.js></script>
+		<script type=text/javascript src=./nurmg/static/js/vendor.zrender.b92a3c2eb300b9fdb132.js></script>
+		<script type=text/javascript src=./nurmg/static/js/vendor.echarts.17f9b142e6041696cc33.js></script>
+		<script type=text/javascript src=./nurmg/static/js/app.5fc7b24c795f02949b89.js></script>
+	</body>
+      </html>

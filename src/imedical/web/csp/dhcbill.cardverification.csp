@@ -1,0 +1,72 @@
+﻿<!-- 
+ * FileName: dhcbill.cardverification.csp
+ * User: Lid
+ * Date: 2018-02-01
+ * Modify: ZhYW 2019-06-26
+ * Description: 获取刷卡卡号，用于条码卡的卡支付验证
+-->
+<!DOCTYPE html>
+<html>
+<head>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<style>
+		#cardNo {
+			width: 97%;
+			height: 36px;
+			font-size: 18px;
+		    padding: 0 0 0 5px;
+		    box-sizing: content-box;
+		    border-radius: 2px;
+		    border: 1px solid #9ed2f2;
+		    color: #000;
+			position: absolute;
+			top: 28%;
+		}
+	</style>
+</head>
+
+<body style="background-color:#ffffff;padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',border:false">
+			<input id="cardNo" placeholder="请刷卡：">
+		</div>
+	</div>
+	<script type="text/javascript">
+		$(function () {
+			var charA = charB = 0;
+			var $cardNo = $("#cardNo");
+			setTimeout(function () {
+				$cardNo.focus();
+			});
+		    $cardNo
+		    .keydown(function (e) {
+		        var cardNo = $(e.target).val();
+		        var count = cardNo.length;
+		        if (count == 0) {
+		            charA = new Date().getTime();
+		        }
+		        if (count > 0) {
+		            charB = new Date().getTime();
+		            if ((charB - charA) > 300) {
+		                $(e.target).val("");
+		                return false;
+		            }
+		        }
+		    })
+		    .keyup(function (e) {
+		        if (e.keyCode == 13) {
+			        var cardNo = $(e.target).val();
+			        if (!cardNo) {
+				        return;
+				    }
+			        var securityNo = "";
+			        var rtnValue = 0 + "^" + cardNo + "^" + securityNo;
+			        websys_showModal("options").callbackFunc(rtnValue);
+			   		websys_showModal("close");
+			    }
+		    });
+		});
+	</script>
+</body>
+</html>

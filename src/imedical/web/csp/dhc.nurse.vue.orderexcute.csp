@@ -1,0 +1,68 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	s PatientTree = $G(%request.Data("PatientTree", 1))
+</script>
+<html>
+<head>
+<title>	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>  </title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<meta charset="utf-8"/>
+<HISUI/>
+<style>
+	body {
+        background-color: #fff;
+    }
+    #nrLayout {
+	}
+	#nrLayout>div{
+		height:100%;
+	}
+	#rightContent{
+		height:100%!important;	
+	}
+	#patient_search{
+		height:calc(100% - 36px)!important;	
+	}
+</style>
+</head>
+<script language="javascript">
+	var EpisodeID = "#(EpisodeID)#";
+	var EpisodeIDStr = EpisodeID;	
+</script>
+<body>
+<div style="position: absolute;top:0;left:0;bottom:0;right:0;margin:4px;">
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true">
+		<csp:if condition="PatientTree">
+			<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+		</csp:if>
+		<!-- ÓÒ²àÄÚÈÝ -->
+		<div id="rightContent" data-options="region:'center',title:'',split:true" style="border:0;">
+			<!--<csp:Include Page="dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute">-->
+			<iframe id="vueview" src="" frameborder="no" border="0"></iframe>
+		</div>  	
+	</div>
+</div>
+<script language="javascript">
+var curUrl = window.location.href.split("/csp/")[0] + "/csp/";
+var iframeUrl = curUrl + "dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute";
+if ("undefined"!==typeof websys_getMWToken){
+	iframeUrl += "&MWToken="+websys_getMWToken()
+}
+var frame=document.getElementById("vueview");
+frame.src=iframeUrl;
+frame.style.framespacing="0";
+frame.style.marginwidth="0" ;
+frame.style.marginheight="0";
+frame.style.scrolling="auto";
+frame.style.width = '100%';
+frame.style.height = '100%';
+$(window).resize(function(){
+    $('#nrLayout').layout("resize");
+});
+</script>
+</body>
+</html>

@@ -4,6 +4,10 @@
 	csp: csp/dhcpha.pivas.refuse.csp
 	js:  scripts/pharmacy/pivas/refuse.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,99 +15,173 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-	<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
-</HEAD>
-<body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
-    <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-            <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'north',title:'配液拒绝',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-pivas-refuse',collapsible:false" class="dhcpha-north-r3">
-                    <table class="dhcpha-north-tbl">
-                        <tr>
-                            <td>
-                                <label for="dateOrdStart">用药日期</label>
-                                <input id="dateOrdStart" class="hisui-datebox"  style="width:125px" />
-                                <input id="dateOrdEnd" class="hisui-datebox" style="width:125px" />
-                            </td>
-                            <td>
-                                <label for="cmbPivaLoc">配液中心</label>
-                                <input id="cmbPivaLoc" type="text" class="hisui-combobox" />
-                            </td>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none"/>
+    <PHAPIVASV1 />
+    <style>
+        .datagrid-row [field] {
+            vertical-align: top;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
 
-                            <td>
-                                <label for="cmbLocGrp">科室组</label>
-                                <input id="cmbLocGrp" type="text" />
-                            </td>
-                            <td>
-                                <label for="cmbPriority">医嘱优先级</label>
-                                <input id="cmbPriority" type="text" />
-                            </td>
-                            <td>
-                                <label for="txtPatNo">登记号</label>
-                                <input id="txtPatNo" type="text" class="hisui-validatebox" style="width:147px" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="datePrtStart">打签日期</label>
-                                <input id="datePrtStart" class="hisui-datebox" style="width:125px" />
-                                <input id="datePrtEnd" class="hisui-datebox" style="width:125px"  />
-                            </td>
-                            <td>
-                                <label for="cmbWard">病区</label>
-                                <input id="cmbWard" type="text" />
-                            </td>
-                            <td>
-                                <label for="cmbWorkType">工作组</label>
-                                <input id="cmbWorkType" type="text" />
-                            </td>
-                            <td style="display:none">
-                                <label for="cmbPassResult">审核结果</label>
-                                <input id="cmbPassResult" type="text" />
-                            </td>
-                            <td>
-                                <label for="txtPrtNo">流程单号</label>
-                                <input id="txtPrtNo" type="text" class="hisui-searchbox" style="width:154px" />
-                            </td>
-                            <td>
-                                <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFind">查询</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="cmgIncItm">药品</label>
-                                <input id="cmgIncItm" type="text" />
-                            </td>
-                            <td>
-                                <label for="cmbPivaRefuse">配液拒绝</label>
-                                <input id="cmbPivaRefuse" type="text" />
-                            </td>
-                            <td colspan="3" style="text-align:left">
-                                <div>
-                                    <div id="DivBatNo" style="text-align:left;padding-left:11px;">批次</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div data-options="region:'center'" border=false class="dhcpha-hisui-border" style="border-radius: 4px;">
+        .pivas-user-select tr {
+            display: none;
+        }
+
+        .pivas-user-select-line {
+            display: none;
+            height: 180px;
+            border-left: 1px solid #cccccc;
+            position: absolute;
+            right: 208px;
+        }
+
+        .pivas-grid-div {
+            padding-top: 8px;
+        }
+
+        .pivas-grid-tip {}
+
+        .pivas-grid-tip:hover {
+            cursor: pointer;
+        }
+        .pha-body{
+	    	padding: 10px;
+	    }
+    </style>
+</HEAD>
+
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'center',title:'配液拒绝',iconCls:'icon-panel-pivas-refuse',headerCls:'panel-header-gray'">
                     <table id="gridOrdExe"></table>
                 </div>
             </div>
         </div>
     </div>
     <div id="gridOrdExeBar">
-        <a class="hisui-linkbutton" iconCls='icon-btn-pivas-refuse' plain="true" id="btnRefuse">拒绝配液</a>
-        <a class="hisui-linkbutton" iconCls='icon-btn-pivas-refuse-cancel' plain="true" id="btnCancel">取消拒绝</a>
+        <div >
+            <table class="pha-con-table">
+                <tr>
+                    <td class="r-label">
+                        <label for="dateOrdStart">#(..Get("用药日期"))#</label>
+                    </td>
+                    <td>
+                        <input id="dateOrdStart" class="hisui-datebox" style="width:125px" />
+                    </td>
+                    <td> 
+                        <input id="dateOrdEnd" class="hisui-datebox" style="width:125px" />
+                    </td>
+                    <td class="r-label">
+                        <label for="cmbLocGrp">#(..Get("科室组"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmbLocGrp" type="text" />
+                    </td>
+                    <td class="r-label">
+                        <label for="cmbPivaCat">#(..Get("配液大类"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmbPivaCat" type="text" />
+                    </td>
+                    <td class="r-label">
+                        <label for="cmbPriority">#(..Get("医嘱优先级"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmbPriority" type="text" />
+                    </td>
+                    <td class="r-label">
+                        <label for="txtPrtNo">#(..Get("流程单号"))#</label>
+                    </td>
+                    <td>
+                        <input id="txtPrtNo" type="text" class="hisui-searchbox" style="width:154px" />
+                    </td>
+
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <label for="datePrtStart">#(..Get("打签日期"))#</label>
+                    </td>
+                    <td>
+                        <input id="datePrtStart" class="hisui-datebox" style="width:125px" />
+                    </td>
+                    <td>
+                        <input id="datePrtEnd" class="hisui-datebox" style="width:125px" />
+                    </td>
+                    <td class="r-label">
+                        <label for="cmbWard">#(..Get("病区"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmbWard" type="text" />
+                    </td>
+                    <td class="r-label">
+                        <label for="cmbWorkType">#(..Get("工作组"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmbWorkType" type="text" />
+                    </td>
+                    <td style="display:none" class="r-label">
+                        <label for="cmbPassResult">#(..Get("审核结果"))#</label>
+                    </td>
+                    <td style="display:none;">
+                        <input id="cmbPassResult" type="text" />
+                    </td>
+                    <td class="r-label">
+                        <label for="txtPatNo">#(..Get("登记号"))#</label>
+                    </td>
+                    <td>
+                        <input id="txtPatNo" type="text" class="hisui-validatebox" style="width:147px" />
+                    </td>
+                    <td class="r-label">
+                        <label for="cmgIncItm">#(..Get("药品"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmgIncItm" type="text" />
+                    </td>
+
+
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        #(..Get("批次"))#
+                    </td>
+                    <td colspan="4" style="text-align:left">
+                            <div id="DivBatNo" style="text-align:left;"></div>
+                    </td>
+                    <td class="r-label">
+                        <label for="cmbPack">#(..Get("打包"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmbPack" type="text" />
+                    </td>
+
+                    <td class="r-label">
+                        <label for="cmbPivaRefuse">#(..Get("配液拒绝"))#</label>
+                    </td>
+                    <td>
+                        <input id="cmbPivaRefuse" type="text" />
+                    </td>
+                    <td></td>
+                    <td class="r-label">
+                        <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFind">查询</a>
+                    </td>
+
+                </tr>
+            </table>
+            </div>
+                <div class="pha-line"></div>
+                <div>
+                    <a class="hisui-linkbutton" iconCls='icon-disp-x' plain="true" id="btnRefuse">拒绝配液</a>
+                    <a class="hisui-linkbutton" iconCls='icon-disp-back' plain="true" id="btnCancel">取消拒绝</a>
+                </div>
+            </div>
+
     </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/timeline.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/refuse.js"></script>
 </body>
 

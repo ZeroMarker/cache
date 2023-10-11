@@ -26,11 +26,20 @@
 
 		/// 会诊打印走的模式
 		s PrintModel = ##class(web.DHCEMConsultCom).GetEmSysConfig("PRINTMODEL",LgHospID)
+		/// 会诊未完成是否可以打印会诊记录单
+	  	s ConsNoCompCanPrt = ##class(web.DHCEMConsultCom).GetEmSysConfig("CONSNOCOMPCANPRT",LgHospID)
 
 		w "<script Language=""JavaScript"">"_$c(13,10)
 		w "var PrintModel="""_$g(PrintModel)_""";"_$c(13,10)
+		w "var ConsNoCompCanPrt="""_$g(ConsNoCompCanPrt)_""";"_$c(13,10)
 		w "</script>"
 	</server>
+	<script Language="Javascript">
+	if(HISUIStyleCode==="lite"){///2023-02-03 极简风格样式修改
+	document.write("<style>.list-title{background-color: #fff;}.list-title label{font-weight: bold;left:10px;}.list-icon{display:none}</style>");
+	document.write("<style>.item-table td,.div-content,.container,.panel-north,.panel-center,.panel-south,.list-title,.dashline-div{border-color: #e2e2e2;}}</style>");
+	}
+</script>
 </head>
 <body class="background-warp">
 	<div class="container">
@@ -51,8 +60,14 @@
 					<input id="CstRLoc" class="textbox" style="width:115px;height:30px;line-height:30px;"/>
 					<label style="margin-left:10px;">#(..Get("会诊类型"))#</label>
 					<input id="CstType" class="textbox" style="width:115px;height:30px;line-height:30px;"/>
+					<span style="padding-left:16px">
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="QryPatList()">查询</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick="PrintCst()">打印</a>
+					</span>
+				</div>
+				<div class="dashline-div"></div>
+				<div id="tool">
+					<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-print'" onclick="PrintCst()">打印</a>
+					<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-paper-link-pen'" onclick="CloseLoop()">详情</a>
 				</div>
 	    	</div>
     	</div>
@@ -67,16 +82,16 @@
 				<label>#(..Get("会诊内容"))#</label>
 	        </div>
 	    	<div class="list-order-item">
-				<div style="margin:5px 10px;">
-					<div style="margin:5px;"><label style="font-weight:bold;">#(..Get("病情摘要"))#</label></div>
+				<div style="margin:6px 10px;">
+					<div style="margin:6px;"><label style="font-weight:bold;">#(..Get("病情摘要"))#</label></div>
 					<div id="ConsTrePro" class="div-content"></div>
 				</div>
-				<div style="margin:5px 10px;">
-					<div style="margin:5px;"><label style="font-weight:bold;">#(..Get("会诊目的"))#</label></div>
+				<div style="margin:6px 10px;">
+					<div style="margin:6px;"><label style="font-weight:bold;">#(..Get("会诊目的"))#</label></div>
 					<div id="ConsPurpose" class="div-content"></div>
 				</div>
-				<div style="margin:5px 10px;">
-					<div style="margin:5px;"><label style="font-weight:bold;">#(..Get("会诊结论"))#</label></div>
+				<div style="margin:6px 10px;">
+					<div style="margin:6px;"><label style="font-weight:bold;">#(..Get("会诊结论"))#</label></div>
 					<div id="ConsOpinion" class="div-content"></div>
 				</div>
 	    	</div>
@@ -85,7 +100,7 @@
 	<!--------------打印相关---------->
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCIPBILL">
-			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 		</form>
 	</div>
 	<!-------------------------------->

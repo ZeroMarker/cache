@@ -1,0 +1,263 @@
+<!-- 血糖预警系统 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s PatientListPage=""
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+	s DefaultCode = $G(%request.Data("DefaultCode", 1))
+	s SinglePatient = $G(%request.Data("SinglePatient", 1))
+</script>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+<style type='text/css' class="eduExeStyle">
+body{background-color: #fff;padding: 4px 4px 0!important;display: flex;overflow: hidden;}
+#_HospList+.combo>.combo-text{width: 315px!important;}
+/* #wardPatientCondition {margin-top: 5px;width: 206px;padding:0 1px;} */
+.panel-header, .panel-body{width: auto!important;}
+#ctcRecordModal input.textbox{width: 600px;}
+.healDetail,.healDetailADRs,.healDetailCurve{line-height: 27px;width: 100%;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;margin-top: 3px;}
+#evaluateTree .tree-icon{display: none;}
+#evaluateInput+.searchbox>input{width: 170px!important;}
+#adrsInput+.searchbox>input{width: 230px!important;}
+#startDate+.datebox>input,#endDate+.datebox>input{width: 80px!important;}
+.adrsContent{display: flex;}
+.adrsContent>div:first-of-type{flex: 3;}
+.adrsContent>div:last-of-type{flex: 2;}
+#layWest .panel-body.panel-body-noheader {border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+#layCenter .panel-body.panel-body-noheader {border-color: #cccccc;}
+.deleteBtn{cursor: pointer;color: #00f;}
+.adrsContent h3{background: transparent;font-size: 16px;line-height: 30px;}
+label.checkbox, label.radio{height: auto;}
+.adrsContent table tr>td:first-of-type{width: 70px;vertical-align: top;}
+.adrsContent table tr td{word-break: break-all;}
+.l-btn-small{outline: none;}
+td[field="adrsDesc"]>div{line-height: 30px;}
+ul>li.showNode>div>span.tree-join{background: url(../scripts_lib/hisui-0.1.0/dist/css/images/blue/tree_lines.png) -97px center no-repeat!important;}
+ul>li.showNode>div>span.tree-expanded{background: url(../scripts_lib/hisui-0.1.0/dist/css/images/blue/tree_lines.png) -17px center no-repeat!important;}
+li.showNode>ul>li.showNode>div>span.tree-line{background: none!important;}
+.unman {background: url(../images/unman.png) no-repeat;background-size: cover;}
+.PatInfoItem{margin-left: 0!important;}
+.helpInfo{position: relative;}
+.helpInfo>.helpFlag{font-size: 0;width: 58px;height: 18px;}
+.helpInfo>.helpFlag>span.icon{display: inline-block;width: 18px;}
+.helpInfo>.helpDetail{position: absolute;border-radius: 4px;z-index: 10;overflow: visible;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);background: #fff;border: 1px solid #cccccc;padding: 10px;width: 300px;right: -12px;top: 25px;display: none;}
+.helpInfo:hover>.helpDetail{display: block;}
+.helpInfo>.helpDetail:after {position: absolute;content: "";width: 10px;height: 10px;border-left: 1px solid #cccccc;border-top: 1px solid #cccccc;transform: rotate(45deg);background: white;top: -6px;right: 15px;}
+.helpInfo>.helpDetail>p {line-height: 20px;overflow: hidden;display: flex;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+.helpInfo>.helpDetail>p>i.dot {margin-top: 5px;}
+.helpInfo>.helpDetail>p>span{text-align: left;flex: 1;}
+.severity{display: inline-block;padding: 5px 10px;border-radius: 4px;cursor: pointer;background: white;user-select:none;line-height: 18px;}
+.severity+.severity{margin-left: 5px;}
+.r-label{padding-right: 10px;}
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+#testDate+span>input{width: 95px!important;}
+#assessStartDate+span>input,#assessEndDate+span>input{width: 82px!important;}
+#testTime{width: 70px!important;}
+#ward+span>input{width: 115px!important;}
+td[field="operate"] span{display: inline-block;width: 16px;cursor: pointer;}
+span.icon.icon-help{width: 16px;display: inline-block;}
+.l-btn-text {padding: 0 10px;}
+.PatInfoItem {padding-left: 40px;}
+.PatInfoItem>img {left: 0px;}
+.PatInfoItem>span {white-space: nowrap;height: 30px;display: inline-block;vertical-align: middle;}
+#bgLayout .layout-panel-west>.panel-header{border-radius: 4px 4px 0 0;}
+#layWest{border-radius: 0 0 4px 4px;}
+.kw-section-list>li{margin-top: 1px;}
+#patFrame{height:40px;}
+</style>
+<script language="javascript">
+  var EpisodeID = "#(EpisodeID)#";
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+</script>
+</head>
+<body>
+<div style="width: 100%;" class="ctcContent">
+	<div id="adrsPanel" class="hisui-panel" title="血糖预警系统" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding: 5px 0;overflow-y: hidden;">
+		<table cellpadding="0" style="width: 100%;border-collapse: collapse;">
+			<tr style="height: 40px;">
+				<td style="padding-left: 10px;">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;"></span>
+					<span style="padding-right: 6px;">#(..Get("院区"))#</span>
+					<select id="_HospList"></select>
+				</td>
+			</tr>
+	    <tr style="line-height: 22px;height: 40px;">
+	    	<td>
+	    		<table cellpadding="0" style="border-collapse: collapse;">
+	    			<tr>
+							<td class="r-label" style="padding-left: 10px;">
+								#(..Get("日期"))#
+							</td>
+							<td>
+				        <input id="startDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setDateboxOption"></input>
+							</td>
+							<td style="padding: 0 5px;">#(..Get("至"))#</td>
+							<td class="r-label">
+				        <input id="endDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setDateboxOption"></input>
+							</td>
+							<td class="r-label">
+								#(..Get("病案号"))#
+							</td>
+							<td class="r-label">
+								<input id="medicareNo" style="width: 80px;" class="hisui-validatebox textbox">
+							</td>
+							<td class="r-label">
+								#(..Get("姓名"))#
+							</td>
+							<td class="r-label">
+								<input id="patName" style="width: 80px;" class="hisui-validatebox textbox">
+							</td>
+							<td class="r-label">
+								#(..Get("床号"))#
+							</td>
+							<td class="r-label">
+								<input id="bedCode" style="width: 80px;" class="hisui-validatebox textbox">
+							</td>
+							<td class="r-label">
+								#(..Get("病区"))#
+							</td>
+							<td class="r-label">
+								<select id="ward" style="width: 150px;" data-options="valueField:'wardid',textField:'warddesc'" class="hisui-combobox" name="state">
+								</select>
+							</td>
+							<td class="r-label">
+								#(..Get("血糖"))#
+							</td>
+							<td>
+								<input id="bgLow" style="width: 40px;" class="hisui-validatebox textbox">
+							</td>
+							<td style="padding: 0 5px;">#(..Get("至"))#</td>
+							<td class="r-label">
+								<input id="bgHigh" style="width: 40px;" class="hisui-validatebox textbox">
+	              <span class="icon icon-help" id="queryDescription" style="vertical-align: middle;height: 16px;">&nbsp;</span>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="getBGRecordByDays(1)">查询</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-clean'" onclick="clearSearchCondition()">清屏</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-export'" onclick="exportExcel()">导出</a>
+							</td>
+	    			</tr>
+	    		</table>
+	    	</td>
+	    </tr>
+	  </table>
+		<div style="height: 0;border-bottom: 1px dashed #ccc;margin: 5px 0 9px 0;"></div>
+		<table cellpadding="0" style="width: 100%;border-collapse: collapse;margin: 0px 0 6px 0;">
+	    <tr>
+	    	<td>
+	    		<div id="redkw" style="padding-left: 4px;"></div>
+	    		<!-- <object id="object" data="../images/一级.svg" type="" fill="red!important" style="height: 30px;fill:red!important;"></object>
+	    		<iframe id="iframe" src="../images/一级.svg" frameborder="0" style="height: 30px;fill:red!important;"></iframe>
+	    		<embed id="embed" src="../images/一级.svg" style="height: 30px;fill:red!important;"></embed> -->
+					<table cellpadding="0" id="bgConfig" style="display: none;">
+				    <tr>
+							<td class="r-label" style="padding-left: 5px;">
+				        <input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:checkAllBG,checked:true" label="全选" id="checkAll">
+							</td>
+							<!-- <td class="r-label">
+				        <input class="hisui-checkbox" type="checkbox"  label="空腹血糖" id="KFXT">
+							</td> -->
+				    </tr>
+				  </table>
+	    	</td>
+	    	<td style="text-align: right;">
+					<table cellpadding="0" style="display: inline-block;border-collapse: collapse;" id="bgWarn">
+				    <tr>
+							<td class="r-label">
+							</td>
+							<td class="r-label">
+                <div class="helpInfo">
+                  <a href="javascript:void(0);" class="helpFlag">
+                    <span class="icon icon-help">&nbsp;</span>
+                  </a>
+                  <div class="helpDetail">
+                  </div>
+                </div>
+							</td>
+				    </tr>
+				  </table>
+	    	</td>
+	    </tr>
+	  </table>
+		<div id="bgLayout" class="hisui-layout" style="width:calc(100% - 8px);height:calc(100% - 100px);margin-left: 4px;" data-options="clickExpand:true">
+			<div id="layWest" data-options="region:'west',title:'警示病区分布',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',onCollapse:toggleCollapse,onExpand:toggleCollapse,showCollapsedTitle:true" style="width:400px;">
+				<table id="warningWard" data-options="singleSelect:true,onClickRow: selectWWRow"></table>
+			</div>
+			<div id="layCenter" data-options="region:'center',title:'',split:true,bodyCls:'panel-header-gray'" 
+				style="border: 0;overflow: hidden;">
+				<table id="bloodGlucose" data-options="pagination:true,pageSize:20,pageList:[20,50,100,200]">
+					<!-- <thead frozen="true">
+						<tr>
+							<th field="wardDesc">病区</th>
+							<th field="bedCode">床号</th>
+							<th field="medicareNo">病案号</th>
+							<th field="name">姓名</th>
+						</tr>
+					</thead>
+					<thead>
+						<tr>
+							<th field="height">身高</th>
+							<th field="weight">体重</th>
+							<th field="bmi">BMI</th>
+							<th field="diagnosis">诊断</th>
+							<th field="date">测量日期</th>
+							<th field="NightPBS">夜间2点</th>
+							<th field="FBS">空腹血糖</th>
+							<th field="BreakfastPBS">早餐后2小时</th>
+							<th field="LunchFBS">午餐前</th>
+							<th field="LunchPBS">午餐后2小时</th>
+							<th field="DinnerFBS">晚餐前</th>
+							<th field="DinnerPBS">晚餐后2小时</th>
+							<th field="BedtimeFBS">晚睡前</th>
+							<th field="RBS">随机</th>
+							<th field="ltma">降糖医嘱（长期）</th>
+							<th field="tmo">降糖医嘱（临时）</th>
+						</tr>
+					</thead>
+					<thead frozen="true">
+						<tr>
+							<th field="operate">操作</th>
+						</tr>
+					</thead> -->
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- 开立医嘱、会诊模态框 -->
+<div id="retestModal" class="hisui-dialog" title="血糖" style="top: 25px;left: 25px;padding: 0 10px;" 
+data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true">
+	<div id="patFrame" style="margin:0 10px;">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<iframe src="" frameborder="0" style="width: 100%;height: calc(100% - 45px);"></iframe>
+</div>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts_lib/SheetJs/datagrid-export.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.BGWarningSystem.js" charset=gbk></script>
+</body>
+</html>

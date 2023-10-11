@@ -1,0 +1,199 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            
+        </script>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui/quality/StandardComm.css" />
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/echarts.min.js"></script>
+	<STYLE type='text/css'>
+		.datagrid-wrap.panel-body.panel-body-noheader{
+				border-color:#ccc;
+				border-top-right-radius:0;
+				border-top-left-radius:0;
+				border-right:0;
+				border-left:0;
+				border-bottom:0;
+				border-width: 0;
+		}
+		/*
+		.datagrid-toolbar{
+			height:24px;
+			padding:4px
+		}
+		.datagrid-toolbar .l-btn-plain{
+			margin-top:1px!important;
+		}
+		.datagrid-toolbar .hischeckbox_square-blue{
+			margin-top:1px!important;
+		}*/
+		.hisui-timespinner.timespinner-f.spinner-text.spinner-f.validatebox-text{
+			width:72px!important;
+		}
+		.datebox .combo-arrow{
+			position:relative;
+			left:-4px!important;
+		}
+
+		.toLinkWindow{
+			position: relative;
+		}
+		.link-window{
+			border:1px solid #e2e2e2;
+			border-radius: 4px;
+			display: flex;
+			flex-direction: column;
+			position: absolute;
+			top: 10;
+			bottom: 50;
+			left: 10;
+			right: 10;
+		}
+		.window-content{
+			flex: 1;
+		}
+		.form-row .row-item label{
+			width:60px
+		}
+		.window-bottom{
+			position: absolute;
+			bottom: 10;
+			left: 0;
+			right: 0;
+			text-align: center;
+		}
+		#toLinkWindow .datagrid-header
+		{
+			border-width: 1px 0 1px;
+		}
+	</STYLE>
+</head>	
+<body class="hisui-layout">
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:4px;">
+		<div  class="hisui-panel" fit="true" data-options="title:'漏报质控统计',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="padding:4px;">
+			<div id="panel" class="hisui-layout" data-options="fit:true,border:false" > 
+				<div  data-options="region:'north',headerCls:'panel-header-gray',border:false" style="padding:6px 10px 10px 6px">
+					<ul class="head-ul">
+						<li><label>#(..Get("提交时间"))#</label></li>
+						<li>
+							<input id="startDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px">
+							<span class="nur_label"  style="margin:0 2px;">#(..Get("至"))#</span>
+							<input id="endDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px">
+						</li>
+						<li><label>#(..Get("统计维度"))#</label></li>
+						<li>
+							<select id="summaryType" class="hisui-combobox" name="state" style="width:80px" data-options="enterNullValueClear:false"></select>
+						</li>
+						<li><label>#(..Get("统计范围"))#</label></li>
+						<li id="summaryLoc">
+							<select id="summaryRange" class="hisui-combobox" style="width:300px;" data-options="enterNullValueClear:false"></select>
+						</li>
+						<li id="summaryEvent" style="display: none;">
+							<select id="summaryEventRange" class="hisui-combobox" style="width:300px;" data-options="enterNullValueClear:false"></select>
+						</li>
+						<li>
+							<a href="#"  id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;">查询</a>
+						</li>
+						<li>
+							<a href="#"  id="resetBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'" style="width:90px;">重置</a>
+						</li>
+					</ul>
+				</div>
+				<div data-options="region:'center',title:'#(..Get("数据展示"))#',headerCls:'panel-header-gray',iconCls:'icon-qrcode-blue'">
+					<table  id="summaryDataTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+				<div data-options="region:'east',title:'#(..Get("明细展示"))#',headerCls:'panel-header-gray',split:true,collapsed:true,showCollapsedTitle:true,iconCls:'icon-table-col'" style="width:900px;" id="detail">
+					<table  id="summaryDetailTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--div id="tb" class="p_10">
+		<ul class="head-ul">
+			<li>
+				<a href="#" id="linkBtn" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true">手动关联</a>	
+			</li>
+			<li>
+				<a href="#" id="cancelLinkBtn" class="hisui-linkbutton" data-options="iconCls:'icon-mtpaper-arrw-lftp',plain:true">取消关联</a>	
+			</li>
+			<li><label style="line-height:25px">#(..Get("分类"))#</label></li>
+			<li>
+				<select id="summaryDetailType" class="hisui-combobox" style="width:80px;height:26px;" data-options="enterNullValueClear:false"></select>
+			</li>
+		</ul>
+	</div-->
+	<div id="tb">
+		<a href="#" id="linkBtn" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true">手动关联</a>	
+		<a href="#" id="cancelLinkBtn" class="hisui-linkbutton" data-options="iconCls:'icon-mtpaper-arrw-lftp',plain:true">取消关联</a>
+		<label style="line-height:25px;margin-left:5px;">#(..Get("分类"))#</label>	
+		<select id="summaryDetailType" class="hisui-combobox" style="width:80px;height:26px;" data-options="enterNullValueClear:false"></select>
+	</div>
+	<!-- 手动关联弹窗 -->
+	<div id="toLinkWindow" class="toLinkWindow p_10">
+		<div class="link-window" >
+			<div class="window-top def-form p_10" >
+				<div class="form-row">
+					<div class="row-item">
+						<label>#(..Get("患者姓名"))#</label>
+						<input id="patName" class="textbox" disabled="true"></td>
+					</div>
+					<div class="row-item">
+						<label>#(..Get("登记号"))#</label>
+						<input id="regNo" class="textbox" disabled="true">
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="row-item">
+						<label>#(..Get("床号"))#</label>
+						<input id="bedCode" class="textbox"  disabled="true">
+					</div>
+					<div class="row-item">
+						<label>#(..Get("所在科室"))#</label>
+						<input id="wardDesc" class="textbox" disabled="true">
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="row-item">
+						<label>#(..Get("触发时间"))#</label>
+						<input id="insertDateTime" class="textbox" disabled="true">
+					</div>
+					<div class="row-item">
+						<label>#(..Get("事件类型"))#</label>
+						<input id="event" class="textbox" disabled="true">
+					</div>
+				</div>
+			</div>
+			<div class="window-content">
+				<table id="summaryNeedLinkTable" class="hisui-datagrid"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+			</div>
+		</div>
+		<div class="window-bottom" >
+			<a href="#" id="linkSaveBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			<a href="#" id="linkCloseBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:5px;">关闭</a>
+		</div>
+	</div>
+	<!-- 图表 -->
+	<div id="summaryCharts" style="overflow: hidden;">
+		<div id="charts"  class="p_10" style="width: 1000px;height: 650px;"></div>
+	</div>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.Comm.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.OmitAdverseSummary.js" charset="gbk"></script>
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ quit 1
+</csp:method>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>病案浏览</title>
+	<script language="cache" runat="server">
+	s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+	s RoleID = $Get(%request.Data("RoleID",1),"")
+	s Flag = $Get(%request.Data("Flag",1),"")
+	s protocol = "http:"
+	s:(%request.Secure=1) protocol = "https:"
+	s ip = ##class(web.DHCEPR).GetHostIP()
+	s appPath =##class(web.DHCEPR).GetAppPath()
+	s logId = %session.Get("LOGON.USERCODE")
+	s ServerIP = %session.Get("SERVER_NAME")
+	</script>
+	<script type = "text/javascript">
+	var logID = '#(logId)#';
+	var EpisodeID = '#(EpisodeID)#';
+	var RoleID = '#(RoleID)#';
+	var Flag = '#(Flag)#';
+	var port = window.location.port;
+	if (port=="" || port==undefined)
+	{
+		port = "80"
+	}
+	
+	var DataServiceUrl = '#(protocol)#'+"//"+"#(ip)#"+":"+port+'#(appPath)#';
+	var serverIP = '#(ServerIP)#';
+	</script>
+	<HISUI />
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/fs.pdfview.css">
+	
+	<script src="../scripts/epr/pdfjs-2.2.228-dist/build/pdf.js"></script>
+	<script src="../scripts/epr/js/fs.pdfviewtree.js"></script>
+	<style>
+	.tree-node-searched {
+		background: #feed81;
+		color: #404040;
+	}
+	</style>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+     <div data-options="region:'west',collapsible:true" style="background-color:#E3E3E3;display:flex;width:208px">
+     	<div class="hisui-layout" data-options="fit:true">
+     		<div data-options="region:'north',collapsible:true" style="height:50px">
+     			
+     		<input id="search-reason" type="text" style="width:200px;height:20px;padding:4px;" placeholder="快速定位"/> 
+
+     		</div>
+     		<div data-options="region:'center',collapsible:true" style="background-color:#E3E3E3;display:flex;">
+     			<div id="tt"  class="accordiontree" data-options="animate:true" style="width:208px"></div>
+     		</div>
+     	</div>
+	</div>
+	<div data-options="region:'center'">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north'" class="view-toolbar">
+				<input id="tstbPageNum" type="text" title="跳转到" class="view-tb-textbox" />
+				<label id="tslTotalPage" class="view-tb-label">第1页/共2页</label>
+				<button id="tsbPre" class="view-tb-btn icon-pre" title="上一页"></button>
+				<button id="tsbNext" class="view-tb-btn icon-next" title="下一页"></button>
+				<button id="tsbZoomIn" class="view-tb-btn icon-in" title="放大"></button>
+				<button id="tsbZoomOut" class="view-tb-btn icon-out" title="缩小"></button>
+				<button id="tsbRotateCW" class="view-tb-btn icon-cw" title="顺时针旋转"></button>
+				<button id="tsbRotateACW" class="view-tb-btn icon-acw" title="逆时针旋转"></button>
+				<div id="tags"></div>
+			</div>
+			<div data-options="region:'center',checkbox:true" style="background-color:#E3E3E3;overflow-x:auto;overflow-y:auto">
+				<div id="container" >
+					<canvas id="pdfCanvas">
+				</div>
+			</div>
+		</div>
+	</div>
+	
+</body>
+</html>

@@ -5,87 +5,99 @@
 <HTML>
 <head>
         <title>质控消息</title>
-        <script language="cache" runat="server">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+   		<HISUI/>
+        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script type="text/javascript" src="../scripts/datagrid-export.js" charset="utf-8"></script>
+	    
+	    
+		<script language="cache" runat="server">
   		s userID = %session.Get("LOGON.USERID")
 		s userLoc = %session.Get("LOGON.CTLOCID")
 		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s QuaSetPage = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("QuaSetPage")
+		s:(QuaSetPage="") QuaSetPage=1
+		s HospitalID = %session.Get("LOGON.HOSPID")
 	   </script>
 	    <script type="text/javascript">
 		var userID = '#(userID)#';
 		var userLoc = '#(userLoc)#';
 		var ssgroupID = '#(ssgroupID)#';
+		var QuaSetPage = '#(QuaSetPage)#';
+		var HospitalID = '#(HospitalID)#';
 	   </script>
-		<link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" />
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
-        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
-	    <script src="../scripts/DHC.EMR.Quality.MessageSummary.js"></script>
-		<!--script src="../scripts/epr/js/eprMessageSummary.js"></script-->
+	   <style>
+	   form table td, form table th{
+			padding:5px 0;   
+		}
+	   </style>
 	    
 </head>
 
 <body class="hisui-layout" data-options="fit:true,border:false" style="border:none;">
-	<div data-options="region:'north',split:true,headerCls:'panel-header-gray',border:true" style="height:320px; border:none;padding:5px 5px 0px 5px">
+	<div data-options="region:'north',split:true,headerCls:'panel-header-gray',border:true" class="div_center" style="height:350px; border:none;padding:4px 4px 0px 4px">
 		<div class="hisui-panel" title="质控消息查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" >
-			<div id="messageListTableTBar" style="padding:10px;height:33px">	
-				<div style="float:left">
-					    <span style="margin-left:10px;margin-right:10px;">消息状态 </span>
-					    <input class='hisui-radio' type="radio" checked=true label='未处理消息' name='msgTypeRadio' id="uMessageRadio" value='U|U|U'></input>
-					    <input class='hisui-radio' type="radio" label='医生已处理消息' name='msgTypeRadio' id="eMessageRadio" value='R|E|U'></input>
-					    <input class='hisui-radio' type="radio" label='确认已修复消息' name='msgTypeRadio' id="cMessageRadio" value='R|E|C'></input>
-		 				<span style="margin-left:20px;margin-right:0px;">开始时间 </span><input id="inputCreateDateStart" class="hisui-datebox" />
-		 				<span style="margin-left:20px;margin-right:0px;">结束时间 </span><input id="inputCreateDateEnd" class="hisui-datebox" />
+			<div id="messageListTableTBar" style="padding:10px;">	
+				<div>
+					    <span style="margin-right:10px;">#(..Get("消息状态"))#</span>
+					    <span style="margin-right:10px;"><input class='hisui-radio' type="radio" checked=true label='未处理消息' name='msgTypeRadio' id="uMessageRadio" value='|U|U'></input></span>
+					    <span style="margin-right:10px;"><input class='hisui-radio' type="radio" label='医生已处理消息' name='msgTypeRadio' id="eMessageRadio" value='R|E|U'></input></span>
+					    <input class='hisui-radio' type="radio" label='确认已修复消息' name='msgTypeRadio' id="cMessageRadio" value='R|E|C'></input>	
 		 		</div>	
-		 		<div style="float:right;">
-	 				<a id="ConfirmBtn" href="#" data-options="iconCls:'icon-ok'" class="hisui-linkbutton" style="margin-right:15px;">确认已修复</a>		
+		 		<div style="padding-top:10px">
+		 			<span style="margin-right:10px;">#(..Get("开始时间"))#</span><input id="inputCreateDateStart" class="hisui-datebox" />
+		 			<span style="margin-left:20px;margin-right:10px;">#(..Get("结束时间"))#</span><input id="inputCreateDateEnd" class="hisui-datebox" />
+                    <span style="margin-left:20px;margin-right:10px;">#(..Get("科室"))#</span><select id="ctLocID" class="hisui-combobox" style="width:150px;"></select>
+		 			<span style="margin-left:20px;margin-right:10px;">#(..Get("消息检索"))#</span><input id="selectDec" name="textbox" class="hisui-searchbox"  style="width:150px;">
+	 				<a id="ConfirmBtn" href="#" data-options="iconCls:'icon-w-ok'" class="hisui-linkbutton" style="margin-left:10px;margin-right:15px;">确认已修复</a>		                     
+	 				<a href="#" class="hisui-linkbutton hover-dark"  id="makeExcelBtn"  style="width:90px;margin-left:10px">导出表格</a>
 	 			</div>
 			</div>	
-			<div class="hisui-datagrid" id="messageListTable" data-options="border:false" style="border:none;height:275px;"></div>
+			<div class="hisui-datagrid" id="messageListTable" data-options="border:false,fit:true" style="border:none;"></div>
 		</div>
 	</div>
-	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="border:none;">
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" class="div_center" style="border:none;">
 		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'west',split:true" style="border:none; width:820px; padding:0px 0px 5px 5px">	
-				<div class="hisui-panel" title="医生列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-person',fit:true" style="width:815px,margin-left:40px;margin-bottom:40px">
-					<div id="docListTableTBar" style="height:30;padding: 5px 0px 5px 10px;">	
-							<span style="margin-left:20px;margin-right:10px;">医生所在科室</span> <select class="hisui-combobox" id="inputDocLoc" name="inputDocLoc" style="width:130px;"></select>
+			<div data-options="region:'west',split:true" style="border:none; width:820px; padding:0px 0px 4px 4px">	
+				<div class="hisui-panel" title="医生列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-person',fit:true" style="width:815px">
+					<div id="docListTableTBar" style="height:30;padding:10px;">	
+							<span style="margin-right:10px;">#(..Get("医生所在科室"))#</span><select class="hisui-combobox" id="inputDocLoc" name="inputDocLoc" style="width:130px;"></select>
 							<!--span style="margin-left:10px;margin-right:10px;">医生所在安全组</span> <select id="inputDocSSGroup" name="inputDocSSGroup" style="width:75px;height:30px;"></select-->
-							<span style="margin-left:10px;margin-right:10px;">医生姓名</span> <input id="inputDocName" class="hisui-validatebox textbox" style="width:100px;"/>
+							<span style="margin-left:10px;margin-right:10px;">#(..Get("医生姓名"))#</span><input id="inputDocName" class="hisui-validatebox textbox" style="width:100px;"/>
 							<a href="#" id="docSearchBtn" class="hisui-linkbutton" iconCls="icon-w-find" style="margin-left:10px;">查询</a>
 							<a href="#" id="docResetBtn" class="hisui-linkbutton" iconCls="icon-w-update" style="margin-left:10px;">清屏</a>
 					</div>
-					<div class="hisui-datagrid" id="docListTable" data-options="border:false" style="border:none;height:254px;"></div>
+					<div class="hisui-datagrid" id="docListTable" data-options="border:false,fit:true" style="border:none;height:254px;"></div>
 				</div>		
 			</div>
-			<div data-options="region:'center'" style="border:none;padding:0px 5px 5px 0px">
+			<div data-options="region:'center'" style="border:none;padding:0px 4px 4px 0px">
 				<div class="hisui-panel" title="发消息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="margin-right:40px;margin-bottom:40px">
-					<div style="padding:5px 20px 10px 20px">
+					<div style="padding:10px">
 						<form id="ff" method="post">
 							<table cellpadding="3" >
 								<tr>
-									<td>收件人</td>
+									<td align="right">#(..Get("收件人"))#</td>
 									<td>
-										<input class="hisui-validatebox" type="text" name="inputReceiveUserName" id="inputReceiveUserName" readonly="true" disabled data-options="required:true" style="width:350px;height:30px;" />
+										<input class="hisui-validatebox" type="text" name="inputReceiveUserName" id="inputReceiveUserName" readonly="true" disabled data-options="required:true" style="margin-left:10px;width:350px;height:30px;" />
 										<input type="hidden" name="inputReceiveUserID" id="inputReceiveUserID" />
 									</td>
 								</tr>
 								<tr>
-									<td>紧急程度</td>
+									<td>#(..Get("紧急程度"))#</td>
 									<td>
-										<select id="inputPriority" name="inputPriority" style="width:357px;height:30px;"></select>
-										<input type="hidden" name="inputPriorityValue" id="inputPriorityValue" />
+										<span style="margin-left:10px;"><select id="inputPriority" name="inputPriority" style="margin-left:10px;width:357px;height:30px;"></select>
+										<input type="hidden" name="inputPriorityValue" id="inputPriorityValue" /></span>
 									</td>
 								</tr>
 								<tr>
-									<td>消息标题</td>
-									<td><input class="hisui-validatebox textbox" type="text" name="inputMessageHeader" id="inputMessageHeader" data-options="required:true" style="width:350px;height:30px;" /></td>
+									<td>#(..Get("消息标题"))#</td>
+									<td><input class="hisui-validatebox textbox" type="text" name="inputMessageHeader" id="inputMessageHeader" data-options="required:true" style="margin-left:10px;width:350px;height:30px;" /></td>
 								</tr>
 								<tr>
-									<td>消息内容</td>
-									<td><textarea class="hisui-validatebox textbox" name="inputMessage" id="inputMessage" style="width:350px;height:58px;" ></textarea></td>
+									<td valign="top">#(..Get("消息内容"))#</td>
+									<td><textarea class="hisui-validatebox textbox" name="inputMessage" id="inputMessage" style="margin-left:10px;width:350px;height:58px;" ></textarea></td>
 								</tr>
 								<tr>
 									<td></td>
@@ -100,7 +112,7 @@
 			</div>
 		</div>
 	</div>
-	<div data-options="region:'south'" style="border:none;height:1px"></div>
+	<script src="../scripts/DHC.EMR.Quality.MessageSummary.js"></script>
 </body>
 
 </HTML>

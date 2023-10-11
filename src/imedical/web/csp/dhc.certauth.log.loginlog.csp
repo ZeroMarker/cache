@@ -1,0 +1,103 @@
+﻿<html>
+    <head>
+    	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
+        <HISUI/>
+		<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/js/log.loginlog.js" ></script>
+
+        <server>
+            s userID = %session.Get("LOGON.USERID")
+            s ssGroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s hospID = %session.Get("LOGON.HOSPID")
+			s:(hospID = "")&&(userLocID '= "") hospID = ##Class(CA.BL.HospitalMgr).GetHospitIDByLocID(userLocID)
+            s isOnMulityHospMgr = ##Class(CA.BL.HospitalMgr).IsOnMulityHospMgr()
+        </server>
+
+        <script language="javascript">
+            var logonInfo = {
+                UserID: "#(userID)#",
+                GroupID: "#(ssGroupID)#",
+                CTLocID: "#(userLocID)#",
+                HospID: "#(hospID)#"
+            }; 
+            
+            var sysOption = {
+	        	IsOnMulityHospMgr: "#(isOnMulityHospMgr)#"
+	        };
+        </script>
+    </head>
+
+    <body class="hisui-layout">
+		
+		<div data-options="region:'north',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" style="height:200px" >
+        	<div id="hospDiv" class="hisui-panel" style="height:41px;margin-bottom:4px;">
+				<table cellspacing="5" cellpadding="0">
+		            <tr>
+		            	<td id="_HospListLabel" style="color:red;margin:0 10">选择医院：</td>
+		            	<td><input id="_HospList"></td>
+		            </tr>
+		        </table>
+	        </div>
+        	<div class="hisui-panel" style="width:auto;height:auto" data-options="title:'查询条件',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+                <table cellspacing="5" cellpadding="0" >
+                	<tr>
+                    	<td><a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="btnQuery" style="height:30px;margin-left:10px;width:90px;">查询</a> </td>
+                        <td><a class="hisui-linkbutton" data-options="iconCls:'icon-reset',plain:true" id="btnReset" style="height:30px;margin-left:10px;width:150px;">重置查询条件</a> </td>
+                    </tr>
+                </table>
+                <table cellpadding="5" cellspacing="5" class="table">
+                	<tr>
+                        <td class="label">开始日期</td>
+                        <td></td>
+                        <td>
+                            <input id="StartDate" class="hisui-datebox" style="width:155px;" data-options="fit:true,border:false,editable:false"></input>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td class="label">结束日期</td>
+                        <td></td>
+                        <td>
+                        	<input id="EndDate" class="hisui-datebox" style="width:155px;" data-options="onSelect:setStartData,fit:true,border:false,value:'Today',editable:false"></input>
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="label">用户工号</td>
+						<td></td>
+                        <td>
+                            <input id="UserCode" type="text" class="textbox tdtext"/>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td class="label">用户姓名</td>
+                        <td></td>
+                        <td>
+                            <input id="UserName" type="text" class="textbox tdtext"/>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td class="label">科室</td>
+                        <td></td>
+                        <td>
+                            <select id="UserDept" class="hisui-combobox" style="width:155px"></select>
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    
+                </table>
+        	</div>
+        </div>
+        
+        <div data-options="region:'center',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" >
+            <div class="hisui-panel" data-options="title:'日志信息',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">
+                <table id="dgLog" ></table>
+            </div>
+        </div>
+        
+    </body>
+</html>

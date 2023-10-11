@@ -1,0 +1,1067 @@
+<!--csp:nur.hisui.taskoverview.csp-->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+        	s PatientListPage=""
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+			s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+			s DefaultCode = $G(%request.Data("DefaultCode", 1))
+			s SinglePatient = $G(%request.Data("SinglePatient", 1))
+        </script>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	
+	
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding: 5px!important;
+        }
+        .patientbar {
+	    	padding-left: 40px;
+    		text-indent: -40px; 
+	    }
+	    .layout>.panel.layout-panel>.panel-header {
+		    padding: 1px 5px;
+		}
+		.west_patients {
+			width: 225px;
+			border: none;
+		}
+		.west_north_search {
+			padding: 5px;
+			height: 61px;
+			border: 1px solid #ccc;
+			border-bottom-width: 0;
+		}
+		#wardPatientCondition {
+			margin-top: 5px;
+			width: 206px;
+			padding:0 1px;
+		}
+		.west_center_list {
+			padding: 0;
+		}
+		.center_templates {
+			border: none;
+		}
+		@media screen and (max-width: 1800px) {
+		    .center_north_patinfo {
+				height:58px;
+				border: none;
+			}
+		}
+		@media screen and (min-width: 1800px) {
+		    .center_north_patinfo {
+				height:38px;
+				border: none;
+			}
+		}
+		.center_center_list {
+			border-radius: 4px;
+		}
+		.unman {
+			background: url(../images/unman.png) no-repeat;
+			background-size: cover;
+		}
+		.td_title {
+        	text-align:right;
+        	height: 30px;
+        	padding:0 5px 0 40px;
+        }
+        .td_item {
+        	height: 30px;
+        	padding: 0;
+        }
+        .layout-panel-north{
+			border-bottom: 0;	
+		}
+		.td_itemb input.combo-text{
+			width:123px!important;	
+		}
+		.td_item input.hisui-timespinner{
+			width:56px!important;	
+		}
+	</STYLE>
+	<style type="text/css">
+
+		#chart {  
+			width: 100%;  
+			height: 100%;  
+			display: block;
+		}
+		#chart #numbers {  
+			width: 50px;  
+			height: 100%;  
+			margin: 0;  
+			padding: 0;  
+			display: inline-block;  
+			float: left;
+		}
+		#chart #numbers li {  
+			text-align: right;  
+			padding-right: 1em;  
+			list-style: none;  
+			height: 29px;  
+			border-bottom: 1px solid #444;  
+			position: relative;  
+			bottom: 30px;
+		}
+		#chart #numbers li:last-child {  height: 30px;}
+		#chart #numbers li span {  color: #eee;  position: absolute;  bottom: 0;  right: 10px;}
+		#chart #bars { display: inline-block;min-width:100%;   width: auto;  height: 200px;   margin: 0;  border-bottom: 1px solid #017bec;}
+		#chart #bars li {  display: table-cell;  width: 100px;min-width:100px;  height: 200px;  margin: 0;  text-align: center;  position: relative;}
+		#chart #bars li .bar {  display: block;  width: 50px;margin-bottom: 10px;  margin-left: 25px;  background: #017bec;  position: absolute;  bottom: 0;}
+		#chart #bars li .bar:hover {  background: #5AE;  cursor: pointer;}
+		#chart #bars li span {  display: block;height: 40px;width: 100%;  position: absolute;  bottom: -45px;  left: 0;  text-align: center;}
+		
+		
+		#right span.value{position: absolute;right: 10px;}
+		#right span.text{position: absolute;left: 10px;}
+		#right div.print{
+			position: relative;
+			display: block;
+			height: 40px;
+			line-height: 40px;
+			background:#efefef;
+			border-radius: 2px;
+			margin: 0px 5px 5px 5px;
+		}
+		#right table.right-table div.print:hover{
+			color: #1890ff;
+			background: #d8efff;
+			cursor:pointer;
+		}
+		.settingTag{
+			color: #000;
+			border: 1px solid #ccc;
+			width: 100%;
+			display: block;
+			position: absolute;
+			background: #fff;
+			right: -1px;
+		}
+		.settingContent{
+			position: absolute;
+			right: -1px;
+			width: 400px;
+			top: 31px;
+			background: #fff;
+			height: 150px;
+			border: 1px solid #ccc;
+			display:none;
+		}
+		.tabs-panels .panel-body{
+			overflow-y: hidden !important;
+		}
+	</style>
+	
+	
+
+<style>
+		.hj-wrap{
+			width:500px;
+			height: 200px;
+			margin:10px auto;
+			clear:both;
+			overflow: hidden;
+			display:inline;
+		}
+		.hj-transverse-split-div{
+			float: left;
+			/*height: 100%;*/
+			height:150px;
+			padding:10px;
+			overflow: hidden;
+			border-right:1px solid #ddd
+		}
+		.hj-transverse-split-div ul{
+			height: 100%;
+			overflow-y: auto;
+			}
+		.hj-wrap .hj-transverse-split-label{
+			float:left;
+			width: 10px;
+			height: 100%;
+			display:block;
+			cursor: e-resize;
+			background-color:#fff;
+		}
+		table tr td{
+			border:1px solid #fff;
+		}
+		.hj-vertical-split-div{
+			height:150px;
+			border:0px solid red;
+			width:99.9%;
+			margin:0 auto;
+			background-color:#0099ff;
+		}
+		.hj-vertical-split-label{
+			width: 100%;
+			height: 10px;
+			display:block;
+			cursor: n-resize;
+			background-color:#fff;
+		}
+		.webui-popover-inner{
+			width:100% !important;
+			background: #fff;
+    		color: black;
+    		border-radius: 6px;
+    		
+		}
+	</style>
+  <server>
+ ; 是否显示左侧患者列表 Y 显示 其他 不显示
+ s IsShowPatList=$G(%request.Data("IsShowPatList", 1))
+ </server>
+	<script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var AuthorityFlag = "#(AuthorityFlag)#";
+        var DefaultCode = "#(DefaultCode)#";
+        var SinglePatient = "#(SinglePatient)#";
+    </script>
+     <script language="javascript">
+     
+	    var EpisodeIDStr = "#(EpisodeID)#";
+		var TWflag = true;
+		var TWsheetCode ="" //DefaultSee、WZX（单据code）
+		var TWstartDate = "" //开始日期
+		var TWstartTime="" //开始时间
+		var TWendDate="" //结束日期
+		var TWendTime=""//结束时间
+		var IsShowPatList="#(IsShowPatList)#"
+	</script>
+	
+<style type="text/css">
+.mt {
+	max-width: 650px !important;
+	min-width: 170px;
+	height: 100% !important;
+	overflow-x:auto;
+	overflow-y:hidden;
+}
+.mk {
+	white-space: nowrap;
+	padding-bottom:20px;
+}
+
+.mj:last-child ul{
+	border: none !important;
+	
+}
+.mj {
+	width: 150px;
+	height: 200px;
+	/*border-right: 1px solid #999;*/
+	border: none;
+	padding-left:10px;
+	display: inline-block;
+}
+.mt ul{
+	border-right: 1px solid #eee !important;
+	height: 200px;
+	overflow-y:auto;
+	overflow-x:hidden;
+}
+.webui-popover{
+	border:none !important	
+}
+
+</style>
+</head>
+<body>
+	<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:0.5;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+		<div>Loading</div>
+	</div>
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true"> 
+		<csp:if condition='IsShowPatList="Y"'>
+			<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+		</csp:if>
+		<div class="center_templates" data-options="region:'center',split:true">
+			<div class="hisui-layout"  data-options="fit:true,split:true">
+				<div id="main-tabs" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools'" style="height:auto;">   
+					<div title="任务总览"> 
+						<div class="center_center_list" data-options="region:'center',split:true" style="border-color: #ccc; border-radius:4px">
+							<div data-options="region:'north'" style="padding:10px;position:relative;">
+								<span>#(..Get("开始时间"))#</span>
+								<input id="execStDate" class="hisui-datebox textbox tb130">
+								<input id="execStTime"class="hisui-timespinner" data-options="showSeconds:false" style="border-radius: 2px;width:80px;" value="00:00">
+				
+								
+								<span style="margin-left:20px;">#(..Get("结束时间"))#</span>
+								<input id="execEndDate" class="hisui-datebox textbox tb130">
+								<input id="execEndTime" class="hisui-timespinner" data-options="showSeconds:false" style="border-radius: 2px;width:80px;" value="23:59">
+								<span style="margin-left:10px;">
+									<a class="hisui-linkbutton" id="serachBtn" data-options="iconCls:'icon-w-find'">查询</a>
+								</span>
+								
+								<span style="display:none; position: absolute;right:20px;line-height:32px;width: 100px;text-align: center;z-index:999">
+									<span class="settingContent">asdfasdf</span>
+									<a href="#" id="vsReminder_tip" class="settingTag" style="">区块设置</a>
+								</span>
+								
+
+							</div>
+							<div data-options="region:'center',title:'',split:true,bodyCls:'panel-header-gray'"
+					 	  style="margin:0 10px 5px 10px;height: calc(100% - 88px);position: relative;overflow-y: auto;">
+						   
+							<div id="left" style="position: absolute;width: calc(100%);left: 0px !important;">
+								<div id="tabsDoctorOrderExe" style="height:300px;margin-bottom:10px;" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true"></div>
+								<div id="tabsNurseOrderExe" style="height:300px;margin-bottom:10px;" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true"></div>
+								<div id="tabsTasksTreat" style="height:300px;margin-bottom:10px;" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true"></div>
+								<div id="tabsTasksAssess" style="height:300px;margin-bottom:10px;" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true"></div>
+								<div id="tabsTasksSign" style="height:300px;margin-bottom:10px;" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true"></div>
+								
+								
+							</div>
+							<div id="right"  style="position: absolute;width: 410px;heigth:auto;right: 0px;display:none;">
+								<div id="unPrintTagCount" class="hisui-tabs tabs-gray" style="width:calc(100%);height:auto;margin-bottom:10px;" data-options="isBrandTabs:true">
+								</div>
+								<div id="unPrintDocOrderCount" class="hisui-tabs tabs-gray" style="width:calc(100%);height:auto;margin-bottom:10px;" data-options="isBrandTabs:true">
+								</div>	
+								<div id="barCodeCount" class="hisui-tabs tabs-gray" style="width:calc(100%);height:auto;margin-bottom:10px;" data-options="isBrandTabs:true">
+								</div>
+								<div id="infusionCount" class="hisui-tabs tabs-gray" style="width:calc(100%);height:auto;margin-bottom:10px;" data-options="isBrandTabs:true">
+								</div>
+							
+							
+							</div> 
+						
+						   
+						   
+						   </div>
+
+						</div>  
+					</div>
+				</div> 	
+			</div>
+		</div>
+	</div>
+
+<script type="text/javascript">
+	$(window).load(function() {
+		$("#Loading").hide();
+		
+		if(null!=EpisodeID && ''!=EpisodeID){
+			parmaInit.init(EpisodeID)
+		}else{
+			$("#left").css({"visibility":"hidden"})
+			//$("#serachBtn").trigger("click")
+			initLoading()
+		}
+	})
+
+	$(function(){
+		var opt = $("#execStDate").datebox('options');
+		opt.maxDate = formatDate(1);
+		$("#execStDate").datebox("setValue",formatDate(0));
+		$("#execEndDate").datebox("setValue",formatDate(1));
+		var optB = $("#execEndDate").datebox('options');
+		optB.minDate = formatDate(0); 
+	});
+	$('#execStDate').datebox({
+        onSelect: function (select) {
+	    	var stDate = $('#execStDate').datebox('getValue')  
+	    	var optB = $("#execEndDate").datebox('options');
+
+	    	optB.minDate = stDate;   
+	    }
+	})
+	
+	
+	$('#execEndDate').datebox({
+        onSelect: function (select) {
+	    	var stDate = $('#execEndDate').datebox('getValue')  
+	    	var optB = $("#execStDate").datebox('options');
+
+	    	optB.maxDate = stDate;   
+	    }
+	})
+	
+	function formatDate(t){
+		var curr_Date = new Date();  
+		curr_Date.setDate(curr_Date.getDate() + parseInt(t)); 
+		var Year = curr_Date.getFullYear();
+		var Month = curr_Date.getMonth()+1;
+		var Day = curr_Date.getDate();
+		//return Year+"-"+Month+"-"+Day;
+		
+		if(typeof(DateFormat)=="undefined"){ //2017-03-15 cy
+			return Year+"-"+Month+"-"+Day;
+		}else{
+			if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY 2017-03-07 cy
+				return Day+"/"+Month+"/"+Year;
+			}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
+				return Year+"-"+Month+"-"+Day;
+			}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
+				return Month+"/"+Day+"/"+Year;
+			}else{ //2017-03-15 cy
+				return Year+"-"+Month+"-"+Day;
+			}
+		}
+	}
+	
+	//页面检索事件
+	$("#serachBtn").on("click",function(){
+		$("#Loading").show();
+		setTimeout(function(){
+		    var EpisodeIDS=""
+			var slen = $("#patient_search").length
+			if(slen>0){
+				
+				EpisodeIDS = parmaInit.resultPatIds(null);
+			}else{
+				EpisodeIDS = "#(EpisodeID)#";
+				
+			}
+			if(EpisodeIDS==""){
+				$("#Loading").hide();
+				$.messager.alert('提示','请选择左侧列表患者！' , "info");
+				return false;
+			}
+			parmaInit.init(EpisodeIDS)
+			$("#left").css({"visibility":""})
+		}, 1000);
+		
+		
+	})
+	
+	function initLoading(){
+		//$("#Loading").show();
+		var t2 = window.setInterval(function() {
+		    var EpisodeIDS=""
+			var slen = $("#patient_search").length
+			if(slen>0){
+				
+				EpisodeIDS = parmaInit.resultPatIds(null);
+			}else{
+				EpisodeIDS = "#(EpisodeID)#";
+				
+			}
+			if(EpisodeIDS==""){
+				//$("#Loading").hide();
+				//$.messager.alert('提示','请选择左侧列表患者！' , "info");
+				//return false;
+			}else{
+				$("#Loading").hide();
+				window.clearInterval(t2)  // 去除定时器	
+				parmaInit.init(EpisodeIDS)
+				$("#left").css({"visibility":""})
+			}
+			
+		}, 200);
+	}
+	//双击打印统计时，跳转操作
+	$("body").on("dblclick","li div.bar",function(){
+		
+		var h = $("#nrLayout").find(".tabs-panels").eq(0).height()
+		var text = $(this).siblings("span.name").text();
+		var id = $(this).parents(".hisui-tabs").attr("id")
+		
+		
+		
+
+		TWstartDate = $("#execStDate").datebox("getValue");
+		TWstartTime = $("#execStTime").timespinner("getValue");
+		TWendDate = $("#execEndDate").datebox("getValue");
+		TWendTime = $("#execEndTime").timespinner("getValue");
+		TWsheetCode = $(this).attr("code")
+		
+		
+	
+		var EpisodeIDS=""
+		var slen = $("#patient_search").length
+		if(slen>0){
+			/*var all = parmaLeftUrls[id].data.body.all
+			var eidArr={}
+			for(var i in all){
+				if(TWsheetCode==all[i].code){
+					var list = all[i].list
+					for(var j in list){
+						var eid = list[j].episodeID	
+						eidArr[eid]=""
+					}
+				}	
+			}
+			for(var key in eidArr){
+				EpisodeIDS.push(key)
+			}*/
+			EpisodeIDS = parmaInit.resultPatIds(null);
+		}else{
+			EpisodeIDS = "#(EpisodeID)#";
+			//EpisodeIDS.push(EpisodeID)	
+		}
+		EpisodeIDStr = EpisodeIDS
+		//EpisodeIDS = EpisodeIDS.join("^")
+//HLZLD
+	console.log(EpisodeIDStr+","+TWstartDate+","+TWstartTime+","+TWendDate+","+TWendTime+","+TWsheetCode)
+			
+		var iframeUrl=""
+		if("tabsTasksTreat"==id){
+			TWsheetCode = "HLZLD"
+			var curUrl = window.location.href.split("/csp/")[0] + "/csp/";
+			var iframeUrl = curUrl + "dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute"
+		}else if("tabsDoctorOrderExe"==id){
+			
+			var curUrl = window.location.href.split("/csp/")[0] + "/csp/";
+			var iframeUrl = curUrl + "dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute"
+			//var iframeUrl = curUrl + "dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute?EpisodeIDS="+EpisodeIDS+"&TWflag="+TWflag+"&TWstartDate="+TWstartDate+"&TWstartTime="+TWstartTime+"&TWendDate="+TWendDate+"&TWendTime="+TWendTime+"&TWsheetCode="+TWsheetCode;
+		}else if("tabsTasksSign"==id){
+			var stdate = TWstartDate +' '+ TWstartTime
+			var etDate = TWendDate + ' ' + TWendTime
+			var EpisodeID = EpisodeIDS.split("^")[0]
+			var arrs = EpisodeIDS.split("^")
+			var iframeUrl = 'nur.hisui.multivitalsignbyday.csp?componentArgs={}&codeStr='+TWsheetCode+'&EpisodeIDS='+EpisodeIDS+'&startDateTime='+stdate+'&endDateTime='+etDate+'&EpisodeID='+arrs[0]
+		}else if("tabsTasksAssess"==id){
+			var stdate = TWstartDate +' '+ TWstartTime
+			var etDate = TWendDate + ' ' + TWendTime
+			var text =$(this).parents("li").find("span.name").text()
+			text="常规护理任务-护理评估"
+			var iframeUrl = 'nur.hisui.taskoverview.assess.csp?1=1&EpisodeIDS='+EpisodeIDS+'&startDateTime='+stdate+'&endDateTime='+etDate+'&showTaskTabName='+text+'&code='+TWsheetCode
+		}else if("tabsNurseOrderExe"==id){
+			var text =$(this).parents("li").find("span.name").text()
+			var ptext =  encodeURI(text);  
+			iframeUrl='nur.hisui.nurseplantaskexecute.csp?1=1&episodeIDString='+EpisodeIDS+'&dateFrom='+TWstartDate+'&timeFrom='+TWstartTime+'&dateTo='+TWendDate+'&timeTo='+TWendTime+'&showTaskTabName='+ptext
+		}
+			console.log(iframeUrl)
+		if(iframeUrl !=""){
+			var content = '<iframe scrolling="auto" frameborder="0"  src="'+iframeUrl+'" style="width:100%;height:'+h+'px;"></iframe>';
+			addTab(text,content)
+		}
+
+		
+	})
+	
+	function addTab(title, content){
+		debugger;
+		$('#main-tabs').tabs('close', title);
+		if ($('#main-tabs').tabs('exists', title)){
+			$('#main-tabs').tabs('close', title);
+			
+			addTab(title, content)
+		} else {
+			$HUI.tabs("#main-tabs").add({
+				title: title,
+				content: content,
+				closable:true  		
+			});
+			$('#main-tabs').tabs({    
+				onSelect:function(title,index){    
+					if(index==0){
+						$("#serachBtn").trigger("click")
+					}else{
+						var tabsId = $(this).attr("id");
+						var tab = $HUI.tabs("#"+tabsId).getTab(index)
+						console.log(tab)
+						$HUI.tabs("#"+tabsId).update({
+							tab:tab	
+						});
+					}
+				}
+			})
+			
+		}
+	}
+	var patientId=""
+	//页面初始化入口
+	var parmaInit = {
+		resultPatIds:function(patid){
+			//获取左侧列表选中的人员
+			var episodeIdStr = patid
+			
+			if(null!=episodeIdStr && ""!= episodeIdStr){
+				return episodeIdStr;
+			}
+			
+			var episodeIDArr=[];
+			var nodes = $('#patientTree').tree('getChecked');
+			if(nodes.length > 0){
+				for(var i = 0; i < nodes.length; i++){
+					if(typeof(nodes[i].episodeID) != "undefined"){
+						episodeIDArr.push(nodes[i].episodeID);
+					}	
+				}
+				episodeIdStr = episodeIDArr.join("^");	
+			}else{
+				episodeIdStr = "";
+			}
+			return episodeIdStr;
+		},
+		resultPamars:function(patid){
+			//左边柱状图初始化加载
+			var episodeIdStr = parmaInit.resultPatIds(patid);
+			//没有病人id则返回
+			if(episodeIdStr=="" || episodeIdStr== null){
+				return false;
+			}
+			//获取页面参数
+			var StartDate = $("#execStDate").datebox("getValue");
+			var StartTime = $("#execStTime").timespinner("getValue");
+			var EndDate = $("#execEndDate").datebox("getValue");
+			var EndTime = $("#execEndTime").timespinner("getValue");
+			var parmas = {
+				GroupID: session['LOGON.GROUPID'],
+				locID:session['LOGON.CTLOCID'],
+				wardID:session['LOGON.WARDID'],
+				episodeIDs:episodeIdStr,
+				StartDate:StartDate,
+				StartTime:StartTime,
+				EndDate:EndDate,
+				EndTime:EndTime,
+				BarFilter:""
+			}
+			return parmas;
+		
+		},
+		init:function(patid){
+			//$("#left").hide()
+			parmaLeftUrls.initLeftTabs(patid);
+			//parmaRightUrls.initRightTabs(patid);
+			//parmaInit.settingAllTag(patid)
+		},
+		settingAllTag:function(patid){
+			var parmas = parmaInit.resultPamars(patid)
+			var parma = {
+				GroupID:parmas.GroupID,
+				locID:parmas.locID,tabsDoctorOrderExe:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.NeedExeTask",
+			funcName:"GetOrderExecuteChartFacade"
+		},
+				wardID:parmas.wardID
+			}
+			runClassMethod("Nur.NIS.Service.ExecuteSummary.Biz","GetSettingAllTag", parmas,function(data){
+				console.log(data)
+			},'json',false);
+		}
+	
+	}
+
+
+	var parmaLeftUrls  = {
+		tabsDoctorOrderExe:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.NeedExeTask",
+			funcName:"GetOrderExecuteChartFacade"
+		},
+		tabsNurseOrderExe:{
+			methodName:"Nur.NIS.Service.NursingPlan.TaskRecord",
+			funcName:"GetNursingTaskStatisticsInfo"
+		},
+		tabsTasksTreat:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.NeedExeTask",
+			funcName:"NormalTaskProcessInit"
+		},
+		tabsTasksAssess:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.NeedExeTask",
+			funcName:"NormalTaskProcessInit"
+		},
+		tabsTasksSign:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.NeedExeTask",
+			funcName:"NormalTaskProcessInit"
+		},
+		
+		initLeftTabs:function(patid){
+			var parmas = parmaInit.resultPamars(patid)
+			rspatientList(parmas.episodeIDs)
+			$("#Loading").show();
+			$("#left div.hisui-tabs").each(function(){
+				var tabsId = $(this).attr("id");
+				var parmaUrl = parmaLeftUrls[tabsId]
+				console.log(tabsId)
+				//1、访问后台，将返回的json放入parmaLeftUrls中
+				parmaLeftUrls.resultData(parmaUrl.methodName,parmaUrl.funcName,parmas,tabsId)
+				//2、获取tabs标签的title
+				parmaLeftUrls.resultTabTitles(parmaLeftUrls[tabsId].data,tabsId)
+				//3、模拟点击第一个tab
+				//4、获取点击的内容，放入指定tab的content中
+				$('#'+tabsId).tabs({    
+					onSelect:function(title,index){    
+						var key = $(title).attr("key");
+						var tab = $HUI.tabs("#"+tabsId).getTab(index)
+						$HUI.tabs("#"+tabsId).update({
+							tab:tab,
+							options:{
+								//content : parmaLeftUrls.resultTabContent(parmaLeftUrls[tabsId].data.body[key])
+								content: parmaLeftUrls[tabsId].data.body ? parmaLeftUrls.resultTabContent(parmaLeftUrls[tabsId].data.body[key]) : []
+							}	
+						});
+						animateDiv(tabsId)
+					}    
+				});
+				if("tabsDoctorOrderExe"!=tabsId){
+					$('#'+tabsId).tabs('close', 1);  
+				}          
+				//默认点击第一个tab
+				$("#"+tabsId).tabs('select',1);  
+				var tab = $('#'+tabsId).tabs('getSelected');
+				var index = $('#'+tabsId).tabs('getTabIndex',tab);
+				console.log(index)
+			})
+			$("#Loading").hide();
+		},
+		resultTabContent:function(data){
+			var arrs = []
+			var nums = 1
+			for(var i in data){
+				//nums += data[i].value
+				var val = data[i].value
+				if(val>nums){
+					nums = val
+				}
+			}
+
+			for(var i in data){
+				var value = data[i].value
+				var num = (parseInt(value) / nums) * 100
+				if(num==0){
+					num=1
+				}
+				var html = '<li><div id="bar" code="'+data[i].code+'" data-percentage="'+num+'" class="bar"><div style="bottom: 20px;position: relative;">'+data[i].value+'</div></div><span class="name">'+data[i].name+'</span></li>'
+				arrs.push(html)
+			}
+			var htmls ='<div id="chart"><ul id="bars" style="margin-top:20px;">'+arrs.join("")+'</ul></div>'
+			return htmls;
+		},
+		resultTabTitles:function(data,tabsId){
+			//生成tab的title
+			var title_name = data.name;
+			var head = data.head;
+			var body = data.body;
+			parmaLeftUrls.closeAllTabs(tabsId)
+			$HUI.tabs("#"+tabsId).add({
+				title: title_name,
+				iconCls:'icon-batch-add'    		
+			});
+			
+			for(var i in head){
+				var key = head[i].key;
+				var name = head[i].name;
+				var value = head[i].value;
+				name=name=="待执行"? "未执行":name
+				$HUI.tabs("#"+tabsId).add({
+					title: '<span class="keyname" key="'+key+'">'+name+'('+value+')'+'</span>'
+				});
+			}
+		
+		},
+		resultData:function(className,funcName,parmas,tabsId){
+			
+			
+			//注意参数名大小写
+			if(tabsId=="tabsDoctorOrderExe"){
+				parmas ={
+					GroupID:parmas.GroupID,
+					LocID:parmas.locID,
+					WardID:parmas.wardID,
+					EpisodeIDs:parmas.episodeIDs,
+					StartDate:parmas.StartDate,
+					StartTime:parmas.StartTime,
+					EndDate:parmas.EndDate,
+					EndTime:parmas.EndTime
+				}
+			}else if(tabsId=="tabsNurseOrderExe"){
+				//护嘱执行
+				parmas ={
+					episodeIDString:parmas.episodeIDs,
+					dateFrom:parmas.StartDate+" "+parmas.StartTime,
+					dateTo:parmas.EndDate+" "+parmas.EndTime,
+					typeCodes:"",
+					hospitalId:""
+				}
+			}else if(tabsId=="tabsTasksTreat" || tabsId=="tabsTasksAssess" || tabsId=="tabsTasksSign" ){
+				var TaskType = ""
+				if (tabsId=="tabsTasksSign"){
+					TaskType ="1"
+				}else if (tabsId=="tabsTasksAssess"){
+					TaskType ="2"
+				}else if (tabsId=="tabsTasksTreat"){
+					TaskType ="3"
+				}
+				parmas = {
+					LocID:parmas.locID,
+					WardID:parmas.wardID,
+					EpisodeIDs:parmas.episodeIDs,
+					StartDate:parmas.StartDate,
+					StartTime:parmas.StartTime,
+					EndDate:parmas.EndDate,
+					EndTime:parmas.EndTime,
+					TaskType:TaskType,
+					GroupID:parmas.GroupID,
+					//BarFilter:parmas.BarFilter
+				}
+			}
+			runClassMethod(className,funcName, parmas,function(data){
+				console.log(data)
+				parmaLeftUrls[tabsId].data = data
+			},'json',false);
+			
+			
+			
+		},
+		closeAllTabs:function(id){
+			//清空所有的Tab
+			var arrTitle = new Array();
+			var id = "#"+id;//Tab所在的层的ID
+			var tabs = $(id).tabs("tabs");//获得所有小Tab
+			var tCount = tabs.length;
+			if(tCount>0){
+						//收集所有Tab的title
+				for(var i=0;i<tCount;i++){
+					arrTitle.push(tabs[i].panel('options').title)
+				}
+						//根据收集的title一个一个删除=====清空Tab
+				for(var i=0;i<arrTitle.length;i++){
+					$(id).tabs("close",arrTitle[i]);
+				}
+			}
+		}
+	}
+
+
+	//已禁用
+	var parmaRightUrls = {
+		unPrintTagCount:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.Biz",
+			funcName:"QueryUnPrintTagCount"
+		},
+		unPrintDocOrderCount:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.Biz",
+			funcName:"QueryUnPrintDocOrderCount"
+		},
+		barCodeCount:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.Biz",
+			funcName:"QueryBarCodeCount"
+		},
+		infusionCount:{
+			methodName:"Nur.NIS.Service.ExecuteSummary.Biz",
+			funcName:"QueryInfusionCount"
+		},
+
+
+		initRightTabs:function(patid){
+			var parmas = parmaInit.resultPamars(patid)
+			$("#right div.hisui-tabs").each(function(){
+				var tabsId = $(this).attr("id");
+				var parmaUrl = parmaRightUrls[tabsId]
+				parmaRightUrls.resultData(parmaUrl.methodName,parmaUrl.funcName,parmas,tabsId)
+				parmaRightUrls.resultTabTitles(parmaRightUrls[tabsId].data,tabsId)
+				$HUI.tabs("#"+tabsId).add({
+					title: 'tabsIda',
+						content : parmaRightUrls.resultTabContent(parmaRightUrls[tabsId].data)
+				});
+				
+			})
+			$("#right .tabs-panels .panel").show()
+			$("#right .tabs-brand").css({"border":"none"})
+			$("#right .tabs-header li.tabs-selected").hide()
+		},
+		resultTabContent:function(parma){
+			var arrs = []
+			var data = parma.data
+			for(var i in data){
+					var html = '<div class="print" code="'+data[i].code+'"><span class="text">'+data[i].name+'</span><span class="value">'+data[i].value+'</span></div>';
+					arrs.push(html)
+			}
+			var trArrs = []
+			var html = ""
+			var count = 0;
+			for(var i in arrs){
+				 html += "<td>"+arrs[i]+"</td>"
+				 count++
+				 if(count==2){
+				 	trArrs.push("<tr>"+html+"</tr>")
+					 html = ""
+					 count = 0;
+				 }
+			}
+			if(html !=""){
+				trArrs.push("<tr>"+html+"</tr>")
+				html = ""
+			}
+			return '<table class="table right-table"  style="width:100%">'+trArrs.join("")+'</table>';
+		},
+		resultTabTitles:function(data,tabsId){
+			var title_name = data.name;
+			parmaLeftUrls.closeAllTabs(tabsId)
+			$HUI.tabs("#"+tabsId).add({
+				title: title_name,
+				iconCls:'icon-batch-add'    		
+			});
+			
+		
+		},
+		resultData:function(className,funcName,parmas,tabsId){
+			//注意参数名大小写
+			runClassMethod(className,funcName, parmas,function(data){
+				parmaRightUrls[tabsId].data = data
+			},'json',false);
+		},
+		
+	}
+	
+	var showIdAnimateArrs = ["tabsTasksSign","tabsTasksAssess"]
+	//已动画的形式呈现柱状图
+	function animateDiv(tabsId){
+		$("#"+tabsId+" #bars li .bar").each(function(e,d){
+			var f=$(this).data("percentage");
+			if(f > 90){f=90}
+			
+			var ht = $(this).parents("ul").height()
+			console.log(ht)
+			f = ht * (f/100)
+			
+			$(this).animate({height:f+"px"},500)
+						
+			if(f<=1 || showIdAnimateArrs.indexOf(tabsId)<0){
+				return true;	
+			}
+			
+			
+			var barCode = $(this).attr("code")
+			$(this).popover({
+				trigger:'hover',
+				content:function(){
+					var tab = $('#'+tabsId).tabs('getSelected');
+					var index = $('#'+tabsId).tabs('getTabIndex',tab);
+				
+					var list={}
+					if(index==1){
+					 	list = parmaLeftUrls[tabsId].data.body.all
+					}else{
+						list = parmaLeftUrls[tabsId].data.body.unexec
+					}
+					list = parmaLeftUrls[tabsId].data.body.unexec
+					var psj = {}
+					
+					for(var i in list){
+						var code = list[i].code
+						if(barCode==code){
+							var arrs = list[i].list
+							
+							for(var j in arrs){
+								var episodeID = arrs[j].episodeID	
+								var espArrs = []
+								if(typeof(psj[episodeID])!="undefined"){
+									espArrs = psj[episodeID]
+								}
+								espArrs.push(arrs[j])
+								psj[episodeID]=espArrs
+								
+								
+							}
+						}
+					}
+					var paj = []
+					for(var eid in psj){
+						paj.push(eid)
+					}
+					paj.sort(function(a, b){
+						var abed = patientList[a].bedCode+0
+						var bbed = patientList[b].bedCode+0
+						
+						return abed - bbed
+						}
+					);
+					
+					var tp=[]
+					for(var index in paj){
+						var eid = paj[index]
+						var html='<div class="mj"><label style="font-weight:bold;color:#017bec;">'+patientList[eid].name+'('+patientList[eid].bedCode+'床)</label>'
+						var lt = psj[eid]
+						var ltArrs = []
+			
+						for(var j in lt){
+									
+							ltArrs.push('<li style="padding:5px;cursor: pointer">'+lt[j].dateStr+" "+lt[j].timeStr+"</li>")
+						}
+						var ht = '<ul>'+ltArrs.join("")+'</ul>'
+						var html = html+ht+"</div>"
+						tp.push(html)
+					}
+
+					
+					
+					var phtml = '<div class="mt">'
+								+'<div class="mk">'
+								+tp.join("")
+								//+'<div class="mj"></div><div class="mj"></div><div class="mj"></div><div class="mj"></div><div class="mj"></div><div class="mj"></div><div class="mj"></div><div class="mj"></div><div class="mj"></div>'
+								+'</div></div>'
+							
+					
+					return phtml
+				},
+				style:'inverse'
+			});
+			
+		})
+	}
+
+function ptsh(){
+	
+	
+	
+}
+
+</script>
+<script type="text/javascript">
+
+	
+      
+
+
+	// 获取患者信息
+  var patientList = {};
+
+  function rspatientList(episodeIdStr){
+
+	  $cm({
+	    	ClassName: 'Nur.NIS.Service.VitalSign.TaskRule',
+	    	MethodName: 'GetPatientsByEpisodeIDs',
+	    	EpisodeIDs: episodeIdStr
+	  }, function(res) {
+	  		for(var i in res){
+				var episodeID = res[i].episodeID
+				patientList[episodeID] = res[i]  	
+			}
+			
+	  });
+	  
+  }
+function updateSbgTableSize() {
+    var n = 0;
+    var timer = setInterval(function() {
+	    console.log(1)
+        /*var innerHeight = window.innerHeight;
+        $('#adrsPanel').panel('resize', {
+            height: innerHeight - $(".ctcAEPatBar").height() - 9
+        });
+        $('#bloodGlucose').datagrid('resize', {
+            height: innerHeight - $(".ctcAEPatBar").height() - 110
+        })*/
+        //$("#serachBtn").trigger("click")
+        clearInterval(timer);
+      $(".panel-body.panel-body-noheader.panel-body-noborder").css("width","100%")
+            
+       
+    }, 200);
+}
+window.addEventListener("resize", updateSbgTableSize)
+</script>
+</body>
+</html>
+

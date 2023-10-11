@@ -54,8 +54,13 @@
 			s:(westWidth = "") westWidth = 280
 			s CAServicvice = ""
 			s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
-			s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
-			if (IsCAON = "Y")&(IsCACTLoc = "1") { 
+            //最新的程序需要增加产品模块的判断
+            if ($ll((##class(%Dictionary.CompiledMethod).%OpenId("CA.DigitalSignatureService||IsCACTLoc")).DefaultArgs) = "4") {
+                s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"IPEMR")
+            } else {
+                s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+            }
+			if ((IsCAON = "Y")||(IsCAON = "1"))&&(IsCACTLoc = "1") { 
 				s CAServicvice = "1" 
 				d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
 			}

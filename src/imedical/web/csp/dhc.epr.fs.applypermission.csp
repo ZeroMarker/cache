@@ -1,68 +1,64 @@
-<HTML>
-<HEAD>
+ï»¿<html>
+<head>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-	<TITLE>ÉêÇëÈ¨ÏŞ</TITLE>	
-	
+	<title>ç”³è¯·æƒé™</title>
 	<script language="cache" runat="server">
-  		s appointUserID = %session.Get("LOGON.USERID")
+		s appointUserID = %session.Get("LOGON.USERID")
 		s appointUserLoc = %session.Get("LOGON.CTLOCID")
-		s appointUserSSGroupID = %session.Get("LOGON.GROUPID")	
+		s appointUserSSGroupID = %session.Get("LOGON.GROUPID")
+		if (appointUserID = "")
+		{
+			s appointUserID = "2776"
+			s appointUserLoc = "1673"
+			s appointUserSSGroupID = "1"
+		}
 		s hospitalFlag = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("HospitalFlag")
 		s dataServiceURL = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("DataServiceURL")
-		s systemName = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("SystemName")
-        s systemVersion = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("Version")
 	</script>
 	<script type="text/javascript">
 		var appointUserID = '#(appointUserID)#';
-		var appointUserLoc = '#(appointUserLoc)#';	
+		var appointUserLoc = '#(appointUserLoc)#';
 		var appointUserSSGroupID = '#(appointUserSSGroupID)#';
 		var hospitalFlag = '#(hospitalFlag)#';
 		var dataServiceURL = '#(dataServiceURL)#';
-		var systemName = '#(systemName)#';
-        var systemVersion = '#(systemVersion)#';
-		if (appointUserID == "")
-		{
-			appointUserID = '2776';
-			appointUserLoc = '1673';	
-			appointUserSSGroupID = '1';
-		}
 	</script>
-	
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
 	<script src="../scripts/epr/JQuery/jquery-1.8.0.min.js"></script>
 	<script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
 	<script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
-	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
-	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
-    
 	<script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
-	
-	<script src="../scripts/epr/js/FS.ApplyPermission.js"></script>	
-	
-</HEAD>
-
-<body class="easyui-layout" data-options="fit:true">
-	<div data-options="region:'north'" class="easyui-panel" style="padding:3px;height:110px;border:0">
-		<div id="applyListTBar" class="easyui-panel" style="height:30;border:0">
-			<a href="#" id="addApplyBtn" class="easyui-linkbutton" iconCls="icon-add" data-options="plain:true">ĞÂÔöä¯ÀÀÉêÇë</a>
-			<a href="#" id="viewHistoryBtn" class="easyui-linkbutton" iconCls="icon-tip" data-options="plain:true">ä¯ÀÀ¼ÇÂ¼</a>
-			<a href="#" id="viewFavoritesBtn" class="easyui-linkbutton" iconCls="icon-tip" data-options="plain:true">ÊÕ²Ø</a>
+	<script src="../scripts/epr/js/xlsx.full.min.js"></script>
+	<script src="../scripts/epr/js/FS.ApplyPermission.js"></script>
+	<style type="text/css">
+	.tbtextbox {
+		border: 1px solid #95B8E7;
+		vertical-align: middle;
+	}
+	</style>
+</head>
+<body class="easyui-layout">
+	<div data-options="region:'north'" style="height:80px;">
+		<div style="padding:5px;">
+			<a href="#" id="addApplyBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true">æ–°å¢æµè§ˆç”³è¯·</a>
+			<a href="#" id="viewHistoryBtn" class="easyui-linkbutton" data-options="iconCls:'icon-sum',plain:true">æµè§ˆè®°å½•</a>
+			<a href="#" id="viewFavoritesBtn" class="easyui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="width:76px;">æ”¶è—</a>
 		</div>
-		<div id="applyListTableTBar" class="easyui-panel" style="height:70;border:0">	
-			<div style="margin:5px">
-				<select id="inputType" name="inputType" style="width:100px;height:20px;"></select>
- 				<input id="inputDateStart" class="easyui-datebox" />
- 				<input id="inputDateEnd" class="easyui-datebox" />
-			</div>	
-			<div style="margin:5px">
-				<a href="#" id="searchBtn" class="easyui-linkbutton" iconCls="icon-search">²éÑ¯</a>
-				<a href="#" id="resetBtn" class="easyui-linkbutton" iconCls="icon-reload">Çå¿ÕÌõ¼ş</a>
-				<a href="#" id="addFavoriteBtn" class="easyui-linkbutton" iconCls="icon-reload">Ìí¼ÓÊÕ²Ø</a>
-				<a href="#" id="reAppointBtn" class="easyui-linkbutton" iconCls="icon-reload">ÖØĞÂÉêÇëÑ¡ÖĞÉêÇë</a>
-				<a href="#" id="viewBtn" class="easyui-linkbutton" iconCls="icon-tip">ä¯ÀÀÑ¡ÖĞÎÄµµ</a>
-			</div>		
-		</div>	
+		<div style="padding:5px;">
+			<label for="inputType">ç”³è¯·ç±»å‹</label>
+			<input id="inputType" class="easyui-combobox" style="width:120px;">
+			<label for="inputDateStart">ç”³è¯·æ—¥æœŸ</label>
+			<input id="inputDateStart" class="easyui-datebox" style="width:120px;" />
+			<span>è‡³</span>
+			<input id="inputDateEnd" class="easyui-datebox" style="width:120px;" />
+			<a href="#" id="searchBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width:76px;">æŸ¥è¯¢</a>
+			<a href="#" id="resetBtn" class="easyui-linkbutton" data-options="iconCls:'icon-reload'">æ¸…ç©ºæ¡ä»¶</a>
+			<a href="#" id="addFavoriteBtn" class="easyui-linkbutton" data-options="iconCls:'icon-tip'">æ·»åŠ æ”¶è—</a>
+			<a href="#" id="reAppointBtn" class="easyui-linkbutton" data-options="iconCls:'icon-redo'">é‡æ–°ç”³è¯·</a>
+			<a href="#" id="viewBtn" class="easyui-linkbutton" data-options="iconCls:'icon-edit'">æµè§ˆé€‰ä¸­æ–‡æ¡£</a>
+		</div>
 	</div>
-	<div data-options="region:'center'"  style="width:500px;border:0">
+	<div data-options="region:'center',border:false">
 		<div id="applyDefaultListPanel" class="easyui-panel" style="border:0">
 			<table id="applyDefaultListTable" data-options="fit:true"></table>
 		</div>
@@ -70,115 +66,104 @@
 			<table id="applyListTable" data-options="fit:true"></table>
 		</div>
 	</div>
-	<div data-options="region:'south',border:false" style="height:20px;">
-        <div id="systemDesc" style="float:right;padding:0 10px;font-size:13px;"></div>
-    </div>
-	<div id="addApplyWin" style="width:1000px;height:600px;padding:10px">
-    	<div class="easyui-layout" data-options="fit:true">    
-        	<div data-options="region:'center'">   
-				<div id="patientListTableTBar" style="padding:5px;height:50">	
-					<div>
-						<!--»¼Õß¾ÍÕï¿ÆÊÒ: <select id="inputPatientLoc" name="inputPatientLoc" style="width:100px;height:20px;"></select>
-						»¼Õß¾ÍÕï²¡Çø: <select id="inputPatientWard" name="inputPatientWard" style="width:100px;height:20px;"></select> -->
-						»¼ÕßĞÕÃû:<input id="inputPatientName" class="easyui-textbox" style="width:100px;height:20px;" />
-						»¼ÕßµÇ¼ÇºÅ:<input id="inputPatientRegNo" class="easyui-textbox" style="width:100px;height:20px;" />
-						»¼Õß¾ÍÕïºÅ:<input id="inputPatientEpisodeID" class="easyui-textbox" style="width:100px;height:20px;" />
-						»¼Õß²¡ÈËºÅ:<input id="inputPatientID" class="easyui-textbox" style="width:100px;height:20px;" />
-						»¼Õß²¡°¸ºÅ:<input id="inputMedRecordID" class="easyui-textbox" style="width:100px;height:20px;" />
+	<div id="addApplyWin" style="width:1000px;height:600px;padding:10px;">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<div id="patientListTableTBar" style="padding:5px;">
+					<div style="padding:5px;">
+						<!--æ‚£è€…å°±è¯Šç§‘å®¤<select id="inputPatientLoc" name="inputPatientLoc" style="width:100px;height:20px;"></select>
+						æ‚£è€…å°±è¯Šç—…åŒº<select id="inputPatientWard" name="inputPatientWard" style="width:100px;height:20px;"></select> -->
+						<label for="inputPatientName">æ‚£è€…å§“å</label>
+						<input id="inputPatientName" class="tbtextbox" style="width:100px;height:20px;" />
+						<label for="inputPatientRegNo">æ‚£è€…ç™»è®°å·</label>
+						<input id="inputPatientRegNo" class="tbtextbox" style="width:100px;height:20px;" />
+						<label for="inputPatientEpisodeID">æ‚£è€…å°±è¯Šå·</label>
+						<input id="inputPatientEpisodeID" class="tbtextbox" style="width:100px;height:20px;" />
+						<label for="inputPatientID">æ‚£è€…ç—…äººå·</label>
+						<input id="inputPatientID" class="tbtextbox" style="width:100px;height:20px;" />
+						<label for="inputMedRecordID">æ‚£è€…ç—…æ¡ˆå·</label>
+						<input id="inputMedRecordID" class="tbtextbox" style="width:100px;height:20px;" />
 					</div>
-					<div style="margin:5px">
-						<a href="#" id="patientSearchBtn" class="easyui-linkbutton" iconCls="icon-search">²éÑ¯»¼Õß</a>
-						<a href="#" id="patientResetBtn" class="easyui-linkbutton" iconCls="icon-reload">Çå¿ÕÌõ¼ş</a>
-					</div>	
-					<div style="margin:5px">
-						<a href="#" id="addListBtn" class="easyui-linkbutton" iconCls="icon-add">½«Ñ¡ÖĞ¼ÓÈëÉêÇëÁĞ±í</a>
-					</div>	
+					<div style="padding:5px;">
+						<a href="#" id="patientSearchBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'">æŸ¥è¯¢æ‚£è€…</a>
+						<input id="file" type="file" accept=".xls,.xlsx" style="display:none">
+						<a href="#" id="patchPatSearchBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'">æ‰¹é‡å¯¼å…¥æŸ¥è¯¢</a>
+						<a href="#" id="patientResetBtn" class="easyui-linkbutton" data-options="iconCls:'icon-reload'">æ¸…ç©ºæ¡ä»¶</a>
+						<a href="#" id="addListBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">åŠ å…¥å¾…ç”³è¯·åˆ—è¡¨</a>
+					</div>
 				</div>
 				<table id="patientListTable" data-options="fit:true"></table>
-        	</div>   
-			<div data-options="region:'south'" style="height:200">   
-				<div id="addListTableTBar" style="padding:5px;height:50">	
-					<div style="margin:5px">
-						<a href="#" id="removeListBtn" class="easyui-linkbutton" iconCls="icon-remove">½«Ñ¡ÖĞÒÆ³ıÉêÇëÁĞ±í</a>
-						<a href="#" id="resetListBtn" class="easyui-linkbutton" iconCls="icon-reload">Çå¿ÕÉêÇëÁĞ±í</a>
-					</div>	
-					<div style="margin:5px">
-						<a href="#" id="addNewApplyBtn" class="easyui-linkbutton" iconCls="icon-ok">ä¯ÀÀÉêÇë<font color="red">(ĞèÉóÅú)</font></a>
-						<a href="#" id="addDefaultRoleBtn" class="easyui-linkbutton" iconCls="icon-ok">±¾¿Æ²¡Àúä¯ÀÀ(ÎŞĞèÉóÅú)</a>
-					</div>	
+			</div>
+			<div data-options="region:'south',border:false" style="height:200px;">
+				<div id="addListTableTBar" style="padding:5px;">
+					<a href="#" id="removeListBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">ç§»é™¤å¾…ç”³è¯·åˆ—è¡¨</a>
+					<a href="#" id="resetListBtn" class="easyui-linkbutton" data-options="iconCls:'icon-reload'">æ¸…ç©ºå¾…ç”³è¯·åˆ—è¡¨</a>
+					<a href="#" id="addNewApplyBtn" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">æµè§ˆç”³è¯·<font color="red">(éœ€å®¡æ‰¹)</font></a>
+					<a href="#" id="addDefaultRoleBtn" class="easyui-linkbutton" data-options="iconCls:'icon-ok'">æœ¬ç§‘ç—…å†æµè§ˆ(æ— éœ€å®¡æ‰¹)</a>
 				</div>
 				<table id="addListTable" data-options="fit:true"></table>
-        	</div>  
-    	</div>  
-    </div>
-    <div id="viewHistoryWin" style="width:1000px;height:600px;padding:10px">
-    	<div class="easyui-layout" data-options="fit:true">    
-        	<div data-options="region:'center'">   
-				<div id="historyListTableTBar" style="padding:5px;height:50">
-					<div style="margin:5px">
- 						<input id="historyDateStart" class="easyui-datebox" />
- 						<input id="historyDateEnd" class="easyui-datebox" />
- 					</div>
-					<div style="margin:5px">
-						<a href="#" id="refreshBtn" class="easyui-linkbutton" iconCls="icon-search">Ë¢ĞÂ</a>
-					</div>	
-				</div>
-				<table id="historyListTable" data-options="fit:true"></table>
-        	</div>  
-    	</div>  
-    </div>
-    <div id="viewFavoritesWin" style="width:1000px;height:600px;padding:10px">
-    	<div class="easyui-layout" data-options="fit:true">  
-    		<div data-options="region:'west'" style="width:100px">   
-				<div id="categoryListTableTBar" style="padding:5px;height:50">
-					<div style="margin:5px">
-						<a href="#" id="categoryAddBtn" class="easyui-linkbutton" iconCls="icon-add"></a>
-						<a href="#" id="categoryDeleteBtn" class="easyui-linkbutton" iconCls="icon-remove"></a>
-					</div>	
-				</div>
-				<table id="categoryListTable" data-options="fit:true"></table>
-        	</div>  
-        	<div data-options="region:'center'">   
-				<div id="favoritesListTableTBar" style="padding:5px;height:50">
-					<div style="margin:5px">
-						<a href="#" id="favoritesDeleteBtn" class="easyui-linkbutton" iconCls="icon-remove">É¾³ıÊÕ²Ø</a>
- 						<a href="#" id="favoritesMoveBtn" class="easyui-linkbutton" iconCls="icon-remove">ÒÆ¶¯µ½·ÖÀà</a>
- 					</div>
-				</div>
-				<table id="favoritesListTable" data-options="fit:true"></table>
-        	</div>  
-    	</div>  
-    </div>
-  	<div id="addCategoryDialog" class="easyui-dialog" style="width:400px;height:200px">
-    	<div style="margin:5px">
-    		<div style="margin:20px 0;"></div>
-    		<p>ÇëÌîĞ´·ÖÀàÃû:</p>
-			<input id="inputCategoryDesc" class="easyui-textbox" data-options="multiline:false" style="width:350px;height:60px">
-		</div>
-	</div>
-	<div id="addFavoriteDialog" class="easyui-dialog" style="width:200px;height:400px">
-    	<div class="easyui-layout" data-options="fit:true">    
-        	<div data-options="region:'center'">  
-				<div id="categoryListTableSelectTBar" style="padding:5px;height:50">
-					<div style="margin:5px">
-						<a href="#" id="categorySelectAddBtn" class="easyui-linkbutton" iconCls="icon-add"></a>
-						<a href="#" id="categorySelectDeleteBtn" class="easyui-linkbutton" iconCls="icon-remove"></a>
-					</div>	
-				</div>
-				<table id="categoryListSelectTable" data-options="fit:true"></table>
 			</div>
 		</div>
 	</div>
-	<div id="requestReasonDialog" class="easyui-dialog" style="width:400px;height:300px">
-    	<div style="margin:5px">
-    		<p>È·¶¨ÉêÇëÈ¨ÏŞ?µã»÷ÉêÇëºó»áÌá½»ÉóÅú,ÉóÅúÍ¨¹ıºó¼´¿Éä¯ÀÀÏàÓ¦µÄ²¡Àú</p>
-    		<p>ÇëÑ¡ÔñÉêÇëä¯ÀÀµÄÊ±³¤:</p>
-			<select id="inputRequestSpan" name="inputRequestSpan" style="width:350px;height:20px;"></select>
-    		<p>ÇëÌîĞ´ÉêÇëµÄÔ­Òò:</p>
-			<input id="inputRequestReason" class="easyui-textbox" data-options="multiline:true" style="width:350px;height:40px">
+	<div id="viewHistoryWin" style="width:1000px;height:600px;padding:10px;">
+		<div id="historyListTableTBar" style="padding:5px 10px;">
+			<label for="historyDateStart">æŸ¥è¯¢æ—¥æœŸ</label>
+			<input id="historyDateStart" class="easyui-datebox" style="width:120px;" />
+			<span>è‡³</span>
+			<input id="historyDateEnd" class="easyui-datebox" style="width:120px;" />
+			<a href="#" id="refreshBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width:80px;">æŸ¥è¯¢</a>
+		</div>
+		<table id="historyListTable" data-options="fit:true"></table>
+	</div>
+	<div id="viewFavoritesWin" style="width:1000px;height:600px;padding:10px;">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:180px;">
+				<div id="categoryListTableTBar" style="padding:5px;">
+					<a href="#" id="categoryAddBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">æ–°å¢</a>
+					<a href="#" id="categoryDeleteBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">åˆ é™¤</a>
+				</div>
+				<table id="categoryListTable" data-options="fit:true"></table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<div id="favoritesListTableTBar" style="padding:5px;">
+					<a href="#" id="favoritesDeleteBtn" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">åˆ é™¤æ”¶è—</a>
+					<a href="#" id="favoritesMoveBtn" class="easyui-linkbutton" data-options="iconCls:'icon-redo'">ç§»åŠ¨åˆ°åˆ†ç±»</a>
+				</div>
+				<table id="favoritesListTable" data-options="fit:true"></table>
+			</div>
+		</div>
+	</div>
+	<div id="addCategoryDialog" style="width:400px;height:200px;padding:10px;">
+		<p style="padding:5px 0;">åˆ†ç±»åç§°</p>
+		<input id="inputCategoryDesc" class="tbtextbox" style="width:360px;height:24px;">
+	</div>
+	<div id="addFavoriteDialog" style="width:200px;height:400px;"> 
+		<div id="categoryListTableSelectTBar" style="padding:5px;">
+			<a href="#" id="categorySelectAddBtn" class="easyui-linkbutton" data-options="iconCls:'icon-add'">æ–°å¢åˆ†ç±»</a>
+		</div>
+		<table id="categoryListSelectTable" data-options="fit:true"></table>
+	</div>
+	<div id="requestReasonDialog" style="width:400px;height:300px;padding:10px;">
+		<p style="padding:5px 0;">ç‚¹å‡»ç”³è¯·åæäº¤å®¡æ‰¹ï¼Œå®¡æ‰¹é€šè¿‡åå³å¯æµè§ˆå·²ç”³è¯·ç—…æ¡ˆ</p>
+		<div style="padding:5px 0;">
+			<label for="inputRequestSpan">ç”³è¯·æµè§ˆæ—¶é•¿</label>
+			<input id="inputRequestSpan" class="easyui-combobox" style="width:260px;height:20px;">
+		</div>
+		<div style="padding:5px 0;">
+			<label for="inputRequestReason">ç”³è¯·æµè§ˆåŸå› </label>
+			<input id="inputRequestReason" class="tbtextbox" style="width:260px;height:40px;">
+		</div>
+	</div>
+	<div id="reapplyReasonDialog" style="width:400px;height:300px;padding:10px;">
+		<p style="padding:5px 0;">ç‚¹å‡»ç”³è¯·åé‡æ–°æäº¤å®¡æ‰¹</p>
+		<div style="padding:5px 0;">
+			<label for="inputReapplySpan">ç”³è¯·æµè§ˆæ—¶é•¿</label>
+			<input id="inputReapplySpan" class="easyui-combobox" style="width:260px;height:20px;">
+		</div>
+		<div style="padding:5px 0;">
+			<label for="inputReapplyReason">ç”³è¯·æµè§ˆåŸå› </label>
+			<input id="inputReapplyReason" class="tbtextbox" style="width:260px;height:40px;">
 		</div>
 	</div>
 </body>
-
-</HTML>
-
+</html>

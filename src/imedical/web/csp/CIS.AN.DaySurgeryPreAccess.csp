@@ -1,15 +1,48 @@
+
 <html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
 <head>
 <title>日间准入麻醉评估</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <dhcclinic:head></dhcclinic:head>
+<HISUI/>
 <style>
+	ul li
+{
+	list-style-type: none;
+	align-items: center;
+	float:left;
+}
+.labelRight
+	{
+		/*border:1px solid red;*/
+		text-align:right;
+		width:58px;
+		padding-right:10px;
+		padding-right:8px;
+			
+	}
+	.labelLeft
+	{
+		/*border:1px solid red;*/
+		text-align:right;
+		width:35px;
+		padding-left:5px;
+			
+	}
+	.line
+	{
+		color:#ccc;
+	}
 	.form-item-checkboxlist {width:120px;}
 	.form-row-group > .panel { margin-bottom:10px;}
+
 </style>
-<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operapplication.css" />
-<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operbanner.css"/>
 
 	<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
 	<script type="text/javascript" src="../service/dhcanop/js/dhcan.lodop.js"></script>
@@ -18,162 +51,179 @@
 
 	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
 	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DaySurgeryPreAccess.js"></script>
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperScheduleBanner.js"></script>
 
 </head>
 
 
-<body class="hisui-layout">
-	<div id="PreDaySurgeryAccessDlg" title="日间麻醉术前评估信息" style="padding:10px">
-	     		
-				<div style="margin:0 10px 5px 10px;">
-		     	<div id="patinfo_banner" data-options="border:false" style="height:35px;">
-   				</div>
+<body style="padding:0;margin:0">
+	<div id="PreDaySurgeryAccessDlg" title="日间麻醉术前评估信息" style="margin:-15px 5px 0 0 ;padding:0 0 0 0;">	
+		<div style="height:30px;margin:5px 5px 0 0;">
+		   <ul style="padding-left:0px">
+	     			<li style="margin-top:-5px;"><label id="patSeximg" style="margin-left:10px;" name="patSeximg"></label></li>
+	     			 <li><label id="PatName"  name="PatName" style="font-size:16px;padding-left:10px;">-</label></li>
+					 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatGender"  name="PatGender">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatAge"  name="PatAge">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><font style="color:#666666">登记号:</font>
+					<label id="RegNo"  name="RegNo"></label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><font style="color:#666666">病案号:</font>
+					<label id="MedcareNo"  name="MedcareNo"></label></li>
+					
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>								
+					<li><label id="PatDeptDesc" >-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="AdmReason"  name="AdmReason">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatWardDesc">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatBedCode" >-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatSecret"  name="PatSecret">-</label></li>
+				</ul>
 
-	     		</div>
-	     	<div>
-	             <div class="form-row">
-	                 <div class="form-title-right4">术前诊断</div>
-	                 <div class="form-item-normal">
-	                        <input type="text" id="PreDiagnosis" class="textbox" style="width:440px">
-	                 </div>
-	                
-	                <div class="form-title-normal">拟施手术</div>
-	                <div class="form-item-normal">
-	                        <input type="text" id="PlanOperDescs" class="textbox" style="width:390px"> 
+	     		</div>	
+			<form id="dataForm" method="post" style="padding:0px">
+				<div style="height:40px;padding-left:0px;">
+	             <div class="form-row" style="margin-left:8px">
+	                <div class="labelRight">拟施手术</div>
+	                <div class="form-item-normal" colspan=5>
+	                      <input type="text" id="PlanOperDesc" class="hisui-validatebox" style="width:420px"> 
 	                </div>
-	              </div>      
-	        </div>
-	        
-	 
-
-			<form id="dataForm" method="post">
-				<div>
-	                <div class="form-row">
+	                 <div  >&nbsp&nbsp术前诊断</div>
+	                 <div style="padding-left:9px;" >
+	                        <input type="text" id="PrevDiagnosisDesc" class="hisui-validatebox" style="width:270px;">
+	                 </div>
+	              </div> 
+	              </div>     
+				<div style="height:40px;padding-left:0px;">
+	                <div class="form-row"  style="margin-left:8px">
 	                	
-	                    <div class="form-title-right4">身高</div>
+	                    <div class="labelRight">身高:cm</div>
 	                    <div class="form-item-normal">
-	                        <input type="text" id="PreAccHeight" class="textbox operdata" style="width:65px"> cm
+	                        <input type="text" id="PreAccHeight" class="hisui-validatebox operdata" style="width:55px">
 	                    </div>
 	                    
-	                    <div class="form-title-right4">体重</div>
+	                    <div class="form-title-right5">体重:kg</div>
 	                    <div class="form-item-normal">
-	                        <input type="text" id="PreAccWeight" class="textbox operdata" style="width:65px"> Kg
+	                        <input type="text" id="PreAccWeight" class="hisui-validatebox operdata" style="width:55px">
 	                    </div>
-	                    <div class="form-title-right4" style="margin-left:10px;">脉搏</div>
-	                    <div class="form-item-normal">
-	                        <input type="text" id="PreAccPulse" class="textbox operdata" style="width:67px"> 次/分
+	                    <div class="form-title-right5">脉搏:次/分</div>
+	                    <div class="form-item-normal" >
+	                        <input type="text" id="PreAccPulse" class="hisui-validatebox operdata" style="width:56px">
 	                    </div>
-	                    <div class="form-title-right4" style="margin-left:10px;">呼吸</div>
-	                    <div class="form-item-normal">
-	                        <input type="text" id="PreAccRespiration" class="textbox operdata" style="width:65px"> 次/分
+	                    <div>呼吸:次/分</div>
+	                   <div style="padding-left:8px;">
+	                        <input type="text" id="PreAccRespiration" class="hisui-validatebox operdata" style="width:70px;">
 	                    </div>
-	                    <div class="form-title-right4" style="margin-left:10px;">血压</div>
-	                    <div class="form-item-normal">
-	                        <input type="text" id="PreAccBP" class="textbox operdata" style="width:80px"> mmHg
+	                    <div style="width:78px;margin-left:23px">血压:mmHg</div>
+	                    <div  style="margin-left:10px">
+	                        <input type="text" id="PreAccBP" class="hisui-validatebox operdata" style="width:82px">
 	                    </div>
 	                    
 	                </div>
 	            </div>
-			<div>
-	                <div class="form-row">
-	                 	<div class="form-title-right4" >麻醉方式</div>
+				<div style="height:40px;padding-left:0px;">
+	                <div class="form-row"  style="margin-left:8px">
+	                 	<div class="labelRight">麻醉方式</div>
 	                    <div class="form-item-normal">
-	                        <input type="text" id="PreAnaMethod" class="textbox" style="width:250px">
+	                        <input type="text" id="PreAnaMethod" class="hisui-validatebox" style="width:420px">
 	                    </div>
 	                </div>
 	                
 	         </div>
-	    <div>
+	    <div style="height:25px;padding-left:0px;">
 	    <input type="hidden" id="PreDayForbid" class="operdata" data-multiple="Y">
-	         <div class="form-row">	
-	         <div class="form-title-right4" >术前禁忌</div>
+	         <div class="form-row" style="margin-left:8px">	
+	         <div class="labelRight" ><span style="font-weight:bold;">术前禁忌</span></div>
 	         
-			 <div class="form-item-normal" style="margin-left:-5px;">
+			 <div class="form-item-normal" >
 				<input type="checkbox" id="PreDayForbidCHK1" data-formitem="PreDayForbid" class="hisui-checkbox" label="全身状况不稳定的ASAⅢ级-Ⅳ级患者">
 			 </div>
 			 </div>
 	    </div>
-		<div>
-	         <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+		<div style="height:25px;">
+	         <div class="form-row" style="margin-left:8px">	
+	         <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK2" data-formitem="PreDayForbid" class="hisui-checkbox" label="高危婴儿或早产儿">
 			 </div>
 			 </div>
 	    </div>
 	    
-	    	<div>
-	         <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+	    	<div style="height:25px;">
+	         <div class="form-row" style="margin-left:8px">	
+	          <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK3" data-formitem="PreDayForbid" class="hisui-checkbox" label="估计术中失血多和手术较大的患者">
 			 </div>
 			 </div>
 	    </div>
-	    	<div>
-	         <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+	    	<div style="height:25px;">
+	         <div class="form-row" style="margin-left:8px">	
+	          <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK4" data-formitem="PreDayForbid" class="hisui-checkbox" label="因潜在或已并存的疾病可能会导致术中出现严重并发症的患者(如恶性高热家族史，过敏体质者等)">
 			 </div>
 			 </div>
 	    </div>
-	    	<div>
-	         <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+	    	<div style="height:25px;">
+	         <div class="form-row" style="margin-left:8px">	
+	         <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK5" data-formitem="PreDayForbid" class="hisui-checkbox" label="近期出现急性上呼吸道感染未愈者、哮喘发作及持续状态">
 			 </div>
 			 </div>
 	    </div>
-	    	<div>
-	         <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+	    	<div style="height:25px;">
+	         <div class="form-row" style="margin-left:8px">	
+	         <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK6" data-formitem="PreDayForbid" class="hisui-checkbox" label="估计术后呼吸功能恢复时间长的病态肥胖或阻塞性睡眠呼吸暂停综合征患者">
 			 </div>
 			 </div>
 	    </div>
-	    	<div>
-	         <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+	    	<div style="height:25px;">
+	         <div class="form-row" style="margin-left:8px">	
+	          <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK7" data-formitem="PreDayForbid" class="hisui-checkbox" label="吸毒﹑滥用药物者">
 			 </div>
 			 </div>
 	    </div>
-	    <div>
-	         <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+	    <div style="height:25px;">
+	         <div class="form-row" style="margin-left:8px">	
+	          <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK8" data-formitem="PreDayForbid" class="hisui-checkbox" label="心理障碍、精神疾病及不配合的患者">
 			 </div>
 			 </div>
 	    </div>
-	    <div>
-	   <div class="form-row">	
-	         <div class="form-title-normal" style="margin-left:50px;"></div>
+	    <div style="height:25px;">
+	   <div class="form-row" style="margin-left:8px">	
+	         <div class="labelRight" ></div>
 			 <div class="form-item-normal">
 				<input type="checkbox" id="PreDayForbidCHK9" data-formitem="PreDayForbid" class="hisui-checkbox" label="患者离院后24h无成人陪护">
 			 </div>
 			 </div>
 	    </div>
-	    <div>
-	    <div class="form-row">	
-	         <div class="form-title-right4" >备注</div>
+	    <div style="margin-top:5px;">
+	    <div class="form-row" style="margin-left:8px">	
+	         <div class="labelRight" >备注</div>
 			 <div class="form-item-normal">
-			 <input type="text" class="textbox operdata" id="PreOtherNote" name="PreOtherNote" style="width:500px">
+			 <input type="text" class="hisui-validatebox operdata" id="PreOtherNote" name="PreOtherNote" style="width:420px">
 			 </div>
-			 <div class="form-title-normal" style="margin-left:10px;">适合日间手术</div>
-			 <div class="form-item-normal">
-			 <select id="IsCanDayOper" name="IsCanDayOper" class="hisui-combobox operdata"></select>
+			 <div >适合日间手术</div>
+			 <div style="margin-left:8px;">
+			 <select id="IsCanDayOper" name="IsCanDayOper" class="hisui-combobox operdata" style="width:70px;"></select>
 			 </div>
 			 </div>
 	 </div>	
-	 <div>
-		<div class="form-row" style="margin-top:100px;">	
-		<div style="margin-left:400px">
+	 <div style="margin-top:18px;">
+		<div class="form-row" >	
+		<div style="margin-left:350px">
     	<a href="#" class="hisui-linkbutton" id="btnSave" data-options="iconCls:'icon-w-save'">保存</a>
 		</div>
 		<div style="margin-left:50px">

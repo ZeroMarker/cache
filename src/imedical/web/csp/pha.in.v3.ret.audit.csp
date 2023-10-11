@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+    退货 - 审核
+    csp:  csp/pha.in.v3.ret.audit.csp
+    js:   scripts/pha/in/v3/ret/audit.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style> 
+    </style>
+    <Server language="CACHE" runat="Server">
+        s startDate = $G(%request.Data("startDate",1))
+        s endDate=$Get(%request.Data("endDate",1)) 
+   </Server>
+    <script language=javascript>
+        var LoadStDate="#(startDate)#" ;
+        var LoadEndDate= "#(endDate)#" ;
+   </script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',border:false" class="pha-body" border="false">
+            <div class="hisui-layout" fit="true" id="layout-ret-audit">
+                <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north', height:500, split:true, title:'退货单',showCollapsedTitle:true"  id="layout-ret-audit-panel">
+                    <table id="gridMain"></table>
+                </div>
+                <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',title:'单据明细'">
+                    <table id="gridItm"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridMainBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("开始日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="startDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="loc">#(..Get("退货科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="nextStatus">#(..Get("预审流程"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="nextStatus" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="no">#(..Get("单号"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="no" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnFind">查询</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnPrint">打印</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="endDate">#(..Get("结束日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="endDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="vendor">#(..Get("经营企业"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="vendor" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <label for="nextStatusResult">#(..Get("流程状态"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="nextStatusResult" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="filterField">#(..Get("其他"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="filterField" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnClean">清屏</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnAudit">审核通过</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnAuditPrint">审核通过并打印</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-no'" id="btnAuditRefuse">审核拒绝</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-undo'" id="btnAuditCancel">取消审核</a>
+            <!--a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-unuse'" id="btnDestroy">作废</a-->
+        </div>
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/audit.js"></script>
+</body>
+
+</html>

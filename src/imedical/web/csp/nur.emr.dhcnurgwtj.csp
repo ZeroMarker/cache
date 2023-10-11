@@ -1,0 +1,495 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    s isPermission = ##Class(NurMp.Service.Template.Model).editAuthority(%request.Get("EpisodeID"),$g(%session.Data("LOGON.CTLOCID")),"DHCNURGWTJ")
+    i isPermission'="0"
+    {
+    s utfo = $ZCONVERT(isPermission,"O","UTF8")
+    s urlo = $ZCONVERT(utfo,"O","URL")
+    s %response.ServerSideRedirect = "nur.emr.permissiondenied.csp?isPermission="_urlo
+    q 1
+    }
+    else
+    {
+    q 1
+    }
+</csp:method>
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type = "text/css" href = "../skin/default/css/websys.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts/nurse/hisui-0.1.0/dist/css/jquery.contextMenu.css" />
+
+<style type="text/css">.datagrid-row-mp-printed
+{
+background:#CDC9A5;
+}
+.marker
+{
+position:absolute;border-radius:50%;z-index:999;
+}
+body * 
+{
+font-family:微软雅黑;font-size:14px
+}
+.commonModalDialog .dialog-content
+{
+overflow:hidden;
+}
+#element_Ul li label.checkbox
+{
+display:inline;
+}
+.datagrid-row-selected
+{
+background: #fced89 !important;color: #000000;
+}
+.datagrid-row-editting
+{
+background: #abbd65;color: #000000;
+}
+.tooltipTable
+{
+border-collapse:collapse;border: 1px solid #509de1;
+}
+.tooltipTable td
+{
+border: 1px solid #509de1;
+}
+.tooltipTable th
+{
+border: 1px solid #509de1;
+}
+img[src = ""]
+{
+opacity: 0;
+}
+ </style></head>
+   <body style="background-color:white;padding:0px;width:100%">
+<div LineNo="1" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_66" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_66" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000;font-weight:bold">#(..Get("类型："))#</div>
+</div>
+<div id="div_DropRadioElement_65" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:346.94px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_65' name='DropRadioElement_65' querybanding='HISUIDataTableElement_2:DropRadioElement_65' oldVal='' SaveField='Item1' style='height:30px;width:346.94px;'></select>
+</div>
+<div id="div_LableElement_68" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:30px;padding-right:0px">
+<div id="LableElement_68" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000;font-weight:bold">#(..Get("状态："))#</div>
+</div>
+<div id="div_DropRadioElement_67" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:116px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_67' name='DropRadioElement_67' querybanding='HISUIDataTableElement_2:DropRadioElement_67' oldVal='' SaveField='Item2' style='height:30px;width:116px;'></select>
+</div>
+<div id="div_LableElement_74" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_74" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("开始日期"))#</div>
+</div>
+<div id="div_DateElement_73" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155px;padding-left:0px;padding-right:0px">
+<input id="DateElement_73" name="DateElement_73" querybanding="HISUIDataTableElement_2:DateElement_73" oldVal="" SaveField="Item3" format="yyyy-MM-dd" style="height:30px;width:155px" />
+</div>
+<div id="div_LableElement_78" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_78" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("结束日期"))#</div>
+</div>
+<div id="div_DateElement_77" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155px;padding-left:0px;padding-right:0px">
+<input id="DateElement_77" name="DateElement_77" querybanding="HISUIDataTableElement_2:DateElement_77" oldVal="" SaveField="Item4" format="yyyy-MM-dd" style="height:30px;width:155px" />
+</div>
+<div id="div_ButtonElement_69" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88px;padding-left:30px;padding-right:10px">
+<a id="ButtonElement_69" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_69" style="height:30px;width:88px">#(..Get("查询"))#</a>
+</div>
+<div id="div_ButtonElement_70" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88px;padding-left:15px;padding-right:10px">
+<a id="ButtonElement_70" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_70" style="height:30px;width:88px">#(..Get("审核"))#</a>
+</div>
+<div id="div_ButtonElement_71" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:116px;padding-left:25px;padding-right:10px">
+<a id="ButtonElement_71" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_71" style="height:30px;width:116px">#(..Get("撤销审核"))#</a>
+</div>
+<div id="div_ButtonElement_72" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:25px;padding-right:10px">
+<a id="ButtonElement_72" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_72" style="height:30px;width:58px">#(..Get("导出"))#</a>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:5px 10px 5px 10px">
+<div id="div_HISUIDataTableElement_2" style="float:left;width:1459px;height:835px">
+<table id="HISUIDataTableElement_2"  name="HISUIDataTableElement_2" style="width:1406px;height:835px"></table>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/plugin/datagrid-cellediting.js?ver=2023-04-14_100244" ></script>
+
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </SCRIPT>
+   <SCRIPT Language="Javascript">
+  var HighRiskReportEnable='#(##class(NurMp.Template.EventSet).isReport("8b5d6ede32ba4829a9629eb5be7f16b9"))#';
+  var WebIp='';
+  var EpisodeID='#(%request.Get("EpisodeID"))#';
+  var TemplateGUID="8b5d6ede32ba4829a9629eb5be7f16b9";
+  var TemplateIndentity="DHCNURGWTJ";
+  var CAPatientPDF = false;
+  var dtformat = "";
+  var WindowCompleted = false;
+  var HiddenNoSubmit = false;
+  var RequiredAlter = false;
+  var HideSavedAlter = false;
+  var ShowLeaveMark = false;
+   </SCRIPT>
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Service.Template.Model).InitEnvironment(%request.Get("ModelId"),%session.Data("LOGON.CTLOCID"))
+   </SCRIPT>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/HisUITableEdit.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/rightClickHandler.js?ver=2023-04-14_100244" charset="gbk" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/validateboxType.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/ElementUtility.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Foundation.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Condition.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Cascading.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript">
+var LoadFormElements = [
+'DropRadioElement_65','DropRadioElement_67','DateElement_73','DateElement_77'
+];
+
+
+
+$(document).ready(function () {InnerNetDebug();
+CallItemBeforeInit();
+ $('#DropRadioElement_65').DropDropRadio({ID:'DropRadioElement_65',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_65').data('NumberValues',{DHCNURDGTLFXPGD:'1',DHCNURBRDDZCWXYSPGJHLCSB:'2',DHCNURHZYCFXYSPGBD:'3',DHCNURYHYCPGYHLCSB:'4',DHCNURNMYCSBB:'5',DHCNURHZZLNLPDB:'6',DHCNURDDFXPGJFFCSB:'7'});
+ $('#DropRadioElement_67').DropDropRadio({ID:'DropRadioElement_67',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_67').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+ $('#DateElement_73').dateboxq({ID:'DateElement_73' });
+ $('#DateElement_77').dateboxq({ID:'DateElement_77',required:true });
+$('#ButtonElement_69').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_69').click(function () {RecQuery('Gather_ButtonElement_69','Callback_ButtonElement_69','',null); });
+$('#ButtonElement_70').linkbutton({  stopAllEventOnDisabled: 'true',iconCls: 'icon-w-ok'}); 
+ $('#ButtonElement_70').click(function () {BatchSign('Gather_ButtonElement_70','Callback_ButtonElement_70','',null); });
+$('#ButtonElement_71').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_71').click(function () {BatchWithdrawnSign('Gather_ButtonElement_71','Callback_ButtonElement_71','',null); });
+$('#ButtonElement_72').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+AddCssStyle('.datagrid-header-row{ height: 0px; }.HISUIDataTableElement_2-header-row0{ height: 46px; }');
+ $('#HISUIDataTableElement_2').datagrid({
+title:''
+,updateVerifyRelatedSignField:''
+,fitColumns:false
+,rePrintTemplateIndentity:''
+,autoRowHeight:true
+,striped:false
+,signVerifyNoWarn:false
+,cancelRecShowRed:false
+,HiddenEmptyDyTitle:false
+,ReSetTableHeadMenu:false
+,SwitchTableHeadMenu:false
+,CopyMenu:true
+,RePrintSetMenu:true
+,nowrap:false
+,pagination:true
+,rownumbers:true
+,singleSelect:false
+,checkOnSelect:true
+,selectOnCheck:true
+,resizeHandle:'right'
+,idField:'ID'
+ ,rowStyler:function(index, rowData)
+{
+var tableID='HISUIDataTableElement_2';
+return HISUITableRowStyler(index,rowData,tableID);
+}
+,onDblClickRow:function(rowIndex, rowData)
+{
+
+var isOK = IsVerifyEditPermission(rowData.ID, '',false);
+
+if (!isOK){
+
+    return;
+
+}
+
+HisUIStatisticsOpenWindow(rowData,'CallbackEdit_HISUIDataTableElement_2',null);
+}
+
+,onSelect:OnHisUITableRowSelect
+,onUnselect:OnHisUITableRowUnSelect
+,onLoadSuccess:OnHisUITableLoadSuccess
+,pagePosition:'bottom'
+,sortName:'31'
+,sortOrder:'desc'
+,pageNumber:1
+,pageSize:20
+,scrollbarSize:0
+,pageList:[10,20,30,40,50,100,200]
+,frozenColumns:[
+
+]
+,columns:[
+[
+{field:'ID',checkbox:true},
+{title:$g("床号"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C294E42855E60AF44AB876763A0DA8DC24F',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:43}
+,{title:$g("姓名"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C296D355477E25649A3A5121586A1BFA2F6',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:43}
+,{title:$g("登记号"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29AAB13136D76111EDB909000C2985E37C',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:57}
+,{title:$g("性别"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C2934D96433B88E4BC597EA57BC7BD2DC1D',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:43}
+,{title:$g("年龄"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29C7A1F0F1600B43CCB5692AEAC7C1CCBB',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:50}
+,{title:$g("评分"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29AB04FCAF322F4987B7852DA14ED9FB04',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:43}
+,{title:$g("评估日期，时间"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C2953A957DF03F748929FD4F0765E75B06F',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:154}
+,{title:$g("需复评日期"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29805ED3328DBC4B05BCED048E70341E3E',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:110}
+,{title:$g("高危因素"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29B75DB983E93E478DBED0D5BDBB821219',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:408}
+,{title:$g("审核人"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29A0F540D9C7E2474C9A06A2689860A66A',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'center',halign:'center',order:'asc',width:68}
+,{title:$g("审核日期"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29AF3EFC102A42426BBC20DB78A002EBE7',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:159}
+,{title:$g("科室"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_2';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'8EE3B584A5AD453598673EDB68733C29B8FC5A7CD76111EDBB0A000C2985E37C',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:160}
+],
+
+]
+ });
+
+$('#HISUIDataTableElement_2').datagrid('getPager').pagination({
+onSelectPage:function(pageNumber, pageSize){
+var PageStart=(pageNumber-1)*pageSize+1;
+var PageEnd=pageNumber*pageSize;
+$('#HISUIDataTableElement_2').data('nurPageNumber', pageNumber);
+$('#HISUIDataTableElement_2').data('nurPageSize', pageSize);
+var queryParam=$('#HISUIDataTableElement_2').attr('queryInfo');
+GetDataFromService(null,["HISUIDataTableElement_2"],'PageStart='+PageStart+'&PageEnd='+PageEnd,queryParam);
+}
+});
+$('#div_HISUIDataTableElement_2').on("mouseup", function(e){var txt = window.getSelection ? window.getSelection().toString() : document.selection.createRange().text;window.TableClipboardContent = txt;});
+CallItemAfterInit();
+CallItemBeforeSetValue();
+SetOneValue('DropRadioElement_65',{source:[{Text: $g("导管脱落风险评估单"),Value: 'DHCNURDGTLFXPGD'},{Text: $g("病人跌倒/坠床危险因素评估及护理措施表（停用）"),Value: 'DHCNURBRDDZCWXYSPGJHLCSB'},{Text: $g("患者压疮风险因素评估表单"),Value: 'DHCNURHZYCFXYSPGBD'},{Text: $g("已患压疮评估与护理措施表"),Value: 'DHCNURYHYCPGYHLCSB'},{Text: $g("难免压疮申报表"),Value: 'DHCNURNMYCSBB'},{Text: $g("患者自理能力评定"),Value: 'DHCNURHZZLNLPDB'},{Text: $g("跌倒风险评估及防范措施表"),Value: 'DHCNURDDFXPGJFFCSB'}],values:[{Text: $g("导管脱落风险评估单"),Value: 'DHCNURDGTLFXPGD'}]});
+SetOneValue('DropRadioElement_67',{source:[{Text: $g("审核"),Value: '1'},{Text: $g("未审核"),Value: '2'},{Text: $g("全部类型"),Value: '3'},{Text: $g("需复评"),Value: '4'}],values:[{Text: $g("未审核"),Value: '2'}]});
+SetOneValue('DateElement_73',GetYesterdayDate());
+
+SetOneValue('DateElement_77',GetCurrentDate());
+
+
+InitHiddenField();
+InitDynamicTableTitleLabel();
+ShortcutFormElementFocus();
+setTimeout(function(){
+if (window.HISUIStyleCode == 'lite'){
+$('#DateElement_73').css('width',($('#DateElement_73').css('width').replace('px','')-7)+'px');
+$('#DateElement_77').css('width',($('#DateElement_77').css('width').replace('px','')-7)+'px');
+}
+GetDataFromService(null,null,null,null,false);
+CallItemAfterSetValue();
+DBTableFirstLoadData('HISUIDataTableElement_2',false);
+
+InitPatientPDF();
+InitHandover();
+InitHighRiskReport();
+setTimeout(function(){
+UpdateCAOldFormData();
+InitAutoSignature();
+InitTableCellPopover();
+InitSignDomain();
+BindingLeaveMarkLogEvent();
+WindowCompleted = true;
+setTimeout(PrintActivexUpgrade, 100); 
+setTimeout(function(){
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/shim.min.js?ver=2023-04-14_100244');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js?ver=2023-04-14_100244');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/clipboard.min.js?ver=2023-04-14_100244');
+}, 100); 
+RealTimeSave(+0*1000);
+GetLeaveMarkLogs();
+}, 10); 
+}, 0); 
+ });
+$(window).load(function () {
+$('body').append('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+if ($.type(window.WindowLoadCallBack) === 'function') { window.WindowLoadCallBack(); }
+ });
+function Callback_ButtonElement_69()
+{
+return ['HISUIDataTableElement_2'];
+}
+function Gather_ButtonElement_69()
+{
+var gatherElements = ['DropRadioElement_65','DropRadioElement_67','DateElement_73','DateElement_77'];
+var gatherImportMap = '';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_70()
+{
+return ['HISUIDataTableElement_2'];
+}
+function Gather_ButtonElement_70()
+{
+var gatherElements = ['HISUIDataTableElement_2'];
+var gatherImportMap = '';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_71()
+{
+return ['HISUIDataTableElement_2'];
+}
+function Gather_ButtonElement_71()
+{
+var gatherElements = ['HISUIDataTableElement_2'];
+var gatherImportMap = '';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Gather_ButtonElement_72()
+{
+var gatherElements = ['HISUIDataTableElement_2'];
+var gatherImportMap = 'HISUIDataTableElement_2^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function CallbackEdit_HISUIDataTableElement_2()
+{
+var tableHtmlId = 'HISUIDataTableElement_2';
+DBTableLoadData(tableHtmlId);}
+function CallbackDel_HISUIDataTableElement_2()
+{
+var tableHtmlId = 'HISUIDataTableElement_2';
+DBTableLoadData(tableHtmlId);}
+
+</script> <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/custom.js?ver=2023-04-14_100244" ></script>
+ <script type="text/javascript" src="../scripts_gen/DHCNURGWTJ.js?ver=2023-04-14_100244" ></script>
+<script for="PrintActiveX" event="CheckUpgradeEvent(msg)" language="javascript">
+function PrintActiveX::CheckUpgradeEvent(msg) {
+console.log(msg);
+var reMsg = JSON.parse(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+else if (reMsg.status == "-1") {//升级失败
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+}
+</script>
+<script type='text/template' id='dialogReferTemplate'>
+<div id="dialogRefer" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose'
+	},{
+		text:'清屏',
+		iconCls:'icon-w-clean',
+		id: 'btnClear'
+	},{
+		text:'引用',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='dialogSpecialCharTemplate'>
+<div id="dialogSpecialChar" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnCharClose'
+	},{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnCharRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='menuTemplate'>
+<div id="menu" class="hisui-menu" style="width:100px;"></div>
+</script>
+<script type='text/template' id='HisUITableMenuTemplate'>
+<div id="hisUITableMenu" class="hisui-menu" data-options="onClick:OnHisUiTableMenuHandler" style="width:100px;"></div>
+</script>
+<script type='text/template' id='RePrintSetDialogTemplate'>
+<div id="rePrintDialog" class="hisui-dialog" title="补打设置" style="width:350px;height:300px;" data-options="closed:true,onOpen:function(){RePrintGetPrintinfo();},modal:true,
+	buttons:[
+	{text:'确定',handler:function(){RePrint();}},
+	{text:'取消',handler:function(){$HUI.dialog('#rePrintDialog').close();}}
+	]">
+    <div style="width:350px;height:213px;display:table-cell;vertical-align:middle;text-align:center;">
+        <div style="display:inline-block;">
+            <span id="IsPrint">#(..Get("未打印"))#</span>  <br>
+            #(..Get("打印信息："))#<span id="PrintInfo">#(..Get("无"))#</span>
+            <br>
+            <br>
+            #(..Get("开始页："))#<input id="startPageNo" class="hisui-numberbox textbox" data-options="required:true">
+            <br>
+            <br>
+            #(..Get("开始行："))#<input id="startRowNo" class="hisui-numberbox textbox" data-options="required:true">
+        </div>
+    </div>
+</div>
+</script>
+<script type='text/template' id='CancelHighRisKReportDialogTemplate'>
+<div id='cancelReportDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		撤销原因：
+	   <select id='reasonBox' name='reason' class='hisui-combobox' style='width:200px;'>
+	   	    <option value='撤销'>撤销</option>
+	    		<option value='出院'>出院</option>
+	    		<option value='死亡'>死亡</option>
+	    		<option value='转出'>转出</option>
+	    </select>
+	   <br/>
+	   撤销日期：
+	   <input id="cancelReportDate" class="hisui-datebox textbox datebox-f combo-f" data-options="">
+	   <br/>
+	   撤销时间：
+	   <input id="cancelReportTime" class="hisui-timespinner" data-options="" style="border-radius: 2px;">
+  </div>
+</div>
+</script>
+<script type='text/template' id='SignPWDVerifyDialogTemplate'>
+<div id='signPWDVerifyDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		 密码：<input id="signPWD" class="textbox" type="password">
+  </div>
+</div>
+</script>
+</body>
+</html>

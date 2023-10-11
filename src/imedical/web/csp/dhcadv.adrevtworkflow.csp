@@ -1,6 +1,7 @@
 <html>
 <head>
 <HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/commonfun.js"></script>
@@ -14,6 +15,8 @@
 		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
 	</script>
 	<style>
 		.panel-header, .panel-body {
@@ -30,10 +33,17 @@
 		    border-radius: 4px 4px 0 0 !important;
 		   
 		}
+		/*多院区改造 cy 2021-04-09 */
+		#_HospList+span{max-width:234px}
+		#_HospList+span >input{max-width:200px}
 	</style>
 </head>
 <body>
 	<div id="mainpanel" class="hisui-layout"  fit="true">
+		<div data-options="region:'north',title:'',headerCls:'panel-header-gray',split:false" style='height:40px;padding:10px 5px 0 10px' border="false"><!--多院区改造 cy 2021-04-15-->
+			<label id="_HospListLabel" style='margin-right:10px;'>医院</label><input id="_HospList">
+			<a href="#" id="_HospBtn" data-options="iconCls:'icon-w-key'" class="hisui-linkbutton" style="margin-left:10px;">数据关联医院</a>
+		</div>
 		<div data-options="region:'west',title:'工作流定义树',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:300px;">
 			<ul class="hisui-tree" id="tree" data-options="lines:true"></ul>
 		</div> 
@@ -48,6 +58,12 @@
 	    		</div> 
 	    		<div id="EWFL" title="事件等级"   style="border:0px;">
 	    			<table id="evtwfleveldg" toolbar="#ewfltb" iconCls="icon-paper" border="false" iconCls="icon-paper" headerCls="panel-header-gray"></table>
+	    		</div>
+	    		<div id="EWFTime" title="时限"   style="border:0px;">
+	    			<table id="evtwftimedg" toolbar="#ewftimetb" iconCls="icon-paper" border="false" iconCls="icon-paper" headerCls="panel-header-gray"></table>
+	    		</div>   
+	    		<div id="EWFDic" title="元素"   style="border:0px;">
+	    			<table id="evtwfdicdg" toolbar="#ewfdictb" iconCls="icon-paper" border="false" iconCls="icon-paper" headerCls="panel-header-gray"></table>
 	    		</div>   
 			</div>
 		</div>
@@ -67,15 +83,16 @@
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="insertwfi" style="display:none;">新增工作流项目</a></td>
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="delete">删除</a> </td>
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="save">保存</a> </td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" id="copy" onclick="javascript:WorkFlowCopy()"style="display:none;">复制</a> </td>
 		    </tr>
 		</table>
 	</div>	
 	<div id="ewfltb">
 		<table cellspacing="0" cellpadding="0" >
 			<tr>
-		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="inseventwfl">新增</a></td>
-		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="deleventwfl">删除</a> </td>
-		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="saveventwfl">保存</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="inseventwfl">新增</a></td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="deleventwfl">删除</a> </td>
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="saveventwfl">保存</a> </td>
 		    </tr>
 		</table>
 	</div>
@@ -87,6 +104,55 @@
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="saveventwfg">保存</a> </td>
 		    </tr>
 		</table>
+	</div>
+	<div id="ewftimetb">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="instime">新增</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="deltime">删除</a> </td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="savtime">保存</a> </td>
+		    </tr>
+		</table>
+	</div>
+	<div id="ewfdictb">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="insdic">新增</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="deldic">删除</a> </td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="savdic">保存</a> </td>
+		    </tr>
+		</table>
+	</div>
+	<!--复制工作流-->
+	<div id="copydialog"
+	        class="hisui-dialog"  	
+			style="width:400px;height:300px;"
+			data-options="title:'复制工作流',modal:true,closed:true,
+				toolbar:[{
+					text:'保存',
+					iconCls:'icon-save',
+					handler:function(){SaveWorkFlowCopy();}
+				}]">
+		 <div style="padding:10px 60px 20px 60px">
+		 	<form id="copyWorkFlow" class="hisui-form" >		
+			<table cellpadding="5">
+				<tr>
+					<td >code</td>
+					<td ><input id="copyCode" type="text"  class="hisui-validatebox" data-options="required:true" style="width:200px"/></td>
+				</tr>
+				<tr>
+					<td >名称</td>
+					<td ><input id="copyName" type="text" class="hisui-validatebox"  data-options="required:true" style="width:200px" /></td>	
+				</tr>
+				<tr>
+					<td >类型</td>
+					<td> 
+					<input style="width:208px" id="copyType" class='hisui-combobox' />
+					</td>
+				</tr>
+			</table>
+			</form>
+		</div>
 	</div>
 </body>
 </html>

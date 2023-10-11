@@ -1,0 +1,206 @@
+﻿<!-- 
+ * FileName: dhcbill.conf.general.main.csp
+ * Author: ZhYW
+ * Date: 2022-02-28
+ * Description: 通用配置主界面
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.layout>.panel>.panel-header {
+		    -moz-border-radius: 4px 4px 0 0;
+		    -webkit-border-radius: 4px 4px 0 0;
+		    border-radius: 4px 4px 0 0;
+		}
+		.layout>.panel>.panel-body {
+		    -moz-border-radius: 0 0 4px 4px;
+		    -webkit-border-radius: 0 0 4px 4px;
+		    border-radius: 0 0 4px 4px;
+		}
+		.layout-split-west {
+		    border-right: 10px solid #fff;
+		}
+		.hisui-combogrid.tb-colspan {
+			width: 450px;
+			height: 30px;
+			line-height: 30px;
+			box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			-webkit-box-sizing: border-box;
+		}
+		.textbox.tb200 {
+			width: 200px;
+		}
+		.textbox.tb550 {
+			width: 550px;
+		}
+		.textbox.tb486 {
+			width: 486px;
+		}
+		.textbox.tb-colspan {
+			width: 100%;
+			height: 30px;
+			line-height: 30px;
+			box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			-webkit-box-sizing: border-box;
+		}
+		textarea.textbox.tb-colspan {
+			line-height: 20px;
+		}
+		body {
+			background-color: #ffffff
+		}
+	</style>
+	 <ADDINS require="CmdShell"></ADDINS>
+	<script type="text/javascript">
+		//全局变量
+		var GV = { m_RegularExp:/[`:_.~!@#$%^&*() \+ =<>?"{}|, \/ ;' \\ [ \] ·~！@#￥%……&*（）—— \+ ={}|《》？：“”【】、；‘’，。、]/g,
+				   cfgData:{}
+				};
+	</script>
+	<server>
+		set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+	</server>
+</head>
+
+<body style="padding:10px">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',title:'配置管理',collapsible:false,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:258px">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="padding:3px;border-bottom:1px solid #cccccc;border-radius:0;">
+					<div><input id="mod-search" class="textbox" style="width:240px;"/></div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<ul id="modTree"></ul>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',border:false">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'west',title:'配置点',collapsible:false,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:316px">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="padding:3px;border-bottom:1px dashed #cccccc;">
+							<div><input id="cfg-search" class="textbox" style="width:282px;"/></div>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="cfgPointList"></table>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',headerCls:'panel-header-gray',title:'配置',iconCls:'icon-batch-cfg'" style="overflow:hidden;">
+					<iframe width="100%" height="100%" scrolling="auto" frameborder="0" src="dhcbill.nodata.warning.csp"></iframe>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="edit-mod-dlg" style="width:300px;height:180px;display:none;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label"><label class="clsRequired">#(..Get("代码"))#</label></td>
+				<td><input id="dlg-mod-code" class="hisui-validatebox textbox" data-options="required:true,validType:['checkModCodeExist']" style="width:225px;"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label class="clsRequired">#(..Get("描述"))#</label></td>
+				<td><input id="dlg-mod-desc" class="hisui-validatebox textbox" data-options="required:true" style="width:225px;"/></td>
+			</tr>
+		</table>
+	</div>
+	<!--以下为配置点修改界面-->
+	<div id="edit-pt-dlg" style="width:750px;height:710px;display:none;">
+		<table class="search-table" style="padding-left:35px">
+			<tr>
+				<td class="r-label"><label>#(..Get("全代码"))#</label></td>
+				<td><input id="dlg-pt-cpCode" class="hisui-validatebox textbox tb200" disabled="true"/></td>
+				<td class="r-label"><label>#(..Get("发布状态"))#</label></td>
+				<td><input id="dlg-pt-isReleased" class="hisui-combobox textbox tb200" disabled="true"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>#(..Get("代码"))#</label></td>
+				<td><input id="dlg-pt-code" class="hisui-validatebox textbox tb200" placeholder="#(..Get("无需填写，描述回车后自动生成"))#" data-options="required:true,validType:['checkPointCodeExist']" readonly="readonly"/></td>
+				<td class="r-label"><label id="dlg-pt-descLabel" class="clsRequired">#(..Get("名称"))#</label></td>
+				<td><input id="dlg-pt-desc" class="hisui-validatebox textbox tb200" data-options="required:true"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label class="clsRequired">#(..Get("结果类型"))#</label></td>
+				<td><input id="dlg-pt-resultType" class="hisui-combobox textbox tb200" data-options="required:true"/></td>
+				<td class="r-label"><label id="dlg-pt-ctrlTypeLabel">#(..Get("控制类型"))#</label></td>
+				<td><input id="dlg-pt-ctrlType" class="hisui-combobox textbox tb200"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label class="clsRequired">#(..Get("是否公用"))#</label></td>
+				<td><input id="dlg-pt-publicFlag" class="hisui-combobox textbox tb200" data-options="required:true"/></td>
+
+			</tr>
+			<tr>
+				<td class="r-label"><label class="clsRequired">#(..Get("配置界面URL"))#</label></td>
+				<td colspan="3"><input id="dlg-pt-url" class="hisui-validatebox textbox tb486" data-options="required:true" placeholder="#(..Get("请先配置URL！"))#" readonly="readonly"/>
+				<a href="javascript:;" class="showicon hisui-tooltip" id="dlg-pt-setUrl" title="配置URL" data-options="iconCls:'#("icon-"_$s((defUIVersion="lite"):"",1:"blue-")_"edit")#',plain:true,position:'bottom'" style="margin-left: 5px;"></a></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label id="dlg-pt-dataViewTypeLabel">#(..Get("数据展示形式"))#</label></td>
+				<td><input id="dlg-pt-dataViewType" class="hisui-combobox textbox tb200"/></td>
+				<td class="r-label"><label id="dlg-pt-collDataSrcLabel">#(..Get("源数据类型"))#</label></td>
+				<td><input id="dlg-pt-collDataSrc" class="hisui-combobox textbox tb200"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label id="dlg-pt-collDataSrcDicTypeLabel">#(..Get("源数据字典"))#</label></td>
+				<td><input id="dlg-pt-collDataSrcDicType" class="hisui-combobox textbox tb200"/></td>	
+				<td class="r-label"><label id="dlg-pt-collDataSrcQryLabel">#(..Get("源数据Query"))#</label></td>
+				<td><input id="dlg-pt-collDataSrcQry" class="hisui-combogrid textbox tb200" /></td>
+				<!--td class="r-label"><label id="dlg-pt-isOneToManyLabel">#(..Get("是否一对多"))#</label></td>
+				<td><input id="dlg-pt-isOneToMany" class="hisui-combobox textbox tb200"/></td-->
+			</tr>
+			<tr>				
+				<td class="r-label"><label id="dlg-pt-tgtDataSrcLabel" for="dlg-pt-tgtDataSrc">#(..Get("目标数据类型"))#</label></td>
+				<td><input id="dlg-pt-tgtDataSrc" class="hisui-combobox textbox tb200"/></td>
+				<td class="r-label"><label id="dlg-pt-tgtDataSrcDicTypeLabel">#(..Get("目标数据字典"))#</label></td>
+				<td><input id="dlg-pt-tgtDataSrcDicType" class="hisui-combobox textbox tb200"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label id="dlg-pt-tgtDataSrcQryLabel">#(..Get("目标数据Query"))#</label></td>
+				<td><input id="dlg-pt-tgtDataSrcQry" class="hisui-combogrid textbox tb200"/></td>
+				<td class="r-label"><label id="dlg-pt-dataMulFlagLabel">#(..Get("是否支持多选"))#</label></td>
+				<td><input id="dlg-pt-dataMulFlag" class="hisui-combobox textbox tb200" /></td>
+				
+			</tr>
+			<tr>
+				<td class="r-label"><label id="dlg-pt-activeDateFromLabel">#(..Get("生效开始日期"))#</label></td>
+				<td><input id="dlg-pt-activeDateFrom" class="hisui-datebox textbox tb200"/></td>
+				<td class="r-label"><label id="dlg-pt-activeDateToLabel">#(..Get("生效结束日期"))#</label></td>
+				<td><input id="dlg-pt-activeDateTo" class="hisui-datebox textbox tb200"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label id="dlg-pt-updLevelDicCodeLabel" class="clsRequired">#(..Get("修改级别"))#</label></td>
+				<td><input id="dlg-pt-updLevelDicCode" class="hisui-combobox textbox tb200" data-options="required:true"/></td>
+				<td class="r-label"><label id="dlg-pt-ctrlLevelDicCodeLabel">#(..Get("控制级别"))#</label></td>
+				<td><input id="dlg-pt-ctrlLevelDicCode" class="hisui-combogrid textbox tb200"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>#(..Get("提示内容"))#</label></td>
+				<td colspan="3"><textarea id="dlg-pt-ctrlLevelRemark" class="textbox tb-colspan" style="height:40px;"></textarea></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>#(..Get("配置点说明"))#</label></td>
+				<td colspan="3"><textarea id="dlg-pt-remark" class="textbox tb-colspan" style="height:70px;"></textarea></td>
+			</tr>
+			<tr>
+				<td><textarea id="dlg-pt-collDataSrcQryDicDR" class="hisui-textbox tb-colspan" hidden="true"></textarea></td>
+				<td><textarea id="dlg-pt-tgtDataSrcQryDicDR" class="hisui-textbox tb-colspan" hidden="true"></textarea></td>
+			</tr>
+		</table>
+	</div>
+	<!--以上为配置点修改界面-->
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.general.main.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.importorexport.js"></script>
+</body>
+</html>

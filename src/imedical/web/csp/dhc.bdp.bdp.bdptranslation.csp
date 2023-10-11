@@ -1,55 +1,79 @@
+
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
  q 1
 /*
- // dhc.bdp.bdp.bdptranslation.csp
- //  BDP_Translation.js
-// 名称: 平台翻译
-// 描述: 平台翻译界面，增删改查
-// 编写者: 基础数据平台组-钟荣枫
-// 编写日期: 2020-4-24
- */ 
+    @CSP：dhc.bdp.bdp.bdptranslation.csp
+    @JS:
+    @Title：翻译界面查询
+    @Creator:陈莹
+    @Description:翻译第二版
+    @CreateDate：2021-12-02
+*/ 
 </csp:method>
 <!DOCTYPE html>
 <HTML lang="en">
 <HEAD>
  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
  <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
- <HISUI/>
- <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
- <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
-
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_Translation.js"></script>
 </HEAD>
 <BODY>
-	<script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_Translation.js"></script>
-	<div class="hisui-layout" data-options="fit:true" border="false">
-        
-		 <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;" title="" border="false">
-	    	 <table style="padding-top:10px;padding-bottom:10px" >
-			    <tr>
-			   	 	<td class="tdlabel">类名</td>
-		    		<td><input id="TextTableName" type="text" class="textbox hisui-validatebox" style="width:120px"></td>
-			   	 	<td class="tdlabel">字段名</td>
-		    		<td><input id="TextFieldName" type="text" class="textbox hisui-validatebox" style="width:120px"></td>
-			   	 	<td class="tdlabel">语言</td>
-		    		<td><input id="TextLanguage" type="text" class="textbox hisui-combobox" style="width:120px"></td>
-		    		<td class="tdlabel">翻译前中文</td>
-		    		<td><input id="TextFieldDesc" type="text" class="textbox hisui-validatebox" style=""></td>
-					<td class="tdlabel-b">
-						<a href="#" id="btnSearch" class="hisui-linkbutton" iconCls="icon-w-find">查询</a>
-					</td>
-					<td class="tdlabel-b">
-						<a href="#" id="btnRefresh" class="hisui-linkbutton" iconCls="icon-w-reset">重置</a>
-					</td>
-				</tr>
-			 </table >
-		 </div> 
-		 <div data-options="region:'center'" border="false"> 
-			<table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
-		 </div> 
-     </div> 
-  
-     <div id="myWin" style="width:500px;height:300px;padding:10px;display:none;">   
+	<div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+		<div id="layoutcenter" data-options="region:'center',split:true" border="false" style="padding:4px 4px 4px 0px">
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="mygrid" border="true" toolbar="#mybar" title="翻译数据"></table>
+		</div>
+		<div id="layoutwest" data-options="region:'west',split:true"  style="width:550px;padding:4px 0px 4px 4px;" border="false" >
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="mygridLeft" border="true" toolbar="#mybarLeft" title="表结构登记"></table>
+			
+		</div>
+	</div>
+	<!--左侧 表结构登记 工具条-->
+    <div id="mybarLeft">
+	  <table style="padding-bottom:10px;padding-top:10px;">
+			<td class="tdlabel">类名</td>
+			<td><input style="width:80px;" class='hisui-validatebox' id="TextTableName"></td>
+			<td class="tdlabel">产品组</td>
+			<td><input style="width:80px;" class='hisui-validatebox' id="TextType"></td>		
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="btnSearchLeft">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="btnRefreshLeft" >重置</a>
+			</td>
+	  </table> 
+	  
+	</div> 
+	<!--右侧 翻译数据 工具条-->   
+    <div id="mybar">
+	  <table style="padding-top:5px;padding-bottom:5px;" >
+	    <tr>
+	    	<td class="tdlabel">字段名</td>
+    		<td><input id="TextFieldName" type="text" class="textbox hisui-validatebox" style="width:80px"></td>
+	   	 	<td class="tdlabel">语言</td>
+    		<td><input id="TextLanguage" type="text" class="textbox hisui-combobox" style="width:80px"></td>
+    		<td class="tdlabel">翻译前中文</td>
+    		<td><input id="TextFieldDesc" type="text" class="textbox hisui-validatebox" style="width:80px"></td>	
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="btnSearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="btnRefresh" >重置</a>
+			</td>
+		</tr> 
+	  </table>  
+	   <div style="border-bottom: 1px dashed #C0C0C0;"></div>	
+	  	<a   href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAdd">新增</a> 
+        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true"id="btnUpdate">修改</a> 
+        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true"  id="btnDel">删除</a>
+	</div> 
+	
+	 <!--维护翻译数据 新增修改弹窗-->
+	 <div id="myWin" style="width:500px;height:300px;padding:10px;display:none;">   
 		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">    
 			<table  align="center">
 				<tr style="display:none;">
@@ -82,13 +106,6 @@
 			</table >
 		</form>
 	</div>
-	<!--工具栏-->
-	<div id="mybar">
-
-	    <a   href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAdd">新增</a> 
-        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true"id="btnUpdate">修改</a> 
-        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true"  id="btnDel">删除</a>
-					
-    </div>
-    </BODY>
+</BODY>
 </HTML>
+																						

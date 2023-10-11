@@ -1,0 +1,105 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+s RowID=$g(%request.Data("RowID",1))
+s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+if (PreviewRptFlag=0){
+	//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17 
+}   
+</SCRIPT>
+<server>
+s SourceType=$g(%request.Data("SourceType",1))
+s SubType=$g(%request.Data("SubType",1))
+s QXType=$Get(%request.Data("QXType",1))
+s Type=$Get(%request.Data("Type",1))
+s WaitAD=$Get(%request.Data("WaitAD",1))
+</server>
+</HEAD>
+<body class="hisui-layout"> 
+<!--Add By QW20210429 BUG:QW0102 增加加载-->
+<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+		<div data-options="region:'center',border:false,split:true" style="width:600px;padding:10px 10px 10px 5px;">
+		<div class="hisui-panel" title="汇总单" data-options="fit:true,border:true,'eqtitle':'maintitle'">
+			<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:140px;">
+				<div class="eq-table" style="width:100%">
+					<div class="eq-table-tr">					
+						<div class="eq-table-td eq-table-label"><lable id="cMergeOrderNo" for="MergeOrderNo">汇总单号</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MergeOrderNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><lable id="cEquipName" for="EquipName">设备名称</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipName"></div>
+						<div class="eq-table-td eq-table-label"><lable id="cEquipNo" for="EquipNo">设备编号</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipNo"></div>
+						<div class="eq-table-td eq-table-button"><a id="BPicture" href="#" class="hisui-linkbutton" >图片信息</a></div>	
+						<div class="eq-table-td eq-table-button"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">退回</a></div>				
+			    	</div>
+			    	<div class="eq-table-tr">					
+						<div class="eq-table-td eq-table-label"><lable id="cRequestNo" for="RequestNo">报废单号</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RequestNo"></div>	
+						<div class="eq-table-td eq-table-label"><lable id="cUseLoc" for="UseLoc">使用科室</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UseLoc" data-options="'component':'PLAT.L.Loc'"></div>	
+						<div class="eq-table-td eq-table-label"><lable id="cStartDate" for="StartDate">申请日期</lable></div>
+						<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="StartDate"></div>	
+						<div class="eq-table-td eq-table-label15"><a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print"  data-options="stopAllEventOnDisabled:true">打印</a></div>			
+		    		</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><lable id="cRequestLoc" for="RequestLoc">申请科室</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RequestLoc" data-options="'component':'PLAT.L.Loc'"></div>
+						<div class="eq-table-td eq-table-label"><lable id="cEquipType" for="EquipType">管理类组</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipType" data-options="'component':'PLAT.L.EquipType'"></div><!--Add By QW202101121 BUG:QW0087  需求号:1703669 汇总单界面，管理类组下拉框显示的为科室信息-->		
+						<div class="eq-table-td eq-table-label"><lable id="cEndDate" for="EndDate">至</lable></div>
+						<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EndDate"></div>
+						<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+						<div class="eq-table-td eq-table-button"><a id="BApprove" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a></div>
+
+		    		</div>
+		    		<div class="eq-table-tr">
+			    	    <div class="eq-table-td eq-table-label"></div>
+							<div id="ApproveButton" class="eq-attribute"></div>
+		    		</div>
+					<!--Modified By QW20210429 BUG:QW0102 增加合计 begin-->
+		    		</div>
+				</div>
+			<div data-options="region:'center',border:false,fit:true" style="height:79.5%;position:relative">
+				<table id="DHCEQMergeOrder" class="hisui-datagrid" ></table>
+				<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+			<!--Modified By QW20210429 BUG:QW0102 增加合计 end-->
+			</div>			
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<input id="RowID" type="hidden"  value=#(RowID)#>
+			<input id="SourceType" type="hidden" value=#(SourceType)#>
+			<input id="SubType" type="hidden" value=#(SubType)#>		
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> 
+            <input id="QXType" name="QXType" type="hidden" value=#(QXType)#>
+            <input id="Type" name="Type" type="hidden" value="">
+            <input id="WaitAD" name="WaitAD" type="hidden" value=#(WaitAD)#>
+            <input id="StatusDR" name="StatusDR" type="hidden" value=""><!--Add By QW202101121 BUG:QW0087 需求号:1703512 已经审核的汇总单，点击全部不显示报废设备-->
+			
+			<input id="ApproveSetDR" name="ApproveSetDR" type="hidden">
+            <input id="Action" name="Action" type="hidden">
+			<input id="CurRole" name="CurRole" type="hidden">
+            
+            <input id="UseLocDR" type="hidden">		
+			<input id="EquipDR" type="hidden">
+			<input id="RequestLocDR" type="hidden">
+			<input id="EquipTypeDR" type="hidden">
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/em/mergeorderaudit.js"></script>
+<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
+</body>
+
+</html>

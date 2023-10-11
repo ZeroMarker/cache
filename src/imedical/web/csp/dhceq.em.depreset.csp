@@ -1,0 +1,129 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<style type="text/css">
+.eqbutton
+{
+	margin-left:15px;
+}
+</style>
+<script language=Cache runat=server>
+	s EQRowID=$Get(%request.Data("EQRowID",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s CARowID=$o(^DHCEQCostAllot(0,"StatusSourceType","N","1",EQRowID,""))
+	s EQOriginalFee=$fn($p($g(^DHCEQEquip(EQRowID)),"^",27),"",2)
+	s DepreTotalFee=$fn($p($g(^DHCEQEquip(EQRowID)),"^",35),"",2)
+	s EQUseLocDR=$p($g(^DHCEQEquip(EQRowID)),"^",19)
+	s DepreSetID=""
+	s DepreTotal=""
+	i EQRowID'="" d
+	.s DepreSetID=$o(^DHCEQDepreSet(0,"Equip",EQRowID,""))
+	.i DepreSetID'="" d
+	..s DepreTotal=$p($g(^DHCEQDepreSet(DepreSetID)),"^",22)
+	
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+    s RemainFeeRate=+##class(web.DHCEQCommon).GetSysInfo("990029")
+</script>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,headerCls:'panel-header-gray',border:false">
+	        <div class="hisui-layout" data-options="fit:true,border:false">
+	        	<div data-options="region:'north',border:true,headerCls:'panel-header-gray',title:'设备折旧设置',split:true" style="height:250px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQName" for="EQName">设备名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQName" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQNo" for="EQNo">设备编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQUseLocDR_CTLOCDesc" for="EQUseLocDR_CTLOCDesc">使用科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQUseLocDR_CTLOCDesc" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQEquipTypeDR_ETDesc" for="EQEquipTypeDR_ETDesc">管理类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQEquipTypeDR_ETDesc" disabled="true"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQOriginalFee" for="EQOriginalFee">原值</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQOriginalFee" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQDepreTotalFee" for="EQDepreTotalFee">累计折旧</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQDepreTotalFee" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQNetFee" for="EQNetFee">净值</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQNetFee" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQStartDate" for="EQStartDate">启用日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EQStartDate" disabled="true"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQSelfFundFee" for="EQSelfFundFee">自筹资金</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQSelfFundFee" disabled="true" style="width:96px;"><span id="EQFunds" style="text-align:left;color:#008FF0;">其它资金</span></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQDepreTotal" for="EQDepreTotal">已折期数</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQDepreTotal" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQRemainDepreMonth" for="EQRemainDepreMonth">剩余期数</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQRemainDepreMonth" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQLastMonthDepre" for="EQLastMonthDepre">上月折旧</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQLastMonthDepre" disabled="true"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQStartDepreDate" for="EQStartDepreDate">折旧开始日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EQStartDepreDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQDepreMethodDR_DMDesc" for="EQDepreMethodDR_DMDesc">折旧方法</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQDepreMethodDR_DMDesc" data-options="'component':'PLAT.L.DepreMethod'"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQLimitYearsNum" for="EQLimitYearsNum">折旧年限</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQLimitYearsNum"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQDepreStatus" for="EQDepreStatus">折旧状态</label></div>
+						<div class="eq-table-td eq-table-input"><div id="EQDepreStatus" class="hisui-switchbox" data-options="onText:'启用',offText:'停用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){console.log(event);console.log(obj);}"></div></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQPreMonthDepre" for="EQPreMonthDepre">本月预计折旧</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EQPreMonthDepre" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:true,headerCls:'panel-header-gray',title:'设备折旧分摊'" style="position:relative;">
+	                <table id="tDHCEQCostAllot" class="hisui-datagrid"></table>
+	            </div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" style="height:40px;" class="eq-clearfix">
+    	<div style="margin:0px auto;fit:true;vertical-align:middle;text-align:center;">
+        	<a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+			<a id="BClosed" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">关闭</a>
+    	</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="EQRowID" value=#(EQRowID)#>
+			<INPUT type="hidden" id="DepreSetID" value=#(DepreSetID)#>
+			<INPUT type="hidden" id="CARowID" value=#(CARowID)#>
+			<INPUT type="hidden" id="CATypes" value="1">	<!--设备-->
+			<INPUT type="hidden" id="CAAllotType" value="0">	<!--默认为固定比例-->
+			<INPUT type="hidden" id="CAHold2" value=#(EQRowID)#>
+			<INPUT type="hidden" id="CAEquipDR" value=#(EQRowID)#>
+			<INPUT type="hidden" id="CAHold1" value=#(EQOriginalFee)#>
+			<INPUT type="hidden" id="ReadOnly" value=#(ReadOnly)#>
+			<INPUT type="hidden" id="EQDepreMethodDR">
+			<INPUT type="hidden" id="EQUseLocDR" value=#(EQUseLocDR)#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="DepreTotalFee" value=#(DepreTotalFee)#>
+			<INPUT type="hidden" id="DepreTotal" value=#(DepreTotal)#>
+			<INPUT type="hidden" id="RemainFeeRate" value=#(RemainFeeRate)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/depreset.js'></script>
+</body>
+</html> 

@@ -1,0 +1,85 @@
+<!-- 
+ * FileName: dhcbill.dc.billbalance.csp
+ * Modify: tangzf 
+ * Date: 2022-6-6
+ * Description: 账单不平数据核查
+-->
+<!DOCTYPE html>
+<TRAK:HEAD></TRAK:HEAD>
+<HISUI></HISUI>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<style>
+		.panel-body{
+			border-color:#CCCCCC;
+		}	
+		#coninfopanel .panel-header{
+			border-bottom-width:0px;
+		}
+		#coninfopanel .panel-body{
+			border-radius:0px 0px 4px 4px!important;
+		}
+		
+	</style>
+</head>
+
+<body style="padding:10px;">
+    <div class="hisui-layout" data-options="fit:true">
+    	<div data-options="region:'north',border:false,collapsible:false" style="height:124px;">
+			<div class="hisui-panel" data-options="title:'账单平衡核查',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;" >
+				<table class='search-table' id='tQueryPanel' >
+					<tr>
+						<td class='r-label td-first-col' ><label>核查开始日期</label></td>
+						<td><input id="StartDate" class="hisui-datebox textbox"  name="StartDate" /> </td>
+						<td class='r-label'><label>核查结束日期</label></td>
+						<td><input id="EndDate" class="hisui-datebox textbox"  name="EndDate" /> </td>
+						<td class='r-label'><label>登记号</label></td>
+						<td><input id="RegNo" class="hisui-textbox textbox"  name="RegNo" /> </td>
+						<td class='r-label'><label>就诊号</label></td>
+						<td><input id="AdmDr" class="hisui-textbox textbox"  name="AdmDr" /> </td>
+						<td class='r-label'><a id="btnQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onClick='RunQuery()'>查询</a></td>
+						<td><a href="javascript:;" id="csconflg-tips" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>提示</td>
+					</tr>
+					<tr>
+						<td class='r-label'><label>账单</label></td>
+						<td><input id="PBDr" class="hisui-textbox textbox" name="PBDr" /> </td>
+						<td class='r-label'><label>姓名</label></td>
+						<td><input id="PatName" class="hisui-textbox textbox" /> </td>
+						
+						<td colspan=4/>
+						<td class='r-label'><a  id="btnQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-clean'" onClick='clear_click()'>清屏</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'center'" id='coninfopanel' >
+			<div id="dg" class="hisui-datagrid"></div>
+		</div>
+		<div id="Modifydl" class="hisui-window" title="解决方法" data-options="modal:true,closed:true,iconCls:'icon-w-edit',collapsible:false,minimizable:false,maximizable:false,border:false" style="width:710px;height:390px;padding:10px">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',border:false" >
+					<table  class='search-table' >
+					<tr>
+						<td ><textarea id="editCode" style='width:680px;height:290px'></textarea></td>
+					</tr>
+					<tr>
+					   	<td  style='text-align:center'><a  href="#" style='width:80px;' id='saveBtn' class="hisui-linkbutton"  onClick='saveSolveInfo()'>保存</a>
+					</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+		<script type="text/javascript" src="../scripts/dhcbill/dc/billbalance.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!--
+	desc: 货位顺序维护（备药路径）
+	csp: pha.in.v3.mob.drawsort.csp
+	js:  scripts/pha/mob/v2/drawsort.js
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<html XMLNS=TRAK>
+
+<head>
+    <title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <style type="text/css"></style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+			<!--HISUI布局 Start-->
+            <div class="hisui-layout" fit="true" border="false">
+                <!--1.条件区域(分成两行)-->
+				<div data-options="region:'north',title:'查询条件',split:true,headerCls:'panel-header-gray',iconCls:'icon-search',collapsible:false" class="dhcpha-north-r1">
+                    <table class="dhcpha-north-tbl">
+                        <tr>
+                            <td>
+                                <label for="cmb-PhaLoc">药房</label>
+                                <input id="cmb-PhaLoc" />
+                            </td>
+                            <td>
+                                <label for="cmg-Inci">药品名称</label>
+                                <input id="cmg-Inci" />
+                            </td>
+                            <td>
+                                <label for="txt-stkbin">货位码描述</label>
+                                <input id="txt-stkbin" class="hisui-validatebox" />
+                            </td>
+                            
+                            <!--button-->
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btn-Find" style="margin-left:60px">查询</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-edit" id="btn-CreateSortNum">生成货位顺序</a>
+                            </td>
+                        </tr>
+                        
+                    </table>
+                </div>
+				<!--2.病区表格区域-->
+                <div data-options="region:'west',title:'取药规则列表',split:true,headerCls:'panel-header-gray',iconCls:'icon-house',width:460">
+                    <table id="grid-main"></table>
+                </div>
+                
+                <div id="gridMainBar">
+					<table>
+						<tr>
+							<td>
+								<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">增加</a>
+							</td>
+							<td>
+								<div class="datagrid-btn-separator"></div>
+							</td>
+							<td>
+								<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+							</td>
+							<td>
+								<div class="datagrid-btn-separator"></div>
+							</td>
+							<td>
+								<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
+							</td>
+							<td>
+								<input class="hisui-validatebox" style="visibility:hidden" />
+							</td>
+						</tr>
+					</table>
+				</div>
+                
+				<!--3.明细表格区域-->
+                <div data-options="region:'center',title:'药房货位列表',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper-table'">
+                    <table id="grid-detail"></table>
+                </div>
+            </div>
+			<!--HISUI布局 End-->
+        </div>
+    </div>
+	
+	<!--dhcpha common js-->
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.export.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/export.js"></script>
+    <script type="text/javascript" src="../scripts/DHCSTXMLPrint.js"></script>
+    <script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+	
+	<!-- js -->
+	<script type="text/javascript" src="../scripts/pha/mob/v2/drawsort.js"></script>
+
+</body>
+
+<!-- 弹窗 -->
+<div id="dialog-setNum" class="hisui-dialog" title="设置货架顺序" style="width:800px;height:600px;top:20px;padding:10px;" data-options="iconCls:'icon-save',resizable:true,modal:true,closed:true,toolbar:[{
+		text:'编辑',
+		iconCls:'icon-edit',
+		handler:function(){alert('edit')}
+	},{
+		text:'帮助',
+		iconCls:'icon-help',
+		handler:function(){alert('help')}
+	}],buttons:[{
+		text:'保存',
+		handler:function(){SaveStkShelves();}
+	},{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#dialog-setNum').close();}
+	}]">   
+	<div id="grid-dialog-setNum" data-options="fit:true" border="false"></div>
+</div>
+
+</html>

@@ -1,0 +1,58 @@
+﻿<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhc.emr.quality.depdislog.csp-->
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    	<HISUI/> 
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+		<script language="cache" runat="server">
+			Set EpisodeID=%request.Get("EpisodeID","")			
+		</script>
+		<SCRIPT language = 'javascript' >
+			var ServerObj={
+				EpisodeID: '#(EpisodeID)#'
+			};
+	   </SCRIPT>
+		<script type="text/javascript">
+			var statusData = $cm({
+				ClassName:"EPRservice.Quality.SetDepDisFlag",
+				QueryName:"GetDepDisList",
+				AEpisodeID:ServerObj.EpisodeID,
+				ResultSetType:"array",
+				rows:100	
+			},false);
+	   </script>
+	</head>
+	<body style="background-color:#ffffff">
+		<div id="vstp" style="margin:0 auto; width:450px;background-color:#ffffff "></div>
+		<script type="text/javascript">
+	    $(function(){
+		    var items=[];
+		    for (var i = 0; i < statusData.length; i++) {
+			    //console.log(statusData)
+				var title = emrTrans(statusData[i].Action)+" "+emrTrans(statusData[i].IsPass) 
+				var context="<div style='margin:0px;' id='itembox"+i+"'>"
+				if (statusData[i].CreateUserName!="") {					
+					context=context+"<div style='float:none;margin-left:5px'>"+emrTrans("操作人")+"："+statusData[i].CreateUserName+"  "+statusData[i].CreateDate+"</div>";
+				}
+				context=context+"</div>"
+				//console.log(context)
+				items.push({title:title,context:context});
+			}
+	        $("#vstp").vstep({
+	            //showNumber:false,
+	            stepHeight:60,
+	            currentInd:statusData.length,
+	            onSelect:function(ind,item){console.log(item);},
+	            //titlePostion:'top',
+	           	items:items
+	        });	       
+	    });
+		</script>
+	</body>
+</html>

@@ -9,51 +9,93 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 <style type="text/css">
 i{display:block;width:30px;}
+.eq-table{width:100%}
+.eq-bussinfo{
+	margin-top:10px;
+}
+.eq-bussdetail{
+	padding:10px;
+	color:#0d83b0;
+}
+h1{color:#666;}
 </style>
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
 	s BussID=$Get(%request.Data("BussID",1))
 	s BussType=$Get(%request.Data("BussType",1))
+	s DCRRowID=$Get(%request.Data("DCRRowID",1))
+	s WaitAD = $Get(%request.Data("WaitAD",1))
+	s Type = $Get(%request.Data("Type",1))
+	s ModelOperMethod=##class(web.DHCEQCommon).GetSysInfo("201004")
+	s ManuFactoryOperMethod=##class(web.DHCEQCommon).GetSysInfo("201005")
 </Script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'edittitle',title:'明细单信息'" style="padding:10px;margin-bottom:10px;">
-			<div class="eq-table">
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cISLEquipName" for="ISLEquipName">设备名称</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLEquipName" data-options="'itype':'0','property':''"><i class="icon-blue-edit"></i></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLModelDR_MDesc" for="ISLModelDR_MDesc">规格型号</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLModelDR_MDesc" data-options="'itype':'9','property':'PLAT.L.Model'"><i class="icon-blue-edit"></i></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLUnitDR_UOMDesc" for="ISLUnitDR_UOMDesc">单位</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLUnitDR_UOMDesc" data-options="'itype':'9','property':'PLAT.L.UOM'"><i class="icon-blue-edit"></i></div>
+		<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray'" style="padding:0px 10px 10px 10px;margin-bottom:10px;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding:0px 0px 10px 0px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cISLEquipName" for="ISLEquipName">设备名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLEquipName" data-options="'itype':'0','property':''"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLModelDR_MDesc" for="ISLModelDR_MDesc">规格型号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLModelDR_MDesc" data-options="'itype':'9','component':'PLAT.L.Model'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLUnitDR_UOMDesc" for="ISLUnitDR_UOMDesc">单位</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLUnitDR_UOMDesc" data-options="'itype':'9','component':'PLAT.L.UOM'"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cISLQuantityNum" for="ISLQuantityNum">数量</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" disabled="true" id="ISLQuantityNum"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLOriginalFee" for="ISLOriginalFee">原值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" disabled="true" id="ISLOriginalFee" data-options="'itype':'3','property':''"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLManuFactoryDR_MFName" for="ISLManuFactoryDR_MFName">生产厂商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLManuFactoryDR_MFName" data-options="'itype':'9','component':'PLAT.L.ManuFacturer'"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cISLStatCatDR_SCDesc" for="ISLStatCatDR_SCDesc">设备类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLStatCatDR_SCDesc" data-options="'itype':'9','component':'PLAT.L.StatCat'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLEquipCatDR_ECDesc" for="ISLEquipCatDR_ECDesc">设备分类</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLEquipCatDR_ECDesc" data-options="'itype':'9','component':'EM.L.EquipCat'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLLimitYearsNum" for="ISLLimitYearsNum">使用年限</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLLimitYearsNum" data-options="'itype':'3','property':''"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cISLInvoiceNos" for="ISLInvoiceNos">发票号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLInvoiceNos" data-options="'itype':'0','component':''"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLHold5_EDesc" for="ISLHold5_EDesc">经费来源</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLHold5_EDesc" data-options="'component':'PLAT.L.Expenditures'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cISLRemark" for="ISLRemark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISLRemark" data-options="'itype':'0','property':''"></div>
+						</div>
+					</div>
 				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cISLQuantityNum" for="ISLQuantityNum">数量</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLQuantityNum"></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLOriginalFee" for="ISLOriginalFee">原值</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLOriginalFee" data-options="'itype':'3','property':''"></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLManuFactoryDR_MFName" for="ISLManuFactoryDR_MFName">生产厂商</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLManuFactoryDR_MFName" data-options="'itype':'9','property':'PLAT.L.ManuFacturer'"><i class="icon-blue-edit"></i></div>
-				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cISLStatCatDR_SCDesc" for="ISLStatCatDR_SCDesc">设备类型</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLStatCatDR_SCDesc" data-options="'itype':'9','property':'PLAT.L.StatCat'"><i class="icon-blue-edit"></i></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLEquipCatDR_ECDesc" for="ISLEquipCatDR_ECDesc">设备分类</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLEquipCatDR_ECDesc" data-options="'itype':'9','property':'EM.L.EquipCat'"><i class="icon-blue-edit"></i></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLLimitYearsNum" for="ISLLimitYearsNum">使用年限</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLLimitYearsNum" data-options="'itype':'3','property':''"><i class="icon-blue-edit"></i></div>
-				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cISLInvoiceNos" for="ISLInvoiceNos">发票号</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLInvoiceNos" data-options="'itype':'0','property':''"><i class="icon-blue-edit"></i></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLHold5_EDesc" for="ISLHold5_EDesc">经费来源</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLHold5_EDesc" data-options="'itype':'9','property':'PLAT.L.Expenditures'"><i class="icon-blue-edit"></i></div>
-					<div class="eq-table-td eq-table-label"><label id="cISLRemark" for="ISLRemark">备注</label></div>
-					<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLRemark" data-options="'itype':'0','property':''"><i class="icon-blue-edit"></i></div>
+				<div data-options="region:'center',border:false">
+					<div class="eq-bussinfo" style="display:none;" id="11">
+						<input type="checkbox" class='hisui-checkbox'><h1>相关验收单：</h1>
+						<div class="eq-bussdetail" id="OpenCheckNos"></div>
+					</div>
+					<div class="eq-bussinfo" style="display:none;" id="22">
+						<input type="checkbox" class='hisui-checkbox'><h1>相关转移单：</h1>
+						<div class="eq-bussdetail" id="SMNos"></div>
+					</div>
+					<div class="eq-bussinfo" style="display:none;" id="52">
+						<input type="checkbox" class='hisui-checkbox'><h1>相关设备：</h1>
+						<div class="eq-bussdetail" id="EquipNos"></div>
+					</div>
+					<div class="eq-bussinfo" style="display:none;" id="94">
+						<input type="checkbox" class='hisui-checkbox'><h1>相关合同：</h1>
+						<div class="eq-bussdetail" id="ContractNos"></div>
+					</div>
+					<div>
+						<div style="width:25%;float:left;text-align:center;"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+						<div style="width:25%;float:left;text-align:center;"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a></div>
+						<div style="width:25%;float:left;text-align:center;"><a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a></div>
+						<div style="width:25%;float:left;text-align:center;"><a id="BAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">确认</a></div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -61,8 +103,21 @@ i{display:block;width:30px;}
 	<INPUT type="hidden" id="BussID" value="#(BussID)#">
 	<INPUT type="hidden" id="BussType" value="#(BussType)#">
 	<INPUT type="hidden" id="MainFlag" value="N">
+	<INPUT type="hidden" id="DCRRowID" value="#(DCRRowID)#">
+	<INPUT type="hidden" id="DCRStatus">
 	<INPUT type="hidden" id="ISEquipTypeDR">
-	<script type='text/javascript' src='../scripts/dhceq/plat/businessmodifylist.js'></script>
-	<script type='text/javascript' src='../scripts/dhceq/plat/businessmodifycommon.js'></script>
+	<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+	<INPUT type="hidden" id="Type" value=#(Type)#>
+	<INPUT type="hidden" id="ISLModelDR">
+	<INPUT type="hidden" id="ISLUnitDR">
+	<INPUT type="hidden" id="ISLManuFactoryDR">
+	<INPUT type="hidden" id="ISLStatCatDR">
+	<INPUT type="hidden" id="ISLEquipCatDR">
+	<INPUT type="hidden" id="ISLHold5">
+	<INPUT Type="hidden" id="ISLItemDR">
+	<INPUT Type="hedden" id="EQItemDR">
+	<input type="hidden" id="ModelOperMethod" value=#(ModelOperMethod)#>
+	<input type="hidden" id="ManuFactoryOperMethod" value=#(ManuFactoryOperMethod)#>
+	<script type='text/javascript' src='../scripts/dhceq/plat/busmodify.js'></script>
 </body>
 </html>

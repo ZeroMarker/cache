@@ -1,0 +1,181 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+    If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+    Quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.ctcevaltemplate.csp 放化疗反应评价模板-->
+<HTML lang="zh-CN">
+
+<HEAD>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI></HISUI>
+    <style>
+        body{background: white;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+#ctcConfig>div{flex: 1;}
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;}
+#tbEvaluate .l-btn-text,#tbADRs .l-btn-text{padding: 0 10px;}
+.datagrid-toolbar{width: 100%;}
+.panel.datagrid>.panel-body.panel-body-noheader{border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+#mm>div{padding: 5px 10px;cursor: pointer;}
+#mm>div:hover{background: #dbedf9!important;}
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+#ssForm table tr{height: 40px;}
+#statisticsModal .dialog-button {padding: 5px 10px 10px;}
+</style>
+</head>
+
+<body style="overflow: hidden;padding: 0;">
+    <div style="position: relative;padding-top: 10px;">
+        <table cellpadding="0" style="margin-left: 10px;border-collapse: collapse;">
+            <tr>
+                <td class="r-label">
+                    <span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+                </td>
+                <td class="r-label">
+                    <select id="_HospList"></select>
+                </td>
+            </tr>
+        </table>
+        <hr class="dashed" style="margin: 10px 0;">
+    </div>
+    <div id="ctcConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;padding-left: 10px;">
+        <div class="evaluate">
+            <div class="hisui-panel" title="评价模板维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+                <table id="tbEvaluate" cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+                    <tr>
+                        <td class="r-label">
+                            使用条件
+                        </td>
+                        <td class="r-label">
+                            <input class="hisui-combobox textbox" id="tplType" style="width:140px;" />
+                        </td>
+                        <td class="r-label">
+                            <input id="evaluateInput" style="width: 150px;" class="hisui-text textbox" placeholder="模板描述" data-options="prompt:'模板描述'">
+                        </td>
+                        <td class="r-label">
+                            <a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="getESTableData();">查询</a>
+                        </td>
+                        <td class="r-label">
+                            <a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-clean'" onclick="clearSearchCond();">清屏</a>
+                        </td>
+                    </tr>
+                </table>
+                <table class='hisui-treegrid' id="evalTemplate" style="height: 100%;"></table>
+            </div>
+        </div>
+        <div style="margin: 0 10px;" class="ADRs">
+            <table id="ADRsTable" class="hisui-datagrid" title="模板明细" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:false,
+            onDblClickRow:editADRsRow,
+            onBeforeDrag:beforeDragADRsRow,
+            onDrop:dropADRsRow,
+            onLoadSuccess:function(){
+                $(this).datagrid('enableDnd');
+            },toolbar: [{
+                iconCls: 'icon-add',
+                text:'新增',
+                handler: addADRsRow
+            },{
+                iconCls: 'icon-cancel',
+                text:'删除',
+                handler: deleteADRsRow
+            }]
+        ">
+                <thead>
+                    <tr>
+                        <!-- <th data-options="field:'sortNo',width:80">序号</th>    -->
+                        <th data-options="field:'sysDesc',width:80">系统描述</th>
+                        <th data-options="field:'adrsCode',width:80">不良反应code</th>
+                        <th data-options="field:'adrsDesc',width:200,editor:{type:'lookup',options:{panelWidth:420,panelHeight:250}}">不良反应描述</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- 右键菜单 -->
+    <div id="mm" style="position: absolute;border: 1px solid #40a2de;display: none;background: white;">
+        <div id="mm1" onclick="menuHandler(1);">#(..Get("新增"))#</div>
+        <div id="mm2" onclick="menuHandler(2);">#(..Get("新增同级评估模板"))#</div>
+        <div id="mm3" onclick="menuHandler(3);">#(..Get("修改"))#</div>
+        <div id="mm4" onclick="menuHandler(4);">#(..Get("删除"))#</div>
+        <div id="mm5" onclick="menuHandler(5);">#(..Get("复制"))#</div>
+    </div>
+    <!-- 模态框 -->
+    <div id="statisticsModal" class="hisui-dialog" title="交班项目配置" style="top: 50px;left: 300px;padding: 5px 10px 0;width: 522px;" data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+        text:'保存',
+        handler:saveEvalTemplate
+    },{
+        text:'取消',
+        handler:function(){$HUI.dialog('#statisticsModal').close();}
+    }]">
+        <form id="ssForm">
+            <table cellpadding="0" class="modalTable" style="border-collapse: collapse;width: 100%;">
+                <tr>
+                    <td class="r-label">
+                        使用条件
+                    </td>
+                    <td>
+                        <input class="hisui-combobox textbox" id="type" style="width:429px;" />
+                        <!-- <input id="type" class="hisui-validatebox textbox" data-options="required:true"> -->
+                        <input id="id" type="hidden">
+                        <input id="copyid" type="hidden">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <span class="labelStar">*</span>模板代码
+                    </td>
+                    <td>
+                        <input id="code" style="width: calc(100% - 8px);" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <span class="labelStar">*</span>模板描述
+                    </td>
+                    <td>
+                        <input id="tplDesc" style="width: calc(100% - 8px);" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
+                    </td>
+                </tr>
+                <tr class="validLoc">
+                    <td class="r-label">
+                        <!-- <span class="labelStar">*</span> -->使用科室
+                    </td>
+                    <td>
+                        <select id="validLoc" class="locs" style="width:428px;"></select>
+                    </td>
+                </tr>
+                <tr class="invalidLoc">
+                    <td class="r-label">
+                        禁用科室
+                    </td>
+                    <td>
+                        <select id="invalidLoc" class="locs" style="width:428px;"></select>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.ctcevaltemplate.js"></script>
+</body>
+
+</html>

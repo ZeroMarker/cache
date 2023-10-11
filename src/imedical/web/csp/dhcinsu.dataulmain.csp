@@ -1,0 +1,101 @@
+<!-- 
+ * FileName: dhcinsu.dataulmain.csp
+ * Anchor: wxq
+ * Date: 2022-06-10
+ * Description: 医保数据上传管理
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<server>
+		set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+	</server>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.css'/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/default/dhcinsu.dataulmain.css'/>
+	<script type='text/javascript' src='../scripts/dhcbill/common/dhcbill.common.js'></script>
+	<script type='text/javascript' src='../scripts/hisui/websys.hisui.js'></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+</head>
+
+<body style="padding:10px">
+<div class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',title:'医保数据上传',collapsible:false,split:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'," style="height:177px;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label"><label id="_HospUserListLabel" style="color:red;">医院</label></td>
+				<td id="HospIdTd"><input id="_HospUserList"></td>
+				<td class="r-label r-label-20"><label>登记号</label></td>
+				<td><input id="PatNo" class="textbox" style="width:213px"/></td>
+				<td class="r-label r-label-20"><label>病案号</label></td>
+				<td><input id="MedNo" class="textbox " style="width:213px"/></td>
+				<td class="r-label r-label-20"><a href="" class="hisui-linkbutton" id="btn-find" style="width:100px;" data-options="iconCls:'icon-w-find'">查询</a></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>医保类型</label></td>
+				<td><input id="InsuType" class="textbox" style="width:220px"/></td>
+				<td class="r-label r-label-20"><label>上传标志</label></td>
+				<td><input id="UpFlag" class="textbox" style="width:220px"/></td>
+				<td class="r-label r-label-20"><label>业务类型</label></td>
+				<td><input id="OptType" class="textbox" style="width:220px"/></td>
+				<td class="r-label r-label-20"><a href="" class="hisui-linkbutton" id="btn-up" style="width:100px;" data-options="iconCls:'icon-w-upload',stopAllEventOnDisabled:true">上传</a></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>日期选择</label></td>
+				<td><input id="DateFlag" class="textbox" style="width:220px"/></td>
+				<td class="r-label r-label-20"><label>开始日期</label></td>
+				<td><input id="SDate" class="textbox" style="width:220px"/></td>
+				<td class="r-label r-label-20"><label>结束日期</label></td>
+				<td><input id="EDate" class="textbox" style="width:220px"/></td>
+				<td class="r-label r-label-20"><a href="" class="hisui-linkbutton" id="btn-del" style="width:100px;" data-options="iconCls:'icon-w-back',stopAllEventOnDisabled:true" >撤销</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-layout" data-options="fit:true" style="background-color:#f5f5f5">
+			<div data-options="region:'center',title:'上传列表',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="margin-right:10px">
+				<table id="mainDtlList"></table>
+			</div>
+			<div data-options="region:'east',title:'上传交易',collapsible:false,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'," style="width:615px;">
+				<table id="PortListDic"></table>
+			</div>
+			<div  style="height:290px;" data-options="region:'south',title:'上传明细',split:true,showCollapsedTitle:true,#($s((defUIVersion="lite"):"",1:"headerCls:'panel-header-gray',"))#iconCls:'icon-paper'">
+				<div  class="hisui-tabs tabs-gray" style="height:223px;padding:10px">
+					<div  data-options="title:'上传记录'">
+						<table id="PortListUL"></table>
+					</div>
+					<div title="明细详细">
+						<div class="hisui-tabs tabs-gray" style="height:165px;padding:10px">
+							<div title="已上传" style="border:false" >
+								<table id="PortListSubY"></table>
+							</div>
+							<div title="未上传" style="border:false">
+								<table id="PortListSubN"></table>
+							</div>
+							<div title="上传失败" style="border:false">
+								<table id="PortListSubF"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--弹窗-->
+<div id="InfoWin" class="hisui-dialog" title="详细内容" style="width:700px;height:550px;padding:10px 0 0 10px"data-options="resizable:false,modal:true,closed:true,iconCls:'icon-w-paper'">
+	<div class="hisui-panel" data-options="bodyCls:'panel-header-gray'"style="height:453px;width:680px;border-radius:4px">
+		<div id="info" style="padding:10px"></div>
+	</div>
+</div>
+
+	<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.dataulmain.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+</body>
+</html>

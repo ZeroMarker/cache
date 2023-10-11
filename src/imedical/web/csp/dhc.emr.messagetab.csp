@@ -1,6 +1,17 @@
+ï»¿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
 <HTML>
 <HEAD>
+	<ExtHealth:Head/>
+	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+    <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+    <script charset="utf-8" type="text/javascript" src="../scripts/DHC.EMR.Quality.MessageTab.js"></script>
 	<TITLE>MessageTab</TITLE>
  		<script language="cache" runat="server">
 	 	s tabId=$G(%request.Data("tabId",1))
@@ -9,11 +20,10 @@
 	 	s ctlocId=$G(%request.Data("ctlocId",1))
 	 	s InstanceId = $G(%request.Data("InstanceId",1))
 	 	s emrDocId = $G(%request.Data("emrDocId",1))
+		s MessageID = $G(%request.Data("MessageID",1))
 		s:(userId = "") userId = %session.Get("LOGON.USERID")
 		s:(groupId = "") groupId = %session.Get("LOGON.GROUPID")
 		s:(ctlocId = "") ctlocId = %session.Get("LOGON.CTLOCID")
-
-
 	</script>
 	<script type="text/javascript">
 		var tabId = '#(tabId)#';
@@ -22,57 +32,44 @@
 		var ctlocId = '#(ctlocId)#';
 		var InstanceId = '#(InstanceId)#';
 		var emrDocId = '#(emrDocId)#';
+		var MessageID= '#(MessageID)#'
 	</script>
-	<link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" />
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
-        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
-        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
-	
-    
-    <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
-	
-	<script charset="utf-8" type="text/javascript" src="../scripts/DHC.EMR.Quality.MessageTab.js"></script>
-	
+	<style>
+		.panel-body, .panel-header{
+			border:1px solid #cccccc;
+			}
+	</style>
 </HEAD>
 
 <body class="hisui-layout" data-options="fit:true,border:true" style="border:none;">
-	<div data-options="region:'center'" style="padding:5px;">		
+	<div data-options="region:'center,border:none'" style="padding:10px;background-color:#ffffff">		
 		<div id="messageListTableTBar" style="padding:10px 0px 10px 0px;height:65px">	
 			<div>
-				<span style="margin-left:10px;margin-right:10px">ÏûÏ¢×´Ì¬ </span><select class="hisui-combobox" id="inputMessageType" name="inputMessageType" style="width:130px;"></select>
+				<span style="margin-left:10px;margin-right:10px">#(..Get("æ¶ˆæ¯çŠ¶æ€"))# </span><select class="hisui-combobox" id="inputMessageType" name="inputMessageType" style="width:130px;"></select>
 				<input id="inputCreateDateStart" class="hisui-datebox" style="width:120px;" />
 	 			<input id="inputCreateDateEnd" class="hisui-datebox" style="width:120px;" />
  			</div>
  			<div style="padding:10px 0px 10px 0px">
  			 	<div style="padding:0px 0px 0px 0px;border:1px #cccccc dashed;border-left:none;border-right:none;border-top:none;"> </div>
- 			 	<a style="padding:10px 0px 0px 0px;"href="javascript:void(0)" id="doneBtn" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" >´¦Àí</a>
- 			 	<a style="padding:10px 0px 0px 0px;"href="javascript:void(0)" id="appealBtn" class="hisui-linkbutton" data-options="iconCls:'icon-undo',plain:true" >ÉêËß</a>
-				<div id="content" class="hisui-dialog" closed="true" >
-					<div id="appealwrap" style="padding:20px 0px 0px 35px;">
-						<div>
-						<h3 float="left">
-						ÉêËßÔ­Òò£º
-						</h3>
-						<input id="appealText" style="width:230px;height:35px" />
-						</div>
-						
-					</div>	
-					<div id="dlg-buttons1" style="float: left;padding:30px 0px 0px 50px;"> 
-						<a href="#" id="appealOk" class="hisui-linkbutton" iconCls="icon-ok" click="confirm()">È·ÈÏ</a>
-					</div>
-					<div id="dlg-buttons2" style="float: left;padding:30px 0px 0px 20px;"> 
-					<a href="#" id="appealCancel" class="hisui-linkbutton" iconCls="icon-cancel" click="cancle()">È¡Ïû</a>
-					</div>
-				</div>	
+ 			 	<a style="padding:4px 0px;"href="javascript:void(0)" id="doneBtn" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" >å¤„ç†</a>
+ 			 	<a style="padding:4px 0px;"href="javascript:void(0)" id="appealBtn" class="hisui-linkbutton" data-options="iconCls:'icon-undo',plain:true" >ç”³è¯‰</a>	
  			</div>
 		</div>
-		<table id="messageListTable" title="ÖÊ¿ØÏûÏ¢´ı´¦ÀíÁĞ±í" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:5px 15px 5px 15px"></table>
-	    
-
+		<table id="messageListTable" class="hisui-datagrid,border:none" style="height:730px;"></table>   
+	</div>
+	<div id="content" class="hisui-dialog" data-options="iconCls:'icon-w-pen-paper'" closed="true" >
+		<div id="appealwrap" style="padding:20px;">
+			<div style="margin-bottom:10px">#(..Get("ç”³è¯‰åŸå› "))#</div>
+			<input id="appealText" class="hisui-validatebox textbox" style="width:253px;" />
+			<div style="display:flex;justify-content:center">	
+				<div id="dlg-buttons1" style="float: left;padding:20px 20px 0px 0px;"> 
+					<a href="#" id="appealOk" class="hisui-linkbutton" iconCls="icon-w-ok" click="confirm()">ç¡®è®¤</a>
+				</div>
+				<div id="dlg-buttons2" style="float: left;padding-top:20px;"> 
+					<a href="#" id="appealCancel" class="hisui-linkbutton" iconCls="icon-w-cancel" click="cancle()">å–æ¶ˆ</a>					
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 

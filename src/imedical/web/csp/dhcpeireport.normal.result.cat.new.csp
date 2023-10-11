@@ -1,13 +1,23 @@
 
-
+<!--
+ * FileName: dhcpeireport.normal.result.cat.new.csp
+ * Description: 打印cat类的项目（包含职业病报告）
+-->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	q 1
-</csp:method>	
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
 <SCRIPT language="Cache" RUNAT="SERVER">	
 		i "SummarizeGather"=$G(ReultOutType) d
 		.s DIVClass="LISReport"
 		e  d
 		.s DIVClass="Page LISReport"
+		
+		if '$d(ServerPath) {
+			s ServerPath="../"
+		} else {
+			s ServerPath=ServerPath_"web/"
+		}
 	</SCRIPT>
 	<!--DIV class='#(DIVClass)#'-->
 			<TABLE width=655 border=0 cellspacing=0 class="ResultLisTable">
@@ -73,10 +83,10 @@
 		.s Arrow=$P(CurData,"^",6)
 		.s:Arrow="" Arrow=1
 		.s TemplateDescs=$P(CurData,"^",7)
-		.i Arrow="1" s ArrowName="../images/dhcpe/NoArrow.gif"
-		.i Arrow="0" s ArrowName="../images/dhcpe/DownArrow.gif"
-		.i Arrow="2" s ArrowName="../images/dhcpe/UpArrow.gif"
-		.i Arrow="3" s ArrowName="../images/dhcpe/Star.gif"
+		.i Arrow="1" s ArrowName=ServerPath_"images/dhcpe/NoArrow.GIF"
+		.i Arrow="0" s ArrowName=ServerPath_"images/dhcpe/DownArrow.GIF"
+		.i Arrow="2" s ArrowName=ServerPath_"images/dhcpe/UpArrow.GIF"
+		.i Arrow="3" s ArrowName=ServerPath_"images/dhcpe/Star.GIF"
 		s TestResult2=""
 		
 		s iwd=120
@@ -112,10 +122,10 @@
 							.s idate=$g(^DHCPETempReport(UserID,"HistoryContrast",PAADM,"OD",OrdDeID,ind1))
 							.s iArrow=$p(idate,"^",2)
 							.s:iArrow="" iArrow="1"
-							.i iArrow="1" s iArrowName="../images/dhcpe/NoArrow.gif"
-							.i iArrow="0" s iArrowName="../images/dhcpe/DownArrow.gif"
-							.i iArrow="2" s iArrowName="../images/dhcpe/UpArrow.gif"
-							.i iArrow="3" s iArrowName="../images/dhcpe/Star.gif"
+							.i iArrow="1" s iArrowName=ServerPath_"images/dhcpe/NoArrow.GIF"
+							.i iArrow="0" s iArrowName=ServerPath_"images/dhcpe/DownArrow.GIF"
+							.i iArrow="2" s iArrowName=ServerPath_"images/dhcpe/UpArrow.GIF"
+							.i iArrow="3" s iArrowName=ServerPath_"images/dhcpe/Star.GIF"
 							.w "<TD class=LISResultValue width='"_iwd_"'>"_$p(idate,"^",1)_"</TD>"
 							.w "<TD class=LISResultNormal width='"_iwa_"'><IMG id='Arrow"_ind1_"' name='Arrow' src='"_iArrowName_"'></TD>"
 						</SCRIPT>	

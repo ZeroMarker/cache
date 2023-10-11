@@ -1,0 +1,160 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ // dhc.bdp.bdp.bdpmenu.csp
+ // 名称:基础数据平台组内配置-菜单维护
+ // 编写者:基础数据平台组 - 陈莹,谢海睿
+ // 编写日期:2019-12-13
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+</HEAD>
+<server>
+        s menuid=%request.Get("BDPMENU")   //菜单id
+        s ValueExpression=$LISTGET($G(^User.BDPMenuD(menuid)),15)
+        s MKBFlag = $p($p(ValueExpression,"MKBFlag=",2),"&",1)
+   </server> 
+  <script type="text/javascript">
+     var  MKBFlag="#(MKBFlag)#"
+  </script>
+<BODY style="padding:4px;">
+	<div class="hisui-layout" data-options="fit:true" border="false" >
+       	<div data-options="region:'north',collapsible:false,bodyCls:'panel-header-gray'" style="border-bottom-style:dashed;border-radius:4px 4px 0 0">
+	    	 <table style="padding:5px 0 5px 0" >
+			    <tr>
+			    	<td class="tdlabel">描述</td>
+			    	<td><input class="textbox hisui-validatebox" id="TextSearch"></td>
+   					<td class="tdlabel-b">
+   					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find ',stopAllEventOnDisabled:true" id="btnSearch">查询</a>
+   					<td>
+		    		<td class="tdlabel-b">
+		    			<a href="#"  class="hisui-linkbutton" iconCls='icon-w-clean' data-options="stopAllEventOnDisabled:true" id="btnRefresh">清屏</a>
+					</td>
+				</tr>			    	 
+			 </table >	
+		 </div> 
+		
+		 <div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-top-style:none;border-radius:0 0 4px 4px">
+			<table id="mygrid" data-options="border:false,fit:true"></table> 
+		 </div>	 
+     </div> 
+   
+     <div id="myWin" style="width:800px;height:400px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+			<div class="hisui-layout" border="false"  style="height:300px;">
+   				<div data-options="region:'west',split:true,collapsible:false,border:false" style="width:370px">
+					<table>
+						<tr>
+			               <td class="tdlabel"><font color=red>*</font>代码</td>
+			    		   <td><input id="Code" name="Code" type="text" class="textbox hisui-validatebox"   data-options="required:true" style="width:220px"></td>
+			    		 </tr>
+			    		<tr>
+			    		   <td class="tdlabel"><font color=red>*</font>描述</td>
+			    		   <td><input id="Caption" name="Caption" type="text" class="textbox hisui-validatebox"   data-options="required:true" style="width:220px"></td>
+			    		</tr>
+			    		<tr>
+			    		   <td class="tdlabel">URL解析地址</td>
+			    		   <td><input id="LinkUrl" name="LinkUrl" type="text" class="textbox hisui-validatebox"   data-options="" style="width:220px"></td>
+			    		</tr>
+			    		<tr>
+			               <td class="tdlabel">功能</td>
+			    		   <td><input id="LinkFuntionDR" name="LinkFuntionDR" type="text" class="textbox hisui-combotree" data-options="" style="width:227px"></td>
+			    		</tr>
+			    		<tr>
+			    		   <td class="tdlabel">组件名称</td>
+			    		   <td><input id="CompName" name="CompName" type="text" class="textbox hisui-validatebox"   data-options="" style="width:220px"></td>
+			    		</tr>
+			    		<tr>
+			               <td class="tdlabel">父菜单</td>
+			    		   <td><input id="ParentMenuDr" name="ParentMenuDr" type="text" class="textbox hisui-combotree" data-options="" style="width:227px"></td>
+			    		</tr>
+			    		<tr>
+			               <td class="tdlabel">显示顺序</td>
+			    		   <td><input id="Sequence" name="Sequence" type="text" class="textbox hisui-numberbox" data-options="" style="width:227px"></td>
+			    		</tr>
+			    		<tr>
+			               <td class="tdlabel">图标</td>
+			    		   <td><input id="Image" name="Image" type="text" class="textbox hisui-validatebox"  data-options="" style="width:220px"></td>
+			    		</tr>
+			    		<tr style="display:none">
+				 			<td></td>
+				   			<td><input id="ID" name="ID" type="text" class="textbox hisui-validatebox" ></td>
+		 				</tr>
+					</table >
+				 </div> 
+
+				 <div data-options="region:'center',border:false,fit:true" title="">
+					<table>
+						<tr>
+			               <td class="tdlabel">服务器端类方法</td>
+			    		   <td><input id="Method" name="Method" type="text" class="textbox hisui-validatebox"   data-options="" style="width:220px"> </td>
+			    		 </tr>
+			    		<tr>
+			    		   <td class="tdlabel">快捷键</td>
+			    		   <td><input id="ShortcutKey" name="ShortcutKey" type="text" class="textbox hisui-validatebox"   data-options="" style="width:220px"></td>
+			    		</tr>
+			    		<tr>
+			    		   <td class="tdlabel">弹出窗口方式</td>
+			    		   <td><input id="ShowInNewWindow" name="ShowInNewWindow" type="text" class="textbox hisui-validatebox"   data-options="" style="width:220px"></td>
+			    		</tr>
+			    		<tr>
+			    		   <td class="tdlabel">值表达式</td>
+			    		   <td><input id="ValueExpression" name="ValueExpression" type="text" class="textbox hisui-validatebox"   data-options="" style="width:220px"></td>
+			    		</tr>
+			    		<tr>
+			               <td class="tdlabel">关联产品线</td>
+			    		   <td><input id="ProductLineDr" name="ProductLineDr" type="text" class="textbox hisui-combotree" data-options="" style="width:227px"></td>
+			    		</tr>
+			    		<tr>
+	    		   			<td class="tdlabel">激活基础数据维护菜单</td> 
+	    		   			<td><input id="actMenuBDP" name="actMenuBDP"  type="checkbox"  class='hisui-checkbox' label=""  data-options="checked:false" value="Y"></td>
+				 		</tr>
+				 		<tr>
+	    		   			<td class="tdlabel">激活功能元素授权菜单</td> 
+	    		   			<td><input id="actMenuAutItem" name="actMenuAutItem" type="checkbox" class='hisui-checkbox' label="" data-options="checked:false" value="Y"></td>
+				 		</tr>
+				 		<tr>
+	    		   			<td class="tdlabel">激活基础数据授权菜单</td> 
+	    		   			<td><input id="actMenuAutData" name="actMenuAutData" type="checkbox" class='hisui-checkbox'  label=""  data-options="checked:false" value="Y"></td>
+				 		</tr>
+				 		<tr>
+	    		   			<td class="tdlabel">属于医学知识库</td> 
+	    		   			<td><input id="IsMKBMenu" name="IsMKBMenu" type="checkbox" class='hisui-checkbox'  label=""  data-options="checked:false" value="Y"></td>
+				 		</tr>
+				 		
+					</table>
+				</div>	 
+			</div> 
+		</form>
+	</div>
+	
+	<div id="myChecktreeWin" style="width:600px;height:500px;top:30px;padding:10px;display:none;">   
+		<div class="hisui-layout" data-options="fit:true" border="false" >
+	       	<div data-options="region:'north',collapsible:false,border:false" style="height:55px">
+		    	 <table>
+				    <tr>
+				    	<td class="tdlabel">查询</td>
+		    			<td><input id="myChecktreeDesc" type="text" class="hisui-validatebox"></td>
+				   	 	<td>
+							<input id="myChecktreeFilterCK0" class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+							<input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+							<input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>
+						</td>
+					</tr>			    	 
+				 </table >	
+			 </div>
+			 <div data-options="region:'center',border:false">
+				<table id="myChecktree" data-options="border:false" style="width:100%;"></table> 
+			 </div>	 
+	     </div> 
+     </div> 
+ 	<script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_Menu.js"></script>
+</BODY>
+</HTML>

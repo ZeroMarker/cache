@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--药房药库-毒麻药品用药登记
+	csp:  pha.in.v1.narcreg.csp
+	js:   pha/in/v1/narcreg.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    	
+    	.pha-scrollbar-hidden {
+	    	overflow: hidden;
+	    }
+	    .pha-scrollbar-hidden-chl {
+	    	width: 100%;
+	    	height: 95%;
+	    	overflow-y: scroll;
+	    }
+    </style>
+    
+    <!-- 接收参数 -->
+    <server>
+		s EpisodeID = $G(%request.Data("EpisodeID", 1))
+		s patNo = ""
+		i EpisodeID'="" d
+		.s papmi = $p(^PAADM(EpisodeID),"^",1)
+		.s patNo = $p(^PAPER(papmi,"PAT",1),"^",1)
+	</server>
+	<script type="text/javascript">
+		var EpisodeID = "#(EpisodeID)#";
+		var patNo = "#(patNo)#";
+	</script>
+	
+</head>
+
+<body>
+    <!-- 整体布局 -->
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+        	<!-- layout start -->
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',border:false,split:true">
+                    <div id="panelNarcReg">
+                        <table id="gridNarcReg"></table>
+                    </div>
+                </div>
+            </div>
+            <!-- layout end -->
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+	<div id="gridNarcRegBar">
+		<div class="pha-row">
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="startDate" title="#(..Get("日期为打包表预计分发日期"))#" class="hisui-tooltip" data-options="position:'bottom',tipWidth:75"><span style="color:red">*</span>#(..Get("开始日期"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="startDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true,clear:false' data-options="width:154"/>
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="endDate" title="#(..Get("日期为打包表预计分发日期"))#" class="hisui-tooltip" data-options="position:'bottom',tipWidth:75"><span style="color:red">*</span>#(..Get("截止日期"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="endDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true,clear:false' data-options="width:154"/>
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="poisonIdStr"><span style="color:red">*</span>#(..Get("管制分类"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="poisonIdStr" class="hisui-combobox" data-pha='class:"hisui-combobox",requied:true,query:true,clear:true' />
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="regState">#(..Get("登记状态"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="regState" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:false' />
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="patNo">#(..Get("登记号"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="patNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox",query:true,clear:true' style="width:153px;"/>
+            </div>
+            
+            <div class="pha-col">
+            	<a id="btnFind" class="hisui-linkbutton" iconCls="icon-w-find">查询</a>
+			</div>
+        </div>
+        <div class="pha-row">
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="phLocId">#(..Get("发药科室"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="phLocId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true' />
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="docLocId">#(..Get("开单科室"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="docLocId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true' />
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="wardLocId">#(..Get("病区"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="wardLocId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true' />
+            </div>
+            <div class="pha-col" style="width:42px;text-align:right">
+                <label for="inci">#(..Get("药品"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="inci" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="dspState">#(..Get("发药状态"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="dspState" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true' />
+            </div>
+            
+            <div class="pha-col">
+            	<a id="btnClear" class="hisui-linkbutton" iconCls="icon-w-clean">清屏</a>
+			</div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+        	<a id="btnSave" class="hisui-linkbutton" plain='true' iconCls="icon-checkin">登记</a>
+        	<a id="btnCancel" class="hisui-linkbutton" plain='true' iconCls="icon-undo">撤消登记</a>
+		</div>
+	</div>
+    
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v1/narcreg.js"></script>
+</body>
+
+</html>

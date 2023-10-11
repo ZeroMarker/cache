@@ -1,7 +1,12 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
 <html>
 <head>
 <HISUI/>
-
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
 <title>	分级数据统计 </title>
 <style>
 	.textLabel{
@@ -25,7 +30,7 @@
 		float:left;	
 	}
 	.tdDiv{
-		width:320px;/*hxy 2018-04-27 300px*/
+		width:272px;/*hxy 2018-04-27 300px cy 2022-07-20 320px->275px*/
 		height:67px;/*hxy 2018-04-25 70px*/
 		border: 1px solid #CCC;/*hxy 2018-04-25 #EEE*/
 		box-sizing:border-box;
@@ -88,19 +93,15 @@
 	
 	.bottomDivLefBorder{
 		float:left;
-		width:50%;
+		width:100%;
 		height:100%;
-		border-right:4px solid #FFF;
-		border-bottom: 4px solid #FFF;
 		box-sizing:border-box;
 	}
 	
 	.bottomDivRigBorder{
 		float:right;
-		width:50%;
+		width:100%;
 		height:100%;
-		border-left:4px solid #FFF;
-		border-bottom: 4px solid #FFF;
 		box-sizing:border-box;
 	}
 	
@@ -108,8 +109,8 @@
 		border:1px solid #CCCCCC;/*hxy 2018-04-25 #EEE*/
 		box-sizing:border-box;	
 		width:100%;
-		height:100%;
 		border-radius: 4px;/*5->4*/
+		background:#FFF;
 	}
 	
 	.heading{
@@ -128,185 +129,219 @@
 	}
 	.heading >span{padding-left:10px}/*hxy*/
 	
+	.StaTable td{
+		padding:5px 10px 5px 0px !important;
+		height:345px;
+	}
 </style>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
 <!-- ECharts单文件引入 -->
 <script type="text/javascript" src="../scripts/dhcadvEvt/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
-<script type="text/javascript" src="../scripts/dhcadvEvt/echarts/Echarts.js" ></script>
+<!--script type="text/javascript" src="../scripts/dhcadvEvt/echarts/Echarts.js" ></script-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/Echarts.js" ></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/checklevdataanalysess.js"  ></script>
 <script Language="Javascript">
 	var HospID="#(%session.Data("LOGON.HOSPID"))#"  //院室ID
 </script>
+<server>
+    s LgHospID=%session.Get("LOGON.HOSPID")
+    s REPLACELOCASPRV=##Class(web.DHCEMComPar).GetAppPropValue("DHCEMCHK","REPLACELOCASPRV",LgHospID)
+	w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	w "var REPLACELOCASPRV="""_REPLACELOCASPRV_""";"_$c(13,10)
+ 	w "</SCRIPT>"
+</server>
 </head>
 	
-<body>
-	<div class="hisui-layout" style="" data-options="fit:true">
-		<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:125px;overflow:hidden;"><!--hxy 2020-02-21 115->125-->
-			<div style="margin:10px 10px 10px 10px;">
-				<span style="margin-right:5px">开始日期</span><!--hxy-->
-				<input id="stDate" style="width:160px" class="hisui-datebox textbox"></input>
+<body class="hisui-layout" data-options="fit:true">
+	<div id="HISUIstyleid" data-options="region:'center',title:'',border:false,headerCls:'panel-header-gray'" style="padding:10px 10px 5px 10px;">
+		<div class="hisui-layout" data-options="fit:true" >   
+			<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:135px;overflow:hidden;"><!--hxy 2020-02-21 115->125-->
+    			<div class="hisui-panel" title="" style="padding:10px 10px 0px 5px;border:1px solid #ccc !important;" data-options="fit:true,bodyCls:'panel-body-gray',iconCls:'icon-paper',closable:true,collapsible:true,minimizable:true,maximizable:true">
+					<div>
+					<span style="margin-left:5px;margin-right:5px">#(..Get("开始日期"))#</span><!--hxy-->
+					<input id="stDate" style="width:160px" class="hisui-datebox textbox"></input>
+					
+					<span style="margin-right:5px;margin-left:15px">#(..Get("结束日期"))#</span>
+					<input id="endDate" style="width:160px" class="hisui-datebox textbox"></input>
+					<td><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-search-white" style="margin-left:10px">查询</a></td>
+					</div>
+				<div style="padding-top:10px;">
+								<div class="tdDiv" data-type="ZSDO" style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+									<div class="floatLeft tdLeftDiv">
+										<img src="../scripts/dhcnewpro/images/checkAllNum.png"/>
+									</div>
+									
+									<div class="floatLeft tdRightDiv">
+										<div class="tdRightDivTop">
+											<span class="tdRightDivTopSpan">#(..Get("分诊总计人数"))#</span>
+										</div>
+										
+										<div class="tdRightDivBottom">
+											<span id="AllNumber" class="tdRightDivBottomSpan">0</span>
+										</div>
+									</div>
+								</div>
+							<!--</td>
+							
+							<td>hxy-->
+								<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+									<div class="floatLeft tdLeftDiv">
+										<img src="../scripts/dhcnewpro/images/checkRedAreaNum.png"/>
+									</div>
+									
+									<div class="floatLeft tdRightDiv">
+										<div class="tdRightDivTop">
+											<span class="tdRightDivTopSpan">#(..Get("红区分诊人数"))#</span>
+										</div>
+										
+										<div class="tdRightDivBottom">
+											<span id="redNumber" class="tdRightDivBottomSpan">0</span>
+										</div>
+									</div>
+								</div>
+								<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)"><!--hxy 2020-02-21-->
+									<div class="floatLeft tdLeftDiv">
+										<img src="../scripts/dhcnewpro/images/checkOrangeAreaNum.png"/>
+									</div>
+									
+									<div class="floatLeft tdRightDiv">
+										<div class="tdRightDivTop">
+											<span class="tdRightDivTopSpan">#(..Get("橙区分诊人数"))#</span>
+										</div>
+										
+										<div class="tdRightDivBottom">
+											<span id="orangeNumber" class="tdRightDivBottomSpan">0</span>
+										</div>
+									</div>
+								</div>
+							<!--</td>
+							
+							<td>hxy-->
+								<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+									<div class="floatLeft tdLeftDiv">
+										<img src="../scripts/dhcnewpro/images/checkYellowAreaNum.png"/>
+									</div>
+									
+									<div class="floatLeft tdRightDiv">
+										<div class="tdRightDivTop">
+											<span class="tdRightDivTopSpan">#(..Get("黄区分诊人数"))#</span>
+										</div>
+										
+										<div class="tdRightDivBottom">
+											<span id="yellowNumber" class="tdRightDivBottomSpan">0</span>
+										</div>
+									</div>
+								</div>
+							<!--</td>
+							
+							<td>hxy-->
+								<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+									<div class="floatLeft tdLeftDiv">
+										<img src="../scripts/dhcnewpro/images/checkGreenAreaNum.png"/>
+									</div>
+									
+									<div class="floatLeft tdRightDiv">
+										<div class="tdRightDivTop">
+											<span class="tdRightDivTopSpan">#(..Get("绿区分诊人数"))#</span>
+										</div>
+										
+										<div class="tdRightDivBottom">
+											<span id="greenNumber" class="tdRightDivBottomSpan">0</span>
+										</div>
+									</div>
+								</div>
+					</div>
+				</div>
+			</div> 
 				
-				<span style="margin-right:5px;margin-left:15px">结束日期</span>
-				<input id="endDate" style="width:160px" class="hisui-datebox textbox"></input>
-				<td><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-search-white" style="margin-left:10px">查询</a></td>
-			</div>
-			
-			<div style="height:75px">
-				<table id="typeTable" class="typeTable" style="width:100%" cellspacing="0" >
+		
+			<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="">
+				<table style="width:100%;border:0px;" class="StaTable" cellspacing="0" cellpadding="0">
+					<tr>
+						<td style="width:50%">
+							<div class="bottomDivLefBorder" id="getHeightDiv" style="">
+							<div class="bottomDivLef">
+								<div class="heading"><span>#(..Get("绿色通道"))#</span></div>
+								<div id="lstdEcharts" class="echartBody">
+								
+								</div>
+							</div>
+							</div>
+						</td>
+						<td>
+							<div class="bottomDivRigBorder" style="">
+							<div class="bottomDivRig">
+								<div class="heading"><span>#(..Get("三无人员统计"))#</span></div>
+								<div id="swryEcharts" class="echartBody">
+								
+								</div>
+							</div>
+							</div>
+						</td>
+					</tr>
 					<tr>
 						<td>
-							<div class="tdDiv" data-type="ZSDO" style="background:url(../scripts/dhcnewpro/images/nosel.png)">
-								<div class="floatLeft tdLeftDiv">
-									<img src="../scripts/dhcnewpro/images/checkAllNum.png"/>
-								</div>
+							<div class="bottomDivLefBorder" style="">
+							<div class="bottomDivLef">
+								<div class="heading"><span>#(..Get("病人来源人数统计"))#</span></div>
+								<div id="brlyrsEcharts" class="echartBody">
 								
-								<div class="floatLeft tdRightDiv">
-									<div class="tdRightDivTop">
-										<span class="tdRightDivTopSpan">分诊总计人数</span>
-									</div>
+								</div>
+							</div>
+						</div>
+						</td>
+						<td>
+							<div class="bottomDivRigBorder" style="">
+								<div class="bottomDivRig">
+									<div class="heading"><span>#(..Get("病人来源统计"))#</span></div>
+									<div id="brlyEcharts" class="echartBody">
 									
-									<div class="tdRightDivBottom">
-										<span id="AllNumber" class="tdRightDivBottomSpan">0</span>
 									</div>
 								</div>
 							</div>
-						<!--</td>
-						
-						<td>hxy-->
-							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
-								<div class="floatLeft tdLeftDiv">
-									<img src="../scripts/dhcnewpro/images/checkRedAreaNum.png"/>
-								</div>
-								
-								<div class="floatLeft tdRightDiv">
-									<div class="tdRightDivTop">
-										<span class="tdRightDivTopSpan">红区分诊人数</span>
-									</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<div class="bottomDivLefBorder" style="">
+								<div class="bottomDivLef">
+									<div class="heading"><span>#(..Get("分诊年龄分布统计"))#</span></div>
+									<div id="fznlEcharts" class="echartBody">
 									
-									<div class="tdRightDivBottom">
-										<span id="redNumber" class="tdRightDivBottomSpan">0</span>
 									</div>
 								</div>
 							</div>
-							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)"><!--hxy 2020-02-21-->
-								<div class="floatLeft tdLeftDiv">
-									<img src="../scripts/dhcnewpro/images/checkOrangeAreaNum.png"/>
-								</div>
-								
-								<div class="floatLeft tdRightDiv">
-									<div class="tdRightDivTop">
-										<span class="tdRightDivTopSpan">橙区分诊人数</span>
-									</div>
-									
-									<div class="tdRightDivBottom">
-										<span id="orangeNumber" class="tdRightDivBottomSpan">0</span>
-									</div>
-								</div>
-							</div>
-						<!--</td>
-						
-						<td>hxy-->
-							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
-								<div class="floatLeft tdLeftDiv">
-									<img src="../scripts/dhcnewpro/images/checkYellowAreaNum.png"/>
-								</div>
-								
-								<div class="floatLeft tdRightDiv">
-									<div class="tdRightDivTop">
-										<span class="tdRightDivTopSpan">黄区分诊人数</span>
-									</div>
-									
-									<div class="tdRightDivBottom">
-										<span id="yellowNumber" class="tdRightDivBottomSpan">0</span>
-									</div>
-								</div>
-							</div>
-						<!--</td>
-						
-						<td>hxy-->
-							<div class="tdDiv" data-type="SYDO"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
-								<div class="floatLeft tdLeftDiv">
-									<img src="../scripts/dhcnewpro/images/checkGreenAreaNum.png"/>
-								</div>
-								
-								<div class="floatLeft tdRightDiv">
-									<div class="tdRightDivTop">
-										<span class="tdRightDivTopSpan">绿区分诊人数</span>
-									</div>
-									
-									<div class="tdRightDivBottom">
-										<span id="greenNumber" class="tdRightDivBottomSpan">0</span>
+						</td>
+						<td>
+							<div class="bottomDivRigBorder" style="">
+								<div class="bottomDivRig">
+									<div class="heading"><span id="LocSta">#(..Get("分诊科室分布统计"))#</span></div>
+									<div id="fzksEcharts" class="echartBody">
+
 									</div>
 								</div>
 							</div>
 						</td>
 					</tr>
 				</table>
-			</div>
-			
-			
-		</div> 
-		  
-		
-		<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:5px;">
-			<div class="bottomDiv">
-				<div class="bottomDivLefBorder" id="getHeightDiv" style="">
-					<div class="bottomDivLef">
-						<div class="heading"><span>绿色通道</span></div>
-						<div id="lstdEcharts" class="echartBody">
-						
-						</div>
-					</div>
-				</div>
-				<div class="bottomDivRigBorder" style="">
-					<div class="bottomDivRig">
-						<div class="heading"><span>三无人员统计</span></div>
-						<div id="swryEcharts" class="echartBody">
-						
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<div class="bottomDiv" style="padding-top:6px">
-				<div class="bottomDivLefBorder" style="">
-					<div class="bottomDivLef">
-						<div class="heading"><span>病人来源人数统计</span></div>
-						<div id="brlyrsEcharts" class="echartBody">
-						
-						</div>
-					</div>
-				</div>
-				<div class="bottomDivRigBorder" style="">
-					<div class="bottomDivRig">
-						<div class="heading"><span>病人来源统计</span></div>
-						<div id="brlyEcharts" class="echartBody">
-						
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<div class="bottomDiv" style="padding-top:6px">
-				<div class="bottomDivLefBorder" style="">
-					<div class="bottomDivLef">
-						<div class="heading"><span>分诊年龄分布统计</span></div>
-						<div id="fznlEcharts" class="echartBody">
-						
-						</div>
-					</div>
-				</div>
-				<div class="bottomDivRigBorder" style="">
-					<div class="bottomDivRig">
-						<div class="heading"><span>分诊科室分布统计</span></div>
-						<div id="fzksEcharts" class="echartBody">
-						
-						</div>
-					</div>
-				</div>
+				
 			</div>
 		</div>   
 	</div>
 </body>
+<script Language="Javascript">
+	/// cy  2022-07-20 极简风格样式修改
+	if(HISUIStyleCode==="lite"){
+		$("#HISUIstyleid").css('background-color','#F5F5F5');
+		$(".heading").css({
+			'background':'#FFF',
+			'font-weight':'700'
+		});
+		$(".StaTable td").css({
+			'background':'#f5f5f5'
+		});
+
+	}
+</script>
 </html>

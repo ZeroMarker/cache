@@ -1,0 +1,790 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.shift.project.csp -->
+	<title>查询历史交班记录</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+            overflow: hidden;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:480px;
+			height:423px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:470px;
+			height:274px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.right-hisui-panel{
+			
+			height: calc(50% - 5px);
+		}
+		table.search-table.processconfig-table td{
+			line-height:28px;	
+		}
+		.syxm span {
+		    border: 1px solid #ccc;
+		    padding: 5px;
+		   
+		    margin-left: 5px;
+		    margin-top: 5px;
+		    display: inline-block;
+		    background: #f9f9fa;
+		}
+		.syxm span.bgselect{
+			background: #ffe48d;
+		}
+		span.shiftName, span.projectName {
+		    height: 24px;
+		    display: inline-block;
+		    margin: 2px 0px;
+		    line-height: 24px;
+		    border-radius: 3px;
+		    min-width: 50px;
+		    text-align: center;
+		    white-space: nowrap;
+		    padding: 0px 3px;
+		}
+		.souInput {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 0px;
+    vertical-align: top;
+}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+ 	<script language="cache" runat="SERVER">
+   if ##class(websys.Conversions).IsValidMethodName("websys.StandardTypeItem","GetIdFromCodeOrDescription"){
+   		Set EnableToken =##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableToken")
+		If EnableToken { // 启用token后，必须传入用效token才可以请求数据\
+		}else{
+			w "<script type=""text/javascript"" >function websys_getMWToken(){return  """"}<"_"/"_"script>"
+		}
+            
+    }else{
+	    w " <script type=""text/javascript"" >function websys_getMWToken(){return """"}<"_"/"_"script>"
+	} 
+  </script>
+	<SCRIPT language="cache" RUNAT="SERVER">
+ 		n (%request,%session,%response)
+ 		s WardID=$g(%session.Data("LOGON.WARDID"))
+ 		s ThisWardID = $G(%request.Data("WardID", 1))
+ 		s:ThisWardID'="" WardID=ThisWardID
+ 		s LocID = $G(%request.Data("LocID", 1))
+ 		s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+ 		s ClassID = $G(%request.Data("ClassID", 1))
+ 	</SCRIPT>
+ 	
+ 	<script language="javascript">
+ 	   var GLOBAL={
+	 	   WardID:"#(WardID)#",
+	 	   LocID:"#(LocID)#",
+	 	   ShiftBookID:"#(ShiftBookID)#",
+	   	   ClassID:"#(ClassID)#",
+	   	   HospID:session['LOGON.HOSPID']
+	   }
+	   var WardID="#(WardID)#";
+
+	</script>
+</head>
+<body>
+	<div style="border:1px solid #ddd;border-radius:4px;">
+		<div class="hisui-panel" data-options="border:false" >			
+
+	<table  border="0" cellspacing="0" style="width:100%;height:calc(100% - 3px)">
+		<tr ><td style="height:50px;">
+		
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="height:50px;margin-top:10px;margin-bottom:10px;">
+						<div class="souInput" style="margin-left:10px;vertical-align: sub;"><span>#(..Get("交班日期"))#</span></div>
+							
+						<div class="souInput" >
+							<input id="datecomboStart" style="vertical-align: top;margin-left:5px;" class="hisui-datebox" type="text">
+						</div>
+						<div class="souInput" >
+							~
+						</div>
+						<div class="souInput" >
+							<input id="datecomboEnd" style="vertical-align: top;margin-left:5px;" class="hisui-datebox" type="text">
+						</div>
+						<div class="souInput Wards"><span style="line-height: 32px;">#(..Get("交班病区"))#</span></div>
+						<div class="souInput">
+							<input id="Locs"  style="vertical-align: top;width:200px;height:30px;margin-top: 1px;"> 
+								
+						</div>
+						<div class="souInput ShiftBook"><span style="line-height: 32px;">#(..Get("交班本"))#</span></div>
+						<div class="souInput">
+						
+							<select class="hisui-combogrid" id="ShiftBookList" style="vertical-align: top;width:150px" data-options="
+								            panelWidth: 350,
+								            blurValidValue:true,
+								            idField: 'ID',
+								            textField: 'ShiftBookName',
+								            method: 'get',
+								            onClickRow:function(rowIndex, rowData){
+									            GLOBAL.ShiftBookID=rowData.ID
+									        	initLoad()   
+									        },
+								            columns: [[
+								                {field:'ShiftBookName',title:$g('名称'),width:150,
+								                	 formatter:function(value,row,index){
+									                 	return $g(value)
+									                 }
+								                },
+								                {field:'ShiftBookType',title:$g('类型'),width:80,
+									                formatter:function(value,row,index){
+										                var text=''
+										                if(value==1){
+											               text='病区' 
+											            }else if(value==2){
+												           text='科室'  
+												        }else if(value==3){
+												           text='产房'  
+												        }else if(value==4){
+												           text='新生儿'  
+												        }else{
+												           text='其他'  
+												        }
+															return $g(text)
+									                }
+								                },
+								                {field:'Remarks',title:$g('备注'),width:80,
+								                	formatter:function(value,row,index){
+									                 	return $g(value)
+									                 }
+								                
+								                },
+								                
+								            ]],
+								            fitColumns: true
+								        ">    
+								</select>
+						
+						</div>
+						<div class="souInput ShiftClass"><span style="line-height: 32px;">#(..Get("交班班制"))#</span></div>
+						<div class="souInput"> 
+							<select class="hisui-combogrid" id="ShiftClassList" style="vertical-align: top;width:150px" data-options="
+								            panelWidth: 350,
+								            blurValidValue:true,
+								            idField: 'ID',
+								            textField: 'ShiftClassName',
+								            method: 'get',
+								            onClickRow:function(rowIndex, rowData){
+									        	initLoad()   
+									        },
+								            columns: [[
+								                {field:'ShiftClassName',title:$g('名称'),width:150,
+								                formatter:function(value,row,index){
+									                 	return $g(value)
+									                 }},
+								                {field:'ShiftClassType',title:$g('类型'),width:80,
+									                formatter:function(value,row,index){
+										                var text=''
+										                if(value==1){
+											               text='单班' 
+											            }else if(value==2){
+												           text='两班'  
+												        }else if(value==3){
+												           text='三班'  
+												        }else if(value==4){
+												           text='四班'  
+												        }else{
+												           text='其他'  
+												        }
+															return $g(text)
+									                }
+								                },
+								                {field:'ShiftIsDefalut',title:$g('默认交班'),width:80,
+									                formatter:function(value,row,index){
+											                var text='否'
+											                if(value==1){
+												               text='是' 
+												            }
+													        return $g(text)
+									                }
+								                },
+								                {field:'isWard',title:$g('全院'),width:80,
+								                	formatter:function(value,row,index){
+											                var text='否'
+											                if(value==0){
+												               text='是' 
+												            }
+													        return $g(text)
+									                }
+								                
+								                }
+								            ]],
+								            fitColumns: true
+								        ">    
+								</select>
+						
+						</div>
+								
+				</div>
+			</div>
+		
+		</td></tr>
+
+		<tr>
+			<td style="border-top:1px solid #ddd;">
+				<table id="project" style="width:100%;height:100%;"></table>
+			</td>
+		</tr>
+	</table>
+	</div></div>
+	<div id="dialogRefer"></div>
+	
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript">
+	
+$(function() {
+	var curr_time = new Date()
+    var nowDate=curr_time.getFullYear()+"-"+(curr_time.getMonth()+1)+"-"+curr_time.getDate()
+    $('#datecomboStart').datebox("setValue", nowDate);
+    $('#datecomboEnd').datebox("setValue", nowDate);
+
+	
+	    //查询病区对应的科室
+    $get.ShiftWardData()
+    $get.ShiftClassList()
+    $get.ShiftBookList()
+    initLoad()
+	
+	
+	
+})	
+
+$get={
+	ShiftWardData:function(){
+		var rtnData=""
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetLocRoleList",{"WardID":GLOBAL.WardID},function(rtn){
+			
+			
+			var comboData=[{
+					"value":"",
+					"text":$g(rtn[0].WardName)	
+				}]
+			var LocArr={}
+			for(var i=0;i<rtn.length;i++){
+				var LocID=rtn[i].LocID
+				var LocName=rtn[i].LocName
+				
+				LocArr[LocID]=LocName
+				
+				
+			}
+			for(var key in LocArr){
+				var Json={
+					"value":key,
+					"text":$g(LocArr[key])	
+				}
+				comboData.push(Json)
+			}
+			
+			$HUI.combo("#Locs",{
+				valueField:"value",
+				textField:"text",
+				multiple:false,
+				selectOnNavigation:false,
+				panelHeight:"auto",
+				editable:true,
+				//data:data
+			});
+			
+			var data={"data":comboData}
+			$("#Locs").combobox(data)
+			if(comboData.length>0){
+				$("#Locs").combobox("setValue",comboData[0].value)
+			}
+			
+			
+			/*var trObj = $HUI.combogrid("#ShiftWardLoc");
+        	var grid = trObj.grid();
+        	grid.datagrid("loadData",{"total":5,"rows":comboData});
+			
+			var signContors=[]
+			signContors.push({'id':'Locs','type':'combox','title':'','objData':comboData,'style':'width:157px;'})
+
+			for(var i=0;i<signContors.length;i++){
+				var key = signContors[i].id
+				createInputHtml("allLoc",signContors,key,0)
+			}
+			if(rtn.length==0){
+				$("#allLoc").hide()
+			}*/
+
+		},'json',false);
+		return rtnData
+		
+	},
+	GetDefaultShiftBookID:function(){
+		
+		var LocID=$("#Locs").combo("getValue")
+		///通过WardID获取交班本
+		var ShiftBookID=""
+		runClassMethod("Nur.SHIFT.Service.ShiftController","GetWardShiftBookID",{"WardID":GLOBAL.WardID,"LocID":LocID},function(rtn){
+			
+			ShiftBookID=rtn
+			
+		},'text',false);
+		return ShiftBookID
+	},
+	ShiftBookList:function(){
+		///通过WardID获取交班本
+		var ShiftBookID=""
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftBookList",{"hospID":GLOBAL.HospID},function(rtn){
+		
+			var trObj = $HUI.combogrid("#ShiftBookList");
+        	var grid = trObj.grid();
+        	grid.datagrid("loadData",{"total":5,"rows":rtn});
+			
+			
+			var ShiftBookID=$get.GetDefaultShiftBookID()
+			var selectIndex=0
+			for(var i=0;i<rtn.length;i++){
+	      		if(rtn[i].ID==ShiftBookID){
+		      		selectIndex=i
+		      	}
+	      	}
+	        grid.datagrid('selectRow',selectIndex);
+			
+		},'json',false);
+		
+	},
+	ShiftClassList:function(){
+		///通过WardID获取交班本
+		var rtnA=[],rtnB=[],data=[]
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftClassList",{HospID:GLOBAL.HospID, WardID:"", LocID:""},function(rtn){
+				rtnA=rtn
+		},'json',false);
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftClassList",{HospID:GLOBAL.HospID, WardID:GLOBAL.WardID, LocID:GLOBAL.LocID},function(rtn){
+				rtnB=rtn
+		},'json',false);
+		
+		for(var i=0;i<rtnA.length;i++){
+			rtnA[i].isWard=0
+			
+			data.push(rtnA[i])
+		}
+		for(var i=0;i<rtnB.length;i++){
+			rtnB[i].isWard=1
+			data.push(rtnB[i])
+		}
+		console.log(data)
+		var selectRow=0
+		for(var i=0;i<data.length;i++){
+			if(data[i].ShiftIsDefalut=="1"){
+				selectRow=i
+			}
+		}
+		
+		
+		var trObj = $HUI.combogrid("#ShiftClassList");
+        var grid = trObj.grid();
+        grid.datagrid("loadData",{"total":5,"rows":data});
+	 	grid.datagrid('selectRow',selectRow);
+		
+	}	
+}
+
+
+
+
+
+function AddColumn(field,title){
+	///格式化交接班
+	var shiftSign={
+			field:field,
+			title:$g(title),
+			halign:'center',
+			formatter:function(value,row,index){
+				if(typeof(value)=="undefined" || value==""){
+					return ""
+				}
+				
+				var values=value.split("|")
+				var userIds=[],userNames=[]
+				for(var i=0;i<values.length;i++){
+					var userID=values[i].split("*")[1]
+					var userName=values[i].split("*")[0]
+					userIds.push(userID)
+					var closeHtml='<a class="panel-tool-close" shiftTimeID="'+row.ShiftTimeID+'" nurseID="'+userID+'" field="'+field+'" href="javascript:void(0)" onclick="ddd(this)" style="visibility: hidden;display: inline-block;width: 16px;    height: 16px;margin: 0 0 0 2px;vertical-align: top;    margin-top: 4px;"></a>'
+					userName='<span class="shiftName">'+userName+closeHtml+"</span>"
+
+					
+					userNames.push(userName)
+				}
+				row[field]=userIds.join(",")
+				return userNames.join("")
+			}
+		}
+	return shiftSign
+}
+xcChange.Locs=function(value,oldValue){
+	GLOBAL.LocID=value
+	$get.ShiftBookList()
+	initLoad()
+	
+	
+	
+}
+	
+// 初始化显示设置
+function initLoad(){
+	var rtnData=[]
+
+	
+	if(1==2){
+		var columns=[{field:"ShiftTitle",title:$g("日期")},{field:"ShiftName",title:$g("交班班次")}]
+		var ClassName="Nur.SHIFT.Service.ShiftConfigController"
+		var MethodName="GetShiftProjectList"
+		var Parmas={ProjectType:"1"}
+		runClassMethod(ClassName,MethodName,Parmas,function(rtn){
+				
+				for(var i=0;i<rtn.length;i++){
+					var Column={field:rtn[i].ProjectCode,title:rtn[i].ProjectName}
+					
+					Column.formatter=function(value,row,index){
+			            if(value==0){
+				         	return "<span style='color:#ddd'>"+value+"</span>"   
+				        }
+				        if(typeof(value)=="undefined"){
+					        return "<span style='color:#ddd'>0</span>"   
+					     }
+						return "<span>"+value+"</span>" 
+					}	
+					
+						columns.push(Column)
+					
+				}
+		},'json',false);
+	}else{
+	
+		var StartDate=$('#datecomboStart').datebox("getValue");
+		var EndDate=$('#datecomboEnd').datebox("getValue");
+		
+		
+		var ShiftBook = $('#ShiftBookList').combogrid('grid').datagrid('getSelected');
+		
+		var LocID=$("#Locs").combobox("getValue")
+		var ShiftClass = $('#ShiftClassList').combogrid('grid').datagrid('getSelected');
+		ClassName="Nur.SHIFT.Service.ShiftProjectController"
+		MethodName="GetAllColumns"
+		Parmas={"WardID":GLOBAL.WardID, "LocID":LocID, "ShiftBookID":ShiftBook.ID, "StartDate":StartDate, "EndDate":EndDate, "ClassID":ShiftClass.ID}
+		
+		var columns=[{field:"ShiftTitle",title:$g("日期")}]
+		columns.push({field:"ShiftName",title:$g("交班班次"),
+				formatter: function(value,row,index){
+					var TimeRecord=row.TimeRecord
+					if(typeof(TimeRecord)=="undefined"){
+						return $g(value)	
+					}
+					var ShiftColor=TimeRecord.ShiftColor
+					var ShiftStartTime=$g(TimeRecord.ShiftStartTime)
+					var ShiftStartSymbol=TimeRecord.ShiftStartSymbol
+					var ShiftEndTime=$g(TimeRecord.ShiftEndTime)
+					var ShiftEndSymbol=TimeRecord.ShiftEndSymbol
+					var ShiftName=$g(TimeRecord.ShiftName)
+					if(ShiftStartSymbol==0){
+						ShiftStartSymbol=""	
+					}else{
+						ShiftStartSymbol="<span style='color:red;'>+"+ShiftStartSymbol+"</span>"	
+					}
+					if(ShiftEndSymbol==0){
+						ShiftEndSymbol=""	
+					}else{
+						ShiftEndSymbol="<span style='color:red;'>+"+ShiftEndSymbol+"</span>"
+					}
+					
+					var text="<div ShiftTimeRecordID='"+row.ShiftTimeID+"' TimeID='"+row.TimeID+"'><span class='shiftName' style='background:"+ShiftColor+"'>"+$g(ShiftName)+"</span><span style=''>("+ShiftStartTime+ShiftStartSymbol+"~"+ShiftEndTime+ShiftEndSymbol+")</span></div>"
+					
+					return text
+				}
+			
+			})
+		
+		runClassMethod(ClassName,MethodName,Parmas,function(rtn){
+				for(var i=0;i<rtn.length;i++){
+					
+					rtn[i].formatter=function(value,row,index){
+						if(value==0){
+				         	return "<div style='color:#ddd;text-align:center;'>"+value+"</div>"   
+				        }
+				        if(typeof(value)=="undefined"){
+					        return "<div style='color:#ddd;text-align:center;'>0</div>"   
+					     }
+						//return "<span>"+value+"</span>" 
+						return '<div style="text-align:center;">'+value+'<div>'
+					},
+					rtn[i].halign='center'
+					columns.push(rtn[i])
+				}
+				
+		},'json',false);
+		
+		
+		
+	}
+	columns.push(AddColumn("ShiftSign",$g("交班护士")))
+	columns.push(AddColumn("ShiftTakeSign",$g("接班护士")))
+	columns.push({field:"Shift",title:$g("交班详情"),
+			formatter: function(value,row,index){
+				return '<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" onclick="shiftrecord();"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">详情 <span class="l-btn-icon icon-paper-table">&nbsp;</span></span></span></a>'	
+			}
+	
+	})
+	var gid="project"
+		
+	$('#'+gid).datagrid({
+		fit:true,
+		singleSelect : true,
+		fitColumns:false,
+		idField:"ID",
+		pagination : true, 		//是否开启分页
+		rownumbers : true,//是否开启行号
+		idField:"ID",
+		pageSize: 20,//分页数量
+		pageList : [20,50,100,200],
+		columns :[columns],
+		onDblClickRow:function(index,rowData){
+			//"ShiftBookID":ShiftBook.ID, "StartDate":StartDate, "EndDate":EndDate, "ClassID":ShiftClass.ID}
+	/*		var ShiftBook = $('#ShiftBookList').combogrid('grid').datagrid('getSelected');
+		
+			var LocID=$("#Locs").combobox("getValue")
+			var ShiftClass = $('#ShiftClassList').combogrid('grid').datagrid('getSelected');
+			
+			var url="nur.ward.shift.book.csp?ShiftDate="+rowData.ShiftTitle+"&ShiftBookID="+ShiftBook.ID+"&ClassID="+ShiftClass.ID+"&LocID="+LocID+"&MWToken="+websys_getMWToken()
+			
+			//window.open(url,"_blank");
+			var w=$(window).width() - 100,h=$(window).height() - 150
+			
+	websys_createWindow(url,'child3','width='+w+',height='+h+',top=58,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes');
+*/
+			/*
+			$('#dialogRefer').dialog({    
+				title: $g("查看交班信息"),    
+				width: $(window).width() - 100,    
+				height: $(window).height() - 150,    
+				closed: false,    
+				cache: false,
+				iconCls:'icon-w-edit',
+		        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+				modal: true ,
+				buttons:[]  
+			});   
+			$("#dialogRefer").dialog("open");
+			*/
+		}
+		
+	}).datagrid({loadFilter:DocToolsHUINur.lib.pagerFilter});	
+	
+	var StartDate=$('#datecomboStart').datebox("getValue");
+	var EndDate=$('#datecomboEnd').datebox("getValue");
+
+
+	runClassMethod("Nur.SHIFT.Service.ShiftProjectController","GetAllRecordByDate",{"WardID":GLOBAL.WardID, "LocID":LocID, "ShiftBookID":ShiftBook.ID, "StartDate":StartDate, "EndDate":EndDate,"ClassID":ShiftClass.ID},function(rtn){
+			//加载术语数据源
+			var projectArr=[]
+			var rtnData=[]
+			for(var i=0;i<rtn.length;i++){
+				
+					rtnData.push(rtn[i])
+				
+			}
+			
+			$("#"+gid).datagrid("unselectAll");
+			$("#"+gid).datagrid('loadData', rtnData)
+			
+			
+	},'json',true);
+     
+}
+
+function shiftrecord(){
+		var ShiftBook = $('#ShiftBookList').combogrid('grid').datagrid('getSelected');
+	
+		var LocID=$("#Locs").combobox("getValue")
+		var ShiftClass = $('#ShiftClassList').combogrid('grid').datagrid('getSelected');
+		var rowData = $("#project").datagrid("getSelected");
+		var url="nur.ward.shift.book.csp?ShiftDate="+rowData.ShiftTitle+"&ShiftBookID="+ShiftBook.ID+"&ClassID="+ShiftClass.ID+"&LocID="+LocID+"&MWToken="+websys_getMWToken()
+		
+		//window.open(url,"_blank");
+		var w=$(window).width() - 100,h=$(window).height() - 150
+			
+		websys_createWindow(url,'child3','width='+w+',height='+h+',top=58,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes');
+
+	
+	
+	
+}
+$('#datecomboStart').datebox({
+    onSelect: function (date) {
+        var dateH=$('#datecomboStart').datebox("getValue");
+       initLoad()
+    }
+});
+$('#datecomboEnd').datebox({
+    onSelect: function (date) {
+        var dateH=$('#datecomboStart').datebox("getValue");
+       
+    }
+});
+
+$('#datecomboStart').datebox().datebox('calendar').calendar({
+    validator: function (date) {
+        var curr_time = new Date()
+        var d1 = new Date(curr_time.getFullYear(), curr_time.getMonth(), curr_time.getDate());
+        return d1 >= date;
+    }
+});
+$('#datecomboEnd').datebox().datebox('calendar').calendar({
+    validator: function (date) {
+        var curr_time = new Date()
+        var d1 = new Date(curr_time.getFullYear(), curr_time.getMonth(), curr_time.getDate());
+        return d1 >= date;
+    }
+});
+var DocToolsHUINur={
+	lib:{
+		pagerFilter:function pagerFilter(data){
+			if (typeof data.length == 'number' && typeof data.splice == 'function'){	// is array
+				data = {
+					total: data.length,
+					rows: data
+				}
+			}else{
+				if(typeof(data.rows)=='undefined'){
+					var arr = []
+					for (var i in data){
+						arr.push(data[i])
+					}
+					data = {
+						total: arr.length,
+						rows: arr
+					}
+				}
+			}
+			var dg = $(this);
+			var opts = dg.datagrid('options');
+			var pager = dg.datagrid('getPager');
+			pager.pagination({
+				showRefresh:false,
+				onSelectPage:function(pageNum, pageSize){
+					opts.pageNumber = pageNum;
+					opts.pageSize = pageSize;
+					pager.pagination('refresh',{
+						pageNumber:pageNum,
+						pageSize:pageSize
+					});
+					dg.datagrid('loadData',data);
+					dg.datagrid('scrollTo',0); //滚动到指定的行  
+					    
+				}
+			});
+			if (!data.originalRows){
+				data.originalRows = (data.rows);
+			}
+			if (opts.pagination){
+				if (data.originalRows.length>0) {
+					var start = (opts.pageNumber==0?1:opts.pageNumber-1)*parseInt(opts.pageSize);
+					if ((start+1)>data.originalRows.length){
+						//取现有行数最近的整页起始值
+						start=Math.floor((data.originalRows.length-1)/opts.pageSize)*opts.pageSize;
+						opts.pageNumber=(start/opts.pageSize)+1;
+					}
+					//解决页码显示不正确的问题
+					$.extend($.data(pager[0], "pagination").options,{pageNumber:opts.pageNumber});
+					
+					var end = start + parseInt(opts.pageSize);
+					data.rows = (data.originalRows.slice(start, end));
+				}
+			}
+			//console.log(data)
+			return data;
+		}
+	}
+}
+function updateSbgTableSize() {
+    var n = 0;
+    var timer = setInterval(function() {
+	   
+        clearInterval(timer);
+    	window.location.reload()
+            
+       
+    }, 200);
+    
+    
+}
+
+window.addEventListener("resize", updateSbgTableSize)
+</script>
+</body>
+</html>

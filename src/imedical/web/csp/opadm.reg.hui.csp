@@ -9,6 +9,8 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+<DOCHEAD></DOCHEAD>
+<DOCCARD medStepCode="OPAdmReg"></DOCCARD>
 <style>
 object {
 	display:none;
@@ -41,7 +43,7 @@ object {
 }
 .dateinfo-div,.locinfo-div,.timerange-div{
 	float: left;
-	margin:15px 15px 0 15px;
+	margin:16px 15px 0 15px;
 }
 .timerange-div a{
 	margin:0 5px;
@@ -85,7 +87,10 @@ object {
 .marklist-card{
 	position: relative;
 	border-radius:0 !important;
-	border-color:black;
+	border-color:black !important;
+}
+.marklist-card-fastsche{
+	position: relative;
 }
 .marklist-card-stop{
 	position: relative;
@@ -97,6 +102,9 @@ object {
 }
 .marklist-card-invalid div:first-child{
 	color: red;
+}
+.marklist-card-fastsche div:first-child{
+	color: green;
 }
 .schenum-div {
 	position:absolute;
@@ -179,12 +187,19 @@ object {
 #DeptTreeList-div{
 	position: absolute;
 	display: none;
-	width: 190px;
+	width: 192px;
 	padding: 5px;
 	z-index: 99999;
 	background: white;
 	border: 1px solid #ccc;
 	box-shadow: 2px 2px 2px #888888;
+	margin-top: -1px;
+}
+/**需要10px，
+ * html中连续几个内联标签或表单元素标签的换行在浏览器会被解释为一个3px的空格 
+ */
+#CloseDeptTreeDiv {
+	margin-left: 7px;
 }
 .search-table{
 	border-collapse:separate;
@@ -197,7 +212,7 @@ object {
 /*分时段预约样式*/
 .diytable{
 	border-collapse:collapse;
-	border:1px solid #ccc; 
+	border:0px solid #ccc; 
 }
 .diytable td{
 	text-align:center;
@@ -220,7 +235,7 @@ object {
 	color:black;
 	font-weight:bold;
 }
-.diytable td[id="_table_"]:hover{
+.diytable td[id*="_table_"]:hover{
 	cursor:pointer;
 	background:#FFCFCF;
 }
@@ -230,7 +245,7 @@ object {
 	text-align: left;
 	border-bottom: 1px solid #cccccc;
 	color: black;
-	font-weight:bold;
+	font-weight:normal;
 }
 #Appoint,#Update{
 	background:#21BA45;
@@ -243,8 +258,9 @@ iframe{
 <Server>
 //挂号类型 APP 预约 NurReg 分诊挂号 Reg 当日挂号
 s ParaRegType=%request.Get("ParaRegType")
+s ChangeAPPTRowID=%request.Get("ChangeAPPTRowID")
 s sysDateFormat=##class(websys.Conversions).DateFormat()
-s GetreceipNO=##Class(%CSP.Page).Encrypt($lb("web.udhcOPBillIF.GetReceiptNO"))
+s GetreceipNO=##Class(websys.Page).Encrypt($lb("web.udhcOPBillIF.GetReceiptNO"))
 
 w "<input id='OMrType' name='OMrType' type='hidden' value=''>",$C(13,10)
 w "<input id='IMrType' name='IPMRN' type='hidden' value=''>",$C(13,10)
@@ -259,12 +275,13 @@ w "<input id='AppBreakCount' name='AppBreakCount' type='hidden' value=''>",$C(13
 w "<input id='ReceiptSum' name='ReceiptSum' type='hidden' value=''>",$C(13,10)
 w "<input id='AccAmount' name='AccAmount' type='hidden' value=''>",$C(13,10)
 w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+/*w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
 d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
 D ##Class(web.DHCBillPrint).AccPWDCLSID()
 s HospitalCode=##class(web.DHCOPAdmReg).GetHospitalCode()
 s CurDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
@@ -284,6 +301,52 @@ s CashPayModeID=$o(^CT("CTPM",0,"Code","CASH",""))
 s OPRegListDefault=##class(web.DHCOPRegConfig).GetSpecConfigNode("OPRegListDefault")
 //挂号界面按专业组查询排班
 s QryScheduleByClinicGroup=##class(web.DHCOPRegConfig).GetSpecConfigNode("QryScheduleByClinicGroup")
+//改约带入患者信息
+s ChangePatientNo="",ChangeOtherInfo=""
+if (ChangeAPPTRowID'=""){
+	s Appt=$G(^RBAS(+ChangeAPPTRowID,$P(ChangeAPPTRowID,"||",2),"APPT",$P(ChangeAPPTRowID,"||",3)))
+	s ChangePatientID=$P(Appt,"^",2)
+	s ChangePatientNo=$p(^PAPER(ChangePatientID,"PAT",1),"^",1)
+	s AppPatientName=$p($g(^RBAS(+ChangeAPPTRowID,$P(ChangeAPPTRowID,"||",2),"APPT",$P(ChangeAPPTRowID,"||",3),"DHC")),"^",1)
+	s AppCredTypeDR=$p($g(^RBAS(+ChangeAPPTRowID,$P(ChangeAPPTRowID,"||",2),"APPT",$P(ChangeAPPTRowID,"||",3),"DHC")),"^",7)
+	if (AppCredTypeDR '="") s AppCredTypeCode=$p(^PAC("CARD",AppCredTypeDR),"^",1),AppCredTypeDR=AppCredTypeDR_"$"_AppCredTypeCode
+	s AppPatientCredNo=$p($g(^RBAS(+ChangeAPPTRowID,$P(ChangeAPPTRowID,"||",2),"APPT",$P(ChangeAPPTRowID,"||",3),"DHC")),"^",8)
+	s AppPatientTelH=$p($g(^RBAS(+ChangeAPPTRowID,$P(ChangeAPPTRowID,"||",2),"APPT",$P(ChangeAPPTRowID,"||",3),"DHC")),"^",5)
+	s AppAdress=$p($g(^RBAS(+ChangeAPPTRowID,$P(ChangeAPPTRowID,"||",2),"APPT",$P(ChangeAPPTRowID,"||",3),"DHC")),"^",10)
+	s AppPatTypeDr=$p($g(^RBAS(+ChangeAPPTRowID,$P(ChangeAPPTRowID,"||",2),"APPT",$P(ChangeAPPTRowID,"||",3),"DHC")),"^",15)
+	s ChangeOtherInfo=AppPatientName_"^"_AppPatientCredNo_"^"_AppPatientTelH_"^"_AppAdress_"^"_AppPatTypeDr_"^"_AppCredTypeDR
+}
+// 公共卡卡号
+s CommonCardNoStr=##class(web.DHCOPRegConfig).GetSpecConfigNode("CommonCardNo")
+s CurrentCommonCardNoStr=""
+if (CommonCardNoStr'=""){
+	for i=1:1:$L(CommonCardNoStr,"&"){
+		s OneCommonCardNo=$P(CommonCardNoStr,"&",i)
+		s CardRowid=""
+		for {
+			s CardRowid=$O(^DHCCARDi("CF",0,"CardNo",OneCommonCardNo,CardRowid))
+			q:CardRowid=""
+			s ActiveFlag=$P(^DHCCARD("CF",CardRowid),"^",10) 
+			Continue:ActiveFlag'="N"
+			if (CurrentCommonCardNoStr=""){
+				s CurrentCommonCardNoStr=OneCommonCardNo 
+			}else{
+				s CurrentCommonCardNoStr=CurrentCommonCardNoStr_"&"_OneCommonCardNo 
+			}
+			q 		
+		}
+	}
+	s CommonCardNoStr=CurrentCommonCardNoStr
+	}
+// 允许当日挂号选择分时段
+s OPRegistShowTimeRange=##class(web.DHCOPRegConfig).GetSpecConfigNode("OPRegistShowTimeRange")
+s HospID=%session.Get("LOGON.HOSPID")
+s GroupID=%session.Get("LOGON.GROUPID")
+s OPRegInsertOrder=##class(web.DHCOPRegConfig).GetGroupConfig(HospID,GroupID,"OPRegInsertOrder")
+if (OPRegInsertOrder=1) {s MRNoteFee=0}
+//对外接口接入,初始化
+s SessionStr=##class(DHCDoc.Util.RegisteredObject).%SessionStr()
+d ##class(DHCDoc.Interface.AccessManage).LoadJS(SessionStr,"AdmReg")
 </Server>
 </head>
 <body class="hisui-layout" data-options="split:true">
@@ -307,21 +370,30 @@ s QryScheduleByClinicGroup=##class(web.DHCOPRegConfig).GetSpecConfigNode("QrySch
 			OPRegListDefault:"#(OPRegListDefault)#",
 			pageCode:'opadm.reg.hui.csp',
 			QryScheduleByClinicGroup:"#(QryScheduleByClinicGroup)#",
-			domSelector:'.textbox'
+			domSelector:'.textbox',
+			ChangePatientNo:"#(ChangePatientNo)#",
+			ChangeOtherInfo:"#(ChangeOtherInfo)#",
+			CommonCardNoStr:"#(CommonCardNoStr)#",
+			OPRegInsertOrder:"#(OPRegInsertOrder)#",
+			OPRegistShowTimeRange:"#(OPRegistShowTimeRange)#"
 		};
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
 	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCOPAdmReg.Common.js"></script>
 	<script type="text/javascript" src="../scripts/DHC.WMR.Request.js"></script>
 	<!--script type="text/javascript" src="../scripts/OPAdm/common.js"></script-->
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
 	<script type="text/javascript" src="../scripts/OPAdm/Reg.hui.js"></script>
-	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.JS"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
 	<script type="text/javascript" src="../scripts/OPAdm/MisPose/MisPosePublic.js"></script>
 	<script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
 	<script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillPayScanCodeService.js"></script>
 	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
 	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/bizlogdts.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.JS"></script>
 </body>
 </html>

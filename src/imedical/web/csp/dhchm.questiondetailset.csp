@@ -12,6 +12,7 @@ Created by wangguoying
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<script type="text/javascript" src="../scripts/dhchm.questiondetailset.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
 	<style>
 		#Content{
 			
@@ -40,15 +41,35 @@ Created by wangguoying
 		a{
 			font-size:18px;
 		}
+		.unnormal{
+			font-size:24px;
+			color:red;		
+		}
 	</style>
 	<SCRIPT language="Cache" RUNAT="SERVER">
 		s QuesID=%request.Get("QuesID")
-		s:QuesID="" QuesID=1
+		
+		s PAADM=%request.Get("PAADM")
 		s PreIADM=%request.Get("PreIADM")
+		s DocFlag=%request.Get("DocFlag")  //是否显示护士填写的主题
+		s:DocFlag="" DocFlag="N"
+		i (PreIADM="")&&(PAADM'="")
+		{
+			s IADM=$O(^DHCPEIADM(0,"PAADM",PAADM,""))
+			s PreIADM=$P(^DHCPEIADM(IADM),"^",4)
+		}
+		
 		s RegNo=""
 		s EQID=%request.Get("EQID")
+		i EQID'=""
+		{
+			s:PreIADM="" PreIADM=$G(^DHCPEDataNewEx("HMToPreIADM",+EQID))
+		}
 		i PreIADM'=""
 		{
+			s:QuesID="" QuesID=##class(web.DHCPE.HM.ExamSurveyHandler).GetQuestionnaireByPreIADM(PreIADM)
+			s QuesID = $P(QuesID,"^",1)
+			i QuesID="" w "<div style='font-weight:600;color:red;'>无可用问卷！</div>" q
 			s PIBI=$P(^DHCPEPreIADM(PreIADM),"^",1)
 			s RegNo=$P(^DHCPEPreIBI(PIBI),"^",1)
 			s EvaluationId=$G(^DHCPEDataNewEx("PreIADMToHM",PreIADM))
@@ -66,13 +87,14 @@ Created by wangguoying
 		;w SizeJSON,!
 		i SubjectOrder=""
 		{
-			s Job=##class(web.DHCPE.HM.ExamSurveyHandler).QuerySurveyDetail(QuesID,RegNo,"","",EQID)
-			s SubjectOrder=1
+			s Job=##class(web.DHCPE.HM.ExamSurveyHandler).QuerySurveyDetail(QuesID,RegNo,"","",EQID,DocFlag)
+			s SubjectOrder=$O(^TMPDHCPEHMQuestion(Job,"Subject",QuesID,""))
 		}
 	</SCRIPT>
 	 <Script  type='text/javascript'>
-		var Job=#(Job)#
-		var QuesID=#(QuesID)#
+		var Job="#(Job)#"
+		var QuesID="#(QuesID)#"
+		var SubjectOrder="#(SubjectOrder)#"
 	</Script>
 </head>
 
@@ -84,17 +106,22 @@ Created by wangguoying
 		<div id="SubjectDiv" >
 			
 			<SCRIPT language="Cache" RUNAT="SERVER">
+				q:$G(QuesID)=""
 				s Flag="0"
-				s:ReadOnly="Y" Flag="1"
-				d ##class(web.DHCPE.HM.ExamSurveyHandler).OutSurveyToWeb(Job,QuesID,SubjectOrder,Flag,SizeJSON)
+				s:$G(ReadOnly)="Y" Flag="1"
+				//i %session.Get("LOGON.GROUPID")="164" s Flag=0
+				d ##class(web.DHCPE.HM.ExamSurveyHandler).OutSurveyToWeb(Job,QuesID,SubjectOrder,Flag,SizeJSON,DocFlag)
 			</SCRIPT>
 		</div>
 	</Div>
+	<div id="SubjectTool">
+		<!--
+		<span style="color:#B3B3B3">保存</span>
+    	<a onclick="save_curPage();" href="#" class="icon-save"></a>-->
+   </div>
 	<input type="hidden" id="RegNo" value="#(RegNo)#">  
 	<input type="hidden" id="PreIADM" value="#(PreIADM)#">  
 	<input type="hidden" id="appendStr" value=""/>
-	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
-	<script type="text/javascript" src="../scripts/websys.hisui.js"></script>
 	
 </body>
 </html>

@@ -3,7 +3,12 @@
 <head>
 
 <title>新检查/病理结果查看</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI/>
+<server>
+s EpisodeID=%request.Get("EpisodeID")
+s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+</server>
 <script Language="Javascript">
 	var LgUserID = '#($g(%session.Data("LOGON.USERID")))#';	//用户ID
     var HospID=  '#($g(%session.Data("LOGON.HOSPID")))#';		//医院ID
@@ -14,13 +19,14 @@
     var EpisodeID = '#($g(%request.Data("EpisodeID",1)))#'; //界面提供选择就诊,这个参数暂时不用
 	var ReqNo = '#($g(%request.Data("ReqNo",1)))#';
 	var OEORIID = '#($g(%request.Data("OEORIID",1)))#';	
+	var PAAdmType='#(PAAdmType)#'
 </script>
 <script type="text/javascript" src="../scripts/dhcdoc/common/common.js" ></script>
 <link rel="stylesheet" href="../scripts/dhcdoc/dhcapp/css/inspectrs.css" />
 <script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js" charset="gb2312"></script>
 <script type="text/javascript" src="../scripts/dhc.orderview.js"></script>
 <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/inspectrs.js" charset="gb2312"></script>
-
+<script type="text/javascript" src="../scripts/dhcdoc/OEOrder.Common.Control.js"></script>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -32,6 +38,9 @@
 .top-sel{
 	height:14%;	
 }
+label.checkbox, label.radio {
+	padding-right: 5px;
+	}
 /*.panel-body-noheader{
 	border:0;
 }*//*hxy 2018-10-22注释*/
@@ -64,11 +73,13 @@
 						<td class ="r-label">#(..Get("医嘱分类"))#</span></td><!--hxy 2018-07-03 padding-->
 						<td><input id="ordType" style="width:120px" class="textbox"></input></td>
 						
-						<td colspan="7" style="padding:0 5 0 10px;">
+						<td colspan="7" style="padding:0 5 0 20px;">
 							<input id="radio1" class='hisui-radio' type="radio" data-options="label:'当天',disable:false,name:'wantEat',onCheckChange:function(event,value){upPacsDate(value,1)}">
-							<input id="radio2" checked='checked' class='hisui-radio' type="radio" data-options="label:'一个月',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,2)}">
-							<input id="radio3" class='hisui-radio' type="radio" data-options="label:'半年',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,3)}">
+							<input id="radio2" class='hisui-radio' type="radio" data-options="label:'一个月',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,2)}">
+							<input id="radio3" checked='checked' class='hisui-radio' type="radio" data-options="label:'半年',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,3)}">
 							<input id="radio4" class='hisui-radio' type="radio" data-options="label:'更多',name:'wantEat',disable:false,onCheckChange:function(event,value){upPacsDate(value,4)}">
+						</td>
+						<td style="padding:0 5 0 20px;">
 							<input id="thisAdm" class='hisui-checkbox' type="checkbox" data-options="label:'当前就诊',checked:true,onCheckChange:function(event,value){thisAdm=value==true?'Y':'N';}"></input>
 						</td>
 						<td class ="r-label"><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-w-find" >查询</a></td>
@@ -86,13 +97,17 @@
 				</table>
 	    	</div>
 	    </div>   
-	    <div data-options="region:'center',border:true,bodyCls:'panel-header-gray'" style="border-left:0px;border-right:0px;border-bottom:0px">
-        	<table id="inspectDetail"></table>
+	    <div data-options="region:'center',border:false,bodyCls:'panel-header-gray'" style="padding:0 10px 10px 10px">
+        	<table data-options="bodyCls:'panel-header-gray'" id="inspectDetail"></table>
         </div>   
 	</div>
 	
-	<div id="readDetailWin" class="hisui-window" title="阅读明细" data-options="closed:'false',minimizable:false" style="width:400px;height:350px;top:100px">
-		<table id="readDetailTable"></table> 
+	<div id="readDetailWin" class="hisui-window" title="阅读明细" data-options="closed:'false',iconCls:'icon-w-paper',minimizable:false" style="width:400px;height:350px;top:100px">
+		<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',border:false,bodyCls:'panel-header-gray'" style="padding:10px">
+        	<table data-options="bodyCls:'panel-header-gray'" id="readDetailTable"></table>
+        </div>  
+        </div>
 	</div>
 	<div id="readInter" class="hisui-window" title="说明书" data-options="closed:'false',minimizable:false" style="width:400px;height:550px;top:10px">
 		<table id="itro_content"></table> 

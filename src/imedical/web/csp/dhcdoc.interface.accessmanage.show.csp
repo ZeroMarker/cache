@@ -1,0 +1,102 @@
+<div class="hisui-panel" data-options="fit:true,border:false" style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'west',split:false,border:false" style="width:446px;padding-right:10px;"> 
+			<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,title:'厂家列表'"> 
+				<table id="CompanyTab"></table> 
+			</div> 
+		</div> 
+		<div data-options="region:'center',split:false,border:false"> 
+			<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,title:'关联模块列表'"> 
+				<div style="padding:10px;border-bottom:1px solid #ccc;">
+					<label id="_HospListLabel" for="_HospList" style="padding-right:10px;color:red;">医院</label>
+					<input id="_HospList" type="text" class="textbox"></input>
+				</div>
+				<div class="hisui-panel" data-options="fit:true,border:false">
+					<table id="ModuleLinkTab"></table> 
+					<div id='tipInfo'>
+						<div>
+							<div class="tip-title">使用说明</div>
+							<ul class='tip-info'>
+								<li style='color:#008FF0;'>一、中间层说明</li>
+								<li>1、管理各厂家业务的调用，规范对外统一方法及各实现层需要实现的方法内容</li>
+								<li>2、每一个业务界面相当于一个业务域，对照一个中间层JS</li>
+								<li>3、目前已经集成的中间层JS可以参考业务域维护界面</li>
+								<li style='color:#008FF0;'>二、接口层说明</li>
+								<li>1、JS对应路径：<font color='red'>imedical/web/scripts/dhcdoc/interface/厂家代码/模块代码.js</font></li>
+								<li>2、接口层JS路径固定，CSP调用类文件加载JS的时候，会自动去此路径下引用</font></li>
+								<li style='color:#008FF0;'>三、公共方法</li>
+								<li>1、CSP界面初始化引入JS：##class(DHCDoc.Interface.AccessManage).LoadJS(SessionStr,ProductDomain,medStepCode)</li>
+								<li style="padding-left:20px;">SessionStr：用户id^安全组id^科室id^院区id(参照:##class(DHCDoc.Util.RegisteredObject).%SessionStr())</li>
+								<li style="padding-left:20px;">ProductDomain：业务域代码，参照业务域维护界面代码(多个以 ! 分割)</li>
+								<li style="padding-left:20px;">medStepCode：诊疗环境代码(Reg:挂号,Diag:诊断,Order:开方,Disp:取药,Exam:检查,Opera:手术,Bill:收费,Other:其他)</li>
+								<li>2、查询一个或多个厂家/模块关联数据：##class(DHCDoc.Interface.AccessManage).GetAccessLinkInfo</li>
+							</ul>
+						</div>
+						<div>
+							<div class="tip-title">操作说明</div>
+							<ul class='tip-info'>
+								<li style="color:#008FF0;">一、左侧：厂家列表</li>
+								<li>1、可以进行添加、删除、保存操作</li>
+								<li>2、单击查看该厂家关联的模块信息，双击修改名称</li>
+								<li>3、新增时，后台自动生成厂家代码；因为要固定路径引入，后续修改名称时，代码不再变动</li>
+								<li>4、模块维护：可以进行模块数据的添加、删除、保存操作</li>
+								<li>5、业务域维护：可以进行业务域的添加、删除、保存操作</li>
+								<li style="padding-left:20px;">接入排序：维护单个业务域对接口的调用顺序，后台使用基础数据平台组排序功能</li>
+								<li>6、厂家数据、模块数据、业务域属于公有数据，不区分院区</li>
+								<li>7、业务域的排序数据属于私有数据，根据院区区分</li>
+								<li style="color:#008FF0;">二、右侧：关联模块列表</li>
+								<li>1、先从左侧选择厂家，选择之后，右侧展示出关联信息</li>
+								<li>2、模块列悬浮展示启用的厂家列表，点击之后，可以弹出模块关联厂家界面，功能与本界面一致</li>
+								<li>3、需引入JS填写规则</li>
+								<li style="padding-left:20px;">默认路径从scripts层级开始，例如:CUSTOM/PassJs/McLoader.js,scripts/dhcdoc/DHCDSS.js</li>
+								<li style="padding-left:20px;">支持全路径，例如:imedical/web/CUSTOM/PassJs/McLoader.js</li>
+								<li style="padding-left:20px;">多个文件之间以 , 分割，支持引入CSS文件</li>
+								<li>4、科室授权：按照科室启用，空则默认全部</li>
+								<li>5、扩展设定：自定义参数值</li>
+								<li style="padding-left:20px;">模块级勾选项：勾选后保存到模块表,此后其余厂家关联此模块的时候,自动插入扩展数据并控制必填</li>
+								<li style="padding-left:20px;">保存时需注意：模块级数据仅允许修改值,非模块级数据可以随意修改</li>
+								<li style="padding-left:20px;">取值方法：##class(DHCDoc.Interface.AccessManage).GetAccessLinkExt(产家代码,模块代码,扩展代码,医院ID)</li>
+								<li>6、关联数据属于私有数据，根据院区区分</li>	
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div> 
+		</div> 
+	</div>
+</div>
+<div id="Module-dialog" class="hisui-dialog" title="模块列表" style="width:675px;height:550px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true,closable:true">
+	<div class="hisui-layout" data-options="fit:true,border:false" style="width:600px;height:500px;">   
+		<div data-options="region:'center',split:true,border:false">
+			<table id="ModuleTab"></table>
+		</div>
+	</div>
+</div>
+<div id="Product-dialog" class="hisui-dialog" title="业务域列表" style="width:675px;height:550px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true,closable:true">
+	<div class="hisui-layout" data-options="fit:true,border:false" style="width:600px;height:500px;">   
+		<div data-options="region:'center',split:true,border:false">
+			<table id="ProductTab"></table>
+		</div>
+	</div>
+</div>
+<div id="CompanyLink-dialog" class="hisui-dialog" title="关联厂家" style="width:900px;height:550px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true,closable:true">
+	<div class="hisui-layout" data-options="fit:true,border:false" style="width:860px;height:500px;">   
+		<div data-options="region:'center',split:true,border:false">
+			<table id="CompanyLinkTab"></table>
+		</div>
+	</div>
+</div>
+<div id="LinkExt-dialog" class="hisui-dialog" title="关联扩展维护" style="width:600px;height:550px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true,closable:true">
+	<div class="hisui-layout" data-options="fit:true,border:false" style="width:550px;height:500px;">   
+		<div data-options="region:'center',split:true,border:false">
+			<table id="LinkExtTab"></table>
+		</div>
+	</div>
+</div>
+<div id="AccessSort-dialog" class="hisui-dialog" title="接入排序" style="width:600px;height:550px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true,closable:true">
+	<div class="hisui-layout" data-options="fit:true,border:false" style="width:550px;height:500px;">   
+		<div data-options="region:'center',split:true,border:false">
+			<table id="AccessSortTab"></table>
+		</div>
+	</div>
+</div>

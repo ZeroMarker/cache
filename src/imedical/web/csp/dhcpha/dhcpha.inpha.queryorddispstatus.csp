@@ -4,7 +4,7 @@
 	js: scripts/pharmacy/inpha/dhcpha.inpha.queryoedispstatus.js
 -->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
     q 1
 </csp:method>
 <HTML XMLNS=TRAK>
@@ -16,55 +16,105 @@
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI/>
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <style>
+    /* 兼容低版本的 */
+    .pha-row {
+	    margin-top: 10px;
+	    margin-bottom: 10px;
+	}
+	.pha-col:first-child {
+	    margin-left: -1px;
+	}
+	.pha-col {
+	    display: inline-block;
+
+	    margin-left: -4px;
+	    padding-left: 10px;
+
+	    vertical-align: middle;
+	}
+	.pha-tip-info {
+	    line-height: 25px;
+
+	    height: 28px;
+	    padding-left: 30px;
+
+	    color: #1278b8;
+	    border: 1px solid #c0e2f7;
+	    border-radius: 4px;
+	    background: url('../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png') #e3f7ff no-repeat;
+	    background-position: 10px center;
+	}
+	.validatebox-text {
+    	border-radius: 2px;
+	}
+    </style>
 </HEAD>
 </head>
 
 <body>
-	<div class="hisui-layout" fit="true">
-        <div data-options="region:'center'" border=false  class="dhcpha-hisui-container"> 
-            <div class="hisui-layout" fit="true">
-                <div data-options="region:'north',title:'住院医嘱发药状态查询 <b>【三种必选条件 ： <医嘱ID+执行日期> ，<登记号+药品+执行日期> ，<执行记录ID> 】</b>',split:true,headerCls:'panel-header-gray',collapsible:false,iconCls:'icon-panel-common-query'" class="dhcpha-north-r1">
-                    <table class="dhcpha-north-tbl">
-                        <tr>
-                            <td>
-                                <label for="txtPatno">登记号</label>
-                                <input id="txtPatno" class="hisui-validatebox" style="width:100px" />
-                            </td>
-                       		<td>
-                                <label for="cmgIncItm">药品</label>
-                                <input id="cmgIncItm" type="text" />
-                            </td>
-                            <td>
-                                <label for="txtOeori">医嘱ID</label>
-                                <input id="txtOeori" class="hisui-validatebox" style="width:100px;"/>
-                            </td>
-                            <td>
-                                <label for="dateStart">执行日期</label>
-                                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" style="width:125px;"/>
-                            </td>
-                       		<td>
-                                <label for="txtOrdExe">执行记录ID</label>
-                                <input id="txtOrdExe" class="hisui-validatebox" style="width:125px;" />
-                            </td>
-                            <td>
-                                <a id="btnFind" class="hisui-linkbutton" data-options="plain:false,iconCls:'icon-w-find'">查询</a>
-                            </td>
-                            <td>
-                                <a id="btnClear" class="hisui-linkbutton" data-options="plain:false,iconCls:'icon-w-clean'">清屏</a>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div data-options="region:'center'" border="false" >
-            		<div class="hisui-layout" fit="true" border="false">
-                		<div data-options="region:'center',title:'医嘱明细<b>【有单元格为红色时不能发药】</b>',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-common'">
-                    		<table id="gridOrdItem"></table>
-                		</div>
-           			</div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center'" border="false" >
+    		<div class="hisui-layout" fit="true" border="false">
+        		<div data-options="region:'center',border:false,title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-common'">
+            		<table id="gridOrdItem"></table>
         		</div>
-            </div>
-        </div>
+   			</div>
+		</div>
     </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridOrdItemBar">
+		<div class="pha-row">
+	        <div class="pha-col">
+	            <label for="txtPatno">#(..Get("登记号"))#</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id="txtPatno" class="hisui-validatebox" style="width:100px" />
+	        </div>
+	        <div class="pha-col">
+	            <label for="cmgIncItm">#(..Get("药品"))#</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id="cmgIncItm" type="text" />
+	        </div>
+	        <div class="pha-col">
+	            <label for="txtOeori">#(..Get("医嘱ID"))#</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id="txtOeori" class="hisui-validatebox" style="width:100px;"/>
+	        </div>
+	        <div class="pha-col">
+	            <label for="dateStart">#(..Get("执行日期"))#</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" style="width:125px;"/>
+	        </div>
+	        <div class="pha-col">
+	            <label for="txtOrdExe">#(..Get("执行记录ID"))#</label>
+	        </div>
+	        <div class="pha-col">
+	            <input id="txtOrdExe" class="hisui-validatebox" style="width:100px;" />
+	        </div>
+	        
+	        <div class="pha-col">
+	        	<a id="btnFind" class="hisui-linkbutton" data-options="plain:false,iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+			</div>
+	        <div class="pha-col">
+	        	<a id="btnClear" class="hisui-linkbutton" data-options="plain:false,iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
+			</div>
+	    </div>
+	    <div class="pha-row">
+	    	<div class="pha-col">
+                <div class="pha-tip-info" style="width:100%;line-height: 28px;top:10px;right: 10px;letter-spacing:1px">
+                    （1）#(..Get("上方条件可选三种组合"))#：<b>[#(..Get("医嘱ID"))#+#(..Get("执行日期"))#]，[#(..Get("登记号"))#+#(..Get("药品"))#+#(..Get("执行日期"))#]，[#(..Get("执行记录ID"))#]</b>；
+                    （2）#(..Get("下方明细表格中有单元格为"))#<b>#(..Get("红色"))#</b>#(..Get("时不能发药"))#。
+                </div>
+            </div>
+	    </div>
+    </div>
+    
+    <!-- js -->
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.plugins.js" ></script>	
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>

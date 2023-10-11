@@ -1,0 +1,173 @@
+<!--
+ * Description: 医生工作量分配
+ * FileName: dhcpe.auditwork.distribute.csp
+ * Anchor: wangguoying
+ * Date: 2020-01-25
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpe/dhcpe.min.css"></LINK>
+	<style>
+		.labelTd{
+			text-align:right;
+		}
+		.btnTd{
+			width:120px;
+			text-align:left;
+		}
+		.autocut {
+			overflow:hidden;
+			white-space:nowrap;
+			text-overflow:ellipsis;
+			-o-text-overflow:ellipsis;
+			-icab-text-overflow: ellipsis;
+			-khtml-text-overflow: ellipsis;
+			-moz-text-overflow: ellipsis;
+			-webkit-text-overflow: ellipsis;
+		}
+		.pe-panel-tool{
+			background: #ee0f0f;
+   			color: #ffffdf;
+    		padding: 2px 4px 2px 4px;
+   	 		border-radius: 4px;
+		}
+		.drag{
+			width: 270px;
+		    height: 30px;
+		    padding: 2px;
+		    margin: 5px 0;
+		    background: #2ad29b;
+			border-radius: 2px;
+		}
+		.no-drag{
+			width: 270px;
+		    height: 30px;
+		    padding: 2px;
+		    margin: 5px 0;		 
+		    background: #EE0F0F;
+			border-radius: 2px;
+		}
+		.dp{
+			opacity:0.5;
+			filter:alpha(opacity=50);
+		}
+		.over{
+			background:#FBEC88;
+		}
+		.drag .base{
+		    font-size: 16px;
+		    font-weight: 500;
+		    padding: 0 0 5px 5px;
+		}
+		.no-drag .base{
+		    font-size: 16px;
+		    font-weight: 480;
+		    padding: 0 0 5px 5px;
+		}
+   </style>
+</head>
+<body class="hisui-layout" fit="true" style="padding:5px 5px 5px 5px;">
+	<div id="LayoutDiv" class="hisui-layout" style="background-color: inherit;" >
+		<!-- west region -->
+		<div id="WestPanel" data-options="region:'west',title:'搜索',headerCls:'panel-header-gray',iconCls:'icon-search',split:true" style="width:383px;border-radius:0 0 4px 4px ;">
+			
+			<table style="" cellspacing="10">
+				<tr>
+					<td class="labelTd">#(..Get("登记号"))#:</td>	
+					<td><input id="S_RegNo" class="hisui-validatebox textbox" style="width:248px;" ></td>				
+				</tr>
+				<tr>
+					<td class="labelTd">#(..Get("VIP等级"))#:</td>	
+					<td><input id="S_VIPLevel" class="hisui-combobox"  style="width:256px;" data-options=""> </td>				
+				</tr>
+				
+				<tr>
+					<td class="labelTd">#(..Get("团体"))#:</td>
+					<td><input class="hisui-combogrid" type="text" Id="S_GID" style="width:256px;" /></div></td>
+				</tr>
+				<tr>
+					<td class="labelTd">#(..Get("分组"))#:</td>
+					<td><input class="hisui-combogrid" type="text" Id="S_TeamID" style="width:256px;" /></div></td>
+				</tr>
+				<tr>
+					<td class="labelTd">#(..Get("到达开始日期"))#:</td>
+					<td><input id="S_StartDate" class="hisui-datebox textbox"  type="text" style="width:256px;" ></td>						
+				</tr>
+				<tr>
+					<td class="labelTd">#(..Get("到达结束日期"))#:</td>
+					<td><input id="S_EndDate" class="hisui-datebox textbox"  type="text" style="width:256px;" ></td>
+				</tr>
+				<tr style="color:red;font-weight:700">
+					<td class="labelTd">#(..Get("分配类型"))#:</td>	
+					<td><input id="S_Type" class="hisui-combobox"  style="width:256px;" data-options=""> </td>				
+				</tr>
+				<tr>
+					<td colspan="2" align="center">
+						<a href="#"  onclick="find_onclick();"  class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>	
+						<a href="#"  onclick="clean_onclick();" style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>								
+					</td>
+				</tr>
+			</table>
+			<div style="border-top:1px dashed #ccc;padding:10px;">
+				<div >
+					<a href="#"  onclick="doc_setting();" style="background:#ff9933;margin-left:20px;border-radius:4px;" class="hisui-linkbutton" data-options="">医生设置</a>	
+					<a href="#"  onclick="select_all_doc();"  style="background:#28BA05; margin-left:20px;border-radius:4px;" class="hisui-linkbutton" data-options="">全选</a>	
+					<a href="#"  onclick="unselect_all_doc();" style="background:#ee0f0f;margin-left:20px;border-radius:4px;" class="hisui-linkbutton" data-options="">撤销选中</a>	
+				</div>
+				<div class="kw-chapter" ><a></a>#(..Get("全天医生"))#</div>
+    			<div class="kw-line"></div>
+				<table style="margin-top:10px;padding:10px;border:1px dashed #ccc;border-radius:4px;">
+					<tr><td>
+						<div id="WDocKeys"></div>
+					</td></tr>
+				</table>
+				<div class="kw-chapter" ><a></a>#(..Get("半天医生"))#</div>
+    			<div class="kw-line"></div>
+				<table style="margin-top:10px;padding:10px;border:1px dashed #ccc;border-radius:4px;">
+					<tr><td>
+						<div id="HDocKeys"></div>
+					</td></tr>
+				</table>
+			</div>
+		</div>
+		<!-- //west region -->
+		
+		<!-- 中心布局 begin -->
+		<div  data-options="region:'center',headerCls:'panel-header-gray',border:false" style="background-color: inherit;" >
+			<!-- 内部五方布局 begin -->
+			<div class="hisui-layout" fit="true">
+				<!-- north region -->
+				<div id='NoDistributePanel' data-options="region:'north',title:'未分配人员',headerCls:'panel-header-gray',iconCls:'icon-cancel-ref',split:true" style="height:260px;border-radius:0 0 4px 4px ;">
+					<table id="NoDistributeList" data-options="border:false,bodyCls:'panel-body-gray'" ></table>	
+				</div>
+				<!-- //north region -->
+				<!-- center region -->
+				<div id='DistributePanel' data-options="region:'center',title:'<label>#(..Get("已分配人员"))#</label><label style=\'color:red \'>#(..Get("(移动后，双击图标可删除)"))#</label>',headerCls:'panel-header-gray',iconCls:'icon-return',split:true,
+					tools:[{
+    						iconCls:'icon-canel-distribute',
+					    	handler:undistribute_all
+					    }]" style="border-radius:0 0 4px 4px ;">
+					<table id="DistributeTab" style="height:100%">
+						<tr id="DistributeTR">
+						</tr>
+					</table>
+				</div>
+				<!-- //center region -->
+			</div>
+			<!-- //内部五方布局 end -->
+		</div>
+		<!-- //中心布局 end -->
+	</div>
+  	<script type="text/javascript" src="../scripts/dhcpe.auditwork.distribute.js"></script>
+  	<script type="text/javascript" src="../scripts/dhcpe/dhcpe.extend.js"></script>
+  	<Script language="javascript" type="text/javascript">
+	$("#LayoutDiv").height($(document).height());
+	</Script>
+</body>
+</html>
+
+

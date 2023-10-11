@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--门诊配液-配液状态执行
+	csp:pha.opivas.v4.exe.csp
+	js: pha/opivas/v4/exe.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    
+    <!-- 2019.07.16 以后可能不会用这个组件 -->
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
+    <script language=javascript>
+        if (typeof HISUIStyleCode == 'string' && HISUIStyleCode == 'lite') {
+            $(function(){
+                $('body').append('<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.lite.css"></link>');
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',border:false">
+                    <div id="panelExe" class="hisui-panel" title="配液状态执行" iconCls="icon-pivas-exe" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'">
+                        <table id="gridExe"></table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridExeBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conStDate">#(..Get("打签开始时间"))#</label>
+                </td>
+                <td> <input class="hisui-datebox" id='conStDate' data-pha='class:"hisui-datebox",query:true' />
+                    <input class="hisui-timespinner" id='conStTime' data-pha='class:"hisui-timespinner",query:true,clear:true' data-options="showSeconds:true,width:100" />
+                </td>
+                <td class="r-label">
+                    <label for="conPivasLoc">#(..Get("配液中心"))#</label>
+                </td>
+                <td>
+                    <input id='conPivasLoc' data-pha='class:"hisui-combobox",query:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conPack">#(..Get("打包状态"))#</label>
+                </td>
+                <td>
+                    <input id='conPack' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conArcim">#(..Get("药品名称"))#</label>
+                </td>
+                <td>
+                    <input id='conArcim' data-pha='class:"hisui-lookup",query:true,clear:true' />
+                </td>
+                <td>
+                    <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conEdDate">#(..Get("打签结束时间"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox" id='conEdDate' data-pha='class:"hisui-datebox",query:true' />
+                    <input class="hisui-timespinner" id='conEdTime' data-pha='class:"hisui-timespinner",query:true,clear:true' data-options="showSeconds:true,width:100" />
+                </td>
+                <td class="r-label">
+                    <label for="conPS">#(..Get("执行状态"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-combobox" id='conPS' style="width:153px" data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conPatNo">#(..Get("登记号"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-validatebox" id='conPatNo' style="width:153px" data-pha='class:"hisui-validatebox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conPOGSNo">#(..Get("流程单号"))#</label>
+                </td>
+                <td>
+                    <input id='conPOGSNo' data-pha='class:"hisui-triggerbox",query:true,clear:true' />
+                </td>
+                <td>
+                    <a id="btnClean" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
+                </td>
+
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div class="pha-line-bar">
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-all-select" id="btnAllSelect">#(..Get("选择全部数据"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-all-unselect" id="btnAllUnSelect">#(..Get("取消选择全部数据"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-exe-order" id="btnExecute">#(..Get("确认执行"))#</a>
+            <!-- <a class="hisui-linkbutton" plain='true' iconCls="icon-print" id="btnPrint30">打印排药单</a> -->
+        </div>
+    </div>
+    <!-- 配液打签,住院门诊统一 -->
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/print.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/makelabel.js"></script>
+    <!-- 门诊配液公用 -->
+
+    <link rel="stylesheet" href="../scripts/pha/opivas/v4/css/ui.css">
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/ux.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/store.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/com.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/exe.js"></script>
+    <server>
+        // 加载lodop
+        //d ##class(web.DHCXMLPConfig).LODOPInit()
+    </server>
+</body>
+
+</html>

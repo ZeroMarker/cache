@@ -1,0 +1,143 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI css="dhcma.hai.common.css"></HISUI>
+		<DHCHAI:HEAD></DHCHAI:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/echarts.min2.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/theme.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/STATV2/Common/FloatWindow.js"></script>	
+	</head>
+	<body>
+		<!--主页面-->
+		<div class="hisui-layout" data-options="fit:true">
+    		<!--PDCA指标库-->
+			<div class="ma-panel" data-options="region:'center',border:false,collapsible:false" style="padding:10px;">
+        		<table id="gridIndexBase" data-options="toolbar:'#custtb'"></table>
+				<div id="custtb" style="padding:3px" > 
+	        		<div style="padding:7px 0px 9px 7px">
+						<input class="hisui-searchbox" id="searchbox" style="width:220px;padding-right:2px" data-options="prompt:'搜索'" />
+					</div>	  
+					<span class="line" style="display: block;border-bottom: 1px dashed rgb(204, 204, 204);margin: 1px 0px;clear: both;/* padding-bottom: 5px; */"></span>
+	        		<a class="hisui-linkbutton" id="btnAdd" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true">
+	            		新增
+					</a>
+		    		<a class="hisui-linkbutton" id="btnEdit" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true">
+						修改
+					</a>
+					<a class="hisui-linkbutton" id="btnDelete" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true">
+						删除
+					</a>
+	   			</div>          
+			</div>
+    		<!--PDCA指标库修改 -->
+   	 		<div id="LayerEdit" style="overflow: hidden; padding-right: 10px; display: none; ">
+        		<table class="search-table">
+        			<tr>
+                		<td class="r-label">
+                    		<label for="txtIndexCode">指标代码</label>
+                		</td>
+                		<td>
+                			<input class="hisui-validatebox textbox" id="txtIndexCode" data-options="required:true" style="width:350px" >
+                		</td>
+            		</tr>
+        			<tr>
+                		<td class="r-label">
+                    		<label for="txtIndexDesc">指标名称</label>
+                		</td>
+                		<td>
+                			<input class="hisui-validatebox textbox" id="txtIndexDesc" data-options="required:true" style="width:350px" >
+                		</td>
+            		</tr>
+            		<!--指标分类(暂时不启用)
+            		<tr>
+                		<td class="r-label">
+                    		<label for="txtIndexType">指标名称</label>
+                		</td>
+                		<td>
+                			<input class="hisui-validatebox textbox" id="txtIndexType" data-options="required:true" style="width:350px" >
+                		</td>
+            		</tr>
+            		-->
+            		<tr>
+                		<td class="r-label">
+                    		<label for="txtKPA">标准值</label>
+                		</td>
+                		<td>
+                			<input class="textbox" id="txtKPA" data-options="required:true" style="width:350px" >
+                    	</td>
+            		</tr>
+            		<tr>
+                		<td class="r-label">
+                    		<label for="txtLinkRep">报表名称</label>
+                		</td>
+                		<td>
+                			<input class="hisui-validatebox textbox" id="txtLinkRep" data-options="required:true" style="width:350px" >
+               			</td>
+            		</tr>
+            		<tr>
+                		<td class="r-label">
+                    		<label for="txtLinkRepPath">报表路径</label>
+                		</td>
+                		<td>
+                			<input class="hisui-validatebox textbox" id="txtLinkRepPath" data-options="required:true" style="width:350px" >
+                    	</td>
+            		</tr>
+           			<tr>
+                		<td class="r-label">
+                    		<label for="txtLinkParm">报表参数</label>
+                		</td>
+                		<td>
+                			<input class="textbox" id="txtLinkParm" data-options="required:true" style="width:350px" >
+                		</td>
+           			</tr>
+           			<tr>
+                		<td class="r-label">
+                    		<label for="txtLinkCsp">关联Csp</label>
+                		</td>
+                		<td>
+                			<input class="hisui-validatebox textbox" id="txtLinkCsp" data-options="required:true" style="width:350px" >
+                		</td>
+           			</tr>
+            		<tr>
+                		<td class="r-label"></td>
+                		<td>
+                    		<input class='hisui-checkbox' type="checkbox" label='是否有效' id="chkActive">
+                		</td>
+            		</tr>
+            		<tr>
+                		<td colspan="2" class="search-btnlist">
+                    		<a id="btnSave" class="hisui-linkbutton">保存</a>
+                    		<a id="btnClose" class="hisui-linkbutton">关闭</a>
+                		</td>
+           			</tr>
+       	 		</table>
+    		</div>
+		</div>
+		<script language="Cache" runat="server">
+			set menuCode="DHCHAIPDCA-IndexBase"
+			set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+			set groupId=$g(%session.Data("LOGON.GROUPID"))
+			Set OperAdmin = $g(%request.Data("ParamAdmin",1))
+			Set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+	   </script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/IndexBase/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/IndexBase/Event.js"></script>
+		
+		<script language="javascript" type="text/javascript">
+			$(window).load(function() {
+				InitIndexBaseWin();
+			});
+		</script>
+	</body>
+</html>

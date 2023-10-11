@@ -1,0 +1,281 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s DataSource = $G(%request.Data("DataSource", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var DataSource="#(DataSource)#";
+	   var hospID="#(hospID)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<!--div class="hisui-panel" title="基本配置" style="" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="shiftTable" style="width:100%"></table>
+	</div-->
+	<div class="hisui-panel" style="height:99%;border:1px solid #ccc" title="" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+
+	<table id="shiftTable" style="width:100%"></table>
+	</div>
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+
+<script type="text/javascript">
+
+
+var entity=""
+var xcTopContors=""
+var xcChange={}
+var json={
+	control:function(){
+		var ActiveFlagData=[
+		{"text":"启用","value":"1"},
+		{"text":"禁用","value":"0"}
+		]
+		var IntoNextData=[
+		{"text":"是","value":"1"},
+		{"text":"否","value":"0"}
+		]
+		var DataSourceData=[
+		{"text":"手动输入","value":"1"},
+		{"text":"统计带入","value":"2"}
+		]
+		var PatentMsgData=[
+		{"text":"床号","value":"1"},
+		{"text":"患者姓名","value":"2"},
+		{"text":"统计数量","value":"3"}
+		]
+		
+		//获取统计需求设置的交班项目
+		var ShiftProjectData=[]
+		var param={
+			ShiftBookID:ShiftBookID
+		}
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftAreaList",param,function(rtn){
+				var rtnArr={}
+				var FilterCodes=["Existing","Original"]
+				for(var i=0;i<rtn.length;i++){
+					var rtnArr={
+						'text':rtn[i].AreaName,
+						'value':rtn[i].ID
+						}
+						
+					if(FilterCodes.indexOf(rtn[i].AreaContent)==-1){
+						
+						ShiftProjectData.push(rtnArr)
+					}	
+						
+					
+				}
+				
+		},'json',false);
+		var ProjectTips=[]
+		runClassMethodNew("Nur.NIS.Service.Base.BedConfig","GetNurseBasicDataList",{
+			page:1,    //可选项，页码，默认1
+			rows:1000,    //可选项，获取多少条数据，默认50
+			IsQuery:true,
+			searchName:"",
+			searchType:0
+			
+			},function(rs){
+			for(var i=0;i<rs.rows.length;i++){
+				var json={}
+				json.value=rs.rows[i].NBDExpression
+				json.text=rs.rows[i].NBDNote
+				ProjectTips.push(json)
+			}
+		},'json',false)
+		var controlArrs=[
+			
+			{'id':'ShiftProjectID','type':'combox','objData':ShiftProjectData,'title':'交班项目','required':'true'},
+			
+			{'id':'PatentMsg','type':'combox','objData':ProjectTips,'multiple':'true','title':'显示形式','required':'true'},
+			{'id':'AreaName','type':'text','title':'显示名称','required':'true'},
+			//{'id':'IntoNext','type':'combox','objData':IntoNextData,'title':'带入下个班次','required':'true','defaultValue':'0'},
+			{'id':'EditorFlag','type':'combox','objData':ActiveFlagData,'title':'编辑状态','required':'true','defaultValue':'1'},
+			//{'id':'AreaSort','type':'text','title':'排序号','required':'true'},
+			{'id':'AreaRow','type':'text','title':'行号','required':'true'},
+			{'id':'AreaCol','type':'text','title':'列号','required':'true'},
+			
+			{'id':'RowSpan',"hidden":"true",'type':'text','title':'合并行数'},
+			{'id':'Colspan','type':'text','title':'合并列数'},
+			
+			//{'id':'ValidPatient','type':'combox','multiple':'true','queryName':'GetApplyPatient','title':'适用患者'},
+			]
+		if(DataSource=="2" || DataSource==2){
+			controlArrs=[
+				{'id':'AreaContent','type':'text','title':'项目Code','required':'true'},
+				{'id':'AreaName','type':'text','title':'项目名称','required':'true'},
+				//{'id':'AreaSort','type':'text','title':'排序号','required':'true'},
+				{'id':'AreaRow','type':'text','title':'行号','required':'true'},
+				{'id':'AreaCol','type':'text','title':'列号','required':'true'},
+				
+				{'id':'RowSpan',"hidden":"true",'type':'text','title':'合并行数'},
+				{'id':'Colspan','type':'text','title':'合并列数'},
+				//{'id':'ValidPatient','type':'combox','multiple':'true','queryName':'GetApplyPatient','title':'适用患者'},
+			]
+		}
+		
+		return controlArrs
+	},
+	create:function(tableID){
+		var controlArrs=json.control()
+		for(var i=0;i<controlArrs.length;i++){
+			var key = controlArrs[i].id
+			createInputHtml(tableID,controlArrs,key,0)
+		}
+		var inputw=0
+		for(var i=0;i<controlArrs.length;i++){
+			var obj = controlArrs[i]
+			var thisw=$("#"+obj.id).parents("td").outerWidth()-17
+			if(thisw>inputw) inputw=thisw
+		}
+		
+		for(var i=0;i<controlArrs.length;i++){
+			var obj = controlArrs[i]
+			$("#"+obj.id).width(inputw)
+			if(obj.type=="combox"){
+				getComboxLocalData(obj)
+			}
+		}
+	},
+	setValue:function(id,className,methodName){
+		
+		runClassMethod(className,methodName,{id:id},function(rtn){
+			entity=rtn
+		},'json',false);
+
+	},
+	save:function(id,className,methodName){
+		var parms = ""
+		var controlArrs=json.control()
+		var topParms = resultParms(controlArrs)
+		var downParms = ""
+		var rsTxt=""
+		if(topParms!=""){
+			var rtnParms=setAllParms([parms,topParms,downParms])
+			rtnParms.id=id
+			rtnParms.ShiftBookID=ShiftBookID
+			rtnParms.DataSource=DataSource
+			rtnParms.ActiveFlag=1
+			runClassMethod(className,methodName,{data:JSON.stringify(rtnParms)},function(rtn){
+				if(rtn == 0) {
+					
+				} else if(rtn == 1){
+					//$.messager.alert('提示','保存失败！'+ rtn , "info");
+					rsTxt = "保存失败！"
+				}else if(rtn == 2){
+					rsTxt = "报错失败，存在相同的组名"
+				}
+				
+			
+			},'json',false);
+		
+			
+		}else{
+			rsTxt = "保存失败,存在必填项为空！"
+		}
+		return rsTxt
+	}
+	
+}
+
+
+$(function(){
+	$('body').addClass('active')
+	if(id!=""){
+		json.setValue(id,"Nur.SHIFT.Service.ShiftConfigController","GetShiftAreaCustomById")
+	}
+	json.create("shiftTable")
+	
+})
+
+function saveFunLib(){
+	return json.save(id,"Nur.SHIFT.Service.ShiftConfigController","InsertShiftAreaCustom")
+	
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

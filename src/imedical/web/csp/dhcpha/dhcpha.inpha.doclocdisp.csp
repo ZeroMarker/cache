@@ -1,9 +1,12 @@
 <!--
-	医生科室发药
-	csp: csp/dhcpha/dhcpha.inpha.doclocdisp.csp
-	js:  scripts/pharmacy/inpha/dhcpha.inpha.doclocdisp.js
+    医生科室发药
+    csp: csp/dhcpha/dhcpha.inpha.doclocdisp.csp
+    js:  scripts/pharmacy/inpha/dhcpha.inpha.doclocdisp.js
 -->
 <!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
 <html lang="zh-CN">
 
 <head>
@@ -19,13 +22,9 @@
     <!--ADDINS require="LODOP"/-->
     <!--css-->
     <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/themes/ui.multiselect.css">
-    <link rel="stylesheet" type="text/css"
-        href="../scripts_lib/jquery.jqGrid-4.6.0/css/themes/redmond/jquery-ui-1.8.2.custom.css">
+    <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/themes/redmond/jquery-ui-1.8.2.custom.css">
     <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/ui.jqgrid.css">
-    <link rel="stylesheet" type="text/css"
-        href="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.css" />
-    <link rel="stylesheet" type="text/css"
-        href="../scripts/pharmacy/plugins/bootstrap-combobox/css/bootstrap-combobox.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.css" />
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/select2-4.0.3/select2.min.css">
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/skins/icheck/blue.css">
     <!--js-->
@@ -34,11 +33,8 @@
     <script type="text/javascript" src="../scripts/pharmacy/plugins/icheck/icheck.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/moment.min.js">
     </script>
-    <script type="text/javascript"
-        src="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/bootstrap-bootbox/bootbox.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/plugins/bootstrap-combobox/js/bootstrap-combobox.js">
-    </script>
     <script type="text/javascript" src="../scripts_lib/bootstrap-3.3.5/js/popover.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/select2-4.0.3/select2.min.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/select2-4.0.3/i18n/zh-CN.js"></script>
@@ -48,6 +44,7 @@
     <!--jqgrid样式与医生站统一-->
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.jqGrid.css">
     </script>
+    <DHCPHARMACYLANG/>
     <!--dhcpha common js-->
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.common.js"></script>
@@ -59,7 +56,7 @@
     </server>
     <SCRIPT Language="Javascript">
         DHCPHA_CONSTANT.DEFAULT.INPHAWAY = "#(InPhaWay)#";
-        $.fn.modal.Constructor.prototype.enforceFocus = function () {}; //modal中select2才能编辑(z-index)
+        $.fn.modal.Constructor.prototype.enforceFocus = function () { }; //modal中select2才能编辑(z-index)
         $("object").hide();
     </script>
     <style type="text/css">
@@ -80,20 +77,28 @@
         .RowBlue {
             background-color: #00BFFF;
         }
+        .ui-jqgrid tr.jqgrow td {
+            padding:0px 8px;    
+        }
+        .dhcpha-col-split{
+            border-left:0px;    
+        }
+        .ui-th-ltr, .ui-jqgrid .ui-jqgrid-htable th.ui-th-ltr {
+            border-left: 1px solid #ccc;
+        }
     </style>
 </head>
 
-<body>
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask">
+        <img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
+    </div>
     <div id="dhcpha-query-condition">
         <div class="container-fluid dhcpha-condition-container">
             <div class="row ">
                 <div class="col-lg-12 col-md-12">
-                    <button class="btn btn-default btn_button btn_important" id="btn-disp"><img
-                            src="../scripts/pharmacy/images/dispprint-default.png"
-                            class="dhcpha-btn-image"><br><strong>发药并打印</strong></button>
-                    <button class="btn btn-default btn_button btn_refuse" id="btn-refuse"><img
-                            src="../scripts/pharmacy/images/refdisp-default.png"
-                            class="dhcpha-btn-image"><br><strong>拒绝发药</strong></button>
+                    <button class="btn btn-default btn_button btn_important" id="btn-disp"><img src="../scripts/pharmacy/images/dispprint-default.png" class="dhcpha-btn-image"><br><strong>#(..Get("发药并打印"))#</strong></button>
+                    <button class="btn btn-default btn_button btn_refuse" id="btn-refuse"><img src="../scripts/pharmacy/images/refdisp-default.png" class="dhcpha-btn-image"><br><strong>#(..Get("拒绝发药"))#</strong></button>
                 </div>
             </div>
         </div>
@@ -102,23 +107,20 @@
             <div class="row row_style">
                 <form class="form-inline">
                     <div class="input-group">
-                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>药房</strong></span>
+                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("药房"))#</strong></span>
                         <select class="form-control in_select" id="sel-phaloc">
                         </select>
                     </div>
                     <div class="input-group">
-                        <span for="date-start"
-                            class="input-group-addon dhcpha-input-group-addon-in"><strong>用药日期</strong></span>
-                        <input id="date-start" class="form-control input_style" type="text"
-                            style="border-right:none;width:86px" placeholder="请选择日期">
+                        <span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("用药日期"))#</strong></span>
+                        <input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:86px" placeholder="请选择日期">
                         <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
                             <i class="fa fa-calendar"></i>
                         </span>
                     </div>
-                    <span><strong>至</strong></span>
+                    <span><strong>#(..Get("至"))#</strong></span>
                     <div class="input-group">
-                        <input id="date-end" class="form-control input_style" type="text"
-                            style="border-right:none;width:86px" placeholder="请选择日期">
+                        <input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:86px" placeholder="请选择日期">
                         <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
                             <i class="fa fa-calendar"></i>
                         </span>
@@ -127,22 +129,21 @@
                     </div>
                     <div class="input-group">
                         <input type="checkbox" id="chk-timer">
-                        <lable for="chk-timer"><strong>定时刷新</strong></lable>
+                        <lable for="chk-timer"><strong>#(..Get("定时刷新"))#</strong></lable>
                     </div>
                     <div class="form-group dhcpha-col-split">
                     </div>
                     <div class="input-group">
                         <input type="checkbox" id="chk-prtdetail">
-                        <lable for="chk-prtdetail"><strong>打印明细</strong></lable>
+                        <lable for="chk-prtdetail"><strong>#(..Get("打印明细"))#</strong></lable>
                     </div>
                     <div class="input-group">
                         <input type="checkbox" id="chk-prttotal">
-                        <lable for="chk-prttotal"><strong>打印汇总</strong></lable>
+                        <lable for="chk-prttotal"><strong>#(..Get("打印汇总"))#</strong></lable>
                     </div>
-                    <div class="btn-group" style="position: absolute;right: 2em;">
+                    <div class="btn-group" style="padding-left:10px;">
                         <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
-                        <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
-                            id="btn-find">查询</button>
+                        <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-find">#(..Get("查询"))#</button>
                     </div>
                 </form>
             </div>
@@ -155,7 +156,7 @@
                 <div id="monitor-condition">
                     <div id="div-ward-condition">
                         <div class="panel div_content wardtitle">
-                            <div class="panel-heading"><span class="pal_style"><strong>医生科室列表</strong></span></div>
+                            <div class="panel-heading"><span class="pal_style"><strong>#(..Get("医生科室列表"))#</strong></span></div>
                             <table id="grid-wardlist" class="table table-bordered table_style">
                             </table>
                             <div id="jqGridPager1"></div>
@@ -167,10 +168,10 @@
                 <div class="panel div_content">
                     <div class="panel-heading"><span class="pal_style">
                             <strong>
-                                <a data-toggle="collapse" href="#div-conditions" id="a-condition">筛选条件</a>
+                                #(..Get("筛选条件"))#
                             </strong>
                         </span></div>
-                    <div id="div-conditions" class="panel-collapse collapse">
+                    <div id="div-conditions">
                         <form class="form-inline" style="padding-top:5px;padding-bottom:5px">
                             <div class="input-group checkboxpadding">
                                 <select class="form-control in_select" id="sel-locinci">
@@ -178,21 +179,17 @@
                                 </select>
                             </div>
                             <div class="input-group">
-                                <input id="txt-regno" class="form-control input_style" type="text" style="width:13em;"
-                                    placeholder="登记号...">
+                                <input id="txt-regno" class="form-control input_style" type="text" style="width:13em;" placeholder="#(..Get("登记号"))#...">
                             </div>
-                            <div class="btn-group" style="position: absolute;right: 2em;">
+                            <div class="btn-group" style="padding-left:10px;">
                                 <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
-                                <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal"
-                                    type="button" id="btn-finddetail">查询</button>
+                                <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-finddetail">#(..Get("查询"))#</button>
                             </div>
                         </form>
                     </div>
                 </div>
                 <div class="panel div_content" id="div-tab">
-                    <div class="panel-heading"><span class="pal_style" id="sp-title"><strong>发药汇总</strong></span><i
-                            class="fa  fa-exchange dhcpha-btn-fa" id="a-change"
-                            style="padding-left:20px;cursor: pointer;"><strong style="font-size:14px"> 切换</strong></i>
+                    <div class="panel-heading"><span class="pal_style" id="sp-title"><strong>#(..Get("发药汇总"))#</strong></span><i class="fa  fa-exchange dhcpha-btn-fa" id="a-change" style="padding-left:20px;cursor: pointer;"><strong style="font-size:14px"> #(..Get("切换"))#</strong></i>
                     </div>
                     <div id="div-total">
                         <table id="grid-disptotal" class="table table-bordered table_style">

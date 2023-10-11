@@ -1,0 +1,394 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<HTML>
+	<HEAD>
+		<title>
+			<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+		</title>
+			<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+		<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+		<script type="text/javascript" src="../scripts/nurse/hisui/NurMp.Quality.Comm.js"></script>
+		<script language="cache" runat="server">
+			s appointUserID = %session.Get("LOGON.USERID")
+			s appointUserLoc = %session.Get("LOGON.CTLOCID")
+			s ssgroupID = %session.Get("LOGON.GROUPID")	
+	   </script>
+		<script type="text/javascript">
+			var appointUserID = '#(appointUserID)#';
+			var appointUserLoc = '#(appointUserLoc)#';
+			var ssgroupID = '#(ssgroupID)#';
+	   </script>
+	   <STYLE type='text/css'>
+			.datagrid-wrap.panel-body.panel-body-noheader{
+				border-top-right-radius:0;
+				border-top-left-radius:0;
+			}
+	</STYLE>
+	</HEAD>
+<body class="tenpx_body">
+	<div class="hisui-layout" data-options="fit:true,border:true">
+		<div data-options="region:'center',title:'出院病历授权',iconCls:'icon-edit',headerCls:'panel-header-gray'">
+			<div class="hisui-layout" data-options="fit:true,border:true">
+				<div class="bottom_border_single_row_layout_north" data-options="region:'north',bodyCls:'panel-body-gray'">
+					<table class="search_table">
+						<tr>
+							<td>#(..Get("开始日期"))#</td>
+							<td>
+								<input id="SttDate" class="hisui-dateboxq l_datebox"></input>
+							</td>
+							<td>#(..Get("结束日期"))#</td>
+							<td >
+								<input id="EndDate" class="hisui-dateboxq l_datebox"></input>
+							</td>
+							<td >#(..Get("生效类型"))#</td>
+							<td>
+								<select id="isCurrentValidSelect" class="hisui-combobox m_combobox" name="isCurrentValidSelect"></select>
+							</td>
+							<td>
+								<a href="#" id="withdrawBtn" class="hisui-linkbutton" iconCls="icon-w-close">#(..Get("撤销/拒绝"))#</a>
+							</td>
+							<td>
+								<a href="#" id="empowerBtn" class="hisui-linkbutton" iconCls="icon-w-ok">授权</a>
+							</td>
+							<td>
+								<a href="#" id="searchBtn" class="hisui-linkbutton" iconCls="icon-w-find">查询</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="historyTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-doctor',fit:true,border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="empowerDialog" class="hisui-dialog" title="授权" style="width:300px;height:157px;padding:10px;" closed="true" data-options="iconCls:'icon-w-msg',resizable:true,modal:true">
+		<table class="fixed_search_table">
+			<tr>
+				<td>
+					<label>#(..Get("授权时间"))#</label>
+				</td>
+                <td >
+                	 <input id="applySpan"  class="hisui-numberbox textbox" style="width:156px;"></input>
+				</td>
+                <td >
+					<label>#(..Get("小时"))#<label>
+                </td>
+                
+			</tr>
+			<tr><td></td></tr>
+			<tr>
+				<td colspan=3 class="content_center_td">
+	                <a href="#" id="saveBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'">保存</a>
+	            </td>
+			</tr>
+		</table>
+	</div>
+	<div id="CancelDialog" class="hisui-dialog" title="撤销/拒绝" style="width:400px;height:230px;" closed="true" data-options="iconCls:'icon-w-msg',resizable:true,modal:true">
+		<table class="search_table" style="width:100%;border-spacing:18px;">
+			<tr>
+				<td>
+					<textarea id="cncelReason"  class="textarea hisui_textarea"  style="width:100%;height:103px;background:#ffffff;"></textarea>
+				</td>
+			</tr>
+			<tr>
+				<td class="content_center_td">
+					<a href="#" id="cancel" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'">确定</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+
+<script language="javascript">
+	$(init);
+	function init(){
+		initConfig();
+		initGrid();
+	}
+	function initConfig(){
+		$('#SttDate').dateboxq('setValue', (new Date().before(7)).Format("yyyy-MM-dd"))
+        $('#EndDate').dateboxq('setValue', (new Date()).Format("yyyy-MM-dd"))
+        $('#isCurrentValidSelect').combobox({
+            valueField: 'id',
+            textField: 'text',
+            data: [{
+	                id: 'all',
+	                text: $g('全部')
+				},{
+	                id: 'active',
+	                text: $g('生效中')
+	            }, {
+	                id: 'past',
+	                text: $g('过期')
+	            },{
+	                id: 'apply',
+	                text: $g('申请')
+	            }],
+                onSelect: function(record) {
+	                Search();
+                }
+		});
+		$("#isCurrentValidSelect").combobox("setValue","apply")
+		$('#withdrawBtn').click(CancelEmpower);
+		$('#empowerBtn').click(Empower);
+		$('#searchBtn').click(Search);
+		$('#saveBtn').click(save);
+		$('#cancel').click(cancel);
+	}
+	var appointIDs = [];
+	function Empower(){
+		appointIDs = []
+        var gridRows = $('#historyTable').datagrid("getChecked");
+        var error=""
+        for (var i = 0; i < gridRows.length; i++) {
+            var gridRow = gridRows[i];
+			if (gridRow["status"] != $g("申请"))
+			{
+				var number = i+1
+				if(error==""){
+					error=number;
+				}else{
+					error=error+","+number;
+				}
+				continue;
+			}
+			else if (gridRow["status"] == $g("申请"))
+			{
+                var appointID = gridRow["authorityID"];
+                appointIDs.push(appointID)
+			}
+        }
+		if (appointIDs.length == 0&&error!="") {
+			$.messager.alert($g('提示'),$g("选择的数据已授权或过期，不能授权！"));
+			return;
+		}else if(appointIDs.length == 0){
+			$.messager.alert($g('提示'),$g("请至少选择一条记录！"));
+		}else{
+			if(error!=""){
+				$.messager.alert($g('提示'),$g('选择的第')+error+$g("条已授权或过期，不能授权！"));	
+			}
+			$('#applySpan').numberbox("setValue",4)
+	    	$('#empowerDialog').dialog('open');
+		}
+		
+	}
+	function save(){
+        runClassMethod("NurMp.Quality.Service.AuthorityV2", "empowerAuthority",
+            { 
+                parameter1 : JSON.stringify(appointIDs) ,
+                parameter2 :session['LOGON.USERID'],
+                parameter3 :session['LOGON.CTLOCID'],
+                parameter4 :$('#applySpan').numberbox("getValue")
+            },
+            function(data){
+                if (data == "0")
+                {
+                    $.messager.alert($g('提示'),$g('授权成功！'));
+                    $('#empowerDialog').dialog('close');
+                    $('#historyTable').datagrid('reload');
+                }else{
+                    $.messager.alert($g('错误'), $g("授权失败:") + data, 'error');
+                }
+            }
+        )
+	}
+	function CancelEmpower(){
+		appointIDs = [];
+        var gridRows = $('#historyTable').datagrid("getChecked");
+        var error=""
+        for (var i = 0; i < gridRows.length; i++) {
+            var gridRow = gridRows[i];
+			if (gridRow["status"] == $g("过期"))
+			{
+				var number = i+1
+				if(error==""){
+					error=number;
+				}else{
+					error=error+","+number;
+				}
+				continue;
+			}
+			else if (gridRow["status"] == $g("生效中")||gridRow["status"] == $g("申请"))
+			{
+                var appointID = gridRow["authorityID"];
+                appointIDs.push(appointID)
+			}
+        }
+		if (appointIDs.length == 0&&error!="") {
+			$.messager.alert($g('提示'),$g("选择的数据不需要撤销！"));
+			return;
+		}else if(appointIDs.length == 0){
+			$.messager.alert($g('提示'),$g("请至少选择一条记录！"));
+		}else{
+			if(error!=""){
+				$.messager.alert($g('提示'),$g('选择的第')+error+$g("条已失效，不需要撤销！"));	
+			}
+			$('#cncelReason').val("")
+	    	$('#CancelDialog').dialog('open');
+			
+			
+		}
+	}
+	function cancel(){
+        runClassMethod("NurMp.Quality.Service.AuthorityV2", "cancelAuthority",
+            { 
+                parameter1 : JSON.stringify(appointIDs) ,
+                parameter2 :session['LOGON.USERID'],
+                parameter3 :$('#cncelReason').val()
+            },
+            function(data){
+                if (data == "0")
+                {
+                    $.messager.alert($g('提示'),$g('撤销成功！'));
+                    $('#historyTable').datagrid('reload');
+                    $('#CancelDialog').dialog('close');
+                }else{
+                    $.messager.alert($g('错误'), $g("撤销失败:") + data, 'error');
+                }
+            }
+        )
+	}
+	function Search(){
+		var startDate = $('#SttDate').dateboxq('getValue');
+    	var endDate = $('#EndDate').dateboxq('getValue');
+    	var isValid =$("#isCurrentValidSelect").combobox("getValue")
+        var queryParams = $('#historyTable').datagrid('options').queryParams;
+        queryParams.SttDate = startDate;
+        queryParams.EndDate = endDate;
+        queryParams.IsValid = isValid;
+        $('#historyTable').datagrid('options').queryParams = queryParams;
+        $('#historyTable').datagrid('reload');
+	}
+	function initGrid(){
+		var startDate = $('#SttDate').dateboxq('getValue');
+    	var endDate = $('#EndDate').dateboxq('getValue');
+		$('#historyTable').datagrid({
+            url: $URL,
+            queryParams:{
+                ClassName: 'NurMp.Quality.Service.AuthorityV2',
+                QueryName: 'getAuthorityList',
+                SttDate: startDate,
+                EndDate: endDate,
+                IsValid:"apply"
+            },
+            method: 'post',
+            loadMsg: $g('数据装载中......'),
+            showHeader: true,
+            multiple: true,
+            fitColumns: true,
+            columns: [
+				[
+                    { field: 'ck', checkbox: true },
+                    { field: 'status', title: '状态', width: 70 },
+                    { field: 'requstDateTime', title: '申请时间', width: 140 },
+                    { field: 'requestUserName', title: '申请人', width: 80 },
+                    { field: 'requestUserCTLocName', title: '申请科室', width: 120 },
+                    { field: 'appointDateTime', title: '授权时间', width: 140 },
+                    { field: 'appointEndDateTime', title: '授权结束时间', width: 140 },
+                    { field: 'appointUserName', title: '授权人', width: 70 },
+                    { field: 'appointUserCTLocName', title: '授权科室', width: 120 },
+		            { field: 'ApplyReason', title: '申请原因', width: 100 },
+		            { field: 'patName', title: '患者姓名', width: 70 },
+		            { field: 'regNo', title: '登记号', width: 90 },
+		            { field: 'CancelDateTime', title: '撤销时间', width: 140 },
+                    { field: 'CancelUserName', title: '撤销人', width: 70 },
+                    { field: 'CancelReason', title: '撤销原因', width: 70 },
+					{ field: 'detailData', title: '详情', width: 80, hidden:true },
+					{ field: 'appointUserID', title: '授权人ID', width: 80, hidden: true },
+					{ field: 'authorityID', title: 'authorityID', width: 80, hidden: true },
+					{ field: 'episodeID', title: '就诊指针', width: 80, hidden: true },
+					{ field: 'requestUserCTLocID', title: '给予的医生所在科室ID', width: 80, hidden: true },
+                    { field: 'requestUserID', title: '申请人Id', width: 80, hidden: true }
+                ]
+			],
+			view:detailview,
+			/*
+			detailFormatter:function(index,row){
+				return '<table id="DatagridDetail' + index + '"></table>'
+			},
+			onExpandRow: function(index,row){
+				var o=$('#DatagridDetail'+index);
+				$('#DatagridDetail' + index).datagrid({
+					autoHeight:250,
+					width:940,
+					//title:"操作明细",
+					striped:true,
+					singleSelect:true,
+					columns:[
+						[
+							{ field: 'emrCode', title: '授权病历', width: 80, hidden: true },
+							{ field: 'emrCodeDesc', title: '授权病历', width: 240 },
+							{ field: 'actionDescStr', title: '授权操作', width: 250 },
+						]
+					],
+		    		onLoadSuccess:function(){    
+		                $('#_list_tj').datagrid('fixDetailRowHeight',index);    
+	                    setTimeout(function () {
+	                    	  var tr=o.closest('tr');
+				                id = tr.prev().attr('id'); //此子表格父行所在行的id
+		                        id = id.replace(/-2-(\d+)$/, '-1-$1'); 
+		                        $('#' + id).next().css('height', tr.height());//设置没展开的前部分的高度，由于启用了计时器，会闪一下
+	                     }, 0);
+	                  } 
+				})
+				InitDatagridDetail(index,row)
+			},
+			*/
+			detailFormatter: detailFormatter,
+            pagination: true,
+            pageSize: 20,
+            pageList: [10, 20, 50],
+            pagePosition: 'bottom',
+            rowStyler: function(index, row) {
+                if (row["IsValid"] == $g("已授权")) {
+                    return 'background-color:#c7dafe;';
+                }
+            }
+        });
+	}
+	function InitDatagridDetail(index,row)
+    {
+        var DetailJson,DetailData={rows:[],total:0};
+        
+        if (!!row["detailData"]){
+            DetailJson=row["detailData"]
+            DetailJson=$.parseJSON(DetailJson)
+        }
+        
+        for (var p in DetailJson){
+            //DetailData.rows.push({"key":p,"value":DetailJson[p]});
+            DetailData.rows.push(DetailJson[p]);
+            DetailData.total++;
+        }
+        $('#DatagridDetail' + index).datagrid("loadData",DetailData);
+    }
+
+	function detailFormatter(rowIndex,rowData){
+		var table = '<table class="checkbox_detail_table"><thead style="background-color:#F4F6F5;"><tr><td style="width:200px;">授权病历</td><td>授权操作</td></tr></thead>';
+		if (!!rowData.detailData) {
+			var detailJson = $.parseJSON(rowData.detailData);
+			if (detailJson.length > 0) {
+				table += '<tbody>'
+				$.each(detailJson, function(i,d) {
+					var tr = '<tr><td>' + d.emrCodeDesc + '</td><td>' + d.actionDescStr + '</td></tr>';
+					table += tr;
+				})
+				table += '</tbody>'
+			}
+		}
+		table += '</table>';
+		return table;
+	}
+	
+</script>		
+</HTML>
+	

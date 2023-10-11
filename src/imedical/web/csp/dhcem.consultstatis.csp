@@ -1,4 +1,8 @@
-
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
 <!--dhcem.consultstatis.csp  会诊申请统计 //-->
 <html lang="en">
 <head>
@@ -16,64 +20,71 @@
     		background: url(../scripts/dhcnewpro/images/adv_search.png);
 		}
 		.panel-body, .panel-header {
-		    border-color: #ccc;
+		    /*border-color: #ccc;*/
 		}
 	</style>
 	<script Language="Javascript">
 		var LocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; 
    </script>
 </head>
-<body style="background:#fff;">
-	<div style="position:absolute;left:10px;right:0px;top:10px;bottom:10px;border-radius:4px 4px 4px 4px;">
-		<div class="hisui-layout" data-options="fit:true,border:false">
-			<div data-options="region:'north',title:'会诊统计',headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="height:125px;padding:10px;overflow:hidden">
-				<form id="" >
-					<table cellspacing="0" cellpadding="0" >
-						<tr>
-							<td style="padding:0px 3px" class="textLabel">#(..Get("开始时间"))#</td>	
-							<td>
-								<input type="text" id="stDate"  class="hisui-datebox textbox" style="width:120px" name="stDate" ></input> 
-							<td>
-							
-							<td style="padding-left:20px;padding-right:3px">
-								<span>#(..Get("统计类型"))#</span>
-							</td>
-							<td>
-								<input id="statisType" class="hisui-combobox"/>
-							</td>
-							<td style="padding-left:20px;padding-right:3px">
-								<span>#(..Get("会诊类型"))#</span>
-							</td>
-							<td>
-								<input id="consultType" class="hisui-combobox"/>
-							</td>
-							
-							<td style="padding-left:20px">
-								<input id="showDetail" class='hisui-checkbox' checked type="checkbox" label="显示明细"></input>
-							</td>
-							
-							<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search-white'" onclick="commonQuery()">查询</a></td>
-							<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" onclick="commonExport()">导出</a></td>
-							<td style="color:red;display:none">*统计内容不包括抗菌药物申请</td>
-						<tr>
-						<tr>
-							<td style="padding:0px 3px" class="textLabel">#(..Get("结束时间"))#</td>	
-							<td>
-								<input type="text" id="endDate" class="hisui-datebox textbox" style="width:120px" name="endDate" ></input>
-							<td>
-							<td style="padding-left:20px;padding-right:3px">
-								<span>#(..Get("会诊性质"))#</span>
-							</td>
-							<td>
-								<input id="consNature" class="hisui-combobox"/>
-							</td>
-						</tr>
-					</table>
-				</form>
-			</div>
-			<div data-options="region:'center',title:''" style="border:0;">
-				<table id="consultStatisTable" style="border:0;"></table>
-			</div>
+<body style="background:#fff;padding:10px">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div id="toolbar" style="height:74px;padding:8px;overflow:hidden">
+			<form id="" >
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+						<td style="padding:0px 3px" class="textLabel">#(..Get("开始时间"))#</td>	
+						<td>
+							<input type="text" id="stDate"  class="hisui-datebox textbox" style="width:120px" name="stDate" ></input> 
+						<td>
+						
+						<td style="padding-left:20px;padding-right:3px">
+							<span>#(..Get("统计类型"))#</span>
+						</td>
+						<td>
+							<input id="statisType" class="hisui-combobox"/>
+						</td>
+						<td style="padding-left:20px;padding-right:10px">
+							<span>#(..Get("会诊类型"))#</span>
+						</td>
+						<td>
+							<input id="consultType" class="hisui-combobox"/>
+						</td>
+						
+						<td style="padding-left:20px">
+							<!--input id="showDetail" class='hisui-checkbox' checked type="checkbox" label="显示明细"></input-->
+							<input id="showDetail" class='hisui-radio' checked type="radio" label="显示明细"></input>
+						</td>
+						
+						<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search-white'" onclick="commonQuery()">查询</a></td>
+						<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" onclick="commonExport()">导出</a></td>
+						<td style="color:red;display:none">*统计内容不包括抗菌药物申请</td>
+					</tr>
+					<tr style="height:6px"></tr>
+					<tr>
+						<td style="padding:0px 3px;padding-right:10px" class="textLabel">#(..Get("结束时间"))#</td>	
+						<td>
+							<input type="text" id="endDate" class="hisui-datebox textbox" style="width:120px" name="endDate" ></input>
+						<td>
+						<td style="padding-left:20px;padding-right:10px">
+							<span>#(..Get("会诊性质"))#</span>
+						</td>
+						<td>
+							<input id="consNature" class="hisui-combobox"/>
+						</td>
+						<td style="padding-left:46px;padding-right:10px;text-algin:right"><!--hxy 2021-05-08-->
+							<span>#(..Get("科室"))#</span>
+						</td>
+						<td>
+							<input id="consLoc" class="hisui-combobox" disabled/>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		<div data-options="region:'center',title:''" style="border:0;">
+			<table id="consultStatisTable" style="border:0;"></table>
 		</div>
 	</div>
 	<div id="consDetailWin" class="hisui-window" title=#(..Get("会诊明细"))# style="height:600px;width:1000px;padding:10px;" data-options="iconCls:'icon-w-card',closed:true,modal:true,collapsible:false,minimizable:false,maximizable:false">

@@ -28,15 +28,12 @@
 .editcls{
 	color:#40A2DE;
 }
-.panel-header{
-	border-bottom:0;
-}
+
 a:hover{
 	cursor: pointer;
 }
 </style>
 <Server>
-	s EntryFrom=%request.Get("EntryFrom")
 	s EpisodeID=%request.Get("EpisodeID")
 	s PatientID=%request.Get("PatientID")
 	/*;CA:数字签名加载JS  ---START---
@@ -45,24 +42,23 @@ a:hover{
 	.s CAInit=1
 	.d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
 	;得到CA认证的XML信息串
-	s GetOEORIItemXMLMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
+	s GetOEORIItemXMLMethod=##Class(websys.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
 	;插入CA认证后的信息串
-	s InsertCASignInfoMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
+	s InsertCASignInfoMethod=##Class(websys.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
 	;------END-----*/
 	//获取撤销、停止执行记录原因json
 	s OECStatusChReasonJson=##Class(web.DHCDocInPatUICommon).GetOECStatusChReason()
 	s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
 </Server>
 </head>
-<body>
+<body style="padding:10px;box-sizing: border-box;">
 	<csp:Include Page="doc.surgeryord.show.hui.csp">
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
 			EpisodeID:"#(EpisodeID)#",
 			PatientID:"#(PatientID)#",
-			OECStatusChReasonJson:"#(OECStatusChReasonJson)#",
-			EntryFrom:"#(EntryFrom)#",
+			OECStatusChReasonJson:'#(OECStatusChReasonJson)#',
 			PAAdmType:"#(PAAdmType)#"
 		};
 		/*function GetList_pnp(){

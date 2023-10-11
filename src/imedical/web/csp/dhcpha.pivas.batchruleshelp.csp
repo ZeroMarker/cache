@@ -1,39 +1,30 @@
 <!DOCTYPE html>
-<!--配液排批规则帮助说明
-	csp:dhcpha.pivas.batchruleshelp.csp
+<!--
+    配液排批规则帮助说明
+	csp: dhcpha.pivas.batchruleshelp.csp
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
     <title>
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
-    <TRAK:HEAD>
-    </TRAK:HEAD>
-    <!-- Put your page Title here -->
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
     </script>
     <STYLE>
-        /*
-		.if{
-			color:#017BCE;
-			font-weight:bold;
-			font-size:15px;
-		}
-		.then{
-			color:#FF584C;
-			font-weight:bold;
-			font-size:15px;
-		}
-		*/
-        
         .batch-title {
             color: #007ACF;
             font-size: 15px;
             font-weight: bold;
         }
-        
+
         .batch-title-sign {
             height: 14px;
             margin-top: 3px;
@@ -41,59 +32,66 @@
             float: left;
             margin-right: 10px;
         }
-        
+
         div p {
-            padding-top: 10px
+            padding-top: 10px;
         }
     </STYLE>
 </HEAD>
 
 <body>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
-            <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'center'" border="false" class="dhcpha-hisui-border" style="border-radius: 4px;padding:10px">
+
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-side-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center'" style="padding: 10px;">
                     <div class="batch-title">
-                        <div class="batch-title-sign"></div>排批算法</div>
+                        <div class="batch-title-sign"></div>排批计算概述
+                    </div>
                     <div style="border-bottom:1px solid #cccccc;padding-top:10px"></div>
                     <div style="padding-left:40px">
                         <!--p><b>以某一组液体为例</b></p-->
-                        <p>A1.<span class="if">如果</span>在排批界面修改过批次，<span class="then">则</span>返回该批次,且为最终批次。</p>
-                        <p>B1.<span class="if">如果</span>在用法固定批次维护中存在，<span class="then">则</span>返回该批次。</p>
-                        <p>B2.<span class="if">如果</span>在药品固定批次维护中存在，<span class="then">则</span>返回该批次。</p>
-                        <p>B3.<span class="if">如果</span>在时间规则维护中存在，<span class="then">则</span>返回该批次。</p>
-                        <p>C1.<span class="if">以A、B</span>中返回批次为基础，<span class="then">按</span>优先级为其他规则、频次优先级、药品顺序规则记录每个病人每天每个批次每组药的液体量。</p>
-                        <p>D1.<span class="if">如果</span>在容积规则维护中已存在，<span class="then">则</span>按批次顺序以及C中记录的液体量,进行批次容量累加,超出部分移动至下一批次。</p>
+                        <p>A1. <span class="if">如果</span>在排批界面修改过批次，<span class="then">则</span>返回该批次,且为最终批次。</p>
+                        <p>B1. <span class="if">如果</span>在【用法固定批次】维护中存在，<span class="then">则</span>返回该批次。</p>
+                        <p>B2. <span class="if">如果</span>在【药品固定批次】维护中存在，<span class="then">则</span>返回该批次。</p>
+                        <p>B3. <span class="if">如果</span>在【配液大类规则】维护中存在，<span class="then">则</span>返回该批次。</p>
+                        <p>B4. <span class="if">如果</span>在【时间规则】维护中存在，<span class="then">则</span>返回该批次。</p>
+                        <p>C1. <span class="if">以A、B</span>中返回批次为基础，<span class="then">按</span>优先级为其他规则、频次优先级、顺序规则记录每个病人每天每个批次每组药的液体量。</p>
+                        <p>D1. <span class="if">如果</span>在容积规则维护中已存在，<span class="then">则</span>按批次顺序以及C中记录的液体量,进行批次容量累加,超出部分移动至下一批次。</p>
                     </div>
                     <div class="batch-title" style="margin-top:10px">
-                        <div class="batch-title-sign"></div>时间规则</div>
+                        <div class="batch-title-sign"></div>时间规则
+                    </div>
                     <div style="border-bottom:1px solid #cccccc;padding-top:10px"></div>
                     <div style="padding-left:40px">
-                        <p>按用药时间划分批次</p>
+                        <p> 按用药时间划分批次</p>
                     </div>
                     <div class="batch-title" style="margin-top:10px">
-                        <div class="batch-title-sign"></div>病区规则</div>
+                        <div class="batch-title-sign"></div>病区规则
+                    </div>
                     <div style="border-bottom:1px solid #cccccc;padding-top:10px"></div>
                     <div style="padding-left:40px">
-                        <p>E1.<span class="if">如果</span>某病区已按配液中心维护，<span class="then">则</span>以该规则的明细规则为准。</p>
-                        <p>E2.<span class="if">如果</span>某病区未按配液中心维护，<span class="then">则</span>以该配液中心病区为空的明细规则为准。</p>
+                        <p>E1. <span class="if">如果</span>某病区已按配液中心维护，<span class="then">则</span>以该规则的明细规则为准。</p>
+                        <p>E2. <span class="if">如果</span>某病区未按配液中心维护，<span class="then">则</span>以该配液中心病区为空的明细规则为准。</p>
                     </div>
                     <div class="batch-title" style="margin-top:10px">
-                        <div class="batch-title-sign"></div>频次规则</div>
+                        <div class="batch-title-sign"></div>频次规则
+                    </div>
                     <div style="border-bottom:1px solid #cccccc;padding-top:10px"></div>
                     <div style="padding-left:40px">
-                        <p>依据容积规则移动批次的基础，仅维护的频次可移动批次。</p>
+                        <p>依据【容积规则】移动批次的基础，容积规则对医嘱排序时，将按此规则顺序。</p>
+                        <p>同时能够设定批次是否能够上移或者下移，不维护则不能够进行移动。</p>
                     </div>
                     <div class="batch-title" style="margin-top:10px">
-                        <div class="batch-title-sign"></div>其他规则</div>
+                        <div class="batch-title-sign"></div>其他规则
+                    </div>
                     <div style="border-bottom:1px solid #cccccc;padding-top:10px"></div>
                     <div style="padding-left:40px">
-                        <p>依据容积规则移动批次的基础，分为按持续量（用药时间顺序）、大液体量（液体量大的优先）。</p>
+                        <p>依据【容积规则】移动批次的基础，优先大小液体量用于医嘱排序。</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
 </body>
 

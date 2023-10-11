@@ -1,3 +1,11 @@
+
+<!-- 
+ * FileName: dhcpedocpatient.station.hisui.csp
+ * Anchor: yp
+ * Date: 
+ * Description: HISUI 总检界面
+-->
+
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
@@ -5,9 +13,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
  <script type="text/javascript">
         //处理键盘事件 禁止后退键（Backspace）密码或单行、多行文本框除外
         function forbidBackSpace(e) {
@@ -36,15 +44,28 @@
 <SCRIPT language="Cache" RUNAT="SERVER"> 
 set PAADM=$g(%request.Data("PAADM",1))
 set StationID=$g(%request.Data("StationID",1))
+set AuditInfo = ##class(web.DHCPE.ResultNew).GetAuditInfo(PAADM,StationID) 
+set CAAuditIMG = ""
+if $P(AuditInfo,"^",1)'=""
+{
+    set CAAuditIMG = ##class(web.DHCPE.CA.Main).GetSignName(1,PAADM_"%"_StationID)
+}
+set AuditUserDisplay = $CASE(CAAuditIMG="",1:"table-cell",:"none")
+set SuperFlag = $g(^DHCPESetting("DHCPE","SuperGroup",%session.Get("LOGON.CTLOCID")))=%session.Get("LOGON.GROUPID")
+
 </SCRIPT> 
 <script type="text/javascript">
  var PAADMID="#(PAADM)#"
  var StationIDHISUI="#(StationID)#"
- 	
+    
  </script>
  
+</head>
+
+
+ 
   <style type="text/css">
- 		table
+        table
         {
             border-collapse: collapse;
             margin: 0 auto;
@@ -63,74 +84,78 @@ set StationID=$g(%request.Data("StationID",1))
             border: 1px solid #ccc;
             color: #666;
         }
-
-
+.r-label-2{
+    padding-left: 20px;
+}
+.r-label{
+    padding-left: 10px;
+}
 </style>
- 
-</head>
 
 <body id="BodyContent" class="hisui-layout">
   <input type="hidden" id="EpisodeID"/>
   <input type="hidden" id="StationID"/>
- <div  data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false">
+  <input type="hidden" id="H_SuperFlag" value="#(SuperFlag)#"/>
+ <div data-options="region:'center',border:false" style="padding:4px;">
     <div class="hisui-layout" fit="true">
-	  <div id="ResultPanel" data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:2px;border: 1px solid #ccc;">
-	 
-	 	 <SERVER>
- 		     //d ##class(web.DHCPE.ResultNew).OutResultToWebHISUI(PAADM,StationID)
-		     s IDStr= ##class(web.DHCPE.ResultNew).OutResultToWebHISUI(PAADM,StationID) //录入换行
- 		     w "<input id='IDStr' name='IDStr' type='hidden' value='"_IDStr_"'>"
-
+      <div id="ResultPanel" data-options="region:'center'" style="padding:4px;border: 1px solid #E2E2E2;">
+     
+         <SERVER>
+             //d ##class(web.DHCPE.ResultNew).OutResultToWebHISUI(PAADM,StationID)
+             s IDStr= ##class(web.DHCPE.ResultNew).OutResultToWebHISUI(PAADM,StationID) //录入换行
+                 i (IDStr="-1") w "<font color=red>"_"该科室缺少配置信息，请核实"_"</font>"
+             w "<input id='IDStr' name='IDStr' type='hidden' value='"_IDStr_"'>"
+             
+             
         </SERVER>
-	 	
+        
      </div>
      
-     <div id="AuditDocPanel"  data-options="region:'east', title:'',headerCls:'panel-header-gray'" style="width:350px;border: 1px solid #ccc;">
-	 	<div class="hisui-layout" fit="true">
-	 	 <div data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false" style="padding:2px;">
-	 	 <SERVER>
- 		    d ##class(web.DHCPE.ResultNew).OutAuditDocHISUI(PAADM,StationID)
- 		    
+     <div id="AuditDocPanel"  data-options="region:'east'" style="width:370px;padding:4px;border: 1px solid #E2E2E2;">
+        <div class="hisui-layout" fit="true">
+         <div data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false">
+         <SERVER>
+            d ##class(web.DHCPE.ResultNew).OutAuditDocHISUI(PAADM,StationID)
+            
         </SERVER>
-	 	 </div>
-	 	 <div data-options="region:'south', title:'',headerCls:'panel-header-gray',border:false" style="height:50px;">	
-	 	 
-	 	 	<table border=0>
-	 	 	<tr style="height:10px;">
-	 	 	</tr>
-	 	 		<tr border=0>
-	 	 			<td align="right" border=0>
-            		<label for="AuditUser">提交人</label></td>
-          			<td>
-           			<div>
-             		 <input class="hisui-combobox" type="text" Id="AuditUser" style="width:120px;" /></div></td>
-	 	 			<td align="right">
-            		<label for="AuditDate">时间</label></td>
-          			<td>
-           			<div>
-             		 <input class="hisui-datebox" type="text" Id="AuditDate" style="width:120px;" /></div></td>
-	 	 		</tr>
-	 	 	</table>
-	 	 
-	 	 
-	 	 </div>
-	 	 </div>
+         </div>
+         <div data-options="region:'south',border:false" style="height:47px;">  
+         
+            <table style="border-collapse:separate; border-spacing:0px 4px;border:0;">
+            
+                <tr style="border:0;">
+                    <td  class="r-label" style="border:0;">
+                    <label for="AuditUser">#(..Get("提交人"))#</label></td>
+                    <td style="border:0;">
+                    <div style="display:#(AuditUserDisplay)#;">
+                     <input class="hisui-combobox" type="text" Id="AuditUser" style="width:120px;" /></div>
+                     <CSP:IF CONDITION=(CAAuditIMG'="")>
+                        <img id="CAAuditIMG" style='width:120px;height:40px;' src='data:image/Jpeg;base64,#(CAAuditIMG)#'>
+                    </CSP:IF>
+                    </td>
+                    <td  class="r-label" style="border:0;">
+                    <label for="AuditDate">#(..Get("时间"))#</label></td>
+                    <td style="border:0;">
+                    <div>
+                     <input class="hisui-datebox" type="text" Id="AuditDate" style="width:120px;" /></div></td>
+                </tr>
+            </table>
+         
+         
+         </div>
+         </div>
      </div>
      
      
  </div>  
 </div>  
- <div data-options="region:'south', title:'',headerCls:'panel-header-gray',border:false" style="height:45px;">	
- 	<table>
- 	<tr style="height:10px;">
-	 	 	</tr>
- 	<tr>
- 	<td>
- 	<div align="center"><a id="DBRAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">科室提交</a></div></td>
- 	<td>
- 	<div align="center"><a id="DBAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">取消提交</a></div></td>
- 	</tr>
- 	</table>
+ <div data-options="region:'south',border:false" style="height:40px;">  
+    <table style="border-collapse:separate; border-spacing:0px 5px;border:0;">
+    <tr style="border:0;">
+    <td style="border:0;"><a id="DBRAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">科室提交</a></div></td>
+    <td style="border:0;" class="r-label-2"><a id="DBAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">取消提交</a></div></td>
+    </tr>
+    </table>
  </div>
  <div id="HistoryResultWin"> 
 </div>
@@ -141,6 +166,7 @@ set StationID=$g(%request.Data("StationID",1))
 
   <script type="text/javascript" src="../scripts/DHCPENewResultHISUI.js"></script>
   <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/dhcpe.cacommon.js"></script>
   <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
   <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
   <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
@@ -163,19 +189,18 @@ set StationID=$g(%request.Data("StationID",1))
 </body>
 
 
-</html>
-
 <script language="javaScript">
-	
+    
 </script> 
 
-<div id="STEDDiv" style="overflow-y:auto;white-space:normal;top:10px;left:500px;word-break:break-all;background-color:white;cursor:pointer;">
-	
-	<SERVER>
-		d ##class(web.DHCPE.DocPatientFind).OutEDInfoForHISUI(StationID,"",PAADM,"1")
-	</SERVER>
-	
+<div id="STEDDiv" style="border:0;overflow-y:auto;white-space:normal;top:10px;left:500px;word-break:break-all;background-color:white;cursor:pointer;padding:4px;border-radius:4px;">
+    
+    <SERVER>
+        d ##class(web.DHCPE.DocPatientFind).OutEDInfoForHISUI(StationID,"",PAADM,"1")
+    </SERVER>
+    
 </div>
 
 
 
+</html>

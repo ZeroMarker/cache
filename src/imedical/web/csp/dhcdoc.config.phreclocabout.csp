@@ -1,5 +1,5 @@
 <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
-<!--设置 dhcdoc.config.phreclocabout.csp HUI接受科室药房设置--> 
+<!--设置 dhcdoc.config.phreclocabout.csp HUI接收科室药房设置--> 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML XMLNS=TRAK>
 <HEAD>
@@ -21,15 +21,16 @@
 	padding: 5px 10px;
 	top:1px;
 }
+.tip_class li{
+	border-bottom:1px solid #ddd;
+	padding: 5px 10px;
+}
 </style>
  </head> 
  <body>  
   <div class="hisui-layout" data-options="fit:true,border:false" style=""> 
-	<div data-options="region:'north',split:false,title:'',border:false" style="height:110px;padding:10px 10px 0 10px;">
+	<div data-options="region:'north',collapsible:false,title:'',border:false" style="height:65px;padding:10px 10px 0 10px;">
     	<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-radius:4px;">
-    		<div id="" class="messager-popover error" style="position:relative;margin:10px 10px 0 10px;height:20px;">
-				<span class="content">若启用急诊虚拟长期功能，建议针剂、大输液等子类勾选【临时医嘱拆分整包装发药】，方可按执行记录进行撤销，以实现部分退药等业务场景</span>
-			</div>
     		<table class="search-table">
 				<tr>
 					<td class="r-label">
@@ -38,23 +39,75 @@
 					<td>
 						<input id="_HospList"/>
 					</td>
-					<td class="r-label">
-						<label for="Combo_PHRecLoc">药房</label>
-					</td>
-					<td>
-						<input class="hisui-combobox textbox" id="Combo_PHRecLoc" style="width:220px;"/>
-					</td>
-					<td class="r-label">
-						<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查找</a>  
-					</td>
 				</tr>
 			</table>
     	</div>
     </div>
-    <div data-options="region:'center',split:true,title:'',border:false" style="padding:10px;">
-    	<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-radius:4px;">
-    		<table id="tabPHItemCatExtConfig"></table>
-    	</div>
+	<div data-options="region:'west',collapsible:false,border:false" style="width:260px;padding:10px 0px 10px 10px;">
+		<!--左侧药房-->
+    	<div class="hisui-panel "  title="药房" data-options="headerCls:'panel-header-gray',fit:true" style="border:1px solid #ccc;border-radius:4px;">
+			<table id="tabPHRecLoc"></table>
+		</div>
+    </div>
+    <div data-options="region:'center',collapsible:false,title:'',border:false" style="padding:10px;">
+		<div class="hisui-accordion accordion-gray" style="float:left;" data-options="border:false,fit:true">   
+			<!--手风琴-->
+			<div title="子类相关设置" data-options="selected:true,tools:'#Panel-Tools-CatExtConfig'" style="overflow:auto;padding:10px;border: 1px #ccc solid;">  
+				<table id="tabPHItemCatExtConfig"></table>
+				<div id="Panel-Tools-CatExtConfig">
+					<a href="#" id="Panel-Tools-CatExtConfig-Tip" class="x-btn-text icon-help"></a>
+				</div>
+			</div>
+			<!--手风琴-->
+			<div title="静配相关设置" style="padding:10px;border: 1px #ccc solid;" id="DosingConfig" data-options="tools:'#Panel-Tools-DosingRecConfig'">   
+				<div id="Panel-Tools-DosingRecConfig">
+					<a href="#" id="Panel-Tools-DosingRecConfig-Tip" class="x-btn-text icon-help"></a>
+				</div>
+				<table class="search-table" >
+					<tr>
+						<td colspan="4">
+							<div id="ISDosingRecLoc" class="hisui-switchbox" data-options="onText:'静配药房',offText:'普通药房',
+								size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){console.log(event);console.log(obj);}">
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td style="width:185px;">
+							<a href="#" title="医嘱开立时间在配液结束时间点（含）之前时，要求执行时间在当日配液开始时间之前的执行记录，接收至默认药房" class="hisui-tooltip"   style="vertical-align:middle;" data-options="position:'top'">配液开始时间点</a>
+						</td>
+						<td style="width:165px;">
+							<input id="DTPicker_DosingStartTime" class="hisui-timespinner" style="width:130px" data-options="showSeconds:true"/> 
+						</td>
+						<td style="width:200px;">
+							<a href="#" title="医嘱开立时间在配液结束时间点之后时，要求执行时间在次日配液开始时间之前的执行记录，接收至默认药房" class="hisui-tooltip"   style="vertical-align:middle;" data-options="position:'top'">配液结束时间点</a>
+						</td>
+						<td style="width:165px;">
+							<input id="DTPicker_DosingEndTime" class="hisui-timespinner" style="width:130px" data-options="showSeconds:true"/> 
+						</td>
+					<tr>
+						<td colspan="2">
+							<input id="Check_IPDosingNextDay" type="checkbox" class="hisui-checkbox"/>
+							<a href="#" title="明日开始配液时间之前的医嘱都统一接收到默认药房" class="hisui-tooltip"   style="vertical-align:middle;" data-options="position:'top'">隔日配液</a>
+						</td>
+						<td colspan="2" style="width:165px;">
+							<input id="Check_IPDosingTodayRecLoc" type="checkbox" class="hisui-checkbox"/>
+							<a href="#" title="按配液起止时间计算接收科室。<br>配液截止时间之前开立的医嘱:仅修改当日上班时间之前的执行记录；<br>配液截止时间后开立的医嘱:修改次日上班时间之前的执行记录。" 
+								class="hisui-tooltip"   style="vertical-align:middle;" data-options="position:'top'">按上下班时间修改静配接收科室</a>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<input id="Check_NotAllowStopWhenPIVASDispensing" type="checkbox" class="hisui-checkbox" label="配液后不允许撤销或作废"/>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" style="text-align:center;">
+							<a class="hisui-linkbutton" id="BSaveDosingConfig" data-options="iconCls:'icon-w-save'">保存</a>
+						</td>
+					</tr>
+				</table>
+			</div>   
+		</div>
     </div>
 </div>
 <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>

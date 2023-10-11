@@ -1,33 +1,20 @@
 <div class="hisui-layout" fit="true">
-	<div data-options="region:'west',border:false,split:true" style="padding:10px 5px 10px 10px;width:500px;">
-		<div class="hisui-panel" title="病理申请单维护" data-options="iconCls:'icon-edit',headerCls:'panel-header-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">   
-			<div class="note">
-			<div class="note-head">
-				<div class="c-label"></div>
-				<div class="c-title">配置说明</div>
+	<div data-options="region:'west',border:false,split:true" style="padding:10px 5px 10px 10px;width:370px;">
+		<div id="west_cPanel" class="hisui-panel" title="病理申请单维护" data-options="iconCls:'icon-paper-table',headerCls:'panel-header-gray',fit:true">   
+			<div style="position:absolute;top:10px;right:4px;">
+				<a class="hisui-linkbutton" id="helptip" data-options="iconCls:'icon-help',plain:true" style="color:#017bce;">配置说明</a>
 			</div>
-			<ul>
-				<li>初始化方法:	Init()</li>
-				<li>选中项目方法:ItemMastOn(id,Desc,Emg)</li>
-				<li>取消选中项目方法:ItemMastOff(itmmast)</li>
-				<li>特殊判断必填方法:CheckSaveInfo()</li>
-				<li>保存其他数据方法:SaveOtherInfo()</li>
-				<li>加载其他数据方法:LoadOtherInfo(JsonStr)</li>
-				</ul>
-			</div>
-			<div style="border-color: #fff;height:600px;"> 
-				<table id="tabBLTypeList"></table> 
-			</div>
+			<table id="tabBLTypeList"></table> 
 		</div>
 	</div>   
 
 	<div data-options="region:'center',border:false,split:false" style="padding:10px 0px 10px 0px;"> 
-		<div class="hisui-panel" title="内容维护" data-options="iconCls:'icon-edit',headerCls:'panel-header-gray',fit:true,closable:false,collapsible:false,minimizable:false,maximizable:false">   
+		<div class="hisui-panel" title="内容维护" data-options="iconCls:'icon-two-recta-gear',headerCls:'panel-header-gray',fit:true,closable:false,collapsible:false,minimizable:false,maximizable:false">   
 			<table id="tabBLContentList"></table> 
 		</div>	
 	</div>
 	<div data-options="region:'east',border:false,split:true" style="padding:10px 5px 10px 5px;width:500px;">
-		<div class="hisui-panel" title="模板维护" data-options="iconCls:'icon-edit',headerCls:'panel-header-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">   
+		<div class="hisui-panel" title="模板维护" data-options="iconCls:'icon-template',headerCls:'panel-header-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">   
 			<table id="tabBLTempList"></table> 
 		</div>
 	</div>
@@ -69,7 +56,7 @@
 				</tr>
 				<tr>
 					<td class="r-label">
-						<label class="left_label" for="OpenitmmastFuc">启动选中取消选中</label>
+						<label class="left_label" for="OpenitmmastFuc">启动医嘱勾选/取消勾选功能</label>
 					</td>
 					<td colspan="">
 						<div id="OpenitmmastFuc" class="hisui-switchbox" style="margin-left:5px;margin-right:10px" data-options="onText:'Yes',offText:'No',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,value){console.log(event);console.log(value);}">
@@ -94,6 +81,34 @@
 						</div>
 					</td>
 				</tr>
+				<csp:if condition='MapType="CA"'>
+					<tr>
+						<td class="r-label">
+							<label class="left_label" for="XMLTempName">XML打印模板名称</label>
+						</td>
+						<td colspan="">
+							<input id="XMLTempName" style="width:200px" class="hisui-validatebox" />
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label class="left_label" for="TempType">模板类型</label>
+						</td>
+						<td colspan="">
+							<input class="hisui-radio" type="radio" label="治疗评估" name="TempType" value="CA" data-options="required:true,requiredSel:true" checked>
+							<input class="hisui-radio" type="radio" label="治疗记录" name="TempType" value="CR" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label class="left_label" for="ActiveFlag">是否激活</label>
+						</td>
+						<td colspan="">
+							<div id="ActiveFlag" class="hisui-switchbox" style="margin-left:5px;margin-right:10px" data-options="onText:'Yes',offText:'No',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,value){}">
+							</div>
+						</td>
+					</tr>
+				</csp:if>
 				<!--<tr>
 					<td class="r-label">
 						<label class="left_label" for="BLFristFunction">初始化方法</label>
@@ -124,51 +139,64 @@
 			</table>
 		</div>
 	</div>
-	<div id="BLTempl-dialog" class="hisui-dialog" title="模板维护" style="padding:10px;top:50px;width:800px;height:700px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
+	<div id="BLTempl-dialog" class="hisui-dialog" title="模板维护" style="padding:10px;width:780px;height:700px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
 		<div class="hisui-panel" style="border-color:#ccc;" data-options="border:true,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
 				<table class="search-table">
-				<tr>
-					<td class="r-label">
-						<label class="left_label" for="BLTID">ID(需和顶层Div的id保持一致用于缓存)</label>
-					</td>
-					<td>
-						<input class="textbox" id="BLTID"/>
-					</td>
-					<td class="r-label">
-						<label class="left_label" for="BLTName">描述</label>
-					</td>
-					<td>
-						<input class="textbox" id="BLTName"/>
-					</td>
-				</tr>
+					<tr>
+						<td colspan="2">
+							<input id="AddBLTempContent" class='hisui-checkbox' type="checkbox" data-options="label:'模板内容'">
+							<input id="AddBLTempType" class='hisui-checkbox' type="checkbox" data-options="label:'模板类型'">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label class="left_label" for="BLTID">ID(需和顶层Div的id保持一致用于缓存)</label>
+						</td>
+						<td>
+							<input class="textbox" id="BLTID"/> 
+						</td>
+						<td class="r-label">
+							<label class="left_label" for="BLTName">描述</label>
+						</td>
+						<td>
+							<input class="textbox" id="BLTName"/>
+						</td>
+					</tr>
 				</table>
-				<table class="search-table">
-				<tr>
-					<td class="r-label">
-						<label class="left_label" for="BLTJsContent">调用JS文件</label>
-					</td>
-					<td colspan="">
-						<textarea  rows="1" style="width:300px" id="BLTJsContent"></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td class="r-label">
-						<label class="left_label" for="Content">代码描述</label>
-					</td>
-					<td  colspan="3">
-						<textarea rows="26" style="width:650px"  id="Content" name="Content"></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="4" style="text-align: center;"><a href="javascript:void(0)" id="BSaveBLTempl" data-options="iconCls:''" class="hisui-linkbutton">保存</a></td>
-				</tr>
+				<table class="search-table" id ="">
+					<tr id = "BLTJsContenttd" >
+						<td class="r-label">
+							<label class="left_label" for="BLTJsContent">调用JS文件</label>
+						</td>
+						<td colspan="">
+							<textarea  rows="1" style="width:650px;height:24px;" id="BLTJsContent"></textarea>
+						</td>
+					</tr>
+					<tr id = "Contenttd" >
+						<td class="r-label">
+							<label class="left_label" for="Content">代码描述</label>
+						</td>
+						<td  colspan="3">
+							<textarea rows="23" style="width:650px"  id="Content" name="Content"></textarea>
+						</td>
+					</tr>
+					<tr style="text-align:center;">
+						<td colspan="4" style="text-align: center;"><a href="javascript:void(0)" id="BSaveBLTempl" data-options="iconCls:''" class="hisui-linkbutton">保存</a></td>
+					</tr>
 			</table>
 		</div>
 	</div>
-	<div id="BLItem-dialog" class="hisui-dialog" title="元素维护" style="padding:10px;top:50px;width:960px;height:600px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
+	<div id="BLItem-dialog" class="hisui-dialog" title="元素维护" style="padding:10px;top:50px;width:1160px;height:680px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
 		<div class="hisui-panel" style="border-color:#ccc;" data-options="border:true,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
-			<div data-options="region:'north',border:false,collapsible:false" style="height:45px;border-bottom:1px solid #ccc;">
-				<table class="search-table" style="">
+			<div data-options="region:'north',border:false,collapsible:false" style="height:195px;border-bottom:1px solid #ccc;">
+				<ul>
+					<li>必填功能说明</li>
+					<li>--支持普通元素（Input、Lable等）的维护</li>
+					<!--li>--DataGrid组件需要添加TableID为必填项，并在初始化column中添加Required:true属性，以标识哪些列需要必填</li-->
+					<li>--对DataGrid组件和CheckBox组件，可选择对应类型和对应的TableID。DataGrid的列必填需维护列元素ID串，例:Name*Part，元素描述:标本名称*标本名称</li>
+					<li>--其他自定义的TABLE标签，逻辑判断所属对象的OtherInfo方法是否能否返回有效对象，维护时务必保证元素描述与TableName保持一致</li>
+				</ul>
+				<table class="search-table" style="">					
 					<tr>
 						<td class="r-label">
 							<label>元素ID</label>
@@ -182,14 +210,31 @@
 						<td >
 							<input class="textbox" id="BLItemDesc"/>
 						</td>
-						<td>
+						<td class="r-label">
 							<input id="forSave" class='hisui-checkbox' type="checkbox" data-options="label:'是否保存'">
 						</td>
-						<td>
+						<td class="r-label">
 							<input id="ForRequest" class='hisui-checkbox' type="checkbox" data-options="label:'是否必填'">
 						</td>
 						<td class="r-label">
-							<label>限制填写长度</label>
+							<input id="forXPrintName" class='hisui-checkbox' type="checkbox" data-options="label:'是否打印时不打印元素描述'">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label>控件类型</label>
+						</td>
+						<td>
+							<input class="textbox" id="BLItemXType"/>
+						</td>
+						<td class="r-label">
+							<label>控件ID</label>
+						</td>						
+						<td>
+							<input class="textbox" id="BLItemXID"/>
+						</td>
+						<td class="r-label">
+							<label>元素限制填写长度</label>
 						</td>
 						<td >
 							<input class="textbox" id="BLItemLength" />
@@ -205,7 +250,7 @@
 					</tr-->
 				</table>
 			</div>
-			<div data-options="region:'center',title:'',border:false" style="height:490px">
+			<div data-options="region:'center',title:'',border:false" style="height:390px">
 				<table id="tabBLItemList"></table>
 			</div>
 		</div>
@@ -256,5 +301,62 @@
 			</div>
 		</div>
 		</div>
+	</div>
+</div>
+<div id="MoreType_toolbar">
+	<a href="javascript:void(0)" id="MoreType_all" class="hisui-menubutton" data-options="menu:'#mm2',iconCls:'icon-paper-info',otherCls:'menubutton-toolbar'">更多</a>
+	<div id="mm2" class="menu-no-icon">   
+	    <div id="Typeviewopen">申请单展示</div>
+	    <div id="Typeviewexport">单据导出</div> 
+	    <div id="Typeviewimport">单据导入</div> 
+	</div>
+</div>
+<div id="MoreMulit_toolbar">
+	<a href="javascript:void(0)" id="Cancleall" class="hisui-menubutton" data-options="menu:'#mm3',iconCls:'icon-paper-info',otherCls:'menubutton-toolbar'">更多</a>
+	<div id="mm3" class="menu-no-icon">   
+	    <div id="showviewopen">可视化模板</div> 
+	    <div id="viewexport">模板导出</div> 
+	    <div id="viewimport">模板导入</div> 
+	</div>
+</div>
+<div id="AddMulit_toolbar">
+	<a href="javascript:void(0)" class="hisui-menubutton menubutton-toolbar" data-options="menu:'#mm4',iconCls:'icon-add'">新增</a>
+	<div id="mm4" style="width:120px !important;">   
+	    <div id="AddSame">新增同级</div> 
+	    <div id="AddNext">新增子级</div> 
+	    <div id="AddtoMapBLTemp">增加内容维护</div> 
+	</div>
+</div>
+<div id="Export-dialog" class="hisui-dialog"  title="模板导出选择" data-options="iconCls:'icon-w-list',shadow:false,modal:true,closed:true">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',title:'',border:false" style="overflow:hidden;">
+			<table id="tabExportTempList" toolbar="#tabExportTempList-bar"></table>
+			<div id="tabExportTempList-bar">
+				<div style="padding:10px;">
+					<input id="TempEchkSel" class='hisui-checkbox' type="checkbox" label="全选/取消全选">
+					<a class="hisui-linkbutton" id="B_GenExportTemp" data-options="iconCls:'icon-w-export'" style="margin-left:20px;">导出</a>
+				</div>
+		    </div>
+		</div>
+	</div>
+</div>
+<div id="TypeExport-dialog" class="hisui-dialog"  title="单据导出选择" data-options="iconCls:'icon-w-list',shadow:false,modal:true,closed:true">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',title:'',border:false" style="overflow:hidden;">
+			<table id="tabExportTypeList" toolbar="#tabExportTypeList-bar"></table>
+			<div id="tabExportTypeList-bar">
+				<div style="padding:10px;">
+					<a class="hisui-linkbutton" id="B_GenExportType" data-options="iconCls:'icon-w-export'" style="margin-left:20px;">导出</a>
+				</div>
+		    </div>
+		</div>
+	</div>
+</div>
+<div id="Import-dialog" class="hisui-dialog"  title="模板导入" data-options="iconCls:'icon-w-list',shadow:false,modal:true,closed:true">
+	<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-gray'"
+	style="padding-top:10px">
+		<a href="#" title='windows路径格式:"d:\TempToText.txt"; 小机路径格式:"/tmp/TempToText.txt"' class="hisui-tooltip" data-options="position:'right'"><label for="FilePath">导出路径</label></a>
+		<input id="ImportFilePath" class='hisui-validatebox' type="text" style="width:200px">
+		<a class="hisui-linkbutton" id="B_GenImportTemp" data-options="iconCls:'icon-w-export'" style="margin-left:20px;">导入</a>
 	</div>
 </div>

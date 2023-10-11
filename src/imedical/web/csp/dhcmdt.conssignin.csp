@@ -1,6 +1,14 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcmdt.conssignin.csp 会诊签到-->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;" >
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<ADDINS require="CmdShell"/>
 <HISUI/>
 <link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/dhcmdt/css/conssignin.css"></link>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
@@ -8,27 +16,115 @@
 <script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/layout.js"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/conssignin.js"></script>
-<style>
-.panel-body, .panel-header {
-    border-color: #ccc;
-}
-</style>
 <!-- 会诊配置 -->
 <server>
   s LgHospID=%session.Get("LOGON.HOSPID")
   s SingnIn = ##class(web.DHCMDTCom).GetEmSysConfig("SINGNINQD",LgHospID)  //是否启用二维码签到
+  s SignType = ##class(web.DHCMDTCom).GetEmSysConfig("SINGNTYPE",LgHospID)   /// 签到方式
+  s SIGNJUR = ##class(web.DHCMDTCom).GetEmSysConfig("SIGNJUR",LgHospID)   /// 签到方式
   w "<script Language=""JavaScript"">"_$c(13,10)
   w "var SingnIn="""_$g(SingnIn)_""";"_$c(13,10)
+  w "var SignType="""_$g(SignType)_""";"_$c(13,10)
+  w "var SIGNJUR="""_$g(SIGNJUR)_""";"_$c(13,10)
   w "</script>"
 </server>
 </head>
 
 <body id="mainLayout" class="hisui-layout" fit="true">
 	<div data-options="region:'north',title:'',height:174,headerCls:'panel-header-gray',iconCls:'icon-molecule',border:false">
-		<div id="QRCodeConInDiv" style="">二维码签到显示区域</div>
+		<div id="qrCodeConInDiv" style="">二维码签到显示区域</div>
 	</div>
 	<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-molecule',border:false" style="padding:10px 10px 5px 10px;">
 		<table id="docListTable"></table>
 	</div>
+	<p id="time" class="clock"></p>
 </body>
+
+<!-- mdt确认专家窗口 -->
+<div id="sureDocMes" class="hisui-window" data-options="title:'专家确认',closed:true" style="width:600px;height:490px;">
+	<div style="float:left;">
+		<img id="userImg" src="" style="width:300px;height:450px"/>
+	</div>
+	<div style="float:left;position: relative">
+		<div id="errTip" style=";display:none;">
+			<span id="errMes" style="font-size:20px;font-weight:600;color:red;position:absolute;top: 0px;"></span>
+			<div id="addDoc" style="border: 1px solid #f1f1f1;border-radius: 5px;margin-left: 5px;margin-top: 65px;">
+				<div style="line-height: 25px;font-weight:600;">添加专家</div>
+				<div style="padding-left: 10px;">
+					<div><span style="font-size: 16px;line-height: 45px;margin-right: 10px;">科室</span><input id="userLoc" class="hisui-combobox" style="width:148px"/></div>
+					<div><span style="font-size: 16px;line-height: 45px;margin-right: 10px;">职称</span><input id="userPrvTp" class="textbox" style="width:140px" disabled/></div>
+					<div><span style="font-size: 16px;line-height: 45px;margin-right: 10px;">医生</span><input id="userName" class="textbox" style="width:140px" disabled/></div>
+					<div style="height:40px;text-align: center;">
+						<a href="#" style="" class="hisui-linkbutton" data-options="iconCls:''" onclick="addCstDoc()" id="">添加到会诊专家</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="userInfoTip" style="">
+			<span style="font-size:20px;font-weight:600;color:blue;">用户信息</span><br/>
+			<span style="" id="userInfo"></span><br/>
+			<span style="line-height: 50px;font-size: 15px;font-weight: 600;" id="signTipMes"></span>
+		</div>
+	</div>
+	<a href="#" style="position: absolute;right: 10px; top: 180px;" class="hisui-linkbutton" data-options="iconCls:''" onclick="surSign()" id="sureBtn">确定</a>
+	<a href="#" style="position: absolute;right: 10px; top: 220px;" class="hisui-linkbutton red" data-options="iconCls:''" onclick="closeWin()" id="bt_Revisionexp">取消</a>		
+</div>
+
+
+
+<div id="userWin" class="hisui-window" title="新增人员信息" data-options="iconCls:'icon-w-epr',closed:'true',modal:true,collapsible:false,maximizable:false,minimizable:false" style="width:550px;height:400px;padding:10px;top:100px"><!--hxy 2018-09-13 加遮罩-->
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center'" style="border:0px;border-bottom:1px solid #8DB2E3;overflow: hidden;">
+			<div style="width:320px;float:left">
+				<input style="display:none" id="addUserId"/>
+				<div class="addUserLine">
+					<span class="addUserSpan">工号</span><input id="code" class="textbox" placeholder="回车检索"/>
+				</div>	
+				<div class="addUserLine">
+					<span class="addUserSpan">姓名</span><input id="name" class="textbox"/>
+				</div>
+				<!--
+				<div>
+					<span>部门</span><span></span>
+				</div>
+				-->
+				<div class="addUserLine">
+					<span class="addUserSpan">职位</span><input id="pos" class="textbox"/>
+				</div>
+				<div class="addUserLine">
+					<span class="addUserSpan">性别</span>
+					<input class="hisui-radio" type="radio" label="男" name="gender" value="1">
+           			<input class="hisui-radio" type="radio" label="女" name="gender" value="2">
+				</div>
+				<div class="addUserLine">
+					<span class="addUserSpan">卡号</span><input id="cardNum" class="hisui-numberbox textbox"/>
+				</div>
+				<div class="addUserLine">
+					<span class="addUserSpan"><span style="color:red">*</span>手机号码</span><input id="mobile" class="hisui-validatebox textbox" data-options=""/>
+				</div>
+				<div class="addUserLine">
+					<span class="addUserSpan"><span style="color:red">*</span>身份证号</span><input id="idenCard" class="hisui-validatebox textbox" data-options=""/>
+				</div>
+			</div>
+			<div style="width:200px;float:left">
+				<img src="" style="width:180px;height:240px" id="addUserImg"/>
+				<div style="text-align: center;padding-top: 10px;">
+					<a href="#" id="app" class="hisui-linkbutton" data-options="iconCls:'icon-w-epr'" onclick="photo()" style="width:88px;">拍照</a>
+				</div>
+			</div>
+		</div>
+		
+		<div data-options="region:'south',border:false" style="text-align:center;padding-top:15px;">
+			<a href="#" class="hisui-linkbutton planPat-Btn" onclick="addSureUser()">确定</a>
+			<a style="width:20px;display:inline-block"></a>
+			<a href="#" style="background:#DE5246;border:0px solid #DE5246" class="hisui-linkbutton planPat-Btn" onclick="closeUserWin()">取消</a>
+		</div>
+	</div>
+</div>
+
+<div id="toolbar" class="toolbar">
+ 	<!--<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="showUserWin()">添加人员信息</a>-->
+	<!--<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear',plain:true" onclick="" id="">扫脸签到</a>-->
+</div>
+<div id='Loading' style="display:none;position:absolute;z-index:9999;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;opacity: 0.8;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">摄像中···</font></h1></div>
 </html>

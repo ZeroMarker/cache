@@ -1,0 +1,89 @@
+﻿<html>
+    <head>
+        <title> 检验信息 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/bs.op.resource.lisdata.css" />
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script language="cache" runat="server">
+            s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+            s loginID = $Get(%session.Data("LOGON.SSUSERLOGINID"))
+            s product = $Get(%request.Data("product",1),"OP")
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s userID = $Get(%request.Data("UserID",1),"")
+            s userLocID = $Get(%request.Data("UserLocID",1),"")
+            s scheme = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTION","params":{"name":"lisScheme","defaultValue":"<scheme><show><parent><item><code>EpisodeDate</code><desc>就诊日期</desc><hidden>N</hidden></item><item><code>DeptDesc</code><desc>就诊科室</desc><hidden>N</hidden></item><item><code>OEordItemRowID</code><desc>OEordItemRowID</desc><hidden>Y</hidden></item><item><code>OEordItemDesc</code><desc>医嘱名称</desc><hidden>N</hidden></item><item><code>LabEpisodeNo</code><desc>标本号</desc><hidden>N</hidden></item><item><code>SpecimenDesc</code><desc>标本类型</desc><hidden>N</hidden></item><item><code>CollectionDate</code><desc>采集日期</desc><hidden>N</hidden></item><item><code>CollectionTime</code><desc>采集时间</desc><hidden>N</hidden></item><item><code>ReceiveDate</code><desc>接受日期</desc><hidden>N</hidden></item><item><code>ReceiveTime</code><desc>接收时间</desc><hidden>N</hidden></item><item><code>AuthorisationDate</code><desc>审核日期</desc><hidden>N</hidden></item><item><code>AuthorisationTime</code><desc>审核时间</desc><hidden>N</hidden></item><item><code>ExistReport</code><desc>有无报告</desc><hidden>N</hidden></item></parent><child><item><code>OeordID</code><desc>OeordID</desc><hidden>Y</hidden></item><item><code>LabEpisodeNo</code><desc>标本号</desc><hidden>N</hidden></item><item><code>ItemDesc</code><desc>描述</desc><hidden>N</hidden></item><item><code>Synonym</code><desc>英文缩写</desc><hidden>N</hidden></item><item><code>ItemResult</code><desc>结果</desc><hidden>N</hidden></item><item><code>ItemUnit</code><desc>单位</desc><hidden>N</hidden></item><item><code>AbnorFlag</code><desc>异常值</desc><hidden>N</hidden></item><item><code>ItemRanges</code><desc>范围值</desc><hidden>N</hidden></item></child></show><reference><parent><item><code>EpisodeDate</code><desc>就诊日期:</desc><separate>,</separate></item><item><code>DeptDesc</code><desc>就诊科室:</desc><separate>,</separate></item><item><code>OEordItemDesc</code><desc>医嘱名称:</desc><separate>enter</separate></item></parent><child><item><code>ItemDesc</code><desc>描述</desc><separate>blackspace</separate></item><item><code>AbnorFlag</code><desc>异常值</desc><separate>,</separate></item><item><code>ItemResult</code><desc>结果</desc><separate/></item><item><code>ItemUnit</code><desc>单位</desc><separate/></item></child><separate>enter</separate></reference><checkstyle/><interface>HIS</interface><pageConfig/></scheme>","langID":(langID)}})
+            s AbnorFlagCheck = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTION","params":{"name":"lis_AbnorFlag_Check","defaultValue":"Y"},"langID":(langID)})
+            s formatStrings = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTION","params":{"name":"lisDataFormat","defaultValue":[],"langID":(langID)}})
+            s DateFormat = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_DATEFORMAT","params":{"langID":(langID)}})
+        </script>
+        <script language="javascript">
+            var langID = "#(langID)#";
+            var loginID = "#(loginID)#";
+            var product = "#(product)#";
+            var patientID = "#(patientID)#";
+            var episodeID = "#(episodeID)#";
+            var userID = "#(userID)#";
+            var userLocID = "#(userLocID)#";
+            var scheme = '#(scheme)#';
+            var AbnorFlagCheck = '#(AbnorFlagCheck)#';
+            var strXml = "";
+            var quoteData = {};
+            var qryAnt = {};
+            var formatStrings = eval('#(formatStrings)#');
+            var checkstyle = "";
+            var interface = "";
+            //是否启用前端页面配置记录
+            var pageConfig = "";
+            var DateFormat = #(DateFormat)#;
+            var initFlag = false;
+            var selectConfig = "";
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div class="hisui-panel" id="seekform" data-options="region:'north',border:false" style="height:70px;">
+            <div style="padding:5 0 0 5;">
+                <label>#(..Get("审核日期"))#</label>
+                <input id="stDate" class="hisui-datebox" style="width:115px"/>
+                <label>#(..Get("至"))#</label>
+                <input id="endDate" class="hisui-datebox" style="width:115px"/>
+                <input id="currentEpisode" class="hisui-checkbox" type="checkbox" data-options="label:'本次就诊',checked:true" style="padding-left:3px;"/>
+            </div>
+            <div style="padding:5 0 0 5;">
+                <input class="hisui-radio" id="oneMonth" type="radio" data-options="name:'rrtMonth',label:'1个月',onCheckChange:function(e,val){upPacsDate(e,val,1)}"/>
+                <input class="hisui-radio" id="threeMonths" type="radio" data-options="name:'rrtMonth',label:'3个月',onCheckChange:function(e,val){upPacsDate(e,val,2)}"/>
+                <input class="hisui-radio" id="sixMonths" type="radio" data-options="name:'rrtMonth',label:'6个月',onCheckChange:function(e,val){upPacsDate(e,val,3)}"/>
+                <input class="hisui-radio" id="otherMonths" type="radio" data-options="name:'rrtMonth',label:'更多',onCheckChange:function(e,val){upPacsDate(e,val,4)}"/>
+                <a href="#" id="search" class="hisui-linkbutton" iconCls="icon-w-find" onclick="queryData()" style="padding-left:3px;">#(..Get("查询"))#</a>
+            </div>
+        </div>
+        <div data-options="region:'south',border:false" style="height:40px;">
+            <a href="#" id="refrence" class="hisui-linkbutton" style="width:80px;float:right;margin:3 5;" onclick="getData()">#(..Get("引用"))#</a>
+        </div>
+        <div data-options="region:'center',border:false">
+            <div id="dataPnl" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <div class="hisui-panel" id="lisDataPnl" data-options="region:'north',border:false" style="height:60%;padding:3 5 3 5;">
+                    <table class="hisui-datagrid" id="lisData" data-options="headerCls:'panel-body'" style="width:100%;"></table>
+                </div>
+                <div class="hisui-panel" id="lisSubDataPnl" data-options="region:'center',border:false" style="padding:3 5 3 5;">
+                    <table class="hisui-datagrid" id="lisSubData" data-options="headerCls:'panel-body'" style="width:100%;"></table>
+                    <div class="datagrid-header" data-options="fit:true" style="position:absolute;top:0px;border:0px">
+                        <div class="datagrid-header-inner" style="display: block">
+                            <table id="lisSubColumn" data-options="fit:true">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.resource.commonfile.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.resource.lisdata.js"></script>
+    </body>
+</html>

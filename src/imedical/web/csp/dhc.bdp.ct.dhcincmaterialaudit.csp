@@ -1,0 +1,206 @@
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+ // dhc.bdp.ct.dhcincmaterialaudit.csp
+ // 名称: 材料审批流字典表  
+ // 修改人:基础数据平台-sunfengchao 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <!-- meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests;" / -->
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>  
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/websys.comm.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/OrderItem/DHC_INCMaterialAudit.js"></script>
+ 
+<style>
+.tbclass{
+    text-align: right;
+}
+.dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break:keep-all;
+    word-wrap:break-word;
+    white-space:nowrap;
+}
+</style>
+</HEAD>
+
+<BODY> 
+
+<SERVER>
+ ///  做审批应该是 需要流程实例id  +  节点角色来做审批
+ s procInsId= $g(%request.Data("procInsId",1))  //流程实例Id 
+ s taskId= $g(%request.Data("taskId",1))   // 任务Id 
+ s bizRole=$g(%request.Data("bizRole",1))    //节点角色 
+ s ^TMPbizRole2=$lb(procInsId,taskId,bizRole,ViewCode)  
+ if (bizRole="datadetail")
+ {
+     
+ }
+</SERVER>
+
+    <div class="hisui-layout" data-options="fit:true" border="false" >  
+    
+    <div data-options="region:'north',split:true,collapsible:false,headerCls:'panel-header-gray'" style="border-bottom: 1px dashed #C0C0C0;height:60px;" title="" border="false"> 
+             <table  cellspacing=10>
+                <tr>
+                    <td id="_HospListLabel" for="_HospList" class="tbclass" style="color:red;margin-right:10px;" >医院</td>
+                    <td><input id="_HospList" ></td>  
+                
+                     <td class="tbclass">物资代码</td>
+                     <td><input id="TextCode" type="text" class="hisui-validatebox"  style="width:150px" ></td>
+                     <td class="tbclass">物资名称</td>
+                     <td><input id="TextDesc" type="text" class="hisui-validatebox" style="width:150px" ></td>
+                   
+                     <td class="tbclass">是否审核完成</td>
+                     <td><input id="TextBDPINCAAudit"  type="text"  class='hisui-combobox'   style="width:150px"></td> 
+                       
+                       <!-- td class="tbclass">同步开始日期</td>
+                       <td><input id="checkdatefrom" type="text" class="textbox hisui-datebox"  style="width:130px" ></td>
+                       <td class="tbclass">同步结束日期</td>
+                       <td><input id="checkdateto" type="text" class="textbox hisui-datebox"  style="width:130px" ></td -->   
+                       <td class="tbclass-b"><a href="#" class="hisui-linkbutton" iconCls="icon-w-find" id="btnSearch" >查询</a></td>
+                       <td class="tbclass-b"><a href="#" class="hisui-linkbutton" iconCls="icon-w-reset" id="btnRefresh" >重置</a></td>
+                    </tr>     
+             </table> 
+         </div> 
+           
+                <div data-options="region:'center'" border="false">  
+                    <table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
+                </div>  
+            
+            </div>  
+           </div>  
+     </div> 
+                 
+     <div id="myWin" style="width:1100px;height:600px;padding:10px;resizable:true;display:none;">  
+          <div class="hisui-layout" data-options="fit:true" border="false" >   
+                <div data-options="region:'east',split:true,collapsible:false,headerCls:'panel-header-gray'" style="width:350px;" border="false">  
+                     <div id="vstp" style="width:300px"></div>
+                </div>
+          
+           <div data-options="region:'center'" border="false">
+                 <form id="INCItm-form-save" method="post" data-options="fit:true,border:false,plain:true">  
+                    <table cellspacing=10>   
+                        <tr>
+                           <td class="tbclass"><font color=red>*</font>物资代码</td> 
+                           <td><input id="InciCode" name="InciCode" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td>
+                            
+                           <td class="tbclass"><font color=red>*</font>物资名称</td> 
+                           <td><input id="InciDesc" name="InciDesc" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td> 
+                         </tr>  
+                       
+                        <tr> 
+                           <td class="tbclass"><font color=red>*</font>物资别名</td>
+                           <td><input id="InciAlias" name="Alias" type="text" class="textbox hisui-validatebox" style="width:200px"></td>
+                           
+                            <td class="tbclass">规格</td>
+                           <td><input id="Spec" name="Spec" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td>
+                         </tr>   
+                         
+                         <tr> 
+                           <td class="tbclass">型号</td>
+                           <td><input id="Model" name="Model" type="text" class="textbox hisui-validatebox"  style="width:200px"  ></td> 
+                           
+                           <td class="tbclass">生产商</td>
+                           <td><input id="Manf" name="Manf" type="text" class="textbox hisui-combobox"  style="width:207px" ></td>  
+                         </tr> 
+                         
+                         <tr>
+                           <td class="tbclass"><font color=red>*</font>基本单位</td>
+                            <td><input id="BUom" name="BUom" type="text" class="textbox hisui-combobox"  style="width:207px" ></td> 
+                             
+                           <td class="tbclass"><font color=red>*</font>入库单位</td>
+                           <td><input id="PUom" name="PUom"  class='textbox hisui-combobox'  style="width:207px"></td> 
+                         </tr>  
+                         
+                         <tr>
+                           <td class="tbclass">入库转换系数</td>
+                           <td><input id="Factor" name="Factor"  class="textbox hisui-validatebox"  style="width:200px"> </td> 
+                          
+                            <td class="tbclass">大包装单位</td>
+                            <td><input id="PackUomMax"  name="PackUomMax" type="text" class="textbox hisui-combobox" style="width:207px" ></td> 
+                        </tr>
+                          
+                        <tr> 
+                          <td class="tbclass">大包装转换系数</td>
+                          <td><input id="PackUomFacMax" name="PackUomFacMax" type="text" class="textbox hisui-validatebox" style="width:200px"></td> 
+                          
+                           <td class="tbclass"><font color=red>*</font>零售价</td>
+                           <td><input id="SP" name="SP" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td > 
+                         </tr> 
+                         
+                        <tr> 
+                           <td class="tbclass"><font color=red>*</font>库存类组</td>
+                           <td><input id="MaxStkGrp" name="StkGrp" type="text" class="textbox hisui-combobox" style="width:207px"></td> 
+                           <td class="tbclass"><font color=red>*</font>库存分类</td>
+                           <td><input id="MaxStkCat" name="StkCat" type="text" class="textbox hisui-combobox"  style="width:207px"></td> 
+                        </tr>
+                        
+                      
+                        <tr>  
+                           <td class="tbclass">国家医保编码</td>
+                           <td><input id="MatInsuCode" name="MatInsuCode" type="text" class="textbox hisui-validatebox"  style="width:200px"></td> 
+                           <td class="tbclass">国家医保名称</td>
+                           <td><input id="MatInsuDesc" name="MatInsuDesc" type="text" class="textbox hisui-validatebox"  style="width:200px"></td>  
+                        </tr> 
+                         <tr>  
+                           <td class="tbclass">产地</td>
+                           <td><input  id="OriginBox" name="Origin" type="text" class="textbox hisui-combobox"  style="width:207px"></td> 
+                           <td class="tbclass">条码</td>
+                           <td><input id="INCBarCode" name="INCBCode" type="text" class="textbox hisui-validatebox"  style="width:200px"></td>  
+                        </tr> 
+                        
+                         <tr>  
+                           <td class="tbclass">供应商</td>
+                           <td><input id="PbVendor" name="PbVendor" type="text" class="textbox hisui-combobox"  style="width:207px"></td> 
+                           <td class="tbclass">注册证号</td>
+                           <td><input id="RegisterNo"  name="RegisterNo" type="text" class="textbox hisui-validatebox"  style="width:200px"></td>  
+                        </tr>
+                         
+                        
+                         <tr>   
+                          <td class="tbclass">进口标志</td> 
+                          <td><input  id="ImportFlag" name="ImportFlag" type="text"  class='textbox hisui-combobox' style="width:207px"></td> 
+                           <td class="tbclass">结束日期</td>
+                           <td><input id="INCEndDate" name="INCEndDate" type="text" class="textbox hisui-datebox"  style="width:207px" ></td>
+                          
+                         </tr> 
+                       
+                       <tr> 
+                          <td class="tbclass">是否收费</td> 
+                          <td><input id="Charge" name="Charge" class='textbox hisui-checkbox' type="checkbox" label=""  data-options="checked:true" value="Y"></td> 
+                          <td class="tbclass">是否高值</td> 
+                          <td><input id="HighValue" name="HighValue" class='textbox hisui-checkbox' type="checkbox" label=""  data-options="checked:false" value="Y"></td> 
+                       </tr>  
+                    </table >
+                </form>   
+        </div>          
+      </div>  
+    </div>   
+    
+    
+    
+    
+    <div id="mybar"> 
+        <a class="hisui-linkbutton"  data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAddINCItm">新增材料</a>      
+        <a class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="btnCheckJDT">查看流程进度</a>  
+   
+    </div> 
+    <div id='LookLifeWin' style="width:1600px,height:800px;overflow-x:hidden;overflow-y:hidden">  </div>   
+</BODY>
+ </html>
+ 

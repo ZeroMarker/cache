@@ -1,0 +1,148 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+	<!--title>icd诊断对照界面</title-->
+	<title>数据对照</title>
+	<HISUI/>
+	<DHCCKB/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/common.css">	<!-- 禁止复制 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/diagconstants.js"></script>
+	<script language="Cache" runat="server">
+	w $$$cspStrictJavaScriptStart
+	w "var extDiagId="_##class(web.DHCCKBCommon).GetExtDicIdByCode("DiseaseData","")_";"	// 外部疾病字典
+	w "var symptomRelId="_##class(web.DHCCKBCommon).GetDicIdByCode("SymptomRelData")_";"	// 病症关系字典id
+	w "var referenceId="_##class(web.DHCCKBCommon).GetDicIdByCode("ReferenceData")_";"		// 参考依据字典
+	w "var diseaseId="_##class(web.DHCCKBCommon).GetDiseaseData()_";"		// 疾病字典
+	w "var ICDDiagDataId="_##class(web.DHCCKBCommon).GetDicIdByCode("ICDDiagData")_";"		// icd诊断字典	
+	w $$$cspJavaScriptEnd					
+	</script>
+	<style>
+	.tdlabel {
+	 padding-right:4px;
+	}
+	</style>
+</head>
+
+<body scroll="no">
+	<div class="hisui-layout" data-options="fit:true" border="false">			
+		<!--hisICD诊断-->		
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:10px 5px 10px 10px;">
+			<div class="hisui-panel" data-options="title:'ICD诊断',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+				<div id="treediv" class="hisui-layout layout" fit="true">	
+					<!-- 查询条件区域-->
+					<div data-options="region:'north',title:''" style="height:85px;" border=0>	
+						<table style="padding:10px 0px 0px 10px;">						
+							<tr>
+						    	<td class="tdlabel">检索</td>
+					    		<td><input style="width:165px;" class='hisui-searchbox' id="FindTreeText" missingMessage="请输入查找内容"></td>
+					    		<td style="padding-right:10px;padding-left:20px;"><input class="hisui-radio" type="radio" label="未匹配" id="hismatch"></td>
+					    		<td class="tdlabel-b">
+									<a href="#" id="btnSearch" class="hisui-linkbutton" onclick="ReloadTree()" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a>
+								</td>
+								<td class="tdlabel-b" style="padding-left:8px">
+									<a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="ClearHisData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">重置</a>
+								</td>
+							</tr>
+						</table >
+						<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+						<!-- <div id="switch1" class="hisui-switchbox" style="margin:5px 0px 0px 5px;float:left;" data-options="onText:'未匹配',offText:'匹配',
+							size:'small',animated:true,onClass:'gray',offClass:'primary',checked:'false',onSwitchChange:function(event,obj){console.log(event);console.log(obj);}">
+						</div> -->	
+						<div style="clear:both"></div>																		
+						<div>
+							<table cellspacing="0" cellpadding="0" >
+								<tr>			  					
+						    		<td style="padding-right:10px">
+										<a href="#" class="hisui-linkbutton" iconCls="icon-compare" plain="true" id="condata" onclick="CheckCondata()">数据对照</a>
+									</td> 								
+						   		 </tr>
+							</table>
+						</div>
+					</div>
+					<!--内容展示区域 -->
+					<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:0px 10px 0px 0px;">
+						<!-- <ul data-options="fit:true" id="dictree" border="false" class="hisui-tree" toolbar="#mybar"></ul>  -->
+						<ul data-options="" id="diagtree" border="false" class="hisui-tree" style="padding-left:10px;padding-right:0px"></ul> 
+					</div>	
+				</div>
+			</div>			
+		</div>
+		
+		<div data-options="region:'east',split:false,collapsible:false" style="width:800px;padding:10px 10px 10px 5px;" border="false" >	
+			<div class="hisui-layout" data-options="fit:true" border="false">
+				<!--已对照数据-->
+				<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:800px;padding-top:10px" border="false">
+					<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="constgrid" toolbar="#consttoolbar" border="true" title="已对照通用名"></table>					
+				</div>
+				
+				<!--安全用药疾病库-->
+				<div data-options="region:'north',split:false,collapsible:false,title:''" style="height:300px;" border="false">
+					<div class="hisui-panel" data-options="title:'安全用药疾病库',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	 
+						<table id="sysgrid" toolbar="#systoolbar"></table>
+					</div>
+				</div>
+			</div>
+		</div>		
+	</div>	
+	
+	
+<!--安全用药疾病库工具栏 toolbar-->
+<div id="systoolbar" class="toolbar" style="">
+	<table style="padding:10px" >		
+		<tr>
+			<td style="padding-right:10px">描述</td>
+			<td>
+				<input id="sysDesc" class="hisui-validatebox textbox"/>
+			</td>
+			<td style="padding-left:20px;">
+				<input class="hisui-radio" type="radio" data-options="onChecked:function(event,val){},onUnchecked:function(event,val){},onCheckChange:function(event,value){}" label="未匹配" id="match">
+			</td>
+			<td style="padding-left:10px;padding-right:10px">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="sysSearch">查询</a>
+			</td>
+			<td style="padding-right:10px">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="sysRefresh" onclick="ClearLibData()">重置</a>
+			</td>				
+		</tr>				
+	</table>
+</div>
+
+<!--对照数据grid工具栏 toolbar-->
+<div id="consttoolbar" class="toolbar">
+	<table cellspacing="0" cellpadding="0" >	
+		<tr>			  					
+			<td style="padding-right:10px">
+				<a href="#" class="hisui-linkbutton" iconCls="icon-edit" plain="true" id="symdata" onclick='CheckUpdateDiagnosRel()'>病症关系</a>
+				<a href="#" class="hisui-linkbutton" iconCls="icon-stamp-pass" plain="true" onclick='sureoprat(1)'>审核</a>
+				<a href="#" class="hisui-linkbutton" iconCls="icon-stamp-cancel" plain="true" onclick='sureoprat(-1)'>取消审核</a>
+			</td> 								
+		</tr>										
+	</table>
+</div>
+
+<div id="symWin" style="width:360px;height:173px;padding:10px 10px 0px 10px;display:none;">   
+	<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+		<table style="margin:auto;border-spacing:0">		
+			<tr>
+	           <td class="tdlabel" style="padding-bottom:10px;padding-right:10px;">病症关系</td>
+			   <td style="padding-bottom:10px"><input id="symList" type="text" class="textbox hisui-combobox" data-options=""></td>
+			 </tr>
+			<tr>
+			   <td class="tdlabel">参考依据</td>
+			   <td><input id="refList" type="text" class="textbox hisui-combobox" data-options=""></td>
+			</tr>			
+		</table >
+	</form>
+</div>
+
+</body>
+</html>

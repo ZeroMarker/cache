@@ -1,6 +1,11 @@
-﻿<HTML>
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<HTML>
 <HEAD>
-	<HISUI/>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+   	<HISUI/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
 	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
@@ -32,6 +37,15 @@
             s onlyCurrentDept = "2"
         }
    </script>
+   	<style>
+		.searchInput{
+			color:#999;
+			width:247px;
+		}
+		.panel-body, .panel-header{
+			border-color:#cccccc;
+		}
+	</style>
 	<script type="text/javascript">
 		var ssgroupID = '#(ssgroupID)#';
 		var appointUserID = '#(appointUserID)#';
@@ -48,104 +62,137 @@
         }
    </script>
     <style type="text/css">
-		.panel-body .panel-body-noheader 
-		{ 
-			border-color: #cccccc;;
+		.label-input
+		{
+			margin:0 5px;
+		}
+		.span-href
+		{
+			margin-left:10px;
 		}
    </style>	
 	<title>直接授权</title>
 </HEAD>
-<body class="hisui-layout">
-	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:3px;">
+<body style="padding:10px">
+<div class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:0px;">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
-				<div id="patientListTableTBar" style="padding:5px;height:30px;">	
+				<div id="patientListTableTBar" style="padding:10px;height:30px;">	
 					<div style="margin-bottom:5px;">
-						&nbsp;#(..Get("患者姓名"))# <input id="inputPatientName" class="textbox" style="width:80px;" />
-						&nbsp;#(..Get("登记号"))# <input id="inputPatientRegNo" class="textbox" style="width:80px;" />
-						&nbsp;#(..Get("就诊号"))# <input id="inputPatientEpisodeID" class="textbox" style="width:70px;" />
-						&nbsp;#(..Get("病人号"))# <input id="inputPatientID" class="textbox" style="width:80px;" />
-						&nbsp;#(..Get("病案号"))# <input id="inputMedicareNo" class="textbox" style="width:80px;" />
-						<a href="#" id="patientSearchBtn" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
-						<a href="#" id="patientResetBtn" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+						<label class="label-input">#(..Get("患者姓名"))# </label><input id="inputPatientName" class="textbox" style="width:80px;" />
+						<label class="label-input">#(..Get("登记号"))# </label></label><input id="inputPatientRegNo" class="textbox" style="width:80px;" />
+						<label class="label-input">#(..Get("就诊号"))# </label><input id="inputPatientEpisodeID" class="textbox" style="width:70px;" />
+						<label class="label-input">#(..Get("病人号"))# </label><input id="inputPatientID" class="textbox" style="width:80px;" />
+						<label class="label-input">#(..Get("病案号"))# </label><input id="inputMedicareNo" class="textbox" style="width:80px;" />
+						<span class="span-href">
+							<a href="#" id="patientSearchBtn" class="hisui-linkbutton" iconCls="icon-w-find" style="margin-top:-3px">#(..Get("查询"))#</a>
+							<span style="margin-left:10px;"></span>
+							<a href="#" id="patientResetBtn" class="hisui-linkbutton" iconCls="icon-w-clean" style="margin-top:-3px">#(..Get("清屏"))#</a>
+						</span>
 					</div>		
 				</div>
 				<table id="patientListTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
 			</div>
-			<div data-options="region:'south',headerCls:'panel-header-gray',border:false" style="height:300px;padding-top:3px;">
-				<div id="docListTableTBar" style="padding:5px;height:30px;">	
+			<div data-options="region:'south',headerCls:'panel-header-gray',border:false" style="height:300px;padding-top:10px;">
+				<div id="docListTableTBar" style="padding:10px;height:30px;">	
 					<div style="margin-bottom:5px;">
-						&nbsp;#(..Get("科室"))#&nbsp; <select id="inputDocLoc" name="inputDocLoc" class="hisui-combobox" style="width:130px;"></select>
-						<!--&nbsp;&nbsp;#(..Get("安全组"))#&nbsp; <select id="inputDocSSGroup" name="inputDocSSGroup" class="hisui-combobox" style="width:126px;"></select> -->
-						&nbsp;&nbsp;#(..Get("姓名"))#&nbsp; <input id="inputDocName" class="textbox" style="width:111px;" />
-						&nbsp;&nbsp;#(..Get("用户名"))#&nbsp; <input id="inputDocUserCode" class="textbox" style="width:111px;" />
-						<a href="#" id="docSearchBtn" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
-						<a href="#" id="docResetBtn" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+						<label class="label-input">#(..Get("科室"))# </label><select id="inputDocLoc" name="inputDocLoc" class="hisui-combobox" style="width:130px;"></select>
+						<!--#(..Get("安全组"))# <select id="inputDocSSGroup" name="inputDocSSGroup" class="hisui-combobox" style="width:126px;"></select> -->
+						<label class="label-input">#(..Get("姓名"))# </label><input id="inputDocName" class="textbox" style="width:111px;" />
+						<label class="label-input">#(..Get("用户名"))# </label><input id="inputDocUserCode" class="textbox" style="width:111px;" />
+						<span class="span-href">	
+							<a href="#" id="docSearchBtn" class="hisui-linkbutton" iconCls="icon-w-find" style="margin-top:-3px">#(..Get("查询"))#</a>
+							<span style="margin-left:10px;"></span>
+							<a href="#" id="docResetBtn" class="hisui-linkbutton" iconCls="icon-w-clean" style="margin-top:-3px">#(..Get("清屏"))#</a>
+						</span>
 					</div>		
 				</div>
 				<table id="docListTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-doctor',fit:true"></table>
 			</div>
 		</div>
 	</div>
-	<div id="eastPanel" data-options="region:'east',headerCls:'panel-header-gray',border:false" style="width:440px;padding:3px 3px 3px 0;">
+	<div id="eastPanel" data-options="region:'east',headerCls:'panel-header-gray',border:false" style="width:400px;padding-left:10px;">
 		<div class="hisui-panel" title="授权信息" data-options="region:'south',headerCls:'panel-header-gray',split:false,fit:true,iconCls:'icon-paper',tools:'#episodehistory'" style="height:200px;">
 			<div id="emrTreeDiv" class="hisui-layout" data-options="fit:true,border:false" style="border-color:#cccccc;">
 				<div data-options="region:'north',border:false" style="overflow:hidden;">
-					<div id="treeTBar" style="padding:5px;overflow-y:hidden;">
-						#(..Get("授权时间(小时)"))#<input type="text" id="inputGivePowerSpan" style="width:30px;height:30px;margin:0 5px 0 5px;"></input>  
-						#(..Get("授权操作类型"))# <select id="inputGivePowerType" class="hisui-combobox" name="inputGivePowerType" style="width:100px;height:30px;margin:0 5px 0 5px;"></select>
-						<a href="#" id="treeHistoryBtn" class="hisui-linkbutton">#(..Get("授权历史"))#</a>	
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="overflow:hidden;">
+							<div id="treeTBar" style="overflow-y:hidden;padding:10px">
+								<label class="label-input">#(..Get("授权时间(小时)"))# </label><input type="text" id="inputGivePowerSpan" style="width:30px;height:30px;"></input>  
+								<label class="label-input">#(..Get("授权操作类型"))# </label><select id="inputGivePowerType" class="hisui-combobox" name="inputGivePowerType" style="width:100px;height:30px;"></select>
+								<label class="label-input"><a href="#" id="treeHistoryBtn" class="hisui-linkbutton">#(..Get("授权历史"))#</a></label>
+							</div>
+						</div>
+						<div data-options="region:'center',border:false" style="overflow:hidden;height:30px;border-top:1px solid #cccccc;padding:10px;border-radius:0px;">
+							<span id="searchSpan" style="display:none">      
+                    			<input type="text" class="hisui-searchbox" id="searchRecord" style="width:200px;height:28px" data-options="prompt:emrTrans('输入名称搜索！')" />
+                    		</span>	
+						</div>
 					</div>
 				</div>
-				<div data-options="region:'center',border:false" style="border-top:1px solid #cccccc;border-bottom:1px solid #cccccc;">
-					<ul id="emrTree" class="hisui-tree" data-options="lines:true"></ul>
+				<div id="treeCenterDiv" data-options="region:'center',border:false" style="padding:10px;border-radius:0px;">
+					<ul id="emrTree" class="hisui-tree" data-options="lines:true"></ul>			
 				</div>
-				<div data-options="region:'south',border:false" style="overflow:hidden;text-align:center;">
-					<a href="#" id="treeGivePowerBtn" class="hisui-linkbutton" style="margin:5px 0 7px 0;background-color:#21BA45;">#(..Get("给予权限"))#</a>
+				<div data-options="region:'south',border:false" style="overflow:hidden;text-align:center;border-radius:0px;border-top:1px solid #cccccc;">
+					<a href="#" id="treeGivePowerBtn" class="hisui-linkbutton" style="margin:6px 0 7px 0;background-color:#21BA45;">#(..Get("给予权限"))#</a>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div id="treeHistoryWin" style="border:0;padding:5px;">
-		<div id="historyTableTBar" style="padding:5px;height:30;border:0;">	
-			<div style="margin-bottom:5px;">
-				#(..Get("生效类型"))# <select id="isCurrentValidSelect" class="hisui-combobox" name="isCurrentValidSelect" style="width:100px;"></select>
-				<a href="#" id="withdrawBtn" class="hisui-linkbutton" iconCls="icon-w-close">#(..Get("撤销生效中授权"))#</a>
-			</div>	
+	<div id="treeHistoryWin" style="border:0;padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center'" style="overflow:hidden;bodyCls:'panel-body-gray'" style="border-radius:4px;border-color:#cccccc;">
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'north',border:false" style="overflow:hidden;">
+						<div id="historyTableTBar" style="padding:10px;height:30px;border:0;">	
+							<div>
+								<label class="label-input">#(..Get("生效类型"))# </label><select id="isCurrentValidSelect" class="hisui-combobox" name="isCurrentValidSelect" style="width:100px;"></select>
+								<span style="margin-left:10px;"></span>
+								<a href="#" id="withdrawBtn" class="hisui-linkbutton" iconCls="icon-w-close">#(..Get("撤销生效中授权"))#</a>
+							</div>	
+						</div>
+					</div>
+					<div data-options="region:'center',border:false" style="overflow:hidden;border-top:1px solid #cccccc;border-radius:0px">
+						<table id="historyTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-doctor',fit:true" style=""></table>
+					</div>
+				</div>
+			</div>
 		</div>
-		<table id="historyTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-doctor',fit:true"></table>
 	</div>
-	<div id="MessageWin" style="padding:5px">
+	<div id="MessageWin" style="padding:10px">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',headerCls:'panel-header-gray',border:false" style="height:90px;">
-				<div style="height:20px;padding:8px 0px 3px 10px;">
-					<span style="font-weight:bold;">#(..Get("给予医生："))#</span>
-					<span> <a id="MsgDocName">#(..Get("给予医生"))#</a></span>
+				<div style="padding-bottom:10px">
+					<span style="color:#666666;">#(..Get("给予医生："))#</span>
+					<span> <a id="MsgDocName" style="color:#000000;">#(..Get("给予医生"))#</a></span>
 				</div>
-				<div style="height:20px;padding:3px 0px 3px 10px;">
-					<span style="font-weight:bold;">#(..Get("患者姓名："))#</span>
-					<span> <a id="MsgPatName">#(..Get("患者姓名"))#</a></span>
+				<div style="padding-bottom:10px">
+					<span style="color:#666666;">#(..Get("患者姓名："))#</span>
+					<span> <a id="MsgPatName" style="color:#000000;">#(..Get("患者姓名"))#</a></span>
 				</div>
-				<div style="height:20px;padding:3px 0px 8px 10px;">
-					<span style="font-weight:bold;">#(..Get("操作类型："))#</span>
-					<span> <a id="actionsName">#(..Get("操作类型"))#</a></span>
+				<div style="padding-bottom:10px">
+					<span style="color:#666666;">#(..Get("操作类型："))#</span>
+					<span> <a id="actionsName" style="color:#000000;">#(..Get("操作类型"))#</a></span>
 				</div>
 			</div>
 			<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
-				<div style="padding:0 3px 0 3px;">
+				<div>
 					<table id="MsgWinTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray'" style="height:380px;border:1px solid #cccccc;"></table>
 				</div>
-				<div>
-					<span style="height:50px;line-height:50px;overflow:hidden;padding-left:210px;">
+				<div style="text-align:center;margin-top:10px">
+					<span>
 						<a href="#" id="MsgBtnOK" class="hisui-linkbutton">#(..Get("确定"))#</a>
 					</span>
-					<span style="height:50px;line-height:50px;overflow:hidden;padding-left:15px;">
+					<span style="margin-left:10px;"></span>
+					<span>
 						<a href="#" id="MsgBtnCancel" class="hisui-linkbutton">#(..Get("取消"))#</a>
 					</span>
 				</div>
 			</div>
 		</div>
 	</div>
+</div>	
 	<script type="text/javascript" src="../scripts/emr/js/auth.directauthorization.js"></script>
 </body>
 </HTML>

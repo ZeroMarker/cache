@@ -1,0 +1,114 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.tcmdisease.csp 中医护理-病种新增/修改--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+#mainPanel > .panel{
+	margin:4px 0;
+}
+#mainPanel > .panel:nth-child(2){
+	margin-top:0;
+}
+#mainPanel > .panel:nth-child(6){
+	margin-bottom:0;
+}
+label.radio,label.checkbox{
+	vertical-align:baseline;
+}
+.DISRSymptomDiagnos-div{
+	display:inline-block;
+	font-size:0;
+}
+#myEffectWin .panel{
+	display:inline-block !important;
+}
+#myEffectWin > .panel >.panel-body{
+	overflow:hidden;
+}
+ul.kw-section-list{
+	overflow:hidden;
+	float:left;
+}
+#SymptomMethodPanel,#SymptomTechPanel,#SymptomScorePanel{
+	overflow:hidden;
+}
+</style>
+ <Server>
+ 	 ; 是否显示左侧患者列表 Y 显示 其他 不显示
+	 s DisRecId=$G(%request.Data("DisRecId", 1)) //病种记录表(Nur.TCM.DiseaseRecord)ID
+	 s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	 s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+ 	// 实用性评价结果json
+	s FERUsefulnessResultJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("Nur.TCM.FinalEvalRecord","FERUsefulnessResult")
+	k FERUsefulnessResultArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(FERUsefulnessResultJson,.FERUsefulnessResultArr)
+	// 职称(取基础数据-医护人员类型CT_CarPrvTp-护士)
+	k FERTechnicalArr
+	s CTCPTRowId=0,index=1
+	for {
+		s CTCPTRowId=$o(^CT("CPT",CTCPTRowId)) Q:CTCPTRowId=""
+		s CTCPTInternalType=$p($g(^CT("CPT",CTCPTRowId)),"^",4)
+		continue:CTCPTInternalType'="NURSE"
+		s CTCPTDateFrom=$p($g(^CT("CPT",CTCPTRowId)),"^",5)
+		continue:(CTCPTDateFrom'="")&&(CTCPTDateFrom>+$h)
+		s CTCPTDateTo=$p($g(^CT("CPT",CTCPTRowId)),"^",6)
+		continue:(CTCPTDateTo'="")&&(CTCPTDateTo<=+$h)	
+		s CTCPTDesc=$p($g(^CT("CPT",CTCPTRowId)),"^",2)
+		s FERTechnicalArr(CTCPTRowId)=CTCPTDesc
+	}
+	// 开展临床路径
+	s DISRClinicalPathWayJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("Nur.TCM.DiseaseRecord","DISRClinicalPathWay")
+	k DISRClinicalPathWayArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(DISRClinicalPathWayJson,.DISRClinicalPathWayArr)
+	// 治疗方法
+	s DISRTreatMethodJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("Nur.TCM.DiseaseRecord","DISRTreatMethod")
+	k DISRTreatMethodArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(DISRTreatMethodJson,.DISRTreatMethodArr)
+	//诊断顺序
+	s DISRDiagnosNumberJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("Nur.TCM.DiseaseRecord","DISRDiagnosNumber")
+	k DISRDiagnosNumberArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(DISRDiagnosNumberJson,.DISRDiagnosNumberArr)
+	//病种json
+	s DISRDiseaseJson=##class(Nur.TCM.Service.NursingPlan.NursePlanMake).GetTCMKnowledgeJson("","",%session.Get("LOGON.WARDID"),"")
+	k DISRDiseaseArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(DISRDiseaseJson,.DISRDiseaseArr)
+	//评价效果
+	s ESREffectSymptomResultJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("Nur.TCM.EffectSymptomRecord","ESREffectSymptomResult")
+	k ESREffectSymptomResultArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(ESREffectSymptomResultJson,.ESREffectSymptomResultArr)
+</Server>
+ </head> 
+ <body>
+  <csp:Include Page="nur.hisui.tcmdisease.show.csp">
+<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		DisRecId:"#(DisRecId)#",
+		EpisodeID:"#(EpisodeID)#",
+		CurrentDate:"#(CurrentDate)#",
+		DISRTreatMethodJson:#(DISRTreatMethodJson)#
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/nurse/hisui/TCMDisease.js"></script>
+</body>
+</html>

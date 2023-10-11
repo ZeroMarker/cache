@@ -1,0 +1,175 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE>
+<!--nur.hisui.nurseCustomStatsReportConfig.csp 自定义报表配置界面（子界面）--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<Server>
+</Server>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+</style>
+<Server>
+
+s ReportItemComponentTypeJson=##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.StatsReportItemConfig","SSReportItemComponentType")
+
+s ReportItemDataTypeJson=##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.StatsReportItemConfig","SSReportItemDataType")
+
+s ReportPropertyTypeJson=##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.StatsReportConfig","SSReportProperty")
+
+s ReportItemKeyJson=##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.CustomReportSearch","CRSItemKey")
+
+s ReportInitialValueJson=##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.CustomReportSearch","CRSInitialValue")
+
+s ControlTypeJson=##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.CustomReportSearch","CRSControlType")
+
+</Server>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false" style="overflow-y:hidden">
+	    <div data-options="region:'west',border:false,split:false" style="width:685px;padding:4px;">
+	    	<div class="hisui-panel" data-options="title:'报表列表',headerCls:'panel-header-gray',iconCls:'icon-template'" fit="true" style="">
+	    		<div class="hisui-layout" data-options="fit:true,border:false">
+	    			<div data-options="region:'north',border:false,split:false" style="height:51px;border-bottom:1px dashed #ccc;">
+	    				<table class="search-table">
+							<tr>
+								<td class="r-label">
+									<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+								</td>
+								<td>
+									<input id="_HospList" styel="width:150px !important;"/>
+								</td>
+								<td class="r-label">
+									<label for="SearchName">表单</label>
+								</td>
+								<td>
+									<input id="SearchName" class="hisui-searchbox textbox"  data-options="searcher:RefreshData" placeholder="请输入表单名称" style="width:130px;"/>
+								</td>
+								<td style="padding-left:10px;">
+									<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>   
+								</td>
+							</tr>
+						</table>
+	    			</div>
+	    			<div data-options="region:'center',border:false,split:false" style="">
+	    				<table id="ReportListTab"></table>
+	    			</div>
+	    		</div>
+		    </div>
+		</div>
+	<div data-options="region:'center',border:false,split:false" style="padding:2px 2px 2px 0;">
+	    <div data-options="region:'north',border:false,split:false" style="padding:2px 2px 2px 0;">
+	    	<div class="hisui-panel" data-options="title:'检索条件配置',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" fit="true" style="">
+	    		<div id="ReportSearchTab-div" class="hisui-layout" data-options="fit:true,border:false">
+	    			<div  data-options="border:false,split:false" style="height:35%">
+						<table id="ReportSearchTab"></table>					
+	    			</div>
+	    		</div>
+	    	</div>
+	    </div>
+	    <div data-options="region:'center',border:false,split:false" style="height:58%;padding:2px 2px 2px 0;">
+	    	<div class="hisui-panel" data-options="title:'报表项配置',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" fit="true" >
+		   		<table id="ReportItemListTab"></table>
+		   </div>
+	    </div>
+	 </div>	     
+	</div>
+	<!--复制弹框-->
+	<div id="CopyWin" class="hisui-window" title="复制 " style="width:343px;height:300px;" data-options="iconCls:'icon-w-copy',closed:true">   
+	    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+	    	<table ALIGN="left" class="search-table">
+	    	    
+	    	    <!--
+	 	 		<tr>
+	            	<td  class="r-label">
+						<label for="CopyReportCode">#(..Get("表单编码"))#</label>
+					</td>
+					<td>
+		        		<input id="CopyReportCode" type="text" class="textbox" style="width:250px;"/>
+		        	</td>
+		        </tr>
+		        -->
+		       
+		        <tr>	 	 		
+	            	<td  class="r-label">
+						<label for="CopyReportName">#(..Get("表单名称"))#</label>
+					</td>
+					<td>
+		        		<input id="CopyReportName" type="text" class="textbox" style="width:250px;"/>
+		        	</td>
+	          	</tr>
+	 	 		<tr>
+	            	<td  class="r-label">
+						<label for="CopyReportProperty">#(..Get("表单属性"))#</label>
+					</td>
+					<td>
+		        		<select id="CopyReportProperty" style="width:250px;"/>
+		        	</td>
+		        </tr>
+		        <tr>
+	            	<td  class="r-label">
+						<label for="CopyReportAddress">#(..Get("CSP名称"))#</label>
+					</td>
+					<td>
+		        		<input id="CopyReportAddress" type="text" class="textbox" style="width:250px;"/>
+		        	</td>
+		        </tr>
+		        <tr>
+	            	<td  class="r-label">
+						<label for="CopyTemplateCode">#(..Get("模板编码"))#</label>
+					</td>
+					<td>
+		        		<input id="CopyTemplateCode" type="text" class="textbox" style="width:250px;"/>
+		        	</td>
+		        </tr>
+		        <tr>
+	            	<td  class="r-label">
+						<label for="CopyQueryInfo">#(..Get("Query"))#</label>
+					</td>
+					<td>
+		        		<input id="CopyQueryInfo" type="text" class="textbox" style="width:250px;"/>
+		        	</td>
+		        </tr>
+	          	<tr>
+	          		<td colspan=2 style="text-align:center;">
+	          			<a class="hisui-linkbutton" id="BReportCopy" data-options="iconCls:'icon-w-copy'">复制</a>
+	    				<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+	          		</td>
+	          	</tr>
+	 	 	</table>
+		</div>
+	</div>
+	<!--示例弹框-->
+	<div id="DemoWin" class="hisui-window" title="查看示例截图 " style="width:1000px;height:600px;" data-options="iconCls:'icon-w-copy',closed:true">   
+	    <img id="demoImg"/>
+	</div>
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		ReportItemComponentTypeJson:#(ReportItemComponentTypeJson)#,
+		ReportItemDataTypeJson:#(ReportItemDataTypeJson)#,
+		ReportPropertyTypeJson:#(ReportPropertyTypeJson)#,
+		ReportItemKeyJson:#(ReportItemKeyJson)#,
+		ReportInitialValueJson:#(ReportInitialValueJson)#,
+		ControlTypeJson:#(ControlTypeJson)#
+	};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.nurseCustomStatsReportConfig.js"></script>
+</body>
+</html>

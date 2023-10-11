@@ -1,0 +1,306 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //s %session.Data("LOGON.USERID")=6505  ///visitor
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbencyclopedia.csp
+    @JS:.js
+    @Title：医为百科
+    @Creator:chenghegui
+    @Description:查看知识
+    @CreateDate：2018-05-07
+*/
+</csp:method>
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/browserscroll.css" /> 
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript"  src="../scripts/bdp/MKB/MKP/MKB_Encyclopedia.js"></script>
+<style>
+   /*属性标题*/
+    H1 {
+	    display: block;
+	}
+	H2 {
+		color:#4f9cee
+	}
+    html,body,h3{ 
+        margin: 0; 
+        padding: 0;
+    }
+    h2,h3{ 
+        height:auto;
+        white-space:nowrap; 
+        width:100%;
+        margin-bottom: 10px;
+        border-bottom: #ddd none 1px;
+        padding-left:50px;
+     }
+     h1{ 
+        height:auto;
+        width:99%;
+        margin-bottom: 10px;
+        border-bottom: #ddd none 1px;
+        padding-left:50px;
+     }
+    li{ 
+        list-style: none; 
+        margin: 0;
+        vertical-align: top;
+     }
+    ul{ 
+         margin: 0;
+         padding: 0;
+     }
+   /* a{ 
+        text-decoration: none;
+        cursor:pointer;
+        color:#333
+    }
+    a:hover{
+        color: #40a2de
+     }*/
+    /*这是百科右侧导航代码的样式表*/
+    .directory-nav{
+        position: fixed; 
+        right:70px; 
+        bottom:40px; 
+        padding: 12px 0 20px 32px; 
+        display:none;overflow-y:hidden;
+        max-height:450px
+     }
+    /*.directory-scroll{position:relative;left:0px; top: 50%;background-color:#333;overflow-y:auto;max-height:440px}*/
+    .directory-nav li{
+        height: 24px;
+        line-height: 24px; 
+        position: relative;
+     }
+    .directory-nav li a{
+     }
+    .directory-nav .l1{
+     }
+    .directory-nav .l2{ 
+    text-indent:0.6em;
+    }
+    .directory-nav .l1 a{
+        font-size: 14px;
+     }
+    .directory-nav .l2 a{
+        font-size: 12px;
+    }
+    .directory-nav,.directory-nav a{ 
+        color: #666;
+     }
+    .directory-nav .cur a{
+    }
+    .directory-nav .line{ 
+        position: absolute; 
+        left:4px; top: 5px; 
+        bottom: 5px; z-index: 1; 
+        width: 2px; background: #ddd;
+    }
+    .directory-nav .c-top,.directory-nav .c-bottom{ 
+        position: absolute; 
+        left: 0; 
+        z-index: 2;
+        display: block; 
+        width: 10px; 
+        height: 10px; 
+        font-size: 0; 
+        line-height: 0;
+        background: url(../scripts/bdp/Framework/imgs/directory-nav.png) no-repeat 0 -69px;
+    }
+    .directory-nav .c-dot{
+        position:absolute; 
+        left:-32px; 
+        top: 50%; 
+        z-index: 2; 
+        margin-top: -5px;
+        width: 10px; 
+        height: 10px; 
+        font-size:0; 
+        line-height:0;
+        background: url(../scripts/bdp/Framework/imgs/directory-nav.png) no-repeat -275px 0;
+    }
+
+    .directory-nav li:hover{
+        background-color:#f4f6f5;
+    }       
+    .directory-nav li:hover .c-dot{
+        background: url(../scripts/bdp/Framework/imgs/directory-nav.png) no-repeat 2px -115px;
+    }
+    .directory-nav .c-top{ 
+        top: 0
+    }
+    .directory-nav .c-bottom{ 
+        bottom: 0
+    }
+    .directory-nav .cur-tag{
+        position: absolute; 
+        left: -1px; 
+        top:25px; 
+        z-index: 5; 
+        margin-top: -6px;
+        display: block; 
+        width: 19px; 
+        height: 13px; 
+        font-size: 0; 
+        line-height: 0;
+        background: url(../scripts/bdp/Framework/imgs/directory-nav.png) no-repeat -271px -37px;
+        -webkit-transition:top .3s ease 0s;
+        transition:top .3s ease 0s;
+    }
+    .para{
+        font-size: 14px;
+        word-wrap: break-word;
+        color: #333;
+        margin-bottom: 15px;
+        text-indent: 2em;
+        line-height: 24px;
+        zoom: 1;
+    }
+    
+    /*百科全称、别名、所属知识-标题的字体*/
+    .tdname{
+        color:#000;
+        font-weight:600;
+        margin-bottom: 15px;
+        margin-top: 15px;
+    }
+    /*百科全称、别名、所属知识-内容的字体*/
+    .tdvalue{
+        padding-right:120px;
+     }
+     
+     /*百科页签样式*/
+    .changetab a{
+        float: left;
+        outline: 0;
+        width: 185px;
+        font: 18px/24px 'Microsoft Yahei';
+        color: #75787B;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+     }
+   .select{
+        color:#FFF !important;
+        background-color:#519CEA !important;   
+        border-color: #519CEA !important;
+      }
+    .changetab  a i {
+        display: block;
+        margin: 12px 0;
+        /*border-right: 1px solid #D8DBDE;*/
+        font-style: normal;
+     }
+     .changetab a i span {
+        font-size: 18px;
+        padding: 12px 0;
+        position: relative;
+     }
+     .changetab a:hover {
+        background: #D8DBDE;
+    }
+
+ 
+  /*去掉引用起始节点的拼音码--石萧伟*/
+  .hidecls {
+    display: none;
+	}
+  #detail{
+	  overflow:auto;
+  }	 
+
+  .filebox {
+  	width:250px;
+  }
+
+</style>
+</head>
+<body >
+<server>
+	s termdr=%request.Get("id")
+	s base=%request.Get("base")
+	if (termdr'="") & (base = ""){
+		s base = $lg($g(^User.MKBTermD(termdr)),4)
+	}
+	s proid=%request.Get("proid")
+	s baseDesc = %request.Get("baseDesc") //供电子病历调用，传描述获取id
+	s termDesc = %request.Get("termDesc") //供电子病历调用，传描述获取id
+	if (baseDesc'=""){
+		s base = $o(^User.MKBTermBaseI("DescIndex"," "_$zconvert(baseDesc,"U"),0))
+	}
+	if ((termdr="")&&(termDesc'="")&&(base'=""))
+	{
+		s termdr = ##class(web.DHCBL.MKB.MKBTerm).GetTermDRByDesc(base,termDesc)	//$o(^User.MKBTermI("DescIndex",base," "_$zconvert(termDesc,"U"),""))
+	}
+	
+</server>
+	<a id='changeview' class='hisui-linkbutton hisui-tooltip'  style='float:right;'  iconCls='icon-toggle' plain='true'></a>
+	<div><iframe id="iframeview"  frameborder='0' src='' style='display:none;'></iframe></div>
+	<div id="head_h" style="background-color:#FFFFFF; padding:20px 50px ;line-height:2;">
+		<p id="head_h1" style="text-align:center;padding:0 30px 0 30px;margin-bottom:10px;margin-top:0;font-size:24px;color:#333;font-weight:400;height:auto"></p>
+				<div id="div-img" style="width:100%;height:100%;text-align:center;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看把"  /></div>
+
+	<div id='relationdoc'class='relationdoc' style='overflow:hidden;min-height:1000px;display:none;width:100%'>
+    </div>
+    <div id="win"></div>
+    <div id="dialog"  style="width:840px;height:560px;padding:10px;display:none;">   
+    <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+    <table>
+        <tbody>
+             <tr><td colspan="2">
+                <table style="padding-left:32px">
+                    <tbody>
+                        <tr>
+                            <td class="tdlabel">术语</td><td><input id="termbox" name="MKBKMTermDr" class="hisui-combobox" style="width:314px"></td>
+                            <td class="tdlabel">属性</td><td><input id="probox" name="MKBKMProDr"class="hisui-combobox" style="width:314px" ></td>
+                         </tr>
+                    </tbody>
+                </table>
+             </td></tr>
+             <tr><td class="tdlabel">内容</td><td><div id="detail" style="width:678px;height:200px;padding:0;border:1px solid #9ed2f2;border-radius:4px" ></div>
+             </td></tr>
+             <tr><td class="tdlabel">已选内容</td><td><input id="MKBKMDetailI" name="MKBKMDetail" class="textbox" style="width:672px;display:none" ></input><input id="MKBKMDetailI2" name="MKBKMDetail2" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr style="display:none"><td>路径</td><td><input id="MKBKnoPathI" name="MKBKMPath" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr style="display:none"><td>类型</td><td><input id="MKBKnoTypeI" name="MKBKMType" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr style="display:none"><td>代码</td><td><input id="MKBKnoCodeI" name="MKBKMCode" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel">出处</td><td><input id="MKBKMSourceI" name="MKBKMSource" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel">备注</td><td><input id="MKBKMNoteI" name="MKBKMNote" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel">名称</td><td><input id="MKBKnoDescI" name="MKBKMDesc" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel"><font color=red>*</font>上传文献</td>
+	             <td><iframe id="upload" src="" frameborder="0" width="680" height="40" scrolling="no" frameborder="0" style="padding-left:-2px"></iframe></td>
+             </tr>
+        </tbody>
+      </table>
+    </form>
+  </div>
+</div>
+<div id='previewdoc' class='previewdoc' style='min-height:1000px;display:none;width:93%;padding-left:100px'>
+	<object id="previewdocobj" type="application/pdf"  style='min-height:960px;width:93%' data='../scripts/bdp/MKB/Doc/Doc/新型冠状病毒感染的肺炎诊疗方案（试行第五版）.pdf' style="display:block"> <div id="PDFNotKnown">你需要先安装pdf阅读器才能正常浏览文件，请点击<a href="http://get.adobe.com/cn/reader/download/?installer=reader_11.0_chinese_simplified_for_windows" target="_blank">这里</a>下载.</div> </object>
+</div>
+    <script type="text/javascript">
+    var url="dhc.bdp.mkb.mkbuploadfilecommit.csp"
+    if ("undefined"!==typeof websys_getMWToken){
+		url += "?MWToken="+websys_getMWToken()
+	}
+	$('#upload').attr('src', url);
+	
+	
+     var  termdr="#(termdr)#"
+     var  base="#(base)#"
+     var  proid="#(proid)#"
+     var termDesc = "#(termDesc)#"
+
+  </script>  
+</body>
+</html>

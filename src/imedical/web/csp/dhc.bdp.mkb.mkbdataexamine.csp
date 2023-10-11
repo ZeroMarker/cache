@@ -1,0 +1,441 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbdataexamine.csp
+    @JS:MKB_DataExamine.js
+    @Title：审核
+    @Creator:石萧伟
+    @Description:审核
+    @CreateDate：2019-6-18
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_DataExamine.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/datagrid-detailview.js"> </script>
+<style>	
+  	.panel-body,.tree-title,.combobox-item, .combobox-group{
+        font-size: 14px;
+    }
+    #DiagForm,#DiagTag
+    {
+        min-width: 300px;
+        /*  border-collapse 设置表格的边框是否被合并为一个单一的边框，还是象在标准的HTML中分开显示。 */
+        border-collapse: collapse;
+        /*border: 1px solid #bbbbbb;*/
+        border: 0px;
+    }
+    #DiagForm tr{
+        height: 35px;
+    }
+    /* 单元格边框 */
+    #DiagForm td, th
+    {
+        border-bottom:1px solid #cccccc;
+        border-right:1px solid #cccccc;
+    }
+
+    .td_label{
+        text-align: center;
+        /*background-color: #F4F6F5;*/
+        font-weight: bold;
+        min-width:50px;
+    }
+    .hidecls{
+        display:none;
+    }
+	
+	#SelectList ul{
+		margin-top:5px;	
+	}
+/*---滚动条默认显示样式--*/  
+::-webkit-scrollbar-thumb{  
+   background-color:#018EE8;  
+   height:50px;  
+   outline-offset:-2px;  
+   outline:2px solid #fff;  
+   -webkit-border-radius:4px;  
+   border: 2px solid #fff;  
+}
+/*---鼠标点击滚动条显示样式--*/  
+::-webkit-scrollbar-thumb:hover{  
+   background-color:#FB4446;  
+   height:50px;  
+   -webkit-border-radius:4px;  
+}
+/*---滚动条大小--*/  
+::-webkit-scrollbar{  
+   width:8px;  
+   height:8px;  
+}
+/*---滚动框背景样式--*/  
+::-webkit-scrollbar-track-piece{  
+   background-color:#fff;  
+   -webkit-border-radius:0;  
+}
+textarea:not(#textareadom){
+	height:28px;
+} 
+#asswest .pagination-info,#asswest .pagination-page-list{
+     display:none;
+}
+
+/*诊断模板样式*/
+#diagTempTabs{
+	margin-top:5px;
+}
+#diagTempTabs > .tabs-panels{
+	display: none;
+}
+#DiagTemplate{
+	position:absolute;
+	display:block;
+	text-decoration:none;
+	top:10px;
+	right:10px;
+	color: #1584D2;
+}
+
+/*.SearchLog{
+	float:right;
+	margin-top:5px;
+	margin-right:5px;
+}
+#log{
+	width:900px;
+}
+#log ul{
+	float:left;
+	list-style:none;
+	width:145px;
+	/*margin-left:10px;
+}*/
+/*#log-date li {
+	width:145px;
+	height:100px;
+}
+#log-date li .date{
+	position: relativ; 
+	display: inline-block; 
+	margin-top:10px;
+	float:right;
+}
+#log-date li .time{
+	position: relative; 
+	margin-left:8px;
+	color: #999;
+	float:right;
+}
+#log-date li .user{
+	position: relative; 
+	display: inline-block; 
+	color: #999;
+	float:right;
+}
+#log-detail li{
+	position: relative; 
+	padding: 0 0 0 10px;
+	line-height: 20px; 
+	border-left: 1px solid #48C086; 
+	margin-left:10px;
+	width:680px;
+	height:100px;
+}
+#log-detail li .node-icon{
+	position: absolute; 
+	left: -6px; top: 20%; 
+	width: 21px; 
+	height: 20px; 
+	background: url(../scripts/bdp/Framework/icons/order-icons.png)  -21px -72px no-repeat;
+}
+#log-detail li .txt{
+	position: relative; 
+	display: inline-block; 
+	vertical-align: left;
+	margin-top:10px;
+}*/
+/*圆形*/
+.circle{
+	width: 10px;
+    height: 10px;
+    background: #4EAC7E;
+    border-radius: 50px;
+    float:none;
+    margin-left:-31px;
+    margin-top:0px;	
+}
+.playcircle{
+	background:	 url(../scripts/bdp/Framework/icons/playcircle.gif);
+	width:20px;
+	height:20px;
+	float:left;
+	margin-left:-22px;
+	margin-top:-5px;
+} 
+/*.underC{text-decoration:underline}*/  
+/*下载按钮*/
+.load{
+	background:url(../scripts/bdp/Framework/icons/mkb/load.png) no-repeat 0 3px;
+    padding: 0 10px 5px 20px;
+    margin: 10px 0 0 0;
+    color: black;
+    /*background-position:0 3px;*/
+    border-left: 10px solid #ffffff;
+}
+.load:hover {
+	background-color: #cee4ff;
+	border-left: 10px  solid #cee4ff;
+	}
+ #layoutwest .pagination-info,#layoutwest .pagination-page-list{
+         display:none;
+     } 
+  /*#reason_insert .datagrid-btable tr{height: 10px;} */
+  
+  /*总边框*/
+  #layout{
+	  border:0px solid #cccccc;
+  }
+  /*总边框*/
+  #border{ 
+  		height:97% ; 
+  		width:99%; 
+  		position:absolute;
+  		border:1px solid #cccccc;
+  }
+</style>
+<Server>
+    s SDSStr=%request.Get("SDSStr")  //诊断名
+    s baseId=$o(^User.MKBTermBaseI("FlagIndex"," DIAGNOSE",0))
+    s icdBase = $o(^User.MKBTermBaseI("FlagIndex"," ICD10INTER",0))
+    s SDnote=%request.Get("SDnote")  //备注
+    s SDreason=%request.Get("SDreason")  //上报理由
+    s SDid=%request.Get("SDid")  //审核数据id
+    s SDstatus=%request.Get("SDstatus")  //审核状态
+    s SDchild=%request.Get("SDchild")  //第一条结构化
+    s SDrowIndex=%request.Get("SDrowIndex")
+    s MKBTBCode=$LISTGET($G(^User.MKBTermBaseD(baseId)),2)
+</Server>
+
+</HEAD>
+<BODY style="padding:4px" style="overflow:hidden">
+	<div id="border" style="overflow:hidden">
+	<div class="hisui-layout" data-options="fit:true" border="false" id="layout" style="padding:4px">
+		<div data-options="region:'north',split:true,bodyCls:'panel-header-gray'" border="false" style="height:180px;overflow:hidden;">
+			<table style="" data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'"  id="reviewed_grid" border="false">
+			
+			<!--<table cellspacing="5" style="padding-left:20px" border="0">
+				<tr style="height:5px;" >
+					<td>状态</td>
+					<td>诊断短语</td>
+					<td>ICD描述</td>
+					<td>ICD编码</td>
+					<td>诊断表达式</td>
+					<td>其他描述</td>
+				</tr>
+				
+				<tr>
+					<td><font color=green>原始:</font></td>
+					<td><font color=red id="textDia"></font></td>
+					<td><font color=red id="textICDDesc"></font></td>
+					<td><font color=red id="textICDCode"></font></td>
+					<td><font color=red id="textResult"></font></td>
+				</tr>
+				
+				<tr>
+					<td><font color=green>目标:</font></td>
+					<td><input id="textDiaDr" type="text"  style="width:250px" class="hisui-validatebox"></td>
+					<td><input id="textICDDr" type="text"  class="hisui-validatebox" style="width:150px" readonly="true"></td>
+					<td><input id="textICDCode2" type="text" class="hisui-validatebox"  style="width:150px" readonly="true"></td>
+					<td><input id="textResult2" type="text"  class="hisui-validatebox" style="width:300px" readonly="true"></td>
+					<td><input id="textOtherDesc" type="text"  class="hisui-validatebox" style="width:150px"></td>
+				</tr>
+				
+				<tr>
+					<td>备注:</td>
+					<td colspan="2"><textarea id="note_str" type="text" class="hisui-validatebox" style="width:416px;height:70px"></textarea></td>
+					<td style="padding-left:10px" colspan="2">上报理由:
+						<table>
+							<tr>
+								<td><input class='hisui-checkbox reason' type="checkbox" data-options="checked:false" value="A" id="reason_A">缺诊断短语</td>
+								<td style="padding-left:10px"><input class='hisui-checkbox reason' type="checkbox" data-options="checked:false" value="E" id="reason_E">缺ICD</td>
+								<td style="padding-left:10px"><input class='hisui-checkbox reason' type="checkbox" data-options="checked:false" value="C" id="reason_C">缺诊断表达式</td>
+							</tr>
+							<tr>
+								<td><input class='hisui-checkbox reason' type="checkbox" data-options="checked:false" value="B" id="reason_B">诊断短语不正确</td>
+								<td style="padding-left:10px"><input class='hisui-checkbox reason' type="checkbox"  data-options="checked:false" value="F" id="reason_F">ICD不正确</td>
+								<td style="padding-left:10px"><input class='hisui-checkbox reason' type="checkbox"  data-options="checked:false" value="D" id="reason_D">诊断表达式不正确</td>
+							</tr>
+						</table>
+					</td>
+					<td id="reason_insert">
+						
+						<!--<table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'"  id="reason_grid" border="false"></table> 
+					</td>
+				</tr>-->
+			</table>		
+		</div>
+		<div border="false" data-options="region:'center',split:true,bodyCls:'panel-header-gray'" style="overflow:hidden">
+			<div style="border-top: 1px  dashed #C0C0C0;margin-top: 0px;margin-bottom: 5px;"></div> <!--虚线-->
+			<table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'"  id="same_grid" border="false"></table> 
+		</div>		
+		<div data-options="region:'south',split:false,collapsible:false,headerCls:'panel-header-gray' "  style="height:40px;overflow:hidden; " title="" border="false">
+			<table data-options="fit:true" style="margin-left:34%">
+	        	<tr>
+	        		<td ><a href="#" class="hisui-linkbutton" style="width:100px;" id="commitallbtn">审核</a></td>
+	        		<td style="padding-left:10px"><a href="#" class="hisui-linkbutton" style="width:150px;" id="updata_target">保存当前编辑</a></td>
+	        		<td style="padding-left:10px"><a href="#" class="hisui-linkbutton" style="width:150px;" id="jump_main">类似诊断列表</a></td>
+	        	</tr>
+	        </table>		
+		</div>
+	</div>
+ 	<!--属性列表弹窗--> 
+ 	 <div id='mypropertylist' style='margin:10px;background:#FFFFFF;height:360px;display:none;' data-options="split:true"  align="center">
+ 		<div id='mypropertylayout' class="hisui-layout" data-options="split:true,fit:true" border="false" >
+ 			<div data-options="region:'center',border:false,split:true" style="">
+ 				<div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看把" style="margin:20px 0" /></div>
+ 				<div class="hisui-layout" data-options="fit:true" border="false" style="padding:5px">
+ 					<div data-options="region:'west',collapsible:false,border:false" style="width:200px;padding-top:5px">
+ 						<table data-options="fit:true,bodyCls:'panel-body-gray'" id="Form_DiagPropertySearchGrid" border="true" toolbar="#Form_DiagPropertySearchBar"></table> 
+ 					</div>
+ 					<div id="Form_DiagPropertySearchBar">
+ 						<input style="width:158px" id="Form_DiagPropertySearchText" class="easyui-searchbox"> 
+ 						<a href="#" class="hisui-linkbutton" iconCls='icon-w-update' id="btnReloadPro" ></a>
+					</div>
+ 					<div data-options="region:'center',split:true,border:false" style="padding-left:3px;padding-right:3px;padding-top:5px">
+ 						<table data-options="fit:true,bodyCls:'panel-body-gray'" id="Form_DiagPropertySelectedGrid" border="true"></table> 
+					</div>				 
+					<div id='mypropertyeast' data-options="region:'east',collapsible:false,border:false,split:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" style="width:500px;padding-top:5px;padding-right:60px">
+						<div id="" class="hisui-panel" style="" border="true" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray',closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+					        <table id="DiagForm" class="stripe">
+					            <tr id="formTemplate" style="display:none;">
+					                <td nowrap style="white-space:nowrap;word-break:nowrap" class="td_label"><span></span><label for="email">分型1</label></td>
+					            </tr>
+					        </table>
+					        
+					        <div id="RightMenu" class="hisui-menu" style="width: 120px;">  
+					        </div>  
+					        <div id="NodeMenu" class="hisui-menu" style="width: 120px;">  
+					        </div> 
+					        <input id="SelMKBRowId" type="hidden"></input>
+						</div>	
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'north',collapsible:false,border:false" style="height:30px">	
+				<span style="padding-right:10px;padding-top:100px">诊断</span>
+		        <select class="hisui-combogrid" id="combogrid" style="width:380px" data-options="">
+		        </select>
+			</div>
+			<div data-options="region:'south',collapsible:false,border:false" style="height:40px;">
+				<table data-options="fit:true" style="margin-left:40%">
+		        	<tr>
+		        		<td ><a href="#" class="hisui-linkbutton" style="width:100px;" id="commitbtn">修改</a></td>
+		        		<td style="padding-left:10px"><a href="#" class="hisui-linkbutton" style="width:100px;" id="updataResultBtn">取消</a></td>
+		        	</tr>
+		        </table>
+			</div>			
+		</div>		
+ 	</div>
+ 	<!--已选属性列表右键菜单-->
+ 	<div id="selProMenu" class="hisui-menu" style="width:80px;display:none;"> 
+ 		<div id="CopySelPro" iconCls="icon-copyorder" data-options="">复制</div>
+ 		<div id="DelSelPro" iconCls="icon-cancel" data-options="">删除</div>
+ 	</div>  
+ 	<!--存放各种id-->
+ 	<div id='quotaWin' style="width:1100px;height:480px;display:none;overflow:hidden;">
+	 	<table>
+	 		<tr>
+	 			<td id="result_Ids"></td><!--新的结构化诊断列表选的串-->
+	 			<td id="push_result_Ids"></td><!--传过来的结构化诊断列表选的串-->
+	 			<td id="result_term_id"></td><!--新的结构化termdr-->
+	 			<td id="push_term_id"></td><!--传过来的结构化termdr-->
+	 			<td id="result_supplement"></td><!--新的补充诊断-->
+	 			<td id="push_result_supplement"></td><!--传过来的的补充诊断-->
+	 			<td id="push_icd_id"></td><!--传过来的icd-->
+	 			<td id="result_icd_id"></td><!--新的icd-->
+	 			<td id="push_dia_id"></td><!--传过来的诊断id-->
+	 			<td id="result_dia_id"></td><!--新的诊断id-->
+	 			<td id="push_adm_id"></td><!--传过来的就诊指向-->
+	 			
+	 			<td id="justreason_id"></td><!--上报理由-->
+	 		</tr>
+	 	</table> 
+ 	</div>	
+ 	
+
+ 	
+ 	 <!--ICD工具条-->
+    <div id="ICDbar" data-options="split:false"  style="text-align: left; display:block;border:false" >
+    	<table>
+	    	<tr>
+	    		<td class="tdlabel">编码</td>
+		        <td><input href="#" class="hisui-validatebox" id="TexticdCode" style="width:80px"></td>
+		        <td class="tdlabel">描述</td>
+		        <td><input href="#" class="hisui-validatebox" id="TexticdDesc" style="width:80px"></td>
+		        <td class="tdlabel-b"><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-find'" id="btnicdsearch">查询</a></td>
+		        <td class="tdlabel-b"><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-clean'" id="btnicdrefresh">清屏</a></td>			        
+		        <!--<td><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,plain:true,iconCls:'icon-cancel'" id="btnicdcancel">关闭</a></td>-->
+		    </tr>
+		</table>      
+    </div>  
+ 	<!--国际码工具条-->
+    <div id="interbar" data-options="split:false"  style="text-align: left; display:block;" >
+    	<table>
+	    	<tr>
+	    		<td class="tdlabel">编码</td>
+		        <td><input href="#" class="hisui-validatebox" id="TextInterCode" style="width:80px"></td>
+		        <td class="tdlabel">中文</td>
+		        <td><input href="#" class="hisui-validatebox" id="TextInterDesc" style="width:80px"></td>
+		    	<td class="tdlabel-b"><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-find'" id="btninterSave">查询</a></td>
+		        <td class="tdlabel-b"><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-clean'" id="btninterClear">清屏</a></td>
+		    </tr>   
+		 </table>           
+    </div>       
+ 	<!--icd弹窗
+ 	<div id="icdDiv" style="height:420px;display:none;padding:10px" >-->
+ 	<div id="icdDiv" style='box-shadow:2px 3px 10px #666;height:360px;display:none;' data-options="split:true"  align="center">
+ 		<div class="hisui-layout" style="" data-options="split:true,fit:true,collapsible:false" border="false">
+ 			<!--icd10-->
+ 			<div data-options="region:'west',split:true,bodyCls:'panel-header-gray'" id="icdlayoutcenter" style="width:510px;"> 
+				<table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray',iconCls:'icon-paper' " title="ICD10" id="ICDGrid" border="false"></table> 
+			</div> 
+			<!--国际码-->
+			<div data-options="region:'center',split:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray' " >
+				<table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray',iconCls:'icon-paper'" title="ICD10国际码" id="interGrid" border="false"></table>
+			</div>
+			<div data-options="region:'south',collapsible:false,border:false" style="height:40px;">
+				<table data-options="fit:true" style="margin-left:40%;margin-top:4px">
+		        	<tr>
+		        		<td ><a href="#" class="hisui-linkbutton" style="width:100px;" id="commiticdbtn">修改</a></td>
+		        		<td style="padding-left:10px"><a href="#" class="hisui-linkbutton" style="width:100px;" id="icdcancelBtn">取消</a></td>
+		        	</tr>
+		        </table>
+			</div>									
+	    </div> 
+ 	</div> 
+ 	</div>	
+</BODY>
+<SCRIPT language = 'javascript'>
+	var SDSStr = "#(SDSStr)#"
+	var SDnote = "#(SDnote)#"
+	var SDreason = "#(SDreason)#"
+	var baseId = "#(baseId)#"
+	var icdBase = "#(icdBase)#"
+	var SDid = "#(SDid)#"
+	var SDstatus = "#(SDstatus)#"
+	var SDchild = "#(SDchild)#"
+	var MKBTBCode="#(MKBTBCode)#"
+	var SDrowIndex="#(SDrowIndex)#"
+	var menuid=tkMakeServerCall("web.DHCBL.BDP.BDPMenuDefine","GetID","dhc.bdp.mkb.mtm."+MKBTBCode);
+</SCRIPT>
+</HTML>
+																						

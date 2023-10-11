@@ -1,0 +1,154 @@
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
+</csp:method>
+
+<script language="cache" runat="SERVER">
+    s HospitalID = $G(%request.Data("HospitalID", 1))
+</script>
+
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/cdss/hmset.js" charset='gbk'></script>
+	<STYLE type='text/css'>
+		.accordion>.panel>.panel-header, .layout>.panel>.panel-header, .panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, .panel.window>.panel-header, .tabs-panels>.panel>.panel-header {
+		    -moz-border-radius: 0;
+		    -webkit-border-radius: 0;
+		    border-radius: 5px 5px 0 0;
+		    padding: 5px;
+		}
+		.td-btn {
+			padding-left: 20px;
+		}
+
+		.table-border {
+			border-width: 1px;
+			border-style: dashed solid solid;
+			border-color: #ccc;
+			border-radius: 0px 0px 4px 4px;
+		}
+		.messager-popover .content {
+	        height:100%;
+		    float: left;
+		    margin-top: -1px;
+		}
+		.r-label{
+			text-align: right;
+    		padding:10px 10px 10px 20px;
+		}
+		.span-label{
+			text-align: right;
+    		padding:10px 9px 10px 20px;
+		}
+		.combo-p>.panel-body.panel-body-noheader {
+			max-height:410px;
+		}
+		#panelVteFormInput, #panelVteDetailFormInput{
+			padding:10px;
+		}
+	</STYLE>
+	<script language="javascript">
+		var HospitalID = "#(HospitalID)#";
+   </script>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px" >
+		<div class="hisui-layout" data-options="fit:true">
+			<div id="panelTabSheet" data-options="region:'west',title:'数据列配置',iconCls:'icon-search',headerCls:'panel-header-gray',collapsed:false,split:true" style="border-radius: 0 0 5px 5px;width:700px;">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div id="panelVteFormInput" data-options="region:'north',border:false">
+						<table cellpadding="5">
+							<tr>
+								<td class="r-label">版本类型</td>
+								<td ><input id="configType" class="hisui-combobox" name="configType" style="width:150px;" data-options="enterNullValueClear:false,panelHeight:'auto'"></input></td>
+								</td>
+								<td class="r-label">模板</td>
+								<td ><input id="templateCode" class="hisui-combobox" name="templateCode" style="width:300px;" data-options="enterNullValueClear:false,panelHeight:'auto'"></input></td>
+							</tr>
+							<tr>
+								<td class="r-label">数据列</td>
+								<td ><input id="type" class="hisui-combobox" name="type" style="width:150px;" data-options="enterNullValueClear:false,panelHeight:'auto'"></input></td>
+								<td class="r-label">记录单名称</td>
+								<td ><input id="HMCode" class="hisui-combobox" name="HMCode" style="width:300px;" data-options="enterNullValueClear:false,panelHeight:'auto'"></input></td>								
+							</tr>
+						</table>
+						<table>
+							<tr>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" id='queryBtn'>查询</a>
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" id='addBtn'>新增</a>
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" id='editBtn'>修改</a>
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" id='cancelBtn'>作废</a>
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" id='autoCreateBtn'>一键生成</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div data-options="region:'center',title:'',iconCls:'icon-write-order'" style="border-width: 1px;border-style: dashed solid solid;border-color:#ccc;border-radius: 0px 0px 5px 5px;" >
+						<div id="center" class="hisui-layout" fit=true border=false>
+							<div data-options="region:'center',iconCls:'icon-w-list',headerCls:'panel-header-gray'" title="" border=false>
+								<table id='gridVTE' class="hisui-datagrid" border=false title="" fit=true data-options="headerCls:'panel-header-gray'">
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="panelSheetDetail" data-options="region:'center',title:'数据源配置',iconCls:'icon-paper',collapsed:false,headerCls:'panel-header-gray'" style="border-radius: 0 0 5px 5px;border-color:#cccccc">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div id="panelVteDetailFormInput" data-options="region:'north',border:false">
+						<table cellpadding="10">
+							<tr>	 
+								<td class="r-label">方法类型</td>
+								<td ><input id="MethodType" class="hisui-combobox" name="MethodType" style="width:200px;" data-options="enterNullValueClear:false,panelHeight:'auto'"></input></td>
+							</tr>
+							<tr>
+								<td class="r-label">计算结果</td>
+								<td> <input id="resultInput" class="textbox" style="width:500px"></td>
+							</tr>
+						</table>
+						<table cellpadding="10">
+							<tr>
+								<td class="td-btn" >
+									<a href="#" class="hisui-linkbutton" id='queryDetailBtn'>查询</a>
+								</td>
+								<td class="td-btn" >
+									<a href="#" class="hisui-linkbutton" id='addDetailBtn'>保存</a>
+								</td>
+								<td class="td-btn" >
+									<a href="#" class="hisui-linkbutton" id='editDetailBtn'>修改</a>
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" id='cancelDetailBtn'>作废</a>
+								</td>
+							</tr>
+						</table>
+					</div>	
+					<div data-options="region:'center'" style="border-width: 1px;border-style: dashed solid solid;border-color:#ccc;border-radius: 0px 0px 5px 5px;" >
+						<table id='vteDetail' class="hisui-datagrid" data-options="fit:true,border:false,headerCls:'panel-header-gray',pagination:false">
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

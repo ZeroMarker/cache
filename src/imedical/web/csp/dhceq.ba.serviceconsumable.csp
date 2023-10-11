@@ -1,0 +1,82 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+</head>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+s ESRowID=$g(%request.Data("ESRowID",1))
+s ReadOnly=$g(%request.Data("ReadOnly",1))
+s SICBussType=0
+s (SourceType,SourceID,SICServiceItemDR)=""
+if ESRowID'=""
+{
+	s SourceType=$p($g(^DHCEQEquipService(ESRowID)),"^",1)
+	s SourceID=$p($g(^DHCEQEquipService(ESRowID)),"^",2)
+	s SICServiceItemDR=$p($g(^DHCEQEquipService(ESRowID)),"^",4)
+}
+s SICBussType=0
+s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</SCRIPT>
+
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px; width:700px;">
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc; padding-bottom: 10px; ">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cSICConsumableItemDR_CIDesc" for="SICConsumableItemDR_CIDesc">耗材项目</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SICConsumableItemDR_CIDesc" data-options="'component':'BA.L.ConsumableItem'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSICQuantity" for="SICQuantity">数量</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SICQuantity" ></div>
+							<div class="eq-table-td eq-table-label"><label id="cSICSubType" for="SICSubType">扩展类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SICSubType" ></div>
+							<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cSICUOMDR_UOMDesc" for="SICUOMDR_UOMDesc">单位</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SICUOMDR_UOMDesc" data-options="'component':'PLAT.L.UOM'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSICQuantityType" for="SICQuantityType">数量类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="SICQuantityType"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSICSubKey" for="SICSubKey">扩展描述</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SICSubKey" ></div>
+							<div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">删除</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="tDHCEQCServiceConsumable" class="hisui-datagrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="ESRowID" value=#(ESRowID)#>
+			<INPUT type="hidden" id="ReadOnly" value=#(ReadOnly)#>
+			<INPUT type="hidden" id="SourceType" value=#(SourceType)#>
+			<INPUT type="hidden" id="SourceID" value=#(SourceID)#>
+			<INPUT type="hidden" id="SICServiceItemDR" value=#(SICServiceItemDR)#>
+			<INPUT type="hidden" id="SICBussType" value=#(SICBussType)#>
+			
+			<INPUT type="hidden" id="SICRowID">
+			<INPUT type="hidden" id="SICConsumableItemDR">
+			<INPUT type="hidden" id="SICUomDR"> <!--//modified by ZY 20220809 2708102-->
+			
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/ba/serviceconsumable.js"></script>
+</body>
+</html>

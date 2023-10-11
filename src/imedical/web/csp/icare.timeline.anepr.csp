@@ -19,14 +19,70 @@
 	</server>
 </head>
 <body class='hisui-layout'>
-	<div data-options="region:'west',title:'',iconCls:'icon-w-list',split:true" style="width:160px;">
-		<div id="mytt" style="width:150px;" class="accordiontree" ></div>
+	<div data-options="region:'west',title:'',onResize:debounced_westOnResize,border:false" style="width:220px;padding:10px 0 10px 10px;overflow:hidden;">
+		<div id="mytt" style="width:200px; overflow-y:auto;overflow-x:hidden;" class="accordiontree" ></div>
 	</div>   
-	<div data-options="region:'center',title:'',split:true" 
+	<div data-options="region:'center',border:false "
 		style="padding:10px;overflow:hidden">
 			<iframe name="ctxfrm" width="100%" height="100%" src="" style="overflow:hidden" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0></iframe>
 	</div>
 	<script type="text/javascript">
+
+		var getTokenUrl=function(url){
+			
+			if(typeof url=='string' && url.indexOf('.csp')>-1) {
+				var token='';
+				if(typeof websys_getMWToken=='function' ){
+					token= websys_getMWToken();
+				}
+				
+				var arr=url.split('#');
+				arr[0]=arr[0]+(arr[0].indexOf('?')>-1?'&':'?')+'MWToken='+token; 
+				url=arr.join('#');
+			}
+			
+			//alert('getTokenUrl:'+url)
+			
+			return url;
+		}
+		
+		function debounce(func, wait, immediate) {
+		    var timeout, result;
+		    var debounced = function () {
+		        var context = this;
+		        var args = arguments;
+
+		        if (timeout) clearTimeout(timeout);
+		        if (immediate) {
+		            // 如果已经执行过，不再执行
+		            var callNow = !timeout;
+		            timeout = setTimeout(function(){
+		                timeout = null;
+		            }, wait)
+		            if (callNow) result = func.apply(context, args)
+		        }
+		        else {
+		            timeout = setTimeout(function(){
+		                func.apply(context, args)
+		            }, wait);
+		        }
+		        return result;
+		    };
+
+		    debounced.cancel = function() {
+		        clearTimeout(timeout);
+		        timeout = null;
+		    };
+
+		    return debounced;
+		}
+		function westOnResize(){
+			var p=$('#mytt').parent();
+			
+			$('#mytt').width(p.width()-2);
+			$('#mytt').height(p.height()-2);
+		}
+		var debounced_westOnResize=debounce(westOnResize,200)
 		$(function(){
 			var OpaId = "#(OpaId)#";
 			var OEOrdItem = "#(OEOrdItem)#";
@@ -57,11 +113,15 @@
 				for(var i=0; i<OpaJson.length; i++){
 					var item = OpaJson[i]; //MenuDesc-菜单名称,URL-链接路径,CreateUser-创建用户,CreateDT-创建日期时间
 					
-					treeJson[1].children.push({id:"opId"+item.MenuDesc,text:item.MenuDesc,href:item.URL});
+					treeJson[1].children.push({
+						id:"opId"+item.MenuDesc,
+						text:item.MenuDesc
+						,href:item.URL+(item.URL.indexOf('?')>-1?'&':'?')+'orderView=Y'
+					});
 				}
 				if (EprJson.length==0) {
 					//$("#mytt").tree('select',0);
-					ctxfrm.location.href = treeJson[1].children[0].href;
+					ctxfrm.location.href = getTokenUrl( treeJson[1].children[0].href );
 				}
 			}else{
 				treeJson[1].children.push({id:"opId",text:"无手术相关信息",href:"#"});
@@ -70,13 +130,14 @@
 				border:false,
 				onClick:function(node){
 					if (typeof node.href=='string' && node.href!="#"){
-						ctxfrm.location.href = node.href;
+						ctxfrm.location.href = getTokenUrl(node.href);
 					}
 					//$("#mytt").tree('toggle',node.target);
 				},
 				data:treeJson,
 				
 			});
+			debounced_westOnResize();
 		})
 	</script>   
 </body>

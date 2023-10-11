@@ -1,0 +1,455 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.bedsettings.csp 床位图通用配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+	text-align: right;
+}
+.config-title {
+	margin:10px 0 0 0;
+	font-weight:bold;
+}
+.right-label{
+	width: 200px;
+	padding-right: 10px;
+	text-align: right;
+}
+.layout-split-west{
+	border-right-width:10px;
+}
+.btnCls {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    padding: 0 5px 0 0;
+}
+</style>
+</head>
+
+<body>
+<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-panel" data-options="fit:true,border:false" style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false" style="height:51px;">
+			<table class="search-table">
+	  	 	 	<tr>
+		            <td class="r-label">
+		              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		            </td>
+		            <td>
+		              <input id="_HospList"/>
+		            </td>
+		            <td class="r-label">
+						<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-save'">保存</a>  
+					</td>
+					<td>
+						<a class="hisui-linkbutton" id="BBedRequestConfig" data-options="iconCls:'icon-w-config'">床位图数据请求配置</a>  
+					</td>
+		          </tr>
+	  	 	 </table>
+		</div>
+		<div data-options="region:'west',split:true,border:false" style="width:720px;">
+			<div class="hisui-panel" data-options="fit:true,title:'显示配置',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" style="">
+				<div style="height:250px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">床位图整体配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>床位图刷新间隔时间</label>
+							</td>
+							<td>
+								<input class="hisui-numberbox textbox" id="IntervalTime" style="width:50px;"/>
+								<label>分钟</label>
+							</td>
+						</tr>
+						<!--tr>
+							<td class="right-label">
+								<label>床位图操作</label>
+							</td>
+							<td>
+								<div id="OperSwitch" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChange">
+								</div>
+							</td>
+							<td id="OccupyComponment">
+								<label>是否启用包床按钮</label>
+								<div id="OccupySwitch" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+								</div>
+							</td>
+						</tr-->	
+						<tr>
+							<td class="right-label">
+								<label>患者头像显示身份证采集图片</label>
+							</td>
+							<td>
+								<div id="patCredNoImgSwitch" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChange">
+								</div>
+							</td>
+						</tr>	
+						<tr>
+							<td class="right-label">
+								<label>婴儿床显示位置</label>
+							</td>
+							<td>
+								<input class="hisui-combobox textbox" id="BabyBedPosition" style="width:100px;"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>床位卡背景色</label>		
+							</td>
+							<td>
+								<input class="hisui-combobox textbox" id="BedCardColor" style="width:100px;"/>
+							</td>
+						</tr>	
+						<tr>
+							<td class="right-label">
+								<label>空床显示床位费</label>
+							</td>
+							<td>
+								<div id="showBedBillSwitch" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>默认按责组加载</label>
+							</td>
+							<td>
+								<div id="loadBedByWardGroup" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+								</div>
+							</td>
+						</tr>		
+					</table>
+				</div>
+				<div style="height:50px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">床位图区域显示配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>区域配置</label>
+								
+							</td>
+							<td>
+								<input class="hisui-checkbox" type="checkbox" label="等候区" id="Area_W">
+								<input class="hisui-checkbox" type="checkbox" label="转出区" id="Area_T">
+								<input class="hisui-checkbox" type="checkbox" label="出院区" id="Area_O">
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="height:50px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">等候区配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>允许分配至等候区患者</label>
+								
+							</td>
+							<td>
+								<input class="hisui-radio" type="checkbox" name="waitRoom" data-options="required:true,requiredSel:true" label="未开入院诊断或医疗结算的患者" id="waitRoom_OnlyNoAdmitDiagORDocDisch">
+								<input class="hisui-radio" type="checkbox" name="waitRoom" data-options="required:true,requiredSel:true" label="不控制" id="waitRoom_NotControl">
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="height:86px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">出院区配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>出院区显示</label>
+							</td>
+							<td>
+								<input class="hisui-numberbox textbox" id="OutDays" style="width:50px;"/>
+								<label>天内出院病人</label>
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label for="allowDragDocDischPat">允许拖拽已开立出院医嘱患者</label>
+							</td>
+							<td>
+								<input class="hisui-checkbox" type="checkbox" id="allowDragDocDischPat">
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="height:82px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">悬浮窗配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>患者详细信息悬浮显示</label>
+								
+							</td>
+							<td>
+								<input class="hisui-checkbox" type="checkbox" label="床位图" id="HoverCard_A">
+								<input class="hisui-checkbox" type="checkbox" label="婴儿床位图" id="HoverCard_B">
+								<input class="hisui-checkbox" type="checkbox" label="等候区" id="HoverCard_W">
+								<input class="hisui-checkbox" type="checkbox" label="转出区" id="HoverCard_T">
+								<input class="hisui-checkbox" type="checkbox" label="出院区" id="HoverCard_O">
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>患者详细信息悬浮时间</label>
+								
+							</td>
+							<td>
+								<input class="hisui-numberbox textbox" id="HoverCardDelayTime" style="width:50px;"/>
+								<label>秒后显示</label>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="height:129px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">床位图图标规则配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>新开长期医嘱图标</label>
+								
+							</td>
+							<td>
+								<input class="hisui-combobox textbox" id="LongOrderImg" style="width:100px;"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>新开临时医嘱图标</label>
+								
+							</td>
+							<td>
+								<input class="hisui-combobox textbox" id="TempOrderImg" style="width:100px;"/>
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>图标筛选显示配置</label>
+								
+							</td>
+							<td>
+								<input class="hisui-checkbox" name="IconFilterConfigs" type="checkbox" label="科室" id="IconFilter_L">
+								<input class="hisui-checkbox" name="IconFilterConfigs" type="checkbox" label="组别" id="IconFilter_G">
+								<input class="hisui-checkbox" name="IconFilterConfigs" type="checkbox" label="病房" id="IconFilter_R">
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="height:61px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">统计信息显示配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>全部患者统计</label>
+							</td>
+							<!--td>
+								<input class="hisui-radio" name="SumConfig" type="radio" label="在床患者" id="Sum_1">
+								<input class="hisui-radio" name="SumConfig" type="radio" label="本病区患者" id="Sum_2">
+							</td-->
+							<td>
+								<label>在床患者 + </label>
+								<input class="hisui-checkbox" name="SumConfig1" type="checkbox" label="等候区分过床患者" id="waitHasBed">
+								<input class="hisui-checkbox" name="SumConfig1" type="checkbox" label="等候区未分床患者" id="waitNoBed">
+								<input class="hisui-checkbox" name="SumConfig1" type="checkbox" label="转出区患者" id="transPat">
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>病区统计信息表达式</label>
+							</td>
+							<td>
+								<input class="textbox" id="WardStatistics" style="width:300px;"/>
+								<label>(表达式以字符串返回数据)</label>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',split:true,border:false" style="">
+			<div class="hisui-panel" data-options="fit:true,title:'操作配置',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" style="">
+				<div style="height:110px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">分床主管医生护士配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+							</td>
+							<td>
+								<label>必填</label>								
+							</td>
+							<td>
+								<label>多选</label>
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>主管医生</label>
+							</td>
+							<td  style="text-align:center;width:40px;">
+								<input class="hisui-checkbox" type="checkbox" label="" id="mainDocRequired">
+							</td>
+							<td  style="text-align:center;width:40px;">
+								<input class="hisui-checkbox" type="checkbox" label="" disabled id="mainDocMulti">
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>主管护士</label>
+							</td>
+							<td style="text-align:center;width:40px;">
+								<input class="hisui-checkbox" type="checkbox" label="" id="mainNurseRequired">
+							</td>
+							<td style="text-align:center;width:40px;">
+								<input class="hisui-checkbox" type="checkbox" label="" id="mainNurseMulti">
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="height:130px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">婴儿床操作配置</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>修改母亲主管医生同步婴儿</label>
+							</td>
+							<td>
+								<div id="updateMotherDocSyncBaby" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChange">
+								</div>
+							</td>
+						</tr>	
+						<tr>
+							<td class="right-label">
+								<label>允许婴儿单独分床</label>
+							</td>
+							<td>
+								<div id="allowBabyAloneAssignBed" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChange">
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="right-label">
+								<label>婴儿转移后显示虚拟床位</label>
+							</td>
+							<td>
+								<div id="transbabyShowVirtualBed" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChange">
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="height:237px;margin:0 10px;">
+					<div class="config-title" style="">
+						床位状态操作
+						<a href="#" id="bedStatusTip" class="hisui-linkbutton l-btn l-btn-small l-btn-plain" data-options="iconCls:'icon-tip',plain:true" group=""></a>
+					</div>
+					<table id="bedStatusTab"></table>
+				</div>
+				<div style="height:70px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">床位图病区切换</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>允许切换的安全组</label>
+							</td>
+							<td>
+								<input class="hisui-combobox" id="allowSwitchWardGroups" style="width:250px;"/>
+							</td>
+						</tr>	
+					</table>
+				</div>
+				<div style="height:101px;margin:0 10px;">
+					<div class="config-title" style="margin-bottom:0;">病区床位管理</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="right-label">
+								<label>床位类型修改</label>
+							</td>
+							<td>
+								<div id="allowModifyBedType" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChange">
+								</div>
+							</td>
+						</tr>	
+						<tr>
+							<td class="right-label">
+								<label>房间类型修改</label>
+							</td>
+							<td>
+								<div id="allowModifyBedRoom" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChange">
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="bedRequestConfig-dialog" class="hisui-dialog" title="床位图请求数据配置" style="width:1033px;height:600px;padding-bottom:0;" data-options="iconCls:'icon-w-batch-cfg',shadow:false,modal:true,closed:true,
+	buttons:[
+		{
+			iconCls:'icon-w-save',
+			text:'保存',
+			handler:function(){ saveBedRequestConfig(); }
+		},
+		{
+			iconCls:'icon-w-close',
+			text:'关闭',
+			handler:function(){$HUI.dialog('#bedRequestConfig-dialog').close();}
+		}
+	]">
+	<div class="hisui-panel" title="" style="padding:10px 10px 0 10px;" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'west',split:false,border:false" style="width:370px;">
+				<table id="basicDataTab"></table>
+			</div>
+			<div data-options="region:'center',split:true,border:false" style="padding:156.5px 10px 0 10px;">
+				<table class="search-table">												
+					<tr>
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'" onclick="moveRight()">右移</a>
+						</td>
+					</tr>
+					<tr>
+					</tr>
+					<tr>
+					</tr>
+					<tr>
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-left'" onclick="moveLeft()">左移</a>
+						</td>
+					</tr>						
+				</table>
+			</div>
+			<div data-options="region:'east',split:false,border:false" style="width:535px;">
+				<table id="selectedBasicDataTab"></table>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/bedsettings.js"></script>
+<!--<script type="text/javascript">
+	var now = new Date().getTime();
+	document.write('<script charset="GB2312" src="../scripts/nurse/hisui/bedsettings.js?v=' + now + '"><\/script\>');
+</script>-->
+</body>
+</html>

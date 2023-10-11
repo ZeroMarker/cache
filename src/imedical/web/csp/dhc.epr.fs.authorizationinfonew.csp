@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>归档权限审批</title>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/fs.common.css">
+</head>
+<body style="padding:10px;box-sizing:border-box;">
+	<div class="hisui-panel" data-options="title:'归档权限审批',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="padding:5px;border-bottom:1px solid #e2e2e2;border-radius:0;">
+				<table class="searchform">
+					<tr>
+						<td class="form-r-label"><label for="dbStartDate">#(..Get("开始日期"))#</label></td>
+						<td><input id="dbStartDate" class="hisui-datebox" style="width:150px;" /></td>
+						<td class="form-r-label"><label for="cbbRequestAct">#(..Get("操作类型"))#</label></td>
+						<td><select id="cbbRequestAct" class="hisui-combobox" style="width:150px;"></select></td>
+						<td class="form-r-label"><label for="cbbAppointStatus">#(..Get("审批状态"))#</label></td>
+						<td><select id="cbbAppointStatus" class="hisui-combobox" style="width:150px;"></select></td>
+						<td class="form-btn"><a id="btnSearch" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td class="form-btn"><a id="btnConfigReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'">召回原因</a></td>
+					</tr>
+					<tr>
+						<td class="form-r-label"><label for="dbEndDate">#(..Get("结束日期"))#</label></td>
+						<td><input id="dbEndDate" class="hisui-datebox" style="width:150px;" /></td>
+						<td class="form-r-label"><label for="tbMRNo">#(..Get("病案号"))#</label></td>
+						<td><input id="tbMRNo" type="text" class="textbox" style="width:143px;" /></td>
+						<td class="form-r-label"><label for="tbPatName">#(..Get("姓名"))#</label></td>
+						<td><input id="tbPatName" type="text" class="textbox" style="width:143px;" /></td>
+						<td class="form-btn"><a id="btnReset" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'">重置</a></td>
+						<td></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<div id="authtoolbar">
+					<a id="btnApprove" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true">审批通过</a>
+					<a id="btnReject" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">拒绝申请</a>
+				</div>
+				<table id="authlist"></table>
+			</div>
+		</div>
+	</div>
+	<div id="dlgReject" style="width:500px;height:340px;padding:10px;">
+		<p class="dialog-r-ele">#(..Get("审批人："))#<span id="txtAppointUser"></span></p>
+		<p class="dialog-r-ele">#(..Get("审批时间："))#<span id="txtAppointDate"></span></p>
+		<p class="dialog-r-ele">#(..Get("当前状态：已归档"))#</p>
+		<div class="dialog-r-ele">
+			<label for="cbbRecallReason">#(..Get("拒绝原因："))#</label>
+			<textarea id="taRejectReason" class="textbox" style="width:374px;height:100px;"></textarea>
+		</div>
+	</div>
+	<div id="dlgConfigReason" style="width:800px;height:500px;padding:10px;">
+		<div id="reasontoolbar" style="padding:5px;">
+			<label for="tbReasonDesc">#(..Get("标题"))#</label>
+			<input id="tbReasonDesc" type="text" class="textbox" style="width:150px;">
+			<label for="tbReason">#(..Get("内容"))#</label>
+			<input id="tbReason" type="text" class="textbox" style="width:200px;">
+			<a id="btnAddReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+			<a id="btnSaveReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+			<a id="btnRemoveReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+		</div>
+		<table id="reasonlist"></table>
+	</div>
+	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s reasonFlag = "0"
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var userName = '#(userName)#';
+		var userLocID = '#(userLocID)#';
+		var reasonFlag = '#(reasonFlag)#';
+	</script>
+	<script src="../scripts/epr/js/fs.authorizationinfonew.js"></script>
+</body>
+</html>

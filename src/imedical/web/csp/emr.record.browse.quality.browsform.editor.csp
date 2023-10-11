@@ -1,0 +1,84 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<html>
+<head>
+	<title>在编辑器浏览病历</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	
+
+</head>
+<body style="margin:0px;">
+	<script language="cache" runat="server">
+	    d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s id = $Get(%request.Data("id",1),"")
+		s text = $Get(%request.Data("text",1),"")
+		s chartItemType = $Get(%request.Data("chartItemType",1),"")
+		s pluginType = $Get(%request.Data("pluginType",1),"")
+		s emrDocId = $Get(%request.Data("emrDocId",1),"")
+		s characteristic = $Get(%request.Data("characteristic",1),"")
+		s status = $Get(%request.Data("status",1),"")
+		s episodeId = $Get(%request.Data("episodeId",1),"")
+		s patientId = $Get(%request.Data("patientId",1),"")
+		s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+   		s needPrint=$Get(%request.Data("Print",1),"N")
+		s closeAfterPrint=$Get(%request.Data("CloseAfterPrint",1),"N")
+   		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+		s userName = %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+		s action = $Get(%request.Data("Action",1),"")
+		s visitType=$Get(%request.Data("VisitType",1),"")
+		if (visitType="OP") 
+		{
+			s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
+		}
+		else
+		{
+			s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyles")
+		}
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		
+		s path = $Get(%request.Data("Path",1),"")
+		
+   </script>
+	<script language="javascript">
+		var param = "";
+		var id = '#(id)#';
+		var text = '#(text)#';
+		var chartItemType = '#(chartItemType)#';
+		var pluginType = '#(pluginType)#';
+		var emrDocId = '#(emrDocId)#';
+		var characteristic = '#(characteristic)#';
+		var status = '#(status)#';
+		var iword = false;
+		var igrid = false;
+		var pluginUrl = "#(pluginUrl)#";
+		var needPrint = "#(needPrint)#";
+		var closeAfterPrint = "#(closeAfterPrint)#";
+		var episodeId = "#(episodeId)#";
+		var patientId = "#(patientId)#";
+		var ssgroupId = "#(ssgroupID)#";
+		var IsSetToLog = '#(IsSetToLog)#';
+		var userName = '#(userName)#';
+		var userID = '#(userID)#';
+		var setDefaultFontStyle = "#(setDefaultFontStyle)#";
+		var action = '#(action)#';
+		var ipAddress = getIpAddress();
+		var userLocID = '#(userLocID)#';
+		var path = '#(path)#';
+   </script>
+    <div id="promptMessage" style="display:none;font-size:20px;font-weight:bold;padding:10px 0 0 5px;"></div>
+	<div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+	<div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+    <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px;display:none;"/>
+	<script type="text/javascript" src="../scripts/emr/js/record.browse.quality.browseform.editor.js"></script>
+</body>
+</html>

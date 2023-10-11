@@ -1,0 +1,137 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	// 编辑页面csp
+	s EditorPage= $S($G(%request.Data("EditorPage", 1))="":"nur.emr.business.refer.editor.csp",1:%request.Data("EditorPage", 1))
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	s Tabs = $G(%request.Data("Tabs", 1))
+	s ModelId = $G(%request.Data("ModelId", 1))
+	s WinWidth = $G(%request.Data("WinWidth", 1))
+	s ListWidth = $G(%request.Data("ListWidth", 1))
+</script>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!--nur.emr.business.refer.common.csp-->
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+			background-color: #fff;
+			padding: 10px !important;
+		}	
+	</STYLE>
+	
+	<!--link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/editor.css">
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/refer/common.js" charset=gbk></script-->
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/refer/common.js" charset=gbk></script>
+
+	<script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var Tabs = "#(Tabs)#";
+        var ModelId = "#(ModelId)#";
+		var winwidth="#(WinWidth)#";
+		var listwidth="#(ListWidth)#";
+    </script>
+</head>
+
+<body>
+	<!--等候加载提示-->
+	<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true">
+		<!--左侧框架-->
+		<SCRIPT language="cache" RUNAT="SERVER">
+			w "<div data-options='region:""west"",split:true,border:false' style='width:"_WinWidth_"'>"
+		</SCRIPT>
+			<!--Tab页签-->
+			<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true"></div>
+		</div>
+		<!--右侧框架-->
+		<div class="center_region" data-options="region:'center',border:false">
+			<!-- 加载编辑器的容器 -->
+			<script id="container" name="content" type="text/plain" style="width:calc(100% - 2px);height:calc(100% - 128px);"></script>
+		</div>
+	</div>
+	<!--弹出录入模式下的元素弹窗-->
+	<div id="dialogDomO" class="hisui-dialog dialogO" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomO'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomO').close();}
+	}]">
+		<select id="comboDom" class="hisui-combobox" style="width:280px;"></select>
+	</div>
+	<div id="dialogDomM" class="hisui-dialog dialogM" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomM'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomM').close();}
+	}]">
+		<div class="hisui-panel" id="panelDomM" data-options="border:false">
+			<ul id="ulDom" style="list-style-tupe:none;"></ul>
+		</div>
+	</div>
+	<div id="dialogDomD" class="hisui-dialog dialogD" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomD'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomD').close();}
+	}]">
+		<table class="tableForm">
+			<tr id="row1">
+				<td >
+					日期：
+				</td>
+				<td>
+					<input id="dateDomD" class="hisui-datebox textbox"></input>
+				</td>
+			</tr>
+			<tr id="row2">
+				<td>
+					时间：
+				</td>
+				<td>
+					<input id="timeDomD" class="hisui-timespinner textbox"></input>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div id="dialogDomN" class="hisui-dialog dialogN" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomN'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomN').close();}
+	}]">
+		数值：<input class="hisui-validatebox textbox" data-options="validType:'number'" id="txtNumber">	
+	</div>
+	<!-- 配置文件 -->
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/utf8-php/ueditor.config.js"></script>
+	<!-- 编辑器源码文件 -->
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/utf8-php/ueditor.all.js"></script>
+	<!-- 实例化编辑器 -->
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/refer/editor.js"></script>
+</body>
+
+</html>

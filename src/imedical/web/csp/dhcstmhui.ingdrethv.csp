@@ -6,7 +6,7 @@
 </csp:method>
 <html lang="zh-CN">
  <SERVER>
-  s gIngrtId=$Get(%request.Data("gIngrtId",1))
+ s gIngrtId=$Get(%request.Data("gIngrtId",1))
  d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
  d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
 </SERVER>
@@ -26,25 +26,24 @@
 			<input id="RowId" name="RowId" type="hidden">
 			<tr>
 				<td>退货科室</td>
-				<td><input id="RetLoc" name="RetLoc" class="textbox hisui-combobox" style=""></td>
+				<td><input id="RetLoc" name="RetLoc" class="textbox hisui-combobox"></td>
 				<td>类组</td>
-				<td><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree" style=""></td>
+				<td><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree"></td>
 				<td>制单日期</td>
-				<td><input id="Date" name="Date" class="hisui-datebox textbox" data-options="disabled:true" style="width:120px"></td>
+				<td><input id="Date" name="Date" class="hisui-datebox textbox" data-options="disabled:true"></td>
 				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:86px">完成</a></td>
-				<td><a href="#" id="PrintBT" class="hisui-linkbutton" style="width:86px">打印</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'">完成</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton" style="width:87px">取消完成</a></td>
 			</tr>
 			<tr>
 				<td>供应商</td>
-				<td><input id="Vendor" name="Vendor" class="textbox hisui-combobox" style=""></td>
+				<td><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
 				<td>单号</td>
-				<td><input id="RetNo" name="RetNo" class="textbox" disabled="true" style=""></td>
+				<td><input id="RetNo" name="RetNo" class="textbox" disabled="true"></td>
 				<td>制单时间</td>
-				<td><input id="Time" name="Time" class="hisui-timespinner" data-options="disabled:true" style="width:120px;"></td>
+				<td><input id="Time" name="Time" class="hisui-timespinner textbox" data-options="disabled:true"></td>
 				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-				<td><a href="#" id="CanComBT" class="hisui-linkbutton">取消完成</a></td>
-				<td><a href="#" id="DelBT" class="hisui-linkbutton" style="width:86px">删除</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
 			</tr>
 			<tr>
 				<td>制单人</td>
@@ -52,42 +51,43 @@
 				<td>完成标志</td>
 				<td class="CkPadding"><input id="Completed" name="Completed" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y"></td>
 				<td></td><td></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
 			</tr>
 		</table>
 	</div>
 	<div data-options="region:'center',border:false">
 		<table id="RetGrid"></table>
 	</div>
-	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true'" title="查询退货单"> 
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询退货单"> 
 		<div class="hisui-layout" data-options="fit:true">
 			<div class="" data-options="region:'north',border:false">
-				<table id="FindConditions" class="Condition">
+				<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){FQueryBT.click()}">
 					<input id="HvFlag" name="HvFlag" class="textbox" type="hidden">
+					<input id="AuditFlag" name="AuditFlag" type="hidden" value="N">
 					<tr>
 						<td>起始日期</td>
-						<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox" style=""></td>
+						<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
 						<td>退货科室</td>
-						<td><input id="FRetLoc" name="RetLoc" class="textbox hisui-combobox" style=""></td>
-						<td colspan="2">
-						完成标志
-						<select id="FCompleted" name="Completed" class='hisui-simplecombobox' style="width:160px"></select>
-						</td>
-						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:''">查询</a></td>
-						<td><a href="#" id="FComBT" class="hisui-linkbutton" data-options="iconCls:''">完成</a></td>
+						<td><input id="FRetLoc" name="RetLoc" class="textbox hisui-combobox"></td>
+						<td>完成标志</td>
+						<td><input id="FCompleted" name="Completed" class="textbox hisui-simplecombobox"></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="FComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">选取</a></td>
 					</tr>
 					<tr>
 						<td>截止日期</td>
-						<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox" style=""></select></td>
+						<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
 						<td>供应商</td>
-						<td><input id="FVendor" name="Vendor" class="textbox hisui-combobox" style=""></td>
+						<td><input id="FVendor" name="Vendor" class="textbox hisui-combobox"></td>
 						<td></td><td></td>
-						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:''">清屏</a></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
 					</tr>
 				</table>
 			</div>   
 			<div class="GridPadding" data-options="region:'west',border:false" style="padding-top:0;width:500px;">
-					<div class="hisui-panel" data-options="fit:true,iconCls:'icon-paper',title:'退货单',headerCls:'panel-header-gray'">   
-						<table id="RetMainGrid"></table>
+				<div class="hisui-panel" data-options="fit:true,iconCls:'icon-paper',title:'退货单',headerCls:'panel-header-gray'">   
+					<table id="RetMainGrid"></table>
 				</div>
 			</div>
 			<div class="GridPadding" data-options="region:'center',border:false" style="padding-top:0;padding-left:0;">   
@@ -99,9 +99,11 @@
 	</div>
 
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/IngDretCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/IngDretPrint.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/IngDretHV.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/findIngWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/IngDret/IngDretHV.js"></script>
+
 </body>
 </html>

@@ -20,37 +20,39 @@
 		<table id="Conditions" class="Condition">
 			<input id="RowId" name="RowId" type="hidden">
 			<tr>
-				<td><label>科室</label><input id="LocId" name="LocId" class="hisui-combobox" style="width:170px;"></td>
+				<td><label>科室</label><input id="LocId" name="LocId" class="textbox hisui-combobox"></td>
 				<td><label>单号</label><input id="DsrqNo" name="DsrqNo" class="textbox" disabled="true"></td>
-				<td>
-					<input class="hisui-radio" type="radio" label="个人请领" name="ReqMode" value="1" data-options="checked:true">
-					<input class="hisui-radio" type="radio" label="专业组请领" name="ReqMode" value="0">
-					<input id="UserGrp" name="UserGrp" class="hisui-combobox" disabled="true">
-				</td>
-				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
-				<td><a href="#" id="CancelBT" class="hisui-linkbutton" style="width:86px">作废</a></td>
-				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width: 100px;">清屏</a></td>
-			</tr>
-			<tr>
-				<td><label>类组</label><input id="Scg" name="Scg" class="hisui-stkscgcombotree" style="width:170px;"></td>
-				<td><label>制单人</label><input id="User" name="User" class="textbox" disabled="true"></td>
-				<td align="left"><label style="margin-right:14px;">状态</label><select id="Status" name="Status" class='hisui-combobox' data-options="disabled:true" style="width:170px;">
+				<td><label>单据状态</label><select id="Status" name="Status" class='textbox hisui-combobox' data-options="disabled:true">
 					<option value=""></option>
 					<option value="C">已处理</option>
 					<option value="O">待处理</option>
 					<option value="X">已作废</option>
 					<option value="R">已拒绝</option>
 				</select></td>
-				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
-				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:86px">完成</a></td>
-				<td><a href="#" id="QueryBT" class="hisui-linkbutton">查询请领单</a></td>
+				<td align="left"><input class="hisui-radio" type="radio" label="个人请领" id="ReqByUser" name="ReqMode" value="1" data-options="checked:true"></td>				
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="CancelBT" class="hisui-linkbutton" style="width:88px">作废</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:88px">清屏</a></td>
 			</tr>
 			<tr>
-				<td><label>备注</label><input id="Remarks" name="Remarks" class="textbox" style="width:163px;"></td>
+				<td><label>类组</label><input id="Scg" name="Scg" class="textbox hisui-stkscgcombotree"></td>
+				<td><label>制单人</label><input id="User" name="User" class="textbox hisui-combobox" disabled="true"></td>
+				<td align="left"><label>完成标志</label><input id="CompFlag" name="CompFlag" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y"></td>
+				<td><input class="hisui-radio" type="radio" label="专业组请领" id="ReqByList" name="ReqMode" value="0">
+					<input id="UserGrp" name="UserGrp" class="hisui-combobox" disabled="true">
+				</td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:88px">完成</a></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:88px">查询</a></td>
+			</tr>
+			<tr>
+				<td><label>备注</label><input id="Remarks" name="Remarks" class="textbox"></td>
 				<td><label>制单日期</label><input id="CreateDate" name="CreateDate" class="hisui-datebox textbox" data-options="disabled:true"></td>
-				<td align="left"><label style="margin-right:0;">完成</label><input id="CompFlag" name="CompFlag" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y"></td>
+				<td align="left"><label>模板标志</label><input id="TemplateFlag" name="TemplateFlag" class='hisui-checkbox' type="checkbox" value="Y"></td>
+				<td></td>
 				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
 				<td><a href="#" id="CanComBT" class="hisui-linkbutton">取消完成</a></td>
+				<td><a href="#" id="TemplateBT" class="hisui-linkbutton" style="width:88px">查询模板</a></td>
 			</tr>
 		</table>
 	</div>
@@ -63,6 +65,7 @@
 			<div data-options="region:'north',border:false">
 				<table id="FConditions" class="Condition">
 					<input id="NotDisp" name="NotDisp" type="hidden" value=0>
+					<input name="CompFlag" value="Y" type="hidden">
 					<tr>
 						<td><label>起始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox"></td>
 						<td><label>科室</label><input id="FLocId" name="LocId" class="hisui-combobox"></td>
@@ -99,9 +102,37 @@
 			</div>
 		</div>
 	</div>
+	<!--模板单据窗口-->
+	<div id="TemplateWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询模板">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="hisui-layout" data-options="region:'north',border:false,split:true">
+				<table id="TemplateConditions" class="Condition">
+					<tr>
+						<td><label class="required">*</label><label>科室</label><input id="FTLoc" name="LocId" class="textbox hisui-combobox"></td>
+						<td><label>专业组</label><input id="FTUserGrp" name="UserGroup" class="hisui-combobox"></td>
+						<td><a href="#" id="FTQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="FTClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+						<td><a href="#" id="FTSelectBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">模板编辑</a></td>
+						<td><a href="#" id="FTCreateBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">模板制单</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'west',border:false" class="FindGridWest GridPadding">
+				<div class="hisui-panel" data-options="title:'请领单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="TemplateMainGrid" ></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-left:0px;" class="GridPadding">
+				<div class="hisui-panel" data-options="title:'请领单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="TemplateItmGrid" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDispReq/INDispReqCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDispReq/FindINDispReq.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INDispReq/TemplateWin.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDispReq/INDispReqPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDispReq/INDispReq.js"></script>
 </body>

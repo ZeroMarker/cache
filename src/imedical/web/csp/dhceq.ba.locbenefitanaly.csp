@@ -1,0 +1,135 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+.eq-table{width:100%;}
+.eq-table-item{padding-top:5px;font-weight:blod;}
+.eq-table-lable{width:4%;color:#666;text-align:right;font-weight:blod;font-size:16px;}
+.eq-table-lable-large{width:12%;color:#666;text-align:right;font-weight:blod;}
+.eq-table-info{width:10%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px;}
+.eq_echarts{
+	width: 100%;
+	height: 100%;
+	overflow:hidden;
+	}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s StoreLocDR=$Get(%request.Data("StoreLocDR",1))
+	s StoreLocDesc=$Get(%request.Data("StoreLoc",1))
+	s StartDate=$Get(%request.Data("StartDate",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+	s Job=$Get(%request.Data("Job",1))
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'west',border:true,collapsible:false" style="width:300px;" title="科室信息">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cStartDate" for="StartDate">日期:</div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate" data-options='validParams:"YM"' style="width:100px" value=#(StartDate)#></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable"><label id="cEndDate" for="EndDate">至:</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate" data-options='validParams:"YM"' style="width:100px" value=#(EndDate)#><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cStoreLoc">科室:</div>
+					<div class="eq-table-td eq-table-info" id="StoreLoc"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cAllEQNum">总数量:</div>
+					<div class="eq-table-td eq-table-info" id="AllEQNum"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cAllEQAmount">总金额:</div>
+					<div class="eq-table-td eq-table-info" id="AllEQAmount"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cAllInCome">总收入:</div>
+					<div class="eq-table-td eq-table-info" id="AllInCome"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cAllOutFee">总支出:</div>
+					<div class="eq-table-td eq-table-info" id="AllOutFee"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cPerDayInCome">日均收入:</div>
+					<div class="eq-table-td eq-table-info" id="PerDayInCome"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cPepleNum">总人次:</div>
+					<div class="eq-table-td eq-table-info" id="PepleNum"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cPerDayPepleNum">日均服务人次:</div>
+					<div class="eq-table-td eq-table-info" id="PerDayPepleNum"></div>
+				</div>
+			</div>
+			<div class="hisui-tabs" id="TabsData" data-options="region:'center',split:true">
+				<div data-options="title:'科室效益分析统计图',selected:true,iconCls:'icon-add-note'"> 
+					<div style='height:97%;width:98%;padding:1%;'>
+						<div style='height:340px;width:100%;'>
+							<div style='float:left;height:100%;width:49%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="科室月工作量统计">
+									<div id="LocWorkLoad" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="科室支出项统计">
+									<div id="LocOutFee" class="eq_echarts"></div>
+								</div>
+							</div>
+						</div>
+						<div style='height:340px;width:100%;'>
+							<div style='float:left;height:100%;width:49%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="科室月收益统计">
+									<div id="LocBenefitCharts" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="科室月收益明细">
+									<div id="LocBenefitGrid" class="hisui-datagrid"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div data-options="title:'科室效益分析设备明细',iconCls:'icon-add-note'"> 
+					<div style='height:680px;width:98%;padding:1%;'>
+						<div style='float:left;height:99%;width:100%;'>
+							<table class="hisui-datagrid" id="tLocBenefitEquipList" data-options="headerCls:'panel-header-card'" title="科室效益分析设备明细"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="StoreLocDesc" value=#(StoreLocDesc)#>
+			<INPUT type="hidden" id="StoreLocDR" value=#(StoreLocDR)#>
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#(Job)#>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/common/echarts.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/ba/locbenefitanaly.js"></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</body>
+<script type='text/javascript'>
+MonthBox('StartDate');
+MonthBox('EndDate');
+</script>
+</HTML>

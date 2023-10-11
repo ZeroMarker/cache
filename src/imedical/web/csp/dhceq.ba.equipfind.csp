@@ -1,0 +1,68 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<HISUI/>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s ReadOnly=%request.Data("ReadOnly",1)
+ s QXType=%request.Data("QXType",1)
+ //s UseLocDR=%request.Data("UseLocDR",1)
+</Script>
+</HEAD>
+<body class="hisui-layout">
+		<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel"  title="设备清单" data-options="fit:true,eqtitle:'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:100px;"><!--modified by csj 20191129 修改高度(能否自适应?)-->
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="No">设备编号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="No" ></div>
+					<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
+					<!--取消包含查询2850539 modified by ZY 20220913-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Name"></div> 
+					<div class="eq-table-td eq-table-label"><label id="cEquipType" for="EquipType">管理类组</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType'" id="EquipType" ></div>
+					<div class="eq-table-td eq-table-label"><label for="Status">状态</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="Status" ></div>
+					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cUseLoc" for="UseLoc">使用科室</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc','paras':[{name:'Type',type:'4',value:'QXType'},{name:'LocDesc',type:'4',value:'UseLoc'}]" id="UseLoc"></div>
+					<div class="eq-table-td eq-table-label"><label for="MinValue">设备原值</label></div>
+					<div class="eq-table-td "><input style="WIDTH: 63px; TEXT-ALIGN: right" class="hisui-validatebox" id="MinValue" >至<input style="WIDTH: 64px; TEXT-ALIGN: right" class="hisui-validatebox" id="MaxValue" ></div>
+					<div class="eq-table-td eq-table-label"><lable id="cProvider" for="Provider">供应商</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Vendor'" id="Provider"></div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input"></div>
+					<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+				<table id="tDHCEQBenefitEquip" data-options="border:false"></table>
+				<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;"></span>	
+				<div class="eq-table-td eq-table-input"></div>	
+			</div>
+    	</div>
+	</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="UseLocDR">
+			<INPUT type="hidden" id="EquipTypeDR" >
+			<INPUT type="hidden" id="ProviderDR">
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<INPUT TYPE="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/ba/equipfind.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</body>
+</HTML>

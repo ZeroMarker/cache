@@ -1,8 +1,14 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <html>
 <head>
 <meta content="text/html;charset=utf-8"/>
 <!-- Put your page Title here -->
 <title>	分诊上传文件 </title>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
+
 <script Language="Javascript">
 	var SessionID= "#(%session.SessionId)#";
 	var UserId = "#($g(%session.Data("LOGON.USERID")))#;"
@@ -14,7 +20,7 @@
 <link rel="stylesheet" href="../scripts/dhcnewpro/plugins/imgshow/css/boxImg.css" />
 <SERVER>
 		s HospID = %session.Data("LOGON.HOSPID")
-		Set FTPFOLDERNAME=##Class(web.DHCAppComPar).GetAppPropValue("DHCEMCHK","FTPFOLDERNAME",HospID,"","","")
+		Set FTPFOLDERNAME=##Class(web.DHCEMComPar).GetAppPropValue("DHCEMCHK","FTPFOLDERNAME",HospID,"","","")
 		w "<SCRIPT>"
 		w "var FTPFOLDERNAME="""_FTPFOLDERNAME_""";"_$c(13,10)
  		w "</SCRIPT>"
@@ -25,21 +31,25 @@
 <body class="hisui-layout">
 <input id="PCLRowID" style="display:none"></input><!--分诊ID-->
 <div data-options="region:'center',border:false" style="padding: 5px 10px 10px 10px;" >
-	<div id="cc" data-options="fit:true" class="hisui-layout" style="padding:10px">
-	    <div data-options="region:'north',title:'',split:true,border:false" style="height:62px;padding-top:5px;overflow: hidden">
-	   		<table style="padding-top:5px">
+	<div id="cc" data-options="fit:true" class="hisui-layout" >
+	    <div data-options="region:'north',title:'',border:false" style="height:42px;padding-top:0px;overflow: hidden">
+	   		<table style="padding-top:0px">
 	   			<tr>
-	   				<td style="padding-left:10px;padding-top:8px"><input type="radio" class="hisui-radio" name="uploadType"  label='急救单' data-options="checked:true" value="1"></td>
-	   				<td style="padding-left:10px;padding-top:8px"><input type="radio" class="hisui-radio" name="uploadType" label='救助单' value="2"></td>
-	   				<td style="padding-left:10px;padding-top:8px"><input type="radio" class="hisui-radio" name="uploadType" label='接警单' value="3"></td>
-					<td style="padding-left:30px;width:450px">
-						<input class="" type="file" id="uploadify"  name="uploadify" />
+	   				<td style="padding-left:10px;"><input type="radio" class="hisui-radio" name="uploadType"  label='急救单' data-options="checked:true" value="1"></td>
+	   				<td style="padding-left:10px;"><input type="radio" class="hisui-radio" name="uploadType" label='救助单' value="2"></td>
+	   				<td style="padding-left:10px;"><input type="radio" class="hisui-radio" name="uploadType" label='接警单' value="3"></td>
+					<td style="padding-left:30px;width:450px;">
+						<input class="" style="" type="file" id="uploadify"  name="uploadify" style="display:none"/>
+						<a href="javascript:void(0)" for="myFile" class="hisui-linkbutton" onclick="uploadPic()">上传图片</a>
+						<input class="" id="myFile" name="file1" type="file" data-options="width:200,plain:true" accept="image/*" style="display:none"/>
+						<!--input class="hisui-filebox" id="myFile" name="file1" type="file" data-options="width:200,plain:true"/>
+						<a href="javascript:void(0)" class="hisui-linkbutton" onclick="uploadPic()">上传</a-->
 					</td>
 	   			</tr>
 	   		</table>
 			
 	    </div>
-	    <div data-options="region:'east',title:'',split:true,headerCls:'panel-header-gray',border:false,collapsible:false" style="width:600px;">
+	    <div data-options="region:'east',title:'',headerCls:'panel-header-gray',border:false" style="width:600px;padding-left:10px;">
 	    	<div class="hisui-panel" title="上传图片" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:true,collapsible:true,minimizable:true,maximizable:true">
 	    		<div id="imgDiv"></div>
 	    	</div>
@@ -58,12 +68,14 @@
 	    </tr>
 	</table>
 </div>
-
+ 
 </body>
 
 
 <script type="text/javascript" src="../scripts/dhcnewpro/plugins/imgshow/js/boxImg.js"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/plugins/uploadify/jquery.uploadify.min.js" ></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/dhcem.uploadify.js"></script>
-
+<!--遮罩-->
+<div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;opacity: 0.8;display:none;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">需要同步删除ftp服务器文件,这需要一点时间,请稍等···</font></h1></div>
+ 
 </html>

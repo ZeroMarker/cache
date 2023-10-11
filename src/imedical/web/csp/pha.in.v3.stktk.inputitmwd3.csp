@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--库存盘点输盘录入方式三
+	csp:csp/pha.in.v3.stktk.inputitmwd3.csp
+	js: scripts/pha/in/v3/stktk/inputitmwd3.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
+
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+	<title>
+		<TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+     <style>
+  
+    </style>
+    <!-- 接收参数 -->
+    <server>
+		s stktkId = $G(%request.Data("stktkId", 1))
+		s stktkLocId = $G(%request.Data("stktkLocId", 1))
+		s stktkWinId =  $G(%request.Data("stktkWinId", 1))
+		s inputModel = 3
+	</server>
+	<script type = "text/javascript">
+		var Com_StktkId = "#(stktkId)#";
+		var Com_LocId = "#(stktkLocId)#";
+		var Com_WinId = "#(stktkWinId)#";
+		var Com_InputModel = "#(inputModel)#";
+	</script>
+
+</HEAD>
+<body>
+	<div class = "hisui-layout" fit = "true">
+		<div data-options = "region:'center',border:false" class = "pha-body">
+			<div class = "hisui-layout" fit = "true">
+				<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',region:'center',split:true, title:'库存盘点-按品种录入'" >
+					<table id="gridStktkDetail"></table>
+				</div>
+				
+			</div>		
+		</div>
+	</div>
+	<div id = "gridStktkDetailBar" >
+		<table id = "qCondition" class = "pha-con-table">
+			<tr>
+				<td class = "r-label">
+					<input id = 'stktkId' class = "hisui-validatebox"  value='#(stktkId)#' data-pha = 'class:"hisui-validatebox",clear:true,query:true' style = "width:0px;display: none;">
+					<input id = 'stktkLocId' class = "hisui-validatebox" value='#(stktkLocId)#'  data-pha = 'class:"hisui-validatebox",clear:true,query:true' style = "width:0px;display: none;">
+					<label for = "manGrpId">#(..Get("盘点组"))#</label>
+				</td>
+				<td>
+					<input id = 'manGrpId' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stkGrpId">#(..Get("类组"))#</label>
+				</td>
+				<td>
+					<input id = 'stkGrpId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stkCatId">#(..Get("库存分类"))#</label>
+				</td>
+				<td >
+					<input id = 'stkCatId' class = "hisui-combobox" data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td >
+					<label for = "orderType">#(..Get("排序方式"))#</label>
+				</td>
+				<td>
+					<input id = 'orderType' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-find'"  data-options = "stopAllEventOnDisabled:true" id = 'btnFind'>查询</a>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-clean'"  data-options = "stopAllEventOnDisabled:true" id = 'btnClean'>清屏</a>
+				</td>
+			</tr>
+			<tr>
+				<td class = "r-label">
+					<label for = "stkbinId">#(..Get("药品货位"))#</label>
+				</td>
+				<td>
+					<input id = 'stkbinId' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stktkNo">#(..Get("盘点单号"))#</label>
+				</td>
+				<td>
+					<input id = 'stktkNo' disabled = "true" class = "hisui-validatebox"  data-pha = 'class:"hisui-validatebox",clear:true,query:true'>
+				</td>
+				<td >
+					<label for = "inputWinId">#(..Get("实盘窗口"))#</label>
+				</td>
+				<td>
+					<input id = 'inputWinId' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td/>
+				<td/>
+				<td>
+					<a class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-save'"  data-options = "stopAllEventOnDisabled:true" id = 'btnSave'>保存</a>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-back'"  data-options = "stopAllEventOnDisabled:true" id = 'btnBack'>返回</a>
+				</td>
+			</tr>
+		</table>
+		<div class = "pha-line"></div>
+		<div>
+			<div style="margin:2px 0px;">
+				<a class = "hisui-linkbutton" plain = 'true' iconCls = "icon-add"  id = "btnAddRows">新增药品</a>
+				<a class = "hisui-linkbutton" plain = 'true' iconCls = "icon-cancel"  id = "btnDelRows">删除药品</a>
+				<label for = "inci" style="margin:2px 10px;">#(..Get("定位药品"))#</label>
+				<input id="inci" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+			</div>
+		</div>
+    </div>
+	<!-- 药库公共 -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/com/js/store.js"></script>
+	<!-- 本页js -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/stktk/component.js"></script>
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/stktk/inputitmwd3.js"></script>
+</body>
+</html>

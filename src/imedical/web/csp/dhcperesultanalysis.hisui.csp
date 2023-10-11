@@ -3,6 +3,7 @@
  * Anchor: zhongricheng
  * Date: 2019-09-10
  * Description: HISUI 体检结果分析
+ * Query：web.DHCPE.Statistic.IllnessStatistic.cls   PEResultAnalysis
 -->
 
 <!DOCTYPE html>
@@ -15,46 +16,70 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
-	<script language="JavaScript"> 
-		self.moveTo(0,0) 
-		self.resizeTo(screen.availWidth,screen.availHeight)
-	</script>
 	<SCRIPT language="Cache" RUNAT="SERVER">
  		s curDate=+$h
 	</SCRIPT>
+	<script type="text/javascript">
+		var bodyCls1 = ""
+		var bodyCls2 = "panel-header"
+		var borderColor1 = "#ccc"
+		if (HISUIStyleCode == "lite") {
+			bodyCls1 = "panel-header-gray"
+			bodyCls2 = "panel-header-gray"
+			borderColor1 = "#E2E2E2"
+		}
+	</script>
+
 	<style>
-	.paddingtd{
-		padding: 0 0 0 10px;
-	}
-	.paddingtd1{
-		padding: 0 0 0 6px;
-	}
-	.heard-border {
-		border: 1px solid #ccc;
-		border-radius:4px;
-	}
+		.paddingtd{
+			padding: 0 0 0 10px;
+		}
+		.paddingtd1{
+			padding: 0 0 0 6px;
+		}
+		.heard-border {
+			border: 1px solid #ccc;
+			border-radius:4px;
+		}
+		/*处理复选框与文字距离 及 垂直居中问题*/
+		label.ochkbox {
+			background-position: 0 -1px;
+		}
+		/*处理炫彩/极简五方布局中自定义增加的边框颜色问题*/
+		.inherit-border, .inherit-border>div:first-child  {
+		}
+		.inherit-border-div {
+			border-bottom-width: 1px;
+			border-radius:0!important;
+			border-color: inherit!important;
+		}
+		/*重写 手风琴中 边框样式*/
+		.accordion.accordion-noborder .panel .accordion-header {
+			border-radius: inherit!important;
+			border-right-width: 0;
+			border-left-width: 0;
+		}
 	</style>
 </head>
 <body>
 	<!-- 主页面 start -->
-	<div class="hisui-panel" border="false" fit="true" style="padding:10px;">
-		<div class="hisui-layout" border="false" data-options="collapsible:false,fit:true">			
-			<div class="hisui-layout" data-options="region:'center'" border="false">
-				<!-- 分析查询 west start -->
-				<div class="hisui-layout" data-options="region:'west'" style="width:241px; border-radius:0 0 0 0; border:1px solid #509de1;">
-					<div data-options="region:'north',title:'条件维护',headerCls:'panel-header',collapsible:false" border="false" style="height:367px;">
-						<!-- 查询条件 north start -->
+	<div class="hisui-panel" border="false" fit="true" style="padding:10px; background-color: inherit;">
+		<div class="hisui-layout" data-options="collapsible:false,fit:true,border:false" style="background-color: inherit;">			
+			<div class="hisui-layout" data-options="region:'center',border:false" style="background-color: inherit;">
+				<div class="hisui-layout" data-options="region:'west',bodyCls:bodyCls1" style="width:241px; margin-bottom:1px;">
+					<!-- 查询条件 north start -->
+					<div data-options="region:'north',title:'#(..Get("条件维护"))#',headerCls:bodyCls2,collapsible:false" border="false" style="height:359px; overflow: hidden;">
 						<table style="border-spacing: 10px;">
 							<tr>
-								<td align="right"><label for="BeginDate">开始日期</label></td>
+								<td align="right"><label for="BeginDate">#(..Get("开始日期"))#</label></td>
 								<td style=""><input class="hisui-datebox textbox" id="BeginDate" name="BeginDate" style="width:152px;"/></td>
 							</tr>	
 							<tr>	
-								<td align="right"><label for="EndDate">截止日期</label></td>
+								<td align="right"><label for="EndDate">#(..Get("截止日期"))#</label></td>
 								<td style=""><input class="hisui-datebox textbox" id="EndDate" name="EndDate" style="width:152px;"/></td>
 							</tr>	
 							<tr>
-								<td align="right"><label for="AgeFrom">年龄范围</label></td>
+								<td align="right"><label for="AgeFrom">#(..Get("年龄范围"))#</label></td>
 								<td style="">
 									<input class="hisui-numberbox textbox" id="AgeFrom" name="AgeFrom" data-options="isKeyupChange:true" style="width:69px;"/>
 									-
@@ -62,66 +87,66 @@
 								</td>
 							</tr>
 							<tr>	
-								<td align="right"><label for="AgeGroup">年龄段</label></td>
+								<td align="right"><label for="AgeGroup">#(..Get("年龄段"))#</label></td>
 								<td style=""><input class="hisui-combobox" id="AgeGroup" name="AgeGroup" style="width:152px;"/></td>
 							</tr>
 							<tr>
-								<td align="right"><label for="Sex">性别</label></td>
+								<td align="right"><label for="Sex">#(..Get("性别"))#</label></td>
 								<td style=""><input class="hisui-combobox" id="Sex" name="Sex" style="width:152px;"/></td>
 							</tr>
 							<tr>
-								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BQuery" data-options="iconCls:'icon-w-find'" href="#" style="width: 145px;">查询</a></td>
+								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BQuery" data-options="iconCls:'icon-w-find'" href="#" style="width: 145px;">#(..Get("查询"))#</a></td>
 							</tr>
 							<tr>
-								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSymptomsEdit" data-options="iconCls:'icon-w-edit'" href="#" style="width: 145px;">体征条件维护</a></td>
+								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSymptomsEdit" data-options="iconCls:'icon-w-edit'" href="#" style="width: 145px;">#(..Get("体征条件维护"))#</a></td>
 							</tr>
 							<tr>
-								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSetAllTarget" data-options="iconCls:'icon-w-update'" href="#" style="width: 145px;">重新生成指标</a></td>
+								<td colspan=2 style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSetAllTarget" data-options="iconCls:'icon-w-update'" href="#" style="width: 145px;">#(..Get("重新生成指标"))#</a></td>
 							</tr>
 						</table>
 					</div>
 					<!-- 查询条件 north end -->
-							
+
 					<!-- 体征、团体、套餐 accordion start -->
-					<div data-options="region:'center'" border="false" style="">
-		 				<div class="hisui-accordion" fit="true" border="false" style="float:left;">
-				 			<div title="体征选择" data-options="iconCls:'icon-w-list',selected:true" border="false" style="background-color:#EBEBEB;">   
+					<div data-options="region:'center',border:false" style="border-radius: 0;">
+		 				<div class="hisui-accordion" fit="true" border="false" style="float:left; padding-bottom:1px;">
+				 			<div title='#(..Get("体征选择"))#' data-options="iconCls:'icon-w-list',selected:true" style="border-right-width: 0; border-left-width: 0;">   
 						        <table id="Symptoms"></table>
 						    </div>
-						    <div title="团体选择" data-options="iconCls:'icon-w-list'" border="false" style="background-color:#EBEBEB;">   
-						        <div class="hisui-layout" fit="true">
-							        <div data-options="region:'north'" border="false" style="height:91px;border-bottom:1px solid #C0C0C0;overflow:hidden;">
+		 				    <div title='#(..Get("团体选择"))#' data-options="iconCls:'icon-w-list'" style="border-right-width: 0; border-left-width: 0;">
+						    	<div class="hisui-layout inherit-border" fit="true" border="false">
+							        <div data-options="region:'north',border:false" class="inherit-border-div" style="height:91px; overflow: hidden;">
 										<table style="border-spacing: 10px;">
 											<tr>
-												<td align="right"><label for="GBIDesc">团体名称</label></td>
-												<td style=""><input class="hisui-validatebox textbox" id="GBIDesc" name="GBIDesc" oninput="SearchGBIDesc()" onpropertychange="OnPropChanged(event,'Groups')" style="width:146px;"/></td>
+												<td align="right"><label for="GBIDesc">#(..Get("团体名称"))#</label></td>
+												<td style=""><input class="hisui-validatebox textbox" id="GBIDesc" name="GBIDesc" oninput="SearchGBIDesc()" onpropertychange="OnPropChanged(event,'Groups')" style="width:145px;"/></td>
 											</tr>	
 											<tr>	
-												<td align="right"><label for="ContractID">团体合同</label></td>
-												<td style=""><input class="hisui-combogrid" id="ContractID" name="ContractID" style="width:153px;"/></td>
+												<td align="right"><label for="ContractID">#(..Get("团体合同"))#</label></td>
+												<td style=""><input class="hisui-combogrid" id="ContractID" name="ContractID" style="width:152px;"/></td>
 											</tr>
 										</table>
 									</div>
 							        <div data-options="region:'center'" border="false">
-							        	<table id="Groups"></table>
+						        		<table id="Groups"></table>
 							        </div>
-						        </div>
-						    </div>   
-						    <div title="套餐选择" data-options="iconCls:'icon-w-list'" border="false" style="background-color:#EBEBEB;">
-						    	<div class="hisui-layout" fit="true">
-							        <div data-options="region:'north'" border="false" style="height:52px;border-bottom:1px solid #C0C0C0;overflow:hidden;">
+						        </div> 
+						    </div>
+							<div title='#(..Get("套餐选择"))#' data-options="iconCls:'icon-w-list'" style="border-right-width: 0; border-left-width: 0;">
+						    	<div class="hisui-layout inherit-border" fit="true" border="false">
+							        <div data-options="region:'north',border:false" class="inherit-border-div" style="height:51px; overflow: hidden;">
 										<table style="border-spacing: 10px;">
 											<tr>
-												<td align="right"><label for="OSDesc">套餐描述</label></td>
+												<td align="right"><label for="OSDesc">#(..Get("套餐描述"))#</label></td>
 												<td style=""><input class="hisui-validatebox textbox" id="OSDesc" name="OSDesc" oninput="SearchOSDesc()" onpropertychange="OnPropChanged(event,'OrdSets')" style="width:146px;"/></td>
 											</tr>
 										</table>
 									</div>
 							        <div data-options="region:'center'" border="false">
-						        		<table id="OrdSets"></table>
+							        	<table id="OrdSets"></table>
 							        </div>
-						        </div> 
-						    </div> 
+						        </div>
+						    </div>   						    
 						</div>
 		 			</div>
 		 			<!-- 体征、团体、套餐 accordion end -->
@@ -129,16 +154,17 @@
 				<!-- 分析查询 west end -->
 				
 				<!-- 结果分析 润乾iframe start -->
-				<div class="hisui-layout ResizeDiv1" data-options="region:'center'" border="false" style="">
-					<div data-options="region:'center'" border="false" style="padding:0 2px 2px 10px;">
-						<div class="hisui-layout" fit="true" border="false" style="border:1px solid #C0C0C0; border-radius:4px;">
-							<div data-options="title:'结果分析',region:'center',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" border="false" style="overflow:hidden;"> 
-								<div id="ReportFileDiv" style="width:100%; height:100%;">
-						 			<iframe id="ReportFile" name="ReportFile" src="dhccpmrunqianreport.csp?reportName=DHCPEResultAnalysis.raq" width="100%" height="100%" frameborder="0" border="0" hspace="0" vspace="0" marginwidth="0" marginheight="0" scrolling="auto" allowtransparency="yes"></iframe>
-						 		</div>
+				<div class="ResizeDiv1" data-options="region:'center',border:false" style="padding-left:10px; background-color: inherit;">
+					<div class="hisui-panel" data-options="border:false,fit:true">
+						<div class="hisui-layout" data-options="border:false,fit:true">
+							<div data-options="region:'center',title:'#(..Get("结果分析"))#',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,tools:'#search-panel-tools'" style="overflow: hidden;">
+								<iframe id="ReportFile" name="ReportFile" src="" width="100%" height="100%" frameborder="0" border="0" hspace="0" vspace="0" marginwidth="0" marginheight="0" scrolling="auto" allowtransparency="yes"></iframe>
 							</div>
 						</div>
 					</div>
+				</div>
+				<div id="search-panel-tools">
+					<span href="#" style="cursor:pointer;padding:10px;" onclick="description_click();"><font color="#339EFF">#(..Get("统计说明"))#</font></span>
 				</div>
 			 	<!-- 结果分析 润乾iframe end -->
 		 	</div>
@@ -151,36 +177,36 @@
 		<div id="SymptomsEditLayoutWin" class="hisui-layout" fit="true" border="false">
 		 	<!-- 体征维护 west start -->
 			<div class="hisui-layout" data-options="region:'west'" border="false" style="width:378px; border:1px solid #ccc; border-radius:4px;">
-				<div data-options="title:'体征维护',region:'north',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" border="false" style="height: 208px;border-bottom:1px dashed #C0C0C0;">
+				<div data-options="title:'#(..Get("体征维护"))#',region:'north',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" border="false" style="height: 208px;border-bottom:1px dashed #C0C0C0;">
 					<table style="border-spacing: 10px;">
 						<tr>
-							<td align="right"><label for="SymptomCode">体征编号</label></td>
+							<td align="right"><label for="SymptomCode">#(..Get("体征编号"))#</label></td>
 							<td style=""><input class="hisui-validatebox textbox" id="SymptomCode" name="SymptomCode" style="width:100px;"/></td>
 							
-							<td align="right"><label for="SymptomDesc">体征描述</label></td>
+							<td align="right"><label for="SymptomDesc">#(..Get("体征描述"))#</label></td>
 							<td style=""><input class="hisui-validatebox textbox" id="SymptomDesc" name="SymptomDesc" style="width:100px;"/></td>
 						</tr>	
 						<tr>
-							<td align="right"><label for="SymptomManSeq">男性顺序</label></td>
+							<td align="right"><label for="SymptomManSeq">#(..Get("男性顺序"))#</label></td>
 							<td style=""><input class="hisui-numberbox textbox" id="SymptomManSeq" name="SymptomManSeq" data-options="isKeyupChange:true" style="width:107px;"/></td>
 						
-							<td align="right"><label for="SymptomFemanSeq">女性顺序</label></td>
+							<td align="right"><label for="SymptomFemanSeq">#(..Get("女性顺序"))#</label></td>
 							<td style=""><input class="hisui-numberbox textbox" id="SymptomFemanSeq" name="SymptomFemanSeq" data-options="isKeyupChange:true" style="width:107px;"/></td>
 						</tr>	
 						<tr>	
-							<td align="right"><label for="UseRange">作用范围</label></td>
+							<td align="right"><label for="UseRange">#(..Get("作用范围"))#</label></td>
 							<td style=""><input class="hisui-combobox" id="UseRange" name="UseRange" style="width:107px;"/></td>
 								
 							<td colspan=2 style="text-align:center;"></td>
 						</tr>
 					
 						<tr>
-							<td colspan=2 align="center"><a id="BSearch" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-find'">查询</a></td>
-							<td colspan=2 align="center"><a id="BClear" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							<td colspan=2 align="center"><a id="BSearch" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+							<td colspan=2 align="center"><a id="BClear" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a></td>
 						</tr>
 						<!-- tr>
-							<td align="center"><a id="BAdd" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-add'">新增</a></td>
-							<td align="center"><a id="BUpd" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-edit'">修改</a></td>
+							<td align="center"><a id="BAdd" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-add'">#(..Get("新增"))#</a></td>
+							<td align="center"><a id="BUpd" href="#" class="hisui-linkbutton" style="width:110px;" data-options="iconCls:'icon-w-edit'">#(..Get("修改"))#</a></td>
 						</tr -->
 					</table>
 				</div>
@@ -194,14 +220,14 @@
 			<div class="hisui-layout ResizeDiv1" data-options="region:'center'" border="false" style="">
 				<div data-options="region:'center'" border="false" style="padding:0 2px 2px 10px;">
 					<div class="hisui-layout" fit="true" border="false" style="border:1px solid #ccc; border-radius:4px;">
-						<div data-options="title:'表达式维护',region:'center',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" border="false" style=""> 
+						<div data-options="title:'#(..Get("表达式维护"))#',region:'center',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" border="false" style=""> 
 							<table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
 								<tr>
 									<td>
 										<div><textarea id="NorInfo"  style="width:700px;height:50px;"></textarea></div>
 									</td>
 									<td>
-										<a id="BSave" class="hisui-linkbutton hover-dark" style="width:110px;" data-options="iconCls:'icon-w-save'">保存</a>
+										<a id="BSave" class="hisui-linkbutton hover-dark" style="width:110px;" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
 									</td>
 								</tr>
 							</table>
@@ -221,21 +247,21 @@
 	<div id="SymptomsListOptWin" style="width:465px;height:235px;padding:0 10px 10px 10px;display:none;">   
 		<table style="border-spacing: 10px;margin:0 auto;">
 			<tr>
-				<td align="right"><label for="SymptomCodeWin">体征编号</label></td>
+				<td align="right"><label for="SymptomCodeWin">#(..Get("体征编号"))#</label></td>
 				<td style=""><input class="hisui-validatebox textbox" id="SymptomCodeWin" name="SymptomCodeWin" style="width:120px;"/></td>
 				
-				<td align="right"><label for="SymptomDescWin">体征描述</label></td>
+				<td align="right"><label for="SymptomDescWin">#(..Get("体征描述"))#</label></td>
 				<td style=""><input class="hisui-validatebox textbox" id="SymptomDescWin" name="SymptomDescWin" style="width:120px;"/></td>
 			</tr>	
 			<tr>
-				<td align="right"><label for="SymptomManSeqWin">男性顺序</label></td>
+				<td align="right"><label for="SymptomManSeqWin">#(..Get("男性顺序"))#</label></td>
 				<td style=""><input class="hisui-numberbox textbox" id="SymptomManSeqWin" name="SymptomManSeqWin" data-options="isKeyupChange:true" style="width:127px;"/></td>
 			
-				<td align="right"><label for="SymptomFemanSeqWin">女性顺序</label></td>
+				<td align="right"><label for="SymptomFemanSeqWin">#(..Get("女性顺序"))#</label></td>
 				<td style=""><input class="hisui-numberbox textbox" id="SymptomFemanSeqWin" name="SymptomFemanSeqWin" data-options="isKeyupChange:true" style="width:127px;"/></td>
 			</tr>	
 			<tr>	
-				<td align="right"><label for="UseRangeWin">作用范围</label></td>
+				<td align="right"><label for="UseRangeWin">#(..Get("作用范围<"))#/label></td>
 				<td style=""><input class="hisui-combobox" id="UseRangeWin" name="UseRangeWin" style="width:127px;"/></td>
 				
 				<td colspan=2 style="text-align:center;"></td>
@@ -252,29 +278,29 @@
 					<div class="messager-icon messager-info" style="valign:top;"></div>
 				</td>
 				<td>  
-					<p><font style="font-size:16px; font-weight:bold">是否保存维护的表达式并更新查询指标？</font></p>
+					<p><font style="font-size:16px; font-weight:bold">#(..Get("是否保存维护的表达式并更新查询指标？"))#</font></p>
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<p><font style="font-size:15px; font-weight:bold">保存并更新：</font>保存维护的表达式并更新查询指标；</p>
+					<p><font style="font-size:15px; font-weight:bold">#(..Get("保存并更新："))#</font>#(..Get("保存维护的表达式并更新查询指标；"))#</p>
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<p><font style="font-size:15px; font-weight:bold">保存：</font>只保存维护的表达式；</p>
+					<p><font style="font-size:15px; font-weight:bold">#(..Get("保存："))#</font>#(..Get("只保存维护的表达式；"))#</p>
 				</td>
 			</tr>
 			<tr>
 				<td>
-					<p><font style="font-size:15px; font-weight:bold">取消：</font>不做以上操作。</p>
+					<p><font style="font-size:15px; font-weight:bold">#(..Get("取消："))#</font>#(..Get("不做以上操作。"))#</p>
 				</td>
 			</tr>
 			<tr>
 				<td colspan=4 align="center">
-					<a id="BSaveAndUpdWin" href="#" class="hisui-linkbutton" style="width:110px;">保存并更新</a>&nbsp;&nbsp;&nbsp;
-					<a id="BSaveWin" href="#" class="hisui-linkbutton" style="width:110px;">保存</a>&nbsp;&nbsp;&nbsp;
-					<a id="BCancelWin" href="#" class="hisui-linkbutton" style="width:110px;">取消</a>
+					<a id="BSaveAndUpdWin" href="#" class="hisui-linkbutton" style="width:110px;">#(..Get("保存并更新"))#</a>&nbsp;&nbsp;&nbsp;
+					<a id="BSaveWin" href="#" class="hisui-linkbutton" style="width:110px;">#(..Get("保存"))#</a>&nbsp;&nbsp;&nbsp;
+					<a id="BCancelWin" href="#" class="hisui-linkbutton" style="width:110px;">#(..Get("取消"))#</a>
 				</td>
 			</tr>
 		</table>
@@ -282,6 +308,7 @@
 	<!-- 表达式确认保存模态窗口 end -->
 								
 	<script type="text/javascript" src="../scripts/DHCPEResultAnalysis.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPEStatisticDescription.hisui.js"></script>
 	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
 </body>

@@ -1,0 +1,86 @@
+<!-- 
+    * FileName: dhcbill.outpay.ipaddinv.csp
+    * Author: LUANZH
+    * Date: 2022-12-5
+    * Description: 住院外院发票录入
+   -->
+   <!DOCTYPE html>
+   <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	if ##class(websys.SessionEvents).SessionExpired() quit 1
+	quit 1
+   </csp:method>
+   <html>
+   <head>
+	   <EXTHEALTH:HEAD/>
+	   <HISUI/>
+	   <DHCBILL/>
+	   <ADDINS/>
+	   <link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.outpay.addinv.css'/>
+	   <script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	   <script type='text/javascript' src='../scripts/DHCInsuPort.js'></script>
+	   <script type='text/javascript' src='../scripts/DHCWeb.OPYBComm.js'></script>
+	   <server>
+	       set ItemType=##class(BILL.OUTPAY.BL.ConFigCommon).IsEnterHIS($g(%session.Data("LOGON.HOSPID")))
+	   	   set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+		   set AuditFlag=##class(BILL.OUTPAY.BL.ConFigCommon).IsShowAuditFlag($g(%session.Data("LOGON.HOSPID")))
+		   set GroupId=$g(%session.Data("LOGON.GROUPID"))
+		   set HospId=$g(%session.Data("LOGON.HOSPID"))
+		   set PatientListPage=""
+		   set EpisodeID=%request.Get("EpisodeID")
+		   set BillId=%request.Get("BillId")
+		   w "<input id='PatientId' type='hidden' value='"_$s((+EpisodeID'=0):$p($g(^PAADM(EpisodeID)),"^",1),1:"")_"'/>",!
+		   w "<input id='admStr' type='hidden'/>",!
+		   w "<input id='PatInsTypeDR' type='hidden'/>",!
+	   </server>
+	   <script type='text/javascript'>
+		   //常量
+		   var CV = {
+			 EpisodeID: "#(EpisodeID)#",
+			 BillId: "#(BillId)#",
+		   };
+		   var GV = {
+			EditRowIndex: undefined,
+			ItemType: "#($s((ItemType="0"):"INSU",1:"HIS"))#",
+			AuditFlag: #(AuditFlag)#
+		};
+	   </script>
+   </head>
+   
+   <body class="hisui-layout">
+	   <!--<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;">
+		   <csp:Include Page="dhcbill.in.patient.banner.csp">
+	   </div>-->
+	   <div data-options="region:'center',border:false" style="padding:10px;background-color:#($s((defUIVersion="lite"):"#f5f5f5",1:"#ffffff"))#">
+		   <div class="hisui-layout" data-options="fit:true" id="head-menu">
+			   <div data-options="region:'north',border:false" style="border-radius:4px 4px 0 0;border-left:1px solid #cccccc;border-right:1px solid #cccccc;border-top:1px solid #cccccc">
+				   <table class="search-table">
+					<tr>
+						<td class="r-label"><label>#(..Get("账单号"))#</label></td>
+						<td><input class="textbox" id="billNo" value="#(BillId)#" disabled/></td>
+						<td class="r-label r-label-2"><label>#(..Get("发票号"))#</label></td>
+						<td><input class="textbox" id="invNo"/></td>
+						<td class="r-label r-label-2"><label>#(..Get("发票金额"))#</label></td>
+						<td><input class="textbox" id="invAmt" disabled/></td>
+						<td class="r-label r-label-2"><label>#(..Get("费用发生时间"))#</label></td>
+					    <td><input class="hisui-datetimeboxq" id="billTime" style="width:175px;"></td>
+						<td><input class="textbox" id="EpisodeID" value="#(EpisodeID)#" type='hidden'/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("发票数量"))#</label></td>
+					    <td><input class="textbox" id="invNum" disabled/></td>
+						<td class="r-label r-label-2"><label>#(..Get("录入总金额"))#</label></td>
+					    <td><input class="textbox" id="addAmt" disabled/></td>
+						
+					</tr>
+				   </table>
+			   </div>
+			   
+			   <div data-options="region:'center',border:false"  style="border-radius:0 0 4px 4px;border-top:1px dashed #cccccc;;border-right:1px solid #cccccc;border-left:1px solid #cccccc;border-bottom:1px solid #cccccc">
+				   <table id="insuItmList"></table>
+			   </div>
+		   </div>
+	   </div>
+	   <script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcbill.ipbill.common.js'></script>
+	   <script type="text/javascript" src="../scripts/dhcbill/outpay/dhcbill.outpay.ipaddinv.js"></script>
+   </body>
+   </html>

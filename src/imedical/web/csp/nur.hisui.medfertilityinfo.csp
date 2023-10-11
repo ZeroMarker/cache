@@ -1,0 +1,389 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+Set NoBack = $GET(%request.Data("NoBack", 1))
+// Set ifRegister = ##class(Nur.IP.Delivery).ifRegister(EpisodeID)
+s IsShowPatInfoBannner = "Y" //$G(%request.Data("IsShowPatInfoBannner", 1))
+Set babyList=##class(Nur.NIS.Common.QueryBrokerNew).GetListFromQuery("Nur.IP.Delivery","findBaby",EpisodeID)
+s babyCount=babyList.Count()
+</script>
+<HTML lang="zh-CN">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI translate=1 />
+	<script language="javascript">
+		var EpisodeID = "#(EpisodeID)#";
+		var IsShowPatInfoBannner = "#(IsShowPatInfoBannner)#";
+		IsShowPatInfoBannner = "Y" == IsShowPatInfoBannner ? true : false;
+		var NoBack = "#(NoBack)#";
+		var babyCount = "#(babyCount)#";
+	</script>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+	<style type='text/css'>
+		body {
+			background-color: #fff;
+			padding: 0;
+			margin: 0;
+		}
+
+		.discharge {
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+
+		}
+
+		.discharge__body {
+			position: absolute;
+			top: 5px;
+			left: 0;
+			bottom: 4px;
+			right: 0;
+		}
+
+		.discharge__body .panel {
+			margin-bottom: 10px;
+		}
+
+		.textbox {
+			width: 136px;
+			height: 28px;
+		}
+
+		.r-label {
+			
+		}
+
+		.discharge__body table tr {
+			height: 40px;
+		}
+		#patFrame{height:40px;}
+	</style></head>
+
+<body>
+	<server>
+		s PatientListPage=""
+	</server>
+	<div class="hisui-layout discharge">
+		<csp:if condition='"Y"=IsShowPatInfoBannner'>
+			<div data-options="region:'north',split:false" style="border:none;height:40px;overflow:hidden;">
+                <div id="patFrame">
+					<csp:Include Page="dhcdoc.patinfo.banner.csp">
+                </div>
+			</div>
+		</csp:if>
+		<div data-options="region:'center',split:false" style="border:none">
+			<div class="discharge__body">
+				<div class="hisui-panel" title="产科病人分信息填写（注意：出院病人不能修改生育信息！）" style="color:red;"
+					data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-write-order'">
+					<table cellpadding="0" style="border-collapse: collapse;margin: 5px auto 0 auto;">
+						<tr>
+							<td class="r-label">
+								<span style="color: red;">*</span>#(..Get("生育类型"))#
+							</td>
+							<td class="r-label">
+								<select id="BirthType" class="hisui-combobox" style="width:155px;">
+								</select>
+							</td>
+							<td class="r-label">
+								#(..Get("计生手术类型"))#
+							</td>
+							<td>
+								<select id="OperType" class="hisui-combobox" style="width:155px;">
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">
+								<span style="color: red;">*</span>#(..Get("手术或生育日期"))#
+							</td>
+							<td style="padding:0 5px 0 0;">
+								<input id="BirthDate" class="hisui-datebox textbox" style="width:155px;">
+								</input>
+							</td>
+							<td class="r-label">
+								#(..Get("生育证号"))#
+							</td>
+							<td>
+								<input class="textbox" id="BirthNo"></input>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">
+								#(..Get("出生证号"))#
+							</td>
+							<td>
+								<input class="textbox" id="BornNo"></input>
+							</td>
+							<td class="r-label">
+								#(..Get("独生子女证号"))#
+							</td>
+							<td>
+								<input class="textbox" id="OneChildNo"></input>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">
+								<span style="color: red;">*</span>#(..Get("胎儿数"))#
+							</td>
+							<td>
+								<input class="textbox" id="BabyNum"></input>
+							</td>
+							<td class="r-label">
+								<span style="color: red;">*</span>#(..Get("晚育标志"))#
+							</td>
+							<td>
+								<select id="LateBirthSign" class="hisui-combobox" style="width:155px;">
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">
+								<span style="color: red;">*</span>#(..Get("早产标志"))#
+							</td>
+							<td>
+								<select id="PrematureSign" class="hisui-combobox" style="width:155px;">
+								</select>
+							</td>
+							<td class="r-label">
+								<span style="color: red;">*</span>#(..Get("孕周数"))#
+							</td>
+							<td>
+								<input class="textbox" id="GestationalWeek"></input>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">
+								<span style="color: red;">*</span>#(..Get("胎次"))#
+							</td>
+							<td>
+								<input class="textbox" id="PregNum"></input>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label" colspan="4" style="text-align:center;">
+								<a href="#" id="Save" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'">
+									#(..Get("保存"))#
+								</a>
+								<a href="#" style="margin-left: 20px" id="Clear" class="hisui-linkbutton hover-dark"
+									data-options="iconCls:'icon-w-reset'">
+									#(..Get("重置"))#
+								</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		$(function () {
+			// if (1 != ifRegister) {
+			// 	$.messager.alert("提示", "该患者没有进行分娩登记，无法操作!", 'info');
+			// 	setTimeout(function () {
+			// 		$(".discharge").remove();
+			// 		if (!NoBack) {
+			// 			window.history.back(-1);
+			// 		}
+			// 	}, 2000);
+			// 	return;
+			// }
+			if(HISUIStyleCode=='lite') {
+				$(".pat-info-container").css("background-color","#F5F5F5");
+				$(".discharge__body").parent().css("background-color","#F5F5F5");
+		    }
+			if ((session['LOGON.CTLOCDESC'].indexOf('门诊')<0)&&(babyCount<1)) {
+				$.messager.alert("提示", "该患者没有分娩记录，无法操作!", 'info');
+				setTimeout(function () {
+					$(".discharge").remove();
+					if (!NoBack) {
+						window.history.back(-1);
+					}
+				}, 2000);
+				return;
+			}
+			var BaseInfoLayOutInit = function () {
+				function filter(q, row) {
+					var opts = $(this).combobox('options');
+					var text = row[opts.textField];
+					var pyjp = getPinyin(text).toLowerCase();
+					if (row[opts.textField].indexOf(q) > -1 || pyjp.indexOf(q.toLowerCase()) > -1) {
+						return true;
+					}
+					return false;
+				}
+				//生育类别
+				$HUI.combobox('#BirthType', {
+					valueField: 'ID',
+					textField: 'desc',
+					panelHeight: 'auto',
+					url: $URL + '?ClassName=Nur.Interface.OutSide.Med.Fertility&MethodName=GetPregOptionsByCode&episodeID=' + EpisodeID + "&code=matn_type",
+					onSelect: function (record) { },
+					filter: filter
+				});
+				//计划生育手术类别
+				$HUI.combobox('#OperType', {
+					valueField: 'ID',
+					textField: 'desc',
+					panelHeight: 'auto',
+					url: $URL + '?ClassName=Nur.Interface.OutSide.Med.Fertility&MethodName=GetPregOptionsByCode&episodeID=' + EpisodeID + "&code=birctrl_type",
+					onSelect: function (record) { },
+					filter: filter
+				});
+				//晚育标志
+				$HUI.combobox('#LateBirthSign', {
+					valueField: 'ID',
+					textField: 'desc',
+					panelHeight: 'auto',
+					url: $URL + '?ClassName=Nur.Interface.OutSide.Med.Fertility&MethodName=GetPregOptionsByCode&episodeID=' + EpisodeID + "&code=latechb_flag",
+					onSelect: function (record) { },
+					filter: filter
+				});
+				//早产标志
+				$HUI.combobox('#PrematureSign', {
+					valueField: 'ID',
+					textField: 'desc',
+					panelHeight: 'auto',
+					url: $URL + '?ClassName=Nur.Interface.OutSide.Med.Fertility&MethodName=GetPregOptionsByCode&episodeID=' + EpisodeID + "&code=pret_flag",
+					onSelect: function (record) { },
+					filter: filter
+				});
+				var isDelivery = tkMakeServerCall("Nur.Interface.OutSide.Med.Fertility", "judMotherIsDelivery", EpisodeID);
+				if (isDelivery > 0) {
+					$("#BabyNum").val(isDelivery); //设置母亲此次分娩了几个孩子
+				}
+			};
+			var BaseInfoInitValue = function () {
+				//BirthType_"^"_OperType_"^"_BirthDate_"^"_BirthNo_"^"_BornNo_"^"_OneChildNo_"^"_BabyNum_"^"_LateBirthSign
+				var baseInfoStr = tkMakeServerCall("Nur.Interface.OutSide.Med.Fertility", "GetData", EpisodeID);
+				if (baseInfoStr != "") {
+					var baseInfoArray = baseInfoStr.split("^");
+					$("#BirthNo").val(baseInfoArray[0]);
+					$HUI.combobox('#BirthType').setValue(baseInfoArray[1])
+					$HUI.combobox('#OperType').setValue(baseInfoArray[2])
+					$HUI.combobox('#LateBirthSign').setValue(baseInfoArray[3])
+					$("#GestationalWeek").val(baseInfoArray[4]);
+					$("#PregNum").val(baseInfoArray[5]);
+					$("#BabyNum").val(baseInfoArray[6]);
+					$HUI.combobox('#PrematureSign').setValue(baseInfoArray[7]);
+					$("#BirthDate").datebox({});
+					$('#BirthDate').datebox('setValue', baseInfoArray[8]);
+					$("#BornNo").val(baseInfoArray[9]);
+					$("#OneChildNo").val(baseInfoArray[10]);
+				}
+
+				$('#Save').click(Save);
+				$('#Clear').click(Clear); //zhangxiangbo
+
+			};
+			var Save = function () {
+				var PatStatus = tkMakeServerCall("Nur.Interface.OutSide.Med.Fertility", "GetPatStatus", EpisodeID);
+				if (PatStatus == "F") {
+					$.messager.alert("提示", "患者已经出院，不允许修改生育信息!", 'info');
+					return;
+				}
+				var BirthType = $('#BirthType').combobox('getValue');
+				if (BirthType == "") {
+					$.messager.alert("提示", "生育类型不能为空!", 'info');
+					return;
+				}
+				var OperType = $('#OperType').combobox('getValue');
+				var BirthDate = $HUI.datebox('#BirthDate').getValue();
+				if (BirthDate == "") {
+					$.messager.alert("提示", "手术或生育日期不能为空!", 'info');
+					return;
+				}
+				var BirthNo = $('#BirthNo').val();
+				if (BirthNo == "") {
+					// $.messager.alert("提示", "生育证号不能为空!", 'info');
+					// return;
+				}
+				var BornNo = $('#BornNo').val();
+				if (BornNo == "") {
+					// $.messager.alert("提示", "出生证号不能为空!", 'info');
+					// return;
+				}
+				var OneChildNo = $('#OneChildNo').val();
+				var BabyNum = $('#BabyNum').val();
+				if (BabyNum == "") {
+					$.messager.alert("提示", "胎儿数不能为空!", 'info');
+					return;
+				}
+				if (!BabyNum.match(/^[1-9]\d*$/)) {
+					$.messager.alert("提示", "胎儿数只允许录入整数!", 'info');
+					return;
+				}
+				var LateBirthSign = $('#LateBirthSign').combobox('getValue');
+				if (LateBirthSign == "") {
+					$.messager.alert("提示", "晚育标志不能为空!", 'info');
+					return;
+				}
+				var PrematureSign = $('#PrematureSign').combobox('getValue');
+				if (PrematureSign == "") {
+					$.messager.alert("提示", "早产标志不能为空!", 'info');
+					return;
+				}
+				var GestationalWeek = $('#GestationalWeek').val();
+				if (GestationalWeek == "") {
+					$.messager.alert("提示", "孕周数不能为空!", 'info');
+					return;
+				}
+				if (!GestationalWeek.match(/^[1-9]\d$/)) {
+					$.messager.alert("提示", "孕周数只允许填二位整数!", 'info');
+					return;
+				}
+				var PregNum = $('#PregNum').val();
+				if (PregNum == "") {
+					$.messager.alert("提示", "胎次不能为空!", 'info');
+					return;
+				}
+				if (!PregNum.match(/^[1-9]\d*$/)) {
+					$.messager.alert("提示", "胎次只允许录入整数!", 'info');
+					return;
+				}
+				if ((BirthNo.toString().length > 50) || (BornNo.toString().length > 50) || (OneChildNo.toString().length > 50) || (BabyNum.toString().length > 50) || (GestationalWeek.toString().length > 50) || (PregNum.toString().length > 50)) {
+					$.messager.alert("提示", "填入的信息长度不大于50位！", 'info');
+					return;
+				}
+				var DelStr = "BirthType|" + BirthType + "^OperType|" + OperType + "^BirthDate|" + BirthDate + "^BirthNo|" + BirthNo + "^BornNo|" + BornNo + "^OneChildNo|" + OneChildNo + "^BabyNum|" + BabyNum + "^LateBirthSign|" + LateBirthSign + "^PrematureSign|" + PrematureSign + "^GestationalWeek|" + GestationalWeek + "^PregNum|" + PregNum
+				var ret = tkMakeServerCall("Nur.Interface.OutSide.Med.Fertility", "Save", EpisodeID, DelStr, session['LOGON.USERID']);
+				if (ret != 0) {
+					$.messager.alert("提示", "保存失败!", 'info');
+				} else {
+					$.messager.alert("提示", "保存成功!", 'info');
+				}
+				window.close();
+			};
+			var Clear = function () {
+				$HUI.combobox('#BirthType').setValue("")
+				$HUI.combobox('#OperType').setValue("")
+				$('#BirthDate').datebox('setValue', "")
+				$("#BirthNo").val("");
+				$("#BornNo").val("");
+				$("#OneChildNo").val("");
+				$("#BabyNum").val("");
+				$HUI.combobox('#LateBirthSign').setValue("")
+				$HUI.combobox('#PrematureSign').setValue("")
+				$("#GestationalWeek").val("");
+				$("#PregNum").val("");
+			};
+			BaseInfoLayOutInit();
+			BaseInfoInitValue()
+			InitPatInfoBanner(EpisodeID);
+		});
+	</script>
+
+</body>
+
+</html>

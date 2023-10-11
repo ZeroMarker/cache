@@ -1,0 +1,121 @@
+<!-- 
+ * FileName: dhcbill.ipbill.arrearsback.csp
+ * Author: ZhYW
+ * Date: 2021-05-26
+ * Description: 住院欠费补回
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.ipbill.arrearsback.css"/>
+	<server>
+		set GroupId=%session.Get("LOGON.GROUPID")
+		set HospId=%session.Get("LOGON.HOSPID")
+		set PatientId=%request.Get("PatientId")
+		
+		do ##class(BILL.Util.Library).LoadPaySrvLib()     //引入第三方支付服务接口
+		set DefPayMId=##class(BILL.IP.BL.ArrearsBack).GetGSDefPayMID(GroupId, HospId)  //默认支付方式
+		set CallPMCodeStr=##class(DHCBILL.Common.DHCBILLCommon).GetCallPMCodeStr(HospId)
+	</server>
+	<script type="text/javascript">
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		//常量
+		var CV = {
+			PatientId: "#(PatientId)#",
+			DefPayMId: "#(DefPayMId)#",
+			CallPMCodeAry: "#(CallPMCodeStr)#" ? "#(CallPMCodeStr)#".split("^") : []
+		};
+		
+		//全局变量
+		var GV = {
+			EditIndex: undefined,    //支付方式grid编辑行索引
+		};
+	</script>
+
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',bodyCls:'panel-header-gray'" style="height:52px;border-radius:4px 4px 0 0;">
+				<table class="search-table">
+					<tr>
+						<td class="r-label"><label>#(..Get("就诊科室"))#</label></td>
+						<td><input id="admList" class="hisui-combobox textbox"/></td>
+						<td class="r-label r-label-20"><label>#(..Get("开始日期"))#</label></td>
+						<td><input id="stDate" class="hisui-datebox textbox"/></td>
+						<td class="r-label r-label-20"><label>#(..Get("结束日期"))#</label></td>
+						<td><input id="endDate" class="hisui-datebox textbox"/></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+				<table id="payList"></table>
+			</div>
+			<div data-options="region:'south',border:false" style="height:270px;">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+	   	 			<div data-options="region:'center',border:false" style="padding-top:10px;">
+	   	 				<div id="tipDiv" style="display:none;">
+							<span class="tipAmt">#(..Get("应填金额："))#</span><a href="javascript:;" id="tipAmt" class="tipAmt" onclick="setColumnVal()"></a>
+						</div>
+	   	 				<table id="paymList"></table>
+	   	 			</div>
+	   	 			<div data-options="region:'east',border:false" style="width:690px;padding-right:10px;">
+	   	 				<table class="search-table" style="width:100%;">
+	   	 					<tr>
+								<td class="r-label"><label>#(..Get("发票号"))#</label></td>
+								<td>
+									<input id="receiptNo" class="textbox text-bold" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="display:none;margin-left:2px;"></a>
+								</td>
+								<td class="r-label"><label>#(..Get("应收"))#</label></td>
+								<td><input id="receAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" style="color:#008000;" disabled/></td>
+								<td class="r-label"><a href="javascript:;" class="hisui-linkbutton biggerBtn green" id="btn-restore">补回</a></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("总金额"))#</label></td>
+								<td><input id="totalAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/></td>
+								<td class="r-label"><label>#(..Get("应退"))#</label></td>
+								<td><input id="refAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" style="color:#ff0000;" disabled/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("自付金额"))#</label></td>
+								<td>
+									<input id="patShareAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/>
+									<input id="discAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" type="hidden"/>
+									<input id="payorAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" type="hidden"/>
+								</td>
+								<td class="r-label"><label>#(..Get("实收现金"))#</label></td>
+								<td><input id="patPaidAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("医保金额"))#</label></td>
+								<td><input id="insuAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/></td>
+								<td class="r-label"><label>#(..Get("找零"))#</label></td>
+								<td><input id="recOrBackMoney" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("结算押金"))#</label></td>
+								<td>
+									<input id="selDepAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/>
+								</td>
+							</tr>
+	   	 				</table>
+	   	 			</div>
+	   	 		</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.arrearsback.js"></script>
+</body>
+</html>

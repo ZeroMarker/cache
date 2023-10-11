@@ -1,0 +1,72 @@
+﻿<html>
+    <head>
+        <title> 患者在院病历浏览 </title>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+        <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/opdoc.patientRecordBrowse.css">
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
+        
+        <script language="cache" runat="server">
+            s ssgroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s userName = %session.Get("LOGON.USERNAME")
+            s userID = %session.Get("LOGON.USERID")
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s episodeIDs = $Get(%request.Data("EpisodeIDs",1),"")
+            //接口获取结核病就诊列表(按照就诊时间升序)就诊号串,以","分隔
+            s:(episodeIDs = "") episodeIDs = ##class(EMRservice.BL.opInterface).getPhthisisRecordAdm(episodeID)
+            s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+            s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+            s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLog")
+        </script>
+        <script language="javascript">
+            var ssgroupID = "#(ssgroupID)#";
+            var userLocID = "#(userLocID)#";
+            var userName = "#(userName)#";
+            var userID = "#(userID)#";
+            var patientID = "#(patientID)#";
+            var episodeIDs = "#(episodeIDs)#";
+            var episodeID = "";
+            var param = "";
+            var iword = false;
+            var igrid = false;
+            var pluginUrl = "#(pluginUrl)#";
+            var setDefaultFontStyle = "#(setDefaultFontStyle)#";
+            var ipAddress = getIpAddress();
+            var IsSetToLog = '#(IsSetToLog)#';
+            var searchBoxWidth = 208;
+        </script>
+    </head>
+    <body style="height:100%;width:100%;margin:0;">
+        <div id="browse" class="hisui-layout" data-options="border:false,fit:true">
+            <div class="browseInfo" data-options="region:'north',border:false">
+                <div id="episodeInfo"></div>
+                <a id='print' title="打印" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick= "printDocument()">打印</a>
+            </div>
+            <div id="browseCategory" data-options="region:'east',border:false,split:true,title:'病历目录'" style="width:220px;">
+                <div class="hisui-layout" data-options="fit:true,border:false">
+                    <div data-options="region:'north',border:false" style="height:35px;padding:3px;">
+                        <input type="text" class="hisui-searchbox" id="selectCategory" data-options="prompt:'输入病历名称搜索!'" />
+                    </div>
+                    <div data-options="region:'center',border:false">
+                        <ol class="categorytree" id="ulcategory"></ol> 
+                    </div>
+                </div>
+            </div>
+            <div id="browseContent" data-options="region:'center',border:false" style="padding:0;margin:0;overflow:hidden;">
+                <div id="promptMessage" style="display:none;font-size:20px;font-weight:bold;padding:10px 0 0 5px;"></div>
+                <div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+                <div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+            </div>
+        </div>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.patientRecordBrowse.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/patientRecordBrowse.editor.js"></script>
+    </body>
+</html>

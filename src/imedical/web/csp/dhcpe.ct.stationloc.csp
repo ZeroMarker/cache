@@ -1,0 +1,131 @@
+
+<!--
+ * FileName: dhcpe.ct.stationloc.csp 
+ * Author: xy
+ * Date: 2021-08-10
+ * Description: 站点分类维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.panel-header{
+	border-bottom: 0;
+}
+.r-label{
+	padding-left: 10px;
+}
+
+</style>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+	<div data-options="region:'west',border:false,collapsible:false" style="width:340px;padding:10px;">
+		<div class="hisui-panel" fit="true" data-options="title:'站点',headerCls:'panel-header-gray',iconCls:'icon-house'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 	<div class="hisui-layout" fit="true">
+		 		<div data-options="region:'north',border:false,collapsible:false" style="height:92px;border-bottom:1px solid #C0C0C0;">
+		 			<table class="search-table">
+		 			    <tr>
+							<td class="r-label"><label>#(..Get("科室"))#</label></td>
+							<td colspan='3'><input id="LocList" class="hisui-combobox textbox" style="width:254px;"></td>
+	    	 				
+	    	 				</tr>
+						<tr>
+							<td class="r-label"><label>#(..Get("描述"))#</label></td>
+							<td>
+								<input class="textbox"  id="Desc"/>
+							</td>
+							<td class="r-label">
+								<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+							<td><input type="hidden" id="StationID"/></td>				
+						</tr>
+                   </table>
+		 		</div>
+		 		
+		 		<div data-options="region:'center',border:false">
+		 			<table id="StaionGrid"></table>
+		 		</div>
+			</div>							
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10px 10px 10px 0;border:0;">
+		<div class="hisui-panel" fit="true" data-options="title:'站点分类维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+			<div class="hisui-layout" fit="true">
+		 		<div data-options="region:'north',border:false,collapsible:false" style="height:52px;border-bottom:1px dashed #ccc;">
+		 			<table class="search-table">
+		 				<tr>	
+							<td class="r-label"><label>#(..Get("分类"))#</label></td>
+							<td>
+								<input class="textbox"  id="SLDesc"/>
+							</td>
+							<td class="r-label">
+								<a id="BLFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+							
+							<td><input type="hidden" id="STLocID" /></td>	
+										
+						</tr>
+						
+					
+                   </table>
+		 		</div>
+		 		<div data-options="region:'center',border:false">
+		 			<table id="StationLocGrid" toolbar="#stationlocbar"></table>
+		 		</div>
+			</div>		
+		</div>
+	</div>
+</div>
+
+    <!--科室站点详情面板工具栏 start-->
+    <div id="stationlocbar">
+  
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="BLAdd" disabled>新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="BLUpdate" disabled>修改</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="BLSave" disabled>保存</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-key',plain:true,stopAllEventOnDisabled:true" id="RelateLoc" disabled>数据关联科室</a>
+	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star',plain:true,stopAllEventOnDisabled:true" id="RelateStandard" disabled>标准化对照</a>
+    </div>
+ 	<!--科室站点详情面板工具栏 end-->
+	
+	<!--关联科室授权弹窗-->
+	<div id="LocListWin"  style="display:none;">
+		<div data-options="region:'north',split:false,border:true" style="height:290px;padding:10px;">
+		<div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+				<table data-options="bodyCls:'panel-header-gray'" id="LocListGrid"></table>
+			</div>
+        </div>
+	</div>
+	
+	<!--标准化对照弹窗-->
+    <div id="StandardWin"  style="display:none;">
+        <div data-options="region:'north',split:false,border:true" style="height:350px;padding:10px;padding-bottom:0px">
+        	<div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+                <table id="ExamItemCatGrid" data-options="border:false,toolbar:'#ExamItemCatGrid_custtb'"></table>
+				<div id="ExamItemCatGrid_custtb" style="float: right;" >
+					<input id="ExamItemCatGrid_search" data-options="prompt:'#(..Get("搜索"))#'" class="hisui-searchbox"/>
+				</div>
+            </div>
+        </div>
+    </div>
+    
+	<script type="text/javascript" src="../scripts/dhcpe/ct/stationloc.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+
+</body>		
+</html>

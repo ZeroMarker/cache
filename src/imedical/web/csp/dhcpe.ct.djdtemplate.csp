@@ -1,0 +1,108 @@
+<!--
+ * FileName: dhcpe.ct.djdtemplate.csp 
+ * Author: zhongricheng
+ * Date: 2021-09-17
+ * Description: 导检单格式预览
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+	.page-a4 {
+		width: 21cm;
+		min-height: 29.7cm;
+		margin: 0 auto;
+		border: .05pt solid #D3D3D3;
+		border-radius: 3pt;
+		background: white;
+		box-shadow: 0 0 2pt rgba(0, 0, 0, 0.1);  /*阴影*/
+	}
+	</style>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	s ID=$g(%request.Data("ID",1))
+	s TemplateName=$g(%request.Data("TemplateName",1))
+	s LocID=$g(%request.Data("LocID",1))
+	if (TemplateName'="") {
+		s HT=$p(TemplateName,"$",1)
+		s BT=$p(TemplateName,"$",2)
+		s FT=$p(TemplateName,"$",3)
+	} else {
+		s HT="H-General"
+		s BT="B-Formatter1"
+		s FT="F-NoFooter"
+	}
+	s ShowPart=HT_"^"_BT_"^"_FT
+	</SCRIPT>
+</head>
+<body>
+	<input id="ID" value="#(ID)#" type="hidden">
+	<input id="HT" value="#(HT)#" type="hidden">
+	<input id="BT" value="#(BT)#" type="hidden">
+	<input id="FT" value="#(FT)#" type="hidden">
+	<!-- 导检单部位 start -->
+	<div class="hisui-panel" title="" data-options="fit:true,border:false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'west'" style="width:192px; border:1px solid #ccc; border-radius:4px;">
+				
+				<table style="border-spacing: 10px; border-collapse: separate; width:100%;">
+					<tr>
+						<td align="right"><label for="DJDHead">信息格式</label></td>
+						<td>
+							<input class="hisui-combobox" id="DJDHead" name="DJDHead" type="text" style="width:100px;">
+						</td>
+					</tr>
+					<tr>
+						<td align="right"><label for="DJDBody">项目格式</label></td>
+						<td>
+							<input class="hisui-combobox" id="DJDBody" name="DJDBody" type="text" style="width:100px;">
+						</td>
+					</tr>
+					<tr>
+						<td align="right"><label for="DJDFoot">页脚格式</label></td>
+						<td>
+							<input class="hisui-combobox" id="DJDFoot" name="DJDFoot" type="text" style="width:100px;">
+						</td>
+					</tr>
+					<tr>
+						<td colspan=2 align="center">
+							<a id="Btn-Save" href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						</td>
+					</tr>
+					<!--tr>
+						<td colspan=2 align="center">
+							<a id="Btn-Reset" href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'">重置</a>
+						</td>
+					</tr-->
+					<tr>
+						<td colspan=2 align="center">
+							<a id="Btn-Print" href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false,collapsible:false" style="padding-left:10px;">
+				<div class="hisui-panel" title="" data-options="fit:true" style="border:1px solid #ccc; border-radius:4px;">
+					<div style="text-align:center; margin: 10px 0;">
+						<span style="color:red; font-size:12pt;">★提示：界面预览与真实打印有一定差距，请以真实打印为准</span>
+					</div>
+					<div class="page-a4" style="margin-bottom:10px;">
+						<CSP:INCLUDE PAGE="dhcpe.ct.djdtemplate.temporary.csp?PAADM=Temporary&Part=#(ShowPart)#&ExStrs=Y^&LocID=#(LocID)#">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+    <!-- 导检单部位 end -->
+
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.djdtemplate.js"></script>
+	<script type='text/javascript' src='../scripts/DHCPEPrintDJDCommon.js'></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+</body>		
+</html>

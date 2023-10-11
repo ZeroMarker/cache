@@ -1,0 +1,489 @@
+<!-- 
+ * FileName: dhcinsu.dicdataconfig.csp
+ * Creator: HanZH
+ * Date: 2022-08-11
+ * Description:医保系统参数配置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<style>
+		.container>div {
+			height: 390px;
+			width: 250px;
+			padding-left: 10px;
+			float: left;
+		}
+		.tabs-panels div.panel {
+			padding-bottom: 10px;
+		}
+		.r-label-1 {
+			padding-left: 95px;
+		}
+		.search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.r-label{
+			padding: 0 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:true">
+		<div data-options="region:'north',border:false">
+			<table class="search-table">
+				<tr>
+					<td class="r-label td-first-col"><label>医保类型</label></td>
+					<td><input id="InsuType" class="hisui-combobox textbox"/></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px;">
+			<div id="tab" class="hisui-tabs tabs-gray" data-options="fit:true">
+				<div title="医保环境配置" style="padding-left:10px;padding-top:10px">
+					<div class="hisui-panel" title="医保环境基础配置"  data-options="headerCls:'panel-header-card-gray'" style="width:1192px;border-color:#e2e2e2">
+						<table class="search-table" style="margin:0px auto">
+							<tr>
+								<td class="r-label"><label>是否弹框提示</label></td>
+								<td><input id="MsgBoxFlag" class="hisui-combobox textbox"/></td>
+								<td class="r-label" style="width:336px;"><label>是否自动启动中间件</label></td>
+								<td><input id="AutoStartINSUService_SYS" class="hisui-combobox textbox" data-options="required:true"/></td>
+		 					</tr>
+							<tr>
+								<td class="r-label hisui-tooltip" title="写入InsuDataFlow.log"  data-options="position:'bottom'"><label>是否保存医保交互数据日志</label></td>
+								<td><input id="InsuLogInsuFlag" class="hisui-combobox textbox"/></td>
+								<td class="r-label hisui-tooltip" title="存入InsuMsgInfo表"  data-options="position:'bottom'"><label>是否保存数据库日志</label></td>
+								<td><input id="InsuMsgInfoFlag" class="hisui-combobox textbox"/></td>
+		 					</tr>
+							<tr>
+								<td class="r-label hisui-tooltip" title="写入InsuLogFile.txt"  data-options="position:'bottom'"><label>是否保存医保主业务日志</label></td>
+								<td><input id="InsuLogBussFlag" class="hisui-combobox textbox"/></td>
+								<td class="r-label hisui-tooltip" title="写入InsuLogFile.txt"  data-options="position:'bottom'"><label>是否保存医保接口函数流程日志</label></td>
+								<td><input id="InsuLogHisFlag" class="hisui-combobox textbox"/></td>
+		 					</tr>
+		 				</table>
+		 			</div>
+		 			<div class="hisui-panel" title="数据库连接配置"  data-options="headerCls:'panel-header-card-gray'" style="width:1192px;border-color:#e2e2e2">
+						<table class="search-table" style="margin:0px auto;">
+							<tr>
+								<td class="r-label"><label>用户名</label></td>
+								<td><input id="Username" class="hisui-validatebox textbox" data-options="required:true"/></td>
+								<td class="r-label"><label>密码</label></td>
+								<td><input id="Password" class="hisui-validatebox textbox" data-options="required:true"/></td>
+								<td class="r-label"><label>密钥</label></td>
+								<td><input id="Key" class="hisui-validatebox textbox" data-options="required:true"/></td>
+								<td class="r-label"><label>连接方式</label></td>
+								<td><input id="LinkType" class="hisui-combobox textbox" data-options="required:true"/></td>
+		 					</tr>
+		 				</table>
+		 			</div>
+					<div style="text-align:center;">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-save" data-options="iconCls:'icon-w-save'">保存</a>
+					</div>
+				</div>
+				<div title="医保接口参数配置" style="padding-left:10px;padding-top:10px;padding-right:4px;">
+					<div class="hisui-panel" title="医保接口公共参数" data-options="headerCls:'panel-header-card-gray'" style="width:1192px;border-color:#e2e2e2">
+						<table class="search-table" style="margin:0px auto;">
+							<tr>
+								<td class="r-label" style="width:140px;"><label>医保定点医药机构编号</label></td>
+								<td><input id="InsuHospCode" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label" style="width:170px;"><label>参保地医保区划代码缺省值</label></td>
+								<td><input id="CenterNoDefault" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+		 					</tr>
+							<tr>
+								<td class="r-label"><label>医保定点医药机构名称</label></td>
+								<td><input id="InsuHospName" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label"><label>参保地医保区划名称缺省值</label></td>
+								<td><input id="CenterNameDefault" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+		 					</tr>
+							<tr>
+								<td class="r-label"><label>接口版本号</label></td>
+								<td><input id="CenterVersion" class="hisui-combobox textbox" style="width:225px;"/>
+								<td class="r-label"><label>就医地区划</label></td>
+								<td><input id="InsuCenterNo" class="hisui-validatebox textbox" style="width:218px;" style="width:218px;" data-options="required:true"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>签名类型</label></td>
+								<td><input id="signtype" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label"><label>请求签名生成方式</label></td>
+								<td><input id="SignMod" class="hisui-combobox textbox" style="width:225px;"/>
+							</tr>
+							<tr>
+								<td class="r-label"><label>医保接口经办人类别</label></td>
+								</td><td><input id="optertype" class="hisui-combobox textbox" style="width:225px;"/></td>
+		 					</tr>	
+		 				</table>
+					</div>
+                    <div class="hisui-panel" title="医保接口header参数--医保中心提供" data-options="headerCls:'panel-header-card-gray'" style="width:1192px;border-color:#e2e2e2">
+					    <table class="search-table" style="margin:0px auto;">
+							<tr>
+								<td class="r-label" style="width:140px;"><label>应用服务地址</label></td>
+								<td><input id="INSUIP" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label" style="width:170px;"><label>签名密钥</label></td>
+								<td><input id="secretKey" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+		 					</tr>
+							<tr>
+								<td class="r-label"><label>接口版本</label></td>
+								<td><input id="apiversion" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label"><label>接口版本号</label></td>
+								<td><input id="infver" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>应用账户编码</label></td>
+								<td><input id="xRioPaasid" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label"><label>服务名</label></td>
+								<td><input id="apiname" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+		 					</tr>
+							<tr>
+								<td class="r-label"><label>授权密钥</label></td>
+								<td><input id="apiaccesskey" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label"><label>服务商ID 码</label></td>
+								<td><input id="infosysign" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+		 					</tr>
+							<tr>
+								<td class="r-label"><label>接收方系统代码</label></td>
+								<td><input id="HisSysCode" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+								<td class="r-label"><label>服务商统一社会信用代码</label></td>
+								<td><input id="infosyscode" class="hisui-validatebox textbox" style="width:218px;" data-options="required:true"/></td>
+							</tr>
+                        </table>
+					</div>
+					<div style="text-align:center">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-save2" data-options="iconCls:'icon-w-save'">保存</a>
+					</div>	
+				</div>
+				<div title="医保目录对照">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>收费项是否与其他收费项关联</label></td>
+							<td><input id="TariInsuFlag" class="hisui-combobox textbox" style="width:120px;"/></td>
+							<td class="r-label"><label>是否按照收费项大类过滤</label></td>
+							<td><input id="FilterByTarCate_SYS" class="hisui-combobox textbox" style="width:120px;"/></td>
+	 					</tr>
+						<tr>
+							<td class="r-label"><label>特殊收费项目对照是否启用</label></td>
+							<td><input id="TariSpecialFlag" class="hisui-combobox textbox" style="width:120px;"/></td>
+							<td class="r-label"><label>默认对照时间设置</label></td>
+							<td><input id="INSUCONACTDATE_SYS" class="hisui-validatebox textbox" style="width:113px;" data-options="required:true"/></td>
+						</tr>	
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save3" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="医保读卡">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>获取人员信息时是否弹窗显示</label></td>
+							<td><input id="IsShowInsuCardInnfoDiagFlag" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>是否强制动态库读卡</label></td>
+							<td><input id="isCanReadCardByDLL" class="hisui-combobox textbox"/></td>
+	 					</tr>
+	 					<tr>
+							<td class="r-label"><label>是否允许身份号获取人员信息</label></td>
+							<td><input id="IsCanReadIDCard" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>医保接口读卡服务</label></td>
+							<td><input id="pUrl" class="hisui-validatebox textbox" data-options="required:true"/></td>
+						</tr>
+	 					<tr>
+							<td class="r-label"><label>医保接口读卡服务用户</label></td>
+							<td><input id="pUser" class="hisui-validatebox textbox" data-options="required:true"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save4" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>	
+	 				</table>
+				</div>
+				<div title="门诊医保挂号">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>门诊挂号是否弹读卡窗标志</label></td>
+							<td><input id="IsOPRegShowFlag" class="hisui-combobox textbox"/></td>
+							<td class="r-label" style="width:245px;"><label>门诊挂号是否使用医保账户</label></td>
+							<td><input id="OPRegUseZHFlag" class="hisui-combobox textbox"/></td>
+	 					</tr>
+						<tr>
+							<td class="r-label"><label>门诊挂号撤销是否需要读卡</label></td>
+							<td><input id="OPRegDestroyIsReadCard" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>门诊挂号有效天数(空或0:不验证)</label></td>
+							<td><input id="OPRegEffecDays" class="hisui-validatebox textbox" data-options="required:true"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>慢病病种取值方式</label></td>
+							<td><input id="QCChronicFlag" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>慢病信息是否同步保存医保控费系统</label></td>
+							<td><input id="SaveLocalPsnInfo" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>医保诊断是否取对照</label></td>
+							<td><input id="ICDContrastFlag" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save5" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>	
+	 				</table>
+				</div>
+				<div title="住院医保登记">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>住院登记是否弹读卡窗</label></td>
+							<td><input id="IsIPRegShowFlag" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>住院登记取消是否需要读卡</label></td>
+							<td><input id="IPRegDestroyIsReadCard" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>医保登记修改是否读卡</label></td>
+							<td><input id="IPRegModIsReadCard" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>医保登记成功后是否更新费别</label></td>
+							<td><input id="UpdatePatAdmReason" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>入院时间是否允许修改</label></td>
+							<td><input id="AdmDateIsEdit" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>住院结算是否调用出院登记</label></td>
+							<td><input id="IPOutRegFlag" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save6" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="医保结算">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>个人结算方式</label></td>
+							<td><input id="Psnsetlway" class="hisui-combobox textbox"/></td>
+							<td class="r-label" style="width:280px;"><label>医保返回总金额与HIS总金额误差允许最大值</label></td>
+							<td><input id="IPMistake" class="hisui-validatebox textbox" data-options="required:true"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save7" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="门诊医保结算">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>门诊收费预结算弹框类型</label></td>
+							<td><input id="OPDivFrmType" class="hisui-combobox textbox" style="width:225px;"/></td>
+							<td class="r-label"><label>门诊结算是否使用医保账户</label></td>
+							<td><input id="OPUseZHFlag" class="hisui-combobox textbox" style="width:225px;"/></td>
+	 					</tr>
+						<tr>
+							<td class="r-label"><label>门诊结算是否自动补挂医保号</label></td>
+							<td><input id="InsuDivRegFlag" class="hisui-combobox textbox" style="width:225px;"/></td>
+							<td class="r-label"><label>门诊结算撤销是否需要读卡</label></td>
+							<td><input id="OPStrikeIsReadCard" class="hisui-combobox textbox" style="width:225px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>门诊结算是否弹读卡窗</label></td>
+							<td><input id="IsOPDivideShowFlag" class="hisui-combobox textbox" style="width:225px;"/></td>
+							<td class="r-label"><label>门诊退费是否弹读卡窗</label></td>
+							<td><input id="IsOPDivideStrikeShowFlag" class="hisui-combobox textbox" style="width:225px;"/></td>
+	 					</tr>
+						<tr>
+							<td class="r-label"><label>门诊部分退费是否弹读卡窗</label></td>
+							<td><input id="IsOPPartDivideStrikeShowFlag" class="hisui-combobox textbox" style="width:225px;"/></td>
+							<td class="r-label"><label>门诊预结算分解框弹窗标志</label></td>
+							<td><input id="OPDivPreShw" class="hisui-combobox textbox" style="width:225px;"/></td>
+	 					</tr>
+	 					<tr>
+							<td class="r-label"><label>HIS挂号与医保挂号对应关系</label></td>
+							<td><input id="PaadmConInadmType" class="hisui-combobox textbox" style="width:225px;"/></td>
+							<td class="r-label"><label>医疗类别弹窗标志</label></td>
+							<td><input id="AKA130MsgboxFlag" class="hisui-combobox textbox" style="width:225px;"/></td>
+	 					</tr>
+	 					<tr>
+							<td class="r-label"><label>挂号调用医保结算标志</label></td>
+							<td><input id="OPRegBXFlag" class="hisui-combobox textbox" style="width:225px;"/></td>
+							<td class="r-label"><label>费别是否关联医疗类别</label></td>
+							<td><input id="PacAdmreasonConAKA130Flag" class="hisui-combobox textbox" style="width:225px;"/></td>
+	 					</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save8" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="住院医保结算">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>允许中途结算的开始日期</label></td>
+							<td><input id="MidStartDate" class="hisui-validatebox textbox" data-options="required:true"/></td>
+							<td class="r-label"><label>医保结算是否需要读卡</label></td>
+							<td><input id="InsuDivReadCardFlag" class="hisui-combobox textbox"/></td>
+	 					</tr>
+						<tr>
+							<td class="r-label"><label>允许中途结算的截止日期</label></td>
+							<td><input id="MidEndDate" class="hisui-validatebox textbox" data-options="required:true"/></td>
+							<td class="r-label"><label>医保结算撤销是否需要读卡</label></td>
+							<td><input id="InsuDesDivReadCardFlag" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>住院结算是否使用医保账户</label></td>
+							<td><input id="IPUseZHFlag" class="hisui-combobox textbox"/></td>
+							<td class="r-label"><label>住院是否打印医保结算单</label></td>
+							<td><input id="IPIsPST" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save9" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="医保明细上传">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>费用发生日期取值方式</label></td>
+							<td><input id="INSUBILLDATECTL" class="hisui-combobox textbox" style="width:200px;"/></td>
+							<td class="r-label"><label>明细上传时是否校验未对照项目</label></td>
+							<td><input id="NotConstracted" class="hisui-combobox textbox" style="width:200px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label" style="width:245px;"><label>明细上传分包模式</label></td>
+							<td><input id="UpDetailMode" class="hisui-combobox textbox" style="width:200px;"/></td>
+							<td class="r-label"><label>明细上传正记录单次上传最大条数</label></td>
+							<td><input id="MaxRectNum" class="hisui-validatebox textbox" style="width:197px;" data-options="required:true"/></td>
+	 					</tr>
+	 					<tr>
+							<td class="r-label" style="width:245px;"><label>负记录的上传分包模式</label></td>
+							<td><input id="UpFDetailMode" class="hisui-combobox textbox" style="width:200px;"/></td>
+							<td class="r-label"><label>明细上传负记录单次上传最大条数</label></td>
+							<td><input id="MaxRectNumNeg" class="hisui-validatebox textbox" style="width:197px;" data-options="required:true"/></td>
+	 					</tr>
+						<tr>
+							<td class="r-label"><label>费用明细合并方式</label></td>
+							<td><input id="INSUMerges" class="hisui-combobox textbox" style="width:200px;"/></td>
+							<td class="r-label"><label>明细上传时是否校验需未审核而未审核医嘱</label></td>
+							<td><input id="NotAudit" class="hisui-combobox textbox" style="width:200px;"/></td>
+	 					</tr>
+						<tr>
+							<td class="r-label"><label>明细上传时是否校验未对照项目</label></td>
+							<td><input id="TarContrastAuditFlag" class="hisui-combobox textbox" style="width:200px;"/></td>
+							<td class="r-label"><label>明细上传时是否校验医保目录对照关系审批标志</label></td>
+							<td><input id="NoChecked" class="hisui-combobox textbox" style="width:200px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>零费用医嘱上传标志</label></td>
+							<td><input id="ZeroOrdIsUpFlag" class="hisui-combobox textbox" style="width:200px;"/></td>
+							<td class="r-label"><label>费用明细院内审批标志取值位置配置</label></td>
+							<td><input id="OEMainInsCfg" class="hisui-combobox textbox" style="width:200px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>明细核查接口院内审核标志取值位置</label></td>
+							<td><input id="ChkInsuFlagMod" class="hisui-combobox textbox" style="width:200px;"/></td>
+							<td class="r-label"><label>明细取折扣配置</label></td>
+							<td><input id="InsuDiscountCtl_SYS" class="hisui-combobox textbox" style="width:200px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>是否医保标识取值位置配置</label></td>
+							<td><input id="OEMainInsCfg_SYS" class="hisui-combobox textbox" style="width:200px;"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save10" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="住院医保明细">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>住院明细全部撤销方式</label></td>
+							<td><input id="IsCanDiretCancelMXFlag" class="hisui-combobox textbox"/></td>
+							<td class="r-label" style="width:300px;"><label>费用日期小于住院日期或大于出院日期处理方式</label></td>
+							<td><input id="INSUDETDATACTL" class="hisui-combobox textbox"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save11" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="签到">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>是否需要医保签到</label></td>
+							<td><input id="IsNeedSignInFlag" class="hisui-combobox textbox" style="width:120px;"/></td>
+							<td class="r-label"><label>是否需要医保签退</label></td>
+							<td><input id="IsNeedSignOutFlag" class="hisui-combobox textbox" style="width:120px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>是否校验mac他址</label></td>
+							<td><input id="isCheckMACFlag" class="hisui-combobox textbox" style="width:120px;"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save12" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="医保报销返回支付方式">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>是否使用基金支付总额的支付方式</label></td>
+							<td><input id="IsUseFundPaySumamtCTP" class="hisui-combobox textbox" style="width:120px;"/></td>
+							<td class="r-label"><label>门诊挂号报销支付方式是否全部返回</label></td>
+							<td><input id="OPRegIsBackALLCTP" class="hisui-combobox textbox" style="width:120px;"/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>门诊结算报销支付方式是否全部返回</label></td>
+							<td><input id="OPDivIsBackALLCTP" class="hisui-combobox textbox" style="width:120px;"/></td>
+							<td class="r-label"><label>住院结算报销支付方式是否全部返回</label></td>
+							<td><input id="IPDivIsBackALLCTP" class="hisui-combobox textbox" style="width:120px;"/></td>
+						</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save13" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+				<div title="医保数据上传">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>配置类型</label></td>
+							<td><input id="CFTTYPE" class="hisui-combobox textbox"/></td>
+							<td class="r-label" style="width:220px;"><label>上传门诊基金结算清单的医疗类别</label></td>
+							<td><input id="SpeDiseType" class="hisui-validatebox textbox" data-options="required:true"/></td>
+	 					</tr>
+						<tr>
+							<td colspan="4" style="text-align:center;">
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-save14" data-options="iconCls:'icon-w-save'">保存</a>
+							</td>
+						</tr>
+	 				</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<DHCBILLINSUCloud/>
+	<script type="text/javascript" src="../scripts/dhcinsu/dicdataconfig.js"></script>
+</body>
+</html>

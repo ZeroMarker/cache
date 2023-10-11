@@ -1,184 +1,97 @@
-<csp:method name=OnPreHTTP
-            arguments=""
-            returntype=%Boolean>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
     i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
     q 1
 </csp:method>
-<script language="cache"
-        runat="SERVER">
-            s EpisodeID = $G(%request.Data("EpisodeID", 1))
-			s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
-			s PatientListPage=""
-			s DefaultCode = $G(%request.Data("DefaultCode", 1))
-        </script>
+<!--nur.hisui.nursingRecords.csp-->
+<script language="cache" runat="server">
+	// 病人信息条内的病人列表
+	s PatientListPage=$G(%request.Data("PatientListPage", 1))
+	// 就诊号
+    s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	// 编辑权限相关（新版停用）
+	s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+	// 默认打开的表单Guid或者ModelID
+    s DefaultCode = $G(%request.Data("DefaultCode", 1))
+	// 是否是单个病人的样式（1:隐藏，非1:显示）
+	s SinglePatient = $G(%request.Data("SinglePatient", 1))
+	// 是否是单个表单的样式（1:隐藏，非1:显示）
+	s SingleTemplate = $G(%request.Data("SingleTemplate", 1))
+	// 自定义的病人基本信息条页面csp 
+	s CustomBanner= ##class(NurMp.Common.Base.Patient).GetBannerCsp($G(%request.Data("CustomBanner", 1)))
+	// 隐藏病人基本信息条(1:隐藏，非1:显示) 增加判断：如果csp不存在，则强制隐藏病人基本信息条
+	s HideBanner = $s(($G(%request.Data("HideBanner", 1))=1)||(CustomBanner=""):1,1:0)
+	// 病人列表页面csp
+	s PatListPage= $S($G(%request.Data("PatListPage", 1))="":"nur.emr.business.patlist.csp",1:%request.Data("PatListPage", 1))
+	// 模板列表页面csp
+	s TempListPage= $S($G(%request.Data("TempListPage", 1))="":"nur.emr.business.templist.csp",1:%request.Data("TempListPage", 1))
+	// 表单页面csp
+	s RecordTabPage= $S($G(%request.Data("RecordTabPage", 1))="":"nur.emr.business.recordtab.csp",1:%request.Data("RecordTabPage", 1))
+	// 右键弹窗页面csp
+	s DialogPage= $S($G(%request.Data("DialogPage", 1))="":"nur.emr.business.dialog.csp",1:%request.Data("DialogPage", 1))
+	// 病人列表页面的宽度
+	s PatListWidth = $S($G(%request.Data("PatListWidth", 1))="":"255px",1:%request.Data("PatListWidth", 1))
+	// 模板列表页面的宽度
+	s TempListWidth = $S($G(%request.Data("TempListWidth", 1))="":"232px",1:%request.Data("TempListWidth", 1))
+</script>
 <html lang="zh-CN">
 <head>
-	<meta http-equiv="Content-Type"
-		  content="text/html; charset=utf-8">
-	<title>
-		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
-	</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<!--nur.emr.business.nursingrecords.csp-->
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
-	<script type="text/javascript"
-			src="../scripts/DHC.WMR.PinYinHead.js"></script>
-	<script type="text/javascript"
-			src="../scripts/nurse/hisui/utils.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
-	<script type="text/javascript"
-			src="../scripts/nurse/hisui-0.1.0/dist/js/nursingRecords.js" charset=gbk></script>
-	<STYLE type='text/css'>
-		body {
-            background-color: #fff;
-            padding: 5px!important;
-        }
-		.west_patients {
-			width: 225px;
-			border: none;
-		}
-		.west_north_search {
-			padding: 5px;
-			height: 95px;
-			border: 1px solid #ccc;
-		}
-		#wardPatientCondition {
-			margin-top: 5px;
-			width: 208px;
-		}
-		.west_center_list {
-			padding: 0 10px;
-		}
-		.center_templates {
-			border: none;
-		}
-		.center_north_patinfo {
-			height:38px;
-			border:none
-		}
-		.center_center_list {
-			border: none;
-			border-radius: 4px;
-		}
-		.center_center_tree {
-			border: none;
-			border-top: 1px solid #509de1;
-			padding: 10px;
-		}
-		.PatInfoItem{
-	        top:0 !important;
-	        left:0 !important;
-	        margin-left:0 !important;
-        }
-		.searchbox .searchbox-prompt {
-			padding-left: 5px !important;
-		}
-	</STYLE>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/helper.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/records/main.js" charset=gbk></script>
 	<script language="javascript">
-        var EpisodeID = "#(EpisodeID)#";
+		var patientListPage = "#(PatientListPage)#";
+   		var EpisodeID = "#(EpisodeID)#";
         var AuthorityFlag = "#(AuthorityFlag)#";
-        var DefaultCode = "#(DefaultCode)#";
+    	var DefaultCode = "#(DefaultCode)#";
     </script>
 </head>
-<body>
-	<div id="nrLayout" class="hisui-layout" data-options="fit:true">   
-		<div data-options="region:'west',split:true,headerCls:'panel-header-gray'"
-			 class="west_patients">
-			<div class="hisui-layout"
-				 data-options="fit:true">
-				<div data-options="region:'north',split:true" 
-					 class="west_north_search">
-					<input id="wardPatientSearchBox"
-						   class="hisui-searchbox"
-						   data-options="prompt:'#(..Get("姓名、登记号、床号"))#'"
-						   style="width:208px;"/>
-					<div id="wardPatientCondition" 
-						 class="hisui-switchbox" 
-						 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+<body class="s_body">
+	<!--等候加载提示-->
+	<div id="loading" class="custom_step_loading">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+		<br><br><span class="loading_words">#(..Get("正在初始化界面..."))#</span>
+	</div>
+	<div class="hisui-layout main-layout color_layout" data-options="fit:true">
+		<csp:if condition="SinglePatient'=1">
+		 	<script language="cache" runat="server">
+				w "<div data-options=""region:'west',split:true,title:'患者列表',showCollapsedTitle:true"" style=""width:calc("_PatListWidth_")"">"
+			</script>
+		    	<csp:Include page="#(PatListPage)#">
+		   	</div>
+		</csp:if>
+	   	<div data-options="region:'center',border:false">
+			<div class="hisui-layout color_layout" data-options="fit:true,split:true">	
+				<csp:if condition="HideBanner'=1">
+					<div class="banner_row_layout_north" data-options="region:'north',border:false">
+						<csp:Include Page="#(CustomBanner)#">
 					</div>
-					<div style="padding-top:5px;">
-						<input class='hisui-radio' 
-							   id="radioTodayOper"
-							   type="radio" 
-							   label='今日手术' 
-							   name='highestDegree' 
-							   value="bachelor" 
-							   data-options="radioClass:'hischeckbox_square-blue'">
-					</div>
-				</div> 
-				<div data-options="region:'center',title:'患者列表',split:true,iconCls:'icon-patient'"
-					 class="west_center_list">
-					<ul id="patientTree" 
-						data-options="animate:true">
-					</ul>
-				</div> 
-			</div> 
-		</div>  
-		<div class="center_templates"
-			 data-options="region:'center',split:true">
-			<div class="hisui-layout" 
-				 data-options="fit:true,split:true"
-				 style="border:none;">
-				<div class="center_north_patinfo"
-					 data-options="region:'north',split:false">
-					<csp:Include Page="dhcdoc.in.patient.banner.csp">
-				</div>
-				<div class="center_center_list" 
-				     data-options="region:'center',split:true"
-					 style="border:none;">
-					<div class="hisui-layout" 
-						 data-options="fit:true,split:true"
-						 style="border:none;">
-						<div data-options="region:'west',title:'模板列表',headerCls:'panel-header-gray',showCollapsedTitle:false,split:true,iconCls:'icon-apply-check'" 
-							 style="width:232px;">
-							<div class="hisui-layout" 
-							     data-options="fit:true,split:true">
-								<div data-options="region:'north',split:true" 
-									 style="height:45px;border:none;padding:5px;">
-									<input id="savedSearchBox" 
-									       class="hisui-searchbox" 
-									       data-options="prompt:'#(..Get("汉语名称、简拼"))#'"
-										   style="width:150px"/>
-									<a id="btnMore" 
-									   class="hisui-linkbutton" href="#" 
-									   style="width:58px">更多</a>
-								</div> 
-								<div class="center_center_tree"
-									 data-options="region:'center',tools:'#tab-tools',split:true,iconCls:'icon-template'" >
-									<ul id="savedTemplateTree" 
-										data-options="animate:true">
-									</ul>
-								</div> 
+				</csp:if>
+				<div data-options="region:'center',border:false">
+					<div class="hisui-layout content-layout color_layout" data-options="fit:true,border:false">
+						<csp:if condition="SingleTemplate'=1">
+							<script language="cache" runat="server">
+								w "<div data-options=""region:'west',split:true,title:'模板列表',headerCls:'panel-header-gray',showCollapsedTitle:true,iconCls:'icon-template',onCollapse:function(){autoResizeTable('1');},onExpand:function(){autoResizeTable('2');}"" style=""width:calc("_TempListWidth_")"">"
+							</script>
+								<csp:Include page="#(TempListPage)#">
 							</div>
-						</div> 
-						<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" style="width:230px;border:none;">
-							<div id="recordTabs" class="hisui-tabs tabs-gray" data-options="fit:true">
-							</div>
+						</csp:if>
+						<div data-options="region:'center',border:false,headerCls:'panel-header-gray'">
+							<csp:Include Page="#(RecordTabPage)#">
 						</div>
 					</div>
 				</div>	
 			</div>
 		</div>
 	</div>
-	<div id="windowMore" class="hisui-window" title="更多模板" 
-		 style="width:300px;height:680px;top:10px;left:400px;padding:5px" 
-		 data-options="iconCls:'icon-w-list',closed:true,collapsible:false,minimizable:false,maximizable:false,resizable:false,modal:false,isTopZindex:true">
-		<div class="hisui-layout" data-options="fit:true,split:true"
-			 style="border:none;">
-			<div data-options="region:'north'" 
-				 style="height:35px;border:none;">
-				<input id="moreSearchBox" 
-					   class="hisui-searchbox" 
-					   data-options="prompt:'#(..Get("汉语名称、简拼"))#'"
-					   style="width:290px"/>
-			</div>
-			<div data-options="region:'center'"
-				 style="border:none;">
-				<div id="templateTabs" 
-					 class="hisui-tabs tabs-gray" 
-					 data-options="region:'center',fit:true">
-				</div>
-			</div>
-		</div>
-	</div>
+	<csp:Include Page="#(DialogPage)#">
 </body>
 </html>

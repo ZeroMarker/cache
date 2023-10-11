@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液审核原因维护
-	csp:dhcpha.pivas.auditreason.csp
-	js: scripts/pharmacy/pivas/auditreason.js
+<!--
+    配液审核原因维护
+	csp: csp/dhcpha.pivas.auditreason.csp
+	js:  scripts/pharmacy/pivas/auditreason.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,49 +16,53 @@
     </title>
     <TRAK:HEAD>
     </TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-	<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
     <style type="text/css">
-		#lyWest .datagrid-body td {
-		    border-color: white;
-		}
+        .pha-body {
+            background-color: #fff;
+        }
+
+        .layout {
+            background-color: #fff;
+        }
+
+        #lyWest .datagrid-body td {
+            border-color: white;
+        }
     </style>
 </HEAD>
 
-<body>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'west',title:'配伍审核原因',split:true,width:425,headerCls:'panel-header-gray',iconCls:'icon-panel-common'" id="lyWest">
+                <div data-options="region:'west',title:'配伍审核原因',split:true,width:425,headerCls:'panel-header-gray',iconCls:'icon-paper-ques'" id="lyWest">
                     <table id="treeGridReason"></table>
                 </div>
-                <div data-options="region:'center',title:'配伍审核原因明细',headerCls:'panel-header-gray',iconCls:'icon-panel-common'">
+                <div data-options="region:'center',title:'原因列表',headerCls:'panel-header-gray',iconCls:'icon-paper-info'">
                     <table id="gridAuditReason"></table>
                 </div>
             </div>
         </div>
     </div>
-
-    <div id="gridAuditReasonBar">
-        <table>
-            <tr>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">增加</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
-                </td>
-            </tr>
-        </table>
+    <div id="treeGridReasonBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label id="_HospListLabel" style="display:none;">医院</label>
+                <input id="_HospList">
+            </div>
+        </div>
     </div>
-	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <div id="gridAuditReasonBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-translate-word" id="btnTranslate">翻译</a>
+    </div>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/auditreason.js"></script>
 </body>
 

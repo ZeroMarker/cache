@@ -1,0 +1,121 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		div span{
+			padding-top: 1em;
+			font-size:1.5em;
+		}
+		input {
+			height:1.5em;
+			border: none;
+			border-bottom: black solid 1px;
+			font-size: 95%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<div id="Form">
+		<script language="Cache" RUNAT="SERVER">
+			Set ReportID=$g(%request.Data("ReportID",1))
+			Set ReportInfo=##Class(DHCMed.EPDService.HCVReferralSrv).PrintHCVRefReport(ReportID)
+			Set RecHospName			= $p(ReportInfo,"^",1)
+			Set PatName				= $p(ReportInfo,"^",2)
+			Set PatSex				= $p(ReportInfo,"^",3)
+			Set PersonalID			= $p(ReportInfo,"^",4)
+			Set DetectionDesc		= $p(ReportInfo,"^",5)
+			Set ExamPlanDesc		= $p(ReportInfo,"^",6)
+			Set OtherPlan			= $p(ReportInfo,"^",7)
+			Set RefTelPhone			= $p(ReportInfo,"^",8)
+			Set RefDoctor			= $p(ReportInfo,"^",9)
+			Set RefOrgName			= $p(ReportInfo,"^",10)
+			Set Resume				= $p(ReportInfo,"^",11)
+			Set ReportDate			= $p(ReportInfo,"^",12)
+			// 字典列表
+			Set DicData 			= ##Class(DHCMed.EPDService.HCVReferralSrv).GetHCVRefDicList()
+			Set HcvDetectionList	= $Lg(DicData,1)
+			Set HcvExamPlanList	    = $Lg(DicData,2)
+		</script>
+		<div style="font-size: 150%;font-weight: bold;text-align: center;padding-top:4em;">
+			<span>丙肝转介通知单</span>
+		</div>
+		<div style="padding-top:2em;width:46em;">
+			<span><input type='text' style='width:12em;text-align: center' value=#(RecHospName)#>(接收医疗机构名称):</span>
+		</div>	
+		<div style="padding-top:2em;width:46em;">	
+			<span style="margin-top:2em;padding-left:2em;">
+				姓名<input type='text' style='width:5em' value=#(PatName)#>，
+				性别<input type='text' style='width:1em' value=#(PatSex)#>，
+				身份证号<input type='text' style='width:11em' value=#(PersonalID)#>，
+			</span>
+		</div>	
+		<div style="padding-top:2em;width:46em;">	
+			<span>
+				已在我院就诊检测出
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(HcvDetectionList))#>
+					<CSP:IF CONDITION='$Lg(HcvDetectionList,ZLInd)=DetectionDesc'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(HcvDetectionList,ZLInd))#
+				</CSP:LOOP>
+			</span>
+			<span>
+				现须贵单位为其提供
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(HcvExamPlanList))#>
+					<CSP:IF CONDITION='$Lg(HcvExamPlanList,ZLInd)=ExamPlanDesc'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(HcvExamPlanList,ZLInd))#
+				</CSP:LOOP>
+				<input type='text' style='width:6em' value=#(OtherPlan)#>
+			</span>
+		</div>	
+		<div style="padding-top:2em;width:46em;">	
+			<span  style="padding-left:1em;">
+				特转介到您处，请给予接洽。如有疑问，请与我单位联系
+			</span>
+		</div>	
+		<div style="padding-top:2em;width:46em;">	
+			<span  style="padding-left:2em;">
+				转介单位联系电话：<input type='text' style='width:10em' value=#(RefTelPhone)#>
+			</span>
+		</div>	
+		<div style="padding-top:2em;width:46em;">	
+			<span  style="padding-left:2em;">
+				转介医生签名：<input type='text' style='width:6em' value=#(RefDoctor)#>
+			</span>
+		</div>
+		<div style="padding-top:2em;width:46em;">		
+			<span  style="padding-left:2em;">
+				转介单位：<input type='text' style='width:14em' value=#(RefOrgName)#>
+			</span>
+		</div>
+		<div style="padding-top:2em;width:46em;">		
+			<span style="padding-top: 2em;">
+				备注：<input type='text' value=#(Resume)#>
+			</span>
+		</div>
+		<div style="padding-left:32em;padding-top: 2em;">
+			<span >
+				<script language="Cache" RUNAT="SERVER">
+		    		Set ReportDateYear	= $p(ReportDate,"-",1)
+		    		Set ReportDateMonth	= $p(ReportDate,"-",2)
+		    		Set ReportDateDay	= $p(ReportDate,"-",3)
+				</script>
+				<input type='text' style='width:3em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(ReportDateYear)#>年
+				<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(ReportDateMonth)#>月
+				<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(ReportDateDay)#>日
+			</span>
+		</div>
+	</div>	
+	
+	
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

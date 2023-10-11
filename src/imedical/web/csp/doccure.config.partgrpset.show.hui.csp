@@ -1,0 +1,135 @@
+<div class="hisui-panel" data-options="border:false,fit:true" style="padding:10px">   
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false" style="height:45px;padding:0px;">
+			<table ALIGN="left" class="">
+		 	 	<tr>
+		            <td style="padding-right:10px">
+						<label id="_HospUserListLabel" style='color:red;'>#(..Get("医院"))#</label>
+					</td>
+					<td>
+						<input id="_HospUserList" style="width:250px;"/>
+					</td>
+		          </tr>
+		 	 </table>
+		</div>
+		<div title="部位/穴位组维护" data-options="region:'west',border:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-set-paper'" style="width:600px;padding:0px">
+			<div class="hisui-panel" data-options="border:false,iconCls:'icon-edit',headerCls:'panel-header-gray',fit:true">   
+				<table id="tabCurePartGrpSet" toolbar="#PartGrpSet-Bar"></table> 
+			</div>
+		</div>
+		<div title="已关联部位/穴位项" data-options="region:'center',border:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-add-item'">
+			<div class="hisui-panel" data-options="border:false,iconCls:'icon-edit',headerCls:'panel-header-gray',fit:true">   
+				<table id="tabCurePartGrpLinkSet" toolbar="#PartGrpLinkSet-Bar"></table> 
+			</div>
+		</div>
+		<div title="部位/穴位" data-options="region:'east',border:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper-info'" style="width:340px;padding:0px">
+			<div class="hisui-panel" data-options="border:false,headerCls:'panel-header-gray',fit:true,closable:false">   
+				<table id="tabCurePartSet" toolbar="#PartSet-Bar"></table> 
+			</div>
+		</div>
+	</div>
+	<div id="PartGrpSet-Bar">
+		<div style="padding:10px 0px 10px 10px;border-bottom:1px dashed #ccc">
+			<input id="SType" class="hisui-combobox" style="width:150px;" placeholder="#(..Get("请选择类型"))#"/>
+			<input id="SDesc" class="hisui-searchbox" style="width:170px" data-options="searcher:CurePartGrpSetDataGridLoad,prompt:'#(..Get("请输入描述/别名检索"))#'"/>
+			<input id="SAuthority" class="hisui-combobox" style="width:150px" placeholder="#(..Get("请选择权限类型"))#"/>
+		</div>
+	    <a href="#" class="hisui-linkbutton" iconCls="icon-add" plain="true" onclick="AddGridData()">新增</a>
+	    <a href="#" class="hisui-linkbutton" iconCls="icon-write-order" plain="true" onclick="UpdateGridData()">修改</a>
+	    <a href="#" class="hisui-linkbutton" iconCls="icon-house" plain="true" onclick="ReHospitalHandle()">关联医院</a>
+	    <a href="#" class="hisui-linkbutton" iconCls="icon-ref" plain="true" onclick="ReCureItemHandle()">关联项目</a>
+    </div>
+    <div id="PartGrpLinkSet-Bar">
+    	<a href="#" class="hisui-linkbutton" iconCls="icon-cancel" plain="true" onclick="DeletePartGrpLinkSet()">删除</a>
+	    <a href="#" class="hisui-linkbutton" iconCls="icon-up" plain="true" onclick="UpPartGrpLinkSet()"></a>
+	    <a href="#" class="hisui-linkbutton" iconCls="icon-down" plain="true" onclick="DownPartGrpLinkSet()"></a>
+    </div>
+    <div id="PartSet-Bar">
+    	<div style="padding:10px 0px 10px 10px;border-bottom:1px dashed #ccc">
+			<input id="SPartDesc" class="hisui-searchbox" style="width:170px" data-options="searcher:CurePartSetDataGridLoad,prompt:'#(..Get("请输入描述/别名检索"))#'"/>
+	    </div>
+	    <a href="#" class="hisui-linkbutton" iconCls="icon-save" plain="true" onclick="SavePartGrpLinkSet()">保存关联</a>
+    </div>
+    <div id="refitem-dialog" style="display:none;padding:10px" title="关联治疗项目" >
+		<div class="hisui-panel panel-body-gray" data-options="fit:true,border:true" style="padding:0px;height:100%;"> 
+			<table id="tabRefCureItem"></table> 
+		</div>
+	</div>
+</div>
+<div id="add-dialog" class="hisui-dialog" title="增加/修改" style="width:241px;height:340px;" data-options="iconCls:'icon-w-new',shadow:false,modal:true,closed:true">
+	<form id="add-form" method="post" style="width:100%;heigth:100%">
+		<table class="table-form">
+			<tr>
+				<input name="DDCPGSROWID" id="DDCPGSROWID" type="hidden" value="">
+				<td class="r-label">#(..Get("类型"))#</td>
+				<td><input name="DDCPGSType" id="DDCPGSType" class="hisui-combobox textbox" data-options="required:true"></td>
+			</tr>
+			<!--<tr>
+				<td class="r-label">代码</td>
+				<td><input name="DDCPGSCode" id="DDCPGSCode" class="hisui-validatebox textbox" data-options="required:true"></td>
+			</tr>-->
+			<tr>
+				<td class="r-label">#(..Get("描述"))#</td>
+				<td><input name="DDCPGSDesc" id="DDCPGSDesc" class="hisui-validatebox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td class="r-label">#(..Get("别名"))#</td>
+				<td><input name="DDCPGSAlias" id="DDCPGSAlias" class="hisui-validatebox textbox"></td>
+			</tr>
+			<tr>
+				<td class="r-label">#(..Get("权限类型"))#</td>
+				<td><input name="DDCPGSAuthority" id="DDCPGSAuthority" class="hisui-combobox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td class="r-label">#(..Get("默认"))#</td>
+				<td><input id="DDCPGSDefaultFlag" class='hisui-radio' type="radio"></td>
+			</tr>
+			<tr>
+				<td class="r-label">#(..Get("激活"))#</td>
+				<td><input id="DDCPGSAvailFlag" class='hisui-radio' type="radio"></td>
+			</tr>
+			<tr>
+				<td colspan=2 class="c-label"><a href="javascript:void(0)" id="btnSave" data-options="iconCls:''" class="hisui-linkbutton green">保存</a></td>
+			</tr>
+		</table>
+	</form>
+</div>
+
+<div id="AcupDetail-dialog" class="hisui-dialog"  title="属性查看" style="width:600px;height:457px;" data-options="iconCls:'icon-w-plus',shadow:false,modal:true,closed:true">
+	<div class="hisui-panel" data-options="border:false,headerCls:'panel-header-gray',fit:true">   
+		<table class="table-set">
+		<tr>
+			<td>
+				<label for="AcupPosition">#(..Get("定位"))#</label>
+			</td>
+			<td>
+				<textarea id="AcupPosition" class="table-set-filed hisui-validatebox table-textarea "></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="AcupAttending">#(..Get("主治"))#</label>
+			</td>
+			<td>
+				<textarea id="AcupAttending" class="table-set-filed hisui-validatebox table-textarea "></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="AcupOperation">#(..Get("操作"))#</label>
+			</td>
+			<td>
+				<textarea id="AcupOperation" class="table-set-filed hisui-validatebox table-textarea"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="AcupImgDiagramShow">#(..Get("图解"))#</label>
+			</td>
+			<td>
+				<img id="AcupImgDiagramShow" alt="#(..Get("暂无图解"))#" style="width:120px;height:120px"/>
+			</td>
+		</tr>
+		</table> 
+	</div>
+</div>

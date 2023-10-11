@@ -1,8 +1,14 @@
 <!DOCTYPE html>
-<!--配液时间段统计
-	csp:dhcpha.pivas.statetime.csp
-	js:scripts/pharmacy/pivas/statetime.js
+<!--
+    配液时间段统计
+    csp: csp/dhcpha.pivas.charts.line.csp
+    js:  scripts/pharmacy/pivas/charts.line.js
 -->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,42 +17,34 @@
     </title>
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI />
-    <link rel="stylesheet" type="text/css"
-        href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    </link>
+    <PHAPIVASV1 />
+
     <STYLE type="text/css">
         .dhcpha-tmp-border {
             border: 1px solid #cccccc;
             border-radius: 4px;
         }
-
-        .dhcpha-no-data {
-        height:100%;
-        width:100%;
-            background: url('../scripts/pharmacy/common/image/bg-nodata.png') no-repeat center;
-        }
     </STYLE>
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'north',title:'配液数据折线图',split:true,headerCls:'panel-header-gray',iconCls:'icon-green-chart',collapsible:false"
-                    class="dhcpha-north-r1">
-                    <table class="dhcpha-north-tbl">
+                <div data-options="region:'north',title:'配液数据折线图',split:true,headerCls:'panel-header-gray',iconCls:'icon-green-chart',collapsible:false" class="pha-pivas-row-1">
+                    <table class="pha-con-table">
                         <tr>
-                            <td>
-                                <label for="dateStart">开始日期</label>
-                                <input id="dateStart" class="hisui-datebox" />
+                            <td class="r-label">
+                                <label for="dateStart">#(..Get("开始日期"))#</label>
                             </td>
                             <td>
-                                <label for="dateEnd">结束日期</label>
+                                <input id="dateStart" class="hisui-datebox" />
+                            </td>
+                            <td class="r-label">
+                                <label for="dateEnd">#(..Get("结束日期"))#</label>
+                            </td>
+                            <td>
                                 <input id="dateEnd" class="hisui-datebox" />
                             </td>
                             <td>
@@ -55,29 +53,29 @@
                         </tr>
                     </table>
                 </div>
-                <div data-options="region:'center'" border="false" style="border-radius: 4px;">
+                <div data-options="region:'center'" border="false">
                     <div id="tabsOne" class="hisui-tabs tabs-gray" fit="true">
-                        <div data-options="title:'配置量'">
+                        <div data-options="title:'配置量',code:'配置量'">
                             <div class="hisui-layout" fit="true" border="false">
-                                <div data-options="region:'center'" border="false" id="eChartPS60" class="dhcpha-no-data">
-                           
-                                </div>
-                            </div>
-                        </div>
-                        <div data-options="title:'退药量'">
-                            <div class="hisui-layout" fit="true" border="false">
-                                <div data-options="region:'center'" border="false" id="eChartReturn"  class="dhcpha-no-data">
+                                <div data-options="region:'center'" border="false" id="eChartPS60" class="pha-pivas-no-data">
 
                                 </div>
                             </div>
                         </div>
-                        <div data-options="title:'排批修改量'">
-                                <div class="hisui-layout" fit="true" border="false">
-                                    <div data-options="region:'center'" border="false" id="eChartPS3"  class="dhcpha-no-data">
-    
-                                    </div>
+                        <div data-options="title:'退药量',code:'退药量'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false" id="eChartReturn" class="pha-pivas-no-data">
+
                                 </div>
                             </div>
+                        </div>
+                        <div data-options="title:'排批修改量',code:'排批修改量'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false" id="eChartPS3" class="pha-pivas-no-data">
+
+                                </div>
+                            </div>
+                        </div>
                         <!-- <div data-options="title:'配伍审核'">
                             <div class="hisui-layout" fit="true" border="false">
                                 <div data-options="region:'center'" border="false" id="eChartAudit"  class="dhcpha-no-data">

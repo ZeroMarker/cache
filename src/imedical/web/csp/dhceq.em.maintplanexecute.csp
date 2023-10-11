@@ -10,8 +10,8 @@
 
 <TITLE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 <script type='text/javascript' src='../scripts/dhceq/em/maintplanexecute.js'></script>
 </HEAD>
 
@@ -21,13 +21,14 @@
  s BussType=$g(%request.Data("BussType",1))
  s ReadOnly=$g(%request.Data("ReadOnly",1))
  s Status=$g(%request.Data("Status",1))
+ s MaintTypeDR=$g(%request.Data("MaintTypeDR",1)) //add by sjh SJH0037 2020-10-16  增加MaintTypeDR传参
  </Script>
 
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" title="计划执行" data-options="eqtitle:'maintitle',fit:true">
+		<div class="hisui-panel panel-header-gray" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;height:120px;">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding-bottom:10px;">
 					<div class="eq-table">
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cPEPlanExecuteNo" for="PEPlanExecuteNo">执行单号</label></div>
@@ -39,32 +40,31 @@
 							<div class="eq-table-td eq-table-label"><label id="cPETotalNum" for="PETotalNum">总数量</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="font-size:18px;font-weight:bold;color:red;text-align:right" id="PETotalNum" disabled="true"></div>
 							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-label"></div>
 							<div class="eq-table-td eq-table-label"><a id="BFinish" href="#" class="hisui-linkbutton" style="margin-left:12%;" data-options="stopAllEventOnDisabled:true">完成</a></div>
 							<div class="eq-table-td eq-table-label"></div>					
 						</div>
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cPEExecuteUserDR_UserName" for="PEExecuteUserDR_UserName">执行人</label></div>
 							<div class="eq-table-td eq-table-input"><input id="PEExecuteUserDR_UserName" class="hisui-validatebox textbox" disabled="true" data-options="component:'PLAT.L.EQUser'"></input></div>
-							<div class="eq-table-td eq-table-label"><label id="cPEExecuteDate" for="PEExecuteDate">执行日期</label></div>
+							<div class="eq-table-td eq-table-label"><label id="cPEExecuteDate" for="PEExecuteDate">计划执行日期</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="PEExecuteDate" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPERemark" for="PERemark">备注</label></div>
-							<div class="eq-table-td eq-table-input"><textarea id="PERemark" style="width:155;" class="textbox"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label id="cMTMaintUserDR_UserName" for="MTMaintUserDR_UserName">计量负责人</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTMaintUserDR_UserName" disabled="true"></div>
 							<div class="eq-table-td eq-table-label"><label id="cPEDisExecuteNum" for="PEDisExecuteNum">未执行</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="font-size:18px;font-weight:bold;color:red;text-align:right;" id="PEDisExecuteNum" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"></div>
 							<div class="eq-table-td eq-table-label"></div>
 							<div class="eq-table-td eq-table-label"><a id="BExecute" href="#" class="hisui-linkbutton" style="margin-left:12%;" data-options="stopAllEventOnDisabled:true">执行</a></div>
 							<div class="eq-table-td eq-table-label"></div>
 						</div>
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cMTMaintUserDR_UserName" for="MTMaintUserDR_UserName">计量负责人</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTMaintUserDR_UserName" disabled="true"></div>
 							<div class="eq-table-td eq-table-label"><label id="cMTMaintDate" for="MTMaintDate">计量日期</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MTMaintDate" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-label"></div>
+							<!--modify by lmm 2020-11-18-->
+							<div class="eq-table-td eq-table-label"><label id="cEExecuteDate" for="EExecuteDate">设备执行日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EExecuteDate"></div>
+							<!--ui改造 by hyy 20230201，位置调换 -->
+							<div class="eq-table-td eq-table-label"><label id="cPERemark" for="PERemark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="PERemark" class="textbox"></textarea></div>
 							<div class="eq-table-td eq-table-label"></div>
 							<div class="eq-table-td eq-table-label"></div>
 							<div class="eq-table-td eq-table-label"></div>
@@ -89,6 +89,8 @@
 			<input type="hidden" id="ExecuteLocDR">
 			<input type="hidden" id="ExecuteUserDR">
 			<input type="hidden" id="Status" value=#(Status)#>
+			<input type="hidden" id="ListEquipID">
+			<input type="hidden" id="MaintTypeDR" value=#(MaintTypeDR)#>
 		</form>
 	</div>
 </body>

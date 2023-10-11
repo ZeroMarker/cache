@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<!--门诊草药处方审核
+	csp:pha.herb.v2.opaudit.csp
+	js: pha/herb/v2/opaudit.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI/>
+	<ADDINS require="RWCard,WebsysTool" />
+	<PHAHERBV2/>
+	<server>
+		s gPatNo = $G(%request.Data("gPatNo",1))
+		s ReasonWayId = ##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("HERBA")
+		d ##class(PHA.COM.ReadCard).LoadPlugin()
+	</server>
+	<SCRIPT Language="Javascript">
+       	var ReasonWayId = "#(ReasonWayId)#";
+       	var LoadPatNo = "#(gPatNo)#";
+   </SCRIPT>
+   <style>
+    iframe {
+	    width: 100%;
+	    height: 100%;
+	    border: none;
+	    overflow: hidden;
+	    display:block;
+	}
+    </style>
+</head>
+
+<body>       
+    <div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">		
+				<div data-options="region:'center',title:'门诊草药处方审核',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray',collapsible:true">
+					<div class="hisui-layout" fit="true">
+						<div data-options="region:'north',border:false,split:true" class="dhcpha-north-tbl-2" style="overflow:hidden" id="presclayout">							
+							<div class="pha-row">
+								<div class="pha-col">
+									<label for="dateStart">开始日期</label>
+								</div>
+								<div class="pha-col">
+									<input id="dateColStart" class="hisui-datebox phaherb-datebox"></input>
+								</div>
+								<div class="pha-col">
+									<input id="timeColStart" class="hisui-timespinner phaherb-timespinner" showSeconds="true"></input>
+								</div>
+								<div class="pha-col" style="margin-left:10px;">卡号</div>
+								<div class="pha-col">
+									<input id="txtCardNo" type="text" class="hisui-validatebox textbox"/>
+								</div>
+								<div class="pha-col">
+									<span><a class="hisui-linkbutton" plain="false" data-options="iconCls:'icon-w-card'" id="readCard">读卡</a></span>
+								</div>
+								<div class="pha-col">
+									<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:QueryOutPrescList()">查询</a>
+								</div>
+								<div class="pha-col">
+									<a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:Clear()">清屏</a>
+								</div>
+							</div>
+							<div class="pha-row">
+								<div class="pha-col">
+									<label for="dateEnd">截止日期</label>
+								</div>
+								<div class="pha-col">
+									<input id="dateColEnd" class="hisui-datebox phaherb-datebox"></input>
+								</div>
+								<div class="pha-col">
+									<input id="timeColEnd" class="hisui-timespinner phaherb-timespinner" showSeconds="true"></input>
+								</div>
+								<div class="pha-col">登记号</div>
+								<div class="pha-col">
+									<input id="txtBarCode" type="text" class="hisui-validatebox textbox"/>
+								</div>
+								<div class="pha-col">
+									<input id="chk-audit" class='hisui-checkbox' type="checkbox" label="已审核" data-options="onCheckChange:function(event,value){javascript:QueryOutPrescList()}" >
+								</div>
+								<div class="pha-col">
+									<input id="chk-autofresh" class='hisui-checkbox' type="checkbox" label="自动刷新" >
+								</div>
+							</div>
+						</div>
+						
+						<div data-options="region:'center'" border="false" style="border-radius: 4px;padding:10px;padding-top:0px">
+							<div class="hisui-layout" id="mainLayout" fit="true" border="false">
+								<div data-options="region:'center',split:false,border:true,iconCls:'icon-paper',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" 
+								title="处方列表">
+									<table id="gridOutPrescList"></table>
+								</div>
+								<div data-options="region:'west',width:700,split:true,border:true,iconCls:'icon-presc-preview',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'"
+								 title="处方预览" style="padding:10px;">
+									<div id="colprelayout" src="" style="border:0px;width:100%;height:437px"></div>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+		    </div>
+        </div>
+    </div>
+	
+	<!-- 表格工具栏 -->
+    <div id="gridOutPrescListBar" style="height:30px;padding-top:2px">
+		<div class="pha-col">
+			<a class="hisui-linkbutton" iconCls='icon-stamp-pass' plain="true" id="btnAuditOk">审核通过</a>
+		</div>
+		<div class="pha-col">
+			<a class="hisui-linkbutton" iconCls='icon-audit-x' plain="true" id="btnAuditNo">审核拒绝</a>
+		</div>
+		<div class="pha-col">
+			<a class="hisui-linkbutton" iconCls='icon-base-info' plain="true" id="btnAdmInfo">其他信息</a>
+		</div>
+		<div class="pha-col">
+			<a class="hisui-linkbutton" iconCls='icon-clock-record' plain="true" id="btnAuditRecord">审核记录</a>
+		</div>
+		<div class="pha-col">			
+			<a class="hisui-linkbutton" iconCls='icon-analysis' plain="true" id="btnAnalyPresc">合理分析</a>
+		</div>
+		<div class="pha-col">			
+			<a class="hisui-linkbutton" iconCls='icon-print' plain="true" id="btnPrintPresc">打印处方</a>
+		</div>
+    </div>
+	
+	<!-- dhcpha js -->
+	<script type="text/javascript" src="../scripts/pharmacy/common/js/printcom.js"></script>
+	<script type="text/javascript" src="../scripts/pharmacy/outpha/dhcpha.outpha.printcom.js"></script>
+    <!-- window dialog -->
+	<script type="text/javascript" src="../scripts/pha/herb/v2/monitorlog.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/herb/v2/opaudit.js"></script>
+	
+<csp:Include Page="pha.herb.v2.addinfo.csp">
+<csp:Include Page="pha.herb.v2.monitorlog.csp">
+</body>
+
+</html>

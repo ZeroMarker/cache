@@ -1,0 +1,126 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>	
+		<HISUI/>
+        <DHCHAI:HEAD></DHCHAI:HEAD>
+    	<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+    	<server>
+    		//Set EducationURL=##class(DHCHAI.BT.Config).GetValByCode("EducationURL")
+    		Set PaadmID =$g(%request.Data("PaadmID",1))
+			Set IndexTab =$g(%request.Data("IndexTab",1))
+			Set PageType =$g(%request.Data("PageType",1))
+			Set LocFlag =$g(%request.Data("LocFlag",1))
+            Set index =+$g(%request.Data("index",1))
+            Set PatViewInfo=##class(DHCHAI.IRS.CCInfViewSrv).GetPatViewInfo(PaadmID)
+            Set EpisodeID=$p($p(PatViewInfo,"^",1),"||",2)
+            Set PatientID=$p(PatViewInfo,"^",2)
+            //获得病历浏览csp配置
+			Set cspUrl = ##class(DHCHAI.BT.Config).GetValByCode("SYSEmrCSP","")
+    		// 获取体温单csp界面
+    		Set TemperatureCSP = ##class(DHCHAI.BT.Config).GetValByCode("SYSTemperatureCSP","")
+    		if (TemperatureCSP=""){
+        		Set TemperatureCSP="dhchai.ir.view.temperature.csp"
+    		}
+    		
+       </server>
+    	
+	</head>
+	
+	<body> 
+		<!-- 主页面-->
+		<div class="hisui-layout" data-options="fit:true" >	
+		<div data-options="region:'north',border:false,collapsible:false" style="padding:10px;">	
+		<div class="title" style="line-height: 35px;background-color: #F7F7F8;">
+					<ul style="list-style-type:none;height:35px;padding-left: 10px !important;margin-bottom: 0px;display: block;overflow: hidden;white-space:nowrap;">
+						
+					</ul>
+					<!--
+					<div style="float: right;margin-top: -25px;margin-right: 8px;cursor:pointer;">
+						<img src="../scripts/dhchai/img/delete.png">
+					</div>
+					-->
+					<!--替换为layer的关闭按钮-->
+					<div class="close" style="cursor:pointer;opacity:1;">
+						<span class="layui-layer-setwin" style="margin-top:-5px; ">
+							<a class="layui-layer-ico layui-layer-close layui-layer-close1" href="javascript:;"></a>
+						</span>
+					</div>
+				</div>
+				
+			</div>  
+			<div  data-options="region:'center',border:false,collapsible:false" style="padding:10px;padding-top:0px;">				
+				<div id="divTabs" class="hisui-tabs" data-options="tools:'#tab-tools',fit:true,">   
+					<div id="divtab0" title="摘要" data-options="selected:true" style="overflow:hidden;">   
+						<iframe id="Tab0" width="100%"  height="100%" frameborder="0" src=""></iframe>
+					</div>   
+					<div id="divtab1" title="疑似筛查" data-options="closable:false" style="overflow:hidden;display:none;">   
+						<iframe id="Tab1" width="100%" height="100%"   frameborder="0" src=""></iframe>   
+					</div> 
+					<div id="divtab2" title="检验报告" data-options="closable:false" style="overflow:hidden;display:none;">   
+						<iframe id="Tab2" width="100%" height="100%" frameborder="0" src=""></iframe>
+					</div> 	
+					<div id="divtab3" title="抗菌用药" data-options="closable:false" style="overflow:hidden;display:none;">   
+						<iframe id="Tab3" width="100%" height="100%" frameborder="0" src=""></iframe>
+					</div> 
+					<div id="divtab4" title="治疗" data-options="closable:false" style="overflow:hidden;display:none;">   
+						<iframe id="Tab4" width="100%" height="100%" frameborder="0" src=""></iframe>
+					</div> 		
+					<div id="divtab5" title="手术" data-options="closable:false" style="overflow:hidden;display:none;">   
+						<iframe id="Tab5" width="100%" height="100%" frameborder="0" src=""></iframe>
+					</div> 	
+					
+					<div id="divtab6" title="体温单" data-options="closable:false" style="overflow:hidden;display:none;">   
+						<iframe id="Tab6" width="100%" height="100%" frameborder="0" src=""></iframe>
+					</div> 	
+					
+					<div id="divtab7" title="病程" data-options="closable:false" style="overflow:hidden;display:none;">  
+						<iframe id="Tab7" width="100%" height="100%" frameborder="0" src=""></iframe>
+						<!--h1>敬请期待</h1-->    
+					</div>
+					<div id="divtab8" title="影像报告" data-options="closable:false" style="overflow:hidden;display:none;">  
+						<iframe id="Tab8" width="100%" height="100%" frameborder="0" src=""></iframe>						
+					</div>  
+					<div id="divtab9" title="就诊信息" data-options="closable:false" style="overflow:hidden;display:none;">  
+						<iframe id="Tab9" width="100%" height="100%" frameborder="0" src=""></iframe>						
+					</div>  
+					<div id="divtab10" title="病历浏览" data-options="closable:false" style="overflow:hidden;display:none;">  
+						<iframe id="Tab10" width="100%" height="100%" frameborder="0" src=""></iframe>						
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script language="javascript" type="text/javascript">
+			var PaadmID = "#(PaadmID)#";
+			var IndexTab = "#(IndexTab)#";
+			var PageType     = "#(PageType)#";
+			var LocFlag = "#(LocFlag)#"
+            var index = "#(index)#";
+            if ((typeof(index) == "undefined")||(index=="undefined")){
+                index="";
+            }
+            
+			var obj = new Object();
+			obj.PatViewInfo="#(PatViewInfo)#";
+			var EpisodeID="#(EpisodeID)#",PatientID="#(PatientID)#";
+			var cspUrl="#(cspUrl)#",TemperatureCSP="#(TemperatureCSP)#";
+		</script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+	  	<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/View/Main/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/View/Main/Event.js"></script>
+		
+	    <script language="javascript" type="text/javascript">
+			$(document).ready(function(){
+				InitPatViewWin();
+	        	  			
+			});
+		</script>
+	</body>
+</html>

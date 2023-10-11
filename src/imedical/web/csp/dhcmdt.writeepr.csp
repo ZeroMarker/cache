@@ -1,0 +1,156 @@
+<!-- dhcmdt.writeepr.csp  会诊申请引用界面 //-->
+<html>
+<head>
+
+<script Language="Javascript">	
+	
+	var session=new Array();
+	session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#";
+	session['LOGON.GROUPID']="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
+	session['LOGON.GROUPDESC']="#(%session.Get("LOGON.GROUPDESC"))#";  //安全组
+	session['LOGON.USERID']="#(%session.Get("LOGON.USERID"))#";        //用户ID
+	session['LOGON.USERCODE']="#(%session.Get("LOGON.USERCODE"))#";    //用户工号
+	session['LOGON.USERNAME']="#(%session.Get("LOGON.USERNAME"))#";    //用户姓名
+	session['LOGON.CTLOCID']="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<HISUI/>
+<script src="../scripts/websys.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/writeepr.js"></script>
+<style>
+.panel-body, .panel-header {
+    border-color: #ccc;
+}
+.tabs-header, .tabs-panels{
+	border:0 !important;
+}
+.panel-header{
+	border-radius: 4px 4px 0px 0px !important;
+}
+.layout-panel-center, .layout-body{
+	border-radius: 4px 4px 4px 4px !important;
+}
+
+.tabs-container.tabs-gray .tabs-header-bottom.tabs-header .tabs, .tabs-container.tabs-gray .tabs-header-left.tabs-header .tabs, .tabs-container.tabs-gray .tabs-header-right.tabs-header .tabs{
+	box-sizing: border-box;
+}
+</style>
+</head>
+
+<body>
+	<input type=hidden id="PatientID" value=#(%request.Get("PatientID"))# > 
+	<input type=hidden id="EpisodeID" value=#(%request.Get("EpisodeID"))# >  
+	<input type=hidden id="ElementId" value=#(%request.Get("ElementId"))# >
+	<input type=hidden id="Type" value=#(%request.Get("Type"))# >
+	<input type=hidden id="emrType" value=#(%request.Get("emrType"))# >
+	<server>
+		s value=##class(web.DHCAPPCommonUtil).DateLogicalToHtml(+$h)         
+		w "<input type=hidden id='date' value='"_value_"' >" 
+   </server>
+	<div id="quoteTab" class="hisui-tabs tabs-gray" fit=true data-options="isBrandTabs:true" style="">
+		<div title="#(..Get("资源列表"))#" data-options="iconCls:''" style="padding:20px;"></div>
+		<div title="#(..Get("电子病历"))#" data-options="closable:false" style="padding:5px 5px 0 5px;" >  
+			<iframe id="newWinFrame" src="" width="100%" height="100%" frameborder="0"></iframe>
+		</div>  
+		<div title="#(..Get("诊断"))#" data-options="closable:false" style="padding:5px 5px 0 5px;" >  
+			<div class="" id="DiaDatagrid"></div>
+		</div>
+		<div title="#(..Get("检验"))#" style="padding:5px 5px 0 5px;" >   
+			<div class="hisui-layout" fit="true">
+			    <div data-options="region:'north',border:false,title:'',split:true" style="height:250px;">
+			    	<div class="" id="LisDatagrid"></div>
+			    </div>
+			     <div data-options="region:'center',title:'',border:false" >
+			    	<div class="" id="LisSubDatagrid"></div>
+			    </div>
+			</div>
+		</div>   
+		<div title="#(..Get("检查"))#" data-options="closable:false" style="overflow:auto;padding:5px 5px 0 5px;">   
+			 <div class="hisui-layout" fit="true">
+			    <div data-options="region:'north',title:'',border:false,split:true" style="height:250px;">
+			    	<div class="" id="PacsDatagrid"></div>
+			    </div>
+			     <div data-options="region:'center',title:'',border:false" >
+			    	<div class="" id="PacsSubDatagrid"></div>
+			    </div>
+			</div>
+		</div>   
+		<div title="#(..Get("医嘱"))#" data-options="closable:false" style="padding:5px 5px 0 5px;" >  
+				<div class="" id="OrderDatagrid"></div>
+		</div>
+		<div title="#(..Get("病理"))#" data-options="closable:false" style="padding:5px 5px 0 5px;" >  
+			 <div class="hisui-layout" fit="true">
+			    <div data-options="region:'north',title:'',border:false,split:true" style="height:250px;">
+			    	<div class="" id="PatHologyDatagrid"></div>
+			    </div>
+			     <div data-options="region:'center',title:'',border:false" >
+			    	<div class="" id="PatHologySubDatagrid"></div>
+			    </div>
+			</div>
+		</div>    
+	</div>
+	<div id="LisDatagridTB" class="datagrid-toolbar">
+		<table>
+			<tr>
+			<td><input type="radio" name="queryType" value="lastadm"><label>#(..Get("上次就诊"))#</label></input></td>
+			<td><input type="radio" name="queryType" checked="checked" value="adm"><label>#(..Get("本次就诊"))#</label></input></td>
+			<td><input type="radio" name="queryType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
+			<td id="admLitTD" style="display:none"><input id="admListCombogrid" ></td>                				
+			</tr>
+		</table>
+	</div>
+	<div id="PacsDatagridTB" class="datagrid-toolbar">
+		<table>
+			<tr>
+			<td>			
+				<input type="checkbox" name="pacsExamDesc"  ><label>#(..Get("检查所见"))#</label></input>
+				<input type="checkbox" name="pacsstrResult"  checked="checked"><label>#(..Get("诊断意见"))#</label></input>
+				<input type="checkbox" name="pacsstrOrderName" ><label>#(..Get("检查方法"))#</label></input>
+			</td>			    	
+			<td><input type="radio" name="queryType" value="lastadm"><label>#(..Get("上次就诊"))#</label></input></td>
+			<td><input type="radio" name="queryPacsType" checked="checked" value="adm"><label>#(..Get("本次就诊"))#</label></input></td>
+			<td><input type="radio" name="queryPacsType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
+			<td id="admPacsListTD" style="display:none"><input id="admPacsListCombogrid" ></td>                				
+			</tr>
+		</table>
+	</div>
+	
+	<div id="OrderDatagridTB" class="datagrid-toolbar">
+		<div style="margin-top:5px;margin-bottom:5px;">
+			<table>
+			<tr>
+			<td><input type="radio" name="queryOrderType" checked="checked" value="short"><label>#(..Get("临时医嘱"))#</label></input></td>
+			<td><input type="radio" name="queryOrderType" checked="checked" value="long"><label>#(..Get("长期医嘱"))#</label></input></td>
+			<td><input type="radio" name="queryOrderType" checked="checked" value="adm"><label>#(..Get("本次就诊"))#</label></input></td>
+			<td><input type="radio" name="queryOrderType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
+			<td id="admOrderListTD" style="display:none"><input id="admOrderListCombogrid" ></td>                					
+			</tr>
+			</table>								
+		</div>
+	</div>
+	<div id="DiaDatagridTB" class="datagrid-toolbar">
+		<table>
+			<tr>
+			<td><input type="radio" name="queryDiaType" checked="checked" value="adm"><label>#(..Get("本次就诊"))#</label></input></td>
+			<td><input type="radio" name="queryDiaType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
+			<td id="admDiaListTD" style="display:none"><input id="admDiaListCombogrid" ></td>                					
+			</tr>
+		</table>
+	</div>
+	<div id="PatHologyDatagridTB" class="datagrid-toolbar">
+		<table>
+			<tr>
+			<td>
+				<input type="checkbox" name="PatHologyDate"  ><label>#(..Get("报告日期"))#</label></input>			
+				<input type="checkbox" name="PatHologySee"  ><label>#(..Get("检查所见"))#</label></input>
+				<input type="checkbox" name="PatHologyDia"  checked="checked"><label>#(..Get("病理诊断"))#</label></input>
+				<input type="checkbox" name="PatHologyNo" ><label>#(..Get("病理号"))#</label></input>
+			</td>		    	
+			<td><input type="radio" name="queryPatHologyType" checked="checked" value="adm"><label>#(..Get("本次就诊"))#</label></input></td>
+			<td><input type="radio" name="queryPatHologyType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
+			<td id="admPatHologyTD" style="display:none"><input id="admPatHologyListCombogrid" ></td>                				
+			</tr>
+		</table>
+	</div>			
+</body>
+</html>

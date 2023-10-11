@@ -1,0 +1,79 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+If ##Class(websys.SessionEvents).SessionExpired() quit 1
+quit 1
+</csp:method>
+
+<!DOCTYPE html>
+<!-- dhcdoc.common.excel.import.csp 医生站公共 Excel 导入 --> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"></ADDINS>
+<style>
+	body {
+		background:#fff;
+		margin: 0px;
+		padding: 0px;
+	}
+	.operate-area {
+		margin: 10px;
+		padding: 0px 10px;
+	}
+	.excel-detail {
+		margin: 0px 10px 10px 10px;
+		padding: 5px 10px;
+	}
+	table {
+	    border-collapse: collapse;
+	}
+	th, td {
+	    border: solid 1px #0099FF;
+	    padding: 5px 10px;
+	}
+</style>
+<Server>
+	// &mClassName=&mMethodName=&mCheckBefore=&mShowExcelDetail=&mHospId=
+	s mClassName = $g(%request.Data("mClassName",1))
+	s mMethodName = $g(%request.Data("mMethodName",1))
+	s mCheckBefore = $g(%request.Data("mCheckBefore",1))
+	s mShowExcelDetail = +$g(%request.Data("mShowExcelDetail",1))
+	s mMethodNameTemplate = $g(%request.Data("mMethodNameTemplate",1))
+	s mImportSuccessClose = $g(%request.Data("mImportSuccessClose",1))
+	s mHospId = $g(%request.Data("mHospId",1))			// 如果界面有分院区选择需传
+</Server>
+</head>
+<body>
+	<div class="operate-area">
+		<input id="checkFile" name="carduploadfile" data-options="width:400, buttonText:'选择', prompt:'请选择 excel 文件：*.xls,*.xlsx', buttonIcon:'icon-w-file', plain:false" 
+			accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
+		<a id="clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清空</a>
+		<a id="import" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">导入</a>
+		<a id="excelTemplateDown" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-download'">模板下载</a>
+	</div>
+	<csp:if condition='mShowExcelDetail="0"'>
+	<csp:else>
+		<div id="excelDetail" class="excel-detail" contenteditable></div>
+	</csp:if>
+	<SCRIPT language = 'javascript'>
+		var ServerObj={
+			mClassName: "#(mClassName)#",						// 后台类（校验、导入、模板方法请统一写到这个类中）
+			mMethodName: "#(mMethodName)#",						// 导入方法
+			mCheckBefore: "#(mCheckBefore)#",					// 数据校验方法，不传默认 CheckBeforeImport
+			mShowExcelDetail: "#(mShowExcelDetail)#",			// 展示数据细节
+			mMethodNameTemplate: "#(mMethodNameTemplate)#",		// 导入模板 Query，不传默认 mMethodName + Template
+			mImportSuccessClose: "#(mImportSuccessClose)#",		// 导入成功关闭窗口（1关闭 0不关 不传默认关闭）
+			mHospId: "#(mHospId)#"								// 界面有多院区时需传
+		}
+	</SCRIPT>
+	
+	<!-- defer 异步加载 -->
+	<script charset="utf-8" language="javascript" type="text/javascript" src="../scripts/websys.js" defer></script>
+    <script charset="utf-8" language="javascript" type="text/javascript" src="../scripts/dhcdoc/tools/xlsx.full.min.js" defer></script>
+    <script charset="utf-8" language="javascript" type="text/javascript" src="../scripts/dhcdoc/common/excel.import.js" defer></script>
+</body>
+</html>

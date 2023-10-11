@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<!--科室药品信息维护
+	csp:csp/pha.in.v3.incitmloc.csp
+	js: scripts/pha/in/v3/LocManage/INCItmLoc.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<SERVER>
+	s locktype =$Get(%request.Data("locktype", 1))
+</SERVER>
+<script type="text/javascript">
+   var locktype="#(locktype)#";
+   </script>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+	<title>
+		<TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+</HEAD>
+<body>
+	<div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-panel-body-content">
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',border:false,split:true,height:450">
+					<div class="hisui-panel" title="科室药品信息维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:'panel-body-gray'">
+						<table id="gridIncil"></table>
+						<div id="fold">
+							<div class="pha-con-more-less" style="display: none;">
+								<div>#(..Get("更多"))#</div>
+								<div class="more"></div>
+							</div>
+							<div class="pha-con-more-less" >
+								<div>#(..Get("收缩"))#</div>
+								<div class="less"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false,split:true">
+					<div class="hisui-layout" fit="true">
+						<div data-options="region:'center',border:false">
+							<div class="hisui-panel" title="批次信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:'panel-body-gray'">
+								<table id="gridInclb"></table> 	
+							</div>
+						</div>
+						<div data-options="region:'east',border:false,width:550,split:true">
+							<div class="hisui-layout" fit="true">
+								<div data-options="region:'center',border:false">
+									<div class="hisui-panel" title="货位信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:'panel-body-gray'">
+										<table id="gridStkBin"></table>
+									</div>
+								</div>
+								<div data-options="region:'east',border:false,width:300,split:true">
+									<div class="hisui-panel" title="发药单位" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:'panel-body-gray'">
+										<table id="gridDispUom"></table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="gridIncilBar">
+		<table  class="pha-con-table">
+			<tr>
+				<td class="r-label">
+					<label for="cmbPhaLoc">#(..Get("药房科室"))#</label>
+				</td>
+				<td>
+					<input id='cmbPhaLoc' class="hisui-combobox">
+				</td>
+				<td class="r-label">
+					<label for="cmbStkGroup">#(..Get("类组"))#</label>
+				</td>
+				<td>
+					<input id='cmbStkGroup' class="hisui-combobox">
+				</td>
+				<td class="r-label">
+					<label for="cmbgridInci">#(..Get("药品名称"))#</label>
+				</td>
+				<td>
+					<input id="cmbgridInci" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true'>
+				</td>
+				<td class="r-label">
+					<label for="cmbLockStore">#(..Get("加锁标志"))#</label>
+				</td>
+				<td>
+					<input id='cmbLockStore' class="hisui-combobox">
+				</td>
+				<td>
+					<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryIncil()">查询</a>
+				</td>
+				<td>
+					<a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" onclick="javascript:clean()">清屏</a>
+				</td>
+			</tr>
+			<tr class="pha-con-more-less-link">
+				<td class="r-label">
+					<label for="cmbIfHaveStore">#(..Get("库存类型"))#</label>
+				</td>
+				<td>
+					<input id='cmbIfHaveStore' class="hisui-combobox">
+				</td>
+				<td class="r-label">
+					<label for="cmbStkCat">#(..Get("库存分类"))#</label>
+				</td>
+				<td>
+					<input id='cmbStkCat' class="hisui-combobox">
+				</td>
+				<td class="r-label">
+					<label for="cmbStkBinStore">#(..Get("货位"))#</label>
+				</td>
+				<td>
+					<input id='cmbStkBinStore' class="hisui-combobox">
+				</td>
+				<td class="r-label">
+					<label for="cmbUseState">#(..Get("可用状态"))#</label>
+				</td>
+				<td>
+					<input id='cmbUseState' class="hisui-combobox">
+				</td>
+			</tr>
+			<tr class="pha-con-more-less-link">
+				<td class="r-label">
+					<label for="cmbLocMagStore">#(..Get("盘点组"))#</label>
+				</td>
+				<td>
+					<input id='cmbLocMagStore' class="hisui-combobox">
+				</td>
+			</tr>
+		</table>		
+		<div class="pha-line"></div>
+		<div class="datagrid-toolbar" style="border-bottom:0">
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveInci" onclick="javascript:SaveInci()">#(..Get("保存"))#</a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-batch-add" id="btncreatLimts" onclick="javascript:creatLimts()">#(..Get("生成上下限"))#</a>
+			<a class="hisui-linkbutton" plain='true' data-options="iconCls:'icon-download'" onclick="javascript:downloadFile()">模板下载</a>
+			<a class="hisui-linkbutton" plain='true' data-options="iconCls:'icon-upload'" onclick="javascript:uploadData()">数据导入</a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-batch-cfg" onclick="javascript:UpdateInPhUomWin()">批量配置住院发药单位</a>
+		</div>
+	</div>
+	<div id="gridInclbBar">
+		<table  class="pha-con-table">
+    		<tr>
+            	<td>
+                	<label for="cmbIfHaveStorei">#(..Get("库存数"))#</label>
+            	</td>
+            	<td>
+                	<input id='cmbIfHaveStorei' placeholder=#(..Get("选择库存..."))# class="hisui-combobox ">
+            	</td>
+            	<td>
+                	<label for="cmbIncilbState">#(..Get("库存可用"))#</label>
+            	</td>
+            	<td>
+                	<input id='cmbIncilbState' placeholder=#(..Get("选择库存可用..."))# class="hisui-combobox ">
+            	</td>
+            	<td>
+                	<label for="cmbIncilArcState">#(..Get("医嘱可用"))#</label>
+            	</td>
+            	<td>
+                	<input id='cmbIncilArcState' placeholder=#(..Get("选择医嘱可用..."))# class="hisui-combobox ">
+            	</td>
+            </tr>
+    	</table>
+	</div>
+	<div id="gridStkBinBar">
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AddStkBin()">#(..Get("新增"))#</a>
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="SaveStkBin()">#(..Get("保存"))#</a>
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="DelStkBin()">#(..Get("删除"))#</a>
+	</div>
+	<!-- 生成上下限 -->
+	 <div id="creatLimtsConWin" class="hisui-dialog" data-options="iconCls:'icon-w-edit',resizable:true,closed:true,width:495,
+	      height:382,title:'生成上下限',modal: true,">
+        <div data-options="region:'north',border:false,split:true" style="height:165px;padding:10px">
+			<div class="hisui-panel" title=#(..Get("因子"))#  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''" >
+				<table  class="pha-con-table">
+    				<tr>
+            			<td>
+                			<label for="startDate">#(..Get("开始日期"))#</label>
+            			</td>
+						<td>
+							<input id="startDate" class="hisui-datebox" type="text"  />
+						</td>
+						<td>
+							<label for="phaLoc">#(..Get("药房科室"))#</label>
+						</td>
+						<td>
+							<input id='phaLoc' placeholder=#(..Get("选择药房科室..."))# class="hisui-combobox">
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="endDate">#(..Get("截止日期"))#</label>
+						</td>
+						<td>
+							<input id="endDate" class="hisui-datebox" type="text"/>
+						</td>
+						<td style="text-align:right">
+							<label for="stkGroup">#(..Get("类组"))#</label>
+						</td>
+						<td>
+							<input id='stkGroup' placeholder=#(..Get("选择类组..."))# class="hisui-combobox">
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="maxlimts">#(..Get("上限系数"))#</label>
+						</td>
+						<td>
+							<input id="maxlimts" class="hisui-numberbox textbox" data-options="precision:2" value="1.25" style="width:150px;">
+						</td>
+						<td>
+							<label for="minlimts">#(..Get("下限系数"))#</label>
+						</td>
+						<td>
+							<input id="minlimts" class="hisui-numberbox textbox" data-options="precision:2" value="0.25" style="width:160px;">
+						</td>
+					</tr>
+				</table>
+			</div>
+    	</div>
+    	<div data-options="region:'center',border:false,split:true" style="padding:0 10px 0 10px">
+			<div class="hisui-panel" title=#(..Get("业务类型"))# data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''" >
+				<table  class="pha-con-table">
+    				<tr>
+            			<td>
+							<label for="PFlag">#(..Get("住院发药"))#</label>
+						</td>
+						<td>
+							<input id="PFlag" type="checkbox" class="hisui-checkbox" data-options="checked:true">
+						</td>
+					    <td style="padding-left:100px">
+							<label for="FFlag">#(..Get("门诊发药"))#</label>
+						</td>
+						<td>
+							<input id="FFlag" type="checkbox" class="hisui-checkbox" data-options="checked:true">
+						</td>
+						<td style="padding-left:100px">
+							<label for="KFlag">#(..Get("转入"))#</label>
+						</td>
+						<td>
+							<input id="KFlag" type="checkbox" class="hisui-checkbox">
+						</td>
+					</tr>
+				 	<tr>
+				 	   <td>
+							<label for="YFlag">#(..Get("住院退药"))#</label>
+						</td>
+						<td>
+							<input id="YFlag" type="checkbox" class="hisui-checkbox" data-options="checked:true">
+						</td>		
+					    <td style="padding-left:100px">
+							<label for="HFlag">#(..Get("门诊退药"))#</label>
+						</td>
+						<td>
+							<input id="HFlag" type="checkbox" class="hisui-checkbox" data-options="checked:true">
+						</td>
+						<td style="padding-left:100px">
+							<label for="TFlag">#(..Get("转出"))#</label>
+						</td>
+						<td>
+							<input id="TFlag" type="checkbox" class="hisui-checkbox">
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'south',border:false,split:true">
+			<div class="pha-row" style="text-align:center;">
+			 	<div class="pha-col" >
+					<a href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="javascript:saveDataBtn()">保存</a>
+				</div>
+				<div class="pha-col" >
+					<a href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="javascript:closeNewWin()">关闭</a>
+				</div>
+			</div>
+		</div>
+	</div> 
+	
+	<!-- 批量配置住院发药单 -->
+	<div id="updateInPhUomWin" class="hisui-dialog" data-options="iconCls:'icon-w-edit',resizable:true,closed:true,width:495,
+	      height:600,title:'批量配置住院发药单位(住院发整包装,取药/出院带药可发基本单位)',modal: true,">
+        <div data-options="region:'north',border:false,split:true" style="height:400px;padding:10px">
+			<div class="hisui-panel" title=#(..Get("发药类别"))#  data-options="headerCls:'panel-header-gray',iconCls:'',fit:true,bodyCls:''" >
+				<table id="gridDispCat"></table> 	
+			</div>
+    	</div>
+    	<div data-options="region:'center',border:false,split:true" style="height:90px;padding:0 10px 0 10px">
+			<div class="hisui-panel" title=#(..Get("配置选项"))# data-options="headerCls:'panel-header-gray',iconCls:'',fit:true,bodyCls:''" >
+				<table  class="pha-con-table">
+    				<tr>
+            			<td>
+							<label for="uomComfigDesc">#(..Get("配置描述"))#</label>
+						</td>
+						<td>
+							<input id='uomComfigDesc' class="hisui-combobox">
+						</td>
+					    <td>
+							<label for="uomComfigVal">#(..Get("配置值"))#</label>
+						</td>
+						<td>
+							<input id='uomComfigVal'  class="hisui-combobox">
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'south',border:false,split:true">
+			<div class="pha-row" style="text-align:center;">
+			 	<div class="pha-col" >
+					<a href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="javascript:UpdateInPhUom()">保存</a>
+				</div>
+				<div class="pha-col" >
+					<a href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="javascript:CloseInPhUom()">关闭</a>
+				</div>
+			</div>
+		</div>
+	</div> 
+	
+	<script type="text/javascript" src="../scripts/pha/in/v3/LocManage/INCItmLoc.js"></script>
+</body>
+
+</HTML>

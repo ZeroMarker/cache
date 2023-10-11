@@ -1,0 +1,71 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<script language="cache" runat="SERVER">
+        s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/nurse/hisui/patpaincharts.js" charset='gbk'></script>
+	<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js" ></script>
+	<script type="text/javascript">
+	var episodeID="#(EpisodeID)#";
+	</script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+        }
+        .datagrid-wrap.panel-body.panel-body-noheader{
+	        border-color:#ccc;
+	        border-top-right-radius:0;
+	        border-top-left-radius:0;
+	        border-right:0;
+	        border-left:0;
+	        border-bottom:0;
+        }
+        .datagrid-wrap.panel-body.panel-body-noheader{
+			border-top-style:dotted;
+		}
+		tr.datagrid-row-selected>td[field="score"]>div{color: black;}
+	</STYLE>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'west',border:false" style="width:630px;padding:10px">
+		<div class="hisui-panel" data-options="title:'病区患者疼痛评分',headerCls:'panel-header-gray',iconCls:'icon-set-paper',fit:true">
+			<table id="wardPatPainGrid" class="hisui-datagrid" data-options="fit:true">   
+			</table>
+		</div>
+	</div> 
+	<div data-options="region:'center',border:false" style="padding-top:10px;padding-bottom:10px;padding-right:10px;">
+		<div id="paindeitalpanel" class="hisui-panel" data-options="title:'疼痛评分明细',headerCls:'panel-header-gray',iconCls:'icon-set-paper',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north'" style="height:300px;border:none;border-bottom:1px solid #ccc;">
+					<div id="echartbox" style="width:100%;height:100%;"></div>
+				</div>
+			</div>
+		</div>
+	</div> 
+	<div id="grid_toolbar" Style="margin:0px; padding:10px;">
+		<table cellpadding=0 style="border-collapse: collapse;border: 0;margin: 0;">
+			<tr>
+				<td class="r-label"><input class="hisui-checkbox" type="checkbox" label="<span title='设置表格是否可选多行，导出多条数据或批量删除使用' class='hisui-tooltip'>#(..Get("按分数排序"))#</span>" id="scorerange"></td>
+				<td class="r-label"><span title='查询出院患者,请选择出院日期' class='hisui-tooltip'>#(..Get("出院日期"))#</span></td>
+				<td class="r-label"><input class="hisui-datebox" type="textbox" id="dischargeDate" style="width:100px"></td>
+				<td class="r-label"><span title='输入登记号' class='hisui-tooltip'>#(..Get("登记号"))#</span></td>
+				<td class="r-label"><input class="textbox" id="regNoInput" style="width:100px"></td>
+				<td><a href="#" id="search" class="hisui-linkbutton" iconCls="icon-search" plain="true">查询</a></td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>

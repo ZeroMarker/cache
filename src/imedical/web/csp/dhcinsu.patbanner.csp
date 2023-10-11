@@ -1,0 +1,136 @@
+<style>
+	.PatImage {
+		position: absolute;
+		top: 3px;
+		width: 30px;
+	 	height: 30px;
+	 	border-radius: 30px;
+	 	margin-left: 10px;
+	}
+	
+	.PatInfoItem {
+		padding: 9px 0;
+		margin-left: 5px !important;
+	}
+	
+	.PatInfoItem span {
+		color: black;
+		margin: 0 5px;
+	}
+	 
+	.PatInfoItem img {
+		 color: white;
+		 margin: 0 5px;
+	}
+	
+	.PatInfoItem a img{
+		margin-top: 4px;
+	}
+	
+	.i-btn-right{
+	 	position: absolute;
+	    right: 10px;
+	    top: 3px;
+ 	}
+	
+	.baseIcon img{
+		margin-left: 5px;
+		margin-right: 5px;
+	}
+	
+	.unman {
+	 	background:url(../images/unman.png) no-repeat;
+	 	background-size: cover;
+		position: absolute;
+		top: 3px;
+		left: 10px;
+	 	width: 30px;
+	 	height: 30px;
+	    border-radius: 30px;
+	}
+	
+	.tip-txt {
+		margin-left: 45px;
+		color: #666666;
+	}
+</style>
+<div class="patientbar">
+   <div class="PatInfoItem"></div>
+   <div class="i-btn-right">
+   	   <div id="InpatListDiv" style="display:inline;">
+			<div id="patlist" class="hisui-panel" title="患者列表" 
+				style="width:990px;height:560px;overflow:hidden;"
+				data-options="resizable:true,modal:true,closed:true,closable:true,onOpen:onOpenPatListWin,onClose:onClosePatListWin,headerCls:'panel-header-gray'">  
+			    <iframe src="about:blank" width="100%" min-height="350px" height="100%" frameborder="0"></iframe>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	var patientListPage = "dhcinsu.patbanner.csp"
+	function showPatListWin() {
+		if ($("#InpatListDiv .panel").css('display') !== "none") {
+			return;
+		}
+		if ($("#InpatListDiv").data("AutoOpen") == 1) {
+			$("#patlist").panel({
+				closable: false
+			});
+		} else {
+			$("#patlist").panel({
+				closable: true
+			});
+		}
+		$("#patlist").panel("open");
+	}
+
+	function hidePatListWin() {
+		if ($("#InpatListDiv").data("AutoOpen") == 1) {
+			// 未选患者时,不允许隐藏患者列表
+		} else {
+			$("#patlist").panel("close");
+		}
+	}
+
+	function onOpenPatListWin() {
+		if ($("#patlist").find("iframe").get(0).src == "about:blank") {
+			$("#patlist").find("iframe").get(0).src = "undefined" == typeof patientListPage ? "dhcbill.ipbill.inpatlist.csp" : patientListPage;
+		}
+		var opt = {
+			'z-index': 9085,
+			'position': 'fixed'
+		};
+		var panelJObj = $("#InpatListDiv .panel");
+		var patListJObj = $("#patlist");
+		if ($("#InpatListDiv").data("AutoOpen") == 1) {
+			panelJObj.css($.extend({}, opt, {
+					right: '0px',
+					top: '0px'
+				}));
+			patListJObj.panel('resize', {
+				width: $(document.body).width(),
+				height: $(document.body).height()
+			});
+		} else {
+			panelJObj.css($.extend({}, opt, {
+					right: '10px',
+					top: '36px'
+				}));
+			patListJObj.panel('resize', {
+				width: 1120,
+				height: $(document.body).height() - 46
+			});
+		}
+		$(".window-mask.alldom").show();
+	}
+
+	function onClosePatListWin() {
+		$(".window-mask.alldom").hide();
+	}
+
+	$(function () {
+		$(".window-mask.alldom").hide();
+		$("#InPatListBtn").click(showPatListWin);
+	});
+
+</script>

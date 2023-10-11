@@ -1,0 +1,294 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>胃管插管信息</title>
+<csp:content charset="UTF-8">
+<dhcicu:easyui></dhcicu:easyui>
+<dhcicu:head></dhcicu:head>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/json2.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/xlsx.full.min.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/icu/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding-left:5px;padding-top:15px;padding-bottom:15px;">
+    	<form id="conditionForm">
+    		<label style="padding-left:10px;padding-right:10px;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:10px;padding-right:10px;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:10px;padding-right:10px;">拔管原因</label>
+    		<input type="text" id="drawReason" name="drawReason" class="textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:10px;">查询</a>
+    		<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-export'" style="margin-left:10px;">导出</a>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", date.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", date.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: true,
+        		toolbar: "#dataTools",
+        		border:false,
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "web.DHCICUStatisticXZRY",
+            		QueryName: "FindStomachTubeInfo",
+            		ArgCnt: 4
+        		},
+        		columns: [
+            		[{
+                    	field: "patName",
+                    	title: "患者姓名",
+                    	width: 120
+                	}, {
+                    	field: "patSex",
+                    	title: "性别",
+                    	width: 40
+                	}, {
+                    	field: "patAge",
+                    	title: "年龄",
+                    	width: 40
+                	},
+                	{
+                    	field: "icuInDateTime",
+                    	title: "入科时间",
+                    	width: 160
+                	}, {
+                    	field: "icuOutDateTime",
+                    	title: "出科时间",
+                    	width: 160
+                	},
+                	{
+                    	field: "wardDesc",
+                    	title: "病区",
+                    	width: 80
+                	}, {
+                    	field: "icuBed",
+                    	title: "床位",
+                    	width: 80
+                	},
+                	{
+                    	field: "ICUGuardDay",
+                    	title: "监护天数",
+                    	width: 80
+                	}, {
+                    	field: "icuDiag",
+                    	title: "ICU诊断",
+                    	width: 80
+                	},
+                	{
+                    	field: "papmiMedicare",
+                    	title: "病案号",
+                    	width: 80
+                	},
+                	{
+                    	field: "admNo",
+                    	title: "住院号",
+                    	width: 80
+                	},
+                	{
+                    	field: "ICUALeaveCondition",
+                    	title: "转归状态",
+                    	width: 80
+                	},
+                	{
+                    	field: "TracheaDesc",
+                    	title: "胃管插管类型",
+                    	width: 120
+                	},
+                	{
+                    	field: "IntubeDaysInfo",
+                    	title: "插拔管日期",
+                    	width: 200
+                	},
+                	{
+                    	field: "IntubeDays",
+                    	title: "插管天数",
+                    	width: 120
+                	},
+                	{
+                    	field: "TubeDrawReason",
+                    	title: "拔管原因",
+                    	width: 200
+                	},
+                	{
+                    	field: "WGdgzt",
+                    	title: "导管状况",
+                    	width: 120
+                	}
+                	,
+                	{
+                    	field: "WGwyys",
+                    	title: "胃液颜色",
+                    	width: 120
+                	}
+                	,
+                	{
+                    	field: "WGkcyys",
+                    	title: "空肠液颜色",
+                    	width: 120,
+                    	hidden:true
+                	}
+                	,
+                	{
+                    	field: "WGdghl",
+                    	title: "导管护理",
+                    	width: 120
+                	}
+                	,
+                	{
+                    	field: "WGzrqs",
+                    	title: "置入腔数",
+                    	width: 120
+                	}
+                	,
+                	{
+                    	field: "WGzrsd",
+                    	title: "置入深度(CM)",
+                    	width: 120
+                	}
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = session.DeptID;
+            	param.Arg4 = $("#drawReason").val();
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+            	"background-color:" + row.StatusColor + ";";
+        	},
+        	onLoadSuccess: function(data) {},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnExport").click(function(){
+	    	exportToExcel();
+    	});
+	});
+	
+	function exportQuery(dataGrid,options){
+			if (!options.limit)options.limit=100000;
+			var data = dhccl.getDatas(ANCSP.DataQuery,options,"json");
+	      	var colNames=[];
+     		var cols = $(dataGrid).datagrid('getColumnFields');
+		    var array = [];
+		    for (var i in cols) {     
+		         //获取每一列的列名对象
+		         var col = $(dataGrid).datagrid("getColumnOption", cols[i]);
+		         //追加对象
+		         colNames.push(col.title.trim());
+		    }   
+    
+			var filename = "胃管插管信息.xlsx";
+			var ws_name = "SheetJS";
+			var list=[];
+			
+			list.push(colNames);
+			for(var i=0;i<data.length;i++){
+				var item=data[i];
+				var row=[];
+				for(var j in cols){
+					var colName=cols[j];
+					row.push(item[colName]);
+				}
+				list.push(row);
+			}
+			if(typeof console !== 'undefined') console.log(new Date());
+			var wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(list);
+			 
+			/* add worksheet to workbook */
+			XLSX.utils.book_append_sheet(wb, ws, ws_name);
+
+			/* write workbook */
+			if(typeof console !== 'undefined') console.log(new Date());
+			XLSX.writeFile(wb, filename);
+			if(typeof console !== 'undefined') console.log(new Date())
+	}
+	function exportToExcel() {
+		exportQuery("#data_grid",{
+	        ClassName: "web.DHCICUStatisticXZRY",
+            QueryName: "FindStomachTubeInfo",
+            Arg1: $("#OperStartDate").datebox("getValue"),
+            Arg2: $("#OperEndDate").datebox("getValue"),
+            Arg3: session.DeptID,
+            ArgCnt: 3
+	    });
+	}
+	
+/*	
+	function exportToExcel() {
+    	var datagrid = $("#data_grid");
+    	var rows = datagrid.datagrid("getRows");
+    	
+    	var columns = datagrid.datagrid("options").columns[0];
+    	var columnLength = columns.length;
+    	var sheetRowCount = 3;
+    	
+    	var xlsExcel, xlsBook, xlsSheet;
+    	xlsExcel = new ActiveXObject("Excel.Application");
+    	xlsBook = xlsExcel.Workbooks.Add();
+
+		var excelRow=2,excelColumn=0;
+    	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = column["title"];
+        	}
+        
+        excelRow++;
+		excelColumn=1;
+        for (var i = 0; i < rowLength ; i++) {
+            	row = rows[i];
+            	excelRow++;
+            	excelColumn=0;
+         
+            	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	field = column["field"];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = row[field] || "";
+            	}
+       		}
+       		
+    	xlsExcel.Visible = true;
+    	//xlsSheet.PrintPreview;
+    	//xlsSheet.PrintOut();
+}*/
+	</script>
+</body>
+</html>

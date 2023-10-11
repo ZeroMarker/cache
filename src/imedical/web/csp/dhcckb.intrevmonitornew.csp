@@ -1,0 +1,189 @@
+<!-- dhcckb.intrevmonitor.csp  知识库监测中心 csp //-->
+<!DOCTYPE html>
+<html >
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<!-- <DHCCKB/> -->
+	<link href="../scripts/dhcnewpro/dhcckb/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcckb/css/intrevmonitornew.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<!-- ECharts文件引入 -->
+	<!-- <script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/Echarts.js" ></script> -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/echarts.min.js" ></script>
+	<!-- ECharts文件引入 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/intrevmonitornew.js"></script>
+	<style type="text/css">
+	.datagrid-body td,.datagrid-footer td{
+		font-size:14px;
+		border-right:0px;		
+		padding:0;
+		margin:0;
+	}
+	</style>
+	
+</head>
+<body class="background-warp">
+	<div class="container">
+		<div class="view-area-first">
+			<ul class="pf-nav">
+				<li class="pf-nav-total-item">
+					<div class="item-left total-left"></div>
+					<div class="item-center total-center"></div>
+					<div class="item-right total-right"></div>
+					<div class="item-text">
+						<div class="item-warn">审查总数</div>
+						<div id="Count" class="item-num"></div>
+						<div class="item-uom">个</div>
+					</div>
+				</li>
+				<li class="pf-nav-inter-item">
+					<div class="item-left inter-left"></div>
+					<div class="item-center total-center"></div>
+					<div class="item-right total-right"></div>
+					<div class="item-text">
+						<div class="item-warn">相互作用</div>
+						<div id="InterEach" class="item-num"></div>
+						<div class="item-uom">个</div>
+					</div>
+				</li>
+				 <li class="pf-nav-taboo-item">
+					<div class="item-left taboo-left"></div>
+					<div class="item-center taboo-center"></div>
+					<div class="item-right taboo-right"></div>
+					<div class="item-text">
+						<div class="item-warn">配伍禁忌</div>
+						<div id="Taboo" class="item-num"></div>
+						<div class="item-uom">个</div>
+					</div>
+				</li>
+				<li class="pf-nav-usage-item">
+					<div class="item-left usage-left"></div>
+					<div class="item-center usage-center"></div>
+					<div class="item-right usage-right"></div>
+					<div class="item-text">
+						<div class="item-warn">用法用量</div>
+						<div id="RuleUsage" class="item-num"></div>
+						<div class="item-uom">个</div>
+					</div>
+				</li>
+				<li class="pf-nav-indic-item">
+					<div class="item-left indic-left"></div>
+					<div class="item-center indic-center"></div>
+					<div class="item-right indic-right"></div>
+					<div class="item-text">
+						<div class="item-warn">适应症</div>
+						<div id="RuleIndic" class="item-num"></div>
+						<div class="item-uom">个</div>
+					</div>
+				</li>
+				<li class="pf-nav-contr-item">
+					<div class="item-left contr-left"></div>
+					<div class="item-center contr-center"></div>
+					<div class="item-right contr-right"></div>
+					<div class="item-text">
+						<div class="item-warn">禁忌症</div>
+						<div id="RuleContr" class="item-num"></div>
+						<div class="item-uom">个</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<div class="view-area-second">
+			<div class="view-left">
+				<div class="list-title">
+					<!-- <div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcckb/images/trendchart.png" border=0/>
+					</div> -->
+					<label>合理用药审查趋势</label>
+					<!-- <div class="list-tools"></div> -->
+	            </div>
+            	<div class="list-order-item">
+            		<div id="TrendCharts" class="item-chart"></div>
+				</div>
+			</div>
+			<div class="view-center">
+				<div class="list-title">
+					<!-- <div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcckb/images/proportion.png" border=0/>
+					</div> -->
+					<label>合理用药审查指标趋势图</label>
+					<div class="list-tools">
+					</div>
+	            </div>
+            	<div class="list-order-item">
+            		<div id="PropCharts" class="item-chart"></div>
+				</div>
+			</div>
+			<div class="view-right">
+				<div class="list-title">
+					<!-- <div class="list-icon">
+						<img src="../scripts/dhcnewpro/dhcckb/images/addrule.png" border=0/>
+					</div> -->
+					<label>新增监测指标</label>
+					<div class="list-tools">
+						<!-- <span class="icon-right icon-more">更多</span> -->
+					</div>
+	            </div>
+            	<div class="list-order-item">
+					<div class="item-news-body">
+	            		<ul class="item-news">
+							<!-- <li class="item-news-item">
+								<div class="item-news-icon">
+									<img src="../scripts/dhcnewpro/dhcckb/images/addrule.png" border=0/>
+								</div>
+								<div class="item-news-title"><label>阿莫西林克拉维酸钾</label></div>
+								<div class="item-news-time"><label>19.04.05</label></div>
+							</li> -->
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="view-area-third">
+			<div class="list-title">
+				<!-- <div class="list-icon">
+					<img src="../scripts/dhcnewpro/dhcckb/images/infomation.png" border=0/>
+				</div> -->
+				<label>全院各科室监测值(Top 10)</label>
+				<!-- <div class="list-tools">
+					<span class="icon-right icon-more">更多</span>
+				</div> -->
+            </div>
+        	<div class="list-order-item">
+        		<table id="main"></table>
+        		<!--
+				<table border="1" cellspacing="0" cellpadding="1" class="item-rank">
+					<thead>
+						<tr style="height:30px;">
+							<th class="key-label"><label>排名</label></th>
+							<th class="key-label item-rank-width"><label>科室</label></th>
+							<th class="key-label"><label>相互作用</label></th>
+							<th class="key-label"><label>配伍禁忌</label></th>
+							<th class="key-label"><label>适应症</label></th>
+							<th class="key-label"><label>用法用量</label></th>
+							<th class="key-label"><label>禁忌症</label></th>
+							<th><label></label></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr style="height:30px;">
+							<td class="key-label"><label>No.1</label></td>
+							<td class="key-label item-rank-width"><label>感染科</label></td>
+							<td class="key-label"><label>100</label></td>
+							<td class="key-label"><label>100</label></td>
+							<td class="key-label"><label>100</label></td>
+							<td class="key-label"><label>100</label></td>
+							<td class="key-label"><label>100</label></td>
+							<td class="key-label"><label></label></td>
+						</tr>
+					</tbody>
+				</table>
+				-->
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            
+        </script>
+<HTML lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <ADDINS require="DoctorSheet"></ADDINS>
+ 	<SERVER>
+ 		Set setstr=##class(Nur.DHCMGNurseSet).getSet()
+ 		Set webIP=$PIECE(setstr,"^",2)
+ 		Set locId=%session.Data("LOGON.CTLOCID")
+ 		Set docLoc=""
+ 		Set logonLocType=$PIECE($GET(^CTLOC(locId)),"^",13)
+ 		If logonLocType="W" Do
+ 		.Set chl=0 For  Set chl=$ORDER(^CTLOC(locId,"LINK",chl)) Quit:chl=""  Do
+ 		..Set linkLoc=$PIECE(^CTLOC(locId,"LINK",chl),"^",1)
+ 		..Set docLoc=linkLoc
+ 		e  Do
+ 		.Set docLoc=locId
+	</SERVER>
+    <HISUI/>
+    <SCRIPT Language="Javascript">
+		var webIp=window.location.href.split('/imedical/web')[0]; //"#(webIP)#";
+		var wardId=session['LOGON.WARDID'];
+		var locId="#(docLoc)#";
+		var userId=session['LOGON.USERID'];
+		function orderSheetWindow(episodeId)
+		{
+			if ("undefined"==typeof EnableLocalWeb || 0 ==EnableLocalWeb ){
+		 		//未开启使用中间件 或 老项目，然仍用老的方式运行		 
+				DHCCDoctorOrderSheet.showDoctorOrderSheetWindow(episodeId,wardId,locId,userId,webIp)
+				//window.close()
+			}else{		
+				DoctorSheet.TopMost = true;
+				DoctorSheet.notReturn=1
+				DoctorSheet.showDoctorOrderSheetWindow(episodeId,wardId,locId,userId,webIp,"true"); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+				//window.close();
+			}
+		}
+	</SCRIPT>
+    <script type="text/javascript" src="../scripts/nurse/hisui/quality/datagrid-export.js"></script>
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<STYLE type='text/css'>
+
+		.unman {
+			background:url(../images/unman.png) no-repeat;
+			background-size: 40px;
+			background-position: center center;
+			width: 45px;
+			height: 45px;
+			position: absolute;
+			top: 2px;
+			left: 0px;
+		}
+		.man {
+			background:url(../images/man.png) no-repeat;
+			background-size: 40px;
+			background-position: center center;
+			width: 45px;
+			height: 45px;
+			position: absolute;
+			top: 2px;
+			left: 0px;
+		}
+		.woman {
+			background: url(../images/woman.png) no-repeat;
+			background-size: 40px;
+			background-position: center center;
+			width: 45px;
+			height: 45px;
+			position: absolute;
+			top: 2px;
+			left: 0px;
+		}
+		.sline, .infoLabel {
+			color: #787878;
+		}
+		.patientInfo {
+			padding-bottom: 10px;
+			padding-left: 60px;
+			display: inline-block;
+			position: absolute;
+			top: 15px;
+		}
+		.patientInfo span {
+			padding-left: 5px;
+			font-size: 16px;
+			color:  rgba(85, 85, 85, 1);
+		}
+		.nur_ul li{
+			float: left;
+			padding-left: 10px;
+		}
+		ul{
+			margin: 0px;
+			padding: 0px;
+			overflow: hidden;
+		}
+
+		.datagrid-wrap.panel-body.panel-body-noheader{
+				border-color:#ccc;
+				border-top-right-radius:0;
+				border-top-left-radius:0;
+				border-right:0;
+				border-left:0;
+				border-bottom:0;
+		}
+		.datagrid-toolbar{
+			height:24px;
+			padding:5px
+		}
+		.datagrid-toolbar .l-btn-plain{
+			margin-top:1px!important;
+		}
+		.datagrid-toolbar .hischeckbox_square-blue{
+			margin-top:1px!important;
+		}
+		.hisui-timespinner.timespinner-f.spinner-text.spinner-f.validatebox-text{
+			width:72px!important;
+		}
+		.datebox .combo-arrow{
+			position:relative;
+			left:-4px!important;
+		}
+		.emrdatatable .datagrid-wrap.panel-body.panel-body-noheader{
+			border-top-style:dashed;
+		}
+		/*重写switchbox样式*/
+		.has-switch label {
+			width: 33.5% !important;
+			margin-left: 1px;
+		}
+		.datagrid-toolbar {
+			padding: 5px 1px;
+		}
+		.cntt {
+			margin: 0px !important;
+			font-weight: 500;
+		}
+		.vstep-container-steps .active div, .vstep-container-steps .active span, .vstep-container-steps .active label {
+			color: #13AE37 !important;
+		}
+	</STYLE>
+	<link rel='stylesheet' type='text/css' href='../scripts/nurse/hisui/quality/Nur.Quality.AuditMain.css'/>
+</head>	
+<body style="padding:10px !important;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+			<div class="hisui-panel" fit="true" data-options="title:'护理病历质控',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+				<div class="hisui-layout" data-options="fit:true,border:false" > 
+					<div  data-options="region:'north',headerCls:'panel-header-gray',border:false" style="height:82px;">
+						<div style="padding:10px 0 10px 0;">
+							<ul class="nur_ul" style="list-style:none;">
+								<li><label style="margin-right:10px;">#(..Get("病区"))#</label><select id="inputWardID" class="hisui-combobox" style="width:200px;" data-options="enterNullValueClear:false"></select></li>
+								<li><div id="patSwitch" style="padding-top:2px;"></div></li>
+								<li id="dateInput">
+									<label style="margin-right:10px;">#(..Get("出院时间"))#</label><input id="inputOutHopStartDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px">
+									<span class="nur_label" style="margin:0 1px;">#(..Get("至"))#</span>
+									<input id="inputOutHopEndDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px">
+								</li>
+								<li>
+										<label style="margin-right:10px;">#(..Get("关键字查询"))#</label><select id="inputMainSelect" class="hisui-combobox" name="state" style="width:80px;" data-options="enterNullValueClear:false"></select>
+										<input  id="inputMainInput" class="textbox" name="name" style="width:120px;" data-options="" placeholder="#(..Get("请输入查询关键字"))#">
+								</li>
+								<li>
+										<a href="#"  id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;">查询</a>
+								</li>
+								<li>
+										<a href="#" id="exportBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-paper'" style="width:90px;">导出</a>
+								</li>
+							</ul>
+						</div>
+						<div>
+							<div>
+								<ul class="nur_ul nur_checkbox"  style="list-style:none;">
+									<li>
+										<span class="nur_label" style="">#(..Get("状态"))#</span>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div class="emrdatatable" data-options="region:'center',headerCls:'panel-header-gray',border:false">
+						<table  id="patEmrDataListTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="auditDetailsWin" style="border:0;padding:6px 10px 10px 10px;">
+		<div class="hisui-layout" data-options="fit:true,border:false" >
+			<div  data-options="region:'north',border:false" style="height:45px;">
+					<div id="sex" ></div>
+					<div class="patientInfo">
+						<span id="regNo"></span>
+						<span class="sline">/</span>
+						<span id="bedCode"></span>
+						<span class="sline">/</span>
+						<span id="patName"></span>
+						<span class="sline">/</span>
+						<span id="sex2"></span>
+						<span class="sline">/</span>
+						<span id="age"></span>
+						<span class="sline">/</span>
+					</div>
+			</div>
+			<div data-options="region:'center',border:false" >
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div  data-options="region:'north',border:false">
+						<div id="selectEmrInfo" class="selectEmrInfo"><span>#(..Get("文书名称"))#:</span>&nbsp;&nbsp;<span id="selectEmrDesc" class="selectEmrDesc">#(..Get("压疮风险评估单"))#</span></div>
+						<div class="selectStatusInfo">
+							<div class="selectStatusInfo_icon">
+								<div class="icon_font"></div>
+							</div>
+							<span class="selectStatusInfo_font">#(..Get("当前状态"))#:</span>&nbsp;
+							<span class="selectStatusInfo_status" id="selectStatusInfo_status">#(..Get("审核通过"))#</span>
+							<span class="selectStatusInfo_font statusLeft" id="selectStatusInfo_detaTime">2020-01-01 13:29</span>
+						</div>
+					</div>
+					<div data-options="region:'center',border:false" style="padding:10px;">
+						<div class="auditRecDetailsProcess" style="height:auto;width:568px;"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-->查阅护理病历<!-->
+	<div id="showAndAppraiseEmr" style="padding:4px;">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div  data-options="region:'north',split:true,border:false" style="height:34px">
+				<div>
+					<a id="emrNotesBtn" href="javascript:void(0)"  class="l-btn l-btn-small l-btn-plain">
+						<span class="l-btn-left l-btn-icon-left" >
+							<span class="l-btn-text" style="line-height:29px;">#(..Get("备注"))#</span>
+							<span class="l-btn-icon icon-alert"></span>
+						</span>
+					</a>
+					<a href="javascript:void(0)" id ="emrAppraiseBtn" class="l-btn l-btn-small l-btn-plain">
+						<span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text" style="line-height:29px;">#(..Get("评价"))#</span>
+							<span class="l-btn-icon icon-other-yellow">&nbsp;&nbsp;</span>
+						</span>
+					</a>
+				</div>
+			</div>
+			<div data-options="region:'west',split:true,border:false" style="width:260px;" >
+				<div id="emrAndAppraiseList" class="hisui-tabs tabs-gray" data-options="fit:true">   
+					<div title="#(..Get("文书列表"))#" style="padding:10px;">
+						<ul id="emrTree" class="hisui-tree" data-options="lines:true"></ul>
+					</div>   
+					<div title="#(..Get("评价列表"))#" style="padding-top:2px;">
+						<table  id="appraiseListTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',split:true,border:false">
+				<div  id="emrAndAppraiseDetails"  class="hisui-tabs tabs-gray" data-options="fit:true"></div>
+				<div  id="showAppraiseDetails"   class="hisui-panel"  fit="true" data-options="title:'评价内容',headerCls:'panel-header-gray',iconCls:'icon-paper-table'" style="padding:10px;">
+					<div  id="showAppraiseLayout"  class="hisui-layout" data-options="fit:true,border:false">
+						<div id="showEmrScoreList" data-options="region:'north',split:true,border:false" style="height:500px"></div>	
+						<div data-options="region:'center',split:true,border:false" style="padding-top:5px;">
+							<textarea id="showEmrAppRemarks" class="textbox" placeholder="#(..Get("请填写备注"))#"  style="padding:2px;width:calc(100% - 6px);height:calc(100% - 6px);border-color:#ccc;"></textarea>
+						</div>
+						<div  data-options="region:'south',split:true,border:false" style="height:40px;padding-top:5px;text-align:center">
+							<div id="showAppraiseBtns" hidden="true">
+								<a id="saveAppraiseShowBtn" href="javascript:void(0)" class="hisui-linkbutton">保存</a>
+								<a id="submitAppraiseShowBtn" href="javascript:void(0)"  class="hisui-linkbutton">提交</a>
+								<a id="cancelSubmitShowBtn" href="javascript:void(0)"  class="hisui-linkbutton">撤销提交</a>
+							</div>
+						</div>
+
+					</div>
+			
+				</div>
+			</div>	
+		</div>
+	</div>
+	<!-->填写备注<!-->
+	<div id="showInputEmrNote"  style="padding:10px;">
+		<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div  data-options="region:'north',border:false" style="padding:10px;">
+					<div>
+						<input id="inputEmtNoteStartDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px" placeholder="#(..Get("备注开始日期"))#">
+						<span class="nur_label" style="margin:0 1px;">#(..Get("至"))#</span>
+						<input id="inputEmtNoteEndDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px" placeholder="#(..Get("备注结束日期"))#">
+						<a href="#"  id="searchNoteBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;height:30px;margin-left:6px;">查询</a>
+					</div>
+				</div>
+				<div data-options="region:'center'" style="border-right:0;border-bottom:0;border-left:0;border-top:1px dashed #e2e2e2;border-radius:0;">
+					<div class="hisui-panel" data-options="fit:true,border:false,bodyCls:'panel-body-gray'">
+						<table  id="inputEmrNoteTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,border:false"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-->填写评价<!-->
+	<div id="showInputEmrScore"  style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div id="inputEmrScoreList" data-options="region:'north',split:true,border:false" style="height:470px"></div>	
+			<div data-options="region:'center',split:true,border:false" style="padding-top:5px;">
+				<!--div style="background-color: rgb(232, 232, 232);border-color: rgba(255, 0, 0, 0);border-width: 1px;border-style: solid;text-align: left;">&nbsp;#(..Get("备注"))#</div-->
+				<textarea id="inputEmrAppRemarks" class="textbox" placeholder="#(..Get("请填写备注"))#"  style="padding:2px;width:calc(100% - 6px);height:calc(100% - 6px);border-color:#ccc;"></textarea>
+			</div>
+			<div  data-options="region:'south',split:true,border:false" style="height:40px;text-align:center">
+				<div style="height:6px;"></div>
+				<div>
+					<a id="saveAppraiseBtn" href="javascript:void(0)" class="hisui-linkbutton">保存</a>
+					<!--a id="submitAppraiseBtn" style="visibility:hidden" href="javascript:void(0)"  class="hisui-linkbutton">提交</a-->
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.Comm.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.AuditMain.js" charset="gbk"></script>
+</body>
+
+</html>

@@ -22,6 +22,8 @@
 	border:2px solid #509de1;
 	border-radius:60px;
 	margin:1px;
+	user-select:none;
+	-ms-user-select:none;
 }
 .seqno-list li:hover{
 	border:2px solid orange;
@@ -29,8 +31,27 @@
 	font-size:22px!important;
 	font-weight:bolder;
 }
+body {
+	user-select:none;
+	-ms-user-select:none;
+}
 .avail-seqno{background-color:rgb(50, 189, 40);}
 .stop-seqno{background-color:#ff8888;}
+.timeStyle {
+	height:60px;
+	width:200px;
+	float:left;
+	background-color:#c7d7e7;
+	color:#FF0000;
+	font-size:20px;
+	line-height:60px;
+	padding-left:10px;
+	margin:5px 5px 0px 10px;
+	border:2px solid;
+	border-radius:25px;
+	user-select: none;
+}
+
 </style>
 <Server>
 s ASRowid=%request.Get("ASRowid")
@@ -40,39 +61,111 @@ s ASRowid=%request.Get("ASRowid")
 <div class="hisui-layout" fit="true">
 	<div class="hisui-panel" data-options="iconCls:'icon-template',fit:true,headerCls:'panel-header-gray',title:''" style="1px solid #ccc;">
 		<div id="SeqNoWin">
-			<ul class="seqno-list"><ul>
+			<ul class="seqno-list" unselectable="on"><ul>
 		</div>
 	</div>
 </div>
 	<SCRIPT language = 'javascript' >
 	var ASRowid="#(ASRowid)#"
 	var ServerObj={
-		StopStatus:#(##class(DHCDoc.OPAdm.Schedule).#StopStatus)#
+		StopStatus:#(##class(DHCDoc.OPAdm.Schedule).#StopStatus)#,
+		QueueArr:new Array(),
+		FirstSelQueueNo:"",
+		SecondSelQueueNo:"",
 	};
 	$(function(){
 		 ShowAvailSeqNo(ASRowid)
-		 $('.seqno-list').on('click','li',function(){
+		 $(".seqno-list li").click(function (e){
+			 alert(1)
+			 })
+		 $('#SeqNoWin').on('click','li',function(e){
 	        var QueueNo=$(this).text();
 	        var NewStatusCode=0;
 	        if($(this).hasClass('avail-seqno')) NewStatusCode=ServerObj.StopStatus;
-	        StopQueueNo(NewStatusCode,QueueNo,this);
+	        //检测用户Shift批量选择的顺序号
+	        if(e.shiftKey){
+		        if (ServerObj.SecondSelQueueNo!=""){
+			    	ServerObj.FirstSelQueueNo=ServerObj.SecondSelQueueNo;
+			    	ServerObj.SecondSelQueueNo=QueueNo
+			    }else if (ServerObj.FirstSelQueueNo==""){
+					ServerObj.FirstSelQueueNo=QueueNo;
+				}else{
+					ServerObj.SecondSelQueueNo=QueueNo;
+				}
+				console.log(ServerObj.FirstSelQueueNo+","+ServerObj.SecondSelQueueNo);
+			}else{
+				ServerObj.FirstSelQueueNo="";
+			    ServerObj.SecondSelQueueNo="";
+			}
+	        if ((ServerObj.FirstSelQueueNo!="")&&(ServerObj.SecondSelQueueNo!="")){
+		    	var StartIndex=$.inArray(parseInt(ServerObj.FirstSelQueueNo), ServerObj.QueueArr);
+		    	//确定第一次选择的号源状态，后续状态以该状态为准
+		        var NewStatusCode=0;
+		    	$(".seqno-list>li").each(function(index,that){
+					var selQueueNo=$(that).text();
+					if(selQueueNo==ServerObj.FirstSelQueueNo){
+						if($(that).hasClass('stop-seqno')) NewStatusCode=ServerObj.StopStatus;
+					}
+				})
+		        
+		        var EndIndex=$.inArray(parseInt(ServerObj.SecondSelQueueNo), ServerObj.QueueArr);
+		        if (StartIndex>EndIndex){
+			    	var temp=EndIndex;
+			    	EndIndex=StartIndex;
+			    	StartIndex=temp;
+			    }
+			    //批量修改
+			    var SelQueueArr=ServerObj.QueueArr.slice(StartIndex,parseInt(EndIndex)+1);
+		        $(".seqno-list>li").each(function(index,that){
+					var selQueueNo=$(that).text();
+					var InArrFalg=$.inArray(parseInt(selQueueNo), SelQueueArr);
+					if(InArrFalg>=0){
+						StopQueueNo(NewStatusCode,selQueueNo,that)
+					}
+				})
+		    }else{
+	        	StopQueueNo(NewStatusCode,QueueNo,this);
+		    }
 	    });
-		})
-	function ShowAvailSeqNo(ASRowid)
-	{
-	    $('.seqno-list').empty();
-	    $.cm({ 
+	    document.onkeyup = OnKeyupHandler
+	})
+	function OnKeyupHandler(e) {
+		//shift
+		 if(e.keyCode==16){
+		 	ServerObj.FirstSelQueueNo="";
+			ServerObj.SecondSelQueueNo="";
+		 }
+	}
+	function ShowAvailSeqNo(ASRowid) {
+		$('#win-panel').empty();
+		$.cm({ 
 	        ClassName:"DHCDoc.OPAdm.Schedule",
-	        MethodName:"ShowAvailSeqNo", 
-	        ASRowid:ASRowid
+	        MethodName:"ShowAvailSeqNoNew", 
+	        ASRowid:ASRowid,
+	        dataType:"json"
 	    },function(data){
 	        for(var i=0;i<data.length;i++){
-	            var className="avail-seqno";
-	            if(data[i].StatusCode==ServerObj.StopStatus) className="stop-seqno";
-	            $('.seqno-list').append("<li class='"+className+"'>"+data[i].QueueNo+"</li>");
+		        var OneData=data[i];
+		        var TimeRange=OneData.TimeRange;
+		        var Lists=OneData.Lists;
+		        var InsHtml="<div style='display: table'>";
+		        InsHtml += "<div class='timeStyle' ondblclick='TimeClick(this)'>";
+		        InsHtml += TimeRange;
+		        InsHtml += "</div>";
+		        InsHtml += "<div style='height:100%;float:left;'>";
+		        InsHtml += "<ul class='seqno-list' unselectable='on'>";
+		        for(var j=0;j<Lists.length;j++) {
+		            var className="avail-seqno"
+		            if(Lists[j].StatusCode==ServerObj.StopStatus) className="stop-seqno"
+	        		ServerObj.QueueArr.push(Lists[j].QueueNo);
+		            //InsHtml += "<li class='"+className+"' onclick='StopQueueNo("+Lists[j].StatusCode+","+Lists[j].QueueNo+",this)'>"+Lists[j].QueueNo+"</li>" ;       
+		        	InsHtml += "<li class='"+className+"'>"+Lists[j].QueueNo+"</li>"
+		        }
+		        InsHtml += "</ul>";
+		        InsHtml += "</div>";
+		        $('#SeqNoWin').append(InsHtml);
 	        }
-	    },function(err){
-	    });
+	    })
 	}
 	function StopQueueNo(NewStatusCode,QueueNo,that)
 	{

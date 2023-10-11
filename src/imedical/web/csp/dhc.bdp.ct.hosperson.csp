@@ -1,0 +1,196 @@
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+ // dhc.bdp.ct.hosperson.csp
+ // 名称: HOS人员基本信息
+ // 修改人:基础数据平台-gaoshanshan
+ // 修改日期:2022-11-10
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/> 
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/HOS/CT_BDP_CT.HOS_Person.js"></script>
+</HEAD>
+<style>
+.tbclass{
+    text-align: right;
+}
+.dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break:keep-all;
+    word-wrap:break-word;
+    white-space:nowrap;
+}
+</style>
+<BODY> 
+    <div class="hisui-layout" data-options="fit:true" border="false" > 
+            <div data-options="region:'north' ,split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom:1px dashed #C0C0C0;overflow:hidden" title="" border="false">  
+                 <table cellspacing=10 >
+                    <tr>
+                    	<td class="">标识码</td>
+			    		<td><input id="TextCode" type="text" class="hisui-validatebox" style="width:150px"></td>
+			    		<td class="">姓名</td>
+			    		<td><input id="TextDesc" type="text" class="hisui-validatebox" style="width:150px"></td>
+			    		<td class="">状态</td>
+                        <td><input id="TextStatus" type="text" class="hisui-combobox" style="width:150px"></td>
+                           <td class="tdlabel-b"><a href="#" class="hisui-linkbutton" iconCls="icon-w-find" id="btnSearch" >查询</a></td>
+                           <td class="tdlabel-b"><a href="#" class="hisui-linkbutton" iconCls="icon-w-reset" id="btnRefresh" >重置</a></td>
+                    </tr>     
+                 </table > 
+             </div>  
+            <div data-options="region:'center'" border="false"> 
+                <table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
+             </div>  
+     </div> 
+      
+    <div id="myWin" style="width:auto;height:auto;resizable:true;display:none;"> 
+        <div title="基本信息" style="padding:10px;">
+            <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+                <table cellspacing=10>
+                	 <input type="hidden" name="ID">
+                	 <input type="hidden" name="PAPhoto" id="PAPhoto">
+                     <tr>
+                       <td rowspan="3" class="tbclass"></td>
+                       <td rowspan="3"><a id="btnUpload" href="#"><img id="PhotoImg" decoding="async" src="../scripts/bdp/Framework/imgs/null.jpg" width="120px" height="120px" style="margin-left:10px"></a></td>
+                       <td class="tbclass"><font color=red>*</font>标识码</td>
+                       <td><input id="PAPersonID" name="PAPersonID" type="text" class="textbox hisui-validatebox"  style="width:200px" data-options="required:true"></td>
+                       <td class="tbclass"><font color=red>*</font>姓名</td>
+                       <td><input id="PAName" name="PAName" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options="required:true"></td>
+                       
+                    </tr>
+                    <tr>
+                       <td class="tbclass">性别</td>
+                       <td><input id="PAGenderCode" name="PAGenderCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                   	   <td class="tbclass">曾用名</td>
+					   <td><input id="PAFormerName" name="PAFormerName" type="text" class="textbox hisui-validatebox"  style="width:200px"></td>
+                    </tr>
+                    <tr>
+                       <td class="tbclass">出生日期</td>
+                       <td><input id="PABirthDate" name="PABirthDate" type="text" class="textbox hisui-datebox" style="width:207px"></td>
+                       <td class="tbclass">出生时间</td>
+                       <td><input id="PABirthTime" name="PABirthTime" type="text" class="textbox hisui-timespinner" data-options="showSeconds:true" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">国籍</td>
+                       <td><input id="PANationalityCode" name="PANationalityCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass">第一语言</td>
+                       <td><input id="PALanguageCode1" name="PALanguageCode1" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass">第二语言</td>
+                       <td><input id="PALanguageCode2" name="PALanguageCode2" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">证件类型</td>
+                       <td><input id="PAIdentityType" name="PAIdentityType" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass">身份证号</td>
+                       <td><input id="PAIdentityID" name="PAIdentityID" type="text" class="textbox hisui-validatebox" validType="idCode" style="width:200px"></td>
+                       <td class="tbclass">民族</td>
+                       <td><input id="PANationCode" name="PANationCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">学历</td>
+                       <td><input id="PAEducationCode" name="PAEducationCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass">学位</td>
+                       <td><input id="PADegreeCode" name="PADegreeCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass">职业</td>
+                       <td><input id="PAOccupationCode" name="PAOccupationCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">婚姻状态</td>
+                       <td><input id="PAMarriedCode" name="PAMarriedCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass">籍贯</td> <!--籍贯（国家）-->
+                       <td><input id="PANPCountryCode" name="PANPCountryCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass">现住址</td> <!--现住址（国家）-->
+                       <td><input id="PAAddrCountryCode" name="PAAddrCountryCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">宗教</td>
+                       <td><input id="PAReligionCode" name="PAReligionCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass"></td> <!--籍贯（省）-->
+                       <td><input id="PANPPROVCode" name="PANPPROVCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass"></td> <!--现住址（省）-->
+                       <td><input id="PAAddrPROVCode" name="PAAddrPROVCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">手机号码</td>
+                       <td><input id="PAMobile" name="PAMobile" type="text" class="textbox hisui-validatebox" validType="mobile" style="width:200px"></td>
+                       <td class="tbclass"></td> <!--籍贯（市）-->
+                       <td><input id="PANPCITYCode" name="PANPCITYCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass"></td> <!--现住址（市）-->
+                       <td><input id="PAAddrCITYCode" name="PAAddrCITYCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">邮箱</td>
+                       <td><input id="PAEmail" name="PAEmail" type="text" class="textbox hisui-validatebox" validType="email" style="width:200px"></td>
+                       <td class="tbclass"></td> <!--籍贯（县区）-->
+                       <td><input id="PANPDISTRCode" name="PANPDISTRCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                       <td class="tbclass"></td> <!--现住址（县区）-->
+                       <td><input id="PAAddrDISTRCode" name="PAAddrDISTRCode" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">状态</td>
+                       <td><input id="PAPersonStatus" name="PAPersonStatus" type="text" class="textbox hisui-combobox" style="width:207px"></td>
+					   <td class="tbclass">排序号</td>
+                       <td><input id="PASeqNo" name="PASeqNo" type="text" class="textbox hisui-validatebox" validType="NotNegativeInteger" style="width:200px"></td>
+					   <td class="tbclass">详细地址</td>
+                       <td><input id="PAAddress" name="PAAddress" type="text" class="textbox hisui-validatebox" style="width:200px"></td>
+					</tr>
+                     <tr>
+                       <td class="tbclass"><font color=red>*</font>开始日期</td>
+                       <td><input id="PAStartDate" name="PAStartDate" type="text" class='hisui-datebox' style="width:207px" data-options="required:true"></td>
+                       <td class="tbclass">结束日期</td>
+                       <td><input id="PAEndDate" name="PAEndDate" type="text" class='hisui-datebox' style="width:207px"></td>
+                       <td class="tbclass">是否有效</td>
+                       <td><input class='hisui-checkbox' type="checkbox" label="" id="PAActivity" name="PAActivity" checked="checked" value="Y"></td>
+                     </tr>
+					<tr>
+                       <td class="tbclass">拼音码</td>
+                       <td><input id="PAPYCode" name="PAPYCode" type="text" class="textbox hisui-validatebox" style="width:200px"></td>
+					   <td class="tbclass">五笔码</td>
+                       <td><input id="PAWBCode" name="PAWBCode" type="text" class="textbox hisui-validatebox" style="width:200px"></td>
+                       <td class="tbclass">备注</td>
+                       <td><input id="PAMark" name="PAMark" type="text" class="textbox hisui-validatebox" style="width:200px"></td>
+					</tr>
+					
+                </table >
+            </form>
+         </div> 
+    </div>
+   
+    <!--工具栏-->
+    <div id="mybar">
+        <a  href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAdd">新增</a> 
+        <a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true"id="btnUpdate">修改</a> 
+        <a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true"  id="btnDel">删除</a>
+    	<a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-person',plain:true,stopAllEventOnDisabled:true"  id="btnEmployee">组织</a>
+    	<a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-person',plain:true,stopAllEventOnDisabled:true"  id="btnPostion">职位</a>
+    	<a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-person',plain:true,stopAllEventOnDisabled:true"  id="btnProfTitle">职务</a>
+    	<a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-person',plain:true,stopAllEventOnDisabled:true"  id="btnPost">岗位</a>
+    </div>
+    <!--照片上传弹窗-->
+	<div id="myWinUpload" data-options="iconCls:'icon-w-paper'" style="width:800px;height:500px;padding:10px;display:none;"> </div>
+
+	<!--组织人员弹窗-->
+	<div id="myWinEmployee" data-options="iconCls:'icon-w-paper'" style="padding:10px;display:none;overflow:hidden;" > </div> 
+	<!--人员职位弹窗-->
+	<div id="myWinPostion" data-options="iconCls:'icon-w-paper'" style="padding:10px;display:none;overflow:hidden;" > </div> 
+	<!--人员职务弹窗-->
+	<div id="myWinProfTitle" data-options="iconCls:'icon-w-paper'" style="padding:10px;display:none;overflow:hidden;" > </div> 
+	<!--人员职务弹窗-->
+	<div id="myWinPost" data-options="iconCls:'icon-w-paper'" style="padding:10px;display:none;overflow:hidden;" > </div> 
+
+</BODY>
+ </html>
+ 

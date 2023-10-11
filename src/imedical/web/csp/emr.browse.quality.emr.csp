@@ -1,0 +1,54 @@
+﻿﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<html>
+<head>
+	<title>病历浏览</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/browse.emr.css"/>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s action = $Get(%request.Data("Action",1),"")
+		s viewType = $Get(%request.Data("ViewType",1),"")
+		s instanceID = $Get(%request.Data("InstanceID",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s episodeDept = ##class(EPRservice.HISInterface.PatientInfoAssist).CurrentDept(episodeID)	
+		s episodeLocID = $p(episodeDept,"^",1)
+        s admType = $p(^PAADM(episodeID),"^",2)  //值:I、O、E
+		s path = $Get(%request.Data("Path",1),"")
+  </script>
+	<script language="javascript">
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var episodeLocID = '#(episodeLocID)#';
+		var instanceID = '#(instanceID)#';
+		var viewType = '#(viewType)#';  //值Editor PDF
+		var action = '#(action)#';
+        var admType = '#(admType)#';
+		var path = '#(path)#';
+   </script>
+	
+</head>
+<body class="hisui-layout" data-options="border:false">
+	<div data-options="region:'east',border:false" style="width:210px;padding:0;">
+		
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',border:false" style="height:30px;padding:0;">
+				<input type="text" class="hisui-searchbox" id="selectCategory" data-options="width:210,prompt:'输入病历名称搜索!'" />
+			</div>
+			<div data-options="region:'center',border:false" class='navcategory'>
+				<ol class="categorytree" id="ulcategory"></ol> 
+			</div>
+		</div>
+	</div>
+	<div id="browseContent" data-options="region:'center',border:false" style="padding:0;margin:0;"></div>
+    <div id="logdialog" class="hisui-dialog" title="操作记录明细" style="width:950px;height:500px;padding:0;margin:0;" data-options="iconCls:'icon-w-list',modal:true,isTopZindex:true,closed:true">
+        <iframe id="logiframe" frameborder="0" src="" style="width:100%;height:99%;padding:0;margin:0;"></iframe>
+    </div>
+	<script type="text/javascript" src="../scripts/emr/js/browse.quality.emr.js"></script>
+</body> 
+</html>

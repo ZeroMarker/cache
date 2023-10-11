@@ -8,75 +8,125 @@
 <!-- Put your page Title here -->
 	<title>	Cache Server Page </title>
 	<meta charset="utf-8"/>
-	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<link rel="stylesheet" type="text/css" href="../scripts/nurse/NurWB/css/font-awesome.4.6.0.css">
 	<link rel="stylesheet" type="text/css" href="../scripts/nurse/NurWB/css/main.css">
 	<link rel="stylesheet" href="../scripts/nurse/NurWB/css/excel.css" type="text/css" />
+	<link rel="stylesheet" href="../scripts_lib/jQuery/colorpicker/css/colorpicker.css" type="text/css" />
 	<HISUI />
 	<style type="text/css">
-		
-
+		.topline{
+			border-bottom: 1px dashed #ccc;
+			width:100%;
+		}
 		.item-body {
 			position: absolute;
-			top: 60px;
+			top: 67px;
 			bottom: 10px;
+			left:10px;
 			width: calc(100% - 20px);
 		}
 
-		.wb-ward-area {
+		.wb-item-area {
 			float: left;
-			width: 200px;
+			width: 350px;
 			height: 100%;
 			overflow: auto;
-			background: ghostwhite;
-		}
-
-		.tree-file {
-			/*background: url(../css/icons/base_info.png) no-repeat -240px 0;*/
+			border-radius: 4px;
 		}
 
 		.wb-content-area {
-			float: left;
-			width: calc(100% - 200px);
+			position:absolute;
+			left:360px;
 			height: 100%;
+			border-radius: 4px;
+			border:1px lightgray solid;
+			width: calc(100% - 374px);
 		}
-
-		.panel-header,
-		.panel-body {
-			border-color: transparent;
+		#templateDialog .tipText{
+			text-align:right;
+			height:28px;
+			line-height:28px;
+			padding-right:12px;
+			margin-left: 2px
 		}
-
-		
+		#templateDialog .oneline{
+			width: calc(100% - 20px);
+			display:flex;
+			margin:10px 0px 0px 10px;
+			flex-wrap: nowrap;
+		}
+		#templateDialog .dialog-button{
+			padding-top:0px;
+		}
+		.nurHead #hospWard{
+			display:none;
+		}
+		.nurHead .item-body{
+			top:10px;
+		}
+		input[type=text]{
+			border:none;
+			width:auto
+		}
+		input[type=color] {
+			width:20px;
+		}
 		</style>
+	<script language="cache" RUNAT="SERVER">
+  		s multiFlag=1
+	</script>
 	</head>
-	<body style="background-color:white">
-		<div style="display:flex;">
-			<div data-options="region:'north',border:false" style="height: 44px;padding:10px 10px 0 10px">
-		 		<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
-		 	</div>
-		 	<div style="margin-top:10px;display:flex;">
-		 	<div style="height:32px;line-height:32px;margin-right:5px">病区</div>
-		 		<input id="searchText" href="#" class="textbox" style="height:32px;margin-right:5px"/>
-		 		<a id="searchItem" class="hisui-linkbutton" data-options="iconCls:'icon-search'" style="height:34px;">查询</a>
-		 	</div>
+	<body style="background-color:white;padding:0px;">
+		<div id="hospWard">
+			<div style="display:flex;flex-wrap:wrap;padding:10px;">
+				<csp:if condition='1=multiFlag'>
+					<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+					<div style="display:flex;padding-top:2px;">
+						<div style="height:32px;line-height:32px;margin:0px 10px">病区</div>
+	 					<select id="wardComb" class="hisui-combobox" name="dept" style="width:280px;height:32px;" data-options="enterNullValueClear:false,onSelect:selectTopWardHandler,blurValidValue:true,valueField:'wardid',textField: 'warddesc',defaultFilter:6"></select>
+					</div>
+				<csp:else>
+	 				<div style="height:32px;line-height:32px;margin-right:10px">病区</div>
+	 				<select id="wardComb" class="hisui-combobox" name="dept" style="width:280px;height:32px;" data-options="enterNullValueClear:false,onSelect:selectTopWardHandler,blurValidValue:true,valueField:'wardid',textField: 'warddesc',defaultFilter:6"></select>	
+				</csp:if>
+			</div>
+			<div class="topline"></div>
 		</div>
 		<div class="item-body">
-			<div class="wb-ward-area"><ul id="ward-tree" class="hisui-tree" data-options="lines:false"></ul></div>
+			<div class="hisui-layout wb-item-area" fit="true">
+				<div data-options="region:'west',border:false" style="width:350px;padding:0px;">
+					<div class="hisui-layout" fit="true">
+						<div data-options="region:'north',border:false"style="height:42px;">
+							<input id="searchText" href="#" placeholder="请输入要查询的项目" class="textbox" style="height:30px;margin-right:10px;width:235px;"/>
+	 						<a id="searchItem" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="height:30px;margin-top:-3px;">查询</a>
+	 					</div>
+						<div data-options="region:'center',border:false"style="border:solid 1px lightgray;border-radius:4px;">
+							<table class="hisui-treegrid" id="item-grid" border="false"
+				    			data-options="fitColumns:true,fit: true,idField: 'id',treeField: 'name',iconCls:'icon-paper',headerCls:'panel-header-gray'">
+			    				<thead><tr><th field="name" width="170">项目名称</th><th field="code" width="180">项目代码</th></tr></thead>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			
 			<div class="wb-content-area">
 				<div class="toolbars">
 					<div class="group font">
 						<div class="body">
 							<div class="sub sub-top">
 								<select id="fontfamily" class="fontfamily">
-									<option value="微软雅黑" selected="selected">微软雅黑</option>
-									<option value="SimHei">黑体</option>
+									<option value="MicrosoftYahei" selected="selected">微软雅黑</option>
 									<option value="SimSun">宋体</option>
 									<option value="NSimSun">新宋体</option>
-									<option value="FangSong">仿宋</option>
 									<option value="KaiTi">楷体</option>
 								</select>
 								<select id="fontsize" class="fontsize">
+									<option value="8px">8</option>
+									<option value="9px">9</option>
+									<option value="10px">10</option>
+									<option value="11px">11</option>
 									<option value="12px" selected="selected">12</option>
 									<option value="14px">14</option>
 									<option value="15px">15</option>
@@ -89,7 +139,6 @@
 									<option value="28px">28</option>
 									<option value="36px">36</option>
 									<option value="48px">48</option>
-									<option value="72px">72</option>
 								</select>
 							</div>
 							<div class="sub sub-bottom">
@@ -99,20 +148,20 @@
 								<button type="button" class="tag-btn btn-italic">
 									<i class="tag italic"></i>
 								</button>
-								<button type="button" class="tag-btn btn-underline">
+								<button type="button" class="tag-btn btn-underline" style="display: none">
 									<i class="tag underline"></i>
 								</button>
-								<button type="button" class="tag-btn btn-strike">
+								<button type="button" class="tag-btn btn-strike" style="display: none">
 									<i class="tag strike"></i>
 								</button>
 								<button type="button" class="tag-btn" id="bgColor">
 									<i class="tag bgColor"></i>
 								</button>
-								<input type="color" id="bgColorSelect" style="display: none">
+								<input type="color" id="bgColorSelect" autocomplete="on" value="#EBF9FF">
 								<button type="button" class="tag-btn" id="fontColor">
 									<i class="tag fontColor"></i>
 								</button>
-								<input type="color" id="fontColorSelect" style="display: none">
+								<input type="color" id="fontColorSelect" value="#323232">
 							</div>
 						</div>
 						<div class="foot">字体</div>
@@ -152,7 +201,7 @@
 						<div class="foot">对齐方式</div>
 						<a class="corner_mark"></a>
 					</div>
-					<div class="group cells" style="padding: 0px 10px;">
+					<div class="group cells" style="padding: 0px 10px;display: none;">
 						<div class="body">
 							<div class="sub sub-right">
 								<ul class="border-btn select-ctrl-border">
@@ -191,10 +240,10 @@
 						<div class="body">
 							<div class="sub sub-left" style="width: 100px;">
 								<div class="input-group">
-									<label>列宽</label> <input type="number" id="cell-width" class="cell-width" value="60">
+									<label>列宽</label> <input type="number" id="cell-width" style="padding-left:5px;" class="cell-width" value="60">
 								</div>
 								<div class="input-group">
-									<label>行高</label> <input type="number" id="cell-height" class="cell-height" value="25">
+									<label>行高</label> <input type="number" id="cell-height" style="padding-left:5px;" class="cell-height" value="25">
 								</div>
 							</div>
 						</div>
@@ -202,52 +251,145 @@
 					</div>
 					<div class="group edit">
 						<div class="body">
-							<div class="sub sub-left" style="width: 300px;">
+							<div class="sub sub-left" style="width: calc(100% - 20px);">
 								<!--设计后获取表格的代码-->
-								<textarea id="getHtml" style="width: 220px;margin-bottom:5px"></textarea>
-								<div>
-									<input type="button" value="保存为当前病区的模板" onClick="saveButtonClicked()">
+								<textarea id="getHtml" style="width: 100px;margin-bottom:5px" style="display:none"></textarea>
+								<a href="#" class="hisui-linkbutton" iconcls="icon-w-import" id="insertTemplate" style="margin-bottom:5px;height:30px;width:130px">导入模板</a>
+								<a href="#" class="hisui-linkbutton" iconcls="icon-w-save" id="saveTemplate" onClick="saveButtonClicked()" style="margin-bottom:5px;height:30px;width:130px;display:block;">保存到病区</a>
+								<div style="display:none">
+									<input type="button" value="保存到病区" onClick="saveButtonClicked()">
 								</div>
 							</div>
 						</div>
 						<div class="foot">保存</div>
 					</div>
+						<div class="group tips" style="width:calc(100% - 231px - 221px - 121px - 151px - 10px);">
+						<div class="body" style="text-align:left;overflow:hidden;overflow-y:scroll;">
+								<div style="color:gray;padding:0px 5px;font-size:12.5px">1：新建表格，如14行x15列，做好行列合并(可省略)</div>
+								<div style="color:gray;padding:0px 5px;font-size:12.5px">2：设置“项目格”（需右键设置）和对应的代码格(可省略)</div>
+								<div style="color:gray;padding:0px 5px;font-size:12.5px">3：从左侧列表复制项目名称到“项目格”，复制项目代码到对应的代码格</div>
+								<div style="color:gray;padding:0px 5px;font-size:12.5px">4：保存表格到当前病区</div>
+						</div>
+						<div class="foot">使用说明</div>
+					</div>
 				</div>
 				<!--输入框-->
 				<div style="width: 100%;display: flex;">
-					<input type="text" id="selectTdValue" style="width: 100%;outline:none;">
+					<input type="text" id="selectTdValue" style="width: 100%;outline:none;" placeholder="固定项目请在蓝色项目格内输入项目名，其后白色数据格内输入相应Code">
 				</div>
-				<div class="excel" onselectstart="return false">
-				</div>
-
-				
+				<div class="excel" onselectstart="return false"></div>
 			</div>
 		</div>
+		<div id="templateDialog" class="hisui-dialog" title="导入其他病区模板" style="width:416px;height:208px;padding:0px"data-options="iconCls:'icon-w-import',modal:true,closed:'true',buttons:[{text:'导入',handler:function(){templateDialogInsert()}},{text:'取消',handler:function(){$HUI.dialog('#templateDialog').close();}}]">   
+	    	<csp:if condition='1=multiFlag'>
+				<div class="oneline">
+	    			<div data-options="region:'north',border:false">
+		 				<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+		 			</div>
+				</div>
+			</csp:if>
+	    	<div class="oneline">
+	    		<div class="tipText">病区</div>
+	    		<select id="dialogWard" class="hisui-combobox" style="width:352px;height:32px;" data-options="enterNullValueClear:false,onSelect:selectDialogWardHandler,blurValidValue:true,valueField:'wardid',textField: 'warddesc',defaultFilter:6">
+				</select>
+	    	</div>
+	    	<div class="oneline">
+	    		<div class="tipText" style="line-height:23px;height:23px;">导入</div>
+	    		<div id="optionList" style="width:346px;">
+	    			<input class='hisui-radio' type="radio" label='表格结构' name='option' value='clear'>
+            		<input class='hisui-radio' type="radio" label='表格结构和项目' checked="true" name='option' value='origin'>
+	    		</div>
+	    	</div>
+	    	<div id="clearDom" style="display:none"></div>
+	    </div>
 		<script type="text/javascript" src="../scripts/nurse/NurWB/js/excel.js"></script>
 		<script type="text/javascript" src="../scripts/nurse/NurWB/js/windowFun.js"></script>
+		<script type="text/javascript" src="../scripts_lib/jQuery/colorpicker/js/colorpicker.js"></script>
 		<script type="text/javascript">
-			var wardId;
-			baseSetup();
+			var multiFlag = "#($g(multiFlag))#";
+			var isNurHead = false;
+			var hospComp,hospCompDiag,wardId,treegridObj;
+			var logItems=undefined
+			$(document).ready(function () {
+				baseSetup();
+			});
 			function baseSetup(){
-				//
-				var hospComp = GenHospComp("ARC_ItemCat");
-				$('#_HospList').combogrid({
-			   		onSelect:function(value){
-				   		$(".excel").Excel({
-							setting: {
-								row: 0,
-								col: 0
-							}
-						});
-						$('#getHtml').val('');
-						wardId = undefined;
-						document.getElementById('searchText').value = '';
-				   		getAllWard();
-			   		}	 
-		   		});	
-		   		//搜索按钮点击
-				$("#searchItem").click(function (argument) {
-		            getAllWard();
+				//设置背景色 医为浏览器不支持input type=color
+				$('#bgColorSelect').ColorPicker({
+					onSubmit: function(hsb, hex, rgb, el) {
+						var selectTd = document.querySelector('.excel table .selectTd');
+						$(el).val("#"+hex).css("color","#"+hex);
+						if(selectTd){
+							selectTd.style.backgroundColor = "#" + hex;
+						}
+						$(el).ColorPickerHide();
+					},
+					onBeforeShow: function() {
+						$(this).ColorPickerSetColor(this.value);
+					}
+					}).bind('keydown',function(){
+						$(this).ColorPickerSetColor(this.value);
+				});
+				$('#fontColorSelect').ColorPicker({
+					onSubmit: function(hsb, hex, rgb, el) {
+						var selectTd = document.querySelector('.excel table .selectTd');
+						$(el).val("#"+hex).css("color","#"+hex);
+						if(selectTd){
+							selectTd.style.color = "#" + hex;
+						}
+						$(el).ColorPickerHide();
+					},
+					onBeforeShow: function() {
+						$(this).ColorPickerSetColor(this.value);
+					}
+					}).bind('keydown',function(){
+						$(this).ColorPickerSetColor(this.value);
+				});
+				var groupDesc = session['LOGON.GROUPDESC']
+				if(groupDesc == "住院护士长" || groupDesc == "ICU护士长" || groupDesc == "Inpatient Nurse" ||groupDesc == "产科护士长"){
+					isNurHead = true;
+				}
+				var insertTemplate = document.getElementById('insertTemplate');
+				insertTemplate.style.display = 'none';
+				if (parseInt(multiFlag) && !isNurHead) {
+					hospComp = GenHospComp("Nur_IP_TABLELayout");
+					var _HospList = document.getElementById('_HospList');
+					_HospList.id = '_HospList1';
+					$('#_HospList1').combogrid({
+			   			onSelect:function(value){
+				   			$('#wardComb').combobox('clear');
+				   			$(".excel").Excel({
+								setting: {
+									row: 0,
+									col: 0
+								}
+							});
+							$('#getHtml').val('');
+							wardId = undefined;
+							var selectTdValue = document.getElementById('selectTdValue')
+							selectTdValue.value="";
+							var insertTemplate = document.getElementById('insertTemplate');
+							insertTemplate.style.display = 'none';
+				   			getAllWard();
+				   			treegridObj.loadData({
+								"rows":[]
+							});
+							logItems = undefined
+				   			getLogItemTableData();
+			   			}	 
+		   			});
+		   			hospCompDiag = GenHospComp("Nur_IP_TABLELayout");
+					$('#_HospList').combogrid({
+			   			onSelect:function(value){
+				   			$HUI.combobox("#dialogWard").setValue('');
+				   			getAllWard('dialogWard');
+			   			}	 
+		   			});	
+				}
+		   		
+		        $("#insertTemplate").click(function (argument) {
+			        $HUI.combobox("#dialogWard").setValue('');
+		            $('#templateDialog').dialog('open')
 		        });
 		   		$(".excel").Excel({
 					setting: {
@@ -255,21 +397,157 @@
 						col: 0
 					}
 				});
-				$HUI.tree("#ward-tree",{
-					onSelect:function(node){
-						$('#getHtml').val('');
-						wardId = node.wardid;
-						getWardTemplate();
+				treegridObj = $HUI.treegrid("#item-grid",{});
+				getLogItemTableData();
+				$('#getHtml').val('');
+				if(!isNurHead){
+					getAllWard();//获取所有病区
+					getAllWard('dialogWard');
+				}else{
+					wardId = session['LOGON.WARDID']
+					document.body.classList.add("nurHead");
+					getWardTemplate();
+				}
+				//搜索按钮点击
+				$("#searchItem").click(function (argument) {
+					treegridObj.loadData({
+						"rows":[]
+					});
+					getLogItemTableData();
+				});
+			}
+			
+			function selectTopWardHandler(item){
+				var insertTemplate = document.getElementById('insertTemplate');
+				insertTemplate.style.display = 'block';
+				$('#getHtml').val('');
+				$(".excel").Excel({
+					setting: {
+						row: 0,
+						col: 0
 					}
 				});
-				getAllWard();
-				
+				wardId = item.wardid;
+				getWardTemplate();
+			}
+			function selectDialogWardHandler(item){
+				var id = item.wardid
+				if (id == wardId){
+					var hospid=hospCompDiag?$HUI.combogrid('#_HospList').getValue():session['LOGON.HOSPID'];
+					var hospid2=hospComp?$HUI.combogrid('#_HospList1').getValue():session['LOGON.HOSPID'];
+					if(hospid2!=hospid){
+						return	
+					}
+					$.messager.popover({msg: '已选病区与当前病区相同哦~~',type:'alert'});
+					$HUI.combobox("#dialogWard").setValue('');
+				}
+			}
+			
+			function templateDialogInsert(){
+				var hospid=hospCompDiag?$HUI.combogrid('#_HospList').getValue():session['LOGON.HOSPID'];
+				var wardid = $HUI.combobox("#dialogWard").getValue();
+				if(wardid == undefined || wardid == ''){
+					$.messager.popover({msg: '请选择病区',type:'alert'});
+					return;
+				}
+				var type = $("input[name='option']:checked").val();
+            	getWardTemplate('templateDialog',hospid,wardid,type);
 			}
 			
 			function saveButtonClicked(){
 				if(wardId == undefined){
 					$.messager.popover({msg: '请选择病区',type:'alert'});
 					return
+				}
+				
+				var table = document.querySelector('.excel table');
+				var trs = table.querySelectorAll('tr');
+				var colNum = 0;//列数
+				var rowNum = trs.length-1;
+				for(var i= 0; i < trs.length;i++){
+					var tds = trs[i].querySelectorAll('td');
+					for(var j= 0; j < tds.length;j++){
+						var td = tds[j];
+						if(i == 0){
+							td.removeAttribute('data-order');//ABCD...的表头
+						}else if(j == 0){//1234列头
+							continue;
+						}else{
+							var orderStr = (i-1)+'-'+(j-1);
+							td.setAttribute('data-order',orderStr);//记录第几行第几列
+						}
+						td.classList.remove('custom');
+						td.removeAttribute('data-role');
+						td.removeAttribute('data-parent');
+						td.removeAttribute('data-last');
+					}
+					if(i == 1){
+						colNum = tds.length - 1;	
+					}
+				}
+				
+				//父子绑定
+				for (var colIndex = 0; colIndex < colNum;) {
+					var nextIndex = colIndex;
+					for (var rowIndex = 0; rowIndex < rowNum;rowIndex++) {
+						var idStr = rowIndex+'-'+colIndex;
+						var td = table.querySelector('td[data-order="'+idStr+'"]');
+						var display = td?td.style.display:""
+						var rowSpan = 1;
+						if(td.rowSpan && td.rowSpan != ''){
+							rowSpan = parseInt(td.rowSpan)
+						}
+						var colSpan = 1;
+						if(td.colSpan && td.colSpan != ''){
+							colSpan = parseInt(td.colSpan)
+						}
+						if (display == 'none' || !td.classList.contains('itemName')) {
+							continue;//不显示的或普通单元格
+						}
+						//console.log(td.innerText);
+						if (rowSpan > 1) {
+							var childId = colIndex + colSpan;
+							var lastTd;
+							for (var i = 0; i < rowSpan;i++) {
+								var str = 'td[data-order="'+(rowIndex+i)+'-'+childId+'"]'
+								var childTd = table.querySelector(str);
+								if(!childTd){
+									continue
+								}
+								var childDisplay = childTd?childTd.style.display:""
+								if (childDisplay == 'none' || !childTd.classList.contains('itemName')) {
+									continue
+								}
+								childTd.setAttribute('data-parent',idStr);
+								lastTd = childTd;
+								//console.log(childTd.innerText);
+							}
+							if (lastTd) {
+								lastTd.setAttribute('data-last','1');
+								td.setAttribute('data-role','parent');
+							}
+						}
+						
+						if (rowIndex == 0) {//下一列的位置
+							var temp = colIndex + colSpan;
+							if (rowSpan > 1) {//子项目格
+								temp += 1;
+							}
+							for (var x = temp;x < colNum;x++) {
+								var next = table.querySelector('td[data-order="'+rowIndex+'-'+x+'"]');
+								var nextDisplay = next?next.style.display:""
+								if (nextDisplay == 'none' || !next.classList.contains('itemName')) {
+									continue
+								}
+								nextIndex = x
+								break;
+							}
+						}
+					}
+					if (nextIndex == colIndex) {
+						break
+					}
+					colIndex = nextIndex;
 				}
 				getHospLogItems();
 			}
@@ -289,53 +567,91 @@
 			}
 			
 			//获取病区模板
-			function getWardTemplate(){
-				var hospid=$HUI.combogrid('#_HospList').getValue();
+			function getWardTemplate(dialogId,hos,ward,type){
+				var selectTdValue = document.getElementById('selectTdValue')
+				selectTdValue.value="";
+				var hospid=hospComp?$HUI.combogrid('#_HospList1').getValue():session['LOGON.HOSPID'];
+				
+				var wardid = wardId
+				if(dialogId != undefined){
+					hospid = hos;
+					wardid = ward;
+				}
+				
 				$cm({
 					ClassName:'CF.NUR.DWB.TableLayout',
 					MethodName:"Get",
-					WardID:wardId,
+					WardID:wardid,
 					HospDR:hospid
 				},function(jsonData){
 					//console.log('template',jsonData);
 					if(jsonData.msg){
+						if(dialogId != undefined){
+							$.messager.popover({msg: '获取模板失败请重试',type:'alert'});
+						}
 						return		
 					}
 					var html = jsonData.html
-					if(!html){
-						$(".excel").Excel({
-							setting: {
-								row: 21,
-								col: 20
-							}
-						});
-						
-					}else{
-						html = html.replace(/@yangshi@/g,' style=');
-						html = html.replace(/\\/g,'');
-						console.log(html);
-						setHtml(html);
+					if(!html || html == "" || html.indexOf("<td") == -1){
+						html = '<table class="selectTd" border="1"><tbody><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="0-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="0-1"></td><td rowspan="1" colspan="3" data-order="0-2" class="selectTd"></td><td style="display: none;" data-order="0-3"></td><td style="display: none;" data-order="0-4"></td><td class="itemName" style="text-align: center; vertical-align: middle;" data-order="0-5" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="0-6"></td><td style="text-align: center; vertical-align: middle;" rowspan="1" colspan="3" data-order="0-7"></td><td style="display: none;" data-order="0-8"></td><td style="display: none;" data-order="0-9"></td><td class="itemName" style="width: 71px;" data-order="0-10" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="0-11"></td><td rowspan="1" colspan="3" data-order="0-12"></td><td style="display: none;" data-order="0-13"></td><td style="width: 59px; display: none;" data-order="0-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="1-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="1-1"></td><td rowspan="1" colspan="3" data-order="1-2"></td><td style="display: none;" data-order="1-3"></td><td style="display: none;" data-order="1-4"></td><td class="itemName" style="text-align: center; vertical-align: middle;" data-order="1-5" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="1-6"></td><td style="text-align: center; vertical-align: middle;" rowspan="1" colspan="3" data-order="1-7"></td><td style="display: none;" data-order="1-8"></td><td style="display: none;" data-order="1-9"></td><td class="itemName" style="width: 71px;" data-order="1-10" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="1-11"></td><td rowspan="1" colspan="3" data-order="1-12"></td><td style="display: none;" data-order="1-13"></td><td style="width: 59px; display: none;" data-order="1-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="2-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="2-1"></td><td rowspan="1" colspan="3" data-order="2-2"></td><td style="display: none;" data-order="2-3"></td><td style="display: none;" data-order="2-4"></td><td class="itemName" style="text-align: center; vertical-align: middle;" data-order="2-5" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; text-align: center; vertical-align: middle; display: none;" data-order="2-6"></td><td style="text-align: center; vertical-align: middle;" rowspan="1" colspan="3" data-order="2-7"></td><td style="display: none;" data-order="2-8"></td><td style="display: none;" data-order="2-9"></td><td class="itemName" style="width: 71px;" data-order="2-10" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="2-11"></td><td rowspan="1" colspan="3" data-order="2-12"></td><td style="display: none;" data-order="2-13"></td><td style="width: 59px; display: none;" data-order="2-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="3-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="3-1"></td><td rowspan="1" colspan="3" data-order="3-2"></td><td style="display: none;" data-order="3-3"></td><td style="display: none;" data-order="3-4"></td><td class="itemName" style="text-align: center; vertical-align: middle;" data-order="3-5" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; text-align: center; vertical-align: middle; display: none;" data-order="3-6"></td><td style="text-align: center; vertical-align: middle;" rowspan="1" colspan="3" data-order="3-7"></td><td style="display: none;" data-order="3-8"></td><td style="display: none;" data-order="3-9"></td><td class="itemName" style="width: 71px;" data-order="3-10" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="3-11"></td><td rowspan="1" colspan="3" data-order="3-12"></td><td style="display: none;" data-order="3-13"></td><td style="width: 59px; display: none;" data-order="3-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="4-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="4-1"></td><td rowspan="1" colspan="3" data-order="4-2"></td><td style="display: none;" data-order="4-3"></td><td style="display: none;" data-order="4-4"></td><td class="itemName" style="text-align: center; vertical-align: middle;" data-order="4-5" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="4-6"></td><td rowspan="1" colspan="3" data-order="4-7"></td><td style="display: none;" data-order="4-8"></td><td style="display: none;" data-order="4-9"></td><td class="itemName" style="width: 71px;" data-order="4-10" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="4-11"></td><td rowspan="1" colspan="3" data-order="4-12"></td><td style="display: none;" data-order="4-13"></td><td style="width: 59px; display: none;" data-order="4-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="5-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="5-1"></td><td rowspan="1" colspan="3" data-order="5-2"></td><td style="display: none;" rowspan="1" colspan="2" data-order="5-3"></td><td style="display: none;" data-order="5-4"></td><td class="itemName" style="text-align: center; vertical-align: middle;" data-order="5-5" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="5-6"></td><td rowspan="1" colspan="3" data-order="5-7"></td><td style="display: none;" data-order="5-8"></td><td style="display: none;" data-order="5-9"></td><td class="itemName" style="width: 71px;" data-order="5-10" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="5-11"></td><td rowspan="1" colspan="3" data-order="5-12"></td><td style="display: none;" data-order="5-13"></td><td style="width: 59px; display: none;" data-order="5-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="6-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="6-1"></td><td rowspan="1" colspan="3" data-order="6-2"></td><td style="display: none;" data-order="6-3"></td><td style="display: none;" data-order="6-4"></td><td style="text-align: center; vertical-align: middle;" data-order="6-5" class="itemName" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="6-6"></td><td rowspan="1" colspan="3" data-order="6-7"></td><td style="display: none;" data-order="6-8"></td><td style="display: none;" data-order="6-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="6-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="6-11"></td><td rowspan="1" colspan="3" data-order="6-12"></td><td style="display: none;" data-order="6-13"></td><td style="width: 59px; display: none;" data-order="6-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px; font-weight: 700;" rowspan="1" colspan="2" data-order="7-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="7-1"></td><td rowspan="1" colspan="3" data-order="7-2"></td><td style="display: none;" data-order="7-3"></td><td style="display: none;" data-order="7-4"></td><td style="text-align: center; vertical-align: middle;" data-order="7-5" class="itemName" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="7-6"></td><td rowspan="1" colspan="3" data-order="7-7"></td><td style="display: none;" data-order="7-8"></td><td style="display: none;" data-order="7-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="7-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="7-11"></td><td rowspan="1" colspan="3" data-order="7-12"></td><td style="display: none;" data-order="7-13"></td><td style="width: 59px; display: none;" data-order="7-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="8-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="8-1"></td><td rowspan="1" colspan="3" data-order="8-2"></td><td style="display: none;" data-order="8-3"></td><td style="display: none;" data-order="8-4"></td><td style="" data-order="8-5" class="itemName" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="8-6"></td><td rowspan="1" colspan="3" data-order="8-7"></td><td style="display: none;" data-order="8-8"></td><td style="display: none;" data-order="8-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="8-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="8-11"></td><td rowspan="1" colspan="3" data-order="8-12"></td><td style="display: none;" data-order="8-13"></td><td style="width: 59px; display: none;" data-order="8-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="9-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="9-1"></td><td rowspan="1" colspan="3" data-order="9-2"></td><td style="display: none;" data-order="9-3"></td><td style="display: none;" data-order="9-4"></td><td style="" data-order="9-5" class="itemName" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="9-6"></td><td rowspan="1" colspan="3" data-order="9-7"></td><td style="display: none;" data-order="9-8"></td><td style="display: none;" data-order="9-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="9-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="9-11"></td><td rowspan="1" colspan="3" data-order="9-12"></td><td style="display: none;" data-order="9-13"></td><td style="width: 59px; display: none;" data-order="9-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="10-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="10-1"></td><td rowspan="1" colspan="3" data-order="10-2"></td><td style="display: none;" data-order="10-3"></td><td style="display: none;" data-order="10-4"></td><td style="" data-order="10-5" class="itemName" rowspan="1" colspan="2"></td><td class="itemName" style="width: 59px; display: none;" data-order="10-6"></td><td rowspan="1" colspan="3" data-order="10-7"></td><td style="display: none;" data-order="10-8"></td><td style="display: none;" data-order="10-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="10-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="10-11"></td><td rowspan="1" colspan="3" data-order="10-12"></td><td style="display: none;" data-order="10-13"></td><td style="width: 59px; display: none;" data-order="10-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="11-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="11-1"></td><td rowspan="1" colspan="3" data-order="11-2"></td><td style="display: none;" data-order="11-3"></td><td style="display: none;" data-order="11-4"></td><td class="itemName" rowspan="1" colspan="2" data-order="11-5"></td><td class="itemName" style="width: 59px; display: none;" data-order="11-6"></td><td rowspan="1" colspan="3" data-order="11-7"></td><td style="display: none;" data-order="11-8"></td><td style="display: none;" data-order="11-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="11-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="11-11"></td><td rowspan="1" colspan="3" data-order="11-12"></td><td style="display: none;" data-order="11-13"></td><td style="width: 59px; display: none;" data-order="11-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="12-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="12-1"></td><td rowspan="1" colspan="3" data-order="12-2"></td><td style="display: none;" data-order="12-3"></td><td style="display: none;" data-order="12-4"></td><td class="itemName" rowspan="1" colspan="2" data-order="12-5"></td><td class="itemName" style="width: 59px; display: none;" data-order="12-6"></td><td rowspan="1" colspan="3" data-order="12-7"></td><td style="display: none;" data-order="12-8"></td><td style="display: none;" data-order="12-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="12-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="12-11"></td><td rowspan="1" colspan="3" data-order="12-12"></td><td style="display: none;" data-order="12-13"></td><td style="width: 59px; display: none;" data-order="12-14"></td></tr><tr style="height: 25px;"><td class="itemName" style="width: 59px;" rowspan="1" colspan="2" data-order="13-0"></td><td class="itemName" style="width: 58px; display: none;" data-order="13-1"></td><td rowspan="1" colspan="3" data-order="13-2"></td><td style="display: none;" data-order="13-3"></td><td style="display: none;" data-order="13-4"></td><td class="itemName" rowspan="1" colspan="2" data-order="13-5"></td><td class="itemName" style="width: 59px; display: none;" data-order="13-6"></td><td rowspan="1" colspan="3" data-order="13-7"></td><td style="display: none;" data-order="13-8"></td><td style="display: none;" data-order="13-9"></td><td class="itemName" style="width: 71px;" rowspan="1" colspan="2" data-order="13-10"></td><td class="itemName" style="width: 59px; display: none;" data-order="13-11"></td><td rowspan="1" colspan="3" data-order="13-12"></td><td style="display: none;" data-order="13-13"></td><td style="width: 59px; display: none;" data-order="13-14"></td></tr></tbody></table>'
 					}
+					html = html.replace(/@smh@/g,'-style:');
+					html = html.replace(/@yangshi@/g,' style=');
+					html = html.replace(/\\/g,'');
+					if(dialogId != undefined && type=="clear"){
+						var clearDom = document.getElementById('clearDom');
+						clearDom.innerHTML = html;
+						var tds = clearDom.querySelectorAll('td');
+						for(var i = 0; i < tds.length;i++){
+							var td = tds[i];
+							td.innerHTML = '';
+							td.removeAttribute('data-id');
+						}
+						html = clearDom.innerHTML; 
+								
+					}
+					//console.log(html);
+					setHtml(html);
+					if(dialogId != undefined){
+						$HUI.combobox("#dialogWard").setValue("")
+						$('#templateDialog').dialog('close')
+					}
+					
 				});	
 				
 			}
 			//保存病区模板
 			function saveWardTemplate(itemCodeArr){
 				var htmls = getHtml();
-				console.log(htmls)
+				//console.log(htmls)
+				
 				var codeArr = [];
-				console.log(itemCodeArr)
+				//console.log(itemCodeArr)
 				for(var i = 0; i < itemCodeArr.length;i++){
 					var dict = itemCodeArr[i];
-					var codeStr = 'data-id="'+dict['code']+'"';
-					if(htmls.indexOf(codeStr) != -1){
-						codeArr.push(dict['code']);
+					if(dict['code']){
+						var codeStr = 'data-id="'+dict['code']+'"';
+						if(htmls.indexOf(codeStr) == -1){
+							continue;
+						}
+						
+						var tdDoms = document.querySelectorAll('.excel td[data-id='+dict['code']+']')
+						for(var j = 0; j < tdDoms.length;j++)
+						{
+							var tdDom = tdDoms[j]
+							if(tdDom.style !="" && tdDom.style.display == "none"){
+								continue
+							}
+							codeArr.push(dict['code']);
+							break
+						}
 					}
 				}
 				var codes = codeArr.join();
 				htmls = htmls.replace(/ style=/g,'@yangshi@');
+				htmls = htmls.replace(/-style:/g,'@smh@');
 				htmls = htmls.replace(/\\/g,'');
-				var hospid=$HUI.combogrid('#_HospList').getValue();
+				var hospid=hospComp?$HUI.combogrid('#_HospList1').getValue():session['LOGON.HOSPID'];
 				
 				//获取列数
 				var colnum = $(".excel").getExcelColumNum();
@@ -349,7 +665,7 @@
 					Codes:codes,
 					ColCount:colnum
 				},function(jsonData){
-					console.log('template',jsonData);
+					//console.log('template',jsonData);
 					if(jsonData.flag == false || jsonData.flag == 'false' ){
 						$.messager.popover({msg: '保存失败！',type:'error',timeout: 800});
 						return		
@@ -358,35 +674,47 @@
 				});
 			}
 			//获取所有病区
-			function getAllWard(){
-				var hospid=$HUI.combogrid('#_HospList').getValue();
-				var desc = document.getElementById('searchText').value;
+			function getAllWard(dialogWardId){
+				var hospid=hospComp?$HUI.combogrid('#_HospList1').getValue():session['LOGON.HOSPID'];
+				if(dialogWardId != undefined){//插入模板的
+					hospid=hospCompDiag?$HUI.combogrid('#_HospList').getValue():session['LOGON.HOSPID']; 
+				}
 				$cm({
 					ClassName:'Nur.DWB.Service.BedChartService',
 					QueryName:"GetallWard",
-					desc:desc,
-					hospid:hospid
+					desc:"",
+					hospid:hospid,
+					rows:99999
 				},function(jsonData){
-					console.log('allwards',jsonData);
+					//console.log('allwards',jsonData);
 					if(jsonData.msg){
+						if(dialogWardId != undefined){//插入模板
+							$('#dialogWard').combobox("loadData",[]);
+							return;
+						}
+						$('#wardComb').combobox('clear');
 						return		
 					}
-					$("#ward-tree").tree({
-						data:jsonData.rows,
-						formatter:function(node){
-							return node.warddesc;
-						}
-					});
+					if(dialogWardId != undefined){//插入模板
+						$('#dialogWard').combobox("loadData",jsonData.rows);
+						return;	 
+					}
+					var wardArr = jsonData.rows
+					for(var i = 0; i < wardArr.length;i++){
+						wardArr[i]['index']=i;
+					}
+					$('#wardComb').combobox("loadData",wardArr);
 				});	
 			}
 			
 			//获取日志模板项目
 			function getHospLogItems(){
-				var hospid=$HUI.combogrid('#_HospList').getValue();
+				var hospid=hospComp?$HUI.combogrid('#_HospList1').getValue():session['LOGON.HOSPID'];
 				$cm({
 					ClassName:'CF.NUR.DWB.LogItem',
-					MethodName:"GetTableStructure",
-					HospID:hospid
+					MethodName:"GetAllHospLogItemsCode",
+					CurHosp:hospid,
+					Layout:"1"
 				},function(jsonData){
 					if(jsonData.msg){
 						return
@@ -395,6 +723,45 @@
 				});
 			}
 			
+	//获取日志项目表
+	function getLogItemTableData(){
+		var searchText = document.getElementById('searchText').value;
+        var hospid=hospComp?$HUI.combogrid('#_HospList1').getValue():session['LOGON.HOSPID'];;
+		$cm({
+			ClassName:'CF.NUR.DWB.LogItem',
+			MethodName:"GetTableStructure",
+			HospID:hospid,
+			Desc:searchText
+		},function(jsonData){
+			if(jsonData.msg){
+				return		
+			}
+			for(var i=0; i < jsonData.length;i++){
+				if(jsonData[i]['name'] == undefined){
+					jsonData[i]['name']=""
+				}
+			}
+			jsonData=jsonData.sort(treeSort)
+			logItems = jsonData
+			treegridObj.loadData({
+				"rows":jsonData
+			});
+		});
+	}
+	function treeSort(a,b){
+		var aOrder=a.order;
+		var bOrder=b.order;
+		if((bOrder==undefined || bOrder=="") && (aOrder==undefined || aOrder=="")){
+			return 1
+		}
+		if(bOrder==undefined || bOrder==""){
+			return -1
+		}
+		if(aOrder==undefined || aOrder==""){
+			return 1
+		}
+		return parseInt(aOrder) - parseInt(bOrder)
+	}	
 		</script>
 </body>
 </html>

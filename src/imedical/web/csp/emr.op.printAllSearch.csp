@@ -1,6 +1,8 @@
 ﻿<html>
     <head>
         <title> 门诊病历查询补打页面 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <ADDINS require="RWCard,PublicReadPerson"/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
         <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
@@ -11,12 +13,12 @@
         <script type="text/javascript" src="../scripts/emr/lib/JQuery/locale/easyui-lang-zh_CN.js"></script>
         <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
         <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
         
+        <DOCCARD medStepCode="EMRCopy"></DOCCARD>
         <!-- 读卡 -->
-        <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
-        <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+        <script type="text/javascript" src="../scripts/websys.js"></script>
         <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
-        <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
         
         <style type="text/css">
         * 
@@ -39,24 +41,9 @@
         </style>
         
         <script language="cache" runat="server">
-            s myCode($i(myCode))="<script type='text/javascript'>"
-            s event=##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
-            s myCode($i(myCode))="function tkMakeServerCall(tkclass,tkmethod) {"
-            s myCode($i(myCode))=" if ((tkclass=='')||(tkmethod=='')) return '';"
-            s myCode($i(myCode))=" var args=new Array('"_event_"',tkclass,tkmethod);"
-            s myCode($i(myCode))=" for (var i=2; i<tkMakeServerCall.arguments.length; i++) {"
-            s myCode($i(myCode))=" args[i+1]=tkMakeServerCall.arguments[i];"
-            s myCode($i(myCode))=" }"
-            s myCode($i(myCode))=" var retval=cspHttpServerMethod.apply(this,args);"
-            s myCode($i(myCode))=" return retval;"
-            s myCode($i(myCode))="}"
-            s myCode($i(myCode))="<"_"/script>"
-            f myIdx=1:1:myCode {
-                w myCode(myIdx),!
-            }
-            s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
-            w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_ReadCardTypeEncrypt_"'>",$C(13,10)
-            d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+        	//统一卡管理修改，无需业务产品组自行输出元素    以下两个元素为卡消费元素，暂不需要，注释
+        	//w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+			//w "<input id='Securityno' name='Securityno' type='hidden' value=''>",$C(13,10)
             
             s patientID = $Get(%request.Data("PatientID",1),"")
             s episodeID = $Get(%request.Data("EpisodeID",1),"")
@@ -78,8 +65,9 @@
             s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
             s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
 
-			s PatientNoLength = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("PatientNoLength","N")   
-			s cards = ##Class(EMRservice.SystemParameter).getCards()			
+			s PatientNoLength = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("PatientNoLength","N")    
+            //是否显示模态窗的关闭按钮,true:显示;false:不显示;默认为显示
+            s isShowCloseBtn = ##Class(EMRservice.SystemParameter).isShowCloseBtn()
         </script>
         <script language="javascript">            
             var patInfo = {
@@ -98,14 +86,14 @@
             };
                         
             var sysOption = {
-                PatientNoLength : '#(PatientNoLength)#'
+                PatientNoLength : '#(PatientNoLength)#',
+                isShowCloseBtn : '#(isShowCloseBtn)#' == "true"?true:false
             };
             
             var envVar = {
                 InsIDCount : "",
                 PrintPageCount:""
             };
-			var cards = "#(cards)#".split("^");
         </script>
     </head>
     <body class="easyui-layout">
@@ -167,12 +155,23 @@
                             </td>
                             <td style="padding-top:5px;">
                                 <p align=left>
-                                    <!--a id="readCard" href="#" class="easyui-linkbutton" style="">读卡</a-->
+                                    <a id="readCard" href="#" class="easyui-linkbutton" style="">读卡</a>
                                     <!--<a id="reset" href="#" class="easyui-linkbutton" style="padding-left:15px;">清空</a>-->
                                     <a id="printSelect" href="#" class="easyui-linkbutton" style="margin-left:49px;">多选打印</a>
                                 </p>
                             </td>
                         </tr>
+                        <!-- 天津武清中医项目提供非标准的身份证号查询接口方法 -->
+                        <!--<tr>
+                            <td style="padding-top:5px;">
+                                <p align=right>
+                                    <label>身份证号</label>
+                                </p>
+                            </td>
+                            <td style="padding-top:5px;">
+                               <input id="idCardSearch" class="easyui-searchbox" data-options="fit:true,border:false" style="width:200px;"></input>
+                            </td>
+                        </tr>-->
                     </table>
                 </div>
                 <div data-options="region:'center',title:'门诊病历打印情况列表'" style="top:0px;">
@@ -182,6 +181,7 @@
         </div>
         
         <script type="text/javascript" src="../scripts/emr/js/op.common.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/op.hisLog.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/op.printAllSearch.js"></script>
     </body>
 </html>

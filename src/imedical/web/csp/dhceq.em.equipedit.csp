@@ -7,12 +7,13 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
 <body class="hisui-layout">
 	<script language=Cache runat=server>
 		s RowID=$Get(%request.Data("RowID",1))
+		s ReadOnly=$Get(%request.Data("ReadOnly",1))  //Modify by zx 2020-08-20 BUG ZX0102
 		s ModelOperMethod=##class(web.DHCEQCommon).GetSysInfo("201004")
 		s ManuFactoryOperMethod=##class(web.DHCEQCommon).GetSysInfo("201005")
 		s ProviderOperMethod=##class(web.DHCEQCommon).GetSysInfo("201006")
@@ -30,7 +31,7 @@
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label id="cEQNo" for="EQNo">资产编号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQNo" disabled="true"></div>
-						<div class="eq-table-td eq-table-label"><label id="cEQName" for="EQName">设备名称</label></div> <!--add by zx 2019-03-14 ZX0061-->
+						<div class="eq-table-td eq-table-label"><label id="cEQName" for="EQName">资产名称</label></div> <!--add by zx 2019-03-14 ZX0061-->
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQName"></div>
 						<div class="eq-table-td eq-table-label"><label id="cEQItemDR_MIDesc" for="EQItemDR_MIDesc">设备项名称</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQItemDR_MIDesc" disabled="true"></div>
@@ -40,7 +41,7 @@
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label id="cEQModelDR_MDesc" for="EQModelDR_MDesc">规格型号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Model'" id="EQModelDR_MDesc"></div>
-						<div class="eq-table-td eq-table-label"><label id="cEQUnitDR_UOMDesc" for="EQUnitDR_UOMDesc">资产单位</label></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQUnitDR_UOMDesc" for="EQUnitDR_UOMDesc">单位</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.UOM'" id="EQUnitDR_UOMDesc"></div>
 						<div class="eq-table-td eq-table-label"><label id="cEQStatusDisplay" for="EQStatusDisplay">状态</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQStatusDisplay" disabled="true"></div>
@@ -67,10 +68,14 @@
 						<div class="eq-table-td eq-table-label"><label id="cEQFileNo" for="EQFileNo">档案号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQFileNo"></div>
 					</div>
-					<!--add hly 20200311 bug:1191120-->
+					<!--MZY0058	1548526		2020-10-18-->
 					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label id="cEQOldNo" for="EQOldNo">财政编码</label></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQOldNo" for="EQOldNo">旧系统唯一号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQOldNo"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQBrand_ECDesc" for="EQBrand_BDesc">品牌</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Brand'" id="EQBrand_BDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQParentDR_EQNo" for="EQParentDR_EQNo">父设备编码</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQParentDR_EQNo" data-options="component:'EM.L.Equip',paras:[{name:'Equip',type:'4',value:'EQParentDR_EQNo'},{name:'vConfig',type:'2',value:'1'}]"></div>
 					</div>
 				</div>
 				<div class="eq-table">
@@ -80,7 +85,7 @@
 				</div>
 				<div class="eq-table">
 					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label id="cEQOriginDR_ODesc" for="EQOriginDR_ODesc">资产来源</label></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQOriginDR_ODesc" for="EQOriginDR_ODesc">来源</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Origin'" id="EQOriginDR_ODesc"></div>
 						<div class="eq-table-td eq-table-label"><label id="cEQBuyTypeDR_BTDesc" for="EQBuyTypeDR_BTDesc">采购方式</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.BuyType'" id="EQBuyTypeDR_BTDesc"></div>
@@ -110,6 +115,17 @@
 						<div class="eq-table-td eq-table-label"><label id="cEQAccountNo" for="EQAccountNo">凭证号</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQAccountNo"></div>
 					</div>
+                    <!--Modefied by ZY0307 2022-07-13 新增字段维护 2913588,2913589,2913590 -->
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cEQAuthorizeDeptDR_ADDesc" for="EQAuthorizeDeptDR_ADDesc">配置批准单位</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQAuthorizeDeptDR_ADDesc" data-options="'component':'PLAT.L.AuthorizeDept'"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cEQUseSubjectDR_USDesc" for="EQUseSubjectDR_USDesc">使用责任主体</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQUseSubjectDR_USDesc" data-options="'component':'PLAT.L.UseSubject'"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cEQBuyModeDR_BMDesc" for="EQBuyModeDR_BMDesc">采购组织形式</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQBuyModeDR_BMDesc" data-options="'component':'PLAT.L.BuyMode'"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cEQAccountDate" for="EQAccountDate">凭证日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox" id="EQAccountDate"></div>
+                    </div>
 				</div>
 				<div class="eq-table">
 					<div class="eq-table-tr">
@@ -140,7 +156,7 @@
 						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQRentLocDR_CTLOCDesc" disabled="true"></div>
 					</div>
 					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label id="cEQLimitYearsNum" for="EQLimitYearsNum">使用年限</label></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQLimitYearsNum" for="EQLimitYearsNum">折旧年限</label></div><!--Modefied by zc0103 2021-06-02 使用年限修改为折旧年限-->
 						<div class="eq-table-td"><input type="text" class="hisui-validatebox" data-options="precision:2,decimalSeparator:'.'" id="EQLimitYearsNum"></div>
 						<!--Modify by zx 2020-03-31 元素宽度不一致加textbox控制 BUG ZX0082-->
 						<div class="eq-table-td eq-table-label"><label id="cEQDepreMethodDR_DMDesc" for="EQDepreMethodDR_DMDesc">折旧方法</label></div>
@@ -157,17 +173,52 @@
 						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQUnusualRemark" disabled="true"></div>
 						<!--div class="eq-table-td eq-table-label"><label id="cEQHold5" for="EQHold5">中医标志</label></div>
 						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQHold5"></div-->
-						<div class="eq-table-td eq-table-label"><label id="cEQCommonageFlag" for="EQCommonageFlag">共用</label></div>
-						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQCommonageFlag"></div>
+						<!--Modify by zx 2020-08-18 ZX0102-->
+						<div class="eq-table-td eq-table-label"><label id="cEQUserDR_SSUSRName" for="EQUserDR_SSUSRName">使用人</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'" id="EQUserDR_SSUSRName"></div>
+						<!--Modify by zx 2021-05-20 1880422-->
+						<div class="eq-table-td eq-table-label"><label id="cEQPower" for="EQPower">功率(W)</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQPower"></div>
 					</div>
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label id="cEQRemark" for="EQRemark">备注</label></div>
 						<div class="eq-table-td"><textarea id="EQRemark" style="width:150px"></textarea></div>
-						<div class="eq-table-td eq-table-label"></div>
-						<div class="eq-table-td"></div>
+						<!--Modify by zx 2021-05-20 1880422-->
+						<div class="eq-table-td eq-table-label"><label id="cEQCommonageFlag" for="EQCommonageFlag">共用</label></div>
+						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQCommonageFlag"></div>
+						<!--Modefied by zc0103 2021-06-02 新增使用年限 begin-->
+						<div class="eq-table-td eq-table-label"><label id="cEQHold5" for="EQHold5">厂家建议使用年限</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-numberbox textbox" data-options="precision:0" id="EQHold5"></div> <!--Modify by zx 2021-06-21 BUG:1981163-->
+						<!--Modefied by zc0103 2021-06-02 新增使用年限 end-->
+						<!--Modefied by zc0103 2021-06-02 新增管理部门 begin-->
+						<div class="eq-table-td eq-table-label"><label id="cEQManageLocDR_CTLOCDesc" for="EQManageLocDR_CTLOCDesc">管理部门</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQManageLocDR_CTLOCDesc"></div>
+						<!--Modefied by zc0103 2021-06-02 新增管理部门 end-->
 						<!--div class="eq-table-td eq-table-label"><label id="cEQComputerFlag" for="EQComputerFlag">计量标志</label></div>
 						<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="EQComputerFlag"></div-->
 					</div>
+					<!--Modefied by ZY0307 2022-07-13 新增字段维护 begin-->
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQConfigLicense" for="EQConfigLicense">配置许可证号</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQConfigLicense"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQNewOldPercent" for="EQNewOldPercent">新旧程度</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQNewOldPercent"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQVoltage" for="EQVoltage">电压</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQVoltage"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQElectriccurrent" for="EQElectriccurrent">电流</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQElectriccurrent"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQNote" for="EQNote">注意事项</label></div>
+						<div class="eq-table-td"><textarea id="EQNote" style="width:150px"></textarea></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQMaintNote" for="EQMaintNote">保养要点</label></div>
+						<div class="eq-table-td"><textarea id="EQMaintNote" style="width:150px"></textarea></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQMakeOpenCheckUser" for="EQMakeOpenCheckUser">验收制单人</label></div>
+						<div class="eq-table-td"><input type="text" class="hisui-validatebox" id="EQMakeOpenCheckUser" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label ></label></div>
+						<div class="eq-table-td"></div>
+					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -207,6 +258,15 @@
 			<INPUT type="hidden" id="EQStatus">
 			<INPUT type="hidden" id="EQCountryDR">
 			<INPUT type="hidden" id="EQAdvanceDisFlag">	<!--add by Mozy 2019-10-18-->
+			<INPUT type="hidden" id="EQUserDR"> <!--Modify by zx 2020-08-18 ZX0102-->
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#"> <!--Modify by zx 2020-08-18 ZX0102-->
+			<INPUT type="hidden" id="EQBrand"> <!--Add by QW20220531  BUG:QW0162 品牌-->
+			<INPUT type="hidden" id="EQManageLocDR">
+            <INPUT type="hidden" id="EQAuthorizeDeptDR">
+            <INPUT type="hidden" id="EQUseSubjectDR">
+            <INPUT type="hidden" id="EQBuyModeDR">
+            <INPUT type="hidden" id="EQParentDR">
+            <INPUT type="hidden" id="EQHold13">
 		</form>
 	</div>
 	<input type="hidden" id="ModelOperMethod" value=#(ModelOperMethod)#>

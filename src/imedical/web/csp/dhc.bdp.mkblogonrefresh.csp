@@ -1,0 +1,46 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!-- Dummy page to refresh opener and close self after a successful relogon
+     This is mainly to keep the logon page from becoming very complex -->
+<html XMLNS=TRAK>
+<HEAD>
+<TITLE></TITLE>
+</HEAD>
+<SERVER>
+	;logonrefresh.csp
+	;KK 22/Aug/2002 Log 26992 If the user logon as different group after it has timed out then redirect to the start page of that group
+	n diffgroup
+	s diffgroup=0		;zhaocz 2009-07-20  原来=0  修改成1
+	i ##Class(web.SSUser).CheckforDiffUserGroup(%session.Get("LOGON.GROUPID"))=1 s diffgroup=1
+	;s ^zkarthi("diffgroup")=diffgroup
+</SERVER>
+<BODY>
+<script language="Javascript">
+	alert("logonrefresh.csp")
+	var diffgroup="#(diffgroup)#";
+	var win=window.opener;
+	var winmain=window.opener.opener;
+	if (diffgroup==1) {
+		//KK 15/Oct/2002 Log 28619 epr.frames.csp to open in the main window instead of popup window.
+		if ((winmain) && (winmain.name=="TRAK_main")){
+			if (win) win.close();
+			winmain.top.location="dhc.bdp.epr.frames.csp";
+		} else {
+			win.top.location="dhc.bdp.epr.frames.csp";
+		}
+	}
+	else {
+		win.location.reload();
+	}
+	
+	window.close();
+
+	/*********original scripts
+	var win=window.opener;
+	win.location.reload();
+	window.close();
+	************/
+</script>
+</BODY>
+</HTML>
+
+

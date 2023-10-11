@@ -1,0 +1,75 @@
+<div class="hisui-panel" data-options="fit:true,border:false" style="padding: #($CASE(obsId,"":"10px",:"5px 0"))#;overflow: hidden;">
+	<div id="layoutMain" class="hisui-layout" fit="true">
+		<div data-options="region:'center',border:false" style="overflow: hidden;">
+			<div id="pCenter" class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:true,bodyCls:'panel-body-gray'" style="overflow:hidden;">
+					<!--医嘱录入布局-->
+					<div id="pOrder" class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="height:71px;overflow:hidden;">
+							<div class="hisui-layout" data-options="fit:true">
+								<div data-options="region:'north',border:false" style="height:40px;border-bottom:1px dashed #ccc;overflow:hidden;">
+									<div id="layoutTipBar" class="hisui-layout" data-options="fit:true">
+										<input type="hidden" value="" id="HiddenOrderPrior"/>
+										<csp:if condition='Priorlayout="Transverse"'>
+											<div id="pOrderPrior" data-options="region:'west',border:false" style="width:0px;overflow:hidden;padding-top:1px;">
+												<div id='kwOrderPrior'></div>
+											</div>
+										<csp:else>
+											<div id="pOrderPrior" data-options="region:'west',border:false" style="width:110px;overflow:hidden;padding:4px 8px;">
+												<input id='kwOrderPrior' style="width:100px;"/>
+											</div>
+										</csp:if>
+										<div data-options="region:'center',border:false" style="overflow:hidden;padding:2px;">
+											<div id="Prompt">#(..Get("提示信息"))#</div>
+										</div>
+										<server>
+											s CondWidth=325
+											i PAAdmType'="I" s CondWidth=CondWidth+220
+											i (PAAdmType="I")&&(CareProvType="NURSE")  s CondWidth=CondWidth+60
+										</server>
+										<div data-options="region:'east',border:false" style="width:#(CondWidth)#px;white-space:nowrap;line-height:38px;overflow:hidden;">
+											<table style="border-collapse:separate;border-spacing:10px 0px;">
+												<tr>
+													<csp:if condition=(PAAdmType'="I")>
+														<td><input id="ChronicDiag" placeholder="慢病病种" class="textbox"></td>
+													</csp:if>
+													<csp:if condition='ShowOrderOpenForAllHosp=1'>
+														<td><input id="OrderOpenForAllHosp" class='hisui-checkbox' type="checkbox" label="#(..Get("跨院"))#" data-options="checked:#(DefOpenAllHosp=1)#"></td>
+													</csp:if>
+													<csp:if condition=((CareProvType="NURSE")&&(PAAdmType="I"))>
+														<td><input id="NurseOrd" class='hisui-checkbox' type="checkbox" label="#(..Get("护嘱"))#"></td>
+													</csp:if>
+													<td><input id="FindByLogDep" class='hisui-checkbox' type="checkbox" data-options="checked:#(+RecLocByLogonLocFlag||EmConsultItm)#" label="#(..Get("按登录取接收科室"))#"></td>
+													<td>
+														<label>#(..Get("未审"))#</label>
+													</td>
+													<td>
+														<input id="ScreenBillSum" disabled class="textbox"/>
+													</td>
+													<csp:if condition=(PAAdmType'="I")>
+														<td>
+															<label>#(..Get("已审"))#</label>
+														</td>
+														<td>
+															<input id="SavedScreenBillSum" disabled class="textbox"/>
+														</td>
+													</csp:if>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</div>
+								<div data-options="region:'center',border:false" style="overflow:hidden;">
+									<div id="orderBtnList"></div>
+								</div>
+							</div>
+						</div>
+						<div id="pGrid" data-options="region:'center',border:false" style="overflow:hidden;">
+							<table id="Order_DataGrid" style="height:100%;width:100%;"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

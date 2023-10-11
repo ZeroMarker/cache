@@ -8,7 +8,8 @@
 	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
 	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
 	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
-    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    //d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17 
 	}   
     </SCRIPT>  
 </csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->
@@ -19,7 +20,6 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<DHCEQ:HISUI></DHCEQ:HISUI>
-
 </head>
 <script language=Cache runat=server>
 	s ISRowID=$Get(%request.Data("RowID",1))
@@ -30,8 +30,10 @@
 	s CancelOper=$Get(%request.Data("CancelOper",1))
 	s CurRole=$Get(%request.Data("CurRole",1))
 	s Action=$Get(%request.Data("Action",1))
+	s KeepTitle=$Get(%request.Data("KeepTitle",1))
+	s title="入库单"
+	i KeepTitle'=1 s title=""
 	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("13",ISRowID),CurRole,Action)
-	
 	s ISLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
 	s ISLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
 	s ISOriginDR=##class(web.DHCEQCommon).GetSysInfo("301008")
@@ -49,71 +51,78 @@
 		i EditFlag'=0  s FundsEditType=0 
 	}
 	//End  By QW20190530 需求号:869592 资金来源
+	/// add by ZY0241 2020-09-07
+	///入库单是否控制，同一张入库单只取自一个合同    同一张入库单，入库明细的经费来源要求相同。
+	s ContractNoSysType=+##class(web.DHCEQCommon).GetSysInfo("301011")
+	s ISLHold5SysType=+##class(web.DHCEQCommon).GetSysInfo("301012")
+	//Add By QW20210913 BUG:QW0147 增加补打标记	begin
+	s PrintBuss=##class(web.DHCEQCommon).GetSysInfo("990087")
+	s PrintNumFlag=##Class(web.DHCEQCommon).Find(PrintBuss,"21","N")
+	//Add By QW20210913 BUG:QW0147 增加补打标记	end
+	
 </script>
 <style type="text/css">
-	.hisui-textarea
-	{
-		width:300%;
-		height:100%;
-	}
+.hisui-textarea
+{
+	width:320%;
+	height:100%;
+}
+.messager-popover
+{
+	font-weight: normal;
+}
 </style>
 <body class="hisui-layout" >
-	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-4-9 界面首先加载loading bug WY0060-->
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" title="入库单" data-options="eqtitle:'maintitle',fit:true">
+		<div class="hisui-panel panel-header-gray" title="#(title)#" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:160px;">
-					
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label for="OpenCheck">选择验收设备</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.InStock.OpenCheckList'" id="OpenCheck"></div>
-						<div class="eq-table-td eq-table-label"><label id="cISLocDR_CTLOCDesc" for="ISLocDR_CTLOCDesc">库房</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="ISLocDR_CTLOCDesc"></div>
-						<div class="eq-table-td eq-table-label"><label for="ISBuyUserDR_SSUSRName">采购人</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="ISBuyUserDR_SSUSRName"></div>
-						<!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label15"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
-						<div class="eq-table-td eq-table-label15"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close"  data-options="stopAllEventOnDisabled:true">删除</a></div>
-					</div>
-					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.InStock.OpenCheckList'" id="OpenCheck"></div>
 						<div class="eq-table-td eq-table-label"><label id="cISInStockNo" for="ISInStockNo">入库单号</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISInStockNo" disabled="true"></div>
-						<div class="eq-table-td eq-table-label"><label id="cISProviderDR_VDesc" for="ISProviderDR_VDesc">供应商</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="ISProviderDR_VDesc"></div>
-						<div class="eq-table-td eq-table-label"><label id="cISBuyLocDR_CTLOCDesc" for="ISBuyLocDR_CTLOCDesc">申购部门</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="ISBuyLocDR_CTLOCDesc"></div>
-						<!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label15"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit"  data-options="stopAllEventOnDisabled:true">提交</a></div>
-						<div class="eq-table-td eq-table-label15"><a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print"  data-options="stopAllEventOnDisabled:true">打印</a></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ISInStockNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cISLocDR_CTLOCDesc" for="ISLocDR_CTLOCDesc">库房</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="ISLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label"><label for="ISBuyUserDR_SSUSRName">采购人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'" id="ISBuyUserDR_SSUSRName"></div>
+						<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"><a id="BClear" href="#" class="hisui-linkbutton" iconCls="icon-w-clean" data-options="stopAllEventOnDisabled:true">清屏</a><a id="BCancel" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">作废</a></div>
 					</div>
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label id="cISEquipTypeDR_ETDesc" for="ISEquipTypeDR_ETDesc">管理类组</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType'" id="ISEquipTypeDR_ETDesc"></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EquipType'" id="ISEquipTypeDR_ETDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cISProviderDR_VDesc" for="ISProviderDR_VDesc">供应商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Vendor'" id="ISProviderDR_VDesc"></div>
 						<div class="eq-table-td eq-table-label"><label id="cISInDate" for="ISInDate">制单日期</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="ISInDate"></div>
 						<div class="eq-table-td eq-table-label"><label id="cISOriginDR_ODesc" for="ISOriginDR_ODesc">来源</label></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Origin'" id="ISOriginDR_ODesc"></div>
-						<!--modify by lmm 2019-05-29 892873-->
-						<!--modify by lmm 2019-11-22 LMM0050-->
-						<div class="eq-table-td eq-table-label15"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">退回</a></div>
-						<div class="eq-table-td eq-table-label15"><a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核1</a></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Origin'" id="ISOriginDR_ODesc"></div>
+						<div class="eq-table-td eq-table-label"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit"  data-options="stopAllEventOnDisabled:true">提交</a></div>
+						<div class="eq-table-td eq-table-label"><a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核1</a></div>
+						<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print"  data-options="stopAllEventOnDisabled:true">打印</a></div>
 					</div>
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label" ><label for="ISRemark" >备注</label></div>
-						<div class="eq-table-td eq-table-input"><textarea id="ISRemark" class="hisui-textarea"></textarea></div>
+						<div class="eq-table-td eq-table-input"><textarea id="ISRemark" class="hisui-textarea textbox"></textarea></div>
+						<div class="eq-table-td eq-table-label"><label id="cISBuyLocDR_CTLOCDesc" for="ISBuyLocDR_CTLOCDesc">申购部门</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Loc','paras':[{name:'Type',type:'2',value:''},{name:'LocDesc',type:'4',value:'ISBuyLocDR_CTLOCDesc'},{name:'LocType',type:'2',value:'0102'}]" id="ISBuyLocDR_CTLOCDesc"></div>
 						<div class="eq-table-td eq-table-label"></div>
 						<div class="eq-table-td eq-table-label"></div>
 						<div class="eq-table-td eq-table-label"></div>
 						<div class="eq-table-td eq-table-label"></div>
-						<!--modify by lmm 2019-05-29 892873-->
-						<div class="eq-table-td eq-table-label15"><a id="BCancel" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">作废</a></div>
+						<div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close"  data-options="stopAllEventOnDisabled:true">删除</a></div>
+						<div class="eq-table-td eq-table-label"><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">退回</a></div>
 					</div>
-					
 				</div>
-				<!--add by zx 2019-07-23 入库编辑列bug修改-->
 				<div data-options="region:'center',border:false" style="position:relative">
 					<table id="DHCEQInStock" class="hisui-datagrid" data-options="onClickRow:onClickRow"></table>
-					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+					<div class="messager-popover info" style="position:absolute;right:0px;top:0px;margin:2px 5px 2px 0;padding:3px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -143,6 +152,11 @@
 			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
 			<INPUT type="hidden" id="CancelOper" value="#(CancelOper)#">
 			
+			<INPUT type="hidden" id="ContractNo">
+			<INPUT type="hidden" id="ISLHold5">
+			<INPUT type="hidden" id="ISLHold5EDesc">
+			<INPUT type="hidden" id="ContractNoSysType" value="#(ContractNoSysType)#">
+			<INPUT type="hidden" id="ISLHold5SysType" value="#(ISLHold5SysType)#">
 			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
 			<INPUT type="hidden" id="CurDate" value=#(CurDate)#>
 			<INPUT type="hidden" id="NextFlowStep">
@@ -159,6 +173,7 @@
 			<INPUT type="hidden" id="FundsEditType" value=#(FundsEditType)#><!--Add By QW20190530 需求号:869592 资金来源-->
 			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#> <!--add by QW20191022 BUG:QW0032 增加润乾打印-->
 			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-11 WL0010  -->
+			<INPUT type="hidden" id="PrintNumFlag" value=#(PrintNumFlag)#>   <!--Add By QW20210913 BUG:QW0147 增加补打标记 -->
 		</form>
 	</div>
 	<script type='text/javascript' src='../scripts/dhceq/em/instock.js'></script>

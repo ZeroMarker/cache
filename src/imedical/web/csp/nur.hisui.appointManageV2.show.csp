@@ -1,0 +1,126 @@
+<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-panel" data-options="fit:true,border:false">
+	<div id="wardlist" class="hisui-layout" fit="true" data-options="clickExpand:true">
+		<csp:if condition='isShowWardList="N"'>
+		<csp:else>
+			<div data-options="region:'west',title:'病区列表',headerCls:'panel-header-gray',split:true,collapsible:false,maximizable:true,iconCls:'icon-template'" style="width:235px;border-radius:0 0 4px 4px;">
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'north',split:false,border:false" style="height:91px;border-bottom:1px solid #ccc;border-radius:0;">
+						<table class="search-table">
+							<tr>
+								<td class="r-label">#(..Get("病区"))#</td>
+				                <td>
+				                    <input id="SearchWard" href="#" class="hisui-searchbox" data-options="prompt:'#(..Get("请输入病区名称"))#',searcher:filterWardsData" style="width:161px;"/>
+				                </td>
+				            </tr>
+				            <tr>
+				                <td class="r-label">#(..Get("科室组"))#</td>
+				                <td>
+				                    <input id="SearchLocGroup" href="#" class="hisui-combobox textbox" style="width:161px;"/>
+				                </td>
+							</tr>
+						</table>
+					</div>
+					<div data-options="region:'center',split:false,border:false">
+						<table id="AppWardListTab"></table>
+					</div>
+				</div>
+			</div>
+		</csp:if>
+		<div data-options="region:'center',split:true,border:false" style="">
+			<div class="hisui-panel" title="住院证患者查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,tools:'#tt'"> <!---->
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'north',split:false,border:false" style="height:121px;border-bottom:1px solid #ccc;overflow:hidden;border-radius:0;">
+						<table class="search-table">
+							<tr>
+								<td class="r-label">
+									<label>#(..Get("开始日期"))#</label>
+								</td>
+								<td>
+									<input id="SearchDateFrom" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser" style="width:120px;"/>
+								</td>
+								<td class="r-label">
+									<label>#(..Get("结束日期"))#</label>
+								</td>
+								<td>
+									<input id="SearchDateTo" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser" style="width:120px;"/>
+								</td>
+								<td class="r-label">#(..Get("患者姓名"))#</td>
+	                            <td>
+	                                <input id="SearchPatName" class="textbox" style="width:113px;">
+	                            </td>
+								<td class="r-label">#(..Get("登记号"))#</td>
+	                            <td>
+	                                <input id="SearchRegNO" class="textbox" style="width:113px;">
+	                            </td>
+								<td class="r-label td-label">#(..Get("卡号"))#</td>
+			                    <td>
+			                        <input id="SearchCardNo" class="textbox" style="width:113px;">
+			                    </td>
+			                    <td class="r-label">
+	                            	<a href="#" id="readCardBtn" class="hisui-linkbutton " data-options="iconCls:'icon-w-card'">读卡</a>
+	                            </td>
+	                            <td>
+	                            	<a href="#" id="exportBtn" class="hisui-linkbutton " data-options="iconCls:'icon-w-export'">导出</a>
+	                            </td>
+			                  </tr>
+			                  <tr>
+	                            <td class="r-label">#(..Get("预约科室"))#</td>
+	                            <td>
+	                                <input id="SearchAppLoc" class="hisui-combobox textbox" style="width:120px;">
+	                            </td>
+	                            <td class="r-label">#(..Get("预约病区"))#</td>
+	                            <td>
+	                                <input id="SearchAppWard" class="hisui-combobox textbox" style="width:120px;">
+	                            </td>
+	                            <td class="r-label">#(..Get("预约医生"))#</td>
+                    			<td>
+                    				<input id="bookDocBox" class="hisui-combobox textbox" style="width:120px;"></input>
+                    			</td>
+	                            <td class="r-label">#(..Get("紧急情况"))#</td>
+			                    <td>
+			                    	<input id="admInitStateBox" class="hisui-combobox textbox" style="width:120px;"></input>
+			                    </td>
+			                    <td class="r-label">#(..Get("入院途径"))#</td>
+			                    <td>
+			                    	<input id="inSorceBox" class="hisui-combobox textbox" style="width:120px;"></input>
+			                    </td>
+	                            <td class="r-label">
+	                            	<a href="#" id="findAppPatListBtn" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'">查询</a>
+	                            </td>
+	                          </tr>
+	                        <tr>
+	                        	<td colspan="11" style="font-size:0;padding-left:10px;">
+	                        		<input class="hisui-checkbox" type="checkbox" name="BookType" label="普通" value="普通" checked data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-checkbox" type="checkbox" name="BookType" label="预住院(普通)" value="预住院(普通)" checked data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-checkbox" type="checkbox" name="BookType" label="预住院(日间手术)" value="预住院(日间手术)" checked data-options="onCheckChange:findAppPatList">
+			                        <!--input class="hisui-checkbox" type="checkbox" name="BookType" label="点收" value="点收" checked data-options="onCheckChange:findAppPatList"-->                        
+			                        <div class="line"></div>
+			                        <input class="hisui-radio" type="radio" name="patState" label="未安排" value="2" checked data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-radio" type="radio" name="patState" label="安排" value="1" data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-radio" type="radio" name="patState" label="登记" value="0" data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-radio" type="radio" name="patState" label="住院" value="3" data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-radio" type="radio" name="patState" label="作废" value="4" data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-radio" type="radio" name="patState" label="全部" value="5" data-options="onCheckChange:findAppPatList">
+			                        <div class="line"></div>
+			                        <input class="hisui-checkbox" type="checkbox" name="Assess" label="未评估" value="NotAssess" checked data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-checkbox" type="checkbox" name="Assess" label="评估通过" value="P" data-options="onCheckChange:findAppPatList">
+			                        <input class="hisui-checkbox" type="checkbox" name="Assess" label="评估未通过" value="NotP" data-options="onCheckChange:findAppPatList">
+	                        	</td>
+	                        </tr>
+						</table>
+					</div>
+					<div data-options="region:'center',split:false,border:false">
+						<table id="PatBookListTab"></table>
+					</div>
+				</div>
+				<div id="tt">
+					<a href="#" id="pagecolor-tip" class="x-btn-text icon-help">&nbsp&nbsp&nbsp&nbsp</a>
+				</div>
+
+			</div>
+		</div>   
+	</div>
+</div>

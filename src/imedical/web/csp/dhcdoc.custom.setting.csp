@@ -1,0 +1,87 @@
+<!--dhcdoc.custom.setting.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></SCRIPT>
+<style>
+.accordion-body .layout-panel-center>div.panel-body{
+	padding:10px;
+	display: flex;
+    flex-flow: row wrap;
+    align-content:flex-start;
+}
+.accordion-body .layout-panel-center>div.panel-body>div{
+	flex-shrink:0;
+    margin:5px 3px;
+    white-space: nowrap;
+    width:280px;
+}
+.accordion-body .layout-panel-center>div.panel-body>div>*{
+	display: inline-block;
+	overflow: hidden;
+	vertical-align:middle;
+	line-height:28px;
+}
+/*.title-right{
+    min-width: 120px;
+    text-align: right;
+}
+#OrderEntry .title-right,#CMOrderEntry .title-right,#CheckApp .title-right{
+    min-width: 190px;
+    text-align: right;
+}*/
+/* UI要求靠左，右对齐*/
+.title-right{
+    text-align: right;
+    padding-right:10px;
+}
+#OrderEntry .title-right{
+	min-width: 190px;
+}
+#CMOrderEntry .title-right{
+	min-width: 110px;
+}
+#CheckApp .title-right{
+    min-width: 190px;
+}
+label.checkbox,label.radio,input.numberbox{
+	margin-right:10px;
+	padding-left:22px;
+}
+</style>
+<server>
+	s GroupRowId=$G(%request.Data("GroupRowId",1))
+	s SelectTitle=$G(%request.Data("SelectTitle",1))
+	s HospID=$G(%request.Data("HospID",1))
+	if HospID="" s HospID=%session.Get("LOGON.HOSPID")
+	if GroupRowId=""{
+		s isNurseLogin = ##class(web.DHCDocMain).isNurseLogin()
+		s AdmType=##class(DHCDoc.Order.Common).GetLocAdmType(%session.Get("LOGON.CTLOCID"))
+	}else{
+		s GroupDesc=$ZCVT($P(^SSU("SSGRP",GroupRowId),"^",1),"U")
+		s isNurseLogin=(GroupDesc["护士")||(GroupDesc["NURSE")
+		s AdmType=$SELECT((GroupDesc["住院")||(GroupDesc["INPAT"):"I",(GroupDesc["急诊")||(GroupDesc["EM"):"E",1:"O")
+	}
+</server>
+</head>
+<body style="background:white;padding:0px;margin:0px;">
+	<div class="hisui-panel" data-options="fit:true,border:false" style="padding:10px;">
+		<CSP:Include Page="dhcdoc.custom.setting.show.csp">
+	</div>
+</body>
+<script type="text/javascript">
+	var ServerObj={
+		GroupRowId:'#(GroupRowId)#',
+		SelectTitle:'#(SelectTitle)#',
+		isNurseLogin:#(isNurseLogin)#,
+		HospID:'#(HospID)#'
+	};
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/custom.setting.js"></script>
+</html>

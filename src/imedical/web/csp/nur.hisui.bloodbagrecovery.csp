@@ -1,0 +1,319 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetDataImport.csp 交班数据引入配置-->
+<HTML lang="zh-CN">
+
+<HEAD>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI></HISUI>
+	<style>
+		body {
+			background: white;
+			padding: 0;
+			overflow: hidden;
+		}
+
+		hr.solid {
+			border-top: 0;
+			border-bottom: 1px solid #ccc;
+		}
+
+		div.hGap {
+			height: 10px;
+		}
+
+		div.vGap {
+			width: 10px;
+		}
+
+		.selfBtn .l-btn-plain {
+			padding: 0;
+			border: 0;
+			margin-top: 3px;
+			margin-bottom: 3px;
+		}
+
+		.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {
+			line-height: 22px;
+			padding: 0 10px 0 31px;
+			margin: 0;
+			color: #666;
+		}
+
+		.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {
+			left: 5px;
+			height: 22px;
+			width: 26px;
+		}
+
+		.combo .combo-text {
+			box-sizing: border-box;
+		}
+
+		#_HospList+.combo>.combo-text {
+			width: 320px !important;
+		}
+
+		.l-btn:focus {
+			outline: none;
+		}
+
+		td.datagrid-value-changed {
+			background: transparent;
+		}
+
+		.icon {
+			padding-left: 20px;
+			background-position: left 0px center;
+			display: inline-block;
+			font-size: 12px;
+			cursor: pointer;
+		}
+
+		@keyframes shine {
+			0% {
+				background-position: -1px -1px;
+			}
+
+			100% {
+				background-position: -12px -12px;
+			}
+		}
+
+		#bloodBagList tr {
+			border-bottom: 1px solid #cccccc;
+			height: 30px;
+		}
+
+		#bloodBagList tr>th {
+			text-align: center;
+			background: #f9f9fa;
+		}
+
+		#bloodBagList tr>td {
+			text-align: center;
+		}
+
+		#bloodBagList tr>td:first-of-type {
+			text-align: left;
+			padding-left: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div>
+		<table cellpadding="0" style="margin: 10px;border-collapse:collapse;">
+			<tr>
+				<td class="r-label">血袋编码</td>
+				<td class="r-label">
+					<input id="BloodBagNo" class="hisui-validatebox textbox" type="text">
+				</td>
+				<td class="r-label">血制品编码</td>
+				<td class="r-label">
+					<input id="BloodProductNo" class="hisui-validatebox textbox" type="text">
+				</td>
+				<td class="r-label">
+					<a href="#" id="recycleBtn" class="hisui-linkbutton hover-dark" style="margin-right: 10px;"
+						data-options="iconCls:'icon-w-update'" onclick="recycleBloodBag()" disabled>回收</a>
+					<a href="#" id="deleteBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-cancel'"
+						onclick="deleteBloodBag()" disabled>删除</a>
+				</td>
+			</tr>
+		</table>
+
+		<table id="bloodBagList" cellpadding="0"
+			style="width: 100%;border-collapse: collapse;margin-top: -0.5em;display: none;" class="hisui-datagrid"
+			data-options="headerCls:'panel-header-gray',pagination:false,autoSizeColumn:true,fitColumns:true,onCheck: checkRow,
+			onCheckAll: checkRow,
+			onUncheck: uncheckRow,
+			onUncheckAll: uncheckRow," border="false">
+			<thead>
+				<tr>
+					<th data-options="field:'ck',checkbox:true"></th>
+					<th data-options="field:'number',width:30">序号</th>
+					<th data-options="field:'warddesc',width:30">病区</th>
+					<th data-options="field:'patname',width:30">患者姓名</th>
+					<th data-options="field:'registerNum',width:30">登记号</th>
+					<th data-options="field:'bedcode',width:30">床号</th>
+					<th data-options="field:'patBldType',width:30">患者血型</th>
+					<th data-options="field:'bldProduct',width:30">血制品</th>
+					<th data-options="field:'bldType',width:30">血液血型</th>
+					<th data-options="field:'nurse',width:30">护工</th>
+					<th data-options="field:'datetime',width:30">时间</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript">
+		// var bloodBagIds = [2, 1];
+		var bloodBagIds = [];
+		// 删除血袋
+		function deleteBloodBag() {
+			$.messager.confirm($g("删除"), $g("确认要删除当前选中的血袋？"), function (r) {
+				if (r) {
+					var rows = $("#bloodBagList").datagrid('getChecked'), ids = [];
+					rows.map(function (r) {
+						ids.push(parseInt(r.id));
+					})
+					$cm({
+						ClassName: 'Nur.BloodBagRecive',
+						MethodName: 'DeleteBloodBag',
+						bloodBagIds: JSON.stringify(ids),
+					}, function (res) {
+						if (0 == res) {
+							$.messager.popover({ msg: $g('血袋删除成功！'), type: 'success' });
+							ids.map(function (id) {
+								var index = bloodBagIds.indexOf(id);
+								bloodBagIds.splice(index, 1);
+							})
+							getBloodBagList();
+							$("#recycleBtn").linkbutton('disable');
+							$("#deleteBtn").linkbutton('disable');
+						} else {
+							$.messager.alert($g('提示'), $g('血袋删除抱错，请稍后再试！'));
+						}
+					});
+				}
+			});
+		}
+		// 回收血袋
+		function recycleBloodBag() {
+			var rows = $("#bloodBagList").datagrid('getChecked'), ids = [];
+			rows.map(function (r) {
+				ids.push(r.id);
+			})
+			$cm({
+				ClassName: 'Nur.BloodBagRecive',
+				MethodName: 'RecycleBloodBag',
+				bloodBagIds: JSON.stringify(ids),
+			}, function (res) {
+				if (0 == res) {
+					$.messager.popover({ msg: $g('血袋回收成功！'), type: 'success' });
+					getBloodBagList();
+					$("#recycleBtn").linkbutton('disable');
+					$("#deleteBtn").linkbutton('disable');
+				} else {
+					$.messager.alert($g('提示'), $g('血袋回收抱错，请稍后再试！'));
+				}
+			});
+		}
+		function checkRow(index, row) {
+			console.log(arguments);
+
+			var rows = $("#bloodBagList").datagrid('getRows');
+			console.log(rows);
+			if (row.datetime) {
+				rows.map(function (r, i) {
+					if (row.id != r.id) {
+						$("#bloodBagList").datagrid('uncheckRow', i);
+					}
+				})
+			} else {
+				rows.map(function (r, i) {
+					if (r.datetime) {
+						$("#bloodBagList").datagrid('uncheckRow', i);
+					}
+				})
+			}
+			$("#recycleBtn").linkbutton('enable');
+			$("#deleteBtn").linkbutton('enable');
+		}
+		function uncheckRow(index, row) {
+			console.log(arguments);
+			var rows = $("#bloodBagList").datagrid('getChecked');
+			console.log(rows);
+			if (!rows.length) {
+				$("#recycleBtn").linkbutton('disable');
+				$("#deleteBtn").linkbutton('disable');
+			}
+		}
+		$('#BloodBagNo').keydown(function (e) {
+			if (e.keyCode == 13) {
+				if ('' === $("#BloodBagNo").val()) {
+					$.messager.alert($g('提示'), $g('请输入血袋编码！'));
+					return false;
+				}
+				if ('' === $("#BloodProductNo").val()) {
+					$("#BloodProductNo").focus();
+				} else {
+					bldRecivePC();
+				}
+			}
+		});
+		$('#BloodProductNo').keydown(function (e) {
+			if (e.keyCode == 13) {
+				if ('' === $("#BloodProductNo").val()) {
+					$.messager.alert($g('提示'), $g('请输入血制品编码！'));
+					return false;
+				}
+				if ('' === $("#BloodBagNo").val()) {
+					$("#BloodBagNo").focus();
+				} else {
+					bldRecivePC();
+				}
+			}
+		});
+		function bldRecivePC() {
+			$cm({
+				ClassName: 'Nur.BloodBagRecive',
+				MethodName: 'InsertBloodBagInfo',
+				bloodbagId: $("#BloodBagNo").val(),
+				bloodProductId: $("#BloodProductNo").val(),
+			}, function (id) {
+				// console.log(data);
+				// wardsData = data.rows;
+				if (id != parseInt(id)) {
+					// $.messager.alert($g('提示'), $g('未查询到相关血袋数据！'));
+					$.messager.alert($g('提示'), $g(id));
+				} else {
+					bloodBagIds.unshift(id);
+					getBloodBagList();
+					$("#BloodBagNo").val('');
+					$("#BloodProductNo").val('');
+				}
+			});
+		}
+		// 获取血袋列表
+		getBloodBagList();
+		function getBloodBagList() {
+			$cm({
+				ClassName: 'Nur.BloodBagRecive',
+				QueryName: 'GetBloodBagList',
+				bloodBagIds: JSON.stringify(bloodBagIds),
+			}, function (data) {
+				console.log(data);
+				// wardsData = data.rows;
+				$('#bloodBagList').datagrid({
+					data: data
+				});
+			});
+		}
+		function updateDomSize() {
+			$('#bloodBagList').datagrid('resize', {
+				width: window.innerWidth,
+				height: window.innerHeight - 50
+			});
+		}
+		window.addEventListener("resize", updateDomSize);
+		$(function () {
+
+			updateDomSize();
+		});
+
+	</script>
+</body>
+
+</html>

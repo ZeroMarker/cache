@@ -1,0 +1,156 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCHAI:HEAD></DHCHAI:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/echarts.min2.js" charset="utf-8"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/theme.js"></script>	
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/STATV2/Common/FloatWindow.js"></script>
+		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/chartjs/echarts.min.js" charset="utf-8"></script>
+		<!--嵌入富文本编辑框-->
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+		<link href="../scripts/DHCMA/HAI/IR/PDCA/Report/DocEdit/themes/default/_css/umeditor.css" type="text/css" rel="stylesheet">	
+		<script type="text/javascript" charset="utf-8" src="../scripts/DHCMA/HAI/IR/PDCA/Report/DocEdit/umeditor.config.js"></script>
+    	<script type="text/javascript" charset="utf-8" src="../scripts/DHCMA/HAI/IR/PDCA/Report/DocEdit/editor_api.js"></script>
+    	<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/DocEdit/lang/zh-cn/zh-cn.js"></script>
+    	<style type="text/css">
+        	h1{
+           	 	font-family: "微软雅黑";
+            	font-weight: normal;
+       	 	}
+        	.edui-container{
+        		border:none;
+        		box-shadow:none;
+        	}
+        	.no-result {
+				position: relative;
+    			width: 100%;
+    			height: 100%;
+    			background: url(../scripts/DHCMA/HAI/img/暂无数据.png) center center no-repeat;
+			}
+   	 	</style>
+   	 	<!--嵌入文件上传功能-->
+   	 	<link rel="stylesheet" href="../scripts/DHCMA/HAI/IR/PDCA/Report/JqueryPlugins/uploadify/uploadify.css" />
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/IR/PDCA/Report/JqueryPlugins/imgshow/css/boxImg.css" />
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/JqueryPlugins/imgshow/js/boxImg.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/JqueryPlugins/uploadify/jquery.uploadify.min.js" ></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/JqueryPlugins/common.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/JqueryPlugins/component.js"></script>
+	</head>
+	<body>
+		<!--PDCA报告-->
+		<div class="hisui-layout" data-options="fit:true">
+    		<div data-options="region:'center',fit:true,border:false,collapsible:false">
+    			<!--页签:1.登记计划,2.执行,3.检查评价-->
+    			<div id="Maintabs" class="hisui-tabs tabs-gray" style="padding:false;border:none;">
+    				<!--页签1-->
+					<div title="登记计划">
+						<div class="page-body" id="divbody" style="width:1283px;">
+        					<!--1.1 报告头信息-->
+            				<div class="report-header">
+                				<span>#(..Get("PDCA项目登记表"))#</span>
+            				</div>
+            				<!--1.2 报告信息-->
+            				<div class="report-content">
+            					<!--1.2.1 基本信息-->
+                				<div class="hisui-panel" id="BaseInfo" data-options="title:'一、基本信息',headerCls:'panel-header-gray'" style="padding:2px 5px 0px 0px;">
+                    				<table id="PatInfoTab" class="report-tab">
+                        				<tr class="report-tr">
+                            				<td class="report-td" style="width:130px;"><font color='red'>*</font>#(..Get("项目类型"))#</td>
+                            				<td><input class="textbox" id="cboItemType" style="width:180px;display:inline;"/></td>
+                            				<td class="report-td" style="width:130px;"><font color='red'>*</font>#(..Get("项目名称"))#</td>
+                            				<td><input class="textbox" id="txtItemName" style="width:172px;" /></td>
+                            				<td class="report-td" style="width:130px;"><font color='red'>*</font>#(..Get("指标名称"))#</td>
+                            				<td><input class="hisui-combobox textbox" id="cboIndex" style="width:180px;" /></td>
+                            				<td class="report-td" style="width:130px;"><font color='red'>*</font>#(..Get("目标值"))#</td>
+                            				<td><input class="textbox" id="txtTargetVal" style="width:172px;"/></td>
+                        				</tr>
+                        				<tr class="report-tr">
+                        					<td class="report-td" style="width:130px;">#(..Get("登记日期"))#</td>
+                        					<td><input class="textbox readonly-noborder" id="txtRegDateTime" style="width:172px;" readonly="readonly"/></td>
+                            				<td class="report-td" style="width:130px;">#(..Get("登记科室"))#</td>
+                            				<td><input class="textbox readonly-noborder" id="txtRegLoc" style="width:172px;" readonly="readonly"/></td>
+                           		 			<td class="report-td" style="width:130px;">#(..Get("登记人"))#</td>
+                            				<td><input class="textbox readonly-noborder" id="txtRegUser" style="width:172px;" readonly="readonly"/></td>
+                        					<td class="report-td" style="width:130px;">#(..Get("报告状态"))#</td>
+                            				<td><input class="textbox readonly-noborder" id="txtStatus" style="width:172px; red; font-weight: bold;" readonly="readonly"/></td>
+                            			</tr>
+                    				</table>
+                				</div>
+                				<!--扩展信息-->
+                				<div id="ExtDiv"></div>
+                				<!--计划(P)-->
+                				<div id="PlanDiv"></div>
+            				</div>
+        				</div>
+       					<!--操作按钮-->
+						<div class="page-footer">
+							<a id="btnSave_P" class="hisui-linkbutton">暂存</a>
+        					<a id="btnSubmit_P" class="hisui-linkbutton">审核</a>
+           					<a id="btnUnCheck_P" class="hisui-linkbutton">取消审核</a>
+        					<a id="btnDelete_P" class="hisui-linkbutton">删除</a>
+         					<a id="btnExport_P" class="hisui-linkbutton">导出</a>
+    					</div>
+					</div>
+					<!--页签2-->
+					<div title="执行" style="padding-top:0px;padding:0px;">
+						<div id="DoDiv"></div>
+                		<!--操作按钮-->
+						<div class="page-footer">
+							<a id="btnSave_D" class="hisui-linkbutton">暂存</a>
+        					<a id="btnSubmit_D" class="hisui-linkbutton">提交</a>
+        					<a id="btnSuperNur_D" class="hisui-linkbutton">护士长签字</a>
+           					<a id="btnSuperDor_D" class="hisui-linkbutton">科主任签字</a>
+    					</div>
+					</div>
+					<!--页签3-->
+					<div title="检查评价" style="padding-top:0px;padding:0px;">
+						<div id="CADIV" class='hisui-tabs tabs-gray' style='padding:false;border-radius:0;'></div>
+               			<!--操作按钮-->
+						<div class="page-footer">
+        					<a id="btnCheck_A" class="hisui-linkbutton">审核</a>
+    					</div>
+					</div>
+				</div>
+   			</div>
+		</div>
+		<!-- 历史提取 -->
+		<div id="LayerOpenHistPDCA" style="overflow:hidden;padding:10px;display:none;">  
+			<table id="gridHistPDCA"></table>
+		</div>	
+		<!-- 帮助链接[PDCA流程描述]-->
+		<div id="HelpTip" class="icon-help"></div>
+		
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/FloatWindow.js"></script>
+		
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/PDCARep_Base.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/PDCARep_Load.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/PDCA/Report/PDCARep_Loc.js"></script>
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+			Set RegTypeID  	= $g(%request.Data("RegTypeID",1))	
+			Set ReportID   	= $g(%request.Data("ReportID",1))
+			SET SubID	   	= $g(%request.Data("SubID",1))
+			Set AdminPower 	= +$g(%request.Data("AdminPower",1))
+		</SCRIPT>
+		<script language="javascript" type="text/javascript">
+			var RegTypeID 	= '#(RegTypeID)#';
+			var ReportID  	= '#(ReportID)#';
+			var SubID  		= '#(SubID)#';
+			var AdminPower 	= '#(AdminPower)#';
+			
+			$(window).load(function() {
+				InitPARepBaseWin();
+			});
+		</script>
+	</body>
+</html>

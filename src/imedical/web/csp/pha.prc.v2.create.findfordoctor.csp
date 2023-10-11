@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!--药房药库-处方点评-处方点评查询(医生使用)
-	csp:pha.prc.v2.create.findfordoctor.csp
-	js: pha/prc/v2/create.findfordoctor.js
+<!--药房药库 - 处方点评 - 处方点评查询(医生使用)
+	csp: pha.prc.v2.create.findfordoctor.csp
+	js:  pha/prc/v2/create.findfordoctor.js
 -->
 <html>
 <!-- 验证session过期 -->
@@ -18,8 +18,25 @@
     </TRAK:HEAD>
     <HISUI />
     <PHALIBV1 />
-
+    
+    <!-- 请求参数 -->
+	<script runat="server" language="cache">
+		s PCntItmLogID = $Get(%request.Data("PCntItmLogID",1),"")
+	</script>
+	<script language=javascript>
+		var PCntItmLogID = '#(PCntItmLogID)#';
+	</script>
+	
+	<!-- 兼容极简UI样式 -->
 	<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+	<script language=javascript>
+		if (typeof HISUIStyleCode == 'string' && HISUIStyleCode == 'lite') {
+			$(function(){
+				$('body').append('<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.lite.css"></link>');
+			});
+		}
+	</script>
+	
 </head>
 
 <body>
@@ -36,13 +53,13 @@
 				
 				<div data-options="region:'center',border:true,title:'医生申诉',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper-ques'" style="padding-top:2px">
 					<div class="hisui-layout" fit="true" border="true">
-						<div data-options="region:'center',border:false,headerCls:'panel-header-gray',height:350" style="border-top:1px solid #cccccc">
-								<table  id="gridCommentLog"> </table>							
+						<div id="panelCommentLog" data-options="region:'center',border:false,headerCls:'panel-header-gray',height:350" style="border-bottom:1px solid #e2e2e2">
+							<table id="gridCommentLog"> </table>							
 						</div>
 							 
-						<div data-options="region:'south',split:true,border:false,height:250" style="text-align:center;overflow:hidden;padding:10px;margin-top:-5px;">
-							<textarea id="txtDocNote" placeholder="#(..Get("申诉原因录入"))#..." style="box-sizing: border-box;width:100%;height:185px;border-color:#cccccc;overflow:hidden;border-radius:4px;" ></textarea>
-							<div style="margin-top:10px;margin-bottom:10px">
+						<div data-options="region:'south',split:true,border:false,height:250" style="text-align:center;overflow:hidden;padding:10px;margin-top:-10px;">
+							<textarea id="txtDocNote" placeholder="#(..Get("申诉原因录入"))#..." style="box-sizing: border-box;width:100%;height:190px;border-color:#cccccc;overflow:hidden;border-radius:2px;" ></textarea>
+							<div style="margin-top:6px;margin-bottom:10px">
 								<a class="hisui-linkbutton" plain="false" id="btnAccept">接受</a>
 								<a class="hisui-linkbutton" plain="false" id="btnComplain" style="margin-left:50px;background:#FE6248">申诉</a>
 							</div>

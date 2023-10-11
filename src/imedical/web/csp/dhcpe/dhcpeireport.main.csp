@@ -1,0 +1,375 @@
+<!--
+ dhcpe/dhcpeireport.main.csp
+ http://127.0.0.1/imedical/web/csp/dhcpe/dhcpeireport.main.csp?ID=1&Type=TEMP&PageList=^CO^HP^EX^HM^PO^GE^SR^IL^OT^
+ https://127.0.0.1:443/imedical/web/csp/dhcpe/dhcpeireport.main.csp?ID=1&Type=TEMP&PageList=^CO^HP^EX^HM^PO^GE^SR^IL^OT^
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+	<head>
+		<script language="Cache" RUNAT="SERVER">
+			s ID=%request.Get("ID")  // 根据Type决定   发同仁团体
+			s Type=%request.Get("Type")  // ID的类型
+			// 定义显示的页面 空则都显示
+			// ^CO^HP^EX^HM^PO^GE^SR^IL^OT^  封面  报告首页  说明  人体图  阳性结果  总检建议  体检结果  疾病解释  其他说明
+			s PageList=%request.Get("PageList")
+			
+			s RptJson=##class(web.DHCPE.ReportOutToWeb).GetReportInforNew(ID,Type)
+			s ShowPage=0
+			i RptJson.Size()>0 {
+				s ShowPage=1
+				s baseinfo=RptJson.baseinfo
+				s business=RptJson.business
+				s footer=RptJson.footer
+				s other=RptJson.other
+			}
+			//s ServerPath=##class(ext.util.String).GetCacheURL()
+    		//s ServerPath=$p(ServerPath,"web/csp/",1)
+    		// https://114.242.246.243:1443/imedical/web/scripts/dhcpe/css/dhcpe.min.css
+			//w "<link rel='stylesheet' type='text/css' href='"_ServerPath_"web/scripts/dhcpe/report/dhcpeireport.normal.css'>"
+		</script>
+    
+        <!--link rel="stylesheet" type="text/css" href="../../scripts/dhcpe/report/dhcpeireport.normal.css"/-->
+        <style>
+        	/* 设置报告全局样式 */
+			/* dhcpeireport.normal.css
+				A4大小 210mm*297mm
+				lodop打印时，一般会在js中设置 Top,Left,Width,Height，且不同打印机的实际打印尺寸不一样
+				所以以下class设置的宽度需要按实际来调整 page rptpage human-div
+				198*285
+			 */
+			.page {
+				width: 195mm;
+				margin: 0 auto;
+			}
+
+			.rptbase {
+			    width: 95%;
+			    margin: 0 auto;
+			    table-layout: fixed;
+				font-size: 12pt;
+			    font-family: 宋体;
+			}
+
+			.rptpage {
+			    width: 95%;
+			    margin: 0 auto;
+			    table-layout: fixed;
+				font-size: 12pt;
+			    font-family: 宋体;
+			    page-break-after: always;
+			}
+
+			.rpttitle {
+				text-align: center;
+				font-size: 22pt;
+				font-family: 隶书;
+			}
+
+			table {
+				border-collapse: collapse;
+			}
+
+			/* 封面样式 */
+			.cover {
+				font-size: 14pt;
+			}
+
+			.cover-info {
+				width: 70%;
+				margin: 0 auto;
+				position: relative;
+				top: 0;
+				/* left: 30mm; */
+			}
+
+			.cover-info-tab {
+				font-size: 13pt;
+				width: 75%;
+				margin: 0 auto;
+				line-height: 180%;
+			}
+
+			.cover-info-text {
+				width: 67pt;
+				text-align: right;
+				font-weight: bold;
+			}
+
+			.cover-info-val {
+				text-align: center;
+				border-bottom: 1pt solid #000000;
+			}
+
+			/* 报告首页样式 */
+			.home-info-table {
+				font-size: 11pt;
+				width: 100%;
+			    position: relative;
+			    line-height: 125%;
+			}
+
+			.home-info-text {
+				text-align: center;
+				/*font-weight: bold;*/
+				border: 1pt solid #000000;
+			}
+
+			.home-info-val {
+				text-align: center;
+				border: 1pt solid #000000;
+			}
+
+			.home-info-illText {
+				font-weight: bold;
+			}
+
+			.home-info-illval {
+				border-top: 1pt solid #000000;
+				height: 70pt;
+				vertical-align: top;
+			}
+
+			/* 说明样式 */
+			.explain-normal {
+				font-size: 11pt;
+			    line-height: 160%;
+				font-family: 宋体;
+				margin: 2pt auto; /* <p>之间的间距 */
+			}
+
+			.explain-normal-first {
+				font-size: 11pt;
+			    line-height: 160%;
+				font-family: 宋体;
+				margin: 2pt auto; /* <p>之间的间距 */
+				text-indent: 2em; /* 首行缩进 */
+			}
+
+			.explain-bold {
+				font-size:12pt;
+			    line-height: 160%;
+				font-family:宋体;
+				font-weight: bold;
+				margin:2pt auto; /* <p>之间的间距 */
+			}
+
+			.explain-item-table {
+				width: 90%;
+				left: 5%;
+			    position: relative;
+			    line-height: 160%;
+			    font-size:11pt;
+			}
+
+			.explain-item-table tr th, .explain-item-table tr td {
+				text-align: center;
+				border: 1pt solid #000000;
+			}
+
+			.oth-explain-normal-first {
+				font-size: 11pt;
+			    line-height: 160%;
+				font-family: 宋体;
+				margin: 4pt auto; /* <p>之间的间距 */
+				text-indent: 2em; /* 首行缩进 */
+			}
+
+			/* 人体图样式 */
+			.human-div {
+			    width: 180mm;
+			    position: relative;
+			    page-break-after: always;
+			}
+
+			.human-img {
+			    margin: 5mm;
+				width: 100%;
+			}
+			
+			.human-flag {
+				position: absolute;
+				width: 4mm;
+			}
+
+			.human-tip {
+				width: 4mm;
+				padding: 0 5pt;
+			}
+			
+			.human-tip-div {
+			    width: 3.4mm;
+			    display: inline-block;
+			    height: 3.4mm;
+			    border: 0.5pt solid #000000;
+			    border-radius: 50%;
+			    margin: 0 5pt;
+			}
+
+			/* 阳性体征 */
+			.positive-text {
+			    font-size:11pt;
+				line-height: 160%;
+			}
+
+			/* 疾病解释 */
+			.illexplain-text {
+				line-height: 160%;
+				font-size: 11pt;
+				text-align: justify; /*实现两端对齐*/
+  				text-justify: newspaper; /*通过增加或减少字或字母之间的空格对齐文本*/
+  				word-break: break-all; /*允许在单词内换行*/
+			}
+
+			/* 总检结论与建议 */
+			.summary-con {
+				margin: 1pt 0;
+				line-height: 160%;
+				font-size: 11pt;
+				font-weight: 700;
+			}
+
+			.summary-adv {
+				margin: 1pt 0;
+				line-height: 160%;
+				font-size: 11pt;
+				text-align: justify; /* 两端对齐 */
+			}
+
+			.summary-foot {
+				line-height: 160%;
+				font-size: 11pt;
+				text-align: right;
+				font-weight: 700;
+			}
+
+			.summary-doc {
+				width: 70pt;
+				vertical-align: middle;
+			}
+
+			/* 体检结果 */
+			.rlt-table {
+				width: 100%;
+				font-size: 11pt;
+				line-height: 140%;
+			}
+
+			.rlt-title {
+				background-color: #ccc;
+				font-size: 13pt;
+				height: 18pt;
+			    vertical-align: middle;
+				font-weight: 700;
+			}
+
+			.rlt-title td {
+				border-top: 1pt solid #000000;
+				border-bottom: 1pt solid #000000;
+			}
+
+			.rlt-head {
+				font-size: 12pt;
+				font-weight: 700;
+			}
+
+			.rlt-head td {
+				border-top: 1pt solid #000000;
+				border-bottom: 1pt solid #000000;
+			}
+
+			.rlt-content{
+				padding-bottom: 5pt;
+			}
+
+			.rlt-content-txt {
+				text-align: right;
+				font-weight: 700;
+			}
+
+			.rlt-content-val {
+				text-align: center;
+			}
+
+			.rlt-content-abn {/* 异常结果 */
+				color: red;
+			}
+
+			.rlt-foot {
+				font-size: 11pt;
+				line-height: 260%;
+				text-align: right;
+				font-weight: 700;
+			}
+
+			.rlt-img {
+				width: 65pt;
+				vertical-align: middle;
+			}
+		</style>
+    </head>
+    <body>
+        <div id='ReportDiv' class="page">
+        	<CSP:IF CONDITION=(ShowPage=1)>
+				<script language="Cache" RUNAT="SERVER">
+					// 封面 cover
+					i ((PageList="")||(PageList["^CO^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.cover","OnPageCSPROOT")
+					
+					// 报告首页 homepage
+					i ((PageList="")||(PageList["^HP^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.homepage","OnPageCSPROOT")
+					
+					// 说明 explain
+					i ((PageList="")||(PageList["^EX^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.explain","OnPageCSPROOT")
+					
+					// 人体图 human
+					i ((PageList="")||(PageList["^HM^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.human","OnPageCSPROOT")
+					
+					// 阳性体征 positive
+					i ((PageList="")||(PageList["^PO^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.positive","OnPageCSPROOT")
+					
+					// 总检建议 generaladvice
+					i ((PageList="")||(PageList["^GE^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.generaladvice","OnPageCSPROOT")
+					
+					// 历史结果对比
+					i ((PageList="")||(PageList["^HR^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.historyrecord","OnPageCSPROOT")
+					
+					// 体检结果 stationresult
+					i ((PageList="")||(PageList["^SR^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.stationresult","OnPageCSPROOT")
+					
+					// 疾病解释 illexplain
+					i ((PageList="")||(PageList["^IL^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.illexplain","OnPageCSPROOT")
+					
+					// 其他说明 othexplain
+					i ((PageList="")||(PageList["^OT^")) d $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.othexplain","OnPageCSPROOT")
+				</script>
+        	<CSP:ELSE>
+        		<p style="font-size:16pt; color:red;"> 无报告数据! </p>
+			</CSP:IF>
+        </div>
+        <!--script language='javascript' src='../../scripts_lib/lodop/LodopFuncs.js'></script-->
+        <!-- script src="../scripts/dhcpe/report/dhcpeireport.normal.js"></script -->
+<SCRIPT language="javascript">
+	/*
+	document.body.onload = BodyLoadHandler;
+
+	function BodyLoadHandler()
+	{
+		if(document.readyState=='complete')
+		{
+			LODOP=getLodop(); 
+			//LODOP.ADD_PRINT_HTM("11mm","0mm","RightMargin:0mm","BottomMargin:15mm",xmlHttp.responseText);
+			//var PrintDetail=document.getElementById("ReportDiv").innerHTML
+			LODOP.ADD_PRINT_HTM("75mm","12mm","RightMargin:6mm","BottomMargin:20mm",document.body.innerHTML);
+ 			LODOP.PRINT();
+		}else{
+			timeIframe=setTimeout("BodyLoadHandler()",5);
+			return false;
+		}
+	}
+	*/
+</SCRIPT>
+    </body>
+</html>

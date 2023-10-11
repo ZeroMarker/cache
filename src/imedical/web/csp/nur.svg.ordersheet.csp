@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ ;i ##Class(Nur.CSPDebug).setSession() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<!-- nur.svg.ordersheet.csp -->
+	<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8"-->
+	<title>医嘱单</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ 	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/nurse/ordersheet/svg27.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/ordersheet/svgUtils.js" charset="gbk"></script>
+	<!--script type="text/javascript" src="../scripts/nurse/ordersheet/drawLongSheet.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/nurse/ordersheet/drawTempSheet.js" charset="gbk"></script-->
+
+<script type="text/javascript">
+var $g = parent.$g
+</script>
+<server>
+    Set ifColorPrint = "false"    
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
+	Set:EpisodeID="" EpisodeID = $g(%request.Data("episodeID",1)),PatientID="",mradm="",Page=""
+	if EpisodeID'="" {
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+		Set Page=$g(%request.Data("page",1))
+		Set SheetType=$g(%request.Data("SheetType",1))
+		//是否能启用表格配置
+		Set ifExitSheetConfig=##class(Nur.NIS.Service.OrderSheet.Sheet).ifExitSheetConfig()
+		if (ifExitSheetConfig=1)
+		{
+			W "<script type=""text/javascript"" src=""../scripts/nurse/ordersheet/drawSheet.js"" charset=""gbk""></script>"
+		}else{
+			If SheetType="T" W "<script type=""text/javascript"" src=""../scripts/nurse/ordersheet/drawTempSheet.js"" charset=""gbk""></script>"
+			If SheetType="L" W "<script type=""text/javascript"" src=""../scripts/nurse/ordersheet/drawLongSheet.js"" charset=""gbk""></script>"
+		}
+	}	
+</server>
+ <style type="text/css" media="screen">
+	tspan.unPrinted, text.unPrinted{
+		fill: Blue
+	}
+	tspan.printed, text.printed{
+		fill: Gray
+	}
+	line.unPrinted{
+		stroke: Blue
+	}
+	line.printed{
+		stroke: Gray
+	}
+	rect.clicked{
+		opacity: 0.2;
+	}
+	rect.unClicked{
+		opacity: 0;
+	}
+</style>
+</head>
+<body style="background-color:#fff;">
+	<div id="drawing" align="center" style="width:100%;height:100%;" ></div>
+</body>
+<script type="text/javascript">
+var episodeID="#(EpisodeID)#";
+var ifColorPrint="#(ifColorPrint)#";
+var ifExitSheetConfig="#(ifExitSheetConfig)#";
+var userID = session['LOGON.USERID'];
+var locID = session['LOGON.CTLOCID'];
+var page="#(Page)#"==""?1:"#(Page)#";
+var type="#(SheetType)#"==""?"L":"#(SheetType)#";
+var pageOBJ="",CAImages="",LogoImage=""
+if (SVG.supported) {
+	var draw = SVG('drawing').style({overflow:'visible'});//fill('#f03');
+    draw.viewbox({ x: 0, y: 0, width: 210, height: 297 });   
+	if(!!window.ActiveXObject || "ActiveXObject" in window){
+        //alert("ie");
+        document.body.style.height="1000px";
+    }
+    if(window.parent){
+    	pageOBJ=window.parent.toIframeValue(page);
+    	CAImages = window.parent.toCAImages();
+    	LogoImage = window.parent.toLogoImage();
+    	var PAGE_TOTAL_ROWS = parseInt(pageOBJ.totalRows) + 2 //定义一张纸一共多少行
+    	if (ifExitSheetConfig==1)
+    	{
+	    	var sheetConfig = window.parent.toSheetConfig();
+	    	var textConfig = window.parent.toTextConfig();
+	    	var generalConfig = window.parent.toGeneralConfig();
+	    	initTable(sheetConfig,textConfig,generalConfig)
+	    	drawTable(pageOBJ);
+	    }else{
+	    	if (type=="L"){
+	    		drawLongTable(pageOBJ);
+	    	}
+	    	else{
+		    	drawTempTable(pageOBJ);
+	    	}
+	    }
+    }
+    
+} else {
+  alert('SVG not supported')
+}
+var bottomLocation=false,topLocation=true;
+var range = 1;
+var totalheight = 0;
+$(window).scroll(function(){
+	var srollPos = $(window).scrollTop();    //滚动条距顶部距离(页面超出窗口的高度)
+	totalheight = parseFloat($(window).height()) + parseFloat(srollPos);
+	if(($(document).height()-range) <= totalheight) {
+		bottomLocation = true;
+	}else{
+		bottomLocation = false;
+	}
+	
+	if (srollPos == 0)
+	{
+		topLocation = true;
+	}else{
+		topLocation = false;
+	}
+});
+
+window.onmousewheel = wheel;
+function wheel(ev){
+	if ( !bottomLocation && !topLocation ) {return}
+	var e = ev || event;
+	var b=false;
+	if (e.wheelDelta)
+	{
+		b = e.wheelDelta > 0 ? true:false;
+	}else{
+		b = e.detail < 0 ? true:false;
+	}
+	if ( !b && bottomLocation )
+	{
+		parent.pageHandler.nextPage()
+		bottomLocation = false
+	}
+	if (b && topLocation)
+	{
+		parent.pageHandler.prePage()
+		topLocation = false
+	}
+}
+
+</script>
+<!--script type="text/javascript" src="../scripts/nurse/ordersheet/requestData.js" charset="gbk"></script-->
+
+</html>

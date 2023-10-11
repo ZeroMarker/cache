@@ -1,0 +1,777 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.shift.project.csp -->
+	<title>交班项目维护9.0</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:480px;
+			height:423px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:470px;
+			height:274px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.right-hisui-panel{
+			
+			height: calc(50% - 5px);
+		}
+		table.search-table.processconfig-table td{
+			line-height:28px;	
+		}
+		.syxm span,.sysou span {
+		    border: 1px solid #ccc;
+		    padding: 2px 5px 2px 5px;
+		   border-radius: 4px;
+		    margin-left: 5px;
+		    margin-top: 5px;
+		    display: inline-block;
+		    cursor: pointer;
+		}
+		.caloay{
+			padding:5px;	
+		}
+		.caloay span {
+		   border: 1px solid #ccc;
+		    padding: 2px 5px 2px 5px;
+		   	border-radius: 4px;
+		    font-weight: bold;
+		    display: inline-block;
+		    cursor: pointer;
+		}
+		.syxm span:hover,.sysou span:hover{
+			background: #ffe48d;
+			color:#000 !important;
+		}
+		.syxm span.bgselect,.sysou span.bgselect{
+			background: #ffe48d;
+			color:#000 !important;
+		}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<!--div data-options="region:'north',border:false" style="height:40px;">
+			<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+			<input id="_HospList" class="textbox"/>
+		</div-->
+		
+		<div data-options="region:'west',border:false,collapsible:true,split:true" style="width:680px;">
+			<div class="hisui-panel projectAll"  title="交班项目" style="padding:0px;overflow: hidden;" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+				<!--div class="datagrid-toolbar">
+    				<input class="hisui-searchbox" id="projectdesc" name="projectdesc">  
+					<input type="hidden" name="cusIndex">
+					<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="insertProjectView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">新增</span><span class="l-btn-icon icon-add">&nbsp;</span></span></a>
+		    		<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="copyProjectView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">复制</span><span class="l-btn-icon icon-add">&nbsp;</span></span></a>
+		    		
+		    		<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="updateProjectView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">修改</span><span class="l-btn-icon icon-write-order">&nbsp;</span></span></a>
+		    		<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="deleteProjectView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">删除</span><span class="l-btn-icon icon-cancel">&nbsp;</span></span></a>
+		    													
+    			</div-->
+    			<!--div style="height:calc(100% - 33px)">
+    				<table id="project"></table>
+    			</div-->
+				<table id="project"></table>
+
+			</div>
+		</div>
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-panel"  title="项目术语" style="padding:0px;overflow: hidden;" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+				<table style="height:100%;width:100%;">
+					<tr>
+						
+					<td style="height:400px;vertical-align: top;">
+				
+				
+				
+				<div class="datagrid-toolbar">
+    					<input class="hisui-searchbox" placeholder="#(..Get("请输入术语内容……"))#" id="desc" name="desc">  
+					<input type="hidden" name="cusIndex">
+					<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="insertShuyuView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">新增</span><span class="l-btn-icon icon-add">&nbsp;</span></span></a>
+		    		<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="copyShuyuView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">复制</span><span class="l-btn-icon icon-add">&nbsp;</span></span></a>
+		    		
+		    		<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="updateShuyuView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">修改</span><span class="l-btn-icon icon-write-order">&nbsp;</span></span></a>
+		    		<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="deleteShuyuView()"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">删除</span><span class="l-btn-icon icon-cancel">&nbsp;</span></span></a>
+		    														
+    			</div>
+    			<div class="caloay" ><span>数据源类型</span></div>
+    			<div class="sysou" style="height:40px;overflow: auto;border-bottom:1px solid #ddd">
+    				
+    			</div>
+    			<div class="caloay" ><span>数据源</span></div>
+				<div class="syxm" style="height:250px;overflow: auto;"></div>
+				</td></tr>
+				<tr><td style="vertical-align: top;">
+				<div style="height:100%;border-top: 1px solid #ccc;" >
+						
+						<div class="datagrid-toolbar">
+		    				<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="saveTwo"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">保存</span><span class="l-btn-icon icon-save">&nbsp;</span></span></a>
+		    						
+		    			</div>
+						
+						<textArea class="ProjectContent" style="width: 100%;height: calc(100% - 31px);resize: none;border:1px solid #FFF;"></textArea>
+					
+				</div>
+				</td></tr>
+				</table>
+			</div>
+			
+		</div>
+	</div>	
+	
+	<div id="dialogRefer"></div>
+	
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script language="javascript">
+	$.fn.watch = function (callback) {
+        return this.each(function () {
+            //缓存以前的值
+            $.data(this, 'originVal', $(this).val());
+            $(this).on('keyup paste input propertychange', function () {
+                var originVal = $.data(this, 'originVal');
+                var currentVal = $(this).val();
+                if (originVal !== currentVal) {
+                    $.data(this, 'originVal', $(this).val());
+                    callback(currentVal,originVal,$(this));
+                }
+            });
+        });
+    }
+	$("body").on("click",".searchbox-button",function(){
+		$method.shuyu()
+	})
+</script>
+<script type="text/javascript">
+	
+var GLOBAL = {
+	HospEnvironment: true,
+	HospitalID: session['LOGON.HOSPID']
+};
+$(function() {
+	$method.datagrid();
+	$method.xiangmu()
+	$method.shuyu()
+	
+    $("input[name=desc]").watch(function(value,oldval,ele) {
+		$method.shuyu()
+	})
+	$("input[name=projectdesc]").watch(function(value,oldval,ele) {
+		$method.xiangmu()
+	})
+	
+	
+})
+function addProject(){
+	runClassMethod("Nur.SHIFT.Service.ShiftData","AddProject",{},function(rtn){
+			$method.xiangmu()
+					
+	},'json',false);	
+	
+}
+ 
+
+var $method={
+	ToolBar:function(gid){
+		var ToolBar = [
+		{
+	        text: '<input class="hisui-searchbox" id="projectdesc" name="projectdesc"><input type="hidden" name="cusIndex">',
+	       
+	    },{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        insertView(gid,1,1)
+		    }
+	    },{
+	        text: '复制',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        insertView(gid,3,1)
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        insertView(gid,2,1)
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					$.messager.alert("提示","请选择需要删除的记录！");
+					return false;
+				}
+			
+				$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
+				    if (r){
+					   var row = $("#"+gid).datagrid("getSelected");
+					   runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftProjectById",{id:row.ID},function(rtn){
+							if(rtn == 0) {
+								$.messager.popover({msg:'删除成功！',type:'success'});
+								$method.xiangmu()
+							} else if(rtn == 2) {
+								$.messager.popover({msg:'交班项目已经被引用，无法删除',type:'error'});
+							}
+							
+						},'json',false);
+				    }    
+				}); 
+	        }
+	    }];
+		return ToolBar
+	},
+	removeProject:function(){
+		
+	},
+	datagrid:function(){
+		
+
+
+		
+		
+		var gid="project"
+		$('#'+gid).datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:false,
+			idField:"ID",
+			toolbar :$method.ToolBar(gid),
+			rownumbers:true,
+			columns :[[
+				{field:'ID',title:'ID',width:50},
+				{field:'ProjectCode',title:'项目Code',width:160},
+				{field:'ProjectName',title:'项目名称',width:160},
+				{field:'ProjectRemark',title:'项目描述',width:260, 
+					styler: function (value, row, index) {
+	                    return 'white-space: normal;word-break:break-all;';
+	                    
+	                }
+	             },
+				{field:'ProjectClassName',title:'类方法名',
+					formatter: function(itemInfo,row,index){
+						if(typeof(row.ProjectParameter)=="undefined"){
+							row.ProjectParameter=""
+						}
+						return row.ProjectClassName+":"+row.ProjectMethodName+"("+row.ProjectParameter+")"
+					}, 
+					styler: function (value, row, index) {
+	                    return 'white-space: normal;word-break:break-all;';
+	                },
+				},
+				
+			]],
+			loadFilter:function(data){
+				var newData=[]
+				var FilterCodes=["Existing","Original","Other"]
+				for(var i=0;i<data.length;i++){
+					if(FilterCodes.indexOf(data[i].ProjectCode)==-1){
+						
+						newData.push(data[i])
+					}
+				}
+				return { 'total': 0, 'rows': newData };
+
+			},
+			onClickRow:function(index,rowData){
+				$("textarea.ProjectContent").val(rowData.ProjectContent)
+				
+			}
+		});	
+		
+
+	},
+	xiangmu:function(){
+		var desc=$("input[name=projectdesc]").val()
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftProjectList",{"ProjectType":1,"desc":desc},function(rtn){
+			//加载术语数据源
+			$("#project").datagrid("unselectAll");
+			$("#project").datagrid('loadData', rtn)
+			
+			
+		},'json',true);	
+		
+	},
+	shuyu:function(){
+		var desc=$("input[name=desc]").val()
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftProjectList",{"ProjectType":2,"desc":desc},function(rtn){
+			
+			var projectArr=[],projectCategoryArr=[]
+			for(var i=0;i<rtn.length;i++){
+				//projectArr.push('<span id="'+rtn[i].ID+'">'+rtn[i].ID+":"+rtn[i].ProjectName+'</span>')
+				if(typeof(rtn[i].IsCategory)=="undefined"){
+					rtn[i].IsCategory=""	
+				}
+				projectArr.push('<span id="'+rtn[i].ID+'" iscategory="'+rtn[i].IsCategory+'" category="'+rtn[i].ProjectCategory+'">'+rtn[i].ProjectName+'</span>')
+				
+			}
+			$("div.syxm").html(projectArr.join(""))	
+			
+			
+			runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetProjectCategory",{ProjectType:2},function(rtn){
+					projectCategoryArr.push('<span style="color:#ccc;" value="0">常用数据源</span>')
+
+					for(var i=0;i<rtn.length;i++){
+						projectCategoryArr.push('<span style="color:#ccc;" value="'+rtn[i].value+'">'+rtn[i].text+'</span>')
+					}
+			},'json',false);
+			
+			$("div.sysou").html(projectCategoryArr.join(""))	
+		},'json',true);
+	}	
+}
+var rowContent={}
+
+$("body").on("click","#saveTwo",function(){
+	var text=$("textarea.ProjectContent").val()	
+	var gid="project"
+	
+	var row = $("#"+gid).datagrid("getSelected");
+	if (!row) {
+		$.messager.alert("提示","请选择一条交班项目！");
+		return false;
+	}
+	
+	var rtnParms={
+		id:row.ID,
+		ProjectContent:	text
+	}
+	var rsTxt="保存成功！"
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","UpdateShiftProjectContent",{data:JSON.stringify(rtnParms)},function(rtn){
+		if(rtn == 0) {
+			row.ProjectContent=text
+			$.messager.popover({msg:"保存成功！",type:'success'});
+		} else if(rtn == 1){
+			$.messager.popover({msg:"保存失败！",type:'error'});
+		}
+	},'json',false);
+	
+	
+})
+
+function insertShuyuView(){
+	insertView("shuyu",1,2)
+}
+function copyShuyuView(){
+	insertView("shuyu",3,2)
+}
+
+function updateShuyuView(){
+	insertView("shuyu",2,2)
+}
+
+function insertProjectView(){
+	insertView("project",1,1)
+}
+function copyProjectView(){
+	insertView("project",3,1)
+}
+
+function updateProjectView(){
+	insertView("project",2,1)
+}
+
+function deleteProjectView(){
+	var gid="project"
+	var row = $("#"+gid).datagrid("getSelected");
+	            
+	if (!row) {
+		$.messager.alert("提示","请选择需要删除的记录！");
+		return false;
+	}
+
+	$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
+	    if (r){
+		   var row = $("#"+gid).datagrid("getSelected");
+		   runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftProjectById",{id:row.ID},function(rtn){
+				if(rtn == 0) {
+					$.messager.popover({msg:'删除成功！',type:'success'});
+					$method.xiangmu()
+				} else if(rtn == 2) {
+					$.messager.popover({msg:'交班项目已经被引用，无法删除',type:'error'});
+				}
+				
+			},'json',false);
+	    }    
+	}); 	
+}
+
+function deleteShuyuView(){
+	var rows=$(".syxm span.bgselect")
+	if(rows.length==0){
+		$.messager.alert("提示","请选择一条需要删除的记录");
+		return false;
+	}
+	
+	$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
+	    if (r){
+		   var id=rows.attr("id")
+		   runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftProjectById",{id:id},function(rtn){
+				if(rtn == 0) {
+					$.messager.popover({msg:'删除成功！',type:'success'});
+					$method.shuyu()
+				} else if(rtn == 2) {
+					$.messager.popover({msg:'术语已经被引用，无法删除',type:'error'});
+				}
+				
+			},'json',false);
+	    }    
+	}); 
+}
+$("body").on("click",".syxm span",function(){
+	//alert(getCursortPosition($("textarea.ProjectContent")))
+	//var focuIndex=$("input[name=cusIndex]").val()
+	//$("textarea.ProjectContent").setCurPos(focuIndex,focuIndex)
+	$(".syxm span").removeClass("bgselect")
+	$(this).addClass("bgselect")
+})
+$("body").on("click",".sysou span",function(){
+	
+	
+	if($(this).hasClass("bgselect")){
+		$(this).removeClass("bgselect")
+	}else{
+		$(this).addClass("bgselect")
+	}
+	var thiscategory=[],cysjy=[]
+	$(".sysou span").each(function(){
+		var category=$(this).attr("value")
+		if(typeof(category)!="undefined" && $(this).hasClass("bgselect")){
+			thiscategory.push(category)
+		}
+		
+	})
+	if(thiscategory.length>0){
+		$(".syxm span").each(function(){
+			var category=$(this).attr("category")
+			$(this).hide()
+			if(thiscategory.indexOf(category)==-1 || typeof(category)=="undefined"){
+				$(this).hide()
+			}else{
+				$(this).show()
+			}
+			if(thiscategory.indexOf("0")>-1){
+				var Iscategory=$(this).attr("iscategory")
+				
+				if(typeof(Iscategory)!="undefined"){
+					if(Iscategory=="1"){
+						$(this).show()
+					}
+				}
+			}
+			
+			
+		})
+	}else{
+		$(".syxm span").show(100)
+	}
+
+		
+})
+
+$("body").on("dblclick",".syxm span",function(){
+
+	var gid="project"
+	var row = $("#"+gid).datagrid("getSelected");
+	if (!row) {
+		$.messager.alert("提示","请选择一条交班项目！");
+		return false;
+	}
+	///需要插入的文本内容
+	var text="【"+$(this).attr("id")+":"+$(this).text()+"】";
+	///获取文本域的内容
+	var oldText=$("textarea.ProjectContent").val()	
+	///获取文本域光标位置
+	var focuIndex=$("textarea.ProjectContent").getCurPos()
+	///没有光标时，插入在最后
+	if(focuIndex==0){
+		focuIndex=oldText.length
+	}
+	///判断文本区域是否可以插入术语
+	var strIndex=0,endIndex=0
+	for(var i=0;i<oldText.length;i++){
+		var txt=oldText.slice(i,i+1)
+		if(txt=="【") strIndex=i
+		if(txt=="】") endIndex=i
+		if((strIndex>0)&&(endIndex>0)){
+			if((focuIndex>strIndex)&&(focuIndex<=endIndex)){
+				$.messager.popover({msg:'当前位置无法插入术语',type:'error'});
+				return false;	
+			}
+			strIndex=0,endIndex=0
+			
+		}
+	}
+	///截取光标之前内容和光标之后的内容
+	var afterText=oldText.slice(0,focuIndex)
+	var beforeText=oldText.slice(focuIndex)
+	
+	///插入数据后，光标所在的位置
+	var focuIndexNew=afterText+text
+	focuIndexNew=focuIndexNew.length
+	///
+	$("textarea.ProjectContent").val(afterText+text+beforeText)	
+	$("textarea.ProjectContent").setCurPos(focuIndexNew,focuIndexNew)
+	
+	
+	/*var newText=oldText+text
+	var aaa=0
+	if(focuIndex!=""){
+		newText=oldText.slice(0,focuIndex) + text + oldText.slice(focuIndex)
+		//aaa=parseInt(focuIndex)+text.length
+		var leftCount=0,rightCount=0
+		for(var i=focuIndex;i>=0;i--){
+			var a=(oldText.slice(i-1,i))
+			if(a=="【"){
+				leftCount=leftCount+1
+			}
+			if(a=="】"){
+				rightCount=rightCount+1
+			}
+		}
+		if(rightCount!=leftCount){
+			
+			//$("textarea.ProjectContent").setCurPos(focuIndex,focuIndex)
+			//$.messager.alert("提示","请在其他");
+			$.messager.popover({msg:'当前位置无法插入术语',type:'error'});
+			return false;	
+		}
+		
+		
+		//alert(aaa)
+	}
+	*/
+	
+	
+	
+	//$("input[name=cusIndex]").val(aaa)
+})
+
+$("textarea.ProjectContent").on("click",function(){
+	var focuIndex=$(this).getCurPos()
+	$("input[name=cusIndex]").val(focuIndex)
+})
+
+
+$.fn.extend({
+		// 获取当前光标位置的方法
+		getCurPos:function() {
+			var curCurPos = '';
+			var all_range = '';
+			if (navigator.userAgent.indexOf("MSIE") > -1) { //IE
+
+				if( $(this).get(0).tagName == "TEXTAREA" ){ 
+					// 根据body创建textRange
+					all_range = document.body.createTextRange();
+					// 让textRange范围包含元素里所有内容
+					all_range.moveToElementText($(this).get(0));
+				} else {
+					// 根据当前输入元素类型创建textRange
+					all_range = $(this).get(0).createTextRange();
+				}
+
+				// 输入元素获取焦点
+				$(this).focus();
+
+				// 获取当前的textRange,如果当前的textRange是一个具体位置而不是范围,textRange的范围从start到end.此时start等于end
+				var cur_range = document.selection.createRange();
+
+				// 将当前的textRange的end向前移"选中的文本.length"个单位.保证start=end
+				cur_range.moveEnd('character',-cur_range.text.length)
+
+				// 将当前textRange的start移动到之前创建的textRange的start处, 此时当前textRange范围变为整个内容的start处到当前范围end处
+				cur_range.setEndPoint("StartToStart",all_range);
+
+				// 此时当前textRange的Start到End的长度,就是光标的位置
+				curCurPos = cur_range.text.length;
+			} else {
+				// 文本框获取焦点
+				$(this).focus();
+				// 获取当前元素光标位置
+				curCurPos = $(this).get(0).selectionStart;
+			}
+			// 返回光标位置
+			return curCurPos;
+		},
+		// 设置当前光标位置方法
+		setCurPos:function(start,end) {
+			if(navigator.userAgent.indexOf("MSIE") > -1){
+				var all_range = '';
+
+				if( $(this).get(0).tagName == "TEXTAREA" ){ 
+					// 根据body创建textRange
+					all_range = document.body.createTextRange();
+					// 让textRange范围包含元素里所有内容
+					all_range.moveToElementText($(this).get(0));
+				} else {
+					// 根据当前输入元素类型创建textRange
+					all_range = $(this).get(0).createTextRange();
+				}
+
+				$(this).focus();
+
+				// 将textRange的start设置为想要的start
+				all_range.moveStart('character',start);
+
+				// 将textRange的end设置为想要的end. 此时我们需要的textRange长度=end-start; 所以用总长度-(end-start)就是新end所在位置
+				all_range.moveEnd('character',-(all_range.text.length-(end-start)));
+
+				// 选中从start到end间的文本,若start=end,则光标定位到start处
+				all_range.select();
+			}else{
+				// 文本框获取焦点
+				$(this).focus();
+
+				// 选中从start到end间的文本,若start=end,则光标定位到start处
+				$(this).get(0).setSelectionRange(start,end);
+			}
+		},
+	});
+
+
+
+
+
+function insertView(gid,saveFlag,type){
+	var id=""
+	if(saveFlag==2 || saveFlag==3){
+		if(gid=="project"){
+			var rows = $('#'+gid).datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				$.messager.alert("提示","请选择一条记录");
+				return false;
+			}
+			var row = $("#"+gid).datagrid("getSelected");
+			id=row.ID
+		}else{
+			var rows=$(".syxm span.bgselect")
+			if(rows.length==0){
+				$.messager.alert("提示","请选择一条记录");
+				return false;
+			}
+			id=rows.attr("id")
+		}
+	}
+	var title="交班项目维护"
+	if(type==2){
+		title="交班术语维护"	
+	}
+	var url="nur.hisui.shift.project.insert.csp?id="+id+"&ProjectType="+type+"&saveFlag="+saveFlag
+	$('#dialogRefer').dialog({    
+		title: title,    
+		width: 400,    
+		height: 500,    
+		closed: false,    
+		cache: false,
+        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+		modal: true ,
+		buttons:[{
+			text:'保存',
+			iconCls:'icon-w-edit',
+			id: 'btnRefer',
+			handler:function(){
+				var $iframe = $('#iframeRefer')[0].contentWindow
+				var rsTxt = $iframe.saveFunLib()
+				if(rsTxt==""){
+					$.messager.popover({msg:'保存成功！',type:'success'});
+					if(gid=="project"){
+						$method.xiangmu();
+					}else{
+						//$method.shuyu()
+					}
+					$('#dialogRefer').dialog('close');	
+				}else{
+					$.messager.alert('提示',rsTxt , "info");	
+				}
+			}
+		},{
+			text:'关闭',
+			iconCls:'icon-w-close',
+			id: 'btnClose',
+			handler:function(){
+				$('#dialogRefer').dialog('close');	
+			}
+		}]  
+	});   
+	$("#dialogRefer").dialog("open");
+	
+}
+
+
+</script>
+</body>
+</html>

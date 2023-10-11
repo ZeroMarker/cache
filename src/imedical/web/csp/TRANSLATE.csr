@@ -10,7 +10,35 @@ The <b>TRAK:TRANSLATE</b> inserts the system title from the MEDTRAK configuratio
 
 <csr:action>
 	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
-		w "##($p($g(^CF("SM",1)),"^",5))##"
+		s LogonDesc="",HospDesc="",LogonLocDesc="",LocalIPLabel=""
+		if $d(%session),$g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.CTLOCID")){
+			s LogonID = %session.Data("LOGON.SSUSERLOGINID")
+			s ClientIP = $P($g(^SST("LOG",LogonID,"ADDR")),"^",1)
+			s LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			if (LogonLocID>0){
+				Set GroupDesc = %session.Data("LOGON.GROUPDESC")
+				s LogonLocDesc=$s(LogonLocID'="":$P(^CTLOC(LogonLocID),"^",2),1:"")
+				Set SplitDepDescDash = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","SplitDepDescDash") 
+				If (SplitDepDescDash="")||(SplitDepDescDash=1){
+					if $l(LogonLocDesc,"-") =2 s LogonLocDesc =  $p(LogonLocDesc,"-",2) 
+				}
+				Set HospId = $P(^CTLOC(LogonLocID),"^",22)
+				If HospId>0 Set HospDesc = $p(^CT("HOSP",HospId),"^",2)
+				
+				if ##class(websys.Conversions).IsValidMethodName("web.DHCBL.Authorize.BDPTranslation","GetTransDesc"){
+					Set LangId = %session.Data("LOGON.LANGID")
+					If LangId="" Set LangId=20
+					Set Languages=$p($g(^SS("LAN",LangId)),"^",1)
+					Set GroupDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.SSGroup","SSGRPDesc",Languages,GroupDesc)
+					Set LogonLocDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTLoc","CTLOCDesc",Languages,LogonLocDesc)
+					Set HospDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTHospital","HOSPDesc",Languages,HospDesc)
+				}
+				Set LocalIPLabel = ##class(websys.Translation).Get("DIC","±¾»úIP£º")
+			}
+			s LogonDesc=" "_%session.Data("LOGON.USERNAME")_" "_GroupDesc_" "_LogonLocDesc_" "_HospDesc_" "_LocalIPLabel_ClientIP
+	    }
+	    ;$p($g(^CF("SM",1)),"^",5)
+		w LogonDesc
 	</SCRIPT>
 </csr:action>
 </csr:rule>

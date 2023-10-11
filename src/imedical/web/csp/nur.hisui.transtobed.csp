@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HTML lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <STYLE type='text/css'>
+    body {
+	    background-color:#fff;
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.editCls {
+		cursor:pointer;
+	}
+	.messager-popover .content {
+		height:auto;
+	}
+    </STYLE>
+    <server>
+    	s bedSetting=##class(Nur.NIS.Service.Base.BedConfig).GetBedSetting(%session.Get("LOGON.HOSPID"),"true")
+    	k bedSettingArr
+		d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(bedSetting,.bedSettingArr)
+		s MainDocRequired=bedSettingArr("MainDocRequired")
+		s MainNurseRequired=bedSettingArr("MainNurseRequired")
+    </server>
+</head>
+
+<body style="padding:4px;box-sizing: border-box;">
+	<div class="hisui-panel" title="在床患者列表" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:0 4px 4px 4px;">
+	    <div class="hisui-layout" data-options="fit:true,border:false">
+	    	<div data-options="region:'north',border:false" style="height:52px;">
+				<table class="search-table">
+					<tr>
+						<td class="r-label" style="padding-left:6px;">#(..Get("姓名"))#</td>
+						<td>
+							<input id="PatName" class="hisui-combobox"  style="height:30px;width:180px"/>
+						</td>
+						<td class="r-label">#(..Get("床号"))#</td>
+						<td>
+							<input id="BedCode" class="textbox" style="height:30px;width:180px" />
+						</td>
+						<td class="r-label">#(..Get("登记号"))#</td>
+						<td>
+							<input id="RegNo" class="textbox" style="height:30px;width:180px"/>
+						</td>
+						<td class="r-label"><a href="#" id="Find" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a id="clear" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					</tr>
+				</table>
+			</div>
+	    	<div data-options="region:'west',title:'#(..Get("等候区/转出区患者列表"))#',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:700px;" >
+		    	 <table fit="true" id="WardWaitGrid"></table>
+	    	</div>
+	    	<div data-options="region:'center',title:'#(..Get("在床患者列表"))#',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:800px;">
+		    	 <table fit="true" id="wardBedGrid"></table>
+	    	</div>
+	    </div>
+    </div>
+    <div id="Win" class="hisui-dialog" title="#(..Get("分床"))#"  style="width:348px;height:250px;;padding:0px;" data-options="iconCls:'icon-w-edit',resizable:true,modal:true,closed:true">   
+		<div class="hisui-panel"  data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:0px solid #ccc;border-radius:0;">
+			<table class="search-table">
+                <tr>
+					<td class="r-label">
+						<font id="firstAssignBedFlag" 
+							  style="color: red;font-size:25px"></font>
+						<font>#(..Get("将"))#</font>
+					</td>
+					<td>
+						<input id="patientName" class="textbox" style="width:173px;font-size:18px" disabled="">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("分配至"))#</td>
+					<td>
+						<input id="bedNo" class="hisui-combobox" style="width:180px;">
+						<span>#(..Get("床"))#</span>
+					</td>
+				</tr>
+				 <tr>
+					<td class="r-label">
+						<server>
+						w "<label class='"_$case(MainDocRequired,"Y":"clsRequired",:"")_"'>"
+					   </server>
+					    #(..Get("主管医生"))#</label>
+					</td>
+					<td>
+						<input id="doctor" class="hisui-combobox" style="width:180px;">
+					</td>
+				</tr>
+				 <tr>
+					<td class="r-label">
+						<server>
+						w "<label class='"_$case(MainNurseRequired,"Y":"clsRequired",:"")_"'>"
+					   </server>
+					   #(..Get("主管护士"))#</label>
+					</td>
+					<td>
+						<input id="nurse" class="hisui-combobox" style="width:180px;">
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align:center;">
+						<a href="#" id="Trans" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">分床</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var bedSetting=#(bedSetting)#;
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.transToBed.js"></script>
+</body>
+</html>
+

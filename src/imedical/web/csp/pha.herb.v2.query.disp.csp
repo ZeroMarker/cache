@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--草药处方发药查询
+	csp:pha.herb.v2.query.disp.csp
+	js: pha/herb/v2/query.disp.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHAHERBV2 />
+    <style>
+        .pha-label {
+            width: 58px;
+            text-align: right;
+        }
+
+        .pha-footer-noline .datagrid-ftable td {
+            border-bottom: 0;
+        }
+
+        .pha-grid-a {
+            cursor: pointer;
+        }
+        /*
+        .pha-body {
+	        background-color: #fff;
+	    }
+	    
+	    .layout {
+	        background-color: #fff;
+	    }
+	    */
+    </style>
+
+</head>
+
+<body>  
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',border:false" class="pha-body">
+			<div class="hisui-layout" fit="true" id="lyBody">
+				<div data-options="region:'north',border:false,split:true,height:'135'">
+                    <div class="hisui-panel" title="草药发药查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-sample-stat',fit:true,bodyCls:''">
+                        <table class="pha-con-table nopadding">
+                            <tr>
+                                <td class="r-label">#(..Get("开始时间"))#</td>
+                                <td>
+                                    <input class="hisui-datebox phaherb-datebox" id="conStartDate">
+                                </td>
+                                <td>
+                                    <input class="hisui-timespinner phaherb-timespinner" id="conStartTime" showSeconds="true">
+                                </td>
+                                <td class="r-label">#(..Get("发药药房"))#</td>
+                                <td>
+                                    <input class="hisui-combobox" id="conPhaLoc">
+                                </td>
+                                <td class="r-label">#(..Get("就诊类型"))#</td>
+                                <td>
+                                    <input id="conAdmType">
+                                </td>
+                                <td class="r-label">#(..Get("登记号"))#</td>
+                                <td>
+                                    <input class="hisui-validatebox" id="conPatNo">
+                                </td>
+                                <td class="r-label">#(..Get("处方号"))#</td>
+                                <td>
+                                    <input class="hisui-validatebox" id="conPrescNo">
+                                </td>
+                                <td class="r-label">
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="r-label">#(..Get("结束时间"))#</td>
+                                <td>
+                                    <input class="hisui-datebox phaherb-datebox" id="conEndDate">
+                                </td>
+                                <td>
+                                    <input class="hisui-timespinner phaherb-timespinner" id="conEndTime" showSeconds="true" >
+                                </td>
+                                <td class="r-label">#(..Get("开单科室"))#</td>
+                                <td>
+                                    <input id="conDocLoc">
+                                </td>
+                                <td class="r-label">#(..Get("当前状态"))#</td>
+                                <td>
+                                    <input class="hisui-combobox" id="conState">
+                                </td>
+                                <td class="r-label">#(..Get("煎药方式"))#</td>
+                                <td>
+                                    <input class="hisui-combobox" id="conCookType">
+                                </td>
+                                <td class="r-label">
+                                    <div id="moreorless"></div>
+                                </td>  
+                                <td>
+                                    
+                                </td>    
+                                <td class="r-label">
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                                </td>                     
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div data-options = "region:'center',border:false,split:true">
+                    <div class = "hisui-layout" fit = "true" id="layout-herb—grid">
+						<div class = "hisui-layout pha-body" data-options = "region:'west',border:false" style="padding:0px 0px 0px 10px;">
+							<div data-options = "headerCls:'panel-header-gray',iconCls:'icon-paper-eye-r',region:'center',split:true,border:true,title:'处方预览'">
+								<iframe id="ifrm-PreViewPresc" src="" style="border:0px;width:100%;height:99%;"></iframe> 
+							</div>
+						</div>
+                        <div class = "hisui-layout" data-options = "region:'center',border:false" id="layout-herb—grid-list">
+                            <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center', split:true, title:'处方列表'" >
+                                <table id="gridHerbPrescList"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+		</div>
+	</div>
+    <div id = "js-pha-moreorless" >
+		<table class = "pha-con-table">
+            <tr>
+                <td class="r-label">#(..Get("处方剂型"))#</td>
+                <td>
+                    <input class="hisui-combobox" id="conForm">
+                </td>
+                <td class="r-label">#(..Get("出院带药"))#</td>
+                <td>
+                    <input id="conOut">
+                </td>
+                <td class="r-label">#(..Get("协定处方"))#</td>
+                <td>
+                    <input id="conAgreePre">
+                </td>
+                <td class="r-label">#(..Get("药品名称"))#</td>
+                <td>
+                    <input id="conInci">
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("处方费别"))#</td>
+                <td>
+                    <input class="hisui-combobox" id="conBillType">
+                </td>
+                <td class="r-label">#(..Get("处方疗程"))#</td>
+                <td>
+                    <input class="hisui-combobox" id="conDuration">
+                </td>
+            </tr>
+		</table>
+    </div>
+	
+	<!-- 表格工具栏 -->
+    <div id="gridHerbPrescListBar" style="height:30px;padding-top:2px">
+		<a class="hisui-linkbutton" iconCls='icon-herb-pre' plain="true" id="btnSaveAgreeRet">置为可退</a>
+		<a class="hisui-linkbutton" iconCls='icon-print' plain="true" id="btnPrintPYD">打印配药单</a>
+		<a class="hisui-linkbutton" iconCls='icon-print' plain="true" id="btnPrintPresc">打印处方</a>
+    </div>	
+	
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/herb/v2/query.disp.js"></script>
+	
+
+</body>
+
+</html>

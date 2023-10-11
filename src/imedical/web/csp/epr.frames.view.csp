@@ -1,4 +1,5 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ // d %response.SetCookie("sessionid",%session.SessionId,"","/","",0)
  if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
@@ -7,8 +8,10 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!--<meta name="viewport" content="width=device-width, initial-scale=0,user-scalable=yes,maximum-scale=1.0">-->
+	<csp:if condition=1'=%request.Get("hideMetaViewport")>
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
+	</csp:if>
 	<meta http-equiv="X-UA-Compatible" content="edge" />
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
@@ -17,20 +20,46 @@
 	Set PatientNo = $g(%request.Data("RegNo",1))
 	Set EpisodeID = $g(%request.Data("EpisodeID",1))
 	set mradm = $g(%request.Data("mradm",1))
+	Set AnaesthesiaID = $g(%request.Data("AnaesthesiaID",1))
 	if (PatientNo'=""){
 		Set PatientID=$O(^PAPERi("PAPMI_PatNo",PatientNo,""))
 	}
 	if (EpisodeID'="") {
-		Set PatientID = $p(^PAADM(EpisodeID),"^")
-		Set mradm=$P(^PAADM(EpisodeID),"^",61)
+		Set PatientID = $p($G(^PAADM(EpisodeID)),"^")
+		Set mradm=$P($G(^PAADM(EpisodeID)),"^",61)
 	}
 	If EpisodeID="",PatientID'=""{
 		Set EpisodeID=$O(^PAPERdr(PatientID,"ADM","I",""),-1)
 		If EpisodeID="" Set EpisodeID=$O(^PAPERdr(PatientID,"ADM","O",""),-1)
 		If EpisodeID="" Set EpisodeID=$O(^PAPERdr(PatientID,"ADM","E",""),-1)
+		if (PatientNo'=""){
+			If PatientID'="",$g(%request.Data("AdmTimes",1))'=""{
+				Set PAAdm="",AdmTimes = $g(%request.Data("AdmTimes",1))
+				Set ind=0
+				For  Set PAAdm=$O(^PAPERdr(PatientID,"ADM","I",PAAdm)) Quit:(PAAdm="")&&(ind=AdmTimes)  Do
+				.Set ind=ind+1
+				.Quit:ind=AdmTimes
+				Set EpisodeID = PAAdm
+			}
+		}
 	}
-	
+	If EpisodeID'="" Set %request.Data("EpisodeID",1)=EpisodeID
+	If PatientID'="" Set %request.Data("PatientID",1)=PatientID
+	Set CTLodId = %session.Data("LOGON.CTLOCID")
+	Set CALogonTypeList = ##class(websys.CAInterface).GetLogonTypeList(CTLodId,"")
+	Set CALogonDefaultType = $p($P(CALogonTypeList,"^",$p(CALogonTypeList,"$",2)),"|")
+	Set LogonType=""
+	if $d(%session.Data("CALogonType"),LogonType){
+	    //set IsCALoc = ##class(websys.CAInterface).IsCaLogon(Loc,%session.Data("LOGON.USERID"),%session.Data("LOGON.GROUPID"),"HISLogon")
+		//if IsCALoc { // ÷ª”–ø™Õ®¡ÀCAµƒø∆ “≤≈“˝”√CA◊ ‘¥, ª·µº÷¬∑«¡Ÿ¥≤ø∆ “Ã· æ"«ÎºÏ≤È÷§ È”¶”√ª∑æ≥ «∑Ò∞≤◊∞’˝»∑"
+		// 20221028  π”√caµ«¬º¡À∑«CAø∆ “∫Û,‘Ÿ«–ªªµΩCAø∆ “ ±,–Ë“™◊ ‘¥–£—È÷§ È «∑Ò’˝≥£
+		if (LogonType'="") d ##class(websys.CAInterface).IsAndLoadJs(LogonType,Loc,"","","",%session.Data("LOGON.HOSPID"))
+		//}
+	 }
 	</server>
+	<script type="text/javascript">
+		var LastCALogonType = "#(LogonType)#";
+	</SCRIPT>
 	<style>
 /*#0063A7*/
 body {
@@ -39,11 +68,12 @@ body {
   font-size: 16px;
   line-height: 1.7;
   color: #333;
-  background-color: #017BCE;
+  background-color: transparent;/*#017BCE;*/
+  padding:0;
 }
 .centerPanel {
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: transparent;
   position: absolute;
   width:100%;
   height:50px;
@@ -74,7 +104,7 @@ body {
 		<INPUT TYPE="hidden" name="FollowUpAppt" value="">
 		<INPUT TYPE="hidden" name="apptID" value="">
 		<INPUT TYPE="hidden" name="OperRoomID" value="">
-		<INPUT TYPE="hidden" name="AnaesthesiaID" value=""> <!--OR_Anaesthesia”√”⁄‘⁄“Ω÷ˆ±Ìº”…œ¬È◊Ì±Ì÷∏’Î//-->
+		<INPUT TYPE="hidden" name="AnaesthesiaID" id="AnaesthesiaID" value="#(AnaesthesiaID)#"> <!--OR_Anaesthesia”√”⁄‘⁄“Ω÷ˆ±Ìº”…œ¬È◊Ì±Ì÷∏’Î//-->
 		<!-- œ÷‘⁄–Ë“™‘Ÿº”“ª∏ˆ ÷ ı±ÌOR_Anaest_Operation£®¬È◊Ì±Ìµƒ◊”±Ì£©µƒID£¨“≤‘⁄“Ω÷ˆ±Ì÷–¥Ê,–Ë“™Õ®π˝∂•≤ø≤Àµ•¥´ ÷ ı±ÌID //-->
 		<INPUT TYPE="hidden" name="AnaestOperationID" value=""> 
 		<!-- MEDRECORD -->
@@ -101,6 +131,11 @@ body {
 		<!-- “Ωºº…Í«Îµ•∫≈ PACSApplyNo -->
 		<INPUT TYPE="hidden" name="PACSApplyNo" id="PACSApplyNo" value="">
 		<server>
+			Set EnableExitAlert = +##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableExitAlertInView")
+			/*if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Configuration||EnableExitAlert"){
+				Set EnableExitAlert = ##class(websys.Configuration).GetFieldValue("EnableExitAlert")
+				if EnableExitAlert="" Set EnableExitAlert=0
+			}*/
 			Set Url = $g(%request.Data("TDIRECTPAGE",1))
 			if (Url'=""){
 				if Url'["?" Set Url = Url_"?a=a"
@@ -113,7 +148,7 @@ body {
 					Continue:key="CacheUserName"
 					Continue:key="LayoutManager"
 					Continue:key="PASSWORD"
-					Continue:key="CSPRQN" //∑Q"[1m_$c([m3,0[1m)_[m"
+					Continue:key="CSPRQN" //∑Q"1m_$c(m3,01m)_m"
 					Continue:"^DEPARTMENT^Hospital^SSUSERGROUPDESC^"[("^"_key_"^")
 					Continue:"^TPSID^ViewCode^"[("^"_key_"^")
 					Set Url = Url_"&"_key_"="_$G(%request.Data(key,1))
@@ -121,10 +156,11 @@ body {
 			}else{
 				Set Url = "websys.home.csp"
 			}
+			
 		</server>
 	</FORM>
 	<div id="centerPanel" class="centerPanel" >
-		<iframe name="TRAK_main" id="TRAK_main" src="#(Url)#" width="100%" height="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+		<iframe name="TRAK_main" id="TRAK_main" src="#(Url)#" width="100%" height="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0 allowtransparency='true'>
 		</iframe>
 	</div>
 	<div style="height:0px"  id="southPanel">
@@ -133,16 +169,148 @@ body {
 	</div>
 	<!--<script type="text/javascript" src="../scripts_lib/jQuery/jquery-1.8.0.min.js"></script>-->
 	<script type="text/javascript" >
+	var keepopen=false;
+	if ("1"=="#(EnableExitAlert)#"){
+		window.onbeforeunload = unlockbeforeunload ;
+	}
+	function unlockbeforeunload(){
+		if(!keepopen){
+			return "ƒ˙»∑∂®ÕÀ≥ˆœµÕ≥";
+		}
+	}
+	window.onunload=unlockonunload;
+	function unlockonunload() {
+		if (!keepopen) {
+			   try {unloadHandler();} catch(e) {}
+			   window.onbeforeunload = function(){}
+			   window.location.href="websys.closesession.csp";
+		}
+		return true;
+	}
+	function unloadHandler() {
+
+			// SA 13.8.02 - log 26697: Function written in order to close Medicode 
+			// when Medtrak is closed. While this code is only relevant to RIE, because 
+			// there is no single component associated with this code, SP and I have agreed
+			// that this code needs to be here rather than in a custom javascript.
+			// This code also appears in websys.frames.csp
+
+			// DDE object
+			var objDDE;
+			try {
+				objDDE = new ActiveXObject("tkDDEInterface.clsConnect");
+				objDDE.DDELinkTopic = "OINSIGHT|MW_MAINFORM.TXT_HOST_ID";
+				objDDE.DDELinkMode = 2;
+				objDDE.DDELinkItem = "TEXT";
+				objDDE.DDEText = "MEDICODE_EXIT"
+				objDDE.DDEPoke();
+			} catch(e) {}
+			
+			// cjb 04/04/2006 58809 - unload SimpleCode when unloading web session
+			var obj;
+			try {
+				obj = new ActiveXObject("tkPSimpleCode.clstkPSimpleCode");
+				obj.ItemPath = "";
+				obj.ClosePSimpleCodeWindow();
+				obj="";
+			} catch(e) {}
+
+		}
+		var DivBedSelected = "";
+		var isMenuLoaded = 0;
+		var isMainLoaded = 0;
+		var elementID="";
+		var elementValue="";
+		/*¿œµƒæÕ’Ôº«¬ºΩÁ√Ê—°÷––– ±, π”√¡Àœ¬√Êµƒ∑Ω∑®,websys.List.js*/
+		function SetEpisodeDetails(patID,episID,mradm,titleName,apptID,waitinglistID,OEOrdItemIDs,SinglePatientFlag,WardID,PAAdmCodingID,multipleIDs,OEORIItemStatus,BillRowIds,BillTypes,wlstatus,ARCIMDesc,FollowUpApptID,ItemApptStatus,Decease,ReqIDs,ReqVolIDs,canGiveBirth,MultiEpisodeID,OperRoomID,AnaesthesiaID,NokID,attendID) {
+				var frm = document.forms['fEPRMENU'];
+				if (frm) {
+					//HORRIBLE BUT SAFE SO CAN'T GET MIXED IDs... clear then set values
+					for (var i=0; i<frm.elements.length; i++) {
+						frm.elements[i].value="";
+					}
+					//
+					frm.PatientID.value = patID;
+					frm.EpisodeID.value = episID;
+					frm.mradm.value = mradm;
+					//alert("SetEpisodeDetails"+OperRoomID);
+					if (apptID) frm.apptID.value=apptID;
+					if (OperRoomID) frm.OperRoomID.value=OperRoomID;
+					if (waitinglistID) frm.WaitingListID.value=waitinglistID;
+					if (OEOrdItemIDs) frm.OEOrdItemID.value=OEOrdItemIDs;
+					if (SinglePatientFlag) frm.SinglePatientFlag.value=SinglePatientFlag;
+					if (WardID) frm.WardID.value=WardID;
+					if (PAAdmCodingID) frm.PAAdmCodingID.value=PAAdmCodingID;
+					if (multipleIDs) frm.MultipleIDs.value=multipleIDs;
+					if (OEORIItemStatus) frm.OEORIItemStatus.value=OEORIItemStatus;
+					if (BillRowIds) frm.BillRowIds.value=BillRowIds;
+					if (BillTypes) frm.BillTypes.value=BillTypes;
+					if (wlstatus) frm.WLWaitListStatusDR.value=wlstatus;
+					if (ARCIMDesc) frm.ARCIMDesc.value=ARCIMDesc;
+					if (FollowUpApptID) frm.FollowUpAppt.value=FollowUpApptID;
+					if (ItemApptStatus) frm.ItemApptStatus.value=ItemApptStatus;
+					if (Decease) frm.Decease.value=Decease;
+					if (ReqIDs) frm.ReqIDs.value=ReqIDs;
+					if (ReqVolIDs) frm.ReqVolIDs.value=ReqVolIDs;
+					if (canGiveBirth) frm.canGiveBirth.value=canGiveBirth;
+					if (MultiEpisodeID) frm.MultiEpisodeID.value=MultiEpisodeID;
+					if (NokID) frm.NokID.value=NokID;	// cjb 22/02/2006 56793
+					if (AnaesthesiaID) frm.AnaesthesiaID.value=AnaesthesiaID;
+					if (attendID) frm.attendID.value=attendID;  //log 61395 TedT
+				}
+		}
+
+		function SetSingleField(fldname,val) {
+				var frm = document.forms['fEPRMENU'];
+				if (frm) {
+					var fld=frm.elements[fldname];
+					if (fld) fld.value=val;
+				}
+
+		}
+		function MainClearEpisodeDetails() {
+				var frm = document.forms['fEPRMENU'];
+				for (var i=0; i<frm.elements.length; i++) {
+					frm.elements[i].value="";
+				}
+		}
+
+		function mPiece(s1,sep,n) {
+			delimArray = s1.split(sep);
+			if ((n <= delimArray.length-1) && (n >= 0)) return delimArray[n];
+		}
+		function SetKeepOpen(url,newwin) {
+			keepopen = true;
+			location.href = url;
+		}
 		$(init);
 		function resizeCenter(){
 			var docHeight = $(window).height();
 			$("#centerPanel").height(docHeight); //.css("top",menuHeight)
 		}
 		function init(){
+			window.moveTo(0,0);
+			window.resizeTo(window.screen.availWidth,window.screen.availHeight);
 			resizeCenter();
 			$(window).resize(function(){
 				resizeCenter();
 			});
+		}
+		function windowClose(){
+			var browserName = window.navigator.appName;
+			if (browserName=="Netscape"){
+				window.opener = null;
+				window.open("","_self");
+				//window.open("about:blank","_self","");		
+				window.close();
+			}else{
+				if (browserName== "Microsoft Internet Explorer"){
+					window.opener = "whocares";
+		            window.opener = null;
+		            window.open('', '_top');
+		            window.close();
+				}
+			}
 		}
 	</script>
 </body>

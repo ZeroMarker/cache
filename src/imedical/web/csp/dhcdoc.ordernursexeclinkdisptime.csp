@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<!--dhcdoc.ordernursexeclinkdisptime.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{
+	background: #fff;
+}
+.datagrid-body{
+	/*height:240px !important;*/
+}
+.panel-header{
+	border-bottom: 0;
+}
+</style>
+<Server>
+	s OrderNurseLinkOrderRowid=$G(%request.Data("OrderNurseLinkOrderRowid",1)) //主医嘱rowid
+	s OrderFreqRowid=$G(%request.Data("OrderFreqRowid",1)) 
+	s OrderFreqDispTimeStr=$G(%request.Data("OrderFreqDispTimeStr",1)) 
+	Set langid=20
+    if ($d(%session))&&($d(%session.Data)){
+        set langid=+$g(%session.Data("LOGON.LANGID"))
+    }
+	s OrderFreqFactor=$P($g(^PHCFR(OrderFreqRowid)),"^",2)
+	s OrderFreqDesc=$P($G(^PHCFR(OrderFreqRowid)),"^",4)
+	s OrderFreqDesc=##class(User.PHCFreq).GetTranByDesc("PHCFRDesc2",OrderFreqDesc,langid)
+	s OrderWeekFlag=$P(^PHCFR(OrderFreqRowid),"^",9)
+	if (OrderWeekFlag="Y"){
+		s OrderFreqDispTimeStr="" ;周频次分发次数大于1时，按分发次数处理
+	}
+	s LinkOrderFreqDr=$p($g(^OEORD(+OrderNurseLinkOrderRowid,"I",$p(OrderNurseLinkOrderRowid,"||",2),2)),"^",4)
+	s FreeTimeFreqFlag=$P(^PHCFR(LinkOrderFreqDr),"^",13)
+	s WeekFlag=$P(^PHCFR(LinkOrderFreqDr),"^",9)
+	s MasterOrderFreqDispTimeStr=""
+	//周频次或自定义分发时间频次
+	i (WeekFlag="Y")||(FreeTimeFreqFlag="Y") {
+		s OrderFreqWeek=$p($g(^OEORD(+OrderNurseLinkOrderRowid,"I",$p(OrderNurseLinkOrderRowid,"||",2),"DHC")),"^",55)
+		s OrderFreqFreeTimeStr=$p($g(^OEORD(+OrderNurseLinkOrderRowid,"I",$p(OrderNurseLinkOrderRowid,"||",2),"DHC")),"^",68)
+		s MasterOrderFreqDispTimeStr=##Class(web.DHCOEOrdItem).GetOrderFreqDispTimeStr(LinkOrderFreqDr,OrderFreqWeek,OrderFreqFreeTimeStr)
+	}
+	if (FreeTimeFreqFlag="Y")||(WeekFlag="Y"){
+		s OrdLinkFreqFactor=$L(MasterOrderFreqDispTimeStr,$C(1))
+	}else{
+		s OrdLinkFreqFactor=$P(^PHCFR(LinkOrderFreqDr),"^",2)
+	}
+	
+	s Tips=""
+	s OrdFreqInfo=##class(DHCDoc.Interface.Inside.ServiceOrd).GetOrdFreqInfo(OrderNurseLinkOrderRowid)
+	s IntervalTimeFlag=$List(OrdFreqInfo,7)
+	if (IntervalTimeFlag="Y"){
+		s IntervalTime=$p(^PHCFR(LinkOrderFreqDr),"^",5) 	;频次间隔时间
+		s IntervalUnit=$P(^PHCFR(LinkOrderFreqDr),"^",14)	;间隔单位
+		s Tips=##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","每",langid)_IntervalTime_$CASE(IntervalUnit,"H":##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","小时",langid),"D":##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","天",langid),:"")_##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","一次",langid)
+	}elseif (OrderFreqDispTimeStr'="") {
+		s Tips=##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","每日",langid)_$L(OrderFreqDispTimeStr,$C(1))_##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","次",langid)
+		s OrderFreqFactor=$L(OrderFreqDispTimeStr,$C(1))
+	}elseif (OrderFreqFactor'=""){
+		s Tips=##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","每日",langid)_OrderFreqFactor_##class(websys.Translation).Get("dhcdoc.ordernursexeclinkdisptime.csp","次",langid)
+	}	
+	s Arr=[]
+	
+	//间隔时间频次
+	if (IntervalTimeFlag="Y"){
+		s OrderFreqDispTimeStr=$List(OrdFreqInfo,4)
+		for i=1:1:$L(OrderFreqDispTimeStr,$C(1)) {
+			s DispDesc=$p(OrderFreqDispTimeStr,$C(1),i)
+			s DispTime=$ZTH(DispDesc)
+			s DispDesc=$ZT(DispTime,2)
+			s Obj={}
+			do Obj.%Set("DispTime",$ZT(DispTime,2))
+			do Obj.%Set("DispDesc",DispDesc)
+			do Obj.%Set("PHCDTRowID",LinkOrderFreqDr_"_"_i)		///间隔时间频次的分发时间id是虚拟的，代表了第i次分发时间
+			do Obj.%Set("LogicalDispTime",DispTime)
+			d Arr.%Push(Obj,"")
+		}
+	}else{
+		s PHCDTSubDr=0
+		for {
+			s PHCDTSubDr=$O(^PHCFR(LinkOrderFreqDr,"DT",PHCDTSubDr))
+			Q:(PHCDTSubDr="")
+			s DispTime=$P(^PHCFR(LinkOrderFreqDr,"DT",PHCDTSubDr),"^",1)
+			s DispDesc=$P(^PHCFR(LinkOrderFreqDr,"DT",PHCDTSubDr),"^",2)
+			if (DispDesc="") s DispDesc=$ZT(DispTime,2)
+			if (MasterOrderFreqDispTimeStr'="") {
+				//"01:00"_$c(2,2)_"56_1"_$c(1)_"02:00"_$c(2,2)_"56_2"_$c(1)_"04:00"_$c(2,2)_"56_3"_$c(1)_"08:00"_$c(2,2)_"56_4"_$c(1)_"16:00"_$c(2,2)_"56_5"_$c(1)_"19:00"_$c(2,2)_"56_6"_$c(1)_"17:00"_$c(2,2)_"56_7"_$c(1)_"18:00"_$c(2,2)_"56_8"_$c(1)_"20:00"_$c(2,2)_"56_9"
+				if (WeekFlag="Y") {
+					s CheckPHCDT=$ZT(DispTime,2)_$C(2)_$C(2)_LinkOrderFreqDr_"_"_PHCDTSubDr
+				}else {
+					s CheckPHCDT=$ZT(DispTime,2)_$C(2)_$C(2)_LinkOrderFreqDr_"_"_PHCDTSubDr
+				}
+				continue:(($C(1)_MasterOrderFreqDispTimeStr_$C(1))'[($C(1)_CheckPHCDT_$C(1)))
+			}
+			s Obj={}
+			do Obj.%Set("DispTime",$ZT(DispTime,2))
+			do Obj.%Set("DispDesc",DispDesc)
+			do Obj.%Set("PHCDTRowID",LinkOrderFreqDr_"_"_PHCDTSubDr)
+			do Obj.%Set("LogicalDispTime",DispTime)
+			d Arr.%Push(Obj,"")
+		}
+	}
+	s JsonInfo=""
+	s obj=##class(%Library.GlobalCharacterStream).%New()
+	do Arr.%ToJSON(obj)
+	While 'obj.AtEnd { 
+		s JsonInfo=JsonInfo_obj.ReadLine(,.sc,.eol)
+	}
+	s FreqFreeTimeJson=$replace(JsonInfo,"""","'")
+	s GetOrderFreqFreeTimeInfoMethod=##Class(websys.Page).Encrypt($lb("web.DHCOEOrdItem.GetOrderFreqFreeTimeInfo"))
+</Server>
+</head>
+<body>
+	<div class="hisui-panel" title="#(OrderFreqDesc)# <i>#(..Get("关联"))#</i> #(Tips)#" style="height:309px;" data-options="headerCls:'panel-header-gray'">
+		<div class="hisui-layout" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+			<div data-options="region:'center', split:true, iconCls:'icon-add',collapsible:false,border:false" style="">
+				<table id="OrdNurseExecLinkFreqTimeTable"></table>
+			</div>
+		</div>
+	</div>
+	<a href="#" id="OKBtn" style="margin: 10px 0px 0px 90px;" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" >#(..Get("确定"))#</a>
+<SCRIPT language = 'javascript' >
+	var ServerObj={
+		GetOrderFreqFreeTimeInfoMethod:"#(GetOrderFreqFreeTimeInfoMethod)#",
+		FreqFreeTimeJson:"#(FreqFreeTimeJson)#",
+		OrderFreqFactor:"#(OrderFreqFactor)#",
+		OrdLinkFreqFactor:"#(OrdLinkFreqFactor)#",
+		OrderFreqRowid:"#(OrderFreqRowid)#"
+	}
+	window.returnValue=undefined;
+	$(function(){
+		InitOrdExecLinkFreqTimeTableDataGrid();
+		$("#OKBtn").click(OKBtnClickHandler);
+	});
+	function OKBtnClickHandler(){
+		var FreeTimeArr=$("#OrdNurseExecLinkFreqTimeTable").datagrid('getChecked');
+		FreeTimeArr.sort(function(obj1,obj2){
+			return parseFloat(obj1.LogicalDispTime)-parseFloat(obj2.LogicalDispTime);
+		});
+		if (FreeTimeArr.length==0){
+			$.messager.alert("提示","请选择需要使用的分发时间");
+			return false;
+		}
+		if ((ServerObj.OrderFreqFactor!="")&&(FreeTimeArr.length<ServerObj.OrderFreqFactor)){
+			$.messager.alert("提示",$g("该频次系数为")+ServerObj.OrderFreqFactor+","+$g("请选择")+ServerObj.OrderFreqFactor+$g("条记录")+"!");
+			return false;
+		}
+		var CalOrderFreqDispTimeStr="",OrderNurseExecLinkDispTimeStr="";
+		for (var i=0;i<FreeTimeArr.length;i++){
+			var OneFreeTimeStr=FreeTimeArr[i].LogicalDispTime+String.fromCharCode(2)+String.fromCharCode(2)+FreeTimeArr[i].PHCDTRowID;
+			if (CalOrderFreqDispTimeStr==""){
+				CalOrderFreqDispTimeStr=OneFreeTimeStr;
+				OrderNurseExecLinkDispTimeStr=FreeTimeArr[i].LogicalDispTime;
+			}else{
+				CalOrderFreqDispTimeStr=CalOrderFreqDispTimeStr+String.fromCharCode(1)+OneFreeTimeStr;
+				OrderNurseExecLinkDispTimeStr=OrderNurseExecLinkDispTimeStr +"|"+ FreeTimeArr[i].LogicalDispTime;
+			}
+		}
+		var OrderFreqFreeTimeInfo = cspRunServerMethod(ServerObj.GetOrderFreqFreeTimeInfoMethod, ServerObj.OrderFreqRowid, CalOrderFreqDispTimeStr);
+		var OrderFreqFreeTimeDesc=OrderFreqFreeTimeInfo.split("^")[1];
+		var rtnValue=OrderNurseExecLinkDispTimeStr+"^"+OrderFreqFreeTimeDesc;
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc(rtnValue);
+		}else{
+			window.returnValue=rtnValue;
+			window.close();
+		}
+	}
+	var Cancel=0;
+	function InitOrdExecLinkFreqTimeTableDataGrid(){
+		var FreeTimeColumns=[[ 
+ 			{field:'CheckFreq',title:'选择',checkbox:'true',width:80},
+ 			{field:'DispDesc',title:'描述',width:150},
+			{field:'DispTime',title:'时间',width:150},
+			{field:'LogicalDispTime',hidden:true},
+			{field:'PHCDTRowID',hidden:true}
+		]];
+		$("#OrdNurseExecLinkFreqTimeTable").datagrid({  
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : false,
+			fitColumns : false,
+			autoRowHeight : false,
+			rownumbers:false,
+			showFooter:false,
+			pagination : false,  //
+			pageSize: 10,
+			idField:'PHCDTRowID',
+			columns :FreeTimeColumns,
+			onCheck:function(rowIndex, rowData){
+				if (ServerObj.OrderFreqFactor=="") return;
+				var Selections=$("#OrdNurseExecLinkFreqTimeTable").datagrid('getChecked');
+				var OverNum=Selections.length-ServerObj.OrderFreqFactor;
+				if (OverNum<=0) return;
+				if (Cancel==1){
+					setTimeout(function(){
+						$("#OrdNurseExecLinkFreqTimeTable").datagrid('uncheckRow',rowIndex);
+					});
+					Cancel=0;
+					return;
+				}
+				for (i=0;i<Selections.length;i++){
+					var SelRowIndex=$("#OrdNurseExecLinkFreqTimeTable").datagrid('getRowIndex',Selections[i]);
+					if (SelRowIndex==rowIndex){
+						continue;
+					}
+					$("#OrdNurseExecLinkFreqTimeTable").datagrid('uncheckRow',SelRowIndex);
+					OverNum--;
+					if (OverNum<=0){
+						break;
+					}
+				}
+			},onBeforeSelect:function(index, row){
+				var Selections=$("#OrdNurseExecLinkFreqTimeTable").datagrid('getChecked');
+				if ((ServerObj.OrderFreqFactor!="")&&(Selections.length>=ServerObj.OrderFreqFactor)){
+					var ret=dhcsys_confirm($g("勾选数已到该频次系数")+ServerObj.OrderFreqFactor+","+$g("继续勾选将会取消一条勾选记录,是否继续")+"?");
+					if (!ret) {
+						Cancel=1;
+					}
+				}
+				return true;
+			},onLoadSuccess:function(data){
+			}
+		});
+		var FreqFreeTimeJson=eval("("+ServerObj.FreqFreeTimeJson+")");
+		var FreqFreeTimeGridData={
+			'total':FreqFreeTimeJson.length,
+			'rows':FreqFreeTimeJson
+		}
+		$("#OrdNurseExecLinkFreqTimeTable").datagrid('loadData',FreqFreeTimeGridData);
+		if ((ServerObj.OrderFreqFactor!="")&&(FreqFreeTimeGridData['total']>parseInt(ServerObj.OrderFreqFactor))){
+			$(".datagrid-header-check input").attr("disabled","disabled");
+		}
+	}
+   </SCRIPT>
+</body>
+</html>

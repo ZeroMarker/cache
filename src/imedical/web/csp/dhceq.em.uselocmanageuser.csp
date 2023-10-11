@@ -1,0 +1,52 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	s GetRepPath=##Class(web.DHCEQStoreMoveSP).GetPath()
+	s GroupID=$Get(%request.Data("GroupID",1))	//czf 2021-11-12
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'系统用户名单查询'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding-bottom:10px;">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cUseLoc" for="UseLoc">登录科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc','paras':[{name:'Type',type:'4',value:'QXType'},{name:'LocDesc',type:'4',value:'UseLoc'}]" id="UseLoc" style="width:238px"></div>	<!--	MZY0121	2591953		2022-04-15	增加文本框宽度	-->
+							<div class="eq-table-td eq-table-label-new"><label id="cUser" for="User">用户员</label></div>
+							<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'" id="User" style="width:238px"></div>	<!--	MZY0121	2591953		2022-04-15	增加文本框宽度	-->
+							<div class="eq-table-td eq-table-label-first"><a id="BFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true"></a></div>
+							<!--div class="eq-table-td eq-table-label"><a id="BExport" href="#" class="hisui-linkbutton" iconCls="icon-w-export" data-options="stopAllEventOnDisabled:true">导出</a></div-->
+						</div>
+					</div>
+				<div data-options="region:'center',border:false" style="position:relative">
+					 <table id="DHCEQUseLocManageUser" class="hisui-datagrid" data-options="border:false,fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="UseLocDR" value="">
+			<INPUT type="hidden" id="UserDR" value="">
+			<INPUT type="hidden" id="GroupDR" value=#(GroupID)#>
+			<INPUT TYPE="hidden" id="Job" value=#($Job)#>
+			<INPUT type="hidden" id="GetRepPath" value=#(GetRepPath)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/uselocmanageuser.js'></script>
+</body>
+</HTML>

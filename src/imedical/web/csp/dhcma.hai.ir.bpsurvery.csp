@@ -1,0 +1,87 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="en">
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<DHCMED:HEAD></DHCMED:HEAD>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		 <HISUI css="dhcma.hai.common.css"></HISUI>
+		<DHCHAI:HEAD></DHCHAI:HEAD>
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
+		</SCRIPT>
+		<CSP:IF CONDITION="IsADDINS=1">
+			<ADDINS require="DHCOPPrint"></ADDINS>
+			<ADDINS require="CmdShell"/>
+		</CSP:IF>
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+	</HEAD>
+	
+	<body>
+		<!-- 主页面-->
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false,collapsible:false" style="padding:10px;" class="ma-panel">
+				<table id="gridBPRegList" data-options="toolbar:'#ToolBar'"></table>
+		        <div id="ToolBar">	
+					<table class="search-table" style="margin:-1px 0 -1px 0;">
+						<tr>
+					        <td class="r-label">调查编号</td>
+							<td >
+								<input class="textbox" id="cboSurvNumber" style="width:157px" />
+							</td>
+							<td class="r-label">调查院区</td>
+							<td >
+								<input class="textbox" id="cboHospital" style="width:157px" />
+							</td>
+							<td class="r-label">透析科室</td>
+							<td >
+								<input class="hisui-combobox textbox" id="cboBDLocation" style="width:200px"/>
+							</td>
+							<td class="r-label">姓名</td>
+							<td>
+								<input class="textbox" id="txtPatName" style="width:100px">
+							</td>
+							<td class="r-label">
+								<input class='hisui-radio' type="radio" label='未调查' name='chkStatunit' value="1" id="chkStatunit-UnSub">
+								<input class='hisui-radio' type="radio" label='已调查' name='chkStatunit' value="2" id="chkStatunit-UnCheck">	
+								<input class='hisui-radio' type="radio" label='已审核' name='chkStatunit' value="3" id="chkStatunit-Check">	
+							</td>
+							<td class="r-label">
+								<a class="hisui-linkbutton"  id="btnQuery" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-find'" >查询</a>
+								<a class="hisui-linkbutton"  id="btnExport" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-export'" >导出</a>
+							</td>
+																
+						</tr>								
+					</table>
+					<a class="hisui-linkbutton" id="btnChkReps"  data-options="iconCls:'icon-stamp-pass',plain:true,stopAllEventOnDisabled:true">批量审核</a>
+					<a class="hisui-linkbutton" id="btnUnChkReps"  data-options="iconCls:'icon-stamp-pass',plain:true,stopAllEventOnDisabled:true">取消审核</a>
+			
+				</div>
+			</div>
+		</div>
+
+		<script language='Cache' runat='SERVER'>
+           set menuCode="DHCHAIOth-BPMonit-survery"
+           set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+           set groupId=$g(%session.Data("LOGON.GROUPID"))
+		   set OperAdmin = $g(%request.Data("ParamAdmin",1))
+		   set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+       </script>
+       
+		<script type='text/javascript' src='../scripts/DHCMA/HAI/Units/datagrid-export.js'></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/BPSurvQry/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/BPSurvQry/Event.js"></script>
+		
+		<script language="javascript" type="text/javascript">
+			$(window).load(function() {
+				InitBPSurvWin();
+			});
+		</script>
+		</script>
+	</body>
+</html>

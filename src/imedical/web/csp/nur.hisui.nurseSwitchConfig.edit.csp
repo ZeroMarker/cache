@@ -1,0 +1,576 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/switch.css">
+	<style type='text/css'>
+		body {
+			padding: 0px;
+		}
+		.switchTable td:first-child {
+			width: 278px !important;
+		}
+		.switchTable td:nth-child(3) {
+			width: 254px !important;
+			text-align:right;
+		}
+		.switchTable td:nth-child(4) {
+			width: 20px !important;
+			text-align:left;
+		}
+	</style>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/switch/func.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/switch/edit.js" charset=gbk></script>
+</head>
+
+<body> 
+	<!--等候加载提示-->
+	<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true">
+		<div class="regHosp_M" data-options="region:'north',bodyCls:'panel-header-gray'">
+			<table class="HospTable">
+				<tr>
+					<td>
+						<label id="_HospListLabel">医院</label>
+					</td>
+					<td>
+						<input id="_HospList" class="hisui-combobox" style="width:120px;"/>
+					</td>
+					<td>
+						
+					</td>
+					<td colspan=3>
+						<a id="btnFindCommon" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询通用</a>
+						<a id="btnFindAuth" class="hisui-linkbutton hover-dark btntext" data-options="iconCls:'icon-w-find'">查询授权明细</a>
+						<a id="btnSave" class="hisui-linkbutton hover-dark btntext" data-options="iconCls:'icon-w-save'">保存</a>
+					</td>
+					<td>
+						<a href="#" id="a_help">
+							<i class="icon icon-help">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						</a>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>安全组</label>
+					</td>
+					<td>
+						<input id="cbGroup" class="hisui-combogrid cbCommon" name="cbGroup" placeholder="通用"></input>
+					</td>
+					<td>
+						<label>科室</label>
+					</td>
+					<td>
+						<input id="cbLoc" class="hisui-combogrid cbCommon" name="cbLoc" placeholder="通用"></input>
+					</td>
+					<td>
+						<label>模板</label>
+					</td>
+					<td colspan=2>
+						<input id="cbModel" class="hisui-combotree cbCommon" name="cbModel" placeholder="通用"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<table class="switchTable" data-options="fit:true" >
+				<tr>
+					<td class="title-td" colspan=5>
+						<label class="title-label">病历书写</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>转科控制</label>
+					</td>
+					<td>
+						<select id="TransactionFlag" class="hisui-combobox nurseCombo" type="combobox" defValue="none" data-options="editable:false">
+							<option value="none" selected>无</option>
+							<option value="transTime">按转科时间</option>
+						</select>
+					</td>
+					<td>
+						<label>护理病历质控</label>
+					</td>
+					<td>
+						<div id="QualitySwitchFlag" 
+							class="hisui-switchbox nurseSwitch" 
+							type="switchbox" 
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>病历关闭提醒</label>
+					</td>
+					<td>
+						<div id="CloseAlertFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td >
+						<label>禁用代签</label>
+					</td>
+					<td>
+						<div id="SignFor" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td >
+						<label>弹出窗口显示模板</label>
+					</td>
+					<td>
+						<div id="ShowInWindow" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<label>显示打印标记</label>
+					</td>
+					<td>
+						<div id="IfPrint" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>链接操作日志</label>
+					</td>
+					<td>
+						<div id="GotoUrl" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td colspan=3 style="text-align:left;">
+						<input id="UrlParameter" 
+							class="hisui-textbox textbox"
+							type="textbox"
+							style="width:359px;disabled:true"
+							placeholder="请输入URL参数">
+					</td>
+				</tr>
+				<!--移除此开关配置-->
+				<!--tr>
+					<td>
+						<label>出院病历控制</label>
+					</td>
+					<td>
+						<div id="OutPatientEditFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"  
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div> 
+					</td>
+					<td>
+						<label>限制天数</label>
+					</td>
+					<td>
+						<input id="OutPatientEditDays" class="hisui-numberbox textbox" type="numberbox" data-options="isKeyupChange:true,disabled:true" style="width:100px;">
+					</td>
+					<td></td>
+				</tr-->
+				<tr>
+					<td >
+						<label>历次就诊</label>
+					</td>
+					<td>
+						<div id="AllVisitFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<label>相同就诊类型</label>
+					</td>
+					<td>
+						<div id="SameAdmType" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray',disabled:true">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td >
+						<label>出院病历记录排序</label>
+					</td>
+					<td>
+						<input id="OutRecordTimeSort_down" class="hisui-radio" type="radio" label="↑" name="OutRecordTimeSort" value="down" defValue="down" data-options="checked:true,radioClass:'hischeckbox_square-blue'">
+                        <input id="OutRecordTimeSort_up" class="hisui-radio" type="radio" label="↓" name="OutRecordTimeSort" value="up" defValue="" data-options="radioClass:'hischeckbox_square-blue'">
+					</td>
+					<td >
+						<label>回车时自动全选下一个值</label>
+					</td>
+					<td>
+						<div id="EnterSelectNextVal" class="hisui-switchbox nurseSwitch" type="switchbox" data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="title-td" colspan=5>
+						<label class="title-label">书写时效</label>
+					</td>
+				</tr>
+				<tr>
+					<td >
+						<label>未首次分床不可编辑</label>
+					</td>
+					<td>
+						<div id="UnInHospEdit" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<label>同一时间点不允许多条记录</label>
+					</td>
+					<td>
+						<div id="comboOneTimeRecords"
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>禁止填写早于入院时间点N个小时的记录</label>
+					</td>
+					<td>
+						<div id="InHospTime"
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>成人（小时） N=</label>
+					</td>
+					<td>
+						<input id="AdultBeforeHours" class="hisui-numberbox textbox beforeHours" type="numberbox" defValue="0" data-options="isKeyupChange:true,fix:false,max:100,min:0,disabled:true" style="width:100px;">
+					</td>
+					<td>
+						<label>新生儿（小时） N=</label>
+					</td>
+					<td>
+						<input id="BabyBeforeHours" class="hisui-numberbox textbox beforeHours" type="numberbox" defValue="0" data-options="isKeyupChange:true,fix:false,max:100,min:0,disabled:true" style="width:100px;">
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>在院期间记录的日期限制</label>
+					</td>
+					<td colspan=4>
+						<select id="comboRecordDate" class="hisui-combobox nurseCombo" type="combobox" defValue="4" data-options="editable:false" style="width:475px;">
+							<option value="1">不允许提前书写超过当前时间X小时的记录</option>
+							<option value="6">不允许推后书写早于当前时间X小时的记录</option>
+							<option value="2">不允许书写后天及之后的记录</option>
+							<option value="3">不允许书写一周之后的记录</option>
+							<option value="4" selected>只允许书写前天、昨天、今天的记录</option>
+							<option value="5">不限日期</option>		
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label class="recordTd">时间（小时）X=</label>
+					</td>
+					<td>
+						<select id="comboRecordTime" class="hisui-combobox nurseCombo recordTd" type="combobox" defValue="8" data-options="editable:false">
+							<option value="1">0</option>
+							<option value="2">0.5</option>
+							<option value="3">1</option>
+							<option value="4">1.5</option>
+							<option value="5">2</option>
+							<option value="6">2.5</option>
+							<option value="7">3</option>
+							<option value="9">3.5</option>
+							<option value="10">4</option>
+							<option value="11">4.5</option>
+							<option value="12">5</option>
+							<option value="13">5.5</option>
+							<option value="14">6</option>
+							<option value="15">6.5</option>
+							<option value="16">7</option>
+							<option value="17">7.5</option>
+							<option value="18">8</option>
+							<option value="19">8.5</option>
+							<option value="20">9</option>
+							<option value="21">9.5</option>
+							<option value="8" selected>不限时间</option>
+						</select>
+					</td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="title-td" colspan=5>
+						<label class="title-label">颜色标识</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>24h统计</label>
+					</td>
+					<td>
+						<input id="Stat24hBackcolor" class="textbox" type="color" defValue="#ffffff" style="width:100px;">
+						</input>
+					</td>
+					<td>
+						<label>时间段统计</label>
+					</td>
+					<td>
+						<input id="StatTimeBackcolor" class="textbox" type="color" defValue="#ffffff" style="width:100px;">
+						</input>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>日间小结统计</label>
+					</td>
+					<td>
+						<input id="StatDayBackcolor"
+							class="textbox"
+							type="color"
+							defValue="#ffffff"
+							style="width:100px;">
+						</input>
+					</td>
+					<td>
+						<label>单项统计</label>
+					</td>
+					<td>
+						<input id="SingleBackcolor"
+							class="textbox"
+							type="color"
+							defValue="#ffffff"
+							style="width:100px;">
+						</input>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>换页标志</label>
+					</td>
+					<td>
+						<input id="NextPageFlagBackcolor"
+							class="text"
+							type="color"
+							defValue="#ffffff"
+							style="width:100px;">
+						</input>
+					</td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="title-td" colspan=5>
+						<label class="title-label">右键引用</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>目录展示方式</label>
+					</td>
+					<td>
+						<select id="KnowCateExpandFlag" class="hisui-combobox nurseCombo" type="combobox" defValue="O" data-options="editable:false">
+							<option value="C">全部收缩</option>
+							<option value="O" selected>全部展开</option>
+							<option value="P1">展开一级目录</option>
+						</select>
+					</td>
+					<td>
+						<label>多选写入</label>
+					</td>
+					<td>
+						<div id="KnowMultWrite" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>弹出录入</label>
+					</td>
+					<td>
+						<div id="KnowWindow" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<label>带入预览</label>
+					</td>
+					<td>
+						<div id="ToPreview" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>医嘱通用名称</label>
+					</td>
+					<td>
+						<div id="ArcimDescParse" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="title-td" colspan=5>
+						<label class="title-label">打印设置</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>隐藏续打痕迹</label>
+					</td>
+					<td>
+						<div id="ContinuePrintMark" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<label>续打满页提醒</label>
+					</td>
+					<td>
+						<div id="PrintFullPageAlert" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td class="title-td" colspan=5>
+						<label class="title-label">出入液量24小时</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>开始时间</label>
+					</td>
+					<td>
+						<input id="dayStartTime" class="hisui-timespinner timespinner-f spinner-text spinner-f validatebox-text" type="timespinner" style="width:100px;border-radius:2px;"></input>
+					</td>
+					<td>
+						<label>结束时间</label>
+					</td>
+					<td>
+						<input id="dayEndTime" class="hisui-timespinner timespinner-f spinner-text spinner-f validatebox-text" type="timespinner" style="width:100px;border-radius:2px;"></input>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>显示标题</label>
+					</td>
+					<td colspan=4>
+						<input id="DisplayTitle24" 
+							class="hisui-textbox textbox"
+							type="textbox"
+							style="width:468px;"
+							placeholder="请输入出入液量24小时统计的显示标题">
+					</td>
+				</tr>
+				<tr>
+					<td class="title-td" colspan=5>
+						<label class="title-label">出入液量小结</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>开始时间</label>
+					</td>
+					<td>
+						<input id="partStartTime" class="hisui-timespinner timespinner-f spinner-text spinner-f validatebox-text"  type="timespinner" style="width:100px;border-radius:2px;"></input>
+					</td>
+					<td>
+						<label>结束时间</label>
+					</td>
+					<td>
+						<input id="partEndTime" class="hisui-timespinner timespinner-f spinner-text spinner-f validatebox-text"  type="timespinner" style="width:100px;border-radius:2px;"></input>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>显示标题</label>
+					</td>
+					<td colspan=4>
+						<input id="DisplayTitleDay" 
+							class="hisui-textbox textbox"
+							type="textbox"
+							style="width:468px;"
+							placeholder="请输入出入液量小结统计的显示标题">
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id="dgAuth" data-options="iconCls:'icon-w-home',shadow:false,modal:true,closed:true"></div>
+	</div>
+</body>
+
+</html>

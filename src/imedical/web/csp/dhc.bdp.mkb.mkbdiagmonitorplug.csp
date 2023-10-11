@@ -1,0 +1,117 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbdiagmonitorplug.csp
+    @JS:MKB_DataMonitorPlug.js
+    @Title：数据监控
+    @Creator:石萧伟
+    @Description:开诊断数据监控
+    @CreateDate：2019-06-12
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_DiagMonitorPlug.js"></script>
+<script type="text/javascript" src="../scripts/bdp/App/BDPSystem/echarts/build/dist/echarts3.0.js"></script> 
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/FileSaver.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/jszip.min.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/excel-gen.js"></script>
+ <style>
+ /*下载按钮*/
+.load{
+	background:url(../scripts/bdp/Framework/icons/mkb/load.png) no-repeat 0 3px;
+    padding: 0 10px 5px 20px;
+    margin: 10px 0 0 0;
+    color: black;
+    /*background-position:0 3px;*/
+    border-left: 10px solid #ffffff;
+}
+.load:hover {
+	background-color: #cee4ff;
+	border-left: 10px  solid #cee4ff;
+	} 
+html, body,.layout{
+    height: 100%;
+}
+/*隐藏诊断列表下拉菜单的下拉箭头*/
+#mbedit .m-btn-downarrow 
+{
+	 display: none;
+}
+.layout>.panel>.panel-body
+{
+	border-radius:4px;
+}
+.m-btn .l-btn-left .l-btn-text {
+    margin-right: 0px;
+    margin-left: 0px;
+}   
+ </style>
+</HEAD>
+<BODY style="padding:4px">
+     <div class="hisui-layout" data-options="fit:true"  id="layout">
+     <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" border="true" style="height:100%;width:100% ">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " border="false">
+	    	 <table style="padding-top:5px;padding-bottom:2px">
+	    	 	<tr>
+	    	 	    <td class="tdlabel">科室</td>
+	    			<td><input id="TextType" type="text"  style="width:100px" ></td>
+    	 			<td class="tdlabel">起始日期</td>
+	    			<td><input id="begin_date" type="text" class="textbox hisui-datebox" style="width:150px" ></td>
+	    			<td class="tdlabel">结束日期</td>
+	    			<td><input id="end_date" type="text"  class="textbox hisui-datebox" style="width:150px" ></td>
+					<td class="tdlabel-b">
+						<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-find'" id="btnsearch" style="">查询</a><br/>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-clean'" id="btnrefresh" style="">清屏</a><br/>
+					</td>
+					<td>
+						<span class="loadspan"><a href="#" class="load" data-options="plain:true" id="onload_btn">导出</a></span>
+					</td>
+					<!--<td>
+						<a  class="hisui-linkbutton " iconCls='icon-toggle' plain="true"  data-options="stopAllEventOnDisabled:true" id="btnSwitchSortWay">切换展示形式</a>
+					</td>-->
+					<td>  
+						<a href="#" id="mbedit" class="hisui-menubutton l-btn-5" data-options="menu:'#dataMenu',iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true">切换展示</a>
+					 	<div id="dataMenu" style='width:120px;margin:-5px;padding:-5px'>
+					 	<a class="hisui-linkbutton" iconCls="icon-resort"  plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="userbtn">用户</a>
+					 	<a class="hisui-linkbutton" iconCls="icon-resort"  plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="diagbtn">诊断</a>
+					 	<a class="hisui-linkbutton" iconCls="icon-resort"  plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="locbtn">科室</a>
+					 		<!--<div  data-options="iconCls:'icon-resort'" id="userbtn">用户</div>
+					 		<div  data-options="iconCls:'icon-resort'" id="diagbtn">诊断</div>
+					 		<div  data-options="iconCls:'icon-resort'" id="locbtn">科室</div>-->
+					 	</div>
+					</td>
+					<td style="padding:0px 20px;color:#1278b3;background-color:#e3f7ff;border:1px solid #c0e2f7">
+						共开立&nbsp&nbsp<font color=red id="totaldia"></font>&nbsp&nbsp条诊断
+					</td>
+				</tr> 
+			 </table >
+		 </div> 
+     
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" border="false" style="height:45%" >
+			<table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" id="datagrid" border="true" class="dataclass"></table>
+		</div> 
+		<div data-options="region:'south',split:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" border="false" style="height:45%;padding-top:20px" align="center">
+			<div id="main" style="height:100%;"></div>
+		</div> 
+		</div>		     
+ 	</div> 
+ 	<!--详细数据弹窗-->
+ 	<div id="detailed_div" style="width:1100px;height:550px;display:none;padding:0px 10px">
+		<table data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'"  id="detailedgrid" border="true" ></table>			
+ 	</div> 	 	
+ 	<table id="table1" style="display:none"></table>
+</BODY>
+</HTML>
+

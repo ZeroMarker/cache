@@ -1,0 +1,708 @@
+<!-- dhcpeuploadcheckresult.csp -->
+<!--https://222.132.155.205:11443/imedical/web/csp/dhcpeuploadcheckresult.csp?URCode=SC01&CurLocID=105 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	q 1
+</csp:method>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+
+<TITLE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s URCode=%request.Data("URCode",1)
+	s CurLocID=%request.Data("CurLocID",1)
+	s URID=$o(^CT.PE.UpLoadResultI("IdxOfLocCode"," "_CurLocID," "_URCode,""))
+    q:URID=""
+    s ArcimID=""
+    s LURID=""
+    f  s LURID=$o(^CF.PE.LocUpLoadResultI("IdxOfLURDR",URID,LURID)) q:LURID=""  d
+    .s LURARCIM=$lg(^CF.PE.LocUpLoadResultD(LURID),3)
+    .i ArcimID="" d
+    ..s ArcimID=LURARCIM
+    .e  d
+    ..s ArcimID=ArcimID_"^"_LURARCIM
+    
+    s ODID=$o(^DHCPEODR(0,"ARCITMODDR",$p(ArcimID,"^",1),"")) //如果没有这个索引的话需要在DHC_PE_OrderDetailRelate表新建索引
+    s UserCode=$G(^DHCPEDataEx("UploadCheckResult","UserCode",CurLocID,ArcimID))
+    s ArcimDesc=$P(^ARCIM(+ArcimID,1,1),"^",3)
+    s LURid=$o(^CF.PE.LocUpLoadResultI("IdxOfLURARCIMDR",URID," "_$p(ArcimID,"^",1),""))
+	s FilePath=$lg(^CF.PE.LocUpLoadResultD(LURid),4)
+	s TextName=FilePath_"DHCPE.txt"
+	s LURTextInfo=$lg(^CF.PE.LocUpLoadResultD(LURid),5)
+
+	
+	s checked=""
+	i LURTextInfo="Y" s checked="checked=checked"
+	w "<Table id='ImgTable' width=80% border=1>"
+	w "<TR><TD colspan=4 align='center'><font color='green' size=24px><P>体检上传"_ArcimDesc_"信息</P></font></TD></TR>"
+	
+	w "<TR>"
+	w "<TD>项目名称</TD><TD><input id='ItemDesc' value='"_ArcimDesc_"'></TD>"
+	w "<TD>图片文件</TD><TD><input id='FileName' value='"_FilePath_"'></TD>"
+	
+	w "</TR>"
+	//w "<TR><TD height=5 colspan=4></TD></TR>"
+	w "<TR>"
+	
+	w "<TD>读取文本</TD><TD><input type='checkbox' id='GetTextInfo' value = '1'"_checked_"></TD>"
+	w "<TD>用户编号</TD><TD><input id='UserID' value='"_UserCode_"'></TD>"
+	w "</TR>"
+	//w "<TR><TD height=5 colspan=4></TD></TR>"
+	w "<TR>"
+	w "<TD>体检号</TD><TD><input id='HPNo' value=''></TD>"
+	w "<TD>个人信息</TD><TD><input id='BaseInfo' value='"_""_"'></TD>"
+	w "</TR>"
+	
+	//w "<TR><TD height=5 colspan=4></TD></TR>"
+	
+	w "<TR>"
+	w "<TD>检查所见</TD><TD><textarea rows='6' id='ExamDesc' style='width:80%'></textarea></TD>"
+	w "<TD>检查结论</TD><TD><textarea rows='6' id='ExamResult' style='width:80%'>详见报告</textarea></TD>"  // ondblclick='detailStandard(this);'
+	
+	w "</TR>"
+	w "<TR>"
+	w "<TD></TD>"
+	w "<TD colspan=3><button class='i-btn';white-space:normal; word-break:break-all;' onclick='GetResult_Click()' id='BGetResult'><B>结果上传</B></button></TD>"
+	w "</TR>"
+	
+	//输出细项选择
+	w "<TR><TD colspan=4>"
+	w "<table width=100%>"
+	s i=0
+	s NeedTR=0
+	s ODSSub=0
+	f  s ODSSub=$O(^DHCPEST(+ODID,"OD",$P(ODID,"||",2),"ODS",ODSSub)) q:ODSSub=""  d
+	.s ODSDesc=$P(^DHCPEST(+ODID,"OD",$P(ODID,"||",2),"ODS",ODSSub),"^",2)
+	.s i=i+1
+	.s NeedTR=1
+	.i i=1 d
+	..w "<tr>"
+	.w "<td ondblclick='SetResult(this)'>"_ODSDesc_"</td>"
+	.i i=5 d
+	..w "</tr>"
+	..s i=0
+	..s NeedTR=0
+	i NeedTR=1 d
+	.w "</tr>"
+	
+	w "</table>"
+	w "</TD></TR>"
+	
+	w "</Table>"
+	
+	
+</SCRIPT>
+<SCRIPT SRC="../scripts_lib/lodop/LodopFuncs.js"></SCRIPT>
+
+</head>
+<BODY>
+<TABLE>
+<TR>
+  
+  <!--TD  id="AddItem" width="0" height="0" style="display:none;">#(AddItem)#</TD-->
+  
+</TR>
+</TABLE>
+<SCRIPT language="javascript">
+document.title='#(ArcimDesc)#报告上传！';
+var CurLocID='#(CurLocID)#';
+var ArcimID='#(ArcimID)#';
+var ODID='#(ODID)#';
+var idTmr="";
+var FilePath='#(FilePath)#';
+var URID='#(URID)#';
+
+
+var ImgsName="";
+var TxtsName="";
+document.write("<OBJECT ID='PEPhoto' CLASSID='CLSID:6939ADA2-0045-453B-946F-44F0D6424D8A' CODEBASE='../addins/client/PEPhoto.CAB#version=2,0,0,58'></OBJECT>");
+var PhotoFtpInfo=tkMakeServerCall("web.DHCPE.Interface.Main","GetInfoFTP",CurLocID);
+
+
+document.body.onload = BodyLoadHandler;
+function BodyLoadHandler()
+{
+	var obj=document.getElementById("HPNo");
+	if (obj) obj.onkeydown=HPNo_keydown;
+	//ImgsName=GetFileNames(".jpg")
+	//if (ImgsName=="") return false;   //临时注释掉
+	//ShowImgInfo(ImgsName);
+	TxtsName=GetFileNames(".txt")
+	GetTextInfo(TxtsName,URID)
+
+}
+//根据图片文件数量，显示图片
+function ShowImgInfo(ImgsName)
+{
+	
+	//alert(ImgsName)
+	var t = document.getElementById("ImgTable");
+	var ImgFileArr=ImgsName.split("^")
+	var ImgNameLength=ImgFileArr.length;
+	for (var FileI=0;FileI<ImgNameLength;FileI++){
+		var row = t.insertRow(-1);
+		var cell1 = row.insertCell(-1);
+		cell1.colSpan  = 4;
+		var OneImgFile=ImgFileArr[FileI];
+		cell1.innerHTML="<img id='img"+FileI+"' src='file://"+FilePath+OneImgFile+"' width='100%'>"
+	}
+}
+
+function SetResult(e)
+{
+	var ResultInfo=e.innerHTML;
+	var obj=document.getElementById("ExamResult");
+	if (obj) obj.value=ResultInfo;
+}
+function HPNo_keydown(e)
+{
+	if(e.keyCode==13)
+	{
+		SetBaseInfo_Click();
+	}
+}
+
+//读取多个txt文件，获取结果信息
+function GetTextInfo(TxtFileName,LURid)
+{
+	//if (!PicFileIsExist('#(TextName)#')) return false;
+	//Lodop=getLodop();
+	//if (Lodop.CVERSION) alert('a')
+	/*var TextInfo=""
+	var TxtFileArr=TxtFileName.split("^")
+	var FileNameLength=TxtFileArr.length;
+	for (var FileI=0;FileI<FileNameLength;FileI++){
+		var OneTextName=TxtFileArr[FileI];
+		var OneTextInfo=Lodop.GET_FILE_TEXT(FilePath+OneTextName)
+		TextInfo=TextInfo+OneTextInfo;
+		
+	}*/
+	//读取txt文件
+	var TxtFileName=FilePath+"/"+TxtFileName
+	var TextInfo=""
+	var ForReading=1;
+	var fso=new ActiveXObject("Scripting.FileSystemObject");
+	var f=fso.OpenTextFile(TxtFileName,ForReading);
+	TextInfo=f.ReadAll();
+	
+	var ResultInfo=tkMakeServerCall("web.DHCPE.Interface.Main","GetResultInfo",TextInfo,CurLocID,URID);
+	var ResultArr=ResultInfo.split("^");
+	var obj=document.getElementById("HPNo");
+	if (obj) obj.value=ResultArr[0];
+	var obj=document.getElementById("ExamResult");
+	if (obj) obj.value=ResultArr[1];
+	var obj=document.getElementById("ExamDesc");
+	if (obj) obj.value=ResultArr[2];
+	SetBaseInfo_Click("1")
+}
+
+
+
+function SetBaseInfo_Click(CloseFlag)
+{
+	var HPNo="";
+	var obj=document.getElementById("HPNo");
+	var HPNo=obj.value;
+	if (HPNo==""){
+		alert("体检号不能为空");
+		return false;
+	}
+	var OneBaseInfo=#server(web.DHCPE.Interface.Main.GetBaseInfo(HPNo,ArcimID,"HPNo",CurLocID))#;
+	if (OneBaseInfo=="NoHP"){
+		alert("体检号不存在");
+		if (CloseFlag=="1"){
+			window.open("","_self","");
+			window.close()
+		}
+		return false;
+	}else if(OneBaseInfo=="NoItem"){
+		alert("此体检号没有此检查项目");
+		if (CloseFlag=="1"){
+			window.open("","_self","");
+			window.close()
+		}
+		return false;
+        }else if(OneBaseInfo=="NoPaied"){
+		alert("此检查项目没有付费");
+		if (CloseFlag=="1"){
+			window.open("","_self","");
+			window.close()
+		}
+		return false;
+	}else{
+		var obj=document.getElementById("BaseInfo");
+		var BaseArr=OneBaseInfo.split("^");
+		if (obj) obj.value=BaseArr[2]+" "+BaseArr[3]+" "+BaseArr[4]+" "+BaseArr[7]
+	}
+}
+//保存结果，并上传图像
+function GetResult_Click()
+{
+	if (ImgsName==""){
+		//alert("没有图片文件，不需要上传");
+		//return false;
+	}
+	var HPNo="",UserID="",ExamDesc="",ExamResult="";
+	var obj=document.getElementById("UserID");
+	UserID=obj.value;
+	if (UserID==""){
+		alert("请先输入人员工号");
+		return false;
+	}
+	var UserID=#server(web.DHCPE.Interface.Main.GetUserID(UserID,CurLocID,ArcimID))#;
+	if (UserID==""){
+		alert("输入工号不正确");
+		return false;
+	}
+	var obj=document.getElementById("HPNo");
+	HPNo=obj.value;
+	if (HPNo==""){
+		alert("体检号不能为空");
+		return false;
+		
+	}
+	var OneBaseInfo=#server(web.DHCPE.Interface.Main.GetBaseInfo(HPNo,ArcimID,"HPNo",CurLocID))#;
+	if(OneBaseInfo=="NoItem"){
+		alert("此体检号没有此检查项目");
+		return false;
+	}else if (OneBaseInfo=="NoPaied"){
+		alert("体检号此项目未付费，请核实");
+		return false;
+	}else if (OneBaseInfo==""){
+		alert("体检号信息有问题，请核实");
+		return false;
+	}
+	var OEID=OneBaseInfo.split("^")[7];
+	var obj=document.getElementById("ExamDesc");
+	ExamDesc=obj.value;
+	var obj=document.getElementById("ExamResult");
+	ExamResult=obj.value;
+	ResultInfo=ExamDesc+"^"+ExamResult;
+	
+	if ((ExamResult!="")||(ExamDesc!="")){//没有结果，仅上传图像
+		var SaveRet=tkMakeServerCall("web.DHCPE.Interface.Main","SaveResult",HPNo,ResultInfo,UserID,ArcimID,ODID,CurLocID);
+		
+	}
+	var ImgFileArr=ImgsName.split("^")
+	var ImgNameLength=ImgFileArr.length;
+	for (var FileI=0;FileI<ImgNameLength;FileI++){
+		var OneImgFile=ImgFileArr[FileI];
+		var FileName=FilePath+OneImgFile;
+		if (!PicFileIsExist(FileName)){
+			alert("图像不存在"+FileI);
+			return false;
+		}
+		
+		//alert(FTPArr[4])
+		PEPhoto.FileName = FileName; //保存图片的名称包括后缀
+		PEPhoto.AppName = FTPArr[4]+"/"; //ftp目录
+		PEPhoto.DBFlag = "0"; //是否保存到数据库  0  1
+		PEPhoto.FTPFlag = "1"; //是否上传到ftp服务器  0  1
+		PEPhoto.DBConnectString = "CN_IPTCP:172.18.15.30[1972]:dhc-app" //数据库服务器
+		PEPhoto.FTPString = FTPArr[0]+"^"+FTPArr[1]+"^"+FTPArr[2]+"^"+FTPArr[3]; //FTP服务器
+		var Sort=tkMakeServerCall("web.DHCPE.Interface.Main","GetImgCurSort",OEID);
+		FTPFileName=OEID+"_"+Sort;
+		PEPhoto.PatientID = FTPFileName;  //eSrc.id;//PA_PatMas表的ID
+		PEPhoto.SaveFile("jpg") //对于已经存在图片保存到数据库同时上传FTP的标志有效
+		if (!PicFileIsExist(FileName)){
+			if (FileI==0){
+				var DeleteFlag="1";
+			}else{
+				var DeleteFlag="0";
+			}
+			var SaveRet=tkMakeServerCall("web.DHCPE.Interface.Main","SaveUploadInfo",OEID,UserID,PEPhoto.AppName+FTPFileName,DeleteFlag);		
+		}else{
+			alert("图像上传失败"+FileI);
+			return false;
+		}
+		
+	}
+	fso   =   new   ActiveXObject( "Scripting.FileSystemObject"); 
+	var TxtFileArr=TxtsName.split("^")
+	var FileNameLength=TxtFileArr.length;
+	for (var FileI=0;FileI<FileNameLength;FileI++){
+		var OneTextName=TxtFileArr[FileI];
+		try{
+			fso.DeleteFile(FilePath+OneTextName); 
+		}catch(e){}
+	}
+	
+	alert("上传成功！")
+	parent.open("","_self","");
+	parent.close();
+	//alert(11111)
+	
+}
+
+function PicFileIsExist(filespec) 
+{ 
+	var   fso,   s   =   filespec; 
+	fso   =   new   ActiveXObject( "Scripting.FileSystemObject"); 
+    if(fso.FileExists(filespec)){
+		return true;}
+	else{
+		return false;}   
+}
+function GetFileNames(FileLastName)
+{
+	var fso = new ActiveXObject("Scripting.FileSystemObject");
+	var f = fso.GetFolder(FilePath); 
+	var fc = new Enumerator(f.Files);
+	var FileNameStr="";  
+	//以下内容是显示文件名 
+	var i=0; 
+	for (; !fc.atEnd(); fc.moveNext())  
+    {
+	    try{
+	    	var OneFileName=fc.item().Name;
+	    	if (OneFileName.split(FileLastName).length>1){
+	    		if (FileNameStr==""){
+				    FileNameStr=OneFileName;
+	    		}else{
+				    FileNameStr=FileNameStr+"^"+OneFileName;
+	    		}
+	    	}
+	    }catch(e)
+	    {}
+	    
+    }
+    return FileNameStr;
+    
+    
+}
+
+var CurObj;
+var CloseODSDivFlag="1";
+function detailStandard(e)
+{
+	//alert(ODID)
+	//alert(123)
+  //var ResultInfo=tkMakeServerCall("web.DHCPE.Interface.Main","GetResultInfo",TextInfo,ArcimID,CurLocID);
+	CurObj=e;
+	CurID=e.id;
+	setCaret(CurObj);
+	var IDInfo=e.id;
+	//var encmeth="";
+	//var obj=document.getElementById("GetODSStr");
+	//if (obj) encmeth=obj.value;
+	//var ODStr=cspRunServerMethod(encmeth,IDInfo);
+	
+	
+	var obj=document.getElementById("HPNo");
+	HPNo=obj.value;
+	if (HPNo==""){
+		alert("体检号不能为空");
+		return false;
+	}
+	
+	var OneBaseInfo=#server(web.DHCPE.Interface.Main.GetBaseInfo(HPNo,ArcimID,"HPNo",CurLocID))#;
+	
+	var OEID=OneBaseInfo.split("^")[7];
+	
+	//alert(OEID)
+	if (OEID==""){
+		alert("体检号没有此项目！")
+		return
+		}
+	var InfoStr=OEID+"^"+ODID
+	var ODStr=tkMakeServerCall("web.DHCPE.ResultNew","GetItemStrNew",InfoStr);
+	//alert(ODStr)
+	CreateODSDiv(e,ODStr);
+}
+
+
+function setCaret(textObj) {
+	if (textObj.createTextRange) {
+		 if(window.navigator.appVersion.indexOf("rv:11") > -1) {}
+		  else {textObj.caretPos = document.selection.createRange().duplicate();}
+
+	    //if(websys_isIE) textObj.caretPos = document.selection.createRange().duplicate();
+    }
+}
+
+function CreateODSDiv(obj,Info){  
+    
+	//alert(obj)
+	//alert(Info)
+		var el=obj;
+		var op=getoffset(obj);
+		var DivTop=op[0]+40;
+		var Divleft=op[1]+40;
+
+
+	
+
+
+ 
+   var innerText="<TABLE border=0.5 width=360><TR align='left' bgcolor='lightblue'><TD colspan=3><button onclick='RemoveAllDiv(1)'>关闭</button>&nbsp;&nbsp;<button onclick='ResumeDefault()'>恢复默认</button></TD></TR>"
+   
+	RemoveAllDiv(1);
+	
+    //if (Info=="") return false;
+	div = document.createElement("div");   
+    div.id="ODSDiv";  
+    div.style.position='absolute';  
+    //var op=getoffset(obj);  
+    div.style.top=DivTop;  
+    div.style.left=Divleft;  
+    div.style.zIndex =100;  
+    div.style.backgroundColor='white';  
+    div.style.border="1px solid #666";  
+    //div.className="td1"; 
+	//alert(obj.id)
+    //var innerText="<TABLE border=0.5 width=360><TR align='left' bgcolor='lightblue'><TD colspan=3><button onclick='RemoveAllDiv(1)'>关闭</button>&nbsp;&nbsp;<button onclick='ResumeDefault()'>恢复默认</button></TD></TR>"
+    var Char_2=String.fromCharCode(2);
+    var Char_1=String.fromCharCode(1);
+    var ODSArr=Info.split(Char_2);
+    var ODSArrLength=ODSArr.length
+    for (var i=0;i<ODSArrLength;i++)
+    {
+    	var OneODSArr=ODSArr[i];
+    	var OneArr=OneODSArr.split(Char_1);
+    	innerText=innerText+"<TR bgcolor='lightblue'><TD style='cursor:hand' width=33% value='"+OneArr[1]+"' onclick=ODSDblClick(this)>"+OneArr[0]+"</TD>"
+		i=i+1;
+		if (i<ODSArrLength)
+		{
+			var OneODSArr=ODSArr[i];
+			var OneArr=OneODSArr.split(Char_1);
+			innerText=innerText+"<TD style='cursor:hand' width=33% value='"+OneArr[1]+"' onclick=ODSDblClick(this)>"+OneArr[0]+"</TD>"
+		}
+		
+		i=i+1;
+		if (i<ODSArrLength)
+		{
+			var OneODSArr=ODSArr[i];
+			var OneArr=OneODSArr.split(Char_1);
+			innerText=innerText+"<TD style='cursor:hand' value='"+OneArr[1]+"' onclick=ODSDblClick(this)>"+OneArr[0]+"</TD>"
+		}
+		
+		innerText=innerText+"</TR>"
+	}
+    //var ReportFromatObj=document.getElementById("ReportFormat")
+    //if (ReportFromatObj) ReportFromat=ReportFromatObj.value;
+    var ReportFromat="RF_Ris"
+    if (ReportFromat<3){
+    //加入对应的建议内容
+	Info=obj.id;
+	CurID=Info;
+	var InfoArr=Info.split("^");
+	var OEORIRowId=InfoArr[0];
+	var ODRowid=InfoArr[1];
+	var otherDesc="";
+	var EpisodeID=""
+  	var obj=document.getElementById("EpisodeID");
+    	if (obj){
+		EpisodeID=obj.value
+	}
+	var obj=document.getElementById("StationID");
+	var ChartID=""
+	if (obj) ChartID=obj.value;
+	var temIns=document.getElementById("GetEDInfo");
+	if(temIns){
+			temIns=temIns.value;
+	}
+	var Info=cspRunServerMethod(temIns,OEORIRowId,EpisodeID,ODRowid,ChartID,otherDesc);
+	if (Info!=""&&ChartID!=4){
+		var Char_1=String.fromCharCode(1);
+		var EDArr=Info.split(Char_1);
+		var EDArrLength=EDArr.length
+		var innerText=innerText+"<TR bgcolor='lightgreen'><TD colspan=3><b>以下为建议内容<b></TD></TR>"
+		for (var i=0;i<EDArrLength;i++)
+		{
+			var OneED=EDArr[i];
+			innerText=innerText+"<TR bgcolor='lightblue'><TD style='cursor:hand' width=110 value='"+OneED+"' onclick=EDDescClick(this,0)>"+OneED+"</TD>"
+			i=i+1;
+			if (i<EDArrLength)
+			{
+				var OneED=EDArr[i];
+				innerText=innerText+"<TD style='cursor:hand' width=110 value='"+OneED+"' onclick=EDDescClick(this,0)>"+OneED+"</TD>"
+			}	
+			i=i+1;
+			if (i<EDArrLength)
+			{
+				var OneED=EDArr[i];
+				innerText=innerText+"<TD style='cursor:hand' width=110 value='"+OneED+"' onclick=EDDescClick(this,0)>"+OneED+"</TD>"
+			}
+			innerText=innerText+"</TR>"
+		}
+	}
+    }
+    
+   
+	innerText=innerText+"</TABLE>"
+    div.innerHTML=innerText;
+    document.body.appendChild(div);
+	rDrag.init(div);
+	ReShowDiv(div,el);
+}
+function ReShowDiv(div,el)
+{
+	//DivTop=div.style.top; 
+	document.getElementById(div.id).style.display = "";
+    divHeight=document.getElementById(div.id).offsetHeight;
+    document.getElementById(div.id).style.display = "none";
+	bodyHeight=window.screen.availHeight-parent.BottomHeight;
+	var OldTop=(+div.style.top.split("px")[0])
+	if ((divHeight + OldTop + el.offsetHeight +60)>bodyHeight){
+		if (OldTop - divHeight>0){  //
+			divTop=OldTop - divHeight
+		}else{//上面显示不下,就让下面有滚动条显示
+			divTop=(OldTop) + el.offsetHeight +60;
+		}
+	}else{
+		divTop=OldTop + el.offsetHeight+60;
+	}
+	
+	 div.style.top=divTop;
+	 document.getElementById(div.id).style.display = "";
+   
+}
+
+function getoffset(elem)   
+{
+	if ( !elem ) return {left:0, top:0};
+
+    var top = 0, left = 0;
+
+    if ( "getBoundingClientRect" in document.documentElement ){
+
+        //jquery方法
+
+        var box = elem.getBoundingClientRect(), 
+
+        doc = elem.ownerDocument, 
+
+        body = doc.body, 
+
+        docElem = doc.documentElement,
+
+        clientTop = docElem.clientTop || body.clientTop || 0, 
+
+        clientLeft = docElem.clientLeft || body.clientLeft || 0,
+
+        top  = box.top  + (self.pageYOffset || docElem && docElem.scrollTop  || body.scrollTop ) - clientTop,
+
+        left = box.left + (self.pageXOffset || docElem && docElem.scrollLeft || body.scrollLeft) - clientLeft;
+
+    }else{
+
+        do{
+
+            top += elem.offsetTop || 0;
+
+            left += elem.offsetLeft || 0;
+
+            elem = elem.offsetParent;
+
+        } while (elem);
+
+	}
+	var rec = new Array(1);   
+	rec[0] = top;   
+	rec[1] = left;   
+	return rec 
+}
+
+function RemoveAllDiv(Type)
+{
+	if (CloseODSDivFlag=="1"){
+		var div=document.getElementById("ODSDiv");  
+		if (div!=null) document.body.removeChild(div);
+	}else{
+		CloseODSDivFlag="1";
+	}
+	var div=document.getElementById("EDDetail");  
+    if (div!=null) document.body.removeChild(div);
+	var div=document.getElementById("ALLEDDesc");  
+    if (div!=null) document.body.removeChild(div);
+	if (Type=="1")
+	{
+		var div=document.getElementById("EDDiv");  
+		if (div!=null) document.body.removeChild(div);
+	}
+}
+
+
+function ODSDblClick(e)
+{
+	var NatureDesc="";
+	if (CurObj=="") return false;
+	if (!CurObj) return false;
+	var Strs=e.innerText;
+	var CurObjID=CurObj.id;
+	var IDArr=CurObjID.split("^");
+	var NatureObj=document.getElementById(IDArr[0]+"^"+IDArr[1]+"S");
+	if (NatureObj) NatureDesc=NatureObj.innerText;
+	var EyeSeeObjID=IDArr[0]+"^"+IDArr[1]+"^EyeSee";
+	//alert(EyeSeeObjID)
+	var EyeSeeObj=document.getElementById(EyeSeeObjID)
+	if (EyeSeeObj){
+		var ZDObjID=IDArr[0]+"^"+IDArr[1];
+		var ZDObj=document.getElementById(ZDObjID)
+		var EyeSeeStr="";
+		EyeSeeStr=tkMakeServerCall("web.DHCPE.ODStandard","GetEyeSeeInfo",IDArr[1],Strs);
+		if (Strs==NatureDesc){
+			ZDObj.value=Strs;
+			EyeSeeObj.value="";
+		}else if (ZDObj.value==NatureDesc){
+			ZDObj.value=Strs;
+			EyeSeeObj.value=EyeSeeStr;
+		}else{
+			if (EyeSeeStr!=""){
+				if (EyeSeeObj.value!=""){
+					EyeSeeObj.value=EyeSeeObj.value+"\n"+EyeSeeStr
+				}else{
+					EyeSeeObj.value=EyeSeeStr;
+				}
+			}
+			if (ZDObj.value!=""){
+				ZDObj.value=ZDObj.value+"\n"+Strs
+			}else{
+				ZDObj.value=Strs;
+			}
+			
+		}
+		
+	}else{
+		if (Strs==NatureDesc){
+			CurObj.value=Strs;
+		}else if (CurObj.value==NatureDesc){
+			CurObj.value="";
+			insertAtCaret(CurObj, Strs);
+		}else{
+			insertAtCaret(CurObj, Strs);
+		}
+	}
+	
+	return false;
+}
+
+function insertAtCaret(textObj, textFeildValue) {
+    if (document.all) {
+		if (textObj.createTextRange && textObj.caretPos) {
+            var caretPos = textObj.caretPos;
+            caretPos.text = caretPos.text.charAt(caretPos.text.length - 1) == '   ' ? textFeildValue + '   ' : textFeildValue;
+        } else {
+            textObj.value = textFeildValue;
+        }
+    } else {
+		if (textObj.setSelectionRange) {
+            var rangeStart = textObj.selectionStart;
+            var rangeEnd = textObj.selectionEnd;
+            var tempStr1 = textObj.value.substring(0, rangeStart);
+            var tempStr2 = textObj.value.substring(rangeEnd);
+            textObj.value = tempStr1 + textFeildValue + tempStr2;
+            textObj.setSelectionRange(textObj.value.length,textObj.value.length)
+        } else {
+            alert("This   version   of   Mozilla   based   browser   does   not   support   setSelectionRange");
+        }
+    }
+}
+
+
+
+</Script>
+</BODY>
+</HTML>

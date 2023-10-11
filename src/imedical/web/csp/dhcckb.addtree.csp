@@ -1,0 +1,114 @@
+<!--dhcckb.addtree.csp --> 
+<html>
+<head>
+<title>分类树维护</title>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCCKB/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/addtree.js"></script> 
+	<style>
+		.datagrid-wrap
+		{
+			border:none;
+		}
+	</style>
+	<script language="Cache" runat="server">
+		s drugCatID=##class(web.DHCCKBCommon).GetDrugCategoryData()
+		w "<input style="_"""display:none"""_" id="_"""drugCatID"""_"value="""_drugCatID_""">"
+   </script>
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false" >	
+	<div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom:0px;height:120px;" title="" border="false">
+		 <div class="hisui-panel" data-options="title:'字典数据',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:px solid #ccc;border-top:0;border-bottom:0px;border-radius:0px;">	
+			 <table style="padding-top:10px;padding-bottom:10px" >
+			    <tr>
+			    	<td class="tdlabel">检索</td>
+		    		<td><input style="width:165px;" class='hisui-validatebox' id="FindTreeText" missingMessage="请输入查找内容"></td>
+		    		<td class="tdlabel-b">
+						<a href="#" id="btnSearch" class="hisui-linkbutton" onclick="SearchData()" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="ClearData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a>
+					</td>
+				</tr> 
+			 </table >
+			 <!--工具栏-->
+			 <table id="mybar">
+				<a class="hisui-linkbutton" onclick="AddDataTree()" id="insert" data-options="iconCls:'icon-add',plain:true">新增</a>
+				<a class="hisui-linkbutton" onclick="UpdateDataTree()" id="save" data-options="iconCls:'icon-save',plain:true">修改</a>
+				<a class="hisui-linkbutton" onclick="DelDataTree()" id="delete" data-options="iconCls:'icon-cancel',plain:true">删除</a>	
+				<a href="#" class="hisui-linkbutton" onclick="BatchData()" data-options="iconCls:'icon-paper-cfg',plain:true" id="btnBatch">批量设定药品</a>
+			</table>
+	 	</div> 
+	 </div>	 
+	 
+	 <div data-options="region:'center'" border="false" id="layoutcenter" style="">	 
+	 	<div class="hisui-panel" data-options="title:'',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-bottom:1px solid #ccc;border-radius:0px;">	
+			<ul data-options="fit:true" id="dictree" border="false" toolbar="#mybar"></ul>  <!-- <ul id="RangeCat"></ul> -->
+		</div>
+	 </div> 	
+</div>
+
+<div id="myWin" style="width:360px;height:400px;padding:10px;display:none;">   
+	<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+		<table style="width:90%">
+			<tr style="display:none">
+	 			<td></td>
+	   			<td><input id="treeID" type="text" class="textbox hisui-validatebox"></td>
+	 		</tr>
+			<tr>
+	           <td class="tdlabel"><font color=red>*</font>代码</td>
+			   <td><input id="treeCode" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+			 </tr>
+			<tr>
+			   <td class="tdlabel"><font color=red>*</font>描述</td>
+			   <td><input id="treeDesc" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+			</tr>
+			<tr>
+			   <td  class="tdlabel">上级分类</td>
+			   <td><input id="parref" type="text" class="textbox hisui-combotree"></td>
+			</tr>
+		</table >
+	</form>
+</div>
+      		
+<!-- 属性树右键菜单 -->
+<div id="right" class="hisui-menu" style="">
+	<div onclick="AddSameDataTree()" iconCls="icon-add" data-options="">添加本级</div>
+	<div onclick="AddDataTree()" iconCls="icon-add" data-options="">添加下级</div>
+	<div onclick="UpdateDataTree()" iconCls="icon-write-order" data-options="">修改</div>
+	<div onclick="DelDataTree()" iconCls="icon-cancel" data-options="">删除</div>
+	<!-- <div class="menu-sep"></div>	 -->
+</div>
+
+<!--批量设定药品弹窗-->
+<div id="myChecktreeWin" style="width:500px;height:480px;padding-top:10px;display:none;">   
+    <div class="hisui-layout" data-options="fit:true,bodyCls:'panel-header-gray'" border="false">
+        <div data-options="region:'north',collapsible:false,border:false" style="height:40px">
+             <table>
+                <tr>
+                    <td class="tdlabel">检索</td>
+                    <td><input id="myChecktreeDesc" type="text" class="textbox hisui-validatebox"></td>
+                    <td>
+                        <input id="myChecktreeFilterCK0" class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+                        <input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+                        <input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>
+                    </td>
+                </tr>                    
+             </table >  
+         </div>
+         <div data-options="region:'center',bodyCls:'panel-header-gray'" style='border-top: 1px solid #C0C0C0;'>
+            <table id="myChecktree" data-options="border:false,bodyCls:'panel-header-gray'" style="width:100%;"></table> 
+         </div>  
+     </div> 
+ </div>
+</body>
+</html>
+
+

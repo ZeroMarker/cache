@@ -21,6 +21,7 @@
             s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")    
             s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
             
+            s autoClose = $Get(%request.Data("AutoClose", 1), "N")
             s autoPrint = $Get(%request.Data("AutoPrint", 1), "N")
             s isWithTemplate =  $Get(%request.Data("IsWithTemplate",1), "N")
             
@@ -43,6 +44,9 @@
             
             s emrTemplate = ""
             s:("Y"=isWithTemplate)&&(episodeID'="") emrTemplate = ##Class(EMRservice.BL.opInterface).getEMRTemplatePrint(episodeID, .instanceId)            
+            //南方医院-部分科室采用新模板的病历用正常加载打印方式
+            s flag = ##Class(EMRservice.BL.opInterface).isRefDocID(userLocID, instanceId)
+            s:((emrTemplate = "")&&(flag = "1")) isWithTemplate = "N"
         </script>
         <script language="javascript">
             
@@ -70,6 +74,7 @@
                 instanceId : "#(instanceId)#",
                 emrTemplate : "#(emrTemplate)#",
                 autoPrint : "#(autoPrint)#",
+                autoClose : "#(autoClose)#",
                 isWithTemplate : "#(isWithTemplate)#",
                 isPrinting: false,
                 CopyCount: "#(CopyCount)#"

@@ -1,0 +1,90 @@
+﻿<!--供应链授权维护-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="hisui-panel" data-options="region:'center',headerCls:'panel-header-gray',iconCls:'icon-write-order',fit:true">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div class="BorderLine" data-options="region:'north',border:false,collapsible:false">
+				<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+					<tr>
+						<td><label>代码</label><input name="ChainCode" class="textbox"></td>
+						<td><label>生产厂家</label><input id="Manf" name="Manf" class="hisui-combobox textbox"></td>
+						<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a></td>
+						<td><a href="#" id="UpdateBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a></td>
+						<td><a href="#" id="LinkInciBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-list'">关联产品</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="hisui-panel" data-options="region:'center',border:false,collapsible:false">
+				<table id="ChainGrid"></table>
+			</div>
+		</div>
+	</div>
+
+	<!--授权书级别信息弹窗-->
+	<div id="ChainDetailWin" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-list',closed:true,modal:true" title="授权书信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="ChainMain" class="Condition">
+					<input name="RowId" type="hidden">
+					<tr>
+						<td><label class="required">*</label><label>编号</label><input name="ChainCode" class="textbox hisui-validatebox" data-options="required:true"></td>
+						<td><label class="required">*</label><label>生产厂家</label><input id="DetailManf" name="Manf" class="hisui-combobox textbox" data-options="required:true"></td>
+						<td><label>备注</label><input name="Remarks" class="textbox"></td>
+						<td><a href="#" id="DetailSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<div id="ChainDetail"></div>
+			</div>
+		</div>
+	</div>
+
+	<!--授权书关联库存项明细弹窗-->
+	<div id="ChainItmWin" class="hisui-dialog FindWin" data-options="closed:true,modal:true" title="授权书-关联产品">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',bodyCls:'panel-body-gray',border:false">
+				<table id="ChainItmMain" class="Condition">
+					<input id="ItmInci" name="Inci" type="hidden">
+					<tr>
+						<td><label>生产厂家</label><input id="ItmManf" name="Manf" class="hisui-combobox textbox"></td>
+						<td><label>供应商</label><input id="ItmVendor" name="Vendor" class="hisui-combobox textbox"></td>
+						<td><label>物资名称</label><input id="ItmInciDesc" name="InciDesc" class="textbox"></td>
+						<td><a href="#" id="QueryUnLinkBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="ItmSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+						<td><a href="#" id="CancelLinkBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">取消</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="GridPadding" data-options="region:'center',bodyCls:'panel-body-gray',border:false" style="padding-top:0;">
+				<div class="hisui-panel" data-options="title:'库存项',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="UnLinkInciGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'east',bodyCls:'panel-body-gray',border:false" style="width:500px;padding-top:0;padding-left:0;">
+				<div class="hisui-panel" data-options="title:'已关联',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="ChainItmGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<csp:Include Page="dhcstmhui.picuploadwin.csp">
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SupplyChain/ChainDetail.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SupplyChain/ChainItm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SupplyChain/SupplyChain.js"></script>
+</body>
+</html>

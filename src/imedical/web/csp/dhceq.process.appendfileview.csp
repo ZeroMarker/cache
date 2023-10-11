@@ -5,6 +5,9 @@
 <HTML XMLNS=TRAK>
 <HEAD>
 <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 <!-- <TRAK:HEAD></TRAK:HEAD> -->
 <title>文件预览</title>                
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
@@ -18,13 +21,32 @@ i $g(%request.Data("ToSwfFlag",1))'="Y"
 { 
 	&SQL(Update SQLUSER.DHC_EQAppendFile set AF_ToSwfFlag='Y' where AF_RowID = :RowID)
 }
+s HttpsFlag=##class(web.DHCEQCommon).GetSysInfo("990069")  //Modefied by zc0097 2021-1-26 修正ChromeFlag调用方法不存在的问题
 </script>
 <BODY>
+	<INPUT type="hidden" id="HttpsFlag" value=#(HttpsFlag)#>  <!--Modefied by zc0097 2021-1-26 修正ChromeFlag调用方法不存在的问题-->
 <script type="text/javascript">
 // add by zx 2017-08-11 使用pdf插件预览 ZX0038
 $(function() {
-	   var url="http://"+window.location.host+"/imedical/web/scripts/dhceq/generic/web/viewer.html?file="+encodeURIComponent("http://"+window.location.host+"#(pdfurl)#"); //add by zx 2019-07-12 8.3版本路径改变
-	   window.location=url;
+		//Modefied By zc0096 20210121 是否启用https的判断 begin
+	   	//var HttpsFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990069');
+	   	var HttpsFlag=$('#HttpsFlag').val();   //Modefied by zc0097 2021-1-26 修正ChromeFlag调用方法不存在的问题
+		if (HttpsFlag=="1")
+		{
+			var url="https://"+window.location.host+"/imedical/web/scripts/dhceq/generic/web/viewer.html?file="+encodeURIComponent("https://"+window.location.host+"#(pdfurl)#"); //add by zx 2019-07-12 8.3版本路径改变
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		}
+		else
+		{
+	   		var url="http://"+window.location.host+"/imedical/web/scripts/dhceq/generic/web/viewer.html?file="+encodeURIComponent("http://"+window.location.host+"#(pdfurl)#"); //add by zx 2019-07-12 8.3版本路径改变
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		}
+		//Modefied By zc0096 20210121 是否启用https的判断 end
+	   	window.location=url;
     });
     
 </script>

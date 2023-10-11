@@ -1,0 +1,85 @@
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s WebIP = ""
+	s nurSetID = $O(^Nur.DHCMGNurseSetD(""))
+	i nurSetID'="" d
+	.s WebIP = $ListGet(^Nur.DHCMGNurseSetD(nurSetID), 3)
+	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+    d ##class(web.DHCXMLPConfig).LODOPInit("1")
+</script>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<NURHISUI />
+	<script type="text/javascript" charset="GB2312" src="../scripts/nurse/nis/NursePrintComm/NurPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.patinfoprint.js" charset='gbk'></script>
+	<!--<script type="text/javascript">
+	var now = new Date().getTime();
+	document.write('<script charset="gbk" src="../scripts/nurse/hisui/nur.patinfoprint.js?v=' + now + '"><\/script\>');
+	</script>-->
+	<STYLE type='text/css'>
+		.accordion>.panel>.panel-header, .layout>.panel>.panel-header, .panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, .panel.window>.panel-header, .tabs-panels>.panel>.panel-header {
+		    -moz-border-radius: 0;
+		    -webkit-border-radius: 0;
+		    border-radius: 5px 5px 0 0;
+		    padding: 5px;
+		}
+		.td-btn {
+			padding-left: 20px;
+		}
+
+		.table-border {
+			border-width: 1px;
+			border-style: dashed solid solid;
+			border-color: #ccc;
+			border-radius: 0px 0px 4px 4px;
+		}
+		.messager-popover .content {
+	        height:100%;
+		    float: left;
+		    margin-top: -1px;
+		}
+		.r-label{
+			text-align: right;
+    		padding:10px 10px 10px 20px;
+		}
+		.span-label{
+			text-align: right;
+    		padding:10px 9px 10px 20px;
+		}
+		.combo-p>.panel-body.panel-body-noheader {
+			max-height:410px;
+		}
+	</STYLE>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:4px">
+		<div id="main" class="hisui-layout" fit=true>
+			<div data-options="region:'center',border:false,collapsible:false" style="">
+				<div class="hisui-panel"
+					 data-options="fit:true,headerCls:'panel-header-gray',border:false"
+					 style="">
+					<table id="patGrid" title="»¼ÕßÁÐ±í" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-patient'"
+						   class="hisui-datagrid">
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script language="javascript">
+        session['WebIP']="#(WebIP)#";
+    </script>
+</body>
+
+</html>

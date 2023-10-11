@@ -1,0 +1,861 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+/*
+@CSP:dhc.bdp.mkb.mkbdataimportpanel.csp
+@JS:
+@Title:医用知识库管理--导入界面
+@Description:列表型树形数据导入
+@Creator:基础数据平台组 - 陈莹
+@CreateDate:2018-08-28
+*/
+</csp:method>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+</HEAD>
+ <server>
+     s base=%request.Get("base")   //菜单id
+     s ImportType=%request.Get("type")  //类型 T知识管理 /M规则管理
+</server> 
+<style type="text/css">
+ 	.load{
+		background:#40A2DE;
+	    color: #fff;
+	    min-width: 0;
+	    line-height: 30px;
+	    padding: 0 15px;
+	    margin: 0;
+	}
+	.load:hover {
+		background: #378ec4;
+	    color: #fff;
+	    border: 0 solid #378ec4;
+	    filter: none;
+		border: 0 solid #378ec4;
+		}
+	.loadTem {
+		background:#40A2DE;
+	    color: #fff;
+	    min-width: 0;
+	    line-height: 30px;
+	    padding: 0 15px;
+	    margin: 0;
+	}
+	.loadTem:hover {
+		background: #378ec4;
+	    color: #fff;
+	    border: 0 solid #378ec4;
+	    filter: none;
+		border: 0 solid #378ec4;
+		}
+</style> 
+ <script type="text/javascript">
+    var  base="#(base)#"
+    var  ImportType="#(ImportType)#"  //导入类型，区分是知识管理还是规则管理M
+     
+    ///判断浏览器是否是IE
+    function isIE()
+	{
+		if((!!window.ActiveXObject)||(navigator.userAgent.indexOf('Trident')>-1&&navigator.userAgent.indexOf("rv:11.0")>-1))
+		{	return true;}
+		else
+		{  
+			return false;
+		}
+	}
+	var GetColumnMethod="GetTermTableColumn",ValidMethod="ValidateTermTable",ImportMethod="SaveTermTableData",GetCountMethod="GetTermDataCount",ExportMethod="GetTermDataInfo";
+	if (ImportType=="M")
+	{
+		///规则管理
+		var GetColumnMethod="GetMappingTableColumn",ValidMethod="ValidateMappingTable",ImportMethod="SaveMappingTableData",GetCountMethod="GetMappingDataCount",ExportMethod="GetMappingDataInfo";
+	}
+	///导出Excel模板文件2019-08-16
+	function ExcelExportTemplet()
+	{
+		
+
+		if (!isIE())
+		{
+			$.messager.alert('错误提示','请在IE下执行！',"error");
+			return;
+		}
+		try{
+	    	var xlApp = new ActiveXObject("Excel.Application");
+			var xlBook = xlApp.Workbooks.Add();///默认三个sheet
+		}catch(e){
+			$.messager.alert('错误提示','不能生成表格文件，请确认是否符合备注条件。',"error");
+			return;
+		}
+		
+		
+		xlBook.worksheets(1).select(); 
+		var xlsheet = xlBook.ActiveSheet;
+		var excelinfostr=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",GetColumnMethod,base);
+		
+		var excelinfo=excelinfostr.split("[N]");
+		
+		var fieldinfostrcode=excelinfo[1];
+		var fieldinfostr=excelinfo[2];
+		var fieldInfoArray=fieldinfostr.split("[A]");
+		var fieldInfoArray2=fieldinfostrcode.split("[A]");
+		for (var i=0;i<(fieldInfoArray.length);i++){
+			
+			xlsheet.cells(2,i+1)=fieldInfoArray[i];
+			xlsheet.cells(3,i+1)=fieldInfoArray2[i];
+			xlsheet.Columns(i+1).NumberFormatLocal = "@";   ///设置某列单元格格式为文本格式  20170830
+			xlsheet.cells(2,i+1).Font.Bold = true; //设置为粗体
+			xlsheet.cells(3,i+1).Font.Bold = true; //设置为粗体
+			xlsheet.cells(2,i+1).WrapText=true;  //设置为自动换行*
+			xlsheet.cells(3,i+1).WrapText=true;  //设置为自动换行*
+			//设置单元格底色*(1-黑色，2-白色，3-红色，4-绿色，5-蓝色，6-黄色，7-粉红色，8-天蓝色，9-酱土色.)
+			//xlsheet.cells(2,i+1).Interior.ColorIndex = 5;  ///蓝色底色
+			//xlsheet.cells(3,i+1).Interior.ColorIndex = 5;
+			
+			//设置必填项字体颜色
+			//xlsheet.cells(2,i+1).Font.ColorIndex = 3;  ///红色
+			//xlsheet.cells(3,i+1).Font.ColorIndex = 3;
+			xlsheet.cells(2,i+1).Font.ColorIndex = 1; 
+			xlsheet.cells(3,i+1).Font.ColorIndex = 1;
+				
+			
+		}
+		
+		//xlsheet.name=excelinfo[0];
+		xlsheet.cells(1,1)=excelinfo[0];
+		fieldInfoArray.length
+		xlsheet.cells(1,1).Font.Bold = true; //设置为粗体
+		//合并单元格
+		xlsheet.Range(xlsheet.Cells(1, 1),  xlsheet.Cells(1, fieldInfoArray.length)).Merge();   
+		xlsheet.Range( xlsheet.Cells(1,1),xlsheet.Cells(1, fieldInfoArray.length)).HorizontalAlignment =-4108;//文字居中
+		
+		
+		xlApp.Visible=true;
+		xlBook.Close(savechanges=true);
+        CollectGarbage();
+		xlApp=null;
+		xlsheet=null;
+		
+	}
+	
+	
+	///导出Excel模板文件2019-08-16
+	function ExcelExportError(ErrorArray)
+	{
+		try{
+	    	var xlApp = new ActiveXObject("Excel.Application");
+			var xlBook = xlApp.Workbooks.Add();///默认三个sheet
+		}catch(e){
+			$.messager.alert('错误提示','不能生成表格文件，请确认是否符合备注条件。',"error");
+			return;
+		}
+		
+		
+		xlBook.worksheets(1).select(); 
+		var xlsheet = xlBook.ActiveSheet;
+		var excelinfostr=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",GetColumnMethod,base);
+		
+		var excelinfo=excelinfostr.split("[N]");
+		
+		var fieldinfostrcode=excelinfo[1];
+		var fieldinfostr=excelinfo[2];
+		var fieldInfoArray=fieldinfostr.split("[A]");
+		var fieldInfoArray2=fieldinfostrcode.split("[A]");
+		for (var i=0;i<(fieldInfoArray.length);i++){
+			
+			xlsheet.cells(2,i+1)=fieldInfoArray[i];
+			xlsheet.cells(3,i+1)=fieldInfoArray2[i];
+			xlsheet.Columns(i+1).NumberFormatLocal = "@";   ///设置某列单元格格式为文本格式  20170830
+			xlsheet.cells(2,i+1).Font.Bold = true; //设置为粗体
+			xlsheet.cells(3,i+1).Font.Bold = true; //设置为粗体
+			xlsheet.cells(2,i+1).WrapText=true;  //设置为自动换行*
+			xlsheet.cells(3,i+1).WrapText=true;  //设置为自动换行*
+			//设置单元格底色*(1-黑色，2-白色，3-红色，4-绿色，5-蓝色，6-黄色，7-粉红色，8-天蓝色，9-酱土色.)
+			//xlsheet.cells(2,i+1).Interior.ColorIndex = 5;  ///蓝色底色
+			//xlsheet.cells(3,i+1).Interior.ColorIndex = 5;
+			
+			//设置必填项字体颜色
+			//xlsheet.cells(2,i+1).Font.ColorIndex = 3;  ///红色
+			//xlsheet.cells(3,i+1).Font.ColorIndex = 3;
+			xlsheet.cells(2,i+1).Font.ColorIndex = 1; 
+			xlsheet.cells(3,i+1).Font.ColorIndex = 1;
+				
+			
+		}
+		
+		//xlsheet.name=excelinfo[0];
+		xlsheet.cells(1,1)=excelinfo[0];
+		fieldInfoArray.length
+		xlsheet.cells(1,1).Font.Bold = true; //设置为粗体
+		//合并单元格
+		xlsheet.Range(xlsheet.Cells(1, 1),  xlsheet.Cells(1, fieldInfoArray.length)).Merge();   
+		xlsheet.Range( xlsheet.Cells(1,1),xlsheet.Cells(1, fieldInfoArray.length)).HorizontalAlignment =-4108;//文字居中
+		
+		
+		xlApp.Visible=true;
+		xlBook.Close(savechanges=true);
+        CollectGarbage();
+		xlApp=null;
+		xlsheet=null;
+		
+	}
+	
+    /// 获取文件路径 2017-07-11
+	/// 使用方法：var filepath=getPath(document.getElementById("fileupload"));
+	function getPath(obj) {
+            if (obj) {
+                if (window.navigator.userAgent.indexOf("MSIE") >= 1) {
+                    obj.select(); 
+                   obj.blur();   //在IE9下，如果file控件获得焦点，则document.selection.createRange()拒绝访问，需要加一句obj.blur();
+
+                    return document.selection.createRange().text;
+                }
+                else if (window.navigator.userAgent.indexOf("Firefox") >= 1) {
+                    if (obj.files) {
+                        return obj.files.item(0).getAsDataURL();
+                    }
+                    return obj.value;
+                }
+                return obj.value;
+            }
+        }
+	
+	/*
+    FileReader共有4种读取方法：
+    1.readAsArrayBuffer(file)：将文件读取为ArrayBuffer。
+    2.readAsBinaryString(file)：将文件读取为二进制字符串
+    3.readAsDataURL(file)：将文件读取为Data URL
+    4.readAsText(file, [encoding])：将文件读取为文本，encoding缺省值为'UTF-8'
+                 */
+   /* var wb;//读取完成的数据
+    var rABS = false; //是否将文件读取为二进制字符串
+
+	importf=function (obj) {//导入
+        if(!obj.files) {
+            return;
+        }
+        var f = obj.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var data = e.target.result;
+            if(rABS) {
+                wb = XLSX.read(btoa(fixdata(data)), {//手动转化
+                    type: 'base64'
+                });
+            } else {
+                wb = XLSX.read(data, {
+                    type: 'binary'
+                });
+            }
+            //wb.SheetNames[0]是获取Sheets中第一个Sheet的名字
+            //wb.Sheets[Sheet名]获取第一个Sheet的数据
+            document.getElementById("demo").innerHTML= JSON.stringify( XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]) );
+        };
+        if(rABS) {
+            reader.readAsArrayBuffer(f);
+            alert(1)
+        } else {
+            reader.readAsBinaryString(f);
+            alert(2)
+        }
+    }
+
+    fixdata=function (data) { //文件流转BinaryString
+        var o = "",
+            l = 0,
+            w = 10240;
+        for(; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)));
+        o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)));
+        return o;
+    }*/
+    
+    //获取文件的base64编码 20190918
+    function directTurnIntoBase64(fileObj,callback){
+        var r = new FileReader();
+        // 转成base64
+        r.onload = function(){
+           //变成字符串
+            imgBase64 = r.result;
+           
+            callback(imgBase64);
+        }
+        r.readAsDataURL(fileObj);    //转成Base64格式
+    }
+    /*var fileObj = document.getElementsByName("inputfile")[0].files[0]
+    directTurnIntoBase64(fileObj,function()
+    {
+	    
+	     console.log(imgBase64)
+    })
+    
+    */
+	function ExcelImportData(filepath)
+	{	
+			
+			if (!isIE())
+			{
+				$.messager.alert('错误提示','请在IE下执行！',"error");
+				return;
+			}
+			//var fileObj = document.getElementsByName("inputfile")[0].files[0]; // js 获取文件对象  fileObj.name获取到文件名，但不包含路径
+			var filepath=getPath(document.getElementsByName("inputfile")[0]) 
+			//var filepath=getPath(document.getElementById("filebox_file_id_1"))  //元素和fileboxID 不一样，自动生成的 所以用getElementsByName获取
+			if(typeof(filepath)=="undefined") {
+				$.messager.alert('错误提示','请先选择文件！',"error");
+				return;
+				
+			}
+			if(filepath.indexOf("fakepath")>=0 ) {
+				$.messager.alert('错误提示','请在IE下执行！',"error");
+				return;
+				
+			}
+			try{ 
+				var xlApp = new ActiveXObject("Excel.application"); 
+				var xlBook = xlApp.Workbooks.open(filepath);
+			}		
+			catch(e){
+				$.messager.alert('错误提示','不能读取表格文件，请确认是否符合备注条件。',"error");
+				return;
+			}
+			xlBook.worksheets(1).select(); 
+			var xlsheet = xlBook.ActiveSheet; 
+			var sheetname=xlsheet.cells(1,1).value
+			
+			var errorData=[];
+			var data1=[]
+			data1.push(sheetname)
+			errorData.push(data1);
+			var colcount=xlsheet.UsedRange.Cells.Columns.Count;  ///列数
+			var data2=[];
+			var data3=[];
+			var propdescStr="",propcodeStr="";
+			for (var n=1;n<=colcount;n++){
+				
+				var propdesc="",propcode="";
+				if ((typeof(xlsheet.Cells(3,n).value)!="undefined")) 
+				{
+					propcode=xlsheet.Cells(3,n).value;
+				}
+				
+				if ((typeof(xlsheet.Cells(2,n).value)!="undefined"))
+				{
+					propdesc=xlsheet.Cells(2,n).value;
+				}
+				
+				
+				
+				if ((xlsheet.Cells(2,n).value=="对应表格行")||(xlsheet.Cells(2,n).value=="报错信息"))
+				{
+					break;
+				}
+				else
+				{
+					if (n==1)
+					{
+						propcodeStr=propcode;
+						propdescStr=propdesc;
+					}
+					else
+					{
+						
+						propcodeStr=propcodeStr+"[A]"+propcode;
+						propdescStr=propdescStr+"[A]"+propdesc;		
+						
+					}
+				}
+				data2.push(propdesc)
+				data3.push(propcode)
+				
+			}
+			errorData.push(data2);
+			errorData.push(data3);
+			
+			$.m({
+				ClassName:"web.DHCBL.MKB.MKBDataImportInfo",
+				MethodName:ValidMethod,
+				'base':base,
+				'tableName':sheetname,
+				'columStr':propcodeStr
+			},function(data){
+				 var data=eval('('+data+')'); 
+				 if (data.success == 'false') {
+				 	$.messager.alert('错误提示',data.errorinfo,"error");
+					return;
+				 }
+				 else
+				 {
+						var errorRow="";
+						var rowcount=xlsheet.UsedRange.Cells.Rows.Count ;  ///行数
+						$("#progressBarID").progressbar({
+							width:500,
+							height:30,
+							text : '{value}%' 
+						});
+						
+						//$(".progressbar-value .progressbar-text").css("background-color","1095F1")  //背景色蓝色
+						var row=0;
+						var taskcount=rowcount-3;
+						var myVar =setInterval(function(){
+							row++;
+						  	if(row>taskcount) //读完所有数据后退出
+						  	{
+							  	
+								$("#progressBarID").progressbar("setValue",100);
+							  	xlBook.Close (savechanges=false);
+								CollectGarbage();
+								xlApp=null;
+								xlsheet=null;
+								xlBook=null;
+								clearInterval(myVar)
+								
+								
+								if(errorRow!=""){
+									$.messager.alert('错误提示',"导入完成，第"+errorRow+"行导入失败!",'error',function(){
+											var xlApp2 = new ActiveXObject("Excel.Application");
+											var xlBook2 = xlApp2.Workbooks.Add();
+											///导出错误数据表格
+											xlBook2.worksheets(1).select(); 
+											var xlsheet2 = xlBook2.ActiveSheet;
+											
+											for (var i=0;i<(errorData.length);i++){
+												var datainfo=errorData[i]
+												xlsheet2.Columns(i+1).NumberFormatLocal = "@";   ///设置某列单元格格式为文本格式
+												for (var j=0;j<(datainfo.length);j++){
+													xlsheet2.cells(i+1,j+1)=datainfo[j];
+													
+													if ((i==0)||(i==1)||(i==2))
+													{
+														xlsheet2.cells(i+1,j+1).Font.Bold = true; //设置为粗体
+														xlsheet2.cells(i+1,j+1).Font.ColorIndex = 1; 
+													}
+												}
+												
+											}
+											xlsheet2.cells(2,datainfo.length-1)='对应表格行'
+											xlsheet2.cells(2,datainfo.length)='错误信息'
+											
+											xlsheet2.Range(xlsheet2.Cells(1, 1),xlsheet2.Cells(1, datainfo.length-2)).Merge();  //合并单元格   
+											xlsheet2.Range( xlsheet2.Cells(1,1),xlsheet2.Cells(1, datainfo.length-2)).HorizontalAlignment =-4108;//文字居中
+											
+											
+											xlApp2.Visible=true;
+											xlBook2.Close(savechanges=true);
+									        CollectGarbage();
+											xlApp2=null;
+											xlsheet2=null;
+									　　　　　　
+								
+									});
+									
+										
+									
+												
+								}else{
+									$.messager.alert('提示消息','导入完成','info');
+									
+								}
+								
+								
+								
+						  	}
+						  	else
+						  	{
+						  		var data=[];
+								var valueStr="";
+								for (var j=1;j<=colcount;j++){
+									var cellvalue="";
+									if (typeof(xlsheet.Cells(row+3,j).value)=="undefined")
+									{
+										cellvalue="";
+									}
+									else if(typeof(xlsheet.Cells(row+3,j).value)=="date") 
+									{
+										cellvalue=xlsheet.Cells(row+3,j).value;
+										if (cellvalue!="") cellvalue=(new Date(cellvalue)).format("Y-m-D")
+									}
+									else if (typeof(xlsheet.Cells(row+3,j).value)=="number") 
+									{
+									 	//xlsheet.Columns(j).NumberFormatLocal = "@";   ///设置某列单元格格式为文本格式  20170830
+										xlsheet.Cells(row+3,j).value="'"+xlsheet.Cells(row+3,j).value
+										cellvalue=xlsheet.Cells(row+3,j).value;
+										
+									}
+									else
+									{
+										cellvalue=xlsheet.Cells(row+3,j).value;
+									}
+									data.push(xlsheet.Cells(row+3,j).value)
+									
+									if (j==1)  valueStr=cellvalue;
+									else valueStr=valueStr+("[A]"+cellvalue);
+									
+								}
+								var saveResult =tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",ImportMethod,base,propcodeStr,valueStr);
+								if (saveResult.indexOf("false")>0){  //保存失败
+									if(errorRow!=""){
+									
+										errorRow=errorRow+","+(row+3)
+										
+									}else{
+										errorRow=row+3
+									}
+									
+									data.push(row+3);
+									data.push(saveResult);
+									errorData.push(data);
+								}
+								$("#progressBarID").progressbar("setValue",100*row/taskcount);
+								
+							  }
+						},100);  //100ms执行一次   
+					 }
+					 
+				});
+		
+	}
+	
+
+	//导出数据 onlyDescFlag-只导中心词的标识
+	function ExportData(onlyDescFlag) {
+		if (!isIE())
+		{
+			$.messager.alert('错误提示','请在IE下执行！',"error");
+			return;
+		}
+		try{
+	    	var xlApp = new ActiveXObject("Excel.Application");
+			var xlBook = xlApp.Workbooks.Add();///默认三个sheet
+		}catch(e){
+			$.messager.alert('错误提示','不能生成表格文件，请确认是否符合备注条件。',"error");
+			return;
+		}
+		
+		
+		xlBook.worksheets(1).select(); 
+		var xlsheet = xlBook.ActiveSheet;
+		
+		if (onlyDescFlag=="1") //导出中心词
+		{
+			var excelinfostr=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",GetColumnMethod,base,onlyDescFlag);
+		}
+		else
+		{
+			var excelinfostr=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",GetColumnMethod,base);
+		}
+
+		var excelinfo=excelinfostr.split("[N]");
+		
+		var fieldinfostrcode=excelinfo[1];
+		var fieldinfostr=excelinfo[2];
+		var fieldInfoArray=fieldinfostr.split("[A]");
+		var fieldInfoArray2=fieldinfostrcode.split("[A]");
+		for (var i=0;i<(fieldInfoArray.length);i++){
+			
+			xlsheet.cells(2,i+1)=fieldInfoArray[i];
+			xlsheet.cells(3,i+1)=fieldInfoArray2[i];
+			xlsheet.Columns(i+1).NumberFormatLocal = "@";   ///设置某列单元格格式为文本格式  20170830
+			xlsheet.cells(2,i+1).Font.Bold = true; //设置为粗体
+			xlsheet.cells(3,i+1).Font.Bold = true; //设置为粗体
+			xlsheet.cells(2,i+1).WrapText=true;  //设置为自动换行*
+			xlsheet.cells(3,i+1).WrapText=true;  //设置为自动换行*
+			//设置单元格底色*(1-黑色，2-白色，3-红色，4-绿色，5-蓝色，6-黄色，7-粉红色，8-天蓝色，9-酱土色.)
+			//xlsheet.cells(2,i+1).Interior.ColorIndex = 5;  ///蓝色底色
+			//xlsheet.cells(3,i+1).Interior.ColorIndex = 5;
+			
+			//设置必填项字体颜色
+			//xlsheet.cells(2,i+1).Font.ColorIndex = 3;  ///红色
+			//xlsheet.cells(3,i+1).Font.ColorIndex = 3;
+			xlsheet.cells(2,i+1).Font.ColorIndex = 1; 
+			xlsheet.cells(3,i+1).Font.ColorIndex = 1;
+				
+			
+		}
+		
+		//xlsheet.name=excelinfo[0];
+		xlsheet.cells(1,1)=excelinfo[0];
+		fieldInfoArray.length
+		xlsheet.cells(1,1).Font.Bold = true; //设置为粗体
+		//合并单元格
+		xlsheet.Range(xlsheet.Cells(1, 1),  xlsheet.Cells(1, fieldInfoArray.length)).Merge();   
+		xlsheet.Range( xlsheet.Cells(1,1),xlsheet.Cells(1, fieldInfoArray.length)).HorizontalAlignment =-4108;//文字居中
+		
+		
+		var count=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",GetCountMethod,base);
+		for (var i=1;i<=count;i++){
+			if (onlyDescFlag=="1") //导出中心词
+			{
+				var DataDetailStr=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",ExportMethod,base,i,onlyDescFlag);
+			}
+			else
+			{
+				var DataDetailStr=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo",ExportMethod,base,i);
+			}
+			var Detail=DataDetailStr.split("[A]");		
+			for (var j=1;j<=fieldInfoArray.length;j++){
+				xlsheet.cells(3+i,j)=Detail[j-1];
+				xlsheet.cells(3+i,j)=Detail[j-1];
+			}	
+		}
+		xlApp.Visible=true;
+		xlBook.Close(savechanges=true);
+        CollectGarbage();
+		xlApp=null;
+		xlsheet=null;
+	}
+	
+	//判断文件是否存在
+	function IsExistsFile(filepath)
+    {
+        var xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        xmlhttp.open("GET",filepath,false);
+        xmlhttp.send();
+        if(xmlhttp.readyState==4){   
+            if(xmlhttp.status==200) return true; //url存在   
+            else if(xmlhttp.status==404) return false; //url不存在   
+            else return false;//其他状态   
+        } 
+    }
+	
+	//导出知识模板数据
+	function ExportModeData() 
+	{
+			
+		var filename=tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo","ExportDiagTemplate",base);
+		
+		/* 2022.01.14 为支持linux系统下载
+		if(filename!=""){	
+			var filepath ="../scripts/bdp/MKB/DataExport/"+filename;
+			var isExists=IsExistsFile(filepath)
+			if(isExists){
+				location.href=filepath;
+			}else{
+				$.messager.alert('提示','导出失败!',"error");
+			}
+		}else{
+			$.messager.alert("提示","导出失败！","error")
+			//$.messager.progress('close');
+		}*/		
+		if(filename!="")
+		{	
+	        $(".loadTem").attr("href","#");
+	        $(".loadTem").removeAttr("download");
+	        $(".loadTem").removeAttr("target");	
+	        filepath ="../scripts/bdp/MKB/DataExport/"+filename;
+	        $(".loadTem").attr("href",filepath);
+	        $(".loadTem").attr("download",filename);
+	        //判断浏览器是否支持a标签 download属性
+	        var isSupportDownload = 'download' in document.createElement('a');
+	        if(!isSupportDownload){
+	            var fileType = filename.split(".")[filename.split(".").length-1];
+	            if((fileType!="pdf")&&(fileType!="PDF")){
+	                objIframe=document.createElement("IFRAME");
+	                document.body.insertBefore(objIframe);
+	                objIframe.outerHTML=   "<iframe   name=a2   style='width:0;hieght:0'   src="+$(".loadTem").attr("href")+"></iframe>";
+	                pic   =   window.open($(".loadTem").attr("href"),"a2");
+	                document.all.a2.removeNode(true)
+	            }else{
+	                alert("此浏览器使用另存下载");
+	                $(".loadTem").attr("target","_blank");
+	            }
+	        }
+		 }
+	    else
+	    {
+	        //$.messager.alert("提示","导出失败","error")
+	        //$.messager.progress('close');
+	        var url = window.location.href.split('csp')[0]
+            url = url + "scripts/bdp/MKB/DataExport/" + encodeURI(fileName)
+            //存在直接下载pdf以外的文件
+            if (fileName.split('.')[1] != "pdf") {
+                $(".loadTem").attr("href", url);
+            } else {
+                //如果是pdf则打开浏览器窗口预览保存文件
+                window.open(url);     //在同当前窗口中打开窗口
+            }
+                    
+	    }
+	}
+	//dingyanan 2021-04-16 导出txt格式
+	ExportTXTData= function() {
+		if (ImportType=="M")
+		{
+			ExportTXTData("1")
+		}
+		else
+		{
+		    //点击导出实际匹配结果按钮
+		    /*var os = navigator.platform;  
+		    var userAgent = navigator.userAgent;
+		    if (os.indexOf("Win") > -1) { 
+		        /*if (userAgent.indexOf("Windows NT 6.1") > -1 || userAgent.indexOf("Windows 7") > -1) {  
+		            console.log("Win7");  
+		        } else 
+		        if (userAgent.indexOf("Windows NT 6.2") > -1 && userAgent.indexOf("Windows 8") > -1) {  
+		            $.messager.alert('错误提示','该功能不支持win8及以上系统在ie下导出，请使用谷歌浏览器!',"error");
+		            return;	
+		        } else if (userAgent.indexOf("Windows NT 6.3") > -1 && userAgent.indexOf("Windows 8.1") > -1) {  
+		            $.messager.alert('错误提示','该功能不支持win8及以上系统在ie下导出，请使用谷歌浏览器!',"error");
+		            return;	
+		        } else if (userAgent.indexOf("Windows NT 10.0") > -1 && userAgent.indexOf("Windows 10") > -1) {  
+		            $.messager.alert('错误提示','该功能不支持win10系统在ie下导出，请使用谷歌浏览器!',"error");
+		            return;	
+		        }  	
+		    }*/
+
+		    var filename = tkMakeServerCall("web.DHCBL.MKB.MKBDataImportInfo","ExportTermTXTData",base);
+		    
+		    if(filename!=""){	
+		        $(".load").attr("href","#");
+		        $(".load").removeAttr("download");
+		        $(".load").removeAttr("target");	
+		        filepath ="../scripts/bdp/MKB/"+filename;
+		        $(".load").attr("href",filepath);
+		        $(".load").attr("download",filename);
+		        //判断浏览器是否支持a标签 download属性
+		        var isSupportDownload = 'download' in document.createElement('a');
+		        if(!isSupportDownload){
+		            var fileType = filename.split(".")[filename.split(".").length-1];
+		            if((fileType!="pdf")&&(fileType!="PDF")){
+		                objIframe=document.createElement("IFRAME");
+		                document.body.insertBefore(objIframe);
+		                objIframe.outerHTML=   "<iframe   name=a1   style='width:0;hieght:0'   src="+$(".load").attr("href")+"></iframe>";
+		                pic   =   window.open($(".load").attr("href"),"a1"); //
+		                document.all.a1.removeNode(true)
+		            }else{
+		                alert("此浏览器使用另存下载");
+		                $(".load").attr("target","_blank");
+		            }
+		        }
+		    }else{
+		        //$.messager.alert("提示","导出失败","error")
+		        //$.messager.progress('close');
+		        var url = window.location.href.split('csp')[0]
+                url = url + "scripts/bdp/MKB/" + encodeURI(fileName)
+                //存在直接下载pdf以外的文件
+                if (fileName.split('.')[1] != "pdf") {
+                    $(".load").attr("href", url);
+                } else {
+                    //如果是pdf则打开浏览器窗口预览保存文件
+                    window.open(url);     //在同当前窗口中打开窗口
+                }
+                //window.open(url); 
+                        
+		    }
+		}
+	}
+	ImportJBCYZDData= function() {
+		var filename=$("#MKBDMPath").val();
+		if (filename=="")
+		{
+			$.messager.alert("提示","请先选择需要导入的Word文献上传，然后再执行导入！","error")
+			return
+		}
+		$.ajax({
+                url:"http://192.144.152.252:8080/ImportDischargeGuidance?DocxName="+filename,
+                type: "GET",
+                dataType: "json",
+                cache: false,
+                success: function(data){
+                  $.messager.alert("提示",data,"info")  
+                    
+                },
+                error:function(){
+	                $.messager.alert("提示","请求数据失败！","error") 
+                }
+            });
+		
+	}
+  </script>
+<BODY style="padding:10px 5px 0px 0px">
+	<div> 
+		<div style="margin-bottom:10px">
+			<table >
+	  	 		<tr >
+	  	 			<td class="tdlabel-b">
+	  		 			<a href="#" class="hisui-linkbutton" data-options="" onclick="ExcelExportTemplet()">下载数据模板</a>
+	  		 		</td>
+		  	  	</tr >
+		  	 </table >
+	  	 </div>
+	  	 <div style="margin-bottom:10px;padding-left:11px;"> 
+	  	 	<input class="hisui-filebox" name="inputfile" id="inputfile" data-options="width:415,buttonText:'',buttonIcon:'icon-folder',plain:true,prompt:'excel：*.xls,*.xlsx'" />
+	  		 <!--input class="hisui-filebox" name="inputfile" id="inputfile" data-options="width:400,buttonIcon:'icon-w-file',buttonText:'',prompt:'excel：*.xls,*.xlsx',onChange:function(nv,ov){}" accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/-->
+			<a href="#" class="hisui-linkbutton" data-options="" onclick="ExcelImportData()">导入</a>
+	  	 </div>
+	  	 <div style="margin-bottom:10px;height:34px">
+	  	 	<table >
+	  	 		<tr >
+	  	 			<td class="tdlabel-b">
+		  	  			<a href="#" class="hisui-linkbutton" data-options="" onclick="ExportData(0)">导出</a>
+		  	  		</td>
+		  	  		<td class="tdlabel-b">
+		  	  			<a href="#" class="loadTem" data-options="plain:true"  id="ExportModeDiv" onclick="ExportModeData()">导出知识模板内容</a>
+		  	  		</td>
+		  	  		<td class="tdlabel-b">
+		  	  			<a href="#" class="load"  data-options="plain:true" id="ExportTermDesc" onclick="ExportTXTData()">导出中心词</a>
+		  	  		</td>
+		  	  	</tr >
+		  	 </table >
+		 </div>
+		 <!--出院指导文献导入-->
+		 <div id="jbcyzddiv"style="margin-bottom:10px;padding-left:11px;"> 
+		 	<p style="margin-bottom:10px"><strong>疾病出院指导文献导入:</strong></p>
+			<iframe id="upload" src="" width="500px" height="36px" scrolling="no" frameborder="0"></iframe>
+			<input id="MKBDMType" name="MKBDMType"  style="width:200px;" type="hidden" >
+			<div style="padding:4px;"> 
+				<input id="MKBDMPath" name="MKBDMPath" type="text" class="textbox hisui-validatebox" style="width:292px" readonly="true">&nbsp;&nbsp;&nbsp;
+				<a href="#" class="hisui-linkbutton" data-options="" onclick="ImportJBCYZDData()">导入</a>
+				<!--input id="MKBDMPath" name="MKBDMPath"  style="width:300px;"-->
+			</div>
+	  	 </div>
+	  	 
+		 <!--div style="margin-bottom:20px" id="ExportModeDiv">
+		  	  <a href="#" class="hisui-linkbutton" data-options="" onclick="ExportModeData()">导出知识模板内容</a>
+		 </div-->
+	  	 <div style="padding:10px;color:#1278b8;background:#e3f7ff;border:1px solid #c0e2f7;margin-left:10px"> 
+	  	 	<p style="margin-bottom:10px"><strong>备注:</strong></p>
+	  	 	<p style="margin-bottom:10px">1.需在IE下执行操作，请先确认本机有安装office软件，并且要读取的表格文件不是受保护视图。</p>
+	  	 	<p>2.在IE-[internet选项]-[安全]-[受信任的站点]-[站点]中添加开始界面到可信任的站点，然后在[自定义级别]中对[没有标记为安全的ActiveX控件进行初始化和脚本运行]这一项设置为启用，确定后，重启浏览器。</p>	  	 	
+	  	 </div>
+	  	 
+     </div> 
+     
+     <div id="progressBarID" style="width:400px;"></div>
+     
+     <script type="text/javascript">
+     	var url="dhc.bdp.mkb.mkbjbcyzduploadfile.csp"
+	    if ("undefined"!==typeof websys_getMWToken){
+			url += "?MWToken="+websys_getMWToken()
+		}
+		$('#upload').attr('src', url);
+		
+	    if (ImportType=="M")
+	    {
+		    $("#ExportModeDiv" ).css("display", "none");
+		    $("#ExportTermDesc" ).css("display", "none");
+		    
+	    }
+	    else
+	    {
+		   $("#ExportModeDiv" ).css("display", "block"); 
+		   $("#ExportTermDesc" ).css("display", "block"); 
+	    }
+	    var basedesc=tkMakeServerCall("web.DHCBL.MKB.MKBTerm", "getTermDesc",base)
+	    if (basedesc=="疾病出院指导")
+	    {
+		    $("#jbcyzddiv").css("display","block"); 
+		}
+	    else
+	    {
+		    $("#jbcyzddiv").css("display", "none");
+		}
+     </script>
+</BODY>
+
+</HTML>

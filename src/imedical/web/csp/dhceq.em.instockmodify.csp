@@ -1,0 +1,101 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+i{display:block;width:30px;}
+.eq-table-td
+{
+	width:auto;
+}
+.eq-table-tr>.eq-table-td:nth-child(1)
+{
+	width:65px;
+}
+.eq-table-tr>.eq-table-td:nth-child(3)
+{
+	width:65px;
+}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s BussType=$Get(%request.Data("BussType",1))
+	s BussNo=$Get(%request.Data("BussNo",1))
+	s WaitAD = $Get(%request.Data("WaitAD",1))
+	s Type = $Get(%request.Data("Type",1))
+	s BussCode = $Get(%request.Data("BussCode",1))
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:105px;padding:10px;">
+		<div class="hisui-panel" data-options="fit:true,eqtitle:'maintitle',title:'入库单查询'" style="padding-bottom:10px;">
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cBussType" for="BussType">业务类型</label></div>
+				<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="BussType" value="#(BussType)#"></div>
+				<div class="eq-table-td eq-table-label-new"><label id="cBussNo" for="BussNo">业务单号</label></div>
+				<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BussNo" value="#(BussNo)#"></div>
+				<div class="eq-table-td eq-table-label-first"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'入库单信息'" style="overflow:hidden;">
+			<div id="BusinessMain" style="background:url(../images/no_data.png) no-repeat center;height:100%;width:100%;display:block;"></div>
+			<div id="InStockInfo" style="height:100%;width:100%;">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'north',border:false" style="padding-bottom:10px;border-bottom:solid 1px #ccc;">
+						<div class="eq-table">
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label-first"><label id="cISLocDR_CTLOCDesc" for="ISLocDR_CTLOCDesc">库房</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISLocDR_CTLOCDesc"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISBuyLocDR_CTLOCDesc" for="ISBuyLocDR_CTLOCDesc">采购部门</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISBuyLocDR_CTLOCDesc" data-options="'itype':'9','property':'PLAT.L.Loc'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISBuyUserDR_SSUSRName" for="ISBuyUserDR_SSUSRName">采购人</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISBuyUserDR_SSUSRName" data-options="'itype':'9','property':'PLAT.L.EQUser'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISInDate" for="ISInDate">入库日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" disabled="true" id="ISInDate"></div>
+								<div class="eq-table-td eq-table-label-first"><a id="BDepreCalculation" href="#" class="hisui-linkbutton" iconCls="icon-w-calc" data-options="stopAllEventOnDisabled:true">折旧测算</a></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label-first"><label id="cISEquipTypeDR_ETDesc" for="ISEquipTypeDR_ETDesc">管理类组</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISEquipTypeDR_ETDesc" data-options="'itype':'9','property':'PLAT.L.EquipType'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISProviderDR_VDesc" for="ISProviderDR_VDesc">供货商</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISProviderDR_VDesc" data-options="'itype':'9','property':'PLAT.L.Vendor'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISOriginDR_ODesc" for="ISOriginDR_ODesc">设备来源</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISOriginDR_ODesc" data-options="'itype':'9','property':'PLAT.L.Origin'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cNewISInDate" for="NewISInDate">新入库日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="NewISInDate"></div>
+								<div class="eq-table-td eq-table-label-first"><a id="BModify" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">确认修改</a></div>
+								<div class="eq-table-td"></div>
+							</div>
+						</div>
+					</div>
+					<div data-options="region:'center',border:false" style="border-radius:0px;">
+						<table id="DHCEQBusinessList" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-add-note'" class="hisui-datagrid"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<INPUT type="hidden" id="BussID">
+	<INPUT type="hidden" id="MainFlag" value="Y">
+	<INPUT type="hidden" id="DCRRowID">
+	<INPUT type="hidden" id="DCRStatus">
+	<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+	<INPUT type="hidden" id="Type" value=#(Type)#>
+	<INPUT type="hidden" id="BussCode" value="#(BussCode)#">
+	<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+	<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+	<script type='text/javascript' src='../scripts/dhceq/em/instockmodify.js'></script>
+</body>
+</HTML>

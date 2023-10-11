@@ -1,0 +1,82 @@
+<!-- dhcpresc.queryaudit.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<ADDINS require="CmdShell"/>
+	<HISUI/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/plugins/font-awesome/font-awesome.min.css"/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcpresc/css/queryaudit.css"/>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcpresc/queryaudit.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+	</script>
+   <style type="text/css">
+  
+  </style>
+</head>
+
+<body style="padding:10px">
+<div id="MainPanel" class="hisui-layout" data-options="fit:true" > 
+	<div data-options="region:'center',title:'',border:false,headerCls:'panel-header-gray'">
+		<div class="hisui-panel" data-options="title:'审核记录列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-top:0;border-radius:0px;">	
+			<div class="hisui-layout" fit="true">	
+				<div id="prescList" toolbar="#toolbar"></div>
+			</div>
+		</div>	
+	</div>  
+</div> 
+<div id="toolbar" class="datagrid-toolbar">
+	<div id="queryForm" style="margin:10px 0px 10px 10px;">
+		<div>
+			<span class="tdstyle" style="margin-left:20px;margin-right:10px;" >起始时间</span>
+     		<input class="hisui-datebox textbox datebox-f combo-f" style="display: none;" id="stDate"/>
+     	
+			<span class="tdstyle" style="margin-left:20px;margin-right:10px;">截止时间</span>
+     		<input style="margin-left:10px;" class="hisui-datebox textbox datebox-f combo-f" style="display: none;" id="endDate"/>  
+     	
+			<span class="tdstyle" style="margin-left:20px;margin-right:10px;">&nbsp;&nbsp;&nbsp;登记号</span>
+    		<input id="patno" class="textbox validatebox-text"/>
+    	
+			<span class="tdstyle" style="margin-left:20px;margin-right:10px;">&nbsp;&nbsp;&nbsp;就诊号</span>
+    		<input id="admno" class="textbox validatebox-text"/>
+    	
+ 			<a href="#" class="hisui-linkbutton " style="float:right;margin-right:20%;" id = "query" data-options="iconCls:'icon-w-find'">查询</a>
+	    </div>
+	    <div style="margin-top:10px;">
+			<span class="tdstyle" style="margin-left:20px;margin-right:10px;vertical-align: middle;">问题类型</span>
+    		<input id="problemtype" style="width:155px" class="hisui-combobox" /> 
+    	
+			<span class="tdstyle" style="margin-left:20px;margin-right:10px;vertical-align: middle;">包含药品</span>
+    		<input id="druglist" style="width:155px" class="hisui-combobox" />
+    
+	 		<span class="tdstyle" style="margin-left:20px;margin-right:10px;vertical-align: middle;">警示级别</span>
+	 		<span><input class="hisui-radio" type="radio" label="禁止" name="manlevel" value="禁止" data-options="radioClass:'hischeckbox_square-blue'"/></span>   
+	 		<span style="margin-left:20px;"><input class="hisui-radio" type="radio" label="警示" name="manlevel" value="警示" data-options="radioClass:'hischeckbox_square-blue'"/></span>
+	 		<span style="margin-left:20px;"><input class="hisui-radio" type="radio" label="提醒" name="manlevel" value="提醒" data-options="radioClass:'hischeckbox_square-blue'"/></span>
+	 		<span style="margin-left:20px;"><input class="hisui-radio" type="radio" label="提示" name="manlevel" value="提示" data-options="radioClass:'hischeckbox_square-blue'"/></span>
+	 
+    		<a href="#" class="hisui-linkbutton " style="float:right;margin-right:20%;" data-options="iconCls:'icon-w-export'" onclick="commonExport()" id = "export">导出</a>
+		 </div>			
+	</div>
+</div>
+</body>
+</html>
+
+

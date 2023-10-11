@@ -1,8 +1,8 @@
-<!--��ϴ����-->
+﻿<!--清洗-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -10,125 +10,286 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<CSSDHISUI/>
-	
-
 </head>
+<style>
+.l-btn-plain:hover {
+	color: #339eff;
+	border-radius: 2px;
+}
+.col-linkbutton{
+	background: #e5e5e5;
+	color: #000000;
+	border-radius: 2px;
+	margin-right:10px
+}  
+.col-linkbutton>.l-btn-left{
+	overflow:visible;
+}
+</style>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:10px">
-		<div class="hisui-panel" data-options="title:'��ϴ��Ϣ�ɼ�',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="UomTB">
-				<div> 
-					<table class="Condition" id="cleantable">
-						<input id="cleantypev" name="cleantypev" type="hidden">
-						<input id="cleanCodev" name="cleanCodev" type="hidden">
-						<input id="cleanStrov" name="cleanStrov" type="hidden">
-						<input id="cleanerv" name="cleanerv" type="hidden">
-						<input id="MachineNoValue" name="MachineNoValue" type="hidden">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px">
+		<div class="hisui-panel" data-options="title:'清洗信息',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false">
+					<table class="Condition" id="CleanTable">
 						<tr>
 							<td>
-							<label>����</label><input id="cleandate" name="cleandate" class="textbox hisui-dateboxq" style="width:128px"></input>
+								<label>清洗科室</label><input class="textbox hisui-combobox" id="CleanLoc" name="CleanLoc" style="width:112px">
 							</td>
-							<td style="padding-left:20px">
-							<label>��ϴ��ʽ</label><input id="cleantype" name="cleantype" class="textbox" style="width:120px"></input>
-  							</td>
-  							<td style="padding-left:20px">
-  								<a href="#" id="btnCommit" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">����</a>
-  							</td>
+							<td>
+								<label>起始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox" style="width:114px">
+							</td>
+							<td>
+								<label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox" style="width:114px">
+							</td>
+							<td>
+								<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
 						</tr>
 						<tr>
 							<td>
-								<label>��ϴ����</label><input id="cleanmachine" name="cleanmachine" class="textbox" style="width:120px"></input>
+								<label>清洗机</label><input id="CleanMachine" name="CleanMachine" class="textbox hisui-combobox" style="width:112px">
 							</td>
-							<td style="padding-left:20px">
-								<label>��ϴ�ܺ�</label><input id="cleanCode" name="cleanCode" class="textbox" style="width:120px"></input>
+							<td>
+								<label>清洗方式</label><input id="CleanType" name="CleanType" class="textbox hisui-combobox" style="width:114px">
 							</td>
-							<td style="padding-left:20px">
-  								<a href="#" id="clear" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">����</a>
-  							</td>
+							<td>
+								<label>清洗程序</label><input id="CleanStro" name="CleanStro" class="textbox hisui-combobox" style="width:114px">
+							</td>
+							<td>
+								<a href="#" id="CommitBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">清洗 </a>
+							</td>
 						</tr>
 						<tr>
 							<td>
-								<label>��ϴ����</label><input id="cleanStro" name="cleanStro" class="textbox" style="width:120px"></input>
+								<label>清洗时间</label><input id="StartTime" name="StartTime" class="textbox hisui-timespinner" data-options="showSeconds:true" style="width:112px">
 							</td>
-							<td style="padding-left:20px">
-								<label>��ϴ��</label><input id="cleaner" name="cleaner" class="textbox" style="width:120px"></input>
+							<td>
+								<label>清洗人</label><input id="Cleaner" name="Cleaner" class="textbox hisui-combobox" style="width:114px">
 							</td>
-							<td style="padding-left:20px">
-								<a href="#" id="query" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">��ѯ</a>
+							<td>
+								<label>清洗架</label><input id="CleanBasket" name="CleanBasket" class="textbox hisui-combobox" style="width:114px">
+							</td>
+							<td>
+								<a href="#" id="CancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'">撤销</a>
 							</td>
 						</tr>
-						<tr align="center">	
-							<td colspan="2">
-								<a href="#" id="add" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="display:none">�½�</a>
+						<tr>
+							<td colspan=4 style="text-align:right">
+								<a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>&nbsp;&nbsp;
+								<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
 							</td>
 						</tr>
 					</table>
 				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="CleanList"></table>
+				</div>
 			</div>
-				<table id="tabDrugList"></table>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:600px;padding-left:0px">
-		<div class="hisui-panel" data-options="title:'��ϴ��ϸ',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="InputTB">
-				<div class="BorderLine">
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:520px;">
+		<div class="hisui-panel" data-options="title:'清洗明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
 					<table id="CleanDetailTable" class="Condition">
 						<tr>
-							<td><label>����</label><input class="textbox" id="BarCode" name="BarCode" style="width:85px" onkeyup="this.value=this.value.replace(/[^\d]/g,'') " onafterpaste="this.value=this.value.replace(/[^\d]/g,'')"></td>
-							<td><label>��ͨ��</label><input id="CommonPackage" class="textbox hisui-combobox" style="width:140px"></td>
-							<td><label>����</label><input id="CommonPackageNum" name="CommonPackageNum" class="hisui-numberbox textbox" style="width:80px"></td>
-							<td><a href="#" id="CommonPackageCreateBT" class="hisui-linkbutton" style="width:80px;">����</a></td>
+							<td><label>标牌</label><input class="textbox" id="CodeDictId" name="CodeDictId" style="width:148px"></td>
+							<td colspan="2" style="text-align:left;">	
+								<a href="#" id="UseBarCodeBT" class="hisui-linkbutton" data-options="plain:true"></a>
+								<a href="#" title="切换扫码模式" id="BarCodeSwitchBT" class="hisui-linkbutton">切换</a>
+								<input type="password" class="textbox" id="BarCodeHidden" style="border:0px;background:none;opacity:0.0;width:10px;">
+							</td>
+						</tr>
+						<tr>
+							<td><label>普通循环包</label><input id="CommonPkg" class="textbox hisui-combobox" ></td>
+							<td><label>数量</label><input id="ComPkgNum" name="ComPkgNum" class="hisui-numberbox textbox" style="width:80px" data-options="precision:0,fix:false,min:1"></td>
+							<td><a href="#" id="ComPkgCreateBT" class="hisui-linkbutton" style="width:80px;">新增</a></td>
+						</tr>
+					</table>
+					<table class="Condition">
+						<tr>
+							<td align="left">
+								<a href="#" id="AddCallBackBT" class="hisui-linkbutton col-linkbutton" data-options="plain:true">回收明细
+								<span id="CallBackNum" class="mark">0</span></a>
+								<a href="#" id="CreateBT" class="hisui-linkbutton col-linkbutton" data-options="plain:true">紧急回收单
+								<span id="CreateNum" class="mark">0</span></a>
+								<a href="#" id="AddExtBT" class="hisui-linkbutton col-linkbutton" data-options="plain:true">外来器械
+								<span id="ExtNum" class="mark">0</span></a>
+								<a href="#" id="AddUnPassCleanBtn" class="hisui-linkbutton col-linkbutton" data-options="plain:true">清洗不合格
+								<span id="UnPassCleanNum" class="mark">0</span></a>
+							</td>
+						</tr>
+						<tr>
+							<td align="left">
+								<a href="#" id="AddExpireDealBtn" class="hisui-linkbutton col-linkbutton" data-options="plain:true">过期
+								<span id="ExpireDealNum" class="mark">0</span></a>
+								<a href="#" id="AddUnPassSterBtn" class="hisui-linkbutton col-linkbutton" data-options="plain:true">灭菌不合格
+								<span id="UnPassSterNum" class="mark">0</span></a>
+							</td>
 						</tr>
 					</table>
 				</div>
-				<table class="Condition">
-					<tr>
-						<td colspan="2" align="left"><a href="#" id="AddItemBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">����ϴר����е��</a>
-							<a href="#" id="AddGYB" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">����ϴ���ð�</a>		
-						</td>
-					</tr>
-				</table>
-			</div>
-			<table id="ItemList"></table>
-		</div>
-	</div>
-	<div id="SelReqWin" class="hisui-dialog FindWin GridPadding" data-options="closed:'true',modal:true,iconCls:'icon-w-find',headerCls:'panel-header-gray'" title="����ϴר����е��">
-		<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc"> 
-			<div data-options="region:'north',border:false">
-				<div id="SelReqWinTB">
-				<table id="SelReqConditions" class="Condition">
-					<tr>
-						<td><label>��ʼ����</label><input id="SelReqWinStartDate" name="SelReqWinStartDate" class="textbox hisui-dateboxq"></td>
-						<td><label>��ֹ����</label><input id="SelReqWinEndDate" name="SelReqWinEndDate" class="textbox hisui-dateboxq"></td>
-						<td><a href="#" id="querySelReqWin" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px;">��ѯ</a></td>
-						<td><a href="#" id="SelBarCodeCreateBT" class="hisui-linkbutton" style="width:116px;">����������</a></td>
-					</tr>
-				</table>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="ItemList"></table>
 				</div>
 			</div>
-			<table id="UnCleanList"></table>
 		</div>
-	</div>	
+	</div>
 	
-	<div id="OrdWin" class="hisui-dialog FindWin GridPadding" data-options="closed:'true',modal:true,iconCls:'icon-w-find',headerCls:'panel-header-gray'" title="����ϴ���ð�">
-		<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc">
-			<div data-options="region:'north',border:false">
-  				<div id="OrdWinTB">
-  				<table id="uncleanord" class="Condition">
-					<tr>
-						<td><label>��ʼ����</label><input id="SelReqStartDate" name="StartDate" class="textbox hisui-dateboxq"></td>
-						<td><label>��ֹ����</label><input id="SelReqEndDate" name="EndDate" class="textbox hisui-dateboxq"></td>
-						<td><a href="#" id="queryord" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px;">��ѯ</a></td>
-						<td><a href="#" id="AddUnCleanOrd" class="hisui-linkbutton" style="width:116px;">����������</a></td>
-					</tr>
-				</table>
+	<!--外来器械-->
+	<div id="UnExtWin" class="hisui-dialog FindWin GridPadding" title="待清洗-外来器械" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'">
+		<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false">
+					<table id="UnExtConditions" class="Condition">
+						<tr>
+							<td><label>起始日期</label><input id="EStartDate" name="EStartDate" class="textbox hisui-datebox"></td>
+							<td><label>截止日期</label><input id="EEndDate" name="EEndDate" class="textbox hisui-datebox"></td>
+							<td><a href="#" id="QueryUnExtWin" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="AddUnExtBT" class="hisui-linkbutton">添加消毒包</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="UnExtList"></table>
 				</div>
 			</div>
-			<table id="UnCleanOrdList"></table>
 		</div>
 	</div>
-</div>
+	
+	<!--紧急回收单-->
+	<div id="SelReqWinForCallBack" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-paper',closed:'true',modal:true" title="待清洗-紧急回收单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="SelReqConditionsForCallBack" class="Condition">
+					<tr>
+						<td>开始日期</td>
+						<td><input id="FStartDate" name="CBStartDate" class="textbox hisui-datebox" ></td>
+						<td>结束日期</td>
+						<td><input id="FEndDate" name="CBEndDate" class="textbox hisui-datebox" ></td>
+						<td>回收科室</td>
+						<td><input id="BackLoc" name="BackLoc" class="textbox hisui-combobox"></td>
+						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">选取单据</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0; width:600px" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'回收单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqMasterGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="SelReqDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--清洗不合格-->
+	<div id="UnPassCleanWin" class="hisui-dialog FindWin GridPadding" title="待清洗-清洗不合格" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'">
+		<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false">
+					<table id="UnPassCleanConditions" class="Condition">
+						<tr>
+							<td><label>起始日期</label><input id="UnPassCStartDate" name="UnPassCStartDate" class="textbox hisui-datebox"></td>
+							<td><label>截止日期</label><input id="UnPassCEndDate" name="UnPassCEndDate" class="textbox hisui-datebox"></td>
+							<td><a href="#" id="QueryUnPassCleanWin" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="AddUnPassCleanBT" class="hisui-linkbutton">添加消毒包</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="UnPassCleanList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--灭菌不合格包-->
+	<div id="UnPassSterWin" class="hisui-dialog FindWin GridPadding" title="待清洗-灭菌不合格包" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'">
+		<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false">
+					<table id="UnPassSterConditions" class="Condition">
+						<tr>
+							<td><label>起始日期</label><input id="UnPassSStartDate" name="UnPassSStartDate" class="textbox hisui-datebox"></td>
+							<td><label>截止日期</label><input id="UnPassSEndDate" name="UnPassSEndDate" class="textbox hisui-datebox"></td>
+							<td><a href="#" id="QueryUnPassSterWin" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="AddUnPassSterBT" class="hisui-linkbutton">添加消毒包</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="UnPassSterList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--回收单-->
+	<div id="CallBackOrdWin" class="hisui-dialog FindWin GridPadding" title="待清洗-回收单" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'">
+		<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false">
+					<table id="CallBackUnClean" class="Condition">
+						<tr>
+							<td><label>起始日期</label><input id="CBStartDate" name="CBStartDate" class="textbox hisui-datebox" style="width:120px"></td>
+							<td><label>截止日期</label><input id="CBEndDate" name="CBEndDate" class="textbox hisui-datebox" style="width:120px"></td>
+							<td>
+								<input class='hisui-radio' data-options="checked:'true'" type="radio" label='全部' name='ReqLevel' value=''>
+								<input class='hisui-radio' type="radio" label='紧急' name='ReqLevel' value='1'>
+								<input class='hisui-radio' type="radio" label='一般' name='ReqLevel' value='0'>
+							</td>
+							<td><a href="#" id="QueryCallBackOrd" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="AddCallBackUnCleanOrd" class="hisui-linkbutton">添加消毒包</a></td>
+						</tr>
+						<tr>
+							<td><label>灭菌方式</label><input id="SterTypeId" name="SterTypeId" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><label>消毒包</label><input id="PkgDesc" name="PkgDesc" class="textbox hisui-combobox" style="width:120px"></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="CallBackUnCleanGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--过期-->
+	<div id="ExpireDealWin" class="hisui-dialog FindWin GridPadding" title="待清洗-过期包" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'">
+		<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false">
+					<table id="ExpireDealConditions" class="Condition">
+						<tr>
+							<td><label>起始日期</label><input id="ExpStartDate" name="ExpStartDate" class="textbox hisui-datebox"></td>
+							<td><label>截止日期</label><input id="ExpEndDate" name="ExpEndDate" class="textbox hisui-datebox"></td>
+							<td><a href="#" id="QueryExpireDeal" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="AddExpireDealBT" class="hisui-linkbutton">添加消毒包</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="ExpireDealList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<csp:Include Page="cssdhui.packageclean.cleantypedetailwin.csp">
 	<script type="text/javascript" src="../scripts/cssd/Clean/CleanCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/UnCleanOprWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/UnCleanExtWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/UnPassCleanWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/UnPassSterWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/ExpireDealWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/CallBackCleanOrdWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Clean/SelCallBackItm.js"></script>
 	<script type="text/javascript" src="../scripts/cssd/Clean/CleanInfoCollect.js"></script>
 </body>
 </html>

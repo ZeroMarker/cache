@@ -1,0 +1,414 @@
+<!--nur.hisui.nursingreportscore.csp 病历表单分值字段配置-->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+<!--meta http-equiv="Content-Type" content="text/html; charset=utf-8"-->
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<STYLE type='text/css'>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	#_HospList + .combo {
+		width:auto !important;
+	}
+</STYLE>
+</head>
+<body>
+	 <server>
+	 	s NERSTypeJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("Nur.NIS.EmrReportScore","NERSType")
+	</server>
+	<div class="hisui-layout" data-options="fit:true,border:false" style=""> 
+		<div data-options="region:'north',split:false,title:'',border:false" style="height:53px;border-bottom:1px dashed #ccc;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label">
+						<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+					</td>
+					<td>
+						<input id="_HospList" style="width:350px;"/>
+					</td>
+					<td class="r-label">
+						<label for="search">表单名称/分值字段</label>
+					</td>
+					<td>
+						<input id="search" class="hisui-searchbox" style="width:223px;" placeholder="请输入表单名称或分值字段"/>
+					</td>
+				</tr>
+			</table>
+	    </div>
+	    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+	    	<table id="ReportScoreGrid"></table>
+	    </div>
+	</div>
+	<!--弹框-->
+	<div id="referDialog">
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<label for="Type" class="clsRequired">类型</label>
+				</td>
+				<td>
+					<input id="Type" class="hisui-combobox textbox" style="width:407px;"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="Code" class="clsRequired">编码</label>
+				</td>
+				<td>
+					<input id="Code" class="textbox" style="width:400px;"/>
+				</td>
+			</tr>	
+			<tr>
+				<td class="r-label">
+					<label for="tableName" class="clsRequired">表单名称</label>
+				</td>
+				<td>
+					<input id="tableName" class="hisui-combobox textbox" style="width:407px;"/>
+				</td>
+			</tr>
+			<tr style="height:44px;">
+				<td class="r-label">
+					<label for="scoreField" class="clsRequired">分值字段</label>
+				</td>
+				<td>
+					<input id="scoreField" style="width:400px;" class="textbox">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">分值字段2</td>
+				<td>
+					<input id="scoreField2" style="width:400px;" class="textbox" placeholder="日期Item//时间Item//分数Item，多个数据使用^分割">
+				</td>
+			</tr>
+			<tr style="color:red">
+				<td class="r-label">注意:</td>
+				<td>
+					病历曲线图默认使用分值字段，若同时存在则优先使用分值字段2
+				</td>
+			</tr>
+		</table>
+	</div>
+</body>
+<script language="javascript">
+var NERSTypeJson=#(NERSTypeJson)#;
+(function(){
+	var GV = {
+    	ClassName: "NurMp.NursingRecordsChart",
+	};
+	var USERID = session["LOGON.USERID"];
+	var CTLOCID = session["LOGON.CTLOCID"];
+	var HOSPID = session["LOGON.HOSPID"];
+	function getHospitalID() {
+		return $('#_HospList').combobox('getValue') || HOSPID;	
+	}
+	function initUI() {
+		initSearchCondition();
+		//initPageDom();
+		initType();
+	}
+	function initType(){
+		$HUI.combobox("#Type", {
+			editable: false,
+			mode:'local',
+			multiple:false,
+			selectOnNavigation:true,
+		  	valueField:'value',
+		  	textField:'text', 
+		  	data:NERSTypeJson
+		});
+	}
+	/**
+	* @description: 初始化查询条件
+	*/
+	function initSearchCondition() {
+		var hospComp = GenHospComp("Nur_IP_EmrReportScore");
+		hospComp.jdata.options.onSelect = function(e,t){
+			initPageDom();
+		}
+		hospComp.jdata.options.onLoadSuccess= function(data){
+			initPageDom();
+		}
+		// 查询
+		$('#search').searchbox({
+			searcher: function(value) {
+				initPageDom();
+			},
+			prompt: '请输入表单名称或分值字段'
+		});
+		
+	}
+	function initPageDom() {
+		var toolbar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: append
+	    }, {
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: modify
+	    }, {
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: remove
+	    }];
+	    var columns=[[
+	    	{ field: 'Type', title: '类型', width: 130},
+	    	{ field: 'Code', title: '编码', width: 100},
+			{ field: 'tableName', title: '表单名称', width: 260, editor: 'validatebox' },
+			{ field: 'scoreField', title: '分值字段', width: 180, editor: 'validatebox',wordBreak:"break-all" },
+			{ field: 'scoreField2', title: '分值字段2', width: 450, editor: 'validatebox',wordBreak:"break-all" },
+			{ field: 'validLocs', title: '生效科室', width: 100},
+			{ field: 'user', title: '录入人', width: 150},
+			{ field: 'time', title: '录入时间', width: 150},
+        ]]
+	    $('#ReportScoreGrid').datagrid({  
+			fit : true,
+			width : 'auto',
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : true,
+			autoRowHeight : false,
+			loadMsg : '加载中..',  
+			pagination : true, 
+			rownumbers : true,
+			idField:"rw",
+			pageSize: 15,
+			pageList : [15,50,100,200],
+			columns :columns,
+			toolbar :toolbar,
+			autoRowHeight:true,
+			nowrap:false,  /*此处为false*/
+			url : $URL+"?ClassName="+GV.ClassName+"&QueryName=GetEmrReportList",
+			onBeforeLoad:function(param){
+				$('#ReportScoreGrid').datagrid("unselectAll");
+				param = $.extend(param,{keyword:$('#search').searchbox('getValue'),hospDR:getHospitalID()});
+			},
+			onDblClickRow:function(rowIndex, rowData){
+				modify();
+			}
+		})
+	}
+	/**
+    * @description: 添加元素
+    */ 
+	function append() {
+		$HUI.combobox('#tableName', {
+			valueField: 'id',
+			textField: 'desc',
+			defaultFilter:2,
+			loader: function(param, success, error){
+				$cm({
+					ClassName: GV.ClassName,
+					QueryName: "GetAssessItems",
+					keyword:"",
+					loc: CTLOCID,
+					Hospital:getHospitalID(),
+					rows: 99999
+				},function(data){
+					success(data.rows);
+				});
+			}
+		});
+		$HUI.dialog('#referDialog',{
+			title: '新增',
+			width:502,
+			height:340,
+			iconCls:'icon-w-add',
+			resizable:false,
+			modal:true,
+			buttons:[{
+				text:'保存',
+				handler:function(){
+					save("");
+				}
+				},{
+					text:'取消',
+					handler:function(){
+						$HUI.dialog('#referDialog').close();
+					}
+				}
+			]
+		});
+		$("#Type,#tableName").combobox("setValue","");
+		$('#Code,#tableName,#scoreField,#scoreField2').val('');
+	}
+	/**
+    * @description: 删除
+    */ 
+	function remove() {
+		var row = $('#ReportScoreGrid').datagrid('getSelections')[0];
+		if (row.length == 0) {
+			$.messager.popover({ msg: '请选择数据行！', type: 'alert' , timeout: 1000});
+			return ;
+		}
+		$cm({
+			ClassName: "Nur.NIS.EmrReportScore",
+			MethodName: "DelEmrReportScore",
+			ID: row.id,
+			UserId: USERID
+		}, function(ret) {
+			if (ret == '0') {
+				$.messager.popover({ msg: '删除成功！', type: 'success' , timeout: 1000});
+				$('#ReportScoreGrid').datagrid('reload');
+			}else {
+				$.messager.popover({ msg: ret, type: 'error' , timeout: 1000});
+				return;
+			}
+		});
+	}
+	/**
+    * @description: 修改
+    */ 
+	function modify() {
+		var row = $('#ReportScoreGrid').datagrid('getSelections')[0];
+		if (!row || row.length == 0) {
+			$.messager.popover({ msg: '请选择数据行！', type: 'alert' , timeout: 1000});
+			return ;
+		}
+		$HUI.combobox('#tableName', {
+			valueField: 'id',
+			textField: 'desc',
+			defaultFilter:2,
+			loader: function(param, success, error){
+				$cm({
+					ClassName: GV.ClassName,
+					QueryName: "GetAssessItems",
+					keyword:"",
+					loc: CTLOCID,
+					Hospital:getHospitalID() ,
+					rows: 99999
+				},function(data){
+					success(data.rows);
+					var tableId = data.rows.filter(function(e){ return e.desc == row.tableName});
+					$('#tableName').combobox('setValue', tableId[0].id);
+				});
+			}
+		});
+		$HUI.dialog('#referDialog',{
+			title: '修改',
+			width:502,
+			height:340,
+			iconCls:'icon-w-edit',
+			resizable:false,
+			modal:true,
+			buttons:[{
+				text:'保存',
+				handler:function(){
+					save(row.id);
+				}
+				},{
+					text:'取消',
+					handler:function(){
+						$HUI.dialog('#referDialog').close();
+					}
+				}
+			]
+		});
+		$.each(row,function(key,value){  
+			if (key =="Code") {
+				$("#Code").val(value);
+			}
+			var domID = key.replace(key[0],key[0].toLowerCase());
+			if (domID =="typeId") {
+				$("#Type").combobox('setValue', value);
+			}
+			if ($('#' + domID).length) {
+				var domType = $('#' + domID).attr('class');
+		        if (!!domType) {
+		        	if (domType.indexOf('combobox') > -1) {
+			        	$('#' + domID).combobox('setText', value);
+			        } else if (domType.indexOf('textbox') > -1){
+			        	$('#' + domID).val(value);
+			        } else {}
+				}
+			}
+		});
+	}
+	/**
+    * @description: 保存
+    */ 
+	function save(id) {
+		var obj = {
+			id:id,
+			tableName:$('#tableName').combobox('getValue'),
+			scoreField:$('#scoreField').val(),
+			scoreField2:$('#scoreField2').val(),
+			Code:$("#Code").val(),
+			Type:$('#Type').combobox('getValue'),
+			userId:USERID,
+			locId:CTLOCID,
+			hospID:getHospitalID()
+		};
+		if (!obj.Type) {
+			$.messager.popover({ msg: '请选择类型', type: 'error'});
+			$("#Type").next('span').find('input').focus();
+			return;
+		}
+		if (!obj.Code) {
+			$.messager.popover({ msg: '请填写编码！', type: 'error'});
+			$("#Code").focus();
+			return;
+		}
+		if (!obj.tableName) {
+			$.messager.popover({ msg: '请选择表单名称！', type: 'error'});
+			$("#tableName").next('span').find('input').focus();
+			return;
+		}
+		if (!obj.scoreField) {
+			$.messager.popover({ msg: '请填写分值字段！', type: 'error'});
+			$("#scoreField").focus();
+			return;
+		}
+		$cm({
+			ClassName: "Nur.NIS.EmrReportScore",
+			MethodName: "AddOrUpdateEmrReportScore",
+			data: JSON.stringify(obj),
+			dataType:"text"
+		}, function(ret) {
+			if (ret == '0') {
+				if(id ==""){
+					$.messager.popover({ msg: '添加成功！', type: 'success' , timeout: 1000});
+				}else{
+					$.messager.popover({ msg: '修改成功！', type: 'success' , timeout: 1000});
+				}
+				$HUI.dialog('#referDialog','close');
+				$('#ReportScoreGrid').datagrid('reload');
+			}else {
+				if(id ==""){
+					$.messager.popover({ msg: '添加失败！' + ret, type: 'error' , timeout: 1000});
+				}else{
+					$.messager.popover({ msg: '修改失败！' + ret, type: 'error' , timeout: 1000});
+				}
+				return;
+			}
+		});
+	}
+	/*whc 2020-07-08解决不能输入^问题*/
+      if(websys_isIE==true){
+        document.onkeypress = null;
+      }else{
+        document.removeEventListener("keydown", websys_sckey)
+      }
+      document.onkeydown = null;
+      /*end*/
+	initUI();	
+}())
+</script>
+
+</html>

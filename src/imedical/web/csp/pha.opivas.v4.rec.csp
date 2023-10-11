@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--门诊配液-接收申请
+	csp:pha.opivas.v4.rec.csp
+	js: pha/opivas/v4/rec.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <ADDINS require="RWCard,PublicReadPerson" />
+    <server>
+        s ReadAccExpEncrypt=##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+        s GetCardTypeEncrypt=##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+        s ReadCardTypeEncrypt=##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+        d ##class(PHA.COM.ReadCard).LoadPlugin()
+    </server>
+</head>
+
+<body>
+    <div style="display:none;">
+        <input id='ReadAccExpEncrypt' type='hidden' value='#(ReadAccExpEncrypt)#'></input>
+        <input id='GetCardTypeEncrypt' type='hidden' value='#(GetCardTypeEncrypt)#'></input>
+        <input id='ReadCardTypeEncrypt' type='hidden' value='#(ReadCardTypeEncrypt)#'></input>
+        <server>
+            d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+        </server>
+    </div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',border:false">
+                    <div id="panelRec" class="hisui-panel" title="接收申请" iconCls="icon-drug-audit" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'">
+                        <table id="gridRec"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridRecBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conStDate">#(..Get("申请开始日期"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox" id='conStDate' data-pha='class:"hisui-datebox",query:true' style="width:125px" />
+                </td>
+                <td class="r-label">
+                    <label for="conPivasLoc">#(..Get("配液中心"))#</label>
+                </td>
+                <td>
+                    <input id='conPivasLoc' data-pha='class:"hisui-combobox",query:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conDocLoc">#(..Get("医生科室"))#</label>
+                </td>
+                <td>
+                    <input id='conDocLoc' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conPatNo">#(..Get("登记号"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-validatebox" id='conPatNo' style="width:153px" data-pha='class:"hisui-validatebox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conCardNo">#(..Get("卡号"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-validatebox" id='conCardNo' style="width:153px" data-pha='class:"hisui-validatebox",query:true,clear:true' />
+                </td>
+                <td>
+                    <a id="btnReadCard" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">#(..Get("读卡"))#</a>
+                </td>
+                <td>
+                    <a id="btnClean" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conStDate">#(..Get("申请开始日期"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox" id='conEdDate' data-pha='class:"hisui-datebox",query:true' style="width:125px" />
+                </td>
+                <td class="r-label">
+                    <label for="conRecStatus">#(..Get("接收状态"))#</label>
+                </td>
+                <td>
+                    <input id='conRecStatus' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conPack">#(..Get("打包状态"))#</label>
+                </td>
+                <td>
+                    <input id='conPack' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conEMLGLoc">#(..Get("留观室"))#</label>
+                </td>
+                <td>
+                    <input id='conEMLGLoc' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td>
+                </td>
+                <td>
+                </td>
+                <td>
+                </td>
+                <td>
+                    <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+
+                </td>
+                <td style="display:none">
+                    <a id="btnStart" class="hisui-linkbutton" data-options="iconCls:'icon-w-clock'">#(..Get("自动刷新"))#</a>
+                </td>
+                <td  style="display:none">
+                    <a id="btnStop" class="hisui-linkbutton" data-options="iconCls:'icon-w-clock'">#(..Get("停止刷新"))#</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div class="pha-line-bar">
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-accept" id="btnPass">#(..Get("接收"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-no" id="btnRefuse">#(..Get("拒绝接收"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-bag" id="btnPack">#(..Get("打包接收"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-bottle-drug" id="btnPivas">#(..Get("配液接收"))#</a>
+        </div>
+
+    </div>
+    </div>
+    <!-- 门诊配液公用 -->
+    <link rel="stylesheet" href="../scripts/pha/opivas/v4/css/ui.css">
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-detailview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/ux.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/store.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/com.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/rec.js"></script>
+</body>
+
+</html>

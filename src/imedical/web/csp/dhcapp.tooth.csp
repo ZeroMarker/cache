@@ -1,0 +1,113 @@
+<!--dhcapp.tooth.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></SCRIPT>
+<style type='text/css'>
+.frm-table{
+	width:100%;
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.frm-table td:nth-child(2n+1){
+	text-align:right;
+	min-width:60px;
+	padding:0 10px;
+}
+</style>
+</head>
+<body class="hisui-layout" >
+	<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:10px;">
+		<div class="hisui-panel" fit="true"  title="#(..Get("本次处理牙位"))#" data-option="headerCls:'panel-header-gray'"style="height:100%;border-radius:4px;">
+			<form id="mainForm" method="post"> 
+			<table class="frm-table">
+				<tr>
+					<td>
+						<iframe class='textbox' id='CurTreat' src='emr.ip.tool.tooth.csp?MWToken=#(%session.SessionId)#' frameborder=1 style="width:1050px;height:365px;"></iframe>
+					</td>
+				</tr>
+				<tr>
+					<td style="text-align:center;">
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="SaveDataClick()">#(..Get("保存"))#</a>
+					</td>
+				</tr>
+			</table>
+			</form>
+		</div>
+	</div>
+</body>
+<server>
+s EpisodeID=$G(%request.Data("EpisodeID",1))
+s PatientID=$G(%request.Data("PatientID",1))
+//s toothdate=$G(%request.Data("toothdate",1))
+</server>
+<script type="text/javascript">
+
+	function InitData()
+	{
+    	
+        $.each(toothdate, function(id, value) {
+            if ($('#'+id).prop("tagName")=="IFRAME"){
+                var src=$('#'+id).attr('src');
+                src=src+(src.indexOf('?')>-1?'&':'?')+'initValue='+value;
+                $('#'+id).attr('src',src);
+                $('#'+id).attr('value',value);
+            }else{
+                $('#'+id).setValue(value);
+            }
+        });
+}
+function SaveDataClick()
+{
+    if(!$('#mainForm').form('validate')){
+        $.messager.popover({msg:"请完成必填字段的填写",type:'alert'});
+        return;
+    }
+    var SaveObj=new Object();
+    var $obj=$('.frm-table>tbody>tr>td>[id]');
+    for(var i=0;i<$obj.size();i++){
+        var id=$obj.eq(i).attr('id');
+        if(id=='') continue;
+        var tagName=$obj.eq(i).prop("tagName");
+        if(tagName=='A') continue;
+        if (tagName=="IFRAME"){
+            var GetPageDataForOut=$('#'+id)[0].contentWindow.GetPageDataForOut;
+            if(typeof GetPageDataForOut!='function'){
+                continue;
+            }
+            var value=GetPageDataForOut();
+        }else{
+            var value=$obj.eq(i).getValue();
+            var childClassName=$obj.eq(i).children().attr('class');
+            if(childClassName&&(childClassName.indexOf('kw-section-list')>-1)){
+                value=value.length?value[0].id:'';
+            }
+        }
+        SaveObj[id]=value;
+    }
+    var SaveData=JSON.stringify(SaveObj);
+    if (websys_showModal('options').CallBackFunc) {
+		websys_showModal('options').CallBackFunc(SaveObj);
+	}else{
+		window.close();
+	}
+}
+function getSelectedToothObj()
+{
+	if (window.parent[0].GetToothData){
+	data=window.parent[0].GetToothData();
+	if (data=="") return "";
+	var Obj=JSON.parse(data);
+	return JSON.parse(Obj.CurTreat);
+	}else{
+	return ""	
+		}
+}
+</script>
+</html>

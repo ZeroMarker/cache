@@ -1,0 +1,737 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+Set PatientListPage = ""
+Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+Set AuthorityFlag = $GET(%request.Data("AuthorityFlag", 1))
+Set DefaultCode = $GET(%request.Data("DefaultCode", 1))
+Set SinglePatient = $GET(%request.Data("SinglePatient", 1))
+Set From = $GET(%request.Data("from", 1))
+Set UserType = ##class(Nur.NIS.Service.Base.User).GetUserType(%session.Get("LOGON.USERID"))
+Set IsShowPatList = $GET(%request.Data("IsShowPatList", 1))
+Set IsShowPatInfoBannner = $GET(%request.Data("IsShowPatInfoBannner", 1))
+</script>
+<html lang="zh-CN">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	<style type='text/css' class="eduExeStyle">
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			background-color: #fff;
+			margin: 4px !important;
+			height: calc(100% - 9px) !important;
+		}
+		.adrs td[field="adrsDesc"]{border-right: 0;}
+		#myCanvas+table tr:last-of-type>td[field="adrsDesc"]{border-radius: 0 0 0 4px;}
+		.adrs .datagrid-view .datagrid-body table.datagrid-btable-frozen tr:first-of-type>td{border-top: 1px solid #cccccc;}
+		.adrs .datagrid-view2 .datagrid-body table.datagrid-btable-frozen tr:first-of-type>td:last-of-type{border-radius: 0 4px 0 0;}
+		.adrs .datagrid-view2 .datagrid-body table.datagrid-btable-frozen+table tr:last-of-type>td:last-of-type{border-radius: 0 0 4px 0;}
+
+		.panel-header,
+		.panel-body {
+			width: auto !important;
+		}
+
+		#mvsLayout>.layout-panel-center {
+			width: calc(100% - 225px) !important;
+		}
+
+		/* #wardPatientCondition {
+			margin-top: 5px;
+			width: 206px;
+			padding: 0 1px;
+		} */
+
+		.panel-header,
+		.panel-body {
+			width: auto !important;
+		}
+
+		#ctcRecordModal input.textbox {
+			width: 100%; box-sizing: border-box;
+		}
+
+		#ctcRecordModal .dialog-button {
+			padding-top: 5px;
+		}
+
+		.healDetail,
+		.healDetailADRs,
+		.healDetailCurve {
+			line-height: 27px;
+			width: 100%;
+		}
+
+		hr.dashed {
+			border-top: 0;
+			border-bottom: 1px dashed #ccc;
+			margin: 4px 0 10px;
+		}
+
+		.adrs .datagrid-wrap.panel-body.panel-body-noheader {
+			border: 0;
+		}
+
+		.adrs .datagrid-wrap.panel-body.panel-body-noheader tr>td:first-of-type {
+			border-left: 1px solid #ddd;
+		}
+
+		.adrs .datagrid-header td.datagrid-header-over,
+		.adrs .datagrid-row-over {
+			background: transparent;
+		}
+
+		.adrs .datagrid-column-over {
+			background: #dcf0ff;
+		}
+
+		#evaluateTree .tree-icon {
+			display: none;
+		}
+
+		#tplType+.combo>input {
+			width: 128px !important;
+		}
+
+		#type+.combo>input {
+			width: 390px !important;
+		}
+
+		#adrsInput+.searchbox>input {
+			width: 230px !important;
+		}
+
+		#assessInsertDate+.datebox>input,
+		#assessStartDate+.datebox>input,
+		#assessEndDate+.datebox>input {
+			width: 80px !important;
+		}
+
+		.adrsContent {
+			display: flex;
+		}
+
+		.adrsContent+.adrsContent {
+			margin-top: 5px;
+		}
+
+		.adrsContent>div:first-of-type {
+			flex: 3;
+		}
+
+		.adrsContent>div:last-of-type {
+			flex: 2;
+		}
+
+		.adrsContent h3 {
+			background: transparent;
+			font-size: 16px;
+			line-height: normal;
+			color: black;
+			font-weight: normal;
+		}
+
+		label.checkbox,
+		label.radio {
+			height: auto;
+		}
+
+		.adrsContent table tr>td:first-of-type {
+			width: 70px;
+			vertical-align: top;text-align: right;
+		}
+
+		.adrsContent table tr td {
+			word-break: break-all;
+		}
+
+		.adrs .datagrid-btable.datagrid-btable-frozen {
+			top: 0;
+		}
+
+		.l-btn-small {
+			outline: none;
+		}
+
+		.adrs .l-btn-small .l-btn-text,
+		.adrs .l-btn-small .l-btn-icon {
+			width: 20px;
+		}
+
+		a[name="showADRsCurve"] {
+			float: right;
+		}
+
+		td[field="adrsDesc"]>div {
+			line-height: 30px;
+		}
+
+		ul>li.showNode>div>span.tree-join {
+			background: url(../scripts_lib/hisui-0.1.0/dist/css/images/blue/tree_lines.png) -97px center no-repeat !important;
+		}
+
+		ul>li.showNode>div>span.tree-expanded {
+			background: url(../scripts_lib/hisui-0.1.0/dist/css/images/blue/tree_lines.png) -17px center no-repeat !important;
+		}
+
+		li.showNode>ul>li.showNode>div>span.tree-line {
+			background: none !important;
+		}
+
+		.unman {
+			background: url(../images/unman.png) no-repeat;
+			background-size: cover;
+		}
+
+		td[field="adrsDescs"] div.datagrid-cell,
+		.datagrid-cell-group {
+			text-overflow: ellipsis;
+			padding: 0 8px;
+		}
+
+		#tbEvaluate+div.panel>div {
+			border: 1px solid #cccccc;
+		}
+
+		.labelStar {
+			color: red;
+			vertical-align: bottom;
+			line-height: 100%;
+		}
+
+		#ssForm table tr {
+			height: 40px;
+		}
+
+		.adrs .datagrid-header {
+			background: transparent;
+		}
+
+		#adrsPanel {
+			overflow: hidden;
+		}
+
+		.adrs .datagrid-view1>.datagrid-header,
+		.adrs .datagrid-view2>.datagrid-header {
+			border: 0;
+		}
+
+		.adrs table.datagrid-btable.datagrid-btable-frozen {
+			top: 0 !important;
+			/* border-top: 1px solid #cccccc; */
+		}
+		#ssForm+div>.panel-body{border-color: #cccccc;}
+		#ctcRecordForm>table>tbody>tr>td:first-of-type{white-space: nowrap;}
+		#ctcRecordForm>table>tbody>tr>td{padding: 5px 0px;}
+		#ctcRecordForm>table>tbody>tr>td.r-label{padding-right: 10px;}
+		#ctcRecordForm>table>tbody>tr:nth-of-type(2)>td{padding-top: 0px;padding-bottom: 0px;}
+		#ctcRecordForm>table>tbody>tr:nth-of-type(2)>td label{margin-right: 10px;}
+		#ctcAEModal>.panel>div{height: auto!important;}
+		.healDetailADRs tr>td>span{text-align: right;display: inline-block;white-space: nowrap;}
+#patFrame{height:40px;}
+a[name$="SubRecord"]{margin-left: 10px;}
+a[name$="SubRecord"]+a[name$="SubRecord"]{margin-left: 5px;}
+	</style>
+	<script language="javascript">
+		var EpisodeID = "#(EpisodeID)#";
+		window.EpisodeIDStr = EpisodeID;
+		// 监听EpisodeIDStr
+		Object.defineProperties(window, {
+			EpisodeIDStr: {
+				configurable: true,
+				set: function (newValue) {
+					console.log('你修改了 EpisodeIDStr 的值：' + newValue);
+					EpisodeID = newValue;
+					if (EpisodeID) {
+						InitPatInfoBanner(EpisodeID)
+						console.log(134534);
+						getELTableData();
+					}
+				}
+			}
+		});
+		var AuthorityFlag = "#(AuthorityFlag)#";
+		var DefaultCode = "#(DefaultCode)#";
+		var SinglePatient = "#(SinglePatient)#";
+		var From = "#(From)#";
+		var UserType = "#(UserType)#";
+		var docFlag = "DOCTOR" == UserType ? true : false;
+		var IsShowPatList = "#(IsShowPatList)#";
+		var IsShowPatInfoBannner = "#(IsShowPatInfoBannner)#";
+		IsShowPatList = "Y" == IsShowPatList ? true : false;
+		IsShowPatInfoBannner = "Y" == IsShowPatInfoBannner ? true : false;
+	</script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.CTCEvaluationRecord.js" charset=gbk></script>
+</head>
+
+<body>
+	<!-- <div style="width: 223px;margin-right: 10px;">
+	<div style="border: 1px solid #cccccc;padding: 5px;margin-bottom: 10px;">
+		<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、登记号、床号"))#'" style="width:208px;"/>
+		<div id="wardPatientCondition" class="hisui-switchbox" data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+		</div>
+	</div>
+	<div class="hisui-panel" title="患者列表" id="patientList" data-options="headerCls:'panel-header-gray',iconCls:'icon-patient'" style="padding: 10px;">
+		<ul id="patientTree" data-options="animate:true"></ul>
+	</div>
+</div> -->
+	<div id="mvsLayout" class="hisui-layout" data-options="fit:true">
+		<csp:if condition='"Y"=IsShowPatList'>
+			<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+		</csp:if>
+		<!-- 右侧内容 -->
+		<div id="rightContent" data-options="region:'center',title:'',split:true" style="border:0;overflow: hidden;">
+			<div class="ctcContent" style="overflow: hidden;">
+				<csp:if condition='"Y"=IsShowPatInfoBannner'>
+					<div id="patFrame">
+						<csp:Include Page="dhcdoc.patinfo.banner.csp">
+					</div>
+				</csp:if>
+				<div style="padding: 1px;">
+					<div id="adrsPanel" class="hisui-panel" title="恶性肿瘤放化疗不良反应评估"
+						data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding: 10px 10px 0;">
+						<div style="display: flex;">
+							<table style="width: 300px;height: 300px;" id="evaluateList" class="hisui-datagrid" title="评价方案列表"
+								data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:false,
+								toolbar: [{
+									iconCls: 'icon-add',
+									text:'新增',
+									handler: addELRow
+								},{
+									iconCls: 'icon-write-order',
+									text:'修改',
+									handler: editELRow
+								},{
+									iconCls: 'icon-cancel',
+									text:'删除',
+									handler: deleteELRow
+								}],
+								onClickRow: selectELRow,
+								onDblClickRow:editELRow
+							">
+								<thead>
+									<tr>
+										<th data-options="field:'propertyName',width:180">#(..Get("评价属性"))#</th>
+										<th data-options="field:'date',width:100">#(..Get("创建日期"))#</th>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+							<div style="flex: 1;height: 100%;margin-left: 10px;">
+								<table class="healDetail" cellpadding="0" style="border-collapse: collapse;">
+									<tr>
+										<td colspan="3">#(..Get("治疗模式："))#</td>
+									</tr>
+									<tr>
+									</tr>
+								</table>
+								<hr class="dashed">
+								<p style="padding-bottom: 10px;">
+									<a href="javascript:void(0)" class="hisui-linkbutton" id="newBuild" data-options="iconCls:'icon-w-add'"
+										onclick="openCtcAEModal();">新增</a>
+									<a href="javascript:void(0)" class="hisui-linkbutton" id="prevPage"
+										data-options="iconCls:'icon-w-arrow-left'" onclick="prevPage();">上一页</a>
+									<a href="javascript:void(0)" class="hisui-linkbutton" id="nextPage"
+										data-options="iconCls:'icon-w-arrow-right'" onclick="nextPage();">下一页</a>
+									<a href="javascript:void(0)" class="hisui-linkbutton" id="printBtn"
+										data-options="iconCls:'icon-w-print'" disabled onclick="prePrint();">打印</a>
+									<!-- <a href="javascript:void(0)" class="hisui-linkbutton" id="createPic" data-options="iconCls:'icon-camera'" disabled>生成图片</a> -->
+								</p>
+								<div class="adrs">
+									<table id="subRecordTable"></table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 模态框 -->
+	<div id="ctcRecordModal" class="hisui-dialog" title="新增"
+		style="top: 50px;left: 300px;padding: 5px 10px 0;width: 960px;" data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+		text:'保存',
+		handler:saveELRow
+	},{
+		text:'取消',
+		handler:function(){$HUI.dialog('#ctcRecordModal').close();}
+	}]">
+		<div id="patFrame">
+			<csp:Include Page="dhcdoc.patinfo.banner.csp">
+		</div>
+		<form id="ctcRecordForm">
+			<table cellpadding="0" style="border-collapse: collapse;width: 100%;table-layout: fixed;" class="modalTable">
+				<colgroup>
+					<!-- <col width="10px"> -->
+					<col style="width: 66px;" />
+					<col/>
+				</colgroup>
+				<tr>
+					<td class="r-label"><span>#(..Get("评价属性"))#</span></td>
+					<td>
+						<input id="propertyName" class="hisui-validatebox textbox" data-options="required:true"
+							placeholder="#(..Get("请输入创建的评价属性"))#">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><span>#(..Get("治疗模式"))#</span></td>
+					<td>
+						<input readonly="required" data-options="onChecked:modelTypeChange,required:true" class="hisui-radio"
+							type="radio" label="单纯化疗" name="modelType" value="0">
+						<input readonly="required" data-options="onChecked:modelTypeChange,required:true" class="hisui-radio"
+							type="radio" label="单纯放疗" name="modelType" value="1">
+						<input readonly="required" data-options="onChecked:modelTypeChange,required:true" class="hisui-radio"
+							type="radio" label="放化综合治疗" name="modelType" value="2">
+						<input readonly="required" data-options="onChecked:modelTypeChange,required:true" class="hisui-radio"
+							type="radio" label="其他" name="modelType" value="3">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><span>#(..Get("化疗方案"))#</span></td>
+					<td>
+						<input id="chemotherapyName" class="hisui-validatebox textbox" placeholder="请输入化疗方案">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><span>#(..Get("放疗部位"))#</span></td>
+					<td>
+						<input id="radiotherapyLocation" class="hisui-validatebox textbox" placeholder="以/分隔多个放疗部位">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><span>#(..Get("放疗总剂量"))#</span></td>
+					<td>
+						<input id="radiotherapyDose" class="hisui-validatebox textbox" placeholder="以/分隔不同部位使用剂量，顺序与放疗部位对应">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><span>#(..Get("其他"))#</span></td>
+					<td>
+						<input id="otherPlan" class="hisui-validatebox textbox" placeholder="请输入治疗模式">
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+	<!-- 不良反应评价标准 -->
+	<div id="ctcAEModal" class="hisui-dialog" title="新增" style="top: 25;left: 25;padding: 10px 10px 0;width: 1300px;"
+		data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true,buttons:[{
+		text:'保存',
+		id:'saveCtcAE',
+		handler:saveCTCSubRecord
+	},{
+		text:'审核',
+		id:'auditCtcAE',
+		handler:function(){saveCTCSubRecord(1);}
+	},{
+		text:'撤销审核',
+		id:'recallCtcAE',
+		handler:recallCTCSubRecord
+	},{
+		id:'cancelCtcAE',
+		text:'取消',
+		handler:function(){$HUI.dialog('#ctcAEModal').close();}
+	}]">
+		<div style="display: flex;">
+			<div style="width: 376px;margin-right: 10px;" id="ardsTree">
+				<div class="hisui-panel" title="不良反应评价标准(CTCAE)" style="padding:10px 0 0 10px;display: flex;flex-direction: column;"
+					data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+					<div>
+						<input id="evaluateInput" style="width: 188px;height: 30px;" class="hisui-searchbox textbox"
+							data-options="prompt:$g('评价系统、不良反应'),searcher:filterEvaluate">
+						<a href="#" class="hisui-linkbutton" id="toggleFold"
+							style="float: right;margin: 0 10px;">#(..Get("收起"))#</a>
+						<a href="#" class="hisui-linkbutton" onclick="citeTemplate();"
+							style="float: right;margin-left: 10px;">#(..Get("引用模板"))#</a>
+					</div>
+					<div style="overflow:auto;height: 458px;">
+						<div id="evaluateTree" data-options="animate:true"></div>
+					</div>
+				</div>
+			</div>
+			<div style="flex: 1;">
+                <div id="patFrame">
+					<csp:Include Page="dhcdoc.patinfo.banner.csp">
+				</div>
+				<table class="healDetailADRs" cellpadding="0" style="border-collapse: collapse;margin-bottom: 5px;">
+					<tr>
+						<td>#(..Get("治疗模式："))#</td>
+						<!-- <td>AAA</td>
+					<td>AAA</td>
+					<td>AAA</td> -->
+					</tr>
+					<tr>
+						<td><span>#(..Get("评估/更新人："))#</span></td>
+						<td><span>#(..Get("审核人："))#</span></td>
+						<td><span>#(..Get("审核时间："))#</span></td>
+					</tr>
+				</table>
+				<div style="display: flex;">
+					<div style="width: 280px;margin-right: 10px;">
+						<table id="ADRsTable"></table>
+					</div>
+					<div style="flex: 1;">
+						<div id="evaluateContent" class="hisui-panel" title="评估内容" style="padding:10px;"
+							data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+							<table id="evaluateForm" cellpadding="0" style="width: 100%;border-collapse: collapse;">
+								<tr>
+									<td>
+										<span class="r-label">#(..Get("评估日期"))#</span><input id="assessInsertDate" class="hisui-datebox textbox"
+											style="width: 118px;"></input>
+									</td>
+									<td>
+										<span class="r-label">#(..Get("放疗次数"))#</span><input id="radiotherapyNum" class="hisui-numberbox textbox"
+											data-options="precision:0,fix:false,max:999999,min:1,required:true" style="width: 80px;">
+									</td>
+									<td>
+										<span class="r-label">#(..Get("化疗周期数"))#</span><input id="chemotherapyInterval" class="hisui-numberbox textbox"
+											data-options="precision:0,fix:false,max:999999,min:1,required:true" style="width: 80px;">
+									</td>
+									<td>
+										<span class="r-label">#(..Get("其他"))#</span><input id="other" class="hisui-validatebox textbox" style="width: 80px;">
+									</td>
+								</tr>
+							</table>
+							<hr class="dashed" style="margin:10px -10px 7px;">
+							<div id="adrsContents" style="overflow-x: hidden;">
+								<!-- <div class="adrsContent">
+								<div>
+									<h3>发热</h3>
+									<p>
+										<input class="hisui-radio" type="radio" label="男" name="sex" value="1" data-options="required:true">
+									</p>
+									<p>
+										<input class="hisui-radio" type="radio" label="女" name="sex" value="2" data-options="required:true">
+									</p>
+								</div>
+								<div>
+									<table>
+										<tr>
+											<td>定义：</td>
+											<td>AAA</td>
+										</tr>
+										<tr>
+											<td>引申注释：</td>
+											<td>BBB</td>
+										</tr>
+									</table>
+								</div>
+							</div> -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 不良反应分级曲线 -->
+	<div id="adrsCurveModal" class="hisui-dialog" title="不良反应分级曲线"
+		style="top: 50px;left: 50px;padding: 5px 10px 0;width: 1300px;" data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#adrsCurveModal').close();}
+	}]">
+		<div>
+			<div id="patFrame">
+				<csp:Include Page="dhcdoc.patinfo.banner.csp">
+			</div>
+			<table class="healDetailCurve" cellpadding="0" style="border-collapse: collapse;">
+				<tr>
+					<td>#(..Get("治疗模式："))#</td>
+				</tr>
+			</table>
+			<div>
+				<hr class="dashed" style="margin: 5px -10px 10px;">
+				<table id="gradeSearch" cellpadding="0" style="border-collapse: collapse;">
+					<tr>
+						<td class="r-label">
+							#(..Get("评估日期"))#
+						</td>
+						<td>
+							<input id="assessStartDate" class="hisui-datebox textbox" style="width: 118px;"></input>
+						</td>
+						<td style="padding: 0 5px;">#(..Get("至"))#</td>
+						<td class="r-label">
+							<input id="assessEndDate" class="hisui-datebox textbox" style="width: 118px;"></input>
+						</td>
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"
+								onclick="getADRSItemAssessGrade();">查询</a>
+						</td>
+					</tr>
+				</table>
+				<div id="adrsGradeCurve"
+					style="width: 1280px;height: 500px;position: relative;border: 1px solid #cccccc;margin-top: 10px;border-radius: 4px;"></div>
+			</div>
+		</div>
+	</div>
+	<!-- 引用模板 -->
+	<div id="citeTplModal" class="hisui-dialog" title="引用模板" style="top: 25;left: 25;padding: 0 10px;width: 1300px;"
+		data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true,buttons:[{
+		text:'确定',
+		handler:selectEvalTpl
+	},{
+		text:'取消',
+		handler:function(){$HUI.dialog('#citeTplModal').close();}
+	}]">
+		<table id="tbEvaluate" cellpadding="0" style="border-collapse: collapse;margin: 10px 0;">
+			<tr>
+				<td class="r-label">
+					#(..Get("使用条件"))#
+				</td>
+				<td class="r-label">
+					<input class="hisui-combobox textbox" id="tplType" style="width:160px;" />
+				</td>
+				<td class="r-label">
+					<input id="templateDesc" style="width: 150px;" class="hisui-text textbox" placeholder="模板描述"
+						data-options="prompt:'模板描述'">
+				</td>
+				<td class="r-label">
+					<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'"
+						onclick="getCTCEvalTemplateAndDetail();">查询</a>
+				</td>
+				<td>
+					<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-clean'"
+						onclick="clearSearchCond();">清屏</a>
+				</td>
+			</tr>
+		</table>
+		<table id="evalTemplate" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',rownumbers:false,border:false,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:true,pageSize:20,pageList:[20,50,100,200],
+		onDblClickRow:selectEvalTpl
+	">
+			<thead>
+				<tr>
+					<th data-options="field:'useCond',width:80">#(..Get("使用条件"))#</th>
+					<th data-options="field:'tplDesc',width:130">#(..Get("模板描述"))#</th>
+					<th data-options="field:'adrsDescs',width:280,showTip:true,tipWidth:450">#(..Get("不良反应描述"))#</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+	<!-- 保存为个人模板模态框 -->
+	<div id="statisticsModal" class="hisui-dialog" title="保存为模板"
+		style="top: 50px;left: 300px;padding: 5px 10px 0;width: 522px;" data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+		text:'保存',
+		handler:saveEvalTplAndADRs
+	},{
+		text:'取消',
+		handler:function(){$HUI.dialog('#statisticsModal').close();}
+	}]">
+		<form id="ssForm" style="margin-bottom: 5px;">
+			<table cellpadding="0" class="modalTable" style="border-collapse: collapse;width: 100%;">
+				<tr>
+					<td class="r-label">
+						#(..Get("使用条件"))#
+					</td>
+					<td>
+						<input class="hisui-combobox textbox" id="type" style="width:429px;" />
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("模板代码"))#
+					</td>
+					<td>
+						<input id="code" style="width: calc(100% - 8px);" class="hisui-validatebox textbox"
+							data-options="required:true,validType:'length[1,50]'">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("模板描述"))#
+					</td>
+					<td>
+						<input id="tplDesc" style="width: calc(100% - 8px);" class="hisui-validatebox textbox"
+							data-options="required:true,validType:'length[1,50]'">
+					</td>
+				</tr>
+				<tr class="validLoc">
+					<td class="r-label">
+						#(..Get("使用科室"))#
+					</td>
+					<td>
+						<select id="validLoc" class="locs" style="width:428px;"></select>
+					</td>
+				</tr>
+				<tr class="invalidLoc">
+					<td class="r-label">
+						#(..Get("禁用科室"))#
+					</td>
+					<td>
+						<select id="invalidLoc" class="locs" style="width:428px;"></select>
+					</td>
+				</tr>
+			</table>
+		</form>
+		<table id="personalADRsTable" class="hisui-datagrid" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:false,
+		onLoadSuccess:function(){
+			$(this).datagrid('enableDnd');
+		}
+		">
+			<thead>
+				<tr>
+					<th data-options="field:'sysDesc',width:80">#(..Get("系统描述"))#</th>
+					<th data-options="field:'adrsCode',width:80">#(..Get("不良反应code"))#</th>
+					<th data-options="field:'adrsDesc',width:200,editor:{type:'lookup',options:{panelWidth:420,panelHeight:250}}">
+						#(..Get("不良反应描述"))#</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+<style type="text/css">
+	.patientbar {
+		position: relative!important;
+		height: 60px!important;
+		border-radius: 4px;
+		margin-bottom: 4px;
+	}
+	.PatInfoItem {
+		margin-left: 0 !important;
+		height: auto!important;
+		padding: 0 5px!important;
+		padding-left: 75px!important;
+		line-height: 1.8!important;
+		position: static!important;
+		position: absolute!important;
+		top:50%!important;
+		transform: translate(0, -50%)!important;
+    overflow: visible!important;
+	}
+	.patientbar>div:first-of-type {
+		width: 50px!important;
+		height: 50px!important;
+	}
+	.PatInfoItem>div {
+		margin: 0 5px!important;
+	}
+	.PatInfoItem span, .patinfo-hover-content span{
+		line-height: 1.8!important;
+	}
+	.PatInfoItem a img {
+    margin-top: 0!important;
+    height: 16px!important;
+	}
+</style>
+</body>
+
+</html>

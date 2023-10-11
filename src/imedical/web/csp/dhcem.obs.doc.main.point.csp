@@ -1,0 +1,91 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<HISUI/>
+<title>	主要交班内容 </title>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>
+<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgUserID="#(%session.Get("LOGON.USERID"))#";   //用户ID
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#"; //科室ID
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#";   //医院ID
+</script>
+</head>
+
+<body style="margin: 0px;background:rgba(0,0,0,0.5);">
+	<div id="title" style="color: #fff;height: 45px;line-height:45px;padding-left:10px;font-size:14px;">
+		<span>今日重点交接班内容</span>
+		<span style="float:right;margin-right: 10px;"></span><!--明细-->
+	</div>
+	<div id="content" style="padding-left:10px;color: #fff;font-size:14px;">
+		<div>
+			<!--div>
+				<span>留观室【10】床</span>
+				<span style="color:#69b4ea">于景汉</span>
+				<div>患者对阿莫西林过敏，注意开立药物时不要使用阿莫西林，患者目前红细胞指标过低，注意监测，随时做好输血的准备。</div>
+			</div>
+			<div style="margin:10px 0;border-bottom: 1px dashed #ccc;"></div>
+			<div>
+				<span>留观室【11】床</span>
+				<span style="color:#69b4ea">李艳巧</span>
+				<div>患者因肺部感染来院，目前状态尚可。</div>
+			</div>
+			<div style="margin:10px 0;border-bottom: 1px dashed #ccc;"></div>
+			<div>
+				<span>留观室【12】床</span>
+				<span style="color:#69b4ea">乔岩喜</span>
+				<div>患者有严重的呼吸道感染症状，注意测量提问，开立降温医嘱，防止高温情况发生。</div>
+			</div>
+			<div style="margin:10px 0;border-bottom: 1px dashed #ccc;"></div>
+			<div>
+				<span>留观室【14】床</span>
+				<span style="color:#69b4ea">书义诚</span>
+				<div>患者外伤入院，注意白细胞指标。</div>
+			</div-->
+		</div>
+	</div>
+</body>
+
+
+<script type="text/javascript">
+	
+	$(function(){
+		initPage();
+		
+		initView();	
+	})
+	
+	function initPage(){
+		var bodyHeight = $('body').height();
+		var titleHeight = $('#title').height();
+		var contentHeight = bodyHeight-titleHeight-15+'px';
+		$('#content').css({height:contentHeight});
+	}
+	
+	function initView(){
+		var LgParams=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID;
+		$cm({
+			ClassName:"web.DHCEMDocMessageInterface",
+			MethodName:"getLastShift",
+			LgParam:LgParams
+		},function(jsonData){
+			var ConHtml="";
+			for(var index in jsonData){
+				ConHtml=ConHtml+'<div>';
+				ConHtml=ConHtml+'	<span>'+jsonData[index].Bed+'</span>';
+				ConHtml=ConHtml+'	<span style="color:#69b4ea">'+jsonData[index].PatName+'</span>';
+				ConHtml=ConHtml+'	<div>'+jsonData[index].PatDesc+'</div>';
+				ConHtml=ConHtml+'	<div style="margin:10px 0;border-bottom: 1px dashed #ccc;"></div>';
+				ConHtml=ConHtml+'</div>';
+			}
+			if(ConHtml=="") ConHtml="<div>无</div>"
+			$("#content").html(ConHtml)
+		});
+		
+	}
+	
+</script>
+</html>

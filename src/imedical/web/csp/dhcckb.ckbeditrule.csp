@@ -1,0 +1,98 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--dhcckb.ckbeditrule.csp 规则编辑 //-->
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<DHCAPP:EASYUI/>
+	<title>临床知识库业务数据编辑器</title>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/ckbeditrule.js"></script>
+</head>
+
+<body>	
+	<div id="mainPanel" class="easyui-layout"  fit="true">   
+		<div data-options="region:'west',title:'审查维度',split:true" style="width:180px;">
+			<div id="rangelist" border="false"></div>
+		</div>   
+		
+		<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="padding:10px;border-color:#cccccc">
+			<div class="easyui-panel" title="" fit="true" style="padding:10px 10px 20px 10px" data-options="headerCls:'panel-header-card-gray'">
+				<div id="mainRule" class="easyui-layout"  fit="true">   
+					<div data-options="region:'west',title:'规则列表',headerCls:'panel-header-gray'" style="width:180px;">
+						<table id="rulelist"></table>
+					</div>  
+					<div data-options="region:'center',title:' ',split:true,headerCls:'panel-header-gray'" style="padding:10px;border-color:#cccccc">
+						<div class="easyui-panel" title="管理级别" data-options="headerCls:'panel-header-card-gray'" style="height:70px;padding-top:10px;padding-bottom:20px;margin-bottom:5px;">
+							<label style="margin:20px;margin-right:5px;">级别</label>                              
+                            <input id="level" class="easyui-combobox"/>  
+                            <label style="margin:20px;margin-right:5px;">判定方法</label>                              
+                            <input id="ways" class="easyui-combobox"/>
+						</div>
+						
+						<div id="sPanel" title="" style="min-width:400px;min-height:170px;height:auto; margin-bottom:20px;" data-options="headerCls:'panel-header-gray'">
+							<table id="ruletable"></table>
+						</div>
+						<!-- <div id="sPanel" title="成组规则列表" style="min-width:400px;min-height:170px;height:auto; margin-bottom:20px;" data-options="headerCls:'panel-header-gray'">
+							<table id="ruleItmtable"></table>
+						</div> -->
+						<div  class="easyui-panel" title="消息编辑" data-options="headerCls:'panel-header-card-gray'" style="padding-top:10px;padding-bottom:20px;margin-bottom:20px;">
+							<span style="margin-left:5px"> 消息内容：</span><textarea id="message"  style="width:96%;height:80px;resize:none;margin: 5px;margin-bottom:10px;margin-left:10px;"></textarea>
+							<span style="margin-left:5px"> 修改建议：</span><textarea id="advice"  style="width:96%;height:60px;resize:none;margin: 5px;margin-bottom:10px;margin-left:10px;"></textarea>
+							<span style="margin-left:5px"> 参考来源：</span><textarea id="source"  style="width:96%;height:60px;resize:none;margin: 5px;margin-left:10px;"></textarea>
+						</div>
+						<div   data-options="headerCls:'panel-header-card-gray'" style="opacity:0.9;border:1px solid #E5E5E5;background-color:#F9F9F9;width:100%;height:30px;position:absolute;left:0px;bottom:0px;z-index:2px;">
+							<a href="#" id="insert" class="easyui-linkbutton" data-options="iconCls:'icon-add'" style="margin:5px 10px 5px 40px">添加</a>        
+							<a href="#" id="update" class="easyui-linkbutton" data-options="iconCls:'icon-edit'" style="margin:5px 10px 5px 10px">修改</a>        
+							<a href="#" id="delete" class="easyui-linkbutton" data-options="iconCls:'icon-remove'" style="margin:5px 10px 5px 10px">删除</a>        
+							<a href="#" id="clean" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" style="margin:5px 10px 5px 10px">重置</a>        
+						</div> 
+					</div>	                    
+				</div>					
+			</div>					
+		</div>
+	</div>
+</body>
+	<script type="text/javascript">
+	var editIndex=undefined;
+	var modifyBeforeRow = {};
+	var modifyAfterRow = {};
+	function endEditing(){
+			if (editIndex == undefined){return true}
+			if ($('#dg').datagrid('validateRow', editIndex)){
+				//列表中下拉框实现，修改后把回写feetypename，因为formatter显示的是feetypename字段
+				var ed = $('#dg').datagrid('getEditor', {index:editIndex,field:'feetypeid'});
+				var feetypename = $(ed.target).combobox('getText');
+				$('#dg').datagrid('getRows')[editIndex]['feetypename'] = feetypename;
+				$('#dg').datagrid('endEdit', editIndex);
+				modifyAfterRow = $('#dg').datagrid('getRows')[editIndex];
+				var aStr = JSON.stringify(modifyAfterRow);
+				var bStr = JSON.stringify(modifyBeforeRow);
+				if(aStr!=bStr){
+					console.log('修改前：');
+					console.dir(modifyBeforeRow);
+					console.log('修改后：');
+					console.dir(modifyAfterRow);
+				}
+				editIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+	function onClickRow(index){
+		if (editIndex!=index) {
+			if (endEditing()){
+				$('#dg').datagrid('selectRow', index)
+						.datagrid('beginEdit', index);
+				editIndex = index;
+				modifyBeforeRow = $.extend({},$('#dg').datagrid('getRows')[editIndex]);
+			} else {
+				$('#dg').datagrid('selectRow', editIndex);
+			}
+		}
+	}
+</script>
+</html>

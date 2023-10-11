@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术清点</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="padding:10px 10px 5px 10px;">
+		<form id="bladeForm">
+			<div class="form-row-group">
+	    		<div>
+	    			<div class="form-row">
+	    				<div class="form-title-right2">名称</div>
+	    				<div class="form-item-normal">
+	    					<input type="text" id="inventoryName" class="textbox" placeholder="请输入清点单名称。" style="width:120px;">
+	    				</div>
+	    				<input type="hidden" id="inventoryId">
+	    				<span class="form-btn">
+	    					<a href="#" id="btnAddInventory">新建</a>
+	    				</span>
+	    				<span class="form-btn">
+	    					<a href="#" id="btnEditInventory">修改</a>
+	    				</span>
+	    				<span class="form-btn">
+	    					<a href="#" id="btnDelInventory">删除</a>
+	    				</span>
+	    			</div>
+	    		</div>
+	    	</div>
+		</form>
+	</div>
+    <div data-options="region:'center',border:false" style="padding:5px 10px 10px 10px;">
+    	<div id="inventoryPage" style="border:0px;"></div>
+    </div> 
+    <script type="text/javascript">
+    	var state = {
+	    	serverPage:"CIS.AN.OperCount.csp?opsId="+session.OPSID+"&EpisodeID="+session.EpisodeID+"&moduleCode="+session.ModuleCode+"&menuCode="+session.MenuCode,
+	    	moduleCode:session.ModuleCode,
+	    	pages:[]	
+	    };
+    	function initForm()
+    	{
+	    	$("#btnAddInventory").linkbutton({
+		    	iconCls:"icon-w-add",
+		    	onClick:addInventory	
+		   	});
+		   	
+		   	$("#btnEditInventory").linkbutton({
+		    	iconCls:"icon-w-edit",
+		    	onClick:editInventory	
+		   	});
+		   	
+		   	$("#btnDelInventory").linkbutton({
+		    	iconCls:"icon-w-cancel",
+		    	onClick:delInventory	
+		   	});
+		   	
+		   	$("#inventoryPage").tabs({
+				fit:true,
+				onSelect:function(title,index){
+					if(state.pages && state.pages.length>index)
+					{
+						console.log(state.pages);
+						loadFormData(state.pages[index]);	
+					}	
+				}   	
+			})
+		   	
+		   	initInventoryPages();
+	    }
+	    
+	    function initInventoryPages()
+	    {
+		     loadSheetPages();
+			 
+			 for(var i=0;i<state.pages.length;i++)
+			 {
+				var page=state.pages[i];
+				var href=state.serverPage+"&recordSheetId="+page.RowId;
+				addTab(page.SheetName,href,false);	 
+			 }   
+		}
+	    
+	    function addInventory()
+	    {
+			var inventoryName=$("#inventoryName").val();
+			if(!inventoryName)
+			{
+				$.messager.alert("提示","请输入清点单名称","warning");
+				return;	
+			}
+			
+			if($("#inventoryPage").tabs("exists", inventoryName))
+			{
+				$("#inventoryPage").tabs("select", inventoryName);	
+				return;
+			}
+			
+			// 创建新表单
+			var ret=dhccl.runServerMethodNormal(ANCLS.BLL.RecordSheet,"CreateSheet",session.OPSID,state.moduleCode,inventoryName,session.UserID);
+			var retArray=ret.split('^');
+			if(ret.indexOf("S^")===0)
+			{
+				var recordSheetID=retArray[1];
+				var href=state.serverPage+"&recordSheetId="+recordSheetID;
+				addTab(inventoryName,href,false);
+				loadSheetPages();	
+			}
+			else
+			{
+				$.messager.alert("提示","新建清点单失败，原因："+ret,"error");	
+			}
+			    
+		}
+		
+		function editInventory()
+		{
+			var inventoryId=$("#inventoryId").val();
+			if(!inventoryId)
+			{
+				$.messager.alert("提示","请先选择要修改名称的清点单","warning");
+				return;		
+			}
+			
+			var inventoryName=$("#inventoryName").val();
+			if(!inventoryName)
+			{
+				$.messager.alert("提示","请输入清点单名称","warning");
+				return;	
+			}
+			
+			if($("#inventoryPage").tabs("exists", inventoryName))
+			{
+				$("#inventoryPage").tabs("select", inventoryName);	
+				return;
+			}
+			
+			// 创建新表单
+			var ret=dhccl.runServerMethodNormal(ANCLS.BLL.RecordSheet,"EditSheet",inventoryId,inventoryName,session.UserID);
+			//var retArray=ret.split('^');
+			if(ret.indexOf("S^")===0)
+			{
+				//var recordSheetID=retArray[1];
+				//var href=state.serverPage+"&recordSheetId="+recordSheetID;
+				//addTab(inventoryName,href,false);
+				
+				var tabPanel=$("#inventoryPage").tabs("getSelected");
+				if(tabPanel)
+				{
+					$("#inventoryPage").tabs("update",{
+						tab:tabPanel,
+						options:{
+							title:inventoryName	
+						}	
+					});
+					//tabPanel.panel("setTitle",inventoryName);
+					//var tabOpts=tabPanel.panel("options");
+					//console.log(tabOpts);	
+				}	
+			}
+			else
+			{
+				$.messager.alert("提示","修改清点单失败，原因："+ret,"error");	
+			}
+		}
+		
+		function delInventory()
+		{
+			var inventoryId=$("#inventoryId").val();
+			if(!inventoryId)
+			{
+				$.messager.alert("提示","请先选择要删除名称的清点单","warning");
+				return;		
+			}
+			
+			$.messager.confirm("提示","是否要删除清点单，删除后数据将不可恢复？",function(r){
+				if(r){
+					var ret=dhccl.runServerMethodNormal(ANCLS.BLL.RecordSheet,"DelSheet",inventoryId,session.UserID);
+					if(ret.indexOf("S^")===0)
+					{
+						var tabPanel=$("#inventoryPage").tabs("getSelected");
+						var tabIndex=$("#inventoryPage").tabs("getTabIndex",tabPanel);
+						$("#inventoryPage").tabs("close",tabIndex);	
+					}	
+					else
+					{
+						$.messager.alert("提示","删除清点单失败，原因："+ret,"error");	
+					}
+				}	
+			});	
+		}
+		
+		function loadFormData(data)
+		{
+			if(data)
+			{
+				$("#inventoryName").val(data.SheetName);
+				$("#inventoryId").val(data.RowId);	
+			}	
+		}
+		
+		function loadSheetPages()
+		{
+			var pageStr=dhccl.runServerMethodNormal(ANCLS.BLL.RecordSheet,"GetSheets",session.OPSID,state.moduleCode);
+			 try
+			 {
+				 state.pages=JSON.parse(pageStr);
+			 }
+			 catch(ex)
+			 {
+					 
+			 }
+		}
+		
+		function addTab(title, href, closeable) {
+		    var tabPanel = $("#inventoryPage"),
+		        canClose = true;
+		    if (closeable == false) {
+		        canClose = false;
+		    }
+		    if (tabPanel.tabs("exists", title)) {
+		        tabPanel.tabs("select", title);
+		    } else {
+		        var content = "未实现";
+		        if (href) {
+		            content = "<iframe scrolling='yes' frameborder='0' allowfullscreen='true' webkitallowfullscreen='true' mozallowfullscreen='true' src='" + href + "' style='width:100%;height:100%'></iframe>";
+		        }
+		        tabPanel.tabs("add", {
+		            title: title,
+		            closable: canClose,
+		            content: content
+		                //href:content
+		        });
+		    }
+		}
+		
+		
+	    
+	    $(document).ready(initForm);
+    </script>
+</body>
+</html>

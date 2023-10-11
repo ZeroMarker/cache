@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!--煎药-患者领药
+	csp:pha.dec.v2.patreceive.csp
+	js: scripts/pha/dec/v2/patreceive.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHADECV2/>
+    <ADDINS require="RWCard,WebsysTool" />
+	<DOCCARD medStepCode="Other" ></DOCCARD>
+    <server>
+		d ##class(PHA.COM.ReadCard).LoadPlugin()
+	</server>
+	
+	<style>
+	.layout-expand-west{
+		background-color:#fff
+	}
+	</style>
+</HEAD>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div style="width:0px;height:0px">
+				<server>
+				 	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+				</server>
+			</div>
+			<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">
+				<div data-options="region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-blue-drug-ok'" class="pha-body" title="患者领药">
+					<div id="mainLayout" class="hisui-layout" fit="true" >
+						<div data-options="region:'north',border:false,split:true" class="dhcpha-north-tbl-2" style="overflow:hidden">
+                            <div class="pha-row" style="margin-top:0px;">
+                            	<label for="dateStart">#(..Get("开始日期"))#</label>
+	                       		<div class="pha-col">
+	                            	<input id="dateStart" type="text" class="hisui-datebox" style="width:120px;" />
+		                        </div>
+		                        <div class="pha-col">
+		                            <input id="timeStart" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90"/>
+		                        </div>
+		                        <div class="pha-col" style="margin-left:10px;">
+		                        	<label for="cmbDecLoc">#(..Get("煎药室"))#</label>
+		                        </div>
+	                            <div class="pha-col">
+	                                <input id="cmbDecLoc" class="hisui-combobox" style="width:100px;" />
+	                            </div>
+	                            <div class="pha-col">
+		                        	<label for="cmbAdmType">#(..Get("就诊类型"))#</label>
+		                        </div>
+	                            <div class="pha-col">
+	                                <input id="cmbAdmType" class="hisui-combobox" />
+	                            </div>
+	                            <div class="pha-col">
+	                            	<label for="txtPatNo">#(..Get("登记号"))#</label>
+	                           	</div>
+	                            <div class="pha-col">
+	                                <input id="txtPatNo" class="hisui-validatebox textbox" />
+								</div>
+	                            <div class="pha-col">
+	                            	 <span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-find' id="btnSearch" onclick="javascript:Query()">查询</a></span>
+	                            </div>
+                            </div>
+                            <div class="pha-row">
+                            	<label for="dateEnd">#(..Get("截止日期"))#</label>
+		                       	<div class="pha-col">
+		                            <input id="dateEnd" type="text" class="hisui-datebox" style="width:120px;" />
+		                        </div>
+		                       	<div class="pha-col">
+		                            <input id="timeEnd" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90">
+		                        </div>
+		                        <div class="pha-col">
+		                        	<label for="cmbPhaLoc">#(..Get("药房科室"))#</label>
+		                        </div>
+	                            <div class="pha-col">
+	                                <input id="cmbPhaLoc" class="hisui-combobox" style="width:100px;" />
+	                            </div>
+	                            <div class="pha-col" style="margin-left:10px;">
+	                            	<label for="txtPrescNo">#(..Get("处方号"))#</label>
+	                           	</div>
+	                            <div class="pha-col">
+	                                <input id="txtPrescNo" class="hisui-validatebox textbox" style="width:148px;"/>
+								</div>
+	                            <div class="pha-col" style="margin-left:10px;">#(..Get("卡号"))#</div>
+								<div class="pha-col">
+									<input id="txtCardNo" class="hisui-validatebox textbox"/>
+								</div>
+								<div class="pha-col">
+									<span><a class="hisui-linkbutton" plain="false" data-options="iconCls:'icon-w-card'" id="readCard">读卡</a></span>
+								</div>
+								<div class="pha-col">
+	                            	<span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-clean' id="btnClear" onclick="javascript:Clear()">清屏</a></span>
+	                            </div>
+                            </div>
+                        </div>
+						
+						<div data-options="region:'center',split:false,border:true,iconCls:'icon-paper',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" title="处方列表">
+							<table id="gridPrescList"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>			
+	<div id="gridPatReveiveBar">
+	       <span><a class="hisui-linkbutton" plain="true" iconCls='icon-ok' id="btnDisp" onclick="javascript:Disp()">确认发放</a></span>
+    </div>
+    <!--pha common js-->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/com.js"></script>
+	<script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/xmlprint.js"></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/preview.js"></script>
+    <!--pha dec js-->
+	<script type="text/javascript" src="../scripts/pha/dec/v2/patreceive.js"></script>
+</body>
+</HTML>

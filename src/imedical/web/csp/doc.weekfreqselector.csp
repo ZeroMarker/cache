@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
 <HISUI></HISUI>
 <style>
 body{
@@ -16,8 +15,9 @@ body{
 .datagrid-body{
 	/*height:240px !important;*/
 }
-.panel-header{
-	border-bottom: 0;
+.panel-title{
+	white-space:nowrap;
+	overflow:hidden;
 }
 </style>
 <Server>
@@ -48,24 +48,27 @@ body{
 	//周频次系数,即一周需要执行几次
 	s OrderFreqWeekNum=$P($G(^PHCFR(OrderFreqRowid)),"^",11)
 	s OrderFreqDesc=$P($G(^PHCFR(OrderFreqRowid)),"^",4)
-	s GetWeekFreqStartDateMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOEOrdItemView.GetWeekFreqStartDate"))
+	Set langid=##class(DHCDoc.Util.RegisteredObject).%LanguageID()
+	s OrderFreqDesc=##class(User.PHCFreq).GetTranByDesc("PHCFRDesc2",OrderFreqDesc,langid)
+	s GetWeekFreqStartDateMethod=##class(websys.Page).Encrypt($lb("web.DHCOEOrdItemView.GetWeekFreqStartDate"))
+	s PHCFRWeek=$p($g(^PHCFR(OrderFreqRowid)),"^",15) 
 </Server>
  </head>
-<body>
-<div class="hisui-panel" title="#(OrderFreqDesc)#(时间点:#(OrderFreqTimeList)#)" style="height:309px;" data-options="headerCls:'panel-header-gray'">
-	<div class="hisui-layout" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
-		<div data-options="region:'center', split:true, iconCls:'icon-add',collapsible:false,border:false" style="">
-			<table id="FreqWeekTable"></table>
-		</div>
+<body class="hisui-layout" data-options="fit:true,border:false">
+	<div  data-options="region:'center'" style="border:0px;padding:10px;">
+		<table id="FreqWeekTable"></table>
 	</div>
-</div>
-<a href="#" id="OKBtn" style="margin: 10px 0px 0px 90px;" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" >确定</a>
+	<div data-options="region:'south',border:false" style="height:40px;padding-top:0px;text-align:center;overflow:hidden;">
+		<a href="#" id="OKBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-ok'" >确定</a>
+		<a href="#" id="CloseBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-close'" >取消</a> 
+	</div>
 <SCRIPT language = 'javascript' >
 	var OrderFreqDispTimeStr="#(OrderFreqDispTimeStr)#";
 	var OrderFreqWeekStr="#(OrderFreqWeekStr)#";
 	var OrderFreqTimeList="#(OrderFreqTimeList)#";
 	var GetWeekFreqStartDateMethod="#(GetWeekFreqStartDateMethod)#";
 	var OrderFreqWeekNum="#(OrderFreqWeekNum)#";
+	var PHCFRWeek="#(PHCFRWeek)#";
 	window.returnValue=OrderFreqDispTimeStr+"^"+OrderFreqWeekStr;
      
 	$(function(){
@@ -73,6 +76,18 @@ body{
 		$("#OKBtn").click(function(){
 			OKBtnClickHandler();
 		});
+		$("#CloseBtn").click(function(){
+			if (websys_showModal("options").CallBackFunc) {
+				websys_showModal("options").CallBackFunc("");
+			}else{
+				window.returnValue=rtnValue;
+				window.close();
+			}
+		});
+		var content=$('.panel-title').text();
+		if(GetTextWidth(content)>$('.panel-title').innerWidth()){
+			$('.panel-title').tooltip({content:content})
+		}
 	});
 	function OKBtnClickHandler(){
 		var FreqWeekArr=$("#FreqWeekTable").datagrid('getChecked');
@@ -84,7 +99,7 @@ body{
 			return false;
 		}
 		if ((OrderFreqWeekNum!="")&&(FreqWeekArr.length<OrderFreqWeekNum)){
-			$.messager.alert("提示","该周频次系数为"+OrderFreqWeekNum+",请选择"+OrderFreqWeekNum+"条记录!");
+			$.messager.alert("提示",$g("该周频次系数为")+OrderFreqWeekNum+$g(",请选择")+OrderFreqWeekNum+$g("条记录!"));
 			return false;
 		}
 		var CalOrderFreqDispTimeStr="";
@@ -93,7 +108,7 @@ body{
 		for (var i=0;i<FreqWeekArr.length;i++){
 			CalOrderFreqWeekStr=CalOrderFreqWeekStr+FreqWeekArr[i].FreqValue;
 			for (var j=0;j<OrderFreqTimeListArr.length;j++){
-				var OneFreqWeekStr=OrderFreqTimeListArr[j]+String.fromCharCode(2)+FreqWeekArr[i].FreqValue;
+				var OneFreqWeekStr=OrderFreqTimeListArr[j]+String.fromCharCode(2)+FreqWeekArr[i].FreqValue+String.fromCharCode(2)+"";
 				if (CalOrderFreqDispTimeStr==""){
 					CalOrderFreqDispTimeStr=OneFreqWeekStr
 				}else{
@@ -110,29 +125,30 @@ body{
 			window.close();
 		}
 	}
-	var Cancel=0;
 	function InitFreqWeekDataGrid(){
 		var FreqWeekGridData={"total":7,"rows":[
-			{"FreqValue":"1","WeekDesc":"星期一"},
-			{"FreqValue":"2","WeekDesc":"星期二"},
-			{"FreqValue":"3","WeekDesc":"星期三"},
-			{"FreqValue":"4","WeekDesc":"星期四"},
-			{"FreqValue":"5","WeekDesc":"星期五"},
-			{"FreqValue":"6","WeekDesc":"星期六"},
-			{"FreqValue":"7","WeekDesc":"星期天"}
+			{"FreqValue":"1","WeekDesc":$g("星期一")},
+			{"FreqValue":"2","WeekDesc":$g("星期二")},
+			{"FreqValue":"3","WeekDesc":$g("星期三")},
+			{"FreqValue":"4","WeekDesc":$g("星期四")},
+			{"FreqValue":"5","WeekDesc":$g("星期五")},
+			{"FreqValue":"6","WeekDesc":$g("星期六")},
+			{"FreqValue":"7","WeekDesc":$g("星期天")}
 		]};
 		var FreqWeekColumns=[[ 
- 			{field:'CheckFreq',title:'选择',checkbox:'true',width:80},
+ 			{field:'CheckFreq',title:$g('选择'),checkbox:'true',width:80},
  			{field:'FreqValue',hidden:true},
-			{field:'WeekDesc',title:'星期',width:150}
+			{field:'WeekDesc',title:$g('星期'),width:150}
 		]];
 		//初始化周频次选择表格
 		var FreqWeekDataGrid=$("#FreqWeekTable").datagrid({  
+			title:'#(OrderFreqDesc)# #(..Get("(时间点:"))# #(OrderFreqTimeList)#)',
+			headerCls:'panel-header-gray',
 			fit : true,
-			border : false,
+			border : true,
 			striped : true,
 			singleSelect : false,
-			fitColumns : false,
+			fitColumns : true,
 			autoRowHeight : false,
 			rownumbers:false,
 			showFooter:false,
@@ -145,47 +161,36 @@ body{
 				var Selections=$("#FreqWeekTable").datagrid('getChecked');
 				var OverNum=Selections.length-OrderFreqWeekNum;
 				if (OverNum<=0) return;
-				if (Cancel==1){
-					setTimeout(function(){
-						$("#FreqWeekTable").datagrid('uncheckRow',rowIndex);
-					});
-					Cancel=0;
-					return;
-				}
-				for (i=0;i<Selections.length;i++){
-					var SelRowIndex=$("#FreqWeekTable").datagrid('getRowIndex',Selections[i]);
-					if (SelRowIndex==rowIndex){
-						continue;
-					}
-					$("#FreqWeekTable").datagrid('uncheckRow',SelRowIndex);
-					OverNum--;
-					if (OverNum<=0){
-						break;
-					}
-				}
-			},onBeforeSelect:function(index, row){
-				var Selections=$("#FreqWeekTable").datagrid('getChecked');
-				if ((OrderFreqWeekNum!="")&&(Selections.length>=OrderFreqWeekNum)){
-					var ret=dhcsys_confirm("勾选星期数已到该周频次系数"+OrderFreqWeekNum+",继续勾选将会取消一条勾选记录,是否继续?");
-					if (!ret) {
-						Cancel=1;
-					}
-				}
-				return true;
-			},onLoadSuccess:function(data){
-				if (OrderFreqWeekStr==""){return;}
+				$.messager.confirm('提示',$g("勾选星期数已到该周频次系数")+OrderFreqWeekNum+$g(",继续勾选将会取消一条勾选记录,是否继续?"),function(r){
+					var rowIndex=$("#FreqWeekTable").datagrid('getRowIndex',r?Selections[0]:Selections[Selections.length-1]);
+					$("#FreqWeekTable").datagrid('uncheckRow',rowIndex);
+				});
+			},
+			onLoadSuccess:function(data){
 				data.rows.forEach(function(item, index){
-					if (OrderFreqWeekStr.indexOf(item.FreqValue)>=0){
-						$("#FreqWeekTable").datagrid('selectRow',index);
+					if (OrderFreqWeekStr!=""){
+						if (OrderFreqWeekStr.indexOf(item.FreqValue)>=0){
+							$("#FreqWeekTable").datagrid('selectRow',index);
+						}
+					}else if (PHCFRWeek!=""){
+						if (PHCFRWeek.indexOf(item.FreqValue)>=0){
+							$("#FreqWeekTable").datagrid('selectRow',index);
+						}
 					}
 				});
 			}
 		});
 		
 		$("#FreqWeekTable").datagrid('loadData',FreqWeekGridData);
-		if ((OrderFreqWeekNum!="")&&(FreqWeekGridData['total']>OrderFreqWeekNum)){
-			$(".datagrid-header-check").attr("disabled","disabled");
+		if ((OrderFreqWeekNum!="")&&(FreqWeekGridData['total']>parseInt(OrderFreqWeekNum))){
+			$(".datagrid-header-check input").attr("disabled","disabled");
 		}
+	}
+	function GetTextWidth(content){
+		var $span=$("<span>"+content+"</span>").hide().appendTo('body');
+		var width=$span.width()
+		$span.remove();
+		return width;
 	}
    </SCRIPT>
   

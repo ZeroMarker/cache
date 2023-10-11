@@ -1,8 +1,8 @@
-<!-- 
+ï»¿<!-- 
  * FileName: dhcbill.ipbill.chequeback.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2020-01-02
- * Description: Ö§Æ±µ½ÕË
+ * Description: æ”¯ç¥¨åˆ°è´¦
 -->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
@@ -15,40 +15,87 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<DHCBILL/>
-	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.ipbill.chequeback.css'/>
+	<ADDINS require="CmdShell"></ADDINS>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.ipbill.chequeback.css"/>
+	<server>
+		set DefDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+		w "<input id='patientId' type='hidden'/>",!
+	</server>
+	<script type="text/javascript">
+		//å¸¸é‡
+		var CV = {
+			DefDate: "#(DefDate)#"
+		};
+		
+		//å…¨å±€å˜é‡
+		var GV = {};
+	</script>
 </head>
 
 <body style="padding:10px;">
 	<div class="hisui-layout" data-options="fit:true">
-		<div data-options="region:'north',border:false,collapsible:false" style="height:124px;">
-			<div class="hisui-panel" data-options="title:'Ö§Æ±µ½ÕË',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
-				<table class="search-table">
+		<div data-options="region:'north',title:'æ”¯ç¥¨åˆ°è´¦',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-radius:0;height:127px;border-bottom-style:dashed;overflow:hidden;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label>#(..Get("å¼€å§‹æ—¥æœŸ"))#</label></td>
+					<td><input id="stDate" class="hisui-datebox textbox"></td>
+					<td class="r-label r-label-20"><label>#(..Get("ç»“æŸæ—¥æœŸ"))#</label></td>
+					<td><input id="endDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label r-label-20"><label>#(..Get("æ”¯ä»˜æ–¹å¼"))#</label></td>
+					<td><input id="paymode" class="hisui-combobox textbox"/></td>
+					<td class="r-label r-label-20"><label>#(..Get("åˆ°è´¦æ ‡å¿—"))#</label></td>
+					<td><input id="backFlag" class="hisui-combobox textbox"></td>
+					<td class="r-label r-label-20">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">æŸ¥è¯¢</a>
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-insert" data-options="iconCls:'icon-w-save'" style="margin-left:15px;">åˆ°è´¦</a>
+					</td>
+				<tr>
+					<td class="r-label"><label>#(..Get("æ”¯ç¥¨å·"))#</label></td>
+					<td><input id="chequeNo" class="textbox"></td>
+					<td class="r-label r-label-20"><label>#(..Get("ç™»è®°å·"))#</label></td>
+					<td><input id="patientNo" class="textbox"/></td>
+					<td class="r-label r-label-20"><label>#(..Get("ç—…æ¡ˆå·"))#</label></td>
+					<td><input id="medicareNo" class="textbox"></td>
+					<td class="r-label r-label-20"><label>#(..Get("å¤‡æ³¨"))#</label></td>
+					<td><textarea class="textbox" id="remark" style="height:28px;margin-top:2px;"/></textarea></td>
+					<td class="r-label r-label-20">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-update" data-options="iconCls:'icon-w-update'">ä¿®æ”¹</a>
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-export" data-options="iconCls:'icon-w-export'" style="margin-left:15px;">å¯¼å‡º</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+			<div id="list-tb">
+				<table cellspacing="0" cellpadding="0">
 					<tr>
-						<td class="r-label"><label>¿ªÊ¼ÈÕÆÚ</label></td>
-						<td><input id="stDate" class="hisui-datebox textbox"></td>
-						<td class="r-label r-label-1"><label>½áÊøÈÕÆÚ</label></td>
-						<td><input id="endDate" class="hisui-datebox textbox"/></td>
-						<td class="r-label r-label-1"><label>Ö§¸¶·½Ê½</label></td>
-						<td><input id="paymode" class="hisui-combobox textbox"/></td>
-						<td class="r-label r-label-1"><label>µ½ÕË±êÖ¾</label></td>
-						<td><input id="backFlag" class="hisui-combobox textbox"></td>
-						<td class="r-label r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">²éÑ¯</a></td>
-					</tr>
-					<tr>
-						<td class="r-label"><label>ÕËºÅ</label></td>
-						<td><input id="cardNo" class="textbox"></td>
-						<td class="r-label r-label-1"><label>±¸×¢</label></td>
-						<td colspan="5"><input id="remark" class="textbox tb-colspan"/></td>
-						<td class="r-label r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btn-insert" data-options="iconCls:'icon-w-save'">µ½ÕË</a></td>
-						<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-update" data-options="iconCls:'icon-w-update'">ĞŞ¸Ä</a></td>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-write-order" id="btn-edit" plain="true">ä¿®æ”¹æ”¯ç¥¨ä¿¡æ¯</a></td>
 					</tr>
 				</table>
 			</div>
-		</div>
-		<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
-			<table class="hisui-datagrid" id="chequeList"></table>
+			<table id="chequeList"></table>
 	  	</div>
 	</div>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.chequeback.js"></script>
+	<div id="appendDlg" style="padding:0 10px;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label"><label class="clsRequired">#(..Get("æ”¯ç¥¨å·"))#</label></td>
+				<td><input id="WinChequeNo" class="hisui-numberbox textbox tb270"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label class="clsRequired">#(..Get("æ”¯ç¥¨æ—¥æœŸ"))#</label></td>
+				<td><input id="WinChequeDate" class="hisui-datebox textbox tb270"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>#(..Get("é“¶è¡Œ"))#</label></td>
+				<td><input id="WinBank" class="hisui-combobox textbox tb270"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>#(..Get("è´¦æˆ·å·"))#</label></td>
+				<td><input id="WinAccNo" class="textbox tb270"/></td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.chequeback.js"></script>
 </body>
 </html>

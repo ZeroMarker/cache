@@ -14,10 +14,25 @@
 	<link rel="stylesheet" type="text/css" href="../scripts/dhctt/xmldesigner/main.css"/>
 	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
 	<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
-	<script language="javascript" src="../scripts/websys.chrome.js"></script>
+	<!-- <script language="javascript" src="../scripts/websys.chrome.js"></script> -->
 	<script language="javascript" src="../scripts/DHCPrtComm.js"></script>
 	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/edit_area/edit_area_full.js"></script>
-	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/xmldesigner.js" charset='utf-8'></script>
+	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/xmldesigner.js" charset='utf-8'></script>	
+	<server>
+		if $g(%request.Data("type", 1)) = "dev" {
+			// 用于本地开发用			
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/ObjTree.js"" charset='utf-8'></script>"
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/label.js"" charset='utf-8'></script>"
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/line.js"" charset='utf-8'></script>"
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/img.js"" charset='utf-8'></script>"
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/list.js"" charset='utf-8'></script>"
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/listItem.js"" charset='utf-8'></script>"
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/qrcode.js"" charset='utf-8'></script>"
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/barcode.js"" charset='utf-8'></script>"
+		}
+	</server>
+	
+	
 	<server> 
 		// DHCJFDeposit "&reportName=DHCRisBill_CT1"
 		Set reportName = $g(%request.Data("reportName",1)) ;"mytest" //"DHCJFIPReceipt" //;"DHCRisBill_MRI" ;"DHCJFDeposit" //%request.Get("reportName")
@@ -46,6 +61,8 @@
    	.txtStyle,.numberStyle,.selStyle{
 	   	width:160px;
 	   	margin:2px 0;
+	   	box-sizing: content-box;
+	   	padding: 2px;
    	}
    	.selStyle{
 	   	height:20px;
@@ -194,6 +211,17 @@
 	    		<td class ="tdCtrlAttrLeft"><input id="t-type" value="" name="t-type" type="hidden" class ="txtStyle"></td>
 	    		<td class ="tdCtrlAttrRight"><input id="t-ind" value="" name="t-ind" type="hidden" class ="txtStyle"></td>
 	    	</tr>
+	    	<tr id = "tr-coltype" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">列类型</td>
+				<td class ="tdCtrlAttrRight">
+					<select id="t-coltype" class="selStyle">
+						<option value="text">文本</option>
+						<option value="img">图片</option>
+						<option value="barcode">条形码</option>
+						<option value="qrcode">二维码</option>
+					</select>
+				</td>
+			</tr>
 	    	<tr id = "tr-name" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft">元素名</td>
 				<td class ="tdCtrlAttrRight"><input id="t-name" type="text" class ="txtStyle"/></td>
@@ -204,11 +232,11 @@
 			</tr>
 			<tr id = "tr-x" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft">X坐标</td>
-				<td class ="tdCtrlAttrRight"><input id="t-x" type="text" class ="numberStyle" maxlength="3"/></td>
+				<td class ="tdCtrlAttrRight"><input id="t-x" type="text" class ="numberStyle" maxlength="4"/></td>
 			</tr>
 			<tr id = "tr-y" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft">Y坐标</td>
-				<td class ="tdCtrlAttrRight"><input id="t-y" type="text" class ="numberStyle" maxlength="3"/></td>
+				<td class ="tdCtrlAttrRight"><input id="t-y" type="text" class ="numberStyle" maxlength="4"/></td>
 			</tr>
 			<tr id = "tr-height" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft"><a href="#" title="文本宽与高只有lodop打印才有效">高度</a></td>
@@ -219,9 +247,9 @@
 				<td class="tdCtrlAttrRight"><input id="t-width" type="text" class ="numberStyle" maxlength="5"/></td>
 			</tr>
 			<tr id = "tr-PrtPage" class="trCtrlAttr">
-				<td class ="tdCtrlAttrLeft">打印纸张</td>
+				<td class ="tdCtrlAttrLeft">打印纸张名</td>
 				<td class ="tdCtrlAttrRight">
-				<input id="t-PrtPage" class="txtStyle"></input></td>
+				<input id="t-PrtPage" class="txtStyle" autocomplete="off"></input></td>
 			</tr>
 			<tr id = "tr-PrtPaperSet" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft"><a href="#" title="WIN:表示在打印机中设定,HAND:表示在XML中设定">纸张设置</a></td>
@@ -234,20 +262,41 @@
 			<tr id = "tr-PaperDesc" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft">纸张设置描述</td>
 				<td class ="tdCtrlAttrRight">
-				<input id="t-PaperDesc" class="txtStyle"></input></td>
+				<input id="t-PaperDesc" class="txtStyle" autocomplete="off"></input></td>
 			</tr>
 			<tr id = "tr-PrtDevice" class="trCtrlAttr">
-				<td class ="tdCtrlAttrLeft">打印机</td>
+				<td class ="tdCtrlAttrLeft"><a href="#" title="模糊匹配打印机，方便指定共享打印机">打印机名称</a></td>
 				<td class ="tdCtrlAttrRight">
-				<input id="t-PrtDevice" class="txtStyle"></input></td>
+				<input id="t-PrtDevice" class="txtStyle" autocomplete="off"></input></td>
+			</tr>
+			<tr id = "tr-NotFindPrtDevice" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft"><a href="#" title="未找到指定打印机时，会走这个配置项">未找到指定打印机时</a></td>
+				<td class ="tdCtrlAttrRight">
+					<select id="t-NotFindPrtDevice" class="selStyle">
+					<option value="">使用默认打印机打印</option>
+					<option value="SELF">让用户选择打印机</option>
+					</select>
+				</td>
 			</tr>
 			<tr id = "tr-LandscapeOrientation" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft">打印方向</td>
 				<td class ="tdCtrlAttrRight">
 				<select id="t-LandscapeOrientation" class="selStyle">
+				<option value="">默认</option>
 				<option value="Y">横向--纸张旋转90度后打印</option>
 				<option value="X">纵向--按纸张设置方向打印</option>
 				<option value="Z">纵向且即打即停-限LODOP</option>
+				</select>
+				</td>
+			</tr>
+			<tr id = "tr-Duplex" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">双面打印</td>
+				<td class ="tdCtrlAttrRight">
+				<select id="t-Duplex" class="selStyle">
+				<option value="0">不控制</option>
+				<option value="1">不双面</option>
+				<option value="2">双面(长边装订)</option>
+				<option value="3">小册子双面(短边装订_长边水平)</option>
 				</select>
 				</td>
 			</tr>
@@ -261,25 +310,19 @@
 				<td class ="tdCtrlAttrRight">
 				<input id="t-XMLClassQuery" class="txtStyle"></input></td>
 			</tr>
-			
-			<tr id = "tr-fontsize" class="trCtrlAttr">
-				<td class ="tdCtrlAttrLeft">字体大小</td>
-				<td class ="tdCtrlAttrRight"><input id="t-fontsize" type="text" class ="numberStyle"  maxlength="2"/></td>
-			</tr>
-			<tr id = "tr-fontbold" class="trCtrlAttr">
-				<td class ="tdCtrlAttrLeft">是否粗体</td>
+			<tr id="tr-PageFooter" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">页脚</td>
 				<td class ="tdCtrlAttrRight">
-				<select id="t-fontbold" class="selStyle" attrName="fontbold">
-				<option value="true">是</option>
-				<option value="false">否</option>
-				</select>
-				</td>
+				<input id="t-PageFooter" class="txtStyle" placeholder="第#页/共&页"></input></td>
 			</tr>
 			<tr id = "tr-fontname" class="trCtrlAttr">
 				<td class ="tdCtrlAttrLeft">字体名</td>
 				<td class ="tdCtrlAttrRight"><select id="t-fontname" class="selStyle" attrName="fontname">
 				<OPTION value="C39P36DmTt">C39P36DmTt</OPTION>
 				<OPTION value="Code 128">Code 128</OPTION>
+				<OPTION value="C39HrP24DmTt">C39HrP24DmTt</OPTION>
+				
+				<OPTION value="Code128">Code128</OPTION>
 				<OPTION value="IDAutomationHC39M">IDAutomationHC39M</OPTION>
 				<OPTION value=@Fixedsys>@Fixedsys</OPTION><OPTION value=@MingLiU>@MingLiU</OPTION>
 				<OPTION value=@PMingLiU>@PMingLiU</OPTION><OPTION value=@SyStem>@SyStem</OPTION>
@@ -324,8 +367,49 @@
 				</select>
 				</td>
 			</tr>
-			<tr id = "tr-barcodetype" class="trCtrlAttr">
-				<td class ="tdCtrlAttrLeft">字体名</td>
+			<tr id = "tr-fontsize" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">字体大小</td>
+				<td class ="tdCtrlAttrRight"><input id="t-fontsize" type="text" class ="numberStyle"  maxlength="2"/></td>
+			</tr>
+			<tr id = "tr-fontbold" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">是否粗体</td>
+				<td class ="tdCtrlAttrRight">
+				<select id="t-fontbold" class="selStyle" attrName="fontbold">
+				<option value="true">是</option>
+				<option value="false">否</option>
+				</select>
+				</td>
+			</tr>
+			<tr id = "tr-fontcolor" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft"><a href="#" title="字体颜色只支持LODOP打印">字体颜色</a></td>
+				<td class ="tdCtrlAttrRight"><input id="t-fontcolor" type="text" placeholder="#000000" class ="txtStyle"/></td>
+			</tr>
+			<tr id = "tr-RePrtHeadFlag" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">是否重复打印</td>
+				<td class ="tdCtrlAttrRight">
+				<select id="t-RePrtHeadFlag" class="selStyle" attrName="RePrtHeadFlag">
+				<option value="Y">是</option>
+				<option value="N">否</option>
+				</select>
+				</td>
+			</tr>
+			<tr id="tr-qrcodeversion" class="trCtrlAttr">
+				<td class="tdCtrlAttrLeft"><a href="#" title="与宽高一起约定二维码大小">二维码等级</a></td>
+				<td class="tdCtrlAttrRight">
+				<select id="t-qrcodeversion" class="selStyle" attrName="qrcodeversion">
+				<OPTION value="">Auto</OPTION>
+				<OPTION value="1">内容小于17个字符</OPTION>
+				<OPTION value="2">内容小于32个字符</OPTION>
+				<OPTION value="3">内容小于53个字符</OPTION>
+				<OPTION value="5">内容小于106个字符</OPTION>		
+				<OPTION value="7">内容小于154个字符</OPTION>
+				<OPTION value="10">内容小于271个字符或135个汉字</OPTION>
+				<OPTION value="14">内容小于458个字符或229个汉字</OPTION>
+				</select>
+				</td>
+			</tr>
+			<tr id="tr-barcodetype" class="trCtrlAttr">
+				<td class ="tdCtrlAttrLeft">条码类型</td>
 				<td class ="tdCtrlAttrRight"><select id="t-barcodetype" class="selStyle" attrName="barcodetype">
 				<OPTION value="128A">Code128A</OPTION>
 				<OPTION value="128B">Code128B</OPTION>
@@ -375,7 +459,7 @@
 			<!--list data-->
 			<tr id = "tr-PageRows" class="trCtrlAttr">
 			<td class ="tdCtrlAttrLeft">一页显示行数</td>
-			<td class ="tdCtrlAttrRight"><input id="t-PageRows" type="text" class ="numberStyle" attrName="PageRows" maxlength="2"/></td>
+			<td class ="tdCtrlAttrRight"><input id="t-PageRows" type="text" class ="numberStyle" attrName="PageRows" maxlength="6"/></td>
 			</tr>
 			<tr id = "tr-CurrentRow" class="trCtrlAttr">
 			<td class ="tdCtrlAttrLeft">当前行号</td>
@@ -393,19 +477,19 @@
 			<!--line-->
 			<tr id = "tr-stx" class="trCtrlAttr">
 			<td class ="tdCtrlAttrLeft">开始X值</td>
-			<td class ="tdCtrlAttrRight"><input id="t-stx" type="text" class ="numberStyle" maxlength="3"/></td>
+			<td class ="tdCtrlAttrRight"><input id="t-stx" type="text" class ="numberStyle" maxlength="4"/></td>
 			</tr>
 			<tr id = "tr-sty" class="trCtrlAttr">
 			<td class ="tdCtrlAttrLeft">开始Y值</td>
-			<td class ="tdCtrlAttrRight"> <input id="t-sty" type="text" class ="numberStyle" maxlength="3"/></td>
+			<td class ="tdCtrlAttrRight"> <input id="t-sty" type="text" class ="numberStyle" maxlength="4"/></td>
 			</tr>
 			<tr id = "tr-endx" class="trCtrlAttr">
 			<td class ="tdCtrlAttrLeft">结束X值</td>
-			<td class ="tdCtrlAttrRight"><input id="t-endx" type="text" class ="numberStyle" maxlength="3"/></td>
+			<td class ="tdCtrlAttrRight"><input id="t-endx" type="text" class ="numberStyle" maxlength="4"/></td>
 			</tr>
 			<tr id = "tr-endy" class="trCtrlAttr">
 			<td class ="tdCtrlAttrLeft">结束Y值</td>
-			<td class ="tdCtrlAttrRight"> <input id="t-endy" type="text" class ="numberStyle" maxlength="3"/></td>
+			<td class ="tdCtrlAttrRight"> <input id="t-endy" type="text" class ="numberStyle" maxlength="4"/></td>
 			</tr>
 			
 			<tr id = "tr-RePrtHeadFlag" class="trCtrlAttr">
@@ -422,7 +506,6 @@
 			<button id="btnSetCol" class="buttonStyle">设定</button>
 			</td>
 			</tr>
-			
 			<tr><td></td></tr>
 		</table>
     </div>
@@ -482,7 +565,12 @@
 		<INPUT TYPE="hidden" id="xmldesigner" name="xmldesigner" value="1">
 		<INPUT TYPE="hidden" id="xmlName" name="xmlName" value="">
 	</form>
-    <!--<script type="text/javascript" src="../scripts_lib/require.js" data-main="../scripts/xmldesigner/main"></script>!-->
-     <script type="text/javascript" src="../scripts/dhctt/xmldesigner/main.js" charset='utf-8'></script>
+	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/main.js" charset='utf-8'></script>     
+	<server>
+		if $g(%request.Data("type", 1)) = "dev" {
+			// 用于本地开发用	这个引用必须放最后面否则有报错！！
+			w "<script type=""text/javascript"" src=""../scripts/dhctt/xmldesigner/js/main.js"" charset='utf-8'></script>"
+		}
+	</server>
 </body>
 </html>

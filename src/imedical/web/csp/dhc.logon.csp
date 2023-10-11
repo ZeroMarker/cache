@@ -1,19 +1,27 @@
 <!doctype html>
 <html>
 <head>
+<link rel="shortcut icon" type="image/png" href="../logo.png">
 <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
 <title><EXTHEALTH:TITLE></EXTHEALTH:TITLE></title>
-<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
-<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+<server>
+	if ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","NotInsertCacheBrokerJS"){
+		w " <script type=""text/javascript"" src=""../scripts/csp/broker/cspbroker.js""></script>"
+		w " <script type=""text/javascript"" src=""../scripts/csp/broker/cspxmlhttp.js""></script>"
+	}else{
+		w $$$cspStrictBrokerInsertJS
+		w $$$cspStrictBrokerInsertHttpJS
+	}
+</server>
 <SCRIPT SRC="../scripts/websys.js"></SCRIPT>
-<BOOTSTRAP303/>
-<ADDINS require="CMgr,CmdShell,PrjSetTime"/>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/bootstrap-3.0.3/dist/css/bootstrap.min.css"> 
+<script type="text/javascript" src="../scripts_lib/bootstrap-3.0.3/dist/js/bootstrap.min.js" charset="utf-8"></script>
+<ADDINS require="CMgr,CmdShell,DHCWebBrowser,DHCWebBrowserPatch"/>
 <link type="text/css" rel="stylesheet" href="../scripts_lib/font-awesome/font-awesome.min.css" />
 <link type="text/css" rel="stylesheet" href="../skin/default/css/logon.css" />
-<link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
-<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" charset="utf-8"></script>
-<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+
 <script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
 <script type="text/javascript" src="../scripts_lib/bootstrap-3.0.3/dist/js/jquery.backgroundcover.js"></script>
 <server>
@@ -25,11 +33,14 @@
  	Set IEVersion = "IE11"
  }
  Set IsIE = (%request.GetCgiEnv("HTTP_USER_AGENT")["Trident")
+ Set LogonGrayScaleEnable = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","LogonGrayScaleEnable")
+ Set IsWideScreen = %request.Get("IsWideScreen")
 </server>
 <style>
 body{
 	overflow:hidden;
 	color:#000000;
+	padding:0;
 }
 body *{
 	font-size:12px;
@@ -48,42 +59,30 @@ body *{
     padding: 15px;
     border-bottom: 0px solid #e5e5e5;
 }
-.loginbox_cq .alert-danger {
-    margin: -29px 0 0 0;
-    height: 26px;
-    padding: 0px 10px 0;
-}
+
 .x-grid3-row td,.x-grid3-summary-row td {
     line-height: 12px;
     padding-bottom: 1px;
     padding-top: 1px;
     font: normal 12px "Microsoft Yahei", arial, helvetica, sans-serif;
 }
-.ipInfo{
-    position: absolute;
-    /*top: 475px;
-    left: 875px;*/
-    color: #fff;
-    background-color: #000;
-    opacity: 0.1;
-    /*height: 32px;*/
-    width: 324px;
-    text-align: left;
-    padding: 8px 5px 5px 5px;
-    border-radius: 4px;
-}
-.ipInfo .arrow{
-    border-width:8px 7px 8px 7px;
-    border-style: solid;
-    border-color: transparent transparent #000 transparent;
-    margin-top: -22px;
-    margin-left: 162px;
-    width: 14px;
-    /* height: 16px; */
-}
-#DEPARTMENT{
+#DEPARTMENTLookup{
 	cursor:pointer!important;
 	padding-left:12px!important;
+}
+#careProInfoDiv{background:#ffffff;padding:10px;border-radius:5px;position:absolute;display:none;box-shadow: 0 5px 10px rgb(0 0 0 / 20%);z-index: 900;}
+#careProInfoDiv * {font-family: "microsoft yahei",DFKai-SB,KaiTi;}
+#careProInfoDiv div.carelabel {font-size:13px;margin:5px 0 0 0;}
+.careProInfoArrow{position:absolute;top:50%;border:7px solid transparent;right:-7px;margin-top:-7px;border-right-width: 0px;border-left-color: #ffffff;z-index: 10000;}
+.panel .panel-body.panel-body-noborder{
+	padding:0;
+}
+/*不清楚上面一句把padding:0的原因，暂时增加重写hisui.messager弹出窗口缺少padding，*/
+.panel.messager-window .panel-body.panel-body-noborder{
+	padding:10px;
+}
+a:focus{
+	color:#FFFFFF;  /*hisui-alert提示按钮字体颜色被bootstrap覆盖了，重写回来*/
 }
 </style>
 <csp:if condition=IEVersion="IE6">
@@ -101,6 +100,86 @@ body *{
 	}
 	</style>
 </csp:If>
+<csp:if condition=LogonGrayScaleEnable="1">
+	<style>
+	html {-webkit-filter: grayscale(100%);-moz-filter: grayscale(100%);-ms-filter: grayscale(100%);-o-filter: grayscale(100%);filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1);_filter:gray;filter:gray;}
+	</style>
+	<csp:if condition=IsIE=1>
+	<style>
+	html div.in_img,html img{ -webkit-filter: grayscale(100%); -moz-filter: grayscale(100%);-ms-filter: grayscale(100%);-o-filter: grayscale(100%);filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1);filter:gray;}
+	body div.vi-block{	background-color:#222222 !important;}
+	.login_header .hospital ,body .loginbox_cq a,body .loginbox_cq div,body a#ForgetPassword{color:#222222;}
+	.fa.login_icon_1,.fa.login_icon_2,.fa.login_icon_3,.fa.login_icon_4{background-color:#222222 !important;}
+	body .loginbox_cq #Logon{	background-color:#222222;	border-color:#222222;}
+	.img1{
+		background:url("../skin/default/images/logon/gray/1.jpg");
+	}
+	.img2{
+		background:url("../skin/default/images/logon/gray/2.jpg");
+	}
+	.img3{
+		background:url("../skin/default/images/logon/gray/3.jpg");
+	}
+	</style>
+	<script type="text/javascript">
+		function grayscale(src){
+			try{
+				var h=0,w=0;
+				if ('string'==typeof src){
+					var imgObj = new Image();
+					imgObj.src = src;
+					w = imgObj.width;
+					h = imgObj.height;
+					if (w*h>10240) return "";/*图片太大会慢*/
+				}
+				var canvas = document.createElement('canvas');
+		        var ctx = canvas.getContext('2d');	
+		        canvas.width = w;
+				canvas.height = h;
+		        ctx.drawImage(imgObj, 0, 0);
+		        var imgPixels = ctx.getImageData(0, 0, w, h);
+		        for(var y = 0; y < imgPixels.height; y++){
+		            for(var x = 0; x < imgPixels.width; x++){
+		                var i = (y * 4) * imgPixels.width + x * 4;
+						// IE下二层循环慢, chrome下并不慢
+		                var avg = (imgPixels.data[i] + imgPixels.data[i + 1] + imgPixels.data[i + 2]) / 3;
+						//var avg = Math.max(imgPixels.data[i] , imgPixels.data[i + 1]);
+						//var avg = imgPixels.data[i];
+						// 灰度图像是R、G、B三个分量相同的一种特殊的彩色图像
+		                imgPixels.data[i] = avg; 
+		                imgPixels.data[i + 1] = avg; 
+		                imgPixels.data[i + 2] = avg;
+		            }
+		        }
+		        ctx.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
+		        return canvas.toDataURL();
+			}catch(e){return "";}
+	    }
+	    $(function(){
+			$('img').each(function(){
+				var s = grayscale(this.src);
+				if (s!="") this.src = s;
+			});
+		});
+	</script>
+	</csp:if>
+</csp:if>
+<csp:if condition=1=IsWideScreen>
+	<style>
+		.loginboxP_cq {
+		    right: 846px;
+		}
+		.img1{
+			background:url("../skin/default/images/logon/widescreen/1.jpg");
+		}
+		.img2{
+			background:url("../skin/default/images/logon/widescreen/2.jpg");
+		}
+		.img3{
+			background:url("../skin/default/images/logon/widescreen/3.jpg");
+		}
+	</style>
+</csp:if>
 <script language=cache runat=server>
 	Set LogonPageTitle="东华标准版数字化医院信息管理系统"
 	if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Configuration||LogonPageTitle"){
@@ -126,12 +205,13 @@ body *{
 	s myCode($i(myCode))="session['CONTEXT']='"_$g(%request.Data("CONTEXT",1))_"';"			;;;%session.Data("CONTEXT",1)
 	s myCode($i(myCode))="session['LOGON.WARDID']='"_$g(%session.Data("LOGON.WARDID"))_"';"
 	s myCode($i(myCode))="session['LOGON.HOSPID']='"_$g(%session.Data("LOGON.HOSPID"))_"';"
-	
+	s myCode($i(myCode))="session['SessionId']='"_%session.SessionId_"';"
+	s myCode($i(myCode))="var FIXKEY = 'ABCDEF0123456789';"
 	s myStatusTip = "用户名称:  "_ $g(%session.Data("LOGON.USERNAME"))_"  组:  "_$g(%session.Data("LOGON.GROUPDESC"))
 	s myStatusTip = myStatusTip_"  科室: "_$g(%session.Data("LOGON.CTLOCDESC"))
 	
 	s myCode($i(myCode))="window.status='"_myStatusTip_"';"
-	s event=##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
+	s event=##class(websys.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
 	
 	s myCode($i(myCode))="function tkMakeServerCall(tkclass,tkmethod) {"
 	s myCode($i(myCode))="	if ((tkclass=='')||(tkmethod=='')) return '';"
@@ -142,15 +222,79 @@ body *{
 	s myCode($i(myCode))="	var retval=cspHttpServerMethod.apply(this,args);"
 	s myCode($i(myCode))="	return retval;"
 	s myCode($i(myCode))="}"
+	s myCode($i(myCode))="function tkMakeServerCall(tkclass,tkmethod) {"
+	s myCode($i(myCode))="	if ((tkclass=='')||(tkmethod=='')) return '';"
+	s myCode($i(myCode))="	var reqdata = {EncryItemName:'"_event_"'};"
+	s myCode($i(myCode))="	reqdata['P_1']=tkclass,reqdata['P_2']=tkmethod"
+	s myCode($i(myCode))="	//var reqdata = {ClassName:tkclass,MethodName:tkmethod};"
+	s myCode($i(myCode))="	for (var i=2; i<tkMakeServerCall.arguments.length; i++) {"
+	s myCode($i(myCode))="	reqdata[""P_""+(parseInt(i)+1)] = tkMakeServerCall.arguments[i];"
+	s myCode($i(myCode))="	}"
+	s myCode($i(myCode))="	var retval=$m(reqdata,false);"
+	s myCode($i(myCode))="	return retval;"
+	s myCode($i(myCode))="}"
 	s myCode($i(myCode))="<"_"/script>"
 	f myIdx=1:1:myCode {
 		w myCode(myIdx),!
 	}
-
+	s IsShowSolar24InLogonPage = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowSolar24InLogonPage")
+	Set Solar24Info=""
+	If IsShowSolar24InLogonPage s Solar24Info = ##class(websys.CalendarUtil).GetSolar24Desc()
  	//function tkMakeServerCall(tkclass,tkmethod) {  if ((tkclass=='')||(tkmethod=='')) return '';var args=new Array('#(##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect")))#',tkclass,tkmethod);  for (var i=2; i<tkMakeServerCall.arguments.length; i++) {  args[i+1]=tkMakeServerCall.arguments[i];  }  var retval=cspHttpServerMethod.apply(this,args);  return retval; }
+ 	s IsShowHospDescShort1 = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowHospDescShort1")
+	s IsShowActiveUser = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowActiveUser")
  </script>
+ <csp:method name=GenMWToken arguments="" returntype=%Boolean>
+ Set EnableToken = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableToken")
+ If EnableToken{
+ 	Set MWTokenKey = ##class(BSP.SYS.SRV.Token).GetTokenReqKey()
+ 	If $g(%request.Data("CASTypeCode",1))="MWHOSAuth2"{
+#;	     找到登录位置相同的MW_Token, 减少Token生成
+		 Set HOSUserCode = $g(%request.Data("userCode",1))
+		 Set HOSPostCode = $g(%request.Data("postCode",1))
+		 Set ValidMWToken = ##class(BSP.SYS.SRV.Token).GetValidTokenByUser(HOSUserCode,$lb("Session",%session.SessionId),$g(%request.Data("DEPARTMENT",1)),$g(%request.Data("SSUSERGROUPDESC",1)),HOSPostCode)
+		 Set %request.Data(MWTokenKey,1)=ValidMWToken
+	 }
+	 Set BSPSYSTokenId = $g(%request.Data(MWTokenKey,1))
+	 If (BSPSYSTokenId="") || ( (BSPSYSTokenId'="") && ('$d(^BSP.SYS.Token(BSPSYSTokenId)))){
+	 	 Kill %session.Data //从登录界面生成的MWToken,从新%session中复制数据,不要留老的%sessionData
+	 	 Set BSPSYSTokenId = ##class(BSP.SYS.SRV.Token).GenTokenFromSessionId(%session.SessionId,BSPSYSTokenId)
+	 	 Set %request.Data(MWTokenKey,1)=BSPSYSTokenId
+	 }
+ 	 // 一定要重写, 保证%session指向MWToken对象
+ 	 d ##class(BSP.SYS.SRV.Token).OverrideSession(BSPSYSTokenId)
+ }
+ Q 1
+ </csp:method>
+  <csp:method name=GenTran arguments="" returntype=%Boolean>
+	Set %request.Data("DEPARTMENT",1)=##class(websys.TranslationEPR).GetTrans("User.CTLoc","CTLOCDesc","",%request.Get("DEPARTMENT"))
+	Set %request.Data("SSUSERGROUPDESC",1)=##class(websys.TranslationEPR).GetTrans("User.SSGroup","SSGRPDesc","",%request.Get("SSUSERGROUPDESC"))
+	Set %request.Data("Hospital",1)=##class(websys.TranslationEPR).GetTrans("User.CTHospital","HOSPDesc","",%request.Get("Hospital"))
+	Set %request.Data("UserPost",1)=##class(websys.TranslationEPR).GetTrans("CT.BDP.CT.HOSPost","POSTDesc","",%request.Get("UserPost"))
+ 	Q 1
+ </csp:method>
+   <csp:method name=GenTranSrc arguments="" returntype=%Boolean>
+	Set %request.Data("DEPARTMENT",1)=##class(websys.TranslationEPR).GetTransSrcData("User.CTLoc","CTLOCDesc","",%request.Get("DEPARTMENT"))
+	Set %request.Data("SSUSERGROUPDESC",1)=##class(websys.TranslationEPR).GetTransSrcData("User.SSGroup","SSGRPDesc","",%request.Get("SSUSERGROUPDESC"))
+	Set %request.Data("Hospital",1)=##class(websys.TranslationEPR).GetTransSrcData("User.CTHospital","HOSPDesc","",%request.Get("Hospital"))
+	Set %request.Data("UserPost",1)=##class(websys.TranslationEPR).GetTransSrcData("CT.BDP.CT.HOSPost","POSTDesc","",%request.Get("UserPost"))
+ 	Q 1
+ </csp:method>
  <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- if %request.GetCgiEnv("HTTP_X_FORWARDED_FOR")'="" s %request.CgiEnvs("REMOTE_ADDR")=%request.GetCgiEnv("HTTP_X_FORWARDED_FOR")
+ s returnval = ##Class(websys.cas.CASService).CASService($g(%request.Data("CASEnable",1)),$g(%request.Data("CASService",1)))
+ if (returnval) {
+	Set lic=1,PEiMediclVer="",forcePasswordChange="0",readonly=1,locIsDisabled=1,logonround=0,CurrServerCmpCode="",ValidUser=0
+ 	Quit 1
+ }
+ if %request.GetCgiEnv("HTTP_X_FORWARDED_FOR")'="" Set %request.CgiEnvs("REMOTE_ADDR")=%request.GetCgiEnv("HTTP_X_FORWARDED_FOR")
+ // If $g(%request.Data("IPAddress",1))'="" Set %request.CgiEnvs("REMOTE_ADDR") = %request.Data("IPAddress",1)
+ Set UserAgent = $G(%request.CgiEnvs("HTTP_USER_AGENT"))
+ if ($zcvt(UserAgent,"L")["firefox"){
+	Set %request.Data("Error:ErrorDesc",1)="请使用医为浏览器或IE浏览器"
+	Set %request.Data("Error:ErrorCode",1)="UseMediwayOrIE"
+	Set %response.ServerSideRedirect = "websys.e403.csp"
+	Quit 1
+ }
  //登录后才同步时间,相差超一分钟
  Set ClientDate = $g(%request.Data("ClientDate",1))
  Set ClientTime = $g(%request.Data("ClientTime",1))
@@ -165,49 +309,179 @@ body *{
 		Set ModifyTimeFlag=1
 	}
  }
+ Set EnableToken = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableToken")
+ If EnableToken{
+	Set FirstSession = 0
+ 	// 未登录过,测试发现要进行前端跳转，后端redirect在医为浏览器下，会导致每个ajax都起新会话
+ 	if (%session.LicenseId=%session.SessionId){
+ 		Set FirstSession = 1
+ 	}
+ 	Set LicUserName = "Logon"
+ 	If $g(%request.Data("IPAddress",1))'="" Set LicUserName = %request.Data("IPAddress",1)
+ 	d ##class(BSP.SYS.SRV.Token).SessionLoginByIP(%session,LicUserName)
+ 	Set %session.AppTimeout = 600
+	If FirstSession {
+		Set Param = "a=a"
+		Set val="" For{
+			Set val = $O(%request.Data(val))
+			Quit:val=""
+			Set Param = Param_"&"_val_"="_$G(%request.Data(val,1))
+		}
+ 		Set %response.Redirect = "dhc.logon.csp?"_Param
+ 		Q 1
+ 	}
+ }
+ If EnableToken d ..GenMWToken()
+ 
+ s rtn= ..ValidSignature()
+ if rtn<0 {
+    Set %request.Data("PASSWORD",1)=""
+    Set %request.Data("USERNAME",1)=""
+    Set %request.Data("SSUSERGROUPDESC",1)=""
+    Set %request.Data("DEPARTMENT",1)=""
+    d ##class(websys.SessionLogonEvent).InitialiseSession()
+    Set STATUS = $p(rtn,"^",2)
+    Set %session.AppTimeout=60*5
+    Set lic=1,PEiMediclVer="",forcePasswordChange="0",readonly=1,locIsDisabled=1,logonround=0,CurrServerCmpCode="",ValidUser=0
+    Quit 1
+ }
+ if ##class(websys.Conversions).IsValidMethodName("websys.Filter","InjectionStrictFilter") d ##class(websys.Filter).InjectionStrictFilter()
  if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
  ;s preSessionId=##Class(websys.SessionLogon).LogonBefore()
  ;s preSessionId=0
  ;if (preSessionId=0) {
 	 //判断是否CAS单点登录
 	Set caslogin = $g(%request.Data("caslogin",1))
+	Set ShowCALogonType = $Zcvt($g(%request.Data("ShowCALogonType",1)),"U") //=Sound
 	Set PEiMediclVer = $p($tr($p($g(^CF("SM",1)),"^",5),"R",""),".",1,2)
-	//Set NewSession = (('caslogin) && %session.NewSession && ($G(%request.Data("token",1))="") && ($G(%request.Data("TPSID",1))=""))
-	// 2020-06-01 在IE下%session.NewSession在F5后，有时得到1，有时为0，判断前后%session.SessionId是否一样
-	// 桌面进入登录NewSession=0,^Temp(sid)为空
-	// F5 NewSession=1 ,^Temp(sid)有值
-	// F5 NewSession=0 ,^Temp(sid)有值  '$d(^Temp(%session.SessionId))表示F5刷新
-	Set fromCloseSes = $d(^Temp(%session.SessionId))
-	Set MyNewSession=0
-	if %session.NewSession,'fromCloseSes Set MyNewSession=1
-	Set NewSession = (('caslogin) && MyNewSession && ($G(%request.Data("token",1))="") && ($G(%request.Data("TPSID",1))=""))
-	Set IsOutInLine = ($d(%session) && $d(^Temp(%session.SessionId)) && ($G(^Temp(%session.SessionId))="outline"))
-	if (NewSession || IsOutInLine) {
-		 // 超时后按F5, 本机测试sessionId有时会变化
-		 Set %request.Data("PASSWORD",1)=""
-		 Set %request.Data("USERNAME",1)=""
-		 Set %request.Data("SSUSERGROUPDESC",1)=""
-		 Set %request.Data("DEPARTMENT",1)=""
-	 }
-	 k ^Temp(%session.SessionId)
-	 // F5刷新时报科室无效问题 20200601 by wanghc CachePs的Input不能删除，删除会导致请求乱码
-	 d ..AdjustCharSet()
+	// 把HOS传过来的岗位代码转成id与描述
+	Set HOSPostCode = $g(%request.Data("postCode",1))
+	If $g(%request.Data("TPSID",1))=""{  //免密码登录,暂不重写
+		if HOSPostCode'="",$g(%request.Data("UserPost",1))="",$G(%request.Data("DEPARTMENTID",1))="",$G(%request.Data("SSUSERGROUPID",1))=""{
+			 Set PostId = $O(^CT.BDP.CT.HOSPostI("IndexCode",$zu(28,HOSPostCode,7,32768),""))
+			 if PostId>0{
+				 Set %request.Data("UserPost",1)= $lg(^CT.BDP.CT.HOSPostD(PostId),3)
+			 	Set %request.Data("UserPostId",1)=PostId
+			 	do ##class(BSP.IMP.BDP.Interface).GetLocGroupByPost(PostId,.PostLocId,.PostGroupId,.PostHospId)
+			 	Set %request.Data("DEPARTMENTID",1) = PostLocId
+			 	Set %request.Data("SSUSERGROUPID",1) = PostGroupId
+			 	Set %request.Data("hospID",1) = PostHospId
+			 }
+			 ;Set ^Wanghc("ip",$I(^Wanghc),"logon.csp",2.1)=$G(PostId)_","_PostLocId_"."_PostGroupId_"."_PostHospId
+		 }
+	}
+	; 登录验证前把翻译转成源数据
+	 do ..GenTranSrc()  
 	 // 支持传科室Code,科室Id作为入参,以便解决乱码问题 20200317 by wanghc 
 	 Set InCharSet = $G(%request.Data("InCharSet",1))
 	 Set DepId="" , DepCode=$g(%request.Data("DEPARTMENTCODE",1))
+	 ;If (DepCode="") Set DepCode=$g(%request.Data("buCode",1))
 	 if (DepCode'="") Set DepId = ##class(web.CTLoc).GetIdFromCodeOrDescription(DepCode)
- 	 If $d(%request.Data("DEPARTMENTID")) Set DepId = $g(%request.Data("DEPARTMENTID",1))
+ 	 If $d(%request.Data("DEPARTMENTID")) {
+	 	 Set DepId = $g(%request.Data("DEPARTMENTID",1))
+	 	 Set DepHospId=$p($g(^CTLOC(DepId)),"^",22)
+		 Set %request.Data("Hospital",1) =$p(^CT("HOSP",DepHospId),"^",2)
+ 	 }
+ 	 Set GrpID=0
+ 	 If $d(%request.Data("SSUSERGROUPID")) {
+	 	 Set GrpID = $g(%request.Data("SSUSERGROUPID",1))	 	 
+ 	 }
+ 	 Set:GrpID>0 %request.Data("SSUSERGROUPDESC",1) =$p($g(^SSU("SSGRP",GrpID)),"^",1)
 	 if ((DepId'="") && (DepId>0)) Set %request.Data("DEPARTMENT",1) = $p(^CTLOC(DepId),"^",2)
-	 if ('caslogin){
-	 	s returnval=##Class(websys.SessionLogon).Logon()
-	 }else{
-		s returnval = ##Class(websys.cas.SessionLogon).CASLogon()
+	 /*Portal Request locID,grpID,hospID*/
+	 If $d(%request.Data("locID")) Set DepId = $g(%request.Data("locID",1))
+	 if ((DepId'="") && (DepId>0)) Set %request.Data("DEPARTMENT",1) = $p(^CTLOC(DepId),"^",2)
+	 If $d(%request.Data("grpID")) Set GrpID = $g(%request.Data("grpID",1))
+	 if (($G(GrpID)'="") && (GrpID>0)) Set %request.Data("SSUSERGROUPDESC",1) = $p($g(^SSU("SSGRP",GrpID)),"^",1)
+	 If $d(%request.Data("hospID")) Set HospID = $g(%request.Data("hospID",1))
+	 if (($G(HospID)'="") && (HospID>0)) Set %request.Data("Hospital",1) = $P($g(^CT("HOSP",HospID)),"^",2)
+	 /*Portal Request End*/
+	 if (caslogin=1) Set %request.Data("CASTypeCode",1)="MWPortal",%request.Data("token",1) = $g(%request.Data("ticket",1))
+	 //  http://192.168.101.100:8111/callback?code=pdsdkEUVtm&state=35e6b2693a937afc1c1402efbd156102
+	 // 统一认证前端：http://114.251.235.4:8229
+	 // 统一认证后端：http://114.251.235.4:8269
+	 If $g(%request.Data("CASTypeCode",1))="MWHOSAuth2"{
+#;      找到登录位置相同的MW_Token, 减少Token生成
+		Set HOSUserCode = $g(%request.Data("userCode",1))
+		
+		Set MWTokenKey = ##class(BSP.SYS.SRV.Token).GetTokenReqKey()
+		Set ValidMWToken = ##class(BSP.SYS.SRV.Token).GetValidTokenByUser(HOSUserCode,$lb("Session",%session.SessionId),$g(%request.Data("DEPARTMENT",1)),$g(%request.Data("SSUSERGROUPDESC",1)),HOSPostCode)
+		;Set ^Wanghc("ip",$I(^Wanghc),"logon.csp")=ValidMWToken_","_$G(%request.Data("DEPARTMENT",1))_","_$G(%request.Data(MWTokenKey,1))
+		;Set ^Wanghc("HOSToken",$I(^Wanghc))=HOSUserCode_","_ValidMWToken_","_%session.SessionId_","_$g(%request.Data("DEPARTMENT",1))_","_$g(%request.Data("SSUSERGROUPDESC",1))
+		If ValidMWToken'=%request.Data(MWTokenKey,1){
+			Set RedirectUrl = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("WebsysHOS","oauthLogonURL") ;"https://111.205.6.218:1443/oauth/authorize" //"http://114.251.235.4:8229/oauth/authorize"
+			Set OauthClientId = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("WebsysHOS","oauthClientId") ;"https://111.205.6.218:1443/oauth/authorize" //"http://114.251.235.4:8229/oauth/authorize"
+			Set appURL= ##Class(ext.util.String).GetCacheURL() //"http://"_%request.CgiEnvs("HTTP_HOST")_%request.CgiEnvs("HTTP_URL") 
+			Set appURL = $replace(appURL,"csp/dhc.logon.csp?","form.htm?") ;2016 增加form.htm来传数据库密码与用户名
+			Set ViewCode = $G(%request.Data("ViewCode",1))
+			;Set TOKEN = "1234567887654321abcd"
+			;Set %request.Data("token",1) = TOKEN
+			;Set %request.Data("MACAddr",1)="E8:D0:FC:E2:54:95"
+			Set SelfUrl = appURL
+			// if (SelfUrl'["MACAddr") Set SelfUrl = SelfUrl_"&MACAddr=E8:D0:FC:E2:54:95&token="_(##class(web.Util.Encryption).MD5HexStr($h_OauthClientId))
+			;Set ^Wanghc("HOSToken",$I(^Wanghc),"TOKEN","CSP")=SelfUrl
+			Set code = $G(%request.Data("code",1))  //授权码
+			if code=""{
+				Set Redirect = RedirectUrl_"?response_type=code&client_id="_OauthClientId_"&redirect_uri="_$zcvt(SelfUrl,"O","URL")
+				Set %response.Redirect = Redirect
+				Quit 1
+			}
+			Set %request.Data("token",1)=code
+		}
 	 }
+	 d %session.Lock()
+	 s returnval=##Class(websys.SessionLogon).Logon()
+	 Set %session.Data("LOGON.IsWideScreen")=$G(%request.Data("IsWideScreen",1))
+	 d %session.%Save()
+	 // 翻译默认科室
+	 do ..GenTran()
+	 Set NameTran = ##class(websys.Translation).Get("DIC", "姓名")
+	 Set GvInsuNoTran = ##class(websys.Translation).Get("DIC", "国家医师编码")
+	 Set GvHospNoTran = ##class(websys.Translation).Get("DIC", "医疗机构编码")
+	 Set GvHospNameTran = ##class(websys.Translation).Get("DIC", "医疗机构名称")
 	 ; ab 18.04.07 63052 - override timeout to 60 secs to free license
 	 ;w "<br>"_$g(lic)_"<br>",!
-	 s %session.AppTimeout=60*5
-	 s sc=%session.Login("_system","SYS",1)
-	 s:$System.Status.IsError(sc) ^TempLogon($h)=$system.Status.GetErrorText(sc)
+	 If $G(%session.Data("LOGON.CTLOCDESC"))=""{ 
+		s %session.AppTimeout=60*5
+	 }
+	 Set UserCodeNo = "",HospCodeNo="",HospCodeDesc=""
+	 Set IsShowCareProInfo = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowCareInfoInLogonPage")
+	 Set IsShowServerInfoInLogonPage = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowServerInfoInLogonPage")
+	 Set IsShowBannerInLogonPage = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowBannerInLogonPage")
+	 Set IsShowVIInLogonPage = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowVIInLogonPage")
+	 Set EnablePostLogon = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnablePostLogon")
+	 If EnablePostLogon=1{
+		Set %request.Data("DEPARTMENTLookup",1)=%request.Get("UserPost")
+	 }else{
+	 	Set %request.Data("DEPARTMENTLookup",1)=%request.Get("DEPARTMENT")
+	 }
+	 if ($G(%session.Data("LOGON.USERID"))>0) {
+		 // 医师编码
+		 Set SeUserId = $G(%session.Data("LOGON.USERID"))
+		 Set UserCodeNo = $p(^SSU("SSUSR",SeUserId),"^",124)
+		 If $G(%session.Data("LOGON.HOSPID"))>0 {
+			 Set HospCodeNo = $p(^CT("HOSP",$G(%session.Data("LOGON.HOSPID"))),"^",7)
+			 Set HospCodeDesc = $p(^CT("HOSP",$G(%session.Data("LOGON.HOSPID"))),"^",2)
+		 }else {
+			 Set DepHospId = 0
+			 if (EnablePostLogon){
+				 d ##class(BSP.IMP.BDP.Interface).GetDefaultLocGroupPost(SeUserId,,,,.DepHospId)
+			 }else{
+				 Set DefaultLocId = $p(^SSU("SSUSR",SeUserId),"^",4)
+				 Set DepHospId=$p($g(^CTLOC(DefaultLocId)),"^",22)
+			 }
+			 if (DepHospId>0){
+				 Set HospCodeNo = $p(^CT("HOSP",DepHospId),"^",7)
+			 	 Set HospCodeDesc = $p(^CT("HOSP",DepHospId),"^",2)
+			 }
+		 }
+	 }
+	 If 'EnableToken {
+		s sc=%session.Login("_SYSTEM","SYS",1)
+	 	s:$System.Status.IsError(sc) ^TempLogon($h)=$system.Status.GetErrorText(sc)
+	 }
+	 //d %response.SetCookie("sessionid",%session.SessionId,"","/","")
+	 //d %response.SetCookie("sessionid",%session.SessionId,"","/","",1,0,"None")
 	 s ^Temp("ClientName")=$J_" "_$ZUTIL(67,12,$j)_" "_$zu(67,15,$j)
 	 q returnval
  ;}else{
@@ -226,6 +500,29 @@ body *{
 	 	Set DepId = ##class(web.CTLoc).GetIdFromCodeOrDescription(mydep)
 	}
 	Quit DepId
+</csp:method>
+<csp:method name=ValidSignature>
+	n (%request)
+	Set TicketCode = $G(%request.Data("TPSID",1)),rtn=1
+	If (TicketCode'=""){
+		Set TPSysRowId = $o(^websys.ThirdPartySystemI(0,"Ticket",TicketCode,""))
+		If (TPSysRowId>0){
+			Set AES7PaddingKey = $p(^websys.ThirdPartySystemD(TPSysRowId),"^",6) 
+			If $l(AES7PaddingKey)=32{
+				Set TimeStamp = $G(%request.Data("timeStamp",1))
+				Set SignDisTime = ##class(web.Util.Encryption).HMACSHA256ValidSign($G(%request.Data("signature",1)),"",AES7PaddingKey,TimeStamp_AES7PaddingKey)
+				If (SignDisTime<0){
+					set rtn="-103^ThitySystemSignatureNotMatch"
+					Quit rtn
+				}
+				If ((SignDisTime)>300) || ((SignDisTime)<-300) {
+					set rtn="-104^ThitySystemSignatureTimeOut"
+					Quit rtn
+				}
+			}
+		}
+	}
+	Quit rtn
 </csp:method>
 <csp:method name=AdjustCharSet arguments="">
 	n (%request)
@@ -266,7 +563,8 @@ function singleSession(){
 	if(0!=preSessionId){
 		//四川一个用户只能在线一份会话
 		if(confirm(username+" 已经在 #($g(LOGADDRIP))# 登录了系统!会话ID:#($g(LOGADDRSessionId))#,你确定替换登录?")){
-			#server(websys.SessionLogon.ForceLogoutByUser(username))#
+			tkMakeServerCall("websys.SessionLogon","ForceLogoutByUser",username);
+			//#server(websys.SessionLogon.ForceLogoutByUser(username))
 		}else{
 			window.location.href="websys.closesession.csp?relogon=1";
 		}
@@ -277,7 +575,7 @@ function singleSession(){
 		return ;
 		//协和一台电脑只能登录一个用户
 		//if(confirm("#($g(username))# 已经登录了系统,你确定重新登录?")==true){
-		//	#server(websys.SessionLogon.ForceLogoutPreSession())#
+		//	#server(websys.SessionLogon.ForceLogoutPreSession())
 		//	window.location.href="dhc.logon.csp";
 		//}else{
 		//	window.close();
@@ -288,14 +586,22 @@ singleSession();
 function setPageTitle(){
 	var ipobj = document.getElementById("localipdiv");
 	if (ipobj && ipobj.innerText){
-		var pageTitle = #server(websys.Configuration.GetLogonPageTitle(ipobj.innerText))#;
-		//var pageTitle =#server(websys.DHCClientLoginIPLocRule.GetHospInfoByIP(ipobj.innerText))#;
+		var pageTitle = tkMakeServerCall("websys.Configuration","GetLogonPageTitle",ipobj.innerText);
 		if (pageTitle.indexOf("^")>-1){pageTitle = pageTitle.split("^")[1];}
 		if (pageTitle!=""){
+			if (pageTitle.indexOf(".png")>-1 || pageTitle.indexOf(".jpg")>-1){
+				pageTitle = '<img style="height:110px;margin-top:-35px;" src="'+pageTitle+'"/>';
+			}
 			$(".hospital").html(pageTitle);
 		}
+		//if (1=="#(IsShowCareProInfo)#"){
+			//var pageTitle1 =#server(websys.DHCClientLoginIPLocRule.GetHospInfoByIP(ipobj.innerText));
+			//if (pageTitle1.indexOf("^")>-1){
+			//	var pageTitle1Arr = pageTitle1.split("^");
+			//	showCareUserInfo(pageTitle1Arr[6],pageTitle1Arr[1]);
+			//}
+		//}
 	}
-	
 }
 var showModal = function(target, url, opt){
 	var width = 400, height=400 , title = "对话框!" ,showbefore = null,showafter=null,content="无内容";
@@ -328,12 +634,22 @@ var showModal = function(target, url, opt){
 function ChangePassword(obj) {
 	//var doc="websys.default.csp?WEBSYS.TCOMPONENT=SSUser.EditPassword&ID="+session['LOGON.USERID']; 
 	//window.open(doc,'new','scrollbars=no,toolbar=no,width=350,height=250,top=200,left=500');
-	websys_showModal({url:'websys.user.settings.csp?changepassword=1',title:'修改密码',width:480,height:280});
+	websys_showModal({url:'websys.user.settings.csp?changepassword=1',title:'修改密码',width:580,height:380,
+		onClose:function(){
+			$("#PASSWORD").val("");
+		}
+	});
 }
 function ChangePinPassword(obj) {
 	var doc="websys.default.csp?WEBSYS.TCOMPONENT=SSUser.EditPINPassword&ID="+session['LOGON.USERID']; 
 	window.open(doc,'new','scrollbars=no,toolbar=no,width=350,height=250,top=200,left=500');
 	
+}
+function ForgetPasswordHander(){
+	websys_showModal({url:"websys.forgetpassword.csp",title:'忘记密码',width:740,height:450});
+}
+function ActiveUserHander(){
+	websys_showModal({url:"websys.activeUser.csp",title:'激活用户',width:740,height:450});
 }
 function ChangeDefultDept(obj)
 {
@@ -356,6 +672,8 @@ function unlockonunload() {
 }
 window.onunload=unlockonunload;
 var islogon = 0;
+var ShowCALogonType = "#(ShowCALogonType)#";
+var EnablePostLogon = "#(EnablePostLogon)#";
 </SCRIPT>
 
 </head>
@@ -368,25 +686,80 @@ var islogon = 0;
 	    <!--LOGO-->
 	    <div class="login_header">
 	      <div class="hospital">#(LogonPageTitle)#</div>
+	      <csp:if condition=IsShowVIInLogonPage=1>
+	      <div class="vi-block" style="left:10px;top:28px;background-color: #03469F;"></div>
+	      <div class="vi-block" style="left:30px;top:28px;background-color: #00A9E4"></div>
+	      <div class="vi-block" style="left:70px;top:28px;background-color: #f6b72c;"></div>
+	      <div class="vi-block" style="right:70px;top:28px;background-color: #f6b72c;"></div>
+	      <div class="vi-block" style="right:30px;top:28px;background-color: #00A9E4"></div>
+	      <div class="vi-block" style="right:10px;top:28px;background-color: #03469F;"></div>
+	      </csp:If>
 	    </div>
 	    <!--LOGO-->
-	    <server>
-	          Set hldImg = ##class(websys.Holiday).GetImg()
-	          if (hldImg="") Set hldImg = "1.jpg"
-	   </server>
-	    <!--背景图-->
-	    <div class="login_carousel">
-	      <div id="carousel-example-generic" class="carousel_200 carousel slide login_carousel_picture" data-ride="carousel">
-	        <div class="carousel-inner" role="listbox">
-		  		  <div class="item active"> <div class="in_img" style="background-image:url('../skin/default/images/logon/#(hldImg)#')"></div> </div>
-	        </div>  
-	      </div>
-	    </div>
+		<csp:if condition=IsShowBannerInLogonPage=0>
+			<!--背景图-->
+			<server>
+				Set hldImg = ##class(websys.Holiday).GetImg()
+				if (hldImg="") Set hldImg = "1.jpg"
+				if (hldImg'=""),$G(LogonGrayScaleEnable)=1 Set hldImg="gray/"_hldImg
+			</server>
+			<div class="login_carousel">
+				<div id="carousel-example-generic" class="carousel_200 carousel slide login_carousel_picture" data-ride="carousel">
+					<div class="carousel-inner" role="listbox">
+						<div class="item active"> <div class="in_img" style="background-image:url('../skin/default/images/logon/#(hldImg)#')"></div> </div>
+					</div>  
+				</div>
+			</div>
+		<csp:else>
+			<!--轮播图-->
+			<div class="login_carousel">
+				<div id="carousel-example-generic" class="carousel_200 carousel slide login_carousel_picture" data-ride="carousel">
+					<!-- Indicators -->
+					<server>
+						Set hldImg = ##class(websys.Holiday).GetImg()
+						Set defaultActive = "active"
+						if (hldImg'="") Set defaultActive = ""
+						if (hldImg'=""),$G(LogonGrayScaleEnable)=1 Set hldImg="gray/"_hldImg
+					</server>
+					<ol class="carousel-indicators login_indicators">
+						<li data-target="#carousel-example-generic" data-slide-to=0 class="#(defaultActive)#"></li>
+						<li data-target="#carousel-example-generic" data-slide-to=1></li>
+						<li data-target="#carousel-example-generic" data-slide-to=2></li>
+						<csp:if condition=hldImg'="">
+						<li data-target="#carousel-example-generic" data-slide-to=3 class="active"></li>
+						</csp:if>
+					</ol>    
+					<!-- Wrapper for slides -->
+					<div class="carousel-inner" role="listbox">
+						<div class="item #(defaultActive)#"> <div class="in_img img1"></div> </div>
+						<div class="item"> <div class="in_img img2"></div> </div>
+						<div class="item"> <div class="in_img img3"></div> </div>
+						<csp:if condition=hldImg'="">
+							<div class="item active">
+							<div class="in_img" style="background-image:url('../skin/default/images/logon/#(hldImg)#')"></div>
+							</div>
+						</csp:if>
+					</div>
+					<!-- Controls -->
+					<a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+						<i class="fa fa-chevron-left" aria-hidden="true"></i>
+						<span class="sr-only">Previous</span>
+					</a>
+					<a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+						<i class="fa fa-chevron-right" aria-hidden="true"></i>
+						<span class="sr-only">Next</span>
+					</a>
+				</div>
+			</div>
+			<!--轮播图-->
+		</csp:if>
+
 	    <!--背景图-->
 	  <form ACTION="dhc.logon.csp" method="post" name="fSSUserLogon" id="fSSUserLogon">
 	    <!--登录框 SCQ-->
 	    <INPUT TYPE="HIDDEN" NAME="TFORM" VALUE="SSUserLogon">
 		<INPUT TYPE="HIDDEN" NAME="TPAGID" VALUE='#($i(^websys.Counters("tpagid")))#'>
+		<INPUT TYPE="HIDDEN" NAME="RSID" VALUE='#(%request.Get("RSID"))#'>
 		<INPUT TYPE="HIDDEN" NAME="TEVENT" VALUE="">
 		<INPUT TYPE="HIDDEN" NAME="TOVERRIDE" VALUE="">
 		<INPUT TYPE="HIDDEN" NAME="TDIRTY" VALUE='#($g(IsDirty))#'>
@@ -404,10 +777,7 @@ var islogon = 0;
 		<input name="CAUserCertCode" id="CAUserCertCode" type="hidden" value='#($g(%request.Data("CAUserCertCode",1)))#'>
 		<input name="CACertNo" id="CACertNo" type="hidden" value='#($g(%request.Data("CACertNo",1)))#'>
 		<input name="CAToken" id="CAToken" type="hidden" value='#($g(%request.Data("CAToken",1)))#'>
-		<input name="ContainerPin" id="ContainerPin" type="hidden" value='#($g(%request.Data("ContainerPin",1)))#'>		
-		<INPUT type="hidden" name="CacheNoRedirect" value="1">
-		<INPUT type="hidden" name="CacheUserName" value="dhsyslogin">
-		<INPUT type="hidden" name="CachePassword" value="1q2w3e4r%T6y7u8i9o0p">
+		<input name="ContainerPin" id="ContainerPin" type="hidden" value='#($g(%request.Data("ContainerPin",1)))#'>
 		<INPUT TYPE="HIDDEN" NAME="TCONTEXT" VALUE='#($g(%request.Data("TCONTEXT",1)))#'>
 		<!--<INPUT TYPE="HIDDEN" ID="SelectedDefaultDepBordker" VALUE='#(##class(%CSP.Page).Encrypt($lb("web.SSUserOtherLogonLoc.SelectedDefaultDepBordker")))#' />-->
 		<INPUT TYPE="HIDDEN" id="IPAddress" NAME="IPAddress" VALUE=""/>
@@ -423,18 +793,33 @@ var islogon = 0;
 		<input id="Hospital" name="Hospital" type="hidden" value="#($g(%request.Data("Hospital",1)))#">
 		<input id="ADErrMessage" name="ADErrMessage" type="hidden" value="#($g(%request.Data("ADErrMessage",1)))#">
 		<input name="isADEmployee" id="isADEmployee" type="hidden" value="1"/>
-		<csp:if condition='ModifyTimeFlag=1'><object ID='CLSSETTIME' CLASSID='CLSID:6F4558E4-72DA-4CCD-963C-9EED2ECD14A9' CODEBASE='../addins/client/SetTime.CAB#version=1,0,0,0' height="0" width="0"></object></csp:if>
+		<csp:if condition='$G(ModifyTimeFlag)=1'><object ID='CLSSETTIME' CLASSID='CLSID:6F4558E4-72DA-4CCD-963C-9EED2ECD14A9' CODEBASE='../addins/client/SetTime.CAB#version=1,0,0,0' height="0" width="0"></object></csp:if>
 		<!--CA单点登录用-->
 		<input name="caslogin" id="caslogin" type="hidden" value='#($g(%request.Data("caslogin",1)))#'>
 		<input name="ticket" id="ticket" type="hidden" value='#($g(%request.Data("ticket",1)))#'>
 		<input name="directpage" id="directpage" type="hidden" value='#($g(%request.Data("directpage",1)))#'>
+		<input name="DEPARTMENT" id="DEPARTMENT" type="hidden" value='#($g(%request.Data("DEPARTMENT",1)))#'>
 		<input name="DEPARTMENTAlias" id="DEPARTMENTAlias" type="hidden" value='#($g(%request.Data("DEPARTMENTAlias",1)))#'>
+		<input name="UserPost" id="UserPost" type="hidden" value='#($g(%request.Data("UserPost",1)))#'>
+		<input name="UserPostId" id="UserPostId" type="hidden" value='#($g(%request.Data("UserPostId",1)))#'>
 		<input name="PwdComplexity" id="PwdComplexity" type="hidden" value='#($g(%request.Data("PwdComplexity",1)))#'><!--密码复杂度是否符合要求-->
+		<INPUT name="MWToken" id="MWToken" TYPE="HIDDEN" VALUE='#($g(%request.Data("MWToken",1)))#'/>
+		<INPUT name="IsWideScreen" id="IsWideScreen" TYPE="HIDDEN" VALUE='#($g(%request.Data("IsWideScreen",1)))#'/>
 	    <div class="loginboxP_cq loginbox_cq">
+	      <csp:if condition=IsShowVIInLogonPage=2>
+	      <div class="vi-block" style="left:0px;top:0px;background-color: #03469F;"></div>
+	      <div class="vi-block" style="left:20px;top:0px;background-color: #00A9E4"></div>
+	      <div class="vi-block" style="left:60px;top:0px;background-color: #f6b72c;"></div>
+	      <div class="vi-block" style="right:0px;bottom:20px;background-color: #00A9E4"></div>
+	      <div class="vi-block" style="right:20px;bottom:0px;background-color: #00A9E4"></div>
+	      <div class="vi-block" style="right:0px;bottom:0px;background-color: #03469F;"></div>
+	      </csp:If>
 	      <div class="tcq">
-	      	
-	      		<div style='font-size:16px;'>
-	      			欢迎登录 #(PEiMediclVer)#
+	      		<csp:if condition=IsShowSolar24InLogonPage=1>
+	      		<div style="position: absolute;top: -25px;right:0px;background:#000000;color:#ffffff;padding:10px;opacity:0.8;border-radius: 5px;">#(Solar24Info)#</div>
+	      		</csp:if>
+	      		<div style='font-size:14px;'>
+	      			#(..Get("欢迎登录"))# #(PEiMediclVer)#
 	      			<csp:if condition=(($g(LicVerSummary)'="")&&("合同临时试用"[$g(LicVerSummary)))>
 		      			<!--<div style="font-size:13px;color:red;"><a class="dhccpopover" href="#" onclick="GetLic();" role="button" tabindex="0" style="margin-top:4px;">获得许可证</a></div>-->	      			
 			      		<a class="dhccpopover" role="button" tabindex="0" style="margin-top:4px;display:inline;font-size:15px;" 
@@ -445,22 +830,7 @@ var islogon = 0;
 			      		</a>
 		      		</csp:if>
 	      		</div>
-	      	
 	      </div>
-	      <!-- fa-minus-circle-->
-	      <server>
- 	 		if (STATUS=""){
-	 	 		If $g(LicTip)'="" {
-	 	 			Set getLiclinkHtml = "<div style='display:inherit;'><u><a style='color:#a94442;' href='#' onclick='GetLic();' role='button' tabindex='0' style='margin-top:4px;'>获得许可证</a></u></div>"
-	 	 			Set STATUS = $g(LicTip)_getLiclinkHtml
-     	 		}
- 	 		}
- 	 	</server>
-	      <csp:if condition=$g(STATUS)'="">
-	     	 <div class="alert alert-danger" role="alert">
-	     	 	<i class="fa" style="font-family:'microsoft yahei'">#(STATUS)#</i>
-	     	 </div>
-	      </csp:if>
 	      <div class="form-group">
 	        <div class="input-group">
 	        	<csp:if condition=IEVersion="IE11">
@@ -468,7 +838,7 @@ var islogon = 0;
 	          	<csp:else>	
 	          		<div class="addonimg" style="background-image:url('../skin/default/images/logon/username.png');"></div>
 	          	</csp:if>
-	          <input name="USERNAME" id="USERNAME" tabIndex="1" value='#(%request.Get("USERNAME"))#' type="text" autocomplete="off" class="form-control" style="ime-mode:disabled;" placeholder="请输入用户名..." title="请输入用户名...">
+	          <input name="USERNAME" id="USERNAME" tabIndex="1" value='#(%request.Get("USERNAME"))#' type="text" autocomplete="off" class="form-control" style="ime-mode:disabled;" placeholder="#(..Get("请输入用户名..."))#" title="#(..Get("请输入用户名..."))#">
 	          <div class="usernameinfo logon-center-right">#($G(%session.Data("LOGON.USERNAME")))#</div>
 	        </div>
 	      </div>
@@ -479,7 +849,7 @@ var islogon = 0;
 	          <csp:else>
 	          	<div class="addonimg" style="background-image:url('../skin/default/images/logon/password.png');"></div>
 	          </csp:if>
-	          <input name="PASSWORD" id="PASSWORD" tabIndex="2" value='#(%request.Get("PASSWORD"))#' type="password" autocomplete="off" class="form-control" style="ime-mode:disabled;" placeholder="请输入密码..." title="请输入密码...">
+	          <input name="PASSWORD" id="PASSWORD" tabIndex="2" value='#(%request.Get("PASSWORD"))#' type="password" autocomplete="off" class="form-control" style="ime-mode:disabled;" placeholder="#(..Get("请输入密码..."))#" title="#(..Get("请输入密码..."))#">
 	        </div>
 	      </div>
 	      <div class="form-group">
@@ -489,31 +859,67 @@ var islogon = 0;
 	          	<csp:else>
 		          	<div class="addonimg" style="background-image:url('../skin/default/images/logon/loc.png');"></div>
 	          	</csp:if>
-	          	<input class="form-control" name="DEPARTMENT" tabIndex="3" autocomplete="off" id="DEPARTMENT" title="请选择登录科室" value='#(%request.Get("DEPARTMENT"))#' placeholder="请选择科室...">
+	          	<input class="form-control" name="DEPARTMENTLookup" tabIndex="3" autocomplete="off" id="DEPARTMENTLookup"  value='#(%request.Get("DEPARTMENTLookup"))#' placeholder="#(..Get("请选择登录位置"))#">
+	          	<script language=cache runat=server>
+					// 一开始默认登录，后台 websys.SessionLogon 没有返回医院id，要获取下
+					s hospDesc = %request.Get("Hospital")
+					s:$G(hospDesc)'="" hospid = $O(^CT("HOSP", 0, "Desc", $$ALPHAUP^SSUTIL4(hospDesc), ""))
+					s HospDescShort1 = ""
+					Set:($G(hospid)>0 && IsShowHospDescShort1) HospDescShort1 = $p($g(^CT("HOSP", hospid)), "^", 39)
+				</script>
+				<div id="HospDescShort1" class="logon-center-right" style="right: 5px; top:1px;">#(HospDescShort1)#</div>
 	        </div>
 	      </div>
-	      <button href="#" id="Logon" name="Logon" tabIndex="4" href="javascript:void(0);" type="button" class="btn btn-primary btn-lg btn-block">登录</button>
+	      <div class="alert alert-danger" role="alert">
+	      <server>
+	      	w "<i class=""fa"" style=""font-family:'microsoft yahei'"">"
+ 	 		if ($g(STATUS)=""){
+	 	 		If $g(LicTip)'="" {
+	 	 			Set getLiclinkHtml = "<div style='display:inherit;'><u><a style='color:#a94442;margin-top: 0px;' href='#' onclick='GetLic();' role='button' tabindex='0' style='margin-top:4px;'>获得许可证</a></u></div>"
+	 	 			Set STATUS = $g(LicTip)_getLiclinkHtml
+     	 		}
+ 	 		}
+ 	 		if $g(STATUS)'=""{
+ 	 			w STATUS
+ 	 		}
+ 	 		w "</i>"
+ 	 		if '$g(ValidUser) w "<a id=""ForgetPassword"" name=""ForgetPassword"" href=""#"" onclick=""ForgetPasswordHander()"">忘记密码</a>"
+			if ('$g(ValidUser) && IsShowActiveUser) w "<a id=""ActiveUser"" name=""ActiveUser"" href=""#"" onclick=""ActiveUserHander()"">激活用户</a>"
+			  
+		 </server>
+		 </div>
+	      <button href="#" id="Logon" name="Logon" tabIndex="4" href="javascript:void(0);" type="button" class="btn btn-primary btn-lg btn-block">#(..Get("登录"))#</button>
 	      <server>
 	      if 0,$g(ValidUser){
 	      	w "<a id=""CHANGEPASSWORD"" name=""CHANGEPASSWORD"" href=""#"" class=""edit_pw"">修改密码</a>"
 	      	W "<a id=""ChangePINPassword"" name=""ChangePINPassword"" href=""#"" class=""edit_pw"">修改PIN密码</a>"
 	      	w "<a id=""ChangDefaultDept"" name=""ChangDefaultDept"" href=""#"" class=""edit_loc"">修改默认科室</a>"
 	      }
+	      if '$g(ValidUser){
+	      	w "<div>"
+	      	Set IsShowCALogonLinks =##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","IsShowCALogonLinks")
+		If IsShowCALogonLinks{
+			Set LogonTypeList = ##Class(websys.CAInterface).GetLogonTypeList("","LOGON") ;"UKEY|UKey登陆|1^PHONE|手机登陆|0^FACE|刷脸登陆|0$1"
+			if LogonTypeList'="" {
+				Set LogonTypeList = $p(LogonTypeList ,"$",1)
+				for i=1:1:$l(LogonTypeList,"^") {
+					Set itm = $P(LogonTypeList,"^",i)
+					w "<A class=""signLogonBtn"" HREF=""#"" onclick='LogonTypeBtnClick("""_$p(itm,"|")_""","""_$p(itm,"|",4)_""")' title="""_$p(itm,"|",2)_""" style=""width: 90px; display: inline-block;"">"
+					w "<img style=""width: 16px; height: 16px; margin-top: -3px; margin-right:2px;"" src=""../skin/default/images/logon/"_$zcvt($p(itm,"|"),"L")_"_green.png"">"
+					w $p(itm,"|",2)_"</A>"
+				}
+					
+			}
+		}
+		w "</div>"
+	      }
 	      </server>
 	    </div>
-    <!--登录框 ECQ-->
+	    <!--登录框 ECQ-->
+
     </form>
     
-    <!--显示IP信息-->
-    <div class="ipInfo">
-    	<div class="arrow"></div>
-    	<div style="margin-top:5px;">
-    		服务器IP:#(##class(ext.util.String).ServerIP())# 本机IP:<span id="localipdiv">#(%request.CgiEnvs("REMOTE_ADDR"))#</span>
-    	</div>
-    	<div>
-    		本机MAC:<span id="localmacdiv"></span>
-    	</div>
-    </div>
+    
     <!--详细信息-->
     <div class="login_row">
       <div class="row login_row_4">
@@ -547,9 +953,10 @@ var islogon = 0;
             </div>
           </li>
         </ul>
-        <div class="login_QRcode"><img src="../skin/default/images/logon/QRcode.png" />
+        
+        <!--<div class="login_QRcode"><img src="../skin/default/images/logon/QRcode.png" />
           <div class="login_br">扫一扫关注</div>
-        </div>
+        </div>-->
       </div>
     </div>
     <!--详细信息-->
@@ -563,6 +970,8 @@ var islogon = 0;
 		<div class="login_logo"><img src="../skin/default/images/logon/logo3.png" /></div>
         <span>#(+$zd(+$h,3))#</span>
         <span>东华医为科技有限公司版权所有</span>
+       
+		
 	<!--<span>|</span>
         <span>联系我们</span><span>|</span>
         <span>加入我们</span><span>|</span>
@@ -571,8 +980,23 @@ var islogon = 0;
         <a href="#" class="green"><i class="fa fa-thumbs-o-down login_down_color"></i>不喜欢（1）</a>
 	//-->
       </div>
+      <csp:if condition=IsShowServerInfoInLogonPage=1>
+        	<!--显示IP信息-->
+		    <div class="ipInfo">
+		    	<div>
+					<server>
+					Set OriginServerIP = ##class(ext.util.String).ServerIP()
+					Set ServerAlias = ##CLASS(CF.BSP.SYS.SRV.IPList).GetAlias(OriginServerIP)
+					If ServerAlias="" Set ServerAlias=OriginServerIP
+					</server>
+		    		<span>#(..Get("服务器IP"))#:</span><span>#(ServerAlias)#</span>
+		    		<span>#(..Get("本机IP"))#:</span><span id="localipdiv">#(%request.CgiEnvs("REMOTE_ADDR"))#</span>
+		    		<span>#(..Get("本机MAC"))#:</span><span id="localmacdiv"></span>
+		    	</div>
+		    </div>
+    	</csp:if>
     </div>
-    <!--页脚-->
+     <!--页脚-->
 
 	<div class="modal fade" id="modalWin" tabindex='-1' role="dialog" aria-hidden="true">
 		 <div class="modal-dialog">
@@ -593,14 +1017,17 @@ var islogon = 0;
 	var locIsDisabled = #(locIsDisabled)#;
 	var ValidUser = #($g(ValidUser))#;
 	var logonround = #(logonround)#;
-	var ModifyTimeFlag = #(ModifyTimeFlag)#;
+	var ModifyTimeFlag = "#(ModifyTimeFlag)#";
 	//密码复杂度相关
 	var tipPasswordChange='#($g(tipPasswordChange))#';
 	var PwdContainWordAndNum='#(##class(websys.Configuration).GetFieldValue("PwdContainWordAndNum"))#';
+	var PasswordOtherValid='#(##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","PasswordOtherValid"))#';
 	var PwdMinLength='#(##class(web.CFSM).GetPasswordMinLength())#';
+	var uniUserPwdComplexityCfg=#(##class(BSP.SYS.BL.UserPwdComplexity).GetUserPwdComplexityCfg())#;  //2023-02-07新的密码复杂度配置
 	var PwdLastPwd='#(%request.Get("PASSWORD"))#';
-	
-	
+	var HospCodeNo = "#(HospCodeNo)#";
+	var HospCodeDesc = "#(HospCodeDesc)#";
+	var IsShowHospDescShort1 = "#(IsShowHospDescShort1)#";
 </script>
 <script type='text/javascript' src='../scripts/framework/dhcc.icare.lu.js'></script>
 <script type='text/javascript' src='../scripts/websys.encrypt.js'></script>
@@ -630,7 +1057,8 @@ function ValidEncLic(){
 	var encLicObj = $("#EncLicTA");
 	if (encLicObj){
 		var encLicStr = encLicObj.val();
-		var licStr = #server(websys.License.DecryptLicAndSave(encLicStr))#
+		var licStr = tkMakeServerCall("websys.License","DecryptLicAndSave",encLicStr);
+		 //#server(websys.License.DecryptLicAndSave(encLicStr))
 		var licArr = licStr.split("^");
 		if (licArr.length>0){
 			if (licArr.length>4) {
@@ -642,11 +1070,11 @@ function ValidEncLic(){
 	}
 }
 function disableDep(){
-	$("#DEPARTMENT").removeClass("logininput-dep").addClass("disabledField").attr("readOnly",true).attr("disabled",false); 
+	$("#DEPARTMENTLookup").removeClass("logininput-dep").addClass("disabledField").attr("readOnly",true).attr("disabled",false); 
 	//.attr("disabled",true); -- disabled后,submit不会提交DEPARTMENT
 }
 function enableDep(){
-	$("#DEPARTMENT").removeClass("disabledField").addClass("logininput-dep").attr("readOnly",false).attr("disabled",false);
+	$("#DEPARTMENTLookup").removeClass("disabledField").addClass("logininput-dep").attr("readOnly",false).attr("disabled",false);
 	$("#ChangDefaultDept").show();
 	$("#CHANGEPASSWORD").show();
 	$("#ChangePINPassword").show();
@@ -675,17 +1103,17 @@ if (readonly=='READONLY') {
 var listflag=0;
 if(objListFlag) listflag=objListFlag.value;
 if(objListFlag && listflag!=1){
-	$("#DEPARTMENT").removeClass("logininput-dep");
+	$("#DEPARTMENTLookup").removeClass("logininput-dep");
 } else {
 	enableDep();
 }
 if (locIsDisabled) {
 	disableDep();
 } else {
-	$("#DEPARTMENT").removeClass("disabledField");
+	$("#DEPARTMENTLookup").removeClass("disabledField");
 }
 if (!ValidUser) {
-	$("#DEPARTMENT").val("");
+	$("#DEPARTMENTLookup").val("");
 	disableDep();
 	$("#ChangDefaultDept").hide();
 	$("#CHANGEPASSWORD").hide();
@@ -702,6 +1130,24 @@ if (!logonround) {
 </SCRIPT>
   </CSP:IF>
 <script type="text/javascript">
+	var fixCareUserInfo = function(){
+		$("#careProInfoDiv").css({
+			top:$(".loginboxP_cq").offset().top+($(".loginboxP_cq").height()/2) - ($("#careProInfoDiv")._outerHeight()/2),
+			left:$(".loginboxP_cq").offset().left-($("#careProInfoDiv")._outerWidth())-5
+		});
+	}
+	var showCareUserInfo = function(hospCodeNo,hospDescNo){
+		if (1=="#(IsShowCareProInfo)#"){
+			var userCodeNo="#(UserCodeNo)#";	
+			var h = '<div class="careProInfoArrow"></div>';
+			if (ValidUser){
+				h = h + '<div class="carelabel">#(NameTran)#：'+$('.usernameinfo').text()+'</div><div class="carelabel">#(GvInsuNoTran)#：'+userCodeNo+'</div>';
+			}
+			h+='<div class="carelabel">#(GvHospNoTran)#：'+hospCodeNo+'</div><div class="carelabel">#(GvHospNameTran)#：'+hospDescNo+'</div>';
+			$("#careProInfoDiv").css('display',"block").html(h);
+			fixCareUserInfo();
+		}
+	}
 	$(function(){
 		$(window).resize(function(){
 			/* 轮播图片高度 DY */
@@ -714,29 +1160,21 @@ if (!logonround) {
 		$(".in_img").backgroundcover();
 		$(".dhccpopover").popover({width:'160'});
 		(function(){
-			if (ModifyTimeFlag) {
+			if ("undefined"!=typeof ModifyTimeFlag && ModifyTimeFlag==1) {
 				var serverDate = "#($zd(+$h,3))#";
 				var serverTime = "#($zt($p($h,",",2)))#";
-				var dateArr = serverDate.split("-");
-				var timeArr = serverTime.split(":");
-				var SetSysTime = "";
 				if ("undefined"!=typeof EnableLocalWeb || 1==EnableLocalWeb ){
-					SetSysTime = PrjSetTime;
-				}else{
-					try{
-						SetSysTime = new ActiveXObject("PrjSetTime.CLSSETTIME")
-					}catch(e){
-						
+					if (CmdShell){
+						CmdShell.clear();
+						CmdShell.notReturn=1;
+						CmdShell.Run('cmd.exe /c time '+serverTime);
+						CmdShell.Run('cmd.exe /c date '+serverDate.replace(/-/g,"/"));
 					}
-				}
-				if(SetSysTime){
-					SetSysTime.VYear = dateArr[0];
-					SetSysTime.VMonth = dateArr[1]; 
-					SetSysTime.VDay = dateArr[2];
-					SetSysTime.VHour = timeArr[0]-8;
-					SetSysTime.VMinute = timeArr[1];
-					SetSysTime.VSecond = timeArr[2];
-					SetSysTime.SetTime();
+				}else{
+					//提权运行
+					var UAC = new ActiveXObject("Shell.Application");
+					UAC.ShellExecute('cmd.exe','/c time '+serverTime,"","runas",1);
+					UAC.ShellExecute('cmd.exe','/c date '+serverDate.replace(/-/g,"/"),"","runas",1);
 				}
 			}
 		})();
@@ -789,5 +1227,9 @@ if (!logonround) {
    service.InstancesOfAsync(foo, 'Win32_NetworkAdapterConfiguration');
 </SCRIPT>
 </CSP:IF>
+<div id="careProInfoDiv"></div>
+<server>
+	if ##class(websys.Conversions).IsValidClassName("websys.dto.OtherSysUrlOnLogon") d ##class(websys.dto.OtherSysUrlOnLogon).writeHtml()
+</server>
 </body>
 </html>

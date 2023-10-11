@@ -18,42 +18,53 @@ js:dhcstmhisui/Comment/Comment.js
 	<div class="GridPadding" data-options="region:'center',border:false,collapsible:false">
 		<div class="hisui-panel" data-options="title:'高值医嘱统计',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'"> 
 			<div class="hisui-layout" data-options="fit:true">
-				<div class="BorderLine" data-options="region:'north',border:false,collapsible:false">
-					<table id="Conditions" class="Condition">
-						<tr>
-				            <td>高值医嘱数量</td>
-				            <td><input id="conHvOrdNum" class='hisui-numberbox' disabled="true" data-options="requied:true"></td>
-							<td align="right"><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">统计医嘱数量</a></td>
-							<td align="right"><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-						</tr>
-					</table>
+				<div data-options="region:'north',border:false,collapsible:false">
+					<div class="hisui-layout" data-options="fit:true">
+						<div class="BorderLine" data-options="region:'north',collapsible:false">
+							<table id="Conditions" class="Condition">
+								<tr>
+									<td>高值医嘱数量</td>
+									<td><input id="conHvOrdNum" class='textbox hisui-numberbox' disabled="true" data-options="requied:true,precision:0,min:0"></td>
+									
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false,collapsible:false">
+							<table id="FindConditions" class="Condition">
+								<input id="Inci" name="Inci" type="hidden">
+								<tr>
+									<td>起始日期</td>
+									<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
+									<td>开单科室</td>
+									<td><input id="OriLoc" name="OriLoc" class="textbox hisui-combobox"></td>
+									<td>类组</td>
+									<td><input id="StkGrpId" name="StkGrpId" class="textbox hisui-stkscgcombotree"></td>
+									<td>物资名称</td>
+									<td><input id="InciDesc" name="InciDesc" class="textbox"></td>
+									<td><a href="#" id="QueryBT" class="hisui-linkbutton">统计医嘱</a></td>
+									
+								</tr>
+								<tr>
+									<td>截止日期</td>
+									<td><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
+									<td>开单医生</td>
+									<td><input id="Doctor" name="OriDoctor" class="textbox hisui-combobox"></td>
+									<td>库存分类</td>
+									<td><input id="StkCat" name="StkCat" class="textbox hisui-combobox"></td>
+									<td></td><td></td>
+									<td><a href="#" id="ClearBT" class="hisui-linkbutton" style="width:86px">清屏</a></td>
+								</tr>
+							</table>
+						</div>
+					</div>
 				</div>
-				<div data-options="region:'center',border:false,collapsible:false">
-					<table id="FindConditions" class="Condition">
-					<input id="Inci" name="Inci" type="hidden">
-						<tr>
-							<td>起始日期</td>
-							<td><input id="StartDate" name="StartDate" class="hisui-datebox" style="width:160px;"></td>
-							<td>开单科室</td>
-							<td><input id="OriLoc" name="OriLoc" class="hisui-combobox" style="width:160px;"></td>
-							<td>类组</td>
-							<td><input id="StkGrpId" name="StkGrpId" class="textbox hisui-stkscgcombotree" style="width:155px;"></td>
-							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox" style="width:155px;"></td>
-						</tr>
-						<tr>
-							<td>截止日期</td>
-							<td><input id="EndDate" name="EndDate" class="hisui-datebox" style="width:160px;"></select></td>
-							<td>开单医生</td>
-							<td><input id="Doctor" name="OriDoctor" class="hisui-combobox" style="width:160px;"></td>
-							<td>库存分类</td>
-							<td><input id="StkCat" name="StkCat" class="textbox hisui-combobox" style="width:155px;"></td>
-						</tr>
-					</table>
-				</div>	
+				<div data-options="region:'center',border:false">
+					<table id="OrdItmGrid"></table>
+				</div>			
 			</div>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="region:'south',border:false,collapsible:false" style="padding-top:0;height:300px;">
+	<div class="GridPadding" data-options="region:'south',border:false,collapsible:false" style="padding-top:0;height:190px;">
 		<div class="hisui-panel" title="生成点评单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
 			<div class="BorderLine" data-options="region:'north',border:false,collapsible:false">
 				<table id="CreateNoConditions" class="Condition">
@@ -68,19 +79,19 @@ js:dhcstmhisui/Comment/Comment.js
 				<table id="CreateConditions" class="Condition">
 					<tr>
 				        <td><input id="chkRandomNum" name='saveType' class="hisui-radio" type="radio" label='随机数' value='rNum'></td>
-						<td><input id="conSaveRandomNum"  name="conSaveRandomNum" class='hisui-numberbox' style="width:160px;"></td>
+						<td><input id="conSaveRandomNum"  name="conSaveRandomNum" class='hisui-numberbox' style="width:160px;" data-options="precision:0,min:0"></td>
 						<td>间隔数</td>
-						<td><input id="conSpaceQty" name="conSpaceQty"  class='hisui-numberbox' style="width:160px;"></td>
+						<td><input id="conSpaceQty" name="conSpaceQty"  class='hisui-numberbox' style="width:160px;" data-options="precision:0,min:0"></td>
 						<td>理论所需总数</td>
-						<td><input id="conTheoryQty" name="conTheoryQty"  class='hisui-numberbox' disabled="true" style="width:160px;"><td>
+						<td><input id="conTheoryQty" name="conTheoryQty"  class='hisui-numberbox' disabled="true" style="width:160px;" data-options="precision:0,min:0"><td>
 					</tr>
 					<tr>
 				        <td><input id="chkPercent" name='saveType' class="hisui-radio" type="radio" label='百分比'  value='percent'></td>
-						<td><input id="conSavePercent"  name="conSavePercent" class='hisui-numberbox' style="width:160px;"></td>
+						<td><input id="conSavePercent"  name="conSavePercent" class='hisui-numberbox' style="width:160px;" data-options="precision:0,min:0"></td>
 						<td>抽查数</td>
-						<td><input id="conWriteQty"  name="conWriteQty" class='hisui-numberbox' disabled="true" style="width:160px;"></td>
+						<td><input id="conWriteQty"  name="conWriteQty" class='hisui-numberbox' disabled="true" style="width:160px;" data-options="precision:0,min:0"></td>
 						<td>建议间隔数</td>
-						<td><input id="conASpaceQty"  name="conASpaceQty" class='hisui-numberbox' disabled="true" data-options="display:true" style="width:160px;"><td>
+						<td><input id="conASpaceQty"  name="conASpaceQty" class='hisui-numberbox' disabled="true" data-options="display:true,precision:0,min:0" style="width:160px;"><td>
 					</tr>
 				</table>
 			</div>	

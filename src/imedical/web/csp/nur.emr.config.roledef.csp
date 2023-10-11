@@ -1,0 +1,190 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<!--nur.emr.config.roledef.csp-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/roledef.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:0px !important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: 0;
+			border-radius: 0;
+		}
+		#panelGrade {
+			border-top:1px dashed #ccc;
+			border-right:0;
+			border-bottom:0;
+			border-left:0;
+		}
+		#add-dialog {
+			top:60px;
+			width:444px;
+			padding: 0px 10px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px; 
+			height:'auto',
+			border:1px solid transparent;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+			height:32px;
+			/* white-space:nowrap !important; */
+			overflow:hidden;
+			border:1px solid transparent;
+		}
+		.form-table td:first-child {
+			width: 48px;
+			text-align: right;
+		}
+		input.textbox{
+			width: 368px;	
+		}
+		.required-label:before {
+			content: '*';
+			color: red;
+			vertical-align: bottom;
+			line-height: 100%;
+		}
+		.cb, textarea{
+			width: 375px !important;
+		}
+		.icon{
+			width: 20px;
+			height: 20px;
+			margin-right: 10px;
+			float: right;
+		}
+		textarea {
+			height: 72px;
+			padding:4px;
+		}
+		td[field="RDPointDesc"] div.datagrid-cell, .datagrid-cell-group{
+			text-overflow: ellipsis; /*2018-12-4 showTip 列数据太多显示...*/
+			padding: 0 8px;
+		}
+		.grid-cell-icon {
+			font-family: Mw_mifonts;
+		    -webkit-font-smoothing: antialiased;
+		    font-style: normal;
+		    font-variant: normal;
+			width: 16px;
+		    height: 16px;
+		    position: relative !important;
+		    background-color: transparent !important;
+		    margin-top: 0px;
+		    display: inline-block;
+		    text-rendering: auto;
+		    font-weight: 500;
+		    font-size: 12px;
+		    line-height: 16px;
+		    text-align: center;
+		    padding: 5px 5px 5px 8px;
+		}
+	</STYLE>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="height:54px;padding:10px;">
+			<table>
+				<tr>
+					<td class="r-label">
+						<label id="_HospListLabel">医院</label>
+					</td>
+					<td>
+						<input id="_HospList" class="textbox"/>
+					</td>
+					<td class="r-label" style="width:60px;">
+						<label>类别</label>
+					</td>
+					<td>
+						<input id="cbType" class="hisui-combobox" name="cbType" placeholder="请选择"></input>
+					</td>
+					<td class="r-label" style="width:60px;">
+						<label>名称</label>
+					</td>
+					<td>
+						<input id="sbName" class="hisui-searchbox" name="sbName" data-options="prompt:'请输入'"></input>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<div id="panelGrade" class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'">
+				<table id="gridRole" class="hisui-datagrid" data-options="fit:true,border:false"></table>
+			</div>
+		</div>
+	</div>
+	<div id="add-dialog" class="hisui-dialog" data-options="shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				id: 'btn-dialog-save',
+				text:'保存',
+				handler: function(){ save(); }
+			},
+			{
+				id: 'btn-dialog-cancel',
+				text:'取消',
+				handler: function(){$HUI.dialog('#add-dialog').close();}
+			}
+		]">
+		<div class="hisui-panel" data-options="border:false,fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+			<form id="add-form" method="post" >
+				<table class="form-table" data-options="">
+					<tr>
+						<td class="r-label required-label" style="width:65px;">名称</td>
+						<td>
+							<input id="RDName" class="hisui-textbox textbox" name="RDName" placeholder="请输入名称"> 
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label required-label">类别</td>
+						<td>
+							<input id="RDType" class="hisui-combobox cb" name="RDType" placeholder="请选择类别"></input>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label required-label">指向</td>
+						<td>
+							<input id="RDPoint" class="hisui-combobox cb" name="RDPoint" placeholder="请选择或者输入指向">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label region-label">备注</td>
+						<td rowspan=2>
+							<textarea id="RDRemark"  name="RDRemark" placeholder="请输入备注"></textarea>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+					</tr>
+					<tr>
+						<td class="r-label">停用</td>
+						<td>
+							<input id="RDDisable" class="hisui-checkbox" type="checkbox" data-options="checked:false" name="RDDisable">
+							<input name="RowID" id="RowID" type="hidden" value="">
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</div>
+</body>
+</html>

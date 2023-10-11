@@ -1,0 +1,271 @@
+
+<!-- 
+ * FileName: dhccrmsetplan.hisui.csp
+ * Anchor: yupeng
+ * Date: 2020-11-23
+ * Description: 随访计划HISUI
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    
+}
+.r-label{
+    padding-left: 10px;
+}
+.r-label1{
+    padding-left: 5px;
+}
+.r-label-1{
+    padding-left: 20px;
+}
+.r-label-11{
+    padding-left: 0px;
+}
+/*弹出框里标签右对齐 并且有10px内边距*/
+.tdlabel
+{
+  padding-left: 10px;
+  padding-right: 30px;
+  text-align:right;
+}
+
+</style>
+
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+        
+</SCRIPT> 
+<script type="text/javascript">
+   
+</script>
+
+</head>
+<body style="padding:10px;">
+
+ <div class="hisui-layout" fit="true" data-options="split:true">
+
+ <div data-options="region:'north',split:true,border:false" style="height:440px;">
+ <div class="hisui-panel" data-options="title:'患者列表',headerCls:'panel-header-gray',iconCls:'icon-patient-info'">
+    
+    <div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:400px;">
+
+    <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false">
+        
+      <table class="search-table">
+      <tr>
+        <td class="r-label">
+          <label for="RegNo">登记号</label>
+        </td>
+        <td>
+          <input class="hisui-validatebox" type="text" id="RegNo" />
+        </td>
+        <td class="r-label">
+          <label for="PatName">姓名</label>
+        </td>
+        <td>
+          <input class="hisui-validatebox" type="text" id="PatName" />
+        </td>
+        <td class="r-label">
+          <label for="PatSex">性别</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="PatSex" style="width:153px" />
+        </td>
+        <td class="r-label">
+          <label for="Hospital">院区</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="Hospital" style="width:153px" />
+        </td>
+        
+        
+     
+          <td class="r-label">
+           <label for="PatAgeL">年龄范围</label></td>
+          
+          <td>
+          <input class="hisui-validatebox" type="text" id="PatAgeL" style="width:40px"/>
+          </td>
+          <td class="r-label">
+           <label for="PatAgeU">至</label></td>
+          
+          <td>
+          <input class="hisui-validatebox" type="text" id="PatAgeU" style="width:40px"/>
+          </td>
+        
+        
+        
+        <td colspan=2 class="r-label r-label-1">
+           <a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+         </td>
+         
+         
+      </tr>
+      <tr>
+        <td class="r-label">
+          <label for="BeginDate">开始日期</label>
+        </td>
+        <td>
+          <input id="BeginDate" class="hisui-datebox textbox" />
+        </td>
+        <td class="r-label">
+          <label for="EndDate">结束日期</label>
+        </td>
+        <td>
+          <input id="EndDate" class="hisui-datebox textbox" />
+        </td>
+        <td class="r-label">
+          <label for="PatLoc">科室</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="PatLoc" style="width:153px" />
+        </td>
+        <td class="r-label">
+          <label for="Diagnosis">诊断</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="Diagnosis" style="width:153px" />
+        </td>
+        
+        <td class="r-label">
+           <label for="PatInDateL">住院天数</label></td>
+          
+          <td>
+          <input class="hisui-validatebox" type="text" id="PatInDateL" style="width:40px"/>
+          </td>
+          <td class="r-label">
+           <label for="PatInDateU">至</label></td>
+          
+          <td>
+          <input class="hisui-validatebox" type="text" id="PatInDateU" style="width:40px"/>
+          </td>
+          <td class="r-label">
+          <input class='hisui-checkbox' type="checkbox"  label="已定计划" Id="FindCheck" data-options="boxPosition:'right'"/>
+          </td>
+          
+      </tr>
+    </table>
+        
+        
+       
+      </div>  
+     <div data-options="region:'center',split:true,border:false">
+       <div id="TypeTab" class="hisui-tabs tabs-gray" fit="true" data-options="isBrandTabs:true,border:false" style="border:0;border-top:1px solid #ccc;border-radius:0;">
+
+            <div title="类型" style="padding:20px;"></div> 
+                <div id="OPatient" title="门诊" border="false" style="overflow:hidden;">
+                    <table data-options="fit:true" id="OPatientTab" border="false"></table>
+                </div>
+                <div id="IPatient" title="在院" border="false" style="overflow:hidden;">
+                    <table data-options="fit:true" id="IPatientTab" border="false"></table>
+                </div>
+                
+                <div id="CPatient" title="出院" border="false" style="overflow:hidden;">
+                    <table data-options="fit:true" id="CPatientTab" border="false"></table>
+                </div>
+                 <div id="EIPatient" title="急诊留观" border="false" style="overflow:hidden;">
+                    <table data-options="fit:true" id="EIPatientTab" border="false"></table>
+                </div>
+                 <div id="EOPatient" title="急诊非留观" border="false" style="overflow:hidden;">
+                    <table data-options="fit:true" id="EOPatientTab" border="false"></table>
+                </div>
+       </div>
+      </div>
+      
+    </div>   
+    </div>  
+ </div>
+ <div data-options="region:'center',split:true,border:false">
+  <div class="hisui-panel" data-options="title:'生成计划',headerCls:'panel-header-gray',iconCls:'icon-template',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+    
+    <div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+
+    <div data-options="region:'north',headerCls:'panel-header-gray'" style="height:51px;border:0;border-bottom:1px solid #ccc;border-radius:0;">
+  
+    <table class="search-table">
+      <tr>
+        <td class="r-label">
+          <label for="fuperson">随访人</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="fuperson" style="width:160px" />
+        </td>
+        
+        <td class="r-label">
+          <label for="fusbDate">随访日期</label>
+        </td>
+        <td>
+          <input id="fusbDate" class="hisui-datebox textbox" style="width:130px" />
+        </td>
+        <td class="r-label">
+          <label for="fusbEndDate">结束日期</label>
+        </td>
+        <td>
+          <input id="fusbEndDate" class="hisui-datebox textbox" style="width:130px" />
+        </td>
+        
+        <td class="r-label">
+          <label for="fusubject">随访主题</label>
+        </td>
+        <td>
+          <input class="hisui-combotree" id="fusubject" style="width:180px" />
+        </td>
+        <td class="r-label">
+          <label for="fudays">随访周期</label>
+        </td>
+        <td>
+          <input class="hisui-numberbox textbox" id="fudays" style="width:40px"/>
+        </td>
+        
+        <td class="r-label">
+          <label for="funums">随访次数</label>
+        </td>
+        <td>
+          <input class="hisui-numberbox textbox" id="funums" style="width:40px"/>
+        </td>
+        
+        <td class="r-label r-label-1">
+          <a id="CreatePlan" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save',stopAllEventOnDisabled:'true'">生成计划</a>
+        </td>
+         <td class="r-label r-label-1">
+          <a id="QueryPlan" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:'true'">查询计划</a>
+        </td>
+      </tr>
+    </table>
+       
+     
+    </div>
+    <div data-options="region:'center',border:false">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-left:0;border-bottom:0;border-right:0;border-radius:0;">
+        <table class="hisui-datagrid" id="FUPlanTab" data-options="bodyCls:'panel-header-gray',fit:true,border:false"></table>
+            
+        </div>
+     
+      </div>
+    
+  </div>            
+ </div> 
+ </div>
+
+</div>
+
+
+<script type="text/javascript" src="../scripts/DHCCRMSetPlan.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+</body>     
+</html>
+            
+        

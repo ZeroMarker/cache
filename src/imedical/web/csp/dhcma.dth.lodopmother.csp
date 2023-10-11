@@ -1,0 +1,345 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/css/base.css">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			border: none;
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+		}
+		input {
+			border: none;
+			border-bottom: black solid 1px;
+			font-size: 95%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<div id="Form">
+		<script language="Cache" RUNAT="SERVER">
+			Set ReportID=$g(%request.Data("ReportID",1))
+			Set MomID = ""
+			Set MomID=##Class(DHCMed.DTH.MaternalReport).GetRepIDByDthID(ReportID)
+			Set ReportInfo=##Class(DHCMed.DTHService.LodopReportSrv).PrintDTHMomReport(MomID)
+			Set PatName				= $p(ReportInfo,"^",1)
+			Set CardNo				= $p(ReportInfo,"^",2)
+			Set ConPlace			= $p(ReportInfo,"^",3)
+			Set TempPlace			= $p(ReportInfo,"^",4)
+			Set RegType				= $p(ReportInfo,"^",5)
+			Set IsPlan				= $p(ReportInfo,"^",6)
+			Set Age					= $p(ReportInfo,"^",7)
+			Set Nation				= $p(ReportInfo,"^",8)
+			Set Education			= $p(ReportInfo,"^",9)
+			Set FamilIncome			= $p(ReportInfo,"^",10)
+			Set ConType				= $p(ReportInfo,"^",11)
+			Set Gravidity			= $p(ReportInfo,"^",12)
+			Set Parity				= $p(ReportInfo,"^",13)
+			Set ArtDra				= $p(ReportInfo,"^",14)
+			Set LastMenDate			= $p(ReportInfo,"^",15)
+			Set DeliveryDate		= $p(ReportInfo,"^",16)
+			Set DeliveryTime		= $p(ReportInfo,"^",17)
+			Set DeathDate			= $p(ReportInfo,"^",18)
+			Set DeathTime			= $p(ReportInfo,"^",19)
+			Set DeliveryPosition	= $p(ReportInfo,"^",20)
+			Set DeathPosition		= $p(ReportInfo,"^",21)
+			Set DeliveryWay			= $p(ReportInfo,"^",22)
+			Set IsNewWay			= $p(ReportInfo,"^",23)
+			Set Deliveryer			= $p(ReportInfo,"^",24)
+			Set IsPreCheck			= $p(ReportInfo,"^",25)
+			Set Frequency			= $p(ReportInfo,"^",26)
+			Set PreTime				= $p(ReportInfo,"^",27)
+			Set AReason				= $p(ReportInfo,"^",28)
+			Set BReason				= $p(ReportInfo,"^",29)
+			Set CReason				= $p(ReportInfo,"^",30)
+			Set DReason				= $p(ReportInfo,"^",31)
+			Set DiagnoseBasis		= $p(ReportInfo,"^",32)
+			Set ProResult			= $p(ReportInfo,"^",33)
+			Set ProReason			= $p(ReportInfo,"^",34)
+			Set CountryResult		= $p(ReportInfo,"^",35)
+			Set CountryReason		= $p(ReportInfo,"^",36)
+			Set Hosptail			= $p(ReportInfo,"^",37)
+			Set RepUser				= $p(ReportInfo,"^",38)
+			Set RepDate				= $p(ReportInfo,"^",39)
+			// 字典列表
+			Set DicData 			= ##Class(DHCMed.DTHService.LodopReportSrv).GetMomRepDicList()
+			Set RegTypeList			= $Lg(DicData,1)
+			Set IsPlanList			= $Lg(DicData,2)
+			Set EducationList		= $Lg(DicData,3)
+			Set FamilIncomeList		= $Lg(DicData,4)
+			Set ConTypeList			= $Lg(DicData,5)
+			Set DeliveryPositionList= $Lg(DicData,6)
+			Set DeathPositionList	= $Lg(DicData,7)
+			Set DeliveryWayList		= $Lg(DicData,8)
+			Set IsNewWayList		= $Lg(DicData,9)
+			Set DeliveryerList		= $Lg(DicData,10)
+			Set IsPreCheckList		= $Lg(DicData,11)
+			Set DiagnoseBasisList	= $Lg(DicData,12)
+			Set ProResultList		= $Lg(DicData,13)
+			Set CountryReasonList	= $Lg(DicData,14)
+			Set NationList			= $Lg(DicData,15)
+		</script>
+		<div style="font-size: 120%;font-weight: bold;text-align: center;">
+			<span>孕产妇死亡登记副卡</span>
+		</div>
+		<div style="font-size: 85%;font-weight: bold;text-align: center;">
+			<span>(与居民死亡医学证明书同时填写)</span>
+		</div>
+		<div>
+			<span>姓名<input type='text' style='width:7em' value=#(PatName)#></span>
+			<span style="float:right;margin-right:4em;">死亡医学证明书编号 <input type='text' style='width:12em' value=#(CardNo)#></span>
+		</div>
+		<div>
+			<span>常住址<input type='text' style='width:10em' value=#(ConPlace)#></span>
+		</div>
+		<div style="padding-bottom:0.5em;">
+			<span>暂住址<input type='text' style='width:10em' value=#(TempPlace)#></span>
+		</div>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td colspan="4">
+					户口
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(RegTypeList))#>
+						<CSP:IF CONDITION='$Lg(RegTypeList,ZLInd)=RegType'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(RegTypeList,ZLInd))#
+					</CSP:LOOP>
+					<span style="padding-left:8em;">计划内外</span>
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(IsPlanList))#>
+						<CSP:IF CONDITION='$Lg(IsPlanList,ZLInd)=IsPlan'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(IsPlanList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					年龄<input type='text' style='width:10em' value=#(Age)#>
+					<span style="padding-left:8em;">民族</span>
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(NationList))#>
+						<CSP:IF CONDITION='$Lg(NationList,ZLInd)=Nation'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(NationList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					文化程度
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EducationList))#>
+						<CSP:IF CONDITION='$Lg(EducationList,ZLInd)=Education'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EducationList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					家庭年人均收入（元）
+					<br>
+					<span style="padding-left:4em;">
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(FamilIncomeList))#>
+							<CSP:IF CONDITION='$Lg(FamilIncomeList,ZLInd)=FamilIncome'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(FamilIncomeList,ZLInd))#
+						</CSP:LOOP>
+					</span>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					居住地区
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(ConTypeList))#>
+						<CSP:IF CONDITION='$Lg(ConTypeList,ZLInd)=ConType'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(ConTypeList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					孕产次
+					<span style="padding-left:2em;">孕次<input type='text' style='width:3em' value=#(Gravidity)#></span>
+					<span style="padding-left:2em;">产次<input type='text' style='width:3em' value=#(Parity)#></span>
+					<span style="padding-left:2em;">人工流产、引产次<input type='text' style='width:3em' value=#(ArtDra)#></span>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					末次月经
+					<script language="Cache" RUNAT="SERVER">
+			    		Set LastMenDateYear=$p(LastMenDate,"-",1)
+			    		Set LastMenDateMonth=$p(LastMenDate,"-",2)
+			    		Set LastMenDateDay=$p(LastMenDate,"-",3)
+					</script>
+					<input type='text' style='width:3em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(LastMenDateYear)#>年
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(LastMenDateMonth)#>月
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(LastMenDateDay)#>日
+				</td>
+			</tr>
+				<tr>
+				<td colspan="4">
+					分娩时间
+					<script language="Cache" RUNAT="SERVER">
+			    		Set DeliveryDateYear=$p(DeliveryDate,"-",1)
+			    		Set DeliveryDateMonth=$p(DeliveryDate,"-",2)
+			    		Set DeliveryDateDay=$p(DeliveryDate,"-",3)
+					</script>
+					<input type='text' style='width:3em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeliveryDateYear)#>年
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeliveryDateMonth)#>月
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeliveryDateDay)#>日
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeliveryTime)#>时
+				</td>
+			</tr>
+			
+			<tr>
+				<td colspan="4">
+					死亡时间
+					<script language="Cache" RUNAT="SERVER">
+			    		Set DeathDateYear=$p(DeathDate,"-",1)
+			    		Set DeathDateMonth=$p(DeathDate,"-",2)
+			    		Set DeathDateDay=$p(DeathDate,"-",3)
+					</script>
+					<input type='text' style='width:3em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeathDateYear)#>年
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeathDateMonth)#>月
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeathDateDay)#>日
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt;text-align: center;' value=#(DeathTime)#>时
+				</td>
+			</tr>
+			<tr>
+				<td>
+					分娩地点
+				</td>
+				<td colspan="3">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(DeliveryPositionList))#>
+						<CSP:IF CONDITION='$Lg(DeliveryPositionList,ZLInd)=DeliveryPosition'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(DeliveryPositionList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					死亡地点
+				</td>
+				<td colspan="3">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(DeathPositionList))#>
+						<CSP:IF CONDITION='$Lg(DeathPositionList,ZLInd)=DeathPosition'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(DeathPositionList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			
+			<tr>
+				<td style="width:4em;">
+					分娩方式
+				</td>
+				<td colspan="3">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(DeliveryWayList))#>
+						<CSP:IF CONDITION='$Lg(DeliveryWayList,ZLInd)=DeliveryWay'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(DeliveryWayList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					新法接生
+				</td>
+				<td colspan="3">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(IsNewWayList))#>
+						<CSP:IF CONDITION='$Lg(IsNewWayList,ZLInd)=IsNewWay'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(IsNewWayList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					接生者
+				</td>
+				<td colspan="3">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(DeliveryerList))#>
+						<CSP:IF CONDITION='$Lg(DeliveryerList,ZLInd)=Deliveryer'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(DeliveryerList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					产前检查
+				</td>
+				<td colspan="3">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(IsPreCheckList))#>
+						<CSP:IF CONDITION='$Lg(IsPreCheckList,ZLInd)=IsPreCheck'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(IsPreCheckList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					初检孕周
+					<span style="padding-left:0.5em;"><input type='text' style='width:3em' value=#(Frequency)#>周</span>
+					<span style="padding-left:4em;">产检次数<input type='text' style='width:3em' value=#(PreTime)#></span>
+				</td>
+			</tr>
+			
+			<tr>
+				<td colspan="4">
+					致死的主要疾病诊断
+					<span style="padding-left:2.5em;">A<input type='text' style='width:12em' value=#(AReason)#></span>
+					<br>
+					<span style="padding-left:12em;">B<input type='text' style='width:12em' value=#(BReason)#></span>
+					<br>
+					<span style="padding-left:12em;">C<input type='text' style='width:12em' value=#(CReason)#></span>
+				</td>
+			</tr>
+			
+			<tr>
+				<td colspan="4">
+					根本死因
+					<span style="padding-left:0.5em;"><input type='text' style='width:12em' value=#(DReason)#></span>
+				</td>
+			</tr>
+			
+			<tr>
+				<td colspan="4">
+					省级医疗保健机构评审结果
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(ProResultList))#>
+						<CSP:IF CONDITION='$Lg(ProResultList,ZLInd)=ProResult'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(ProResultList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					影响死亡的主要因素
+					<span style="padding-left:2em;">
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(CountryReasonList))#>
+							<CSP:IF CONDITION='$Lg(CountryReasonList,ZLInd)=ProReason'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(CountryReasonList))#
+						</CSP:LOOP>
+					</span>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					国家级评审结果 
+					<span style="padding-left:4em;">
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(ProResultList))#>
+							<CSP:IF CONDITION='$Lg(ProResultList,ZLInd)=CountryResult'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(ProResultList,ZLInd))#
+						</CSP:LOOP>
+					</span>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					影响死亡的主要因素
+					<span style="padding-left:2em;">
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(CountryReasonList))#>
+							<CSP:IF CONDITION='$Lg(CountryReasonList,ZLInd)=CountryReason'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(CountryReasonList))#
+						</CSP:LOOP>
+					</span>
+				</td>
+			</tr>
+		</table>
+		<div>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;填卡单位：<input type='text' style='width:10em' value=#(Hosptail)#>&nbsp;&nbsp;&nbsp;
+			填卡人：<input type='text' style='width:5em' value=#(RepUser)#>&nbsp;&nbsp;&nbsp;
+			日期：<input type='text' style='width:6em' value=#(RepDate)#>
+		</div>
+	</div>	
+	
+	
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

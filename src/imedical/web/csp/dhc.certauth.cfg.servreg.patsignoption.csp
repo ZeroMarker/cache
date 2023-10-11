@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>患者签名参数详细配置</title>
+    <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+    <HISUI/>
+    <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+        i ##Class(websys.SessionEvents).SessionExpired()
+        q 1
+    </csp:method>
+    
+    <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+   	<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+    
+        <server>
+            s userID = %session.Get("LOGON.USERID")
+            s ssGroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            
+            s PatSignOption = $Get(%request.Data("patSignOption",1),"")
+        </server>
+
+        <script language="javascript">
+            var logonInfo = {
+                UserID: "#(userID)#",
+                GroupID: "#(ssGroupID)#",
+                CTLocID: "#(userLocID)#"
+            }; 
+            
+            var caInfo = {
+		    	PatSignOption : JSON.parse(unescape(utf8to16(base64decode("#(PatSignOption)#"))))
+			}; 
+			
+			window.returnValue = "";
+			function SetOption(option){
+				if (option == "") return;
+
+				var supportSignTypeSet = option.supportSignType;
+				var positionTypeSet = option.positionType;
+				var enableCombineKeyWordSet = option.enableGroupKeyWord;
+				
+				var list = supportSignTypeSet.split("|")
+				for (var i=0;i<list.length;i++)
+				{
+					$("#"+list[i]).checkbox('check');
+				}
+				
+				if (enableCombineKeyWordSet == "1")
+				$("#EnableCombineKeyWord").checkbox('check');
+				
+				$("#PositionType").combobox('select',positionTypeSet);
+			}
+			
+			$(function(){
+		       	$("#btnSaveOption").click(function(){
+		        	var supportSignTypeValue = "";
+		        	var list = $("input[name='SupportSignType']:checked")
+		        	for (var i=0;i<list.length;i++)
+					{
+						if (supportSignTypeValue != "") 
+								supportSignTypeValue = supportSignTypeValue + "|";
+							supportSignTypeValue = supportSignTypeValue + list[i].defaultValue;
+					}
+				 	var positionTypeValue = $("#PositionType").combobox('getValue');
+		        	var enableCombineKeyWordValue = $("#EnableCombineKeyWord")[0].checked == true?"1":"0"
+		        	var optionValue = {
+			        	supportSignType : supportSignTypeValue,
+			        	positionType : positionTypeValue,
+			        	enableGroupKeyWord :enableCombineKeyWordValue
+			        }
+			        
+					window.returnValue = JSON.stringify(optionValue);
+			        parent.closeDialog("setPatSignOption");
+	        	});
+	        	
+	        	$("#btnCancel").click(function(){
+		        	window.returnValue = "";
+			        parent.closeDialog("setPatSignOption");
+	        	});
+	        	
+	        	SetOption(caInfo.PatSignOption);
+        	})
+        </script>
+    
+    
+</head>
+<body class="hisui-layout">
+    <div data-options="region:'center',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="margin:15px;">
+        <div class="hisui-panel" style="width:auto;height:auto;" data-options="title:'患者签名参数详细配置',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+            <table cellpadding="5" cellspacing="10" style="margin:5px 5px">
+                <tr>
+                	<td colspan="4">
+                		<div class="hisui-panel" title="支持的签署类型" style="height:150px;width:400px;padding:20px" data-options="headerCls:'panel-header-card'">
+							<table cellpadding="5" class="table">
+								<tr>
+									<td>
+										<input class="hisui-checkbox" type="checkbox" id="DataBoard" name="SupportSignType" value="DataBoard" label="签名板数据签署&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" />
+									</td>
+									<td>
+										<input class="hisui-checkbox" type="checkbox" id="PDFPad" name="SupportSignType" value="PDFPad" label="平板PDF签署" />
+									</td>
+								<tr>
+								<tr>	
+									<td>
+										<input class="hisui-checkbox" type="checkbox" id="PDFWeChat" name="SupportSignType" value="PDFWeChat" label="微信PDF签署" />
+									</td>
+								</tr>
+							</table>
+						</div>
+                	</td>
+                	<td style="width:450px;padding-top:15px;" valign="top">
+                		勾选要使用的签名方式。
+                	</td>
+                </tr>	
+		        <tr>
+		        	<td class="label">签名位置类型</td>
+		            <td colspan="3">
+		                <select id="PositionType" class="hisui-combobox" style="width:280px;">
+		                	<option value="KeyWord">指定关键字</option>
+							<option value="Coordinate">坐标</option>
+                            <option value="Free">在平板上自由点按</option>
+		                </select>
+		            </td>
+		            <td>
+		            	选择要使用的签名位置类型，CA合并签名图片到PDF时会根据选择类型进行处理。
+		            </td>
+		        </tr>
+		        <tr>
+		            <td colspan="4">
+		            	<input class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="启用签名关键字组合并功能&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" id="EnableCombineKeyWord" />
+		            </td>
+		            <td>
+		            	是否将亲属意见、亲属关系、签署签名合并为一个组推送给CA，CA触发签名时，这一组关键字依次自动触发、并只身份认证一次。
+		            </td>
+		        </tr>
+		        <tr>
+                   <td colspan="4">
+                       <a href="#" id="btnSaveOption" class="hisui-linkbutton" data-options="iconCls:'icon-ok'" style="height:30px;float:right;margin-right:65px;">确定</a>
+                   </td>
+                   <td colspan="4">
+                       <a id="btnCancel" class="hisui-linkbutton" data-options="iconCls:'icon-no'" style="height:30px;">取消</a>
+                   </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

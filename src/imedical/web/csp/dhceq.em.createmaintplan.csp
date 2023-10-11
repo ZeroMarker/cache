@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<script type='text/javascript' src='../scripts/dhceq/em/createmaintplan.js'></script>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s RowID=$g(%request.Data("RowID",1))
+ s MPRowID=$g(%request.Data("MPRowID",1))
+ s BussType=$g(%request.Data("BussType",1))
+ s ReadOnly=$g(%request.Data("ReadOnly",1))
+ s AddFlag=$g(%request.Data("AddFlag",1))	// MZY0099	2200181		2021-11-13
+ </Script>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true">	<!--MZY0099	2198140		2021-11-13-->
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+						<!--MZY0083	2034423		2021-07-19-->
+							<div class="eq-table-td eq-table-label"><label id="cNo" for="No">设备编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="font-size:18px;font-weight:bold;color:red;text-align:right" id="No"></div>
+							<div class="eq-table-td eq-table-label"><label id="cName" for="Name">设备名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Name"></div>
+							<div class="eq-table-td eq-table-label"><label id="cUseLocDR_LocDesc" for="UseLocDR_LocDesc">使用科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="UseLocDR_LocDesc" data-options="component:'PLAT.L.Loc'"></div>
+							<div class="eq-table-td eq-table-label"><label id="cRiskGrade" for="RiskGrade">风险等级</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="RiskGrade"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" style="margin-left:12%;" data-options="stopAllEventOnDisabled:true">查询</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cManuFactoryDR_MFName" for="ManuFactoryDR_MFName">生产厂商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.ManuFacturer'" id="ManuFactoryDR_MFName"></div>
+							<div class="eq-table-td eq-table-label"><label id="cLeaveFactoryNo" for="LeaveFactoryNo">出厂编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="LeaveFactoryNo"></div>
+							<div class="eq-table-td eq-table-label"><label for="MinValue">设备原值</label></div>
+							<div class="eq-table-td"><input style="WIDTH: 63px; TEXT-ALIGN: right" class="hisui-validatebox" id="MinValue">至<input style="WIDTH: 64px; TEXT-ALIGN: right" class="hisui-validatebox" id="MaxValue"></div>
+							<!--MZY0083	2034340		2021-07-19-->
+							<div class="eq-table-td eq-table-label"><label for="EngineerDR_SSUSRName">工程师台账</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'" id="EngineerDR_SSUSRName"></div>
+							<div class="eq-table-td eq-table-label"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cEquipTypeDR_ETDesc" for="EquipTypeDR_ETDesc">管理类组</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EquipType'" id="EquipTypeDR_ETDesc" ></div>
+							<div class="eq-table-td eq-table-label"><label id="cBeginInStockDate" for="BeginInStockDate">入库日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BeginInStockDate"></div>
+							<div class="eq-table-td eq-table-label"><label id="cEndInStockDate" for="EndInStockDate">至</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndInStockDate"></div>
+							<div class="eq-table-td eq-table-label"><label for="Chk">未建计划</label></div>
+							<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox" id="Chk"></div>
+							<div class="eq-table-td eq-table-label"></div>
+						</div>
+						<!--MZY0083	2034423		2021-07-19-->
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cFileNo" for="FileNo">档案号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="font-size:18px;font-weight:bold;color:red;text-align:right" id="FileNo"></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="DHCEQEquipList" data-options="border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<input type="hidden" id="RowID" value=#(RowID)#>
+			<input type="hidden" id="MPRowID" value=#(MPRowID)#>
+			<input type="hidden" id="ReadOnly" value=#(ReadOnly)#>
+			<input type="hidden" id="AddFlag" value=#(AddFlag)#>	<!--MZY0099	2200181		2021-11-13-->
+			<input type="hidden" id="UseLocDR">
+			<input type="hidden" id="ManuFactoryDR">
+			<input type="hidden" id="EquipTypeDR">
+			<input type="hidden" id="StatCatDR">
+			<input type="hidden" id="EquipCatDR">
+			<input type="hidden" id="EngineerDR">
+		</form>
+	</div>
+</body>
+</html>

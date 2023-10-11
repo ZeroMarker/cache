@@ -1,0 +1,158 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<csr:action>
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    	//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4()
+    	d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()
+	}   
+    </SCRIPT>  
+</csr:action>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<style>
+	.eq-table-td{
+		width : 140px;
+	}
+</style>
+<script language=Cache runat=server>
+	s RowID=$Get(%request.Data("RowID",1))
+	s Type=$Get(%request.Data("Type",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("33",RowID),CurRole)
+</script>
+<style>
+	.eqbutton{
+		margin-left:15px;
+	}
+</style>
+<body class="hisui-layout" >
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false,fit:true" style="padding:10px 10px 0 10px;">
+		<div class="hisui-panel"  data-options="headerCls:'panel-header-gray',title:'设备信息',iconCls:'icon-paper'" style="padding-bottom:10px;margin-bottom:10px;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.Equip'" id="Name"></div>
+					<div class="eq-table-td eq-table-label"><label for="EquipNo">设备编号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipNo" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="FileNo">档案号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FileNo" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="Model">规格型号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Model" disabled="true"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="LeaveFactoryNo">出厂编号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="LeaveFactoryNo" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label id="cISBuyLocDR_CTLOCDesc" for="UseLoc">使用科室</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="UseLoc" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="StartDate">启用日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="StartDate" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="LimitYearsNum">使用年限</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="LimitYearsNum" disabled="true"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="OriginalFee">设备原值</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OriginalFee" disabled="true"></div>
+				</div>
+			</div>
+		</div>
+		<div class="hisui-panel" data-options="headerCls:'panel-header-gray',title:'报告记录',iconCls:'icon-paper'" style="padding-bottom:10px;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cISInStockNo" for="No">报告单号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="No" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="ReportDate">上报日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="ReportDate" value=#(CurDate)#></div>
+					<div class="eq-table-td eq-table-label"><label id="cISInDate" for="Location">存放地点</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Locaton'" id="Location"></div>
+					<div class="eq-table-td eq-table-label"><label for="State">当前设备状态</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="State"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="CheckResult">计量检测或质量检测</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CheckResult"></div>
+					<div class="eq-table-td eq-table-label"><label for="DepreMonths">已折旧月数</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="DepreMonths" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="MaintCounts">维修频率(次数)</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" style="width:84px" id="MaintCounts">&nbsp;<input class="hisui-validatebox" style="width:60px" id="FrequencyUnit"></div>	<!--	MZY0157	2612987		2023-03-29	设置间距	-->
+					<div class="eq-table-td eq-table-label"><label for="PreviousMaintFee">末次维修费</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PreviousMaintFee"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="TotalFee">当前维修总费用</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="TotalFee"></div>
+					<div class="eq-table-td eq-table-label"><label for="Situation">故障现象及原因</label></div>
+					<div class="eq-table-td eq-table-input"><textarea class="hisui-textarea textbox" id="Situation"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label for="OtherSituation">其他报废预警原因</label></div>
+					<div class="eq-table-td eq-table-input"><textarea class="hisui-textarea textbox" id="OtherSituation"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label for="CheckUser">鉴定工程师</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CheckUser" disabled="true"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="Phone">联系电话</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Phone"></div>
+					<div class="eq-table-td eq-table-label"><label for="AuditUser">审核人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="AuditUser" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="AuditDate">审核日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="AuditDate" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><label for="AuditTime">审核时间</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="AuditTime" disabled="true"></div>
+				</div>
+			</div>
+		</div>
+		<div style="text-align:center;margin-top:10px">
+			<a id="BSave" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+			<a id="BDelete" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">删除</a>
+			<a id="BSubmit" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">提交</a>
+			<a id="BApprove1" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">审核</a>
+			<a id="BCancelSubmit" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">退回</a>
+			<a id="BPrint" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">打印</a>
+			<!--a id="BApprove2" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">审核</a>
+			<a id="BCancel" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">作废</a>
+			<a id="BClear" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">清屏</a-->
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="RowID" value="#(RowID)#">
+			<INPUT type="hidden" id="Type" value="#(Type)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="RoleStep" value="#(RoleStep)#">
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			
+			<INPUT type="hidden" id="EquipDR">
+			<INPUT type="hidden" id="Status">
+			<INPUT type="hidden" id="LocationDR">
+			<INPUT type="hidden" id="UseLocDR">
+			<INPUT type="hidden" id="CheckUserDR">
+			
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="ApproveRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="ApproveTypeCode" value=33>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/appraisalreport.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
+</body>
+</html>

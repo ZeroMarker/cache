@@ -1,0 +1,53 @@
+<!--ipdoc.prescprint.csp 住院处方打印(按PrintType区分 MJ:毒麻 CM:草药 OUT:处方带药)-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<STYLE type='text/css'>
+object {
+	display:none;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+</STYLE>
+<Server>
+s DisplayType=%request.Get("DisplayType")
+d ##class(web.DHCXMLPConfig).LODOPInit()
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+s XMLObject=##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+w "<input id='XMLObject' name='XMLObject' type='hidden' value='"_XMLObject_"'>",$C(13,10)
+d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+w "<object ID='ClsSaveBase64IMG' CLASSID='CLSID:F6E5F767-D0E0-4311-AAFF-5EB0385F68A8' CODEBASE='../addins/client/ClsSaveBase64IMG.CAB#version=1,0,0,5' VIEWASTEXT>"
+w "</object>",$C(13,10)
+s NowDate=##class(websys.Conversions).DateLogicalToHtml(+$h) 
+</Server>
+ </head>
+<body>
+<csp:Include Page="ipdoc.prescprint.show.csp">
+<SCRIPT language = 'javascript' >
+	var ServerObj={
+		DisplayType:"#(DisplayType)#",
+		NowDate:"#(NowDate)#",
+		EpisodeID:""
+	}
+</SCRIPT>
+</body>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.JS"></script>
+<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+<script type="text/javascript" src="../scripts/DHCOPPrtCommon.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/opdoc/printcommon.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/PrescPrintSearch.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/PrescPrint.js"></script>
+</html>

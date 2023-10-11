@@ -9,6 +9,7 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard"/>
+<DOCCARD medStepCode="OPAdmReg"></DOCCARD>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -22,12 +23,15 @@
 s winfrom=%request.Get("winfrom")
 s AdmType=%request.Get("AdmType")
 s RegConDisForRapidReg=##Class(web.DHCDocConfig).GetConfigNode("RegConDisForRapidReg")
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+/*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)*/
 w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
 w "<input id='Securityno' name='Securityno' type='hidden' value=''>",$C(13,10)
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+s DocOPRegistBill=##class(web.DHCOPRegConfig).GetSpecConfigNodeHosp("DocOPRegistBill",%session.Get("LOGON.HOSPID"))
+s DocOPRegistInsu=##class(web.DHCOPRegConfig).GetSpecConfigNodeHosp("DocOPRegistInsu",%session.Get("LOGON.HOSPID"))
+s CashPayModeID=$o(^CT("CTPM",0,"Code","CASH",""))
 </Server>
 </head>
 <body>
@@ -37,9 +41,24 @@ w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' valu
 		//全局请求后台服务对象
 		var ServerObj={
 			AdmType:"#(AdmType)#",
-			winfrom:"#(winfrom)#"
+			winfrom:"#(winfrom)#",
+			CashPayModeID:"#(CashPayModeID)#",
+			DocOPRegistBill:"#(DocOPRegistBill)#",
+			DocOPRegistInsu:"#(DocOPRegistInsu)#",
+			RegConDisForRapidReg:"#(RegConDisForRapidReg)#"
 		};
 	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCOPAdmReg.Common.js"></script>
+	<csp:if condition='DocOPRegistInsu="1"'>
+		<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	</csp:if>
+	<script type="text/javascript" src="../scripts/OPAdm/MisPose/MisPosePublic.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillPayScanCodeService.js"></script>
+	
     <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/OPDoc.RapidRegist.hui.js"></script>
 </body>

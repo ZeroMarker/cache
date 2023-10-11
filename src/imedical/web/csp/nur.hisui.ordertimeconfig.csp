@@ -1,0 +1,315 @@
+<html>
+<!-- 验证session过期 页面班次时间配置 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <style>
+    body{
+	 	background:#ffffff;   
+    }
+    .header{
+	 	display:flex;
+	 	flex-wrap:nowrap; 
+	 	padding:0 10px 10px 0;
+	 	justify-content:left; 
+	 	align-content:center;
+    }
+    #content{
+	    height: calc(100% - 40px);
+	    width:100%;
+    }
+    #content>div{
+	 	width:100%;
+	 	height:calc(50% - 5px);
+	 	boxsizing:border-box;
+    }
+    .up{
+	 	padding-bottom:5px;  
+    }
+    .down{
+	 	padding-top:5px;  
+    }
+    #infoContent{
+	    height: calc(100% - 31px);
+	    display:flex;
+	    flex-direction:row;
+	    flex-wrap:wrap;
+	    justify-content:flex-start;
+    }
+    #infoContent>div{
+	    width:50%;
+	    height:calc(50% - 1px);
+	    box-sizing:border-box;
+	    padding:10px;
+	    display:flex;
+	    flex-wrap:nowrap;
+	    align-items:center;
+    }
+    .box{
+	 	position:relative;   
+    }
+    .box>span{
+	 	position:absolute;
+	 	right:10px;
+	 	top:10px;
+	 	font-weight:bold;
+    }
+    .combo-arrow{
+		margin-left:-4px;    
+	}
+	.hisui-timespinner{
+		width:61px!important;	
+	}
+    </style>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+  	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+</head>
+
+<body>
+	<div class="header">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<csp:if condition='1=##class(Nur.SHIFT.Service.ShiftBizBase).#MULTIHOSP'>
+					<td class="r-label">
+						<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+					</td>
+					<td class="r-label">
+						<select id="_HospList"></select>
+					</td>
+				</csp:if>
+				<td class="r-label">病区</td>
+				<td class="r-label">
+					<select id="wardBox" style="width:200px;"></select>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" id="search">查询</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+    <div id="content">
+    	<div class="up">
+    		<table id="tableOne" class="hisui-datagrid" title="班次列表" style="width:100%" data-options="fit:true,toolbar:[],singleSelect: true,
+			headerCls:'panel-header-gray',iconCls:'icon-paper',rownumbers:true">
+			<thead>
+			<tr>
+				<th data-options="field:'op',width:140,align:'center',editor:{type:'linkbutton',options:{hidden:true,iconCls:'icon-save',handler:function(){endEditing();}}}">操作</th>
+			</tr>
+			</thead>
+			</table>
+    	</div>
+    	<div class="down">
+    		<div id="accPanel" title="班次内容配置">
+    			<div class="datagrid-toolbar">
+    				<table cellspacing="0" cellpadding="0">
+    					<tbody>
+    						<tr>
+    						<td><a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="saveTwo"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">保存</span><span class="l-btn-icon icon-save">&nbsp;</span></span></a></td>
+    						</tr>
+    					</tbody>
+    				</table>
+    			</div>
+    			<div id="infoContent" style="width:100%;box-sizing:border-box;">
+    				<div class="box" style="border-right:1px solid #cccccc;">
+    					<span>第一班</span>
+    					<table cellpadding="0" cellspacing="0">					
+							<tr>
+								<td class="r-label" style="padding-bottom:10px;">班次</td>
+								<td style="padding-bottom:10px;">
+									<input id="Order_1" class="hisui-validatebox textbox" data-options="required:true" style="width:110px">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">开始时间</td>
+								<td style="padding-right:10px;">									
+								<select id="Select_start_1" class="hisui-combobox" name="state" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+									<option value="0">今日</option>
+									<option value="-1">前日</option>
+									<option value="1">次日</option>
+								</select>
+								</td>
+								<td>
+									<input id="Time_start_1" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+								<td class="r-label" style="padding-left:10px;">结束时间</td>
+								<td style="padding-right:10px;">									
+									<select id="Select_end_1" class="hisui-combobox" name="state" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+										<option value="0">今日</option>
+										<option value="-1">前日</option>
+										<option value="1">次日</option>
+									</select>
+								</td>
+								<td>
+									<input id="Time_end_1" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label" style="padding-top:10px;">颜色</td>
+								<td style="padding-top:10px;">
+									<input id="Color_1" type="color" class="hisui-validatebox textbox" data-options="required:true" style="width:110px">
+								</td>
+							</tr>
+						</table>
+    				</div>
+    				<div class="box" >
+    					<span>第二班</span>
+    					<table cellspacing="0" cellpadding="0">					
+							<tr>
+								<td style="padding-bottom:10px;" class="r-label">班次</td>
+								<td style="padding-bottom:10px;">
+									<input id="Order_2" class="hisui-validatebox textbox" data-options="required:true" style="width:110px">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">开始时间</td>
+								<td style="padding-right:10px;">									
+								<select id="Select_start_2" class="hisui-combobox" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+										<option value="0">今日</option>
+										<option value="-1">前日</option>
+										<option value="1">次日</option>
+								</select>
+								</td>
+								<td>
+									<input id="Time_start_2" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+								<td class="r-label" style="padding-left:10px;">结束时间</td>
+								<td style="padding-right:10px;">									
+									<select id="Select_end_2" class="hisui-combobox" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+										<option value="0">今日</option>
+										<option value="-1">前日</option>
+										<option value="1">次日</option>
+									</select>
+								</td>
+								<td>
+									<input id="Time_end_2" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label" style="padding-top:10px;">颜色</td>
+								<td style="padding-top:10px;">
+									<input id="Color_2" type="color" class="hisui-validatebox textbox" data-options="required:true" style="width:110px">
+								</td>
+							</tr>
+						</table>
+    				</div>
+    				<div class="box"  style="border-right:1px solid #cccccc;border-top:1px solid #cccccc">
+    					<span>第三班</span>
+    					<table cellspacing="0" cellpadding="0">					
+							<tr>
+								<td style="padding-bottom:10px;" class="r-label">班次</td>
+								<td style="padding-bottom:10px;">
+									<input id="Order_3" class="hisui-validatebox textbox" data-options="required:true"  style="width:110px">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">开始时间</td>
+								<td style="padding-right:10px;">									
+								<select id="Select_start_3" class="hisui-combobox" name="state" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+										<option value="0">今日</option>
+										<option value="-1">前日</option>
+										<option value="1">次日</option>
+								</select>
+								</td>
+								<td>
+									<input id="Time_start_3" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+								<td class="r-label" style="padding-left:10px;">结束时间</td>
+								<td style="padding-right:10px;">									
+									<select id="Select_end_3" class="hisui-combobox" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+										<option value="0">今日</option>
+										<option value="-1">前日</option>
+										<option value="1">次日</option>
+									</select>
+								</td>
+								<td>
+									<input id="Time_end_3" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label" style="padding-top:10px;">颜色</td>
+								<td style="padding-top:10px;">
+									<input id="Color_3" type="color" class="hisui-validatebox textbox" data-options="required:true" style="width:110px">
+								</td>
+							</tr>
+						</table>
+    				</div>
+    				<div class="box"  style="border-top:1px solid #cccccc;border-top:1px solid #cccccc">
+    					<span>第四班</span>
+    					<table cellspacing="0" cellpadding="0">					
+							<tr>
+								<td style="padding-bottom:10px;" class="r-label">班次</td>
+								<td style="padding-bottom:10px;">
+									<input id="Order_4" class="hisui-validatebox textbox" data-options="required:true"  style="width:110px">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">开始时间</td>
+								<td style="padding-right:10px;">									
+								<select id="Select_start_4" class="hisui-combobox" name="state" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+										<option value="0">今日</option>
+										<option value="-1">前日</option>
+										<option value="1">次日</option>
+								</select>
+								</td>
+								<td>
+									<input id="Time_start_4" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+								<td class="r-label" style="padding-left:10px;">结束时间</td>
+								<td style="padding-right:10px;">									
+									<select id="Select_end_4" class="hisui-combobox" name="state" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+										<option value="0">今日</option>
+										<option value="-1">前日</option>
+										<option value="1">次日</option>
+									</select>
+								</td>
+								<td>
+									<input id="Time_end_4" class="hisui-timespinner" data-options="showSeconds:false,required:true" style="width:90px;border-radius: 2px;">
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label" style="padding-top:10px;">颜色</td>
+								<td style="padding-top:10px;">
+									<input id="Color_4" type="color" class="hisui-validatebox textbox" data-options="required:true" style="width:110px">
+								</td>
+							</tr>
+						</table>
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+    </div>
+    <script type="text/javascript">
+	   $(function(){
+	       for (var i = 1; i <= 4; i++) {
+			    $("#Color_"+i).color({
+					editable:true,
+					required:true,
+					width:110,
+					height:30
+				});
+	    	} 
+	     })
+         
+    	var development=false
+    	var target=document.createElement("script")
+    	target.type = "text/javascript";
+    	
+        if (development) {
+            target.src = "http://127.0.0.1/imedical/web/scripts/nurse/hisui/nur.hisui.ordertimeconfig.js"; // 本地跑服务
+        } else {
+            target.src = "../scripts/nurse/hisui/nur.hisui.ordertimeconfig.js"; 
+        }
+        document.getElementsByTagName('body')[0].appendChild(target);
+        
+    </script>
+</body>
+</html>

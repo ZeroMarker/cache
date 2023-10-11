@@ -1,0 +1,177 @@
+<!-- 
+ * FileName: dhcinsu.divincdiscnfm.csp
+ * Date: 2021-01-26
+ * Creator WenYX
+ * Description: 医保清分确认
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html;"-->
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCBILL/>
+<link rel="stylesheet" type="text/css" href="#(##class(INSU.Util.Library).#CSSPath)#dhcinsu.divincdiscnfm.css"/>
+<style>
+	.layout-body{
+		border-radius:0px !important;
+	}
+	#DZYC .layout-body{
+    	border-radius:0px 0px 4px 4px !important;
+	}
+	</style>
+</head>
+
+<body style='padding:10px'>
+	<div class="hisui-layout" data-options="fit:true">
+		<!--查询条件-->
+		<div data-options="collapsible:false,region:'north',title:'异地清分上传',headerCls:'panel-header-gray',iconCls:'icon-int-bill'" style="height:128px;">
+				<table class='search-table'  >
+   					<tr>
+   						<td class="r-label td-first-col" ><label>开始日期</lable></td>
+   						<td><input id="stdate" class="hisui-datebox" /></td>
+   						
+   						<td class="r-label "><label>医保类别</label></td>
+						<td><input id="hiType" class="hisui-combobox" /></td>
+						<!--<td class="r-label "><label>经办中心</label></td>
+						<td><input id="centerno" class="hisui-combobox" /></td>-->
+						<td class="r-label " style="padding-left:20px"><a id="btnDivSumQuery" href="#" class="hisui-linkbutton" style="width:140px" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" >清分查询</a></td>
+						<td class="r-label "><a id="btnDivCreate" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-submit',stopAllEventOnDisabled:true" >清分提取</a></td>
+						<td class="r-label "><a id="btnDivConfirm" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok',stopAllEventOnDisabled:true" >清分确认</a></td>
+   					</tr>
+   					
+   					<tr>
+   						<td class="r-label td-first-col"><label>结束日期</label></td>
+						<td><input id="endate" class="hisui-datebox" /></td>
+   						<td class="r-label"></td>
+   						<td></td>
+						<td class="r-label "><a id="btnSynHisDiv" href="#" class="hisui-linkbutton" style="width:140px" data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >同步HIS数据</a></td>
+    					<td class="r-label "><a id="btnDivCreateDel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel',stopAllEventOnDisabled:true" >清分作废</a></td>
+    					<td class="r-label "><a id="btnDivConfirmCancel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back',stopAllEventOnDisabled:true" >清分回退</a></td>
+   					</tr>
+   				</table>
+   			
+		</div>
+		<!--查询展示-->
+		<div data-options="region:'center'" style="border:0">
+	
+			<div class="hisui-layout" data-options="fit:true">
+				 <div data-options="region:'north',title:'',split:true,bodyCls:'panel-header-gray'" style="height:360px;padding:0px;border-radius:4px">
+				     <div id="ballist" class="hisui-datagrid" ></div>
+				 </div>
+			     <div data-options="region:'center',title:''" style="border:0;padding:0px;border-radius:4px;">	
+					
+				     <div id="ttcfm" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools',fit:true,headerCls:'panel-header-gray'">   
+				         <div data-options="title:'清分确认明细',headerCls:'panel-header-gray'" style="border:1px;border-radius:4px;padding:10px;">     
+                            <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:10;border-radius:4px;">
+                            <div id="ttcfmtb" >
+	                         <a href="javascript:void(0)" id='btnDivDetEpot' class="hisui-linkbutton" data-options="iconCls:'icon-export',plain:true">导出</a>
+	                        </div>
+	                        <table id="divdetdg" data-options="headerCls:'panel-header-gray',pagination:true,toolbar:'#ttcfmtb'"></table>
+	                        </div>
+				         </div>   
+				         <div id="DZYC" title="明细对比结果" data-options="closable:true" style="overflow:auto;padding:10px;">   
+					         <div class="hisui-layout" data-options="fit:true">
+				                <div data-options="region:'west',title:'医保异常数据',tools:'#titlebtn',split:true,headerCls:'panel-header-gray',iconCls:'icon-pat-fee-det'" style="padding:0px;width:1000px;border-radius:4px;">	
+					                <!--<div id="titlebtn">
+					                    <a id="btnCenterErrEpot" href="#" style="width:150px;height:15px;" >导出中心异常</a>
+						                <a id="btnStrikeForInsu" href="#" style="width:150px;height:15px;" >处理中心异常</a>
+					                </div>-->
+					                <div id="centererrdg"></div>	
+				                </div>
+				                <div data-options="region:'center',title:'HIS异常数据',tools:'#titlehisbtn',headerCls:'panel-header-gray',iconCls:'icon-pat-fee-det'" style="border-radius:4px;padding:0px;">
+					               <!--<div id="titlehisbtn">
+					                  <a id="btnHisErrEpot" href="#" style="width:150px;height:15px;" >导出HIS异常</a>
+						              <a id="btnStrikeForHis" href="#" style="width:150px;height:15px;" >处理HIS异常</a>
+					               </div>-->					
+					               <div id="hiserrdg"></div>
+				                </div>
+			                 </div>
+			             </div>   
+								
+                   </div>
+					
+				
+			  </div>
+		 </div>
+	</div>
+</div>
+        <!--修改确认标识弹窗-->
+ <div id="CnfmDlBd">
+	<div id="CnfmPanel" class="hisui-panel"  style="fit:true;padding-bottom:10px;border:0px" data-options="closable:true,collapsible:true,minimizable:true,maximizable:true,modal:true">
+	     <table class='search-table'>
+		    <tr>
+		       <td class="r-label" >姓名</td>
+	           <td>
+			      <input id="cName" class="textbox" readonly=true>
+			      <input id="cDivDetDr" class="textbox" style='display:none'>
+		       </td>
+		       <td class="r-label" >登记号</td>
+	           <td>
+			      <input id="cRegNo" class="textbox" readonly=true>
+		       </td>
+		    </tr>
+		    <tr>
+		       <td class="r-label" >总金额</td>
+	           <td>
+			      <input id="cBcbxf" class="textbox" readonly=true>
+		       </td>
+		        <td class="r-label" >基金支付金额</td>
+	           <td>
+			      <input id="CJjzfe" class="textbox" readonly=true>
+		       </td>
+		    </tr>
+		    <tr>
+		       <td class="r-label" >结算日期</td>
+	           <td>
+			      <input id="cDivDate" class="textbox" readonly=true>
+		       </td>
+		        <td class="r-label" >结算时间</td>
+	           <td>
+			      <input id="cDivTime" class="textbox" readonly=true>
+		       </td>
+		    </tr>
+		    <tr>
+		       <td class="r-label" >本次是否清分</td>
+	           <td colspan='3' >
+			      <input  class="hisui-radio" type="radio" label="是" name="cIsCnfm" value="1" data-options="required:true" id='cIsCnfm1'>
+                  <input class="hisui-radio" type="radio" label="否" name="cIsCnfm" value="0" data-options="required:true" id='cIsCnfm0'>
+		       </td>
+		       
+		    </tr>
+		     <tr>
+		       <td class="r-label" >清分备注</td>
+	           <td colspan='3' >
+			      <input id="cCnfmBz" class="textbox" style='width:407px'>
+		       </td>
+		      
+		    </tr>
+		    <tr>
+		       <td class="r-label" >证件号码</td>
+	           <td colspan='3' >
+			      <input id="cCertno" class="textbox" style='width:407px'>
+		        </td>
+		    </tr>
+	     </table>
+	     <table >
+	        <tr>
+		       <td style="align:center;padding:0px 20px 0px 80px" colspan='2'>
+		          <a id="btnUpdtCnfm" href="#" class="hisui-linkbutton" style="margin-left:80px" data-options="iconCls:'icon-w-update'" >更新</a>
+		       </td>
+			   <td style="align:center;padding:0px 20px 0px 10px" colspan='2'>
+		    	   <a id="btnCnfmDlC" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="align:center;">关闭</a>
+			   </td>
+		    </tr>
+       </table>
+	</div>					
+ </div>
+	<script type="text/javascript" src="../scripts/dhcinsu/divincdiscnfm.js" ></script>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js" ></script>
+</body>
+</html>

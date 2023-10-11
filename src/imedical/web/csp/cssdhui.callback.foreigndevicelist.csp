@@ -1,10 +1,14 @@
-<!--������е�Ǽǽ���-->
+﻿<!--外来器械登记界面-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
 </csp:method>
 <html lang="zh-CN">
+<server>
+	Do ##class(web.DHCXMLPConfig).LODOPInit()
+	Write ##class(web.CSSDHUI.Common.UtilCommon).EncryptInput()
+</server>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -12,131 +16,209 @@
 	<CSSDHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div id="ForeignDeviceTB" style="padding:0px;">
-		<div class="BorderLine"> 
-			<table class="Condition">
+	<div class="hisui-layout BorderLine" data-options="region:'north'">
+		<div data-options="region:'west',width:800,border:false">
+			<table id="ForeignDeviceTB" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 				<tr>
-					<td><label>������</label><select id="package" name="package" class="textbox hisui-combobox" style="width:145px;"></select></td>
-					<td>�ǼǺ�</td>
-					<td><input id="RegisterNo" name="RegisterNo" class="textbox" style="width:120px"></td>
-					<td>ʹ������</td>
-					<td><input id="RecDateValue" name="RecDateValue" class="textbox hisui-datebox" style="width:120px"></td>
-					<td>�ƽ���</td>
-					<td><input id="Transfer" name="Transfer" class="textbox" style="width:100px"><input id="TransferDr" name="TransferDr" class="textbox" style="width:120px" hidden></td>
-					<td>�ƽ�������</td>
-					<td><input id="TransferRec" name="TransferRec" class="textbox" style="width:100px"></td>
-					<td colspan="3" style="">
-						<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px">��ѯ</a>
-						<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px">����</a>
+					<td><label>消毒包</label><input id="package" name="package" class="textbox hisui-combobox"></td>
+					<td><label>登记号</label><input id="RegisterNo" name="RegisterNo" class="textbox"></td>
+					<td><label>移交接收人</label><input id="TransferRec" name="TransferRec" class="textbox"></td>
+					<td><a href="#" id="ViewPicBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:60px">图片</a></td>
+				</tr>
+				<tr>
+					<td><label>起始日期</label><input id="RecDateValue" name="RecDateValue" class="textbox hisui-datebox"></td>
+					<td><label>截止日期</label><input id="RecEndDateValue" name="RecEndDateValue" class="textbox hisui-datebox"></td>
+					<td>
+						<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+						<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
 					</td>
+					<td><a href="#" id="TakePhotoBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:60px">拍照</a></td>
 				</tr>
 			</table>
 		</div>
-		<table>
-			<tr>
-				<td>
-					<a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">����</a>
-				</td>
-				<td>
-					<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">����</a>
-				</td>
-				<td>
-					<a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">ɾ��</a>
-				</td>
-				<td>
-					<a href="#" id="TransferBT" class="hisui-linkbutton" data-options="iconCls:'icon-paper-plane',plain:true">�ƽ�</a>
-				</td>
-			</tr>
-		</table>
-	</div>
-	<div data-options="region:'center',border:false,headerCls:'panel-header-gray'" class="GridPadding">
-		<div class="hisui-panel" title=""  data-options="headerCls:'panel-header-gray',fit:true"  style="border-color:#ccc">
-			<table id="ExtralList"></table>
+		<div data-options="region:'center'" style="height: 70px;float:left;border:none;border-left:1px solid #ccc;border-radius:0px;margin-top:10px">
+			<table id="ConditionTransfer" class="Condition">
+				<td><label>移交接收人</label><input id="TransRecName" name="TransferRec" class="textbox"></td>
+				<td><a href="#" id="UpdateTransferBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'">移交</a></td>
+			</table>
 		</div>
 	</div>
-	<div id="AddWin" class="hisui-dialog AddWin" data-options="closed:'true',modal:true,iconCls:'icon-w-find'" title="����������е��Ϣ" style="width:1020px;height:310px">
+
+	<div data-options="region:'center',border:false,iconCls:'icon-paper'">
+		<table id="ExtralList"></table>
+	</div>
+
+	<div id="BatchAddWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-find'" title="新增外来器械">
 		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'center',border:false">
-				<table id="SelBarCodeConditions" class="Condition" align="center">
+			<div class="GridPadding" data-options="region:'north',border:false,collapsible:false">
+				<table id="BatchConditions" class="Condition" align="center">
+				<tr>
+					<td colspan=4 style="width:100%;padding:5px;">
+						<div class="static-popover info" style="text-align:left;border-radius:5px;" data-options="region:'north',border:false">
+							<span class="static-popover-icon info"></span>
+							<span class="content" id="baseInfo" style="line-height:13px;">如存在患者、手术及接收信息，请先录入，再扫描标牌</span>
+						</div>
+					</td>
+				</tr>
 					<tr>
-						<input id="RowId" name="RowId" class="textbox" hidden>
-						<td><label class="required">*</label>����������</td>
-						<td><input id="InstruName" name="InstruName" class="textbox hisui-combobox"></td>
-						<td><label class="required">*</label>�����Ʊ���</td>
-						<td><input id="InstruCode" name="InstruCode" class="textbox hisui-combobox"></td>
-						<td><label class="required">*</label>��е����</td>
-						<td><input id="InstruNum" name="InstruNum" class="hisui-numberbox textbox"></td>
-						<td><label class="required">*</label>ֲ����</td>
-						<td align="center">
-							<input class='hisui-radio' type="radio" label='��' name='Implants' value='Y'>
-							<input class='hisui-radio' type="radio" label='��' name='Implants' value='N'>
+						<td><label class="required">*</label><label>标牌</label><input class="textbox" id="BarCode" name="BarCode"></td>
+						<td style="text-align:left;">
+							<a href="#" id="UseBarCodeBT" class="hisui-linkbutton" data-options="plain:true"></a>
+							<a href="#" title="切换扫码模式" id="BarCodeSwitchBT" class="hisui-linkbutton">切换</a>
+							<input type="password" class="textbox" id="BarCodeHidden" style="border:0px;background:none;opacity:0.0;width:10px;">
 						</td>
+						<td><label class="required">*</label><label>接收人</label><input id="BRecManDr" name="RecManDr" class="textbox hisui-combobox"></td>
+						<td><label>接收日期</label><input id="BRecDate" name="RecDate" class="textbox hisui-datebox"></td>
 					</tr>
 					<tr>
-						<td><label class="required">*</label>����</td>
-						<td><input id="Firm" name="Firm" class="hisui-combobox textbox"></td>
-						<td>�绰</td>
-						<td><input id="Tel" name="Tel" class="textbox" readonly="readonly" ></td>
-						<td>������</td>
-						<td><input id="SerMan" name="SerMan" class="textbox" readonly="readonly"></td>
-						<td>����</td>
-						<td><input id="Receipt" name="Receipt" class="textbox" ></td>
+						<td><label>患者登记号</label><input id="BHospitalNo" name="HospitalNo" class="hisui-validatebox textbox"></td>
+						<td><label>姓名</label><input id="BSickerName" name="SickerName" class="textbox" disabled></td>
+						<td><label>科室</label><input id="BExtLoc" name="ExtLoc" class="textbox hisui-combobox" disabled></td>
+						<td><label>床号</label><input id="BBedNo" name="BedNo" class="textbox" disabled></td>
 					</tr>
 					<tr>
-						<td><label class="required">*</label>�ǼǺ�</td>
-						<td><input id="HospitalNo" name="HospitalNo" class="hisui-validatebox textbox"></td>
-						<td>ʹ�ÿ���</td>
-						<td><input id="ExtLoc" name="ExtLoc" class="textbox hisui-combobox" ></td>
-						<td>ʹ��ҽ��</td>
-						<td><input id="UseDoctor" name="UseDoctor" class="textbox" ></td>
-						<td>ʹ������</td>
-						<td><input id="UseDate" name="UseDate" class="textbox hisui-dateboxq" ></td>
-					</tr>
-					<tr>
-						<td>��������</td>
-						<td><input id="SickerName" name="SickerName" class="textbox"  ></td>
-						<td>��������</td>
-						<td><input id="PatientAge" name="PatientAge" class="hisui-numberbox textbox"  ></td>
-						<td>�����Ա�</td>
-						<td align="center">
-							<input class='hisui-radio' type="radio" label='��' name='PatientSex' value='1'>
-							<input class='hisui-radio' type="radio" label='Ů' name='PatientSex' value='0'>
-						</td>
-						<td>����</td>
-						<td><input id="BedNo" name="BedNo" class="hisui-numberbox textbox"></td>
-					</tr>
-					<tr>
-						<td>������е</td>
-						<td><input id="PowerInstru" name="PowerInstru" class="textbox" ></td>
-						<td><label class="required">*</label>������</td>
-						<td><input id="RecMan" name="RecMan" class="hisui-validatebox textbox"><input class="textbox" hidden id="RecManDr" name="RecManDr"></td>
-						<td><label class="required">*</label>��������</td>
-						<td><input id="RecNum" name="RecNum" class="hisui-numberbox textbox"></td>
-						<td>��������</td>
-						<td><input id="RecDate" name="RecDate" class="textbox hisui-dateboxq" ></td>
-					</tr>
-					<tr>
-						<td>��������</td>
+						<td><label>患者年龄</label><input id="BExtPatientAge" name="PatientAge" class="textbox" disabled></td>
 						<td>
-							<select name="OperatorType" class="hisui-combobox" style="width:155px">
-								<option value="1" >��������</option>
-								<option value="2" >��������</option>
+							<label>患者性别</label>
+							<select id="BExtPatientSex" name="PatientSex" class="hisui-combobox textbox" disabled>
+								<option value="1" >男</option>
+								<option value="0" >女</option>
 							</select>
 						</td>
-						<td>��ע</td>
-						<td><input id="Remark" name="Remark" class="textbox" ></td>
-						<td colspan="2">
-							<a href="#" id="AddSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">����</a>
-							<a href="#" id="CancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">ȡ��</a>
+					</tr>
+					<tr>
+						<td><label>手术医生</label><input id="BUseDoctor" name="UseDoctor" class="textbox"></td>
+						<td><label>使用时间</label><input id="BUseDate" name="UseDate" class="textbox hisui-datebox"></td>
+						<td>
+							<label>手术类型</label>
+							<select name="OperatorType" class="hisui-combobox textbox">
+								<option value="0" >择期手术</option>
+								<option value="1" >急诊手术</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td><label>厂商</label><input id="BExtFirm" name="ExtFirm" class="hisui-combobox textbox"></td>
+						<td><label>送包人</label><input id="BExtSerMan" name="ExtSerMan" class="textbox" disabled></td>
+						<td><label>送包人电话</label><input id="BExtTel" name="ExtTel" class="textbox" disabled></td>
+						<td><label>单据</label><input id="BExtReceipt" name="ExtReceipt" class="textbox"></td>
+					</tr>
+					<tr>
+						<td><label>接收包数</label><input id="BExtRecNum" name="ExtRecNum" class="hisui-numberbox textbox" data-options="isKeyupChange:true"></td>
+						<td>
+							<label>器械功能</label>
+							<select name="FunctionalCheck" class="hisui-combobox textbox">
+								<option value="1" >完好</option>
+								<option value="2" >异常</option>
+							</select>
+						</td>
+						<td><label>动力器械</label><input id="BExtPowerInstru" name="ExtPowerInstru" class="textbox"></td>
+						<td><label>备注</label><input id="BRemark" name="Remark" class="textbox"></td>
+					</tr>
+					<tr>
+						<td>
+							<label>消毒包</label><input id="BPkgDesc" name="PkgDesc" class="hisui-combobox textbox">
+						</td>
+						<td style="text-align:left;">
+							<a href="#" id="BAddDictBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增标牌</a>
+						</td>
+						<td colspan=2>
+							<a href="#" id="BAddSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">保存</a>
+							<a href="#" id="BAddClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+							<a href="#" id="BAddCancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a>
 						</td>
 					</tr>
 				</table>
 			</div>
+			<div class="GridPadding" data-options="region:'center',border:false,collapsible:false" style="padding-top:0;">
+				<div class="hisui-panel" title="标牌信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<table id="BExtDetailGrid"></table>
+				</div>
+			</div>
 		</div>
 	</div>
-	<script type="text/javascript" src="../scripts/cssd/CallBack/ForeignDeviceList.js"></script>
-	<script type="text/javascript" src="../scripts/cssd/CallBack/ForeignDeviceAddWin.js"></script>
+
+	<div id="AddDetailWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-find'" title="新增外来器械">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="GridPadding" data-options="region:'north',border:false,collapsible:false">
+				<table id="SelConditions" class="Condition" align="center">
+					<input id="ExtRowId" name="ExtRowId" class="textbox" type="hidden">
+					<input id="" name="ExtState" class="textbox" type="hidden">
+					<tr>
+						<td><label class="required">*</label><label>消毒包</label><input id="ExtInstruName" name="ExtInstruName" class="textbox hisui-combobox"></td>
+						<td><label class="required">*</label><label>标牌</label><input id="ExtInstruCode" name="ExtInstruCode" class="textbox hisui-combobox"></td>
+						<td><label class="required">*</label><label>接收人</label><input id="ExtRecManDr" name="ExtRecManDr" class="textbox hisui-combobox"></td>
+						<td><label>接收日期</label><input id="ExtRecDate" name="ExtRecDate" class="textbox hisui-datebox" ></td>
+					</tr>
+					<tr>
+						<td><label>患者登记号</label><input id="ExtHospitalNo" name="ExtHospitalNo" class="hisui-validatebox textbox"></td>
+						<td><label>姓名</label><input id="ExtSickerName" name="ExtSickerName" class="textbox" disabled></td>
+						<td><label>科室</label><input id="ExtPatientLoc" name="ExtPatientLoc" class="textbox hisui-combobox" disabled></td>
+						<td><label>床号</label><input id="ExtBedNo" name="ExtBedNo" class="textbox" disabled></td>
+					</tr>
+					<tr>
+						<td><label>患者年龄</label><input id="ExtPatientAge" name="ExtPatientAge" class="textbox" disabled></td>
+						<td>
+							<label>患者性别</label>
+							<select id="ExtPatientSex" name="ExtPatientSex" class="hisui-combobox textbox" disabled>
+								<option value="1" >男</option>
+								<option value="0" >女</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td><label>手术医生</label><input id="ExtUseDoctor" name="ExtUseDoctor" class="textbox"></td>
+						<td><label>使用时间</label><input id="ExtUseDate" name="ExtUseDate" class="textbox hisui-datetimeboxq"></td>
+						<td>
+							<label>手术类型</label>
+							<select name="ExtOperatorType" class="hisui-combobox textbox">
+								<option value="0" >择期手术</option>
+								<option value="1" >急诊手术</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td><label class="required">*</label><label>厂商</label><input id="ExtFirm" name="ExtFirm" class="hisui-combobox textbox"></td>
+						<td><label>送包人</label><input id="ExtSerMan" name="ExtSerMan" class="textbox" disabled></td>
+						<td><label>送包人电话</label><input id="ExtTel" name="ExtTel" class="textbox" disabled></td>
+						<td><label>单据</label><input id="ExtReceipt" name="ExtReceipt" class="textbox" ></td>
+					</tr>
+					<tr>
+						<td><label class="required">*</label><label>接收包数</label><input id="ExtRecNum" name="ExtRecNum" class="hisui-numberbox textbox" data-options="isKeyupChange:true"></td>
+						<td>
+							<label>器械功能</label>
+							<select name="ExtFunctionalCheck" class="hisui-combobox textbox">
+								<option value="1" >完好</option>
+								<option value="2" >异常</option>
+							</select>
+						</td>
+						<td><label>动力器械</label><input id="ExtPowerInstru" name="ExtPowerInstru" class="textbox"></td>
+						<td><label>备注</label><input id="ExtRemark" name="ExtRemark" class="textbox"></td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<a href="#" id="AddDictBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增标牌</a>
+							<a href="#" id="ExtAddSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">保存</a>
+							<a href="#" id="ExtCancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="GridPadding" data-options="region:'center',border:false,collapsible:false" style="padding-top:0;">
+				<div class="hisui-panel" title="外来器械明细维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+					<table id="EditExtDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<CSP:INCLUDE PAGE="cssdhui.commonfile.csp"> 
 	<script type="text/javascript" src="../scripts/cssd/CallBack/CallBackCommon.js"></script>
-	<script type="text/javascript" src="../scripts/cssd/Common/encode.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonData.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonEditor.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/CallBack/ForeignDeviceBatchAddWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/CallBack/ForeignDeviceEditDetailWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/CallBack/ForeignDeviceList.js"></script>
 </body>
 </html>

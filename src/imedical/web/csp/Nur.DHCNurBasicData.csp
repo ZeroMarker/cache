@@ -1,913 +1,1085 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-     i ##Class(websys.SessionEvents).SessionExpired() q 1
-    q 1
+    If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+    Quit 1
 </csp:method>
 <html>
+
 <head>
-<!-- Put your page Title here -->
-<title>	基础数据维护 </title>
-<meta charset="utf-8"/>
-<HISUI/>
-<style type="text/css">
-	body{
-		margin:0;
-	}
-	.content{
-		display:flex;
-		flex-direction:row;
-		flex-warp:nowarp;
-	}
-	.content >div{
-		height:100%;
-	}
-	.icon{width: 20px;height: 20px;margin-right: 10px;float: right;}
-</style>
+    <!-- Put your page Title here -->
+    <title> 基础数据维护 </title>
+    <meta charset="utf-8" />
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI />
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: row;
+            flex-warp: nowarp;
+        }
+
+        .content>div {
+            height: 100%;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            float: right;
+        }
+    </style>
     <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
-	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
-	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+    <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+    <SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
 </head>
-	<div class="content">
-		<div id="left" style="margin-right:5px;">
-			<div id="upLX" class="hisui-panel" title="上报类型维护" style="padding-top:5px" >
-				<table id="tbGridL" class="hisui-datagrid"></table>
-				<div id="custtbL" >
-					<table cellpadding="2">
-						<tr>
-							<td>
-								<input class="hisui-textbox" name="name" id="searchInput" style="height:30px;padding-left:4px;" placeholder="请输入上报类型">
-							</td>
-							<td>
-								<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'"  onclick="getDataUp()">查询</a>
-							</td>
-						</tr>				
-					</table>
-					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onClick="addItem()">新增</a>
-					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onClick="modifyItem()">修改</a>
-					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onClick="delItem()">删除</a>
-				</div>
-				<div id="dd">
-					<div style="padding:10px">
-						
-					<table>	
-						<tr>
-							<td class="r-label">上报类型</td>
-							<td>
-								<input id="upType" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">列表模板</td>
-							<td>
-								<select id="iconokBox" style="width:200px;"></select>
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">打印模板</td>
-							<td>
-								<select id="printSelect" style="width:200px;"></select>
-							</td>
-						</tr>
-					</table>
-					</div>
-				</div>
-				
-				<div id="dd_column">
-					<div style="padding:10px">
-						
-					<table>	
-						<tr>
-							<td class="r-label">列元素</td>
-							<td>
-								<input id="columncell" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">调用方法</td>
-							<td>
-								<input id="useMethod" style="width:193px;" class="hisui-validatebox textbox" data-options="required:false,validType:'length[1,50]'">
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">表头层级</td>
-							<td>
-								<select id="headInfo" style="width:200px;"></select>
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">隶属元素</td>
-							<td>
-								<select id="column" style="width:200px;"></select>
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">列排序</td>
-							<td>
-								<input id="sortName" style="width:193px;" class="hisui-numberbox textbox" data-options="required:true,isKeyupChange:true">
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">启用日期</td>
-							<td>
-								<input id="dateStart" class="hisui-datebox textbox" data-options='onSelect:dateStart,required:true'/>
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">停用日期</td>
-							<td>
-								<input id="dateEnd" class="hisui-datebox textbox" data-options='onSelect:dateEnd'/>
-							</td>
-						</tr>
-					</table>
-					</div>
-				</div> 
-			</div>
-		</div>
-		<div id="right">
-			<div id="upELe" class="hisui-panel" title="上报页面元素维护" style="padding-top:5px">
-				<table id="tbGridR" class="hisui-datagrid"></table>
-				<div id="custtbR" >
-					<table cellpadding="2">
-						<tr>
-							<td>
-								<input id="columnInput" class="hisui-textbox" name="name" style="height:30px;padding-left:4px;" placeholder="请输入列元素">
-							</td>
-							<td>
-								<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="getColumnData()">查询</a>
-							</td>
-						</tr>				
-					</table>
-					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onClick="addColumn()">新增</a>
-					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onClick="modifyColumn()">修改</a>
-					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onClick="delColumn()">删除</a>
-				</div>
-			</div>
-		</div>
-	</div>
+<div class="content">
+    <div id="left" style="margin-right:5px;width:500px;">
+        <div id="upLX" class="hisui-panel" title="上报类型维护" style="padding-top:5px">
+            <table id="tbGridL" class="hisui-datagrid"></table>
+            <div id="custtbL">
+                <table cellpadding="2">
+                    <tr>
+                    	<td>
+							<label id="_HospListLabel" style='color:red;margin:0 0 0 10px' class='r-label'>医院</label>
+							<input id="_HospList" class="textbox"/>
+						</td>
+                        <td>
+                            <input class="hisui-textbox" name="name" id="searchInput"
+                                style="height:30px;padding-left:4px;" placeholder="请输入上报类型">
+                        </td>
+                        <td>
+                            <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'"
+                                onclick="getDataUp()">查询</a>
+                        </td>
+                    </tr>
+                </table>
+                <a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"
+                    onClick="addItem()">新增</a>
+                <a href="javascript:void(0)" class="hisui-linkbutton"
+                    data-options="iconCls:'icon-write-order',plain:true" onClick="modifyItem()">修改</a>
+                <a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true"
+                    onClick="delItem()">删除</a>
+            </div>
+            <div id="dd">
+                <div style="padding:10px">
+
+                    <table>
+                        <tr>
+                            <td class="r-label">上报类型</td>
+                            <td>
+                                <input id="upType" style="width:193px;" class="hisui-validatebox textbox"
+                                    data-options="required:true,validType:'length[1,50]'">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">列表模板</td>
+                            <td>
+                                <select id="iconokBox" style="width:200px;"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">打印模板</td>
+                            <td>
+                                <select id="printSelect" style="width:200px;"></select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div id="dd_column">
+                <div style="padding:10px">
+
+                    <table>
+                        <tr>
+                            <td class="r-label">列元素</td>
+                            <td>
+                                <input id="columncell" style="width:193px;" class="hisui-validatebox textbox"
+                                    data-options="required:true,validType:'length[1,50]'">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">调用方法</td>
+                            <td>
+                                <input id="useMethod" style="width:193px;" class="hisui-validatebox textbox"
+                                    data-options="required:false,validType:'length[1,50]'">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">表头层级</td>
+                            <td>
+                                <select id="headInfo" style="width:200px;"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">隶属元素</td>
+                            <td>
+                                <select id="column" style="width:200px;"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">列排序</td>
+                            <td>
+                                <input id="sortName" style="width:193px;" class="hisui-numberbox textbox"
+                                    data-options="required:true,isKeyupChange:true">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">启用日期</td>
+                            <td>
+                                <input id="dateStart" class="hisui-datebox textbox"
+                                    data-options='onSelect:dateStart,required:true' />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">停用日期</td>
+                            <td>
+                                <input id="dateEnd" class="hisui-datebox textbox" data-options='onSelect:dateEnd' />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="right">
+        <div id="upELe" class="hisui-panel" title="上报页面元素维护" style="padding-top:5px">
+            <table id="tbGridR" class="hisui-datagrid"></table>
+            <div id="custtbR">
+                <table cellpadding="2">
+                    <tr>
+                        <td>
+                            <input id="columnInput" class="hisui-textbox" name="name"
+                                style="height:30px;padding-left:4px;" placeholder="请输入列元素">
+                        </td>
+                        <td>
+                            <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'"
+                                onclick="getColumnData()">查询</a>
+                        </td>
+                    </tr>
+                </table>
+                <a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"
+                    onClick="addColumn()">新增</a>
+                <a href="javascript:void(0)" class="hisui-linkbutton"
+                    data-options="iconCls:'icon-write-order',plain:true" onClick="modifyColumn()">修改</a>
+                <a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true"
+                    onClick="delColumn()">删除</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <body>
-<server>
-s SaveAdverseEvent=##Class(%CSP.Page).Encrypt($lb("NurMp.DHCNurAdverseEvent.Save"))
-</server>
+    <server>
+        Set SaveAdverseEvent=##class(websys.Page).Encrypt($LISTBUILD("NurMp.DHCNurAdverseEvent.Save"))
+    </server>
 </body>
 
 <script language="javascript">
-var SaveAdverseEvent = "#(SaveAdverseEvent)#";
-var startDate="";
-var endDate="";
-var updataSelect="" // 当前上报类型表格选中的行数据
-var columnSelect="" // 当前上报元素选中的行数据
-var TypeId="" // init typeID
-// 修改功能需要的变量
-	function dateStart(date){
-		// 开始日期选择	
-		// startDate=date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
-		startDate=$("#dateStart").datebox('getValue');
-	}
-	function dateEnd(date){
-		// 开始日期选择	
-		// endDate=date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
-		endDate=$("#dateEnd").datebox('getValue');
-	}
-	function changeSort(value,row,index){
-		
-		if(row.Levels==1){
-			return value;	
-		}else{
-			return row.ParentSort+'.'+value;
-		}
-	}	
-	function getColumnData(){
-		var str="";
-		str=$("#columnInput").val();
-		$cm({
-			ClassName:'NurMp.DHCNurAdverseElement',
-			MethodName:'getData',
-			parr:str,
-			AdverseDR:TypeId
-		},function(res){
-			var tmpData=res.data
-			$HUI.datagrid('#tbGridR',{
-					onSelect:function(rowIndex,rowData){
-						columnSelect=rowData;
-					},
-					onDblClickRow:function(rowIndex,rowData){
-						$HUI.datagrid('#tbGridR').unselectRow(rowIndex)	
-						columnSelect="";
-					},
-					autoSizeColumn:true,
-					fitColumns:true,
-					fit:true,
-					columns:[[
-						{field:'Element',title:'列表元素',width:leftW/4},
-						{field:'CallMethod',title:'调用方法',width:leftW/4},
-						{field:'Levels',title:'所属层级',width:leftW/15,hidden:true},
-						{field:'ColumnSort',title:'列排序',width:leftW/20,formatter:changeSort},
-						{field:'Status',title:'状态',width:leftW/20},
-					]],
-					data:{
-						rows:tmpData
-					},
-					idField:'id',
-					headerCls:'panel-header-gray',
-					iconCls:'icon-paper',
-					rownumbers:true,
-					singleSelect:false,
-					width:500,
-					headerCls:'panel-header-gray',
-					iconCls:'icon-paper',
-					toolbar:'#custtbR',
-					singleSelect:true
-				})
-				$("#tbGridR").datagrid('clearSelections')
-				// updataSelect="" 
-				columnSelect=""	
-		})
-	}
-	function modifyColumn(){
-		if(columnSelect==""){
-			$.messager.popover({msg: '未选中要修改的行数据！',type:'info',timeout: 2000,showType: 'show'});
-			return;
-		}
-		var tmpCallMethod=columnSelect.CallMethod;
-		var tmpColumnSort=columnSelect.ColumnSort;
-		var tmpElement=columnSelect.Element;
-		var tmpAdverseElementDR=columnSelect.AdverseElementDR;
-		var tmpLevels=parseInt(columnSelect.Levels);
-		endDate=columnSelect.ExpiryDate;// 停用日期
-		var RowIdCol=columnSelect.Id;
-		startDate=columnSelect.EffectiveDate; // 启用日期
-		console.log(columnSelect,startDate,endDate,tmpLevels);
-		
-		// 增加列元素
-		$HUI.dialog(('#dd_column'),{
-			title: '上报页面元素维护',
-			width:400,
-			height:350,
-			iconCls:'icon-save',
-			resizable:false,
-			modal:true,
-			buttons:[{
-			text:'保存',
-			handler:function(){
-				var cellStr=$("#columncell").val();
-				var methodName=$("#useMethod").val();
-				var sort=$("#sortName").val();
-				if(cellStr=="" || sort=="" || startDate==""){
-					$.messager.popover({
-						msg: '有未填项！',
-						type:'error',
-					})
-					return;	
-				}
-				console.log(cellStr,methodName,sort,startDate,endDate)
-				if(tmpLevels==1){
-					
-					// var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate;
-					var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate+"^AdverseDR|"+updataSelect.Id+"^Levels|1";
-					$cm({
-						ClassName:'NurMp.DHCNurAdverseElement',
-						MethodName:'Save',
-						parr:tmpstr,
-						id:RowIdCol	
-					},function(res){
-						if(res.status==0){
-							$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-							$HUI.dialog('#dd_column').close();
-							startDate="";
-							endDate="";
-							$("#columncell").val("");
-							$("#useMethod").val("");
-							$("#sortName").val("");	
-							getColumnData();
-						}else{
-							$.messager.popover({msg:res.msg,type:'error',timeout: 1000});	
-						}
-					})
-				}else{
-					
-					var twoVal=$HUI.combobox("#column").getValue();
-					 // console.log(twoVal);
-					 if(!twoVal){
-						$.messager.popover({msg: '隶属元素项不能为空！',type:'alert'});
-						return;
-					 }
-					 var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate+"^AdverseDR|"+updataSelect.Id+"^Levels|2"+"^AdverseElementDR|"+twoVal;
-					 $cm({
-						ClassName:'NurMp.DHCNurAdverseElement',
-						MethodName:'Save',
-						parr:tmpstr,
-						id:RowIdCol
-					 },function(res){
-						 console.log(res);
-						 if(res.status==0){
-								$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-								$HUI.dialog('#dd_column').close();
-								startDate="";
-								endDate="";
-								$("#columncell").val("");
-								$("#useMethod").val("");
-								$("#sortName").val("");	
-								getColumnData();	 
-						}else{
-							$.messager.popover({msg: '保存失败！',type:'error',timeout: 1000});		 
-						}
-					 })	
-				}
-			},
-			},{
-				text:'取消',
-				handler:function(){
-					$HUI.dialog('#dd_column').close();
-					startDate="";
-					endDate="";	
-					$("#columncell").val("");
-					$("#useMethod").val("");
-					$("#sortName").val("");
-				}
-			}]
-		})
-			var tmp=[{Description:1,Indentity:1},{Description:2,Indentity:2}];
-			// 隶属元素逻辑
-			$HUI.combobox("#column",{
-				valueField:'id', textField:'desc', multiple:false,selectOnNavigation:false,editable:true,
-				required:true,
-				data:tmp,
-				panelHeight:'auto',
-				onSelect:function(record){
-					console.log(record);	
-				}
-			});
-			// 表头层级逻辑
-			$HUI.combobox("#headInfo",{
-				valueField:'Indentity', textField:'Description', multiple:false,selectOnNavigation:false,editable:false,
-				required:true,
-				data:tmp,
-				panelHeight:'auto',
-				onChange:function(newVal){
-					console.log('song',newVal,tmpLevels);
-					if(newVal==1){
-						tmpLevels=1;
-						
-						$HUI.combobox("#column").clear();
-						$HUI.combobox("#column").disable();
-					}else if(newVal==2){
-						// 二级表头获取一级表头数据
-						tmpLevels=2;
-						$HUI.combobox("#column").enable();
-						$cm({
-							ClassName:'NurMp.DHCNurAdverseElementSub',
-							MethodName:'getData',
-							parr:'',
-							AdverseDR:updataSelect.Id	
-						},function(res){
-							var tmp=[]
-							res.data.forEach(function(item){
-								var tmpObj={}
-								Object.keys(item).forEach(function(iner){
-									tmpObj['id']=iner;
-									tmpObj['desc']=item[iner];
-									tmp.push(tmpObj);
-								})
-							})
-							$HUI.combobox("#column").loadData(tmp);
-							$HUI.combobox("#column").setValue(tmpAdverseElementDR);
-						})
-						
-					}	
-				}
-			});
-			
-		$("#headInfo").combobox('setValue',tmpLevels)
-			
-			
-		$("#columncell").val(tmpElement);
-		$("#useMethod").val(tmpCallMethod);
-		$("#sortName").val(tmpColumnSort);
-		$("#columncell").validatebox("validate");
-		$("#useMethod").validatebox("validate");
-		$("#sortName").validatebox("validate");
-		$('#dateStart').datebox('setValue',startDate);
-		$('#dateEnd').datebox('setValue',endDate);
-			
-		
-	}
-	function modifyItem(){
-		console.log(updataSelect);
-		if(updataSelect==""){
-			$.messager.popover({msg: '未选中要修改的行数据！',type:'info',timeout: 2000,showType: 'show'});
-			return;
-		}
-		var name=updataSelect.Name;
-		var RowId=updataSelect.Id;
-		var eventDesc=updataSelect.EventDesc;
-		var Indentity=updataSelect.Indentity.split(',');
-		var PrintCode=updataSelect.PrintCode;
-		$cm({
-			ClassName:'NurMp.DHCNurAdverseEvent',
-			MethodName:'GetCateChapterJason',
-			parr:''	
-		},function(res){
-			// 列表模板
-			var tmp=res.data
-			$HUI.combobox("#iconokBox",{
-				valueField:'Indentity', textField:'Description', multiple:true,selectOnNavigation:false,editable:true,
-				required:true,
-				data:tmp,
-				formatter:function(row){  
-					var rhtml;
-					if(row.selected==true){
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon icon-ok'></span>";
-					}else{
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon'></span>";
-					}
-					return rhtml;
-				},
-				onChange:function(newval,oldval){
-					$(this).combobox("panel").find('.icon').removeClass('icon-ok');
-					for (var i=0;i<newval.length;i++){
-						$(this).combobox("panel").find('#i'+newval[i]).addClass('icon-ok');
-					}
-				}
-			});
-			$("#iconokBox").combobox('setValues',Indentity)
-		})
-		$cm({
-			ClassName:'NurMp.DHCNurAdverseEvent',
-			MethodName:'GetPrintCateChapterJason',
-			parr:''
-		},function(res){
-			// 打印模板配置
-			var tmp=res.data;
-			$HUI.combobox("#printSelect",{
-				valueField:'Indentity', textField:'Description', multiple:false,selectOnNavigation:false,editable:true,
-				required:true,
-				data:tmp,
-				formatter:function(row){  
-					var rhtml;
-					if(row.selected==true){
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon icon-ok'></span>";
-					}else{
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon'></span>";
-					}
-					return rhtml;
-				}
-			});
-			$("#printSelect").combobox('setValue',PrintCode)
-		})
-		// 修改数据
-		$HUI.dialog(('#dd'),{
-		title: '上报类型维护修改',
-		width:400,
-		height:220,
-		iconCls:'icon-save',
-		resizable:false,
-		modal:true,
-		buttons:[{
-		text:'保存',
-		handler:function(){
-			save(RowId);
-		}
-		},{
-			text:'取消',
-			handler:function(){$HUI.dialog('#dd').close();}
-			}]
-		})
-		// 设置输入框的值
-		$("#upType").val(name)
-		$("#upType").validatebox("validate");
-				
-	}
-	function addColumn(){
-		// 增加列元素
-		$("#columncell").val('');
-		$("#useMethod").val('');
-		$("#sortName").val('');
-		var currentStatus=1; // 默认调用一级表头保存
-		if(!updataSelect.Id){
-			$.messager.popover({msg: '未选择上报类型维护数据！',type:'alert'});
-			return;
-		}
-		$HUI.dialog(('#dd_column'),{
-			title: '上报页面元素维护',
-			width:400,
-			height:350,
-			iconCls:'icon-save',
-			resizable:false,
-			modal:true,
-			buttons:[{
-			text:'保存',
-			handler:function(){
-				var cellStr=$("#columncell").val();
-				var methodName=$("#useMethod").val();
-				var sort=$("#sortName").val();
-				if(cellStr=="" || sort=="" || startDate==""){
-					$.messager.popover({
-						msg: '有未填项！',
-						type:'error',
-					})
-					return;	
-				}
-				console.log(cellStr,methodName,sort,startDate,endDate)
-				if(currentStatus==1){
-					// 一级表头数据存储
-					var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate+"^AdverseDR|"+updataSelect.Id+"^Levels|1";
-					$cm({
-						ClassName:'NurMp.DHCNurAdverseElement',
-						MethodName:'Save',
-						parr:tmpstr,
-						id:''	
-					},function(res){
-						if(res.status==0){
-							$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-							$HUI.dialog('#dd_column').close();
-							startDate="";
-							endDate="";
-							$("#columncell").val("");
-							$("#useMethod").val("");
-							$("#sortName").val("");	
-							getColumnData();
-						}else{
-							$.messager.popover({msg: '保存失败！',type:'error',timeout: 1000});	
-						}
-					})
-				}else{
-					// 二级表头存储
-				var twoVal=$HUI.combobox("#column").getValue();
-				 console.log(twoVal);
-				 if(!twoVal){
-					$.messager.popover({msg: '隶属元素项不能为空！',type:'alert'});
-					return;
-				 }
-				 var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate+"^AdverseDR|"+updataSelect.Id+"^Levels|2"+"^AdverseElementDR|"+twoVal;
-				 $cm({
-					ClassName:'NurMp.DHCNurAdverseElement',
-					MethodName:'Save',
-					parr:tmpstr,
-					id:''
-				 },function(res){
-					 console.log(res);
-					 if(res.status==0){
-							$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-							$HUI.dialog('#dd_column').close();
-							startDate="";
-							endDate="";
-							$("#columncell").val("");
-							$("#useMethod").val("");
-							$("#sortName").val("");	
-							getColumnData();	 
-					}else{
-						$.messager.popover({msg: '保存失败！',type:'error',timeout: 1000});		 
-					}
-				 })
-				}
-				// var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate;
-			},
-			},{
-				text:'取消',
-				handler:function(){
-					$HUI.dialog('#dd_column').close();
-					startDate="";
-					endDate="";
-					$("#columncell").val("");
-					$("#useMethod").val("");
-					$("#sortName").val("");	
-				}
-			}]
-		})
-		var tmp=[{Description:1,Indentity:1},{Description:2,Indentity:2}];
-			// 隶属元素逻辑
-			$HUI.combobox("#column",{
-				valueField:'id', textField:'desc', multiple:false,selectOnNavigation:false,editable:true,
-				required:true,
-				data:tmp,
-				panelHeight:'auto',
-				onSelect:function(record){
-					console.log(record);	
-				}
-			});
-			// 表头层级逻辑
-			$HUI.combobox("#headInfo",{
-				valueField:'Indentity', textField:'Description', multiple:false,selectOnNavigation:false,editable:true,
-				required:true,
-				data:tmp,
-				panelHeight:'auto',
-				onChange:function(newVal){
-					if(newVal==1){
-						currentStatus=1;
-						$HUI.combobox("#column").clear();
-						$HUI.combobox("#column").disable();
-					}else{
-						// 二级表头获取一级表头数据
-						currentStatus=2;
-						$HUI.combobox("#column").enable();
-						$cm({
-							ClassName:'NurMp.DHCNurAdverseElementSub',
-							MethodName:'getData',
-							parr:'',
-							AdverseDR:updataSelect.Id	
-						},function(res){
-							var tmp=[]
-							res.data.forEach(function(item){
-								var tmpObj={}
-								Object.keys(item).forEach(function(iner){
-									tmpObj['id']=iner;
-									tmpObj['desc']=item[iner];
-									tmp.push(tmpObj);
-								})
-							})
-							$HUI.combobox("#column").loadData(tmp)
-						})
-						
-					}	
-				}
-			});
-			
-			$("#headInfo").combobox('setValue',1)
-			// $("#column").combobox('setValue',1)
-	}
-	function delColumn(){
-		// 删除数据
-		if(columnSelect==""){
-			$.messager.popover({msg: '未选中行！',type:'alert'});
-		}else{
-			$.messager.confirm('删除', '确定要删除吗?', function (r) {
-				if (r) {	
-					$cm({
-						ClassName:'NurMp.DHCNurAdverseElement',  // old class
-						// ClassName:'NurMp.DHCNurAdverseElementSub',
-						MethodName:'delete',
-						id:columnSelect.Id	
-					},function(e){
-						if(e.status==0){
-							$.messager.popover({msg: '数据删除成功！',type:'success',timeout: 1000})
-							columnSelect="";
-							getColumnData();
-						}
-					})
-				}
-			});	
-		}
-		
-	} 
-	function addItem(){
-		// alert(33);
-		// 请求列表模板数据
-		$cm({
-			ClassName:'NurMp.DHCNurAdverseEvent',
-			MethodName:'GetCateChapterJason',
-			parr:''	
-		},function(res){
-			// 列表模板
-			var tmp=res.data
-			$HUI.combobox("#iconokBox",{
-				valueField:'Indentity', textField:'Description', multiple:true,selectOnNavigation:false,editable:true,
-				required:true,
-				data:tmp,
-				formatter:function(row){  
-					var rhtml;
-					if(row.selected==true){
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon icon-ok'></span>";
-					}else{
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon'></span>";
-					}
-					return rhtml;
-				},
-				onChange:function(newval,oldval){
-					$(this).combobox("panel").find('.icon').removeClass('icon-ok');
-					for (var i=0;i<newval.length;i++){
-						$(this).combobox("panel").find('#i'+newval[i]).addClass('icon-ok');
-					}
-				}
-			});
-		})
-		// 打印模板
-		$cm({
-			ClassName:'NurMp.DHCNurAdverseEvent',
-			MethodName:'GetPrintCateChapterJason',
-			parr:''	
-		},function(res){
-			
-			var tmp=res.data
-			$HUI.combobox("#printSelect",{
-				valueField:'Indentity', textField:'Description', multiple:false,selectOnNavigation:false,editable:true,
-				required:true,
-				data:tmp,
-				formatter:function(row){  
-					var rhtml;
-					if(row.selected==true){
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon icon-ok'></span>";
-					}else{
-						rhtml = row.Description+"<span id='i"+row.Indentity+"' class='icon'></span>";
-					}
-					return rhtml;
-				},
-				onChange:function(newval,oldval){
-					$(this).combobox("panel").find('.icon').removeClass('icon-ok');
-					for (var i=0;i<newval.length;i++){
-						$(this).combobox("panel").find('#i'+newval[i]).addClass('icon-ok');
-					}
-				}
-			});	
-		})
+    var SaveAdverseEvent = "#(SaveAdverseEvent)#";
+    var startDate = "";
+    var endDate = "";
+    var updataSelect = ""; // 当前上报类型表格选中的行数据
+    var columnSelect = ""; // 当前上报元素选中的行数据
+    var TypeId = ""; // init typeID
+	var GLOBAL = {
+		HospEnvironment: true,
+		HospitalID: session['LOGON.HOSPID']
+	};
+    // 修改功能需要的变量
+    function dateStart(date) {
+        // 开始日期选择	
+        // startDate=date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+        startDate = $("#dateStart").datebox('getValue');
+    }
+    function dateEnd(date) {
+        // 开始日期选择	
+        // endDate=date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+        endDate = $("#dateEnd").datebox('getValue');
+    }
+    function changeSort(value, row, index) {
 
-		
-		// 新增数据
-		$HUI.dialog(('#dd'),{
-		title: '上报类型维护新增',
-		width:400,
-		height:220,
-		iconCls:'icon-save',
-		resizable:false,
-		modal:true,
-		buttons:[{
-		text:'保存',
-		handler:function(){
-			save("");	
-		},
-		},{
-			text:'取消',
-			handler:function(){$HUI.dialog('#dd').close();}
-			}]
-		})
-		$("#upType").val("")			
-	}
-	function delItem(){
-		// 删除数据
-		if(updataSelect==""){
-			$.messager.popover({msg: '未选中行！',type:'alert'});
-		}else{
-			$.messager.confirm('删除', '确定要删除吗?',function(r){
-				if(r){
-					$cm({
-						ClassName:'NurMp.DHCNurAdverseEvent',
-						MethodName:'delete',
-						id:updataSelect.Id	
-					},function(e){
-						if(e.status==0){
-							$.messager.popover({msg: '数据删除成功！',type:'success',timeout: 1000})
-							updataSelect="";
-							getDataUp();
-							$("#tbGridL").datagrid('clearSelections')
+        if (row.Levels == 1) {
+            return value;
+        } else {
+            return row.ParentSort + '.' + value;
+        }
+    }
+    function getColumnData() {
+	    
+        var str = "";
+        str = $("#columnInput").val();
+     
+        $cm({
+            ClassName: 'NurMp.DHCNurAdverseElement',
+            MethodName: 'getData',
+            parr: str,
+            AdverseDR: TypeId
+        }, function (res) {
+            var tmpData = res.data
+            $HUI.datagrid('#tbGridR', {
+                onSelect: function (rowIndex, rowData) {
+                    columnSelect = rowData;
+                },
+                onDblClickRow: function (rowIndex, rowData) {
+                    $HUI.datagrid('#tbGridR').unselectRow(rowIndex)
+                    columnSelect = "";
+                },
+                autoSizeColumn: true,
+                fitColumns: true,
+                fit: true,
+                columns: [[
+                    { field: 'Element', title: '列表元素', width: leftW / 4 },
+                    { field: 'CallMethod', title: '调用方法', width: leftW / 4 },
+                    { field: 'Levels', title: '所属层级', width: leftW / 15, hidden: true },
+                    { field: 'ColumnSort', title: '列排序', width: leftW / 20, formatter: changeSort },
+                    {
+                        field: 'Status', title: '状态', width: leftW / 20,
+                        styler: function (value, row, index) {
+                            if (value === "停用") return 'color:red;';
+                        }
+                    },
+                ]],
+                data: {
+                    rows: tmpData
+                },
+                idField: 'id',
+                headerCls: 'panel-header-gray',
+                iconCls: 'icon-paper',
+                rownumbers: true,
+                singleSelect: false,
+                width: 500,
+                headerCls: 'panel-header-gray',
+                iconCls: 'icon-paper',
+                toolbar: '#custtbR',
+                singleSelect: true
+            })
+            $("#tbGridR").datagrid('clearSelections')
+            // updataSelect="" 
+            columnSelect = ""
+        })
+    }
+    function modifyColumn() {
+        if (columnSelect == "") {
+            $.messager.popover({ msg: '未选中要修改的行数据！', type: 'info', timeout: 2000, showType: 'show' });
+            return;
+        }
+        var tmpCallMethod = columnSelect.CallMethod;
+        var tmpColumnSort = columnSelect.ColumnSort;
+        var tmpElement = columnSelect.Element;
+        var tmpAdverseElementDR = columnSelect.AdverseElementDR;
+        var tmpLevels = parseInt(columnSelect.Levels);
+        endDate = columnSelect.ExpiryDate;// 停用日期
+        var RowIdCol = columnSelect.Id;
+        startDate = columnSelect.EffectiveDate; // 启用日期
+        console.log(columnSelect, startDate, endDate, tmpLevels);
+
+        // 增加列元素
+        $HUI.dialog(('#dd_column'), {
+            title: '上报页面元素维护',
+            width: 400,
+            height: 350,
+            iconCls: 'icon-save',
+            resizable: false,
+            modal: true,
+            buttons: [{
+                text: '保存',
+                handler: function () {
+                    var cellStr = $("#columncell").val();
+                    var methodName = $("#useMethod").val();
+                    var sort = $("#sortName").val();
+                    if (cellStr == "" || sort == "" || startDate == "") {
+                        $.messager.popover({
+                            msg: '有未填项！',
+                            type: 'error',
+                        })
+                        return;
+                    }
+                    endDate = $("#dateEnd").datebox('getValue');
+                    console.log(cellStr, methodName, sort, startDate, endDate)
+                    if (tmpLevels == 1) {
+
+                        // var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate;
+                        var tmpstr = "Element|" + cellStr + "^CallMethod|" + methodName + "^ColumnSort|" + sort + "^EffectiveDate|" + startDate + "^ExpiryDate|" + endDate + "^AdverseDR|" + updataSelect.Id + "^Levels|1";
+                        $cm({
+                            ClassName: 'NurMp.DHCNurAdverseElement',
+                            MethodName: 'Save',
+                            parr: tmpstr,
+                            id: RowIdCol
+                        }, function (res) {
+                            if (res.status == 0) {
+                                $.messager.popover({ msg: '保存成功！', type: 'success', timeout: 1000 });
+                                $HUI.dialog('#dd_column').close();
+                                startDate = "";
+                                endDate = "";
+                                $("#columncell").val("");
+                                $("#useMethod").val("");
+                                $("#sortName").val("");
+                                getColumnData();
+                            } else {
+                                $.messager.popover({ msg: res.msg, type: 'info', timeout: 1000 });
+                            }
+                            $("#dateStart").datebox('setValue', "");
+                            $("#dateEnd").datebox('setValue', "");
+                        })
+                    } else {
+
+                        var twoVal = $HUI.combobox("#column").getValue();
+                        // console.log(twoVal);
+                        if (!twoVal) {
+                            $.messager.popover({ msg: '隶属元素项不能为空！', type: 'alert' });
+                            return;
+                        }
+                        var tmpstr = "Element|" + cellStr + "^CallMethod|" + methodName + "^ColumnSort|" + sort + "^EffectiveDate|" + startDate + "^ExpiryDate|" + endDate + "^AdverseDR|" + updataSelect.Id + "^Levels|2" + "^AdverseElementDR|" + twoVal;
+                        $cm({
+                            ClassName: 'NurMp.DHCNurAdverseElement',
+                            MethodName: 'Save',
+                            parr: tmpstr,
+                            id: RowIdCol
+                        }, function (res) {
+                            console.log(res);
+                            if (res.status == 0) {
+                                $.messager.popover({ msg: '保存成功！', type: 'success', timeout: 1000 });
+                                $HUI.dialog('#dd_column').close();
+                                startDate = "";
+                                endDate = "";
+                                $("#columncell").val("");
+                                $("#useMethod").val("");
+                                $("#sortName").val("");
+                                getColumnData();
+                            } else {
+                                $.messager.popover({ msg: res.msg, type: 'info', timeout: 1000 });
+                            }
+                            $("#dateStart").datebox('setValue', "");
+                            $("#dateEnd").datebox('setValue', "");
+                        })
+                    }
+                },
+            }, {
+                text: '取消',
+                handler: function () {
+                    $HUI.dialog('#dd_column').close();
+                    startDate = "";
+                    endDate = "";
+                    $("#columncell").val("");
+                    $("#useMethod").val("");
+                    $("#sortName").val("");
+                }
+            }]
+        })
+        var tmp = [{ Description: 1, Indentity: 1 }, { Description: 2, Indentity: 2 }];
+        var columntmp = [];
+
+        // 隶属元素逻辑
+        $HUI.combobox("#column", {
+            valueField: 'id', textField: 'desc', multiple: false, selectOnNavigation: false, editable: true,
+            required: true,
+            data: columntmp,
+            panelHeight: 'auto',
+            onSelect: function (record) {
+                console.log(record);
+            }
+        });
+        // 表头层级逻辑
+        $HUI.combobox("#headInfo", {
+            valueField: 'Indentity', textField: 'Description', multiple: false, selectOnNavigation: false, editable: false,
+            required: true,
+            data: tmp,
+            panelHeight: 'auto',
+            onChange: function (newVal) {
+                console.log('song', newVal, tmpLevels);
+                if (newVal == 1) {
+                    tmpLevels = 1;
+
+                    $HUI.combobox("#column").clear();
+                    $HUI.combobox("#column", { required: false });
+                    $HUI.combobox("#column").disable();
+
+                } else if (newVal == 2) {
+                    // 二级表头获取一级表头数据
+                    tmpLevels = 2;
+                    $HUI.combobox("#column").enable();
+                    $HUI.combobox("#column", { required: true });
+                    $cm({
+                        ClassName: 'NurMp.DHCNurAdverseElementSub',
+                        MethodName: 'getData',
+                        parr: '',
+                        AdverseDR: updataSelect.Id
+                    }, function (res) {
+                        var tmp = []
+                        res.data.forEach(function (item) {
+                            var tmpObj = {}
+                            Object.keys(item).forEach(function (iner) {
+                                tmpObj['id'] = iner;
+                                tmpObj['desc'] = item[iner];
+                                tmp.push(tmpObj);
+                            })
+                        })
+                        $HUI.combobox("#column").loadData(tmp);
+                        $HUI.combobox("#column").setValue(tmpAdverseElementDR);
+                    })
+
+                }
+            }
+        });
+
+        $("#headInfo").combobox('setValue', tmpLevels)
+
+
+        $("#columncell").val(tmpElement);
+        $("#useMethod").val(tmpCallMethod);
+        $("#sortName").val(tmpColumnSort);
+        $("#columncell").validatebox("validate");
+        $("#useMethod").validatebox("validate");
+        $("#sortName").validatebox("validate");
+        $('#dateStart').datebox('setValue', startDate);
+        $('#dateEnd').datebox('setValue', endDate);
+
+
+    }
+    function modifyItem() {
+        console.log(updataSelect);
+        if (updataSelect == "") {
+            $.messager.popover({ msg: '未选中要修改的行数据！', type: 'info', timeout: 2000, showType: 'show' });
+            return;
+        }
+        var name = updataSelect.Name;
+        var RowId = updataSelect.Id;
+        var eventDesc = updataSelect.EventDesc;
+        var Indentity = updataSelect.Indentity.split(',');
+        var PrintCode = updataSelect.PrintCode;
+        $cm({
+            ClassName: 'NurMp.DHCNurAdverseEvent',
+            MethodName: 'GetCateChapterJason',
+            parr: ''+"^"+ GLOBAL.HospitalID
+        }, function (res) {
+            $HUI.combobox("upType", { required: true });
+            // 列表模板
+            var tmp = res.data
+            $HUI.combobox("#iconokBox", {
+                valueField: 'Indentity', textField: 'Description', multiple: true, selectOnNavigation: false, editable: true,
+                required: true,
+                data: tmp,
+                formatter: function (row) {
+                    var rhtml;
+                    if (row.selected == true) {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon icon-ok'></span>";
+                    } else {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon'></span>";
+                    }
+                    return rhtml;
+                },
+                onChange: function (newval, oldval) {
+                    $(this).combobox("panel").find('.icon').removeClass('icon-ok');
+                    for (var i = 0; i < newval.length; i++) {
+                        $(this).combobox("panel").find('#i' + newval[i]).addClass('icon-ok');
+                    }
+                },
+                filter: function (q, row) {
+                    var opts = $(this).combobox('options');
+                    return row[opts.textField].indexOf(q) > -1;
+                }
+            });
+            $("#iconokBox").combobox('setValues', Indentity)
+        })
+        $cm({
+            ClassName: 'NurMp.DHCNurAdverseEvent',
+            MethodName: 'GetPrintCateChapterJason',
+            parr: ''+"^"+GLOBAL.HospitalID
+        }, function (res) {
+            // 打印模板配置
+            var tmp = res.data;
+            $HUI.combobox("#printSelect", {
+                valueField: 'Indentity', textField: 'Description', multiple: false, selectOnNavigation: false, editable: true,
+                required: true,
+                data: tmp,
+                formatter: function (row) {
+                    var rhtml;
+                    if (row.selected == true) {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon icon-ok'></span>";
+                    } else {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon'></span>";
+                    }
+                    return rhtml;
+                },
+                filter: function (q, row) {
+                    var opts = $(this).combobox('options');
+                    return row[opts.textField].indexOf(q) > -1;
+                }
+            });
+            $("#printSelect").combobox('setValue', PrintCode)
+        })
+        // 修改数据
+        $HUI.dialog(('#dd'), {
+            title: '上报类型维护修改',
+            width: 400,
+            height: 220,
+            iconCls: 'icon-save',
+            resizable: false,
+            modal: true,
+            buttons: [{
+                text: '保存',
+                handler: function () {
+                    save(RowId);
+                }
+            }, {
+                text: '取消',
+                handler: function () { $HUI.dialog('#dd').close(); }
+            }]
+        })
+        // 设置输入框的值
+        $("#upType").val(name)
+        $("#upType").validatebox("validate");
+
+    }
+    function addColumn() {
+        // 增加列元素
+        $("#columncell").val('');
+        $("#useMethod").val('');
+        $("#sortName").val('');
+        var currentStatus = 1; // 默认调用一级表头保存
+        if (!updataSelect.Id) {
+            $.messager.popover({ msg: '未选择上报类型维护数据！', type: 'alert' });
+            return;
+        }
+        $HUI.dialog(('#dd_column'), {
+            title: '上报页面元素维护',
+            width: 400,
+            height: 350,
+            iconCls: 'icon-save',
+            resizable: false,
+            modal: true,
+            buttons: [{
+                text: '保存',
+                handler: function () {
+                    var cellStr = $("#columncell").val();
+                    var methodName = $("#useMethod").val();
+                    var sort = $("#sortName").val();
+                    if (cellStr == "" || sort == "" || startDate == "") {
+                        $.messager.popover({
+                            msg: '有未填项！',
+                            type: 'error',
+                        })
+                        return;
+                    }
+                    console.log(cellStr, methodName, sort, startDate, endDate)
+                    if (currentStatus == 1) {
+                        // 一级表头数据存储
+                        var tmpstr = "Element|" + cellStr + "^CallMethod|" + methodName + "^ColumnSort|" + sort + "^EffectiveDate|" + startDate + "^ExpiryDate|" + endDate + "^AdverseDR|" + updataSelect.Id + "^Levels|1";
+                        $cm({
+                            ClassName: 'NurMp.DHCNurAdverseElement',
+                            MethodName: 'Save',
+                            parr: tmpstr,
+                            id: ''
+                        }, function (res) {
+                            if (res.status == 0) {
+                                $.messager.popover({ msg: '保存成功！', type: 'success', timeout: 1000 });
+                                $HUI.dialog('#dd_column').close();
+                                startDate = "";
+                                endDate = "";
+                                $("#columncell").val("");
+                                $("#useMethod").val("");
+                                $("#sortName").val("");
+                                getColumnData();
+                            } else {
+                                $.messager.popover({ msg: res.msg, type: 'info', timeout: 1000 });
+                            }
+                            $("#dateStart").datebox('setValue', "");
+                            $("#dateEnd").datebox('setValue', "");
+                        })
+                    } else {
+                        // 二级表头存储
+                        var twoVal = $HUI.combobox("#column").getValue();
+                        console.log(twoVal);
+                        if (!twoVal) {
+                            $.messager.popover({ msg: '隶属元素项不能为空！', type: 'alert' });
+                            return;
+                        }
+                        var tmpstr = "Element|" + cellStr + "^CallMethod|" + methodName + "^ColumnSort|" + sort + "^EffectiveDate|" + startDate + "^ExpiryDate|" + endDate + "^AdverseDR|" + updataSelect.Id + "^Levels|2" + "^AdverseElementDR|" + twoVal;
+                        $cm({
+                            ClassName: 'NurMp.DHCNurAdverseElement',
+                            MethodName: 'Save',
+                            parr: tmpstr,
+                            id: ''
+                        }, function (res) {
+                            console.log(res);
+                            if (res.status == 0) {
+                                $.messager.popover({ msg: '保存成功！', type: 'success', timeout: 1000 });
+                                $HUI.dialog('#dd_column').close();
+                                startDate = "";
+                                endDate = "";
+                                $("#columncell").val("");
+                                $("#useMethod").val("");
+                                $("#sortName").val("");
+                                getColumnData();
+                            } else {
+                                $.messager.popover({ msg: res.msg, type: 'info', timeout: 1000 });
+                            }
+                            $("#dateStart").datebox('setValue', "");
+                            $("#dateEnd").datebox('setValue', "");
+                        })
+                    }
+                    // var tmpstr="Element|"+cellStr+"^CallMethod|"+methodName+"^ColumnSort|"+sort+"^EffectiveDate|"+startDate+"^ExpiryDate|"+endDate;
+                },
+            }, {
+                text: '取消',
+                handler: function () {
+                    $HUI.dialog('#dd_column').close();
+                    startDate = "";
+                    endDate = "";
+                    $("#columncell").val("");
+                    $("#useMethod").val("");
+                    $("#sortName").val("");
+                }
+            }]
+        })
+        var tmp = [{ Description: 1, Indentity: 1 }, { Description: 2, Indentity: 2 }];
+        var columntmp = [];
+
+        $("#columncell").validatebox({ required: true });
+        $("#sortName").validatebox({ required: true });
+        // 隶属元素逻辑
+        $HUI.combobox("#column", {
+            valueField: 'id', textField: 'desc', multiple: false, selectOnNavigation: false, editable: true,
+            required: false,
+            data: columntmp,
+            panelHeight: 'auto',
+            onSelect: function (record) {
+                console.log(record);
+            }
+        });
+        // 表头层级逻辑
+        $HUI.combobox("#headInfo", {
+            valueField: 'Indentity', textField: 'Description', multiple: false, selectOnNavigation: false, editable: true,
+            required: true,
+            data: tmp,
+            panelHeight: 'auto',
+            onChange: function (newVal) {
+                if (newVal == 1) {
+                    currentStatus = 1;
+                    $HUI.combobox("#column").clear();
+                    $HUI.combobox("#column", { required: false });
+                    $HUI.combobox("#column").disable();
+                } else {
+                    // 二级表头获取一级表头数据
+                    currentStatus = 2;
+                    $HUI.combobox("#column", { required: true });
+                    $HUI.combobox("#column").enable();
+                    $cm({
+                        ClassName: 'NurMp.DHCNurAdverseElementSub',
+                        MethodName: 'getData',
+                        parr: '',
+                        AdverseDR: updataSelect.Id
+                    }, function (res) {
+                        var tmp = []
+                        res.data.forEach(function (item) {
+                            var tmpObj = {}
+                            Object.keys(item).forEach(function (iner) {
+                                tmpObj['id'] = iner;
+                                tmpObj['desc'] = item[iner];
+                                tmp.push(tmpObj);
+                            })
+                        })
+                        $HUI.combobox("#column").loadData(tmp)
+                    })
+
+                }
+            }
+        });
+
+        $("#headInfo").combobox('setValue', 1)
+        // $("#column").combobox('setValue',1)
+    }
+    function delColumn() {
+        // 删除数据
+        if (columnSelect == "") {
+            $.messager.popover({ msg: '未选中行！', type: 'alert' });
+        } else {
+            $.messager.confirm('删除', '确定要删除吗?', function (r) {
+                if (r) {
+                    $cm({
+                        ClassName: 'NurMp.DHCNurAdverseElement',  // old class
+                        // ClassName:'NurMp.DHCNurAdverseElementSub',
+                        MethodName: 'delete',
+                        id: columnSelect.Id
+                    }, function (e) {
+                        if (e.status == 0) {
+                            $.messager.popover({ msg: '数据删除成功！', type: 'success', timeout: 1000 })
+                            columnSelect = "";
+                            getColumnData();
+                        }
+                    })
+                }
+            });
+        }
+
+    }
+    function addItem() {
+        // alert(33);
+        // 请求列表模板数据
+        $cm({
+            ClassName: 'NurMp.DHCNurAdverseEvent',
+            MethodName: 'GetCateChapterJason',
+            parr: ''+"^"+GLOBAL.HospitalID
+        }, function (res) {
+            $HUI.combobox("upType", { required: true });
+            // 列表模板
+            var tmp = res.data
+            $HUI.combobox("#iconokBox", {
+                valueField: 'Indentity', textField: 'Description', multiple: true, selectOnNavigation: false, editable: true,
+                required: true,
+                data: tmp,
+                formatter: function (row) {
+                    var rhtml;
+                    if (row.selected == true) {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon icon-ok'></span>";
+                    } else {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon'></span>";
+                    }
+                    return rhtml;
+                },
+                onChange: function (newval, oldval) {
+                    $(this).combobox("panel").find('.icon').removeClass('icon-ok');
+                    for (var i = 0; i < newval.length; i++) {
+                        $(this).combobox("panel").find('#i' + newval[i]).addClass('icon-ok');
+                    }
+                },
+                filter: function (q, row) {
+                    var opts = $(this).combobox('options');
+                    return row[opts.textField].indexOf(q) > -1;
+                }
+            });
+        })
+        // 打印模板
+        $cm({
+            ClassName: 'NurMp.DHCNurAdverseEvent',
+            MethodName: 'GetPrintCateChapterJason',
+            parr: ''+"^"+GLOBAL.HospitalID
+        }, function (res) {
+
+            var tmp = res.data
+            $HUI.combobox("#printSelect", {
+                valueField: 'Indentity', textField: 'Description', multiple: false, selectOnNavigation: false, editable: true,
+                required: true,
+                data: tmp,
+                formatter: function (row) {
+                    var rhtml;
+                    if (row.selected == true) {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon icon-ok'></span>";
+                    } else {
+                        rhtml = row.Description + "<span id='i" + row.Indentity + "' class='icon'></span>";
+                    }
+                    return rhtml;
+                },
+                onChange: function (newval, oldval) {
+                    $(this).combobox("panel").find('.icon').removeClass('icon-ok');
+                    for (var i = 0; i < newval.length; i++) {
+                        $(this).combobox("panel").find('#i' + newval[i]).addClass('icon-ok');
+                    }
+                },
+                filter: function (q, row) {
+                    var opts = $(this).combobox('options');
+                    return row[opts.textField].indexOf(q) > -1;
+                }
+            });
+        })
+
+
+        // 新增数据
+        $HUI.dialog(('#dd'), {
+            title: '上报类型维护新增',
+            width: 400,
+            height: 220,
+            iconCls: 'icon-save',
+            resizable: false,
+            modal: true,
+            buttons: [{
+                text: '保存',
+                handler: function () {
+                    save("");
+                },
+            }, {
+                text: '取消',
+                handler: function () { $HUI.dialog('#dd').close(); }
+            }]
+        })
+        $("#upType").val("")
+    }
+    function delItem() {
+        // 删除数据
+        if (updataSelect == "") {
+            $.messager.popover({ msg: '未选中行！', type: 'alert' });
+        } else {
+            $.messager.confirm('删除', '确定要删除吗?', function (r) {
+                if (r) {
+                    $cm({
+                        ClassName: 'NurMp.DHCNurAdverseEvent',
+                        MethodName: 'delete',
+                        id: updataSelect.Id
+                    }, function (e) {
+                        if (e.status == 0) {
+                            $.messager.popover({ msg: '数据删除成功！', type: 'success', timeout: 1000 })
+                            updataSelect = "";
+                            getDataUp();
+                            TypeId = "";
+                            getColumnData();
+                            $("#tbGridL").datagrid('clearSelections')
+                        }
+                    })
+                }
+            })
+        }
+    }
+    function getDataUp() {
+        // 获取上报类型表格数据	
+        var str = "";
+        var str = $("#searchInput").val();
+        $cm({
+            ClassName: 'NurMp.DHCNurAdverseEvent',
+            MethodName: 'getData',
+            parr: str + "^" + GLOBAL.HospitalID
+        }, function (res) {
+            var tmpData = res.data;
+            $HUI.datagrid('#tbGridL', {
+                onSelect: function (rowIndex, rowData) {
+                    updataSelect = rowData;
+                    TypeId = rowData.Id;
+                    getColumnData();
+                    /*
+                    $cm({
+                        ClassName:'NurMp.DHCNurAdverseElement',
+                        MethodName:'getData',
+                        AdverseDR:rowData.Id
+                    },function(res){
+                        console.log(res)	
+                    })*/
+                },
+                onDblClickRow: function (rowIndex, rowData) {
+                    // hisui封装后的方法调用。
+                    $HUI.datagrid('#tbGridL').unselectRow(rowIndex)
+                    updataSelect = "";
+                    TypeId = "";
+                    getColumnData();
+                },
+                autoSizeColumn: true,
+                fitColumns: true,
+                nowrap: false,
+                fit: true,
+                columns: [[
+                    { field: 'Name', title: '上报类型', width: leftW / 2 },
+                    { field: 'EventDesc', title: '列表模板', width: leftW / 2 },
+                    { field: 'PrintDesc', title: '打印模板', width: leftW / 2 },
+                    {
+						field:'Priority',
+						title:'优先级',
+						width:leftW / 3,
+						formatter:function(value,row,index){
+							var down = '<span style="margin-left:5px;cursor:pointer" class="icon icon-down" onclick="downTable('+row.Id+')">&nbsp;&nbsp;&nbsp;&nbsp;</span> ';
+							var up = '<span style="cursor:pointer" class="icon icon-up" onclick="upTable('+row.Id+')">&nbsp;&nbsp;&nbsp;&nbsp;</span>';
+							return down + up;
 						}
-					})	
-				}	
-			})	
-		}	
-	}
-	function getDataUp(){
-		// 获取上报类型表格数据	
-		var str="";
-		var str=$("#searchInput").val();
-		$cm({
-			ClassName:'NurMp.DHCNurAdverseEvent',
-			MethodName:'getData',
-			parr:str	
-		},function(res){
-				var tmpData=res.data;
-				$HUI.datagrid('#tbGridL',{
-					onSelect:function(rowIndex,rowData){
-						updataSelect=rowData;
-						TypeId=rowData.Id;
-						getColumnData();
-						/*
-						$cm({
-							ClassName:'NurMp.DHCNurAdverseElement',
-							MethodName:'getData',
-							AdverseDR:rowData.Id
-						},function(res){
-							console.log(res)	
-						})*/
-					},
-					onDblClickRow:function(rowIndex,rowData){
-						// hisui封装后的方法调用。
-						$HUI.datagrid('#tbGridL').unselectRow(rowIndex)
-						updataSelect="";
-						TypeId="";
-						getColumnData();
-					},
-					autoSizeColumn:true,
-					fitColumns:true,
-					nowrap:false,
-					fit:true,
-					columns:[[
-						{field:'Name',title:'上报类型',width:leftW/2},
-						{field:'EventDesc',title:'列表模板',width:leftW/2},
-						{field:'PrintDesc',title:'打印模板',width:leftW/2},
-					]],
-					data:{
-						rows:tmpData
-					},
-					idField:'id',
-					headerCls:'panel-header-gray',
-					iconCls:'icon-paper',
-					rownumbers:true,
-					singleSelect:false,
-					width:500,
-					headerCls:'panel-header-gray',
-					iconCls:'icon-paper',
-					toolbar:'#custtbL',
-					pagination:false,
-					singleSelect:true
-				})
-				$("#tbGridL").datagrid('clearSelections')
-				updataSelect="" 
-				columnSelect=""		
-		})
-	}
-var leftW=600;
-var tmp=$("body").get(0).clientWidth;
-var tmpH=$("body").get(0).clientHeight-20;
-$(function(){
-	// 页面初始化	
-	var rightW=tmp-leftW-5-10*2;
-	$("#left").css("width",leftW+"px")
-	$("#right").css("width",rightW+"px")
-	var initL = function () {
-		var valbox = $HUI.panel("#upLX",{
-			iconCls:'icon-format-line-dott',
-			width:leftW,
-			height:tmpH,
-			headerCls:'panel-header-gray'
-		});
-	}
-	var initR = function () {
-		var valbox = $HUI.panel("#upELe",{
-			iconCls:'icon-format-line-dott',
-			//fit:true,
-			width:rightW,
-			height:tmpH,
-			headerCls:'panel-header-gray'
-		});
-	}
-	initL()
-	initR()
-	$(window).on("resize",function(){
-		tmp=$("body").get(0).clientWidth;	
-		tmpH=$("body").get(0).clientHeight-20;
-		var rightW=tmp-leftW-5-10*2;
-		$("#left").css("width",leftW+"px")
-		$("#right").css("width",rightW+"px")
-		var initL = function () {
-			var valbox = $HUI.panel("#upLX",{
-				iconCls:'icon-format-line-dott',
-				width:leftW,
-				height:tmpH,
-				headerCls:'panel-header-gray'
-			});
+					}
+                ]],
+                data: {
+                    rows: tmpData
+                },
+                idField: 'id',
+                headerCls: 'panel-header-gray',
+                iconCls: 'icon-paper',
+                rownumbers: true,
+                singleSelect: false,
+                width: 500,
+                headerCls: 'panel-header-gray',
+                iconCls: 'icon-paper',
+                toolbar: '#custtbL',
+                pagination: false,
+                singleSelect: true
+            })
+            $("#tbGridL").datagrid('clearSelections')
+            updataSelect = ""
+            columnSelect = ""
+        })
+    }
+    var leftW = 600;
+    var tmp = $("body").get(0).clientWidth;
+    var tmpH = $("body").get(0).clientHeight - 20;
+    $(function () {
+        // 页面初始化	
+        var rightW = tmp - leftW - 5 - 10 * 2;
+        $("#left").css("width", leftW + "px")
+        $("#right").css("width", rightW + "px")
+        var initL = function () {
+            var valbox = $HUI.panel("#upLX", {
+                iconCls: 'icon-format-line-dott',
+                width: leftW,
+                height: tmpH,
+                headerCls: 'panel-header-gray'
+            });
+        }
+        var initR = function () {
+            var valbox = $HUI.panel("#upELe", {
+                iconCls: 'icon-format-line-dott',
+                //fit:true,
+                width: rightW,
+                height: tmpH,
+                headerCls: 'panel-header-gray'
+            });
+        }
+        initL()
+        initR()
+        $(window).on("resize", function () {
+            tmp = $("body").get(0).clientWidth;
+            tmpH = $("body").get(0).clientHeight - 20;
+            var rightW = tmp - leftW - 5 - 10 * 2;
+            $("#left").css("width", leftW + "px")
+            $("#right").css("width", rightW + "px")
+            var initL = function () {
+                var valbox = $HUI.panel("#upLX", {
+                    iconCls: 'icon-format-line-dott',
+                    width: leftW,
+                    height: tmpH,
+                    headerCls: 'panel-header-gray'
+                });
+            }
+            var initR = function () {
+                var valbox = $HUI.panel("#upELe", {
+                    iconCls: 'icon-format-line-dott',
+                    //fit:true,
+                    width: rightW,
+                    height: tmpH,
+                    headerCls: 'panel-header-gray'
+                });
+            }
+            initL()
+            initR()
+        });
+        initHosp();
+    })
+    $(function () {
+        getDataUp()// 上报类型获取初始数据
+        getColumnData() //上报页面元素维护初始化
+    })
+    function save(args) {
+        var tmp = JSON.stringify($("#iconokBox").combobox("getValues")) //复选框选中的值
+        var tmptext = $("#iconokBox").combobox("getText");
+        tmptext = JSON.stringify(tmptext.split(","))
+        var str = $("#upType").val()// 获取输入的值
+        // 有关打印模板的逻辑代码
+        var tmpPrint = $("#printSelect").combobox("getValue");
+        var tmpPrintText = $("#printSelect").combobox("getText");
+        if (tmp.lenght == 0 || str == '' || tmpPrint == '') {
+            $.messager.popover({
+                msg: '有未填项！',
+                type: 'error',
+            })
+        } else {
+            // 保存数据
+
+            // var mergeStr="Name|"+str+"^EventDesc|"+tmptext+"^EventCode|"+tmp;
+            var mergeStr = "Name|" + str + "^EventDesc|" + tmptext + "^EventCode|" + tmp + "^PrintDesc|" + tmpPrintText + "^PrintCode|" + tmpPrint + "^HospitalID|" + GLOBAL.HospitalID;
+            console.log(mergeStr)
+            $cm({
+                ClassName: 'NurMp.DHCNurAdverseEvent',
+                MethodName: 'Save',
+                parr: mergeStr,
+                id: args
+            }, function (r) {
+                if (r.status == 0) {
+                    $.messager.popover({ msg: '保存成功！', type: 'success', timeout: 1000 });
+                    $HUI.dialog('#dd').close();
+                    getDataUp();
+                } else {
+                    $.messager.popover({ msg: r.msg, type: 'info', timeout: 1000 });
+                }
+            }, function (e) {
+                $.messager.popover({ msg: '保存失败！', type: 'error', timeout: 1000 });
+            })
+        }
+        return;
+        var Id = cspRunServerMethod(SaveAdverseEvent, "^Name|" + $("#tbGridR").val() + "^EventDesc|" + $("#iconokBox").val(), "");
+        alert(Id);
+    }
+    /**
+	 * @description 初始化医院
+	 */
+	function initHosp(){
+		if (typeof GenHospComp == "undefined") {
+			GLOBAL.HospEnvironment = false;
 		}
-		var initR = function () {
-			var valbox = $HUI.panel("#upELe",{
-				iconCls:'icon-format-line-dott',
-				//fit:true,
-				width:rightW,
-				height:tmpH,
-				headerCls:'panel-header-gray'
-			});
-		}
-		initL()
-		initR()
-	})
-})
-$(function(){
-	getDataUp()// 上报类型获取初始数据
-	getColumnData() //上报页面元素维护初始化
-})
-function save(args){
-	var tmp=JSON.stringify($("#iconokBox").combobox("getValues")) //复选框选中的值
-	var tmptext=$("#iconokBox").combobox("getText");
-		tmptext=JSON.stringify(tmptext.split(","))
-	var str=$("#upType").val()// 获取输入的值
-	// 有关打印模板的逻辑代码
-	var tmpPrint=$("#printSelect").combobox("getValue");
-	var tmpPrintText=$("#printSelect").combobox("getText");
-	if(tmp.lenght==0 || str=='' || tmpPrint==''){
-		$.messager.popover({
-				msg: '有未填项！',
-				type:'error',
-		})	
-	}else{
-		// 保存数据
-		
-		// var mergeStr="Name|"+str+"^EventDesc|"+tmptext+"^EventCode|"+tmp;
-		var mergeStr="Name|"+str+"^EventDesc|"+tmptext+"^EventCode|"+tmp+"^PrintDesc|"+tmpPrintText+"^PrintCode|"+tmpPrint;
-		console.log(mergeStr)
-		$cm({
-			ClassName:'NurMp.DHCNurAdverseEvent',
-			MethodName:'Save',
-			parr:mergeStr,
-			id:args	
-		},function(r){
-			if(r.status==0){
-				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-				$HUI.dialog('#dd').close();
+		if(GLOBAL.HospEnvironment){
+			var opt = { width: 250 };
+			var hospComp = GenHospComp("Nur_IP_DHCNurAdverseEvent", session['LOGON.USERID'] + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.CTLOCID'] + '^' + GLOBAL.HospitalID, opt); 
+			hospComp.options().onSelect = function(q, row){
+				GLOBAL.HospitalID = row.HOSPRowId;
 				getDataUp();
+				TypeId = "";
+				getColumnData();
 			}
-		},function(e){
-				$.messager.popover({msg: '保存失败！',type:'error',timeout: 1000});
+		}else{
+			$m({
+				ClassName: 'NurMp.Common.Tools.Hospital', 
+				MethodName: 'hospitalName', 
+				HospitalID: GLOBAL.HospitalID
+			},function(hospDesc){
+				$HUI.combobox("#_HospList", {
+					width:250,
+					valueField: 'HOSPRowId',
+					textField: 'HOSPDesc',
+					data: [{
+						HOSPRowId: GLOBAL.HospitalID,
+						HOSPDesc: hospDesc
+					}],
+					value: GLOBAL.HospitalID,
+					disabled: true
+				});
+			});
+		}
+	}
+    function downTable(rowId){
+		// 审核工作流下调级别
+		if (!rowId) {
+			$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+			return;
+		}
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseEvent',
+			MethodName:'changePriority',
+			Type:'DOWN',
+			id:rowId,
+            HospDr:GLOBAL.HospitalID
+		},function(res){
+			if(res.status==0){
+				getDataUp();
+			}else{
+				$.messager.popover({msg: res.msg,type:'alert'});	
+			}	
 		})
 	}
-	return;
-	 var Id=cspRunServerMethod(SaveAdverseEvent,"^Name|"+$("#tbGridR").val()+"^EventDesc|"+$("#iconokBox").val(),"");
-	 alert(Id);
-}
+	function upTable(rowId){
+		if (!rowId) {
+			$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+			return;
+		}
+		$cm({
+			ClassName:'NurMp.DHCNurAdverseEvent',
+			MethodName:'changePriority',
+			Type:'UP',
+			id:rowId,
+            HospDr:GLOBAL.HospitalID
+		},function(res){
+			if(res.status==0){
+				getDataUp();	
+			}else{
+				$.messager.popover({msg: res.msg,type:'alert'});	
+			}
+		})
+	}
+
 </script>
+
 </html>

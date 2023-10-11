@@ -7,7 +7,8 @@
     ;导入润乾直接打印所需包
 	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
 	if (PreviewRptFlag=0){
-    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    //d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17
 	}   
     </SCRIPT>  
 </csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->
@@ -29,7 +30,7 @@
 	s ItemInputType=##class(web.DHCEQCommon).GetSysInfo("101006")
 	s ModelInputType=##class(web.DHCEQCommon).GetSysInfo("101007")
 	
-	s (BRLRowID,IFBLRowID,Status,ECRowID)=""
+    s (BRLRowID,IFBLRowID,Status,ECRowID,TmpSourceID)=""
 	if (RowID'="")
 	{
 		s YearFlag = $Piece($Get(^DHCEQBuyRequest(RowID)),"^",3)
@@ -44,6 +45,8 @@
 	{
 		s YearFlag=$Get(%request.Data("YearFlag",1))
 		s Year=$p($zd(+$H,3),"-",1)
+        //add by ZY     2849944  20220815
+        s TmpSourceID=##Class(web.DHCEQ.EM.BUSOpenCheckRequest).GetCurSourceID("91")
 	}
 	if YearFlag="Y"
 	{
@@ -85,17 +88,13 @@
 <style type="text/css">
 	.hisui-textarea
 	{
-		width:430%;
+		width:200%;	/* MZY0149	3158808		2023-01-09	*/
 		border:1px solid #40a2de;
 	}
 	.hisui-textarea2
 	{
 		width:415%;
 		border:1px solid #40a2de;
-	}
-	.eq-table-label
-	{
-		width:133px;
 	}
 	.eq-time-line
 	{
@@ -104,382 +103,438 @@
 		padding-top:10px;
 		font-size:16px;
 	}
-	.eq-from-title
-	{
-		/*font-family:'Microsoft Yahei';*/
-		color:#000000;
-		font-size:22px;
-		letter-spacing:20px;
-		margin-top:10px;
-		margin-bottom:10px;
-	}
+    .eq-form-title
+    {
+        height:100%;
+        background:url(../images/dhceq/eq-form-top.png) no-repeat top;
+        background-size: 100% 62px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .eq-form-title>h1
+    {
+        font-family:'Microsoft YaHei UI';
+        color:#000000;
+        font-size:22px;
+        letter-spacing:10px;
+        position: relative;
+        top:50%;
+        transform:translateY(-50%);
+    }
 	.eq-input-border
 	{
 		border-color:#fff;
 		background-color:#fff
 	}
+	.eq-table-td1
+	{
+		display: table-cell;
+    	white-space: nowrap;
+    	white-space: normal;
+    	vertical-align: middle;
+	}
+	.eq-first-padding{
+		padding-top: 0px;
+	}
 </style>
 <body class="hisui-layout">
 	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by zx 2019-05-05 界面首先加载loading ZX0063-->
 	
-	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div >
-			<div align="center">
-		    <h1 align="center" class="eq-from-title">#(Title)#</h1>
-			</div>
-			<div style="width:100px;height:47px; position:fixed;right:60px;top:200px;z-index:3;">
-				<ul id="Anchor"></ul>
-		    </div>
-			<a name="ApproveSchedule"></a>
-			<div id="cApproveSchedule" data-options="region:'north',border:false" align="center" style="height:40px;">
-				<ul id="ApproveSchedule" style="margin-top:20px;"></ul>
-			</div>
-			<div data-options="region:'center',border:false" style="padding:10px 150px;">
-				<a name="requestpanel"></a>
-				<div class="hisui-panel" data-options="eqtitle:'maintitle',title:'申请单'" style="padding:10px 10px;margin-bottom:10px;overflow:hidden;">
-					<div class="eq-table" id="requestpanel">
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRRequestNo" for="BRRequestNo">申请单号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox eq-input-border" id="BRRequestNo" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRRequestDate" for="BRRequestDate">申请日期</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox eq-input-border" disabled="true" id="BRRequestDate"></div>	<!--style="border-color:#fff;background-color:#fff"-->
-							<div class="eq-table-td eq-table-label"><label id="cBRRequestLocDR_CTLOCDesc" for="BRRequestLocDR_CTLOCDesc">申请科室</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox eq-input-border" disabled="true" id="BRRequestLocDR_CTLOCDesc"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRManageLocDR_CTLOCDesc" for="BRManageLocDR_CTLOCDesc">管理科室</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRManageLocDR_CTLOCDesc"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBREquipTypeDR_ETDesc" for="BREquipTypeDR_ETDesc">管理类组</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BREquipTypeDR_ETDesc" data-options="'component':'PLAT.L.EquipType'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRPurchaseTypeDR_PTDesc" for="BRPurchaseTypeDR_PTDesc">申购类别</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.PurchaseType'" id="BRPurchaseTypeDR_PTDesc"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRLName" for="BRLName">设备名称</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLName"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRLItemDR_MIDesc" for="BRLItemDR_MIDesc">设备项</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.GetMasterItem'" id="BRLItemDR_MIDesc"></div>
-							<div class="eq-table-td eq-table-label"><label id="cIFBLModel" for="IFBLModel">参考规格型号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IFBLModel"></div>
-							<div class="eq-table-td"><a href="#" id='cIfbListForLocNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:ifbListForLoc()'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRLRequestNum" for="BRLRequestNum">申请数量</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="BRLRequestNum" data-options="isKeyupChange:true"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRLHold10" for="BRLHold10">预算单价(元)</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="BRLHold10" data-options="isKeyupChange:true"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRLTotalFee" for="BRLTotalFee">预计费用(元)</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLTotalFee" disabled="true" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRLHold1" for="BRLHold1">科室负责人</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLHold1"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRLHold2" for="BRLHold2">联系电话</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="BRLHold2"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRUseLocDR_CTLOCDesc" for="BRUseLocDR_CTLOCDesc">使用科室</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="BRUseLocDR_CTLOCDesc"></div>
-							<div class="eq-table-td"><a href="#" id='cUnitLocNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:uniteRequest()'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRLHold3" for="BRLHold3">经办人</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLHold3"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRLHold4" for="BRLHold4">联系电话</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="BRLHold4"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRLPurposeTypeDR_PTDesc" for="BRLPurposeTypeDR_PTDesc">设备用途</label></div><!--modified by csj 20200525 名称修改-->
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.PurposeType'" id="BRLPurposeTypeDR_PTDesc"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRLRequestReason" for="BRLRequestReason">申购理由</label></div>
-							<div class="eq-table-td"><textarea id="BRLRequestReason" class="hisui-textarea"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBRLRemark" for="BRLRemark">备注</label></div>
-							<div class="eq-table-td"><textarea id="BRLRemark" class="hisui-textarea"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-					</div>
-				</div>
-				<a name="baseInfopanel"></a>
-				<div class="hisui-panel" id="baseInfopanel" data-options="eqtitle:'maintitle',title:'基本信息'" style="padding:10px;margin-bottom:10px;overflow:hidden;">
-					<div class="eq-table">
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cBRLStatCatDR_SCDesc" for="BRLStatCatDR_SCDesc">资产类型</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLStatCatDR_SCDesc" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRLEquipCatDR_ECDesc" for="BRLEquipCatDR_ECDesc">资产分类</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLEquipCatDR_ECDesc" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRDUseYearsNum" for="BRDUseYearsNum">参考使用年限</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="BRDUseYearsNum"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation-PurchaseType">
-							<div class="eq-table-td eq-table-label"><label id="cBRDConsumption" for="BRDConsumption">耗材有无收费项目</label></div>
-							<div class="eq-table-td eq-table-input"><input type="checkbox" class='hisui-checkbox' id="BRDConsumption"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRDMedicalItem" for="BRDMedicalItem">有无使用特殊耗材</label></div>
-							<div class="eq-table-td eq-table-input"><input type="checkbox" class='hisui-checkbox' id="BRDMedicalItem"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRDMaterial" for="BRDMaterial">耗材参考价格</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" type="text" id="BRDMaterial" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation-PurchaseType">
-							<div class="eq-table-td eq-table-label"><label id="cBRDCountNum" for="BRDCountNum">同类台数</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" data-options="precision:2,decimalSeparator:'.'" id="BRDCountNum"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRDCountInLoc" for="BRDCountInLoc">科室同类台数</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="BRDCountInLoc" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRDHold1" for="BRDHold1">使用状况</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRDHold1"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation-PurchaseType">
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"><a href="#" id='cOldEconCalcNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:econcalcList("N")'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"><a href="#" id='cEquipServiceNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:equipServiceList()'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"><a href="#" id='cServiceConsumableNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:serviceConsumableList()'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cBRDHold2" for="BRDHold2">与现有同类设备共性</label></div>
-							<div class="eq-table-td"><textarea id="BRDHold2" class="hisui-textarea"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cBRDHold3" for="BRDHold3">与现有同类设备区别</label></div>
-							<div class="eq-table-td"><textarea id="BRDHold3" class="hisui-textarea"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-					</div>
-				</div>				
-				<a name="benefitpanel"></a>
-				<div class="hisui-panel" id="benefitpanel" data-options="eqtitle:'maintitle',title:'经济预测'" style="padding:10px;margin-bottom:10px;">
-					<div class="eq-table">
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cECWorkLoadNum" for="ECWorkLoadNum">年工作量</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECWorkLoadNum" ></div>
-							<div class="eq-table-td eq-table-label"><label id="cECPositiveRate" for="ECPositiveRate">检查阳性率</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECPositiveRate" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cECServiceIncome" for="ECServiceIncome">人均收费</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECServiceIncome" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cECMaterialIncome" for="ECMaterialIncome">材料收入</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECMaterialIncome" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cECMaintFee" for="ECMaintFee">维修费</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECMaintFee" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cECFeeOfEmployee" for="ECFeeOfEmployee">人员经费</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECFeeOfEmployee" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cECMaterialFee" for="ECMaterialFee">材料费</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECMaterialFee" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cECDepreFee" for="ECDepreFee">折旧费</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECDepreFee" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"><label id="cECBuildingFee" for="ECBuildingFee">房屋折旧</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECBuildingFee" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cECEnergyFee" for="ECEnergyFee">能源费</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECEnergyFee" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cECEffect" for="ECEffect">电费</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-numberbox textbox" id="ECEffect" data-options="precision:2,decimalSeparator:'.'"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"><a href="#" id='cEconCalcNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:econcalcList("Y")'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-					</div>
-				</div>
-				<a name="socialpanel"></a>
-				<div class="hisui-panel" id="socialpanel" data-options="eqtitle:'maintitle',title:'社会效益'" style="padding:10px;margin-bottom:10px;">
-					<div class="eq-table">
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"><a href="#" id='cResearchLWNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:researchList(0)'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"><a href="#" id='cResearchXMNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:researchList(1)'></a></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cARClinicEffect" for="ARClinicEffect">对医疗工作的作用</label></div>
-							<div class="eq-table-td eq-table-info"><textarea id="ARClinicEffect" class="hisui-textarea" style="width:350%;"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cBRLHold9" for="BRLHold9">对科研工作的支持</label></div>
-							<div class="eq-table-td eq-table-info"><textarea id="BRLHold9" class="hisui-textarea" style="width:350%;"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-					</div>
-				</div>
-				<a name="uesdpanel"></a>
-				<div class="hisui-panel" id="uesdpanel" data-options="eqtitle:'maintitle',title:'使用条件'" style="padding:10px;margin-bottom:10px;">
-					<div class="eq-table">
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cARPersonnelState" for="ARPersonnelState">人员配备</label></div>
-							<div class="eq-table-td eq-table-info"><textarea id="ARPersonnelState" class="hisui-textarea" style="width:355%;"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cARPolluteState" for="ARPolluteState">污染放射问题</label></div>
-							<div class="eq-table-td eq-table-info"><textarea id="ARPolluteState" class="hisui-textarea" style="width:355%;"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cARPlaceConditionFlag" for="ARPlaceConditionFlag">特殊场地要求</label></div>
-							<div class="eq-table-td eq-table-input"><input type="checkbox" class='hisui-checkbox' id="ARPlaceConditionFlag"><textarea id="ARPlaceCondition" class="hisui-textarea2" style="width:345%;"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="Argumentation">
-							<div class="eq-table-td eq-table-label"><label id="cARPlaceReformFlag" for="ARPlaceReformFlag">是否需装机改造</label></div>
-							<div class="eq-table-td eq-table-input"><input type="checkbox" class='hisui-checkbox' id="ARPlaceReformFlag"><textarea id="ARPlaceReform" class="hisui-textarea2" style="width:345%;"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-					</div>
-				</div>
-				<a name="auditpanel"></a>
-				<div class="hisui-panel" id="auditpanel" data-options="eqtitle:'maintitle',title:'审批信息'" style="padding:10px;">
-					<div class="eq-table">
-						<div class="eq-table-tr" name="AuditPriceAndNum">
-							<!--
-							<div class="eq-table-td eq-table-label"><label id="cBRAIAuditQuantity" for="BRAIAuditQuantity">数量</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRAIAuditQuantity"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRAIAuditPrice" for="BRAIAuditPrice">单价</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRAIAuditPrice"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBRAIAuditTotalFee" for="BRAIAuditTotalFee">总金额</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" style="border-color:#fff;background-color:#fff" id="BRAIAuditTotalFee" ></div>
-							
-						</div>
-						<div class="eq-table-tr" name="AuditFundInfo">
-							<div class="eq-table-td eq-table-label"><label id="cBRLFundsOriginDR_FTDesc" for="BRLFundsOriginDR_FTDesc">资金来源</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLFundsOriginDR_FTDesc" data-options="'component':'PLAT.L.FundsType'"></div>
-							-->
-						</div>
-						<div class="eq-table-tr" name="AuditInfo">
-							<div class="eq-table-td eq-table-label"><label id="cEditOpinion" for="EditOpinion">审批意见</label></div>
-							<div class="eq-table-td eq-table-info"><textarea id="EditOpinion" class="hisui-textarea"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="AuditInfo">
-							<div class="eq-table-td eq-table-label"><label id="cRejectReason" for="RejectReason">拒绝原因</label></div>
-							<div class="eq-table-td eq-table-info"><textarea id="RejectReason" class="hisui-textarea"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-						<div class="eq-table-tr" name="AuditInfo">
-							<div class="eq-table-td eq-table-label"><label id="cOpinionRecords" for="OpinionRecords">审批记录</label></div>
-							<div class="eq-table-td eq-table-info"><textarea id="OpinionRecords" disabled="true" class="hisui-textarea"></textarea></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div data-options="region:'south',border:false" class="footer">
-		<div class="footer-box">
-			<div style="width:25%;float:left;"></div>
-			<div style="width:50%;float:left;">
-				<a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a>
-				&nbsp;&nbsp;
-				<a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a>
-				&nbsp;&nbsp;
-				<a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a>
-				&nbsp;&nbsp;
-				<a id="BPrint" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">打印</a>
-				&nbsp;&nbsp;
-				<a id="BApprove1" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a>
-				&nbsp;&nbsp;
-				<a id="BCancelSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">退回</a>
-			</div>
-			<div style="width:25%;float:left;"></div>
+    <div data-options="region:'center',border:false,fit:true" style="padding: 10px 168px;background-color:#F5F5F5;positon:relative;">
+        <div style="position:absolute;left:30px;top:120px;">
+            <div id="Anchor"></div>
+        </div>
+        <div class="hisui-panel" data-options="border:false,fit:true">
+            <div class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',border:false" style="height: 80px;">
+                    <div class="eq-form-title"> 
+                        <h1>#(Title)#</h1>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="padding:0px 10px 10px 10px;">
+                    <a name="requestpanel"></a>
+                    <div class="hisui-panel" data-options="eqtitle:'maintitle',title:'申请单'" style="padding:10px 10px;margin-bottom:10px;overflow:hidden;">
+                        <div class="eq-table" >
+                            <div class="eq-table-tr">
+                                <div class="eq-table-td1 eq-table-label"><label id="cBRRequestNo" for="BRRequestNo">申请单号</label></div>
+                                <div class="eq-table-td1 eq-table-input"><input class="hisui-validatebox eq-input-border textbox" id="BRRequestNo" disabled="true"></div>
+                                <div class="eq-table-td1 eq-table-label"><label id="cBRRequestDate" for="BRRequestDate">申请日期</label></div>
+                                <div class="eq-table-td1 eq-table-input"><input class="hisui-validatebox eq-input-border textbox" disabled="true" id="BRRequestDate"></div> <!--style="border-color:#fff;background-color:#fff"-->
+                                <div class="eq-table-td1 eq-table-label"><label id="cBRRequestLocDR_CTLOCDesc" for="BRRequestLocDR_CTLOCDesc">申请科室</label></div>
+                                <div class="eq-table-td1 eq-table-input"><input class="hisui-validatebox eq-input-border textbox" disabled="true" id="BRRequestLocDR_CTLOCDesc"></div>
+                                <div class="eq-table-td1 eq-table-label"></div>
+                                <div class="eq-table-td1 eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr">
+                                <div class="eq-table-td eq-table-label"><label id="cBRManageLocDR_CTLOCDesc" for="BRManageLocDR_CTLOCDesc">管理科室</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRManageLocDR_CTLOCDesc"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBREquipTypeDR_ETDesc" for="BREquipTypeDR_ETDesc">管理类组</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BREquipTypeDR_ETDesc" data-options="'component':'PLAT.L.EquipType'"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRPurchaseTypeDR_PTDesc" for="BRPurchaseTypeDR_PTDesc">申购类别</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.PurchaseType'" id="BRPurchaseTypeDR_PTDesc"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr">
+                                <div class="eq-table-td eq-table-label"><label id="cBRLName" for="BRLName">设备名称</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRLName"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLItemDR_MIDesc" for="BRLItemDR_MIDesc">设备项</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.GetMasterItem'" id="BRLItemDR_MIDesc"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cIFBLModel" for="IFBLModel">参考规格型号</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" style="width:110px;" id="IFBLModel"><a href="#" id='cIfbListForLocNum'   style="text-decoration:underline; margin: 0 0 0 10px; background-color:#339dfe;" onclick='javascript:ifbListForLoc()' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr">
+                                <div class="eq-table-td eq-table-label"><label id="cBRLRequestNum" for="BRLRequestNum">申请数量</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRLRequestNum" data-options="isKeyupChange:true"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLHold10" for="BRLHold10">预算单价(元)</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRLHold10" data-options="isKeyupChange:true"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLTotalFee" for="BRLTotalFee">预计费用(元)</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRLTotalFee" disabled="true" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr">
+                                <!--    MZY0041 1427330     2020-7-22   -->
+                                <div class="eq-table-td eq-table-label"><label id="cBRLHold1_SSUSRName" for="BRLHold1_SSUSRName">科室负责人</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'" id="BRLHold1_SSUSRName"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLHold2" for="BRLHold2">联系电话</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRLHold2"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRUseLocDR_CTLOCDesc" for="BRUseLocDR_CTLOCDesc">使用科室</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" style="width:117px;" data-options="'component':'PLAT.L.Loc'" id="BRUseLocDR_CTLOCDesc"><a href="#" id='cUnitLocNum'   style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:uniteRequest()' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr">
+                                <!--    MZY0041 1427330     2020-7-22   -->
+                                <div class="eq-table-td eq-table-label"><label id="cBRLHold3_SSUSRName" for="BRLHold3_SSUSRName">经办人</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'" id="BRLHold3_SSUSRName"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLHold4" for="BRLHold4">联系电话</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRLHold4"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLPurposeTypeDR_PTDesc" for="BRLPurposeTypeDR_PTDesc">设备用途</label></div><!--modified by csj 20200525 名称修改-->
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.PurposeType'" id="BRLPurposeTypeDR_PTDesc"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr">
+                                <div class="eq-table-td eq-table-label"><label id="cBRLRequestReason" for="BRLRequestReason">申购理由</label></div>
+                                <div class="eq-table-td"><textarea id="BRLRequestReason" class="hisui-textarea textbox"></textarea></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLHold5" for="BRLHold5">功能(概要)</label></div>
+                                <div class="eq-table-td"><textarea id="BRLHold5" class="hisui-textarea textbox"></textarea></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLRemark" for="BRLRemark">备注</label></div>
+                                <div class="eq-table-td"><textarea id="BRLRemark" class="hisui-textarea textbox"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation-PurchaseType">
+                                <div class="eq-table-td eq-table-label"><label id="cBRHold3" for="BRHold3"><span style="color: red;">*</span>紧急采购</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="是" name="BRHold3" id="BRHold3Is" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"><label style="margin-left:20px;"></label><input class="hisui-radio" type="radio" label="否" name="BRHold3" id="BRHold3Not" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr">
+                                <div class="eq-table-td eq-table-label"><label id="cBRHold4" for="BRHold4">紧急采购原因</label></div>
+                                <div class="eq-table-td"><textarea id="BRHold4" class="hisui-textarea textbox"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a name="baseInfopanel"></a>
+                    <div class="hisui-panel" data-options="eqtitle:'maintitle',title:'基本信息'" style="padding:10px;margin-bottom:10px;overflow:hidden;">
+                        <div class="eq-table">
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cBRDUseYearsNum" for="BRDUseYearsNum">参考使用年限</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox textbox" id="BRDUseYearsNum"></div>
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cBRLStatCatDR_SCDesc" for="BRLStatCatDR_SCDesc">设备资产类型</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox textbox" id="BRLStatCatDR_SCDesc" disabled="true"></div>
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cBRLEquipCatDR_ECDesc" for="BRLEquipCatDR_ECDesc">设备资产分类</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox textbox" id="BRLEquipCatDR_ECDesc" disabled="true"></div>
+                                <div class="eq-table-td eq-table-label eq-first-padding"></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation-PurchaseType">
+                                <!--div class="eq-table-td eq-table-label"><label id="cBRDConsumption" for="BRDConsumption">耗材有无收费项目</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="有" name="BRDConsumption" id="BRDConsumptionIs" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"><label style="margin-left:20px;"></label><input class="hisui-radio" type="radio" label="无" name="BRDConsumption" id="BRDConsumptionNot" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRDMedicalItem" for="BRDMedicalItem"><span style="color: red;">*</span>有无使用特殊耗材</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="有" name="BRDMedicalItem" id="BRDMedicalItemIs" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"><label style="margin-left:20px;"></label><input class="hisui-radio" type="radio" label="无" name="BRDMedicalItem" id="BRDMedicalItemNot" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"></div>
+                                -->
+                            </div>
+                            <!--div class="eq-table-tr" name="Argumentation-PurchaseType">
+                                <div class="eq-table-td eq-table-label"><label id="cSICConsumableItem_CIDesc" for="SICConsumableItem_CIDesc">耗材名称</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:129px;" id="SICConsumableItem_CIDesc"><a href="#" id='cServiceConsumableNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:serviceConsumableList()'>更多</a></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRDHold5" for="BRDHold5">耗材规格型号</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRDHold5"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRDMaterial" for="BRDMaterial">耗材参考价格</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" type="text" id="BRDMaterial" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div-->
+                            
+                            <!--modify by ZY 1254590 2022-08-08-->
+                            <div class="eq-table-tr" name="Argumentation-PurchaseType" id="ArgumentationLink">
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <!--modified by zy 20230209  bug:3232015-->
+                    <a name="peerpanel"></a>
+                    <div class="hisui-panel" data-options="eqtitle:'maintitle',title:'同类设备信息'" style="padding:10px 10px;margin-bottom:10px;overflow:hidden;">
+                        <div class="eq-table">
+                            <div class="eq-table-tr" name="Argumentation-PurchaseType">
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cBRDCountNum" for="BRDCountNum">同类台数</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox textbox" id="BRDCountNum"></div>
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cBRDCountInLoc" for="BRDCountInLoc">科室同类台数</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox textbox" id="BRDCountInLoc"></div>
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cECWorkLoadNumAvg" for="ECWorkLoadNumAvg">旧设备工作量</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox" style="width:111px;" disabled="true"  id="ECWorkLoadNumAvg"><a href="#" id='cOldEconCalcNum'   style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:econcalcList("N")' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                <div class="eq-table-td eq-table-label eq-first-padding"></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cBRDHold2" for="BRDHold2">同类设备共性</label></div>
+                                <div class="eq-table-td"><textarea id="BRDHold2" class="hisui-textarea textbox" ></textarea></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRDHold3" for="BRDHold3">同类设备区别</label></div>
+                                <div class="eq-table-td"><textarea id="BRDHold3" class="hisui-textarea textbox"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            
+                         </div>
+                    </div>
+                    <a name="benefitpanel"></a>
+                    <div class="hisui-panel" data-options="eqtitle:'maintitle',title:'经济预测'" style="padding:10px;margin-bottom:10px;">
+                        <div class="eq-table">
+                             <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cbenefit" for="benefit">设备效益分析</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox" style="width:111px;" disabled="true" id="benefit"><a href="#" id='cBenefitDisplay' style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:benefitDisplay()' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cESServiceDR_SIDesc" for="ESServiceDR_SIDesc">服务项目</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox" style="width:111px;" disabled="true" id="ESServiceDR_SIDesc"><a href="#" id='cEquipServiceNum' style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:equipServiceList()' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                <!--div class="eq-table-td eq-table-label"><label id="cSICConsumableItem_CIDesc" for="SICConsumableItem_CIDesc">耗材名称</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:129px;" disabled="true" id="SICConsumableItem_CIDesc"><a href="#" id='cServiceConsumableNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:serviceConsumableList()'>更多</a></div>
+                                -->
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cProfit" for="Profit">经济论证结论</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox textbox" disabled="true"  id="Profit"></div>
+                            </div>                  
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cECWorkLoadNum" for="ECWorkLoadNum">年工作量(人)</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECWorkLoadNum" ></div>
+                                <div class="eq-table-td eq-table-label"><label id="cECPositiveRate" for="ECPositiveRate">检查阳性率</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECPositiveRate" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cECServiceIncome" for="ECServiceIncome">人均收费</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECServiceIncome" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cECMaterialIncome" for="ECMaterialIncome">材料收入</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECMaterialIncome" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cECMaintFee" for="ECMaintFee">维修费</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECMaintFee" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cECFeeOfEmployee" for="ECFeeOfEmployee">人员经费</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECFeeOfEmployee" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cECMaterialFee" for="ECMaterialFee">材料费</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECMaterialFee" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cECDepreFee" for="ECDepreFee">折旧费</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECDepreFee" disabled="true"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cECBuildingFee" for="ECBuildingFee">房屋折旧</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECBuildingFee" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cECEffect" for="ECEffect">电费</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECEffect" data-options="precision:2,decimalSeparator:'.'"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cECEnergyFee" for="ECEnergyFee">其他能耗</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ECEnergyFee" data-options="precision:2,decimalSeparator:'.'" style="width:111px;"><a href="#" id='cEconCalcNum' style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:econcalcList("Y")' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a name="socialpanel"></a>
+                    <div class="hisui-panel" data-options="eqtitle:'maintitle',title:'社会效益'" style="padding:10px;margin-bottom:10px;">
+                        <div class="eq-table">
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cRDesc0" for="RDesc0">开展科研项目</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox" style="width:110px;" disabled="true" id="RDesc0"><a href="#" id='cResearchKYNum' style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:researchList(0)' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cRDesc1" for="RDesc1">开展论文</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox" style="width:110px;" disabled="true" id="RDesc1"><a href="#" id='cResearchLWNum' style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:researchList(1)' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                
+                                <div class="eq-table-td eq-table-label eq-first-padding"><label id="cRDesc2" for="RDesc2">开展功能项目</label></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"><input class="hisui-validatebox" style="width:110px;" disabled="true" id="RDesc2"><a href="#" id='cResearchXMNum' style="text-decoration:underline; margin: 0 0 0 10px;" onclick='javascript:researchList(2)' class="showicon hisui-linkbutton element-square-btn" data-options="iconCls:'icon-w-edit'"></a></div>
+                                
+                                <div class="eq-table-td eq-table-label eq-first-padding"></div>
+                                <div class="eq-table-td eq-table-input eq-first-padding"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cARClinicEffect" for="ARClinicEffect">对医疗作用</label></div>
+                                <div class="eq-table-td eq-table-info"><textarea id="ARClinicEffect" class="hisui-textarea textbox" ></textarea></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRLHold9" for="BRLHold9">对科研支持</label></div>
+                                <div class="eq-table-td eq-table-info"><textarea id="BRLHold9" class="hisui-textarea textbox"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a name="uesdpanel"></a>
+                    <div class="hisui-panel" data-options="eqtitle:'maintitle',title:'使用条件'" style="padding:10px;margin-bottom:10px;">
+                        <div class="eq-table">
+                            <!---//add by ZY 2943640 20220915-->
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td1 eq-table-label"><label id="cARSettleState" for="ARSettleState">用水情况</label></div>
+                                <div class="eq-table-td1 eq-table-info"><input class="hisui-combobox textbox" id="ARSettleState" ></div>
+                                <div class="eq-table-td1 eq-table-label"><label id="cARPolluteState" for="ARPolluteState">污水处理</label></div>
+                                <div class="eq-table-td1 eq-table-info"><input class="hisui-combobox textbox" id="ARPolluteState" ></div>
+                                <div class="eq-table-td1 eq-table-label"><label id="cAROtherState" for="AROtherState">辐射防护</label></div>
+                                <div class="eq-table-td1 eq-table-info"><input class="hisui-combobox textbox" id="AROtherState" ></div>
+                                <div class="eq-table-td1 eq-table-label"></div>
+                                <div class="eq-table-td1 eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cARVoltageType" for="ARVoltageType">用电条件</label></div>
+                                <div class="eq-table-td eq-table-info"><input class="hisui-combobox textbox" id="ARVoltageType" ></div>
+                                <div class="eq-table-td eq-table-label"><label id="cARFloorSpace" for="ARFloorSpace">占地面积(㎡)</label></div>
+                                <div class="eq-table-td eq-table-info"><input class="hisui-validatebox" id="ARFloorSpace" ></div>
+                                <div class="eq-table-td eq-table-label"><label id="cARPersonnelState" for="ARPersonnelState">人员配备</label></div>
+                                <div class="eq-table-td eq-table-info"><textarea id="ARPersonnelState" class="hisui-textarea textbox" ></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cARPlaceConditionFlag" for="ARPlaceConditionFlag">特殊场地要求</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="有" name="ARPlaceConditionFlag" id="ARPlaceConditionFlagIs" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"><label style="margin-left:20px;"></label><input class="hisui-radio" type="radio" label="无" name="ARPlaceConditionFlag" id="ARPlaceConditionFlagNot" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"><textarea id="ARPlaceCondition" class="hisui-textarea2" style="width:355%;"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"><label id="cARPlaceReformFlag" for="ARPlaceReformFlag">是否需装机改造</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="是" name="ARPlaceReformFlag" id="ARPlaceReformFlagIs" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"><label style="margin-left:20px;"></label><input class="hisui-radio" type="radio" label="否" name="ARPlaceReformFlag" id="ARPlaceReformFlagNot" data-options="radioClass:'hischeckbox_square-blue',requiredSel:true"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="Argumentation">
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"><textarea id="ARPlaceReform" class="hisui-textarea2" style="width:355%;"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <a name="auditpanel"></a>
+                    <div class="hisui-panel" id="auditpanel"  data-options="eqtitle:'maintitle',title:'审批信息'" style="padding:10px;">
+                        <div class="eq-table">
+                            <div class="eq-table-tr" name="AuditPriceAndNum">
+                                <!--
+                                <div class="eq-table-td eq-table-label"><label id="cBRAIAuditQuantity" for="BRAIAuditQuantity">数量</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRAIAuditQuantity"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRAIAuditPrice" for="BRAIAuditPrice">单价</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRAIAuditPrice"></div>
+                                <div class="eq-table-td eq-table-label"><label id="cBRAIAuditTotalFee" for="BRAIAuditTotalFee">总金额</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" style="border-color:#fff;background-color:#fff" id="BRAIAuditTotalFee" ></div>
+                                
+                            </div>
+                            <div class="eq-table-tr" name="AuditFundInfo">
+                                <div class="eq-table-td eq-table-label"><label id="cBRLFundsOriginDR_FTDesc" for="BRLFundsOriginDR_FTDesc">资金来源</label></div>
+                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BRLFundsOriginDR_FTDesc" data-options="'component':'PLAT.L.FundsType'"></div>
+                                -->
+                            </div>
+                            <div class="eq-table-tr" name="AuditInfo">
+                                <div class="eq-table-td1 eq-table-label"><label id="cEditOpinion" for="EditOpinion"><span style="color:red;">*</span>审批意见</label></div>
+                                <div class="eq-table-td1 eq-table-info"><textarea title="必填项" id="EditOpinion" class="hisui-textarea"></textarea></div> 
+                                <div class="eq-table-td1 eq-table-label"></div>
+                                <div class="eq-table-td1 eq-table-input"></div>
+                                <div class="eq-table-td1 eq-table-label"></div>
+                                <div class="eq-table-td1 eq-table-input"></div>
+                                <div class="eq-table-td1 eq-table-label"></div>
+                                <div class="eq-table-td1 eq-table-input"><a href="#" id='cBuyRequestProcess' style="text-decoration:underline;" onclick='javascript:BuyRequestProcess()' ></a></div> <!--   MZY0246 1556440     2020-11-26  -->
+                            </div>
+                            <div class="eq-table-tr" name="AuditInfo">
+                                <div class="eq-table-td eq-table-label"><label id="cRejectReason" for="RejectReason">拒绝原因</label></div>
+                                <div class="eq-table-td eq-table-info"><textarea id="RejectReason" class="hisui-textarea"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                            <div class="eq-table-tr" name="AuditInfo">
+                                <div class="eq-table-td eq-table-label"><label id="cOpinionRecords" for="OpinionRecords">审批记录</label></div>
+                                <div class="eq-table-td eq-table-info"><textarea id="OpinionRecords" disabled="true" class="hisui-textarea"></textarea></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                                <div class="eq-table-td eq-table-label"></div>
+                                <div class="eq-table-td eq-table-input"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>  
+        </div>  
+        <div style="position:absolute;right:30px;bottom:30px;">
+        	<div style="margin-top:10px;">
+            	<a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+            </div>
+            <div style="margin-top:10px;">
+            	<a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a>
+            </div>
+            <div style="margin-top:10px;">
+            	<a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a>
+            </div>
+            <div style="margin-top:10px;">
+            	<a id="BPrint" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">打印</a>
+            </div>
+            <div style="margin-top:10px;">
+            	<a id="BApprove1" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a>
+            </div>
+            <div style="margin-top:10px;">
+            	<a id="BCancelSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">退回</a>
+            </div>
 		</div>
 	</div>
 	<!--隐藏元素-->
@@ -509,6 +564,9 @@
 			<INPUT type="hidden" id="BRLManuFactoryDR">
 			<INPUT type="hidden" id="BRLUnitDR">
 			<INPUT type="hidden" id="BRLFundsOriginDR">
+			<!--	MZY0041	1427330		2020-7-22	-->
+			<INPUT type="hidden" id="BRLHold1">
+			<INPUT type="hidden" id="BRLHold3">
 			<INPUT type="hidden" id="BRDFeeOfDepre">
 			<INPUT type="hidden" id="BRAIRowID">
 			<INPUT type="hidden" id="ECRowID"  value="#(ECRowID)#">
@@ -542,6 +600,7 @@
 			<INPUT type="hidden" id="YearMinFee" value="#(YearMinFee)#">
 			<INPUT type="hidden" id="ItemInputType" value="#(ItemInputType)#">
 			<INPUT type="hidden" id="ModelInputType" value="#(ModelInputType)#">
+            <INPUT type="hidden" id="TmpSourceID" value=#(TmpSourceID)#>
 		</form>
 	</div>
 	<script type='text/javascript' src='../scripts/dhceq/em/buyrequest.js'></script>

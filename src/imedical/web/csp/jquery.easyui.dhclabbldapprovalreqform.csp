@@ -4,13 +4,21 @@
  quit 1
 </csp:method>
 <HTML XMLNS=TRAK>
-<meta charset="utf-8" /> 
+<meta http-equiv="Content-Type" content="IE=Edge,chrome=1" />
 <HEAD>
 <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
 <!-- <TRAK:HEAD></TRAK:HEAD> -->
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-
+<title>审批大量用血</title>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/hisuisource.js?version=0.02" ></script>
+<script src="../scripts/websys.jquery.js" type="text/javascript"></script>
+<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/lisprintinterface/LISPrintForHis.js"></script>
+<!--script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" ></script>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js" ></script>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script-->
 <SERVER>
+
  s USERID=$G(%session.Data("LOGON.USERID"))
  s USERCODE = $G(%session.Data("LOGON.USERCODE"))
  s USERNAME = $G(%session.Data("LOGON.USERNAME"))
@@ -24,121 +32,179 @@
  i $l(HospCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
  //处理用户信息
  i $l(USERCODE) s CollectUserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
+ //获取打印服务地址
+ s rtn=##Class(DHCLIS.DHCOrderList).GetConnectString(1)
+ //s rtn="http://172.26.204.32/imedicallis/LIS.WS.DHCLISService.cls?wsdl=1&amp;CacheUserName=dhsuper&amp;CachePassword=dhsuper"
+ //获取web地址
+ s webIP=##Class(DHCLIS.DHCOrderList).getDllWebIP()
+ //获取基础配置
+ s config=##class(BLD.Common.SYSParameter).GetCTSConfigMTHD("ISISSVOLAPPROVAL",HospitalDR)
+ s config=$TR(config,"^","")
+//s HISUIVersion=""
+  //获取当前登录人员主题设置
+  s HISUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion") 
+  s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.css""/>"   //默认炫彩
+  i HISUIVersion="lite" s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.lite.min.css""/>"  
+  w hrefstr
+ 
 </SERVER>
-<!-- Put your page Title here -->
-<title>审批大量用血</title>
-	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/hisuisource.js" ></script>
-	<link   type="text/css" href="../scripts_lib/plug/font-awesome-4.3.0/css/font-awesome.min.css" rel="stylesheet" />
-	<script src="../scripts/websys.jquery.js" type="text/javascript"></script>
-	<script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
-    <style>
-    .PatientInfo {
-        border: 0px;
-        display: none;
-        border-bottom: 1px double #061fe9;
-        padding: 5px 5px 7px 15px
-    }
 
-        .PatientInfo span {
-            font-weight: bold;
-            border-bottom: 1px solid #000000;
-        }
 
-    .ReqFormListInfo table {
-        width: 100%;
-        border: 0px;
-        border-bottom: 2px dotted #00ff90;
-        line-height: 20px
-    }
 
-    .Operate {
-        height: 70px;
-        width: 100%;
-        position: absolute;
-        bottom: 0px;
-        border-top: 1px double #061fe9;
-    }
-    </style>
+<script Language="JavaScript">
+    var webIP = "#((webIP))#" ;
+	var ServerConnectString = "#((rtn))#" ;
+    ServerConnectString=ServerConnectString.split('$LIS.SP$')[0];
+	var HospitalDR = "#((HospitalDR))#" ;
+	var config= "#((config))#" ;
+	var HISUIVersion= "#((HISUIVersion))#" ;
+</script>
+
+	
 </head>
-<body>
-    <div class="hisui-layout" data-options="fit:true">
-        <div data-options="region:'west',title:'审核单列表',split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width: 370px;">
-            <table id="dg_ApprovalList"></table>
+<body style="padding:4px 4px 4px 4px">
+        <div id="cc" class="hisui-layout" data-options="fit:true">
+        <div id="div_ApList" data-options="region:'west',title:'',split:true,collapsible:false,border:false" style="width: 409px;">
+            <div class="hisui-panel" title="" data-options="headerCls:'panel-header-gray',bodyCls:'panel-header-gray',iconCls:'icon-paper',border:true,closable:false,collapsible:false,fit:true">
+                 <table id="dg_ApprovalList"></table>	
+            </div>
         </div>
-        <div data-options="region:'center',title:'申请信息',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding: 5px;">
-            <div class="PatientInfo">
-                <table style="width: 100%">
-                    <tr>
-                        <td rowspan="2">
-                            <span id="sp_PatName" style="padding-right: 10px; font-size: 25px; font-weight: bold; font-family: KaiTi"></span>
-                            <span id="sp_Sex" style="padding-right: 10px; font-size: 19px; font-family: KaiTi"></span>
-                        </td>
-                        <td>年龄：<span id="sp_Age"></span>
-                        </td>
-                        <td>登记号：<span id="sp_RegNo"></span>
-                        </td>
-                        <td>病案号：<span id="sp_MedicalRecordNo"></span>
-                        </td>
-                        <td>科室：<span id="sp_Location"></span>
-                        </td>
-                        <td>病区：<span id="sp_Ward"></span>
-                        </td>
-                        <td>床号：<span id="sp_BedNo"></span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">身份证号：<span id="sp_IDNumber"></span>
-                        </td>
-                        <td colspan="4">诊断：<span id="sp_Diagnosis"></span>
-                        </td>
-                    </tr>
-                    <tr>
-                    </tr>
-                </table>
-            </div>
-            <div class="ReqFormListInfo">
-            </div>
-            <div class="Operate">
-                <table style="width: 100%">
-                    <tr>
-                        <td>审批意见：<input id="text_ApprovOpinion" type="text" style="width: 85%" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding-top: 10px; text-align: center">
-                            <a id="" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save'" onclick="ApprovalReqForm();">通过</a>
-                            &nbsp&nbsp&nbsp&nbsp
-                            <a id="" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="RefuseApprovalReqForm();">拒审</a>
-                        </td>
-                    </tr>
-                </table>
+	   <div class="ChangeBackColor" data-options="region:'center',title:'',border:false" style="padding: 0px 0px 0px 0px;">
+            <div id="ISSData" class="hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,fit:true,border:false">
+                <div class="hisui-layout" data-options="fit:true,border:false" style="border:none">
+                    <div class="ChangeBackColor" data-options="region:'center',border:false">
+                         <div class="hisui-layout" fit="true" border="false">
+							<div  class="ChangeBackColor"  data-options="region:'center',collapsible:false,split:false,border:false">
+								<div  class="hisui-layout" fit="true" data-options="border:false">
+									<div  data-options="region:'north',title:'',collapsible:false,split:false,border:true,bodyCls:'panel-header-gray'" style="height: 56px;padding-top:2px; border-radius: 4px 4px 4px 4px">
+											<div id="div_patientInfo" style="width: 72%; float: left;"></div>
+											<div id="div_patientBldType" style="width: 28%; float: left;"></div>
+									</div>
+									<div   id="div_AppDetil" data-options="region:'center',title:'',split:false,border:false" style="margin-top:4px">
+										 <div  style="border-bottom: 0px dotted #bdbaba;" class="hisui-panel" title="审批单申请详情 " style=""  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true">
+											  <div class="ReqFormListInfo"></div> 
+											 
+										 </div>
+									</div>
+								   
+								</div>
+							</div>
+							<div data-options="region:'south',title:'',collapsible:false,split:false,border:false" style="height: 105px; padding-top: 0px;">
+								<div class="hisui-layout" data-options="fit:true,split:false,border:false">
+									<div data-options="region:'center',title:'',bodyCls:'panel-header-gray',collapsible:false,split:false,border:true" style="border-top: 1px dashed #bdbaba;border-radius: 0px 0px 4px 4px">
+										<table style="border-spacing:10px 10px" id="ApprovalData">
+													
+													<tr>
+														<td style="text-align: left"><span style="color:#666666" listranslate="html~Director：">科主任：</span></td>
+														<td id="td_HeadCheckUserName" style="text-align: left; font-size:14px;"></td>
+														<td style="width: 110px; text-align: right"><span style="color:#666666" listranslate="html~CheckDate：">审批时间：</span></td>
+														<td id="td_HeadCheckDate" style="text-align: left; font-size:14px;"></td>
+														<td style="width: 110px; text-align: right"><span style="color:#666666" listranslate="html~CheckRemark：">审批意见：</span></td>
+														<td id="td_HeadOpnion" style="text-align: left; font-size:14px;"></td>
+													</tr>
+													<tr>
+														<td style="text-align: left"><span style="color:#666666" listranslate="html~BDDepartment：">输血科：</span></td>
+														<td id="td_BISCheckUserName" style="text-align: left; font-size:14px;"></td>
+														<td style="width: 110px; text-align: right"><span style="color:#666666" listranslate="html~CheckDate：">审批时间：</span></td>
+														<td id="td_BISCheckDate" style="text-align: left; font-size:14px;"></td>
+														<td style="width: 110px; text-align: right"><span style="color:#666666" listranslate="html~CheckRemark：">审批意见：</span></td>
+														<td id="td_BISOpnion" style="text-align: left; font-size:14px;"></td>
+													</tr>
+													 <tr>
+														<td style="text-align: left"><span style="color:#666666" listranslate="html~MedDepartment：">医务科：</span></td>
+														<td id="td_MEDCheckUserName" style="text-align: left; font-size:14px;"></td>
+														<td style="width: 110px; text-align: right"><span style="color:#666666" listranslate="html~CheckDate：">审批时间：</span></td>
+														<td id="td_MEDCheckDate" style="text-align: left; font-size:14px;"></td>
+														<td style="width: 110px; text-align: right"><span style="color:#666666" listranslate="html~CheckRemark：">审批意见：</span></td>
+														<td id="td_MEDOpnion" style="text-align: left; font-size:14px;"></td>
+													</tr>
+
+										</table>
+
+									</div>
+								</div>
+
+							</div>
+						</div>
+                    </div>
+                    
+					
+					<div  class="ChangeBackColor" data-options="region:'south',bodyCls:'panel-header-gray',border:false" style="height: 60px;border-radius:4px;padding-top:4px">
+                        <div class="hisui-panel panel-header-gray" data-options="bodyCls:'panel-header-gray',fit:true" style="padding-top:4px">
+
+                        <table style="width: 100%; padding-top:10px; padding-left:10px;">
+                       
+                            <tr>
+                                <td>审批意见 &nbsp;<input id="text_ApprovOpinion" type="text" style="width:60%" class="hisui-validatebox" />
+                                   <a id="Check" href="#" style="margin-left:6px" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" onclick="ApprovalReqForm();">通过</a>
+								   <a id="Reject" href="#" style="margin-left:6px" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="RefuseApprovalReqForm();">拒绝</a>
+								   <a id="print" href="#" style="margin-left:6px" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick="Print();">打印</a>
+									
+                                </td>
+                            </tr>
+                           
+                        </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <table id="tb_ApprovalList">
-        <tr>
-            <td>申请日期：<input id="db_SttDate" type="text" class="easyui-datebox" required="required" style="width: 120px" />--
-                <input id="db_EndDate" type="text" class="easyui-datebox" required="required" style="width: 120px" />
-            </td>
-        </tr>
-        <tr>
-            <td>审批状态：
-                 <label>
-                     <input name="ApproveType" type="radio" value="10" onclick="LoadApprovalList()" checked="checked" />申请</label>
-                <label>
-                    <input name="ApproveType" type="radio" value="20" onclick="LoadApprovalList()" />通过</label>
-                <label>
-                    <input name="ApproveType" type="radio" value="30" onclick="LoadApprovalList()" />拒绝</label>
-                <label>
-                    <input name="ApproveType" type="radio" value="40" onclick="LoadApprovalList()" />作废</label>
-                <label>
-                    <input name="ApproveType" type="radio" value="" onclick="LoadApprovalList()" />全部</label>
-            </td>
-        </tr>
-    </table>
+	<div id="tb_ApprovalList" style="height: 130px" >
+         <table id="tabl_ApprovalList" style="margin:0px 0px 0px 0px;border-collapse: separate; border-spacing: 10px 10px;" border="0">
+                                            <tr>
+                                                <td style="text-align: right">申请日期</td>
+                                                <td><input id="db_SttDate" type="text" class="hisui-datebox" required="required"
+                                                    style="width: 140px" /><span style="margin-left:7px;margin-right:3px">至</span>
+                                                    <input id="db_EndDate" type="text" class="hisui-datebox" required="required" style="width: 140px" />
+                                                </td>
+                                            </tr>
+                                            <tr id="tr_approveTyle" style="display:none">
+                                                 <td>单据类型</td>
+				                                 <td><select class="hisui-combogrid" id='cbg_approveTyle' name="approveTyle" style="width: 308px;" />
+                                                 </td>    
+                                             </tr>
+                                             <tr>
+                                                <td>审批状态</td> 
+                                                   
+                                                    <td><input class='hisui-radio' type='radio' name='ApproveStatue' value='W' label='申请' id='radio_active' data-options="required:true,checked:true" />
+                                                   
+                                                    <span style="margin-left: 10px">
+                                                        <input class='hisui-radio' type='radio' name='ApproveStatue' value='C' label='通过' id='radio_no' />
+                                                    </span>
+                                                    <span style="margin-left: 10px">
+                                                       <input class='hisui-radio' type='radio' name='ApproveStatue' value='R' label='作废' id='radio_no' />
+                                                    </span>
+                                                    <span style="margin-left: 10px">  
+                                                       <input class='hisui-radio' type='radio' name='ApproveStatue' value='' label='全部' id='radio_no' />
+                                                     </span>
+                                                </td>
+                                            </tr>
+		                                    <!--tr id="tr_approveTyle" style="display:none">
+                                                <td><span style="margin-right:6px;">审批类型</span>
+       
+                                                      <input class='hisui-radio' type='radio' name='ApproveType' value='REF' label='申请超量' id='radio_active' data-options="required:true,checked:true" />
+                                                      <input class='hisui-radio' type='radio' name='ApproveType' value='API' label='发血超量' id='radio_no' />  
+                  
+                 
+                                                </td>
+                                            </tr-->
+                                            
+                                            <tr>
+                                               <td colspan="2" style="text-align: right">
+                                                  <a href="javascript:void(0)" id="btn_search" class="hisui-linkbutton hisui-tooltip" icon="icon-w-find" onclick="LoadApprovalList();">查询</a>
+                                                  <a id="btn_clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="margin-left: 6px" onclick="ClearAll();">清屏</a>
+                                               </td>
+                                            </tr>
+                                    </table>
+    </div> 
+   
     <script type="text/javascript">
     var me = {
         ApprovalListDR: "",
+		ISISSVOLAPPROVAL:config,
+		approveTyle:[{ "ID": "REF", "Name":"申请超量"},
+	             { "ID": "API", "Name":"发血超量"}]
     }
     $(function () {
         //全局ajax开始
@@ -166,191 +232,386 @@
         });
         $("#db_SttDate").datebox("setValue", ThreeDataAgo);
         $("#db_EndDate").datebox("setValue", TodayDate);
-        $("#dg_ApprovalList").datagrid({
-            fit: true,
-            border: false,
-            toolbar: '#tb_ApprovalList',
-            columns: [[
-                { field: 'ApprovalNo', title: '审批单号', width: 100, align: 'center' },
-                {
-                    field: 'ApproveType', title: '状态', width: 50, align: 'center',
-                    formatter: function (value, row, index) {
-                        var retStr = "";
-                        switch (value) {
-                            case "10":
-                                retStr = "申请";
-                                break;
-                            case "20":
-                                retStr = "通过";
-                                break;
-                            case "30":
-                                retStr = "拒审";
-                                break;
-                            case "40":
-                                retStr = "作废";
-                                break;
-                            default:
-                                retStr = "未知";
-                                break;
-                        }
-                        return retStr;
+        
+        //状态事件
+		$HUI.radio("[name='ApproveStatue']", {
+			onChecked: function (e) {
+				var value = $(e.target).attr("value");
+			    LoadApprovalList();
+			}
+	    });
+	    
+        $('#cbg_approveTyle').combogrid({
+	        data: me.approveTyle,
+	        panelWidth: 250,
+	        method: 'get',
+	        //panelHeight: 'auto',
+	        idField: 'ID',
+	        textField: 'Name',
+	        //multiple: true,
+	        columns: [[
+	            { field: 'ID', title: 'ID', width: 40, sortable: false, align: 'center' },
+	            {field: 'Name', title: '审批类型', width: 200, sortable: false, align: 'center'}
+	        ]],
+	        onLoadSuccess: function () {
+                
+	           $(this).combogrid('setValue', "REF");
+	             
+           },
+           onSelect: function (index, row) { 
+		   
+		       $("#print").show(); 
+               $("#td_IssUnCK").show(); 
+               $("#td_IssCK").show();
+               LoadApprovalList();
+           
+           }
+
+	   });
+       
+       if(me.ISISSVOLAPPROVAL==1){
+	        $("#tr_approveTyle").show();
+	        $("#tb_ApprovalList").attr("style", "height:160px"); 
+	   }
+       $("#dg_ApprovalList").datagrid({
+        fitColumns: true,  //列少设为true,列多设为false
+        rownumbers: false,
+        pagination: true,
+        pageSize: 20,
+        pageList: [20, 40, 80, 100],
+        singleSelect: true,
+        idField: "ApprovalListDR",
+        toolbar: '#tb_ApprovalList',
+        border: false,
+        title:  "审核单列表",
+	    headerCls: 'panel-header-gray',
+		bodyCls: 'panel-header-gray',
+		iconCls:'icon-paper',
+        fit: true,
+        showPageList:false, 
+		showRefresh:false,
+        columns: [[
+                { field: 'ApprovalNo', title: "审核单号", width: 100, align: 'left' },
+                { field: 'ApproveTypeDes', title:"状态", width: 60, align: 'left' ,
+                    styler: function (value, row, index) {
+	                if ( value == "待审") {
+		                return 'background-color:#EFF9FF;color:#339EFF;';
+                       
                     }
+                    if ( value == "审核") {
+	                    return 'background-color:#E6FFFB;color:#05A489;';
+                       
+                    }
+                    if ( value == "作废") {
+	                    return 'background-color:#FFE1E1;color:#FF5252;';
+                       
+                    }
+                    if ( value == "接收") {
+	                    return 'background-color:#FFF2E9;color:#FF793E;';
+                       
+                    }
+                    if ( value == "输血科拒收") {
+	                    return 'background-color:#FBE1F8;color:#D952D1;';
+                       
+                    }
+                    if ( value == "待提交") {
+	                    return 'background-color:#F5FFE6;color:#85C528;';
+                       
+                    }
+                    
+	            }
+                
+                
                 },
-                { field: 'AddDate', title: '申请日期', width: 100, align: 'center' },
-                { field: 'AddUserName', title: '申请人', width: 100, align: 'right' }
+                { field: 'ApprovaWaitDate', title:"申请日期", width: 90, align: 'left' },
+                { field: 'ApprovaWaitUser', title: "申请人", width: 60, align: 'left' }
+               
             ]],
-            singleSelect: true,
             onSelect: function (rowIndex, rowData) {
                 LoadApprovalInfo(rowData["ApprovalListDR"]);
+                ContrlBtnStatue(rowData["IsSupApprove"], rowData["Status"],rowData.IsApButten,rowData.IsDisButten);
+                LoadApprovOpinion(rowData);
+				
             },
             onLoadSuccess: function (data) {
-                $(".ReqFormListInfo").html("");
+
                 me.ApprovalListDR = "";
-                $(".PatientInfo").css("display", "none");
+                $('#text_ApprovOpinion').val("");
+				
             }
         });
-        LoadApprovalList();
-    });
 
+	  LoadApprovalList();
+  });
+	
+	//加载审批信息
+	function LoadApprovOpinion(Data) {
+		
+		if (Data["ApprovOpinion"].length > 0) {
+			$("#text_ApprovOpinion").val(Data["ApprovOpinion"]);
+		}
+
+	}
+	//控制按钮状态
+function ContrlBtnStatue(IsSupApprove, Status,IsApButten,IsDisButten) {
+    //初始化默认禁用状态
+    $("#Check").linkbutton('disable');
+    $("#Reject").linkbutton('disable');
+    $("#print").linkbutton('disable'); 
+    $("#Commit").linkbutton('disable'); 
+
+    if (IsApButten=="1") {
+        $("#Check").linkbutton('enable');
+       
+
+    }
+    if (IsDisButten=="1") {
+        $("#Reject").linkbutton('enable');
+       
+
+    }
+  
+   
+    //医务科或输血科审批后，可打印审批单
+    if ((Status == "20") || (Status == "40")) {
+        $("#print").linkbutton('enable');
+
+    }
+
+}
+   
+    
+    
     //载入审核单列表
     function LoadApprovalList() {		
         var SttDate = $("#db_SttDate").datebox("getValue");
         var EndDate = $("#db_EndDate").datebox("getValue");
-        var ApproveType = $('input:radio[name="ApproveType"]:checked').val();
+        var ApproveType ="REF";
+		if(me.ISISSVOLAPPROVAL==1){
+		    ApproveType=$("#cbg_approveTyle").combogrid("getValue"); ;
+		}
+		var ApproveStatue = $('input:radio[name="ApproveStatue"]:checked').val();
         $("#dg_ApprovalList").datagrid({
-	        url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.BLD.DHCBDApprovalReqForm&QueryName=QryApprovalReqFormList&FunModul=JSON&P0='+SttDate+'&P1='+EndDate+'&P2=REF&P3='+ApproveType,
-	        method: 'get',
-//			queryParams: { 
-//				ClassName:"DHCLIS.BLD.DHCBDApprovalReqForm",
-//				QueryName:"QryApprovalReqFormList",
-//				FunModul:"JSON",
-//				P0:SttDate, 
-//				P1:EndDate, 
-//				P2:ApproveType, 
-//				P3:"",  //ToDate:"", 
-//				P4:"",  //LocCode:"", 
-//				P5:"",  //AuthFlag:"", 
-//				P6:"",  //AllTS:"", 
-//				P7:"",  //AdmDateFlag:""
-//				P8:"",
-//				P9:"",   //ReadFlag
-//				P10:"",	 //RegNo
-//				P11:"",  //LocationDR
-//				P12:"",  //WardDR
-//				P13:""  //PrintFlag
-//			},		
+			url:'jquery.easyui.dhclabclassjson.csp?ClassName=BLD.WS.BLL.CTS.QryReqApproval&QueryName=QryApprovalList&FunModul=JSON&P0='+SttDate+'&P1='+EndDate+'&P2='+ApproveType+'&P3='+ApproveStatue+'&P4=10',
+	        method: 'get'
+
         });
     }
 
     //加载审核单关联信息
     function LoadApprovalInfo(ApprovalDR) {
         me.ApprovalListDR = ApprovalDR;
+		$("#text_ApprovOpinion").val("");
         $(".ReqFormListInfo").html("");
-        if (ApprovalDR.length == 0) {
-            $(".PatientInfo").css("display", "none");
-        }
-        $(".PatientInfo").css("display", "block");
+		
+		var ApproveType ="REF";
+		if(me.ISISSVOLAPPROVAL.indexOf("1")>-1){
+		   ApproveType=$("#cbg_approveTyle").combogrid("getValue"); ;
+		}
+		var QueryName="QryApprovaInfoByApr";
+        if(ApproveType=="API"){
+		    QueryName="QryIssueListByApr";
+		}
         $.ajax({
 	        url:'jquery.easyui.dhclabclassjson.csp',
 	        data: { 
-				 ClassName:"BLD.WS.BLL.DHCBDApprovalList",
-				 QueryName:"QryReqFormListByApr",
+				 ClassName:"BLD.WS.BLL.CTS.QryReqApproval",
+				 QueryName:QueryName,
 				 FunModul:"JSON",
-				 P0:ApprovalDR
+				 P0:me.ApprovalListDR 
 			 },
             success: function (data) {
 	            data = jQuery.parseJSON(data)["rows"];
-                if (data.length > 0) {
-                    for (var index = 0; index < data.length; index++) {
-                        //展示病人信息
-                        if (index == 0) {
-                            for (var i = 0; i < $(".PatientInfo span").length; i++) {
-                                var NodeName = $(".PatientInfo span")[i]["id"];
-                                NodeName = NodeName.replace("sp_", "");
-                                $(".PatientInfo span").eq(i).html(data[0][NodeName]);
-                            }
-                        }
-                        console.log(data[index]);
-                        var ReqFormInfo = data[index];
-                        //展示申请单信息
-                        var HtmlStr = "<table><tr><td>";
-                        HtmlStr += "申请单号：" + ReqFormInfo["ReqFormNo"] + "</td>";
-                        HtmlStr += "<td>申请类型：" + ReqFormInfo["ReqTypeName"] + "</td>";
-                        HtmlStr += "<td>预定日期：" + ReqFormInfo["BookDate"] + "</td>";
-                        HtmlStr += "<td>审核时间：" + ReqFormInfo["CheckDate"] + "&nbsp&nbsp" + ReqFormInfo["CheckTime"] + "</td>";
-                        HtmlStr += "<td>审核人：" + ReqFormInfo["CheckUserName"] + "</td>";
-                        HtmlStr += "</tr>"
-                        var ProductListObj = JSON.parse(ReqFormInfo["ProductList"]);
-                        for (var j = 0; j < ProductListObj.length; j++) {
-                            HtmlStr += "<tr>";
-                            HtmlStr += "<td>申请血型：" + ProductListObj[j]["ReqBloodGroup"] + "</td>";
-                            HtmlStr += "<td>血产品：<b>" + ProductListObj[j]["ReqProduct"] + "</b></td>";
-                            HtmlStr += "<td>申请量：<b>" + ProductListObj[j]["Volumn"] + "&nbsp&nbsp" + ProductListObj[j]["Unit"] + "</b></td>";
-                            HtmlStr += "<td colspan=\"2\">输血目的：" + ProductListObj[j]["Purpose"] + "</td>";
-                            HtmlStr += "</tr>";
-                        }
-                        HtmlStr += "</table>";
-                        $(".ReqFormListInfo").append(HtmlStr);
-                    }
-                    //展示审批信息
-                    $(".Operate").css("display", "block");
-                    var SelectedRow = $("#dg_ApprovalList").datagrid("getSelected");
-                    var ApproveType = SelectedRow["ApproveType"];
-                    if (SelectedRow["ApprovalReason"].length > 0) {
-                        var HtmlStr = "<table style='padding-top:12px'>";
-                        HtmlStr += "<tr>";
-                        HtmlStr += "<td colspan='3'>申请原因：" + SelectedRow["ApprovalReason"] + "</td>";
-                        HtmlStr += "</tr>";
-                        HtmlStr += "</table>";
-                        $(".ReqFormListInfo").append(HtmlStr);
-                    }
-                    if (ApproveType != "10") {
-                        $(".Operate").css("display", "none");
-                        var HtmlStr = "<table style='padding-top:20px'>";
-                        HtmlStr += "<tr style='border-bottom: 1px double #061fe9;'><td style='font-size:19px;text-align:center;font-weight:bold;border-bottom: 1px double #061fe9;' colspan='3'>审批信息</td></tr>"
-                        var ApproveTypeStr = "";
-                        switch (ApproveType) {
-                            case "10":
-                                ApproveTypeStr = "申请";
-                                break;
-                            case "20":
-                                ApproveTypeStr = "通过";
-                                break;
-                            case "30":
-                                ApproveTypeStr = "拒审";
-                                break;
-                            case "40":
-                                ApproveTypeStr = "作废";
-                                break;
-                            default:
-                                ApproveTypeStr = "未知";
-                                break;
-                        }
-                        HtmlStr += "<tr><td>审批状态：" + ApproveTypeStr + "</td>";
-                        HtmlStr += "<td>审批时间：" + SelectedRow["ApproveDate"] + "&nbsp&nbsp" + SelectedRow["ApproveTime"] + "</td>";
-                        HtmlStr += "<td>审批人：" + SelectedRow["ApproveUserName"] + "</td>";
-                        HtmlStr += "</tr>";
-                        if (SelectedRow["ApprovOpinion"].length > 0) {
-                            HtmlStr += "<tr>";
-                            HtmlStr += "<td colspan='3'>审批意见：" + SelectedRow["ApprovOpinion"] + "</td>";
-                            HtmlStr += "</tr>";
-                        }
-                        HtmlStr += "</table>";
-                        console.log(HtmlStr)
-                        $(".ReqFormListInfo").append(HtmlStr);
-                    }
-                }
+	            if (data.length > 0) {
+						for (var index = 0; index < data.length; index++) {
+							//展示病人信息
+							if (index == 0) {
+								var OneItemData = data[index];
+								InitPatientInfo(OneItemData);
+							}
+							var ReqFormInfo = data[index];
+							//术前办理展示申请单信息
+							if(ApproveType=="REF"){
+								var HtmlStr = "<div style='padding:5px 5px 10px 10px;border-bottom: 1px dashed #bdbaba;'><table style='border-spacing: 0; width: 100%;'><tr style='height:30px'><td><span style='color:#666666;'>";
+								HtmlStr +="申请单号:</span></td><td><span style='font-size:14px;'>" + ReqFormInfo["ReqFormNo"] + "</span></td>";
+								HtmlStr += "<td style='text-align: right;'><span style='color:#666666;'>申请类型:</span></td><td><span style='font-size:14px;padding-left:10px'>" + ReqFormInfo["ReqTypeName"] + "</span></td>";
+								HtmlStr += "<td style='text-align: right;'><span style='color:#666666;'>预定日期:</span></td><td><span style='font-size:14px;padding-left:10px'>" + ReqFormInfo["BookDate"] + "</span></td>";
+								HtmlStr += "<td><span style='color:#666666;'>审核时间:</span></td><td>" + ReqFormInfo["CheckDate"] + "&nbsp&nbsp" + ReqFormInfo["CheckTime"] + "</td>";
+								HtmlStr += "<td><span style='color:#666666;'>审核人:</span></td><td><span style='font-size:14px;'>" + ReqFormInfo["CheckUserName"] + "</span></td>";
+								HtmlStr += "</tr>"
+								var ProductListObj = JSON.parse(ReqFormInfo["ProductList"]);
+								for (var j = 0; j < ProductListObj.length; j++) {
+									HtmlStr += "<tr style='height:30px'>";
+									HtmlStr += "<td><span style='color:#666666;'>申请血型:</span></td><td><span style='font-size:14px;'>" + ProductListObj[j]["ReqBloodGroup"] + "</span></td>";
+									HtmlStr += "<td style='text-align: right;'><span style='color:#666666;'>血产品:</span></td><td><span style='font-size:14px;padding-left:10px'>" + ProductListObj[j]["ReqProduct"] + "</span></td>";
+									HtmlStr += "<td style='text-align: right;'><span style='color:#666666;'>申请量:</span></td><td><span style='font-size:14px;padding-left:10px'>" + ProductListObj[j]["Volumn"] + "&nbsp&nbsp" + ProductListObj[j]["Unit"] + "</span></td>";
+									HtmlStr += "<td ><span style='color:#666666;'>输血目的:</span></td><td colspan=\"2\"><span style='font-size:14px;'>" + ProductListObj[j]["Purpose"] + "</span></td>";
+									HtmlStr += "</tr>";
+								}
+								HtmlStr += "</table></div>";
+							//发血超量补审展示发血单信息1px dashed #ccc;
+							}else{
+							    var HtmlStr = "<div style='padding:5px 5px 10px 10px;border-bottom: 1px dashed #bdbaba;'><table style='border-spacing: 0; width: 100%;'><tr style='height:30px'><td><span style='color:#666666;'>";
+								HtmlStr += "发血单号：</span><span style='font-size:14px;'>" + ReqFormInfo["RecordNo"] + "</span></td>";
+								HtmlStr += "<td><span style='color:#666666;'>发血时间：</span><span style='font-size:14px;'>" + ReqFormInfo["IssueDate"] + "&nbsp&nbsp" + ReqFormInfo["IssueTime"] + "</span></td>";
+								HtmlStr += "<td><span style='color:#666666;'>发血人：</span><span style='font-size:14px;'>" + ReqFormInfo["IssueUserName"] + "</span></td>";
+								HtmlStr += "</tr>"
+								var ProductListObj = JSON.parse(ReqFormInfo["ProductList"]);
+								for (var j = 0; j < ProductListObj.length; j++) {
+									HtmlStr += "<tr style='height:30px'>";
+									HtmlStr += "<td><span style='color:#666666;'>血袋编码：</span><span style='font-size:14px;'>" + ProductListObj[j]["PackID"] +"||"+ProductListObj[j]["ProductBarcode"]+"</span></td>";
+									HtmlStr += "<td><span style='color:#666666;'>血产品：</span><span style='font-size:14px;'>" + ProductListObj[j]["BdProduct"] + "</span></td>";
+									HtmlStr += "<td><span style='color:#666666;'>发血量：</span><span style='font-size:14px;'>" + ProductListObj[j]["PackVolume"]+ "</span></td>";
+									HtmlStr += "</tr>";
+								}
+								HtmlStr += "</table></div>";
+							
+							}
+							$(".ReqFormListInfo").append(HtmlStr);
+						}
+						//展示申请原因 
+						var SelectedData = $("#dg_ApprovalList").datagrid("getSelected");
+						if (SelectedData["ApprovalReason"].length > 0) {
+                           	var HtmlStr = "<table style='padding-top:5px;padding-left:10px'>";
+							HtmlStr += "<tr>";
+							HtmlStr += "<td colspan='3'><span style='color:#666666;'>申请原因：</span><span style='font-size:14px;'>" + SelectedData["ApprovalReason"] + "</span></td>";
+							HtmlStr += "</tr>";
+							HtmlStr += "</table>"; 
+							$(".ReqFormListInfo").append(HtmlStr);
+						}
+                         $("#td_HeadCheckUserName").html(SelectedData["HeadCheckUser"]);
+                         $("#td_HeadCheckDate").html(SelectedData["HeadCheckDate"]+" "+SelectedData["HeadCheckTime"]);
+                         $("#td_HeadOpnion").html(SelectedData["HeadCheckRemark"]);
+                         $("#td_BISCheckUserName").html(SelectedData["DeptApproveUser"]);
+                         $("#td_BISCheckDate").html(SelectedData["DeptApproveDate"]+" "+SelectedData["DeptApproveTime"]);
+                         $("#td_BISOpnion").html(SelectedData["DeptApprovOpinion"]);
+                         $("#td_MEDCheckUserName").html(SelectedData["ApproveUserName"]);
+                         $("#td_MEDCheckDate").html(SelectedData["ApproveDate"]+" "+SelectedData["ApproveTime"]);
+                         $("#td_MEDOpnion").html(SelectedData["ApprovOpinion"]);
+					}
+				
+                
             }
         });
     }
+	
+	 	//获取患者信息
+	function InitPatientInfo(data) {
+	   
+		var SexImageClass = "man";
+		if (data.Sex == "女")
+			SexImageClass = "woman";
+		var PatientType = "";
+		//I住院,O门诊,H体检,E急诊,N新生儿,R科研,P药理,G其他
+		switch (data.AdmType) {
+			case "I":
+				PatientType = "住院";
+				break;
+			case "O":
+				PatientType = "门诊";
+				break;
+			case "H":
+				PatientType = "体检";
+				break;
+			case "E":
+				PatientType = "急诊";
+				break;
+			case "N":
+				PatientType = "新生儿";
+				break;
+			case "R":
+				PatientType = "科研";
+				break;
+			case "P":
+				PatientType = "药理";
+				break;
+			case "G":
+				PatientType = "其他";
+				break;
+		}
+		var ABO = data.ABO
+		var RHD = data.RH;
+		if (ABO == null || ABO.length == 0) {
+			ABO = "ABO未知";   
+		}
+		if (RHD == null || RHD.length == 0) {
+			RHD = "RH未知"
+		}
+		var htmlStr = "";
+		htmlStr += '<table style="line-height:20px;padding-top:2px">';
+		htmlStr += '<tr>';
+		htmlStr += '<td rowspan="2" >';
+		htmlStr += '<span style="margin-left:10px"><img src="../images/' + SexImageClass + '.png" />';
+		htmlStr += '</span></td>';
+		htmlStr += '<td><span style="margin-left:15px;font-size:20px;"> ';
+		htmlStr += data.PatName;
+		htmlStr += '</span><span style="margin-left:10px;margin-right:10px;color:#ccc">/</span>';
+		htmlStr += data.Sex;
+		htmlStr += '<span style="margin-left:10px;margin-right:10px;color:#ccc">/</span>';
+		htmlStr += data.AgeDesc;
+		htmlStr += '<span style="margin-left:10px;margin-right:10px;color:#ccc">/</span>';
+		htmlStr += data.Location;
+		htmlStr += '<span style="margin-left:10px;margin-right:10px;color:#ccc">/</span>';
+		htmlStr += data.Ward;
+		htmlStr += '<span style="margin-left:10px;margin-right:10px;color:#ccc">/</span>';
+		htmlStr += data.BedNo+"床";
+		htmlStr += '</td>';
+		htmlStr += '<tr>';
+		htmlStr += '<td><span style="margin-left:15px">';
+		htmlStr += PatientType;
+		htmlStr += '</span><span style="margin-left:10px;margin-right:10px;color:#ccc">/</span>';
+		htmlStr += '<span style="">病案号</span>：';
+		htmlStr += data.MedicalRecordNo;
+		htmlStr += '<span style="margin-left:10px;margin-right:10px;color:#ccc">/</span>';
+		htmlStr += '<span style="color:#f1a734">诊断</span>：';
+		htmlStr += '<a title="' + data.Diagnosis + '" style="color:#f1a734"><b>' + data.Diagnosis.substr(0, 20) + '</a>';
+		htmlStr += '</td>';
+		htmlStr += '</tr>';
+		htmlStr += "</table>";
+		if ($("#div_patientInfo").length > 0){
+			$("#div_patientInfo").html(htmlStr);
+		}
+
+		var htmlType = "";
+		htmlType += '<table style="line-height:20px;padding-top:2px">';
+		htmlType += '<tr><td style="width:35px;text-align:right"> ABO:</td><td> &nbsp;<span style="font-size:20px;color:#1278b8">';
+		htmlType += ABO;
+		htmlType += '</span></td></tr>';
+		htmlType += '<tr><td style="width:35px;text-align:right"> RH:</td><td> &nbsp;<span style="color:#1278b8;">';
+		htmlType += RHD;
+		htmlType += '</span></td></tr>';
+		htmlType += '</table>';
+		$("#div_patientBldType").html(htmlType);
+
+	}
+	
     //审批
     function ApprovalReqForm() {
-        var ApprovOpinion = $("#text_ApprovOpinion").val();
-        $.messager.confirm('确认', '您确认想要<span style="font-weight:bold;color:red">审批通过</span>吗？此操作不可取消！', function (r) {
+       
+		var ApprovOpinion = $("#text_ApprovOpinion").val();
+		if(me.ApprovalListDR.length==0||me.ApprovalListDR==undefined){
+			$.messager.alert('提示', "请先选择审批单再进行审批操作","info");
+			return;
+			
+        }
+        var SelectRow = $("#dg_ApprovalList").datagrid("getSelected");
+        if (SelectRow == undefined || SelectRow == null || SelectRow.length == 0) {
+            $.messager.alert('提示', '"请先选择审批单再进行审批操作！', 'info');
+            return;
+
+        }
+        var IsSupApprove = SelectRow["IsSupApprove"];
+		var ApproveType ="REF";
+		if(me.ISISSVOLAPPROVAL=="1"){
+		    ApproveType=$("#cbg_approveTyle").combogrid("getValue"); 
+		}
+		var ApproveStatue = $('input:radio[name="ApproveStatue"]:checked').val();
+			
+        $.messager.confirm('确认', '您确认想要<span style="font-weight:bold;color:red">审批通过</span>吗？！', function (r) {
             if (r) {
-	            $.ajaxRunServerMethod({ClassName:"DHCLIS.BLD.DHCBDApprovalReqForm",MethodName:"ApprovalReqForm",UserID:"#((USERID))#",ApprovalListDR:me.ApprovalListDR,ApprovOpinion:ApprovOpinion},
+	            $.ajaxRunServerMethod({ClassName:"BLD.WS.BLL.CTS.QryReqApproval",MethodName:"ApprovalReqFormCSP",UserID:"#((USERID))#",ApprovalListDR:me.ApprovalListDR,ApprovOpinion:ApprovOpinion,modeType:ApproveType,IsSupApprove:IsSupApprove},
 		           function(rtn){
-					   if (rtn == "0") {
+					   if (rtn == "1") {
 						   LoadApprovalList();
 						   $.messager.show({
 								title:'提示消息',
@@ -370,15 +631,33 @@
     //拒绝审批
     function RefuseApprovalReqForm() {
         var ApprovOpinion = $("#text_ApprovOpinion").val();
+		if(me.ApprovalListDR.length==0||me.ApprovalListDR==undefined){
+			$.messager.alert('提示', "请先选择审批单再进行审批操作","info");
+			return;
+			
+        }
+        var SelectRow = $("#dg_ApprovalList").datagrid("getSelected");
+        if (SelectRow == undefined || SelectRow == null || SelectRow.length == 0) {
+            $.messager.alert('提示', '"请先选择审批单再进行审批操作！', 'info');
+            return;
+
+        }
+        var IsSupApprove = SelectRow["IsSupApprove"];
+		var ApproveType ="REF";
+		if(me.ISISSVOLAPPROVAL=="1"){
+		    ApproveType=$("#cbg_approveTyle").combogrid("getValue"); 
+		}
+		var ApproveStatue = $('input:radio[name="ApproveStatue"]:checked').val();
+		
         $.messager.confirm('确认', '您确认想要<span style="font-weight:bold;color:red">拒绝审批</span>吗？此操作不可取消！', function (r) {
             if (r) {
-                $.ajaxRunServerMethod({ClassName:"DHCLIS.BLD.DHCBDApprovalReqForm",MethodName:"RefuseApprovalReqForm",UserID:"#((USERID))#",ApprovalListDR:me.ApprovalListDR,ApprovOpinion:ApprovOpinion},
+                $.ajaxRunServerMethod({ClassName:"BLD.WS.BLL.CTS.QryReqApproval",MethodName:"RejectReqFormCSP",UserID:"#((USERID))#",ApprovalListDR:me.ApprovalListDR,ApprovOpinion:ApprovOpinion,modeType:ApproveType,IsSupApprove:IsSupApprove},
 		           function(rtn){
-					   if (rtn == "0") {
+					   if (rtn == "1") {
 						   LoadApprovalList();
 						   $.messager.show({
 								title:'提示消息',
-								msg:'审批成功!',
+								msg:'拒审成功!',
 								timeout:5000,
 								showType:'slide'
 							});
@@ -390,51 +669,125 @@
             }
         });
     }
-    //获取当前日期
-function GetCurentDate() {
-    var now = new Date();
-
-    var year = now.getFullYear();       //年
-    var month = now.getMonth() + 1;     //月
-    var day = now.getDate();            //日
-
-    var hh = now.getHours();            //时
-    var mm = now.getMinutes();          //分
-
-    var clock = year + "-";
-
-    if (month < 10)
-        clock += "0";
-
-    clock += month + "-";
-
-    if (day < 10)
-        clock += "0";
-
-    clock += day;
-
-    return (clock);
-}
-
-//获取日期的下偏移几天
-function getNextDays(date,days) {
-    date = new Date(date);
-    date = +date + 1000 * 60 * 60 * 24 * days;
-    date = new Date(date);
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    if (month < 10) {
-        month = "0" + month;
+	
+	//取消审批
+    function ReturnApprovalReqForm() {
+       // var ApprovOpinion = $("#text_ApprovOpinion").val();
+        $.messager.confirm('确认', '您确认想要<span style="font-weight:bold;color:red">取消审批</span>吗？', function (r) {
+            if (r) {
+                $.ajaxRunServerMethod({ClassName:"DHCLIS.BLD.DHCBDApprovalReqForm",MethodName:"ReturnApprovalReqForm",UserID:"#((USERID))#",ApprovalListDR:me.ApprovalListDR},
+		           function(rtn){
+					   if (rtn == "1") {
+						   LoadApprovalList();
+						   $.messager.show({
+								title:'提示消息',
+								msg:'取消审批成功!',
+								timeout:5000,
+								showType:'slide'
+							});
+					   } else {
+						    $.messager.alert("错误提示",rtn);
+					   }
+		           }
+		           );
+            }
+        });
     }
-    if (date.getDate() < 10) {
-        day = "0" + day;
-    }
-    //格式化
-    return date.getFullYear() + "-" + month + "-" + day;
+	
+	function Print(){
+	    // var ApproveType = $('input:radio[name="ApproveType"]:checked').val();
+	    var ApproveType ="REF";
+		if(me.ISISSVOLAPPROVAL=="1"){
+		    ApproveType=$("#cbg_approveTyle").combogrid("getValue"); 
+		}
+	    var selected = $("#dg_ApprovalList").datagrid('getSelected');
+        if (selected == null) {
+            $.messager.alert("操作提示", "请选择要打印的审批单！")
+            return;
+        }
+        if(selected["ApproveTypeDes"]=="作废"){
+	        $.messager.alert("操作提示", "该审批单已作废！")
+            return;
+	        
+	    }
+	    if(selected["ApproveTypeDes"]=="输血科拒审"){
 
-}
-    </script>
+	        $.messager.alert("操作提示", "该审批单输血科已拒审！")
+            return;
+	        
+	    }
+	    var ApprovalDR = selected["ApprovalListDR"];
+	    var IsSign=selected["ApproveDate"];
+	    if(IsSign==""){
+		    $.messager.alert("操作提示", "医务科未审批，无法打印！")
+            return;
+		}
+		
+	    var printFlag = "0";       ///0:打印所有报告 1:循环打印每一份报告
+		var printType = "PrintPreview";    ///PrintOut:打印  PrintPreview打印预览
+		var paramList = "1";               ///1:报告处理打印 2:自助打印 3:医生打印
+		var funName = "QueryPrintData";
+	    var claName = "HIS.DHCBDPrintBigReqform";
+        var ApprovalDRStr = ApprovalDR + ",REF";  //申请超量
+        if (ApproveType == "API"){   //发血超量
+           ApprovalDRStr = ApprovalDR;
+        }
+        var UserParam = "med" ;
+	    var connectString = ServerConnectString;
+        var Param = "1@" + connectString + "@" + ApprovalDRStr + "@" + UserParam + "@" + printType + "@DOCTOR@" + claName + "@" + funName;
+		//var printUrl="http://"+ webIP +"/imedicallis/lisprint/print2HIS/ResultPrintForHis.application?Param="+Param;
+		 //document.location.href=printUrl;
+		 HISBasePrint(Param);
+	    return;
+	}
+	
+	//获取当前日期
+	function GetCurentDate() {
+		var now = new Date();
+		var year = now.getFullYear();       //年
+		var month = now.getMonth() + 1;     //月
+		var day = now.getDate();            //日
+		var hh = now.getHours();            //时
+		var mm = now.getMinutes();          //分
+		var clock = year + "-";
+		if (month < 10)
+			clock += "0";
+
+		clock += month + "-";
+
+		if (day < 10)
+			clock += "0";
+
+		clock += day;
+
+		return (clock);
+	}
+
+	//获取日期的下偏移几天
+	function getNextDays(date,days) {
+		date = new Date(date);
+		date = +date + 1000 * 60 * 60 * 24 * days;
+		date = new Date(date);
+		var month = date.getMonth() + 1;
+		var day = date.getDate();
+		if (month < 10) {
+			month = "0" + month;
+		}
+		if (date.getDate() < 10) {
+			day = "0" + day;
+		}
+		//格式化
+		return date.getFullYear() + "-" + month + "-" + day;
+
+	}
+	//极简风格下页面阴影部分及按钮处理
+  if(HISUIVersion=="lite"){
+	  
+	   $(".ChangeBackColor").css("background", "#f5f5f5");
+	   //$("#btn_save").css("background", "#28BA05"); 	 
+	   
+ }
+</script>
 </body>
 
 </html>
-

@@ -1,0 +1,166 @@
+<!--
+ * FileName: dhcpeireport.zyjkfc.csp
+ * Anchor: zhongricheng
+ * Date: 2022-12-15
+ * Description: 职业病复查报告
+-->
+<!--
+ * 注意: 修改的时候尽量不用 px 使用 pt
+ * A4 size   595.44*841.68 pt    210*297 mm
+ https://192.168.90.102:1443/imedical/web/csp/dhcpe/dhcpeireport.zyjkfc.csp?ID=5285425&Type=PAADM
+ https://192.168.90.102:1443/imedical/web/csp/dhcpe/dhcpeireport.zyjkfc.csp?ID=5285426&Type=PAADM
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+
+<html>
+	<head>
+		<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+		<style>
+		body{
+			width: 185mm;
+			margin: 0;
+			padding: 15mm 7.5mm;
+		}
+		p {
+			text-align: center;
+			padding: 0;
+			margin: 0;
+		}
+		.TableWidth {
+			width: 100%;
+			border-collapse:collapse;
+			table-layout: fixed;
+		}
+		.TableWidth tr {
+			height: 15mm;
+		}
+		.TableWidth tr td {
+			border: 1pt solid #000000;
+			font-family: 宋体;
+			font-size: 12pt;
+			text-align: center;
+		}
+		.TrBorder td {
+			border: 0!important;
+		}
+		</style>
+		
+		<script language="Cache" RUNAT="SERVER">
+			s ID=%request.Get("ID")
+			s Type=%request.Get("Type")  // ID的类型
+			
+			s RptJson=##class(web.DHCPE.Occu.ReportData).GetOccuReport(ID,Type,"obj")
+			s ShowPage=0
+			i (RptJson.%Size()>0) {
+				
+			}
+		</script>
+	</head>
+	<body>
+		<p style="line-height:140%; font-size: 22pt; font-family: 隶书;"><b>#(RptJson.other.HOSPDESC)#</b></p>
+		<p style="line-height:140%; font-size: 16pt; font-family: 黑体;">职业健康检查复查报告</p>
+		<table class="TableWidth">
+			<tr class="TrBorder" style="height: 10mm;">
+				<td style="width:35mm;">&ensp;</td>
+				<td style="width:35mm;">&ensp;</td>
+				<td style="width:22mm;">&ensp;</td>
+				<td style="width:23mm;">&ensp;</td>
+				<td style="width:25mm;">&ensp;</td>
+				<td style="width:5mm;">&ensp;</td>
+				<td style="width:40mm;">登记号：#(RptJson.RegNo)#</td>
+			</tr>
+			
+			<tr>
+				<td><b>姓名</b></td>
+				<td>#(RptJson.Name)#</td>
+				<td><b>性别</b></td>
+				<td>#(RptJson.Sex)#</td>
+				<td><b>身份证号码</b></td>
+				<td colspan=2>#(RptJson.IDCard)#</td>
+			</tr>
+			
+			<tr>
+				<td><b>工作单位</b></td>
+				<td colspan=3>#(RptJson.Company)#</td>
+				<td><b>拟从事工种</b></td>
+				<td colspan=2>#(RptJson.occuData.WorkTypeDesc)#</td>
+			</tr>
+			
+			<tr style="height: 20mm;">
+				<td><b>（拟）职业病危害因素种类</b></td>
+				<td colspan=6>#(RptJson.HarmInfoData)#</td>
+			</tr>
+			
+			<tr>
+				<td><b>复查日期</b></td>
+				<td colspan=3><b>复查项目及结果</b></td>
+				<td colspan=2><b>体检结论</b></td>
+				<td><b>处理意见</b></td>
+			</tr>
+			<script language="Cache" RUNAT="SERVER">
+				
+				s CheckInfoArr=RptJson.CheckInfo
+				if $isobject(CheckInfoArr) {
+					for temp=(CheckInfoArr.%Size()-1):-1:0 {
+						s tmpObj=CheckInfoArr.%Get(temp)
+						s tmpItemSum=$replace(tmpObj.ItemSum,$c(10,10),"<br>")
+						s tmpItemSum=$replace(tmpItemSum,$c(13,10),"<br>")
+						s tmpItemSum=$replace(tmpItemSum,"\r\n","<br>")
+						w "<tr style=""height: 30mm;"">"
+						w "<td>"_tmpObj.ArrDate_"</td>"
+						w "<td colspan=3 style=""text-align: left;"">"_tmpItemSum_"</td>"
+						w "<td colspan=2>"_tmpObj.Conclusion_"</td>"
+						w "<td style=""text-align: left;"">"_tmpObj.Suggestions_"</td>"
+						w "</tr>"
+					}
+				}
+				
+				s tmpItemSum=$replace(RptJson.ItemSum,$c(10,10),"<br>")
+				s tmpItemSum=$replace(tmpItemSum,$c(13,10),"<br>")
+				s tmpItemSum=$replace(tmpItemSum,"\r\n","<br>")
+				w "<tr style=""height: 30mm;"">"
+				w "<td>"_RptJson.ArrDate_"</td>"
+				w "<td colspan=3 style=""text-align: left;"">"_tmpItemSum_"</td>"
+				w "<td colspan=2>"_RptJson.Conclusion_"</td>"
+				w "<td style=""text-align: left;"">"_RptJson.Suggestions_"</td>"
+				w "</tr>"
+			</script>
+			
+			<tr>
+				<td><b>依据的法律、法规及标准</b></td>
+				<td colspan=6 style="text-align: left;">《中华人民共和国职业病防治法》、《职业健康监护管理办法》、《职业健康监护技术规范（GBZ188-2014）》</td>
+			</tr>
+			
+			<script language="Cache" RUNAT="SERVER">
+				if (RptJson.caAduitUser'="") {
+					s auditDoctor = "<img class='summary-doc' src='data:image/png;base64,"_RptJson.caAduitUser_"'/>"
+				} else {
+					s auditDoctor = RptJson.GenDoc
+				}
+				
+				if (RptJson.caMainDoctor'="") {
+					s mainDoctor = "<img class='summary-doc' src='data:image/png;base64,"_RptJson.caMainDoctor_"'/>"
+				} else {
+					s mainDoctor = RptJson.AudDoc
+				}
+			</script>
+
+			<tr style="height: 30mm;">
+				<td><b>主检医师(签名):</b></td>
+				<td colspan=4 style="border-right-width: 0; text-align: left;">#(auditDoctor)#</td>
+				<td colspan=2 style="border-left-width: 0; vertical-align: bottom;"><b>日期：</b>#(RptJson.GenDateHTM)#</td>
+			</tr>
+			
+			<tr style="height: 30mm;">
+				<td><b>检查机构(签章):</b></td>
+				<td colspan=4 style="border-right-width: 0; vertical-align: top;"></td>
+				<td colspan=2 style="border-left-width: 0; vertical-align: bottom;"><b>日期：</b>&ensp;&ensp;&ensp;&ensp;年&ensp;&ensp;月&ensp;&ensp;日</td>
+			</tr>
+
+		</table>
+	</body>
+</html>

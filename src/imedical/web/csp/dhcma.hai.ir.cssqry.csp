@@ -1,0 +1,113 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="en">
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<DHCMED:HEAD></DHCMED:HEAD>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<HISUI css="dhcma.hai.common.css"></HISUI>
+		<DHCHAI:HEAD></DHCHAI:HEAD>
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
+		</SCRIPT>
+		<CSP:IF CONDITION="IsADDINS=1">
+			<ADDINS require="DHCOPPrint"></ADDINS>
+			<ADDINS require="CmdShell"/>
+		</CSP:IF>
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+	</HEAD>
+	
+	<body>
+		<!-- 主页面-->
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false,collapsible:false" style="padding:10px;" class="ma-panel">
+				<table id="gridApply" data-options="toolbar:'#ToolBar'"></table>
+		        <div id="ToolBar">	
+					<table class="search-table">
+						<tr>
+                            <td class="r-label">调查编号</td>
+                            <td >
+                                <input class="textbox" id="cboSurvNumber" style="width:157px" />
+                            </td>
+                            <td class="r-label">调查院区</td>
+                            <td >
+                                <input class="textbox" id="cboHospital" style="width:157px" />
+                            </td>
+                            <td class="r-label">科室\病区</td>
+                            <td >
+                                <input class="textbox" id="cboLocation" style="width:157px">
+                            </td>
+                             <td >
+                                <a class="hisui-linkbutton"  id="btnExport" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-export'" style="display: inline-block;margin:0px 10px">导出</a>
+                                <a class="hisui-linkbutton"  style="display:none;" id="btnExportXML" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-export'" >导出平台</a>
+                             </td>                                      
+                        </tr>
+                        <tr>    
+                            <td class="r-label">感染分类</td>
+                            <td >
+                                <input class="textbox" id="cboInfCategoryDr" style="width:157px">
+                            </td>
+                            <td class="r-label">姓名</td>
+                            <td>
+                                <input class="textbox" id="txtPatName" style="width:150px">
+                            </td>
+                            <td class="r-label" colspan="2">
+                                <input class='hisui-radio' type="radio" label='未调查' name='chkStatunit' value="1" id="chkStatunit-UnSub">
+                                <input class='hisui-radio' type="radio" label='已调查' name='chkStatunit' value="2" id="chkStatunit-UnCheck">  
+                                <input class='hisui-radio' type="radio" label='已审核' name='chkStatunit' value="3" id="chkStatunit-Check">    
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton"  id="btnQuery" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-find'" style="display: inline-block;margin:0px 10px">查询</a>
+                                
+                            </td>       
+                        </tr>           
+                    </table>
+                    <div class="line" style="border-bottom: 1px dashed rgb(204, 204, 204);margin: 1px 0px;clear: both;"></div>
+                    <a class="hisui-linkbutton" id="btnChkReps"  data-options="iconCls:'icon-stamp-pass',plain:true,stopAllEventOnDisabled:true" style="display: inline-block;padding:7px">批量审核</a>
+                    <a class="hisui-linkbutton" id="btnUnChkReps"  data-options="iconCls:'icon-stamp-pass',plain:true,stopAllEventOnDisabled:true" style="display: inline-block;padding:7px">取消审核</a>
+			
+				</div>
+			</div>
+		</div>
+
+		<script language='Cache' runat='SERVER'>
+           set menuCode="DHCHAIOth-CSS-Reg"
+           set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+           set groupId=$g(%session.Data("LOGON.GROUPID"))
+		   set OperAdmin = $g(%request.Data("ParamAdmin",1))
+		   set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+       </script>
+       
+       <script type="text/javascript" src="../scripts/DHCMA/HAI/xlxs/FileSaver.js"></script>
+	    <script type="text/javascript" src="../scripts/DHCMA/HAI/xlxs/jszip.min.js"></script>
+	    
+		<script type='text/javascript' src='../scripts/DHCMA/HAI/Units/datagrid-export.js'></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+        <script type="text/javascript" src="../scripts/DHCMA/HAI/Units/FunLibUI.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/CSSQry/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/CSSQry/Event.js"></script>
+		
+		<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<!-- Add By zhoubo 2018-03-30 增加导民科系统接口问题提示 -->
+		<script language='javascript' src='../scripts/DHCMA/HAI/Interface/MKProblemView/gui.js'></script>
+		<script language='javascript' src='../scripts/DHCMA/HAI/Interface/MKProblemView/event.js'></script>	
+		<script language='javascript' src='../scripts/DHCMA/HAI/Interface/MKExportToTxt/ExportMinke.js'></script>
+		<!-- Add By chenjb 2022-08-24 增加导2022接口用 -->
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/xlxs/FileSaver.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/xlxs/jszip.min.js"></script>
+		
+		<script language="javascript" type="text/javascript">
+			$(window).load(function() {
+				InitPatFindWin();
+			});
+		</script>
+		</script>
+	</body>
+</html>

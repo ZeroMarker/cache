@@ -1,4 +1,8 @@
 <html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+</csp:method>
 <HEAD>
 	<meta http-equiv="Content-Type" content="text/html; ">
 	<link rel="stylesheet" type="text/css" href="../scripts/dhcpha/jQuery/themes/default/easyui.css">
@@ -7,14 +11,15 @@
 	<script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
 	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/emr/css/layout.css"/>
-	<link rel="stylesheet" href="../scripts/dhcpha/emr/lib/tool/ztree/css/zTreeStyle/zTreeStyle.css" />
+	<link rel="stylesheet" href="../scripts/dhcpha/emr/lib/tool/zTree/css/zTreeStyle/zTreeStyle.css" />
 	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/EMRcolorpicker.js"></script>
 	<script type="text/javascript" src="../scripts/dhcpha/emr/js/tools.js"></script>
 	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/json2.js"></script>	
 	<script type="text/javascript" src="../scripts/dhcpha/emr/js/actionlog.js"></script>	
-	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/ztree/js/jquery.ztree.all-3.5.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpha/emr/lib/tool/zTree/js/jquery.ztree.all-3.5.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcpha/clinical/ieversion.js"></script>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
 	
 	<script language="cache" runat="server">
 		s patientID = $Get(%request.Data("PatientID",1),"") 
@@ -159,7 +164,7 @@
 						<!--<a id='viewRevision' title="显示留痕" href="#" class="easyui-linkbutton" data-options="plain:true"><div>显示留痕</div><div style="padding:0 12 0 13px;margin:0"><input type="checkbox"/></div></a> --><!--qunianpeng 2018/2/28注释 显示留痕未实现-->			
 						<a id='reference' title="药历参考" href="#" class="easyui-linkbutton" data-options="plain:true">药历参考</a>
 						<a id='export' title="药历导出" href="#" class="easyui-linkbutton" data-options="plain:true">药历导出</a>
-						<!--<a id='recordtransfer' title="药历转移" href="#" class="easyui-linkbutton" data-options="plain:true">药历转移</a>-->
+						<a id='emrreference' title="病历参考" href="#" class="easyui-linkbutton" data-options="plain:true"  onclick="Emrreference()">病历参考</a>
 					</span>
 					<span class="toolblock toolspan" id="span4">		
 						<a id='favoritesPlus' title="添加收藏" href="#" class="easyui-linkbutton" data-options="plain:true" style="disable:true">添加收藏</a>
@@ -171,9 +176,17 @@
 					</span>
 			      </div>
 			    </div>
-			    <div data-options="region:'east',split:true,title:'药历资源',collapsed:true,border:false" style="width:465px;">
+			    <!-- <div data-options="region:'east',split:true,title:'药历资源',collapsed:true,border:false" style="width:465px;">
 					<div id="resources" class="easyui-tabs" fit="true" border="false" tabPosition="right" headerWidth="75" iconCls="tabs-header-right"></div>
-				</div>
+				</div> -->
+				
+				 <div data-options="region:'east',iconCls:'icon-add-item',title:'',headerCls:'panel-header-gray',border:false,showCollapsedTitle:true,width:420,collapsible:true,collapsed:false,split:true">
+				    <div id="tabs-util" class="easyui-tabs tabs-gray" fit="true">
+						<div title="药历资源" data-options="iconCls:'icon-add-item'">
+							<div id="resources" class="easyui-tabs tabs-gray tabs-keywords" data-options="fit:true,border:false,headerWidth:80" style="padding:0;"></div> 
+		    			</div>
+	    		     </div>
+	    	    </div>
 			  
 			    <div data-options="region:'center',border:false">
 					<div id="library" class="easyui-tabs" data-options="fit:true,border:false,tools:'#tab-tools'"></div>

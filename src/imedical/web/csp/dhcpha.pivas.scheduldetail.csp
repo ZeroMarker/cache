@@ -1,54 +1,59 @@
 <!DOCTYPE html>
-<!--排班管理-排班详情
-	csp: dhcpha.pivas.scheduldetail.csp
+<!--
+    排班管理-排班详情
+	csp: csp/dhcpha.pivas.scheduldetail.csp
 	js:  scripts/pharmacy/pivas/scheduldetail.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
+
 <HEAD>
     <title>
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
-	<Server language="CACHE" runat="Server">
-   </Server> 
-    <SCRIPT Language="Javascript">
-	</script>
-<style>
-</style>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <style>
+        .dialog-button {
+            padding-top: 0px;
+        }
+    </style>
 </HEAD>
-<body >
-    <div class="hisui-layout"  fit="true" border="false">
-        <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-        	<div class="hisui-layout" fit="true" border="false">
-        		<div data-options="region:'center',split:true,headerCls:'panel-header-gray',title:''" class="dhcpha-hisui-border"  style="border-radius: 4px;">
-        			<table id="gridSchedul"></table>
-				</div>
-			</div>
-        </div> 
-    </div>
- 	<div id="gridSchedulBar">
-    	<table>
-    		<tr>
-    		<td>
-    		<input id="cmbYear"/>
-    		<td>
-    		<input id="cmbMonth"/>
-    		</td>
-    		</td>
-		        <td>
-		        	<div class="datagrid-btn-separator"></div>
-				</td>
 
-				<td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">生成排班</a>
-		        </td>
-		    </tr>
-		</table>   
- 	</div>
- 	<!--窗体 Start-->
-     <div id="gridSchedulWin" class="hisui-dialog" title="排班班次修改" closed="true" style="width:230px;height:220px;" data-options="modal:true,
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-side-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                    <table id="gridSchedul">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridSchedulBar" class="pha-con-datagrid-toolbar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="cmbYear" />
+                <td>
+                    <input id="cmbMonth" />
+                </td>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-save" id="btnSave">生成排班</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--窗体 Start-->
+    <div id="gridSchedulWin" class="hisui-dialog" title="排班班次修改" closed="true" style="width:230px;" data-options="modal:true,
 	buttons:[{
 		text:'确定',
 		handler:function(){
@@ -60,57 +65,49 @@
 			$('#gridSchedulWin').window('close');
 		}
 	}]">
-	    <div class="hisui-layout" fit="true" >
-        <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
-        <div class="hisui-layout" data-options="fit:true" >
-            <div data-options="region:'center'" border="false">
-            <table class="dhcpha-north-tbl">
-            	<tr>
-			    <td>
-					 <span style="color:red">*</span>日期
-				</td>	
-				<td>
-					 <input id="dateSchedul" class='hisui-datebox' style="width:154px"/>
-				</td>
-				</tr>
-            	<tr>
-			    <td>
-					 <span style="color:red">*</span>人员
-				</td>	
-				<td>
-					 <input id="cmbUser"/>
-				</td>
-				</tr>
-            	<tr>
-            	<td>
-					 <span style="color:red">*</span>班次
-				</td>
-            	<td>
-					 <input id="cmbSchedul" class='hisui-combobox'/>
-				</td>
-				</tr>
 
-
-	         </table>
-	         </div>
-        </div>
-        </div>
-        </div>
-    </div>	
- 	<!--右键菜单 Start-->
-	<div id="menuScheDetail" class="hisui-menu" style="display: none;">
-	    <div id="menuAddItm" data-options="iconCls:'icon-add'" style="margin-top:3px">追加排班</div>
-	     <div class="menu-sep"></div>
-	    <!--div id="menuEditItm" data-options="iconCls:'icon-edit'">修改排班</div>
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <span style="color:red">*</span>日期
+                </td>
+                <td>
+                    <input id="dateSchedul" class='hisui-datebox' style="width:154px" />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <span style="color:red">*</span>人员
+                </td>
+                <td>
+                    <input id="cmbUser" />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <span style="color:red">*</span>班次
+                </td>
+                <td>
+                    <input id="cmbSchedul" class='hisui-combobox' />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--右键菜单 Start-->
+    <div id="menuScheDetail" class="hisui-menu" style="display: none;">
+        <div id="menuAddItm" data-options="iconCls:'icon-add'" style="margin-top:3px">追加排班</div>
+        <div class="menu-sep"></div>
+        <!--div id="menuEditItm" data-options="iconCls:'icon-edit'">修改排班</div>
 	     <div class="menu-sep"></div-->
-	    <div id="menuDeleteItm" data-options="iconCls:'icon-remove'"  style="margin-bottom:3px">删除排班</div>
-	</div>
- 	<script type="text/javascript" src="../scripts/pharmacy/plugins/datagrid-cellediting/datagrid-cellediting.js"></script>
+        <div id="menuDeleteItm" data-options="iconCls:'icon-remove'" style="margin-bottom:3px">删除排班</div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/datagrid-cellediting/datagrid-cellediting.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.store.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.tools.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/pivas/scheduldetail.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.store.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.tools.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/scheduldetail.js"></script>
 </body>
+
 </HTML>

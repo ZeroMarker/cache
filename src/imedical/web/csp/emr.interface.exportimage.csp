@@ -1,0 +1,50 @@
+﻿<html>
+<head>
+<title>	EMR导出图片 </title>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>	
+	<script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/interface.exportimage.js"></script>
+	<script language="cache" runat="server">
+		d ##Class(EMRservice.SystemParameter).GetImportResource()
+		s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")	
+		s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s docID = $Get(%request.Data("DocID",1),"")
+		s titleCode = $Get(%request.Data("TitleCode",1),"")
+		s instanceID = ##class(EMRservice.HISInterface.ExportImage).IsHasInstance(episodeID,docID,titleCode)
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+   </script>
+
+	<script language="javascript">
+	var pluginUrl = "#(pluginUrl)#";
+	var episodeId = "#($Get(%request.Data("EpisodeID",1),""))#";
+	var patientId = "#(patientID)#";
+	var docID = "#($Get(%request.Data("DocID",1),""))#"; 
+	var userId = "#($Get(%request.Data("UserID",1),""))#";
+	var ctlocId = "#($Get(%request.Data("CtlocID",1),""))#";
+	var setDefaultFontStyle = "#(setDefaultFontStyle)#";
+	var titleCode = '#(titleCode)#';
+    var instanceID = '#(instanceID)#';
+	var ipAddress = "#($Get(%request.Data("IPAddress",1),""))#";
+	if (ipAddress == "")
+	{
+		ipAddress = getIpAddress();
+	}
+	var fromType = "#($Get(%request.Data("FromType",1),""))#";
+	var gl = {
+		patientId:patientId,
+		episodeId:episodeId,
+		userId:userId,
+		userName:userName	
+	};
+	var invoker = window.dialogArguments == undefined? parent: window.dialogArguments;
+   </script>	
+</head>
+<body>
+	<div id="containerWord" style="width:0px;height:0px;overflow:hidden;"></div>
+	<div id="containerGrid" style="width:0px;height:0px;overflow:hidden;"></div>
+</body>
+</html>
+ 

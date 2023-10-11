@@ -1,0 +1,88 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<script type="text/javascript" src="../scripts/dhceq/em/maintequipalert.js"></script>
+</head>
+<server>
+	 s QXType=$g(%request.Data("QXType",1))
+	 s BussType=$g(%request.Data("BussType",1))
+	 s MaintLocDR=$g(%request.Data("MaintLocDR",1))
+	 s MaintTypeDR=$g(%request.Data("MaintTypeDR",1))
+	 i (BussType=2)&&(MaintTypeDR=5)
+	 {
+		s title="设备计量预警"
+	 }
+	 elseif (BussType=2)&&(MaintTypeDR=4)
+	 {
+		s title="设备巡检预警"
+	 }
+	 elseif (BussType=1)
+	 {
+		s title="PM设备预警"
+	 }
+</server>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel" title=#(title)# data-options="fit:true,eqtitle:'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<!--Modefied by zc0134 2023-04-21 调整页面样式 begin-->
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;border-bottom:solid 1px #ccc;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cEquip" for="Equip">设备名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Equip" data-options="component:'EM.L.Equip'"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cEquipNo" for="EquipNo">设备编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipNo"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cMPName" for="MPName">计划名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MPName" data-options="component:'EM.L.PlanName',paras:[{name:'BussType',type:4,value:'BussType'},{name:'Name',type:1,value:'MPName'},{name:'EquipDR',type:4,value:'EquipDR'},{name:'MaintTypeDR',type:4,value:'MaintTypeDR'}]"></div>	<!--MZY0091	2074805,2078709		2021-08-26	取消该条件-->
+						<div class="eq-table-td eq-table-label-new"><label id="cFixTimeFlag" for="FixTimeFlag">不显示固定时间计划</label></div>
+						<div class="eq-table-td eq-table-input"><input type="checkbox" class='hisui-checkbox' id="FixTimeFlag"></div>
+						<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+						<div class="eq-table-td eq-table-label"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cMPMaintLoc" for="MPMaintLoc">保养科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MPMaintLoc" data-options="component:'PLAT.L.Loc'"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cMPMaintType" for="MPMaintType">保养类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MPMaintType" data-options="component:'EM.L.MaintType',paras:[{name:'MaintTypeDesc',type:1,value:'MPMaintType'},{name:'MaintType',type:4,value:'BussType'}]"></div>
+						<div class="eq-table-td eq-table-label"><!--label id="cTempPlanFlag" for="TempPlanFlag">不显示临时计划</label--></div>		<!--MZY0091	2074805,2078709		2021-08-26	取消该条件-->
+						<div class="eq-table-td eq-table-input"><!--input type="checkbox" class='hisui-checkbox' id="TempPlanFlag"--></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"><a id="BExecute" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">执行</a></div>
+						<div class="eq-table-td eq-table-label"></div>
+					</div>
+					<!--Modefied by zc0134 2023-04-21 调整页面样式 end-->
+				</div>
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
+					<table id="tDHCEQMaintEquipAlert" data-options="border:false,fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<input type="hidden" id="QXType" value=#(QXType)#>
+	        <input type="hidden" id="BussType" value=#(BussType)#>
+			<input type="hidden" id="MaintLocDR" value=#(MaintLocDR)#>
+			<input type="hidden" id="MaintTypeDR" value=#(MaintTypeDR)#>
+	        <input type="hidden" id="EquipDR">
+	        <input type="hidden" id="MPNameDR">
+	        <input type="hidden" id="MPMaintLocDR">
+	        <input type="hidden" id="MPMaintTypeDR">
+		</form>
+	</div>
+</body>
+
+</html>
+
+

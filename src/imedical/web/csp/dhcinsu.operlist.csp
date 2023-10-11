@@ -1,0 +1,79 @@
+<!-- 
+ * FileName:	dhcinsu.operlist.csp
+ * User:		Hanzh 
+ * Date:		2021-12-03 
+ * Description: 医保手术目录维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE>医保手术目录维护</TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS require="CmdShell"/>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true" >
+	   <div data-options="region:'north',border:false">
+		  <div class="hisui-panel" data-options="border:false,title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check',closable:false,collapsible:false">
+			  <table  class='search-table' style="border-collapse: separate;border-spacing: 0 10px;" >
+				<tr>
+					<td class="r-label td-first-col"><label>医保类型</label></td>
+					<td><input id="tInsuType" class="hisui-combobox textbox"/></td>
+					<td class="r-label td-first-col"><label>开始日期</label></td>
+					<td><input id="StartDate" type="text" class="hisui-datebox" style="width:120px"></input></td>
+					<td class="r-label"><label>结束日期</label></td>
+					<td><input id="EndDate" type="text" class="hisui-datebox" style="width:120px"></input></td>
+                 	<!--td class="r-label"><label>查找条件</label></td>
+                    <td><input id="QryType" class="textbox" /></td-->
+					<td class="r-label"><label>版本</label></td>
+					<td><input id="HisVer" class="textbox"/></td>
+					<td>
+						<a id="btnSearch" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:20px;width:120px" onClick='QryInOperList()'>查询</a>
+		           	</td>
+					<td>
+						<a id="btnInItmImpt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'" style="margin-left:20px;width:120px" onClick='InItmImpt()'>导入手术</a> 
+		            </td>
+                 </tr>
+                 <tr>
+					<td class="r-label"><label>手术代码</label></td>
+                    <td><input id="OprnOprtCode" class="textbox" /></td>
+                    <td class="r-label"><label>手术名称</label></td>
+                    <td><input id="OprnOprtName" class="textbox" style="width:114px"/></td>
+                    <td class="r-label"><label>拼音助记码</label></td>
+					<td><input id="Pinyin" class="textbox" style="width:114px"></td>
+					<td></td>
+					<td></td>
+					<td>
+						<a id="btnInItmEpot" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" style="margin-left:20px;width:120px" onClick='InItmEpot()'>导出手术</a> 
+		            </td>
+				</tr>
+			  </table>
+			</div>		
+		</div>
+	<div data-options="region:'center',border:false" style="border:1px dashed #cccccc;border-left:0">
+		<table id='tInOperList' ></table>
+	 </div>
+	</div>
+	<!--医保手术维护toolbar-->
+	<div id="dgTB" class="hisui-toolbar" >  
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td><a id="btnAdd" href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add"  onClick='addINSUTarItems()'>新增</a></td>
+					<td><a id="btnEdit" href="#" class="hisui-linkbutton" plain="true"  iconCls="icon-edit"  onClick='InOperListEditClick()'>修改</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>	
+	<DHCBILLINSUCloud/>
+	<script type="text/javascript" src="../scripts/dhcinsu/operlist.js"></script>
+</body>
+</html>

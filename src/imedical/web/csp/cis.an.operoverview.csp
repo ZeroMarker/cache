@@ -1,0 +1,428 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>患者手术信息概览</title>
+<csp:content charset="UTF-8">
+<HISUI></HISUI>
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<dhcclinic:head></dhcclinic:head>
+<style>
+	.patinfo-title {
+		text-align:right;
+		padding:0px;
+		color: #666666;
+		font-weight: 400;
+		font-size: 14px;
+		line-height: 1.5;
+		width:163px;
+	}
+	.patinfo-item {
+		padding-left:-2px;
+		width:200px;
+		color: #000000;
+		font-size: 14px;
+		line-height: 1.5;
+	}
+		
+	.patinfo-table{
+		margin:10px 0px;
+		border-spacing:0px 4px;
+	}
+		
+	.patinfo-table tr{
+		height:32px;	
+	}
+		
+	.source-type {
+		font-weight:bold;
+		font-size:20px;
+	}
+		
+	.positive {
+		color:red;
+		font-weight:bold;	
+	}
+	
+	.dialog-button {
+		padding:0 10px 10px 10px
+	}
+	
+	.form-title {
+    	display: inline-block;
+    	text-align: center;
+    	text-align: justify;
+    	text-justify: distribute-all-lines;
+    	text-align-last: right;
+		margin-right:10px;
+	}
+   </style>
+   <script type="text/javascript" src="../service/dhcanop/lib/nicescroll/jquery.nicescroll.min.js"></script>
+   <script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/CIS.AN.inoproom.js"></script>
+   
+</head>
+<body class="hisui-layout" style="background-color:#FFFFFF">
+    <div id="center" data-options="region:'center',border:false" style="padding:10px;">
+	<div class="hisui-panel" data-options="title:'手术进度',iconCls:'icon-track',height:170,headerCls:'panel-header-gray'" style="margin-bottom:10px;">
+		<div id="hstp" style="height: 65px;margin:10px;"></div>
+		<div>
+		
+		<a href="#" id="InOperRoom" class="hisui-linkbutton" style="margin:10px;" onclick="inoproomdatetime()">入手术间</a>
+		</div>
+	</div>
+	<div class="hisui-panel" data-options="title:'手术信息',iconCls:'icon-paper',headerCls:'panel-header-gray'" style="margin-bottom:10px;">
+		<table class="patinfo-table">
+			<tr>
+				<td class="patinfo-title">患者姓名：</td>
+				<td class="patinfo-item">
+					<span id="PatName"></span>
+					<!--a href="#" title="通知患者" class="hisui-linkbutton" id="btnNoticeSurgeon" data-options="iconCls:'icon-send-msg',plain:true"></a-->
+				</td>
+				<td class="patinfo-title">性别：</td>
+				<td class="patinfo-item"><span id="PatGender"></span></td>
+				<td class="patinfo-title">年龄：</td>
+				<td class="patinfo-item"><span id="PatAge"></span></td>
+				<td class="patinfo-title">病人号：</td>
+				<td class="patinfo-item"><span id="RegNo"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">科室名称：</td>
+				<td class="patinfo-item"><span id="PatDeptDesc"></span></td>
+				<td class="patinfo-title">病区：</td>
+				<td class="patinfo-item"><span id="PatWardDesc"></span></td>
+				<td class="patinfo-title">床位：</td>
+				<td class="patinfo-item"><span id="PatBedCode"></span></td>
+				<td class="patinfo-title">手术类型：</td>
+				<td class="patinfo-item"><span id="SourceTypeDesc" class="source-type"></span></td>
+				<!--td class="patinfo-item">
+					<span class="form-btn">
+                    	<a href="#" id="btnSyncPatInfo" class="hisui-linkbutton">更新患者信息</a>
+                    </span>
+				</td-->
+			</tr>
+			<tr>
+				<td class="patinfo-title">术前诊断：</td>
+				<td class="patinfo-item" colspan="7"><span id="PrevDiagnosisDesc"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">手术名称：</td>
+				<td class="patinfo-item" colspan="7"><span id="OperDesc"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">手术部位：</td>
+				<td class="patinfo-item"><span id="BodySiteDesc"></span></td>
+				<td class="patinfo-title">手术分级：</td>
+				<td class="patinfo-item"><span id="OperClassDesc"></span></td>
+				<td class="patinfo-title">切口类型：</td>
+				<td class="patinfo-item"><span id="BladeTypeDesc"></span></td>
+				<td class="patinfo-title">手术体位：</td>
+				<td class="patinfo-item"><span id="OperPositionDesc"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">主刀医生：</td>
+				<td class="patinfo-item"><span id="SurgeonDesc"></span></td>
+				<td class="patinfo-title">主刀电话：</td>
+				<td class="patinfo-item">
+					<span id="SurPhoneNumber"></span>
+					<!--a href="#" title="通知主刀医生" class="hisui-linkbutton" id="btnNoticeSurgeon" data-options="iconCls:'icon-send-msg',plain:true"></a-->
+				</td>
+				<td class="patinfo-title">手术助手：</td>
+				<td class="patinfo-item"><span id="AsstDesc"></span></td>
+				<td class="patinfo-title">非计划再次手术：</td>
+				<td class="patinfo-item"><span id="ReentryOperation"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">麻醉方法：</td>
+				<td class="patinfo-item" colspan="3"><span id="AnaMethodDesc"></span></td>
+				
+				<td class="patinfo-title">需要麻醉医生：</td>
+				<td class="patinfo-item"><span id="AnaesthesiaDesc"></span></td>
+				<td class="patinfo-title">ASA分级：</td>
+				<td class="patinfo-item"><span id="ASAClassDesc"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">麻醉指导：</td>
+				<td class="patinfo-item"><span id="AnaExpertDesc"></span></td>
+				<td class="patinfo-title">麻醉医生：</td>
+				<td class="patinfo-item"><span id="AnesthesiologistDesc"></span></td>
+				<td class="patinfo-title">麻醉助手：</td>
+				<td class="patinfo-item" colspan="3"><span id="AnaAssistantDesc"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">手术日期：</td>
+				<td class="patinfo-item"><span id="OperDate"></span></td>
+				<td class="patinfo-title">巡回护士：</td>
+				<td class="patinfo-item"><span id="CircualNurseDesc"></span></td>
+				<td class="patinfo-title">洗手护士：</td>
+				<td class="patinfo-item" colspan="3"><span id="ScrubNurseDesc"></span></td>
+			</tr>
+			<!--tr>
+				<td class="patinfo-title">是否冰冻：</td>
+				<td class="patinfo-item"><span id="ProfrozenDesc"></span></td>
+				<td class="patinfo-title">是否需要x-Ray：</td>
+				<td class="patinfo-item"><span id="MechanicalArmDesc"></span></td>
+				<td class="patinfo-title">隔离手术：</td>
+				<td class="patinfo-item"><span id="IsoOperationDesc"></span></td>
+				<td class="patinfo-title">体外循环：</td>
+				<td class="patinfo-item"><span id="ECCDesc"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">自体血回输：</td>
+				<td class="patinfo-item"><span id="TransAutobloodDesc"></span></td>
+				<td class="patinfo-title">备血：</td>
+				<td class="patinfo-item"><span id="PrepareBloodDesc"></span></td>
+				<td class="patinfo-title">微创手术：</td>
+				<td class="patinfo-item" ><span id="MISDesc"></span></td>
+				<td class="patinfo-title">使用抗生素：</td>
+				<td class="patinfo-item" ><span id="AntibiosisDesc"></span></td>
+			</tr-->
+			<tr>
+				<td class="patinfo-title">同意使用自费项目：</td>
+				<td class="patinfo-item"><span id="AgreeProjectDesc"></span></td>
+				<td class="patinfo-title">专业：</td>
+				<td class="patinfo-item"><span id="MajorDesc"></span></td>
+				<td class="patinfo-title">新冠：</td>
+				<td class="patinfo-item" ><span id="XinGuanDesc"></span></td>
+				<td class="patinfo-title">术后转入ICU：</td>
+				<td class="patinfo-item" ><span id="AfterOperationICUDesc"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">仪器器械：</td>
+				<td class="patinfo-item" colspan="7" ><span id="SurgicalMaterials" ></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">特殊情况：</td>
+				<td class="patinfo-item" colspan="7" ><span id="SpecialConditions" ></span></td>
+			</tr>
+			
+			<tr>
+				<td class="patinfo-title">高值耗材：</td>
+				<td class="patinfo-item" colspan="7" ><span id="HighConsume" ></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">手术要求：</td>
+				<td class="patinfo-item" colspan="7" ><span id="OperRequirement" ></span></td>
+			</tr>
+		</table>
+	</div>
+	<div class="hisui-panel" data-options="title:'检验信息',iconCls:'icon-paper',headerCls:'panel-header-gray'">
+		<table class="patinfo-table">
+			<tr>
+				<td class="patinfo-title">ABO血型：</td>
+				<td class="patinfo-item">
+					<span id="BloodType"></span>
+				</td>
+				<td class="patinfo-title">RH血型：</td>
+				<td class="patinfo-item"><span id="RHBloodType"></span></td>
+			</tr>
+			<tr>
+				<td class="patinfo-title">HbsAg：</td>
+				<td class="patinfo-item"><span id="HbsAg"></span></td>
+				<td class="patinfo-title">HcvAb：</td>
+				<td class="patinfo-item"><span id="HcvAb"></span></td>
+				<td class="patinfo-title">HivAb：</td>
+				<td class="patinfo-item"><span id="HivAb"></span></td>
+				<td class="patinfo-title">梅毒：</td>
+				<td class="patinfo-item"><span id="Syphilis"></span></td>
+			</tr>
+		</table>
+	</div>
+	</div>
+	<script type="text/javascript">
+		var overview={
+			operSchedule:null,
+			operTestData:null	
+		};
+		function initPage()
+		{
+			//$("body").niceScroll();
+			loadOperSchedule();	
+			initOperSteps();
+			loadTestData();
+		}
+		
+		function loadOperSchedule(){
+			
+			overview.operSchedule=dhccl.runServerMethod(ANCLS.BLL.OperScheduleList,"GetOperScheduleNew",session.OPSID)
+		    if (overview.operSchedule)
+		    {
+				for(var key in overview.operSchedule)
+				{
+					$("#"+key).text(overview.operSchedule[key]);
+					if(key!=="PatRHD" && overview.operSchedule[key]==="阳性"){
+						if(!$("#"+key).hasClass("positive")){
+							$("#"+key).addClass("positive")	
+						}	
+					}
+				}   
+				switch(overview.operSchedule.SourceType){
+					case "B":
+						$("#SourceTypeDesc").css("color","#ffcc66");
+						break;
+					case "E":
+						$("#SourceTypeDesc").css("color","#ff9999");
+						break;
+				}
+				if(overview.operSchedule.AnaesthesiaDesc==="否")
+				{
+					$("#AnaesthesiaDesc").css("color","#ff0000");
+					//$("#InOperRoom").css("display", "none");
+					
+				}
+			}
+		}
+		
+		function initOperSteps(){
+			var nurseTimeList=dhccl.runServerMethod("CIS.AN.BL.RealTimeMonitor","GetAnaRecordTime",session.OPSID);
+			var currentInd=0;
+			if (nurseTimeList && nurseTimeList.length>0){
+				setCurrentInd();
+			}
+			
+			$('#btnSyncPatInfo').linkbutton({
+				onClick:function(){
+					alert("2");	
+				}    
+			});
+			
+			
+			$("#hstp").hstep({
+		        //showNumber:false,
+		        stepWidth:200,
+		        currentInd:currentInd,
+		        onSelect:function(ind,item){console.log(item);},
+		        //titlePostion:'top',
+		        items:nurseTimeList
+		    });
+		    
+		    function setCurrentInd(){
+			    var existTime=false;
+				for(var i=currentInd;i<nurseTimeList.length;i++){
+					var nurseTime=nurseTimeList[i];
+					if(nurseTime.context && currentInd<nurseTimeList.length){
+						currentInd=i+1;
+						setCurrentInd();	
+					}
+				}	
+			}	
+		}
+		function loadTestData(){
+			overview.operTestData=dhccl.runServerMethod(ANCLS.BLL.OperApplication,"GetTestDataJSON",overview.operSchedule.EpisodeID,overview.operSchedule.OperDate)
+		    if (overview.operTestData)
+		    {
+				for(var key in overview.operTestData)
+				{
+					if(key=="BloodType"){
+						$("#"+key).text(overview.operTestData[key]);
+					}else if(overview.operTestData[key]=="+"){
+						$("#"+key).text("阳性");
+						if(key!=="RHBloodType"){
+							if(!$("#"+key).hasClass("positive")){
+								$("#"+key).addClass("positive")
+							}
+						}
+					}else if(overview.operTestData[key]=="-"){
+						$("#"+key).text("阴性");
+					}else{
+						$("#"+key).text("未知");
+					}
+				}
+			}
+		}
+		
+		//入手术间时间
+        function inoproomdatetime(){
+			var operStatus=dhccl.runServerMethod("CIS.AN.BL.OperSchedule","GetOperStatusByopsId",session.OPSID);
+            //var canCancelOperation=dhccl.runServerMethodNormal(ANCLS.BLL.OperApplication,"CanCancelOperation",selectedData.OPSID,session.UserID,session.GroupID,"btnCancelOperation");
+            //if(canCancelOperation.indexOf("E^")===0){
+                //$.messager.alert("提示",canCancelOperation,"warning");
+                //return;
+            //}
+            // $("#operCancelReason").dialog("open");
+            if (operStatus.result!="Arrange")
+            {
+	        	$.messager.alert("提示","非安排状态，不允许再次开始！","error");
+	        	return   
+	        }
+            var StartDT=dhccl.runServerMethodNormal(ANCLS.BLL.OperScheduleList,"GetStartDTByopsId",session.OPSID);
+            var inoproom=new InOpRoom({
+                title:"",
+                saveHandler:saveinopTime
+
+                //inoproomHandle:function(startDT){
+                    //var ret=dhccl.runServerMethodNormal(ANCLS.BLL.OperScheduleList,"CancelOperation",selectedData.OPSID,reason,session.UserID);
+                    //if(ret.indexOf("S^")===0){
+                        //$.messager.popover({msg:"保存成功",timeout:1500,type:"success"});
+                        //$("#operlistBox").datagrid("reload");
+                    //}else{
+                        //$.messager.alert("提示","保存失败，原因："+ret,"error");
+                    //}
+                //}
+            })
+             	inoproom.loadData
+                ({ 
+                startDT:StartDT,
+                title:"开始时间"
+                
+               }
+       
+            );
+        
+			
+            inoproom.open();
+        }
+        
+        
+        /**
+ * 保存开始监护时间
+ * @param {object} data 
+ */
+function saveinopTime(data) {
+    var recordStartDT = data.startDT;
+    var schedule = {
+        RowId: session.OPSID,
+        TheatreInDT: recordStartDT,
+        isStarting: "N",
+        ClassName: ANCLS.Model.OperSchedule,
+        UpdateUser: session['UserID']
+    };
+     var operschedule={
+        RowId: session.OPSID,
+        OperDate: recordStartDT.split(" ")[0],
+        ClassName: ANCLS.Model.OperSchedule,
+	};
+    dhccl.saveDatas(ANCSP.DataListService, {
+        ClassName: ANCLS.BLL.AnaestRecord,
+        MethodName: "StartRecordhs",
+        jsonData: dhccl.formatObjects(schedule)
+    }, function(ret) {
+        if (ret.indexOf("S^") === 0) {
+	        var jsonData = dhccl.formatObjects(operschedule);
+                dhccl.saveDatas(ANCSP.DataListService, {
+                    jsonData: jsonData
+                })
+            //record.context.loadSchedule();
+            //record.context.loadParaItems();
+            //refreshPage();
+            //resetToolkit();
+            //var view = window.StartRecordView.instance;
+            //view.close();
+            //refreshDeviceInUsage();
+            //refreshOperScheduleList();
+            //refreshKeyTimeline();
+            //inoproom.close();
+            location.assign(location.href)
+            //refreshPage()
+        } else {
+            dhccl.showMessage(ret, "开始监护");
+        }
+    });
+}
+
+		
+		
+		
+		$(document).ready(initPage);
+   </script>
+   <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.TimeDateDbGet.js"></script>
+</body>
+</html>

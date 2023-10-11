@@ -1,16 +1,26 @@
 ﻿ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
 <html xmlns="http://www.w3.org/1999/xhtml">
    <head>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
    		<HISUI/>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.edit.css"/>
 		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 		<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
 		<script type="text/javascript" src="../scripts/websys.js"></script>
+		
+		<ADDINS require="EMRPDFCreator"></ADDINS>
+		
 		<script language="cache" runat="server">
 			s episodeID = $Get(%request.Data("EpisodeID",1),"")
 			s userLocID = $Get(%request.Data("CTlocID",1),"")
 			s userID = $Get(%request.Data("UserID",1),"")
+			s productSourceType = $Get(%request.Data("ProductSourceType",1),"EMR")
+			s productSourceCode = $Get(%request.Data("ProductSourceCode",1),"")
 			s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
 			s episodeType = $p(^PAADM(episodeID),"^",2)
 			s mradm = $p($g(^PAADM(episodeID)),"^",61)
@@ -40,7 +50,12 @@
 		    s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
             s CAServicvice = ""
             s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
-            s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+            //最新的程序需要增加产品模块的判断
+            if ($ll((##class(%Dictionary.CompiledMethod).%OpenId("CA.DigitalSignatureService||IsCACTLoc")).DefaultArgs) = "4") {
+                s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"IPEMR")
+            } else {
+                s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+            }
             if ((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1") {
                 s CAServicvice = "1"
                 d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
@@ -62,6 +77,18 @@
 			s recordShowType = $Get(%request.Data("RecordShowType",1),"")
 			s setResourceWidth = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("setResourceWidth")
 			s:(setResourceWidth = "") setResourceWidth="{'navigationWidth':'320','qualityWidth':'500','referenceWidth':'650','rescorceWidth':'580'}"
+			s signCTPCPType = ##Class(EMRservice.SystemParameter).GetSignCTPCPDescType()
+			s loadDocMode = ##Class(EMRservice.SystemParameter).GetLoadDocMode()
+			s emrDocIDs = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("CollectMedicalRecordConfig","")
+	   		s showNav = $Get(%request.Data("ShowNav",1),"")
+			//是否启用所有病历均可撤销签名
+        	s isAllRevokeSign = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isAllRevokeSign","Y")
+			s isPatCAOn = ##Class(EMRservice.Ajax.anySign).IsPatCAOn(userLocID,userID,%session.Get("LOGON.GROUPID"),"IPEMR")
+	   		s patCAOffReason = ""
+	   		s:($P(isPatCAOn,"^",1) = "0") patCAOffReason = $P(isPatCAOn,"^",2)
+            s medicalRecordDocID = ##Class(EMRservice.SystemParameter).GetMedicalRecordDocID()
+			s medicalRecordDocIDCN = ##Class(EMRservice.SystemParameter).GetChineseMedicalRecordDocID()
+            s openWay = $Get(%request.Data("OpenWay",1),"")
 	   </script>
 		<script language = "javascript">
 		  var patientID = '#(patientID)#';
@@ -124,61 +151,75 @@
 		  var qualityWidth = setResourceWidth.qualityWidth;
 		  var refWidth = setResourceWidth.referenceWidth;
 		  var resWidth = setResourceWidth.rescorceWidth;
+		  var signCTPCPType = '#(signCTPCPType)#';
+		  var loadDocMode = $.parseJSON('#(loadDocMode)#'.replace(/\'/g, "\""));
+		  var productSourceType ="#(productSourceType)#";
+		  var productSourceCode ="#(productSourceCode)#";
+		  var printInstanceIds = {Items:[]};
+		  var emrDocIDs = "#(emrDocIDs)#".split("!");
+		  var showNav = '#(showNav)#';
+		  var isAllRevokeSign = '#(isAllRevokeSign)#';
+		  var patCAOffReason = '#(patCAOffReason)#';
+          var medicalRecordDocID = '#(medicalRecordDocID)#';
+		  var medicalRecordDocIDCN = '#(medicalRecordDocIDCN)#';
+          var openWay = '#(openWay)#';
+          var parentWin = openWay == "Interface" ? parent:top
 		</script>
 	    <title>电子病历书写</title>	
    </head>
-   <body>
-   		<div id="main" class="hisui-layout" data-options="fit:true">
-		   	<div id="west" data-options="region:'west',split:true,border:false" style="width:320px;">
-				<div id="navtab" class="hisui-tabs tabs-gray" data-options="fit:true">  
-			   	  	<div title="病历导航" style="padding:0;margin:0;overflow:hidden;">
-				   	  		<div>
-								<div id="quicknav"></div>
-			   	  				<div class="treetype">
-									<input label="日期" type="radio" id="List" name="NavType" value="List">
-									<input label="分类" type="radio" id="Tree" name="NavType" value="Tree">
+   <body style="padding:10px">
+		<div id="newMain" class="hisui-layout" data-options="fit:true">
+	   		<div data-options="region:'center',border:false" style="overflow:hidden;width:100%;height:100%;padding:30px 0px 0px 0px;background:url(../scripts/emr/image/edit-png/png/5@3x.png) no-repeat;background-size:100%;">
+		   		<div id="main" class="hisui-layout" data-options="fit:true">
+				   	<div id="west" data-options="region:'west',split:true,border:false" style="width:320px;">
+						<div id="navtab" class="hisui-tabs tabs-gray" data-options="fit:true">  
+					   	  	<div title="病历导航" style="padding:0;margin:0;overflow:hidden;">
+					   	  		<div>
+									<div id="quicknav"></div>
+				   	  				<div class="treetype">
+										<input label="日期" type="radio" id="List" name="NavType" value="List">
+										<input label="分类" type="radio" id="Tree" name="NavType" value="Tree">
+									</div>
 								</div>
-							</div>
-							<div style="height:88%;overflow-y:auto;">
-								<div id="recordlist">
-									<ul id="InstanceTree"></ul>
-								</div>
-								<div id="deletelist">
-									<ul id="deleteTree"></ul>
-								</div>
-							</div>				
-				   	  	</div>
-			   	 
-			   	  	<div title="病历资源" style="padding:0;margin:0;overflow:hidden;">
-			   	  		<iframe id="framResource" src="" frameborder="0" style="width:100%; height:100%;margin:0;padding:0;overflow:hidden"></iframe>
-			   	  	</div>
-			   	</div>
-		   	</div>	
-		   	<div data-options="region:'center',border:false" style="overflow:hidden;">
-		   		<div id="editor" class="hisui-layout" data-options="fit:true">
-		   			<div data-options="region:'north',border:false" style="height:100px;padding:0;margin:0;overflow:hidden">
-		   				<iframe id="framRecordTool" src="" frameborder="0" style="width:100%; height:100%;margin:0;padding:0;overflow:hidden"></iframe>
-		   			</div>
-		   			<div data-options="region:'center',border:false">
-	    				<div id="lock"></div>
-						<div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
-	   		    		<div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
-		   			</div>
-	   		    </div>
-		   	</div>
-	   	</div>
+				 				<div style="height:88%;overflow-y:auto;">
+									<div id="recordlist">
+										<ul id="InstanceTree"></ul>
+									</div>
+									<div id="deletelist">
+										<ul id="deleteTree"></ul>
+									</div>
+								</div>				 			
+					   	  	</div>
+					   	</div>
+				   	</div>	  			
+				   	<div data-options="region:'center',border:false" style="overflow:hidden;padding:0px 10px 10px 10px;background-color:rgba(229, 229, 229, 1);">
+				   		<div id="editor" class="hisui-layout" data-options="fit:true">
+				   			<div data-options="region:'north',border:false" style="height:30px;padding:0;overflow:hidden;border-radius:4px">
+				   				<csp:Include Page="emr.ip.edit.toolbar.csp">
+				   			</div>
+				   			<div data-options="region:'center',border:false">
+			    				<div id="lock"></div>
+								<div id="containerWord" style="width:100%;height:100%;overflow:hidden;"></div>
+			   		    		<div id="containerGrid" style="width:100%;height:100%;overflow:hidden;"></div>
+				   			</div>
+			   		    </div>
+				   	</div>
+				</div>
+	   		</div>
+	   		<div data-options="region:'east',split:true,border:false" style="width:400px;padding-left:5px">	   		
+	        	<iframe id="framResource" src="" frameborder="0" style="width:100%; height:100%;margin:0;padding:0;overflow:hidden"></iframe>	
+	   		</div>
+	   </div>
 		<div id="dialog"></div> 
-
 	    <script type="text/javascript" src="../scripts/emr/js/ip.edit.js"></script>
 		<script type="text/javascript" src="../scripts/emr/js/privilege.js"></script>
   		<script type="text/javascript" src="../scripts/emr/js/record.lock.js"></script>
-  		<script type="text/javascript" src="../scripts/emr/js/ip.quicknavigation.js"></script>
   		<script type="text/javascript" src="../scripts/emr/js/ip.editor.js"></script>
-  		<script type="text/javascript" src="../scripts/emr/js/record.his_service.js"></script>
+  		<script type="text/javascript" src="../scripts/emr/js/ip.quicknavigation.js"></script>
     	<script type="text/javascript" src="../scripts/emr/js/record.hyperlink.js"></script>
 		<script type="text/javascript" src="../scripts/emr/js/ip.userconfig.js"></script>
     	<script language="cache" runat="server">
-  			d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS()
+  			d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"IPEMR")
   	   </script>
 		<script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>
 	</body>

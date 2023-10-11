@@ -1,0 +1,140 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+            s now=$zd(+$h,3)
+        </script>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <script type="text/javascript"
+            src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/findMEWS.js" charset="gbk"></script>
+    <script type="text/javascript" 
+    		src="../scripts_lib/xlsx/grid2excel.js" charset="utf-8"></script>
+    <STYLE type='text/css'>
+        body {
+            background-color: #fff;
+        }
+        table{
+        	text-align:inherit;
+        }
+
+        form table td, form table th{
+        	padding:0;
+        }
+.datagrid-wrap.panel-body.panel-body-noheader {
+	
+    border-width:0!important;
+}
+.hisui-panel.panel-body.panel-body-noheader.panel-noscroll{
+	
+	border-color: #ccc!important;
+}
+.datagrid-toolbar{
+	height:32px;
+}
+td .l-btn.l-btn-small.l-btn-plain{
+	position:relative;
+	top:2px;
+}
+td .combo.datebox{
+	width:123px !important;
+}
+    </STYLE>
+</head>
+
+<body>
+<div class="hisui-layout" id="head-menu" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false,collapsible:false" style="padding:10px 10px 0px 10px;height:95px;">
+			<div class="hisui-panel" data-options="title:'MEWS评分',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-bottom:1px dotted #ccc;border-top:0;border-radius:0;padding:10px;">
+				
+		                <table 
+		                       style="border-spacing:0">
+		                    <tr>
+		                        <td class="r-label">
+		                            开始时间
+		                        </td>
+		                        <td style="">
+		                            <input id="startDate"
+		                                   class="hisui-datebox textbox"
+		                                   style="width:120px;margin-right:20px;">
+		                            </input>
+		                        </td>
+		                        <td class="r-label" style="padding-left:30px;">
+		                            结束时间
+		                        </td>
+		                        <td style="">
+		                            <input id="endDate"
+		                                   class="hisui-datebox textbox"
+		                                   style="width:120px;">
+		                            </input>
+		                        </td>
+		                        <td class="r-label" style="padding-left:30px;">住院号</td>
+							    <td style="">
+								<input id="medNoInput" class="textbox" style="width:120px;">
+							    </td>
+							    <td class="r-label" style="padding-left:30px;">最低总分:</td>
+							    <td>
+								<input id="minGrade" class="textbox" style="width:60px;">
+							    </td>
+							    <td class="r-label" style="padding-left:15px;">最高总分:</td>
+							    <td>
+							    <input id="maxGrade" class="textbox" style="width:60px;">
+							    </td>
+							    <td class="r-label" style="padding-left:30px;">科室</td>
+							    <td>
+							    <select id="LocCode" class="hisui-combobox" style="width:150px;"></select>
+							    </td>
+		                         <td style="padding:0 20px">
+		                         <a href="#"
+				                   id="searchBtn"
+				                   class="hisui-linkbutton hover-dark"
+				                   data-options="iconCls:'icon-w-find'"
+				                   >
+				                    查询
+				                 </a>
+		                        </td>
+		                         <td style="padding:0 20px">
+		                         <a href="#"
+				                   id="outBtn"
+				                   class="hisui-linkbutton hover-dark"
+				                   data-options="iconCls:'icon-w-find'"
+				                   >
+				                    导出
+				                 </a>
+		                        </td>
+		                    </tr>
+							
+		                </table>
+		              
+			</div>
+		</div>		
+		<div data-options="region:'center',border:false,collapsible:false" style="padding:0 10px 10px 10px;">
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'" style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+					<div id="babyGrid" class="hisui-datagrid" data-options="fit:true" ></div>
+			</div>
+		</div>
+	</div>
+    <script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var now = "#(now)#";
+    </script>
+</body>
+
+</html>

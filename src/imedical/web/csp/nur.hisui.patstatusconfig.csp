@@ -1,0 +1,213 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.patstatusconfig.csp 护士站-患者状态配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+	text-align: right;
+}
+.days-label {
+	text-align: left;
+}
+.tip{
+	color:gray;
+	padding-left:10px;
+}
+.tip i{
+	margin-right:10px;
+}
+/*.numberbox {
+	width:50px !important;
+}*/
+.config-title {
+	margin:10px 0 0 0;
+	font-weight:bold;
+}
+.btnCls {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    padding: 0 5px 0 0;
+}
+.colorSet-div,.signSet-div{
+	margin:0 10px;
+}
+.opertionSetPanel .panel-tool {
+	top:27%;
+	height:30px;
+}
+.opertionSetPanel .panel-tool a:hover {
+	background-color:#0063a7;
+}
+.datagrid-cell-rownumber, .datagrid-header-rownumber {
+	width:45px;
+}
+.icon-translate-word:before {
+	margin-top:3px;
+}
+</style>
+</head>
+
+<body>
+<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-layout" data-options="fit:true,border:false" style=""> 
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:51px;border-bottom:1px dashed #ccc;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+				</td>
+				<td>
+					<input id="_HospList"/>
+				</td>
+				<td class="r-label">
+					<label for="searchType">类型</label>
+				</td>
+				<td>
+					<input class="textbox" id="searchType"/>
+				</td>
+				<td class="r-label">
+					<label for="searchName">数据编码/名称</label>
+				</td>
+				<td>
+					<input class="textbox" id="searchName" style="width:200px;" placeholder="请输入数据编码/名称"/>
+				</td>
+				<td class="r-label">
+					<label for="active">状态</label>
+				</td>
+				<td>
+					<input class="textbox" id="active"/>
+				</td>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>  
+				</td>
+			</tr>
+		</table>
+    </div>
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+    	<table id="tabPatStatusList"></table>
+    </div>
+</div>
+<!--增加/修改弹框-->
+<div id="PatStatusEditWin" class="hisui-window" title="患者状态配置" style="width:407px;height:523px;overflow-y:hidden;" data-options="iconCls:'icon-w-batch-cfg',closed:true">   
+	<table class="search-table">
+		<tr>
+			<td class="r-label">
+				<label for="PSCCode" class="clsRequired">数据编码</label>
+			</td>
+			<td>
+				<input class="textbox" id="PSCCode" style="width:300px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCType" class="clsRequired">类型</label>
+			</td>
+			<td>
+				<input id="PSCType" class="hisui-combobox textbox" style="width:307px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCName" class="clsRequired">名称</label>
+			</td>
+			<td>
+				<input class="textbox" id="PSCName" style="width:300px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCEMRTemplate" class="clsRequired">来源</label>
+			</td>
+			<td>
+				<input class="textbox" id="PSCEMRTemplate" style="width:307px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCItem" class="clsRequired">项目代码</label>
+			</td>
+			<td>
+				<input class="textbox" id="PSCItem" style="width:277px;"/>
+				<a href="#" id="PSCItem_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCValidExpression">生效公式</label>
+			</td>
+			<td>
+				<input class="textbox" id="PSCValidExpression" style="width:300px;" placeholder="且用'&'连接、或用'||'连接"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCValidDays">有效天数</label>
+			</td>
+			<td>
+				<input class="hisui-numberbox textbox" id="PSCValidDays" style="width:277px;" placeholder="大于等于0"/>
+				<a href="#" id="PSCValidDays_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCApplyPersonType" class="clsRequired">适用人群</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="PSCApplyPersonType" style="width:307px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCValidLocs">适用范围</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="PSCValidLocs" style="width:307px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCInvalidLocs">不适用范围</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="PSCInvalidLocs" style="width:307px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="PSCActive">状态</label>
+			</td>
+			<td>
+				<div id="PSCActive" class="hisui-switchbox" data-options="onText:'启用',offText:'停用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="text-align:center;">
+				<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-save'">保存</a>
+				<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+			</td>
+		</tr>
+	</table>
+</div>
+<script type="text/javascript" src="../scripts/dhcdoc/common/tanslatecomponent.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/patStatusConfig.js"></script>
+</body>
+</html>

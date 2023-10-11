@@ -1,0 +1,37 @@
+<!-- /imedical/web/csp/websys.monitor.taskTimecfg.csp-->
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+If ##Class(websys.SessionEvents).SessionExpired() q 1
+Quit 1
+</script>
+<html>
+    <head>
+        <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <HISUI></HISUI>
+        <style>
+        	.panel-body{
+	        	border-color: gray;	
+	        }
+        </style>
+        
+        <script runat="server" language="cache">
+			//"serverId":"9","serverName":"local","serverIP":"127.0.0.1"
+			set serverId = $g(%request.Data("ServerId",1)) 
+			set:serverId="" serverId = 9
+			set serverName = $g(%request.Data("serverName",1)) 
+			set serverIP = $g(%request.Data("serverIP",1)) 
+			
+		</script>
+		  <script type="text/javascript">
+			var serverId = "#($G(serverId))#";
+			var serverName = "#($G(serverName))#";
+			var serverIP = "#($G(serverIP))#";		
+		</script>
+    </head>
+    <body>
+
+        <div id="taskDatagrid" style="padding:2px" data-options="title:'服务器【#($G(serverName))# - #($G(serverIP))#】 任务运行时长配置',region:'center',split:true,bodyCls:'panel-body-gray',headerCls:'panel-header-gray',border:true,iconCls:'icon-paper'"></div>
+        <script type="text/javascript" src="../scripts/websys.monitor.taskTimecfg.js"></script>
+    </body>
+</html>

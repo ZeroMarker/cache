@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!--dhcdoc.echarts.csp-->
+<HTML lang="zh-CN">
+<HEAD>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI></HISUI>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></script>
+	<script type="text/javascript" src="../scripts_lib/echarts5.4.0/echarts.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/echarts.js"></script>
+	<server>
+		s CurDate=$ZD(+$H,3)
+		s CurMonth=$P(CurDate,"-",1,2)
+		s AlonePage=+%request.Get("AlonePage")
+		s NoMargin=+%request.Get("NoMargin")
+		s showMonthChange=0
+		s IndicateRows=[]
+		s IndicateCodes=%request.Get("IndicateCode")
+		s:IndicateCodes="" IndicateCodes="DrugPercent"
+		s ColCnt=+%request.Get("ColCnt")
+		s:ColCnt=0 ColCnt=999
+		s len=$L(IndicateCodes,",")
+		for i=1:1:len{
+			s IndicateCode=$P(IndicateCodes,",",i)
+			continue:IndicateCode=""
+			s IndicateObj=##class(DHCDoc.DHCDocConfig.Indicate).GetDetailByCode(IndicateCode)
+			s Params=IndicateObj.Params
+			s:Params="" Params="{}"
+			s IndicateObj.Params={}.%FromJSON(Params)
+			s IndicateObj.ArgsObj={}
+			s IndicateObj.MethodValue=""
+			if (IndicateObj.ClassName'="")&&(IndicateObj.MethodName'=""){
+				s obj=##class(%Dictionary.MethodDefinition).%OpenId(IndicateObj.ClassName_"||"_IndicateObj.MethodName,0)
+				s FormalSpec=obj.FormalSpec
+				k Args
+				s ArgCnt=$L(FormalSpec,",")
+				for j=1:1:ArgCnt{
+					s OneFormalSpec=$P(FormalSpec,",",j)
+					continue:OneFormalSpec=""
+					s ArgName=$TR($P($P(OneFormalSpec,":",1),"=",1)," ")
+					s val=IndicateObj.Params.%Get(ArgName)
+					s Args($I(Args))=val
+					d IndicateObj.ArgsObj.%Set(ArgName,val)
+				}
+				s IndicateObj.MethodValue=$ClassMethod(IndicateObj.ClassName,IndicateObj.MethodName,Args...)
+			}
+			if 'AlonePage s IndicateObj.backgroundColor="rgba(0,0,0,0.5)",IndicateObj.Theme="dark"
+			else  s IndicateObj.backgroundColor="",IndicateObj.Theme=""
+			if IndicateObj.showTitle'=1 s IndicateObj.Text=""
+			s:IndicateObj.showMonthChange=1 showMonthChange=1
+			d IndicateRows.%Push(IndicateObj)
+		}
+	</server>
+	<style>
+		body,.panel-body{
+			background:#($CASE(AlonePage,1:"",:"RGBA(0,0,0,0);"))#
+		}
+		#main{
+			height:100%;
+			width:100%;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			align-items: center;
+		}
+		#main>.container{
+			flex-grow:1;
+			width:100%;
+			height:100%;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-top:#($CASE(NoMargin,0:"15px",1:0))#;
+		}
+		#main>.container:first-child{
+			margin-top:0px;
+		}
+		.container>div{
+			flex-grow:1;
+			width:100%;
+			height:100%;
+			margin-left:#($CASE(NoMargin,0:"15px",1:0))#;
+		}
+		.container>div:first-child{
+			margin-left:0px;
+		}
+		.single-main{
+			background:rgba(0,0,0,0.5);
+			display: flex;
+			justify-content:center;
+			align-items:center;
+			color:#fff;
+		}
+		.single-main>div{
+			margin:5px;
+			height:54px;
+		}
+		.single-img{
+			width:54px;
+		}
+		.single-img img{
+			width:100%;
+			height:100%;
+		}
+		.single-val{
+		    font-size: 26px;
+		}
+		.single-title{
+			font-size: 16px;
+		}
+		.next-month,.last-month{
+			cursor: pointer;
+			font-size: 40px;
+			line-height: 80px;
+			font-weight: bolder;
+			background-color:rgba(0,0,0,.1);
+			color: #fff;
+			padding:0 5px;
+			position:absolute;
+			top:50%;
+			transform: translateY(-50%);
+		}
+		.next-month{
+			right:0;
+		}
+		.last-month{
+			left:0;
+		}
+		.next-month:hover,.last-month:hover{
+			background-color:rgba(0,0,0,.5);
+		}
+	</style>
+</head>
+<body>
+	<div id="pMain" class="hisui-panel" data-options="fit:true,border:false" style="overflow:hidden;">
+		<div id="main"></div>
+	</div>
+	<csp:if condition=(showMonthChange)>
+		<a class="hisui-tooltip last-month" title="上月" data-options="position:'right'">&lt;</a>
+		<a class="hisui-tooltip next-month" title="下月" data-options="position:'left'">&gt;</a>
+	</csp:if>
+</body>
+<script type='text/javascript'>
+	var ServerObj={
+		CurMonth:'#(CurMonth)#',
+		ColCnt:#(ColCnt)#,
+		IndicateRows:#(IndicateRows.%ToJSON())#
+	};
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/echarts.js"></script>
+</html>

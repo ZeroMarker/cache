@@ -1,0 +1,73 @@
+<!-- 
+ * FileName: dhcinsu.tarcontrast.audit.csp
+ * Author: tangzf 
+ * Date: 2020-6-1
+ * Description: 医保目录对照院内审核
+-->
+<!DOCTYPE html>
+<TRAK:HEAD></TRAK:HEAD>
+<HISUI></HISUI>
+<DHCBILL/>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCINSUPort.js"></script>
+	
+	<style>
+	.textbox{
+			width:115px	!important ;
+		}
+	</style>
+</head>
+<body style="background-color: #FFFFFF">
+	<div class="hisui-layout" data-options="fit:true" >
+	   <div data-options="region:'north',border:false">
+		  <div class="hisui-panel" data-options="border:false,title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check',closable:false,collapsible:false">
+			  <table class='search-table' style="width:80%" >
+					<tr>
+						<td class="r-label td-first-col"><label>医保类型</label></td>
+						<td><input id="insuType" class="textbox"  /></td>
+						<td class="r-label"><label>对照关系</label></td>
+						<td><input id="ConType" name="ConType" class="textbox"/></td>
+						<td class="r-label"><label>项目大类</label></td>
+						<td><input id="TarCate" name="TarCate" class="textbox"/></td>
+						<td class="r-label" ><label id='LabelTarDate'>收费项日期</label></td>
+						<td id="TDTarDate"><input id="TarDate"   class="hisui-datebox textbox" /></td>
+						<td class='r-label'><a id="btnQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onClick='LoadDataGrid()'>查询</a></td>
+					</tr>
+					<tr>
+						<td class="r-label td-first-col"><label>查询条件</label></td>
+						<td><input id="QClase" name="QClase" class="textbox"/></td>
+						<td class="r-label"><label>关键字</label></td>
+						<td><input id="KeyWords" name="KeyWords" class="textbox" placeholder='输入关键字检索...'/></td>
+						<td class="r-label" ><label>对照生效日期</label></td>
+						<td><input id="ActDate" name="ActDate" class="hisui-datebox  textbox" /></td>
+					</tr>
+				</table>
+			</div>		
+		</div>
+	<div data-options="region:'center',border:false" style="border-top:1px dashed #ccc;border-left:0">
+		<table id='dg' ></table>
+	 </div>
+	</div>	
+	
+	<!--医保目录对照(HIS)toolbar-->
+	<div id="dgTB" class="hisui-toolbar" >  
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-ok" id="btnExport" plain="true" onClick='Audit(4)' >审核通过</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="btnUpload" plain="true" onClick='Audit(5)' >审核拒绝</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<DHCBILLINSUCloud/>
+	<script type="text/javascript" src="../scripts/dhcinsu/tarcontrast.audit.js"></script>
+</body>
+</html>

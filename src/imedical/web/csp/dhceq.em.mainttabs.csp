@@ -1,0 +1,63 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	Set QXType=$Get(%request.Data("QXType",1))
+</Script>
+</HEAD>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel" data-options="fit:true,eqtitle:'maintitle',bodyCls:'panel-body-gray'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div id="main" class="hisui-tabs tabs-gray" data-options="fit:true,border:false">   
+					<div title="信息设备" style="overflow:hidden;">
+						<!--zyq 2806314 20220922 信息设备显示不全-->
+						<iframe id="tab0" frameborder="0" src="" style="width:99%;height:100%;"></iframe>
+					</div>   
+					<div title="软件故障"  style="overflow:auto;">
+						<iframe id="tab1" frameborder="0" src="" style="width:100%;height:100%;"></iframe>
+					</div>   
+					<div title="软件需求" style="overflow:hidden;">
+						<iframe id="tab2" frameborder="0" src="" style="width:100%;height:100%;"></iframe>
+					</div>
+				</div>
+				
+    		</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+		<INPUT type="hidden" id="QXType" value=#(QXType)#>
+		</form>
+	</div>
+</body>
+<script type="text/javascript">
+$(function(){
+	var myTabs=new Array();  
+	myTabs[0]="dhceq.em.hardwaremaintsimple.csp?QXType="+getElementValue("QXType");
+	myTabs[1]="dhceq.em.problemsimple.csp?QXType="+getElementValue("QXType");    
+	myTabs[2]="dhceq.em.requirementsimple.csp?QXType="+getElementValue("QXType");
+	$('#tab0').attr('src', myTabs[0]);
+	$HUI.tabs("#main",{
+		onSelect:function(title,index){
+			$.messager.popover({type:'info',msg:'切换到【'+title+'】'}); 
+			$('#tab'+index).attr('src', myTabs[index]);					
+		}
+	});
+});	
+</script>
+</HTML>

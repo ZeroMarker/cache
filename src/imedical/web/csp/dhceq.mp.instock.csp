@@ -2,18 +2,6 @@
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
 </csp:method>
-<csr:action>		<!--add by wl 2019-11-20 WL0010 begin-->		
-    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
-    ;导入润乾直接打印所需包
-    //modify by wl 2019-12-13 WL0021 begin
-    s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
-	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") 
-	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
-    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
-	}  
-	 //modify by wl 2019-12-13 WL0021 end 
-    </SCRIPT>  
-</csr:action>		<!--add by wl 2019-11-20 WL0010 end-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,6 +28,12 @@
 	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
 	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") 
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    //d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17 
+	} 
 </script>
 <!--Mozy003003	1241868		2020-3-27	注释多行文本框个性样式>
 <style type="text/css">
@@ -136,7 +130,6 @@
 			<INPUT type="hidden" id="NextFlowStep">
 			<INPUT type="hidden" id="CancelFlag">
 			<INPUT type="hidden" id="CancelToFlowDR">
-			
 			<INPUT type="hidden" id="AISAccessoryTypeDR" value="#(AISAccessoryTypeDR)#">
 			<INPUT type="hidden" id="AISAccessoryType" value="#(AISAccessoryType)#">
 			<INPUT type="hidden" id="AISLocDR" value="#(AISLocDR)#">
@@ -144,7 +137,6 @@
 			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
 			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
 			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
-			
 			<INPUT type="hidden" id="AISStatus" value="">
 			<INPUT type="hidden" id="AISInType" value="">
 			<INPUT type="hidden" id="AISBuyLocDR" value="">
@@ -153,6 +145,7 @@
 			<INPUT type="hidden" id="AISJob" value="">
 			<input type="hidden" id="PrintFlag" value=#(PrintFlag)#> <!--add by wl 2019-11-20 WL0010-->
 			<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-20 WL0010  -->	
+			<INPUT type="hidden" id="AISLRowID" value=""><!--	MZY0040	1408950		2020-7-21  -->
 		</form>
 	</div>
 	<script type='text/javascript' src='../scripts/dhceq/mp/instock.js'></script>

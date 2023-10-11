@@ -1,0 +1,294 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s IsPopUp = $G(%request.Data("IsPopUp", 1))
+</script>
+<!DOCTYPE html>
+<!--nur.hisui.inhospitalService.csp 住院服务中心-病区床位概览--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"/>
+<link href="../scripts/nurse/hisui/css/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<style type='text/css' class="eduExeStyle">
+body>div>div>div{background: #f5f5f5!important;}
+body>div>div>div>div{background: #ffffff;}
+table{border-collapse: collapse;}
+/*hr.solid{border-top: 0;border-bottom: 1px solid #ccc;}*/
+div.hGap{height: 10px;}
+div.vGap{width: 10px;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+#ihsWards{padding-left: 10px;padding-top: 10px;}
+.ihsWard{
+	float: left;
+	width:calc(12% - 10px); /*width: auto;*/
+	margin:0 10px 10px 0;
+}
+.ihsWard>div{border: 1px solid #cccccc;border-radius: 4px;overflow: hidden;font-size: 0;}
+@keyframes shine {
+  0% {
+    background-position: -1px -1px;
+  }
+  100% {
+    background-position: -12px -12px;
+  }
+}
+.ihsWard>div.select{transition: all .15s ease-in-out;background: repeating-linear-gradient(135deg,transparent,transparent 3px,#3d9cd2 3px,#3d9cd2 8px);animation: shine 1s infinite linear;border-color: transparent;}
+.ihsWard>div:hover{transform: scale(1.05,1.05);}
+.ihsWard>div>title{
+	background: #f9f9fa;
+	height: 33px;
+	display: block;
+	border-bottom: 1px solid #cccccc;
+	line-height: 33px;padding-left: 10px;
+	font-weight: bold;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+.ihsWard>div>table{
+	table-layout: fixed;
+	width: 100%;
+	background: white;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+.ihsWard>div>table tr{height: 30px;}
+.ihsWard>div>table tr>td:first-of-type{padding-left: 10px;}
+.ihsWard>div>table tr>td:last-of-type{padding-right: 10px;text-align: right;}
+#ihsWardsTable tr{border-bottom: 1px solid #cccccc;height: 30px;}
+#ihsWardsTable tr>th{text-align: center;background: #f9f9fa;}
+#ihsWardsTable tr>td{text-align: center;}
+#ihsWardsTable tr>td:first-of-type{text-align: left;padding-left: 10px;}
+.floor {
+	text-align:left !important;
+	overflow:hidden;
+	white-space:nowrap;
+	text-overflow:ellipsis;
+}
+/*.floor .value:hover{
+	white-space:normal;
+	max-height:0.5rem;
+	transition:all .3s ease-in-out;
+}*/
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+.building-div{
+	clear:both;
+	margin:0 10px 10px 0;
+	height:30px;
+	line-height:30px;
+	text-align:center;
+	background:#D8EFFF;
+	font-weight:bold;
+	border-radius:4px;
+}
+.floor-div {
+	position:relative;
+	height:auto;
+	overflow:hidden;
+}
+.floor-title {
+	position:absolute;
+	height:calc(100% - 10px);
+	background:#D8EFFF;
+	font-weight:bold;
+	border-radius:4px;
+	width: 15px;  
+    margin-right:10px;
+    padding:0 10px;
+    line-height: 15px;  
+    word-wrap: break-word;/*英文的时候需要加上这句，自动换行*/ 
+    word-break: break-all;
+    overflow:hidden;
+}
+.floor-title span{
+	display:flex;
+	height:100%;
+	width:100%;
+	align-items:center;
+	text-align:center;
+}
+#menubtn-toolbar:hover,.m-btn-plain-active:hover,.m-btn-plain:hover {
+	background-color:white;
+	background:white;
+}
+#menubtn-toolbar .l-btn-text {
+	padding:0 5px;
+	min-width:auto;
+}
+.menu {
+	border-color:#ccc;
+}
+.menu-sel .menu-text {
+	color:#32A6FF !important;
+	font-weight:bold;
+}
+.displayType_sel .fa{
+	color:#32A6FF !important;
+}
+#mytitle {
+    position: absolute;
+    color: #ffffff;
+    font-size: 14px;
+    padding: 4px;
+    background: rgba(40, 40, 40, 0.8);
+    border-radius:5px;
+    z-index:999;
+}
+.panel .datagrid{
+	margin-top:0px !important;
+}
+#menubtn-toolbar .m-btn-downarrow{
+	display:none;
+}
+.fa {
+	color:#979797;
+}
+.kw-section-list>li:first-of-type{margin-left: 10px;}
+</style>
+</head>
+<body style="overflow: hidden;">
+  <div class="hisui-layout" data-options="fit:true,border:false">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div id="ihsTab" class="hisui-panel" data-options="fit:true,title:'全院病区概览',iconCls:'icon-eye',headerCls:'panel-header-gray'" style="overflow:hidden;"> 
+		      <div style="position: relative;border-bottom:1px solid #ccc;">
+		        <table cellpadding="0" style="margin-left: 10px;height:50px;">
+		          <tr>
+		            <!--td class="r-label">
+		            	<label id="_HospListLabel" class="clsRequired">所属医院</label>
+		            </td>
+		            <td class="r-label">
+		            	<select id="_HospList"></select>
+		            </td-->
+		            <td class="r-label">
+		            	<label>#(..Get("病区"))#</label>
+		            </td>
+		            <td>
+		            	<input id="wardName" class="hisui-searchbox" data-options="prompt:'#(..Get("请输入病区名称"))#',searcher:filterWardsData">
+		            </td>
+		            <!--td class="r-label">
+		            	<label>病房楼</label>
+		            </td>
+		            <td class="r-label">
+		            	<input id="LocBuilding" class="hisui-combobox">
+		            </td-->
+		            <td>
+		            	<div id="LocBuilding"></div>
+		            </td>
+		            <!--td class="r-label">
+		            	<label>楼层</label>
+		            </td>
+		            <td class="r-label">
+		            	<input id="LocBuildingFloor" class="hisui-combobox">
+		            </td-->
+		            <td class="r-label" style="padding-left: 5px;">
+		            	<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="findWardBedData()">查询</a>
+		            </td>
+		            <td>
+		            	<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-export'" onclick="exportWardBedData()">导出</a>
+		            </td>
+		          </tr>
+		        </table>
+		          <div style="position: absolute;right: 10px;top: 10px;">
+		          	<div  style="float:left;border: 1px solid #ccc;padding: 3px 5px;border-radius: 4px;margin-right:10px;">
+					    <a style="vertical-align:bottom;" href="javascript:void(0)" id="menubtn-toolbar" class="hisui-menubutton menubutton-toolbar"  data-options="menu:'#mmedit'">排序</a>
+					    <!--<i class="fa fa-sort-amount-desc" aria-hidden="true" style="margin-right:5px;font-size:1.15em;"></i>-->
+					    <div id="mmedit" style="width:70px !important;">
+					        <div id="SortType_1" class="menu-sel" onclick="SortTypeChange(1)">#(..Get("默认"))#</div>
+					        <div id="SortType_2" onclick="SortTypeChange(2)">#(..Get("病房楼"))#</div>
+					        <div id="SortType_3" onclick="SortTypeChange(3)">#(..Get("楼层"))#</div>
+					    </div>
+				    </div>
+				    <div style="float:left;border: 1px solid #ccc;border-radius: 4px;">
+				    	<div  style="float:left;padding: 6px 5px 3px;border-right:1px solid #ccc;">
+					    	<span id="displayType_card" class="displayType_sel" onclick="ihsWardsShow(true);"><i class="fa fa-th" aria-hidden="true" style="font-size:18px;"></i></span>
+					    </div>
+							<div style="float:left;padding: 6px 5px 3px;">
+								<span id="displayType_list" onclick="ihsWardsShow(false);"><i class="fa fa-th-list" aria-hidden="true" style="font-size:18px;"></i></span>
+					    </div>
+				    </div>
+				    <!--div  style="float:left;border: 1px solid #ccc;padding: 5px;border-radius: 4px 0 0 4px;">
+				    	<span id="displayType_card" class="displayType_sel" onclick="ihsWardsShow(true);"><i class="fa fa-th-large" aria-hidden="true" style="font-size:18px;"></i></span>
+				    </div>
+		          	<div style="float:left;border: 1px solid #ccc;border-left: 0;border-radius: 0 4px 4px 0;padding: 5px;">
+			            <span id="displayType_list" onclick="ihsWardsShow(false);"><i class="fa fa-list-ul" aria-hidden="true" style="font-size:18px;"></i></span>
+				    </div-->
+		          </div>
+		      </div>
+
+		      <div id="ihsWards" style="overflow-x: hidden;">
+		        <div class="ihsWard">
+		          <div>
+		            <title>保健科护理单元</title>
+		            <table>
+		              <tr>
+		                <td>#(..Get("总床位"))#：</td>
+		                <td>54</td>
+		              </tr>
+		              <tr>
+		                <td>#(..Get("已占用"))#：</td>
+		                <td>5</td>
+		              </tr>
+		              <tr>
+		                <td>#(..Get("明日出院人数"))#：</td>
+		                <td>3</td>
+		              </tr>
+		              <tr>
+		                <td>#(..Get("位置"))#：</td>
+		                <td>3</td>
+		              </tr>
+		            </table>
+		          </div>
+		        </div>
+		      </div>
+		      <table id="ihsWardsTable" cellpadding="0" style="width: 100%;border-collapse: collapse;display: none;" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',pagination:false,autoSizeColumn:true,fitColumns:true,onDblClickRow:openBedChart,singleSelect:true" border="false">
+		        <thead>
+		          <tr>
+		            <th data-options="field:'warddesc',width:30,formatter:wardDescFormate">#(..Get("病区"))#</th>
+		            <th data-options="field:'totalBeds',width:20,align:'center'">#(..Get("总床位"))#</th>
+		            <th data-options="field:'emptyBeds',width:20,align:'center'">#(..Get("已占用"))#</th>
+		            <th data-options="field:'BedRate',width:20,align:'center'">#(..Get("床位使用率"))#</th>
+		            <th data-options="field:'leavePatients',width:20,align:'center'">#(..Get("今出/明出人数"))#</th>
+		            <th data-options="field:'LocFloorDesc',width:20,align:'left'">#(..Get("位置"))#</th>
+		          </tr>
+		        </thead>
+		      </table>
+		    </div>
+	</div>
+  </div>
+  <script type="text/javascript">
+		var IsPopUp = "#(IsPopUp)#";
+		IsPopUp="Y"==IsPopUp?true:false;
+    /*$('#ihsTab').tabs({
+      	width:window.innerWidth-20,
+      	height:window.innerHeight-20
+    });*/
+    
+  </script>
+  <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+  <script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.inhospitalService.js"></script>
+</body>
+</html>

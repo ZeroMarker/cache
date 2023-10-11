@@ -1,0 +1,234 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RowID=$Get(%request.Data("RowID",1))
+	s Status = ""
+	if (RowID'="")
+	{
+		s Status = $Piece($Get(^DHCEQSplit(RowID)),"^",22)
+	}
+	s ApproveRoleDR=$Get(%request.Data("ApproveRole",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	i Status>0 s ReadOnly=1
+	s QXType=$Get(%request.Data("QXType",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s Type=$Get(%request.Data("Type",1))
+	s SJob=$Get(%request.Data("SJob",1))
+	i SJob="" s SJob=$Job
+	s CancelOper=$Get(%request.Data("CancelOper",1))
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s ActionID=""
+	&SQL(select A_RowID into :ActionID from SQLUSER.DHC_EQCAction where A_Code = :Action)
+	s ApproveSetDR=##class(web.DHCEQApproveList).GetApproveSet("36",RowID)
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(ApproveSetDR,CurRole,Action)
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	s CompName="EM.G.BuyRequest.BuyReqList"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+	s ComponentID=$o(^DHCEQCCode("DHCEQCComponent",0,"Name",CompName,""))
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	;导入润乾直接打印所需包
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if (PreviewRptFlag=0){
+    	//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+	}
+</Script>
+<Style>
+.eq-table
+{
+	width:100%;
+}
+.eq-table-label
+{
+	width:auto;
+	text-align:right;
+	padding:0 15px;
+}
+</Style>
+<body class="hisui-layout">
+    <div data-options="region:'center',border:false" style="padding:5px 10px 0px 10px;">
+        <div class="hisui-layout" data-options="fit:true,border:false">
+            <div data-options="region:'north',border:false" id="SLTable">
+            	<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'主设备信息'" id="SLTableTitle" style="padding-bottom:10px;">
+	                <div class="eq-table">
+	                    <div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cSEquipDR_EQName" for="SEquipDR_EQName">主设备名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SEquipDR_EQName"></div>
+							<div class="eq-table-td eq-table-label"><label id="cEquipNo" for="EquipNo">主设备编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="EquipNo"></div>
+	                    	<div class="eq-table-td eq-table-label"><label id="cSRequestNo" for="SRequestNo">申请单号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SRequestNo" disabled="true"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSRequestDate" for="SRequestDate">申请日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SRequestDate"></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                    	<div class="eq-table-td eq-table-label"><label id="cSLocDR_DeptDesc" for="SLocDR_DeptDesc">科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SLocDR_DeptDesc"></div>
+	                    	<div class="eq-table-td eq-table-label"><label id="cSOriginalFee" for="SOriginalFee">原值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SOriginalFee"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cSDepreTotalFee" for="SDepreTotalFee">累计折旧</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SDepreTotalFee"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSNetFee" for="SNetFee">净值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SNetFee"></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                        <div class="eq-table-td eq-table-label"><label id="cSEquipTypeDR_ETDesc" for="SEquipTypeDR_ETDesc">设备类组</label></div>
+	                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SEquipTypeDR_ETDesc"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cSStatCatDR_SCDesc" for="SStatCatDR_SCDesc">设备类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SStatCatDR_SCDesc"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cSEquipCatDR_ECDesc" for="SEquipCatDR_ECDesc">设备分类</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SEquipCatDR_ECDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSOriginDR_ODesc" for="SOriginDR_ODesc">来源</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SOriginDR_ODesc"></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                        <div class="eq-table-td eq-table-label"><label id="cSTransAssetDate" for="STransAssetDate">入库日期</label></div>
+	                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="STransAssetDate"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cSStartDate" for="SStartDate">启用日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SStartDate"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cSProviderDR_VName" for="SProviderDR_VName">供应商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SProviderDR_VName"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSManuFactoryDR_VName" for="SManuFactoryDR_VName">生产厂商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SManuFactoryDR_VName"></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                        <div class="eq-table-td eq-table-label"><label id="cSModelDR_MDesc" for="SModelDR_MDesc">规格型号</label></div>
+	                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SModelDR_MDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSLimitYearsNum" for="SLimitYearsNum">使用年限</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SLimitYearsNum"></div>
+	                    	<div class="eq-table-td eq-table-label"><label id="cSDepreMethodDR_DMDesc" for="SDepreMethodDR_DMDesc">折旧方法</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SDepreMethodDR_DMDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cLeaveFactoryNo" for="LeaveFactoryNo">出厂编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="LeaveFactoryNo"></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                    	<div class="eq-table-td eq-table-label"><label id="cSSplitOriginalFee" for="SSplitOriginalFee">拆后原值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SSplitOriginalFee"></div>
+	                    	<div class="eq-table-td eq-table-label"><label id="cSSplitDepreTotalFee" disabled="true" for="SSplitDepreTotalFee">拆后累计折旧</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SSplitDepreTotalFee"></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cSSplitNetFee" for="SSplitNetFee">拆后净值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SSplitNetFee"></div>
+							<div class="eq-table-td eq-table-label"><input class="hisui-checkbox" type="checkbox" data-options="checked:true" id="SIsKeep"></div>
+	                        <div class="eq-table-td eq-table-input"><label id="cSIsKeep" for="SIsKeep">是否保留原设备</label></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                    	<div class="eq-table-td eq-table-label"><label id="cSReason" for="SReason">拆分原因</label></div>
+	                        <div class="eq-table-td eq-table-input"><textarea id="SReason" class="textbox"></textarea></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cSRemark" for="SRemark">备注</label></div>
+	                        <div class="eq-table-td eq-table-input"><textarea id="SRemark" class="textbox"></textarea></div>
+	                        <div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+	                        <div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+	                    </div>
+	                    <div class="eq-table-tr">
+	                        <div class="eq-table-td eq-table-label"><label id="cEditOpinion" for="EditOpinion">审批意见</label></div>
+	                        <div class="eq-table-td eq-table-input"><textarea id="EditOpinion" class="textbox"></textarea></div>
+	                        <div class="eq-table-td eq-table-label"><label id="cRejectReason" for="RejectReason">拒绝原因</label></div>
+	                        <div class="eq-table-td eq-table-input"><textarea id="RejectReason" class="textbox"></textarea></div>
+	                        <div class="eq-table-td eq-table-label"><label><a id="showOpinion" class="eq-cursor-pointer">审批记录</a></label></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+	                    </div>
+	                </div>
+                </div>
+            </div>
+            <div data-options="region:'center',border:false" style="position:relative;" id="SLGrid">
+                <div class="hisui-panel" data-options="eqtitle:'listtitle',fit:true,title:'拆分设备明细'">
+                    <table id="tDHCEQSplitList" class="hisui-datagrid"></table>
+                </div>
+                <div class="messager-popover info" style="position:absolute;right:0px;top:0px;margin:1px 5px 4px 0;padding:5px 10px;">
+					<span id="sumTotalicon" class="messager-popover-icon info"></span>
+					<span id="sumTotal" >合计</span>
+				</div>
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'south',fit:true,border:false" style="position:relative;margin:0 auto;padding-bottom:10px" class="eq-clearfix">
+        <div style="margin:0px auto;padding-top:10px;position:relative;float:left;left:50%;transform:translate(-50%,0)">
+            <div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BSubmit" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a></div>
+            <div class="eq-table-td eq-table-label"><a id="BCancelSubmit" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">取消提交</a></div>
+            <div class="eq-table-td eq-table-label">
+                <a id="BApprove1" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp"
+                    data-options="stopAllEventOnDisabled:true">审核</a>
+                <a id="BApprove2" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp"
+                    data-options="stopAllEventOnDisabled:true">审核</a>
+                <a id="BApprove3" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp"
+                    data-options="stopAllEventOnDisabled:true">审核</a>
+            </div>
+            <!--div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton"
+                    iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">打印</a></div-->
+        </div>
+    </div>
+    <!-- 出厂编号信息弹窗 czf 1880419 2021-07-08-->
+	<div id="SLEquipListWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="padding:10px;">
+		<!--div data-options="fit:true">
+			 <table id="SLEquipListGrid" class="hisui-datagrid"></table>
+		</div-->
+	</div>
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="SRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="SStatus">
+			<INPUT type="hidden" id="SEquipDR">
+			<INPUT type="hidden" id="SDepreMethodDR">
+			<INPUT type="hidden" id="SEquipTypeDR">
+			<INPUT type="hidden" id="SStatCatDR">
+			<INPUT type="hidden" id="SEquipCatDR">
+			<INPUT type="hidden" id="SLocDR">
+			<INPUT type="hidden" id="SOriginDR">
+			<INPUT type="hidden" id="SEquipStatus">
+			<INPUT type="hidden" id="SProviderDR">
+			<INPUT type="hidden" id="SManuFactoryDR">
+			<INPUT type="hidden" id="SModelDR">
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="ApproveTypeCode" value=36>
+			<INPUT type="hidden" id="ApproveSetDR" value="#(ApproveSetDR)#">
+			<INPUT type="hidden" id="ApproveRoleDR" value="#(ApproveRoleDR)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="CancelOper" value="#(CancelOper)#">
+			<INPUT type="hidden" id="RoleStep" value="#(RoleStep)#">
+			<INPUT type="hidden" id="CurDate" value="#(CurDate)#">
+			<INPUT type="hidden" id="Action" value="#(Action)#">
+			<INPUT type="hidden" id="ActionID" value="#(ActionID)#">
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="Type" value="#(Type)#" >
+			<INPUT type="hidden" id="SplitNumCode" value="#(SplitNumCode)#">
+			<INPUT type="hidden" id="SplitRowCode" value="#(SplitRowCode)#">
+			<INPUT type="hidden" id="HospitalDesc" value="#(HospitalDesc)#">
+			<INPUT type="hidden" id="GetComponentID" value="#(ComponentID)#">
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			<INPUT type="hidden" id="SLListTotalFee">
+			<INPUT type="hidden" id="SLListTotalDepreFee">
+			<INPUT type="hidden" id="SJob" value="#(SJob)#">
+			<INPUT type="hidden" id="EQItemDR">
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/em/split.js"></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
+</body>
+</html>

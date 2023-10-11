@@ -5,10 +5,7 @@
 <html>
 <head>
 	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
-	<link rel="stylesheet" type="text/css" href="../skin/default/css/websys.css"/>
-	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
-	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
-	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
 	<script type="text/javascript" src="http://localhost:8000/CLodopfuncs.js?priority=1"></script>
 	<script type="text/javascript" src="http://localhost:18000/CLodopfuncs.js?priority=0"></script>
@@ -16,6 +13,15 @@
 </head>
 <body>
 	<SERVER>
+		
+		set otherCfg = ""
+		s:$d(%request.Data("previewFlag",1)) otherCfg = otherCfg _ """preview"":" _%request.Data("previewFlag",1) _","
+		s:$d(%request.Data("printListByText",1)) otherCfg = otherCfg _ """printListByText"":" _%request.Data("printListByText",1) _","
+		s:$d(%request.Data("tableBorder",1)) otherCfg = otherCfg _ """tableBorder"":" _%request.Data("tableBorder",1) _","
+		s:$d(%request.Data("listHtmlTableBorder",1)) otherCfg = otherCfg _ """listHtmlTableBorder"":" _%request.Data("listHtmlTableBorder",1) _","
+		s:otherCfg'="" otherCfg = $e(otherCfg, 1, $l(otherCfg) - 1)
+		s otherCfg = "{" _ otherCfg _ "}"
+		;s ^hz = otherCfg
 		Set isLodopPrint = $g(%request.Data("isLodop",1),0)
 		Set isPreview = $g(%request.Data("preview",1),0)
 		if isPreview'=1{
@@ -46,7 +52,7 @@
 			Set listInfo = $g(%request.Data("xmlListData",1))
 		}
  	</SERVER>
- 	<input id="PrintItemEnc" name="PrintItemEnc" type=hidden value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
+ 	<input id="PrintItemEnc" name="PrintItemEnc" type=hidden value="#(##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
 	<csp:if condition="$g(isPreview)=1">
 	 	<div>
 	 		<div style="margin-right:10px;float:right;">
@@ -81,17 +87,22 @@
 			//}
 			var c2 = String.fromCharCode(2);
 			var itmInfo = "#(XMLPrintData)#";
-			
 			#(##class(web.DHCPlatformPrint).RunQuery(CQN,CQQ))#;
 			if (listInfo=="") listInfo = "#(listInfo)#";
 			//var val = '处理方法：1.	关闭报表工具2.	把东华智能报表工具安装下jdbc目录打开注释p8以下的驱动包(CacheDB.jar)如图 3.	在cache2010安装目录下如：\Dev\java\lib\JDK15 复制cacheDB.jar（文件大小是2098kb）到东华智能报表工具安装下jdbc中；（不能用JDK16下的cacheDB.jar）4.	在通过studio打开您报错的query类，修改您所调用的query 中sqlproc属性（如果为false请设置成true 编译此类 p5与2010需要设置）如图：';
 			//val = autoWordEnter(val,30);
 			//var ajson = [{type:"text",name:"patno",value:val,x:50,y:10,lineHeigth:10}]
-			var ajson = null;
+			var ajson = [];
 			if (#(isLodopPrint)#){
 				// DHC_GetBase64ByLodop(itmInfo,listInfo,ajson,"#(reportDesc)#");
 				// DHC_CreateByXMLName(getLodop(),"#(reportName)#",itmInfo,listInfo,ajson)
-				DHC_PrintByLodop(getLodop(),itmInfo,listInfo,ajson,"#(reportDesc)#");
+				var otherCfg = '#(otherCfg)#';
+				otherCfg = JSON.parse(otherCfg);
+				/*otherCfg.printListByText = true;
+				otherCfg.listAfterCallback = function(cfg){
+					cfg.PrinterObj.ADD_PRINT_LINE(cfg.y + "mm", "80mm", (parseInt(cfg.y)+10)+"mm", "60mm", 0, 2); //0=实线,1=线宽
+				};*/
+				DHC_PrintByLodop(getLodop(),itmInfo,listInfo,ajson,"#(reportDesc)#", otherCfg);
 			}else{
 				DHCP_XMLPrint(printObj,itmInfo,listInfo,ajson);
 			}
@@ -118,5 +129,3 @@
 	</script>
 </body>
 </html>
-
-

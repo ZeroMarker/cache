@@ -1,0 +1,86 @@
+<!--
+	症状
+	csp: dhcpe/zyjktj/dhcpeireport.zyjk.symptom.csp
+	A4 大小 一般为  210mm*297mm  595pt*840pt
+	单独的样式放在 style 中，便于浏览器调试
+	尽量不用 px，会受分辨率影响效果
+	不同打印机对 lodop 也有影响，调试时可使用真实打印机的电脑预览
+	&ensp; 半角占位符  &emsp; 全角占位符
+	
+	1英寸 72pt  25.30mm    大特号 63pt  22.14mm    特号 54pt  18.97mm    初号 42pt  14.82mm    小初 36pt  12.70mm
+	一号  26pt   9.17mm    小一   24pt   8.47mm    二号 22pt   7.76mm    小二 18pt   6.35mm    三号 16pt   5.64mm
+	小三  15pt   5.29mm    四号   14pt   4.94mm    小四 12pt   4.23mm    五号 10.5pt 3.70mm    小五 9pt    3.18mm
+	六号  7.5pt  2.56mm    小六   6.5pt  2.29mm    七号 5.5pt  1.94mm    八号 5pt    1.76mm
+-->
+<style>
+    .symptom-table {
+        font-size: 12pt;
+        width: 100%;
+        position: relative;
+        line-height: 175%;
+    }
+    .symptom-text {
+        padding-left: 5pt;
+        border: 1pt solid #000000;
+    }
+    .symptom-val {
+        text-align: center;
+        border: 1pt solid #000000;
+    }
+</style>
+
+<div class="rptpage">
+	<table style="width: 100%;">
+	    <tr><td style="height:10pt;">&ensp;</td></tr>
+		<tr><td class="rpttitle">症状</td></tr>
+	    <tr><td style="height:5pt;">&ensp;</td></tr>
+        <tr>
+            <td style="margin:0 auto;">
+                <table class="symptom-table">
+                    <tr>
+                        <td class="symptom-val" style="width:28%;">项&ensp;&ensp;&ensp;目</td>
+                        <td class="symptom-val" style="width:22%;"></td>
+                        <td class="symptom-val" style="width:28%;">项&ensp;&ensp;&ensp;目</td>
+                        <td class="symptom-val" style="width:22%;"></td>
+                    </tr>
+                    <script language="Cache" RUNAT="SERVER">
+                        if $isObject(occuinfo.occuSymptomList) {
+                            s syspNum = occuinfo.occuSymptomList.Size()
+                            for aindex=0:1:(syspNum-1) {
+                                s symptom=occuinfo.occuSymptomList.Get(aindex)
+                                s desc=symptom.desc
+                                continue:desc=""
+                                s remark=symptom.remark
+                                s remark=symptom.remark
+                                
+                                w:aindex#2=0 "<tr>",!
+                                
+                                w "<td class='symptom-text'>"_desc_"</td>",!
+                                w "<td class='symptom-val'>"_remark_"</td>",!
+                                
+                                if (aindex=(syspNum-1) && (aindex#2=0)) {
+                                    w "<td class='symptom-text'></td>",!
+                                    w "<td class='symptom-val'></td>",!
+                                    w "</tr>"
+                                    continue
+                                }
+
+                                w:(aindex#2=1) "</tr>",!
+                            }
+                            s SymptomUser=occuinfo.occuSymptomUser
+                            s SymptomDate=occuinfo.occuSymptomDate
+                        }
+                    </script>
+                    <tr>
+                        <td colspan=4 style="text-align: right;">
+                            医生：#(SymptomUser)#
+                            &emsp;&emsp;
+                            日期：#(SymptomDate)#
+                            &emsp;&emsp;
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>

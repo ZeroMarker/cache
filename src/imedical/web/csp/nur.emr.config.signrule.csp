@@ -1,0 +1,216 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<!--nur.emr.config.signrule.csp-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/signrule.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:0px !important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: 0;
+			border-radius: 0;
+		}
+		#panelGrade {
+			border-top:1px dashed #ccc;
+			border-right:0;
+			border-bottom:0;
+			border-left:0;
+		}
+		#add-dialog {
+			top:60px;
+			width:472px;
+			padding: 0px 10px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px; 
+			height:'auto',
+			border:1px solid transparent;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+			height:32px;
+			/* white-space:nowrap !important; */
+			overflow:hidden;
+			border:1px solid transparent;
+		}
+		.form-table td:first-child {
+			width: 60px;
+			text-align: right;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		.required-label:before {
+			content: '*';
+			color: red;
+			vertical-align: bottom;
+			line-height: 100%;
+		}
+		.comborole, .cb {
+			width: 375px;
+		}
+		.trrole, .trinter {
+			display:none;
+		}
+		#SRIndentity{
+			width:280px;
+		}
+		.grid-cell-icon {
+			font-family: Mw_mifonts;
+		    -webkit-font-smoothing: antialiased;
+		    font-style: normal;
+		    font-variant: normal;
+			width: 16px;
+		    height: 16px;
+		    position: relative !important;
+		    background-color: transparent !important;
+		    margin-top: 0px;
+		    display: inline-block;
+		    text-rendering: auto;
+		    font-weight: 500;
+		    font-size: 12px;
+		    line-height: 16px;
+		    text-align: center;
+		    padding: 5px 5px 5px 8px;
+		}
+	</STYLE>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="height:54px;padding:10px;">
+			<table>
+				<tr>
+					<td class="r-label">
+						<label id="_HospListLabel">医院</label>
+					</td>
+					<td>
+						<input id="_HospList" class="textbox"/>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<div id="panelGrade" class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'">
+				<table id="gridGrade" class="hisui-datagrid" data-options="fit:true,border:false"></table>
+			</div>
+		</div>
+	</div>
+	<div id="add-dialog" class="hisui-dialog" data-options="shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				id: 'btn-dialog-save',
+				text:'保存',
+				handler: function(){ saveGrade(); }
+			},
+			{
+				id: 'btn-dialog-cancel',
+				text:'取消',
+				handler: function(){$HUI.dialog('#add-dialog').close();}
+			}
+		]">
+		<div class="hisui-panel" data-options="border:false,fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+			<form id="add-form" method="post" >
+				<table class="form-table">
+					<tr>
+						<td class="r-label required-label" style="width:63px;">名称</td>
+						<td>
+							<input placeholder="请输入" name="SRDesc" class="hisui-textbox textbox" id="SRDesc"> 
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label required-label">运算符</td>
+						<td>
+							<input class="hisui-radio" type="radio" label="=" name="SRCharacter" value="=" data-options="required:true,requiredSel:true">&nbsp;&nbsp;
+        					<input class="hisui-radio" type="radio" label=">=" name="SRCharacter" value=">=" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label required-label">数量</td>
+						<td>
+							<input class="hisui-radio" type="radio" label="1" name="SRNum" value="1" data-options="required:true,requiredSel:true,checked:true">&nbsp;&nbsp;
+        					<input class="hisui-radio" type="radio" label="2" name="SRNum" value="2" data-options="required:true,requiredSel:true">&nbsp;&nbsp;
+							<input class="hisui-radio" type="radio" label="3" name="SRNum" value="3" data-options="required:true,requiredSel:true">&nbsp;&nbsp;
+							<input class="hisui-radio" type="radio" label="4" name="SRNum" value="4" data-options="required:true,requiredSel:true">&nbsp;&nbsp;
+							<input class="hisui-radio" type="radio" label="5" name="SRNum" value="5" data-options="required:true,requiredSel:true">&nbsp;&nbsp;
+							<input class="hisui-radio" type="radio" label="6" name="SRNum" value="6" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr class='trdeftype'>
+						<td class="r-label required-label">定义方式</td>
+						<td>
+							<input class="hisui-combobox cb" id="SRDefType" name="SRDefType" placeholder="请选择定义方式"></input>
+						</td>
+					</tr>
+					<tr class='trinter'>
+						<td class="r-label"></td>
+						<td>
+							<input class="hisui-textbox textbox" id="SRInter" name="SRInter" placeholder="请输入接口"></input>
+						</td>
+					</tr>
+					<tr class='trrole'>
+						<td class="r-label"></td>
+						<td>
+							<input class="comborole" id="SRRole_1" name="SRRole_1" placeholder="第一角色"></input>
+						</td>
+					</tr>
+					<tr class='trrole'>
+						<td class="r-label"></td>
+						<td>
+							<input class="comborole" id="SRRole_2" name="SRRole_2" placeholder="第二角色"></input>
+						</td>
+					</tr>
+					<tr class='trrole'>
+						<td class="r-label"></td>
+						<td>
+							<input class="comborole" id="SRRole_3" name="SRRole_3" placeholder="第三角色"></input>
+						</td>
+					</tr>
+					<tr class='trrole'>
+						<td class="r-label"></td>
+						<td>
+							<input class="comborole" id="SRRole_4" name="SRRole_4" placeholder="第四角色"></input>
+						</td>
+					</tr>
+					<tr class='trrole'>
+						<td class="r-label"></td>
+						<td>
+							<input class="comborole" id="SRRole_5" name="SRRole_5" placeholder="第五角色"></input>
+						</td>
+					</tr>
+					<tr class='trrole'>
+						<td class="r-label"></td>
+						<td>
+							<input class="comborole" id="SRRole_6" name="SRRole_6" placeholder="第六角色"></input>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">是否停用</td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="SRStop" name="SRStop">
+							<input name="RowID" id="RowID" type="hidden" value="">
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</div>
+</body>
+</html>

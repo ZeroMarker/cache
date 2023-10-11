@@ -1,0 +1,71 @@
+﻿<!--辅料包打印-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
+</csp:method>
+<html lang="zh-CN">
+<server>
+	Do ##class(web.DHCXMLPConfig).LODOPInit()
+	Write ##class(web.CSSDHUI.Common.UtilCommon).EncryptInput()
+</server>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<CSSDHISUI/>
+</head>
+<body id="Layout" class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false,collapsible:false">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table id="Condition" class="Condition" onkeydown="if(event.keyCode==13){query.click()}">
+						<tr>
+							<td><label class="required">*</label><label>消毒包</label><input id="Pkg" name="Pkg" class="hisui-combobox" style="width:120px;"></td>
+							<td><label>接收科室</label><input id="ToLoc" name="ToLoc" class="hisui-combobox" style="width:120px;"></td>
+							<td><label>起始日期</label><input id="StartDate" name="StartDate" class="hisui-datebox textbox" style="width:120px;"></td>
+							<td><label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-datebox textbox" style="width:120px;"></td>
+							<td><label class="required">*</label><label>生成数量</label><input id="CreateQty" name="CreateQty" class="hisui-numberbox textbox" style="width:60px" data-options="isKeyupChange:true"></td>
+							<td><a href="#" id="LabelGen" class="hisui-linkbutton" class="hisui-linkbutton" style="width:128px">标签生成</a></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>审核人</label><input id="PackChkUser" name="PackChkUser" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><label class="required">*</label><label>包装人</label><input id="PackUser" name="PackUser" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><label>配包人</label><input id="Packer" name="Packer" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><label>包装材料</label><input id="Material" name="Material" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><a href="#" id="query" data-options="iconCls:'icon-w-find'" class="hisui-linkbutton">查询</a></td>
+							<td><a href="#" id="GenLabelAndPrint" class="hisui-linkbutton" style="width:128px">标签生成并打印</a></td>
+						</tr>
+						<tr>
+							<td><label>灭菌器</label><input id="SterMachine" name="SterMachine" class="textbox" style="width:120px"></td>
+							<td><label>批次</label><input id="HeatNo" name="HeatNo" class="textbox hisui-numberbox" style="width:120px"></td>
+							<td><label>灭菌日期</label><input id="SterDate" name="SterDate" class="hisui-datebox textbox" style="width:120px"></td>
+							<td><label>灭菌人</label><input id="SterUser" name="SterUser" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><a href="#" id="ClearBT" data-options="iconCls:'icon-w-clean'" class="hisui-linkbutton">清屏</a></td>
+							<td><a href="#" id="UpdateBT" class="hisui-linkbutton" style="width:128px">修改标签</a></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false,collapsible:false">
+				<table id="GridList"></table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" >
+		<div class="hisui-panel" data-options="title:'器械明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'" style="width:200px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table id="ItemSListGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<csp:Include Page="cssdhui.packagepack.labelinfoedit.csp">
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/FlPkgPrintLabel.js"></script>
+</body>
+</html>

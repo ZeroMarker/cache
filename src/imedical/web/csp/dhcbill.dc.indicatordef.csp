@@ -1,0 +1,195 @@
+<!-- 
+ * FileName: dhcbill.dc.indicatordef.csp
+ * Creator: tangzf
+ * Date: 2022-5-11
+ * Description: 指标字典定义
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+		<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+<ADDINS require="CmdShell"></ADDINS>
+	<style type="text/css">
+  	#_HospList{
+		width:348px !important	
+	}
+	#_HospUserList{
+		width:348px !important	
+	}
+  	.textbox{
+    	width:140px	!important; /* 文本框宽度减小 tangzf 2019-8-12*/ 
+	} 
+	#ExecClassMethod{
+    	width:365px	!important; /* 文本框宽度减小 tangzf 2019-8-12*/ 
+	}  
+	.ShowBox1{
+		width:220px !important;
+	}
+	.ShowBox2{
+		width:180px !important;
+	}
+	.ShowBox3{
+		width:177px !important;
+	}
+	.l-btn-icon.icon-write-order{
+		height: 15px;
+	}
+	</style>
+</head>
+<server>
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_DICDATA")
+</server>
+<body>
+	<div class="hisui-layout" fit="true">  
+		<div data-options="region:'north'"style="overflow:hidden;border-radius:0px;border-bottom:1px dashed #cccccc;">
+			<table class="search-table">
+					<tr>
+						<td class='r-label'><label>院区</label></td>
+						<td><input id="hospital" style="width:227px;"  class="textbox" placeholder=""/></td>
+						<td class="r-label r-label-20"><label>HIS版本号</label></td>
+						<td><input id="QHISVer" class="textbox" style="width:227px;"/></td>
+						<td class='r-label r-label-20'><label >业务类型</label></td>
+						<td><input id="QBusinessType" style="width:227px;" class="textbox" ></input></td>
+						<td class="r-label r-label-20"><a id="btnQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onClick='Querydic()'>查询</a></td>
+					</tr>
+					<tr>
+						<td class='r-label'><label>核查分类</label></td>
+						<td><input id="QCheckType"  class="textbox" style="width:227px;"></input></td>
+						<td class='r-label r-label-20'><label>异常等级</label></td>
+						<td><input id="QExceptionLeval" class="textbox" style="width:227px;"></input></td>
+						<td class='r-label r-label-20'><label>关键字</label></td>
+						<td><input id="dicKey" class="textbox" style="width:220px !important;" placeholder='输入关键字回车查询,支持模糊查询'></input></td>
+						<td class='r-label r-label-20'><a id="btnQClear" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-clean'" >清屏</a></td>  
+					</tr>
+			</table>
+		</div>
+		<div data-options="region:'center'" id='coninfopanel' style="border-left:none;border-top:none">
+			<div id="dg"></div>
+		</div>
+		<!-- <div id="editForm1" data-options="region:'south'"  style="height:132px;border-top-width:1px">
+			<table class='search-table editinfo'  >
+				<tr >
+					<td class="r-label"><label>核查分类</label></td>
+					<td ><input id="CheckType"  class="textbox"/></td>
+					<td  class="r-label"><label>业务类型</label></td>
+					<td ><input id="BusinessTypeCode" class="textbox"/></input></td>
+					<td class='r-label'><label>指标代码</label></td>
+					<td><input id="Code" class="hisui-validatebox textbox" required="required" missingMessage="请输入指标"/></td>
+					<td class="r-label"><label>指标名称</label></td>
+					<td><input id="Name"  class="textbox"/></td>
+					<td class="r-label">
+						<a id="btnClear" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-clean'" >清屏</a>  
+					</td>
+				</tr>
+				<tr >
+					<td class="r-label"><label>异常等级</label></td>
+					<td><input id="EXlevelId"  class="textbox"/></td>
+					<td class="r-label"><label>监控点说明</label></td>
+					<td><input id="Description"  class="textbox"/></td>
+					<td  class="r-label"><label >是否有效</label></td>
+					<td><input id="ActiveFlag"  class="textbox"/></td>
+					<td  class="r-label"><label>指标类型</label></td>
+					<td ><input id="IndicatorTypeId" class="textbox"/></input></td>
+					<td class="r-label">
+						<a id="btnUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" >保存记录</a>  
+					</td>
+				</tr>
+				<tr>
+					<td  class="r-label"><label >HIS版本号</label></td>
+					<td ><input id="HISVer"  class="textbox"/></td>
+					<td  class="r-label"><label >执行类名</label></td>
+					<td ><input id="ExecClass"  class="textbox"/></td>
+					<td  class="r-label"><label >执行方法名</label></td>
+					<td colspan=3><input id="ExecClassMethod"  class="textbox"/></td>
+					<td class="r-label">
+						<a id="btnStop" href="#" style="width:116px" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">停用</a>  
+					</td>
+				</tr>
+			</table>
+		</div> -->
+	</div>
+	<div id="toolbar" class="hisui-toolbar">
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnImport" plain="true" onClick='Import("")' >导入指标</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出指标</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-add" id="btnAddIndex" plain="true" onClick='ShowClearEdit()' >新增指标</a></td>
+			</tr>
+		</table> 
+	</div>
+	<!-- window dialog -->
+	<!-- 指标明细展示弹出页面 -->
+	<div id="DatadetailedForm" class="hisui-dialog" data-options="closed:true,width:865,height:533,title:'指标明细展示',iconCls:'icon-w-add',
+		buttons:[
+			{
+				text: '保存',
+				handler: function(){
+					UpdateDic();
+				}
+			},
+			{
+				text: '关闭',
+				handler: function(){
+					$('#DatadetailedForm').dialog('close');
+				}
+			}
+		]" >
+		 <div class="hisui-layout" fit="true">
+		     <div data-options="region:'center',border:false" style="overflow:hidden">
+		         <table class="search-table">
+					<tr>
+						<td class="r-label"><label>指标名称</label></td>
+						<td colspan=5><input id="Name" autocomplete="off" class="textbox" style="width:758px !important;" /></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>核查分类</label></td>
+						<td><input id="CheckType" class="textbox ShowBox1" /></td>
+						<td class="r-label"><label>业务类型</label></td>
+						<td><input id="BusinessTypeCode" class="textbox ShowBox2"/></td>
+						<td class="r-label"><label>是否有效</label></td>
+						<td><input id="ActiveFlag" class="textbox ShowBox3" /></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>指标代码</label></td>
+						<td><input id="Code" class="hisui-validatebox textbox ShowBox1"  autocomplete="off"/></td>
+						<td class="r-label"><label>异常等级</label></td>
+						<td><input id="EXlevelId" class="textbox ShowBox2" /></td>
+						<td class="r-label"><label>指标类型</label></td>
+						<td><input id="IndicatorTypeId" class="textbox ShowBox3" /></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>执行类名</label></td>
+						<td><input id="ExecClass" class="textbox ShowBox1" /></td>
+						<td class="r-label"><label>执行方法名</label></td>
+						<td colspan=3><input id="ExecClassMethod" autocomplete="off" class="textbox" style="width:441px !important;"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>HIS版本号</label></td>
+						<td colspan=5><textarea id="HISVer" class="textbox ShowBox1" style="text-align:left;display:inline-block;width:765px"></textarea></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>监控点说明</label></td>
+						<td colspan=5><textarea id="Description"style="width:759px !important;height:230px;text-align:left;display:inline-block;"></textarea></td>
+					</tr>
+				</table>
+		     </div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/indicatordef.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/publicimportexceltoarr.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/xlsx.full.min.js"></script>
+	<!--<DHCBILLINSUCloud/>-->
+</body>
+</html>

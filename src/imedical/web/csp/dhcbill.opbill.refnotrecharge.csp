@@ -1,0 +1,82 @@
+<!-- 
+ * FileName: dhcbill.opbill.refnotrecharge.csp
+ * Author: WangXQ
+ * Date: 2023-03-02
+ * Description: 门诊已退费未重收患者查询
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<TITLE>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<DOCCARD medStepCode="Other"/>
+	<server>
+		set DefDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+		do ##class(BILL.Util.Library).LoadReadCardLib()  //引入读卡公共js
+		w "<input id='CardTypeRowId' type='hidden'/>",!
+	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			DefDate: "#(DefDate)#"
+		};
+	</script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',collapsible:false,title:'已退费未重收明细查询',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:167px;overflow:hidden;border-radius:0;border-bottom-style:dashed;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label id="_HospUserListLabel" style="color:red;">#(..Get("医院"))#</label></td>
+					<td colspan="3"><input id="_HospUserList"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("卡号"))#</label></td>
+					<td><input id="CardNo" class="textbox"/></td>
+					<td class="r-label"><label>#(..Get("卡类型"))#</label></td>
+					<td><input id="CardTypeNew" class="textbox" disabled/></td>
+					<td class="r-label r-label-20"><label>#(..Get("退费开始日期"))#</label></td>
+					<td><input id="stDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label r-label-20"><label>#(..Get("退费结束日期"))#</label></td>
+					<td><input id="endDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label r-label-20">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">#(..Get("读卡"))#</a>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+					<td><input id="patientNo" class="textbox"/></td>
+					<td class="r-label r-label-20"><label>#(..Get("患者姓名"))#</label></td>
+					<td><input id="patientName" class="textbox"/></td>
+					<td class="r-label r-label-20"><label>#(..Get("执行状态"))#</label></td>
+					<td><input id="execStatus" class="textbox"/></td>
+					<td class="r-label r-label-20"><label>#(..Get("退费操作员"))#</label></td>
+					<td><input id="user" class="textbox"/></td>
+					<td class="r-label r-label-20">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>	
+					</td>
+					<td class="r-label">
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-clean" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>	
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+			<table id="patList"></table>
+		</div>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.refnotrecharge.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--
+    desc: 移动药房 - 物流箱状态执行        //物流箱接收
+    csp:  pha.mob.v2.boxreceive.csp
+    js:   pha/mob/v2/boxreceive.js
+    modified by MaYuqiang 20210330 界面功能修改为物流箱状态执行
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    
+    <style>
+        .panel-body, .panel-header {
+            border-color: #d1d6da;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <!-- layout start -->
+            <div id="layout" class="hisui-layout" fit="true">
+                <div data-options="region:'center',split:true,border:false">
+                    <div id="panelBoxItm" class="hisui-panel" title=""
+                        data-options="iconCls:'icon-scanning',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+                        <table id="gridBoxItm"></table>
+                    </div>
+                </div>
+            </div>
+            <!-- layout end -->
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridBoxItmBar" style="display:none;">
+        <div class="pha-row">
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="fromLocId">#(..Get("出发科室"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="fromLocId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:false,save:true,query:true,clear:false" />
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="toLocId"><span style="color:red">*</span>#(..Get("到达科室"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="toLocId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:false" />
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="boxNo">#(..Get("装箱单号"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="boxNo" class="hisui-validatebox" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" style="width:153px;" />
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right;">
+                <label for="prescNo">#(..Get("处方号"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="prescNo" class="hisui-validatebox" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" style="width:153px;" />
+            </div>
+            
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFind">查询</a>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls='icon-w-ok' plain="false" id="btnReceive">执行</a>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls='icon-w-clean' plain="false" id="btnClear">清屏</a>
+            </div>
+            
+        </div>
+        
+        <div class="pha-row">
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="startDate" title="#(..Get("日期为装箱日期"))#" class="hisui-tooltip" data-options="position:'bottom'">#(..Get("开始日期"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="startDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" style="width:160px;"/>
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="endDate" title="#(..Get("日期为装箱日期"))#" class="hisui-tooltip" data-options="position:'bottom'">#(..Get("结束日期"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="endDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" style="width:160px;"/>
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="boxStatus" title="#(..Get("待执行状态"))#" class="hisui-tooltip" data-options="position:'bottom'">#(..Get("执行状态"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="boxStatus" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:false,save:true,query:true,clear:true" />
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right;">
+                <label for="logisticName">#(..Get("物流人员"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="logisticName" class="hisui-validatebox" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" style="width:153px;" />
+            </div>
+            <div class="pha-col">
+                <input id="isRecWhenScan" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox" label="扫描物流箱自动执行"/>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/mob/v2/boxreceive.js"></script>
+</body>
+
+</html>

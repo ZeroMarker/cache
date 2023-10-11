@@ -1,0 +1,133 @@
+<!-- 
+ * FileName:	dhcinsu.opereditcom.csp
+ * User:		Hanzh
+ * Date:		2021-12-03
+ * Description: 医保手术维护弹窗
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<server>
+		do ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("CT_INSU_MI.OPRNOPRTLIST")
+	</server>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css'/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" >
+   <div id="InItmEPl"data-options="region:'center',border:false" style="solid #ccc;border-top:0;">
+      <table  class="search-table" style="width:100%;">				
+		 <tr>
+			<td class="r-label" align="right">医保类型</td>
+			<td><input id="HiType" class="hisui-combobox" style="width:155px"></td>
+			<td class="r-label" align="right" >创建人</td>
+			<td><input id="HisCrterId" class="textbox"></td>
+			<td class="r-label" align="right" >章</td>
+			<td><input id="Cpr" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >手术代码</td>
+			<td><input id="OprnOprtCode" class="textbox hisui-validatebox" missingMessage="该项不能为空" data-options = "required:true"></td>
+			<td class="r-label" align="right" >创建日期</td>
+			<td><input id="HisCrteDate" class="textbox"  ></td>
+			<td class="r-label" align="right" >章代码范围</td>
+			<td><input id="CprCodeScp" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >手术名称</td>
+			<td><input id="OprnOprtName" class="textbox hisui-validatebox" missingMessage="该项不能为空" data-options = "required:true" ></td>
+			<td class="r-label" align="right" >创建时间</td>
+			<td><input id="HisCrteTIme" class="textbox"   ></td>
+			<td class="r-label" align="right" >章名称</td>
+			<td><input id="Cprname"  class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >使用标记</td>
+			<td><input id="UsedStd" class="hisui-combobox" style="width:155px"></td>
+			<td class="r-label" align="right" >团标版手术代码</td>
+			<td><input id="RtlOprnOprtCode" class="textbox"></td>
+			<td class="r-label" align="right" >团标版手术名称</td>
+			<td><input id="RtlOprnOprtName" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >有效标志</td>
+			<td><input  id="ValiFlag" class="hisui-combobox" data-options = "required:true" style="width:155px"></td>
+			<td class="r-label" align="right" >临床版手术代码</td>
+			<td><input id="ClncOprnOprtCode" class="textbox"></td>
+			<td class="r-label" align="right" >临床版手术名称</td>
+			<td><input id="ClncOprnName" class="textbox" ></td>
+		 </tr>
+		 <tr>
+			<td class="r-label"><label>版本</label></td>
+			<td><input id="HisVer" class="textbox" data-options = "required:true"/></td>
+			<td class="r-label" align="right" >类目代码</td>
+			<td><input id="CGyCode" class="textbox" ></td>
+			<td class="r-label" align="right" >类目名称</td>
+			<td><input id="CgyName"  class="textbox"></td>
+			
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >版本名称</td>
+			<td><input id="VerName" class="textbox"></td>
+			<td class="r-label" align="right" >细目代码</td>
+			<td><input id="DtlsCode" class="textbox"></td>
+			<td class="r-label" align="right" >细目名称</td>
+			<td><input id="DtlsName" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >医保版本号</td>
+			<td><input id="Ver" class="textbox"></td>
+			<td class="r-label" align="right" >亚目代码</td>
+			<td><input id="SorCode"  class="textbox">
+			</td><td class="r-label" align="right" >亚目名称</td>
+			<td><input id="SorName" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >下载批次</td>
+			<td><input id="HisBatch" class="textbox"></td>
+			<td class="r-label" align="right" >唯一记录号</td>
+			<td><input id="Rid" class="textbox"></td>
+			<td class="r-label" align="right" >手术标准目录ID</td>
+			<td><input id="OprnStdListId" class="textbox"></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >备注</td>
+			<td><input id="Memo" class="textbox" ></td>
+			<td class="r-label" align="right" >更新日期</td>
+			<td><input id="HisUpdtDate" class="textbox" ></td>
+			<td class="r-label" align="right" >更新时间</td>
+			<td><input id="HisupdtTime" class="textbox " ></td>
+		 </tr>
+		 <tr>
+			<td class="r-label" align="right" >更新人</td>
+			<td><input id="HisUpdtId" class="textbox"></td>
+			<td class="r-label" align="right" >数据创建时间</td>
+			<td><input id="CrteTime" class="textbox" ></td>
+			<td class="r-label" align="right" >数据更新时间</td>
+			<td><input id="UpdtTime" class="textbox" ></td>
+		 </tr>			
+	  </table>
+	  <table style="padding:0 10px 0 20px">
+	    <tr>	
+	       <td style="padding:0 0px 0px 330px">
+		      <a id="btnU" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">确定</a>
+	       </td>
+	  	   <td  style="padding:0 0px 0px 50px">
+		      <a id="btnC" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+	      </td>
+	    </tr>		
+	</table>
+   </div>
+</div>
+ <script type="text/javascript" src="../scripts/dhcinsu/opereditcom.js"></script>
+</body>
+</html>

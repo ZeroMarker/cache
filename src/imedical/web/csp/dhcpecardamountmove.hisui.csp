@@ -16,6 +16,12 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	
+	<script src="../scripts/dhcpe/easyui-extensions/jquery.jdirk.js"></script>
+	<script src="../scripts/dhcpe/easyui-extensions/datagrid/jeasyui.extensions.datagrid.getDom.js"></script>
+    <script src="../scripts/dhcpe/easyui-extensions/datagrid/jeasyui.extensions.datagrid.getColumnInfo.js"></script>
+    <script src="../scripts/dhcpe/easyui-extensions/datagrid/jeasyui.extensions.datagrid.getRowData.js"></script>
+    <script src="../scripts/dhcpe/easyui-extensions/datagrid/jeasyui.extensions.datagrid.tooltip.js"></script>
+	
 <style>
 .search-table{
 	border-collapse:separate;
@@ -36,160 +42,213 @@
 	border-bottom: 0;
 }
 
+.statFont{
+	color:white;
+}
+.statBg0{
+	background-color:#40A2DE;
+	border:1px solid #40A2DE;
+	border-radius:4px;
+}
+.statBg-1{
+	background-color:red;
+	border:1px solid red;
+	border-radius:4px;
+}
+.datagrid-row-selected{
+	background-image: linear-gradient(180deg, #ba9b9b , #d5d567);	
+}
+.datagrid-row-over{
+	background-image: linear-gradient(180deg, #cfd3db , #c3d7c4);	
+}
 
 </style>
 
+<server language="Cache" RUNAT="SERVER">
+	w "<input type='hidden' id='Job' value='"_$job_"'/>"
+</server>
 </head>
 <body>
-<div class="hisui-layout" fit="true">
-	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:770px;padding:10px 10px 0 10px;">
-		<div class="hisui-panel" data-options="title:'卡金额转移',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0px 0px 4px 4px;">
-			<table class="search-table" >
-				<tr>
-					<td class="r-label"><label for="SourceCardType">源卡类型</label></td>
-          			<td> 
-              			<input class="hisui-combobox" style="width:155px" type="text" Id="SourceCardType">
-         			 </td>
-         		    <td class="r-label r-label-1"><label for="ToCardType">到卡类型</label></td>
-          			<td> 
-              			<input class="hisui-combobox" style="width:155px" type="text" Id="ToCardType">
-         			 </td> 
-         		</tr>
-         		<tr>
-					<td id="SourceNoL" class="r-label">源代金卡号</td>
-					<td>
-						<input class="textbox" id="SourceNo">
-					</td>
-         		    <td id="ToNoL"class="r-label r-label-1">到代金卡号</td>
-					<td>
-						<input class="textbox" id="ToNo">
-					</td>
-					 <td id="toto" class="r-label">--</td>
-					<td>
-						<input class="textbox" id="ToNo2">
-					</td>
-         		</tr>  
-				<tr>
-					<td class="r-label"><label for="SourceInfo">源信息</label></td>
-					<td>
-						<input class="textbox" id="SourceInfo" disabled>
-					</td>
-					<td class="r-label r-label-1"><label for="ToInfo">到信息</label></td>
-					<td>
-						<input class="textbox" id="ToInfo" disabled>
-					</td>	
-         		    
-         		</tr> 	
-				<tr>
-					<td class="r-label"><label for="SourceStatus">源状态</label></td>
-					<td>
-						<input class="textbox" id="SourceStatus" disabled>
-					</td>
-					<td class="r-label r-label-1"><label for="ToStatus">到状态</label></td>
-					<td>
-						<input class="textbox" id="ToStatus" disabled>
-					</td>
-         		    
-         		</tr> 	
-				<tr>	
-					<td class="r-label"><label for="SourceAmount">源余额</label></td>
-					<td>
-						<input class="textbox" id="SourceAmount" disabled>
-					</td>
-					<td class="r-label"><label for="ToAmount">到余额</label></td>
-					<td>
-						<input class="textbox" id="ToAmount" disabled>
-					</td>
-				</tr>
+	<div class="hisui-panel" fit="true" title="" style="padding:10px" data-options="border:false">
+		<div id="CardTab" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools'" fit="true">
 			
-			    <tr>	
-					<td class="r-label"><label for="MoveAmount">转移金额</label></td>
-					<td>
-						<input class="textbox" id="MoveAmount">
-					</td>
-					<td class="r-label"><label for="ToAmountNew">转移后到总金额</label></td>
-					<td>
-						<input class="textbox" id="ToAmountNew" disabled/>
-					</td>
-						
-				</tr>
-				 <tr>	
-					<td id="CTotalAmt" class="r-label"><label for="TotalAmt">转移总金额</label></td>
-					<td>
-						<input class="textbox" id="TotalAmt" disabled/>
-					</td>
-					<td id="CTotalNum" class="r-label"><label for="TotalNum">总张数</label></td>
-					<td>
-						<input class="textbox" id="TotalNum" disabled/>
-					</td>
-						
-				</tr>
-				<tr></tr>
-				<tr></tr>
-				<tr >
-				<td colspan='2'  style="padding-left:250px;">
-						<a id="BMove" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'">转移</a>
-					</td>
-				<td colspan='2'  style="padding-left:40px;">
-						<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
-					</td>
-				</tr>
-				<tr>
-				 <input type="hidden" id="SourceCardID"/>
-				 <input type="hidden" id="ToCardID"/>
-				</tr>
-			
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
-				<tr></tr>
+			<div title="转移卡金额" style="padding:10px;">   
+				<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" border="false">
+					<table class="search-table" >
+						<tr>
+							<td class="r-label"><label>#(..Get("源卡类型"))#</label></td>
+	          				<td><input class="hisui-combobox" style="width:155px" type="text" Id="SourceCardType"></td>
+	          				
+	          				<td class="r-label r-label-1"><label>#(..Get("到卡类型"))#</label></td>
+	          				<td><input class="hisui-combobox" style="width:155px" type="text" Id="ToCardType"></td> 
+	         			</tr>
+	         			
+	         			<tr>
+	         				<td id="SourceNoL" class="r-label"><label>#(..Get("源代金卡号"))#</label></td>
+							<td><input class="textbox" id="SourceNo"></td>
+							
+	         		    	<td id="ToNoL"class="r-label r-label-1"><label>#(..Get("到代金卡号"))#</label></td>
+							<td><input class="textbox" id="ToNo"></td>
+							
+							<td id="toto" class="r-label">--</td>
+							<td><input class="textbox" id="ToNo2"></td>
+	         			</tr>  
+						<tr>
+							<td class="r-label"><label>#(..Get("源信息"))#</label></td>
+							<td><input class="textbox" id="SourceInfo" disabled></td>
+							
+							<td class="r-label r-label-1"><label>#(..Get("到信息"))#</label></td>
+							<td><input class="textbox" id="ToInfo" disabled></td>
+	         			</tr> 	
+						<tr>
+							<td class="r-label"><label>#(..Get("源状态"))#</label></td>
+							<td><input class="textbox" id="SourceStatus" disabled></td>
+							
+							<td class="r-label r-label-1"><label>#(..Get("到状态"))#</label></td>
+							<td><input class="textbox" id="ToStatus" disabled></td>
+	         			</tr>
+	         			
+						<tr>
+							<td class="r-label"><label>#(..Get("源余额"))#</label></td>
+							<td><input class="textbox" id="SourceAmount" disabled></td>
+							<td class="r-label"><label>#(..Get("到余额"))#</label></td>
+							<td><input class="textbox" id="ToAmount" disabled></td>
+						</tr>
 				
-				<tr></tr>
+				    	<tr>
+							<td class="r-label"><label>#(..Get("转移金额"))#</label></td>
+							<td><input class="textbox" id="MoveAmount"></td>
+							<td class="r-label"><label>#(..Get("转移后到总金额"))#</label></td>
+							<td><input class="textbox" id="ToAmountNew" disabled/></td>
+						</tr>
 						
-			</table>
+					 	<tr>	
+							<td id="CTotalAmt" class="r-label"><label>#(..Get("转移总金额"))#</label></td>
+							<td><input class="textbox" id="TotalAmt" disabled/></td>
+							
+							<td id="CTotalNum" class="r-label"><label>#(..Get("总张数"))#</label></td>
+							<td><input class="textbox" id="TotalNum" disabled/></td>
+						</tr>
+						
+						<tr></tr>
+						
+						<tr>
+							<td colspan='2'  style="padding-left:250px;">
+								<a id="BMove" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'">转移</a>
+							</td>
+							<td colspan='2'  style="padding-left:40px;">
+								<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+					 			<input type="hidden" id="SourceCardID"/>
+					 			<input type="hidden" id="ToCardID"/>
+							</td>
+						</tr>
+						<tr></tr>
+					</table>
+				</div>
+			</div>
+			
+			<div title="导入卡信息" style="overflow:auto;padding:10px;">   
+				<div class="hisui-layout" data-options="title:''" border="false" fit="true">
+					<div data-options="region:'west',title:'',headerCls:''" style="width:270px; border: 1px #ccc solid; border-radius: 4px;">
+						<table class="search-table" >
+							<tr>
+								<td class="r-label"><label>#(..Get("源卡类型"))#</label></td>
+		          				<td><input class="hisui-combobox" style="width:155px" type="text" id="ImpSourceCardType"></td>
+		         			</tr>
+		         			
+		         			<tr>
+		         				<td id="ImpSourceNoL" class="r-label"><label>#(..Get("源卡号"))#</label></td>
+								<td><input class="textbox" id="ImpSourceNo"></td>
+		         			</tr>  
+							<tr>
+								<td class="r-label"><label>#(..Get("源信息"))#</label></td>
+								<td><input class="textbox" id="ImpSourceInfo" disabled></td>
+		         			</tr> 	
+							<tr>
+								<td class="r-label"><label>#(..Get("源状态"))#</label></td>
+								<td><input class="textbox" id="ImpSourceStatus" disabled></td>
+		         			</tr>
+		         			
+							<tr>
+								<td class="r-label"><label>#(..Get("源余额"))#</label></td>
+								<td><input class="textbox" id="ImpSourceAmount" disabled></td>
+							</tr>
+							
+						 	<tr>	
+								<td id="ImpCTotalAmt" class="r-label"><label>#(..Get("转移总金额"))#</label></td>
+								<td><input class="hisui-numberbox textbox" id="ImpTotalAmt"/></td>
+							</tr>
+							
+							<tr></tr>
+							
+							<tr>
+								<td colspan='2' style="text-align:center;">
+									<a id="BMClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+								</td>
+							</tr>
+							<tr>
+						 		<input type="hidden" id="ImpSourceCardID"/>
+							</tr>
+							<tr></tr>
+						</table>
+					</div>   
+					<div data-options="region:'center',title:'',bodyCls:'panel-header-gray',border:false" style="padding:0 0 0 10px;">
+						<div class="hisui-panel" data-options="title:''" fit="true" style="border-radius: 4px 4px 0 0; border-color:#ccc;">
+							<div class="hisui-layout" data-options="title:''" border="false" fit="true">
+								<div data-options="region:'north',title:'',border:false,headerCls:'panel-header-gray'" style="padding:10px;background:#fff;height:54px; border-bottom:1px solid #ccc;">
+									<table  cellpadding="10">
+										<tr>
+											<td><input class="hisui-filebox" name="TemplateFile" id="TemplateFile" data-options="width:410,buttonText:'选择模板',plain:true,prompt:'excel文件：*.xls,*.xlsx'" accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></td>	
+											
+											<td style="padding-left:10px;">
+												<a onclick="load_excel();" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy'">加载</a>
+											</td>
+											<td style="padding-left:10px;">
+												<a onclick="operate_data('Check');" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-book'">验证</a>
+											</td>
+											<td style="padding-left:10px;">
+												<a onclick="operate_data('Import');" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">导入</a>
+											</td>
+											<!--td style="padding-left:10px;">
+												<a onclick="delete_row('',9);" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'">清空</a>
+											</td-->
+											<td style="padding-left:20px;">
+												<label id="DisplayMsg" style="padding:5px;border:1px solid #40A2DE;border-radius:4px;">#(..Get("无数据"))#</label>
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div data-options="region:'center',border:false,headerCls:'panel-header-gray'" border="false" style="background:#fff;">
+									<table id="actionList" data-options=" border:false,fit:true,singleSelect:true,bodyCls:'panel-header-gray'"></table><!-- datagrid end //-->
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
 		</div>
 	</div>
-		
-</div>
 
-
-<script type="text/javascript" src="../scripts/DHCPECardAmountMove.hisui.js"></script>
-<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
-<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
-
-  
-  
-</body>		
+	<div id='Loading' style="display:none;position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;filter:alpha(opacity=85);opacity: 0.85;">
+		<!--<div style="margin:0 auto;padding:25px;border:1px solid #40A2DE;border-radius:4px;width:200px;background-color:#40A2DE;">-->
+		<h1>
+			<image src='../images/dhcpe/loading.gif'/><font><div id="LoadMsg">处理中···</div></font>
+		</h1>
+		<!--</div>-->
+	</div>
+	
+	<script type="text/javascript" src="../scripts/DHCPECardAmountMove.hisui.js"></script>
+	
+	<script type="text/javascript" src="../scripts/xlsx.full.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpeimportcardinfo.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPEExcelTool.js"></script>
+	
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+</body>
 </html>
-			
-		

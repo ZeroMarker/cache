@@ -1,0 +1,124 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+/*
+    @CSP：dhc.bdp.ct.cthccsloclinkloc.csp
+    @JS:CT_HCCSLocLinkLoc.js
+    @Title：个人通讯录HIS科室授权HIS科室
+    @Creator:丁亚男
+    @CreateDate：2021-03-16
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/CTHCCS/CT_HCCSLocLinkLoc.js"></script>
+
+</HEAD>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+		<div data-options="region:'north',border:false" style="overflow: hidden;">
+			<table style="padding-top:10px;" >
+				<tr>
+					<td class="tdlabel" id="_HospListLabel" ><font color=red>*</font>医院</font></td>
+					<td><input id="_HospList"  class="hisui-combobox" data-options="required:true"></td>
+				</tr>
+			</table>
+			<!--
+		 	<label id="_HospListLabel" for="_HospList" style="color:red;margin-right:10px;">医院</label>
+		    <input id="_HospList"/> 
+		    -->
+		</div>
+		<!--
+		<div data-options="region:'west',split:true,collapsible:false" border="false" style="width:550px;padding-right:10px;padding-left:10px">
+			<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="listlocgrid" border="true" toolbar="#mybar" title="个人通讯录科室"></table>
+		</div>
+		-->
+		<div data-options="region:'center',split:true,collapsible:false" style="" border="false" >
+			<table  cellspacing=10 style="width:100%;height:100%">
+				<tr>
+					<td style="width:550px;">
+						<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="listlocgrid" border="true" toolbar="#mybar" title="个人通讯录科室"></table>
+					</td>
+					<td >
+						<table data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" id="hislocgrid" border="true" toolbar="#hislocmybar" title="授权科室"></table>
+					</td>				
+				</tr>
+			</table>
+		</div>
+	</div>
+    <!--医呼通科室工具条-->
+    <div id="mybar">
+	  <table style="padding-top:5px;padding-bottom:5px;" >
+	    	<td class="tdlabel">科室</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="listlocDesc"></td>		
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="listlocSearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="listlocRefresh" >重置</a>
+			</td>
+	  </table>
+	</div>
+	
+	<!--HIS科室工具条-->
+	<div id="hislocmybar">
+	  <table style="padding-top:5px;padding-bottom:5px;" >
+	    	<td class="tdlabel">科室</td>
+			<td><input style="width:165px;" class='hisui-validatebox' id="hislocDesc"></td>	
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="hislocSearch">查询</a>
+			</td>
+			<td class="tdlabel-b">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="hislocRefresh" >重置</a>
+			</td>
+	  </table>
+	  <div  style="border-bottom: 1px dashed #C0C0C0;"></div>
+	  	<table>
+	  		<tr>
+	  			<td ><input  class="hisui-radio" type="radio" label='全部' name='FilterCK' value='0' id="CheckALL"></td> 
+	  			<td style="padding-left:10px"><input  class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'></td> 
+	  			<td style="padding-left:10px"><input  class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'></td> 
+	  			<td style="padding-left:10px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="saveButton">保存</a></td>
+	  		</tr>
+	  	</table>
+	  	<!--
+	  	<input style="" class="hisui-radio" type="radio" label='全部' name='FilterCK' value='0' id="CheckALL">
+		<input style="margin-left:20px" class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+		<input style="margin-left:20px" class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>	
+	  	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" id="saveButton">保存</a>
+	  	-->
+	  </div>  
+	</div>
+	
+	<!--医呼通科室增改弹窗-->
+     <div id="myWin" style="width:420px;height:260px;padding:10px;display:none;">
+		       <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			    <table id="addtable" align="center">
+			    <tr style="display:none">
+		 			<td></td>
+		   			<td><input id="LOCRowId" name="LOCRowId" type="text" class="textbox hisui-validatebox" ></td>
+		 		 </tr>
+		 		 <tr>
+	               <td class="tdlabel"><font color=red>*</font>科室代码</td>
+	    		   <td><input id="LOCCode" name="LOCCode" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+	    		 <tr>
+	               <td class="tdlabel"><font color=red>*</font>科室名称</td>
+	    		   <td><input id="LOCDesc" name="LOCDesc" type="text" class="textbox hisui-validatebox" style="width:250px"  data-options="required:true"></td>
+	    		 </tr>
+				 </table>
+			</form>  
+	</div>
+	
+</BODY>
+</HTML>
+																						

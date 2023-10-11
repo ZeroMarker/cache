@@ -1,0 +1,130 @@
+<html>
+<head>
+	<HISUI/>
+	<DHCCKB/>
+	<!--<link rel="stylesheet" type="text/css" href="../scripts/urule-asserts/css/bootstrap.min.css"> <!--后边去掉得了-->
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/dhcckb/css/rule.editor.test.css">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/rule.editor.test.js"></script>
+	<script Language="Javascript">
+		var ruleId="#(%request.Get("ruleId"))#"; //ruleId
+		//var relation="#(%request.Get("relation"))#"; //目录ID
+		//var dicCode="#(%request.Get("dicCode"))#"; //药品ID
+	</script>	
+<style>
+</style>
+
+</head>
+<body class="" style="height:auto"><!--hisui-layout-->
+	<div style="position:fixed;top:10px;left:10px;z-index:2">
+		<a href="#" class="hisui-linkbutton" onclick="saveRule()" style="width:86.01px">保存</a>
+		<a href="#" class="hisui-linkbutton" onclick="empty()">清空目录</a>
+		<a href="#" class="hisui-linkbutton" onclick="release()" style="width:86.01px">发布</a>
+		<a href="#" class="hisui-linkbutton" onclick="cancelRelease()">取消发布</a>
+		<a href="#" class="hisui-linkbutton" onclick="lifeCycle()">生命周期</a>
+ </div>
+	<!--div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:10px 10px 10px 0px;"-->
+  <!--operation 比较操作符-->
+		<ul id="operation" class="dropdown-menu dropdown-context" style="z-index: 3; top: 335px; left: 323px; display: none;">
+			<li onclick="OperaActive('大于','GreaterThen')"><a data="1">大于</a></li>
+			<li onclick="OperaActive('大于或等于','GreaterThenEquals')"><a data="1">大于或等于</a></li>
+			<li onclick="OperaActive('小于','LessThen')"><a data="1">小于</a></li>
+			<li onclick="OperaActive('小于或等于','LessThenEquals')"><a data="1">小于或等于</a></li>
+			<li onclick="OperaActive('等于','Equals')"><a data="1">等于</a></li>
+			<li onclick="OperaActive('Between','Between')"><a data="1">Between</a></li>
+			<li onclick="OperaActive('不等于','NotEquals')"><a data="1">不等于</a></li>
+			<!--li onclick="OperaActive('在集合','In')"><a data="1">在集合</a></li-->
+		</ul>
+		<!--type 输入值类型-->
+		<ul id="inputType" class="dropdown-menu dropdown-context" style="z-index: 3; top: 400px; left: 235px; display: none;">
+			<li onclick="TypeActive('I1')"><a data="1">输入值</a></li>
+			<li onclick="TypeActive('I2')"><a data="2">输入值(带单位)</a></li>
+			<li onclick="TypeActive('I3')"><a data="3">输入值(上下线)</a></li>
+			<!--li onclick="TypeActive('I4')"><a data="4">选择变量</a></li--><!--鉴于当前未用到该变量，暂不考虑-->
+			<li onclick="TypeActive('I5')"><a data="5">选择数据集</a></li>
+			<!--li onclick="TypeActive('I6')"><a data="6">选择规则</a></li-->
+		</ul>
+		<!--unit 请选择单位-->
+		<ul id="unit" class="dropdown-menu dropdown-context" style="font-size: 12px; z-index: 3; top: 371px; left: 339px; display: none;">
+			<!--<div style="margin-left: 2px;margin-right: 2px"><i class="glyphicon glyphicon-filter" style="color:#006600;margin-left: 2px;margin-right: 2px"></i>  
+				<input type="text" class="form-control" placeholder="输入值后回车查询" style="width: 85%;display: inline-block;height: 26px;padding: 1px;font-size: 12px;">
+		 </div>
+		 <li><a data="1" ondblclick='UnitActive(this)'>g</a></li>
+		 <li><a data="1" ondblclick='UnitActive(this)'>mg/kg</a></li>注释：改为取值-->
+				<!--server>
+				s unitId = ##class(web.DHCCKBCommon).GetUnitData()
+				d ##class(web.DHCCKBRuleEditor).QueryDictonHtml(unitId)
+			</server hxy 2020-12-02 改到js里，为了动态回车检索调用-->
+		</ul>
+		<!--rule 规则-->
+		<ul id="rule" class="dropdown-menu dropdown-context" style=" z-index: 3; top: 370px; left: 327px; display:none;"></ul>
+		<!--variate 请选择变量-->
+		<ul id="drugattr" class="dropdown-menu dropdown-context" style="z-index: 3; top: 335px; left: 323px; display: none;">
+			<server>
+				d ##class(web.DHCCKBRuleEditor).QueryDrugAttr()
+			</server>
+		</ul>
+		<!--variate 数据集面板-->
+		<ul id="dataset" class="dropdown-menu dropdown-context" style="z-index: 3; top: 335px; left: 323px; display: none;">	
+		</ul>
+		
+		<!--下拉框选择 hxy 2021-03-24-->
+		<ul id="combox" class="dropdown-menu dropdown-context" style="z-index: 3; top: 254px; left: 204px; display: none;">
+			<li onclick="chooseCombox('additem')" style="cursor: default"><a>添加条件</a></li>
+			<li onclick="chooseCombox('addunionitem')" style="cursor: default"><a>添加联合条件</a></li>
+			<li onclick="chooseCombox('del')" style="cursor: default"><a>删除</a></li>
+		</ul>
+		<!--分支扩展下拉框选择 qnp 2022-04-21-->
+		<ul id="manlevelattr" class="dropdown-menu dropdown-context" style="z-index: 3; top: 335px; left: 323px; display: none;">
+			<server>
+				d ##class(web.DHCCKBRuleEditor).QueryLevelAttr()
+			</server>
+		</ul>		
+	 <div style="margin-top:40px"><!--rule st-->
+	  <div>
+	  	<span class="font-12">备注</span><input id="remark" type="text" class="textbox" placeholder="请输入备注内容" style="margin-left:10px;width: 85%;display: inline-block;height: 26px;padding: 1px;font-size: 12px;">
+	  </div>
+			<!--part-1 st-->
+			<div><strong class="font-12">假定关系</strong></div>
+			<div id="line"></div>
+
+			<!--script language="Cache" runat="server">
+				d ##class(web.DHCCKBRuleEditor).displayForm() ;hxy
+   </script-->
+  	<!--div style="height: 100px; position: relative;"><!--测试 sufan st->
+  		<span  style="position: absolute; left: 10px; top:30px;">
+   	  <span style="font-size:10pt;"><input id="selBox1" class="hisui-combobox" style="width:65px;" /></span>
+   	</span>
+			</div>-->
+   <!--div style="height: 100px; position: relative;"><!--测试 st->
+   	<svg height="100%" version="1.1" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="overflow: hidden; position: relative; left: -0.997159px; top: -0.0880647px;">
+   	  <desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Rapha??l 2.2.0</desc>
+   	  <defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></defs>
+   	  <path fill="none" stroke="#777777" d="M45,16C45,16,45,16,80,16" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+   	  <path fill="none" stroke="#777777" d="M45,16C45,46,45,46,80,46" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+   	  <path fill="none" stroke="#777777" d="M120,49C120,49,120,49,155,49" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+   			<path fill="none" stroke="#777777" d="M120,49C120,79,120,79,155,79" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+   	</svg>
+   	<span class="btn btn-default dropdown-toggle rule-join-container" style="position: absolute; left: 5px; top: 5px;">
+   	  <span style="font-size: 11pt">并且</span>
+   	  <i class="glyphicon glyphicon-chevron-down rule-join-node"></i>
+   	</span>
+   	<div style="position: absolute; left: 80px; top: 8px;"><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span><span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: darkcyan; border: 1px dashed transparent;">西医疾病</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span></span></span></span><span style="height: 20px; cursor: pointer; margin: 0px 1px 0px 0px; color: red; padding: 0px 2px; border: 1px dashed transparent; font-size: 12px; font-weight: bold;">等于</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: rgb(253, 253, 253); padding: 0px 2px; border: 1px dashed transparent;">.</span><span><span style="display: inline;"><span style="height: 20px; cursor: pointer; margin: 0px; color: rgb(1, 116, 223); padding: 0px 2px; border: 1px dashed transparent;">呼吸道感染</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span></span></span></span></span></span><i class="glyphicon glyphicon-trash" style="color: #019dff;cursor: pointer;font-size: 9pt;padding-left:5px"></i></div><span class="btn btn-default dropdown-toggle rule-join-container" style="position: absolute; left: 80px; top: 38px;"><span style="font-size: 11pt">联合</span><i class="glyphicon glyphicon-chevron-down rule-join-node"></i></span><div style="position: absolute; left: 155px; top: 41px;"><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span><span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: darkcyan; border: 1px dashed transparent;">检验指标</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span></span></span></span><span style="height: 20px; cursor: pointer; margin: 0px 1px 0px 0px; color: red; padding: 0px 2px; border: 1px dashed transparent; font-size: 12px; font-weight: bold;">等于</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: rgb(253, 253, 253); padding: 0px 2px; border: 1px dashed transparent;">.</span><span><span style="display: inline;"><span style="height: 20px; cursor: pointer; margin: 0px; color: rgb(1, 116, 223); padding: 0px 2px; border: 1px dashed transparent;">全血</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span></span></span></span></span></span><i class="glyphicon glyphicon-trash" style="color: #019dff;cursor: pointer;font-size: 9pt;padding-left:5px"></i></div><div style="position: absolute; left: 155px; top: 71px;"><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span><span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: darkcyan; border: 1px dashed transparent;">检验指标的范围值</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span></span></span></span><span style="height: 20px; cursor: pointer; margin: 0px 1px 0px 0px; color: red; padding: 0px 2px; border: 1px dashed transparent; font-size: 12px; font-weight: bold;">等于</span><span><span style="height: 20px; cursor: pointer; margin: 0px; color: rgb(253, 253, 253); padding: 0px 2px; border: 1px dashed transparent;">.</span><span><span style="display: inline;">
+   	  <span style="height: 20px; cursor: pointer; margin: 0px; color: rgb(180, 95, 4); padding: 0px 2px; border: 1px dashed transparent;">200 </span>
+   	  <input type="text" class="form-control rule-text-editor" style="height: 22px; display: none;">
+   	  <input type="hidden" class="form-control rule-text-editor" style="height: 22px; display: none;" value="3931">
+   	  <span style="height: 20px; cursor: pointer; margin: 0px; color: rgb(1, 116, 223); padding: 0px 2px; border: 1px dashed transparent;">mg/kg</span>
+   	  <span>
+   	  	<span style="height: 20px; cursor: pointer; margin: 0px; color: white; padding: 0px 2px; border: 1px dashed transparent;">.</span>
+   	  </span></span></span></span></span><i class="glyphicon glyphicon-trash" style="color: #019dff;cursor: pointer;font-size: 9pt;padding-left:5px"></i></div>
+   </div><!-测试 ed-->
+  	
+		</div><!--rule ed-->
+ <!--</div>center ed-->
+
+</body>
+</html>

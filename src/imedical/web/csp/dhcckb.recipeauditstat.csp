@@ -1,0 +1,266 @@
+<!-- dhcckb.recipeauditstat.csp 处方审核记录统计 -->
+<html>
+<head>
+<title></title>
+<EXTHEALTH:HEAD />
+<HISUI/>
+<DHCCKB/>
+
+<link href="../scripts/dhcnewpro/dhcckb/css/pdss.css" rel="stylesheet">
+<link href="../scripts/dhcnewpro/dhcckb/css/recipeauditstat.css" rel="stylesheet">
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/echarts/echarts.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/echarts/Echarts.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/recipeauditstat.js"></script>
+
+
+<style>
+	
+</style>
+
+</head>
+
+<body style="background-color:white;margin:2px 2px 2px 2px" >  
+	<div class="hisui-panel" data-options="region:'north',split:true,collapsible:false,title:'审核结果',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:170px;padding-top:10px;padding-left:10px;overflow:hidden">
+		<div style="margin:2px 2px 2px 2px;">
+			<span style="margin-right:5px">开始日期</span>
+			<input id="stDate" style="width:160px" class="hisui-datebox textbox"></input>
+			<span style="margin-right:5px;margin-left:15px">结束日期</span>
+			<input id="endDate" style="width:160px" class="hisui-datebox textbox"></input>
+			<span style="margin-right:5px;margin-left:15px">科室</span>
+			<input id="Loc" style="width:350px" class="hisui-validatebox textbox"></input>
+			<td><a href="#" id="addBTN" class="hisui-linkbutton cancel-Btn" iconCls="icon-add" style="margin-left:10px">添加科室</a></td>
+			<td><a href="#" id="searchBTN" class="hisui-linkbutton cancel-Btn" iconCls="icon-search" style="margin-left:10px">查询</a></td>
+		</div>
+		<div style="padding-top:5px">
+			<table cellspacing="0" style="width:100%">
+	 			<tr>
+	 				<td>
+	 					<div class="tdDiv" data-type="auditTotalNum" style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+	 						<div class="floatLeft tdLeftDiv">
+	 							<img src="../scripts/dhcnewpro/images/blueline.png"/>
+	 						</div>
+	 						
+	 						<div class="floatLeft tdRightDiv">
+	 							<div class="tdRightDivTop">
+	 								<span class="tdRightDivTopSpan">审核药品总数</span>
+	 							</div>
+	 							
+	 							<div class="tdRightDivBottom">
+	 								<span id="auditTotalNum" class="tdRightDivBottomSpan">0</span>
+	 							</div>
+	 						</div>
+	 					</div>
+	 				</td>
+	 				<td>
+	 					<div class="tdDiv" data-type="prescNum"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+	 						<div class="floatLeft tdLeftDiv">
+	 							<img src="../scripts/dhcnewpro/images/yellowline.png"/>
+	 						</div>
+	 						
+	 						<div class="floatLeft tdRightDiv">
+	 							<div class="tdRightDivTop">
+	 								<span class="tdRightDivTopSpan">全部处方数量</span>
+	 							</div>
+	 							
+	 							<div class="tdRightDivBottom">
+	 								<span id="prescNum" class="tdRightDivBottomSpan">0</span>
+	 							</div>
+	 						</div>
+	 					</div>
+	 				</td>
+	 				<td>
+	 					<div class="tdDiv" data-type="errorprescNum"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+	 						<div class="floatLeft tdLeftDiv">
+	 							<img src="../scripts/dhcnewpro/images/greenline.png"/>
+	 						</div>
+	 						
+	 						<div class="floatLeft tdRightDiv">
+	 							<div class="tdRightDivTop">
+	 								<span class="tdRightDivTopSpan">药品提示次数</span>
+	 							</div>
+	 							
+	 							<div class="tdRightDivBottom">
+	 								<span id="errorprescNum" class="tdRightDivBottomSpan">0</span>
+	 							</div>
+	 						</div>
+	 					</div>
+	 				</td>
+	 				<td>
+	 					<div class="tdDiv" data-type="modifyNum"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+	 						<div class="floatLeft tdLeftDiv">
+	 							<img src="../scripts/dhcnewpro/images/smallgreenline.png"/>
+	 						</div>
+	 						
+	 						<div class="floatLeft tdRightDiv">
+	 							<div class="tdRightDivTop">
+	 								<span class="tdRightDivTopSpan">处方修改次数</span>
+	 							</div>
+	 							
+	 							<div class="tdRightDivBottom">
+	 								<span id="modifyNum" class="tdRightDivBottomSpan">0</span>
+	 							</div>
+	 						</div>
+	 					</div>
+	 				</td>
+	 				<td>
+	 					<div class="tdDiv" data-type="mandatoryAuditNum"  style="background:url(../scripts/dhcnewpro/images/nosel.png)">
+	 						<div class="floatLeft tdLeftDiv">
+	 							<img src="../scripts/dhcnewpro/images/redline.png"/>
+	 						</div>
+	 						
+	 						<div class="floatLeft tdRightDiv">
+	 							<div class="tdRightDivTop">
+	 								<span class="tdRightDivTopSpan">强制审核次数</span>
+	 							</div>
+	 							
+	 							<div class="tdRightDivBottom">
+	 								<span id="mandatoryAuditNum" class="tdRightDivBottomSpan">0</span>
+	 							</div>
+	 						</div>
+	 					</div>
+	 				</td>
+	 				
+	 			</tr>
+	 		</table>
+	 	</div>
+	</div>
+	<!-- <div  style="padding-top:2px">
+		<div class="hisui-panel" data-options="title:'各科室审核记录列表',headerCls:'panel-header-gray',iconCls:'icon-paper'"> 	
+			 <div id="layoutBorder" style="height:300px;border-left:0px;border-right:0px;padding-bottom:8px">
+		 		<table id="datagrid"></table>
+			 </div>
+		</div>	
+	</div> -->
+	
+	<div style="padding-top:2px" id="statTabs" class="hisui-tabs tabs-gray" data-options="">
+		<div title="按科室汇总" border=0>
+			<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" border=0> 	
+				 <div id="layoutBorder" style="height:200px;border-left:0px;border-right:0px;padding-bottom:8px">
+			 		<table id="datagrid"></table>
+				 </div>
+			</div>	
+			<div id="locprescEcharts" class="echartBody" style="height:300px">
+					
+			</div>
+		</div>
+		<div title="按医生汇总" border=0>
+			<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" border=0> 	
+				 <div id="layoutBorder" style="height:200px;border-left:0px;border-right:0px;padding-bottom:8px">
+			 		<table id="docdatagrid"></table>
+				 </div>
+			</div>
+			<div id="docprescEcharts" class="echartBody" style="height:300px">
+					
+			</div>	
+		</div>
+		<div title="按药品汇总">
+			<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" border=0> 	
+				 <div id="layoutBorder" style="height:200px;border-left:0px;border-right:0px;padding-bottom:8px">
+			 		<table id="drugdatagrid"></table>
+				 </div>
+			</div>	
+			<div id="drugprescEcharts" class="echartBody" style="height:320px">
+					
+			</div>
+		</div>
+	</div>
+	<div style="padding-top:2px">
+		<div class="hisui-panel" data-options="title:'按类别汇总表',headerCls:'panel-header-gray',iconCls:'icon-paper'" border=0> 	
+			 <div id="layoutBorder" style="height:200px;border-left:0px;border-right:0px;padding-bottom:8px">
+		 		<table id="typedatagrid"></table>
+			 </div>
+		</div>	
+	</div> 
+	
+	
+	<div style="padding-top:2px">
+		<div class="bottomDiv">
+			<div class="bottomDivLefBorder" id="getHeightDiv" style="">
+				<div class="bottomDivLef">
+					<div class="heading"><span>提示类别占比</span></div>
+					<div id="promptTypeEcharts" class="echartBody">
+					
+					</div>
+				</div>
+			</div>
+			<div class="bottomDivRigBorder" style="">
+				<div class="bottomDivRig">
+					<div class="heading"><span>全院各类别修改次数同比和环比</span></div>
+					<div id="YoYEcharts" class="echartBody">
+					
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="bottomDiv" style="padding-top:6px">
+			<div class="bottomDivLefBorder" style="">
+				<div class="bottomDivLef">
+					<div class="heading"><span>全院各类别强制审核次数同比和环比</span></div>
+					<div id="AuditTypeEcharts" class="echartBody">
+					
+					</div>
+				</div>
+			</div>
+			<div class="bottomDivRigBorder" style="">
+				<div class="bottomDivRig">
+					<div class="heading"><span>各科室对比统计</span></div>
+					<div id="locEcharts" class="echartBody">
+					
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="bottomDiv" style="padding-top:6px">
+			<div class="bottomDivLefBorder" style="">
+				<div class="bottomDivLef">
+					<div class="heading"><span>各医生对比统计</span></div>
+					<div id="docEcharts" class="echartBody">
+					
+					</div>
+				</div>
+			</div>
+			<div class="bottomDivRigBorder" style="">
+				<div class="bottomDivRig">
+					<div class="heading"><span>科室按问题类型强制审核次数对比</span></div>
+					<div id="questionAuditTypeEcharts" class="echartBody">
+					
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="bottomDiv" style="padding-top:6px">
+			<div class="bottomDivLef">
+				<div class="heading"><span>科室按问题类型修改次数对比</span></div>
+				<div id="questionTypeEcharts" class="echartBody">
+					
+				</div>
+			</div>
+		</div>
+	</div>
+   
+   <div id="locwin" style="display:none;">
+		<div class="hisui-layout" fit="true">
+			<!--人员信息-->
+			<div id="locTable" toolbar="#tb"></div>
+		</div>
+		<div id="tb">
+			<span style="margin:5px 5px;">科室</span>
+			<span ><input id="LocDesc" style="margin:5px 10px 5px 0px;" /></span>
+			<span ><button id="FindLoc" class="" style="width:100;margin:5px 10px;float:none">查询</button></span>
+			<span ><button id="LocAdd" class="" style="width:100;margin:5px 10px;float:none">添加</button></span>
+			<div >
+				<span style="margin:5px 20px 5px 40px;"><input type="text" id="LocDescStr"  style="border:0;border-bottom:1px solid #40a2de;width:400px !important;max-width:300px !important;"/></span>
+				
+			</div>
+		</div>
+    </div>	
+</body>
+</html>

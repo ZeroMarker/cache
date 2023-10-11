@@ -1,4 +1,5 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ Set %request.CgiEnvs("HTTP_X_ACCEPT_TAG")=1
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
 </csp:method>
@@ -7,6 +8,7 @@
 <title>查询sql</title>
 	<DHCTT:HEAD/>
     <script src="../scripts_lib/jQuery/jquery-1.8.0.min.js" type="text/javascript"></script>
+    <script src="../scripts/websys.jquery.js" type="text/javascript"></script>
 </head>
 <body>
 <style>
@@ -45,23 +47,32 @@
 	.if tmp["--" d
 	..s tmp = $e(tmp,0,$find(tmp,"--")-3)
 	.s myQuery = myQuery_tmp
-	
-	s tableName = $p($p($p(myQuery,"from",2),"where"),"--",1)
+	/*s tableName = $p($p($p(myQuery,"from",2),"where"),"--",1)
 	s tableName = $zstrip($tr($c(13,10)_tableName_$c(13,10),$C(9,13,10),"   "),"<>W")
 	s tableName = $p(tableName," ")
-	s tableName = ##class(web.Util.DHCJFClassGlobal).GetTableInfo(tableName)
+	*/
+	S CurNamespace = $NAMESPACE
+	s ReqNamespace = $g(%request.Data("Namespace",1),CurNamespace)
+	// 得到表名
+	Set SQLHtmlObj = ##class(web.Util.DHCPlatformSQLParser).%New(myTmpQuery)
+	Set sqlhtml = SQLHtmlObj.GetSqlHtml()
+	Set tableName = $lg(SQLHtmlObj.StatementTables,1)
+	;Set myQuery = SQLHtmlObj.SQLStatement
+	Set SQLHtmlObj = ""
+	
+	s tableName = ##class(web.Util.DHCJFClassGlobal).GetTableInfo(tableName,ReqNamespace)
 	s pojoPackageName = $p(tableName,"!",2)
 	s pojoClassName = $p(tableName,"!",3)
 	s masterIndex = $p(tableName,"!",4)
 	s tableName = $p(tableName,"!",1)
-	s tableRowidName = ##class(web.Util.DHCJFClassGlobal).GetUserRowid(pojoPackageName,pojoClassName)
+	s tableRowidName = ##class(web.Util.DHCJFClassGlobal).GetUserRowid(pojoPackageName,pojoClassName,ReqNamespace)
 	//转换大小写
 	s MaxRows = $g(%request.Data("MaxRows",1),100)
 	//s PackageNameInput = $g(%request.Data("PackageNameInput",1),"User")
 	s RuntimeMode = $g(%request.Data("RuntimeMode",1),"")
 	s REFField=","
 	Set tmprs = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectColumn")
-	Set tSC = tmprs.Execute($p(tableName,"."), $p(tableName,".",2),"")
+	Set tSC = tmprs.Execute($p(tableName,"."), $p(tableName,".",2),"",ReqNamespace)
 	if $$$ISERR(tSC) Quit
 	while(tmprs.Next()){
 		s Type = tmprs.Data("Type")
@@ -74,12 +85,29 @@
 	Set UpdMaxCnt = $G(^DHCTTTEMP("config","UpdMaxCnt"),100) //100
 	Set DelMaxCnt = $G(^DHCTTTEMP("config","DelMaxCnt"),20) //100
 </script>
-<font class='greentitle'>#($namespace)#下的表查询</font>
+<font class='greentitle'><span id="OpenNamespace">#(ReqNamespace)#</span>下的表查询</font>
 <form action="dhctt.sql.csp" method="post">
 <div style="margin:2px 5px 0px 20px" >
 		<table class="AutoForm" style="width:98%;">
 			<tbody>
 				<tr><td class="AutoFormButton" style="text-align:left;"><nobr>
+						Namespace:<select id="Namespace" class="AutoForm" title="Namespace" name="Namespace">
+						<SCRIPT language="CACHE" RUNAT=SERVER>
+						
+						Set $Namespace = "%sys"
+						Set nrs = ##class(%ResultSet).%New("Config.Namespaces:List")
+						Set %sc = nrs.Prepare()
+						If (+%sc=0) { Do ..ShowError(%sc) Quit }
+						Set %sc = nrs.Execute()
+						If (+%sc=0) { Do ..ShowError(%sc) Quit }
+						while(nrs.%Next()){
+							W "<option class=""AutoForm"" value="""_nrs.GetData(1)_""""
+							w:(nrs.GetData(1)=ReqNamespace) " selected"
+							w " >"_nrs.GetData(1)_"</option>"
+						}
+						Set $Namespace = CurNamespace
+						</SCRIPT>
+						</select>
 						&nbsp;&nbsp;Display:&nbsp;
 						<select id="RuntimeMode" class="AutoForm" title="Display mode used for the results" name="RuntimeMode">
 						<option class="AutoForm" value="" #($s(RuntimeMode="":"selected",1:""))#>
@@ -89,19 +117,20 @@
 						</option></select>
 						&nbsp;&nbsp;
 						Max Rows:&nbsp;
-						<input class="AutoForm" type="text" title="Maximum number of rows to display" name="MaxRows" size="8" value="#(MaxRows)#">						
+						<input class="AutoForm" type="text" title="Maximum number of rows to display" name="MaxRows" size="8" value="#(MaxRows)#">					
+						<input type="hidden" name="MWToken" value="#($g(%request.Data("MWToken",1)))#">
 						<!--Class Package:<input class="AutoForm" type="text" title="联想表名时,去遍历的包" id="PackageNameInput" name="PackageNameInput" value="#(PackageNameInput)#">-->
 						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;							
 						<input class="AutoFormButton" type="submit" name="$AUTOFORM_EXECUTE" value="Execute Query">&nbsp;
 						<label>模式名,表名,字段名提示快捷键 Alt+/, 双击修改数据</label>
-						<label><a href="javascript:void(0);" onclick='window.open("dhctt.config.csp","a","width=260,height=280,top=20,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");return false;'>配置</a></label>
+						<label><a href="javascript:void(0);" onclick='window.open("dhctt.config.csp?MWToken=#($G(%request.Data("MWToken",1)))#","a","width=260,height=280,top=20,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");return false;'>配置</a></label>
 				</nobr></td></tr>
 				<tr class="AutoForm" valign="middle">			
 					<td class="AutoFormControl" nowrap="">
 						<div name="Query-wrap" id="Query-wrap" class='divMouseOut'>
 							<textarea spellcheck="false"  name="Query" id="Query" autocapitalize="off">#(myTmpQuery)#</textarea>
 							<SCRIPT language=cache runat=server>
-								w ##class(web.Util.DHCPlatformSQLParser).GetSqlHtmlBySql(myQuery)								
+								w sqlhtml							
 							</SCRIPT>
 						</div>
 					</td>
@@ -121,15 +150,9 @@
 	s SchemaQuery = ""
 	Set SchemaQuery = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectSchema")
 	Set %sc = SchemaQuery.Prepare()
-	If (+%sc=0) {
-	Do ..ShowError(%sc)
-	Quit
-	}
+	If (+%sc=0) {Do ..ShowError(%sc) Quit }
 	Set %sc = SchemaQuery.Execute()
-	If (+%sc=0) {
-	Do ..ShowError(%sc)
-	Quit
-	}
+	If (+%sc=0) { Do ..ShowError(%sc) Quit }
 	s SCHEMAARR=""
 	while(SchemaQuery.%Next()){
 		if (""=SCHEMAARR) s SCHEMAARR=""""_SchemaQuery.Data("Schema")_""""
@@ -155,7 +178,7 @@
 	w "<div  style='margin:2px 5px 0px 20px'>"
 	if $g(%request.Data("$AUTOFORM_UPDATE",1))="ExecuteUpdate"{
 		Set UPDATEStatement = $g(%request.Data("UPDATEStatement",1))
-		d ##class(web.DHCTTSqlLog).ExecuteSQL(UPDATEStatement,RuntimeMode)		
+		d ##class(web.DHCTTSqlLog).ExecuteSQL(UPDATEStatement,RuntimeMode,ReqNamespace)		
 	}
 	if $g(%request.Data("$AUTOFORM_EXECUTE",1))="Execute Query"{
 		Set updateSqlObj = ##class(web.Util.DHCPlatformSQLParser).%New(sqlStatement)
@@ -164,7 +187,7 @@
 		If FirstToken'="SELECT" {
 			try {
 				if FirstToken="UPDATE"{
-					Set updateCount = updateSqlObj.GetCount()
+					Set updateCount = updateSqlObj.GetCount(ReqNamespace)
 					Set updateSqlStatement = updateSqlObj.SQLStatement				
 					If ( $find($zcvt(updateSqlObj.SQLStatement,"U")," WHERE ")=0){
 						Write "警告: <font color='red'>"_FirstToken_"语句没有Where条件</font><br>"
@@ -181,7 +204,7 @@
 				}
 				if FirstToken="DELETE"{
 					//Write "不允许使用Delete语句!"
-					Set updateCount = updateSqlObj.GetCount()
+					Set updateCount = updateSqlObj.GetCount(ReqNamespace)
 					Set updateSqlStatement = updateSqlObj.SQLStatement				
 					If ( $find($zcvt(updateSqlObj.SQLStatement,"U")," WHERE ")=0){
 						Write "警告: <font color='red'>"_FirstToken_"语句没有Where条件</font><br>"
@@ -197,8 +220,9 @@
 					}
 				}
 				if FirstToken = "INSERT"{
-					d ##class(web.DHCTTSqlLog).ExecuteSQL(sqlStatement,RuntimeMode)
+					d ##class(web.DHCTTSqlLog).ExecuteSQL(sqlStatement,RuntimeMode,ReqNamespace)
 				}
+				w "<font color='red'>"_$G(^||SQLError)_"</font><br>"
 				;write !,$translate($justify("-",75)," ","-"),!
 			}catch tException {
 				do $system.Status.DisplayError(tException.AsStatus())
@@ -215,6 +239,7 @@
 	if FirstToken'="SELECT" quit
 	if $g(%request.Data("$AUTOFORM_EXECUTE",1))="Execute Query"{
 		set query = ""
+		Set $Namespace = ReqNamespace
 		Set query = ##class(%ResultSet).%New()
 		Set query.RuntimeMode=RuntimeMode
 		Set %sc = query.Prepare(sqlStatement,0,"RUNTIME")
@@ -225,7 +250,10 @@
 </Script>
 <table><tr><td><div id="selectedTables" style="margin:0px 0px 0px 20px;">
 <b>表名:</b><div id="tn" style="display:inline;">#(tableName)#</div>,<b>实体类名:</b>#(pojoPackageName_"."_pojoClassName)#,<b>主索引:</b>#(masterIndex)#,
-<b>RowId:</b><div id="in" style="display:inline;">#(tableRowidName)#</div><a href="dhctt.findtablestructure.csp?packageName=#(pojoPackageName)#&tableName=#(pojoClassName)#" target='_blank'>表结构详情</a>
+<b>RowId:</b><div id="in" style="display:inline;">#(tableRowidName)#</div><a href="dhctt.findtablestructure.csp?MWToken=#($G(%request.Data("MWToken",1)))#&Namespace=#(ReqNamespace)#&packageName=#(pojoPackageName)#&tableName=#(pojoClassName)#" target='_blank'>表结构详情</a>
+<csp:if condition=FirstToken="SELECT">
+<a href="javascript:void(0);" onclick="ToExcel();return false;">导出CSV数据</a>
+</csp:if>
 </div></td></tr></table>
 <div id="resultSetDiv">
 <table id="resultSetTable" border=1 bgcolor="" style="margin:0px 0px 0px 20px; padding=1px 1px 1px 1px;"  cellpadding="0" cellspacing="0"  >
@@ -237,7 +265,6 @@
 		.i $d(REFField(query.GetColumnHeader(j))) s REFFieldNo=REFFieldNo_j_"," w "<th><U><a href=""#"" data-cn="""_query.GetColumnHeader(j)_""" onclick=""propertyClickHandler(this);"">"_(query.GetColumnHeader(j))_"</a></U><input id='colz"_j_"' type=hidden value='"_REFField(query.GetColumnHeader(j))_"'></th>"
 		.e  w "<th><a href=""#"" data-cn="""_query.GetColumnHeader(j)_""" onclick=""propertyClickHandler(this);"">"_(query.GetColumnHeader(j))_"</a></th>"
 		w "<tr>"
-		
 		s queryRow=0
 		while ((query.Next())&&(queryRow<MaxRows)){
 			s queryRow=queryRow+1
@@ -250,6 +277,7 @@
 			.e  w "<td>"_query.GetData(j)_"</td>"			
 			w "<tr>"
 		}
+		Set $Namespace = CurNamespace
 	</SCRIPT>	
 </table>
 </div>

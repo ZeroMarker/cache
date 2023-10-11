@@ -1,0 +1,114 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ // dhc.bdp.ct.cthccsequipreceive.csp
+ // 医呼通设备管理（科室级）
+ // 基础数据平台-李可凡
+ // 2022-08-26
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/websys.comm.js"></script>
+</head>
+<style>
+	.tbclass{
+	    text-align: right;
+   }
+   .dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break: keep-all;	
+    word-wrap:break-word;
+    white-space: nowrap;
+}
+</style>
+<body>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/CTHCCS/CT_HCCSEquipReceive.js"></script>
+
+	<div class="hisui-layout" data-options="fit:true" border="false" >
+		<div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom:1px dashed #C0C0C0;" title="" border="false">
+			<table style="padding-top:10px;padding-bottom:10px" >
+				<tr>
+					<td class="tdlabel">设备编码</td>
+					<td><input id="TextEQCode" type="text" class="hisui-validatebox"  style="width:120px" ></td>
+					<td class="tdlabel">设备ID</td>
+					<td><input id="TextEQID" type="text" class="hisui-validatebox"  style="width:120px" ></td>
+					<td class="tdlabel">使用模式</td>
+		    		<td><input id="TextUseMode" type="text" class="textbox hisui-combobox" style="width:80px;"></td>
+		    		<td class="tdlabel">使用人</td>
+		    		<td><input id="TextUser" type="text" class="textbox hisui-combobox" style="width:120px;"></td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnSearch" class="hisui-linkbutton" iconCls="icon-w-find">查询</a>
+					</td>
+					<td class="tdlabel-b">
+						<a href="#" id="btnRefresh" class="hisui-linkbutton" iconCls="icon-w-reset">重置</a>
+					</td>
+				</tr> 
+			</table >
+		</div>
+		<div data-options="region:'center'" border="false"> 
+			<table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
+		</div>
+	</div>
+	
+	<!--接收弹窗-->
+	<div id="ReceiveWin" style="width:auto;height:auto;resizable:true;display:none;">
+	<div style="padding:0px 10px 10px 0px;">
+		<form  id="form-Receive" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table cellspacing=10 >
+				<tr>
+					<td class="tdlabel"><font color=red>*</font>设备</td>
+	    			<td><input id="ReceiveEquipDR"  name="ReceiveEquipDR" type="text" class="textbox hisui-combogrid" data-options="required:true" style="width:250px"></td>
+				</tr>
+			</table >
+		</form>
+	</div> 		
+	</div>
+	
+	<!--修改弹窗-->
+	<div id="myWin" style="width:auto;height:auto;resizable:true;display:none;">
+	<div style="padding:0px 10px 10px 0px;">
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table cellspacing=10>
+				<tr style="display:none">
+		 			<td></td>
+		   			<td><input id="ELCLRowId" name="ELCLRowId" type="text" class="textbox hisui-validatebox" ></td>
+				</tr>
+				<tr>
+					<td class="tdlabel"><font color=red>*</font>设备</td>
+	    			<td><input id="ELCLEquipmentDR"  name="ELCLEquipmentDR" type="text" class="textbox hisui-validatebox" data-options="required:true,disabled:true" style="width:250px"></td>
+				</tr>
+				<tr>
+					<td class="tdlabel"><font color=red>*</font>使用模式</td>
+	    			<td><input id="ELCLUseMode"  name="ELCLUseMode" type="text" class="textbox hisui-combogrid" data-options="required:true" style="width:257px"></td>
+				</tr>
+				<tr>
+					<td class="tdlabel">使用人</td>
+	    			<td><input id="ELCLEquipUserDR"  name="ELCLEquipUserDR" type="text" class="textbox hisui-combogrid" data-options="prompt:'使用模式为‘单人专用’时可选'" style="width:257px"></td>
+				</tr>
+			</table >
+		</form>
+		</div> 
+	</div>
+	
+	<!--工具栏-->
+	<div id="mybar">
+    	<a   href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnReceive">接收设备</a> 
+        <a   href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="btnUpdate">修改</a> 
+        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-update',plain:true,stopAllEventOnDisabled:true"id="btnShare">批量设置共用</a> 
+        <a   href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-undo',plain:true,stopAllEventOnDisabled:true"  id="btnReturn">归还</a>
+    </div>
+</body>
+</html>

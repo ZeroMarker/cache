@@ -1,0 +1,178 @@
+<!--nur.hisui.transferstep.csp 转科记录步骤条-->
+<script language="cache" runat="SERVER">
+ 	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+
+<div class="hisui-panel" title="转科记录" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false" style="">
+	<div class="transfer-steps"></div>
+</div>
+
+<style>
+	.transfer-steps{
+		margin: 10px 0;
+		padding-left: 10px;
+		position: relative;
+		font-family: Microsoft YaHei, Arial;	
+	}
+	.transfer-steps .steps-icon{
+		margin-left: 4px;
+	    width: 6px;
+	    height: 6px;
+	    border-radius: 6px;
+	    border-width: 2px;
+	    border-style: solid;
+	    border-color: #ccc;	
+	}
+	.transfer-steps .steps-tail{
+		margin-left: 8px;
+	    padding: 6px 0;
+	    display: block;
+	    width: 1px;
+	    height: 20px;
+    }
+    .transfer-steps .steps-tail::after{
+    	content: "";
+		display: inline-block;
+		width: 2px;
+		height: 100%;
+		border-radius: 1px;
+		background-color: #ccc;
+    }
+    .steps-container{
+		width:100%;
+		height:70px;
+		position:relative;	
+		display: block;
+    	overflow: visible;    
+	}
+    .steps-container .steps-item-icon{
+		position: relative;
+	    display: inline-block;
+	    width: 16px;
+	    height: 16px;
+	    float: left;  
+	    top:5px;
+	}
+	.steps-item-icon span{
+	    display: inline-block;
+	    width: 100%;
+	    height: 100%;
+    }
+	.steps-container .is-regInHosp {
+    	color: #7322a9;
+    }
+    .steps-container .is-firstToBed {
+    	color: #e87e2b;
+    }
+    .steps-container .is-changeBed {
+    	color: #6aad4a;
+    }
+    .steps-container .is-transWard {
+    	color: #2c79b9;
+    }
+    .steps-container .is-transDept {
+    	color: #eb5e45;
+    }
+    .steps-container .is-discharge {
+    	color: #eb5e45;
+    }
+    .steps-container .steps-item-tail{
+    	margin-left: 8px;
+	    padding: 30px 0 6px;
+	    display: block;
+	    width: 1px;
+	    height: 34px;
+	    position:absolute;   
+    }
+    .transfer-steps .steps-item-tail::after{
+    	content: "";
+		display: inline-block;
+		width: 2px;
+		height: 100%;
+		border-radius: 1px;
+		background-color: #ccc;
+    }    
+    .steps-item-content{
+		padding-left:32px;    
+	}
+	.steps-item-title{
+		line-height:24px;	
+	}
+	.steps-item-description div{
+		color:#666;
+		font-size:12px;	
+		line-height:18px;
+	}
+</style>
+<script type="text/javascript">
+	var episodeID="#(EpisodeID)#";
+	initSteps();
+	
+	function initSteps(){
+		runClassMethod("Nur.NIS.Service.Base.Patient","GetTransRecord",{"EpisodeID":episodeID},function(data){
+			if(data.length>0){
+				var html='<div class="steps-icon"></div><div class="steps-tail"></div>';
+				data.forEach(function(item,index){
+					var iconCss=getTransStepCss(item,"icon");
+					var conCss=getTransStepCss(item);
+					html+='<div class="steps-container"><div class="steps-item"><div class="steps-item-tail"></div>';
+					html+='<div class="steps-item-icon">';
+					html+='<span class="'+iconCss+'"></span>';
+					html+='</div>';
+					html+='<div class="steps-item-content">';
+					html+='<div class="steps-item-title">';
+					html+='<span class="'+conCss+'">'+item.transDate+" "+item.transTime+" | "+item.transType+" | "+$g("护士")+"："+item.transUser+(item.transUser+item.mainDoctor ? " | "+$g("医生")+"：" + item.mainDoctor : "")+'</span>';
+					html+='</div>';
+					html+='<div class="steps-item-description">';
+					if(item.transFrom !== ''){
+						html+='<div>'+$g('原')+'：'+item.transFrom +'</div>';
+					}
+					if(item.transTo !== ''){
+						html+='<div>'+$g('现')+'：'+item.transTo +'</div>';
+					}
+					html+='</div>';
+					html+='</div>';
+					html+='</div>';
+					html+='</div>';
+				})
+				html+='<div class="steps-icon"></div>';
+				$(".transfer-steps").html(html);
+			}			
+		},'json',false)	
+	}
+	
+	function getTransStepCss(item,flag) {
+      var transType = item.transType;
+      var iconCSS = "";
+      switch (transType) {
+        case $g("入院登记"):
+          iconCSS = flag=="icon" ? "is-regInHosp icon icon-import" : "is-regInHosp";
+          break;
+        case $g("首次分床"):
+          iconCSS =  flag=="icon" ?  "is-firstToBed icon icon-bed" : "is-firstToBed";
+          break;
+        case $g("分床"):
+          iconCSS =  flag=="icon" ? "is-changeBed icon icon-transfer" : "is-changeBed";
+          break;
+        case $g("分配等候区"):
+          iconCSS =  flag=="icon" ? "is-changeBed icon icon-transfer" : "is-changeBed";
+          break;
+        case $g("分配出院区"):
+          iconCSS =  flag=="icon" ? "is-changeBed icon icon-transfer" : "is-changeBed";
+          break;
+        case $g("转病区"):
+          iconCSS =  flag=="icon" ? "is-transWard icon icon-trans-pat" : "is-transWard";
+          break;
+        case $g("转科"):
+          iconCSS =  flag=="icon" ? "is-transDept icon icon-trans-pat" : "is-transDept";
+          break;
+        case $g("出院"):
+          iconCSS =  flag=="icon" ? "is-discharge icon icon-export" : "is-discharge";
+          break;
+        default:
+          iconCSS = "";
+          break;
+      }
+      return iconCSS;
+    }
+</script>

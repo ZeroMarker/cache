@@ -1,0 +1,307 @@
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+ // dhc.bdp.ct.incmaterialform.csp
+ // 名称: 材料审批流字典 电子审批表单   
+ // 修改人:基础数据平台-sunfengchao 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>  
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/OrderItem/DHC_INCMaterialFormAudit.js"></script>
+ 
+<style>
+.tbclass{
+    text-align: right;
+}
+.dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break:keep-all;
+    word-wrap:break-word;
+    white-space:nowrap;
+}
+textarea { 
+    width: 530px;
+    height:60px;
+}
+</style>  
+</HEAD>
+
+
+<BODY>  
+ <div class="hisui-layout" data-options="fit:true" border="false" >  
+   <div data-options="region:'north',split:true,collapsible:false,headerCls:'panel-header-gray'" style="border-bottom: 1px dashed #C0C0C0;height:560px;" title="" border="false">  
+         <div class="hisui-layout" data-options="fit:true" border="false" >   
+               <div data-options="region:'east',split:true,collapsible:false,headerCls:'panel-header-gray'" style="border-bottom: 1px dashed #C0C0C0;width:500px;" title="" border="false">   
+                  <div id="vstp" style="height: 300px;width:300px"></div>
+               </div>  
+            <div data-options="region:'center'" border="false"> 
+                  <div id="tabsINC" class="hisui-tabs tabs-gray"   data-options=" border:false,isBrandTabs:false"> 
+                    <div id="tabInci" title="库存项" data-options="selected:true"> 
+                     <form id="INCItm-form-save" method="post" data-options="fit:true,border:false,plain:true">  
+                        <table cellspacing=10>   
+                         <tr>
+                           <td class="tbclass"><font color=red>*</font>物资代码</td> 
+                           <td><input id="InciCode" name="InciCode" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td>
+                            
+                           <td class="tbclass"><font color=red>*</font>物资名称</td> 
+                           <td><input id="InciDesc" name="InciDesc" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td> 
+                         </tr>  
+                       
+                        <tr> 
+                           <td class="tbclass"><font color=red>*</font>物资别名</td>
+                           <td><input id="InciAlias" name="Alias" type="text" class="textbox hisui-validatebox" style="width:200px"></td>
+                           
+                            <td class="tbclass">规格</td>
+                           <td><input id="Spec" name="Spec" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td>
+                         </tr>   
+                         
+                         <tr> 
+                           <td class="tbclass">型号</td>
+                           <td><input id="Model" name="Model" type="text" class="textbox hisui-validatebox"  style="width:200px"  ></td> 
+                           
+                           <td class="tbclass">生产商</td>
+                           <td><input id="Manf" name="Manf" type="text" class="textbox hisui-combobox"  style="width:207px" ></td>  
+                         </tr> 
+                         
+                         <tr>
+                           <td class="tbclass"><font color=red>*</font>基本单位</td>
+                            <td><input id="BUom" name="BUom" type="text" class="textbox hisui-combobox"  style="width:207px" ></td> 
+                             
+                           <td class="tbclass"><font color=red>*</font>入库单位</td>
+                           <td><input id="PUom" name="PUom"  class='textbox hisui-combobox'  style="width:207px"></td> 
+                         </tr>  
+                         
+                         <tr>
+                           <td class="tbclass">入库转换系数</td>
+                           <td><input id="Factor" name="Factor"  class="textbox hisui-validatebox"  style="width:200px"> </td> 
+                          
+                            <td class="tbclass">大包装单位</td>
+                            <td><input id="PackUomMax"  name="PackUomMax" type="text" class="textbox hisui-combobox" style="width:207px" ></td> 
+                        </tr>
+                          
+                        <tr> 
+                          <td class="tbclass">大包装转换系数</td>
+                          <td><input id="PackUomFacMax" name="PackUomFacMax" type="text" class="textbox hisui-validatebox" style="width:200px"></td> 
+                          
+                           <td class="tbclass"><font color=red>*</font>零售价</td>
+                           <td><input id="SP" name="SP" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td > 
+                         </tr> 
+                         
+                        <tr> 
+                           <td class="tbclass"><font color=red>*</font>库存类组</td>
+                           <td><input id="MaxStkGrp" name="StkGrp" type="text" class="textbox hisui-combobox" style="width:207px"></td> 
+                           <td class="tbclass"><font color=red>*</font>库存分类</td>
+                           <td><input id="MaxStkCat" name="StkCat" type="text" class="textbox hisui-combobox"  style="width:207px"></td> 
+                        </tr>
+                        
+                      
+                        <tr>  
+                           <td class="tbclass">国家医保编码</td>
+                           <td><input id="MatInsuCode" name="MatInsuCode" type="text" class="textbox hisui-validatebox"  style="width:200px"></td> 
+                           <td class="tbclass">国家医保名称</td>
+                           <td><input id="MatInsuDesc" name="MatInsuDesc" type="text" class="textbox hisui-validatebox"  style="width:200px"></td>  
+                        </tr> 
+                         <tr>  
+                           <td class="tbclass">产地</td>
+                           <td><input  id="OriginBox" name="Origin" type="text" class="textbox hisui-combobox"  style="width:207px"></td> 
+                           <td class="tbclass">条码</td>
+                           <td><input id="INCBarCode" name="INCBCode" type="text" class="textbox hisui-validatebox"  style="width:200px"></td>  
+                        </tr> 
+                        
+                         <tr>  
+                           <td class="tbclass">供应商</td>
+                           <td><input id="PbVendor" name="PbVendor" type="text" class="textbox hisui-combobox"  style="width:207px"></td> 
+                           <td class="tbclass">注册证号</td>
+                           <td><input id="RegisterNo"  name="RegisterNo" type="text" class="textbox hisui-validatebox"  style="width:200px"></td>  
+                        </tr>
+                         
+                        
+                         <tr>   
+                          <td class="tbclass">进口标志</td> 
+                          <td><input  id="ImportFlag" name="ImportFlag" type="text"  class='textbox hisui-combobox' style="width:207px"></td> 
+                           <td class="tbclass">结束日期</td>
+                           <td><input id="INCEndDate" name="INCEndDate" type="text" class="textbox hisui-datebox"  style="width:207px" ></td>
+                          
+                         </tr> 
+                       
+                       <tr> 
+                          <td class="tbclass">是否收费</td> 
+                          <td><input id="Charge" name="Charge" class='textbox hisui-checkbox' type="checkbox" label=""  data-options="checked:true" value="Y"></td> 
+                          <td class="tbclass">是否高值</td> 
+                          <td><input id="HighValue" name="HighValue" class='textbox hisui-checkbox' type="checkbox" label=""  data-options="checked:false" value="Y"></td> 
+                       </tr> 
+                      </table>
+                    </form>  
+            </div>
+            
+            <div id="tabTar" title="收费项" data-options="selected:false"> 
+                  <form id="TarItem-form-save" method="post" data-options="fit:true,border:false,plain:true" > 
+                        <table cellspacing=10>     
+                            <tr>
+                               <td class="tbclass"><font color=red>*</font>收费项代码</td>
+                               <td><input id="TARICode" name="TARICode"  type="text" class="textbox hisui-validatebox"  style="width:200px" ></td> 
+                               
+                               <td class="tbclass"><font color=red>*</font>收费项名称</td>
+                               <td><input id="TARIDesc" name="TARIDesc"  type="text" class="textbox hisui-validatebox"  style="width:200px" ></td> 
+                             </tr>   
+                             
+                             <tr>
+                               <td class="tbclass"><font color=red>*</font>收费项别名</td>
+                               <td><input id="TARIAlias" name="TARIAlias"  type="text" class="textbox hisui-validatebox" style="width:200px" ></td>
+                               <td class="tbclass">规格</td>
+                               <td><input id="TARISpec" name="TARISpec"  type="text" class="textbox hisui-validatebox" style="width:200px"></td> 
+                             </tr>   
+                               
+                          <tr>
+                           <td class="tbclass"><font color=red>*</font>基本单位</td>
+                           <td><input id="TARIUOM"  name="TARIUOM"  type="text" class="textbox hisui-combobox" style="width:207px"></td> 
+                           <td class="tbclass">价格</td>
+                           <td><input id="TARIPrice" name="TPPrice"  type="text" class="textbox hisui-validatebox" style="width:200px"></td> 
+                         </tr> 
+                          
+                         <tr>
+                           <td class="tbclass"><font color=red>*</font>收费项目子类</td>
+                            <td><input id="TARISubCate" name="TARISubCate"  class='textbox hisui-combobox'data-options="required:true" style="width:207px"></td>
+                            
+                            <td class="tbclass"><font color=red>*</font>收费会计子类 </td>
+                            <td><input id="TARIAcctCate" name="TARIAcctCate"  class='textbox hisui-combobox' data-options="required:true" style="width:207px"></td>
+                         </tr>
+                        <tr>
+                          <td class="tbclass"><font color=red>*</font>住院费用子类</td>
+                            <td><input id="TARIInpatCate" name="TARIInpatCate"  class='textbox hisui-combobox' data-options="required:true" style="width:207px"></td>
+                            
+                            <td class="tbclass"><font color=red>*</font>门诊费用子类</td>
+                            <td><input id="TARIOutpatCate" name="TARIOutpatCate"  class='textbox hisui-combobox' data-options="required:true" style="width:207px"></td>
+ 
+                        </tr>
+                         
+                        <tr>
+                            <td class="tbclass"><font color=red>*</font>经济核算子类</td>
+                            <td><input id="TARIEMCCate" name="TARIEMCCate" class='textbox hisui-combobox'  data-options="required:true" style="width:207px"></td>
+                            
+                            <td class="tbclass"><font color=red>*</font>旧病案首页子类 </td>
+                            <td><input id="TARIMRCate" name="TARIMRCate" class='textbox hisui-combobox'  data-options="required:true" style="width:207px"></td>
+                         </tr>
+                                
+                          <tr>  
+                              <td class="tbclass"><font color=red>*</font>新病案首页子类</td>
+                              <td><input id="TARIMCNew" name="TARIMCNew"  class='textbox hisui-combobox' data-options="required:true" style="width:207px"></td> 
+                              <td class="tbclass"><font color=red>*</font>患者费别</td>
+                              <td><input id="TPPatInsType" name="TPPatInsType" class='textbox hisui-combobox'  data-options="required:true" style="width:207px"></td>
+                              
+                          </tr> 
+                             
+                         <tr>
+                           <td class="tbclass">国家医保编码</td>
+                           <td><input id="TARIInsuCode" name="TARIInsuCode" type="text" class="textbox hisui-validatebox" style="width:200px" ></td>
+                           <td class="tbclass">国家医保名称</td>
+                           <td><input id="TARIInsuDesc" name="TARIInsuName" type="text" class="textbox hisui-validatebox" style="width:200px" ></td> 
+                         </tr>  
+                           <tr>
+                           <td class="tbclass">进口标志</td>
+                           <td><input id="TarImportFlag" name="TARIManufactorType"  type="text" class="textbox hisui-combobox" style="width:207px"></td> 
+                            <td class="tbclass"><font color=red>*</font>开始日期</td>
+                            <td><input id="TARIStartDate"  name="TARIStartDate" type="text" class="textbox hisui-datebox"  style="width:207px" ></td> 
+                         </tr>        
+                          <tr>     
+                               <td class="tbclass">结束日期</td>
+                               <td><input id="TARIEndDate"  name="TARIEndDate" type="text" class="textbox hisui-datebox"  style="width:207px" ></td>
+                                 
+                          </tr> 
+                            
+                        </table >
+                    </form>  
+            </div>
+            <div id="tabArcim" title="医嘱项" data-options="selected:false"> 
+                   <form id="ARCItmMast-form-save" method="post" data-options="fit:true,border:false,plain:true" > 
+                        <table cellspacing=10>     
+                            <tr>
+                               <td class="tbclass"><font color=red>*</font>医嘱代码</td>
+                               <td><input id="ARCIMCode"  name="ARCIMCode"type="text" class="textbox hisui-validatebox"  style="width:200px" ></td> 
+                               
+                               <td class="tbclass"><font color=red>*</font>医嘱名称</td>
+                               <td><input id="ARCIMDesc" name="ARCIMDesc" type="text" class="textbox hisui-validatebox"  style="width:200px" ></td> 
+                             </tr>   
+                             
+                          <tr>
+                        
+                           <tr> 
+                             <td class="tbclass"><font color=red>*</font>医嘱大类</td>
+                             <td><input id="ARCIOrderCatDR" name="ARCIOrderCatDR"  class='textbox hisui-combobox' data-options="required:true" style="width:207px"></td>
+                              
+                             <td class="tbclass"><font color=red>*</font>医嘱子类</td>
+                             <td><input id="ARCIMItemCatDR" name="ARCIMItemCatDR" class='textbox hisui-combobox'  data-options="required:true" style="width:207px"></td>
+                             
+                        </tr>
+                         
+                         <tr>
+                             <td class="tbclass"><font color=red>*</font>账单组 </td>
+                             <td><input id="ARCIMBillGrpDR" name="ARCIMBillGrpDR" class='textbox hisui-combobox' data-options="required:true" style="width:207px"></td>
+                           
+                          <td class="tbclass"><font color=red>*</font>账单子组</td>
+                          <td><input id="ARCIMBillSubDR" name="ARCIMBillSubDR" class='textbox hisui-combobox'  data-options="required:true" style="width:207px"></td>
+                           
+                               
+                               
+                         </tr>
+                       
+                         <tr>     
+                            <td class="tbclass"><font color=red>*</font>开始日期</td>
+                               <td><input id="ARCIMEffDate" name="ARCIMEffDate"  type="text" class="textbox hisui-datebox"  style="width:207px" ></td>
+                                      
+                                <td class="tbclass">结束日期</td>
+                          <td><input id="ARCIMEffDateTo"  name="ARCIMEffDateTo" type="text" class="textbox hisui-datebox"  style="width:207px" ></td>
+                              
+                               
+                          </tr> 
+                             <td class="tbclass"><font color=red>*</font>计价单位</td>
+                           <td><input id="ARCIMBillingUOMDR" name="ARCIMBillingUOMDR" type="text" class="textbox hisui-combobox" style="width:207px"></td> 
+                           <td class="tbclass">独立医嘱</td> 
+                           <td><input id="ARCIMOrderOnItsOwn" name="ARCIMOrderOnItsOwn" class='textbox hisui-checkbox' type="checkbox" label=""  data-options="checked:true" value="Y"></td> 
+                           
+                           </tr>  
+                           <tr>  
+                                <td class="tbclass">无库存医嘱</td> 
+                                <td><input id="ARCIMAllowOrderWOStockCheck" name="ARCIMAllowOrderWOStockCheck" class='textbox hisui-checkbox' type="checkbox" label=""  data-options="checked:true" value="Y"></td>  
+                          </tr>  
+                        </table>
+                    </form>     
+                    </div>
+                </div>
+             </div> 
+         </div>
+         
+         
+         
+    </div>
+     
+     <div data-options="region:'center'" border="false">  
+       <table cellspacing=10>    
+             <tr>     
+                <td class="tbclass">审批意见</td>
+                <td><textarea id="AuditComment"  name="AuditComment"  type="text"></textarea></td> 
+              </tr>
+               <tr>    
+                  <td><a class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="btnAudit">审核</a>  </td>   
+                  <td><a class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="btnRefuseAuit">拒绝</a>  </td> 
+              </tr> 
+      </table>
+    </div>  
+ </div>
+</BODY>
+ </html>
+ 

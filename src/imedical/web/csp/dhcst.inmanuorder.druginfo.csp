@@ -3,6 +3,10 @@
 	csp:dhcst.inmanuorder.druginfo.csp
 	js: scripts/pharmacy/dhcst/inmanuorder/druginfo.js
 -->
+<!-- 验证session -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
 
 <HTML XMLNS=TRAK>
 
@@ -12,79 +16,67 @@
     </title>
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI/>
+    <PHALIBV1 />
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.common.css"></link>
 </HEAD>
 
 <body>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',border:false" class="dhcpha-hisui-container">
+        <div data-options="region:'center',border:false" class="pha-body">
             <div class="hisui-layout" fit="true">
-                <div data-options="region:'center',border:false,split:true">
+                <div data-options="region:'north',border:false,split:true,height:400">
                     <div class="hisui-panel" title="药品信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
                         <table id="gridDrugInfo"></table>
                     </div>
                 </div>
-	        	<div data-options="region:'east',border:false,split:true,width:500" >
-	        		<div class="hisui-layout" fit="true">
-		        		<div data-options="region:'north',border:false,split:true,width:500,height:250">
-			                <div class="hisui-panel" title="制剂信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
-			                    <table id="gridInRcp"></table>
-			                </div>
-			                
-		                </div>
-		                <div data-options="region:'center',border:false,split:true,width:600">
-			                <div class="hisui-panel" title="制剂原料信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
-			                    <table id="gridInRecIngr"></table>
-			                </div>
-			                
-		                </div>
-		                
-	                </div>
+	        	<div data-options="region:'center',border:false" >
+	        		<div class="hisui-panel" title="制剂信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+			            <table id="gridInRcp"></table>
+			        </div>
 	            </div>
-				
+				<div data-options="region:'east',border:false,split:true,width:650">
+                    <div class="hisui-panel" title="制剂原料信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                        <table id="gridInRecIngr"></table>
+                    </div>
+                </div>
             </div>
         </div>
         
     </div>
     <div id="gridQueryBar" data-options="region:'center'" >
-        <div class="pha-row ">
-            
-                <div class="pha-col-first">
-                    <label for="ypmc">药品名称</label>
-                </div>
-                <div class="pha-col" >
-                    <input id="cmgIncItm" class="hisui-validatebox" placeholder="药品名称..."></input>
-                </div>
-                <div class="pha-col" >
-                	<label>库存分类</label>
-                </div>
-                <div class="pha-col" >
-                	<input id="cmbStkCat" class="hisui-validatebox"  placeholder="库存分类..." />
-                </div>
-                <div class="pha-col">
-                	<label>别名</label>
-                </div>
-                <div class="pha-col" >
-                	<input id="txtAlias" class="hisui-validatebox"  placeholder="别名..." />
-                </div>
-                <div class="pha-col">
-                    <label>仅制剂</label>
-                </div>
-                <div class="pha-col" style="padding-left:5px;">
-                    <input id="chkInManu" type="checkbox" class="hisui-checkbox" />
-                </div>
-
-                <div class="pha-col">
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="ypmc">#(..Get("药品名称"))#</label>
+                </td>
+                <td>
+                    <input id="cmgIncItm" class="hisui-validatebox" placeholder=#(..Get("药品名称..."))#></input>
+                </td>
+                <td class="r-label">
+                	<label>#(..Get("库存分类"))#</label>
+                </td>
+                <td>
+                	<input id="cmbStkCat" class="hisui-validatebox"  placeholder=#(..Get("库存分类..."))# ></input>
+                </td>
+                <td class="r-label">
+                	<label>#(..Get("别名"))#</label>
+                </td>
+                <td>
+                	<input id="txtAlias" class="hisui-validatebox"  placeholder=#(..Get("别名..."))#></input>
+                </td>
+                <td>
+                    <input id="chkInManu" type="checkbox" class="hisui-checkbox" label="仅制剂"/>
+                </td>
+                <td>
                     <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFind">查询</a>
-                </div>
-
-        </div>
+                </td>
+            </tr>
+        </table>
     </div>
     <div id="gridInRcpBar" style="height:32px;padding-top:2px">
         <table>
             <tr>
-                
                 <td>
                     <span><a class="hisui-linkbutton" iconCls='icon-add' plain="true" id="btnAddInRcp">新增</a></span>
                 </td>
@@ -115,7 +107,7 @@
         </table>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.export.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/dhcst/common/common.js"></script>
 	<script type="text/javascript" src="../scripts/pharmacy/dhcst/inmanuorder/druginfo.js"></script>

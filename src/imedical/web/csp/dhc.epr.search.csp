@@ -1,0 +1,102 @@
+﻿<html>
+<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ quit 1
+</csp:method-->
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>搜索</title>
+	
+	<script src="../scripts/epr/search/jquery/jquery-1.8.0.min.js"></script>
+	<script src="../scripts/epr/search/jquery/jquery.easyui.min.js"></script>
+	<script src="../scripts/epr/search/jquery/easyui-lang-zh_CN.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/search/jquery/themes/metro/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/search/jquery/themes/icon.css">
+	
+	<script src="../scripts/epr/search/fullTextSearch.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/search/fullTextSearch.css">
+	
+	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")
+		s:(userID = "") userID = "34"
+		s ctLocID = %session.Get("LOGON.CTLOCID")
+		s ssGroupID = %session.Get("LOGON.GROUPID")
+		s hospid = %session.Get("LOGON.HOSPID")
+		s solrUrl = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("SolrUrl")
+		s queryOption = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("QueryOption")
+		s dataServiceUrl = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("DataServiceUrl")
+		s wordCollect = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("WordCollect")
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var ctLocID = '#(ctLocID)#';
+		var ssGroupID = '#(ssGroupID)#';
+		var solrUrl = '#(solrUrl)#';
+		var queryOption = '#(queryOption)#';
+		var dataServiceUrl = '#(dataServiceUrl)#';
+		var cspBaseUrl = dataServiceUrl + 'csp/';
+		var wordCollect = '#(wordCollect)#';
+		var hospid = '#(hospid)#';
+	</script>
+	
+	<!-- ajax-solr基础类 -->
+	<script src="../scripts/epr/search/core/Core.js"></script>
+	<script src="../scripts/epr/search/core/AbstractManager.js"></script>
+	<script src="../scripts/epr/search/managers/Manager.jquery.js"></script>
+	<script src="../scripts/epr/search/core/Parameter.js"></script>
+	<script src="../scripts/epr/search/core/ParameterStore.js"></script>
+	<script src="../scripts/epr/search/core/AbstractWidget.js"></script>
+	<script src="../scripts/epr/search/core/AbstractFacetWidget.js"></script>
+	
+	<!-- 返回结果过滤 -->
+	<script src="../scripts/epr/search/widgets/ResultWidget.js"></script>
+	<!-- 分页 -->
+	<script src="../scripts/epr/search/widgets/PagerWidget.js"></script>
+</head>
+<body class="easyui-layout">
+	<div id="left" data-options="region:'center',split:true">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="height:100px">
+				<div class="easyui-layout" data-options="fit:true">
+					<div data-options="region:'east',split:true,border:false" style="width:150px;float:right">
+	 					<div id="toolbarright" class="easyui-panel" style="padding:5px;">
+							<a href="#" id="myDocButton" class="easyui-linkbutton" data-options="plain:true">我的文库</a>
+							<a href="#" id="importButton" class="easyui-linkbutton" data-options="plain:true">导入结果</a>
+						</div>
+					</div>
+					<div data-options="region:'center',split:true,border:false">
+						<div class="top">
+							<div id="log"><img src='../scripts/epr/search/images/logo.jpg' class='pic'></div>
+							<div id="search">
+								<input type="text" id="query" name="query" />
+								<input type="hidden" id="saveQuery" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',split:true,border:false">
+				<div id="bottom">
+					<div class="bottom">
+						<div id="result">
+							<div id="docs"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'south',split:true,border:false" style="height:30px">
+				<div id="navigation">
+					<ul id="pager"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="right" data-options="region:'east',split:true,title:'过滤条件'">
+		<div id="condition">
+			<div id="fqpg"></div>
+		</div>
+	</div>
+	<div id="importWin"></div>
+	<div id="myDocWin"></div>
+	<div id="saveWin"></div>
+</body>
+</html>

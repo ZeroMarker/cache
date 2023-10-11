@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<!--
+    采购订单 - 制单
+    csp:  csp/pha.in.v3.po.create.csp
+    js:   scripts/pha/in/v3/po/create.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        #winFindPO {
+            overflow: hidden;
+        }
+
+        .pha-po-create-hide {
+            display: none;
+        }
+        #qCondition a{
+            min-width:90px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center', title:'采购订单 / 制单'" id="layout-po-create-panel">
+                    <table id="gridItm"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridItmBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="loc">#(..Get("订单科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="reqLoc">#(..Get("申购科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="reqLoc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:false">
+                </td>
+
+                <td class="r-label">
+                    <label for="stkCatGrp">#(..Get("类组"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="stkCatGrp" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:false">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnSelect" data-pha-btn>查询单据</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnClean" data-pha-btn>清屏</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnPrint" data-pha-btn>打印</a>
+                </td>
+
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="vendor">#(..Get("经营企业"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="vendor" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="needDate">#(..Get("到货日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="needDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:false">
+                </td>
+                <td class="r-label">
+                    <label for="remarks">#(..Get("备注"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="remarks" class="pha-po-remarks" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true,required:false">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnSave" data-pha-btn>保存</a>
+                </td>
+                <td class="r-label">
+                    <a name="btnGroupFinish" class="hisui-linkbutton" id="btnFinish" data-pha-btn>完成</a>
+                    <a name="btnGroupFinish" class="hisui-linkbutton" id="btnFinishCancel" data-pha-btn>取消完成</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnDelete" data-pha-btn>删除</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-banner-container">
+            <div id="poBanner"></div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-add'" id="btnAddItm" data-pha-btn>新增一行</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'" id="btnDeleteItm" data-pha-btn>删除勾选行</a>
+        </div>
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/po/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/po/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/po/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/po/create.js"></script>
+    <!-- 查询 -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/po/query.js"></script>
+    <csp:Include Page="pha.in.v3.po.query.template.csp"></csp:Include>
+    <script type="text/javascript">
+        $('body').append('<div id="winQueryPO"  class="js-pha-com-window-sign"></div>')
+        $('#winQueryPO').append($('#template-po-query').html())
+        $('#mainDiv-q').css('background-color', 'white');
+        $.parser.parse($('#lyMainView-q').parent());
+    </script>
+</body>
+
+</html>

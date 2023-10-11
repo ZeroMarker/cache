@@ -3,10 +3,6 @@
 	GV.EditRowIndex = undefined;
 	
 	$(function() {
-		$(document).keydown(function (e) {
-			banBackSpace(e);
-		});
-		
 		var toolbar = [{
 				text: '新增',
 				iconCls: 'icon-add',
@@ -106,7 +102,7 @@
 									$.extend($(this).combobox("options"), {
 										mode: 'local',
 										delay: 0,
-										defaultFilter: 4,
+										defaultFilter: 5,
 										valueField: 'id',
 										textField: 'text',
 									});
@@ -130,20 +126,22 @@
 										case "ARCIM":
 											$.extend($(this).combobox("options"), {
 												mode: 'remote',
-												delay: 500,
+												delay: 300,
 												defaultFilter: 1,
 												valueField: 'ArcimRowID',
 												textField: 'ArcimDesc',
 											});
-											cn = "DHCDoc.DHCDocConfig.ArcItemConfig";
-											qn = "FindAllItem";
+											cn = "BILL.COM.ItemMast";
+											qn = "FindARCItmMast";
 											break;
 										}
+										var sessionStr = PUBLIC_CONSTANT.SESSION.USERID + "^" + "" + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + GV.HospId;
 										param.ClassName = cn;
 										param.QueryName = qn;
 										param.ResultSetType = "array";
-										param.Alias = param.q;
 										param.HospId = GV.HospId;
+										param.alias = param.q;
+										param.sessionStr = sessionStr;
 									}
 								},
 								onSelect: function(rec) {
@@ -227,9 +225,12 @@
 				MethodName: "SaveRules",
 				jsonStr: JSON.stringify(jsonObj)
 			}, function (rtn) {
-				var type = (rtn.success == "0") ? "success" : "error";
-				$.messager.popover({msg: rtn.msg, type: type});
-				GV.CateList.reload();
+				if (rtn.success == 0) {
+					$.messager.popover({msg: rtn.msg, type: "success"});
+					GV.CateList.reload();
+				}else {
+					$.messager.popover({msg: rtn.msg, type: "error"});
+				}
 			});
 		}
 
@@ -260,6 +261,9 @@
 				$.messager.popover({msg: "请选择需要删除的行", type: "info"});
 				return;
 			}
+			if (!row.TCDRowID) {
+				return;
+			}
 			$.messager.confirm("确认", "确认删除？", function(r) {
 				if (r) {
 					$.cm({
@@ -267,7 +271,7 @@
 						MethodName: "DeleteCD",
 						id: row.TCDRowID
 					}, function(rtn) {
-						if (rtn.success == "0") {
+						if (rtn.success == 0) {
 							$.messager.popover({msg: rtn.msg, type: "success"});
 							GV.CateList.reload();
 						}else {

@@ -1,0 +1,427 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+<html>
+<head>
+<title>	Cache Server Page </title>
+
+<link rel="stylesheet" href="../scripts_lib/bootstrap-3.3.5/css/bootstrap.min.css"></link>
+<script type="text/javascript" src="../scripts_lib/vue.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/plugins/xlsx.full.min.js"></script>
+<!-- 兼容IE支持promise对象 -->
+<script type="text/javascript" src="../scripts/nurse/hisui/plugins/babel-polyfill.js"></script>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+
+<style>.icon{width: 20px;height: 20px;margin-right: 10px;float: right;}</style>
+<style>
+
+	* {
+		margin: 0;
+		padding: 0;
+	}
+
+	html {
+		height: 100%;
+		width: 100%;
+	}
+
+	body {
+		font-family: "微软雅黑";
+		min-height: 95%;
+		width: 100%;background: white;
+	}
+	label {
+    font-weight: 500;
+}
+</style>
+</head>
+
+<body>
+	<input type="file" id="FileInput" hidden="hidden" style="display: none;" onchange="readfls(this.files)" />
+	<div id="app">
+		<div class="nav-bar">
+			<div class="btn-toolbar" role="toolbar" style="margin-bottom:10px;">
+				<!--
+				<div class="input-group" style="width: 350px;">
+					<span class="input-group-btn">
+				        <button class="btn btn-info" type="button"  onclick="$('#FileInput')[0].click()">
+				        <i class="glyphicon glyphicon-folder-open"></i>选择文件</button>
+				      </span>
+					<input type="text" class="form-control" placeholder="请选择文件" readonly="readonly" v-model="fileInfo.name">
+					<input style="width: 70px;height:34px;margin-left:280px;margin-top:-34px;border-radius:2px;"
+						class="form-control btn-primary"
+						 type="button" id ="saveBtn" value="保存" onclick="Save();" />
+				</div>
+				-->
+				<table style="margin-left:10px;">
+					<tr>
+						<td class="r-label">
+							<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+						</td>
+						<td>
+							<input id="_HospList" style="width:240px;"/>
+						</td>
+						
+						<!-- 间隔用-->
+						<td class="r-label"></td>
+						
+						<td>
+							<input id='uploadFile' name="uploadFile" />
+						</td>
+						<td style="padding-left: 10px;">
+							<a href="#" onclick="Save();" class="hisui-linkbutton">保存</a>
+						</td>
+						<td class="r-label">
+							<a class="hisui-linkbutton" data-options="iconCls:'icon-w-download'" id="download" style="margin-left: 10px;color: white;">模板下载</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div id="demo" style="overflow: auto;" v-if="tableDemo.tbody.length>0">
+			<table class="table table-bordered" style="min-width: 100%;">
+				<thead>
+					<tr>
+						<!-- <th>#</th> -->
+						<th v-for="i in tableDemo.thead">
+							{{i}}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="(i,index) in tableDemo.tbody">
+						<!-- <th scope="row">{{index}}</th> -->
+						<td v-for="j in tableDemo.thead">{{i[j]}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript">
+		var ImportFile = null;
+		function readfls(fls) {
+			if (fls && fls.length > 0) {
+				ImportFile = fls[0];
+				var fileX = ImportFile.name.split(".").reverse()[0];
+				var fileXyes = false;
+				["xlsx", "xlc", "xlm", "xls", "xlt", "xlw", "csv"].forEach(function (value, index, array) {
+					if (fileX === value) {
+						fileXyes = true;
+					}
+				});
+				if (fileXyes) {
+					app.fileInfo.name = ImportFile.name;
+					app.fileInfo.size = ImportFile.size;
+					file2Xce(ImportFile).then(function (t) {
+						console.log("执行完毕");
+						console.log(t)
+						//清空file，否则产生缓存
+						var obj = document.getElementById('FileInput');
+						obj.value='';
+						if (t && t.length >= 0) {
+							var tmpHead = [];
+							var pmodel = {};
+							for (var itm in t[0]) {
+								tmpHead.push(itm);
+								pmodel[itm] = itm;
+							}
+							app.tableDemo.thead = tmpHead;
+							app.tableDemo.tbody = t;
+						}
+					});
+				} else {
+					alert("格式错误！请重新选择");
+				}
+			}
+		}
+		
+		//解决不支持IE 自定义extend FileReader
+		if (!FileReader.prototype.readAsBinaryString) {
+		    FileReader.prototype.readAsBinaryString = function (fileData) {
+		       var binary = "";
+		       var pt = this;
+		       var reader = new FileReader();      
+		       reader.onload = function (e) {
+		           var bytes = new Uint8Array(reader.result);
+		           var length = bytes.byteLength;
+		           for (var i = 0; i < length; i++) {
+		               binary += String.fromCharCode(bytes[i]);
+		           }
+		        //pt.result  - readonly so assign binary
+		        pt.content = binary;
+		        $(pt).trigger('onload');
+		    }
+		    	reader.readAsArrayBuffer(fileData);
+		    }
+		}
+		
+		var wb; //读取完成的数据　
+		function file2Xce(f) {
+			return new Promise(function (resolve, reject) {
+				var reader = new FileReader();
+				reader.readAsBinaryString(f);
+				reader.onload = function (e) {
+					var bsVersion = IEVersion();
+					if(bsVersion == "" || bsVersion == "-1"){//不是IE浏览器
+						var data = reader.result;
+					}else{
+						var data = reader.content;
+					}
+					if (app.rABS) {
+						wb = XLSX.read(btoa(fixdata(data)), { //手动转化
+							type: 'base64'
+						});
+					} else {
+						wb = XLSX.read(data, {
+							type: 'binary'
+						});
+					}
+					resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+				};
+				/**
+				if (app.rABS) {
+					reader.readAsArrayBuffer(f);
+				} else {
+					reader.readAsBinaryString(f);
+				}
+				*/
+			});
+		};
+
+		function fixdata(data) { //文件流转BinaryString
+			var o = "",
+				l = 0,
+				w = 10240;
+			for (; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)));
+			o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)));
+			return o;
+		}
+
+
+		var app = new Vue({
+			el: "#app",
+			data: {
+				rABS: false, //是否将文件读取为二进制字符串
+				fileInfo: {
+					name: "",
+					size: 0
+				},
+				tableDemo: {
+					thead: [],
+					tbody: []
+				}
+			}
+		});
+		
+		function Save (){
+			//console.log("数据："+app.tableDemo.tbody)
+			//console.log("表头："+app.tableDemo.thead)
+			
+			if (app.tableDemo.tbody.length > 2000)
+			{
+				$.messager.popover({msg:"一次导入数据不能超过2000行！",type:'error'});
+				setTimeout(function(){
+			　　	window.location.reload();
+			　　},1500);　//延时1.5秒
+				return
+			}
+			
+			var columnNames = []
+			for(var h=0; h<app.tableDemo.thead.length; h++ ){
+				let columnName = app.tableDemo.thead[h];
+				columnNames.push(columnName)
+			}
+			
+			var info = [];
+			for(var b=0;b<app.tableDemo.tbody.length;b++){
+				var map = app.tableDemo.tbody[b];
+				var jsonStr = "{"+"\""+"行号"+"\""+":"+"\""+b+"\""+",";
+				var isNull=""
+				for (var k=0;k<columnNames.length;k++) {
+					var key = columnNames[k]
+					if(typeof(map[key])!='undefined'){
+						var objStr = "\""+key+"\""+":"+"\""+map[key]+"\""+",";
+					}else{
+						var objStr = "\""+key+"\""+":"+"\""+isNull+"\""+",";
+					}
+					// 替换换行符
+					objStr = objStr.replace(/\r\n/g,"")
+					objStr = objStr.replace(/\n/g,"");
+					jsonStr+=objStr
+					
+				}
+				jsonStr +="}"
+				info.push(jsonStr)
+			}
+			
+			$.messager.confirm("保存", "数据会进行处理，确定保存?", function (r) {
+				if (r) {	
+				
+				$.messager.progress({
+					title: "提示",
+					msg: '正在导入数据,请稍等',
+					text: '导入中....'
+				});
+		
+				saveData(info,0,columnNames.join(","))
+					
+					
+					//$.messager.popover({msg:"全部导入成功！",type:'info'});
+					//window.location.reload()
+					
+					//$.messager.popover({msg:"点击了确定",type:'info'});
+				} else {
+					//$.messager.popover({msg:"点击了取消"});
+				}
+			});
+			
+		}
+		
+		function saveSuccessData(){
+			$cm({
+						ClassName: 'Nur.NIS.Service.NursingPlan.ExcelImport',
+						MethodName: 'GetSaveSuccessData'
+					},
+					function(data){
+					})
+				}
+		var errorFlag = 0
+		function saveData(info,i,columnNames){
+			if(i>=info.length){
+				//window.location.reload()
+				$m({
+						ClassName: 'Nur.NIS.Service.NursingPlan.ExcelImport',
+						MethodName: 'saveSuccessData',
+						columnNames: columnNames,
+						hospitalId: $("#_HospList").combobox("getValue")
+					},
+					function(data){
+						if (data!="" && data.indexOf("-999") > -1)
+						{
+							var quedesc = data.split("^")[1]
+							$.messager.alert("错误提示", "当前院区有重复问题，导入失败！<br/>重复问题："+quedesc, 'error');
+							$.messager.progress("close");
+							
+							return false;
+						}else
+						{
+							$.messager.progress("close");
+							$.messager.popover({msg:"全部导入成功！",type:'info'});
+							setTimeout(function(){
+						　　	window.location.reload();
+						　　},1000);　//延时1秒
+						}
+					},false)
+				return	
+			}
+			
+			var rate = (i / info.length).toFixed(2) *100
+			$(".messager-p-msg").text("正在导入数据,请稍等("+rate.toFixed(2) +"%)")
+
+					$cm({
+						ClassName: 'Nur.NIS.Service.NursingPlan.ExcelImport',
+						MethodName: 'GetImportNursePlan',
+						rowIndex:i,
+						columnNames:columnNames,
+						info:info[i]
+					},
+					function(data){
+						i = i+1
+						saveData(info,i,columnNames)
+					},false)
+		}
+		
+		function IEVersion() {
+            var userAgent = navigator.userAgent; //取得浏览器的userAgent字符串  
+            var isIE = userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1; //判断是否IE<11浏览器  
+            var isEdge = userAgent.indexOf("Edge") > -1 && !isIE; //判断是否IE的Edge浏览器  
+            var isIE11 = userAgent.indexOf('Trident') > -1 && userAgent.indexOf("rv:11.0") > -1;
+            if(isIE) {
+                var reIE = new RegExp("MSIE (\\d+\\.\\d+);");
+                reIE.test(userAgent);
+                var fIEVersion = parseFloat(RegExp["$1"]);
+                if(fIEVersion == 7) {
+                    return 7;
+                } else if(fIEVersion == 8) {
+                    return 8;
+                } else if(fIEVersion == 9) {
+                    return 9;
+                } else if(fIEVersion == 10) {
+                    return 10;
+                } else {
+                    return 6;//IE版本<=7
+                }   
+            } else if(isEdge) {
+                return 'edge';//edge
+            } else if(isIE11) {
+                return 11; //IE11  
+            }else{
+                return -1;//不是ie浏览器
+            }
+        }
+        
+        /**
+		 * @description 初始化医院
+		 */
+		function initCondition() {
+			try
+			{
+				// 多院区
+				var hospComp = GenHospComp("Nur_IP_Question",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+				var hospID=hospComp.getValue();
+				hospComp.options().onSelect = function(i,d){
+					// 	HOSPDesc: "东华标准版数字化医院[总院]"
+					// HOSPRowId: "2"
+					console.log(arguments);
+					hospID=d.HOSPRowId;
+				}
+			}catch(ex)
+			{
+			  // 兼容老项目，非多院区的场景
+			  var defaultHosId = session['LOGON.HOSPID'];
+			  $("#_HospList").combobox({
+			    url:
+			      $URL +
+			      "?1=1&ClassName=Nur.NIS.Service.NursingPlan.ExcelImport" +
+			      "&QueryName=GetHospitalList&ResultSetType=array",
+			    valueField: "HospitalId",
+			    textField: "HospitalDesc",
+			    defaultFilter: 4,
+			    value:defaultHosId,
+			    onLoadSuccess: function () {
+			      // $("#HospitalId").combobox("setValue", defaultHosId); // 设置默认医院
+			    },
+			  });
+			}
+		}
+		$(function () {
+			// 初始化医院
+			initCondition();
+			$('#uploadFile').filebox({
+				width: 400,
+				prompt: '请选择导入模板',
+				buttonText: '选择',
+				buttonAlign: 'left',
+				plain: true,
+				onChange:function()
+				{
+					var files = $("#uploadFile").filebox('files')
+					readfls(files)
+					$("#uploadFile").filebox('clear');//清空fixbox组件的值、避免二次选同个文件无法更新
+				}
+			})
+			
+			// 下载导入模板
+			$("#download").click(function (argument) {
+         	 	window.location.href="../service/NURNIS/Template/全院-简版护理计划知识库V8.5-导入模板.xlsx";
+     	 	});
+		})
+	</script>
+	
+</body>
+</html>

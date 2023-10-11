@@ -1,0 +1,53 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<server>
+if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+
+s CollectFlag=$g(%request.Data("CollectFlag",1))  //add by lmm 2020-08-17
+ s colsets=##Class(web.DHCEQCColSet).GetColSets("","2","","Maint") //用户级设置
+ if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","1","","Maint") //安全组级设置
+ if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","0","","Maint") //系统设置
+ s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")	;add by csj 20191206
+ s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	;add by csj 20191206
+ s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+</server>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel"  title="房屋建筑查询" data-options="fit:true,eqtitle:'maintitle'" style="width:100%;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;width:150%;border-bottom:solid 1px #ccc;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cEquip" for="Equip">建筑名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Equip" data-options="'component':'EM.L.Equip'"></div>
+							<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:120px;margin-right:20px">查询</a></div>
+							<div class="eq-table-td eq-table-button"><a id="BImport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:120px;margin-right:20px">导入</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="buildingfind" data-options="fit:true,border:false"></table>
+				
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+            <input id="EquipDR" name="EquipDR" type="hidden">
+		</form>
+	</div>
+<script type='text/javascript' src='../scripts/dhceqbu/em/buildingfind.js'></script>
+</body>
+
+</html>

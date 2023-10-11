@@ -1,0 +1,235 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+<html>
+<head>
+<title>	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>  </title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<meta charset="utf-8"/>
+<HISUI/>
+</head>
+<style>
+	body {
+        /*background-color: #fff;*/
+        padding: 5px!important;
+    }
+	/*.west_patients {
+		width: 225px;
+		border: none;
+	}
+	.west_north_search {
+		padding: 5px;
+		height: 61px;
+		border: 1px solid #ccc;
+		border-bottom: 0;
+	}
+	#wardPatientCondition {
+		margin-top: 5px;
+		width: 206px;
+		padding:0 1px;
+	}*/
+	.layout-split-west{
+		border-right-width:4px;	
+	}
+	.west_center_list {
+		padding: 0;
+	}
+	.center_templates {
+		border: none;
+	}
+	.center_north_patinfo {
+		height:38px;
+		border: none;
+	}
+	.center_center_list {
+		border: none;
+		border-radius: 4px;
+	}
+	.center_center_tree {
+		border: none;
+		padding: 4px;
+	}
+	.PatInfoItem{
+        top:0 !important;
+        left:0 !important;
+        margin-left:0 !important;
+    }
+	.searchbox .searchbox-prompt {
+		padding-left: 5px !important;
+	}
+	.unman {
+		background: url(../images/unman.png) no-repeat;
+		background-size: contain;
+	}
+	.man {
+		background: url(../images/man.png) no-repeat;
+		background-size: contain;
+	}
+	.woman {
+		background: url(../images/woman.png) no-repeat;
+		background-size: contain;
+	}
+	
+	.layout-panel-north{
+		border-bottom: 0;	
+	}
+	
+	/* 医嘱执行记录*/
+	/*.right-order-record{
+		top: 0;
+    	bottom: 10px;
+    	left: 225px;
+    	right:1px;
+    	position: absolute;    	
+	}
+	.right-order-record #toolbar{
+		padding:10px 10px 0 10px;
+	}
+	.right-order-record #toolbar td{
+		padding:0 10px 10px 0;
+	}
+	#toolbar td input.combo-text{
+		width:123px!important;	
+	}
+	#toolbar td input.hisui-timespinner{
+		width:56px!important;	
+	}*/
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+		/*padding: 0 10px;*/
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.order-list{
+		padding: 0 4px 4px;	
+		height:calc(100% - 94px)!important;	
+	}
+	#orderTabs{
+		border-left: 1px solid #ccc;
+		border-right: 1px solid #ccc;
+		border-bottom: 1px solid #ccc;
+		border-radius: 4px;	
+	}
+	#orderTabs .tabs-header{
+		margin-bottom: 2px;
+	}
+	#orderTabs .tabs-header, #orderTabs .tabs-panels{
+		border-left:0;
+		border-right:0;
+	}
+	#orderTabs .tabs-panels{
+		border-bottom:0;	
+	}
+	#orderTabs .tabs-panels{
+		height: calc(100% - 39px)!important;	
+	}
+	
+	#orderTabs .panel-body, #orderTabs .panel-header{
+		border-color: #ccc;	
+	}
+	#orderTabs .panel-body.panel-body-noheader{
+		border-radius: 0;
+		border-left: 0;
+		border-right: 0;
+	}
+	.hstep-container ul.hstep-container-steps li .cnode{
+		margin-left: 6px;	
+	}
+	.hstep-container ul.hstep-container-steps li.active .cnode{
+		margin-bottom: 3px;	
+	}
+	.search-table td .datebox input{
+		width:84px!important;	
+	}
+	.search-table td .spinner input{
+		width:52px!important;	
+	}
+</style>
+<script language="javascript">
+	var EpisodeID = "#(EpisodeID)#";
+</script>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/executeView.js" charset=gbk></script>
+<body>
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true">
+		<!--div id="patient_search" data-options="region:'west',title:'患者列表',split:true,collapsible:false"
+			 class="west_patients">
+			<div id="divPatients" class="hisui-layout"
+				 data-options="fit:true">
+				<div data-options="region:'north',split:true" 
+					 class="west_north_search">
+					<input id="wardPatientSearchBox"
+						   class="hisui-searchbox"
+						   data-options="prompt:'#(..Get("姓名、登记号、床号"))#'"
+						   style="width:208px;"/>
+					<div id="wardPatientCondition" 
+						 class="hisui-switchbox" 
+						 data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+					</div>
+				</div> 
+				<div data-options="region:'center',split:true"
+					 class="west_center_list" style="border-color: #ccc;">
+					<ul id="patientTree" 
+						data-options="animate:true,lines: true">
+					</ul>
+				</div> 
+			</div> 
+		</div-->
+		<csp:include page="nur.hisui.common.patientlistnew.csp"></csp:include>
+		<div data-options="region:'center',title:'',split:false" style="border:0;">
+			<!-- PDA执行记录 -->
+			<!--div class="right-order-record"-->
+				<div id="execute-record" class="hisui-panel" title="PDA执行记录" data-options="iconCls:'icon-paper-info',headerCls:'panel-header-gray',fit:true,minimizable:false,maximizable:false">	
+					<div id="toolbar">
+						<table class="search-table">
+							<tr>
+								<td class="r-label">#(..Get("开始日期"))#</td>
+								<td>
+									<input id="startDate" class="hisui-datebox" data-options="required:true" style="width:120px;">
+								</td>
+								<td class="r-label">
+									<input id="startTime" class="hisui-timespinner" style="border-radius: 2px;" style="width:86px">
+								</td>
+								<td class="td-checkbox">
+									<input class="hisui-checkbox" type="checkbox" name="orderType" label="长期" id="long">
+								</td>
+								<td class="r-label td-checkbox">
+									<input class="hisui-checkbox" type="checkbox" name="exeStatus" label="已执行" id="executed">
+								</td>
+								<td>
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="initTable(0)">查询</a>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">#(..Get("结束日期"))#</td>
+								<td>
+									<input id="endDate" class="hisui-datebox" data-options="required:true" style="width:120px;">
+								</td>
+								<td class="r-label">
+									<input id="endTime" class="hisui-timespinner" style="border-radius: 2px;" style="width:86px">
+								</td>
+								<td class="td-checkbox">
+									<input class="hisui-checkbox" type="checkbox" name="orderType" label="临时" id="temp">
+								</td>
+								<td class="r-label td-checkbox">
+									<input class="hisui-checkbox" type="checkbox" name="exeStatus" label="未执行" id="unexecute">
+								</td>
+							</tr>
+						</table>					
+					</div>
+					<div class="order-list">
+						<div id="orderTabs" class="hisui-tabs tabs-gray" data-options=""></div>
+					</div>					
+				</div>
+			<!--/div-->
+		</div>
+	</div>
+</body>
+</html>

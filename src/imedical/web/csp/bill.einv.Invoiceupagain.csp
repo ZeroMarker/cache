@@ -1,0 +1,170 @@
+<!-- 
+ * FileName: bill.einv.invoiceupagain.csp 
+ * Author: ZhaoZW
+ * Date: 2019-09-16
+ * Function: 电子票据补上传--jQuery hisui
+ * Description: 定义主体框架
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="x-ua-compatible" content="edge">
+	<meta http-equiv="Content-Type" content="text/html;">
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI/>
+	<style type="text/css">
+		html,body{
+			padding: 0;
+			margin: 0;
+		}
+		div,input{
+			border-radius:5px;
+		}
+		
+		.panel-icon, .panel-tool
+		{
+			position: absolute;
+			top:30%;
+			margin-top: -8px;
+			height:auto;
+		}
+		
+		.rowStyle{
+			clear:both;
+			text-align:left;
+			margin:10px 5px;
+			height:30px;
+		}
+		
+		.rowField{
+			float:left;
+		}
+		
+		.fieldLabel{
+			float:left;
+			font-size:13px;
+			font-weight:bold;
+			text-align:right;
+			width:70px;
+			padding-top:5px;
+		}
+   </style>
+    <script type="text/javascript" src="../scripts/bill.einv.commonprint.js"></script>
+   	<script type="text/javascript" src="../scripts/bill.einv.invoiceupagain.js"></script>
+   	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+   	
+   	<server>
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		do ##class(web.DHCXMLPConfig).LODOPInit()
+		///do ##class(web.DHCXMLPConfig).LODOPInit(1)  强制使用CLodop打印
+		w "<input id='GetCardTypeEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'/>",!
+		w "<input id='ReadCardTypeEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'/>",!
+		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'/>",!
+		w "<input id='CardTypeRowId' type='hidden'/>",!
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="height:140px">
+			<!--<div style="margin-top:10px;">-->
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',title:'未上传成功的电子票据信息'" style="border-radius:0 0 4px 4px;">
+				<div class="rowStyle">
+					<div class="rowField">
+						<div class="fieldLabel" style="width:100px;">开始日期:&nbsp;</div>
+						<input id="IUDStDate" name="IUDStDate" class="hisui-datebox textbox" style="width:120px"/>
+					</div>
+					<div class="rowField">
+						<div class="fieldLabel" style="width:100px;">结束日期:&nbsp;</div>
+						<input id="IUDEdDate" name="IUDEdDate" class="hisui-datebox textbox" style="width:120px"/>
+					</div>
+					<div class="rowField">
+						<div class="fieldLabel" style="width:100px;">登记号:&nbsp;</div>
+						<input id="rmarkNo" name="rmarkNo" class="hisui-validatebox textbox" style="width:120px"/>
+					</div>
+					<div class="rowField">
+						<div class="fieldLabel" style="width:100px;">院区:&nbsp;</div>
+						<input id="Hosptial" name="Hosptial" class="hisui-combogrid textbox" style="width:120px"/>
+					</div>
+				</div>
+				<div class="rowStyle">
+					<div class="rowField">
+						<div class="fieldLabel" style="width:100px;">业务类型:&nbsp;</div>
+						<input id="IUDPayAdmTypeCombo" name="IUDPayAdmTypeCombo" class="textbox" style="width:120px"/>
+					</div>
+					<div class="rowField">
+						<div class="fieldLabel" style="width:100px;">上传标志:&nbsp;</div>
+						<input id="EINVFlg" name="EINVFlg" class="textbox" style="width:120px"/>
+					</div>
+					<div class="rowField">
+						<div class="fieldLabel" style="width:100px;">卡号:&nbsp;</div>
+						<input id="CardNo" class="textbox" style="width:120px"/>
+					</div>
+					<div class="rowField" style="margin-left:100px">
+						<a href="#" id="IUDSearch" style="width:120px" class="hisui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+					</div>
+					<div class="rowField" style="margin-left:100px">
+						<a href="#" id="IUDPrint" style="width:120px" class="hisui-linkbutton" data-options="iconCls:'icon-print'">打印发票</a>
+					</div>
+					<div class="rowField" style="margin-left:100px">
+						<a href="#" id="PrintDirect" style="width:120px" class="hisui-linkbutton" data-options="iconCls:'icon-print'">打印小条</a>
+					</div>
+					
+				</div>
+				<!--<table cellspacing="0" cellpadding="0">
+					<tbody>
+						<tr>
+							<td><label align="right" for="IUDStDate"><span align="right">开始日期</span></label></td>
+							<td><input id="IUDStDate" class="hisui-datebox textbox"/></td>
+							<td>&nbsp&nbsp&nbsp</td>
+							<td><label align="right" for="IUDEdDate"><span align="right">结束日期</span></label></td>
+							<td><input id="IUDEdDate" class="hisui-datebox textbox" style="height: 30px;width: 150px;"/></td>
+							<td>&nbsp&nbsp&nbsp</td>
+							<td><label align="right" for="IUDPayAdmTypeCombo"><span align="right">业务类型</span></label></td>
+							<td><input id="IUDPayAdmTypeCombo" class="text" style="height: 30px;width: 150px;"/></td>
+							<td>&nbsp&nbsp&nbsp</td>
+							<td   class="r-label">院区</td>
+							<td><input id ="Hosptial" class="hisui-combogrid textbox" data-options=""></td>
+							<td   class="r-label">登记号</td>
+							<td><input id ="rmarkNo" class="hisui-validatebox textbox" data-options=""></td>
+							<td   class="r-label">开票标志</td>
+							<td><input id ="EINVFlg" class="textbox" data-options=""></td>
+							<td>&nbsp&nbsp&nbsp</td>
+							<td><a href="#" id="IUDSearch" class="hisui-linkbutton" data-options="iconCls:'icon-search'">查询</a></td>	
+							<td>&nbsp&nbsp&nbsp</td>
+							<!--<td><a href="#" id="IUDUpload" class="hisui-linkbutton" data-options="iconCls:'icon-upload'">票据上传</a></td>
+						</tr>
+					</tbody>
+				</table>-->
+			</div>
+		</div>
+		<div data-options="region:'center',border:false">
+			<!--<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top-style:dashed;border-radius:0 0 4px 4px;">
+				<table id="tBillIUD" class="hisui-datagrid" cellspacing="0" cellpadding="0"></table>
+			</div>
+			-->
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'电子票据信息',tools:'#Func-btn'" style="border-radius:0 0 4px 4px;">
+				<table class="hisui-datagrid" id="tBillIUD"></table>
+			</div>
+			
+			<div id="Func-btn" class="panel-tool">
+				<a id="IUDUploadSelected" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-knw-submit',plain:true" href="#">批量开票据</a> <!-- 这个按钮用来 一次性补开所有选择的电子票据 -->			
+				<a id="IUDUpload" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-knw-submit',plain:true" href="#">单张开票</a>
+				<!--a id="IUDUploadPInv" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true" href="#">开纸质票</a>
+				<a id="IUDCancel" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" href="#">票据撤销</a-->	
+				<a id="IUDReInvoice" style="width:120px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-reload',plain:true" href="#">电票换开</a>			
+			</div>
+	  	</div> 
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEINV">
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		</form>
+	</div>
+</body>
+</html>

@@ -25,7 +25,7 @@
             /*
             s preftab=$g(%request.Data("PREFTAB",1)) ;organise all tabs
             s orderentrywin=$g(%request.Data("OEWIN",1))
-            s extraitms=##Class(%CSP.Page).UnescapeURL($g(%request.Data("EXTRAPREFITEMS",1))) ;add tab's groupitems
+            s extraitms=##Class(websys.Page).UnescapeURL($g(%request.Data("EXTRAPREFITEMS",1))) ;add tab's groupitems
             i extraitms'="" {d ##Class(epr.PreferencesQuery).websysSaveOETabsUserAdd()}
             w "<SCR"_"IPT language='Javascript'>"_$c(13,10)
             w "var mainwin=window.open('','"_orderentrywin_"');",$c(13,10)
@@ -44,7 +44,7 @@
 	s formulary=$g(%request.Data("formulary",1))
 	s tabidx=$g(%request.Data("TABIDX",1)) ;organise one tab
 	s preftab=$g(%request.Data("PREFTAB",1)) ;organise all tabs
-	s extraitms=##Class(%CSP.Page).UnescapeURL($g(%request.Data("EXTRAPREFITEMS",1))) ;add tab's groupitems
+	s extraitms=##Class(websys.Page).UnescapeURL($g(%request.Data("EXTRAPREFITEMS",1))) ;add tab's groupitems
 	i extraitms'="" d ##Class(epr.PreferencesQuery).websysSaveOETabsUserAdd()
 	d ##Class(epr.PreferencesQuery).GetOEPrefDelims(.itemdataDelim,.groupitemDelim,.tabgroupDelim)
 	s FindDataXTYPE=""
@@ -59,6 +59,7 @@
 	;w "<BR>"_$zd($h,4)_","_$zt($p($h,",",2))_"CHART:",chartid_"</BR>"_$c(13,10)
 	w "<SCR"_"IPT language='Javascript'>"_$c(13,10)
 	;get the window with the order entry screen where this page was called from
+    s:(orderentrywin'="")&&(orderentrywin'["MWToken") orderentrywin=orderentrywin_$s(orderentrywin'["?":"?MWToken="_%session.SessionId,1:"&MWToken="_%session.SessionId)
 	w "var mainwin=window.open('','"_orderentrywin_"');",$c(13,10),$c(13,10)
 	if (FindDataXTYPE="L"){
 		w "mainwin.OEPrefChangeHandel('L')",$c(13,10)
@@ -134,6 +135,7 @@
 	w "if (self==top) window.close();"_$c(13,10)
 	i FocusWindowName'="",FocusWindowName'="undefined" d
         . ;Log 59598 - BC - 29-06-2006 : Change statusbar variable (status=) to display the status bar (=yes).
+    .s:(FocusWindowName'="")&&(FocusWindowName'["MWToken") FocusWindowName=FocusWindowName_$s(FocusWindowName'["?":"?MWToken="_%session.SessionId,1:"&MWToken="_%session.SessionId)
 	. w "var openwin = window.open("""",'"_FocusWindowName_"','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes');",$c(13,10)
 	. w "if (openwin) openwin.focus();",$c(13,10)
 	w "</SCR"_"IPT>",$c(13,10)

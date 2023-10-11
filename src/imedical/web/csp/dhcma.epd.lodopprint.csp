@@ -1,0 +1,334 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/css/base.css">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			border: none;
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+			font-size: 70%;
+		}
+		input {
+			border: none;
+			border-bottom: black solid 1pt;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0px;background-color:#FFF;">
+	<div id="Form">
+		<script language="Cache" RUNAT="SERVER">
+			Set EmptyString	= ""
+			Set ReportID=$g(%request.Data("ReportID",1))
+			Set ReportInfo=##Class(DHCMed.EPDService.LodopReportInfo).GetReportInfo(ReportID)
+			Set RepNo		= $p(ReportInfo,"^",1)
+			Set CardType	= $p(ReportInfo,"^",2)
+			Set PatName		= $p(ReportInfo,"^",3)
+			Set FamName		= $p(ReportInfo,"^",4)
+			Set PersonalID	= $p(ReportInfo,"^",5)
+			Set PatSex		= $p(ReportInfo,"^",6)
+			Set Birthday	= $p(ReportInfo,"^",7)
+			Set PatientAge	= $p(ReportInfo,"^",8)
+			Set AgeUnit		= $p(ReportInfo,"^",9)
+			Set Company		= $p(ReportInfo,"^",10)
+			Set TelPhone	= $p(ReportInfo,"^",11)
+			Set AreaDesc	= $p(ReportInfo,"^",12)
+			Set PatAdress	= $p(ReportInfo,"^",13)
+			Set Occupation	= $p(ReportInfo,"^",14)
+			Set MEPDDiagDegree	= $p(ReportInfo,"^",15)
+			Set MEPDSickKind	= $p(ReportInfo,"^",16)
+			Set MEPDSeverity	= $p(ReportInfo,"^",17)
+			Set SickDate	= $p(ReportInfo,"^",18)
+			Set DiagDate	= $p(ReportInfo,"^",19)
+			Set DiagDateTime= $p(ReportInfo,"^",20)
+			Set MEPDIsInEPD	= $p(ReportInfo,"^",21)
+			Set MEPDContr	= $p(ReportInfo,"^",22)
+			Set DeathDate	= $p(ReportInfo,"^",23)
+			Set RepDisease	= $p(ReportInfo,"^",24)
+			
+			Set Disease		= $p(ReportInfo,"^",25)
+			Set MEPDDelReason= $p(ReportInfo,"^",26)
+			Set RepLocDesc	= $p(ReportInfo,"^",27)
+			Set LocTelephone= $p(ReportInfo,"^",28)
+			Set RepUserName	= $p(ReportInfo,"^",29)
+			Set RepDate	= $p(ReportInfo,"^",30)
+			Set MEPDDemo	= $p(ReportInfo,"^",31)
+			
+			Set DicList 	= ##Class(DHCMed.EPDService.LodopReportInfo).GetRepDicList()
+			Set AgeUnitList = $Lg(DicList,1)
+			Set AreaList 	= $Lg(DicList,2)
+			Set SexList 	= $Lg(DicList,3)
+			Set CareerList 	= $Lg(DicList,4)
+			Set DiagnoseDegreeList = $Lg(DicList,5)
+			Set EpidemicSickQualityList = $Lg(DicList,6)
+			Set EpidemicSeverityList = $Lg(DicList,7)
+			Set EPDIsCheckList = $Lg(DicList,8)
+			Set EpidemicReviseReasonList = $Lg(DicList,9)
+			Set DiaList = ##Class(DHCMed.EPDService.EpidemicReportExport).GetEpidemic(RepDisease,MEPDSeverity)
+			
+			//CA签名
+			Set CASignImg=""	//Base64图片地址
+			Set CASignID=##class(DHCMed.CA.SignVerify).GetRepSignID("EPD","EPD",ReportID,"S")
+			Set:CASignID'="" CASignImg=##class(CA.BICAService).GetImageBySignID(CASignID)
+		</script>
+		<div style="font-size: 150%;font-weight: bold;text-align: center;margin-bottom:1em;">
+			<span>中华人民共和国传染病报告卡</span>
+		</div>
+		<div style="margin-bottom:0.5em;width:97%;font-size: 70%;">
+			<span style="float: left; margin-top: 3pt;">卡片编号:<span style='text-decoration: underline;'>&nbsp;#(RepNo)#&nbsp;</span></span>
+			<span style="float: right;">报卡类别*:
+				<span>1、<CSP:IF CONDITION="CardType=0"><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>初次报告</span>
+				<span>2、<CSP:IF CONDITION="CardType=1"><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>订正报告</span>
+				<span>
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EpidemicReviseReasonList))#>
+						<CSP:IF CONDITION="ZLInd=1">(</CSP:IF>
+						<CSP:IF CONDITION="(CardType=1)&&($Lg(EpidemicReviseReasonList,ZLInd)=MEPDDelReason)"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EpidemicReviseReasonList,ZLInd))#
+						<CSP:IF CONDITION="ZLInd=$Ll(EpidemicReviseReasonList)">)</CSP:IF>
+					</CSP:LOOP>
+				</span>
+			</span>
+		</div>
+		<table class="RepInfo" border="1" width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+		<tr>
+			<td>
+				姓名*
+			 	<input type='text' style='width:7em;text-align:center;' value=#(PatName)#>
+			 	(患儿家长姓名:
+			 	<input type='text' style='width:5em;text-align:center;' value=#(FamName)#>
+			 	)
+			</td>
+		</tr>
+		<tr>
+			<td>
+				有效证件号*:
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO="18">
+					<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+						#($e(PersonalID,ZLInd))#
+					</div>
+				</CSP:LOOP>
+				性别:
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(SexList))#>
+					<CSP:IF CONDITION="$Lg(SexList,ZLInd)=PatSex"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(SexList,ZLInd))#
+				</CSP:LOOP>
+			</td>
+		</tr>
+		<tr>
+			<td>出生日期*:
+				<script language="Cache" RUNAT="SERVER">
+			    	Set BirthdayYear=$p(Birthday,"-",1)
+			    	Set BirthdayMonth=$p(Birthday,"-",2)
+			    	Set BirthdayDay=$p(Birthday,"-",3)
+			    	Set Birthday = BirthdayYear_"年"_BirthdayMonth_"月"_BirthdayDay_"日"
+				</script>
+				<input type='text' style='width:8em;' value=#(Birthday)#>
+				（如出生日期不详,实足年龄:<input type='text' style='width:2.4em;text-align:center;' value=#(PatientAge)#>
+				年龄单位
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(AgeUnitList))#>
+					<CSP:IF CONDITION="$Lg(AgeUnitList,ZLInd)=AgeUnit"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(AgeUnitList,ZLInd))#
+				</CSP:LOOP>
+				）
+			</td>
+		</tr>
+		<tr>
+			<td>
+				工作单位(学校):
+				<input type='text' style='width:20em;' value=#(Company)#>
+				&nbsp;&nbsp;联系电话:
+				<input type='text' style='width:8em;' value=#(TelPhone)#>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				病人属于*:
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(AreaList))#>
+					<CSP:IF CONDITION="$Lg(AreaList,ZLInd)=AreaDesc"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(AreaList,ZLInd))#
+				</CSP:LOOP>
+			</td>
+			
+		</tr>
+		<tr>
+			<td>
+				现住址(详填)*:<input type='text' style='width:30em;' value=#(PatAdress)#>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				人群分类*:
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(CareerList))#>
+					<CSP:IF CONDITION="$Lg(CareerList,ZLInd)=Occupation"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(CareerList,ZLInd))#
+				</CSP:LOOP>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				病例分类*:(1)&nbsp;
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(DiagnoseDegreeList))#>
+					<CSP:IF CONDITION="$Lg(DiagnoseDegreeList,ZLInd)=MEPDDiagDegree"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(DiagnoseDegreeList,ZLInd))#
+				</CSP:LOOP>
+				<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(2)&nbsp;
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EpidemicSickQualityList))#>
+					<CSP:IF CONDITION="$Lg(EpidemicSickQualityList,ZLInd)=MEPDSickKind"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EpidemicSickQualityList,ZLInd))#
+				</CSP:LOOP>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<script language="Cache" RUNAT="SERVER">
+			    	Set SickDateYear=$p(SickDate,"-",1)
+			    	Set SickDateMonth=$p(SickDate,"-",2)
+			    	Set SickDateDay=$p(SickDate,"-",3)
+			    	Set DiagDateYear=$p(DiagDate,"-",1)
+			    	Set DiagDateMonth=$p(DiagDate,"-",2)
+			    	Set DiagDateDay=$p(DiagDate,"-",3)
+			    	Set DiagDateTime=$p($p(DiagDateTime," ",2),":",1)
+				</script>
+				发病日期*:
+				<input type='text' style='width:3em;text-align:center;' value=#(SickDateYear)#>年
+				<input type='text' style='width:1.2em;text-align:center;' value=#(SickDateMonth)#>月
+				<input type='text' style='width:1.2em;text-align:center;' value=#(SickDateDay)#>日
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				诊断日期*:
+				<input type='text' style='width:3em;text-align:center;' value=#(DiagDateYear)#>年
+				<input type='text' style='width:1.2em;text-align:center;' value=#(DiagDateMonth)#>月
+				<input type='text' style='width:1.2em;text-align:center;' value=#(DiagDateDay)#>日
+				<input type='text' style='width:1.2em;text-align:center;' value=#(DiagDateTime)#>时
+			</td>
+		</tr>
+		<tr>
+			<td>
+				是否为输入病例*:
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EPDIsCheckList))#>
+					<CSP:IF CONDITION="$Lg(EPDIsCheckList,ZLInd)=MEPDIsInEPD"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EPDIsCheckList,ZLInd))#
+				</CSP:LOOP>
+				&nbsp;&nbsp;
+				入境前居住或旅行的国家或地区:
+				<input type='text' style='width:10em;' value=#(MEPDContr)#>
+				
+			</td>
+		</tr>
+		<tr>
+			<td>
+				死亡日期:
+				<script language="Cache" RUNAT="SERVER">
+			    	Set DeathDateYear=$p(DeathDate,"-",1)
+			    	Set DeathDateMonth=$p(DeathDate,"-",2)
+			    	Set DeathDateDay=$p(DeathDate,"-",3)
+				</script>
+				<input type='text' style='width:3em;text-align:center;' value=#(DeathDateYear)#>年
+				<input type='text' style='width:1.2em;text-align:center;' value=#(DeathDateMonth)#>月
+				<input type='text' style='width:1.2em;text-align:center;' value=#(DeathDateDay)#>日
+			</td>
+		</tr>
+		</table>
+		<table class="RepInfo" border="1" width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td style="padding-top:0.5em;">
+					甲类传染病*：
+					<script language="Cache" RUNAT="SERVER">
+				    	Set AList=$p(DiaList,"^",1)
+					</script>
+					<span class='unicode-checked'>#(AList)#</span>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border="1" width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td style="padding-top:0.5em;">
+					乙类传染病*：
+					<script language="Cache" RUNAT="SERVER">
+				    	Set BList=$p(DiaList,"^",2)
+					</script>
+					<span class='unicode-checked'>#(BList)#</span>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border="1" width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td style="padding-top:0.5em;">
+					丙类传染病*：
+					<script language="Cache" RUNAT="SERVER">
+				    	Set CList=$p(DiaList,"^",3)
+					</script>
+					<span class='unicode-checked'>#(CList)#</span>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border="1" width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td style="padding-top:0.5em;">
+					其他法定管理以及重点监测传染病*：
+					<script language="Cache" RUNAT="SERVER">
+				    	Set DList=$p(DiaList,"^",4)
+					</script>
+					<span class='unicode-checked'>#(DList)#</span>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border="1" width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr style="padding-top:0.5em;">
+				<CSP:IF CONDITION='Disease=""'>
+					<CSP:ELSE>
+					<td style="width:6em;padding-left:0.5em;padding-bottom:0.5em;">
+						订正病名:
+						<input type='text' style='width:16em;' value=#(Disease)#>
+					</td>
+				</CSP:IF>
+				<td style="width:6em;padding-left:0.5em;padding-bottom:0.5em;">
+					退卡原因:
+					<input type='text' style='width:16em;' value=#(MEPDDelReason)#>
+				</td>
+			</tr>
+			<tr>
+				<td style="width:6em;padding-left:0.5em;padding-bottom:0.5em;">
+					报告单位:
+					<input type='text' style='width:16em;' value=#(RepLocDesc)#>
+				</td>
+				<td style="width:6em;padding-left:0.5em;padding-bottom:0.5em;">
+					联系电话:
+					<input type='text' style='width:16em;' value=#(LocTelephone)#>
+				</td>
+			</tr>
+			<tr>
+				<td style="width:6em;padding-left:0.5em;padding-bottom:0.5em;">
+					填卡医生*:
+					<CSP:IF CONDITION="CASignImg=EmptyString">
+						<input type='text' style='width:16em;' value=#(RepUserName)#>
+					<CSP:ELSE >
+						<div style='width:16em; text-decoration:underline;display:inline;'>
+							<img src="data:image/png;base64,#(CASignImg)#" alt="CA签名" style="height:20px;" />
+						</div>
+					</CSP:IF>
+				</td>
+				<td style="width:6em;padding-left:0.5em;padding-bottom:0.5em;">
+					填卡日期*:
+					<input type='text' style='width:16em;' value=#(RepDate)#>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border="1" width="97%" heigth="12em" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td style="width:4em;padding-left:0.5em;padding-bottom:0.5em;">
+					备注:
+				</td>
+				<td colspan="3" style="width:18em;padding-left:0.5em;padding-bottom:0.5em;height:4em;">
+					#(MEPDDemo)#
+				</td>
+			</tr>
+		</table>
+	</div>
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

@@ -20,16 +20,20 @@
 #ScheduleList .datagrid-row-over,#ScheduleList .datagrid-row-selected{
         background-color: #ffffff;
 }
-#ScheduleList .datagrid-body [class="datagrid-cell-c2-Week"]:hover{
+#ScheduleList .datagrid-body [class*="datagrid-cell-c2-Week"]:hover{
     text-decoration: underline;
     font-weight: bolder;
     color:blue;
 }
-#ScheduleList .datagrid-body [class="datagrid-cell-c2-Week"]:hover{
+#ScheduleList .datagrid-body [class*="datagrid-cell-c2-Week"]:hover{
 	cursor:pointer;
     text-decoration: underline;
     font-weight: bolder;
     color:blue;
+}
+#ScheduleList tr:hover {
+    background: #dcf0ff;
+    cursor: default;
 }
 .inactive{
 	background-color:#f64c60;
@@ -55,24 +59,24 @@ iframe{
 }
 </style>
 <Server>
-Write "<SCRIPT language = 'javascript' >",!
-	Write $CHAR(9),"var TRArr=new Array();",!
-	Set Rowid=0
-	For  Set Rowid=$ORDER(^DHCTimeRange(Rowid)) Quit:Rowid=""  Do
-	.Set SttTime=$PIECE(^DHCTimeRange(Rowid),"^",3)
-	.Set SttTime=$ZTIME(+SttTime)
-	.Set EndTime=$PIECE(^DHCTimeRange(Rowid),"^",4)
-	.Set EndTime=$ZTIME(+EndTime)
-	.Write $CHAR(9),"TRArr["_Rowid_"]='"_SttTime_"^"_EndTime_"';",!
+w "<SCRIPT language = 'javascript' >",!
+	w $C(9),"var TRArr=new Array();",!
+	s Rowid=0
+	f  s Rowid=$O(^DHCTimeRange(Rowid)) q:Rowid=""  d
+	.s SttTime=$P(^DHCTimeRange(Rowid),"^",3)
+	.s SttTime=$ZT(+SttTime)
+	.s EndTime=$P(^DHCTimeRange(Rowid),"^",4)
+	.s EndTime=$ZT(+EndTime)
+	.w $C(9),"TRArr["_Rowid_"]='"_SttTime_"^"_EndTime_"';",!
 	
-	Write $CHAR(9),"var APTMArr=["
-	Set Rowid=0,count=0
-	For  Set Rowid=$ORDER(^RBC("APTM",Rowid)) Quit:Rowid=""  Do
-	.Set Desc=$PIECE(^RBC("APTM",Rowid),"^",2)
-	.If $INCREMENT(count)>1 Write ","
-	.Write "{'Rowid':'"_Rowid_"','Desc':'"_Desc_"'}"
-	Write "];",!
-Write "</SCRIPT>"
+	w $C(9),"var APTMArr=["
+	s Rowid=0,count=0
+	f  s Rowid=$O(^RBC("APTM",Rowid)) q:Rowid=""  d
+	.s Desc=$P(^RBC("APTM",Rowid),"^",2)
+	.i $I(count)>1 w ","
+	.w "{'Rowid':'"_Rowid_"','Desc':'"_Desc_"'}"
+	w "];",!
+w "</SCRIPT>"
 </Server>
 </head>
 <body>
@@ -80,8 +84,17 @@ Write "</SCRIPT>"
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
+			pageCode:"opadm.scheduletemplate.hui.csp",
+			pageName:"排班模板维护",
+			ProductLine:"OPAdm",
+			parentPageCode:"",
+			parentPageName:"",
+			MainCSPIsLink:"N",
+			domSelectors:".hisui-numberbox^.hisui-radio",
+			domNotSelectors:"#selTempl^#selIntervalTime^#TRASLoad^#IntervalTime"
 		};
 	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/Schedule.tools.js"></SCRIPT>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>

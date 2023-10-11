@@ -1,0 +1,135 @@
+<!-- 
+ * FileName: dhcinsu.divmonstmt.csp
+ * Date: 2021-06-09
+ * Creator DingSH
+ * Description: 对账清算上传
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html;"-->
+<!--<title>医保对账</title>-->
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCBILL/>
+<server>
+	set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+</server>
+<script type="text/javascript" src="../scripts/jsonfun.js" ></script>
+<link rel="stylesheet" type="text/css" href="#(##class(INSU.Util.Library).#CSSPath)#dhcinsu.divmonstmt.css"/>
+<!--如果浏览器不支持原生的Promise请放开如下一行数据-->
+<!--script type="text/javascript">
+ if(websys_isIE){
+	 $.getScripts("../scripts/dhcbill/plugin/browser/browser-polyfill.js");
+	 }
+</script-->
+	<style>
+	.layout-body{
+		border-radius:0px !important;
+	}
+	#DZYC .layout-body{
+    	border-radius:0px 0px 4px 4px !important;
+	}
+	</style>
+</head>
+
+<body style='padding:10px'>
+	<div class="hisui-layout" data-options="fit:true">
+		<!--查询条件-->
+		<div  data-options="region:'north',title:'对账清算上传',#($s((defUIVersion="lite"):"",1:"headerCls:'panel-header-gray',"))#iconCls:'icon-int-bill',showCollapsedTitle:true" style="height:128px;">
+			<table class='search-table'  >
+				<tr>
+					<td class="r-label"><label>开始日期</lable></td>
+					<td><input id="stdate" class="hisui-datebox" name="stdate"/></td>
+					<td class="r-label "><label>医保类别</label></td>
+					<td><input id="hiType" class="hisui-combobox" /></td>
+					<td class="r-label "><label>医疗机构</label></td>
+				    <td><input id="InsuHospCode" class="hisui-combobox" /></td>
+				    <td class="r-label "><label>对账类型</label></td>
+					<td><input id="blModType" class="hisui-combobox" /></td>
+					<!--<td class="r-label "><label>结算经办机构</label></td>
+					<td><input id="setlOptins" class="hisui-combobox" /></td>-->
+					<td class="r-label"><a id="btnDivSumQuery" href="#" class="hisui-linkbutton" style="width:120px" data-options="iconCls:'icon-w-find'" >查询</a></td>
+					<!--<td class="r-label " ><a id="btnDivSumCreate" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >生成对账数据</a></td>-->
+					<!--<td class="r-label "><a id="btnImportThirdDet" href="#" class="hisui-linkbutton" style="width:160px" data-options="iconCls:'icon-w-import',stopAllEventOnDisabled:true" >导入第三方明细</a></td>-->
+					<td><a id="btnDivSumConfirm" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-submit',stopAllEventOnDisabled:true" >对总账</a></td>
+					<td class="r-label"><a id="btnClrAppy" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-submit',stopAllEventOnDisabled:true" >清算申请</a></td>
+				</tr>
+				<tr>	
+					<td class="r-label"><label>结束日期</label></td>
+					<td><input id="endate" class="hisui-datebox"  name="endate"/></td>
+					<td class="r-label "><label>对账状态</label></td>
+					<td><input id="blStatus" class="hisui-combobox" /></td>
+					<td class="r-label "><label>清算类别</label></td>
+					<td><input id="clrType" class="hisui-combobox" /></td>
+					<td class="r-label "><label>险种类型</label></td>
+					<td><input id="insutype" class="hisui-combobox" /></td>
+					<td class="r-label ">
+						<a href="javascript:void(0)" id="menubtn-blue" class="hisui-menubutton menubutton-blue" style="width:120px;" data-options="menu:'#mm-blue'">数据操作</a>
+						<div id="mm-blue" style="width:140px;">   
+						   <div id="btnSynHisDiv" >同步HIS数据</div>  
+						   <div id="btnDivSumCreate" >生成对账数据</div> 
+						   <div id="btnDivSumCreateDel" >作废对账数据</div>
+						   <div id="btnImportThirdDet" >导入第三方明细</div>
+						   <div id="btnImportDet" >导入医保明细</div>
+						</div>
+					</td>
+					<!--<td class="r-label "><a id="btnSynHisDiv" href="#" class="hisui-linkbutton" style="width:140px" data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >同步HIS数据</a></td>-->
+					<!--<td class="r-label "><a id="btnDivSumCreateDel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" >作废对账数据</a></td>
+					<td class="r-label "><a id="btnImportDet" href="#" class="hisui-linkbutton" style="width:160px" data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >导入医保明细</a></td>-->
+					<td><a id="btnDivDetConfirm" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" >对明细账</a></td>
+					<td class="r-label"><a id="btnClrAppyCancel" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" >清算撤销</a></td>
+				</tr>
+			</table>
+		</div>
+		<!--查询展示-->
+		<div data-options="region:'center'" style="border:0">
+			<div class="hisui-layout" data-options="fit:true" style="background-color:#f5f5f5">
+				 <div id="north-p" data-options="region:'north',bodyCls:'panel-header-gray',split:true" style="height:380px;padding:0px;border-radius:0px;">
+				     <div id="ballist" class="hisui-datagrid" ></div>
+				 </div>
+		         <div data-options="region:'center',title:''" style="border:0;padding:0px;border-radius:4px;">	
+                      <div id="ttstmt" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools',fit:true,headerCls:'panel-header-gray'">   
+                            <div div title="对账明细" data-options="headerCls:'panel-header-gray'" style="overflow:auto;">   
+                                <!--div data-options="fit:true" style="border-radius:4px;padding:10px;"--> 
+								<table id="divdetdg" ></table>
+                            </div> 
+                            <div id="DZYC" title="对账异常明细" data-options="closable:true" style="overflow:auto;padding:10px;">   
+                                <div class="hisui-layout" data-options="fit:true" >
+                                    <div data-options="region:'west',title:'医保异常数据',tools:'#titlebtn',split:true,#($s((defUIVersion="lite"):"",1:"headerCls:'panel-header-gray',"))#iconCls:'icon-cancel-int-bill',showCollapsedTitle:'true'" style="padding:0px;width:1000px;border-radius:0;">	
+                                        <div id="titlebtn">
+											<a id="btnCenterErrEpot" href="#" style="width:50px;height:15px;background:none" >导出</a>
+											<a id="btnStrikeForInsu" href="#" style="width:50px;height:15px;background:none" >处理</a>
+										</div>
+										<div id="centererrdg"></div>	
+                                    </div>
+                                    <div data-options="region:'center',title:'HIS异常数据',tools:'#titlehisbtn',headerCls:'panel-header-gray',iconCls:'icon-cancel-int-bill'" style="border-radius:4px;padding:0px;">
+                                        <div id="titlehisbtn">
+                                            <a id="btnHisErrEpot" href="#" style="width:50px;height:15px;background:none" >导出</a>
+                                            <a id="btnStrikeForHis" href="#" style="width:50px;height:15px;background:none" >处理</a>
+                                        </div>				
+                                        <div id="hiserrdg"></div>
+                                    </div>
+                                </div>
+                            </div>           
+                      </div>
+                 </div>
+		 	</div>
+		</div>
+	  </div>
+	<div id="ShwBlRsdl" class="hisui-window" title="对账结果详细" data-options="modal:true,closed:true,iconCls:'icon-w-edit',collapsible:false,minimizable:false,maximizable:false" style="width:600px;height:330px;padding:10px 5px 5px 10px">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'center',border:false" >
+				<textarea id="blResult"  data-options="multiline:true" style='width:98%;height:97%' class="textbox" ></textarea>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcinsu/divmonstmt.js" ></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js" ></script>
+</body>
+</html>

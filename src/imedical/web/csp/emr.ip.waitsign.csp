@@ -1,15 +1,27 @@
-﻿<html>
+﻿ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+        i ##Class(websys.SessionEvents).SessionExpired() 
+		q 1
+</csp:method>
+<html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
     <HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 	<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")
 		s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
 		s locID = $g(%session.Data("LOGON.CTLOCID"))
 		s CTLOCType = $p($g(^CTLOC(locID)),"^",13)
 		s HospitalName = ##Class(EMRservice.BOSysOption).GetValueByName("HospitalName")
 		s:(HospitalName = "") HospitalName = "DtHealth"
 		s docID = ##Class(EMRservice.SystemParameter).GetMedicalRecordDocID()
+		s chineseDocID = ##Class(EMRservice.SystemParameter).GetChineseMedicalRecordDocID()
+		//doctor/nurse，根据医护人员类型判断
+		s userType = "doctor"
+		s isNurse = ##Class(EMRservice.BL.BLTemplateSign).UserIsNur(userID)
+		s:(isNurse = "1") userType = "nurse"
 	</script>
 
     <script language = "javascript">
@@ -41,82 +53,80 @@
 		var defaultRadio = "currentGroup";
 		var HospitalName = '#(HospitalName)#';
 		var docID = '#(docID)#';
+		var chineseDocID = '#(chineseDocID)#';
+		var curindex = undefined;
+		var userID = '#(userID)#';
+		var userType = '#(userType)#';
     </script>
+    <style>
+    .row{
+			margin:10px;
+		}
+		
+	.item{
+			margin-right:35px;
+			margin-left:13px;
+		}
+	.first{
+			margin-left:72px;
+		}
+	.right{
+			margin-right:10px;
+		}
+	.left{
+			margin-left:10px;
+		}
+	.currentUser{
+			margin-right:9px;
+			margin-left:2px;
+		}
+	.currentGroup{
+		margin-left:10px;
+		}
+  </style>
     <title>待签患者查询</title>
 </head>
-<body class="hisui-layout" data-options="fit:true,border:false">
-    <div  data-options="region:'north'"title="待签患者查询" style="height:140px;"  > 
-
-	<table class="tableStyle01" style="width:100%; height:80% " >
-		<tr >
-			<td >
-				&nbsp;&nbsp;#(..Get("待签操作："))#
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SignAction" id="Check" checked=true value="Check" >#(..Get("病历医师签名"))#</input>
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SignAction" id="attendingCheck" value="attendingCheck" >#(..Get("主治医师签名"))#</input>
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SignAction" id="viceChiefCheck" value="viceChiefCheck^chiefCheck" onclick="changeType()" >#(..Get("(副)主任医师签名"))#</input>
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SignAction" id="chairmanCheck" value="chairmanCheck" onclick="changeType()" >#(..Get("科主任签名"))#</input>
-				</td>
-				<td >
-				<input class='hisui-radio' type="radio" name="SignAction" id="patientSign" value="patientSign" >#(..Get("患者签名"))#</input>
-			</td>
-		</tr>	
-		<tr>
-			<td >
-				&nbsp;&nbsp;#(..Get("查询方式："))#
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SearchType" id="inpat" checked=true value="inpat" >#(..Get("在院患者"))#</input>
-			</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SearchType" id="outthreedays" value="2" >#(..Get("出院3天"))#</input>
-			</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SearchType" id="outsevendays" value="6" >#(..Get("出院7天"))#</input>
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="SearchType" id="outdate" value="outdate" >
-					#(..Get("出院日期"))# <input  class="hisui-datebox textbox"  id="startDate" data-options="formatter:Dateformatter,parser:Dateparser,width:120"></input>
-					<input  class="hisui-datebox textbox"  id="endDate" data-options="formatter:Dateformatter,parser:Dateparser,width:120"></input>
-				</input>
-				</td>
-				<td >
-				<input  class='hisui-radio' type="radio" name="SearchType" id="papmiNo" value="papmiNo">&nbsp;&nbsp;#(..Get("登记号"))# <input class="hisui-validatebox" id="patientNo" style="width:90px"/></input>
-			</td>
-			<td align='center'>
-				<a id="PatientListQuery" href="#" class="hisui-linkbutton" >#(..Get("查询"))#</a>
-			</td>
-		</tr>	
-		<tr>
-			<td>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="PatientType" id="currentUser" value="currentUser" >#(..Get("本人主管患者"))#</input>
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="PatientType" id="currentGroup" checked=true value="currentGroup" >#(..Get("本医疗组患者"))#</input>
-				</td>
-				<td>
-				<input class='hisui-radio' type="radio" name="PatientType" id="currentLoc" value="currentLoc" >#(..Get("本科室患者"))#</input>
-				&nbsp;&nbsp;&nbsp;
-				</td>
-				<td>
-				<div id="GroupSign" href="#" class="hisui-linkbutton">#(..Get("集中签名页面"))#</div>
-			</td>
-		</tr>	
-	</table>
-
-    </div>
-    <div data-options="region:'center',border:false">
-    	<table id="patientListData"></table>
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+	    <div data-options="region:'north',headerCls:'panel-header-gray',iconCls:'icon-paper',showCollapsedTitle:true" title="待签患者查询" style="height:160px;"  > 
+			<table class="tableStyle01" style="width:100%; height:80% " >
+				 <div id="signAction" class="row">
+					<span>#(..Get("待签操作"))#</span>
+				</div>
+				<div class="row">
+					<span>#(..Get("查询方式"))#</span>
+					<span class="item"><input class='hisui-radio' type="radio" name="SearchType" id="inpat" checked=true value="inpat"/><label>#(..Get("在院患者"))#</label></span>
+					<span class="item"><input class='hisui-radio' type="radio" name="SearchType" id="outthreedays" value="2"/><label>#(..Get("出院3天"))#</label></span>
+					<span class="item"><input class='hisui-radio' type="radio" name="SearchType" id="outsevendays" value="6"/><label>#(..Get("出院7天"))#</label></span>
+					<span class="item"><input class='hisui-radio' type="radio" name="SearchType" id="papmiNo" value="papmiNo"><label class="right">登记号</label><input class="hisui-validatebox" id="patientNo" style="width:90px"/></span>
+					<span class="item"><input class='hisui-radio' type="radio" name="SearchType" id="outdate" value="outdate" >#(..Get("出院日期："))#
+						<label class="right">#(..Get("起始"))#</label><input  class="hisui-datebox textbox"  id="startDate" data-options="width:120"></input>
+						<label class="right left">#(..Get("截止"))#</label><input  class="hisui-datebox textbox"  id="endDate" data-options="width:120"></input>
+						</input></span>
+				</div>
+				<div class="row">
+					<span class="first"></span>
+					<span id="searchPatientType">
+						<span class="currentUser"><input class='hisui-radio' type="radio" name="PatientType" id="currentUser" value="currentUser"/><label>#(..Get("本人主管患者"))#</label></span>
+						<span class="currentGroup"><input class='hisui-radio' type="radio" name="PatientType" id="currentGroup" value="currentGroup"/><label>#(..Get("本医疗组患者"))#</label> </span>
+						<span class="right" style="margin-left:13px;"><input class='hisui-radio' type="radio" name="PatientType" id="currentLoc" value="currentLoc" checked=true/><label>#(..Get("本科室患者"))#</label></span>
+					</span>
+					<span class="item"><div id="GroupSign" href="#" class="hisui-linkbutton">#(..Get("集中签名页面"))#</div><label></label></span>
+					<span class="item"><a id="PatientListQuery" href="#" class="hisui-linkbutton" >#(..Get("查询"))#</a></span>
+				</div>
+			</table>
+	    </div>
+	    <div id="patlistdiv" data-options="region:'west',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" style="width:600px;height:100%;padding-top:10px;">
+	    	<div class="hisui-panel" title="患者信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+	    		<table id="patientListData"></table>
+	    	</div>
+		</div>
+		<div id="recordDiv" data-options="region:'center',title:'',split:true,border:false" style="padding:10px 0px 0px 5px;">
+			<div class="hisui-panel" data-options="bodyCls:'panel-body-gray',iconCls:'icon-paper',fit:true,border:false">
+				<div id="noRecordpngdiv" style="border:1px solid #cccccc;height:99.7%;border-radius:4px"></div>
+				<iframe id="frameRecord" src="" frameborder=0 style="width:100%;height:100%;"></iframe>
+			</div>
+		</div>
 	</div>
     <script type="text/javascript" src="../scripts/emr/js/ip.waitsign.js"></script>    
 </body>

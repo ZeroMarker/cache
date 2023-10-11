@@ -2,6 +2,7 @@
 	csp：pha.cpw.v2.viewdocs.csp
 	scripts: scripts/pha/cpw/v2/viewdocs.js
  -->
+<!DOCTYPE html>
 <HTML XMLNS=TRAK>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
     d ##Class(websys.SessionEvents).SessionExpired() q 1
@@ -12,6 +13,7 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
+    <EXTHEALTH:EXT321/>
     <HISUI/>
     <PHACPWV2/>
 	<style>
@@ -106,107 +108,149 @@
         .pha-uploader .hisui-validatebox {
             width: 200px;
         }
+        textarea {
+	    	padding: 0px;    
+	    }
     </style>
 </HEAD>
 </head> 
 <body>
 	<div id="mainpanel" class="hisui-layout" fit="true">
-		<div data-options="region:'north',split:false,headerCls:'panel-header-gray',title:'文献阅读',iconCls:'icon-paper'" style="border-radius: 4px;" class="cpw-north-r2" >
-			<table class="cpw-north-tb">
-				<tr>
-					<td>
-						<label for="stDate">开始日期</label>
-						<input id="stDate" type="text" class="hisui-datebox cpw-date" required="required"/>
-					</td>
-					<td>
-						<label for="title">主题</label>
-						<input id="title" class="hisui-validatebox cpw-validatebox"/>
-					</td>
-					<td>
-						<label for="keywords">关键字</label>
-						<input id="keywords" class="hisui-validatebox cpw-validatebox"/>
-					</td>
-					<td><a href="#" class="hisui-linkbutton" iconCls="icon-search" onclick="javascript:queryList()">查询</a></td>
-					<td><a href="#" class="hisui-linkbutton" iconCls="icon-add" onclick="javascript:addNewRec()">新建</a></td>
-					<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" onclick="javascript:downloadDocRec()">下载</a></td>
-				</tr>
-				<tr>
-					<td>
-						<label for="endDate">结束日期</label>
-						<input id="endDate" type="text" class="hisui-datebox cpw-date" required="required"/>
-					</td>
-					<td>
-						<label for="author">作者</label>
-						<input id="author" class="hisui-validatebox cpw-validatebox" data-options="valueField:'value',textField:'text'"/>
-					</td>
-					<td colspan=2><a href="#" id="Audit" class="hisui-linkbutton" iconCls="icon-accept" onclick="javascript:viewDocRec()">浏览</a></td>
-					<td><a href="#" class="hisui-linkbutton" iconCls="icon-edit" onclick="javascript:modefiRecord()">修改</a></td>
-					<td><a href="#" class="hisui-linkbutton" iconCls="icon-remove" onclick="javascript:deleteDoc()">删除</a></td>
-				</tr>
-			</table>
-		</div>
-		<div data-options="region:'center'">
+		<div data-options="region:'center',border:false" style="padding:10px;">
 			<table id="docList"></table>
 		</div>
 	</div>
-	<div id="winAdd" style="padding:10px;padding-right:20px;">
-		<table class="cpw-north-tb" style="text-align: center;">
-			<tr>
-				<td style="width:65px;">
-					<label for="txtTitle"><b style="color:red">*</b>主题</label>
-				</td>
-				<td>
-					<input id="txtTitle" class="hisui-validatebox" style="width:99.3%;" />
-				</td>
-			</tr>
-			<tr>
-				<td colspan=2 style="text-align: left;">
-					<div class="pha-col" style="width:60px;text-align: right;padding-left:5px;margin:0 6px 0 0">
-						<label for="txtAuthor">作者</label>
-					</div>
-					<input id="txtAuthor" class="hisui-validatebox"/>
-					<label for="docDate" style="margin-left:20px;">文献日期</label>
-					<input id="docDate" type="text" class="hisui-datebox"/>
-					<div class="pha-col">
-						<div id="PHA_UPLOAD_BtnAdd" style="margin-left:20px;width:120px;"></div>
-					</div>
-					<div class="pha-col" id="tdUPLOAD">
-					</div>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<label for="txtKeywords"><b style="color:red">*</b>关键字</label>
-				</td>
-				<td>
-					<input id="txtKeywords" class="hisui-validatebox" style="width:99.3%;" />
-				</td>
-			</tr>
-			<tr style="height:125px;">
-				<td>
-					<label for="content"><b style="color:red">*</b>主要内容</label>
-				</td>
-				<td>
-					<textarea id="content" rows="5" cols="150" style="width:100%;" ></textarea>
-				</td>
-			</tr>
-			<tr style="height:75px;">
-				<td>
-					<label for="liters">相关文献</label>
-				</td>
-				<td>
-					<textarea id="liters" rows="3" cols="150" style="width:100%;"></textarea>
-				</td>
-			</tr>
-			<tr style="height:75px;">
-				<td>
-					<label for="txtRemark">备注</label>
-				</td>
-				<td>
-					<textarea id="txtRemark" rows="3" cols="150" style="width:100%;"></textarea></div>
-				</td>
-			</tr>
-		<table>
+
+	<div id="docListToolbar">
+		<div class="pha-row">
+			<div class="pha-col">
+				<label for="stDate">#(..Get("开始日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="stDate" class="hisui-datebox" required="required"/>
+			</div>
+			<div class="pha-col">
+				<label for="title">#(..Get("主题"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="title" class="hisui-validatebox"/>
+			</div>
+			<div class="pha-col">
+				<label for="keywords">#(..Get("关键字"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="keywords" class="hisui-validatebox"/>
+			</div>
+			<div class="pha-col">
+				<a href="#" class="hisui-linkbutton" iconCls="icon-w-find" onclick="javascript:queryList()">查询</a>
+			</div>
+			<div class="pha-col">
+				<a href="#" class="hisui-linkbutton" iconCls="icon-w-add" onclick="javascript:addNewRec()">新建</a>
+			</div>
+			<div class="pha-col">
+				<a href="#" class="hisui-linkbutton" iconCls="icon-w-download" onclick="javascript:downloadDocRec()">下载</a>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col">
+				<label for="endDate">#(..Get("结束日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="endDate" class="hisui-datebox" required="required"/>
+			</div>
+			<div class="pha-col">
+				<label for="author">#(..Get("作者"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="author" class="hisui-validatebox" data-options="valueField:'value',textField:'text'"/>
+			</div>
+			<div class="pha-col" style="visibility:hidden;">
+				<label>占位置</label> <!-- 为了对齐，占个位置 -->
+			</div>
+			<div class="pha-col" style="visibility:hidden;">
+				<input class="hisui-validatebox"/>
+			</div>
+			<div class="pha-col">
+				<a href="#" id="Audit" class="hisui-linkbutton" iconCls="icon-w-eye" onclick="javascript:viewDocRec()">浏览</a>
+			</div>
+			<div class="pha-col">
+				<a href="#" class="hisui-linkbutton" iconCls="icon-w-edit" onclick="javascript:modefiRecord()">修改</a>
+			</div>
+			<div class="pha-col">
+				<a href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="javascript:deleteDoc()">删除</a>
+			</div>
+		</div>
+	</div>
+	<div id="winAdd" style="width:890px;">
+		<div>
+			<div class="pha-row">
+				<div class="pha-col">
+					<label for="txtTitle">&ensp;&ensp;&ensp;<b style="color:red">*</b>#(..Get("主题"))#</label>
+				</div>
+				<div class="pha-col">
+					<input id="txtTitle" class="hisui-validatebox textbox" style="width:798px;"/>
+				</div>
+			</div>
+			<div class="pha-row">
+				<div class="pha-col">
+					<label for="txtAuthor">&ensp;&ensp;&ensp;&ensp;#(..Get("作者"))#</label>
+				</div>
+				<div class="pha-col">
+					<input id="txtAuthor" class="hisui-validatebox textbox"/>
+				</div>
+				<div class="pha-col">
+					<label for="docDate">#(..Get("文献日期"))#</label>
+				</div>	
+				<div class="pha-col">
+					<input id="docDate" class="hisui-datebox"/>
+				</div>
+				<div class="pha-col">
+					<div id="PHA_UPLOAD_BtnAdd"></div>
+				</div>
+				<div id="tdUPLOAD" class="pha-row" style="display:inline;">
+				</div>
+			</div>
+			<div class="pha-row">
+				<div class="pha-col">
+					<label for="txtKeywords">&ensp;<b style="color:red">*</b>#(..Get("关键字"))#</label>
+				</div>
+				<div class="pha-col">
+					<input id="txtKeywords" class="hisui-validatebox textbox" style="width:798px;"/>
+				</div>
+			</div>
+			<div class="pha-row">
+				<div class="pha-col">
+					<label for="content"><b style="color:red">*</b>#(..Get("主要内容"))#</label>
+				</div>
+				<div class="pha-col">
+					<textarea id="content" rows="5" cols="150" style="width:798px;padding:0 0 0 5px;margin-left:-7px;border-radius:2px;"></textarea>
+				</div>
+			</div>
+			<div class="pha-row">
+				<div class="pha-col">
+					<label for="liters">#(..Get("相关文献"))#</label>
+				</div>
+				<div class="pha-col">
+					<textarea id="liters" rows="3" cols="150" style="width:798px;padding:0 0 0 5px;border-radius:2px;"></textarea>
+				</div>
+			</div>
+			<div class="pha-row">
+				<div class="pha-col">
+					<label for="txtRemark">&ensp;&ensp;&ensp;&ensp;#(..Get("备注"))#</label>
+				</div>
+				<div class="pha-col">
+					<textarea id="txtRemark" rows="3" cols="150" style="width:798px;padding:0 0 0 5px;height:100%;border-radius:2px;"></textarea></div>
+				</div>
+			</div>
+			<div class="pha-row" style="text-align:center;">
+				<div class="pha-col">
+					<a href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="javascript:SaveDataBtn()">保存</a>
+				</div>
+				<div class="pha-col">
+					<a href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="javascript:closeNewWin()">关闭</a>
+				</div>
+			</div>
+		</div>
 	</div>	
     <script type="text/javascript" src="../scripts/pha/plugins/webuploader/dist/webuploader.js"></script>
 	<script type="text/javascript" src="../scripts/pha/cpw/v2/viewdocs.js"></script>

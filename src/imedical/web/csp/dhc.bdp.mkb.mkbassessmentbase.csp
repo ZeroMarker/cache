@@ -1,0 +1,178 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbassessmentbase.csp
+    @JS:MKB_AssessmentBase.js
+    @Title：评估表注册
+    @Creator:石萧伟
+    @Description:评估表注册
+    @CreateDate：2018-05-02
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+
+<style>
+ .pagination-info,.pagination-page-list{
+         display:none;
+     }
+::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+    color: gray;
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+   color:    gray;
+   opacity:  1;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+   color:    gray;
+   opacity:  1;
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+   color:    gray;
+}   
+</style>
+</HEAD>
+<BODY>
+     <div class="hisui-layout" data-options="fit:true" id="layout">
+
+     	<!--中心操作区-->
+		<div id="layoutcenter" data-options="region:'center',split:true" border="false"  style="border-color:#cccccc;padding:4px 4px 4px 0px">
+			<div class="hisui-layout hisui-panel" data-options="fit:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="评估表维护" border="true" style="padding:0px 0px 30px 0px">
+				<div class="datagrid-toolbar" data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;overflow:hidden" border="false">
+				   <a href="#" class="hisui-linkbutton l-btn-6" data-options="iconCls:'icon-mappingknow',plain:true,stopAllEventOnDisabled:true" id="btnAddBase">注册新评估表</a>				
+				   <a href="#" class="hisui-linkbutton l-btn-3" iconCls="icon-combobox" data-options="plain:true,stopAllEventOnDisabled:true" id="addCombobox">下拉框</a>
+				   <a href="#" class="hisui-linkbutton l-btn-3" iconCls="icon-checkbox" data-options="plain:true,stopAllEventOnDisabled:true" id="addCheckbox">复选框</a>
+				   <a href="#" class="hisui-linkbutton l-btn-3" iconCls="icon-radio" data-options="plain:true,stopAllEventOnDisabled:true" id="addRadio">单选框</a>
+				   <a href="#" class="hisui-linkbutton l-btn-3" iconCls="icon-singletext" data-options="plain:true,stopAllEventOnDisabled:true" id="addText">文本框</a>
+				   <a href="#" class="hisui-linkbutton l-btn-5" iconCls="icon-textarea" data-options="plain:true,stopAllEventOnDisabled:true" id="addTexts">多行文本框</a>
+				   <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-lockdata" data-options="plain:true,stopAllEventOnDisabled:true" id="btnForbid">锁死</a>
+				   <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-save" data-options="plain:true,stopAllEventOnDisabled:true" id="btnSave" style='border-left:1px solid #C0C0C0'>保存</a>
+				   <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-reload" data-options="plain:true,stopAllEventOnDisabled:true" id="btnRefresh">重置</a>
+				   <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-detailsview" data-options="plain:true,stopAllEventOnDisabled:true" id="btnpreview">预览</a>
+		     	</div>
+		     	<div id="centerlayout" data-options="fit:true,region:'center',split:false"  border="false" style="padding:4px">
+		     	
+		     		<div class="hisui-layout" data-options="fit:true" >
+			     		<div id='eastlay' class="hisui-panel" data-options="region:'east',split:true,headerCls:'panel-header-blue',collapsible:false" style="width:350px;">
+			     			<div style='border-bottom:1px solid #C0C0C0;overflow:hidden'>
+			     				<p style='float:left;border-left: 4px solid #40A2DE;border-radius:2px;margin:10px 0px 10px 10px;padding-left:10px'>评分结果</p>
+			     				<p class="scoreP" style='float:left;margin:10px 0px 10px 170px'>（0分）</p>
+			     			</div>
+			     			<!--评分范围等级-->
+			     			<div id='scorelevelN'>
+			     				<div class='scoreclassN'>
+			     					<div>
+			     					<div class='hiddenRowid' style='display:none'></div>
+			     					<div class='hiddenCode' style='display:none'></div>
+			     					</div>
+			     					<table style="padding-top:10px" cellspacing='10' align='center'>
+			     						<tr>
+			     							<td align='right'>评分范围</td>
+			     							<td><input class='minscore hisui-validatebox' id='forclickMin' type='text' style='width:60px;'></td>
+			     							<td>-</td>
+			     							<td><input class='maxscore hisui-validatebox' id='forclickMax' type='text' style='width:60px;'></td>
+			     							<td><img  src='../scripts_lib/hisui-0.1.0/dist/css/icons/add.png' onclick='addNewLevel()' style='border: 0px;cursor:pointer'></td>
+			     							<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+			     						</tr>
+			     						<tr>
+			     							<td align='right'>评分等级</td>
+			     							<td colspan='5'><input id='forclickRank' class='levelscore hisui-validatebox'  type='text' style='width:155px;'></td>
+			     						</tr>
+			     						<tr>
+			     							<td align='right'>备注</td>
+			     							<td colspan='5'><textarea id='forclickNode' class='nodescore' type='text' style='width:157px;height:50px'  ></textarea></td>
+			     						</tr>
+			     					</table>
+			     				</div>
+			     			</div>
+			     		</div>
+			     		<div data-options="region:'center',split:true,headerCls:'panel-header-blue'"  style="padding:0px 0px 0px 0px">
+			     			<div id='lockForm'>
+			     				<form id="form-save" method="post" data-options="fit:true,border:false,plain:true" style="margin:10px 0px -2px 0px"> 	
+									<table align='center'>
+										<tr>
+											<td>标题</td>
+											<td style='padding-left:10px'><input id='MKBABDesc' name='MKBABDesc' type="text" class="hisui-validatebox" style='width:300px'></td>
+										</tr>
+										<tr>
+											<td style='display:none'><input id="MKBABCode" name="MKBABCode"  style="width:257px;"></td>
+										</tr>
+										<tr>
+											<td style='display:none'><input id="MKBABNote" name="MKBABNote"  style="width:257px;"></td>
+										</tr>
+									</table>
+								</form>
+			     			</div>
+			     			<!--扩展列-->
+							<div id="registerMain">
+
+							</div>
+						</div>	
+					</div>
+					
+				</div>
+			</div>
+		</div> 
+		<!--左侧列表展示-->
+		 <div id="layoutwest" data-options="region:'west',split:true" border="false"  style="width:350px;padding:4px 0px 4px 4px" > 
+            <table data-options="fit:true,iconCls:'icon-w-paper'" id="assbasegrid" border="true"  title="评估表" toolbar="#leftTools" ></table> 
+        </div>      
+ 	</div>
+ 	<!--左侧工具栏-->
+ 	<div id="leftTools">
+ 		<!--<a id="TextDesc" class="hisui-searchbox" style="width:170px"></a>-->
+ 		<input style="width:165px" id="TextDesc" />
+ 		<span class="searchbox-button" style="margin-left:-34px;" id="btnSearch"></span>
+ 		<a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-refresh" data-options="plain:true" id="btnLeftRefresh"></a>
+ 	</div>
+ 	<!--添加小按钮-->
+ 	<!--<div id="basetools"> 
+ 		 <a href="#" class="icon-w-add" id="btnAddBase"></a>
+ 	</div>-->
+ 	<!--添加多行窗口-->
+ 	<div id="myWin" style="width:450px;height:450px;top:30px;padding:10px;display:none;">
+ 	<div><p>每行代表一个选项，可以添加多个选项</p></div>
+ 	<div align="center"><textarea id="buttons" type="text" style="width:400px;height:320px"></textarea></div>
+ 	</div>
+ 	<!--预览窗口-->
+ 	<div id='preWin' align="center" style="display:none;">
+ 	</div>
+ 	<!--解锁密码-->
+ 	<div id='lockWin' style="width:300px;height:180px;display:none;padding-top:20px">
+ 		<div align='center'><font color=red>*</font>请输入解锁密码！</div>
+ 		<div align='center' style='padding-top:10px'><input type="password" id='lockpassword' class="hisui-validatebox" style="width:200px" data-options="required:true,missingMessage:'请输入密码'"></input></div>
+ 	</div> 	
+ 	<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_AssessmentBase.js"></script>
+</BODY>
+</HTML>
+
+
+
+			     				
+			     					
+			     						
+			     							
+			     							
+			     							
+			     							
+			     						
+			     						
+			     						
+			     							
+			     							
+			     						
+			     						
+			     							
+			     							
+			     						
+			     					
+			     				

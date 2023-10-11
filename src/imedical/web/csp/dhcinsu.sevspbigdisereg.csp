@@ -1,0 +1,212 @@
+<!-- 
+ * FileName:	dhcinsu.sevspbigdisereg.csp
+ * User:		HanZH
+ * Date:		2023-04-20
+ * Function:	人员重特大疾病备案
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<style>
+		#Qdatagrid .panel-body-noheader{
+				border-top:1px dashed #cccccc !important;
+				border-right:1px solid #cccccc !important;
+				border-left:1px solid #cccccc !important;
+				border-bottom:1px solid #cccccc !important;
+		}
+		#Qdatagrid .panel-body{
+				border-radius:0 0 4px 4px !important;
+		}
+	
+		.tb120{
+				width: 120px !important;
+		}
+		.tb100{
+			width: 100px !important;
+		}
+	</style>
+	<server>
+		w "<input id='DHCVersion' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPConfig.GetVersion"))_"'/>",!
+	</server>
+	<DOCCARD medStepCode="Other" ></DOCCARD>
+</head>
+<body style="padding:10px;background-color: #fff">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',border:false" style='width:820px;padding-right:10px;background-color: #fff' >
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style='height:125px;'>
+					<div class="hisui-panel" title="患者查询-人员重特大疾病备案" id="SearchPat"   data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+						<table class="search-table addInfo">
+							<tr>
+								<td class="r-label td-first-col" ><label>登记号</label></td>
+								<td><input id="patientNo"  class="textbox tb120"/></td>
+								<td class="r-label  r-label-20" ><label>HIS卡类型</label></td>
+								<td><input id="HISCardType"   class="textbox tb120"  /></td>
+								<td class="r-label  r-label-20" ><label>HIS卡号</label></td>
+								<td><input id="HISCardNo"  placeholder="刷卡/请输入卡号" class="textbox tb120"  /></td>
+								<td style="padding-left:20px"><a id="btn-readINSUCard" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-card'" >读医保卡</a></td>
+							</tr>
+							<tr>
+								<td class="r-label" ><label class="clsRequired" >医保类型</label></td>
+								<td><input id="QInsuType" required="required" class="textbox tb120"/></td>
+								<td class="r-label r-label-20" ><label >就诊记录</label></td>
+								<td ><input id="AdmList" class="textbox tb120"/></td>
+							    <td class="r-label r-label-20"><label>诊断记录</label></td>
+							    <td ><input id="DiagLst"  class="hisui-combogrid textbox tb120" /></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style='padding:10px 0 0 0;background-color: #fff' >
+					<div class="hisui-panel" title="人员重特大疾病备案" id="ReportPanel"  data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+						<table class="search-table addInfo">
+							<tr>
+								<td class="r-label td-first-col" ><label class="clsRequired" readonly="true">人员编号</label></td>
+								<td><input id="PsnNo" required="required" missingMessage="该项不能为空" class="textbox hisui-validatebox"/></td>
+								<td class="r-label td-first-col" style="width:162px"><label>事件类型</label></td>
+								<td><input id="EvtType" class="textbox"/></td>	
+								<td style="padding-left:20px"><a id="btnRefer" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-ok'" >备案登记</a></td>
+							</tr>
+							<tr>
+								<td class="r-label td-first-col"><label>申报来源</label></td>
+								<td><input id="Dclasouc" class="textbox"/></td>
+								<td class="r-label"><label>申请日期</label></td>
+								<td><input id="AppyDate" class="textbox"/></td>
+								<td style="padding-left:20px"><a id="btnClean" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-clean'" >&nbsp;&nbsp;&nbsp;&nbsp;清屏&nbsp;&nbsp;&nbsp;</a></td>
+								
+							</tr>
+							<tr style="display:none">
+								<td class="r-label"><label class="clsRequired">定点医药机构名称</label></td>
+								<td><input id="FixmedinsName" class="textbox"/></td>
+								<td class="r-label"><label>定点医药机构编号</label></td>
+								<td><input id="FixmedinsCode" class="textbox" readonly="true"/></td>
+							</tr>
+							<tr>
+								<td class="r-label td-first-col"><label class="clsRequired" >开始日期</label></td>
+								<td><input id="SDate" class="textbox hisui-datebox" data-options="required:true"/></td>
+								<td class="r-label"><label>结束日期</label></td>
+								<td><input id="EDate" class="textbox hisui-datebox" ></td>
+							</tr>
+							<tr>
+								<td class="r-label td-first-col"><label class="clsRequired">按病种结算病种名称</label></td>
+								<td><input id="BydiseSetlDiseName" PlaceHolder="支持首拼汉字查询" class="textbox"/></td>
+								<td class="r-label"><label>按病种结算病种目录代码</label></td>
+								<td><input id="BydiseSetlListCode" readonly="true" class="textbox"/></td>
+							</tr>
+							<tr>
+								<td class="r-label td-first-col"><label>手术操作名称</label></td>
+								<td><input id="OprnOprtName" PlaceHolder="支持汉字查询" class="textbox"/></td>
+								<td class="r-label"><label>手术操作代码</label></td>
+								<td><input id="OprnOprtCode" readonly="true" class="textbox"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>申请理由</label></td>
+							   	<td colspan='3'>
+									<input id='AppyRea'  class="textbox"  style="width:485px"/>
+							   	</td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>代办人关系</label></td>
+								<td><input id="AgnterRlts" class="textbox"/></td>
+								<td class="r-label td-first-col"><label>代办人姓名</label></td>
+								<td><input id="AgnterName" class="textbox"/></td>
+							</tr>
+						    <tr>
+							    <td class="r-label td-first-col"><label>代办人证件类型</label></td>
+							    <td><input id="AgnterCertType" class="textbox"/></td>
+								<td class="r-label"><label>代办人证件号码</label></td>
+								<td><input id="AgnterCertno" class="textbox"/></td>
+						    </tr>
+						    <tr>
+							   <td class="r-label"><label>代办人联系方式</label></td>
+							   <td><input id="AgnterTel" class="textbox"/></td>
+							</tr>
+							<tr>
+								<td class="r-label td-first-col"><label>代办人联系地址</label></td>
+								<td colspan='3'>
+									<input id='AgnterAddr' class="textbox" style="width:485px"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label td-first-col"><label>备注</label></td>
+								<td colspan='3'>
+								<input id='Memo' class="textbox" size=12 style="width:485px"></input>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label td-first-col"><label>字段扩展</label></td>
+								<td colspan='3'>
+								<input id='ExpContent' class="textbox" size=12 style="width:485px"></input>
+								</td>
+							</tr>
+							<tr>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	    <div data-options="region:'center',border:false" >
+			<div class="hisui-layout" data-options="fit:true">
+			    <div data-options="region:'north',border:false" style='height:165px;border-radius:0'>
+					<div class="hisui-panel EastSearch" style="border-bottom-style:dashed;border-radius:0" data-options="title:'人员重特大疾病备案查询',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" >
+						<table class='search-table searchPanel'>
+							<tr>
+							   	<td class='r-label td-first-col'>开始日期</td>
+							   	<td><input id="StartDate" class="hisui-datebox textbox"/> </td>
+							   	<td class='r-label  r-label-20'>结束日期</td>
+							   	<td><input id="EndDate" class="hisui-datebox textbox"/> </td>
+							</tr>
+							<tr style="display:none">
+							   	<td class='r-label'>证件类型</td>
+							   	<td><input id="SearchType" class="textbox"/> </td>
+							   	<td class='r-label  r-label-20'>证件号码</td>
+							   	<td><input id="SearchId" class="textbox"/> </td>
+							</tr>
+							<tr>
+								<td class='r-label'>医保类型</td>
+								<td><input id="SearchInsuType" class="textbox"/> </td>
+								<td class='r-label  r-label-20'>姓名</td>
+								<td><input id="SearchName" class="textbox"/> </td>
+							</tr>
+							<tr>
+								<td class='r-label'>人员编号</td>
+								<td><input id="SearchInsuNo" class="textbox"/> </td>
+							</tr>
+						</table>
+				    </div>
+			    </div>
+			    <div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-top-style:none;border-radius:0 0 4px 4px;">
+					<div id="dg" ></div>
+			    </div>
+		   </div>
+	   </div>
+	</div>   
+	<!--toolbar-->
+	<div id="tToolBar" class="hisui-toolbar" >  
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td hidden><a href="#" hidden class="hisui-linkbutton" iconCls="icon-search" id="btnFindReport" plain="true" >查询审批信息(双击行)</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-search" id="btnFind" plain="true"  >查询</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-back" id="btnReferDes" plain="true" >备案撤销</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-search" id="btnsearch" plain="true" >备案查询</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<script type="text/javascript" src="../scripts/dhcinsu/sevspbigdisereg.js"></script>
+</body>
+</html>

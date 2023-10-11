@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--库存转移接收
+	csp:  csp/pha.in.v3.trans.auditin.csp
+	js:   scripts/pha/in/v3/trans/auditin.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    
+	<!-- 样式扩展 -->
+    <style>
+    	.button-width {
+			width: 90px;
+		}
+    </style>
+
+</head>
+
+<body>
+	<!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true" >
+                <div class="hisui-panel" data-options="headerCls:'panel-header-gray',bodyCls:'',iconCls:'icon-paper',region:'north',height:400,split:true,title:'库存转移接收-库存转移单',collapsible:true,showCollapsedTitle:true" >
+	                <table id="gridInit"></table>
+	            </div>
+	            <div data-options="headerCls:'panel-header-gray',region:'center',iconCls:'icon-paper',split:true,title:'单据明细'" >
+	            	<table id="gridIniti"></table>    
+	            </div>
+			</div>
+		</div>
+    </div>
+    
+    <!-- 库存转移单列表工具栏 -->
+	<div id="gridInitBar" >
+		<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="recLocId">#(..Get("请求科室"))#</label></td>
+                <td><input id="recLocId"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td><label for="startDate">#(..Get("开始日期"))#</label></td>
+                <td><input id="startDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+		 		<td class="r-label"><label for="reqNo">#(..Get("请求单号"))#</label></td>
+                <td><input id="reqNo" class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+		 		<td class="r-label"><label for="nextStatusCode">#(..Get("预审流程"))#</label></td>
+                <td><input id="nextStatusCode"  class="Condition-width"  disabled="disabled" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+                <td class="r-label"><label for="opertId">#(..Get("转移类型"))#</label></td>
+                <td><input id="opertId"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td><a id="btnQuery" class="hisui-linkbutton button-width" data-pha-event='click:Query'>查询</a></td>
+                <td><a id="btnMZJYAudit1" class="hisui-linkbutton button-longwidth" data-pha-event='click:MZJYAudit1' >麻精审核1</a></td>
+            </tr>
+            <tr>
+		 		<td class="r-label"><label for="proLocId">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td><label for="endDate">#(..Get("结束日期"))#</label></td>
+                <td><input id="endDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="transNo">#(..Get("转移单号"))#</label></td>
+                <td><input id="transNo" class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+            	<td class="r-label"><label for="nextStatusResult">#(..Get("流程状态"))#</label></td>
+                <td><input id="nextStatusResult"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="mzjy" id='labelFormzjy'>#(..Get("麻醉精一"))#</label></td>
+                <td><input id="mzjy"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+            	<td><a id="btnClear" class="hisui-linkbutton button-width" data-pha-event='click:Clear'>清屏</a></td>
+            	<td><a id="btnMZJYAudit2" class="hisui-linkbutton button-longwidth" data-pha-event='click:MZJYAudit2' >麻精审核2</a></td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div>
+        	<a id="btnAudit" class="hisui-linkbutton" plain='true' iconCls="icon-ok" data-pha-event='click:Audit'>#(..Get("接收"))#</a>
+        	<a id="btnRefuse" class="hisui-linkbutton" plain='true' iconCls="icon-no" data-pha-event='click:Refuse'>#(..Get("拒绝接收"))#</a>
+        	<a id="btnCancelAudit" class="hisui-linkbutton" plain='true' iconCls="icon-undo" data-pha-event='click:CancelAudit'>#(..Get("取消接收"))#</a>
+		</div>
+	</div>
+
+	<!-- 库存转移单明细列表工具栏 -->
+	<div id="gridInitiBar" >
+		<div>
+        	<a id="btnPartInAudit" class="hisui-linkbutton" plain='true' iconCls="icon-ok" data-pha-event='click:PartInAudit'>#(..Get("接收(按勾选明细)"))#</a>
+			<a id="btnPartInCancel" class="hisui-linkbutton" plain='true' iconCls="icon-undo" data-pha-event='click:PartInCancel'>#(..Get("取消接收(按勾选明细)"))#</a>
+		</div>
+	</div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/auditin.js"></script>
+    
+</body>
+
+</html>

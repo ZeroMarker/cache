@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--住院药房 - 发药综合查询
+	csp: pha.ip.v4.query.stat.csp
+	js:  pha/ip/v4/query.stat.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <link rel="stylesheet" href="../scripts/pha/ip/v4/css/ui.css">
+    <style>
+        .pha-label {
+            width: 58px;
+            text-align: right;
+        }
+
+        .pha-footer-noline .datagrid-ftable td {
+            border-bottom: 0;
+        }
+
+        .pha-grid-a {
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" id="lyBody">
+                <div data-options="region:'north',border:false,split:true,height:'135'" id="ddd">
+                    <div class="hisui-panel" title="发药统计" data-options="headerCls:'panel-header-gray',iconCls:'icon-sample-stat',fit:true,bodyCls:''">
+                        <!-- <div class="pha-con-more-less">
+                            <div>更多</div><div class="more"></div>
+                        </div>
+                        <div class="pha-con-more-less" style="display: none;">
+                            <div>收缩</div><div class="less"></div>
+                        </div> -->
+                        <div class="pha-row">
+                            <div class="pha-col pha-label">#(..Get("开始时间"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-datebox pha-datebox" id="conStartDate" style="width:120px">
+                            </div>
+                            <div class="pha-col">
+                                <input class="hisui-timespinner pha-timespinner" id="conStartTime" showSeconds=true style="width:100px">
+                            </div>
+                            <div class="pha-col pha-label">#(..Get("发药药房"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-combobox" id="conPhaLoc">
+                            </div>
+                            <div class="pha-col">#(..Get("病区"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-combobox" id="conWardLoc">
+                            </div>
+                            <div class="pha-col pha-label">#(..Get("发药类别"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-combobox" id="conDispCat">
+                            </div>
+
+
+                            <div class="pha-col pha-label">#(..Get("统计类型"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-combobox" id="conIntrType">
+                            </div>
+
+                            <div class="pha-col">
+                                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                            </div>
+
+                        </div>
+                        <div class="pha-row">
+                            <div class="pha-col pha-label">#(..Get("结束时间"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-datebox pha-datebox" id="conEndDate" style="width:120px">
+                            </div>
+                            <div class="pha-col">
+                                <input class="hisui-timespinner  pha-timespinner" id="conEndTime" showSeconds=true style="width:100px">
+                            </div>
+                            <div class="pha-col pha-label">#(..Get("汇总方式"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-combobox" id="conWay">
+                            </div>
+                            <div class="pha-col">#(..Get("科室"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-combobox" id="conDocLoc">
+                            </div>
+                            <div class="pha-col pha-label">#(..Get("管制分类"))#</div>
+                            <div class="pha-col">
+                                <input class="hisui-combobox" id="conPoison">
+                            </div>
+
+                            <div class="pha-col pha-label">#(..Get("药品名称"))#</div>
+                            <div class="pha-col">
+                                <input id="conInci">
+                            </div>
+                            <div class="pha-col">
+                                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div data-options="region:'west',border:false,width:500,split:true">
+                    <div class="hisui-panel" title="汇总" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridGrp"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false,height:400,split:true" class='pha-footer-noline'>
+                    <div class="hisui-panel" title="药品汇总" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                        <table id="gridInci"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridGrpBar">
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="btnFindInci">批量查询</a>
+    </div>
+    <!-- 发药明细台账 -->
+    <div title="发退记录" id="winOrder" style="padding:10px">
+        <table id="gridOrder"></table>
+    </div>
+    <!-- 本页面js -->
+    <script src="../scripts/pha/ip/v4/store.js"></script>
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/query.stat.js"></script>
+</body>
+
+</html>

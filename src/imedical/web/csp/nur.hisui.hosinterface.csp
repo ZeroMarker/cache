@@ -1,0 +1,105 @@
+<!-- HOS跳转界面 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+  Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s PatientListPage=""  
+	d %session.Unlock()
+	s type=$g(%request.Data("type",1))
+  s LocID = %session.Get("LOGON.CTLOCID")
+  s WardID = %session.Get("LOGON.WARDID")
+  // s OperateUserDR = %session.Get("LOGON.USERID")
+  s GroupID = %session.Get("LOGON.GROUPID")
+  s HospID=%session.Get("LOGON.HOSPID") 
+	s res=##class(%ArrayOfDataTypes).%New()
+  d res.SetAt(200,"code")
+  d res.SetAt("success","msg")
+  d res.SetAt("true","success")
+  // ToBeHandled	需处理
+  i type="ToBeHandled" {
+    s rtn=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardNeedToDealOrdNums(LocID, WardID, GroupID, HospID)
+    s rtn=$l(rtn,"^")
+  }
+  // InfuseSheet	输液单
+  i type="InfuseSheet" {
+    s rtn=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardOtherSheetOrdNums("CQSYD",LocID, WardID, GroupID, HospID)
+  }
+  // InjectSheet	注射单
+  i type="InjectSheet" {
+    s rtn=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardOtherSheetOrdNums("CQZSD",LocID, WardID, GroupID, HospID)
+  }
+  // OralBill	口服单
+  i type="OralBill" {
+    s rtn=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardOtherSheetOrdNums("CQKFYD",LocID, WardID, GroupID, HospID)
+  }
+  // SkinTest	皮试单
+  i type="SkinTest" {
+    s rtn=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardOtherSheetOrdNums("PSD",LocID, WardID, GroupID, HospID)
+  }
+  // InspectSheet	检验单
+  i type="InspectSheet" {
+    s rtn=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardOtherSheetOrdNums("JYD",LocID, WardID, GroupID, HospID)
+  }
+  // Checklist	检查单
+  i type="Checklist" {
+    s rtn=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardOtherSheetOrdNums("JCD",LocID, WardID, GroupID, HospID)
+  }
+  i (type="TempMeasure")||(type="BloodMeasure")||(type="BGMeasure")||(type="WeightTest")||(type="FAA")||(type="FFRA")||(type="PURA")||(type="AOSA") {
+    s StartDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+    s EndDate=##class(websys.Conversions).DateLogicalToHtml(+$h+1)
+    s EpisodeIDs=""
+    s data=##class(Nur.NIS.Service.Base.Ward).GetWardPatients(WardID)
+	  //s ^tmpWuJiang("EpisodeIDs","WardID")=WardID
+	  //s ^tmpWuJiang("EpisodeIDs","data")=##class(Nur.JSON).Encode(data)
+    f i=1:1:data.Count() {
+      continue:"在院转科"=data.GetAt(i).GetAt("ID")
+      s children=data.GetAt(i).GetAt("children")
+      f j=1:1:children.Count() {
+        s episodeID=children.GetAt(j).GetAt("episodeID")
+        s EpisodeIDs=EpisodeIDs_"^"_episodeID
+      }
+    }
+    s EpisodeIDs=$e(EpisodeIDs,2,*)
+  }
+  // TempMeasure	体温需测
+  i type="TempMeasure" {
+	  //s ^tmpWuJiang("EpisodeIDs","TempMeasure")=EpisodeIDs
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","1","temperature")
+  }
+  // BloodMeasure	血压需测
+  i type="BloodMeasure" {
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","1","sysPressure^diaPressure")
+  }
+  // BGMeasure	血糖需测
+  i type="BGMeasure" {
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","1","FBS^BreakfastPBS^LunchFBS^LunchPBS^DinnerFBS^DinnerPBS^BedtimeFBS^NightPBS^NightPBS2^RBS")
+  }
+  // WeightTest	体重需测
+  i type="WeightTest" {
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","1","weight")
+  }
+  // FAA	入院首次评估
+  i type="FAA" {
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","2","ABFE297A5A2C45DD98B38C1C1CDA726D")
+  }
+  // FFRA	跌倒/坠床风险评估
+  i type="FFRA" {
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","2","D7CED2438F044477A5C0FC09ED2BF68F")
+  }
+  // PURA	压疮风险评估
+  i type="PURA" {
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","2","E40CBC705DAF418FA17DB4C08854C96F")
+  }
+  // AOSA	生活自理能力评估
+  i type="AOSA" {
+    s rtn=##class(Nur.NIS.Service.ExecuteSummary.NeedExeTask).NormalTaskCountByItem(LocID, WardID, EpisodeIDs, StartDate,"00:00",EndDate,"23:59","2","804811D8E0614B8EABD0FFCB1B3611A1")
+  }
+  i $isvalidnum(rtn)=0 {
+    d res.SetAt(-1,"code")
+    d res.SetAt("fail","msg")
+    d res.SetAt("false","success")
+  }
+  d res.SetAt(rtn,"data")
+  d ##class(Nur.NIS.Common.JSON).EncodeByWrite(res)
+</script>

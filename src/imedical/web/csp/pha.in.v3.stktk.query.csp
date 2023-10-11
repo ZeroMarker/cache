@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!--库存盘点实盘 调整
+	csp:csp/pha.in.v3.stktk.query.csp
+	js: scripts/pha/in/v3/stktk/query.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
+
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+	<title>
+		<TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+    
+    <!-- 接收参数 -->
+    <server>
+		s stktkId  =  $G(%request.Data("stktkId", 1))
+	</server>
+	<script type = "text/javascript">
+		var stktkId  =  "#(stktkId)#";
+	</script>
+	<style type="text/css">
+		.pha-sub-center {
+		    display: flex;
+			justify-content: center;
+		}
+	</style>
+</HEAD>
+<body>
+	<div class = "hisui-layout" fit = "true">
+		<div data-options = "region:'center',border:false" class = "pha-body">
+			<div class = "hisui-layout" fit = "true">
+				<div class = "hisui-layout" fit = "true"  id="layout-stktk-itm">
+					<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'west',width:200, split:true"  title = #(..Get("库存盘点单列表"))# >
+						<table id="gridStktkMain"></table>
+					</div>
+					<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center'"  title = #(..Get("单据明细"))#>
+						<table id="gridStktkDetail"></table>
+					</div>
+				</div>
+
+			</div>		
+		</div>
+	</div> 
+	<div id = "gridStktkMainBar" >
+		<div class="pha-sub-center">
+			<table id = "qCondition" class = "pha-con-table" >
+				<tr>
+					<td class = "r-label">
+						<label for = "stktkLocId">#(..Get("盘点科室"))#</label>
+					</td>
+					<td>
+						<input id = 'stktkLocId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+					</td>
+				</tr>
+				<tr>
+					<td class = "r-label">
+						<label for = "stDate">#(..Get("开始日期"))#</label>
+					</td>
+					<td>
+						<input id = 'stDate' class = "hisui-datebox pha-date-def" data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+					</td>
+				</tr>
+				<tr>
+					<td class = "r-label">
+						<label for = "endDate">#(..Get("结束日期"))#</label>
+					</td>
+					<td>
+						<input id = 'endDate' class = "hisui-datebox pha-date-def"  data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+					</td>
+				</tr>
+				<tr>
+					<td class = "r-label">
+						<label for = "stktkStatus">#(..Get("单据状态"))#</label>
+					</td>
+					<td>
+						<input id = 'stktkStatus' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+					</td>
+				</tr>
+				<tr>				
+					<td colspan=2 style="text-align:center;">
+						<a class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-find'" data-options = "stopAllEventOnDisabled:true" style="margin-right:7px;" id = 'btnFind'>查询</a>
+						<a class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-clear'" data-options = "stopAllEventOnDisabled:true" id = 'btnClean'>清屏</a>
+					</td>			
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div id = "gridStktkDetailBar" >
+		<table class = "pha-con-table">
+			<tr>
+				<td>
+					<input class = "hisui-radio" type = "radio" label = "仅盘盈" name = "lossFlag" value = "1" data-options = "required:true,requiredSel:true">
+				</td>
+				<td>
+					<input class = "hisui-radio" type = "radio" label = "仅盘亏" name = "lossFlag" value = "2" data-options = "required:true,requiredSel:true">
+				</td>
+				<td>
+					<input class = "hisui-radio" type = "radio" label = "仅无损益" name = "lossFlag" value = "3" data-options = "required:true,requiredSel:true">
+				</td>
+				<td style="padding-right: 10px;">
+					<input class = "hisui-radio" type = "radio" label = "仅有损益" name = "lossFlag" value = "4" data-options = "required:true,requiredSel:true">
+				</td>
+				<td style="border-left:1px solid #ccc">
+					<input class = "hisui-radio" type = "radio" label = "全部" name = "lossFlag" value = "0" data-options = "required:true,requiredSel:true">
+				</td>
+				<td>
+					<input id = 'freQtyUnZero'  type = "checkbox" class = "hisui-checkbox"  label="账盘非零" data-pha = 'class:"hisui-checkbox",clear:true,query:true'>
+				</td>
+				<td>
+					<input id = 'countQtyUnZero'  type = "checkbox" class = "hisui-checkbox"  label="实盘非零" data-pha = 'class:"hisui-checkbox",clear:true,query:true'>
+				</td>
+				<td>
+					<input id = 'inci' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton" data-options = "iconCls:'icon-w-find'" data-options = "stopAllEventOnDisabled:true" id = 'btnFindDetail'>查询</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!-- 药库公共 -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/com/js/store.js"></script>
+	<!-- 本页js -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/stktk/query.js"></script>
+</body>
+</html>

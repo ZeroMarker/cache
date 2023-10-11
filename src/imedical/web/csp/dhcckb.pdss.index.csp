@@ -1,0 +1,115 @@
+<!--
+ * @Author: qunianpeng
+ * @Date: 2022-03-30 21:57:16
+ * @Descripttion: 知识浏览首页
+ * @version: V1.0
+ * @LastEditors: qnp
+ * @LastEditTime: 2022-08-18 11:38:49
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />   
+    <title>知识浏览首页</title>
+   <!--  <EXTHEALTH:HEAD></EXTHEALTH:HEAD> -->
+	<HISUI/>
+	<!-- <DHCCKB/> -->
+	<SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.common.css" />
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.iconfont.css" />
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.index.css" />
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.druglist.css" />
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.page.css" />
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.drugdetail.css" />  
+   	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/util/jquery-editable-select/dist/jquery-editable-select.min.css" /> 
+    <!-- <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/util/jquery-editable-select/src/jquery-editable-select.css" />   -->
+    <script language="Cache" runat="server">
+		w $$$cspStrictJavaScriptStart
+			s logHospId = $g(%session.Data("LOGON.HOSPID"))		// 医院
+			s lgLocId = $g(%session.Data("LOGON.CTLOCID"))		// 科室
+			s lgUserId = $g(%session.Data("LOGON.USERID"))		// 用户
+			s lgGroupId = $g(%session.Data("LOGON.GROUPID"))	// 安全组
+			s lgProId = ##class(web.DHCCKBCommon).GetProfessID(lgUserId)	// 职称
+			s LoginInfo = lgUserId_"^"_lgProId_"^"_lgLocId_"^"_lgGroupId_"^"_logHospId
+			w "var LoginInfo="""_LoginInfo_""""	
+		w $$$cspJavaScriptEnd									
+	</script>
+	<script type="text/javascript">
+		if ((typeof HISUIStyleCode == "string") && (HISUIStyleCode == "lite")) {
+	  		document.write('<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.lite.css"/>');
+		}
+	</script>
+  </head>
+
+  <body>
+    <!--头部区域start -->
+    <div class="header">
+      <div class="headbg"></div>
+      <!-- 搜索框区域start -->
+      <div class="searchbox">
+        <img class="searchlogo" src="../scripts/dhcnewpro/dhcckb/pdss/images/search_logo.png" />
+        <ul class="searchnav">
+          <li data-type="drug"><a class="active">药品</a></li>
+          <li data-type="indic"><a>适应症</a></li>
+          <li data-type="contr"><a>禁忌症</a></li>
+          <li data-type="edu" style="display:none"><a>用药教育</a></li>
+          <li data-type="check" style="display:none"><a>用药审查</a></li>
+          <li data-type="book" style="display:none"><a>文献查阅</a></li>
+          <!-- <li><a href="#"> 提示信息</a></li> -->
+        </ul>
+        <div class="searchcont">
+          <!--<input name="search" id="keyword" type="text" autocomplete="off" />   -->      
+          <div id="searchlist" class="searchlist"> <!-- class="searchlist search_scrollbar"-->
+          	<select id="editable-select" class="editable-select"> 
+	           <!--  <option>one</option>
+	            <option>two</option>
+	            <option>three</option> -->
+            </select>          
+          </div>
+          <div class="searchbtn"><span>搜索</span></div>
+        </div>
+      </div>
+    </div>
+    <!-- 头部区域end -->
+    
+    <!--tab面包屑区域start-->
+    <div class="tab" id="tab"></div>
+    <!--tab面包屑区域 end -->
+    
+    <!--药品tips区域start-->
+    <div class="drugtips">
+      <div class="tipstext"></div>
+    </div>
+    <!-- 药品tips区域end-->
+    
+    <!-- 药品明细区域start-->    
+    <div class="details clearfix"></div>
+    <div class="drugcont">
+      <div class="drugbox"></div>
+      <!--分页-->
+      <div class="divpage" id="divpage"></div>
+    </div>
+    <!-- 药品明细区域end-->    
+    
+    <!-- 用药教育信start-->    
+    <div id="edu" class="drugedu"></div>
+    <!-- 用药教育信start-->    
+    <div class="totop"></div>
+  </body>
+  <script src="../scripts/dhcnewpro/dhcckb/pdss/components/tab.js"></script>
+  <script src="../scripts/dhcnewpro/dhcckb/pdss/components/page.js"></script>
+  <script src="../scripts/dhcnewpro/dhcckb/pdss/components/createdrugdetail.js"></script>
+  <script src="../scripts/dhcnewpro/dhcckb/util/jquery-editable-select/dist/jquery-editable-select.min.js"></script>
+  <!-- <script src="../scripts/dhcnewpro/dhcckb/util/jquery-editable-select/src/jquery-editable-select.js"></script> -->
+  <script src="../scripts/dhcnewpro/dhcckb/pdss/pdss.index.js"></script>
+</html>

@@ -11,7 +11,7 @@
 <meta charset="utf-8"/>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI />
-<NURHISUI />
+
 <style>
 	.panel-body.panel-body-noheader{
 		border-color: #ccc;
@@ -64,7 +64,8 @@
 					</div>
 					<div class="button-group">
 						<a id="btn-add" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
-						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="UpdateGridData()">修改</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="UpdateGridData(0)">修改</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" onclick="UpdateGridData(1)">复制</a>
 						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="DeleteGridData()">删除</a>
 					</div>
 				</div>	
@@ -119,7 +120,7 @@
 								<tr>
 									<td class="r-label">参数</td>
 									<td>
-										<textarea placeholder="多个参数用“@”连接" name="Params" id="params" id="params" style=""></textarea>
+										<textarea placeholder="多个体征项使用“&”连接，体征项和其他参数用“@”连接" name="Params" id="params" id="params" style=""></textarea>
 									</td>
 								</tr>
 								<tr>
@@ -154,6 +155,7 @@
         {code:'bindingItem',desc:'绑定元素'},
         {code:'changeBedRules',desc:'换床显示规则'},
         {code:'changeDeptRules',desc:'转科显示规则'}, 
+        {code:'bedLocExtDirec',desc:'床号/科室显示方向'}, 
         {code:'dateDefine',desc:'日期定义'},
         {code:'dateFormat',desc:'日期格式'}, 
         {code:'intervalMode',desc:'间隔方式'},
@@ -165,7 +167,14 @@
         {code:'pulseDificitStyle',desc:'脉搏短绌显示样式'},
         {code:'breathePos',desc:'呼吸机位置'},
         {code:'overShowMode',desc:'超出标尺显示方式'},
-        {code:'allergyResult',desc:'过敏结果'}        
+        {code:'allergyResult',desc:'过敏结果'},
+        {code:'valueTransform',desc:'数值转换方式'},
+        {code:'timeFormat',desc:'时间格式'},
+        {code:'bpShowNums',desc:'血压显示次数'},
+        {code:'intervalTime',desc:'间隔时间点'},
+        {code:'patientInfo',desc:'患者信息'},
+        {code:'patientColor',desc:'患者信息颜色'},
+        {code:'applyArea',desc:'适用区域'}
 	];
 	$(function(){
 		//initHospComb('Nur_IP_ChartDictConfig');
@@ -208,7 +217,7 @@
 			singleSelect : true,
 			loadMsg : '加载中..', 			
 			onDblClickRow:function(rowIndex, rowData){ 
-				UpdateGridData();
+				UpdateGridData(0);
        		}  
     		// url:$URL,
 			// queryParams:{
@@ -264,25 +273,38 @@
 	// 加载类别下拉框数据
 	function selectDataLoad(){
 		$('#category, #category2').combobox({
-			data: categoryList	
+			data: categoryList,
+			defaultFilter:6
 		});   
 	}
-	// 修改数据回显
-	function UpdateGridData(){
+	// 修改/复制数据回显
+	function UpdateGridData(flag){
 		var rows = $('#temperatureSelectList').datagrid("getSelections");
     	if (rows.length == 1) {
        		$("#add-dialog").dialog("open");
         	//清空表单数据
 	 		$('#add-form').form("clear");
+	 		var arr=[];
+	 		var params="";
+	 		if(rows[0].Expression && rows[0].Expression && rows[0].Expression.split("^").length >= 3)
+	 		{
+		 		arr=rows[0].Expression.split("^");
+		 		var newArr=[];
+		 		arr.forEach(function(val,index){
+			 		if(index>=2) newArr.push(val);	
+			 	})
+			 	params=newArr.join("^");
+	 		}
+	 		
 		 	$('#add-form').form("load",{
-		 		Rowid: rows[0].rowid,
+		 		Rowid: flag ? "" : rows[0].rowid,
 		 		Code: rows[0].Category,
 		 		Desc: rows[0].Description,
 		 		cValue: rows[0].CValue,
 		 		ClassName: rows[0].Expression && rows[0].Expression.split("^").length >= 1 ? rows[0].Expression.split("^")[0] : "",
 		 		QueryName: rows[0].Expression && rows[0].Expression.split("^").length >= 2 ? rows[0].Expression.split("^")[1] : "",
-		 		Params: rows[0].Expression && rows[0].Expression.split("^").length == 3 ? rows[0].Expression.split("^")[2] : "", 
-		 		LoopTime: rows[0].LoopTimes		
+		 		Params: params, 
+		 		LoopTimes: rows[0].LoopTimes		
 	 		});
 	 		if(rows[0].IsStop == "Y"){
 		 		$("#isStop").checkbox("check");	
@@ -292,9 +314,11 @@
 			}
 	 			
      	}else{
-	    	$.messager.alert("简单提示", "请选择要修改配置数据", "info");
+	     	var option=flag ? "复制" : "修改";
+	    	$.messager.alert("简单提示", "请选择要"+option+"的配置数据", "info");
      	}
 	}
+	
 	// 新增/修改保存
 	function SaveFormData(){
 		var rowid = $("#rowid").val();
@@ -304,7 +328,10 @@
 		var className = $("#className").val();
 		var queryName = $("#queryName").val();
 		var params = $("#params").val();
-		var expression = className || queryName || params ? className + "^" + queryName + "^" + params : "";
+		var expression = className ? (queryName ? className + "^" + queryName  : className) : ""
+		if (params!="") {
+			expression += "^" + params ;
+		}
 		var loopTimes = $("#loopTimes").val();
 		var isStop = $("#isStop").radio('getValue') ? "Y" : "N";
 		if(category == "")

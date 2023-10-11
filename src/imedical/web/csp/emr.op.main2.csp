@@ -89,8 +89,15 @@
     <script language="cache" runat="server">
         s CAServicvice=""
         s IsCAON=##Class(CA.DigitalSignatureService).IsCAON()
-        s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
-        if ("Y"=IsCAON)&("1"=IsCACTLoc) { 
+        
+        //最新的程序需要增加产品模块的判断
+        if ($ll((##class(%Dictionary.CompiledMethod).%OpenId("CA.DigitalSignatureService||IsCACTLoc")).DefaultArgs) = "4") {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"OPEMR")
+        } else {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        }
+        
+        if ((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1"){ 
             s CAServicvice="1"
             d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
         }    

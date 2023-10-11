@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!--药房药库 - 盘点损益统计报表
+	csp:  pha.in.v3.stat.stktkamount.csp
+	js:   pha/in/v3/stat/stktkamount.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />	
+</head>
+
+<body>
+	<div class="hisui-panel" fit="true" border="false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false,split:true" style="width:265px;">
+				<div class="hisui-panel" data-options="title:'盘点损益统计',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+					<table id="gridStkTk"></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:true,bodyCls:'panel-body-gray',headerCls:'panel-header-gray'">
+				<div class="hisui-panel" data-options="iconCls:'icon-paper',bodyCls:'panel-header-gray',fit:true,border:false">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:true,bodyCls:'panel-body-gray',headerCls:'panel-header-gray'" style="height:43px;border-width:0;border-bottom-width:1px;border-bottom-right-radius:0;border-bottom-left-radius:0;"> 
+							<div class="pha-row">
+								<div class="pha-col">
+									<input class='hisui-radio' type="radio" label='全部' data-options='checked:true' name='StatFlag' value='0'>
+								</div>
+								<div class="pha-col">
+									<input class='hisui-radio' type="radio" label='仅盘盈' name='StatFlag' value='1'>
+								</div>
+								<div class="pha-col">
+									<input class='hisui-radio' type="radio" label='仅盘亏' name='StatFlag' value='2'>
+								</div>
+								<div class="pha-col">
+									<input class='hisui-radio' type="radio" label='仅无损益' name='StatFlag' value='3'>
+								</div>
+								<div class="pha-col">
+									<input class='hisui-radio' type="radio" label='仅有损益' name='StatFlag' value='4'>
+								</div>
+							</div>
+						</div>
+						<div data-options="region:'center',border:false">
+							<div id="tabs-region" pha-region="tabs-panel" class="hisui-tabs tabs-gray" data-options="fit:true,border:false"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<div id="conToolbar">
+	<table id="div-conditions" class="pha-con-table">
+		<tr>
+			<td class="r-label">
+				<label for="phaLoc"><span style="color:red">*</span>#(..Get("科室"))#</label>
+			</td>
+			<td>
+				<input id="phaLoc" data-pha='class:"hisui-combobox",requied:true,query:true,clear:true'/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="startDate"><span style="color:red">*</span>#(..Get("开始日期"))#</label>
+			</td>
+			<td>
+				<input id="startDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true,clear:true' style="width:160px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="startTime">#(..Get("开始时间"))#</label>
+			</td>
+			<td>
+				<input id="startTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",query:true,clear:true' style="width:160px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="endDate"><span style="color:red">*</span>#(..Get("截止日期"))#</label>
+			</td>
+			<td>
+				<input id="endDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true,clear:true' style="width:160px;" />
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="endTime">#(..Get("截止时间"))#</label>
+			</td>
+			<td>
+				<input id="endTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",query:true,clear:true' style="width:160px;" />
+			</td>
+		</tr>
+		<tr>
+			<td colspan=2 style="text-align:center;">
+				<a href="#" id="btnFind" class="hisui-linkbutton" style="margin-right:5px;" data-options="iconCls:'icon-w-find'">查询</a>
+				<a href="#" id="btnClear" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+			</td>
+		</tr>
+	</table>	
+</div>
+
+	<script type="text/javascript" src="../scripts/pha/in/v3/stat/stktkamount.js"></script>
+</body>
+</html>

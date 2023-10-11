@@ -1,0 +1,189 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+	@Creator:      guozizhu
+	@CreateDate：  2019-09-30
+	@Description:  临床知识库与His的数据对照存储
+	@CSP：         dhcckb.datacontrastandstorage.csp
+	@JS:           datacontrastandstorage.js
+*/
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCCKB/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/datacontrastandstorage.js"></script>
+	<style>
+	.layout-panel-center{
+		padding: 10px;
+	}
+	.layout-panel-west{
+		padding: 10px 0px 10px 10px;
+	}
+	body .layout-panel-west .layout-panel-center {
+		padding: 10px 0px 0px 0px !important;
+	}
+	
+	</style>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true" border="false">
+		
+		<!--已对照通用名-->
+		<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'"  border="false">
+			<div class="hisui-panel" data-options="title:'已对照通用名',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table data-options="fit:true" id="contrastGrid" border="false"></table>
+			</div>
+		</div>
+		<div data-options="region:'west',split:false,collapsible:false" style="width:700px;" border="false" >
+			<div class="hisui-layout" data-options="fit:true" border="false">
+				<!--His通用名-->
+				<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" border="false">
+					<div class="hisui-panel" data-options="title:'His通用名',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table data-options="fit:true" id="hisGrid" border="false" toolbar="#hisToolbar" ></table>
+					</div>
+			</div>
+				<!--临床知识库-->
+				<div data-options="region:'north',split:false,collapsible:false" style="height:330px;border:0;">
+					<div class="hisui-panel" data-options="title:'知识映射-安全用药药品库',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+						<table data-options="fit:true" id="genGrid" toolbar="#genToolbar"></table>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--临床知识库工具栏-->
+	<div id="genToolbar"style="padding:10px;" >
+		<table >
+			<tr>
+				<td style="padding-right:5px">类型</td>
+				<td>
+					<input id="genType" class="hisui-validatebox textbox"/>
+					<input id="genTypeID" class="hisui-validatebox textbox" hidden/>
+				</td>
+				<td style="padding-left:20px;padding-right:5px">描述</td>
+				<td>
+					<input id="genDesc" class="hisui-validatebox textbox"/>
+				</td>			
+				<td style="padding-left:10px;padding-right:10px">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="genSearch">查询</a>
+				</td>
+				<td style="padding-right:10px">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="genRefresh" >清屏</a>
+				</td>
+				
+			</tr>
+			<tr>
+			  	<td style="padding-right:5px;padding-top:10px">院区</td>
+				<td style="padding-top:10px"><input id="HospId" class="hisui-combobox textbox"/></td>				
+				<td colspan="4" style="padding-top:10px;padding-left:20px;">
+					<input class="hisui-checkbox" type="checkbox" data-options="onChecked:function(event,val){console.log('checked='+val);},onUnchecked:function(event,val){console.log('uncheck='+val)},onCheckChange:function(event,value){console.log(value)}" label="停用" id="stopFlag">
+					<input class="hisui-checkbox" type="checkbox" value="1" label="未匹配项" id="genMatch"><!--xww 2021-08-26-->
+				</td>				
+			</tr>
+		</table>
+	</div>
+	<!--对照数据工具栏  Sunhuiyong -2020-04-09-->
+	<div id="resetToolbar">
+		<table style="" >
+			<tr>
+				<td>
+					<a id="resetCompare" href="#" class="hisui-linkbutton" plain="true" iconCls="icon-write-order">修改</a>
+				</td>
+				<td>
+					<a href="#" class="hisui-linkbutton" iconCls="icon-cancel" plain="true" id="deleteAllContrast">删除</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!--His通用名工具栏-->
+	<div id="hisToolbar">
+		<table style="padding:10px 10px 0px 10px;" >
+			<tr>
+				<td style="padding-right:5px">描述</td>
+				<td>
+					<input id="hisDesc" class="hisui-validatebox textbox"/>
+				</td>
+				<td style="padding-right:10px;padding-left:20px;">
+					<input class="hisui-radio" type="radio" value="1" label="未匹配项" id="hismatch">
+				</td>
+				<td style="padding-right:10px;display:none">
+					<input class="hisui-checkbox" type="checkbox" value="1" label="已核对" name="hischeck" id="hischeck">
+				</td>
+
+				<td style="padding-right:10px;display:none">
+					<input class="hisui-checkbox" type="checkbox" value="0" label="未核对" name="hischeck" id="hischeckno">
+				</td>
+
+				<td style="padding-right:10px">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="hisSearch">查询</a>
+				</td>
+				<td style="padding-right:10px">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true" id="hisRefresh" >重置</a>
+				</td>
+			</tr>
+		</table>
+		<div  style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+		<div>
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+  					<td>
+  						<a id="openDataType" href="#" class="hisui-linkbutton" plain="true" iconCls="icon-ref">字典归属</a>
+  					</td>
+			    	<td style="padding-right:10px">
+						<a href="#" class="hisui-linkbutton" iconCls="icon-ok" plain="true" id="condata" >数据对照</a>
+					</td> 
+					
+			    </tr>
+			</table>
+		</div>
+	</div>
+<!-- Sunhuiyong 添加重定向对照数据操作-->
+<div id="resetcompare" class="hisui-dialog" title="数据对照修改" style="width:450px;height:135px;padding:10px 10px 0px 10px;"
+ data-options="iconCls:'icon-w-save',resizable:true,modal:true,closed:true,buttons:[{
+		text:'保存',
+		id:'SaveReCompareData',
+		handler:function(){SaveReCompareData()}
+	},{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#resetcompare').close();}
+	}]">   
+	<!-- 修改字典指向表格-->
+	<form>
+	  <table style="margin:auto">
+		<tr >
+			<td style="padding-right:5px">重置为该数据对照</td> 
+			<td><input class="hisui-combobox" href="#" id="newcomparedata" /></td>   
+		</tr>
+		</table>
+	</form>
+</div>
+
+<div id="DataTypeDialog" class="hisui-dialog" title="字典归属修改" style="width:450px;height:135px;padding:10px 10px 0px 10px;"
+ data-options="iconCls:'icon-save', iconCls:'icon-w-save',resizable:true,modal:true,closed:true,buttons:[{
+		text:'保存',
+		id:'updateDataType',
+		handler:function(){updateDataType()}
+	},{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#DataTypeDialog').close();}
+	}]">   
+	<!-- 修改字典指向表格-->
+	<form>
+	  <table style="margin:auto">
+		<tr >
+			<td style="padding-right:5px">重置为该字典类型</td> 
+			<td><input class="hisui-combobox" href="#" id="ExtDateType" /></td>   
+		</tr>
+		</table>
+	</form>
+</div>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.ncpaccompanysub.csp 陪护人体征录入--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<AINURPRINT></AINURPRINT>
+<HISUI></HISUI>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/NCPAccompanySub.js" charset=gbk></script>
+	<STYLE type='text/css'>
+        .search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.r-label{
+			padding-left: 10px;
+		}
+		.west_patients {
+			width: 195px;
+			border: none;
+		}
+		.west_north_search {
+			padding: 5px;
+			height: 66px;
+			border: 1px solid #ccc;
+		}
+		#wardPatientCondition {
+			margin-top: 5px;
+			width: 166px;
+			padding:0 1px;
+		}
+		.west_center_list {
+			padding: 0;
+		}
+		.center_templates {
+			border: none;
+		}
+		.center_north_patinfo {
+			height:38px;
+			border: none;
+		}
+		.center_center_list {
+			border: none;
+			border-radius: 4px;
+		}
+		.center_center_tree {
+			border: none;
+			padding: 4px;
+		}
+		.PatInfoItem{
+	        top:0 !important;
+	        left:0 !important;
+	        margin-left:0 !important;
+        }
+		.searchbox .searchbox-prompt {
+			padding-left: 5px !important;
+		}
+		.unman {
+			background: url(../images/unman.png) no-repeat;
+			background-size: cover;
+		}
+		.man{
+		 background:url(../images/man.png) no-repeat;
+		 background-size:cover;
+		 }
+		 .woman{
+			 background:url(../images/woman.png) no-repeat;
+			 background-size:cover;
+		 }
+		 /*床位 责组的样式*/
+		.switch {
+			text-align:center;
+			padding-top: 5px;
+		}
+		.ant-switch{
+			margin:0;
+			padding:0;
+			color:rgba(0,0,0,.65);
+			font-size:14px;
+			font-variant:tabular-nums;
+			line-height:1.5;
+			list-style:none;
+			-webkit-font-feature-settings:"tnum";
+			font-feature-settings:"tnum";
+			position:relative;
+			display:inline-block;
+			-webkit-box-sizing:border-box;
+			box-sizing:border-box;
+			min-width:44px;
+			height:22px;
+			line-height:20px;
+			vertical-align:middle;
+			background-color:rgba(0,0,0,.25);
+			border:1px solid transparent;
+			border-radius:100px;
+			cursor:pointer;
+			-webkit-transition:all .36s;
+			transition:all .36s;
+			-webkit-user-select:none;
+			-moz-user-select:none;
+			-ms-user-select:none;
+			user-select:none;
+		}
+		.ant-switch-checked .ant-switch-inner {
+			margin-right:24px;
+			margin-left:6px;
+		}
+		.ant-switch:focus {
+			outline:0;
+		}
+		.ant-switch:after {
+			position:absolute;
+			top:1px;
+			left:1px;
+			width:18px;
+			height:18px;
+			background-color:#fff;
+			border-radius:18px;
+			cursor:pointer;
+			-webkit-transition:all .36s cubic-bezier(.78,.14,.15,.86);
+			transition:all .36s cubic-bezier(.78,.14,.15,.86);content:" ";
+		}
+		.ant-switch-checked:after {
+			left:100%;
+			margin-left:-1px;
+			transform:translateX(-100%);
+		}
+		.ant-switch-checked {
+			background-color:#1890ff;
+		}
+		.switchIcon{
+			margin:0 10px;
+		}
+		.patlist-div .panel-header{
+			border-radius:0;
+		}
+		#NCPAccompanyRecEditWin .panel,#NCPAccompanyRecSubEditWin .panel{
+			margin:10px;
+		}
+		#NCPAccompanyRecSubEditWin table tr {
+			height:30px;
+		}
+	</STYLE>
+</head>
+<body style="padding:10px;">
+	<server>
+    	s PatientListPage=""
+        s EpisodeID = $G(%request.Data("EpisodeID", 1))
+		s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+		s DefaultCode = $G(%request.Data("DefaultCode", 1))
+		s SinglePatient = $G(%request.Data("SinglePatient", 1))
+		s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+		s CurrentTime=$zt($p($h,",",2),2) ;##class(websys.Conversions).TimeLogicalToHtml($p($h,",",2))
+   </server>
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true">   
+		<div div id="patient_search" data-options="region:'west',split:false,border:false" style="width:196px;overflow-y:hidden;">
+			<div style="padding-bottom:10px;"> <!--margin: 10px 0 10px 10px;-->
+				<!--input id="wardPatientSearchBox" class="textbox" placeholder="#(..Get("姓名、床号"))#" style="width:151px;"/><a class="hisui-linkbutton" id="wardPatientSearchBtn" data-options="iconCls:'icon-w-find',plain:true" style="background:#40A2DE;vertical-align:bottom;margin-left:-2px;"></a-->
+				<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、床号"))#'" style="width:186px;"/>
+			</div>
+			<div class="patlist-div" style="margin-right:10px;"><!--margin:0 0 10px 10px;-->
+				<div class="hisui-panel" title="#(..Get("陪护人员列表"))#" id="patientList" style="overflow:hidden;">
+					<div class="switch">
+						<label class="current">#(..Get("床位"))#</label>
+						<button id="switchBtn" type="button" role="switch" class="switchIcon ant-switch" aria-checked="true" ant-click-animating="false">
+							<span class="ant-switch-inner"></span>
+						</button>
+						<label>#(..Get("责组"))#</label>
+					</div>
+					<div id="patientListTree" class="hisui-panel" style="border:0;"><ul id="patientTree" data-options="animate:true"></ul></div>
+				</div>
+			</div>
+		</div>  
+		
+		<div class="center_templates" data-options="region:'center',split:true" style=""><!--padding:10px;-->
+			<div id="NCPAccompanySubPanel" class="hisui-panel" data-options="fit:true,title:'陪护体征信息',iconCls:'icon-cal-pen',headerCls:'panel-header-gray'"> 
+				<div style="border-bottom:1px dashed #ccc;">
+					<table class="search-table">
+						<tr>
+							<td class="r-label">
+								<label>#(..Get("查询日期"))#</label>
+							</td>
+							<td>
+								<input id="stDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser,onSelect:onChangeDate"/>
+							</td>
+							<td style="padding:0 10px;">
+								<label>#(..Get("至"))#</label>
+							</td>
+							<td>
+								<input id="edDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser,onSelect:onChangeDate"/>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div id="NCPAccompanySubPanel-table">
+					<table id="tabNCPAccompanySub"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--增加/修体征录入弹框-->
+	<SCRIPT language = 'javascript'>
+		var EpisodeID = "#(EpisodeID)#";
+        var AuthorityFlag = "#(AuthorityFlag)#";
+        var DefaultCode = "#(DefaultCode)#";
+        var SinglePatient = "#(SinglePatient)#";
+        var ServerObj={
+			CurrentDate:"#(CurrentDate)#",
+			CurrentTime:"#(CurrentTime)#"
+		}
+   </script>
+	<script type="text/javascript">
+		var ColumnsJson = tkMakeServerCall("Nur.NIS.Service.Accom.NCPAccompany", "GetNCPAccompanyInfoSubData",session['LOGON.HOSPID'],"T");
+		document.write(ColumnsJson)
+		
+		function onChangeDate(){
+			
+			$('#tabNCPAccompanySub').datagrid("reload");
+		}
+	</script>
+</body>
+</html>

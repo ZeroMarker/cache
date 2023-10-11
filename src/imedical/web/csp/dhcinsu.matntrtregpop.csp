@@ -1,0 +1,133 @@
+<!-- 
+ * FileName:	dhcinsu.matntrtregpop.csp
+ * User:		靳帅
+ * Date:		2022-11-24
+ * Description: 生育备案弹窗
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>   
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method> 
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS require="CmdShell"/>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.css'/>
+  	<link rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/>
+	<script type='text/javascript' src='../scripts/dhcbill/common/dhcbill.common.js'></script>
+	<script type='text/javascript' src='../scripts/dhcinsu/common/dhcinsu.common.js'></script> 
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>	
+
+
+</head>
+
+<body>
+<div class="hisui-layout" data-options="fit:true" style='padding:0 10px 0px 0'>
+   <div id="InItmEPl"data-options="region:'center',border:false" style="solid #ccc;border-top:0;">
+      <table  class="search-table" style="width:100%;">	
+                           <tr hidden>
+                            <td hidden class="r-label "><label>医保类型</label></td>
+                            <td hidden><input id="QInsuType"   class="textbox " /></td>		
+                                
+                          </tr>	
+		  <tr>
+          <td class="r-label"     ><label class="clsRequired" >孕妇姓名</label></td>
+		  <td><input id="name" missingMessage="该项不能为空" class="hisui-validatebox textbox"     /></td>
+          <td class="r-label r-label-20"      ><label class="clsRequired" >孕妇证件号码</label></td>
+          <td><input id="Certno" class="textbox hisui-validatebox" /></td>
+          
+          <td class="r-label r-label-20 "      ><label  class="clsRequired">险种类型</label></td>
+		  <td><input id="InsuType" class="textbox hisui-validatebox"    /></td>	
+      </tr>
+       <tr>   
+          <td class="r-label "      ><label  class="clsRequired">孕妇联系电话</label></td>
+          <td><input id="tel"    missingMessage="该项不能为空" class="hisui-validatebox textbox" data-options="validType:'mobilephone'" /></td>
+          
+          <td class="r-label r-label-20"        ><label class="clsRequired">生育申报人类别</label></td>
+          <td><input id="MatnTrtDclaerType"   missingMessage="该项不能为空" class="textbox hisui-validatebox"/></td>
+       <td class="r-label r-label-20"       ><label  class="clsRequired" >孕周数</label></td>
+          <td><input id="GesoVal" class="textbox"/></td>
+      </tr>
+         <tr>
+           <td class="r-label  "       ><label class="clsRequired" >胎次</label></td>
+          <td><input id="Fetts" class="textbox"/></td>
+          <td class="r-label  r-label-20"      ><label class="clsRequired" >生育类别</label></td>
+          <td><input id="MatnType"     missingMessage="该项不能为空" class="textbox hisui-validatebox"  /></td>
+          <td class="r-label r-label-20"      ><label class="clsRequired" >末次月经日期</label></td>
+          <td><input id="LastMenaDate" class="textbox hisui-datebox" /></td>
+         
+           </tr>
+      
+       <tr> 
+       
+          <td class="r-label  "><label class="clsRequired" >预计生育日期</label></td>
+          <td><input id="PlanMatnDate" class="textbox hisui-datebox" ></td>
+          <td class="r-label  r-label-20 "      ><label class="clsRequired" >产检开始日期</label></td>
+          <td><input id="SDate" class="textbox hisui-datebox"/></td>
+        <td class="r-label r-label-20"      ><label class="clsRequired">产检结束日期</label></td>
+          <td><input id="EDate" class="textbox hisui-datebox" ></td>
+      </tr>
+     
+ 
+      <tr>
+          <td class="r-label"    ><label>联系地址</label></td>
+          <td colspan='5'>
+            <input id='addr' class="textbox" size=12 style="height:28px;width:755px"></input>
+          </td>
+          
+          
+          </tr>
+          
+          <tr>
+          <td class="r-label "    ><label>配偶姓名</label></td>
+          <td><input id="SpusName" class="textbox"/></td>
+          <td class="r-label  r-label-20"   ><label>配偶证件类型</label></td>
+          <td><input id="SpusCertType" class="textbox" /></td>
+          <td class="r-label  r-label-20"    ><label>配偶证件号码</label></td>
+          <td><input id="SpusCertNo" class="textbox"/></td>
+      </tr>
+       <tr>   
+       <td class="r-label"    ><label>计划生育服务证号</label></td>
+          <td><input id="FpscNo" class="textbox"/></td>
+          <td class="r-label  r-label-20"    ><label>代办人姓名</label></td>
+          <td><input id="AgnterName" class="textbox"/></td>
+          <td class="r-label r-label-20"    ><label>代办人关系</label></td>
+          <td><input id="AgnterRlts" class="textbox"/></td>
+      </tr>
+      <tr>
+          <td class="r-label"    ><label>代办人联系方式</label></td>
+          <td><input id="AgnterTel" class="textbox"/></td>
+          <td class="r-label  r-label-20"   ><label>代办人证件类型</label></td>
+          <td><input id="AgnterCertType" class="textbox"/></td>
+          <td class="r-label  r-label-20"   ><label>代办人证件号码</label></td>
+          <td><input id="AgnterCertno" class="textbox"/></td>
+      </tr>
+      <tr>
+          <td class="r-label "   ><label>备注</label></td>
+          <td colspan='5'>
+            <textarea id='reflRea' class="textbox" size=12 style="height:28px;width:755px"></textarea>
+          </td>
+      </tr>
+	  </table>
+	  <table   style="margin-top: -5px;">
+	    <tr>	
+	       <td  style="padding:0 0px 0px 385px">
+		      <a id="btnU" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">确定</a>
+	       </td>
+	  	   <td  style="padding:0 0px 0px 10px">
+		      <a id="btnC" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" >关闭</a>
+	      </td>
+	    </tr>		
+	</table> 
+   </div>
+</div>
+<script type="text/javascript" src="../scripts/dhcinsu/matntrtregpop.js"></script>
+
+</body>
+</html>

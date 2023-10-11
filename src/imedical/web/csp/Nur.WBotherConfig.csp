@@ -1,0 +1,937 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+	<title>	Cache Server Page </title>
+	<meta charset="utf-8"/>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/NurWB/css/font-awesome.4.6.0.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/NurWB/css/main.css">
+	<link rel="stylesheet" href="../scripts/nurse/NurWB/css/excel.css" type="text/css" />
+	<link rel="stylesheet" href="../scripts_lib/jQuery/colorpicker/css/colorpicker.css" type="text/css" />
+	<HISUI />
+<style type="text/css">
+	.panelArea{
+		width:360px;
+		height:330px;
+		float:left;
+		margin-right:10px;
+		margin-bottom:10px;
+	}
+	.radioDiv{
+		padding-bottom:10px;
+		width:calc(100% - 11px);
+	}
+	.oneRow{
+		width:100%;
+		padding-bottom: 10px;
+		display:flex;
+	}
+	.oneRow .tvTip{
+		width:77px;
+		height:30px;
+		line-height:30px;
+		text-align:right;
+		padding-right:10px;
+	}
+	
+	.oneRow textarea{
+		width:calc(100% - 97px);
+		height:60px;
+	}
+	.oneRow input{
+		width:calc(100% - 94px);
+		height:30px;
+	}
+	.oneRow .forceList{
+		width:calc(100% - 94px);
+		height:30px;
+		padding-top:3px
+	}
+	.mastFill{
+		color:red;
+	}
+	.panelArea .panel-header-gray+.panel-body{
+		padding:10px;	
+		position:relative;
+	}
+	.panelArea .hisui-linkbutton{
+		position: absolute;
+		bottom: 10px;
+		right:135px;
+		left:135px;
+	}
+	#LogShowByLoc .oneRow .tvTip,#configSharePanel .oneRow .tvTip{
+		width:auto;
+		white-space:nowrap;
+	}
+	.LogShowByLoc{
+		float:left;
+		width:400px;
+		height:330px;
+		margin-right:10px;
+		margin-bottom:10px;
+	}
+	.LogShowByLoc panel-header-gray+.panel-body{
+		padding:0px;
+		
+	}
+	.LogShowByLoc .oneRow{
+		border-bottom: 1px dashed #ccc;
+		padding:10px;
+		padding-bottom:0px;
+		position:relative;
+		width:calc(100% - 20px);
+	}
+	.LogShowByLoc .oneRow .forceList{
+		padding-right:15px;
+		width:auto;
+	}
+	.logWardArea{
+		width:100%;
+		height:calc(100% - 45px);
+	}
+	#logWardsDialog .tipText{
+		text-align:right;
+		height:28px;
+		line-height:28px;
+		padding-right:10px;
+	}
+	#logWardsDialog .oneline{
+		width: calc(100% - 20px);
+		display:flex;
+		margin:10px 0px 0px 10px;
+		flex-wrap: nowrap;
+	}
+	#logWardsDialog .dialog-button{
+		padding-top:0px;
+	}
+	.shareTip{
+		color:gray;
+	}
+	#jieqiPanel .oneRow{
+		padding-bottom:5px;
+	}
+	#jieqiPanel .tvTip{
+		width:73px;
+	
+	}
+	#jieqiPanel .tvTip+div{
+		width:calc(100% - 73px)	
+	}
+	#jieqiPanel input[type=color] {
+		width:20px;
+		height:20px;
+	}
+	.group .body,.toolbars{
+		height:auto;
+	}
+	.toolbars .group{
+		border:none;
+	}
+	.fa{
+		font-size:18px;
+		color:#555555;
+	}
+	.colorpicker input[type=text]{
+		border:1px solid transparent;
+		width:auto;
+	}
+	#widthRow{
+		display:none;
+	}
+	#widthRow .tvContent{
+		display:flex;
+	}
+</style>
+<script language="cache" RUNAT="SERVER">
+  	s multiFlag=1
+</script>
+
+</head>
+<body style="background:white;">
+<div class="hisui-layout" fit="true"><div data-options="region:'center',border:false" style="padding:10px 10px 10px 10px;">
+	<div class="panelArea" id="schedualPanel" style="display:none;">
+		<div class="hisui-panel" title="护理排班版本" 
+    		data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:[]">
+    		<div class="radioDiv">
+    			<input class="hisui-radio" type="radio" label="护理管理3.x" name="nurmg" value="3">
+    		</div>
+    		<div class="radioDiv">
+    			<input class="hisui-radio" type="radio" label="护理管理4.x" name="nurmg" value="4">
+    		</div>
+    		<div class="radioDiv">
+    			<input class="hisui-radio" type="radio" label="其它版本" name="nurmg" value="4">
+    			<input placeholder="输入排班查询接口名称" class="textbox">
+    		</div>
+    		<a href="#" class="hisui-linkbutton" onClick="saveSchedualVersion()" style="height:30px;">保存</a>
+    	</div>
+	</div>
+    
+	<div class="panelArea" id="shiftPanel" style="display:none;">
+		<div class="hisui-panel" title="护理交班版本" 
+    		data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:[]">
+    		<div class="radioDiv" id="normalArea">
+    			<input id="normal" class="hisui-radio" type="radio" label="病室交班" name="shiftVersion" data-options="required:true" value="normal">
+    		</div>
+    		<div class="radioDiv" id="isbarArea">
+    			<input id="isbar" class="hisui-radio" type="radio" label="个体交班(ISBAR)" name="shiftVersion" data-options="required:true" value="ISBAR">
+    		</div>
+    		<a href="#" class="hisui-linkbutton" onClick="saveShiftVersion()" style="height:30px;">保存</a>
+    	</div>
+	</div>
+	<div class="panelArea" id="apkPanel">
+		<div class="hisui-panel" title="安卓TV升级" 
+    		data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:[]">
+			<div class="oneRow">
+				<div class="tvTip"><span class="mastFill">*</span>AppId</div>
+				<input id="curId" class="textbox" placeholder="例如:com.dhcc.nurtv.standard">
+			</div>
+			<div class="oneRow">
+				<div class="tvTip"><span class="mastFill">*</span>版本号</div>
+				<input id="curVersion" class="textbox" placeholder="例如:1.1.0">
+			</div>
+    		<div class="oneRow">
+    			<div class="tvTip"><span class="mastFill">*</span>标题</div>
+    			<input id="curTitle" class="textbox" placeholder="新版本发布">
+    		</div>
+			<div class="oneRow">
+				<div class="tvTip"><span class="mastFill">*</span>更新内容</div>
+				<input id="curContent" class="textbox" placeholder="1.更新护理交班;2.修复了一些bug;">
+			</div>
+			<div class="oneRow">
+				<div class="tvTip"><span class="mastFill">*</span>安装包位置</div>
+				<input id="curRoute" class="textbox" placeholder="例如:http://114.242.246.235:18080/imedical/web/scripts/nurse/tv/tv_1.1.0.apk">
+			</div>
+			<div class="oneRow">
+				<div class="tvTip"><span class="mastFill">*</span>强制升级</div>
+				<div id="curForce" class="forceList">
+					<input id="force1" class="hisui-radio" type="radio" label="是" data-options="required:true" name="forceList" value="1">
+            		<input id="force0" class="hisui-radio" type="radio" label="否" data-options="required:true" name="forceList" value="0">
+				</div>
+			</div>
+			<a href="#" class="hisui-linkbutton" onClick="saveApkVersion()" style="height:30px;">保存</a>					
+    	</div>
+	</div>
+	<div class="LogShowByLoc" id="LogShowByLoc">
+		<div class="hisui-panel" title="病区日志分科室显示配置" 
+    		data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:[]">
+    		<div class="oneRow">
+				<div class="tvTip"><span class="mastFill">*</span>是否分科室:</div>
+				<div id="showList" class="forceList">
+					<input id="show1" class="hisui-radio" type="radio" label="分科室" data-options="required:true" name="LogShow" value="1">
+            		<input id="show0" class="hisui-radio" type="radio" label="不分科室" data-options="required:true" name="LogShow" value="0">
+				</div>
+				<a href="#" class="hisui-linkbutton" onClick="saveLogShowByLocType()" style="height:30px;width:90px;">保存</a>
+			</div>
+			<div class="logWardArea">
+				<table id="specialWardTable" class="hisui-datagrid" border="false" data-options="rownumbers:true,singleSelect:true,fit:true,toolbar: '#tbLog',headerCls:'panel-header-gray'" 
+					style="width:400px;">
+					<thead><tr><th data-options="field:'warddesc',width:300">病区名称</th></tr></thead>
+				</table>
+				<div id="tbLog">
+					<span>特殊病区</span>
+					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="appendWard()">新增</a>
+					<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeWard()">删除</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="logWardsDialog" class="hisui-dialog" title="新增特殊病区" style="width:416px;height:208px;padding:0px"data-options="iconCls:'icon-add',modal:true,closed:'true',buttons:[{text:'确定',handler:function(){logWardAdd()}},{text:'取消',handler:function(){$HUI.dialog('#logWardsDialog').close();}}]">   
+	    <csp:if condition='1=multiFlag'>
+			<div class="oneline">
+	    		<div data-options="region:'north',border:false">
+		 			<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+		 		</div>
+			</div>
+		</csp:if>
+	    <div class="oneline">
+	    	<div class="tipText">病区</div>
+	    	<select id="dialogWard" class="hisui-combobox" style="width:352px;height:32px;" data-options="enterNullValueClear:false,blurValidValue:true,valueField:'wardid',textField: 'warddesc',defaultFilter:6">
+			</select>
+	    </div>
+	</div>
+	<csp:if condition='1=multiFlag'>
+		<div class="panelArea" id="configSharePanel" style="width:450px;height:380px;clear:left">
+		  <div class="hisui-panel" title="共享配置" 
+    		data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:[]">
+    		<div class="oneRow">
+				<div class="tvTip">启用共享</div>
+				<div id="curShare" class="shareList">
+					<input id="share1" class="hisui-radio" type="radio" label="启用" data-options="required:true" name="shareList" value="1">
+            		<input id="share0" class="hisui-radio" type="radio" label="不启用" data-options="required:true" name="shareList" value="0">
+				</div>
+			</div>
+    		<div class="oneRow">
+	    		<div data-options="region:'north',border:false">
+		 			<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+		 		</div>
+			</div>
+			
+			<div class="oneRow">
+				<div class="tvTip">共享模块</div>
+				<div id="shareModule" class="moduleList">
+					<input class="hisui-checkbox" type="checkbox" label="床位卡配置" id="bed">
+					<input class="hisui-checkbox" type="checkbox" label="日志项目" id="item">
+					<input class="hisui-checkbox" type="checkbox" label="日志模板" id="layout">
+					<!--<input class="hisui-checkbox" type="checkbox" label="护理任务" id="task"> -->
+				</div>
+			</div>
+			<div class="oneRow">
+				<div class="tvTip">强制共享</div>
+				<div id="shareForce" class="shareForceList">
+					<input id="shareForce1" class="hisui-radio" type="radio" label="启用强制共享" data-options="required:true" name="shareForceList" value="1">
+            		<input id="shareForce0" class="hisui-radio" type="radio" label="不启用强制共享" data-options="required:true" name="shareForceList" value="0">
+				</div>
+			</div>
+			<div class="oneRow">
+				<div class="tvTip">共享说明</div>
+				<div class="shareTip">启用共享配置后：病区有配置使用病区，病区没有配置取全院的配置；全院没有配置取共享院区配置。<br>
+					启用强制共享:直接使用共享院区配置或共享院区"全院"配置。
+				</div>
+			</div>
+    		<a href="#" class="hisui-linkbutton" onClick="saveConfigShare()" style="height:30px;">保存</a>
+    	  </div>
+		</div>
+	</csp:if>
+	<div class="panelArea" id="jieqiPanel" style="height:380px;width:430px">
+		<div class="hisui-panel" title="24节气" 
+    		data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',tools:[]">
+    		<div class="oneRow">
+				<div class="tvTip">是否显示</div>
+				<div id="showJQList" class="showJQList">
+					<input id="showJQ1" class="hisui-radio" type="radio" label="显示" data-options="required:true" name="showJQList" value="1">
+            		<input id="showJQ0" class="hisui-radio" type="radio" label="不显示" data-options="required:true" name="showJQList" value="0">
+				</div>
+			</div>
+			<div id="posRow" class="oneRow">
+				<div class="tvTip">显示位置</div>
+				<div id="showJQPos" class="showJQPos">
+					<input id="position1" class="hisui-radio" type="radio" label="滚动字幕内" data-options="required:true" name="showJQPos" value="1">
+            		<input id="position0" class="hisui-radio" type="radio" label="导航栏病区前(可不设置宽度)" data-options="required:true" name="showJQPos" value="0">
+				</div>
+			</div>
+			<div id="widthRow" class="oneRow">
+				<div class="tvTip">宽度设置</div>
+				<div class="tvContent">
+					<div><label>滚动字幕(%)</label>
+						<input id="textWidth" class="hisui-numberbox textbox" style="width:95px;" data-options="isKeyupChange:true,precision:0,min:1,max:100" ></div>
+					<div><label>节气宽度(%)</label>
+						<input id="jqWdith" class="hisui-numberbox textbox" style="width:100%;" data-options="isKeyupChange:true,precision:0,min:1,max:100" ></div>
+					<div><label>病区宽度(%)</label>
+						<input id="wardWidth" class="hisui-numberbox textbox" style="width:100%;" data-options="isKeyupChange:true,precision:0,min:1,max:100" ></div>
+				</div>
+				
+			</div>
+			<div id="styleRow" class="oneRow">
+				<div class="tvTip">文字设置</div>
+				<div class="toolbars">
+					<div class="group font">
+						<div class="body">
+							<div class="sub sub-top">
+								<select id="fontsize" class="fontsize">
+									<option value="8px">8</option>
+									<option value="9px">9</option>
+									<option value="10px">10</option>
+									<option value="11px">11</option>
+									<option value="12px">12</option>
+									<option value="14px">14</option>
+									<option value="15px">15</option>
+									<option value="16px" selected="selected">16</option>
+									<option value="18px">18</option>
+									<option value="20px">20</option>
+									<option value="22px">22</option>
+									<option value="24px">24</option>
+									<option value="26px">26</option>
+									<option value="28px">28</option>
+									<option value="36px">36</option>
+									<option value="48px">48</option>
+								</select>
+								<button type="button" class="tag-btn btn-bold"><i class="tag bold"></i></button>
+								<button type="button" class="tag-btn btn-italic"><i class="tag italic"></i></button>
+								<button type="button" class="tag-btn" id="fontColor"><i class="tag fontColor"></i></button>
+								<input type="color" id="fontColorSelect" value="#323232">
+								<button type="button" class="tag-btn" id="clearBtn"><i class='fa fa-trash-o'></i></button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="previewRow" class="oneRow">
+				<div class="tvTip">文字预览</div>
+				<div id="jqPreview" class="jqPreview">节气内容</div>
+			</div>
+			<div id="pinjieRow" class="oneRow">
+				<div class="tvTip">文字拼接</div>
+				<div class="tvContent">
+					<input id="beforeJQ" class="textbox" style="width:calc(100% - 10px);" placeholder="节气前拼接内容">
+					<input id="afterJQ" class="textbox" style="width:calc(100% - 10px);margin-top:10px;" placeholder="节气后拼接内容">
+				</div>
+			</div>
+			
+    		<a href="#" class="hisui-linkbutton" onClick="saveJQConfig()" style="height:30px;">保存</a>
+    	</div>
+	</div></div></div>
+<script type="text/javascript" src="../scripts_lib/jQuery/colorpicker/js/colorpicker.js"></script>
+<script type="text/javascript">
+var apkInfo;
+var showScheudal=false,showShift=true,showApk=true;
+var multiFlag = "#($g(multiFlag))#";
+var hospCompByLoc,hospCompShare
+baseSetup();
+function baseSetup(){
+	$('#fontColorSelect').ColorPicker({
+		onSubmit: function(hsb, hex, rgb, el) {
+			$(el).val("#"+hex).css("color","#"+hex);
+			var jqPreview = document.getElementById('jqPreview')
+			jqPreview.style.color='#'+hex
+			jqPreview.setAttribute("data-color",'#'+hex)
+			$(el).ColorPickerHide();
+		},
+		onBeforeShow: function() {
+			$(this).ColorPickerSetColor(this.value);
+		}
+	}).bind('keydown',function(){
+			$(this).ColorPickerSetColor(this.value);
+	});
+	if(showScheudal){
+		var pannel = document.getElementById('schedualPanel');
+		pannel.style = '';
+	}
+	if(showShift){
+		var pannel = document.getElementById('shiftPanel');
+		pannel.style.display = 'block';
+		//console.log('shiftPanel',pannel )
+		getShiftVersion();
+	}
+	if(showApk){
+		var pannel = document.getElementById('apkPanel');
+		pannel.style = '';
+		getApkVersion();
+	}
+	if (parseInt(multiFlag)) {
+		//院区初始化和选择院区
+		hospCompByLoc = GenHospComp("Nur_IP_WardMerge"); 
+		var _HospList = document.getElementById('_HospList');
+		_HospList.id = 'HospByLoc';
+		$('#HospByLoc').combogrid({
+	   		onSelect:function(value){
+				$('#dialogWard').combobox('clear');
+		   		getAllWard();//获取所有病区
+	   		}	 
+   		});
+   		document.getElementById('_HospListLabel').id = '__HospListLabel1';
+   		document.getElementById('_HospListLabel').innerText="共享院区"
+   		hospCompShare = GenHospComp("Nur_IP_TABLELayout");
+		$('#_HospList').combogrid({
+			onSelect:function(value){
+				
+			}	 
+		});	
+		$('#shareForce1').radio({
+			onChecked:function(e,value){
+				$HUI.radio('#share1').setDisable(true);
+				$HUI.radio('#share1').setValue(true);
+				$HUI.radio('#share0').setDisable(true);
+			}	 
+		});
+		$('#shareForce0').radio({
+			onChecked:function(e,value){
+				$HUI.radio('#share1').setDisable(false);
+				$HUI.radio('#share0').setDisable(false);
+			}	 
+		});
+		$('#showJQ1').radio({
+			onChecked:function(e,value){
+				$('#posRow').css("display","flex")
+				$('#styleRow').css("display","flex")
+				$('#previewRow').css("display","flex")
+				$('#pinjieRow').css("display","flex")
+				if($("input[name='showJQPos']:checked").val()==1){
+					$('#widthRow').css("display","none")
+				}else{
+					$('#widthRow').css("display","flex")
+				}
+			}	 
+		});
+		$('#showJQ0').radio({
+			onChecked:function(e,value){
+				//console.log(value)
+				// posRow styleRow previewRow pinjieRow
+				$('#posRow').css("display","none")
+				$('#styleRow').css("display","none")
+				$('#previewRow').css("display","none")
+				$('#pinjieRow').css("display","none")
+				$('#widthRow').css("display","none")
+			}	 
+		});
+		$('#position0').radio({
+			onChecked:function(e,value){
+				$('#widthRow').css("display","flex")
+			}	 
+		});
+		$('#position1').radio({
+			onChecked:function(e,value){
+				$('#widthRow').css("display","none")
+			}	 
+		});
+		
+	}
+	$('#jieqiPanel').on('change', '#fontsize', setFontSize);
+	$('#jieqiPanel').on('click', '.btn-bold', setFontBold);
+	$('#jieqiPanel').on('click', '.btn-italic', setFontItalic);
+	$('#jieqiPanel').on('click', '#fontColor', clickFontColor);
+	$('#jieqiPanel').on('change', '#fontColorSelect', setFontColor);
+	$('#jieqiPanel').on('click', '#clearBtn', clearJQStyle);
+	
+	getLogShowByLocType()
+	getLogShowByLocWards()
+	getAllWard()
+	getShareData()
+	getJQConfig()
+}
+
+function saveSchedualVersion(){}
+
+function getSchdualVersion(){}
+
+//
+function saveShiftVersion(){
+	var type = $("input[name='shiftVersion']:checked").val();
+	if(type == undefined){
+		$.messager.popover({msg: "请选择护理交班版本类型",type:'alert'});
+		return
+	}
+	$cm({
+		ClassName:'Nur.DWB.Service.BedChartService',
+		MethodName:"SaveShiftVersion",
+		type:type
+	},function(jsonData){
+		//console.log('saveShiftVersion',jsonData)
+		if(jsonData.flag == 'false'){
+			$.messager.popover({msg: jsonData.err,type:'alert'});
+			return;
+		}else{
+			$.messager.popover({msg: '保存成功',type:'success'});
+		}
+	});
+	
+}
+
+function getShiftVersion(){
+	$cm({
+		ClassName:'Nur.DWB.Service.BedChartService',
+		MethodName:"GetShiftVersion"
+	},function(jsonData){
+		//console.log('GetShiftVersion',jsonData);
+		var idStr = '';
+		if(jsonData.type == "ISBAR"){
+			idStr = '#isbar';
+		}else{
+			idStr = '#normal'
+		}
+		$HUI.radio(idStr).setValue(true);
+	});
+}
+
+
+//安卓apk版本升级
+function saveApkVersion(){//保存
+	var curId = document.getElementById('curId').value
+	var curVersion = document.getElementById('curVersion').value
+	var curTitle = document.getElementById('curTitle').value
+	var curContent = document.getElementById('curContent').value
+	var curRoute = document.getElementById('curRoute').value
+	
+	if(curId == "" || curVersion == "" || curTitle == "" || curContent == "" || curRoute == ""){
+		$.messager.popover({msg: '请填写完整',type:'alert'});
+		return;
+	}
+	var forceObj = $("input[name='forceList']:checked");
+	var forceType = forceObj.val()+""
+	
+	$cm({
+		ClassName:'Nur.DWB.Service.BedChartService',
+		MethodName:"SaveAppVersion",
+		AppId:curId,
+		AppNote:curContent,
+		AppTitle:curTitle,
+		AppVersion:curVersion,
+		AppUrl:curRoute,
+		AppForce:forceType
+	},function(jsonData){
+		//console.log('SaveAppVersion',jsonData)
+		if(jsonData.flag == 'false'){
+			$.messager.popover({msg: jsonData.err,type:'alert'});
+			return;
+		}else{
+			$.messager.popover({msg: '保存成功',type:'success'});
+		}
+	});
+	
+	
+}
+function getApkVersion(){//获取
+	var curId = document.getElementById('curId')
+	var curVersion = document.getElementById('curVersion')
+	var curTitle = document.getElementById('curTitle')
+	var curContent = document.getElementById('curContent')
+	var curRoute = document.getElementById('curRoute')
+	var curForce = document.getElementById('curForce')
+	$cm({
+		ClassName:'Nur.DWB.Service.BedChartService',
+		MethodName:"GetAppVersion"
+	},function(jsonData){
+		//console.log('GetPadVersion',jsonData)
+		apkInfo = jsonData;
+		var count = 0;
+		for(var key in jsonData){
+			count += 1;
+			break;
+		}
+		if(count == 0){
+			curId.value = '';
+			curVersion.value = '';
+			curTitle.value = '';
+			curContent.value = '';
+			$HUI.radio("#force0").setValue(true);
+		}else{
+			curId.value = jsonData['AppId']
+			curVersion.value = jsonData['AppVersion']
+			curTitle.value = jsonData['AppTitle']
+			curContent.value = jsonData['AppNote']
+			curRoute.value = jsonData['AppUrl']
+			
+			if(jsonData['AppForce']+"" == '1'){
+				$HUI.radio("#force1").setValue(true);
+			}else{
+				$HUI.radio("#force0").setValue(true);
+			}
+		}
+		
+	});
+}
+function saveLogShowByLocType(){
+	var type = $("input[name='LogShow']:checked").val();
+	if(type == undefined){
+		$.messager.popover({msg: "请选择是否分科室展示",type:'alert'});
+		return
+	}
+	$cm({
+		ClassName:'CF.NUR.DWB.LogShowByLoc',
+		MethodName:"SaveLogShowByLocType",
+		type:type
+	},function(jsonData){
+		//console.log('SaveLogShowByLocType',jsonData)
+		if(jsonData.flag == 'false'){
+			$.messager.popover({msg: jsonData.err,type:'alert'});
+			return;
+		}else{
+			$.messager.popover({msg: '保存成功',type:'success'});
+		}
+	});
+	
+}
+
+function getLogShowByLocType(){
+	$cm({
+		ClassName:'CF.NUR.DWB.LogShowByLoc',
+		MethodName:"GetLogShowByLocType"
+	},function(jsonData){
+		//console.log('GetLogShowByLocType',jsonData);
+		var idStr = '';
+		if(jsonData.type == 1){
+			idStr = '#show1';
+		}else{
+			idStr = '#show0'
+		}
+		$HUI.radio(idStr).setValue(true);
+	});
+}
+
+function getLogShowByLocWards(){
+	$cm({
+		ClassName:'CF.NUR.DWB.LogShowByLoc',
+		MethodName:"GetLogShowByLocWards"
+	},function(jsonData){
+		$('#specialWardTable').datagrid({
+			data: jsonData
+		});
+	});
+}
+
+function appendWard(){
+	$HUI.combobox("#dialogWard").setValue('');
+	$('#logWardsDialog').dialog('open')
+}
+
+function removeWard(){
+	var getSelDict = $('#specialWardTable').datagrid('getSelected')
+	if(!getSelDict){
+		$.messager.popover({msg: '请选择要删除的病区',type:'alert'});
+		return;
+	}
+	$cm({
+		ClassName:'CF.NUR.DWB.LogShowByLoc',
+		MethodName:"DeleteLogShowByLocWard",
+		WardID:getSelDict['wardId']
+	},function(jsonData){
+		if(jsonData.msg){
+			$.messager.popover({msg: jsonData.msg,type:'alert'});
+			return		
+		}
+		$.messager.popover({msg: '删除成功！',type:'success',timeout: 800});
+		getLogShowByLocWards()
+	});	
+	
+}
+
+function getAllWard(){
+	var hospid=hospCompByLoc?$HUI.combogrid('#HospByLoc').getValue():session['LOGON.HOSPID'];
+	$cm({
+		ClassName:'Nur.DWB.Service.BedChartService',
+		QueryName:"GetallWard",
+		desc:'',
+		hospid:hospid,
+		rows:99999
+	},function(jsonData){
+		if(jsonData.msg){
+			$('#dialogWard').combobox("loadData",[]);
+			return
+		}
+		var wardArr=[]
+		for(var i = 0; i < jsonData.rows.length;i++){
+			var dict = jsonData.rows[i];
+			if(dict['wardid'] == -1 || dict['wardid'] == '-1' ){
+				continue;
+			}
+			wardArr.push(dict);
+		}
+		$('#dialogWard').combobox("loadData",wardArr);
+	});	
+}
+
+function logWardAdd(){
+	var wardid = $HUI.combobox("#dialogWard").getValue();
+	if(wardid == undefined || wardid == ''){
+		$.messager.popover({msg: '请选择病区',type:'alert'});
+		return;
+	}
+	$cm({
+		ClassName:'CF.NUR.DWB.LogShowByLoc',
+		MethodName:"AddLogShowByLocWard",
+		WardID:wardid
+	},function(jsonData){
+		if(jsonData.msg){
+			$.messager.popover({msg: jsonData.msg,type:'alert'});
+			return		
+		}
+		$('#logWardsDialog').dialog('close')
+		$.messager.popover({msg: '新增成功！',type:'success',timeout: 800});
+		getLogShowByLocWards()
+	});	
+	
+}
+function getShareData(){
+	$cm({
+		ClassName:'CF.NUR.DWB.ShareConfig',
+		MethodName:"GetShareConfig"
+	},function(jsonData){
+		if(jsonData.msg){
+			$.messager.popover({msg: jsonData.msg,type:'alert'});
+			return		
+		}
+		//console.log(jsonData)
+		var idStr = '#share'+jsonData.ShareFlag;
+		$HUI.radio(idStr).setValue(true);
+		$HUI.radio('#shareForce'+jsonData.ShareForceFlag).setValue(true);
+		hospCompShare.setValue(jsonData.ShareHosp)
+		$('#bed').checkbox('setValue',jsonData.ShareBedCard=="1");
+		$('#item').checkbox('setValue',jsonData.ShareItem=="1");
+		$('#layout').checkbox('setValue',jsonData.ShareLayout=="1");
+		//$('#task').checkbox('setValue',jsonData.ShareTask=="1");
+		
+	});
+
+}
+function saveConfigShare(){
+	var shareFlag = $("input[name='shareList']:checked").val();
+	var shareForceFlag = $("input[name='shareForceList']:checked").val();
+	var ShareHosp = hospCompShare.getValue()
+	var ShareBedCard = $('#bed').checkbox('getValue');
+	ShareBedCard = ShareBedCard?"1":"0"
+	var ShareItem = $('#item').checkbox('getValue');
+	ShareItem = ShareItem?"1":"0"
+	var ShareLayout = $('#layout').checkbox('getValue');
+	ShareLayout = ShareLayout?"1":"0"
+	//var ShareTask = $('#task').checkbox('getValue');
+	ShareTask ='0' //ShareTask?"1":"0"
+	$cm({
+		ClassName:'CF.NUR.DWB.ShareConfig',
+		MethodName:"SaveShareConfig",
+		ShareFlag:shareFlag,
+		ShareHosp:ShareHosp,
+		ShareBedCard:ShareBedCard,
+		ShareItem:ShareItem,
+		ShareLayout:ShareLayout,
+		ShareTask:ShareTask,
+		ShareForceFlag:shareForceFlag
+	},function(jsonData){
+		if(jsonData.msg){
+			$.messager.popover({msg: jsonData.msg,type:'alert'});
+			return		
+		}
+		$.messager.popover({msg: '保存成功',type:'success',timeout: 800});
+	});
+	
+}
+function setFontSize(){
+	var fontSize = $(this).val();
+	var jqPreview = document.getElementById('jqPreview')
+	jqPreview.style.fontSize=fontSize
+	
+}
+function setFontBold(){
+	$(this).toggleClass("buttonBgColor");
+	var classStr=$(this).attr('class')
+	var jqPreview = document.getElementById('jqPreview')
+	if(classStr.indexOf('buttonBgColor') != -1){
+		jqPreview.style.fontWeight=700
+	}else{
+		jqPreview.style.fontWeight=400
+	}
+}
+function setFontItalic(){
+	$(this).toggleClass("buttonBgColor");
+	var classStr=$(this).attr('class')
+	var jqPreview = document.getElementById('jqPreview')
+	if(classStr.indexOf('buttonBgColor') != -1){
+		jqPreview.style.fontStyle='italic'
+	}else{
+		jqPreview.style.fontStyle='normal'
+	}
+}
+function clickFontColor(){
+	$('#fontColorSelect').click();
+}
+function setFontColor(){
+	var color = $("#bgColorSelect").val();
+	$("#fontColor").val(color);
+	var jqPreview = document.getElementById('jqPreview')
+	jqPreview.style.color=color
+}
+
+function clearJQStyle(){
+	var jqPreview = document.getElementById('jqPreview')
+	jqPreview.style=""
+	jqPreview.removeAttribute("data-color")
+}
+
+function saveJQConfig(){
+	var jqPreview = document.getElementById('jqPreview')
+	var show = $("input[name='showJQList']:checked").val();
+	var position=0,style="",before='',after = '',hexColor='',widths=""
+	if(show == '1'){
+		position=$("input[name='showJQPos']:checked").val();
+		style = $('#jqPreview').attr('style')
+		before= $('#beforeJQ').val()
+		after = $('#afterJQ').val()
+		hexColor=jqPreview.getAttribute('data-color')
+		hexColor=hexColor==undefined?'':hexColor
+		var textWidth = $("#textWidth").numberbox('getValue')
+		var jqWdith = $("#jqWdith").numberbox('getValue')
+		var wardWidth = $("#wardWidth").numberbox('getValue')
+		if(textWidth == ""&&jqWdith == ""&&wardWidth == ""){
+		}else{
+			if(textWidth == "" || jqWdith == "" || wardWidth == ""){
+				$.messager.popover({msg: "宽度不能为空",type:'alert'});
+				return
+			}
+			var total = parseInt(textWidth) + parseInt(jqWdith) + parseInt(wardWidth)
+			if(total!=100){
+				$.messager.popover({msg: "宽度之和必须为100%",type:'alert'});
+				return
+			}
+		}
+		widths = textWidth +"@"+ jqWdith +"@"+ wardWidth 
+	}
+	if(show == undefined){
+		$.messager.popover({msg: "请选择是否显示",type:'alert'});
+		return
+	}
+	$cm({
+		ClassName:'Nur.DWB.Service.BedChartService',
+		MethodName:"SaveJQConfig",
+		show:show,
+		position:position,
+		style:style,
+		before:before,
+		after:after,
+		hexColor:hexColor,
+		widths:widths
+	},function(jsonData){
+		//console.log('SaveJQConfig',jsonData)
+		if(jsonData.flag == 'false'){
+			$.messager.popover({msg: jsonData.err,type:'alert'});
+			return;
+		}else{
+			$.messager.popover({msg: '保存成功',type:'success'});
+		}
+	});
+}
+
+function getJQConfig(){
+	var jqPreview = document.getElementById('jqPreview')
+	$cm({
+		ClassName:'Nur.DWB.Service.BedChartService',
+		MethodName:"GetJQConfig"
+	},function(jsonData){
+		//console.log('GetJQConfig',jsonData)
+		if(jsonData.flag == 'false'){
+			$.messager.popover({msg: jsonData.err,type:'alert'});
+			return;
+		}else{
+			$HUI.radio("#showJQ"+jsonData.show).setValue(true);
+			$HUI.radio("#position"+jsonData.position).setValue(true);
+			var style=jsonData.style==undefined?'':jsonData.style
+			document.getElementById('jqPreview').style=style
+			document.getElementById('beforeJQ').value=jsonData.before==undefined?'':jsonData.before
+			document.getElementById('afterJQ').value=jsonData.after==undefined?'':jsonData.after
+			var hexColor = jsonData.hexColor==undefined?'':jsonData.hexColor
+			var styleArr = style.replaceAll(" ","").split(';')
+			for (var i = 0; i < styleArr.length;i++){
+				var oneStr = styleArr[i]
+				if(oneStr == ''){
+					continue
+				}
+				var arr = oneStr.split(':')
+				if(arr[0] == 'font-size'){
+					$("#fontsize").val(arr[1]);
+				}else if(arr[0] == 'font-weight'){
+					if(arr[1] == "700"){
+						$('.btn-bold').addClass("buttonBgColor")
+					}
+				}else if(arr[0] == 'font-style'){
+					if(arr[1] == "italic"){
+						$('.btn-italic').addClass("buttonBgColor")
+					}
+				}else if(arr[0] == 'color'){
+					$($("#fontColorSelect")[0]).val(hexColor).css("color",hexColor);
+				}
+			}
+			$("#textWidth").numberbox('setValue',(jsonData['textWidth']==undefined?"":jsonData['textWidth']))
+			$("#jqWdith").numberbox('setValue',(jsonData['jqWdith']==undefined?"":jsonData['jqWdith']))
+			$("#wardWidth").numberbox('setValue',(jsonData['wardWidth']==undefined?"":jsonData['wardWidth']))
+		}
+	});
+	
+}
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 病区基数药依据消耗补货
+    csp: csp/pha.ip.v4.reqbyconsume.csp
+    js:  scripts/pha/ip/v4/reqbyconsume.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <PHAPRINTCOM />
+    <Server language="CACHE" runat="Server">
+        s reqId = $G(%request.Data("reqId",1))
+        s reqType = $G(%request.Data("reqType",1))
+    </Server>
+    <SCRIPT Language="Javascript">
+        var LoadReqId = "#(reqId)#" || "";
+        var LoadReqType = "#(reqType)#" || "";
+    </script>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-panel" data-options="title:'科室备用药品补货 (依据消耗)',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',fit:true,iconCls:'icon-paper-info'" id="pha_ip_v4_return">
+                <table id="gridDetail"></table>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridDetailBar">
+        <table class="pha-con-table" id="qCondition">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("消耗开始时间"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox " id="startDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true" disabled>
+                </td>
+                <td>
+                    <input class="hisui-timespinner " id="startTime" showSeconds=true data-pha="class:'hisui-timespinner',query:true,clear:true,required:true" disabled>
+                </td>
+
+                <td class="r-label">
+                    <label for="reqLoc">#(..Get("请求科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="reqLoc" data-pha="class:'hisui-combobox',query:true,clear:true,required:true" disabled>
+                </td>
+                <td>
+                    <label for="reqType">#(..Get("请求类型"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="reqType" data-pha="class:'hisui-combobox',query:true,clear:false,required:true" disabled>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" iconCls='icon-w-find' id="btnFind" style="width:100%;">统计消耗</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("消耗结束时间"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox " id="endDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                </td>
+                <td>
+                    <input class="hisui-timespinner " id="endTime" showSeconds=true data-pha="class:'hisui-timespinner',query:true,clear:true,required:true">
+                </td>
+                <td>
+                    <label for="proLoc">#(..Get("供给科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="proLoc" data-pha="class:'hisui-combobox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="arcItmCat">#(..Get("医嘱子类"))#</label>
+                </td>
+                <td>
+                    <input id="arcItmCat" data-pha="class:'hisui-combobox',query:true,clear:true,required:false">
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" iconCls='icon-w-save' id="btnSave" style="width:100%;">生成补货单</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 本页面js -->
+    <script src="../scripts/pha/ip/v4/reqbyconsume.js"></script>
+</body>
+
+</html>

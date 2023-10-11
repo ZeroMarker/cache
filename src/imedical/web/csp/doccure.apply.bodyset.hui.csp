@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--设置 doccure.apply.bodyset.hui.csp 治疗人体部位图-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/dhcdoccure_hui/css/bodyset.canvas.css"/>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/dhcdoccure_hui/tools/layui/css/layui.css"/>
+<Server>
+s Sex=""
+s DCARowId=$g(%request.Data("DCARowId",1))
+s ShowFlag=$g(%request.Data("ShowFlag",1))
+s EpisodeID=$g(%request.Data("EpisodeID",1))
+if (EpisodeID="")&&(DCARowId'=""){
+	s EpisodeID=$p($g(^DHCDocCure(DCARowId)),"^",1)
+}
+if EpisodeID'=""{
+	s PAPMIRowid=$p(^PAADM(EpisodeID),"^",1)
+	s SexId=$P($G(^PAPER(PAPMIRowid,"ALL")),"^",7)
+	s Sex=$p(^CT("SEX",SexId),"^",2)
+}
+s ApplyStatus=$p($g(^DHCDocCure(+DCARowId)),"^",3)
+s FFAreaHtmlStr=##class(DHCDoc.DHCDocCure.Config).GetCureBodyConfig("female-front-pic")
+s FBAreaHtmlStr=##class(DHCDoc.DHCDocCure.Config).GetCureBodyConfig("female-back-pic")
+s MFAreaHtmlStr=##class(DHCDoc.DHCDocCure.Config).GetCureBodyConfig("male-front-pic")
+s MBAreaHtmlStr=##class(DHCDoc.DHCDocCure.Config).GetCureBodyConfig("male-back-pic")
+</Server>
+</head> 
+<body>
+	<csp:Include Page="doccure.apply.bodyset.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			DCARowId:"#(DCARowId)#",
+			ApplyStatus:"#(ApplyStatus)#",
+			ShowFlag:"#(ShowFlag)#",
+			Sex:"#(Sex)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/tools/drawingtools.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/tools/layui/layui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.patbody.js"></script>
+</body>
+</html>

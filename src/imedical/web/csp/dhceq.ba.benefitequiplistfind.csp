@@ -12,24 +12,67 @@
 </head>
 <script language=Cache runat=server>
 	s QXType = $Get(%request.Data("QXType",1))
+	s StartMonth = $p($zd(+$h,3),"-",1)_"-01"	//czf 2022-04-06
+	s EndMonth = $p($zd(+$h,3),"-",1,2)
+	s Job = $j
 </script>
 <body class="hisui-layout" >
 	<div data-options="region:'center',border:false" style="padding:10px;">
 		<div class="hisui-panel" title="效益分析设备" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMasterItem" for="MasterItem">设备项名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MasterItem" data-options="component:'EM.L.GetMasterItem'"></div>
+							<div class="eq-table-td eq-table-label"><label  for="No">设备编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="No"></div>
+							<div class="eq-table-td eq-table-label"><label id="cUseLoc" for="UseLoc">使用科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc','paras':[{name:'Type',type:'4',value:'QXType'},{name:'LocDesc',type:'4',value:'UseLoc'}]" id="UseLoc"></div>
+							<div class="eq-table-td eq-table-label"><label  for="FromOriginalFee">设备原值</label></div>							
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FromOriginalFee"></div>
+							<div class="eq-table-td eq-table-label"><label for="ToOriginalFee">到</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ToOriginalFee"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find"  data-options="stopAllEventOnDisabled:true">查询</a></div>
+	           			</div>
+	            	</div>
+	            </div>
 				<div data-options="region:'center',border:false" style="position:relative">
 					<table id="DHCEQBenefitEquipListFind" class="hisui-datagrid"></table>
 				</div>
 			</div>
 		</div>
 	</div>
+	<!-- 修改信息弹窗 czf 1880419 2021-07-08-->
+	<div id="UpdateBAEQWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="padding:10px;">
+		<div data-options="fit:true">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cBELHold1_CTLOCDesc" for="BELHold1_CTLOCDesc">执行科室</label></div>
+					<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="BELHold1_CTLOCDesc" data-options="'component':'PLAT.L.Loc'"></div>
+				</div>
+			</div>
+		</div>
+		<div id="hiddenEncrypt" style="display:hidden">
+			<form name="DHCEQ">
+				<INPUT type="hidden" id="BELHold1">
+				<INPUT type="hidden" id="BELRowID">
+			</form>
+		</div>
+	</div>
 	<!--隐藏元素-->
 	<div id="hiddenEncrypt" style="display:hidden">
 		<form name="DHCEQ">
 			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT ype="hidden" id="MasterItemDR">
+			<INPUT type="hidden" id="UseLocDR">
+			<INPUT type="hidden" id="StartMonth" value="#(StartMonth)#">	<!--czf 2022-04-06 begin-->
+			<INPUT type="hidden" id="EndMonth" value="#(EndMonth)#">
+			<INPUT type="hidden" id="Job" value="#(Job)#">					<!--czf 2022-04-06 end-->
 		</form>
 	</div>
 	<script type='text/javascript' src='../scripts/dhceq/ba/benefitequiplistfind.js'></script>
-
+	<script type='text/javascript' src='../scripts/dhceq/common/hisui.common.js'></script>
 </body>
 </html>

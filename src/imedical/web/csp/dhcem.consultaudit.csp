@@ -12,18 +12,39 @@
 	<!-- 会诊配置 -->
 	<server>
 	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  s LgLocID=%session.Get("LOGON.CTLOCID")
+	  s LgUserID=%session.Get("LOGON.USERID")
+	  s LgGroupID=%session.Get("LOGON.GROUPID")
+	  s LgParams=LgHospID_"^"_LgLocID_"^"_LgUserID_"^"_LgGroupID
 	  /// 审核的时候是否必须确定到人
 	  s AudNeedUser=##Class(web.DHCEMConsultCom).GetEmSysConfig("AUDNEEDUSER",LgHospID)
+	  /// 医师会诊申请时是否必须指定职称 hxy 2021-02-07
+	  s IsMustPrvTp = ##class(web.DHCEMConsultCom).GetEmSysConfig("ISMUSTPRVTP",LgHospID)
+	  /// 审核的时候是否可以修改类型 hxy 2021-02-23
+	  s AudModPrvTp=##Class(web.DHCEMConsultCom).GetEmSysConfig("AUDMODPRVTP",LgHospID)
 	  /// 多科会诊填写标识
 	  s MulWriFlag=##Class(web.DHCEMConsultCom).GetEmSysConfig("MULWRIFLAG",LgHospID)
-	  ;s:MulWriFlag=1 AudNeedUser=0    
-	  
+	  ;s:MulWriFlag=1 AudNeedUser=0
 	  /// 会诊打印走的模式
 	  s PrintModel = ##class(web.DHCEMConsultCom).GetEmSysConfig("PRINTMODEL",LgHospID)
+	  /// 会诊未完成是否可以打印会诊记录单
+	  s ConsNoCompCanPrt = ##class(web.DHCEMConsultCom).GetEmSysConfig("CONSNOCOMPCANPRT",LgHospID)
+	  /// 选择专科小组后是否允许修改会诊科室
+	  s GrpAllowUpd=##class(web.DHCEMConsultCom).GetEmSysConfig("GRPALLOWUPD",LgParams)
+	  /// 会诊审核-会诊地点-默认 hxy 2021-05-29
+	  s AuditDefPlace=##class(web.DHCEMConsultCom).GetEmSysConfig("AUDITDEFPLACE",LgParams)
+	  /// 医师会诊是否启用大科标识 hxy 2021-06-21
+	  s LeaderFlag=##Class(web.DHCEMConsultCom).GetEmSysConfig("LEADERFLAG",LgHospID)
 	  w "<script Language=""JavaScript"">"_$c(13,10)
 	  w "var AudNeedUser="""_$g(AudNeedUser)_""";"_$c(13,10)
+	  w "var IsMustPrvTp="""_$g(IsMustPrvTp)_""";"_$c(13,10)
+	  w "var AudModPrvTp="""_$g(AudModPrvTp)_""";"_$c(13,10)
 	  w "var PrintModel="""_$g(PrintModel)_""";"_$c(13,10)
 	  w "var MulWriFlag="""_$g(MulWriFlag)_""";"_$c(13,10)
+	  w "var ConsNoCompCanPrt="""_$g(ConsNoCompCanPrt)_""";"_$c(13,10)
+	  w "var GrpAllowUpd="""_$g(GrpAllowUpd)_""";"_$c(13,10)
+	  w "var AuditDefPlace="""_$g(AuditDefPlace)_""";"_$c(13,10)
+	  w "var LeaderFlag="""_$g(LeaderFlag)_""";"_$c(13,10)
 	  w "</script>"
 	</server>
 	<script language="Cache" runat="server">
@@ -40,37 +61,41 @@
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultprintcom.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultaudit.js"></script>
 </head>
-<body style="padding:10px;background-color:#fff">
-	<div class="hisui-layout" fit="true">
-		<div data-options="region:'center',headerCls:'panel-header-gray',title:''" border=false>
-			<div id="toolbar">
-				<div style="margin:9px;">
-					<label>开始日期</label>
-					<input id="StartDate" class="hisui-datebox textbox">
-					<label style="margin-left:40px;">请会诊科室</label>
-					<input id="CstRLoc" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
-					<label style="margin-left:52px;text-align:right;padding-right:5px">登记号</label><input id="PatNo" class="hisui-validatebox" style="width:173px;vertical-align:bottom;">
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="QryPatList()" style="margin-left:20px;">查询</a>
-				</div>
-				<div>
-					<div style="margin:9px;">
-			        	<label>结束日期</label>
-			        	<input id="EndDate" class="hisui-datebox textbox">
-						<label style="margin-left:53px;">会诊类型</label>
-						<input id="CstType" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
-						<label style="margin-left:40px;">审核状态</label>
-						<input id="AuditFlag" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
+<body style="background-color:#fff">
+	<div id="cc" class="hisui-layout" style="" data-options="fit:true">   
+		<div data-options="region:'center',title:'',split:true" style="padding:10px;">
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'center',headerCls:'panel-header-gray',title:''" border=false>
+					<div id="toolbar">
+						<div style="margin:9px;">
+							<label class="twoLagLabel" style="width:100px;">#(..Get("开始日期"))#</label>
+							<input id="StartDate" class="hisui-datebox textbox">
+							<label class="twoLagLabel" style="margin-left:40px;width:160px;">#(..Get("请会诊科室"))#</label>
+							<input id="CstRLoc" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
+							<label class="twoLagLabel" style="margin-left:40px;text-align:right;padding-right:5px;width:160px;">#(..Get("登记号"))#</label><input id="PatNo" class="hisui-validatebox" style="width:173px;vertical-align:bottom;">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="QryPatList()" style="margin-left:20px;">查询</a>
+						</div>
+						<div>
+							<div style="margin:9px;">
+					        	<label class="twoLagLabel" style="width:100px;">#(..Get("结束日期"))#</label>
+					        	<input id="EndDate" class="hisui-datebox textbox">
+								<label class="twoLagLabel" style="margin-left:40px;width:160px;">#(..Get("会诊类型"))#</label>
+								<input id="CstType" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
+								<label class="twoLagLabel" style="margin-left:40px;width:160px;">#(..Get("审核状态"))#</label>
+								<input id="AuditFlag" class="textbox" style="width:180px;height:30px;line-height:30px;"/>
+							</div>
+							<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+							<a href="javascript:void(0)" class="hisui-linkbutton" onclick="newConsult()" data-options="iconCls:'icon-stamp',plain:true">审核</a>
+							<a href="javascript:void(0)" class="hisui-linkbutton" onclick="RefuseCst()" data-options="iconCls:'icon-back',plain:true">驳回</a>
+							<a href="javascript:void(0)" class="hisui-linkbutton" onclick="cancelAudit()" data-options="iconCls:'icon-stamp',plain:true">取消审核</a>
+							<a href="javascript:void(0)" class="hisui-linkbutton" onclick="PrintCstHtml()" data-options="iconCls:'icon-print',plain:true">打印</a>
+						</div>
 					</div>
-					<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
-					<a href="javascript:void(0)" class="hisui-linkbutton" onclick="newConsult()" data-options="iconCls:'icon-stamp',plain:true">审核</a>
-					<a href="javascript:void(0)" class="hisui-linkbutton" onclick="RefuseCst()" data-options="iconCls:'icon-back',plain:true">驳回</a>
-					<a href="javascript:void(0)" class="hisui-linkbutton" onclick="cancelAudit()" data-options="iconCls:'icon-stamp',plain:true">取消审核</a>
-					<a href="javascript:void(0)" class="hisui-linkbutton" onclick="PrintCstHtml()" data-options="iconCls:'icon-print',plain:true">打印</a>
+					<table id="bmDetList" data-options="toolbar:'#toolbar',title:'会诊审核',headerCls:'panel-header-gray',iconCls:'icon-paper'"></table>
 				</div>
-			</div>
-			<table id="bmDetList" data-options="toolbar:'#toolbar',title:'会诊审核',headerCls:'panel-header-gray',iconCls:'icon-paper'"></table>
-		</div>
-	</div>
+			</div>		
+		</div>   
+	</div>  
 	<!-- 会诊申请 -->
 	<div id="MdtConsWin">
 		<iframe id="newWinFrame" src="" width="100%" height="99%" frameborder="0"></iframe>
@@ -87,34 +112,34 @@
 				<td width="180px"></td>
 			</tr>
 			<tr class="tr">
-				<td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">申请信息：</td>
+				<td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">#(..Get("申请信息"))#：</td>
 			</tr>
 			<tr class="tr">
-				<td align="right"  class="tb_td_bk">申请科室：</td>
+				<td align="right"  class="tb_td_bk">#(..Get("申请科室"))#：</td>
 				<td width="180px"><span id="CsRLoc"></span></td>
-				<td align="right"  class="tb_td_bk" id="consSendDoc">申请医生：</td>
+				<td align="right"  class="tb_td_bk" id="consSendDoc">#(..Get("申请医生"))#：</td>
 				<td width="180px"><span id="CsRUser"></span></td>
-				<td align="right"  class="tb_td_bk">申请时间：</td>
+				<td align="right"  class="tb_td_bk">#(..Get("申请时间"))#：</td>
 				<td width="180px"><span id="CsRDate"></span></td>
 			</tr>
 			<tr class="tr">
-				<td align="right"  class="tb_td_bk">会诊类型：</td>
+				<td align="right"  class="tb_td_bk">#(..Get("会诊类型"))#：</td>
 				<td width="180px"><span id="CsType"></span></td>
-				<td align="right"  class="tb_td_bk">外院名称：</td>
+				<td align="right"  class="tb_td_bk">#(..Get("外院名称"))#：</td>
 				<td width="180px"><span id="CsUnit"></span></td>
 				<td align="right"  class="tb_td_bk"></td>
 				<td width="180px"></td>
 			</tr>
 			<tr class="tr1">
-				<td align="right"  class="tb_td_bk tb_td_required">会诊地点：</td>
+				<td align="right"  class="tb_td_bk tb_td_required">#(..Get("会诊地点"))#：</td>
 				<td width="180px"><input id="ConsNPlace" class="ui-input"/></td>
-				<td align="right"  class="tb_td_bk tb_td_required">会诊日期：</td>
+				<td align="right"  class="tb_td_bk tb_td_required">#(..Get("会诊日期"))#：</td>
 				<td width="180px"><input id="CstNDate" class="hisui-datebox textbox" style="width:170px;"></td>
-				<td align="right"  class="tb_td_bk tb_td_required">会诊时间：</td>
+				<td align="right"  class="tb_td_bk tb_td_required">#(..Get("会诊时间"))#：</td>
 				<td width="180px"><input id="CstNTime" class="hisui-timespinner textbox" style="width:170px;"></td>
 			</tr>
 			<tr class="tr">
-				<td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">会诊科室：</td>
+				<td align="left" colspan="6" style="background:rgb(238, 247, 254);font-weight:bold;">#(..Get("会诊科室"))#：</td>
 			</tr>
 		</table>
 		<div style="border:1px solid #95B8E7;border-top:none;margin-right:1px;">
@@ -131,7 +156,7 @@
 	<!--------------打印相关---------->
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCIPBILL">
-			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 		</form>
 	</div>
 	<!-------------------------------->

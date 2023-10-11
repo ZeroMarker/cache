@@ -1,5 +1,10 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+</csp:method>
 <HTML>
 <HEAD>
+<TRAK:HEAD></TRAK:HEAD>
 <meta http-equiv="Content-Type" content="text/html; ">
 <script Language="Javascript">
 	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#";      //安全组ID
@@ -11,6 +16,7 @@
 	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
 </script>
 <EASYUI:CLINICAL/>
+<EXTHEALTH:EXT321/>
 <!-- Put your page Title here -->
 	<script type="text/javascript" src="../scripts/dhcpha/clinical/clistudentinfo.js"></script>
 	<style type="text/css">
@@ -49,7 +55,7 @@
 <!--以下定义基地学员信息界面-->
 	<div id="mainpanel" class="easyui-layout" fit="true">
 	    <!--查询条件区-->
-		<div data-options="region:'north',title:'培训基地学员信息'" style="width:400px;height:110px" >
+		<div data-options="region:'north',title:'#(..Get("培训基地学员信息"))#'" style="width:400px;height:110px" >
 			<!--查询条件布局使用table-->
 			<table>
 					<tr style="height:10">
@@ -70,19 +76,21 @@
 					</tr>
 					<tr>
 						<td></td>
-						<td style="padding-right:5px">开始日期</td>
-						<td><input id="startDate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td style="padding-right:5px">#(..Get("开始日期"))#</td>
+						<td><input id="startDate" type="text" class="easyui-datebox" data-options="editable:false" required="required"></input></td>
 						<td></td>
 						<td></td>
-						<td style="padding-right:5px">姓名</td>
+						<td style="padding-right:5px">#(..Get("姓名"))#</td>
 						<td><input id="userName" style="width:180;border:1px solid #95B8E7;"/></td>
 						<td></td>
 						<td></td>
+						<td style="padding-right:5px">#(..Get("培训开始日期"))#</td>
+						<td><input id="TrainstartDate" type="text" class="easyui-datebox"  data-options="editable:false"></input></td>
 						<td></td>
 						<td></td>
-						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-search">查询</a></td>
+						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-search">#(..Get("查询"))#</a></td>
 						<td></td>
-						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-add">新增</a></td>
+						<td><a href="#" style="width:90" class="easyui-linkbutton" iconCls="icon-add">#(..Get("新增"))#</a></td>
 						<td></td>
 						<td>
 						<!--
@@ -92,12 +100,16 @@
 					</tr>
 					<tr>
 						<td></td>
-						<td style="padding-right:5px">结束日期</td>
-						<td><input id="endDate" type="text" class="easyui-datebox" required="required"></input></td>
+						<td style="padding-right:5px">#(..Get("结束日期"))#</td>
+						<td><input id="endDate" type="text" class="easyui-datebox" data-options="editable:false" required="required"></input></td>
 						<td></td>
 						<td></td>
+						<td style="padding-right:5px">#(..Get("培训专业"))#</td>
+				        <td ><input id="Career" class="easyui-combobox" style="width:180;border:1px solid #95B8E7;"></input></td>
 						<td></td>
 						<td></td>
+						<td style="padding-right:5px">#(..Get("培训结束日期"))#</td>
+						<td><input id="TrainendDate" type="text" class="easyui-datebox" data-options="editable:false"></input></td>
 						<td></td>
 						<td></td>
 					</tr>
@@ -113,41 +125,59 @@
 			<tr style="display:none">
 				<td width="100px" align="right"></td>
 				<td width="230px"></td>
-				<td width="100px" align="right">学员表ID</td>
+				<td width="100px" align="right">#(..Get("学员表ID"))#</td>
 				<td width="230px"><input id="bmStudentID" style="width:145px;border:1px solid #95B8E7;" readonly/></td>
 			</tr>
 			<tr>
-				<td width="100px" align="right">姓名：</td>
+				<td width="100px" align="right">#(..Get("姓名："))#</td>
 				<td width="230px"><input id="bmSName" style="width:150px;border:1px solid #95B8E7;"/></td>
-				<td width="100px" align="right">性别：</td>
+				<td width="100px" align="right">#(..Get("性别："))#</td>
 				<td width="230px"><input id="bmSSex" editable="false" style="width:150px;"/></td>
 			</tr>
 			<tr>
-				<td width="100px" align="right">年龄：</td>
+				<td width="100px" align="right">#(..Get("年龄："))#</td>
 				<td width="230px"><input id="bmSAge" style="width:150px;border:1px solid #95B8E7;"/></td>
-				<td width="100px" align="right">学历：</td>
-				<td width="230px"><input id="bmSEdu" editable="false" style="width:150px;"></input></td>
-			</tr>
-			<tr>
-				<td width="100px" align="right">职称：</td>
-				<td width="230px"><input id="bmSCarPrvTp" editable="false" style="width:150px;"></input></td>
-				<td width="100px" align="right">工作单位：</td>
+			    <td width="100px" align="right">#(..Get("工作单位："))#</td>
 				<td width="230px"><input id="bmSWorkUnit"style="width:150px;border:1px solid #95B8E7;"></input></td>
 			</tr>
 			<tr>
-				<td width="100px" align="right">开学日期：</td>
-				<td width="230px"><input id="bmSBegEduDate" type="text" class="easyui-datebox" style="width:150px;"></input></td>
-				<td width="100px" align="right">毕业日期：</td>
-				<td width="230px"><input id="bmSEndEduDate" type="text" class="easyui-datebox" style="width:150px;"></input></td>
-			</tr>
-			<tr>
-				<td width="100px" align="right">培训专业：</td>
-				<td width="230px"><input id="bmSCareer" editable="false" style="width:150px;"></input></td>
-				<td width="100px" align="right">是否省外：</td>
+				<td width="100px" align="right">#(..Get("职称："))#</td>
+				<td width="230px"><input id="bmSCarPrvTp" editable="false" style="width:150px;"></input></td>
+				<td width="100px" align="right">#(..Get("是否省外："))#</td>
 				<td width="230px"><input id="bmSOutProFlag" editable="false" style="width:150px;border:1px solid #95B8E7;"></input></td>
 			</tr>
+			<tr>	
+				<td width="100px" align="right">#(..Get("第一学历："))#</td>
+				<td width="230px"><input id="bmSEdu" editable="false" style="width:150px;"></input></td>
+			    <td width="100px" align="right">#(..Get("第一专业："))#</td>
+				<td width="230px"><input id="bmSProfession" editable="false" style="width:150px;"></input></td>
+			</tr>
+			<tr>	
+				<td width="100px" align="right">#(..Get("最高学历："))#</td>
+				<td width="230px"><input id="bmSHigEdu" editable="false" style="width:150px;"></input></td>
+			    <td width="100px" align="right">#(..Get("最高专业："))#</td>
+				<td width="230px"><input id="bmSTopProfession" editable="false" style="width:150px;"></input></td>
+			</tr>
 			<tr>
-				<td width="100px" height="100px" align="right">备注：</td>
+				<td width="100px" align="right">#(..Get("开学日期："))#</td>
+				<td width="230px"><input id="bmSBegEduDate" type="text" class="easyui-datebox" data-options="editable:false" style="width:150px;"></input></td>
+				<td width="100px" align="right">#(..Get("毕业日期："))#</td>
+				<td width="230px"><input id="bmSEndEduDate" type="text" class="easyui-datebox" data-options="editable:false" style="width:150px;"></input></td>
+			</tr>
+			<tr>
+				<td width="100px" align="right">#(..Get("培训专业："))#</td>
+				<td width="230px"><input id="bmSCareer" editable="false" style="width:150px;"></input></td>
+			    <td width="100px" align="right">#(..Get("指导教师："))#</td>
+				<td width="230px"><input id="bmSTeacher"  style="width:150px;"></input></td>	
+			</tr>
+			<tr>
+			   <td width="100px" align="right">#(..Get("培训时间："))#</td>
+				<td width="230px"><input id="bmSTrainDate" type="text" class="easyui-datebox" data-options="editable:false" style="width:150px;"></input></td>
+			    <td width="100px" align="right">#(..Get("是否通过考核："))#</td>
+				<td width="230px"><input id="bmSIsAssessment" editable="false" style="width:150px;border:1px solid #95B8E7;"></input></td>
+			</tr>
+			<tr>
+				<td width="100px" height="100px" align="right">#(..Get("备注："))#</td>
 				<td colspan="3" height="120px" ><textarea style="width:580px;height:120px;border:1px solid #95B8E7;" id="bmSRemark"></textarea></td>	
 			</tr>
 		</table>

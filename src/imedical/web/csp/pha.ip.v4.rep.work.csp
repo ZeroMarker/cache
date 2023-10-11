@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--住院药房-工作量统计
+	csp:pha.ip.v4.rep.work.csp
+	js: pha/ip/v4/rep.work.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+        .pha-date {
+            width: 125px;
+        }
+
+        .pha-time {
+            width: 117px;
+        }
+
+        .hisui-tabs div {
+            overflow: hidden;
+        }
+
+        .layout-split-west>.panel-header {
+            border-radius: 4px 4px 0px 0px !important;
+        }
+
+        .pha-label {
+            width: 5em;
+            text-align: right;
+        }
+
+        .webui-popover-content ul li {
+            line-height: 28px;
+        }
+
+        iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',width:370,split:true,title:'住院工作量统计',headerCls:'panel-header-gray',iconCls:'icon-sample-stat',collapsible:false" style="border-radius: 0px 0px 4px 4px;">
+                    <div style="position:absolute;top:3px;right:5px">
+                        <a class="hisui-linkbutton js-help" data-options="plain:true,iconCls:'icon-help'" id="js-help"></a>
+                        <!-- <a id="js-help">Help</a> -->
+
+                    </div>
+                    <div class="pha-row">
+                        <div class="pha-col pha-label">
+                            #(..Get("开始时间"))#
+                        </div>
+                        <div class="pha-col">
+                            <input id="conStartDate" class="hisui-datebox pha-date">
+                            <input id="conStartTime" class="hisui-timespinner pha-time" data-options="showSeconds:true">
+                        </div>
+                    </div>
+                    <div class="pha-row">
+                        <div class="pha-col pha-label">
+                            #(..Get("结束时间"))#
+                        </div>
+                        <div class="pha-col">
+                            <input id="conEndDate" class="hisui-datebox pha-date">
+                            <input id="conEndTime" class="hisui-timespinner pha-time" data-options="showSeconds:true">
+                        </div>
+                    </div>
+                    <div class="pha-row">
+                        <div class="pha-col pha-label">
+                            #(..Get("统计方式"))#
+                        </div>
+                        <div class="pha-col">
+                            <input id="conWay">
+                        </div>
+                    </div>
+                    <div class="pha-row">
+                        <div class="pha-col pha-label">
+                            #(..Get("管制分类"))#
+                        </div>
+                        <div class="pha-col">
+                            <input id="conPoison">
+                        </div>
+                    </div>
+                    <div class="pha-row">
+                        <div class="pha-col pha-label">
+                            #(..Get("剂型"))#
+                        </div>
+                        <div class="pha-col">
+                            <input id="conPhcForm">
+                        </div>
+                    </div>
+                    <div class="pha-row">
+                        <div class="pha-col pha-label">
+                            #(..Get("药品"))#
+                        </div>
+                        <div class="pha-col">
+                            <input id="conInci">
+                        </div>
+                    </div>
+                    <div class="pha-row">
+                        <div class="pha-col pha-label">
+                            #(..Get("医嘱优先级"))#
+                        </div>
+                        <div class="pha-col">
+                            <input id="conPriority">
+                        </div>
+                    </div>
+                    <div class="pha-row" style="text-align: center;">
+                        <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false">#(..Get("查询"))#</a>
+                        <a id="btnClean" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',plain:false">#(..Get("清屏"))#</a>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-tabs tabs-gray" fit="true" id="tabsReport">
+                        <div data-options="title:'西成药',groupType:'COM'">
+                            <iframe groupType="COM" src="../csp/dhcst.blank.backgroud.csp"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="pha-help-content" style="display: none;">
+        <ul>
+            <li>
+                #(..Get("人次：一张发药、退药单中的同一病人，视为 1"))#
+            </li>
+            <li>
+                #(..Get("品种数：一张发药、退药单中的同一药品，视为 1"))#
+            </li>
+        </ul>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/rep.work.js"></script>
+</body>
+
+</html>

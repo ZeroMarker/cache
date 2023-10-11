@@ -1,0 +1,147 @@
+<!--
+Description: 服务级别维护
+FileName: dhcpe.ct.serviceclass.csp
+Author: wangguoying
+Date: 2021-08-06
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>	
+	<style>
+		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			padding:0 10px;
+			text-align:right;
+		}
+		.labelWinTd{
+			width:80px;
+			text-align:right;
+		}
+		.btnTd{
+			width:120px;
+			text-align:right;
+		}
+   </style>
+</head>
+<body class="hisui-layout" fit="true"  >
+	<!--  西方布局   -->
+	<div id="DetailPanel" data-options="region:'west',headerCls:'panel-header-gray',border:false" style="padding:10px;width:800px;">
+		<!--  panel -->
+		<div id="SeviceDiv" fit="true" style="height:100%" class="hisui-panel" title="服务级别维护"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">	
+			<input type="hidden" id="SCID" val="">	
+			<!--  内部五方  -->
+			<div class="hisui-layout" fit="true"  >	
+				<!--  内部五方  北方布局 -->
+				<div  data-options="region:'north',border:false" style="height:188px;">	
+					<table class="hisui-table">
+						<tr>
+							<td class="labelTd">科室</td>	
+							<td><input id="LocList" type="text" style="width:207px;"></td>
+							<td class="labelTd">激活</td>
+							<td><input id="Active" class="hisui-checkbox" type="checkbox" checked></td>
+							<td class="labelTd"><label>单独授权</label><input class='hisui-checkbox' type="checkbox" Id="Empower"/></td>
+
+						</tr>
+						<tr>
+							<td class="labelTd">编码</td>	
+							<td><input id="Code" class="hisui-validatebox" type="text" style="width:200px;" ></td>
+							<td class="labelTd">描述</td>		
+							<td><input id="Desc" class="hisui-validatebox" type="text" style="width:200px;"></td>
+						</tr>
+						<tr>
+							<td class="labelTd">建议价格</td>
+							<td><input id="Price" class="hisui-numberbox textbox" data-options="isKeyupChange:true,min:1" type="text" style="width:207px;"></td>
+							<td class="labelTd">随访间隔(月)</td>
+							<td><input id="Months" class="hisui-numberbox textbox" data-options="isKeyupChange:true,min:0" type="text" style="width:207px;"></td>
+							<td style="padding-left:20px"><a id="SaveBtn" onclick="SaveBtn_onclick();" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>		
+						</tr>
+						<tr>
+							<td class="labelTd" >备注</td>	
+							<td colspan="3"><textarea id="Remark" rows="2" style="width:100%" type="text"  ></textarea></td>
+							<td style="padding-left:20px"><a id="ClearBtn" onclick="ClearBtn_onclick();" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>		
+						</tr>
+					</table>
+				</div>
+				<!--  //内部五方  北方布局 -->
+				<!--  内部五方  中心布局 -->
+				<div  data-options="region:'center',border:false" style="border-top:1px solid #ccc;">	
+				
+						<table id="SCList" fit="true"  data-options="singleSelect:true"></table>
+				
+				</div>
+				<!--  //内部五方  中心布局 -->
+			</div>
+			<!--  //内部五方  -->
+		</div>
+		<!--  //panel -->
+	</div>
+	<!--  //西方布局   -->
+	
+	
+	
+	<!--  中心布局   -->
+	<div  data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px 10px 10px 0;position:relative;">
+		<div id='OptionPanel' class="hisui-panel" title="关联问卷"  fit="true" style="height:100px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+			<!--  内部五方  -->
+			<div class="hisui-layout" fit="true"  >	
+				<!--  内部五方  北方布局 -->
+				<div  data-options="region:'north',border:false" style="height:135px;">	
+					<table class="hisui-table" >
+						<tr>
+							<td class="labelTd">所属问卷</td>
+							<td><input class="hisui-combobox selector" type="text" Id="Questionnaire" style="width:205px;" ></td>					
+							<td><a id="QSave" onclick="QSave_onclick();" style="margin-left:40px;" href="#" class="hisui-linkbutton head-btn" data-options="iconCls:'icon-w-save'">保存</a></td>
+						</tr>
+						<tr>
+							<td class="labelTd">顺序号</td>
+							<td><input id="QSeq" class="hisui-numberbox textbox" data-options="isKeyupChange:true,min:1" type="text" style="width:208px;"></td>
+							<td><a id="QClear" onclick="QClear_onclick();" style="margin-left:40px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+						</tr>
+						<tr>
+							<td class="labelTd" >备注</td>	
+							<td><input id="QRemark" class="hisui-validatebox" type="text"  style="width:200px;" ></td>
+							<td><a id="QDelete" onclick="QDeleter_onclick();" style="margin-left:40px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a></td>					
+						</tr>
+					</table>
+					<input id="QRID" type="hidden" value="">
+				</div>
+				<!--  //内部五方  北方布局 -->
+				<!--  内部五方  中心布局 -->
+				<div  data-options="region:'center',border:false" style="border-top:1px solid #ccc;">	
+				
+						<table id="QRList" fit="true" data-options="singleSelect:true,border:false,bodyCls:'panel-body-gray'"></table>
+				
+				</div>
+				<!--  //内部五方  中心布局 -->
+			</div>
+			<!--  //内部五方  -->
+		</div> <!--hisui panel -->
+	</div>
+	<!--  //中心布局  -->
+	
+	
+	<!--关联科室授权弹窗-->
+	<div id="LocListWin"  style="display:none;">
+			<div data-options="region:'north',split:false,border:true" style="height:290px;padding:10px;">
+			<div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+						<table data-options="bodyCls:'panel-header-gray'" id="LocListGrid"></table>
+				</div>
+	        </div>
+	</div>
+	
+	
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script> 
+  	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.serviceclass.js"></script> 
+</body>
+</html>

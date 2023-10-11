@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!--发票管理
+	csp:csp/pha.in.v3.invnomanage.csp
+	js: scripts/pha/in/v3/pay/InvNoManage.js
+-->
+<HTML >
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHALIBV1 />
+    <style>
+		.Text-width {
+			width: 120px;
+		}
+		.Date-width {
+			width: 115px !important;
+		}
+	</style>   
+</HEAD>
+
+        
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true"  >
+                <div data-options="region:'north',height:450, border:false,split:true">
+                	<div class="hisui-layout" fit="true" id="lyBody" >
+                		<div data-options="region:'west',width:880, border:false,split:true">
+			                <div id="panel" class="hisui-panel" title="发票信息"
+			                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">	
+			                    <table id="GridInvNo"></table>	
+			                    <div id="fold">
+									<div class="pha-con-more-less" style="display: none;">
+			                            <div>#(..Get("更多"))#</div>
+			                            <div class="more"></div>
+			                        </div>
+			                        <div class="pha-con-more-less" >
+			                            <div>#(..Get("收缩"))#</div>
+			                            <div class="less"></div>
+			                        </div>
+			                    </div> 			                            
+			                </div>
+                    	</div>
+                    	<div data-options="region:'center',border:false,split:true">
+			                <div id="panel" class="hisui-panel" title="入库/退货单据"
+			                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">	
+			                    <table id="GridBusiMain"></table>				                            
+			                </div>
+                    	</div>
+                    </div>
+                </div>
+                <div data-options="region:'center', border:false,split:true">
+                    <div id="panel" class="hisui-panel" title="入库/退货明细"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">	
+                        <table id="GridBusiDetail"></table>				                            
+                    </div>
+                </div>
+			</div>
+		</div>
+    </div>
+
+	<!--发票信息工具栏-->
+	<div id="GridInvNoBar">
+        <div class="pha-row">
+        	<div class="pha-col">
+				<label for="PurLoc">#(..Get("采购科室"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id='PurLoc'  class="hisui-combobox" data-pha='class:"hisui-datebox",requied:true,clear:true,query:true'>
+			</div>	
+        	<div class="pha-col">
+				<label for="InvStartDate">#(..Get("开始日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="InvStartDate" class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",requied:true,clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<label for="InvNo">&emsp;#(..Get("发票号"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="InvNo"  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false" onclick="javascript:QueryInvNo()">#(..Get("查询"))#</a>
+			</div>
+			<div class="pha-col">
+				<a id="btnClean" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',plain:false" onclick="javascript:Clear()">#(..Get("清屏"))#</a>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col">
+				<label for="Vendor">#(..Get("经营企业"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="Vendor" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/>
+			</div>	
+			<div class="pha-col">
+				<label for="InvEnDate">#(..Get("结束日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="InvEnDate" class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",requied:true,clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<label for="InvOrigiNo">#(..Get("发票代码"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="InvOrigiNo"  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-update',plain:false" onclick="javascript:UpdateInvNo()">#(..Get("更新或补录发票信息"))#</a>
+			</div>
+		</div>
+		<div class="pha-row pha-con-more-less-link">
+			<div class="pha-col">
+				<label for="InvState">#(..Get("货票状态"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="InvState" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<label for="RCFlag" disabled="true">#(..Get("未同步"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="RCFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox"'  data-pha='class:"hisui-checkbox",clear:true,query:true'>
+			</div>
+		</div>
+		
+		<div class="pha-line"></div>
+		<div class="datagrid-toolbar" style="border-bottom:0">
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveInv" onclick="javascript:SaveInv()">#(..Get("保存"))#</a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-barbell" id="btnSendInv" onclick="javascript:SendInv()">#(..Get("同步"))#</a>
+		</div>
+    </div>
+    <!--入库/退货单据工具栏-->
+	<div id="GridBusiMainBar">
+        <div class="pha-row">
+        	<div class="pha-col">
+				<label for="BusiStartDate">#(..Get("开始日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="BusiStartDate" class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",clear:true,query:1'/>
+			</div>
+        	<div class="pha-col">
+				<label for="BusiType">#(..Get("业务类型"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="BusiType" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:0'/>
+			</div>	
+			<div class="pha-col">
+				<a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false" onclick="javascript:QueryBusiMain()">#(..Get("查询"))#</a>
+			</div>
+		</div>
+		<div class="pha-row">
+			
+			<div class="pha-col">
+				<label for="BusiEndDate">#(..Get("结束日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="BusiEndDate" class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",clear:true,query:2'/>
+			</div>
+		</div>
+    </div>
+ 	
+ 	<!-- 入库/退货单明细发票信息修改 -->
+    <div id="diagUpdateInvNo" class="hisui-dialog" data-options="closed:true,width:1100,height:700,title:'入库/退货单明细发票信息修改'" style="padding:10px">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center', border:false,split:true">
+            	<div class="hisui-layout" fit="true" >
+            		<div data-options="region:'north',height:300, border:false,split:true">
+		                <div id="panel" class="hisui-panel" title="入库/退货单列表"
+		                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">	
+		                    <table id="GridUpdateInvNoMian"></table>				                            
+		                </div>
+                	</div>
+                	<div data-options="region:'center',border:false,split:true">
+		                <div id="panel" class="hisui-panel" title="入库/退货单明细列表"
+		                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">	
+		                    <table id="GridUpdateInvNoDetail"></table>				                            
+		                </div>
+                	</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 入库/退货单明细发票信息修改工具栏 -->
+    <div id="diagUpdateInvNoBar">
+    	<div class="pha-row">
+    		<div class="pha-col">
+				<label for="UpPurLoc">#(..Get("采购科室"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id='UpPurLoc'  class="hisui-combobox" data-pha='class:"hisui-datebox",requied:true,clear:true,query:true'>
+			</div>	
+    		<div class="pha-col">
+				<label for="UpBusiType">#(..Get("业务类型"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="UpBusiType" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/>
+			</div>	
+			<div class="pha-col">
+				<label for="UpStartDate">#(..Get("开始日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="UpStartDate" class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<label for="UpEndate">#(..Get("结束日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="UpEndate" class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<label for="WithOutInvNoFlag" >#(..Get("仅无发票"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="WithOutInvNoFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox"'  data-pha='class:"hisui-checkbox",clear:true,query:true'>
+			</div>
+			<div class="pha-col">
+				<a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false" onclick="javascript:QueryUpMain()">#(..Get("查询"))#</a>
+			</div>
+		</div>
+	</div>
+	<!-- 入库/退货单明细发票明细信息修改工具栏 -->
+	<div id="diagUpdateInvNoDetailBar">
+		<div class="datagrid-toolbar" style="border-bottom:0">
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveInv" onclick="javascript:UpdateInv()">保存</a>
+		</div>
+	</div>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/InvNoManage.js"></script>
+
+</body>
+</HTML>

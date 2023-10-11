@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<!--台账查询
+	csp:csp/pha.in.v3.locitmstkmove.csp
+	js: scripts/pha/in/v3/StockQuery/LocItmStkMove.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+	<title>
+		<TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+
+</HEAD>
+
+<body>
+	<div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+			<div class="hisui-layout" fit="true" id="lyBody">
+				<div data-options="region:'center',border:false,split:true">
+					<div id="panel" class="hisui-panel" title="台账药品列表"
+						data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">
+						<table id="gridIncil"></table>
+						<div id="test">
+							<div class="pha-con-more-less" style="display: none;">
+	                            <div>更多</div>
+	                            <div class="more"></div>
+	                        </div>
+	                        <div class="pha-con-more-less" >
+	                            <div>收缩</div>
+	                            <div class="less"></div>
+	                        </div>
+	                    </div>  
+					</div>
+				</div>
+				<div data-options="region:'south',border:false,height:450,split:true">
+					<div id="panel" class="hisui-panel" title="台账明细列表"
+						data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+						<table id="gridMoveDetail"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 科室库存项列表工具栏 -->
+	<div id="gridIncilBar">
+		<div class="pha-row" >
+			<div class="pha-col">
+				<label for="cmbPhaLoc">药房科室</label>
+			</div>
+			<div class="pha-col">
+				<input id='cmbPhaLoc' placeholder="选择药房科室..." class="hisui-combobox">
+			</div>
+			<div class="pha-col">
+				<label for="StartDate">起始日期</label>
+			</div>
+			<div class="pha-col">
+				<input id="StartDate" class="hisui-datebox dhcpha-date" type="text"
+					style="width:230px" />
+			</div>
+			<div class="pha-col">
+				<label for="EndDate">截止日期</label>
+			</div>
+			<div class="pha-col">
+				<input id="EndDate" class="hisui-datebox dhcpha-date" type="text"
+					style="width:230px" />
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryIncil()">查询</a>
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" onclick="javascript:clean()">清屏</a>
+			</div>
+		</div>
+		<div class="pha-row pha-con-more-less-link" >
+			<div class="pha-col">
+				<label for="cmbStkGroup">&emsp;&emsp;类组</label>
+			</div>
+			<div class="pha-col">
+				<input id='cmbStkGroup' placeholder="选择类组..." class="hisui-combobox">
+			</div>
+			<div class="pha-col">
+				<label for="cmbgridInci">药品名称</label>
+			</div>
+			<div class="pha-col">
+				<input id="cmbgridInci"
+					data-pha='class:"hisui-lookup",requied:true,clear:true,save:true'>
+			</div>
+			<div class="pha-col">
+				<label for="cmbPoison">管制分类</label>
+			</div>
+			<div class="pha-col">
+				<input id='cmbPoison' placeholder="选择管制分类..." class="hisui-combobox">
+			</div>
+			<div class="pha-col">
+				<div class="pha-drug-gene-label">
+					<label for="genePHCCat">#(..Get("药学分类"))#</label>
+				</div>
+			</div>
+			<div class="pha-col">
+				<div class="pha-drug-gene-text">
+					<input id="genePHCCat"
+						data-pha='class:"hisui-triggerbox",requied:true,save:0,clear:true'>
+				</div>
+			</div>
+		</div>
+		<div class="pha-row pha-con-more-less-link">
+			<div class="pha-col">
+				<label for="cmbStkCat">库存分类</label>
+			</div>
+			<div class="pha-col">
+				<input id='cmbStkCat' placeholder="选择库存分类..." class="hisui-combobox">
+			</div>
+			
+			<div class="pha-col">
+				<label for="cmbIfUse">是否消耗</label>
+			</div>
+			<div class="pha-col">
+				<input id='cmbIfUse' placeholder="选择是否有消耗..." class="hisui-combobox">
+			</div>
+			
+			<div class="pha-col">
+				<label for="chkManFlag">&emsp;管理药</label>
+			</div>
+			<div class="pha-col" style="padding-left:4px">
+				<input id="chkManFlag" type="checkbox" class="hisui-checkbox">
+			</div>
+			
+		</div>
+
+	</div>
+	<!-- 台账明细工具栏  -->
+	<div id="gridMoveDetailBar">
+		<div class="datagrid-toolbar" style="border-bottom:0;padding:3px 0;">
+			<div class="pha-col">
+				<label for="cmbBusinessType">业务类型</label>
+			</div>
+			<div class="pha-col">
+				<input id='cmbBusinessType' placeholder="选择业务类型..." class="hisui-combobox">
+			</div>
+			<div class="pha-col">
+				<label for="chkShowRetAsp">显示业务损益</label>
+			</div>
+			<div class="pha-col" style="padding-left:4px">
+				<input id="chkShowRetAsp" type="checkbox" class="hisui-checkbox">
+			</div>
+			<div class="pha-col">
+				<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryMoveDetail()">查询</a>
+			</div>
+		</div>
+
+	</div>
+	
+	<!-- 业务明细查询 -->
+    <div id="diagBusinessDetail" class="hisui-dialog" data-options="closed:true,width:1200,height:400,title:'台账信息'" style="padding:10px">
+        <div class="hisui-layout" fit="true">
+、            <div data-options="region:'center',border:false,split:true">
+				<div id="panel" class="hisui-panel" title="单据主信息"
+					data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">
+					<table id="gridBusinessMainInfo"></table>
+				</div>
+			</div>
+			<div data-options="region:'east',border:false,width:800,split:true">
+				<div id="panel" class="hisui-panel" title="单据明细信息"
+					data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+					<table id="gridBusinessDetail"></table>
+				</div>
+			</div>
+            
+        </div>
+    </div>
+	<script type="text/javascript" src="../scripts/pha/in/v3/StockQuery/LocItmStkMove.js"></script>
+</body>
+
+</HTML>

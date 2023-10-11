@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<!--
+	desc: 打印任务执行 (不要加任何seesion验证)
+	csp:  csp/pha.sys.v1.task.csp
+	js:   scripts/pha/sys/v1/task.js
+-->
+<csp:content charset="utf-8">
+<script language="Cache" method="OnPreHTTP" arguments="" returntype="%Boolean"> 
+	Quit 1
+</script>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<meta content="always" name="referrer">
+<title>	PHA SYS Task </title>
+
+<!-- 获取客户端参数 -->
+<server>
+	w "<script type='text/javascript'>" ,!
+	w "	var session = new Array();" ,!
+	w "	var client = new Array();" ,!
+	
+	/* 客户端变量 */
+	s pUserId = ""
+	s pUserCode = ""
+	s pCTLoc = ""
+	s pSSGroup = ""
+	s key = ""
+	f {
+		s key = $o(%request.Data(key))
+		q:key=""
+		s val = $g(%request.Data(key,1))
+		i key = "USER_ID" {
+			s pUserId = val
+		}
+		i key = "USER_CODE" {
+			s pUserCode = val
+		}
+		i key = "CTLOC" {
+			s pCTLoc = val
+		}
+		i key = "SSGROUP" {
+			s pSSGroup = val
+		}
+		w "	client['" _ key _ "'] = '" _ val _ "';" ,!
+	}
+	
+	/* 会话变量 */
+	// 用户
+	k SeesionData
+	s userId = "", userCode = "", userName = ""
+	i (pUserId '= "") {
+		s userId = pUserId
+	} elseif (UserCode '= "") {
+		s userId = $o(^SSU("SSUSR",0,"SSUSR_Initials",$$ALPHAUP^SSUTIL4(UserCode),""))
+	}
+	i userId '= "" {
+		s userCode = $p(^SSU("SSUSR", userId), "^", 1)
+		s userName = $p(^SSU("SSUSR", userId), "^", 2)
+	}
+	s SeesionData("LOGON.USERID") = userId
+	s SeesionData("LOGON.USERCODE") = userCode
+	s SeesionData("LOGON.USERNAME") = userName
+	// 科室&医院
+	s locId = "", locDesc = "", hospId = "", hospDesc = ""
+	i pCTLoc '= "" {
+		s locId = $p(pCTLoc, "@", 1)
+		s locDesc = $p(pCTLoc, "@", 2) // 中文有乱码
+		i locId '= "" {
+			s locDesc = $p(^CTLOC(locId), "^", 2)
+			s hospId = $p(^CTLOC(locId), "^", 22)
+			s hospDesc = $p($g(^CT("HOSP", +hospId)), "^", 2)
+		}
+	}
+	s SeesionData("LOGON.CTLOCID") = locId
+	s SeesionData("LOGON.CTLOCDESC") = locDesc
+	s SeesionData("LOGON.HOSPID") = hospId
+	s SeesionData("LOGON.HOSPDESC") = hospDesc
+	// 安全组
+	s groupId = "", groupDesc = ""
+	i pSSGroup '= "" {
+		s groupId = $p(pSSGroup, "@", 1)
+		s groupDesc = $p(pSSGroup, "@", 2) // 中文有乱码
+		i groupId '= "" {
+			s groupDesc = $p(^SSU("SSGRP", groupId), "^", 1)
+		}
+	}
+	s SeesionData("LOGON.GROUPID") = groupId
+	s SeesionData("LOGON.GROUPDESC") = groupDesc
+	// 保存
+	s sKey = ""
+	f {
+		s sKey = $o(SeesionData(sKey))
+		q:(sKey = "")
+		w "	session['" _ sKey _ "'] = '" _ SeesionData(sKey) _ "';" ,!
+		s %session.Data(sKey) = SeesionData(sKey)
+	}
+	w "</script>"
+</server>
+
+<!-- 基础JS -->
+<script type="text/javascript" src="../scripts_lib/jQuery/jquery-1.8.0.min.js" charset="utf-8"></SCRIPT>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="gb2312"></script>
+<script type="text/javascript">
+	/*
+	* 启动任务
+	*/
+	window.onload = function() {
+		StartTask();
+	}
+	
+	/*
+	* 访问后台的方法
+	* websys.Broker.cls含有session验证,此处不适用
+	*/
+	$URL = "web.DHCST.Common.ActionURL.cls";
+	if (typeof $ == "undefined") {
+		$ = {};
+	}
+	$.cm = function(_ajaxOpts, successFn, errorFn){
+		_ajaxOpts.url = _ajaxOpts.url || $URL;
+		_ajaxOpts.type = _ajaxOpts.type || "POST";
+		_ajaxOpts.dataType = _ajaxOpts.dataType || "json";
+		var pData = {};
+		for (k in _ajaxOpts) {
+			pData[k] = _ajaxOpts[k];
+		}
+		_ajaxOpts.data = pData;
+		
+		if (!successFn) {
+			var returnData = null;
+			_ajaxOpts.async = false;
+			_ajaxOpts.success = function(data){
+				returnData = data;
+			}
+			_ajaxOpts.error = function(xhr, err, o){
+				returnData = xhr.responseText;
+			}
+			$.ajax(_ajaxOpts);
+			return returnData;
+		} else {
+			if (successFn) {
+				_ajaxOpts.success = successFn;
+			}
+			if (errorFn) {
+				_ajaxOpts.error = errorFn;
+			}
+			_ajaxOpts.async = true;
+			$.ajax(_ajaxOpts);
+		}
+	}
+	function tkMakeServerCall(){
+		if (!arguments) {
+			return "-1^参数异常";
+		}
+		if (arguments.length < 2 ){
+			return "-1^参数个数少于2";
+		}
+		var cmOpts = {};
+		cmOpts.ClassName = arguments[0];
+		cmOpts.MethodName = arguments[1];
+		var Params = "";
+		for (var i = 2; i < arguments.length; i++) {
+			if (Params == "") {
+				Params = arguments[i];
+			} else {
+				Params = Params + String.fromCharCode(2) + arguments[i];
+			}
+		}
+		cmOpts.Params = Params;
+		cmOpts.ParamListByStr = 1;
+		cmOpts.dataType = "text"
+		return $.cm(cmOpts);
+	}
+	/*
+	* 写本地日志
+	*/
+	function WriteLocalLog(logData){
+		if (client.IsWebBrowser == "Y") {
+			var retStr = window.external.WriteLocalLog(logData);
+		} else {
+			$.cm({
+				url: "http://127.0.0.1:" + (client["LocalPort"] || 12997) + "/PHAService/",
+				dataType: "text",
+				actiontype: "log",
+				logData: logData
+			}, function(jsonData){});
+		}
+	}
+	/*
+	* 朗读语音
+	*/
+	function SpeakText(text){
+		if (client.IsWebBrowser == "Y") {
+			var retStr = window.external.SpeakText(text, 0, 100);
+		} else {
+			$.cm({
+				url: "http://127.0.0.1:" + (client["LocalPort"] || 12997) + "/PHAService/",
+				dataType: "text",
+				actiontype: "SpeakText",
+				text: text,
+				rate: 0,
+				volume: 100
+			}, function(jsonData){});
+		}
+	}
+</script>
+
+<!-- 打印JS -->
+<!-- 公共 -->
+<!-- script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.common.phaxmlprint.js" charset="gb2312"></script -->
+<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/DHCSTXMLPrint.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/pharmacy/common/js/printcom.js" charset="gb2312"></script>
+<!-- 业务 -->
+<script type="text/javascript" src="../scripts/pharmacy/outpha/dhcpha.outpha.printcom.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/pharmacy/inpha/ipprintcom.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/pha/ip/v4/mobprint.js" charset="gb2312"></script>
+<!-- 任务 -->
+<script type="text/javascript" src="../scripts/pha/sys/v1/task.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/pha/sys/v1/task.op.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/pha/sys/v1/task.ip.js" charset="gb2312"></script>
+<script type="text/javascript" src="../scripts/pha/sys/v1/task.in.js" charset="gb2312"></script>
+
+</head>
+
+<body>
+	正在打印...
+</body>
+</html>

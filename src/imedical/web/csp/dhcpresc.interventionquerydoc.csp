@@ -1,0 +1,204 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<!--dhcpresc.interventionquerydoc.csp-->
+<title>	审核干预情况查询（按科室） </title>
+<HISUI/>
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+
+<link href="../scripts/dhcnewpro/dhcpresc/css/interventionquery.css" rel="stylesheet">
+
+<!-- ECharts文件引入 -->
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/echarts.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/Echarts.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcpresc/interventionquerydoc.js"></script>
+<script Language="Javascript">
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+</head>
+<body>
+  <div class="hisui-panel" data-options="title:'数据总览',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:158px;border-radius:0px;">	
+	<!-- <div class="heading">
+		<div class="keyscat" style="clear:both;font-size:16px;font-weight:600;padding:15px 0 15px 15px;">
+			<a class="keysbyt" style="border-right:5px #017bce solid;width:0;height:30px;padding:0;margin-right:10px;"></a>
+			数据总览
+		</div>
+		<span class="query" style="display:none">
+			<a href="#" class="hisui-linkbutton btn-rad">累计</a>
+			<span style="padding-right:6px">选择年份</span>
+			<input type="text" id="checkYear" class="textbox"></input>	
+		</span>
+	</div> -->
+	<ul class="pf-nav" style="padding:15px 15px 15px 0px;">
+		<li class="pf-nav-item">
+			<div class="item-left total-left"></div>
+			<div class="item-text">
+				<div class="item-warn">监测医生数</div>
+				<div id="LocNum" class="item-num ui-span">7</div>
+			</div>
+		</li>
+		<li class="pf-nav-item">
+			<div class="item-left inter-left"></div>
+			<div class="item-text">
+				<div class="item-warn">医生人均开方数</div>
+				<div id="TotalNum" class="item-num ui-span">5</div>
+				<div class="item-uom">次</div>
+			</div>
+		</li>
+		<li class="pf-nav-item">
+			<div class="item-left taboo-left"></div>
+			<div class="item-text">
+				<div class="item-warn">人均被系统拦截次数</div>
+				<div id="Hook" class="item-num ui-span">7</div>
+				<div class="item-uom">次</div>
+			</div>
+		</li>
+		<li class="pf-nav-item">
+			<div class="item-left usage-left"></div>
+			<div class="item-text">
+				<div class="item-warn">人均被系统审核不通过</div>
+				<div id="NoPass" class="item-num ui-span">7</div>
+				<div class="item-uom">次</div>
+			</div>
+		</li>
+		<li class="pf-nav-item">
+			<div class="item-left chinese-left"></div>
+			<div class="item-text">
+				<div class="item-warn">人均被人工审核不通过数</div>
+				<div id="HumanRefuse" class="item-num ui-span">7</div>
+				<div class="item-uom">次</div>
+			</div>
+		</li>
+		<li class="pf-nav-item">
+			<div class="item-left pharc-left"></div>
+			<div class="item-text">
+				<div class="item-warn">人均双签执行</div>
+				<div id="HumanDouble" class="item-num ui-span">7</div>
+				<div class="item-uom">次</div>
+			</div>
+		</li>
+	</ul>
+  </div>
+  
+  <div style="width:100%;margin-top:10px;">
+      <div class="hisui-panel" data-options="title:'详细数据',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="">	
+ 		<!--<div style="width:100%;height:100%;box-sizing: border-box;background:#FFF;border-radius:4px;padding:0 10px 10px 10px"> -->
+		<div id="toolbar" style="padding-top:10px;padding-bottom:10px">
+			<!-- <div class="heading">
+	  			<div class="tag-icon" style="margin-left:10px"></div>
+				<div class="tag-text">详细数据</div>
+			</div> -->
+			<span style="margin-right:6px;margin-left:10px">查找时间</span>
+			<input id="stDate" style="width:160px" class="hisui-datebox textbox"></input>
+			<span style="margin-right:6px;">至</span>
+			<input id="endDate" style="width:160px" class="hisui-datebox textbox"></input>
+			<span style="margin-right:6px;margin-left:15px">查找科室</span>
+			<input id="loc" style="width:160px" class="hisui-combobox textbox"></input>
+			<span>
+				<a href="#" id="searchBtn" class="hisui-linkbutton" iconCls="icon-w-find" style="margin-left:10px">查询</a>
+			</span>
+			<span style="float:right;display:none">
+				<a href="#" class="hisui-linkbutton cutcicle " id="curDay">当日</a>
+				<a href="#" class="hisui-linkbutton cutcicle uncheck" id="curMonth">当月</a>
+				<a href="#" class="hisui-linkbutton cutcicle uncheck" id="curYear">当年</a>
+			</span>
+		</div>
+		<div id="datagird" style="height:260px;"></div>
+	</div>
+  </div>
+  
+  <div style="width:100%;height:200px;margin-top:10px;">
+  	<div class="div-block-left">
+  	  	 <div class="hisui-panel" data-options="title:'处方总通过率排行',fit:true,headerCls:'panel-header-big panel-header-gray',iconCls:'icon-paper'" tools='#passRate'>	
+  			<!-- <div class="div-block-con">
+  			<div class="heading-border">
+	  			<div class="tag-icon"></div>
+				<div class="tag-text">处方总通过率排行</div>
+				<span class="query">
+					<input type="text" id="orderPresc" class="order textbox" style="width:100px;margin-right:10px;"></input>
+					<!--<a href="#" class="hisui-linkbutton btn-rad">累计</a>
+					<span style="padding-right:6px">选择年份</span>
+					<input type="text" id="checkYearPresc" class="textbox"></input>	-->
+				<!--</span>
+			</div> -->
+			<div id="total" style="height:100%;"></div>
+  		</div>
+  	</div>
+  	<div class="div-block-right">
+  	  	 <div class="hisui-panel" data-options="title:'系统审查通过率排行',fit:true,headerCls:'panel-header-big panel-header-gray',iconCls:'icon-paper'" tools='#sysRate'>	
+  			<!-- <div class="div-block-con">
+  			<div class="heading-border">
+	  			<div class="tag-icon"></div>
+				<div class="tag-text">系统审查通过率排行</div>
+				<span class="query">
+					<input type="text" id="orderSys" class="order textbox" style="width:100px;margin-right:10px;"></input>
+					<!--<a href="#" class="hisui-linkbutton btn-rad">累计</a>
+					<span style="padding-right:6px">选择年份</span>
+					<input type="text" id="checkYearSys" class="textbox"></input>-->	
+				<!--</span>
+			</div> -->
+			<div  id="orderSysRate" style="height:100%;"></div>
+  		</div>
+  	</div>
+  </div>
+  
+  <div style="width:100%;height:200px;padding:53px 0px 40px 0px;">
+  	<div class="div-block-left">
+  	  	 <div class="hisui-panel" data-options="title:'人工审核通过率排行',fit:true,headerCls:'panel-header-big panel-header-gray',iconCls:'icon-paper'" tools='#userRate'>
+  			<!-- <div class="div-block-con">
+  			<div class="heading-border">
+	  			<div class="tag-icon"></div>
+				<div class="tag-text">人工审核通过率排行</div>
+				<span class="query">
+					<input type="text" id="orderPerson" class="order textbox" style="width:100px;margin-right:10px;"></input>
+					<!--<a href="#" class="hisui-linkbutton btn-rad">累计</a>
+					<span style="padding-right:6px">选择年份</span>
+					<input type="text" id="checkYearPerson" class="textbox"></input>-->	
+				<!--</span>
+			</div> -->
+			<div id="moncharts" style="height:100%;"></div>
+  		</div>
+  	</div>
+  	<div class="div-block-right">
+  	  	 <div class="hisui-panel" data-options="title:'双签执行率排行',fit:true,headerCls:'panel-header-big panel-header-gray',iconCls:'icon-paper'" tools='#doubleRate'>	
+  			<!-- <div class="div-block-con">
+  			<div class="heading-border">
+	  			<div class="tag-icon"></div>
+				<div class="tag-text">双签执行率排行</div>
+				<span class="query">
+					<input type="text" id="orderDouble" class="order textbox" style="width:100px;margin-right:10px;"></input>
+					<!--<a href="#" class="hisui-linkbutton btn-rad">累计</a>
+					<span style="padding-right:6px">选择年份</span>
+					<input type="text" id="checkYearDouble" class="textbox"></input>-->	
+				<!--</span>
+			</div> -->
+			<div id="orderRate" style="height:100%;"></div>
+  		</div>
+  	</div>
+  </div>
+  
+<div id="passRate"> 
+	<input type="text" id="orderPresc" class="hisui-combobox" style="width:100px;margin-right:10px;"></input>
+</div>
+
+<div id="sysRate"> 
+	<input type="text" id="orderSys" class="hisui-combobox" style="width:100px;margin-right:10px;"></input>
+</div>	
+
+<div id="userRate"> 
+	<input type="text" id="orderPerson" class="hisui-combobox" style="width:100px;margin-right:10px;"></input>
+</div>	
+
+<div id="doubleRate"> 
+	<input type="text" id="orderDouble" class="hisui-combobox" style="width:100px;margin-right:10px;"></input>
+</div>	
+	
+</body>
+</html>

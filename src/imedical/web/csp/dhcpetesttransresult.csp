@@ -1,27 +1,68 @@
-<!-- dhcpetesttransresult.csp -->
 
+<!-- 
+ * FileName: dhcpetesttransresult.csp
+ * Anchor: sxt
+ * Date: 2021-07-22
+ * Description: 检验、检查结果回传详情
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
 <html>
 <head>
 <!--meta http-equiv="Content-Type" content="text/html; charset=utf-8"-->
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<TITLE></TITLE>
 
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 50px;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-header{
+	border-bottom: 0;
+}
+
+
+</style>
 </head>
 <BODY>
-
-	<SCRIPT language="Cache" RUNAT="SERVER">
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:195px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
+		<table class="search-table">
+		<SCRIPT language="Cache" RUNAT="SERVER">
 	
-	
+		s CTLOCID=%session.Get("LOGON.CTLOCID")
 		s OEID=$g(%request.Data("OEID",1))
+		//w "<tr><td>查看平台消息：<a href='http://平台服务器地址/hsb/csp/Login.csp'>点击查看平台消息</a><br></td></tr>"
+
 		w "系统医嘱ID:<b>"_OEID_"</b><br>",!
-		s LisNewVersion=$g(^DHCPESetting("DHCPE","LisNewVersion"))
-		s RisStation=$g(^DHCPESetting("DHCPE","StationId_Ris"))
+		s ArcItmID=$p($g(^OEORD($p(OEID,"||",1),"I",$p(OEID,"||",2),1)),"^",2)
+		s ArcItmDesc=$P(^ARCIM(+ArcItmID,1,1),"^",2)
+		w "系统医嘱名称:<b>"_ArcItmDesc_"</b><br>",!
+		s LisNewVersion=$g(^DHCPESetting("DHCPE","LisNewVersion",CTLOCID))
+		s RisStation=$g(^DHCPESetting("DHCPE","StationId_Ris",CTLOCID))
 		s RisStation="^"_RisStation_"^"
 		s OldOrdItem=""
-        s CRMOrder=$o(^DHCPECRMO(0,"OEORI",OEID,0))
-		s PreItem=$p(^DHCPECRMO(CRMOrder),"^",2)
-		s PIBI=$P(^DHCPEPreIADM(+PreItem),"^",1)
-		s RegNo=$P(^DHCPEPreIBI(PIBI),"^",1)
+        	s CRMOrder=$o(^DHCPECRMO(0,"OEORI",OEID,0))
+		s PreItem=$p($g(^DHCPECRMO(CRMOrder)),"^",2)
+		s PIBI=$P($g(^DHCPEPreIADM(+PreItem)),"^",1)
+		s RegNo=$P($g(^DHCPEPreIBI(PIBI)),"^",1)
 		
 		s namespaceLab="DATA_OLD" //^DHCPESetting("NAMESPACE","LABDATA")
 		S newId=PreItem
@@ -53,24 +94,29 @@
 			i LabNo'=""{
 				w "化验项目:标本号为"_LabNo_"<br>",!
 				
-				i LisNewVersion'="Y"{
+				i (LisNewVersion'="Y"){
+					w "调用体检取数据方法:"_"##class(web.DHCPE.TransResult).TransALabItem<br>"
 					s ret=##class(web.DHCPE.TransResult).TransALabItem("",%session.Get("LOGON.USERID"),OEID)
 					i ret'="Over"{
 					w "lis接口返回信息："_ret_"<br>"
 					}
-				}elseif(TransResultFlag="PT"){
-					s ret=##class(web.DHCPE.TransResult).TransALabItemNewByPT("",%session.Get("LOGON.USERID"),OEID)
-					i ret'=""{
-					w "lis接口返回信息："_ret_"<br>"
-					}
+				}elseif(LisNewVersion="Y"){
+					if (TransResultFlag="PT"){
+						w "调用体检取数据方法:"_"##class(web.DHCPE.TransResult).TransALabItemNewByPT<br>"
+						s ret=##class(web.DHCPE.TransResult).TransALabItemNewByPT("",%session.Get("LOGON.USERID"),OEID)
+						i ret'=""{
+							w "lis接口返回信息："_ret_"<br>"
+						}
 					
+					}elseif (TransResultFlag="PG"){
+						w "调用体检取数据方法:"_"##class(web.DHCPE.TransResult).TransALabItemNew<br>"
+					
+						s ret=##class(web.DHCPE.TransResult).TransALabItemNew("",%session.Get("LOGON.USERID"),OEID)
+						i ret'=""{
+						w "lis接口返回信息："_ret_"<br>"
+						}
 					}
-				else{
-					s ret=##class(web.DHCPE.TransResult).TransALabItemNew("",%session.Get("LOGON.USERID"),OEID)
-					i ret'=""{
-					w "lis接口返回信息："_ret_"<br>"
-					}
-					}
+				}
 				
 				/*
 				s NewRet=##class(web.DHCPE.TransResult).TransALabItemNew("","",OEID,1)
@@ -86,86 +132,95 @@
 				*/	
 			}else{
 				s ARCIMID=$P($G(^OEORD(OEORD,"I",COrderSub,1)),"^",2)
-				s StationId=$o(^DHCPEST(0,"STORD_ARCIM",ARCIMID,0))
+				//s StationId=$o(^DHCPEST(0,"STORD_ARCIM",ARCIMID,0))
+				s OrderDR=##class(web.DHCPE.CT.HISUICommon).GetStatOrderIDByARCIM(ARCIMID,CTLOCID)
+				s StationId=$p(OrderDR,"||",1)
 				w:StationId="" "体检站点为空，不接收结果<br>"
 				q:StationId=""
-				s RisStation=$g(^DHCPESetting("DHCPE","StationId_Ris"))
+				s RisStation=$g(^DHCPESetting("DHCPE","StationId_Ris",CTLOCID))
+				s RisStation="^"_RisStation_"^"
 				i '(RisStation[("^"_StationId_"^")) w "不是检查及检验类型的项目，不需要回传<br>"
-				s STORDChildSub=$O(^DHCPEST(0,"STORD_ARCIM",ARCIMID, StationId, 0))
+				//s STORDChildSub=$O(^DHCPEST(0,"STORD_ARCIM",ARCIMID, StationId, 0))
+				s STORDChildSub=$p(OrderDR,"||",2)
 				//w STORDChildSub_"STORDChildSub"
 				Q:(""=STORDChildSub) 0
-				s ReportFormat=$P(^DHCPEST(StationId,"O",STORDChildSub),"^",4)
+				s SOSID=$o(^CF.PE.StationOrderSetI("IdxOfLocOrder"," "_CTLOCID,OrderDR,0))
+				//s ReportFormat=$P(^DHCPEST(StationId,"O",STORDChildSub),"^",4)
+				s ReportFormat=$lg($g(^CF.PE.StationOrderSetD(SOSID)),5)
 				
 				
 				i (RisStation[("^"_StationId_"^")){
-					//w TransResultFlag_"TransResultFlag"
+					
 					if (TransResultFlag="PT"){
-					s ret=##class(web.DHCPE.TransResult).TransARisItemByPT("",OEID, %session.Get("LOGON.USERID"))
-					i ret'=""{
-					w "检查接口返回信息："_ret_"<br>"
-					}
-					}
-					else{
+						w "调用体检取数据方法:"_"##class(web.DHCPE.TransResult).TransARisItemByPT<br>"	
+						s ret=##class(web.DHCPE.TransResult).TransARisItemByPT("",OEID, %session.Get("LOGON.USERID"))
+						i ret'=""{
+							w "检查接口返回信息："_ret_"<br>"
+						}
+					}elseif(TransResultFlag="PG"){
+						w "调用体检取数据方法:"_"##class(web.DHCPE.TransResult).TransARisItem<br>"
 						s ret=##class(web.DHCPE.TransResult).TransARisItem("",OEID, %session.Get("LOGON.USERID"))
 						i ret'=""{
-						w "检查接口返回信息："_ret_"<br>"
+							w "检查接口返回信息："_ret_"<br>"
 						}
 						
 						}
 					}
-				/*
-				w:ReportFormat["EKG" "心电结果，请联系心电工程师<br>"
-				i ReportFormat["PIS"{
-					s cLocDr=$P(^OEORD(+ordItmId,"I",$P(ordItmId,"||",2),3),"^",6)
-					zn "PIS"
-					s value=##class(Src.DPIS3OutInterface).GetPisDiagToTJ(OEID,cLocDr)  //新项目、新病理结果
-					zn "DHC-APP"
-					w:value="" "新医嘱："_OEID_"新病理系统没有获取到结果<br>"
-					i value=""{
-						
-						i OldOrdItem'=""{
-							zn "PIS"
-							s value=##class(Src.DPIS3OutInterface).GetPisDiagToTJ(OldOrdItem,cLocDr)  //新项目、新病理结果
-							zn "DHC-APP"
-							w:value="" "旧医嘱："_OldOrdItem_"新病理系统没有获取到结果<br>"
-							i value=""{
-								s obj=##class(web.DHCPE.Soap.MyServiceSoap).%New()
-								s value=obj.GetPisResult(OldOrdItem)
-								w:value="" "旧医嘱："_OldOrdItem_"旧病理系统没有获取到结果<br>"
-							}
-						}
-					}
-					d ##class(web.DHCPE.TransResult).TransAPISItem("",OEID,"")
-					w:'$D(^DHCPERLT(0,"OEORI",OEID)) "新旧病理都没有获取到结果，请联系病理工程师<br>"
-				}else{
-					s RisRet=##class(web.DHCPE.TransResult).TransARisItem("",OEID,"")
-					w:RisRet'="" RisRet_"<br>"
-					w:'$D(^DHCPERLT(0,"OEORI",OEID)) "检查系统没有获取到结果，请联系检查系统工程师<br>"
-				}
-				*/
+				
 			}
 		}
 		w:'$D(^DHCPERLT(0,"OEORI",OEID)) "不存在结果<BR>"
 		q:'$D(^DHCPERLT(0,"OEORI",OEID))
 		w "已存在结果:<br>"
 		w:($d(^DHCPEDataEx("DocRecordResult",OEID))) "在体检系统保存的结果，如果需要获取接口的结果请到录入界面点取正常值<br>"
-		w "<table border=1 width=90%><tr><td width=40%>项目名称</td><td width=20%>结果</td><td>单位</td><td>参考范围</td><td>医生</td></tr>"
+		</SCRIPT>
+		</table>
+		</div>
+	</div>
+		<script type="text/javascript">
+			var OEID="#(OEID)#"
+	
+		</script>	
+		
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+				
+				<table data-options="bodyCls:'panel-header-gray'" id="RltGrid" >
+		<SCRIPT language="Cache" RUNAT="SERVER">
+		
+		w "<table border=1 width=90%>"
+		w "<tr><td width=40%>项目名称</td><td width=20%>结果</td><td>单位</td><td>参考范围</td><td>检查医生</td><td>报告医生</td><td>审核医生</td></tr>"
 		s RLT=0
 		f  s RLT=$O(^DHCPERLT(0,"OEORI",OEID,RLT)) q:RLT=""  d
-		.s ItemID=$P(^DHCPERLT(RLT),"^",3)
+		.s ItemID=$P($g(^DHCPERLT(RLT)),"^",3)
 		.s ODDesc=$P($g(^DHCPEST(+ItemID,"OD",$P(ItemID,"||",2))),"^",1)
-		.s Result=$P(^DHCPERLT(RLT),"^",4)
-		.s User=$P(^DHCPERLT(RLT),"^",5)
-		.s UserName=""
-		.s:User'="" UserName=$P($G(^SSU("SSUSR",User)),"^",2)
+		.s Result=$P($g(^DHCPERLT(RLT)),"^",4)
+		.s UserName="",ReportDoc="",AuditDoc="",UserID=""
+		.s User=$P($g(^DHCPERLT(RLT)),"^",16)
+		.s:(User'="") UserName=$LG(^CF.PE.SSUserD(User),3)
+		.s:(User="") UserID=$P($g(^DHCPERLT(RLT)),"^",5)
+		.s:UserID'="" UserName=$P($G(^SSU("SSUSR",UserID)),"^",2)
+		.// 报告医生
+		.s RUser=$P($g(^DHCPERLT(RLT)),"^",17)
+		.s:RUser'="" ReportDoc=$LG(^CF.PE.SSUserD(RUser),3)
+		.
+		.// 审核医生
+		.s AUser=$P($g(^DHCPERLT(RLT)),"^",18)
+		.s:AUser'="" AuditDoc=$LG(^CF.PE.SSUserD(AUser),3)
 		.s ODUnit=$G(^DHCPEDataEx("DHCPEResult",RLT,"Unit"))
 		.s Standard=$G(^DHCPEDataEx("DHCPEResult",RLT,"Ranges"))
-		.w "<tr><td>"_ODDesc_"</td><td>"_Result_"</td><td>"_ODUnit_"</td><td>"_Standard_"</td><td>"_User_" "_UserName_"</td></tr>"
+		.w "<tr><td>"_ODDesc_"</td><td>"_Result_"</td><td>"_ODUnit_"</td><td>"_Standard_"</td><td>"_UserName_"</td><td>"_ReportDoc_"</td><td>"_AuditDoc_"</td></tr>"
+		
 		w "</table>"
 		q
 		
 	</SCRIPT>
-
+			</table>
+			</div>
+        </div>
+	      
+</div>
 </BODY>
+<script type="text/javascript" src="../scripts/DHCPETesttransresult.hisui.js"></script>
 </html>
 

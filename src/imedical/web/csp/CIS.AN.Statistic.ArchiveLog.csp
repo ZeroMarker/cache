@@ -1,0 +1,164 @@
+<csp:method name=OnPerHttp arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q l
+	quit l
+</csp:method>
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>归档日志查询</title>
+<csp:content charset="UTF-8">
+<HISUI></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding:10px 0px 10px 0px">
+    	<form id="conditionForm">
+    		<label class="lableTitle1">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label class="lableTitle1">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:10px">查询</a>
+    		<!--<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-export'">导出</a>-->
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1,1);
+			//date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		dhccl.parseDateFormat();
+            var ret=dhccl.runServerMethod("web.DHCClinicCom","GetDateFormat");
+              if(ret.result=="j/n/Y") 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("dd/MM/yyyy");
+	            var lastMonthLastDay=lastMonthLastDay.format("dd/MM/yyyy");
+	        
+	        }
+	        else 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("yyyy-MM-dd");
+	            var lastMonthLastDay=lastMonthLastDay.format("yyyy-MM-dd");
+		        }
+		     $("#OperStartDate").datebox("setValue", lastMonthFirstDay);
+    		 $("#OperEndDate").datebox("setValue", lastMonthLastDay);
+    		
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		title: "",
+        		nowrap: true,
+        		toolbar: "#dataTools",
+        		border:false,
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.AnesthetistWorkload",
+            		QueryName: "FindArchiveLog",
+            		ArgCnt: 2
+        		},
+        		columns: [
+            		[{
+                    	field: "ModuleDesc",
+                    	title: "归档表单",
+                    	width: 240
+                	}, {
+                    	field: "ArchiveDateTime",
+                    	title: "归档日期",
+                    	width: 180
+                	}, {
+                    	field: "ArchiveUserDesc",
+                    	title: "归档用户",
+                    	width: 80
+                	},
+                	{
+                    	field: "Url",
+                    	//halign: 'center',
+                    	title: "文件链接",
+                    	width: 880
+                	}
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+	        	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+            	"background-color:" + row.StatusColor + ";";
+        	},
+        	onLoadSuccess: function(data) {},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnExport").click(function(){
+	    	exportToExcel();
+    	});
+	});
+	
+	function exportToExcel() {
+    	var datagrid = $("#data_grid");
+    	var rows = datagrid.datagrid("getRows");
+    	
+    	var columns = datagrid.datagrid("options").columns[0];
+    	var columnLength = columns.length;
+    	var sheetRowCount = 3;
+    	
+    	var xlsExcel, xlsBook, xlsSheet;
+    	xlsExcel = new ActiveXObject("Excel.Application");
+    	xlsBook = xlsExcel.Workbooks.Add();
+
+		var excelRow=2,excelColumn=0;
+    	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = column["title"];
+        	}
+        
+        excelRow++;
+		excelColumn=1;
+        for (var i = 0; i < rowLength ; i++) {
+            	row = rows[i];
+            	excelRow++;
+            	excelColumn=0;
+         
+            	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	field = column["field"];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = row[field] || "";
+            	}
+       		}
+       		
+    	xlsExcel.Visible = true;
+    	//xlsSheet.PrintPreview;
+    	//xlsSheet.PrintOut();
+}
+	</script>
+</body>
+</html>

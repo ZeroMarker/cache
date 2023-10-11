@@ -1,0 +1,251 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>置管位置</title>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<style>
+	.tbclass{
+	    text-align: right;
+   }
+   .dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    work-break:keep-all;
+    work-wrap:break-word;
+    white-space:nowrap;     
+}
+</style>
+</head>
+
+<body class="hisui-layout" >
+	<div data-options="region:'center',headerCls:'panel-header-gray'" border="false">
+    	<table id="catheterposition_datagrid" data-options="fit:true,border:false"></table>
+    </div>
+	<div id="catheterposition_dialog_tool" style="padding:0px 20px 20px 20px;">
+		<a id="dialog_okay" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+		<a id="dialog_cancel" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">取消</a>
+	</div>
+	<div id="catheterposition_dialog" class="hisui-dialog" style="width:285px;height:197px;resizable:true;padding:10px;"  title="新增置管位置" data-options="iconCls:'icon-add',buttons:'#catheterposition_dialog_tool',closed:true,modal:true">
+		<form data-options="fit:true,border:false,plain:true">
+                <table cellspacing=10>
+				<tr style="display:none">
+		 			<td></td>
+		   			<td><input id="DSCRowId" name="RowId" type="text" class="textbox hisui-validatebox" ></td>
+				</tr>
+				<tr>
+					<td class="tbclass"><font color=red>*</font>代码</td>
+					<td><input id="DSCCode" name="Code" type="text" class="textbox hisui-validatebox"  data-options="required:true" style="width:193px"></td>
+				</tr>	
+				<tr>	
+					<td class="tbclass"><font color=red>*</font>名称</td>
+					<td><input id="DSCName" name="Description" type="text" class="textbox hisui-validatebox" data-options="required:true" style="width:193px"></td>
+				</tr>
+		</table >
+		</form>
+	</div>
+	<script type="text/javascript">
+	var page = {}
+	
+	$(document).ready(function(){
+		initDatagrid();
+		initDialog();
+	});
+	
+	function initDatagrid(){
+		page.datagrid = $("#catheterposition_datagrid");
+		page.datagrid.datagrid({
+			fit: true,
+        	singleSelect: true,
+        	rownumber: true,
+        	pagination: true,
+        	//title:"置管位置基础数据维护",
+        	//headerCls:"panel-header-gray",
+                fixRowNumber:true, //列号 自适应宽度
+        	fitColumns:true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+        	pageSize: 100,
+        	pageList: [10, 20, 50, 100, 200, 500],
+        	bodyCls: "panel-body-gray",
+        	toolbar: [{
+            	id: 'catheterposition_add',
+            	iconCls: 'icon-add',
+            	text: '添加',
+            	handler: function() {
+                	page.dialog.dialog({
+                  		title: "添加置管位置",
+                   		iconCls: "icon-w-add"
+                	});
+                	page.dialog.buttons.ok.linkbutton({
+                    	text: "确定",
+                    	iconCls: "icon-w-add"
+                	});
+                	page.dialog.dialog("open");
+            	}
+        	}, {
+            	id: 'catheterposition_edit',
+            	iconCls: 'icon-write-order',
+            	disabled: true,
+            	text: '编辑',
+            	handler: function() {
+                	page.dialog.dialog({
+                    	title: "修改置管位置",
+                    	iconCls: "icon-w-edit"
+                	});
+                	page.dialog.buttons.ok.linkbutton({
+                   		text: "修改",
+                    	iconCls: "icon-w-edit"
+                	});
+                	page.dialog.dialog("open");
+                	var selectedRecord = page.datagrid.datagrid("getSelected");
+                	page.dialogForm.form("load", selectedRecord);
+            	}
+        	}, {
+            	id: 'catheterposition_remove',
+            	iconCls: 'icon-cancel',
+            	disabled: true,
+            	text: '删除',
+            	handler: function() {
+                	$.messager.confirm("删除确认", "当前操作为：删除当前选中的置管位置\n风险：删除后应用程序可能报错\n是否继续？", function(confirmed) {
+                    	if(confirmed){
+	                    	var selectedRecord = page.datagrid.datagrid("getSelected");
+                    		if (Number(selectedRecord.RowId)) {
+                        		$.m({
+                                	ClassName: "Clinic.ICU.Catheter",
+                                	MethodName: "RemoveCatheterPosition",
+                                	rowId: selectedRecord.RowId
+                            	},
+                            	function(response) {
+                                	if ($.trim(response) === "0") {
+                                 	   $.messager.alert("提示","删除成功！","info");
+                                	    page.datagrid.datagrid("reload");
+                                	} else {
+                                	    $.messager.alert("提示","删除错误!", response);
+                                	}
+                            	});
+                    		}
+                    	}
+                	});
+                }
+        	}],
+        	url: "dhcclinic.jquery.csp",
+        	idField: "RowId",
+        	queryParams: {
+            	ClassName: "Clinic.ICU.Catheter",
+            	QueryName: "FindCatheterPosition",
+            	ArgCnt: 0
+        	},
+        	frozenColumns: [
+            	[
+
+            	]
+        	],
+        	columns: [
+            	[
+            	{ field: "RowId", title: "ID", width: 60, sortable: true },
+            	{ field: "Code", title: "代码", width: 60, sortable: true },
+            	{ field: "Description", title: "名称", width: 120, sortable: true }
+           		]
+        	],
+        	onSelect: function(record) {
+            	$("#catheterposition_edit,#catheterposition_remove").linkbutton("enable");
+        	}
+		});
+	}
+	
+	function initDialog(){
+		page.dialog = $("#catheterposition_dialog");
+    	page.dialog.dialog({
+        	onBeforeOpen: function() {},
+        	onOpen: function() {},
+        	onBeforeClose: function() {},
+        	onClose: function() {
+            	page.dialogForm.form("clear");
+        	}
+    	});
+    	
+    	initiateDialogForm();
+    	initiateDialogTool();
+	}
+	
+	/**
+ 	* @description 初始化对话框表单
+ 	*/
+	function initiateDialogForm() {
+    	var form = $(page.dialog).find("form");
+    	page.dialogForm = form;
+    	page.dialogForm.form({
+        	onValidate: function() {},
+        	onSubmit: function() {},
+        	onLoadSuccess: function(data) {}
+    	});
+    	
+    	form.items = {};
+	}
+	
+	/**
+ 	* @description 初始化对话框按钮
+ 	*/
+	function initiateDialogTool() {
+    	page.dialog.buttons = {};
+    	var buttons = page.dialog.buttons;
+    	buttons.ok = $("#dialog_okay");
+    	buttons.cancel = $("#dialog_cancel");
+    	buttons.ok.linkbutton({
+        	onClick: function() {
+            	var data = page.dialogForm.serializeJson();
+            	//ajax post: saving data
+            	$.m({
+                	ClassName: "Clinic.ICU.Catheter",
+                	MethodName: "SaveCatheterPosition",
+                	rowId: data.RowId || "",
+                	code: data.Code,
+                	description: data.Description
+            	}, function(response) {
+                	response = $.trim(response);
+                	if (Number(response) > 0) {
+                    	if (data.RowId) {
+                        	var rowIndex = page.datagrid.datagrid("getRowIndex", data.RowId);
+                        	page.datagrid.datagrid("updateRow", {
+                            	index: rowIndex,
+                            	row: data
+                        	});
+                    	} else {
+                        	data.RowId = Number(response);
+                        	page.datagrid.datagrid("appendRow", data);
+                    	}
+                    	page.dialog.dialog("close");
+                	} else {
+                    	//$.messager.show("Error!", response);
+                    	$.messager.alert("提示",response,"info");
+                	}
+            	});
+        	}
+    	});
+
+    	buttons.cancel.linkbutton({
+        	onClick: function() {
+            	page.dialog.dialog("close");
+        	}
+    	});
+	}
+	
+	/// jQuery扩展函数
+	(function($) {
+    	$.fn.serializeJson = function() {
+        	var serializeObj = {};
+        	$(this.serializeArray()).each(function() {
+            	serializeObj[this.name] = $.trim(this.value);
+        	});
+        	return serializeObj;
+    	};
+	})(jQuery);
+	</script>
+</body>
+</html>

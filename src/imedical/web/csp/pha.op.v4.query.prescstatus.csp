@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--门诊药房--处方状态查询
+    csp:pha.op.v4.query.prescstatus.csp
+    js: pha/op/v4/query.prescstatus.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <PHALIBV1 />
+    <PHAOPV4 />
+    <style>
+        .pha-body {
+		    background-color: #fff;
+		}
+    </style>
+</head>
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class = "hisui-layout" id ="qcondPanel" title="门诊处方状态查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',border:true,split:true">
+                    <table id="gridPrescStatus"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridPrescStatusBar">
+        <table id = "qCondition" class = "pha-con-table">
+            <tr>
+                <td class = "r-label">
+                    <label>#(..Get("开始日期"))#</label>
+                </td>
+                <td>
+                    <input id="conPhStDate" class="hisui-datebox" data-pha='class:"hisui-datebox"'>
+                </td>
+                <td class = "r-label">
+                    <label>#(..Get("结束日期"))#</label>
+                </td>
+                <td>
+                    <input id="conPhEndDate" class="hisui-datebox" data-pha='class:"hisui-datebox"'>
+                </td>
+                <td>
+                    <label>#(..Get("登记号"))#</label>
+                </td>
+                <td>
+                    <input id="conPatNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox"'>
+                </td>
+                <td>
+                    <label>#(..Get("处方号"))#</label>
+                </td>
+                <td>
+                    <input id="conPrescNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox"'>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-find" id="btnFind">查询</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-clean" id="btnClean">清屏</a>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="10">
+                    <div class="pha-tip-info" style="width:100%;line-height: 28px;top:10px;right: 10px;letter-spacing:1px">
+                    #(..Get("（1）上方条件可选两种组合：<b>[开始日期+结束日期+登记号]，[处方号]"))#</b>；
+                    #(..Get("（2）红色信息,优先注意。"))#
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+<script type="text/javascript" src="../scripts/pha/op/v4/query.prescstatus.js"></script>
+
+</html>

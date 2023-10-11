@@ -14,7 +14,7 @@
 			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
 		</SCRIPT>
 		<CSP:IF CONDITION="IsADDINS=1">
-			<ADDINS require="CmdShell"/>
+			<ADDINS require="CmdShell"></ADDINS>
 		</CSP:IF>
 		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
 	
@@ -30,7 +30,16 @@
 			Set EpdDiseaseToSickKind = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdDiseaseToSickKind","")
 			Set EpdDiseaseToDegree = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdDiseaseToDegree","")
 			Set EpdDiseaseToResume = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdDiseaseToResume","")
-			
+			Set EpdRepDateDisplay = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdRepDateDisplay","")
+			Set EpdClinicModDiag = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdClinicModDiag","")
+			Set EpdAdminModDiag = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdAdminModDiag","")
+			Set EpdRepDateModify = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdRepDateModify","")
+			Set EpdRevisedModDiag = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdRevisedModDiag","") // 订正报告之后是否允许修改诊断信息
+			Set EpdRegionRelateCurrAdd = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdRegionRelateCurrAdd","")	//传染病病人所属与现住址强制关联
+			Set EpdNTSEEADDRESS = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdNTSEEADDRESS",%session.Data("LOGON.HOSPID"))
+			Set:EpdNTSEEADDRESS'="" EpdNTSEEADDRESS=##class(DHCMed.SSService.AreaDicSrv).GetAddress(EpdNTSEEADDRESS)
+			Set EpdCloseNeedReason = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdCloseNeedReason","")	// 直接关闭新建传染病报告需填写原因
+			Set EpdReviseAllowCheck = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdReviseAllowCheck",%session.Data("LOGON.HOSPID")) //传染病订正报告允许审核
 			//获取患者现住址
 			Set EpisodeID=$g(%request.Data("EpisodeID",1))	       //当前病人就诊ID
  			Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)         //病人ID
@@ -38,8 +47,7 @@
 			Set PatCurrAddress =$p(PatAddress,$c(1),2)
 			Set CurrAddress = ##class(DHCMed.EPDService.InitRepLoadSrv).GetAddress(PatCurrAddress)
 			//获取初始赋值字典项
-			Set EpdInitAddressByLocalHospital=CurrAddress
-			Set:EpdInitAddressByLocalHospital="" EpdInitAddressByLocalHospital =##class(DHCMed.EPDService.InitRepLoadSrv).GetDictionary("GetAreaInfo!!EpdInitAddressByLocalHospital")		
+			Set EpdInitAddressByLocalHospital=##class(DHCMed.EPDService.InitRepLoadSrv).GetDictionary("GetAreaInfo!!EpdInitAddressByLocalHospital")
 			Set EpdInitIntimateKey =##class(DHCMed.EPDService.InitRepLoadSrv).GetDictionary("GetDictionary!!EpdInitIntimateKey!!EpidemicContact")
 			
  	        //患者基本信息
@@ -53,8 +61,8 @@
                 Set EpdRepPlaceCode = objRepPlace.Code
 				Set EpdRepPlaceDesc = objRepPlace.Description
 			}
-   	        //获取草稿、订正状态是否存在
-   	        Set EpdSaveTmp ="",EpdCorrect=""
+   	        //获取草稿、订正、漏报、复诊状态是否存在
+   	        Set EpdSaveTmp ="",EpdCorrect="",EpdRepeat="",EpdOmision=""
 			Set objSaveTmp = ##class(DHCMed.SS.Dictionary).GetByTypeCode("EPIDEMICREPORTSTATUS",6,1)  //草稿
 			If $IsObject(objSaveTmp){ 
 				Set EpdSaveTmp = objSaveTmp.Code
@@ -63,18 +71,25 @@
             If $IsObject(objCorrect){ 
 				Set EpdCorrect = objCorrect.Code
 			}
+			Set objRepeat = ##class(DHCMed.SS.Dictionary).GetByTypeCode("EPIDEMICREPORTSTATUS",8,1)  //复诊
+            If $IsObject(objRepeat){ 
+				Set EpdRepeat = objRepeat.Code
+			}
+			Set objOmision = ##class(DHCMed.SS.Dictionary).GetByTypeCode("EPIDEMICREPORTSTATUS",9,1)  //漏报
+            If $IsObject(objOmision){ 
+				Set EpdOmision = objOmision.Code
+			}
 			//获取建卡登记字典对照信息
    	        Set DicInfo=##class(DHCMA.Util.BTS.DictionaryMapSrv).GetDicInfo(EpisodeID,"EPD")
    	        Set OccupationInfo = $p(DicInfo,"^",4)
    	   </server>
    	</head>
 	<body>
-	     <csp:Include Page="dhcma.epd.report.show.csp"> 
+	    
 	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/EPD/report/Gui.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/EPD/report/Event.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/EPD/report/Print.js"></script>
-		
 		<script language="Cache" RUNAT="SERVER">
             Set PortalFlag=+$g(%request.Data("PortalFlag",1))	   //Portal调用标志
 			Set ReportID=$g(%request.Data("ReportID",1))	       //当前报告ID
@@ -84,6 +99,7 @@
 			Set IFRowID=$g(%request.Data("IFRowID",1))		       //传染病诊断ID
 			Set IsSecret=+$g(%request.Data("IsSecret",1))          //是否涉密
 			Set EmrOpen=+$g(%request.Data("EmrOpen",1))            //是否由病历浏览打开
+			Set DetailsId = $g(%request.Data("MsgDetailsId",1))    //基础平台消息ID
 			If ReportID'="" {
 				Set objReport=##Class(DHCMed.EPD.Epidemic).GetObjById(ReportID)
 				If $IsObject(objReport){
@@ -105,6 +121,7 @@
             var PortalFlag='#(PortalFlag)#';
             var IsSecret='#(IsSecret)#';
 	        var EmrOpen='#(EmrOpen)#';
+			var DetailsId = "#(DetailsId)#";
 			
 			//全局请求后台服务对象
 			var ServerObj={
@@ -124,15 +141,27 @@
 				EpdRepPlaceDesc:"#(EpdRepPlaceDesc)#",
 				EpdSaveTmp:"#(EpdSaveTmp)#",
 				EpdCorrect:"#(EpdCorrect)#",
+				EpdRepeat:"#(EpdRepeat)#",
+				EpdOmision:"#(EpdOmision)#",
 				PatCurrAddress:"#(PatCurrAddress)#",
 				CurrAddress:"#(CurrAddress)#",
 				OccupationInfo:"#(OccupationInfo)#",
+				EpdRepDateDisplay:"#(EpdRepDateDisplay)#",
+				EpdClinicModDiag:"#(EpdClinicModDiag)#",
+				EpdAdminModDiag:"#(EpdAdminModDiag)#",
+				EpdRepDateModify:"#(EpdRepDateModify)#",
+				EpdRevisedModDiag:"#(EpdRevisedModDiag)#",
+				EpdRegionRelateCurrAdd:"#(EpdRegionRelateCurrAdd)#",
+				EpdNTSEEADDRESS:"#(EpdNTSEEADDRESS)#",
+				EpdCloseNeedReason:"#(EpdCloseNeedReason)#",
+				EpdReviseAllowCheck:"#(EpdReviseAllowCheck)#"
 			};
-			
 		    $(window).load(function() {
 				InitReportWin();
 			});
-   		</script>  
-   		 
+   		</script>
+		 <csp:Include Page="dhcma.epd.report.show.csp"> 
+   		<OBJECT ID='ClsSaveBase64IMG' CLASSID='CLSID:F6E5F767-D0E0-4311-AAFF-5EB0385F68A8' CODEBASE='../addins/client/ClsSaveBase64IMG.CAB#version=1,0,0,5'></OBJECT>
+   		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
 	</body>
 </html>

@@ -2,16 +2,19 @@
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  q 1
 </csp:method>
-<csr:action>		<!--modify by wl 2019-12-13 WL0021 begin-->		
+<csr:action>
     <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
     ;导入润乾直接打印所需包
+    if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
 	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
-	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
 	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
-    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+		//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+		d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17
 	}   
+	d ##class(web.DHCEQCommon).InitLodopPrint()		//加载Lodop打印插件及js czf 2022-01-22
     </SCRIPT>  
-</csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->  
+</csr:action>
 <!DOCTYPE html>
 <HTML lang="en">
 <HEAD>
@@ -19,9 +22,8 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
-<!-- modified by sjh SJH0027 2020-06-12 修改台帐界面中“账”字为“帐”-->
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 <style type="text/css">
 /*文本描述信息div实现table布局*/
 .eq-table{width:100%;}
@@ -50,7 +52,6 @@
 </style>
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
-	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
 	s RowID=$Get(%request.Data("RowID",1))
 	s ReadOnly=$Get(%request.Data("ReadOnly",1))
 	s ToolBarFlag=$Get(%request.Data("ToolBarFlag",1))  //0:不显示功能按钮 1:显示功能按钮
@@ -60,12 +61,14 @@
 	s GetPath=##class(web.DHCEQStoreMoveSP).GetPath()
 	s BuildingType=##class(web.DHCEQCommon).GetSysInfo("401003")  //add by zx 20190705 获取房屋类组设置 BUG ZX0069
 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	//add by czf 20190902
-	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")	
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+	s HasAffixFlag=##class(web.DHCEQEquip).HasAffix(RowID)		//add by czf 2021-03-22	
+	s VehicleType=##class(web.DHCEQCommon).GetSysInfo("401005")  //add by QW20220406 BUG:QW0157 房屋车辆改造
 </Script>
 <body class="hisui-layout" id="EquipShow">
-	<div data-options="region:'north',border:false" style="height:72px;border-bottom:1px solid #DCDCDC;padding:3px 0px;"> <!--begin 顶部按钮区域-->
+	<div data-options="region:'north',border:false" style="height:73px;border-bottom:1px solid #DCDCDC;padding:3px 0px;"> <!--	MZY0151	2023-02-01	-->
 		<div style="float:left;border-right:1px solid #DCDCDC;padding:0px 5px;">
-			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-change-account',plain:true" onclick="javascript:changeAccount()">调帐</a>
+			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-change-account',plain:true" onclick="javascript:changeAccount()">调账</a> <!-- modified by LMH 20220825 2676671-->
 			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-start',plain:true" onclick="javascript:equipStart()">启用</a>
 			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-stop',plain:true" onclick="javascript:equipStop()">停用</a>
 			<a href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-equi-cfg',plain:true" onclick="javascript:equipAttribute()">属性</a><!-- add by jyp 2019-09-02 设备属性相关调整-->
@@ -88,16 +91,14 @@
 	<div data-options="region:'center',border:false"> <!--begin 主体内容区域-->
 		<div class="hisui-layout" data-options="fit:true,border:false">
 			<div data-options="region:'north',border:false" style="height:40px;" style="overflow:hidden"> <!--begin banner显示区域-->
-				<iframe id="Banner" frameborder="0" src="" style="width:100%;height:40px;padding-top:10px;"></iframe>
+				<iframe id="Banner" frameborder="0" src="" style="width:100%;height:60px;padding-top:10px"></iframe>	<!--	 MZY0157	3220809		2023-03-29	-->
 			</div> <!--begin banner显示区域-->
-			<div data-options="region:'center',border:false" style="padding:0 5px 5px 5px;"> <!--begin 台帐信息显示区域-->
+			<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;"> <!--	MZY0151	2023-02-01	-->
 				<div class="hisui-layout" data-options="fit:true,border:false" id="EquipInfo">
 					<div data-options="region:'center',split:true" title="信息总览<a href='#\' onclick='javascript:equipEdit()' style='padding:10px 15px;background:url(../images/eq-edit.png) no-repeat center;'></a>"> <!--begin 台帐总览区域-->
-
 						<div class="hisui-panel" data-options="fit:true,border:false" >
 							<div class="hisui-layout" data-options="fit:true,border:false" id="EquipCard">
-								<div data-options="region:'north',border:false" style="padding:10px;"> <!--begin 台帐基本信息区域-->
-									
+								<div data-options="region:'north',border:false" style="height:310px;padding:10px;"> <!--	MZY0151	2023-02-01	-->
 									<div class="eq-table" style="position:relative;">
 										<div style="position:absolute;right:0px;top:0px;height:150px;width:20%;border:1px dashed #DCDCDC;padding:10px;">
 											<img id="Image" src="" height="100%" width="100%" style="display:none;"/>
@@ -108,6 +109,8 @@
 										</div>
 										<div class="eq-table-tr">
 											<div class="eq-table-td" style="font-weight:900; padding-top:0px"><span>基本信息</span></div>
+                                            <!--add by zy  2022-09-14 -->
+											<div class="eq-table-td" id="IdleFlagSwitch" style="margin-left:110px"></div>
 										</div>
 										<div class="eq-table-tr">
 											<div class="eq-table-td eq-table-lable">设备项名称：</div> <!--add by zx 2019-03-14 ZX0061-->
@@ -138,8 +141,9 @@
 											<div class="eq-table-td eq-table-info" id="EQLeaveFactoryDate"></div>
 											<div class="eq-table-td eq-table-lable">档案号：</div>
 											<div class="eq-table-td eq-table-info" id="EQFileNo"></div>
-											<div class="eq-table-td eq-table-lable"></div>
-											<div class="eq-table-td eq-table-info"></div>
+											<!--Add By QW202208016 begin 需求号:2760300 增加资产分类显示,若为土地可跳转-->
+											<div class="eq-table-td eq-table-lable">资产分类：</div>
+											<div class="eq-table-td eq-table-info" id="EQEquiCatDR_ECDesc"></div>
 											<div class="eq-table-td eq-table-lable-large"></div>
 											<div class="eq-table-td eq-table-info"></div>
 											<div class="eq-table-td eq-table-lable"></div>
@@ -184,7 +188,7 @@
 											<div class="eq-table-td eq-table-info" id="EQStartDate"></div>
 											<div class="eq-table-td eq-table-lable">异常状态：</div>
 											<div class="eq-table-td eq-table-info" id="EQAdvanceDisFlag"></div> <!--add by zx 2019-06-17异常标志获取-->
-											<div class="eq-table-td eq-table-lable">使用年限：</div>
+											<div class="eq-table-td eq-table-lable">折旧年限：</div>
 											<div class="eq-table-td eq-table-info" id="EQLimitYearsNum"></div>
 											<div class="eq-table-td eq-table-lable-large">折旧方法：</div>
 											<div class="eq-table-td eq-table-info" id="EQDepreMethodDR_DMDesc"></div>
@@ -320,6 +324,7 @@
 	<input type="hidden" id="EQStatus">
 	<input type="hidden" id="EQStatusDisplay">
 	<input type="hidden" id="EQParentDR">
+    <input type="hidden" id="EQIdleFlag"> <!--add by zy  2022-09-14 -->
 	<input type="hidden" id="PrintFlag" value=#(PrintFlag)#>
 	<input type="hidden" id="GetRepPath" value=#(GetPath)#> <!--add by zx  2018-12-18 与通用方法命名一致-->
 	<input type="hidden" id="ToolBarFlag" value=#(ToolBarFlag)#>
@@ -329,6 +334,9 @@
 	<INPUT type="hidden" id="SplitRowCode" value="#(SplitRowCode)#"> <!--add by czf 20190902-->
 	<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-11 WL0010  -->	
 	<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+	<INPUT type="hidden" id="HasAffixFlag" value=#(HasAffixFlag)#>	<!--add by czf 20210322-->
+	<INPUT type="hidden" id="VehicleType" value="#(VehicleType)#">  <!--add by QW20220406 BUG:QW0157 房屋车辆改造-->
+	<INPUT type="hidden" id="EQName">  <!--add by QW20220406 BUG:QW0157 房屋车辆改造-->
 	<!--script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>	Mozy003002	2020-03-18	屏蔽引用-->
 	<script type='text/javascript' src='../scripts/dhceq/em/equip.js'></script>
 	<script type='text/javascript' src='../scripts/dhceq/plat/printbar.js'></script>

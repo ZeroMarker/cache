@@ -1,0 +1,137 @@
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<NURHISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+        }
+		.tabFrame {
+			vertical-align:top
+		}
+		.text {
+			resize: none;
+			box-sizing: border-box;
+			margin:5px 5px 5px 5px;
+			width: -webkit-fill-available;
+			height: -webkit-fill-available;
+			border:1px
+			solid #bbb
+			}
+		.hisui-panel {
+			width:70%;
+			overflow:hidden;
+			}
+	</STYLE>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+<script language="cache" runat="SERVER">
+    s EpisodeID = $G(%request.Data("EpisodeID", 1))
+   	s Tabs = $G(%request.Data("Tabs", 1))
+	s ModelId = $G(%request.Data("ModelId", 1))
+	s WinWidth = $G(%request.Data("WinWidth", 1))
+	s ListWidth = $G(%request.Data("ListWidth", 1))
+</script>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<!--左侧框架-->
+		<div class="hisui-panel" data-options='region:"west",split:true,border:false'>
+			<!--Tab页签-->
+			<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true">
+			</div>
+		</div>
+		<!--右侧框架-->
+		<div class="hisui-panel" id="content" title=#(..Get("预览"))# style="overflow:hidden;" data-options="region:'center',split:true,headerCls:'panel-header-gray'">
+			<!--编辑部分-->
+			<textarea class="text" id="textEdit"></textarea>	
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+var EpisodeID = "#(EpisodeID)#";
+var Tabs = "#(Tabs)#";
+var ModelId = "#(ModelId)#";
+var winwidth="#(WinWidth)#";
+var listwidth="#(ListWidth)#";
+$(function() {
+	// 定义全局变量
+	var Global = {
+		tabs: $cm({
+		    ClassName: 'Nur.SHIFT.Emr.RefSetting',
+		    MethodName: 'getRefList', 
+			wardId: session['LOGON.WARDID'],
+		},false)
+	};
+	/**
+	 * @description: 初始化界面
+	 */
+	function initUI() {
+		initCondition();
+		initData();
+	}
+	/**
+	 * @description: 初始化条件
+	 */
+	function initCondition() {
+	}
+	/**
+	 * @description: 初始化数据
+	 */
+	function initData() {
+		for (var i=0; i<Global.tabs.length; i++) {
+			var Title=$g(Global.tabs[i].Title)
+			var Url=Global.tabs[i].Csp
+			var ActiveFlag=Global.tabs[i].ActiveFlag
+			if(ActiveFlag==1){
+				//var TitleHtml="<span url='"+Url+"'>"+Title+"</span>"
+				$('#tabs').tabs('add', {
+					title: $g(Global.tabs[i].Title)
+				});
+			}
+		}
+		$('#tabs').tabs({
+			onSelect: function (title,index) {
+				if (Global.tabs[index].ActiveFlag == '1') {
+					updateTab(index);
+				}
+			}
+		});
+		updateTab(0);
+		$('#tabs').tabs('select',0);
+		
+		Global.tabs[0].ActiveFlag = '0';
+	}
+	/**
+	 * @description: 更新tab
+	 */
+	function updateTab(index) {
+		var targetTab = $('#tabs').tabs('getTab', index);
+		var tabSrc = Global.tabs[index].Csp + '?EpisodeID=' + EpisodeID + '&ListWidth=' + listwidth + '&ModelId=' + ModelId;
+		if('undefined'!==typeof websys_getMWToken)
+		{
+			tabSrc+="&MWToken="+websys_getMWToken()
+		}
+		var content = '<iframe id="' + Tabs.split(',')[index] + '" scrolling="auto" width="99%" height="99%" frameborder="0" src="' + tabSrc + '"></iframe>'; 
+		$('#tabs').tabs('update', {
+			tab: targetTab,
+			options: {
+				content: content
+			}
+		});
+		Global.tabs[index].ActiveFlag = '0';
+	}
+	initUI();
+});
+</script>
+</html>

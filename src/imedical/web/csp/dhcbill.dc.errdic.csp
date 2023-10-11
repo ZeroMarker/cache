@@ -1,0 +1,124 @@
+<!-- 
+ * FileName: dhcbill.dc.errdic.csp
+ * Creator: tangzf
+ * Date: 2022-5-11
+ * Description: 错误信息维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+		<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+	<ADDINS require="CmdShell"></ADDINS>
+	
+	<style type="text/css">
+  	#_HospList{
+		width:348px !important	
+	}
+	#_HospUserList{
+		width:348px !important	
+	}
+  	search-table,.editinfo .textbox{
+    	width:148px	!important; /* 文本框宽度减小 tangzf 2019-8-12*/ 
+	} 
+
+	
+	</style>
+</head>
+<server>
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_DICDATA")
+</server>
+<body>
+	<div class="hisui-layout" fit="true">  
+		<div data-options="region:'north'" style="overflow:hidden;border-radius:0px;border-bottom:1px dashed #cccccc;">
+			<table class="search-table">
+					<tr>
+						<td class='r-label'><label>院区</label></td>
+						<td><input id="hospital" class="textbox" style="width:142px;" placeholder=""/></td>
+					</tr>
+					<tr>
+						<td><label class='r-label'>产品线</label></td>
+						<td><input id="QProductLine" class="textbox" style=""></input></td>
+						<td><label class='r-label'>模块</label></td>
+						<td><input id="QModule" class="textbox" style=""></input></td>
+						<td><label class='r-label'>关键字</label></td>
+						<td><input id="dicKey" class="textbox" style="width:345px" placeholder='输入关键字回车查询,支持模糊查询'></input></td>
+						<td class="r-label">
+							<a id="btnSeach" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-find'" >查询</a>  
+						</td>
+						<td class="r-label">
+							<a id="btnClearQ" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-clean'" >清屏</a>  
+						</td>
+					</tr>
+			</table>
+		</div>
+		<div data-options="region:'center'" style='border-width:1px 0px 0px 0px' id='coninfopanel' >
+			<div id="dg" data-options="region:'center',border:false"></div>
+		</div>
+		<div id="editForm1" data-options="region:'south'"  style="height:130px;border-top-width:1px">
+			<table class='search-table editinfo'  >
+				<tr >
+					<td  class="r-label"><label >产品线</label></td>
+					<td><input id="ProductLine"  class="textbox"/></td>
+					<td  class="r-label"><label >模块</label></td>
+					<td><input id="ProductModule"  class="textbox"/></td>
+					<td class='r-label'><label>提示代码</label></td>
+					<td><input id="ErrCode"  class="textbox"/></td>
+					<td class="r-label"><label>默认提示描述</label></td>
+					<td><input id="ErrDefaultDesc"  class="textbox"/></td>
+					<td class="r-label">
+						<a id="btnClear" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-clean'" >清屏</a>  
+					</td>
+				</tr>
+				<tr >
+					<td class="r-label"><label>详细描述</label></td>
+					<td ><input id="RuleInfo"  class="textbox"/></td>
+					<td  class="r-label"><label >是否启用</label></td>
+					<td><input id="ActiveFlag"  class="textbox"/></td>
+					<td  class="r-label"><label>备注</label></td>
+					<td><input id="Demo" class="textbox"/></td>
+					<td  class="r-label"><label>快捷生成</label></td>
+					<td><input id="ClassProperty" placeholder="选择字段后生成" class="textbox"/></td>
+					<td class="r-label">
+						<a id="btnUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" >保存记录</a>  
+					</td>
+				</tr>
+				<tr>
+					<td  class="r-label"><label >提示类型</label></td>
+					<td ><input id="ErrType" class="textbox"/></td>
+					<td  class="r-label"><label >表名</label></td>
+					<td ><input id="TableName" class="textbox"/></td>
+					<td  class="r-label"><label >字段</label></td>
+					<td ><input id="Property" class="textbox"/></td>
+					<td  class="r-label"><label>提示公式</label></td>
+					<td ><input id="ErrConfig"  placeholder="例:登记号：{User.PAPatMas||PAPMINo}姓名：{User.PAPatMas||PAPMIName}" class="textbox"/></td>
+					<td class="r-label">
+						<a id="btnDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" >删除记录(测试用)</a>  
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div class="hisui-toolbar" id="toolbar">
+	<table cellspacing="0" cellpadding="0">
+		<tr>
+			<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnImport" plain="true" onClick='Import("")' >导入字典</a></td>
+			<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出字典</a></td>
+		</tr>
+	</table> 
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/errdic.js"></script>
+	<!--<DHCBILLINSUCloud/>-->
+</body>
+</html>

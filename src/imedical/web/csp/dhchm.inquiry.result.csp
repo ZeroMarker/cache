@@ -1,0 +1,94 @@
+<!--
+ * Description: 问诊结果
+ * FileName: dhchm.inquiry.result.csp
+ * Anchor: wangguoying
+ * Date: 2021-05-11
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		.title{
+			font-weight: 600;
+		}
+		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+			width:100%;
+		}
+   </style>
+ <SCRIPT language="Cache" RUNAT="SERVER">
+	s EQID=%request.Get("EQID")
+	s RetObj = ##class(HS.BL.ExamSurvey).GetSurveyConslusionObj(EQID)
+	s Index = 1
+	s Total = RetObj.ConclusionTypes.Count()
+	
+</SCRIPT>
+</head>
+
+<body style="padding:10px;background-color:#fff;"> 
+	
+    <div id="kw">
+    	<csp:WHILE COUNTER=Counter CONDITION=(Index<=Total)>
+			<SCRIPT language="Cache" RUNAT="SERVER">
+				s ConclusionObj = RetObj.ConclusionTypes.GetAt(Index)	
+								
+			</SCRIPT>
+			<div class="kw-chapter" style="margin-top:10px;"><a></a>#(ConclusionObj.TypeDesc)#</div>
+    		<div class="kw-line"></div>
+    		<div style="padding: 10px;display: flex">
+    			<SCRIPT language="Cache" RUNAT="SERVER">
+    				d ##class(web.DHCPE.HM.Inquiry).OutInquiryKeys(RetObj,Index)
+    				s Index = Index+1
+    			</SCRIPT>
+    		</div>
+    		<div id="Description#(Index-1)#" class="hisui-panel" data-options="bodyCls:'panel-body-gray'" style="padding:0 10px;display:none">
+    			<table class="hisui-table" >				
+    				<tr><td><lable class="title">基本介绍</label><div class="kw-line" style="margin-top:5px;"></div></td></tr>
+    				<tr><td><span id="Introduce#(Index-1)#"></span> </td></tr>
+    				<tr><td><lable class="title">健康建议</label><div class="kw-line" style="margin-top:5px;"></div></td></tr>
+    				<tr><td><span id="Advice#(Index-1)#"></span> </td></tr>
+    				<tr><td><lable class="title">特别说明</label><div class="kw-line" style="margin-top:5px;"></div></td></tr>
+    				<tr><td><span id="Remark#(Index-1)#"></span> </td></tr>
+    				<input type="hidden" id="H_ID">
+    			</table>
+    		</div>		   		
+		</csp:WHILE>	    	
+	</div>
+</body>
+<script language="javascript">
+	String.prototype.replaceAll = function(s1, s2) {
+	    return this.replace(new RegExp(s1, "gm"), s2);
+	}
+	function keywords_click(node,index){
+		var display = $("#Description"+index)[0].style.display;
+		if(display == "" || display == "block") //说明当前 已选中某个节点
+		{
+			if(node.id == $("#H_ID").val()){ //点击的已选的节点
+				$("#Keys"+index).keywords("clearAllSelected");
+				$("#Description"+index).fadeOut("fast");
+				return false;
+			}
+		}
+		var id = node.id.replace("_","||");
+		var info = tkMakeServerCall("web.DHCPE.HM.Inquiry","GetInquiryDetail",id)
+		if(info != ""){
+			var char0 = String.fromCharCode(0);
+			var char10 = String.fromCharCode(10);
+			var arr = info.split(char0);
+			$("#Description"+index).fadeIn();
+			$("#Introduce"+index).html(arr[0]);
+			$("#Advice"+index).html(arr[1].replaceAll(char10,"<br>"));
+			$("#Remark"+index).html(arr[2]);
+			$("#H_ID").val(node.id);
+		}
+	}
+</script>
+</html>

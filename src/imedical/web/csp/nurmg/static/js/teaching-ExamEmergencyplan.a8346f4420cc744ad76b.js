@@ -1,0 +1,1 @@
+webpackJsonp([308],{xYsK:function(e,n,t){"use strict";Object.defineProperty(n,"__esModule",{value:!0});var s={render:function(){var e=this.$createElement;return(this._self._c||e)("div",[this._v(this._s(this.$t("menu.ExamEmergencyplan.5nrnc8ac30o0")))])},staticRenderFns:[]},l=t("VU/8")(null,s,!1,null,null,null);n.default=l.exports}});

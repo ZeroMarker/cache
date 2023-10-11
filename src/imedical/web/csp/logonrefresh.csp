@@ -1,6 +1,10 @@
 <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
 <!-- Dummy page to refresh opener and close self after a successful relogon
      This is mainly to keep the logon page from becoming very complex -->
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  I ##Class(websys.SessionEvents).SessionExpired() q 1
+  quit 1
+</csp:method>
 <html XMLNS=TRAK>
 <HEAD>
 <TITLE></TITLE>
@@ -10,20 +14,45 @@
 	n diffgroup
 	s diffgroup=0		;zhaocz 2009-07-20  原来=0  修改成1
 	i ##Class(web.SSUser).CheckforDiffUserGroup(%session.Get("LOGON.GROUPID"))=1 s diffgroup=1
-	;s ^zkarthi("diffgroup")=diffgroup
+	//s ^zkarthi("diffgroup",$I(^Wanghc))=diffgroup
+	/*处理参数*/	
+	Set Param = "?a=a"
+	Set key = "" For {
+		Set key = $O(%request.Data(key))
+		Quit:key=""
+		Continue:key="TDIRECTPAGE"
+		Continue:key="CacheNoRedirect"
+		Continue:key="CachePassword"
+		Continue:key="CacheUserName"
+		Continue:key="LayoutManager"
+		Continue:key="PASSWORD"
+		Continue:key="CSPRQN" //稱"1m_$c(m3,01m)_m"
+		Continue:"^DEPARTMENT^Hospital^SSUSERGROUPDESC^"[("^"_key_"^")
+		Continue:"^TPSID^ViewCode^"[("^"_key_"^")
+		Set Param = Param_"&"_key_"="_$G(%request.Data(key,1))
+	}
 </SERVER>
 <BODY>
 <script language="Javascript">
 	var diffgroup="#(diffgroup)#";
 	var win=window.opener;
+	//alert("diffgroup="+diffgroup);
 	var winmain=window.opener.opener;
 	if (diffgroup==1) {
 		//KK 15/Oct/2002 Log 28619 epr.frames.csp to open in the main window instead of popup window.
-		if ((winmain) && (winmain.name=="TRAK_main")){
+		//alert(win.name+","+winmain.name)		
+		if (win && (win.name=="TRAK_main")){
+			//if (win) win.close();
+			//winmain.top.location="epr.frames.csp";
+			win.top.keepopen = true;
+			win.top.location="epr.frames.csp#(Param)#";
+		}else if(win.name.indexOf("MENU")>-1){
 			if (win) win.close();
-			winmain.top.location="epr.frames.csp";
+			winmain.top.keepopen = true;
+			winmain.top.location="epr.frames.csp#(Param)#";
 		} else {
-			win.top.location="epr.frames.csp";
+			win.top.keepopen = true;
+			win.top.location="epr.frames.csp#(Param)#";
 		}
 	}
 	else {
@@ -39,5 +68,3 @@
 </script>
 </BODY>
 </HTML>
-
-

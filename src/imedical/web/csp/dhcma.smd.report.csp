@@ -58,12 +58,16 @@
 			
 			Set LocID=%session.Get("LOGON.CTLOCID","")
  			Set HospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LocID)
- 			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(HospID,"SMD")		
+ 			Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(HospID,"SMD")	
+			set LagCode = $g(%session("LOGON.LANGCODE"))				
  			Set LocDesc=$p($g(^CTLOC(+LocID)),"^",2)
  			Set:LocDesc["-" LocDesc=$p(LocDesc,"-",2)
+			Set LocDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTLoc","CTLOCDesc",LagCode,LocDesc)
  			Set HospDesc=$p($g(^CT("HOSP",+HospID)),"^",2)
+			Set HospDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTHospital","HOSPDesc",LagCode,HospDesc)
  			Set UserID=%session.Get("LOGON.USERID","")
- 			Set UserName=$p($g(^SSU("SSUSR",+UserID)),"^",2)			
+ 			Set UserName=$p($g(^SSU("SSUSR",+UserID)),"^",2)	
+			Set UserName = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTCareProv","CTPCPDesc",LagCode,UserName)				
 			Set EmrOpen=+$g(%request.Data("EmrOpen",1))   //是否由病历浏览打开
 			Set:EmrOpen="" EmrOpen=""""""	
 		</SERVER>

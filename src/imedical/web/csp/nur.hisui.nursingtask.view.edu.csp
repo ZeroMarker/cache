@@ -1,0 +1,657 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.nursereferconfig.csp -->
+	<title>待宣任务</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:480px;
+			height:423px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:470px;
+			height:274px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.right-hisui-panel{
+			
+			height: calc(50% - 5px);
+		}
+		table.search-table.processconfig-table td{
+			line-height:28px;	
+		}
+		#exeTable td{
+			padding: 5px;
+		}
+		.combo .combo-text,.spinner .spinner-text{
+			padding:0px;
+		}
+		label.radio, label.checkbox {
+    margin-right: 10px;
+}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script language="cache" runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+            s StartDate=$G(%request.Data("StartDate", 1))
+            s EndDate=$G(%request.Data("EndDate", 1))
+   </script>
+   <script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var StartDate="#(StartDate)#";
+        var EndDate="#(EndDate)#";
+  </script>
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		
+		
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+
+				<div data-options="region:'west',border:false,split:true" style="width:450px;" >
+					
+						<div class="hisui-panel" title="#(..Get("显示设置-任务列表"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<div style="margin-top:2px;height: calc(100% - 4px);border-top:1px solid #ccc;"><table id="eduTaskTable"></table></div>
+						</div>
+					
+					
+					
+				</div>
+				<div data-options="region:'center',border:false,split:true" style="padding-left: 5px;">
+					
+					<div class="hisui-panel"  title="#(..Get("宣教内容"))#" style="padding:5px;overflow: hidden;" data-options="fit:true,iconCls:'icon-target-arrow',headerCls:'panel-header-gray'">
+						<table id="tbEvaluate" style="display:none;">
+							<tr>
+								<td style="padding: 8px;">
+									<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" onclick="updateModalPos('drugModal');">#(..Get("用药情况"))#</a>
+								</td>
+							</tr>
+						</table>
+						
+						<table id="exeTable" style="width:100%;">
+												
+							<tr>
+								<td style="vertical-align: top;line-height: 30px;">#(..Get("宣教内容"))#</td>
+								<td>
+									<textarea name="" id="editContent" cols="30" rows="10" style="border-color: #CCC;width: 100%;height: 100px;resize: none;border-radius: 2px;overflow: auto;" onkeyup="updateHeight('editContent');" onchange="updateHeight('editContent');"></textarea>
+								</td>
+							</tr>
+							<tr id="eduDateTime" style="height:34px">
+								<td><span style="color: red;">*</span>#(..Get("宣教日期"))#</td>
+								<td>
+							    <input id="eduDate" class="hisui-datebox textbox" style="width: 115px;"></input>
+									<input id="eduTime" class="hisui-timespinner" style="border-radius: 2px;">
+							    <input id="eduId" type="hidden"></input>
+								</td>
+							</tr>
+							<tr id="remark" style="height:34px">
+								<td style="vertical-align: top;line-height: 30px;text-align: right;">#(..Get("备注"))#</td>
+								<td>
+									<textarea name="" id="remarks" cols="30" rows="10" style="border-color: #CCC;width: 100%;height: 100px;resize: none;border-radius: 2px;overflow: auto;" onkeyup="updateHeight('remarks');" onchange="updateHeight('remarks');"></textarea>
+								</td>
+							</tr>
+						</table>
+						<div style="position: absolute;bottom: 10px;text-align: center;width: 100%;">
+							<a class="hisui-linkbutton" onclick="addOrUpdateEducation2Record();" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+						</div>
+						
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+	<!--div class="hisui-layout" data-options="fit:true,border:false">
+		
+		
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+
+				<div data-options="region:'west',border:false,split:true" style="padding-left:5px;width:500px;height:100%;" >
+					
+						<div class="hisui-panel" title="#(..Get("显示设置-任务列表"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="eduTaskTable"></table>
+						</div>
+					
+					
+				</div>
+				<div data-options="region:'center',border:false,split:true" style="">
+					<div class="hisui-panel"  title="#(..Get("宣教内容"))#" style="padding:0px" data-options="fit:true,iconCls:'icon-target-arrow',headerCls:'panel-header-gray'">
+							<div id="eduConfig" style="overflow-x: hidden;justify-content: space-between;">
+								
+								
+										<table id="tbEvaluate" style="display:none;">
+											<tr>
+												<td style="padding: 8px;">
+													<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" onclick="updateModalPos('drugModal');">#(..Get("用药情况"))#</a>
+												</td>
+											</tr>
+										</table>
+										<div style="height: 100%;overflow-y: auto;padding: 20px;">
+											<table id="exeTable" style="width:100%;">
+												
+												<tr>
+													<td style="vertical-align: top;line-height: 30px;">#(..Get("宣教内容"))#</td>
+													<td>
+														<textarea name="" id="editContent" cols="30" rows="10" style="width: 100%;height: 100px;resize: none;border-radius: 2px;overflow: auto;" onkeyup="updateHeight('editContent');" onchange="updateHeight('editContent');"></textarea>
+													</td>
+												</tr>
+												<tr id="eduDateTime" style="height:50px">
+													<td><span style="color: red;">*</span>#(..Get("宣教日期"))#</td>
+													<td>
+												    <input id="eduDate" class="hisui-datebox textbox" style="width: 115px;"></input>
+														<input id="eduTime" class="hisui-timespinner" style="border-radius: 2px;">
+												    <input id="eduId" type="hidden"></input>
+													</td>
+												</tr>
+												<tr id="remark" style="height:50px">
+													<td style="vertical-align: top;line-height: 30px;">#(..Get("备注"))#</td>
+													<td>
+														<textarea name="" id="remarks" cols="30" rows="10" style="width: 100%;height: 60px;resize: none;border-radius: 2px;overflow: auto;" onkeyup="updateHeight('remarks');" onchange="updateHeight('remarks');"></textarea>
+													</td>
+												</tr>
+											</table>
+										</div>
+										<div style="position: absolute;bottom: 10px;text-align: center;width: 100%;">
+												<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" onclick="addOrUpdateEducation2Record();">#(..Get("确定"))#</a>
+										</div>
+									
+								</div>
+							
+						
+		
+					</div>
+				</div>
+			</div>
+		</div>
+	</div-->
+	
+	<div id="dialogRefer"></div>
+	<!-- 用药情况模态框 -->
+<div id="drugModal" class="hisui-dialog" title="#(..Get("用药情况"))#" style="top: 50px;left: 50px;padding: 10px 10px 0;width: 900px;" data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true,buttons:[{
+		text:$g('确定'),
+		id:'saveCtcAE',
+		handler:function(){}
+	},{
+		id:'cancelCtcAE',
+		text:$g('取消'),
+		handler:function(){$HUI.dialog('#drugModal').close();}
+	}]"> 
+	<div>
+		<div id="drugToolbar" style="padding: 7.5px 0;">
+			<table>
+				<tr>
+					<td class="r-label" style="padding-left: 8px;">
+						<span style="color: red;">*</span>#(..Get("开始日期"))#
+					</td>
+					<td>
+				    <input id="beginDate" class="hisui-datebox textbox" style="width: 115px;" data-options="onChange:setDrugDateOption"></input>
+					</td>
+					<td class="r-label" style="padding-left: 8px;">
+						<span style="color: red;">*</span>#(..Get("结束日期"))#
+					</td>
+					<td class="r-label">
+				    <input id="endDate" class="hisui-datebox textbox" style="width: 115px;" data-options="onChange:setDrugDateOption"></input>
+					</td>
+					<td class="r-label">
+		        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="getDrugState()">#(..Get("查询"))#</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<table style="height: 500px;width: 880px;border:1px solid #cccccc;" id="docAdvicesTable" class="hisui-treegrid">
+			<thead>   
+				<tr>
+					<th data-options="field:'oeCatDesc',width:200">#(..Get("医嘱类别"))#</th>
+					<th data-options="field:'oeDesc',width:350">#(..Get("医嘱名称"))#</th>
+					<th data-options="field:'instruction',width:80">#(..Get("用药途径"))#</th>
+					<th data-options="field:'freq',width:80">#(..Get("频率"))#</th>
+					<th data-options="field:'oeTime',width:140">#(..Get("开医嘱时间"))#</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+</div>
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<!--script type="text/javascript" src="../scripts/nurse/hisui/NurseQuestionPlanComConfig.js"></script-->
+<script type="text/javascript">
+	
+
+$(function() {
+	///加载左边列表
+	initTable()
+	getEduOptions()
+	
+})	
+function getDrugState() {
+	saveFlag=false;
+  $cm({
+    ClassName: 'Nur.NIS.Service.Education2.Biz',
+    QueryName: 'GetTypeOrderInPeriod',
+    page: 1,
+    rows: 10,
+    AdmDR: EpisodeID,
+		startDate:StartDate,
+		endDate:EndDate,
+		type:"R"
+  }, function (data) {
+  	console.log(data);
+  	var rows=[];
+  	data.rows.map(function(e,i) {
+			var children=e.children;
+			delete e.children;
+			e.id=e.id.replace('||','_')+'_'+i
+  			rows.push(e);
+	  		if (children) {
+	  			var children=JSON.parse(children);
+	  			children.map(function(c) {
+	  				// if (c.id) c.id=c.id.replace('||','_')
+	  				if (c.itmMastDr) c.id=c.itmMastDr.replace('||','_')+'_'+e.id;
+	  				c._parentId=e.id;
+	  				rows.push(c);
+	  			})
+	  		}
+  	});
+		$('#docAdvicesTable').datagrid("loadData",rows)
+  })
+}
+// 更新模态框位置
+function updateModalPos(id) {
+  var offsetLeft=(window.innerWidth-$('#'+id).parent().width())/2;
+  var offsetTop=(window.innerHeight-$('#'+id).parent().height())/2;
+  $('#'+id).dialog({
+    left: offsetLeft,
+    top: offsetTop
+  }).dialog("open");
+}
+function setDateboxOption() {
+	var startDate=$("#startDate").datebox('getValue'),stopDate=$("#stopDate").datebox('getValue');
+	var startOpt=$("#startDate").datebox('options'),stopOpt=$("#stopDate").datebox('options');
+	if (startDate) stopOpt.minDate = startDate;
+	if (stopDate) startOpt.maxDate = stopDate;
+}
+function setDrugDateOption() {
+	var beginDate=$("#beginDate").datebox('getValue'),endDate=$("#endDate").datebox('getValue');
+	var startOpt=$("#beginDate").datebox('options'),stopOpt=$("#endDate").datebox('options');
+	if (beginDate) stopOpt.minDate = beginDate;
+	if (endDate) startOpt.maxDate = endDate;
+}
+
+
+
+
+
+function addOrUpdateEducation2Record () {
+	var content=$("#editContent").val();
+	var remarks=$("#remarks").val();
+	if (remarks) content+='\r\n'+remarks;
+	var eduDate=$('#eduDate').datebox('getValue');
+	var eduTime=$('#eduTime').timespinner('getValue');
+	if (!eduDate||!eduTime) return $.messager.popover({msg: $g('宣教日期不能为空！'),type:'alert'});
+	//if (new Date(standardizeDate(eduDate)+' '+eduTime).valueOf()>new Date().valueOf()) return $.messager.popover({msg: $g('宣教日期不能大于当前时间！'),type:'alert'});
+	
+	
+	
+	var subject=[]
+	var subjectIds=[]
+	var eduTaskIds=[]
+	var itemList=[]
+	$("input.bgItem").each(function(){
+		 var value=$(this).radio('getValue')
+		 if(value){
+		 	var lable=$(this).attr('label')
+		 	var id=$(this).attr('val')
+		 	
+		 	var option={"id":id,"option":lable}
+		 	itemList.push(option)
+		 	
+		 }
+	})
+	
+	var rows=$("#eduTaskTable").datagrid('getSelections');
+	for(var i=0;i<rows.length;i++){
+		var title=rows[i].title
+		var subjectId=rows[i].subjectId
+		var taskId=rows[i].taskId
+		subject.push(title)
+		subjectIds.push(subjectId)
+		eduTaskIds.push(taskId)
+	}
+	
+	var subjectStr=subject.join(",")
+	var id=$("#eduId").val();
+	 $cm({
+	    ClassName: 'Nur.NIS.Education2',
+	    MethodName: 'AddOrUpdateEducation2Record',
+	    dataType: "text",
+	    AdmDR: EpisodeID,
+	    Subject: subjectStr,
+	    Content: content,
+	    EducationDate: eduDate,
+	    EducationTime: eduTime,
+	    EduItemList: JSON.stringify(itemList),
+	    UserId: session['LOGON.USERID'],
+	    LocId: session['LOGON.CTLOCID'],
+	    WardId: session['LOGON.WARDID'],
+	    id: "",
+	    SubjectIds: JSON.stringify(subjectIds),
+	    eduTaskIds: JSON.stringify(eduTaskIds)
+	  }, function (res) {
+	  	console.log(res);
+	  	if (0==res) {
+	  		$.messager.popover({msg: $g('宣教执行成功！'),type:'success'});
+	  		window.location.reload()    
+	  	} else {
+	  		$.messager.popover({msg: res,type:'alert'});
+	  	}
+	  });
+}
+
+
+
+
+
+
+var grid={
+	 ToolBar:function(gid){
+		var ToolBar = [{
+	        text: $g('新增'),
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        var rows = $("#eduTaskTable").datagrid("getSelections");
+		        console.log(rows)
+		    }
+	    },{
+	        text: $g('修改'),
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        insertView(gid,2)
+		    }
+	    },{
+	        text: $g('删除'),
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					$.messager.alert($g("提示"),$g("请选择需要删除的记录！"));
+					return false;
+				}
+			
+				$.messager.confirm($g('确认'),$g('您确认想要删除记录吗？'),function(r){    
+				    if (r){
+					   var row = $("#"+gid).datagrid("getSelected");
+					   runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetDeleteTaskRuleSettingById",{id:row.ID},function(rtn){
+							if(rtn == 0) {
+								$.messager.popover({msg:$g('删除成功！'),type:'success'});
+								initTable()
+							} else {
+								
+							}
+							
+						},'json',false);
+				    }    
+				}); 
+	        }
+	    }];
+		return ToolBar
+	}
+}	
+
+	
+	// 初始化显示设置
+function initTable(){
+	
+	
+	$("#eduTaskTable").datagrid({  
+		fit : true,
+			width : 'auto',
+			border : false,
+			striped : false,
+			singleSelect : false,
+			fitColumns : false,
+			autoRowHeight : false,
+			loadMsg : '加载中..',  
+			pagination : false, 
+			rownumbers : true,
+			//idField:"pid",
+			
+			autoRowHeight:true,
+			nowrap:false,
+			
+			
+			
+			
+			
+	
+		columns :[[ 
+		//{ field: 'ck', checkbox:true},
+		{ field: 'bedCode', title: '床号',width:50},
+		{ field: 'name', title: '姓名',width:100},
+		{ field: 'title', title: '宣教主题',width:120},
+		{ field: 'planDate', title: '计划宣教日期',width:140},
+		]],
+		autoRowHeight:true,
+		nowrap:true,  /*此处为false*/
+		onCheck: function(rowIndex,rowData){
+			var rows=$("#eduTaskTable").datagrid('getChecked');
+			
+		},
+		onUncheck: function(rowIndex,rowData){
+			
+		},
+		onClickRow:function(rowIndex,rowData){
+			//var rows = $("#eduTaskTable").datagrid("getSelections");
+			var rows=$("#eduTaskTable").datagrid('getSelections');
+			console.log(rows.eduRecordId)
+			var contents=[]
+			for(var i=0;i<rows.length;i++){
+				var content=rows[i].content
+				contents.push(content)
+			}
+			$("#editContent").html(contents.join(""))
+			console.log(rows)
+		}
+	
+	})
+	
+    reloadSheetParamsGrid("eduTaskTable")
+    
+}
+
+
+
+function reloadSheetParamsGrid(gid){
+
+	var data = {
+		Adm:EpisodeID,
+		WardID:session['LOGON.WARDID'],
+		UserId:session['LOGON.USERID'],
+		LocId:session['LOGON.CTLOCID'],
+		HospDR:session['LOGON.HOSPID'],
+		NoReturn: "", 
+		StartDate:StartDate,
+		EndDate:EndDate
+	}
+	var param = $.extend(param,data)
+	runClassMethod("Nur.NIS.Service.NursingTask.Controller","UpdateEduTaskAndReturnList",param,function(res){
+		
+		var rtn=res.rtnData
+		var rowData=res.taskList
+		
+		var allSubList=[]
+		for(var i=0;i<rowData.length;i++){
+			var row=rowData[i]
+			
+			var subList=row.subList
+			for(var j=0;j<subList.length;j++){
+				allSubList.push(subList[j])
+			}
+				
+		
+		}
+		
+		
+		$("#"+gid).datagrid("unselectAll");
+		$("#"+gid).datagrid('loadData', rtn)
+	})
+	
+}
+function getEduOptions() {
+	
+	
+	var record=""
+	var data={ 
+		AdmDR: EpisodeID,
+    	wardID: session['LOGON.WARDID'],
+    	hospID: session['LOGON.HOSPID'],
+    	startDate: StartDate,
+    	endDate: StartDate,
+    	keyword: ""
+	}
+	var param = $.extend(param,data)
+	runClassMethod("Nur.NIS.Service.Education2.Biz","GetEducationColumnAndRecord",param,function(data){
+		
+  		record=data.lastRecord[0]
+  		//var eduRecordId=data.data[0].eduRecordId
+  		//$("#eduId").val(eduRecordId);
+	})
+	
+	
+	
+  $cm({
+    ClassName: 'Nur.NIS.Service.Education2.HealthRecord',
+    MethodName: 'GetHealthEduItemOptions',
+    dataType: "text",
+    wardId: session['LOGON.WARDID']
+  }, function (data) {
+  	data=JSON.parse(data)
+  	console.log(data);
+  	eduOptions=data;
+  	data.map(function(e) {
+  		var options=e.options.toString().split('/');
+  		if (1==e.blankFlag) {
+  			options.push($g('其他'));
+  		}
+  		var tr='<tr style="height:34px;"><td style="width: 10px;white-space: nowrap;padding-right: 5px;"><span style="color: red;">*</span>'+e.name+'</td><td></td></tr>'
+  		$("#remark").before(tr);
+  		//var record="";
+  		var $td=$("#remark").prev().find('td:eq(1)');
+  		if (1==e.type) { //多选
+  			options.map(function(o,i) {
+		  		var item='<input class="hisui-checkbox bgItem" type="checkbox" data-id="'+o+'" label="'+o+'" id="option'+e.id+'_'+i+'">';
+		  		$td.append(item);
+		      $td.find("input:eq(-1)").checkbox({
+		        label: o,
+		        value: o,
+		        checked: false
+		      });
+  			})
+  		} else {
+  			options.map(function(o,i) {
+		  		var item='<input class="hisui-radio bgItem" type="radio" data-id="'+o+'" label="'+o+'" val="'+e.id+'" id="option'+e.id+'_'+i+'" name="'+e.name+'">';
+		  		$td.append(item);
+		      $td.find("input:eq(-1)").radio({
+		        label: o,
+		        value: o,
+		        checked: false
+		      });
+  			})
+  		}
+  		if (1==e.blankFlag) {
+		  		var item='<input style="width: 120px;margin-left:5px;" class="hisui-validatebox textbox validatebox-text">';
+		  		$td.append(item);
+  		}
+			if (record&&record['option'+e.id]) {
+				var selOptions=record['option'+e.id].split('/');
+				selOptions.map(function(so) {
+					var index=options.indexOf(so);
+					if (so.indexOf($g('其他')+'(')>-1) {
+						index=options.indexOf($g('其他'));
+						$td.find("input.textbox").val(so.replace($g('其他')+'(','').slice(0,-1));
+					}
+					if (1==e.type) {
+						$td.find('#option'+e.id+'_'+index).checkbox('setValue',true);
+					} else {
+						$td.find('#option'+e.id+'_'+index).radio('setValue',true);
+					}
+				})
+			}
+  	})
+  });
+}
+
+</script>
+</body>
+</html>

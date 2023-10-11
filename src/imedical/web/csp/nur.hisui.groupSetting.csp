@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<head>
+
+<!-- nur.hisui.groupSetting.csp -->
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<meta charset="utf-8"/>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<NURHISUI />
+<style>
+	body{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;	
+    	overflow:hidden;
+    	background-color:#fff;
+	}
+	.wrap{
+		height:100%;	
+	}
+	.wrap .content{
+		width:100%;
+		/*height:calc(100% - 32px);*/
+		height:100%;
+		display:flex;	
+	}
+	.wrap .content .panel-area{
+		flex:1;
+		height:100%;
+	}
+	.wrap .left-panel{
+		margin-right:10px;
+	}
+	.wrap .panel-area>div{
+		height:100%;
+		width:100%;	
+	}
+	.wrap .panel-area .panel .hisui-panel{
+		height:calc(100% - 35px)!important;
+	}
+	#form .r-label{
+		padding-left:10px;	
+	}
+	#form td{
+		padding-bottom: 10px;	
+	}
+	#_HospList+.combo{width: 228px!important;}
+	#_HospList+.combo>.combo-text{width:193px!important;}
+	.left-panel .datagrid{
+		height:calc(100% - 174px)!important;	
+	}
+	.left-panel .datagrid .panel-body{
+		border-radius:0;
+		border-color:#ccc;	
+		border-left:0;
+		border-right:0;
+		border-bottom:0;
+	}
+	.bed-area{
+		height:calc(100% - 51px);
+		overflow-y:auto;	
+	}
+	.buttons{
+		padding:10px 0 0 10px;	
+	}
+	.buttons a{
+		margin-right:6px;
+	}
+	.bed-area .beds ul{
+		display: flex;
+    	flex-wrap: wrap;
+    	padding: 5px;
+    	position: relative;
+	}	
+	.bed-area .beds li{
+		line-height: 24px;
+    	text-align: center;
+    	margin: 5px;
+    	height: 24px;
+    	padding: 0 10px;
+    	background-color: #fff;
+    	border:1px solid #ccc;
+    	border-radius: 4px;
+    	cursor: pointer;
+    	color: #666;	
+	}	
+  	.bed-area .edit-area .beds li.grouped{
+	  	background-color: #bbb;
+    	color: #fff;
+    	border-color:#bbb;
+	}
+	.bed-area .edit-area .beds li:hover {
+    	color: #017bce;
+    	background-color: rgb(216, 239, 255);
+    	border-color:rgb(216, 239, 255);
+  	}
+  	.bed-area .edit-area .beds li.active {
+   		background-color: #40a2de;
+    	color: #fff;
+    	border-color:#40a2de;
+  	}
+  	.bed-area .preview-area .beds li{
+		cursor:default;
+		background-color:#efefef;
+		border-color:#efefef;  	
+	}
+	.bed-area .preview-area table{
+		table-layout: fixed;	
+	}
+  	.bed-area .preview-area table td{
+	 	border-right:1px solid #ccc; 
+	 	border-bottom:1px solid #ccc;
+	 	vertical-align:top;
+	}
+	.bed-area .preview-area table td:last-child{
+	 	border-right:0;
+	}
+	.bed-area .preview-area table td.borderRight{
+		border-right:1px solid #ccc;		
+	}
+  	.moveSelected {
+      position: absolute;
+      background-color: #1890ff;
+      border: 1px dashed #ccc;
+      opacity: 0.3;
+      top: 0;
+      left: 0;
+    }
+    .icon{width: 20px;height: 20px;margin-right: 10px;float: right;}
+    #switch{
+		display:none;    
+	}
+	label.checkbox, label.radio{
+		padding-left:20px;	
+		margin-left:6px;
+	}
+	#_HospListLabel{
+		display:none;	
+	}
+	label.checkbox, label.radio{
+		padding-left:19px
+	}
+</style>
+</head>
+<body onresize="resizeFresh()">
+	<SCRIPT language="cache" RUNAT="SERVER">
+		n (%request,%session,%response)
+		s switchFlag=$G(%request.Data("switchFlag",1))
+	    s:switchFlag="" switchFlag=$g(^NurGroupSetting("switch"))
+	    w " <script type=""text/javascript"" >var switchFlag="""_switchFlag_""";<"_"/"_"script>"
+	</SCRIPT>
+	<div class="wrap">
+		<div id="switch" style="padding-bottom:10px;">
+			<label style="padding-right:10px;">#(..Get("护理分组"))#</label><div class="hisui-switchbox" data-options="onText:'开',offText:'关',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:onSwitchChange"></div>
+		</div>	
+		<div class="content">
+			<div class="panel-area left-panel">
+				<div class="hisui-panel" title="责组信息维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-pen'">
+					<form id="form" method="post" >
+						<table cellspacing="0" cellpadding="0" style="padding:10px 10px 0 0;">
+							<tr>
+								<td class="r-label">#(..Get("所属医院"))#</td>
+								<td>
+									<input name="Rowid" id="rowid" type="hidden" value="">
+									<select id="_HospList"></select> 
+								</td>
+								<td class="r-label">#(..Get("病区"))#</td>
+								<td>
+									<select placeholder="#(..Get("请选择"))#" name="Ward" id="ward" style="width:214px;"></select>  
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">#(..Get("责组代码"))#</td>
+								<td>
+									<input placeholder="#(..Get("请输入"))#" name="Code" class="hisui-validatebox textbox" id="code" style="width:223px;" /> 
+								</td>
+								<td class="r-label">#(..Get("责组名称"))#</td>
+								<td>
+									<input placeholder="#(..Get("请输入"))#" name="Name" class="hisui-validatebox textbox" id="name" style="width:207px;" /> 
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">#(..Get("责组护士"))#</td>
+								<td colspan="3">
+									<select placeholder="#(..Get("请选择"))#" name="Nurse" id="nurse" style="width:463px;"></select> 
+									<input class="hisui-checkbox" type="checkbox" data-options="checked:true" id="active" name="Active" label="激活">
+								</td>
+							</tr>	
+							<tr>
+								<td colspan="4" align="center">
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-right:6px;" onclick="searchGroup()">查询</a>   
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="margin-right:6px;" onclick="saveWardProGroup(0)">新增</a> 
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" onclick="saveWardProGroup(1)">修改</a>    
+								</td>
+							</tr>								
+						</table>
+					</form>
+					<table id="groupGrid"></table>				
+				</div>
+			</div>
+			<div class="panel-area right-panel">
+				<div class="hisui-panel" title="组内信息维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-pen'">
+					<p style="padding:10px;border-bottom:1px solid #ccc;"><a href="#" class="hisui-linkbutton hover-dark" onclick="saveGroupBeds()">保存</a></p>
+					<div class="bed-area">
+						<div class="edit-area">
+							<p style="height:30px;line-height:30px;border-bottom:1px solid #ccc;padding:0 10px;background-color:#fafafa;">#(..Get("管理组（当前组）"))#</p>
+							<div class="buttons" style="padding:10px 10px 0 10px;">
+								<a href="#" class="hisui-linkbutton hover-dark" onclick="$('.edit-area .beds li:not(.active)').addClass('active')">全选</a>
+								<a href="#" class="hisui-linkbutton hover-dark" onclick="$('.edit-area .beds li.active').removeClass('active')">取消</a>
+								<a href="#" class="hisui-linkbutton hover-dark" onclick="resetBeds()">不分组</a>
+							</div>
+							<div class="beds">
+								<ul></ul>
+								<div class="moveSelected"></div>
+							</div>													
+						</div>
+						<div class="preview-area">
+							<p style="height:30px;line-height:30px;border-top:1px solid #ccc;border-bottom:1px solid #ccc;padding:0 10px;background-color:#fafafa;">#(..Get("已分组"))#</p>
+							<table style="width:100%;" cellpadding="0" cellspacing="0"></table>														
+						</div>
+					</div>					
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/groupSetting.js"></script>
+</body>
+</html>

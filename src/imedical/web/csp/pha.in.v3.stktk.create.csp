@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--库存盘点账盘建单
+	csp:csp/pha.in.v3.stktk.create.csp
+	js: scripts/pha/in/v3/stktk/create.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
+
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+	<title>
+		<TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+    <PHAPRINTCOM />
+    <!-- 接收参数 -->
+    <server>
+		s stktkId  =  $G(%request.Data("stktkId", 1))
+	</server>
+	<script type = "text/javascript">
+		var stktkId  =  "#(stktkId)#";
+	</script>
+	<style>
+
+		.pha-button-word4 {
+			width: 86px;
+		}
+	</style>
+</HEAD>
+<body>
+	<div class = "hisui-layout" fit = "true">
+		<div data-options = "region:'center',border:false" class = "pha-body">
+			<div class = "hisui-layout" fit = "true">
+				<div data-options = "region:'center',border:false,split:true">
+					<div id = "panel" class = "hisui-panel" title = #(..Get("库存盘点账盘"))#
+					data-options = "headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+						<table id = "gridMStktkDetail"></table>
+					</div>
+				</div>
+			</div>		
+		</div>
+	</div>
+	<div id = "gridMStktkDetailBar" >
+		<table id = "qCondition" class = "pha-con-table">
+			<tr>
+				<td class = "r-label">
+					<input id = 'stktkId' class = "hisui-validatebox"  data-pha = 'class:"hisui-validatebox",clear:true,query:true' style = "width:0px;display: none;">
+					<div style = "width:0px;display: none;">
+						<input id = 'compFlag' disabled = "disabled"  type = "checkbox" class = "hisui-checkbox" label="完成" data-pha = 'class:"hisui-checkbox",clear:true,query:true' >
+					</div>
+					<label for = "stktkLocId">#(..Get("盘点科室"))#</label>
+				</td>
+				<td>
+					<input id = 'stktkLocId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stkGrpId">#(..Get("类组"))#</label>
+				</td>
+				<td>
+					<input id = 'stkGrpId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stkbinId">#(..Get("药品货位"))#</label>
+				</td>
+				<td>
+					<input id = 'stkbinId' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-find'"  data-options = "stopAllEventOnDisabled:true" id = 'btnFind'>查询单据</a>
+				</td>
+				<td>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-save'"  data-options = "stopAllEventOnDisabled:true" id = 'btnSave'>生成账盘</a>
+				</td>
+				<td>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-clean'"  data-options = "stopAllEventOnDisabled:true" id = 'btnClean'>清屏</a>
+				</td>
+				<td>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-print'"   data-options = "stopAllEventOnDisabled:true"  id = 'btnPrint'>打印</a>
+				</td>
+			</tr>
+			<tr>
+				<td class = "r-label">
+					<label for = "noUseFlag">#(..Get("不可用品种"))#</label>
+				</td>
+				<td >
+					<input id = 'noUseFlag' class = "hisui-combobox" data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stkCatId">#(..Get("库存分类"))#</label>
+				</td>
+				<td >
+					<input id = 'stkCatId' class = "hisui-combobox" data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "manDrgFlag">#(..Get("管理药"))#</label>
+				</td>
+				<td>
+					<input id = 'manDrgFlag' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-ok'"   data-options = "stopAllEventOnDisabled:true"  id = 'btnPreStktk'>预盘数据</a>
+				</td>
+				<td>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-back'"   data-options = "stopAllEventOnDisabled:true"  id = 'btnComplete'>完成</a>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-back'"   data-options = "stopAllEventOnDisabled:true"  id = 'btnCancelComp'>取消完成</a>
+				</td>
+				
+				<td>
+					<a data-pha-btn class = "hisui-linkbutton pha-button-word4" data-options = "iconCls:'icon-w-back'"   data-options = "stopAllEventOnDisabled:true"  id = 'btnDelete'>删除</a>
+				</td>
+
+				<td class="r-label">
+                    <div id="moreorless"></div>
+                </td>
+				
+			</tr>
+		</table>
+		<div data-options="region:'south'" border="false" style="text-align:center;padding:0 10px 10px 10px">
+			<div id="infoArea" style = "width:100%"></div>
+		</div>
+	</div>
+	<div id = "js-pha-moreorless" >
+		<table class = "pha-con-table">
+			<tr>
+				<td class = "r-label">
+					<label for = "inclbQtyFlag">#(..Get("批次库存"))#</label>
+				</td>
+				<td>
+					<input id = 'inclbQtyFlag' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "manGrpId">#(..Get("盘点组"))#</label>
+				</td>
+				<td>
+					<input id = 'manGrpId' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "selManGrp">#(..Get("含盘点组"))#</label>
+				</td>
+				
+				<td >
+					<input id = 'selManGrp'  class = "hisui-combobox" data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				
+		</table>
+    </div>
+	<div id = "diagFindStktk" class = "hisui-dialog" title = #(..Get("'库存盘点单查询'"))# style = "width:1200px;height:700px;color:white;padding:10px;" data-options = "closable:true,modal:true,closed:true,collapsible:false,resizable:true,iconCls:'icon-w-list'"  >
+		<div class = "hisui-layout" fit = "true" id="layout-stktk-create-diag">
+			<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',height:200, split:true, title:'库存盘点单',showCollapsedTitle:true" >
+				<table id="gridStktkMain"></table>
+			</div>
+			<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center', title:'单据明细'">
+				<table id="gridStktkDetail"></table>
+			</div>
+		</div>
+	</div>  
+	<div id = "gridStktkMainBar" >
+		<table id = "winQCondition" class = "pha-con-table">
+			<tr>
+				<td class = "r-label">
+					<label for = "phLoc">#(..Get("盘点科室"))#</label>
+				</td>
+				<td>
+					<input id = 'phLoc' class = "hisui-combobox" data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stDate">#(..Get("开始日期"))#</label>
+				</td>
+				<td>
+					<input id = 'stDate' class = "hisui-datebox" data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "endDate">#(..Get("结束日期"))#</label>
+				</td>
+				<td>
+					<input id = 'endDate' class = "hisui-datebox"  data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stktkStatus">#(..Get("单据状态"))#</label>
+				</td>
+				<td>
+					<input id = 'stktkStatus' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				
+				<td>
+					<a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-find'" data-options = "stopAllEventOnDisabled:true" id = 'btnSearch'>查询</a>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-find'" data-options = "stopAllEventOnDisabled:true" id = 'btnSelStktk'>选取</a>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton" style = "width:100%;display:none" data-options = "iconCls:'icon-w-close'" data-options = "stopAllEventOnDisabled:true" id = 'btnClose'>关闭</a>
+				</td>			
+			</tr>
+		</table>
+		
+	</div>
+	<div id = "diagPrintModel" class = "hisui-dialog" title = #(..Get("选择打印方式"))# style = "width:300px;height:250px;color:white;" data-options = "closable:true,modal:true,closed:true,collapsible:false,resizable:true,iconCls:'icon-w-list',buttons:[{
+		text:'打印',
+		id:'btnPrtStktk'
+	},{
+		text:'取消',
+		id:'btnCloseDiag'
+	}]">
+		<div class = "hisui-layout" fit = "true">
+			<table class = "pha-con-table">
+				<tr>
+					<td colspan=2>
+						<input class = "hisui-radio" type = "radio" label = "按照药品批次打印" name = "printModel" value = "1" data-options = "required:true,requiredSel:true">
+					</td>
+				</tr>
+				<tr>
+					<td colspan=2>
+						<input class = "hisui-radio" type = "radio" label = "按照药品品种打印" name = "printModel" value = "2" checked = "true" data-options = "required:true,requiredSel:true">
+					</td>
+				</tr>
+				<tr>
+					<td >
+						<label for = "orderType">#(..Get("排序方式"))#</label>
+					</td>
+					<td>
+						<input id = 'orderType' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+					</td>
+				</tr>
+				<tr>
+					<td >
+						<label for = "prtStkbin">#(..Get("打印货位"))#</label>
+					</td>
+					<td>
+						<input id = 'prtStkbin' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+					</td>
+				</tr>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<!-- 药库公共 -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/com/js/store.js"></script>
+	<!-- 本页js -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/stktk/component.js"></script>
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/stktk/create.js"></script>
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/stktk/print.js"></script>
+</body>
+</html>

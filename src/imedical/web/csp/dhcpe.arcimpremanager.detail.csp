@@ -1,0 +1,135 @@
+<!--
+ * Description: 项目限额维护
+ * FileName: dhcpe.arcimpremanager.detail.csp
+ * Anchor: wangguoying
+ * Date: 2021-09-24
+-->
+
+<div id="DetailLyt" fit="true" class="hisui-layout" >
+	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:50px;padding:10px 10px 0 8px;">
+		<table style="border-spacing:0">
+				<tr>
+				  	<td class="r-label"><label for="CurDate">#(..Get("日期周"))#</label></td>
+					<td>
+						<input class="hisui-datebox" type="text" id="CurDate">
+					</td>
+					<td class="" style="padding-left: 10px;">
+						<a id="BSearch" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >#(..Get("查询"))# </a>
+					</td>
+					<td class="plain-td" >
+						<a id="BPreWeek" href="#" class="hisui-linkbutton" >#(..Get("上周"))#</a>
+					</td>
+					<td class="plain-td">
+						<a id="BCurWeek" href="#" class="hisui-linkbutton" >#(..Get("本周"))#</a>
+					</td>
+					<td class="plain-td">
+						<a id="BNextWeek" href="#" class="hisui-linkbutton" >#(..Get("下周"))#</a>
+					</td>
+					<td style="padding-left:40px;">
+						<input id="SearchDescBtn" data-options="prompt:$g('医嘱项名称 模糊查询'),searcher:function(value,name){initDataGrid(value);}" href="#" class="hisui-searchbox" style="width:343px;" />
+					</td>
+				</tr>		
+			</table>
+	
+		
+	</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="border-top:1px dotted #ccc">
+			<table  data-options="bodyCls:'panel-header-gray table-splitline',border:false"  id="PreManagerList"></table>
+		
+        </div>
+</div>
+	<!-- 列表菜单  -->
+	<div id="tb" data-options="fit:true">
+		<table style="border-spacing:0">
+			<tr>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',disabled:true" plain="true" id="BSave">#(..Get("保存"))#</a></td>
+				<td><div class="datagrid-btn-separator"></div></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-all-select'" plain="true" id="BSelectAll">#(..Get("全部选中"))#</a></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-all-unselect'" plain="true" id="BUnSelectAll">#(..Get("撤销选中"))#</a></td>
+				<td><div class="datagrid-btn-separator"></div></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy'" plain="true" id="BPreCopy">#(..Get("沿用前一周限额"))#</a></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy'" plain="true" id="BNextCopy">#(..Get("复制到下一周"))#</a></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy'" plain="true" id="BAdvanceCopy">#(..Get("按条件复制"))#</a></td>
+				
+				
+			</tr>
+		</table>
+		<div  class="grid-toobar-right">
+			<table style="border-spacing:0">
+				<tr>
+					<td class="note-font">&nbsp;&nbsp;#(..Get("界面模式"))#:&nbsp;&nbsp;</td>
+					<td>
+						<input value="S" class='hisui-radio' type="radio" data-options="label:'限额查询',name:'Model',requiredSel:true,disable:false,checked:true">
+					</td>
+					<td style="padding-left:10px;">
+						<input value="E" id="Model_E" class='hisui-radio' type="radio" data-options="label:'限额维护',name:'Model',requiredSel:true,disable:false">
+					</td>
+					<td style="padding-left:10px;">
+						<input value="C" class='hisui-radio' type="radio" data-options="label:'拖拽复制',name:'Model',requiredSel:true,disable:false">
+					</td>
+					<td class="note-font">&nbsp;&nbsp;#(..Get("背景示例"))#:&nbsp;&nbsp;</td>
+					<td class="color-example avail-bg"></td>
+					<td style="padding: 0 5px;">#(..Get("有余额"))#</td>
+					<td class="color-example fulfil-bg"></td>
+					<td style="padding: 0 5px;">#(..Get("满额"))#</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<!-- //列表菜单  -->
+	
+	
+
+		
+<script type="text/javascript">
+	//先讲本界面解析出来才能调用相关方法
+	$.parser.parse('#DetailLyt');
+	var today = getDefStDate(0);
+	$('#CurDate').datebox('setValue',today);
+	initDataGrid();
+	//查询
+    $("#BSearch").click(function(){
+    	initDataGrid();
+    });
+
+    //上一周
+    $("#BPreWeek").click(function(){
+    	setDate(-1);
+    	initDataGrid();
+    });
+    //下一周
+    $("#BNextWeek").click(function(){
+    	setDate(1);
+    	initDataGrid();
+    });
+    //本周
+    $("#BCurWeek").click(function(){
+    	setDate(0);
+    	initDataGrid();
+    });
+    //保存
+    $("#BSave").click(function(){
+    	save_manager();
+    });
+    //全选
+    $("#BSelectAll").click(function(){
+    	select_all_node();
+    });
+    //撤销全选
+    $("#BUnSelectAll").click(function(){
+    	unselect_all_node();
+    });
+    //沿用上一周
+    $("#BPreCopy").click(function(){
+    	copy_week(-1);
+    });
+    //复制到下一周
+    $("#BNextCopy").click(function(){
+    	copy_week(1);
+    });
+    //按条件复制
+    $("#BAdvanceCopy").click(function(){
+    	copy_advance();
+    });
+</script>
+

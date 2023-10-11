@@ -1,9 +1,19 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+
 <html>
 <head>
-<title>日间准入麻醉评估</title>
+<title>日间恢复评估</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI /></HISUI>
 <dhcclinic:head></dhcclinic:head>
+<script language="Cache" runat=server method="Get" arguments="item:%String" returntype="%String">
+   quit ##class(CIS.AN.COM.Html).Get(item)
+</script>
 <style>
 ul li
 {
@@ -11,11 +21,26 @@ ul li
 	align-items: center;
 	float:left;
 }
-	.form-item-checkboxlist {width:120px;}
-	.form-row-group > .panel { margin-bottom:10px;}
+.labelRight
+	{
+		width:56px;
+		text-align:right;
+		padding-right:10px;	
+	}
+.line
+{
+	color:#ccc;
+}
+.form-item-checkboxlist {width:120px;}
+.form-title-rightlong2 {
+    display: inline-block;
+    width:180px;
+    margin-right: 10px;
+    text-align: right;
+    text-overflow: ellipsis;
+    color:red;
+}
 </style>
-<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operapplication.css" />
-<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operbanner.css"/>
 
 	<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
 	<script type="text/javascript" src="../service/dhcanop/js/dhcan.lodop.js"></script>
@@ -24,98 +49,120 @@ ul li
 
 	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
 	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DaySurgeryPost.js"></script>
-	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperScheduleBanner.js"></script>
 
 </head>
 
 
-<body class="hisui-layout">
-	<div id="PreDaySurgeryAccessDlg" title="日间手术恢复评估" style="padding:5px">
-	     		
-				<div style="margin:0 10px 0 10px;">
-		     	<div id="patinfo_banner" data-options="border:false" style="height:35px;">
-   				</div>
-	     		</div>
-	     	<div>
+<body style="background-color:white;padding:0"  class="hisui-layout">
+	<div data-options="region:'north',border:false" style="padding-top:10px;">
+		<div style="height:30px;">
+		   <ul style="padding-left:10px;">
+	     			<li><label id="patSeximg" name="patSeximg" style=""></label></li>
+	     			 <li><label id="PatName"  name="PatName" style="font-size:16px;padding-left:10px;">-</label></li>
+					 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatGender"  name="PatGender">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatAge"  name="PatAge">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><font style="color:#666666">登记号:</font>
+					<label id="RegNo"  name="RegNo"></label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><font style="color:#666666">病案号:</font>
+					<label id="MedcareNo"  name="MedcareNo"></label></li>
+					
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>								
+					<li><label id="PatDeptDesc" >-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="AdmReason"  name="AdmReason">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatWardDesc">-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatBedCode" >-</label></li>
+					<li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+					<li><label id="PatSecret"  name="PatSecret">-</label></li>
+			</ul>
+		</div>
+   </div>
+	<div data-options="region:'center',border:false" style="padding:2px 0 10px 0;overflow-x:hidden;overflow-y:hidden">
+			<div style="">
 	             <div class="form-row">
-	                 <div class="form-title-right4">术前诊断</div>
-	                 <div class="form-item-normal">
-	                        <input type="text" id="PreDiagnosis" class="textbox" style="width:420px">
+	                 <div class="labelRight">术前诊断</div>
+	                 <div  class="form-item-normal" >
+	                        <input type="text" id="PreDiagnosisDesc" class="hisui-validatebox textbox" disabled style="width:716px">
 	                 </div>
 	                
-	                <div class="form-title-normal">拟施手术</div>
-	                <div class="form-item-normal">
-	                        <input type="text" id="PlanOperDescs" class="textbox" style="width:410px"> 
-	                </div>
+	                
 	              </div>      
 	        </div>
-	        
-	 
-
-			<form id="dataForm" method="post">
-		
-	    <div>
+	        <div style="">
+	        <div class="form-row">
+	        <div class="labelRight">拟施手术</div>
+	                <div >
+	                        <input type="text" id="PlanOperDesc" class="hisui-validatebox textbox" disabled style="width:716px"> 
+	                </div>	
+	        </div>
+	        </div>
+	    	<div  style="">
 	    	    <input type="hidden" id="PostMoveScore" class="operdata" data-multiple="N" >
-
-	         <div class="form-row">	
-	         <div class="form-title-normal">Aldrete</div>
-	         <div class="form-title-rightlong" >运动:自主活动或指令运动</div>
-			 <div class="form-item-normal">
-				<input type="checkbox" id="PostMoveScoreCHK1" data-formitem="PostMoveScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
-	                        	testScore('score1','PostMoveScoreCHK1',value);
-	                        }">能够自主或根据指令移动四肢(四级2分)
-			</div>
-			 </div>
-	    </div>
-	    <div>
-	    <div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
-				<div class="form-item-normal">	
-				<input type="checkbox" id="PostMoveScoreCHK2" data-formitem="PostMoveScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
-	                        	testScore('score1','PostMoveScoreCHK2',value);
-	                        }">自主或根据指令移动两个肢体(二级1分)
-			</div>
-	    </div>
+		         <div class="form-row">	
+		         <div class="labelRight">Aldrete</div>
+		         <div class="form-title-rightlong2" style="width:174px;">运动:自主活动或指令运动</div>
+				 <div class="form-item-normal" style="">
+					<input type="checkbox" id="PostMoveScoreCHK1" label="能够自主或根据指令移动四肢(四级2分)" data-formitem="PostMoveScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
+		                        	testScore('score1','PostMoveScoreCHK1',value);
+		                        }"></input>
+				</div>
+				</div>
+	    	</div>
+		    <div>
+		    <div class="form-row">
+		    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
+					<div class="form-item-normal"  style="">	
+					<input type="checkbox" id="PostMoveScoreCHK2" label="自主或根据指令移动两个肢体(二级1分)" data-formitem="PostMoveScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
+		                        	testScore('score1','PostMoveScoreCHK2',value);
+		                        }"></input>
+				</div>
+		    </div>
 	    </div>
 	    <div>
 	   <div class="form-row">
-	   	 <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	   	 <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 			<div class="form-item-normal">	
-				<input type="checkbox" id="PostMoveScoreCHK3" data-formitem="PostMoveScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostMoveScoreCHK3" label="不能自主或根据指令移动肢体(零级0分)" data-formitem="PostMoveScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
 	                        	testScore('score1','PostMoveScoreCHK3',value);
-	                        }">不能自主或根据指令移动肢体(零级0分)
+	                        }"></input>
 			 </div>
 	   </div>
 	   </div>
 		<div>
-	    <input type="hidden" id="PostRespScore" class="operdata" data-multiple="N">
 	         <div class="form-row">	
-	         <div class="form-title-rightlong" style="margin-left:60px;">呼吸</div>
+	    <input type="hidden" id="PostRespScore" class="operdata" data-multiple="N">
+	         <div class="form-title-rightlong2" style="margin-left:60px;">呼吸</div>
 			 <div class="form-item-normal">
-				<input type="checkbox" id="PostRespScoreCHK1" data-formitem="PostRespScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostRespScoreCHK1" label="可深呼吸和随意咳嗽(2分)" data-formitem="PostRespScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
 	                        	testScore('score2','PostRespScoreCHK1',value);
-	                        }">可深呼吸和随意咳嗽(2分)
+	                        }"></input>
 
 			 </div>
 			 </div>
 	    </div>
 	     <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-				<input type="checkbox" id="PostRespScoreCHK2" data-formitem="PostRespScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostRespScoreCHK2" label="呼吸宭迫或呼吸受限(1分)" data-formitem="PostRespScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
 	                        	testScore('score2','PostRespScoreCHK2',value);
-	                        }">呼吸宭迫或呼吸受限(1分)
+	                        }"></input>
 				</div>
 		</div>
 		</div>
 	     <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-				<input type="checkbox" id="PostRespScoreCHK3" data-formitem="PostRespScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostRespScoreCHK3" label="无呼吸(0分)" data-formitem="PostRespScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
 	                        	testScore('score2','PostRespScoreCHK3',value);
-	                        }">无呼吸(0分)
+	                        }"></input>
 				</div>
 		</div>
 		</div>
@@ -123,22 +170,22 @@ ul li
 	    <div>
 	    <input type="hidden" id="PostCircleScore" class="operdata" data-multiple="N">
 	         <div class="form-row">	
-	         <div class="form-title-rightlong" style="margin-left:60px;">循环:血压与麻醉前相比</div>
+	         <div class="form-title-rightlong2" style="margin-left:60px;">循环:血压与麻醉前相比</div>
 			 <div class="form-item-normal">
-				<input type="checkbox" id="PostCircleScoreCHK1" data-formitem="PostCircleScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostCircleScoreCHK1" label="±20%以内(2分)" data-formitem="PostCircleScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
 	                        	testScore('score3','PostCircleScoreCHK1',value);
-	                        }">±20%以内(2分)
+	                        }"></input>
 			 </div>
 			 </div>
 	    </div>
 	   		<!------>
 		 <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-				<input type="checkbox" id="PostCircleScoreCHK2" data-formitem="PostCircleScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostCircleScoreCHK2" label="±20%～49%(1分)" data-formitem="PostCircleScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
 	                        	testScore('score3','PostCircleScoreCHK2',value);
-	                        }">±20%～49%(1分)
+	                        }"></input>
 				</div>
 		</div>
 		</div>
@@ -146,11 +193,11 @@ ul li
 		<!------>
 		 <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-					<input type="checkbox" id="PostCircleScoreCHK3" data-formitem="PostCircleScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
+					<input type="checkbox" id="PostCircleScoreCHK3" label="±50%以上(0分)" data-formitem="PostCircleScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
 	                        	testScore('score3','PostCircleScoreCHK3',value);
-	                        }">±50%以上(0分)
+	                        }"></input>
 			</div>
 		</div>
 		</div>
@@ -158,22 +205,22 @@ ul li
 	    <div>
 	    	<input type="hidden" id="PostConciousScore" class="operdata" data-multiple="N">
 	         <div class="form-row">	
-	         <div class="form-title-rightlong" style="margin-left:60px;">意识</div>
+	         <div class="form-title-rightlong2" style="margin-left:60px;">意识</div>
 			 <div class="form-item-normal">
-				<input type="checkbox" id="PostConciousScoreCHK1" data-formitem="PostConciousScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostConciousScoreCHK1" label="完全清醒(2分)" data-formitem="PostConciousScore" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
 	                        	testScore('score4','PostConciousScoreCHK1',value);
-	                        }">完全清醒(2分)
+	                        }"></input>
 			 </div>
 			 </div>
 	    </div>
 	     <!------>
 		 <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-				<input type="checkbox" id="PostConciousScoreCHK2" data-formitem="PostConciousScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostConciousScoreCHK2" label="嗜睡但可被叫醒(1分)" data-formitem="PostConciousScore" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
 	                        	testScore('score4','PostConciousScoreCHK2',value);
-	                        }">嗜睡但可被叫醒(1分)
+	                        }"></input>
 				</div>
 		</div>
 		</div>
@@ -181,11 +228,11 @@ ul li
 		<!------>
 		 <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-				<input type="checkbox" id="PostConciousScoreCHK3" data-formitem="PostConciousScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostConciousScoreCHK3" label="对刺激无反应(0分)" data-formitem="PostConciousScore" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
 	                        	testScore('score4','PostConciousScoreCHK3',value);
-	                        }">对刺激无反应(0分)
+	                        }"></input>
 				</div>
 		</div>
 		</div>
@@ -194,11 +241,11 @@ ul li
 	    	<input type="hidden" id="PostSpO2Score" class="operdata" data-multiple="N">
 
 	         <div class="form-row">	
-	         <div class="form-title-rightlong" style="margin-left:60px;">血氧饱和度</div>
+	         <div class="form-title-rightlong2" style="margin-left:60px;">血氧饱和度</div>
 			 <div class="form-item-normal">
-				<input type="checkbox" id="PostSpO2ScoreCHK1" data-formitem="PostSpO2Score" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostSpO2ScoreCHK1" label="吸空气血氧饱和度≥92%(2分)" data-formitem="PostSpO2Score" class="hisui-checkbox" value="2" data-options="onChecked:function(event,value){
 	                        	testScore('score5','PostSpO2ScoreCHK1',value);
-	                        }">吸空气血氧饱和度≥92%(2分)
+	                        }"></input>
 
 			 </div>
 			 </div>
@@ -206,11 +253,11 @@ ul li
 	    <!------>
 		 <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-					<input type="checkbox" id="PostSpO2ScoreCHK2" data-formitem="PostSpO2Score" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
+					<input type="checkbox" id="PostSpO2ScoreCHK2" label="需吸氧才能维持血氧饱和度≥90%(1分)" data-formitem="PostSpO2Score" class="hisui-checkbox" value="1" data-options="onChecked:function(event,value){
 	                        	testScore('score5','PostSpO2ScoreCHK2',value);
-	                        }">需吸氧才能维持血氧饱和度≥90%(1分)
+	                        }"></input>
 			</div>
 		</div>
 		</div>
@@ -218,44 +265,42 @@ ul li
 		<!------>
 		 <div>
 	    	<div class="form-row">
-	    	    <div class="form-title-rightlong" style="margin-left:60px;"></div>
+	    	    <div class="form-title-rightlong2" style="margin-left:60px;"></div>
 				<div class="form-item-normal">
-				<input type="checkbox" id="PostSpO2ScoreCHK3" data-formitem="PostSpO2Score" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
+				<input type="checkbox" id="PostSpO2ScoreCHK3" label="吸氧条件下血氧饱和度仍小于90%(0分)" data-formitem="PostSpO2Score" class="hisui-checkbox" value="0" data-options="onChecked:function(event,value){
 	                        	testScore('score5','PostSpO2ScoreCHK3',value);
-	                        }">吸氧条件下血氧饱和度仍小于90%(0分)
+	                        }"></input>
 				</div>
 		</div>
 		</div>
 		<!------>
-	    	<div>
+	    	<div style="">
 	         <div class="form-row">	
-	         <div class="form-title-rightlong" style="margin-left:60px;">Aldrete分数</div>
+	         <div class="form-title-rightlong2" style="margin-left:60px;">Aldrete分数</div>
 			 <div class="form-item-normal">
-				<input type="text" id="PostAldreteScore" class="textbox operdata" style="width:65px;margin-left:6px;" disabled> 
+				<input type="text" id="PostAldreteScore" class="hisui-validatebox operdata" style="width:65px;margin-left:0px;" disabled> 
 			 </div>
 			 <div class="form-title-right4">备注</div>
-	                    <div class="form-item-normal">
-	                        <input type="text" id="PostDaySurgeryNote" class="textbox operdata" style="width:575px"> 
+	                    <div style="margin-right:5px">
+	                        <input type="text" id="PostDaySurgeryNote" class="hisui-validatebox operdata" style="width:200px"> 
 	                    </div>
 			 </div>
 	    </div>
 	   
-	 <div style="margin-top:10px;">
-		<div class="form-row" >	
-		<div style="margin-left:400px">
-    	<a href="#" class="hisui-linkbutton" id="btnSave" data-options="iconCls:'icon-w-save'">保存</a>
-		</div>
-		<div style="margin-left:50px">
-		<a href="#" class="hisui-linkbutton" id="btnClose" data-options="iconCls:'icon-w-close'">关闭</a>
-    	</div>
-    	</div>
-		</div>
 	
 	   
-		</form>
-</div>
-</div>
-
+		</div>
+		<div data-options="region:'south',border:false" style="padding:0px 0 10px 0"> 
+		<div style=";text-align:center">
+		<span>
+	    	<a href="#" class="hisui-linkbutton" id="btnSave" data-options="iconCls:'icon-w-save'">保存</a>
+		</span>
+		<span style="margin-left:50px">
+			<a href="#" class="hisui-linkbutton" id="btnClose" data-options="iconCls:'icon-w-close'">关闭</a>
+    	</span>
+	</div>
+	
+		</div>
 		
 </body>
 </html>

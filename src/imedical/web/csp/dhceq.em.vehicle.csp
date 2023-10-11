@@ -1,0 +1,104 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
+    <HISUI/>
+    <DHCEQ:HISUI></DHCEQ:HISUI>
+    <!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
+</head>
+<body class="hisui-layout">
+    <script language=Cache runat=server>
+        s VSourceType=$Get(%request.Data("VSourceType",1))
+        s VSourceID=$Get(%request.Data("VSourceID",1))
+        s ReadOnly=$Get(%request.Data("ReadOnly",1))
+        s VRowID=$Order(^DHCEQVehicle(0,"Source",VSourceType,VSourceID,0))
+        s (VEquipDR,EQName)=""
+        if VSourceType=0
+        {
+            s EQName=$p($g(^DHCEQOpenCheckList(VSourceID)),"^",2)
+        }
+        elseif VSourceType=1
+        {
+            s VEquipDR=VSourceID
+            s EQName=$Piece($Get(^DHCEQEquip(VEquipDR)),"^",1)
+        }
+    </script>
+    <div data-options="region:'center',border:false">
+        <div class="hisui-panel" data-options="border:false" style="padding:10px;">
+            <div>
+                <!--div class="eq-table">
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-item">基本信息</div>
+                    </div>
+                </div-->
+                <div class="eq-table">
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cVEquipDR_EQName" for="VEquipDR_EQName">车辆名称</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VEquipDR_EQName" disabled="true" value="#(EQName)#"></div> <!--modify by QW20220406 BUG:QW0157 房屋车辆改造 begin-->
+                        <div class="eq-table-td eq-table-label"><label id="cVVehicleNo" for="VVehicleNo">车牌号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VVehicleNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVRegisterDate" for="VRegisterDate">注册登记日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="VRegisterDate"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cVVehicleType" for="VVehicleType">车辆类型</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VVehicleType"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVDisplacemint" for="VDisplacemint">排气量</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VDisplacemint"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVFacModel" for="VFacModel">厂牌型号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VFacModel"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cVHasLicenseNo" for="VHasLicenseNo">车辆行驶证编码</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VHasLicenseNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVIdentification" for="VIdentification">车辆识别代码</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VIdentification"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVPlait" for="VPlait">编制情况</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VPlait"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cVCarFrameNo" for="VCarFrameNo">车架号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VCarFrameNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVEngineNo" for="VEngineNo">发动机号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VEngineNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVCerHolderNo" for="VCerHolderNo">车辆所有人</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VCerHolderNo"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cVMileage" for="VMileage">行驶里程</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VMileage"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVColor" for="VColor">颜色</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VColor"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cVSeatNum" for="VSeatNum">座位数</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="VSeatNum"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'south',border:false" class="footer">
+        <div class="footer-box">
+            <div style="float:left;width:100%;"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+        </div>
+    </div>
+
+    <!--隐藏元素-->
+    <div id="hiddenEncrypt" style="display:hidden">
+        <form name="DHCEQ">
+            <INPUT type="hidden" id="VSourceType" value="#(VSourceType)#">
+            <INPUT type="hidden" id="VSourceID" value="#(VSourceID)#">
+            <INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+            <INPUT type="hidden" id="VRowID" value="#(VRowID)#">
+            <INPUT type="hidden" id="VEquipDR" value="#(VEquipDR)#">
+            
+        </form>
+    </div>
+    <script type='text/javascript' src='../scripts/dhceq/em/vehicle.js'></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!--dhcckb.nutritionformula.csp-->
+
+<html>
+<head>
+<title></title>
+
+<HISUI/>
+<link id="themecss" rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/dhcckb/css/nutritionformula.css">
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/nutritionformula.js"></script>
+
+</head>
+<body>   
+	<div class="hisui-layout" data-options="clickExpand:true,fit:true">   
+		<div data-options="region:'center',title:'',split:true,bodyCls:'panel-header-gray'" style="padding:10px;">
+			<table id="datagrid" class="hisui-datagrid" fit="true" title=""></table>
+		</div>   
+	</div>
+</body>
+</html>
+
+<!--toolbar-->
+<div id="toolbar" class="toolbar" style="">
+	<div style="margin: 5px 0px;">
+		<input id="id" style="display:none;"/>
+		<span style="display:none;">
+			<span style="display:inline-block;width: 71px;" class="r-label">患者类型</span>
+			<input id="patType" class="hisui-combobox"></input>
+		</span>
+		<span style="padding-left:10px" class="r-label">营养类型</span><span style="color:blue;">(计算医嘱项剂量使用)</span>
+		<input id="nutType" class="hisui-combobox"></input>
+		<span style="padding-left:10px" class="r-label">类别</span>
+		<input id="nutCat" class="hisui-combobox"></input>
+		<span style="padding-left:10px" class="r-label">描述</span>
+		<input id="nutDesc" class="textbox"></input>
+		<span style="padding-left:10px" class="r-label">备注</span>
+		<input id="nutNote" class="textbox" style="width:300px"></input>
+	</div>
+	<div style="margin: 5px 0px;">
+		<span style="display:inline-block;width: 65px;" class="r-label">表达式</span>
+		<input class="hisui-radio" type="radio" label="范围" name="pressType" value="scope" data-options="radioClass:'hischeckbox_square-blue',required:false,checked:true,onChecked:pressTypeChange">
+		<input class="hisui-radio" type="radio" label="值" name="pressType" value="num" data-options="radioClass:'hischeckbox_square-blue',required:false,onChecked:pressTypeChange">
+		<span style="width:50px;display: inline-block;"></span>
+		<input id="minValue" value="" class="textbox pressScope" style="width:50px;" onkeyup="this.value=this.value.replace(/\D/g,'')"/>
+		<span id="minSymbol" class="pressScope" onClick="minSymbolClick()" data-val=">">大于</span>
+		<span style="color:blue;">【表达式值】</span>
+		<span id="maxSymbol" class="pressScope" onClick="maxSymbolClick()" data-val="<">小于</span>
+		<input id="maxValue" value="" class="textbox pressScope" style="width:50px" onkeyup="this.value=this.value.replace(/\D/g,'')"/>
+		<span id="numSymbol" class="pressNum" style="display:none;">等于</span>
+		<input id="numValue" value="" class="textbox pressNum" style="width:50px;display:none;" onkeyup="this.value=this.value.replace(/\D/g,'')"/>
+	</div>
+	<div style="padding-left: 85px;height:65px;">
+		<div id="pressDesc" style="height: 20px;"></div>
+		<div>
+			<textarea id="press" style="width:724px;height:45px;resize:none;" placeholder="录入表达式"></textarea>	
+		</div>
+	</div>
+	
+	<div style="margin: 5px 0px;">
+		<!--
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('>')">></a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('>=')">>=</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('<')">&lt</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('<=')">&lt=</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('.and.')">.and.</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('.or.')">.or.</a>
+		-->
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('+')">+</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('-')">?</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('*')">*</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('/')">/</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big('(')">(</a>
+		<a href="#" class="hisui-linkbutton" onclick="javascript:big(')')">)</a>
+		<input style="margin-left:20px;margin-bottom:-2px" type="checkbox" checked="true" id="flag" name="flag" >是否可用</input>
+	</div>
+	<div style="margin: 5px 0px;">
+		<a href="#" class="hisui-linkbutton" id="selectParams" >参数</a>
+		<a href="#" class="hisui-linkbutton" onclick="clearPress()">清空表达式</a>
+		<a id="add" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="clearAll()" >清屏</a>
+		<a id="add" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="cleaAndLoad()" >清屏查找</a>
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="saveExpress('update')">修改</a>
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" onclick="saveExpress('add')">增加</a>
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="loadTable()">查找</a>
+	</div>
+</div>
+
+<ul id="paramAttr" class="dropdown-menu dropdown-context" style="z-index: 3;display: none;">
+	
+</ul>

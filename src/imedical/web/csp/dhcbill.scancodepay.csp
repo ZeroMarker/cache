@@ -1,143 +1,55 @@
 <!-- 
  * FileName: dhcbill.scancodepay.csp
- * Anchor: Lid
+ * Author: Lid
+ * Modify: ZhYW
  * Date: 2018-03-14
- * Function: 
- * Description: 扫描付业务界面实现
+ * Description: 扫码付业务界面实现
 -->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##class(websys.SessionEvents).SessionExpired() q 1
- q 1
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
 </csp:method>
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
-	<style>
-		body{
-			width: 420px;
-			position: fixed; 
-            background-Color:#e5f9ff;
-			border-Radius: 5px
+	<ADDINS/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.scancodepay.css"/>
+	<script type="text/javascript" src="../scripts/DHCBillPayScanCodeService.js"></script>
+	<server>
+   	set arguments=%request.Get("arguments")
+   </server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			Args: #(arguments)#
 		}
 		
-		#mb_tit{
-			display:block;
-			font-Size: 14px;
-			color:White;
-			padding:10px 50px;
-            background-Color:#566883;
-			border-Radius:5px 5px 0 0; 
-			font-Weight:bold
+		//全局变量
+		var GV = {
+			WaitPayTime: 60,        //支付等待时间
+		    WaitScanTime: 60,       //扫码等待时间
+		    VerifyInterval: 10,     //查询间隔
+		    VerifyTimeAry: [4, 6]   //轮循队列间隔秒数
 		}
-		
-		#mb_titleico{
-			position:absolute;
-			padding: 8pt 5pt;
-			left:20px;
-			top:9px;
-			width:20px;
-			height:20px;
-		}
-		
-		#mb_ico{
-			display:block;
-			position:absolute;
-			color:White;
-			right:12px;
-			top:9px; 
-			width:18px;
-			height:18px;
-			text-Align:center;  
-            line-Height:16px;
-			cursor:pointer;
-			font-Family:微软雅黑
-		}
-		
-		#mb_ico:hover{
-			background-Color:red;
-		}
-		
-		#mb_msg{
-			padding:30px 100px 40px 100px;
-			line-Height:40px; 
-			font-Size:20px;
-			text-Align:center;
-			color:#FE9F4A;
-		}
-		
-		#mb_paysta{
-			color:#7ec0e9;
-			font-size:20px;
-		}
-		
-		#mb_payico{
-			padding-right:3pt;
-			height:16px;
-			width:16px;
-		}		
-		
-		#mb_second{
-			float:right;
-			font-Family:微软雅黑;
-			font-size:18px;
-			color:#fe7e00
-		}
-		
-		#ScanCode{
-			width:300px;
-			margin:10px 60px;
-			padding:3px 0px;
-			text-align:center;
-			font-size:18px;
-			border-left:none;
-			border-right:none;
-			border-top:none;
-			border-bottom-color:#7ec0e9;
-			BACKGROUND-COLOR: transparent;
-		}
-		
-		#ScanCode:focus{
-			/*outline-color:red;*/
-			-moz-box-shadow: 0 0 0 0 #95B8E7;
-	  		-webkit-box-shadow: 0 0 0 0 #95B8E7;
-	  		box-shadow: 0 0 0 0 #95B8E7;
-		}
-		
-		#mb_btnbox{
-			margin:15px 0 10px 0;
-			text-Align:center
-		}
-		
-		#mb_btn_no{
-			width:85px;
-			height:30px;
-			
-			border:none;
-			background-Color:#7ec0e9;
-		}
-   </style>
+	</script>
 </head>
 
 <body>
-	<img id="mb_titleico" src="../images/title.png"/><span id="mb_tit">扫码支付</span>  
 	<div id="mb_msg">
 		<span id="mb_second"></span>
 		<div id="mb_paysta">
-			<img id="mb_payico" src="../images/scan.png"/>扫码中...</div>
+			<img id="mb_payico" src="../scripts_lib/hisui-0.1.0/dist/css/icons/scanning.png">
+			<span>扫码中</span>
+			<img src="../scripts/dhcbill/themes/default/images/paying.gif"/>
 		</div>
-	<input id="ScanCode" type="text" value=""/>
-	<div id="mb_btnbox">
-		<input id="mb_btn_no" type="button" value="关闭" />  
 	</div>
-	<!--扫描支付页面end-->
-	<script type="text/javascript" src="../scripts/DHCBillPayByScanCode.js"></script>
-	<script type="text/javascript" src="../scripts/DHCBillPayScanCodeService.js"></script>
-	<script language="javascript">
-		document.body.onload = BodyLoadHandler
-		document.body.onbeforeunload = onbeforeunloadHandler;
-	</script>
+	<input id="mb_scancode" class="textbox" autocomplete="off"/>
+	<div id="mb_btnbox">
+		<a href="javascript:;" class="hisui-linkbutton" id="mb_btn_no">关闭</a>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcbill.scancodepay.js"></script>
 </body>
 </html>

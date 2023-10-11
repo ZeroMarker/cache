@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!--
+ 待备药病区列表
+ pha.ip.v4.reqboard.csp
+ pha/ip/v4/reqboard.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/Font-Awesome-4.6.3/css/font-awesome.min.css" />
+    <style>
+        body {
+            background: white;
+        }
+
+        /* 标题区域 */
+        .pha-mob-nav {
+            height: 50px;
+            line-height: 50px;
+            background-color: #009EDB;
+            font-size: 25px;
+            color: white;
+        }
+
+        .pha-mob-nav div,
+        .pha-mob-nav span {
+            font-size: 25px;
+            color: white;
+        }
+        
+        .pha-mob-ward {
+            border: 1px solid #cccccc;
+            border-top: 0;
+            margin: 5px;
+            border-radius: 4px;
+            transition: all ease 0.5s;
+            cursor: pointer;
+        }
+
+        .pha-mob-ward .notice {
+            background-color: #46C6BD;
+            color: white;
+        }
+
+        .pha-mob-ward table div {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .pha-mob-ward:hover {
+            box-shadow: 6px 6px 6px #ececec;
+            /*设置阴影,可以自定义参数*/
+            /* box-shadow: 4px 4px 4px #ececec; */
+        }
+
+        .pha-ward-select {
+            /* border:1px dashed #FF695E; */
+            box-shadow: 6px 6px 6px #cccccc;
+            /*设置阴影,可以自定义参数*/
+        }
+
+        .ward-title {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px;
+            border-top: 1px solid #cccccc;
+            border-bottom: 1px solid #cccccc;
+            text-align: left;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        .ward-title-notify {
+            background: #46C6BD;
+            color: white;
+            border-bottom: 1px solid #46C6BD;
+            border-top: 1px solid #46C6BD;
+            margin-left: -1px;
+            margin-right: -1px;
+        }
+
+        .pha-mob-tag {
+            float: left;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        #tblWard table {
+            width: 100%;
+        }
+
+        #tblWard td {
+            text-align: center;
+            width: 50%;
+        }
+
+        /* 单元格样式 */
+        .pha-ward-cell {
+            border: 1px dashed #cccccc;
+            margin-right: -1px;
+            margin-bottom: -1px;
+            border-top: 0;
+            border-left: 0;
+            padding: 5px;
+        }
+
+        /* .pha-mob-ward table tr td div{
+            border-top:0;
+        }
+        .pha-mob-ward table tr div{
+            border-right:0;
+        }
+        .pha-mob-ward table tr td div{
+            border-left:0;
+        } */
+        /* .pha-mob-ward table tr td div {
+            margin-right:-1px;
+            margin-bottom:-1px;
+            border-top:0;
+            border-left: 0;
+        } */
+        .pha-ward-fix {
+            float: left;
+            padding-left: 10px;
+
+        }
+
+        .pha-refresh {
+            color: white;
+            font-size: 15px;
+        }
+
+        .pha-mob-title-refresh:hover {
+            cursor: pointer;
+            background-color: #46c6bd;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'north',border:false,height:50,split:false" style="overflow: hidden;">
+            <div class="pha-mob-nav">
+                <div class="pha-mob-title pha-mob-title-refresh" style="float:left;padding-left:20px;padding-right:20px;">
+                    #(..Get("住院移动药房工作站"))#
+                </div>
+                <div style="float:left;padding-left:20px">
+                    <div id="clockTimeNow">
+                        <span id="clockDate"></span>
+                        <span id="clockTime"></span>
+                    </div>
+                </div>
+
+                <div id="navNotifyBar" style="float:right;">
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'center',border:true" style="border-top:none" id="tblWard">
+            <table style="width:100%;">
+                <tr>
+                    <td>
+
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+    <!-- 第一层window -->
+    <div id="diagPhReq" class="hisui-dialog" title='领药单列表' style="width:500px;height:500px;color:white" data-options="closable:false,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-print',
+	buttons:[{
+        text:'关闭',
+		handler:function(){
+			$('#diagPhReq').dialog('close');
+		}
+	}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" border="false">
+                <div class="hisui-layout" fit="true" border="false">
+                    <div data-options="region:'north',split:true,height:50,border:false" style="overflow:hidden;">
+                        <div class="pha-row" style="text-align:center">
+                            <div class="pha-col">
+                                #(..Get("开始日期"))#
+                                <input type="text" class="hisui-datebox" id='conStartDate'>
+                                <div style="display: none;">
+                                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-arrow-left" id="conStartPrev"></a>
+                                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-arrow-right" id="conStartNext"></a>
+                                </div>
+                            </div>
+                            <div class="pha-col">
+                                #(..Get("结束日期"))#
+                                <input type="text" class="hisui-datebox" id='conEndDate'>
+                                <div style="display: none;">
+                                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-arrow-left" id="conEndPrev"></a>
+                                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-arrow-right" id="conEndNext"></a>
+                                </div>
+                            </div>
+                            <div class="pha-col">
+                                <a class="hisui-linkbutton" plain='false' iconCls="icon-w-find" id="btnFindPhReq">#(..Get("查询"))#</a>
+                            </div>
+                            <div class="pha-col">
+                                <!--a class="hisui-linkbutton" plain='false' iconCls="icon-w-print" id="btnConnectPhReq">#(..Get("关联请领单"))#</a -->
+                                <a class="hisui-linkbutton" plain='false' iconCls="icon-w-print" id="btnConnectPhReq">#(..Get("打印"))#</a>
+                            </div>
+                            <div class="pha-col">
+                            	<a class="hisui-linkbutton" plain='false' iconCls="icon-w-print" id="btnConnectPhReqSend">#(..Get("打印送药"))#</a>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div id="lyWinCen" data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false">
+                        <div id='containerPhReq'>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 第二层window,其实不建议套两层 -->
+    <div id="diagPhReqItm" class="hisui-dialog" title='请领单明细' style="width:500px;height:500px;color:white;padding:10px" data-options="closable:false,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-print',
+	buttons:[{
+		text:'关闭',
+		handler:function(){
+			$('#diagPhReqItm').dialog('close');
+		}
+	}]">
+        <table id="gridPhReqItm"></table>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/reqboard.js"></script>
+    <script type="text/javascript" src="../scripts/pha/ip/v4/mobprint.js"></script>
+</body>
+
+</html>

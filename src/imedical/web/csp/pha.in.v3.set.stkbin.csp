@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--药库业务流程配置
+	csp:csp/pha.in.v3.set.stkbin.csp
+	js: scripts/pha/in/v3/set/stkbin.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+	<title>
+		<TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+	<style>
+		.pha-line {
+			margin-top: 2px;
+		}
+	</style>
+	
+</HEAD>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false" style="background-color:white">
+			<div class="hisui-layout" fit="true" >
+                <div data-options="region:'west',width:200, border:false,split:true">
+                    <div id="panel" class="hisui-panel" title="科室"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:'',tools:[{iconCls: 'icon-help'}]">	
+                        <table id="gridLoc"></table>				                            
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true" >
+		                <div data-options="region:'west',width:150, border:false,split:true">
+		                    <div id="panel" class="hisui-panel" title="货架"
+		                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">	
+		                        <table id="gridFirst"></table>				                            
+		                    </div>
+		                </div>
+		                <div data-options="region:'center',border:false">
+		                    <div class="hisui-layout" fit="true" >
+				                <div data-options="region:'west',width:150, border:false,split:true">
+				                    <div id="panel" class="hisui-panel" title="层"
+				                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">	
+				                        <table id="gridSecond"></table>				                            
+				                    </div>
+				                </div>
+				                <div data-options="region:'center',border:false">
+				                    <div class="hisui-layout" fit="true" >
+						                <div data-options="region:'west',width:150, border:false,split:true">
+						                    <div id="panel" class="hisui-panel" title="列"
+						                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">	
+						                        <table id="gridThird"></table>				                            
+						                    </div>
+						                </div>
+						                <div data-options="region:'center',border:false">
+						                    <div class="hisui-layout" fit="true" >
+								                <div data-options="region:'north',height:400, border:false,split:true">
+								                    <div id="panel" class="hisui-panel" title="药品(已维护)"
+								                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">	
+								                        <table id="gridUseDrug"></table>				                            
+								                    </div>
+								                </div>
+								                <div data-options="region:'center',border:false">
+								                    <div id="panel" class="hisui-panel" title="药品(未维护)"
+								                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">	
+								                        <table id="gridNotUseDrug"></table>				                            
+								                    </div>
+									            </div>
+											</div>
+							            </div>
+									</div>
+					            </div>
+							</div>
+			            </div>
+					</div>
+	            </div>
+			</div>
+		</div>
+    </div>
+    <!--科室模糊搜索-->
+    <div id="gridLocBar">
+     	<div style="padding:1px">
+        	<input id="locQText" href="#" class="hisui-searchbox"/>
+        </div>	
+    </div>
+    
+    <!--货架模糊搜索-->
+    <div id="gridFirstBar">
+     	<div style="padding:1px">
+        	<input id="gridFirstQText" href="#" class="hisui-searchbox" />
+        </div>	
+        <div class="pha-line"></div>
+		<div class="datagrid-toolbar" style="border-bottom:0">
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd" title=#(..Get("新增"))# onclick="javascript:Add(1)"></a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave" title=#(..Get("保存"))# onclick="javascript:SaveSb(1)"></a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete" title=#(..Get("删除"))# onclick="javascript:DeleteSb(1)"></a>
+		</div>	
+    </div>
+    
+    <!--货架层模糊搜索-->
+    <div id="gridSecondBar">
+     	<div style="padding:1px">
+        	<input id="gridSecondQText" href="#" class="hisui-searchbox" />
+        </div>
+        <div class="pha-line"></div>
+		<div class="datagrid-toolbar" style="border-bottom:0">
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd" title=#(..Get("新增"))# onclick="javascript:Add(2)"></a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave" title=#(..Get("保存"))# onclick="javascript:SaveSb(2)"></a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete"   title=#(..Get("删除"))# onclick="javascript:DeleteSb(2)"></a>
+		</div>		
+    </div>
+    
+    <!--货架列模糊搜索-->
+    <div id="gridThirdBar">
+     	<div style="padding:1px">
+        	<input id="gridThirdQText" href="#" class="hisui-searchbox" />
+        </div>
+        <div class="pha-line"></div>
+		<div class="datagrid-toolbar" style="border-bottom:0">
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd" title=#(..Get("新增"))# onclick="javascript:Add(3)"></a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave" title=#(..Get("保存"))# onclick="javascript:SaveSb(3)"></a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete"   title=#(..Get("删除"))# onclick="javascript:DeleteSb(3)"></a>
+		</div>	
+    </div>
+    
+    <!--已维护药品模糊搜索-->
+    <div id="gridUseDrugBar">
+        <table>
+		    <tr>
+		    	<td><input id="useQText" href="#" class="hisui-searchbox" /></td>
+		    	<td style="padding-left:10px"><a id="btnImportWin" class="hisui-linkbutton button-width" >#(..Get("导入科室货位码"))#</a></td>
+		        <!--td><label for="phLocId">#(..Get("科室"))#</label></td>
+		        <td><input id="phLocId" class="hisui-combobox" style="width:200px" placeholder='请点击下拉'/></td>
+		        <td><label for="stkBinComb">#(..Get("货位(树)"))#</label></td>
+		        <td><input id="stkBinTree" class="hisui-combotree" style="width:200px" placeholder='请点击下拉'/></td>
+                <td class="r-label"><label for="stkBinComb">#(..Get("货位(下拉框)"))#</label></td>
+                <td><input id="stkBinComb"  data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td class="r-label"><label for="stkBinRacks">#(..Get("货架"))#</label></td>
+                <td><input id="stkBinRacks"  data-pha='class:"hisui-combobox",clear:true,query:true'/></td-->
+		    </tr>
+		</table>
+
+    </div>
+    
+    <!--未维护药品模糊搜索-->
+    <div id="gridNotUseDrugBar">
+     	<div style="padding:1px">
+        	<input id="notUseQText" href="#" class="hisui-searchbox" />
+        </div>	
+    </div>
+    
+    <!--导出弹框-->
+	<div id="ImportWin" class="hisui-dialog" data-options="closed:'true',modal:true" title="导入科室货位码" style="width:340px;height:145px;">
+		<table class="pha-con-table">
+		    <tr>
+		    	<td class="r-label"><label for="conFileBox">#(..Get("文件选择"))#</label></td>
+                <td><input id='conFileBox' data-pha /></td>
+		    </tr>
+		</table>
+		<div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+			<a id='btnImportFile' class="hisui-linkbutton" >导入</a>
+		    <a id='btnExportFile' class="hisui-linkbutton" style="margin-left:10px;">导入模版下载</a>
+		</div>
+	</div>
+    
+
+	<script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/set/stkbin.js"></script>
+	<!-- 导入excel文件读取插件 -->
+    <script type="text/javascript" src="../scripts/pha/plugins/xlsx/xlsx.full.min.js"></script>
+</body>
+
+</HTML>

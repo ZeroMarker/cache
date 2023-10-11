@@ -51,6 +51,8 @@
 		s strMenu="{ID:"_TMENU_"}"
 		if '((strAutMenu[strMenu)||(1=grpId))
 		{
+			s %request.Data("Error:ErrorDesc",1) = "你无权访问，请联系计算机管理员！"
+			s %response.ServerSideRedirect="websys.e403.csp"
 			q 1
 		}
 	 }
@@ -88,29 +90,62 @@
 		s %request.Data("extfilename",1)=myextfilename
 		;i mnu.ChartBook s %response.ServerSideRedirect="epr.chartbook.csp" s %request.Data("ChartBookID",1)=mnu.ChartBook.%Id()
 		///功能 （基础数据平台 dhc.bdp.ext.default.csp)
-		i mnu.LinkFuntionDR s %session.Data("BDPSYS.Function")=mnu.LinkFuntionDR.Code s %response.ServerSideRedirect="dhc.bdp.ext.default.csp"
+		i mnu.LinkFuntionDR
+		{
+			 s %session.Data("BDPSYS.Function")=mnu.LinkFuntionDR.Code
+			 s %response.ServerSideRedirect="dhc.bdp.ext.default.csp"
+		}
 		///解析地址，csp/  组件就填dhc.bdp.ext.menu.csp  
 		i mnu.LinkUrl'="" s %response.ServerSideRedirect = mnu.LinkUrl
 		
-		if mnu.LinkUrl="websys.default.jquery.csp" s %response.ServerSideRedirect = "dhc.bdp.ext.menujquery.csp"    //jquery
-		if mnu.LinkUrl="websys.default.csp" s %response.ServerSideRedirect = "dhc.bdp.ext.menu.csp"  //组件
-		/*
-		//2020-03-20测试获取url的参数
-		s Expression=$p(mnu.LinkUrl,"?",2)
-		if Expression'=""
+		//if mnu.LinkUrl="websys.default.jquery.csp" s %response.ServerSideRedirect = "dhc.bdp.ext.menujquery.csp"    //jquery
+		//if mnu.LinkUrl="websys.default.csp" s %response.ServerSideRedirect = "dhc.bdp.ext.menu.csp"  //组件
+		
+		//解析地址，csp 2021-02-22 chenying update
+		if mnu.LinkUrl="dhc.bdp.ext.menujquery.csp" s %response.ServerSideRedirect = "websys.default.jquery.csp"    //jquery
+		if mnu.LinkUrl="dhc.bdp.ext.menu.csp" s %response.ServerSideRedirect = "websys.default.csp"  //组件	
+		
+		//组件 2021-02-22 chenying update
+		if (mnu.CompName'="")
 		{
-			s ValueLength=$l(Expression,"&")
-			for i=1:1:ValueLength
+			//判断URL地址是否已经包括?
+			if (%response.ServerSideRedirect["?")
 			{
-				s valuei=$p(Expression,"&",i)
-				s valuename=$p(valuei,"=",1)
-				s value=$p(valuei,"=",2)
-				continue:valuename=""
-				continue:value=""
-				s %request.Data(valuename,1)=value
-			}			
+				s %response.ServerSideRedirect =%response.ServerSideRedirect_"&WEBSYS.TCOMPONENT="_mnu.CompName
+			}
+			else
+			{
+				s %response.ServerSideRedirect =%response.ServerSideRedirect_"?WEBSYS.TCOMPONENT="_mnu.CompName
+			}
 		}
-		*/	 
+		//值表达式 2021-02-22 chenying update
+		if (mnu.ValueExpression'="")
+		{
+			//2020-02-21 组件， 值表达式有双引号 chenying
+			s ValueExpression=mnu.ValueExpression
+			if ValueExpression[""""
+			{
+				s length=$l(ValueExpression)
+				///去掉首尾的双引号
+				if ($e(ValueExpression,length)="""")&&($e(ValueExpression,1)="""")
+				{
+					s ValueExpression=$e(ValueExpression,1,length-1)
+					s ValueExpression=$e(ValueExpression,2,$l(ValueExpression))
+				}
+			}
+			
+			//判断URL地址是否已经包括?
+			if (%response.ServerSideRedirect["?")
+			{
+				s %response.ServerSideRedirect =%response.ServerSideRedirect_ValueExpression
+			}
+			else
+			{
+				if $e(ValueExpression,1)="&" s ValueExpression=$e(ValueExpression,2,$l(ValueExpression)) ///处理第一个&符号
+				s %response.ServerSideRedirect =%response.ServerSideRedirect_"?"_ValueExpression
+			}
+		}
+		
 	}
 	i mnu d mnu.%Close()
 	k mnu

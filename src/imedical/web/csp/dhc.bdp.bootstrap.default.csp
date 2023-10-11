@@ -33,10 +33,8 @@
     <!--<link href="../scripts/bdp/Framework/assets/dialog/artdialog.css" rel="stylesheet" />-->
     <link href="../scripts/bdp/Framework/assets/app.css" rel="stylesheet" />
      
-    <SERVER> d ##Class(web.DHCBL.BDP.BDPMenuDefine).Head()</SERVER>
-    <style>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 
-</style>
 </head>
 <body class="no-skin" style="overflow:hidden" >
 
@@ -144,7 +142,7 @@
 				    } 
 				    pucl.innerHTML=temp; 
 				} 
-
+				var MatchSearchIds=""  //满足检索条件的ID串  20210520改为前台判断是否满足检索条件
 				function handle(){
 					
 					var search=document.getElementById("searchid").value;
@@ -158,7 +156,21 @@
 					}
 					else
 					{
-						var mystr=getSession();				
+						var mystr=getSession();		
+						MatchSearchIds=tkMakeServerCall('web.DHCBL.BDP.BDPMenuDefine','SearchMenu',search);	 //满足检索条件的ID串 20210520改为前台判断是否满足检索条件
+						///20220729对检索符合条件的菜单+父菜单子菜单超过400以上的增加提示
+						var MatchSearchArray=MatchSearchIds.split("ID")
+						if (MatchSearchArray.length>400)
+						{
+							alert("检索结果太多了，再给点关键词吧~");
+							return; 
+						}
+						var restrictStr="chanpinpeizhi^CHANPINPEIZHI^产品配置^jichushuju^JICHUSHUJU^基础数据"
+						if (restrictStr.indexOf("search")>-1)
+						{
+							alert("检索结果太多了，再给点关键词吧~");
+							return; 
+						}
 						var obj =tkMakeServerCall('web.DHCBL.BDP.BDPMenuDefine','GetMenu',"menuTreeRoot",mystr,search);
 						var json = eval(obj);
 						var strr="";
@@ -174,7 +186,11 @@
 						     //alert(json[i].text) 
 						     var myCaption=json[i].text
 						     var mySMRowID=json[i].id
-						     var menuIcon=""
+						     var mySMRowIDStr="{ID:"+mySMRowID+"}"
+						     if (MatchSearchIds.indexOf(mySMRowIDStr)== -1)  //前台判断是否满足检索条件20210520
+						     {
+							     continue
+						     }
 							 if (myCaption.indexOf("系统配置")!= -1) menuIcon="key"
 							 else if(myCaption.indexOf("产品配置")!= -1) menuIcon="cog"
 							 else if(myCaption.indexOf("临床知识库")!= -1) menuIcon="book"
@@ -225,6 +241,11 @@
 					    // alert(json[i].text) 
 					   var mySMRowID2=json[i].id
 					   var myCaption2 = json[i].text
+			   		   var mySMRowIDStr2="{ID:"+mySMRowID2+"}"
+					   if (MatchSearchIds.indexOf(mySMRowIDStr2)== -1)  //前台判断是否满足检索条件20210520
+					   {
+						    continue
+					   }
 					   var myImage2 = json[i].icon
 					   var leaf=json[i].leaf
 					   var myCaption2 = myCaption2.replace(" ","");		 
@@ -337,26 +358,29 @@
     <!-- basic scripts -->
     <!--[if !IE]> -->
     <script type="text/javascript">
-
-        function setContentStyle(){
-	        var outerHeight=""
-	        if(window.parent.document.getElementById("centerPanel")!=null&&window.parent.document.getElementById("centerPanel")!=undefined)
-	        {	
-				outerHeight=window.parent.document.getElementById("centerPanel").style.height
-				outerHeight=outerHeight.replace("px","");
-				outerHeight=outerHeight-30
-				
+    	///获取界面高度/home页
+    	function getiFrameHeight() {
+			var outerHeight="";
+			//煎药室-系统配置-打开煎药室系统配置菜单，界面下方留有空白 gxp2020-12-25
+			if ((parent.$("#TRAK_tabs")!=null)&&(parent.$("#TRAK_tabs")!=undefined)&&(parent.$("#TRAK_tabs >.tabs-panels").height()!=null)&&(parent.$("#TRAK_tabs >.tabs-panels").height()>0))
+			{
+			    outerHeight=parent.$("#TRAK_tabs >.tabs-panels").height()-$("#myTab").height();
 				//outerHeight=outerHeight-10 ///2020-02-13解决下面出现10px遮住了的问题
+				return outerHeight;
+			}
+			else if((parent.$("#centerPanel")!=null)&&(parent.$("#centerPanel")!=undefined)&&(parent.$("#centerPanel").height()!=null)&&(parent.$("#centerPanel").height()>0))
+			{
+				outerHeight=parent.$("#centerPanel").height()-$("#myTab").height();
+				return outerHeight;
+			}
+			else
+			{
+				outerHeight=$(window).height()-$("#myTab").height();
+				/*
+				//outerHeight=Math.max(parent.$(".panel-body").height(),parent.$("#centerPanel").height())-$("#myTab").height();
 				
-	        }
-	        else
-	        {
-		        var windowHight="";
-		        windowHight = document.documentElement.clientHeight;
-	        	if(windowHight==0){
-	         		windowHight = document.body.clientHeight;
-	       		 }
-	       		var Sys = {};
+				//老系统的获取高度方法
+				var Sys = {};
 				var ua = navigator.userAgent.toLowerCase();
 				var s;
 				(s = ua.match(/msie ([\d.]+)/)) ? Sys.ie = s[1] :
@@ -364,26 +388,23 @@
 				(s = ua.match(/chrome\/([\d.]+)/)) ? Sys.chrome = s[1] :
 				(s = ua.match(/opera.([\d.]+)/)) ? Sys.opera = s[1] :
 				(s = ua.match(/version\/([\d.]+).*safari/)) ? Sys.safari = s[1] : 0;
-			
-
 				if(Sys.chrome){
-					outerHeight = windowHight - 68;
+					//outerHeight = $(window).height() - 122;
+					outerHeight = $(window).height() -68;
 				}
 				else{
-				    outerHeight = windowHight - 36; 
+				  //outerHeight = $(window).height() - 80; 
+					outerHeight = $(window).height() - 36; 
 				}
-	        }
-
-			return outerHeight
-        }
-        //屏幕下方出现空白，高度不自适应 所以删掉  20171109
-        //document.getElementById("pageContent").style.height=setContentStyle()
-   
+				*/
+			    return outerHeight;
+			}
+		}
         var groupdesc = session['LOGON.GROUPDESC'];
-        document.getElementById("iframe_home").style.height=setContentStyle()
-		document.getElementById("iframe_home").src="../scripts/bdp/App/BDPSystem/Home/index.html?groupdesc="+groupdesc
+        document.getElementById("iframe_home").style.height=getiFrameHeight();
+        document.getElementById("iframe_home").src="../scripts/bdp/App/BDPSystem/Home/index.html?groupdesc="+groupdesc
     	
-		
+
     	var PreHtmlWord=document.getElementById('navmenu').innerHTML    //把一开始的菜单内容赋值给一个变量
     	
     </script>

@@ -1,0 +1,230 @@
+<!--script type='text/javascript' src='../scripts/dhccertauth/imanageduser/CA_Common_BJCA_UKEY.js'></script-->
+<SCRIPT language="cache" RUNAT="SERVER">
+	s CAVerify=##Class(Nur.Labor.Custom).GetIsVerifyCA(%session.Get("LOGON.CTLOCID")) 
+	i CAVerify=1 d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+</SCRIPT>
+<script type="text/javascript">
+var CAVerify = "#(CAVerify)#";
+var html='<span href="javascript:void(0)" id="saveCASignNurse">'
+	html=html+'<a href="#" class="hisui-linkbutton" data-options="iconCls:\'icon-w-edit\'" onclick="signAndLogon(1);;">#(..Get("交班签名"))#</a>&nbsp'
+	html=html+'<a href="#" class="hisui-linkbutton" data-options="iconCls:\'icon-w-edit\'" onclick="signAndLogon(2);;">#(..Get("接班签名"))#</a>'
+	html=html+'	</span>'
+	/*
+var html='<a href="javascript:void(0)"  id="saveCASignNurse" class="hisui-menubutton menubutton-toolbar"  data-options="menu:\'#sign-toolbar\',iconCls:\'icon-paper-submit\'">CA签名</a>'
+	html=html+'<div id="sign-toolbar" style="width:100px;">' 
+	html=html+'<div onclick="signAndLogon(1);">交班护士</div>'   
+	html=html+'<div onclick="signAndLogon(2);">接班护士</div>'
+	html=html+'<div onclick="signAndLogon(3);">护士长</div>  '   
+	html=html+'	</div>'*/
+	//$("#saveSignNurse").after(html)
+function OpenCA(){
+	var rtn=$method.GetAllGenral()
+	if(rtn.OpenCA==1 && CAVerify == 1){
+		$("#saveSignNurse").hide()
+		$("#saveCASignNurse").show()
+		// $('<script type="text/javascript" src="../scripts/dhccertauth/imanageduser/CA_Common_BJCA_UKEY.js"><\/script>').appendTo('head')
+	}else{
+		$("#saveSignNurse").show()
+		$("#saveCASignNurse").hide()
+	}	
+}
+
+
+
+
+function SignLogon(rtn,signNurseType){
+	 var toSignData = "待签名数据";
+	 //var hashData = rtn.ca_key.HashData(toSignData);
+	 //var signData = rtn.ca_key.SignedData(hashData, rtn.ContainerName);
+	 var hashData = HashData(toSignData);
+	 var signData = SignedData(hashData, rtn.ContainerName);
+	 var CACertNo = GetCertNo(rtn.ContainerName);
+	 // 调用病历方法，保存签名数据
+	 // ##Class(CA.DigitalSignatureService).Sign()需要的参数从 rtn 中取
+	 var CAUserCertCode = rtn.CAUserCertCode;
+	 var CAUserID = rtn.UserID
+	 // var CACertNo = rtn.CACertNo;
+	 var itmHashData = hashData
+	 var row = $("#shiftBookArea").datagrid("getSelected");
+	
+	 var ShiftTimeID=row.ShiftTimeID
+	var parmas={
+		"SVShiftMainDR":GLOBAL.ShiftID,
+		"SVShiftClsDR":ShiftTimeID,
+		"SVShiftHandleType":signNurseType,
+		"SVMainItemHash": itmHashData,
+		"SVMainSignCertCode": CAUserCertCode,
+		"SVMainSignValue": signData,
+		"SVMainSignCertNo": CACertNo,
+		"SVCreateUserDr": CAUserID,
+		"wardId":GLOBAL.WardID
+	}
+	var data = JSON.stringify(parmas)
+	///保存签名数据到CA库
+	runClassMethod("Nur.SHIFT.Service.ShiftCAController","InsertShiftSignNur",{data:data},function(rtn){
+		///保存业务数据签名
+		
+		
+		//护士长签名
+		if(signNurseType==3){
+			var params={}
+			params.ShiftHeadNurseSign=CAUserID
+			params.ShiftID=GLOBAL.ShiftID
+			params.ShiftIsCA=1
+			runClassMethod("Nur.SHIFT.Service.ShiftController","MagicHeadSave",{data:JSON.stringify(params)},function(rtn){
+				if(rtn == 0) {
+					$.messager.popover({ msg: $g('签名成功'), type: 'success', timeout: 1000 });
+					$HUI.dialog("#modalSign").close()
+					initLoad()
+				}
+			},'json',false)
+			return false;
+		}
+		
+		//班次签名模式
+		if(GLOBAL.bookGenral.SignType==1){
+		    var row = $("#shiftBookArea").datagrid("getSelected");
+			if (!row) {
+				$.messager.alert($g("提示"),$g("请选择一条交班班次记录！"));
+				return false;
+			}
+			
+			var $this=$(row.ShiftName)
+			 var ShiftTimeID=row.ShiftTimeID
+			 var params={
+					ID:ShiftTimeID,
+			        UserID:CAUserID,
+			        IsCaSign:1
+			      }
+			//交班护士签名
+		    if(signNurseType==1){
+				params.SignFilds="ShiftSign"
+				params.ShiftSign=CAUserID
+		    }
+		    //接班护士签名
+		    if(signNurseType==2){
+			params.SignFilds="ShiftTakeSign"
+			params.ShiftTakeSign=CAUserID
+		    }
+			runClassMethod("Nur.SHIFT.Service.ShiftController","ShiftMagicSave",{data:JSON.stringify(params)},function(rtn){
+				if(rtn == 0) {
+					$.messager.popover({ msg: $g('交班签名成功'), type: 'success', timeout: 1000 });
+					$HUI.dialog("#modalSign").close()
+					initLoad()
+				} 
+				
+			},'json',false);
+		}else{
+			var rows = $("#shiftBookDetail").datagrid("getSelections");
+			var ids=[]	
+			for(var i=0;i<rows.length;i++){
+				ids.push(rows[i].ID)
+			}
+			params.ids=ids.join(",")
+			params.NurseID=CAUserID
+			if(signUserType==1){
+				params.FildName="ShiftSign"
+				
+		    }else if(signUserType==2){
+			    params.FildName="ShiftTakeSign"
+			}
+			runClassMethod("Nur.SHIFT.Service.ShiftController","ShiftPatientCASignSave",{data:JSON.stringify(params)},function(rtn){
+				if(rtn == 0) {
+					$.messager.popover({ msg: $g('交班签名成功'), type: 'success', timeout: 1000 });
+					$HUI.dialog("#modalSign").close()
+					initLoad()
+				} 
+				
+			},'json',false);
+		}
+	    
+		
+	},'json',false);
+	
+
+	
+
+ Logon();
+}
+
+function Logon(){}
+
+
+
+function signAndLogon(signNurseType){
+ var logonType = "";// UKEY|PHONE|FACE|SOUND|"" 空时弹出配置签名方式，其它弹出固定方
+ var singleLogon = 0; //0-弹出多页签签名，1-单种签名方式
+ var forceOpen = 1; //1-强制每次都弹出签名窗口
+ debugger;
+ 
+ //撤销签名
+var row = $("#shiftBookArea").datagrid("getSelected");
+if (!row) {
+	$.messager.alert($g("提示"),$g("请选择一条交班班次记录！"));
+	return false;
+}
+var innerCallBack = function (rtn) {
+        if (!rtn.IsSucc) {
+            window.CAVarCert = "";
+            window.CAContainerName = "";
+            window.CAUserCertCode = "";
+            alert("证书未登录,请重新登录证书!");
+            return;
+        }
+        else {
+	        if (!!rtn.ca_key) {
+		        var varCertCode = rtn.ca_key.GetUniqueID(rtn.varCert,rtn.ContainerName);
+	        } else {
+            	var varCertCode = GetUniqueID(rtn.varCert,rtn.ContainerName);
+	        }
+            var currentUserCode = tkMakeServerCall("NurMp.CA.DHCNurSignVerify", "GetUsrCodeByKey", varCertCode);
+            if (!!currentUserCode && currentUserCode.toLowerCase() != userCode.toLowerCase()) {//当uk绑定的工号和签名框里输入的工号不一致时。
+                window.CAVarCert = "";
+                window.CAContainerName = "";
+                window.CAUserCertCode = "";
+                alert("证书未登录,请重新登录证书!");
+                return;
+            }
+            /*
+            window.CAVarCert = rtn.varCert;
+            window.CAContainerName = rtn.ContainerName;
+            window.CAUserCertCode = rtn.CAUserCertCode;
+            window.CARtn = rtn;*/
+            SignLogon(rtn,signNurseType); // 写后面的业务代码
+        }
+        
+    }
+ var userCode = session['LOGON.USERCODE']
+ dhcsys_getcacert({ modelCode: "NurShift", callback: innerCallBack, SignUserCode: userCode }, undefined, undefined, undefined);	
+ /*
+ dhcsys_getcacert({
+	 modelCode:"NurShift", //签名模块中代码
+	 callback:function(cartn){
+		 // 签名窗口关闭后,会进入这里
+		 if (cartn.IsSucc){
+			 if (cartn.ContainerName=="") {
+			 	// Loc Disable CA
+			 	Logon(); //系统不用签名
+			 }else{
+				var isObject = ("object"== typeof(cartn))
+				var isCAReLogon = cartn.IsCAReLogon
+			 	if ("object"== typeof cartn && cartn.IsCAReLogon){
+			 		SignLogon(cartn,id); // 写后面的业务代码
+			 	}
+		 	}
+		 }else {
+		 	alert("签名失败！");
+		 	return false;
+		 	}
+		 }
+	 //isHeaderMenuOpen:true, //是否在头菜单打开签名窗口. 默认 true
+	 //SignUserCode:txtUser, //期望签名人 HIS 工号，会校验证书用户与 HIS 工号. 默认空
+	 //signUserType:"", // 默认空，表示签名用户与当前 HIS 用户一致。ALL 时不验证用户与证书
+	 //notLoadCAJs:1, //登录成功后，不向头菜单加载 CA
+	 //loc:deptDesc, //科室 id 或描述，默认当前登录科室
+	 //groupDesc:groupDesc, //安全组描述，默认当前登录安全组
+	 //caInSelfWindow:1 //用户登录与切换科室功能， 业务组不用
+	 }, logonType, singleLogon, forceOpen);*/
+}
+
+</script>

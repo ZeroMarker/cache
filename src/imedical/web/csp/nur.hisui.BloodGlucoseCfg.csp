@@ -1,0 +1,717 @@
+<!-- 血糖配置 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+ Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set IsStandardEdition = $GET(%request.Data("IsStandardEdition", 1))
+</script>
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style type='text/css' class="eduExeStyle">
+body{background: white;}
+table{border-collapse: collapse;}
+hr.solid{border-top: 0;border-bottom: 1px solid #ccc;}
+div.hGap{height: 10px;}
+div.vGap{width: 10px;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+#ctcConfig{padding-left: 10px;padding-right: 5px;padding-top: 10px;}
+#ctcConfig>div{width: calc(33.33% - 2px);padding-right: 8px;}
+#msgConfig{padding-left: 10px;padding-top: 10px;}
+#msgConfig>div:first-of-type{width: 25%;}
+#msgConfig>div{width: 75%;}
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;}
+.datagrid-toolbar{width: 100%;}
+.panel.datagrid>.panel-body.panel-body-noheader{border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+.transparentHeader{background: transparent;border-bottom: 0;border-radius: 0;border: 0;border-top: 1px solid #cccccc;}
+.relateDiagnose .transparentHeader{border-top: 0;}
+.transparentHeader>.panel-title{color: #000;}
+.transparentHeader+.panel-body{border: 0;}
+.evaluate .panel-body.panel-body-noheader, .grade .panel-body.panel-body-noheader{border-top: 0;}
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+/*.combo-panel.panel-body.panel-body-noheader{height: auto!important;max-height: 200px;}*/
+.evaluate .datagrid-toolbar>table{width: 100%;}
+.evaluate .datagrid-toolbar>table tr{width: 100%;float: left;}
+.evaluate .datagrid-toolbar>table tr>td{float: left;}
+.evaluate .datagrid-toolbar>table tr>td:nth-of-type(3){float: right;}
+.evaluate .datagrid-toolbar>table tr>td:nth-of-type(3) .helpInfo>.helpFlag>span.icon{margin-top: 6px;margin-right: 10px;}
+.evaluate .datagrid-toolbar>table tr>td:nth-of-type(3) .helpInfo>.helpDetail{right: 3px;top: 30px;}
+.evaluate .datagrid-toolbar>table tr>td:nth-of-type(3) .helpInfo>.helpDetail:after{right: 12px;}
+.relateDiagnose .datagrid-toolbar>table{width: 100%;}
+.relateDiagnose .datagrid-toolbar>table tr{width: 100%;float: left;}
+.relateDiagnose .datagrid-toolbar>table tr>td{float: left;}
+.relateDiagnose .datagrid-toolbar>table tr>td:nth-of-type(3){float: right;}
+.relateDiagnose .datagrid-toolbar>table tr>td:nth-of-type(3) .helpInfo>.helpFlag>span.icon{margin-top: 6px;margin-right: 10px;}
+.relateDiagnose .datagrid-toolbar>table tr>td:nth-of-type(3) .helpInfo>.helpDetail{right: 3px;top: 30px;}
+.relateDiagnose .datagrid-toolbar>table tr>td:nth-of-type(3) .helpInfo>.helpDetail:after{right: 12px;}
+.relateDiagnose .datagrid-toolbar>table tr>td:nth-of-type(3)>span{margin-top: 4px;display: inline-block;}
+.relateDiagnose .panel-body-noheader{border: 0;}
+.helpInfo{position: relative;}
+.helpInfo>.helpFlag{font-size: 0;width: 58px;height: 18px;}
+.helpInfo>.helpFlag>span.icon{display: inline-block;width: 18px;}
+.helpInfo>.helpDetail{position: absolute;border-radius: 4px;z-index: 10;overflow: visible;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);background: #fff;border: 1px solid #cccccc;padding: 10px;width: 300px;right: -12px;top: 25px;display: none;}
+.helpInfo:hover>.helpDetail{display: block;}
+.helpInfo>.helpDetail:after {position: absolute;content: "";width: 10px;height: 10px;border-left: 1px solid #cccccc;border-top: 1px solid #cccccc;transform: rotate(45deg);background: white;top: -6px;right: 15px;}
+.helpInfo>.helpDetail>p {line-height: 20px;overflow: hidden;display: flex;text-align: left;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+.helpInfo>.helpDetail>p>i.dot {margin-top: 5px;}
+.helpInfo>.helpDetail>p>span{text-align: left;flex: 1;}
+.helpInfo>.helpDetail.top {top: -70px;}
+.helpInfo>.helpDetail.top:after {transform: rotate(-135deg);bottom: -6px;top: auto;}
+.commonHelp{position: absolute;border-radius: 4px;z-index: 10;overflow: visible;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);background: #fff;border: 1px solid #cccccc;padding: 10px;width: 300px;right: -12px;top: 25px;display: none;}
+.commonHelp:after {position: absolute;content: "";width: 10px;height: 10px;border-left: 1px solid #cccccc;border-top: 1px solid #cccccc;transform: rotate(45deg);background: white;top: -6px;right: 15px;}
+.helpDiagnose:after {left: 15px;}
+.commonHelp>p {line-height: 20px;overflow: hidden;display: flex;}
+.commonHelp>p>i.dot {margin-top: 5px;}
+.commonHelp>p>span{text-align: left;flex: 1;}
+.icon{padding-left: 0;}
+span.icon.icon-help{width: 16px;}
+#eduSetTab .tabs-panels>.panel>.panel-body.panel-body-noheader.panel-body-noborder{overflow: hidden;}
+.minicolors-theme-bootstrap .minicolors-swatch {top: 2px!important;left: 2px!important;width: 28px!important;height: 28px!important;border: 0;}
+form table td, form table th {padding: 0;}
+form table tr {height: 40px;}
+#tbRbgd+div .datagrid-toolbar table{width: 100%;}
+.relateDiagnose .datagrid-toolbar table tr td:last-of-type,#tbRbgd+div .datagrid-toolbar table tr td:last-of-type{text-align: right;padding-right: 10px;}
+#nurseMeasure+span{margin-right: 10px;}
+</style>
+<!-- <script type="text/javascript" src="../scripts/nurse/hisui/jscolor.js"></script> -->
+
+<!-- <script src="https://www.jq22.com/jquery/1.11.1/jquery.min.js"></script> -->
+<!-- Bootstrap 3 -->
+<script src="../scripts_lib/bootstrap-3.3.5/css/bootstrap.min.css"></script>
+<script src="../scripts_lib/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<!-- MiniColors -->
+<script src="../scripts_lib/jQuery/jquery.minicolors.js"></script>
+<link rel="stylesheet" href="../scripts_lib/jQuery/jquery.minicolors.css"/>
+
+<script language="javascript">
+  var IsStandardEdition = "#(IsStandardEdition)#";
+  IsStandardEdition="Y"==IsStandardEdition?true:false;
+	var vitalSignList=[],vsDescObj={},vsCodeObj={};
+</script>
+</head>
+<body style="overflow: hidden;padding: 10px 10px 0;">
+	<div style="position: relative;padding-bottom: 10px;">
+		<table cellpadding="0">
+	    <tr>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>#(..Get("所属医院"))#
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+	    </tr>
+	  </table>
+	  <!-- <hr class="solid"> -->
+	</div>
+	<div id="eduSetTab" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true,selected:1">
+		<div title="#(..Get("血糖配置"))#" data-options="iconCls:'icon-set-paper'"></div>   
+		<div title="#(..Get("血糖预警相关配置"))#">
+			<div id="ctcConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;">
+				<div class="evaluate">
+					<div class="hisui-panel" title="血糖采集时间配置"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table id="bloodGlucose" class="hisui-datagrid"
+							data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+								iconCls: 'icon-add',
+								text:$g('新增'),
+								handler:addBGRow
+							},{
+								iconCls: 'icon-save',
+								text:$g('保存'),
+								handler:saveBGRow
+							},{
+								iconCls: 'icon-help'
+							}],
+							onDblClickRow:editBGRow
+						">
+							<thead>   
+								<tr>
+									<th data-options="field:'VSCode',width:80">#(..Get("体征项代码"))#</th>
+									<th data-options="field:'VSDesc',width:130,
+									editor:{
+										type:'combobox',
+										options:{
+											defaultFilter:6,
+											valueField:'value',
+											textField:'desc',
+											data:vitalSignList,
+											blurValidValue:true
+										}
+									}">#(..Get("体征项描述"))#</th>
+									<th data-options="field:'startTime',width:80,editor:{type:'timespinner'}">#(..Get("采集开始时间"))#</th>
+									<th data-options="field:'endTime',width:80,editor:{type:'timespinner'}">#(..Get("采集结束时间"))#</th>
+									<th data-options="field:'showTime',width:70,editor:{type:'icheckbox'},formatter:function(value,row){
+										return '1'==value?$g('是'):$g('否');
+									}">#(..Get("显示时间"))#</th>
+									<th data-options="field:'field',width:50,formatter:function(value,row){
+										return '<span class=\'l-btn-icon icon-no gradeBtn\' onclick=\'deleteBGRow('+row.id+')\'>&nbsp;</span>';
+									}">#(..Get("操作"))#</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>   
+						</table>
+					</div>
+				</div>
+				<div class="Rbgd">
+					<div class="hisui-panel" style="overflow:hidden;" id="commonSet" title="通用配置"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table id="tbRbgd" style="width: 100%;margin: 5px 0;">
+							<tr style="float: right;margin-right: 10px;">
+								<td>
+									<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="saveRbgdRow();">#(..Get("保存"))#</a>
+								</td>
+							</tr>
+						</table>
+						<!-- Related blood glucose doctor's order -->
+						<!-- title="关联测血糖医嘱" -->
+						<table id="rbgdTable" class="hisui-datagrid"
+							data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,headerCls:'transparentHeader',toolbar: [{
+								iconCls: 'icon-add',
+								text:$g('新增'),
+								handler:addRbgdRow
+							},{
+								iconCls: 'icon-help',
+								text:$g('关联测血糖医嘱'),
+							}],
+							onDblClickRow:editRbgdRow
+						">   
+							<thead>   
+								<tr>
+									<th data-options="field:'adviseCode',width:80">#(..Get("医嘱代码"))#</th>   
+									<th data-options="field:'adviseDesc',width:200,
+									editor:{
+										type:'combobox',
+										options:{
+											defaultFilter:6,
+											valueField:'id',
+											textField:'desc',
+											mode:'remote',
+											loader: docAdviceloader,
+											blurValidValue:true
+										}
+									}">#(..Get("医嘱名称"))#</th>
+									<th data-options="field:'field',width:50,formatter:function(value,row){
+										return '<span class=\'l-btn-icon icon-no gradeBtn\' onclick=\'deleteRbgdRow('+row.id+')\'>&nbsp;</span>';
+									}">#(..Get("操作"))#</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>   
+						</table>
+						<table>
+							<!-- <csp:if condition=IsStandardEdition'="Y">
+								<tr style="height: 40px;">
+									<td style="padding: 0 10px;">#(..Get("会诊申请时效"))#(#(..Get("小时"))#)</td>
+									<td class="r-label">
+										<input style="width:150px;" id="applyHour" class="hisui-numberbox textbox" data-options="max:200,min:1,isKeyupChange:true">
+									</td>
+									<td class="r-label">
+										<div class="helpInfo">
+											<a href="javascript:void(0);" class="helpFlag">
+												<span class="icon icon-help">&nbsp;</span>
+											</a>
+											<div class="helpDetail top">
+												<p>#(..Get("说明："))#</p>
+												<p>#(..Get("定义血糖异常时，会诊申请提出的时效。"))#</p>
+											</div>
+										</div>
+									</td>
+								</tr>
+							</csp:if> -->
+							<tr style="height: 40px;">
+								<td style="padding: 0 10px;">#(..Get("默认血糖采集时间列"))#</td>
+								<td class="r-label">
+									<select id="timeShow" class="hisui-combobox" name="state" style="width:150px;line-height: 30px;" data-options="enterNullValueClear:false,blurValidValue:true,panelHeight:'auto'">
+										<option value="N">#(..Get("否"))#</option>
+										<option value="Y">#(..Get("是"))#</option>
+									</select>
+								</td>
+								<td class="r-label">
+									<div class="helpInfo">
+										<a href="javascript:void(0);" class="helpFlag">
+											<span class="icon icon-help">&nbsp;</span>
+										</a>
+										<div class="helpDetail top">
+											<p>#(..Get("说明："))#</p>
+											<p>#(..Get("多人血糖、单人血糖录入页面是否默认显示时间"))#</p>
+										</div>
+									</div>
+								</td>
+							</tr>
+							<tr style="height: 40px;">
+								<td style="padding: 0 10px;">#(..Get("默认血糖备注列"))#</td>
+								<td class="r-label">
+									<select id="remarkShow" class="hisui-combobox" name="state" style="width:150px;line-height: 30px;" data-options="enterNullValueClear:false,blurValidValue:true,panelHeight:'auto'">
+										<option value="N">#(..Get("否"))#</option>
+										<option value="Y">#(..Get("是"))#</option>
+									</select>
+								</td>
+								<td class="r-label">
+									<div class="helpInfo">
+										<a href="javascript:void(0);" class="helpFlag">
+											<span class="icon icon-help">&nbsp;</span>
+										</a>
+										<div class="helpDetail top">
+											<p>#(..Get("说明："))#</p>
+											<p>#(..Get("多人血糖、单人血糖录入页面，默认血糖列后是否显示备注，可进行自定义编辑。"))#</p>
+										</div>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<div class="grade">
+					<div class="hisui-panel" id="templateSet" title="降糖方案配置" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+						<table id="downGluTable" class="hisui-datagrid"
+							data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,headerCls:'transparentHeader',toolbar: [{
+								iconCls: 'icon-add',
+								text:$g('新增'),
+								handler:addDgRow
+							},{
+								iconCls: 'icon-save',
+								text:$g('保存'),
+								handler:saveDgRow
+							}],
+							onDblClickRow:editDgRow
+						">   
+							<thead>   
+								<tr>
+									<th data-options="field:'adviseCode',width:80">#(..Get("医嘱代码"))#</th>   
+									<th data-options="field:'adviseDesc',width:200,
+									editor:{
+										type:'combobox',
+										options:{
+											defaultFilter:6,
+											valueField:'id',
+											textField:'desc',
+											mode:'remote',
+											loader: docAdviceloader,
+											blurValidValue:true
+										}
+									}">#(..Get("医嘱名称"))#</th>
+									<th data-options="field:'field',width:50,formatter:function(value,row){
+										return '<span class=\'l-btn-icon icon-no gradeBtn\' onclick=\'deleteDgRow('+row.id+')\'>&nbsp;</span>';
+									}">#(..Get("操作"))#</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>   
+						</table>
+					</div>
+				</div>
+			</div>
+			<csp:if condition=IsStandardEdition'="Y">
+				<div style="padding: 10px 10px 0;">
+					<table id="bloodWarn" class="hisui-datagrid" title="血糖预警配置"
+						data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+							iconCls: 'icon-add',
+							text:$g('新增'),
+							handler:addBWRow
+						},{
+							iconCls: 'icon-write-order',
+							text:$g('修改'),
+							handler:editBWRow
+						},{
+							iconCls: 'icon-cancel',
+							text:$g('删除'),
+							handler:deleteBWRow
+						}],
+						onClickRow:selectBWRow,
+						onDblClickRow:editBWRow
+					">
+						<thead>   
+							<tr>
+								<th data-options="field:'code',width:80">#(..Get("变量code"))#</th>
+								<th data-options="field:'name',width:130">#(..Get("变量名称"))#</th>
+								<th data-options="field:'type',width:60,formatter:function(value,row){
+									return 'W'==value?$g('警示'):$g('高危');
+								}">#(..Get("变量属性"))#</th>
+								<th data-options="field:'variableDesc',width:130">#(..Get("变量描述"))#</th>
+								<th data-options="field:'relatedBGItems',width:280,formatter:function(value,row){
+									value=value.split(',');
+									var str=vsDescObj[value[0]]||'';
+									for(var i=1;i<value.length;i++){
+										str+=','+(vsDescObj[value[i]]||'')
+									}
+									return str;
+								}">#(..Get("关联血糖项目"))#</th>
+								<th data-options="field:'condition',width:130">#(..Get("边界条件"))#</th>
+								<th data-options="field:'color',width:80,formatter:function(value,row){
+									return '<span style=\'background:'+value+';display:inline-block;width:30px;height:30px;vertical-align: middle;\' ></span>';
+								}">#(..Get("颜色"))#</th>
+								<th data-options="field:'nurseMeasureDesc',width:180">#(..Get("护士处理措施"))#</th>
+								<th data-options="field:'docMeasureDesc',width:180">#(..Get("医生处理措施"))#</th>
+								<!-- <th data-options="field:'criticalFlag',width:74,formatter:function(value,row){
+									return 'Y'==value?'√':'';
+								}">#(..Get("是否危急值"))#</th> -->
+								<!-- <th data-options="field:'criticalReply',width:180">#(..Get("危急值处理建议"))#</th> -->
+								<th data-options="field:'retestFlag',width:74,formatter:function(value,row){
+									return 'Y'==value?'√':'';
+								}">#(..Get("是否必须复测"))#</th>
+								<th data-options="field:'retestTiming',width:74,formatter:function(value,row){
+									return value?(value+$g('分钟')):'';
+								}">#(..Get("复测时效"))#</th>
+								<th data-options="field:'consultFlag',width:74,formatter:function(value,row){
+									return 'Y'==value?'√':'';
+								}">#(..Get("是否必须会诊"))#</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>   
+					</table>
+				</div>
+			</csp:if>
+		</div>  
+		<csp:if condition=IsStandardEdition'="Y">
+			<div title="#(..Get("消息通知相关配置"))#">
+				<div id="msgConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;">
+					<div class="relateDiagnose">
+						<div class="hisui-panel" title="通用配置"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+							<table id="diagnoseTable" class="hisui-datagrid"
+								data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,headerCls:'transparentHeader',toolbar: [{
+									iconCls: 'icon-add',
+									text:$g('新增'),
+									handler:addDiagRow
+								},{
+									iconCls: 'icon-save',
+									text:$g('保存'),
+									handler:saveDiagRow
+								},{
+									iconCls: 'icon-help',
+									text:$g('关联糖尿病诊断'),
+								}],
+								onDblClickRow:editDiagRow
+							">   
+								<thead>   
+									<tr>
+										<th data-options="field:'diagnoseCode',width:80">#(..Get("诊断代码"))#</th>   
+										<th data-options="field:'diagnoseDesc',width:200,
+										editor:{
+											type:'combobox',
+											options:{
+												defaultFilter:6,
+												valueField:'id',
+												textField:'desc',
+												mode:'remote',
+												loader: diagnoseloader,
+												blurValidValue:true
+											}
+										}">#(..Get("诊断名称"))#</th>
+										<th data-options="field:'field',width:50,formatter:function(value,row){
+											return '<span class=\'l-btn-icon icon-no gradeBtn\' onclick=\'deleteDiagRow('+row.id+')\'>&nbsp;</span>';
+										}">#(..Get("操作"))#</th>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>   
+							</table>
+						</div>
+					</div>
+					<div style="padding: 0 10px;">
+						<table id="msgNotify" class="hisui-datagrid" title="消息通知配置"
+							data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+								iconCls: 'icon-add',
+								text:$g('新增'),
+								handler:addMNRow
+							},{
+								iconCls: 'icon-write-order',
+								text:$g('修改'),
+								handler:editMNRow
+							},{
+								iconCls: 'icon-cancel',
+								text:$g('删除'),
+								handler:deleteMNRow
+							}],
+							onDblClickRow:editMNRow
+							">
+							<!-- onClickRow:selectMNRow, -->
+							<thead>   
+								<tr>
+									<th data-options="field:'code',width:80">#(..Get("变量code"))#</th>
+									<th data-options="field:'variableDesc',width:130">#(..Get("变量描述"))#</th>
+									<th data-options="field:'relatedBGItems',width:180,formatter:function(value,row){
+										value=value.split(',');
+										var str=vsDescObj[value[0]]||'';
+										for(var i=1;i<value.length;i++){
+											str+=','+(vsDescObj[value[i]]||'')
+										}
+										return str;
+									}">#(..Get("关联血糖项目"))#</th>
+									<th data-options="field:'condition',width:130">#(..Get("边界条件"))#</th>
+									<th data-options="field:'triggerTimes',width:104">#(..Get("连续触发次数"))#</th>
+									<th data-options="field:'ruleLocs',width:120,formatter:function(value,row){return getWardsDesc(value)||'全院';}">适用范围</th>
+									<th data-options="field:'ruleInvalidLocs',width:120,formatter:function(value,row){return getWardsDesc(value);}">不适用范围</th>
+									<th data-options="field:'forPeople',width:90,formatter:function(value,row){
+										if(1==value) return $g('糖尿病患者');
+										if(2==value) return $g('非糖尿病患者');
+										return $g('全部患者');
+									}">#(..Get("适用人群"))#</th>
+									<th data-options="field:'messageCode',width:80">#(..Get("消息代码"))#</th>
+									<th data-options="field:'measures',width:180">#(..Get("危急值处理建议"))#</th>
+								</tr>
+							</thead>
+							<tbody>
+							</tbody>   
+						</table>
+					</div>
+				</div>
+			</div>
+		</csp:if>
+	</div>
+	
+  <!-- 模态框 -->
+  <div id="bloodWarnModal" class="hisui-dialog" title="血糖预警设置" style="top: 10px;left: 300px;padding: 5px 10px 0;width: 600px;" 
+	data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+			text:$g('保存'),
+			handler:saveBWRow
+		},{
+			text:$g('取消'),
+			handler:function(){$HUI.dialog('#bloodWarnModal').close();}
+		}]"> 
+		<form id="bwForm">
+			<table cellpadding="0" class="modalTable" style="width: 100%;">
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("变量code"))#
+					</td>
+					<td>
+						<input id="id" type="hidden">
+						<input id="code" class="hisui-validatebox textbox" data-options="required:true" placeholder="请输入变量code">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("变量名称"))#
+					</td>
+					<td>
+						<input id="name" class="hisui-validatebox textbox" data-options="required:true" placeholder="请输入变量名称">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("变量属性"))#
+					</td>
+					<td>
+						<select id="type" class="hisui-combobox" name="state" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true,prompt:$g('请选择变量属性'),panelHeight:'auto'">
+							<option value="W">#(..Get("警示"))#</option>
+							<option value="R">#(..Get("高危"))#</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" style="vertical-align: top;line-height: 40px;">
+						<span class="labelStar" style="vertical-align: middle;">*</span>#(..Get("变量描述"))#
+					</td>
+					<td style="font-size: 0;">
+					  <textarea id="variableDesc" value="" cols="30" rows="4" data-options="required:true" style="width: 100%;border-radius: 2px;resize: none;box-sizing: border-box;padding: 5px;overflow: auto;margin: 5px 0;"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("关联血糖项目"))#
+					</td>
+					<td>
+						<select id="relatedBGItems" class="hisui-combobox" name="state" style="width:479px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true" placeholder="请选择关联血糖项目"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>边界条件
+					</td>
+					<td>
+						<input id="condition" style="width:472px;" class="hisui-validatebox textbox" data-options="required:true" placeholder="多个条件以符合||拼接，关系为or；以符号&&拼接，关系为and">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("颜色"))#
+					</td>
+					<td>
+						<!-- <input id="color" class="hisui-validatebox textbox jscolor" data-options="required:true" data-jscolor="{}"> -->
+						<input type="text" id="color" class="form-control" style="height: 31px;">
+						<!-- type="color" -->
+						<!-- <a href="javascript:void(0);" id="handFilling" onclick="handFillingColor();">#(..Get("手填"))#</a> -->
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" style="vertical-align: top;line-height: 40px;">
+						#(..Get("护士处理措施"))#
+					</td>
+					<td style="font-size: 0;">
+						<input class="hisui-combobox textbox" id="nurseMeasure" style="width:403px;" data-options="defaultFilter:6, valueField:'id', textField:'bdDesc',blurValidValue:true"/>
+						<input class="hisui-checkbox" type="checkbox" label="必填项" id="nurMeasureRequire">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" style="vertical-align: top;line-height: 40px;">
+						#(..Get("医生处理措施"))#
+					</td>
+					<td style="font-size: 0;">
+						<input class="hisui-combobox textbox" id="docMeasure" style="width:479px;" data-options="defaultFilter:6, valueField:'id', textField:'bdDesc',blurValidValue:true"/>
+					</td>
+				</tr>
+				<!-- <tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("是否危急值"))#
+					</td>
+					<td>
+						<select id="criticalFlag" class="hisui-combobox" name="state" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true,onChange:toggleCritical">
+							<option value="Y">#(..Get("是"))#</option>
+							<option value="N">#(..Get("否"))#</option>
+						</select>
+						<input style="width:306px;" id="criticalReply" class="hisui-validatebox textbox" placeholder="请输入危急值回复信息">
+					</td>
+				</tr> -->
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("是否必须复测"))#
+					</td>
+					<td style="font-size: 0;">
+						<select id="retestFlag" class="hisui-combobox" name="state" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true,onChange:toggleRetest,panelHeight:'auto'">
+							<option value="Y">#(..Get("是"))#</option>
+							<option value="N">#(..Get("否"))#</option>
+						</select>
+						<input style="width:319px;margin-left: 5px;" id="retestTiming" class="hisui-numberbox textbox" data-options="max:200,min:1,isKeyupChange:true" placeholder="请输入复测时效，单位：分钟">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("是否必须会诊"))#
+					</td>
+					<td>
+						<select id="consultFlag" class="hisui-combobox" name="state" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true,panelHeight:'auto'">
+							<option value="Y">#(..Get("是"))#</option>
+							<option value="N">#(..Get("否"))#</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+  <!-- 消息通知配置模态框 -->
+  <div id="msgNotifyModal" class="hisui-dialog" title="消息通知配置" style="top: 10px;left: 300px;padding: 5px 10px 0;width: 600px;" 
+	data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+			text:$g('保存'),
+			handler:saveMNRow
+		},{
+			text:$g('取消'),
+			handler:function(){$HUI.dialog('#msgNotifyModal').close();}
+		}]"> 
+		<form id="mnForm">
+			<table cellpadding="0" class="modalTable" style="width: 100%;">
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("变量code"))#
+					</td>
+					<td>
+						<input id="mnId" type="hidden">
+						<input id="mnCode" class="hisui-validatebox textbox" data-options="required:true" placeholder="请输入变量code">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" style="vertical-align: top;line-height: 40px;">
+						<span class="labelStar" style="vertical-align: middle;">*</span>#(..Get("变量描述"))#
+					</td>
+					<td style="font-size: 0;">
+					  <textarea id="mnVariableDesc" value="" cols="30" rows="4" data-options="required:true" style="width: 100%;border-radius: 2px;resize: none;box-sizing: border-box;padding: 5px;overflow: auto;margin: 5px 0;"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("关联血糖项目"))#
+					</td>
+					<td>
+						<select id="mnRelatedBGItems" class="hisui-combobox" name="state" style="width:479px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true" placeholder="请选择关联血糖项目"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>边界条件
+					</td>
+					<td>
+						<input id="mnCondition" style="width:472px;" class="hisui-validatebox textbox" data-options="required:true" placeholder="多个条件以符合||拼接，关系为or；以符号&&拼接，关系为and">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("连续触发次数"))#
+					</td>
+					<td>
+						<input id="triggerTimes" class="hisui-numberbox textbox" data-options="required:true,max:100,min:1" placeholder="请输入连续触发次数">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						适用范围
+					</td>
+					<td>
+						<select id="ruleLocs" class="locs" style="width:300px;"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						不适用范围
+					</td>
+					<td>
+						<select id="ruleInvalidLocs" class="locs" style="width:300px;"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						#(..Get("适用人群"))#
+					</td>
+					<td>
+						<select id="forPeople" class="hisui-combobox" name="state" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true,panelHeight:'auto'">
+							<option value="1">#(..Get("糖尿病患者"))#</option>
+							<option value="2">#(..Get("非糖尿病患者"))#</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("消息代码"))#
+					</td>
+					<td>
+						<input id="messageCode" class="hisui-validatebox textbox" data-options="required:true" placeholder="请输入消息代码">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>#(..Get("回复信息"))#
+					</td>
+					<td>
+						<input id="measures" class="hisui-validatebox textbox" data-options="required:true" placeholder="请输入危急值回复信息">
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+  <div class="helpDocOrder commonHelp">
+  	<p>#(..Get("说明："))#</p>
+  	<p>#(..Get("定义病区通过血糖仪采集血糖的医嘱，非检验科测定血糖医嘱。"))#</p>
+  </div>
+  <div class="helpDiagnose commonHelp">
+  	<p>#(..Get("说明："))#</p>
+  	<p>#(..Get("根据关联的糖尿病诊断，确定该患者为糖尿病人。"))#</p>
+  </div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.BloodGlucoseCfg.js"></script>
+</body>
+</html>

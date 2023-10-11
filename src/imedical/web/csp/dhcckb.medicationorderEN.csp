@@ -1,0 +1,169 @@
+<!--dhcckb.medicationorder.csp  药嘱单 csp //-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCCKB/>
+	<link href="../scripts/dhcnewpro/dhcckb/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcckb/css/basedemo.css" rel="stylesheet">
+
+	<link href="../scripts/dhcnewpro/dhcckb/css/pdss_bs.css" rel="stylesheet">
+	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/pdss_bs.js"></script>
+	
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/medicationorderEN.js"></script>
+	<script Language="Javascript">
+	var medOrderID="#(%request.Get("medOrderID"))#" //medOrderID
+	var hideFlag="#(%request.Get("hideFlag"))#" //hideFlag
+</script>
+
+</head>
+ <style>
+	.icon{width:20px;height:20px;margin-right:10px;float:right;}
+	.ckb-view-body-lists{background:#FFF;}    
+	table tr{
+		height:40px;
+	}
+</style>
+<body class="background-warp">
+	<div class="container">
+<!-- 		<div style="text-align:center;">
+		<span style="color:#378ec4;font-weight:bold">药嘱单录入</span>
+		</div> -->
+		<div class="pat-base" style ='height:200px;top:0px'>
+			<!-- 病人基本信息--><div class="table_title"  style="width:200px;">Basic patient information</div>
+			<div style="border-bottom: 1px solid #40a2de;"></div>
+			<table>
+			<tr>
+				<td><!--患者姓名--><label>PatName</label></td>
+				<td><input id="PatName" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--登记号--><label class="left-2-font">PatNo</label></td>
+				<td><input id="PatNo" class="hisui-validatebox" style="width:143px;"/></td>				
+				<td><!--患者性别--><label class="left-2-font">Sex</label></td>
+				<td><input id="PatSex" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--患者年龄--><label class="left-2-font">Age</label></td>
+				<td><input id="PatAge" class="hisui-validatebox" style="width:143px;"/></td>
+			</tr>
+			<tr>
+				<td><!--就诊日期--><label class="left-20">AdmTime</label></td>
+				<td><input id="AdmDate" class="hisui-datebox" style="width:150px;"/></td>
+				<td><!--就诊科室--><label class="left-2-font">AdmLoc</label></td>
+				<td><input id="AdmLoc" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--系统编号--><label class="left-2-font">SysNo</label></td>
+				<td><input id="Number" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--处方号--><label class="left-2-font">PrescNo</label></td>
+				<td><input id="PrescriptionNumber" class="hisui-validatebox" style="width:143px;"/></td>
+			</tr>
+			<tr>			
+				<td><!--医生--><label class="left-20"><span style="">Doctor</span></label></td>
+				<td><input id="Doctor" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--中医诊断--><label class="left-2-font">Chinese Diagnosis</label></td>
+				<td><input id="Diagnosis" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--身份证号--><label class="left-2-font">ID card</label></td>
+				<td><input id="IDCard" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--出生日期--><label class="left-2-font">Birthday</label></td>
+				<td><input id="PatBDay" class="hisui-datebox" style="width:150px;"/></td>
+
+			</tr>
+			<tr>
+				<td><!--备注--><label class="left-20">Remark</label></td>
+				<td><input id="Remarks" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--住址--><label class="left-2-font">Address</label></td>
+				<td><input id="Adress" class="hisui-validatebox" style="width:143px;"/></td>
+				<td><!--手机--><label class="left-2-font">Phone number</label></td>
+				<td><input id="Phone" class="hisui-validatebox" style="width:143px;"/></td>
+				<td></td>
+				<td></td>
+			</tr>
+			</table>
+		</div>
+		<div class="pat-adm" style ='top:205px'>
+			<!--药嘱单内容--><div class="table_title"  style="width:200px;">Contents of Drug Order</div>
+			<div style="border-bottom: 1px solid #40a2de;"></div>
+			<div class="pat-base-area">
+				<table cellpadding="5">
+				    <tbody><tr>
+				        <td>
+				            <!--方剂类型--><label class="left-20">Type of prescription</label>
+				        </td>
+				        <td id="presclist">
+				           <!--一般方剂--> <input class="hisui-radio" type="radio" label="General formula" name="prescType" value="generalPrescEN" id="generalPresc" data-options="required:true">
+				           <!--解表剂--> <input class="hisui-radio" type="radio" label="Exterior-releasing formula" name="prescType" value="antidotePrescEN" id="antidotePresc" data-options="required:true">
+				           <!--补益剂--><input class="hisui-radio" type="radio" label="Tonifying and replenishing formula" name="prescType" value="tonicPrescEN" id="antidotePresc" data-options="required:true">
+				        </td>				       
+				    </tr></tbody>
+				</table>				
+			</div>
+			<table>
+			<tr>
+				<td><!--煎煮器皿--><label class="left-20">Container for decoction</label></td>
+				<td><input id="DecoctingVessel" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--煎煮次数--><label class="left-40">Decoction frequency</label></td>
+				<td><input id="DecoctingTimes" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--特殊煎法--><label class="left-40">Special decoction methods</label></td>
+				<td><input id="DecoctingMethod" class="hisui-validatebox" style="width:250px;"/></td>
+			</tr>
+			<tr>
+				<td><!--储存方法--><label class="left-20">Storage methods</label></td>
+				<td><input id="StorageMethod" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--服药温度--><label class="left-40">Taking temperature</label></td>
+				<td><input id="MedicationTemperature" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--服药时间--><label class="left-40">Taking time</label></td>
+				<td><input id="MedicationTime" class="hisui-validatebox" style="width:250px;"/></td>
+			</tr>		
+			<tr>
+				<td><!--服药次数--><label class="left-20">Taking frequency</label></td>
+				<td><input id="MedicationTimes" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--服药剂量--><label class="left-40">Dosage</label></td>
+				<td><input id="Dosage" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--服药食忌--><label class="left-40">Dietary contraindication during medication</label></td>
+				<td><input id="foodTaboo" class="hisui-validatebox" style="width:250px;"/></td>
+			</tr>
+			<tr>		
+				<td><!--药后护理--><label class="left-20">After-medicine care methods</label></td>
+				<td><input id="PostDrugCare" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--特殊服法--><label class="left-40">Special taking method</label></td>
+				<td><input id="SpecialObey" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--用药告知--><label class="left-40">Medication notification</label></td>
+				<td><input id="MedicationNotification" class="hisui-validatebox" style="width:243px;"/></td>
+			</tr>
+			<tr>
+				<td><!--浸泡时间--><label class="left-20">Soaking time</label></td>
+				<td><input id="SoakingTime" class="hisui-validatebox" style="width:250px;"/></td>
+				<td><!--煎煮温度--><label class="left-40">Decoction temperature</label></td>
+				<td><input id="DecoctingTemperature" class="hisui-validatebox" style="width:250px;"/></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><!--第一煎--><label class="left-12">【First decoction】</label></td>
+				<td><!--浸泡水量--><label class="left-40">Decoction water consumption</label></td>
+				<td><input id="SoakingWater" class="hisui-combogrid" style="width:250px;"/></td>
+				<td><!--煎煮时间--><label class="left-40">Decoction time</label></td>
+				<td><input id="DecoctionTime" class="hisui-validatebox" style="width:250px;"/></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><!--第二煎--><label class="left-12">【Second decoction】</label></td>
+				<td><!--浸泡水量--><label class="left-40">Decoction water consumption</label></td>
+				<td><input id="SoakingWater2" class="hisui-combogrid" style="width:250px;"/></td>
+				<td><!--煎煮时间--><label class="left-40">Decoction time</label></td>
+				<td><input id="DecoctionTime2" class="hisui-validatebox" style="width:250px;"/></td>
+				<td></td>
+			</tr>
+			</table>				
+		
+		</div>
+	</div>
+	<!--底部按钮-->
+	<div id="footer" style="opacity:0.9;border:1px solid #E5E5E5;background-color:#F9F9F9;width:100%;height:30px;position:fixed;left:0px;bottom:0px;z-index:2;text-align:center">
+			<!--保存--><a href="#" id="btnSearch" class="hisui-linkbutton" onclick="SaveData()" data-options="iconCls:'',stopAllEventOnDisabled:true">Save</a>
+			<!--打印--><a href="#" id="btnPrint" style="margin-left:15px;" class="hisui-linkbutton" onclick="PrintData()" data-options="iconCls:'',stopAllEventOnDisabled:true">Print</a>
+  			<!--药嘱单查询--><a href="#" id="btnList" style="margin-left:15px;" class="hisui-linkbutton" onclick="ListData()" data-options="iconCls:'',stopAllEventOnDisabled:true">QueryDrugOrder</a>
+    </div>
+</body>
+</html>

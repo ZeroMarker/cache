@@ -1,0 +1,106 @@
+<!-- dhcem.wirtebedshift.csp  交班日志页面-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcem/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcem/css/wirtebedshift.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<server>
+	s PatientID=$Get(%request.Data("PatientID",1)) /// 病人ID
+	s EpisodeID=$Get(%request.Data("EpisodeID",1)) /// 就诊ID
+	s RegNo=$Get(%request.Data("RegNo",1))         /// 登记号
+	s MWToken=$Get(%request.Data("MWToken",1))     /// token
+	s CurOrd=$Get(%request.Data("ord",1))
+	
+	s OrdUrl="dhc.orderview.csp?ord="_CurOrd_"&MWToken="_MWToken
+	s StaUrl="dhcem.patcurstatus.csp?EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&RegNo="_RegNo_"&MWToken="_MWToken
+	s FeeUrl="dhcem.onlyadvice.csp?EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&RegNo="_RegNo_"&MWToken="_MWToken
+	s ArgUrl="dhcem.allergyenter.csp?EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&RegNo="_RegNo_"&MWToken="_MWToken
+</server>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',title:'患者就诊视图',headerCls:'panel-header-gray',iconCls:'icon-paper'" border=false style='padding:2px 2px 0px 2px;'>
+			<div id="tt" class="hisui-tabs tabs-gray-btm" style="" fit=true>
+				<div title="医嘱视图" style="">   
+					<iframe src="#(OrdUrl)#" width="100%" height="100%" frameborder="0" style="display:block" id="ordViewIframe"></iframe>    
+				</div>    
+				<div title="患者就诊状态视图" style="">   
+					<iframe src="#(StaUrl)#" width="100%" height="100%" frameborder="0" style="display:block"></iframe>    
+				</div>   
+				<div title="费用明细查询" data-options="" style="overflow:auto;">   
+					<iframe src="#(FeeUrl)#" width="100%" height="100%" frameborder="0" style="display:block"></iframe>    
+				</div>   
+				<div title="过敏记录" data-options="" style="">   
+					<iframe src="#(ArgUrl)#" width="100%" height="100%" frameborder="0" style="display:block"></iframe>    
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'south',title:'关联费用查询',split:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" style="height:300px;">
+			<table id='attachtable' class="hisui-datagrid" data-options="bodyCls:'panel-header-gray',fitColumns:true" fit=true title='' ></table>
+		</div>
+	</div>
+</body>
+
+<script type="text/javascript">
+
+	
+	$(function(){
+		listenRetValue();
+		
+		initTable();
+	})
+
+	
+	
+	function listenRetValue(){
+		websys_on("onEmNurData",function(res){
+			if(res.ord){
+				
+				$HUI.tabs('#tt').select(0);
+				$('#ordViewIframe').attr('src','dhc.orderview.csp?ord='+res.ord);
+			}
+			if(res.ordExe){
+				searchAttach(res.ordExe);
+			}
+		});
+	}
+	
+	function initTable(){
+	
+		$('#attachtable').datagrid({
+			fitColumns:true,
+			fit:true,
+			pagination:true,
+	        url:'dhcapp.broker.csp?ClassName=web.DHCEMNurExe&MethodName=GetAttach',
+	        columns:[[
+			{field: 'admDeptDesc',title: '就诊科室'},
+			{field: 'orcatDesc',title: '医嘱大类'},
+			{field: 'arcimDesc',title: '医嘱名称'}, 
+			{field: 'phOrdQtyUnit',title: '总量'},
+			{field: 'price',title: '单价'},
+			{field: 'totalAmount',title: '总价'},
+			{field: 'ctcpDesc',title: '开医嘱人'},
+			{field: 'reclocDesc',title: '接收科室'},
+			{field: 'createDateTime',title: '开医嘱时间'},
+			{field: 'sttDateTime',title: '要求执行时间'},
+			{field: 'ordStatDesc',title: '医嘱状态'},
+			{field: 'phcduDesc1',title: '疗程'},
+			{field: 'oeoriId',title: 'oeoriId'},
+			{field: 'disposeStatCode',title: 'disposeStatCode'}
+			]]
+	    });
+	}
+	
+	function searchAttach(oeoreId){
+		$('#attachtable').datagrid('load',{
+			ordId:oeoreId
+		});
+	}
+</script>
+</html>

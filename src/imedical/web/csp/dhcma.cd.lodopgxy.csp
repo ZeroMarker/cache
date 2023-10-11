@@ -1,0 +1,207 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/css/base.css">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			border: none;
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+			height:1.5em;
+		}
+		input {
+			border: none;
+			border-bottom: black solid 1px;
+			font-size: 95%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<div id="Form">
+		<script language="Cache" RUNAT="SERVER">
+			set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+			Set ReportID=$g(%request.Data("ReportID",1))
+			Set ReportInfo=##class(DHCMed.CDService.LodopRepSrv).GetGXYInfo(ReportID)
+			Set KPBH 		= $p(ReportInfo,"^",1)
+			Set PatStatus 	= $p(ReportInfo,"^",2)
+			Set FamilyConut = $p(ReportInfo,"^",3)
+			Set RelationList= $p(ReportInfo,"^",4)
+			Set GXYZD 		= $p(ReportInfo,"^",5)
+			Set GXYZDICD 	= $p(ReportInfo,"^",6)
+			Set Weight		= $p(ReportInfo,"^",7)
+			Set Height 		= $p(ReportInfo,"^",8)
+			Set SymptomList	= $p(ReportInfo,"^",9)
+			Set SSY 		= $p(ReportInfo,"^",10)
+			Set SZY 		= $p(ReportInfo,"^",11)
+			Set HeartRate 	= $p(ReportInfo,"^",12)
+			Set Resume 		= $p(ReportInfo,"^",13)
+			Set ReportOrgan = $p(ReportInfo,"^",14)
+			Set ReportUser 	= $p(ReportInfo,"^",15)
+			Set ReportDate 	= $p(ReportInfo,"^",16)
+			Set RepLocDesc 	= $p(ReportInfo,"^",17)
+			
+			// 患者信息
+			Set PatInfo 	= ##class(DHCMed.CDService.LodopRepSrv).GetPATInfo(ReportID)
+			Set DJH 		= $p(PatInfo,"^",3)
+			Set CRXM		= $p(PatInfo,"^",4)
+			Set SFZH 		= $p(PatInfo,"^",5)
+			Set CRXB 		= $p(PatInfo,"^",6)
+			Set PatAge		= $p(PatInfo,"^",7)
+			Set CSRQ		= $p(PatInfo,"^",8)
+			Set CRMZ		= $p(PatInfo,"^",11)
+			Set CZDZS		= $p(PatInfo,"^",14)
+			Set CZDZS2		= $p(PatInfo,"^",15)
+			Set CZDZX		= $p(PatInfo,"^",16)
+			// 字典列表
+			Set DicInfo 	= ##Class(DHCMed.CDService.LodopRepSrv).GetGXYDicList()
+			Set GXYRelationList	= $lg(DicInfo,1)
+			Set GXYSymptomsList	= $lg(DicInfo,2)
+		</script>
+		<div style="font-size: 140%;font-weight: bold;text-align: center;">
+			<span>高血压报卡</span>
+		</div>
+			
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td>
+					卡片编号
+					<input type='text' style="width:6em;" value=#(KPBH)#>
+					<span style="padding-left:2em;">登记号</span>
+					<input type='text' style="width:6em;" value=#(DJH)#>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					姓名
+					<input type='text' style="width:4em;"  value=#(CRXM)#>
+					<span style="padding-left:4em;">性别</span>
+					<input type='text' style="width:2em;" value=#(CRXB)#>
+					<span style="padding-left:4em;">年龄</span>
+					<input type='text' style="width:3em;" value=#(PatAge)#>
+					<span style="padding-left:4em;">出生日期</span>
+					<input type='text' style="width:6em;" value=#(CSRQ)#>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					民族
+					<input type='text' style="width:4em;" value=#(CRMZ)#>
+					<span style="padding-left:3em;">身份证号</span>
+					<input type='text' style="width:8em;" value=#(SFZH)#>
+					<span style="padding-left:3em;">患者类型</span>
+					<input type='text' style="width:8em;" value=#(PatStatus)#>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					目前居住地址:省
+					<input type='text' style="width:3em;" value=#(CZDZS)#>
+					<span style="padding-left:1em;">市</span>
+					<input type='text' style="width:3em;" value=#(CZDZS2)#>
+					<span style="padding-left:1em;">县</span>
+					<input type='text' style="width:3em;" value=#(CZDZX)#>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td colspan="4">
+					高血压发病明细信息
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					家族史 父母兄弟姐妹共<input type='text' style="width:2em;" value=#(FamilyConut)#>人，其中有高血压史
+					<script language="Cache" RUNAT="SERVER">
+						Set TRelationList = $LFS(RelationList,",")
+				   </script>
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(GXYRelationList))#>
+						<CSP:IF CONDITION="$LF(TRelationList,$Lg(GXYRelationList,ZLInd))>0"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(GXYRelationList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					高血压诊断
+					<input type='text' style="width:3em;" value=#(GXYZD)#>
+					<span style="padding-left:1em;">ICD编码</span>
+					<input type='text' style="width:6em;" value=#(GXYZDICD)#>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					体重
+					<input type='text' style="width:3em;" value=#(Height)#>公斤
+					<span style="padding-left:1em;">身高</span>
+					<input type='text' style="width:3em;" value=#(Weight)#>厘米
+				</td>
+			</tr>
+			<tr>
+				<td style="padding-left:1em;width:2em;">
+					症状
+				</td>
+				<td colspan="3">
+					<script language="Cache" RUNAT="SERVER">
+						Set TSymptomList = $LFS(SymptomList,",")
+				   </script>
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(GXYSymptomsList))#>
+						<CSP:IF CONDITION="$LF(TSymptomList,$Lg(GXYSymptomsList,ZLInd))>0"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(GXYSymptomsList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					血压(mmHg)&nbsp;&nbsp;收缩压:
+					<input type='text' style="width:3em;" value=#(SSY)#>
+					<span style="padding-left:1em;">舒张压:</span>
+					<input type='text' style="width:3em;" value=#(SZY)#>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					<span style="padding-left:1em;">心率(次/分钟)</span>
+					<input type='text' style="width:3em;" value=#(HeartRate)#>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					<span style="padding-left:1em;">其他</span>
+					<input type='text' style="width:6em;" value=#(Resume)#>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					报卡单位
+					<input type='text' style="width:14em;" value=#(ReportOrgan)#>
+					<span style="padding-left:4em;">报卡科室</span>
+					<input type='text' style="width:8em;" value=#(RepLocDesc)#>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:1em;">
+					<span >报卡医生</span>
+					<input type='text' style="width:14em;" value=#(ReportUser)#>
+					<span style="padding-left:4em;">报卡日期</span>
+					<input type='text' style="width:8em;" value=#(ReportDate)#>
+				</td>
+			</tr>
+			
+			
+		</table>
+		
+	</div>	
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

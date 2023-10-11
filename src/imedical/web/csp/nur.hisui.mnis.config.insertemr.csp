@@ -1,0 +1,159 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.mobilecare.common.js" charset='gbk'></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui/css/nur.hisui.mobilecare.common.css">
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.mnis.config.insertemr.js" charset='gbk'></script>
+	
+	<script type="text/javascript">
+		var SelectHospID = "#(%request.Get("SelectHospID"))#";
+		var SelectLocID = "#(%request.Get("SelectLocID"))#"
+	</script>
+    <style type='text/css'>
+    	#insertEmrPanel {
+			height:100px
+		}
+		#insertEmrValuePanel {
+			height:200px
+		}
+    </style>
+</head>
+
+<body class="hisui-layout">
+	<div id="main" data-options="region:'center'">
+    	<!-- easyui layout 隔层嵌套 -->
+    	<div class="hisui-layout" data-options="fit:true">
+	    	<!--
+	    	/// 1.科室列表
+	    	-->
+	    	<csp:Include Page="nur.hisui.mobilecare.locpanel.csp">
+	        <div data-options="region:'center',border:false">
+		        <div class="hisui-layout" data-options="fit:true">
+		       		<!--
+			    	/// 3.模板设置
+			    	-->
+			    	<div id="insertEmrPanel" data-options="region:'north',split:true,collapsible:false,title:'模板设置',headerCls:'panel-header-gray',iconCls:'icon-all-select'">
+			       		<div id="insertEmrGridTbar" class="div-tbar">
+							<table cellspacing="0" cellpadding="0"><tbody><tr>
+								<td><a id="insertEmrGridAddBtn" group="insertEmrGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">新增</span>
+									<span class="l-btn-icon icon-add">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrGridEditBtn" group="insertEmrGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">修改</span>
+									<span class="l-btn-icon icon-edit">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrGridDeleteBtn" group="insertEmrGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">删除</span>
+									<span class="l-btn-icon icon-cancel">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrGridUpBtn" group="insertEmrGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">上移</span>
+									<span class="l-btn-icon icon-up">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrGridDownBtn" group="insertEmrGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">下移</span>
+									<span class="l-btn-icon icon-down">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrGridTestBtn" group="insertEmrGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">测试</span>
+									<span class="l-btn-icon icon-alert-pen">&nbsp;</span></span></a></td>
+							</tr></tbody></table>
+						</div>
+			       		<table id='insertEmrGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#insertEmrGridTbar'">
+						</table>
+						<div id="insertEmrDialog" class="hisui-window" title="模板设置" style="width:450px;height:265px;overflow-y:hidden"
+						    data-options="iconCls:'icon-all-select',modal:true,closed:true">
+							<div class="hisui-layout" data-options="fit:true">
+								<div id="insertEmrDialogForm" class="hisui-panel div-dialog" data-options="region:'center'">
+									<div class="div-dialog-body">
+										<div class="div-dialog-body-item" style="display:none">
+											<div class="div-dialog-body-item-label">ID</div>
+											<input id="ID" class="hisui-validatebox textbox validatebox-text" style="width:210px;height:28px;line-height:28px">
+										</div>
+									</div>
+								</div>
+								<div id="insertEmrBbar" data-options="region:'south',split:true,collapsible:false" class="dialog-button div-dialog-bbar">
+									<a id="insertEmrDialogSaveBtn" group="insertEmrDialogBtn" href="javascript:void(0)" class="hisui-linkbutton hover-dark l-btn l-btn-small"><span class="l-btn-left l-btn-icon-left">
+										<span class="l-btn-text">保存</span>
+										<span class="l-btn-icon icon-w-save">&nbsp;</span></span></a>
+									<a id="insertEmrDialogCloseBtn" group="insertEmrDialogBtn" href="javascript:void(0)" class="hisui-linkbutton hover-dark l-btn l-btn-small"><span class="l-btn-left l-btn-icon-left">
+										<span class="l-btn-text">关闭</span>
+										<span class="l-btn-icon icon-w-close">&nbsp;</span></span></a>
+								</div>
+							</div>
+						</div>
+					</div>
+		         	<!--
+			    	/// 4.字段设置
+			    	-->
+			        <div id="insertEmrItemPanel" data-options="region:'center',title:'字段设置',headerCls:'panel-header-gray',iconCls:'icon-lt-rt-55'">
+			       		<div id="insertEmrItemGridTbar" class="div-tbar">
+							<table cellspacing="0" cellpadding="0"><tbody><tr>
+								<td><a id="insertEmrItemGridAddBtn" group="insertEmrItemGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">新增</span>
+									<span class="l-btn-icon icon-add">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrItemGridEditBtn" group="insertEmrItemGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">修改</span>
+									<span class="l-btn-icon icon-edit">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrItemGridDeleteBtn" group="insertEmrItemGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">删除</span>
+									<span class="l-btn-icon icon-cancel">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrItemGridUpBtn" group="insertEmrItemGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">上移</span>
+									<span class="l-btn-icon icon-up">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrItemGridDownBtn" group="insertEmrItemGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">下移</span>
+									<span class="l-btn-icon icon-down">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrItemGridTestBtn" group="insertEmrItemGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">测试</span>
+									<span class="l-btn-icon icon-alert-pen">&nbsp;</span></span></a></td>
+							</tr></tbody></table>
+						</div>
+			       		<table id='insertEmrItemGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#insertEmrItemGridTbar'">
+						</table>
+			        </div>
+			        <!--
+			    	/// 2.内容设置
+			    	-->
+			        <div id="insertEmrValuePanel" data-options="region:'south',split:true,collapsible:false,title:'内容设置',headerCls:'panel-header-gray',iconCls:'icon-template'">
+			       		<div id="insertEmrValueGridTbar" class="div-tbar">
+							<table cellspacing="0" cellpadding="0"><tbody><tr>
+								<td><a id="insertEmrValueGridAddBtn" group="insertEmrValueGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">新增</span>
+									<span class="l-btn-icon icon-add">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrValueGridEditBtn" group="insertEmrValueGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">修改</span>
+									<span class="l-btn-icon icon-edit">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrValueGridDeleteBtn" group="insertEmrValueGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">删除</span>
+									<span class="l-btn-icon icon-cancel">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrValueGridUpBtn" group="insertEmrValueGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">上移</span>
+									<span class="l-btn-icon icon-up">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrValueGridDownBtn" group="insertEmrValueGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">下移</span>
+									<span class="l-btn-icon icon-down">&nbsp;</span></span></a></td>
+								<td><a id="insertEmrValueGridTestBtn" group="insertEmrValueGridTbar" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">测试</span>
+									<span class="l-btn-icon icon-alert-pen">&nbsp;</span></span></a></td>
+							</tr></tbody></table>
+						</div>
+			       		<table id='insertEmrValueGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#insertEmrValueGridTbar'">
+						</table>
+			        </div>
+		        </div>
+	        </div>
+	    </div>
+    </div>
+</body>
+
+</html>

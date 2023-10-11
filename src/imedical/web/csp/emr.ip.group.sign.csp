@@ -1,11 +1,17 @@
-﻿<html xmlns="http://www.w3.org/1999/xhtml">
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
 	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.group.sign.css"/>
 	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script> 
 	<script language="cache" runat="server">
 	    s docId = $Get(%request.Data("DocID",1),"")  
+	    s chineseDocID = $Get(%request.Data("ChineseDocID",1),"")  
 	    s signType = $Get(%request.Data("SignType",1),"") //"Nur" "Doc"
 		s userCode = %session.Get("LOGON.USERCODE")
 		s userName = %session.Get("LOGON.USERNAME")
@@ -13,6 +19,8 @@
 		s ssgroupID = %session.Get("LOGON.GROUPID")
 		s userLocID = %session.Get("LOGON.CTLOCID")
 		s userlocName = $case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+		s userWardID = %session.Get("LOGON.WARDID")
+		s userWardName = $case(userWardID,"":"",:$p(^PAWARD(userWardID),"^",2))
 		s sessionID = %session.SessionId	
     	s patientNoLength = ##Class(EMRservice.BOSysOption).GetValueByName("PatientNoLength")
     	s:(patientNoLength = "") patientNoLength = 10
@@ -20,8 +28,13 @@
 		s:(hospitalName = "") hospitalName = "DtHealth"	 
 		s CAServicvice = ""
 		s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
-		s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(userLocID)
-		if (IsCAON = "Y")&(IsCACTLoc = "1") { 
+        //最新的程序需要增加产品模块的判断
+        if ($ll((##class(%Dictionary.CompiledMethod).%OpenId("CA.DigitalSignatureService||IsCACTLoc")).DefaultArgs) = "4") {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"IPEMR")
+        } else {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        }
+		if ((IsCAON = "Y")||(IsCAON = "1"))&&(IsCACTLoc = "1") { 
 			s CAServicvice = "1" 
 			d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
 		} 
@@ -33,10 +46,11 @@
 		s:(userPost '= "") userPost = ##Class(EMRservice.BL.BLSignRole).GetSignCode($p(userPost,"^",1))
 		s defaultGroup = $P(##Class(EMRservice.SystemParameter).getDefaultGroup(),"#",1)
 		s defaultLoc = $P(##Class(EMRservice.SystemParameter).getDefaultGroup(),"#",2)
-		
+		s hospitalID = %session.Get("LOGON.HOSPID")
    </script>
    <script language = "javascript">
    	var docId = '#(docId)#';
+   	var chineseDocID = '#(chineseDocID)#';
    	var signType = '#(signType)#';
 	var userCode = '#(userCode)#';
 	var userName = '#(userName)#';
@@ -44,6 +58,8 @@
 	var ssgroupID = '#(ssgroupID)#';
 	var userLocID = '#(userLocID)#';
 	var userlocName = '#(userlocName)#';
+	var userWardID = '#(userWardID)#';
+	var userWardName = '#(userWardName)#';
 	var sessionID = '#(sessionID)#';	
 	var patientNoLength = '#(patientNoLength)#';
 	var hospitalName = '#(hospitalName)#';
@@ -57,7 +73,8 @@
 	var strServerCert = '';
 	var strKey = '';
 	var strUserSignedData = '';
-	var strUserCert = '';	
+	var strUserCert = '';
+	var hospitalID = '#(hospitalID)#';		
 	function Dateformatter(date)
 	{
 		if (typeof(dtformat) != "undefined")
@@ -99,63 +116,97 @@
 		}
 	}
 	ipAddress = getIpAddress();
+	var tmpDocID = docId;
 </script> 
 	<title>首页签名</title>
 </head>
-<body id="layout" class="hisui-layout">
-	<div data-options="region:'west',border:false" style="width:410px;padding:3px;">
-		<div class="hisui-panel" title="批量签名" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" style="padding-top:3px;">
-		<div class="hisui-layout" data-options="fit:true">	
-			<div data-options="region:'north',border:false" style="height:255px;padding-left:5px;">
-		        <div class="desc">#(..Get("签名类型"))#</div><input id="cboSignType" class="hisui-combobox"/>
-		        <div id="loc" class="row">
-					<div class="desc">#(..Get("科室"))#</div><input id="cbxLoc" class="hisui-combobox"/>
-					<input class='hisui-checkbox' type="checkbox" name="checkbox" id="chkGroup" data-options='onCheckChange:function(event,value){chkGroupChange(value)}' label="本医疗组"/>
-					<input class='hisui-checkbox' type="checkbox" name="checkbox" id="chkLoc" data-options='onCheckChange:function(event,value){chkLocchange(value)}' label="本科"/>
-					<input class='hisui-checkbox' type="checkbox" name="checkbox" id="chkUser" data-options='onCheckChange:function(event,value){chkUserChange(value)}' label="本人"/>
-		        </div>
-		        <div id="ward" class="row">
-		        	<span class="desc">#(..Get("病区"))#</span><input id="wardcombo" class="hisui-combobox"></input>
-		        </div>
-		        <div class="row">
-					<span class="desc">#(..Get("病案号"))#</span><input class="hisui-validatebox" id="medicareNo"/>
-					<span class="desc">#(..Get("登记号"))#</span><input class="hisui-validatebox" id="patientNo"/>
-				</div>
-				<div class="row">
-				    <span class="desc">#(..Get("身份证"))#</span><input class="hisui-validatebox" id="IDCardNo" />	
-		 	    	<span class="desc">#(..Get("医保号"))#</span><input class="hisui-validatebox" id="medicalInsuranceNo"/>		
-				</div>
-				<div class="row">
-	 	    		<span class="desc">#(..Get("患者姓名"))#</span><input class="hisui-validatebox" id="patientName"/>	        		
-				</div>
-				<div class="row" id="oDate">
-				    <span class="desc">#(..Get("出院日期"))# </span><input class="hisui-datebox datebox-f combo-f" id="outStartDate" data-options="width:144"/> 
-			 	    <span>#(..Get("至"))# </span><input class="hisui-datebox datebox-f combo-f" id="outEndDate" data-options="width:144"/>				
-				</div>
-				 <div class="row" id="iDate">
-				    <span class="desc">#(..Get("在院日期"))# </span><input class="hisui-datebox datebox-f combo-f" id="inStartDate" data-options="width:144"/> 
-			 	    <span>#(..Get("至"))# </span><input class="hisui-datebox datebox-f combo-f" id="inEndDate" data-options="width:144"/>				
-				</div>
-				<div class="radiostatus">
-					<input class='hisui-radio' type="radio" name="admStatus" id="radioInp" value="A" label="在院"/>
-					<input class='hisui-radio' type="radio" name="admStatus" id="radioOutp" value="D" label="出院"/>
-					<span style="padding-left:20px;">#(..Get("签名状态"))#</span> <input id="cboSign" value="unsign" class="hisui-combobox" style="width:80px" data-options="panelHeight:'auto',
-						valueField: 'id',
-						textField: 'text',
-						data: [{id: 'sign',text: emrTrans('已签')},{id: 'unsign',text: emrTrans('未签')}]" />
-			       <a id="PatientListQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >#(..Get("查询"))#</a>
-				</div>
-           </div>
-          
-		   <div data-options="region:'center',border:false">
-				<table id="patientListData"></table>
-		   </div>
-		   </div>		
+<body style="padding:10px;background-color:#fff;">
+	<div id="layout" class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',border:false" style="width:417px;padding-right:10px;">
+			<div class="hisui-panel" title="批量签名" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" style="">
+			<div class="hisui-layout" id="layoutMain" data-options="fit:true">	
+				<div data-options="region:'north',border:false" style="height:355px;padding:10px 0px 0px 10px;">
+			        <div style="margin-left:0px;">
+			        	<div class="desc">#(..Get("首页类型"))#</div>
+						<input class='hisui-radio' type="radio" name="medicineStatus" id="radioWestern" checked="true" value="" label="西医病案首页"/>
+						<span style="margin-right:10px"></span>
+						<input class='hisui-radio' type="radio" name="medicineStatus" id="radioChinese" value="Chinese" label="中医病案首页"/>
+					</div>
+					<div class="row">
+						<div class="desc">#(..Get("签名类型"))#</div>
+						<input id="cboSignType" class="hisui-combobox"/>
+					</div>
+			        <div id="NurLoc" class="row">
+						<div class="desc">#(..Get("科室"))#</div>
+						<input id="cbxNurLoc" class="hisui-combobox"/>
+			        </div>					
+			        <div id="loc" class="row">
+						<div class="desc">#(..Get("科室"))#</div>
+						<input id="cbxLoc" class="hisui-combobox"/>
+						<div style="margin:10px 0px 0px 5px">
+							<input class='hisui-checkbox' type="checkbox" name="checkbox" id="chkGroup" data-options='onCheckChange:function(event,value){chkGroupChange(value)}' label="本医疗组"/>
+							<span style="margin-right:10px"></span>
+							<input class='hisui-checkbox' type="checkbox" name="checkbox" id="chkLoc" data-options='onCheckChange:function(event,value){chkLocchange(value)}' label="本科"/>
+							<span style="margin-right:10px"></span>
+							<input class='hisui-checkbox' type="checkbox" name="checkbox" id="chkUser" data-options='onCheckChange:function(event,value){chkUserChange(value)}' label="本人"/>
+			        	</div>
+			        </div>
+			        <div id="ward" class="row">
+			        	<span class="desc">#(..Get("病区"))#</span>
+			        	<input id="wardcombo" class="hisui-combobox"></input>
+	                    <input class="hisui-checkbox" type="checkbox" id="chkNurUser" data-options="checked:true" label="本人"/>
+			        </div>
+			        <div class="row">
+						<span class="desc">#(..Get("病案号"))#</span>
+						<input class="hisui-validatebox" id="medicareNo"/>
+						<span class="desc">#(..Get("登记号"))#</span>
+						<input class="hisui-validatebox" id="patientNo"/>
+					</div>
+					<div class="row">
+					    <span class="desc">#(..Get("身份证"))#</span>
+					    <input class="hisui-validatebox" id="IDCardNo" />	
+			 	    	<span class="desc">#(..Get("医保号"))#</span>
+			 	    	<input class="hisui-validatebox" id="medicalInsuranceNo"/>		
+					</div>
+					<div class="row">
+		 	    		<span class="desc">#(..Get("患者姓名"))#</span><input class="hisui-validatebox" id="patientName"/>	        		
+					</div>
+					<div class="row" id="oDate">
+					    <span class="desc">#(..Get("出院日期"))# </span><input class="hisui-datebox datebox-f combo-f" id="outStartDate" data-options="width:144"/> 
+				 	    <span>#(..Get("至"))# </span><input class="hisui-datebox datebox-f combo-f" id="outEndDate" data-options="width:141"/>				
+					</div>
+					 <div class="row" id="iDate">
+					    <span class="desc">#(..Get("在院日期"))# </span>
+					    <input class="hisui-datebox datebox-f combo-f" id="inStartDate" data-options="width:133"/> 
+				 	    <span style="margin:0 10px">#(..Get("至"))# </span>
+				 	    <input class="hisui-datebox datebox-f combo-f" id="inEndDate" data-options="width:132"/>				
+					</div>
+					<div class="radiostatus">
+						<span class="desc">#(..Get("签名状态"))#</span> 
+						<input id="cboSign" value="unsign" class="hisui-combobox" style="width:70px" data-options="panelHeight:'auto',
+							valueField: 'id',
+							textField: 'text',
+							data: [{id: 'sign',text: emrTrans('已签')},{id: 'unsign',text: emrTrans('未签')}]" />
+						<div style="display:inline-block;margin:0 10px">
+							<input class='hisui-radio' type="radio" name="admStatus" id="radioInp" value="A" label="在院"/>
+							<span style="margin-right:10px"></span>
+							<input class='hisui-radio' type="radio" name="admStatus" id="radioOutp" value="D" label="出院"/>
+						</div>
+				       <a id="PatientListQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >#(..Get("查询"))#</a>
+					</div>
+	           </div>
+	          
+			   <div data-options="region:'center',border:false" style="border-radius:0px;border-top:1px solid #cccccc;">
+					<table id="patientListData"></table>
+			   </div>
+			   </div>		
+			</div>
+		</div>
+		<div data-options="region:'center',headerCls:'panel-header-gray'" style="padding:0px;border-radius:4px;">
+			<div id="noRecordpngdiv"></div>
+			<iframe id="frameEditor" frameborder="0" src="" style="width:100%;height:100%;"></iframe>
 		</div>
 	</div>
-	<div data-options="region:'center',border:false" style="padding:3px;overflow:hidden;">
-		<iframe id="frameEditor" frameborder="0" src="" style="width:100%;height:100%;"></iframe>
-	</div>
-	<script type="text/javascript" src="../scripts/emr/js/ip.group.sign.js"></script>   
+	<script type="text/javascript" src="../scripts/emr/js/ip.group.sign.js"></script>
 </body> 
 </html>

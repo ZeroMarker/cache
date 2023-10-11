@@ -20,6 +20,9 @@
         <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
         
+		<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+		<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+        
         <style type="text/css">
         * 
         .datagrid-cell{
@@ -57,7 +60,7 @@
 
         <div id="patLst" class="easyui-panel" data-options="region:'west',border:false,noheader:true,split:true" style="width:300px;">
             <div class="easyui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
-            <div id="seekform" data-options="region:'north',border:false" style="height:120px;padding:3px">
+            <div id="seekform" data-options="region:'north',border:false" style="height:150px;padding:3px">
                     <table id="qryTable" style="width:100%;height:100%;table-layout:fixed;border:0;cellspacing:1;cellpadding:0">
                         <tr>
                             <td>
@@ -68,7 +71,18 @@
                                 <label style="padding-top:3px;">就诊科室：</label>
                                 <input id="cbxLoc" class="easyui-combobox" style="width:140px"/>
                             </td>
-                            <td style="width:80"></td>
+                            <td style="width:230">
+                            	<label style="padding-top:3px;">审核状态：</label>
+                            	<span>
+                            		<select id="auditStatus" class="easyui-combobox" style="width:125px;">
+									<option value="全部">全部</option>
+									<option value="未审核" selected="selected">未审核</option>
+									<option value="已审核">已审核</option>
+									<option value="拒绝">拒绝</option>
+									<option value="作废">作废</option>
+								</select>
+	                            </span>
+                            </td>
                         </tr>
                         <tr>
                             <td>
@@ -78,6 +92,10 @@
                             <td>
                                 <label style="padding-top:3px;">开始日期：</label>
                                 <input class="easyui-datebox datebox-f combo-f" id="startDate" data-options="formatter:Dateformatter,parser:Dateparser,width:140"/>
+                            </td>
+                            <td>
+                            	<label>卡类型：</label><input id="cardType" class="easyui-combobox" style="width:150px"/>
+                            	<!-- <span style = "display:block;text-align:right;padding-right:5px"><a href="#" id="btnExport" class="easyui-linkbutton" onclick="">导出</a></span> -->
                             </td>
                         </tr>
                         <tr>
@@ -90,7 +108,10 @@
                                 <input class="easyui-datebox datebox-f combo-f" id="endDate" data-options="formatter:Dateformatter,parser:Dateparser,width:140"/>
                             </td>
                             <td>
-                               <button id="PatientListQuery">查&nbsp&nbsp&nbsp询</button>
+                            	<!-- <a href="#" id="btnReadCard" class="easyui-linkbutton" onclick="">读卡</a> -->
+                            	<a id="readCard" href="#" onclick="readCardEvent()" class="easyui-linkbutton">读卡</a>
+		          				<a id="healthCard" href="#" onclick="readHealthCardEvent()" class="easyui-linkbutton">读医保卡</a>
+                                <a href="#" id="btnSetQuery" class="easyui-linkbutton" onclick="setQuery()">查询</a>
                             </td>
                         </tr>
                     </table>
@@ -109,9 +130,15 @@
                         <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px"/>
                         <span style="font-size:18px;margin-left:5px;margin-top:0px;">审核人：</span>
                         <select name="auditUsrCombo" id="auditUsrCombo" style="width:200px;font-size:18px;margin-left:5px;"></select>
-                        <button id="btnOpOfficeAudit">审&nbsp&nbsp&nbsp核</button>
-                        <button id="btnOpOfficePrint">PDF打印</button>
-                        <button id="btnOpOfficePDFPrev">PDF预览</button>
+	                    <span style = "margin-left:15px;">
+	                        <a href="#" id="btnAuditAndPrint" class="easyui-linkbutton" data-options="stopAllEventOnDisabled:true">审核并打印</a>
+	                        <span style = "margin-left:5px;"><a href="#" id="btnOpOfficeAudit" class="easyui-linkbutton">审核</a></span>
+	                        <span style = "margin-left:5px;"><a href="#" id="btnPrint" class="easyui-linkbutton">打印</a></span>
+	                        <span style = "margin-left:5px;"><a href="#" id="btnRefuse" class="easyui-linkbutton">拒绝</a></span>
+	                        <span style = "margin-left:5px;"><a href="#" id="btnBrowse" class="easyui-linkbutton">病历浏览</a></span>
+                        	<!-- <a href="#" class="easyui-linkbutton" id="btnOpOfficePrint">PDF打印</a>
+                        	<a href="#" class="easyui-linkbutton" id="btnOpOfficePDFPrev">PDF预览</a> -->
+                        </span>
                     </div>
                     <table id="msgTable" class="right" style="width:400px;height:100%;table-layout:fixed;display:none;" border=0 cellspacing=0 cellpadding=1> 
                         <tr> 

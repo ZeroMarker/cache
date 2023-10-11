@@ -1,0 +1,144 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--ma.ipmr.fp.frontpage.clinic.main.csp-->
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<HISUI css="ipmr.base.css"></HISUI>
+		<link type="text/css" rel="styleSheet"  href="../scripts/ipmr/css/base.css" />
+		<script language="cache" runat="server">
+			Set EpisodeID=$Get(%request.Data("EpisodeID",1),"")
+			Set MWToken=$Get(%request.Data("MWToken",1),"")
+			// 多语言
+			Set langid=20
+			if ($d(%session)){
+				set langid=+$g(%session.Data("LOGON.LANGID"))
+			}
+			set VoumeID ="",PatientID="",AdmLocID=""
+			set IsCanCode = 0
+			set MasterStatus = "",MasterID="",MasterTypeID="",WorkFItemID=""
+			set (PatName,MrNo,AdmTimes,DischLocDesc,AdmDate,DischDate,Sex,Age)=""
+			Set (OutSysEpisodeID,OutSysPatientID,OutSysAdmLocID,EmrUrl)=""
+			Set DefaultFPConfig=""
+			set OutSysEpisodeID = +EpisodeID
+			set objVolpaadm = ##Class(MA.IPMR.SS.VolPaadm).GetPatObjByAdm(EpisodeID)
+			If $isobject(objVolpaadm) {
+				set VoumeID = objVolpaadm.Parref.%Id()
+				d ##class(MA.IPMR.FPS.EmrRecordSrv).getEmrDataByVol(VoumeID)
+				set PatientID = objVolpaadm.SVPatientID
+				set OutSysPatientID = +PatientID
+				set AdmLocID = objVolpaadm.SVAdmLocID
+				Set OutSysAdmLocID=""
+				Set objSys = ##class(CT.IPMR.DPS.Common).GetSysIdByOID(EpisodeID)
+				If $isobject(objSys) {
+					set tFromUser = ""
+					Set xMapID = ""
+					For {
+						Set xMapID=$o(^CT.IPMR.DP.LocationMapI("IndexOfIpmrLoc"," "_AdmLocID,xMapID))
+						Quit:xMapID=""
+						Set objMap = ##class(CT.IPMR.DP.LocationMap).GetObjById(xMapID)
+						continue:'$isobject(objMap)
+						Set tOutSysAdmLocID = objMap.DLHisLocID
+						Continue:$p(tOutSysAdmLocID,"||",2)'=objSys.%Id()
+						Set OutSysAdmLocID = +tOutSysAdmLocID
+						Quit:OutSysAdmLocID'=""
+					}
+					Set EmrUrl = objSys.DSEMRUrl
+				}
+				set PatName = ##class(MA.IPMR.BT.SSUser).GetTranByDesc("BSDesc",objVolpaadm.SVPatName,langid)
+				set MrNo = objVolpaadm.Parref.SVMainDr.SMMrNo
+				set AdmTimes = objVolpaadm.SVAdmTimes
+				set DischLocDesc = ##class(MA.IPMR.BT.Location).GetTranByDesc("BLDesc",objVolpaadm.SVDischLocDesc,langid)
+				set AdmDate = objVolpaadm.SVAdmDate
+				set AdmDate = ##Class(MA.IPMR.ImedicalSrv).DateLogicalToHtml(AdmDate)
+				set DischDate = objVolpaadm.Parref.SVDischDate
+				set DischDate = ##Class(MA.IPMR.ImedicalSrv).DateLogicalToHtml(DischDate)
+				set Sex = ##class(CT.IPMR.BT.Dictionary).GetTranByDesc("BDDesc",objVolpaadm.SVSex,langid)
+				set Age = ##Class(MA.IPMR.SSService.CommonSrv).tranAgeLanguage(objVolpaadm.SVAge,langid)
+				set MrType = objVolpaadm.Parref.SVMainDr.SMNoType.Parref.%Id()
+				set MrClass = objVolpaadm.Parref.SVMainDr.SMNoType.Parref.BMMrClass.BMCode
+				set objConfig=##class(CT.IPMR.FP.Config).GetObjByMrClass(MrClass,"")
+				If $isobject(objConfig) {
+					set DefaultFPConfig = objConfig.%Id()
+					set FPMasterID = $o(^MA.IPMR.FP.DataMasterI("IndexVolumeConfig",VoumeID,DefaultFPConfig,""))
+					If FPMasterID'="" {
+						set objMaster = ##class(MA.IPMR.FP.DataMaster).GetObjById(FPMasterID)
+						If $isobject(objMaster) {
+							set MasterStatus = objMaster.FDStatus
+							set MasterID = objMaster.%Id()
+							set MasterTypeID = objMaster.FDFPTypeDr.%Id()
+						}
+					}
+				}
+				set objWorkFItem = ##class(CT.IPMR.BT.WorkFItem).GetWFItemBySysOpera(MrType,"FP")
+				If $isobject(objWorkFItem) {
+					set WorkFItemID = objWorkFItem.%Id()
+					set IsCanCode = ##class(MA.IPMR.FPS.DataMasterSrv).ChkCodeable(VoumeID,WorkFItemID)
+				}
+				
+			}
+			Set IsCodePageShowEmrAlone = ##class(CT.IPMR.BT.Config).GetValByCode("IsCodePageShowEmrAlone","")
+			Set CodeQualityUrl = ##class(CT.IPMR.BT.Config).GetValByCode("CodeQualityUrl","")
+			set IsShowQuality = $p(CodeQualityUrl,"|",1)
+			set QualityUrl = $p(CodeQualityUrl,"|",2)
+	  		//Set EmrUrl = ##class(CT.IPMR.BT.Config).GetValByCode("EMRUrl","")
+	  		Set IsEMRByCoding = ##class(CT.IPMR.BT.Config).GetValByCode("IsEMRByCoding","")
+	  		Set CodingDocID = ##class(CT.IPMR.BT.Config).GetValByCode("CodingDocID","")
+	  		
+	  		Set IsCodeMultiVer = ##class(CT.IPMR.BT.Config).GetValByCode("IsCodeMultiVer","")
+	  		
+	  		Set baseinfoPage="ma.ipmr.fp.frontpage.baseinfo.csp?EpisodeID="_EpisodeID_"&MWToken="_MWToken
+	  		Set diagnosPage="ma.ipmr.fp.frontpage.diagnos.csp?EpisodeID="_EpisodeID_"&MWToken="_MWToken
+	  		Set oprationPage="ma.ipmr.fp.frontpage.operation.csp?EpisodeID="_EpisodeID_"&MWToken="_MWToken
+	  		Set costPage="ma.ipmr.fp.frontpage.cost.csp?EpisodeID="_EpisodeID_"&MWToken="_MWToken
+	  		set multiverPage="ma.ipmr.fp.frontpage.multiver.csp?EpisodeID="_EpisodeID_"&MWToken="_MWToken
+	  	</script>
+	</head>
+	<!--<body style="padding:10px;background-color:#ffffff">-->
+	<body style="">
+	<!--主页面-->
+		<csp:Include Page="ma.ipmr.fp.frontpage.clinic.main.show.csp">
+		<script type="text/javascript"  src="../scripts/ipmr/common.js"></script>
+		<script type="text/javascript"  src="../scripts/ipmr/fp/frontpage/main.clinic.js"></script>
+		<SCRIPT language = 'javascript' >
+			//全局请求后台服务对象
+			var ServerObj={
+				IsCodePageShowEmrAlone:'#(IsCodePageShowEmrAlone)#',	//是否单独面板显示浏览病历
+				IsShowQuality:'#(IsShowQuality)#',		//是否加载质控页签
+				QualityUrl:'#(QualityUrl)#',			//质控url
+				IsEMRByCoding:'#(IsEMRByCoding)#',			//是否启用创建编目后首页
+				CodingDocID:'#(CodingDocID)#',		// 编目后首页模板编码
+				EpisodeID:'#(EpisodeID)#',
+				PatientID:'#(PatientID)#',
+				AdmLocID:'#(AdmLocID)#',
+				EmrUrl:'#(EmrUrl)#',					// 病历浏览url
+				VoumeID:'#(VoumeID)#',
+				IsCanCode:'#(IsCanCode)#',				// 是否可以编目
+				MasterStatus:'#(MasterStatus)#',		// 编目状态
+				MasterID:'#(MasterID)#',				// 编目主表ID
+				MasterTypeID:'#(MasterTypeID)#',		// 编目首页类型ID
+				WorkFItemID:'#(WorkFItemID)#',			// 工作流编目操作ID
+				PatName:'#(PatName)#',
+				MrNo:'#(MrNo)#',
+				AdmTimes:'#(AdmTimes)#',
+				DischLocDesc:'#(DischLocDesc)#',
+				AdmDate:'#(AdmDate)#',
+				DischDate:'#(DischDate)#',
+				Sex:'#(Sex)#',
+				Age:'#(Age)#',
+				DefaultFPConfig:'#(DefaultFPConfig)#',	// 默认编目配置ID
+				IsCodeMultiVer:'#(IsCodeMultiVer)#',
+				OutSysAdmLocID:'#(OutSysAdmLocID)#',
+				OutSysPatientID:'#(OutSysPatientID)#',
+				OutSysEpisodeID:'#(OutSysEpisodeID)#'
+			};
+		</SCRIPT>
+		<script type="text/javascript"  src="../scripts/websys.js"></script>
+	</body>
+</html>
+

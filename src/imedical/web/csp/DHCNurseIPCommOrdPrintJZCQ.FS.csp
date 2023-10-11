@@ -1,82 +1,279 @@
 <!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
-<!--csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  q 1
-</csp:method-->
-
-
+ 
+</csp:method>
 <HTML XMLNS=TRAK>
+	<server>
+		s EpisodeID = $G(%request.Data("EpisodeID", 1))
+		//d ##class(web.DHCXMLPConfig).LODOPInit(1)
+	</server>
 <HEAD>
 <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
-<TRAK:HEAD></TRAK:HEAD>
-	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
-	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
-	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<NURHISUI />
+<script type="text/javascript" src="../scripts/nurse/ordersheet/LodopFuncs.js"></script>
 </HEAD>
+<script language="javascript">
+	function $g(value){
+		return value
+	}
+	var episodeID = "#(EpisodeID)#";
+	var type="L"
+</script>
 <BODY>
-
- 	
- 	
 	<server>
-		d ##class(web.DHCMGNurData).PrintLinkFile()
- 		s setstr=##class(Nur.DHCMGNurseSet).getSet()
- 		s CacheDB=$P(setstr,"^")
-		s webIP=$P(setstr,"^",2)
- 		s dllstr=webIP_"/dhcmg/DHCCDoctorOrderSheet.dll#DHCCDoctorOrderSheet.WebInterface"
- 		w "<OBJECT id=""DHCCDoctorOrderSheet""  classid="""_dllstr_""" IEWASTEXT></OBJECT>"
- 		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
-  		s categoryDetail = $Get(%request.Data("CategoryDetail",1),"")
-  		s pageInfoID = $Get(%request.Data("PageInfoID",1),"")
- 		
- 		s GetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.GetPageNumber"))
-        s SetPageNumMethod=##Class(%CSP.Page).Encrypt($lb("EPRservice.BOPrintPageNumber.SetPageNumber"))
-	    s userID = $Get(%request.Data("userID",1),"")
-	     
 	</server>
+	<div id="pageView"></div>
 	<SCRIPT Language="Javascript">
-        var userID = "#(userID)#";
-        var webIp="#(webIP)#";
-        var GetPageNumMethod="#(GetPageNumMethod)#";
-	    var SetPageNumMethod="#(SetPageNumMethod)#";
-	    var EpisodeID = '#(EpisodeID)#';
-		var pageInfoID = '#(pageInfoID)#';
-	
-        var startPageNumTmp=cspRunServerMethod(GetPageNumMethod,pageInfoID);
-        var startPageNumTmp2="";
-
-		if(startPageNumTmp!=0)
-		{
-			startPageNumTmp2=startPageNumTmp;
-			startPageNumTmp=startPageNumTmp-1;
+		var global = {
+		    userID: session['LOGON.USERID'],
+		    locID: session['LOGON.CTLOCID'],
+		    iframeWidth: 60,
+		    currPage: 0,    //当前页
+		    totalPages: 0,  //总页数
+		    arrangeFlag: 0, //是否重整
+		    sheetType: type,
+		    sheetData: {}   //后台获取的数据
 		}
-		//debugger;
-        DHCCDoctorOrderSheet.printOut(EpisodeID,webIp,"Long")
-	    
-
-     
-        var curPageNumTemp=DHCCDoctorOrderSheet.pageNo;
-
-     
-        var curendpage="";
-        if (curPageNumTemp!=0)
-        {
-	        curendpage=curPageNumTemp;
-        }
-        else
-        {
-	        curendpage=startPageNumTmp2
-        }
-     	if ((curendpage!=0)&&(curendpage>=startPageNumTmp2))
-		{
-			curendpage=parseInt(curendpage)
-		
-		    var RetVal=cspRunServerMethod(SetPageNumMethod,curendpage,pageInfoID);	
-	
+		document.body.onload = function(){
+			loadChart()
 		}
-        
-
-		setTimeout("parent.printNext();", 3000 );	
+		function loadChart() {
+		    $cm({
+		        ClassName: "Nur.NIS.Service.OrderSheet.Sheet",
+		        MethodName: "getOrders",
+		        Type: global.sheetType,
+		        EpisodeID: episodeID,
+		        UserID: global.userID,
+		        LocID: global.locID,
+		        ArrangeFlag: global.arrangeFlag,
+		        ResultSetType: "array"
+		    },function(sheet){
+				debugger
+				if (sheet == "-1" || sheet.totalPage == 0) {
+					return;
+				}
+				global.sheetData = sheet
+				global.totalPages = sheet.totalPage
+				printHandler.printAll()
+			})
+		}
 		
+		//打印操作
+		var printHandler = {
+		    //获取需要打印的打印数据
+		    getPrintData: function (page, ifXuPrint) {
+		        var iframeDoc = $(window.frames["pageframe" + page].document)
+		        var rectHtml = iframeDoc.find("#drawing rect")
+		        rectHtml.css("visibility", "hidden");
+		        var drawingDom = iframeDoc.find("#drawing")
+		        if (!!ifXuPrint) {
+		            if (drawingDom.find(".unPrinted").length == 0) {
+		                rectHtml.css("visibility", "visible");
+		                return ""
+		            }
+		            //续打打印只打印class为unPrinted的元素
+		            var printedHtml = iframeDoc.find("#drawing .printed")
+		            printedHtml.css("visibility", "hidden");
+		            var printData = drawingDom.html()
+		            printedHtml.css("visibility", "visible");
+		        } else {
+		            var printData = drawingDom.html()
+		        }
+		        rectHtml.css("visibility", "visible");
+		        return printData
+		    },
+		    //lodop打印
+		    LodopPrint: function (printData) {
+		        var LODOP = getLodop();
+		        LODOP.PRINT_INIT("医嘱单")
+		        LODOP.SET_PRINT_PAGESIZE(1, 2100, 2970, "A4");
+		        printData = printData.replace(/blue/ig, "#000000")
+		        LODOP.ADD_PRINT_HTML(0, 0, "100%", "100%", printData);
+		        LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT", "Full-Page");
+		        LODOP.PRINT();
+		    },
+		    //lodop批量打印
+		    batchLodopPrint: function (ifXuPrint, callback) {
+			    var LODOP = getLodop();
+		        LODOP.PRINT_INIT("医嘱单打印");
+		        LODOP.SET_PRINT_PAGESIZE(1, 2100, 2970, "A4");
+		        var printPage = 0;
+		        (function renderSinglePage(page) {
+		            if (page > global.totalPages) {
+			            if (printPage != 0) {
+		                    LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT", "Full-Page");
+		                    LODOP.PRINT();
+		                }
+			            callback()
+		                return
+		            }
+		            if (!window.frames["pageframe" + page]) {
+		                //未渲染的页先渲染
+		                chartHandler.render(page, false)
+		                $("#pageframe" + page).load(function () {
+		                    var printData = printHandler.getPrintData(page, ifXuPrint)
+		                    if (printData != "") {
+		                        printData = printData.replace(/blue/ig, "#000000")
+		                        LODOP.ADD_PRINT_HTML(0, 0, "100%", "100%", printData);
+		                        printPage++;
+		                        if (printPage % 10 == 0) {
+		                            LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT", "Full-Page");
+		                            LODOP.PRINT();
+		                            printPage = 0
+		                        } else {
+		                            LODOP.NewPage();
+		                        }
+		                    }
+		                    renderSinglePage(page + 1)
+		                })
+		            }
+
+		        })(1)
+		    },
+		    //全部打印, 不续打
+		    printAll: function () {
+		        printHandler.batchLodopPrint(false, function () {
+		            //setTimeout("parent.printNext();", 3000 );
+		        })
+		    }
+
+	}
+	//渲染医嘱单操作
+	var chartHandler = {
+	    //渲染
+	    render: function (pageNum, ifShow) {
+		    $("#pageView").html("");
+	        var srcUrl = "./nur.svg.ordersheet.csp?EpisodeID=" + episodeID + "&SheetType=" + global.sheetType
+	            + "&webIP=" + global.webIP + "&userID=" + global.userID + "&locID=" + global.locID + "&v=" + new Date().getTime();
+	        var myiframe = document.getElementById("pageframe" + pageNum)
+	        if (!myiframe) {
+		        
+	            myiframe=document.createElement("iframe");
+	            myiframe.id = "pageframe" + pageNum;
+	            myiframe.name = "pageframe" + pageNum;
+	            myiframe.width = global.iframeWidth + "%";
+	            myiframe.height = "100%";
+	            myiframe.style.position = "absolute";
+	            myiframe.style.zIndex = pageNum;
+	            if (ifShow) {
+	                if (global.currPage != 0) {
+	                    var currFrame = document.getElementById("pageframe" + global.currPage)
+	                    currFrame.style.zIndex = parseInt(currFrame.style.zIndex) - parseInt(global.totalPages);
+	                }
+	                global.currPage = pageNum;
+	                myiframe.style.zIndex = pageNum + parseInt(global.totalPages);
+	            }
+	            myiframe.setAttribute('marginwidth', '0');
+	            myiframe.setAttribute('marginheight', '0');
+	            myiframe.setAttribute('hspace', '0');
+	            myiframe.setAttribute('vspace', '0');
+	            myiframe.setAttribute('frameborder', '0');
+	            myiframe.src = getIframeUrl(srcUrl + "&page=" + pageNum);
+	            $("#pageView").append(myiframe);
+	        }
+	    }
+	}
+	// 获取当前页数的医嘱数据
+	function toIframeValue(pageNum) {
+	    var obj = global.sheetData.pages[parseInt(pageNum) - 1];
+	    if (!!!obj) {
+	        $.messager.popover({ msg: '不存在医嘱', type: 'error' });
+	        return;
+	    }
+	    obj["totalRows"] = global.sheetData.totalRows
+	    return obj
+
+	}
+
+		// 获取CA图签流
+	function toCAImages() {
+	    var obj = global.sheetData.CAImages
+	    return obj
+	}
+
+
+	// 获取CA图签流
+	function toLogoImage() {
+	    var obj = global.sheetData.logoImage
+	    return obj
+	}
+
+	// 获取表格配置
+	function toSheetConfig()
+	{
+		var obj = global.sheetData.SheetConfig
+	    return obj
+	}
+
+
+	//获取文本配置
+	function toTextConfig()
+	{
+		var obj = global.sheetData.TextConfig
+	    return obj
+	}
+
+
+
+	//获取通用配置
+	function toGeneralConfig()
+	{
+		var obj = global.sheetData.GeneralConfig
+	    return obj
+	}
+
+	function runClassMethod(className,methodName,datas,successHandler,datatype,sync){
+	var _options = {
+		url : "Nur.Archive.cls",
+		async : true,
+		dataType : "json", // text,html,script,json
+		type : "POST",
+		data : {
+				'className':className,
+				'methodName':methodName
+			   }
+	};
+	$.extend(_options.data, datas);
+	var option={dataType:typeof(datatype) == "undefined"?"json":datatype,async:typeof(sync) == "undefined"?_options.async:sync};
+	_options=$.extend(_options, option);
+	return $.ajax(_options).done(successHandler).error(successHandler);
+	}
+		
+function serverCall(className,methodName,datas){
+	ret=runClassMethod(className,methodName,datas,function(){},"",false)
+	return parseJsonString(ret.responseText)
+}
+function parseJsonString(jsonString) {
+  try {
+    var json = JSON.parse(jsonString);
+    if (typeof json === 'object') {
+      for (var key in json) {
+        if (typeof json[key] === 'string') {
+          json[key] = parseJsonString(json[key]);
+        }
+      }
+    }
+    return json;
+  } catch (e) {
+    return jsonString;
+  }
+}
+
+function getIframeUrl(url){
+	if ('undefined'!==typeof websys_getMWToken){
+		if(url.indexOf("?")==-1){
+			url = url+"?MWToken="+websys_getMWToken()
+		}else{
+			url = url+"&MWToken="+websys_getMWToken()
+		}
+	}
+	return url
+}
+
 	</SCRIPT>
 </BODY>
 </HTML>

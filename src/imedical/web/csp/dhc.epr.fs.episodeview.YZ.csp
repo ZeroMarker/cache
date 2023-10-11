@@ -1,0 +1,106 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+
+<TITLE>就诊浏览</TITLE>	
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">	
+	<script src="../scripts/epr/JQuery/jquery-1.8.0.min.js"></script>
+	<script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+	<script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/metro/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+	
+	<script language="cache" runat="server">
+	s RegNo = $Get(%request.Data("RegNo",1),"")
+	s IDCard = $Get(%request.Data("IDCard",1),"")
+	s SchemeID = ##class(DHCEPRFS.BL.BLPrintScheme).GetSchemeIDByDefault("VIEW")
+	</script>
+	<script type="text/javascript">
+		var RegNo = '#(RegNo)#';
+		var IDCard = '#(IDCard)#';
+		var SchemeID = '#(SchemeID)#';
+	</script>
+			
+	<script src="../scripts/epr/js/fs.episodeviewyz.js"></script>
+	<style type="text/css">
+		label {
+            font-size:14px;
+            height:25px;   
+            line-height:25px;   
+        }
+	    .datagrid-header .datagrid-cell span,.datagrid-cell,.datagrid-cell-group,.datagrid-header-rownumber,.datagrid-cell-rownumber {
+		    font-size: 14px;
+		}
+		a.l-btn span span.l-btn-text {
+			font-size: 14px;
+		}
+		.combo .combo-text,.combobox-item {
+			font-size: 14px;
+		}
+		.pagination-info,.pagination span {
+			font-size: 14px;
+		}
+	</style>
+</head>
+
+<body  class="easyui-layout" style="width:100%;height:100%;margin:0;padding:0;">
+	<div  id = "episodeDiv" class="easyui-layout" data-options="region:'east',split:true,title:'就诊列表'" style="padding:0px;width:400px;" >
+		<div class="easyui-panel" id="episodeListTableTBar" style="padding:10px 0;">
+			<table cellpadding="2" cellspacing="0" border="0" style="width:400px;">
+				<tr>
+					<td>
+						<label for="inputStartDate">起始日期</label>
+						<input id="inputStartDate" class="easyui-datebox" style="width:120px;">
+					</td>
+					<td>
+						<label for="inputEndDate">截止日期</label>
+						<input id="inputEndDate" class="easyui-datebox" style="width:120px;">
+					</td>
+				</tr>
+				<tr>
+					<td>
+				    	<label for="inputAdmType">就诊类型</label>
+						<input id="inputAdmType" class="easyui-combobox" style="width:120px;">
+					</td>
+					<td id="IPLoctd">
+						<label for="inputPatientLoc">就诊科室:&nbsp;&nbsp;</label>
+                        <div class="datagrid-toolbar" id="inputPatientLocTbar" name="inputPatientLocTbar" style="width:100%;height:30px;">  
+                            <table>  
+                                <tr>  
+                                    <th>检索:</th>
+                                    <td>
+                                        <input type="inputPatientLocText" id="inputPatientLocText" name="inputPatientLocText"/>  
+                                    </td>
+                                    <td>
+                                    	<div class="dialog-tool-separator"></div>  
+                                    </td>
+                                    <td>
+                                        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-no',plain:true" id="inputPatientLocClear">清空</a>  
+                                    </td>
+                                </tr>
+                            </table> 
+                        </div>
+                        <select id="inputPatientLoc" name="inputPatientLoc" class="easyui-combogrid" style="width:90px;height:25px;"></select>
+					</td>
+				</tr>
+				<tr>
+					<td>
+					</td>
+					<td>
+						<a href="#" id="btnSearch" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<table id="episodeListTable" data-options="fit:true"></table>
+	</div>
+	<div  class="easyui-layout" data-options="region:'center'" style="width:1300px;height:100%;">
+		<div id="iframeDIV" style="width:100%;height:100%;">
+			<iframe id="contentIFrame" src="" frameborder="0" style="border:0;width:100%;height:100%;"></iframe>	     
+		</div>
+	</div>	
+</body>
+</html>

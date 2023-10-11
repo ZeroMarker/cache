@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<!--
+    调价 - 批次价 - 审核
+    csp:  csp/pha.in.v3.aspb.audit.csp
+    js:   scripts/pha/in/v3/aspb/audit.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+
+    <server>
+        s aspbExeFlag = $g(%request.Data("exeflag", 1))
+    </server>
+    <script type="text/javascript">
+        var ASPBEXEFLAG = "#(aspbExeFlag)#" || '';
+    </script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',iconCls:'icon-paper',bodyCls:'panel-body-gray',headerCls:'panel-header-gray'" style="border-radius:4px;" id="layout-aspb-audit-panel">
+                    <table id="gridAspb"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridAspbBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("开始日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="startDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="endDate">#(..Get("结束日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="endDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="nextStatusResult">#(..Get("状态"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="nextStatusResult" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="stkCatGrp">#(..Get("类组"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="stkCatGrp" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <label for="filterField">#(..Get("其他"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="filterField" class="hisui-validatebox" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnFind">查询</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnClean">清屏</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <a data-pha-btn class="hisui-linkbutton js-pha-aspb-audit" data-options="plain:true,iconCls:'icon-ok'" id="btnAudit">审核</a>
+        <a data-pha-btn class="hisui-linkbutton js-pha-aspb-audit" data-options="plain:true,iconCls:'icon-undo'" id="btnAuditCancel">取消审核</a>
+        <a data-pha-btn class="hisui-linkbutton js-pha-aspb-exe" data-options="plain:true,iconCls:'icon-ok'" id="btnExecute">生效</a>
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/aspb/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/aspb/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/aspb/audit.js"></script>
+</body>
+
+</html>

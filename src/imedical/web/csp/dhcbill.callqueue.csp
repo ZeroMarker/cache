@@ -1,0 +1,142 @@
+<!-- 
+ * FileName: dhcbill.callqueue.csp
+ * Author: ZhYW
+ * Date: 2021-08-19
+ * Description: 叫号
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head> 
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<server>
+		set QueueType=%request.Get("QueueType")
+	</server>
+	<style>
+		.btn-space {
+			margin-left: 30px;
+		}
+	</style>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:4px;display:flex;">
+			<div class="messager-popover info" style="top:10px;float:left;left:10px;right:10px;">
+				<span class="messager-popover-icon info"></span>
+				<span class="content">
+					正在呼叫：<label></label>
+				</span>
+			</div>
+			<div style="align-self:center;margin: auto;">
+				<a href="javascript:;" class="hisui-linkbutton big" id="btn-call" data-options="iconCls:'icon-big-ring',plain:true">呼叫下一患者</a>
+				<a href="javascript:;" class="hisui-linkbutton big btn-space" id="btn-reCall" data-options="iconCls:'icon-big-ring-blue',plain:true">重复呼叫下一患者</a>
+				<a href="javascript:;" class="hisui-linkbutton big btn-space" id="btn-passCall" data-options="iconCls:'icon-big-skip-no',plain:true">过号并呼叫下一患者</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var init = function() {
+			//叫号
+			$("#btn-call").click(function() {
+				if ($("#" + this.id).linkbutton("options").disabled) {
+					return;
+				}
+				$("#" + this.id).linkbutton("toggleAble");
+
+				$.m({
+					ClassName: "BILL.AUX.BL.CallQueue",
+					MethodName: "CallNO",
+					queueType: "#(QueueType)#",
+					client: ClientIPAddress,
+					sessionStr: getSessionStr()
+				}, function(rtn) {
+					var myAry = rtn.split("^");
+					if (myAry[0] == 0) {
+						var queueId = myAry[1];
+						setCallMsg(queueId);
+						return;
+					}
+					$.messager.popover({msg: (myAry[1] || myAry[0]), type: 'error'});
+				});
+			});
+			
+			//重复呼叫
+			$("#btn-reCall").click(function() {
+				if ($("#" + this.id).linkbutton("options").disabled) {
+					return;
+				}
+				$("#" + this.id).linkbutton("toggleAble");
+
+				$.m({
+					ClassName: "BILL.AUX.BL.CallQueue",
+					MethodName: "ReCallNO",
+					queueType: "#(QueueType)#",
+					client: ClientIPAddress,
+					sessionStr: getSessionStr()
+				}, function(rtn) {
+					var myAry = rtn.split("^");
+					if (myAry[0] == 0) {
+						var queueId = myAry[1];
+						setCallMsg(queueId);
+						return;
+					}
+					$.messager.popover({msg: (myAry[1] || myAry[0]), type: 'error'});
+				});
+			});
+			
+			//过号
+			$("#btn-passCall").click(function() {
+				if ($("#" + this.id).linkbutton("options").disabled) {
+					return;
+				}
+				$("#" + this.id).linkbutton("toggleAble");
+				
+				$.messager.confirm("确认", "确认过号呼叫下一患者？", function(r) {
+					if (!r) {
+						return;
+					}
+					$.m({
+						ClassName: "BILL.AUX.BL.CallQueue",
+						MethodName: "PassCallNO",
+						queueType: "#(QueueType)#",
+						client: ClientIPAddress,
+						sessionStr: getSessionStr()
+					}, function(rtn) {
+						var myAry = rtn.split("^");
+						if (myAry[0] == 0) {
+							var queueId = myAry[1];
+							setCallMsg(queueId);
+							return;
+						}
+						$.messager.popover({msg: (myAry[1] || myAry[0]), type: 'error'});
+					});
+				});
+			});
+		}
+		
+		var setCallMsg = function(queueId) {
+			var json = getPersistClsObj("BILL.AUX.CallQueue", queueId);
+			var patientId = json.PAPMIDR;
+			var patName = getPropValById("PA_PatMas", patientId, "PAPMI_Name");
+			var msg = json.QueueNo + "号，患者：" + patName;
+			$(".messager-popover .content>label").text(msg);
+			
+			//头菜单传值
+			var frm = dhcsys_getmenuform();
+			if (frm) {
+				frm.PatientID.value = patientId;
+			}
+		}
+		
+		$(init);
+	</script>
+</body>
+</html>

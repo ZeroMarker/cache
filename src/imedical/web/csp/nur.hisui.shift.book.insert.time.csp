@@ -1,0 +1,277 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var hospID="#(hospID)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+	  	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+<style id="easyui-color-style">.color-cell{display:inline-block;float:left;cursor:pointer;border:1px solid #fff}.color-cell:hover{border:1px solid #000}</style>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<div class="hisui-panel" title="基本配置" style="" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="shiftTable" style="width:100%">
+		</table>
+	</div>
+	
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+
+<script type="text/javascript">
+
+
+var entity=""
+var xcTopContors=""
+var xcChange={}
+var json={
+	control:function(){
+		var ShiftIntoDetailData=[
+		{"text":"否","value":"0"},
+		{"text":"是","value":"1"}
+		]
+		
+		
+		var ShiftClassData=[]
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftClassList",{},function(rtn){
+				var rtnArr={}
+				for(var i=0;i<rtn.length;i++){
+					var rtnArr={
+						'text':rtn[i].ShiftClassName,
+						'value':rtn[i].ID
+						}
+					ShiftClassData.push(rtnArr)
+				}
+		},'json',false);
+		
+		var controlArrsBak=[
+			{'id':'ShiftClassID','type':'combox','objData':ShiftClassData,'title':'班次类别','required':'true','style':'width:307px;'},
+			{'id':'ShiftIntoDetail','type':'combox','objData':ShiftIntoDetailData,'title':'开始时间','required':'true','style':'width:307px;'},
+			{'id':'Sort','type':'text','title':'排序号','required':'true','style':'width:300px;'},
+			{'id':'ValidPatient','type':'combox','multiple':'true','queryName':'GetApplyPatient','title':'适用患者','style':'width:307px;'},
+
+			//{'id':'ActiveFlag','type':'combox','objData':ActiveFlagData,'title':'激活状态','style':'width:307px;'}
+		]
+		
+		var SymbolData=[
+		{"text":"今日","value":"0"},
+		{"text":"次日","value":"1"},
+		{"text":"前日","value":"-1"}
+		
+		]
+		var TypeData=[
+		{"text":"第一班","value":"1"},
+		{"text":"第二班","value":"2"},
+		{"text":"第三班","value":"3"},
+		{"text":"第四班","value":"4"},
+		{"text":"第五班","value":"5"},
+		{"text":"第六班","value":"6"},
+		{"text":"第七班","value":"7"},
+		{"text":"第八班","value":"8"},
+		{"text":"第九班","value":"9"},
+		{"text":"第十班","value":"10"},
+		]
+		var GroupData=[
+		{"text":"第一组","value":"1"},
+		{"text":"第二组","value":"2"},
+		{"text":"第三组","value":"3"},
+		{"text":"第四组","value":"4"},
+		{"text":"第五组","value":"5"},
+		{"text":"第六组","value":"6"},
+		{"text":"第七组","value":"7"},
+		{"text":"第八组","value":"8"},
+		{"text":"第九组","value":"9"},
+		{"text":"第十组","value":"10"},
+		]
+		var AgeData=[
+		{"text":"新生儿(<28天)","value":"1"},
+		{"text":"28天<婴儿<=1岁","value":"2"},
+		{"text":"1岁<儿童<=14岁","value":"3"},
+		{"text":"成人(>14岁)","value":"4"}
+		]
+		
+		
+		var controlArrs=[
+			{'id':'TimeGroup','type':'combox','objData':GroupData,'title':'组别','defaultValue':1,'style':'width:307px;'},
+			{'id':'ShiftName','type':'text','title':'班次名称','required':'true','style':'width:300px;'},
+			{'id':'Type','type':'combox','objData':TypeData,'title':'班次类型','required':'true','style':'width:307px;'},
+			{'id':'kssj','title':'开始时间','required':'true'},
+			{'id':'ShiftStartSymbol','pid':'kssj','type':'combox','objData':SymbolData,'defaultValue':0,'required':'true','style':'width:100px;'},
+			{'id':'ShiftStartTime','pid':'kssj','type':'text','required':'true','placeholder':'格式:HH:mm:ss','style':'width:200px;'},
+			{'id':'jssj','title':'结束时间','required':'true'},
+			{'id':'ShiftEndSymbol','pid':'jssj','type':'combox','objData':SymbolData,'defaultValue':0,'required':'true','style':'width:100px;'},
+			{'id':'ShiftEndTime','pid':'jssj','type':'text','required':'true','placeholder':'格式:HH:mm:ss','style':'width:200px;'},
+			{'id':'ShiftColor','type':'text','title':'颜色','style':'width:300px;'},
+			{'id':'ShiftTempCode','type':'text','title':'打印模板','style':'width:300px;'},
+			{'id':'ShiftIntoDetail','type':'combox','objData':ShiftIntoDetailData,'title':'带入明细','required':'true','defaultValue':1,'style':'width:307px;'},
+			{'id':'IntoLast','type':'combox','objData':ShiftIntoDetailData,'title':'引用前班次内容','required':'true','defaultValue':0,'style':'width:307px;'},
+			{'id':'Sort','type':'text','title':'排序号','required':'true','style':'width:300px;'},
+			{'id':'ValidPatient','type':'combox','multiple':'true','objData':AgeData,'title':'适用患者','style':'width:307px;'},
+
+
+		]
+		return controlArrs
+	},
+	create:function(tableID){
+		var controlArrs=json.control()
+		doHtml(controlArrs,tableID)
+		$("#ShiftColor").attr("type","color")
+		 $("#ShiftColor").color({
+			editable:true,
+			required:true,
+			width:110,
+			height:30
+		});
+		
+	},
+	setValue:function(id,className,methodName){
+		
+		runClassMethod(className,methodName,{id:id},function(rtn){
+			entity=rtn
+		},'json',false);
+
+	},
+	save:function(id,className,methodName){
+		var parms = ""
+		var controlArrs=json.control()
+		var topParms = resultParms(controlArrs)
+		var downParms = ""
+		var rsTxt=""
+		if(topParms!=""){
+			var rtnParms=setAllParms([parms,topParms,downParms])
+			rtnParms.id=id
+			rtnParms.ShiftBookID=ShiftBookID
+			
+			rtnParms.ShiftColor=$("#ShiftColor").color("getValue")
+			
+			runClassMethod(className,methodName,{data:JSON.stringify(rtnParms)},function(rtn){
+				if(rtn == 0) {
+					
+				} else if(rtn == 1){
+					//$.messager.alert('提示','保存失败！'+ rtn , "info");
+					rsTxt = "保存失败！"
+				}else if(rtn == 2){
+					rsTxt = "报错失败，存在相同的组名"
+				}
+				
+			
+			},'json',false);
+		
+			
+		}else{
+			rsTxt = "保存失败,存在必填项为空！"
+		}
+		return rsTxt
+	}
+	
+}
+
+
+$(function(){
+	$('body').addClass('active')
+	if(id!=""){
+		json.setValue(id,"Nur.SHIFT.Service.ShiftConfigController","GetShiftBookTimeById")
+	}
+	json.create("shiftTable")
+	
+})
+
+function saveFunLib(){
+	return json.save(id,"Nur.SHIFT.Service.ShiftConfigController","InsertShiftBookTime")
+	
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

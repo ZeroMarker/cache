@@ -1,6 +1,4 @@
-<csp:method name=OnPreHTTP
-            arguments=""
-            returntype=%Boolean>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
     i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
     q 1
 </csp:method>
@@ -13,12 +11,12 @@
 	</title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI />
-	<script type="text/javascript"
-			src="../scripts/nurse/hisui-0.1.0/dist/js/config/nurseKnowledgeConfig.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/nurseKnowledgeConfig.js" charset=gbk></script>
 	<STYLE type='text/css'>
 		body {
-            background-color: #fff;
-            padding:5px!important;
+            background-color: #f5f5f5;
+            padding:4px !important;
         }
         .td_label {
         	text-align:right;
@@ -36,121 +34,142 @@
 	        border-left:0;
 	        border-bottom:0;
         }
+        .layout>.panel.layout-panel>.panel-header {
+	    	border-top-right-radius:4px;
+	        border-top-left-radius:4px;
+	    }
+	    .accordion>.panel>.panel-body, .layout>.panel>.panel-body, .panel.combo-p>.panel-body, .panel.lookup-p>.panel-body, .panel.window>.panel-body, .tabs-panels>.panel>.panel-body {
+			border-bottom-right-radius:4px;
+	        border-bottom-left-radius:4px;
+		}
+		.panel-body-gray, .panel-header-gray.panel-body.panel-body-noheader {
+			border-top: 0px;
+			border-right: 0px;
+			border-left: 0px;
+		}
+		#tableEdit {
+			border-collapse: separate;
+			border-spacing: 10px 10px;
+			border:1px solid transparent;
+		}
 	</STYLE>
 </head>
 
 <body>
 	<div class="hisui-layout"
 	     data-options="fit:true">
-	    <div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" 
-			 style="height:60px;padding:5px;">
-			<table cellpadding="20">
-				<tr>
-					<td>院区</td>
-					<td class="td_item">
-						<select id="comboHospital" 
-								class="hisui-combobox" 
-								style="width:220px;"
-								data-options="disabled:true">
-						</select>
-					</td>
-					<td class="td_label">病区</td>
-					<td class="td_item">
-						<select id="comboDepartment" 
-								class="hisui-combobox" 
-								style="width:220px;"
-								data-options="disabled:true">
-						</select>
-					</td>
-					<td class="td_label">
-						<a id="btnSearch" class="hisui-linkbutton hover-dark">查询</a>
-					</td>
-				</tr>
-			</table>
-		</div>
 	    <div data-options="region:'west',split:true"
 	         style="width:250px;border:none">
 	        <div id="knowledgePanel"
 	        	 class="hisui-panel"
-	             data-options="title:'知识库列表',fit:true,headerCls:'panel-header-gray'">
+	             data-options="title:'知识库列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-template'">
 				<ul id="knowledgeCategoryTree" class="hisui-tree">
 	            </ul>
 	            <div id="menuTree" class="hisui-menu" style="width:120px;">
 				</div>		            
 	        </div>
 	    </div>
-	    <div data-options="title:'元素列表',region:'center',split:true,headerCls:'panel-header-gray'">
-	        <div class="hisui-layout" data-options="fit:true,border:false">
-	        	<div data-options="region:'west',border:false" style="width:60px;">
-	        		<a id="btnAddT" style="width:60px;border-bottom:1px solid white" class="hisui-linkbutton">文本</a>
-		        	<a id="btnAddO" style="width:60px;border-bottom:1px solid white" class="hisui-linkbutton">O</a>
-		        	<a id="btnAddM" style="width:60px;border-bottom:1px solid white" class="hisui-linkbutton">M</a>
-		        	<a id="btnAddD" style="width:60px;border-bottom:1px solid white" class="hisui-linkbutton">D</a>
-	        	</div>
-	        	<div data-options="region:'center',border:false" style="border-left:1px solid dotted;">
-	            	<ul id="elementTree">
-	            	</ul>
-	            	<div id="menuElement" class="hisui-menu" style="width:120px;">
-					</div>	
-	        	</div>
+	    <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;padding-left:-1px;">
+	        <div class="hisui-panel" data-options="title:'元素列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-set-col'">
+		        <div class="hisui-layout" data-options="fit:true,border:false">
+		        	<div data-options="region:'west',border:false" style="width:60px;">
+		        		<a id="btnAddA" style="width:60px;background-color:gray;border-bottom:1px solid white" class="hisui-linkbutton">A</a>
+			        	<a id="btnAddO" style="width:60px;background-color:#509de1;border-bottom:1px solid white" class="hisui-linkbutton">O</a>
+			        	<a id="btnAddM" style="width:60px;background-color:#EE7942;border-bottom:1px solid white" class="hisui-linkbutton">M</a>
+			        	<a id="btnAddD" style="width:60px;background-color:#4EEE94;border-bottom:1px solid white" class="hisui-linkbutton">D</a>
+			        	<a id="btnAddN" style="width:60px;background-color:#8552A1;border-bottom:1px solid white" class="hisui-linkbutton">N</a>
+		        	</div>
+		        	<div data-options="region:'center',border:false" style="border-left:1px solid dotted;">
+		            	<ul id="elementTree">
+		            	</ul>
+		            	<div id="menuElement" class="hisui-menu" style="width:120px;">
+						</div>	
+		        	</div>
+		        </div>
 	        </div>
-	        
 	    </div>
 	    <div data-options="region:'east',split:true"
-	         style="width:1000px;border:none">
-	        <div class="hisui-layout" data-options="fit:true">
-			    <div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" 
+	         style="width:1000px;border:none;padding-left:-1px;">
+	        <div id="contentlayout" class="hisui-layout" data-options="fit:true">
+			    <div data-options="region:'north',split:true,title:'内容（A-文本，O-下拉，M-多选，D-日期，N-数值）',headerCls:'panel-header-gray',iconCls:'icon-ref'" 
 			 		 style="height:350px;"> 
-			        <div id="contentPanel"
-			        	 class="hisui-panel"
-			             data-options="title:'内容',fit:true,headerCls:'panel-header-gray'"
-			             style="padding:4px;">
-			        </div>
-			    </div>
-			    <div data-options="region:'center',split:true" style="border:none">
-			    	<div>
-						<a id="btnSave" title="保存" style="float:right" class="hisui-linkbutton">保存</a>
-					</div>
-			    </div>
-			    <div data-options="region:'south',split:true" style="border:none;height:300px;">
-				    	<div id="editPanel"
-				    		 class="hisui-panel"
-				             data-options="title:'编辑',fit:true,headerCls:'panel-header-gray'"
-				             style="overflow-y:auto;padding:10px;">
-				             <table id="tableEdit" cellpadding="20">
-								<tr id="trFirst" style="display:none;">
-									<td style="width:40px;">名称</td>
-									<td>
-										<input id="txtName" 
-											   class="textbox" 
-											   style="width:300px;">
-									</td>
-									<td></td>
-								</tr>
-								<tr>
-									<td>内容</td>
-									<td colspan="2" class="td_item">
-										<div id="divArea"><textarea id="txtItem" style="width:800px;height:120px;"></textarea></div>
-										<div id="divDatetime" style="display:none">
-											<input id="date" class="hisui-datebox textbox datebox-f combo-f" value="2020-02-17"></input>
-											<input id="time" class="hisui-timespinner" data-options="showSeconds:true" style="border-radius: 2px;">
-											<br>
-											<input class="hisui-checkbox" type="checkbox" label="日期" checked="checked" id="cbDate">
-											<input class="hisui-checkbox" type="checkbox" label="时间" checked="checked" id="cbTime">
-										</div>
-									</td>
-								</tr>
-								<tr id="trLast" style="display:none;">
-									<td>默认</td>
-									<td>
-										<input id="txtDefaultVal" 
-											   class="textbox" 
-											   style="width:300px;">
-									</td>
-									<td></td>
-								</tr>
-							</table>
+			 		<div class="hisui-layout" data-options="fit:true">
+			 			<div data-options="region:'north',border:false" style="height:258px;"> 
+			 				<div id="contentPanel"
+					        	 class="hisui-panel panel-header-gray"
+					             data-options="fit:true"
+					             style="border-radius:0px;">
+					        </div>
+				 		</div>
+				 		<div data-options="region:'center',border:false" style="padding:10px 0 10px 10px;">
+					        <a id="btnSave" title="保存" class="hisui-linkbutton" style="float:right;margin-right:10px;">保存</a>
 				        </div>
+				 	</div>
+			    </div>
+			    <div data-options="region:'center',split:true,border:false">
+			    	<div id="propertyLayout" class="hisui-layout" data-options="fit:true">
+			    		<div data-options="region:'west',split:true,border:false" style="width:500px;">
+							<div id="editPanel"
+					    		 class="hisui-panel"
+					             data-options="title:'编辑',fit:true,headerCls:'panel-header-gray',iconCls:'icon-target-arrow'"
+					             style="overflow-y:auto;">
+					             <table id="tableEdit">
+									<tr id="trFirst" style="display:none;">
+										<td style="width:28px;">#(..Get("名称"))#</td>
+										<td>
+											<input id="txtName" 
+												   class="hisui-textbox textbox" 
+												   style="width:400px;">
+										</td>
+										<td></td>
+									</tr>
+									<tr>
+										<td style="vertical-align:text-top;padding-top:6px;">#(..Get("内容"))#</td>
+										<td colspan="2" class="td_item">
+											<div id="divArea"><textarea id="txtItem" class="hisui-textbox textbox" style="width:393px;height:120px;padding:6px;"></textarea></div>
+											<div id="divDatetime" style="display:none">
+												<input id="date" class="hisui-datebox textbox datebox-f combo-f" style="width:146px;">
+												<input id="time" class="hisui-timespinner timespinner-f spinner-text spinner-f validatebox-text" data-options="showSeconds:true" style="border-radius: 2px;width:145px;">
+												&nbsp;
+												<input class="hisui-checkbox" type="checkbox" label="日期" checked="checked" id="cbDate">
+												<input class="hisui-checkbox" type="checkbox" label="时间" checked="checked" id="cbTime">
+											</div>
+											<div id="divNumber" style="display:none;"><input class="hisui-numberbox textbox" data-options="isKeyupChange:true" id="txtNumber" style="width:407px;"></div>
+										</td>
+									</tr>
+									<tr id="trLast" style="display:none;">
+										<td>#(..Get("默认"))#</td>
+										<td>
+											<input id="txtDefaultVal" 
+												   class="hisui-textbox textbox" 
+												   style="width:400px;">
+										</td>
+										<td></td>
+									</tr>
+								</table>
+					        </div>
+			    		</div>
+			    		<div data-options="region:'center',split:true,border:false">
+							<div class="hisui-layout" data-options="fit:true,border:false">
+								<div data-options="region:'north',split:true,border:false" style="height:92px">
+									<div id="sourcePanel" class="hisui-panel" data-options="title:'数据源',fit:true,headerCls:'panel-header-gray',iconCls:'icon-key'">
+										<table id="tableEdit" data-options="fit:true">
+											<tr>
+												<td><a id="btnSource" class="hisui-linkbutton">绑定</a></td>
+												<td><a id="btnClear" class="hisui-linkbutton">清空</a></td>
+												<td><input id="txtSource" class="textbox" style="width:300px;"></td>
+												<td><input id="sourceCode" class="textbox" style="width:50px;display:none;"></td>
+											</tr>
+										</table>
+									</div>
+								</div>
+								<div data-options="region:'center',split:true,border:false">
+									<div id="referPanel" class="hisui-panel" data-options="title:'关联项',fit:true,headerCls:'panel-header-gray',iconCls:'icon-barbell'">
+										<div id="kw" style="padding:5px;"></div>
+									</div>
+								</div>
+							</div>
+			    		</div>
 			    	</div>
 			    </div>
 			</div>
@@ -160,7 +179,7 @@
 		<div style="padding:10px">	
 			<table style="border-collapse:separate; border-spacing:0px 10px;">	
 				<tr>
-					<td class="td-label">病区</td>
+					<td class="td-label">#(..Get("病区"))#</td>
 					<td>
 						<select id="comboWard" 
 								class="hisui-combobox" 
@@ -168,20 +187,22 @@
 						</select>
 					</td>
 				</tr>
+				<!--
 				<tr>
 					<td class="td-label">关键字</td>
 					<td>
 						<input id="wardKey" style="width:250px;" class="textbox">
 					</td>
 				</tr>
+				-->
 				<tr>
-					<td class="td-label">描述</td>
+					<td class="td-label">#(..Get("描述"))#</td>
 					<td>
 						<input id="desc" style="width:250px;" class="textbox">
 					</td>
 				</tr>
 				<tr>
-					<td class="td-label">授权</td>
+					<td class="td-label">#(..Get("授权"))#</td>
 					<td>
 						<select id="comboAuthLoc" 
 								class="hisui-combobox" 
@@ -196,18 +217,30 @@
 		<div style="padding:10px">	
 			<table style="border-collapse:separate; border-spacing:0px 10px;">	
 				<tr>
-					<td class="r-label">名称</td>
+					<td class="r-label">#(..Get("名称"))#</td>
 					<td>
-						<input id="cateName" style="width:250px;" class="textbox">
+						<input id="cateName" style="width:255px;" class="textbox">
 					</td>
 				</tr>
 				<tr>
-					<td class="r-label">描述</td>
+					<td class="r-label">#(..Get("描述"))#</td>
 					<td>
-						<input id="cateDesc" style="width:250px;" class="textbox">
+						<input id="cateDesc" style="width:255px;" class="textbox">
 					</td>
 				</tr>
 			</table>
+		</div>
+	</div>
+	<div id="dialogSource" data-options="iconCls:'icon-w-key'">
+		<div class="hisui-panel" data-options="fit:true,border:false" style="padding:10px;">
+			<div id="tabSource" class="hisui-tabs tabs-gray" data-options="fit:true">   
+				<div title="外部" style="padding:20px;">   
+					<ul id="outTree" class="hsiui-tree" data-options="animate:true"></ul>
+				</div>   
+				<div title="内部" style="padding:20px">   
+					<ul id="inTree" class="hsiui-tree" data-options="animate:true"></ul>
+				</div>
+			</div>
 		</div>
 	</div>
 </body>

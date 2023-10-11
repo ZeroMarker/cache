@@ -1,0 +1,745 @@
+<!-- 数据明细模态框 -->
+<style class="vsddStyle">
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+#vsddStartDate+.datebox>input,#vsddEndDate+.datebox>input{width: 83px!important;}
+.vsddTable .datagrid-view1>.datagrid-body, .vsddTable .datagrid-view2>.datagrid-body{max-height: 350px!important;}
+.vsddTable .panel-body{border-color: #cccccc;}
+.vsddTable td.warning>div{width: 140px;color: rgb(246, 164, 5);border: 2px solid rgb(246, 164, 5)!important;box-sizing: border-box;height: 33px!important;line-height: 29px;}
+#vsddStartTime,#vsddEndTime {width: 60px!important;}
+.vsddTable .datagrid-view2 td.fControl{background: #e4e4e4!important;}
+#patFrame{height:40px;}
+</style>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<div id="vsddModal" class="hisui-dialog" title="#(..Get("数据明细"))#" style="top: 50px;left: 300px;padding: 5px 10px 10px;width: 1000px;overflow: hidden;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true">
+	<div id="patFrame" style="margin-bottom: 5px;">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<form id="vsddForm" style="padding: 10px 0;">
+		<table cellpadding="0" style="border-collapse: collapse;">
+			<tr>
+				<td class="r-label" style="padding-left: 10px;">
+					#(..Get("开始时间"))#
+				</td>
+				<td class="r-label">
+			    <input id="vsddStartDate" style="width: 120px;" class="hisui-datebox textbox" data-options="required:true"></input>
+				</td>
+				<td class="r-label">
+					<input id="vsddStartTime" style="width: 90px;border-radius: 2px;" class="hisui-timespinner">
+				</td>
+				<td class="r-label">#(..Get("结束时间"))#</td>
+				<td class="r-label">
+			    <input id="vsddEndDate" style="width: 120px;" class="hisui-datebox textbox" data-options="required:true"></input>
+				</td>
+				<td class="r-label">
+					<input id="vsddEndTime" style="width: 90px;border-radius: 2px;" class="hisui-timespinner">
+				</td>
+				<td class="r-label">
+	        <a href="#" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-find'" onclick="getVsddList();">#(..Get("查询"))#</a>
+				</td>
+				<td class="r-label">
+	        <a href="#" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-add'" onclick="getVsddList(1);">#(..Get("新增"))#</a>
+				</td>
+				<td class="r-label">
+	        <a href="#" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-save'" onclick="endEditVsddCell(1);">#(..Get("保存"))#</a>
+				</td>
+				<td class="r-label">
+					<a href="#" id="vsddTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+				</td>
+			</tr>
+		</table>
+	</form>
+  <div class="vsddTable">
+    <table id="dataDetails" class="hisui-datagrid" data-options="singleSelect:true,autoSizeColumn:false,fitColumns:false,pagination:true,toolbar:'#vsddForm',pageList:[20,50,100,200]"></table>
+  </div>
+</div>
+<script type="text/javascript">
+var vsddFlag=-1,vsddPage=1,vsddPageSize=20,curVsddET,colCodes=[],vsddTableData=[];
+var vsddPatInfo;
+// 更新模态框位置
+function updateVsddModalPos(id) {
+  var offsetLeft=(window.innerWidth-$('#'+id).parent().width())/2;
+  var offsetTop=(window.innerHeight-$('#'+id).parent().height())/2;
+  $('#'+id).dialog({
+		onBeforeClose: function() {
+			endEditVsddCell();
+		},
+    left: offsetLeft,
+    top: offsetTop
+  }).dialog("open");
+}
+function getVsddList(f) {
+	$('#vsddModal').dialog({
+		onBeforeClose: function() {
+			endEditVsddCell();
+		},
+    width: window.innerWidth-30,
+    height: window.innerHeight-30
+  }).dialog("open");
+	var tableHeight=window.innerHeight-205-$('#vsddModal #patFrame').height();
+	console.log(tableHeight);
+	$('.vsddStyle').append('.vsddTable .datagrid-view1>.datagrid-body, .vsddTable .datagrid-view2>.datagrid-body{max-height: '+tableHeight+'px!important;height: '+tableHeight+'px!important;}');
+	updateVsddModalPos("vsddModal");
+	var startdate=$("#vsddStartDate").datebox("getValue"),starttime=$("#vsddStartTime").timespinner("getValue");
+	var enddate=$("#vsddEndDate").datebox("getValue"),endtime=$("#vsddEndTime").timespinner("getValue");
+	if (!startdate||!starttime||!enddate||!endtime) {
+		$.messager.popover({msg: $g('请选择完整的日期时间！'),type:'alert'});
+		return false;
+	}
+  $cm({
+    ClassName: 'Nur.NIS.Service.VitalSign.Temperature',
+    MethodName: 'GetTempDataByDateArea',
+		episodeID:EpisodeID,
+		startdate:startdate,
+		starttime:starttime,
+		enddate:enddate,
+		endtime:endtime
+  }, function (res) {
+		var vsddFrozenCol=[
+			{title: "日期", field: "date", align:'center', width: 100},
+			{title: "时间", field: "time", align:'center', width: 60}
+	    ];
+		var vsddCol=[];
+		colCodes=[];
+		console.log(JSON.stringify(singleConfig));
+		singleConfig.map(function(e) {
+			var field=e.codeOri||e.code;
+			if (colCodes.indexOf(field)>-1) return;
+			vsddCol.push({
+				title: e.desc, 
+				field: field, 
+				align:'center', 
+				width: 140,
+				styler: function (value, row, index) {
+					console.log(e); // 此行代码不能删除、更改，	2619448
+					// 控制空白栏标题和空白栏的
+					if ((field.indexOf("_Title")>-1)||(("true"==e.blank)&&!row[field+"_Title"])) return 'background: #e4e4e4!important;';
+					if ((("undefined" == typeof value)||(""===value))&&row.fControl[field]) {
+						if (row.fControl[field].values.length>=singleConfigObj[field].times.length) {
+							return { class: "fControl" };
+						}
+					}
+					if (e.normalValueRangFrom || e.normalValueRangTo) {
+						if (value==parseFloat(value)) {
+							if (value < e.normalValueRangFrom || value > e.normalValueRangTo) {
+								return {class:"warning"};
+							}
+						}
+					}
+					// var dateValue=new Date(curDay+' '+curTime).valueOf();
+					// // 校验入院时间
+					// if (row.inHospDateTime) {
+					// 	var inHospDay=row.inHospDateTime.split(' ');
+					// 	var inHospDTValue=new Date(standardizeDate(inHospDay[0])+' '+inHospDay[1]).valueOf();
+					// 	if (inHospDTValue>dateValue) return 'background: #e4e4e4!important;';
+					// }
+					// // 校验转科时间
+					// if (!modify&&row.latestTransLocDateTime) {
+					// 	var transLocDay=row.latestTransLocDateTime.split(' ');
+					// 	var transLocDTValue=new Date(standardizeDate(transLocDay[0])+' '+transLocDay[1]).valueOf();
+					// 	if (transLocDTValue>dateValue) return 'background: #e4e4e4!important;';
+					// }
+				}
+			});
+			colCodes.push(field);
+			var e1=singleConfigObj[field+"_Title"];
+			if (e1) {
+				if (colCodes.indexOf(e1.code)>-1) return;
+				vsddCol.push({
+					title: e1.desc, 
+					field: e1.code, 
+					align:'center', 
+					width: 140,
+					styler: function (value, row, index) {
+						console.log(e1); // 此行代码不能删除、更改，	2619448
+						if (e1.normalValueRangFrom || e1.normalValueRangTo) {
+							if (value==parseFloat(value)) {
+								if (value < e1.normalValueRangFrom || value > e1.normalValueRangTo) {
+									return {class:"warning"};
+								}
+							}
+						}
+					}
+				});
+				colCodes.push(e1.code);
+			}
+		});
+		console.log(JSON.stringify(vsddCol));
+		var data=[];
+		res.map(function(e, i) {
+			var valueObj={};
+			var codes=Object.keys(e);
+			codes.map(function(code, i2) {
+				if (('date'==code)||('fControl'==code)) return;
+				var times=Object.keys(e[code]);
+				times.map(function(time, i3) {
+					if (!valueObj[time]) {
+						valueObj[time]={
+							date:e.date,
+							time:time
+						}
+					}
+					valueObj[time][code]=e[code][time].value;
+				})
+			})
+			var timeNodes=Object.keys(valueObj);
+			timeNodes.sort();
+			timeNodes.map(function(t, i4) {
+				data.push(valueObj[t]);
+			})
+		});
+		data.map(function (d,i) {
+			for (var j = 0; j < res.length; j++) {
+				if (d.date==res[j].date) {
+					data[i].fControl=res[j].fControl;
+					break;
+				}
+			}
+		})
+		if (1==f) {
+			var dateValue=new Date(standardizeDate(startdate)+' '+starttime).valueOf();
+			// 校验入院时间
+			var inHospDay=(vsddPatInfo.inHospDateTime||vsddPatInfo.regDateTime).split(' ');
+			var inHospDTValue=new Date(standardizeDate(inHospDay[0])+' '+inHospDay[1].slice(0,5)).valueOf();
+			if (inHospDTValue>dateValue) {
+				$.messager.popover({msg: $g('新增时间不能早于入院时间！'),type:'alert'});
+				return false;
+			}
+			if (!data.length||(startdate!=data[0].date)||(starttime!=data[0].time)) {
+				var fControl;
+				for (var i = 0; i < data.length; i++) {
+					if (startdate==data[i].date) {
+						fControl=data[i].fControl;
+						break;
+					}
+				}
+				if (!fControl) {
+					var fControl = $cm(
+						{
+							ClassName: "Nur.NIS.Service.VitalSign.Temperature",
+							MethodName: "GetFormulaControlData",
+							episodeID: EpisodeID,
+							date: startdate,
+							item: "",
+							userLocID: session["LOGON.CTLOCID"],
+						},
+						false
+					);
+				}
+				data.unshift({
+					date: startdate,
+					time: starttime,
+					fControl: fControl,
+				});
+			}else{
+				$.messager.popover({msg: $g('已存在开始日期时间行！'),type:'alert'});
+			}
+		}
+		vsddTableData=data;
+		$('#dataDetails').datagrid({
+			frozenColumns :[vsddFrozenCol],
+			columns :[vsddCol],
+			pageSize:vsddPageSize,
+			data:{total:vsddTableData.length,rows:vsddTableData},
+			onClickCell:function(index, field, value) {
+				if ((field.indexOf('date')>-1)||(field.indexOf('time')>-1)) return;
+				var rows=$('#dataDetails').datagrid('getRows')
+				if (field.indexOf('_Title')>-1) {
+					if (!rows[index].blank) return;
+					var bgColor=$('tr[datagrid-row-index="'+index+'"]>td[field="vsItem"]').css('backgroundColor');
+					if ('rgb(228, 228, 228)'==bgColor) return;
+				}
+				colIndex=colCodes.indexOf(field);
+				editVsddCell(index, field);
+			},
+			onLoadSuccess:function(data){
+				showVsddFControlTip();
+				setTimeout(function() {
+					updateVsddModalPos("vsddModal");
+				}, 300);
+			},
+			onClickRow:function(index,row){
+			}
+		}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
+		updateVsddModalPos("vsddModal");
+  	});
+}
+function addVsddSymbol(d){
+	$(curVsddET).val($(curVsddET).val()+d)
+}
+function endEditVsddCell(flag){
+	if (curVsddET) {
+		$(curVsddET).tooltip('hide');
+	}
+	var rows=$('#dataDetails').datagrid('getRows');
+	// 结束编辑
+	for (var i = 0, len = rows.length; i < len; i++) {
+		e=rows[i];
+		var ed = $('#dataDetails').datagrid("getEditors",i)[0];// 获取编辑器
+		if (ed) {
+			var field=ed.field;
+			var time=e.time;
+			var c=singleConfigObj[field];
+			if (JSON.parse(c.select)) {
+				var value=$(ed.target).combobox('getValue');
+				if ((''===value)&&("Y"==c.udFlag)) {
+					value=$(ed.target).combobox('textbox').val();
+					$(ed.target).combobox("setValue",value);
+				}
+			} else {
+				var value=$(ed.target).val();
+			}
+			$(ed.target).removeClass('error');
+			if (JSON.parse(c.validate)&&(''!==value)) {
+				var symbol = c.symbol;
+				if (!symbol || (symbol.indexOf(value)<0)) {
+					if (c.errorValueHightFrom || c.errorValueLowTo) {
+						if (value!=parseFloat(value)) {
+							$.messager.popover({msg: $g('请填写正确的数值！'),type:'alert'});
+							return false;
+						}
+						if (value > parseFloat(c.errorValueHightFrom) || value < parseFloat(c.errorValueLowTo)) {
+							$(ed.target).addClass('error');
+							$.messager.popover({msg: $g('填写的值超出正确范围！'),type:'alert'});
+							return false;
+						}
+					}
+				}
+			}
+			var fieldTitle=field+"_Title";
+			if (value&&singleConfigObj[fieldTitle]&&!e[fieldTitle]) {
+				$.messager.popover({msg: $g('录入空白栏数据前请先录入空白栏标题！'),type:'alert'});
+				return false;
+			}
+			if (singleConfigObj[field].formulaControl=="Y") {
+				checkVsddFormulaControl(e[field],value,i,field)
+			}
+			var res=$cm({
+				ClassName: 'Nur.NIS.Service.VitalSign.Temperature',
+				MethodName: "SaveObsDataByDay",
+				dataType: "text",
+				episodeID:EpisodeID,
+				modifyData:JSON.stringify([{
+					code:field,
+					value:value,
+					time:time
+				}]),
+				userID:session["LOGON.USERID"],
+				date:e.date,
+				userLocID:session["LOGON.CTLOCID"],
+				wardID:session['LOGON.WARDID']
+			}, false);
+			if ('-1000'==res) {
+				$('#dataDetails').datagrid('endEdit', i);
+				var oldOk = $.messager.defaults.ok;
+				var oldNo = $.messager.defaults.no;
+				$.messager.defaults.ok = $g("申请授权");
+				$.messager.defaults.no = $g("取消");
+				var btns = $.messager.confirm($g("提示"), $g("病人已出院，限制操作，请申请出院病历授权"), function (r) {
+					if (true===r) {
+						var url='nur.emr.dischargerecordauthorizeapply.csp?mouldType=SMTZ&regNo='+vsddPatInfo.regNo; 
+						if ("undefined" != typeof websys_getMWToken) {
+						url += "&MWToken=" + websys_getMWToken();
+						}
+						window.location.href=url;
+					}
+					/*要写在回调方法内,否则在旧版下可能不能回调方法*/
+					$.messager.defaults.ok = oldOk;
+					$.messager.defaults.no = oldNo;
+				}).children("div.messager-button");
+				btns.children("a.l-btn").css({width:'auto'});
+				$(".window-shadow").map(function (i,obj) {
+					$(obj).css({height:$(obj).prev().height()});
+				});
+			} else if (0==res) {
+				if (flag) {
+					$.messager.popover({msg: $g('数据保存成功'),type:'success'});
+				}
+			} else if (0==parseInt(res)) {
+				$.messager.popover({msg: $g(res.split("^")[1]),type:'info'});
+			} else {
+				$.messager.popover({msg: res,type:'alert'});
+					return false;
+			}
+			$('#dataDetails').datagrid('endEdit', i);
+			// 更新控制体征项录入频次的数据
+			if (singleConfigObj[field].formulaControl=="Y") {
+				updateVsddFormulaControlData(i,e.date);
+			} else {
+				showVsddFControlTip();
+			}
+			return true;
+		}
+	}
+	return true;
+}
+function checkVsddFormulaControl(oldVal,newVal,i,field) {
+	var date=vsddTableData[i].date;
+	var e = singleConfigObj[field];
+	var len=vsddTableData[i].fControl[field].values.length;
+	if ('undefined'==typeof oldVal) oldVal='';
+	if ((''===oldVal)&&(''!==newVal)) { // 添加数据
+		if ((vsddTableData[i].fControl[field].values.length+1)>=e.times.length) {
+			vsddTableData[i].fControl[field].values.length=len+1;
+			vsddTableData.map(function (v,ind) {
+				if ((date==v.date)&&((''===vsddTableData[ind][field])||('undefined'==typeof vsddTableData[ind][field]))&&(i!=ind)) {
+					$('.vsddTable tr[datagrid-row-index="'+ind+'"] td[field="'+field+'"]').addClass('fControl');
+					vsddTableData[ind].fControl[field].values.length=len+1;
+				}
+			})
+		}
+	}
+	if ((''!==oldVal)&&(''===newVal)) { // 删除数据
+		if ((vsddTableData[i].fControl[field].values.length-1)<e.times.length) {
+			vsddTableData[i].fControl[field].values.length=len-1;
+			vsddTableData.map(function (v,ind) {
+				if ((date==v.date)&&((''===vsddTableData[ind][field])||('undefined'==typeof vsddTableData[ind][field]))&&(i!=ind)) {
+					$('.vsddTable tr[datagrid-row-index="'+ind+'"] td[field="'+field+'"]').removeClass('fControl').off();
+					vsddTableData[ind].fControl[field].values.length=len-1;
+				}
+			})
+		}
+	}
+}
+function updateVsddFormulaControlData(i, date) {
+	var res = $cm(
+		{
+			ClassName: "Nur.NIS.Service.VitalSign.Temperature",
+			MethodName: "GetFormulaControlData",
+			episodeID: EpisodeID,
+			date: date,
+			item: "",
+			userLocID: session["LOGON.CTLOCID"],
+		},
+		false
+	);
+	vsddTableData.map(function (v,i) {
+		if (date==v.date) {
+			vsddTableData[i].fControl=res;
+		}
+	})
+	showVsddFControlTip();
+}
+function showVsddFControlTip(){
+	var $td = $(".vsddTable td.fControl");
+	console.log($td);
+	$td.mouseenter(function (event) {
+		console.log(event);
+		var item = $(this).attr("field");
+		var index = $(this).parent().attr("datagrid-row-index");
+		var itemsValue=vsddTableData[index].fControl[item];
+		var content = "体征项已录入，不允许多次录入！<br>";
+		content += "操作时间：" + itemsValue.opeTimes.join('/') + "<br>";
+		content += "数据时间：" + itemsValue.dataTimes.join('/') + "<br>";
+		content += "数值：" + itemsValue.values.join('/') + "<br>";
+		content += "操作用户：" + itemsValue.users.join('/') ;
+		var placement = "bottom";
+		if (index > 8) placement = "top";
+		$(this).popover({
+			trigger: "manual",
+			placement: placement,
+			content: content,
+		}).popover("show");
+	}).mouseleave(function () {
+		if ($(this) && $(this).popover) {
+			try {
+				$(this).popover("hide");
+			} catch (e) {}
+		}
+		$('div.webui-popover').hide();
+	});
+}
+function forwardVsddTableCell(index, field, keyCode) {
+  var rows = $("#dataDetails").datagrid("getRows"),
+    row = rows[index];
+  var colIndex=colCodes.indexOf(field);
+  switch (keyCode) {
+    case 38: //上
+      if (0 == index) {
+        index = rows.length - 1;
+        if (0 == colIndex) {
+          colIndex = colCodes.length - 1;
+        } else {
+          colIndex--;
+        }
+      } else {
+        index--;
+      }
+      break;
+    case 40: //下
+      if (index == rows.length - 1) {
+        index = 0;
+        if (colCodes.length - 1 == colIndex) {
+          colIndex = 0;
+        } else {
+          colIndex++;
+        }
+      } else {
+        index++;
+      }
+      break;
+    case 37: //左
+      if (0 == colIndex) {
+        if (0 == index) {
+          index = rows.length - 1;
+        } else {
+          index--;
+        }
+        colIndex = colCodes.length - 1;
+      } else {
+        colIndex--;
+      }
+      break;
+    case 39: //右
+      if (colIndex == colCodes.length - 1) {
+        colIndex = 0;
+        if (index == rows.length - 1) {
+          index = 0;
+        } else {
+          index++;
+        }
+      } else {
+        colIndex++;
+      }
+      break;
+    default:
+      return;
+  }
+	field=colCodes[colIndex];
+  editVsddCell(index, field, keyCode);
+}
+function editVsddCell(index, field, keyCode){
+	var rows=$('#dataDetails').datagrid('getRows'),row=rows[index];
+	var saveRes=endEditVsddCell();
+	if (!saveRes) return;
+  var $td = $(
+    '.vsddTable tr[datagrid-row-index="' + index + '"]>td[field="' + field + '"]'
+  );
+  var bgColor = $td.css("backgroundColor");
+  if ("rgb(228, 228, 228)" == bgColor) {
+    if (keyCode) {
+      forwardVsddTableCell(index, field, keyCode);
+    }
+    return;
+  }
+	var tipId=field+"Tip";
+	var c=singleConfigObj[field];
+	if (c.symbol&&!$("#"+tipId).length) {
+		var tipDom='<div id="'+tipId+'">';
+		c.symbol.map(function(e) {
+			tipDom+='<a href="#" name="symbol" class="easyui-linkbutton" data-options="plain:true" data-text="'+e+'"></a>';
+		})
+		tipDom+='</div>';
+		$("#toolTips").append(tipDom);
+		$("a[name='symbol']").map(function(index,elem) {
+			var text=$(this).data('text');
+      $(elem).linkbutton({size:'small',onClick:function () {addVsddSymbol(text);},text:text});
+		});
+	}
+	var e = $('#dataDetails').datagrid('getColumnOption', field);
+	if (JSON.parse(c.select)) {
+		var optData=[];
+		c.options.map(function(item) {
+			optData.push({item:item})
+		})
+		e.editor = {
+	    type:'combobox',
+	    options:{
+				valueField:'item',
+				textField:'item',
+				data:optData,
+				defaultFilter:6,
+	    }
+	  };
+	} else {
+		e.editor = {
+	    type:'text',
+	    options:{
+	      required:true
+	    }
+	  };
+	}
+	$('#dataDetails').datagrid('editCell', {
+		index:index,
+		field:[field]||[]
+	});
+	var ed = $('#dataDetails').datagrid("getEditor", {index: index, field: field});// 获取编辑器
+	curVsddET=ed.target;
+	$(ed.target).focus().bind('keyup',function(e) {
+		if ("vsItem"==field) {
+			// if (13==e.keyCode) endEditVsddCell();
+			return;
+		}
+		if (13==e.keyCode) e.keyCode=40;
+		switch(e.keyCode){
+		  case 38: //上
+				if (0==index) {
+					index=rows.length-1;
+					if (0==colIndex) {
+						colIndex=colCodes.length-1;
+					} else {
+						colIndex--;
+					}
+				} else {
+					index--;
+				}
+				break;
+		  case 40: //下
+				if (index==(rows.length-1)) {
+					index=0;
+					if ((colCodes.length-1)==colIndex) {
+						colIndex=0;
+					} else {
+						colIndex++;
+					}
+				} else {
+					index++;
+				}
+				break;
+		  case 37: //左
+				if (0==colIndex) {
+					if (0==index) {
+						index=rows.length-1;
+					} else {
+						index--;
+					}
+					colIndex=colCodes.length-1;
+				} else {
+					colIndex--;
+				}
+				break;
+		  case 39: //右
+				if ((colCodes.length-1)==colIndex) {
+					colIndex=0;
+					if (index==(rows.length-1)) {
+						index=0;
+					} else {
+						index++;
+					}
+				} else {
+					colIndex++;
+				}
+				break;
+		  default:
+				return;
+		}
+		field=colCodes[colIndex];
+		editVsddCell(index, field, e.keyCode)
+	})
+	if (JSON.parse(c.select)) {
+		$(ed.target).combobox('textbox').bind('focus',function(){
+      $(ed.target).combobox('showPanel')
+      $(ed.target).combobox('textbox').bind("keyup",function(e) {
+				if ("vsItem"==field) {
+					// $(this).bind("change",endEditVsddCell);
+					return;
+				}
+      	if (13==e.keyCode) {
+      		keyCode=keyCode || 40;
+					switch(keyCode){
+					  case 38: //上
+							if (0==index) {
+								index=rows.length-1;
+								if (0==colIndex) {
+									colIndex=colCodes.length-1;
+								} else {
+									colIndex--;
+								}
+							} else {
+								index--;
+							}
+							break;
+					  case 40: //下
+							if (index==(rows.length-1)) {
+								index=0;
+								if ((colCodes.length-1)==colIndex) {
+									colIndex=0;
+								} else {
+									colIndex++;
+								}
+							} else {
+								index++;
+							}
+							break;
+					  case 37: //左
+							if (0==colIndex) {
+								if (0==index) {
+									index=rows.length-1;
+								} else {
+									index--;
+								}
+								colIndex=colCodes.length-1;
+							} else {
+								colIndex--;
+							}
+							break;
+					  case 39: //右
+							if ((colCodes.length-1)==colIndex) {
+								colIndex=0;
+								if (index==(rows.length-1)) {
+									index=0;
+								} else {
+									index++;
+								}
+							} else {
+								colIndex++;
+							}
+							break;
+					  default:
+							return;
+					}
+					field=colCodes[colIndex];
+					editVsddCell(index, field, keyCode)
+      	}
+      })
+    }).focus();
+	};
+	if (c.symbol) {
+		$(ed.target).tooltip({
+			position: 'top',
+			hideEvent: 'none',
+			deltaY: 10,
+			backgroundColor: "rgba(255,255,255,0.8)",
+			content: function(){
+				return $('#'+tipId);
+			},
+			onShow: function(){
+				$(this).tooltip('tip').css({
+					backgroundColor: '#fff',
+				});
+			}
+		});
+	}
+}
+function openVsddModal() {
+	if (!EpisodeID) return;
+	if (vsddFlag!=EpisodeID) {
+		vsddFlag=EpisodeID;
+		InitPatInfoBanner(EpisodeID);
+		vsddPatInfo=$cm({
+			ClassName: 'Nur.CommonInterface.Patient',
+			MethodName: 'getPatient',
+			episodeID: EpisodeID,
+		}, false);
+		vsddPatInfo.inHospDateTime=vsddPatInfo.inHospDateTime?vsddPatInfo.inHospDateTime.trim():'';
+		vsddPatInfo.regDateTime=vsddPatInfo.regDateTime?vsddPatInfo.regDateTime.trim():'';
+		var inHospDay=(vsddPatInfo.inHospDateTime||vsddPatInfo.regDateTime).split(' ');
+		$('#vsddStartDate').datebox('setValue', inHospDay[0]);
+		$('#vsddStartTime').timespinner('setValue', inHospDay[1].slice(0,5));
+		$('#vsddEndDate').datebox('setValue', formatDate(new Date()));
+		$('#vsddEndTime').timespinner('setValue', new Date().toString().split(' ')[4].slice(0,5));
+		var _content="<p>"+$g("红色框：")+$g("非有效数据")+"</p>";
+		_content+="<p>"+$g("黄色框：")+$g("非正常数据")+"</p>";
+		_content+="<p>"+$g("新增开始时间")+"</p>";
+		$("#vsddTip").popover({
+			trigger:'hover',
+			content:_content,
+			style:'inverse'
+		});
+	}
+	getVsddList();
+}
+// setTimeout(function(){
+// 	openVsddModal();
+// },800);
+</script>

@@ -1,9 +1,8 @@
 <!-- 
  * FileName: dhcbillmenu.ipconfig.csp
- * User: ZhYW
+ * Author: ZhYW
  * Date: 2019-11-21
- * Function: 住院业务参数配置
- * Description: 
+ * Description: 住院业务参数配置
 -->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
@@ -13,151 +12,94 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<server>
 	do ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("IPCONFIG")
+	set EnablePMASystem=##class(BILL.Interface.Inside.AuthItemApply).GetEnablePMASystem()
 	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			EnablePMASystem: "#(EnablePMASystem)#"
+		};
+		
+		//全局变量
+		var GV = {
+			ParamObj: {}
+		};
+	</script>
 </head>
 <body>
 	<table class="search-table" style="width:100%;margin-top:-10px;">
 		<tr>
-			<td class="r-label"><label>医院</label></td>
+			<td class="r-label"><label>#(..Get("医院"))#</label></td>
 			<td colspan="5"><input id="Hospital" class="hisui-combobox textbox"></td>
         </tr>
 		<tr>
-			<td class="r-label"><label>住院登记页面是否可以修改入院日期</label></td>    
-			<td><input id="RegEditAdmDate" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>是否必须录入登记号才能办理入院登记</label></td>    
-			<td><input id="RegNeedPatientNo" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>住院登记时是否判断患者年龄</label></td>    
-			<td><input id="RegCheckAge" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
+			<td class="r-label"><label>#(..Get("住院登记页面是否可以修改入院日期"))#</label></td>    
+			<td><input id="RegEditAdmDate" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("是否必须录入登记号才能办理住院"))#</label></td>    
+			<td><input id="RegNeedPatientNo" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("住院登记时是否判断患者年龄"))#</label></td>    
+			<td><input id="RegCheckAge" class="hisui-combobox textbox"/></td>
         </tr>
 		<tr>
-			<td style="width:260px;"><label>住院登记完成后是否自动打开交押金页面</label></td>    
-			<td><input id="RegLnkPayDep" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>退押金是否打印负票</label></td>    
-			<td><input id="StrikeDepRequireRcpt" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>退押金是否允许修改支付模式</label></td>    
-			<td><input id="RefDepModifyPayM" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
+			<td style="width:260px;"><label>#(..Get("住院登记完成后是否自动打开交押金页面"))#</label></td>
+			<td><input id="RegLnkPayDep" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("留观患者是否允许办理住院"))#</label></td>
+			<td><input id="StayToAdmin" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("退押金是否打印负票"))#</label></td>    
+			<td><input id="StrikeDepRequireRcpt" class="hisui-combobox textbox"/></td>
         </tr>
 		<tr>
-			<td class="r-label"><label>作废押金是否自动打印新押金收据</label></td>    
-			<td><input id="AbortDepRenewPrint" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>最终结算后是否可以交押金</label></td>
-			<td><input id="DischgPayDep" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>出院带药是否按计费点计费</label></td>
-			<td><input id="OutPhBillCondition" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-        </tr>
+			<td class="r-label"><label>#(..Get("退押金是否允许修改支付模式"))#</label></td>    
+			<td><input id="RefDepModifyPayM" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("最终结算后是否可以交押金"))#</label></td>
+			<td><input id="DischgPayDep" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("出院带药是否按计费点计费"))#</label></td>
+			<td><input id="OutPhBillCondition" class="hisui-combobox textbox"/></td>
+		</tr>
 		<tr>
-			<td class="r-label"><label>欠费结算是否打印发票</label></td>    
-			<td><input id="PrintQFInv" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>打印多张发票</label></td>    
-			<td><input id="MultiPrintInv" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>取消结算是否打印负票</label></td>    
-			<td><input id="StrikeInvRequireInv" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-        </tr>
+			<td class="r-label"><label>#(..Get("打印多张发票"))#</label></td>    
+			<td><input id="MultiPrintInv" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("医保患者是否允许中途结算"))#</label></td>
+			<td><input id="InsuIntPay" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("取消结算是否打印负票"))#</label></td>    
+			<td><input id="StrikeInvRequireInv" class="hisui-combobox textbox"/></td>
+		</tr>
 		<tr>
-			<td class="r-label"><label>作废发票是否自动打印新发票</label></td>    
-			<td><input id="AbortInvRenewPrint" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>医保患者是否允许中途结算</label></td>
-			<td><input id="InsuIntPay" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>未到账支票预交金是否参与结算</label></td>
-			<td><input id="CheckPayOrNot" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-        </tr>
+			<td class="r-label"><label>#(..Get("结算患者费用时是否可以选择押金"))#</label></td>
+			<td><input id="SelectDepToPay" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("未到账支票押金是否参与结算"))#</label></td>
+			<td><input id="CheckPayOrNot" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("挂失押金是否参与结算"))#</label></td>
+			<td><input id="LostDepPayOrNot" class="hisui-combobox textbox"/></td>
+		</tr>
 		<tr>
-			<td class="r-label"><label>结算患者费用时是否可以选择押金</label></td>
-			<td><input id="SelectDepToPay" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>财务结算是否需要费用审核</label></td>    
-			<td><input id="ConfirmPatFee" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>住院证办理入院登记有效天数</label></td>
-			<td><input id="IPBookValidFromDate" class="hisui-numberspinner textbox" data-options="min:1,editable:false" style="width:55px;"/><label style="padding:0 5px;">前</label><input id="IPBookValidToDate" class="hisui-numberspinner textbox" data-options="min:1,editable:false" style="width:55px;"/><label style="padding-left:5px;">后</label></td>
-        </tr>
-        <tr>
-        	<td class="r-label"><label>账务开始日期</label></td>
+			<td class="r-label"><label>#(..Get("账务开始日期"))#</label></td>
 			<td><input id="AccountFromDate" class="hisui-datebox textbox"/></td>
-			<td class="r-label"><label>是否按院区计算住院次数</label></td>  
-			<td><input id="CalcInTimesByHosp" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-			<td class="r-label"><label>有未结账记录时是否能办理入院</label></td>
-			<td><input id="RegCheckUnPay" class="hisui-combobox textbox" data-options="
-				panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-				data:[{id:'Y',text:'是'},{id:'N',text:'否'}]
-			"/></td>
-        </tr>
+			<td class="r-label"><label>#(..Get("财务结算是否需要费用审核"))#</label></td>
+			<td><input id="ConfirmPatFee" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("住院证办理入院登记有效天数"))#</label></td>
+			<td><input id="IPBookValidFromDate" class="hisui-numberspinner textbox" data-options="min:0,editable:false" style="width:55px;"/><label style="padding:0 5px;">#(..Get("前"))#</label><input id="IPBookValidToDate" class="hisui-numberspinner textbox" data-options="min:0,editable:false" style="width:55px;"/><label style="padding-left:5px;">#(..Get("后"))#</label></td>
+		</tr>
         <tr>
-        	<td class="r-label"><label>按指定金额拆分账单自定义价格医嘱</label></td>
-			<td><input id="IntArcim" class="hisui-combobox textbox" data-options="
-				panelHeight: 150,
-				url: $URL + '?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem&ResultSetType=array',
-				mode: 'remote',
-				method: 'get',
-				delay: 500,
-				valueField: 'ArcimRowID',
-				textField: 'ArcimDesc',
-				onBeforeLoad: function (param) {
-					param.Alias = param.q;
-					param.HospId = $('#Hospital').combobox('getValue')
-				}
-			"/></td>
+			<td class="r-label"><label>#(..Get("按指定金额拆分账单自定义价格医嘱"))#</label></td>
+			<td><input id="IntArcim" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("是否按院区计算住院次数"))#</label></td>  
+			<td><input id="CalcInTimesByHosp" class="hisui-combobox textbox"/></td>
+			<td class="r-label"><label>#(..Get("有未结账记录时是否能办理住院"))#</label></td>
+			<td><input id="RegCheckUnPay" class="hisui-combobox textbox"/></td>
+		</tr>
+        <tr>
+        	<td class="r-label"><label>#(..Get("是否必须有住院证才能办理住院"))#</label></td>
+			<td><input id="RegNeedIPBook" class="hisui-combobox textbox"/></td>
         </tr>
         <tr>
         	<td colspan="6" style="text-align:center;">
-        		<a id="BtnUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+        		<a id="Btn-Save" href="javascript:;" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
         	</td>
         </tr>
 	</table>

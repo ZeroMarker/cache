@@ -1,0 +1,93 @@
+<style>
+	 .PatImage{
+		position: absolute;
+		top: 3px;
+		width:30px;
+	 	height:30px;
+	 	border-radius:30px;
+	 	margin-left: 10px;
+	 }
+	 .PatInfoItem{
+		position: absolute;
+		top: 3px;
+		/*left: 39px;*/
+		margin-left:10px;
+	 }
+	 .PatInfoItem span{
+		 color:black;
+		 margin:0 5px;
+	 }
+	 .PatInfoItem img{
+		 color:white;
+		 margin:0 5px;
+	 }
+	 .PatInfoItem a img{
+		 margin-top:4px;
+	 }
+	 /*.panel-tool a{*/
+	 #win-min,#win-close{
+		 opacity:1;
+		 background-color:white;
+		 border-radius:3px;
+	 }
+	 #win-min:hover,#win-close:hover{
+		 background-color:red;
+		 background-image:'';
+	}
+	 .man{
+		 background:url(../images/man.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .woman{
+		 background:url(../images/woman.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .i-btn-right{
+	 	position: absolute;
+	    right: 10px;
+	    top: 3px;
+ 	}
+ 	 .baseIcon img{
+	 margin-left:5px;
+	 margin-right:5px;
+ }
+</style>
+<div class="PatInfoItem"></div>
+<script language="javascript">
+var EpisodeID = "#(EpisodeID)#";
+function setPatientInfo(EpisodeID) {
+		$m({
+			ClassName: "web.DHCDoc.OP.AjaxInterface",
+			MethodName: "GetOPInfoBar",
+			CONTEXT: "",
+			EpisodeID: EpisodeID
+		}, function(html) {
+			if (html != "") {
+				$(".PatInfoItem").html(reservedToHtml(html));
+			} else {
+				$(".PatInfoItem").html("获取病人信息失败。请检查【患者信息展示】配置。");
+			}
+		});
+
+		function reservedToHtml(str) {
+			var replacements = {
+				"&lt;": "<",
+				"&#60;": "<",
+				"&gt;": ">",
+				"&#62;": ">",
+				"&quot;": "\"",
+				"&#34;": "\"",
+				"&apos;": "'",
+				"&#39;": "'",
+				"&amp;": "&",
+				"&#38;": "&"
+			};
+			return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g, function(v) {
+				return replacements[v];
+			});
+		}
+}
+if (EpisodeID !== "") {
+	setPatientInfo(EpisodeID)
+}
+</script>

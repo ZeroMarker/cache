@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--门诊配液-配伍审核
+	csp:pha.opivas.v4.oeaudit.csp
+    js: pha/opivas/v4/oeaudit.js
+    配伍审核基本用不到读卡，患者不会来配液中心
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <script language=javascript>
+        if (typeof HISUIStyleCode == 'string' && HISUIStyleCode == 'lite') {
+            $(function(){
+                $('body').append('<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.lite.css"></link>');
+            });
+        }
+    </script>
+    <style>
+        #lyWinCen .datagrid-header {
+            display: none
+        }
+
+        #lyWinCen {
+            border-top: none;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',border:false">
+                    <div id="panelOeAudit" class="hisui-panel" title="配伍审核" iconCls="icon-pivas-oeaudit" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'">
+                        <table id="gridOeAudit"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridOeAuditBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conStDate">#(..Get("医嘱日期"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox" id='conStDate' data-pha='class:"hisui-datebox",query:true' />
+                    <input class="hisui-datebox" id='conEdDate' data-pha='class:"hisui-datebox",query:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conPivasLoc">#(..Get("配液中心"))#</label>
+                </td>
+                <td>
+                    <input id='conPivasLoc' data-pha='class:"hisui-combobox",query:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conDocLoc">#(..Get("医生科室"))#</label>
+                </td>
+                <td>
+                    <input id='conDocLoc' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conEMLGLoc">#(..Get("留观室"))#</label>
+                </td>
+                <td>
+                    <input id='conEMLGLoc' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td>
+                    <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+                </td>
+                <td>
+                    <a id="btnStart" class="hisui-linkbutton" data-options="iconCls:'icon-w-clock'">#(..Get("自动刷新"))#</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conArcim">#(..Get("药品名称"))#</label>
+                </td>
+                <td>
+                    <input id='conArcim' data-pha='class:"hisui-lookup",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conPatNo">#(..Get("登记号"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-validatebox" id='conPatNo' style="width:153px" data-pha='class:"hisui-validatebox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conAuditStatus">#(..Get("审核状态"))#</label>
+                </td>
+                <td>
+                    <input id='conAuditStatus' data-pha='class:"hisui-combobox",query:true,clear:true' />
+                </td>
+                <td class="r-label">
+                </td>
+                <td>
+                </td>
+                <td>
+                    <a id="btnClean" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
+                </td>
+                <td>
+                    <a id="btnStop" class="hisui-linkbutton" data-options="iconCls:'icon-w-clock'">#(..Get("停止刷新"))#</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div class="pha-line-bar">
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-stamp-pass" id="btnPass">#(..Get("审核通过"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-audit-x" id="btnRefuse">#(..Get("审核拒绝"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-stamp-cancel" id="btnCancel">#(..Get("取消审核"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-paper-drug" id="btnMedPass" disabled style="display:none">#(..Get("合理分析"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-emr-cri" id="btnViewEMR">#(..Get("病历浏览"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-clock-record" id="btnRecord">#(..Get("审核记录"))#</a>
+        </div>
+
+    </div>
+    <!-- 审核拒绝原因选择 -->
+    <div id="reasonSelectDiv" class="hisui-dialog" title='选择原因' style="width:1000px;height:500px;color:white" data-options="closable:false,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-list',
+	buttons:[{
+        text:'确认',
+        id:'btnRefuseOK'
+	},{
+		text:'取消',
+		handler:function(){
+			$('#reasonSelectDiv').dialog('close');
+		}
+    }]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center'" style="padding:10px;border:none;padding-bottom:0px;">
+                <div class="hisui-layout" fit="true" border="false">
+                    <div id="lyWinCen" data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+                        <div class="hisui-panel" title="配伍原因" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'">
+                            <table id="treeGridReason"></table>
+                        </div>
+                    </div>
+                    <div data-options="region:'east',split:true,headerCls:'panel-header-gray',width:400" border="false" style="border-radius: 4px;overflow: hidden;">
+                        <div class="hisui-panel" title="备注" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'" style="overflow: hidden;">
+                            <textarea id="txtReasonNotes" style="width:100%;height:100%;overflow:hidden;border:none"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 病历浏览 -->
+    <div id="viewEMRDiv" class="hisui-dialog" title='病历浏览' style="width:1200px;height:580px;color:white" data-options="closable:true,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-list'">
+        <div class="hisui-layout" fit="true" border="false">
+            <div data-options="region:'center'" border="false" style="padding:10px">
+                <div class="hisui-layout" fit="true" border="false">
+                    <div id="lyWinCen" data-options="region:'center',headerCls:'panel-header-gray'" border="false">
+                        <div class="hisui-tabs tabs-gray" fit="true" id="tabsEMR">
+                            <div data-options="title:'病历浏览'">
+                                <iframe id="ifrmEMR" style="display:block;width:100%;height:100%"></iframe>
+                            </div>
+                            <div data-options="title:'过敏记录'">
+                                <iframe id="ifrmAllergy" style="display:block;width:100%;"></iframe>
+                            </div>
+                            <div data-options="title:'检查记录'">
+                                <iframe id="ifrmRisQuery" style="display:block;width:100%;"></iframe>
+                            </div>
+                            <div data-options="title:'检验记录'">
+                                <iframe id="ifrmLisQuery" style="display:block;width:100%;"></iframe>
+                            </div>
+                            <div data-options="title:'本次医嘱'" style="padding:10px">
+                                <iframe id="ifrmOrdQuery" style="display:block;width:100%;"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/echarts/echarts.min.js"></script>
+    <!-- 门诊配液公用 -->
+    <link rel="stylesheet" href="../scripts/pharmacy/pivas/css/ui.css">
+    </link>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/pass.tpn.js"></script>
+    <link rel="stylesheet" href="../scripts/pha/opivas/v4/css/ui.css">
+    </link>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-detailview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/ux.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/store.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/com.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/oeaudit.js"></script>
+</body>
+
+</html>

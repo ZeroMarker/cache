@@ -20,7 +20,7 @@
 	s CurRole=$Get(%request.Data("CurRole",1))
 	s CancelOper="N"
 	s Length=$l(RowIDs,",")
-	s SMFromLocDR=$p($g(^DHCEQEquip(+RowIDs)),"^",19)
+	s SMFromLocDR=$p($g(^DHCEQEquip(+RowIDs)),"^",67)
 	s TotalFee=0
 	for i=1:1:Length
 	{
@@ -28,30 +28,29 @@
 		//s SMFromLocDR=$p($g(^DHCEQEquip(rowid)),"^",67)
 		s TotalFee=TotalFee+$p($g(^DHCEQEquip(rowid)),"^",27)
 	}
-	s SMFromLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",SMFromLocDR)
-	s SMToLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",SMToLocDR)
+	s SMFromLoc=##Class(web.DHCEQCommon).GetTrakNameByID("dept",SMFromLocDR)
+	s SMToLoc=##Class(web.DHCEQCommon).GetTrakNameByID("dept",SMToLocDR)
 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
 </script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" title="调科信息" data-options="eqtitle:'maintitle',fit:true">
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:120px;">
-					
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
 					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label id="cSMFromLocDR_CTLOCDesc" for="SMFromLocDR_CTLOCDesc">转出科室</label></div>
+						<div class="eq-table-td eq-table-label-first"><label id="cSMFromLocDR_CTLOCDesc" for="SMFromLocDR_CTLOCDesc">转出科室</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="SMFromLocDR_CTLOCDesc" disabled="true"></div>
 						<div class="eq-table-td eq-table-label"><label></label></div>
 						<div class="eq-table-td eq-table-label15"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">生成转移单</a></div>
 					</div>
 					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><label id="cSMToLocDR_CTLOCDesc" for="SMToLocDR_CTLOCDesc">转入科室</label></div>
+						<div class="eq-table-td eq-table-label-first"><label id="cSMToLocDR_CTLOCDesc" for="SMToLocDR_CTLOCDesc">转入科室</label></div>
 						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="SMToLocDR_CTLOCDesc"></div>
 					</div>
 				</div>
 				<div data-options="region:'center',border:false" style="position:relative">
 					<table id="DHCEQEquipStockMove" class="hisui-datagrid"></table>
-					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:2px;">合计</span>
 				</div>
 			</div>
 		</div>
@@ -64,7 +63,7 @@
 			<INPUT type="hidden" id="SMFromLoc" value=#(SMFromLoc)#>
 			<INPUT type="hidden" id="SMToLocDR" value=#(SMToLocDR)#>
 			<INPUT type="hidden" id="SMToLoc" value=#(SMToLoc)#>
-			<INPUT type="hidden" id="SMMoveType" value="1">
+			<INPUT type="hidden" id="SMMoveType" value="">
 			<INPUT type="hidden" id="SMRowIDs" value=#(SMRowIDs)#>
 			<INPUT type="hidden" id="QXType" value=#(QXType)#>
 			<INPUT type="hidden" id="WaitAD" value=#(WaitAD)#>

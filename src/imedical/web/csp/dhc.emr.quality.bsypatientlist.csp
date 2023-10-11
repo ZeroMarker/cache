@@ -1,0 +1,61 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+	<head>
+        <title>病案首页质控查询</title>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    	<HISUI/> 
+        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+	</head>
+<body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+	<div data-options="region:'center',fit:true,border:false" class="div_center" style="padding:10px;">
+		<div class="hisui-panel" title="病案首页质控查询" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+            	<div data-options="region:'north',border:false" style="height:50px;overflow:hidden;">
+					<div id="messageListTableTBar" style="padding:10px;height:30">	
+						<div style="float:left;">
+							<span style="margin-right:10px;">#(..Get("质控结果"))#</span><select id="ischecked" class="hisui-combobox" style="width:150px;"></select>
+							<span style="margin:10px;">#(..Get("科室"))#</span><select id="ctLocID" class="hisui-combobox" style="width:150px;"></select>
+							<span style="margin:10px;">#(..Get("病案号"))#</span><input id="mrNo" class="hisui-validatebox textbox" style="width:150px;">
+			 				<span style="margin:10px;">#(..Get("开始时间"))#</span><input id="inputCreateDateStart" class="hisui-datebox" />
+			 				<span style="margin:10px;">#(..Get("结束时间"))#</span><input id="inputCreateDateEnd" class="hisui-datebox" />
+			 				<a id="btnOutPat" href="#" class="hisui-linkbutton hover-dark" onclick="doOutPat()" data-options="iconCls:'icon-w-find'" style="width:90px;margin:0 10px;">出院</a>
+							<a id="btnReclaim" href="#" class="hisui-linkbutton hover-dark" onclick="doReclaim()" data-options="iconCls:'icon-w-find'" style="width:90px;margin-right:10px;">回收</a>
+		 				</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="border: 1px #cccccc solid;border-left:none;border-right:none;">
+					<table class="hisui-datagrid" id="patientListTable" data-options="fit:true,border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+ 	<script language="cache" runat="server">
+ 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s UserID = %session.Get("LOGON.USERID")
+  		s UserLocID = %session.Get("LOGON.CTLOCID")
+		s HospitalID = %session.Get("LOGON.HOSPID")
+  		s DocID = ""
+		s Reclaim=""
+ 		s:(UserID '= "") DocID = ##Class(web.SSUser).GetDefaultCareProvider(UserID)
+		s HospitalName = ##Class(EPRservice.BOSysOption).GetValueByName("HospitalName")
+		s FormatDate = ##class(EMRservice.Tools.Tool).GetHISStandardDateTimeFormat("GetFormatExt","Date")
+ 	</script>
+ 	<script language="javascript">
+ 		var docID = '#(DocID)#';
+ 		var formatDate = '#(FormatDate)#';
+		var userID = '#(UserID)#';
+		var userLocID = '#(UserLocID)#';
+		var HospitalName = '#(HospitalName)#';
+		var SSGroupID = '#(SSGroupID)#';
+		var Reclaim = '#(Reclaim)#';
+		var HospitalID = '#(HospitalID)#';
+ 	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.BSYPatientList.js"></script>	
+</body>
+</html>

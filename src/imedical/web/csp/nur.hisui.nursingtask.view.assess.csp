@@ -1,0 +1,128 @@
+<!--csp:nur.hisui.taskoverview.csp-->
+<script language="cache" runat="SERVER">
+	s PatientListPage=""
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+	s DefaultCode = $G(%request.Data("DefaultCode", 1))
+	s SinglePatient = $G(%request.Data("SinglePatient", 1))
+  s episodeIDs = $G(%request.Data("EpisodeIDS", 1))
+  s componentArgs = $G(%request.Data("componentArgs", 1))
+  s codeStr = $G(%request.Data("codeStr", 1))
+  s endDateTime = $G(%request.Data("endDateTime", 1))
+  s startDateTime = $G(%request.Data("startDateTime", 1))
+  s showTaskTabName = $G(%request.Data("showTaskTabName", 1))
+  
+  
+  
+</script>
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts_lib/echarts4.8.0/echarts.min.js"></script>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding: 5px!important;
+        }
+        .patientbar {
+	    	padding-left: 40px;
+    		text-indent: -40px; 
+	    }
+	    .layout>.panel.layout-panel>.panel-header {
+		    padding: 1px 5px;
+		}
+		
+		
+		
+		.panel-header{
+			display:none;	
+
+		}
+	</STYLE>
+	
+	
+	
+
+
+  <server>
+ ; 是否显示左侧患者列表 Y 显示 其他 不显示
+ s IsShowPatList=$G(%request.Data("IsShowPatList", 1))
+ s IsShowAllPatient=$G(%request.Data("IsShowAllPatient", 1))
+ </server>
+<script language="javascript">
+function getQueryVariable(variable)
+{
+       var query = window.location.search.split("?")[1];
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+           var pair = vars[i].split("=");
+           if(pair[0] == variable){return pair[1];}
+       }
+       return "";
+}
+  var EpisodeID = "#(EpisodeID)#";
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+  episodeIDsStr="#($g(episodeIDs))#";
+  window.componentArgs="#($g(componentArgs))#";
+  window.codeStr="#($g(codeStr))#";
+  window.endDateTime="#($g(endDateTime))#";
+  window.startDateTime="#($g(startDateTime))#";
+  window.showTaskTabName=decodeURI(decodeURI(getQueryVariable("showTaskTabName")));
+
+  
+  // 获取url参数
+
+</script>
+
+</head>
+<body>
+	
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true"> 
+		
+		<csp:if condition='IsShowAllPatient="Y"'>
+			<csp:Include Page="nur.hisui.common.patientlist.csp">
+		</csp:if>
+       <div class="center_templates" data-options="region:'center',split:true">
+       		<div class="search" style="position: relative;margin: 10px 0;">
+				<table cellpadding="0">
+			    <tr>
+						<td class="r-label" style="padding-left: 10px;">开始日期</td>
+						<td class="r-label"><input id="startMVSDay" class="hisui-datebox textbox" style="width: 118px;" disabled></input></td>
+						<td class="r-label">结束日期</td>
+						<td class="r-label"><input id="endMVSDay" class="hisui-datebox textbox" style="width: 118px;" disabled></input></td>
+						<csp:if condition='IsShowAllPatient="Y"'>
+						<td class="r-label"><a class="hisui-linkbutton" id="serachBtn" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</csp:if>
+						
+			    </tr>
+			  </table>
+	        </div>
+			<div class="hisui-layout"  data-options="fit:true,split:true">
+				<div id="opeTabs" class="hisui-tabs tabs-gray" style="margin-bottom: 2px;height:600px;"></div>
+			</div>
+		</div>
+
+	</div>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.assess.js" charset=gbk></script>
+</body>
+</html>
+

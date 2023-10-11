@@ -111,7 +111,8 @@
 	.s rows=$Get(%request.Data("rows",1))
 	.s page=$Get(%request.Data("page",1))
 	.s params=$Get(%request.Data("params",1))
-	.w ##class(web.DHCADVMEDEVENTADD).QueryAdrEvent(rows,page,params)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.w ##class(web.DHCADVMEDEVENTADD).QueryAdrEvent(rows,page,params,HospDr)
 	
 	//不良反应/事件名称
 	i action = "QueryAdrEventCombo" d 
@@ -121,7 +122,8 @@
 	///查询-权限查看按类别
 	i action = "GetQuerySec" d
 	.s params=$Get(%request.Data("params",1))
-	.w ##class(web.DHCADVMEDEVENTADD).GetQuerySec(params)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.w ##class(web.DHCADVMEDEVENTADD).GetQuerySec(params,HospDr)
 	
 	//保存-权限查看按类别
 	i action = "SaveQuerySec" d
@@ -269,7 +271,8 @@
 	 //保存-工作流项目定义
 	i action = "SaveAdrEvtworkFlow" d
 	.s params=$Get(%request.Data("params",1))
-	.w ##class(web.DHCADVEVTWORKFLOW).SaveAdrEvtworkFlow(params)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).SaveAdrEvtworkFlow(params,HospDr)
 	
 	//删除-工作流项目定义
 	i action = "DelAdrEvtworkFlow" d
@@ -281,7 +284,8 @@
 	.s rows=$Get(%request.Data("rows",1))
 	.s page=$Get(%request.Data("page",1))
 	.s params=$Get(%request.Data("params",1))
-	.w ##class(web.DHCADVEVTWORKFLOW).QueryAdrEvtworkFlow(rows,page,params)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).QueryAdrEvtworkFlow(rows,page,params,HospDr)
 	
 	//保存-工作流项目
 	i action = "SaveAdrEvtworkFlowItm" d
@@ -322,7 +326,8 @@
 	///查询-工作流项目授权
 	i action = "QueryEventWorkFlowGrant" d
 	.s params=$Get(%request.Data("params",1))
-	.w ##class(web.DHCADVEVTWORKFLOW).QueryEventWorkFlowGrant(params)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).QueryEventWorkFlowGrant(params,HospDr)
 	
 	//权限指向ComboBox
 	i action = "GetSSPPoint" d
@@ -330,7 +335,8 @@
 	.s page=$Get(%request.Data("page",1))
 	.s params=$Get(%request.Data("params",1))
 	.s input=$Get(%request.Data("q",1))
-	.d ##class(web.DHCADVEVTWORKFLOW).GetSSPPoint(rows,page,params,input)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.d ##class(web.DHCADVEVTWORKFLOW).GetSSPPoint(rows,page,params,input,HospDr)
 	
 	//检查报告编码是否存在
 	i action = "SeaMataRepNo" d
@@ -579,12 +585,15 @@
 	.w ##class(web.DHCADVBLDREPORT).SearchRepNoRepet(bldRepNo)
 
 //============================查询不良反应报告=====================================
-	//科室信息 2016-09-29 congyue
+	//科室信息 2016-09-29 congyue 2021-03-10 cy 修改为获取所有科室
 	i action = "GetQueryLoc" d
-	.S RepTypeCode=$Get(%request.Data("RepTypeCode",1))
-	.S input=$Get(%request.Data("q",1))
-	.w ##class(web.DHCADVMEDEVENTADD).GetQueryLoc(RepTypeCode,input)
-	.
+	.;S RepTypeCode=$Get(%request.Data("RepTypeCode",1))
+	.;S input=$Get(%request.Data("q",1))
+	.;w ##class(web.DHCADVMEDEVENTADD).GetQueryLoc(RepTypeCode,input)
+	.S HospID=$Get(%request.Data("HospID",1))
+	.S q=$Get(%request.Data("q",1))
+	.w ##class(web.DHCADVCOMMONPART).SelLocDesc(HospID,q)
+
 	//科室信息
 	i action = "SelAllLoc" d
 	.s input=$Get(%request.Data("q",1))
@@ -861,7 +870,8 @@
 	.S page=$Get(%request.Data("page",1))
 	.S AdmDr=$Get(%request.Data("params",1))
 	.S InstruType=$Get(%request.Data("instrutype",1))
-	.S retval=##class(web.DHCADVDRUGCOMMON).GetPatOEInfo(rows,page,AdmDr,InstruType)
+	.S inpdesc=$Get(%request.Data("inpdesc",1))
+	.S retval=##class(web.DHCADVDRUGCOMMON).GetPatOEInfo(rows,page,AdmDr,InstruType,inpdesc)
 	.i retval'="" w ##class(web.DHCADVJSONCOMMON).getJsonEmptySign(0)
 	
 	
@@ -956,13 +966,13 @@
 
 //============================转抄操作=====================================
 	
-	///获取User信息
+	///获取User信息 2021-03-10 cy 修改获取该科室下的所有人员 
 	i action = "GetUserDr" d
 	.s rows=$Get(%request.Data("rows",1))
 	.s page=$Get(%request.Data("page",1))
 	.s params=$Get(%request.Data("params",1)) ;New
-	.w ##class(web.DHCADVSEARCHREPORT).GetUserDr(rows,page,params)
-	
+	.;w ##class(web.DHCADVSEARCHREPORT).GetUserDr(rows,page,params)
+	.w ##class(web.DHCADVCOMMONPART).GetUserList(rows,page,params)
 	///查询-User信息
 	i action = "QueryUserMess" d
 	.s rows=$Get(%request.Data("rows",1))
@@ -995,7 +1005,8 @@
 	i action = "SaveTranMess" d
 	.S medadrList=$Get(%request.Data("medadrList",1))
 	.S medadriList=$Get(%request.Data("medadriList",1))
-	.W ##class(web.DHCADVSEARCHREPORT).SaveTranMess(medadrList,medadriList)
+	.S LgParam=$Get(%request.Data("LgParam",1))
+	.W ##class(web.DHCADVSEARCHREPORT).SaveTranMess(medadrList,medadriList,LgParam)
 	
 	///保存-转抄回复信息
 	i action = "SaveReplyMess" d
@@ -1095,7 +1106,8 @@
 	.s rows=$Get(%request.Data("rows",1))
 	.s page=$Get(%request.Data("page",1))
 	.s params=$Get(%request.Data("params",1))
-	.w ##class(web.DHCADVMEDEVENTADD).QueryAdrEventItm(rows,page,params)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.w ##class(web.DHCADVMEDEVENTADD).QueryAdrEventItm(rows,page,params,HospDr)
 
 	//获取接收(审批)科室 2017-05-24 
 	i action = "QueryAuditLocList" d
@@ -1139,7 +1151,8 @@
 	///查询- 工作流 事件等级
 	i action = "QueryEvtWorkFlowLink" d
 	.s params=$Get(%request.Data("params",1))
-	.w ##class(web.DHCADVEVTWORKFLOW).QueryEvtWorkFlowLink(params)
+	.s HospDr=$Get(%request.Data("HospDr",1))
+	.w ##class(web.DHCADVEVTWORKFLOW).QueryEvtWorkFlowLink(params,HospDr)
 	//通过科室ID获取人员列表
 	i action = "GetLocUserList" d
    	.s input=$Get(%request.Data("q",1))			

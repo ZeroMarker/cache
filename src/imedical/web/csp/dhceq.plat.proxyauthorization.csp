@@ -1,0 +1,463 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language="cache" runat="server">
+    ///modified by ZY20230214 bug:3244516
+    s ReadOnly = $Get(%request.Data("ReadOnly",1))
+    s PMProductDR = $Get(%request.Data("PMProductDR",1))
+    s PMSourceType = $Get(%request.Data("PMSourceType",1))
+    s PMSourceID = $Get(%request.Data("PMSourceID",1))
+    s PMCheckRoleRD = $Get(%request.Data("PMCheckRoleRD",1))
+    s VendorDR = $Get(%request.Data("VendorDR",1))
+    s Vendor = $Get(%request.Data("Vendor",1))
+    if ((PMSourceType'="")&&(PMSourceID'=""))
+    {
+        if (PMSourceType=2)
+        {
+            s VendorDR=$p($g(^DHCEQOpenCheckRequest(PMSourceID)),"^",5)
+            s Vendor=##class(web.DHCEQCommon).GetTrakNameByID("prov",VendorDR)
+        }
+        elseif (PMSourceType=1)
+        {
+            s VendorDR=$p($g(^DHCEQEquip(PMSourceID)),"^",25)
+            s Vendor=##class(web.DHCEQCommon).GetTrakNameByID("prov",VendorDR)
+        }
+        /*
+        s ProductSaveResult=##Class(web.DHCEQ.Plat.CTProduct).SaveProductDataBySource(PMSourceType,PMSourceID)
+        s SQLCODE=$p(ProductSaveResult,"^",1)
+        s ProductInfo=$p(ProductSaveResult,"^",2)
+        */
+    }
+    //s (PCode,PDesc,PModels,PManufactoryDR,PManufactory,PAManufactoryDR,PAManufactory,PAAuthorizer,PAAuthorizerDesc)=""
+    s ProductInfo=$g(^DHCEQCTPLAT("Product",PMProductDR))
+    s PCode=$P(ProductInfo,"^",1)
+    s PDesc=$P(ProductInfo,"^",2)
+    s PAssetItemDR=$P(ProductInfo,"^",3)
+    s PModels=$P(ProductInfo,"^",5)
+    s PModels=##class(web.DHCEQCommon).GetTrakNameByID("model",PModels)
+    //s PSpecs=$P(ProductInfo,"^",6)
+    s PManufactoryDR=$P(ProductInfo,"^",7)
+    s PManufactory=##class(web.DHCEQCommon).GetTrakNameByID("manufacturer",PManufactoryDR)
+    s PAManufactoryDR=PManufactoryDR
+    s PAAuthorizer=PManufactoryDR
+    s PAAuthorizerDesc=PManufactory
+    s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+    s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+    s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+    
+    s Date=+$H
+    s User=##Class(web.DHCEQCommon).getMapIDBySource("user",%session.Get("LOGON.USERID"))
+    s Job=$j
+    s nodestr="tmpProductDR"
+</script>
+
+<style>
+    .icon-add
+    {
+        background-position-x:65px;
+    }
+</style>
+<body class="hisui-layout" data-options="fit:true,border:false">
+    <div data-options="region:'center',border:false" style="padding:10px 10px 10px 10px;">
+        <div class="hisui-panel" data-options="eqtitle:'edittitle',fit:true,bodyCls:'panel-body-gray'">
+            <div class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',border:false" style="border-bottom:dashed 0px #e2e2e2;padding-bottom:0px;">
+                    <div class="eq-table">
+                        <div class="eq-table-tr">
+                            <div class="eq-table-td eq-table-label-first" style="color:#666666">产品:</div>
+                            <div class="eq-table-td eq-table-info" id="vPDesc" style="color:#000000"></div>
+                            <div class="eq-table-td eq-table-label-new" style="color:#666666">型号:</div>
+                            <div class="eq-table-td eq-table-info" id="vPModels" style="color:#000000"></div>
+                            <div class="eq-table-td eq-table-label-new" style="color:#666666">生产厂家:</div>
+                            <div class="eq-table-td eq-table-info" id="vPManufactory" style="color:#000000"></div>
+                            <div class="eq-table-td eq-table-label-new" style="color:#666666">供应商:</div>
+                            <div class="eq-table-td eq-table-info" id="vVendor" style="color:#000000"></div>
+                            <div class="eq-table-td eq-table-label-new">
+                                <a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a>
+                                <a id="BProxyAuthorization" href="#" class="hisui-linkbutton" iconCls="icon-w-paper"  data-options="stopAllEventOnDisabled:true" style="margin-left:0px;">选择已有授权书</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="position:relative;padding:0px 10px 10px 10px;overflow:hidden"><!--    MZY0157	3220840		2023-03-29  -->
+                    <div style='height:33%;width:100%;'>
+                        <div style='float:left;height:408px;width:48%;'><!--    MZY0157	3220840		2023-03-29  -->
+                            <div id ="Authorization1" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="一级授权" style="padding:10px;"><!--    MZY0157	3220840		2023-03-29  -->
+                                <div class="hisui-layout" data-options="fit:true,border:false">
+                                    <div data-options="region:'center',border:false" style="border-bottom:dashed 0px #e2e2e2;height:40px;">
+                                        <div class="eq-table">
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorizer_VDesc1" for="PAAuthorizer_VDesc1">授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PAAuthorizer_VDesc1" disabled="true" value=#(PAAuthorizerDesc)#></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorized_VDesc1" for="PAAuthorized_VDesc1">被授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:207px" id="PAAuthorized_VDesc1" data-options="'component':'PLAT.L.Vendor'"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPADesc1" for="PADesc1">证书描述</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PADesc1"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableFromDate1" for="PAAvailableFromDate1">有效期</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableFromDate1"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableToDate1" for="PAAvailableToDate1">至</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableToDate1"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPAContext1" for="PAContext2">授权范围</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PAContext1" class="hisui-textarea textbox" style="width:200px" ></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPARemark1" for="PARemark1">备注</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PARemark1" class="hisui-textarea textbox" style="width:200px" ></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPALimitFlagSwitch1" for="PALimitFlagSwitch1">限定产品</label></div>
+                                                <div class="eq-table-td eq-table-input font-color"><div id="PALimitFlagSwitch1" ></div><a id="BProductMap1" href="#" style="width:140px;" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">授权产品</a></div> 
+                                            </div>
+                                            <div style="position:absolute;right:0px;top:0px;height:94%;width:45%;border:1px dashed #DCDCDC;padding:10px;"><!--    MZY0157	3220840		2023-03-29  -->
+                                                <img id="Image1" src="" height="100%" width="100%" style="display:none;"/>
+                                                <div id="DefaultImage1" class='icon-add' style="background-color:#F5F7F5;height:100%;width:100%;text-align:center;line-height:250px;vertical-align: middle;">
+                                                    <!--sapn style='padding:20px;background:url(../scripts_lib/hisui-0.1.0/dist/css/icons/add.png) no-repeat center;'></sapn-->
+                                                    <span style="font-size:20px;color:#666;">点击上传图片</span>
+                                                </div>
+                                            </div>
+                                            <div id="hiddenEncrypt" style="width:0;height:0;">
+                                                <INPUT type="hidden" id="PARowID1">
+                                                <INPUT type="hidden" id="PAAuthorizer1" value=#(PAAuthorizer)#>
+                                                <INPUT type="hidden" id="PAAuthorized1">
+                                                <INPUT type="hidden" id="PALimitFlag1">
+                                            </div>
+                                       </div>
+                                   </div>
+                               </div>
+                            </div>
+                        </div>
+                        <div style='float:left;height:420px;width:50%;margin-left:1%;'>
+                            <div id ="Authorization2" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="二级授权" style="padding:10px;"><!--    MZY0157	3220840		2023-03-29  -->
+                                <div class="hisui-layout" data-options="fit:true,border:false">
+                                    <div data-options="region:'center',border:false" style="border-bottom:dashed 0px #e2e2e2;height:40px;">
+                                        <div class="eq-table">
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorizer_VDesc2" for="PAAuthorizer_VDesc2">授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PAAuthorizer_VDesc2" disabled="true"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorized_VDesc2" for="PAAuthorized_VDesc2">被授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:207px" id="PAAuthorized_VDesc2" data-options="'component':'PLAT.L.Vendor'"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPADesc2" for="PADesc2">证书描述</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PADesc2"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableFromDate2" for="PAAvailableFromDate2">有效期</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableFromDate2"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableToDate2" for="PAAvailableToDate2">至</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableToDate2"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPAContext2" for="PAContext2">授权范围</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PAContext2" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPARemark2" for="PARemark2">备注</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PARemark2" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPALimitFlagSwitch2" for="PALimitFlagSwitch2">限定产品</label></div>
+                                                <div class="eq-table-td eq-table-input font-color"><div id="PALimitFlagSwitch2" ></div><a id="BProductMap2" href="#" style="width:140px" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">授权产品</a></div> 
+                                            </div>
+                                            <div style="position:absolute;right:0px;top:0px;height:90%;width:45%;border:1px dashed #DCDCDC;padding:10px;">
+                                                <img id="Image2" src="" height="100%" width="100%" style="display:none;"/>
+                                                <div id="DefaultImage2" class='icon-add' style="background-color:#F5F7F5;height:100%;width:100%;text-align:center;line-height:250px;vertical-align: middle;">
+                                                    <!--sapn style='padding:20px;background:url(../scripts_lib/hisui-0.1.0/dist/css/icons/add.png) no-repeat center;'></sapn-->
+                                                    <span style="font-size:20px;color:#666;">点击上传图片</span>
+                                                </div>
+                                            </div>
+                                            <div id="hiddenEncrypt" style="width:0;height:0;">
+                                                <INPUT type="hidden" id="PARowID2">
+                                                <INPUT type="hidden" id="PAAuthorizer2">
+                                                <INPUT type="hidden" id="PAAuthorized2">
+                                                <INPUT type="hidden" id="PALimitFlag2">
+                                            </div>
+                                       </div>
+                                   </div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style='height:33%;width:100%;'>                    
+                        <div style='float:left;height:420px;width:48%;'>
+                            <div id ="Authorization3" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="三级授权"  style="padding:10px;"><!--    MZY0157	3220840		2023-03-29  -->
+                                
+                                <div class="hisui-layout" data-options="fit:true,border:false">
+                                    <div data-options="region:'center',border:false" style="border-bottom:dashed 0px #e2e2e2;height:40px;">
+                                        <div class="eq-table">
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorizer_VDesc3" for="PAAuthorizer_VDesc3">授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PAAuthorizer_VDesc3" disabled="true"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorized_VDesc3" for="PAAuthorized_VDesc3">被授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:207px" id="PAAuthorized_VDesc3" data-options="'component':'PLAT.L.Vendor'"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPADesc3" for="PADesc3">证书描述</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PADesc3"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableFromDate3" for="PAAvailableFromDate3">有效期</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableFromDate3"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableToDate3" for="PAAvailableToDate3">至</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableToDate3"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPAContext3" for="PAContext3">授权范围</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PAContext3" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPARemark3" for="PARemark3">备注</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PARemark3" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPALimitFlagSwitch3" for="PALimitFlagSwitch3">限定产品</label></div>
+                                                <div class="eq-table-td eq-table-input font-color"><div id="PALimitFlagSwitch3" ></div><a id="BProductMap3" href="#" style="width:140px" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">授权产品</a></div> 
+                                            </div>
+                                            <div style="position:absolute;right:0px;top:0px;height:90%;width:45%;border:1px dashed #DCDCDC;padding:10px;">
+                                                <img id="Image3" src="" height="100%" width="100%" style="display:none;"/>
+                                                <div id="DefaultImage3" class='icon-add' style="background-color:#F5F7F5;height:100%;width:100%;text-align:center;line-height:250px;vertical-align: middle;">
+                                                    <!--sapn style='padding:20px;background:url(../scripts_lib/hisui-0.1.0/dist/css/icons/add.png) no-repeat center;'></sapn-->
+                                                    <span style="font-size:20px;color:#666;">点击上传图片</span>
+                                                </div>
+                                            </div>
+                                            <div id="hiddenEncrypt" style="width:0;height:0;">
+                                                <INPUT type="hidden" id="PARowID3">
+                                                <INPUT type="hidden" id="PAAuthorizer3">
+                                                <INPUT type="hidden" id="PAAuthorized3">
+                                                <INPUT type="hidden" id="PALimitFlag3">
+                                            </div>
+                                       </div>
+                                   </div>
+                               </div>
+                            </div>
+                        </div>
+                        <div style='float:left;height:420px;width:50%;margin-left:1%;'>
+                            <div id ="Authorization4" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="四级授权" style="padding:10px;"><!--    MZY0157	3220840		2023-03-29  -->
+                                <div class="hisui-layout" data-options="fit:true,border:false">
+                                    <div data-options="region:'center',border:false" style="border-bottom:dashed 0px #e2e2e2;height:40px;">
+                                        <div class="eq-table">
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorizer_VDesc4" for="PAAuthorizer_VDesc4">授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PAAuthorizer_VDesc4" disabled="true"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorized_VDesc4" for="PAAuthorized_VDesc4">被授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:207px" id="PAAuthorized_VDesc4" data-options="'component':'PLAT.L.Vendor'"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPADesc4" for="PADesc4">证书描述</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PADesc4"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableFromDate4" for="PAAvailableFromDate4">有效期</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableFromDate4"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableToDate4" for="PAAvailableToDate4">至</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableToDate4"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPAContext4" for="PAContext4">授权范围</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PAContext4" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPARemark4" for="PARemark4">备注</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PARemark4" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPALimitFlagSwitch4" for="PALimitFlagSwitch4">限定产品</label></div>
+                                                <div class="eq-table-td eq-table-input font-color"><div id="PALimitFlagSwitch4" ></div><a id="BProductMap4" href="#" class="hisui-linkbutton" style="width:140px" data-options="stopAllEventOnDisabled:true">授权产品</a></div> 
+                                            </div>
+                                            <div style="position:absolute;right:0px;top:0px;height:90%;width:45%;border:1px dashed #DCDCDC;padding:10px;">
+                                                <img id="Image4" src="" height="100%" width="100%" style="display:none;"/>
+                                                <div id="DefaultImage4" class='icon-add' style="background-color:#F5F7F5;height:100%;width:100%;text-align:center;line-height:250px;vertical-align: middle;">
+                                                    <!--sapn style='padding:20px;background:url(../scripts_lib/hisui-0.1.0/dist/css/icons/add.png) no-repeat center;'></sapn-->
+                                                    <span style="font-size:20px;color:#666;">点击上传图片</span>
+                                                </div>
+                                            </div>
+                                            <div id="hiddenEncrypt" style="width:0;height:0;">
+                                                <INPUT type="hidden" id="PARowID4">
+                                                <INPUT type="hidden" id="PAAuthorizer4">
+                                                <INPUT type="hidden" id="PAAuthorized4">
+                                                <INPUT type="hidden" id="PALimitFlag4">
+                                            </div>
+                                       </div>
+                                   </div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style='height:33%;width:100%;'>
+                        <div style='float:left;height:420px;width:48%;'>
+                            <div id ="Authorization5" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="五级授权" style="padding:10px;"><!--    MZY0157	3220840		2023-03-29  -->
+                                <div class="hisui-layout" data-options="fit:true,border:false">
+                                    <div data-options="region:'center',border:false" style="border-bottom:dashed 0px #e2e2e2;height:40px;">
+                                        <div class="eq-table">
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorizer_VDesc5" for="PAAuthorizer_VDesc5">授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PAAuthorizer_VDesc5" disabled="true"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorized_VDesc5" for="PAAuthorized_VDesc5">被授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:207px" id="PAAuthorized_VDesc5" data-options="'component':'PLAT.L.Vendor'"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPADesc5" for="PADesc5">证书描述</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px" id="PADesc5"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableFromDate5" for="PAAvailableFromDate5">有效期</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableFromDate5"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableToDate5" for="PAAvailableToDate5">至</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px" id="PAAvailableToDate5"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPAContext5" for="PAContext5">授权范围</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PAContext5" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPARemark5" for="PARemark5">备注</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PARemark5" class="hisui-textarea textbox" style="width:200px"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPALimitFlagSwitch5" for="PALimitFlagSwitch5">限定产品</label></div>
+                                                <div class="eq-table-td eq-table-input font-color"><div id="PALimitFlagSwitch5" ></div><a id="BProductMap5" href="#" style="width:140px" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">授权产品</a></div> 
+                                            </div>
+                                            <div style="position:absolute;right:0px;top:0px;height:90%;width:45%;border:1px dashed #DCDCDC;padding:10px;">
+                                                <img id="Image5" src="" height="100%" width="100%" style="display:none;"/>
+                                                <div id="DefaultImage5" class='icon-add' style="background-color:#F5F7F5;height:100%;width:100%;text-align:center;line-height:250px;vertical-align: middle;">
+                                                    <!--sapn style='padding:20px;background:url(../scripts_lib/hisui-0.1.0/dist/css/icons/add.png) no-repeat center;'></sapn-->
+                                                    <span style="font-size:20px;color:#666;">点击上传图片</span>
+                                                </div>
+                                            </div>
+                                            <div id="hiddenEncrypt" style="width:0;height:0;">
+                                                <INPUT type="hidden" id="PARowID5">
+                                                <INPUT type="hidden" id="PAAuthorizer5">
+                                                <INPUT type="hidden" id="PAAuthorized5">
+                                                <INPUT type="hidden" id="PALimitFlag5">
+                                            </div>
+                                       </div>
+                                   </div>
+                               </div>
+                            </div>
+                        </div>
+                        <div style='float:left;height:420px;width:50%;margin-left:1%;'>
+                            <div id ="Authorization6" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="六级授权" style="padding:10px;"><!--    MZY0157	3220840		2023-03-29  -->
+                                <div class="hisui-layout" data-options="fit:true,border:false">
+                                    <div data-options="region:'center',border:false" style="border-bottom:dashed 0px #e2e2e2;height:40px;">
+                                        <div class="eq-table">
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorizer_VDesc6" for="PAAuthorizer_VDesc6">授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px;" id="PAAuthorizer_VDesc6" disabled="true"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAuthorized_VDesc6" for="PAAuthorized_VDesc6">被授权者</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:207px;" id="PAAuthorized_VDesc6" data-options="'component':'PLAT.L.Vendor'"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPADesc6" for="PADesc6">证书描述</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:200px;" id="PADesc6"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableFromDate6" for="PAAvailableFromDate6">有效期</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px;" id="PAAvailableFromDate6"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPAAvailableToDate6" for="PAAvailableToDate6">至</label></div>
+                                                <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" style="width:207px;" id="PAAvailableToDate6"></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPAContext6" for="PAContext6">授权范围</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PAContext6" class="hisui-textarea textbox" style="width:200px;"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label" style="vertical-align: text-top;"><label id="cPARemark6" for="PARemark6">备注</label></div>
+                                                <div class="eq-table-td eq-table-input"><textarea id="PARemark6" class="hisui-textarea textbox" style="width:200px;"></textarea></div>
+                                            </div>
+                                            <div class="eq-table-tr">
+                                                <div class="eq-table-td eq-table-label"><label id="cPALimitFlagSwitchSwitch6" for="PALimitFlagSwitch6">限定产品</label></div>
+                                                <div class="eq-table-td eq-table-input font-color"><div id="PALimitFlagSwitch6" ></div><a id="BProductMap6" href="#" style="width:140px;" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">授权产品</a></div> 
+                                            </div>
+                                            <div style="position:absolute;right:0px;top:0px;height:90%;width:45%;border:1px dashed #DCDCDC;padding:10px;">
+                                                <img id="Image6" src="" height="100%" width="100%" style="display:none;"/>
+                                                <div id="DefaultImage6" class='icon-add' style="background-color:#F5F7F5;height:100%;width:100%;text-align:center;line-height:250px;vertical-align: middle;">
+                                                    <!--sapn style='padding:20px;background:url(../scripts_lib/hisui-0.1.0/dist/css/icons/add.png) no-repeat center;'></sapn-->
+                                                    <span style="font-size:20px;color:#666;">点击上传图片</span>
+                                                </div>
+                                            </div>
+                                            <div id="hiddenEncrypt" style="width:0;height:0;">
+                                                <INPUT type="hidden" id="PARowID6">
+                                                <INPUT type="hidden" id="PAAuthorizer6">
+                                                <INPUT type="hidden" id="PAAuthorized6">
+                                                <INPUT type="hidden" id="PALimitFlag6">
+                                            </div>
+                                       </div>
+                                   </div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="hiddenEncrypt" style="width:0;height:0;">
+        <form name="DHCEQ">
+            <INPUT type="hidden" id="PMSourceType" value=#(PMSourceType)#>
+            <INPUT type="hidden" id="PMSourceID" value=#(PMSourceID)#>
+            <INPUT type="hidden" id="PMProductDR" value=#(PMProductDR)#>
+            <INPUT type="hidden" id="PAManufactoryDR" value=#(PAManufactoryDR)#>
+            
+            <INPUT type="hidden" id="PDesc" value=#(PDesc)#>
+            <INPUT type="hidden" id="PModels" value=#(PModels)#>
+            <INPUT type="hidden" id="PManufactory" value=#(PManufactory)#>
+            <INPUT type="hidden" id="VendorDR" value=#(VendorDR)#>
+            <INPUT type="hidden" id="Vendor" value=#(Vendor)#>
+            <INPUT type="hidden" id="topLevel" value=6>
+            <INPUT type="hidden" id="curLevel" value=1>
+            
+            <INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+            <INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+            <INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+            
+            <INPUT type="hidden" id="Date" value=#(Date)#>
+            <INPUT type="hidden" id="User" value=#(User)#>
+            <INPUT type="hidden" id="Job" value=#(Job)#>
+            <INPUT type="hidden" id="nodestr" value=#(nodestr)#>
+            <INPUT type="hidden" id="PMCheckRoleRD" value=#(PMCheckRoleRD)#>
+            <INPUT type="hidden" id="ReadOnly" value=#(ReadOnly)#>
+            
+        </form>
+    </div>
+    <script type="text/javascript" src="../scripts/dhceq/plat/proxyauthorization.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--患者信息弹框
+	csp: csp/pha.op.v4.patinfo.csp
+	js:  scripts/pha/op/v4/patinfo.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <PHALIBV1 />
+    <style>
+        .datagrid-header {
+            border:none;
+           
+        }
+		.datagrid-toolbar{
+			border:none;
+			padding:0;
+		}
+    </style>
+     <server>
+        s admId = $g(%request.Data("admId",1),"")
+        s ordItmId = $g(%request.Data("ordItmId",1),"")
+        s prescNo= $g(%request.Data("prescNo",1),"")
+    </server>
+    <SCRIPT Language="Javascript">
+        var PHA_AdmId = "#(admId)#";
+        var PHA_Oeori= "#(ordItmId)#";
+        var PHA_PrescNo= "#(prescNo)#";
+    </SCRIPT>
+</head>
+
+<body>
+     <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',bodyCls:'panel-body-gray'">
+					<div id="gridPatInfo"></div>
+                </div>
+			</div>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/op/v4/patinfo.js"></script>
+</body>
+
+</html>

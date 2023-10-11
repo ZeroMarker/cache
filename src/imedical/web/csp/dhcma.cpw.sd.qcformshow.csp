@@ -9,30 +9,13 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 		<HISUI/>
-		<DHCMA:HEAD></DHCMA:HEAD>
-		<server>	
-			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
-   	   </server>
 	</head>
 	<body>
-	<style type="text/css">
-	.no-border {
-		border:0px !important;
-		border-radius:0px !important;
-		}
-	</style>
-	  	<script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
-		<script type="text/javascript"  src="../scripts/DHCMA/CPW/SD/QCFormShow/Gui.js"></script>
-		<script type="text/javascript"  src="../scripts/DHCMA/CPW/SD/QCFormShow/Event.js"></script>
-		<script type="text/javascript" src="../scripts/DHCMA/CPW/SD/plugin/datagrid-groupview.js"></script>
-	    <script type="text/javascript" src="../scripts/DHCMA/CPW/SD/QCFormShow/datagrid-export.js"></script>
-	    <script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
-	    <script language="Cache" RUNAT="SERVER">
-	    	If (IsSupportRQ2018'=1) {  //润乾2018支持直接打印，如需引入本方法，本方法影响加载速度
-		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
-		    }		
+		<csp:Include Page="dhcma.sd.qcform.show.csp">
+	    <script language="Cache" RUNAT="SERVER">		
            	Set MrListID =$g(%request.Data("MrListID",1))
            	Set title =$g(%request.Data("title",1))
+           	Set Version =$g(%request.Data("Version",1))  ;增加一个显示版本入参
            	Set IsMedUseHisMenu=##class(DHCMA.Util.BT.Config).GetValueByCode("SYSMedUseHISMenu")
            	Set menuCode="DHCMASDQCMrListQry"
            	Set:IsMedUseHisMenu=1 menuCode="SDQCManage"
@@ -41,18 +24,18 @@
 			Set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,menuCode,groupId)
 	   </script>
 	    <script language="javascript" type="text/javascript">
-	    	var MrListID='#(MrListID)#'
-	    	var title='#(title)#'
-			$(document).ready(function(){
-				var url = "../scripts/DHCMA/CPW/SD/QCFormShow/Layout.html"
-        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
-   					if(statusTxt=="success") {
-	   					InitviewScreen();
-   					} else if (statusTxt=="error") {
-	   					alert("Error: "+xhr.status+": "+xhr.statusText);
-	   				}
-	        	});
+	    	var MrListID='#(MrListID)#';
+	    	var title='#(title)#';
+	    	var Version='#(Version)#'
+			$(window).load(function(){
+				InitviewScreen();	
 			});
         </script>
 	</body>
+	<script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMA/CPW/SD/QCFormShow/Gui.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMA/CPW/SD/QCFormShow/Event.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMA/CPW/SD/plugin/datagrid-groupview.js"></script>
+	<script type="text/javascript" src="../scripts/DHCMA/CPW/SD/QCFormShow/datagrid-export.js"></script>
+
 </html>

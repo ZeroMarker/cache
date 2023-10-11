@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--nur.hisui.transferward.csp 转病区--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<Server>
+	s EpisodeID=$G(%request.Data("EpisodeID", 1))
+	s defHospID=##class(Nur.Interface.Other.BDPInterface).GetDefHospIdByTableName("Nur_IP_NeedCareOrderSet",%session.Get("LOGON.HOSPID"))
+	s transWardBedControl=$g(^DHCDishChargeSet("Disch","transWardBedControl",defHospID))
+</Server>
+<script type="text/javascript">
+	var episodeID="#(EpisodeID)#";
+	var transWardBedControl="#(transWardBedControl)#";
+</script>
+<style>
+	.layout-split-north{
+		border:0;	
+	}
+	.controlMsg {
+		color: red;
+	}
+	.alertMsg {
+	  	color: #589dda;
+	}
+	.buttons{
+		text-align:center;
+		word-spacing:6px;	
+		margin-top:10px;
+	}
+	.contents {
+		margin-left:42px;
+	}
+</style>
+</head>
+<body>
+	<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true,border:false"> 
+		<csp:Include Page="nur.hisui.patinfobanner.csp">
+		<div data-options="region:'center',split:true,border:false" style="padding:10px 10px 10px 0;">
+			<div class="hisui-layout" data-options="fit:true"> 
+				<div data-options="region:'north',split:false,border:false" style="height:400px;">
+					<csp:Include Page="nur.hisui.transferstep.csp">
+				</div>
+				<div data-options="region:'center',split:false,border:false" style="padding-top:10px;">
+					<div class="hisui-panel" title="#(..Get("转病区"))#" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-transfer',closable:false" style="padding:10px;">
+						<table cellpadding="0" cellspacing="0" border="0">
+							<tr>
+								<td class="r-label" style="padding-right:10px;padding-bottom:10px;"><label class="clsRequired">#(..Get("病区"))#</label></td>
+								<td style="padding-right:10px;padding-bottom:10px;">
+									<select id="ward" style="width:180px"></select> 
+								</td>
+								<td class="r-label" style="padding-right:10px;padding-bottom:10px;">#(..Get("用户"))#</td>
+								<td style="padding-bottom:10px;">
+									<input name="username" class="hisui-validatebox textbox" id="username" style="width:180px" /> 
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label" style="padding-right:10px;">
+									<server>
+										 if (transWardBedControl=0){
+											 w "<label for='bedNo' class='clsRequired' style='white-space:nowrap;'>"
+									     }else{
+										      w "<label for='bedNo' style='white-space:nowrap;'>"
+										 }
+									</server>
+									#(..Get("床位代码"))#</label>
+								</td>
+								<td style="padding-right:10px;">
+									<select id="bedNo" style="width:180px"></select> 
+								</td>
+								<td class="r-label" style="padding-right:10px;"><label class="clsRequired">#(..Get("密码"))#</label></td>
+								<td>
+									<input type="password" class="hisui-validatebox textbox" id="password" style="width:180px" /> 
+								</td>
+							</tr>
+							<tr>
+								<td colspan="4" style="padding-top:10px;text-align:center;">
+									<a id="transfer-btn" href="javascript:void(0)" class="hisui-linkbutton" onclick="submitTransferWardForm()">转病区</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="transfer-info" class="hisui-dialog" title="转病区提示" style="width:360px;min-height:80px;padding:10px;" data-options="shadow:false,modal:true,closed:true">
+		<div class="messager-icon messager-info"></div>
+		<div class="contents"></div>
+		<div class="buttons">
+			<a id="nowtrans-btn" href="javascript:void(0)" class="hisui-linkbutton" onclick="nowTransfer()" style="display:none;">立即转病区</a>
+			<a id="nowdeal-btn" href="javascript:void(0)" class="hisui-linkbutton" onclick="openNeedCare()" style="display:none;">立即处理</a>
+			<a id="close-btn" href="javascript:void(0)" class="hisui-linkbutton" onclick="closeTransferInfo()" style="display:none;">关闭</a>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.transferward.js"></script>
+</body>
+</html>

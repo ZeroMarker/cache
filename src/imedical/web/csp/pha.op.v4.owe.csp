@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--门诊药房hisui--欠药管理
+    csp:csp/pha.op.v4.owe.csp
+    js: scripts/pha/op/v4/owe.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+    
+</csp:method>
+
+<HEAD>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+   </Server>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <ADDINS require="RWCard,WebsysTool" />
+    <DOCCARD medStepCode="Disp" ></DOCCARD>
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <PHAOPV4 />
+    <script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+    
+    <!-- 样式扩展 -->
+    <style>
+    </style>
+
+</HEAD>
+<body>
+    
+    <div class = "hisui-layout" fit = "true">
+        <div data-options = "region:'center',border:false" class = "pha-op-body-big">
+            <div class = "hisui-layout" fit = "true" id="layout-op—condition">
+                <div id ="qcondPanel" class ="pha-op-header-big-one" data-options="region:'north',border:false,split:false" >
+                    <div> 
+                        <div width="60%" class="pha-op-window-left">
+                            <a class = "hisui-linkbutton big pha-op-btn-word4" plain = 'true' iconCls = "icon-big-drug-ok" id = 'btnFY'>发药</a>
+                            <a class = "hisui-linkbutton big pha-op-btn-word4" plain = 'true' iconCls = "icon-big-drug-back" id = 'btnReturn'>退药</a>
+                            <a class = "hisui-linkbutton big pha-op-btn-word4" plain = 'true' iconCls = "icon-big-clear" id = 'btnClean'>清屏</a>
+                        </div>
+                        <div width="40%" class="pha-op-window-right" style="border-left:0px">
+                            <table id = "winInfo" class = "pha-con-table-right"  >
+                                <tr>
+                                    <td>
+                                        <span style="margin-left:10px;"></span>             
+                                    </td>
+                                    <td>
+                                        <a class = "hisui-linkbutton "  data-options = "iconCls:'icon-w-switch'" style="visibility:hidden">切换窗口</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan =2>
+                                        <span style="margin-left:10px;"></span>                     
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="clear:both"></div>
+                        <div class = "pha-line"></div>
+                        <div width="100%">
+                            <table id = "qCondition" class = "pha-con-table">
+                                <tr>
+                                    <td class = "r-label-2">
+                                        <label for = "stDate">#(..Get("起止日期"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id = 'stDate' class = "hisui-datebox" data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+                                    </td>
+                                    <td class = "r-label">
+                                        <label for = "endDate">#(..Get("至"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id = 'endDate' class = "hisui-datebox"  data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+                                    </td>
+                                    <td class = "r-label">
+                                        <label for = "prescNo">#(..Get("处方号"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id = 'prescNo' class = "hisui-validatebox" data-pha = 'class:"hisui-validatebox",clear:true,query:true'>
+                                    </td>
+                                    <td class = "r-label">
+                                        <label for = "patNo">#(..Get("登记号"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id = 'patNo' class = "hisui-validatebox" data-pha = 'class:"hisui-validatebox",clear:true,query:true'>
+                                    </td>
+                                    <td class = "r-label">
+                                        <label for = "cardNo">#(..Get("卡号"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id = 'cardNo' class = "hisui-validatebox " data-pha = 'class:"hisui-validatebox",clear:true,query:true'>
+                                    </td>
+                                    <td>
+                                        <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-card'" id = 'btnReadCard'>读卡</a>
+                                    </td>
+                                    <td>
+                                        <input id="fyFlag" class='hisui-checkbox' type="checkbox" label="已发药" data-pha = 'class:"hisui-checkbox",clear:true,query:true' >
+                                    </td>
+                                    <td>
+                                        <input id="returnFlag" class='hisui-checkbox' type="checkbox" label="已退药" data-pha = 'class:"hisui-checkbox",clear:true,query:true' >
+                                    </td>
+                                    <td>
+                                        <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-find'" id = 'btnFind'>查询</a>
+                                    </td>
+                                    
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="clear:both"></div>
+                    </div>
+                </div>
+                <div data-options = "region:'center',border:false,split:true">
+                    <div class = "hisui-layout" fit = "true" id="layout-op—grid">
+                        <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',height:200,border:true,split:true,title:'欠药列表',collapsible: false" >
+                            <table id="gridOweList"></table>
+                        </div>
+                        <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',title:'药品详细列表'">
+                            <table id="gridOweDetail"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>      
+        </div>
+    </div> 
+    <script type="text/javascript" src="../scripts/pha/op/v4/owe.js"></script>
+</body>
+</html>

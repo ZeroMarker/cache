@@ -1,0 +1,90 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s EquipDR=$Get(%request.Data("EquipDR",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s ConfigFlag=$Get(%request.Data("ConfigFlag",1))
+	s ManuFactoryOperMethod=##class(web.DHCEQCommon).GetSysInfo("201005")
+	s ProviderOperMethod=##class(web.DHCEQCommon).GetSysInfo("201006")
+</script>
+<body class="hisui-layout">
+		<div data-options="region:'center',border:false" style="padding:10px 10px 10px 10px">
+		<div class="hisui-panel panel-body-gray"  data-options="fit:true,eqtitle:'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #E2E2E2;padding-bottom:10px;">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cAFPartSpec" for="AFPartSpec">模块</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.SoftwareCModule','paras':[{name:'desc',type:'4',value:'AFPartSpec'}]" id="AFPartSpec" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cAFQuantityNum" for="AFQuantityNum">数量</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="AFQuantityNum" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cAFLeaveDate" for="AFLeaveDate">出厂日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="AFLeaveDate" ></div>
+					<div class="eq-table-td eq-table-label"><lable id="cAFProviderDR_VDesc" for="AFProviderDR_VDesc">供应商</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.Vendor'" id="AFProviderDR_VDesc"></div>
+					<div class="eq-table-td eq-table-label"><a id="BAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add',stopAllEventOnDisabled:true">新增</a></div>
+					
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cAFPartModel" for="AFPartModel">模块版本</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="AFPartModel" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cAFPriceFee" for="AFPriceFee">单价</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="AFPriceFee" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cAFGuaranteeStartDate" for="AFGuaranteeStartDate">保修开始日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="AFGuaranteeStartDate" ></div>
+					<div class="eq-table-td eq-table-label"><labell id="cAFAddDate" for="AFAddDate">追加日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="AFAddDate"></div>
+					<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cAFManuFactoryDR_VDesc" for="AFManuFactoryDR_VDesc">厂商</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.ManuFacturer'" id="AFManuFactoryDR_VDesc"></div>
+					<div class="eq-table-td eq-table-label"><label id="cAFCurrencyDR_UOMDesc" for="AFCurrencyDR_UOMDesc">单位</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.UOM'" id="AFCurrencyDR_UOMDesc" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cAFGuaranteeEndDate" for="AFGuaranteeEndDate">保修截止日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="AFGuaranteeEndDate" ></div>
+					<div class="eq-table-td eq-table-label"><label id="cAFSplitFlag" for=AFSplitFlag">拆分</label></div>
+					<div class="eq-table-td eq-table-input"><input class='hisui-checkbox textbox' type="checkbox"  id="AFSplitFlag" ></div>
+					<div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cAFRemark" for="AFRemark">模块说明</label></div>
+					<div class="eq-table-td"><textarea id="AFRemark" class="textbox"></textarea></div>
+				</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="tDHCEQAffix" class="hisui-datagrid"></table>
+					<!--span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span-->
+				</div>
+    	</div>
+	</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="AFRowID">
+			<INPUT type="hidden" id="AFEquipDR" value="#(EquipDR)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="ConfigFlag" value="#(ConfigFlag)#">
+			<INPUT type="hidden" id="AFManuFactoryDR">
+			<INPUT type="hidden" id="AFCurrencyDR">
+			<INPUT type="hidden" id="AFProviderDR">
+			<INPUT type="hidden" id="AFProviderHandler">
+			<INPUT type="hidden" id="AFProviderTel">
+			<INPUT type="hidden" id="AFCheckListDR">
+			<input type="hidden" id="ProviderOperMethod" value=#(ProviderOperMethod)#>
+			<input type="hidden" id="ManuFactoryOperMethod" value=#(ManuFactoryOperMethod)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/affix.js'></script>
+</body>
+</HTML>

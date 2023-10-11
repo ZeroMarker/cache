@@ -52,17 +52,17 @@ w "<SCRIPT SRC='../SCRIPTS/DHCRegAppScheduler.js'></SCRIPT>"
   if PatientID {
     s PatientNo=$p($g(^PAPER(PatientID,"PAT",1)),"^",2)
   }
-  s GetCurrentDateTimeMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderCommon.GetCurrentDateTime"))
+  s GetCurrentDateTimeMethod=##Class(websys.Page).Encrypt($lb("web.DHCDocOrderCommon.GetCurrentDateTime"))
   ;得到对应号别的出诊记录
-  s GetTodayASRowIdByResMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetTodayASRowIdByRes"))
+  s GetTodayASRowIdByResMethod=##Class(websys.Page).Encrypt($lb("web.DHCOPAdmReg.GetTodayASRowIdByRes"))
   ;得到对应医生所有号别出诊记录
-  s GetTodayAllASRowIdByResMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetTodayAllASRowIdByRes"))
+  s GetTodayAllASRowIdByResMethod=##Class(websys.Page).Encrypt($lb("web.DHCOPAdmReg.GetTodayAllASRowIdByRes"))
   ;得到登录医生的出诊记录,如果没有出诊记录则产生不规则记录
-  s GetRapidASRowIdMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetRapidASRowId"))
+  s GetRapidASRowIdMethod=##Class(websys.Page).Encrypt($lb("web.DHCOPAdmReg.GetRapidASRowId"))
   ;得到医生是否当前星期有排班记录
-  s GetIsScheduleFlagMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetIsScheduleFlag"))
+  s GetIsScheduleFlagMethod=##Class(websys.Page).Encrypt($lb("web.DHCOPAdmReg.GetIsScheduleFlag"))
   ;得到医生当前星期排班记录的时段串
-  s GetScheduleTRangeStrMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCOPAdmReg.GetScheduleTRangeStr"))
+  s GetScheduleTRangeStrMethod=##Class(websys.Page).Encrypt($lb("web.DHCOPAdmReg.GetScheduleTRangeStr"))
   ;得到号别串
   s MarkDocStr=##class(web.DHCOPAdmReg).FindDocMarkStr(%session.Get("LOGON.USERID"),LogonLocId)
   
@@ -70,9 +70,9 @@ w "<SCRIPT SRC='../SCRIPTS/DHCRegAppScheduler.js'></SCRIPT>"
   ;科室
   s CTLOCStr=##class(web.DHCBL.Doctor.AppointOral).GetOPLocList(%session.Get("LOGON.USERID"),LogonLocId)
   ;其他科室的号别
-  s MarkDocStrOtherMark=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.Doctor.AppointOral.FindDocMarkStrNew"))
+  s MarkDocStrOtherMark=##Class(websys.Page).Encrypt($lb("web.DHCBL.Doctor.AppointOral.FindDocMarkStrNew"))
   ;获取可用的排班 
-  s GetAvailRA=##Class(%CSP.Page).Encrypt($lb("web.DHCRBApptSchedule.GetAvailRA"))
+  s GetAvailRA=##Class(websys.Page).Encrypt($lb("web.DHCRBApptSchedule.GetAvailRA"))
   s DateFormat=##Class(websys.Conversions).DateFormat()
   w "<input id='PatientID' name='PatientID' type='hidden' value='"_%request.Get("PatientID")_"'>",$C(13,10)
   w "<input id='mradm' name='mradm' type='hidden' value='"_mradm_"'>",$C(13,10)
@@ -173,7 +173,7 @@ var BackDocId=DocId
   </div>
 </td>
 <td style='width:49%; height:550;'>
-  <iframe name="AppDetail" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDoc.CalendarAppoint&Papmino=#(PatientNo)#" width="100%" height="100%"></iframe>
+  <iframe name="AppDetail" src="websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDoc.CalendarAppoint&Papmino=#(PatientNo)#&MWToken=#(%session.SessionId)#" width="100%" height="100%"></iframe>
 </td>
 </tr>
 </table>

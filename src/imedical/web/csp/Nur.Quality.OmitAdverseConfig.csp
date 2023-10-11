@@ -1,0 +1,224 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+			
+        </script>
+<HTML lang="zh-CN">
+<Server language="CACHE" runat="Server">
+		s IsManyHosps=##class(Nur.Quality.Service.Comm).%IsManyHosps()
+</Server>
+<script language=javascript>
+	var IsManyHosps="#(IsManyHosps)#"
+</script>
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui/quality/StandardComm.css" />
+    <script type="text/javascript" src="../scripts/nurse/hisui/quality/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<STYLE type='text/css'>
+		.datagrid-wrap.panel-body.panel-body-noheader{
+				border-color:#ccc;
+				border-top-right-radius:0;
+				border-top-left-radius:0;
+				border-right:0;
+				border-left:0;
+				border-bottom:0;
+		}
+		.datagrid-toolbar{
+			height:24px;
+			padding:4px
+		}
+		.datagrid-toolbar .l-btn-plain{
+			margin-top:1px!important;
+		}
+		.datagrid-toolbar .hischeckbox_square-blue{
+			margin-top:1px!important;
+		}
+		.hisui-timespinner.timespinner-f.spinner-text.spinner-f.validatebox-text{
+			width:72px!important;
+		}
+		.datebox .combo-arrow{
+			position:relative;
+			left:-4px!important;
+		}
+		.datagrid-wrap.panel-body.panel-body-noheader{
+			border-top-style:dotted;
+		}
+		.window-shadow{
+    		height: 0!important;
+		}
+		
+		.form-row .row-item:first-of-type label{
+			width:70px
+		}
+	</STYLE>
+</head>	
+<body class="hisui-layout">
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:0px;">
+		<div class="hisui-panel" fit="true" data-options="border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false" > 
+				<div  data-options="region:'north',headerCls:'panel-header-gray',border:false" class="p_10">
+						<ul class="head-ul">
+							<CSP:IF CONDITION='IsManyHosps=1' >
+								<li> <label>医院</label> </li>
+								<li><input id="_HospList"/></li>
+							</CSP:IF>
+							<li> <label>名称</label> </li>
+							<li>
+								<input id="inputTitleInput" class="textbox" name="name" style="width:120px;" data-options="" placeholder="请输入关键字">
+							</li>
+							<li> <label>事件类型</label> </li>
+							<li>
+								<select id="inpuEventSelect" class="hisui-combobox" name="state" style="width:180px;" data-options="enterNullValueClear:false"></select>
+							</li>
+							<li>
+								<a href="#"  id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;height:30px;">查询</a>
+							</li>
+						</ul>
+				</div>
+				<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+					<table  id="patOmitAdverseConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 编辑框 -->
+	<div id="orderConfigWin"  class="p_10">
+		<input id="configID" style="display: none;">
+		<div id="orderConfigTable" class="def-form">					
+			<div class="form-row">
+				<div  class="row-item">
+					<label class="label-request">配置名称</label>
+					<input id="titleInput" class="hisui-validatebox textbox" data-options="">
+				</div>
+				<div class="row-item right">
+					<label class="label-request">绑定事件</label>
+					<select id="eventSelect" class="hisui-combobox" name="state" data-options="enterNullValueClear:false"></select>
+				</div>
+			 </div>
+			<div class="form-row">
+				<div  class="row-item right">
+					<label>适用科室</label>
+					<select id="areLocSelect" class="hisui-combobox" name="state" data-options="enterNullValueClear:false"></select>
+				</div>
+			</div>
+			<div class="form-row">
+				<div  class="row-item right">
+					<label>不适用科室</label>
+					<select id="unAreLocSelect" class="hisui-combobox" name="state" data-options="enterNullValueClear:false"></select>
+				</div>
+			</div>
+			<div class="form-row">
+				<div  class="row-item">	
+					<label class="label-request">是否启用</label>
+					<select id="ifOpenSelect" class="hisui-combobox" name="state"  data-options="enterNullValueClear:false,editable:false"></select>
+				</div>
+				<div class="row-item right">
+					<label>自动关联时限(小时)</label>
+					<input id="autoLinkTimeInput" class="textbox"  >
+				</div>
+			</div>
+			<div class="form-row">
+				<div  class="row-item">	
+					<label class="label-request">条件类型</label>
+					<select id="conditionTypeSelect" class="hisui-combobox" name="state" data-options="enterNullValueClear:false,editable:false"></select>
+				</div>	
+			</div>
+		</div>
+		<!-- 重复医嘱类型配置 -->
+		<div id="orderConfig" class="p_10" style="border:1px solid #ccc;border-radius: 4px;display:none;margin-top:10px">
+			<div class="def-form">
+				<div class="form-row">
+					<div class="row-item">
+					<label class="label-request">选择内容</label>
+					<select id="orderSelect" class="hisui-combobox" name="state" data-options="enterNullValueClear:false"></select>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="row-item">
+						<label class="label-request">间隔时间</label>
+						<input id="orderIntervalTimeInput" class="hisui-validatebox textbox" data-options="" >
+					</div>
+					<div class="row-item">
+						<select id="timeTypeSelect" class="hisui-combobox" name="state"  data-options="enterNullValueClear:false"></select>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="row-item">
+						<input class="hisui-checkbox" type="checkbox" label="相同频次" data-options="boxPosition:'right'" id="samePhcfrCode">
+						<input class="hisui-checkbox" type="checkbox" style="width:90px"  label="相同用药途径" data-options="boxPosition:'right'" id="samePhcinDesc">
+						<input class="hisui-checkbox" type="checkbox" label="相同优先级" data-options="boxPosition:'right'" id="sameOecprDesc">
+						<input class="hisui-checkbox" type="checkbox" label="相同剂量" data-options="boxPosition:'right'" id="sameDoseQtyUnit">
+						<input class="hisui-checkbox" type="checkbox" style="width:90px" label="相同开医嘱人" data-options="boxPosition:'right'" id="sameCtcpDesc">
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 评估量变化类型配置 -->
+		<div id="pgConfig" style="border:1px solid #ccc;border-radius: 4px;display: none;margin-top:10px;">
+			<div class="p_10">
+				<ul class="head-ul">
+					<li><label class="label-request">评估录入界面模板</label></li>
+					<li>
+						<input id="pgEmrCodeInput" class="hisui-validatebox textbox" name="name" data-options="" placeholder="请输入关键字">
+					</li>
+				</ul>
+			</div>
+			<div style="height:300px">
+				<table  id="pgItemConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+			</div>
+			
+		</div>
+		<!-- 护理记录类型配置 -->
+		<div id="recordConfig" style="border:1px solid #ccc;border-radius: 4px;display:none;margin-top:10px">
+			<div class="def-form p_10">
+				<div class="form-row">
+					<div class="row-item">
+						<label class="label-request" style="width:80px">记录单</label>
+						<select id="recordEmrCodeSelect" class="hisui-combobox" name="state" data-options="enterNullValueClear:false"></select>
+					</div>
+					<div class="row-item right">
+						<label class="label-request">选择内容</label>
+						<select id="recordEmrItemSelect" class="hisui-combobox" name="state"  data-options="enterNullValueClear:false"></select>
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="row-item">
+						<label style="width:80px">触发间隔(天)</label>
+						<input id="recordTouchDayInput"   class="hisui-validatebox textbox">
+					</div>
+					<div class="row-item">
+						<input class="hisui-checkbox" type="checkbox" checked="" label="多次触发" data-options="boxPosition:'right'" id="recordTouchCheckbox">
+					</div>
+				</div>
+				<div class="form-row">
+					<div class="row-item">
+						<textarea id="recordEmrMainWordInput" class="textbox" size=12 rows="3" style="height:60px;margin:0px;padding:0px;flex:1" placeholder="请输入关键字,使用@区分"></textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div style="text-align: center;margin-top:10px;" >
+			<a href="#"  id="saveBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:90px;height:30px;">保存</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="#"  id="closeBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="width:90px;height:30px;">关闭</a>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.Comm.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.OmitAdverseConfig.js" charset="gbk"></script>
+</body>
+
+</html>

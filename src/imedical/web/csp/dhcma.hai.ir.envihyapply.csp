@@ -1,6 +1,5 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	//i ##Class(websys.SessionEvents).SessionExpired()
-	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
 	q 1
 </csp:method>
 <html lang="en">
@@ -8,19 +7,67 @@
 		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-		<HISUI/>
+		<HISUI css="dhcma.hai.common.css"></HISUI>
 		<DHCHAI:HEAD></DHCHAI:HEAD>
 			<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
 		</SCRIPT>
 		<CSP:IF CONDITION="IsADDINS=1">
-			<ADDINS require="DHCOPPrint"/>
+			<ADDINS require="DHCOPPrint"></ADDINS>
 		</CSP:IF>
 		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
-		
+	
+		<style>
+			#copyADetail {
+				margin-left:4px !important;
+			}
+			#MonthList li {
+				padding-right:5px !important;
+				padding-top:5px !important;
+			}
+
+			#northP .datebox{
+				width:188px !important;
+				margin-right:4px !important;
+				margin-bottom:3px !important;
+			}
+			#northP .combo{
+				margin-bottom:3px !important;
+			}
+			#ResultDetail .datagrid-wrap{
+				border-color:#E2E2E2;
+			}
+			#ApplyEdit .panel-body-noheader{
+				width:396px !important;
+			}
+
+			#LayerReason  .datagrid .panel-body {
+			 height :68.81%  !important;
+			 width : 294px  !important;
+			 margin-left : 1px !important;
+			}
+			#LayerReason .datagrid-body{
+				overflow:hidden !important;
+			}
+			#CopyApply .layout-panel-center{
+				top:83px !important;
+			}
+			#centerP .panel-body{
+				height:367px !important;
+			}
+			#ReCheck #Cbutton .l-btn-text{
+				height:30px !important;
+			}
+			#copyADetail .l-btn-icon{
+				height:29px !important;
+			}
+
+	  </style>
 		<server>
+        //lodop打印
+            d ##class(web.DHCXMLPConfig).LODOPInit()
 			//取配置状态列表
-			Set StatusList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusList()
+			Set StatusList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusDicList()
 			//获取控制设置参数
 			Set IsSupportRQ2018 = ##class(DHCHAI.BT.Config).GetValByCode("IsSupportRQ2018","")
 			If (IsSupportRQ2018'=1) {
@@ -30,23 +77,283 @@
 	</HEAD>
 	
 	<body>
+		<div class="hisui-layout" data-options="fit:true" >
+			<div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 10px 0px;"class="ma-panel">	 
+			 	<div id="custtb" style="padding:3px;"> 
+				 	<a class="hisui-linkbutton" id="btnApply" data-options="iconCls:'icon-add',plain:true">申请</a>
+				 	<a class="hisui-linkbutton" id="btnBatchApply" data-options="iconCls:'icon-batch-add',plain:true">批量申请</a>
+				 	<a id="copyA" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true">复制历史申请单</a>
+				 	<a id="btnColSpec" class="hisui-linkbutton"   data-options="iconCls:'icon-tube-add',plain:true,stopAllEventOnDisabled:true">采集标本</a>
+					<a class="hisui-linkbutton" id="btnDelete" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+					<a class="hisui-linkbutton" id="btnPrintBar" data-options="iconCls:'icon-print',plain:true">打印条码</a>
+				 	<a class="hisui-linkbutton" id="btnPrintReport" data-options="iconCls:'icon-print',plain:true">打印报告</a>
+				 </div>
+				 <table id="gridApply"></table>
+			</div>
+			<div data-options="region:'west',border:false," style="width:298px;padding:10px;"class="ma-panel">
+				<div  class="hisui-panel" data-options="fit:'true',title:'查询条件',headerCls:'panel-header-gray',iconCls:'icon-resort',">
+					<table  style="border-spacing:0px 10px;">
+						<tr >
+							<td class="r-label">#(..Get("院区"))#</td>
+							<td >
+								<input class="textbox" id="cboHospital" style="width:190px">
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">#(..Get("日期类型"))#</td>
+							<td >
+								<input class="textbox" id="DateType" style="width:190px">
+							</td>
+						</tr >
+						<tr>
+							<td class="r-label">#(..Get("开始日期"))#</td>
+							<td >
+								<input class="hisui-datebox textbox" id="DateFrom" style="width:190px">
+							</td>
+						</tr >
+						<tr>
+							<td class="r-label">#(..Get("结束日期"))#</td>
+							<td >
+								<input class="hisui-datebox textbox" id="DateTo" style="width:190px">
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">#(..Get("监测科室"))#</td>
+							<td >
+								<input class="textbox" id="cboMonitorLoc" style="width:190px">
+							</td>
+						</tr>
+						<tr style="display:none;">
+							<td class="r-label">#(..Get("监测分类"))#</td>
+							<td >
+								<input class="textbox" id="cboEvItemFL" style="width:190px">
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">#(..Get("监测项目"))#</td>
+							<td >
+								<input class="textbox" id="cboEvItem" style="width:190px">
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">#(..Get("报告状态"))#</td>
+							<td >
+								<input class="textbox" id="cboRepStatus" style="width:190px">
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">#(..Get("是否合格"))#</td>
+							<td >
+								<input class='hisui-radio'  id="checkOK" name ="checkStandard" type="radio" value="Y" label="#(..Get("合格"))#">
+								<input class='hisui-radio'  id="checkNO" name ="checkStandard" type="radio" value="N"  label="#(..Get("不合格"))#">
+							</td>
+						</tr>
+						<tr>
+							<td colspan=2 style="text-align:center;">
+								<a class="hisui-linkbutton"  id="btnQuery" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-find'" >查询</a>
+								<a class="hisui-linkbutton"  id="btnExport" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-export'">导出申请单</a>
+							</td>
+						</tr>
+					</table>	
+				</div>
+			</div>
+		</div>
+
+		<!--申请单编辑窗口-->
+		<div id="ApplyEdit" class="hisui-dialog" data-options="closed:true" style="width:400px;border:none;overflow:hidden;padding-right:10px;padding-bottom:10px;">    
+			<table  style="border-spacing:0px 10px;margin-right:6px;">
+				<tr >
+					<td class="r-label" style="width:110px">#(..Get("院区"))#</td>
+					<td >
+						<input class="hisui-combobox" id="cboAHospital" style="width:299px">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("监测科室"))#</td>
+					<td >
+						<input class="hisui-combobox" id="cboALoc" style="width:299px">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("监测日期"))#</td>
+					<td >
+						<input class="hisui-datebox" id="AMonitorDate" style="width:299px">
+					</td>
+				</tr >
+				<tr>
+					<td class="r-label">#(..Get("监测项目"))#</td>
+					<td >
+						<input class="hisui-combobox" id="cboAEvItem" style="width:299px">
+					</td>
+				</tr>
+				<tr id="EvIsObjNull" style="display: none;">
+					<td class="r-label">#(..Get("是否允许对象为空"))#</td>
+					<td >
+						<input class="textbox" id="AEvIsObjNull" style="width:292px;">
+					</td>
+				</tr>
+				<tr id="EvObject">
+					<td class="r-label">#(..Get("监测对象"))#</td>
+					<td >
+						<input class="hisui-combobox" id="cboAEvObject" style="width:299px">
+					</td>
+				</tr>
+				<tr id="EvObjectTxt">
+					<td class="r-label">#(..Get("对象备注"))#</td>
+					<td >
+						<textarea class="textbox" id="AEvObjectTxt" style="width:292px"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("中心数量"))#</td>
+					<td >
+						<input class="textbox" id="txtCenterNum" style="width:292px">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("周边数量"))#</td>
+					<td >
+						<input class="textbox" id="txtSurroundNum" style="width:292px">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("参照点数量"))#</td>
+					<td >
+						<input class="textbox" id="txtReferToNum" style="width:292px">
+					</td>
+				</tr>
+			</table>
+			<div id="Abutton" align="center" style="margin-left:4px;">
+				<a href="#" id="addA" class="hisui-linkbutton hover-dark">保存</a>
+				<a href="#" id="closeA" style="margin-left:5px;" class="hisui-linkbutton hover-dark">关闭</a>
+			</div>
+		</div>
+		<!--批量申请编辑窗口-->
+		<div id="LayerBatchApply" class="hisui-dialog" data-options="closed:true" style="width:1150px;height:600px;border:none;overflow:auto;padding:10px;">
+			<div  class="hisui-layout" data-options='fit:true'>
+			<div data-options="region:'center'" > 
+			    <table class="search-table" style="margin-bottom:-12px;" >
+			    <tr>
+
+					<td class="r-label">#(..Get("监测日期"))#</td>
+					<td style="position:relative">
+					
+						<input class="hisui-datebox textbox" id="cboDate" style="width:190px"/>
+					</td>
+					<td class="r-label">#(..Get("监测科室"))#</td>
+					<td style="position:relative">
+					
+						<input class="hisui-combobox textbox" id="cboBatchMonitorLoc" style="width:190px"/>
+					</td>
+				<tr>
+			    </table>
+			  
+			  
+			    <div id="BatchApplyInfo" style="width:1076px;height:470px;" align="center">
+			    </div>
+			   </div>
+		 	</div>
+		</div>
+		<!--复制申请单窗口-->
+		<div id="CopyApply" class="hisui-dialog" data-options="closed:true"  style="height:500px;width:950px;border:none;overflow:auto;padding:0;">
+			<div  class="hisui-layout" data-options='fit:true'>
+				<div id="northP" data-options="region:'north'" style="height:78px;padding-left:5px;border:0px;overflow:hidden;"> 
+					<div> 
+						<ul id='MonthList' style="padding-left:6px;"></ul>
+					</div >
+					<div style="float:left;width:800px;padding:6px;display:inline;margin-top:-1px;" >
+						<span style="padding-right:5px;">#(..Get("监测日期"))#</span>
+						<input class="hisui-datebox" id="CAMonitorDate" style="width:180px;height:29px;">
+						<input class="hisui-combobox" id="CAMonitorLoc" style="width:180px;height:29px;">
+						<a href="#" id="copyADetail" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-copy'"style="margin-left:8px;height:29px;margin-bottom:3px;">复制到本月</a>
+					</div>
+				</div>
+				<div id="centerP" data-options="region:'center'" style="padding:2px 10px 10px 10px;border:0;fit:true;"> 
+					<table id='HisApplyList'></table>
+				</div>
+			</div>
+		</div>
+		<div id="ResultDetail" class="hisui-dialog" data-options="closed:true"  style="width:880px;height:450px;border:none;overflow:auto;padding:10px;">
+			<div id="ResultGrid"></div>
+		</div>
+		<!--复检窗口 填写不合格原因和改进措施-->
+		<div id="ReCheck" class="hisui-dialog" data-options="closed:true"  style="height:370px;width:451px;border:none;overflow:auto;padding:0;">
+		    <table class="search-table">
+		        <tr>
+		            <td class="r-label" >
+		                <p>#(..Get("复检监测日期"))#</p>
+		            </td>
+		            <td>
+		                <input class="hisui-datebox" id="ReCheckMonitorCDate" style="width:321px">
+		            </td>
+		        </tr>
+		        <tr>
+		            <td class="r-label">#(..Get("监测项目"))#</td>
+		            <td >
+		                <input class="hisui-combobox" id="cboCEvItem" style="width:321px">
+		            </td>
+		        </tr>
+		        <tr id="EvObject">
+		            <td class="r-label">#(..Get("监测对象"))#</td>
+		            <td >
+		                <input class="hisui-combobox" id="cboCEvObject" style="width:321px">
+		            </td>
+		        </tr>
+		        
+		        <tr>
+		                <td class="r-label">
+		                <div> #(..Get("不合格原因"))#<a class="hisui-linkbutton" id="btnReason" data-options="iconCls:'icon-resort',plain:true,"></a></div>
+		               </td>
+		                <td>
+		                    <textarea class="textbox" id="txtReason" style="width:314px"></textarea>
+		                    
+		                </td>   
+		            </tr>
+		            <tr>
+		                <td class="r-label" style="vertical-align:text-top;">
+		                    <p>#(..Get("改进措施"))#</p>
+		                </td>
+		                <td rowspan="2">
+		                    <textarea class="textbox " id="txtAction" style="width:314px;height:100px" ></textarea>
+		                    
+		                </td>
+		           </tr>
+		        </td>
+		    </table>
+		    <div id="Cbutton" align="center" style="padding-top:0px;">
+		        <a href="#" id="addC" class="hisui-linkbutton hover-dark">保存</a>
+		        <a href="#" id="closeC" class="hisui-linkbutton hover-dark">关闭</a>
+		    </div>
+		</div>
+
+		<!--不合格原因-->
+		<div id="LayerReason" style="overflow:hidden;">  
+		    <div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 0px 10px;height:380px">  
+		        <table id="gridReason"></table>
+		    </div>
+		</div>  
+
 		<script language='Cache' runat='SERVER'>
            set menuCode="DHCHAIEnviHy-Apply"
            set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
            set groupId=$g(%session.Data("LOGON.GROUPID"))
-		   set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+           set OperAdmin = $g(%request.Data("ParamAdmin",1))
+		   set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+           Set IsValidReason=##class(DHCHAI.BT.Config).GetValByCode("IsValidReason")
+           Set xmlPrintFlag=##class(DHCHAI.BT.Config).GetValByCode("XMLPrint")
        </script>
 		
 		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/EnviHy/EnviHyApply/Gui.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/EnviHy/EnviHyApply/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/EnviHy/EnviHyApply/export.js"></script>
 		
 		<!--------------条码打印相关---------->
 		<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
 		<!-------------------------------->
 		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 		<script language="Cache" runat="server">
-		 Set Encrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))	//加密字符串
+		 Set Encrypt=##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))	//加密字符串
 		 // 获取打印控件配置信息
 		 // CLASSID|CODEBASE
 		 Set CLASSID="CLSID:F30DC1D4-5E29-4B89-902F-2E3DC81AE46D"
@@ -54,7 +361,8 @@
 		 Set barControlInfo ="CLASSID="""_CLASSID_""" CODEBASE="""_CODEBASE_""""
 	   </script>
 		<script language="javascript" type="text/javascript">
-			var Encrypt   = '#(Encrypt)#';
+            var Encrypt   = '#(Encrypt)#';
+            var xmlPrintFlag='#(xmlPrintFlag)#';
 			var barControlInfo = '#(barControlInfo)#';
 			
 			// 条码打印需要的控件
@@ -66,9 +374,11 @@
 			
 			//全局请求后台服务对象
 			var ServerObj={
-				StatusList:"#(StatusList)#"
+				StatusList:"#(StatusList)#",
+                IsValidReason:'#(IsValidReason)#'
 			}
 	        $(document).ready(function(){
+		        /*
 				var url = "../scripts/DHCMA/HAI/IR/EnviHy/EnviHyApply/Layout.html"
         		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
    					if(statusTxt=="success") {
@@ -78,6 +388,9 @@
 	   					alert("Error: "+xhr.status+": "+xhr.statusText);
 	   				}
 	        	});
+	        	*/
+	        	$("body").append(PrintControlHtml);
+	   			InitEnviHyApplyWin();
 			});
 		</script>
 	</body>

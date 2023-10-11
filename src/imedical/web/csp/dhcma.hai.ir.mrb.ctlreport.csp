@@ -1,0 +1,55 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<HEAD>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCHAI:HEAD></DHCHAI:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+		<server>
+			//获取控制设置参数
+			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
+  		</server>
+	</HEAD>
+	
+	<body>
+		<script language='Cache' runat='SERVER'>
+			If (IsSupportRQ2018'=1) {  //润乾2018支持直接打印，如需引入本方法，本方法影响加载速度
+		   		 d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
+			 }	
+			Set ReportID=%request.Get("ReportID")
+			Set EpisodeID=%request.Get("EpisodeID")
+			Set LabRepID=%request.Get("LabRepID")
+			Set LabResID=%request.Get("LabResID")
+			Set EmrOpen=%request.Get("EmrOpen")
+			
+			Set menuCode="DHCHAIAim-MRB-Report"
+			Set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+			Set groupId=$g(%session.Data("LOGON.GROUPID"))
+			set OperAdmin = $g(%request.Data("ParamAdmin",1))
+		    set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+			
+       </script>
+       	<csp:Include Page="dhcma.hai.ir.mrb.ctlreport.show.csp">
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/CtlReport/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/CtlReport/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+				
+		<script language="javascript" type="text/javascript">
+			var EpisodeID 	= '#(EpisodeID)#';
+			var ReportID 	= '#(ReportID)#';
+			var LabRepID 	= '#(LabRepID)#';
+			var LabResID    = '#(LabResID)#';    //检验结果ID
+			var EmrOpen     = '#(EmrOpen)#';     //是否有病例浏览打开
+			$(window).load(function() {
+				InitReportWin();
+			});
+		</script>
+	</body>
+</html>

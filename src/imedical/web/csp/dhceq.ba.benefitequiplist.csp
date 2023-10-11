@@ -9,71 +9,135 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<style type="text/css">
+		.eq-table-label-f{
+			padding-right:10px;
+		}
+		.eqbutton{
+			margin-left:15px;	
+		}
+	</style>
 </head>
 <script language="cache" runat="server">
 
 	s BELRowID = $Get(%request.Data("RowID",1))
-	s EquipDR=""
-	i BELRowID'=""
-	{
-		s BELEquipDR=$p($g(^DHCEQBenefitEquipList(BELRowID)),"^",1)
-		s StoreLocDR=$p($g(^DHCEQEquip(BELEquipDR)),"^",67)
-	}
 	s QXType = $Get(%request.Data("QXType",1))
 	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s (BELEquipDR,StoreLocDR,InitYear,StartDate,EndDate,DMDeviceSource)=""
+	i BELRowID'=""
+	{
+		s BELEquipDR=$p($g(^DHCEQBenefitEquipList(BELRowID)),"^",1)
+		///add by ZY0272 20210628
+		i BELEquipDR="" q
+		s StoreLocDR=$p($g(^DHCEQEquip(BELEquipDR)),"^",67)
+		s InitYear=$p($g(^DHCEQBenefitEquipList(BELRowID)),"^",2)
+		
+		/*
+		i InitYear'="" d
+		.s StartDate=$ZDH(InitYear_"-01-01",3)
+		.s StartDate=##class(web.DHCEQCommon).TransValueToPage(StartDate,"date")
+		s EndDate=##class(web.DHCEQCommon).TransValueToPage(+$h,"date")
+		*/
+		//默认类型是HIS，如果有仪器对照，就通过对照类型采集数据
+		s DMDeviceSource="DHC-HIS"
+		i $Data(^DHCEQDeviceMap(0,"Equip",BELEquipDR))'=0  d
+		.s DeviceSource=""
+		.f  s DeviceSource=$o(^DHCEQDeviceMap(0,"Equip",BELEquipDR,DeviceSource))  quit:DeviceSource=""  d
+		..s rowid=0
+		..f  s rowid=$o(^DHCEQDeviceMap(0,"Equip",BELEquipDR,DeviceSource,rowid))  quit:rowid=""  d
+		...q:$p($g(^DHCEQDeviceMap(rowid)),"^",5)="Y"
+		...s DMDeviceSource=DeviceSource
+	}
+	
+	s CurTime=$p($H,",",2)
 </script>
 <body class="hisui-layout" >
-	<div data-options="region:'north',border:false" style="height:48px;overflow:hidden;">
+	<div data-options="region:'north',border:false" style="height:68px;overflow:hidden;padding-top:10px;">
 		<iframe id="Banner" frameborder="0" src="" style="width:100%;"></iframe>
 	</div>
-	<div data-options="region:'center',border:false" style="height:180px;overflow:hidden;">
-		<div class="eq-table-tr">
-			<div class="eq-table-td eq-table-label"><label id="cBELInitYear" for="BELInitYear">分析初始年度</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELInitYear"></div>
-			<div class="eq-table-td eq-table-label"><label id="cBELPreWorkLoad" for="BELPreWorkLoad">预测工作量</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELPreWorkLoad"></div>
-			<div class="eq-table-td eq-table-label"><label id="cBELNewFunction" for="BELNewFunction">填补诊治空白</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELNewFunction"></div>
-			<div class="eq-table-td eq-table-label"><label id="cBELSpecialService" for="BELSpecialService">服务特殊人群</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELSpecialService"></div>
-			<div class="eq-table-td eq-table-label15"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
-			<div class="eq-table-td eq-table-label15"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-delete"  data-options="stopAllEventOnDisabled:true">删除</a></div>
-		</div>
-		<div class="eq-table-tr">
-			<div class="eq-table-td eq-table-label"><label id="cBELOtherSocial" for="BELOtherSocial">其他社会效益</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELOtherSocial"></div>
-			<div class="eq-table-td eq-table-label"><label id="cBELGraduateNum" for="BELGraduateNum">培养研究生数量</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELGraduateNum"></div>
-			<div class="eq-table-td eq-table-label"><label id="cBELStaffNum" for="BELStaffNum">培养进修人员数量</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELStaffNum"></div>
-			<div class="eq-table-td eq-table-label"><label id="cBELOtherTasks" for="BELOtherTasks">其他科研教学任务</label></div>
-			<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELOtherTasks"></div>
+	<div data-options="region:'center',border:false" style="padding-bottom:10px;overflow:hidden;padding:0 10px 10px 10px;">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',border:false" style="padding-bottom:10px;">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-f"><label id="cBELInitYear" for="BELInitYear">分析初始年度</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELInitYear" style="width:180px;"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBELPreWorkLoad" for="BELPreWorkLoad">预测工作量</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELPreWorkLoad" style="width:180px;"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBELNewFunction" for="BELNewFunction">填补诊治空白</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELNewFunction" style="width:180px;"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBELSpecialService" for="BELSpecialService">服务特殊人群</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELSpecialService" style="width:180px;"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-f"><label id="cBELOtherSocial" for="BELOtherSocial">其他社会效益</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELOtherSocial" style="width:180px;"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBELGraduateNum" for="BELGraduateNum">培养研究生数量</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELGraduateNum" style="width:180px;"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBELStaffNum" for="BELStaffNum">培养进修人员数量</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELStaffNum" style="width:180px;"></div>
+					<div class="eq-table-td eq-table-label"><label id="cBELOtherTasks" for="BELOtherTasks">其他科研教学任务</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BELOtherTasks" style="width:180px;"></div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false">
+				<div id="tDHCEQBene" class="hisui-tabs tabs-gray" style="height:550px;">
+					<div title="数据来源">
+						<table id="tDHCEQDeviceMap" class="hisui-datagrid"></table>
+					</div>
+					<div title="服务项">
+						<table id="tDHCEQServiceMap" class="hisui-datagrid"></table>
+					</div>
+					<div title="月度经济信息">
+						<table id="tDHCEQUseContextMonth" class="hisui-datagrid"></table>
+					</div>
+					<div title="月度成本信息">
+						<table id="tDHCEQUsedResource" class="hisui-datagrid"></table>
+					</div>
+					<div title="科研项目">
+						<table id="tDHCEQResearch0" class="hisui-datagrid"></table>
+					</div>
+					<div title="论文">
+						<table id="tDHCEQResearch1" class="hisui-datagrid"></table>
+					</div>
+					<div title="开发功能">
+						<table id="tDHCEQResearch2" class="hisui-datagrid"></table>
+					</div>
+					<div title="年度评价">
+						<table id="tDHCEQUseContextYear" class="hisui-datagrid"></table>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
-	<div data-options="region:'south',border:false" >
-		<div id="tDHCEQBene" class="hisui-tabs" style="height:500px" >
-			<div title="数据来源">
-				<table id="tDHCEQDeviceMap" class="hisui-datagrid"></table>
-			</div>
-			<div title="年度评价">
-				<table id="tDHCEQUseContextYear" class="hisui-datagrid"></table>
-			</div>
-			<div title="月度经济信息">
-				<table id="tDHCEQUseContextMonth" class="hisui-datagrid"></table>
-			</div>
-			<div title="月度成本信息">
-				<table id="tDHCEQUsedResource" class="hisui-datagrid"></table>
-			</div>
-			<div title="服务项">
-				<table id="tDHCEQServiceMap" class="hisui-datagrid"></table>
-			</div>
-			<div title="其他内容">
-				<table id="tDHCEQResearch" class="hisui-datagrid"></table>
-			</div>
+	<div data-options="region:'south',border:false" style="height:40px;padding-bottom:10px;">
+		<div style="text-align:center;">
+			<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a>
+			<a id="BDelete" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-delete" data-options="stopAllEventOnDisabled:true">删除</a>
 		</div>
 	</div>
-		
+	<!-- 修改信息弹窗 czf 1880419 2021-07-08-->
+	<div id="UpdateBAEQWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="padding:10px;">
+		<div data-options="fit:true">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cStartDate" for="StartDate">开始日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="vStartDate"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cEndDate" for="EndDate">结束日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="vEndDate"></div>
+				</div>
+			</div>
+		</div>
+		<!--div id="hiddenEncrypt" style="display:hidden">
+			<form name="DHCEQ">
+				<INPUT type="hidden" id="BELHold1">
+				<INPUT type="hidden" id="BELRowID">
+			</form>
+		</div-->
+	</div>
+	
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCEQ">
 			<INPUT type="hidden" id="BELRowID" value=#(BELRowID)#>
@@ -82,19 +146,15 @@
 			<INPUT type="hidden" id="DeviceSourceDR">
 			<INPUT type="hidden" id="YearFlag">
 			<INPUT type="hidden" id="StoreLocDR" value=#(StoreLocDR)#>
+			<INPUT type="hidden" id="StartDate">
+			<INPUT type="hidden" id="EndDate">
+			<INPUT type="hidden" id="DMDeviceSource" value=#(DMDeviceSource)#>
+			<INPUT type="hidden" id="CurTime" value=#(CurTime)#>
 			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
 			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
-			
 		</form>
 	</div>
 	<script type="text/javascript" src="../scripts/dhceq/ba/benefitequiplist.js"></script>
-	<!--
-	<script type="text/javascript" src="../scripts/dhceq/ba/billitem.js"></script>
-	<script type="text/javascript" src="../scripts/dhceq/ba/usecontextyear.js"></script>
-	<script type="text/javascript" src="../scripts/dhceq/ba/usecontextmonth.js"></script>
-	<script type="text/javascript" src="../scripts/dhceq/ba/research.js"></script>
-	<script type="text/javascript" src="../scripts/dhceq/ba/usedresource.js"></script>
-	-->
 </body>
 
 </html>

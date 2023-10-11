@@ -1,0 +1,45 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired()
+	q 1
+</csp:method>
+<html>
+<head>
+    <ExtHealth:Head />
+	<HISUI />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Put your page Title here -->
+	<title>	电子病历基础数据管理系统 </title>
+</head>
+<script language="cache" runat="server">
+	s userCode = %session.Get("LOGON.USERCODE")
+	s groupId = %session.Get("LOGON.GROUPID")
+</script>
+<script language="javascript">
+	var argParams ={
+		userCode: "#(userCode)#",
+		groupId: "#(groupId)#",
+	}
+	
+</script>
+<body>
+	<script language="javascript">
+	
+	sessionStorage.setItem('userInfo',JSON.stringify(argParams));
+	
+	$(function(){
+		var MWToken ="";
+		if('undefined' != typeof websys_getMWToken)
+		{
+			MWToken= websys_getMWToken();
+		}
+		var url = "../service/emrdocEditor/index.html?MWToken=" +MWToken;
+		$("#emrdocEditor").attr('src',url)
+	})
+	
+	</script>
+    <div>
+		<iframe id='emrdocEditor' src='' type='text/html' width='100%' height='100%' style='border:none'></iframe>
+	</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!-- HOSÌø×ª½çÃæ -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s PatientListPage=""
+  s startDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+#;  s endDate=##class(websys.Conversions).DateLogicalToHtml(+$h+1)
+  s endDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	s jumpFlag = $GET(%request.Data("jumpFlag", 1))
+	s MWToken = $GET(%request.Data("MWToken", 1))	
+	s EpisodeID = $GET(%request.Data("EpisodeID", 1))	
+	// s regNo = $GET(%request.Data("regNo", 1))	
+  // i regNo'="" {
+  //   s data=##class(Nur.NIS.Common.QueryBrokerNew).GetListFromQuery("LIS.WS.BLL.DHCStatSample","QryAdmNoByRegNo",regNo)
+  //   f i=1:1:data.Count() {
+  //     s AdmNo=data.GetAt(i).GetAt("AdmNo")
+  //     s:AdmNo>EpisodeID EpisodeID=AdmNo
+  //   }
+  // }
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<!-- <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script> -->
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+</head>
+<body>
+<script language="javascript">
+var startDate = "#(startDate)#";
+var endDate = "#(endDate)#";
+var jumpFlag = "#(jumpFlag)#";
+var MWToken = "#(MWToken)#";
+var EpisodeID = "#(EpisodeID)#";
+var paramObj={"groupSort":"N","transInHospFlag":"N","transInHospPatShowDays":"3","consultationFlag":"N","disChargeFlag":"Y","disChargeShowDays":"3","waitingAreaPatFlag":"Y","transAreaPatShow":"Y","mulWardPatGroupByWard":"Y","maternalBabySplit":"N","babyFlag":"2"}
+var episodeIds=[];
+if (EpisodeID&&(["TempMeasure","BloodMeasure","BGMeasure","WeightTest"].indexOf(jumpFlag)<0)) {
+  episodeIds.push(EpisodeID);
+} else {
+  var res=$cm({
+    ClassName: 'Nur.NIS.Service.Base.Ward',
+    MethodName: 'GetWardPatientsList',
+    searchParamObj: JSON.stringify(paramObj)
+  }, false);
+  res.map(function (r) {
+    r.children.map(function (c) {
+      if (c.episodeID) episodeIds.push(c.episodeID);
+      if (c.children) {
+        c.children.map(function (c1) {
+          if (c1.episodeID) episodeIds.push(c1.episodeID);
+        })
+      }
+    })
+  })
+}
+if (["TempMeasure","BloodMeasure","BGMeasure","WeightTest"].indexOf(jumpFlag)>-1) {
+  var codeStr="temperature^rectemperature^oraltemperature";
+  if ("BloodMeasure"==jumpFlag) codeStr="sysPressure^diaPressure";
+  if ("BGMeasure"==jumpFlag) codeStr="FBS^BreakfastPBS^LunchFBS^LunchPBS^DinnerFBS^DinnerPBS^BedtimeFBS^NightPBS^NightPBS2^RBS";
+  if ("WeightTest"==jumpFlag) codeStr="weight^childWeight";
+  console.log("nur.hisui.multivitalsignbyday.csp?codeStr="+codeStr+"&EpisodeIDS="+episodeIds.join('^')+"&startDateTime="+startDate+"&endDateTime="+endDate+"&MWToken="+websys_getMWToken());
+  window.location.href="nur.hisui.multivitalsignbyday.csp?codeStr="+codeStr+"&EpisodeIDS="+episodeIds.join('^')+"&startDateTime="+startDate+"&endDateTime="+endDate+"&MWToken="+websys_getMWToken();
+}
+if ("PayAttention"==jumpFlag) {
+  window.location.href="nur.hisui.orderNeedCare.csp?EpisodeID="+episodeIds[0]+"&MWToken="+websys_getMWToken();
+}
+if ("HealthEdu"==jumpFlag) {
+  window.location.href="nur.hisui.educationexecute.csp?EpisodeID="+episodeIds[0]+"&IsShowPatInfoBannner=Y&IsShowPatList=Y&MWToken="+websys_getMWToken();
+}
+if ("NurRecord"==jumpFlag) {
+  window.location.href="nur.hisui.nursingRecords.csp?EpisodeID="+episodeIds[0]+"&MWToken="+websys_getMWToken();
+}
+if ("VSEntry"==jumpFlag) {
+  window.location.href="nur.hisui.multivitalsign.csp?EpisodeID="+episodeIds[0]+"&ifMultiCheck=1&MWToken="+websys_getMWToken();
+}
+
+
+// var vsInfo=$cm({
+//   ClassName: 'Nur.NIS.Service.VitalSign.Temperature',
+//   MethodName: 'GetAllTempConfig',
+//   locID: session['LOGON.CTLOCID'],
+//   time: ""
+// }, false);
+
+</script>
+</body>
+</html>

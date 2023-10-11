@@ -1,0 +1,98 @@
+﻿<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<meta http-equiv="Content-Type" content="text/html"/> 
+	<script type="text/javascript" src="../scripts/epr/lib/js-xlsx/xlsx.full.min.js" charset="UTF-8" ></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/icon.css"/>
+    <!--引入js-xlsx-->
+	<script language="cache" runat="server">
+          s typeCodeData = ##Class(web.eprajax.query.basicoperation).GetQueryItemType()
+          s StdData = ##Class(web.eprajax.query.basicoperation).GetStdDictionary()  
+   </script>
+    <script language="javascript">
+       var importData=[]
+       var typeCodeData = eval(#(typeCodeData)#);
+       var StdData = eval(#(StdData)#);
+       var categoryItemId = "";
+  </script>
+	<style>
+		#selectCategoryId,#selectTitle,#selectCode,#selectName,#selectSequence,#selectIsActive,#selectStdDic,#selectTypeCode
+		{
+			margin:5px 0px 5px 0px;
+		}
+		#QueryCategoryId,#QueryCategoryName,#QueryCategoryCode,#QueryCategoryRemark,#QueryCategorySequence,#QueryCategoryIsActive
+		{
+			margin:5px 0px 5px 0px;
+		}
+   </style>
+</head>
+<body>
+  	<div class="easyui-layout" data-options="fit:true" id="cc">    
+		<div data-options="region:'south',split:true" style="height:50px;padding:10px;border:none">
+			<div style="float:right">
+				<input type="file" onchange="xlsxUpload(this)" style="width:300px"/>
+				&nbsp;
+				<a href="#" id="ImportData" class="easyui-linkbutton fright">导入</a>
+   			</div>
+		 </div>
+		<div data-options="region:'west',title:'检索类别',iconCls:'icon-w-list',split:true" style="width:360px;padding:10px;">
+		<div style="width:290px;">
+			<ul id="cbtreeCategory1" data-options="animate:true"></ul>
+			<div id="mm" class="easyui-menu" style="width:190px;height:70px;overflow-y:auto;">
+                <div id="addParentQueryCategory">添加节点</div>
+                <div id="addChildQueryCategory">添加子节点</div>
+                <div id="editQueryCategory">编辑节点</div>
+           </div>
+		</div>
+		</div>
+		
+  		<div data-options="region:'center',title:'查询单元编辑'" style="width:100%;height:100%">
+			<table id="showItems" class="easyui-datagrid" title="单元列表" style="width:1230px;height:570px" data-options="url: '../web.eprajax.query.basicsetting.cls?frameType=HISUI',autoSizeColumn:false,fitColumns:true,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:true,">			
+				<thead>   
+					<tr>
+						<th data-options="field:'ID',width:80,hidden:true" style="">Id</th>
+						<th data-options="field:'CategoryID',width:80,hidden:true">项目分类</th>
+						<th data-options="field:'Title',width:90,editor:{type:'textarea',options:{required:true,}}">项目描述</th>
+						<th data-options="field:'ItemCode',width:340,editor:{type:'textarea',options:{required:true,}}">项目代码</th>
+						<th data-options="field:'Name',width:90,editor:{type:'textarea',options:{required:true,}}">项目名称</th>
+						<th data-options="field:'Sequence',width:80,editor:{type:'numberbox',options:{required:true,}}">顺序编号</th>
+						<th data-options="field:'Remark',width:80,editor:{type:'textarea',options:{required:true,}}">项目备注</th>
+						<th data-options="field:'ItemIsActive',width:100,editor:{type:'combobox',options:{valueField:'id',textField:'text',data:getQItemIsActive(),method:'get',required:true,blurValidValue:true,}}">是否有效</th>
+						<th data-options="field:'TypeCode',width:100,editor:{type:'combobox',options:{valueField:'id',textField:'text',data:typeCodeData,method:'get',required:true,blurValidValue:true,}}">项目类型</th>
+						<th data-options="field:'stdDicDesc',width:100,editor:{type:'combobox',options:{valueField:'Code',textField:'Description',data:StdData,method:'get',required:true,blurValidValue:true,}}">字典类型</th>   
+					</tr>   
+				</thead>   		
+			</table>
+			<div id="QuertCatory" class="easyui-dialog" title="检索类别" style="width:410px;height:250px;top:210px;left:500px;padding:10px;" data-options="resizable:true,modal:true,closed:true">   
+				<table>
+					<!-- <tr><th>项目分类：</th><th> --><input class="easyui-validatebox textbox" type="text" id="QueryCategoryId" placeholder="CategoryId" style="width:280px;display:none"/></th></tr>
+					<tr><th>项目代码：</th><th><input class="easyui-validatebox textbox" type="text" id="QueryCategoryCode" placeholder="Code" style="width:280px;"/></th></tr>
+					<tr><th>项目名称：</th><th><input class="easyui-validatebox textbox" type="text" id="QueryCategoryName" placeholder="Name" style="width:280px;"/></th></tr> 
+					<!-- <tr><th>ParentId: </th><th> --><input class="easyui-validatebox textbox" type="text" id="QueryCategoryParentId" placeholder="Title" style="width:280px;display:none"/></th></tr>
+					<tr><th>项目备注：</th><th><input class="easyui-validatebox textbox" type="text" id="QueryCategoryRemark" placeholder="Remark" style="width:280px;"/></th></tr>
+					<tr><th>顺序编号：</th><th><input class="easyui-validatebox textbox" type="text" id="QueryCategorySequence" placeholder="Sequence" style="width:280px;"/></th></tr>
+					<tr><th>是否有效：</th><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="QueryCategoryIsActive" class="easyui-combobox"/></th></tr>
+		   		</table>
+			</div>
+			<div id="QueryItem" class="easyui-dialog" title="编辑单元" style="width:410px;height:350px;top:190px;left:500px;padding:10px;" data-options="resizable:true,modal:true,closed:true">   
+				<table>
+					<input class="easyui-validatebox textbox" type="text" id="rowIndex" readonly="readonly" style="width:365px;display:none"/> 
+					<input class="easyui-validatebox textbox" type="text" id="selectRowId" readonly="readonly" style="width:365px;display:none"/> 
+					<!-- <tr><th>项目分类：</th><th> --><input class="easyui-validatebox textbox" type="text" id="selectCategoryId" placeholder="CategoryId" style="width:250px;display:none"/></th></tr>
+					<tr><th>项目描述：</th><th><input class="easyui-validatebox textbox" type="text" id="selectTitle" placeholder="Title" style="width:250px;"/></th></tr>
+					<tr><th>项目代码：</th><th><input class="easyui-validatebox textbox" type="text" id="selectCode" placeholder="Code" style="width:250px;"/></th></tr>
+					<tr><th>项目名称：</th><th><input class="easyui-validatebox textbox" type="text" id="selectName" placeholder="Name" style="width:250px;"/></th></tr> 
+					<tr><th>项目备注：</th><th><input class="easyui-validatebox textbox" type="text" id="selectRemark" placeholder="Remark" style="width:250px;"/></th></tr>
+					<tr><th>顺序编号：</th><th><input class="easyui-validatebox textbox" type="text" id="selectSequence" placeholder="Sequence" style="width:250px;"/></th></tr>
+					<tr><th>项目类型：</th><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="selectTypeCode" class="easyui-combobox"/></th></tr>
+					<tr><th>字典类型：</th><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="selectStd" class="easyui-combobox"/></th></tr>
+					<tr><th>是否有效：</th><th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="selectIsActive" class="easyui-combobox"/></th></tr>
+				</table>
+			</div>	
+		</div> 
+	</div> 
+    <script type="text/javascript" src="../scripts/epr/js/epr.query.operationitem.js"></script>
+</body>
+</html>

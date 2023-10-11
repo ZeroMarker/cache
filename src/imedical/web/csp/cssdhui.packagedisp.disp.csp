@@ -1,12 +1,12 @@
-<!--ÆÕÍ¨°ü·¢·Å-->
+ï»¿<!--æ™®é€šå¾ªçŽ¯åŒ…å‘æ”¾-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	i ##Class(websys.SessionEvents).SessionExpired() q 1
-	q 1
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
 </csp:method>
 <html lang="zh-CN">
 <SERVER>
-	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop´òÓ¡
+	Do ##class(web.DHCXMLPConfig).LODOPInit()  //Lodopæ‰“å°
 </SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
@@ -14,269 +14,190 @@
 	<HISUI/>
 	<CSSDHISUI/>
 </head>
-<body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false">
-		<div class="hisui-panel" data-options="title:'·¢·Åµ¥ÐÅÏ¢',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="CondTB">
-			<div class="BorderLine"> 
-				<table class="Condition" id="MainCondition">
-					<tr>
-						<td>·¢·Å¿ÆÊÒ
-							<input id="ReqLoc" name="fromLocDr" class="textbox hisui-combobox">
-						</td>
-						<td>½ÓÊÕ¿ÆÊÒ
-							<input id="SupLoc" name="toLocDr" class="textbox hisui-combobox">
-						</td>
-						<!--<td>Ïû¶¾°ü
-							<input id="PackageName" name="packagename" class="textbox hisui-combobox">
-						</td>
-						<td>
-							<input id="isOPRFlag" name="isOPRFlag" value="N" hidden >
-						</td>-->
-							<td>
-							<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">²éÑ¯</a>
-						</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td>¿ªÊ¼ÈÕÆÚ
-							<input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq" >
-						</td>
-						<td>½áÊøÈÕÆÚ
-							<input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq" >
-						</td>
-						<!--<td>
-							<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">²éÑ¯</a>
-						</td>
-						<td></td>-->
-						<td>
-							<a href="#" id="CreateBT" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-eye'" style="width:130px;">²é¿´»ØÊÕµ¥</a>
-						</td>
-						<td>
-							<input id="isOPRFlag" name="isOPRFlag" value="N" hidden >
-						</td>
-					</tr>
-					<tr>
-						<td>Â¥ºÅ
-						<input id="FloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
-						<td>ÏßÂ·ºÅ
-						<input id="LineCode" name="LineCode" class="textbox hisui-combobox"></td>
-						<td>
-							<a href="#" id="CreateBTApply" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-eye'" style="width:130px;">²é¿´½è°üµ¥</a>
-						</td>
-						<td>
-							<input id="isOPRFlag" name="isOPRFlag" value="N" hidden >
-						</td>
-					</tr>
-					<tr>
-						<td>µ¥¾ÝºÅ
-							<input id="FReqNo" name="FReqNo" class="textbox">
-						</td>
-						<td>·¢·ÅÈË
-							<input class="textbox" id="toUser" name="toUser">
-							<input class="textbox" hidden id="toUserDr" name="toUserDr">
-						</td>
-							<td>
-							<a href="#" id="Print" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px;">´òÓ¡</a>
-						</td>
-					</tr>
-					<tr>
-					<td>Ïû¶¾°ü
-							<input id="PackageName" name="packagename" class="textbox hisui-combobox">
-						</td>
-						
-					</tr>
-				</table>
-				</div> 
-					<table>
-				<tr>
-					<td>
-						<a href="#" id="submitAll" class="hisui-linkbutton" data-options="iconCls:'icon-upload',plain:true">ÅúÁ¿Ìá½»</a>
-					</td>
-				</tr>
-			</table>
-			</div>
-			<table id="MainList"></table>
-		</div>
-	</div>
-	<!--
-	<div class="GridPadding hisui-layout" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:370px;padding-left:10px">
-		<div class="hisui-panel" data-options="title:'·¢·ÅÃ÷Ï¸',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<table id="ItemList"></table>
-		</div>
-	</div>
-	-->
-		<!--<div class="GridPadding hisui-layout" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:650px;padding-left:0px;padding-right:0px;padding-bottom:5px">	
-		<div class="GridPadding" data-options="title:'',region:'center',border:false,headerCls:'panel-header-gray'" style="width:520px;padding-left:10px;padding-bottom:0px">	
-		 <div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="·¢·ÅÃ÷Ï¸">
-			<div id="Itembr">
-				<table id="ColSetConditions" class="Condition">
-					<tr>
-					   <td><label>ÌõÂë</label><input class="hisui-numberbox textbox" id="BarCode" name="BarCode" style="width:150px"></td>
-					</tr>
-				</table>
-			   <table>
-					<tr>
-						<td><a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">ÐÂÔö</a></td>
-						<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">±£´æ</a></td>
-						<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">É¾³ý</a></td>
-					</tr>
-						<div class="BorderLine"></div>	
-				</table>
-			</div>
-				<table id="ItemList"></table>
-		</div>
-		</div>
-		<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:280px;padding-left:0px;padding-bottom:0px">	
-			<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="·¢·Å±êÇ©Ã÷Ï¸">
-				<table id="ItemSList"></table>
-			</div>
-		</div>
-	</div>-->
-
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:450px;padding-left:0px">	
-		<div class="hisui-layout" data-options="fit:true">
-			<div  data-options="region:'north',border:false,collapsible:false" style="height:400px" >
-				<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="·¢·ÅÃ÷Ï¸">
-					<div id="Itembr">
-						<table id="ColSetConditions" class="Condition">
-							<tr>
-					   		<td><label>ÌõÂë</label><input class="hisui-numberbox textbox" id="BarCode" name="BarCode" style="width:150px"></td>
-							</tr>
-						</table>
-			   			<table>
+<body id="Layout" class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px">
+		<div class="hisui-panel" data-options="title:'å‘æ”¾å•ä¿¡æ¯',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true,border:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table class="Condition" id="MainCondition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="Type" name="Type" value="N" type="hidden">
 						<tr>
-							<td><a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">ÐÂÔö</a></td>
-							<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">±£´æ</a></td>
-							<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">É¾³ý</a></td>
+							<td><label>å‘æ”¾ç§‘å®¤</label><input id="ReqLoc" name="fromLocDr" class="textbox hisui-combobox"></td>
+							<td><label>æŽ¥æ”¶ç§‘å®¤</label><input id="SupLoc" name="toLocDr" class="textbox hisui-combobox"></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" style="width:130px">æŸ¥è¯¢</a></td>
 						</tr>
-						<div class="BorderLine"></div>	
-						</table>
-					</div>
-				<table id="ItemList"></table>
+						<tr>
+							<td><label class="required">*</label><label>èµ·å§‹æ—¥æœŸ</label><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox"></td>
+							<td><label class="required">*</label><label>æˆªæ­¢æ—¥æœŸ</label><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox"></td>
+							<td><a href="#" id="CreateBT" class="textbox hisui-linkbutton button-mark" style="width:130px;">æŸ¥çœ‹å›žæ”¶å•
+							<span id="ReturnNum" class="mark">0</span></a></td>
+						</tr>
+						<tr>
+							<td><label>èµ·å§‹æ—¶é—´</label><input id="StartTime" name="FStartTime" class="textbox hisui-timespinner" data-options="showSeconds:true"></td>
+							<td><label>æˆªæ­¢æ—¶é—´</label><input id="EndTime" name="FEndTime" class="textbox hisui-timespinner" data-options="showSeconds:true"></td>
+							<td><a href="#" id="CreateBTApply" class="textbox hisui-linkbutton button-mark" style="width:130px;">æŸ¥çœ‹å€ŸåŒ…å•
+							<span id="ApplyNum" class="mark">0</span></a></td>
+						</tr>
+						<tr>
+							<td><label>çº¿è·¯</label><input id="LineCode" name="LineCode" class="textbox hisui-combobox"></td>
+							<td><label>å•æ®ç±»åž‹</label><input id="ReqType" name="ReqType" class="textbox hisui-combobox"></td>
+							<td><a href="#" id="CreateBTFLApply" class="textbox hisui-linkbutton button-mark" style="width:130px;">éžå¾ªçŽ¯åŒ…ç”³è¯·å•
+							<span id="FLApplyNum" class="mark">0</span></a></td>
+						</tr>
+						<tr>
+							<td><label>å•æ®å·</label><input id="FReqNo" name="FNo" class="textbox"></td>
+							<td><label>å‘æ”¾äºº</label><input class="textbox" id="fromUserDr" name="fromUserDr"></td>
+						</tr>
+						<tr>
+							<td><label>æ¶ˆæ¯’åŒ…</label><input id="PackageName" name="packagename" class="textbox hisui-combobox"></td>
+							<td><label>æ ‡ç­¾</label><input id="Label" name="Label" class="textbox"></td>
+						</tr>
+						<tr>
+							<td align="left">
+								<input class='hisui-radio' data-options="checked:'true'" type="radio" label='å…¨éƒ¨' name='FComplateFlag' value=''>
+								<input class='hisui-radio' type="radio" label='æœªæäº¤' name='FComplateFlag' value='N'>
+								<input class='hisui-radio' type="radio" label='å·²æäº¤' name='FComplateFlag' value='Y'>
+							</td>
+							<td><label>æäº¤æ—¶é—´</label><input id="DispTime" name="DispTime" class=" textbox hisui-timespinner" data-options="min:'06:00',showSeconds:true"></td>
+						</tr>
+					</table>
 				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="MainList"></table>
 				</div>
-				<div  data-options="region:'center',border:false" style="padding-top:10px">
-					<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="·¢·Å±êÇ©Ã÷Ï¸" >
-						<table id="ItemSList"></table>
-					</div>
 			</div>
 		</div>
 	</div>
-	<!--Ñ¡È¡»ØÊÕµ¥Dialog-->
-	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-find',closed:'true',modal:true" title="²é¿´»ØÊÕµ¥">
+	
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:500px;">
+		<div id="ItmLayout" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false,collapsible:false" style="height:400px">
+				<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="å‘æ”¾æ˜Žç»†">
+					<div class="hisui-layout" data-options="fit:true">
+						<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray',collapsible:false">
+							<table id="ColSetConditions" class="Condition">
+								<tr>
+									<td>
+										<label>æ ‡ç­¾</label>
+										<input class="textbox" id="BarCode" name="BarCode" style="width:180px;">
+										<a href="#" id="UseBarCodeBT" class="hisui-linkbutton" data-options="plain:true"></a>
+										<a href="#" title="åˆ‡æ¢æ‰«ç æ¨¡å¼" id="BarCodeSwitchBT" class="hisui-linkbutton">åˆ‡æ¢</a>
+										<input type="password" class="textbox" id="BarCodeHidden" style="border:0px;background:none;opacity:0.0;width:10px;">
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false,collapsible:false">
+							<table id="ItemList"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-bottom:1px;padding-left:0px;padding-right:0px">
+				<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="å‘æ”¾æ ‡ç­¾æ˜Žç»†">
+					<table id="ItemSList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--é€‰å–å›žæ”¶å•Dialog-->
+	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-find',closed:'true',modal:true" title="æŸ¥çœ‹å›žæ”¶å•">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
 				<table id="SelReqConditions" class="Condition">
-				<input id="SelisOPRFlag" name="isOPRFlag" value="N" hidden >
-				<input class="textbox" hidden id="SeltoUserDr" name="toUserDr">
 					<tr>
-						<td>»ØÊÕ¿ÆÊÒ</td>
-						<td><input id="SelReqLoc" name="FReqLoc" class="textbox hisui-combobox"></td>
-						<td>µ¥¾ÝºÅ</td>
-						<td><input id="FReqNo" name="FReqNo" class="textbox"  ></td>
-						<td><input id="FIsOPRFlag" name="FIsOPRFlag" class="textbox" value="N" hidden></td>
-						<!--<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">²éÑ¯</a></td>-->
+						<td><label>èµ·å§‹æ—¥æœŸ</label><input id="CStartDate" name="StartDate" class="textbox hisui-datebox" style="width:115px;"></td>
+						<td><label>çº¿è·¯</label><input id="CLineCode" name="LineCode" class="textbox hisui-combobox"></td>
+						<td>
+							<input class='hisui-radio' type="radio" label='å…¨éƒ¨' name='DispFlag' value=''>
+							<input class='hisui-radio' type="radio" label='æœªç”Ÿæˆ' name='DispFlag' value='1' data-options="checked:true">
+							<input class='hisui-radio' type="radio" label='ç”Ÿæˆæœªå‘' name='DispFlag' value='2'>
+							<input class='hisui-radio' type="radio" label='å·²å‘æ”¾' name='DispFlag' value='3'>
+						</td>
+						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" style="width:100px;">æŸ¥è¯¢</a></td>
 					</tr>
 					<tr>
-						<td>¿ªÊ¼ÈÕÆÚ</td>
-						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox" ></td>
-						<td>½áÊøÈÕÆÚ</td>
-						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox" ></td>
-						<!--<td>ÊÇ·ñÉú³É·¢·Åµ¥
-							<input class='hisui-radio' type="radio" label='ÊÇ' name='isDisp' value='Y'>
-							<input class='hisui-radio' type="radio" label='·ñ' name='isDisp' value='N' data-options="checked:true">
-						</td>
-						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">Éú³É·¢·Åµ¥</a></td>-->
+						<td><label>æˆªæ­¢æ—¥æœŸ</label><input id="CEndDate" name="EndDate" class="textbox hisui-datebox" style="width:115px;"></td>
+						<td><label>å›žæ”¶ç§‘å®¤</label><input id="CReqLoc" name="ReqLoc" class="textbox hisui-combobox"></td>
+						<td></td>
+						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton">ç”Ÿæˆå‘æ”¾å•</a></td>
 					</tr>
 					<tr>
-						<td>Â¥ºÅ</td>
-						<td><input id="CFloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
-						<td>ÏßÂ·ºÅ</td>
-						<td><input id="CLineCode" name="LineCode" class="textbox hisui-combobox"></td>
-						<td>ÊÇ·ñÉú³É·¢·Åµ¥
-							<input class='hisui-radio' type="radio" label='ÊÇ' name='isDisp' value='Y'>
-							<input class='hisui-radio' type="radio" label='·ñ' name='isDisp' value='N' data-options="checked:true">
+						<td><label>å•æ®å·</label><input id="CReqNo" name="ReqNo" class="textbox" style="width:108px;"></td>
+						<td><label>æ ‡ç­¾</label><input class="textbox" id="CBBarCode" name="CBBarCode"></td>
+						<td align="left">
+							<a href="#" id="CBBarCodeBT" class="hisui-linkbutton" data-options="plain:true"></a>
+							<a href="#" title="åˆ‡æ¢æ‰«ç æ¨¡å¼" id="CBBarCodeSwitchBT" class="hisui-linkbutton">åˆ‡æ¢</a>
+							<input type="password" class="textbox" id="CBBarCodeHidden" style="border:0px;background:none;opacity:0.0;width:1px;">
 						</td>
-						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">²éÑ¯</a></td>
-						<td><a href="#" id="SelReqCreateBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">Éú³É·¢·Åµ¥</a></td>
 					</tr>
 				</table>
 			</div>
 			<div class="FindGridWest GridPadding" style="padding-top:0; width:600px" data-options="region:'west',border:false">
-				<div class="hisui-panel" data-options="title:'»ØÊÕµ¥',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+				<div class="hisui-panel" data-options="title:'å›žæ”¶å•',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
 					<table id="SelReqMasterGrid"></table>
 				</div>
 			</div>
 			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
-				<div class="hisui-panel" data-options="title:'µ¥¾ÝÃ÷Ï¸',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+				<div class="hisui-panel" data-options="title:'å•æ®æ˜Žç»†',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
 					<table id="SelReqDetailGrid"></table>
 				</div>
 			</div>
 		</div>
 	</div>
 	<div>
-          <audio src="" id="snd_ie" hidden="true"></audio>
-    </div>
-    <!--²éÑ¯½è°üµ¥-->
-   <div id="SelReqWinBorrow" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-find',closed:'true',modal:true" title="²é¿´½è°üµ¥">
+		<audio src="" id="snd_ie" hidden="true"></audio>
+	</div>
+	
+	<!--æŸ¥è¯¢å€ŸåŒ…å•åŠéžå¾ªçŽ¯åŒ…ç”³è¯·å•-->
+	<div id="SelReqWinBorrow" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-find',closed:'true',modal:true" title="æŸ¥çœ‹å¾…å‘å•">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
 				<table id="SelReqConditionsBro" class="Condition">
-				<input id="SelisOPRFlag" name="isOPRFlag" value="N" hidden >
-				<input class="textbox" hidden id="SeltoUserDr" name="toUserDr">
 					<tr>
-						<td>ÉêÇë¿ÆÊÒ</td>
-						<td><input id="SelReqLocB" name="FReqLoc" class="textbox hisui-combobox"></td>
-						<td>µ¥¾ÝºÅ</td>
-						<td><input id="FReqNo" name="FReqNo" class="textbox"  ></td>
-						<td><input id="FIsOPRFlag" name="FIsOPRFlag" class="textbox" value="N" hidden></td>
-						<!--<td><a href="#" id="SelReqQueryBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">²éÑ¯</a></td>-->
+						<td><label>èµ·å§‹æ—¥æœŸ</label><input name="StartDate" class="textbox hisui-datebox"></td>
+						<td><label>çº¿è·¯</label><input id="BroLineCode" name="LineCode" class="textbox hisui-combobox"></td>
+						<td align="right">
+							<input class='hisui-radio' type="radio" label='å…¨éƒ¨' name='DispFlag' value=''>
+							<input class='hisui-radio' type="radio" label='æœªç”Ÿæˆ' name='DispFlag' value='1' data-options="checked:true">
+							<input class='hisui-radio' type="radio" label='ç”Ÿæˆæœªå‘' name='DispFlag' value='2'>
+							<input class='hisui-radio' type="radio" label='å·²å‘æ”¾' name='DispFlag' value='3'>
+						</td>
+						<td><a href="#" id="SelReqQueryBTBro" class="hisui-linkbutton" style="width:100px;">æŸ¥è¯¢</a></td>
 					</tr>
 					<tr>
-						<td>¿ªÊ¼ÈÕÆÚ</td>
-						<td><input id="FStartDateB" name="FStartDate" class="textbox hisui-datebox" ></td>
-						<td>½áÊøÈÕÆÚ</td>
-						<td><input id="FEndDateB" name="FEndDate" class="textbox hisui-datebox" ></td>
-						<!--<td>ÊÇ·ñÉú³É·¢·Åµ¥
-							<input class='hisui-radio' type="radio" label='ÊÇ' name='isDisp' value='Y'>
-							<input class='hisui-radio' type="radio" label='·ñ' name='isDisp' value='N' data-options="checked:true">
-						</td>
-						<td><a href="#" id="SelReqCreateBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">Éú³É·¢·Åµ¥</a></td>-->
+						<td><label>æˆªæ­¢æ—¥æœŸ</label><input name="EndDate" class="textbox hisui-datebox"></td>
+						<td><label>ç”³è¯·ç§‘å®¤</label><input id="SelReqLocB" name="ReqLoc" class="textbox hisui-combobox"></td>
+						<td></td>
+						<td><a href="#" id="SelReqCreateBTBro" class="hisui-linkbutton">ç”Ÿæˆå‘æ”¾å•</a></td>
 					</tr>
 					<tr>
-						<td>Â¥ºÅ</td>
-						<td><input id="BroFloorCode" name="FloorCode" class="textbox hisui-combobox"></td>
-						<td>ÏßÂ·ºÅ</td>
-						<td><input id="BroLineCode" name="LineCode" class="textbox hisui-combobox"></td>
-						<td>ÊÇ·ñÉú³É·¢·Åµ¥
-							<input class='hisui-radio' type="radio" label='ÊÇ' name='isDisp' value='Y'>
-							<input class='hisui-radio' type="radio" label='·ñ' name='isDisp' value='N' data-options="checked:true">
-						</td>
-						<td><a href="#" id="SelReqQueryBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">²éÑ¯</a></td>
-						<td><a href="#" id="SelReqCreateBTBro" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="width:130px;">Éú³É·¢·Åµ¥</a></td>
+						<td><label>å•æ®å·</label><input name="ApplyNo" class="textbox"></td>
 					</tr>
 				</table>
 			</div>
 			<div class="FindGridWest GridPadding" style="padding-top:0; width:600px" data-options="region:'west',border:false">
-				<div class="hisui-panel" data-options="title:'ÉêÇëµ¥',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+				<div class="hisui-panel" data-options="title:'ç”³è¯·å•',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
 					<table id="SelReqMasterGridBro"></table>
 				</div>
 			</div>
 			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
-				<div class="hisui-panel" data-options="title:'µ¥¾ÝÃ÷Ï¸',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+				<div class="hisui-panel" data-options="title:'å•æ®æ˜Žç»†',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
 					<table id="SelReqDetailGridBro"></table>
 				</div>
 			</div>
 		</div>
 	</div>
-<script type="text/javascript" src="../scripts/cssd/Disp/DispCommon.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Disp/SelReq.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Disp/SelReqApply.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Disp/FindWin.js"></script>	
-<script type="text/javascript" src="../scripts/cssd/Disp/PackageDisp.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Common/commonmedia.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Disp/DispPrint.js"></script>
+
+	<CSP:INCLUDE PAGE="cssdhui.packagedisp.dispcode.csp">
+	<script type="text/javascript" src="../scripts/cssd/Common/commonData.js"></script>	
+	<script type="text/javascript" src="../scripts/cssd/Common/commonmedia.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/DispCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/DispPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/SelReq.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/SelReqApply.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/PackageDisp.js"></script>
 </body>
 </html>

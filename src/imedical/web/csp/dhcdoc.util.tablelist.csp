@@ -1,0 +1,370 @@
+<!--dhcdoc.util.tablelist.csp 一个表数据的列表选择弹窗，可用做公共的前台构件-->
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.--> 
+<CSP:CLASS import="User">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{
+	background: #fff;
+}
+.datagrid-body{
+	/*height:240px !important;*/
+}
+.panel-header{
+	border-bottom: 0;
+}
+</style>
+</head>
+<Server>
+s DisplayType=%request.Get("DisplayType")		//展示模式，Search:检索添加模式，Select：直接勾选模式
+s DisplayType=$CASE(DisplayType,"Search":"Search",:"Select")
+s TableName=%request.Get("TableName")			//与CustomQuery任选一项必填，表名
+s CustomQuery=%request.Get("CustomQuery")			//与TableName任选一项必填，自定义Query
+s IDFieldName=%request.Get("IDFieldName")		//可选参数，自定义ID列
+s DescFieldName=%request.Get("DescFieldName")	//可选参数，自定义描述列
+s IDList=%request.Get("IDList")					//默认选择的ID串，!分割
+s HospDr=%request.Get("HospDr")					//院区
+//过滤器，通过id过滤自定义的展示内容,目前仅支持ClassMethod,格式为【类名.方法名】,入参为表ID,出参为Y|N
+s Filter=%request.Get("Filter")					
+if (TableName'=""){
+	s ClassName="web.DHCBL.CT."_$replace(TableName,"_","")
+	s QueryName="GetDataForCmb1"
+}elseif (CustomQuery'=""){
+	s ClassName=$P(CustomQuery,".",1,$L(CustomQuery,".")-1)
+    s QueryName=$P(CustomQuery,".",$L(CustomQuery,"."),$L(CustomQuery,"."))
+}
+
+s Arr=[]
+Set rset=##class(%ResultSet).%New(ClassName_":"_QueryName)
+i IDFieldName="" s IDFieldName=rset.GetColumnName(1)
+i DescFieldName="" s DescFieldName=rset.GetColumnName(3)
+s ArgumentS=$G(^oddCOM(ClassName,"q",QueryName,25))
+s QueryDescName="",QueryHospName=""
+
+for i=1:1:$listlength(ArgumentS){
+	s Argument=$LISTGET(ArgumentS,i)
+	if ($ZCVT(Argument,"U")["HOSP"){
+		//找到lookup的院区列
+		s:(QueryHospName="") QueryHospName=Argument
+	}elseif ($ZCVT(Argument,"U")["DESC"){
+		//找到lookup的描述列
+		s:(QueryDescName="") QueryDescName=Argument
+	}
+}
+;s ClassName="",ExcuteMethod=""
+s ExcuteMethod=""
+if (Filter'=""){
+	s ClassName=$P(Filter,".",1,$L(Filter,".")-1)
+    s ExcuteMethod=$P(Filter,".",$L(Filter,"."),$L(Filter,"."))
+	if (##class(websys.Conversions).IsValidMethodName(ClassName,ExcuteMethod)=0){
+		s ClassName="",ExcuteMethod=""
+	}
+}
+s IDIndex=0,ID=""
+for{
+	s IDIndex=IDIndex+1
+	if (DisplayType="Search"){
+		//检索模式下,需要循环输出已检索内容
+		if (IDIndex>$L(IDList,"!")){quit}
+		s ID=$P(IDList,"!",IDIndex)
+		if (ID=""){continue}
+	}else{
+		//勾选模式下,只检索一次就行了
+		if (IDIndex>1){quit}
+	}
+	s ExcuteStr="rset.Execute("
+	for i=1:1:$listlength(ArgumentS){
+		s Argument=$LISTGET(ArgumentS,i)
+		s val=""
+		if ($ZCVT(Argument,"U")["ROWID")&&(DisplayType="Search"){
+			s val=ID
+		}elseif ($ZCVT(Argument,"U")["HOSP"){
+			//找到lookup的院区列
+			s val=HospDr
+		}
+		i i=1 s ExcuteStr=ExcuteStr_""""_val_""""
+		e  s ExcuteStr=ExcuteStr_","""_val_""""
+	}
+	s ExcuteStr=ExcuteStr_")"
+	d @ExcuteStr
+
+	While(rset.Next())
+	{
+		s ID=rset.GetDataByName(IDFieldName)
+		s Desc=rset.GetDataByName(DescFieldName)
+
+		if (ClassName'="")&&(ExcuteMethod'=""){
+			if ($CLASSMETHOD(ClassName,ExcuteMethod,ID)="N"){
+				continue
+			}
+		}
+		s Desc=##class(web.DHCDocUtilTableList).GetTranslateDataByType(Desc,%request.Get("TableName"))
+		s Obj={}
+		do Obj.%Set("ID",ID)
+		do Obj.%Set("Desc",Desc)
+		d Arr.%Push(Obj,"")
+	}
+	d rset.Close()
+}
+// renyx 获取类中字段的翻译会重写ClassName 需要重新赋值
+s ClassName="web.DHCBL.CT."_$replace(TableName,"_","")
+s JsonInfo=""
+s obj=##class(%Library.GlobalCharacterStream).%New()
+do Arr.%ToJSON(obj)
+While 'obj.AtEnd { 
+	s JsonInfo=JsonInfo_obj.ReadLine(,.sc,.eol)
+}
+s TableJson=$replace(JsonInfo,"""","'")
+
+
+/*
+s sqlStr="SELECT %ID As IDField ,"_IDFieldName_", "_DescFieldName_" FROM "_TableName
+s result=##class(%Library.ResultSet).%New()
+d result.Prepare(sqlStr)
+d result.Execute()
+While(result.Next())
+{
+	s ID=result.Data("IDField")
+	s IDValue=result.Data(IDFieldName)
+	s DescValue=result.Data(DescFieldName)
+	continue:(##Class(DHCDoc.Common.Hospital).GetHospShowDataFlag(TableName,IDValue,HospDr)="N")
+}
+d result.Close()
+*/
+</Server>
+<body>
+	<div class="hisui-panel" title="" style="height:calc(100% - 60px);border: 1px solid rgb(204, 204, 204)" data-options="headerCls:'panel-header-gray',border:false">
+		<div class="hisui-layout" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+			<csp:if condition='DisplayType="Search"'>
+				<div data-options="region:'north',border:false" style="height: 54px;padding: 10px;border-bottom: 1px solid rgb(204, 204, 204);width: 258px;">
+					
+					<input id="TableSearch" class="textbox" style="width: 220px;">
+					<input id="TableSearchID" style="display:none;">
+					
+				</div>
+			</csp:if>
+
+			<div data-options="region:'center', split:true, iconCls:'icon-add',collapsible:false,border:false" style="">
+				<table id="TableList"></table>
+			</div>
+		</div>
+	</div>
+	<a href="#" id="OKBtn" style="margin: 10px 0px 0px 30px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" >确定</a>
+	<div style="display:inline-block;margin:0 20px;"></div>
+	<a href="#" id="CancelBtn" style="margin: 10px 0px 0px 20px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" >取消</a>
+<SCRIPT language = 'javascript' >
+	//全局请求后台服务对象
+	var ServerObj={
+		DisplayType:"#(DisplayType)#",
+		IDList:"#(IDList)#",
+		HospDr:"#(HospDr)#",
+		TableJson:"#(TableJson)#",
+		ClassName:"#(ClassName)#",
+		QueryName:"#(QueryName)#",
+		IDFieldName:"#(IDFieldName)#",
+		DescFieldName:"#(DescFieldName)#",
+		QueryDescName:"#(QueryDescName)#",
+		QueryHospName:"#(QueryHospName)#",
+		TableName:"#(TableName)#",
+		
+	};
+	$(function(){
+		$("#OKBtn").click(OKClickHandle);
+		$("#CancelBtn").click(CancelClickHandle);
+		InitTable()
+		InitTableSearch();
+	});
+
+	function InitTable(){
+		var ToolBar = [{
+			text: '删除',
+			iconCls: 'icon-remove',
+			handler: function() {
+				//var Rows = DeepCopyObject($("#TableList").datagrid('getSelections'));
+				var Rows = $("#TableList").datagrid('getSelections').concat()
+				if (Rows.length == 0){
+					$.messager.alert("提示","未选择需要删除的行信息!");
+					return false;
+				}
+				Rows.forEach(function(item, index){
+					var RowIndex=$("#TableList").datagrid('getRowIndex',item)
+					$("#TableList").datagrid('deleteRow',RowIndex)
+				});
+				$("#TableList").datagrid('clearSelections');
+			}
+		}];
+		var Columns=[[ 
+ 			{field:'Check',title:'选择',checkbox:'true',width:80},
+ 			{field:'Desc',title:'描述',width:300/*,
+ 				formatter:function(value,rec){  
+                   var value=$.cm({
+					    ClassName:"web.DHCDocUtilTableList",
+					    MethodName:"GetTranslateDataByType",
+					    Data:value,
+					    DataType:ServerObj.TableName,
+					    dataType:"text"
+					},false);
+			       return value;
+                }*/
+ 			},
+			{field:'ID',hidden:true}
+		]];
+		//初始化不规则分发时间频次选择表格
+		$("#TableList").datagrid({  
+			mode:"remote",
+			method: "GET",
+		  	data:eval("("+ServerObj.TableJson+")"),
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : false,
+			fitColumns : false,
+			autoRowHeight : false,
+			rownumbers:false,
+			showFooter:false,
+			pagination : false,  //
+			pageSize: 10,
+			idField:'ID',
+			columns :Columns,
+			toolbar :ServerObj.DisplayType=="Search"?ToolBar:"",
+			showFilterToolbar:ServerObj.DisplayType=="Search"?false:true,
+			onLoadSuccess:function(data){
+				if (ServerObj.IDList==""){return;}
+				if (ServerObj.DisplayType=="Select"){
+					data.rows.forEach(function(item, index){
+						if (("!"+ServerObj.IDList+"!").indexOf("!"+item.ID+"!")>=0){
+							$("#TableList").datagrid('selectRow',index);
+						}
+					});
+				}
+			}/*,
+			queryParams:{ClassName: 'DHCDoc.DHCDocConfig.SubCatContral',QueryName: 'FindCatList'},
+			onBeforeLoad:function(param){
+				param = $.extend(param,{value:"-",HospId:ServerObj.HospDr});
+			}*/
+		});
+		
+	} 
+	function OKClickHandle(){
+		var IDStr="";
+		if (ServerObj.DisplayType=="Select"){
+			var Arr=$("#TableList").datagrid('getChecked');
+		}else{
+			var Arr=$("#TableList").datagrid('getData').rows;
+		}
+		for (var i=0;i<Arr.length;i++){
+			if (IDStr==""){
+				IDStr=Arr[i].ID
+			}else{
+				IDStr=IDStr+"!"+Arr[i].ID;
+			}
+		}
+		
+		var rtnValue=IDStr;
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc(rtnValue);
+		}else{
+			window.returnValue=rtnValue;
+			window.close();
+		}
+
+	}
+	function CancelClickHandle(){
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc(false);
+		}else{
+			window.returnValue=false;
+			window.close();
+		}
+	}
+	function InitTableSearch(){
+		$("#TableSearch").lookup({
+			url:$URL,
+			mode:'remote',
+			method:"Get",
+			idField:ServerObj.IDFieldName,
+			textField:ServerObj.DescFieldName,
+			columns:[[  
+				{field:"AppendDesc",title:'名称',width:220,sortable:false/*,
+	 				formatter:function(value,rec){  
+	                   var value=$.cm({
+						    ClassName:"web.DHCDocUtilTableList",
+						    MethodName:"GetTranslateDataByType",
+						    Data:value,
+						    DataType:ServerObj.TableName,
+						    dataType:"text"
+						},false);
+				       return value;
+                    }*/
+                },
+				{field:"AppendID",title:"ID",hidden:true}
+			]],
+			enableNumberEvent:true,
+			pagination:false,
+			rownumbers:true,
+			panelWidth:270,
+			panelHeight:330,
+			isCombo:false,
+			minQueryLen:2,
+			delay:'200',
+			queryOnSameQueryString:true,
+			queryParams:{ClassName: "web.DHCDocUtilTableList",QueryName: "GetDataForCmb"},
+			onBeforeLoad:function(param){
+				var desc=param['q'];
+				if (desc=="") return false;
+				/*if (ServerObj.QueryDescName!=""){
+					param["QueryDescName"]=desc
+					//param = $.extend(param,{[ServerObj.QueryDescName]:desc});
+				}else{
+					param = $.extend(param,{desc:desc});
+				}*/
+				param["MyClassName"]=ServerObj.ClassName
+				param["MyQueryName"]=ServerObj.QueryName
+				param["QueryDescName"]=ServerObj.QueryDescName
+				param["QueryDesc"]=desc
+				/*if (ServerObj.QueryHospName!=""){
+					param[ServerObj.QueryHospName]=ServerObj.HospDr
+					//param = $.extend(param,{[ServerObj.QueryHospName]:ServerObj.HospDr});
+				}*/
+				param["IDFieldName"]=ServerObj.IDFieldName
+				param["DescFieldName"]=ServerObj.DescFieldName
+				param["TableName"]=ServerObj.TableName
+				param["QueryHospName"]=ServerObj.QueryHospName
+				param["QueryHosp"]=ServerObj.HospDr
+				param = $.extend(param,{rows:9999});
+			},onSelect:function(ind,item){
+				var AppendID=item["AppendID"]
+				var AppendDesc=item["AppendDesc"];
+				var rows=$("#TableList").datagrid("getData").rows;
+				var findSameData=0;
+				rows.forEach(function(indItem, index){
+					if (indItem.ID==AppendID){
+						findSameData=1;
+						return false
+					}
+				});
+				if (findSameData==1){
+					$.messager.alert('提示',"存在重复数据，无需再次添加");
+					$("#TableSearch").val("");
+					return
+				}
+				$("#TableList").datagrid("appendRow",{ID:AppendID,Desc:AppendDesc})
+				$("#TableSearch").val("");
+			}
+		});
+	}
+	function DeepCopyObject(source) { 
+		var result={};
+		for (var key in source) {
+			result[key] = typeof source[key]==='object'?deepCoyp(source[key]): source[key];
+		} 
+		return result; 
+	}
+  </SCRIPT>
+<SCRIPT type="text/javascript" SRC='../scripts/DHCOPAdm.Common.js'></SCRIPT>
+<SCRIPT type="text/javascript" SRC='../scripts/DHCWeb.OPCommon.js'></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+</body> 
+</html>

@@ -1,13 +1,24 @@
-﻿﻿<html>
+﻿ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+        i ##Class(websys.SessionEvents).SessionExpired() 
+		q 1
+</csp:method>﻿
+﻿<html>
 <head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
 	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 	<script language="cache" runat="server">
 		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("patientID",1),"")
+		q:((episodeID="")&&(patientID=""))
+		s:episodeID="" episodeID =  ##class(EMRservice.HISInterface.PatientInfoAssist).GetLastAdm(patientID)
+		s:patientID="" patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
 		s instanceID = $Get(%request.Data("InstanceID",1),"")
 		s action = $Get(%request.Data("Action",1),"")
-		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s:(action = "") action = "browse"
 		s admType = $p(^PAADM(episodeID),"^",2)  //值:I、O、E
+		s viewType = $Get(%request.Data("ViewType",1),"PDF")     //Editor  PDF
   </script>
 	<script language="javascript">
 		var patientID = '#(patientID)#';
@@ -15,6 +26,7 @@
 		var action = '#(action)#';
 		var admType = '#(admType)#';
 		var instanceID = '#(instanceID)#';
+		var viewType = '#(viewType)#';
    </script>
 	<title>病历浏览</title>
 </head>

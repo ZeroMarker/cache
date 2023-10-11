@@ -5,20 +5,104 @@
 </csp:method>
 <HTML XMLNS=TRAK>
 <HEAD>
-    <HISUI/>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
-	<TITLE>缁堟湯璐ㄦ帶璇勪环鐣岄潰</TITLE>
+	<TITLE>终末质控评价界面</TITLE>
+ 
+	<style>
+     
+	 .patientbar{
+		overflow:hidden;
+		padding:10px 10px 0 10px;
+	 }
+	 .PatInfoItem {
+		font-size: 0;
+		line-height: 40px;
+		overflow:hidden;
+		position: relative;
+		margin-left:10px;
+	 }
+	 .patinfo-hover-content{
+	 	font-size: 0;
+	 }
+	 .PatInfoItem span, .patinfo-hover-content span{
+		 margin:0;
+		 line-height:30px;
+	 }
+	 .PatInfoItem lable, .patinfo-hover-content lable,.patinfo-hover-content img{
+		 color:#666;
+		 margin-right:5px;
+	 }
+	 .PatInfoItem img{
+		 color:white;
+		 margin-left:5px;
+		 margin-right:5px;
+	 }
+	 .PatInfoItem a img{
+		 margin-top:4px;
+	 }
+	 .patinfo-hover-content span{
+		 line-height:30px;
+	 }
+	 .man{
+		 background:url(../images/man.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .woman{
+		 background:url(../images/woman.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .unman {
+		background: url(../images/unman.png) no-repeat;
+		background-size: cover;
+	 }
+	 .border-div{
+		border:1px solid #E2E2E2;	 
+		height:35px;
+		position:fixed;
+		top:2px;
+		left:10px;
+		right:10px;
+		background: transparent;
+	 }
+	 .PatInfoItem div:first-child{
+		left:20px;	 
+	 }
+    </style>
 </HEAD>
- <script language="cache" runat="server">
+<body class="hisui-layout" id = "checkRuleLayout" data-options="border:false">
+	<div class="patientbar" data-options="region:'north',border:false" style="height:40px;">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10 0 5 5px; overflow:hidden;">
+		<iframe id="recordQuality" width="100%" height="100%" frameborder="0"></iframe>
+		
+	</div> 
+	
+	<div data-options="region:'east',border:false,split:true" style="width:600px;padding:15 10 10 0px;overflow:hidden;">
+		<iframe  id="qualityEntrygrid" width="100%" height="100%" frameborder="0"></iframe>
+	</div>
+	
+    <div id="browselogdialog" class="hisui-dialog" title="操作记录明细" style="width:950px;height:500px;padding:0;margin:0;" data-options="iconCls:'icon-w-list',modal:true,isTopZindex:true,closed:true">
+        <iframe id="browselogiframe" frameborder="0" src="" style="width:100%;height:99%;padding:0;margin:0;"></iframe>
+    </div>	
+    
+    <script language="cache" runat="server">
 		s episodeID = $Get(%request.Data("EpisodeID",1))
+		//s patientName=$Get(%request.Data("patientName",1))
+		s MedicareNo=$Get(%request.Data("MedicareNo",1))
+		s BedNo=$Get(%request.Data("BedNo",1))
 		//s patientID = $Get(%request.Data("patientID",1))
 		s patientID = ##class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s patientName=$p($g(^PAPER(patientID,"ALL")),"^",1)
 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
 		s CTLocatID=$g(%session.Data("LOGON.CTLOCID"))
 		s SSUserID=$g(%session.Data("LOGON.USERID"))
 		s action = $Get(%request.Data("action",1))
-</script>
- <script language="javascript">
+		s PilotSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("PilotSSGroup")
+	</script>
+	 <script language="javascript">
 			
 		var patientID = '#(patientID)#';
         var episodeID = '#(episodeID)#';
@@ -26,21 +110,13 @@
         var CTLocatID ='#(CTLocatID)#';
         var SSUserID ='#(SSUserID)#';
 		var action ='#(action)#';
-</script>
-</HEAD>
-<body class="hisui-layout" id = "checkRuleLayout" data-options="border:false">
-	<div data-options="region:'center',border:false" style="padding:2px;">
-		<object id="recordQuality" data="" width="100%" height="99%"></object>
-		
-	</div> 
-	
-	<div data-options="region:'east',border:false,split:true" style="width:600px;padding:2 2 2 0px;">
-		<object  id="qualityEntrygrid" data="" width="100%" height="100%"></object>
-	</div>
-	
-    <div id="browselogdialog" class="hisui-dialog" title="鎿嶄綔璁板綍鏄庣粏" style="width:950px;height:500px;padding:0;margin:0;" data-options="iconCls:'icon-w-list',modal:true,isTopZindex:true,closed:true">
-        <iframe id="browselogiframe" frameborder="0" src="" style="width:100%;height:99%;padding:0;margin:0;"></iframe>
-    </div>	
+		var patientName='#(patientName)#';
+		var MedicareNo='#(MedicareNo)#';
+		var BedNo='#(BedNo)#';
+		var PilotSSGroup = '#(PilotSSGroup)#';
+		var pilotSSGroup=PilotSSGroup.split('^');
+		var pilotView=pilotSSGroup.indexOf(SSGroupID)
+	</script>
 
 	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.DisCheckRule.js"></script>
 	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>

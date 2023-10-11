@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 直接退药
+    csp: csp/pha.ip.v4.return.csp
+    js:  scripts/pha/ip/v4/return.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <PHAPRINTCOM />
+    <style>
+        #winReturnReason {
+            padding: 10px 10px 0px 10px;
+        }
+        #winSelectPrintWay .pha-con-table {
+            margin: auto
+        }
+
+        .kw-section-list>li {
+            margin: 10px 10px 10px 0px;
+        }
+
+        .dialog-button {
+            padding-top: 0px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-panel" data-options="title:'直接退药',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',fit:true" id="pha_ip_v4_return">
+                <table id="gridDetail"></table>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridDetailBar">
+        <table class="pha-con-table" id="qCondition">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("开始日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-datebox " id="startDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="endDate">#(..Get("结束日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-datebox " id="endDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="loc">#(..Get("退药科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-combobox " id="loc" data-pha="class:'hisui-combobox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="patNo">
+                        <span style="color:red;">*</span>
+                        #(..Get("登记号"))#
+                    </label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-validatebox " id="patNo" data-pha="class:'hisui-validatebox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" iconCls="icon-w-ok" id="btnReturn">退药</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 退药原因 -->
+    <div id="winReturnReason">
+        <table id="gridReturnReason"></table>
+    </div>
+    <!-- 选择打印方式 -->
+    <div id="winSelectPrintWay" style="overflow: hidden;width: 500px;">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <div id="kwPrintWay"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 本页面js -->
+    <script src="../scripts/pha/ip/v4/return.js"></script>
+    <script src="../scripts/pharmacy/inpha/dhcpha.inpha.printreturn.js"></script>
+</body>
+
+</html>

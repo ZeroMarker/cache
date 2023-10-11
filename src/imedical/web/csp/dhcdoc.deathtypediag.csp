@@ -36,29 +36,34 @@ s DISDiagnosTypeRowId=$O(^MRC("DTYP",0,"Code","DIS",0))
 //确诊
 s DiaD=$O(^MRC("DSTAT",0,"Desc","确诊",0))
 </server>
-<body class="hisui-layout" data-options="fit:true,border:false">
-	<div data-options="region:'north',split:false,title:'',border:false" style="height:51px;"> 
-  		<table class="search-table">
-        	<tr>
-        		<td class="r-label">
-        			诊断名称/别名
-        		</td>
-        		<td>
-        			<input class="textbox" id="Text_InputStr" placeholder="请输入诊断查询..." style="width:253px;"/>
-        		</td>
-        		<td class="r-label">
-        			<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>
-        		</td>
-        	</tr>
-        </table>
-  	</div>
-  	<div data-options="region:'center',split:false,title:''" style="border-color:#ccc;"> 
-  		<table id="DeathTypeDiagList"></table>
-  	</div>
-  	<div data-options="region:'south',split:false,title:'',border:false" style="height:50px;text-align:center;padding:10px;">
-  		 <a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确定</a>
-  		 <a href="#" id="BClose" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:50px;">关闭</a>
-  	</div>
+<body>
+<div class="hisui-panel" data-options="fit:true,border:false" style="padding:0 10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,title:'',border:false" style="height:51px;"> 
+			<table class="search-table" style="margin: 0 auto;">
+				<tr>
+					<td class="r-label">
+						#(..Get("诊断名称/别名"))#
+					</td>
+					<td>
+						<input class="textbox" id="Text_InputStr" placeholder="#(..Get("请输入诊断查询..."))#" style="width:210px;"/>
+					</td>
+					<td class="r-label">
+						<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',split:false,bodyCls:'panel-body-gray'"> 
+			<table id="DeathTypeDiagList"></table>
+		</div>
+		<div data-options="region:'south',split:false,title:'',border:false" style="height:50px;text-align:center;padding:10px;">
+			<a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">#(..Get("确定"))#</a>
+			<a href="#" id="BClose" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:50px;">#(..Get("关闭"))#</a>
+		</div>
+	</div>
+</div>
+</body>
   	<SCRIPT language = 'javascript' >
   		var PageLogicObj={
 			m_DeathTypeDiagListGrid:""
@@ -112,8 +117,20 @@ s DiaD=$O(^MRC("DSTAT",0,"Desc","确诊",0))
 			 return false;
 		 }
 		 var ICDDr=row['ICDDr'];
+		 var ret = $.cm({
+			ClassName:"web.DHCDocDiagnosEntryV8",
+			MethodName:"CheckMainDiagFlag",
+			mradm:mradm, DiagnosTypeRowId:DISDiagnosTypeRowId,
+			dataType:"text"
+		 },false);
+		 var MainDiagFlag="N"
+		 ///为空则该诊断类型下不存在主诊断，默认开立诊断为主诊断
+		 ///如果多个诊断录入应默认第一条为主诊断，暂时只允许录入一条死亡诊断
+		 if (ret==""){
+			 MainDiagFlag="Y"			 
+		 }
 		 //插入诊断表
-		 var DiagItemStr=""+"^"+""+"^"+ICDDr+"^"+DISDiagnosTypeRowId+"^"+"N";
+		 var DiagItemStr=""+"^"+""+"^"+ICDDr+"^"+DISDiagnosTypeRowId+"^"+MainDiagFlag;
 		 DiagItemStr=DiagItemStr+"^"+DiaD+"^"+""+"^"+""+"^"+""+"^"+"";
 		 DiagItemStr=DiagItemStr+"^"+""+"^"+"";
 		 var Err = $.cm({
@@ -136,5 +153,4 @@ s DiaD=$O(^MRC("DSTAT",0,"Desc","确诊",0))
 		 }
 	 }
   	</SCRIPT>
-</body>
 </html>

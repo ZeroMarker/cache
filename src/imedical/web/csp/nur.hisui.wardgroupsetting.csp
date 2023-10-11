@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<head>
+
+<!-- nur.hisui.wardgroupsettting.csp -->
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<meta charset="utf-8"/>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<NURHISUI />
+<style>
+	body{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;	
+    	overflow:hidden;
+	}
+	.wrap{
+		height:100%;	
+	}
+	.wrap .content{
+		width:100%;
+		height:calc(100% - 32px);	
+	}
+	.wrap .content>div.panel{
+		width:100%!important;	
+	}
+	.wrap .content>div.panel>.panel-header{
+		width:calc(100% - 12px)!important;		
+	}
+	.wrap .content>div.panel>.panel-body{
+		width:calc(100% - 2px)!important;	
+	}
+	#form .r-label{
+		padding-left:10px;	
+	}
+	#form td{
+		padding-bottom: 10px;	
+	}
+	#_HospList+.combo{width: 210px!important;}
+	#_HospList+.combo>.combo-text{width:175px!important;}
+	.wrap .content .datagrid{
+		height:calc(100% - 52px)!important;	
+	}
+	.wrap .content .datagrid .panel-body{
+		border-radius:0;
+		border-color:#ccc;	
+		border-left:0;
+		border-right:0;
+		border-bottom:0;
+	}
+	.btnCls {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+    }
+    #dialog-pat p.title{
+		height:30px;
+		line-height:30px;   	 
+	}
+    .patPanel{
+		width:100%;
+		height:calc(100% - 30px);
+		display:flex;    
+	}
+	.patPanel>div{
+		height:100%;	
+	}
+	.patArea{
+		width:450px;	
+	}
+	.transArea{
+		width:108px;
+		text-align:center;
+		display:flex;
+		align-items:center;	
+	}
+	.content .datagrid-htable input[type=checkbox]{
+		display:none;	
+	}
+	label.checkbox, label.radio{
+		padding-left:20px;	
+		margin-left:6px;
+	}
+	#_HospListLabel{
+		display:none;	
+	}
+	label.checkbox, label.radio{
+		padding-left:19px
+	}
+</style>
+</head>
+<body>
+	<SCRIPT language="cache" RUNAT="SERVER">
+		n (%request,%session,%response)
+		s switchFlag=$G(%request.Data("switchFlag",1))
+	    s:switchFlag="" switchFlag=$g(^NurGroupSetting("switch"))
+	    w " <script type=""text/javascript"" >var switchFlag="""_switchFlag_""";<"_"/"_"script>"
+	</SCRIPT>
+	<div class="wrap">
+		<div id="switch" style="padding-bottom:10px;">
+			<label style="padding-right:10px;">#(..Get("是否启用护士分管患者"))#</label><div class="hisui-switchbox" data-options="onText:'#(..Get("开"))#',offText:'#(..Get("关"))#',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:onSwitchChange"></div>
+		</div>	
+		<div class="content">
+			<div class="hisui-panel" title="病区专业组维护" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper-pen'">
+				<form id="form" method="post" >
+					<table cellspacing="0" cellpadding="0" style="padding:8px 10px 0 0;">
+						<tr>
+							<!--td class="r-label">日期</td>
+							<td>
+								<input name="Rowid" id="rowid" type="hidden" value="">
+								<input id="createDate" class="hisui-datebox" style="width:160px;">
+							</td-->
+							<td class="r-label">#(..Get("院区"))#</td>
+							<td>
+								<select id="_HospList"></select> 
+							</td>
+							<td class="r-label">#(..Get("病区"))#</td>
+							<td>
+								<select placeholder="请选择" name="Ward" id="ward" style="width:150px;"></select>  
+							</td>
+							<td class="r-label">#(..Get("责组名称"))#</td>
+							<td>
+								<input placeholder="请输入" name="Name" class="hisui-validatebox textbox" id="name" style="width:100px;" /> 
+							</td>
+							<td class="r-label">#(..Get("责组护士"))#</td>
+							<td>
+								<select placeholder="请选择" name="Nurse" id="nurse" style="width:180px;"></select> 
+								<input class="hisui-checkbox" type="checkbox" data-options="checked:true" id="active" name="Active" label="激活">
+							</td>
+							<td style="padding-left:10px;">
+								<a href="#" class="hisui-linkbutton" style="margin-right:6px;" onclick="searchGroup()">查询</a>   
+								<a href="#" class="hisui-linkbutton" style="margin-right:6px;" onclick="saveWardProGroup(0)">新增</a> 
+								<a href="#" class="hisui-linkbutton" style="margin-right:6px;" onclick="saveWardProGroup(1)">修改</a> 
+								<!--a href="#" class="hisui-linkbutton" style="margin-right:6px;" onclick="clearForm()">清空</a-->    
+								<a href="#" class="hisui-linkbutton" style="margin-right:6px;" onclick="assignPat()">分管患者</a> 
+								<a href="#" class="hisui-linkbutton" style="margin-right:6px;" onclick="printWardProGroup()">打印</a>
+								<a id="tooltip" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-help',plain:true" ></a>
+							</td>							
+						</tr>									
+					</table>
+				</form>
+				<table id="groupGrid"></table>				
+			</div>
+		</div>
+		<!-- 分管患者 -->
+		<div id="dialog-pat" class="hisui-dialog dialog" title="分管患者" style="width:1028px;height:600px;padding:0 10px;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,buttons:[
+			{
+				text:'确定',
+				handler:function(){ saveGroupPats(); }
+			},
+			{
+				text:'关闭',
+				handler:function(){$HUI.dialog('#dialog-pat').close();}
+			}
+		]">
+			<p class="title">护士01 / N2 / A / 08:00-16:00</p>
+			<div class="patPanel">				
+				<div class="patArea selectedPat">
+					<div class="hisui-panel" title="已选患者" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false,minimizable:false,maximizable:false">
+						<div id="toolbar" style="padding:10px;"></div>
+						<table id="dg-selected"></table>
+					</div>
+				</div>
+				<div class="transArea">
+					<div>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-left'" style="margin-bottom:50px;" onclick="MoveLeft()">左移</a>  
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'" onclick="MoveRight()">右移</a>    
+					</div>
+				</div>
+				<div class="patArea optionalPat">
+					<div class="hisui-panel" title="可选患者" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false,minimizable:false,maximizable:false">
+						<div id="toolbar2" style="padding:10px;"></div>
+						<table id="dg-optional"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.wardgroupsetting.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" ></script>
+</body>
+</html>

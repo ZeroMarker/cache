@@ -1,0 +1,324 @@
+<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-layout" data-options="fit:true,border:false"> 
+	<div data-options="region:'center',split:true,title:'',border:false" style="">
+		<div id="mainPanel" class="hisui-panel" data-options="fit:true,border:false" style="padding:0 4px;">
+			<div class="disease-div">
+				<table class="search-table">
+					<tr>
+						<td class="r-label">
+							<label class="clsRequired" for="DISRDiseaseDR">#(..Get("病种"))#</label>
+						</td>
+						<td>
+							<select id="DISRDiseaseDR" class="hisui-combobox textbox" data-options="onSelect:DISRDiseaseSelect" style="width:220px;">
+								<server>
+									s index=0
+									for {
+										s index=$o(DISRDiseaseArr(index)) Q:index=""
+										w "<OPTION value="""_$g(DISRDiseaseArr(index,"value"))_""">"_$g(DISRDiseaseArr(index,"text"))_"</OPTION>"
+									}
+						   		</server>
+							</select>
+						</td>
+						<td class="r-label">
+							<label>#(..Get("填写日期"))#</label>
+						</td>
+						<td>
+							<input id="DISRDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser" style="width:120px;"/>
+						</td>
+						<td class="r-label">
+							<label>#(..Get("填写时间"))#</label>
+						</td>
+						<td>
+							<input id="DISRTime" class="hisui-timespinner textbox" data-options="showSeconds:false"  style="width:90px;">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="hisui-panel" title="基本信息" data-options="headerCls:'panel-header-card'" style="height:auto;width:936px;padding-top:10px;">
+				<table class="search-table">
+					<tr>
+						<td class="r-label">
+							<label for="PatLoc">#(..Get("科室"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="PatLoc" disabled style="width:100px;"/>
+							<input class="textbox" id="DISRLocDR" style="display:none;"/>
+							<input class="textbox" id="DISRWardDR" style="display:none;"/>
+						</td>
+						<td class="r-label">
+							<label for="PatName">#(..Get("患者姓名"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="PatName" disabled style="width:100px;"/>
+						</td>
+						<td class="r-label">
+							<label for="PatSex">#(..Get("性别"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="PatSex" disabled style="width:50px;"/>
+						</td>
+						<td class="r-label">
+							<label for="PatAge">#(..Get("年龄"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="PatAge" disabled style="width:50px;"/>
+						</td>
+						<td class="r-label">
+							<label for="PatMedNo">#(..Get("病案号"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="PatMedNo" disabled style="width:100px;"/>
+						</td>
+						<td class="r-label">
+							<label for="PatInHosDate">#(..Get("入院日期"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="PatInHosDate" disabled style="width:120px;"/>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="12">
+							<div style="display:inline-block;font-size:0;">
+								<label for="PatTel" class="r-label">#(..Get("联系电话"))#</label>
+								<input class="textbox" id="PatTel" disabled style="width:100px;"/>
+								<label for="PatInDays" class="r-label">#(..Get("住院总天数"))#</label>
+								<input class="textbox" id="PatInDays" disabled style="width:50px;"/>
+								<label for="DISRClinicalPathWay" class="r-label">#(..Get("开展临床路径"))#</label>
+								<server>
+									s index=0
+									for {
+										s index=$o(DISRClinicalPathWayArr(index)) Q:index=""
+										w "<input class=""hisui-radio"" type=""radio"" label="""_$g(DISRClinicalPathWayArr(index,"text"))_""" name=""DISRClinicalPathWay"" value="""_$g(DISRClinicalPathWayArr(index,"value"))_""">"
+									}
+							   </server>
+							</div>
+							<div id="ADL-div" style="display:inline-block;font-size:0;">
+							    <label for="DISRADLScore" class="r-label">#(..Get("ADL得分"))#</label>
+							    <input class="textbox" id="DISRADLScore" style="width:50px;"/>
+						    </div>
+						    <!--治疗方法-->
+						    
+						    <div style="display:inline-block;font-size:0;">
+							   <!--第一/第二诊断-->
+							   <server>
+									s index=0
+									for {
+										s index=$o(DISRDiagnosNumberArr(index)) Q:index=""
+										w "<input class=""hisui-radio"" type=""radio"" label="""_$g(DISRDiagnosNumberArr(index,"text"))_""" name=""DISRDiagnosNumber"" value="""_$g(DISRDiagnosNumberArr(index,"value"))_""">"
+									}
+							   </server>
+							   <label for="PatDisChargeDate" class="r-label">#(..Get("出院日期"))#</label>
+							   <input class="textbox" id="PatDisChargeDate" disabled style="width:120px;"/>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label" colspan="12"  style="text-align:left;font-size:0;">
+							<div style="display:inline-block;font-size:0;">
+								<label for="DISRSymptomDiagnos">#(..Get("症候诊断"))#</label>
+								<div class="DISRSymptomDiagnos-div">
+									
+								</div>
+								<!--症候诊断checkbox列表-->
+								<label for="DISRSymptomDiagnosDesc" class="r-label">#(..Get("其他"))#</label>
+								<input class="textbox" id="DISRSymptomDiagnosDesc"/>
+							</div>
+							<div id="DISRBoneJointDisease-div" style="display:inline-block;font-size:0;">
+								<label for="DISRBoneJointDisease" style="padding-left:10px;">#(..Get("病种"))#</label>
+								<input class="hisui-checkbox" type="checkbox" name="DISRBoneJointDisease" label="髋" value="髋">
+								<input class="hisui-checkbox" type="checkbox" name="DISRBoneJointDisease" label="踝" value="踝">
+								<input class="hisui-checkbox" type="checkbox" name="DISRBoneJointDisease" label="肩" value="肩">
+						    </div>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label" colspan="12" style="text-align:left;font-size:0;">
+							<div style="display:inline-block;font-size:0;">
+								<label for="DISRTransInDate" style="vertical-align:middle;margin-right:10px;">#(..Get("转入日期"))#</label>
+								<input id="DISRTransInDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser" style="width:120px;"/>
+							</div>
+							<div style="display:inline-block;font-size:0;">
+								<label for="DISRTransOutDate"  style="vertical-align:middle;margin:0 10px;">#(..Get("转出日期"))#</label>
+								<input id="DISRTransOutDate" class="hisui-datebox textbox" data-options="formatter:myformatter,parser:myparser" style="width:120px;"/>
+							</div>
+							<div id="Death-div" style="display:inline-block;font-size:0;">
+								<label class="radio-label" for="Death">#(..Get("死亡"))#</label>
+								<input class="hisui-radio" type="radio" label="是" name="Death" value="Y">
+								<input class="hisui-radio" type="radio" label="否" name="Death" value="N">
+							</div>
+							<!--治疗方法-->
+							
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="hisui-panel" title="一、护理效果评价" style="height:auto;width:936px;">
+				<table id="TCMEffectTable"></table>
+			</div>
+			<div class="hisui-panel" title="二、护理依从性及满意度评价" style="height:auto;width:936px;">
+				<div>
+					<table id="TCMComSatisTable"></table>
+				</div>
+				<div>
+					<table class="search-table">
+						<tr>
+							<td class="r-label">
+								<label for="CSRPrimaryNurse">#(..Get("责任护士签名"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="CSRPrimaryNurse" style="width:125px;"/>
+							</td>
+							<td class="r-label">
+								<label for="CSRSuperNurse">#(..Get("上级护士或护士长签名"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="CSRSuperNurse" style="width:125px;"/>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="hisui-panel" title="三、对本病中医护理方案的评价" style="height:158px;">
+				<table class="search-table">
+					<tr>
+						<td class="r-label">
+							<label for="FERUsefulnessResult">#(..Get("评价"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="FinalEvalRecordId" style="display:none;"/>
+							<server>
+								s index=0
+								for {
+									s index=$o(FERUsefulnessResultArr(index)) Q:index=""
+									w "<input class=""hisui-radio"" type=""radio"" label="""_$g(FERUsefulnessResultArr(index,"text"))_""" name=""FERUsefulnessResult"" value="""_$g(FERUsefulnessResultArr(index,"value"))_""">"
+								}
+						   </server>
+						    
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label" style="vertical-align:text-bottom;">
+							<label for="FERImproveSuggestion">#(..Get("改进意见"))#</label>
+						</td>
+						<td>
+							<textarea class="textbox" id="FERImproveSuggestion" style="height:70px;width:836px;"></textarea>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="hisui-panel" title="四、评价人(责任护士)" style="height:85px;">
+				<table class="search-table">
+					<tr>
+						<td class="r-label">
+							<label for="FERNurse">#(..Get("护士"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="FERNurse" style="width:125px;"/>
+						</td>
+						<td class="r-label">
+							<label for="FERTechnical">#(..Get("技术职称"))#</label>
+						</td>
+						<td>
+							<select id="FERTechnical" class="hisui-combobox textbox" data-options="editable:false">
+								<server>
+									s value=0
+									for {
+										s value=$o(FERTechnicalArr(value)) Q:value=""
+										w "<OPTION value="""_value_""">"_$g(FERTechnicalArr(value))_"</OPTION>"
+									}
+						   		</server>
+							</select>
+						</td>
+						<td class="r-label">
+							<label for="FERSuperNurse">#(..Get("护士长签字"))#</label>
+						</td>
+						<td>
+							<input class="textbox" id="FERSuperNurse" style="width:125px;"/>
+						</td>
+						<td class="r-label">
+							<label for="FERCompleteDate">#(..Get("完成日期"))#</label>
+						</td>
+						<td>
+							<input class="hisui-datebox textbox" id="FERCompleteDate" style="width:120px;"/>
+						</td>
+						<td style="padding-left:5px;">
+							<input class="hisui-timespinner textbox" id="FERCompleteTime" data-options="showSeconds:false" style="width:90px;"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south',split:false,title:'',border:false" style="height:50px;padding:10px;text-align:center;">
+		<a id="BDiseaseSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>   
+	</div>
+</div>
+
+<!--护理效果评价/修改弹框-->
+<div id="myEffectWin" style="width:900px;height:600px;padding:0 10px 0 10px;display:none;">
+	<div div class="hisui-panel" data-options="border:false" style="width:880px;height:auto;">
+		<div id="ESRSymptomKW"></div>
+	</div>
+	<div id="SymptomMethodPanel" class="hisui-panel" title="主要辩证施护方法" style="width:233px;height:350px;">
+		<table id="SymptomMethodTable"></table>
+	</div>
+	<div id="SymptomTechPanel" class="hisui-panel" title="中医护理技术" style="width:319px;height:350px;">
+		<table id="SymptomTechTable"></table>
+	</div>
+	<div id="SymptomScorePanel" class="hisui-panel" title="症状评分" style="width:318px;height:350px;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<label for="ESRPreTreatScore">#(..Get("治疗前得分"))#</label>
+				</td>
+				<td>
+					<input class="hisui-numberbox textbox" id="ESRPreTreatScore" style="width:50px;"/>
+				</td>
+				<td class="r-label">
+					<label for="ESRPreTreatDate">#(..Get("日期"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox" id="ESRPreTreatDate" data-options="formatter:myformatter,parser:myparser" style="width:120px;"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="ESRPostTreatScore">#(..Get("治疗后得分"))#</label>
+				</td>
+				<td>
+					<input class="hisui-numberbox textbox" id="ESRPostTreatScore" style="width:50px;"/>
+				</td>
+				<td class="r-label">
+					<label for="ESRPostTreatDate">#(..Get("日期"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox" id="ESRPostTreatDate" data-options="formatter:myformatter,parser:myparser" style="width:120px;"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="ESRLastTreatScore">#(..Get("方法得分"))#</label>
+				</td>
+				<td>
+					<input class="textbox" disabled id="ESRLastTreatScore" style="width:43px;"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="ESREffectSymptomResult">#(..Get("效果评价"))#</label>
+				</td>
+				<td colspan="3">
+					<server>
+						s index=0
+						for {
+							s index=$o(ESREffectSymptomResultArr(index)) Q:index=""
+							w "<input class=""hisui-radio"" type=""radio"" disabled=""true"" label="""_$g(ESREffectSymptomResultArr(index,"text"))_""" name=""ESREffectSymptomResult"" value="""_$g(ESREffectSymptomResultArr(index,"value"))_""">"
+						}
+				   </server>
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>

@@ -1,0 +1,352 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.mobilecare.common.js" charset='gbk'></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui/css/nur.hisui.mobilecare.common.css">
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.mnis.config.js" charset='gbk'></script>
+	
+    <style type='text/css'>
+		#blockPanel {
+			height:280px
+		}
+		#messagePanel {
+			height:280px
+		}
+    </style>
+</head>
+
+<body class="hisui-layout">
+	<div id="main" data-options="region:'center'">
+    	<!-- easyui layout 隔层嵌套 -->
+    	<div class="hisui-layout" data-options="fit:true">
+	    	<!--
+	    	/// 1.科室列表
+	    	-->
+	    	<csp:Include Page="nur.hisui.mobilecare.locpanel.csp">
+	        <div data-options="region:'center',border:false">
+		        <div class="hisui-layout" data-options="fit:true">
+			        <!--
+			    	/// 5.分块列表
+			    	-->
+			        <div id="blockPanel" data-options="region:'north',split:true,collapsible:false,title:'模块分块设置',headerCls:'panel-header-gray',iconCls:'icon-lt-rt-55'">
+			       		<div id="blockGridTbar" class="div-tbar">
+							<table cellspacing="0" cellpadding="0"><tbody><tr>
+								<td><a id="blockGridSaveBtn" group="blockGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">保存</span>
+									<span class="l-btn-icon icon-save">&nbsp;</span></span></a></td>
+								<td><a id="blockGridAddBtn" group="blockGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">新增</span>
+									<span class="l-btn-icon icon-add">&nbsp;</span></span></a></td>
+								<td><a id="blockGridDeleteBtn" group="blockGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">删除</span>
+									<span class="l-btn-icon icon-cancel">&nbsp;</span></span></a></td>
+							</tr></tbody></table>
+						</div>
+			       		<table id='blockGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#blockGridTbar'">
+						</table>
+			        </div>
+			        <!--
+			    	/// 2.模块列表
+			    	-->
+			        <div id="modulePanel" data-options="region:'center',title:'模块显示设置',headerCls:'panel-header-gray',iconCls:'icon-template'">
+			       		<div id="moduleGridTbar" class="div-tbar">
+							<table cellspacing="0" cellpadding="0"><tbody><tr>
+								<td><a id="moduleGridSaveBtn" group="moduleGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">保存</span>
+									<span class="l-btn-icon icon-save">&nbsp;</span></span></a></td>
+							</tr></tbody></table>
+						</div>
+			       		<table id='moduleGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#moduleGridTbar'">
+						</table>
+			        </div>
+			         <!--
+			    	/// 3.消息列表
+			    	-->
+			        <div id="messagePanel" data-options="region:'south',split:true,collapsible:false,title:'消息提示设置',headerCls:'panel-header-gray',iconCls:'icon-clock-record'">
+						<div id="messageGridTbar" class="div-tbar">
+							<table cellspacing="0" cellpadding="0"><tbody><tr>
+								<td><a id="messageGridSaveBtn" group="messageGridBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">保存</span>
+									<span class="l-btn-icon icon-save">&nbsp;</span></span></a></td>
+							</tr></tbody></table>
+						</div>
+			       		<table id='messageGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#messageGridTbar'">
+						</table>
+			        </div>
+		        </div>
+	        </div>
+	        <!--
+	    	/// 4.全局设置
+	    	-->
+	        <div id="settingPanel" data-options="region:'east',split:true,collapsible:false,title:'其他设置',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'">
+				<!-- 设置滚动条 -->
+				<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false">
+				<!---->
+				<div id="settingPanelTbar" class="div-tbar">
+					<table cellspacing="0" cellpadding="0"><tbody><tr>
+						<td><a id="barcodeLinkBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">条码设置</span>
+							<span class="l-btn-icon icon-gen-barcode">&nbsp;</span></span></a></td>
+						<td><a id="upgradeLinkBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">升级设置</span>
+							<span class="l-btn-icon icon-two-recta-gear">&nbsp;</span></span></a></td>
+					</tr></tbody></table>
+					<div class="div-tbar-dash"></div>
+					<table cellspacing="0" cellpadding="0"><tbody><tr>
+						<td><a id="nuremrLinkBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">护理病历模板设置</span>
+							<span class="l-btn-icon icon-paper-eye">&nbsp;</span></span></a></td>
+						<td><a id="insertemrLinkBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">插护理病历设置</span>
+							<span class="l-btn-icon icon-paper-link">&nbsp;</span></span></a></td>
+					</tr></tbody></table>
+					<div class="div-tbar-dash"></div>
+					<table cellspacing="0" cellpadding="0"><tbody><tr>
+						<td><a id="bloodTransfusionSystemLinkBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">输血系统设置</span>
+							<span class="l-btn-icon icon-adm-same">&nbsp;</span></span></a></td>
+						<td><a id="patientsHandoverSystemLinkBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">患者交接设置</span>
+							<span class="l-btn-icon icon-trans-pat">&nbsp;</span></span></a></td>
+					</tr></tbody></table>
+					<div class="div-tbar-dash"></div>
+					<table cellspacing="0" cellpadding="0"><tbody><tr>
+						<td><a id="standardizationLinkBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">标化扩展设置</span>
+							<span class="l-btn-icon icon-star-orange-body">&nbsp;</span></span></a></td>
+					</tr></tbody></table>
+					<div class="div-tbar-dash" style="display:none"></div>
+					<table cellspacing="0" cellpadding="0" style="display:none"><tbody><tr>
+						<td><a id="settingPanelSaveBtn" group="settingPanelBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain"><span class="l-btn-left l-btn-icon-left">
+							<span class="l-btn-text">保存</span>
+							<span class="l-btn-icon icon-save">&nbsp;</span></span></a></td>
+					</tr></tbody></table>
+				</div>
+				<!---->
+				</div>
+				<div data-options="region:'center',border:false">
+				<!---->
+				<div id='settingPanelBody' border=false fit=true style="display:none" data-options="toolbar:'#settingPanelTbar'">
+		         	<!--
+			    	/// 4.1.参数设置
+			    	-->
+			    	<div id="parameterSet" class="hisui-panel div-set" title="参数设置" data-options="headerCls:'panel-header-card-gray'">
+						<div class="div-set-body">
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">医嘱查询开始时间</div>
+								<input id="SchStartDate" class="hisui-numberbox textbox numberbox numberbox-f validatebox-text" style="width:80px;height:28px;line-height:28px" data-options="min:-30,max:30">
+								<div style="width:5px"></div>
+								<input id="SchStartTime" class="hisui-timespinner timespinner-f spinner-text spinner-f validatebox-text" style="border-radius:2px;width:80px;height:28px;line-height:28px" data-options="showSeconds:false">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">医嘱查询结束时间</div>
+								<input id="SchEndDate" class="hisui-numberbox textbox numberbox numberbox-f validatebox-text" style="width:80px;height:28px;line-height:28px" data-options="min:-30,max:30">
+								<div style="width:5px"></div>
+								<input id="SchEndTime" class="hisui-timespinner timespinner-f spinner-text spinner-f validatebox-text" style="border-radius:2px;width:80px;height:28px;line-height:28px" data-options="showSeconds:false">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">全出区天数</div>
+								<input id="AllOutNum" class="hisui-numberbox textbox numberbox numberbox-f validatebox-text" style="width:80px;height:28px;line-height:28px" data-options="isKeyupChange:true">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">自动执行延迟</div>
+								<input id="ExeAlertFlag.3" class="hisui-numberbox textbox numberbox numberbox-f validatebox-text" style="width:80px;height:28px;line-height:28px" data-options="isKeyupChange:true">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">输液收费项目</div>
+								<input id="IVDInsertOrderFlag.1" class="combo-text validatebox-text" autocomplete="off" style="width:210px;height:28px;line-height:28px" data-options="enterNullValueClear:false,panelHeight:'auto',panelMaxHeight:'398px'">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">续注收费项目</div>
+								<input id="IVCInsertOrderFlag.1" class="combo-text validatebox-text" autocomplete="off" style="width:210px;height:28px;line-height:28px" data-options="enterNullValueClear:false,panelHeight:'auto',panelMaxHeight:'398px'">
+							</div>
+						</div>
+					</div>
+					<!--
+			    	/// 4.4.输液备注
+			    	-->
+			    	<div id="parameterSet" class="hisui-panel div-set" title="选项设置" data-options="headerCls:'panel-header-card-gray'">
+						<div class="div-set-body">
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">巡视备注</div>
+								<input id="TourNoteList" class="hisui-textbox textbox validatebox-text" style="width:210px;height:28px;line-height:28px">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">暂停备注</div>
+								<input id="SuspendNoteList" class="hisui-textbox textbox validatebox-text" style="width:210px;height:28px;line-height:28px">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">停止备注</div>
+								<input id="StopNoteList" class="hisui-textbox textbox validatebox-text" style="width:210px;height:28px;line-height:28px">
+							</div>
+						</div>
+					</div>
+					<!--
+			    	/// 4.6.标本运送一键建单
+			    	-->
+			    	<div id="labOutSet" class="hisui-panel div-set">
+						<div class="panel-title" style="font-weight:bold;color:#000;padding-left:10px;">标本运送过滤条件</div>
+						<div class="div-set-body">
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">医嘱子类</div>
+								<input id="ArcicIdList" class="hisui-textbox textbox validatebox-text" style="width:210px;height:28px;line-height:28px">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">标本类型</div>
+								<input id="SpecCodeIdList" class="hisui-textbox textbox validatebox-text" style="width:210px;height:28px;line-height:28px">
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">接收科室</div>
+								<input id="ReclocIdList" class="hisui-textbox textbox validatebox-text" style="width:210px;height:28px;line-height:28px">
+							</div>
+						</div>
+					</div>
+					<!--
+			    	/// 4.2.流程设置
+			    	-->
+			    	<div id="flowSet" class="hisui-panel div-set" title="流程设置" data-options="headerCls:'panel-header-card-gray'">
+						<div class="div-set-body">
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">执行医嘱弹框</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="ExeAlertFlag.1" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">弹窗自动执行</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="ExeAlertFlag.2" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">皮试双签名</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="SkinTestDualFlag.1" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">必填</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="SkinTestDualFlag.2" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">高危药品双签名</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="HighRiskDualFlag.1" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">必填</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="HighRiskDualFlag.2" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">输液插入医嘱</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="IVDInsertOrderFlag.2" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">续注插入医嘱</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="IVCInsertOrderFlag.2" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">输液闭环</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="InfusionLoopFlag.1" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">开启多通道</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="InfusionLoopFlag.2" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">配液复核控制</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="PyfhControlFlag.1" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">复核人允许相同</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="PyfhControlFlag.2" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">静配接收控制</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="JpRecControlFlag" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">CDSS注意事项</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="CDSSNoticeFlag" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">
+									<span title="标本由护工核对送出" class="easyui-tooltip" style="cursor:help">预建单模式</span>
+								</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="PreWaybillFlag" type="checkbox" class="hisui-checkbox">
+								</div>
+								<div style="width:5px"></div>
+								<div class="div-set-body-item-label">标本发送工号弹窗</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="LabOutUserCode" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--
+			    	/// 4.3.功能设置
+			    	-->
+					<div id="flowSet" class="hisui-panel div-set" title="功能设置" data-options="headerCls:'panel-header-card-gray'">
+						<div class="div-set-body">
+							<div class="div-set-body-item">
+								<div class="div-set-body-item-label">语音识别</div>
+								<div style="width:40px;text-align:left;padding:3px 0">
+									<input id="VoiceFlag" type="checkbox" class="hisui-checkbox">
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--
+			    	/// 4.5.升级设置
+			    	-->
+			    	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.mobilecare.settingpanel.js" charset='gbk'></script>
+		        </div>
+		        <!--
+		    	/// 4.4.输液备注弹窗
+		    	-->
+				<!--
+		    	/// 4.5.链接窗口
+		    	-->
+		        <div id="linkPop" class="hisui-window" title="链接窗口" style="width:650px;height:450px;overflow-y:hidden"
+				    data-options="iconCls:'icon-w-config',modal:true,closed:true">
+				    <iframe id="linkPopFrame" scrolling="no" frameborder="0" src="" style="padding:0;width:100%;height:100%"></iframe>
+				</div>
+			</div>
+			<!---->
+			</div>
+			</div>
+			<!---->
+	    </div>
+    </div>
+</body>
+
+</html>

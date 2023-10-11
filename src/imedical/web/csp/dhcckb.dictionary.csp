@@ -1,0 +1,323 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+<title>临床知识库实体字典维护</title>
+<HISUI/>
+<DHCCKB/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/common.css">	<!-- 禁止复制 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/dictionary.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/diclog.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/ignoreOpenWin.js"></script>
+	<style type="text/css">
+	.layout-panel-center{
+		padding: 10px;
+	}
+	.layout-panel-west{
+		padding: 10px 0px 10px 10px;
+	}
+	.tdlabel {
+    	padding: 0px 5px 10px 0px;
+	}
+   </style>
+</head>
+
+<body >	
+<div class="hisui-layout"  fit="true">
+	<!--查询条件区-->
+	<div data-options="region:'west',title:''"  style="width:500px;" border=0>			
+		<div class="hisui-panel" data-options="title:'字典列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+			<div id="toolbar">	
+				<div style="padding:10px 0px 0px 10px;">						
+					<input id="queryCode" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/>
+					<td ><a style="margin-left:5px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick = 'QueryDicList()'>查询</a> </td>	
+					<td ><a style="margin-left:5px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a> </td>
+				</div>
+				<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="insert">新增</a></td>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="save">保存</a> </td>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-unuse',plain:true" id="delete">停用</a></td>	
+				    </tr>
+				</table>
+			</div>
+			<div id="diclist" toolbar="#toolbar"  border="false"></div>
+    	</div>					
+	</div>
+	<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'">
+		<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true">   
+			<div title="字典维护" data-options="selected:true">
+				<!-- grid类型-->
+				<div id="griddiv" style="height:100%;">
+					<div id="subdiclist" toolbar="#subtoolbar"></div>
+				</div>
+				<!-- tree类型-->
+				<div id="treediv"  class="hisui-layout layout" fit="true">						
+					<!-- 查询条件区域-->
+					<div data-options="region:'north',title:''" style="height:88px;padding:10px 0px 0px 0px;" border=0 >	
+						<table style="margin-left:10px">						
+	    					<tr>						    
+					    		<td><input style="width:165px;" class='hisui-searchbox' id="FindTreeText" prompt='请输入名称' missingMessage="请输入查找内容"></td>
+					    		<td class="tdlabel-b" style="padding-left:10px">
+									<a href="#" id="btnSearch" class="hisui-linkbutton" onclick="SearchData()" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a>
+								</td>
+								<td class="tdlabel-b" style="padding-left:10px">
+									<a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="ClearData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a>
+								</td>
+							</tr>
+						</table>
+						<div style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>	
+						<!--工具栏区域-->
+						<table id="treetoolbar">
+							<tr>
+								<td><a class="hisui-linkbutton" onclick="AddDataTree()" id="insert" data-options="iconCls:'icon-add',plain:true">新增</a></td>
+								<td><a class="hisui-linkbutton" onclick="UpdateDataTree()" id="save" data-options="iconCls:'icon-write-order',plain:true">修改</a></td>
+								<td><a class="hisui-linkbutton" onclick="DelDataTree()" id="deletetreedata" data-options="iconCls:'icon-unuse',plain:true">停用</a></td>
+								<td><a class="hisui-linkbutton" data-options="iconCls:'icon-ref',plain:true" id="settreeparref">字典归属</a></td>	
+								<!-- <td><a href="#" class="hisui-linkbutton" onclick="BatchData()" data-options="iconCls:'icon-paper-cfg',plain:true" id="btnBatch">分类药品关联</a></td> -->
+								<td><a href="#" class="hisui-linkbutton" onclick="BatchDataTab()" data-options="iconCls:'icon-paper-cfg',plain:true" id="btnBatch">关联药品</a></td>
+								<td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-select-grant',plain:true" id="grantauthB">医院授权</a> </td>
+		     					<td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-key',plain:true" id="businessauthB">业务授权</a> </td>
+								<td><a href="#" id="catIgnoreBtn" class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true" onclick="ReviewManage()"  style="display:none">忽略配置</a> </td>
+							</tr> 
+						</table>										
+					</div>
+					<!--内容展示区域 -->
+					<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:0px 10px 0px 0px;">
+						<ul data-options="fit:true" id="dictree" border="false" class="hisui-tree" toolbar="#mybar"></ul> 
+					</div>	 
+				</div>
+			</div>
+			<div title="附加属性" data-options="" style="overflow:auto;">
+				<iframe id="tabscont" scrolling="yes" width=100% height=100%  frameborder="0" src="" ></iframe>	
+			</div> 
+		</div>
+	</div>	
+</div>
+
+<!--字典维护工具栏 toolbar-->
+<div id="subtoolbar" class="toolbar" style="padding:10px 0px 0px 0px;">
+	<table cellspacing="0" cellpadding="0" style="padding-left:10px">
+		<tr>
+			 <td><input id="subQueryCode" href="#" style = '' class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/></td>
+			 <td>
+				<input class="hisui-radio;display:none" type="radio" label="西药" name="drugIngrType" value="drugData" data-options="radioClass:'hischeckbox_square-blue'">
+				<input class="hisui-radio;display:none" type="radio" label="中成药" name="drugIngrType" value="ChineseDrugData" data-options="radioClass:'hischeckbox_square-blue'">
+				<input class="hisui-radio;display:none" type="radio" label="中医饮片" name="drugIngrType" value="ChineseHerbalMedicineData" data-options="radioClass:'hischeckbox_square-blue'">									  
+			</td>
+		     <td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick = 'SubQueryDicList()'>查询</a> </td>	
+			 <td colspan ='6' ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="resetsub">重置</a> </td>	
+		</tr>
+	</table>
+	<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+	<table>
+		<tr>
+		     <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="subinsert">新增</a>
+		     <a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="subsave">保存</a>
+		     <a class="hisui-linkbutton" data-options="iconCls:'icon-unuse',plain:true" id="subdel">停用</a></td>
+		     <td><a class="hisui-linkbutton" data-options="iconCls:'icon-ref',plain:true" id="setparref">字典归属</a></td>
+		     <td><a class="hisui-linkbutton" data-options="iconCls:'icon-stamp-pass',plain:true" id="acdataflag" style="display:none">审核</a></td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-stamp-cancel',plain:true" id="cancelAcflag" style="display:none">取消审核</a></td>
+		      <td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-select-grant',plain:true" id="grantauth">医院授权</a> </td>
+		     <td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-key',plain:true" id="businessauth">业务授权</a> </td>
+		     <td><a class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true" id="reviewMan" style="display:none">忽略配置</a> </td>
+		     <!-- <td><a class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" id="acalldataflag">批量核实</a></td> -->
+	    </tr>
+	</table>
+</div>
+<div id="myWin" style="width:360px;height:230px;padding:10px;padding-bottom:0px;display:none;">   
+	<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+		<table style="text-align:right;margin:auto">
+			<tr>
+	 			<td></td>
+	   			<td ><input id="treeID" type="text" class="textbox hisui-validatebox"></td>
+	 		</tr>
+			<tr>	<!-- 不需要维护 qnp 2023-05-10 -->
+	           <td class="tdlabel" id="requireCode"><font color=red>*</font>代码</td>
+			   <td class="tdlabel"><input id="treeCode" type="text" class="textbox hisui-validatebox" disabled="true"></td>
+			 </tr>
+			<tr>
+			   <td class="tdlabel"><font color=red>*</font>描述</td>
+			   <td class="tdlabel"><input id="treeDesc" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+			</tr>
+			<tr>
+			   <td  class="tdlabel">上级分类</td>
+			   <td class="tdlabel"><input id="parref" type="text" class="textbox hisui-combotree"></td>
+			</tr>
+		</table >
+	</form>
+</div>
+      		
+<!-- 属性树右键菜单 -->
+<div id="right" class="hisui-menu" style="">
+	<div onclick="AddSameDataTree()" iconCls="icon-add" data-options="">添加本级</div>
+	<div onclick="AddDataTree()" iconCls="icon-add" data-options="">添加下级</div>
+	<div onclick="UpdateDataTree()" iconCls="icon-write-order" data-options="">修改</div>
+	<div onclick="DelDataTree()" iconCls="icon-cancel" data-options="">删除</div>
+	<!-- <div class="menu-sep"></div>	 -->
+</div>
+<!-- ld 2022-9-20 术语规则字典右键菜单 -->
+<div id="rightTerm" class="hisui-menu" style="">
+	<div onclick="AddSameDataTree()" iconCls="icon-add" data-options="">添加本级</div>
+	<div onclick="AddDataTree()" iconCls="icon-add" data-options="">添加下级</div>
+	<div onclick="TermRuleTree()" iconCls="icon-add" data-options="">术语规则</div>
+	<div onclick="UpdateDataTree()" iconCls="icon-write-order" data-options="">修改</div>
+	<div onclick="DelDataTree()" iconCls="icon-cancel" data-options="">删除</div>
+</div>
+<!-- ld 2022-9-20 术语规则字典右键菜单 -->
+<div id="rightTermDelete" class="hisui-menu" style="">
+	<div onclick="DelTermRuleTree()" iconCls="icon-cancel" data-options="">删除</div>
+</div>
+<div id="myChecktreeWin">   
+    <div class="hisui-layout" data-options="fit:true,bodyCls:'panel-header-gray'" border="false">
+        <div data-options="region:'north',collapsible:false,border:false" style="height:40px">
+             <table>
+                <tr>
+                    <td class="tdlabel">检索</td>
+                    <td><input id="myChecktreeDesc" class="hisui-searchbox" style="width:155px;" prompt='请输入药品名称' />	</td>
+                    <td class="tdlabel">药学分类</td>
+                    <td><input id="drugcattree" class="hisui-combotree" style="width:155px;" /></td>
+
+                    <td>
+                        <input class='hisui-radio' type="radio" label='已关联' name='FilterCK' value='1'>
+                        <input class='hisui-radio' type="radio" label='未关联' name='FilterCK' value='2'>
+                    </td>
+                    <td>
+                    	<a class="hisui-linkbutton" data-options="iconCls:'icon-batch-add'" id="selmulitm">关联</a>
+		     			<a class="hisui-linkbutton" data-options="iconCls:'icon-unuse'" id="remomulitm">移除</a> 
+		     		</td>
+                </tr>                    
+             </table >  
+         </div>
+         <div data-options="region:'center',bodyCls:'panel-header-gray'" style='border-top: 1px solid #C0C0C0;'>
+            <table id="myChecktree" data-options="border:false,bodyCls:'panel-header-gray'" style="width:100%;"></table> 
+         </div>  
+     </div> 
+ </div>
+ <!--属性、字典、实体全集弹窗-->
+<div id="AttrWin" style="width:600px;height:500px;padding:10px;display:none;overflow:hidden;"> 
+	<div id="tabOther" class="hisui-tabs tabs-gray" style="height:380px">
+		<div title="属性"> 
+			<table data-options="fit:true" style="padding:10px 0px 10px 10px;" >
+				<tr>
+					<td><input id="attrtreecode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码'/></td>					    		
+					<td>
+						<a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="AttrRefreshData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a>
+					</td>
+				</tr> 
+			</table >
+			<ul id="attrtree"></ul>			
+		</div>
+		<div title="字典" style="height:300px;width:200px">		
+			<table data-options="fit:true" style="padding:10px 0px 10px 10px;" >
+				<tr>
+					<td><input id="dictreecode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码'/></td>					    		
+					<td>
+						<a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="Refreshdic()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a>
+					</td>
+				</tr> 
+			</table >
+			<ul id="dicextratree"></ul>				       
+		</div>
+		<div title="实体" style="height:300px;width:200px">		
+			<table data-options="fit:true" id="entitygrid" border="fasle" toolbar="#entitybar"></table>				       
+		</div>						
+	</div>
+</div>	
+<!--entitybar工具栏-->
+<div id="entitybar" class="toolbar" style="padding:10px 0px 10px 10px;">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+			<td><input id="entityCode" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/>	</td>
+			<td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="resetwin">重置</a> </td>
+		</tr>
+	</table>
+</div>
+<!--附加属性工具栏 -->
+<div id="attrtb" class="toolbar">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	     <!--  <td><a class="hisui-linkbutton" id="save" data-options="iconCls:'icon-save',plain:true" onclick="ShowAllData()">保存</a> </td> -->
+	      <td><a class="hisui-linkbutton" id="save" data-options="iconCls:'icon-add',plain:true" onclick="ShowAllData()">增加</a> </td>
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="DelLinkAttr()">删除</a> </td>
+	      <td style="display:none"><a class="hisui-linkbutton" id="link" data-options="iconCls:'icon-add',plain:true">添加附加属性</a> </td>
+	    </tr>
+	</table>
+</div>
+
+
+<div id="diclog" class="hisui-dialog" title="确认更改操作" style="width:650px;height:350px;top:250px;left:500px;padding:10px;"
+ data-options="iconCls:'icon-save',resizable:true,modal:true,closed:true,toolbar:[
+	{
+		text:'帮助',
+		iconCls:'icon-help',
+		handler:function(){alert('该操作将被记录到日志表中，请谨慎操作！')}
+	}],buttons:[{
+		text:'保存',
+		id:'SaveDicLogData',
+		handler:function(){SaveData()}
+	},{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#diclog').close();}
+	}]">   
+	<!-- 不可用表格-->
+			<form>
+			  <table>
+				<tr style="display:none">
+					<td>表名ID：</td>
+					<td><input class="hisui-validatebox" id="dicid" type="text" data-options=""/> </td> 
+					<td>记录名ID：</td> 
+					<td><input class="hisui-validatebox" id="dataid"type="text"  data-options="" /></td>  
+				</tr>
+				
+				<tr >
+					<td>操作日期：</td> 
+					<td><input class="hisui-datebox" id="operatedate" type="text"  data-options="disabled:true" /></td>  
+					<td for="OperatorTime">操作时间：</td> 
+					<td><input class="hisui-timespinner" id="operatetime"type="text" data-options="disabled:true" /></td>  
+				</tr>
+				
+				<tr >
+					<td>作用域：</td> 
+					<td><input class="hisui-combobox" href="#" id="scope" /></td>  
+					<td>作用域值：</td> 
+					<td><input class="hisui-combobox" id="scopevalue" data-options="required:true" /> </td> 	 
+				</tr>
+				<tr style="display:none">
+					<td>操作人：</td> 
+					<td><input class="hisui-validatebox" id="operator" type="text"  data-options="" /></td>  
+				</tr>
+				</table>
+			</form>
+
+</div>
+<div id="resetparref" class="hisui-dialog" title="字典归属指向修改" style="width:500px;height:135px;padding:10px 10px 0px 10px;"
+ data-options="iconCls:'icon-w-edit',resizable:true,modal:true,closed:true,buttons:[{
+		text:'保存',
+		id:'SaveParrefData',
+		handler:function(){SaveParrefData()}
+	},{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#resetparref').close();}
+	}]">   
+	<!-- 修改字典指向表格-->
+	<form>
+	  <table style="margin:auto">
+		<tr >
+			<td style="padding-right:10px">重置为该字典元素</td> 
+			<td><input class="hisui-combobox"  style="width:220px" href="#" id="newparrefid" /></td>   
+		</tr>
+		</table>
+	</form>
+</div>
+</body>
+</html>

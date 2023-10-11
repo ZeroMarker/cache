@@ -7,6 +7,7 @@
 <script language="cache"
         runat="SERVER">
         s EpisodeID = $G(%request.Data("EpisodeID", 1))
+		if (EpisodeID ="undefined") s EpisodeID=""
         s PatientListPage=""
         s todayLogic=+$h
         s todayHtml=$zd(todayLogic,4)
@@ -14,6 +15,16 @@
         s defaultTypeCode=$G(%request.Data("defaultTypeCode",1))
         s:(TypeCode="")&(defaultTypeCode="") defaultTypeCode="A"
         s:(TypeCode'="") defaultTypeCode=TypeCode
+        s CAInit=0
+		i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" {
+			s CAInit=1
+			d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
+		}
+		;得到CA认证的XML信息串
+		s GetOEORIItemXMLMethod=##class(websys.Page).Encrypt($lb("web.DHCDocSignVerify.GetOEORIItemXML"))   //
+		;插入CA认证后的信息串
+		s InsertCASignInfoMethod=##class(websys.Page).Encrypt($lb("web.DHCDocSignVerify.InsertBatchSignRecord"))
+		;------END-----
 </script>
 <HTML lang="zh-CN">
 
@@ -33,7 +44,6 @@
             src="../scripts/nurse/hisui/orderNeedCare.js"></script>
     <STYLE type='text/css'>
         body {
-            background-color: #fff;
             padding:0;
             margin:0;
         }
@@ -43,7 +53,7 @@
             left:0;
             bottom:0;
             right:0;
-            margin:10px;
+            margin:4px;
         }
         .patientTree {
             position: absolute;
@@ -53,7 +63,7 @@
             width:220px;
             height:100%;
         }
-        .content {
+        .contentView {
             position: absolute;
             top:0;
             right:0;
@@ -64,6 +74,7 @@
 	        top:0 !important;
 	        left:0 !important;
 	        margin-left:0 !important;
+	        padding:0 !important;
         }
         .accordion-body{
 	        background-color:#fff;
@@ -71,26 +82,54 @@
         .accordion .accordion-header{
 	        border-top:0;
         }
-        .datagrid-wrap.panel-body.panel-body-noheader{
+        /*.datagrid-wrap.panel-body.panel-body-noheader{
 	        border:none;
 	        border-radius:0;
-        }
+        }*/
         .paientTree .datagrid-wrap.panel-body.panel-body-noheader{
 	        
 	        border-top:1px solid #ccc;
         }
-        .datagrid-toolbar{
+       /*.datagrid-toolbar{
 	      height:32px;
-       }
+       }*/
        .panel-header-gray{
 	       overflow:hidden;
        }
        label+.hischeckbox_square-blue, label+.hisradio_square-blue{
 	       margin-left:0;
        }
-       .datagrid-toolbar {
+       /*.datagrid-toolbar {
     		height:auto;
 	   }
+	   .datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-icon {
+		    left: 0px; 
+		    height: 22px;
+		    width: 16px;
+		}
+	   .datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-text {
+		    line-height: 22px;
+		    padding: 0 0 0 17px;
+		    margin: 0;
+		    color: #666;
+		}*/
+		.layout-split-west {
+			border-right:4px solid #fff;
+		}
+		.layout-split-east{
+			border-right-color:#fff;
+		}
+		.layout-split-east {
+			border-left:4px solid #fff;
+		}
+		.PatInfoItem div:first-child {
+			left:6px !important;
+			
+		}
+		.r-label1 {
+			padding:0 10px;
+		}
+		
     </STYLE>
     <Server>
     //获取撤销、停止执行记录原因json
@@ -102,7 +141,7 @@
 </head>
 <body>
     <div class="body">
-        <div class="hisui-accordion patientTree"
+        <!--div class="hisui-accordion patientTree"
              data-options="border:false">
             <div title="#(..Get("本病区病人"))#"
                  class="wardPatientDiv"
@@ -145,158 +184,171 @@
                     </table>
                 </div>
             </div>
-        </div>
-        <div class="hisui-layout content">
-            <div data-options="region:'north',split:false"
-                 style="height:40px;border:none">
-                <csp:Include Page="dhcdoc.in.patient.banner.csp">
-            </div>
-            <div data-options="region:'center',split:false,headerCls:'panel-header-gray'"
-                 style="padding-top:5px;border:none">
-                <div class="hisui-layout"
-                     id="head-menu"
-                     data-options="fit:true,border:false">
-                    <div data-options="region:'north',border:false,collapsible:false"
-                         style="height:85px;">
-                        <div class="hisui-panel"
-                             data-options="title:'#(..Get("需关注医嘱"))#',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
-                             style="border:1px solid #ccc;border-bottom:1px dotted #ccc;border-top:0;border-radius:0;padding:10px;">
-                            <table style="border-spacing:0">
-                                <tr>
-                                    <td class="r-label"
-                                    	style="padding-right:0;">
-                                        <input class='hisui-radio'
-                                               type="radio"
-                                               label='#(..Get("全部"))#'
-                                               value='A'
-                                               data-options="checked:true"
-                                               name="orderType">
-                                        <input class='hisui-radio'
-                                               type="radio"
-                                               label='#(..Get("长嘱"))#'
-                                               value='L'
-                                               name="orderType">
-                                        <input class='hisui-radio'
-                                               type="radio"
-                                               label='#(..Get("临嘱"))#'
-                                               value='T'
-                                               name="orderType">
-                                    </td>
-                                    <td class="r-label"
-                                        style="padding-left:10px;">
-                                        #(..Get("类型"))#
-                                    </td>
-                                    <td>
-                                        <select id="type"
-                                                class="hisui-combobox"
-                                                style="width:80px;">
-                                        </select>
-                                    </td>
-                                    <td class="r-label"
-                                        style="padding-left:10px;">
-                                        #(..Get("需处理"))#
-                                    </td>
-                                    <td>
-                                        <select id="orderNeedCareType"
-                                                class="hisui-combobox"
-                                                style="width:80px;">
-                                        </select>
-                                    </td>
-                                    <td class="r-label"
-                                        style="padding-left:10px;">
-                                        #(..Get("科室"))#
-                                    </td>
-                                    <td>
-                                        <select id="orderLoc"
-                                                class="hisui-combobox"
-                                                style="width:80px;">
-                                        </select>
-                                    </td>
-                                   <!-- <td style="padding-left:10px;">
-                                        <input id="ignored"
-                                               class='hisui-checkbox'
-                                               type="checkbox"
-                                               label="已忽略">
-                                    </td>-->
-                                    <td style="padding:0 0 0 20px">
-                                        <a href="#"
-                                           id="searchBtn"
-                                           class="hisui-linkbutton hover-dark"
-                                           data-options="iconCls:'icon-w-find'">
-                                            #(..Get("查询"))#
-                                        </a>
-                                    </td>
-                                </tr>
+        </div-->
+        <div class="hisui-layout" fit=true>
+        	<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+        	<div data-options="region:'center',border:false">
+    			<div class="hisui-layout" fit=true>
+		            <div data-options="region:'north',split:false"
+		                 style="height:40px;border:none;">
+		                <!--csp:Include Page="dhcdoc.in.patient.banner.csp"-->
+		                <csp:Include Page="dhcdoc.patinfo.banner.csp">
+		            </div>
+		            <div class="orderDiv" data-options="region:'center',split:false,headerCls:'panel-header-gray'"
+		                 style="border:none;padding-top:5px;">
+		                <div class="hisui-layout"
+		                     id="head-menu"
+		                     data-options="fit:true,border:false">
+		                    <div data-options="region:'north',border:false,collapsible:false"
+		                         style="height:85px;border-radius:0;">
+		                        <div class="hisui-panel"
+		                             data-options="title:'#(..Get("需关注医嘱"))#',fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-apply-check'"
+		                             style="border-bottom-style:dashed;border-top:0;border-radius:0;padding:10px;">
+		                            <table style="border-spacing:0">
+		                                <tr>
+		                                    <td>
+		                                        <input class='hisui-radio'
+		                                               type="radio"
+		                                               label='#(..Get("全部"))#'
+		                                               value='A'
+		                                               data-options="checked:true"
+		                                               name="orderType">
+		                                    </td>
+		                                    <td class="r-label1">
+		                                        <input class='hisui-radio'
+		                                               type="radio"
+		                                               label='#(..Get("长嘱"))#'
+		                                               value='L'
+		                                               name="orderType">
+		                                    </td>
+		                                    <td>
+		                                        <input class='hisui-radio'
+		                                               type="radio"
+		                                               label='#(..Get("临嘱"))#'
+		                                               value='T'
+		                                               name="orderType">
+		                                    </td>
+		                                    <td class="r-label1">
+		                                        #(..Get("类型"))#
+		                                    </td>
+		                                    <td>
+		                                        <select id="type"
+		                                                class="hisui-combobox"
+		                                                style="width:70px;">
+		                                        </select>
+		                                    </td>
+		                                    <td class="r-label1">
+		                                        #(..Get("需处理"))#
+		                                    </td>
+		                                    <td>
+		                                        <select id="orderNeedCareType"
+		                                                class="hisui-combobox"
+		                                                style="width:140px;">
+		                                        </select>
+		                                    </td>
+		                                    <td class="r-label1">
+		                                        #(..Get("科室"))#
+		                                    </td>
+		                                    <td>
+		                                        <select id="orderLoc"
+		                                                class="hisui-combobox"
+		                                                style="width:90px;">
+		                                        </select>
+		                                    </td>
+		                                   <!-- <td style="padding-left:10px;">
+		                                        <input id="ignored"
+		                                               class='hisui-checkbox'
+		                                               type="checkbox"
+		                                               label="已忽略">
+		                                    </td>-->
+		                                    <td style="padding:0 0 0 10px">
+		                                        <a href="#"
+		                                           id="searchBtn"
+		                                           class="hisui-linkbutton hover-dark"
+		                                           data-options="iconCls:'icon-w-find'">
+		                                            #(..Get("查询"))#
+		                                        </a>
+		                                    </td>
+		                                </tr>
 
-                            </table>
+		                            </table>
 
-                        </div>
-                    </div>
-                    <div data-options="region:'center',border:false,collapsible:false"
-                         style="">
-                        <div class="hisui-panel"
-                             data-options="fit:true,headerCls:'panel-header-gray'"
-                             style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-                            <table id="orderGrid"
-                                   class="hisui-datagrid">
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div data-options="region:'east',split:true,headerCls:'panel-header-gray',collapsible:true"
-                 style="padding-top:5px;width:420px;border:none">
-                <div class="hisui-layout"
-                     id="head-menu"
-                     data-options="fit:true,border:false">
-                    <div data-options="region:'north',border:false,collapsible:false"
-                         style="height:85px;">
-                        <div class="hisui-panel"
-                        	 id="execPanle"
-                             data-options="title:'#(..Get("执行记录"))#',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
-                             style="border:1px solid #ccc;border-bottom:1px dotted #ccc;border-top:0;border-radius:0;">
-                            <table style="border-spacing:10">
+		                        </div>
+		                    </div>
+		                    <div data-options="region:'center',border:false,collapsible:false"
+		                         style="border-radius:0;">
+		                        <div class="hisui-panel"
+		                             data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'"
+		                             style="border-top:0;border-radius:0 0 4px 4px;">
+		                            <table id="orderGrid"
+		                                   class="hisui-datagrid">
+		                            </table>
+		                        </div>
+		                    </div>
+		                </div>
+		            </div>
+		            <div class="execDiv" data-options="region:'east',split:true,headerCls:'panel-header-gray',collapsible:true"
+		                 style="width:415px;border:none;padding-top:5px;">
+		                <div class="hisui-layout"
+		                     id="head-menu"
+		                     data-options="fit:true,border:false">
+		                    <div data-options="region:'north',border:false,collapsible:false"
+		                         style="height:85px;border-radius:0;">
+		                        <div class="hisui-panel"
+		                        	 id="execPanle"
+		                             data-options="title:'#(..Get("执行记录"))#',fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-apply-check'"
+		                             style="border-bottom-style:dashed;border-top:0;border-radius:0;padding:10px">
+		                            <table style="border-spacing:0">
+		                                <tr>
+		                                    <td>
+		                                        #(..Get("需处理类型"))#
+		                                    </td>
+		                                    <td style="padding:0 10px;">
+		                                        <select id="execType"
+		                                                class="hisui-combobox"
+		                                                style="width:120px;">
+		                                        </select>
+		                                    </td>
+		                                    <td>
+		                                    </td>
+		                                    <td>
+		                                        <a href="#"
+		                                           id="execSearchBtn"
+		                                           class="hisui-linkbutton hover-dark"
+		                                           data-options="iconCls:'icon-w-find'">
+		                                            #(..Get("查询"))#
+		                                        </a>
+		                                    </td>
+		                                </tr>
 
-                                <tr>
-                                    <td>
-                                        #(..Get("需处理类型"))#
-                                    </td>
-                                    <td>
-                                        <select id="execType"
-                                                class="hisui-combobox"
-                                                style="width:120px;">
-                                        </select>
-                                    </td>
-                                    <td>
-                                    </td>
-                                    <td>
-                                        <a href="#"
-                                           id="execSearchBtn"
-                                           class="hisui-linkbutton hover-dark"
-                                           data-options="iconCls:'icon-w-find'">
-                                            #(..Get("查询"))#
-                                        </a>
-                                    </td>
-                                </tr>
+		                            </table>
 
-                            </table>
-
-                        </div>
-                    </div>
-                    <div data-options="region:'center',border:false,collapsible:false"
-                         style="">
-                        <div class="hisui-panel"
-                             data-options="fit:true,headerCls:'panel-header-gray'"
-                             style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-                            <table id="execGrid"
-                                   class="hisui-datagrid">
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+		                        </div>
+		                    </div>
+		                    <div data-options="region:'center',border:false,collapsible:false"
+		                         style="border-radius:0;">
+		                        <div class="hisui-panel"
+		                             data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'"
+		                             style="border-top:0;border-radius:0 0 4px 4px;">
+		                            <table id="execGrid"
+		                                   class="hisui-datagrid">
+		                            </table>
+		                        </div>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+    	</div>
     </div>
+    <div id="execMoreMenu" class="hisui-menu" style="height:auto!important;width:150px;">
+		<div id="cancelExec" data-options="iconCls:'icon-back'">#(..Get("撤销执行"))#</div>
+		<div class="menu-sep"></div>
+		<div id="cancelAndStopExec" data-options="iconCls:'icon-stop-order'">#(..Get("撤销并停止执行"))#</div>
+		<div class="menu-sep"></div>
+		<div id="stopExec" data-options="iconCls:'icon-stop-order'">#(..Get("停止执行"))#</div>
+	</div>
+    <csp:include page="nur.hisui.handleorderwindow.csp"></csp:include>
     <script language="javascript">
         var EpisodeID = "#(EpisodeID)#";
         var todayLogic = "#(todayLogic)#";
@@ -304,12 +356,31 @@
         var defaultTypeCode="#(defaultTypeCode)#"
         var ServerObj={
 	        DateFormat:"#(DateFormat)#",
-	        OECStatusChReasonJson:"#(OECStatusChReasonJson)#",
-	        CurrentDate:"#(CurrentDate)#"
+	        OECStatusChReasonJson:'#(OECStatusChReasonJson)#',
+	        CurrentDate:"#(CurrentDate)#",
+	        //CA:-------------------start 数字签名-----------------
+		   	CAInit:"#(CAInit)#",
+			GetOEORIItemXMLMethod:"#(GetOEORIItemXMLMethod)#",
+			InsertCASignInfoMethod:"#(InsertCASignInfoMethod)#",
+			strServerRan:"#($g(%session.Data("ServerRan")))#",
+			strServerCert:"#($g(%session.Data("ServerCert")))#",
+			strServerSignedData:"#($g(%session.Data("ServerSignedData")))#",
+			IsCAWin:"",
+			//-------------------------------
 	    }
+	    function GetList_pnp(){
+		   var strTemp =GetUserList();
+		   if (strTemp!="") ServerObj.IsCAWin=strTemp;
+		   else ServerObj.IsCAWin="";
+		}
+		if(ServerObj.CAInit==1) GetList_pnp();
+		var CDSSObj;
     </script>
 </body>
+<!--初始化CA服务环境-->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
 <script type="text/javascript" src="../scripts/dhcdoc/ipdoc/util.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
 <!--script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatOrderViewNurse.js"></script-->
 <script language="cache"
         runat="SERVER">

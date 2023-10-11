@@ -1,0 +1,118 @@
+
+<!-- 
+ * FileName: dhcpecomplain.find.hisui.csp
+ * Anchor: ln
+ * Date: 2023-02-06
+ * Description: HISUI 体检投诉管理
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+	
+<style>
+body{
+	background: backgroundcolor;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.r-label{
+	padding-left: 10px;
+}
+
+/*弹出框里标签右对齐 并且有10px内边距*/
+.tdlabel
+{
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align:right;
+}
+
+</style>
+<script type="text/javascript">
+if (("undefined"==typeof HISUIStyleCode)||(HISUIStyleCode==null)){
+	var backgroundcolor="#fff"
+}else{
+	if(HISUIStyleCode=="lite") {
+		var backgroundcolor="#F5F5F5"
+	}else{
+		var backgroundcolor="#fff"
+	}
+}
+</script>
+</head>
+<body style="padding:10px;box-sizing: border-box;">
+<div class="hisui-panel" fit="true" data-options="title:'体检投诉管理',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:52px;border-bottom:1px dashed #e2e2e2;border-radius:0">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label for="BeginDate">#(..Get("开始日期"))#</label></td>
+					<td>
+						<input id="BeginDate" class="hisui-datebox textbox"/>
+					</td>
+					
+					<td class="r-label"><label for="EndDate">#(..Get("结束日期"))#</label></td>
+					<td>
+						<input id="EndDate" class="hisui-datebox textbox"/>
+					</td>
+
+					<td class="r-label"><label for="Type">#(..Get("类型"))#</label></td>
+					<td>
+						<input class="hisui-combobox" id="Type" disabled/>
+					</td>
+					<td class="r-label">
+					    <input class='hisui-radio' type="radio" label='未处理' name='ProStatus' value='NoPro' id="NoPro">
+					</td>
+					<td>
+                        <input class='hisui-radio' type="radio" label='已处理' name='ProStatus' value='HadPro'>
+					</td>
+					<td class="r-label">
+						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+					<td>
+						<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					</td>
+					<td><input type="hidden" id="RowId"/></td>							
+				</tr>
+				
+			</table>
+	    </div>
+		    <div data-options="region:'center',title:'',border:false">
+				<table id="ComplainGrid" toolbar="#allbar"></table>
+			</div>				
+	    </div>		    
+</div>
+
+  
+<!--数据面板工具栏-->
+ <div id="allbar">
+    <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="BNew">新增</a>
+    <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="BUpdate">修改</a> 
+    <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-wrench-blue',plain:true,stopAllEventOnDisabled:true" id="BProposal">处理</a>
+ </div> 
+ 
+ <div id="ComplainEditWin"></div>   <!--新建投诉记录-->
+ <div id="CompdisposeWin"></div>    <!--处理投诉记录-->
+ 
+<script type="text/javascript" src="../scripts/DHCPEComplain.Find.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+</body>		
+</html>
+			
+		
+ 
+
+
+

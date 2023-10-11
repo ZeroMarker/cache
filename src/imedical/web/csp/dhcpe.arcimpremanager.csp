@@ -1,0 +1,268 @@
+<!-- 
+ * FileName: dhcpe.arcimpremanager.csp
+ * Anchor: wangguoying
+ * Date: 2020-03-17
+ * Description: 项目限额管理
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		.labelTd{
+			width:60px;
+			text-align:right;
+		}
+		.labelWinTd{
+			width:50px;
+			text-align:right;
+		}
+		.btnTd{
+			width:120px;
+			text-align:right;
+		}
+		#group-menu-tree-tools{
+			background-color:#fff;
+			border-bottom: 1px solid #ccc;
+			border-top: 1px dotted #ccc;
+
+			margin-bottom:10px;
+			height:30px; /*自动填充ie下35.82*/
+		    padding: 1px 2px;
+		}
+		#group-menu-tree-tools .l-btn-plain {
+		    padding: 0;
+		    border: 0;
+		    margin-top: 2px;
+		    margin-bottom: 3px;
+		}
+		#group-menu-tree-tools .l-btn-plain .l-btn-icon-left .l-btn-text {
+		    line-height: 22px;
+		    padding: 0 10px 0 31px;
+		    margin: 0;
+		    color: #666;
+		}
+		#group-menu-tree-tools .l-btn-plain .l-btn-icon-left .l-btn-icon {
+		    left: 5px;
+		    height: 22px;
+		    width: 26px;
+		}
+		.combo2-arrow{
+			display:inline-block;
+			width:28px;
+			height:28px;
+			margin-left:10px;
+			
+			background:url(../images/uiimages/input-btn-expand.png)	no-repeat center center;
+			background-color:#abddff;
+			cursor:pointer;
+			border:1px solid #40a2de;
+			vertical-align:top;
+		}
+		.combo2-arrow.disabled{
+			border-color:#bbb;
+			background-color:#bbb;
+		}
+		.combo2-panel-content{
+			padding:10px;
+		}
+		.combo2-panel-buttons{
+			text-align:center;
+		}
+		.plain-td{
+			padding-left: 10px;
+		}
+		.plain-td a{
+		    background: white;
+		    color: #40A2DE;
+		    border: 1px solid #40A2DE !important;
+		    border-radius: 4px;
+		}
+		.note-font {
+			color: red;
+			font-weight: bold;
+		}
+		
+		.empty-bg{
+			background-color:#f7e8e8;
+		}
+		.fulfil-bg{
+			background-color:#ff7070;
+		}
+		.avail-bg{
+			background-color:#4ffbc3;
+		}
+		.grid-toobar-right{
+			top: 5px;
+			right: 8px;
+			height: 20px;
+    		width: auto;
+			position: absolute;	   
+		}
+		.color-example{
+			border-radius: 4px;
+			width: 40px;
+			height: 20px;
+		}
+		.kw-section-list > li {
+		    float: left;
+		    margin: 2px 5px;
+		}
+		.kw-section-list > li:first-child{
+		    margin-left:0;
+		}
+		.kw-section-list:after{
+			clear:both;
+			content: "";
+            display: block;
+            width: 0;
+            height: 0;	
+		}
+   </style>
+</head>
+<body  class="hisui-layout" >
+	<div data-options="region:'center',split:false,border:false" style="padding:10px 9px">
+		<div id="Content" class="hisui-layout" data-options="fit:true,showTitleOnCollapse:true">
+			<!--  西方布局 -->
+			<div  data-options="region:'east',split:true,iconCls:'icon-open-book',headerCls:'panel-header-gray',title:'项目分类',collapsedTitle:$g('展开维护项目分类'),onCollapse:function(){setRightToolbar(1)},onExpand:function(){setRightToolbar(0)}" style= "border-radius:0 0 4px 4px ; width:360px;">				
+				<div class="hisui-layout" fit="true">
+                    <div data-options="region:'north',border:false" style="padding:5px;">
+                        <input id="FindBtn" data-options="prompt:$g('医嘱项名称 模糊查询'),searcher:function(value,name){find_click(value,name);}" href="#" class="hisui-searchbox" style="width:343px;" />
+                    </div>
+                    
+                    <div data-options="region:'center',border:false" >
+                        <div id="TreeDiv" fit="true"  >
+                            <div class="datagrid-toolbar" style="border-top:1px dotted #ccc;height: 32px;">
+                                <table >
+                                    <tr>					
+                                        <td><a href="javascript:void(0);" onclick="addNode_click();" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" disabled id="AddNode">#(..Get("新增子节点"))#</a></td>
+                                        <td><a href="javascript:void(0);" onclick="editNode_click();" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" disabled id="EditNode">#(..Get("修改"))#</a></td>
+                                        <td><a href="javascript:void(0);" onclick="delNode_click();" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" disabled id="DeleteNode">#(..Get("删除节点"))#</a></td>
+                                        
+                                        
+                                    </tr>
+                                </table>
+                            </div>
+                            <ul id="ArcimTree" class="hisui-tree" data-options="animate:true"></ul>
+                            <div id="right-menu" class="hisui-menu" style="width:150px;">
+                                <div id="appendTNode" iconCls="icon-add" onclick="addNode_click()">#(..Get("新增子节点"))#</div>
+                                <div id="delTNode" iconCls="icon-remove" onclick="delNode_click()">#(..Get("删除节点"))#</div>
+                                <div id="editTNode" iconCls="icon-edit" onclick="editNode_click()">#(..Get("修改"))#</div>
+                            </div>
+                        </div>
+                    </div>
+				</div>
+			</div>
+			<!--  //西方布局 -->
+			
+			<!--  //中心布局 -->
+			<div id="CenterLyt" data-options="region:'center',split:true,iconCls:'icon-ip-cfg',headerCls:'panel-header-gray',title:'限额维护',href:'dhcpe.arcimpremanager.detail.csp'" style= "border-radius:0 0 4px 4px ;" >
+			</div>
+			<!--  //中心布局 -->
+		</div>
+	</div>
+	
+	<div id="EditNodeWin" title="修改" class="hisui-window"  style="width:510px;height:428px;padding:5px 10px 6px 10px;"
+		data-options="iconCls:'icon-w-edit',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
+			
+			<div id="node-type-key" style="" data-options=""></div>
+			<div class="kw-line" style="margin-bottom:10px;"></div>
+			<div class="hisui-panel" title="节点" style="width:490px;padding:10px 10px 0 10px" data-options="headerCls:'panel-header-card'">
+				<table style="border-collapse:separate; border-spacing:10px 10px;">
+					<tr>
+						<td >#(..Get("代码"))#</td>
+						<td><input class="hisui-validatebox textbox"  id="win-node-code" data-options="required:true,validType:'length[1,8]'"></td>
+						<td class="labelTd">#(..Get("名称"))#</td>
+						<td>
+							<input  class="hisui-validatebox textbox"  id="win-node-desc" value="" data-options="required:true" >
+							<input  class="hisui-combogrid"  id="win-node-arcim" >
+							<input type="hidden" id="win-node-arcimId" value="">						
+						</td>
+					</tr>
+					<tr>
+						<td>#(..Get("备注"))#</td>
+						<td colspan="3"><textarea style="width:376px;" id="win-node-remark" class="textbox" rows="2"></textarea></td>
+				</table>
+			</div>
+			<div style="height:10px;width:100%"></div>
+			<div class="hisui-panel" title="条件" style="width:490px;padding:10px 10px 0 10px;" data-options="headerCls:'panel-header-card'">
+				<table style="border-collapse:separate; border-spacing:10px 10px;">
+					<tr>
+						<td >#(..Get("性别"))#</td>
+						<td><input class="hisui-combobox" type="text" style="width:154px;" Id="win-node-sex"  />	</td>
+						<td class="labelTd">#(..Get("VIP等级"))#</td>
+						<td><input class="hisui-combobox" type="text" Id="win-node-vip"  />	</td>
+					</tr>
+					<tr>
+						<td >#(..Get("年龄"))#</td>
+						<td colspan="3">
+							<input class="hisui-numberbox textbox" style="width:60px;" data-options="min:0" type="text" Id="win-node-minage"  />
+							<span style="padding:0 10px;">-</span>
+							<input class="hisui-numberbox textbox" style="width:60px;" data-options="min:0" type="text" Id="win-node-maxage"  />
+						</td>
+				</table>
+			</div>
+			<div style="text-align:center;margin-top:10px;">
+				<a  href="#"  onclick="save_node();" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+				<a  href="#"  onclick="cancel_node();" style="margin-left:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">#(..Get("取消"))#</a>					
+			</div>
+			<input type="hidden" id="win_parentId" value="">
+			<input type="hidden" id="win_nodeId" value="">
+			<input type="hidden" id="win_nodeType" value="">
+	</div>
+	
+	
+	<!-- 按条件复制 -->
+	<div id="AdvanceCopyWin" class="hisui-dialog" title="按条件复制"
+			style="width:600px;height:350px;top:250px;left:500px;padding:15px 10px 10px 10px;" 
+			data-options="iconCls:'icon-w-copy',resizable:true,modal:true,closed:true,buttons:[{
+				text:'关闭',
+				handler:function(){$HUI.dialog('#AdvanceCopyWin').close();}}]">   
+		<div class="hisui-panel" title="指定日期复制" style="padding:10px;width:580px;" data-options="headerCls:'panel-header-card'">
+			<table style="border-collapse:separate; border-spacing:10px 10px;">
+				<tr>
+					<td>#(..Get("原日期"))#</td>
+					<td><input class="hisui-datebox" type="text"  id="SDate"></td>
+					<td>#(..Get("目标日期"))#</td>
+					<td><input class="hisui-datebox" type="text" id="TDate"></td>
+					<td style="padding-left: 5px;"><a id="Win_BCopy" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy'" >#(..Get("复制"))# </a></td>
+				</tr>
+			</table>
+		</div>
+		<div style="height:20px;"></div>	
+		<div class="hisui-panel" title="按周复制" style="padding:10px;width:580px;" data-options="headerCls:'panel-header-card'">
+			<table style="border-collapse:separate; border-spacing:10px 10px;">
+				<tr>
+					<td>#(..Get("日期周"))#</td>
+					<td><input class="hisui-datebox" style="width:365px;" type="text" id="W_SDate" data-options="disabled:true"></td>
+					<td rowspan=2 style="padding-left: 5px;"><a id="Win_BWeekCopy" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy'" >#(..Get("复制"))# </a></td>
+				</tr>
+				<tr>
+					<td>#(..Get("目标日期"))#</td>
+					<td>
+						<input class="hisui-datebox" style="width:170px;" type="text" id="W_TBDate">&nbsp;&nbsp;-&nbsp;&nbsp;
+						<input class="hisui-datebox" style="width:170px;" type="text" id="W_TEDate">
+					</td>
+				</tr>
+			</table>
+		</div>	
+	</div>
+	<!-- //按条件复制 -->
+	
+	<!-- 预约详情 -->
+	<div id="PreDetailDialog" style="overflow:hidden"></div>
+	<!-- //预约详情 -->
+	
+	<script type="text/javascript" src="../scripts/dhcpe/easyui-extensions/jquery.jdirk.js"></script>
+  	<script type="text/javascript" src="../scripts/dhcpe/easyui-extensions/layout/showTitleOnCollapse.js"></script>
+  	<script  type="text/javascript"src="../scripts/dhcpe/easyui-extensions/treegrid/treegrid.getRowInfo.js"></script>
+  	<script type="text/javascript" src="../scripts/dhcpe.arcimpremanager.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>  
+</body>
+</html>

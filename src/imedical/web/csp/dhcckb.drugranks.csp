@@ -1,0 +1,101 @@
+<!-- dhcckb.drugranks.csp  处方审核结果分析 csp //-->
+<!DOCTYPE html>
+<html >
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCCKB/> 
+	<link href="../scripts/dhcnewpro/dhcckb/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcckb/css/drugrank.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>		
+	<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/echarts.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/drugrank.js" charset="gb2312"></script>
+	
+</head>
+<body class="background-warp">
+	<div id="composition" class="hisui-layout" fit="true" data-options="clickExpand:true">   
+	 <div data-options="region:'north',title:'',split:true,showCollapsedTitle:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:230px;">
+   <div class="list-title">
+				<div class="list-icon">
+					<img src="../scripts/dhcnewpro/dhcckb/images/infomation.png" border=0/>
+				</div>
+				<label>筛选审查</label>
+   </div>
+
+    <div style="padding-top:2px;padding-left: 10px;">
+      <span>开始日期: <input class="hisui-datebox" id="fromdate"></span>
+      <span style="padding-left: 10px;">截止日期: <input class="hisui-datebox" id="todate"></span>
+      <span style="padding-left: 10px;">科室: <input class="hisui-combobox" id="ctLoc"></span>
+      <div id="switchs" class="hisui-switchbox" style="margin-left:10px" data-options="onText:'全部',offText:'未完成',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+      <button onclick="Query()" style="margin-left: 20px;"  class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >查询</button>
+      <button onclick="QueryRuleCat()" style="margin-left: 20px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >药品高频查询</button>
+      <button onclick="QueryAudit()" style="margin-left: 20px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >审核标记统计图</button>
+   </div>
+   
+   <div  style="padding-top: 5px;padding-left: 10px;">
+      <span>药品名称: <input class="hisui-combobox" id="drugDesc"></span>
+      <span style="padding-left: 10px;">排序条件: <input class="hisui-combobox" id="catDesc"></span>
+      <span style="padding-left: 10px;">院区: <input class="hisui-combobox" id="hosp"></span>
+   </div>
+			
+			<div style="float:right;margin-right: 550px;margin-top:-70px;padding-bottom: 2px;"></div>		
+			<div style="float:right;margin-right: 350px;margin-top:-70px;padding-bottom: 2px;"></div>				   		   
+	  <ul class="pf-nav" style="padding-top: 7px;padding-left: 10px;">
+				<li class="pf-nav-item">
+					<div class="item-left total-left"></div>
+					<div class="item-center total-center"></div>
+					<div class="item-right total-right"></div>
+					<div class="item-text">
+						<div class="item-warn">处方总数</div>
+						<div id="presnum" class="item-num"></div>
+					</div>
+				</li>
+				<li class="pf-nav-item">
+					<div class="item-left inter-left"></div>
+					<div class="item-center inter-center"></div>
+					<div class="item-right inter-right"></div>
+					<div class="item-text">
+						<div class="item-warn">错误处方数</div>
+						<div id="errpresnum" class="item-num"></div>
+					</div>
+				</li>
+				<li class="pf-nav-item">
+					<div class="item-left taboo-left"></div>
+					<div class="item-center taboo-center"></div>
+					<div class="item-right taboo-right"></div>
+					<div class="item-text">
+						<div class="item-warn">处方错误率</div>
+						<div id="errpresrate" class="item-num"></div>
+					</div>
+				</li>
+				<li class="pf-nav-item">
+					<div class="item-left usage-left"></div>
+					<div class="item-center usage-center"></div>
+					<div class="item-right usage-right"></div>
+					<div class="item-text">
+						<div class="item-warn">错误药品个数</div>
+						<div id="errDrugnum" class="item-errnum"></div>
+					</div>
+				</li>
+			</ul>
+	</div>  
+	<div data-options="region:'center',title:'合理用药审查趋势图',split:true,headerCls:'panel-header-gray',iconCls:'icon-star-light-yellow'">
+   	<div class="list-order-item">
+			   	<div class="view-center-list-icon">
+			   		<span name="item-icon" data-value="year" class="view-center-item-icon-year">年</span>
+			   		<span name="item-icon" data-value="quarter" class="view-center-item-icon-quarter">季度</span>
+			   		<span name="item-icon" data-value="month" class="view-center-item-icon-month">月</span>
+			   		<span name="item-icon" data-value="week" class="view-center-item-icon-week">周</span>
+			   		<span name="item-icon" data-value="day" class="view-center-item-icon-day">日</span>
+			   	</div>
+   		  <div id="LocCharts" class="item-chart" style="height:180px;width:1200px;"></div>
+    </div>	 
+	</div>   
+	<div data-options="region:'south',title:'处方审核结果一览',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray',collapsed:false,showCollapsedTitle:true"  style="height:300px;">
+				<div id="maingrid"></div>
+	</div>   
+</div>
+</body>
+</html>

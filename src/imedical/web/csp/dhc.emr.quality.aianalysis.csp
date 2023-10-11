@@ -1,0 +1,84 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<!--dhc.emr.quality.aianalysis.csp-->
+<html>
+	<head>
+	<ExtHealth:Head/>
+	<HISUI/>
+        <title>内涵质控使用数据监控</title>
+        <script type="text/javascript" src="../scripts/datagrid-export.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script type="text/javascript" src="../scripts/websys.js"></script>
+        <style>
+        	.chart{
+	        	border:1px #cccccc solid;
+	        	border-bottom:1px #cccccc solid;
+	        	border-radius:4px;
+				margin:10px 10px 0px 0px;
+        	}
+        	.tclayout {
+				float: left;
+				height: calc(50% - 17px);;
+				width: calc(50% - 17px);
+			}
+			.cenLayout{
+				width: 100% !important;
+				height:calc(100%-40px) !important;
+				overflow:hidden;
+			}
+       </style>
+	</head>
+<body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+	<div data-options="region:'center',fit:true,border:false" style="padding:10px" class="div_center">
+		<div class="hisui-panel" title="内涵质控使用数据监控" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" >
+			<div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+            	<div data-options="region:'north',border:false" style="margin:10px;height:40px;overflow:hidden;">
+					<div id="messageListTableTBarTop" style="height:30">	
+					<!--span style="margin-left:13px;margin-right:0px;">科室 </span><select id="ctLocID" class="hisui-combobox" style="width:150px;"></select-->
+					<span style="margin-right:10px;">#(..Get("起始日期"))#</span><input id="inputCreateDateStart" class="hisui-datebox" />
+			 		<span style="margin-left:10px;margin-right:10px;">#(..Get("截止日期"))#</span><input id="inputCreateDateEnd" class="hisui-datebox" />
+			 		<span style="margin-left:5px;margin-right:0px;"></span><a id="btnSearch" href="#" class="hisui-linkbutton hover-dark" onclick="doSearch()" data-options="iconCls:'icon-w-find'" style="width:90px;">查询</a>
+			 		<!--span style="margin-left:5px;margin-right:0px;"></span><a id="btnSearch" href="#" class="hisui-linkbutton hover-dark" onclick="exportExcel()" data-options="iconCls:'icon-w-export'" style="">导出表格</a-->
+					</div>	
+			 	</div>
+			 	<div data-options="region:'center',border:false" class="cenLayout">
+					<div class="tclayout chart" style="margin-left:10px">
+						<div id="CorectListView" style="height:100%;width:100%"></div>
+					</div>
+					<div class="tclayout chart" style="margin-right:10px">
+						<div id="UseListView" style="height:100%;width:100%"></div>					
+					</div>
+					<div class="tclayout chart" style="margin-left:10px">
+						<div style="height:100%;width:100%">
+							<table class="hisui-datagrid" id="CorectListTable" data-options="border:false,fit:true" ></table>
+						</div>						
+					</div>
+					<div class="tclayout chart" style="margin-right:10px;margin-bottom:10px">
+						<div style="height:100%;width:100%">
+							<table class="hisui-datagrid chart" id="UseListTable" data-options="border:false,fit:true" ></table>
+						</div>						
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+ 	<script language="cache" runat="server">
+ 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s UserID = %session.Get("LOGON.USERID")
+  		s UserLocID = %session.Get("LOGON.CTLOCID")
+  		s SDate=$zd(+$h-30,3)
+  		s EDate=$zd(+$h,3)
+ 	</script>
+ 	<script language="javascript">
+		var userID = '#(UserID)#';
+		var userLocID = '#(UserLocID)#';
+		var SSGroupID = '#(SSGroupID)#'
+		var SDate = '#(SDate)#'
+		var EDate = '#(EDate)#'
+ 	</script>
+	<script type="text/javascript" src="../scripts/quality/DHC.EMR.Quality.AiAnalysis.js"></script>	
+</body>
+</html>

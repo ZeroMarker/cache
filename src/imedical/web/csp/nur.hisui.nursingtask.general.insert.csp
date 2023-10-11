@@ -1,0 +1,289 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s comboxType = $G(%request.Data("comboxType", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var comboxType="#(comboxType)#";
+	   var hospID="#(hospID)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<div class="hisui-panel" title="基本配置" style="" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="NurMpFamilyTable" style="width:100%">
+		</table>
+	</div>
+	
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+
+<script type="text/javascript">
+ var options={
+		"LableElementFamily":[
+			{"text":"华文行楷","value":"STXingkai"},
+			{"text":"黑体","value":"SimHei"},
+		],
+ }
+
+var contors=[]
+function reloadSheetParamsGrid(){
+	var param={
+		hospID:hospID=""?session['LOGON.HOSPID']:hospID,
+		type:comboxType
+	}
+	var rtnData={}
+	runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskRuleSettingList",param,function(data){
+		console.log(data)
+			for(var i=0;i<data.length;i++){
+				var codes=data[i].code
+				var len=codes.split(",").length
+				for(var j=0;j<len;j++){
+					var code=codes.split(",")[j]
+					rtnData[code]=""
+				}
+					
+			}
+			if(entity!=""){
+				delete rtnData[entity.code]
+			}
+			
+	},'json',false);
+	return rtnData
+}
+function rtnData(){
+	if("order"==comboxType){
+		return orderItem()
+	}else if("sign"==comboxType){
+		return signItem(1)
+	}else if("assess"==comboxType){
+		return signItem(2)	
+	}
+	
+}
+var titelVal={}
+	function signItem(taskType){
+		var parmas={
+			hospDR:hospID,
+			TaskType:taskType
+		}
+		var datas=[]
+		runClassMethod("Nur.NIS.Service.NursingTask.Controller","GetTabTitles",parmas,function(rtn){	
+			var gridDatas=reloadSheetParamsGrid()
+			console.log(rtn)
+			for(var i=0;i<rtn.length;i++){
+				var value=rtn[i].itemId
+				var text =rtn[i].itemName
+				var allConfigId =rtn[i].allConfigId
+				var array={}
+				array.text=text
+				array.value=value+"@"+text
+				titelVal[array.value]=allConfigId
+				if(isUndefined(gridDatas[value+"@"+text])){
+					datas.push(array)
+				}
+			}
+			
+			
+		},'json',false);
+		return datas
+	}
+	function orderItem(){
+		var locId = session['LOGON.CTLOCID']
+		var hospId = hospID
+		var groupId = session['LOGON.GROUPID']
+		var gridDatas=reloadSheetParamsGrid()
+		var datas=[]
+	
+		var data=$cm({
+			ClassName:"Nur.NIS.Service.OrderExcute.SheetConfig",
+			QueryName:"GetAllSheet",
+			hospId:hospId,
+			filter:""
+		},false)
+		data=data.rows
+		for(var i=0;i<data.length;i++){
+			var desc=data[i].Name
+			var code=data[i].Code	
+			var PCExecFlag=data[i].PCExecFlag
+			//if(PCExecFlag=="Y"){	
+				var array={}
+				array.text=desc
+				array.value=code+"@"+desc
+				if(isUndefined(gridDatas[code+"@"+desc])){
+					datas.push(array)
+				}
+			//}
+		}
+		
+		return datas
+	}
+
+
+
+
+var entity=""
+var xcTopContors=""
+$(function(){
+	$('body').addClass('active')
+	if(id!=""){
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskRuleSettingById",{id:id},function(rtn){
+			entity=rtn
+		},'json',false);
+	}
+	var objData=rtnData();
+	console.log(objData)
+	contors=[
+		{'id':'type','type':'text','title':'任务类型','style':'width:300px;','isDisabled':'disabled','defaultValue':comboxType},
+		{'id':'code','type':'combox','title':'任务项','required':'true','objData':objData,'multiple':'true','style':'width:307px;'},
+		{'id':'text','type':'text','title':'任务别名','required':'true','style':'width:300px;'},
+		{'id':'sortNo','type':'text','title':'任务排序','required':'true','style':'width:300px;'},
+	]
+	
+	
+	for(var i=0;i<contors.length;i++){
+		var key = contors[i].id
+		createInputHtml("NurMpFamilyTable",contors,key,0)
+	}
+
+})
+var xcChange={
+	'code':function(value,oldValue){
+		console.log($(this))
+		var allConfigId=[]
+		for(var i=0;i<value.length;i++){
+			var val=value[i]
+			var configId=titelVal[val]
+			allConfigId.push(configId)	
+		}
+		$("#allConfigID").val(allConfigId.join(","))
+	},
+}
+function saveFunLib(){
+	var parms = ""
+	var topParms = resultParms(contors)
+	var downParms = ""
+	var rsTxt=""
+	debugger;
+	if(topParms!=""){
+		var rtnParms=setAllParms([parms,topParms,downParms])
+		
+		//var text=$("#code").combo("getText")
+		//rtnParms.code=rtnParms.code.split("@")[0]
+		//rtnParms.text=text
+		rtnParms.hospID=hospID
+		//rtnParms.desc=text
+		rtnParms.id=id
+		console.log(rtnParms)
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetInsertTaskRuleSetting",{data:JSON.stringify(rtnParms)},function(rtn){
+			if(rtn == 0) {
+				
+		
+			} else if(rtn == 1){
+				//$.messager.alert('提示','保存失败！'+ rtn , "info");
+				rsTxt = "保存失败！"
+			}else if(rtn == 2){
+				rsTxt = "报错失败，存在相同的组名"
+			}
+			
+		
+		},'json',false);
+	
+		
+	}else{
+		rsTxt = "保存失败,存在必填项为空！"
+	}
+	return rsTxt
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

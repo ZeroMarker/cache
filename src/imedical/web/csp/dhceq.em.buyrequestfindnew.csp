@@ -1,0 +1,38 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() Quit 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+</Script>
+<server>
+	Set RowID=$Get(%request.Data("RowID",1))
+	Set ApproveRole=$Get(%request.Data("ApproveRole",1))
+	Set QXType=$Get(%request.Data("QXType",1))
+	Set Type=$Get(%request.Data("Type",1))
+	Set WaitAD=$Get(%request.Data("WaitAD",1))
+	Set YearFlag=$Get(%request.Data("YearFlag",1))
+	Set Hold1=$Get(%request.Data("Hold1",1))	//批量标志
+	Set Action=$Get(%request.Data("Action",1))
+	Set CurRole=$Get(%request.Data("ApproveRole",1))
+	Set ApproveSetDR=##class(web.DHCEQApproveList).GetApproveSet("1",RowID)
+	Set RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(ApproveSetDR,CurRole,Action)
+	
+	s Component="DHCEQBuyRequestNew"
+	i Hold1="Y"  d
+	.s Component="DHCEQBuyRequestNN"		//czf 2021-05-18 1837956
+	.set lnk="dhceq.em.buyrequestbatch.csp?&RowID="_RowID_"&ApproveRole="_ApproveRole_"&QXType="_QXType_"&Type="_Type_"&WaitAD="_WaitAD_"&YearFlag="_YearFlag_"&CurRole="_CurRole_"&RoleStep="_RoleStep_"&Action="_Action
+	e  d
+	.set lnk="dhceq.em.buyrequest.csp?&RowID="_RowID_"&ApproveRole="_ApproveRole_"&QXType="_QXType_"&Type="_Type_"&WaitAD="_WaitAD_"&YearFlag="_YearFlag_"&CurRole="_CurRole_"&RoleStep="_RoleStep_"&Action="_Action
+</server>
+<frameset rows="*">
+	<frame src=#(lnk)#  framespacing="0" frameBorder="no" noresize>
+</frameset>
+
+</HTML>

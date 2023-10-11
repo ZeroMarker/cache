@@ -1,4 +1,4 @@
-<!--请领-->
+<!--回收申请-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
 	i ##Class(websys.SessionEvents).SessionExpired() q 1
@@ -11,97 +11,141 @@
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
+	<HISUI translate=1/>
 	<CSSDHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px;padding-bottom:15px">
-		<div class="hisui-panel" data-options="title:'请领单据',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="CondTB">
-				<table class="Condition" id="MainCondition">
+	<div class="GridPadding" data-options="region:'west',headerCls:'panel-header-gray',border:false" style="width:750px;padding-right:0px">
+		<div class="hisui-panel" data-options="title:'申请单据',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table id="MainCondition" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<tr>
+							<td><label>#(..Get("申请科室"))#</label><input id="ReqLoc" name="FReqLoc" class="textbox hisui-combobox"></td>
+							<td><label>#(..Get("紧急程度"))#</label><input id="ReqLevel" name="ReqLevel" class="hisui-combobox textbox"></td>
+							<td><label>#(..Get("单据号"))#</label><input id="FReqNo" name="FReqNo" class="textbox" data-options="isKeyupChange:true"></td>
+						</tr>
+						<tr>
+							<td><label>#(..Get("供应科室"))#</label><input id="SupLoc" name="FSupLoc" class="textbox hisui-combobox"></td>
+							<td><label>#(..Get("单据类型"))#</label><input id="ReqType" name="ReqType" class="hisui-combobox textbox"></td>
+							<td><label>#(..Get("单据状态"))#</label><input id="ReqStatus" name="ReqStatus" class="hisui-combobox textbox"></td>
+						</tr>
+						<tr>
+							<td><label>#(..Get("起始日期"))#</label><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox"></td>
+							<td><label>#(..Get("截止日期"))#</label><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox"></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td align="left" colspan="2">
+								<label style="vertical-align: middle;">#(..Get("日期类型"))#</label><input class="hisui-radio" type="radio" label="需求日期" name="DateType" value="2" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="提交日期" name="DateType" value="1">
+							</td>
+							<td colspan="2">
+								<a href="#" id="QueryBT" class="hisui-linkbutton">查询</a>
+								<a href="#" id="ClearBT" class="hisui-linkbutton">清屏</a>
+								<a href="#" id="ReturnNoBT" class="hisui-linkbutton button-mark">
+									#(..Get("待归还包"))#
+									<span id="ReturnNum" class="mark">0</span>
+								</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="MainList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="GridPadding" data-options="title:'',region:'center',border:false,headerCls:'panel-header-gray'" style="width:500px;">
+		<div id="ItmLayout" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false,collapsible:false">
+				<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="单据明细">
+					<div class="hisui-layout" data-options="fit:true">
+						<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray',collapsible:false">
+							<table class="Condition">
+								<tr>
+									<td>
+										<label>#(..Get("标签"))#</label>
+										<input class="textbox" id="BarCode" name="BarCode" style="width:200px">
+										<a href="#" id="UseBarCodeBT" class="hisui-linkbutton" data-options="plain:true"></a>
+										<a href="#" title=#(..Get("切换扫码模式"))# id="BarCodeSwitchBT" class="hisui-linkbutton">#(..Get("切换"))#</a>
+										<input type="password" class="textbox" id="BarCodeHidden" style="border:0px;background:none;opacity:0.0;width:10px;">
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false,collapsible:false">
+							<table id="ItemList"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'south',border:false" style="height:300px;padding-top:10px;">
+				<div class="hisui-panel" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" title="器械明细">
+					<table id="ItemSListGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--选取请求单模板Dialog-->
+	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'" title="选取申请模板">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="GridPadding" style="width:650px;padding-bottom:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'请求单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="MoudleGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-left:0;padding-bottom:0;" data-options="region:'center',border:false" >
+				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="MoudleDetailGrid"></table>
+				</div>
+			</div>
+			<div data-options="region:'south',border:false">
+				<table id="MoudleConditions" class="Condition" style="margin:auto">
 					<tr>
-						<td>申请科室</td>
-						<td><input id="ReqLoc" name="FReqLoc" class="textbox hisui-combobox" style="width:130px"></td>
-						<td>紧急程度</td>
-						<td>
-			            	<select name="ReqUrgent" class="hisui-combobox" style="width:130px">
-			            		<option value="" >全部</option>
-								<option value="0" >一般</option>
-								<option value="1" >紧急</option>
-							</select>
-						</td>
-						<td><label>单据号</label><input id="FReqNo" name="FReqNo" class="hisui-numberbox textbox" style="width:130px"></td>
+						<td><a href="#" id="SelApplyMoudleBT" class="hisui-linkbutton">选取</a></td>
 					</tr>
-					<tr>
-						<td>供应科室</td>
-						<td><input id="SupLoc" name="FSupLoc" class="textbox hisui-combobox" style="width:130px"></td>
-						<td>单据类型</td>
-						<td>
-							<select name="ReqType" class="hisui-combobox" style="width:130px">
-								<option value="" >全部</option>
-								<option value="0" >请领单</option>
-								<option value="1" >借包单</option>
-								<option value="2" >敷料申请单</option>
-								<option value="3" >手术申请单</option>
-							</select>					
-						</td>
-						<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px">查询</a></td>
-						<!-- <td><a href="#" id="SaveBT" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="width:90px;">新增</a></td> -->
-					</tr>
-					<tr>
-						<td>开始日期</td>
-						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq" style="width:123px"></td>
-						<td>结束日期</td>
-						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq" style="width:123px"></td>
-						<td><a href="#" id="Print" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px">打印请领单</a></td>
-					</tr>	
-				</table>
-				<table>
-					<tr>
-						<td><a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a></td>
-						<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a></td>
-						<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a></td>
-						<td><a href="#" id="ReturnBT" class="hisui-linkbutton" data-options="iconCls:'icon-return',plain:true">归还</a></td>
-						<td hidden><a href="#" id="SaveMoudleBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">设置模板</a></td>
-						<td hidden><a href="#" id="ApplyMoudleBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">选取请领模板</a></td>
-					</tr>
-					<div class="BorderLine"></div>	
 				</table>
 			</div>
-				<table id="MainList"></table>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:560px;padding-left:10px;padding-bottom:15px">	
-		<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<table id="ItemList"></table>
-		</div>
-	</div>
-<!--选取请求单模板Dialog-->
-	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'" title="选取请领单">
+	
+	<!--选取待归还的消毒包Dialog-->
+	<div id="SelReturnWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'" title="选取待归还包">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
-				<table id="SelReqConditions" class="Condition">
-					<tr>
-						<td><a href="#" id="SelApplyMoudleBT" class="hisui-linkbutton" style="width:116px;">选取请领模板</a></td>
-					</tr>
-				</table>
+					<table id="SelReturnConditions" class="Condition">
+						<tr>
+							<td>
+								<a href="#" id="SelReturnBT" class="hisui-linkbutton">选取</a>
+							</td>
+						</tr>
+					</table>
 			</div>
-			<div class="GridPadding" style="width:560px;padding-top:0;" data-options="region:'west',border:false" >
-				<div class="hisui-panel" data-options="title:'请求单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-					<table id="SelReqMasterGrid"></table>
+			<div class="GridPadding" style="width:620px;padding-bottom:0;padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'借包单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="ReturnGrid"></table>
 				</div>
 			</div>
-			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false" >
+			<div class="GridPadding" style="padding-left:0;padding-bottom:0;padding-top:0;" data-options="region:'center',border:false">
 				<div class="hisui-panel" data-options="title:'单据明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-					<table id="SelReqDetailGrid"></table>
+					<table id="ReturnDetailGrid"></table>
 				</div>
 			</div>
 		</div>
 	</div>
-<script type="text/javascript" src="../scripts/cssd/Apply/ApplyCommon.js"></script>	
-<script type="text/javascript" src="../scripts/cssd/Apply/PackageApply.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Apply/ApplyPrint.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Apply/ApplyMoudle.js"></script>
+
+	<csp:Include Page="cssdhui.packageinfo.packagepic.csp">
+	
+	<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonData.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Apply/ApplyCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Apply/ApplyPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Apply/ApplyMoudle.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Apply/ReturnLendPkg.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Apply/PackageApply.js"></script>
 </body>
 </html>

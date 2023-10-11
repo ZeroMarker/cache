@@ -1,0 +1,207 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+/*
+	@CSP:dhc.bdp.sds.structdiagnosexplog.csp
+	@JS:bdp/MKB/SDS/StructDiagnosEntry.js
+	@Title:结构化诊断表达式日志
+	@Description:深度融合医生站版结构化诊断表达式日志(属性修改历史)
+	@Creator:基础数据平台组 - 高姗姗
+	@CreateDate:2020-10-20
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+</HEAD>
+
+<Server>
+	s SDSRowId = %request.Get("SDSRowId") //结构化诊断表id
+ 	
+</Server>
+<style type="text/css">
+    .SearchLog{
+		float:right;
+		margin-top:5px;
+		margin-right:5px;
+	}
+	#log{
+		width:900px;
+	}
+	#log ul{
+		float:left;
+		list-style:none;
+		width:90px;
+		/*margin-left:10px;*/
+	}
+	#log-date li {
+		width:100px;
+	}
+	#log-date li .date{
+		margin-top:3px;
+		float:right;
+		margin-right:10px;
+	}
+	#log-date li .time{
+		color: #999;
+		float:right;
+		margin-right:10px;
+	}
+	#log-date li .user{
+		color: #999;
+		float:right;
+		margin-right:10px;
+	}
+	#log-detail li{
+		padding: 0 0 0 10px;
+		line-height: 20px; 
+		border-left: 1px solid #48C086; 
+		margin-left:10px;
+		width:680px;
+	}
+	#log-detail li .node-icon{
+		margin-left: -16px; 
+		width: 21px; 
+		height: 10px; 
+		background: url(../scripts/bdp/Framework/icons/order-icons.png)  -21px -72px no-repeat;
+	}
+	#log-detail li .txt{
+		vertical-align: left;
+	}
+	/*圆形*/
+	.circle{
+		width: 10px;
+	    height: 10px;
+	    background: #4EAC7E;
+	    border-radius: 50px;
+	    float:none;
+	    margin-left:-31px;
+	    margin-top:0px;	
+	}
+	.playcircle{
+		background:	 url(../scripts/bdp/Framework/icons/playcircle.gif);
+		width:20px;
+		height:20px;
+		float:left;
+		margin-left:-22px;
+		margin-top:-5px;
+	}
+
+</style>
+<body style="padding:4px">
+	<div id="mylayout" class="hisui-layout" data-options="fit:true" border="false" >
+		<div data-options="region:'north',border:false" style="height:40px;border-bottom:#FFF;border-top: medium none" >
+            <div class="SearchLog" >
+            	<input id="SearchLog" class="easyui-searchbox" style="width:310px;"> 
+			</div>
+		</div>
+		<div data-options="region:'center',border:false" >
+			<div id="log" >
+				<ul id="log-date"></ul >
+				<ul id="log-detail" class="status-list"></ul>
+			</div>
+		</div>
+	</div>
+		
+ 	<SCRIPT language = 'javascript' >
+ 	
+	//全局请求后台服务对象
+	var SDSRowId="#(SDSRowId)#"
+	
+		
+	GetLogDetail(SDSRowId,"")	
+		
+	//清除历史记录明细
+	function RemoveLogDetail(){
+		for(var i=0;i<100;i++){
+			if ($("#detail"+i).length>0){
+				$("#date"+i).remove();
+				$("#detail"+i).remove();
+			}
+		}
+	}
+	// 加载历史记录明细
+	function GetLogDetail(SDSRowId,desc){
+		var resultLog=tkMakeServerCall("web.DHCBL.MKB.SDSDiagnosLog","GetLog",SDSRowId,desc);
+		if (resultLog!=""){
+			var list=resultLog.split("*"); 
+			var listlen=list.length;
+			for(var i=0;i<list.length;i++){
+				var content=list[i].split("^")[3]
+				var contentlen=1
+				if (content.indexOf("&%")>0){
+					contentlen=content.split("&%").length;
+				}
+				var tipcontent=content.replace(/\&%/g, ",")
+				tipcontent=tipcontent.replace(/\<a style='color:#FF1493;font-size:16px;'>/g,"")
+				tipcontent=tipcontent.replace(/\<a>/g,"")
+				content=content.replace(/\&%/g, "</br>") //#40A2DE
+				content=content.replace(/\ø/g, "<html><a style='color:#FF6356;font-size:16px;'> ø </a><html/>")
+				content=content.replace(/\->/g, "<html><a style='color:#40A2DE;font-size:16px;font-weight: bold;'> → </a><html/>")
+				content= '<span class="hisui-tooltip" title="'+tipcontent+'">'+content+'</span>';
+				if (i==0){
+					$("#log-date").append('<li id="date'+i+'" class="first">'
+						+'<div class="date">'+list[i].split("^")[1]+'</div>' 
+						+'<div class="time">'+list[i].split("^")[2]+'</div>'
+						+'<div class="user">'+list[i].split("^")[0]+'</div>'
+						+'</li>')
+					$("#log-detail").append('<li id="detail'+i+'" class="first">'
+						+'<div class="playcircle" ></div>'
+						+'<span class="txt">'+content+'</span>'
+						+'</li>')
+				}else{
+					$("#log-date").append('<li id="date'+i+'" >'
+						+'<div class="date">'+list[i].split("^")[1]+'</div>' 
+						+'<div class="time">'+list[i].split("^")[2]+'</div>'
+						+'<div class="user">'+list[i].split("^")[0]+'</div>'
+						+'</li>')
+					$("#log-detail").append('<li id="detail'+i+'">'
+						+'<div class="node-icon" ></div>'
+						+'<span class="txt">'+content+'</span>'
+						+'</li>')
+				}
+				if (contentlen>1){
+					var heightLogLi=contentlen*20+20
+					$("#date"+i).css("height",""+heightLogLi+"px");
+					$("#detail"+i).css("height",""+heightLogLi+"px");
+				}else{
+					$("#date"+i).css("height","60px");
+					$("#detail"+i).css("height","60px");
+				}
+			}
+		}
+	}
+	//修改历史检索框定义
+	 $('#SearchLog').searchbox({
+		   searcher : function (value, name) { // 在用户按下搜索按钮或回车键的时候调用 searcher 函数
+				RemoveLogDetail();
+				
+				GetLogDetail(SDSRowId,value)
+				
+		   }
+	})
+	//修改历史检索框实时检索
+	var flagLogTime=""
+	$('#SearchLog').searchbox('textbox').unbind('keyup').keyup(function(e){  
+			clearTimeout(flagLogTime);
+			flagLogTime=setTimeout(function(){
+				var desc=$('#SearchLog').searchbox('textbox').val() 
+				RemoveLogDetail();
+				
+				GetLogDetail(SDSRowId,desc)
+				
+			},200)
+	}); 	
+	$('#SearchLog').searchbox('textbox').bind('click',function(){ 
+		$('#SearchLog').searchbox('textbox').select()    //重新点击时 默认之前输入的值为选中状态，方便删除     
+	});
+   </SCRIPT>
+ 	
+</body>
+</html>

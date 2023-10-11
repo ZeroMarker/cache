@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--nur.hisui.nursheetprintset.csp 护士打印设置框架csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<Server>
+</Server>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.warning {
+	color:red;
+	border-bottom:1px dashed #ccc;
+}
+.warning p{
+	padding:5px 10px;
+}
+.warning p:first-child{
+	padding-top:10px;
+}
+.warning p:last-child{
+	padding-bottom:10px;
+}
+.warning span{
+	font-weight:bold;
+}
+</style>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+	    <div data-options="region:'north',border:false,split:false" style="height:97px;overflow:hidden;border-right:0px;border-left:0px;padding:0 10px;">
+	    	<div class="hisui-panel" data-options="border:false" style="border-radius:0;">
+		    	<div>
+		    		<table class="search-table">
+						<tr>
+							<td class="" style="padding-right:10px;">
+								<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+							</td>
+							<td>
+								<input id="_HospList"/>
+							</td>
+							<td class="r-label">
+								<a id="SheetPrtSignConfig" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'">打印标记码表维护</a>   
+							</td>
+						</tr>
+					</table>
+		    	</div>
+		    	<div id="config-tabs" fit="true" class="hisui-tabs tabs-gray"
+		    		style="float:left;height:38px;">   
+					<div id="ExecSheet" title="执行单打印设置" selected>  
+					</div>   			
+					<div id="InfuseSheet" title="输液卡打印设置">
+					</div> 
+					<div id="Other" title="其他打印设置">
+					</div>
+				</div> 
+			</div>
+		</div>
+	    <div data-options="region:'center',border:false,split:false" style="padding:0 10px 10px 10px;">
+	    	<div class="hisui-panel" fit="true" style="border-color:#ccc;border-top:0;border-radius:0 0 4px 4px;overflow:hidden;">
+		   		<iframe id="iframe_sheetprintconfig" src="nur.hisui.nurexecsheetprintset.csp" width="100%" height="100%"  frameborder="0" scrolling="Yes"></iframe>
+		   </div>
+	    </div>   
+	</div>
+	<!---->
+	<div id="SheetPrtSignWin" class="hisui-window" title="打印标记码表维护 " style="width:610px;height:600px;padding:10px;" data-options="iconCls:'icon-w-config',closed:true">   
+	    <div class="hisui-panel" data-options="fit:true" style="border-color:#ccc;"> 
+	    	<div class="warning">
+	    		<p>重要提示：</p>
+	    		<p>1、打印标记维护后请勿随意删除,特别是已经使用过的标记,务必先咨询项目上开发工程师。</p>
+	    		<p>2、打印标记代码<span>P</span>,标识为检验条码已打印,必须维护且勿维护成其他标识或删除，否则会导</p>
+	    		<p>致应用程序出现问题(医生站检验条码合并、护士站条码打印等)。</p>
+	    	</div>
+	    	<div style="width:588px;height:414px;"><table id="tabSheetPrtSign"></table></div>
+		</div>
+	</div>
+	<SCRIPT language = 'javascript' >
+		var m_tabSheetPrtSign="";
+		function Init(){
+			$HUI.tabs("#config-tabs",{
+				onSelect:function(title,index){
+					if(title=="执行单打印设置"){
+						$("iframe").attr("src","nur.hisui.nurexecsheetprintset.csp");
+					}else if(title=="输液卡打印设置"){
+						$("iframe").attr("src","nur.hisui.nurinfusesheetprintset.csp");
+					}else if(title=="其他打印设置"){
+						$("iframe").attr("src","nur.hisui.nurothersheetprintset.csp");
+					}
+				}
+			});
+			$("#SheetPrtSignConfig").click(SheetPrtSignConfigHandle);
+		}
+		function GetSelPrtSheetType(){
+			var tab = $('#config-tabs').tabs('getSelected');
+			return tab[0].id;
+		}
+		function InitHospList(){
+			var hospComp = GenHospComp("Nur_IP_SheetPrtSet");
+			hospComp.jdata.options.onSelect = function(e,t){
+				$('#iframe_sheetprintconfig')[0].contentWindow.HospChange();
+			}
+			hospComp.jdata.options.onLoadSuccess= function(data){
+				Init();
+			}
+		}
+		function GetHospId(){
+			return $HUI.combogrid('#_HospList').getValue();
+		}
+		InitHospList();
+		function InitTabSheetPrtSign(){
+			var ToolBar = [{
+				text: '新增',
+				iconCls: '	icon-add',
+				handler: function() {
+					var maxRow=$("#tabSheetPrtSign").datagrid("getRows");
+					$("#tabSheetPrtSign").datagrid("appendRow", {
+						Index:maxRow.length+1,
+	                    SPSSID: "",
+	                    SPSSCode: "",
+	                    SPSSDesc: ""
+	                }).datagrid("beginEdit", maxRow.length-1);
+				}
+			},{
+				text: '删除',
+				iconCls: 'icon-cancel',
+				handler: function() {
+					var rows = $("#tabSheetPrtSign").datagrid("getSelections");
+					if (rows.length > 0) {
+						
+		                    var delDataArr=[],delIndexArr=[];
+	                        for (var i = 0; i < rows.length; i++) {
+	                            var SPSSID=rows[i].SPSSID;
+	                            if (SPSSID) {
+		                            delDataArr.push(SPSSID)
+		                        }
+			                    delIndexArr.push($("#tabSheetPrtSign").datagrid("getRowIndex",rows[i].Index));
+	                        }
+	                        var rtn=$.m({ 
+								ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig", 
+								MethodName:"chkSheetPrtSignUsed",
+								dataArr:JSON.stringify(delDataArr)
+							},false);
+							if (rtn !=""){
+								$.messager.popover({msg: rtn,type: 'error'});
+								return false;
+							}
+	                        $.messager.confirm("提示", "确定要删除吗?",
+			                function(r) {
+			                    if (r) {
+									var value=$.m({ 
+										ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig", 
+										MethodName:"HandleSheetPrtSign",
+										event:"DELETE",
+										dataArr:JSON.stringify(delDataArr)
+									},false);
+							        if(value === "0"){
+								       for (var i = delIndexArr.length-1; i >=0; i--) {
+									       $("#tabSheetPrtSign").datagrid("deleteRow",delIndexArr[i]);
+									   }
+			   					       $.messager.popover({msg: '删除成功!',type: 'success'});
+							        }else{
+								       $.messager.popover({msg: '删除失败:'+value,type: 'error'});
+							        }
+		                    	}
+		                 });
+					}else{
+						$.messager.popover({msg: '请选择要删除的行!',type: 'error'});
+					}
+				}
+		    },{
+				text: '保存',
+				iconCls: 'icon-save',
+				handler: function() {
+					var saveTableDataArr=[],TableDataArr=[],NullValColumnArr=[];
+					var rows=$("#tabSheetPrtSign").datagrid("getRows");
+					for (var j=0;j<rows.length;j++){
+						var editors=$('#tabSheetPrtSign').datagrid('getEditors',j);
+						if (editors.length ==0){
+							TableDataArr.push({"SPSSCode":rows[j].SPSSCode.toUpperCase(),"Index":(j+1)});
+						}else{
+							var rowDataArr=[];
+							for (var k=0;k<editors.length;k++){
+								var field=editors[k].field;
+								var value=$.trim(editors[k].target.val());
+								var fieldOpts = $('#tabSheetPrtSign').datagrid('getColumnOption',field);
+								if (fieldOpts.editor.options){
+									if ((fieldOpts.editor.options.required)&&(!value)){
+										NullValColumnArr.push("第"+(j+1)+"行"+fieldOpts.title);
+									}
+								}
+								rowDataArr.push({"field":field,"fieldValue":value});
+							}
+							if (rowDataArr.length>0){
+								var SPSSID=rows[j].SPSSID;
+								if (!SPSSID) SPSSID="";
+								rowDataArr.push({"field":"SPSSID","fieldValue":SPSSID});
+								saveTableDataArr.push(rowDataArr);
+							}
+							TableDataArr.push({"SPSSCode":$.trim(editors[0].target.val()).toUpperCase(),"Index":(j+1)});
+						}
+					}
+					var repeatMsg=GetRepeatMsg(TableDataArr);
+					if (repeatMsg!=""){
+						$.messager.alert("提示","第"+repeatMsg+"行代码重复！");
+						return false;
+					}
+					if (NullValColumnArr.length>0){
+						$.messager.alert("提示",NullValColumnArr.join("、")+"列不能为空！");
+						return false;
+					}
+					if (saveTableDataArr.length==0){
+						$.messager.popover({msg: '没有需要保存的数据！',type: 'error'});
+						return false;
+					}
+					$.cm({
+						ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+						MethodName:"HandleSheetPrtSign",
+						event:"SAVE",
+						dataArr:JSON.stringify(saveTableDataArr)
+					},function(rtn){
+						if (rtn ==0) {
+							$.messager.popover({msg: '保存成功！',type: 'success'});
+							$('#tabSheetPrtSign').datagrid("reload");
+						}else{
+							$.messager.popover({msg: '保存失败！',type: 'error'});
+						}
+					})
+				}
+		    }];		
+			var Columns=[[
+				{ field: 'SPSSCode', title: '代码',width:140, editor : 
+					{type : 'text',options : {required:true}}
+				},
+				{ field: 'SPSSDesc', title: '描述',width:250,editor :
+				    {type : 'text',options : {required:true}}
+				}
+			]]
+			m_tabSheetPrtSign=$('#tabSheetPrtSign').datagrid({  
+				fit : true,
+				width : 'auto',
+				border : false,
+				striped : true,
+				singleSelect : false,
+				fitColumns : true,
+				autoRowHeight : false,
+				loadMsg : '加载中..',  
+				pagination : false, 
+				rownumbers : true,
+				idField:"Index",
+				columns :Columns,
+				toolbar :ToolBar,
+				nowrap:false,  /*此处为false*/
+				url:$URL+"?ClassName=Nur.NIS.Service.OrderExcute.SheetPrintConfig&QueryName=QuerySheetPrtSignConfig&rows=99999",
+				onDblClickRow:function(rowIndex, rowData){ 
+					$('#tabSheetPrtSign').datagrid("beginEdit", rowIndex);
+		        },onBeforeLoad:function(row, param){
+					$("#tabSheetPrtSign").treegrid("unselectAll");				
+				}
+			})
+		}
+		function SheetPrtSignConfigHandle(){
+			$("#SheetPrtSignWin" ).window({
+			   modal: true,
+			   collapsible:false,
+			   minimizable:false,
+			   maximizable:false,
+			   closed:true,
+			   onClose:function(){
+				  $('#iframe_sheetprintconfig')[0].contentWindow.ReloadSheetPrintSign();
+			   }
+			}).window('open');
+			if (m_tabSheetPrtSign) {
+				$('#tabSheetPrtSign').datagrid("reload");
+			}else{
+				InitTabSheetPrtSign();
+			}
+		}
+		function GetRepeatMsg(arr) {
+			var repeatMsg=[];
+		  	var hash = {};
+		  	for(var i in arr) {
+		    	if(hash[arr[i].SPSSCode]) {
+		    		repeatMsg.push(arr[i].Index);
+		    	}
+		    	hash[arr[i].SPSSCode] = true;
+		  	}
+		  	return repeatMsg.join("、");
+		}
+	</SCRIPT>
+</body>
+</html>

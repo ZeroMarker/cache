@@ -7,17 +7,20 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 </head>
 <server>
-if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
 s BussType=$g(%request.Data("BussType",1))
 s QXType=$g(%request.Data("QXType",1))
 s ManageLocDR=$g(%request.Data("ManageLocDR",1))
 s StartDate=$g(%request.Data("StartDate",1))
 s EndDate=$g(%request.Data("EndDate",1))
 s MaintTypeDR=$g(%request.Data("MaintTypeDR",1))
+s CollectFlag=$g(%request.Data("CollectFlag",1))  //add by lmm 2020-08-17
 //modify by lmm 2020-04-29
  s colsets=##Class(web.DHCEQCColSet).GetColSets("","2","","Maint") //用户级设置
  if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","1","","Maint") //安全组级设置
@@ -25,6 +28,7 @@ s MaintTypeDR=$g(%request.Data("MaintTypeDR",1))
  s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")	;add by csj 20191206
  s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	;add by csj 20191206
  s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+ s MaintIDs=$g(%request.Data("MaintIDs",1))		//CZF0134 2021-02-23
 </server>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
@@ -74,14 +78,16 @@ s MaintTypeDR=$g(%request.Data("MaintTypeDR",1))
             <input id="MaintTypeDR" name="MaintTypeDR" type="hidden" value=#(MaintTypeDR)#>
 			<!--modify by lmm 2020-04-29-->
 			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>
-			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQ.EM.BUSMaint.GetNum")))#>
-			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQ.EM.BUSMaint.GetList")))#>
-			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
-			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
-			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQ.EM.BUSMaint.GetNum")))#>
+			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQ.EM.BUSMaint.GetList")))#>
+			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
 			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>	<!--add by csj 20191206-->
 			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>	<!--add by csj 20191206-->
 			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<INPUT type="hidden" id="CollectFlag" value=#(CollectFlag)#>  <!--modify by lmm 2020-08-17-->
+			<input id="MaintIDs" type="hidden" value=#(MaintIDs)#>		<!--CZF0134 2021-02-23-->
 		</form>
 	</div>
 <script type='text/javascript' src='../scripts/dhceq/em/meteragefind.js'></script>

@@ -8,20 +8,29 @@
 	d ##class(web.DHCXMLPConfig).LODOPInit()
 </script>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/printconsone.js" charset="gb2312"></script>
 
 <script Language="Javascript">
 	var CstItmIDs="#(%request.Get("CstItmIDs"))#" //会诊ID串串
 	var CsType="#(%request.Get("CsType"))#" 
+	var LgHospID="#(%request.Get("LgHospID"))#" //hxy 2021-03-04
+	var LgHospDesc="#(%session.Get("LOGON.HOSPDESC"))#" 
 </script>
 <style>
 	*{
 		font-size:4.2175mm; /*小四*/
 	}
 	.prtTitleDiv{
-		width:210mm;	
+		width:210mm;
+		font-family:"宋体";	
 	}
-	
+	.prtTitleHosp{
+		width:210mm;
+		font-family:"宋体";	
+		font-size:5.5mm;
+		text-align:center;
+	}
 	.textOver{
 		white-space: nowrap;
 		overflow: hidden;
@@ -75,8 +84,8 @@
 	}
 	
 	.prtTitleDiv{
-		height:15mm;
-		line-height:15mm;
+		height:10mm;/*15mm*/
+		line-height:10mm; /*15mm*/
 	}
 	
 	.prtTitle{
@@ -94,7 +103,9 @@
 		max-width:156mm;
 		min-width:156mm;
 		padding:3mm;
-		white-space:normal;
+		word-break:break-all;
+		white-space:pre-wrap;
+		
 	}
 	
 	.CstPurpose{
@@ -105,6 +116,7 @@
 		max-width:156mm;
 		min-width:156mm;
 		padding:3mm;
+		word-break:break-all;
 		white-space:normal;
 	}
 	.CsOpinion{
@@ -115,6 +127,7 @@
 		max-width:156mm;
 		min-width:156mm;
 		padding:3mm;
+		word-break:break-all;
 		white-space:normal;
 	}
 	#CsOpinion{/*hxy 2019-08-07*/
@@ -129,19 +142,64 @@
 		<img class="img" src="../scripts/dhcnewpro/images/logo.png" alt="" title="">
 	</div>
 	
-	<div style="text-align: center;" class="prtTitleDiv textOver">
+	<!--div style="text-align: center;" class="prtTitleDiv textOver">
 		<span class="prtTitle" style=" ">会诊记录(</span>
 		<span class="prtTitle" id="tiCstTypeDesc"></span>
 		<span class="prtTitle">)</span>
 		<span class="CstCstType" id="CstCstType"></span>
-	</div>
-	
-	<div>
+	</div-->
+	<server>
+	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  s PRINTHEADER = ##class(web.DHCEMConsultCom).GetEmSysConfig("PRINTHEADER",LgHospID)
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var PRINTHEADER="""_$g(PRINTHEADER)_""";"_$c(13,10)
+	  w "</script>"
+	  i PRINTHEADER=1 d
+	  .w "<div>"
+	  .w "<table cellspacing='0' cellpadding='0'>"
+	  .w " <thead>"
+	  .w " <tr>"
+	  .w "	<td colspan='4' algin='center'>"
+	  .w "	 <b id='HospDesc' style='font-size:5.5mm;'>医院名称</b>"
+	  .w "	</td>"
+	  .w " </tr>"
+	  .w " <tr>"
+	  .w "	<td colspan='4' algin='center'>"
+	  .w "   <span class='prtTitle' style='padding-left:18mm'>会诊记录(</span>"
+	  .w "   <span class='prtTitle' id='tiCstTypeDesc'></span>"
+	  .w "   <span class='prtTitle'>)</span>"
+	  .w "   <span class='CstCstType' id='CstCstType' style='float:right;position:relative;right:18mm'></span>"
+	  .w "	</td>"
+	  .w " </tr>"
+	  .w "</thead>"
+	  e  d
+	  .w "<div class='prtTitleHosp'><b id='HospDesc' style='font-size:5.5mm;'>医院名称</b></div>"
+	  .w "<div style='text-align: center;' class='prtTitleDiv textOver'>"
+	  .w " <span class='prtTitle' style='padding-left:18mm'>会诊记录(</span>"
+	  .w " <span class='prtTitle' id='tiCstTypeDesc'></span>"
+	  .w " <span class='prtTitle'>)</span>"
+	  .w " <span class='CstCstType' id='CstCstType' style='float:right;position:relative;right:18mm'></span>"
+	  .w "</div>"
+	  .w "<div>"
+	  .w "<table cellspacing='0' cellpadding='0' rules='all' style='table-layout:word-wrap:break-word;word-break:break-all'>"
+	</server>	
+	<!--div>
 		<table cellspacing="0" cellpadding="0">
+			<thead>
+				<tr>
+					<td colspan="4" algin="center">
+						<span class="prtTitle" style=" ">会诊记录(</span>
+						<span class="prtTitle" id="tiCstTypeDesc"></span>
+						<span class="prtTitle">)</span>
+						<span class="CstCstType" id="CstCstType"></span>
+					</td>
+				</tr>
+			</thead-->
+			
 			<tr>
 				<td class="td1">患者姓名:</td>
 				<td class="td2 tdText" id="patName"></td>
-				<td class="td3">住院科室:</td>
+				<td class="td3">就诊科室:</td>
 				<td class="td4 tdText" id="patInLoc"></td>
 			</tr>
 			<tr>
@@ -151,6 +209,18 @@
 				<td class="td4 tdText" id="inHospNo"></td>
 			</tr>
 			<tr>
+				<td class="td1">患者年龄:</td>
+				<td class="td2 tdText" id="patAge"></td>
+				<td class="td3">申请科室:</td>
+				<td class="td4 tdText" id="CstRLoc"></td>
+			</tr>
+			<tr>
+				<td class="td1" id="consSendDoc">申请医生:</td>
+				<td class="td2 tdText" id="CstRUser"><img id="CstRUserImg" width="80" height="28" src="" alt=""/></td><!--hxy 2020-09-25 img-->
+				<td class="td3">联系电话:</td>
+				<td class="td4 tdText" id="CstPhone"></td>
+			</tr>
+			<!--tr>
 				<td class="td1">申请科室:</td>
 				<td class="td2 tdText" id="CstRLoc"></td>
 				<td class="td3" id="consSendDoc">申请医生:</td>
@@ -159,7 +229,7 @@
 			<tr>
 				<td>联系电话:</td>
 				<td class="tdText" id="CstPhone" colspan="3"></td>
-			</tr>
+			</tr-->
 			<tr>
 				<td class="td1">简要病历:</td>
 				<td class="tdText CstTrePro textOver" id="CstTrePro" colspan="3"></td>
@@ -177,11 +247,11 @@
 				<td class="td1">会诊时间:</td>
 				<td class="tdText"  id="CstNDateTime" colspan="3"></td>
 			</tr>
-			<tr>
+			<tr id="LocTr">
 				<td class="td1">会诊科室:</td>
 				<td class="td2 tdText" id="CsLocDesc"></td>
 				<td class="td3" id="consReceiveDoc">会诊医生:</td>
-				<td class="td4 tdText" id="CstRDoctor"></td>
+				<td class="td4 tdText" id="CstRDoctor"><img id="CstRDoctorImg" width="80" height="28" src="" alt=""/></td><!--hxy 2020-09-25 img-->
 			</tr>
 			<tr>
 				<td class="td1">联系电话:</td>

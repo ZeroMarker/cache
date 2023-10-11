@@ -21,9 +21,9 @@
 					<div class="eq-table" style=#(ReportStyle)#  d='tQueryPanel'>
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><lable  for="MonthStr">统计月份</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MonthStr" data-options='validParams:"YM"' value=#(CurMonth)#></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MonthStr" data-options='validParams:"YM"'></div>
+							<div class="eq-table-td eq-table-label"><label id="cEquipTypes" for="EquipTypes">管理类组</label></div>
+							<div class="eq-table-td eq-table-input"><input id="EquipTypes" class="hisui-combogrid textbox"></div>
 							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
 							<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
 						</div>
@@ -46,15 +46,36 @@
 			<INPUT TYPE="hidden" name="PrintFlag" id="PrintFlag" value=#(PrintFlag)#>
 			<INPUT TYPE="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)#>
 			<INPUT TYPE="hidden" name="ReportFilePrintSrc" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>		    
-			<!--Add By DJ 2017-07-14 -->
-			<!--INPUT TYPE="hidden" name="initRunQian" id="initRunQian" value="##class(web.DHCBL.RQ.ServerConfig).GetApplet4()"--> <!--modify by wl 2019-12-30 WL0043>
+			<INPUT TYPE="hidden" name="EquipTypeIDs" id="EquipTypeIDs">
+			<!--INPUT TYPE="hidden" name="initRunQian" id="initRunQian" value="##class(web.DHCEQ.Util.RQServerConfig).GetApplet()"--> <!--modify by wl 2019-12-30 WL0043>
 			<!--调用后台方法隐藏元素
-			<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			<INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
 			-->
 		</form>
 	</div>
 </body>
 <script type='text/javascript'>
 MonthBox('MonthStr');
+$HUI.combogrid('#EquipTypes',{   
+    url:$URL, 
+    queryParams:{
+        ClassName:"web.DHCEQ.Plat.CTEquipType",
+        QueryName:"GetEquipType"
+    },
+    idField:'TRowID',
+	textField:'TName',
+    multiple: true,
+    rowStyle:'checkbox',
+    selectOnNavigation:false,
+	fitColumns:true,
+	fit:true,
+	border:'true',
+	columns:[[
+	   	{field:'check',checkbox:true},
+	   	{field:'TRowID',title:'TRowID',width:50,hidden:true},
+	    {field:'TName',title:'全选',width:150}
+	]]
+});
+
 </script>
 </HTML>

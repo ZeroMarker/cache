@@ -1,0 +1,543 @@
+<!-- 宣教结果配置 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	// s UserType = ##class(Nur.NIS.Service.VitalSign.BloodGlucoseCfg).GetUserType(%session.Get("LOGON.USERID"))
+	s translateWard=""
+	s:##class(Nur.NIS.Common.ConstVal).#TRANSLATION="ON" translateWard=##class(User.PACWard).GetTranByDesc("WARDDesc",%session.Get("LOGON.CTLOCDESC"))
+</script>
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+<style type='text/css' class="eduExeStyle">
+body{background: white;}
+.combo .combo-text{box-sizing: border-box;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+/* #eduConfig{padding-left: 10px;padding-right: 10px;margin-top: -0.5em;padding-top: 10px;} */
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;}
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+#mm>div:hover{background: #dbedf9!important;}
+.addAssess,.delAssess{width: 16px;height: 16px;display: inline-block;vertical-align: middle;margin-left: 8px;cursor: pointer;}
+.icon-barbell,.icon-img,.icon-attachment{width: 16px;height: 16px;display: inline-block;vertical-align: middle;margin-left: 3px;}
+div.combobox-item{width: auto!important;}
+.hideTreeIcon{display: none;}
+/* .panel-title.panel-with-icon {padding-left: 30px;} */
+.panel-body, .panel-header{border-color: #cccccc;}
+#bwForm>table>tbody>tr{height: 40px;}
+#bwForm table tr td>.datagrid>.datagrid-wrap{margin-bottom: 5px;}
+#bwForm table tr td .datagrid-toolbar table td a.l-btn-plain{margin: 0;}
+.dialog-button{padding: 5px 10px 10px;}
+#edusubjectInput,#eduQuoteInput{line-height: 20px;}
+#eduContentForm table tr{height: 40px;}
+#eduSetTab .tabs-panels>.panel>.panel-body.panel-body-noheader.panel-body-noborder{overflow: hidden;}
+#attachFiles>div{max-height: 100px;overflow: auto;}
+#attachFiles>div>div>span:first-of-type{display: inline-block;    width: 700px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;line-height: 30px;vertical-align: middle;}
+#attachFiles>div>div>.l-btn-icon{position: relative;
+    background-color: transparent;cursor: pointer;}
+</style>
+<script language="javascript">
+  var translateWard = "#(translateWard)#";
+</script>
+</head>
+<body style="overflow: hidden;padding: 5px;">
+	<div id="eduSetTab" class="hisui-tabs tabs-gray" data-options="isBrandTabs:true">
+		<div title="#(..Get("宣教设置"))#" data-options="iconCls:'icon-set-paper'" style="padding:4px;"></div>   
+		<div title="#(..Get("知识库维护"))#" style="padding:4px;">
+			<div id="eduConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;">
+				<div style="width: 433px;margin-right: 4px;" id="ardsTree">
+					<div class="hisui-panel" title="#(..Get("宣教主题维护"))#"
+						style="padding:10px 0 0 10px;display: flex;flex-direction: column;"
+						data-options="headerCls:'panel-header-gray',iconCls:'icon-qua-pro-blue'">
+						<div style="margin-bottom: 10px;font-size: 0;">
+							<span id="_HospListLabel"
+								style="vertical-align: middle;line-height: 100%;margin-right: 10px;">#(..Get("所属医院"))#</span>
+							<select id="_HospList"></select>
+						</div>
+						<div style="height: 0;border-bottom: 1px dashed #ccc;margin: 0 0 10px -10px;"></div>
+						<div style="margin-bottom: 10px;font-size: 0;">
+							<input id="edusubjectInput" style="box-sizing: border-box;"
+								class="hisui-validatebox textbox" placeholder="#(..Get("请输入主题关键字"))#">
+							<a class="hisui-linkbutton" data-options="iconCls:'icon-indentation',plain:true" id="toggleFold" style="float: right;margin-left: 10px;"></a>
+							<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'"
+								onclick="filterEdusubject(1)" style="float: right;">#(..Get("查询"))#</a>
+						</div>
+						<div>
+							<span>#(..Get("业务界面主题多选："))#</span>
+							<input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:updateEduMultiExeConfig" label="新增" id="checkboxAdd">
+							<input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:updateEduMultiExeConfig" label="待宣任务" id="checkboxTask">
+						</div>
+						<div style="overflow:auto;height: 458px;">
+							<div id="edusubjectTree" data-options="animate:true"></div>
+						</div>
+					</div>
+				</div>
+				<div class="contents" style="flex: 1;overflow: hidden;">
+					<table id="contentTable" class="hisui-datagrid" title="#(..Get("宣教内容维护"))#" data-options="rownumbers:false,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,headerCls:'panel-header-gray',iconCls:'icon-target-arrow',toolbar: [{
+						iconCls: 'icon-add',
+						text:$g('新增'),
+						id:'newEduContent',
+						disabled:true,
+						handler:addContentRow
+					}],
+					onDblClickRow:editContentRow,
+					onDrop:dropContentRow,
+					onLoadSuccess:function(){
+						$(this).datagrid('enableDnd');
+					}
+					">
+						<thead>   
+							<tr>
+								<th data-options="field:'content',width:600">#(..Get("宣教内容"))#</th>   
+								<th data-options="field:'sortNo',width:50">#(..Get("排序"))#</th>
+								<th data-options="field:'status',width:50,formatter:function(value,row,i){
+									var c=1==value?'green':'red';
+									var d=1==value?$g('启用'):$g('停用');
+									return '<span style=\'color:'+c+';\'>'+d+'</span>';
+								}">#(..Get("状态"))#</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div title="#(..Get("执行结果维护"))#">
+			<iframe id="resultFrame" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+		</div>
+	</div>
+<!-- 右键菜单 -->
+<div id="mm" style="position: absolute;border: 1px solid #40a2de;display: none;background: white;box-shadow: 2px 2px 3px #cccccc;">
+	<!-- box-shadow:#40a2de 0px 0px 2px; -->
+	<div id="mm1" onclick="menuHandler(1);" style="padding: 5px 10px;cursor: pointer;">#(..Get("新增子节点"))#</div>
+	<div id="mm2" onclick="menuHandler(2);" style="padding: 5px 10px;cursor: pointer;">#(..Get("引用"))#</div>
+	<div id="mm3" onclick="menuHandler(3);" style="padding: 5px 10px;cursor: pointer;">#(..Get("编辑"))#</div>
+	<div id="mm4" onclick="menuHandler(4);" style="padding: 5px 10px;cursor: pointer;">#(..Get("排序"))#</div>
+	<div id="mm5" onclick="menuHandler(5);" style="padding: 5px 10px;cursor: pointer;">#(..Get("删除"))#</div>
+</div>
+<!-- 宣教主题维护模态框 -->
+<div id="eduSubjectModal" class="hisui-dialog" title="#(..Get("宣教主题维护"))#" style="top: 50px;left: 300px;padding: 5px 10px 0;width: 900px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+		text:$g('保存'),
+		handler:addOrUpdateEducation2
+	},{
+		text:$g('取消'),
+		handler:function(){$HUI.dialog('#eduSubjectModal').close();}
+	}]"> 
+	<form id="bwForm">
+		<table cellpadding="0" class="modalTable" style="width: 100%;border-collapse: collapse;">
+			<tr>
+				<td class="r-label">
+					<span class="labelStar">*</span>#(..Get("主题名称"))#
+				</td>
+				<td>
+					<input id="id" type="hidden">
+					<input id="subject" style="width:793px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
+				</td>
+			</tr>
+			<tr class="applyRange">
+				<td class="r-label">
+					#(..Get("适用范围"))#
+				</td>
+				<td>
+					<input id="wardRange" style="width:793px;" class="hisui-validatebox textbox" disabled>
+				</td>
+			</tr>
+			<tr class="applyPeople">
+				<td class="r-label">
+					<span class="labelStar">*</span>#(..Get("适用人群"))#
+				</td>
+				<td>
+          <select id="applyPeople" style="width: 800px;" class="hisui-combobox" data-options="required:true,panelHeight:'auto'" name="state">
+						<option value="0">#(..Get("全部人群"))#</option>
+						<option value="1">#(..Get("成人"))#</option>
+						<option value="2">#(..Get("儿童"))#</option>
+						<option value="3">#(..Get("婴儿"))#</option>
+						<option value="4">#(..Get("新生儿"))#</option>
+					</select>
+				</td>
+			</tr>
+			<tr class="applySex">
+				<td class="r-label">
+					<span class="labelStar">*</span>#(..Get("适用性别"))#
+				</td>
+				<td id="applySex">
+          <input class="hisui-radio" type="radio" label="#(..Get("全部"))#" name="applySex" data-options="required:true" value="0" checked>
+          <input class="hisui-radio" type="radio" label="#(..Get("男"))#" name="applySex" data-options="required:true" value="1">
+          <input class="hisui-radio" type="radio" label="#(..Get("女"))#" name="applySex" data-options="required:true" value="2">
+				</td>
+			</tr>
+			<tr class="relateType">
+				<td class="r-label">
+					#(..Get("关联类型"))#
+				</td>
+				<td id="relateType">
+          <input data-options="onCheckChange:toggleRelateType" class="hisui-radio" type="radio" label="#(..Get("医嘱"))#" name="relateType" value="1">
+          <input data-options="onCheckChange:toggleRelateType" class="hisui-radio" type="radio" label="#(..Get("事件"))#" name="relateType" value="2">
+          <input data-options="onCheckChange:toggleRelateType" class="hisui-radio" type="radio" label="#(..Get("评估"))#" name="relateType" value="3">
+          <input data-options="onCheckChange:toggleRelateType" class="hisui-radio" type="radio" label="#(..Get("诊断"))#" name="relateType" value="4">
+						<input data-options="onCheckChange:toggleRelateType" class="hisui-radio" type="radio" label="#(..Get("手术申请"))#" name="relateType" value="6">
+						<input data-options="onCheckChange:toggleRelateType" class="hisui-radio" type="radio" label="#(..Get("检查检验申请"))#" name="relateType" value="7">
+          <input data-options="onCheckChange:toggleRelateType" class="hisui-radio" type="radio" label="#(..Get("特殊"))#" name="relateType" value="5">
+				</td>
+			</tr>
+			<tr class="relateOrders">
+				<td class="r-label" style="vertical-align: top;line-height: 40px;">
+					<span style="vertical-align: text-bottom;" class="labelStar">*</span>#(..Get("关联医嘱"))#
+				</td>
+				<td>
+				  <table id="daTable" class="hisui-datagrid" style="width: 800px;height: 200px;" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:false,pagination:false,headerCls:'transparentHeader',toolbar: [{
+							iconCls: 'icon-add',
+							text:$g('新增'),
+							handler:addDaRow
+						}],
+						onDblClickRow:editDaRow
+					">   
+						<thead>   
+							<tr>
+									<th data-options="field:'adviseDesc',width:695,
+								editor:{
+									type:'combobox',
+									options:{
+										defaultFilter:6,
+										valueField:'id',
+										textField:'desc',
+										mode:'remote',
+										loader: docAdviceloader,
+										blurValidValue:true
+									}
+								}">#(..Get("医嘱名称"))#</th>
+								<th data-options="field:'field',width:50,align:'center',formatter:function(value,row,i){
+									return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteDaRow('+i+')\'>&nbsp;</span>';
+								}">#(..Get("操作"))#</th>
+							</tr>
+						</thead>
+					</table>
+				</td>
+			</tr>
+			<tr class="relateEvents">
+				<td class="r-label" style="vertical-align: top;line-height: 40px;">
+					<span style="vertical-align: text-bottom;" class="labelStar">*</span>#(..Get("关联事件"))#
+				</td>
+				<td>
+				  <table id="reTable" class="hisui-datagrid" style="width: 800px;height: 200px;" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:false,pagination:false,headerCls:'transparentHeader',toolbar: [{
+							iconCls: 'icon-add',
+							text:$g('新增'),
+							handler:addReRow
+						}],
+						onDblClickRow:editReRow
+					">   
+						<thead>   
+							<tr>
+									<th data-options="field:'desc',width:695,
+								editor:{
+									type:'combobox',
+									options:{
+										defaultFilter:6,
+										valueField:'id',
+										textField:'desc',
+										mode:'remote',
+										loader: eventloader,
+										blurValidValue:true
+									}
+								}">#(..Get("事件名称"))#</th>
+								<th data-options="field:'field',width:50,align:'center',formatter:function(value,row,i){
+									return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteReRow('+i+')\'>&nbsp;</span>';
+								}">#(..Get("操作"))#</th>
+							</tr>
+						</thead>
+					</table>
+				</td>
+			</tr>
+			<tr class="relateAssess">
+				<td class="r-label" style="vertical-align: top;line-height: 40px;">
+					<span style="vertical-align: text-bottom;" class="labelStar">*</span>#(..Get("关联评估"))#
+				</td>
+				<td>
+				  <table id="assessTable" class="hisui-datagrid" style="width: 800px;height: 200px;" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:false,pagination:false,headerCls:'transparentHeader',toolbar: [{
+							iconCls: 'icon-add',
+							text:$g('新增'),
+							handler:addAsRow
+						}],
+						onDblClickRow:editAsRow
+					">   
+						<thead>   
+							<tr>
+								<th data-options="field:'relationAssess',width:260,
+								editor:{
+									type:'combobox',
+									options:{
+										defaultFilter:6,
+										valueField:'id',
+										textField:'desc',
+										mode:'remote',
+										loader: assessloader,
+										blurValidValue:true
+									}
+								}">#(..Get("评估表"))#</th>
+								<th data-options="field:'formula',width:260,editor:{
+									type:'text'
+								}">#(..Get("公式"))#</th>   
+								<th data-options="field:'effectFirst',width:90,editor:{
+									type:'icheckbox',
+									options:{
+										on:1,
+										off:''
+									}
+								},formatter:function(value,row,i){
+									return 1==value?'√':'';
+								}">#(..Get("仅首次生效"))#</th>
+								<th data-options="field:'tplDate',width:80,editor:{
+									type:'text'
+								}">#(..Get("日期"))#</th> 
+								<th data-options="field:'field',width:50,align:'center',formatter:function(value,row,i){
+									return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteAsRow('+i+')\'>&nbsp;</span>';
+								}">#(..Get("操作"))#</th>
+							</tr>
+						</thead>
+					</table>
+				</td>
+			</tr>
+			<tr class="relateDiagnose">
+				<td class="r-label" style="vertical-align: top;line-height: 40px;">
+					<span style="vertical-align: text-bottom;" class="labelStar">*</span>#(..Get("关联诊断"))#
+				</td>
+				<td>
+				  <table id="diagnoseTable" class="hisui-datagrid" style="width: 800px;height: 200px;" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:false,pagination:false,headerCls:'transparentHeader',toolbar: [{
+							iconCls: 'icon-add',
+							text:$g('新增'),
+							handler:addDgRow
+						}],
+						onDblClickRow:editDgRow
+					">   
+						<thead>   
+							<tr>
+									<th data-options="field:'desc',width:695,
+								editor:{
+									type:'combobox',
+									options:{
+										defaultFilter:6,
+										valueField:'id',
+										textField:'desc',
+										mode:'remote',
+										loader: diagnoseloader,
+										blurValidValue:true
+									}
+								}">#(..Get("诊断名称"))#</th>
+								<th data-options="field:'field',width:50,align:'center',formatter:function(value,row,i){
+									return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteDgRow('+i+')\'>&nbsp;</span>';
+								}">#(..Get("操作"))#</th>
+							</tr>
+						</thead>
+					</table>
+				</td>
+			</tr>
+				<tr class="operateName">
+					<td class="r-label" style="vertical-align: top;line-height: 40px;">
+						<span style="vertical-align: text-bottom;" class="labelStar">*</span>#(..Get("手术名称"))#
+					</td>
+					<td>
+						<table id="operateTable" class="hisui-datagrid" style="width: 800px;height: 200px;" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:false,pagination:false,headerCls:'transparentHeader',toolbar: [{
+							iconCls: 'icon-add',
+							text:$g('新增'),
+							handler:addOpeRow
+						}],
+						onDblClickRow:editOpeRow
+					">
+							<thead>
+								<tr>
+									<th data-options="field:'desc',width:695,
+								editor:{
+									type:'combobox',
+									options:{
+										defaultFilter:6,
+										valueField:'id',
+										textField:'desc',
+										mode:'remote',
+										loader: operateloader,
+										blurValidValue:true
+									}
+								}">#(..Get("手术名称"))#</th>
+									<th data-options="field:'field',width:50,align:'center',formatter:function(value,row,i){
+									return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteOpeRow('+i+')\'>&nbsp;</span>';
+								}">#(..Get("操作"))#</th>
+								</tr>
+							</thead>
+						</table>
+					</td>
+				</tr>
+				<tr class="itemName">
+					<td class="r-label" style="vertical-align: top;line-height: 40px;">
+						<span style="vertical-align: text-bottom;" class="labelStar">*</span>#(..Get("项目名称"))#
+					</td>
+					<td>
+						<table id="itemsTable" class="hisui-datagrid" style="width: 800px;height: 200px;" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:false,pagination:false,headerCls:'transparentHeader',toolbar: [{
+							iconCls: 'icon-add',
+							text:$g('新增'),
+							handler:addITRow
+						}],
+						onDblClickRow:editITRow
+					">
+							<thead>
+								<tr>
+									<th data-options="field:'desc',width:695,
+								editor:{
+									type:'combobox',
+									options:{
+										defaultFilter:6,
+										valueField:'id',
+										textField:'desc',
+										mode:'remote',
+										loader: itemsloader,
+										blurValidValue:true
+									}
+								}">#(..Get("项目名称"))#</th>
+									<th data-options="field:'field',width:50,align:'center',formatter:function(value,row,i){
+									return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteITRow('+i+')\'>&nbsp;</span>';
+								}">#(..Get("操作"))#</th>
+								</tr>
+							</thead>
+						</table>
+					</td>
+				</tr>
+			<tr class="unusualMethod">
+				<td class="r-label">
+					<span class="labelStar">*</span>#(..Get("特殊方法"))#
+				</td>
+				<td>
+					<select class="specialMethod hisui-combobox" name="state" style="width:800px;" data-options="enterNullValueClear:false, multiple:true,blurValidValue:true,required:true">
+						<option value="1">#(..Get("连续三天大便次数为0"))#</option>
+					</select>
+				</td>
+			</tr>
+				<tr class="appendix">
+					<td class="r-label" style="vertical-align: top;line-height: 40px;">
+						#(..Get("附件"))#
+					</td>
+					<td id="attachFiles">
+						<a href="#" class="hisui-linkbutton hover-dark" onclick="addAttachment()">#(..Get("添加附件"))#</a>
+						<div>
+							<!-- <div>
+								<input class="annexFile" style="display: none;" type="file" onchange="changepic(this)">
+								<span></span>
+								<span class="l-btn-icon icon-cancel" onclick="deleteEduAnnex(4,this)">&nbsp;</span>
+							</div> -->
+						</div>
+					</td>
+				</tr>
+			<tr class="date">
+				<td class="r-label">
+					<span class="labelStar">*</span>#(..Get("启用日期"))#
+				</td>
+				<td>
+			    <input id="startDate" class="hisui-datebox textbox" style="width: 800px;" data-options="onChange:setDateboxOption,required:true"></input>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					#(..Get("停用日期"))#
+				</td>
+				<td>
+			    <input id="stopDate" class="hisui-datebox textbox" style="width: 800px;" data-options="onChange:setDateboxOption"></input>
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>
+<!-- 宣教内容维护模态框 -->
+<div id="eduContentModal" class="hisui-dialog" title="#(..Get("宣教内容维护"))#" style="top: 50px;left: 300px;padding: 5px 10px 0;width: 900px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+		text:$g('保存'),
+		handler:addOrUpdateEducation2Content
+	},{
+		text:$g('取消'),
+		handler:function(){$HUI.dialog('#eduContentModal').close();}
+	}]"> 
+	<form id="eduContentForm">
+		<table cellpadding="0" class="modalTable" style="width: 100%;">
+			<tr>
+				<td class="r-label" style="vertical-align: top;line-height: 30px;">
+					<span class="labelStar" style="vertical-align: middle;">*</span>#(..Get("宣教内容"))#
+				</td>
+				<td>
+					<input id="eduContentId" type="hidden">
+					<!-- <input id="eduContent" style="width:393px;" class="hisui-validatebox textarea" data-options="required:true,validType:'length[1,500]'"> -->
+				  <textarea id="eduContent" cols="30" rows="15" style="width: 800px;border-radius: 2px;resize: none;box-sizing: border-box;padding: 5px 10px;overflow: auto;" data-options="required:true"></textarea>
+				</td>
+			</tr>
+			<tr class="date">
+				<td class="r-label">
+					<span class="labelStar">*</span>#(..Get("启用日期"))#
+				</td>
+				<td>
+			    <input id="contentStartDate" class="hisui-datebox textbox" style="width: 800px;" data-options="onChange:setContentDateOption,required:true"></input>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					#(..Get("停用日期"))#
+				</td>
+				<td>
+			    <input id="contentStopDate" class="hisui-datebox textbox" style="width: 800px;" data-options="onChange:setContentDateOption"></input>
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>
+<!-- 宣教主题引用模态框 -->
+<div id="eduQuoteModal" class="hisui-dialog" title="#(..Get("新增宣教主题引用"))#" style="top: 50px;left: 300px;padding: 10px 10px;width: 1000px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,"> 
+	<div id="eduConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;">
+		<div style="width: 313px;margin-right: 10px;" id="ardsTree">
+			<div class="hisui-panel" title="#(..Get("宣教主题"))#" style="padding:10px 0 0 10px;display: flex;flex-direction: column;" data-options="headerCls:'panel-header-gray',iconCls:'icon-qua-pro-blue'">
+	      <div style="margin-bottom: 10px;font-size: 0;">
+	        <span id="wardDesc" style="vertical-align: middle;line-height: 100%;margin-right: 10px;">#(..Get("病区"))#</span>
+					<select id="ward" class="hisui-combobox" name="state" style="width:157px;" data-options="enterNullValueClear:false,blurValidValue:true,defaultFilter:6,valueField:'wardid',textField:'warddesc',mode:'remote',loader: wardsloader,onSelect:getQuoteSubject"></select>
+				</div>
+	      <div style="margin-bottom: 10px;font-size: 0;">
+					<input id="eduQuoteInput" style="box-sizing: border-box;" class="hisui-validatebox textbox" placeholder="#(..Get("请输入主题关键字"))#">
+					<a class="hisui-linkbutton" data-options="iconCls:'icon-indentation',plain:true" id="quoteToggleFold" style="float: right;margin-left: 10px;"></a>
+	        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="filterEduQuote(1)" style="float: right;">#(..Get("查询"))#</a>
+				</div>
+				<div style="overflow:auto;height: 458px;">
+					<div id="eduQuoteTree" data-options="animate:true"></div>
+				</div>
+			</div>
+		</div>
+		<div class="quotes" style="flex: 1;overflow: hidden;">
+		  <table id="quoteTable" style="height:583px" class="hisui-datagrid" title="#(..Get("宣教内容"))#"
+				data-options="rownumbers:false,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,headerCls:'panel-header-gray',iconCls:'icon-target-arrow',toolbar: [{
+					iconCls: 'icon-book',
+					text:$g('引用'),
+					id:'quoteContent',
+					disabled:true,
+					handler:quoteEduSubjectAndContent
+				}]
+			">   
+				<thead>   
+					<tr>
+						<th data-options="field:'title',width:135">#(..Get("宣教主题"))#</th>
+						<th data-options="field:'content',width:520">#(..Get("宣教内容"))#</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>   
+			</table>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.EducationTemplate.js"></script>
+</body>
+</html>

@@ -1,7 +1,6 @@
 <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	//i ##Class(websys.SessionEvents).SessionExpired()
-	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
 	q 1
 </csp:method>
 <html XMLNS=TRAK>
@@ -18,11 +17,11 @@
 				background-color: yellow;
 			}
 			td.details-control {
-				background: url('../Scripts/dhchai/img/details_open.png') no-repeat center center;
+				background: url('../scripts/dhchai/img/details_open.png') no-repeat center center;
 				cursor: pointer;
 			}
 			tr.shown td.details-control {
-				background: url('../Scripts/dhchai/img/details_close.png') no-repeat center center;
+				background: url('../scripts/dhchai/img/details_close.png') no-repeat center center;
 			}
 			.modal-fullscreen .modal-body {
 				top: 18px;
@@ -37,18 +36,20 @@
 		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
 		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js" charset="utf-8"></script>
 		
-		<script type="text/javascript" src="../Scripts/dhchai/Units/Component.js"></script>
-		<script type="text/javascript" src="../Scripts/dhchai/IR/ICU/survery/Gui.js"></script>
-		<script type="text/javascript" src="../Scripts/dhchai/IR/ICU/survery/Event.js"></script>
+		<script type="text/javascript" src="../scripts/dhchai/Units/Component.js"></script>
+		<script type="text/javascript" src="../scripts/dhchai/IR/ICU/survery/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/dhchai/IR/ICU/survery/Event.js"></script>
 		<script language="Cache" RUNAT="SERVER">		
 		set menuCode="DHCHAIAim-ICU-Survery"
 		set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
 		set groupId=$g(%session.Data("LOGON.GROUPID"))
-		set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+		set OperAdmin = $g(%request.Data("ParamAdmin",1))
+		Set NICUISApgar=##class(DHCHAI.BT.Config).GetValByCode("NICUISApgar")
 	   </script>		
 		<script language="javascript" type="text/javascript">
+			var NICUISApgar=#(NICUISApgar)#
 			$(document).ready(function(){
-				var url = "../Scripts/dhchai/IR/ICU/survery/Layout.html"
+				var url = "../scripts/dhchai/IR/ICU/survery/Layout.html"
         		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
    					if(statusTxt=="success") {
 	   					InitSurveryWin();

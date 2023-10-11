@@ -1,0 +1,150 @@
+
+<!--
+ * FileName: dhcpe.ct.stordersetting.csp 
+ * Author: zhufei
+ * Date: 2021-12-07
+ * Description: 站点医嘱项设置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<style>
+			.search-table{
+				border-collapse:separate;
+				border-spacing:0 10px;
+			}
+			.r-label{
+			  padding-left: 10px;
+			}
+			.newclsInvalid{
+				border-color: red;
+				color: red;
+			}
+			.panel-header{
+				border-bottom: 0;
+			}
+		</style>
+	</head>
+	<body>
+		
+	<!-- 主页面 -->
+	<div class="hisui-layout" data-options="fit:true">
+		
+		<!-- 中心页面 -->
+		<div data-options="region:'center',border:false">
+			<div class="hisui-layout" data-options="fit:true" style="padding:0px;">
+				<div data-options="region:'north',border:false" style="height:50px;">
+					<table class='search-table'>
+						<tr>
+							<td class="r-label"><label>#(..Get("科室"))#</label></td>
+							<td>
+								<input id="LocList" class="hisui-combobox textbox" style="width:130px;">
+							</td>
+							<td class="r-label"><label>#(..Get("站点"))#</label></td>
+							<td>
+								<input id="cboStation" class="hisui-combobox textbox" style="width:130px;">
+							</td>
+							<td class="r-label"><label>#(..Get("医嘱子类"))#</label></td>
+							<td>
+								<input id="cboARCItemCat" class="hisui-combobox textbox" style="width:130px;">
+							</td>
+							<td class="r-label"><label>#(..Get("报告格式"))#</label></td>
+							<td>
+								<input id="cboReportFormat2" class="hisui-combobox textbox" style="width:130px;">
+							</td>
+							<td class="r-label"><label>#(..Get("导诊单类别"))#</label></td>
+							<td>
+								<input id="cboUsherItemCat2" class="hisui-combobox textbox" style="width:130px;">
+							</td>
+							<td class="r-label"><label>#(..Get("标准项目"))#</label></td>
+							<td>
+								<input id="cboExamItemCode2" class="hisui-combobox textbox" style="width:130px;">
+							</td>
+						</tr>
+					</table>
+				</div>
+				
+				<div data-options="region:'center',border:false" style="padding:10px;padding-top:0px;">
+					<div class="hisui-panel" fit="true" title="站点医嘱项" data-options="border:true,iconCls:'icon-resort',fit:true,headerCls:'panel-header-gray'" style="border-top:1px solid #C0C0C0;">
+						<input type="hidden" id="gridSTOrder_ID"/>
+						<table id="gridSTOrder" data-options="border:false,toolbar:'#gridSTOrder_custtb'"></table>
+						<div id="gridSTOrder_custtb" style="padding:3px;" >
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true,stopAllEventOnDisabled:true" id="btnDelete">删除站点项目</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="btnUpdate">编辑站点项目</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="btnNewStationOrder">生成站点项目</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="btnBatchNewStationOrder">批量生成站点项目</a>
+							<div style="float: right;">
+								<input id="gridSTOrder_search" data-options="prompt:'#(..Get("搜索"))#'" class="hisui-searchbox" style="width:140px;"/>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div data-options="region:'east',border:false" style="width:520px;padding:10px;padding-left:0px;padding-top:0px;">
+					<div class="hisui-panel" fit="true" title="医嘱项列表" data-options="border:true,iconCls:'icon-resort',fit:true,headerCls:'panel-header-gray'" style="border-top:1px solid #C0C0C0;">
+						<input type="hidden" id="gridARCIM_ID"/>
+						<table id="gridARCIM" data-options="border:false,toolbar:'#gridARCIM_custtb'"></table>
+						<div id="gridARCIM_custtb" style="padding:3px;" >
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add-item',plain:true,stopAllEventOnDisabled:true" id="btnSetting">站点医嘱项设置</a>
+							<div style="float: right;">
+								<input id="gridARCIM_search" data-options="prompt:'#(..Get("搜索"))#'" class="hisui-searchbox" style="width:140px;"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div><!-- 中心页面 End-->
+		
+		<!-- 标准项目维护页面 -->
+		<div id="winExamItemCodeEdit" class="hisui-dialog" style="border:none;overflow:hidden;padding-right:10px;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label>#(..Get("医嘱类型"))#</label></td>
+					<td>
+						<input id="cboOrderType" class="hisui-combobox textbox" style="width:254px;">
+					</td>
+				</tr>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("报告格式"))#</label></td>
+					<td>
+						<input id="cboReportFormat" class="hisui-combobox textbox" style="width:254px;">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("导诊单类别"))#</label></td>
+					<td>
+						<input id="cboUsherItemCat" class="hisui-combobox textbox" style="width:254px;">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("标准项目"))#</label></td>
+					<td>
+						<input id="cboExamItemCode" class="hisui-combobox textbox" style="width:254px;">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" colspan="1"><label for="chkActive" >#(..Get("是否有效"))#</label></td>
+					<td>
+						<input class='hisui-checkbox' type="checkbox" id="chkActive" checked/>
+					</td>
+				</tr>
+			</table>
+		</div><!-- 编辑页面 End-->
+		
+	</div><!-- 主页面 End-->
+	
+	<script type="text/javascript" src="../scripts/dhcpe/ct/STOrderSetting.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script> 
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	s pid = $G(%request.Data("pid", 1))
+    s taskId = $G(%request.Data("taskId", 1))
+	s hospId = $G(%request.Data("hospId", 1))
+	s taskType = $G(%request.Data("taskType", 1))
+	s relationType = $G(%request.Data("relationType", 1))
+	
+</script>
+<script language="javascript">
+     	var pid="#(pid)#";
+	    var taskId = "#(taskId)#";
+		var hospId = "#(hospId)#";
+		var taskType = "#(taskType)#";
+		var relationType = "#(relationType)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<!--div class="hisui-panel" title="基本配置" style="width:560px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="topCondion" style="width:100%">
+		</table>
+	</div-->
+	<div class="hisui-panel" title="规则配置" style="width:560px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="condion" style="width:100%">
+		
+		</table>
+	</div>
+	<div class="hisui-panel" title="其他配置" style="width:560px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="downCondion" style="width:100%">
+		</table>
+	</div>
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a  heft="#" class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+<div class="vsReminder" style="display:none;">
+	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+</div>
+  
+<div style="margin-bottom: 5px;display:none; " id="comboxSearch">
+	<table>
+		<tr>
+			<td>
+				<input type="text" class="textbox hisui-validatebox startDayReport" style="width:170px;" />
+			</td>
+
+			<td>
+				<a class="hisui-linkbutton btnTaskSearch"  data-options="iconCls:'icon-w-find'">查询</a>  
+			</td>
+		</tr>
+	</table>
+</div>
+<script type="text/javascript">
+var entity=""
+$(function(){
+	$('body').addClass('active')
+	//var normalTime=["taskDesc","taskItem","rationFixedCycle","relationTodayExeTime"]
+	var list=xcShowContors[relationType]
+	
+	if(taskId!=""){
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskRuleRecord",{id:taskId},function(rtn){
+				entity=rtn
+				console.log(entity)
+			},'json',false);
+	}
+	for(var i=0;i<list.length;i++){
+		///创建控件
+		createInputHtml("condion",xcContors,list[i],0)
+		//console.log(list[i])
+	}
+	
+	for(var i=0;i<xcTopContors.length;i++){
+		var key = xcTopContors[i].id
+		if(xcTopContors[i].id=="NTONTaskItem"){
+			if(taskType==1){
+				xcTopContors[i].title="体征任务项"
+				xcTopContors[i].queryName="GetSignsItem"
+				xcTopContors[i].multiple="true"
+				
+			}else{
+				xcTopContors[i].title="评估任务项"
+				xcTopContors[i].queryName="GetAssessItems"
+				xcTopContors[i].multiple="true"
+			}
+		}
+		
+		createInputHtml("topCondion",xcTopContors,key,0)
+	}
+	for(var i=0;i<xcDownContors.length;i++){
+		var key = xcDownContors[i].id
+		createInputHtml("downCondion",xcDownContors,key,0)
+	}
+	console.log("最后给控件赋值")
+	setContorValue()
+	///控件赋值setContorlsValue(list[i])
+	///runClassMethod("","",{},function(data){
+	///})
+	//$("#NTONRelationTodayExeRule").combobox("setValue",2)
+})
+
+function setContorValue(){
+	
+	if(taskId!=""){
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskRuleRecord",{id:taskId},function(rtn){
+				//$("#NTONRelationTodayExeRule").combobox("setValue",3)
+				console.log(entity)
+		},'json',false);
+	}
+}
+
+
+
+
+
+//页面需要显示的控件
+var xcShowContors={
+	"NORMALDAY":["NTONTaskDesc","NTONRationFixedCycle","NTONRelationTodayExeTime"],
+	"NORMALTIME":["NTONTaskDesc","NTONRelationTodayExeTime","jgzq"/*,"cxzq"*/],
+	"SIGNS":["NTONTaskDesc","NTONRelationFormula","NTONRelationTodayExeRule","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime",//"jgzq","cxzq","NTONRelationTodayExeTime",
+			"NTONNormalFormula","zczcxzq","NTONNormalExeTime","zchjgzq","zchcxzq"
+			],
+	"ORDERPC":["NTONTaskDesc","NTONRelationDocAdvices"],
+	"ORDERDAY":["NTONTaskDesc","NTONRelationDocAdvices","NTONRationFixedCycle","NTONRelationTodayExeTime"],
+	"ORDERTIME":["NTONTaskDesc","NTONRelationDocAdvices","NTONRelationTodayExeRule","NTONRelationTodayExeTime","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime",//"jgzq","cxzq",
+	],
+	"ORDERSTOP":["NTONTaskDesc","NTONRelationDocAdvices","NTONRelationTodayExeRule","NTONRelationTodayExeTime","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime",//"jgzq","cxzq",
+	],
+	"ORDERSTART":["NTONTaskDesc","NTONRelationDocAdvices","NTONRelationTodayExeRule","NTONRelationTodayExeTime","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime",//"jgzq","cxzq",
+	],
+	"EVENT":["NTONTaskDesc","NTONRelationEvents","NTONRelationTodayExeRule","NTONRelationNotTodayExeRule","jgzq","cxzq",
+			],
+	"SIGNORDER":["NTONTaskDesc","NTONRelationSign","NTONRelationDocAdvices","NTONRelationFormula","NTONRelationTodayExeRule","NTONRelationTodayExeTime","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime",//"jgzq","cxzq",
+			"NTONNormalFormula","zczcxzq","NTONNormalExeRule","NTONNormalExeTime","zchjgzq","zchcxzq"
+			],
+	"ORDEREVENT":["NTONTaskDesc","NTONRelationEvents","NTONRelationDocAdvices","NTONRelationTodayExeRule","NTONRelationTodayExeTime","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime","jgzq","cxzq",
+			],
+	"SPECIAL":[],
+	"ASSESS":["NTONTaskDesc","NTONRelationAssess","NTONAssessDate","NTONAssessTime","NTONRelationFormula","NTONRelationTodayExeRule","NTONRelationTodayExeTime","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime",//"jgzq","cxzq","NTONRelationNDayExeTime","cxjgzq",
+			"NTONNormalFormula","zczcxzq","NTONNormalExeRule","NTONNormalExeTime","zchjgzq","zchcxzq"
+			],
+	"ORDERASSESS":["NTONTaskDesc","NTONRelationAssess","NTONRelationDocAdvices","NTONAssessDate","NTONAssessTime","NTONRelationFormula","NTONRelationTodayExeRule","NTONRelationTodayExeTime","NTONRelationNotTodayExeRule","NTONRelationNotTodayExeTime",//"jgzq","cxzq",
+			"NTONNormalFormula","zczcxzq","NTONNormalExeRule","NTONNormalExeTime","zchjgzq","zchcxzq"
+			]
+}
+//控件属性 id需保持和表结构字段一致
+var xcTopContors=[
+	
+	{'id':'NTONTaskDesc','type':'text','title':'任务描述','required':'true','style':'width:300px;'},
+	{'id':'NTONTaskItem','type':'comboxGrid','title':'任务项','required':'true','style':'width:307px;'},
+	{'id':'NTONTaskName','type':'text','title':'任务名称','style':'width:300px;'},
+]
+	var wardjson=[]
+    runClassMethodNew("Nur.NIS.Service.Base.Ward","GetallWardNew",{IsQuery:"true",desc: "",hospid: hospId,bizTable: "Nur_IP_Question"},
+        function(obj){
+             for(var i=0;i<obj.rows.length;i++){
+	             var json={}
+	             json.value=obj.rows[i].wardid
+	             json.text=obj.rows[i].warddesc
+	            
+	             	wardjson.push(json)
+	            
+	          }
+   },'json',false)
+
+
+var xcDownContors=[
+	//{'id':'NTONExePeriod','type':'combox','queryName':'GetExePeriod','title':'执行有效时间','required':'true','style':'width:307px;','defaultValue':'1'},
+	{'id':'NTONApplyPatient','type':'combox','multiple':'true','queryName':'GetApplyPatient','title':'适用患者','style':'width:307px;'},
+	{'id':'NTONSpecialPerson','type':'text','title':'其他人群','style':'width:300px;','reminder':'其他人群需自定义方法'},
+	//{'id':'NTONValidLocs','type':'comboxGrid','multiple':'true','queryName':'GetallDept','title':'生效科室','style':'width:307px;'},
+	//{'id':'NTONInvalidLocs','type':'comboxGrid','multiple':'true','queryName':'GetallDept','title':'无效科室','style':'width:307px;'},
+	//{'id':'NTONValidWards','type':'comboxGrid','multiple':'true','queryName':'GetallWard','title':'生效病区','style':'width:307px;'},
+	//{'id':'NTONInvalidWards','type':'comboxGrid','multiple':'true','queryName':'GetallWard','title':'无效病区','style':'width:307px;'},
+	{'id':'NTONValidWards','type':'combox','multiple':'true','objData':wardjson,'title':'生效病区','style':'width:307px;'},	
+	{'id':'NTONInvalidWards','type':'combox','multiple':'true','objData':wardjson,'title':'无效病区','style':'width:307px;'},	
+
+]
+var NTONNormalFormulaHtml=
+/*"<div>"
++"<p>项=体征项/评估项</p>"
++"<p>项:公式 (temperature:>37)</p>"
++"<p>解析：项满足公式 </p>"
++"<p>项:公式A&公式B&公式C (temperature:>37.5&<38.5)</p>"
++"<p>解析：项满足公式A并且满足公式B病区满足公式C (腋温大于37.5并且小于38.5)</p>"
++"<p>项:公式A!公式B!公式C 例:temperature:>39!<36.5</p>"
++"<p>解析：项满足公式A或者满足公式B或者满足公式C (腋温大于39或者小于36.5)</p>"
++"<p>项A:公式A@项B:公式B (temperature:>37.5@pulse>70)</p>"
++"<p>解析：项A满足公式A并且项B满足公式B</p>"
++"<p>项A:公式A||项B:公式B (temperature:>37.5||pulse>70)</p>"
++"<p>解析：项A满足公式A或者项B满足公式B</p>"
++"<p style='font-weight: bold;color: red;'>注:公式只支持英文>、<、=</p>"
++"</div>"*/
+"<div style='width:300px;'>"
++"<p>单项公式规则</p>"
++"<p>公式(大于)： temperature:>37</p>"
++"<p>公式(并且)： temperature:>37.5&temperature:<38.5</p>"
++"<p>公式(或者)： temperature:>39!temperature:<36.5</p>"
++"<p>多项公式规则</p>"
++"<p>公式(大于)： temperature:>37.5@pulse>70</p>"
++"<p>公式(或者)： temperature:>37.5||pulse>70</p>"
++"<p>项比较</p>"
++"<p>项比较(大于)： heartbeat>pulse</p>"
++"<p style='font-weight: bold;color: red;'>注:公式只支持英文>、<、=</p>"
++"</div>"
+var xcContors=[
+	{'id':'NTONTaskDesc','type':'text','title':'任务规则描述','required':'true','style':'width:300px;'},
+	{'id':'NTONRelationTodayExeTime','type':'combox','queryName':'GetExeTime','multiple':'true','title':'当日需执行时间','style':'width:307px;'},
+	{'id':'NTONRelationNDayExeTime','type':'combox','queryName':'GetExeTime','multiple':'true','title':'持续后执行时间','style':'width:307px;'},
+	
+	{'id':'NTONRelationNotTodayExeTime','type':'combox','queryName':'GetExeTime','multiple':'true','title':'非当日需执行时间','style':'width:307px;'},
+	{'id':'NTONRelationExeShift','type':'combox','queryName':'GetExeTime','multiple':'true','title':'当日需执行班次','style':'width:307px;'},
+	{'id':'NTONRelationNotTodayExeShift','type':'combox','queryName':'GetExeTime','multiple':'true','title':'非当日需执行班次','style':'width:307px;'},
+	{'id':'NTONRelationTodayExeRule','type':'combox','queryName':'GetTodayExeRule','title':'当日需执行规则','style':'width:307px;','defaultValue':'1'},
+	{'id':'NTONRelationNotTodayExeRule','type':'combox','queryName':'GetNotTodayExeRule','title':'非当日需执行规则','style':'width:307px;','defaultValue':'1'},
+	{'id':'NTONRelationNoTodayFixedCycle','type':'combox','queryName':'GetFixedCycle','title':'非当日需执行周期','multiple':'true','style':'width:307px;'},
+	{'id':'NTONRationFixedCycle','type':'combox','queryName':'GetFixedCycle','multiple':'true','title':'需执行周期','required':'true','style':'width:307px;'},
+	{'id':'NTONRelationSign','title':'关联体征项','type':'comboxGrid','queryName':'GetSignsItem','required':'true','multiple':'true','style':'width:307px;'},
+	{'id':'NTONRelationEvents','title':'关联事件项','type':'comboxGrid','queryName':'GetEventItems','required':'true','multiple':'true','style':'width:307px;'},
+	{'id':'NTONRelationDocAdvices','title':'关联医嘱项','type':'comboxGrid','queryName':'GetDocAdvice','required':'true','multiple':'true','style':'width:307px;','reminder':'取已执行状态的医嘱'},
+	{'id':'NTONRelationAssess','title':'关联评估项','type':'comboxGrid','queryName':'GetAssessItems','required':'true','style':'width:307px;'},
+	{'id':'NTONAssessDate','type':"text",'title':'评估日期字段','required':'true','style':'width:300px;','reminder':'请输入评估单的字段'},
+	{'id':'NTONAssessTime','type':"text",'title':'评估时间字段','required':'true','style':'width:300px;','reminder':'请输入评估单的字段'},
+	{'id':'NTONRelationFormula','type':'text','title':'生效公式','required':'true','reminder':NTONNormalFormulaHtml,'style':'width:300px;'},
+	{'id':'NTONNormalFormula','type':'text','title':'正常值生效公式','required':'true','reminder':NTONNormalFormulaHtml,'style':'width:300px;'},
+	{'id':'NTONNormalExeRule','type':'combox','queryName':'GetNotTodayExeRule','title':'正常后需执行规则','style':'width:307px;','defaultValue':'1'},
+	{'id':'NTONNormalExeTime','type':'combox','queryName':'GetExeTime','multiple':'true','title':'正常后需执行时间','style':'width:307px;'},
+	{'id':'NTONNormalExeShift','type':'combox','queryName':'GetExeTime','multiple':'true','title':'正常后需执行班次','style':'width:307px;'},
+	{'id':'NTONNormalFixedCycle','type':'combox','queryName':'GetFixedCycle','multiple':'true','title':'正常后需执行周期','style':'width:307px;'},
+	{'id':'zczcxzq','title':'正常值持续天/次'},
+	{'id':'NTONNormalSustain','type':'text','pid':'zczcxzq','style':'width:100px;'},
+	{'id':'NTONNormalSustainUnit','pid':'zczcxzq','type':'combox','queryName':'GetPeriodUnit','style':'width:80px;','defaultValue':'1'},
+	{'id':'zchjgzq','title':'正常后间隔天/次'},
+	{'id':'NTONNormalIntervalPeriod','type':'text','pid':'zchjgzq','style':'width:100px;'},
+	{'id':'NTONNormalIntervalPeriodUnit','pid':'zchjgzq','type':'combox','queryName':'GetPeriodUnit','style':'width:80px;','defaultValue':'1'},
+	{'id':'zchcxzq','title':'正常后持续天/次'},
+	{'id':'NTONNormalPeriod','type':'text','pid':'zchcxzq','style':'width:100px;'},
+	{'id':'NTONNormalPeriodUnit','pid':'zchcxzq','type':'combox','queryName':'GetPeriodUnit','style':'width:80px;','defaultValue':'1'},
+	{'id':'jgzq','title':'间隔天/次'},
+	{'id':'NTONRelationIntervalPeriod','type':'text','pid':'jgzq','style':'width:100px;'},
+	{'id':'NTONRelationIntervalPeriodUnit','pid':'jgzq','type':'combox','queryName':'GetPeriodUnit','style':'width:80px;','defaultValue':'1'},
+	{'id':'cxzq','title':'持续天/次','reminder':'持续周期为空,默认持续到当前日期'},
+	{'id':'NTONRelationPeriod','type':'text','pid':'cxzq','style':'width:100px;'},
+	{'id':'NTONRelationPeriodUnit','pid':'cxzq','type':'combox','queryName':'GetPeriodUnit','style':'width:80px;','defaultValue':'1'},
+	
+	{'id':'cxjgzq','title':'持续后间隔天/次'},
+	{'id':'NTONRelationIntervalPeriodCx','type':'text','pid':'cxjgzq','style':'width:100px;'},
+	{'id':'NTONRelationIntervalPeriodUnitCx','pid':'cxjgzq','type':'combox','queryName':'GetPeriodUnit','style':'width:80px;','defaultValue':'1'},
+	
+	
+	{'id':'NTONRelationPeriodUnit','pid':'cxcxzq','type':'combox','queryName':'GetPeriodUnit','style':'width:80px;','defaultValue':'1'},
+	{'id':'drzdy','title':'当日自定义时间'},
+	{'id':'NTONRelationUDOperator','pid':'drzdy','type':'combox','queryName':'GetrelationUDOperator','style':'width:170px;','defaultValue':'1'},
+	{'id':'NTONRelationUDNum','type':'text','pid':'drzdy','style':'width:50px;'},
+	{'id':'NTONRelationUDUnit','pid':'drzdy','type':'combox','queryName':'GetrelationUDUnit','style':'width:80px;','defaultValue':'1'},
+	{'id':'NTONRelationTodayMethod','type':'text','title':'当日须执行方法','style':'width:300px;'},
+	{'id':'NTONRelationNotTodayMethod','type':'text','title':'非当日须执行方法','style':'width:300px;'},
+	{'id':'NTONNormalMethod','type':'text','title':'正常后须执行方法','style':'width:300px;'},
+]
+
+//key:table表ID
+var xcChange={
+	'NTONRelationTodayExeRule':function(value,oldValue){
+		debugger;
+		var showIds=[
+				{"key":"1","value":["NTONRelationTodayExeTime"]},
+				{"key":"2","value":["NTONRelationExeShift"]},
+				{"key":"3","value":["drzdy"]},
+				{"key":"4","value":["NTONRelationTodayMethod"]},
+				
+				]
+		var $thisId =$(this).attr("id")
+		change(showIds,$thisId,value)
+		
+	},
+	'NTONRelationNotTodayExeRule':function(value,oldValue){
+		
+		var showIds=[
+				{"key":"1","value":["cxzq","jgzq","NTONRelationNotTodayExeTime"]},
+				{"key":"2","value":["NTONRelationNotTodayExeShift"]},
+				{"key":"3","value":["NTONRelationNoTodayFixedCycle","NTONRelationNotTodayExeTime"]},
+				{"key":"4","value":["NTONRelationNotTodayMethod"]},
+				{"key":"5","value":["cxjgzq","NTONRelationNDayExeTime","cxzq","jgzq","NTONRelationNotTodayExeTime",]},
+				]
+		var $thisId =$(this).attr("id")
+		change(showIds,$thisId,value)
+		
+	},
+	'NTONNormalExeRule':function(value,oldValue){
+		
+		var showIds=[
+				{"key":"1","value":["NTONNormalExeTime"]},
+				{"key":"2","value":["NTONNormalExeShift"]},
+				{"key":"3","value":["NTONNormalFixedCycle","NTONNormalExeTime"]},
+				{"key":"4","value":["NTONNormalMethod"]},
+				]
+		var $thisId =$(this).attr("id")
+		change(showIds,$thisId,value)
+		
+	},
+	'NTONRelationUDOperator':function(value,oldValue){
+		var showIds=[
+				{"key":"6","value":["NTONRelationTodayExeTime"]},
+				{"key":"7","value":["NTONRelationTodayExeTime"]}
+				]
+		var $thisId =$(this).attr("id")
+		change(showIds,$thisId,value)	
+	}
+	
+}
+
+$("input").watch(function(value,oldval,ele) {
+		console.log(value)
+		
+    });
+
+
+function saveFunLib(){
+	var parms = resultParms(xcContors)
+	var topParms = resultParms(xcTopContors)
+	var downParms = resultParms(xcDownContors)
+	var rsTxt=""
+	
+	if((parms!="")&&(topParms!="")&&(downParms!="")){
+		var rtnParms=setAllParms([parms,topParms,downParms])
+		rtnParms.NTONTaskAttr=""
+		rtnParms.NTONRelationType=relationType
+		rtnParms.NTONHospital=hospId
+		rtnParms.taskId=taskId
+		rtnParms.pid=pid
+		rtnParms.NTONOperateUserDR=session['LOGON.USERID']
+	
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","AddOrUpdateTaskRuleConfig",{data:JSON.stringify(rtnParms)},function(rtn){
+			if(rtn == 0) {
+				
+		
+			} else {
+				//$.messager.alert('提示','保存失败！'+ rtn , "info");
+				rsTxt = "保存失败！"
+			}
+		
+		},'json',false);
+	
+		
+	}else{
+		rsTxt = "保存失败,存在必填项为空！"
+	}
+	return rsTxt
+}
+
+
+</script>
+	
+</body>
+</html>
+

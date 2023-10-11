@@ -4,8 +4,7 @@
 	js:pharmacy/outpha/dhcpha.outpha.querylocpresc.js
 --> 
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
-	q 1
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -16,6 +15,12 @@
     <TRAK:HEAD>
     </TRAK:HEAD>
     <DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
+	<ADDINS/>
+    <server>
+		s ReadAccExpEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+		s GetCardTypeEncrypt=##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+		s ReadCardTypeEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+	</server>
     <!--css-->  
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/bootstrap-daterangepicker-master/daterangepicker.css" />   
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/select2-4.0.3/select2.min.css" >
@@ -31,6 +36,7 @@
     <script type="text/javascript" src="../scripts/dhcpha/jQuery/jquery.easyui.min.js"></script>
     <script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
     <script type="text/javascript" src="../scripts/dhcpha/jqueryplugins/json2.js"></script>
+    <DHCPHARMACYLANG />
     <!--dhcpha css-->
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.common.css" ></script>
     <!--dhcpha common js-->
@@ -38,49 +44,81 @@
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.export.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.common.js" ></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.common.phaxmlprint.js"></script>
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+    <script type="text/javascript" src="../scripts/DHCOPBillLocCheckOut.js"></script>
     <!--dhcpha js-->
     <script type="text/javascript" src="../scripts/pharmacy/outpha/dhcpha.outpha.printcom.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/outpha/dhcpha.outpha.querylocpresc.js"></script> 
- 
+    
+ 	<script Language="Javascript">
+  </script>
 </head>
 <body >
-    <body>
     	<div id="dhcpha-query-condition">
+    	 <div style="width:0px;height:0px">
+			<input id='ReadAccExpEncrypt' type='hidden' value='#(ReadAccExpEncrypt)#'></input>
+			<input id='GetCardTypeEncrypt' type='hidden' value='#(GetCardTypeEncrypt)#'></input>
+			<input id='ReadCardTypeEncrypt' type='hidden' value='#(ReadCardTypeEncrypt)#'></input>
+			<server>
+			 	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+			</server>
+		</div>
 	     <div class="container-fluid dhcpha-condition-container">
 	        <div class="row row_style">
 	            <form class="form-inline">   
 	                <div class="input-group">
-	                    <span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>医嘱日期</strong></span>
-	                    <input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:10.5em" placeholder="请选择日期">
+	                    <span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("医嘱开始日期"))#</strong></span>
+	                    <input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:10.5em" placeholder='#(..Get("请选择开始日期"))#'>
 	                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
 	                          <i class="fa fa-calendar"></i>
 	                    </span>  
 	               </div>
-	               <span><strong>至</strong></span>
+	               
 	               <div class="input-group">
-	                    <input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:10.5em" placeholder="请选择日期">
-	                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
-	                          <i class="fa fa-calendar"></i>
-	                    </span>                       
-	               </div>
-	               <div class="input-group">
-	                    <span  class="input-group-addon dhcpha-input-group-addon-in"><strong>开单科室</strong></span>                         
+	                    <span  class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("开单科室"))#</strong></span>                         
 	                    <select class="form-control in_select" id="sel-loc">                              
 	                    </select>                   
 	               </div>
 	               <div class="input-group">
-	                    <span  class="input-group-addon dhcpha-input-group-addon-in"><strong>处方类别</strong></span>                           
+	               		<input class="form-control input_style" type="text" id="txt-patno" style="width:8em" placeholder='#(..Get("请输入登记号"))#'>
+	               </div>
+	               <div class="input-group">
+	               		<input class="form-control input_style" type="text" id="txt-cardno" style="width:8em" placeholder='#(..Get("刷卡/请输入卡号"))#'>
+	               		<input class="form-control input_style" type="hidden" id="txt-cardtype">
+	               </div>
+				   <div class="btn-group ">  
+	                    <span class="fa fa-credit-card dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+			            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-readcard">#(..Get("读卡"))#</button>
+	                </div>
+	               <div class="btn-group dhcpha-btn-right-sm">  
+	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-find">#(..Get("查询"))#</button>                 
+	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-clear">#(..Get("清屏"))#</button>
+	               </div>
+	        	</form>             
+	        </div>
+	        <div class="row row_style">
+	            <form class="form-inline">   
+	               <div class="input-group">
+	                    <span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("医嘱结束日期"))#</strong></span>
+	                    <input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:10.5em" placeholder='#(..Get("请选择结束日期"))#'>
+	                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
+	                          <i class="fa fa-calendar"></i>
+	                    </span>   
+	               </div>
+	               <div class="input-group">
+	                    <span  class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("处方类别"))#</strong></span>                           
 	                    <select class="form-control in_select" id="sel-presctype">                            
 	                    </select>                   
 	               </div>
-	               <input class="form-control input_style" type="text" id="txt-patno" style="width:8em" placeholder="请输入登记号">
-	               <div class="btn-group dhcpha-btn-right-sm">  
-	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-find">查询</button>                 
-	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-clear">清屏</button>
-	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-print">打印</button>
-	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-export">导出</button>                                  
+	               <div class="input-group">                                     
+						<input type="checkbox" id="chk-disp" checked="checked"/>
+						<lable for="chk-disp"><strong>#(..Get("已发药"))#</strong></lable>		
+				   </div>
+				   <div class="btn-group dhcpha-btn-right-sm">  
+	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-print">#(..Get("打印"))#</button>
+	                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal dhcpha-btn-split-sm" type="button" id="btn-export">#(..Get("导出"))#</button>                                  
 	               </div>
-	        	</form>             
+	            </form>             
 	        </div>
 	     </div> 
 	     <div class="row dhcpha-row-split"></div>
@@ -89,14 +127,14 @@
          <div class="row">
              <div>
                    <div class="panel div_content">
-                       <div class="panel-heading"><span class="pal_style"><strong>处方列表</strong></span></div>
+                       <div class="panel-heading"><span class="pal_style"><strong>#(..Get("处方列表"))#</strong></span></div>
                             <div class="panel-body" style="border:none;">
                                  <table id="locprescdg">
                                  </table>
                             </div>  
                    </div>
                    <div class="panel div_content">
-                       <div class="panel-heading"><span class="pal_style"><strong>医嘱详细列表</strong></span></div>
+                       <div class="panel-heading"><span class="pal_style"><strong>#(..Get("医嘱详细列表"))#</strong></span></div>
                             <div class="panel-body" style="border:none;">
                                  <table id="prescdetaildg">
                                  </table>
@@ -108,5 +146,4 @@
      </div>
 </body>
  
-</body>
 </html>

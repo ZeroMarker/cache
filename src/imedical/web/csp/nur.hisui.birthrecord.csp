@@ -1,0 +1,294 @@
+<!--nur.hisui.birthrecord.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ 	q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+<HTML lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <link href="../scripts/nurse/hisui/css/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+
+ 
+<STYLE type='text/css'>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.btnCls {
+	display: inline-block;
+	width: 13px;
+	height: 13px;
+	padding: 0 5px 0 0;
+}
+</STYLE>
+</head>
+
+<body>
+<div class="hisui-layout" data-options="fit:true,border:false">
+	<div data-options="region:'north',border:false,collapsible:false" style="height:180px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="fit:true,title:'产程图录入',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label">#(..Get("宫缩开始时间"))#</td>
+					<td>
+						<input id="contraDate" class="hisui-datebox textbox">
+						<input id="contraTime" class="hisui-timespinner">
+					</td>
+					<!--
+					<td class="r-label">
+						<input id="ifMergeFirstAndTwo" class='hisui-checkbox' type='checkbox' label="第一第二产程相加">
+					</td>
+					-->
+				</tr>
+				<tr>
+					<td class="r-label">#(..Get("胎盘娩出时间"))#</td>
+					<td>
+						<input id="placentaOutDate" class="hisui-datebox textbox">
+						<input id="placentaOutTime" class="hisui-timespinner">
+					</td>
+					<td class="r-label">
+						<a id="saveBtn" style="margin-right:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" colspan=3  style="text-align:left;">
+						<a id="firstPreview" style="margin-right:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">第一页</a>
+						<a id="secondPreview" style="margin-right:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">第二页</a>
+						<a id="printStageLabor" style="margin-right:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+						<a id="searchBtn" style="margin-right:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+		<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+			<table id="birthRecordGrid"></table>
+		</div>
+	</div>
+</div>
+<script language="javascript">
+var EpisodeID = "#(EpisodeID)#";
+var columns=[];
+$(function() {
+	$('#saveBtn').click(saveNurCurve);
+	$('#searchBtn').click(gridReload);
+	$('#firstPreview').click(firstPreview);
+	$('#secondPreview').click(secondPreview);
+	$('#printStageLabor').click(printStageLabor);
+	var PregFirstSightEditor={type: 'combobox',options: {valueField:'desc',textField:'desc',data: [{desc:'S-5'},{desc:'S-4'},{desc:'S-3'},{desc:'S-2'},{desc:'S-1'},{desc:'S+0'},{desc:'S+1'},{desc:'S+2'},{desc:'S+3'},{desc:'S+4'},{desc:'S+5'}]}};
+	var PregWombwidthEditor={type: 'combobox',options: {valueField:'desc',textField:'desc',data: [{desc:'0'},{desc:'1'},{desc:'2'},{desc:'3'},{desc:'4'},{desc:'5'},{desc:'6'},{desc:'7'},{desc:'8'},{desc:'9'},{desc:'10'}]}};
+	var PregMembraneEditor={type: 'combobox',options: {valueField:'desc',textField:'desc',data: [{desc:'已破'},{desc:'未破'}]}};
+	columns = [
+			{field: "oper",title: "操作",width:60,formatter: birthRecordOper }
+			,{field: "PregDate",title: "日期",width:110,editor:"dateboxq"}
+			,{field: "PregTime",title: "时间",width:80,editor:"timespinner"}
+			,{field: "PregFetalHeart",title: "胎心",width:80,editor:'text'}
+			,{field: "PregFirstSight",title: "先露高低",width:80,editor:PregFirstSightEditor}
+			,{field: "PregWombwidth",title: "宫口",width:60,editor:PregWombwidthEditor}
+			,{field: "PregBlood",title: "血压",width:70,editor:'text'}
+			,{field: "PregFrequency",title: "宫缩",width:70,editor:'text'}
+			,{field: "PregMembrane",title: "胎膜",width:70,editor:PregMembraneEditor}
+			,{field: "PregHandle",title: "备注",width:400,editor:'textarea'}
+			,{field: "PregComment",title: "娩出标记",width:70,editor:{type:'checkbox',options:{on:'Y',off:'N'}}}
+			,{field: "PregUserID",title: "签名",width:50}
+			,{field: "PregDr",hidden: true}
+		];
+	//初始化汇总表格
+	$("#birthRecordGrid").datagrid({
+		singleSelect: true,
+		striped: true,
+		nowrap: false,
+		fit: true,
+		//autoSizeColumn: true,
+		url: $NURURL + '?1=1&className=Nur.DHCNURPregRec&methodName=birthRecord&parameter1='+EpisodeID,
+		//fitColumns: true,
+		headerCls: 'panel-header-gray',
+		columns: [columns],
+		//showFooter: false,
+		//pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		rownumbers: true, //如果为true, 则显示一个行号列
+		onClickRow:clickRow,
+		onClick:clickGrid,
+        onLoadSuccess: function (data) {
+            $('#' + this.id).datagrid('appendRow', { });
+        }
+	});
+	getNurCurve();
+});
+var editIndex=-1;
+function clickGrid(a)
+{
+	alert(a);
+}
+function gridReload()
+{
+	$("#birthRecordGrid").datagrid('reload');
+	editIndex=-1;
+}
+function clickRow(index)
+{
+	if(index==editIndex) return;
+	if(editIndex!=-1)
+	{
+		$('#birthRecordGrid').datagrid('endEdit', editIndex);
+	}
+	editIndex=index;
+	var row = $('#birthRecordGrid').datagrid('getRows')[editIndex];
+	if(row.PregDate==undefined){
+		var serverDT=getServerTime();
+		row.PregDate=serverDT.date;
+		row.PregTime=serverDT.time;
+	}
+	$('#birthRecordGrid').datagrid('beginEdit', editIndex);
+	var ed = $('#birthRecordGrid').datagrid('getEditor', {index:editIndex,field:'PregFetalHeart'});
+	$(ed.target).on("keypress",function(evt){
+		var key = String.fromCharCode(evt.keyCode);
+		return (/^[0-9\/]$/).test(key)
+	})
+}
+function getNurCurve()
+{
+	$cm({
+        ClassName: "Nur.DHCNurCurve",
+        MethodName: 'getNurCurve',
+        EpisodeID:EpisodeID
+    }, function (nurCurve) {
+	    $HUI.datebox('#contraDate').setValue(nurCurve.contraDate);
+	    $HUI.timespinner('#contraTime').setValue(nurCurve.contraTime);
+	    $HUI.datebox('#placentaOutDate').setValue(nurCurve.placentaOutDate);
+	    $HUI.timespinner('#placentaOutTime').setValue(nurCurve.placentaOutTime);
+	    if(nurCurve.ifMergeFirstAndTwo=="Y")
+        	$HUI.checkbox("#ifMergeFirstAndTwo").setValue(true);
+        else
+        	$HUI.checkbox("#ifMergeFirstAndTwo").setValue(false);
+    })
+}
+function saveNurCurve()
+{
+	var contraDate=$HUI.datebox('#contraDate').getValue();
+	var contraTime=$HUI.timespinner('#contraTime').getValue();
+	var placentaOutDate=$HUI.datebox('#placentaOutDate').getValue();
+	var placentaOutTime=$HUI.timespinner('#placentaOutTime').getValue();
+	var ifMergeFirstAndTwo=$HUI.checkbox("#ifMergeFirstAndTwo").getValue();
+	var parrStr="contraDate|"+contraDate+"^contraTime|"+contraTime+"^placentaOutDate|"+placentaOutDate+"^placentaOutTime|"+placentaOutTime+"^ifMergeFirstAndTwo|"+ifMergeFirstAndTwo;
+	$m({
+        ClassName: "Nur.DHCNurCurve",
+        MethodName: 'SaveNew',
+        EpisodeID:EpisodeID,
+        parrStr:parrStr
+    }, function (txtData) {
+        if (txtData==0) {
+            $.messager.popover({ msg: '保存成功！', type: 'success', timeout: 2000 });
+            getNurCurve();
+            firstPreview();
+        }
+        else{
+	        $.messager.popover({ msg: txtData, type: 'error', timeout: 2000 });
+        }
+    });
+}
+function saveBirthRecord(sIndex)
+{
+	if(editIndex!=-1)
+	{
+		$('#birthRecordGrid').datagrid('endEdit', editIndex);
+	}
+	if(sIndex==-1){
+		return;
+	}
+    var row = $('#birthRecordGrid').datagrid('getRows')[sIndex];
+    if (!(row["PregDate"] && row["PregTime"]))
+    {
+	    $.messager.popover({ msg: "日期和时间不能为空", type: 'error', timeout: 2000 });
+	    return
+	}
+	if ((!!row["PregBlood"]) && (String(row["PregBlood"]).indexOf("/") == - 1))
+    {
+	    $.messager.popover({ msg: "血压格式不正确", type: 'error', timeout: 2000 });
+	    $('#birthRecordGrid').datagrid('beginEdit', editIndex);
+	    return
+	}
+    var parrStr="";
+    for(var i=0;i<columns.length;i++)
+    {
+	    var value=row[columns[i].field];
+	    if(columns[i].field=="PregUserID")
+	    {
+	    	value=session['LOGON.USERID'];
+	    }
+	    if(value==undefined)
+	    {
+		    value="";
+	    }
+	    parrStr=parrStr+columns[i].field+"|"+value+"^";
+    }
+    $m({
+        ClassName: "Nur.DHCNURPregRec",
+        MethodName: 'Save',
+        Parr:parrStr,
+        Episode:EpisodeID
+    }, function (txtData) {
+        if (txtData.split("^").length==2) {
+            $.messager.popover({ msg: '保存成功！', type: 'success', timeout: 2000 });
+            gridReload();
+            firstPreview();
+        }
+        else{
+	        $.messager.popover({ msg: txtData, type: 'error', timeout: 2000 });
+        }
+    })
+}
+function deleteBirthRecord(dIndex)
+{
+    if(editIndex!=-1)
+	{
+		$('#birthRecordGrid').datagrid('endEdit', editIndex);
+	}
+    var row = $('#birthRecordGrid').datagrid('getRows')[dIndex];
+    $m({
+        ClassName: "Nur.DHCNURPregRec",
+        MethodName: 'delete',
+        recID:row.PregDr
+    }, function (txtData) {
+        if (txtData==0) {
+            $.messager.popover({ msg: '删除成功！', type: 'success', timeout: 2000 });
+            gridReload();
+            firstPreview();
+        }
+        else{
+	        $.messager.popover({ msg: '删除失败！', type: 'error', timeout: 2000 });
+        }
+    })
+}
+function firstPreview(){
+	parent.frames["previewFrame"].location.href="nur.laborStage.csp?1=1&page=1&EpisodeID="+EpisodeID;
+}
+function secondPreview(){
+	parent.frames["previewFrame"].location.href="nur.laborStage.csp?1=1&page=2&EpisodeID="+EpisodeID;
+}
+function printStageLabor(){
+	parent.frames["previewFrame"].printSVG();
+}
+function birthRecordOper(val, row, index) {
+    var btns = '';
+    btns = '<a class="btnCls icon-save" href="#" onclick=saveBirthRecord(\'' + index + '\')></a>'
+        + '<a class="btnCls icon-cancel" href="#" onclick=deleteBirthRecord(\'' + index + '\')></a>'
+    return btns;
+}
+    </script>
+</body>
+</html>

@@ -1,8 +1,7 @@
 <!-- 
  * FileName: dhcbill.opbill.dailycollectlist.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-03-12
- * Function: 
  * Description: 门诊日结汇总列表
 -->
 <!DOCTYPE html>
@@ -12,19 +11,40 @@
 </csp:method>
 <html>
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
-	<DHCBILL/>
+	<ADDINS require="CmdShell"></ADDINS>
+	<style>
+		td[field$="InvNoStr"] div.datagrid-cell, .datagrid-cell-group{
+			text-overflow: ellipsis; /*列数据太多显示...*/
+			padding: 0 8px;
+		}
+	</style>
 	<server>
-	set groupId=$g(%session.Data("LOGON.GROUPID"))
-	set hospId=$g(%session.Data("LOGON.HOSPID"))
+	set groupId=%session.Get("LOGON.GROUPID")
+	set hospId=%session.Get("LOGON.HOSPID")
+	
 	set baseConfig=##class(web.UDHCOPGSConfig).ReadCFByGRowID(groupId, hospId)
-	set receFlag=$p(baseConfig,"^",21)
+	set receCfg=$p(baseConfig,"^",21)
+	
+	set stDate=%request.Get("stDate")
+	set endDate=%request.Get("endDate")
+ 	set guserStr=%request.Get("guserStr")
+ 	set receId=%request.Get("receId")
+ 	set hospDR=%request.Get("hospDR")
+ 	set groupDR=%request.Get("groupDR")
+ 	set verifyStatus=%request.Get("verifyStatus")
 	</server>
 	<script type="text/javascript">
 	var GV = {
-		ReceFlag: "#(receFlag)#"
+		stDate: "#(stDate)#",
+		endDate: "#(endDate)#",
+		guserStr: "#(guserStr)#",
+		receId: "#(receId)#",
+		hospDR: "#(hospDR)#",
+		groupDR: "#(groupDR)#",
+		receCfg: "#(receCfg)#",
+		verifyStatus: "#(verifyStatus)#"
 	};
 	</script>
 </head>
@@ -33,6 +53,6 @@
 	<div data-options="region:'center',border:false">
 		<table id="collectList"></table>
 	</div>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.dailycollectlist.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.dailycollectlist.js"></script>
 </body>
 </html>

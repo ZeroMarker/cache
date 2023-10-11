@@ -9,6 +9,7 @@
 	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
 	d ##class(web.DHCBillPrint).InvBillPrintCLSID()
 	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+	w ##class(web.DHCSTMHUI.Common.UtilCommon).EncryptInput()
 </SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
@@ -18,15 +19,16 @@
 </head>
 <body class="hisui-layout" data-options="fit:true">
 	<div data-options="region:'north',border:false">
-		<table id="FindConditions" class="Condition">
-			<input id="Inci" name="Inci" type="hidden">
-			<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
+		<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+			<input id="InciId" name="InciId" type="hidden">
 			<tr>
 				<td><label>条码</label><input id="BarCode" name="BarCode" class="textbox"></td>
 				<td><label>条码状态</label><input id="Status" name="Status" class="textbox hisui-simplecombobox"></td>
 				<td>供应商</td>
 				<td><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
 				<td><label>开始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
+				<td><label>打印状态</label><input id="PrintStatus" name="PrintStatus" class="textbox hisui-simplecombobox"></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" >查询</a></td>
 			</tr>
 			<tr>
 				<td><label>自带条码</label><input id="OrgianlBarCode" name="OrgianlBarCode" class="textbox"></td>
@@ -34,6 +36,10 @@
 				<td>批号</td>
 				<td><input id="BatchNo" name="BatchNo" class="textbox"></td>
 				<td><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
+				<td><label>批次码</label><input id="BatchCode" name="BatchCode" class="textbox"></td>
+				<td>
+					<a href="#" id="ClearBT" class="hisui-linkbutton">清屏</a>
+				</td>
 			</tr>
 			<tr>
 				<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
@@ -48,13 +54,15 @@
 					<input class='hisui-radio' type="radio" label='按注册' name='DateFlag' value='1'>
 					<input class='hisui-radio' type="radio" label='按医嘱' name='DateFlag' value='2'>
 				</td>
-			</tr>
-			<tr>
-				<td><label>打印状态</label><input id="PrintStatus" name="PrintStatus" class="textbox hisui-simplecombobox"></td>
-				<td colspan="2" style="text-align:left;">
-					<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-					<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
-					<a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+				<td colspan="2" style="text-align:right;">
+					<a href="#" id="Print" class="hisui-menubutton menubutton-blue" style="width:120px;" data-options="menu:'#mm-Print'">打印条码</a>
+						<div id="mm-Print" style="width:120px;" class="menu-no-icon">
+							<div name="PrintBarCode">打印条码</div>
+							<div name="PrintPage">打印本页条码</div>
+							<div name="PrintBarCode2">打印条码2次</div>
+							<div name="PrintPage2">打印本页条码2次</div>
+						</div>
+					<a href="#" id="PrintBT" class="hisui-linkbutton">打印</a>
 				</td>
 			</tr>
 		</table>
@@ -65,7 +73,7 @@
 			<table id="BarMainGrid"></table>
 		</div>
 	</div>
-	<div class="GridPadding" style="width:500px;padding-top:0;padding-left:0;" data-options="region:'east',border:false,collapsible:false">
+	<div class="GridPadding" style="height:240px;padding-top:0;" data-options="region:'south',border:false,collapsible:false">
 		<div class="hisui-panel" title="条码信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
 			<table id="BarDetailGrid"></table>
 		</div>

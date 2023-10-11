@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--药房药库-单号规则
+	csp:pha.sys.v1.no.csp
+	js: pha/sys/v1/no.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    .layout-panel-west .datagrid-header{
+        display:none;
+    }
+    .pha-body {
+	    background-color: #fff;
+	}
+    </style>
+</head>
+
+<body>
+	<!-- 整体布局 -->
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+            	<div data-options="region:'north',height:52,border:false">
+            		<div class="pha-row">
+						<label id="_HospListLabel" style="color:red;">#(..Get("医院"))#</label>
+			        	<div class="pha-col">
+			        		<input id="_HospList" class="hisui-combobox textbox"/>
+			        	</div>
+		        	</div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true">
+		                <div data-options="region:'west',border:false,split:true,width:250">   
+		                    <div class="hisui-panel" title="#(..Get("产品线"))#" data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:'',
+		                    	tools: [{    
+									iconCls: 'icon-reload',
+									handler: QueryPro  
+								}]">
+		                        <table id="gridPro"></table>
+		                    </div>
+		                </div>
+		                <div data-options="region:'center',border:false">
+		                    <div id="panel-no" class="hisui-panel" title="#(..Get("产品模块单号规则"))#" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-template',bodyCls:'',
+		                    	tools: [{    
+									iconCls: 'icon-tip'
+								}]">
+                        		<table id="gridNo"></table>
+                    		</div>
+		                </div>
+		            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridNoBar">
+    	<div class="pha-row">
+	        <div class="pha-col">
+		    	<input id="chk-FindAll" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox" label="#(..Get("全局检索"))#"/>
+		    </div>
+		    <div class="pha-col">
+		    	<input id="conAppAlias" class="hisui-searchbox" data-pha="class:'hisui-searchbox',save:true,query:true,clear:true" />
+			</div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+        	<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">#(..Get("保存"))#</a>
+        </div>
+    </div>
+    
+    <!-- window dialog -->
+    
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/sys/v1/no.js"></script>
+</body>
+
+</html>

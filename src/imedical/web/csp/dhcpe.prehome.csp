@@ -1,0 +1,109 @@
+<!--
+* Description: 主场维护
+* FileName: dhcpe.prehome.csp
+* Creator: wangguoying
+* Date: 2022-12-09
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    if ##class(websys.SessionEvents).SessionExpired() quit 1
+    quit 1
+</csp:method>
+<html>
+
+<head>
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI />
+    <link href="../scripts/dhcpe/lib/fullcalendar/5.9.0/main.min.css" rel="stylesheet">
+    <style>
+        .search-table{
+            border-collapse:separate;
+            border-spacing:0 10px;
+            /*padding: 0 10px;*/
+        }
+        .expire-cell {
+            background: #fff2f2;
+        }
+
+        .tip {
+            font-weight: 600;
+            color: red;
+        }
+
+        .radio.checked {
+            font-weight: bold;
+            color: red;
+        }
+        
+
+        .datagrid-row-over.datagrid-row-selected, .datagrid-row-selected{
+            background-color: #ececec;
+        }
+        .fc-dayGridMonth-view .fc-daygrid-dot-event {
+            background-color: #2392ff;
+            border-color: #2392ff;
+            color: #fff2f2;
+        }
+
+    </style>
+       <SCRIPT language="Cache" RUNAT="SERVER">
+		s PGADM = %request.Get("PGADM", 1)
+	</SCRIPT>
+</head>
+
+<body>
+    <input type="hidden" id="H_PGADM" value="#(PGADM)#">
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:false,border:false,title:'',collapsible:false" style="padding:10px 10px;text-align: -webkit-center;">
+            <div id='calendar' ></div>
+        </div>
+    </div>
+    
+
+      <!--  按周复制窗口  -->
+      <div id="copy-week-win" class="hisui-dialog" title="号源复制" style="width:480px;height:180px;padding:0 10px;" data-options="iconCls:'icon-w-edit',resizable:true,modal:true,closed:true,buttons:[{
+        text:'复制',
+        iconCls:'icon-w-copy',
+        handler:copyByWeek},{
+        text:'关闭',
+        iconCls:'icon-w-close',
+        handler:function(){$HUI.dialog('#copy-week-win').close();}
+        }]">
+        <table cellspacing="10">
+                    <tr>
+                        <td>
+                            源日期周
+                        </td>
+                        <td>
+                            <input type="text" class="hisui-datebox" id="SWeekDate" style="width: 120px;">
+                        </td>
+                        <td style="text-align: right;">
+                            &nbsp;&nbsp;&nbsp;&nbsp; 目标日期周
+                        </td>
+                        <td>
+                            <input type="text" class="hisui-datebox" id="TWeekDate" style="width: 120px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span style='color:red'>复制分组</span></td>
+                        <td>
+                            <input class="hisui-checkbox" data-options="checked:true" type="checkbox" label="" id="CopyTeam">
+                        </td>
+                    </tr>
+                </table>
+    </div>
+    <!--  按周复制窗口  -->
+    <!-- 时段维护窗口 -->
+    <div id="TimeEditWin" style="overflow: hidden;"></div>
+    <script type="text/javascript" src="../scripts/dhcpe/lib/tippy/popper.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe/lib/tippy/tippy-bundle.umd.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe/lib/fullcalendar/5.9.0/main.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe/lib/fullcalendar/5.9.0/locales-all.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe.prehome.js"></script>
+
+</body>
+
+</html>

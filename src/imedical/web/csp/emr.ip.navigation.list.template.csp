@@ -1,0 +1,97 @@
+﻿<html>
+    <head>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.navigation.list.template.css"/>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script language="cache" runat="server">
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s categoryIDs = $Get(%request.Data("CategoryIDs",1),"")
+            s currentCategoryID = $p(categoryIDs,",",1)
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s:(patientID="") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+            s userID = %session.Get("LOGON.USERID")
+            s userName = %session.Get("LOGON.USERNAME")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s ssgroupID = %session.Get("LOGON.GROUPID")
+            s Hospital = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("HospitalName")
+            //是否提前书写病程记录
+            s createAdvance = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("ENABLE_ADVANCE_DAILYRECORD")
+            //自动加载病历
+            s isLoadDocument = ##Class(EMRservice.SystemParameter).IsLoadDocument()
+            //控制创建病程记录不受入出院时间限制
+            s openDocCode = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("openDocCode")
+            s:(openDocCode="") openDocCode = "[]"
+            //病种关联模板
+            s openDiseaseTemp = ##Class(EMRservice.SystemParameter).openDiseaseTemp()
+            //判断患者是否下了诊断
+            s DiagnosInfo = ##class(EMRservice.HISInterface.PatientInfoAssist).DiagnosInfo(episodeID)
+            //是否默认勾选全院模板
+            s isCheckAllTemp = ##Class(EMRservice.SystemParameter).IsCheckAllTemp()
+            //是否启用门(急)诊复诊病历创建判断
+            s OEPCreateConfig = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OEPCreateConfig","")
+        </script>
+        <script language="javascript">
+            var gl = {
+                patientId:'#(patientID)#',
+                episodeId:'#(episodeID)#',
+                categoryIds:'#(categoryIDs)#',
+                currentCategoryId:'#(currentCategoryID)#',
+                userId:'#(userID)#',
+                userName:'#(userName)#',
+                userLocId:'#(userLocID)#',
+                groupId:'#(ssgroupID)#',
+                Hospital:'#(Hospital)#'
+            };
+            var sysOption = {
+                createAdvance:'#(createAdvance)#',
+                isLoadDocument:'#(isLoadDocument)#',
+                openDocCode:$.parseJSON("#(openDocCode)#".replace(/\'/g, "\"")),
+                openDiseaseTemp:'#(openDiseaseTemp)#',
+                diagnosInfo:'#(DiagnosInfo)#',
+                isCheckAllTemp:'#(isCheckAllTemp)#',
+                OEPCreateConfig:'#(OEPCreateConfig)#'
+            };
+            //病历导航配置参数
+            var navCategoryData = "";
+        </script>
+        <title> 电子病历模板 </title>
+    </head>
+
+    <body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div data-options="region:'north',border:false" style="height:90px;overflow:hidden;">
+            <div id="searchInfo" class="hisui-panel" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+                <div class="div-table">
+                    <div class="row-item">
+                    	<div class="row-item-label"><label>#(..Get("模板"))#</label></div>
+						<div class="row-item-input"><input id="search" class="hisui-validatebox" placeholder="输入病历名称查询！" style="width:273px;"/></div>
+                    </div>
+                    <div class="row-item">
+                    	<div class="row-item-label"><label>#(..Get("科室"))#</label></div>
+						<div class="row-item-input"><select id="selLocId" class="hisui-combobox" data-options="enterNullValueClear:false,blurValidValue:true" style="width:280px;"></select></div>
+                    </div>                         
+                    <div class="row-item">
+                        <div class="row-item-label" id="diseDesc" style="visibility:hidden;"><label>#(..Get("病种"))#</label></div>
+						<div class="row-item-input" id="dise" style="visibility:hidden;"><input id="selDiseaseSpecies" class="hisui-combogrid" placeholder="输入病种名称查询！" style="width:280px;"/></div>
+                    </div>
+               </div>     
+               <div class="div-table">      
+                    <div class="row-item-short">
+                    	<div class="row-item-input-short" style="padding-top:4px;padding-left:10px"><input class="hisui-checkbox" type="checkbox" label="全院模板" id="allTemp" /></div>
+						<div class="row-item-input-short" id="personaTempDiv" style="padding-top:4px;"><input class="hisui-checkbox" type="checkbox" data-options="onChecked:function(event,val){loadPersonTemplate('');},onUnchecked:function(event,val){doSearch()}" label="个人模板" id="personal"></div>
+						<div class="row-item-input-short"><a href="#" class="hisui-linkbutton hover-dark" id="doSearch">查询</a></div>
+                    </div>    
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'center',border:false" style="padding:0px 10px 10px 10px;">
+            <div id="navcategory" class="hisui-tabs tabs-gray" data-options="tabPosition:'left',fit:true,headerWidth:100" style=""></div>
+            <div id="allTemplateNav" class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" style="display:none;overflow:hidden;">
+                <table id="listAlltemplate" class="hisui-treegrid"></table>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/ip.navigation.list.template.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>
+    </body>
+</html>

@@ -9,6 +9,7 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard"/>
+<DOCCARD medStepCode="Triage"></DOCCARD>
 <style>
 li a{
 	display: block;
@@ -34,13 +35,28 @@ li a:hover{
 iframe{
 	border: 0;
 }
+.toggle-btn{
+	color:#40a2de;
+	text-decoration:underline;	
+	padding-right:13px;
+	background:url(../images/fa-angle-double-down_40a2de_12.png) no-repeat center right;
+    line-height: 13px;
+    display: inline-block;
+    border-bottom:1px solid #40a2de;
+    cursor:pointer;
+}
+.toggle-btn.expanded{
+	background-image:url(../images/fa-angle-double-up_40a2de_12.png);
+}
 </style>
 <Server>
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+/*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)*/
 w "<input id='PapmiNo' name='PapmiNo' type='hidden' value=''>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+;门急诊复诊可重新指定医生
+s AllowOPQueAgainAdjDoc=+##Class(web.DHCDocConfig).GetConfigNode("AllowOPQueAgainAdjDoc")
 </Server>
 </head>
 <body>
@@ -49,10 +65,10 @@ w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' valu
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
-			
+			AllowOPQueAgainAdjDoc:"#(AllowOPQueAgainAdjDoc)#"
 		};
 	</SCRIPT>
-	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.JS"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/Alloc.NurseTriage.hui.js"></script>
 
 	

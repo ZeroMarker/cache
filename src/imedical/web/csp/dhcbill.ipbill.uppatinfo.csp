@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.ipbill.uppatinfo.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-04-14
  * Description: 就诊信息修改查询
 -->
@@ -12,50 +12,48 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
-	<style>
-		.td-first-col {
-			width: 58px;
-		}
-	</style>
 	<server>
-		w "<input id='papmi' name='papmi' type='hidden'>",$c(13,10)
+		set DefDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+		w "<input id='PatientId' type='hidden'>",!
 	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			DefDate: "#(DefDate)#"
+		};
+	</script>
 </head>
 
-<body style="padding:10px;">
+<body style="padding:10px;background-color:#ffffff;">
 	<div class="hisui-layout" data-options="fit:true,border:false">
-		<div data-options="region:'north',border:false,collapsible:false" style="height:91px;">
-			<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-header-gray'" style="border-bottom-style:none;border-radius:4px 4px 0 0;">
-				<table class="search-table" style="width:80%">
-					<tr>
-						<td class="r-label td-first-col"><label>开始日期</label></td>
-						<td><input id="stDate" class="hisui-datebox textbox"/></td>
-						<td class="r-label"><label>结束日期</label></td>
-						<td><input id="endDate" class="hisui-datebox textbox"/></td>
-						<td class="r-label"><label>操作员</label></td>
-						<td><input id="guser" class="hisui-combobox textbox"/></td>
-						<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询</a></td>
-					</tr>
-					<tr>
-						<td class="r-label"><label>登记号</label></td>
-						<td><input id="patientNo" class="textbox"/></td>
-						<td class="r-label"><label>患者姓名</label></td>
-						<td><input id="patName" class="textbox"/></td>
-						<td class="r-label"><label>就诊记录</label></td>
-						<td><input id="admList" class="hisui-combogrid textbox"/></td>
-					</tr>
-				</table>
-			</div>
+		<div data-options="region:'north',bodyCls:'panel-body-gray'" style="height:92px;border-radius:4px 4px 0 0;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+					<td><input id="stDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label r-label-30"><label>#(..Get("结束日期"))#</label></td>
+					<td><input id="endDate" class="hisui-datebox textbox"/></td>
+					<td class="r-label r-label-30"><label>#(..Get("操作员"))#</label></td>
+					<td><input id="guser" class="hisui-combobox textbox" placeHolder="#(..Get("请输入姓名拼音首字母检索"))#"/></td>
+					<td class="r-label r-label-30"><a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询</a></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+					<td><input id="patientNo" class="textbox"/></td>
+					<td class="r-label r-label-30"><label>#(..Get("患者姓名"))#</label></td>
+					<td><input id="patientName" class="textbox"/></td>
+					<td class="r-label r-label-30"><label>#(..Get("就诊记录"))#</label></td>
+					<td><input id="admList" class="hisui-combogrid textbox"/></td>
+				</tr>
+			</table>
 		</div>
-		<div data-options="region:'center',border:false">
-			<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
-				<table class="hisui-datagrid" id="updateList"></table>
-			</div>
+		<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+			<table id="updateList"></table>
 		</div>
 	</div>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.uppatinfo.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.uppatinfo.js"></script>
 </body>
 </html>

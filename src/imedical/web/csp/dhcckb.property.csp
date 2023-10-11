@@ -1,0 +1,175 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+<title>临床知识库数据集维护</title> <!--dhcckb.property.csp-->
+<HISUI/>
+<DHCCKB/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/property.js"></script>
+	<style type="text/css">
+	/*.layout-panel-center{
+		padding: 10px;
+	}*/
+	.layout-panel-west{
+		padding: 0px 10px 0px 0px;
+	}
+	/*.panel-header, .panel-body {
+		border-color: #ccc;		   
+	}*/
+	.panel-header{
+	    border-radius: 4px 4px 0 0 !important;	   
+	}		
+   </style>
+	 <style>
+	/*页面表格样式*/
+	.form-table{
+		border-collapse:collapse;
+		border:1px solid #95B8E7;
+		width:100%;
+		border:none;
+	}
+
+	.form-table td{
+		border:1px solid #95B8E7;
+		border:none;
+		padding:5px 5px;
+		font-size: 13px;
+	}
+	#ExaCatCode{padding:3px 0px;margin:0}
+	.tb_td_bk{
+		padding-left:40px !important;
+		/*width:100px;*/
+		/*background:rgb(238, 247, 254);*/
+	}
+	.tb_td_required{
+		font-weight:bold;
+		color: red;
+	}
+	.tb_td_bold{
+		font-weight:bold;
+	}
+	/* 兼容WebKit核心和IE核心的浏览器 */
+	.ui-input {
+	    -webkit-box-sizing: border-box;
+	    -moz-box-sizing: border-box;
+	    height: 25px;
+	    width:200px;
+	    border:1px solid #95B8E7;
+	}
+	input:focus{ 
+		background-color:#AFEEEE;
+	}
+	#icw_bt a.l-btn-plain,#pw_bt a.l-btn-plain,#uicw_bt a.l-btn-plain{
+		/*  background-color:#ffa8a8; */
+		border:1px solid #95B8E7;
+	}	
+	</style>
+</head>
+<body style="padding:10px">	
+	<div class="hisui-layout"  fit="true" >	
+		<div data-options="region:'west',title:'属性注册-属性树',headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="width:450px;">			
+    	
+				<div class="hisui-layout"  fit="true" >					
+					<div data-options="region:'north',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false,border:0" style="height:55px;">
+						<table style="padding:10px;">
+							<tr>
+								<td><input id="queryCode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码'/></td>					    		
+								<td>
+									<a href="#" style="margin-left:10px" id="find" class="hisui-linkbutton" onclick="searchData()" data-options="iconCls:'icon-w-find'">查询</a>
+
+									<a href="#" style="margin-left:10px" id="btnRefresh" class="hisui-linkbutton" onclick="RefreshData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">重置</a>
+								</td>
+							</tr> 
+						</table>	
+					</div>
+					<div data-options="region:'center',title:'',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper',border:0">	
+						<ul class="hisui-tree" id="attrtree" style="margin-left:10px"></ul>	
+					</div>					
+				</div>					
+		</div>
+		<div id="main" data-options="region:'center',title:'',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper',border:0">
+			<div class="hisui-panel" data-options="title:'属性列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">				
+			<div id="attrlist" toolbar="#subtoolbar"></div>
+				<div id="subtoolbar" class="toolbar">
+					<table cellspacing="0" cellpadding="0" >
+						<tr>
+					      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:AddRow()">新增</a></td>
+					      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:SaveRow()">保存</a> </td>
+					      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-unuse',plain:true" onclick="javascript:DeleteRow()">停用</a></td>
+					    </tr>
+					</table>
+				</div>
+			</div>
+			</div>
+			<!-- <table id="attrlist" class="hisui-datagrid" fit="true" title="属性维护" headerCls='panel-header-gray' iconCls='icon-paper' toolbar='#subtoolbar'></table> -->
+		</div> 
+	</div>	
+</body>
+<!-- 属性树右键菜单 -->
+<div id="right" class="hisui-menu" style="display:none">
+	<div onclick="newCreateAttr('S')" data-options="iconCls:'icon-add'">新增同级属性</div>
+	<div class="menu-sep"></div>	
+	<div onclick="newCreateAttr('C')" data-options="iconCls:'icon-add'">新增下级属性</div>
+
+</div>
+
+<!-- 属性树维护 -->
+<div id="AttrWin">
+	<table border="1" cellspacing="0" cellpadding="1" class="form-table" style="margin-top:10px">
+		<tr>
+			<td align="right" class="tb_td_bk">属性代码</td>
+			<td><input id="attrCode" class="textbox"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">属性名称</td>
+			<td><input id="attrDesc" class="textbox"/></td>
+		</tr>
+		<tr style="display:none;">
+			<td align="right" class="tb_td_bk">上级属性ID</td>
+			<td><input id="parref" class="textbox" disabled="disabled"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">上级属性</td>
+			<td><input id="parrefDesc" class="textbox" disabled="disabled"/></td>
+		</tr>		
+	</table>
+	<div id="icw_bt" style="margin-top:10px;display:flex;justify-content:center;">
+		<!-- 
+		<a href="#" style="width:70px" class="hisui-linkbutton" plain="true" iconCls="icon-save">查询</a>
+		 -->
+		<a href="#" id="saveParref" class="hisui-linkbutton" iconCls="icon-w-save" onclick="SaveAttr('S')">保存</a>
+		<a href="#" id="saveSub" class="hisui-linkbutton" iconCls="icon-w-save" onclick="SaveAttr('C')">保存</a>
+		<a href="#" style="margin-left:10px;" class="hisui-linkbutton" iconCls="icon-w-cancel">取消</a>
+	</div>
+</div>
+
+
+<!--wangxuejian 2021-05-18 -->
+<!--上层节点、关联增加搜索框-->
+<div id="myWin" style="width:500px;padding:10px;padding-bottom:0px;display:none;overflow:hidden;">  
+	<div style="margin-bottom:10px">
+		<table style="font-size:0">
+			<tr>
+				<td><input id="linkCode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码'/></td>					    		
+			  	<td style="padding-left:8px">
+			  		<a href="#" class="hisui-linkbutton" onclick="serchlink()" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a>
+			  	</td>
+				<td style="padding-left:8px"><a href="#" id="btnLinkfresh" class="hisui-linkbutton" onclick="LinkRefresh()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">重置</a></td>
+			</tr> 
+		 </table>
+	</div>
+	 
+	<div class="hisui-panel" data-options="fit:false" style="width:488px;height:300px;border:1px solid #ccc;border-radius:0px;border-top:0px">	
+		<ul id="linktree"></ul>		
+	</div>
+						
+</div>	
+</html>

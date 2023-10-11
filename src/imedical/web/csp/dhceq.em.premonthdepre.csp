@@ -1,0 +1,96 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	s GetRepPath=##Class(web.DHCEQStoreMoveSP).GetPath()
+	s QXType=$g(%request.Data("QXType",1))
+	s FixEquipFlag="1"	//$g(%request.Data("FixEquipFlag",1)) 只显示固定资产
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<span class="messager-popover" style="font-weight: normal;color:#1278b8;right:20px;" id="PriceInfo"><span class="messager-popover-icon info"></span><span class="content" id="DepreMonth">预折旧月份：#(CurMonth)#</span></span>
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'设备预折旧'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cUseLoc" for="UseLoc">使用科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="UseLoc" data-options="'component':'PLAT.L.Loc','paras':[{name:'Type',type:'4',value:'QXType'},{name:'LocDesc',type:'4',value:'UseLoc'}]"></div>
+							<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Name"></div>
+							<div class="eq-table-td eq-table-label"><label for="BeginDepreDate">开始折旧日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BeginDepreDate" ></div>
+							<div class="eq-table-td eq-table-label"><label for="OriginalFeeFrom">设备原值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OriginalFeeFrom" ></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cEquipType" for="EquipType">管理类组</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipType" data-options="'component':'PLAT.L.EquipType'"></div>
+							<div class="eq-table-td eq-table-label"><label for="No">设备编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="No" ></div>
+							<div class="eq-table-td eq-table-label"><label for="EndDepreDate">折旧日期至</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDepreDate" value=#(CurDate)# ></div>
+							<div class="eq-table-td eq-table-label"><label for="OriginalFeeTo">原值至</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OriginalFeeTo"></div>
+							<div class="eq-table-td eq-table-label"><a id="BPreDepre" href="#" class="hisui-linkbutton" iconCls="icon-w-calc" data-options="stopAllEventOnDisabled:true">生成预折旧</a></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="IsDepre">是否折旧(年限为0)</label></div>
+							<div class="eq-table-td eq-table-input"><input class='hisui-validatebox textbox' id="IsDepre" ></div>
+							<div class="eq-table-td eq-table-label"><label for="IsDepring">是否在折(净值为0)</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IsDepring"></div>
+							<div class="eq-table-td eq-table-label"><label for="IsCostAllot">是否分摊</label></div>
+							<div class="eq-table-td eq-table-input"><input class='hisui-validatebox textbox' id="IsCostAllot" ></div>
+							<div class="eq-table-td eq-table-label"><label for="IsPostpone">是否延期折旧</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IsPostpone"></div>
+							<div class="eq-table-td eq-table-label"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="BeginStartDate">启用日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BeginStartDate" ></div>
+							<div class="eq-table-td eq-table-label"><label for="EndStartDate">启用日期至</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndStartDate" value=#(CurDate)# ></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"></div>
+						</div>
+					</div>
+					<div id="LabelShow" style="padding:10px 0 0 10px;color:#666;">
+						<span style="color:#ff0000;font-weight:900;">注意：</span>
+						<span style="color:#000;font-weight:900;">点击【生成预折旧】按钮生成当前月设备预计折旧金额，月底进行正式折旧；若设备折旧信息发生变动，需重新生成预折旧再浏览报表。</span>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;">
+					 <table id="DHCEQPreMonthDepre" class="hisui-datagrid" data-options="border:false,fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="UseLocDR">
+			<INPUT type="hidden" id="EquipTypeDR">
+			<INPUT type="hidden" id="CurMonth" value="#(CurMonth)#">
+			<INPUT type="hidden" id="FixEquipFlag" value="#(FixEquipFlag)#">
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/premonthdepre.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</body>
+</html>

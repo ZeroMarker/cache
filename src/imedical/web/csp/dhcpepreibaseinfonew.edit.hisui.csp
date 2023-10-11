@@ -1,0 +1,265 @@
+<!-- 
+ * FileName: dhcpepreibaseinfonew.edit.hisui.csp
+ * Anchor: xy
+ * Date: 2020-03-16
+ * Description: HISUI 个人基本信息维护
+-->  
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+	<DOCCARD medStepCode="PEReg"></DOCCARD>	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 20px;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-header{
+	border-bottom: 0;
+}
+
+
+</style>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+//d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+set ID=$g(%request.Data("ID",1))
+set OperType=$g(%request.Data("OperType",1))
+set FIBIUpdateModel=##class(web.DHCPE.Public.Setting).GetPAPMINoGenModel()
+set CardRelate=$G(^DHCPESetting("DHCPE","CardRelate",%session.Get("LOGON.CTLOCID")))
+//w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+</SCRIPT> 
+
+<script type="text/javascript">
+	var OperType="#(OperType)#"
+	var FIBIUpdateModel="#(FIBIUpdateModel)#"
+	var ID="#(ID)#"
+	//alert(ID+"^"+FIBIUpdateModel)
+	
+	
+</script>
+</head>
+<body>
+
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:true,border:false,title:'',collapsible:false" style="height:770px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #E2E2E2;border-radius:4px;">
+			<table class="search-table" >
+				<tr>
+					<td class="r-label r-label-1"><label for="CardTypeNew">#(..Get("卡类型"))#</label></td>
+					<td>
+						<input class="textbox" disabled id="CardTypeNew"/> 
+					</td>
+					
+         		    <td class="r-label r-label-1"><label for="CardNo">#(..Get("卡号"))#</label></td>
+          			<td> 
+              			<input class="textbox"  Id="CardNo">
+         			 </td> 
+         			  
+         			  <td rowspan="4" style="width:260px;padding-left:20px;">
+          				<label id="imgPic"> <img src="../images/uiimages/patdefault.png" border="0" width=120 height=120></label>
+                     </td>	
+         		</tr>
+         		
+         		<tr>
+					<td class="r-label"><label for="PatType_DR_Name"><font color="red">*</font>#(..Get("类型"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="PatType_DR_Name" style="width:155px">
+					</td>
+					 <td  class="r-label">#(..Get("医保号"))#</td>
+					<td>
+						<input class="textbox" id="MedicareCode">
+					</td>  
+         		</tr> 	
+         		
+         		<tr>
+					<td  class="r-label">#(..Get("登记号"))#</td>
+					<td>
+						<input class="textbox" id="PAPMINo" disabled>
+					</td>
+         		    <td class="r-label r-label-1"><font color="red">*</font>#(..Get("姓名"))#</td>
+					<td>
+						<input class="textbox"  id="Name"/>
+					</td>
+         		</tr>  
+				
+				<tr>
+					<td class="r-label"><label for="Vocation">#(..Get("职业"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="Vocation" style="width:155px">
+					</td>
+					
+					<td class="r-label r-label-1"><label for="Sex_DR_Name"><font color="red">*</font>#(..Get("性别"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="Sex_DR_Name" style="width:155px">
+					</td>	
+         		</tr> 
+         			
+				<tr>	
+					<td class="r-label"><label for="Blood_DR_Name">#(..Get("血型"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="Blood_DR_Name" style="width:155px">
+					</td>
+					<td class="r-label r-label-1"><label for="DOB"><font color="red">*</font>#(..Get("生日"))#</label></td>
+					<td>
+						<input class="textbox" id="DOB">
+					</td>
+					<td style="padding-left:20px;">
+              			<a id="BPhoto" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-camera'" style="width:120px;">拍照</a>
+          			</td>
+				</tr>
+			
+			    <tr>	
+					<td class="r-label"><label for="MobilePhone"><font color="red">*</font>#(..Get("移动电话"))#</label></td>
+					<td>
+						<input class="textbox" id="MobilePhone">
+					</td>
+					<td class="r-label"><label for="Age">#(..Get("年龄"))#</label></td>
+					<td>
+						<input class="textbox" id="Age">
+					</td>
+					<td style="padding-left:20px;">
+              			<a id="ReadRegInfo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'" style="width:120px;">读身份证</a>
+          			</td>	
+				</tr>
+				
+			 	<tr>	
+					<td class="r-label"><label for="Tel1">#(..Get("电话1"))#</label></td>
+					<td>
+						<input class="textbox" id="Tel1">
+					</td>
+					<td class="r-label"><label for="CTNationDR">#(..Get("民族"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="CTNationDR" style="width:155px"/>
+					</td>
+					<td style="padding-left:20px;">
+              			<a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'" style="width:120px;">读卡</a>
+          			</td>
+						
+				</tr>
+				
+				<tr>	
+					<td class="r-label"><label for="Tel2">#(..Get("电话2"))#</label></td>
+					<td>
+						<input class="textbox" id="Tel2">
+					</td>
+					<td class="r-label"><label for="Married_DR_Name">#(..Get("婚姻状况"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="Married_DR_Name" style="width:155px"/>
+					</td>
+					<td style="padding-left:20px;">
+              			<a id="Update" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:'true'"  style="width:120px;">更新</a>
+          			</td>	
+				</tr>
+				
+				 <tr>	
+					<!--td class="r-label"><label for="VIPLevel">VIP等级</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="VIPLevel" style="width:155px"/>
+					</td-->
+					<td class="r-label"><label for="SpecialType">#(..Get("特殊客户"))#</label></td>
+					<td>
+						<input input class="hisui-combobox" type="text" id="SpecialType" style="width:155px"/>
+					</td>
+					<td class="r-label"><label for="Postalcode">#(..Get("邮编"))#</label></td>
+					<td>
+						<input class="textbox" id="Postalcode"/>
+					</td>
+					<td style="padding-left:20px;">
+            			<a id="Clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:120px;">清屏</a>
+          			</td>	
+				</tr>
+				
+				<tr>
+					<td class="r-label"><label for="PAPMICardType_DR_Name">#(..Get("证件类型"))#</label></td>
+					<td>
+						<input input class="hisui-combobox" type="text" id="PAPMICardType_DR_Name" style="width:155px"/>
+					</td>
+					<td class="r-label"><label for="Position">#(..Get("部门"))#</label></td>
+					<td>
+						<input class="textbox" id="Position">
+					</td> 
+				</tr>
+				
+				<tr>	
+					<td class="r-label"><label for="IDCard">#(..Get("证件号"))#</label></td>
+					<td colspan='3'>
+						<input class="textbox" id="IDCard" style="width:382px">
+					</td>		
+				</tr>
+				
+				<tr>	
+					<td class="r-label"><label for="Company">#(..Get("公司"))#</label></td>
+					<td colspan='3'>
+						<input class="textbox" id="Company" style="width:382px">
+					</td>		
+				</tr>
+				
+				<tr>	
+					<td class="r-label"><label for="Address">#(..Get("联系地址"))#</label></td>
+					<td colspan='3'>
+						<input class="textbox" id="Address" style="width:382px">
+					</td>		
+				</tr>
+				
+				<tr>	
+					<td class="r-label"><label for="Email">#(..Get("电子邮件"))#</label></td>
+					<td colspan='3'>
+						<input class="textbox" id="Email" style="width:382px">
+					</td>		
+				</tr>
+				<input type="hidden" id="RowId"/>
+				<input type="hidden" id="Sex"/>
+          		<input type="hidden" id="NationDesc"/>
+          		<input type="hidden" id="Birth"/>
+          		<input type="hidden" id="CredNo"/>
+          		<input type="hidden" id="PhotoInfo"/>
+			</table>
+		</div>
+	</div>
+		
+</div>
+
+  <div id="NameWin">	
+      <table id="QryNameWin" data-options="fit:true,singleSelect:true"></table>    
+  </div>
+  <div id="PhotoWin"></div>
+
+<script type="text/javascript" src="../scripts/DHCPEPreIBaseInfoNew.Edit.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPreIBaseInfo.Common.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+
+  
+  
+</body>		
+</html>
+			
+		

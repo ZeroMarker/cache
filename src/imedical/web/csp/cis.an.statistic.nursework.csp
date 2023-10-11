@@ -1,0 +1,734 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>手术护士工作量统计</title>
+<csp:content charset="UTF-8">
+<HISUI/></HISUI>
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+    	<form id="conditionForm">
+    		<label style="padding-left:5px;padding-right:6px;">开始日期</label>
+    		<input type="text" style="" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:15px;padding-right:6px;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:15px;padding-right:6px;">手术室</label>
+    		<input type="text" id="OPNurse" name="OPNurse" class="hisui-combobox textbox" data-options="textField:'Description',valueField:'RowId'">
+    		<a id="btnQuery" style="margin-left:6px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
+    		<!--<a id="btnExcel" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-excel'">导出</a>-->
+    		<!--a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'">打印</a-->
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false ">
+    	<table id="data_grid"></table>
+	</div>
+	<div id="OpDetailsDialog" class="hisui-dialog" data-options="closed:true,width:1040,height:500,modal:true">
+		<div style="margin:10px;border:1px solid #ccc;border-radius:4px;height:440px;">
+		<table id="data_grid1"></table> 
+		</div>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		var hasSevenOperSeq = false;
+		var type="",asa="",anDoc="",nursetype="",nurse=""
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1,1);
+			//date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			dhccl.parseDateFormat();
+            var ret=dhccl.runServerMethod("web.DHCClinicCom","GetDateFormat");
+	        if(ret.result=="j/n/Y") 
+	        {var lastMonthFirstDay=lastMonthFirstDay.format("dd/MM/yyyy");
+	         var lastMonthLastDay=lastMonthLastDay.format("dd/MM/yyyy");
+	        
+	        }
+	        else 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("yyyy-MM-dd");
+	            var lastMonthLastDay=lastMonthLastDay.format("yyyy-MM-dd");
+		    }
+            $("#OperStartDate").datebox("setValue", lastMonthFirstDay);
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay);
+    		
+    		$("#OPNurse").combobox({
+	    		textField:'Description',
+	    		valueField:'RowId',
+	    		filter: function(q, row) {
+                	q = q.toUpperCase();
+                	var opts = $(this).combobox('options');
+                	return (row[opts.valueField] === q) || (row[opts.textField].indexOf(q) > -1) || ((row['ShortDesc'] || '').indexOf(q) > -1);
+            	}
+	    	});
+	    	dhccl.getDatas(ANCSP.DataQuery, {
+        		ClassName: CLCLS.BLL.Admission,
+        		QueryName: "FindLocationOld",
+        		Arg1: "",
+        		Arg2: "OP^EMOP^OUTOP",
+        		ArgCnt: 2
+    		}, 'json', true, function(data) {
+        		$("#OPNurse").combobox('loadData', data);
+    		});
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: true,
+        		toolbar: "#dataTools",
+        		border:false,
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.AnaesthesiaStatistic",
+            		QueryName: "FindNurseWorkStat",
+            		ArgCnt: 3
+        		},
+        		columns: [
+            	[{
+                    	field: "NurseName",
+                    	title: "手术护士",
+                    	width: 80
+                	},{
+                    	field: "Circual1",
+                    	title: "巡回（I级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Circual1;
+                        result = "<a href='#' onclick='ShowDetails(\"I级巡回\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Scrub1",
+                    	title: "器械（I级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Scrub1;
+                        result = "<a href='#' onclick='ShowDetails(\"I级器械\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                    	}
+                	},{
+                    	field: "Total1",
+                    	title: "总数（I级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Total1;
+                        result = "<a href='#' onclick='ShowDetails(\"I级总数\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                  		field: "Circual2",
+                    	title: "巡回（II级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Circual2;
+                        result = "<a href='#' onclick='ShowDetails(\"II级巡回\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Scrub2",
+                    	title: "器械（II级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Scrub2;
+                        result = "<a href='#' onclick='ShowDetails(\"II级器械\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Total2",
+                    	title: "总数(II级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Total2;
+                        result = "<a href='#' onclick='ShowDetails(\"II级总数\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Circual3",
+                    	title: "巡回（III级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Circual3;
+                        result = "<a href='#' onclick='ShowDetails(\"III级巡回\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Scrub3",
+                    	title: "器械（III级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Scrub3;
+                        result = "<a href='#' onclick='ShowDetails(\"III级器械\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Total3",
+                    	title: "总数（III级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Total3;
+                        result = "<a href='#' onclick='ShowDetails(\"III级总数\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Circual4",
+                    	title: "巡回（IV级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Circual4;
+                        result = "<a href='#' onclick='ShowDetails(\"IV级巡回\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Scrub4",
+                    	title: "器械（IV级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Scrub4;
+                        result = "<a href='#' onclick='ShowDetails(\"IV级器械\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Total4",
+                    	title: "总数（IV级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Total4;
+                        result = "<a href='#' onclick='ShowDetails(\"IV级总数\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Circual5",
+                    	title: "巡回（V级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Circual5;
+                        result = "<a href='#' onclick='ShowDetails(\"V级巡回\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Scrub5",
+                    	title: "器械（V级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Scrub5;
+                        result = "<a href='#' onclick='ShowDetails(\"V级器械\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "Total5",
+                    	title: "总数（V级）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.Total5;
+                        result = "<a href='#' onclick='ShowDetails(\"V级总数\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "CircualB",
+                    	title: "巡回（择期）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.CircualB;
+                        result = "<a href='#' onclick='ShowDetails(\"择期巡回\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                  		field: "ScrubB",
+                    	title: "器械（择期）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.ScrubB;
+                        result = "<a href='#' onclick='ShowDetails(\"择期器械\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                  		field: "TotalB",
+                    	title: "总数（择期）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.TotalB;
+                        result = "<a href='#' onclick='ShowDetails(\"择期总数\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "CircualE",
+                    	title: "巡回（急诊）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.CircualE;
+                        result = "<a href='#' onclick='ShowDetails(\"急诊巡回\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "ScrubE",
+                    	title: "器械（急诊）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.ScrubE;
+                        result = "<a href='#' onclick='ShowDetails(\"急诊器械\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	},{
+                    	field: "TotalE",
+                    	title: "总数（急诊）",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+                        var result = "",
+                        title = row.TotalE;
+                        result = "<a href='#' onclick='ShowDetails(\"急诊总数\",\"" + row.NurseName + "\")'>" + title + "</a>";
+                        return result;
+                        }
+                	}]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 =  $("#OPNurse").combobox("getValue") || "";
+            	if (stopQuery) return false;
+        	},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+        	});
+        	$("#btnQuery").click(function() {
+	        	var locId=$("#OPNurse").combobox("getValue") || ""
+	        	if(locId=="")
+	        	{
+		        	$.messager.alert("提示", "请先选择手术室！！！", 'info');
+		        }
+	        	stopQuery = false;
+	        	datagrid.datagrid('reload');
+	        });
+	        $("#btnPrint").click(function(){
+		        printGrid();
+		    });
+		});
+		var datagrid1 = $("#data_grid1");
+		datagrid1.datagrid({
+			idField: "RowId",
+			fit: true,
+			rownumbers: true,
+			remoteSort: false,
+			singleSelect:true,
+			striped:true,
+			title: "",
+			nowrap: true,
+			toolbar: "#dataTools",
+			border:false,
+			url: ANCSP.DataQuery,
+			queryParams: {
+				ClassName: "CIS.AN.BL.AnaesthesiaStatistic",
+				QueryName: "FindOperationDetail",
+				ArgCnt: 7
+			},
+			columns: [
+			[{
+				field: "OpDate",
+				title: "手术日期",
+				width: 80
+			},{
+				field: "PatName",
+				title: "患者姓名",
+				width: 100
+			},{
+				field: "Gender",
+				title: "性别",
+				width: 100
+			},{
+				field: "Age",
+				title: "年龄",
+				width: 100
+			},{
+				field: "Loc",
+				title: "科室",
+				width: 100
+			},{
+				field: "BedNo",
+				title: "床号",
+				width: 100
+			},{
+				field: "RegNo",
+				title: "登记号",
+				width: 100
+			},{
+				field: "MedCare",
+				title: "住院号",
+				width: 100
+			},{
+				field: "OperDesc",
+				title: "手术名称",
+				width: 100
+			},{
+				field: "OperClass",
+				title: "手术分级",
+				width: 100
+			},{
+				field: "OpDoc",
+				title: "手术医生",
+				width: 100
+			},{
+				field: "AnDoc",
+				title: "麻醉医生",
+				width: 100
+			},{
+				field: "AnExpert",
+				title: "麻醉指导",
+				width: 100
+			},{
+				field: "AnAssistant",
+				title: "麻醉助手",
+				width: 100
+			},{
+				field: "AnNurse",
+				title: "麻醉护士",
+				width: 100
+			},{
+				field: "AnMethod",
+				title: "麻醉方法",
+				width: 100
+			},{
+				field: "ASA",
+				title: "ASA分级",
+				width: 100
+			},{
+				field: "AnDuration",
+				title: "麻醉时长",
+				width: 100
+			},{
+				field: "CirNurse",
+				title: "巡回护士",
+				width: 100
+			},{
+				field: "ScrubNurse",
+				title: "器械护士",
+				width: 100
+			},{
+				field: "OpDuration",
+				title: "手术时长",
+				width: 100
+			}]
+			],
+			onBeforeLoad: function(param) {
+				param.Arg1 = $("#OperStartDate").datebox("getValue");
+				param.Arg2 = $("#OperEndDate").datebox("getValue");
+				param.Arg3 = type;
+				param.Arg4 = asa;
+				param.Arg5 = anDoc;
+				param.Arg6 = nursetype;
+				param.Arg7 = nurse;
+			},
+			pagination: true,
+			pageList: [200, 500],
+			pageSize: 500
+		});
+		function printGrid(){
+			var lodop = getLodop();
+			createPrintPage(lodop);
+			
+			lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+			lodop.SET_PREVIEW_WINDOW(1, 2, 0, 0, 0, "");
+			lodop.SET_PRINT_MODE("AUTO_CLOSE_PREWINDOW", 1); //打印后自动关闭预览窗口
+			lodop.PREVIEW();
+		}
+		function createPrintPage(lodop){
+			var datagrid = $("#data_grid");
+			var groups = datagrid.datagrid("groups");
+			
+			var length = groups.length;
+			var group,row,rowLength;
+			var gridHtml=[];
+			var linedItemNo=1,operCount=0;
+			var colWidth=100,totalColWidth=700,columns=6;
+			
+			for(var i=0;i<length;i++){
+				group = groups[i];
+				if(i>0){
+					lodop.NEWPAGEA();
+					linedItemNo += 5;
+				}
+				gridHtml=[
+				    "<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:14px;}",
+                    "th {font-size:14px;font-weight:bold;text-align:center;} tr>td {text-align:center} tr {height:24px;} ",
+                    "tr {height:27px;} table {table-layout:fixed;} .item-desc {width:200px;overflow:hidden;}</style>"
+                ];
+                gridHtml.push('<table>');
+                gridHtml.push('<thead><tr>');
+                gridHtml.push('<th style="width:50px;">日期</th>');
+                columns = 7;
+                if(hasSevenOperSeq)columns = 8;
+                colWidth = Math.ceil(totalColWidth/columns);
+                gridHtml.push('<th style="width:'+colWidth+'px;">第一台</th>');
+                gridHtml.push('<th style="width:'+colWidth+'px;">第二台</th>');
+                gridHtml.push('<th style="width:'+colWidth+'px;">第三台</th>');
+                gridHtml.push('<th style="width:'+colWidth+'px;">第四台</th>');
+                gridHtml.push('<th style="width:'+colWidth+'px;">第五台</th>');
+                gridHtml.push('<th style="width:'+colWidth+'px;">第六台</th>');
+                if(hasSevenOperSeq)gridHtml.push('<th style="width:'+colWidth+'px;">第七台</th>');
+                gridHtml.push('<th style="width:'+colWidth+'px;">手术时长</th>');
+                gridHtml.push('</tr></thead>');
+                gridHtml.push('<tbody>');
+                
+                operCount = 0;
+                rowLength = group.rows.length;
+                for(var j=0;j<rowLength;j++){
+	                row = group.rows[j];
+	                gridHtml.push('<tr>');
+	                gridHtml.push('<td>'+row.Date+'</td>');
+	                gridHtml.push('<td>'+row.OperSeq1+'</td>');
+	                gridHtml.push('<td>'+row.OperSeq2+'</td>');
+	                gridHtml.push('<td>'+row.OperSeq3+'</td>');
+	                gridHtml.push('<td>'+row.OperSeq4+'</td>');
+	                gridHtml.push('<td>'+row.OperSeq5+'</td>');
+	                gridHtml.push('<td>'+(row.OperSeq6||'')+'</td>');
+	                if(hasSevenOperSeq)gridHtml.push('<td>'+row.OperSeq7+'</td>');
+	                gridHtml.push('<td>'+(row.TotalTime||'')+'</td>');
+	                gridHtml.push('</tr>');
+	                operCount+=Number(row.OperCount);
+	            }
+	            gridHtml.push('<tr>');
+	            gridHtml.push('<td>合计</td>');
+	            gridHtml.push('<td></td><td></td><td></td><td></td><td></td><td></td>');
+	            if(hasSevenOperSeq)gridHtml.push('<td></td>');
+	            gridHtml.push('</tr>');
+	            gridHtml.push('</tbody></table>');
+	            lodop.ADD_PRINT_TABLE(120,40,"RightMargin:0.8cm",920,gridHtml.join(''));
+	            setHeader();
+	            setMonth(group.value);
+	        }
+	        function setHeader(){
+		        lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+		        lodop.SET_PRINT_STYLE("FontName", "微软雅黑");
+		        lodop.SET_PRINT_STYLE("FontSize", 11);
+		        lodop.ADD_PRINT_TEXT(20, 240, 300, 30, "麻 醉 科 医 师");
+		        lodop.SET_PRINT_STYLEA(0, "FontSize", 21); //设置字体
+		        lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+		        lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+		        lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+		        lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+		        lodop.ADD_PRINT_TEXT(60, 40, 720, 20, "个  人  工  作  量  统  计  表 （共 "+operCount+" 台）");
+		        lodop.SET_PRINT_STYLEA(0, "FontSize", 18); //设置字体
+		        lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+		        lodop.SET_PRINT_STYLEA(0, "Alignment", 2) //居中
+		        lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+		        lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+		        lodop.ADD_PRINT_TEXT(90, 200, 560, 20, $("#OPNurse").combobox("getText"));
+		        lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+		        lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+		        lodop.SET_PRINT_STYLEA(0, "Alignment", 3) //靠右对齐
+		        lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+		        lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+		    }
+		    function setMonth(month)
+		    {
+			    lodop.ADD_PRINT_TEXT(90, 40, 150, 20, month);
+			    lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+			    lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+			    lodop.SET_PRINT_STYLEA(0, "Alignment", 1) //靠右对齐
+			    lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+			    lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+			}
+		}
+		function ShowDetails(title,Nurse){
+			switch (title){
+				case "I级巡回":
+				     asa=1;
+				     type="";
+				     anDoc="";
+				     nursetype="C";
+				     nurse=Nurse;
+				     break;
+				case "I级器械":
+				     asa=1;
+				     type="";
+				     anDoc="";
+				     nursetype="T";
+				     nurse=Nurse;
+				     break;
+				case "I级总数":
+				     asa=1;
+				     type="";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+				case "II级巡回":
+				     asa=2;
+				     type="";
+				     anDoc="";
+				     nursetype="C";
+				     nurse=Nurse;
+				     break;
+				case "II级器械":
+				     asa=2;
+				     type="";
+				     anDoc="";
+				     nursetype="T";
+				     nurse=Nurse;
+				     break;
+				case "II级总数":
+				     asa=2;
+				     type="";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+				case "III级巡回":
+				     asa=3;
+				     type="";
+				     anDoc="";
+				     nursetype="C";
+				     nurse=Nurse;
+				     break;
+				case "III级器械":
+				     asa=3;
+				     type="";
+				     anDoc="";
+				     nursetype="T";
+				     nurse=Nurse;
+				     break;
+				case "III级总数":
+				     asa=3;
+				     type="";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+				case "IV级巡回":
+				     asa=4;
+				     type="";
+				     anDoc="";
+				     nursetype="C";
+				     nurse=Nurse;
+				     break;
+				case "IV级器械":
+				     asa=4;
+				     type="";
+				     anDoc="";
+				     nursetype="T";
+				     nurse=Nurse;
+				     break;
+				case "IV级总数":
+				     asa=4;
+				     type="";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+				case "V级巡回":
+				     asa=5;
+				     type="";
+				     anDoc="";
+				     nursetype="C";
+				     nurse=Nurse;
+				     break;
+				case "V级器械":
+				     asa=5;
+				     type="";
+				     anDoc="";
+				     nursetype="T";
+				     nurse=Nurse;
+				     break;
+				case "V级总数":
+				     asa=5;
+				     type="";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+				case "择期巡回":
+				     asa="";
+				     type="B";
+				     anDoc="";
+				     nursetype="C";
+				     nurse=Nurse;
+				     break;
+				case "择期器械":
+				     asa="";
+				     type="B";
+				     anDoc="";
+				     nursetype="T";
+				     nurse=Nurse;
+				     break;
+				case "择期总数":
+				     asa="";
+				     type="B";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+				case "急诊巡回":
+				     asa="";
+				     type="E";
+				     anDoc="";
+				     nursetype="C";
+				     nurse=Nurse;
+				     break;
+				case "急诊器械":
+				     asa="";
+				     type="E";
+				     anDoc="";
+				     nursetype="T";
+				     nurse=Nurse;
+				     break;
+				case "急诊总数":
+				     asa="";
+				     type="E";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+				default:
+				     asa="";
+				     type="";
+				     anDoc="";
+				     nursetype="";
+				     nurse=Nurse;
+				     break;
+			}
+			//$("#OpDetailsDialog").dialog("setTitle", title);
+			$("#OpDetailsDialog").dialog({
+				title: title,
+				iconCls:"icon-w-paper"
+				});
+			$("#OpDetailsDialog").dialog("open");
+			datagrid1.datagrid('reload');
+		}
+	</script>
+</body>
+</html>

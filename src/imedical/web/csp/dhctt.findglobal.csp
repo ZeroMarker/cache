@@ -1,7 +1,7 @@
 <html>
 <head>
-
 	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+		i ##Class(websys.SessionEvents).SessionExpired() q 1
 		d ##class(web.Util.DHCTTLanguageManager).getLanguage().initFindGlobal(.t)
 		S findpn = "packageName"
 		S findgn = "globalName"
@@ -16,15 +16,10 @@
 		s width100="style='width:100px'"
 		q 1
 	</csp:method>
-
- <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
- <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
- <SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
- 
 	<title>#(t("Find Global Title"))#</title>
 	<DHCTT:HEAD/>
 	<SCRIPT language=CACHE RUNAT=SERVER METHOD=CreateUrl RETURNTYPE=%String ARGUMENTS="pn:%String,tn:%String">
-		q findurl_"?"_findpn_"="_pn_"&"_findtn_"="_tn
+		q findurl_"?"_findpn_"="_pn_"&"_findtn_"="_tn_"&MWToken="_$G(%request.Data("MWToken",1))
 	</SCRIPT>
 </head>
 <body>
@@ -37,9 +32,8 @@
 				<form action="dhctt.findglobal.csp">
 					#(t("pn"))#: <input type="text" name="packageName" id="packageName" value="#($s(reqPnValue:reqPnValue,1:"User"))#" />
 					#(t("gn"))#: <input type="search" name="globalName" id="globalName" autocomplete="off" value="#(reqGnValue)#" placeholder=#(t("gn"))# required=true/>	
+					<input type="hidden" value="#($G(%request.Data("MWToken",1)))#" name="MWToken"/>
 					<input id='find' type="submit" value="#(t("find"))#" />
-					<a href="javascript:void(0)" id="exportTabAllGlobal">导出所有表对应的Global</a>
-					<!--<a href="javascript:void(0)" id="exportAllGlobal">导出所有Global</a>-->
 				</form>
 				<!--&nbsp<a id='find' href="#(..CreateUrl())#">#(t("find"))#</a>-->
 			</td>
@@ -112,16 +106,7 @@
 				DHCTable.filterTalbe( ClassAndGlobalTable,row );
 			}
 		}
-	});	
-	DHC.addEventListener(document.getElementById("exportTabAllGlobal"),"click",function(e){
-		var rtn = cspRunServerMethod("#(##class(%CSP.Page).Encrypt($lb("websys.Query.ToExcel")))#","TableGlobal","web.Util.DHCJFClassGlobal","SelectGlobalInfo");
-		location.href = rtn;
-	})
-	/*DHC.addEventListener(document.getElementById("exportAllGlobal"),"click",function(e){
-		var rtn = cspRunServerMethod("#(##class(%CSP.Page).Encrypt($lb("websys.Query.ToExcel")))#","AllGlobal","%Studio.Global","GlobalList");
-		location.href = rtn;
-	})*/
-	
+	});		
 </script>
 </body>
 </html>

@@ -1,0 +1,244 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1 
+ /*
+    @CSP：dhc.bdp.mkb.mkbklmappingdetail.csp
+    @JS:MKB_KLMappingDetail.js
+    @Title：知识点映射管理
+    @Creator:谷雪萍
+    @Description:知识点映射管理
+    @CreateDate：2018-05-15
+ */
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript">var detailstr=[];var leaveflag="";</script>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/SDS/StructDiagnosCommon.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_KLMappingDetail.js"></script>
+<!--<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_KnoExpression.js"></script>-->
+ <style type="text/css">
+    /*中间面板标题样式*/
+	.titleCls{
+		color:#666;
+	}  
+ 
+	textarea:not(#textareadom){
+		height:28px;
+	}  
+ 
+   /*表达式控件所需样式 开始*/
+    .m-btn-downarrow, .s-btn-downarrow {
+    	top: -3px;
+	}	
+    #DiagForm,#TagForm
+    {
+        min-width: 280px;
+        /*  border-collapse 设置表格的边框是否被合并为一个单一的边框，还是象在标准的HTML中分开显示。 */
+        border-collapse: collapse;
+        /*border: 1px solid #bbbbbb;*/
+    }
+    #DiagForm tr,#TagForm tr{
+        height: 35px;
+    }
+    /* 单元格边框 */
+    #DiagForm td, th
+    {
+        border:1px solid #bbbbbb;
+    }
+    #TagForm td, th
+    {
+        border:1px solid #bbbbbb;
+    }
+    .td_label{
+        text-align: center;
+        font-weight: bold;
+        min-width:50px;
+    }
+    .hidecls{
+        display:none;
+    }
+    /*表达式控件所需样式 结束*/	
+    /*属性面板圆角*/
+	#layout .panel-header-gray {
+    	border-radius: 4px 4px 0px 0px;
+	}  	
+  		        
+ </style>
+</HEAD>
+<BODY style="padding:4px;">
+    <server>
+    	s menuid=%request.Get("BDPMENU")   //菜单id
+    	s mappingBase=%request.Get("mappingBase")   //知识点映射注册id
+    	s termBase=%request.Get("termBase")   //术语库注册id
+    	s termRowId=%request.Get("termRowId")   //知识点映射注册id
+    	s detailIdStr=%request.Get("detailIdStr")   //知识点映射注册id
+    	//表达式控件所需代码
+    	//s GetData=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.MKBKLMappingDetail.GetExpData")) //获取已勾选属性串
+    	s GetData="web.DHCBL.MKB.MKBKLMappingDetail#GetExpData" //获取已勾选属性串
+    	
+   </server> 
+   
+     <div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+
+		<div id="layoutcenter" data-options="region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-radius: 0px 0px 4px 4px;" title="知识库规则维护">
+			
+			<div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0" /></div>
+			<table id="mygrid" toolbar="#mytbar" data-options="fit:true" style="display:none" border="false"></table>
+		</div> 
+		 <div id="layoutwest" data-options="region:'west',split:true" style="width:220px;" border="false" > 
+		 	<table title="规则管理" id="basegrid" toolbar="#leftTools" data-options="iconCls:'icon-w-paper',fit:true" ></table> 
+        </div>      
+ 	</div>
+ 	
+ 	<div id="leftTools">
+ 		<input style="width:165px" class="searchbox searchbox-prompt" id="TextBase">
+ 		<!--<a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-w-find" style="margin-left:-4px" id="btnLeftSearch" data-options="stopAllEventOnDisabled:true"></a>-->
+ 		<span class="searchbox-button" style="margin:1px 0 0 -34px;" id="btnLeftSearch"></span>
+ 		<a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-refresh" plain="true" id="btnLeftRefresh" data-options="stopAllEventOnDisabled:true"></a>
+ 	</div>
+ 	
+	<div id="mytbar" data-options="split:false" style="text-align: left; display:block;" >
+ 		<a class="hisui-searchbox" data-options="iconCls:'icon-search'" id="TextDesc">查询</a>
+ 		<a href="#" class="hisui-linkbutton" iconCls='icon-w-other' id="searchConfig" data-options="stopAllEventOnDisabled:true" style="margin-left:-4px;"></a>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls='icon-refresh' plain="true" id="btnRefresh" data-options="stopAllEventOnDisabled:true">清屏</a>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls='icon-add' plain="true" id="add_btn" data-options="stopAllEventOnDisabled:true">新增</a>
+	    <a href="#" class="hisui-linkbutton l-btn-2" iconCls='icon-save' plain="true" id="save_btn" data-options="stopAllEventOnDisabled:true">保存</a>
+	    <a href="#" class="hisui-linkbutton l-btn-2" iconCls='icon-cancel' plain="true" id="del_btn" data-options="stopAllEventOnDisabled:true">删除</a>
+	    <a href="#" class="hisui-linkbutton l-btn-4" iconCls='icon-upload' plain="true" id="upload_btn" data-options="stopAllEventOnDisabled:true" style="display:none;">上传文献</a>
+		<a href="#" class="hisui-linkbutton l-btn-2" iconCls='icon-import' plain="true" id="btnDataImport" data-options="stopAllEventOnDisabled:true" >导入</a>
+	
+	</div> 
+	
+    <div id="myMenu" class="hisui-menu" style="width:80px;">
+        <div id="del_menu" iconCls="icon-cancel" data-options="">删除</div>
+       	<div id="copy_menu"  iconCls="icon-copyorder" data-options="">复制</div>
+       	<div id="paste_menu"  iconCls="icon-save" data-options="">粘贴</div>
+    </div>  
+        
+	<!--<div id="myWin" style="top:30px;padding:10px;display:none;">   
+		<table data-options="fit:true" id="configgrid" border="false" ></table>  
+	</div>-->
+	
+	 <!--文献表单-->
+     <div id="docWin" style="width:600px;height:450px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table id="addtable" align="center">
+				<tr>
+				 <td class="tdlabel" id="txtchooses"><font color=red>*</font>上传文献</td>
+				 <td><iframe id="upload" src="" width="400px" height="40" scrolling="no" frameborder="0"></iframe></td>
+				</tr>
+				<tr>	
+	               <td class="tdlabel"><font color=red>*</font>代码</td>
+	    		   <td><input id="MKBDMCode" name="MKBDMCode" type="text" class="hisui-validatebox"  style="width:400px;color:#999999; background-color:#F0F0F0;" data-options="required:true " readonly="true"></td>
+	    		</tr>
+	    		<tr>
+	    		   <td class="tdlabel"><font color=red>*</font>名称</td>
+	    		   <td><input id="MKBDMDesc" name="MKBDMDesc" type="text" class="hisui-validatebox" style="width:400px"></td>
+	    		 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">文献出处</td>
+	    		   <td><input id="MKBDMSource" name="MKBDMSource" type="text" class="hisui-validatebox" style="width:400px"></td>
+	    		 </tr>
+				 <tr>
+				   <td class="tdlabel">关键词</td>
+				   <td><input id="MKBDMKeyWord" name="MKBDMKeyWord"  type="text" class="hisui-validatebox" style="width:400px"><td>
+				 </tr>	    		 
+	    		 <tr>
+	    		   <td class="tdlabel">审核状态</td>
+	    		   <td><input id="MKBDMFlag" name="MKBDMFlag"  style="width:407px;"></td>
+	    		 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">备注</td>
+	               <td><textarea id="MKBDMNote" name="MKBDMNote" type="text" class="hisui-validatebox" style="width:400px;height:100px"  ></textarea></td>
+				 </tr>
+				 <tr>
+				   <td><input id="MKBDMType" name="MKBDMType"  style="width:200px;" type="hidden" ></td>
+				 </tr>
+				 <tr>
+				   <td><input id="MKBDMPath" name="MKBDMPath"  style="width:200px;" type="hidden" ></td>
+				 </tr>
+			</table >
+		</form>
+	</div>
+	 <!--属性列表弹窗-->
+ 	 <div id='mypropertylist' style='position:absolute;background:#FFFFFF;border:1px solid #C0C0C0;width:800px;height:270px;padding:3px;z-index:9;display:none;'>		
+ 		<div id='mypropertylayout' class="hisui-layout" data-options="fit:true" border="false" >
+ 			<div data-options="region:'center',border:false,split:true" style="">
+ 				<csp:Include Page="dhc.bdp.sds.structdiagnoscommon.csp">
+			</div>
+			<div data-options="region:'south',collapsible:false,border:false" style="height:35px;margin-top:3px">
+				<table style="margin-left:150px">
+		        	<tr>
+		        		<td ><a href="#" class="hisui-linkbutton" style="width:90px;margin-left:10px" id="confirm_btn_Property">确定</a></td>
+		        		<td ><a href="#" class="hisui-linkbutton" style="width:90px;margin-left:10px" id="cancel_btn_Property">取消</a></td>
+		        	</tr>
+		        </table>
+			</div>
+		</div>
+
+ 	</div>
+ 	
+     <div id="myWinDataImport" style="width:500px;height:450px;display:none"> 
+     </div> 
+	<script type="text/javascript">
+	var url="dhc.bdp.mkb.mkbuploadfile.csp"
+    if ("undefined"!==typeof websys_getMWToken){
+		url += "?MWToken="+websys_getMWToken()
+	}
+	$('#upload').attr('src', url);
+	
+	 var  menuid="#(menuid)#"
+    // var  mappingBase="#(mappingBase)#"
+     var  termBase="#(termBase)#"
+     var  termRowId="#(termRowId)#"
+     var  detailIdStr="#(detailIdStr)#"
+     
+     if ((termRowId==undefined)||(termRowId==null))
+     {
+	      termRowId=""
+     }
+     if ((detailIdStr==undefined)||(detailIdStr==null))
+     {
+	      detailIdStr=""
+     }
+     var mappingBase =""
+     if ((menuid!="")&(menuid!=undefined))
+     {
+	     var  ValueExp=tkMakeServerCall("web.DHCBL.MKB.MKBTerm", "GetValueExp", menuid);
+	     mappingBase = ValueExp.split("=")[1];
+     }
+     if ((mappingBase=="")||(mappingBase==undefined))
+     {
+	     mappingBase="#(mappingBase)#"
+     }
+     
+     //表达式控件所需代码
+  	var documentWidth= window.screen.availWidth //$(window).width(); // $(document).width();
+	var documentHeight=window.screen.availHeight // $(window).height() // $(document).height();
+	var myProWidth=documentWidth*(1/2);
+	var myProHeight=documentHeight*(3/8);
+	
+	var myProWest=document.getElementById('mypropertywest');//属性列表最左侧布局
+	myProWest.style.width=myProWidth*(1/4)+'px';
+	var myProSearch=document.getElementById('Form_DiagPropertySearchText');
+	myProSearch.style.width=myProWidth*(1/4)-40+"px";
+	var myProEast=document.getElementById('mypropertyeast');//属性列表最右侧布局
+	myProEast.style.width=myProWidth*(9/20)+'px';
+	$("#myprobtn").css({"margin-left": (myProWidth-200)/2 + "px"}); //属性列表确定取消按钮
+     var ServerObject={
+			GetData:"#(GetData)#"
+		} 
+	var flagLoadSmartTip=false  //是否加载医为智能提示标识
+	var flagSaveFreq=false   //是否保存频次标识	
+
+  </script>
+</BODY>
+</HTML>
+																						

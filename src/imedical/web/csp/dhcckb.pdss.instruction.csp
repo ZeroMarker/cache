@@ -1,0 +1,60 @@
+<!--
+ * @Author: qunianpeng
+ * @Date: 2022-08-30 21:57:16
+ * @Descripttion: 说明书详情也
+ * @version: V1.0 dhcckb.pdss.instruction.csp
+ * @LastEditors: qnp
+ * @LastEditTime: 2022-09-02 11:38:49
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+	<HISUI/>
+	<DHCCKB/>	
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/common.css"><!-- 禁止复制 -->
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.drugdetail.css">
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.common.css">
+	<script src="../scripts/dhcnewpro/dhcckb/pdss/components/createdrugdetail.js"></script> 
+   	<script src="../scripts/dhcnewpro/dhcckb/pdss/pdss.instruction.js"></script>     
+   	<script language="Cache" runat="server">
+   	/// token 验证
+   	s tokenFlag=1 //##Class(web.DHCCKB.Util.UtilService).VerToken($g(%request.Data("token",1),""))
+   	Q:tokenFlag=0 ""
+	w $$$cspStrictJavaScriptStart
+	s IncId=$g(%request.Data("IncId",1),"")
+	s IncCode=$g(%request.Data("IncCode",1),"")	
+	s IncDesc=$g(%request.Data("IncDesc",1),"")
+	i IncId="" d
+	.s IncIdList=##Class(web.DHCCKBPassNew).GetComDicIdNew(IncCode,"Drug","")	
+	.i $listlength(IncIdList)=1 s IncId=$listget(IncIdList)	
+	.i IncId="" d
+	..s drugData = ##class(web.DHCCKBCommon).GetDrugData()
+	..s libStr = ##class(web.DHCCKBComContrast).GetSysConst(IncCode,IncDesc,drugData)
+	..s libCode = $p(libStr,"^",1)
+	..s IncId = ##class(web.DHCCKBCommon).GetDicIdByCode(libCode,drugData)
+	..q:IncId'=""
+	..s chinaDrugData = ##class(web.DHCCKBCommon).GetChineseDrugData()
+	..s libStr = ##class(web.DHCCKBComContrast).GetSysConst(IncCode,IncDesc,chinaDrugData)
+	..s libCode = $p(libStr,"^",1)
+	..s IncId = ##class(web.DHCCKBCommon).GetDicIdByCode(libCode,chinaDrugData)
+	..q:IncId'=""
+	..s chinaHMData = ##class(web.DHCCKBCommon).GetChineseHMData()
+	..s libStr = ##class(web.DHCCKBComContrast).GetSysConst(IncCode,IncDesc,chinaHMData)
+	..s libCode = $p(libStr,"^",1)
+	..s IncId = ##class(web.DHCCKBCommon).GetDicIdByCode(libCode,chinaHMData)
+	s LgHospID=%session.Data("LOGON.HOSPID")
+	s IncId = ##class(web.DHCCKBCommon).GetComOriginDrug(IncId) //获取同源药品 2022-02-24
+	s url=$g(%request.Data("url",1),"")
+	w "var IncId="_$case(IncId="",1:""""_"""",:IncId)_";"
+	w $$$cspJavaScriptEnd	
+										
+	</script> 	
+</head>
+<body>	    
+	<div class="details"></div>
+</body>
+</html>

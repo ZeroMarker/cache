@@ -1,0 +1,152 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.nurseplanrecordalert.csp HISUI计划到期提醒--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+/*
+#wardPatientCondition {
+	margin-top: 5px;
+	width: 206px;
+	padding:0 1px;
+}
+*/
+/*
+.tree-file,.tree-folder,.tree-folder-open{
+	display:none;
+}
+*/
+.frmepisodepat{
+	background-color:#bae7ff;
+}
+
+.hidenode{
+	display: none;
+}
+
+/*床位 责组的样式*/
+.switch {
+	text-align:center;
+	padding-top: 5px;
+}
+.ant-switch{
+	margin:0;
+	padding:0;
+	color:rgba(0,0,0,.65);
+	font-size:14px;
+	font-variant:tabular-nums;
+	line-height:1.5;
+	list-style:none;
+	-webkit-font-feature-settings:"tnum";
+	font-feature-settings:"tnum";
+	position:relative;
+	display:inline-block;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+	min-width:44px;
+	height:22px;
+	line-height:20px;
+	vertical-align:middle;
+	background-color:rgba(0,0,0,.25);
+	border:1px solid transparent;
+	border-radius:100px;
+	cursor:pointer;
+	-webkit-transition:all .36s;
+	transition:all .36s;
+	-webkit-user-select:none;
+	-moz-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+}
+.ant-switch-checked .ant-switch-inner {
+	margin-right:24px;
+	margin-left:6px;
+}
+.ant-switch:focus {
+	outline:0;
+}
+.ant-switch:after {
+	position:absolute;
+	top:1px;
+	left:1px;
+	width:18px;
+	height:18px;
+	background-color:#fff;
+	border-radius:18px;
+	cursor:pointer;
+	-webkit-transition:all .36s cubic-bezier(.78,.14,.15,.86);
+	transition:all .36s cubic-bezier(.78,.14,.15,.86);content:" ";
+}
+.ant-switch-checked:after {
+	left:100%;
+	margin-left:-1px;
+	transform:translateX(-100%);
+}
+.ant-switch-checked {
+	background-color:#1890ff;
+}
+.switchIcon{
+	margin:0 10px;
+}
+.current{
+	font-weight:700;
+	color:#017bec;
+}
+.patlist-div .panel-header,#patientList{
+	border-radius:0;
+}
+.layout-split-west {
+    border-right: 4px solid transparent;
+}
+.panel-header {
+    border-radius: 0;
+}
+.panel-body.panel-body-noheader {
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+}
+</style>
+ </head> 
+ <body class="hisui-layout" data-options="fit:true,border:false">
+ <server>
+ s EpisodeID=%request.Get("EpisodeID")
+ s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+  ; 护理分组权限 Y 开启
+ s groupFlag=$g(^NurGroupSetting("switch",%session.Get("LOGON.HOSPID")))
+ // HIS 版本 --来自护理病历的配置
+ s version85 = ##class(Nur.NIS.Service.NursingPlan.Utils).GetVersion85()
+ s versionNewFlag=##class(websys.Conversions).IsValidClassName("csp.csp.nur.hisui.common.patientlistnew")
+ //s versionNewFlag=0
+ </server>
+  <csp:Include Page="nur.hisui.nurseplanrecordalert.show.csp">
+<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		EpisodeID:"#(EpisodeID)#",
+		CurrentDate:"#(CurrentDate)#",
+		groupFlag:"#(groupFlag)#",
+		version85:"#(version85)#",
+		versionNewFlag:"#(versionNewFlag)#"  //0:旧版本  1：新版本
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/NursePlanRecordAlert.js"></script>
+</body>
+</html>

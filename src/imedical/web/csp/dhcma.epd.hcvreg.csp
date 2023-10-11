@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><!--<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>--></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI></HISUI>
+		<DHCMA:HEAD></DHCMA:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
+   	    <Server>
+			//患者基本信息
+   	        Set HCVPatInfo = ##class(DHCMed.EPDService.InitRepLoadSrv).GetPatInfo($g(%request.Data("EpisodeID",1)))
+   	        //机构代码
+   	        Set OrganID = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("EpdRPTORG","")
+	   </Server>
+
+	</head>
+	<body>
+		<csp:Include Page="dhcma.epd.hcvreg.show.csp"> 
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/EPD/hcvreport/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/EPD/hcvreport/Event.js"></script>
+		<script language="Cache" RUNAT="SERVER">
+			Set ReportID=$g(%request.Data("ReportID",1))	//当前报告ID	      
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))	//当前病人就诊ID
+ 			Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+			Set LocFlag=+$g(%request.Data("LocFlag",1))		//上报权限的标记
+			set LogonHospID=$g(%session.Data("LOGON.HOSPID"))
+		    set objHosp=##class(DHCMed.Base.Hospital).GetObjById(LogonHospID)
+		    set LagCode = $g(%session("LOGON.LANGCODE"))
+		    Set HospDesc=""
+		    If ($IsObject(objHosp)) {
+			    Set HospDesc=objHosp.Descs
+				Set HospDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTHospital","HOSPDesc",LagCode,HospDesc)
+		    }
+
+			Set:ReportID="" ReportID=""""""					//(若不赋空，则连不上Gui.js)
+			Set:EpisodeID="" EpisodeID=""""""
+			Set PatientID=""""_$g(PatientID)_""""
+			Set LocFlag=""""_LocFlag_""""
+			Set LogonHospID=""""_$g(LogonHospID)_""""
+			Set HospDesc=""""_$g(HospDesc)_""""
+			
+	   </script>
+	  
+	    <script language="javascript" type="text/javascript">
+	        var PatientID=#(PatientID)#;
+            var EpisodeID=#(EpisodeID)#;
+            var ReportID=#(ReportID)#;
+            var LocFlag=#(LocFlag)#;
+            var LogonHospID=#(LogonHospID)#;
+            var HospDesc=#(HospDesc)#;
+            
+            //全局请求后台服务对象
+			var ServerObj={
+	           	HCVPatInfo:"#(HCVPatInfo)#",
+	           	OrganID:"#(OrganID)#",	           	
+			};
+
+			$(window).load(function() {
+				InitReportWin();
+			});
+	   </script>
+	    <script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+	</body>
+</html>

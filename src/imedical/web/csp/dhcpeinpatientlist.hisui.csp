@@ -1,0 +1,90 @@
+<!-- 
+ * FileName: dhcpeinpatientlist.hisui.csp
+ * Anthor: xy
+ * Date: 2022-09-14
+ * Description: HISUI 住院病人体检列表
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+s PAADM=%request.Get("PAADM")
+i PAADM="" s PAADM=%request.Get("EpisodeID")
+</SCRIPT> 
+
+<script type="text/javascript">
+var OtherPAADM="#(PAADM)#"
+//alert(OtherPAADM)
+</script>
+    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    
+}
+.r-label{
+    padding-left: 10px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="hisui-layout" fit="true">
+    <div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:95px;padding:10px 10px 0 10px;">
+        <div class="hisui-panel" data-options="title:'住院体检患者',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom: 1px solid #C0C0C0;border-radius:0;">
+            <table class="search-table">
+                <tr>
+                    
+                    <td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+                    <td>
+                        <input id="StartDate" class="hisui-datebox textbox"/>
+                    </td>
+                    
+                    <td class="r-label"><label>#(..Get("结束日期"))#</label></td>
+                    <td>
+                        <input id="EndDate" class="hisui-datebox textbox"/>
+                    </td>
+                    
+                    <td><input type="hidden" id="PAADM"/></td>
+
+                    <td class="r-label">
+                        <a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                    </td>
+                    
+                    <td>
+                        <a id="BDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+                    </td>
+                    
+                    <td class="r-label">
+                        <a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+                    </td>
+                </tr>   
+            </table>
+        </div>
+    </div>
+    
+
+    <div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+        <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+            <table data-options="bodyCls:'panel-header-gray'" id="IPatientListGrid"></table>
+        </div>
+     </div>
+          
+</div>
+
+<script type="text/javascript" src="../scripts/dhcpeinpatientlist.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+
+</body>     
+</html>

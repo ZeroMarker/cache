@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--药房属性配置
+	csp: pha.in.v3.mob.locconfig.csp
+	js:  scripts/pha/mob/v2/locconfig.js
+-->
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    
+</HEAD>
+
+<body>
+	<!-- 整体布局 -->
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-panel" title=""
+				data-options="iconCls:'icon-set-col',headerCls:'panel-header-gray',fit:true,bodyCls:'',border:false">
+				<table id="gridConfig"></table>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 表格工具栏 -->
+    <div id="gridConfigBar">
+    	<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">#(..Get("新增"))#</a>
+    	<a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnUpdate">#(..Get("修改"))#</a>
+    	<a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">#(..Get("删除"))#</a>
+    	<a class="hisui-linkbutton" plain='true' iconCls="icon-reload" id="btnReload">#(..Get("刷新"))#</a>
+    </div>
+    
+    <!-- 弹窗 -->
+    <div id="gridConfigWin" class="hisui-dialog" title="#(..Get("移动药房配置"))#" closed="true" style="width:287px;height:450px;" data-options="iconCls:'',modal:true,border:false,
+		buttons:[{
+			text:'确定',
+			handler:function(){
+				SaveConfig();
+			}
+		},{
+			text:'取消',
+			handler:function(){
+				$('#gridConfigWin').window('close');
+			}
+		}]">
+	    <div class="hisui-layout" fit="true">
+	        <div data-options="region:'center',border:false">
+		        <div class="hisui-layout" data-options="fit:true" id="win-form">
+		        	<div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="locId"><label style="color:red">*</label>#(..Get("药房科室"))#</label>
+                        </div>
+                        <div class="pha-col">
+                            <input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:true" />
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="presTypeId"><label style="color:red">*</label>#(..Get("配方类型"))#</label>
+                        </div>
+                        <div class="pha-col">
+                            <input id="presTypeId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:true" />
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="printLabSelect">#(..Get("打印用法标签"))#</label>
+                        </div>
+                        <div class="pha-col">
+                            <input id="printLabSelect" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="patAdmType">#(..Get("患者就诊类型"))#</label>
+                        </div>
+                        <div class="pha-col">
+                            <input id="patAdmType" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+                        </div>
+	                </div>
+	                <!-- <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="presChkFlag">#(..Get("是否需要审方"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="presChkFlag" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="presChkSel">#(..Get("审方时刻"))#</label>
+                        </div>
+                        <div class="pha-col">
+                        	<input id="presChkSel" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+                        </div>
+	                </div> -->
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="patRepFlag">#(..Get("是否需患者报到"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="patRepFlag" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="printPresFlag">#(..Get("是否打印配药单"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="printPresFlag" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="callFlag">#(..Get("是否叫号"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="callFlag" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="screenFlag">#(..Get("是否上屏"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="screenFlag" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="presAllSendFlag">#(..Get("是否揭药室全送"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="presAllSendFlag" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div>
+	                <div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="presAgreeRetFlag">#(..Get("是否允许退药"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="presAgreeRetFlag" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div>
+	                <!--div class="pha-row">
+                        <div class="pha-col" style="width:98px;text-align:right;">
+                            <label for="printDispSheet">#(..Get("是否打印调剂单"))#</label>
+                        </div>
+                        <div class="pha-col" style="margin-left:-10px;">
+                            <input id="printDispSheet" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox">
+                        </div>
+	                </div-->
+		        </div>
+	        </div>
+        </div>
+    </div>
+    
+    <!-- js -->
+    <script type="text/javascript" src="../scripts/pha/mob/v2/locconfig.js"></script>
+</body>
+
+</HTML>

@@ -1,0 +1,221 @@
+<!--oeorder.entry.template.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<Server>
+	s EpisodeID=$G(%request.Data("EpisodeID",1))
+	s EditMode=$G(%request.Data("EditMode",1))
+	s:(EditMode="")&&(EpisodeID="") EditMode=1
+	s CONTEXT=$G(%request.Data("CONTEXT",1))
+	s:CONTEXT="" CONTEXT="WNewOrderEntry"	;默认西药录入
+	s TemplateRegion=$G(%request.Data("TemplateRegion",1))
+	s:(TemplateRegion="")&&(EditMode=1) TemplateRegion="south"
+	s laytouDir=$SELECT(" north south "[(" "_TemplateRegion_" "):"X",1:"Y")
+	s bodyRadius=$SELECT(TemplateRegion="window":0,1:4)
+</Server>
+<style>
+	body{
+		background: #fff;
+	}
+	.tree-editor{
+		height: 27px!important;
+		font-size:15px;
+	}
+	.tree-editor-icon{
+		position:absolute;
+		top:3px;
+		right:6px;
+		width:24px;
+		height:24px;
+		background-color:white;
+	}
+	.validatebox-text:focus+.tree-editor-icon{
+		background-color:#ffe48d;
+	}
+	.item-nostock{
+		color:red;
+	}
+	.item-part{
+		color:#017bce;
+	}
+	.item-note{
+		color:#ff7e00;
+		font-size:12px;
+	}
+	input:invalid {
+		background-image: url('../scripts_lib/hisui-0.1.0/dist/css/images/validatebox_warning.png');
+		background-repeat: no-repeat;
+		background-position: right center;
+		border-color: #ffa8a8;
+		background-color: #fff3f3;
+	}
+	.tooltip-content .tree-title{
+		white-space: normal;
+	}
+	/*以下是横向布局专有样式*/
+	.tab-fav-cat{
+		overflow-y:hidden;
+		display:flex;
+		align-items:center;
+		/*border-top:1px dashed #ccc;*/
+		padding-top:5px;
+	}
+	.tab-fav-cat>.fav-container{
+		position:relative;
+		width:240px;
+		height:100%;
+		margin-right:8px;
+		overflow-y:hidden;
+		flex-shrink:0;
+	}
+	.fav-item-div{
+		height:calc(100% - 35px);
+		overflow-x:hidden;
+	}
+	.tab-fav-cat>.fav-container.fav-selected>.fav-item-div{
+		border:2px solid #ffe48d;
+		height: calc(100% - 37px);
+	}
+	.tab-fav-cat>.fav-container.fav-selected>.fav-title-div{
+		background-color:#ffe48d;
+	}
+	.tab-fav-cat>.fav-container>.fav-item-close{
+		position:absolute;
+	    top: 3px;
+	    right: 4px;
+	}
+	.tab-fav-cat>div.fav-add-div{
+		position:relative;
+		border:1px dashed #ccc;
+		color: #ccc;
+		height:80px;
+		width:80px;
+		border-radius:8px;
+		overflow:hidden;
+		flex-shrink:0;
+	}
+	.tab-fav-cat>div.fav-add-div:hover{cursor: pointer;border:1px solid #bbb;}
+	.fav-add-x,.fav-add-y{
+		position:absolute;
+		top:50%;
+		left:50%;
+		transform: translate(-50%,-50%);
+		background-color:#ddd;
+	}
+	.fav-add-x{width:30px;height:5px;}
+	.fav-add-y{width:5px;height:30px;}
+	.fav-add-div:hover div{background-color:#ccc;}
+	
+	.tabs-header{background:white;}
+	.tabs{display:inline;}
+	.tabs li{margin-right:10px;}
+	.tabs li a.tabs-inner{
+	    border-radius: 4px;
+	    text-align: center;
+	    background: #efefef;
+	    color: #666;
+	    padding: 0 10px;
+	    border-top: 0px;
+	}
+	.tabs li a.tabs-inner:hover{
+		background: #d8efff;
+ 		color: #017bce;
+	}
+	.tabs li.tabs-selected a.tabs-inner,.tabs li.tabs-selected a.tabs-inner:hover {
+		background: #40a2de;
+		color:white;
+		border-top: 0px;
+	}
+	.tabs li:not(:last-child)::after {display: none;}
+	.tabs li.tabs-selected a.tabs-inner,.tabs li a.tabs-inner{
+		border-bottom: 0;
+	}
+	.tabs li.tabs-selected a.tabs-close,.tabs li a.tabs-close {
+	    margin-top: -13px;
+	    right: 10px;
+	    background: url(../scripts_lib/hisui-0.1.0/dist/css/images/tabs_icons_2.png) no-repeat -36px 0;
+	}
+	.tabs li a.tabs-close::before, .tabs li.tabs-selected a.tabs-close::before{
+		content:'';
+	}
+</style>
+</head>
+<body>
+	<div class="hisui-panel" data-options="fit:true,border:#('EditMode)#,bodyCls:'panel-body-gray',onResize:function(){$('#layoutMain').layout('resize')}" style="border-radius:#(bodyRadius)#px;padding:0px;#($CASE(TemplateRegion,"window":"border-top:0;",:""))#">
+		<div id="layoutMain" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',collapsible:false,border:false" style="height:45px;padding:5px 10px;overflow:hidden;">
+				<div id="kwFavType"></div>
+				<csp:if condition=(EditMode'=1)>
+					<div style="position:absolute;top:8px;left:165px;">
+						<a id="BSearchShow" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true"></a>  
+					</div>
+					<div style="position:absolute;top:10px;left:200px;">
+						<div id='swUseType'></div>
+						<div id='swXCONTEXT'></div>
+					</div>
+				<csp:else>
+					<div style="position:absolute;top:10px;left:185px;">
+						<div id='swUseType'></div>
+						<div id='swXCONTEXT'></div>
+					</div>
+				</csp:if>
+			</div>
+			<div data-options="region:'center',border:false" style="border-radius:5px;padding:5px 10px;">
+				<csp:if condition='laytouDir="Y"'>
+					<ul id="tFav"></ul>
+				<csp:else>
+					<div id="tabFavCat"></div>
+				</csp:if>
+			</div>
+		</div>
+		<div id="menu" style="width:200px; display: none;">
+		<csp:if condition='laytouDir="Y"'>
+			<div data-options="iconCls:'icon-add'" id="menu_add_cat">#(..Get("增加大类"))#</div>
+			<div data-options="iconCls:'icon-batch-add'" id="menu_add_subcat">#(..Get("增加子分类"))#</div>
+		</csp:if>
+			<div data-options="iconCls:'icon-tube-add'" id="menu_add_item">#(..Get("增加项目"))#</div>
+			<div data-options="iconCls:'icon-edit'" id="menu_edit_note">#(..Get("维护项目备注"))#</div>
+			<div data-options="iconCls:'icon-copy'" id="menu_copy_hosp" name="menucopy" key="User.CTHospital">#(..Get("复制到全院"))#</div>
+			<div data-options="iconCls:'icon-copy'" id="menu_copy_loc" name="menucopy" key="User.CTLoc">#(..Get("复制到科室"))#</div>
+			<div data-options="iconCls:'icon-copy'" id="menu_copy_user" name="menucopy" key="User.SSUser">#(..Get("复制到个人"))#</div>
+			<div data-options="iconCls:'icon-copy'" id="menu_copy_other">
+				<span>#(..Get("复制到其他登录科室"))#</span>
+				<div style="width:200px;max-height:400px;overflow:auto;">
+				<server>
+					s LocList=[].%FromJSON(##class(DHCDoc.Order.Fav).GetUserLogLocs(%session.Get("LOGON.USERID")))
+					Set langid=##class(DHCDoc.Util.RegisteredObject).%LanguageID()
+					for i=1:1:LocList.%Size(){
+						s LocObj=LocList.%Get(i-1)
+						s LocID=LocObj.id,LocDesc=LocObj.text,AuthFlag=LocObj.AuthFlag
+						continue:LocID=%session.Get("LOGON.CTLOCID")
+						s LocDesc=##class(User.CTLoc).GetTranByDesc("CTLOCDesc",LocDesc,langid)
+						&HTML<<div id="menu_copy_otherloc" locid=#(LocID)# name="menucopy" key="User.CTLoc" data-options="disabled:#($CASE(AuthFlag,1:"false",:"true"))#">#(LocDesc)#</div>>
+					}
+				</server>
+				</div>  
+			</div>
+			<div data-options="iconCls:'icon-no'" id="menu_delete">#(..Get("删除"))#</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	var ServerObj={
+		EpisodeID:'#(EpisodeID)#',
+		EditMode:#(+EditMode)#,
+		CONTEXT:'#(CONTEXT)#',
+		laytouDir:'#(laytouDir)#',
+		FavAuth:{
+			'User.CTHospital':#(##class(DHCDoc.Order.Fav).GetHospAuth())#,
+			'User.CTLoc':#(##class(DHCDoc.Order.Fav).GetLocAuth())#,
+			'User.SSUser':1		//个人始终有权限,不取菜单配置
+		}
+	};
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/entry.template.#($ZCVT(laytouDir,"L"))#.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/entry.template.com.js"></script>
+</html>

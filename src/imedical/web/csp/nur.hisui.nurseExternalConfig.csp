@@ -1,6 +1,4 @@
-<csp:method name=OnPreHTTP
-            arguments=""
-            returntype=%Boolean>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
     i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
     q 1
 </csp:method>
@@ -13,6 +11,10 @@
 	</title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI />
+	<ADDINS require="CmdShell"></ADDINS>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
 	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/nurseExtenalConfig.js" charset='gbk'></script>
 	<STYLE type='text/css'>
 		body {
@@ -30,260 +32,323 @@
         .datagrid-wrap.panel-body.panel-body-noheader{
 			border-top-style:dotted;
 		}
+		.search-table {
+			width: 100%;
+			border-collapse: separate;
+			border-spacing: 10px 10px;
+			border:1px solid transprent;
+		}
+		.search-table td{
+			/* height:32px;
+			white-space:nowrap !important; */
+			text-align:right;
+			overflow:hidden;
+			border:1px solid transprent;
+		}
+		.tips{
+			background-color: #FFF;
+			
+			position: absolute;
+			left: 100px;
+			top: 50px;
+			border: 1px solid #c2c2c2;
+			padding: 5px;
+			font-size: 12px;
+			color:#666;
+			font-weight: normal;
+			display:none;
+		}
+		.arrow1, .arrow2{
+			position: absolute;
+			left: 58px;
+			top: 68px;
+			border-bottom: 6px transparent dashed;
+			border-left: 6px transparent dashed;
+			border-right: 6px transparent dashed;
+			border-top: 6px solid #c2c2c2;
+		}
+		.arrow2{
+			top: 67px;/*这里很重要,相当于比原来的三角右移了一个像素*/
+			border-top: 6px white solid;/*用白色的三角覆盖掉灰色的三角*/
+		}
+		.tips p, .tips p{
+			padding-left:12px;
+		}
+		.tips .point{
+			position: absolute;
+			left: 4px;
+			margin-top: 3px;
+			font-size: 40px;
+			line-height: 12px;
+		}
 	</STYLE>
 </head>
 
 <body>
-	<div class="hisui-layout" data-options="fit:true,border:false">   
-		<div data-options="region:'west',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" 
-			 style="width:800px">
-			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="height:80px;">
-					<div class="hisui-panel"
-						 data-options="title:'',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
-						 style="border-radius:0;border-bottom:none;border:none;">
-						<table class="search-table" 
-							   style="width:100%;height:100%">
-							<tr>
-								<td class="r-label">名称</td>
-								<td style="padding:0 5px 0 0;">
-									<input id="name"
-										   class="textbox"
-										   style="width:200px;">
-									</input>
-								</td>
-								<td class="r-label"
-									style="padding:0 5px 0 20px;">
-									描述
-								</td>
-								<td>
-									<input id="desc"
-										   class="textbox"
-										   style="width:200px;">
-									</input>
-								</td>
-								<td class="r-label"
-									style="padding:0 5px 0 20px;">
-									传输方式
-								</td>
-								<td>
-									<select id="workway"
-										    class="hisui-combobox"
-										 	style="width:150px;">
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td class="r-label">类名</td>
-								<td style="padding:0 5px 0 0;">
-									<input id="className"
-										   class="textbox"
-									       style="width:200px;">
-									</input>
-								</td>
-								<td class="r-label"
-									style="padding:0 5px 0 20px;">
-									方法名
-								</td>
-								<td>
-									<input id="methodName"
-										   class="textbox"
-										   style="width:200px;">
-									</input>
-								</td>
-								<td class="r-label"
-									style="padding:0 5px 0 20px;">
-									类型
-								</td>
-								<td>
-									<select id="type"
-										    class="hisui-combobox"
-											style="width:150px;">
-									</select>
-								</td>
-							</tr>
-						</table>
-					</div>
-				</div>
-				<div data-options="region:'center',border:false">
-					<div class="hisui-panel" 
-						 data-options="fit:true,headerCls:'panel-header-gray'"  
-						 style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-						<table id="dataSourceGrid"
-							   class="hisui-datagrid" 
-							   data-options="fit:true">   
-							<thead data-options="frozen:true"> 
-								<tr>
-									<th field="ck" checkbox="true"></th>
-									<th data-options="field:'name',width:200">名称</th>   
-									<th data-options="field:'desc',width:250">描述</th> 
-								</tr>  
-							</thead>
-							<thead>
-								<tr>
-									<th data-options="field:'workway',width:70">传输方式</th>
-									<th data-options="field:'className',width:250">类名</th>
-									<th data-options="field:'methodName',width:180">方法名</th>
-									<th data-options="field:'type',width:100">类型</th>   
-									<th data-options="field:'linkCode',width:220">关联号</th>
-									<th data-options="field:'id',width:50">ID</th>
-								</tr>   
-							</thead>
-						</table>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',split:true,border:false" style="height:45px;padding-top:5px" >
+			   <label id="_HospListLabel" style='color:red;margin:0 0 0 10px' class='r-label'>医院</label>
+				<input id="_HospList" class="textbox"/>
+			</div>
+			<div data-options="region:'center',border:false">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'west',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" 
+						 style="width:681px">
+						<div class="hisui-layout" data-options="fit:true,border:false">
+							<div data-options="region:'north',border:false" style="height:204px;">
+								<div class="hisui-panel"
+									 data-options="title:'数据源',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+									 style="border:1px solid #ccc;border-bottom:0;border-top:0;border-radius:0;">
+									<table class="search-table">
+										<tr>
+											<td style="width:28px;">名称</td>
+											<td>
+												<input id="name"
+													   class="textbox"
+													   style="width:180px;">
+												</input>
+											</td>
+											<td>
+												描述
+											</td>
+											<td>
+												<input id="desc"
+													   class="textbox">
+												</input>
+											</td>
+											<td>
+												传输方式
+											</td>
+											<td>
+												<select id="workway" class="hisui-combobox" style="width:120px;">
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td>类名</td>
+											<td>
+												<input id="className"
+													   class="textbox"
+												       style="width:180px;">
+												</input>
+											</td>
+											<td>
+												方法名
+											</td>
+											<td>
+												<input id="methodName"
+													   class="textbox">
+												</input>
+											</td>
+											<td>
+												类型
+											</td>
+											<td>
+												<select id="type" class="hisui-combobox" style="width:120px;">
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td colspan=6 style="text-align:left;">
+												<span>字段表达式</span>
+												<input id="fieldString" class="textbox" style="width:400px;margin-left:10px;"></input>
+												<div  class="tips" id="tips">
+													<span class="arrow1"></span>
+													<span class="arrow2"></span>
+													<p>例如：</p>
+													<p><span class="point">· </span>名称@值|名称@值</p>
+													<p><span class="point">· </span>名称&字段名@值</p>
+												</div>
+												<a href="#" id="parseField" class="l-btn-text" plain="true" style="min-width: 0px;line-height: 30px;font-size: 14px;padding: 0px 15px;display: inline-block;width: auto;color: rgb(255, 255, 255);background: rgb(64, 162, 222);border: 0px solid rgb(64, 162, 222);margin-left:14px;">解析</a>
+											</td>
+										</tr>
+										<tr>
+											<td colspan=6 style="text-align:left;">
+												<input id="createPic" class="hisui-radio" type="radio" data-options="radioClass:'hischeckbox_square-blue',required:true" label="是否生成图片">
+												<select id="picEmrCode" class="hisui-combobox" placeholder="请选择打印模板" style="width:425px;"></select>
+											</td>
+										</tr>
+			
+									</table>
+								</div>
+							</div>
+							<div data-options="region:'center',border:false">
+								<div class="hisui-panel" 
+									 data-options="fit:true,headerCls:'panel-header-gray'"  
+									 style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+									<table id="dataSourceGrid"
+										   class="hisui-datagrid" 
+										   data-options="fit:true">   
+										<thead data-options="frozen:true"> 
+											<tr>
+												<th field="ck" checkbox="true"></th>
+												<th data-options="field:'name',width:200">名称</th>   
+												<th data-options="field:'desc',width:250">描述</th> 
+											</tr>  
+										</thead>
+										<thead>
+											<tr>
+												<th data-options="field:'workway',width:70">传输方式</th>
+												<th data-options="field:'className',width:250">类名</th>
+												<th data-options="field:'methodName',width:180">方法名</th>
+												<th data-options="field:'type',width:100">类型</th>   
+												<th data-options="field:'createPic',width:100">生成图片</th> 
+												<th data-options="field:'picEmrCode',width:100">打印模板</th> 
+												<th data-options="field:'linkCode',width:220">关联号</th>
+												<th data-options="field:'id',width:50">ID</th>
+											</tr>   
+										</thead>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>   
+					<div data-options="region:'center',border:false,bodyCls:'panel-header-gray'">
+						<div class="hisui-layout" style="height:300px" data-options="fit:true">   
+							<div data-options="region:'north',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" 
+								 style="height:300px">
+								<div class="hisui-layout" data-options="fit:true,border:false">
+									<div data-options="region:'north',border:false" style="height:84px;">
+										<div class="hisui-panel"
+											 data-options="title:'参数',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+											 style="border-radius:0;border-bottom:none;">
+											<table class="search-table">
+												<tr>
+													<td>名称</td>
+													<td>
+														<input id="paramName"
+															   class="textbox"
+															   style="width:60px;">
+														</input>
+													</td>
+													<td>
+														描述
+													</td>
+													<td>
+														<input id="paramDesc"
+															   class="textbox"
+															   style="width:60px;">
+														</input>
+													</td>
+													<td>
+														参数
+													</td>
+													<td>
+														<input id="paramValue"
+															   class="textbox"
+															   style="width:60px;">
+														</input>
+													</td>
+													<td>
+														类型
+													</td>
+													<td>
+														<select id="paramType"
+															    class="hisui-combobox"
+																style="width:80px;">
+														</select>
+													</td>
+												</tr>
+											</table>
+										</div>
+									</div>
+									<div data-options="region:'center',border:false">
+										<div class="hisui-panel" 
+											 data-options="fit:true,headerCls:'panel-header-gray'"  
+											 style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+											<table id="paramGrid"
+												   class="hisui-datagrid" 
+												   data-options="fit:true">   
+												<thead> 
+													<tr>
+														<th data-options="field:'paramName',width:100">名称</th>   
+														<th data-options="field:'paramDesc',width:150">描述</th> 
+														<th data-options="field:'paramValue',width:140">参数名</th>
+														<th data-options="field:'paramType',width:80">类型</th>
+														<th data-options="field:'paramLinkNo',width:200">关联号</th>
+														<th data-options="field:'paramId',width:80">ID</th>
+													</tr>  
+												</thead>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>  
+							<div data-options="region:'center',split:true,border:false">
+								<div class="hisui-layout" data-options="fit:true,border:false">
+									<div data-options="region:'north',border:false"
+										 style="height:84px;">
+										<div class="hisui-panel"
+											 data-options="title:'字段',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
+											 style="border-radius:0;border-bottom:none;">
+											<table class="search-table">
+												<tr>
+													<td>名称</td>
+													<td>
+														<input id="fieldName"
+															   class="textbox"
+															   style="width:60px;">
+														</input>
+													</td>
+													<td>
+														描述
+													</td>
+													<td>
+														<input id="fieldDesc"
+															   class="textbox"
+															   style="width:60px;">
+														</input>
+													</td>
+													<td>
+														字段
+													</td>
+													<td>
+														<input id="fieldValue"
+															    class="textbox"
+															 	style="width:60px;">
+														</input>
+													</td>
+													<td>
+														类型
+													</td>
+													<td>
+														<select id="fieldType"
+															    class="hisui-combobox"
+																style="width:80px;">
+														</select>
+													</td>
+												</tr>
+											</table>
+										</div>
+									</div>
+									<div data-options="region:'center',border:false">
+										<div class="hisui-panel" 
+											 data-options="fit:true,headerCls:'panel-header-gray'"  
+											 style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+											<table id="fieldGrid"
+												   class="hisui-datagrid" 
+												   data-options="fit:true">   
+												<thead> 
+													<tr>
+														<th data-options="field:'fieldName',width:120">名称</th>   
+														<th data-options="field:'fieldDesc',width:150">描述</th> 
+														<th data-options="field:'fieldValue',width:140">字段名</th>
+														<th data-options="field:'fieldType',width:80">类型</th>
+														<th data-options="field:'fieldLinkNo',width:200">关联号</th>
+														<th data-options="field:'fieldId',width:80">ID</th>
+													</tr>  
+												</thead>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>   
+						</div>  
 					</div>
 				</div>
 			</div>
-		</div>   
-		<div data-options="region:'center',border:false,bodyCls:'panel-header-gray'">
-			<div class="hisui-layout" style="height:300px" data-options="fit:true">   
-				<div data-options="region:'north',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" 
-					 style="height:300px">
-					<div class="hisui-layout" data-options="fit:true,border:false">
-						<div data-options="region:'north',border:false" style="height:75px;">
-							<div class="hisui-panel"
-								 data-options="title:'参数',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
-								 style="border-radius:0;border-bottom:none;">
-								<table class="search-table" 
-									   style="width:100%;height:100%">
-									<tr>
-										<td class="r-label">名称</td>
-										<td style="padding:0 2px 0 0;">
-											<input id="paramName"
-												   class="textbox"
-												   style="width:60px;">
-											</input>
-										</td>
-										<td class="r-label"
-											style="padding:0 2px 0 5px;">
-											描述
-										</td>
-										<td>
-											<input id="paramDesc"
-												   class="textbox"
-												   style="width:90px;">
-											</input>
-										</td>
-										<td class="r-label"
-											style="padding:0 2px 0 5px;">
-											参数
-										</td>
-										<td>
-											<input id="paramValue"
-												   class="textbox"
-												   style="width:80px;">
-											</input>
-										</td>
-										<td class="r-label"
-											style="padding:0 2px 0 5px;">
-											类型
-										</td>
-										<td>
-											<select id="paramType"
-												    class="hisui-combobox"
-													style="width:80px;">
-											</select>
-										</td>
-									</tr>
-								</table>
-							</div>
-						</div>
-						<div data-options="region:'center',border:false">
-							<div class="hisui-panel" 
-								 data-options="fit:true,headerCls:'panel-header-gray'"  
-								 style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-								<table id="paramGrid"
-									   class="hisui-datagrid" 
-									   data-options="fit:true">   
-									<thead> 
-										<tr>
-											<th data-options="field:'paramName',width:100">名称</th>   
-											<th data-options="field:'paramDesc',width:150">描述</th> 
-											<th data-options="field:'paramValue',width:140">参数名</th>
-											<th data-options="field:'paramType',width:80">类型</th>
-											<th data-options="field:'paramLinkNo',width:200">关联号</th>
-											<th data-options="field:'paramId',width:80">ID</th>
-										</tr>  
-									</thead>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>  
-				<div data-options="region:'center',split:true,border:false">
-					<div class="hisui-layout" data-options="fit:true,border:false">
-						<div data-options="region:'north',border:false"
-							 style="height:75px;">
-							<div class="hisui-panel"
-								 data-options="title:'字段',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'"
-								 style="border-radius:0;border-bottom:none;">
-								<table class="search-table" 
-									   style="width:100%;height:100%">
-									<tr>
-										<td class="r-label">名称</td>
-										<td style="padding:0 2px 0 0;">
-											<input id="fieldName"
-												   class="textbox"
-												   style="width:60px;">
-											</input>
-										</td>
-										<td class="r-label"
-											style="padding:0 2px 0 5px;">
-											描述
-										</td>
-										<td>
-											<input id="fieldDesc"
-												   class="textbox"
-												   style="width:90px;">
-											</input>
-										</td>
-										<td class="r-label"
-											style="padding:0 2px 0 5px;">
-											字段
-										</td>
-										<td>
-											<input id="fieldValue"
-												    class="textbox"
-												 	style="width:80px;">
-											</input>
-										</td>
-										<td class="r-label"
-											style="padding:0 2px 0 5px;">
-											类型
-										</td>
-										<td>
-											<select id="fieldType"
-												    class="hisui-combobox"
-													style="width:80px;">
-											</select>
-										</td>
-									</tr>
-								</table>
-							</div>
-						</div>
-						<div data-options="region:'center',border:false">
-							<div class="hisui-panel" 
-								 data-options="fit:true,headerCls:'panel-header-gray'"  
-								 style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-								<table id="fieldGrid"
-									   class="hisui-datagrid" 
-									   data-options="fit:true">   
-									<thead> 
-										<tr>
-											<th data-options="field:'fieldName',width:120">名称</th>   
-											<th data-options="field:'fieldDesc',width:150">描述</th> 
-											<th data-options="field:'fieldValue',width:140">字段名</th>
-											<th data-options="field:'fieldType',width:80">类型</th>
-											<th data-options="field:'fieldLinkNo',width:200">关联号</th>
-											<th data-options="field:'fieldId',width:80">ID</th>
-										</tr>  
-									</thead>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>   
-			</div>  
-		</div>   
+		</div>  
 	</div>
 	<div id="importDialog" 
 	     class="hisui-dialog"
@@ -303,10 +368,15 @@
     	<a href="#" id="searchDataItem" class="hisui-linkbutton" iconCls="icon-search" plain="true" >查询</a>
     	<a href="#" id="clearInput" class="hisui-linkbutton" iconCls="icon-remove" plain="true" >清屏</a>
     	<a href="#" id="importData" class="hisui-linkbutton" iconCls="icon-import" plain="true" >导入</a>
-    	<a href="#" id="exportDataAll" class="hisui-linkbutton" iconCls="icon-export-all" plain="true">全部导出</a>
-    	<a href="#" id="exportDataSub" class="hisui-linkbutton" iconCls="icon-export" plain="true">部分导出</a>
+    	<a href="javascript:void(0)" id="menubtn-toolbar" class="hisui-menubutton menubutton-toolbar"  data-options="menu:'#mm-toolbar',iconCls:'icon-export'">导出</a>
+		<div id="mm-toolbar" style="width:150px !important;">   
+		    <div id="exportAllByCsv">全部导出（.csv）</div> 
+		    <div id="exportPartByCsv">部分导出（.csv）</div>
+		    <!--div id="exportDataAll">全部导出（.xls）</div>
+		    <div id="exportDataSub">部分导出（.xls）</div-->
+		</div>
 		<input class="hisui-checkbox" type="checkbox" label="<span title='设置表格是否可选多行，导出多条数据或批量删除使用' style='margin-top:10px; padding-top:10px' class='hisui-tooltip' >选多行</span>" id="ifMultiple" >
+    	<a href="#" id="updateDataSource" class="hisui-linkbutton" iconCls="icon-update" plain="true">更新生命体征数据源</a>
 	</div>
 </body>
-
 </html>

@@ -1,0 +1,226 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+i{display:block;width:30px;}
+.eq-table{width:100%}
+.eq-bussinfo{
+	margin-top:10px;
+}
+.eq-bussdetail{
+	padding:10px;
+	color:#0d83b0;
+}
+h1{color:#666;}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s BussID=$Get(%request.Data("BussID",1))
+	s BussType=$Get(%request.Data("BussType",1))
+	s DCRRowID=$Get(%request.Data("DCRRowID",1))
+	s WaitAD = $Get(%request.Data("WaitAD",1))
+	s Type = $Get(%request.Data("Type",1))
+	s GetSelfFundsID=##class(web.DHCEQCommon).GetSysInfo("990015")
+	s ModelOperMethod=##class(web.DHCEQCommon).GetSysInfo("201004")
+	s ManuFactoryOperMethod=##class(web.DHCEQCommon).GetSysInfo("201005")
+	s ProviderOperMethod=##class(web.DHCEQCommon).GetSysInfo("201006")
+	s LocationOperMethod=##class(web.DHCEQCommon).GetSysInfo("201008")
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'edittitle',title:'',bodyCls:'panel-body-gray'" style="padding-bottom:10px;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCRHold1" for="OCRHold1">验收单号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCRHold1"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLSourceType" for="OCLSourceType">来源方式</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLSourceType"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLSourceID_Desc" for="OCLSourceID_Desc">选择来源</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLSourceID_Desc"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRCheckDate" for="OCRCheckDate">验收日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="OCRCheckDate"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCREquipTypeDR_ETDesc" for="OCREquipTypeDR_ETDesc">管理类组</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCREquipTypeDR_ETDesc" data-options="'component':'PLAT.L.EquipType'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRStatCatDR_SCDesc" for="OCRStatCatDR_SCDesc">设备类型</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCRStatCatDR_SCDesc" data-options="'component':'PLAT.L.StatCat'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLEquiCatDR_ECDesc" for="OCLEquiCatDR_ECDesc">设备分类</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLEquiCatDR_ECDesc" data-options="'component':'EM.L.EquipCat'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLModelDR_MDesc" for="OCLModelDR_MDesc">规格型号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLModelDR_MDesc" data-options="'component':'PLAT.L.Model'"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCLName" for="OCLName">设备名称</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLName"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLOriginalFee" for="OCLOriginalFee">设备原值</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLOriginalFee"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLQuantity" for="OCLQuantity">数量</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLQuantity"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLUnitDR_UOMDesc" for="OCLUnitDR_UOMDesc">单位</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLUnitDR_UOMDesc" data-options="'component':'PLAT.L.UOM'"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCLUseLocDR_CTLOCDesc" for="OCLUseLocDR_CTLOCDesc">使用科室</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLUseLocDR_CTLOCDesc" data-options="'component':'PLAT.L.Loc'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLLocationDR_LDesc" for="OCLLocationDR_LDesc">存放地点</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLLocationDR_LDesc" data-options="'component':'PLAT.L.Locaton'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLContractNo" for="OCLContractNo">合同号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLContractNo"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLHold2" for="OCLHold2">注册证号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLHold2"></div>					
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCRProviderDR_VDesc" for="OCRProviderDR_VDesc">供应商</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCRProviderDR_VDesc" data-options="'component':'PLAT.L.Vendor'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRProviderHandler" for="OCRProviderHandler">供方联系人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCRProviderHandler"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRProviderTel" for="OCRProviderTel">联系电话</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCRProviderTel"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLGuaranteePeriodNum" for="OCLGuaranteePeriodNum">保修期(月)</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLGuaranteePeriodNum"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCLManuFactoryDR_VName" for="OCLManuFactoryDR_VName">生产厂商</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLManuFactoryDR_VName" data-options="'component':'PLAT.L.ManuFacturer'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLManuFacHandler" for="OCLManuFacHandler">厂商联系人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLManuFacHandler"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLManuFacTel" for="OCLManuFacTel">厂商电话</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLManuFacTel"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLHold12" for="OCLHold12">功率</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLHold12"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCLLeaveFactoryDate" for="OCLLeaveFactoryDate">出厂日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="OCLLeaveFactoryDate"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCROpenCheckDate" for="OCROpenCheckDate">开箱日期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="OCROpenCheckDate"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLCountryDR_CTCOUDesc" for="OCLCountryDR_CTCOUDesc">国别/地区</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLCountryDR_CTCOUDesc" data-options="'component':'PLAT.L.Country'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLTempBar" for="OCLTempBar">临时码</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLTempBar"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCROriginDR_ODesc" for="OCROriginDR_ODesc">设备来源</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCROriginDR_ODesc" data-options="'component':'PLAT.L.Origin'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLPurchaseTypeDR_PTDesc" for="OCLPurchaseTypeDR_PTDesc">申购类别</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLPurchaseTypeDR_PTDesc" data-options="'component':'PLAT.L.PurchaseType'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLPurposeTypeDR_PTDesc" for="OCLPurposeTypeDR_PTDesc">设备用途</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLPurposeTypeDR_PTDesc" data-options="'component':'PLAT.L.PurposeType'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLBuyTypeDR_BTDesc" for="OCLBuyTypeDR_BTDesc">采购方式</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLBuyTypeDR_BTDesc" data-options="'component':'PLAT.L.BuyType'"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCLDepreMethodDR_DMDesc" for="OCLDepreMethodDR_DMDesc">折旧方法</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLDepreMethodDR_DMDesc" data-options="'component':'PLAT.L.DepreMethod'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLLimitYearsNum" for="OCLLimitYearsNum">使用年限</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLLimitYearsNum"></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLHold5_EDesc" for="OCLHold5_EDesc">经费来源</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OCLHold5_EDesc" data-options="'component':'PLAT.L.Expenditures'"></div>		
+					<div class="eq-table-td eq-table-label"><label id="cSelfFunds" for="SelfFunds">自筹资金</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="SelfFunds"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCLLeaveFactoryNos" for="OCLLeaveFactoryNos">出厂编号</label></div>
+					<div class="eq-table-td eq-table-input"><textarea id="OCLLeaveFactoryNos" class="textbox"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCLFileNos" for="OCLFileNos">档案号</label></div>
+					<div class="eq-table-td eq-table-input"><textarea id="OCLFileNos" class="textbox"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRConfigState" for="OCRConfigState">配置相符</label></div>
+					<div class="eq-table-td eq-table-input"><textarea id="OCRConfigState" class="textbox"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label id="cOtherFunds" for="OtherFunds">其他资金</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" disabled="true" id="OtherFunds" style="width:107px;"><a id="BFunds" href="#" style="WIDTH:30px;HEIGHT:28px" data-options="stopAllEventOnDisabled:true"></a></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label-first"><label id="cOCRFileState" for="OCRFileState">随机文件</label></div>
+					<div class="eq-table-td eq-table-input"><textarea id="OCRFileState" class="textbox"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRPackageState" for="OCRPackageState">外观完好性</label></div>
+					<div class="eq-table-td eq-table-input"><textarea id="OCRPackageState" class="textbox"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRRemark" for="OCRRemark">备注</label></div>
+					<div class="eq-table-td eq-table-input"><textarea id="OCRRemark" class="textbox"></textarea></div>
+					<div class="eq-table-td eq-table-label"><label id="cOCRRunningState" for="OCRRunningState">运行情况</label></div>
+					<div class="eq-table-td eq-table-input"><textarea id="OCRRunningState" class="textbox"></textarea></div>
+				</div>
+			</div>
+		</div>
+		<div class="hisui-panel" data-options="border:false" style="padding:10px 10px 10px 20px;">
+			<div class="eq-bussinfo" style="display:none;" id="21">
+				<input type="checkbox" class='hisui-checkbox'><h1>相关入库单：</h1>
+				<div class="eq-bussdetail" id="ISNos"></div>
+			</div>
+			<div class="eq-bussinfo" style="display:none;" id="22">
+				<input type="checkbox" class='hisui-checkbox'><h1>相关转移单：</h1>
+				<div class="eq-bussdetail" id="SMNos"></div>
+			</div>
+			<div class="eq-bussinfo" style="display:none;" id="52">
+				<input type="checkbox" class='hisui-checkbox'><h1>相关设备：</h1>
+				<div class="eq-bussdetail" id="EquipNos"></div>
+			</div>
+			<div class="eq-bussinfo" style="display:none;" id="94">
+				<input type="checkbox" class='hisui-checkbox'><h1>相关合同：</h1>
+				<div class="eq-bussdetail" id="ContractNos"></div>
+			</div>
+			<!--div class="eq-bussinfo" style="display:none;" id="93">
+				<input type="checkbox" class='hisui-checkbox'><h1>相关招标：</h1>
+				<div class="eq-bussdetail" id="IFBNos"></div>
+			</div>
+			<div class="eq-bussinfo" style="display:none;" id="92">
+				<input type="checkbox" class='hisui-checkbox'><h1>相关计划单：</h1>
+				<div class="eq-bussdetail" id="BuyPlanNos"></div>
+			</div-->
+		</div>
+	</div>
+	<div data-options="region:'south',border:false" class="footer">
+		<div class="footer-box">
+			<div style="width:25%;float:left;"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+			<div style="width:25%;float:left;"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a></div>
+			<div style="width:25%;float:left;"><a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a></div>
+			<div style="width:25%;float:left;"><a id="BAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">确认</a></div>
+		</div>
+	</div>
+	<INPUT type="hidden" id="BussID" value="#(BussID)#">
+	<INPUT type="hidden" id="BussType" value="#(BussType)#">
+	<INPUT type="hidden" id="MainFlag" value="N">
+	<INPUT type="hidden" id="DCRRowID" value="#(DCRRowID)#">
+	<INPUT type="hidden" id="DCRStatus">
+	<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+	<INPUT type="hidden" id="Type" value=#(Type)#>
+	<INPUT type="hidden" id="OCLRowID">
+	<INPUT type="hidden" id="OCLSourceID">
+	<INPUT type="hidden" id="OCREquipTypeDR">
+	<INPUT type="hidden" id="OCRStatCatDR">
+	<INPUT type="hidden" id="OCLEquiCatDR">
+	<INPUT type="hidden" id="OCLModelDR">
+	<INPUT type="hidden" id="OCLUnitDR">
+	<INPUT type="hidden" id="OCLUseLocDR">
+	<INPUT type="hidden" id="OCLLocationDR">
+	<INPUT type="hidden" id="OCRProviderDR">
+	<INPUT type="hidden" id="OCLManuFactoryDR">
+	<INPUT type="hidden" id="OCLCountryDR">
+	<INPUT type="hidden" id="OCROriginDR">
+	<INPUT type="hidden" id="OCLPurchaseTypeDR">
+	<INPUT type="hidden" id="OCLPurposeTypeDR">
+	<INPUT type="hidden" id="OCLBuyTypeDR">
+	<INPUT type="hidden" id="OCLDepreMethodDR">
+	<INPUT type="hidden" id="OCLHold5">
+	<INPUT type="hidden" id="OCLEquipTypeDR">
+	<INPUT type="hidden" id="OCLStatCatDR">
+	<INPUT Type="hidden" id="OCLItemDR">
+	<INPUT Type="hedden" id="EQItemDR">
+	<INPUT type="hidden" id="GetSelfFundsID" value=#(GetSelfFundsID)#>
+	<input type="hidden" id="ModelOperMethod" value=#(ModelOperMethod)#>
+	<input type="hidden" id="ProviderOperMethod" value=#(ProviderOperMethod)#>
+	<input type="hidden" id="ManuFactoryOperMethod" value=#(ManuFactoryOperMethod)#>
+	<input type="hidden" id="LocationOperMethod" value=#(LocationOperMethod)#>
+	<script type='text/javascript' src='../scripts/dhceq/plat/busmodify.js'></script>
+</body>
+</html>

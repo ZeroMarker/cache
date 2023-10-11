@@ -1,0 +1,643 @@
+
+<!-- 
+ * FileName:    dhcpepreitemlist.main.new.hisui.csp
+ * Author:      xueying
+ * Date:        20230217
+ * Description: 预约项目修改
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<style>
+    #box-td {
+            box-sizing:border-box;
+            -moz-box-sizing:border-box; /* Firefox */
+            -webkit-box-sizing:border-box; /* Safari */
+        }
+    .menu-btn {
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    .search-table{
+            border-collapse:separate;
+            border-spacing:0 10px;
+        }
+    .r-label{
+            padding-left: 10px;
+        }
+    .l-label{
+            padding: 0 10px;
+        } 
+     
+	.datagrid-toolbar {
+    	height: auto;
+    	padding: 1px 2px;
+    	border-width: 0px 0px 1px 0px;
+    	border-style: solid;
+    	border-color: #e2e2e2;
+	}
+	.clsForm table td, .clsForm table th {
+		padding: 0;
+		margin: 0;
+	}
+	.zy_td_padding {
+		padding-left:10px!important;
+	}
+</style>
+    
+<script language="JavaScript"> 
+
+self.moveTo(0,4) 
+self.resizeTo(screen.availWidth,screen.availHeight) 
+
+</script>
+
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+set PAPMINo=$g(%request.Data("PAPMINo",1))
+set PreAdmId=$g(%request.Data("AdmId",1))
+set AdmType=$g(%request.Data("AdmType",1))
+set PreOrAdd=$g(%request.Data("PreOrAdd",1))
+set VIPLevel=$g(%request.Data("VIPLevel",1))
+</SCRIPT> 
+
+
+<script type="text/javascript">
+    var PAPMINo="#(PAPMINo)#"
+    var PreAdmId="#(PreAdmId)#" 
+    var AdmType="#(AdmType)#"
+    var PreOrAdd="#(PreOrAdd)#"
+    var VIPLevel="#(VIPLevel)#"
+    var PreItemList=1
+</script>
+ 
+</head>
+
+<body>
+<div class="hisui-panel" border="false" fit="true" style="padding:4px;">
+    <input type="hidden" id="PIBI_RowId"/>
+    <input type="hidden" id="PIADM_RowId"/>
+    <input type="hidden" id="Sex"/>
+    <input type="hidden" id="NationDesc"/>
+    <input type="hidden" id="Birth"/>
+    <input type="hidden" id="CredNo"/>
+    <input type="hidden" id="PhotoInfo"/>
+    <input type="hidden" id="AdmType"/>
+    <input type="hidden" id="PreOrAdd"/>
+    
+    <div class="hisui-layout" data-options="collapsible:false,fit:true,border:false">
+    
+        <!-- 预约项目 start -->
+         <div id="ZYBTabItem" class="hisui-tabs tabs-gray" data-options="region:'center',split:true,border:false">
+         <!-- 体检项目 start --> 
+            <div title="体检项目" data-options="fit:true" style="border:false; border-radius:0 0 4px 4px;">
+                <div style="height:86%;border-bottom: 1px solid #e2e2e2;">
+                    <table id="PreItemList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false,toolbar:'#ItemToolBar'"></table>
+                </div>
+                <div style="height:20px;margin:2px 0px 0px 2px">
+                    <table valign="top" border="0">
+                        <tr valign="top">
+                            <td valign="top" ><img id="TotalFeeimg" src="../images/dhcpe/总费用.png" border="0" style="padding-top:2px;" width=90 height=30></td>
+                            <td valign="top"><label id="TotalFee" style="font-size:26px;color:#FF5809;">0元</label></td>
+                            <td valign="top"><a id="BRegister" href="#" class="hisui-linkbutton" style="width:90px;height:30px;background-color:#24c24e;"><b style="font-size:20px;">登记</a></td>
+                        </tr>
+                    </table>
+                </div>
+            </div> 
+            <!-- 体检项目 end --> 
+            <!-- 职业健康基本信息 start -->
+            <div title="基本信息" data-options="fit:true,border:false">
+                <form id="jbinfo" class="form clsForm">
+                    <table id="OccuBaseInfo" style="border-spacing:0 10px;">
+                        <tr>
+                            <td style="padding-left:10px;"></td>
+                            <td align="right"><label for="WorkNo">#(..Get("工号"))#</label></td>
+                            <td class="zy_td_padding"><input class="hisui-validatebox textbox" type="text" id="WorkNo" style="width:200px;"/></td>
+                            
+                            <td align="right" class="zy_td_padding"><label for="Industry">#(..Get("行业"))#</label></td>
+                            <td class="zy_td_padding"><input class="hisui-combobox" type="text" id="Industry" style="width:167px;"/></td>
+
+                            <td align="right" class="zy_td_padding"><label for="Category">#(..Get("检查种类"))#</label></td>
+                            <td class="zy_td_padding"><input class="hisui-combobox" type="text" id="Category" style="width:167px;"/></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td align="right"><label for="Typeofwork">#(..Get("工种"))#</label></td>
+                            <td class="zy_td_padding"><input class="hisui-combobox" type="text" id="Typeofwork" style="width:207px;"/></td>
+
+                            <td align="right" class="zy_td_padding"><label for="WorkNo">#(..Get("其他工种"))#</label></td>
+                            <td class="zy_td_padding"><input class="hisui-validatebox textbox" type="text" id="WorkNo" style="width:160px;"/></td>
+                        
+                            <td align="right" class="zy_td_padding"><label for="AllWorkYear">#(..Get("总工龄"))#</label></td>
+                            <td class="zy_td_padding">
+                                <input class="hisui-numberbox textbox" data-options="min:0, max:65" type="text" id="AllWorkYear" style="width:61px;"/>
+                                <label for="AllWorkYear">#(..Get("年"))#</label>
+                                <input class="hisui-numberbox textbox" data-options="min:0, max:11" type="text" id="AllWorkMonth" style="width:61px;"/>
+                                <label for="AllWorkMonth">#(..Get("月"))#</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td align="right"><label for="HarmInfo">#(..Get("接害因素"))#</label></td>
+                            <td class="zy_td_padding"><input class="hisui-combotree" type="text" id="HarmInfo" name="HarmInfo" style="width:207px;"/></td>
+                    
+                            <td align="right" class="zy_td_padding"><label for="HarmWorkYear">#(..Get("接害工龄"))#</label></td>
+                            <td colspan=2 class="zy_td_padding">
+                                <input class="hisui-numberbox textbox" data-options="min:0, max:65" type="text" id="HarmWorkYear" name="HarmWorkYear" style="width:61px;"/>
+                                <label for="HarmWorkYear">#(..Get("年"))#</label>
+                                <input class="hisui-numberbox textbox" data-options="min:0, max:11" type="text" id="HarmWorkMonth" name="HarmWorkMonth" style="width:61px;"/>
+                                <label for="HarmWorkMonth">#(..Get("月"))#</label>
+                                <a class='hisui-linkbutton' style='padding-left:10px;' iconCls='icon-add' plain='true' onclick="AddHarmInfo()"></a>
+                            </td>
+                        </tr>
+                        <tr align="center">
+                            <td align="center" colspan="7">
+                                <a id="JBSave" href="#" class="hisui-linkbutton" style="width:100px;">保存</a>
+                                <a id="JBNext" href="#" class="hisui-linkbutton" style="width:100px; margin-left:10px;">下一步</a>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <!-- 职业健康基本信息 end -->
+    
+            <!-- 职业健康职业史 start -->
+            <div title="职业史" data-options="fit:true,border:false">
+                <div class="hisui-layout" fit="true" border="false">
+                    <div class="inherit-border" data-options="region:'north',border:false,bodyCls:'panel-header-gray'" style="height:171px;border-bottom-width:1px; border-radius:0;">
+                        <form id="ZYform" class="form clsForm">
+                            <table style="border-spacing:10px;">
+                                <tr>
+                                    <td align="right"><label for="StartDate">#(..Get("开始日期"))#</label></td>
+                                    <td><input class="hisui-datebox" type="text" Id="StartDate" style="width:127px;"/></td>
+                                
+                                    <td align="right"><label for="WorkPlace">#(..Get("工作单位"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="WorkPlace" style="width:170px;"/></td>
+                                
+                                    <td align="right"><label for="WorkShop">#(..Get("车间"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="WorkShop" style="width:120px;"/></td>
+                                
+                                    <td align="right"><label for="ZYTypeofwork">#(..Get("工种"))#</label></td>
+                                    <td><input class="hisui-combobox" type="text" Id="ZYTypeofwork" style="width:137px;"/></td>
+                                
+                                    <td align="right"><label for="HarmfulFactor">#(..Get("接触危害"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="HarmfulFactor" style="width:170px;"/></td>
+                                </tr>
+                                <tr>
+                                    <td align="right"><label for="EndDate">#(..Get("截止日期"))#</label></td>
+                                    <td><input class="hisui-datebox" type="text" Id="EndDate" style="width:127px;"/></td>
+                                
+                                    <td align="right"><label for="WorkDepartment">#(..Get("部门"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="WorkDepartment" style="width:170px;"/></td>
+                                
+                                    <td align="right"><label for="WorkTeam">#(..Get("班组"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="WorkTeam" style="width:120px;"/></td>
+                                
+                                    <td align="right"><label for="DailyWorkHours">#(..Get("每日工时数"))#</label></td>
+                                    <td><input class="hisui-numberbox textbox" data-options="min:0, max:24" type="text" Id="DailyWorkHours" style="width:137px;"/></td>
+                                
+                                    <td align="right"><label for="ProtectiveMeasure">#(..Get("防护措施"))#</label></td>
+                                    <td><input class="hisui-combobox" type="text" Id="ProtectiveMeasure" style="width:177px;"/></td>
+                                </tr>
+                                <tr>
+                                    <td align="right"><label for="OHRadiationFlag">#(..Get("放射史"))#</label></td>
+                                    <td><input class="hisui-combobox" type="text" id="OHRadiationFlag" style="width:127px;"/></td>
+                                
+                                    <td align="right"><label for="OHRadiationType">#(..Get("放射线种类"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="OHRadiationType" style="width:170px;"/></td>
+                                
+                                    <td align="right"><label for="OHRadiationDose">#(..Get("累积受照剂量"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="OHRadiationDose" style="width:120px;"/></td>
+                                
+                                    <td align="right"><label for="OHExRadHistory">#(..Get("过量照射史"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" data-options="min:0, max:24" type="text" Id="OHExRadHistory" style="width:130px;"/></td>
+                                
+                                    <td align="right"><label for="OHRemark">#(..Get("备注"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="OHRemark" style="width:170px;"/></td>
+                                </tr>
+                                <tr align="center">
+                                    <td align="center" colspan="10">
+                                        <a id="ZYSave" href="#" class="hisui-linkbutton" style="width:100px;">保存</a>
+                                        <a id="ZYDelete" href="#" class="hisui-linkbutton" style="width:100px; margin-left:15px;">删除</a>
+                                        <a id="ZYCancel" href="#" class="hisui-linkbutton" style="width:100px; margin-left:15px;">清屏</a>
+                                        <a id="ZYNext" href="#" class="hisui-linkbutton" style="width:100px; margin-left:15px;">下一步</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                    <div border="false" data-options="region:'center'"> 
+                        <table class="hisui-datagrid" id="ZYHistory" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false" ></table>
+                    </div>
+                </div> 
+            </div>
+            <!-- 职业健康职业史 end -->
+    
+            <!-- 职业健康病史 start -->
+            <div title="病史" data-options="fit:true,border:false">
+                <SCRIPT language="Cache" RUNAT="SERVER">
+                    s bsNumWidth = "54px" // 病史数字输入框大小
+                </SCRIPT>
+                <form id="DHistory" class="form clsForm">
+                    <table style="border-spacing:10px 5px;">
+                        <tr></tr>
+                        <tr>
+                            <td align="right"><label for="DHis">#(..Get("既往病史"))#</label></td>
+                            <td colspan=4><input class="hisui-validatebox textbox" type="text" Id="DHis" style="width:241px;"/></td>
+                            <td align="right"><label for="DHome">#(..Get("家族史"))#</label></td>
+                            <td colspan=4><input class="hisui-validatebox textbox" type="text" Id="DHome" style="width:241px;"/></td>
+                            <td></td>
+                        </tr>
+                        <tr></tr>
+                        <tr>
+                            <td align="right"><label for="SmokeHis">#(..Get("吸烟史"))#</label></td>
+                            <td colspan=2>
+                                <select id="SmokeHis" class="hisui-combobox" name="SmokeHis" style="width:120px;" data-options="enterNullValueClear:false">
+                                    <option value="不吸烟">不吸烟</option>
+                                    <option value="偶吸烟">偶吸烟</option>
+                                    <option value="经吸">经常吸</option>
+                                </select>
+                            </td>
+          
+                            <td align="right"><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="SmokeNo" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="left"><label for="SmokeNo">#(..Get("包/天"))#</label></td>
+                            <td align="right"><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="SmokeAge" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="left"><label for="SmokeAge">#(..Get("年"))#</label></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr></tr>
+                        <tr>
+                            <td align="right"><label for="AlcolHis">#(..Get("饮酒史"))#</label></td>
+                            <td colspan=2>
+                                <select id="AlcolHis" class="hisui-combobox" name="AlcolHis" style="width:120px;" data-options="enterNullValueClear:false">
+                                    <option value="不饮酒">不饮酒</option>
+                                    <option value="偶饮酒">偶饮酒</option>
+                                    <option value="经饮">经常饮</option>
+                                </select>
+                            </td>
+                            <td align="right"><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="AlcolNo" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="left"><label for="AlcolNo">ml/天</label></td>
+                            <td align="right"><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="Alcol" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="left"><label for="Alcol">年</label></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr></tr>
+                        <tr>
+                            <td align="right"><label>#(..Get("月经史"))#</label></td>
+                            <td align="right"><label for="FirstMenstrual">#(..Get("初潮年龄"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="FirstMenstrual" style="width:#(bsNumWidth)#"/></td>
+                            <td align="right"><label for="Period">#(..Get("经期"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="Period" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="right"><label for="Cycle">#(..Get("周期"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="Cycle" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="right"><label for="MenoParseAge">#(..Get("停经年龄"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="MenoParseAge" style="width:#(bsNumWidth)#;"/></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr></tr>
+                        <tr>
+                            <td align="right"><label>#(..Get("生育史"))#</label></td>
+                    
+                            <td align="right"><label for="NowChild">#(..Get("现有子女"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="NowChild" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="right"><label for="Abortion">#(..Get("流产"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="Abortion" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="right"><label for="Prematurebirth">#(..Get("早产"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="Prematurebirth" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="right"><label for="DeadBirth">#(..Get("死产"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="DeadBirth" style="width:#(bsNumWidth)#;"/></td>
+                            <td align="right"><label for="AbnormalFetal">#(..Get("异常胎"))#</label></td>
+                            <td><input class="hisui-numberbox textbox" data-options="min:0" type="text" Id="AbnormalFetal" style="width:#(bsNumWidth)#;"/></td>
+                        </tr>
+                        <tr></tr>
+                        <tr>
+                            <td align="right"><label>#(..Get("婚姻史"))#</label></td>
+                    
+                            <td align="right"><label for="WeddingDate">#(..Get("结婚日期"))#</label></td>
+                            <td colspan=2><input class="hisui-datebox" type="text" Id="WeddingDate" style="width:118px;"/></td>
+                    
+                            <td align="right" colspan=3><label for="SpouseHarm">#(..Get("配偶接触相关危险因素情况"))#</label></td>
+                            <td colspan=4><input class="hisui-validatebox textbox" type="text" Id="SpouseHarm" style="width:240px;"/></td>
+                        
+                            <td align="right" colspan=3><label for="SpouseHealth">#(..Get("配偶职业及健康状况"))#</label></td>
+                            <td colspan=4><input class="hisui-validatebox textbox" type="text" Id="SpouseHealth" style="width:240px;"/></td>
+                        </tr>
+                        <tr></tr>
+                        <tr align="center">
+                            <td align="center" colspan=12>
+                                <a id="BSSave" href="#" class="hisui-linkbutton" style="width:100px; margin-left:10px;">保存</a>
+                                <a id="BSNext" href="#" class="hisui-linkbutton" style="width:100px; margin-left:10px;">下一步</a></div>
+                            </td>
+                        </tr>
+                    </table>
+                </form> 
+            </div>
+            <!-- 职业健康病史 end -->
+    
+            <!-- 职业健康职业病史 start -->
+            <div title="职业病史" data-options="fit:true,border:false">
+                <div class="hisui-layout" fit="true" border="false">
+                    <div class="inherit-border" data-options="region:'north',border:false" style="height:91px; border-bottom-width:1px; border-radius:0; overflow:hidden;">
+                        <form id="ZYBform" class="form clsForm">
+                            <table style="border-spacing: 10px;">
+                                <tr>
+                                    <td align="right"><label for="DiseaseDesc">#(..Get("病名"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="DiseaseDesc" style="width:160px;"/></td>
+                            
+                                    <td align="right"><label for="DiagnosisDate">#(..Get("诊断日期"))#</label></td>
+                                    <td><input class="hisui-datebox textbox" type="text" Id="DiagnosisDate" style="width:127px;"/></td>
+                            
+                                    <td align="right"><label for="Return">#(..Get("归转"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="Return" style="width:160px;"/></td>
+
+                                    <td align="right"><label for="DiagnosisPlace">#(..Get("诊断单位"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="DiagnosisPlace" style="width:160px;"/></td>
+                            
+                                    <td align="right"><label for="Process">#(..Get("治疗经过"))#</label></td>
+                                    <td><input class="hisui-validatebox textbox" type="text" Id="Process" style="width:160px;"/></td>
+                            
+                                    <!--td align="right"></td>
+                                    <td><input class='hisui-checkbox' type="checkbox" label="是否痊愈" Id="IsRecovery" /></td-->
+                                </tr>
+                                <tr align="center">
+                                    <td align="center" colspan="10">
+                                        <a id="ZYBSave" href="#" class="hisui-linkbutton" style="width:100px;">保存</a>
+                                        <a id="ZYBDelete" href="#" class="hisui-linkbutton" style="width:100px; margin-left:10px;">删除</a>
+                                        <a id="ZYBCancel" href="#" class="hisui-linkbutton" style="width:100px; margin-left:10px;">清屏</a>
+                                        <a id="ZYBNext" href="#" class="hisui-linkbutton" style="width:100px; margin-left:10px;">下一步</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                    </div>
+                    <div border="false" data-options="region:'center'"> 
+                        <table class="hisui-datagrid" id="ZYBHistory" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false" ></table>
+                    </div>
+                </div> 
+            </div> 
+            <!-- 职业健康职业病史 end -->      
+         </div>
+         <!-- 预约项目 end -->
+                
+         <!-- 体检套餐 检查列表 检验列表 其他项目  药品列表 布局start -->
+         <div data-options="region:'south',split:true,headerCls:'panel-header-gray',border:false" style="height:350px; background-color:inherit;">
+            <div class="hisui-layout" data-options="collapsible:false,fit:true,border:false">
+                
+                <!-- 套餐列表 start -->
+                <div data-options="region:'west',collapsible:false,split:true,headerCls:'panel-header-gray',title:'体检套餐'" style="width: 400px;">
+                    <form class="form"> 
+                        <table style='padding-top:1px;'>
+                            <tr>
+                                <td>
+                                    <input class="hisui-validatebox" type="text" Id="AA" style="display:none"/>
+                                </td>
+                                <td style='padding-left:6px;'>
+                                    <label style="padding-right:6px;" for="Set">#(..Get("套餐查询"))#</label>
+                                    <input class="textbox" Id="Set" style="width:80px;" />
+                                </td>
+                                <td style='padding-left: 10px;'>
+                                    <a id="SetBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                    
+                    <div style="height:87%;border:1px solid #e2e2e2;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+                        <table class="textbox" id="QrySet" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+                    </div> 
+                    
+                </div>
+                <!-- 套餐列表 end--> 
+                
+                <!-- 检查列表 start -->
+                <div data-options="region:'center',collapsible:false,split:true,headerCls:'panel-header-gray',title:'检查列表'">
+                    <form class="form"> 
+                        <table style='padding-top:1px;'>
+                            <tr>
+                                <td>
+                                    <input class="hisui-validatebox" type="text" Id="AA" style="display:none"/>
+                                </td>
+                                <td style='padding-left:6px;'>
+                                    <input class="hisui-combobox" type="text" Id="StationID" style="width:100px;" />
+                                </td>
+                                <td style='padding-left:6px;'>
+                                    <label for="Item">#(..Get("项目"))#</label>
+                                </td>
+                                <td style='padding-left: 6px;'>
+                                    <input class="textbox" Id="Item" style="width:60px;" />
+                                </td>
+                                <td style='padding-left: 10px;'>
+                                    <a id="RisBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                    <div style="height:87%;border:1px solid #e2e2e2;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+                        <table class="textbox" id="QryRisItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+                    </div> 
+                </div>
+                <!-- 检查列表 end -->
+                 
+                <!-- 检验列表 其他项目 药品列表 start -->      
+                <div id="ItemLisTab" class="hisui-tabs tabs-gray" data-options="region:'east',border:false,split:true" style="width:450px;">
+                    <!-- 检验列表 start -->
+                    <div title="检验列表" style="border:false; border-radius:0;">
+                        <form class="form">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input class="hisui-validatebox" type="text" Id="AA" style="display:none"/>
+                                    </td>
+                                    <td style='padding-left:6px;'>
+                                        <label style="padding-right:6px;" for="LisItem">#(..Get("项目"))#</label>
+                                        <input class="textbox" Id="LisItem" style="width:80px;" />
+                                    </td>
+                                    <td style='padding-left:10px;'>
+                                        <a id="LisBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                        <div style="height:87%;border:1px solid #e2e2e2;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+                            <table class="textbox" id="QryLisItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+                        </div> 
+                    </div>
+                    <!-- 检验列表 end -->
+                    
+                    <!-- 其他项目 start -->
+                    <div title="其他项目" style="border:false;border-radius:0;">
+                        <form class="form">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input class="hisui-validatebox" type="text" Id="AA" style="display:none"/>
+                                    </td>
+                                    <td style='padding-left:6px;'>
+                                        <label style="padding-right:6px;" for="OtherItem">#(..Get("项目"))#</label>
+                                        <input class="textbox" id="OtherItem" style="width:80px;" />
+                                    </td>
+                
+                                    <td style='padding-left:10px;'>
+                                        <a id="OtherBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                        <div style="height:87%;border:1px solid #e2e2e2;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+                            <table class="textbox" id="QryOtherItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+                        </div> 
+                    </div>
+                    <!-- 其他项目 end -->
+                    
+                    <!-- 药品列表 start -->
+                    <div title="药品列表" style="border:false;border-radius:0;">
+                        <form class="form">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input class="hisui-validatebox" type="text" Id="AA" style="display:none"/>
+                                    </td>
+                                    <td style='padding-left:6px;'>
+                                        <label style="padding-right:6px;" for="MedicalItem">#(..Get("项目"))#</label>
+                                        <input class="textbox" id="MedicalItem" style="width:80px;" />
+                                    </td>
+                
+                                    <td style='padding-left:10px;'>
+                                        <a id="MedicalBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                        <div style="height:87%;border:1px solid #e2e2e2;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
+                            <table class="textbox" id="QryMedicalItm" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" ></table>
+                        </div> 
+                    </div>
+                    <!-- 药品列表 end -->     
+                 
+                 </div>
+                <!-- 检验列表 其他项目 药品列表 end --> 
+              </div> 
+          </div>
+          <!-- 体检套餐 检查列表 检验列表 其他项目  药品列表 布局end -->
+                
+                
+    </div>
+</div>
+
+<!--ItemToolBar  start-->
+<div id="ItemToolBar">
+    <table> 
+        <tr>
+            <td><a id="ConfirmOrdItem" href="#" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'">确认加项</a></td>
+            <td><a id="BSaveAmount" href="#" class="hisui-linkbutton" style="" data-options="plain:true,iconCls:'icon-save',stopAllEventOnDisabled:'true'">保存项目</a></td>
+            <td><a id="DeleteOrdItem" href="#" class="hisui-linkbutton" style="" data-options="plain:true,iconCls:'icon-cancel',stopAllEventOnDisabled:'true'">删除项目</a></td>
+            <td><a id="BEndanger" href="#" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-add-note',stopAllEventOnDisabled:'true'">危害因素</a></td>
+            <td><a id="BReload" href="#" class="hisui-linkbutton" style="" data-options="plain:true,iconCls:'icon-reload',stopAllEventOnDisabled:'true'">刷新项目</a></td>
+            <td><input class='hisui-checkbox' type="checkbox"  label="收费" Id="OpenCharge"/></td>
+            <td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox"  label="自费加项视同收费" Id="IFeeAsCharged"/></td>
+            <td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox"  label="删除项目增加限额" Id="DelItemAddAmount"/></td>
+            <td align="right" style="width:450px;"><label id="ConfirmInfo" style="color:#FF5809;"></label></td>
+            <td align="right"><label style="color:red;">&emsp;#(..Get("双击可编辑!"))#</label></td>
+        </tr>
+    </table>
+</div>
+<!--ItemToolBar  end-->
+
+<!-- 套餐预览窗口 start -->
+<div id="SetWin" data-options="iconCls:'icon-w-paper'" style="padding:10px;">
+    <table id="QrySetWin" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true"></table>  
+</div>
+<!-- 套餐预览窗口 end -->
+
+<!-- 姓名窗口 start -->
+<div id="NameWin">  
+     <table id="QryNameWin" data-options="fit:true,singleSelect:true"></table> 
+</div>
+<!-- 姓名窗口 end --> 
+
+<!-- 职业病危害因素窗口 start -->
+<div id="OccuWin">  
+    <table id="QryOccuWin" data-options="fit:true,singleSelect:false"></table>
+</div>
+<!-- 职业病危害因素窗口 end -->
+
+ 
+<!-- 增加药品项目弹窗 start -->
+<div id="AddMedItemWin" style="width:456px;height:270px;padding:10px;display:none;">
+    <table style="border-spacing: 10px;">
+        <tr>
+            <td align="right">#(..Get("项目名称"))#</td>
+            <td colspan=3><input class="hisui-validatebox textbox" disabled="disabled" id="ItemDescWin" name="ItemDescWin" type="text" style="width:343px;"></td>
+        </tr>
+        <tr>
+            <td align="right">#(..Get("剂量"))#</td>
+            <td><input class="hisui-numberbox textbox" id="ItemDoseQtyWin" name="ItemDoseQtyWin" data-options="min:0,precision:2,fix:false" type="text" style="width:137px;"></td>
+                
+            <td align="right"><label for="ItemUOMWin">#(..Get("剂量单位"))#</label></td>
+            <td><input class="hisui-combobox" id="ItemUOMWin" name="ItemUOMWin" type="text" style="width:137px;"></td>
+        </tr>
+        <tr>
+            <td align="right"><label for="ItemFrequenceWin">#(..Get("频次"))#</label></td>
+            <td><input class="hisui-combobox" id="ItemFrequenceWin" name="ItemFrequenceWin" type="text" style="width:137px;"></td>
+                
+            <td align="right"><label for="ItemInstructionWin">#(..Get("用法"))#</label></td>
+            <td><input class="hisui-combobox" id="ItemInstructionWin" name="ItemInstructionWin" type="text" style="width:137px;"></td>
+        </tr>
+        <tr>
+            <td align="right"><label for="ItemDurationWin">#(..Get("疗程"))#</label></td>
+            <td><input class="hisui-combobox" id="ItemDurationWin" name="ItemDurationWin" type="text" style="width:137px;"></td>
+                
+            <!--td align="right">关联</td>
+            <td><input class="hisui-validatebox textbox" id="ItemLinkDoctorWin" name="ItemLinkDoctorWin" type="text" style="width:130px;"></td-->
+        </tr>
+        <!--tr>
+            <td align="right"><label for="ItemRemarkWin">备注</label></td>
+            <td><input class="hisui-combobox" id="ItemRemarkWin" name="ItemRemarkWin" type="text" style="width:137px;"></td>
+                
+            <td align="right"><label for="ItemPriorRemarksWin">附加说明</label></td>
+            <td><input class="hisui-combobox" id="ItemPriorRemarksWin" name="ItemPriorRemarksWin" type="text" style="width:137px;"></td>
+        </tr-->
+    </table>
+</div>
+<!-- 增加药品项目弹窗 end -->
+ 
+  <div id="CashierWin"></div>   <!-- 收费窗口-->
+  <div id="CopyItemWin"></div>  <!-- 复制项目窗口-->
+  
+  <script type="text/javascript" src="../scripts/dhcpepreiadm.main.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.JS"></script>
+  <script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.PatItemPrint.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.RequestPrint.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+
+</body>
+</html>

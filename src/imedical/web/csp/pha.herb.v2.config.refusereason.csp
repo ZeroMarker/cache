@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!--药房药库-草药房管理-处方拒发原因维护
+    csp:pha.herb.v2.config.refusereason.csp
+    js: pha/herb/v2/config.refusereason.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHAHERBV2/>
+    <server>
+        s gWayType = $G(%request.Data("WayType",1))
+        i gWayType = "" s gWayType = "HERBR"
+        s RefuseWayID = ##Class(PHA.HERB.Com.Data).GetWayIdByCode(gWayType)
+    </server>
+    <SCRIPT Language="Javascript">
+    
+        var RefuseWayID = "#(RefuseWayID)#";
+   </SCRIPT>
+    <style type="text/css">
+    .pha-col{
+        display: inline-block;
+        padding-left: 10px;
+        margin-left: -4px;
+        font-size: 14px;
+    }
+    .pha-body {
+        background-color: #fff;
+    }
+    .layout {
+        background-color: #fff;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'west',border:false,split:true,width:450">
+                    <div class="hisui-panel" title="拒发原因维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-ques',fit:true">
+                        <div data-options="region:'north',border:false,height:92">
+                            <div class="pha-row">
+                                <div class="pha-col" style="margin-left:27px;">
+                                    <label id="_HospListLabel">#(..Get("医院"))#</label>
+                                </div>
+                                <div class="pha-col">
+                                    <input id="_HospList">
+                                </div>
+                            </div>
+                            <div class="pha-row">
+                                <div class="pha-col">
+                                    <label>#(..Get("原因描述"))#</label>
+                                </div>
+                                <div class="pha-col">
+                                    <input id="search-form" href="#"/>
+                                </div>
+                            </div>
+                            <div class="pha-line"></div>
+                        </div>
+                        <div data-options="region:'center',border:false,fit:true">
+                            <ul id="treeGridReason"></ul> 
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel" title="拒发原因明细列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-ques',fit:true,bodyCls:''">
+                        <table id="gridReason"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridReasonBar">
+        <table class="pha-con-table nopadding">
+            <td class="r-label">
+                 #(..Get("原因代码"))#
+            </td>
+            <td>
+                <input id="conCode" class='hisui-validatebox textbox'/>
+            </td>
+            <td>
+            </td>
+            <td class="r-label">
+                 <label>#(..Get("原因描述"))#</label>
+            </td>
+            <td>
+                <input id="conDesc" class='hisui-validatebox textbox'/>
+            </td>
+             <td >
+                 <input id="activeFlag" class='hisui-checkbox' type="checkbox" label="是否启用">
+            </td>
+            <td>
+                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" id="btnAdd">新增</a>
+            </td>
+            <td>
+                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" id="btnEdit">修改</a>
+            </td>
+            <!--td>
+                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" id="btnDel">删除</a>
+            </td-->
+        </table>
+    </div>
+    
+    <!-- 多院区 -->
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/herb/v2/common.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/herb/v2/config.refusereason.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,140 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- MZY0103	2301023		2021-12-06	-->
+<csr:action>
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    //d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()
+	}   
+    </SCRIPT>  
+</csr:action>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")	// MZY0105	2301023		2021-12-13
+	s StatusDR=$Get(%request.Data("StatusDR",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s InventoryDR=$Get(%request.Data("InventoryDR",1))
+	s InventoryNo=$Get(%request.Data("InventoryNo",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	// MZY0090	2021-08-23
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+ 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+ 	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+</script>
+
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中...</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:5px 10px 0px 10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle'" style="border:solid #ccc 1px;height:753px;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 0px #ccc;height:215px;">
+					
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="IEInventoryNo">盘点单号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IEInventoryNo" disabled="true" style="width:148px;"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cIEEquipName" for="IEEquipName">设备名称</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IEEquipName" style="width:148px;"></div>
+								<div class="eq-table-td eq-table-label"><label for="IEEquipNo">设备编号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IEEquipNo" style="width:148px;"></div>
+								<div class="eq-table-td eq-table-label"><label for="IEModel">规格型号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IEModel" style="width:148px;"></div>
+								<div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:20px;margin-right:20px">保存</a></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cIEOriginalFee" for="IEOriginalFee">设备原值</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IEOriginalFee" style="width:148px;"></div>
+								<div class="eq-table-td eq-table-label"><label id="cIETransAssetDate" for="IETransAssetDate">转资(入库)日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="IETransAssetDate"></div>
+								<div class="eq-table-td eq-table-label"><label for="IEStartDate">启用日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="IEStartDate"></div>
+								<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:20px;margin-right:20px">删除</a></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cIEUserLocDR_CTLOCDesc" for="IEUserLocDR_CTLOCDesc">使用部门</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="IEUserLocDR_CTLOCDesc" style="width:155px"></div>
+								<div class="eq-table-td eq-table-label"><label id="cIEStoreLocDR_CTLOCDesc" for="IEStoreLocDR_CTLOCDesc">所在库房</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="IEStoreLocDR_CTLOCDesc" style="width:155px"></div>
+								<div class="eq-table-td eq-table-label"><label for="cIELocationDR_LDesc" for="IELocationDR_LDesc">存放地点</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Locaton'" id="IELocationDR_LDesc" style="width:155px"></div>
+								<div class="eq-table-td"><a id="BSaveExcel" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:20px;margin-right:20px">导出</a></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cIEProviderDR_VDesc" for="IEProviderDR_VDesc">供应商</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="IEProviderDR_VDesc" style="width:155px"></div>
+								<div class="eq-table-td eq-table-label"><label for="cIEManuFactoryDR_MFDesc" for="IEManuFactoryDR_MFDesc">生产厂商</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.ManuFacturer'" id="IEManuFactoryDR_MFDesc" style="width:155px"></div>
+								<div class="eq-table-td eq-table-label"><label for="IELeaveFactoryNo">出厂编号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IELeaveFactoryNo" style="width:148px;"></div>
+								<div class="eq-table-td"><a id="BColSet" href="#" class="hisui-linkbutton" iconCls="icon-set-col" data-options="stopAllEventOnDisabled:true" style="margin-left:20px;margin-right:20px">导出列设置</a></div>	<!--	MZY0121	2578187		2022-04-15	-->
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="IERemark">备注</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IERemark"style="width:148px;"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+								<div class="eq-table-td"></div>
+							</div>
+						</div>
+				<div data-options="region:'center',border:false" style="border-top:solid #ccc 1px;position:relative">
+					<table id="DHCEQInventoryException" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"> </table>
+            	</div>
+		   </div>
+		</div>
+	</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="IEInventoryDR" value="#(InventoryDR)#">
+			<INPUT type="hidden" id="InventoryNo" value="#(InventoryNo)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="IERowID">
+			<INPUT type="hidden" id="IEUserLocDR">
+			<INPUT type="hidden" id="IEStoreLocDR">
+			<INPUT type="hidden" id="IELocationDR">
+			<INPUT type="hidden" id="IEProviderDR">
+			<INPUT type="hidden" id="IEManuFactoryDR">
+			<INPUT type="hidden" id="IEHold1">
+			<INPUT type="hidden" id="IEHold2">
+			<INPUT type="hidden" id="IEHold3">
+			<INPUT type="hidden" id="IEHold4">
+			<INPUT type="hidden" id="IEHold5">
+			<!--MZY0090	2021-08-23-->
+			<INPUT TYPE="hidden" id="GetTitleInfo" value="#(##Class(web.DHCEQCommon).GetTitleInfo("InventoryException"))#">
+			<INPUT TYPE="hidden" id="GetColSets" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" id="GetNum" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetNum")))#>
+			<INPUT TYPE="hidden" id="GetList" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetList")))#>
+			<INPUT TYPE="hidden" id="GetHospitalDesc" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/inventoryexception.js'></script>
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</body>
+</html>

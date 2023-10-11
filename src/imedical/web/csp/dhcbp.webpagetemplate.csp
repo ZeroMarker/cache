@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>血透模板表单</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center'" style="padding:0;">
+		<div id="pageNoTabs" style="margin-left:calc(50% - 500px);width:921px;height:30px;border: 1px solid #ccc;background-color:#eee;">
+						
+		</div>
+		<div style="margin-left:calc(50% - 500px);">
+			<canvas id="myCanvas" width="795" height="1500" style="position:relative;background-color:white;border:1px solid #eee"></canvas> 
+		</div>
+	</div>  
+	<div data-options="region:'south',border:false" style="height:40px;background:#F4F4F4;">
+        <div class="button-list">
+            <a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" data-permission="All">保存</a>
+            <a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a>
+            <!--a href="#" id="btnSaveAndPrint" class="hisui-linkbutton" data-options="iconCls:'icon-save-tmpl'" data-permission="All">保存并打印</a>
+            <a href="#" id="btnPrintWithoutPreview" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">直接打印</a>
+            <a href="#" id="btnArchive" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'" data-permission="All">归档</a-->
+            <a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" data-permission="All">刷新</a>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="../service/dhcanop/js/json2.min.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/JsBarcode.all.min.js"></script>
+<!--<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CASignature.js"></script>-->
+<script type="text/javascript" src="../service/dhcanop/js/CA/CIS.AN.CA.Signature.js"></script>
+
+<!--begin 打印和归档需要引用相关JS -->
+<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.ArchiveRecord.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/dhcan.canvas.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/dhcan.archivecontext.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.RecordBrowser.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/jr-qrcode.js"></script>	
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.complextableview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.editplugin.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.editpluginmanager.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.pagenotabsview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.templatecontext.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.displaysheet.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.lodopprintview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.sheetsettings.js"></script>
+<!--begin 打印和归档需要引用相关JS -->
+
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhcbp.sheetcontext.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/PrintTemplate/dhccl.webpagetemplate.js"></script>
+
+<script language="cache" runat=server>
+    set moduleCode=%request.Get("moduleCode")
+    //set moduleID=##class(CIS.AN.BL.DataModule).GetDataModuleID(moduleCode)
+    //set JScriptData=##class(CIS.AN.BL.PrintTemplate).GetJScriptData(moduleID)
+    set moduleID=##class(web.DHCBPCModule).GetBPDataModuleID(moduleCode)
+    set JScriptData=##class(web.DHCBPTemplate).GetJScriptData(moduleID)
+    set JScript=$SYSTEM.Encryption.Base64Decode(JScriptData)
+    write "<script type=""text/javascript"">",!
+    write JScript,!
+    write "</"_"script>",!
+</script>
+
+</html>

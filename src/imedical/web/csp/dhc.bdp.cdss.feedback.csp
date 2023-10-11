@@ -1,0 +1,95 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //s %session.Data("LOGON.USERID")=6505  ///visitor
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.cdss.feedback.csp
+    @JS:.js
+    @Title：医为百科
+    @Creator:chenghegui
+    @Description:查看知识(CDSS用)
+    @CreateDate：2018-05-07
+*/
+</csp:method>
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<style>
+body{
+   margin:0;
+    padding: 0;
+    background: url("../scripts/bdp/CDSSVue/imgs/feedbackplane.png") no-repeat;
+background-size: cover;
+}
+#buttonContainer{
+    position: absolute;
+    bottom:10px;
+    width:100%;
+    text-align:center
+}
+.button{
+    margin:0 20px;
+}
+#editContainer{
+   position: absolute;
+    bottom:10px;
+    width:400px;
+    left:170px;
+    top:170px;
+    height:200px;
+    border:1px black dashed;
+    border-radius:8px;
+    background-color:rgba(237,241,247)
+}
+#feedbacktitle{
+	position: absolute;
+    top:130px;
+    left:300px;
+    background-color:rgba(237,241,247);
+    color:black
+}
+</style>
+</head>
+<body scroll=no >
+
+    <!--<img id="FeedBackPlane" src="../scripts/bdp/framework/imgs/feedbackplane.png">-->
+    <h4 id="feedbacktitle">请写下您的宝贵意见~</h4>
+    <textarea id="editContainer" ></textarea>
+    <div id="buttonContainer">
+        <button id="submitButton" class="hisui-linkbutton button" >保存</button>
+        <button id="cancelButton" class="hisui-linkbutton button">关闭</button>
+    </div>
+    <script type="text/javascript">
+        $('#submitButton').click(function () {
+            var text = $('#editContainer').val()
+            if(text == ''){
+                $.messager.alert("简单提示", "请输入内容后保存哦~", "info"); 
+            }else{
+                $.messager.confirm("保存", "确认提交您的意见吗?", function (r) {
+                if (r) {
+                    var DataInfo = "web.CDSS.CMKB.Feedback[A]SaveData[A]"+parent.PatientUserInfo+"[A]"+text;   
+                    var result = parent.CDSSMakeServerCall(DataInfo);
+                    //CLOSE WINDOW
+                    console.log(result)
+                    parent.$("#encyclopedia_win").window('close');
+                    parent.$('#encyclopedia_iframe').attr("src", '');
+                } else {
+                    return
+                }
+            });
+            }
+        });
+        $('#cancelButton').click(function () {
+            parent.$("#encyclopedia_win").window('close');
+            parent.$('#encyclopedia_iframe').attr("src", '');
+        })
+
+  </script>  
+</body>
+</html>

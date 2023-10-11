@@ -1,0 +1,391 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+I ##Class(websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<!-- DHCICU.Statistic.QualityControlStat.csp  -->
+<title>重症质控统计(新)</title>
+<csp:content charset="UTF-8">
+<script src="../scripts/websys.js" type="text/javascript"></script>
+<HISUI/>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+    	<form id="conditionForm">
+    	    <label style="padding-left:5px;padding-right:6px;">科室</label>
+    		<select id="Dept" name="Dept" class="hisui-combobox" style="width:150px"></select>
+    		<label style="padding-left:10px;padding-right:6px;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:10px;padding-right:6px;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:10px;">查询</a>
+    		<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'" style="margin-left:10px;">打印</a>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false">
+    	<table id="data_grid" style="border:0"></table>
+	</div>
+	<div id="OpDetailsDialog" class="hisui-dialog" data-options="closed:true,width:1040,height:500,modal:true,iconCls:'icon-w-stamp'">
+		<div style="width:1016px;height:440px;margin:10px;border:1px solid #ccc;border-radius:5px;">
+			<table id="data_grid1"></table> 
+		</div>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		var currentStatCode ="";
+		$(document).ready(function() {
+			
+			/**
+			* 获取上月第一天
+			*/
+		 	var date = new Date()
+		 	var lastMonthFirstDay = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+			/**
+			* 获取上月最后一天
+			*/
+		 	var date = new Date()
+		 	const day = new Date(date.getFullYear(), date.getMonth(), 0).getDate()
+		 	var lastMonthLastDay = new Date(date.getFullYear(), date.getMonth() - 1, day)	
+			
+			$("#Dept").combobox({
+				width:150,
+				valueField: "DeptID",
+		        textField: "DeptName",
+		        url: ANCSP.DataQuery,
+		        onBeforeLoad: function(param) {
+		            param.ClassName = "web.DHCICUQualityControlStatistic";
+		            param.QueryName = "FindICULoc";
+		            param.ArgCnt = 0;
+		        }
+			});
+			$("#Dept").combobox("setValue",session.DeptID);
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		border:false,
+        		rownumbers: false,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: false,
+        		toolbar: "#dataTools",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "web.DHCICUQualityControlStatistic",
+            		QueryName: "FindICUQualityControlStat",
+            		Arg1: "",
+            		Arg2: "",
+            		Arg3: session.DeptID,
+            		Arg4: session.UserID,
+            		ArgCnt: 4
+        		},
+        		columns: [
+            		[{
+                    	field: "SeqNo",
+                    	title: "序号",
+                    	width: 100
+                	},
+                	{
+                    	field: "Title",
+                    	title: " 质控指标",
+                    	width: 250
+                	},
+                	{
+                    	field: "CountCode",
+                    	title: "CountCode",
+                    	width: 100,
+                    	hidden: true
+                	},
+                	{
+                    	field: "Count",
+                    	title: "分子",
+                    	width: 130,
+                    	formatter: function(value, row, index) {
+	                    	if(row.Count!="" && row.Count!=0 && row.CountCode!=""){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.Title+"\"" + "," + "\""+row.CountCode + "\""+ ")'>" + row.Count + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.Count;
+			                }
+                        }
+                	},
+                	{
+                    	field: "TotalCode",
+                    	title: "TotalCode",
+                    	width: 100,
+                    	hidden: true
+                	},
+                	{
+                    	field: "Total",
+                    	title: "分母",
+                    	width: 130,
+                    	formatter: function(value, row, index) {
+	                    	if(row.Total!="" && row.Total!=0 && row.TotalCode!=""){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.Title+"\"" + "," + "\""+row.TotalCode + "\""+ ")'>" + row.Total + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.Total;
+			                }
+                        }
+                	},
+                	{
+                    	field: "Rate",
+                    	title: "指标值",
+                    	width: 160
+                	}
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = $("#Dept").combobox("getValue") ? $("#Dept").combobox("getValue"): session.DeptID;
+            	param.Arg4 = session.UserID;
+            	
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	onLoadSuccess: function(data) {},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+    	stopQuery = false;
+    	datagrid.datagrid('reload');
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnPrint").click(function(){
+	    	printGrid();
+    	});
+	});
+	
+	var datagrid1 = $("#data_grid1");
+		datagrid1.datagrid({
+			idField: "RowId",
+			fit: true,
+			rownumbers: true,
+			remoteSort: false,
+			singleSelect:true,
+			striped:true,
+			title: "",
+			nowrap: false,
+			toolbar: "#dataTools",
+			border:false,
+			url: ANCSP.DataQuery,
+			queryParams: {
+				ClassName: "web.DHCICUQualityControlStatistic",
+				QueryName: "FindICUStatPatInfo",
+				Arg1: session.UserID,
+				Arg2: currentStatCode,
+				ArgCnt: 2
+			},
+			columns: [
+			[{
+				field: "icuaId",
+				title: "重症Id",
+				width: 60,
+				hidden: true,
+			},{
+				field: "patName",
+				title: "患者姓名",
+				width: 70
+			},{
+				field: "patSex",
+				title: "性别",
+				width: 35
+			},{
+				field: "patAge",
+				title: "年龄",
+				width: 40
+			},{
+				field: "icuInDateTime",
+				title: "监护开始时间",
+				width: 120
+			},{
+				field: "icuOutDateTime",
+				title: "监护结束时间",
+				width: 120
+			},{
+				field: "wardDesc",
+				title: "病区",
+				width: 120
+			},{
+				field: "icuBed",
+				title: "床位",
+				width: 70
+			},{
+				field: "ResidentDoctor",
+				title: "主管医师",
+				width: 80
+			},{
+				field: "ICUGuardDay",
+				title: "监护天数",
+				width: 80
+			},{
+				field: "icuDiag",
+				title: "诊断",
+				width: 150
+			},{
+				field: "papmiMedicare",
+				title: "病案号",
+				width: 70
+			},{
+				field: "admNo",
+				title: "就诊号",
+				width: 70
+			},{
+				field: "ICUALeaveCondition",
+				title: "转归状态",
+				width: 70
+			},{
+				field: "note",
+				title: "说明",
+				width: 500
+			}]
+			],
+			onBeforeLoad: function(param) {
+				param.Arg1 = session.UserID;
+				param.Arg2 = currentStatCode;
+			},
+			pagination: true,
+			pageList: [200, 500],
+			pageSize: 500
+		});
+
+	function ShowDetails(title,statCode){
+		currentStatCode = statCode;
+		$("#OpDetailsDialog").dialog({
+			title: title.replace(" ",""),
+			iconCls:"icon-w-stamp"
+		})
+		$("#OpDetailsDialog").dialog("open");
+		datagrid1.datagrid('reload');
+	}
+	
+	function printGrid(){
+		var lodop = getLodop();
+    	createPrintPage(lodop);
+    
+    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    	lodop.SET_PRINT_MODE("PRINT_DUPLEX", 2);
+    	lodop.SET_PREVIEW_WINDOW(1, 2, 0, 0, 0, "");
+    	lodop.SET_PRINT_MODE("AUTO_CLOSE_PREWINDOW", 1); //打印后自动关闭预览窗口
+    	lodop.PREVIEW();
+	}
+	
+	function createPrintPage(lodop){
+		var datagrid = $("#data_grid");
+    	var dataList = datagrid.datagrid("getData");
+    	
+    	var length = dataList.rows.length;
+    	var data,row,rowLength;
+    	var gridHtml=[];
+    	var linedItemNo=1;
+	    	
+    	gridHtml=[
+                "<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:14px;}",
+                "th {font-size:14px;font-weight:bold;text-align:center;} tr>td {text-align:center} tr {height:24px;} ",
+                "tr {height:35px;} .cell-operation {text-align:left;} table {table-layout:fixed;} .item-desc {width:200px;overflow:hidden;}</style>"
+        ];
+    	gridHtml.push('<table>');
+    	gridHtml.push('<thead><tr>');
+    	gridHtml.push('<th style="width:80px;">序号</th>');
+    	gridHtml.push('<th style="width:200px;">质控指标</th>');
+    	gridHtml.push('<th style="width:120px;">分子</th>');
+    	gridHtml.push('<th style="width:120px;">分母</th>');
+    	gridHtml.push('<th style="width:120px;">指标值</th>');
+    	gridHtml.push('</tr></thead>');
+    	gridHtml.push('<tbody>');
+	    
+    	for(var j=0;j<dataList.rows.length;j++){
+	    	row = dataList.rows[j];
+	    	gridHtml.push('<tr>');
+	    	gridHtml.push('<td>'+row.SeqNo+'</td>');
+	    	gridHtml.push('<td>'+row.Title+'</td>');
+	    	gridHtml.push('<td>'+row.Count+'</td>');
+	    	gridHtml.push('<td>'+row.Total+'</td>');
+	    	gridHtml.push('<td>'+row.Rate+'</td>');
+	    	gridHtml.push('</tr>');
+    	}
+    	
+    	gridHtml.push('</tbody></table>');
+    	
+    	lodop.ADD_PRINT_TABLE(120,40,"RightMargin:0.8cm",850,gridHtml.join(''));
+	    	
+    	setHeader();
+    	
+    	function setHeader(){
+	    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    		lodop.SET_PRINT_STYLE("FontName", "微软雅黑");
+    		lodop.SET_PRINT_STYLE("FontSize", 11);
+    		lodop.ADD_PRINT_TEXT(10, 200, 500, 30, session.HospDesc);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 21); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	
+    		lodop.ADD_PRINT_TEXT(60, 350, 400, 20, "重症质控报告");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 18); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		//lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    		
+    		lodop.ADD_PRINT_TEXT(90, 200, 560, 20, session.UserName);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 3) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    		
+    		var starDate=$("#OperStartDate").datebox("getValue");
+    		var endDate=$("#OperEndDate").datebox("getValue");
+    		var dateInfo=starDate+"至"+endDate;
+    		lodop.ADD_PRINT_TEXT(90, 40, 400, 20, dateInfo);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 10); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 1) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    		
+   			lodop.ADD_PRINT_TEXT(990, 0, 760, "BottomMargin:0.8cm", "第#页/共&页");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 12); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 2) //居中对齐
+    		lodop.SET_PRINT_STYLEA(0, "VOrient", 1) //下边距锁定
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 3) //页号
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	}
+    	
+    	function setMonth(month)
+    	{
+	    	lodop.ADD_PRINT_TEXT(90, 40, 150, 20, month);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 1) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	}
+	}
+
+	</script>
+</body>
+</html>

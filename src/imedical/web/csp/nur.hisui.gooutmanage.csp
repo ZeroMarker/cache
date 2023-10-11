@@ -1,0 +1,265 @@
+<!-- 多人血糖 -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+	Set AuthorityFlag = $GET(%request.Data("AuthorityFlag", 1))
+	Set DefaultCode = $GET(%request.Data("DefaultCode", 1))
+	Set SinglePatient = $GET(%request.Data("SinglePatient", 1))
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.gooutmanage.js" charset=gbk></script>
+<style type='text/css' class="eduExeStyle">
+body {background-color: #fff;margin: 4px!important;height: calc(100% - 8px)!important;}
+/* #wardPatientCondition {margin-top: 5px;width: 206px;padding:0 1px;} */
+.panel-header, .panel-body{width: auto!important;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;margin-top: 3px;}
+#multiVSPanel .datebox>input{width: 81px!important;}
+#outDateTime+.datebox>input,#returnDateTime+.datebox>input{width: 387px!important;}
+#multiVSPanel label.checkbox {line-height: 20px;}
+.spinner>.hisui-timespinner{width: 60px!important;}
+.multiContent .panel-body.panel-body-noheader {border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;border-style: dashed;}
+label.checkbox, label.radio{height: auto;}
+.l-btn-small{outline: none;}
+.PatInfoItem{margin-left: 0!important;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+a[name="symbol"] .l-btn-text {padding: 0 5px;line-height: 20px;}
+td.datagrid-value-changed{background: transparent;}
+.datagrid-td-merged>div table td .combo input,.datagrid-row div table td .combo input{width: calc(100% - 30px)!important;}
+#multiVSPanel .datagrid-view2 td.warning{color: rgb(246, 164, 5);border: 2px solid rgb(246, 164, 5)!important;}
+#multiVSPanel .datagrid-view2 td.warning>div{width: 106px;}
+.search-table{border-collapse:separate;border-spacing:0 10px;}
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+</style>
+<script language="javascript">
+  var EpisodeID = "#(EpisodeID)#";
+  var treeTimer=0;
+	window.EpisodeIDStr = EpisodeID;	
+  // 监听EpisodeIDStr
+	Object.defineProperties(window, {
+    EpisodeIDStr: {
+      configurable: true,
+      set: function (newValue) {
+      	clearTimeout(treeTimer);
+      	treeTimer=setTimeout(function(){
+	        console.log('你修改了 EpisodeIDStr 的值：' + newValue);
+					getGMTableData();
+      	},15);
+      }
+    }
+	});
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+</script>
+</head>
+<body>
+<div id="mvsLayout" class="hisui-layout" data-options="fit:true">
+	<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+	<!-- 右侧内容 -->
+	<div id="rightContent" data-options="region:'center',title:'',split:true" style="border:0;">
+		<div class="multiContent">
+			<div id="multiVSPanel" class="hisui-panel" title="外出管理" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding: 5px 0;overflow-y: hidden;">
+				<div style="position: relative;margin: 5px 0 10px;">
+					<table cellpadding="0" style="border-collapse: collapse;">
+				    <tr>
+							<td class="r-label" style="padding-left: 10px;">#(..Get("开始时间"))#</td>
+							<td class="r-label">
+				        <input id="startDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setDateboxOption"></input>
+							</td>
+							<td class="r-label">
+								<input id="startTime" style="width: 90px;border-radius: 2px;" class="hisui-timespinner">
+							</td>
+							<td class="r-label">#(..Get("结束时间"))#</td>
+							<td class="r-label">
+				        <input id="endDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setDateboxOption"></input>
+							</td>
+							<td class="r-label">
+								<input id="endTime" style="width: 90px;border-radius: 2px;" class="hisui-timespinner">
+							</td>
+							<td class="r-label">#(..Get("类型"))#</td>
+							<td class="r-label">
+								<select id="traceType" style="width:150px;"></select>
+							</td>
+							<td class="r-label">
+								<input class="hisui-checkbox" type="checkbox" label="回病区时间为空" id="returnFlag">
+							</td>
+							<td class="r-label">
+								<input class="hisui-checkbox" type="checkbox" label="作废" id="voidFlag">
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" style="" onclick="getGMTableData()">查询</a>
+							</td>
+				    </tr>
+				  </table>
+		    </div>
+			  <table id="gooutmanage" class="hisui-datagrid"
+					data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:true,pageSize:20,pageList:[20,50,100,200],toolbar: [{
+						iconCls: 'icon-add',
+						text:$g('新增'),
+						handler:addGMRow
+					},{
+						iconCls: 'icon-write-order',
+						text:$g('修改'),
+						handler:editGMRow
+					},{
+            iconCls: 'icon-cancel',
+            id: 'voidBtn',
+            text:$g('作废'),
+            handler:toggleGMRow
+					},{
+						iconCls: 'icon-print',
+						id: 'printBtn',
+						text:$g('打印'),
+						handler:printBtn
+          }],
+					onDblClickRow:editGMRow,
+					onSelect:selectGMRow,
+				">
+         <!--   iconCls: 'icon-cancel',
+            text:$g('删除'),
+            handler:deleteGMRow
+          },{ -->
+					<thead>   
+						<tr>
+							<th data-options="field:'bedCode',width:48">#(..Get("床号"))#</th>
+							<th data-options="field:'regNo',width:110">#(..Get("登记号"))#</th>
+							<th data-options="field:'name',width:110">#(..Get("姓名"))#</th>
+							<th data-options="field:'typeDR',width:48,formatter:function(value,row){
+								return traceTypeObj[value];
+							},
+							editor:{
+								type:'combobox',
+								options:{
+									defaultFilter:6,
+									valueField:'id',
+									textField:'type',
+									panelHeight:'auto',
+									data:traceType,
+									blurValidValue:true
+								}
+							}">#(..Get("类型"))#</th>
+							<th data-options="field:'outDateTime',width:140">#(..Get("出病区时间"))#</th>
+							<th data-options="field:'returnDateTime',width:140">#(..Get("回病区时间"))#</th>
+							<th data-options="field:'entourage',width:76">#(..Get("陪同人员"))#</th>
+							<th data-options="field:'remarks',width:120,formatter:function(value,row){
+								return value+(row.voidFlag?$g('（作废）'):'');
+							}">#(..Get("备注"))#</th>
+							<th data-options="field:'outRecorder',width:104">#(..Get("外出登记护士"))#</th>
+							<th data-options="field:'outRecordDateTime',width:140">#(..Get("外出登记时间"))#</th>
+							<th data-options="field:'returnRecorder',width:104">#(..Get("返回登记护士"))#</th>
+							<th data-options="field:'returnRecordDateTime',width:140">#(..Get("返回登记时间"))#</th>
+							<th data-options="field:'eventId',width:76,formatter:function(value,row){
+								return value?$g('自动带入'):$g('手动录入');
+							}">#(..Get("数据来源"))#</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>   
+				</table>
+			</div>
+		</div>
+	</div>  	
+</div>
+
+<!--增加/修改弹框-->
+<div id="QLAssessEditWin" class="hisui-window" title="#(..Get("外出管理"))#" style="width:532px;height:auto;padding: 0 10px;overflow: hidden;" data-options="iconCls:'icon-w-add',closed:true">   
+	<table class="search-table">
+		<tr>
+			<td class="r-label">
+				<label for="code" class="clsRequired">#(..Get("床号"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="bedCode" style="width:424px;"/>
+				<input type="hidden" id="rowId"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="confirmation">#(..Get("登记号"))#</label>
+			</td>
+			<td>
+				<input class="textbox" disabled id="regNo" style="width: 417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="confirmation">#(..Get("姓名"))#</label>
+			</td>
+			<td>
+				<input class="textbox" disabled id="name" style="width:417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="observStatusDR" class="clsRequired">#(..Get("类型"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="typeDR" style="width:424px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="isShow" class="clsRequired">#(..Get("出病区时间"))#</label>
+			</td>
+			<td>
+				<input class="hisui-datetimebox textbox" data-options="showSeconds:false" id="outDateTime" style="width:424px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="type">#(..Get("陪同人员"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="entourage" style="width:417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="flag">#(..Get("备注"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="remarks" style="width:417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="rangeFrom">#(..Get("回病区时间"))#</label>
+			</td>
+			<td>
+				<input class="hisui-datetimebox textbox" data-options="showSeconds:false" id="returnDateTime" style="width:424px;"/>
+			</td>
+		</tr>
+
+		<tr>
+			<td colspan="2" style="text-align:center;">
+				<a class="hisui-linkbutton" onclick="saveGMRow();" id="BSaveVSign" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+				<a class="hisui-linkbutton" id="BCancel" onclick="$('#QLAssessEditWin').window('close');" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">#(..Get("关闭"))#</a> 
+			</td>
+		</tr>
+	</table>
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<DHCEQ:Report></DHCEQ:Report>
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s EquipCatID=%request.Data("EquipCatID",1)
+ s EquipCat=##class(web.DHCEQCommon).GetTrakNameByID("equipcat",EquipCatID)
+ s UseLocID=%request.Data("UseLocID",1)
+</Script>
+</HEAD>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel"  data-options="fit:true,eqtitle:'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',border:false" style="overflow:hidden;">
+					<iframe id="ReportFile" name="ReportFile" src="" width=100% height=100% scrolling="no"></iframe>
+				</div>
+    		</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="CurLocID" value=#(UseLocID)#><!--	参数名称错误-->
+			<INPUT type="hidden" id="EquipCatID" value=#(EquipCatID)#>
+			<INPUT type="hidden" id="EquipCat" value=#(EquipCat)#>
+			<INPUT TYPE="hidden" id="ReportFileName" value=#(ReportFileName)#>
+			<INPUT TYPE="hidden" id="PrintFlag" value=#(PrintFlag)#>
+			<INPUT TYPE="hidden" id="ReportFileSrc" value=#(ReportFileSrc)#>
+			<INPUT TYPE="hidden" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>
+		</form>
+	</div>
+</body>
+<script type='text/javascript'>
+{
+	//modified by ZY0284 20211123
+	jQuery(document).ready(function()
+	{
+		//add  by wl 2020-04-01 增加润乾背景色
+		var ColTColor=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","902001");
+		var DataColor=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","902002");
+		var SumColor=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","902003");
+		var Colorstr="&ColTColor="+ColTColor+"&DataColor="+DataColor+"&SumColor="+SumColor;
+		var ReportFileName=jQuery("#ReportFileName").val();
+		var PrintFlag=getElementValue("PrintFlag");
+		var PrintStr=""
+		var lnk="";
+		$("input").each(function(){
+			var id=$(this)[0].id;
+			var objClassInfo=$("#"+id).prop("class");
+			var options=jQuery("#"+id).attr("data-options");
+			if ((id!="")&&(id!="PrintFlag")&&(id!="ReportFileSrc")&&(id!="ReportFilePrintSrc")&&(id!="ReportFileName"))
+			{
+				if (objClassInfo.indexOf("hisui-datebox")>=0)
+				{
+					lnk=lnk+"&"+id+"="+GetJQueryDate("#"+id);
+				}
+				else
+				{
+					lnk=lnk+"&"+id+"="+getElementValue(id);
+				}
+			}
+		})
+		if (PrintFlag==2) PrintStr="&PrintFlag=1"
+		
+		document.getElementById('ReportFile').src="dhccpmrunqianreport.csp?reportName="+ReportFileName+lnk+PrintStr+Colorstr; //modify  by wl 2020-04-01
+		
+	})
+	
+}
+</Script>
+</HTML>
+

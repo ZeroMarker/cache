@@ -1,0 +1,187 @@
+<!--dhcdoc.labord.preview.csp 检验医嘱合管预览 -->
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED.--> 
+<CSP:CLASS import="User">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{
+	background: #fff;
+}
+.datagrid-body{
+	/*height:240px !important;*/
+}
+.panel-header{
+	border-bottom: 0;
+}
+#WarningInfo,#WarningTimeDown {
+	font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 35px;
+}
+.search-div a{
+	margin-left:10px;
+}
+.footer-div{
+	float:right;
+}
+.editcls-auditResult {
+	text-decoration: none;
+	
+	width:100%;
+	display: inline-block;
+}
+.layout>.panel>.panel-body,.panel-body-gray{
+	border-radius: 4px;
+}
+.pWarning{
+	font-size: 14px;
+	background:#FFE3E3;
+	color:#FF3D2C;
+	border: 1px solid #FF3D2C;
+	padding-left:8px;
+	overflow: hidden; 
+	white-space: nowrap; 
+	text-overflow: ellipsis;
+}
+</style>
+</head>
+<Server>
+s EpisodeID=%request.Get("EpisodeID")
+s LabNoInfo=%request.Get("LabNoInfo")
+
+</Server>
+<body class="hisui-panel" fit="true" style="padding: 10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div class="pWarning" data-options="region:'north', split:true,collapsible:false,bodyCls:'panel-body-gray'"  style="height:40px;overflow:hidden;">
+			<Lable id ="WarningInfo" ></Lable>
+		</div>
+		<div data-options="region:'center',collapsible:false,bodyCls:'panel-body-gray'" style="">
+			<table id="TableList"></table>
+		</div>
+	</div>
+<SCRIPT language = 'javascript' >
+	//全局请求后台服务对象
+	var ServerObj={
+		EpisodeID:"#(EpisodeID)#",
+		LabNoInfo:"#(LabNoInfo)#"
+	};
+	$(function(){
+		InitTable();
+	});
+	function InitTable(){
+		//Index:%String,LabNo:%String,ArcimDesc:%String,OrdRowID:%String,SpecimenDesc:%String,ContainerDesc
+		var Columns=[[ 
+ 			{field:'Index',hidden:true}
+ 			,{title:'条码组',field:'LabNoDesc',width:160}
+			,{title:'检验号',field:'LabNo',width:160,hidden:true}
+			,{title:'医嘱项名称',field:'ArcimDesc',width:300,
+				formatter: function(value,row,index){
+					if (row.OrdRowID!=""){
+						return $g("【已审核】")+value+"";
+					} else {
+						return value;
+					}
+				}
+				,styler: function(value,row,index){
+					if (row.OrdRowID!=""){
+						return "background-color:#ffee00;";
+					}
+				}
+			}
+			,{title:'医嘱ID',field:'OrdRowID',hidden:true,hidden:true}
+			,{title:'标本',field:'SpecimenDesc',width:90}
+			,{title:'管',field:'ContainerDesc',width:60}
+			,{title:'检验科分组代码',field:'LabGroup',width:130}
+		]];
+		//初始化表格
+		$("#TableList").datagrid({
+			fit:true,
+		    pagination:true,
+		    singleSelect:true,
+		    fitColumns:true,
+		    border : false,
+			idField:'Index',
+			autoRowHeight:true,
+			singleLine:false,
+			columns:Columns,
+			loadFilter:DocToolsHUI.lib.pagerFilter
+
+		});
+		
+		$.cm({
+		    ClassName : "web.DHCDocPrescript",
+		    QueryName : "QueryLabOrdPreView",
+		    EpisodeID:ServerObj.EpisodeID, 
+		    LabNoInfo:ServerObj.LabNoInfo
+		},function(JsonData){
+			$("#TableList").datagrid('loadData',JsonData);
+			InitWarningInfo(JsonData);
+			
+		})
+		
+	} 
+	function InitWarningInfo(JsonData){
+		var WarningInfo="";
+		var LabList = new Array();
+		var SpecimenList = new Array();
+		for (var i=0;i<JsonData.rows.length;i++) {
+			var LabNo=JsonData.rows[i].LabNo;
+			var SpecimenDesc=JsonData.rows[i].SpecimenDesc;
+			
+			var Index =-1;
+			$.each(LabList,function(i,element){
+				if (element.LabNo == LabNo){
+					Index=i;
+					return false
+				}
+			});
+			if (Index<0){
+				LabList.push({
+					LabNo:LabNo,
+					SpecimenDesc:SpecimenDesc
+				});
+			}
+			var Index =-1;
+			$.each(SpecimenList,function(i,element){
+				if (element.SpecimenDesc == SpecimenDesc){
+					Index=i;
+					return false
+				}
+			});
+			
+			if (Index<0){
+				SpecimenList.push({
+					LabNoStr:LabNo,
+					SpecimenDesc:SpecimenDesc
+				});
+			}else{
+				var Obj=SpecimenList[Index];
+				if (("^"+Obj.LabNoStr+"^").indexOf("^"+LabNo+"^")==-1){
+					SpecimenList[Index].LabNoStr=SpecimenList[Index].LabNoStr+"^"+LabNo;
+				}
+			}
+		}
+		
+		for (var i=0;i<SpecimenList.length;i++) {
+			var SpecimenDesc=SpecimenList[i].SpecimenDesc;
+			var LabNoArr=SpecimenList[i].LabNoStr.split("^");
+			if (WarningInfo==""){
+				WarningInfo=SpecimenDesc+""+LabNoArr.length+$g("组")
+			}else{
+				WarningInfo=WarningInfo+","+SpecimenDesc+""+LabNoArr.length+$g("组")
+			}
+		}
+		WarningInfo=$g("预计生成")+LabList.length+$g("组条码,其中")+WarningInfo+"."
+		$("#WarningInfo").text(WarningInfo)
+		
+	}
+	
+  </SCRIPT>
+<SCRIPT type="text/javascript" SRC='../scripts/DHCOPAdm.Common.js'></SCRIPT>
+<SCRIPT type="text/javascript" SRC='../scripts/DHCWeb.OPCommon.js'></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+</body> 
+</html>

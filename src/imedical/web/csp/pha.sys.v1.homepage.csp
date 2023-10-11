@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!--药房药库-药学首页-主页(工作台)
+	csp:  pha.sys.v1.homepage.csp
+	js:   pha/sys/v1/homepage.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+	<!-- iMedical版本标题 -->
+	<title>
+	    <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<ADDINS require="CmdShell" />
+	<HISUI />
+	<PHALIBV1 />
+	<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css"/>
+	<style>
+		/* 显示比例(没啥用) */
+		body {
+			zoom: 100%;
+		}
+		/* HISUI Panel边框 */
+		.panel-body, .panel-header {
+			border-color: #d1d6da;
+		}
+		/* 隐藏滚动条 */
+		.pha-scrollbar-hidden {
+			overflow: hidden;
+		}
+		.pha-scrollbar-hidden-chl {
+			width: 100%;
+			height: 95%;
+			overflow-y: scroll;
+		}
+		/* 隐藏footer的下边框 */
+		.datagrid-footer td {
+			border-width: 0 1px 0px 0;
+		}
+		/* portal的下边距设置为0 */
+		.portal-column {
+			padding-bottom: 0px;;
+		}
+		label.radio {
+			background-position-x: -5px;
+		}
+		label.checkbox {
+			background-position-x: -5px;
+		}
+		/* 滚动条设置 */
+		.mCSB_inside>.mCSB_container {
+			margin-right: 0px;
+		}
+		.mCS-inset-dark.mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar,
+		.mCS-inset-2-dark.mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar,
+		.mCS-inset-3-dark.mCSB_scrollTools .mCSB_dragger .mCSB_dragger_bar {
+			background: #CCCEDB;
+		}
+		.mCS-inset-2-dark.mCSB_scrollTools .mCSB_draggerRail {
+			border-color: transparent;
+		}
+		.mCSB_scrollTools_vertical {
+			margin-right: -4px;
+		}
+    </style>
+	
+	<!-- params -->
+	<server>
+	s logonUserId = %session.Data("LOGON.USERID")
+	s selectedLocId = ##class(PHA.SYS.HomePage.Save).GetSelectedLoc(logonUserId)
+	s globalConfig = ##class(PHA.SYS.HomePage.Query).GetGlobalConfig()
+	w "<!-- 药学首页参数 -->",!
+	w "<script type='text/javascript'>",!
+	w "	var HomePage_logonUserId = '" _ logonUserId _ "';",!
+	w "	var HomePage_selectedLocId = '" _ selectedLocId _ "';",!
+	w "	var HomePage_globalConfig = " _ globalConfig _ ";",!
+	w "</"_"script>",!
+	</server>
+	
+	<!-- plugins -->
+	<script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mousewheel.min.js"></script>
+	<script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/pha/plugins/jquery-layoutgrid/jquery-layoutgrid.css"></link>
+	<script type="text/javascript" src="../scripts/pha/plugins/jquery-layoutgrid/jquery-layoutgrid.js" ></script>
+	<script type="text/javascript" src="../scripts/pha/plugins/jquery-nicescroll/jquery.nicescroll.min.js" ></script>
+	<script type="text/javascript" src="../scripts/pha/plugins/easyui-portal/jquery.portal.plus.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+
+</head>
+
+<body>
+	<!-- layout -->
+	<div id="layout-container" class="hisui-layout" fit="true">
+	</div>
+
+	<!-- js & css for this page -->
+	<link rel="stylesheet" type="text/css" href="../scripts/pha/sys/v1/css/homepage.ui.css"></link>
+	<script type="text/javascript" src="../scripts/pha/sys/v1/extend.pha.js" ></script>
+	<script type="text/javascript" src="../scripts/pha/sys/v1/extend.com.js" ></script>
+	<script type="text/javascript" src="../scripts/pha/sys/v1/homepage.com.js"></script>
+	<script type="text/javascript" src="../scripts/pha/sys/v1/homepage.js"></script>
+</body>
+
+</html>

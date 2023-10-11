@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--年报
+	csp:csp/pha.in.v3.rep.year.csp
+	js: scripts/pha/in/v3/rep/year.js
+-->
+<HTML >
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHALIBV1 />
+    
+    <!-- 样式扩展 -->
+    <style>
+    	
+    </style>
+</HEAD>
+        
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true"  >
+                <div data-options="region:'west',width:210, border:false,split:true" class="pha-body" style="padding:0px;">
+                	<div class="hisui-layout" fit="true"  >
+                		<div data-options="region:'center',height:585,border:false,split:true">
+		            		<div id="panel" class="hisui-panel" title="年份"
+				                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-table',fit:true,bodyCls:'',
+				                    tools:[{iconCls: 'icon-help'}]">
+				                <table id="gridYear"></table>	
+				            </div>
+				        </div>
+				        <div data-options="region:'south',height:142,border:false,split:true">
+				        	<div id="panel" class="hisui-panel" title=""
+					                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-table',fit:true,bodyCls:'panel-body-gray'">	
+					         	<table id="qCondition" class="pha-con-table">
+								 	<tr>
+						            	<td class="r-label"><label for="startYearMon">#(..Get("开始月"))#</label></td>
+                						<td><input id="startYearMon" class="hisui-validatebox" style="width:120px;" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+						            </tr>
+						            <tr>
+						            	<td class="r-label"><label for="endYearMon">#(..Get("结束月"))#</label></td>
+                						<td><input id="endYearMon" class="hisui-validatebox" style="width:120px;" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+						            </tr>
+						            
+						        </table>
+			            		<div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+						            <a id="btnCreateYearRep" class="hisui-linkbutton" >#(..Get("生成年报"))#</a>
+								</div>
+							 </div>	
+				         </div>
+				    </div> 
+		        </div>
+            	<div data-options="region:'center',border:false,split:true" class="pha-body" style="padding:0px;">
+            		<div class="hisui-layout" fit="true"  >
+            		  	<div data-options="region:'north',height:250, border:false,split:true" class="pha-body" style="padding:0px;">
+            		  		<div class="hisui-layout" fit="true"  >
+            		  			<div data-options="region:'west', width:450,border:false,split:true">
+		            				<div id="panel" class="hisui-panel" title="年报列表"
+					                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-table',fit:true,bodyCls:''">	
+					                    <table id="gridRep"></table>				                            
+					                </div>
+				                 </div>
+				                 <div data-options="region:'center',border:false,split:true">
+		            				<div id="panel" class="hisui-panel" title="年报操作列表"
+					                    data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-table',fit:true,bodyCls:''">	
+					                    <table id="gridRepOperate"></table>				                            
+					                </div>
+				                 </div>
+			                </div> 
+			            </div>  
+			            <div data-options="region:'center', border:false,split:true">
+			            	<div id="detail" style="width:100%;height:100%;"></div>
+						</div>
+					</div>
+                </div>
+			</div>
+		</div>
+    </div>	
+    
+    
+	<!--年份工具栏-->
+	<div id="gridYearBar">
+		 <table id="qCondition" class="pha-con-table">
+		 	<tr>
+                <td class="r-label"><label for="locId">#(..Get("科室"))#</label></td>
+                <td><input id='locId' data-pha='class:"hisui-combobox",required:true,query:true,clear:true' /></td>
+            </tr>
+            <tr>
+            	<td class="r-label"><label for="year">#(..Get("年份"))#</label></td>
+                <td style="text-align:center;">
+                	<a class="hisui-linkbutton" plain='true' iconCls="icon-triangle-green-left" id="btnCancel" onclick="javascript:YearDown()"></a>
+                    <input class="hisui-validatebox" id='year' data-pha='class:"hisui-validatebox",required:true,query:true' style="width:60px" disabled="true"/>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-triangle-green-right" id="btnCancel" onclick="javascript:YearUp()"></a>
+                </td>
+            </tr>
+        </table>
+	</div>
+
+	
+<script type="text/javascript" src="../scripts/pha/in/v3/rep/year.js"></script>
+<script type="text/javascript" src="../scripts/pha/in/v3/rep/com.js"></script>
+<csp:Include Page="pha.in.v3.rep.detail.csp"></csp:Include>
+
+<script type="text/javascript">
+    $('#detail').append($('#scrDetail').html());
+</script>
+
+</body>
+</HTML>

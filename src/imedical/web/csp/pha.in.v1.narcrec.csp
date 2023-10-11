@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!--药房药库-毒麻药品回收
+	csp:  pha.in.v1.narcrec.csp
+	js:   pha/in/v1/narcrec.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+	<ADDINS require="RWCard,PublicReadPerson" />
+	<DOCCARD medStepCode="NarcRec" ></DOCCARD>
+	<server>
+		d ##class(PHA.COM.ReadCard).LoadPlugin()
+	</server>
+	
+	<!-- 样式扩展 -->
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    	.pha-scrollbar-hidden {
+	    	overflow: hidden;
+	    }
+	    .pha-scrollbar-hidden-chl {
+	    	width: 100%;
+	    	height: 95%;
+	    	overflow-y: scroll;
+	    }
+	    .pha-help-body {
+			margin-top: -10px;
+			overflow: hidden;
+		}
+    </style>
+    
+    <!-- 接收参数 -->
+    <server>
+		s EpisodeID = $G(%request.Data("EpisodeID", 1))
+		s patNo = ""
+		i EpisodeID'="" d
+		.s papmi = $p(^PAADM(EpisodeID),"^",1)
+		.s patNo = $p(^PAPER(papmi,"PAT",1),"^",1)
+	</server>
+	<script type="text/javascript">
+		var EpisodeID = "#(EpisodeID)#";
+		var patNo = "#(patNo)#";
+	</script>
+</head>
+
+<body>
+    <!-- 整体布局 -->
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+        	<!-- layout start -->
+            <div id="layout" class="hisui-layout" fit="true">
+                <div data-options="region:'center',border:false,split:true">
+                    <div id="panelNarcRec">
+                        <table id="gridNarcRec"></table>
+                    </div>
+                </div>
+            </div>
+            <!-- layout end -->
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+	<div id="gridNarcRecBar">
+		<div class="pha-row" id="gridNarcRecBar-row1">
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="startDate" title="#(..Get("日期为毒麻药品用药登记日期"))#" class="hisui-tooltip" data-options="position:'bottom',tipWidth:75"><span style="color:red">*</span>#(..Get("开始日期"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="startDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true' data-options="width:140"/>
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="endDate" title="#(..Get("日期为毒麻药品用药登记日期"))#" class="hisui-tooltip" data-options="position:'bottom',tipWidth:75"><span style="color:red">*</span>#(..Get("截止日期"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="endDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true' data-options="width:140"/>
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="recLocId"><span style="color:red">*</span>#(..Get("回收科室"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="recLocId" class="hisui-combobox" data-pha='class:"hisui-combobox",requied:true,query:true' />
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="recState">#(..Get("回收状态"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="recState" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true'/>
+            </div>
+            <div class="pha-col" style="width:42px;text-align:right">
+                <label for="patNo">#(..Get("登记号"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="patNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox",query:true,clear:true' style="width:143px;" />
+            </div>
+            
+            <div class="pha-col">
+            	<a id="btnFind" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
+			</div>
+			<div class="pha-col">
+				<span id="BMore"></span>
+			</div>
+        </div>
+        <div class="pha-row" id="gridNarcRecBar-row2" style="display:block;">
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="docLocId">#(..Get("开单科室"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="docLocId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true' />
+            </div>
+            <div class="pha-col" style="width:63px;text-align:right">
+                <label for="wardLocId">#(..Get("病区"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="wardLocId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true' />
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="inci">#(..Get("药品"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="inci" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+            </div>
+            <div class="pha-col" style="width:56px;text-align:right">
+                <label for="batchNo" title="#(..Get("发药批号或者用药登记批号"))#" class="hisui-tooltip" data-options="position:'bottom',tipWidth:75">#(..Get("批号"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="batchNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox",query:true,clear:true' style="width:143px;" />
+            </div>
+            <div class="pha-col" style="width:42px;text-align:right">
+                <label for="cardNo">#(..Get("卡号"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="cardNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox",query:true,clear:true' style="width:143px;" />
+            </div>
+            
+            <div class="pha-col">
+            	<a id="btnReadCard" class="hisui-linkbutton" iconCls="icon-w-card">#(..Get("读卡"))#</a>
+			</div>
+			<div class="pha-col">
+				<a id="btnClear" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+			</div>
+        </div>
+        <div class="pha-line"></div>
+        <div class="pha-line-bar">
+        	<a id="btnSave" class="hisui-linkbutton" plain='true' iconCls="icon-blue-drug-ok">#(..Get("回收"))#</a>
+        	<a id="btnCancel" class="hisui-linkbutton" plain='true' iconCls="icon-undo">#(..Get("撤消回收"))#</a>
+        	<a id="btnInput" class="hisui-linkbutton" plain='true' iconCls="icon-edit">#(..Get("录入回收信息"))#</a>
+        	<div class="pha-tip-info pha-col" style="height:24px;margin-left:10px;padding-left:33px;line-height:24px;top:10px;right:10px;letter-spacing:1px;">
+            	#(..Get("温馨提示：仅查询满足当前回收科室的回收状态的执行记录！"))#
+            </div>
+		</div>
+	</div>
+	
+	<!-- 回收信息录入弹窗 -->
+    <script id="win_content_html" type="text/html">
+	   <div class="hisui-layout" fit="true">
+	        <div id="win_layout" data-options="region:'center',border:false" class="">
+		    	<div class="pha-row">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="recCheckUserId">#(..Get("回收核对人"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="recCheckUserId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+		            </div>
+		        </div>
+		        <div class="pha-row">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="recFromUserName" title="#(..Get("录入交回人员的姓名或者工号"))#" class="hisui-tooltip" data-options="position:'bottom',tipWidth:75">#(..Get("回收交回人"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="recFromUserName" class="hisui-validatebox" data-pha='class:"hisui-validatebox",query:true,clear:true' style="width:154px;" />
+		            </div>
+		        </div>
+		        <div class="pha-row">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="recFromUserTel" title="#(..Get("录入交回人员的联系方式"))#" class="hisui-tooltip" data-options="position:'bottom',tipWidth:75">#(..Get("交回人联系方式"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="recFromUserTel" class="hisui-validatebox" data-pha='class:"hisui-validatebox",query:true,clear:true' style="width:154px;" />
+		            </div>
+		        </div>
+		        <div class="pha-row">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="recOriType">#(..Get("回收来源类型"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="recOriType" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+		            </div>
+		        </div>
+		        <div class="pha-row">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="recOriLocId">#(..Get("回收来源科室"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="recOriLocId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+		            </div>
+		        </div>
+		        <div class="pha-row">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="DSCD">#(..Get("残量处理意见"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="DSCD" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+		            </div>
+		        </div>
+		        <div class="pha-row">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="DSCDExeUserId">#(..Get("残量处理执行人"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="DSCDExeUserId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+		            </div>
+		        </div>
+		        <div class="pha-row" style="margin-bottom:0px;">
+		            <div class="pha-col" style="width:110px;text-align:right;">
+		                <label for="DSCDSuperUserId">#(..Get("残量处理监督人"))#</label>
+		            </div>
+		            <div class="pha-col">
+		                <input id="DSCDSuperUserId" class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+		            </div>
+		        </div>
+	        </div>
+	    </div>
+    </script>
+    
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v1/narcrec.js"></script>
+</body>
+
+</html>

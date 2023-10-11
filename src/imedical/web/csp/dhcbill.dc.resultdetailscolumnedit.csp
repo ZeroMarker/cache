@@ -1,0 +1,211 @@
+<!-- 
+ * FileName:	dhcbill.dc.resultdetailscolumnedit.csp
+ * User:		zhangjb 
+ * Date:		2022/08/24
+ * Description: 核查结果明细弹窗
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.layout>.panel>.panel-header {
+		    -moz-border-radius: 4px 4px 0 0;
+		    -webkit-border-radius: 4px 4px 0 0;
+		    border-radius: 4px 4px 0 0;
+		}
+		.layout>.panel>.panel-body {
+		    -moz-border-radius: 0 0 4px 4px;
+		    -webkit-border-radius: 0 0 4px 4px;
+		    border-radius: 0 0 4px 4px;
+		}
+		.no-data {
+			width: 100%;
+			height: 100%;
+			background: url(../images/no_data.png) center center no-repeat;
+		}
+		.layout-panel-west {
+		    padding-right: 10px;
+		}
+		.layout-panel-north{
+		    padding-bottom: 10px;
+		}
+		label.checkbox {
+		    margin-left: -6px;
+		}
+		.textbox.tb320 {
+			width: 320px;
+		}
+		.datagrid-sort .datagrid-sort-icon {
+		padding-right: 13px !important;
+		margin-left: 5px !important;
+		background: url(../scripts_lib/hisui-0.1.0/dist/css/images/lite/datagrid_icons.png) -64px center no-repeat;
+		}
+		.datagrid-sort-desc .datagrid-sort-icon {
+		padding-right: 13px !important;
+		margin-left: 5px !important;
+		background: url(../scripts_lib/hisui-0.1.0/dist/css/images/lite/datagrid_icons.png) -16px center no-repeat;
+		}
+
+   </style>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+	<script type="text/javascript" src="../scripts/dhcbill/dc/datagrid-dnd.js"></script>
+</head>
+
+<body  style="padding:10px;background:#fff">
+	<div class="hisui-layout" data-options="fit:true" >
+		<div data-options="region:'west',title:'列名称',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper-info'" id="ZDLX" style="width:363px;" text='414'>
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false" style="background:#fff">
+					<table id="ColList"></table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',title:'属性编辑',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-write-order'">
+			<div class="hisui-layout">
+				<table class="search-table" cellpadding="0px" cellspacing="10px">
+					<tr>
+						<td class="r-label">列名称</td>
+						<td>
+							<input id ="ColTitle" class="hisui-validatebox textbox" required="required" style="width:128px;"/>
+						</td>
+						<td  class="r-label r-label-20">列显示</td>
+						<td>
+							<div id="Colhidden" class="hisui-switchbox" style="margin-left:0px" data-options="onText:'显示',offText:'隐藏',
+								size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){}">
+							</div>
+						</td>
+						
+					</tr>
+					<tr>
+						<td   class="r-label">列字段名</td>
+						<td>
+							<input id="Colfield" class="hisui-validatebox textbox"  required="required" style="width:128px;"/>
+						</td>
+						
+						
+						<td   class="r-label r-label-20">提示内容</td>
+						<td>
+							<div id="ColshowTip" class="hisui-switchbox" style="margin-left:0px" data-options="onText:'显示',offText:'隐藏',
+								size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){}">
+							</div>
+						</td>
+						
+					</tr>
+					<tr>
+						<!-- <td   class="r-label">使用场景</td>
+						<td>
+							<input id ="DicMemo" class="hisui-validatebox textbox" required="required" style="width:140px;" data-options="">
+						</td> -->
+						<td   class="r-label">列宽</td>
+						<td>
+							<input id ="ColWidth" class="hisui-validatebox textbox" style="width:128px;">
+						</td>
+						<td />
+						<td />
+					</tr>
+					<tr>
+						<td class="r-label"><label>formatter</label></td>
+						<td colspan=3 rowspan=2><textarea id="ColConCode" class="hisui-validatebox textbox"  style="width:300px;height:150px;text-align:left;display:inline-block;"/></textarea></td>
+					</tr>
+					<tr/>
+						<td style="height:110px;"/>
+					</tr>
+				</table>
+				<table align="center" >
+					<tr>
+						<td class="r-label"><a id="btnAudit"  onclick="ClearRightEdit()"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" >清屏</a></td>
+						<td class="r-label"><a id="btnAudit"  onclick="SaveRightEdit('0')"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" >修改</a></td>
+						<td class="r-label"><a id="btnAudit"  onclick="SaveRightEdit('1')"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" >新增</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+
+ 	<!-- 表格工具栏 -->
+    <div id="gridBar">
+        <!-- <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a> -->
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEdit" onClick="ShowColEdit()">修改</a>
+        <!-- <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDel">删除</a>
+        <a><input placeholder="输入关键字回车检索" id="search1" class="searchbox textbox" style="width:170px;"/></a> -->
+        <!--
+        <div style="float:right; margin-top:2px; right;margin-right:5px;">
+            <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" title="拖动可以改变“产品模块”的显示顺序！" class="hisui-tooltip" data-options="position:'left'" style="position:relative; top:3px; cursor:pointer"></img>
+        </div>
+        -->
+    </div>
+    
+    <!-- window dialog -->
+	<!-- 产品模块维护页面 -->
+	<div id="diagApp" class="hisui-dialog" data-options="closed:true,width:730,height:450,title:'编辑',iconCls:'icon-w-add',
+		buttons:[
+			{
+				text: '保存',
+				handler: function(){
+					Save(); // 保存后关闭
+				}
+			},{
+				text: '关闭',
+				handler: function(){
+					$('#diagApp').dialog('close');
+				}
+			}
+		]" >
+		 <div class="hisui-layout" fit="true">
+		     <div data-options="region:'center',border:false" style="overflow:hidden">
+		         <table class="search-table" align="center">
+					<!-- <tr>
+						<td colspan=4 style="text-align:center"><label>说明：此操作是将原免审项添加到新指标里。</label></td>
+					</tr> -->
+					<tr>
+						<td class="r-label"><label>列属性</label></td>
+						<td rowspan=2><textarea id="EditDicDemo" class="hisui-validatebox textbox"  style="width:500px;height:150px"></textarea></td>
+					</tr>
+					<tr/>
+						<td style="height:110px;"/>
+					</tr>
+					<tr>
+						<td class="r-label"><label>formatter</label></td>
+						<td rowspan=2><textarea id="EditConCode" class="hisui-validatebox textbox"  style="width:500px;height:150px;text-align:left;display:inline-block;"/></textarea></td>
+					</tr>
+					<tr/>
+						<td style="height:110px;"/>
+					</tr>
+				<!-- 	<tr>
+						<td class="r-label"><label>原分类代码</label></td>
+						<td><input id="OldCateCode" class="hisui-validatebox textbox" disabled="true"/></td>
+						<td></td>
+						<td></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label><label class='Redword'>*</label>1.新业务类型</label></td>
+						<td><input id="NewBusinessType" class="hisui-validatebox textbox" data-options="required:true" placeholder="必选项" missingMessage="请选择业务类型"/></td>
+						<td class="r-label"><label><label class='Redword'>*</label>2.新指标</label></td>
+						<td><input id="NewIndex" class="hisui-validatebox textbox"  required="required"  placeholder="必选项，可多选" missingMessage="请选择指标" style="width:252px"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label><label class='Redword'>*</label>3.新分类代码</label></td>
+						<td><input id="NewCateCode" class="hisui-validatebox textbox"  required="required"/></td>
+						<td></td>
+						<td></td>
+					</tr> -->
+				</table>
+		     </div>
+		</div>
+	</div>
+
+ <script type="text/javascript" src="../scripts/dhcbill/dc/resultdetailscolumnedit.js"></script>
+</body>
+</html>

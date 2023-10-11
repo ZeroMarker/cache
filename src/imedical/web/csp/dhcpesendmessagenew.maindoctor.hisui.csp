@@ -1,6 +1,10 @@
 
-<!--dhcpesendmessagenew.maindoctor.hisui.csp-->
-
+<!-- 
+ * FileName: dhcpesendmessagenew.maindoctor.hisui.csp
+ * Anchor: xueying
+ * Date: 2019.03.13
+ * Description: HISUI   高危上报
+-->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
@@ -8,9 +12,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
 
 <SCRIPT language="Cache" RUNAT="SERVER"> 
 set PAADM=$g(%request.Data("PAADM",1))
@@ -19,25 +23,25 @@ set OrderItemID=$g(%request.Data("OrderItemID",1))
 <script type="text/javascript">
  var PAADM="#(PAADM)#"
  var OrderItemID="#(OrderItemID)#"
- 	
+    
  
  </script>
  
   <style>
 .search-table{
-	border-collapse:separate;
-	border-spacing:0 10px;
-	/*padding: 0 10px;*/
+    border-collapse:separate;
+    border-spacing:0 10px;
+    /*padding: 0 10px;*/
 }
 
 .panel-header{
-	border-bottom: 0;
+    border-bottom: 0;
 }
 .r-label{
-	padding-left: 10px;
+    padding-left: 10px;
 }
 .r-label-1{
-	padding-left: 20px;
+    padding-left: 20px;
 }
 
 </style>
@@ -45,76 +49,80 @@ set OrderItemID=$g(%request.Data("OrderItemID",1))
 </head>
 <body>
 <div class="hisui-layout" fit="true">
-	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:256px;padding:10px 10px 0 10px;">
-		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:4px 4px 0px 0px;">
-			<table class="search-table">
+    <div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:265px;padding:10px 10px 0 10px;">
+        <div class="hisui-panel" fit="true" data-options="title:'',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-apply-check'" style="border-radius:4px 4px 0px 0px;">
+            <table class="search-table">
         <tr>
-        	<input type="hidden" id="ID"/>
-          <td  class="r-label"><label for="RegNo">登记号</label></td>
+            <input type="hidden" id="ID"/>
+          <td  class="r-label"><label for="RegNo">#(..Get("登记号"))#</label></td>
           <td style="width:200px;">
             <div>
               <input class="hisui-validatebox" type="text" Id="RegNo" style="width:160px;" /></div>
-          </td>	
+          </td> 
           
-          <td  class="r-label"><label for="Name">姓名</label></td>
-          <td style="width:200px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="Name" style="width:160px;" /></div>
-          </td>	
-          <td style="width:200px;">
-            <div>
-              <a id="BSave" href="#" class="hisui-linkbutton" style="width:100px;" data-options="iconCls:'icon-w-edit'">保存</a></div>
-          </td>	
+          <td class="r-label"><label for="Name">#(..Get("姓名"))#</label></td>
+          <td>
+           
+              <input class="hisui-validatebox" type="text" Id="Name" style="width:160px;" />
+          </td> 
+          <td class="r-label-1">
+            <a id="BSave" href="#" class="hisui-linkbutton" style="width:100px;" data-options="iconCls:'icon-w-edit'">保存</a>
+          </td> 
+          
+          <td class="r-label-1">
+              <a id="BSend" href="#" class="hisui-linkbutton" style="width:140px;" data-options="iconCls:'icon-w-export'">保存并发送</a>
+          </td> 
          </tr>
          
         <tr>
-          <td  class="r-label"><label for="Tel">电话</label></td>
+          <td  class="r-label"><label for="Tel">#(..Get("电话"))#</label></td>
           <td style="width:200px;">
             <div>
               <input class="hisui-validatebox" type="text" Id="Tel" style="width:160px;" /></div>
-          </td>	
+          </td> 
           
-          <td  class="r-label"><label for="Sex">性别</label></td>
-          <td style="width:200px;">
+          <td class="r-label"><label for="Sex">#(..Get("性别"))#</label></td>
+          <td>
             <div>
               <input class="hisui-validatebox" type="text" Id="Sex" style="width:160px;"/></div>
-          </td>	
-           <td style="width:200px;">
-            <div>
-              <a id="BSend" href="#" class="hisui-linkbutton" style="width:100px;" data-options="iconCls:'icon-w-export'">发送</a></div>
-          </td>	
+          </td> 
+          <td class="r-label-1">
+                <a id="BClear" href="#" class="hisui-linkbutton"  style="width:100px;" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:'true'">清屏</a>
+            </td>
          </tr>   
           <tr>
-          <td class="r-label"><label for="HighRisk">高危信息</label></td>
+          <td class="r-label"><label for="HighRisk">#(..Get("高危信息"))#</label></td>
           <td colspan="3">
             <div>
               <input class="hisui-combobox" type="text" Id="HighRisk" style="width:415px;" />
               </div>
-          </td>	
-		<td>
-			<label for="CRMFlag">需随访</label><input class='hisui-checkbox' type="checkbox" id="CRMFlag"/>
-		</td>
+          </td> 
+         <td class="r-label-1">
+            <input class='hisui-radio' type="checkbox" id="CRMFlag" label="需随访" />
+         </td>
  
          </tr>
          
          <tr>
-          <td  class="r-label"><label for="TContent">短信信息</label></td>
+          <td  class="r-label"><label for="Content">#(..Get("短信信息"))#</label></td>
           <td colspan="3">
             <div>
-              <textarea id="TContent"  style="width:412px;height:100px;"></textarea></div>
-          </td>	
+              <textarea id="Content"  style="width:409px;height:100px;"></textarea></div>
+          </td> 
           
           
          </tr>
-		</table>
+         
+         
+        </table>
     </div>
     
     </div>
-		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;border-radius:0px;">
-			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-					<table data-options="bodyCls:'panel-header-gray'" id="GWList"></table>
-				</div>
-        	</div>
+        <div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;border-radius:0px;">
+            <div class="hisui-panel" data-options="bodyCls:'panel-body-gray'" fit="true" style="height:100%;border-top:0;border-radius:0 0 4px 4px;">
+                    <table data-options="bodyCls:'panel-header-gray'" id="GWList"></table>
+                </div>
+            </div>
 </div>
 
 

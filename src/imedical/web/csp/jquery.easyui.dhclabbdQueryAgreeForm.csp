@@ -1,0 +1,305 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s USERCODE = $G(%session.Data("LOGON.USERCODE"))
+ s USERNAME = $G(%session.Data("LOGON.USERNAME"))
+ s HOSPID=$G(%session.Data("LOGON.HOSPID"))
+ s (HospCode,LocCode,LocName,HospName)=""
+ i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+ i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
+ 
+ //处理医院信息 
+ s HospitalDR=""
+ i $l(HospCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
+ //处理用户信息
+ i $l(USERCODE) s CollectUserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
+</SERVER>
+<title>知情同意书</title>
+	<link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" />
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/CTSCommon.js" charset="utf-8"></script>
+
+	<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/iconan.css" />
+	<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/custom.css" />
+	<script type="text/javascript" src="../scripts/websys.js" ></script>
+    
+</head>
+<body class="hisui-layout">
+    <div data-options="region:'center',split:false,border:false" style="padding: 10px 10px 10px 10px">
+        <div id="div_wholepanel" class="hisui-panel" title="知情同意书查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-search',closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true" style="">
+            <div id="ids" class="hisui-layout" data-options="fit:true">
+
+                <div style="height: 95px;" data-options="region:'north',split:false,border:false">
+                    <div id="div_Simple" style="white-space: nowrap; padding-left: 10px">
+                       <table>
+                            <tr>
+                                <td align="right" style="padding-right: 8px; padding-left: 20px">
+                                    知情同意书号
+                                </td>
+                                <td>
+                                    <input class="hisui-validatebox" id='ISS_RecordNo' name="FindFast" style="width: 145px;" />
+                                </td>
+
+                                <td align="right" width="80px;" style="padding-right: 8px; padding-left: 20px">开始日期
+                                </td>
+                                <td>
+                                    <input id="db_SttDate" class="hisui-datebox" 
+                                        style="width: 150px" />
+                                </td>
+                                <td align="right" width="80px;" style="padding-right: 8px; padding-left: 20px">结束日期
+                                </td>
+                                <td>
+                                    <input id="db_EndDate" class="hisui-datebox" 
+                                        style="width: 150px" />
+                                </td>
+                                <td align="right" width="100px;" style="padding-right: 8px; padding-left: 20px">
+                                    <a id="btn_find" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="SataAgreeform();">查 询</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" width="80px" style="padding-right: 8px; padding-left: 20px">科室
+                                </td>
+                                <td>
+                                    <input id="cg_Location" style="width: 150px;" />
+                                </td>
+                                <td align="right" style="padding-right: 8px; padding-left: 20px">申请人
+                                </td>
+                                <td>
+                                    <input id="cb_AddUser" style="width: 150px;" />
+                                </td>
+
+                                <td align="right" style="padding-right: 8px; padding-left: 20px">登记号
+                                </td>
+                                <td>
+                                    <input class="hisui-validatebox" id='PatID' name="PatID" style="width: 145px;" />
+                                </td>
+                                <td align="right" width="100px;" style="padding-right: 8px; padding-left: 20px">
+                                    <a id="btn_clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清 空</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="">
+                    <div class="hisui-panel" data-options="closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true,titile:'',bodyCls:'panel-header-gray',border:true" style="">
+                        <table id="dg_BDAgreeformList">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mnu_FindFastType" style="width: 50px;">
+        <div onclick="mnuFindFastClick('AgreeformNo','icon-ok','申请单号')" data-options="iconCls:'icon-ok'">
+            申请单号
+        </div>
+        <div onclick="mnuFindFastClick('RegNo','icon-patient','登记号　')" data-options="iconCls:'icon-patient'">
+            登记号
+        </div>
+        <div onclick="mnuFindFastClick('SurName','icon-person','姓　名　')" data-options="iconCls:'icon-person'">
+            姓 名
+        </div>
+    </div>
+
+    <div id="ISS_window" class="hisui-window" data-options="closed:true" title="所有申请单" style="width: 1150px; height: 600px;">
+        <iframe id="if_ISS" src="" style="height: 99%; width: 99%"></iframe>
+    </div>
+    <div id="ISSInfo_window" class="hisui-window" data-options="closed:true" title="发血信息" style="width: 1100px; height: 600px">
+        <iframe id="if_ISSInfo" src="" frameborder="0" scrolling="no" style="width: 99%; height: 99%;"></iframe>
+    </div>
+    <iframe id="if_download" src="" style="height: 0; width: 0" frameborder="0" scrolling="no"></iframe>
+    
+    <script type="text/javascript">
+	
+		var me = {
+            findType: '0'
+        };
+       
+        $(function () {
+            //初始化datagrid
+            $("#dg_BDAgreeformList").datagrid({
+                fit: true,
+                fitColumns: false,
+                //headerCls: 'panel-header-gray',
+                //title:"申请单列表",
+                pagination: true,
+                nowrap: true,
+                pageSize: 20,
+                pageList: [20, 50, 100, 200],
+                singleSelect: true,
+                checkOnSelect: false,
+                selectOnCheck: false,
+                rownumbers: true,
+                remoteSort: false,
+                border: false,
+				
+				columns: [[
+					{ field: 'AgreeFormNo', title: '知情同意书号', width: 150, align: 'center' ,
+						
+						formatter: function (value, rowdata, rowindex) {
+                            return '<a id=\"danhao' + rowdata.AgreeFormNo + '\"' + 'href=\"#\" onclick=\"AgreeFormNoPrint(&quot;' + rowdata.RowID + '&quot;)\" style=\"color:blue;\">' + value + '</a>';
+                        }
+					},
+					
+					{ field: 'AddDate', title: '申请日期', width: 100, align: 'center' },
+					{ field: 'AddUserName', title: '申请人', width: 100, align: 'center' },
+					{ field: 'ReqProductStr', title: '申请信息', width: 150, align: 'center' },
+					{ field: 'AdmNo', title: '就诊号', width: 100, align: 'right' },
+					{ field: 'RegNo', title: '登记号', width: 100, align: 'center' },
+					{ field: 'SurName', title: '患者姓名', width: 100, align: 'center' },
+					{ field: 'LocationDesc', title: '就诊科室', width: 130, align: 'center' },
+					{ field: 'BedNo', title: '床号', width: 80, align: 'center' },
+					{ field: 'IsRelateReqForm', title: '是否关联申请单', width: 100, align: 'center' },
+					
+				]]
+            });
+            $("#dg_BDAgreeformList").datagrid("loadData", []);
+
+            //初始化日期
+            var thisDate = GetCurentDate();
+            $("#db_SttDate").datebox('setValue', thisDate);
+            $("#db_EndDate").datebox('setValue', thisDate);
+
+            //初始化申请科室
+            $("#cg_Location").combogrid({
+                //url: '../../sys/ashx/ashBTLocation.ashx?method=Find',
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryWard&FunModul=JSON',
+                method: 'get',
+                panelWidth: 300,
+                multiple: true,
+                idField: 'RowID',
+                textField: 'CName',
+                columns: [[
+                    { field: 'RowID', title: 'ID', width: 40, sortable: true, align: 'center' },
+                    { field: 'Code', title: '代码', width: 70, sortable: true, align: 'center' },
+                    { field: 'CName', title: '名称', width: 150, sortable: true, align: 'center' }
+                ]]
+            });
+            
+            //初始化创建人
+            $("#cb_AddUser").combogrid({
+                //url: '../../sys/ashx/ashCodeTable.ashx?Model=SYSUser&GlobalParam=&Method=Query&page=1&rows=20&sort=RowID&order=asc',
+                url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryUser&FunModul=JSON',
+                idField: 'RowID',
+                textField: 'CName',
+                method: 'get',
+                panelWidth: 300,
+                multiple: true,
+                columns: [[
+                    { field: 'RowID', title: 'ID', width: 40, sortable: true, align: 'center' },
+                    { field: 'Code', title: '代码', width: 70, sortable: true, align: 'center' },
+                    { field: 'CName', title: '名称', width: 150, sortable: true, align: 'center' }
+                ]]
+            });
+            //快速查询
+            $('#ISS_RecordNo').keypress(function (event) {
+                if (event.keyCode == "13") {
+                    SataAgreeform();
+                }
+            });
+
+            //清空按钮的执行，清空所有文本框的值
+            $('#btn_clear').click(function () {
+                $('#dg_BDAgreeformList').datagrid('loadData', { total: 0, rows: [] });
+                var Locations = $("#cg_Location").combogrid("setValue", "");
+                
+                var ISSNo = $("#ISS_RecordNo").val("");
+                var AddUser = $("#cb_AddUser").combogrid("setValue", "");
+                var Status = $("#cb_Status").combobox("setValue", "");
+               
+            });
+        });
+       
+        //选择查询的按钮
+        function mnuFindFastClick(value, icon, name) {
+            me.findFlag = value;
+            $('#mnu_FindFast').menubutton({ menu: '#mnu_FindFastType', iconCls: icon, text: name });
+            $('#ISS_RecordNo').focus();
+            $('#ISS_RecordNo').select();
+        }
+        //统计发血单
+        function SataAgreeform() {
+            var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var Locations = $("#cg_Location").combogrid("getValues").toString();
+            var AddUser = $("#cb_AddUser").combogrid("getValues").toString();
+            var Status ="";// $("#cb_Status").combobox("getValues").toString();
+           
+
+            var RegNo = $('#PatID').val();
+            var SurName = "";
+            var AgreeformNo = "";
+            var Labno = "";
+            var FindTxt = $('#ISS_RecordNo').val();
+            var FindType = me.findFlag;
+            switch (FindType) {
+                case "RegNo":
+                    RegNo = FindTxt;
+                    break;
+                case "Labno":
+                    Labno = FindTxt;
+                    break;
+                case "SurName":
+                    SurName = FindTxt;
+                    break;
+                default:
+                    AgreeformNo = FindTxt;
+                    break;
+            }
+
+            $("#dg_BDAgreeformList").datagrid({
+                //url: "../ashx/ashQueryBDReqForm.ashx?method=StatAgreeform&SttDate=" + SttDate + "&EndDate=" + EndDate + "&FAgreeformNo=" + AgreeformNo + "&FAddUserDR=" + AddUser + "&FLocationDR=" + Locations + "&FRegNo="  + RegNo + "&FSurName=" + SurName
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QueryAgreeForm&FunModul=JSON&P2='+SttDate+'&P3='+EndDate+'&P4='+AgreeformNo+'&P5='+AddUser+'&P6='+Locations+'&P7='+RegNo
+                //url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryWard&FunModul=JSON',
+
+			
+			})
+			
+        }
+        function QryReqFormInfo(RegNo) {
+            var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var RegNocol = '.RegNo' + RegNo;
+            console.log(RegNocol);
+            $(RegNocol).attr("style", "color:red;");
+            $("#ReqForm_window").window('open');
+
+            $("#if_ReqForm").attr("src", 'frmQueryBDReqFormbyRegNo.aspx?RegNo=' + RegNo + '&SttDate=' + SttDate + '&EndDate=' + EndDate);
+
+        }
+        function QryISSfodetail(ISSRowID) {
+            var danhao = '#danhao' + ISSRowID;
+            $(danhao).attr("style", "color:red;");
+            $("#ISSInfo_window").window('open');
+            $("#if_ISSInfo").attr("src", "../../cts/form/frmQueryXMIssInfo.aspx?ReqFormDR=" + ReqRowID);
+        }
+        function AgreeFormNoPrint(value){
+			param = "DOCTOR"
+			var UserParam = UserID + "" + "";//^HospID
+			var printType = "PrintPreview";
+			var Param = "1@" + ServerConnectString + "@" + value + "@" + UserParam + "@" + printType + "@" + param + "@HIS.DHCReportPrintXMMethodReport@QueryPrintData";
+			window.parent.parent.PrintCommon(Param);
+		}
+		function PrintCommon(Param) {
+			var printUrl = "../../lisprint/print2HIS/ResultPrintForHis.application?Param=" + Param;
+			document.location.href = printUrl;
+		}
+		</script>
+</body>
+
+</html>
+

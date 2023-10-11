@@ -1,0 +1,53 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<EXTHEALTH:EXT310></EXTHEALTH:EXT310>
+		<DHCMED:HEAD></DHCMED:HEAD> 
+		<HISUI css="dhcma.hai.common.css"></HISUI>
+		<DHCHAI:HEAD></DHCHAI:HEAD>
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
+		</SCRIPT>
+		<CSP:IF CONDITION="IsADDINS=1">
+			<ADDINS require="CmdShell"/>
+		</CSP:IF>
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+	</head>
+	<body>
+		<csp:Include Page="dhcma.hai.ir.inf.repqry.show.csp">
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/datagrid-export.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/repqry/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/Inf/repqry/Event.js"></script>
+	
+		<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.js"></script>  
+		<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.Setting.js"></script>  
+		<script type="text/javascript" src="../scripts/dhcmed/DHC.Med.ExtFramework.DesignerHelper.js"></script>
+		
+		<!-- Add By zhoubo 2018-03-30 增加导民科系统接口问题提示 -->
+		<script language='javascript' src='../scripts/DHCMA/HAI/Interface/MKProblemView/gui.js'></script>
+		<script language='javascript' src='../scripts/DHCMA/HAI/Interface/MKProblemView/event.js'></script>	
+		<script language='javascript' src='../scripts/DHCMA/HAI/Interface/MKExportToTxt/ExportMinke.js'></script>
+		
+		<script language="Cache" runat="server">
+			set menuCode="DHCHAIInf-Rep-RepQry"
+			set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+			set groupId=$g(%session.Data("LOGON.GROUPID"))
+			set OperAdmin = $g(%request.Data("ParamAdmin",1))
+			set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+		</script>
+		<script language="javascript" type="text/javascript">
+			$(window).load(function() {
+				InitCtlResultWin();
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--药房药库-药学首页-卡片使用授权
+	csp:  pha.sys.v1.cardauth.csp
+	js:   pha/sys/v1/cardauth.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    	.pha-body {
+		    background-color: #fff;
+		}
+    </style>
+    
+    <!-- plugins -->
+    <link rel="stylesheet" type="text/css" href="../scripts/pha/plugins/jquery-layoutgrid/jquery-layoutgrid.css"></link>
+    <script type="text/javascript" src="../scripts/pha/plugins/jquery-layoutgrid/jquery-layoutgrid.js" ></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/jquery-nicescroll/jquery.nicescroll.min.js" ></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/easyui-portal/jquery.portal.js" ></script>
+    <script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+    
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+        	<!-- layout start -->
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',border:false,split:true,width:403">
+                    <div id="panel" class="hisui-panel" title="#(..Get("授权类型列表"))#"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:''">
+                        <table id="gridAuth"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+        			<div id="panel" class="hisui-panel" title="#(..Get("卡片内容列表"))#"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:'',tools:[{iconCls:'icon-help',handler:ShowHelpTips}]">
+                        <div class="hisui-layout" fit="true">
+                        	<div data-options="region:'north',border:false,split:true,height:50" style="overflow-y:hidden;">
+								<div class="pha-row" style="margin-bottom:0px;">
+						            <div class="pha-col">
+						                <input id="conCardAlias" class="hisui-searchbox" style="width:222px">
+						            </div>
+						            <div class="pha-col">
+						                <a id="btnAuth" class="hisui-linkbutton" iconCls="icon-w-update">#(..Get("授权"))#</a>
+						            </div>
+						            <div class="pha-col">
+						                <a id="btnPreview" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("预览"))#</a>
+						            </div>
+						        </div>
+							</div>
+							<div data-options="region:'center',border:false,split:true" style="border-top:1px solid #d1d6da;">
+								<table id="treeCard"></table>
+							</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- layout end -->
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridAuthBar">
+    	<div style="height:30px;margin-top:5px;">
+    		<div style="padding-left:5px;">
+	            <div id="kwAuthType" style="float:left;margin-left:5px;"></div>
+	            <div style="float:left;margin-right:5px;">
+	            	<div style="border-left:1px solid #cccccc; height:20px; margin:8px;"></div>
+	            </div>
+				<div id="kwAuthStat" style="float:left"></div>
+            </div>
+        </div>
+       	<div class="pha-row">
+            <div class="pha-col">
+                <label for="combHosp">#(..Get("医院"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="combHosp" class="hisui-combobox" data-pha='class:"hisui-combobox"' style="width:335px"/>
+            </div>
+        </div>
+        <div class="pha-row">
+        	<div class="pha-col">
+                <label for="conAuthAlias">#(..Get("条件"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="conAuthAlias" class="hisui-searchbox" style="width:332px">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 卡片预览js -->
+    <link rel="stylesheet" type="text/css" href="../scripts/pha/sys/v1/css/homepage.ui.css"></link>
+    <script type="text/javascript" src="../scripts/pha/sys/v1/homepage.com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/sys/v1/card.preview.js"></script>
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/sys/v1/extend.pha.js" ></script>
+    <script type="text/javascript" src="../scripts/pha/sys/v1/extend.com.js" ></script>
+    <script type="text/javascript" src="../scripts/pha/sys/v1/cardauth.js"></script>
+</body>
+
+</html>

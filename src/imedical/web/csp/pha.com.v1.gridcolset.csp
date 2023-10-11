@@ -1,0 +1,201 @@
+<!-- 
+	description: jqGrid & easyui表格列设置
+	csp: pha.com.v1.gridcolset.csp
+-->
+<html>
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE>表格列设置</TITLE>
+<TRAK:HEAD>
+</TRAK:HEAD>
+	
+<HISUI />
+<PHALIBV1 />
+<script type="text/javascript" src="../scripts/pha/sys/v1/colset.win.js" ></script>
+<style id="pha-sys-set-panel-body">
+	.panel-body,
+	.panel-header {
+		border-color: #d1d6da;
+	}
+</style>
+<!-- 获取请求数据 -->
+<Server language="CACHE" runat="Server">
+	s Application = %request.Application
+	s pageItmId = $g(%request.Data("pageItmId", 1))
+	
+	w "",!
+	w "<script type='text/javascript'>",!
+	w "	var pageItmId = '" _ pageItmId _ "';",!
+	w "</script>",!
+</Server>
+
+</head>
+
+<body style="overflow:hidden;">
+</body>
+</html>
+
+<!-- 本页的js -->
+<script type='text/javascript'>
+$(function(){
+	var PISTable = 'CF_PHA_IN.PageItmSet';
+	
+	// 设置不需要的列隐藏
+	COLSET_WIN.ResetCols = [{
+		field: "ColIfPrint",
+		hidden: true
+	}, {
+		field: "ColIsCheckbox",
+		hidden: true
+	}, {
+		field: "ColTipWidth",
+		hidden: true
+	}, {
+		field: "ColEnterSort",
+		hidden: true
+	}, {
+		field: "ColIsTotal",
+		hidden: true
+	}, {
+		field: "ColFormatter",
+		hidden: true
+	}, {
+		field: "ColStyler",
+		hidden: true
+	}];
+	
+	var serverOpts = PHA_SYS_SET.Com.GetServerOpts(pageItmId);
+	var pageItmSetId = serverOpts.colsSetId || "";
+	var clsName = serverOpts.ClassName || "";
+	var quyName = serverOpts.QueryName || "";
+	if (pageItmSetId == "") {
+		return;
+	}
+	// 表格列信息维窗口 - 公共
+	var inputStr = PISTable + "^" + pageItmSetId + "^" + clsName + "^" + quyName;
+	COLSET_WIN.Open({
+		// 初始信息
+		checkWidth: false,
+		showGridInfo: true,
+		hideWest: true,
+		serverOpts: serverOpts,
+		width: 900,
+		// 列信息 - 查询
+		queryParams: {
+			ClassName: 'PHA.SYS.Col.Query',
+			QueryName: 'PHAINCol',
+			inputStr: inputStr
+		},
+		// 列信息 - 保存
+		onClickSave: function (initOpts, gridColsData, gridOptsData, saveType) {
+			// 先验证一下pageItmId是否正常 (以防万一)
+			var gridID = initOpts.serverOpts.gridID || "";
+			var pageItmId = initOpts.serverOpts.pageItmId || "";
+			var firstCol = gridColsData[0];
+			var colPointer = firstCol.ColPointer;
+			var colPointerArr = colPointer.split('||');
+			var cPageItmId = colPointerArr[0] + "||" + colPointerArr[1];
+			if (pageItmId != cPageItmId) {
+				PHA.Popover({
+					msg: "页面元素ID不一致，不能保存！",
+					type: "alert"
+				});
+				return;
+			}
+			// 转换需要保存的数据
+			if (saveType == "") {
+				PHA.Popover({
+					msg: "请选择保存类型：用户/安全组/科室/通用!",
+					type: "alert"
+				});
+				return;
+			}
+			var jsonColsStr = JSON.stringify(gridColsData);
+			var jsonOptsStr = JSON.stringify(gridOptsData);
+			
+			// 开始保存
+			// $.m({
+			PHA_SYS_SET.Com.cm({
+				ClassName: "PHA.SYS.Set.Save",
+				MethodName: "SaveGridData",
+				jsonOptsStr: jsonOptsStr,
+				jsonColsStr: jsonColsStr,
+				saveType: saveType,
+				sessionStr: PHA_COM.Session.ALL,
+				dataType: 'text'
+			}, function (retText) {
+				// 判断状态
+				var retArr = retText.split('^');
+				if (retArr[0] < 0) {
+					PHA.Alert("提示", retArr[1], retArr[0]);
+					return;
+				}
+				PHA.Popover({
+					msg: "保存成功，重新进入界面后生效！",
+					type: "success",
+					timeout: 1500
+				});
+				// 在initOpts中更新queryParams
+				pageItmSetId = retText;
+				var oldParamStr = initOpts.queryParams.inputStr;
+				var oldParamArr = oldParamStr.split('^');
+				oldParamArr[1] = pageItmSetId;
+				var newParamStr = oldParamArr.join('^');
+				initOpts.queryParams.inputStr = newParamStr;
+				// 在initOpts中更新serverOpts
+				var newServerOpts = PHA_SYS_SET.Com.GetServerOpts(pageItmId);
+				newServerOpts.gridID = gridID;
+				newServerOpts.pageItmId = pageItmId;
+				initOpts.serverOpts = newServerOpts;
+				initOpts.serverOpts.mSaveType = saveType;
+				// 查询
+				COLSET_WIN.Query();
+				COLSET_WIN.QueryGridInfo();
+			});
+		},
+		// 列信息 - 删除
+		onClickDelete: function (initOpts, selectedRow, colId) {
+			// $.m({
+			PHA_SYS_SET.Com.cm({
+				ClassName: "PHA.SYS.Col.Save",
+				MethodName: "Delete",
+				Id: colId,
+				dataType: 'text'
+			}, function (retText) {
+				var retArr = retText.split('^');
+				if (retArr[0] < 0) {
+					PHA.Alert("提示", retArr[1], retArr[0]);
+					return;
+				}
+				PHA.Popover({
+					msg: "删除成功!",
+					type: "success"
+				});
+				COLSET_WIN.Query();
+			});
+		},
+		onOpen: function(){
+			 $('#dialogColSet').parent().css('top', '-40px');
+			 $('#dialogColSet').parent().css('left', '-1px');
+			 $('#gridDialogSetLayout')
+			 .children().eq(0)
+			 .children().eq(0)
+			 .children().eq(0)
+			 .children().eq(0)
+			 .css('overflow', 'hidden')
+		},
+		onClose: function(){
+			try {
+				websys_showModal('close');
+			} catch(e){}
+			try {
+				window.colse();
+			} catch(e){}
+		}
+	});
+});
+
+</script>

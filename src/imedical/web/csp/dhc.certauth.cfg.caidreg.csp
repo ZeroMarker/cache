@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>CA-ID关联页面</title>
+    <base target= "_self">
+    <HISUI/>
+    
+    <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+   	<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+    <script type="text/javascript" src="../scripts/dhccertauth/js/cfg.caidreg.js"></script>
+    
+    <server>
+    	s SignTypeCode = $Get(%request.Data("SignTypeCode",1),"")
+    	s:(SignTypeCode = "") SignTypeCode = "PHONE"
+    	s HospID = $Get(%request.Data("HospID",1),"")
+    	
+    	s VenderCode = $Get(%request.Data("VenderCode",1),"")
+    	s VenderCode = ##class(CA.DSService).GetCAVenderCode("",SignTypeCode,HospID)
+    	s jsPath = ##Class(CA.DSService).GetJSPath(SignTypeCode,VenderCode)
+		
+		s toAddUserName = ""
+		s toAddUserCode = ""
+		s toAddUserID = $Get(%request.Data("UserID",1),"")
+ 		if (toAddUserID '= "")
+		{
+			s toAddUserCode = ##Class(CA.Util.HISInfo).GetUserCode(toAddUserID)
+			s toAddUserName = ##Class(CA.Util.HISInfo).GetUserName(toAddUserID)
+		}
+		
+		s userID = %session.Get("LOGON.USERID")
+        s ssGroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+    </server>
+    
+    <script type="text/javascript">
+    	var logonInfo = {
+           	UserID: "#(userID)#",
+            GroupID: "#(ssGroupID)#",
+            CTLocID: "#(userLocID)#"
+        };   
+            
+    	var caInfo = {
+	    	SignTypeCode : "#(SignTypeCode)#",
+	    	VenderCode : "#(VenderCode)#"
+    	}; 
+    	
+    	var toAddUserInfo = {
+	    	UserID : "#(toAddUserID)#",
+	    	UserCode : "#(toAddUserCode)#",
+	    	UserName : "#(toAddUserName)#"
+    	};
+    	
+   </script>
+    
+    
+</head>
+<body>
+        <div class="hisui-panel" data-options="region:'center',split:true" style="padding:10px">
+            <table cellpadding="5">
+                <tr>
+                    <td class="label">用户ID</td>
+                    <td>
+                        <input id="UserID" class="textbox" disabled="true" style="width:200px;">
+                    </td>
+                    
+                    <td>
+                        <a id="btnCAIDQuery" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-muti-key'">查询CA用户标识</a>
+                    </td>
+                    
+                    <td>
+                        <a id="btnCAIDReg" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-muti-key'">关联CA用户标识</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">用户工号</td>
+                    <td>
+                        <input id="UserCode" class="textbox" disabled="true" style="width:200px;disabled:true">
+                    </td>
+                    <td class="label">用户姓名</td>
+                    <td>
+                        <input id="UserName" class="textbox" disabled="true" style="width:200px;disabled:disabled">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">CA签名类型</td>
+                    <td>
+                        <input id="SignTypeCode" class="textbox" disabled="true" style="width:200px;disabled:true">
+                    </td>
+                    <td class="label">CA厂商代码</td>
+                    <td>
+                        <input id="VenderCode" class="textbox" disabled="true" style="width:200px;disabled:disabled">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">CA用户唯一标识</td>
+                    <td>
+                        <input id="UserCertCode" class="hisui-validatebox textbox" data-options="required:true" style="width:200px;">
+                    </td>
+                    <td class="label">CA用户姓名</td>
+                    <td>
+                        <input id="CertName" class="hisui-validatebox textbox" data-options="" style="width:200px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">备注</td>
+                    <td colspan="3">
+                        <input id="CANote" class="hisui-textbox" data-options="multiline:true" style="width:580px;height:100px;word-wrap: break-word">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

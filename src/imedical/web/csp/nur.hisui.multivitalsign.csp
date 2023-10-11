@@ -1,0 +1,275 @@
+<!-- 多人血糖 -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	s IsPopUp = $G(%request.Data("IsPopUp", 1))
+	Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+	Set ifBaby = $GET(%request.Data("ifBaby", 1))
+	Set AuthorityFlag = $GET(%request.Data("AuthorityFlag", 1))
+	Set DefaultCode = $GET(%request.Data("DefaultCode", 1))
+	Set SinglePatient = $GET(%request.Data("SinglePatient", 1))
+ 	Set vsGenelConfig=##class(Nur.NIS.Service.VitalSign.MRCObservationItem).getVSGenelConfig()
+ 	Set vsGenelConfig=##class(Nur.JSON).Encode(vsGenelConfig)
+	//  质控做做兼容老版本和新版本的任务总览
+ 	Set qcNewFlag=##class(websys.Conversions).IsValidMethodName("Nur.NIS.Service.NursingTask.Controller","GetNursingTaskRecord")
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<script type="text/javascript">
+	var IsPopUp = "#(IsPopUp)#";
+	IsPopUp="Y"==IsPopUp?true:false;
+</script>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.multivitalsign.js" charset=gbk></script>
+<style type='text/css' class="eduExeStyle">
+body {background-color: #fff;margin: 4px!important;height: calc(100% - 8px)!important;}
+/* #wardPatientCondition {margin-top: 5px;width: 206px;padding:0 1px;} */
+.panel-header, .panel-body{width: auto!important;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;margin-top: 3px;}
+#currentDay+.datebox>input,#qcStartDate+.datebox>input,#qcEndDate+.datebox>input{width: 80px!important;}
+.spinner>.hisui-timespinner{width: 60px!important;}
+.multiContent .panel-body.panel-body-noheader {border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+label.checkbox, label.radio{height: auto;}
+.l-btn-small{outline: none;}
+.PatInfoItem{margin-left: 0!important;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+td.datagrid-value-changed{background: none;}
+#mm>div{text-align: center;}
+#mm>div:hover{background: #dbedf9!important;}
+.multiContent .datagrid-row-selected {background: transparent;}
+.multiContent .tooltip {background-color: #ffffff;border: 1px solid #ccc;}
+a[name="symbol"] .l-btn-text {padding: 0 5px;line-height: 20px;}
+.multiContent .tooltip.tooltip-bottom{display: none!important;}
+td.datagrid-value-changed{background: transparent;}
+.datagrid-td-merged>div table td .combo input,.datagrid-row div table td .combo input{width: calc(100% - 30px)!important;}
+#multiVSPanel .datagrid-view2 td.warning{color: rgb(246, 164, 5);border: 2px solid rgb(246, 164, 5)!important;}
+#multiVSPanel .datagrid-view2 td.fControl{background: #e4e4e4!important;}
+/* #multiVSPanel .datagrid-view2 td.warning>div{width: 106px;} */
+.datagrid-editable-input.error{border-color:red!important;}
+.datagrid-editable-input.warning{border-color:rgb(246, 164, 5)!important;}
+.qcTable .datagrid-view1>.datagrid-body, .qcTable .datagrid-view2>.datagrid-body{max-height: 450px!important;}
+#qcModal .datagrid .panel-body{border-color: #cccccc;}
+#qcModal .icon-help{margin-left: 5px;}
+.tooltip.tooltip-top>.tooltip-arrow{width: 7px;height: 7px;border-width: 1px;background: white;transform: rotate(45deg);bottom: 7px;border-right: 1px solid #cccccc;border-bottom: 1px solid #cccccc;}
+</style>
+<script language="javascript">
+  var EpisodeID = "#(EpisodeID)#",patTimer;
+  var ifBaby = "#(ifBaby)#";
+	window.EpisodeIDStr = EpisodeID;	
+  // 监听EpisodeIDStr
+	Object.defineProperties(window, {
+    EpisodeIDStr: {
+      configurable: true,
+      set: function (newValue) {
+        console.log('你修改了 EpisodeIDStr 的值：' + newValue);
+				// getPatientsTempDataByTime();
+				clearTimeout(patTimer);
+				if (newValue&&(newValue.toString().indexOf("^")<0)) {
+					var frm = dhcsys_getmenuform();
+					if (frm) frm.EpisodeID.value=newValue;
+				}
+				patTimer=setTimeout(function() {
+					getPatientsByEpisodeIDs();
+				}, 30);
+      }
+    }
+	});
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+  var vsGenelConfig = JSON.parse('#(vsGenelConfig)#');
+  var qcNewFlag = JSON.parse('#(qcNewFlag)#');
+  var modify=vsGenelConfig.modify;
+</script>
+</head>
+<body>
+<div id="mvsLayout" class="hisui-layout" data-options="fit:true">
+	<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+	<!-- 右侧内容 -->
+	<div id="rightContent" data-options="region:'center',title:'',split:true" style="border:0;">
+		<div class="multiContent">
+			<div id="multiVSPanel" class="hisui-panel" title="体征批量采集" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:0 0 5px;overflow-y: hidden;">
+				<div style="position: relative;margin: 10px 0;">
+					<table cellpadding="0" style="border-collapse: collapse;">
+				    <tr>
+							<td class="r-label" style="padding-left: 10px;">
+								#(..Get("日期"))#
+							</td>
+							<td class="r-label">
+				        <input id="currentDay" class="hisui-datebox textbox" style="width: 118px;margin-left: 10px;" data-options="onChange:toggleSwitch"></input>
+							</td>
+							<td style="padding-right: 5px;">
+								<input id="timePoint" style="width: 90px;border-radius: 2px;" data-options="onChange:toggleSwitch" class="hisui-timespinner">
+							</td>
+							<td class="r-label">
+								<input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:toggleSwitch" label="需测信息" id="needMeasure">
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="toggleSwitch()">#(..Get("查询"))#</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-print'" onclick="onPrintBtnClick()">#(..Get("打印"))#</a>
+							</td>
+							<!-- <td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-print'" onclick="onPrintBtnClick(1)">#(..Get("空白单"))#</a>
+							</td> -->
+							<td class="r-label">
+				        <a id="qcBtn" href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-paper'" onclick="showQCModal()">#(..Get("质控"))#</a>
+							</td>
+							<td class="r-label">
+								<div id="switch" class="hisui-switchbox" style="padding: 0 1px 0 0" data-options="onText:$g('多时间点'),offText:$g('单时间点'),size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:toggleSwitch"></div>
+							</td>
+							<td class="r-label">
+								<a href="#" id="vsReminder_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+							</td>
+							<td class="r-label">
+								#(..Get("Enter键方向"))#
+							</td>
+							<td class="r-label">
+								<select id="enterDirect" style="width: 70px;" data-options="onSelect:changeEnterDirect,panelHeight:'auto'" class="hisui-combobox">
+									<!-- <option value="37">向左</option>
+									<option value="38">向上</option> -->
+									<option value="39">#(..Get("向右"))#</option>
+									<option value="40">#(..Get("向下"))#</option>
+								</select>
+							</td>
+				    </tr>
+				  </table>
+		      <a id="multiSaveBtn" href="#" class="hisui-linkbutton hover-dark" onclick="saveTableCell(1);" style="position: absolute;right: 10px;top: 0;">#(..Get("保存"))#</a>
+		    </div>
+				<div style="position: relative;margin: 3px 0 9px;display: none;" id="timePointBtns">
+					<table cellpadding="0" style="border-collapse: collapse;">
+				    <tr>
+							<td class="r-label" style="padding-left: 10px;">
+								<a href="#" class="hisui-linkbutton hover-dark" onclick="setTimeVal(this);">2</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="setTimeVal(this);">6</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="setTimeVal(this);">10</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="setTimeVal(this);">14</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="setTimeVal(this);">18</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="setTimeVal(this);">22</a>
+							</td>
+							<td class="r-label">
+								<a href="#" id="timePointTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+							</td>
+				    </tr>
+				  </table>
+		    </div>
+			  <hr class="dashed">
+				<table cellpadding="0" style="width: 100%;">
+			    <tr>
+			    	<td>
+							<table cellpadding="0" id="vsItems" style="border-collapse: collapse;margin: 0 0 6px;">
+						    <tr>
+									<td style="padding-left: 10px;">
+						        <input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:checkAllBG" label="全选" id="checkAll">
+									</td>
+						    </tr>
+						    <tr>
+									<td style="padding-left: 10px;">
+									</td>
+						    </tr>
+						  </table>
+			    	</td>
+			    </tr>
+			  </table>
+				<table id="multiVSTable"></table>
+			</div>
+		</div>
+	</div>  	
+</div>
+<!-- 右键菜单 -->
+<div id="mm" style="position: absolute;border: 1px solid #40a2de;display: none;background: white;">
+	<div id="mm1" onclick="preShow();" style="padding: 5px 10px;cursor: pointer;">#(..Get("预览"))#</div>
+	<div id="mm2" onclick="openSingleVSModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("单人录入"))#</div>
+	<div id="mm3" onclick="openPatEvtModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("事件登记"))#</div>
+	<div id="mm4" onclick="openVsddModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("数据明细"))#</div>
+	<div id="mm5" onclick="openVsmlModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("修改记录"))#</div>
+</div>
+<!-- 单人体征模态框 -->
+<div id="singleVSModal" class="hisui-dialog" title="单人体征" style="top: 25px;left: 25px;padding: 0 5px 5px;" data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true">
+	<iframe src="" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+</div>
+<!-- 患者事件 -->
+<csp:Include Page="nur.hisui.patientevent.csp">
+<!-- 数据明细 -->
+<csp:Include Page="nur.hisui.vsdatadetail.csp">
+<!-- 修改记录 -->
+<csp:Include Page="nur.hisui.vsmodifylog.csp">
+<!-- 质控模态框 -->
+<div id="qcModal" class="hisui-dialog" title="#(..Get("质控"))#" style="top: 50px;left: 300px;padding: 10px;width: 1000px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true">
+	<form id="qcForm" style="padding: 7px 0;">
+		<table cellpadding="0" style="border-collapse: collapse;">
+			<tr>
+				<td class="r-label" style="padding-left: 10px;">
+					#(..Get("开始日期"))#
+				</td>
+				<td class="r-label">
+					<input id="qcStartDate" style="width: 118px;" class="hisui-datebox textbox" data-options="required:true"></input>
+				</td>
+				<td class="r-label">#(..Get("结束日期"))#</td>
+				<td class="r-label">
+					<input id="qcEndDate" style="width: 118px;" class="hisui-datebox textbox" data-options="required:true"></input>
+				</td>
+				<td class="r-label">
+					<input class="hisui-checkbox" type="checkbox" data-options="labelPosition:'before'" label="未填" id="notFilled">
+				</td>
+				<td class="r-label">
+					<a href="#" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-find'" onclick="getQCList();">#(..Get("查询"))#</a>
+				</td>
+			</tr>
+		</table>
+	</form>
+	<div class="qcTable">
+		<table id="qualityControl" class="hisui-datagrid" data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:true,toolbar:'#qcForm',pageList:[20,50,100,200]"></table>
+	</div>
+</div>
+<div style="display:none" id="toolTips"></div>
+<script type="text/javascript">
+/**
+* @description 折叠患者列表
+*/
+function collapsePatPanel() {
+	var n=0;
+	var timer=setInterval(function() {
+		updateDomSize();
+		n++;
+		if (n>5) {
+			clearInterval(timer);
+		}
+	},200);
+}
+/**
+* @description 展开患者列表
+*/
+function expandPatPanel() {
+	collapsePatPanel();
+}
+</script>
+</body>
+</html>

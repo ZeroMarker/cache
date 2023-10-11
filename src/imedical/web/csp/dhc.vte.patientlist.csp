@@ -1,0 +1,55 @@
+<!--VTE风险评估列表csp,csp:dhc.vte.patientlist.csp--> 
+<html XMLNS=TRAK>
+	<head>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body style="padding:0px;">
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		Set vteIpAndPort = $g(%request.Data("IPAndPort",1)) 
+		Set Role = $g(%request.Data("Role",1))
+		</SCRIPT>
+		<script language="javascript" type="text/javascript">
+		//vte 项目访问地址
+		var vteIpAndPort = '#(vteIpAndPort)#';
+		var Role = '#(Role)#';
+		//登陆用户ID
+		var userId = session["LOGON.USERID"];
+		var userName = session["LOGON.USERNAME"];
+		userName = encodeURI(userName);  //进行汉字编码集转换
+		var hisWebIp = location.host;//把当前访问的HIS的web服务器ip传给vte，以便后续医嘱一键录入
+		//登陆科室ID
+		var locId = session["LOGON.CTLOCID"];
+	
+		//登陆病区ID
+		var wardId = session["LOGON.WARDID"];
+		if(wardId==''){
+			wardId = locId;
+		}
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! type 类型一定要确认！！！！！！！！！！！！！！！！！
+		var type = 2;//如果LOGON.CTLOCID是科室id则为1 如果是病区id则为2
+		if(type==2){
+			wardId = locId;
+		}
+		
+		//var iFrameSrc = "http://"+vteIpAndPort+"/api/getVteList?userId="+userId+"&locId="+locId+"&wardId="+wardId+"&type=1";
+		var iFrameSrc = "https://"+vteIpAndPort+"/api/getVteList?userId="+userId+"&locId="+locId+"&wardId="+wardId+"&type="+type+"&Role="+Role+"&userName="+userName+"&hisWebIp="+hisWebIp;
+		function fMain(pid,caseId,mradm){
+			if(pid==null||pid==""){
+				alert("未找到当前病人")
+				return
+			}
+			var url = "epr.chartbook.show.csp?ChartBookID=9&ShowCharts=&PatientID="+pid+"&EpisodeID="+caseId+"&mradm="+mradm+"&List=R&PAAdmCodingID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&apptID=&ConsultID="
+			websys_createWindow(url,'child2','');
+		}
+		</script>
+		<iframe src="" frameborder="0" name="vtelist" id="vtelist" height="100%" width="100%" style ="display:block;position:absolute;"></iframe>
+		
+		<script language="javascript" type="text/javascript">
+			document.getElementById("vtelist").src = iFrameSrc;
+		</script>
+		
+	</body>
+</html>

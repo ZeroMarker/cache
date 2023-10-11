@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--chemo.bs.arcos.csp QP 2020.08.17 --> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+#Sum{
+	padding:0 5px;
+	color:red;
+}
+.datagrid-row-selected{
+	background:#fff;
+}
+/* 关联主医嘱背景 */
+.OrderMasterM{
+	background:#94e494; /*#00FF00*/
+}
+/* 关联子医嘱背景 */
+.OrderMasterS{
+	background:#cdf1cd; /*#66FF99*/
+}
+.datagrid-cell,.datagrid-cell-group,.datagrid-cell-rownumber,.datagrid-header-rownumber{
+    height:auto;
+}
+.datagrid-btable .datagrid-cell-c1-ItemQty,.datagrid-btable .datagrid-cell-c1-ItemDoseQty {
+	padding:0;
+	width:50px;
+}
+</style>
+<Server>
+s EpisodeID=%request.Get("EpisodeID")
+s id=%request.Get("id")
+s GID=%request.Get("GID")
+s GDesc=%request.Get("GDesc")
+s DescCode=%request.Get("DescCode")
+s ARCOSRowid=##class(DHCDoc.Chemo.BS.Ext.Arcos).GetArcosID(DescCode)
+s nowOrderPrior=0	//%request.Get("nowOrderPrior")
+;可以录入小数的子类
+s AllowEntryDecimalItemCat=##class(web.DHCDocConfig).GetConfigNode("AllowEntryDecimalItemCat")
+</Server>
+</head>
+<body>
+	<csp:Include Page="chemo.bs.arcos.show.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			ARCOSRowid:"#(ARCOSRowid)#",
+			nowOrderPrior:"#(nowOrderPrior)#",
+			AllowEntryDecimalItemCat:"#(AllowEntryDecimalItemCat)#",
+			id:"#(id)#",
+			GID:"#(GID)#",
+			GDesc:"#(GDesc)#"
+		};
+	</SCRIPT>
+    <script type="text/javascript" src="../scripts/dhcdoc/chemo/bs/arcos.js"></script>
+    
+	<!--
+	<script type="text/javascript" src="../scripts/dhcdoc/chemo/com/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/Doc.ARCOSItemList.hui.js"></script>
+	-->
+</body>
+</html>

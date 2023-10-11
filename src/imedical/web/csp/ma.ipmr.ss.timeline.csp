@@ -1,0 +1,199 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--ma.ipmr.ss.timeline.csp-->
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<HISUI/>
+		<IPMR:LOGON/>
+		<script language="cache" runat="server">
+			Set VolID=%request.Get("VolID","")
+		</script>
+		<SCRIPT language = 'javascript' >
+			//全局请求后台服务对象
+			var ServerObj={
+				VolID		: '#(VolID)#'
+			};
+		</SCRIPT>
+		<script type="text/javascript"  src="../scripts/websys.js"></script>
+		<script type="text/javascript"  src="../scripts/ipmr/common.js"></script>
+		<script type="text/javascript"  src="../scripts/ipmr/extend.js"></script>
+		<script type="text/javascript">
+			var statusData = $cm({
+				ClassName:"MA.IPMR.SSService.VolStatusQry",
+				QueryName:"QryStatusList",
+				aVolumeID:ServerObj.VolID,
+				ResultSetType:"array",
+				rows:100	//可选项，获取多少条数据，默认50
+			},false);
+		</script>
+	</head>
+	<body style="background-color:#ffffff">
+		<div id="vstp" style="margin:0 auto; width:800px; height:100px; "></div>
+		<script type="text/javascript">
+	    $(function(){
+		    var items=[];
+		    for (var i = 0; i < statusData.length; i++) {
+				var title = statusData[i].ItemDesc+"("+(i+1)+")";
+				var StatusID = statusData[i].StatusID;
+				var StatusIDs = StatusID.split('||')[0]+StatusID.split('||')[1];
+				var context="<div style='margin:0px;' id='itembox"+StatusIDs+"'>"
+				if (statusData[i].UserDesc!="") {
+					context=context+"<div style='float:none;'>"+$g('操作人')+"："+statusData[i].UserDesc+"  "+statusData[i].ActDate+"  "+statusData[i].ActTime+"</div>";
+				}
+				if (statusData[i].BatchNumber!="") {
+					context=context+"<div style='float:none;'>"+$g('操作批号')+"："+statusData[i].BatchNumber+"</div>";
+				}
+				
+				if (statusData[i].ToUserDesc!="") {
+					context=context+"<div style='float:none;'>"+$g('交接人')+"："+statusData[i].ToUserDesc+"</div>";
+				}
+				if (statusData[i].UpdoOperaDesc!="") {
+					context=context+"<div style='float:none;'>"+$g('撤销标记')+"："+statusData[i].UpdoOperaDesc+"</div>";
+				}
+				if (statusData[i].UpdoUserDesc!="") {
+					context=context+"<div style='float:none;'>"+$g('撤销人')+"："+statusData[i].UpdoUserDesc+"</div>";
+				}
+				if (statusData[i].UpdoDate!="") {
+					context=context+"<div style='float:none;'>"+$g('撤销时间')+"："+statusData[i].UpdoDate+"  "+statusData[i].UpdoTime+"</div>";
+				}
+				if (statusData[i].UpdoReason!="") {
+					context=context+"<div style='float:none;'>"+$g('撤销原因')+"："+statusData[i].UpdoReason+"</div>";
+				}
+				context=context+"</div>"
+				console.log(context)
+				items.push({title:title,context:context});
+			}
+	        $("#vstp").vstep({
+	            //showNumber:false,
+	            stepHeight:180,
+	            currentInd:statusData.length,
+	            onSelect:function(ind,item){console.log(item);},
+	            //titlePostion:'top',
+	           	items:items
+	        });
+	        for (var i = 0; i < statusData.length; i++) {
+		        var StatusID = statusData[i].StatusID;
+				$cm({
+			    	ClassName:"MA.IPMR.SSService.VolStatusSrv",
+			    	QueryName:"QryVolStatusInfo",
+			    	aStatusID:StatusID,
+			    	page:1,
+			    	rows:50
+			    },function(rs){
+				    if (rs.rows.length!=0) {
+					    var html = '<div class="test" style="border:0px;">';
+				    	html+='<table style="font:15px;" border="0px" cellspacing="10px" cellpadding="">'
+				    	if (rs.rows[0].value=="Copy") {
+					    	html+='<tr><td align="right" style="white-space:nowrap;">'+$g('委托人姓名')+'：</td><td>'
+							html+=rs.rows[2].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('与患者关系')+'：</td><td>'
+							html+=rs.rows[3].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('证明材料')+'：</td><td>'
+							html+=rs.rows[4].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('证件号码')+'：</td><td>'
+							html+=rs.rows[5].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('联系电话')+'：</td><td>'
+							html+=rs.rows[6].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('联系地址')+'：</td><td>'
+							html+=rs.rows[7].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('复印份数')+'：</td><td>'
+							html+=rs.rows[8].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('复印内容')+'：</td><td>'
+							html+=rs.rows[9].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('复印目的')+'：</td><td>'
+							html+=rs.rows[10].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('备注')+'：</td><td>'
+							html+=rs.rows[11].value
+							html+='</td></tr>'
+				    	}if (rs.rows[0].value=="Lend") {
+					    	html+='<tr><td align="right" style="white-space:nowrap;">'+$g('借阅科室')+'：</td><td>'
+							html+=rs.rows[2].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('科室电话')+'：</td><td>'
+							html+=rs.rows[3].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('借阅人员')+'：</td><td>'
+							html+=rs.rows[4].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('借阅人员电话')+'：</td><td>'
+							html+=rs.rows[5].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('借阅目的')+'：</td><td>'
+							html+=rs.rows[6].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('预计归还日期')+'：</td><td>'
+							html+=rs.rows[7].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('备注')+'：</td><td>'
+							html+=rs.rows[8].value
+							html+='</td></tr>'
+				    	}
+				    	if (rs.rows[0].value=="Seal") {
+					    	html+='<tr><td align="right" style="white-space:nowrap;">'+$g('委托人姓名')+'：</td><td>'
+							html+=rs.rows[2].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('与患者关系')+'：</td><td>'
+							html+=rs.rows[3].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('证明材料')+'：</td><td>'
+							html+=rs.rows[4].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('证件号码')+'：</td><td>'
+							html+=rs.rows[5].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('联系电话')+'：</td><td>'
+							html+=rs.rows[6].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('联系地址')+'：</td><td>'
+							html+=rs.rows[7].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('是否原件')+'：</td><td>'
+							html+=rs.rows[8].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('封存内容')+'：</td><td>'
+							html+=rs.rows[9].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('封存原因')+'：</td><td>'
+							html+=rs.rows[10].value
+							html+='</td></tr>'
+							html+='<tr><td align="right">'+$g('备注')+'：</td><td>'
+							html+=rs.rows[11].value
+							html+='</td></tr>'
+				    	}
+				    	html+='</table>'
+						html+='</div>'
+						var StatusIDs = rs.rows[1].value.split('||')[0]+rs.rows[1].value.split('||')[1];
+						console.log(StatusIDs)
+					    $('#'+'itembox'+StatusIDs).parent().tooltip({
+					        position: 'right',
+						    content:html,  //'<span style="color:#fff">This is the tooltip message.</span>',
+						    onShow: function(){
+								$(this).tooltip('tip').css({
+									backgroundColor: '#666',
+									borderColor: '#666'
+								});
+						    }
+						});
+				    }
+			    });
+		        
+	        }
+	    });
+		</script>
+	</body>
+</html>

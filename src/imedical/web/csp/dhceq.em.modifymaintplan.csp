@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+
+<SCRIPT language="Cache" RUNAT="SERVER">
+ s MPRowID=$g(%request.Data("MPRowID",1))
+ s CancelFlag=$g(%request.Data("CancelFlag",1))		;MZY0111	2411239		2022-01-14
+ s Status=""
+ i MPRowID'="" s Status=$p($g(^DHCEQMaintPlan(MPRowID)),"^",26)
+ </Script>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #E2E2E2;padding-bottom:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cPlanNo" for="PlanNo">计划单号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PlanNo" disabled="true"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cName" for="Name">计划名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Name"></div>	
+							<div class="eq-table-td eq-table-label-new"><lable id="cCycleType" for="CycleType"></lable>周期类型</div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CycleType" disabled="true"></div>	
+							<div class="eq-table-td eq-table-label-new"><a id="BSave" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">保存</a></div><!--modefied by zc0119 20220620 需求2646396 --><!--modefied by zc0121  2022-9-13 修正按钮显示 -->
+							<div class="eq-table-td"><a id="BCancelSubmit" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">作废</a></div><!--modefied by zc0119 20220620 需求2646396 --><!--modefied by zc0121  2022-9-13 修正按钮显示 -->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cMaintLocDR_Loc" for="MaintLocDR_Loc">保养科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintLocDR_Loc" data-options="'component':'PLAT.L.Loc'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cMaintUserDR_Name" for="MaintUserDR_Name">维护工程师</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintUserDR_Name" data-options="'component':'PLAT.L.EQUser'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cMonthStr" for="MonthStr">执行月份</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MonthStr" data-options='validParams:"YM"'></div>
+							<!--div class="eq-table-td eq-table-label"><label id="cStage" for="Stage">计划状况</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="Stage" style="width:238px"></div-->
+							<div class="eq-table-td eq-table-label-new"><a id="BAssign" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">派单</a></div><!--modefied by zc0119 20220620 需求2646396 --><!--modefied by zc0121  2022-9-13 修正按钮显示 -->
+							<div class="eq-table-td"><a id="BUpdateExecute" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">同步执行单</a></div><!--modefied by zc0119 20220620 需求2646396 --><!--modefied by zc0121  2022-9-13 修正按钮显示 -->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cSDate" for="SDate">固定时间范围</label></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="SDate" disabled="true"></div>
+							<div class="eq-table-td eq-table-label-new"><lable id="cEDate" for="EDate">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EDate" disabled="true"></div>
+							<div class="eq-table-td eq-table-label-new"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td"></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="DHCEQEquipList" data-options="border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<input type="hidden" id="MPRowID" value=#(MPRowID)#>
+			<input type="hidden" id="CancelFlag" value=#(CancelFlag)#> <!--MZY0111	2411239		2022-01-14-->
+			<input type="hidden" id="MaintLocDR">
+			<input type="hidden" id="MaintUserDR">
+			<input type="hidden" id="Status">
+		</form>
+	</div>
+</body>
+<script type='text/javascript' src='../scripts/dhceq/em/modifymaintplan.js'></script>
+</html>

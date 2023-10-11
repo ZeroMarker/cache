@@ -1,7 +1,13 @@
 <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	//i ##Class(websys.SessionEvents).SessionExpired()
-	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    Set QString=%request.CgiEnvs("QUERY_STRING")
+    I $P(QString,"%",1)="MWToken" Set %response.Redirect="dhcma.ir.view.main.csp?"_$replace(QString,"%3D","=") q 1
+	
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
+	//地址栏url不改变
+	//Set %response.ServerSideRedirect="dhcma.ir.view.main.csp"
+	//地址栏url改变
+	Set %response.Redirect="dhcma.ir.view.main.csp?1=1&PaadmID="_$g(%request.Data("PaadmID",1))_"&IndexTab="_$g(%request.Data("IndexTab",1))_"&PageType="_$g(%request.Data("PageType",1))_"&LocFlag="_$g(%request.Data("LocFlag",1))_"&index="_$g(%request.Data("index",1))_"&MWToken="_$g(%request.Data("MWToken",1))
 	q 1
 </csp:method>
 <!DOCTYPE html>
@@ -19,19 +25,26 @@
 		</style>
 	</head>
 	<body scroll="no">
-		<script type="text/javascript" src="../Scripts/dhchai/IR/View/Main/Gui.js"></script>
-		<script type="text/javascript" src="../Scripts/dhchai/IR/View/Main/Event.js"></script>
+		<script type="text/javascript" src="../scripts/dhchai/IR/View/Main/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/dhchai/IR/View/Main/Event.js"></script>
 		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 			Set PaadmID =$g(%request.Data("PaadmID",1))
 			Set IndexTab =$g(%request.Data("IndexTab",1))
 			Set PageType =$g(%request.Data("PageType",1))
+			Set LocFlag =$g(%request.Data("LocFlag",1))
+            Set index =$g(%request.Data("index",1))
 	   </SCRIPT>
 		<script language="javascript" type="text/javascript">
 			var PaadmID = "#(PaadmID)#";
 			var IndexTab = "#(IndexTab)#";
 			var PageType     = "#(PageType)#";
+			var LocFlag = "#(LocFlag)#"
+            var index = "#(index)#"
+            if ((typeof(index) == "undefined")||(index=="undefined")){
+                index=""
+            }
 			$(document).ready(function(){
-				var url = "../Scripts/dhchai/IR/View/Main/Layout.html"
+				var url = "../scripts/dhchai/IR/View/Main/Layout.html"
         		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
    					if(statusTxt=="success") {
 	   					InitPatViewWin();

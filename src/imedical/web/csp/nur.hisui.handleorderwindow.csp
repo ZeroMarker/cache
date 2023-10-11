@@ -1,0 +1,343 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<div id="handleOrder-window" style="display:none;">
+	<div id="handleOrder" class="hisui-window" title="医嘱" style="width:450px;height:162px;" data-options="iconCls:'icon-w-batch-cfg',closed:true"> 
+		<div id="handleOrder-form" style="margin:0 auto;height:80px;display:flex;justify-content:center;">
+			<table class="search-table ppdSkinTest" style="display:none;height:240px;">
+				<tr>
+					<td class="r-label" >
+						<label for="blister">#(..Get("局部水泡"))#</label>
+					</td>
+					<td>
+						<input class="hisui-numberbox  textbox" id="blister-width" placeholder="宽度" style="width:70px;" data-options="onChange:caculateResult"/><label style="margin:0 5px;">mm</label>
+						<input class="hisui-numberbox  textbox" id="blister-height" placeholder="长度" style="width:70px;" data-options="onChange:caculateResult"/><label style="margin:0 5px;">mm</label>
+						<input class="hisui-checkbox" type="checkbox" label="无" id="blister-nohave" data-options="onCheckChange:blisterNoHaveChange">
+					</td>
+				</tr>   
+				<tr>
+					<td class="r-label">
+						<label for="blisterState"></label>
+					</td>
+					<td>
+						<input class="hisui-radio" name="blisterState" type="radio" value="单个" label="单个" id="blisterState-sing">
+						<div class="divide-div"></div>
+						<input class="hisui-radio" name="blisterState" type="radio" value="散在" label="散在" id="blisterState-spora">	
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" >
+						<label for="redSwollen">#(..Get("红肿"))#</label>
+					</td>
+					<td>
+						<input class="hisui-numberbox  textbox" id="redSwollen-width" placeholder="宽度" style="width:70px;" data-options="onChange:caculateResult"/><label style="margin:0 5px;">mm</label>
+						<input class="hisui-numberbox  textbox" id="redSwollen-height" placeholder="长度" style="width:70px;" data-options="onChange:caculateResult"/><label style="margin:0 5px;">mm</label>
+						<input class="hisui-checkbox" type="checkbox" label="无" id="redSwollen-nohave" data-options="onCheckChange:redSwollenNoHaveChange">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" >
+						<label for="deadLymphatic"></label>
+					</td>
+					<td>
+						<input class="hisui-checkbox" type="checkbox" label="双圈" id="deadLymphatic-doubleloop" data-options="onCheckChange:caculateResult">
+						<div class="divide-div"></div>
+						<input class="hisui-checkbox" type="checkbox" label="坏死" id="deadLymphatic-necrosis" data-options="onCheckChange:caculateResult">
+						<div class="divide-div"></div>
+						<input class="hisui-checkbox" type="checkbox" label="淋巴管炎" id="deadLymphatic-inflam" data-options="onCheckChange:caculateResult">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" >
+						<label for="induration">#(..Get("皮肤硬结"))#</label>
+					</td>
+					<td>
+						<input class="hisui-numberbox  textbox" id="induration-width" placeholder="宽度" style="width:70px;" data-options="onChange:caculateResult"/><label style="margin:0 5px;">mm</label>
+						<input class="hisui-numberbox  textbox" id="induration-height" placeholder="长度" style="width:70px;" data-options="onChange:caculateResult"/><label style="margin:0 5px;">mm</label>
+						<input class="hisui-checkbox" type="checkbox" label="无" id="induration-nohave" data-options="onCheckChange:indurationNoHaveChange">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" >
+						<label for="induration">#(..Get("硬结平均直径"))#</label>
+					</td>
+					<td>
+						<label id="induration-averageDiameter"></label><label style="margin:0 5px;">mm</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" >
+						<label for="ppdSkinTestResult" >#(..Get("PPD实验结果"))#</label>
+					</td>
+					<td>
+						<input class="textbox" id="ppdSkinTestResult" style="width:193px;" disabled/>
+					</td>
+				</tr>
+				<tr class="skinTest-component" style="display:none;">
+					<td class="r-label" >
+						<label for="skinTestResult" class="clsRequired" style="vertical-align:middle;">#(..Get("皮试结果"))#</label>
+					</td>
+					<td style="font-size:0;">
+						<input class="hisui-radio" name="skinTestResult" type="radio" label="阴性" id="skinTest-ppdnormal" data-options="required:true,requiredSel:true,onChecked:skinTestNormal">
+						<input class="hisui-radio" name="skinTestResult" type="radio" label="阳性" id="skinTest-ppdallergy" data-options="required:true,requiredSel:true,onChecked:skinTestAllergy">
+					</td>
+				</tr>
+				<tr class="dateTime-component">
+					<td class="r-label">
+						<label for="handleDate-ppdSkinTest" class="clsRequired">#(..Get("日期"))#</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox" id="handleDate-ppdSkinTest" style="width:200px;" data-options="onHidePanel:changeDate" />
+					</td>
+				</tr>
+				<tr class="singleSign-component" style="display:none;">
+					<td class="r-label">
+						<label for="userCode-ppdSkinTest" class="clsRequired">#(..Get("工号"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" id="userCode-ppdSkinTest" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr class="doubleSign-component" style="display:none;">
+					<td class="r-label">
+						<label for="secondUserCode-ppdSkinTest" class="clsRequired">#(..Get("工号"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" id="secondUserCode-ppdSkinTest" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr class="skinTest-component" style="display:none;">
+					<td class="r-label" >
+						<label for="skinTestNum-ppdSkinTest">#(..Get("批号"))#</label>
+					</td>
+					<td>
+						<input class="textbox" id="skinTestNum-ppdSkinTest" style="width:193px;" />
+					</td>
+				</tr>
+				
+			</table>
+			<table class="search-table ppdSkinTest" style="height:240px;">
+				<tr>
+					<td colspan="2">
+						<span>#(..Get("有水泡则为"))#<span class="ppdSkinTest-positive">#(..Get("强阳性++++"))#</span></span>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<span>#(..Get("单个、散在只做记录，不作为阴阳性判断标准"))#</span>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<span>#(..Get("有红肿则为"))#<span class="ppdSkinTest-positive">#(..Get("强阳性++++"))#</span></span>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<span>#(..Get("有双圈、坏死、淋巴管炎则为"))#<span class="ppdSkinTest-positive">#(..Get("强阳性++++"))#</span></span>
+					</td>
+				</tr>
+				<tr rowspan="2" style="line-height:2;">
+					<td colspan="2">
+						<span>#(..Get("硬结平均≥20mm"))#<span class="ppdSkinTest-positive">#(..Get("强阳性+++"))#</span></span></br>
+						<span>#(..Get("10mm≤硬结平均直径"))#＜20mm<span class="ppdSkinTest-positive">#(..Get("阳性++"))#</span></span></br>
+						<span>#(..Get("5mm≤硬结平均直径"))#＜10mm<span class="ppdSkinTest-positive">#(..Get("阳性+"))#</span></span></br>
+						<span>#(..Get("无硬结或硬结平均直径"))#＜5mm<span class="ppdSkinTest-masculine">#(..Get("阴性-"))#</span></span></br>
+					</td>
+				</tr>
+				<tr>
+				</tr>
+				<tr class="dateTime-component">
+					<td class="r-label">
+						<label for="handleTime-ppdSkinTest" class="clsRequired">#(..Get("时间"))#</label>
+					</td>
+					<td>
+						<input class="hisui-timespinner textbox" id="handleTime-ppdSkinTest" style="width:200px;" data-options="onChange:changeTime,showSeconds:true" />
+					</td>
+				</tr>
+				<tr class="singleSign-component" style="display:none;">
+					<td class="r-label">
+						<label for="password-ppdSkinTest" class="clsRequired">#(..Get("密码"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" type="password" id="password-ppdSkinTest" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr class="doubleSign-component" style="display:none;">
+					<td class="r-label">
+						<label for="secondPassword-ppdSkinTest" class="clsRequired">#(..Get("密码"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" type="password" id="secondPassword-ppdSkinTest" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr class="handleNote-component" style="display:none;">
+					<td class="r-label">
+						<label for="handleNote-ppdSkinTest">#(..Get("备注"))#</label>
+					</td>
+					<td>
+						<input class="textbox" id="handleNote-ppdSkinTest" style="width:193px;" />
+					</td>
+				</tr>
+			</table>
+			<table class="search-table notPPDSkinTest-table">
+				<tr class="skinTest-component" style="display:none;">
+					<td class="r-labelr" >
+						<label for="skinTestResult" class="clsRequired" style="vertical-align:middle;">#(..Get("皮试结果"))#</label>
+					</td>
+					<td style="font-size:0;">
+						<input class="hisui-radio" name="skinTestResult" type="radio" label="阴性" id="skinTest-normal" data-options="required:true,requiredSel:true,onChecked:skinTestNormal">
+						<input class="hisui-radio" name="skinTestResult" type="radio" label="阳性" id="skinTest-allergy" data-options="required:true,requiredSel:true,onChecked:skinTestAllergy">
+					</td>
+				</tr>
+				<tr id="seeType-component" style="display:none;">
+					<td class="r-labelr" >
+						<label for="seeType" class="clsRequired">#(..Get("类型"))#</label>
+					</td>
+					<td>
+						<input class="hisui-combobox textbox" id="seeType" style="width:200px;"/>
+					</td>
+				</tr>
+				<tr class="dateTime-component">
+					<td class="r-labelr">
+						<label for="handleDate" class="clsRequired">#(..Get("日期"))#</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox" id="handleDate" style="width:200px;" data-options="onHidePanel:changeDate" />
+					</td>
+				</tr>
+				<tr class="dateTime-component">
+					<td class="r-labelr">
+						<label for="handleTime" class="clsRequired">#(..Get("时间"))#</label>
+					</td>
+					<td>
+						<input class="hisui-timespinner textbox" id="handleTime" style="width:200px;" data-options="onChange:changeTime,showSeconds:true" />
+					</td>
+				</tr>
+				<tr class="stopReason-component" style="display:none;">
+					<td class="r-labelr">
+						<label for="stopReason" class="clsRequired">#(..Get("停止原因"))#</label>
+					</td>
+					<td>
+						<input class="hisui-combobox" id="stopReason" style="width:200px;"/>
+					</td>
+				</tr>
+				<tr class="skinTest-component" style="display:none;">
+					<td class="r-labelr" >
+						<label for="skinTestNum">#(..Get("批号"))#</label>
+					</td>
+					<td>
+						<input class="textbox" id="skinTestNum" style="width:193px;" />
+					</td>
+				</tr>
+				<tr class="singleSign-component" style="display:none;">
+					<td class="r-labelr">
+						<label for="userCode" class="clsRequired">#(..Get("工号"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" id="userCode" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr class="singleSign-component" style="display:none;">
+					<td class="r-labelr">
+						<label for="password" class="clsRequired">#(..Get("密码"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" type="password" id="password" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr class="doubleSign-component" style="display:none;">
+					<td class="r-labelr">
+						<label for="secondUserCode" class="clsRequired">#(..Get("工号"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" id="secondUserCode" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr class="doubleSign-component" style="display:none;">
+					<td class="r-labelr">
+						<label for="secondPassword" class="clsRequired">#(..Get("密码"))#</label>
+					</td>
+					<td>
+						<input class="hisui-validatebox textbox" type="password" id="secondPassword" style="width:193px;"/>
+					</td>
+				</tr>
+				<tr id="pcExecReason-component" style="display:none;">
+					<td class="r-labelr">
+						<label for="execReason">#(..Get("PC执行原因"))#</label>
+					</td>
+					<td>
+						<input class="hisui-combobox textbox" id="execReason" style="width:200px;" />
+					</td>
+				</tr>
+				<tr class="handleNote-component" style="display:none;">
+					<td class="r-label">
+						<label for="handleNote">#(..Get("备注"))#</label>
+					</td>
+					<td>
+						<input class="textbox" id="handleNote" style="width:193px;" />
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div style="width:100%;display:flex;justify-content:center;margin: 10px 0;">
+			<a class="hisui-linkbutton" id="saveButton" data-options="iconCls:'icon-w-ok'">确定</a>
+			<a class="hisui-linkbutton" id="cancelButton" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a>
+		</div>
+	</div>
+</div>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.search-table tr {
+	height:30px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-labelr {
+	padding-right:10px;
+	text-align:right;
+}
+.messager-popover .content {
+	height: 18px;
+    float: left;
+    margin-top: -1px;
+    line-height: 21px;
+}
+.ppdSkinTest-positive {
+	color:red;
+	font-weight:bold;
+}
+.ppdSkinTest-masculine {
+	color:#4CBA51;
+	font-weight:bold;
+}
+.divide-div {
+	display:inline-block;
+	width:5px;
+}
+#skinTest-normal + label,#skinTest-ppdnormal + label{
+	font-weight:bold;
+	color:green;
+	margin-right:10px;
+}
+#skinTest-allergy + label,#skinTest-ppdallergy  + label{
+	font-weight:bold;
+	color:red;
+}
+.messager-popover .content {
+	height:fit-content;
+}
+</style>
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<script type="text/javascript" charset="GB2312" src="../scripts/nurse/hisui/handleorderwindow.js"></script>
+<!--调试-->
+<!--<script type="text/javascript">
+	var now = new Date().getTime();
+	document.write('<script charset="GB2312" src="../scripts/nurse/hisui/handleorderwindow.js?v=' + now + '"><\/script\>');
+</script>-->
+

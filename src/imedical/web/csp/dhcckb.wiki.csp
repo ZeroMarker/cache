@@ -1,0 +1,122 @@
+<html>
+<head>
+	<HISUI/>
+	<DHCCKB/>	
+		<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/common.css"><!-- 禁止复制 -->
+  <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/wiki.css">
+ 	<script src="../scripts/dhcnewpro/dhcckb/wiki.js"></script>
+     <style type="text/css">
+   	#tableTb{
+		padding:5 5 5 5;   	
+	}
+	#tableTb a{
+		padding:0 3 0 3;
+		cursor: pointer;
+		text-decoration:underline;
+		font-size:12px
+	}
+	.no-data{
+			width:100%;
+			height:100%;
+			background: url(../scripts/dhcnewpro/dhcckb/images/no_data.png) center center no-repeat;
+		}
+   </style> 
+   	<script language="Cache" runat="server">
+   	/// token 验证
+   	s tokenFlag=1 //##Class(web.DHCCKB.Util.UtilService).VerToken($g(%request.Data("token",1),""))
+   	Q:tokenFlag=0 ""
+	w $$$cspStrictJavaScriptStart
+	s IncId=$g(%request.Data("IncId",1),"")
+	s IncCode=$g(%request.Data("IncCode",1),"")	
+	s IncDesc=$g(%request.Data("IncDesc",1),"")
+	i IncId="" d
+	.s IncIdList=##Class(web.DHCCKBPassNew).GetComDicIdNew(IncCode,"Drug","")	
+    .i $listlength(IncIdList)=1 s IncId=$listget(IncIdList)	
+    .i IncId="" d
+    ..s drugData = ##class(web.DHCCKBCommon).GetDrugData()
+    ..s libStr = ##class(web.DHCCKBComContrast).GetSysConst(IncCode,IncDesc,drugData)
+    ..s libCode = $p(libStr,"^",1)
+    ..s IncId = ##class(web.DHCCKBCommon).GetDicIdByCode(libCode,drugData)
+    ..q:IncId'=""
+    ..s chinaDrugData = ##class(web.DHCCKBCommon).GetChineseDrugData()
+    ..s libStr = ##class(web.DHCCKBComContrast).GetSysConst(IncCode,IncDesc,chinaDrugData)
+    ..s libCode = $p(libStr,"^",1)
+    ..s IncId = ##class(web.DHCCKBCommon).GetDicIdByCode(libCode,chinaDrugData)
+	s LgHospID=%session.Data("LOGON.HOSPID")
+	s IncId = ##class(web.DHCCKBCommon).GetComOriginDrug(IncId) //获取同源药品 2022-02-24
+	//s ^TmpQQ=$lb(IncId,IncCode,IncDesc)
+	s url=$g(%request.Data("url",1),"")
+	w "var IncId="_$case(IncId="",1:""""_"""",:IncId)_";"
+	w $$$cspJavaScriptEnd										
+	</script> 	
+</head>
+
+<body >	
+
+  	<input type="hidden" id="catId" value=#(%request.Get("catId"))# >
+  	<input type="hidden" id="IncId" value=#(%request.Get("IncId"))# >
+  	<input type="hidden" id="input" value=#(%request.Get("input"))# >
+  	<input type="hidden" id="inputType" value=#(%request.Get("inputType"))# >
+  	<input type="hidden" id="url" value=#(%request.Get("url"))# >  
+  	<div><div id="tableTb" ></div>
+		<script language="Cache" runat="server">
+		</script>
+
+  	</div>
+	<div class="body-wrapper">
+		
+		<div class="content-wrapper"> 
+			<div class="content">    	
+				<div class="main-content" id="mainpage">
+				<script type="text/javascript"> 
+				 if(($("#inputType").val()==9)&&($("#url").val()!=""))
+				 {
+					document.getElementById("mainpage").style.width = "100%";	 
+			     }else
+			     {
+				 	  document.getElementById("mainpage").style.width = "950px";  
+				 }
+				</script> 
+					<script language="Cache" runat="server">
+						i tokenFlag=1 D
+						.i %request.Get("inputType")=9  d
+						..d ##class(web.DHCCKBWiki).GetBookData($g(url))
+						.e  d
+						..d ##class(web.DHCCKBWiki).GetLikeDrug($g(IncId))
+						..d ##class(web.DHCCKBWiki).AnchorToHtml($g(IncId))
+						..d ##class(web.DHCCKBWiki).WikiToHtml($g(IncId))
+					</script>
+					<div class="clear"></div> 	      		 
+				</div>
+
+				<div class="side-content"> 
+					<div class="lemmaWgt-promotion-vbaike" style="width:200px;display: block;position:fixed;;margin-top:10px"> 
+						<div class="promotion_title">
+							<script language="Cache" runat="server">								
+								w "<a href='dhcckb.wiki.grap2.csp?IncId="_$g(IncId)_"' target='blank'>知识图谱</a>"
+							</script>
+						</div> 
+					</div>
+				<div class="" style="width:200px;display: block;position:fixed;;margin-top:50px">
+					<script language="Cache" runat="server">
+						i tokenFlag=1 D
+						.//d ##class(web.DHCCKBWiki).AnchorToHtml($g(%request.Data("IncId",1),""))
+						.;d ##class(web.DHCCKBWiki).writeRelateddrugs(IncId,LgHospID)
+						.d ##class(web.DHCCKBWiki).writeLiterData(IncId)
+						.d ##class(web.DHCCKBWiki).AnchorToHtmlS($g(IncId))
+					</script>
+					</div>
+				</div>
+			
+			</div> 
+		</div>
+		<div class="no-data" style="display:none"></div>
+	</div>	
+	<!--回顶部-->	
+	<div id="gotop" style="width:49px;height:47px; position:fixed;right:30px;bottom:85px;z-index:3;">
+		<a href="#top">
+			<img src="../scripts/dhcadvEvt/images/gotop_hover.png" onMouseOver='this.src="../scripts/dhcadvEvt/images/gotop_hover.png"' onMouseOut='this.src="../scripts/dhcadvEvt/images/gotop.png"'/>
+		</a>
+    </div>
+</body>
+</html>

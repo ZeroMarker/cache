@@ -11,6 +11,7 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-27-->
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/group.js"></script>
@@ -26,6 +27,12 @@
 		border-radius: 0px 0px 4px 4px !important;
 	}
 	</style>
+	<server>
+
+	  s MWToken=$Get(%request.Data("MWToken",1)) 
+
+	  s mReqLink = "dhcmdt.grpouterexp.csp"_"?MWToken="_MWToken
+	</server>
 </head>
 <body>
 <div class="hisui-layout" fit="true">
@@ -35,9 +42,12 @@
 		</div>
 	</div>
 	<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px 10px 0px 5px' border="false">
-		<div id="tt" class="hisui-tabs tabs-gray" fit=true>   
+		<div id="tag_id" class="hisui-tabs tabs-gray" fit=true>   
 			<div title="专家组">   
 				<table id="item" toolbar="#item_tb"></table> 
+			</div>
+			<div title="外院专家">   
+				<iframe id="tab_req" src=""  data-src="#(mReqLink)#" width="100%" height="100%" frameborder="0" scrolling="no" style="display:block"></iframe>
 			</div>
 			<div title="资源号别">   
 				<table id="detail" toolbar="#detail_tb"></table>    
@@ -58,10 +68,17 @@
     				</div>
 				</div>
 			</div>
+			<div title="MDT反馈次数维护">   
+				<table id="feedbackNum" toolbar="#feedbackNum_tb"></table>    
+			</div>
 		</div>
 	</div>
 </div>
 <div id="main_tb">
+	<div style="height:10px"></div>
+	<label id="_HospListLabel" style='margin-right:10px;margin-left:10px'>医院</label><input id="_HospList"><!--hxy 2020-05-27-->
+	<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
+	<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>	
 	<table cellspacing="0" cellpadding="0" >
 		<tr>
 	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertRow()">新增</a></td>
@@ -123,6 +140,15 @@
 	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertAppAutRow()">新增</a></td>
 	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteAppAutRow()">删除</a></td>
 	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveAppAutRow()">保存</a></td>
+	    </tr>
+	</table>
+</div>
+<div id="feedbackNum_tb">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertFeeRow()">新增</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteFeeRow()">删除</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveFeeRow()">保存</a></td>
 	    </tr>
 	</table>
 </div>

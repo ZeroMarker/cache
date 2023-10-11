@@ -1,170 +1,196 @@
+<!--
+ * FileName: dhcpe.healthguide.csp
+ * Anchor: JL
+ * Date: 
+ * Description: HISUI 健康分析指导
+ * 其他csp: 
+            dhcpe.healthguide.edit.csp
+			dhcpe.healthguide.print.csp
+			dhcpe.healthguide.hisui.js
+			dhcpe.healthguide.edit.hisui.js
+			Component DHCPENewBaseInfo  组件增加元素HMRegNo
+-->
+<!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
 </csp:method>
-<!--websys.iconprofile.csp //-->
-<!--
-dhcpe.healthguide.csp
-dhcpe.healthguide.edit.csp
-dhcpe.healthguide.print.csp
-dhcpe.healthguide.hisui.js
-dhcpe.healthguide.edit.hisui.js
-Component DHCPENewBaseInfo  组件增加元素HMRegNo
--->
+
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
+	<ADDINS/>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+
+s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+i UIVersion="lite" s LineColor="border-top:1px solid #E2E2E2;border-radius:0px; background: url(../images/no_data_lite.png) center center no-repeat;"
+e  s LineColor="border-top:1px solid #CCCCCC;border-radius:0px; background: url(../images/no_data.png) center center no-repeat;"
+
+i UIVersion="lite" s LineColor1="border:1px solid #E2E2E2; border-radius:4px;"
+e  s LineColor1="border:1px solid #CCCCCC; border-radius:4px;"
+</SCRIPT>	
+
 <style type="text/css">
+/* 病人卡片#036bc2 */
+.celllabel{ font-family: "微软雅黑";height:50px; color:#666; padding: 0; margin: 0; line-height: 25px;} 
+.celllabel h3{color:#000; font-size: 14px; font-weight: normal;  padding: 0; margin: 0;}
+.celllabel h3 span{font-size:14px; padding-right:5px;color:#666}
+.celllabel h4{font-size:14px;font-weight: normal;color:#999;padding: 0,margin: 0.3em;-webkit-margin-before: 0.3em;-webkit-margin-after: 0.3em;margin-bottom: 2px;margin-top: 2px;}
+.celllabel h4 span{font-size:14px;padding-right:5px;margin: 0;margin-bottom: 2px;margin-top: 2px;}
+
 .patientInfo {
-	padding: 10px;
+	padding-bottom: 10px;
+	padding-left: 60px;
 	display: inline-block;
 	position: absolute;
+	top: 10px;
 }
 .sline, .infoLabel {
 	color: #787878;
 }
+.man {
+ 	background:url(../images/man.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+    top: 4px;
+    left: 20px;
+}
 
-
+.woman {
+ 	background: url(../images/woman.png) no-repeat;
+ 	background-position: center center;
+ 	width: 30px;
+ 	height: 30px;
+ 	position: absolute;
+	top: 4px;
+	left: 20px;
+}
+.man_lite {
+ 	background:url(../images/man_lite.png) no-repeat;
+	background-size:cover;
+	position: absolute;
+	left:10px;
+	top:5px;
+	width:30px;
+	height:30px;
+	border-radius:30px;
+	border:none;
+}
+.woman_lite {
+ 	background: url(../images/woman_lite.png) no-repeat;
+ 	background-size:cover;
+	position: absolute;
+	left:10px;
+	top:5px;
+	width:30px;
+	height:30px;
+	border-radius:30px;
+	border:none;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
 </style>
 </head>
-
-<body  id="DiagnosisPanel" class="hisui-layout">
-	<div class="hisui-panel" data-options="title:'健康分析指导',headerCls:'panel-header-gray',iconCls:'icon-big-book-eye'"></div>
-	
-	
-	<div id="HMNew" class="hisui-layout" style="height:750px" data-options="clickExpand:true">
-		
-		<!--客户信息-start-->
-		<div class="hisui-panel" data-options="region:'north',title:'',headerCls:'panel-header-gray'" style="height:45px;padding:5px 0px 5px 0px;">
-		
-			<div style="width:270px;float:left">
-					<table style="width:100%;border-collapse:separate; border-spacing:10px 1px;"> 
-						<tr>
-						  <td align="right" style="width:100px;">
-							 <label for="RegNo">登记号</label></td>
-						  <td align="left">
-							<div><input class="hisui-validatebox" type="text" Id="RegNo" data-options="prompt:'登记号'" style="width:158px;" /></div> </td>
-						 </tr>				
-					 </table>
+<body>
+    <div class="hisui-layout" fit="true">
+		<div data-options="region:'west',border:false" style="width:270px;padding:4px 4px 4px 4px;background-color: inherit;">
+			<div class="hisui-panel" data-options="title:'就诊记录',fit:true,headerCls:'panel-header-gray',iconCls:'icon-big-book-eye'">
+				<div class="hisui-layout" fit="true">
+					<div data-options="region:'north',border:false,collapsible:false" style="height:206px;border-bottom:1px solid #e2e2e2;">
+						<table class="search-table">
+							<tr>
+								<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+								<td><input id="RegNo" class="textbox" style="width:152px;"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+								<td><input id="BDate" class="hisui-datebox textbox" style="width:158px;"/></td>																						
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("结束日期"))#</label></td>
+								<td><input id="EDate" class="hisui-datebox textbox" style="width:158px;"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label for="HGTemplate">#(..Get("模板制作"))#</label></td>    
+								<td>
+									<div id="HGTemplate" class="hisui-switchbox"  data-options="onText:'#(..Get("启用"))#',offText:'#(..Get("禁用"))#',size:'small',
+									animated:true,onClass:'primary',offClass:'gray',checked:false,onSwitchChange:modifyTemplate_change"></div>
+								</td>
+							</tr>																		    
+							<tr>
+							   <td colspan="2" align="center">
+							   <a id="Query" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>					   
+							</tr>							
+						</table>
+					</div>
+					<div data-options="region:'center',border:false">						
+						<table class="hisui-datagrid" id="CanDiagnosisList"></table>
+					</div>						
+				</div>                				         		
 			</div>
-			<div  style="float:left;width:300px;justify-content: center;">
-				<div class="patientInfo">
-				<span class="infoLabel">姓名:</span>
-				<span class="patName" id="patName"></span>
-				<span class="sline">/</span>
-				<span class="infoLabel">性别:</span><span id="sexName"></span>
-				<span class="sline">/</span>
-				<span class="infoLabel">生日:</span><span id="Age"></span>
-				<span class="sline">/</span>
-				<span class="infoLabel" id="PatNoName">登记号:</span><span id="PatNo"></span>
-				<span class="sline"></span>
-				</div>		
-			</div>
-			
-			<!--模板制作-->
-			<div style="float:right;width:270px;">
-				<div class="patientInfo">
-				<input class='hisui-checkbox' type="checkbox" id="HGTemplate" label="模板制作">
+		</div>
+		
+		<!--患者信息-->
+		<div class="hisui-layout" data-options="region:'center',border:false" style="padding:4px 4px 6px 0px;border-radius:4px;background-color: inherit;"> 
+			<div class="hisui-layout" fit="true" style="#(LineColor1)#">
+				<div class="hisui-panel" data-options="region:'north',headerCls:'panel-header-gray',collapsible:false,border:false" style="height:40px;">
+					<div class="hisui-panel" data-options="border:false" style="height:20px;">			
+						<div  style="float:left;justify-content: center;border:false">
+							<div id="sex" style="position:absolute;left:10px;"></div>
+							<div class="patientInfo">					
+							<span class="patName" id="patName"></span>
+							<span class="infoLabel">#(..Get("性别"))#：</span><span id="sexName"></span>
+							<span class="sline">/</span>
+							<span class="infoLabel">#(..Get("生日"))#：</span><span id="Age"></span>
+							<span class="sline">/</span>
+							<span class="infoLabel" id="PatNoName">#(..Get("登记号"))#：</span><span id="PatNo"></span>
+							<span class="sline"></span>
+							</div>		
+						</div>
+					</div>
+				</div> 
+				<div id="DiagnosisTab" class="hisui-tabs tabs-gray" fit="true" data-options="region:'center',border:0" style="#(LineColor)#">
 				</div>
-			</div>  
-		</div>
-		<!--客户信息-end-->
-		
-		
-		<!--就诊记录（左侧、按时间查）-start-->
-		<div data-options="region:'west',title:'就诊记录',split:true,collapsible:false,headerCls:'panel-header-gray'" style="width:270px;">
-			<div data-options="region:'north',title:''" style="height:120px;border: 1px solid #ccc;">
-				<form class="form">
-				  <table style="width:100%;border-collapse:separate; border-spacing:10px 4px;"> 
-					  <tr>
-						  <td align="right" style="width:100px;">
-							 <label for="BDate">开始日期</label></td>
-						  <td align="left">
-							<div><input class="hisui-datebox" type="text" Id="BDate" style="width:158px;" data-options="prompt:'开始日期'" /></div></td>
-					  </tr>
-					  <tr>
-						  <td align="right" style="width:100px;">
-							 <label for="EDate">结束日期</label></td>
-						  <td align="left">
-						  <div><input class="hisui-datebox" type="text" Id="EDate" style="width:158px;" data-options="prompt:'结束日期'" /></div> </td>
-					  </tr>
-					   <tr>
-						   <td colspan="2" align="center">
-						   <div><a id="Query" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div></td>
-					   </tr>
-				  </table>
-			  </form>
-			</div>
-			<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-radius:0 0 4px 4px;">
-				<table class="hisui-datagrid" id="CanDiagnosisList"></table>
-			</div>
-
-		</div>
-		<!--就诊记录（左侧、按时间查）-end-->
-
-
-		<!--健康分析指导主录入窗-start-->
-		<div id="HGMain" class="hisui-layout" data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false">
-			<div id="DiagnosisTab" class="hisui-tabs" data-options="region:'center',border:false">
-	  		</div>	
-		</div>
-		<!--健康分析指导主录入窗-start-->
-
-
-		
-		<!--就诊记录（右侧、全部显示）-start-->
-		<div data-options="region:'east',title:'历史记录',split:true,collapsible:false,headerCls:'panel-header-gray'" style="width:270px;">
-			<div data-options="region:'north',title:''" style="height:120px;border: 1px solid #ccc;">
-				<form class="form">
-				  <table style="width:100%;border-collapse:separate; border-spacing:10px 4px;"> 
-					  <tr>
-						  <td align="right" style="width:100px;">
-							 <label for="ViewBDate">开始日期</label></td>
-						  <td align="left">
-							<div><input class="hisui-datebox" type="text" Id="ViewBDate" style="width:158px;" data-options="prompt:'开始日期'" /></div></td>
-					  </tr>
-					  <tr>
-						  <td align="right" style="width:100px;">
-							 <label for="ViewEDate">结束日期</label></td>
-						  <td align="left">
-						  <div><input class="hisui-datebox" type="text" Id="ViewEDate" style="width:158px;" data-options="prompt:'结束日期'" /></div> </td>
-					  </tr>
-					   <tr>
-						   <td colspan="2" align="center">
-						   <div><a id="ViewQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div></td>
-					   </tr>
-				  </table>
-			  </form>
-			</div>
-			<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-radius:0 0 4px 4px;">
-				<table class="hisui-datagrid" id="ViewDiagnosisList"></table>
 			</div>
 		</div>
-		<!--就诊记录（右侧、全部显示）-end-->
-		<!--就诊记录（右侧、全部显示）-start-->
-		<!--div id="HGHistory"  class="hisui-layout" data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false" style="display:none,top:'45px',left:'420';" >
-		</div-->
-	  		<!--div id="ViewDiagnosisTab" class="hisui-tabs" data-options="region:'center',border:false" style="position:relative">
-	  		</div-->	
 		
-		<!--就诊记录（右侧、全部显示）-end-->
-		<div>	
-		 	<input type="hidden" id="PatientID"/>
-		 	<input type="hidden" id="CurPAADM"/>
-		</div>
-	
+		<!--历史记录 -->
+		<div data-options="region:'east',border:false" style="width:270px;padding:4px 6px 4px 2px;background-color: inherit;">
+            <div class="hisui-panel" fit="true" data-options="region:'north',title:'历史记录',headerCls:'panel-header-gray',iconCls:'icon-big-book-eye'" style="height:100%;border-radius:0 0 4px 4px;">
+                <div class="hisui-layout" fit="true">
+                    
+                    <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+                        <table data-options="fit:true" border="false" id="ViewDiagnosisList"></table>
+                    </div>
+                </div>      
+            </div>
+        </div>
 	</div>
+    <div>	
+		<input type="hidden" id="PatientID"/>
+		<input type="hidden" id="CurPAADM"/>
+	</div>
+    
+    <div id="HGHistoryWin" style="overflow:hidden;"></div>  <!--历史记录窗口-->
 
-  		<script type="text/javascript" src="../scripts/dhcpe.healthguide.hisui.js"></script>
-  	  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
-	  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
-	  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
-	  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
-	  <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
-	  <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
-	  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
-	  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe.healthguide.hisui.js"></script>
+    <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+    <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+    <script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+    <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+    <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+    <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
 </body>
 </html>

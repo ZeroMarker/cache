@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--排班管理-班次维护
-	csp:dhcpha.pivas.schedul.csp
-	js: scripts/pharmacy/pivas/schedul.js
+<!--
+    排班管理-班次维护
+	csp: csp/dhcpha.pivas.schedul.csp
+	js:  scripts/pharmacy/pivas/schedul.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -12,8 +17,9 @@
     <TRAK:HEAD>
     </TRAK:HEAD>
     <HISUI/>
+    <DHCPHAPIVASLIB css="none"/>
+    <PHAPIVASV1 />
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/kalendae/build/kalendae.css">
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
     <style type="text/css">
         .kalendae {
             background: white;
@@ -83,57 +89,43 @@
     </style>
 </HEAD>
 
-<body>
-    <div class="hisui-layout"  fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
-		    <div class="hisui-layout" fit="true">
-		        <div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-molecule'" class="dhcpha-hisui-border"  style="border-radius: 4px;">
-		            <div id="gridSchedul" data-options="fit:true" border="false">
-		            </div>
-		        </div>
-		    </div>
-	    </div>
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-side-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                    <table id="gridSchedul">
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="gridSchedulBar">
-    	<table>
-    		<tr>
+    <div id="gridSchedulBar" style="padding:0">
+        <table class="pha-con-table">
+            <tr>
                 <td>
-                    <input id="cmbPivaLoc" />
+                    <input id="cmbPivaLoc">
                 </td>
-		        <td>
-		        	<div class="datagrid-btn-separator"></div>
-				</td>
-	    		<td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">增加</a>
-		        </td>
-				<td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
-		        </td>
-		        <td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
-		        </td>
-		        <!--td>
-		        	<div class="datagrid-btn-separator"></div>
-				</td>
-		        <td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnConfig">设定日期</a>
-		        </td>
-		        <td>
-		        	<a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnLinkSche">关联班次</a>
-		        </td-->
-		        <td>
-		        	<div class="datagrid-btn-separator"></div>
-				</td>
-				<td colspan="3" style="text-align:left">
-						<div style="border:1px solid #fec0c0;background:#ffe3e3;color:#ff3d2c;height: 27px;line-height: 27px;border-radius: 3px;">
-							<img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:2px;"></img>
-						　		班 次 代 码 在 前 的 优 先 排 班 　
-						</div>
-					</td>
-
-		    </tr>
-		</table>	   
+                <td>
+                    <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+        </div>  
+        <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;line-height: 27px;border-radius: 4px;position: absolute;right: 10px;top: 13px;">
+            <div style="padding-right: 10px;padding-left: 16px;">
+                <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:-4px;top:3px;">
+                #(..Get("班次代码在前的优先排班"))#
+            </div>
+            
+        </div> 
     </div>
     <div id="gridScheFixWin" class="hisui-dialog" title="班次固定日期规则" closed="true" style="width:310px;height:250px;" data-options="modal:true,
 	buttons:[{
@@ -231,9 +223,6 @@
         </div>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/kalendae/build/kalendae.standalone.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/schedul.js"></script>
 </body>
 

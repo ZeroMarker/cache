@@ -1,3 +1,4 @@
+<!--CSP:insudiagscon.csp-->
 <!--Creator:ZhanMingChao-->
 <!--CreatDate:2014.09-->
 <!--Description:医保诊断对照-->
@@ -15,6 +16,7 @@
 <TRAK:HEAD></TRAK:HEAD>
 <HISUI></HISUI>
 <DHCBILL/>
+<ADDINS require="CmdShell"/>
 <link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
 <script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
   <style>
@@ -22,10 +24,10 @@
 	width:115px	!important; /* 文本框宽度减小 */ 	
 }
 #coninfopanel .panel-body-noheader{
-		border-top:1px solid #cccccc !important;
+		border-top:1px dashed #cccccc !important;
 }
 #south-panel .panel-body-noheader{
-		border-top:1px solid #cccccc !important;
+		border-top:1px dashed #cccccc !important;
 }
 
 </style>
@@ -37,70 +39,96 @@
 </server>
 <body style='padding:10px'>
 	<div class="hisui-layout" data-options="fit:true" >   
-   		<div class="hisui-layout" data-options="region:'north'" id='north-panel' >
-   			<div data-options="region:'center'" style='padding-right:10px'>
-   				<div data-options="region:'north'" id='searchTablePanel'>
-   					<div class="hisui-panel"   data-options="title:'医院目录',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
-   						<table class='search-table' style="width:100%" >
-   							<tr>
-		   						<td class="r-label td-first-col"><label>医保类别</label></td>
-								<td ><input id="insuType" class=" textbox"/></td>
-								<td class="r-label" ><label>对照关系</label></td>
-								<td><input id="ConType" name="ConType" class=" textbox"/></td>
-		    					<td><a id="btnQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" style='width:120px' onClick='Query()'>查询</a>  </td>
-		   					</tr>
-		   					<tr>
-		   						<td class="r-label"><label>查询条件</label></td>
-								<td><input id="QClase" name="QClase" class=" textbox"/></td>
-								<td class="r-label"><label>关键字</label></td>
-								<td><input id="KeyWords" name="KeyWords" class="textbox"/></td>
-								<td><a id="btnAutoCon" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" style='width:120px'onClick='AutoCon()'>自动对照</a>  </td>
-
-		   					</tr>
-   						</table>
-   					</div>
-   				</div>
-          		<div data-options="region:'center'" style='height:386px' class='center-panel' id='coninfopanel' >
-					<div id="dg" ></div> 
+		<div data-options="region:'center',border:false" id='searchTablePanel'>
+			<div class="hisui-layout" data-options="fit:true" style="background-color:#f5f5f5">
+				<div data-options="region:'center',title:'医院目录',headerCls:'panel-header-gray',bodyCls:'panel-header-gray',iconCls:'icon-apply-check'" style="margin-right:10px">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="height:172px">
+							<table class='search-table' style="background-color:#ffffff" >
+	   							<tr>
+			   						<td class="r-label td-first-col"><label>医保类别</label></td>
+									<td ><input id="insuType" class=" textbox" style='width:120px'/></td>
+									<td class="r-label r-label-20" ><label>对照关系</label></td>
+									<td><input id="ConType" name="ConType" class=" textbox" style='width:127px'/></td>
+									<td class="r-label r-label-20" ><label>有效标识</label></td>
+									<td><input id="Valid"  class=" hisui-combobox" style='width:120px'/></td>
+								</tr>
+			   					<tr>
+			   						<td class="r-label"><label>查询条件</label></td>
+									<td><input id="QClase" name="QClase" class=" textbox" style='width:120px'/></td>
+									<td class="r-label r-label-20"><label>关键字</label></td>
+									<td><input id="KeyWords" name="KeyWords" class="textbox" style='width:120px'/></td>
+									<td></td>
+									<td><a id="btnQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" style='width:120px' onClick='Query()'>查询</a>  </td>
+								</tr>
+			   					<tr>
+									<td class="r-label" ><label>生效日期</label></td>
+									<td><input id="DateAct"class="hisui-datebox  textbox" data-options="minDate:'1971-01-01',maxDate:'9999-01-01'" style='width:120px'/></td>
+									<td  class="r-label r-label-20"><label>版本</label></td>
+							    	<td><input id="HisVer"  class=" textbox"  style='width:127px'/></td>
+									<td></td>
+									<td><a id="btnAutoCon" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" style='width:120px'onClick='AutoCon()'>自动对照</a>  </td>
+								</tr>
+	   						</table>
+   						</div>
+						<div data-options="region:'center',border:false">
+							<table id="dg"></table>
+						</div>
+					</div>
 				</div>
-			</div>
-			<div  data-options="region:'east'" style='width:500px' > <!-- east -->
-     			<div data-options="region:'north',fit:true"  style="height:164px">
-     				<div class="hisui-panel"    data-options="title:'医保目录',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
-   						<table class='search-table' style="width:100%" >
-   							<tr>
-								<td class="r-label td-first-col"><label>查询条件</label></td>
-								<td><input id="right-QClase"class="textbox"/></td>
-								<td class="r-label"><label>关键字</label></td>
-								<td><input id="right-KeyWords"  placeholder="输入检索关键字" class="textbox"/></td>
-							</tr>
-							<tr>
-								<td class="r-label"><label>生效日期</label></td>
-								<td><input id="dd"  class="hisui-datebox  textbox"/></td>
-								<td class="r-label"><label>备注</label></td>
-								<td><input id="HisNotecon"  placeholder="对照时使用" class="textbox"/></td>
-							</tr>
-							<tr>
-								<td colspan="2" class="r-label td-first-col"><span style='font-size:22px;color:blue;'><input class="hisui-checkbox" type="checkbox" style='font-size:22px'data-options="checked:true,boxPosition:'right'" label="是否刷新医保诊断" id="csconflg"></span></td>
-								<td colspan="2">
-									<a id="btnINSUQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onClick="QueryINSUInfoNew()"style='width:120px;margin-left:20px' >查询</a>
-								</td>
-							</tr>		
-   						</table>
-   					</div>
-   				</div>
-     			<div data-options="region:'center'" style='height:386px' class='center-panel' id='coninfopanel' >
-					<div id="wdg" ></div>
+				
+				<div data-options="region:'east',title:'医保目录',collapsible:false,split:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray',iconCls:'icon-apply-check'," style="width:520px;">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="height:170px">
+							<table class='search-table'  style="background-color:#ffffff" >
+								<tr>
+									<td class="r-label td-first-col"><label>查询条件</label></td>
+									<td><input id="right-QClase"class="textbox"/></td>
+									<td class="r-label r-label-20"><label>关键字</label></td>
+									<td><input id="right-KeyWords"  placeholder="输入检索关键字" class="textbox"/></td>
+								</tr>
+								<tr>
+									<td class="r-label"><label>生效日期</label></td>
+									<td><input id="dd"  class="hisui-datebox  textbox" data-options="minDate:'1971-01-01',maxDate:'9999-01-01'" /></td>
+									<td class="r-label r-label-20"><label>版本</label></td>
+									<td><input id="InsuVer"  class=" textbox" /></td>
+								</tr>
+								<tr>
+									<td class="r-label"><label>备注</label></td>
+									<td><input id="HisNotecon"  placeholder="对照时使用" class="hisui-validatebox textbox" data-options="validType:'length[0,15]'"/></td>
+								</tr>
+								<tr>
+									<td colspan="2" class="r-label td-first-col"><span style='font-size:22px;color:blue;'><input class="hisui-checkbox" type="checkbox" style='font-size:22px'data-options="checked:true,boxPosition:'right'" label="是否刷新医保诊断" id="csconflg"></span></td>
+									<td colspan="2">
+										<a id="btnINSUQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onClick="QueryINSUInfoNew()"style='width:120px;margin-left:20px' >查询</a>
+									</td>
+								</tr>		
+							</table>
+						</div>
+						<div data-options="region:'center',border:false" style='border-top:1px solid #cccccc;'>
+							<table id="wdg"></table>
+						</div>
+					</div>
+	     		</div>	
+				<div style="height:200px;" data-options="region:'south',title:'对照记录(自动对照的可双击复审)',split:true,showCollapsedTitle:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+					<div id="coninfo" ></div>
 				</div>
-     		</div>								<!-- east -->	
+			</div>	
     	</div>
-     	<div  data-options="region:'south'" class="south-panel" style='height:210px' id='coninfopanel' >
-     		<div class="hisui-panel" style='padding-top:4px' id='south-panel' data-options="collapsible:true,title:'对照记录(双击复审)',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" >
-     			<div id="coninfo" ></div>
-     		</div>
-     	</div>
 	</div> 
+	<!--医保诊断对照(HIS)toolbar-->
+	<div id="dgTB" class="hisui-toolbar" style='border-top:1px dashed #cccccc;' >  
+		<table cellspacing="0" cellpadding="0">
+			<tbody style='border-top-style:none;'>
+				<tr>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnInput" plain="true" onClick='Import("")' >导入对照</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出对照</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 	<DHCBILLINSUCloud/>
 	<script type="text/javascript" src="../scripts/insudiagscon.js"></script>
 </body>
+
 </html>

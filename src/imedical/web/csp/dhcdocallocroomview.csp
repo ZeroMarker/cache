@@ -1,4 +1,5 @@
-	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+<!--dhcdocallocroomview.csp   HISUI护士分诊-医生登录卡片-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  //i ##Class(websys.SessionEvents).SessionExpired()
  i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
  q 1
@@ -16,7 +17,7 @@
 <style>
 body{
 	background-color: #fff;
-	padding:10px;
+	padding:5px;
 }
 .title-cls{
 	background-color: #40A2DE;
@@ -28,11 +29,14 @@ body{
 	border-spacing:0 5px;
 }*/
 .tabbody-cls{
-	padding:0 5px;
-	width:47px;
+	padding:0 5px 0 0;
+	width:53px;
 }
 label{
 	color: #878787;
+}
+.selected-div{
+	background-color:#ccc !important;
 }
 </style>
 </HEAD>
@@ -49,13 +53,13 @@ s BorUserId=%request.Get("BorUserId")
 k ^tempdhcallocroom
 s str=##class(web.DHCAlloc).GetExaboroughDocinfo(Userid,Locid,BorUserId)
 s count=0
-s ^TempAllocboderuser(Userid)=str
+;s ^TempAllocboderuser(Userid)=str
 if BorUserId'=""{
-	s ^TempAllocboder(BorUserId)=str
+	;s ^TempAllocboder(BorUserId)=str
 }else{
 	s Initials=$p($g(^SSU("SSUSR",Userid)),"^",1)
 	s Zone=##class(web.DHCAlloc).GetFirstExabID(Initials)
-	if Zone'="" s ^TempAllocboder(Zone)=str
+	;if Zone'="" s ^TempAllocboder(Zone)=str
 }
 s lcurrpos=10,maxheight=55,maxwidth=0,MostUrgent=0
 s onelinemaxnum=100,curlinenum=0,ifTranLine=0
@@ -74,7 +78,6 @@ for {
 	s strayy=$p(str,"!",i)
 	q:strayy=""
 	s Exaroom=$p(strayy,"^",1)
-	s ^tempdhcallocroom=$G(^tempdhcallocroom)_"^"_Exaroom_"^"
 	s locdesc=$p(strayy,"^",2)
 	s docdesc=$p(strayy,"^",3)
 	s UnArrived=$p(strayy,"^",4)
@@ -84,30 +87,36 @@ for {
 	s PerPared=$p(strayy,"^",8)
 	s DocID=$p(strayy,"^",9)
 	s locid=$p(strayy,"^",10)
+	s SetDocID=DocID
+	/*
+	//pb by tanjishan 2023-04-07 按照登录用户去检索，不要在这里转换成号别
 	s DepMarkID=""
-	s SetDocID=""
 	for{
 		s DepMarkID=$O(^User.DHCDepMarkI("DepmMarkDrIndex",DocID,DepMarkID))
 		q:DepMarkID=""
 		s DepmDepDr=$List(^User.DHCDepMarkD(DepMarkID),8)
 		continue:DepmDepDr'=locid
 		s SetDocID=DepMarkID
-	}
+	}*/
 	s Arrived1=$p(strayy,"^",11)
+	s CompIP=$p(strayy,"^",12)
 	s AvailSeqNoCount=$p(strayy,"^",13)
-	w "<DIV class=""orderUnPaid"" id=""",SetDocID,""" "
-	w "style=""left:",(ifTranLine*225),"px; top:",3+(curlinenum*165),"px; width:",215,"px; height:",130,"px; z-index:10; background-color:#FFFFFF;border:1px solid #ccc;border-radius:4px;"""
+	s LogonGroupDr=$p(strayy,"^",14)
+
+	s DocLogonInfo=locid_"^"_DocID_"^"_CompIP_"^"_LogonGroupDr	//用于按登录信息输出医生的病人列表
+	w "<DIV class=""orderUnPaid"" id=""",SetDocID,""" DocLogonInfo=""",DocLogonInfo,""" "
+	w "style=""left:",(ifTranLine*222),"px; top:",0+(curlinenum*165),"px; width:",215,"px; height:",146,"px; z-index:10; background-color:#FFFFFF;border:1px solid #ccc;border-radius:4px;"""
  	w " title=""",i,""" >"
     //TABLE-LAYOUT:FIXED
 	w "<TABLE style=""width:100%;height:100%;"" id="""_i_""" count="""_i_""" title="""_""_""" border=0 cellpadding=0 cellspacing=0>",$c(13,10)
 		w "<tbody>"
 		w "<TR>","<td colspan='4' class='title-cls'>",Exaroom_" - "_docdesc,"</td>","</TR>"
-		w "<TR>","<td class='tabbody-cls'>","<label>科室:</label></td>","<td class='' colspan='3'>",locdesc,"</td>","</TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label style='padding-left: 5px'>科室:</label></td>","<td class='' colspan='3'>",locdesc,"</td>","</TR>"
 		//w "<TR>","<td>","<label>医生:</label></td>","<td style=""font-size:16px;color:red;FONT-WEIGHT: bold;"">",docdesc,"</td>","</TR>"
-		w "<TR>","<td class='tabbody-cls'>","<label>就诊:</label></td>","<td class=''>",Arrived,"</td>","<td class='tabbody-cls'><label>未报到:</label></td><td>",Unreport,"</td></TR>"
-		w "<TR>","<td class='tabbody-cls'>","<label>准备:</label></td>","<td class=''>",PerPared,"</td>","<td class='tabbody-cls'><label>已就诊:</label></td><td>",Arrived1,"</td></TR>"
-		w "<TR>","<td class='tabbody-cls'>","<label>未就诊:</label></td>","<td class=''>",(UnArrived+AgianArrived),"</td>","</TR>"
-		w "<TR>","<td class='tabbody-cls'>","<label>剩号:</label></td>","<td class='' colspan='3'>",AvailSeqNoCount,"</td>","</TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label style='padding-left: 5px'>就诊:</label></td>","<td class=''>",Arrived,"</td>","<td class='tabbody-cls'><label>未报到:</label></td><td>",Unreport,"</td></TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label style='padding-left: 5px' >准备:</label></td>","<td class=''>",PerPared,"</td>","<td class='tabbody-cls'><label>已就诊:</label></td><td>",Arrived1,"</td></TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label style='padding-left: 5px'>未就诊:</label></td>","<td class=''>",(UnArrived+AgianArrived),"</td>","</TR>"
+		w "<TR>","<td class='tabbody-cls'>","<label style='padding-left: 5px' >剩号:</label></td>","<td class='' colspan='3'>",AvailSeqNoCount,"</td>","</TR>"
 		w "</tbody>"
 	w "</TABLE>"
 	w "</DIV>",$c(13,10)
@@ -120,6 +129,7 @@ for {
  	s count=count+1
  	
  }
+ s allocroomviewpanel=0
 /*s j=0
 s rtncall=##class(web.DHCAlloc).QueryExab1(Userid,BorUserId)
 for {
@@ -168,20 +178,36 @@ for {
  w "</DIV><!--ward floorplan-->",$c(13,10)
 }else{
 	w "<div style='text-align:center;height:133px;line-height:133px;color:gray;font-size:16px;'>没有正在出诊医生的号别信息<div>"
+	s allocroomviewpanel=1
 }
 
 </Server>
 
 <SCRIPT language=javascript>
-	var DocID=""
+	var DocID="";
+	var allocroomviewpanel="#(allocroomviewpanel)#"
 	$(function(){
 		$(".orderUnPaid").click(DocClickHandler)
-		})
+		if (allocroomviewpanel=="1"){
+			$("#allocroomviewpanel" , parent.document).css("background-color","#F5F5F5");
+			$("body").css("background-color","#F5F5F5");
+		}else{
+			$("#allocroomviewpanel" , parent.document).css("background-color","#fff");
+			$("body").css("background-color","#fff");	
+			}
+	})
 	function DocClickHandler(){
-		var SelecID=this.id
-		$(".orderUnPaid").each(function(index,element){
+		var SelecID=this.id;
+		if (!$("#"+SelecID).hasClass("selected-div")) {
+			$(".selected-div").removeClass("selected-div");
+			$("#"+SelecID).addClass("selected-div");
+		}else{
+			$(".selected-div").removeClass("selected-div");
+		}
+		window.parent.LoadPatQueue();
+		/*$(".orderUnPaid").each(function(index,element){
 			$(this).css("background-color", "#FFFFFF");
-			})
+		})
 		if (DocID!=SelecID){
 			DocID=SelecID
 			$("#"+SelecID).css("background-color", "#ccc");
@@ -189,19 +215,31 @@ for {
 		}else{
 			DocID=""
 			window.parent.LoadPatQueue("")
-			}
+		}*/
+	}
+	function GetSelDivId(){
+		if ($(".selected-div").length>0) {
+			return $(".selected-div").attr("id");
+		}else{
+			return "";
 		}
-	
-	
+	}
+	function GetSelDivLogonInfo(){
+		if ($(".selected-div").length>0) {
+			return $(".selected-div").attr("DocLogonInfo");
+		}else{
+			return "";
+		}
+	}
 	</SCRIPT>
-<script Language="JavaScript" SRC="../SCRIPTS/websys.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/websys.listrows.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/websys.List.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/websys.List.Tools.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/excelprint.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/dhtmlXCommon.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/dhtmlXCombo.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/DHCWeb.OPCommon.js"></script>
-<script Language="JavaScript" SRC="../SCRIPTS/DHCVisComputerMark.js"></script>
+<script Language="JavaScript" SRC="../scripts/websys.js"></script>
+<script Language="JavaScript" SRC="../scripts/websys.listrows.js"></script>
+<script Language="JavaScript" SRC="../scripts/websys.List.js"></script>
+<script Language="JavaScript" SRC="../scripts/websys.List.Tools.js"></script>
+<script Language="JavaScript" SRC="../scripts/excelprint.js"></script>
+<script Language="JavaScript" SRC="../scripts/dhtmlXCommon.js"></script>
+<script Language="JavaScript" SRC="../scripts/dhtmlXCombo.js"></script>
+<script Language="JavaScript" SRC="../scripts/DHCWeb.OPCommon.js"></script>
+<script Language="JavaScript" SRC="../scripts/DHCVisComputerMark.js"></script>
 </body>
 </html>

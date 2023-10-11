@@ -1,0 +1,301 @@
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+ //dhc.bdp.mkb.mkbcontextsearch.csp
+ // 名称:医用知识库--全文检索界面
+ // 编写者:基础数据平台组 - 李欣
+ // 编写日期:2018-11-19
+</csp:method>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_ContextSearch.js"></script>
+
+<style>
+	html{
+		font-family:Microsoft Yahei;
+		font-size:12px;
+	}
+	body {
+		font-size:13; 
+		overflow-x:hidden		
+	}
+	.contextsearch{
+	  border-color: #41A3DF;
+	  background-color: #41A3DF;
+	  display: inline-block;
+	  
+  	  white-space: nowrap;
+
+  	  padding: 0;
+   	  overflow: hidden;
+   	  vertical-align: middle;
+	}
+	.tipcontent{
+		max-height:13em;
+		display:block;
+		overflow:hidden
+	}
+	.contextsearch-word{
+		
+		font-size:18px;
+		text-align:center;
+		width: 100px;
+   		height: 47px;
+   		overflow: hidden;
+    	display: inline-block;
+    	vertical-align: top;
+    	background: #41A3DF;
+    	cursor: pointer;
+    	line-height:50px;
+    	color:white;	
+    	opacity: 1.0;	
+	}
+	.term a{
+		color: #366ABF;
+		font-size:16px;
+		text-decoration: none;
+		cursor: pointer;
+	}
+	.term a:hover,.term a:active {
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	.childdiv{
+		border-bottom:1px solid #CCCCCC;
+		margin-bottom:20px;
+	}
+	.childdiv span{
+		display:inline-block;
+		margin-top:8px;	
+	}
+	.blue{
+		color:blue	
+	}
+	.red{
+		color:red	
+	}
+	.gray{
+		color:gray	
+	}
+	.pinkblue a{
+		color: #3CBBA3;
+		font-size:13px;
+		text-decoration: none;
+	}
+	.pinkblue a:hover,.pinkblue a:active{
+		cursor: pointer;
+		text-decoration: underline;
+		font-size:13px;
+		color:#3CBBA3	
+	}
+	div.footer {
+		position: absolute;
+		bottom: 0; /* footer高度的负值 */
+		width:60%;	
+		margin-left:100px;
+	}
+	div.container{
+		position:relative;
+		width:100%;
+		
+	}
+	div.head{
+		position:relative;
+		height:10%;
+		fit:true;
+		margin:3% 0 0 25%;
+	}
+	div.body{
+		margin-top:20px;
+		margin-left:100px;
+		margin-right:100px;
+	}
+	li a{
+		border: solid 1px #d6d6d6;
+		border-radius: 2px;
+		color: #7d7d7d;
+		text-decoration: none;
+		display: inline-block;
+		text-align: center;
+		padding: 5px 10px;	
+	}
+	li:hover a {
+		cursor:pointer;
+ 	 	color: #fdfdfd;
+ 	 	background-color: #6699CC;
+ 	 	text-decoration: none;
+ 		border: solid 1px #1d1f20;
+	}
+	ul{
+	  list-style: none;
+	  display: inline;
+	  
+	}
+	li{
+		list-style: none;
+	  	display: inline;
+	 	padding-left: 5px;  
+	}
+	.footer{
+		text-align:center;	
+	}
+</style>
+<server>
+s desc = %request.Get("searchtext")
+</server>
+<script type="text/javascript">
+init = function(){
+	var load_time = 0
+	var first_flag = 0	
+	$("#popver_grid").popover({
+    	//title:'HUI关于',
+    	content:'<div id="menuothers" style="height:180px;width:300px;" ><table data-options="fit:true" border="true"  id="ZSKlist" ></table></div>',
+    	onShow:function(e,value){
+	    	if(load_time<1)
+	    	{
+	    		loadgrid();
+	    		//load_time = 1;
+	    		
+	    	}
+	    },
+	    trigger:'hover',
+	    placement:'bottom'
+    });
+	
+
+	function loadgrid(){
+			var columns = [[ 
+		                      {field: 'ck', checkbox: true, },  //复选框    
+		                      {field:'TermBaseDesc',title:'勾选要搜索的知识库',width:100}, 
+		                      {field:'TermBaseID',title:'知识库ID',hidden:true,width:100}
+		                      ]];
+		    $("#ZSKlist").datagrid({
+			    //title:'test',
+			    width:'100%',
+				height:'100%', 
+		        url: $URL,
+		        queryParams: {
+		            ClassName:"web.DHCBL.MKB.MKBContextSearch",
+		            QueryName: "GetTermBase",
+		        },
+		        columns: columns, //列信息
+		        /*pagination: true, //pagination    boolean 设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+		        pageSize: 5,
+		        pageList: [5,10],
+		        pageNumber:1,*/
+		        singleSelect: false,
+		        bodyCls:'panel-header-gray',
+                headerCls:'panel-header-gray',
+		        idField: 'TermBaseID',
+		        rownumbers: false, //设置为 true，则显示带有行号的列。
+		        fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+		        //remoteSort:false,  //定义是否从服务器排序数据。true
+		        //scrollbarSize: 0,
+		        onLoadSuccess: function(data) {
+			        	if (first_flag <1)
+			        	{
+			        		$('#ZSKlist').datagrid('selectAll');
+			        		first_flag=1
+			        	}
+			        }
+		    });
+		    	
+		
+	}    
+
+}
+$(init);
+//var data = tkMakeServerCall("web.DHCBL.MKB.MKBContextSearch", "QWJSZSK");   
+//var termbase = data.split(",");
+/*$(function(){
+	var newRow = '<tr><td class="tdlabel">知识库列表</td><td>'
+    var result = "";
+    for (var i =0;i<termbase.length;i=i+2){
+	    var id = termbase[i];
+	    var desc = termbase[i+1]; 
+        result +="<input  class='hisui-checkbox' type = 'checkbox' id ='"+id+"'  value='"+id+"' name='test' checked='true' >"+desc+"<br>";
+    }
+ $("#menuothers").append(result);
+});
+
+$(function(){
+         $("#cbAll").click(function(){
+                $("input[name='test']").prop("checked",$(this).prop("checked"));
+         });
+    });*/
+document.onkeydown=function(event){
+ 	if (event.keyCode==13)
+	{
+		Search();
+	}
+ }
+$(function(){
+	$("#context").val("#(desc)#")
+	Search();
+})
+$(document).bind('click',function(){ 
+	$("#popver_grid").popover('hide');
+})
+	
+</script>
+</head>
+
+<body>
+<div class="continer">
+	<div class="head">
+	<!--	<span style="float:left;margin-right:30px;width:50px;height:50px;background:url(../scripts/bdp/Framework/icons/mkb/mkp_logo.png);background-repeat:no-repeat;background-size:cover;display:inline-block"></span> -->
+		<div style="float:left;margin-right:30px;width:50px;height:50px;display:inline-block">
+			<!-- <span style="height:100%;width:100%;background:url(../scripts/bdp/Framework/icons/mkb/mkp_logo.png);background-repeat:no-repeat;"></span> -->
+			<img src="../scripts/bdp/Framework/icons/mkb/mkp_logo.png" style="height:100%;width:100%"></img>
+		</div>
+		<div style="float:left;margin-right:10px">
+			<span class="contextsearch">
+				<input id="context" type="text" style="width:500px;height:47px;font-size:20px;padding-left:10px;">
+				<span class="contextsearch-word" onClick="Search()">搜索一下</span>
+			</span>
+		</div>	
+		<div style="width:50px;height:50px;dispaly:inlune-block;float:left;">
+			<div style="height:13px"></div>
+			<a id="popver_grid"  href="#" style="width:52px;height:30px;vertical-align:middle;" data-options="stopAllEventOnDisabled:true,plain:true"  >高级</a>      
+		</div>
+		
+	</div>
+	<div class="body" id="DivBody">
+		<div id="MKBTip">
+			<!--<span style="color:gray">为您找到相关结果463个,共93页。</span>-->
+		</div>
+		<div style="margin-top:20px" id="DivContent">
+			<!--
+			<div class="childdiv">
+				<span><a href="#">肺及支气管恶性肿瘤</b></a></span></br>
+				<span>&nbsp;&nbsp;&nbsp;<pinkblue>【映射<red>ICD</red>北京版】</pinkblue><red>ICD</red>北京版代码：C34.004;<red>ICD</red>北京版释义：肺门恶性肿瘤;诊断中心词:肺及支气管恶性肿瘤</span></br>
+				<span>&nbsp;&nbsp;&nbsp;<pinkblue>【初始<red>ICD</red>】</pinkblue><red>ICD</red>代码：C34.103;<red>ICD</red>释义：肺上叶恶性肿瘤</span></br>
+				<span>&nbsp;&nbsp;<gray>代码:ZD0001705,常用名:肺癌,备注:无</gray></span></br></br>
+			</div>
+			<div class="childdiv">
+				<span><a href="#">淋巴系统恶性肿瘤</a></span></br>
+				<span>&nbsp;&nbsp;&nbsp;<pinkblue>【映射<red>ICD</red>北京版】</pinkblue><red>ICD</red>北京版代码：C46.301;<red>ICD</red>北京版释义：淋巴结卡波西肉瘤;诊断中心词:淋巴系统恶性肿瘤</span></br>
+				<span>&nbsp;&nbsp;&nbsp;<pinkblue>【初始<red>ICD</red>】</pinkblue><red>ICD</red>代码：C49.902;<red>ICD</red>释义：淋巴管恶性肿瘤</span></br>
+				<span>&nbsp;&nbsp;<gray>代码:ZD0001235,常用名:淋巴瘤,备注:无</gray></span></br></br>
+			</div>
+			<div class="childdiv">
+				<span><a href="#">阑尾感染性疾病</a></span></br>
+				<span>&nbsp;&nbsp;&nbsp;<pinkblue>【映射<red>ICD</red>北京版】</pinkblue><red>ICD</red>北京版代码：C35.001;<red>ICD</red>北京版释义：急性阑尾炎伴穿孔;诊断中心词:阑尾感染性疾病</span></br>
+				<span>&nbsp;&nbsp;&nbsp;<pinkblue>【初始<red>ICD</red>】</pinkblue><red>ICD</red>代码：K35.007;<red>ICD</red>释义：急性坏疽性阑尾炎伴弥漫性腹膜炎</span></br>
+				<span>&nbsp;&nbsp;<gray>代码:ZD0002695,常用名:阑尾炎,备注:无</gray></span></br></br>
+			</div>
+			-->	
+		</div>
+	</div>
+	<div id="footer" style="text-align:center">
+		
+	</div>
+</div>
+</body>
+</html>

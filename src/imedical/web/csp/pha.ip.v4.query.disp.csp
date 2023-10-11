@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 发药单查询
+	csp:csp/pha.ip.v4.query.disp.csp
+	js: pha/ip/v4/query.disp.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <SCRIPT Language="Javascript">
+        var PAGE_CSP = "csp/pha.ip.v4.query.disp.csp"; 
+    </script>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <ADDINS require="CmdShell" />
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <PHAPRINTCOM />
+    <style>
+        .pha-label {
+            width: 58px;
+            text-align: right;
+        }
+
+        .pha-footer-noline .datagrid-ftable td {
+            border-bottom: 0;
+        }
+
+        .pha-grid-a {
+            cursor: pointer;
+        }
+
+        .m-btn .l-btn-text {
+            color: #fff;
+            min-width: 40px;
+        }
+
+        #kwLong .kw-section-list>li,
+        #kwShort .kw-section-list>li {
+            float: none;
+            margin: 0;
+            position: relative;
+        }
+
+        #kwLong a,
+        #kwShort a {
+            line-height: 28px;
+            height: 28px;
+        }
+
+        .has-switch span.switch-info {
+            background: #40a2de;
+        }
+
+        .has-switch>div.switch-on label {
+            border: 1px solid #40a2de;
+        }
+
+        .pha-search-way {
+            visibility: hidden;
+        }
+
+        #pha-con-toggle .panel-header {
+            cursor: pointer;
+        }
+
+        .pha-res-body>div {
+            display: inline-block
+        }
+
+        .pha-res-body .split {
+            width: 15px;
+            text-align: center;
+        }
+
+        .tag-cnt {
+            cursor: pointer !important;
+            display: inline-block;
+            text-align: center;
+            margin-right: 5px;
+
+        }
+
+        #winPrt .pha-con-table {
+            margin: auto
+        }
+
+        .kw-section-list>li {
+            margin: 10px 10px 10px 0px;
+        }
+        .pha-ip-moreorless .pha-con-table {
+            padding-right: 10px;
+        }
+
+        .pha-ip-moreorless .pha-con-table .r-label {
+            white-space: nowrap;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" id="lyBody">
+                <div data-options="region:'center',border:false,split:true">
+                    <div class="hisui-panel" title="发药单查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridPhac"></table>
+                    </div>
+                </div>
+                <div data-options="region:'south',border:false,height:400,split:true">
+                    <div class="hisui-tabs tabs-gray" fit=true>
+                        <div title="发药明细">
+                            <table id="gridDetail"></table>
+                        </div>
+                        <div title="药品汇总">
+                            <table id="gridInci"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 打印方式 -->
+    <div id="winPrt" style="overflow: hidden;width: 900px;">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <div id="kwPrintWay"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="hisui-window" title="用药明细" id="winDose" style="padding:10px" data-options="closed:true,iconCls:'icon-w-paper',resizable:false,modal:false,isTopZindex:true,maximizable:false,minimizable:false,collapsible:false">
+        <div id="winDoseInfo" style="text-align:center;">
+        </div>
+    </div>
+    <div class="hisui-window" title="冲减明细" id="winRes" style="padding:10px" data-options="closed:true,iconCls:'icon-w-paper',resizable:false,modal:false,isTopZindex:true,maximizable:false,minimizable:false,collapsible:false">
+        <div id="winResInfo" style="text-align:center;">
+        </div>
+    </div>
+    <div id="panelCondition">
+        <table class="pha-con-table qCondition">
+            <tr>
+                <td class="r-label">
+                    #(..Get("开始时间"))#
+                </td>
+                <td>
+                    <input class="hisui-datebox pha-datebox" id="conStartDate" style="width:120px">
+                </td>
+                <td>
+                    <input class="hisui-timespinner pha-timespinner" id="conStartTime" showSeconds=true style="width:100px">
+                </td>
+                <td class="r-label">
+                    #(..Get("发药药房"))#
+                </td>
+                <td>
+                    <input class="hisui-combobox" id="conPhaLoc">
+                </td>
+                <td class="r-label">
+                    #(..Get("病区"))#
+                </td>
+                <td>
+                    <input class="hisui-combobox" id="conWardLoc">
+
+                </td>
+                <td class="r-label">
+                    #(..Get("登记号"))#
+                </td>
+                <td>
+                    <input class="hisui-validatebox" id="conPatNo">
+                </td>
+                <td>
+                    <input type="checkbox" class="hisui-checkbox" label="长期" id="conLong">
+                </td>
+                <td>
+
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" id="btnPrint">打印</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    #(..Get("结束时间"))#
+                </td>
+                <td>
+                    <input class="hisui-datebox pha-datebox" id="conEndDate" style="width:120px">
+                </td>
+
+                <td>
+                    <input class="hisui-timespinner  pha-timespinner" id="conEndTime" showSeconds=true style="width:100px">
+
+                </td>
+                <td class="r-label">
+                    #(..Get("发药类别"))#
+                </td>
+                <td>
+                    <input class="hisui-combobox" id="conDispCat">
+                </td>
+                <td class="r-label">
+                    #(..Get("科室"))#
+                </td>
+                <td>
+                    <input class="hisui-combobox" id="conDocLoc">
+                </td>
+                <td class="r-label">
+                    #(..Get("发药单号"))#
+                </td>
+                <td>
+                    <input id="conDispNo" class="hisui-validatebox">
+                </td>
+                <td>
+                    <input type="checkbox" class="hisui-checkbox" label="临时" id="conShort">
+                </td>
+                <td class="r-label">
+                    <div id="moreorless"></div>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                </td>
+                <td>
+                    <div id="SendMachine">
+                        <a class="hisui-linkbutton" data-options="iconCls:'icon-w-msg'" id="btn-SendMachine">发送包药机</a>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="js-pha-moreorless pha-ip-moreorless">
+        <table class="pha-con-table qCondition">
+            <tr>
+                <td class="r-label">
+                    #(..Get("药品名称"))#
+                </td>
+                <td>
+                    <input id="conInci" class="validatebox-text">
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    #(..Get("发药方式"))#
+                </td>
+                <td>
+                    <input class="hisui-combobox" id="conWay">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 本页面js -->
+    <script src="../scripts/pha/ip/v4/store.js"></script>
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/query.disp.js"></script>
+    <script src="../scripts/pharmacy/common/js/lodopcom.js"></script>
+
+    <script src="../scripts/pharmacy/inpha/dhcpha.inpha.hmprintcom.js"></script>
+    <script src="../scripts/pharmacy/inpha/ipprintcom.js"></script>
+</body>
+
+</html>

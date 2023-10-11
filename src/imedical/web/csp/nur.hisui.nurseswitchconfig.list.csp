@@ -1,0 +1,272 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/switch.css">
+	<style type='text/css'>
+		body {
+			padding: 0px;
+		}
+		.switchTable td:first-child {
+			width: 192px !important;
+		}
+		.switchTable td:nth-child(3) {
+			width: 114px !important;
+			text-align:right;
+		}
+		.switchTable td:nth-child(4) {
+			width: 100px !important;
+			text-align:right;
+		}
+		.switchTable td:nth-child(5) {
+			width: 20px !important;
+			text-align:right;
+		}
+	</style>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/switch/func.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/switch/list.js" charset=gbk></script>
+</head>
+
+<body>
+	<!--等候加载提示-->
+	<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true">
+		<div class="regHosp_M" data-options="region:'north',bodyCls:'panel-header-gray'">
+			<table class="HospTable">
+				<tr>
+					<td>
+						<label id="_HospListLabel">医院</label>
+					</td>
+					<td>
+						<input id="_HospList" class="hisui-combobox" style="width:120px;"/>
+					</td>
+					<td></td>
+					<td colspan=3>
+						<a id="btnFindCommon" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询通用</a>
+						<a id="btnFindAuth" class="hisui-linkbutton hover-dark btntext" data-options="iconCls:'icon-w-find'">查询授权明细</a>
+						<a id="btnSave" class="hisui-linkbutton hover-dark btntext" data-options="iconCls:'icon-w-save'">保存</a>
+					</td>
+					<td>
+						<a href="#" id="a_help">
+							<i class="icon icon-help">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						</a>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>安全组</label>
+					</td>
+					<td>
+						<input id="cbGroup" class="hisui-combogrid cbCommon" name="cbGroup" placeholder="通用"></input>
+					</td>
+					<td>
+						<label>科室</label>
+					</td>
+					<td>
+						<input id="cbLoc" class="hisui-combogrid cbCommon" name="cbLoc" placeholder="通用"></input>
+					</td>
+					<td></td>
+					<td colspan=2></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<table class="switchTable">
+				<tr>
+					<td class="title-td" colspan=6>
+						<label class="title-label">病人列表</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>显示在院转科的病人</label>
+					</td>
+					<td>
+						<div id="TransInHospFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+					<td>
+						<label>面板向左收缩</label>
+					</td>
+					<td>
+						<div id="PatListExpandFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>显示N天内出院的病人 N= </label>
+					</td>
+					<td>
+						<input id="OutPatDays" class="hisui-numberbox textbox" type="textbox" data-options="isKeyupChange:true" style="width:100px;">
+					</td>
+					<td></td>
+					<td>
+						<label>一键归档</label>
+					</td>
+					<td>
+						<div id="PlaceFileFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"  
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>撤销提交限制</label>
+					</td>
+					<td colspan=5>
+						<input id="CancelPlaceFileFun" class="hisui-textbox textbox" type="textbox" style="width:643px;disabled:true" placeholder="请输入撤销提交限制的接口">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>列表图标</label>
+					</td>
+					<td colspan=5>
+						<select id="WarnIcons" class="hisui-combogrid" type="combogrid" defValue="" style="width:650px;"></select>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>N天未填提醒 N= </label>
+					</td>
+					<td>
+						<input id="NDaysUnEditWarn" class="hisui-numberbox textbox" type="textbox" data-options="isKeyupChange:true" style="width:100px;">
+					</td>
+					<td>
+						<a id="btnNDaysUnEditWarn" class="hisui-linkbutton hover-dark" data-options="disabled:true" onclick="showDgTemplates('IDsDaysUnEditWarn')">选择应用模板</a>
+						<span id="spIDsDaysUnEditWarn" class="span_unwarn" style="top:191px;">0</span>
+					</td>
+					<td>
+						<label style="margin-left:38px;">标记颜色</label>
+					</td>
+					<td>
+						<input id="NDaysUnEditWarnColor" class="textbox" type="color" defValue="#ffffff" style="width:100px;"></input>
+					</td>
+					<td>
+						<input id="IDsDaysUnEditWarn" class="hisui-textbox textbox textModelIDs" type="textbox" style="width:100px;visibility:hidden;">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>入院X小时未评提醒 X= </label>
+					</td>
+					<td>
+						<input id="XHoursUnEditWarn" class="hisui-numberbox textbox" type="textbox" data-options="isKeyupChange:true" style="width:100px;">
+					</td>
+					<td>
+						<a id="btnXHoursUnEditWarn" class="hisui-linkbutton hover-dark" data-options="disabled:true" onclick="showDgTemplates('IDsHoursUnEditWarn')">选择应用模板</a>
+						<span id="spIDsHoursUnEditWarn" class="span_unwarn" style="top:230px;">0</span>
+					</td>
+					<td>
+						<label style="margin-left:38px;">图标示例</label>
+					</td>
+					<td style="text-align:left;padding-top:6px;">
+						<img class="hisui-tooltip" src="../scripts_lib/hisui-0.1.0/dist/css/icons/evaluate_green.png" title="入院X小时内未评提醒" />
+						<img class="hisui-tooltip" src="../scripts_lib/hisui-0.1.0/dist/css/icons/evaluate_red.png" title="入院X小时后未评提醒" style="margin-left:6px;"/>
+					</td>
+					<td>
+						<input id="IDsHoursUnEditWarn" class="hisui-textbox textbox textModelIDs" type="textbox" style="width:100px;visibility:hidden;">
+					</td>
+				</tr>
+				<tr>
+					<td colspan=6 class="title-td">
+						<label class="title-label">模板列表</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>精简模式</label>
+					</td>
+					<td>
+						<div id="SimpleListFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox" 
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+					<td>
+						<label>列表横向收缩</label>
+					</td>
+					<td>
+						<div id="TemplatePanelExpandFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>目录垂直收缩</label>
+					</td>
+					<td >
+						<div id="TemplateListExpandFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+					<td>
+						<label>隐藏全院模板</label>
+					</td>
+					<td>
+						<div id="HideHospModel" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"  
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>模板排序</label>
+					</td>
+					<td colspan=5>
+						<select id="ModelSort" class="hisui-combobox nurseCombo" type="combobox" defValue="AIOL" data-options="editable:false" style="width:224px;">
+							<option value="AIOL" selected>全院-住院/其它-科室</option>
+							<option value="ALIO">全院-科室-住院/其它</option>
+							<option value="LIOA">科室-住院/其它-全院</option>
+							<option value="LAIO">科室-全院-住院/其它</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div id="dgAuth" data-options="iconCls:'icon-w-home',shadow:false,modal:true,closed:true"></div>
+		<div id="dgHelp" data-options="iconCls:'icon-help',shadow:false,modal:true,closed:true"></div>
+		<div id="dialog-model" data-options="iconCls:'icon-w-list',shadow:false,modal:true,closed:true"></div>
+	</div>	 
+</body>
+
+</html>

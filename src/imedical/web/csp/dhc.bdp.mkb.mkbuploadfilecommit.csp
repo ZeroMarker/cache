@@ -1,0 +1,386 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<style>
+*{
+ padding:0;
+ margin:0;   
+}
+body{
+    background-color:#FFFFFF !important;
+    }
+.button {
+    color: #ffffff;
+    height:30px;
+    background: #40A2DE;
+    padding:0 15px;
+    font-size: 14px;
+    text-align: center;
+    line-height: 30px;
+    border: 1px solid #40A2DE;
+    border-radius: 1px;
+}
+.button:hover{
+    background: #378ec4;
+    color: #ffffff;
+}
+</style>
+<script type="text/javascript">
+    //清空file  
+    function clearInputFile(f){
+        if(f.value){
+            try{
+                f.value = ''; //for IE11, latest Chrome/Firefox/Opera...
+            }catch(err){
+            }
+            if(f.value){ //for IE5 ~ IE10
+                var form = document.createElement('form'), ref = f.nextSibling;
+                form.appendChild(f);
+                form.reset();
+                ref.parentNode.insertBefore(f,ref);
+            }
+        }
+    }
+ 
+        var maxsize = 20*1024*1024;//20M  
+        var errMsg = "上传的附件文件不能超过20M！！！";  
+        var tipMsg = "您的浏览器暂不支持计算上传文件的大小，确保上传文件不要超过20M，建议使用IE、FireFox、Chrome浏览器。";  
+        //获取浏览器
+        var Sys = {};
+        var ua = navigator.userAgent.toLowerCase();
+        var s;
+        (s = ua.match(/msie ([\d.]+)/)) ? Sys.ie = s[1] :
+        (s = ua.match(/firefox\/([\d.]+)/)) ? Sys.firefox = s[1] :
+        (s = ua.match(/chrome\/([\d.]+)/)) ? Sys.chrome = s[1] :
+        (s = ua.match(/opera.([\d.]+)/)) ? Sys.opera = s[1] :
+        (s = ua.match(/version\/([\d.]+).*safari/)) ? Sys.safari = s[1] : 0;
+ 
+        //获取浏览器版本   
+        var browerInfo="" 
+        if(Sys.ie) browerInfo='IE:'+Sys.ie;   //非IE11
+        else if(Sys.firefox) browerInfo='Firefox:'+Sys.firefox;
+        else if(Sys.chrome) browerInfo='Chrome:'+Sys.chrome;
+        else if(Sys.opera) browerInfo='Opera:'+Sys.opera;
+        else if(Sys.safari) browerInfo='Safari:'+Sys.safari;
+        else if ("ActiveXObject" in window)
+        {
+            browerInfo="IE:11"
+        }
+        else
+        {
+            browerInfo=""
+        }
+         function Read() {
+	        var ftpFlag="false" //tkMakeServerCall("web.DHCBL.MKB.MKBDocManage","findFTPFlag");
+			var ftpDesc=tkMakeServerCall("web.DHCBL.MKB.MKBDocManage","findPortS");
+            var obj_file = $(".filebox-text")//document.getElementById("file");
+            var pathDel=parent.$('#MKBDMPath').val(); 
+            //清空原来的文件
+            if(pathDel!="")
+            {
+	            var path=parent.$('#MKBDMPath').val();
+	            if(ftpFlag=="true")
+	            {
+                    var deleteisExists=parent.tkMakeServerCall("web.DHCBL.BDP.FTPUploadFileLy","FTPFileExit",ftpDesc,"kno\\",path);
+                    if(deleteisExists){
+                        var re =parent.tkMakeServerCall("web.DHCBL.BDP.FTPUploadFileLy","DeleFile",ftpDesc,"kno\\",path);
+                    }		            
+		        }
+		        else if(ftpFlag=="false")
+		        {
+		            var deleteisExists=parent.tkMakeServerCall("web.DHCBL.BDP.BDPUploadFile","IsExistsFile","scripts\\bdp\\MKB\\Doc\\Kno\\"+path);
+		            if(deleteisExists){
+		              var re =parent.tkMakeServerCall("web.DHCBL.BDP.BDPUploadFile","DeleteFile","scripts\\bdp\\MKB\\Doc\\Kno\\"+path);
+		            }			        
+			    }
+	            var re=1;
+	            if(re==1){
+	                //$('#show').text('删除成功!');
+	                parent.$('#MKBDMDesc').val("");
+	                parent.$('#MKBDMType').val("");
+	                parent.$('#MKBDMPath').val("");
+	            }
+	        } 
+            var filesize = 0;  
+             var existFile = $(".filebox-text").val();//document.getElementById("file").value;
+             var fileName = existFile.split("\\")[(existFile.split("\\")).length-1];
+             if(ftpFlag=="true")
+             {
+             	var isExists=parent.tkMakeServerCall("web.DHCBL.BDP.FTPUploadFileLy","FTPFileExit",ftpDesc,"kno\\",fileName);	             
+	         }
+	         else if(ftpFlag=="false")
+	         {
+		     	var isExists=parent.tkMakeServerCall("web.DHCBL.BDP.BDPUploadFile","IsExistsFile","scripts\\bdp\\MKB\\Doc\\Kno\\"+fileName);
+		     }
+             var filePath = $(".filebox-text").val();//$("#file").val();
+             var fileNameOld = filePath.split('\\')[filePath.split('\\').length-1];
+             var fileType = (filePath.split('\.')[filePath.split('\.').length-1]).toLowerCase();
+            var spec=/[+#%']/;  
+          if($(".filebox-text").val()==""){//document.getElementById("file").value==""
+            alert("请选择文件!");
+            return false;
+          }
+        if((fileType!="pdf")&&(fileType!="doc")&&(fileType!="docx")&&(fileType!="xlsx")&&(fileType!="xls")&&filePath!="")
+          {
+            alert("文件格式不支持,目前支持仅支持pdf,doc,docx,xls,xlsx格式");            
+            //clearInputFile(obj_file);
+            $('#file').filebox('clear');
+            return false;
+           }
+           if(spec.test(fileNameOld)){
+           alert('文件名不能包含%#+\'等特殊符号');
+            clearInputFile(obj_file);
+            return false;
+          }
+             if (isExists==1){
+             alert("该文件已经存在!自动以时间作前缀重命名");
+            }
+        
+            if(Sys.firefox||Sys.chrome||Sys.safari||Sys.opera||browerInfo=="IE:11"||browerInfo=="IE:10"){ 
+                filesize=$('#file').filebox('files')[0].size
+            }else if(browerInfo=="IE:8.0"||browerInfo=="IE:7.0"||browerInfo=="IE:6.0"||browerInfo=="IE:9.0"){ 
+                try{
+                    var fileSystem = new ActiveXObject("Scripting.FileSystemObject");
+                    // GetFile(path) 方法从磁盘获取一个文件并返回。
+                     var file = fileSystem.GetFile(existFile);
+                     filesize = file.Size;    // 文件大小，单位：b
+                      }catch(e){
+                      alert(e+"\n"+"请按以下方法配置IE浏览器："+"\n"+"请打开【Internet选项-安全-Internet-自定义级别-ActiveX控件和插件-对未标记为可安全执行脚本的ActiveX控件初始化并执行脚本（不安全）-点击启用-确定】");
+                     return window.location.reload();
+                  } 
+            }else{  
+                alert(tipMsg);  
+                return false;  
+            }  
+            if(filesize==-1){  
+                alert(tipMsg);
+                clearInputFile(obj_file);  
+                return false;  
+            }else if(filesize>maxsize){  
+                alert(errMsg);
+                clearInputFile(obj_file);  
+                return false;  
+            }else if(filesize==0){  
+            alert("文件为无效文件0kb！请重新选择文件")
+            clearInputFile(obj_file);
+                return false;  
+            }
+         }
+        function deletefile(){
+	        	var ftpFlag="false" //tkMakeServerCall("web.DHCBL.MKB.MKBDocManage","findFTPFlag");
+				var ftpDesc=tkMakeServerCall("web.DHCBL.MKB.MKBDocManage","findPortS");
+				if(parent.$('#MKBKnoPathI').val()=="")
+				{
+					$('#file').filebox('clear');
+					
+				}else{
+                 parent.$.messager.confirm('提示','确定删除上传的文件吗?', function(r) {
+                 if(r){
+	                var path=parent.$('#MKBKnoPathI').val();
+		            if(ftpFlag=="true")
+		            {
+	                    var deleteisExists=parent.tkMakeServerCall("web.DHCBL.BDP.FTPUploadFileLy","FTPFileExit",ftpDesc,"kno\\",path);
+	                    if(deleteisExists){
+	                        var re =parent.tkMakeServerCall("web.DHCBL.BDP.FTPUploadFileLy","DeleFile",ftpDesc,"kno\\",path);
+	                    }		            
+			        }	            
+		            else if(ftpFlag=="false")
+		            {
+		                var deleteisExists=tkMakeServerCall("web.DHCBL.BDP.BDPUploadFile","IsExistsFile","scripts\\bdp\\MKB\\Doc\\Kno\\"+path);
+		                if(deleteisExists){
+		                         var re=tkMakeServerCall("web.DHCBL.BDP.BDPUploadFile","DeleteFile","scripts\\bdp\\MKB\\Doc\\Kno\\"+path);
+		                   }		            
+			        }    
+			        var re=1;               
+                    if(re==1){
+                        parent.$.messager.show({
+                            title:'提示',
+                            msg:'成功删除文件!',
+                            timeout:2000,
+                            showType:'slide'
+                        });
+                        parent.$('#MKBKnoDescI').val("");
+                        parent.$('#MKBKnoTypeI').val("");
+                        parent.$('#MKBKnoPathI').val("");
+                    }
+	                }
+           		})
+			}
+        }
+</script>
+    
+</head> 
+<body  style="margin:0;padding:0">
+    <table style="padding:0" align="center">
+        <tr>
+         <td>                  
+            <form enctype="multipart/form-data"  method="post" action="dhc.bdp.mkb.mkbuploadfilecommit.csp" onsubmit="return Read();">
+               <table style="margin-left: -4px;margin-right: -4px;"> <tr><td><input class='hisui-filebox'  id="file" data-options="prompt:'请选择文件',width:538,buttonText:'',buttonIcon:'icon-folder',plain:true" style="cursor:pointer" size=25 name=FileStream multiple></td>
+                <td style="padding-left:10px"><input class='button' type="submit"  style="cursor:pointer" value="上传"></td><td style="padding-left:10px"><a href="#" class="hisui-linkbutton" onclick="deletefile()">删除</a></td></tr></table>
+            </form>
+           </td>
+        </tr>
+    </table>  
+    <div class='line' id='ImportXmlInfo'>    
+     <pre id="ImportXmlInfoPre">
+        <csp:if condition='($data(%request.MimeData("FileStream",1)))'>         
+            <server>
+            	s ftpFlagS="false" //##class(web.DHCBL.MKB.MKBDocManage).findFTPFlag()
+            	if (ftpFlagS'="true")
+            	{
+	                ;s ^temp("xmlimport")=%request.MimeData("FileStream",1)_" "_$data(%request.MimeData("FileStream",1))_" "_$data(%request.Data("importXml",1))
+	                New fileStream,bytes,file
+	                ; w dirname 上传的文件存到哪个物理路径下
+	                Set componentxml = "\scripts\bdp\MKB\Doc\Kno\" 
+	                ;Set componentxml = "D:\" 
+	                s dirname = ##class(ext.util.String).GetPhysicalPath("",componentxml)
+	                
+	                Set fileStream = %request.MimeData("FileStream",1)
+	                ; 获取文件名
+	                set fileStream.FileName = ##class(%File).GetFilename(fileStream.FileName) 
+	                
+	                s flag =  ##class(web.DHCBL.BDP.BDPUploadFile).IsExistsFile(componentxml_fileStream.FileName)
+	                i (flag=1)
+	                {
+	                    set y = $zd(+$h,3)
+	                    s y = $tr(y,"-")
+	                    set t = $zt($p($h,",",2))
+	                    s t = $tr(t,":")
+	                    set fileStream.FileName = y_t_fileStream.FileName                  
+	                 }
+	               // set FileSize=-1
+	                set FileName=%request.MimeData("FileStream",1).FileName  
+	                set FileSize=%request.MimeData("FileStream",1).Size
+	        
+	                    /*w "<script type=""text/javascript"">",!
+	                    w "alert("_FileSize_")"
+	                    w "</script>"*/
+	                
+	                set FileContentType=%request.MimeData("FileStream",1).ContentType
+	                set FileType="" 
+	                set FileSuffix=$p($g(FileName),".",2)
+	                if ((FileSuffix="doc")||(FileSuffix="docx")){
+	                    set FileType="D" 
+	                }
+	                if ((FileSuffix="xls")||(FileSuffix="xlsx")){
+	                    set FileType="E" 
+	                }
+	                if ((FileSuffix="pdf")||(FileSuffix="PDF")){
+	                    set FileType="P"
+	                }
+	                
+	                Set file = ##class(%FileBinaryStream).%New()
+	                Set file.Filename=dirname_fileStream.FileName
+	                Do fileStream.Rewind()
+	                While('fileStream.AtEnd){
+	                    Set bytes = fileStream.Read(1024)
+	                    Do file.Write(bytes)
+	                }
+	                Do file.Flush()
+	                s sc= file.%Save()
+	                if (sc=1){
+	                 	d ##class(web.DHCBL.MKB.MKBKnoManage).Word2Pdf(FileName)
+	                    w "<script type=""text/javascript"">",!
+	                    w "parent.$('#MKBKnoDescI').val("_"'"_FileName_"');"
+	                    w "parent.$('#MKBKnoTypeI').val("_"'"_FileType_"');"
+	                    w "parent.$('#MKBKnoPathI').val("_"'"_FileName_"');"
+	                    //w "parent.$('#show').text('上传成功!');"
+	                    w "</script>"
+	                    
+	                }
+	                else
+	                {
+	                   w "<tr>"
+	                        w "<td>"
+	                             w "上传失败!" 
+	                        w "</td>"
+	                    w "</tr>" 
+	                }
+	                Do file.%Close()
+	                Set file="" 
+            	}
+            	else
+            	{
+	                New fileStream,bytes,file
+	                ; w dirname 上传的文件存到哪个物理路径下
+	                Set componentxml = "kno/" 
+	                s dirname =componentxml //##class(ext.util.String).GetPhysicalPath("",componentxml)
+	               // s FTPConfig="127.0.0.1^dhcbdp^1^21"   //固定配置：IP，User，pass，port
+	               	s FTPConfig=##class(web.DHCBL.MKB.MKBDocManage).findPortS()
+	               	 
+	                Set fileStream = %request.MimeData("FileStream",1)
+	                Set FileName=fileStream.FileName
+	                
+	                set FileType="" 
+	                set FileSuffix=$p($g(FileName),".",2)
+	                if ((FileSuffix="doc")||(FileSuffix="docx")){
+	                    set FileType="D" 
+	                }
+	                if ((FileSuffix="xls")||(FileSuffix="xlsx")){
+	                    set FileType="E" 
+	                }
+	                if (FileSuffix="pdf"){
+	                    set FileType="P" 
+	                }
+	                ; 获取文件名
+	                
+	                ;前台是file提交fileStream是File对象  ;用Uploadfiy提交fileStream是%CSP.BinaryStream对象 
+	                set fileStream.FileName = ##class(%File).GetFilename(fileStream.FileName) 
+	                //s flag =##class(web.DHCBL.BDP.BDPUploadFile).IsExistsFile(dirname_fileStream.FileName)
+	                s flag=##class(web.DHCBL.BDP.FTPUploadFileLy).FTPFileExit(FTPConfig,dirname,fileStream.FileName)
+	                i (flag=1)
+	                {
+	                    set y = $zd(+$h,3)
+	                    s y = $tr(y,"-")
+	                    set t = $zt($p($h,",",2))
+	                    s t = $tr(t,":")
+	                    set fileStream.FileName = y_"-"_t_fileStream.FileName                  
+	                }
+	                // set FileSize=-1
+	                set FileName=%request.MimeData("FileStream",1).FileName  
+	                set FileContentType=%request.MimeData("FileStream",1).ContentType
+	                s FileSize=0
+	                try {
+	                    
+	                    set FileSize=%request.MimeData("FileStream",1).Size
+	                } Catch{
+	                    set FileSize=0
+	                }
+
+	                if (FileSize'=0) 
+	                {
+                        s rt= ##class(web.DHCBL.BDP.FTPUploadFileLy).Upload(FTPConfig, fileStream, dirname, FileName)
+                        if (rt=1){
+	                        d ##class(web.DHCBL.MKB.MKBDocManage).Word2Pdf(FileName)
+		                    w "<script type=""text/javascript"">",!
+		                    w "parent.$('#MKBKnoDescI').val("_"'"_FileName_"');"
+		                    w "parent.$('#MKBKnoTypeI').val("_"'"_FileType_"');"
+		                    w "parent.$('#MKBKnoPathI').val("_"'"_FileName_"');"
+		                    //w "parent.$('#show').text('上传成功!');"
+		                    w "</script>"
+                        }
+                        else
+                        {
+                           w "<tr><td>上传失败!</td></tr>" 
+                        }
+	                 }
+	                 else{
+	                    
+	                     w "<script type=""text/javascript"">",!
+	                     w "alert('上传文件为无效文件0KB,请重新选择上传');"
+	                     w "</script>"
+	                 }	            	
+	            }  
+	       </server>
+         </csp:if>   
+         </pre>
+    </div>          
+</body>
+</html>

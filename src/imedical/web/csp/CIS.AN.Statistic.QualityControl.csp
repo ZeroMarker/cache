@@ -1,0 +1,283 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>麻醉质控统计</title>
+<csp:content charset="UTF-8">
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',title:'查询条件',iconCls:'icon-search',headerCls:'panel-header-gray' " style="height:90px;padding-left:5px;padding-top:10px;">
+    	<form id="conditionForm">
+    		<label>开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label>结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-search'">查询</a>
+    		<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-excel'">导出</a>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'麻醉质控统计结果',headerCls:'panel-header-gray' ">
+    	<table id="data_grid"></table>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: true,
+        		toolbar: "",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.AnaesthesiaStatistic",
+            		QueryName: "FindQualityControlStat",
+            		ArgCnt: 2
+        		},
+        		columns: [
+            		[{
+                    	field: "Date",
+                    	title: "手术日期",
+                    	width: 100
+                	},
+                	{
+                    	field: "ANPersentage",
+                    	title: "手术室内/外麻醉比例",
+                    	width: 160
+                	},
+                	{
+                    	field: "ANIN",
+                    	title: "手术室内麻醉比例",
+                    	width: 130
+                	},
+                	{
+                    	field: "ANOUT",
+                    	title: "手术室外麻醉比例",
+                    	width: 130
+                	},
+                	{
+                    	field: "IntraspinalDelivery",
+                    	title: "椎管内分娩镇痛比例",
+                    	width: 160
+                	},
+                	{
+                    	field: "ANPatientRatio",
+                    	title: "麻醉科医患比(人均麻醉量)",
+                    	width: 180
+                	}, 
+                	{
+                    	field: "ANPatientRatioGB",
+                    	title: "麻醉科医患比(GB)",
+                    	width: 130
+                	},
+                	{
+                  		field: "ASAI",
+                    	title: "ASA分级Ⅰ级麻醉患者比例",
+                    	width: 180
+                	},
+                	{
+                  		field: "ASAII",
+                    	title: "Ⅱ级比例",
+                    	width: 80
+                	},
+                	{
+                  		field: "ASAIII",
+                    	title: "Ⅲ级比例",
+                    	width: 80
+                	},
+                	{
+                  		field: "ASAIV",
+                    	title: "Ⅳ级比例",
+                    	width: 80
+                	},
+                	{
+                  		field: "ASAV",
+                    	title: "Ⅴ级比例",
+                    	width: 80
+                	},
+                	{
+                    	field: "ASANone",
+                    	title: "未定级",
+                    	width: 80
+                	},
+                	{
+                    	field: "EmergencyRatio",
+                    	title: "急诊非择期麻醉比例",
+                    	width: 150
+                	}, {
+                    	field: "IntraspinalAnesthesia",
+                    	title: "椎管内麻醉",
+                    	width: 100
+                	},
+                	{
+                    	field: "IntubationAnesthesia",
+                    	title: "插管(喉罩)全麻",
+                    	width: 120
+                	},
+                	{
+                    	field: "NonIntubationAnesthesia",
+                    	title: "非插管全麻",
+                    	width: 100
+                	}, {
+                    	field: "CompoundAnesthesia",
+                    	title: "复合麻醉",
+                    	width: 80
+                	}, {
+                    	field: "OtherAnesthesia",
+                    	title: "其他麻醉方式",
+                    	width: 100
+                	},
+                	{
+                    	field: "OPCancelled",
+                    	title: "麻醉开始后手术取消率",
+                    	width: 150
+                	}, {
+                    	field: "PACUTransferDelay",
+                    	title: "麻醉后监测治疗室(PACU)转出延迟率",
+                    	width: 240
+                	},
+                	{
+                    	field: "PACUHypothermia",
+                    	title: "PACU入室低体温率",
+                    	width: 150
+                	},
+                	{
+                    	field: "ICUUnplanned",
+                    	title: "非计划转入ICU率",
+                    	width: 150
+                	},
+                	{
+                  		field: "UnplannedSecondaryIntubation",
+                    	title: "非计划二次气管插管率",
+                    	width: 180
+                	},
+                	{
+                    	field: "DeathWithin24H",
+                    	title: "麻醉开始后24小时内死亡率",
+                    	width: 200
+                	},
+                	{
+                    	field: "CardiacArrestWithin24H",
+                    	title: "麻醉开始后24小时内心跳骤停率",
+                    	width: 220
+                	}, {
+                    	field: "IntraoperativeAutotransfusion",
+                    	title: "术中自体血输注率",
+                    	width: 150
+                	},
+                	{
+                    	field: "SevereAnaphylaxis",
+                    	title: "麻醉期间严重过敏反应发生率",
+                    	width: 200
+                	},
+                	{
+                    	field: "CentralVenipuncture",
+                    	title: "中心静脉穿刺严重并发症发生率",
+                    	width: 230
+                	}, {
+                    	field: "NeurologicalComplications",
+                    	title: "椎管内麻醉后严重神经并发症发生率",
+                    	width: 230
+                	}, {
+                    	field: "IntubationComplication",
+                    	title: "全麻气管插管拔管后声音嘶哑发生率",
+                    	width: 230
+                	},
+                	{
+                    	field: "NewComaIncidence",
+                    	title: "麻醉后新发昏迷发生率",
+                    	width: 150
+                	}
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+            	"background-color:" + row.StatusColor + ";";
+        	},
+        	onLoadSuccess: function(data) {},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnExport").click(function(){
+	    	exportToExcel();
+    	});
+	});
+	
+	function exportToExcel() {
+    	var datagrid = $("#data_grid");
+    	var rows = datagrid.datagrid("getRows");
+    	
+    	var columns = datagrid.datagrid("options").columns[0];
+    	var columnLength = columns.length;
+    	var sheetRowCount = 3;
+    	
+    	var xlsExcel, xlsBook, xlsSheet;
+    	xlsExcel = new ActiveXObject("Excel.Application");
+    	xlsBook = xlsExcel.Workbooks.Add();
+
+		var excelRow=2,excelColumn=0;
+    	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = column["title"];
+        	}
+        
+        excelRow++;
+		excelColumn=1;
+        for (var i = 0; i < rowLength ; i++) {
+            	row = rows[i];
+            	excelRow++;
+            	excelColumn=0;
+         
+            	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	field = column["field"];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = row[field] || "";
+            	}
+       		}
+       		
+    	xlsExcel.Visible = true;
+    	//xlsSheet.PrintPreview;
+    	//xlsSheet.PrintOut();
+}
+	</script>
+</body>
+</html>

@@ -18,54 +18,96 @@
 	padding-left: 10px;
 	text-align:left;
 }
+.optioncolor{
+	color: darkgreen;
+}
 </style>
 <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 <script type="text/javascript" src="../scripts/dhcdocconfig/dhcdoc.config.itemprior.js"></script>
 </head>
-<body class="hisui-layout" data-options="fit:true,border:false">
-	<div data-options="region:'north',split:false,border:false" style="height:45px;padding:10px 10px 0 10px;">
-		<table ALIGN="left">
-  	 	 	<tr>
-	            <td>
-	              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
-	            </td>
-	            <td class="r-label">
-	              <input id="_HospList"/>
-	            </td>
-	          </tr>
-  	 	 </table>
-	</div>
-  	<div data-options="region:'west',split:false,border:false" style="width:320px;padding:10px;"> 
-  		<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc;"> 
-	  	   <table class="search-table">
-		       <tr>
-			        <td class="r-label">
-			           
-			           <div class="hisui-panel card-wrapper" title="不能下的管制分类(非精神毒麻类)" style="padding:10px;width:277px;">
-			                <select size="4"  multiple="multiple" id="List_Poison" style="height:180px;width:250px;"></select>
-			  	      	</div>
-			        </td>
-		       </tr>
-		       <tr>
-		       		<td class="r-label">
-			        	<div class="hisui-panel card-wrapper" title="不能下的医嘱子类" style="padding:10px;width:277px;">
-			                <select size="4"  multiple="multiple" id="List_ItemCat" style="height:180px;width:250px;"></select>
-			  	      	</div>
-			        </td>
-		       </tr>
-		       <tr>
-		       		<td style="text-align:center;">
-			        	<a class="hisui-linkbutton" id="Confirm" data-options="iconCls:'icon-w-save'">保存</a>
-			        </td>
-		       </tr>
-	       </table>
-	    </div>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false" style="height:45px;padding:10px 10px 0 10px;">
+			<table ALIGN="left">
+	  	 	 	<tr>
+		            <td>
+		              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		            </td>
+		            <td class="r-label">
+		              <input id="_HospList"/>
+		            </td>
+		          </tr>
+	  	 	 </table>
+		</div>
+		<div data-options="region:'center',split:false,border:false" style="padding:10px 10px 10px 0;"> 
+			<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc;"> 
+				<table id="tabItemPrior"></table>
+			</div> 
+	   </div>
+	  	<div data-options="region:'west',split:false,border:false" style="width:320px;padding:10px;">
+		  	<div class="hisui-accordion" data-options="fit:true">   
+			    <div title="不能下的管制分类" data-options="tools:'#tools1'">
+			    	<table id="PoisonListTab"></table>
+			    </div>   
+			    <div title="不能下的医嘱子类" data-options="tools:'#tools2'">   
+			       <table id="ItemCatListTab"></table>
+			    </div>   
+			    <div title="不能下的频次" data-options="tools:'#tools3'">   
+			        <table id="FreqListTab"></table>    
+			    </div>   
+			</div>
+  			<div id="tools1">
+				<a href="#" id="SaveutOrderNotPoison" class="icon-w-save"></a>
+			</div>
+  			<div id="tools2">
+				<a href="#" id="SaveutOutOrderNotItemCat" class="icon-w-save"></a>
+			</div>
+			<div id="tools3">
+				<a href="#" id="SaveutOutOrderNotFreq" class="icon-w-save"></a>
+			</div>
+	  		<!--div class="hisui-panel" data-options="fit:true" style="border-color:#ccc;">
+		  	   <table class="search-table">
+			       <tr>
+				        <td class="r-label">
+				           <div class="hisui-panel card-wrapper" title="不能下的管制分类(非精神毒麻类)" style="padding:10px;width:277px;">
+				                <select size="4"  multiple="multiple" id="List_Poison" style="height:180px;width:250px;"></select>
+				  	      	</div>
+				  	      	   
+				        </td>
+			       </tr>
+			       <tr>
+			       		<td class="r-label">
+				        	<div class="hisui-panel card-wrapper" title="不能下的医嘱子类" style="padding:10px;width:277px;">
+				                <select size="4"  multiple="multiple" id="List_ItemCat" style="height:180px;width:250px;"></select>
+				  	      	</div>
+				  	      	<table class="hisui-datagrid" id="ItemCatListTab" title="不能下的医嘱子类" style="width:257px;height:200px;">
+				        </td>
+			       </tr>
+			       <tr>
+			       		<td style="text-align:center;">
+				        	<a class="hisui-linkbutton" id="Confirm" data-options="iconCls:'icon-w-save'">保存</a>
+				        </td>
+			       </tr>
+		       </table>
+		    </div-->
+	   </div>
+	   
    </div>
-   <div data-options="region:'center',split:false,border:false" style="padding:10px 10px 10px 0;"> 
-		<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc;"> 
-			<table id="tabItemPrior"></table>
-		</div> 
-   </div>
-  	
+   <!-- 例外科室 -->
+   <div id="LocWin" class="toolpanel" data-options="iconCls:'icon-w-edit',collapsible:false,modal:true,draggable:false" style="width:300px;padding:0 10px;">
+	<input id="SearchLoc" data-options="searcher:SearchLessLoc,prompt:'科室检索'" class="hisui-searchbox" style="width:280px;"/>	
+	<table class="search-table" >
+		<tr>
+			<td>
+				<select size="4" multiple="multiple" id="List_Dept" style="height:250px;width:280px;"></select>
+			</td>
+		</tr>
+		<tr>
+			<td align=center>
+				<a class="hisui-linkbutton" id="BSaveLessLoc" data-options="iconCls:'icon-w-save'">保存</a>
+			</td>
+		</tr>
+	</table>
+ </div>
 </body>
 </html>

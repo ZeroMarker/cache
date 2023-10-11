@@ -10,26 +10,44 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-	<link rel="stylesheet" type="text/css" href="../scripts/pha/com/v1/css/ui.css">
+    <HISUI />
+    <link rel="stylesheet" type="text/css" href="../scripts/pha/com/v1/css/ui.css">
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-	<script type="text/javascript" src="../scripts/pha/com/v1/js/com.js"></script>
-	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/com.js"></script>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/pha.js"></script>
+    <style>
+        .dhcpha-win-mask {
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            top: 0px;
+            left: 0px;
+            position: absolute;
+            filter: alpha(opacity=100);
+            opacity: 1;
+            font-size: 1px;
+            background-color: white;
+            text-align: center;
+            padding-top: 20%;
+        }
+    </style>
 </HEAD>
 
 <body>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true" border="false">
         <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
             <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'west',split:true,headerCls:'panel-header-gray',title:'医嘱优先级与发药类别配置',collapsible:false,iconCls:'icon-panel-common',width:850">
+                <div data-options="region:'west',split:true,headerCls:'panel-header-gray',title:'医嘱优先级与发药类别配置',collapsible:false,iconCls:'icon-set-paper',width:850">
                     <table id="gridConfig"></table>
                 </div>
                 <div data-options="region:'center',headerCls:'panel-header-gray',border:false">
                     <div class="hisui-layout" fit="true" border="false">
-                        <div data-options="region:'north',split:true,height:320,headerCls:'panel-header-gray',title:'医嘱优先级',collapsible:false" iconCls='icon-panel-common'>
+                        <div data-options="region:'north',split:true,height:320,headerCls:'panel-header-gray',title:'医嘱优先级',collapsible:false" iconCls='icon-set-paper'>
                             <table id="gridPri"></table>
                         </div>
-                        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',title:'发药类别'" iconCls='icon-panel-common'>
+                        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',title:'发药类别'" iconCls='icon-set-paper'>
                             <table id="gridPriDisType"></table>
                         </div>
                     </div>
@@ -40,36 +58,54 @@
     </div>
 
     <div id="gridConfigToolbar" class="toolbar">
-        <table class="dhcpha-north-tbl" cellpadding=0 cellspacing=0>
+        <table class="pha-con-table">
             <tr>
-                <td>
-                    <label for="cmbPhaLoc">药房</label>
-                    <input id="cmbPhaLoc" class="hisui-combobox" />
+                <td class="r-label">
+                    <label id="_HospListLabel">#(..Get("医院"))#</label>
                 </td>
-                <td style="padding-left:20px">
-                    <label for="txtUser">用户</label>
+                <td style="width:100px">
+                    <input id="_HospList">
+                </td>
+                <td class="r-label">
+                    <label for="txtUser">#(..Get("用户"))#</label>
+                </td>
+                <td>
                     <input id="txtUser" class="hisui-validatebox" />
                 </td>
-                <td style="padding-left:20px">
-                    <label for="txtMac">MAC地址</label>
-                    <input id="txtMac" class="hisui-validatebox" />
-                </td>
-                <td style="padding-left:20px">
+                <td>
                     <a class="hisui-linkbutton" iconCls='icon-w-find' id="btnFind" onclick="Query()">查询</a>
                 </td>
             </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="cmbPhaLoc">#(..Get("药房"))#</label>
+                </td>
+                <td>
+                    <input id="cmbPhaLoc" class="hisui-combobox" />
+                </td>
+               
+                <td class="r-label">
+                    <label for="txtMac">#(..Get("MAC地址"))#</label>
+                </td>
+                <td>
+                    <input id="txtMac" class="hisui-validatebox" />
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" iconCls="icon-w-paper" onclick="PHA.HelpWindow({info:$('#hisuiconfig-help').html()})">帮助</a>
+                </td>
+            </tr>
         </table>
-        <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 3px;margin-left:10px;margin-right: 10px;">
+        <!-- <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 3px;margin-left:10px;margin-right: 10px;">
             <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;"></img>
-             　增 加 数 据 后 , 选 中 配 置 数 据 勾 选 医 嘱 优 先 级 保 存 , 选 中 医 嘱 优 先 级 勾 选 发 药 类 别 保 存
-        </div>
+            #(..Get("增加数据后, 选中配置数据勾选医嘱优先级保存, 选中医嘱优先级勾选发药类别保存"))#
+        </div> -->
 
-        <div class="tool-bar-line" style="border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;margin-top:10px"></div>
+        <div class="tool-bar-line" style="border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
         <table cellspacing="0" cellpadding="0">
             <tr>
                 <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AddConfigShow()">新增</a></td>
-                <td><a class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="EditConfigShow()">编辑</a> </td>
-                <td><a class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="DeleteConfig()">删除</a></td>
+                <td><a class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="EditConfigShow()">修改</a> </td>
+                <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="DeleteConfig()">删除</a></td>
             </tr>
         </table>
     </div>
@@ -99,7 +135,7 @@
                             <table class="dhcpha-north-tbl">
                                 <tr>
                                     <td>
-                                        <span style="color:red">*</span>配置名称
+                                        <span style="color:red">*</span>#(..Get("配置名称"))#
                                     </td>
                                     <td>
                                         <input id="txtConfig" class='hisui-validatebox' />
@@ -107,7 +143,7 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <span style="color:red">*</span>用户
+                                        <span style="color:red">*</span>#(..Get("用户"))#
                                     </td>
                                     <td>
                                         <input id="cmbLocUser" class='hisui-combobox' />
@@ -116,22 +152,41 @@
 
                                 <tr>
                                     <td>
-                                        <span style="color:red">*</span>MAC地址
+                                        <span style="color:red">*</span>#(..Get("MAC地址"))#
                                     </td>
                                     <td>
                                         <input id="txtMacAdd" class='hisui-validatebox' />
                                     </td>
                                 </tr>
                             </table>
-					        <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 3px;margin-left:10px;margin-right: 10px;">
-					            <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;"></img>
-                                　用户与Mac地址必选其一
+                            <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 3px;margin-left:10px;margin-right: 10px;">
+                                <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;"></img>
+                                　#(..Get("用户与Mac地址必选其一"))#
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    <div id="hisuiconfig-help">
+        <table class="pha-help-table">
+            <tr>
+                <td>
+                    #(..Get("选中左侧配置记录, 勾选医嘱优先级保存"))#
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    #(..Get("选中医嘱优先级, 勾选发药类别保存"))#
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    #(..Get("该配置对应【住院药房发药】界面的【客户端配置】功能"))#
+                </td>
+            </tr>
+        </table>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>

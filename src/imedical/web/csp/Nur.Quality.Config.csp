@@ -1,0 +1,300 @@
+<!--Nur.Quality.Config.csp -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            
+        </script>
+<HTML lang="zh-CN">
+<Server language="CACHE" runat="Server">
+		s IsManyHosps=##class(Nur.Quality.Service.Comm).%IsManyHosps()
+</Server>
+<script language=javascript>
+	var IsManyHosps="#(IsManyHosps)#"
+</script>
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/websys.comm.js"></script>
+	<script src="../scripts/nurse/hisui/quality/colpick.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="../scripts/nurse/hisui/quality/colpick.css" type="text/css"/>
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<STYLE type='text/css'>
+		.panel-body, .panel-header {
+	    	border-color: #ccc;
+		}
+		.pa_10{
+			padding:10px 10px 10px 10px;
+		}
+		.font_bold{
+			font-weight: bold;
+			font-size: larger;
+		}
+		.align_l{
+			text-align: left;
+		}
+		.align_r{
+			text-align: right;
+		}
+		.ma_t_10{
+			margin-top: 10px;
+		}
+		.ma_b_10{
+			margin-bottom: 10px;
+		}
+		.wrap{
+			top:0;
+			bottom:0;
+			left:0;
+			right:0;
+			position:absolute;
+	    	background-color: #fff;	
+	    	padding:10px;
+	    	overflow:hidden;
+	    	display: flex;
+	    	flex-direction: column;
+	    	align-items: flex-start;
+		}
+		#main{
+			margin-top: 10px;
+			width: 100%;
+			flex-grow: 1;
+		}
+		#main .generalConfig table{
+			border-collapse: separate;
+			border-spacing: 10px;
+		}
+		#accordion{
+			height: 100%;
+		}		
+		.datagrid-wrap.panel-body.panel-body-noheader{
+				border-color:#ccc;
+				border-top-right-radius:0;
+				border-top-left-radius:0;
+				border-right:0;
+				border-left:0;
+				border-bottom:0;
+		}
+		.datagrid-toolbar{
+			height:24px;
+			padding:5px
+		}
+		.datagrid-toolbar .l-btn-plain{
+			margin-top:1px!important;
+		}
+		.datagrid-toolbar .hischeckbox_square-blue{
+			margin-top:1px!important;
+		}
+		.hisui-timespinner.timespinner-f.spinner-text.spinner-f.validatebox-text{
+			width:72px!important;
+		}
+		.datebox .combo-arrow{
+			position:relative;
+			left:-4px!important;
+		}
+		.datagrid-wrap.panel-body.panel-body-noheader{
+			border-top-style:dotted;
+		}
+		.colpick_dark
+		{
+			z-index: 2;
+		}
+		.zyul li{
+			margin: 2px;
+			float: left;
+			padding: 5px;
+			border-radius: 4px;
+			cursor:pointer;
+			background: rgb(240, 242, 245);
+		}
+		.active{
+			background: #509DE1 !important;
+		}
+	</STYLE>
+</head>	
+<body>
+	<div class="wrap">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="r-label">医院</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+				<td>
+					<a  id="saveConfig" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" >保存</a>
+				</td>
+			</tr>
+		</table>
+		<div id="main">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',title:'',split:true" style="border:0;">
+					<div data-options="region:'center',fit:true">
+						<div id="accordion">
+							<div class="hisui-accordion accordion-gray" data-options="border:false,fit:true">
+								<div title="一般配置" class="generalConfig pa_10" data-options="iconCls:'icon-batch-cfg'">
+									<table cellpadding="0" cellspacing="0">
+										<tr>
+											<td class="align_r">屏蔽评价</td>
+											<td><div id="HideAppraiseFlag" class="hisui-switchbox" data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'"></div></td>
+										</tr>
+										<tr>
+											<td class="align_r">屏蔽备注</td>
+											<td><div id="HideNoteFlag" class="hisui-switchbox" data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'"></div></td>
+										</tr>
+										<tr>
+											<td class="align_r">质控体温单和医嘱单</td>
+											<td><div id="TempAndSheetFlag" class="hisui-switchbox" data-options="onText:'是',offText:'否',checked:false,animated:true,onClass:'primary',offClass:'gray'"></div></td>
+										</tr>
+										<tr>
+											<td class="align_r">审核模式</td>
+											<td>
+												<input id="AuditType_0" class="hisui-radio" type="radio" label="病历审核模式" name="AuditType" value="0" data-options="radioClass:'hischeckbox_square-blue'">
+												<input id="AuditType_1" class="hisui-radio" type="radio" label="病人审核模式" name="AuditType" value="1" data-options="radioClass:'hischeckbox_square-blue'">
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div title="审核状态配置" class="statusConfig pa_10" data-options="iconCls:'icon-batch-cfg'">
+									<div class="hisui-layout" data-options="fit:true">
+										<div data-options="region:'west',headerCls:'panel-header-gray',border:false" style="padding:3px;width:800px">
+											<div class="hisui-panel" fit="true" data-options="title:'工作流层级设置',headerCls:'panel-header-gray',iconCls:'icon-set-paper'">
+												<div class="hisui-layout" data-options="fit:true,border:false" > 
+													<table  id="levelConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+												</div>
+											</div>
+										</div>
+										<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:3px;">
+											<div class="hisui-panel" fit="true" data-options="title:'权限设置',headerCls:'panel-header-gray',iconCls:'icon-set-paper'">
+												<table  id="permissionConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div title="病历工作量与评价关联模板配置" class="workLoadAndAppraiseLinkConfig pa_10" data-options="iconCls:'icon-batch-cfg'">
+									<div class="hisui-layout" data-options="fit:true">
+										<div data-options="region:'west',headerCls:'panel-header-gray',border:false" style="padding:3px;width:600px">
+											<div class="hisui-panel" fit="true" data-options="title:'文书工作量统计项目维护',headerCls:'panel-header-gray',iconCls:'icon-set-paper'">
+												<div class="hisui-layout" data-options="fit:true,border:false" > 
+													<div  data-options="region:'north',border:false" style="height:40px;padding:5px">
+														<input  id="inputWorkEmrDesc" class="textbox" name="name" style="width:140px;height:26px;" data-options="" placeholder="请输入查询表头名称">
+														<a href="#"  id="searchWorkBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;height:30px;">查询</a>
+													</div>
+													<div  data-options="region:'center',border:false">
+														<table  id="inputEmrWorkConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:3px;">
+											<div class="hisui-panel" fit="true" data-options="title:'文书与质控项目关系维护',headerCls:'panel-header-gray',iconCls:'icon-set-paper'">
+												<div class="hisui-layout" data-options="fit:true,border:false" > 
+													<div  data-options="region:'north',border:false" style="height:40px;padding:5px">
+														<input  id="inputAppEmrDesc" class="textbox" name="name" style="width:160px;height:26px;" data-options="" placeholder="请输入查询质控项目名称">
+														<a href="#"  id="searchAppBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;height:30px;">查询</a>
+													</div>
+													<div  data-options="region:'center',border:false">
+															<table  id="inputEmrAppConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div title="质控主界面列配置" class="auditMainColumnConfig pa_10" data-options="iconCls:'icon-batch-cfg'">
+									<div class="hisui-layout" data-options="fit:true">
+										<div  data-options="region:'center',border:false">
+											<table  id="auditPageColumnTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+										</div>
+									</div>
+								</div>	
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 文书与之质控项目关系维护编辑框 -->
+	<div id="addAppEmrLinkWin">
+		<table cellpadding="0" style="padding: 10px 20px;">
+			<tr id="inputAppEmrTitleTr">
+				<td class="label">质控项目</td>
+				<td><select id="inputAppEmrTitle" class="hisui-combobox" style="width:260px;height:26px" data-options="enterNullValueClear:false,required:true"></select></td>
+			</tr>
+			<tr id="inputWorkEmrTitleTr" hidden=true>
+				<td class="label">表头名称</td>
+				<td>
+					<input  id="inputWorkEmrTitle" class="hisui-validatebox textbox" name="name" style="width:230px;height:26px;" data-options="required:true">
+					<input  id="inputWorkEmrSort" class="hisui-validatebox textbox" name="name" style="width:30px;height:26px;" data-options="required:true" placeholder="排序">
+				</td>
+			</tr>
+			<tr>
+				<td class="label">关联模板</td>
+				<td>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" style="height: 250px;width:260px;">
+						<div class='select'>
+							<input id="i-select" class="hisui-checkbox" type="checkbox"/><span class="tip">全选/反选</span>
+						</div>
+						<ul id="jzul" class="zyul">
+						</ul>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">适用范围</td>
+				<td><select id="inputAppEmrArea" style="width:260px;height:26px" ></select></td>
+			</tr>
+			<tr>
+				<td class="label">不适用范围</td>
+				<td><select id="inputAppEmrUnArea"  style="width:260px;height:26px"></select></td>
+			</tr>
+		</table>
+		<div style="text-align: center;">
+			<a href="#"  id="commitBtn" class="hisui-linkbutton" data-options="" style="width:90px;height:30px;">确认</a>
+			<a href="#" id="cancelBtn" class="hisui-linkbutton" data-options="" style="width:90px;height:30px;">取消</a>
+		</div>
+	</div>
+	<!-- 等级级别维护 -->
+	<div id="GradeConditionLinkWin">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:3px;">
+				<div class="hisui-panel" fit="true" data-options="title:'等级条件维护',headerCls:'panel-header-gray',iconCls:'icon-set-paper'">
+					<div class="hisui-layout" data-options="fit:true,border:false" > 
+						<div  data-options="region:'north',border:false" style="height:40px;padding:5px">
+							<a id="addGradeConditionBtn" href="javascript:void(0)"  class="l-btn l-btn-small l-btn-plain">
+								<span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">新增</span>
+									<span class="l-btn-icon icon-add">&nbsp;</span>
+								</span>
+							</a>
+							<a id="saveGradeConditionBtn" href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain">
+								<span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">保存</span>
+									<span class="l-btn-icon icon-save">&nbsp;</span>
+								</span>
+							</a>
+						</div>
+						<div  data-options="region:'center',border:false">
+							<table class="gradeConditionConfigTable" style="margin-left: 20px;">
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.Comm.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.Config.js" charset="gbk"></script>
+</body>
+</html>

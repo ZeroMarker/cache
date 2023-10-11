@@ -1,0 +1,225 @@
+<!-- 
+ * FileName: dhcinsu.insulocrecinfo.csp
+ * Creator: WangXQ
+ * Date: 2022-11-21
+ * Description: 医保科室记录信息
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<title>	医保科室记录信息 </title>
+<HISUI/>
+<DHCBILL/>
+<script type="text/javascript" src="../scripts/jsonfun.js" charset='GB18030'></script>
+</head>
+<server>
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("CT_Loc")
+</server>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcinsu/themes/default/dhcinsu.insulocrecinfo.css"/>
+
+<body style="padding:10px">
+<div class="hisui-layout" data-options="fit:true" >  
+	<div data-options="region:'north',border:false" style="height:165px;overflow:hidden">
+		<div class="hisui-panel" title="科室管理" data-options="headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="border-bottom-style:dashed;border-radius:0;border-radius:0;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label class="clsRequired" id="_HospUserListLabel">医院</label></td>
+					<td colspan="3"><input id="_HospUserList"/></td>
+			    </tr>
+				<tr>
+					<td class="r-label">医保类型</td>
+					<td>
+						<select id="InsuType" class="hisui-combobox textbox" name="InsuType"></select>
+					</td>
+					<td class="r-label r-label-20">医院科室编码</td>
+					<td >
+						<input id="hospDeptCode" class="textbox"></input> 
+					</td>
+					<td class="r-label r-label-20">医院科室名称</td>
+					<td >
+						<input id="hospDeptName" class="textbox"></input> 
+					</td>
+					<td class="r-label r-label-20">
+						<a id="btnSearch" href="#" class="hisui-linkbutton" iconCls="icon-w-find"  style="width:120px;">查询</a> 
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">国家科室代码</td>
+					<td >
+						<input id="deptCode" class="textbox" disabled></input> 
+					</td>
+					<td class="r-label r-label-20">国家科室名称</td>
+					<td >
+						<input id="deptName" class="hisui-combobox textbox"></input> 
+					</td>
+					<td class="r-label r-label-20">上传状态</td>
+					<td >
+						<input id="upStatus" class="hisui-combobox textbox"></input> 
+					</td>
+					<td class="r-label r-label-20">
+						<a id="btnInLocPLUL" href="#" class="hisui-linkbutton btnInLocPLUL" style="width:120px" data-options="iconCls:'icon-w-submit',stopAllEventOnDisabled:true">批量上传</a> 
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-top-style:none;border-radius:0 0 4px 4px;">
+		<table id="locdg"></table>
+	</div>
+</div>
+	
+					
+    <!--科室信息编辑框-->	
+<div id="locDlEd">
+<div class="hisui-panel" style="fit:true;border:0px">
+	<table class="search-table">				
+		<tr >
+			<td class="r-label"><label class="clsRequired">医院科室编码</label></td>
+			<td>
+				<input id="DeptCode" class="textbox" readonly= "true" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">医院科室名称</label></td>
+			<td>
+				<input id="DeptDesc" class="textbox" readonly= "true" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">科室成立日期</label></td>
+			<td>
+				<input id="DeptSetUpDate" class="hisui-datebox" style="width:155px" disabled>
+			</td>
+		</tr>
+		<tr >
+			<td class="r-label">国家科室名称</td>
+			<td>
+				<input id="StandDeptCode" class="textbox" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">国家科室代码</label></td>
+			<td>
+				<input id="ProfessionDeptCode" readonly= "true" class="textbox" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">医师人数</label></td>
+			<td>
+				<input id="DoctorNum" class="textbox" disabled>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label"><label class="clsRequired"></lable>批准床位数量</td>
+			<td>
+				<input id="SPBedNum" class="textbox" disabled>
+			</td>
+			<td class="r-label">医保认可床位数</td>
+			<td>
+				<input id="SJBedNum" class="textbox" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">药师人数</label></td>
+			<td>
+				<input id="PharmacistNum" class="textbox" disabled>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label"><label class="clsRequired">开始日期</label></td>
+			<td>
+				<input id="StDate" class="hisui-datebox" style="width:155px" disabled>
+			</td>
+			<td class="r-label">结束日期</td>
+			<td>
+				<input id="EdDate" class="hisui-datebox" style="width:155px" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">护士人数</label></td>
+			<td>
+				<input id="NurseNum" class="textbox" disabled>
+			</td>
+		</tr>
+			<tr>
+			
+			<td class="r-label"><label class="clsRequired">科室负责人</label></td>
+			<td>
+				<input id="DeptHead" class="textbox" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">负责人电话</label></td>
+			<td>
+				<input id="DeptHeadTelNo" class="textbox" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">技师人数</label></td>
+			<td>
+				<input id="TechnicianNum" class="textbox" disabled>
+			</td>
+		</tr>	
+		<tr>
+			<td class="r-label"><label class="clsRequired">统筹区编号</label></td>
+			<td>
+				<input id="PoolareaNo" class="textbox" disabled>
+			</td>
+			<td class="r-label"><label class="clsRequired">简介</label></td>
+			<td colspan='3'>
+				<input id="itro" class="textbox hisui-validatebox" style="width:419px" disabled>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">医疗服务范围</td>
+			<td colspan='5'>
+				<input id="medservscp" class="textbox" style="width:694px" disabled>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">备注</td>
+			<td colspan='5'>
+				<input id="Remark" class="textbox" style="width:694px" disabled>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">经办人</td>
+			<td>
+				<input id="UserName" class="textbox" readonly= "true" disabled>
+				<input id="UserDr" class="textbox" style="display:none;">
+				
+			</td>
+			<td class="r-label">经办日期</td>
+			<td>
+				<input id="Date" class="hisui-datebox" style="width:155px" readonly= "true" disabled>
+			</td>
+			<td class="r-label">经办时间</td>
+			<td>
+				<input id="Time" class="textbox" readonly= "true" disabled>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">HIS科室Rowid</td>
+			<td>
+				<input id="DeptDr" class="textbox" readonly= "true" disabled>
+			</td>
+			<td class="r-label">科室记录Rowid</td>
+			<td>
+				<input id="Rowid" class="textbox" readonly= "true" disabled>
+			</td>
+			<td class="r-label">医院机构编码</td>
+			<td>
+				<input id="HospCode" class="textbox" readonly= "true" disabled>
+			</td>
+		</tr>
+	</table>			
+</div>
+</div>
+<!--toolbar-->
+<div id="toolBar" class="hisui-toolbar">  
+	<table cellspacing="0" cellpadding="0">
+		<tbody>
+			<tr>
+				<td><a href="#" class="hisui-linkbutton btnInLocUL" iconCls="icon-upload-cloud" id="btnInLocUL" plain="true" data-options="stopAllEventOnDisabled:true">科室上传</a></td>
+				<td><a href="#" class="hisui-linkbutton btnInLocULMod" iconCls="icon-edit" id="btnInLocULMod" plain="true" data-options="stopAllEventOnDisabled:true">科室变更</a></td>
+				<td><a href="#" class="hisui-linkbutton btnInLocULCancel" iconCls="icon-back" id="btnInLocULCancel" plain="true" data-options="stopAllEventOnDisabled:true">科室撤销</a></td>
+				<td><a href="#" class="hisui-linkbutton contrastSave" iconCls="icon-save" id="contrastSave" plain="true" data-options="stopAllEventOnDisabled:true">对照保存</a></td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insulocrecinfo.js"></script>
+<script type="text/javascript" src="../scripts/DHCInsuPort.js" charset='GB18030'></script>
+</body>
+</html>

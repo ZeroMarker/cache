@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  If ##Class(websys.SessionEvents).SessionExpired() quit 1
+  quit 1
+</csp:method>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>方法列表</title>
+  <!--  <HISUI /> -->
+  <link rel="stylesheet" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css">
+  <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js"></script>
+  <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js"></script>
+  <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.4.1/datagrid-detailview.js"></script>
+  <!-- <script type="text/javascript" src="../scripts/hip.ens.marked.js"></script> -->
+  <link rel="stylesheet" href="../scripts/css/hip.ens.markdown.css">
+  <script type="text/javascript" src="../scripts/marked.min.js"></script>
+  <!--  <script src="https://cdn.bootcdn.net/ajax/libs/marked/4.0.2/marked.min.js"></script>
+  <link href="http://cdn.bootcss.com/highlight.js/8.0/styles/monokai_sublime.min.css" rel="stylesheet">
+  <script src="http://cdn.bootcss.com/highlight.js/8.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> -->
+
+
+  <style type="text/css">
+    .datagrid-wrap.panel-body,
+    .panel-header.panel-header-gray {
+      width: auto !important;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .panel-header,
+    .panel-body {
+      border-color: #ddd;
+    }
+
+    .dialog-button {
+      text-align: center;
+      background: #fff;
+      border: 0 none;
+    }
+
+    .window table {
+      padding: 0;
+      margin: 0;
+    }
+
+    .window table tr td {
+      /* padding: 0;
+          margin: 0; */
+      padding-bottom: 10px;
+    }
+
+    /******2018/12/28***************/
+    .datagrid-htable,
+    .datagrid-btable,
+    .datagrid-ftable {
+      color: #000000;
+      border-collapse: separate;
+      width: 100%;
+    }
+
+    .datagrid-header td,
+    .datagrid-body td,
+    .datagrid-footer td {
+      border-color: #ddd;
+      border-style: solid;
+      width: 25%;
+    }
+
+    .datagrid-header-inner {
+      float: left;
+      width: 100%;
+    }
+
+    .dialog-button {
+      text-align: center;
+      background: #fff;
+      border: 0 none;
+      margin-top: -20px;
+    }
+
+    .tooldis {
+      padding-bottom: 5px;
+      margin-left: 3%;
+      display: inline-block;
+    }
+
+    .noBorder .panel-body {
+      border: none
+    }
+
+    td>.inputCls {
+      width: 100%;
+      box-sizing: border-box;
+      height: 30px;
+    }
+
+    .serviceSelect {
+      display: flex;
+      justify-content: center;
+    }
+
+    .select_opt {
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      padding-top: 50px;
+      width: 60px;
+    }
+
+    .select_opt p {
+      background-color: #ccc;
+      margin: 10px
+    }
+
+    .datagrid-view1 {
+      width: 0px !important;
+      /*display: none*/
+    }
+
+    #divMethodListDg .datagrid-view1 {
+      width: 30px !important;
+    }
+
+    td[field="productionName"] div.datagrid-cell,
+    .datagrid-cell-group {
+      text-overflow: ellipsis;
+      /*2018-12-4 showTip 列数据太多显示...*/
+      padding: 0 8px;
+    }
+  </style>
+</head>
+
+<body class="hisui-layout" fit="true">
+  <!-- 列表 -->
+  <div data-options="region:'center'">
+    <div class="datagrid-view hisui-panel" fit="true" id="divMethodListDg">
+      <table id="methodListDg" data-type="uncompleted"></table>
+    </div>
+  </div>
+  <!-- 工具条 -->
+  <div id="toolbar" style="padding-top:5px;padding-bottom:5px;display:none">
+    <div class="tooldis">
+      <label for="lcode">方法代码:</label>
+      <input class="textbox" type="text" id="code" style="width:150px;" />
+    </div>
+    <div class="tooldis">
+      <label for="ldesc">方法描述:</label>
+      <input class="textbox" type="text" id="desc" style="width:150px;" />
+    </div>
+    <div class="tooldis">
+      <label for="lprocuctionname">产品组:</label>
+      <input class="hisui-combobox" id="procuctionname" style="width:150px;">
+    </div>
+    <div class="tooldis">
+      <label for="lstatus">状态:</label>
+      <input class="hisui-combobox" id="status" name="status" style="width:150px;" editable="false">
+    </div>
+    <div class="tooldis">
+      <label for="ltype">方法类型:</label>
+      <input class="hisui-combobox" id="type" name="type" style="width:150px;" editable="false">
+    </div>
+    <div class="tooldis">
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="methodDataSelectBtn">查询</a>
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="methodDataAddBtn">新增</a>
+      <!-- <a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="uploadFile">上传</a> -->
+    </div>
+  </div>
+
+  <!-- 详细信息 -->
+  <div id="methodDetail" class="hisui-window" title='详细信息'
+    data-options="iconCls:'icon-add',modal:true,closed:true,top:'35px',resizable:false,"
+    style="width:650px;height:500px;text-align:center;display:none">
+    <div style="padding: 10px;">
+      <form id="ff1" method="post" accept-charset="utf-8">
+        <table id="t1" style="margin: 0 auto;">
+          <tr>
+            <td class="r-label">调用目标</td>
+            <td>
+              <select id="procuctionnameDetail" style="width:200px;"></select>
+            </td>
+            <td class="r-label">状态</td>
+            <td>
+              <input class=" textbox" id="methodStatus" style="width:200px">
+            </td>
+          </tr>
+          <tr>
+            <td class="r-label">方法代码</td>
+            <td>
+              <input class="textbox inputCls" id="methodCode" name="methodCode"></input>
+            </td>
+            <td class="r-label">方法名称</td>
+            <td>
+              <input class="textbox inputCls" id="methodName" name="methodName"></input>
+            </td>
+          </tr>
+          <tr>
+            <td class="r-label">方法类型</td>
+            <td>
+              <input class="textbox" id="methodType" style="width:200px">
+            </td>
+            <td colspan="2">
+              <input id="ensInterfaceFlag" class="hisui-checkbox" type="checkbox" label="HIS日志标记" data-options="checked:true" name="recordPos"
+                value="Y">
+              <input id="hsbSyncFlag" class="hisui-checkbox" type="checkbox" label="平台日志标记" name="recordPos" value="Y">
+            </td>
+
+          </tr>
+          <tr>
+            <td class="r-label">方法描述</td>
+            <td colspan="3">
+              <textarea rows="10" cols="20" wrap="hard" class="textbox" id="methodDesc" name="methodDesc"
+                style="overflow:scroll;overflow-x:hidden;height:50px;resize:none;white-space:normal;padding:0;width: 100%;box-sizing: border-box;"></textarea>
+            </td>
+          </tr>
+          <tr>
+            <td class="r-label">类名称</td>
+            <td colspan="3">
+              <input class="textbox inputCls" id="methodClassName" name="methodClassName"></input>
+            </td>
+          </tr>
+          <tr>
+            <td class="r-label">入参</td>
+            <td style="height:120px;" colspan="3">
+              <div class="datagrid-view hisui-panel noBorder" fit="true">
+                <table id="inputListDg" data-type="uncompleted"></table>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="r-label">返回值</td>
+            <td style="height:100px;" colspan="3">
+              <div class="datagrid-view hisui-panel noBorder" fit="true">
+                <table id="outputListDg" data-type="uncompleted"></table>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td class="r-label">备注</td>
+            <td colspan="3">
+              <textarea rows="10" cols="20" wrap="hard" class="textbox" id="methodNote" name="methodNote"
+                style="overflow:scroll;overflow-x:hidden;height:50px;resize:none;white-space:normal;padding:0;width: 100%;box-sizing: border-box;"></textarea>
+            </td>
+          </tr>
+          <tr>
+
+            <td colspan='4'>
+              <!--<input class="hisui-filebox" name="fileSel" id='fileSel'
+                data-options="width:400,buttonText:'',buttonIcon:'icon-folder',plain:true" />-->
+              <input name="fileSel" id='fileSel' style="width:100%;box-sizing: border-box;display:inline-block">
+            </td>
+          </tr>
+          <!-- <tr>
+            <td colspan="4" style="text-align:center">
+              <input class="hisui-checkbox" type="checkbox" label="记录HIS端日志" name="recordPos" value="1">
+              <input class="hisui-checkbox" type="checkbox" label="同步到平台端" name="recordPos" value="2">
+            </td>
+          </tr> -->
+        </table>
+        <!-- 点击入参中的detail显示模态框  -->
+        <div id="inputDescDialog" style="padding:10px;">
+          <textarea style="height:90%;width:98%;"></textarea>
+        </div>
+        <!-- 未发现用处，暂时保留  -->
+        <div id="inputDescDialogView"></div>
+        <!-- 未发现用处，暂时保留 -->
+        <input id="hiddenInputDesc" style="display:none;" />
+        <!-- 未发现用处，暂时保留  -->
+        <input id="hiddenOutputDesc" style="display:none;" />
+      </form>
+      <div style="text-align:center;">
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-undo'" id="methodDataCancleBtn">重 置</a>
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-ok'" id="methodDataSaveBtn">保 存</a>
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-add'" id="methodInputAddBtn">新增入参</a>
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-add'" id="methodOutputAddBtn">新增返回值</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文件上传 -->
+  <div id="docViewContent" class="hisui-window" title='文档说明'
+    data-options="iconCls:'icon-add',modal:true,closed:true,top:'35px',resizable:false,"
+    style="width:650px;height:500px;display:none">
+    <div style="padding: 10px;" id='docView'>
+      <!-- <textarea rows="10" cols="20" wrap="hard" class="textbox" id="docContent" name="methodDesc"
+        style="overflow:scroll;overflow-x:hidden;height:430px;resize:none;white-space:normal;padding:0;width: 100%;box-sizing: border-box;"></textarea> -->
+    </div>
+  </div>
+
+
+  <!--方法测试信息-->
+  <div id="testMethod" class="hisui-window" title="方法测试" data-options="iconCls:'icon-save',top:'35px',closed:true,
+      modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false"
+    style="width:650px;height:500px;text-align:center;display:none">
+    <form id="testff1" method="post" accept-charset="utf-8"></form>
+    <div id="testMethodResult"></div>
+  </div>
+
+  <div id="addEnsInterfaceMethod" class="hisui-window" title="添加方法" data-options="iconCls:'icon-save',
+      closed:true,modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false"
+    style="width:800px;height:350px;text-align:center;display:none">
+    <form id="ff2" method="post">
+      <div class="serviceSelect">
+        <div class="select_side">
+          <p>待选区</p>
+          <select id="selectL" name="selectL" multiple="multiple"
+            style="width:300px;height:200px;overflow:auto;"></select>
+        </div>
+        <div class="select_opt">
+          <p id="toright" title="添加">&gt;&gt;</p>
+          <p id="toleft" title="移除">&lt;&lt;</p>
+        </div>
+        <div class="select_side">
+          <p>已选区</p>
+          <select id="selectR" name="selectR" multiple="multiple" style="width:300px;height:200px;overflow:auto;">
+          </select>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:20px;">
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-ok'" id="methodRelSaveBtn">保 存</a>
+      </div>
+    </form>
+  </div>
+</body>
+
+<script type="text/javascript" src="../scripts/hip.ens.interfacemethod.js"></script>
+
+</html>

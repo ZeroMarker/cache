@@ -1,0 +1,224 @@
+<!-- 
+ * FileName: dhcpepreiadm.gtedit.hisui.csp
+ * Anchor: xy
+ * Date: 2021-01-04
+ * Description: HISUI 团体人员预约信息修改
+-->  
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 20px;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-header{
+	border-bottom: 0;
+}
+
+
+</style>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+set ID=$g(%request.Data("ID",1))
+set RegNo=$g(%request.Data("RegNo",1))
+set Name=$g(%request.Data("Name",1))
+set PEDate=$g(%request.Data("PEDate",1))
+set PETime=$g(%request.Data("PETime",1))
+</SCRIPT> 
+
+<script type="text/javascript">
+	var ID="#(ID)#"	
+	var RegNo="#(RegNo)#"	
+	var Name="#(Name)#"	
+	var PEDate="#(PEDate)#"	
+	var PETime="#(PETime)#"	
+</script>
+</head>
+<body>
+
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:750px;padding:0px">
+		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:0px">
+			<table class="search-table" >
+			 	
+         		<tr>
+					<td  class="r-label">#(..Get("登记号"))#</td>
+					<td>
+						<input class="textbox" id="PAPMINo" disabled/>
+					</td>
+         		    <td class="r-label">#(..Get("姓名"))#</td>
+					<td>
+						<input class="textbox"  type="text" id="Name" disabled/>
+					</td>
+					
+         		</tr>  
+				
+				<tr>
+					<td class="r-label"><label for="VIPLevel">#(..Get("VIP等级"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="VIPLevel" style="width:155px" disabled>
+					</td>
+					<td class="r-label">#(..Get("视同收费"))#</td>
+					<td>
+						<input  class='hisui-checkbox' type="checkbox" id="AsCharged"/>
+					</td>	
+         		    
+         		</tr> 	
+				<tr>	
+					<td class="r-label"><label for="GStartDate">#(..Get("团体开始日期"))#</label></td>
+					<td>
+						<input id="GStartDate" class="hisui-datebox textbox" disabled/>
+					</td>
+					<td class="r-label"><label for="GEndDate">#(..Get("团体结束日期"))#</label></td>
+					<td>
+						<input id="GEndDate" class="hisui-datebox textbox" disabled/>
+					</td>
+					
+				</tr>
+				<tr>	
+					<td class="r-label"><label for="PEDateBegin">#(..Get("体检开始日期"))#</label></td>
+					<td>
+						<input id="PEDateBegin" class="hisui-datebox textbox"/>
+					</td>
+					<td class="r-label"><label for="PEDateEnd">#(..Get("体检结束日期"))#</label></td>
+					<td>
+						<input id="PEDateEnd" class="hisui-datebox textbox"/>
+					</td>
+					
+				</tr>
+				<tr>	
+					<td class="r-label"><label for="DelayDate">#(..Get("延期日期"))#</label></td>
+					<td>
+						<input id="DelayDate" class="hisui-datebox textbox" disabled/>
+					</td>
+					<td class="r-label"><label for="GDelayDate">#(..Get("团体延期日期"))#</label></td>
+					<td>
+						<input id="GDelayDate" class="hisui-datebox textbox" disabled/>
+					</td>
+					
+				</tr>
+			
+			    <tr>	
+					<td  class="r-label">#(..Get("预约时间"))#</td>
+					<td>
+						<input id="PETime" class="hisui-timespinner" data-options="showSeconds:true" style="width:155px;border-radius: 2px;"/>
+					</td>
+					<td class="r-label"><label for="PEDeskClerkDRName">#(..Get("接待人"))#</label></td>
+					<td>
+						<input class="hisui-combogrid" type="text" id="PEDeskClerkDRName" style="width:155px"/>
+					</td>
+						
+				</tr>
+			 <tr>	
+					<td class="r-label"><label for="IReportSend">#(..Get("个人报告领取"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="IReportSend" style="width:155px">
+					</td>
+					
+					<td class="r-label"><label for="DisChargedMode">#(..Get("结算方式"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="DisChargedMode" style="width:155px">
+					</td>
+						
+				</tr>
+				<tr>	
+					<td class="r-label"><label for="Type">#(..Get("职务"))#</label></td>
+					<td>
+						<input class="textbox" id="Type">
+					</td>
+					<td class="r-label"><label for="PatFeeTypeName">#(..Get("体检类别"))#</label></td>
+					<td>
+						<input class="hisui-combobox" type="text" id="PatFeeTypeName" style="width:155px">
+					</td>
+						
+				</tr>
+				 <tr>	
+					<td class="r-label"><label for="GetReportDate">#(..Get("取报告日期"))#</label></td>
+					<td>
+						<input id="GetReportDate" class="hisui-datebox textbox"/>
+					</td>
+					<td class="r-label"><label for="GetReportTime">#(..Get("取报告时间"))#</label></td>
+					<td>
+						<input id="GetReportTime" class="hisui-timespinner" data-options="showSeconds:true" style="width:155px;border-radius: 2px;"/>
+					</td>
+				
+						
+				</tr>
+				<tr>
+					<td class="r-label"><label for="Position">#(..Get("部门"))#</label></td>
+					<td>
+						<input class="textbox" id="Position">
+					</td> 
+					<td class="r-label"><label for="AddOrdItemAmount">#(..Get("加项金额"))#</label></td>
+					<td>
+						<input class="textbox" id="AddOrdItemAmount">
+					</td> 
+							
+
+				</tr>
+				
+				<tr>	
+					<td class="r-label">#(..Get("公费加项"))#</td>
+					<td>
+						<input  class='hisui-checkbox' type="checkbox" id="AddOrdItem"/>
+					</td>	
+					<td class="r-label">#(..Get("加项限制"))#</td>
+					<td>
+						<input  class='hisui-checkbox' type="checkbox" id="AddOrdItemLimit"/>
+					</td>	
+						
+				</tr>
+				<tr>	
+					<td class="r-label">#(..Get("允许开药"))#</td>
+					<td>
+						<input  class='hisui-checkbox' type="checkbox" id="AddPhcItem"/>
+					</td>
+					<td class="r-label"></td>		
+					<input type="hidden" id="RowId"/>
+					<input type="hidden" id="PIBI_RowId"/>	
+					<input type="hidden" id="PIBI_DR_Name"/>
+					<input type="hidden" id="PGADM_DR"/>
+					<input type="hidden" id="PGTeam_DR"/>	
+							
+				</tr>
+				
+				<tr>
+						
+					<td colspan="4" align="center">
+						<a id="BUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:'true'">更新</a>
+					</td>
+				</tr>
+
+			
+			</table>
+		</div>
+	</div>
+		
+</div>
+
+  
+<script type="text/javascript" src="../scripts/DHCPEPreIADM.GTEdit.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+</body>
+</html>

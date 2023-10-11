@@ -4,7 +4,7 @@
         <HISUI/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <link rel="stylesheet" type="text/css" href="../scripts/emr/css/opdoc.resource.lisdata.css" />
-	<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
         <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.resource.commonfile.js"></script>
@@ -14,35 +14,40 @@
             s AbnorFlagCheck = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("Lis_AbnorFlag_Check")
             s:(AbnorFlagCheck = "") AbnorFlagCheck = "N"
             s formatStrings = ##Class(EMRservice.SystemParameter).LisDataFormat()
+            s DateFormat = ##class(websys.Conversions).DateFormat()
         </script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.resource.common.head.js"></script>
         <script language="javascript">
             var scheme = '#(scheme)#';
             var AbnorFlagCheck = '#(AbnorFlagCheck)#';
             var strXml = "";
+            var selectConfig="";
             var quoteData = {};
-	    var qryAnt = {};
+            var qryAnt = {};
             var formatStrings = eval('#(formatStrings)#');
             //是否启用前端页面配置记录
             var pageConfig = "";
             //资源区页签查询按钮配置项数据
             var resourceConfig = {};
+            var DateFormat = '#(DateFormat)#';
+            var initFlag = false;
         </script>
     </head>
     <body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
         <div class="hisui-panel" id="seekform" data-options="region:'north',border:false" style="height:70px;">
             <div style="padding:5 0 0 5;">
-                <input class='hisui-radio' id="currentEpisode" type="radio" name='episode' label='本次就诊'>
-                <input class='hisui-radio' id="recentTwice" type="radio" name='episode' label='最近2次就诊'>
-                <!--华西医院使用<input class='hisui-radio' id="threeMonths" type="radio" name='episode' label='3个月内' value='90'>-->
+                <label>#(..Get("审核日期"))#</label>
+                <input id="stDate" class="hisui-datebox" style="width:115px"/>
+                <label>#(..Get("至"))#</label>
+                <input id="endDate" class="hisui-datebox" style="width:115px"/>
+                <input id="currentEpisode" class="hisui-checkbox" type="checkbox" data-options="label:'本次就诊',checked:true" style="padding-left:3px;"/>
             </div>
             <div style="padding:5 0 0 5;">
-                <span style="float:left;padding:0 0 0 5;">
-                    <a>#(..Get("其他就诊"))#</a><select class="hisui-combogrid" id="EpisodeList" style="width:200px;" ></select>
-                </span>
-                <span id="resourceConfig" style="float:right;padding:0 5 0 0;">
-                    <a href="#" class="hisui-linkbutton" title="将当前选中按钮保存为默认按钮" onclick="saveResourceConfig('Pacs');return false;">#(..Get("保存默认配置"))#</a>
-                </span>
+                <input class="hisui-radio" id="oneMonth" type="radio" data-options="name:'rrtMonth',label:'1个月',onCheckChange:function(e,val){upPacsDate(e,val,1)}"/>
+                <input class="hisui-radio" id="threeMonths" type="radio" data-options="name:'rrtMonth',label:'3个月',onCheckChange:function(e,val){upPacsDate(e,val,2)}"/>
+                <input class="hisui-radio" id="sixMonths" type="radio" data-options="name:'rrtMonth',label:'6个月',onCheckChange:function(e,val){upPacsDate(e,val,3)}"/>
+                <input class="hisui-radio" id="otherMonths" type="radio" data-options="name:'rrtMonth',label:'更多',onCheckChange:function(e,val){upPacsDate(e,val,4)}"/>
+                <a href="#" id="search" class="hisui-linkbutton" iconCls="icon-w-find" onclick="queryData()" style="padding-left:3px;">#(..Get("查询"))#</a>
             </div>
         </div>
         <div data-options="region:'south',border:false" style="height:40px;">
@@ -54,7 +59,12 @@
                     <table class="hisui-datagrid" id="lisData" data-options="headerCls:'panel-body'" style="width:100%;"></table>
                 </div>
                 <div class="hisui-panel" id="lisSubDataPnl" data-options="region:'center',border:false" style="padding:3 5 3 5;">
-                    <table class="hisui-datagrid" id="lisSubData" data-options="headerCls:'panel-body'" style="width:100%;"></table>
+                    <table class="hisui-datagrid" id="lisSubData" data-options="headerCls:'panel-body'" style="width:100%;"></table>        	
+	                <div class="datagrid-header" data-options="fit:true" style="position:absolute;top:0px;border:0px">
+						<div class="datagrid-header-inner" style="display: block">
+							<table id="lisSubColumn" data-options="fit:true">
+						</div>
+		        	</div>     	
                 </div>
             </div>
         </div>

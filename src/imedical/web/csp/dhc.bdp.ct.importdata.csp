@@ -1,0 +1,120 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+ // dhc.bdp.ct.importdata.csp
+ // 名称:BDP数据导入界面 读取数据 -支持IE 和谷歌浏览器
+ // 编写者:基础数据平台组 - chenying
+ // 编写日期:2022-07-06
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/exportExcel/IEAndChormExportExcel.js"></script> 
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"> </script>
+	<!--script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/shim.min.js"> </script>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/xlsx.full.min.js"> </script>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/Blob.js"> </script>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/FileSaver.js"> </script-->
+	
+	<!--导出/导入Excel文件，支持加样式-->
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/xlsx.extendscript.js"> </script>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/xlsx-style/xlsx.full.min.js"> </script>
+	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/export.js"> </script>
+	
+</HEAD>
+<style>
+.tabs-title
+{
+	color: #000000;
+}
+</style>
+<body style="background-color:#D4E1F2;">
+<div class="hisui-layout" style="margin-left:4px;margin-right:4px;margin-top:4px;">
+	 <div id="ImportWin" style="width:700px;height:300px;padding:10px;">  
+			<table style="padding-bottom:20px;padding-left:20px;">
+				<tr>
+					<td><a href="javascript:void(0);" class="hisui-linkbutton" data-options="" id="ExcelExportTemplet" style="height:30px;width:150px;">下载导入数据模板</a></td>
+				</tr>
+			</table>
+			<table>
+				<tr>
+					<td style="padding-left: 10px;padding-right:10px;text-align:right;width:105px"><font color=red>*</font>装载Excel文件</td>
+					<td><input id="fileCheck" class="hisui-filebox" name="fileCheck"
+					data-options="width:400,buttonText:'选择',prompt:'excel文件：*.xls,*.xlsx',plain:true"
+					accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></td>	
+					<td style="padding-left: 10px;;width:80px;"><a id='btn' onclick="parseExcelFile()" class="hisui-linkbutton">装载</a></td>
+					<!--td style="padding-left: 10px;"><a id='btn' onclick="$('#fileCheck').filebox('clear')" class="hisui-linkbutton">清空</a></td-->
+				</tr>
+			</table>
+			<div style="padding:10px;color:#1278b8;background:#e3f7ff;border:1px solid #c0e2f7;margin:10px 20px 0px 20px;border-radius:4px"> 
+		  	 	<p style="margin-bottom:10px"><strong>备注:</strong></p>
+		  	 	<p style="margin-bottom:10px">1.请先下载正确的导入模板。</p>
+		  	 	<p style="margin-bottom:10px">2.导入正式库前请先在测试库上进行导入测试，确保数据没有问题。导入成功的数据请勿重复导入。</p>
+		  	 	<p style="margin-bottom:10px;color:red;"><strong>3.请注意，如表格里涉及“日期”、“时间”，请确认已将表格列的单元格格式设置为“文本”！！！日期时间格式与界面保持一致 ！</strong></p>
+		  	 	<p style="margin-bottom:10px;color:red;"><strong>4.在读取数据和导入数据时，请将窗口保持在最前面显示，不要将窗口最小化，否则会影响读取和导入速度！</strong></p>
+		  	 </div>
+	</div>
+	
+	<!--数据预校验-->
+	<div id="myWin" data-options="resizable:true,modal:true,collapsible:false,border:true" style="display:none;padding:10px 10px 0 10px;">  
+		<div id="myTabs" class="hisui-tabs tabs-gray" data-options="fit:true,border:true" style="">
+			<div title="数据明细" id="mygridTab">
+				<table data-options="fit:true" id="mygrid" border="false" ></table>
+			</div>
+			<div title="预校验结果" id="mygrid2Tab">
+				<table data-options="fit:true" id="mygrid2" border="false"></table>
+			</div>
+			<div title="导入结果" id="mygrid3Tab">
+				<div data-options="fit:true" id="mygrid3" border="false"></div>
+			</div>
+			
+		</div>
+ 	</div> 
+	<!--进度条-->
+	<div id="prowin" style="width:400px;height:24px;background-color:#40A2DE;display:none;">
+		<div id="pro" style="width:400px;"></div>
+	</div>
+	<!--数据明细工具条-->
+	<div id="mygridbar" data-options="split:false" style="text-align: left; display:none;padding-top:10px;padding-bottom:10px;">
+		<a href="javascript:void(0);" style="padding-left:8px;padding-right:5px;text-align:right;color:#000000;"><font color=red>*</font>导入类型</a>
+		<input id="importtype" name="importtype" type="text" class="textbox hisui-combobox" data-options="" style="width:150px;">
+		<a class="hisui-linkbutton l-btn-2" iconCls='icon-reload' plain="true" data-options="stopAllEventOnDisabled:true" id="ReloadExcel" style="padding-left: 10px;padding-right:10px;text-align:right;float:right;color:#000000;display:none;">重新装载数据</a>
+		<!--a class="hisui-linkbutton l-btn-2" iconCls='icon-big-switch' plain="true" data-options="stopAllEventOnDisabled:true" id="btnPreCheckValidate" style="width:120px;">预校验数据</a-->
+		<!--a class="hisui-linkbutton l-btn-2" iconCls='icon-import' plain="true" data-options="stopAllEventOnDisabled:true" id="btnImportData" style="width:100px;">一键导入</a-->
+	</div>
+	<!--数据预校验结果工具条-->
+	<div id="mygrid2bar" data-options="split:false" style="text-align: left; display:none;padding-top:3px;padding-bottom:3px;">
+		<a class="hisui-linkbutton" iconCls='icon-export' plain="true" data-options="stopAllEventOnDisabled:true" id="ExportErrorInfo" style="">导出错误数据到Excel</a>
+		<a class="hisui-linkbutton" iconCls='icon-export' plain="true" data-options="stopAllEventOnDisabled:true" id="ExportAllInfo" style="">导出所有数据到Excel</a>
+	</div>
+	<!--数据导入结果工具条-->
+	<div id="mygrid3bar" data-options="split:false" style="text-align: left; display:none;padding-top:3px;padding-bottom:3px;">
+		<a class="hisui-linkbutton" iconCls='icon-export' plain="true" data-options="stopAllEventOnDisabled:true" id="ExportErrorInfo2" style="">导出错误数据到Excel</a>
+		<a class="hisui-linkbutton" iconCls='icon-export' plain="true" data-options="stopAllEventOnDisabled:true" id="ExportAllInfo2" style="">导出所有数据到Excel</a>
+	</div>
+	<!--密码校验框-->
+	<div id="passwordWin" style="width:350px;height:160px;padding:10px;display:none;">   
+		<form id="password-validate" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table  align="center">
+	    		<tr>
+	    		   <td style="padding-left: 10px;padding-right:10px;text-align:right;"><font color=red>*</font>请输入管理员密码</td>
+	    		   <td><input id="password" type='password' class="easyui-passwordbox" /></td>
+	    		</tr>
+			</table >
+		</form>
+	</div>
+	<div  id="logWin" data-options="resizable:true,modal:true,collapsible:false" style="padding:4px;width:400px;height:400px;display:none;" >
+	    <div class="hisui-layout" data-options="fit:true" id="layout" border="false">
+			<div data-options="region:'center',split:true,collapsible:false"  border="false">
+				<table data-options="fit:true,bodyCls:'panel-body-gray',iconCls:'icon-paper'" style="padding:10px;" id="loggrid" border="true" title=""></table>
+			</div>
+		</div>
+	</div>
+	<div id='logdetailwin' class="easyui-dialog" style="overflow:hidden">   </div> 
+</div>
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_DataIMPanel.js"> </script>
+</body>
+</HTML>

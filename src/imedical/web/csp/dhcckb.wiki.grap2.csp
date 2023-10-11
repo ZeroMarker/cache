@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+    <meta charset="utf-8">
+    <title>知识图谱</title>
+     <script src="../scripts/dhcnewpro/plugins/jquery/jquery-2.2.4.min.js"></script>
+     <script src="../scripts/dhcnewpro/plugins/echarts/echarts-all.js" charset="utf-8"></script>
+     <style>
+    
+     </style>
+</head>
+<body style='margin:0'>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width:100%;height:100%;"></div>
+    <script type="text/javascript">
+    	$("#main").width($(document).width());
+    	$("#main").height($(document).height());
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+		var incId="#($g(%request.Data("IncId",1),""))#";
+		
+		function test(Instr)
+		{
+			var ListArr = [];
+			var RetList="";
+			var ListArr = Instr.split("</br>")
+			if(ListArr.length < 2){
+				var Len =  Math.ceil(Instr.length / 80);
+				for(var i=1;i<=Len;i++)
+				{
+					var interval=i*80
+					var List = Instr.substring((i-1)*80,interval);
+					
+					if(RetList == ""){
+						RetList = List;
+					}else{
+						RetList = RetList +"</br>"+ List;
+					}
+				}
+			}else{
+				RetList=Instr;
+			}
+			return RetList;
+		}
+		$.get('web.DHCCKBWiki.cls?Flag=1&IncId='+incId, function (data) {
+		
+			option = {
+				color: ['#60C0DD','#C6E579'],   //,'#C6E579','#F4E001','#F0805A','#26C0C0'
+			    tooltip : {
+				  
+			        trigger: 'item',
+			        formatter: function (params) {
+            				return '<div class="tool">'+params.name.split("&")[0]+'</div>'
+        			}
+			    },
+			    toolbox: {
+			        show : true,
+			        feature : {
+			            restore : {show: true},
+			            magicType: {show: true, type: ['force', 'chord']},
+			            saveAsImage : {show: true}
+			        }
+			    },
+			    legend: {
+			        x: 'left',
+			        data:data.legend
+			    },
+			    series : [
+			        {
+			            type:'force',
+			            name : "图谱",
+			            ribbonType: false,
+			            categories : data.categories,
+			            itemStyle: {
+			                normal: {
+			                    label: {
+			                        show: true,
+			                        textStyle: {
+			                            color: '#333'
+			                        }
+			                    },
+			                    nodeStyle : {
+			                        brushType : 'both',
+			                        borderColor : 'rgba(255,215,0,0.4)',
+			                        borderWidth : 1
+			                    },
+			                    linkStyle: {
+			                        type: 'curve'
+			                    }
+			                },
+			                emphasis: {
+			                    label: {
+			                        show: false,
+			                        //textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+			                    },
+			                    nodeStyle : {
+			                        r: 30
+			                    },
+			                    linkStyle : {}
+			                }
+			            },
+			            useWorker: false,
+			            minRadius : 15,
+			            maxRadius : 25,
+			            gravity: 1.1,
+			            scaling: 1.1,
+			            roam: 'move',
+			            nodes:data.nodes,
+			            links :data.links ,
+			        }
+			    ]
+			};
+			var ecConfig = echarts.config;
+			function focus(param) {
+			    var data = param.data;
+			    var links = option.series[0].links;
+			    var nodes = option.series[0].nodes;
+			    if (
+			        data.source !== undefined
+			        && data.target !== undefined
+			    ) { //点击的是边
+			        var sourceNode = nodes.filter(function (n) {return n.name == data.source})[0];
+			        var targetNode = nodes.filter(function (n) {return n.name == data.target})[0];
+			        console.log("选中了边 " + sourceNode.name + ' -> ' + targetNode.name + ' (' + data.weight + ')');
+			    } else { // 点击的是点
+			        console.log("选中了" + data.name + '(' + data.value + ')');
+			    }
+			}
+			
+			myChart.on(ecConfig.EVENT.CLICK, focus)
+
+			myChart.on(ecConfig.EVENT.FORCE_LAYOUT_END, function () {
+				
+			    console.log(myChart.chart.force.getPosition());
+			});
+			myChart.setOption(option);
+},'json');
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<html>
+    <head>
+        <title> 知识库 </title>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+        <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/opdoc.resource.kbtree.css"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.resource.textkb.css"/>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.resource.common.head.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
+        <script language="cache" runat="server">
+            s isCanEdit = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("KBNodeEdit")
+            s:(isCanEdit = "") isCanEdit = "Y"
+            s isPersonEdit = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PersonalKBNodeEdit")
+            s:(isPersonEdit = "") isPersonEdit = "Y"
+            s isCollapse = ##Class(EMRservice.SystemParameter).SetKnowledgeBaseCollapse()
+            s:(isCollapse = "") isCollapse = "1"
+            s flagFirst = $Get(%request.Data("flagFirst",1),0)
+            s visitType = $Get(%request.Data("VisitType",1),"")
+            s isApprove = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("KBShareIsAprrove","N")
+        </script>
+        <script language="javascript">
+            var isCanEdit = '#(isCanEdit)#';
+            var isPersonEdit = '#(isPersonEdit)#';
+            var isCollapse = '#(isCollapse)#';
+            var curKbParam = "";
+            var flagFirst = parseInt('#(flagFirst)#');//alert('flagFirst    ' + flagFirst);
+            var visitType = '#(visitType)#';
+            var isApprove = '#(isApprove)#';
+			var userID = '#(%session.Get("LOGON.USERID"))#';
+		  	var userName = '#(%session.Get("LOGON.USERNAME"))#';
+		  	var ipAddress = getIpAddress();
+        </script>
+    </head>
+    <body  class="hisui-layout" data-options="fit:true,border:false" style="width:100%;height:100%;overflow:hidden;">
+	    <div class="hisui-panel" data-options="region:'center',border:false" style="fit:true;overflow:hidden;display:inline-block">
+	    	<div style="width:49%;height:100%;overflow:hidden;display:inline-block;border-right:2px dashed;border-right-color:#BBBBBB">
+	    		<p style="margin-left:8px;margin-top:15px;color:#31B1FF;font-size:12px">结构化知识库</p>
+				<div style="margin-left:10px;margin-top:10px">
+		            <span>
+		                <input id="searchBox" href="#" class="hisui-searchbox" style="width:126px;"></input>
+		            </span>
+		            <span>
+		                <div id="switch" class="hisui-switchbox" style="margin-left:5px;width:69px" data-options="onText:'展开',offText:'折叠',size:'small',checked:false,animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,value){SwitchChange(event,value);}"></div>
+		            </span>
+		            <ul id="kbTree" class="hisui-tree" data-options="lines:true,autoNodeHeight:true"></ul>
+				</div>
+		        <div id ="mm" class="hisui-menu" style="width:170px;font-size:12px;display:none;">
+		            <div id="addKBTree">新增个人模板</div>
+		            <div id="addKBNode">新增节点</div>
+		            <div id="editKBNode">编辑知识库节点</div>
+		            <div id="editTreeName">修改目录名称</div>
+		            <div id="deleteKBTree">删除空个人目录</div>
+		            <div id="deleteKBNode">删除知识库节点</div>
+		            <div id="replaceKBNode">替换知识库节点</div>
+		            <div id="shareKBNode">分享个人知识库</div>
+		            <div id="cancelshareKBNode">取消分享知识库</div>
+		            <div class="menu-sep"></div>
+		            <div id="appendKBNode">追加知识库节点</div>
+		            <div id="moveUpKBNode">上移</div>
+		            <div id="moveDownKBNode">下移</div>
+		        </div>
+	    	</div>
+	    	<div style="width:49%;height:100%;overflow:hidden;display:inline-block">
+	    		<p style="margin-left:6px;margin-top:15px;color:#31B1FF;font-size:12px">专科知识库</p>
+				<div style="padding-left:10px;padding-top:10px"> 科室 <input id="cbLoc" class="hisui-combobox"></input></div>
+				<div class="divCategory" style="padding-left:10px;padding-top:4px"> 分类 <input id="cbCategory" class="hisui-combobox"></input></div>
+				<ul id="kbCategory" class="hisui-tree" data-options="lines:true,autoNodeHeight:true" style="padding-left:10px;"></ul>
+	    	</div>
+	    </div>
+	    <div class="hisui-panel" data-options="region:'south',border:false,split:false" style="height:200px;overflow:auto;border-top: 1px solid #9C9C9C;">
+            <!--<p id="kbTreeView" style="margin-left:10px;margin-top:15px;color:#31B1FF;font-size:12px;display:none">结构化知识库预览</p>
+            <p id="kbCategoryView" style="margin-left:10px;margin-top:15px;color:#31B1FF;font-size:12px;display:none">专科知识库预览</p>-->
+            <p id="kbTreeView" style="margin-left:10px;margin-top:15px;color:#31B1FF;font-size:12px;">知识库预览</p>
+            <div id="kbNodeText" readonly="readonly" ondragstart="return false;" style="overflow:hidden;padding:5 0 0 8;"></div>
+        </div>
+    <script type="text/javascript" src="../scripts/emr/js/opdoc.common.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/opdoc.resource.kbtreenew.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/resource.common.head.js"></script>
+    </body>
+
+</html>

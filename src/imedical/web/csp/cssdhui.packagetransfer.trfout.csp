@@ -1,0 +1,112 @@
+﻿<!--消毒包调拨-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI translate=1/>
+	<CSSDHISUI/>
+</head>
+<body id="LayOut" class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px">
+		<div class="hisui-panel" data-options="title:'消毒包调拨',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true,border:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false">
+					<table class="Condition" id="MainCondition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="Type" name="Type" value="Y" type="hidden" >
+						<tr>
+							<td><label class="required">*</label><label>#(..Get("起始日期"))#</label><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox" style="width:120px;"></td>
+							<td><label>#(..Get("调拨科室"))#</label><input id="fromLocDr" name="fromLocDr" class="textbox hisui-combobox" style="width:120px;"></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton">查询</a></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" style="width:76px;">清屏</a></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>#(..Get("截止日期"))#</label><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox" style="width:120px;"></td>
+							<td><label>#(..Get("接收科室"))#</label><input id="toLocDr" name="toLocDr" class="textbox hisui-combobox" style="width:120px;"></td>
+							<td><a href="#" id="SaveBT" class="hisui-linkbutton">新建</a></td>
+							<td>
+								<a href="#" id="UnTrfInBT" class="textbox hisui-linkbutton button-mark" data-options="iconCls:''" style="width:76px;">#(..Get("待接收"))#
+								<span id="UnTrfInNum" class="mark">0</span></a>
+							</td>
+						</tr>
+						<tr>
+							<td><label>#(..Get("调拨人"))#</label><input id="fromUserDr" name="fromUserDr" class="textbox hisui-combobox" style="width:120px;"></td>
+							<td colspan=2><label>#(..Get("标签"))#</label><input id="Label" name="Label" class="textbox" style="width:181px;"></td>
+						</tr>
+						<tr>
+							<td colspan=3 style="text-align:left">
+								<input class='hisui-radio' data-options="checked:'true'" type="radio" label='全部' name='FComplateFlag' value=''>
+								<input class='hisui-radio' type="radio" label='未提交' name='FComplateFlag' value='N'>
+								<input class='hisui-radio' type="radio" label='已提交' name='FComplateFlag' value='Y'>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="MainGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'east',border:false" style="width:600px;">
+		<div id="LabelLayout" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:300px;padding-right: 0px" class="GridPadding">
+				<div class="hisui-panel" data-options="title:'已调拨标签',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout"datagrid-toolbar data-options="fit:true">
+						<div data-options="region:'center',border:false">
+							<table id="TrfItmGrid"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" class="GridPadding">
+				<div class="hisui-panel" data-options="title:'未调拨标签',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false,collapsible:false">
+							<table id="UnTrfConditions" class="Condition">
+								<tr>
+									<td>
+										<input class="textbox" id="BarCode" name="BarCode" style="width:150px;">
+										<a href="#" id="UseBarCodeBT" class="hisui-linkbutton" data-options="plain:true"></a>
+										<a href="#" title="#(..Get("切换扫码模式"))#" id="BarCodeSwitchBT" class="hisui-linkbutton">切换</a>
+										<input type="password" class="textbox" id="BarCodeHidden" style="border:0px;background:none;opacity:0.0;width:1px;">
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="UnTrfItmGrid"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--待接收调拨单-->
+	<div id="UnTrfInWin" class="hisui-dialog FindWin" data-options="iconCls:'icon-w-card',closed:'true',modal:true" title="待接收调拨单">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" class="FindGridWest GridPadding" style="width:700px">
+				<div class="hisui-panel" data-options="title:'调拨单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="UnTrfInMainGrid" ></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-left:0px;" class="GridPadding">
+				<div class="hisui-panel" data-options="title:'明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="UnTrfInItmGrid" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/cssd/Disp/DispCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Transfer/UnTrfInWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Transfer/TrfOut.js"></script>
+</body>
+</html>

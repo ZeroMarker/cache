@@ -1,0 +1,205 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+	<HISUI/>
+	<DHCCKB/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/common.css"><!-- 禁止复制 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<!-- <script type="text/javascript" src="../scripts/dhcadvEvt/common.js"></script> -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/rule.index.edit.js"></script>
+<style>
+/*页面表格样式*/
+.form-table{
+	border-collapse:collapse;
+	/*border:1px solid #95B8E7;*/
+	margin:0px auto 10px;
+	border:none;
+}
+
+.form-table td{
+	/*border:1px solid #95B8E7;*/
+	padding:10px 10px;
+	/*font-size: 13px*/;
+}
+#ExaCatCode{padding:3px 0px;margin:0}
+.tb_td_bk{
+	width:100px;
+	/*background:rgb(238, 247, 254);*/
+}
+.tb_td_required{
+	font-weight:bold;
+	color: red;
+}
+.tb_td_bold{
+	font-weight:bold;
+}
+/* 兼容WebKit核心和IE核心的浏览器 */
+.ui-input {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    height: 25px;
+    width:200px;
+    /*border:1px solid #95B8E7;*/
+}
+input:focus{ 
+	/*background-color:#AFEEEE;*/
+}
+#icw_bt a.l-btn-plain,#pw_bt a.l-btn-plain,#uicw_bt a.l-btn-plain{
+	/*  background-color:#ffa8a8; */
+	/*border:1px solid #95B8E7;*/
+}
+.tree-file{/*hxy 2022-05-17*/
+	display:none;
+}
+.layout-panel-center{
+	/*padding: 10px;*/
+	}
+.layout-panel-west{
+	padding-right:10px;
+}
+.l-btn-text{
+	/*padding:0 6px;*/
+}
+/*滚动条样式*/
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #D4D4D4;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-track-piece {
+    background-color: #F1F1F1;
+    border-radius: 4px;
+}
+.diag-btn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0;
+ }
+</style>
+
+</head>
+<body style="padding:10px">
+<div id="mainPanel" class="hisui-layout" fit="true">
+	<script language="Cache" runat="server">
+			w $$$cspStrictJavaScriptStart
+			//s LgUserId=0
+			//s:$d(%session) LgUserId=+$g(%session).Get("LOGON.USERID")
+			w "var AddRuleFlag="_##class(web.DHCCKBCommon).GetAddRuleFlag()_";"
+			w "var DrugData="_##class(web.DHCCKBCommon).GetDrugData()_";"
+			//w "var LgUserId="_LgUserId_";"
+			w "var globalparref="_##class(web.DHCCKBCommon).GetGlobalData()_";"
+			w $$$cspJavaScriptEnd										
+	</script>
+	<div id="lifeDia" class="hisui-dialog" title="规则生命周期" 
+    	data-options="iconCls:'icon-w-list',maximized:true,closed:true"><!--图标修改,原：icon-save-->
+    </div>
+    <div id="dirDia" class="hisui-dialog" title="目录规则维护" 
+    	data-options="iconCls:'icon-w-list',maximized:true,closed:true">
+    </div>
+	<div data-options="region:'west',title:'',border:false,collapsible:false,split:false,headerCls:'panel-header-gray'" style='width:550px;'>
+		<div class="hisui-layout" fit="true" border="false">
+			<div id="ruleTabs" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools'" fit=true >
+				<div title="药品规则"  style="font-size:0">
+					<div id="modelToolbar" style="padding:10px 0px 10px 10px;font-size:0">
+						<table>
+						  <tr>
+							<td style="text-align:right;padding-bottom:10px"><span style="margin-right:5px">模板选择</span><input id="modelTree" class="hisui-combotree" placeholder='请选择模板' style="width:215px" /></td>
+							<td style="text-align:right;padding-left:10px;padding-bottom:10px"><span  style="margin-right:5px">查询药品</span><input id="queryrules" href="#" class="hisui-searchbox" prompt='请输入药品描述' style="width:215px" /></td>
+	        			<!-- <input class="hisui-radio" type="radio" label="已结构化" name="ruleFlag" value="1" checked="true">
+	        			<input class="hisui-radio" type="radio" label="未结构化" name="ruleFlag" value="0">
+	        			<input class="hisui-radio" type="radio" label="已核实" name="drugConfirmFlag" value="1" checked="true">
+	        			<input class="hisui-radio" type="radio" label="未核实" name="drugConfirmFlag" value="0"> -->
+							<td style="text-align:right;padding-left:10px;padding-bottom:10px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"  id="search">查询</a></td>
+							<td style="text-align:right;padding-left:10px;padding-bottom:10px"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a></td>
+						  </tr>
+						  <tr>				
+							<td style="text-align:right;"><span style="margin-right:5px">医院</span><input id="hospId"  class="hisui-combobox textbox" style="width:215px;"/></td>
+							<td style="text-align:right;margin-left:10px;"><span style="margin-right:5px">属性</span><input id="LookUp"  class="hisui-combobox textbox" style="width:105px;"/>
+							<input id="QueCond"  class="hisui-combobox textbox" style="width:105px;"/></td>
+						  </tr>
+						</table>
+							<!-- <div style="padding-top:5">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addModelRow()">增加行</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addModelKeyWord()">增加到规则</a>
+						</div> -->
+						
+					</div>
+					<table id="modelTable"></table>
+				</div><!-- 模板录入end -->
+				<!-- 字典规则修改为术语规则 -->
+				<div title="术语规则" >   
+					<ul id="commonRuleTree" style="margin:10px 0 0 10px;"></ul>		
+							
+					<!-- 树右键菜单 -->
+					<div id="commonRuleMenu" class="hisui-menu" style="">
+							<div onclick="AddRule('commonRuleTree')" data-options="iconCls:'icon-add'">新增规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="DeleteComRule('commonRuleTree')" data-options="iconCls:'icon-cancel'">删除规则</div>
+					</div> 
+				</div><!-- end子规则定义 -->
+				<div title="全局规则">  
+					<div>
+				    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn" onclick="editGlobalItm('A')">新增</a>
+				    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true,stopAllEventOnDisabled:true" id="edit_btn" onclick="editGlobalItm('E')">修改</a>
+				    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn" onclick="delGlobalItm()">删除</a>    	
+				    </div>  
+					<ul id="globalRuleTree" style="margin-left:10px;margin-right:10px;"></ul>
+					<div id="globalRuleMenu" class="hisui-menu" style="">
+							<div onclick="AddRule('globalRuleTree')" data-options="iconCls:'icon-add'">新增规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="DeleteComRule('globalRuleTree')" data-options="iconCls:'icon-cancel'">删除规则</div>
+					</div> 	
+					<!-- 全局规则树维护 -->				
+					<div id="globalWin" style="display:none">
+						<table border="0" cellspacing="0" cellpadding="0" class="form-table">
+							<tr>
+								<td align="right" style="padding-right:0px;padding-bottom:0px">代码</td>
+								<td style="padding-bottom:0px"><input id="itmCode" class="textbox" style="width:200px;"/></td>
+							</tr>
+							<tr>
+								<td align="right"style="padding-right:0px;padding-bottom:0px">名称</td>
+								<td style="padding-bottom:0px"><input id="itmDesc" class="textbox" style="width:200px;"/></td>
+							</tr>
+							<tr style="display:none;">
+								<td align="right" class="">ID</td>
+								<td><input id="itmId" class="ui-input" disabled="disabled"/></td>
+							</tr>								
+						</table>
+						<div id="icw_bt" class="diag-btn">						
+							<a href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="saveGlobalItm()">保存</a>
+							<a href="#" style="margin-left:20px" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="closeGlobalWin()">取消</a>
+						</div>
+					</div>
+				</div><!-- end全局规则 -->
+			</div><!-- ruleTabs -->
+		</div><!-- hisui-layout end -->
+	</div> <!-- west end -->
+	<div data-options="region:'center',title:'规则维护',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="padding:0px important!" >
+		<div class="hisui-layout" fit="true">	
+			<div data-options="region:'north',title:''" style="height:50px;display:none" border=0>
+				<div class="kw-section">
+					<ul class="kw-section-list keywords" id="selectKeyWords">
+					</ul>
+				</div>
+			</div>
+			<div data-options="region:'center',title:''"  border=0 style="padding-top:0px">
+				<iframe id="ruleFrame" width="100%" height="100%" frameBorder="0"   src="dhcckb.rule.editor0.csp?file=2" ></frame>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+</body>
+</html>

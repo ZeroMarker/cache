@@ -13,6 +13,7 @@
 				<form enctype="multipart/form-data" method="post" action="dhctt.xmlimport.csp">
 					XML路径名:					
 					<input type=file size=30 name=FileStream  accept="text/xml" multiple>
+					<input type="hidden" value="#($G(%request.Data("MWToken",1)))#" name="MWToken"/>				
 					<input type="submit" value="上传">					
 				</form>
 			</td>
@@ -44,7 +45,7 @@
 						Do file.%Save()
 						Do file.%Close()
 						Set file=""
-						w "<a href='dhctt.xmlimport.csp?importXml="_fileStream.FileName_"'>导入XML到组件</a>"
+						w "<a href='dhctt.xmlimport.csp?MWToken="_$G(%request.Data("MWToken",1))_"&importXml="_fileStream.FileName_"'>导入XML到组件</a>"
 					}else{
 						SEt Status = "组件XML内容不正确，请确定是否为组件XML"
 					}
@@ -67,7 +68,7 @@
 			<script language="Cache" runat="server">
 				s filename = $g(%request.Data("importXml",1))
 				s filename = ##class(%File).GetFilename(filename)
-				if (filename'=""){
+				if (filename'="")&&(filename'[".."){
 					Set componentxml = "\temp\componentxml\"
 					s dirname = ##class(ext.util.String).GetPhysicalPath("",componentxml)
 					k %objlasterror

@@ -1,0 +1,90 @@
+<!-- 
+ * FileName: dhcbill.scrdisplayprice.csp
+ * Author: ZhYW
+ * Date: 2022-07-18
+ * Description: 外接屏报价显示
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+		.patInfo {
+			font-size: 60px;
+			color: #000;
+		}
+		.chgInfo {
+			position:absolute;
+			left: 50px;
+		}
+		.chgInfo p
+		,chgInfo label {
+			font-size: 40px;
+			line-height: 60px;
+		}
+	</style>
+	<server>
+		set prtRowIdStr=%request.Get("prtRowIdStr")
+		set patientId=""
+		set patSum=0
+		set insuSum=0
+		set insuTypeStr=""
+		kill paymAry
+		for i=1:1:$l(prtRowIdStr,"^") {
+			set prtRowId=$p(prtRowIdStr,"^",i)
+			continue:(+prtRowId=0)
+			set prtInvData=$g(^DHCINVPRT(+prtRowId))
+			set patientId=$p(prtInvData,"^",15)
+			set insTypeId=$p(prtInvData,"^",9)
+			set insType=$p(^PAC("ADMREA",insTypeId),"^",2)
+			if ((" "_insuTypeStr_" ")'[(" "_insType_" ")) {
+				set insuTypeStr=$s((insuTypeStr=""):insType,1:(insuTypeStr_" "_insType))
+			}
+			set patAmt=$p(prtInvData,"^",16)
+			set patSum=$i(patSum,patAmt)
+			set insuAmt=$p(prtInvData,"^",31)      //医保支付金额
+			set insuSum=$i(insuSum,insuAmt)
+			set paymSub=0
+			while($o(^DHCINVPRT(prtRowId,"P",paymSub))) {
+				set paymSub=$o(^DHCINVPRT(prtRowId,"P",paymSub))
+				set paymData=$g(^DHCINVPRT(prtRowId,"P",paymSub))
+				set isSelf=$p(paymData,"^",1)
+				continue:(+isSelf'=1)    //过滤医保支付方式
+				set paymDR=$p(paymData,"^",1)
+				set paymAmt=$p(paymData,"^",3)
+				set paymAry(paymDR)=$g(paymAry(paymDR))+paymAmt
+			}
+		}
+		set patName=$s((+patientId'=0):$p($g(^PAPER(patientId,"ALL")),"^",1),1:"")
+		set sexDR=$s((+patientId'=0):$p($g(^PAPER(patientId,"ALL")),"^",7),1:"")
+		set sex=$s((+sexDR'=0):$p($g(^CT("SEX",sexDR)),"^",2),1:"")
+	</server>
+</head>
+
+<body>
+	<h2 style="font-size:40px;color:#000;">请您付款：</h2>
+	<h5 style="padding-left:50px;background-color:#fff;"><label class="patInfo">#(patName)#</label><label style="padding-left:40px;" class="patInfo">#(sex)#</label></h5>
+	<div class="chgInfo">
+	 	<p>结算方式：#(insuTypeStr)#</p>
+	 	<p>总金额：#($fn(patSum,"",2))# 元</p>
+		<p>医保支付：#($fn(insuSum,"",2))#元</p>
+		<server>
+			set paymDR=0
+			while($o(paymAry(paymDR))) {
+				set paymDR=$o(paymAry(paymDR))
+				set paymDesc=$p(^CT("CTPM",paymDR),"^",2)
+				set paymAmt=$g(paymAry(paymDR))
+				set paymAmt=$fn(paymAmt,"",2)
+				w "<p>"_paymDesc_"："_paymAmt_"元</p>",!
+			}
+		</server>
+	</div>
+</body>
+</html>

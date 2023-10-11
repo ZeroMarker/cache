@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<!--reg.dhcpatcardunite.hui.csp HISUI 合并卡--> 
+<!--reg.dhcpatcardunite.hui.csp HISUI 合并患者信息--> 
+<!--实际指的是现实是一个人,但系统里是两个患者(不同登记号)，合并是把系统里的这两个患者合并成一个--> 
 <HTML lang="zh-CN">
 <HEAD>
 <meta charset="utf-8">
@@ -8,6 +9,7 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
+<DOCCARD medStepCode="Update"></DOCCARD>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -16,6 +18,7 @@
 }
 .r-label{
 	padding-left: 10px;
+	width:110px;
 }
 .r-label-1{
 	padding:0 10px 0 20px;
@@ -24,9 +27,7 @@
 	border-color: red;
 	color: red;
 }
-.panel-header{
-	border-bottom: 0;
-}
+
 iframe{
 	vertical-align:top;
 	display:block;
@@ -37,13 +38,16 @@ iframe{
 </style>
 <Server>
 	s sysDateFormat=##class(websys.Conversions).DateFormat()
-	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
 	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-	w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+	s HospId=%session.Get("LOGON.HOSPID")
+	s HospCodeNode="HospDr_"_HospId
+	s AutoFillUnitInfo=$g(^DHCDocCardConfig(HospCodeNode,"AutoFillUnitInfo"))	
 	w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
-	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	/*w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
 </Server>
 </head>
 <body>
@@ -51,7 +55,8 @@ iframe{
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
-			sysDateFormat:"#(sysDateFormat)#"
+			sysDateFormat:"#(sysDateFormat)#",
+			AutoFillUnitInfo:"#(AutoFillUnitInfo)#",
 		};
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>

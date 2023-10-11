@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!--门诊药房--报到机报到界面(his的测试界面)
+	csp:pha.op.v4.queue.csp
+	js: pha/op/v4/queue.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <ADDINS require="RWCard,WebsysTool" />
+    <DOCCARD medStepCode="Other" ></DOCCARD>
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <PHAOPV4 />
+	<server>
+		d ##class(PHA.COM.ReadCard).LoadPlugin()
+		d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	</server>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-panel" title="门诊报到机报到(his内部测试使用)" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                <table id="gridWaitRepQueue"></table>
+            </div>
+        </div>
+    </div>
+    <div id="gridPhWinLogBar">
+    	<div class="pha-row">
+            <div class="pha-col">
+                #(..Get("开始日期"))#
+            </div>
+            <div class="pha-col">
+                <input id="conPhStDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true'>
+            </div>
+            <div class="pha-col">
+                #(..Get("结束日期"))#
+            </div>
+            <div class="pha-col">
+                <input id="conPhEndDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true'>
+            </div>
+            <!--div class="pha-col">
+                #(..Get("药房"))#
+            </div>
+            <div class="pha-col">
+                <input id="conPhLoc" data-pha='class:"hisui-combobox",requied:true'>
+            </div-->
+            <div class="pha-col">
+                #(..Get("登记号"))#
+            </div>
+            <div class="pha-col">
+                <input id="conPatNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true'>
+            </div>
+            <div class="pha-col">
+                #(..Get("卡号"))#
+            </div>
+            <div class="pha-col">
+            	<input id="conCardNo" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true'>
+            	 <a class="hisui-linkbutton" plain='false' id="btnReadCard">读卡</a>	
+            </div>	            
+            <div class="pha-col">
+                <a class="hisui-linkbutton" plain='false' iconCls="icon-w-find" id="btnFind">查询</a>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" plain='false' iconCls="	icon-w-ok" id="btnReport">报到</a>
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" plain='false' iconCls="	icon-w-clean" id="btnClean">清屏</a>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../scripts/pha/op/v4/queue.js"></script>
+</html>

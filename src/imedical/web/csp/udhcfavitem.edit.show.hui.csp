@@ -1,0 +1,243 @@
+<div id="mainLayout" class="hisui-layout" fit="true">
+	<div data-options="region:'west',border:false,collapsible:false" style="width:463px;padding:10px 0px 10px 10px;">
+		<div class="hisui-panel" data-options="fit:true,title:'医嘱套维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" >
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'north',border:false,border:false" style="height:90px;overflow:hidden;">
+					<table class="search-table" style="width:443px;">
+						<tr>
+							<td class="r-label" style="display:none;">
+								<label for="SearchCategory">#(..Get("大类"))#</label>
+							</td>
+							<td style="display:none;">
+								<input class="textbox" disabled id="SearchCategory" style="width:155px;">
+							</td>
+							<td class="r-label">
+								<label for="SearchSubCategory">#(..Get("子类"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="SearchSubCategory" style="width:100px;">
+							</td>
+							<td class="r-label">
+								<label for="SearchDesc">#(..Get("描述"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="SearchDesc" style="width:100px;"style="width:100px;">
+							</td>
+							<td class="r-label">
+								<label for="SearchCelerType">#(..Get("快速"))#</label>
+							</td>
+							<td >
+								<input id="SearchCelerType" class='hisui-checkbox' type="checkbox" label="">
+							</td>
+							<td class="r-label">
+								<a id="Search1" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+						</tr>
+						<tr>
+							
+							<td class="r-label">
+								<label for="SearchConditiones">#(..Get("条件"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="SearchConditiones" style="width:100px;">
+							</td>
+							<td class="r-label">
+								<label for="SearchAlias">#(..Get("别名"))#</label>
+							</td>
+							<td>
+								<input class="textbox" id="SearchAlias" style="width:100px;">
+							</td>
+							
+							<td></td><td></td>
+							<td class="r-label">
+								<a id="ClearFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',iconCls:'icon-add',collapsible:false,border:false">
+					<table id="ARCOrdSetsTreeGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<csp:if condition="TDis'=1">
+		<div data-options="region:'center',border:false" style="width:850px;padding:10px 10px 10px 5px">	
+			<div class="hisui-panel" data-options="fit:true,title:'#(..Get("医嘱套明细"))#<span>#(..Get("维护成组医嘱时主子医嘱上的关联字段都需要维护。例如主医嘱为1，子医嘱为1.1、1.2依次类推"))#</span>',headerCls:'panel-header-gray',iconCls:'icon-write-order'">
+				<table id="UDHCARCOrderSetItemEdit"></table>
+			</div>
+		</div>
+	<csp:else>
+		<div data-options="region:'center',title:'',border:false,headerCls:'panel-header-gray'" style="display:none;">	
+		</div>
+	</csp:if>
+</div>
+<!-- 医嘱套右键菜单 -->
+<div id="right" class="hisui-menu" style="height:auto !important;">
+	<div id="AddARCOS" onClick="AddARCOSClick()" data-options="iconCls:'icon-add'">#(..Get("新增"))#</div>
+	<div id="AddSameFavARCOS" onClick="AddARCOSClick()" data-options="iconCls:'icon-add'">#(..Get("新增同级医嘱套"))#</div>
+	<div id="UpdateARCOS" onClick="UpdateARCOSClick()" data-options="iconCls:'icon-edit'">#(..Get("修改"))#</div>
+	<div class="menu-sep"></div>
+	<div id="OtherARCAlias" onClick="OtherARCAliasClick()" data-options="iconCls:'icon-tip'">#(..Get("别名维护"))#</div>
+	<div class="menu-sep"></div>
+	<div id="SetARCOSEPrice" onClick="SetARCOSEPriceClick()" data-options="iconCls:'icon-mnypaper-cfg'">#(..Get("包装价格"))#</div>
+	<div class="menu-sep"></div>
+	<div id="ARCOSCopy" onClick="ARCOSCopyClick()" data-options="iconCls:'icon-copy'">#(..Get("引用医嘱套"))#</div>
+	<div class="menu-sep"></div>
+	<div id="DelARCOS" onClick="DelARCOSClick()" data-options="iconCls:'icon-cancel'">#(..Get("删除"))#</div>
+	<div class="menu-sep"></div>
+	<div id="ARCOSAuthorize" onClick="AuthorizeSetWinClick()" data-options="iconCls:'icon-batch-cfg'">#(..Get("授权可引用科室"))#</div>
+	<div class="menu-sep"></div>
+	<div id="SaveAsUserARCOS" onClick="SaveAsARCOSClick('User')" data-options="iconCls:'icon-save'">#(..Get("另存为个人医嘱套"))#</div>
+	<div class="menu-sep"></div>
+	<csp:if condition='LocARCOSAuthority'>
+		<div id="SaveAsLocARCOS" onClick="SaveAsARCOSClick('Loc')" data-options="iconCls:'icon-save'">#(..Get("另存为科室医嘱套"))#</div>
+		<div class="menu-sep"></div>
+	</csp:if>
+	<csp:if condition='HospARCOSAuthority'>
+		<div id="SaveAsHospARCOS" onClick="SaveAsARCOSClick('Hosp')" data-options="iconCls:'icon-save'">#(..Get("另存为全院医嘱套"))#</div>
+		<div class="menu-sep"></div>
+	</csp:if>
+	<div id="ARCOSSaveToOrdTempl" onClick="ARCOSSaveToOrdTemplClick()" data-options="iconCls:'icon-save-to'">
+		<span>#(..Get("保存到医嘱模板"))#</span>
+		<div style="width:50px;"> 
+		    <div data-options="iconCls:'icon-copy'" name="menucopy" key="User.SSUser">#(..Get("个人"))#</div>
+		    <csp:if condition='##class(DHCDoc.Order.Fav).GetLocAuth()'>
+		    	<div data-options="iconCls:'icon-copy'" name="menucopy" key="User.CTLoc">#(..Get("科室"))#</div>
+		    </csp:if>
+		    <csp:if condition='##class(DHCDoc.Order.Fav).GetHospAuth()'>
+				<div data-options="iconCls:'icon-copy'" name="menucopy" key="User.CTHospital">#(..Get("全院"))#</div>
+			</csp:if>
+	    </div>
+	</div>
+</div>
+<!--授权引用科室弹框-->
+<div id="AuthorizeSetWin" class="toolpanel" data-options="iconCls:'icon-w-edit',collapsible:false,modal:true,draggable:false" style="width:370px;padding:0 10px;">
+	<table class="search-table" >
+		<tr>
+			<td>
+				<label id="_HospUserListLabel" style='color:red;display:none;' class='r-label'>医院</label>
+				<input id="_HospUserList" style="width:250px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<input id="FindDept" href="#" class="hisui-searchbox" data-options="searcher:FindDeptChange,prompt:'#(..Get("请输入科室查询条件..."))#'" style="width:350px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<select size="4" multiple="multiple" id="List_OrderDept" style="height:250px;width:350px;"></select>
+			</td>
+		</tr>
+		<tr>
+			<td align=center>
+				<csp:if condition='HISUIStyleCode="lite"'>
+					<a class='hisui-linkbutton green' id="BSaveARCLocAuthorize" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+				<csp:else>
+					<a class='hisui-linkbutton' id="BSaveARCLocAuthorize" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+				</csp:if>
+			</td>
+		</tr>
+	</table>
+</div>
+<!--添加/更新医嘱医嘱套弹框-->
+<div id="ARCOSSetWin" class="toolpanel" data-options="iconCls:'icon-w-add',collapsible:false,modal:true,draggable:false" style="width:750px;padding:5 10px;">
+	<table class="search-table">
+		<tr>
+			<td class="r-label" style="display:none;">
+				<input class="textbox" disabled id="FavRowid">
+			</td>
+			<td class="r-label">
+				<label for="Category">#(..Get("大类"))#</label>
+			</td>
+		 	<td>
+		 		<input class="textbox" disabled id="Category">
+		 	</td>
+		 	<td class="r-label">
+				<label for="SubCategory">#(..Get("子类"))#</label>
+			</td>
+			<td>
+		 		<input class="textbox" id="SubCategory">
+		 	</td>
+			<td class="r-label">
+				<label for="Conditiones">#(..Get("条件"))#</label>
+			</td>
+			<td>
+		 		<input class="textbox" id="Conditiones">
+		 	</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="Code">#(..Get("代码"))#</label>
+			</td>
+		 	<td>
+		 		<input class="textbox" disabled  id="Code">
+		 	</td>
+		 	<td class="r-label">
+				<label for="Desc">#(..Get("描述"))#</label>
+			</td>
+		 	<td>
+		 		<input class="textbox" id="Desc">
+		 	</td>
+			<td class="r-label">
+				<label for="Alias">#(..Get("别名"))#</label>
+			</td>
+		 	<td>
+		 		<input class="textbox" id="Alias">
+		 	</td>
+		</tr>
+		<tr>
+		 	<td class="r-label">
+				<label for="FavDateTo">#(..Get("结束日期"))#</label>
+			</td>
+			<td>
+		 		<input class="hisui-datebox textbox" id="FavDateTo">
+		 	</td>
+		 	<td class="r-label">
+				<label for="CelerType">#(..Get("快速"))#</label>
+			</td>
+		 	<td >
+		 		<input id="CelerType" class='hisui-checkbox' type="checkbox" label="">
+		 	</td>
+		</tr>
+		<tr class="CNARCOSInfo">
+			<td class="r-label" colspan="6" style="text-align:left;">
+				<label style="font-weight:bold;color:red;">#(..Get("中草药医嘱套用法信息"))#</label>
+			</td>
+		</tr>
+		<tr class="CNARCOSInfo">
+			<td class="r-label">#(..Get("处方剂型"))#</td>
+			<td>
+				<input id="PrescTypeComb" class="hisui-combobox textbox" data-options="url:''"/>
+			</td>
+			<td class="r-label">#(..Get("使用方式"))#</td>
+			<td>
+				<input id="InstrComb" class="hisui-combobox textbox" data-options="url:''"/>
+			</td>
+			<td class="r-label">#(..Get("用药副数"))#</td>
+			<td>
+				<input id="DurationComb" class="hisui-combobox textbox" data-options="url:''"/>
+			</td>
+		</tr>
+		<tr class="CNARCOSInfo">
+			<td class="r-label">#(..Get("用药频次"))#</td>
+			<td>
+				<input id="FreqComb" class="hisui-combobox textbox" data-options="url:''"/>
+			</td>
+			<td class="r-label">#(..Get("一次用量"))#</td>
+			<td>
+				<input id="DoseQtyComb" class="hisui-combobox textbox" data-options="url:''"/>
+			</td>
+			<td class="r-label">#(..Get("备注"))#</td>
+			<td>
+				<input id="CNNote" class="textbox"/>
+			</td> 
+		</tr>
+		<tr>
+			<td class="r-label" colspan="6" style="text-align:center;">
+		 		<a id="SaveARCOSBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+		 	</td>
+		</tr>
+	</table>
+</div>

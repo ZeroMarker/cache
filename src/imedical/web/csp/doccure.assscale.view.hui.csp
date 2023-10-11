@@ -1,0 +1,77 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- doccure.assscale.view.hui.csp  治疗评定量表展示预览 -->
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/assscaleview.css" rel="stylesheet">
+<server>
+	s LgUserID=%session.Get("LOGON.USERID")
+	s EpisodeID=$Get(%request.Data("EpisodeID",1))
+	s AssScaleApplyID=$Get(%request.Data("AssScaleApplyID",1))  /// 评定表ID
+	s AssScaleID=$Get(%request.Data("AssScaleID",1))     /// 评定量表ID
+    i AssScaleID=""{
+	    s:AssScaleApplyID'="" AssScaleID=$lg(^User.DHCDocCureAssScoreD(AssScaleApplyID),8)  
+    }
+    if (EpisodeID=""){
+		s:AssScaleApplyID'="" EpisodeID=$lg(^User.DHCDocCureAssScoreD(AssScaleApplyID),2)        
+	}
+	s AssScaleTabHtml=""
+	s AssScaleTabHtml=##Class(DHCDoc.DHCDocCure.AssScaleConfig).GetAssScaleTabHtml(AssScaleID)
+	s EditFlag=$Get(%request.Data("EditFlag",1)) ;编辑状态 0-预览 1-新建 2-修改
+	s DCASStatus="",CAImage=""
+    if (AssScaleApplyID'=""){
+	    s DCASStatus=$lg(^User.DHCDocCureAssScoreD(AssScaleApplyID),11) 
+		s EditFlag=$case(DCASStatus,"F":2,"C":-1,:EditFlag)
+        s CAImage=##Class(DHCDoc.DHCDocCure.AssScale).GetCAImage(AssScaleApplyID)
+    }
+</server>
+</head>
+<body class="background-warp">
+	<div class="container">
+		<div class="tabform">
+			<server>
+				w AssScaleTabHtml
+			</server>
+		</div>
+		<div class="tabtools">
+			
+		</div>
+	</div>
+	
+	<div class="page-foot">
+		<div class="hisui-panel page-shadow" data-options="border:false,fit:true">   
+			<label>#(..Get("总分"))#</label><label id="count" style="font-size:20px;font-weight:bold;">0</label><label>#(..Get("分"))#</label>
+			<label><img id="CAImage" style="height:20px;width;100px"/></label>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" style="margin-left:20px;margin-right:10px;float:right" id="BtnCancel">#(..Get("撤销"))#</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-pen-paper'" style="margin-left:20px;float:right" id="BtnCureAdvise">#(..Get("治疗医嘱建议"))#</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" style="margin-left:20px;float:right" id="BtnSave">#(..Get("保存"))#</a>
+		</div>
+	</div>	
+</body>
+<SCRIPT language = 'javascript' >
+	//全局请求后台服务对象
+	var ServerObj={
+		EpisodeID:"#(EpisodeID)#",
+		AssScaleID:"#(AssScaleID)#",
+		AssScaleApplyID:"#(AssScaleApplyID)#",
+		LgUserID:"#(LgUserID)#",
+		EditFlag:"#(EditFlag)#",
+		DCASStatus:"#(DCASStatus)#",
+		BusType:"",
+		CAImage:"#(CAImage)#"
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/assscale.view.js"></script>
+<!--初始化CA服务环境-->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
+</html>

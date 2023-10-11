@@ -1,3 +1,7 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <html>
 <head>
 <meta http-equiv="X-UA-Compatible"  content="IE=edge" xmlns:v="urn:schemeas-microsoft-com:vml"/> 
@@ -7,11 +11,13 @@
 <!--<DHCAPP:EASYUI/> hxy--> 
 <script type="text/javascript" src="../scripts/websys.js"></script>
 <FORM:EASYUI/>
-<!--上传图片
+<!--多语言修改引用 websys.EasyUILib--> 
+<server>d ##class(websys.EasyUILib).GenJsTrans()</server>
+<!--上传文件
 <link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/jqueryplugins/uploadify/uploadify.css">
 <script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/uploadify/jquery.uploadify.min.js"></script>
 -->
-<script type="text/javascript" src="../scripts/dhcadvEvt/skin/js/layoutform.js"></script>
+<script type="text/javascript" src="../scripts/dhcadvEvt/skin/js/layoutform.js" charset="gb2312"></script>
 <link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/skin/css/form.css" />	
 <link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/skin/css/formstyle.css" /><!--12-11 add-->	
 <link rel="stylesheet" type="text/css" href="../scripts/dhcadvEvt/skin/css/dhccDate.css" />	
@@ -84,7 +90,7 @@
 		background-color:#378ec4;	 		 
 	 }
 	textarea{
-		 width:auto;
+		 width:98%;
 	}
 </style>
 <SERVER>
@@ -159,15 +165,14 @@
 		     $("#lable89186,#lable89189,#lable89192").css({"position":"relative","left":"-25"});
 		     $("#lable89186 > input.lable-input,#lable89189 > input.lable-input,#lable89192 > input.lable-input").css({"position":"relative","left":"-30"});
 		}
-	 }
-
-	 
+	 }	 
  })	
  </script>	
 </head>
 
 <body style="margin-left:0px;background-color:white;" >
 	<div id="mainpanel" class="easyui-layout"  fit="true" style="overflow:auto;">
+	<div id="top"></div>
 
 	<!--走分类配置，分类包含不良事件的加margin hxy 2017-08-23-->
 	<script language="Cache" runat="server">
@@ -177,17 +182,22 @@
 			s ID=""
 			s ID=$o(^User.DHCAdvFormNameI("IndexCode",##class(web.DHCADVAction).ALPHAUP(code),ID)) ;congyue 2017-09-28 处理code
 			q:ID=""
-			s catId=$LIST(^User.DHCAdvFormNameD(ID),7)
-			s desc=$LIST(^User.DHCAdvFormNameD(ID),3)
-			s isform=$LIST(^User.DHCAdvFormNameD(ID),6) ;Y 表单 非Y 布局表单
+			s catId=$LG(^User.DHCAdvFormNameD(ID),7)
+			s desc=$LG(^User.DHCAdvFormNameD(ID),3)
+			s formwidth=$LG(^User.DHCAdvFormNameD(ID),9)
+			s desc=##class(web.DHCADVCOMMON).GetTransDesc("User.DHCAdvFormName","name","",desc)
+			s isform=$LG(^User.DHCAdvFormNameD(ID),6) ;Y 表单 非Y 布局表单
+			s:+formwidth<500 formwidth=""
+			s:+formwidth>1500 formwidth="1500px"
+			s:formwidth'="" formwidth="width:"_formwidth_" !important"
 			i +recordId=0 d
-			.w "<div class='row' style='z-index:1;margin-left:100px;margin-right:218px' id='from'>"
-			e  w "<div class='row' style='z-index:1;margin-left:66px;margin-right:208px' id='from'>"
+			.w "<div class='row' style='z-index:1;margin-left:100px;margin-right:218px;"_formwidth_"' id='from'>"
+			e  w "<div class='row' style='z-index:1;margin-left:66px;margin-right:208px;"_formwidth_"' id='from'>"
 			w "<div class='title-big'>"_desc_"</div>"
 			w "<style>  "  ;.combo-text{max-width:105px!important;}
 			w ".combo-arrow{width:28px;}"
 			w "</style>"
-			i isform="Y" d   ; 表单加载此js，布局表单不加载此js
+			i isform="Y" d   ; 表单加载此js，布局表单不加载此js 
 			.w "<script type='text/javascript' src='../scripts/dhcadvEvt/dhcadvcommon.js' charset='gb2312'>"
 			.w "</script"_ ">"
 			
@@ -199,12 +209,24 @@
 				s ret=""
 				s code=%request.Get("code")
 				s recordId=%request.Get("recordId")
+				s LgUserID=%session.Get("LOGON.USERID")
+				s LgCtLocID=%session.Get("LOGON.CTLOCID")
+				s LgGroupID=%session.Get("LOGON.GROUPID")
+				s LgHospID=%session.Get("LOGON.HOSPID")
+				S LgParam=LgUserID_"^"_LgCtLocID_"^"_LgGroupID_"^"_LgHospID
+				s RepID=%request.Get("RepID")
+				s ID=""
+				s ID=$o(^User.DHCAdvFormNameI("IndexCode",##class(web.DHCADVAction).ALPHAUP(code),ID)) ;congyue 2017-09-28 处理code
+				q:ID=""
+				s isform=$Lg(^User.DHCAdvFormNameD(ID),6) ;Y 表单 非Y 布局表单
+				s inplist=""
+				s:isform="Y" inplist=##class(web.DHCADVCOMMONPART).GetRepStaus(RepID,code,LgParam)
 				i +recordId'=0 d
 				.//d ##class(web.Form).displayForm(code,recordId)
-				.d ##class(web.DHCADVForm).displayForm(code,recordId,"")
+				.d ##class(web.DHCADVForm).displayForm(code,recordId,"",inplist,LgHospID)
 				e  d
 				.//d ##class(web.Form).displayForm(code,"")
-   				.d ##class(web.DHCADVForm).displayForm(code,recordId,"")
+   				.d ##class(web.DHCADVForm).displayForm(code,recordId,"",inplist,LgHospID)
    			</script>
    	
    			<!--添加事件处理反馈信息  2018-06-11 cy-->
@@ -303,26 +325,26 @@
     </div>-->
     <!--底部按钮-->
 	<div id="footer" style="text-align:center; opacity:0.9;border:1px solid #E5E5E5;background-color:#F9F9F9;width:100%;height:30px;position:fixed;left:0px;bottom:0px;z-index:2;">
-		<button id="SaveBut" class="dhcc-btn" style="">保存</button> 
-		<button id="SubmitBut" class="dhcc-btn" style="margin-left:50px">提交</button> 
-		<button id="Back" class="dhcc-btn" style="margin-left:50px; display:none">驳回修改</button>     
-		<button id="RepAudit" class="dhcc-btn" style="margin-left:50px; display:none">审核</button>     
-		<button id="RepCancelAudit" class="dhcc-btn" style="margin-left:50px; display:none">取消审核</button>     
-		<button id="Transcription" class="dhcc-btn" style="margin-left:50px; display:none">转抄</button>     
-		<button id="HeadNurEvaBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">护士长评价追踪</button>     
-		<button id="LocHeadNurEvaBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">科护士长评价追踪</button>     
-		<button id="NurDepEvaBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">护理部评价追踪</button>     
-		<button id="AssessmentBut" class="dhcc-btn" style="margin-left:50px; display:none">评估</button>     
-		<button id="PatOutcomBut" class="dhcc-btn" style="margin-left:50px; display:none;">转归</button> 
-		<button id="ExpoAssBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">暴露者评估</button>     
-		<button id="ExpoFolBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">暴露者随访</button>   
-		<button id="PicUpLoad" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">图片上传</button>   
+		<button id="SaveBut" class="dhcc-btn" style="">#(..Get("保存"))#</button> 
+		<button id="SubmitBut" class="dhcc-btn" style="margin-left:50px">#(..Get("提交"))#</button> 
+		<button id="Back" class="dhcc-btn" style="margin-left:50px; display:none">#(..Get("驳回修改"))#</button>     
+		<button id="RepAudit" class="dhcc-btn" style="margin-left:50px; display:none">#(..Get("审核"))#</button>     
+		<button id="RepCancelAudit" class="dhcc-btn" style="margin-left:50px; display:none">#(..Get("取消审核"))#</button>     
+		<button id="Transcription" class="dhcc-btn" style="margin-left:50px; display:none">#(..Get("转抄"))#</button>     
+		<button id="HeadNurEvaBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">#(..Get("护士长评价追踪"))#</button>     
+		<button id="LocHeadNurEvaBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">#(..Get("科护士长评价追踪"))#</button>     
+		<button id="NurDepEvaBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">#(..Get("护理部评价追踪"))#</button>     
+		<button id="AssessmentBut" class="dhcc-btn" style="margin-left:50px; display:none">#(..Get("评估"))#</button>     
+		<button id="PatOutcomBut" class="dhcc-btn" style="margin-left:50px; display:none;">#(..Get("转归"))#</button> 
+		<button id="ExpoAssBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">#(..Get("暴露者评估"))#</button>     
+		<button id="ExpoFolBut" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">#(..Get("暴露者随访"))#</button>   
+		<button id="PicUpLoad" class="dhcc-btn" style="margin-left:50px; display:none;width:auto">#(..Get("文件上传"))#</button>   
     </div>
     <!--底部按钮  2018-04-11 cy 增加评价界面保存取消按钮-->
 	<div id="assefooter" style="text-align:center; opacity:0.9;border:1px solid #E5E5E5;background-color:#F9F9F9;width:100%;height:30px;position:fixed;left:0px;bottom:0px;z-index:2;">
-		<button id="AsseSaveBut" class="dhcc-btn" style="">保存</button> 
-		<button id="FormAudit" class="dhcc-btn" style="margin-left:50px; display:none">提交</button>     
-		<button id="FormCancelAudit" class="dhcc-btn" style="margin-left:50px; display:none">取消提交</button>     
+		<button id="AsseSaveBut" class="dhcc-btn" style="">#(..Get("保存"))#</button> 
+		<button id="FormAudit" class="dhcc-btn" style="margin-left:50px; display:none">#(..Get("提交"))#</button>     
+		<button id="FormCancelAudit" class="dhcc-btn" style="margin-left:50px; display:none">#(..Get("取消提交"))#</button>     
     </div>
     <!--检查一体化-底部按钮-->
 	<!--<div id="dhcapp-footer" style="display:none;opacity:0.9;background-color:#fff;width:100%;height:33px;position:fixed;left:0px;bottom:0px;z-index:3;">
@@ -385,53 +407,53 @@
 			<div data-options="region:'center'">
 				<div style="margin:10px;">
                     <div style="width:360px;display:block;margin:10px;">
-                    	<span class="mould_span">器械使用时间：</span>
+                    	<span class="mould_span">#(..Get("器械使用时间"))#：</span>
                     	<input id="MT1" type="text" class="easyui-datebox" editable='false' style="  width:200px;height:25px; text-align:left;"  />
                     </div>
     				<div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">使用目的：</span>
+    					<span class="mould_span">#(..Get("使用目的"))#：</span>
     					<input class="mould_input" id="MT2" type="text" />
     				</div>
            			<div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">使用依据：</span>
+    					<span class="mould_span">#(..Get("使用依据"))#：</span>
     					<input class="mould_input" id="MT3" />
     				</div>
     				<div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">使用情况：</span>
+    					<span class="mould_span">#(..Get("使用情况"))#：</span>
     					<input class="mould_input" id="MT4" />
     				</div>
     				<div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">不良事件情况：</span>
+    					<span class="mould_span">#(..Get("不良事件情况"))#：</span>
     					<input class="mould_input" id="MT5" />
     				</div>
     				<div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">对患者影响：</span>
+    					<span class="mould_span">#(..Get("对患者影响"))#：</span>
     					<input class="mould_input" id="MT6" />
     				</div>
     				<div style="width:360px;display:block;margin:10px;">
-                    	<span class="mould_span">采取治疗措施时间：</span>
+                    	<span class="mould_span">#(..Get("采取治疗措施时间"))#：</span>
                     	<input id="MT7" type="text" class="easyui-datebox" editable='false' style="width:200px; height:25px; text-align:left;" />
                     </div>
                     <div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">采取治疗措施：</span>
+    					<span class="mould_span">#(..Get("采取治疗措施"))#：</span>
     					<input class="mould_input" id="MT8" />
     				</div>
                     <div style="width:360px;display:block;margin:10px;">
-                    	<span class="mould_span">不良事件好转时间：</span>
+                    	<span class="mould_span">#(..Get("不良事件好转时间"))#：</span>
                     	<input id="MT9" type="text" class="easyui-datebox" editable='false' style="width:200px; height:25px; text-align:left;" />
                     </div>
     				<div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">器械联合使用情况：</span>
+    					<span class="mould_span">#(..Get("器械联合使用情况"))#：</span>
     					<input class="mould_input" id="MT10" />
     				</div>
     				<div style="width:360px;display:block;margin:10px;">
-    					<span class="mould_span">事件发生医院：</span>
+    					<span class="mould_span">#(..Get("事件发生医院"))#：</span>
     					<input class="mould_input" id="MT11" type="text" />
     				</div>
     				
 					<div style="width:360px;display:block;margin:10px;">
-					    <button class="dhcc-btn-blue-sm" style="margin-left:110px;" onclick="saveMouldTable()">确定</button> 
-						<button class="dhcc-btn-red-sm" style="margin:10px;margin-left:20px" onclick="javascript:$('#MouldTable').window('close')">取消</button> 
+					    <button class="dhcc-btn-blue-sm" style="margin-left:110px;" onclick="saveMouldTable()">#(..Get("确定"))#</button> 
+						<button class="dhcc-btn-red-sm" style="margin:10px;margin-left:20px" onclick="javascript:$('#MouldTable').window('close')">#(..Get("取消"))#</button> 
 						<!--<a href="#" style="width:90px;margin-left:95px;" class="easyui-linkbutton" onclick="saveMouldTable()">确定</a>
 						<a href="#" style="width:90px;margin:10px;" class="easyui-linkbutton" onclick="javascript:$('#MouldTable').window('close')">取消</a>-->
 					</div>
@@ -451,16 +473,16 @@
 			<div data-options="region:'center'" style="background:#F8F8FF;">
 				<!--<img style="float:right;margin-top:-10px;z-index: 9012" src="../scripts/dhcadvEvt/images/adv_delete.png"> -->
 				<div style="font-size:10pt;margin-top:10px;"id="NextLocList">
-					<span style="margin-left:10px;">科室指向：<span style="margin-left:10px"></span><input id="matadrNextLoc" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:130px;margin-left:2px;border:1px solid #95B8E7;"/></span>
+					<span style="margin-left:10px;">#(..Get("科室指向"))#：<span style="margin-left:10px"></span><input id="matadrNextLoc" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:130px;margin-left:2px;border:1px solid #95B8E7;"/></span>
 				</div>
 				<div style="font-size:10pt;margin-top:10px;">
-					<span style="margin-left:10px;">调查核实：</span>
+					<span style="margin-left:10px;">#(..Get("调查核实"))#：</span>
 				</div>
 				<div style="font-size:10pt;margin-top:5px;">
 					<span style="margin-left:5px;"><textarea id="matadrRecProgress" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto"></textarea> </span>
             	</div>
 				<div style="font-size:10pt;margin-top:10px;">
-					<span style="margin-left:10px;">处理意见：</span>
+					<span style="margin-left:10px;">#(..Get("处理意见"))#：</span>
 				</div>
 				<div style="font-size:10pt;margin-top:5px;">
 					<span style="margin-left:5px;"><textarea id="matadrLocAdvice" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto"></textarea> </span>
@@ -468,8 +490,8 @@
             	<div style="margin:5px;text-align:center;">
 					<!--<a href="#" id="ConfirmAudit" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
 					<a href="#" style="width:90px;margin:5px 50px 5px 5px;" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#Process').window('close')">取消</a>-->
-					<button class="greenButton" id="RepConfirmAudit" style="margin:25px 0px 5px 0px;">确定</button>
-	                <button class="redButton" id="CancelAudit" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#Process').window('close')">取消</button>
+					<button class="greenButton" id="RepConfirmAudit" style="margin:25px 0px 5px 0px;">#(..Get("确定"))#</button>
+	                <button class="redButton" id="CancelAudit" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#Process').window('close')">#(..Get("取消"))#</button>
 				</div>
 			</div>
 		</div>
@@ -481,17 +503,17 @@
 			<div data-options="region:'center'" style="background:#F8F8FF;">
 				<!--<img style="float:right;margin-top:-10px;z-index: 9012" src="../scripts/dhcadvEvt/images/adv_delete.png">-->
 				<div style="font-size:10pt;margin-top:10px;">
-					<span style="margin-left:10px;">驳回指向：<span style="margin-left:10px"></span><input id="RevStatus" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:130px;margin-left:2px;border:1px solid #95B8E7;"/></span>
+					<span style="margin-left:10px;">#(..Get("驳回指向"))#：<span style="margin-left:10px"></span><input id="RevStatus" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:130px;margin-left:2px;border:1px solid #95B8E7;"/></span>
 				</div> 
 				<div style="font-size:10pt;margin-top:10px;">
-					<span style="margin-left:10px;">请填写驳回理由：</span>
+					<span style="margin-left:10px;">#(..Get("请填写驳回理由"))#：</span>
 				</div>
 				<div style="font-size:10pt;margin-top:5px;">
 					<span style="margin-left:5px;"><textarea id="retreason" rows="5" cols="129" style="margin:2px;width:97%;overflow:auto;height:90px;"></textarea> </span>
             	</div>
             	<div style="margin:5px;text-align:center;">
-					<button class="greenButton" id="Reject" style="margin:25px 0px 5px 0px;">确定</button>
-	                <button class="redButton" id="CancelReject" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#RetWin').window('close')">取消</button>
+					<button class="greenButton" id="Reject" style="margin:25px 0px 5px 0px;">#(..Get("确定"))#</button>
+	                <button class="redButton" id="CancelReject" style="margin:25px 0px 5px 20px;" onclick="javascript:$('#RetWin').window('close')">#(..Get("取消"))#</button>
 				</div>
 			</div>
 		</div>
@@ -501,9 +523,9 @@
 		<div class="easyui-layout" style="background-color:#FFFFFF;" data-options="fit:true" >
 		    <!--查询条件区-->
 			<div data-options="region:'north',title:''" style="width:900px;height:50px;border-bottom:1px solid #CCCCCC !important;border-left:0;border-right:0;border-top:0" ><!--background:#F8F8FF;-->
-				<button id="transub" class="dhcc-btn" style="margin-left:5px;margin-top:10px;display:none;" onclick="TranSub(this.id)">转抄提交</button>
-				<button id="tranreply" class="dhcc-btn" style="margin-left:5px;margin-top:10px" onclick="TranReply(1)">回复提交</button>
-				<button id="tranrec" class="dhcc-btn" style="margin-left:5px;margin-top:10px" onclick="TranReply(0)">接收</button>
+				<button id="transub" class="dhcc-btn" style="margin-left:5px;margin-top:10px;display:none;" onclick="TranSub(this.id)">#(..Get("转抄提交"))#</button>
+				<button id="tranreply" class="dhcc-btn" style="margin-left:5px;margin-top:10px" onclick="TranReply(1)">#(..Get("回复提交"))#</button>
+				<button id="tranrec" class="dhcc-btn" style="margin-left:5px;margin-top:10px" onclick="TranReply(0)">#(..Get("接收"))#</button>
 			</div>
 			<!--数据列区域-->
 			<div data-options="region:'center'" style="width:950px;border:0;">
@@ -511,7 +533,7 @@
 					<!--选择区域-->
 					<div data-options="region:'west'"  style="width:400px;border-left:0;border-right:1px solid #CCCCCC !important;border-top:0;"><!--background:#F8F8FF;-->
 						<div style="height:28px;margin-bottom:5px;margin-top:5px;">
-							<span style="margin-left:10px;">转抄科室<span style="margin-left:10px"></span><input id="tranLocDr" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:130px;margin-left:2px;border:1px solid #95B8E7;"/></span>
+							<span style="margin-left:10px;">#(..Get("转抄科室"))#<span style="margin-left:10px"></span><input id="tranLocDr" class="easyui-combobox" data-options="valueField:'val',textField:'text'" style="width:130px;margin-left:2px;border:1px solid #95B8E7;"/></span>
 						</div>
 						
 						<div class="dhcc-panel-header"> 
@@ -536,18 +558,18 @@
 			</div>
 			<div data-options="region:'south'" style="width:950px;height:180px;border-top:1px solid #CCCCCC !important;border-left:0;border-right:0;border-bottom:0"><!--background:#F8F8FF;-->
 				<div style="font-size:10pt;margin-top:5px;width:787px;">
-					<span style="margin-left:10px;float:left;">处理人员：<input id="medadrUser" class="text"style="background-color:#fff;border: 0px none;width:200px;margin-left:2px;border-bottom:1px solid #95B8E7;"/></span>
-					<span style="margin-left:10px;">处理时间：<input id="medadrDateTime"class="text" style="background-color:#fff;border: 0px none;width:200px;margin-left:2px;border-bottom:1px solid #95B8E7;"></input></span>
-					<span style="margin-left:10px;float:right;margin-top:5px;" id="replyFlag" ><input id="reply" name="medadrReplyFlag" type="checkbox" value="Y"></input><label for="reply">该事件已报告本部门第一责任人</label></span>
+					<span style="margin-left:10px;float:left;">#(..Get("处理人员"))#：<input id="medadrUser" class="text"style="background-color:#fff;border: 0px none;width:200px;margin-left:2px;border-bottom:1px solid #95B8E7;"/></span>
+					<span style="margin-left:10px;">#(..Get("处理时间"))#：<input id="medadrDateTime"class="text" style="background-color:#fff;border: 0px none;width:200px;margin-left:2px;border-bottom:1px solid #95B8E7;"></input></span>
+					<span style="margin-left:10px;float:right;margin-top:5px;" id="replyFlag" ><input id="reply" name="medadrReplyFlag" type="checkbox" value="Y"></input><label for="reply">#(..Get("该事件已报告本部门第一责任人"))#</label></span>
 				</div>
 				<div style="font-size:10pt;margin-top:5px;">
-					<span style="margin-left:10px;">处理意见：</span>
+					<span style="margin-left:10px;">#(..Get("处理意见"))#：</span>
 				</div>
 				<div style="font-size:10pt;">
 					<span style="margin-left:5px;"><textarea id="tranLocAdvic" rows="3" cols="129" style="margin:1px;width:97%;"></textarea> </span>
             	</div>
 				<div style="font-size:10pt;margin-top:5px;">
-					<span style="margin-left:10px;" id="tranReply">回复内容：</span>
+					<span style="margin-left:10px;" id="tranReply">#(..Get("回复内容"))#：</span>
 				</div>
 				<div style="font-size:10pt;">
 					<span style="margin-left:5px;"><textarea id="tranReplyMess" rows="3" cols="129" style="margin:1px;width:97%;"></textarea> </span>
@@ -562,13 +584,13 @@
 			<div id="user" toolbar="#tb"></div>
 		</div>
 		<div id="tb">
-			<span style="margin:5px 5px;">姓名</span>
+			<span style="margin:5px 5px;">#(..Get("姓名"))#</span>
 			<span ><input id="UserName" style="margin:5px 10px 5px 0px;" /></span>
-			<span ><button id="Find" class="dhcc-btn-icon" style="width:100;margin:5px 10px;float:none">查询</button></span>
-			<span ><button id="MonAdd" class="dhcc-btn-icon" style="display:none;width:100;margin:5px 10px;float:none;dispaly:none;">添加晨会人员</button></span>
+			<span ><button id="Find" class="dhcc-btn-icon" style="width:100;margin:5px 10px;float:none">#(..Get("查询"))#</button></span>
+			<span ><button id="MonAdd" class="dhcc-btn-icon" style="display:none;width:100;margin:5px 10px;float:none;dispaly:none;">#(..Get("添加晨会人员"))#</button></span>
 			<div >
 				<span style="margin:5px 20px 5px 40px;"><input type="text" id="UserNames" disabled="disabled" style="border:0;border-bottom:1px solid #40a2de;width:260px !important;max-width:300px !important;"/></span>
-				<span ><button id="Add" class="dhcc-btn-icon" style="width:100;float:none" >添加参会人员</button></span>
+				<span ><button id="Add" class="dhcc-btn-icon" style="width:100;float:none" >#(..Get("添加参会人员"))#</button></span>
 			</div>
 		</div>
     </div>

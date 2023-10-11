@@ -1,0 +1,420 @@
+<!-- 血糖配置 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetDataImport.csp 交班数据引入配置-->
+<HTML lang="zh-CN">
+
+<HEAD>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI></HISUI>
+	<style>
+		body {
+			background: white;
+		}
+
+		hr.dashed {
+			border-top: 0;
+			border-bottom: 1px dashed #ccc;
+			margin: 0;
+		}
+
+		div.hGap {
+			height: 10px;
+		}
+
+		div.vGap {
+			width: 10px;
+		}
+
+		.combo .combo-text {
+			box-sizing: border-box;
+		}
+
+		#_HospList+.combo>.combo-text {
+			width: 320px !important;
+		}
+
+		.l-btn:focus {
+			outline: none;
+		}
+
+		td.datagrid-value-changed {
+			background: transparent;
+		}
+
+		.icon {
+			padding-left: 20px;
+			background-position: left 0px center;
+			display: inline-block;
+			font-size: 12px;
+			cursor: pointer;
+		}
+
+		/*#ctcConfig{padding-left: 10px;padding-right: 10px;margin-top: -0.5em;padding-top: 10px;}*/
+		/*#ctcConfig>div{padding-right: 8px;}*/
+		.gradeBtn {
+			position: inherit;
+			background-color: transparent;
+			cursor: pointer;
+		}
+
+		.datagrid-toolbar {
+			width: 100%;
+		}
+
+		.panel.datagrid>.panel-body.panel-body-noheader {
+			border-radius: 0;
+			border-left: 0;
+			border-right: 0;
+			border-bottom: 0;
+			border-color: #cccccc;
+		}
+
+		.transparentHeader {
+			background: transparent;
+			border-bottom: 0;
+			border-radius: 0;
+			border: 0;
+			border-top: 1px solid #cccccc;
+		}
+
+		.transparentHeader>.panel-title {
+			color: #000;
+		}
+
+		.transparentHeader+.panel-body {
+			border: 0;
+			border-bottom: 1px solid #cccccc;
+		}
+
+		.panel-body.panel-body-noheader {
+			border-top: 0;
+		}
+
+		.labelStar {
+			color: red;
+			vertical-align: bottom;
+			line-height: 100%;
+		}
+
+		i.dot {
+			display: inline-block;
+			width: 10px;
+			height: 10px;
+			border-radius: 10px;
+			margin-right: 10px;
+			background: red;
+		}
+
+		.icon {
+			padding-left: 0;
+		}
+	</style>
+	<script language="javascript">
+		var eventList = [], eventObj = {};
+	</script>
+</head>
+
+<body style="overflow: hidden;padding:0;">
+	<div style="position: relative;">
+		<table cellpadding="0" style="margin-left: 10px;border-collapse:separate;border-spacing:0 10px;">
+			<tr>
+				<td class="r-label">
+					<span id="_HospListLabel"
+						style="color: red;vertical-align: bottom;line-height: 100%;">*</span>#(..Get("所属医院"))#
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+			</tr>
+		</table>
+		<hr class="dashed">
+	</div>
+	<div id="ctcConfig">
+		<div class="evaluate">
+			<div class="hisui-panel" style="border:0;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table id="traceTable" class="hisui-datagrid" data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+						iconCls: 'icon-add',
+						text:$g('新增'),
+						handler:addTTRow
+					},{
+            iconCls: 'icon-cancel',
+            text:$g('删除'),
+            handler:deleteTTRow
+          },{
+						iconCls: 'icon-save',
+						text:$g('保存'),
+						handler:saveTTRow
+					}],
+					onDblClickRow:editTTRow
+				">
+					<thead>
+						<tr>
+							<th data-options="field:'type',width:180,editor:{type:'text'}">#(..Get("类型"))#</th>
+							<th data-options="field:'typDR',width:130,formatter:function(value,row){
+								return eventObj[value];
+							},
+							editor:{
+								type:'combobox',
+								options:{
+									defaultFilter:6,
+									valueField:'id',
+									textField:'desc',
+									data:eventList,
+									blurValidValue:true
+								}
+							}">#(..Get("体温单事件"))#</th>
+							<th data-options="field:'iconFlag',width:180,formatter:function(value,row){
+								return 1==value?$g('是'):$g('否');
+							},editor:{type:'icheckbox'}">#(..Get("是否显示外出图标"))#</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript">
+		if (!Array.prototype.includes) {
+			Array.prototype.includes = function (elem) {
+				if (this.indexOf(elem) < 0) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+		}
+		if (!String.prototype.includes) {
+			String.prototype.includes = function (elem) {
+				if (this.indexOf(elem) < 0) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+		}
+		$.extend($.fn.datagrid.methods, {
+			getEditingRowIndexs: function (jq) {
+				var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+				var indexs = [];
+				rows.each(function (i, row) {
+					var index = row.sectionRowIndex;
+					if (indexs.indexOf(index) == -1) {
+						indexs.push(index);
+					}
+				});
+				return indexs;
+			}
+		});
+		// -----------------------------------------------------
+		var hospID, wardsData = [], docAdvicesObj = {};
+		var selectTTIndex, editTTIndex, ttTableData = { "total": 0, "rows": [] };
+		var editRTIndex, rtTableData = { "total": 0, "rows": [] };
+		var editDGIndex, dgTableData = { "total": 0, "rows": [] };
+		$(function () {
+			hospComp = GenHospComp("Nur_IP_TraceEvent", session["LOGON.USERID"] + '^' + session["LOGON.GROUPID"] + '^' + session["LOGON.CTLOCID"] + '^' + session["LOGON.HOSPID"]);
+			hospID = hospComp.getValue();
+			hospComp.options().onSelect = function (i, d) {
+				hospID = d.HOSPRowId;
+				docAdvicesObj = {};
+				init();
+			}
+			init();
+		})
+		function init() {
+			getBGTableData();
+		}
+		function getBGTableData() {
+			// 患者事件类别获取数据
+			var res = $cm({
+				ClassName: 'Nur.NIS.Service.VitalSign.Event',
+				QueryName: 'FindEventTypeList',
+				hospId: hospID,
+				rows: 9999
+			}, false);
+			console.log(res);
+			var filterType=[$g("入院"),$g("转入"),$g("死亡"),$g("出院")];
+			eventList = res.rows.filter(function(e){
+				return (filterType.indexOf($g(e.desc))==-1)&&(e.triggerType!="外出")
+			});
+			console.log(eventList);
+			for (var i = 0; i < eventList.length; i++) {
+				var elem = eventList[i];
+				eventObj[elem.id] = elem.desc;
+			}
+			console.log(eventObj);
+			// 获取示踪配置
+			$cm({
+				ClassName: 'Nur.NIS.Service.Trace.Manage',
+				QueryName: 'GetTraceConfig',
+				rows: 999999999999999,
+				hospDR: hospID
+			}, function (data) {
+				console.log(data);
+				ttTableData = data;
+				selectTTIndex = undefined;
+				editTTIndex = undefined;
+				$('#traceTable').datagrid({ data: ttTableData.rows });
+			});
+		}
+		function addTTRow() {
+			if ((undefined != editTTIndex) && !saveTTRow()) return;
+			editTTIndex = $('#traceTable').datagrid('getRows').length;
+			var row = {
+				type: "",
+				typDR: "",
+				iconFlag: "",
+				id: ""
+			}
+			$('#traceTable').datagrid("insertRow", {
+				row: row
+			}).datagrid("selectRow", editTTIndex);
+			selectTTIndex = editTTIndex;
+			editTTRow(editTTIndex, row)
+		}
+		function editTTRow(curInd, row) {
+			// 当双击另一行时，先保存正在编辑的行
+			if ((undefined != editTTIndex) && (editTTIndex != curInd) && !saveTTRow()) return;
+			editTTIndex = curInd;
+			$('#traceTable').datagrid('beginEdit', editTTIndex);
+			var rowEditors = $('#traceTable').datagrid('getEditors', editTTIndex);
+			$(rowEditors[1].target).combobox('loadData', eventList);
+			if (row.typDR) {
+				$(rowEditors[1].target).combobox('setValue', row.typDR);
+			}
+			$(rowEditors[2].target).checkbox('setValue', row.iconFlag ? true : false);
+			$(rowEditors[0].target).focus();
+		}
+		function saveTTRow() {
+			if (undefined == editTTIndex) {
+				return $.messager.popover({ msg: $g('无需要保存的项！'), type: 'alert' });
+			}
+			var index = $('#traceTable').datagrid('getEditingRowIndexs')[0];
+			// if (undefined===index) return true;
+			var rows = $('#traceTable').datagrid('getRows');
+			var curRow = rows[editTTIndex];
+			// var curRow=$('#traceTable').datagrid('getSelected');
+			var rowEditors = $('#traceTable').datagrid('getEditors', editTTIndex);
+			var id = curRow.id || '';
+			var type = $(rowEditors[0].target).val();
+			var typDR = $(rowEditors[1].target).combobox('getValue');
+			var iconFlag = $(rowEditors[2].target).checkbox('getValue');
+			iconFlag = iconFlag ? 1 : '';
+			if (!type) {
+				$.messager.popover({ msg: $g('请输入类型！'), type: 'alert' });
+				return false;
+			}
+			if (type.toString().length > 50) {
+				$.messager.popover({ msg: $g('类型不超50字！'), type: 'alert' });
+				return false;
+			}
+
+			for (var i = 0; i < rows.length; i++) {
+				var r = rows[i];
+				if ((id == r.id) || !r.id) continue;
+				if (type == r.type) {
+					return $.messager.popover({ msg: $g('该类型已存在！'), type: 'alert' });
+				}
+				if (typDR && (typDR == r.typDR)) {
+					return $.messager.popover({ msg: $g('该体温单事件已存在！'), type: 'alert' });
+				}
+			}
+			var data = {
+				id: id,
+				type: type,
+				typDR: typDR,
+				iconFlag: iconFlag,
+				hospDR: hospID
+			}
+			var updateRow = editTTIndex;
+			var res = $cm({
+				ClassName: 'Nur.NIS.Service.Trace.Manage',
+				MethodName: 'AddOrUpdateTraceConfig',
+				dataType: "text",
+				data: JSON.stringify(data)
+			}, false);
+			if (parseInt(res) == res) {
+				$.messager.popover({ msg: $g('保存成功！'), type: 'success' });
+				var row = {
+					id: id || res,
+					type: type,
+					typDR: typDR,
+					iconFlag: iconFlag
+				};
+				$('#traceTable').datagrid('acceptChanges').datagrid('updateRow', {
+					index: updateRow,
+					row: row
+				});
+				$('#traceTable').datagrid('endEdit', editTTIndex)
+				editTTIndex = undefined;
+				return true;
+			} else {
+				$.messager.popover({ msg: res, type: 'alert' });
+				return false;
+			}
+		}
+		function deleteTTRow() {
+			var bgObj = $('#traceTable');
+			var row = bgObj.datagrid('getSelected');
+			console.log(row);
+			if (!row) {
+				$.messager.popover({ msg: $g('请先选中行！'), type: 'alert' });
+				return false;
+			}
+			$.messager.confirm($g("删除"), $g("确定要删除此行的数据？"), function (r) {
+				if (r) {
+					if (row.id) {
+						var res = $cm({
+							ClassName: 'Nur.NIS.Service.Trace.Manage',
+							MethodName: 'DeleteTraceConfig',
+							ID: row.id
+						}, false);
+						console.log(res);
+						if (0 == res) {
+							$.messager.popover({ msg: $g('删除成功！'), type: 'success' });
+							ttTableData.rows.map(function (elem, index) {
+								if (row.id == elem.id) {
+									ttTableData.rows.splice(index, 1);
+								}
+							});
+							$('#traceTable').datagrid({ data: ttTableData.rows });
+						} else {
+							$.messager.popover({ msg: JSON.stringify(res), type: 'alert' });
+							return false
+						}
+					} else {
+						var curInd = bgObj.datagrid('getRowIndex', row);
+						bgObj.datagrid('deleteRow', curInd);
+					}
+					// updateTableHeight()
+					selectTTIndex = undefined;
+					editTTIndex = undefined;
+				}
+			});
+		}
+		function resizeTableHeight() {
+			var innerHeight = window.innerHeight;
+			var halfpHeight = innerHeight - 52;
+			console.log(halfpHeight);
+			$('#traceTable').datagrid('resize', {
+				height: halfpHeight
+			});
+		}
+		setTimeout(resizeTableHeight, 100);
+		window.addEventListener("resize", resizeTableHeight);
+	</script>
+</body>
+
+</html>

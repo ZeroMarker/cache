@@ -1,0 +1,376 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/css/base.css">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			border: none;
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+		}
+		.MainBox{
+			border: 1px solid black;
+		}
+		input {
+			border: none;
+			border-bottom: black solid 1px;
+			font-size: 95%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<div id="Form">
+			<script language="Cache" RUNAT="SERVER">
+			    Set ReportID=$g(%request.Data("ReportID",1))
+			    Set ChildRepID = ""
+				Set ChildRepID=##Class(DHCMed.DTH.ChildReport).GetRepIDByDthID(ReportID)
+				Set ReportInfo=##Class(DHCMed.DTHService.LodopReportSrv).PrintDTHChildReport(ChildRepID)
+			   	Set RepYear 	= $p(ReportInfo,"^",1)
+				Set IsRepair	= $p(ReportInfo,"^",2)
+				Set CardNo		= $p(ReportInfo,"^",3)
+				Set CurrVillage	= $p(ReportInfo,"^",4)
+				Set CurrRoad	= $p(ReportInfo,"^",5)
+				Set MomName		= $p(ReportInfo,"^",6)
+				Set FatherName	= $p(ReportInfo,"^",7)
+				Set ChildName	= $p(ReportInfo,"^",8)
+				Set TelPhone	= $p(ReportInfo,"^",9)
+				Set Register	= $p(ReportInfo,"^",10)
+				Set Sex			= $p(ReportInfo,"^",11)
+				Set Birthday	= $p(ReportInfo,"^",12)
+				Set Weight		= $p(ReportInfo,"^",13)
+				Set WeightType	= $p(ReportInfo,"^",14)
+				Set Height		= $p(ReportInfo,"^",15)
+				Set BirthPlace	= $p(ReportInfo,"^",16)
+				Set DeathDate	= $p(ReportInfo,"^",17)
+				Set DeadYear	= $p(ReportInfo,"^",18)
+				Set DeadMonth	= $p(ReportInfo,"^",19)
+				Set DeadDay		= $p(ReportInfo,"^",20)
+				Set DeadTime	= $p(ReportInfo,"^",21)
+				Set AReason		= $p(ReportInfo,"^",22)
+				Set BReason		= $p(ReportInfo,"^",23)
+				Set CReason		= $p(ReportInfo,"^",24)
+				Set DReason		= $p(ReportInfo,"^",25)
+				Set BaseReason	= $p(ReportInfo,"^",26)
+				Set ClassifyNo	= $p(ReportInfo,"^",27)
+				Set ICD10		= $p(ReportInfo,"^",28)
+				Set DeadPlace	= $p(ReportInfo,"^",29)
+				Set BFTreat		= $p(ReportInfo,"^",30)
+				Set DiagLevel	= $p(ReportInfo,"^",31)
+				Set NotTreat	= $p(ReportInfo,"^",32)
+				Set NotTreatTxt	= $p(ReportInfo,"^",33)
+				Set DeadDiagList= $p(ReportInfo,"^",34)
+				Set RepUnit		= $p(ReportInfo,"^",35)
+				Set RepUser		= $p(ReportInfo,"^",36)
+				Set RepDate		= $p(ReportInfo,"^",37)
+			   	
+			   	
+			</script>
+			<div style="font-size: 120%;font-weight: bold;text-align: center;">
+				<span>儿童死亡报告卡</span>
+			</div>
+			<div style="padding-left:16em;">
+				<input type='text' style='width:4em' value=#(RepYear)#>年
+				<span style="float:right;padding-right:1em;">
+					表 号：卫统49表
+					<br>
+					制定机关：卫生部
+					<br>
+					批准机关：国家统计局
+					<br>
+					批准文号：国统制
+					<br>
+					[2012]184号
+				</span>
+			</div>
+			<div style="padding-top:4.5em;padding-bottom:0.5em;">
+				<input type='text' style='width:7em' value="">区县
+				<span style="float:right;padding-right:3em;"><CSP:IF CONDITION="IsRepair=1"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>补卡</span>
+			</div>
+			<div class="MainBox" style="height:39em;;width:99%">
+				<div style="width:52%;position:absolute;">
+					<table class="RepInfo" border=0 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-right:none" bordercolor="#000000">
+					<tr>
+						<td>
+							编号<input type='text' style='width:12em' value=#(CardNo)#>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							住址
+							<input type='text' style='width:4em' value=#(CurrVillage)#>乡(区)
+							<input type='text' style='width:4em' value=#(CurrRoad)#>街道(区)
+						</td>
+					</tr>
+					<tr>
+						<td>
+							父亲姓名<input type='text' style='width:5em' value=#(MomName)#>
+							母亲姓名<input type='text' style='width:5em' value=#(FatherName)#>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							儿童姓名<input type='text' style='width:4em' value=#(ChildName)#>
+							联系电话<input type='text' style='width:4em' value=#(TelPhone)#>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							户籍:(1)本地户籍 (2)非本地户籍居住1年以下
+							<br>
+							(3)非本地户籍居住1年及以上
+							<span style="padding-left:8em;">
+								<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+								#(Register)#
+								</div>
+							</span>
+						</td>
+					</tr>
+					<tr>
+						<td >
+							性别：1.男 2.女 3.性别不明
+							<span style="padding-left:8em;">
+								<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+								#(Sex)#
+								</div>
+							</span>
+						</td>
+					</tr>
+					<tr>
+						<td style="font-size:0">
+							<script language="Cache" RUNAT="SERVER">
+						    	Set BirthdayOne = $e(Birthday,3,3)
+						    	Set BirthdayTwo = $e(Birthday,4,4)
+						    	Set BirthdayThr = $e(Birthday,6,6)
+						    	Set BirthdayFor = $e(Birthday,7,7)
+						    	Set BirthdayFiv = $e(Birthday,9,9)
+						    	Set BirthdaySix = $e(Birthday,10,10)
+							</script>
+							<span style="font-size:20px;padding-left:0.5em">出生日期&nbsp;&nbsp;&nbsp;&nbsp;</span>
+							<div style="display:inline-block;border:1pt solid #000;width:2em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">年</div>
+							<div style="display:inline-block;border:1pt solid #000;width:2em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">月</div>
+							<div style="display:inline-block;border:1pt solid #000;width:2.3em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">日</div>
+							<br>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;margin-left:6.5em;font-size:20px;">#(BirthdayOne)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(BirthdayTwo)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(BirthdayThr)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(BirthdayFor)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(BirthdayFiv)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(BirthdaySix)#</div>
+							
+						</td>
+					</tr>
+					
+					<tr>
+						<td >
+							出生体重<input type='text' style='width:4em' value=#(Weight)#>克
+							(1)测量(2)估计
+							<span style="padding-left:4.5em;">
+								<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+								#(WeightType)#
+								</div>
+							</span>
+							<br>
+							孕周<input type='text' style='width:4em' value=#(Height)#>周
+						</td>
+					</tr>
+					
+					
+					<tr>
+						<td >
+							出生地点：
+							<br>(1)省（市）医院
+							<br>(2)区县医院
+							<br>(3)街道（乡镇）卫生院
+							<br>(4)村（诊所）卫生室
+							<br>(5)途中
+							<br>(6)家中
+							<span style="padding-left:8em;">
+								<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+								#(BirthPlace)#
+								</div>
+							</span>
+						</td>
+					</tr>
+					<tr>
+						<td style="font-size:0">
+							<script language="Cache" RUNAT="SERVER">
+						    	Set DeathDateOne = $e(DeathDate,3,3)
+						    	Set DeathDateTwo = $e(DeathDate,4,4)
+						    	Set DeathDateThr = $e(DeathDate,6,6)
+						    	Set DeathDateFor = $e(DeathDate,7,7)
+						    	Set DeathDateFiv = $e(DeathDate,9,9)
+						    	Set DeathDateSix = $e(DeathDate,10,10)
+							</script>
+							<span style="font-size:20px;padding-left:0.5em">死亡日期&nbsp;&nbsp;&nbsp;&nbsp;</span>
+							<div style="display:inline-block;border:1pt solid #000;width:2em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">年</div>
+							<div style="display:inline-block;border:1pt solid #000;width:2em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">月</div>
+							<div style="display:inline-block;border:1pt solid #000;width:2.3em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">日</div>
+							<br>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;margin-left:6.5em;font-size:20px;">#(DeathDateOne)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(DeathDateTwo)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(DeathDateThr)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(DeathDateFor)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(DeathDateFiv)#</div>
+							<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;padding:0;margin:0;font-size:20px;">#(DeathDateSix)#</div>
+							
+						</td>
+					</tr>
+					<tr>
+						<td>
+							死亡年龄
+							<input type='text' style='width:2em' value=#(DeadYear)#>岁
+							<input type='text' style='width:2em' value=#(DeadMonth)#>月
+							<input type='text' style='width:2em' value=#(DeadDay)#>天
+							<input type='text' style='width:2em' value=#(DeadTime)#>小时
+						</td>
+					</tr>
+					<tr>
+						<td>
+							死亡诊断：
+						</td>
+					</tr>
+					
+					<tr>
+						<td>
+							(a)、引起(a)的疾病或情况
+							<input type='text' style='width:6em' value=#(BReason)#>
+						</td>
+					</tr>
+				</table>
+				</div>
+				
+				<div style="width:45%;position: absolute;left:25.4em;">
+					<table class="RepInfo"  border=0 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;" bordercolor="#000000">
+						<tr>
+							<td>
+								(b)、引起(a)的疾病或情况
+								<input type='text' style='width:6em' value=#(CReason)#>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								(c)、引起(b)的疾病或情况
+								<input type='text' style='width:6em' value=#(DReason)#>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								(d)、引起(c)的疾病或情况
+								<input type='text' style='width:6em' value=#(AReason)#>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								根本死因
+								<input type='text' style='width:10em' value=#(BaseReason)#>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								分类编号
+								<input type='text' style='width:10em' value=#(ClassifyNo)#>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								ICD-10编码
+								<input type='text' style='width:10em' value=#(ICD10)#>
+							</td>
+						</tr>
+						<tr>
+							<td >
+								死亡地点：(1)医院(2)途中
+								<br>(3)家中
+								<span style="padding-left:6em;">
+									<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+									#(DeadPlace)#
+									</div>
+								</span>
+							</td>
+						</tr>
+						<tr>
+							<td >
+								死前治疗：(1)住院(2)门诊
+								<br>(3)未治疗
+								<span style="padding-left:6em;">
+									<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+									#(BFTreat)#
+									</div>
+								</span>
+							</td>
+						</tr>
+						<tr>
+							<td >
+								诊断级别：(1)省(市）
+								<br>(2)区县
+								<br>(3)街道（乡镇）
+								<br>(4)村（诊所）
+								<br>(5)未就医
+								<span style="padding-left:6em;">
+									<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+									#(DiagLevel)#
+									</div>
+								</span>
+							</td>
+						</tr>
+						
+						<tr>
+							<td >
+								未治疗或未就医主要原因：（单选）
+								<br>(1)经济困难
+								<br>(2)交通不便
+								<br>(3)来不及送医院
+								<br>(4)家长认为病情不严重
+								<br>(5)风俗习惯
+								<br>(6)风俗习惯
+								<span style="padding-left:6em;">
+									<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+									#(NotTreat)#
+									</div>
+								</span>
+								<br>
+								<input type='text' style='width:10em' value=#(NotTreatTxt)#>
+							</td>
+						</tr>
+						<tr>
+							<td >
+								死前治疗：死因诊断依据: (1)病理尸检
+								<br>(2)临床
+								<br>(3)推断
+								<span style="padding-left:8em;">
+									<div style="display:inline-block;border:1pt solid #000;width:1em;height:1em;text-align:center;">
+									#(DeadDiagList)#
+									</div>
+								</span>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>	
+			<div>
+				填报单位：<input type='text' style='width:10em' value=#(RepUnit)#>&nbsp;&nbsp;&nbsp;
+				填报人：<input type='text' style='width:5em' value=#(RepUser)#>&nbsp;&nbsp;&nbsp;
+				填报日期：<input type='text' style='width:6em' value=#(RepDate)#>
+			</div>
+			
+			
+			
+			
+		
+	</div>	
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

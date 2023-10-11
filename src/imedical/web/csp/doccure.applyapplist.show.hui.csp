@@ -1,11 +1,216 @@
-<div class="hisui-panel" data-options="fit:true,border:false,collapsible:true">
-    <!--治疗预约列表-->
-    <td>
-    	<input name="DCARowId" id="DCARowId" type="hidden"  value="#($g(%request.Data("DCARowId",1)))#">
-    	<input name="DCARowIdStr" id="DCARowIdStr" type="hidden"  value="#($g(%request.Data("DCARowIdStr",1)))#">
-    	<input name="SingleSelect" id="SingleSelect" type="hidden"  value="#($g(%request.Data("SingleSelect",1)))#">
-    	<input name="OperateType" id="OperateType" type="hidden"  value="#($g(%request.Data("OperateType",1)))#">
-    	<input name="XMLObject" id="XMLObject" type="hidden"  value="#(XMLObject)#">
-    </td>
-    <table id="tabCureApplyApp"></table> 	
-</div> 	
+<div id="region_west" data-options="region:'west',split:false,border:false,collapsible:true" style="padding:10px;width:550px;"> 
+	<div id="applist_panel" class="hisui-panel" title="治疗预约-患者列表" 
+	data-options="headerCls:'panel-header-gray',iconCls:'icon-apply-check',fit:true,border:true">
+  		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',split:false,border:false">
+				<div class="hisui-panel" data-options="border:false,headerCls:'panel-header-gray',fit:true,closable:false"> 
+		       		<table class="search-table app-table">
+						<tr>
+							<td class="first-r-label">
+								<label for="StartDate">#(..Get("开始日期"))#</label>
+							</td>
+							<td>
+								<input id="StartDate" class="hisui-datebox textbox" style="width:115px"></input>
+							</td>
+							<td class="r-label">
+								<label for="EndDate">#(..Get("结束日期"))#</label>
+							</td>
+							<td>
+								<input id="EndDate" class="hisui-datebox textbox" style="width:115px"></input>
+							</td>
+						</tr>
+						<tr>
+							<td class="first-r-label">
+								<label>#(..Get("卡号"))#</label>
+							</td>
+							<td colspan=3 style="box-sizing:border-box;">
+								<input id="CardTypeNew" disabled class="hisui-validatebox textbox" style="width:108px;">
+								<input id="CardNo" class="hisui-validatebox textbox" style="width:185px">
+							</td>
+							<td class="r-label">
+								<a id="btnReadCard" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="first-r-label">
+								<label class="alllab">#(..Get("患者条件"))#</label>
+							</td>
+							<td colspan=3 style="box-sizing:border-box;">
+								<input id="PatCondition" class="hisui-combobox textbox" style="width:115px;">
+								<input id="PatConditionVal" class="hisui-validatebox textbox" style="width:185px">
+								<input id="PatientID" class="hisui-validatebox textbox" type="hidden" value=""/>
+							</td>
+							<td class="r-label">
+								<a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="first-r-label">
+								<label for="ServiceGroup">#(..Get("服务组"))#</label>
+							</td>
+							<td colspan=3>
+								<input id="ServiceGroup" class="hisui-combobox textbox" name="ServiceGroup" style="width:115px"/>
+							</td>
+							<td class="r-label">
+					       		<a id="btnClear" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+							</td>
+						</tr>
+					</table>
+				</div> 
+			</div> 
+		 	<div data-options="region:'center',split:false,border:false" > 
+				<div class="hisui-panel panel-header-gray cure-p-bd-t" data-options="fit:true"> 
+	            	<table id="tabCureAppPatientList"></table>
+	            </div>
+		  	</div>
+		</div>
+   </div>
+</div>
+<div data-options="region:'center',border:false,split:true,closable:false,collapsible:true" style="padding:10px 10px 10px 0px;">
+    <div class="hisui-layout" data-options="fit:true,border:false,clickExpand:true">   
+		<div data-options="region:'center',title:'预约资源',headerCls:'panel-header-gray panel-header-cure-high',iconCls:'icon-apply-check',split:true,showCollapsedTitle:true,tools:'#appres-panel-tools'"
+		style="padding:0px;border-radius:0px 0px 4px 4px;">
+		<div class="hisui-panel panel-header-gray cure-p-bd-t" data-options="fit:true" style="margin-top:2px">
+			<csp:if condition='ScheuleGridListOrTab="0"'>
+				<div id="ScheduleTab" class="hisui-tabs tabs-gray" data-options="tabPosition:'top',fit:true,border:false"></div>  
+			<csp:else>
+				<div id="p-ScheduleList" class="hisui-panel" data-options="fit:true,border:false">
+					<table id="ScheduleList"></table>
+				</div>
+			</csp:if>
+		</div>   
+		</div>   
+		<div data-options="region:'south',title:'预约列表',headerCls:'panel-header-gray',iconCls:'icon-apply-check',split:true,showCollapsedTitle:true,tools:'#appres-panel-tools'"
+		style="padding:0px;height:300px;border-radius:0px 0px 4px 4px">
+	    	<input name="XMLObject" id="XMLObject" type="hidden"  value="#(XMLObject)#">							    
+		    <table id="tabCureApplyApp" toolbar="#CureApplyApp-bar"></table> 	
+			<div id="CureApplyApp-bar">
+			    <a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnDelete" plain="true" onclick="appListObj.GenCancelCureAppoint()">取消预约</a>
+			    <a href="#" class="hisui-linkbutton" iconCls="icon-print" id="BtnPrint" plain="true" onclick="appListObj.BtnPrintApplyClick();">打印预约治疗凭证</a>
+			   	<div class="datagrid-btn-separator" style="display:inline;float:none"></div>
+			   	<label for="Appoint_FindDate" class="fr-label" style="clear:both">#(..Get("预约日期"))#</label>
+				<input id="Appoint_FindDate" class="hisui-datebox" type="text" name="Appoint_FindDate" style="width:130px;"/>
+			    <label class="r-label"></label>
+			    <input class='hisui-checkbox' type="checkbox" id="OnlyApp" checked label="#(..Get("仅显示预约"))#">
+		    </div>	
+	    </div>  
+	    <div id="appres-panel-tools">
+			<span id="more-container" class="menu-container">
+				<span class="span-b-text">
+					<label for="Apply_StartDate" class="fr-label">#(..Get("预约开始日期"))#</label>
+					<input id="Apply_StartDate" class="hisui-datebox" type="text" name="cureAppStartDate" style="width:130px;"/>
+				</span>
+				<span class="span-b-btn">
+					<csp:if condition='ScheuleGridListOrTab="1"'>
+						<span style="color:red">#(..Get("双击单元格预约"))#</span>
+					<csp:else>
+						<a href="javascript:void(0)" class="hisui-linkbutton" id="btnApp">预约</a>
+					</csp:if>
+				</span>
+			</span>
+		</div>
+	</div>  
+</div> 
+<div id="appointlist-dialog" class="hisui-dialog" title="预约明细" style="padding:10px" data-options="iconCls:'icon-w-list',shadow:false,modal:true,closed:true">
+	<div class="hisui-panel panel-header-gray" data-options="fit:true"> 
+		<div class="hisui-layout" data-options="fit:true,border:false,collapsible:true">
+			<div data-options="region:'north',border:false" style="padding:10px;height:50px;">
+				<input id="QryAllFlag" class="hisui-checkbox" type="checkbox" name="QryAllFlag" label="#(..Get("全部"))#"/>
+				<label class="r-label"></label>
+				<a href="javascript:void(0)" id="btnExport" data-options="iconCls:'icon-w-export'" class="hisui-linkbutton">导出</a>
+			</div>
+			<div data-options="region:'center',border:true" class="panel-header-gray cure-p-bd-t-tdash">
+			    <table id="tabCureAppointList"></table>    
+		    </div>			
+		</div>
+	</div>
+</div>
+<div class="hisui-dialog" id="DCAListTabWin" title="项目明细" style="padding:10px" data-options="iconCls:'icon-w-list',resizable:true,modal:true,closed:true">  
+	<div class="hisui-panel panel-header-gray" data-options="fit:true"> 
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',split:false,border:false">
+				<div class="hisui-panel panel-header-gray" data-options="border:false,fit:true,closable:false" style="border-radius:0px;border-bottom:1px dash #DCDCDC"> 
+		       		<table class="search-table app-table dcalist-table">
+						<tr>
+							<td class="first-r-label">
+								<label for="DCAStartDate">#(..Get("开始日期"))#</label>
+							</td>
+							<td>
+								<input id="DCAStartDate" class="hisui-datebox textbox" style="width:115px"></input>
+							</td>
+							<td class="r-label">
+								<label for="DCAComboArcim">#(..Get("医嘱项"))#</label>
+							</td>
+							<td>
+								<input id="DCAComboArcim" type="text" class="textbox" name="DCAComboArcim"/>
+							</td>
+							<td class="r-label">
+								<label for="DCAApplyNo">#(..Get("申请单号"))#</label>
+							</td>
+							<td>
+								<input id="DCAApplyNo" class="hisui-validatebox textbox" name="DCAApplyNo" style="width:115px"/>
+							</td>
+							<td class="r-label">
+								<label for="DCAComboOtherChk">#(..Get("其他"))#</label>
+							</td>
+							<td>
+								<input id="DCAComboOtherChk" class="hisui-combobox textbox" name="DCAComboOrderDoc" style="width:170px"/>
+							</td>
+							<td class="r-label">
+								<a id="btnDCAFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="first-r-label">
+								<label for="DCAEndDate">#(..Get("结束日期"))#</label>
+							</td>
+							<td>
+								<input id="DCAEndDate" class="hisui-datebox textbox" style="width:115px"></input>
+							</td>
+							<td class="r-label">
+								<label for="DCAComboOrderLoc">#(..Get("开单科室"))#</label>
+							</td>
+							<td>
+								<input id="DCAComboOrderLoc" class="hisui-combobox" name="DCAComboOrderLoc"/>
+							</td>
+							<td class="r-label">
+								<label for="DCAComboOrderDoc">#(..Get("开单医生"))#</label>
+							</td>
+							<td>
+								<input id="DCAComboOrderDoc" class="hisui-combobox textbox" name="DCAComboOrderDoc" style="width:122px"/>
+							</td>
+							<td class="r-label">
+								<input id="DCAPatientID" class="textbox" type="hidden" value=""/>
+								<input id="DCAServiceGroup" class="textbox" type="hidden" value=""/>
+							</td>
+							<td>
+								<input type="radio" class="hisui-radio" label="#(..Get("时间正序"))#" name="DCASortType" value="A" data-options="required:true,requiredSel:true,checked:true">
+								<label class="fr-label"></label>
+					            <input type="radio" class="hisui-radio" label="#(..Get("时间倒序"))#" name="DCASortType" value="D" data-options="required:true,requiredSel:true">
+							</td>
+							<td class="r-label">
+					       		<a id="btnDCAClear" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+							</td>
+						</tr>
+					</table>
+				</div> 
+			</div> 
+		 	<div data-options="region:'center',split:true,border:false" > 
+				<div class="hisui-panel" data-options="fit:true,border:false,collapsible:false" style="border-top:1px dashed #DCDCDC"> 
+		             <table id="tabCureApplyList"></table>
+				</div> 
+		  	</div>
+		</div>
+	</div>
+</div>
+<div  class="window-mask alldom" style="width:100%;height:100%;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=100);opacity: 1;font-size:1px;background-color:#ccc;text-align:center;padding-top: 20%;">
+	<h1>
+		<csp:if condition='DocCureUseBase="1"'>
+			<p><strong style="color:red">当前治疗站版本为基础版本,无法使用该界面功能.<strong></p>
+		<csp:else>
+			<csp:if condition='CureAppVersion="V1"'>
+				<p><strong style="color:red">预约版本为V1版本,无法使用该界面功能.<strong></p>
+			</csp:if>
+		</csp:if>
+	</h1>
+</div>

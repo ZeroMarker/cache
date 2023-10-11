@@ -1,0 +1,132 @@
+<!--dhcdoc.config.arcim.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<ADDINS require="CmdShell"></ADDINS>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<style>
+	.panel-card{
+		display:flex;
+		flex-wrap:wrap;
+		align-content:flex-start;
+		padding:10px;
+		border-radius:8px!important;
+	}
+	.panel-card>div{
+		margin:8px 5px 0px 5px;
+		width:250px;
+		white-space:nowrap;
+	}
+	.tooltip{
+		background-color:#fff;
+		border:1px solid #aaa;
+		color: #000;
+	}
+	.tip_class li{
+		border-bottom:1px solid #ddd;
+		padding: 5px 10px;
+	}
+	.combobox-item{
+		min-height:24px;
+	}
+</style>
+</head>
+<body class="hisui-layout" fit="true">
+	<div data-options="region:'north',title:'',collapsible:false,headerCls:'panel-header-gray'" style="height:55px;overflow:hidden;padding:10px;">
+		<table>
+	  	     <tr>
+				<td class="r-label">
+		 			<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		 		</td>
+		 		<td>
+		 			<input id="_HospList"/>
+		 		</td>
+ 			</tr>
+ 		</table>
+	</div>
+	<div data-options="region:'west',collapsible:false,border:false" style="width:330px;overflow:hidden;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',collapsible:false,border:false" style="height:38px;overflow:hidden;padding:5px 0px 0px 3px;">
+				<input id="SearchItem" style="width:325px;"/>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="tabArcimList"></table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',border:false" style="padding:2px 5px;">
+				<div clsName="User.DHCItmMast" class="hisui-panel panel-card" title="基本设置" data-options="headerCls:'panel-header-card'">
+					<div><input class="hisui-checkbox" type="checkbox" label="是否提示" id="DARCIMShowOEMessage"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="需要备注(非草药)" id="DARCIMRequireNote"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="住院用整数量" id="DARCIMIPNeedBillQty"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="一个患者只允许开一次" id="DARCIMAllowOnlyOnce"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="一次就诊只允许开一次" id="DARCIMAdmAllowOnlyOnce"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="长期自备或嘱托自动插入取药医嘱" id="DARCIMAutoInsertONEOrd"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="检验医嘱同一天允许重复(仅门诊)" id="DARCIMLabOrdDayAllowRepeat"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="不控制数量" id="DARCIMNotLimitQty"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="计入不记出医嘱标识" id="DARCIMCountInButNotOutFlag"></div>
+			    	<div><input class="hisui-checkbox" type="checkbox" label="同频次不同剂量医嘱" id="DARCIMSameFreqDifferentDosesFlag"></div>
+					<div>
+			    		<label>修改医嘱开始日期时间权限:</label>
+			    		<input id="DARCIMCanCrossDay" class="hisui-combobox" data-options="url:'',editable:false,panelHeight:'auto',data:[{id:'',text:''},{id:'Y',text:'是'},{id:'N',text:'否'}]" style="width:55px;">
+			    	</div>
+					<div>
+			    		<label>修改开医嘱日期时间权限:</label>
+			    		<input id="DARCIMOrdDateCanCrossDay" class="hisui-combobox" data-options="url:'',editable:false,panelHeight:'auto',data:[{id:'',text:''},{id:'Y',text:'是'},{id:'N',text:'否'}]" style="width:55px;">
+			    	</div>
+			    	<div>
+			    		<a id="tipConflic"  class="hisui-linkbutton" data-options="iconCls:'icon-help',plain:true" style="width:145px;">互斥类型(仅西医):</a>
+			    		<input id="DARCIMConflictType" class="hisui-combobox" data-options="url:'',editable:false,panelHeight:'auto',data:[{id:'OW',text:'单向'},{id:'TW',text:'双向'}]" style="width:70px;">
+			    	</div>
+			    	<div>
+			    		<a id="tipRepeatCheckDays"  class="hisui-linkbutton" data-options="iconCls:'icon-help',plain:true" style="width:150px;">重复医嘱判断天数:</a>
+			    		<input id="DARCIMRepeatCheckDays" class="hisui-numberbox" data-options="min:0" style="width:70px;"/> 
+			    	</div>
+			    	<div>
+			    		<label>最小提示库存(待用):</label>
+			    		<input id="DARCIMAlertStockQty" class="hisui-numberbox" data-options="min:0" style="width:70px;"/> 
+			    	</div>
+			    	<div style="width:510px;">
+			    		<label>计入不记出医嘱-无频次长嘱滚动默认开始时间:</label>
+			    		<input id="DARCIMCountInButNotOutIPLongOrdRollSttTime" class="hisui-timespinner"  data-options="showSeconds:true" style="width:85px;"/>  
+			    	</div>
+					<div style="width:510px;">
+			    		<a id="tipSpecLocDiag"  class="hisui-linkbutton" data-options="iconCls:'icon-help',plain:true" style="width:150px;">专科表单:</a>
+			    		<input id="DARCIMSpecLocDiag" name="SpecLocDiag" value="">  
+					</div>
+				</div>
+				<div clsName="User.DHCItmMast" class="hisui-panel panel-card" title="自动停医嘱" style="" data-options="headerCls:'panel-header-card'">
+					<div><input id="DARCIMStopAfterLongOrder" class="hisui-checkbox" type="checkbox" label="按该医嘱开始日期停止长期医嘱"></div>
+					<div style="width:510px;">
+						<a id="tipStopLongOrd"  class="hisui-linkbutton" data-options="iconCls:'icon-help',plain:true" style="width:165px;">默认开始日期及时间:</a>
+			    		<label style="color:red;">today+</label><input id="DARCIMStopDefSttDateDay" style="width:50px;"/>
+		            	<input id="DARCIMStopDefSttTime" class="hisui-timespinner" data-options="showSeconds:true,disabled:true,min:'00:00:01'" style="width:85px;">
+			    	</div>
+					<div><input id="DARCIMNotAutoStop" class="hisui-checkbox" type="checkbox" label="不能被自动停止的长期费用医嘱"></div>
+			    	<div style="width:770px;">
+			    		<input id="DARCIMAllowLongOrder" class="hisui-checkbox" type="checkbox" label="允许该医嘱开长期(适用配置自动停所有长期后转科/术后/重整等非出院医嘱需开立成长期的项目)" data-options="disabled:true">
+			    	</div>
+				</div>
+				<div class="hisui-panel panel-card" title="互斥项" style="height:250px;" data-options="headerCls:'panel-header-card'">
+					<table id="tabConflict"></table>
+				</div>
+				<div class="hisui-panel panel-card" title="医嘱项替换" style="height:250px;" data-options="headerCls:'panel-header-card'">
+					<table id="tabItemReplace"></table>
+				</div>
+			</div>
+			<div data-options="region:'south',collapsible:false,border:false" style="height:40px;text-align:center;padding-top:5px;">
+				<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/dhcdocconfig/arcimext.js"></script>
+</html>

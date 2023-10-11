@@ -1,0 +1,127 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!-- TRAK TOOLBAR  -->
+<SCRIPT SRC="../scripts/tb.js"></SCRIPT>
+<SCRIPT Language="JavaScript">
+//called from menu definition
+function SetKeepOpen(url,newwin) {
+	keepopen = true;
+	parent.keepopen=true;
+	parent.location.href=url;
+	
+}
+</SCRIPT>
+<script language='javascript' src='../scripts/framework/ext.epr.menu.js'></script>
+</HEAD>
+
+<body class="websys_menu" >
+<server>
+	;epr.menu.csp
+	;i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s ^zTRAK("cjb","dhc.bdp.epr.menu.csp")=$g(%request.Data("LogonFromVB",1))
+	
+	n str,LogonPatientID,LogonEpisodeID
+	s (str,LogonPatientID,LogonEpisodeID)=""
+	i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s str=$p($g(%request.Data("LogonFromVB",1)),"^",2)
+	i str'="" s LogonPatientID=$p(str,":",3),LogonEpisodeID=$p(str,":",4)
+	
+ n comp,t
+ s comp=##Class(websys.Component).OpenName("epr.Menu.Messages")
+ i comp d comp.LoadTrans(),comp.%Close()
+ w "<SCRIPT>",$c(13,10)
+ ; Dump out all the translated captions
+ s code=""  f  s code=$o(t(code))  q:code=""  d
+ . w "t['"_code_"']="_..QuoteJS($p($g(t(code),code),"^",1))_";",$c(13,10)
+ w "</SCRIPT>",$c(13,10),!
+</server>
+<DIV style="LEFT: 0px; POSITION: absolute; TOP: 0px">
+<server>
+ ;n menu,swf
+ ;s menu=##Class(dtepr.GroupSettings).GetMainMenu(%session.Get("LOGON.GROUPID"),.swf)
+ ;i menu="" ;
+ ;d ##Class(ext.websys.Menu).ShowToolBar(menu)
+</server>
+<FORM name="fEPRMENU">
+<!--TN:23-Apr-2002:added field MultipleIDs for multiple selected IDs for generic looping workflows-->
+<INPUT TYPE="hidden" name="PatientID" value=#(LogonPatientID)#>
+<INPUT TYPE="hidden" name="EpisodeID" value=#(LogonEpisodeID)#>
+<INPUT TYPE="hidden" name="mradm" value="">
+<INPUT TYPE="hidden" name="Decease" value="">
+<INPUT TYPE="hidden" name="MultipleIDs" value="">
+<!-- WAITINGLIST -->
+<INPUT TYPE="hidden" name="WaitingListID" value="">
+<INPUT TYPE="hidden" name="WLWaitListStatusDR" value="">
+<!-- ORDERITEM -->
+<INPUT TYPE="hidden" name="OEOrdItemID" value="">
+<INPUT TYPE="hidden" name="OEORIItemStatus" value="">
+<INPUT TYPE="hidden" name="ARCIMDesc" value="">
+<INPUT TYPE="hidden" name="ItemApptStatus" value="">
+<!-- CODING -->
+<INPUT TYPE="hidden" name="PAAdmCodingID" value="">
+<!-- BILLING -->
+<INPUT TYPE="hidden" name="BillRowIds" value="">
+<INPUT TYPE="hidden" name="BillTypes" value="">
+<!-- BOOKING -->
+<INPUT TYPE="hidden" name="FollowUpAppt" value="">
+<INPUT TYPE="hidden" name="apptID" value="">
+<INPUT TYPE="hidden" name="OperRoomID" value="">
+<INPUT TYPE="hidden" name="AnaesthesiaID" value="">
+<!-- MEDRECORD -->
+<INPUT TYPE="hidden" name="ReqIDs" value="">
+<INPUT TYPE="hidden" name="ReqVolIDs" value="">
+<!-- EPISODE -->
+<INPUT TYPE="hidden" name="MultiEpisodeID" value="">
+<INPUT TYPE="hidden" name="WardID" value="">
+<!-- MATERNITY -->
+<INPUT TYPE="hidden" name="canGiveBirth" value="">
+<!-- NEXT OF KIN - cjb 22/02/2006 56793 -->
+<INPUT TYPE="hidden" name="NokID" value="">
+<!-- Attendance - 61395 Tedt 01/07 -->
+<INPUT TYPE="hidden" name="attendID" value="">
+<!-- ??? -->
+<INPUT TYPE="hidden" name="SpecificID" value="">
+<INPUT TYPE="hidden" name="SinglePatientFlag" value="">
+<!--药理实验项目Rowid add by guorongyong-->
+<INPUT TYPE="hidden" name="PPRowId" value="">
+</FORM>
+
+</DIV>
+<SCRIPT language='javascript'>
+var usemenuscroll=#(+$g(usemenuscroll))#;
+var swf="#($g(swf))#";
+</script>
+<server>
+ //qse add
+ s ServerNameSpace=##Class(web.DHCTHREEEX).GetServerNameSpace()
+ s Loc=%session.Data("LOGON.CTLOCID")
+ s LocDesc=$P($G(^CTLOC(Loc)),"^",2)
+ i $P(LocDesc,"-",2)'="" s LocDesc= $P(LocDesc,"-",2)
+ s UserId=%session.Data("LOGON.USERID")
+ s Str=##Class(web.DHCLCNUREXCUTE).GetUserWardId(UserId,Loc)
+ s WardStr=$P(Str,"|")
+ s WardId=$P(WardStr,"^",2)
+</server>
+<SCRIPT Language="Javascript">
+ var ServerNameSpace="#(ServerNameSpace)#";
+ var WardId="#(WardId)#";
+ var LocDesc="#(LocDesc)#";
+
+
+</SCRIPT>
+
+<!-- epr.menu.Tools.js scripts has generic script such as highlight menu,scrollbuttons,etc -->
+<script src="../scripts/epr.menu.Tools.js"></script>
+<!-- epr.menu.js scripts has details checking for menus such as PassDetails,CheckLinkDetails,etc -->
+<SCRIPT SRC="../scripts/bdp/MKB/Framework/dhc.bdp.epr.menu.js"></SCRIPT>
+</body>
+</html>
+
+
+

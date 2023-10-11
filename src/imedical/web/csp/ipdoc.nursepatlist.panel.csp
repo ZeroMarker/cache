@@ -1,22 +1,25 @@
 <!--ipdoc.nursepatlist.panel.csp 护士患者列表-->
-<div data-options="region:'west',border:true,split:false,headerCls:'panel-header-gray',border:false" style="width:280px;padding:0 5px 10px 10px;">
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<!--东华CDSS交互-->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
+<div data-options="region:'west',border:true,split:false,headerCls:'panel-header-gray',border:false" style="width:280px;padding:0 5px 0px 0px;">
 	<div class="hisui-panel" data-options="fit:true" style="border:0;">
 		<div id="tabs-reg" class="hisui-tabs tabs-gray" data-options="fit:true" style="">
-			 <div title="在院患者" style="">   
+			 <div title='#(..Get("在院患者"))#' style="">   
 				 <div class="hisui-layout" fit="true">
-				 	<div data-options="region:'north',border:false" style="height:111px;">
-				 		<div style="height:36px;border-bottom:1px dashed #ccc;padding-left:5px;">
+				 	<div data-options="region:'north',border:false" style="height:113px;">
+				 		<div style="height:36px;padding-left:5px;">
 				 			<div id="PatClassify"></div>
 				 		</div>
-				 		<div style="height:36px;border-bottom:1px dashed #ccc;padding-left:5px;">
+				 		<div style="height:36px;padding-left:5px;">
 				 			<div id="SpecialPatCount"></div>
 				 		</div>
 				 		<div style="height:36px;padding:0 0 0 10px;line-height:36px">
-				 			<div id="switch1" class="hisui-switchbox" style="margin-right:5px;" data-options="onText:'需处理',offText:'全部',
-size:'small',animated:true,onSwitchChange:function(){GetGridData()}"></div>
-				 			<input id="patBedNo" href="#" class="hisui-searchbox" data-options="searcher:GetGridData,prompt:'床号'" style="width:100px;"/>
+				 			<div id="switch1" class="hisui-switchbox" style="margin: 0 5px 0 5px;width: 80px;" data-options="onText:'#(..Get("需处理"))#',offText:'#(..Get("全部"))#',
+size:'mini',animated:true,onSwitchChange:function(){GetGridData()}"></div>
+				 			<input id="patBedNo" href="#" class="hisui-searchbox" data-options="searcher:GetGridData,prompt:'#(..Get("床号"))#'" style="width:80px;"/>
 				 			<span style="float:right;">
-				 				<span class='toggle-btn'>更多</span>
+				 				<span class='toggle-btn'>#(..Get("更多"))#</span>
 				 			</span>
 				 		</div>
 				 	</div>
@@ -25,15 +28,18 @@ size:'small',animated:true,onSwitchChange:function(){GetGridData()}"></div>
 				 	</div>
 				 </div>
 			</div>   
-			<div title="出院患者" data-options="" style="">   
+			<div title='#(..Get("出院患者"))#' data-options="" style="">   
 				 <div class="hisui-layout" fit="true">
 				 	<div data-options="region:'north',border:false" style="height:74px;">
-				 		<div style="height:36px;border-bottom:1px dashed #ccc;">
+				 		<div style="height:36px;padding:0 0 0 10px;">
 				 			<div id="OutPatClassify"></div>
 				 		</div>
 				 		<div style="height:36px;padding:0 0 0 10px;line-height:36px;">
-				 			<label for="DisDays">出院天数</label>
-				 			<input id="DisDays" href="#" class="hisui-searchbox" data-options="searcher:GetGridData" style="width:185px;"/>
+				 			<label for="DisDays">#(..Get("出院天数"))#</label>
+				 			<input id="DisDays" href="#" class="hisui-searchbox" data-options="searcher:GetGridData" style="width:105px;"/>
+				 			<span style="float:right;">
+				 				<span class='out-toggle-btn'>#(..Get("更多"))#</span>
+				 			</span>
 				 		</div>
 				 	</div>
 				 	<div data-options="region:'center',border:false" style="border-top:1px solid #ccc;">
@@ -52,7 +58,7 @@ size:'small',animated:true,onSwitchChange:function(){GetGridData()}"></div>
 .r-label{
 	padding-left: 10px;
 }
-.toggle-btn{
+.toggle-btn,.out-toggle-btn{
 	color:#40a2de;
 	text-decoration:underline;
 	padding-right:13px;	
@@ -63,7 +69,7 @@ size:'small',animated:true,onSwitchChange:function(){GetGridData()}"></div>
     border-bottom:1px solid #40a2de;
     cursor:pointer;
 }
-.toggle-btn.expanded{
+.toggle-btn.expanded,.out-toggle-btn.expanded{
 	background-image:url(../images/fa-angle-double-up_40a2de_12.png);
 }
 .kw-section-list>li a{
@@ -75,11 +81,16 @@ size:'small',animated:true,onSwitchChange:function(){GetGridData()}"></div>
 .webui-popover .webui-popover-content{
 	padding:0;
 }
+.webui-popover-inner .close{
+	position:absolute;
+	top: -3px;
+	right: -6px;
+}
 </style>
 <server>
 	//获取病区对应专业组信息
 	s WardGroupJson="",WardGroupCount=0
-	s tmpWardGroupStr=""
+	/*s tmpWardGroupStr=""
 	Set rset=##class(%ResultSet).%New("web.DHCNurWardSet:WardProGroupList")
 	do rset.Execute(%session.Get("LOGON.WARDID"))
 	While (rset.Next()) {
@@ -101,11 +112,31 @@ size:'small',animated:true,onSwitchChange:function(){GetGridData()}"></div>
 			}
 			d rset.Close()
 			s desc=$p($g(^DHCWardProGroup(WardGroupId)),"^",2)
+			if (WardGroupBedIDStr="") s WardGroupBedIDStr=desc
 			s ItemJson="['"_WardGroupBedIDStr_"','"_desc_"']"
 			s WardGroupCount=WardGroupCount+1
 			s WardGroupJson=WardGroupJson_$s(WardGroupCount=1:"",1:",")_ItemJson
 		}
+	}*/
+	Set rset=##class(%ResultSet).%New("Nur.NIS.Service.Base.GroupSettingV2:WardProGroupList")
+	do rset.Execute(%session.Get("LOGON.WARDID"),"","","","",%session.Get("LOGON.HOSPID"))
+	While (rset.Next()) {
+		s RowId=rset.Data("rowid")
+		s desc=rset.Data("desc")
+		continue:(rset.Data("active")'="Y")
+		s WardGroupBedIDStr=""
+		s GroupIDStr=##class(Nur.NIS.Service.Base.GroupSettingV2).GetWardProGroupBeds(RowId)
+		for i=1:1:$l(GroupIDStr,"^"){
+			s BedId=$P(GroupIDStr,"^",i)
+			i WardGroupBedIDStr="" s WardGroupBedIDStr=BedId
+			e  s WardGroupBedIDStr=WardGroupBedIDStr_$C(1)_BedId
+		}
+		if (WardGroupBedIDStr="") s WardGroupBedIDStr=desc
+		s ItemJson="['"_WardGroupBedIDStr_"','"_desc_"']"
+		s WardGroupCount=WardGroupCount+1
+		s WardGroupJson=WardGroupJson_$s(WardGroupCount=1:"",1:",")_ItemJson
 	}
+	d rset.Close()
 	s Delivery=##Class(web.DHCDocInPatientListNew).CheckNuserForDeliveryPatient(%session.Get("LOGON.CTLOCID"))
 	if (Delivery=0){
 		s Type=0
@@ -123,7 +154,6 @@ var PageLogicObj={
 	m_InPatListTabDataGrid:"",
 	m_DisChargePatListTabDataGrid:"",
 	m_WardGroupJson:[#(WardGroupJson)#],
-	m_isShowed:0,
 	Type:"#(Type)#",
 	Delivery:#(Delivery)#,
 	NurBatchSupplementFlag:"#(NurBatchSupplementFlag)#"
@@ -146,6 +176,16 @@ $(function(){
 })
 function Init(){
 	PageLogicObj.m_InPatListTabDataGrid=InitInPatListTabDataGrid();
+	PageLogicObj.NursePatListDoc=$.cm({
+		ClassName:"web.DHCDocInPatientListNew",
+		MethodName:"GetNursePatListDoc",
+		UserID:session['LOGON.USERID'], LocID:session['LOGON.CTLOCID']
+	},false);
+	PageLogicObj.WardProGroupList=new Array();
+	for (var i=0;i<PageLogicObj.m_WardGroupJson.length;i++){
+		PageLogicObj.WardProGroupList.push({"id":PageLogicObj.m_WardGroupJson[i][0],"text":PageLogicObj.m_WardGroupJson[i][1]});
+	}
+	
 }
 function InitEvent(){
 	$('#tabs-reg').tabs({
@@ -172,95 +212,114 @@ function InitEvent(){
 			}
 		});
 	}*/
-   PageLogicObj.m_tabshowd=1
 	tooltip();
    $(document.body).bind("keydown",BodykeydownHandler);
 }
 function tooltip(){
-	   $(".toggle-btn").on({
-		mouseenter:function(){
-			if (($(".more-div").length==0)||(PageLogicObj.m_tabshowd==1)){
-				var type=$("#PatClassify").keywords('getSelected');
-				if (type.length==0) return false;
-				type=type[0]['id'];
-				if (type==2){var theight=200}else{var theight=250}
-				$(".toggle-btn").popover('destroy')
-				$(".toggle-btn").popover({
-					closeable:true,
-					width:250,
-					height:theight,
-					content:GetPannelHTML(),
-					trigger:'hover',
-					placement:'bottom-left',
-					onShow:function(){
-						if ((PageLogicObj.m_isShowed==0)||(PageLogicObj.m_tabshowd==1)){
-							PageLogicObj.m_isShowed=1;
-							PageLogicObj.m_tabshowd=0
-							if (type!=2){$HUI.combobox("#patientMainDocTF,#WardProGroupList",{});}
-							$HUI.linkbutton(".hisui-linkbutton",{});
-						 	if (type!=2){
-							 	$.cm({
-									ClassName:"web.DHCDocInPatientListNew",
-									MethodName:"GetNursePatListDoc",
-									UserID:session['LOGON.USERID'], LocID:session['LOGON.CTLOCID']
-								},function(Data){
-									$HUI.combobox("#patientMainDocTF", {
-										valueField: 'id',
-										textField: 'text', 
-										data: Data,
-										onSelect: function(rec){ 
-											GetGridData();   
-										}
-							 		});
-								});
-								var arr=new Array();
-								for (var i=0;i<PageLogicObj.m_WardGroupJson.length;i++){
-									arr.push({"id":PageLogicObj.m_WardGroupJson[i][0],"text":PageLogicObj.m_WardGroupJson[i][1]});
-								}
-								$HUI.combobox("#WardProGroupList", {
-									valueField: 'id',
-									textField: 'text', 
-									data: arr,
-									onSelect: function(rec){ 
-										GetGridData();   
+	$(".toggle-btn,.out-toggle-btn").each(function(){
+		var that=this;
+		(function(that){
+			$(that).unbind().on({
+				mouseenter:function(){
+					//防止重复初始化浮动窗口
+					if ((typeof $.data(that, "popover") ==="undefined")){
+						var HTMLType=GetHTMLType();
+						var type=$("#"+HTMLType+"PatClassify").keywords('getSelected');
+						if (type.length==0) return false;
+						type=type[0]['id'];
+						if (type==2){var theight=200}else{var theight=250}
+						$(that).popover('destroy');
+						var content=GetPannelHTML(HTMLType);
+						$(that).popover({
+							closeable:true,
+							width:250,
+							height:theight,
+							content:content,
+							trigger:'click',
+							placement:'bottom-left',
+							onShow:function(){
+								//防止重复初始化下拉列表
+								//if (typeof $.data(that, "popover Loaded")  === "undefined"){
+									//$.data(that, "popover Loaded",1);
+									if (type!=2){
+										$HUI.combobox("#"+HTMLType+"_patientMainDocTF,#"+HTMLType+"_WardProGroupList",{});
 									}
-							 	});
-						 	}
-							$("#patientNoTF").focus();
-							$("#BFind").click(function(){
-								var PatientNo=$("#patientNoTF").val();
-								if (PatientNo!='') {
-									if (PatientNo.length<10) {
-										for (var i=(10-PatientNo.length-1); i>=0; i--) {
-											PatientNo="0"+PatientNo;
+									$HUI.linkbutton(".hisui-linkbutton",{});
+								 	if (type!=2){
+									 	setTimeout(function(){
+										 	$HUI.combobox("#"+HTMLType+"_patientMainDocTF", {
+												valueField: 'id',
+												textField: 'text', 
+												data: PageLogicObj.NursePatListDoc,
+												onSelect: function(rec){ 
+													//GetGridData();   
+												}
+									 		});
+									 		
+											$HUI.combobox("#"+HTMLType+"_WardProGroupList", {
+												valueField: 'id',
+												textField: 'text', 
+												data: PageLogicObj.WardProGroupList,
+												onSelect: function(rec){ 
+													//GetGridData();   
+												}
+										 	});
+										},10);
+								 	//}
+									$("#"+HTMLType+"_patientNoTF").focus();
+									$("#"+HTMLType+"_BFind").click(function(){
+										var PatientNo=$("#"+HTMLType+"_patientNoTF").val();
+										if (PatientNo!='') {
+											if (PatientNo.length<10) {
+												for (var i=(10-PatientNo.length-1); i>=0; i--) {
+													PatientNo="0"+PatientNo;
+												}
+											}
+											$("#"+HTMLType+"_patientNoTF").val(PatientNo);
 										}
-									}
-									$("#patientNoTF").val(PatientNo);
+										GetGridData();
+									});
+									$("#"+HTMLType+"_BClear").click(BClearClickHandle);
 								}
-								GetGridData();
-							});
-							$("#BClear").click(BClearClickHandle);
-						}
-					},
-					onHide:function(){
-						BClearClickHandle();
+							},
+							onHide:function(){
+								BClearClickHandle(that);
+							}
+						});
 					}
-				});
-			}
-			$(".toggle-btn").popover('show');
-			$("#patientNoTF").focus();
-		}
+					$(that).popover('show');
+					$("#"+HTMLType+"_patientNoTF").focus();
+				}
+			})
+		
+		})(that);
+		
 	});
    $(document.body).bind("keydown",BodykeydownHandler);
 }
-function BClearClickHandle(){
-	var type=$("#PatClassify").keywords('getSelected');
+
+
+function BClearClickHandle(that){
+	var HTMLType=GetHTMLType();
+	var type=$("#"+HTMLType+"PatClassify").keywords('getSelected');
 	if (type.length==0) return false;
 	type=type[0]['id'];
-	$("#patientNoTF,#patNameTF,#patientMedicalTF").val('');
+	$("#"+HTMLType+"_patientNoTF,#"+HTMLType+"_patNameTF,#"+HTMLType+"_patientMedicalTF").val('');
 	if (type!=2){
-		$("#patientMainDocTF,#WardProGroupList").combobox('setValue','');
-		$("#patientMainDocTF,#WardProGroupList").combobox('setText','');
+		try{
+		$("#"+HTMLType+"_patientMainDocTF,#"+HTMLType+"_WardProGroupList").combobox('setValue','');
+		$("#"+HTMLType+"_patientMainDocTF,#"+HTMLType+"_WardProGroupList").combobox('setText','');
+		}catch(e){}
+	}
+}
+
+function GetHTMLType(){
+	var tab = $('#tabs-reg').tabs('getSelected');
+    var index = $('#tabs-reg').tabs('getTabIndex',tab);
+	if (index==0){
+		return ""
+	}else{
+		return "Out"
 	}
 }
 function PageHandle(){
@@ -306,9 +365,9 @@ function IntKeyWords(){
 	$("#SpecialPatCount").keywords({
 	    labelCls:'red',
 	    items:[
-	        {text:'病危',id:'BZCount'},
-	        {text:'病重',id:'BWCount'},
-	        {text:'新入',id:'CurPatCount'}
+	        {text:$g('病危'),id:'BZCount'},
+	        {text:$g('病重'),id:'BWCount'},
+	        {text:$g('新入'),id:'CurPatCount'}
 	    ],
     	onClick:function(v){
 	    	GetGridData();
@@ -322,12 +381,11 @@ function IntKeyWords(){
 		    singleSelect:true,
 		    labelCls:'red',
 		    items:[
-		        {text:'本病区',id:'0',selected:true},
-		        {text:'在院转科',id:'1'}
+		        {text:$g('本病区'),id:'0',selected:true},
+		        {text:$g('在院转科'),id:'1'}
 		    ],
 	    	onClick:function(v){
 		    	GetGridData();
-		    	PageLogicObj.m_tabshowd=1;
 		    }
 		});
 	}else{
@@ -335,60 +393,66 @@ function IntKeyWords(){
 	    	singleSelect:true,
 	    	labelCls:'red',
 	    	items:[
-		        {text:'本病区',id:'0'},
-		        {text:'在院转科',id:'1'},
-		        {text:'分娩患者',id:'2',selected:true}
+		        {text:$g('本病区'),id:'0'},
+		        {text:$g('在院转科'),id:'1'},
+		        {text:$g('分娩患者'),id:'2',selected:true}
 	    	],
 	    	onClick:function(v){
 		    	GetGridData();
-		    	PageLogicObj.m_tabshowd=1;
 		    }
 		});
 	}
 }
 function InitInPatListTabDataGrid(){
-	var Columns=[[
-		{field:'EpisodeID',title:'',checkbox:true},
-		{field:'PAAdmBedNO',title:'床号',width:40},
-		{field:'ColorDesc',title:'状态 ',width:40,
-			styler: function(value,row,index){
-				if (value!=""){
-					return 'background-color:'+value+';border-radius: 0px;color:#FFF;';
+
+	var Opt={
+		className:"web.DHCDocInPatientListNew",
+		queryName:"GetNursePatList",
+		onColumnsLoad:function(cm){
+			var filedName="";
+			var columnsConfig={};
+			for (var i=0;i<cm.length;i++){
+				columnsConfig={};
+				filedName=cm[i]['field'];
+				switch (filedName) {
+					case "Deposit":
+					case "Amount":
+					case "Charge":
+						$.extend(columnsConfig,{align:'right'});
+					break;
+					case "EpisodeID":
+						$.extend(columnsConfig,{checkbox:true});
+					break;
+					case "ColorDesc":
+						$.extend(columnsConfig,{
+							styler: function(value,row,index){
+								if (value!=""){
+									return 'background-color:'+value+';border-radius: 0px;color:#FFF;';
+								}
+							},
+							formatter: function(value,row,index){
+								return row.ColorStatus;
+							}
+						});
+					break;
+					case "IconProfile":
+							$.extend(columnsConfig,{
+								formatter:function(value,row,index){
+									return reservedToHtml(value);
+								}
+							});
+						break;
+					case "DeliverStatus":
+							$.extend(columnsConfig,{sortable:true});
+						break;
+					default:
+					break;
 				}
-			},
-			formatter: function(value,row,index){
-				return row.ColorStatus;
+				$.extend(cm[i],columnsConfig);
 			}
-		},
-		{field:'PAPMIName',title:'姓名',width:100},
-		{field:'MedicareNo',title:'病案号',width:80},
-		{field:'PAPMINO',title:'登记号',width:100},
-		{field:'PAPMIDOB',title:'出生日期',width:100},
-		{field:'PAPMISex',title:'性别',width:50},
-		{field:'PAAdmDate',title:'就诊日期',width:100},
-		{field:'PAAdmTime',title:'就诊时间',width:70},
-		{field:'ResidentDays',title:'就诊天数',width:80},
-		{field:'PAAdmNo',title:'就诊号',width:120},
-		{field:'PAAdmDepCodeDR',title:'科室',width:100},
-		{field:'PAAdmDocCodeDR',title:'医生',width:80},
-		{field:'Hospital',title:'医院',width:80},
-		{field:'PAAdmWard',title:'病区',width:80},
-		{field:'PAAdmReason',title:'患者类型',width:80},
-		{field:'Diagnosis',title:'诊断',width:80},
-		{field:'ConsultRoom',title:'房间',width:80},
-		{field:'PAPMIAge',title:'年龄',width:70},
-		{field:'Deposit',title:'预交金',width:80,align:'right'},
-		{field:'Amount',title:'费用',width:80,align:'right'},
-		{field:'Charge',title:'余额',width:80,align:'right'},
-		/*{field:'IconProfile',title:'图表菜单',width:80,
-			formatter: function(value,row,index){
-				return reservedToHtml(value);
-			}
-		},*/
-		{field:'EmployeeFunction',title:'患者级别',width:80},
-		{field:'SecretLevel',title:'患者密级',width:80}
-    ]]
-	var InPatListTabDataGrid=$("#InPatListTab").datagrid({
+		}
+	}
+	$.extend(Opt,{
 		fit : true,
 		border : false,
 		singleSelect : PageLogicObj.NurBatchSupplementFlag=="Y"?false:true,
@@ -398,21 +462,22 @@ function InitInPatListTabDataGrid(){
 		pageSize: 15,
 		pageList : [15,100,200],
 		idField:'EpisodeID',
-		columns:Columns,
 		//url:'../web.DHCDocInPatientswitchPatientListNew.cls', 
 		onSelect:function(index, rowData){
 			if (PageLogicObj.NurBatchSupplementFlag=="Y"){
 				//批量补录模式
 				hrefRefreshNew(rowData["EpisodeID"],rowData["PAPMIName"],"Add");
 			}else{
-				var frm=parent.parent.parent.document.forms['fEPRMENU'];
-				var frmcanGiveBirth=frm.canGiveBirth;
-				if (rowData["PAPMISex"]=="女"){
-					frmcanGiveBirth.value=1;
+				var frm = dhcsys_getmenuform();
+				if (rowData["PAPMISex"].indexOf($g("女"))>=0){
+					var GiveBirth=1;
 				}else{
-					frmcanGiveBirth.value=0;
+					var GiveBirth=0;
 				}
-				switchPatient(rowData["PatientID"],rowData["EpisodeID"],rowData["mradm"],"");
+				if (((frm.EpisodeID.value!="")&&(frm.EpisodeID.value!=rowData["EpisodeID"]))||(frm.EpisodeID.value=="")) {
+					switchPatient(rowData["PatientID"],rowData["EpisodeID"],rowData["mradm"],GiveBirth);
+					if(typeof CDSSObj=='object') CDSSObj.SynAdm(rowData["EpisodeID"]);
+				}
 			}
 		},
 		onUnselect:function(index, rowData){
@@ -422,13 +487,17 @@ function InitInPatListTabDataGrid(){
 			}	
 		},
 		onSelectAll:function(rows){
+			var rows=PageLogicObj.m_InPatListTabDataGrid.datagrid('getData').originalRows
 			for (var i=0;i<rows.length;i++){
 				hrefRefreshNew(rows[i]["EpisodeID"],rows[i]["PAPMIName"],"Add");
 			}
 		},
 		onUnselectAll:function(rows){
+			var rows=PageLogicObj.m_InPatListTabDataGrid.datagrid('getData').originalRows
 			for (var i=0;i<rows.length;i++){
+				if (PageLogicObj.NurBatchSupplementFlag=="Y"){
 				hrefRefreshNew(rows[i]["EpisodeID"],rows[i]["PAPMIName"],"Del");
+				}
 			}
 		},
 		onLoadSuccess:function(data){
@@ -439,7 +508,7 @@ function InitInPatListTabDataGrid(){
 				setTimeout(function(){
 				    var frm = dhcsys_getmenuform();
 					var EpisodeID=frm.EpisodeID.value;
-					if ((EpisodeID!="")&&(SelFrmEpisodeID==1)){
+					if ((EpisodeID)&&(EpisodeID!="")&&(SelFrmEpisodeID==1)){
 						var index=$("#InPatListTab").datagrid('getRowIndex',EpisodeID);
 	    				if (index!=-1){
 				        	$("#InPatListTab").datagrid('selectRow',index);
@@ -455,13 +524,19 @@ function InitInPatListTabDataGrid(){
 					}
 				},10);
 			}
+			if (data.rows.length>0 && typeof data.rows[0].IconProfile !="undefined"){
+				setTimeout(function () {
+					StartLoading(0);
+				},100);
+			}
 			function StartLoading(StartRow) {
+                var _data=$('#InPatListTab').datagrid("getRows");
 				var AdmList=[];
-				for (RowIndex=0;RowIndex<data.rows.length;RowIndex++){
+				for (RowIndex=0;RowIndex<_data.length;RowIndex++){
 					AdmList.push({
 						"index":RowIndex,
-						"EpisodeID":data.rows[RowIndex].EpisodeID,
-						"PatientID":data.rows[RowIndex].PatientID
+						"EpisodeID":_data[RowIndex].EpisodeID,
+						"PatientID":_data[RowIndex].PatientID
 					});
 				}
 				var AdmListJson=JSON.stringify(AdmList);
@@ -471,13 +546,14 @@ function InitInPatListTabDataGrid(){
 				    AdmListJson:AdmListJson,
 				    CONTEXT:session['CONTEXT']
 				},function(Icondata){
+                    var _data=$('#InPatListTab').datagrid("getRows");
 					var patientListDataGrid=$('#InPatListTab');
 					var options=patientListDataGrid.datagrid("options");
 					var FieldName="IconProfile";
 					var formatter=patientListDataGrid.datagrid("getColumnOption", FieldName).formatter;
 					var Length=Icondata.length;
 					for (var i=0;i<Length;i++){
-						if (data.rows[Icondata[i].index].EpisodeID!=Icondata[i].EpisodeID){
+						if (_data[Icondata[i].index].EpisodeID!=Icondata[i].EpisodeID){
 							continue
 						}
 						//改成直接操作DOM，不使用HUI方法，提高效率
@@ -491,43 +567,57 @@ function InitInPatListTabDataGrid(){
 			}
 		}
 	});
+	$.extend(Opt,{loadFilter:DocToolsHUI.lib.pagerFilter});
+	var InPatListTabDataGrid=$("#InPatListTab").datagrid(Opt);
 	if (PageLogicObj.NurBatchSupplementFlag!="Y"){
 		InPatListTabDataGrid.datagrid('hideColumn','EpisodeID');
 	}
-	InPatListTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
 	return InPatListTabDataGrid;
 }
 function LoadOtherInfo(data){
-	$("#BZCount a")[0].innerText="病重("+data.SCount+"人)";
-	$("#BWCount a")[0].innerText="病危("+data.CCount+"人)";
-	$("#CurPatCount a")[0].innerText="新入("+data.FCount+"人)";
+	$("#BZCount a")[0].innerText=$g("病重")+"("+data.SCount+$g("人")+")";
+	$("#BWCount a")[0].innerText=$g("病危")+"("+data.CCount+$g("人")+")";
+	$("#CurPatCount a")[0].innerText=$g("新入")+"("+data.FCount+$g("人")+")";
 	var tab = $('#tabs-reg').tabs('getTab',0); //$('#tabs-reg').tabs('getSelected');  // 获取选择的面板
 	$('#tabs-reg').tabs('update', {
 		tab: tab,
 		options: {
-			title: '在院患者 '+'<span style="color:red;">'+(data.total-data.BabyNum)+"+"+data.BabyNum+'<span>' 
+			title: $g('在院患者')+' <span style="color:red;">'+(data.total-data.BabyNum)+"+"+data.BabyNum+'<span>' 
 		}
 	});
-	if (PageLogicObj.m_isShowed==1){
+	if (typeof $.data($(".toggle-btn")[0], "popover") !=="undefined"){
 		$(".toggle-btn").popover('hide');
+	}
+	if (typeof $.data($(".out-toggle-btn")[0], "popover") !=="undefined"){
+		$(".out-toggle-btn").popover('hide');
 	}
 }
 function InitDisChargePatListTabDataGrid(){
-	var Columns=[[ 
-		{field:'EpisodeID',title:'',checkbox:true},
-		{field:'PAAdmDischgeDate',title:'出院日期',width:100},
-		{field:'PAAdmDischgeTime',title:'出院时间',width:80},
-		{field:'PAAdmBedNO',title:'出院床号',width:80},
-		{field:'PAPMINO',title:'登记号',width:100},
-		{field:'PAPMIName',title:'姓名',width:100},
-		{field:'PAPMISex',title:'性别',width:50},
-		{field:'PAPMIDOB',title:'出生日期',width:100},
-		{field:'MedicareNo',title:'病案号',width:80},
-		{field:'ResidentDays',title:'住院天数',width:80},
-		{field:'InTimes',title:'住院次数',width:80},
-		{field:'PAAdmDocCodeDR',title:'医生',width:80}
-    ]]
-	var DisChargePatListTabDataGrid=$("#DisChargePatListTab").datagrid({
+	var Opt={
+		className:"web.DHCDocInPatientListApply",
+		queryName:"GetNursePatList",
+		onColumnsLoad:function(cm){
+			var filedName="";
+			var columnsConfig={};
+			for (var i=0;i<cm.length;i++){
+				columnsConfig={};
+				filedName=cm[i]['field'];
+				switch (filedName) {
+					case "PAAdmDischgeDate":
+					case "PAAdmBedNO":
+						$.extend(columnsConfig,{sortable:true});
+					break;
+					case "EpisodeID":
+						$.extend(columnsConfig,{checkbox:true});
+					break;
+					default:
+					break;
+				}
+				$.extend(cm[i],columnsConfig);
+			}
+		}
+	}
+	$.extend(Opt,{
 		fit : true,
 		border : false,
 		singleSelect : PageLogicObj.NurBatchSupplementFlag=="Y"?false:true,
@@ -537,7 +627,6 @@ function InitDisChargePatListTabDataGrid(){
 		pageSize: 15,
 		pageList : [15,100,200],
 		idField:'EpisodeID',
-		columns :Columns,
 		url:'../web.DHCDocInPatientListNew.cls', 
 		onSelect:function(index, rowData){
 			if (PageLogicObj.NurBatchSupplementFlag=="Y"){
@@ -561,13 +650,17 @@ function InitDisChargePatListTabDataGrid(){
 			}	
 		},
 		onSelectAll:function(rows){
+			var rows=PageLogicObj.m_DisChargePatListTabDataGrid.datagrid('getData').originalRows
 			for (var i=0;i<rows.length;i++){
 				hrefRefreshNew(rows[i]["EpisodeID"],rows[i]["PAPMIName"],"Add");
 			}
 		},
 		onUnselectAll:function(rows){
+			var rows=PageLogicObj.m_DisChargePatListTabDataGrid.datagrid('getData').originalRows
 			for (var i=0;i<rows.length;i++){
+				if (PageLogicObj.NurBatchSupplementFlag=="Y"){
 				hrefRefreshNew(rows[i]["EpisodeID"],rows[i]["PAPMIName"],"Del");
+				}
 			}
 		},
 		onLoadSuccess:function(data){
@@ -576,21 +669,30 @@ function InitDisChargePatListTabDataGrid(){
 			$('#tabs-reg').tabs('update', {
 				tab: tab,
 				options: {
-					title: '出院患者 '+'<span style="color:red;">'+data.total+'<span>'
+					title: $g('出院患者')+' <span style="color:red;">'+data.total+'<span>'
 				}
 			});
 			if (PageLogicObj.NurBatchSupplementFlag=="Y"){
 				ChkSelectRow();
 			}
+			if (typeof $.data($(".toggle-btn")[0], "popover") !=="undefined"){
+				$(".toggle-btn").popover('hide');
+			}
+			if (typeof $.data($(".out-toggle-btn")[0], "popover") !=="undefined"){
+				$(".out-toggle-btn").popover('hide');
+			}
 		}
 	});
+	$.extend(Opt,{loadFilter:DocToolsHUI.lib.pagerFilter});
+	var DisChargePatListTabDataGrid=$("#DisChargePatListTab").datagrid(Opt);
 	if (PageLogicObj.NurBatchSupplementFlag!="Y"){
 		DisChargePatListTabDataGrid.datagrid('hideColumn','EpisodeID');
 	}
-	DisChargePatListTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
 	return DisChargePatListTabDataGrid;
 }
 function GetGridData(){
+	
+	var HTMLType=GetHTMLType();
 	var tab = $('#tabs-reg').tabs('getSelected');
     var index = $('#tabs-reg').tabs('getTabIndex',tab);
 	if (index==0){
@@ -621,15 +723,15 @@ function GetGridData(){
 			var HavedSeeOrdPat=$("#switch1").switchbox('getValue')?"on":"";
 		}
 		var BedNo=$('#patBedNo').searchbox('getValue'); 
-		if ($(".more-div").length==0){
+		if (!$.data($(".toggle-btn")[0], "popover")){
 			var PatientNo="",Name="",MedicalNo="",CardNo="",DocID="",WardGroupLinkBedStr="";
 		}else{
-			var PatientNo=$("#patientNoTF").val();
-			var Name=$("#patNameTF").val();
-			var MedicalNo=$("#patientMedicalTF").val();
-			if (($("#patientMainDocTF").length>0)&&($("#WardProGroupList").length>0)){
-				var DocID=$("#patientMainDocTF").combobox('getValue');
-				var WardGroupLinkBedStr=$("#WardProGroupList").combobox('getValue');
+			var PatientNo=$("#"+HTMLType+"_patientNoTF").val();
+			var Name=$("#"+HTMLType+"_patNameTF").val();
+			var MedicalNo=$("#"+HTMLType+"_patientMedicalTF").val();
+			if (($("#"+HTMLType+"_patientMainDocTF").length>0)&&($("#"+HTMLType+"_WardProGroupList").length>0)){
+				var DocID=$("#"+HTMLType+"_patientMainDocTF").combobox('getValue');
+				var WardGroupLinkBedStr=$("#"+HTMLType+"_WardProGroupList").combobox('getValue');
 			}else{var DocID="";var WardGroupLinkBedStr="";}
 		}
 		PageLogicObj.m_InPatListTabDataGrid.datagrid("options").url='../web.DHCDocInPatientListNew.cls';
@@ -655,16 +757,29 @@ function GetGridData(){
 			DisDay=7;
 			$('#DisDays').searchbox('setValue',7);
 		}
+		if (!$.data($(".out-toggle-btn")[0], "popover")){
+			var PatientNo="",Name="",MedicalNo="",CardNo="",DocID="",WardGroupLinkBedStr="";
+		}else{
+			var PatientNo=$("#"+HTMLType+"_patientNoTF").val();
+			var Name=$("#"+HTMLType+"_patNameTF").val();
+			var MedicalNo=$("#"+HTMLType+"_patientMedicalTF").val();
+			if (($("#"+HTMLType+"_patientMainDocTF").length>0)&&($("#"+HTMLType+"_WardProGroupList").length>0)){
+				var DocID=$("#"+HTMLType+"_patientMainDocTF").combobox('getValue');
+				var WardGroupLinkBedStr=$("#"+HTMLType+"_WardProGroupList").combobox('getValue');
+			}else{var DocID="";var WardGroupLinkBedStr="";}
+		}
 		PageLogicObj.m_DisChargePatListTabDataGrid.datagrid('load', {
 			action: "GetNursePatList",
-			Type:type, PatientNo:"",
-			Name:"", 
-			MedicalNo:"",CardNo:"",
-			BedNo:"", Ward:"", DisDay:DisDay, IllType:"", DocID:"",
-			WardGroupLinkBedStr:"", HavedSeeOrdPat:""
+			Type:type, PatientNo:PatientNo,
+			Name:Name, 
+			MedicalNo:MedicalNo,CardNo:"",
+			BedNo:"", Ward:"", DisDay:DisDay, IllType:"", DocID:DocID,
+			WardGroupLinkBedStr:WardGroupLinkBedStr, HavedSeeOrdPat:""
 		});
+		
 	}
 }
+
 function LoadDischargePat(){
 	if (PageLogicObj.m_DisChargePatListTabDataGrid==""){
 		PageLogicObj.m_DisChargePatListTabDataGrid=InitDisChargePatListTabDataGrid();
@@ -672,8 +787,8 @@ function LoadDischargePat(){
 		    singleSelect:true,
 		    labelCls:'red',
 		    items:[
-		        {text:'本病区',id:'CurWard'},
-		        {text:'本人',id:'CurUser'}
+		        {text:$g('本病区'),id:'CurWard'},
+		        {text:$g('本人'),id:'CurUser'}
 		    ],
 	    	onClick:function(v){
 		    	GetGridData();
@@ -684,7 +799,7 @@ function LoadDischargePat(){
 		GetGridData();
 	}
 }
-function GetPannelHTML(){
+function GetPannelHTML(HTMLType){
 	var type=$("#PatClassify").keywords('getSelected');
 	if (type.length==0) return false;
 	type=type[0]['id'];
@@ -692,49 +807,49 @@ function GetPannelHTML(){
 				+'<table class="search-table" style="width:100%;">'
 					+'<tr>'
 						+'<td class="r-label">'
-							+'<label for="patientNoTF">登记号</label>'
+							+'<label for="'+HTMLType+'_patientNoTF">'+$g('登记号')+'</label>'
 						+'</td>'
 						+'<td>'
-							+'<input class="textbox min-text" id="patientNoTF" style="width:130px;"/>'
+							+'<input class="textbox min-text" id="'+HTMLType+'_patientNoTF" style="width:130px;"/>'
 						+'</td>'
 					+'<tr>'
 						+'<td class="r-label">'
-							+'<label for="patNameTF">姓名</label>'
+							+'<label for="'+HTMLType+'_patNameTF">'+$g('姓名')+'</label>'
 						+'</td>'
 						+'<td>'
-							+'<input class="textbox min-text" id="patNameTF" style="width:130px;"/>'
+							+'<input class="textbox min-text" id="'+HTMLType+'_patNameTF" style="width:130px;"/>'
 						+'</td>'
 					+'</tr>'
 					+'<tr>'
 						+'<td class="r-label">'
-							+'<label for="patientMedicalTF">病案号</label>'
+							+'<label for="'+HTMLType+'_patientMedicalTF">'+$g('病案号')+'</label>'
 						+'</td>'
 						+'<td>'
-							+'<input class="textbox min-text" id="patientMedicalTF" style="width:130px;"/>'
+							+'<input class="textbox min-text" id="'+HTMLType+'_patientMedicalTF" style="width:130px;"/>'
 						+'</td>'
 					+'</tr>'
 					if (type!=2) {
 						var html= html+'<tr>'
 							+'<td class="r-label">'
-								+'<label for="patientMainDocTF">管床医生</label>'
+								+'<label for="'+HTMLType+'_patientMainDocTF">'+$g('管床医生')+'</label>'
 							+'</td>'
 							+'<td>'
-								+'<input class="textbox min-text" id="patientMainDocTF" style="width:136px;"/>'
+								+'<input class="textbox min-text" id="'+HTMLType+'_patientMainDocTF" style="width:136px;"/>'
 							+'</td>'
 						+'</tr>'
 						+'<tr>'
 							+'<td class="r-label">'
-								+'<label for="WardProGroupList">专业组</label>'
+								+'<label for="'+HTMLType+'_WardProGroupList">'+$g('专业组')+'</label>'
 							+'</td>'
 							+'<td>'
-								+'<input class="textbox min-text" id="WardProGroupList" style="width:136px;"/>'
+								+'<input class="textbox min-text" id="'+HTMLType+'_WardProGroupList" style="width:136px;"/>'
 							+'</td>'
 						+'</tr>'
 					}
 					var html= html+'<tr>'
 						+'<td colspan="2" style="text-align:center;">'
-							+'<a href="#" id="BFind" class="hisui-linkbutton">查询</a>'
-							+'<a href="#" id="BClear" class="hisui-linkbutton" style="margin-left:25px;">清屏</a>'
+							+'<a href="#" id="'+HTMLType+'_BFind" class="hisui-linkbutton">'+$g('查询')+'</a>'
+							+'<a href="#" id="'+HTMLType+'_BClear" class="hisui-linkbutton" style="margin-left:25px;">'+$g('清屏')+'</a>'
 						+'</td>'
 					+'</tr>'
 				+'</table>'
@@ -742,49 +857,9 @@ function GetPannelHTML(){
 		return html
 }
 function getConfigUrl(userId,groupId,ctlocId){
-	return {title:"诊疗配置",url:"oeorder.oplistcustom.config.hui.csp",width:700,height:525};	
+	return {title:$g("诊疗配置"),url:"dhcdoc.custom.setting.csp",width:750,height:700,iconCls:'icon-w-setting'}; 
 }
-var DocToolsHUI={lib:{
-	pagerFilter:function pagerFilter(data){
-		if (typeof data.length == 'number' && typeof data.splice == 'function'){	// is array
-			data = {
-				total: data.length,
-				rows: data
-			}
-		}
-		var dg = $(this);
-		var opts = dg.datagrid('options');
-		var pager = dg.datagrid('getPager');
-		pager.pagination({
-			showRefresh:false,
-			onSelectPage:function(pageNum, pageSize){
-				opts.pageNumber = pageNum;
-				opts.pageSize = pageSize;
-				pager.pagination('refresh',{
-					pageNumber:pageNum,
-					pageSize:pageSize
-				});
-				//dg.datagrid('loadData',data);
-				dg.datagrid('reload');
-				dg.datagrid('scrollTo',0); //滚动到指定的行        
-			}
-		});
-		if (!data.originalRows){
-			data.originalRows = (data.rows);
-		}
-		if (opts.pagination){
-			var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
-			if ((start+1)>data.originalRows.length){
-				//取现有行数最近的整页起始值
-				start=Math.floor((data.originalRows.length-1)/opts.pageSize)*opts.pageSize;
-				opts.pageNumber=(start/opts.pageSize)+1;
-			}
-			var end = start + parseInt(opts.pageSize);
-			data.rows = (data.originalRows.slice(start, end));
-		}
-		return data;
-	}
-}};
+
 //重新load当前页面,并加载数据
 function hrefRefreshNew(adm,patname,type){
 	if (type=="Del") {
@@ -831,7 +906,7 @@ function hrefRefreshNew(adm,patname,type){
 				}
 			}
 		}else{
-			 curIframe.contentDocument.body.innerHTML="请选择患者"
+			 curIframe.contentDocument.body.innerHTML=$g("请选择患者")
 		}
 	}
 }

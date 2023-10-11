@@ -1,0 +1,191 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script src="../scripts/dhcmessage.common.js" type="text/javascript"></script>
+	<server>
+		s MsgDetailsId=%request.Get("MsgDetailsId"),FinalMsgDetailsId="",errmsg=""
+		s UserId=%session.Get("LOGON.USERID")
+		s MsgContentId=%request.Get("MsgContentId")
+		if MsgDetailsId>0,$d(^websys.DHCMessageDetailsD(MsgDetailsId)) {
+			if $lg(^websys.DHCMessageDetailsD(MsgDetailsId),7)=UserId {
+				s FinalMsgDetailsId=MsgDetailsId
+			}else{
+				s ContentId=$lg(^websys.DHCMessageDetailsD(MsgDetailsId),2)
+				s FinalMsgDetailsId=$O(^websys.DHCMessageDetailsI("ContentUser",ContentId,UserId,""))
+				if FinalMsgDetailsId="" s errmsg="此消息并未发送给当前登录用户"
+			}
+		}elseif MsgContentId>0,$d(^websys.DHCMessageContentD(MsgContentId)){ //只有消息内容表ID 
+			s CreateUserDr=$lg(^websys.DHCMessageContentD(MsgContentId),4)
+			if CreateUserDr>0,CreateUserDr=UserId {
+				s FinalMsgDetailsId=$O(^websys.DHCMessageDetailsI("ContentUser",MsgContentId,UserId,""))
+				if FinalMsgDetailsId="" {  //没有给发送人的明细记录ID 为发送人创建明细
+					s newMsgId=##class(websys.DHCMessageDetailsMgr).CreateDetails4Creator(MsgContentId,"N")
+					if newMsgId>0 {
+						s FinalMsgDetailsId=newMsgId
+					}else{
+						s errmsg="为发送人创建消息失败 ："_$p(newMsgId,"^",2)	
+					}
+				}
+				
+			}else{
+				s errmsg="此消息不是本人发送"	
+			}
+			
+			
+		} else{
+			s errmsg="消息ID参数不正确"	
+		}
+		
+		if FinalMsgDetailsId>0 {
+			s ContentId=$lg(^websys.DHCMessageDetailsD(FinalMsgDetailsId),2)
+			s Status=$lg(^websys.DHCMessageContentD(ContentId),19)
+			if Status="C" {
+				s FinalMsgDetailsId=""
+				s errmsg="此消息已被撤销"	
+			}
+		}
+	
+	</server>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:0;overflow:hidden;">
+		<csp:if Condition=FinalMsgDetailsId>
+			<iframe src="" id="onemsg" style="width: 100%;height: 100%; margin:0; border: 0;" scroll="auto"></iframe>
+		<csp:else>
+			<div style="margin-top:20px;text-align:center;color:red;">#(..Get(errmsg))#</div>
+		</csp:if>
+	</div>
+	
+	<script type="text/javascript">
+		$(function(){
+			var url='dhc.message.csp?MsgDetailsId=#(FinalMsgDetailsId)#';
+			if($('#onemsg').length>0) {
+				
+				$('#onemsg').attr('src', getTokenUrl(url));
+				
+			}
+		})
+		/// websys_getTop()方法的结果缓存
+		/// websys_getTop()是想作为top的替换，那么调用的次数就比较多，将一次调用结果存下来，下次调用直接返回
+		var websys_getTop_ResultCache=null;
+		/// 提供获取同源的top方法 用于替换top
+		function websys_getTop(){
+			if (websys_getTop_ResultCache) return websys_getTop_ResultCache;
+			var ret=null;
+			var thisOrigin=location.origin; //医为浏览器跨域不抛异常 需要判断是否同源
+			try {
+				var a=top._someVariable; //直接获取top 如果尝试获取其变量不抛异常 那么就用它
+				if (thisOrigin===top.location.origin){ //还需判断同源
+					ret=top
+				}
+			}catch(e){
+				
+			}
+			if (ret===null) { //直接取到的top不能用，那么只能一层一层向上取了
+				var tempWin=window;
+				var cnt=0;
+				while(ret===null) {
+					cnt++;
+					if (!tempWin.parent || tempWin.parent===tempWin) { //没有parent 或者parent是自己 那么top就是自己
+						ret=tempWin;
+					}else{
+						try {
+							// 由于是为了实现替换原本的top 只需要一层层parent往上取即可 不需要考虑window.open情况
+							var a=tempWin.parent._someVariable;  //尝试获取parent变量，抛异常则到此为止
+							if (thisOrigin===tempWin.parent.location.origin) { //同源才往上取
+								tempWin=tempWin.parent;
+							}else{ //不同源 结束
+								ret=tempWin;
+							}
+							
+						}catch(e){
+							ret=tempWin;
+						}
+					}
+		            if (cnt>20) { //避免有逻辑漏洞 最多20层就结束
+		                break;
+		            }
+				}
+			}	
+			if (ret===null) { //最终还是没获取到 就返回window
+				ret=window;
+			}
+			websys_getTop_ResultCache=ret;
+			return ret;
+		}
+	
+		function ForceShowDHCMessageCount(isNewMsg,forceQuery){
+			var fm=websys_getTop();
+			if ( fm && fm!=window && fm.ForceShowDHCMessageCount) {
+				fm.ForceShowDHCMessageCount(isNewMsg,forceQuery)
+			}
+		}
+		function ShowExecMsgWin(DetailsId,OtherJson){
+			var fm=websys_getTop();
+			if ( fm && fm!=window && fm.ShowExecMsgWin ) {  //如果能获取到顶层框架消息处理界面 使用顶层框架消息处理界面
+				fm.ShowExecMsgWin (DetailsId,OtherJson);
+			}else{
+				thisPageShowExecMsgWin(DetailsId,OtherJson);
+			}
+		}
+		
+		///取不到顶层消息的处理窗  采用新窗口打开形式打开消息处理界面
+		var thisPageShowExecMsgWin = function(DetailsId,OtherJson){
+			var dialogTitle=OtherJson.dialogTitle||'须处理';
+			//var ExecMsgWinJObj = $("#ExecMessageWin");
+			//if( ExecMsgWinJObj.is(":visible")) return false;
+			var maxWidth=screen.availWidth-20;
+			var maxHeight=screen.availHeight-40;
+			var realHeight=0,realWidth=0;
+			var dialogWidth=OtherJson.dialogWidth,dialogHeight=OtherJson.dialogHeight;
+			//var msgWinOpts=$("#MessageWin").window('options');
+			var msgWinOpts={width:1300,height:630};
+			
+			if (dialogWidth=="100%"&&dialogHeight=="100%"){  //都是100% 
+				realWidth=maxWidth;
+				realHeight=maxHeight;
+			}else if(parseInt(dialogWidth)=="0"&&parseInt(dialogHeight)=="0"){  //都是0px 按消息界面大小处理
+				realWidth=msgWinOpts.width;
+				realHeight=msgWinOpts.height;
+			}else{  //其他 %计算百分比 px直接使用   上下左右 至少20px
+				if (dialogWidth.indexOf("%")>-1){
+					realWidth= parseInt(maxWidth*parseInt(dialogWidth)/100);
+				}else{
+					realWidth=parseInt(dialogWidth);
+				}
+				realWidth= realWidth>100?realWidth:msgWinOpts.width;  
+				realWidth=realWidth+40>maxWidth?maxWidth-40:realWidth;
+				//realWidth=realWidth+"px";
+				
+				if (dialogHeight.indexOf("%")>-1){
+					realHeight= parseInt(maxHeight*parseInt(dialogHeight)/100);
+				}else{
+					realHeight=parseInt(dialogHeight);
+				}
+				realHeight= realHeight>50?realHeight:msgWinOpts.height;  
+				realHeight=realHeight+40>maxHeight?maxHeight-40:realHeight;
+				//realHeight=realHeight+"px";
+			}
+			if (OtherJson['clientPath']){
+				if (typeof websys_exec=='function') {
+					websys_exec( '"'+OtherJson['clientPath']+'" "'+OtherJson["link"]+'"'  );
+				}
+			}else{
+				var blankLeft=(maxWidth-realWidth)/2;
+				var blankTop=(maxHeight-realHeight)/2;
+				window.open(OtherJson["link"],'blankExecMsgWin','width='+realWidth+',height='+realHeight+',left='+blankLeft+',top='+blankTop);
+			}				
+
+			return false;			
+		}
+	</script>
+</body>
+</html>

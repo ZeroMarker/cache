@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--住院药房 - 配药确认 - 发药
+    csp: csp/pha.ip.v4.dispcheck.csp
+    js:  scripts/pha/ip/v4/dispcheck.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <link rel="stylesheet" href="../scripts/pha/ip/v4/css/ui.css">
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/store.js"></script>
+    <SERVER>
+        s CheckType = $G(%request.Data("CheckType",1))
+        i CheckType="" s CheckType="Confirm"
+        s CheckTypeDesc = $case(CheckType,"Confirm":"配药确认","Collect":"发药确认",:"")
+    </SERVER>
+    <script language=javascript>
+        // 定义默认状态
+        var CHECKTYPE = "#(CheckType)#";
+        var CHECKTYPEDESC = "#(CheckTypeDesc)#";
+    </script>
+    <style>
+        .pha-datebox {
+            width: 125px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',width:730,border:false,split:true">
+                    <div class="hisui-panel" title="#(CheckTypeDesc)#" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridPhac"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-tabs tabs-gray" data-options="tools:[],fit:true">
+                        <div title="汇总" data-options="">
+                            <table id="gridPhacInci"></table>
+                        </div>
+                        <div title="明细" data-options="">
+                            <table id="gridPhacOrder"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridPhacBar">
+        <div class="pha-row">
+            <div class="pha-col">#(..Get("开始时间"))#</div>
+            <div class="pha-col">
+                <input class="hisui-datebox pha-datebox" id="conStartDate">
+            </div>
+            <div class="pha-col">
+                <input class="hisui-timespinner pha-timespinner" showSeconds=true id="conStartTime">
+            </div>
+            <div class="pha-col">#(..Get("药房"))#</div>
+            <div class="pha-col">
+                <input id="conPhaLoc">
+            </div>
+
+            <div class="pha-col">
+                <input class="hisui-checkbox" type="checkbox" data-options="checked:true" label="未确认" id="conUnCheck">
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+            </div>
+        </div>
+        <div class="pha-row">
+            <div class="pha-col">#(..Get("结束时间"))#</div>
+            <div class="pha-col">
+                <input class="hisui-datebox pha-datebox" id="conEndDate">
+            </div>
+            <div class="pha-col">
+                <input class="hisui-timespinner pha-timespinner" showSeconds=true id="conEndTime">
+            </div>
+            <div class="pha-col">#(..Get("病区"))#</div>
+            <div class="pha-col">
+                <input id="conWardLoc">
+            </div>
+            <div class="pha-col">
+                <input class="hisui-checkbox" type="checkbox" data-options="checked:false" label="已确认" id="conChecked">
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+            </div>
+        </div>
+        <div class="pha-row">
+            <div class="pha-col">#(..Get("单据单号"))#</div>
+            <div class="pha-col">
+                <input class="hisui-validatebox" id="conPhacNo" style="width:236px">
+            </div>
+            <div class="pha-col">#(..Get("类别"))#</div>
+            <div class="pha-col">
+                <input class="hisui-combobox" id="conDrugCat">
+            </div>
+        </div>
+        <div style="padding-right:10px;border-left: 1px solid #cccccc;height:100px;display:none">
+            <div class="pha-row">
+                <div class="pha-col">
+                    <input class="hisui-validatebox" id="conUser" data-options="placeholder:'请输入工号...'">
+                </div>
+            </div>
+            <div class="pha-row" style="text-align: center;padding-top:5px">
+                <div id="conUserName" style="font-size:16px;font-weight: bold;">
+                </div>
+            </div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-stamp-pass'" id="btnPass">#(CheckTypeDesc)#</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper-plane'" id="btnSend" style="display: none;">发送包药机</a>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/dispcheck.js"></script>
+</body>
+
+</html>

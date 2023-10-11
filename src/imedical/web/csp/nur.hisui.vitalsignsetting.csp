@@ -1,0 +1,411 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.qlassess.csp 护理计划->评估对问题配置--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+.has-switch.switch-small {
+    padding-right: 1px;
+}
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;-webkit-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;}
+.l-btn{-webkit-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;}
+.panel-body.panel-body-noheader {border-color: #cccccc;}
+.datagrid-view .icon-cancel:before{line-height: 28px;}
+</style>
+ </head> 
+ <body> 
+ <server>
+ 	s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+ </server> 
+<div class="hisui-layout" data-options="fit:true,border:false" style=""> 
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:91px;border-bottom:1px dashed #ccc;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label" style="padding-left: 52px;">
+					<label id="_HospListLabel" for="_HospList">#(..Get("医院"))#</label>
+				</td>
+				<td>
+					<input id="_HospList"/>
+				</td>
+				<td class="r-label">
+					<label>#(..Get("转科前体征修改权限"))#</label>
+				</td>
+				<td class="r-label" style="padding-left: 0;">
+	        <div id="switch" class="hisui-switchbox" data-options="onText:$g('是'),offText:$g('否'),size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:updateVSGenelConfig"></div>
+				</td>
+				<td class="r-label" style="padding-left: 0;">
+					<label>#(..Get("质控显示"))#</label>
+				</td>
+				<td>
+	        <div id="qcSwitch" class="hisui-switchbox" data-options="onText:$g('是'),offText:$g('否'),size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:updateVSGenelConfig"></div>
+				</td>
+				<td class="r-label">
+					<a class="hisui-linkbutton" onclick="openTPModal();" data-options="iconCls:'icon-w-pen-paper'">#(..Get("体征采集时间点"))#</a>  
+				</td>
+				<td>
+					<a class="hisui-linkbutton" onclick="openYestVSModal();" data-options="iconCls:'icon-w-edit'">#(..Get("昨日体征录入"))#</a>  
+				</td>
+				<td class="r-label">
+					<a class="hisui-linkbutton" onclick="openRelateItmMastModal();" data-options="iconCls:'icon-w-switch'">#(..Get("关联医嘱"))#</a>  
+				</td>
+			</tr>
+		</table>
+		<table class="search-table" style="border-spacing: 0;">
+			<tr>
+				<td class="r-label">
+					<label>#(..Get("体征项描述"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="searchName" style="width:120px;" placeholder="#(..Get("请输入体征项描述"))#"/>
+				</td>
+				<td class="r-label">
+					<label>#(..Get("类型"))#</label>
+				</td>
+				<td>
+					<input class="hisui-combobox textbox" style="width:130px;" id="filterType"/>
+				</td>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>  
+				</td>
+			</tr>
+		</table>
+    </div>
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+    	<table id="tabVitalSign"></table>
+    </div>
+</div>
+<!--增加/修改弹框-->
+<div id="QLAssessEditWin" class="hisui-window" title="#(..Get("体征项配置"))#" style="width:570px;height:570px;" data-options="iconCls:'icon-w-batch-cfg',closed:true">   
+	<table class="search-table">
+		<tr>
+			<td class="r-label">
+				<label for="code" class="clsRequired">#(..Get("体征项代码"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="code" style="width:417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="desc" class="clsRequired">#(..Get("体征项描述"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="desc" style="width: 417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="desc">#(..Get("缩写"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="abbrCode" style="width: 417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<!-- <label for="confirmation">#(..Get("空白栏"))#</label> -->
+			</td>
+			<td>
+				<input class="hisui-checkbox" type="checkbox" label="#(..Get("体温单底部空白栏"))#" id="confirmation">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<!-- <label for="titleLastWeek">#(..Get("空白栏"))#</label> -->
+			</td>
+			<td>
+				<input class="hisui-checkbox" type="checkbox" label="#(..Get("空白栏标题延续到下一页"))#" id="titleLastWeek">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="observStatusDR" class="clsRequired">#(..Get("顺序号"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="observStatusDR" style="width: 417px;"/>
+				<!-- <a href="#" id="observStatusDR_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a> -->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="isShow">#(..Get("分床时是否显示"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="isShow" style="width:424px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="type" class="clsRequired">#(..Get("类型"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="type" style="width:424px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="flag">#(..Get("成人婴儿标志"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="flag" style="width:424px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="rangeFrom">#(..Get("正常值起始范围"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="rangeFrom" style="width: 417px;"/>
+				<!-- <a href="#" id="rangeFrom_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a> -->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="rangeTo">#(..Get("正常值截止范围"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="rangeTo" style="width: 417px;"/>
+				<!-- <a href="#" id="rangeTo_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a> -->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="alertRangeFrom">#(..Get("错误值低值上限"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="alertRangeFrom" style="width: 417px;"/>
+				<!-- <a href="#" id="alertRangeFrom_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a> -->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="alertRangeTo">#(..Get("错误值高值下限"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="alertRangeTo" style="width: 417px;"/>
+				<!-- <a href="#" id="alertRangeTo_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a> -->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="values">#(..Get("特殊值"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="values" style="width:424px;" data-options="defaultFilter:6, valueField:'id', textField:'bdDesc',blurValidValue:true"/>
+				<!-- <input class="textbox" id="values" placeholder="#(..Get("多个值用@分隔"))#" style="width:417px;"/> -->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<!-- <label for="udFlag">#(..Get("支持自定义"))#</label> -->
+			</td>
+			<td>
+				<input class="hisui-checkbox" type="checkbox" label="#(..Get("支持自定义（体征项配置特殊值后支持自定义输入）"))#" id="udFlag">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="specialSign">#(..Get("特殊符号"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="specialSign" style="width:424px;" data-options="defaultFilter:6, valueField:'id', textField:'bdDesc',blurValidValue:true"/>
+				<!-- <input class="textbox" id="specialSign" placeholder="#(..Get("多个值用,分隔"))#" style="width:417px;"/> -->
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="status">#(..Get("是否启用"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="status" style="width:424px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="formula">#(..Get("录入频次/天"))#</label>
+			</td>
+			<td>
+				<input class="hisui-combobox textbox" id="formula" style="width:424px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<!-- <label for="formulaControl">#(..Get("控制录入频次"))#</label> -->
+			</td>
+			<td>
+				<input class="hisui-checkbox" type="checkbox" label="#(..Get("控制录入频次（控制录入频次后限制体征项数值录入次数）"))#" id="formulaControl">
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="alertRangeTo">#(..Get("多人体征列宽"))#</label>
+			</td>
+			<td>
+				<input class="textbox" id="colWidth" style="width: 417px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="text-align:center;">
+				<a class="hisui-linkbutton" id="BSaveVSign" data-options="iconCls:'icon-w-ok'">#(..Get("确定"))#</a>
+				<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">#(..Get("取消"))#</a> 
+			</td>
+		</tr>
+	</table>
+</div>
+<!-- 体征采集时间点 -->
+<div id="timePointModal" class="hisui-dialog" title="#(..Get("体征采集时间点"))#" style="top: 50px;left: 300px;padding: 0 10px 10px;width: 300px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true">
+<table class="search-table">
+	<tr>
+		<td class="r-label">
+			<label>#(..Get("体征采集时间点"))#</label>
+		</td>
+		<td>
+			<input class="hisui-combobox textbox" style="width:140px;" id="timePoint"/>
+		</td>
+	</tr>
+</table>
+	<table id="timePointTable" class="hisui-datagrid" data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+		iconCls: 'icon-save',
+		text:$g('保存'),
+		handler: saveTPTable
+	}],
+	onDblClickRow:editTPRow
+	">
+		<thead>   
+			<tr>
+				<th data-options="field:'timePoint',width:100">#(..Get("时间点"))#</th>
+				<th data-options="field:'endPoint',width:170,editor:{
+					type:'timespinner'
+				}">#(..Get("截止时间"))#</th>
+			</tr>
+		</thead>
+	</table>
+</div>
+<!-- 昨日体征项录入 -->
+<div id="yestVSModal" class="hisui-dialog" title="#(..Get("昨日体征项录入"))#" style="top: 50px;left: 300px;padding: 10px 10px 10px;width: 1000px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true">
+	<table id="yestVSTable" class="hisui-datagrid" data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+		iconCls: 'icon-add',
+		text:$g('新增'),
+		handler: addYestVSRow
+	},{
+		iconCls: 'icon-save',
+		text:$g('保存'),
+		handler: saveYestVSRow
+	},{
+		iconCls: 'icon-tip',
+		id:'yestVSInfo',
+	}],
+	onDblClickRow:editYestVSRow
+	">
+		<thead>   
+			<tr>
+				<th data-options="field:'desc',width:200,
+				editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'id',
+						textField:'desc',
+						data: vitalsignList,
+						blurValidValue:true
+					}
+				}">#(..Get("体征项"))#</th>
+				<th data-options="field:'yestDesc',width:300,editor:{
+					type:'text'
+				}">#(..Get("昨日体征录入描述"))#</th>   
+				<th data-options="field:'id',width:50,align:'center',formatter:function(value,row,i){
+					return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteYestVSRow('+(value||0)+','+i+')\'>&nbsp;</span>';
+				}">#(..Get("操作"))#</th>
+			</tr>
+		</thead>
+	</table>
+</div>
+<!-- 关联医嘱 -->
+<div id="relateItmMast" class="hisui-dialog" title="#(..Get("关联医嘱"))#" style="top: 50px;left: 300px;padding: 10px 10px 10px;width: 1000px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true">
+	<table id="oeordTable" class="hisui-datagrid" data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+		iconCls: 'icon-add',
+		text:$g('新增'),
+		handler: addOeordRow
+	},{
+		iconCls: 'icon-save',
+		text:$g('保存'),
+		handler: saveOeordRow
+	},{
+		iconCls: 'icon-tip',
+		id:'oeordTableInfo',
+	}],
+	onDblClickRow:editOeordRow
+	">
+		<thead>   
+			<tr>
+				<th data-options="field:'obsItmDesc',width:130,
+				editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'id',
+						textField:'desc',
+						data: vitalsignList,
+						blurValidValue:true
+					}
+				}">#(..Get("体征项"))#</th>
+				<th data-options="field:'itmMastDesc',width:320,
+				editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'id',
+						textField:'desc',
+						mode:'remote',
+						loader: docAdviceloader,
+						blurValidValue:true
+					}
+				}">#(..Get("医嘱"))#</th>
+				<th data-options="field:'textVal',width:150,editor:{
+					type:'text'
+				}">#(..Get("文本描述"))#</th>   
+				<th data-options="field:'id',width:50,align:'center',formatter:function(value,row,i){
+					return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deleteOeordRow('+(value||0)+','+i+')\'>&nbsp;</span>';
+				}">#(..Get("操作"))#</th>
+			</tr>
+		</thead>
+	</table>
+</div>
+<SCRIPT language = 'javascript' >
+	//全局请求后台服务对象
+	var ServerObj={
+		CurrentDate:"#(CurrentDate)#"
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.vitalsignsetting.js"></script>
+</body>
+</html>

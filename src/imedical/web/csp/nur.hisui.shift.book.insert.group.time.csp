@@ -1,0 +1,277 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	.panel-body, .panel-header {
+    border-color: #FFF;
+}
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s DataSource = $G(%request.Data("DataSource", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var DataSource="#(DataSource)#";
+	   var hospID="#(hospID)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-cellediting.js"></script>
+
+</head>
+<body>
+	
+	
+
+<div class="hisui-layout" data-options="fit:true,border:false">
+		
+		<div data-options="region:'center',border:false,collapsible:true,split:true" style="width:600px;">
+
+				
+				<table id="shiftBookGroup"></table>
+
+		</div>
+</div>
+
+
+<script type="text/javascript">
+$(function(){
+	$('body').addClass('active')
+	shiftBookGroup.datagrid()
+	
+})
+var shiftBookGroup={
+	datagrid:function(){
+		
+		var ToolBar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function() {
+	            var index=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:'请先保存数据后，进行新增操作',type:'error'});
+					return false;
+				}
+				var Len=$("#shiftBookGroup").datagrid("getRows").length;
+				$("#shiftBookGroup").datagrid("insertRow",{
+					index: Len,
+					row: {
+						id:""
+					}
+				});
+				$("#shiftBookGroup").datagrid("beginEdit", Len);
+				var Editors=$('#shiftBookGroup').datagrid("getEditors",Len);
+				$(Editors[0].target).focus();
+            }
+        },{
+            text: '保存',
+            iconCls: 'icon-save',
+            handler: function() {
+	            
+				var index=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+				debugger;
+	            var rowEditors=$('#shiftBookGroup').datagrid('getEditors',index);
+
+	            var row=$('#shiftBookGroup').datagrid('getRow',index);
+	            var rtnParms={}
+				rtnParms.id=row.ID
+				rtnParms.GroupName=$(rowEditors[0].target).val();
+				rtnParms.GroupSort=$(rowEditors[1].target).val();
+				rtnParms.ShiftBookID=ShiftBookID
+				if(rtnParms.GroupName=="" || 
+					rtnParms.GroupSort==""){
+					$.messager.popover({msg:'保存失败，存在为空的数据',type:'error'});
+					return false;
+				}
+				
+				var rows=$('#shiftBookGroup').datagrid('getRows')
+				var isExitSort=0
+				for(var i=0;i<rows.length;i++){
+					if(index==i){
+						continue;	
+					}
+					if(rtnParms.GroupSort==rows[i].GroupSort){
+						isExitSort=1
+					}
+				}
+				if(isExitSort==1){
+					$.messager.popover({msg:'保存失败，存在相同排序',type:'error'});
+					return false;
+				}
+				
+				
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","InsertShiftGroupTime",{data:JSON.stringify(rtnParms)},function(rtn){
+					if(rtn == 0) {
+						$.messager.popover({msg:'保存成功',type:'success'});
+						shiftBookGroup.loadData()
+					}
+					
+				
+				},'json',false);
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+            }
+        },{
+            text: '删除',
+            iconCls: 'icon-cancel',
+            handler: function() {
+	            var selected = $("#shiftBookGroup").datagrid("getSelected");
+	            if (!selected) {
+					$.messager.popover({msg:'请选择需要删除的记录！',type:'error'});
+					return false;
+				}
+				var rowID=selected.ID;
+				if (rowID) {
+					$.messager.confirm('提示', "确定要删除吗？", function(r){
+						if (r) {
+							runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftGroupTimeById",{"id":rowID},function(rtn){
+								$.messager.popover({msg:'删除成功',type:'success'});
+								shiftBookGroup.loadData()
+							})
+						}
+					});
+				}else{
+					
+				}
+            }
+        }];
+		
+		$('#shiftBookGroup').datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:true,
+			idField:"ID",
+			toolbar :ToolBar,
+			onDblClickRow:function(rowIndex, rowData){
+				
+				debugger;
+				var index=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:'请先保存数据后，进行编辑操作',type:'error'});
+					return false;
+				}
+				
+				$("#shiftBookGroup").datagrid("beginEdit", rowIndex);
+				var Editors=$('#shiftBookGroup').datagrid("getEditors",rowIndex);
+				$(Editors[0].target).focus();
+			},
+			rownumbers : true,
+			columns :[[
+				{field:'GroupName',title:$g('合并列名'),editor:{type:'text'},width:100},
+				{field:'GroupSort',title:$g('排序号'),editor:{type:'text'},width:30},
+				
+			]]
+		});	
+	  
+	   shiftBookGroup.loadData()
+		
+	},
+	loadData:function(){
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftGroupTimeList",{"ShiftBookID":ShiftBookID,"IsDeleted":0},function(rtn){
+			$("#shiftBookGroup").datagrid("unselectAll");
+			$("#shiftBookGroup").datagrid('loadData', rtn)
+		})	
+	},
+
+}
+$.extend($.fn.datagrid.methods, {
+	getEditingRowIndexs: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var indexs = [];
+		rows.each(function (i, row) {
+			var index = row.sectionRowIndex;
+			if (indexs.indexOf(index) == -1) {
+				indexs.push(index);
+			}
+		});
+		return indexs;
+	},
+	getEditingRowIndex: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var index = -1;
+		rows.each(function (i, row) {
+			index = row.sectionRowIndex;
+			
+		});
+		return index;
+	},
+	
+});
+
+
+
+
+</script>
+	
+</body>
+</html>
+

@@ -1,0 +1,159 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetDataImport.csp 交班数据引入配置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{background: white;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+/*#ctcConfig{padding-left: 10px;padding-right: 10px;margin-top: -0.5em;padding-top: 10px;}*/
+#ctcConfig{padding-left: 10px;}
+#ctcConfig>div{flex: 3;margin-right: 10px;}
+#ctcConfig>div:first-of-type{flex: 2;}
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;}
+#tbEvaluate .l-btn-text,#tbADRs .l-btn-text{padding: 0 10px;}
+.datagrid-toolbar{width: 100%;}
+.panel-body.panel-body-noheader{border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+</style>
+<script language="javascript">
+	var startFlagList=[
+		{desc:"是",value:1},
+		{desc:"否",value:0},
+	];
+	var startFlagObj={};
+	startFlagList.map(function(elem,index) {
+		startFlagObj[elem.value]=elem.desc;
+	});
+</script>
+</head>
+<body style="overflow: hidden;padding: 0;">
+	<div style="position: relative;padding-top: 10px;">
+		<table cellpadding="0" style="margin-left: 10px;border-collapse: collapse;">
+	    <tr>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+	    </tr>
+	  </table>
+	  <hr class="dashed" style="margin: 10px 0;">
+	</div>
+	<div id="ctcConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;">
+		<div class="evaluate">
+			<div class="hisui-panel" title="字典类型"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table id="tbEvaluate" cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+					<tr>
+						<td class="r-label">
+							<input id="evaluateInput" style="width: 200px;" class="hisui-searchbox" data-options="prompt:'请输入代码或描述',searcher:filterEvaluate">
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-add'" onclick="addESRow();">增加</a>
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="saveESRow();">保存</a>
+						</td>
+						<!-- <td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-cancel'" onclick="deleteESRow();">删除</a>
+						</td> -->
+					</tr>
+				</table>
+			  <table id="evaluateSystem" class="hisui-datagrid"
+					data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:true,pageSize:20,pageList:[20,50,100,200],
+					onClickRow: selectESRow,
+					onDblClickRow:editESRow,
+					onBeforeDrag:beforeDragESRow,
+					onDrop:dropESRow,
+					onLoadSuccess:function(){
+						$(this).datagrid('enableDnd');
+					}
+				">
+					<thead>   
+						<tr>
+							<th data-options="field:'bdCode',width:80,editor:{type:'text'}">代码</th>   
+							<th data-options="field:'bdDesc',width:200,editor:{type:'text'}">描述</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>   
+				</table>
+			</div>
+		</div>
+		<div class="ADRs">
+			<div class="hisui-panel" title="字典项目"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table id="tbADRs" cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+					<tr>
+						<td class="r-label">
+							<input id="ADRsInput" style="width: 200px;" class="hisui-searchbox" data-options="prompt:'请输入代码或描述',searcher:filterADRs">
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-add'" onclick="addADRsRow();">增加</a>
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="saveADRsRow();">保存</a>
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-cancel'" onclick="deleteADRsRow();">删除</a>
+						</td>
+					</tr>
+				</table>
+			  <table id="ADRsTable" class="hisui-datagrid"
+					data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:true,pageSize:20,pageList:[20,50,100,200],
+					onDblClickRow:editADRsRow,
+					onBeforeDrag:beforeDragADRsRow,
+					onDrop:dropADRsRow,
+					onLoadSuccess:function(){
+						$(this).datagrid('enableDnd');
+					}
+				">   
+					<thead>   
+						<tr>
+							<th data-options="field:'bdsCode',width:80,editor:{type:'text'}">代码</th>   
+							<th data-options="field:'bdsDesc',width:200,editor:{type:'text'}">描述</th>
+							<th data-options="field:'startFlag',width:70,formatter:function(value,row){
+								return startFlagObj[value];
+							},
+							editor:{
+								type:'combobox',
+								options:{
+									defaultFilter:6,
+									editable:false,
+									valueField:'value',
+									textField:'desc',
+									data:startFlagList,
+									blurValidValue:true
+								}
+							}">启用</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>   
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.BasicDictConfig.js"></script>
+</body>
+</html>

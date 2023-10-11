@@ -1,0 +1,88 @@
+<!--nur.hisui.transList.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<NURHISUI />
+	<!--ADDINS require="RWCard"/-->
+	<Server>
+	/*w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' style='display:none' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>", $C(13, 10)
+	w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' style='display:none' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>", $C(13, 10)
+	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' style='display:none' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>", $C(13, 10)
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
+	s SwitchSysPat=$G(%request.Data("SwitchSysPat", 1))
+   </Server>
+	<!--script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script-->
+	
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.transList.js" charset='gbk'></script>
+
+	<STYLE type='text/css'>
+		.search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.r-label{
+			padding-left: 10px;
+		}
+	</STYLE>
+</head>
+
+<body style="padding:4px;box-sizing: border-box;">
+	<div class="hisui-panel" fit="true" data-options="title:'患者转入转出查询',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',border:false,collapsible:false" style="height:91px;border-bottom: 1px solid #e2e2e2;border-radius:0">
+				<table class="search-table">
+					<tr>
+						<td class="r-label">#(..Get("开始日期"))#</td>
+						<td>
+							<input id="stDate" class="hisui-datebox textbox">
+						</td>
+						<td class="r-label">#(..Get("原科室"))#</td>
+						<td>
+							<input id="FromLocCom" class="hisui-combobox textbox" name="otherLoginLocs"  data-options="enterNullValueClear:false"></input>
+						</td>
+						<td class="r-label">#(..Get("相关科室"))#</td>
+						<td>
+							<input id="LocCom" class="hisui-combobox textbox" name="otherLoginLocs"  data-options="enterNullValueClear:false"></input>
+						</td>
+						<td class="r-label">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='dfugridSch'>查询</a>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">#(..Get("结束日期"))#</td>
+						<td>
+							<input id="endDate" class="hisui-datebox textbox">
+						</td>
+						<td class="r-label">#(..Get("转入科室"))#</td>
+						<td>
+							<input id="ToLocCom" class="hisui-combobox textbox" name="otherLoginLocs"  data-options="enterNullValueClear:false"></input>
+						</td>
+						<td class="r-label">#(..Get("病案号"))#</td>
+						<td>
+							<input id="medTxt" class="textbox">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',title:'',border:false" style="">
+				<table id='TransPatGrid' class="hisui-datagrid">
+				</table>
+			</div>
+		</div>
+	</div>
+</body>
+<SCRIPT language = 'javascript'>
+	var SwitchSysPat="#(SwitchSysPat)#"
+</SCRIPT>
+</html>

@@ -1,0 +1,163 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.nurcarrysheetconfig.csp 标本运送配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.config-title {
+		padding-left:10px;
+		font-weight:bold;
+	}
+</style>
+</head>
+
+<body>
+	<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false" style="height:50px;">
+			<table class="search-table">
+	  	 	 	<tr>
+		            <td class="r-label">
+		              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		            </td>
+		            <td>
+		              <input id="_HospList"/>
+		            </td>
+		            <td class="r-label">
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="saveCarrySheetConfig()">保存</a>
+					</td>
+		          </tr>
+	  	 	 </table>
+		</div>
+		<div data-options="region:'west',split:false,border:false" style="width:646px;padding:0 10px 10px 10px;">
+			<div class="hisui-panel" title="建单规则配置" data-options="iconCls:'icon-batch-cfg',headerCls:'panel-header-gray',fit:true" style="">
+				<table class="search-table">
+					<tr>
+						<td>
+			              <label class="config-title">禁止同单规则</label>
+			            </td> 
+			            <td class="r-label">
+			              <input class="hisui-checkbox" type="checkbox" data-options="" label="加急" value="Urgent" id="UrgentCheckbox" name="forBidSameSheetRules">
+			            </td>
+			            <td>
+			              <input class="hisui-checkbox" type="checkbox" data-options="" label="接收科室" value="RecLoc" id="RecLocCheckbox" name="forBidSameSheetRules">
+			            </td>
+			            <td class="r-label">
+			              <input class="hisui-checkbox" type="checkbox" data-options="" label="医嘱子类" value="ItemSubCat" id="ItemSubCatCheckbox" name="forBidSameSheetRules">
+			            </td>
+			            <td>
+			              <input class="hisui-checkbox" type="checkbox" data-options="" label="标本类型" value="Specimen" id="SpecimenCheckbox" name="forBidSameSheetRules">
+			            </td>
+					</tr>
+				</table>
+				<div style="font-size:0;height:calc(100% - 51px);">
+					<div style="padding:0 10px 10px 10px;width:370px;height:100%;display:inline-block;">
+						<div class="hisui-panel" title="分单维护" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray',fit:true">
+							<table id="carrySplitGroupSetTab"></table>
+							<div id="carrySplitGroupSetTabToolBar" class="toolbar" style="padding-left:10px;">
+								<table cellpadding="0" cellspacing="0">
+									<tr>
+										<td>
+							              <label class="">类型</label>
+							            </td> 
+							            <td class="r-label">
+							            	<select id="splitType" class="hisui-combobox textbox" data-options="editable:false,onChange:splitTypeChange" style="width:95px;">
+												<option value="Specimen">标本类型</option>
+												<option value="ItemSubCat">医嘱子类</option>
+											</select>
+							            </td>
+										<td>
+											<div class="datagrid-btn-separator"></div>
+										</td>
+										<td>
+											<a href="javascript:void(0)" class="hisui-linkbutton" onclick="carrySplitGroupAdd()" data-options="iconCls:'icon-add',plain:true">新增</a>
+										</td>
+										<td>
+											<a href="javascript:void(0)" class="hisui-linkbutton" onclick="deleteCarrySplitGroup()" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+										</td>
+										<td>
+											<a href="javascript:void(0)" class="hisui-linkbutton" onclick="saveCarrySplitGroup()" data-options="iconCls:'icon-save',plain:true">保存</a>
+										</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div style="padding:0 10px 10px 0;width:224px;height:100%;display:inline-block;">
+						<div class="hisui-panel" title="分单规则维护" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray',fit:true">
+							<table id="carrySplitGroupItemSetTab"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',split:false,border:false" style="padding:0 10px 10px 0;">
+			<div class="hisui-panel" title="运送单其他配置" data-options="iconCls:'icon-batch-cfg',headerCls:'panel-header-gray',fit:true">
+				<table class="search-table">
+		  	 	 	<tr>
+		  	 	 		<td>
+			              <label class="config-title">标本设置</label>
+			            </td>
+			            <td class="r-label">
+			              <label for="maxSpecNum">最大标本数量</label>
+			            </td>
+			            <td>
+			              <input id="maxSpecNum" class="hisui-numberbox textbox" data-options="min:1"/>
+			            </td>
+			            <td class="r-label">
+			              <label for="specDisplayOrder">显示顺序</label>
+			            </td>
+			            <td>
+			            	<select id="specDisplayOrder" class="hisui-combobox textbox" data-options="editable:false">
+								<option value="Desc">时间倒序</option>
+								<option value="Asc">时间正序</option>
+							</select>
+			            </td>
+			          </tr>
+			          <tr>
+		  	 	 		<td>
+			              <label class="config-title">显示设置</label>
+			            </td>
+			            <td class="r-label">
+			              <label for="defDisplaySheetType">默认展示运送单</label>
+			            </td>
+			            <td>
+			                <select id="defDisplaySheetType" class="hisui-combobox textbox" data-options="editable:false">
+								<option value="Ward">本病区</option>
+								<option value="User">本人</option>
+							</select>
+			            </td>
+			            <td class="r-label">
+			              <label for="isAllowChangeDisplaySheetType">是否可切换</label>
+			            </td>
+			            <td>
+			            	<div id="isAllowChangeDisplaySheetType" class="hisui-switchbox" style="margin-left:5px" data-options="onText:'是',offText:'否',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+							</div>
+			            </td>
+			          </tr>
+		  	 	 </table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.nurCarrySheetConfig.js"></script>
+</body>
+</html>

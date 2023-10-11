@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<!--doccure.recordtemp.hui.csp 治疗记录模板展示-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<DHCDOCCURE></DHCDOCCURE>
+<!--<ADDINS require="LODOP"/>-->
+<link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/asscom.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/adaptation.css" rel="stylesheet">
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/storageAllCache.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.recordtemp.js"></script>
+<style type="text/css">
+.pt-butttom{text-align: center}
+.item-table th {
+	padding: 5px 10px;
+	text-align: right;
+	white-space:nowrap;
+	border:0px;
+}
+.t-hidden{
+	display:none	
+}
+.item-table textarea{
+	width:94%	
+}
+.m-input-175{
+	width:175px !important	
+}
+.m-input-155{
+	width:155px !important	
+}
+.kw-section-list > li {
+    margin: 0px;
+}
+/*只有下边框，下边框为虚线*/
+.cure-p-bd-b-bdash{
+	border-top-style:none;
+	border-left-style:none;
+	border-right-style:none;
+	border-bottom-style:dashed;
+	border-radius:0px !important;
+	padding:0px;
+}
+</style>
+<Server>
+ s DoctorID=##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
+ ///是否为实习生
+ s PracticeFlag=##class(web.DHCOEOrdItem).practice(DoctorID)
+ d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+ s PageShowFromWay=%request.Get("PageShowFromWay")
+</Server>
+</head>
+<SCRIPT language = 'javascript' >
+	var LgUserID = session['LOGON.USERID'];   /// 用户ID
+	var LgCtLocID = session['LOGON.CTLOCID']; /// 科室ID
+	var LgGroupID = session['LOGON.GROUPID']; /// 安全组ID
+	var LgHospID=session['LOGON.HOSPID'];
+	var PracticeFlag="#(PracticeFlag)#";
+	var PageShowFromWay="#(PageShowFromWay)#";
+</SCRIPT> 
+<body>
+	<div id="mainPanel" class="hisui-layout" fit="true"> 
+		<div data-options="region:'north',border:false,headerCls:'panel-header-gray'" style='padding:0px 10px;height:45px;'>
+			<csp:Include Page="dhcdoc.patinfo.banner.csp">
+		</div>
+		<csp:if condition='PageShowFromWay="ShowFromEmrList"'>
+		<csp:else>
+			<div data-options="region:'east',border:false" style="padding:0px 10px 10px 10px;width:350px">
+			<div class="hisui-panel panel-header-gray" data-options="fit:true">
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'north',border:false" style="border-radius:4px 4px 0px 0px;height:38px">
+						<div class="hisui-panel panel-header-gray cure-p-bd-b-bdash" data-options="fit:true" style="padding:5px">
+							<div id="ModalType"></div>
+						</div>
+					</div>
+					<div data-options="region:'center',border:false">
+						<table id="ModalListDataGrid" style="height:100px"></table> 
+					</div>
+				</div>
+			</div>
+			</div>
+		</csp:if>
+		<div data-options="region:'center',border:false" style="padding:0px">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'center',border:false,split:true" style="padding-left:10px">
+	<Server>
+	s DCAARowIdStr=$g(%request.Data("DCAARowIdStr",1))
+	s OEORERowIDS=$g(%request.Data("OEORERowIDS",1))
+	s DCRRowId=$g(%request.Data("DCRRowId",1))
+	s DCRTempID=$g(%request.Data("DCRTempID",1)) ;传入的治疗记录模板ID
+	s QueId=$g(%request.Data("QueId",1)) 
+	s source=$g(%request.Data("source",1))
+	s CureDefSetObj=##Class(DHCDoc.DHCDocCure.Record).GetCureDefSetInfo(%session.Get("LOGON.HOSPID"))
+	s DDCISRowidStr=##class(DHCDoc.DHCDocCure.CureItemSet).GetDDCISRowidStr(DCAARowIdStr,OEORERowIDS,DCRRowId)
+	s CureLocReconfirm=##class(DHCDoc.DHCDocCure.Config).GetCureLocConfig("","CureLocReconfirm",%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.HOSPID"))
+	s EpisodeID=""
+	if DCAARowIdStr'=""{
+		s DCARowID=+DCAARowIdStr
+	}elseif OEORERowIDS'=""{
+		s OEORERowID=$p(OEORERowIDS,"^",1)
+		s OrderId=$p(OEORERowID,"||",1,2)
+		s DCARowID=$o(^DHCDocCure(0,"OEORI",OrderId,""))
+	}elseif DCRRowId'=""{
+		s DCARowID=+DCRRowId
+	}
+	s MapID=""
+	if DCRTempID'="" s MapID=DCRTempID
+	if DCARowID'=""{
+		s EpisodeID=$p($g(^DHCDocCure(DCARowID)),"^",1)
+		s OrderId=$p($g(^DHCDocCure(DCARowID)),"^",2)
+		if MapID=""{
+			s MapID=##class(DHCDoc.DHCDocCure.Record).GetRecordTemp(OrderId,%session.Get("LOGON.HOSPID"))
+		}
+	}
+	
+	s PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+	s MapCode=""
+	s MapDesc=""
+	s itemReqJsonStr="A"
+	s CacheMapRowIDStr=""
+	s CacheMapIDStr=""
+	s BLIDStr=""
+	s MapStr=""
+	s BLInit=""
+	s BLItemMast=""
+	s BLSaveOther=""
+	s BLLoadOther=""
+	s PrintTemp=""
+	if MapID'=""{
+		s MapCode=$P(^DHCDocAppBLMap(MapID),"^",1)
+		s MapStr=$P(^DHCDocAppBLMap(MapID),"^",3)
+		s MapDesc=$P(^DHCDocAppBLMap(MapID),"^",2)
+		if ($g(^DHCDocAppBLMap(MapID,"ShowJS"))'=""){
+			w "<script type='text/javascript' src='../"_$g(^DHCDocAppBLMap(MapID,"ShowJS"))_"'></script>"
+		}
+		
+		s BLInit=$P(^DHCDocAppBLMap(MapID),"^",5)
+		s BLItemMast=$P(^DHCDocAppBLMap(MapID),"^",6)
+		s BLSaveOther=$P(^DHCDocAppBLMap(MapID),"^",7)
+		s BLLoadOther=$P(^DHCDocAppBLMap(MapID),"^",8)
+		;s PrintTemp=##Class(web.DHCDocAPPBL).GetPisPrintTemp(MapCode,EpisodeID)
+		s CacheMapRowIDStr=""
+		s CacheMapIDStr=""
+		s BLIDStr=""
+		d ##class(DHCDoc.DHCDocCure.Assessment).GetCacheMap(MapID,.CacheMapRowIDStr,.CacheMapIDStr,.BLIDStr)
+		if (DCRRowId'=""){
+			s myJsonStr=$g(^DHCDocCure(+DCRRowId,"Recode",$p(DCRRowId,"||",2),"Json"))
+			s:myJsonStr'="" itemReqJsonStr=##class(ext.util.String).Replace(myJsonStr,$c(10),"\n")
+		}
+	}	
+	</Server>
+	
+	</div>
+	<csp:if condition='PageShowFromWay="ShowFromEmrList"'>
+	<csp:else>
+		<div id="btPanel" data-options="region:'south',headerCls:'panel-header-gray', border:false" style="height:50px;">		
+			<div class="pt-butttom">
+				<a id="btnSave" href="#" class="hisui-linkbutton">保存</a> 
+				<a id="SaveModel" href="#" class="hisui-linkbutton green" style="margin-left:100px">保存模板</a>
+				</div>
+			</div> 
+		</csp:if>
+	</div>
+	</div>
+	</div>
+	<SCRIPT language = 'javascript' >
+        var itemReqJsonStrSub='#(itemReqJsonStr)#'
+        if (itemReqJsonStrSub!="A"){
+            var itemReqJsonStr=#(itemReqJsonStr)#
+        }else{
+            var itemReqJsonStr="";
+        }
+        var CureDefSetObj=#(CureDefSetObj)#
+		//全局请求后台服务对象
+		var ServerObj={
+			OEORERowIDS:"#(OEORERowIDS)#",
+			DCAARowIdStr:"#(DCAARowIdStr)#",
+			DDCISRowidStr:"#(DDCISRowidStr)#",
+			EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			DCARowId:"#(DCARowID)#",
+			OperateType:"",
+			DCRRowId:"#(DCRRowId)#",
+			QueId:"#(QueId)#",
+			MapID:"#(MapID)#",
+			MapDesc:"#(MapDesc)#",
+			MapCode:"#(MapCode)#",
+			MapStr:"#(MapStr)#",
+			BLInit:"#(BLInit)#",
+			BLItemMast:"#(BLItemMast)#",
+			BLSaveOther:"#(BLSaveOther)#",
+			BLLoadOther:"#(BLLoadOther)#",
+			CacheMapIDStr:"#(CacheMapIDStr)#",
+			CacheMapRowIDStr:"#(CacheMapRowIDStr)#",
+			BLIDStr:"#(BLIDStr)#",
+			PrintTemp:"",
+			source:"#(source)#",
+			CureLocReconfirm:"#(CureLocReconfirm)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OPDocPatInfoBar.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/comAssConsTrePro.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+    <!--初始化CA服务环境-->
+    <script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>麻醉监护</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/jquery.print.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/signature.css" />
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/anaestrecord.css" />
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/font-awesome.min.css"/>
+</head>
+<body class="hisui-layout">
+	<div class="west" data-options="region:'west',width:200,border:false" style="border-right:1px solid #eee">
+		<a href="javascript:;" id="btn_west_collapse" class="collapse-icon"><span class="icon layout-button-black-left"></span></a>
+		<div id="current_room" class="seperated-area" style="min-height:20px;text-align:center;padding:3px 0;font-weight:900;font-size:16px;">
+			手术间02
+		</div>
+		<div id="device_usage" class="seperated-area device-usage" title="">
+			未选择使用设备
+		</div>
+		<div id="procedure_board" class="seperated-area" style="display:none;height:550px;overflow-x:hidden;overflow-y:auto;">
+		</div>
+		<div id="toolkit" class="seperated-area" style="height:550px;overflow-x:hidden;overflow-y:auto;"></div>
+	</div>
+    <div class="center" data-options="region:'center',border:false">
+        <div id="text_history_view" class="texthistory-view" style="display:none;"></div>
+        <canvas id="canvas" width="1054" height="1600" style="margin-top:50px;"></canvas>
+        <div class="form-group" style="width:100%;">
+			<div class="form-signrow form-row-signature" style="margin-left:35px;position:relative;top:-50px;">
+				<div class="form-title-right6">麻醉医师签名：</div>
+				<div class="form-item-normal">
+					<input type="text" id="AnaDoctorSign" class="hisui-triggerbox signature" data-options="icon:'icon-w-edit',prompt:'麻醉医师签名',CareProvType:'DOCTOR'">
+				</div>
+			</div>
+		</div>
+    </div>
+    <div id="collectview" class="east" title="实时监护数据<span id='vitalsign_warning' class='icon-warning' style='display:inline-block;width:16px;height:16px;'></span>" data-options="region:'east',width:150,border:false,collapsible:true,headerCls:'panel-header-gray'" style="border-left:1px solid #eee;background-color: #676767;overflow: hidden;">
+		<span></span>
+	</div>
+    <div id="itemMenus" class="hisui-menu" style="width:120px;">
+    	<div>监护项目</div>
+	</div>
+	<div id="timeLineDialog" class="hisui-dialog" data-options="closed:true,title:'时间轴缩放',width:960,height:480,modal:true">
+		<table id="timeLineBox" class="hisui-datagrid" data-options="toolbar:'#timeLineTools',fit:true">
+		</table>
+		<div id="timeLineTools">
+			开始时间：<input type="text" class="hisui-datetimebox" id="startDT" data-options="required:true"> 
+			结束时间：<input type="text" class="hisui-datetimebox" id="endDT" data-options="required:true"> 
+			列分钟数：<input type="text" class="hisui-numberspinner" id="columnMinutes" data-options="min:1,max:10,value:1,required:true,width:60" style="width:60px;">
+			<a href="#" id="btnAddTimeLine" class="hisui-linkbutton" data-options="iconCls:'icon-add'">新增</a>
+			<a href="#" id="btnDelTimeLine" class="hisui-linkbutton" data-options="iconCls:'icon-remove'">删除</a>
+		</div>
+	</div>
+	<div id="saveSuccess_dialog" class="success-showup" style="display:none;opacity:0;top:150px;left:10px;width:220px;">
+		<span style="display:inline-flex;line-height:24px;font-size:18px;padding:2px 5px;">重新安排手术间成功</span>
+	</div>
+	<div id="signContainer">
+	</div>
+	<script type="text/javascript" src="../service/dhcanop/js/CF.AN.PCATemplate.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.archivecontext.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.RecordBrowser.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/datagrid-cellediting.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/jquery.textbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/jquery.tagbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/jquery.menu.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.datetime.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/plugin/dhccl.careproveditbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/plugin/dhccl.multilinetextbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
+	<!--script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CA.js"></script-->
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CASignature.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.CASignatureHIS.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.canvas.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.recordcontext.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.anaestsheet.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.editplugin.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.editpluginextend.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.textarea.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.anesthetisteditbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.anaestmethodeditbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.diagnosiseditbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.operationeditbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.careproveditbox.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.vitalsigndatamgr.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.vitalsignbatchview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.eventdatamgr.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.drugdatamgr.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.userstemplatemgr.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.eventeditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.procedureboard.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.stoprecordview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.deviceusageeditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.vitalsigneditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.drugeditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/CIS.AN.Toolkit.Big.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.intrmidrugeditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.startrecordview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.druggroupeditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.itemattributeview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.permissionmanager.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.userdefineditemview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.speedchangeeditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.collectview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.chargeview.his.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.autogenerateview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.texthistoryview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.shortcutview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.concentrationchangeeditor.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/dhcan.personalsettingview.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/CIS.AN.AbnormalView.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/CIS.AN.TimeReminder.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/CIS.AN.AnaRegView.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/CIS.AN.Tooltips.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/AnaestMonitoring/CIS.AN.EventAlertView.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.anaestrecord.js"></script>
+</body>
+</html>

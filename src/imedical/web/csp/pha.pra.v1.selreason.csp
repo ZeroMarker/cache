@@ -13,30 +13,35 @@
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI />
     <link rel="stylesheet" type="text/css" href="../scripts/pha/com/v1/css/ui.css" />
-    <script type="text/javascript" src="../scripts/pha/com/v1/js/pha.js"></script>
+    <PHALIBV1 />
     <script type="text/javascript" src="../scripts/pha/pra/v1/selreason.js"></script>
     <server>
         s wayId = $g(%request.Data("wayId",1),0)
         s oeori = $g(%request.Data("oeori",1),0)
         s prescNo = $g(%request.Data("prescNo",1),0)
         s selType = $g(%request.Data("selType",1),0)
+        s orderRequired = $g(%request.Data("orderRequired",1),1)        // MaYuqiang 20220428 医嘱是否必选
     </server>
     <SCRIPT Language="Javascript">
         var PRA_WAYID = "#(wayId)#";
         var PRA_OEORI = "#(oeori)#";
         var PRA_PRESCNO = "#(prescNo)#";
         var PRA_SELTYPE = "#(selType)#";
+        var PRA_ORDERREQUIRED = "#(orderRequired)#";
     </SCRIPT>
+
 </HEAD>
 
 <body>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',border:false" class="pha-body">
+        <div data-options="region:'center',border:false" style="padding:10px">
             <div class="hisui-layout" fit="true">
                 <div data-options="region:'west',border:false,split:true" style="width:350px;">
                     <div class="hisui-panel" title="第一步 : 选择拒绝原因 [双击选择]"
-                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
-                        <table id="gridReason"></table>
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''" >
+                        <div  style="height:100%;overflow:scroll" >
+                        	<table  id="gridReason"></table>
+                        </div>
                     </div>
                 </div>
                 <div data-options="region:'center',border:false">
@@ -57,8 +62,8 @@
                                 </div>
                                 <div data-options="region:'south',border:false,split:true"
                                     style="height:200px;overflow: hidden;padding-right: 6px;padding-bottom: 6px;">
-                                    <textarea id="phNotes" style="width:100%;height:100%;border-radius: 4px;overflow: hidden;"
-                                        placeholder="药师备注..."></textarea>
+                                    <textarea id="phNotes" style="width:100%;height:100%;border-radius: 2px;overflow: hidden;"
+                                        placeholder=#(..Get("药师备注..."))#></textarea>
                                 </div>
                             </div>
                         </div>
@@ -67,7 +72,7 @@
                 <div data-options="region:'south',border:false,split:true" style="height:40px;overflow:hidden;">
                     <div style="text-align: center">
                         <a class="hisui-linkbutton" plain='false' id="btnSure">确定</a>
-                        <a class="hisui-linkbutton red" plain='false' id="btnCancel">取消</a>
+                        <a class="hisui-linkbutton" plain='false' id="btnCancel" style="margin-left:6px">取消</a>
                     </div>
                 </div>
             </div>

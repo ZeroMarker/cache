@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--库存转移接收查询
+	csp:  csp/pha.in.v3.trans.queryin.csp
+	js:   scripts/pha/in/v3/trans/queryin.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    
+	<!-- 样式扩展 -->
+    <style>
+    	.button-width {
+			width: 90px;
+		}
+    </style>
+
+</head>
+
+<body>
+	<!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true" >
+               <div class="hisui-panel" data-options="headerCls:'panel-header-gray',bodyCls:'',iconCls:'icon-paper',region:'north',height:400,split:true,title:'库存转移接收查询-库存转移单',collapsible:true,showCollapsedTitle:true" >
+	                <table id="gridInit"></table>
+	            </div>
+	            <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',split:true,title:'单据明细',toolbar:[]" >
+	            	<table id="gridIniti"></table>    
+	            </div>
+			</div>
+		</div>
+    </div>
+    
+    <!-- 库存转移单列表工具栏 -->
+	<div id="gridInitBar" >
+		<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="recLocId">#(..Get("请求科室"))#</label></td>
+                <td><input id="recLocId"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td><label for="startDate">#(..Get("开始日期"))#</label></td>
+                <td><input id="startDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+		 		<td class="r-label"><label for="reqNo">#(..Get("请求单号"))#</label></td>
+                <td><input id="reqNo" class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+		 		<td class="r-label"><label for="statusCode">#(..Get("流程状态"))#</label></td>
+                <td><input id="statusCode"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+                <td class="r-label"><label for="inci">#(..Get("药品"))#</label></td>
+        		<td ><input id="inci" data-pha="class:'hisui-combogrid',query:true,clear:true"/></td>
+                <td><a class="hisui-linkbutton button-width"  onclick="javascript:Query()">查询</a></td>
+            </tr>
+            <tr>
+		 		<td class="r-label"><label for="proLocId">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td><label for="endDate">#(..Get("结束日期"))#</label></td>
+                <td><input id="endDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="transNo">#(..Get("转移单号"))#</label></td>
+                <td><input id="transNo" class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/></td>
+            	<td class="r-label"><label for="opertId">#(..Get("转移类型"))#</label></td>
+                <td><input id="opertId"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td/>
+                <td/>
+            	<td><a class="hisui-linkbutton button-width"  onclick="javascript:Clear()">清屏</a></td>
+            </tr>
+        </table>
+	</div>
+
+    <!-- 单据明细工具栏 -->
+    <div id="gridInitiBar" >
+        
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/queryin.js"></script>
+   
+</body>
+
+</html>

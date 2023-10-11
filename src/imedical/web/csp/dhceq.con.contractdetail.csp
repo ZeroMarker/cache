@@ -11,46 +11,58 @@
 	<DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
 <script language=Cache runat=server>
-	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
 	s ContractType=$Get(%request.Data("ContractType",1))
 	s QXType=$Get(%request.Data("QXType",1))
 	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")	;add by CZF0085 2020-03-05
  	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
- 	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")	
+ 	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+ 	s SignLocDR=$Get(%request.Data("SignLocDR",1))
+ 	s SignLoc = ##Class(web.DHCEQCommon).GetTrakNameByID("dept", SignLocDR)
 </script>
 
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
 		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true" title="合同明细查询">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;height:140px;"><!-- MZY0033	1369965		2020-06-15 -->
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #E2E2E2;padding-bottom:10px;">
 					<div class="eq-table">
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cContractNo" for="ContractNo">合同号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ContractNo"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ContractNo"></div>
 							<div class="eq-table-td eq-table-label"><label id="cContractName" for="ContractName">合同名称</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ContractName"></div>
-							<div class="eq-table-td eq-table-label"><label for="SignLocDR_CTLOCDesc">签订部门</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="SignLocDR_CTLOCDesc"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ContractName"></div>
+							<div class="eq-table-td eq-table-label"><label id="cSignLocDR_CTLOCDesc" for="SignLocDR_CTLOCDesc">签订科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Loc'" id="SignLocDR_CTLOCDesc" value="#(SignLoc)#"></div>
 							<div class="eq-table-td eq-table-label"><label id="cProviderDR_VDesc" for="ProviderDR_VDesc">供应商</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="ProviderDR_VDesc"></div>
-							<div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
-							<div class="eq-table-td"><a id="BSaveExcel" href="#" class="hisui-linkbutton" iconCls="icon-export" data-options="stopAllEventOnDisabled:true">导出</a></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Vendor'" id="ProviderDR_VDesc"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+							<div class="eq-table-td eq-table-label"><a id="BSaveExcel" href="#" class="hisui-linkbutton" iconCls="icon-export" data-options="stopAllEventOnDisabled:true">导出</a></div>
 						</div>
 						<div class="eq-table-tr">
-							<!-- MZY0033	1369965		2020-06-15  调换位置 -->
 							<div class="eq-table-td eq-table-label"><label for="StartDate">签订日期</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate"></div>
 							<div class="eq-table-td eq-table-label"><label for="EndDate">至</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate"></div>
 							<div class="eq-table-td eq-table-label"><label id="cEquipName" for="EquipName">设备名称</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipName"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipName"></div>
 							<div class="eq-table-td eq-table-label"><label for="Status">状态</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="Status" ></div>
-							<div class="eq-table-td"><a id="BClean" href="#" class="hisui-linkbutton" iconCls="icon-w-clean" data-options="stopAllEventOnDisabled:true">清屏</a></div>
-							<div class="eq-table-td"><a id="BColSet" href="#" class="hisui-linkbutton" iconCls="icon-set-col" data-options="stopAllEventOnDisabled:true">导出列设置</a></div>
+							<div class="eq-table-td eq-table-label"><a id="BClean" href="#" class="hisui-linkbutton" iconCls="icon-w-clean" data-options="stopAllEventOnDisabled:true">清屏</a></div>
+							<div class="eq-table-td eq-table-label"><a id="BColSet" href="#" class="hisui-linkbutton" iconCls="icon-set-col" data-options="stopAllEventOnDisabled:true">导出列设置</a></div>
 						</div>
-						<!-- MZY0033	1369965		2020-06-15 -->
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="IsIFB">是否招标</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IsIFB"></div>
+							<div class="eq-table-td eq-table-label"><label id="cOpenCheckNo" for="OpenCheckNo">验收单号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="OpenCheckNo"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td"></div>
+							<div class="eq-table-td"></div>
+						</div>
 						<div class="eq-table-tr" id="ConditionShow">
 							<div class="eq-table-td eq-table-label"><label for="GEStartDate">保修截止日期</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="GEStartDate"></div>
@@ -64,8 +76,7 @@
 							<div class="eq-table-td"></div>
 						</div>
 					</div>
-					<!-- MZY0033	1369965		2020-06-15 -->
-					<div id="LabelShow" style="padding:5px 0 0 10px;color:#666;">
+					<div id="LabelShow" style="padding:10px 0 0 10px;color:#666;">
 						背景色说明：<span style="color:#000;font-weight:900;">'保修截止日期'</span>列为
 						<span style="display:inline-block;width:24px;height:12px;margin:0 5px;background:#ffff00;"></span>
 						色表示一年内过期,为
@@ -90,15 +101,15 @@
 			<INPUT type="hidden" id="ContractType" value="#(ContractType)#">
 			<INPUT type="hidden" id="QXType" value="#(QXType)#">
 			<INPUT type="hidden" id="ProviderDR" value="">
-			<INPUT type="hidden" id="SignLocDR" value="">
+			<INPUT type="hidden" id="SignLocDR" value="#(SignLocDR)#">
 			<INPUT type="hidden" id="StatusDR" value="">
 			<INPUT type="hidden" id="FileNo" value="">
 			<INPUT TYPE="hidden" id="GetTitleInfo" value="#(##Class(web.DHCEQCommon).GetTitleInfo("ContractList"))#">	<!--add by CZF0085 2020-03-05 begin-->
-			<INPUT TYPE="hidden" id="GetColSets" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
-			<INPUT TYPE="hidden" id="GetRepPath" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
-			<INPUT TYPE="hidden" id="GetNum" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCommon.GetNum")))#>
-			<INPUT TYPE="hidden" id="GetList" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCommon.GetList")))#>
-			<INPUT TYPE="hidden" id="GetHospitalDesc" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT TYPE="hidden" id="GetColSets" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" id="GetNum" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQ.Plat.LIBCommon.GetTempGlobalData")))#>	<!--	MZY0143	3070631		2022-11-16	-->
+			<INPUT TYPE="hidden" id="GetList" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQ.Plat.LIBCommon.GetTempGlobalData")))#>
+			<INPUT TYPE="hidden" id="GetHospitalDesc" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
 			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
 			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>		<!--add by CZF0085 2020-03-05 end-->
 			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>

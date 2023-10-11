@@ -2,17 +2,21 @@
 	set act = $g(%request.Data("act",1))
 	Set dirname = $g(%request.Data("dirname",1)) 
 	if (act="download"){
-		if (errorMsg'=""){
-			w errorMsg
+		if $tr(pathname,"/","\")["\app\dthis\web\temp\"{
+			if (errorMsg'=""){
+				w errorMsg
+			}else{
+				s stream=##class(%FileBinaryStream).%New()
+				s stream.Filename=pathname
+				d stream.Rewind()
+				while('stream.AtEnd){ w stream.Read()}
+				;d stream.Clear() ;--下载后会删除文件
+				d stream.%Close()
+				s stream=""
+				d %response.Flush()	
+			}
 		}else{
-			s stream=##class(%FileBinaryStream).%New()
-			s stream.Filename=pathname
-			d stream.Rewind()
-			while('stream.AtEnd){ w stream.Read()}
-			;d stream.Clear() ;--下载后会删除文件
-			d stream.%Close()
-			s stream=""
-			d %response.Flush()	
+			w "非法下载路径"
 		}
 	} elseif(act="upload"){
 		;前台文件
@@ -33,38 +37,48 @@
 			///后台控件存储路径
 			Set dirname = ##class(ext.util.String).GetPhysicalPath("",dirname)
 			Set pathname = ##class(%File).NormalizeFilename(dirname_"/"_filename)
-			if ('##class(%File).DirectoryExists(dirname)){
-				Do ##class(%File).CreateDirectoryChain(dirname)
-			}	
-			if (##class(%File).DirectoryExists(dirname)){
-				Set file = ##class(%FileBinaryStream).%New()
-				Set file.Filename=pathname
-				Do fileStream.Rewind()
-				While('fileStream.AtEnd){
-					Set bytes = fileStream.Read(1024)
-					Do file.Write(bytes)
+			if $tr(pathname,"/","\")["\app\dthis\web\temp\"{
+				if ('##class(%File).DirectoryExists(dirname)){
+					Do ##class(%File).CreateDirectoryChain(dirname)
 				}
+					
+				if (##class(%File).DirectoryExists(dirname)){
+					Set file = ##class(%FileBinaryStream).%New()
+					Set file.Filename=pathname
+					Do fileStream.Rewind()
+					While('fileStream.AtEnd){
+						Set bytes = fileStream.Read(1024)
+						Do file.Write(bytes)
+					}
+					Do file.Flush()
+					Do file.%Save()
+					Do file.%Close()
+					Set file=""
+					Set webUrl = ##class(ext.util.String).GetVirtualPath(pathname)
+					Write "{""fileFullName"":"""_##class(ext.util.String).EvalJSON(webUrl)_"""}"
+				}
+			}else{
+				w "非法下载路径"
+			}
+		}elseif ($data(%request.Data("FileStream",1))){
+			New fileStream,bytes,file
+			Set pathname = ##class(%File).NormalizeFilename(dirname_"/"_filename)
+			if $tr(pathname,"/","\")["\app\dthis\web\temp\"{
+				Set file = ##class(%FileBinaryStream).%New()
+				Set file.Filename=dirname_filename	
+				Set ind=""
+				do{
+					Set ind=$O(%request.Data("FileStream",ind))
+					Set bytes = %request.Data("FileStream",ind)
+					Do file.Write(bytes)
+				}While(ind>0)
 				Do file.Flush()
 				Do file.%Save()
 				Do file.%Close()
 				Set file=""
-				Set webUrl = ##class(ext.util.String).GetVirtualPath(pathname)
-				Write "{""fileFullName"":"""_##class(ext.util.String).EvalJSON(webUrl)_"""}"
+			}else{
+				w "非法下载路径"
 			}
-		}elseif ($data(%request.Data("FileStream",1))){
-			New fileStream,bytes,file
-			Set file = ##class(%FileBinaryStream).%New()
-			Set file.Filename=dirname_filename	
-			Set ind=""
-			do{
-				Set ind=$O(%request.Data("FileStream",ind))
-				Set bytes = %request.Data("FileStream",ind)
-				Do file.Write(bytes)
-			}While(ind>0)
-			Do file.Flush()
-			Do file.%Save()
-			Do file.%Close()
-			Set file=""
 		}
 	}
 	Quit "" 
@@ -97,10 +111,12 @@
 			s errorMsg="403 禁止下载此文件："_filename_""
 		}elseif ('##class(%File).Exists(pathname)){
 			s errorMsg="404 没找到此文件："_filename_""
-		}else{  //允许下载文件 修改ContentType
+		}elseif(",XLS,XML,XLSX,DOC,DOCX,TXT,CSV,PDF,HTML,JS,CSS,"[(","_ext_",")){  //允许下载文件 修改ContentType
 			s %response.CharSet=""
 			s %response.ContentType="application/octet-stream"  //不处理编码 全以字节处理
 			Do %response.SetHeader("Content-Disposition", "attachment; filename="_##class(ext.util.String).EscapeURL(dfile,"UTF8"))
+		}else{
+			s errorMsg="430 非法下载此文件"
 		}
 	} elseif(act="upload"){
 	}

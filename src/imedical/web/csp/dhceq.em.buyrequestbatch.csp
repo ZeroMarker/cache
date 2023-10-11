@@ -1,0 +1,200 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s RowID=$Get(%request.Data("RowID",1))
+	s argValue=##class(web.DHCEQCommon).GetSysInfo("101001")
+	s argMust=##class(web.DHCEQCommon).GetSysInfo("101003")
+	s YearMinFee=##class(web.DHCEQCommon).GetSysInfo("101005")
+	s ItemInputType=##class(web.DHCEQCommon).GetSysInfo("101006")
+	s ModelInputType=##class(web.DHCEQCommon).GetSysInfo("101007")
+	
+	s (BRLRowID,Status)=""
+	if (RowID'="")
+	{
+		s YearFlag = $Piece($Get(^DHCEQBuyRequest(RowID)),"^",3)
+		s Year = $Piece($Get(^DHCEQBuyRequest(RowID)),"^",5)
+		s BRLRowID=$Order(^DHCEQBuyRequestList(0,"BuyRequest",RowID,""))
+		s Status = $Piece($Get(^DHCEQBuyRequest(RowID)),"^",16)
+	}
+	else
+	{
+		s YearFlag=$Get(%request.Data("YearFlag",1))
+		s Year=$p($zd(+$H,3),"-",1)
+	}
+	s ApproveRoleDR=$Get(%request.Data("ApproveRole",1))
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	i Status>0 s ReadOnly=1
+	s QXType=$Get(%request.Data("QXType",1))
+	s WaitAD=$Get(%request.Data("WaitAD",1))
+	s Type=$Get(%request.Data("Type",1))
+	s CancelOper=$Get(%request.Data("CancelOper",1))
+	s CurRole=$Get(%request.Data("ApproveRole",1))
+	s Action=$Get(%request.Data("Action",1))
+	s ActionID=""
+	&SQL(select A_RowID into :ActionID from SQLUSER.DHC_EQCAction where A_Code = :Action)
+	s ApproveSetDR=##class(web.DHCEQApproveList).GetApproveSet("1",RowID)
+	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(ApproveSetDR,CurRole,Action)
+	s BRRequestLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	s BRRequestLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	s BRPurchaseTypeDR=##class(web.DHCEQCommon).GetSysInfo("301009")
+	s BRPurchaseType=##class(web.DHCEQCommon).GetStandardDesc("DHCEQCPurchaseType",BRPurchaseTypeDR)
+	s BREquipTypeDR=##class(web.DHCEQCommon).GetDefaultEquipType(1)
+	s BREquipType=##class(web.DHCEQCommon).GetDefaultEquipType(2)
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s argFlag=##class(web.DHCEQCommon).GetSysInfo("101003")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	s ECYear=$p($ZD(+$h,3),"-",1)
+	s CompName="EM.G.BuyRequest.BuyReqList"
+	s ComponentID=$o(^DHCEQCCode("DHCEQCComponent",0,"Name",CompName,""))
+	
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	;导入润乾直接打印所需包
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if (PreviewRptFlag=0){
+		//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    	d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17 
+	} 
+</Script>
+<Style>
+.eq-table-td
+{
+	padding-top:10px;
+	display:table-cell;
+	white-space:nowrap;
+	/*white-space:normal;*/
+	vertical-align: middle;
+}
+.messager-popover
+{
+	font-weight: normal;
+}
+.eqbutton
+{
+	margin-left:15px;
+}
+</Style>
+<body class="hisui-layout">
+  <div data-options="region:'center',border:false" style="padding:10px;">
+    <div class="hisui-panel panel-header-gray" data-options="eqtitle:'maintitle',fit:true">
+        <div class="hisui-layout" data-options="fit:true,border:false">
+            <div data-options="region:'north',border:false" id="BRLTable" style="border-bottom:dashed 1px #ccc;padding-bottom:5px;">
+                <div class="eq-table">
+                    <div class="eq-table-tr">
+                    	<div class="eq-table-td eq-table-label-first"><label id="cBRRequestNo" for="BRRequestNo">申请单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRRequestNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBRRequestDate" for="BRRequestDate">申请日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="BRRequestDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBRRequestLocDR_CTLOCDesc" for="BRRequestLocDR_CTLOCDesc">申请科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="BRRequestLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBRUseLocDR_CTLOCDesc" for="BRUseLocDR_CTLOCDesc">使用科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Loc'" id="BRUseLocDR_CTLOCDesc"><a href="#" id='cUnitLocNum' style="color:#15b398;text-decoration:underline;" onclick='javascript:uniteRequest()'></a></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label-first"><label id="cBRManageLocDR_CTLOCDesc" for="BRManageLocDR_CTLOCDesc">管理科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BRManageLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBREquipTypeDR_ETDesc" for="BREquipTypeDR_ETDesc">管理类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BREquipTypeDR_ETDesc" data-options="'component':'PLAT.L.EquipType'"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBRPurchaseTypeDR_PTDesc" for="BRPurchaseTypeDR_PTDesc">申购类别</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.PurchaseType'" id="BRPurchaseTypeDR_PTDesc"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cBRYear" for="BRYear">年度计划</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-checkbox" type="checkbox" id="BRYearFlag"><input class="hisui-validatebox" id="BRYear" value="#(Year)#" style="width:62px;"><span id="YearRemark" style="padding-left:10px;">年(YYYY)</span></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label-first"><label id="cBRRemark" for="BRRemark">备注</label></div>
+						<div class="eq-table-td"><textarea id="BRRemark" class="textbox"></textarea></div>
+						<div class="eq-table-td eq-table-label"><label id="cEditOpinion" for="EditOpinion">审批意见</label></div>
+                        <div class="eq-table-td eq-table-input"><textarea id="EditOpinion" class="textbox"></textarea></div>
+                        <div class="eq-table-td eq-table-label"><label id="cRejectReason" for="RejectReason">拒绝原因</label></div>
+                        <div class="eq-table-td eq-table-input"><textarea id="RejectReason" class="textbox"></textarea></div>
+                        <div class="eq-table-td eq-table-label"><label><a id="showOpinion" class="eq-cursor-pointer">审批记录</a></label></div>
+						<div class="eq-table-td eq-table-input"></div>
+                    </div>
+                </div>
+            </div>
+            <div data-options="region:'center',border:false" style="position:relative;" id="BRLGrid">
+                    <table id="DHCEQBuyReqList" class="hisui-datagrid"  data-options="onClickRow:onClickRow,border:false,fit:true"></table>
+	                <div class="messager-popover info" style="height:18px;position:absolute;right:0px;top:0px;margin:0px 10px 0px 0;padding:5px 10px;">
+					    <span id="sumTotalicon" class="messager-popover-icon info"></span>
+					    <span id="sumTotal"></span>
+					</div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <div data-options="region:'south',border:false" style="border-bottom:dashed 0px #ccc;height:40px;" class="eq-clearfix">
+	    <div style="margin:0px auto;fit:true;vertical-align:middle;text-align:center;">
+	    	<a id="BSave" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a>
+	        <a id="BDelete" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a>
+	        <a id="BSubmit" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a>
+	        <a id="BCancelSubmit" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">取消提交</a>
+	        <a id="BApprove1" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+	        <a id="BApprove2" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+	        <a id="BApprove3" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+	        <!--div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton"
+	                iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">打印</a></div-->
+	    </div>
+	</div>
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="BRRowID" value="#(RowID)#">
+			<INPUT type="hidden" id="BRStatus">
+			<INPUT type="hidden" id="BREquipTypeDR" value="#(BREquipTypeDR)#">
+			<INPUT type="hidden" id="EquipTypeDR" value="#(BREquipTypeDR)#">
+			<INPUT type="hidden" id="BREquipType" value="#(BREquipType)#">
+			<INPUT type="hidden" id="BRRequestLocDR" value="#(BRRequestLocDR)#">
+			<INPUT type="hidden" id="BRRequestLoc" value="#(BRRequestLoc)#">
+			<INPUT type="hidden" id="BRPurchaseTypeDR" value="#(BRPurchaseTypeDR)#">
+			<INPUT type="hidden" id="BRPurchaseType" value="#(BRPurchaseType)#">
+			<INPUT type="hidden" id="BRQuantityNum">
+			<INPUT type="hidden" id="BRTotalFee">
+			<INPUT type="hidden" id="BRManageLocDR">
+			<INPUT type="hidden" id="BRUseLocDR">
+			<INPUT type="hidden" id="BRPurchaseType">
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+			<INPUT type="hidden" id="ApproveTypeCode" value=1>
+			<INPUT type="hidden" id="ApproveSetDR" value="#(ApproveSetDR)#">
+			<INPUT type="hidden" id="ApproveRoleDR" value="#(ApproveRoleDR)#">
+			<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+			<INPUT type="hidden" id="CancelOper" value="#(CancelOper)#">
+			<INPUT type="hidden" id="RoleStep" value="#(RoleStep)#">
+			<INPUT type="hidden" id="CurDate" value="#(CurDate)#">
+			<INPUT type="hidden" id="Action" value="#(Action)#">
+			<INPUT type="hidden" id="ActionID" value="#(ActionID)#">
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="Type" value="#(Type)#" >
+			<INPUT type="hidden" id="SplitNumCode" value="#(SplitNumCode)#">
+			<INPUT type="hidden" id="SplitRowCode" value="#(SplitRowCode)#">
+			<INPUT type="hidden" id="HospitalDesc" value="#(HospitalDesc)#">
+			<INPUT type="hidden" id="argValue" value="#(argValue)#">
+			<INPUT type="hidden" id="argFlag" value="#(argFlag)#">
+			<INPUT type="hidden" id="argMust" value="#(argMust)#">
+			<INPUT type="hidden" id="YearMinFee" value="#(YearMinFee)#">
+			<INPUT type="hidden" id="GetComponentID" value="#(ComponentID)#">
+			<INPUT type="hidden" id="ItemInputType" value="#(ItemInputType)#">
+			<INPUT type="hidden" id="ModelInputType" value="#(ModelInputType)#">
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			<INPUT type="hidden" id="YearFlag" value="#(YearFlag)#">		<!--czf 1950494 2021-06-17-->
+			<INPUT type="hidden" id="EQItemDR">		<!--czf 1950247 2021-06-17-->
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/em/buyrequestbatch.js"></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
+</body>
+</html>

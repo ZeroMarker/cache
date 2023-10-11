@@ -11,12 +11,20 @@
 </HEAD>
 <body style="background-color:#ffffff;padding:10px;overflow:hidden;">
 <server>
+	Set IPInfo = ##class(User.DHCClientLogin).GetInfo()
+	//IP地址^会话ID^在线状态^计算机名^计算机MAC
+	Set IPAddr  = $p(IPInfo,"^"),sDNSName=$TR($p(IPInfo,"^",4),$c(13,10),""),MACAddr=$TR($p(IPInfo,"^",5),$C(13,10),"")
+	Set CAUserCertCode=$g(%session.Data("CAUserCertCode"))
 	Set CASLoginFlag = $g(%request.Data("caslogin",1),0)
 	//登录界面要不要弹出CA登录框
-	SEt EnableCALogon = 1, SSSRChangeLocation="Y",BtnDesc = ..Get("切换科室")
+	SEt EnableCALogon = 1, SSSRChangeLocation="Y",BtnDesc = ..Get("切换科室"), clearCountDtnDesc = ..Get("清除科室登录计数")
+	s OtherLocSortType = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","OtherLocSortType")
+	s ClearCountMethod = ##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.ClearLogonCount"))
 	Set IsIE = (%request.GetCgiEnv("HTTP_USER_AGENT")["Trident")
 	if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Configuration||EnableCALogon"){
 		Set EnableCALogon = ##class(websys.Configuration).GetFieldValue("EnableCALogon")
+		Set EnableCALogonNew = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableCAHISLogon")
+		If EnableCALogonNew=1 Set EnableCALogon=1
 		if EnableCALogon="" Set EnableCALogon=1
 	}
 	Set usercode = $g(%session.Data("LOGON.USERCODE"))
@@ -28,23 +36,26 @@
 	}
 	Set CAUserCertCode=$g(%session.Data("CAUserCertCode"))
 	set SimpleLoc = %session.Data("LOGON.CTLOCDESC")
+	Set SimpleAccPost=""
+	if $d(%session.Data("LOGON.ACCPOSTDESC")) Set SimpleAccPost = %session.Data("LOGON.ACCPOSTDESC")
+	Set SimpleLocTrans = ##class(websys.TranslationEPR).GetTrans("User.CTLoc","CTLOCDesc","",SimpleLoc)
+	Set SimpleGroupTrans = ##class(websys.TranslationEPR).GetTrans("User.SSGroup","SSGRPDesc","",%session.Data("LOGON.GROUPDESC"))
+	Set SimpleAccPostTrans = ##class(websys.TranslationEPR).GetTrans("CT.BDP.CT.HOSPost","POSTDesc","",SimpleAccPost)
+	
 	Set (ReqDEPARTMENT,ReqSSUSERGROUPDESC,ReqHospital)=""
 	if (SimpleLoc'=""){
 		Set ReqDEPARTMENT = $G(%request.Data("DEPARTMENT",1))
 		Set ReqSSUSERGROUPDESC = $G(%request.Data("SSUSERGROUPDESC",1))	
 		Set ReqHospital = $G(%request.Data("Hospital",1))
 	}
+	Set EnablePostLogon = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnablePostLogon")
 	If $L(SimpleLoc,"-")>1  Set SimpleLoc=$P(SimpleLoc,"-",2)
 	w "<script type=""text/javascript"">",!
-		;w "var pwd = '"_##class(%CSP.Page).Encrypt(1)_"';"
 		w "var pwd = '"_##class(web.Util.Encryption).SimpleEncrypt("LogonOtherLoc",%session.SessionId)_"';"
 		w "var rows=["
 		
 		//切换科室 ip科室规则问题 
-		s ssuserLoginId = $G(%session.Data("LOGON.SSUSERLOGINID")),ClientIPAdd=""
-		if ssuserLoginId>0 {
-			Set ClientIPAdd = $p($g(^SST("LOG",ssuserLoginId,"ADDR")),"^",1)
-		}
+		Set ClientIPAdd = IPAddr
 		If (ClientIPAdd="")||(ClientIPAdd="undefined") Set ClientIPAdd = %request.CgiEnvs("REMOTE_ADDR") 
 		
 		s rs=##class(%Library.ResultSet).%New("web.SSUserOtherLogonLoc:LookUpSelectedUserByUHD")
@@ -60,17 +71,24 @@
 		.S LocPY = ##class(ext.util.String).ToChineseSpell(Loc)
 		.S GroupPY = ##class(ext.util.String).ToChineseSpell(Group)
 		.S HospPY = ##class(ext.util.String).ToChineseSpell(HOSPDesc)
+		.S AccPostDesc = ##class(ext.util.String).EvalJSON(rs.GetDataByName("AccPost"))
+		.S AccPostId = ##class(ext.util.String).EvalJSON(rs.GetDataByName("AccPostId"))	
+		.S AccPostDescPY = ##class(ext.util.String).ToChineseSpell(AccPostDesc)
 		.s LocDesc = Loc
 		.s:LocAlias'="" LocDesc = LocAlias_"-"_Loc
 		.q:(CASLoginFlag'=1)&&(%session.Data("LOGON.GROUPDESC")=Group)&&(%session.Data("LOGON.CTLOCDESC")=LocDesc)&&(%session.Data("LOGON.HOSPDESC")=HOSPDesc)
 		.w:total'=0 ","
-		.w "{""Loc"":"""_Loc_""", ""Group"":"""_Group_""",""HOSPDesc"":"""_HOSPDesc_""",""LocAlias"":"""_LocAlias_""",""LocPY"":"""_LocPY_""",""GroupPY"":"""_GroupPY_""",""HospPY"":"""_HospPY_"""}",!		
+		.w "{""Loc"":"""_Loc_""", ""Group"":"""_Group_""",""HOSPDesc"":"""_HOSPDesc_""",""LocAlias"":"""_LocAlias_""",""LocPY"":"""
+		.W LocPY_""",""GroupPY"":"""_GroupPY_""",""HospPY"":"""_HospPY_""",""AccPost"":"""_AccPostDesc_""",""AccPostId"":"""_AccPostId_""",""AccPostPY"":"""_AccPostDescPY_"""}",!		
 		.s total=total+1
 		W "];",!
 	w "</script>"
+	Set CurrentLocationTitle = ..Get("当前科室")_"："_SimpleLocTrans_"，"_..Get("安全组")_"："_SimpleGroupTrans
+	if EnablePostLogon Set CurrentLocationTitle=..Get("当前岗位")_"："_SimpleAccPostTrans
 </server>
 	<div style="width:100%;height:100%;">
-		<table id="otherlocdg" title="#(..Get("当前科室"))#：#(SimpleLoc)#，#(..Get("安全组"))#：#(%session.Data("LOGON.GROUPDESC"))#" 
+		<table id="otherlocdg" title="#(CurrentLocationTitle)#" 
+		
 		 data-options="headerCls:'panel-header-gray',
 				rownumbers:true,
 				singleSelect:true,
@@ -81,10 +99,15 @@
 				pageSize:20">
 			<thead>
 				<tr>
-					<th field="Loc">科室</th>
-					<th field="Group">安全组</th>
-					<th field="HOSPDesc">医院</th>
-					<th field="LocAlias" width="80">科室代码别名</th>
+					<csp:if condition=EnablePostLogon'=1>
+						<th field="Loc" width="120">科室</th>
+						<th field="Group" width="120">安全组</th>
+						<!--<th field="LocAlias" width="80">科室代码别名</th>-->
+					</csp:if>
+					<csp:if condition=EnablePostLogon=1>
+						<th field="AccPost" width="180">岗位</th>
+					</csp:if>
+					<th field="HOSPDesc" style="width:160px;" width="160">医院</th>
 				</tr>
 			</thead>
 		</table>
@@ -92,11 +115,18 @@
 	<div id="mybar" >
 		<table>
 			<tr>
-				<td><label class="r-label">#(..Get("科室"))#</label></td>
-				<td><input id="inLoc" class="textbox inpara"></td>
-				<td><label class="r-label"></label></td>
-				<td><label class="r-label">#(..Get("安全组"))#</label></td>
-				<td><input id="inGroup" class="textbox inpara"></td>
+				<td><label class="r-label"> </label></td>
+				<csp:if condition=EnablePostLogon'=1>
+					<td><label class="r-label">#(..Get("科室"))#</label></td>
+					<td><input id="inLoc" class="textbox inpara"></td>
+					<td><label class="r-label"></label></td>
+					<td><label class="r-label">#(..Get("安全组"))#</label></td>
+					<td><input id="inGroup" class="textbox inpara"></td>
+				</csp:if>
+				<csp:if condition=EnablePostLogon=1>
+					<td><label class="r-label">#(..Get("岗位"))#</label></td>
+					<td><input id="inAccPost" class="textbox inpara"></td>
+				</csp:if>
 				<td><label class="r-label"> </label></td>
 				<td><label class="r-label">#(..Get("医院"))#</label></td>
 				<td><input id="inHosp" class="textbox inpara"></td>
@@ -109,44 +139,21 @@
 	<!--<div region="south" data-options='collapsible:false' style="height:70px;">
 		<font color="green">双击行</font> 或 <font color="green">选中行,点切换科室按钮</font>切换科室
 	</div>-->
-<CSP:IF condition=IsIE>
-<!--**获取本地IP地址,只适用于IE  2013.12.02-->
-<SCRIPT language=JScript event=OnObjectReady(objObject,objAsyncContext) for=foo>
-   if(objObject.IPEnabled != null && objObject.IPEnabled != "undefined" && objObject.IPEnabled == true)
-   {
-    if(objObject.MACAddress != null && objObject.MACAddress != "undefined")
-    MACAddr = objObject.MACAddress;
-    if(objObject.IPEnabled && objObject.IPAddress(0) != null && objObject.IPAddress(0) != "undefined"){
-		if (""==IPAddr){
-			IPAddr = objObject.IPAddress(0);
-		}
-	}
-    if(objObject.DNSHostName != null && objObject.DNSHostName != "undefined")
-    sDNSName = objObject.DNSHostName;
-    }
-</SCRIPT>
-<OBJECT id=locator classid=CLSID:76A64158-CB41-11D1-8B02-00600806D9B6 VIEWASTEXT></OBJECT>
-<OBJECT id=foo classid=CLSID:75718C9A-F029-11d1-A1AC-00C04FB6C223></OBJECT>
-<SCRIPT language=JScript>
-   var service = locator.ConnectServer();
-   var MACAddr ="";
-   var IPAddr="" ;
-   var DomainAddr="";
-   var sDNSName="";
-   service.Security_.ImpersonationLevel=3;
-   service.InstancesOfAsync(foo, 'Win32_NetworkAdapterConfiguration');
-</SCRIPT>
-</CSP:IF>
 <script type="text/javascript">
 		var CAUserCertCode = "#(CAUserCertCode)#";
 		var EnableCALogon = #(EnableCALogon)#;
 		var usercode = "#(usercode)#";
+		var IPAddr = "#(IPAddr)#";
+		var sDNSName = "#(sDNSName)#";
+		var MACAddr = "#(MACAddr)#";
+		var ClearCountMethod = "#(ClearCountMethod)#";		
 		var dg;
 		function getData(){
 			var myrows=[];
-			var inL = $('#inLoc').val().toUpperCase();
-			var inG = $('#inGroup').val().toUpperCase();
-			var inH = $('#inHosp').val().toUpperCase();
+			var inL = $('#inLoc').length>0?$('#inLoc').val().toUpperCase():"";
+			var inG = $('#inGroup').length>0?$('#inGroup').val().toUpperCase():"";
+			var inH = $('#inHosp').length>0?$('#inHosp').val().toUpperCase():"";
+			var inP = $('#inAccPost').length>0?$('#inAccPost').val().toUpperCase():"";
 			for (var i=0; i<rows.length; i++){
 				var item = rows[i];
 				if (inL!=""){
@@ -158,6 +165,9 @@
 				}
 				if (inH!=""){
 					if(item.HOSPDesc.indexOf(inH)==-1 && item.HospPY.indexOf(inH)==-1) continue;
+				}
+				if (inP!=""){
+					if(item.AccPost.indexOf(inP)==-1 && item.AccPostPY.indexOf(inP)==-1) continue;
 				}
 				myrows.push(item);
 			}
@@ -228,36 +238,84 @@
 			if (""!=rowData.LocAlias){
 				dep = rowData.LocAlias+"-"+dep;
 			}
+			// 2680245 相同用户相同科室只允许一个会话存在
+			var LogInfo = tkMakeServerCall("web.DHCSSUserLogonLog","GetLogIdByUserLoc",usercode, dep, rowData['Group'])
+			var LogInfoArr = LogInfo.split("^")
+			if(0!=LogInfoArr[0]){
+				if(confirm(usercode+"已经在"+LogInfoArr[1]+"登录了系统!会话ID:"+LogInfoArr[2]+"。你确定替换登录?")){
+					tkMakeServerCall("web.DHCSSUserLogonLog","Force",LogInfoArr[0]);
+				}else{
+					//window.location.href="websys.closesession.csp?relogon=1";
+					return ;
+				}
+			}
+			
+			var cn="#($G(%session.Data("ContainerName")))#",cp="#($g(%session.Data("ContainerPin")))#",clt='#($g(%session.Data("CALogonType")))#'
+			var cucc='#($g(%session.Data("CAUserCertCode")))#',ccn='#($G(%session.Data("CACertNo")))#',ct='#($G(%session.Data("CAToken")))#';
+			// UKEY登录后拨出UKEY,需要再次验证UKEY的有效性
+			if(EnableCALogon==1) { // && CAUserCertCode==""){
+				dhcsys_getcacert({
+					modelCode:"HISLogon",
+					callback:function(cartn){
+						debugger;
+						if (cartn.IsSucc){
+								cn = cartn.ContainerName;
+								cp = "";
+								clt = cartn.CALogonType||"";
+								cucc = cartn.CAUserCertCode||"";
+								ccn = cartn.CACertNo||"";
+								ct = cartn.CAToken||"";
+								GotoLogonOtherLoc(pwd,dep,rowData,cucc,cn,cp,clt,ccn,ct);
+						 }else {
+							return false;
+						 }
+					},
+					isHeaderMenuOpen:true,hospDesc:rowData.HOSPDesc,
+					SignUserCode:"#($g(%session.Data("LOGON.USERCODE")))#",
+					notLoadCAJs:0,  //UKEY Local check 
+					loc:dep,
+					groupDesc:rowData.Group
+				},"",0); //dhcsys_calogon(deptDesc,txtUser,"",0,function(cartn){
+				return false;
+			}else{
+				GotoLogonOtherLoc(pwd,dep,rowData,cucc,cn,cp,clt,ccn,ct);
+			}
+			return;
+
+			//window.open("dhc.logon.csp?LogonOtherLoc=1&USERNAME="+session["LOGON.USERCODE"]+"&PASSWORD="+pwd+"&DEPARTMENT="+dep,"_self",'top=0,left=0,width='+screen.availWidth+',height='+screen.availHeight+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,maximized=yes');
+		}
+		function clickRowHandler(ind, rowData){
+			if ("#(SSSRChangeLocation)#"=="Y") $("#changeLocBtn").linkbutton('enable');	
+		}
+		function GotoLogonOtherLoc(pwd,dep,rowData,cucc,cn,cp,clt,ccn,ct){
+			var MWToken = websys_getMWToken();
+			if (MWToken!=""){
+				$m({
+					ClassName:"BSP.SYS.SRV.Token",
+					MethodName:"ModifyData",
+					plist:[dep,rowData.Group,rowData.HOSPDesc],
+					"LOGON.CTLOCDESC":dep,
+					"LOGON.GROUPDESC":rowData.Group,
+					"LOGON.HOSPDESC":rowData.HOSPDesc
+					//DEPARTMENT:dep,
+					//SSUSERGROUPDESC:rowData.Group,
+					//Hospital:rowData.HOSPDesc
+				},function(data){
+					//top.location.href = "epr.frames.csp?MWToken="+MWToken+"&r="+(Math.random());
+					if (data==1) websys_getTop().location.reload(true);
+				});
+				return ;
+			}
+
 			var headerwin = null;
 			if (window.opener){
-				headerwin = window.opener;
+				headerwin = window.opener.top;
 			}else if(top.frames["TRAK_menu"]){ //侧菜单
 				top.location = "dhc.logon.csp?DEPARTMENT="+dep+"&SSUSERGROUPDESC="+rowData.Group
 				+"&Hospital="+rowData.HOSPDesc+"&LogonOtherLoc=1&USERNAME=#($g(%session.Data("LOGON.USERCODE")))#&PASSWORD="+pwd;
 				headerwin="";
 			}else{
-				headerwin = parent;
-			}
-			if(EnableCALogon==1 && CAUserCertCode=="" && (!dhcsys_calogon(dep,usercode,undefined,0).IsSucc)){
-				return false;
-			}
-			var caStr = dhcsys_getContainerNameAndPin();
-			var cn="",cp="",clt='',cucc='',ccn='',ct='';
-			if (caStr!=""){
-				var caArr = caStr.split("^");
-				cn = caArr[0]||"";
-				cp = caArr[1]||'';
-				clt = caArr[2]||"";
-				cucc = caArr[3]||'';
-				ccn = caArr[4]||'';
-				ct = caArr[5]||'';
-			}
-			var rtn = getClientIP();
-			if (rtn){
-				var arr = rtn.split("^");
-				IPAddr = arr[0];
-		 		sDNSName = arr[1];
-		 		MACAddr = arr[2];
+				headerwin = parent.top;
 			}
 			var frm = headerwin.document.forms['fEPRMENU'];									
 			if (#(CASLoginFlag)#==1)	{
@@ -274,6 +332,8 @@
 					jqfrm.append('<INPUT TYPE="hidden" name="PASSWORD" value="'+pwd+'">');
 					jqfrm.append('<INPUT TYPE="hidden" name="DEPARTMENT" value="'+(dep)+'">');
 					jqfrm.append('<INPUT TYPE="hidden" name="SSUSERGROUPDESC" value="'+(rowData.Group)+'">');
+					jqfrm.append('<INPUT TYPE="hidden" name="UserPost" value="'+(rowData.AccPost)+'">');
+					jqfrm.append('<INPUT TYPE="hidden" name="UserPostId" value="'+(rowData.AccPostId)+'">');
 					jqfrm.append('<INPUT TYPE="hidden" name="Hospital" value="'+(rowData.HOSPDesc)+'">');
 					jqfrm.append('<input TYPE="hidden" name="CAUserCertCode" value="'+cucc+'">');
 					jqfrm.append('<input TYPE="hidden" name="ContainerName" value="'+cn+'">');
@@ -284,9 +344,7 @@
 					jqfrm.append('<INPUT TYPE="HIDDEN" id="IPAddress" NAME="IPAddress" VALUE="'+IPAddr+'"/>');
 					jqfrm.append('<INPUT TYPE="HIDDEN" id="DNSHostName" NAME="DNSHostName" VALUE="'+sDNSName+'"/>');
 					jqfrm.append('<INPUT TYPE="HIDDEN" id="MACAddr" NAME="MACAddr" VALUE="'+MACAddr+'"/>');
-					jqfrm.append('<input type="hidden" name="CacheNoRedirect" value="1">');
-	 				jqfrm.append('<input type="hidden" name="CacheUserName" value="dhsyslogin">');
-	 				jqfrm.append('<input type="hidden" name="CachePassword" value="1q2w3e4r%T6y7u8i9o0p">');
+					jqfrm.append('<INPUT TYPE="HIDDEN" id="IsWideScreen" NAME="IsWideScreen" VALUE="'+session['LOGON.IsWideScreen']+'"/>');
 	 				jqfrm.append('<input type="hidden" name="LANGID" value="1">');
 					frm.action = "dhc.logon.csp";
 					frm.method = "post";
@@ -313,7 +371,30 @@
 		function loadData(){
 			dg.datagrid('loadData', getData());
 		}
-		$(function(){	
+		function clearLogonCountDel() {
+			$cm({
+				EncryItemName: ClearCountMethod
+			}, function (rtn) {
+				if (rtn.success == 1) {
+					$.messager.popover({ msg: '#(..Get("成功！"))#', type: 'success', timeout: 2000 });
+				} else {
+					$.message.popover({ msg: '#(..Get("失败："))#' + rtn.message, type: 'error', timeout: 5000 });
+				}
+			});
+		}
+		function addClearCountBtn() {
+			try {
+				if ("#(OtherLocSortType)#" == "logonConut") {
+					dg = $('#otherlocdg');
+					var buttonArr = dg.datagrid('getPager').pagination("options").buttons;
+					buttonArr.push({ id: 'clearLogonCount', text: '#(clearCountDtnDesc)#', handler: clearLogonCountDel });
+					dg.datagrid('getPager').pagination({
+						buttons: buttonArr
+					});
+				}
+			} catch (e) { }
+		}
+		$(function(){
 			dg = $('#otherlocdg');
 			if ("#(ReqDEPARTMENT)#"!=""){
 				dblClickRowHandler(1,{LocAlias:"",Loc:"#(ReqDEPARTMENT)#",Group:"#(ReqSSUSERGROUPDESC)#",HOSPDesc:"#(ReqHospital)#"}) //ReqDEPARTMENT
@@ -327,6 +408,7 @@
 			$(".inpara").on('keydown',function(e){
 				if (e.keyCode==13){loadData();}
 			});
+			addClearCountBtn();
 		})
 </script>
 </body>

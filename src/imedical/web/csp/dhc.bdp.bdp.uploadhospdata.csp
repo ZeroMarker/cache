@@ -1,0 +1,250 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ // 基础数据平台-likefan
+ // 2022-07-06
+ // 医院维护logo图片
+ // dhc.bdp.bdp.uploadhospdata.csp
+</csp:method>
+<html>
+<head>
+
+	<style>
+	body{
+	    background-color:#FFFFFF !important;
+	    }
+		/*
+        #preview {
+            width: 450px;
+            height:300px;
+            overflow: hidden;
+        }
+        */
+        #preview img {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <server >
+	
+	//s a=$g(%request.Data("aaa",1))
+	
+	</server>
+	
+     <script src="../scripts/bdp/Framework/Lib/jquery.min.js"></script>
+     <link rel="stylesheet" type="text/css" href="../scripts_lib/ext3.2.1/resources/css/ext-all.css"/>  
+     <script type="text/javascript" src="../scripts_lib/ext3.2.1/adapter/ext/ext-base.js"></script>  
+     <script type="text/javascript" src="../scripts_lib/ext3.2.1/ext-all.js"></script>  
+     <script type="text/javascript">
+        function preview1(file) {
+            var img = new Image(), url = img.src = URL.createObjectURL(file)
+            var $img = $(img)
+            img.onload = function() {
+                URL.revokeObjectURL(url)
+                $('#preview').empty().append($img)
+            }
+        }
+        /*
+        function preview2(file) {
+            var reader = new FileReader()
+            reader.onload = function(e) {
+                var $img = $('<img>').attr("src", e.target.result)
+                $('#preview').empty().append($img)
+            }
+            reader.readAsDataURL(file)
+        }
+        */
+        $(function() {
+            $('[type=file]').change(function(e) {
+                var file = e.target.files[0]
+                //$('#preview').css("height",120);
+                $("#showinfo").innerHTML="";
+                $("#showinfo").hide();
+                preview1(file)
+            })
+        })
+         
+         function Read() {
+	      if(document.getElementById("file").value==""){
+		      parent.Ext.Msg.show({
+				title : '提示',
+				msg : '请选择文件!',
+				icon : Ext.Msg.WARNING,
+				buttons : Ext.Msg.OK
+			});
+		  } else{
+          	parent.Ext.Msg.show({  
+	        	modal:false,  
+	        	title:"文件上传",  
+	        	closable:true,  
+	        	width:260,  
+	        	wait:true  
+	        }) 
+	       }
+         }
+		 function Hide(){
+			 parent.Ext.Msg.hide()
+		}
+		function ReloadPreview(){
+			 parent.ReloadPreview()
+		}
+		
+    </script>
+    
+</head> 
+<body>
+
+    <table>
+        <tr>
+            <td></td>
+               <td>               
+                <form enctype="multipart/form-data" method="post" action="dhc.bdp.bdp.uploadhospdata.csp" onsubmit="return Read();">
+                    &nbsp; &nbsp; 
+                    <input type=file id="file" size=25 name=FileStream multiple>
+                    &nbsp; &nbsp; &nbsp; &nbsp; 
+                    <input type="submit" value="上传">  
+                    <!--<input id="aaa" name="aaa" value=#(a)# hidden=true>-->
+                    <div id="preview" style="width:250px;height:100px;border:1px"></div> 
+                      
+                </form>
+            </td>
+        </tr>
+    </table>    
+    
+    <div class='line' id='ImportXmlInfo'>
+       <pre id="ImportXmlInfoPre">
+        
+        <csp:if condition='($data(%request.MimeData("FileStream",1)))'>         
+            <server>
+                ;s ^temp("xmlimport")=%request.MimeData("FileStream",1)_" "_$data(%request.MimeData("FileStream",1))_" "_$data(%request.Data("importXml",1))
+                New fileStream,bytes,file
+                ; w dirname 上传的文件存到哪个物理路径下
+                Set componentxml = "\scripts\bdp\App\Locations\HospitalLogo\" 
+                s dirname = ##class(web.DHCBL.BDP.BDPUploadFile).GetPhysicalPath("",componentxml)
+                Set fileStream = %request.MimeData("FileStream",1)
+                
+                ; 获取文件名
+                set fileStream.FileName = ##class(%File).GetFilename(fileStream.FileName) 
+                
+                set FileName=%request.MimeData("FileStream",1).FileName  
+                set FileSize=%request.MimeData("FileStream",1).Size
+                set FileContentType=%request.MimeData("FileStream",1).ContentType
+                //s ^templkf("aaa")=$g(%request.Data("aaa",1))
+				if (FileContentType="image/jpeg")||(FileContentType="image/png")||(FileContentType="image/gif")	//仅上传图片
+				{
+					s finalpath=dirname_FileName
+					if (##class(%File).Exists(finalpath)=1)
+					{
+						w "<script type=""text/javascript"">",!
+						w "Hide();"
+						w "</script>"
+						
+						w "<tr>"
+							w "<td>"
+								w "已存在同名图片！"
+							w "</td>"
+						w "</tr>"
+					}
+					else
+					{
+		                Set file = ##class(%FileBinaryStream).%New()
+		                Set file.Filename=dirname_fileStream.FileName
+		                Do fileStream.Rewind()
+		                While('fileStream.AtEnd){
+		                    Set bytes = fileStream.Read(1024)
+		                    Do file.Write(bytes)
+		                }
+		                Do file.Flush()
+		                s sc= file.%Save()
+		                if (sc=1){
+		                    w "<script type=""text/javascript"">",!
+		                    w "Hide();"
+		                    w "ReloadPreview();"
+		                    w "</script>"
+		                    
+		                    w ""
+		                    w "<table id =""showinfo"" >"
+		                    w "<tr>"
+		                        w "<td>"
+		                             w "上传成功!" 
+		                        w "</td>"
+		                    w "</tr>" 
+		                    
+		                    w "<tr>"
+		                        w "<td>"
+		                            w "文件名称:"_FileName_"<br>"
+		                        w "</td>"
+		                    w "</tr>"
+		                    
+		                    w "<tr>"
+		                        w "<td>"
+		                            w "文件类型:"_FileContentType_"<br>"
+		                        w "</td>"
+		                    w "</tr>"
+		                
+		                    w "<tr>"
+		                        w "<td>"
+		                           w "文件大小:"_FileSize_"<br>"
+		                        w "</td>"
+		                    w "</tr>"
+		                
+		                    w "<tr>"
+		                        w "<td>"
+		                            w "路径:"_dirname_"<br>"
+		                        w "</td>"
+		                    w "</tr>"
+		                    
+		                    /*
+		                    // 同时保存CT_HospitalLogo表数据
+		                    s HOSPRowId=$g(^TempHospLogo("HOSPID"))
+		                    s eobj=##class(web.Entity.CT.CTHospitalLogo).%New()
+		                    s eobj.LOGOParRef=HOSPRowId
+							s eobj.LOGORowId=""
+							s eobj.LOGOCode=$p(FileName,".",1)
+							s eobj.LOGOUrl=".."_componentxml_FileName
+							s eobj.LOGORemarks=""
+							s PictureType=$p(FileName,".",2)	//后缀扩展名
+							s:PictureType="jpg" PictureType="jpeg"
+							s eobj.LOGOImg="data:image/"_PictureType_";base64,"_##class(web.DHCBL.BDP.FunLib).GetBase64(dirname_FileName).Read()
+		                    d ##class(web.DHCBL.CT.CTHospitalLogo).SaveEntity(eobj)
+		                    */
+		                    
+		                    s ^TempHospLogo("LOGOUrl")=".."_componentxml_FileName
+		                    s PictureType=$p(FileName,".",2)	//后缀扩展名
+							s:PictureType="jpg" PictureType="jpeg"
+							//s Base64Str=##class(web.DHCBL.BDP.FunLib).GetBase64(dirname_FileName).Read()	//有长度限制32768
+							s Base64Str=##class(web.DHCBL.CT.CTHospitalLogo).GetBase64Code(dirname_FileName)
+		                    s ^TempHospLogo("LOGOImg")="data:image/"_PictureType_";base64,"_Base64Str
+		                	
+		                }
+		                else
+		                {
+		                   w "<tr>"
+		                        w "<td>"
+		                             w "上传失败!" 
+		                        w "</td>"
+		                    w "</tr>" 
+		                }
+		                Do file.%Close()
+		                Set file=""
+					}
+                }
+				else
+				{
+					w "<script type=""text/javascript"">",!
+						w "Hide();"
+					w "</script>"
+					
+					w "<tr>"
+						w "<td>"
+							w "上传失败!请选择图片文件上传!"
+						w "</td>"
+					w "</tr>"
+				}
+         </server>
+         </csp:if>
+       </pre>      
+    </div>          
+  
+</body>
+</html>

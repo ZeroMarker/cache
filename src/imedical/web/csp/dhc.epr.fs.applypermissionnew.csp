@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>借阅申请</title>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/fs.common.css">
+</head>
+<body style="padding:10px;box-sizing:border-box;">
+	<div class="hisui-panel" data-options="title:'借阅申请',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false" style="padding:3px 0;border-bottom:1px solid #ccc;border-radius:0;">
+				<table class="searchform">
+					<tr>
+						<td class="form-r-label"><label for="inputType">#(..Get("申请类型"))#</label></td>
+						<td><select id="inputType" class="hisui-combobox" style="width:150px;"></select></td>
+						<td class="form-r-label"><label for="inputDateStart">#(..Get("申请日期"))#</label></td>
+						<td>
+							<input id="inputDateStart" class="hisui-datebox" style="width:150px;" />
+							<span class="form-span">#(..Get("至"))#</span>
+							<input id="inputDateEnd" class="hisui-datebox" style="width:150px;" />
+						</td>
+						<td class="form-btn"><a id="searchBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td class="form-btn"><a id="resetBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清空</a></td>
+					</tr>
+				</table>
+				<div style="border-top:1px solid #ccc;border-radius:0;">
+					<a id="addApplyBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+					<a id="reAppointBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true">重新申请</a>
+					<a id="viewBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-eye',plain:true">浏览</a>
+					<a id="addFavoriteBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-light-yellow',plain:true">添加收藏</a>
+					<a id="viewHistoryBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clock-record',plain:true">浏览记录</a>
+					<a id="viewFavoritesBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-orange-body',plain:true">收藏记录</a>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false">
+				<div id="applyDefaultListPanel" class="hisui-panel" data-options="border:false"><table id="applyDefaultListTable"></table></div>
+				<div id="applyListPanel" class="hisui-panel" data-options="border:false"><table id="applyListTable"></table></div>
+			</div>
+		</div>
+	</div>
+	<div id="addApplyWin" style="width:1000px;height:640px;">
+		<div class="dialog-r-ele">
+			<div class="hisui-panel" data-options="title:'患者列表',iconCls:'icon-paper',headerCls:'panel-header-gray'" style="width:auto;height:280px;">
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'north',border:false" style="padding:5px;border-bottom:1px solid #ccc;border-radius:0;">
+						<table class="searchform">
+							<tr>
+								<td class="form-r-label"><label for="inputMedRecordID">#(..Get("病案号"))#</label></td>
+								<td><input id="inputMedRecordID" type="text" class="textbox" style="width:143px;" /></td>
+								<td class="form-r-label"><label for="inputPatientRegNo">#(..Get("登记号"))#</label></td>
+								<td><input id="inputPatientRegNo" type="text" class="textbox" style="width:143px;" /></td>
+								<td class="form-r-label"><label for="inputPatientName">#(..Get("姓名"))#</label></td>
+								<td><input id="inputPatientName" type="text" class="textbox" style="width:143px;" /></td>
+								<td class="form-btn"><a id="patientSearchBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+								<td class="form-btn"><a id="patientResetBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清空</a></td>
+							</tr>
+						</table>
+					</div>
+					<div data-options="region:'center',border:false">
+						<div id="patientListTableTBar"><a id="addListBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">添加</a></div>
+						<table id="patientListTable"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="dialog-r-ele">
+			<div id="addListTableTBar">
+				<a id="removeListBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+				<a id="resetListBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true">清空</a>
+				<a id="addDefaultRoleBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true">本科病历浏览</a>
+				<a id="addNewApplyBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true">申请浏览</a>
+			</div>
+			<table id="addListTable" style="width:auto;height:240px;"></table>
+		</div>
+	</div>
+	<div id="viewHistoryWin" style="width:800px;height:600px;padding:10px;">
+		<div id="historyListTableTBar">
+			<table class="searchform">
+				<tr>
+					<td class="form-r-label"><label for="historyDateStart">#(..Get("查询日期"))#</label></td>
+					<td>
+						<input id="historyDateStart" class="hisui-datebox" style="width:150px;" />
+						<span class="form-span">#(..Get("至"))#</span>
+						<input id="historyDateEnd" class="hisui-datebox" style="width:150px;" />
+					</td>
+					<td class="form-btn"><a id="refreshBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+				</tr>
+			</table>
+		</div>
+		<table id="historyListTable"></table>
+	</div>
+	<div id="viewFavoritesWin" style="width:800px;height:600px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false" style="width:200px;padding:10px 0 10px 10px;">
+				<div id="categoryListTableTBar">
+					<a id="categoryAddBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+					<a id="categoryDeleteBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+				</div>
+				<table id="categoryListTable"></table>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:10px;">
+				<div id="favoritesListTableTBar">
+					<a id="favoritesDeleteBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+					<a id="favoritesMoveBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-right',plain:true">移动</a>
+				</div>
+				<table id="favoritesListTable"></table>
+			</div>
+		</div>
+	</div>
+	<div id="addCategoryDialog" style="width:480px;height:260px;padding:10px;">
+		<div style="padding:10px">
+			<label for="inputCategoryDesc">#(..Get("分类名称"))#</label>
+			<input id="inputCategoryDesc" type="text" class="textbox" style="width:360px;" />
+		</div>
+	</div>
+	<div id="addFavoriteDialog" style="width:500px;height:400px;padding:10px;">
+		<div id="categoryListTableSelectTBar">
+			<a id="categorySelectAddBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+		</div>
+		<table id="categoryListSelectTable"></table>
+	</div>
+	<div id="requestReasonDialog" style="width:500px;height:300px;padding:10px;">
+		<p class="dialog-r-ele">#(..Get("点击申请后提交审批，审批通过后即可浏览已申请病案"))#</p>
+		<div class="dialog-r-ele">
+			<label for="inputRequestSpan">#(..Get("申请浏览时长"))#</label>
+			<select id="inputRequestSpan" class="hisui-combobox" style="width:360px;"></select>
+		</div>
+		<div class="dialog-r-ele">
+			<label for="inputRequestReason">#(..Get("申请浏览原因"))#</label>
+			<textarea id="inputRequestReason" class="textbox" style="width:353px;height:100px;"></textarea>
+		</div>
+	</div>
+	<div id="reapplyReasonDialog" style="width:500px;height:300px;padding:10px;">
+		<p class="dialog-r-ele">#(..Get("点击申请后重新提交审批"))#</p>
+		<div class="dialog-r-ele">
+			<label for="inputReapplySpan">#(..Get("申请浏览时长"))#</label>
+			<select id="inputReapplySpan" class="hisui-combobox" style="width:360px;"></select>
+		</div>
+		<div class="dialog-r-ele">
+			<label for="inputReapplyReason">#(..Get("申请浏览原因"))#</label>
+			<textarea id="inputReapplyReason" class="textbox" style="width:353px;height:100px;"></textarea>
+		</div>
+	</div>
+	<script language="cache" runat="server">
+		s appointUserID = %session.Get("LOGON.USERID")
+		s appointUserLoc = %session.Get("LOGON.CTLOCID")
+		s appointUserSSGroupID = %session.Get("LOGON.GROUPID")
+		s hospitalFlag = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("HospitalFlag")
+		s dataServiceURL = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("DataServiceURL")
+		s controlType = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("BrowseControlType")
+	</script>
+	<script type="text/javascript">
+		var appointUserID = '#(appointUserID)#';
+		var appointUserLoc = '#(appointUserLoc)#';
+		var appointUserSSGroupID = '#(appointUserSSGroupID)#';
+		var hospitalFlag = '#(hospitalFlag)#';
+		var dataServiceURL = '#(dataServiceURL)#';
+		var controlType = '#(controlType)#';
+	</script>
+	<script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+	<script src="../scripts/epr/js/fs.applypermissionnew.js"></script>
+</body>
+</html>

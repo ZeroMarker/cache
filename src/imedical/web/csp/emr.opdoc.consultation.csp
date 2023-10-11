@@ -1,0 +1,34 @@
+﻿<html>
+    <head>
+        <title>预问诊</title>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+        <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
+ 		<script type="text/javascript" src="../scripts/emr/js/opdoc.resource.common.head.js"></script>
+        <script language="cache" runat="server">
+        	s episodeID =$Get(%request.Data("EpisodeID",1),"")
+			//s url ="http://172.18.16.21:18080/alpha_diagnosis_doctor/index.html?diagnosisId=73573"
+			s url =##class(web.PreConsultation).GetPreadmUrL(episodeID)
+        </script>
+
+        <script language="javascript">
+        	var token = getMWToken();
+        	var url = "#(url)#";
+        	if ((url != "")&&(token != ""))
+            {
+                url = url+"&MWToken="+token
+            }
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div data-options="region:'center',border:false" style="overflow:hidden">
+			<iframe id="consultation" frameborder=0 scrolling=0  src="" style="width:100%;height:100%"></iframe>
+        </div>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.resource.consultation.js"></script>
+    </body>
+</html>

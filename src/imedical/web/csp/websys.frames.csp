@@ -14,6 +14,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<!-- bootstrap & fontawesome -->
     <link rel="stylesheet" href="../scripts_lib/assets/css/bootstrap.min.css" />
     <link rel="stylesheet" href="../scripts_lib/assets/css/font-awesome.min.css" />
@@ -25,6 +26,31 @@
     <script src="../scripts_lib/assets/js/jquery.min.js" type="text/javascript" ></script>
     <!-- ace settings handler -->
     <script src="../scripts_lib/assets/js/ace-extra.min.js" type="text/javascript" ></script>
+    <style>
+    /*字体*/   
+	body  {  
+		font-family:"Microsoft Yahei";
+		font-size:14px;
+	}
+	/*一些样式重写，或自定义样式*/
+	.page-content{
+		padding:0;	
+	}
+	/*\f104-->\f107, left-->down*/
+	.nav-list li.open>a>.fa-angle-left:before{
+		content: "\f107"
+	}
+	.nav-tabs{
+		border-color:#ffffff;
+	}
+	.nav-tabs > li > a, .nav-tabs > li > a:focus{
+	    line-height:38px;
+	}
+	.nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover{
+	    line-height:38px;
+	}
+    </style>
+    <csp:if condition=0>
 	<style>
 	#sidebar{
 		background-color:#F1F7FF;	
@@ -59,19 +85,8 @@
 	.nav-tabs > li > a, .nav-tabs > li > a:focus { 
 		color:#000000;
 	}
-	/*字体*/   
-	body  {  
-		font-family:"Microsoft Yahei";
-		font-size:14px;
-	}
-	/*\f104-->\f107, left-->down*/
-	.nav-list li.open>a>.fa-angle-left:before{
-		content: "\f107"
-	}
-	/*一些样式重写，或自定义样式*/
-	.page-content{
-		padding:0;	
-	}
+	
+	
 	.tabbable{    /*当为多行时*/
 		padding-top:1px;
 		background: #E1ECFE;
@@ -201,6 +216,7 @@
 		vertical-align: middle;
 	}
    </style>
+   </csp:if>
     <SERVER> 
 	n securitymsg
 	s securitymsg=##Class(web.SSUser).GetSystemSecurityMessage(%session.Get("LOGON.USERID"))
@@ -216,6 +232,10 @@
 			d myeprobj.%Close()
 			s myeprobj=""
 		}
+	}
+	if HomePage'=""{
+		If HomePage'["?" Set HomePage = HomePage_"?"
+		Set HomePage = HomePage_"&MWToken="_$G(%request.Data("MWToken",1))
 	}
 	</SERVER>
 
@@ -272,7 +292,8 @@ function unloadHandler() {
 }
 </SCRIPT>
 </head>
-<body class="no-skin"  style="width:100%;height:100%;overflow:hidden"  > 
+<body class="no-skin"  style="width:100%;height:100%;overflow:hidden"  >
+	<script src="../scripts/websys.frames.js" type="text/javascript" ></script> 
     <div class="main-container " id="main-container">
         <!-- #section:basics/sidebar -->
         <div id="sidebar" class="sidebar responsive sidebar-fixed">
@@ -281,7 +302,36 @@ function unloadHandler() {
             </script>
             <div class="sidebar-toggle sidebar-collapse">
                 <i class="ace-icon fa fa-angle-double-left" data-icon1="ace-icon fa fa-angle-double-left" data-icon2="ace-icon fa fa-angle-double-right"></i>
-            </div>             
+            </div>
+            <!--新增搜索框-->
+        	<div class="sidebar-shortcuts" id="sidebar-shortcuts">
+				<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
+				 	<div class="navbar-header pull-left">
+						<strong>
+		                    <span class="navbar-brand" style="height:30px;padding:5px 5px;font-size:14px;color:#1095F1">
+								输入菜单名查询
+		                    </span>
+		                 </strong>
+	            	</div>
+       				 <div class="navbar-header pull-left" >
+						<table>
+						   <tr>
+                        	<td><input id="searchBox" type="text" class="form-control"></td>
+                       		<td><span class="input-group-btn">
+                            	<button id="searchBtn" class="btn btn-primary" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                        		</span></td>
+                       	  </tr>
+                        </table>
+                    </div>
+
+					<!-- /section:basics/sidebar.layout.shortcuts -->
+				</div>
+
+				<div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini" style="background-color:#00A2E8;">
+				   <img src="../scripts/bdp/Framework/assets/images/BDP.png" alt="BDPLogo" style="width: 30px; height: 30px; margin: 5px;"/>
+				</div>
+			</div><!-- /.sidebar-shortcuts --> 
+			<!--新增搜索框完-->              
            <ul id="navmenu" class="nav nav-list">
             #(##class(websys.Menu).BootstrapSideMenu(1,GroupId))#
            </ul>
@@ -337,6 +387,6 @@ function unloadHandler() {
     <script src="../scripts_lib/assets/js/jquery.contextmenu.js" type="text/javascript" ></script>
     <script src="../scripts_lib/assets/js/ace.min.js" type="text/javascript" ></script>
 	<script src="../scripts_lib/jQuery/jquery.tmpl.min.js" type="text/javascript" ></script>
-	<script src="../scripts/websys.frames.js" type="text/javascript" ></script>
+	<script src="../scripts/websys.jquery.js" type="text/javascript" ></script>
 </body>
 </html>

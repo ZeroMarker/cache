@@ -1,0 +1,182 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.nurexcutegroup.csp 护士执行安全组配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	.wrap{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;
+    	background-color: #fff;	
+    	padding:10px;
+    	overflow:hidden;
+	}
+	.wrap>table td{
+		padding-bottom:10px;	
+	}
+	#main{
+		height:calc(100% - 40px);
+		display:flex;
+	}
+	#main>div{
+		flex:2;
+		margin-right:10px;	
+	}
+	#main>div:last-child{
+		flex:3;
+		margin-right:0;	
+	}
+	/* 左侧安全组 */	
+	#left td.loc{
+		display:none;
+	}
+	#left .list{
+		height:calc(100% - 40px);	
+	}
+	#left .list .datagrid-wrap{
+		border-left:0;
+		border-right:0;
+		border-bottom:0;
+		border-color:#ccc;
+		border-radius:0 0 4px 4px;	
+	}
+	/* 右侧对应单据 */
+	#right #shuttle-box{
+		height:calc(100% - 51px);
+		display:flex;	
+	}
+	#right #shuttle-box>div{
+		display:flex;
+	}
+	#right #shuttle-box>div.allBills{
+		flex:3;	
+	}
+	#right #shuttle-box>div.selectedBills{
+		flex:4;	
+	}
+	#right #shuttle-box>div .buttons{
+		width:110px;
+		text-align:center;
+		display:flex;
+		align-items:center;
+	}
+	#right #shuttle-box>div.allBills .bills{
+		width:calc(100% - 110px)	
+	}
+	#right #shuttle-box>div.selectedBills .bills{
+		width:100%;	
+	}
+	#right #shuttle-box .panel-header{
+		border-radius:0;
+		border-top:0;	
+	}
+	#shuttle-box .allBills .panel-header{
+		border-left:0;	
+	}
+	#right #shuttle-box .panel-body{
+		border-radius:0;
+		border-bottom:0;	
+	}
+	#shuttle-box .allBills .panel-body{
+		border-left:0;			
+	}
+	#right .bills li{
+		line-height:24px;
+		cursor:pointer;	
+		padding:0 10px;
+	}
+	#right .bills li.selected{
+		background-color:#40a2de;
+		color:#fff;	
+	}
+	.selectedBills .checkbox{
+		display:none;	
+	}
+	.datagrid-cell-check, .datagrid-header-check{
+		width:100px;	
+	}
+</style>
+</head>
+
+<body>
+	<div class="wrap">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="r-label">所属医院</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+			</tr>
+		</table>
+		<div id="main">
+			<div id="left">
+				<div class="hisui-panel" title="安全组" data-options="iconCls:'icon-paper-pen',headerCls:'panel-header-gray',fit:true" style="padding-top:10px;">
+					<table cellpadding="0" cellspacing="0">
+						<tr>
+							<td class="r-label" style="padding-bottom:10px;padding-left:10px;">配置方式</td>
+							<td class="r-label" style="padding-bottom:10px;"><select id="mode" style="width:80px;"></select></td>
+							<td class="r-label name" style="padding-bottom:10px;">安全组</td>
+							<td class="r-label" style="padding-bottom:10px;"><select id="linkData" style="width:160px;"></select></td>
+							<td style="padding-bottom:10px;padding-right:10px;"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="onSearch()">查询</a></td>
+						</tr>
+					</table>
+					<div class="list">
+						<table id="dg"></table>
+					</div>					
+				</div>			
+			</div>
+			<div id="right">
+				<div class="hisui-panel" title="单据维护" data-options="iconCls:'icon-transfer',headerCls:'panel-header-gray',fit:true">
+					<div style="padding:10px;border-bottom:1px solid #ccc;"><a href="#" class="hisui-linkbutton" onclick="saveSheets()">保存</a></div>					
+					<div id="shuttle-box">
+						<div class="allBills">
+							<div class="bills">
+								<table id="dg-allsheet" title="全部单据" data-options="headerCls:'panel-header-gray',fit:true"></table>
+								<!--div class="hisui-panel" title="全部单据" data-options="headerCls:'panel-header-gray',fit:true">
+									<ul></ul>
+								</div-->
+							</div>
+							<div class="buttons">
+								<div>
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'" style="margin-bottom:50px;" onclick="moveRight()">右移</a>
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-left'" onclick="moveLeft()">左移</a>
+								</div>
+							</div>
+						</div>
+						<div class="selectedBills">
+							<div class="bills">
+								<!--div class="hisui-panel" title="选中单据" data-options="headerCls:'panel-header-gray',fit:true">
+									<ul></ul>
+								</div-->
+								<table id="dg2" title="选中单据" data-options="headerCls:'panel-header-gray',fit:true"></table>
+							</div>
+							<div class="buttons" style="display:none;">
+								<div>
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-up'" style="margin-bottom:50px;" onclick="moveUp()">上移</a>
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-down'" onclick="moveDown()">下移</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>		
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.nurexcutegroup.js"></script>
+</body>
+</html>

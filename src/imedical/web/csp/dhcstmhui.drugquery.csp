@@ -1,6 +1,9 @@
 ﻿<!--物资信息查询-->
 <!DOCTYPE html>
 <html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -10,8 +13,8 @@
 <body class="hisui-layout" data-options="fit:true">
 	<div class="" data-options="region:'center',border:false">
 	<div class="hisui-layout" data-options="fit:true">
-	<div data-options="region:'north',border:false" class="BorderLine">
-		<table id="Conditions" class="Condition">
+	<div data-options="region:'north'" class="BorderLine">
+		<table id="Conditions" class="Condition" onkeydown="if(event.keyCode==13){document.getElementById('QueryBT').focus();QueryBT.click()}">
 			<input id="Inci" name="Inci" type="hidden">
 			<tr>
 				<td>物资代码</td>
@@ -19,10 +22,10 @@
 				<td>类组</td>
 				<td><input id="StkGrpBox" name="StkGrp" class="textbox hisui-stkscgcombotree"></td>
 				<td>进价</td>
-				<td><input id="BRp" name="BRp" class="textbox"></td>
+				<td><input id="BRp" name="BRp" class="textbox hisui-numberbox" ></td>
 				<td>简称</td>
 				<td><input id="Abbrev" name="Abbrev" class="textbox"></td>
-				<td colspan="2">
+				<td>
 					<input class="hisui-radio" type="radio" label="全部" name="NotUse" value="" data-options="checked:true">
 					<input class="hisui-radio" type="radio" label="可用" name="NotUse" value="N">
 					<input class="hisui-radio" type="radio" label="不可用" name="NotUse" value="Y">
@@ -35,9 +38,9 @@
 				<td><input id="StkCatBox" name="StkCat" class="textbox hisui-combobox"></td>
 				<td>规格</td>
 				<td><input id="Spec" name="Spec" class="textbox"></td>
-				<td>厂商</td>
+				<td>生产厂家</td>
 				<td><input id="ManfBox" name="Manf" class="textbox hisui-combobox"></td>
-				<td colspan="2">
+				<td>
 					<input class="hisui-radio" type="radio" label="全部" name="Charge" value="" data-options="checked:true">
 					<input class="hisui-radio" type="radio" label="收费" name="Charge" value="Y">
 					<input class="hisui-radio" type="radio" label="非收费" name="Charge" value="N">
@@ -55,6 +58,11 @@
 					<input class="hisui-radio" type="radio" label="植入" name="Implantation" value="Y">
 					<input class="hisui-radio" type="radio" label="非植入" name="Implantation" value="N">
 				</td>
+				<td>
+					<input class="hisui-radio" type="radio" label="全部" name="HighRiskBox" value="" data-options="checked:true">
+					<input class="hisui-radio" type="radio" label="跟台" name="HighRiskBox" value="Y">
+					<input class="hisui-radio" type="radio" label="非跟台" name="HighRiskBox" value="N">
+				</td>
 			</tr>
 			<tr>
 				<td>变更起始</td>
@@ -62,15 +70,28 @@
 				<td>变更截止</td>
 				<td><input id="EndDate" name="UpdateEndDate" class="hisui-datebox textbox"></td>
 				<td>售价</td>
-				<td><input id="BSp" name="BSp" class="textbox"></td>
+				<td><input id="BSp" name="BSp" class="textbox hisui-numberbox"></td>
 				<td colspan="2">
 					<input class="hisui-radio" type="radio" label="全部" name="HighPrice" value="" data-options="checked:true">
 					<input class="hisui-radio" type="radio" label="高值" name="HighPrice" value="Y">
 					<input class="hisui-radio" type="radio" label="非高值" name="HighPrice" value="N">
 				</td>
-				<td colspan="2" style="text-align:left">
-				<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-				<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+				<td>
+					<a href="#" id="PrintInciBarBT" class="hisui-linkbutton" >打印物资码</a>
+					<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px;">查询</a>
+				</td>
+			</tr>
+			<tr>
+				<td>注册证号</td>
+				<td><input id="pRegisterNo" name="pRegisterNo" class="textbox"></td>
+				<td>医嘱代码</td>
+				<td><input id="ArcCode" name="ArcCode" class="textbox"></td>
+				<td>售价(入库单位)</td>
+				<td><input id="Sp" name="Sp" class="textbox hisui-numberbox"></td>
+				<td></td><td></td>
+				<td>
+					<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px;">清屏</a>
+					<a href="#" id="SendSCIBT" class="hisui-linkbutton SCIShow" style="width:100px;">推送平台</a>
 				</td>
 			</tr>
 		</table>
@@ -80,8 +101,11 @@
 		</div>
 	</div>
 	</div>
+	<!--资质信息弹窗-->
+	<csp:Include Page="dhcstmhui.incireginfo.csp">
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonHosp.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/DrugInfoCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/DrugQuery.js"></script>
 </body>
 </html>

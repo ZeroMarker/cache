@@ -1,0 +1,341 @@
+﻿<html>
+
+<head>
+
+<title>	二维码登录 </title>
+
+<script type="text/javascript" src="../scripts/dhccertauth/lib/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/lib/qrcode.min.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js"></script>
+
+<script type="text/javascript" src="http://192.192.14.60:80/yxqlogin/qrcode-login-v1.js" id="qrcodeSrc" ></script>
+
+<script language="cache" runat="server">
+  	
+  	s random = $r(999999999999999)
+	s qrCode = ""
+	s signGUID = ""
+	s qrCode = ""
+	s isImage = "1"
+	
+	s ConstRollCountConfig = 120
+	s ConstRollTimeSapn = 2000
+	
+	
+	s QRCodeType = ##Class(CA.ConfigCommon).GetValueWithDefault("PhoneQRCodeType","IMAGE")
+	
+	s venderCode = $Get(%request.Data("venderCode",1),"")
+	s signType = $Get(%request.Data("signType",1),"")
+	s debugLevel = $Get(%request.Data("debugLevel",1),"0")
+	
+	s sessionID = ""
+	if ($g(%session) '= "")
+	{
+		s sessionID = %session.%Id()
+	}
+	else
+	{
+		s sessionID = random
+	}
+	
+	d ##Class(CA.DSService).ClearSessionRedirectCode(sessionID)
+</script>
+
+<script language="javascript">	
+	
+	var QRCodeType = "#(QRCodeType)#";
+	
+	var argWindow = window.dialogArguments;
+	argWindow = argWindow || "";
+	
+	if (argWindow != "") {
+		var Const_Vender_Code = argWindow.VenderCode;
+		var Const_Sign_Type = argWindow.SignType;
+	} else {
+		var Const_Vender_Code = "#(venderCode)#";
+		var Const_Sign_Type = "#(signType)#";
+	}
+	
+	var debugLevel = "#(debugLevel)#";
+	
+	var random = "#(random)#";
+	var qrCode = "#(qrCode)#";
+	var isImage = "#(isImage)#";
+	var signGUID = "#(signGUID)#";
+	var QRCodeType = "#(QRCodeType)#";
+	var ConstRollTimeSapn = "#(ConstRollTimeSapn)#";
+	var ConstRollCountConfig = "#(ConstRollCountConfig)#";
+	var rollCount = "#(ConstRollCountConfig)#";
+	var sessionID = "#(sessionID)#";
+	
+	var qrcodeMaker = "";
+	var rtnLogin = "";
+	
+	function iGetData(Func,P1,P2,P3,P4,P5,P6,P7,P8,P9) {
+    	
+    	var result = "";
+    	
+    	var para = {
+	  		CAFunc: Func,
+	  		CAVenderCode:Const_Vender_Code,
+	  		CASignType:Const_Sign_Type,
+	  		P1:P1||"",
+	  		P2:P2||"",
+	  		P3:P3||"",
+	  		P4:P4||"",
+	  		P5:P5||"",
+	  		P6:P6||"",
+	  		P7:P7||"",
+	  		P8:P8||"",
+	  		P9:P9||""
+  		};
+  		
+  		$.ajax({
+    		url: "../CA.Ajax.DS.cls",
+    		type: "POST",
+    		dataType: "JSON",
+    		async: false,
+    		data: para,
+    		success: function(ret) {
+            	if (ret && ret.retCode == "0") {
+                	result = ret;
+            	} else {
+	            	alert(ret.retMsg);
+            	}
+            },
+        	error: function(err) {
+            	alert(err.retMsg || err);
+        	}
+  		});
+  		
+  		return result;
+    }
+    
+	function getQRCode() {
+		signGUID = "";
+		qrCode = "";
+		isImage = "1";
+		
+		var rtn = iGetData("GetLoginQR",random);
+		if (rtn.retCode == "0") {
+			signGUID = rtn.signGUID;
+			qrCode = rtn.qrCode;
+			isImage = rtn.isImage;
+			
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	function getCallbackCode() {
+		var rtn = iGetData("GetSessionRedirectCode",sessionID);
+		if (rtn.retCode == "0") {
+			return rtn.redirectCode || "";
+		} else {
+			return "";
+		}
+	}
+	
+	function getQRCodeResult() {
+		
+		var code = getCallbackCode();
+		if (code == "") {
+			return {retCode:"0",retMsg:"success",signStatus:"TOSIGN"};
+		}
+		
+		signGUID = code;
+		var rtn = iGetData("GetLoginQRResult",signGUID);
+		return rtn;
+	}
+	
+	function showQRCode() {
+		if (isImage == "1") {
+			var imgdata = "data:image/jpeg;base64," + qrCode;
+  			var qrcodeimg = document.getElementById("qrcodeimg");
+  			qrcodeimg.src = imgdata;
+		} else {
+			if (qrcodeMaker == "") {
+				//qrcodeMaker = new QRCode(document.getElementById("qrcodeimg"),{width:150,height:150,colorDark:"#000000",colorLight : "#ffffff"});
+				qrcodeMaker = new QRCode(document.getElementById("qrcodeimg"),{width:200,height:200,correctLevel:QRCode.CorrectLevel.L});
+			} 
+			qrcodeMaker.clear()
+			qrcodeMaker.makeCode(qrCode);	
+		}
+	}
+	
+	function serverLogin(rtn) {
+		//usrID As %String, UsrCertCode As %String, serverRan As %String, userSignedData As %String, certNo As %String, userCert As %String, signType As %String = "", venderCode As %String = ""
+		var isok = false;
+		var data = ajaxDATA("String","CA.DigitalSignatureService","Login2","",rtn.userCertCode,"","",rtn.certNo,rtn.signCert,Const_Sign_Type,Const_Vender_Code);
+		ajaxPOSTSync(
+			data,
+			function(ret){
+				var  json =JSON.parse(ret);
+				if (json.retCode == "0") {
+					rtn["hisUserName"] = json.hisUserName;
+					rtn["hisUserID"] = json.hisUserID;
+					isok = true;
+				} else {
+					displayError(json.retMsg);
+				}
+			},
+			function(ret){
+				displayError(ret);
+			}
+		)
+		
+		return isok;
+	}
+	
+	function regSession(rtn) {
+		//usrID As %String, UsrCertCode As %String, serverRan As %String, userSignedData As %String, certNo As %String, userCert As %String, signType As %String = "", venderCode As %String = ""
+		var isok = false;
+		var data = ajaxDATA("String","CA.DigitalSignatureService","RegSession",Const_Sign_Type,rtn.certContainer,"",rtn.userCertCode,rtn.certNo,rtn.signToken);
+		ajaxPOSTSync(
+			data,
+			function(ret){
+				var  json =JSON.parse(ret);
+				if (json.retCode == "0") {
+					isok = true;
+				} else {
+					displayError(json.retMsg);
+				}
+			},
+			function(ret){
+				displayError(ret);
+			}
+		)
+		
+		return isok;
+	}
+	function displayError(error) {
+		document.getElementById("caTip").innerText = error;
+	}
+	
+	function refreshQrcodeClick(){
+		qrcodeLogon();
+	}
+	
+	function qrcodeLogon(){
+		/*
+		$("#divqrcodeexp").hide();
+		$("#divqrcodeimg").hide();
+		$("#divqrcodegen").show();
+		displayError("");
+		
+		if (!getQRCode()) {
+			displayError("获取二维码异常");
+			$("#divqrcodegen").hide();
+			$("#divqrcodeexp").show();
+			return;
+		} 
+		
+		showQRCode();
+		$("#divqrcodegen").hide();
+		$("#divqrcodeimg").show();
+		*/
+		
+		$("#divqrcodeexp").hide();
+		$("#divqrcodegen").hide();
+		$("#divqrcodeimg").show();
+		displayError("");
+		
+  		rollCount = ConstRollCountConfig;
+		roll();
+	}
+	
+	function roll(){
+		rollCount--;
+		if (rollCount<1) {
+			$("#divqrcodeimg").hide();
+			$("#divqrcodeexp").show();
+			return ;
+		}
+		
+		
+		var rtn = getQRCodeResult();
+		if (rtn.retCode == "0") {
+			if (rtn.signStatus == "FINISH") {
+				rtnLogin = rtn;
+				if (debugLevel >= 1) {
+					alert("扫码结果 finish:\r\n"+JSON.stringify(rtn));
+				}
+				if (serverLogin(rtn)) {
+					
+					regSession(rtn);
+					
+					var jsonStr = JSON.stringify(rtn);
+					if (debugLevel >= 1) {
+						alert("扫码结果 finish serverLogin:\r\n" + jsonStr);
+					}
+					window.returnValue = jsonStr;
+					window.close();
+				}
+			} else if (rtn.signStatus == "EXPIRE") {
+				var jsonStr = JSON.stringify(rtn);
+				if (debugLevel >= 1) {
+					alert("扫码结果 expire:\r\n" + jsonStr);
+				}
+				$("#divqrcodeimg").hide();
+				$("#divqrcodeexp").show();
+			} else {
+				if (debugLevel >= 2) {
+					var jsonStr = JSON.stringify(rtn);
+					alert("扫码结果 tosign:\r\n" + jsonStr);
+				}
+				setTimeout(roll,ConstRollTimeSapn);
+			}
+		} else {
+			displayError(rtn.retMsg);
+		}
+	}
+	
+	window.onload = function () {
+       
+       var srcs=document.getElementById('qrcodeSrc').src;//获取第三方的引入路径
+        var host = getPath(srcs);//获取host
+        function getPath(url) {
+            var arrUrl = url.split("/");
+            var relUrl = arrUrl[0] + "//" + arrUrl[2];
+            return relUrl
+        };
+        function guid(){
+            function S4() {
+                return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+            }
+            return (S4()+S4()+S4()+S4());
+        };
+        var obj = new YxqLogin({
+            host:host,//截取引入js的域名
+            self_redirect:true,
+            id:"divqrcodeimg",
+            appid: "503993004062727",
+            redirect_uri: encodeURIComponent("http://192.16.10.25/trakcare/web/csp/dhc.certauth.login.redirect.csp"),
+            state:sessionID,//随机码
+            style: ""
+        });
+        
+        qrcodeLogon();
+    };
+</script>
+
+</head>
+
+<body>
+    <div id="caOperTip" style="padding:15px;color:red;font-size:24px;text-align:center;"> 请手机扫码登录 </div>
+       <div id="divqrcodeimg" style="text-align:center;vertical-align:middle;">
+            
+        </div>
+        <div id="divqrcodeexp" style="height:280px;text-align:center;vertical-align:middle;background:#000000;display:none;">
+            <a href="#" style="text-align:center;color:red;line-height:160px;" onclick="refreshQrcodeClick();">二维码失效，点我刷新</a>
+        </div>
+        <div id="divqrcodegen" style="height:280px;text-align:center;vertical-align:middle;background:#000000;display:none;">
+            <h1 style="line-height:160px"><font color="#15425B">二维码生成中...</font></h1>
+        </div>
+    <div id='caTip' style="padding:10px;color:red;font-size:16px;text-align:center;height:50px;overflow-y:auto;overflow-x:hidden;">错误提示</div>
+	
+</body>
+	
+</html>

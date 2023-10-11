@@ -1,0 +1,183 @@
+﻿<html>
+    <head>
+    	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
+        <HISUI/>
+		<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/js/cfg.servmgr.js" ></script>
+
+        <server>
+            s userID = %session.Get("LOGON.USERID")
+            s ssGroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+	        s hospID = %session.Get("LOGON.HOSPID")
+			s:(hospID = "")&&(userLocID '= "") hospID = ##Class(CA.BL.HospitalMgr).GetHospitIDByLocID(userLocID)
+            s isOnMulityHospMgr = ##Class(CA.BL.HospitalMgr).IsOnMulityHospMgr()
+        </server>
+
+        <script language="javascript">
+            var logonInfo = {
+                UserID: "#(userID)#",
+                GroupID: "#(ssGroupID)#",
+                CTLocID: "#(userLocID)#",
+                HospID: "#(hospID)#"
+            }; 
+            
+            var sysOption = {
+	        	IsOnMulityHospMgr: "#(isOnMulityHospMgr)#"
+	        };
+        </script>
+    </head>
+
+    <body class="hisui-layout">
+        <div data-options="region:'center',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" style="height:1000px;" >
+	        <div class="hisui-panel" style="width:auto;height:auto" data-options="title:'系统配置',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+	            <table cellspacing="5" cellpadding="0">
+	                <tr>
+	                	<td id="_HospListLabel" style="color:red;margin:0 10">选择医院：</td>
+	                	<td><input id="_HospList"></td>
+	                	
+	                    <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="btnSaveCommon" style="margin-left:20px;width:90px">保存</a></td>
+	                </tr>
+	            </table>
+	            <div class="hisui-panel" style="width:auto;height:auto;padding-left:20px;" data-options="title:'医护签名相关配置',headerCls:'panel-header-gray'">
+	                <table cellpadding="5" cellspacing="10">
+	                    <tr>
+	                        <td class="optname-td">是否开启医护签名</td>
+	                        <td class="optvalue-td">
+	                            <select id="IsCAOn" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">全院开启医护签名</td>
+	                        <td class="optvalue-td">
+	                            <select id="AllCAOn" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">是否支持免密签名</td>
+	                        <td class="optvalue-td">
+	                            <select id="LoginOnce" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                    </tr>
+	                    <tr>
+	                        <td class="optname-td">UKey签名厂商</td>
+	                        <td class="optvalue-td">
+	                            <select id="DefaultUKEYVenderCode" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">手机签名厂商</td>
+	                        <td class="optvalue-td">
+	                            <select id="DefaultPHONEVenderCode" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">人脸签名厂商</td>
+	                        <td class="optvalue-td">
+	                            <select id="DefaultFACEVenderCode" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                    </tr>
+	                    <tr>
+	                        <td class="optname-td">默认签名方式</td>
+	                        <td class="optvalue-td">
+	                            <select id="DefaultSignType" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">可用签名方式列表</td>
+	                        <td class="optvalue-td">
+	                            <select id="SignTypeList" class="hisui-combobox"></select> 
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">不开启CA的人员类型</td>
+	                        <td class="optvalue-td">
+	                            <select id="DisabledCarPrvTp" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                    </tr>
+	                    <tr>
+	                        <td class="optname-td">是否限制图片不能为空</td>
+	                        <td class="optvalue-td">
+	                            <select id="IsLimitImageNull" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">是否限制图片大小</td>
+	                        <td class="optvalue-td">
+	                            <select id="IsLimitImageSize" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">是否转换签名图格式</td>
+	                        <td class="optvalue-td">
+	                            <select id="PhoneImageConvertFlag" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                    </tr>
+	                    <tr>
+	                        <td class="optname-td">
+                                <a id="AutoReloadImage" href="#" title="可能导致程序异常,不建议开启" class="hisui-tooltip">是否自动更新签名图</a>
+	                        </td>
+	                        <td class="optvalue-td">
+	                            <select id="IsAutoReloadImage" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+                            <td class="optname-td">
+                                <a id="CAOnBySsgroup" href="#" title="开启后如需开启CA，需要同时开启安全组和科室" class="hisui-tooltip">是否开启安全组管理</a>
+                            </td>
+                            <td class="optvalue-td">
+                                <select id="IsCAOnBySsgroup" class="hisui-combobox"></select>
+                            </td>
+                            <td class="optdesc-td"></td>
+                            <td class="optname-td">
+                               <a id="DisabledNoCert" href="#" title="开启后当用户未关联证书时，不启用CA" class="hisui-tooltip">关联证书的用户才启用CA</a>
+                            </td>
+                            <td class="optvalue-td">
+                                <select id="IsDisabledNoCert" class="hisui-combobox"></select>
+                            </td>
+                            <td class="optdesc-td"></td>
+	                    </tr>
+	                    <tr style="display:none">
+	                        <td class="optname-td">登录页显示CA登录按钮</td>
+	                        <td class="optvalue-td">
+	                            <select id="IsShowCALogonLinks" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                    </tr>    
+	                </table>
+	            </div>
+	            <div class="hisui-panel" style="width:auto;height:auto;padding-left:20px;" data-options="title:'患者签名相关配置',headerCls:'panel-header-gray'">
+	                <table cellpadding="5" cellspacing="10" class="table">
+	                    <tr>
+	                        <td class="optname-td">是否开启患者签名</td>
+	                        <td class="optvalue-td">
+	                            <select id="IsHandSignCAON" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">全院开启患者签名</td>
+	                        <td class="optvalue-td">
+	                            <select id="AllPatCAOn" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">默认患者签名厂商&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	                        <td class="optvalue-td">
+	                            <select id="DefaultPATPDFVenderCode" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        
+	                    </tr>
+	                    <tr>
+	                    	<td class="optname-td">是否支持PDF文件签署</td>
+	                        <td class="optvalue-td">
+	                            <select id="IsSupportPDFSign" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                        <td class="optname-td">签署需要展示二维码&nbsp;</td>
+	                        <td class="optvalue-td">
+	                            <select id="IsNeedQrCode" class="hisui-combobox"></select>
+	                        </td>
+	                        <td class="optdesc-td"></td>
+	                    </tr>
+	                </table>
+	            </div>
+	        </div>
+        </div>
+    </body>
+</html>

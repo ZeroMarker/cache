@@ -8,7 +8,8 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
-<ADDINS require="RWCard"/>
+<ADDINS />
+<DOCCARD medStepCode="Update"></DOCCARD>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -36,15 +37,21 @@ iframe{
 w "<input id='OtherCardInfo' name='OtherCardInfo' type='hidden' value=''>",$C(13,10)
 w "<input id='WestOPMedicareNo' name='WestOPMedicareNo' type='hidden' value=''>",$C(13,10)
 w "<input id='WestIPMedicareNo' name='WestIPMedicareNo' type='hidden' value=''>",$C(13,10)
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
 d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+/*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)*/
 s HospitalCode=##class(web.DHCDocOrderCommon).GetCurrentHospitalCode()
 s sysDateFormat=##class(websys.Conversions).DateFormat()
-s ForeignInfoByAge=$g(^DHCDocCardConfig("ForeignInfoByAge"))
 s CardNo=%request.Get("CardNo")
+s HospCodeNode="HospDr_"_%session.Get("LOGON.HOSPID")
+;出生时间必填(年龄:单位-天)
+s LimitBirthTimeByAge=+$g(^DHCDocCardConfig(HospCodeNode,"LimitBirthTimeByAge"))
+s ForeignInfoByAge=$g(^DHCDocCardConfig(HospCodeNode,"ForeignInfoByAge"))
+s sessinStr="^"_%session.Get("LOGON.USERID")_"^"_%session.Get("LOGON.CTLOCID")_"^"_%session.Get("LOGON.GROUPID")_"^"_%session.Get("LOGON.HOSPID")_"^"_%session.Get("LOGON.SITECODE")_"^"
+;患者类型
+s DefaultPatTypePara=##class(web.UDHCOPOtherLB).ReadPatType("GetPatTypeToHUIJson","",sessinStr)
 </Server>
 </head>
 <body>
@@ -57,14 +64,16 @@ s CardNo=%request.Get("CardNo")
 			ForeignInfoByAge:"#(ForeignInfoByAge)#",
 			CardNo:"#(CardNo)#",
 			pageCode:'doc.patientinfoupdate.hui.csp',
-			domSelector:'.textbox'
+			domSelector:'.textbox',
+			DefaultPatTypePara:'#(DefaultPatTypePara)#',
+			LimitBirthTimeByAge:'#(LimitBirthTimeByAge)#'
 		};
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
-	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.JS"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
-	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.JS"></script>
-	<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.JS"></script>
+	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
 	<script type="text/javascript" src="../scripts/Doc.PatientInfoUpdate.hui.js"></script>

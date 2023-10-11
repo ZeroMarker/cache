@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--门诊药房hisui--配药确认
+    csp:csp/pha.op.v4.pyconfirm.csp
+    js: scripts/pha/op/v4/pyconfirm.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+    
+</csp:method>
+
+<HEAD>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <PHAOPV4 />
+    <script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+    
+    <!-- 样式扩展 -->
+    <style>
+        .badge {
+            display: inline-block;
+            min-width: 10px;
+            padding: 3px 7px;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            background-color: #777;
+            border-radius: 10px;
+        }
+    </style>
+
+</HEAD>
+<body>
+    
+    <div class = "hisui-layout" fit = "true">
+        <div data-options = "region:'center',border:false" class = "pha-body">
+            <div class = "hisui-layout" fit = "true" id="layout-op—condition">
+                <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'west',border:true,split:true,title:'同药房排名',collapsible: false"  >
+                    <table id="gridPyRanking"></table>
+                </div>
+                <div data-options = "headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',border:true,split:true,title:'配药确认'">
+                    <table id="gridPrescDetail"></table>
+                </div>
+            </div>      
+        </div>
+    </div> 
+    <div id = "gridPrescDetailBar" >
+        <div> 
+            <div width="60%" class="pha-op-window-left" style="margin-top:12px;">
+                <table id = "qCondition" class = "pha-con-table">
+                    <tr >
+                        <td class = "r-label">
+                            <label for = "prescNo">#(..Get("处方号"))#</label>
+                        </td>
+                        <td>
+                            <input id = 'prescNo' class = "hisui-validatebox" data-pha = 'class:"hisui-validatebox",clear:true,query:true'>
+                        </td>
+                        <td class = "r-label">
+                            <label for = "userCode">#(..Get("工号"))#</label>
+                        </td>
+                        <td>
+                            <input id = 'userCode' class = "hisui-validatebox" data-pha = 'class:"hisui-validatebox",clear:true,query:true'>
+                        </td>
+                        <td>
+                            <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-ok'" id = 'btnPyConfirm'>确认</a>
+                        </td>
+                        <td>
+                            <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-clean'" id = 'btnClean'>清屏</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div width="40%" style="float:right;margin:10px 10px"  >
+                 <img src="../scripts/pha/op/v4/css/images/disp-green.png" style="margin-right:15px;width:50px;height:50px;">
+                 <span style="float:right;" id="todayrank">#(..Get("今日配药"))#<br><lable id="lbl-dispcount" style="visible:true;font-size:24px;color:red;display:block;text-align:center"><strong style="font-size:24px">0</strong></lable></span>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/pha/op/v4/pyconfirm.js"></script>
+</body>
+</html>

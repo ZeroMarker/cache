@@ -1,13 +1,6 @@
 ﻿<!DOCTYPE html>
 <server>
-	s AppName=$G(%request.Data("AppName",1))	//要拍照的模块App名称
-	s RowId=$G(%request.Data("RowId",1))		//要拍照的项目rowid
-	s typeCode=$G(%request.Data("typeCode",1))
-	s typeDesc=$G(%request.Data("typeDesc",1))
-	s GroupId=$G(%request.Data("GroupId",1))
-	s LocId=$G(%request.Data("LocId",1))
-	s UserId=$G(%request.Data("UserId",1))
-	s VendorId=$G(%request.Data("VendorId",1))	//ManfCertSA资质(供应链上供应商资质)用到的
+	s Params=$G(%request.Data("Params",1))
 </server>
 <html XMLNS=TRAK>
 <head>
@@ -17,14 +10,7 @@
 	<HISUI/>
 	<DHCSTMHISUI/>
 	<script language="javascript" type="text/javascript">
-		var AppName='#(AppName)#',
-			RowId='#(RowId)#',
-			typeCode='#(typeCode)#',
-			typeDesc='#(typeDesc)#',
-			GroupId='#(GroupId)#',
-			LocId='#(LocId)#',
-			UserId='#(UserId)#',
-			VendorId='#(VendorId)#';
+		var Params='#(Params)#';
 		
 		//>>>>>>>高拍仪自带示例程序>>>>>> begin
 		var DeviceMain;//主头
@@ -419,30 +405,7 @@
 					var ret = plugin().Ftp_Upload(ftp, 0, FileName, FtpFileName);
 					if(ret == true){
 						alert('第' + (i + 1) + '张上传成功!');
-						switch(AppName){
-						case 'DHCSTDRUGMAINTAINM':
-							//物资图片
-							var ret=#server(web.DHCSTMHUI.DrugInfoMaintain.InsItmPic(RowId,NewFileName,typeCode))#;
-							break;
-						case 'DHCSTVENDORMTM':
-							//供应商图片
-							var ret=#server(web.DHCSTMHUI.APCVendor.InsVendorPic(RowId,NewFileName,typeCode))#;
-							break;
-						case 'DHCSTPHMANFM':
-							//厂商图片
-							var ret=#server(web.DHCSTMHUI.ItmManf.InsManfPic(RowId,NewFileName,typeCode))#;
-							break;
-						case 'ManfCert':
-							//供应链厂商资质图片
-							var ret=#server(web.DHCSTMHUI.DHCItmManfCertSAPic.InsMCPic(RowId,NewFileName,typeCode))#;
-							break;
-						case 'ManfCertSA':
-							//供应链供应商授权图片
-							var ret=#server(web.DHCSTMHUI.DHCItmManfCertSAPic.InsSAPic(RowId,VendorId,NewFileName,typeCode))#;
-							break;
-						default:
-							break;
-						}
+						var ret=#server(web.DHCSTMHUI.UpLoadPic.SavePhoto(Params,FileName,NewFileName))#;
 					}else{
 						alert('第' + (i + 1) + '张上传失败!');
 					}
@@ -479,44 +442,28 @@
 			return {FtpUrl:FtpUrl, FtpSrc:FtpSrc};
 		}
 		
-		function SetType(AppName,RowId,typeCode,typeDesc,GroupId,LocId,UserId,VendorId){
-			AppName=AppName;
-			RowId=RowId;
-			typeCode=typeCode;
-			typeDesc=typeDesc;
-			GroupId=GroupId;
-			LocId=LocId;
-			UserId=UserId;
-			VendorId=VendorId;
-		}	
+		function SetType(Params){
+			Params=Params;
+		}
 	</script>
 </head>
 
 <body onload="Load()" onunload="Unload()">
-	<table class="Condition">
-		<tr>
-			<object id="view1" type="application/x-eloamplugin" width="600" height="400" name="view"></object>
-		</tr>
-		<tr>
-			<object id="thumb1" type="application/x-eloamplugin" width="600" height="150" name="thumb"></object>
-		</tr>
-		<tr>
-			<td><label id="lab1">设备</label><input id="device" name="device" class="hisui-combobox" onchange="changeDev()"></td>
-			<td><input id="subType" name="subType" class="hisui-combobox" onchange="changesubType()"></td>
-			<td><input id="selRes" name="selRes" class="hisui-combobox"></td>
-		</tr>
-	</table>
-	<table class="Condition">
-		<tr>
-			<td><a href="#" id="submit_01" class="hisui-linkbutton" onclick="OpenVideo()">打开视频</a></td>
-			<td><a href="#" id="submit_02" class="hisui-linkbutton" onclick="CloseVideo()">关闭视频</a></td>
-			<td><a href="#" id="submit_03" class="hisui-linkbutton" onclick="Left()">左转</a></td>
-			<td><a href="#" id="submit_04" class="hisui-linkbutton" onclick="Right()">右转</a></td>
-			<td><a href="#" id="submit_05" class="hisui-linkbutton" onclick="Scan()">拍照</a></td>
-			<td><a href="#" id="submit_06" class="hisui-linkbutton" onclick="ScanDel()">删除</a></td>
-			<td><a href="#" id="submit_07" class="hisui-linkbutton" onclick="UpLoadFtp()">上传</a></td>
-		</tr>
-	</table>
+	<object id="view1" type="application/x-eloamplugin" width="600" height="400" name="view"></object>
+	<br />
+	<object id="thumb1" type="application/x-eloamplugin" width="600" height="150" name="thumb"></object>
+	<br />
+	<label id="lab1">设备</label>
+	<select id="device" style="width: 90px" name="device" onchange="changeDev()"></select> 
+	<select id="subType" style="width: 90px" name="subType" onchange="changesubType()"></select>
+	<select id="selRes" style="width: 90px" name="selRes"></select> 
+	<input class="submit_01" type="button" value="打开视频" onclick="OpenVideo()" />
+	<input class="submit_01" type="button" value="关闭视频" onclick="CloseVideo()" />
+	<input class="submit_01" type="button" value="左转" onclick="Left()" />
+	<input class="submit_01" type="button" value="右转" onclick="Right()" />
+	<input class="submit_01" type="button" value="拍照" onclick="Scan()" />
+	<input class="submit_01" type="button" value="删除" onclick="ScanDel()" />
+	<input class="submit_01" type="button" value="上传" onclick="UpLoadFtp()" />
 	
 </body>
 </html>

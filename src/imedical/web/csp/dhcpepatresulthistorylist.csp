@@ -5,9 +5,9 @@
 </csp:method>
 <html>
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
 <style>
 .tblList th, .tblListFlexHeader th, .tblListFlexHeader td
 {
@@ -15,16 +15,16 @@
 }
 
 .tblList
-{	 
+{    
     border-collapse:collapse;
     border-color:#ccc
 
 }
 .tblList tr,td
 {
-	/*border-right: 0px solid #ccc;*/
-	border-bottom: 1px solid #ccc;
-	/*border-left: 0px solid #ccc;*/
+    /*border-right: 0px solid #ccc;*/
+    border-bottom: 1px solid #ccc;
+    /*border-left: 0px solid #ccc;*/
 
 }
 </style>
@@ -32,48 +32,52 @@
 
 </script>
 <SCRIPT language="Cache" RUNAT="SERVER">
-	s OEORIRowId=$g(%request.Data("OEORIRowId",1))
-	i OEORIRowId=""
-	{
- 		s AdmId=$g(%request.Data("AdmId",1))
- 		
- 		s RegNo=$g(%request.Data("RegNo",1))
+    s OEORIRowId=$g(%request.Data("OEORIRowId",1))
+    i OEORIRowId=""
+    {
+        s AdmId=$g(%request.Data("AdmId",1))
+        
+        s RegNo=$g(%request.Data("RegNo",1))
 
- 		s ARCIM=$g(%request.Data("ARCIM",1))
- 		s DateFrom=$g(%request.Data("DateFrom",1))
- 		s DateTo=$g(%request.Data("DateTo",1))
- 		i ""'=DateFrom s DateFrom=$ZDH(DateFrom,4)
- 		i ""'=DateTo s DateTo=$ZDH(DateTo,4)
-	}
-	else
-	{
-		s AdmId=$p(^OEORD(+OEORIRowId),"^",1)
-		s RegNo=""
-		s DateTo=$p(^OEORD(+OEORIRowId),"^",2)
-		s DateFrom=""
-		s ARCIM=$p(^OEORD(+OEORIRowId,"I",$p(OEORIRowId,"||",2),1),"^",2)
-	}
-	
-	
+        s ARCIM=$g(%request.Data("ARCIM",1))
+        s DateFrom=$g(%request.Data("DateFrom",1))
+        s DateTo=$g(%request.Data("DateTo",1))
+        i ""'=DateFrom s DateFrom=$ZDH(DateFrom,4)
+        i ""'=DateTo s DateTo=$ZDH(DateTo,4)
+    }
+    else
+    {
+        s AdmId=$p(^OEORD(+OEORIRowId),"^",1)
+        s RegNo=""
+        s DateTo=$p(^OEORD(+OEORIRowId),"^",2)
+        s DateFrom=""
+        s ARCIM=$p(^OEORD(+OEORIRowId,"I",$p(OEORIRowId,"||",2),1),"^",2)
+    }
+    
+    
 </Script>
 
 </head>
 <body>
 <div class="hisui-layout" fit="true">
 <div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:10px 10px 10px 10px;">
-		<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-radius:4px 4px 4px 4px;">
-		<table id="PatResultHistoryList"></table>
-			 <SERVER>
- 	     d ##Class(web.DHCPE.ResultContrast).OutPatResultHistoryListToHTML(RegNo)
-        </SERVER>
+        <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-radius:4px 4px 4px 4px;">
+        
+        <table id="PatResultHistoryList" data-options="fit:true,border:false"></table>
+         <!--SERVER>
+         d ##Class(web.DHCPE.ResultContrast).OutPatResultHistoryListToHTML(RegNo,%session.Get("LOGON.CTLOCID"))
+        </SERVER-->
 
-		</div>
-	</div>
+        </div>
+    </div>
 </div>
+
+<div id="ResultHistoryWin" style="overflow:hidden;"></div>  <!--结果对比窗口-->
 
 <script type="text/javascript" src="../scripts/DHCPEExportReport.js"></script>
 <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
 <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
 
 </body>
 

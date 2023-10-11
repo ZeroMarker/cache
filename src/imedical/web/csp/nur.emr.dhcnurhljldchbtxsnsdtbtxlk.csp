@@ -1,0 +1,641 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    s isPermission = ##Class(NurMp.Service.Template.Model).editAuthority(%request.Get("EpisodeID"),$g(%session.Data("LOGON.CTLOCID")),"DHCNURHLJLDCHBTXSNSDTBTXLK")
+    i isPermission'="0"
+    {
+    s utfo = $ZCONVERT(isPermission,"O","UTF8")
+    s urlo = $ZCONVERT(utfo,"O","URL")
+    s %response.ServerSideRedirect = "nur.emr.permissiondenied.csp?isPermission="_urlo
+    q 1
+    }
+    else
+    {
+    q 1
+    }
+</csp:method>
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type = "text/css" href = "../skin/default/css/websys.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts/nurse/hisui-0.1.0/dist/css/jquery.contextMenu.css" />
+
+<style type="text/css">.datagrid-row-mp-printed
+{
+background:#CDC9A5;
+}
+.marker
+{
+position:absolute;border-radius:50%;z-index:999;
+}
+body * 
+{
+font-family:微软雅黑;font-size:14px
+}
+.commonModalDialog .dialog-content
+{
+overflow:hidden;
+}
+#element_Ul li label.checkbox
+{
+display:inline;
+}
+.datagrid-row-selected
+{
+background: #fced89 !important;color: #000000;
+}
+.datagrid-row-editting
+{
+background: #abbd65;color: #000000;
+}
+.tooltipTable
+{
+border-collapse:collapse;border: 1px solid #509de1;
+}
+.tooltipTable td
+{
+border: 1px solid #509de1;
+}
+.tooltipTable th
+{
+border: 1px solid #509de1;
+}
+img[src = ""]
+{
+opacity: 0;
+}
+ </style></head>
+   <body style="background-color:white;padding:0px;width:100%">
+<div LineNo="1" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_2" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:973px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_2" style="height:42px;width:973px">
+<div LineNo="1" style="padding:3px">
+<div id="div_DateElement_5" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:121.8px;padding-left:0px;padding-right:0px">
+<input id="DateElement_5" name="DateElement_5" querybanding="HISUIDataTableElement_12:DateElement_4" oldVal="" SaveField="Item1" format="yyyy-MM-dd" style="height:30px;width:121.8px" />
+</div>
+<div id="div_TimeElement_6" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:66px;padding-left:0px;padding-right:0px">
+<input id="TimeElement_6" name="TimeElement_6" querybanding="HISUIDataTableElement_12:TimeElement_6" oldVal="" SaveField="Item2" style="height:30px;width:66px" />
+</div>
+<div id="div_DateElement_7" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:109.8px;padding-left:0px;padding-right:0px">
+<input id="DateElement_7" name="DateElement_7" querybanding="HISUIDataTableElement_12:DateElement_4" oldVal="" SaveField="Item3" format="yyyy-MM-dd" style="height:30px;width:109.8px" />
+</div>
+<div id="div_TimeElement_8" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:102px;padding-left:0px;padding-right:0px">
+<input id="TimeElement_8" name="TimeElement_8" querybanding="HISUIDataTableElement_12:TimeElement_6" oldVal="" SaveField="Item4" style="height:30px;width:102px" />
+</div>
+<div id="div_ButtonElement_9" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_9" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_9" style="height:30px;width:88px">#(..Get("查询"))#</a>
+</div>
+<div id="div_ButtonElement_10" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_10" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_10" style="height:30px;width:88px">#(..Get("作废"))#</a>
+</div>
+<div id="div_RadioElement_11" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:80px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_11'  name='RadioElement_11'  class='hisui-radio'  type='radio'  querybanding='HISUIDataTableElement_12:RecCancel'  label='#(..Get("显示作废"))#'  value='1'  NumberValue='#(..Get("1"))#'  oldVal=''  SaveField='Item5'  /> 
+</div>
+<div id="div_ButtonElement_44" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:144px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_44" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_44" style="height:30px;width:144px">#(..Get("恢复作废记录"))#</a>
+</div>
+<div id="div_ButtonElement_67" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_67" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="" style="height:30px;width:58px">#(..Get("新建"))#</a>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:5px 10px 5px 10px">
+<div id="div_HISUIDataTableElement_12" style="float:left;width:929px;height:348px">
+<table id="HISUIDataTableElement_12"  name="HISUIDataTableElement_12" style="width:930px;height:348px"></table><div id="HISUIDataTableElement_12_toolbar" style="height: auto"><a id='editAppend' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="OnHisuiEditAppend('HISUIDataTableElement_12')">新增</a><a id='editRemove' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="OnHisuiEditRemove('HISUIDataTableElement_12')">移除</a><a id='editCancel' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="OnHisuiEditCancel('HISUIDataTableElement_12')">撤销</a><a id='editAccept' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="OnHisuiEditAccept('HISUIDataTableElement_12')">保存</a><a id='edttEnd' href="javascript:void(0)" class="hisui-linkbutton" style="display: none" data-options="iconCls:'icon-accept',plain:true" onclick="OnHisuiEditEnd('HISUIDataTableElement_12')">结束编辑</a></div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/plugin/datagrid-cellediting.js?ver=2023-04-11_133429" ></script>
+
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </SCRIPT>
+   <SCRIPT Language="Javascript">
+  var HighRiskReportEnable='#(##class(NurMp.Template.EventSet).isReport("70c91a316987420a8c1f6ff6d0bae006"))#';
+  var WebIp='';
+  var EpisodeID='#(%request.Get("EpisodeID"))#';
+  var TemplateGUID="70c91a316987420a8c1f6ff6d0bae006";
+  var TemplateIndentity="DHCNURHLJLDCHBTXSNSDTBTXLK";
+  var CAPatientPDF = false;
+  var dtformat = "";
+  var WindowCompleted = false;
+  var HiddenNoSubmit = false;
+  var RequiredAlter = false;
+  var HideSavedAlter = false;
+  var ShowLeaveMark = false;
+   </SCRIPT>
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Service.Template.Model).InitEnvironment(%request.Get("ModelId"),%session.Data("LOGON.CTLOCID"))
+   </SCRIPT>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/HisUITableEdit.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/rightClickHandler.js?ver=2023-04-11_133429" charset="gbk" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/validateboxType.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/ElementUtility.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Foundation.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Condition.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Cascading.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript">
+var LoadFormElements = [
+'DateElement_5','TimeElement_6','DateElement_7','TimeElement_8','RadioElement_11'
+];
+
+
+
+$(document).ready(function () {InnerNetDebug();
+CallItemBeforeInit();
+ $('#DateElement_5').dateboxq({ID:'DateElement_5' });
+ $('#TimeElement_6').timespinner({ID:'TimeElement_6' });
+if (/^edit/.test('TimeElement_6') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_6'))) {
+$('#TimeElement_6').unbind("keydown.spinner");
+}
+
+ $('#DateElement_7').dateboxq({ID:'DateElement_7' });
+ $('#TimeElement_8').timespinner({ID:'TimeElement_8' });
+if (/^edit/.test('TimeElement_8') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_8'))) {
+$('#TimeElement_8').unbind("keydown.spinner");
+}
+
+$('#ButtonElement_9').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_9').click(function () {RecQuery('Gather_ButtonElement_9','Callback_ButtonElement_9','',null); });
+$('#ButtonElement_10').linkbutton({  stopAllEventOnDisabled: 'true',iconCls: 'icon-w-cancel'}); 
+ $('#ButtonElement_10').click(function () {RecCancel('Gather_ButtonElement_10','Callback_ButtonElement_10','',null); });
+$('#ButtonElement_44').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_44').click(function () {RecRecover('Gather_ButtonElement_44','Callback_ButtonElement_44','',null); });
+$('#ButtonElement_67').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_67').click(function () {New('','Callback_ButtonElement_67','DHCNURHLJLDCHBTLRNSDTBTXLK',{"width":"800","height":"800"},'HISUIDataTableElement_12'); });
+AddCssStyle('.datagrid-header-row{ height: 0px; }.HISUIDataTableElement_12-header-row0{ height: 31px; }');
+ $('#HISUIDataTableElement_12').datagrid({
+title:''
+,updateVerifyRelatedSignField:''
+,bandingTemplateGuid:'9d0d695b86284c06ba11d584358b799a'
+,saveGeneratePic:false
+,saveGeneratePicPrintTemplateEmrCode:'^0'
+,toolbar: '#HISUIDataTableElement_12_toolbar'
+,cellEdit:false
+,cellEditDefaultColumnNo:''
+,autoFocus:true
+,statisticsRowEdit:false
+,editBottomAdd:false
+,onlyRadioDBClickEdit:false
+,fitColumns:false
+,rePrintTemplateIndentity:''
+,autoRowHeight:true
+,striped:false
+,signVerifyNoWarn:false
+,cancelRecShowRed:false
+,HiddenEmptyDyTitle:false
+,ReSetTableHeadMenu:false
+,SwitchTableHeadMenu:false
+,CopyMenu:true
+,RePrintSetMenu:true
+,nowrap:false
+,pagination:true
+,rownumbers:false
+,singleSelect:true
+,checkOnSelect:true
+,selectOnCheck:true
+,resizeHandle:'right'
+,idField:'ID'
+ ,rowStyler:function(index, rowData)
+{
+var tableID='HISUIDataTableElement_12';
+return HISUITableRowStyler(index,rowData,tableID);
+}
+,onBeginEdit:HISUIDataTableElement_12_onBeginEdit
+,onBeforeEdit:HISUIDataTableElement_12_onBeforeEdit
+,onEndEdit:HISUIDataTableElement_12_onEndEdit
+,onDblClickRow :HISUIDataTableElement_12_onDblClickRow
+,onSelect:OnHisUITableRowSelect
+,onUnselect:OnHisUITableRowUnSelect
+,onRowContextMenu:OnHisUITableRowContextMenu
+,onLoadSuccess:OnHisUITableLoadSuccess
+,pagePosition:'bottom'
+,sortName:'ID'
+,sortOrder:'desc'
+,pageNumber:1
+,pageSize:10
+,scrollbarSize:0
+,pageList:[10,20,30,40,50]
+,frozenColumns:[
+
+]
+,columns:[
+[
+{title:$g("日期"),editor:{
+type: 'datebox'
+,options:{
+ID:'editHISUIDataTableElement_12_DateElement_4',required:true}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'DateElement_4',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:126}
+,{title:$g("时间"),editor:{
+type: 'timespinner'
+,options:{
+ID:'editHISUIDataTableElement_12_TimeElement_6',required:true}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'TimeElement_6',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:93}
+,{title:$g("是否显示"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_12_RadioElement_8',enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text',data:[
+{Text: $g("是"),Value:'1',NumberValue:'1'},{Text: $g("否"),Value:'2',NumberValue:'2'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'RadioElement_8',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:86}
+,{title:$g("空白1"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_12_DropListElement_18',panelHeight:300,enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text',data:[
+{Text: $g("意识"),Value:'1',NumberValue:'1'},{Text: $g("血糖mmol/L"),Value:'2',NumberValue:'2'},{Text: $g("SpO₂%"),Value:'3',NumberValue:'3'},{Text: $g("CVPcmH2O"),Value:'4',NumberValue:'4'},{Text: $g("吸氧L/min"),Value:'5',NumberValue:'5'},{Text: $g("ICPmmHg"),Value:'6',NumberValue:'6'},{Text: $g("UVC置入/通畅"),Value:'7',NumberValue:'7'},{Text: $g("UAC置入/通畅"),Value:'8',NumberValue:'8'},{Text: $g("PICC外露/臂围"),Value:'9',NumberValue:'9'},{Text: $g("PICC外露/腿围"),Value:'10',NumberValue:'10'},{Text: $g("CPAP压力/氧浓度"),Value:'11',NumberValue:'11'},{Text: $g("瞳孔左(mm)"),Value:'12',NumberValue:'12'},{Text: $g("瞳孔右(mm)"),Value:'13',NumberValue:'13'},{Text: $g("左上肢肢体肌力"),Value:'14',NumberValue:'14'},{Text: $g("左下肢肢体肌力"),Value:'15',NumberValue:'15'},{Text: $g("右上肢肢体肌力"),Value:'16',NumberValue:'16'},{Text: $g("右下肢肢体肌力"),Value:'17',NumberValue:'17'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'DropListElement_18',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:110}
+,{title:$g("空白2"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_12_DropListElement_20',panelHeight:300,enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text',data:[
+{Text: $g("意识"),Value:'1',NumberValue:'1'},{Text: $g("血糖mmol/L"),Value:'2',NumberValue:'2'},{Text: $g("SpO₂%"),Value:'3',NumberValue:'3'},{Text: $g("CVPcmH2O"),Value:'4',NumberValue:'4'},{Text: $g("吸氧L/min"),Value:'5',NumberValue:'5'},{Text: $g("ICPmmHg"),Value:'6',NumberValue:'6'},{Text: $g("UVC置入/通畅"),Value:'7',NumberValue:'7'},{Text: $g("UAC置入/通畅"),Value:'8',NumberValue:'8'},{Text: $g("PICC外露/臂围"),Value:'9',NumberValue:'9'},{Text: $g("PICC外露/腿围"),Value:'10',NumberValue:'10'},{Text: $g("CPAP压力/氧浓度"),Value:'11',NumberValue:'11'},{Text: $g("瞳孔左(mm)"),Value:'12',NumberValue:'12'},{Text: $g("瞳孔右(mm)"),Value:'13',NumberValue:'13'},{Text: $g("左上肢肢体肌力"),Value:'14',NumberValue:'14'},{Text: $g("左下肢肢体肌力"),Value:'15',NumberValue:'15'},{Text: $g("右上肢肢体肌力"),Value:'16',NumberValue:'16'},{Text: $g("右下肢肢体肌力"),Value:'17',NumberValue:'17'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'DropListElement_20',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:108}
+,{title:$g("空白3"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_12_DropListElement_22',panelHeight:300,enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text',data:[
+{Text: $g("意识"),Value:'1',NumberValue:'1'},{Text: $g("血糖mmol/L"),Value:'2',NumberValue:'2'},{Text: $g("SpO₂%"),Value:'3',NumberValue:'3'},{Text: $g("CVPcmH2O"),Value:'4',NumberValue:'4'},{Text: $g("吸氧L/min"),Value:'5',NumberValue:'5'},{Text: $g("ICPmmHg"),Value:'6',NumberValue:'6'},{Text: $g("UVC置入/通畅"),Value:'7',NumberValue:'7'},{Text: $g("UAC置入/通畅"),Value:'8',NumberValue:'8'},{Text: $g("PICC外露/臂围"),Value:'9',NumberValue:'9'},{Text: $g("PICC外露/腿围"),Value:'10',NumberValue:'10'},{Text: $g("CPAP压力/氧浓度"),Value:'11',NumberValue:'11'},{Text: $g("瞳孔左(mm)"),Value:'12',NumberValue:'12'},{Text: $g("瞳孔右(mm)"),Value:'13',NumberValue:'13'},{Text: $g("左上肢肢体肌力"),Value:'14',NumberValue:'14'},{Text: $g("左下肢肢体肌力"),Value:'15',NumberValue:'15'},{Text: $g("右上肢肢体肌力"),Value:'16',NumberValue:'16'},{Text: $g("右下肢肢体肌力"),Value:'17',NumberValue:'17'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'DropListElement_22',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:105}
+,{title:$g("空白4"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_12_DropListElement_24',panelHeight:300,enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text',data:[
+{Text: $g("意识"),Value:'1',NumberValue:'1'},{Text: $g("血糖mmol/L"),Value:'2',NumberValue:'2'},{Text: $g("SpO₂%"),Value:'3',NumberValue:'3'},{Text: $g("CVPcmH2O"),Value:'4',NumberValue:'4'},{Text: $g("吸氧L/min"),Value:'5',NumberValue:'5'},{Text: $g("ICPmmHg"),Value:'6',NumberValue:'6'},{Text: $g("UVC置入/通畅"),Value:'7',NumberValue:'7'},{Text: $g("UAC置入/通畅"),Value:'8',NumberValue:'8'},{Text: $g("PICC外露/臂围"),Value:'9',NumberValue:'9'},{Text: $g("PICC外露/腿围"),Value:'10',NumberValue:'10'},{Text: $g("CPAP压力/氧浓度"),Value:'11',NumberValue:'11'},{Text: $g("瞳孔左(mm)"),Value:'12',NumberValue:'12'},{Text: $g("瞳孔右(mm)"),Value:'13',NumberValue:'13'},{Text: $g("左上肢肢体肌力"),Value:'14',NumberValue:'14'},{Text: $g("左下肢肢体肌力"),Value:'15',NumberValue:'15'},{Text: $g("右上肢肢体肌力"),Value:'16',NumberValue:'16'},{Text: $g("右下肢肢体肌力"),Value:'17',NumberValue:'17'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'DropListElement_24',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:111}
+,{title:$g("空白5"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_12_DropListElement_26',panelHeight:300,enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text',data:[
+{Text: $g("意识"),Value:'1',NumberValue:'1'},{Text: $g("血糖mmol/L"),Value:'2',NumberValue:'2'},{Text: $g("SpO₂%"),Value:'3',NumberValue:'3'},{Text: $g("CVPcmH2O"),Value:'4',NumberValue:'4'},{Text: $g("吸氧L/min"),Value:'5',NumberValue:'5'},{Text: $g("ICPmmHg"),Value:'6',NumberValue:'6'},{Text: $g("UVC置入/通畅"),Value:'7',NumberValue:'7'},{Text: $g("UAC置入/通畅"),Value:'8',NumberValue:'8'},{Text: $g("PICC外露/臂围"),Value:'9',NumberValue:'9'},{Text: $g("PICC外露/腿围"),Value:'10',NumberValue:'10'},{Text: $g("CPAP压力/氧浓度"),Value:'11',NumberValue:'11'},{Text: $g("瞳孔左(mm)"),Value:'12',NumberValue:'12'},{Text: $g("瞳孔右(mm)"),Value:'13',NumberValue:'13'},{Text: $g("左上肢肢体肌力"),Value:'14',NumberValue:'14'},{Text: $g("左下肢肢体肌力"),Value:'15',NumberValue:'15'},{Text: $g("右上肢肢体肌力"),Value:'16',NumberValue:'16'},{Text: $g("右下肢肢体肌力"),Value:'17',NumberValue:'17'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'DropListElement_26',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:86}
+,{title:$g("空白6"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_12_DropListElement_28',panelHeight:300,enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text',data:[
+{Text: $g("意识"),Value:'1',NumberValue:'1'},{Text: $g("血糖mmol/L"),Value:'2',NumberValue:'2'},{Text: $g("SpO₂%"),Value:'3',NumberValue:'3'},{Text: $g("CVPcmH2O"),Value:'4',NumberValue:'4'},{Text: $g("吸氧L/min"),Value:'5',NumberValue:'5'},{Text: $g("ICPmmHg"),Value:'6',NumberValue:'6'},{Text: $g("UVC置入/通畅"),Value:'7',NumberValue:'7'},{Text: $g("UAC置入/通畅"),Value:'8',NumberValue:'8'},{Text: $g("PICC外露/臂围"),Value:'9',NumberValue:'9'},{Text: $g("PICC外露/腿围"),Value:'10',NumberValue:'10'},{Text: $g("CPAP压力/氧浓度"),Value:'11',NumberValue:'11'},{Text: $g("瞳孔左(mm)"),Value:'12',NumberValue:'12'},{Text: $g("瞳孔右(mm)"),Value:'13',NumberValue:'13'},{Text: $g("左上肢肢体肌力"),Value:'14',NumberValue:'14'},{Text: $g("左下肢肢体肌力"),Value:'15',NumberValue:'15'},{Text: $g("右上肢肢体肌力"),Value:'16',NumberValue:'16'},{Text: $g("右下肢肢体肌力"),Value:'17',NumberValue:'17'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_12';
+return OnHisuiColumnFormatter(value, this, row, tableID);
+}
+,field:'DropListElement_28',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:94}
+],
+
+]
+ });
+
+$('#HISUIDataTableElement_12').datagrid('getPager').pagination({
+onSelectPage:function(pageNumber, pageSize){
+var PageStart=(pageNumber-1)*pageSize+1;
+var PageEnd=pageNumber*pageSize;
+$('#HISUIDataTableElement_12').data('nurPageNumber', pageNumber);
+$('#HISUIDataTableElement_12').data('nurPageSize', pageSize);
+var queryParam=$('#HISUIDataTableElement_12').attr('queryInfo');
+GetDataFromService(null,["HISUIDataTableElement_12"],'PageStart='+PageStart+'&PageEnd='+PageEnd,queryParam);
+}
+});
+function HISUIDataTableElement_12_onDblClickRow(rowIndex, rowData) 
+{
+OnHisuiEditClickRow(rowIndex, rowData,'HISUIDataTableElement_12')
+}
+
+function HISUIDataTableElement_12_onBeginEdit(i,d) 
+{
+$('.datagrid-row-editting').removeClass('datagrid-row-editting');
+$("tr[datagrid-row-index = '"+i+"']").addClass("datagrid-row-editting");
+InitAutoSignature();
+}
+
+function HISUIDataTableElement_12_onBeforeEdit(i,d) 
+{
+InitStatisticsRowEdit('HISUIDataTableElement_12',i,d);
+}
+
+function HISUIDataTableElement_12_onEndEdit(i,d) 
+{
+ClearStatisticsRowEdit('HISUIDataTableElement_12',i,d);
+}
+
+window['editHISUIDataTableElement_12_DateElement_4'] = function()
+{
+SetOneValue('editHISUIDataTableElement_12_DateElement_4',GetCurrentDate());
+
+}
+window['editHISUIDataTableElement_12_TimeElement_6'] = function()
+{
+if (/^edit/.test('editHISUIDataTableElement_12_TimeElement_6') && !IsTableCellEdit(GetTableIdByIndentity('editHISUIDataTableElement_12_TimeElement_6'))) {
+$('#editHISUIDataTableElement_12_TimeElement_6').unbind("keydown.spinner");
+}
+
+SetOneValue('editHISUIDataTableElement_12_TimeElement_6',GetServerNowTime());
+
+}
+window['editHISUIDataTableElement_12_RadioElement_8'] = function()
+{
+$('#editHISUIDataTableElement_12_RadioElement_8').data('NumberValues',{1:'1',2:'2'});
+SetOneValue('editHISUIDataTableElement_12_RadioElement_8',[{Text:$g("是"),Value: '1'}]);
+}
+window['editHISUIDataTableElement_12_DropListElement_18'] = function()
+{
+$('#editHISUIDataTableElement_12_DropListElement_18').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'11',12:'12',13:'13',14:'14',15:'15',16:'16',17:'17'});
+SetOneValue('editHISUIDataTableElement_12_DropListElement_18',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+}
+window['editHISUIDataTableElement_12_DropListElement_20'] = function()
+{
+$('#editHISUIDataTableElement_12_DropListElement_20').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'11',12:'12',13:'13',14:'14',15:'15',16:'16',17:'17'});
+SetOneValue('editHISUIDataTableElement_12_DropListElement_20',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+}
+window['editHISUIDataTableElement_12_DropListElement_22'] = function()
+{
+$('#editHISUIDataTableElement_12_DropListElement_22').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'11',12:'12',13:'13',14:'14',15:'15',16:'16',17:'17'});
+SetOneValue('editHISUIDataTableElement_12_DropListElement_22',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+}
+window['editHISUIDataTableElement_12_DropListElement_24'] = function()
+{
+$('#editHISUIDataTableElement_12_DropListElement_24').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'11',12:'12',13:'13',14:'14',15:'15',16:'16',17:'17'});
+SetOneValue('editHISUIDataTableElement_12_DropListElement_24',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+}
+window['editHISUIDataTableElement_12_DropListElement_26'] = function()
+{
+$('#editHISUIDataTableElement_12_DropListElement_26').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'11',12:'12',13:'13',14:'14',15:'15',16:'16',17:'17'});
+SetOneValue('editHISUIDataTableElement_12_DropListElement_26',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+}
+window['editHISUIDataTableElement_12_DropListElement_28'] = function()
+{
+$('#editHISUIDataTableElement_12_DropListElement_28').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'11',12:'12',13:'13',14:'14',15:'15',16:'16',17:'17'});
+SetOneValue('editHISUIDataTableElement_12_DropListElement_28',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+}
+
+
+
+AddHisuiEditors('HISUIDataTableElement_12');
+AddCellEditDefault('editHISUIDataTableElement_12_DateElement_4','Func^GetCurrentDate');
+AddCellEditDefault('editHISUIDataTableElement_12_TimeElement_6','Func^GetServerNowTime');
+AddCellEditDefault('editHISUIDataTableElement_12_RadioElement_8',[{ Text: $g("是"),Value: '1'}]);
+AddCellEditDefault('editHISUIDataTableElement_12_DropListElement_18',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_12_DropListElement_20',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_12_DropListElement_22',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_12_DropListElement_24',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_12_DropListElement_26',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_12_DropListElement_28',{source:[{Text: $g("意识"),Value: '1'},{Text: $g("血糖mmol/L"),Value: '2'},{Text: $g("SpO₂%"),Value: '3'},{Text: $g("CVPcmH2O"),Value: '4'},{Text: $g("吸氧L/min"),Value: '5'},{Text: $g("ICPmmHg"),Value: '6'},{Text: $g("UVC置入/通畅"),Value: '7'},{Text: $g("UAC置入/通畅"),Value: '8'},{Text: $g("PICC外露/臂围"),Value: '9'},{Text: $g("PICC外露/腿围"),Value: '10'},{Text: $g("CPAP压力/氧浓度"),Value: '11'},{Text: $g("瞳孔左(mm)"),Value: '12'},{Text: $g("瞳孔右(mm)"),Value: '13'},{Text: $g("左上肢肢体肌力"),Value: '14'},{Text: $g("左下肢肢体肌力"),Value: '15'},{Text: $g("右上肢肢体肌力"),Value: '16'},{Text: $g("右下肢肢体肌力"),Value: '17'}],values:[]});
+$('#div_HISUIDataTableElement_12').on("mouseup", function(e){var txt = window.getSelection ? window.getSelection().toString() : document.selection.createRange().text;window.TableClipboardContent = txt;});
+CallItemAfterInit();
+CallItemBeforeSetValue();
+
+SetOneValue('DateElement_7',GetCurrentDate());
+
+SetOneValue('TimeElement_8',GetServerNowTime());
+
+
+InitHiddenField();
+InitDynamicTableTitleLabel();
+ShortcutFormElementFocus();
+setTimeout(function(){
+$('#RadioElement_29').next().css('font-Size','14px');
+$('#RadioElement_29').next().css('font-family','微软雅黑');
+$('#RadioElement_29').next().css('font-weight','bold');
+$('#RadioElement_30').next().css('font-Size','14px');
+$('#RadioElement_30').next().css('font-family','微软雅黑');
+$('#RadioElement_30').next().css('font-weight','bold');
+$('#RadioElement_31').next().css('font-Size','14px');
+$('#RadioElement_31').next().css('font-family','微软雅黑');
+$('#RadioElement_31').next().css('font-weight','bold');
+if (window.HISUIStyleCode == 'lite'){
+$('#DateElement_5').css('width',($('#DateElement_5').css('width').replace('px','')-7)+'px');
+$('#DateElement_7').css('width',($('#DateElement_7').css('width').replace('px','')-7)+'px');
+}
+GetDataFromService(null,null,null,null,false);
+CallItemAfterSetValue();
+DBTableFirstLoadData('HISUIDataTableElement_12',false);
+
+InitPatientPDF();
+InitHandover();
+InitHighRiskReport();
+setTimeout(function(){
+UpdateCAOldFormData();
+InitAutoSignature();
+InitTableCellPopover();
+InitSignDomain();
+BindingLeaveMarkLogEvent();
+WindowCompleted = true;
+setTimeout(PrintActivexUpgrade, 100); 
+setTimeout(function(){
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/shim.min.js?ver=2023-04-11_133429');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js?ver=2023-04-11_133429');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/clipboard.min.js?ver=2023-04-11_133429');
+}, 100); 
+RealTimeSave(+0*1000);
+GetLeaveMarkLogs();
+}, 10); 
+}, 0); 
+ });
+$(window).load(function () {
+$('body').append('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+if ($.type(window.WindowLoadCallBack) === 'function') { window.WindowLoadCallBack(); }
+ });
+function Callback_ButtonElement_9()
+{
+return ['HISUIDataTableElement_12'];
+}
+function Gather_ButtonElement_9()
+{
+var gatherElements = ['DateElement_5','TimeElement_6','DateElement_7','TimeElement_8','RadioElement_11'];
+var gatherImportMap = '';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_10()
+{
+return ['HISUIDataTableElement_12'];
+}
+function Gather_ButtonElement_10()
+{
+var gatherElements = ['HISUIDataTableElement_12'];
+var gatherImportMap = '';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_44()
+{
+return ['HISUIDataTableElement_12'];
+}
+function Gather_ButtonElement_44()
+{
+var gatherElements = ['HISUIDataTableElement_12'];
+var gatherImportMap = '';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_67()
+{
+DBTableFirstLoadData('HISUIDataTableElement_12',false);
+}
+function CallbackEdit_HISUIDataTableElement_12()
+{
+var tableHtmlId = 'HISUIDataTableElement_12';
+DBTableLoadData(tableHtmlId);}
+function CallbackDel_HISUIDataTableElement_12()
+{
+var tableHtmlId = 'HISUIDataTableElement_12';
+DBTableLoadData(tableHtmlId);}
+
+</script> <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/custom.js?ver=2023-04-11_133429" ></script>
+ <script type="text/javascript" src="../scripts_gen/DHCNURHLJLDCHBTXSNSDTBTXLK.js?ver=2023-04-11_133429" ></script>
+<script for="PrintActiveX" event="CheckUpgradeEvent(msg)" language="javascript">
+function PrintActiveX::CheckUpgradeEvent(msg) {
+console.log(msg);
+var reMsg = JSON.parse(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+else if (reMsg.status == "-1") {//升级失败
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+}
+</script>
+<script type='text/template' id='dialogReferTemplate'>
+<div id="dialogRefer" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose'
+	},{
+		text:'清屏',
+		iconCls:'icon-w-clean',
+		id: 'btnClear'
+	},{
+		text:'引用',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='dialogSpecialCharTemplate'>
+<div id="dialogSpecialChar" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnCharClose'
+	},{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnCharRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='menuTemplate'>
+<div id="menu" class="hisui-menu" style="width:100px;"></div>
+</script>
+<script type='text/template' id='HisUITableMenuTemplate'>
+<div id="hisUITableMenu" class="hisui-menu" data-options="onClick:OnHisUiTableMenuHandler" style="width:100px;"></div>
+</script>
+<script type='text/template' id='RePrintSetDialogTemplate'>
+<div id="rePrintDialog" class="hisui-dialog" title="补打设置" style="width:350px;height:300px;" data-options="closed:true,onOpen:function(){RePrintGetPrintinfo();},modal:true,
+	buttons:[
+	{text:'确定',handler:function(){RePrint();}},
+	{text:'取消',handler:function(){$HUI.dialog('#rePrintDialog').close();}}
+	]">
+    <div style="width:350px;height:213px;display:table-cell;vertical-align:middle;text-align:center;">
+        <div style="display:inline-block;">
+            <span id="IsPrint">#(..Get("未打印"))#</span>  <br>
+            #(..Get("打印信息："))#<span id="PrintInfo">#(..Get("无"))#</span>
+            <br>
+            <br>
+            #(..Get("开始页："))#<input id="startPageNo" class="hisui-numberbox textbox" data-options="required:true">
+            <br>
+            <br>
+            #(..Get("开始行："))#<input id="startRowNo" class="hisui-numberbox textbox" data-options="required:true">
+        </div>
+    </div>
+</div>
+</script>
+<script type='text/template' id='CancelHighRisKReportDialogTemplate'>
+<div id='cancelReportDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		撤销原因：
+	   <select id='reasonBox' name='reason' class='hisui-combobox' style='width:200px;'>
+	   	    <option value='撤销'>撤销</option>
+	    		<option value='出院'>出院</option>
+	    		<option value='死亡'>死亡</option>
+	    		<option value='转出'>转出</option>
+	    </select>
+	   <br/>
+	   撤销日期：
+	   <input id="cancelReportDate" class="hisui-datebox textbox datebox-f combo-f" data-options="">
+	   <br/>
+	   撤销时间：
+	   <input id="cancelReportTime" class="hisui-timespinner" data-options="" style="border-radius: 2px;">
+  </div>
+</div>
+</script>
+<script type='text/template' id='SignPWDVerifyDialogTemplate'>
+<div id='signPWDVerifyDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		 密码：<input id="signPWD" class="textbox" type="password">
+  </div>
+</div>
+</script>
+</body>
+</html>

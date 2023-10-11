@@ -1,0 +1,425 @@
+
+<!--
+ * FileName: dhccrmbaseset.hisui.csp
+ * Anchor: yupeng
+ * Date: 2020-11-11
+ * Description: HISUI 随访基础维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+<script language="javascript" type="text/javascript">
+    document.write('<input type= "file" id= "File" style= "display:none">');
+   </script>    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    
+}
+.addtable{
+    border-collapse:separate;
+    border-spacing:0px 10px;
+    
+}
+
+.panel-header{
+    border-bottom: 0;
+}
+.r-label{
+    padding-left: 20px;
+}
+.r-label-1{
+    padding-left: 30px;
+}
+.r-label-11{
+    padding-left: 10px;
+}
+</style>
+</head>
+<body style="padding:10px;">
+<input type="hidden" id="FUSID"/>
+<input type="hidden" id="FUSDID"/>
+<input type="hidden" id="FUSDSID"/>
+<input type="hidden" id="FUSDSTID"/>
+<input type="hidden" id="FUSICDID"/>
+<input type="hidden" id="FUSLocID"/>
+<input type="hidden" id="FUSGroupID"/>
+
+<div class="hisui-layout" fit="true">
+    <div id="layoutcenter" data-options="region:'west',split:true,border:false,collapsible:false" style="width:400px;">
+        <div class="hisui-panel" fit="true" data-options="title:'随访主题',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #e2e2e2;border-radius:0 0 4px 4px;">
+            <div class="hisui-layout" fit="true">
+                 <div data-options="region:'center',border:false">
+                    <table data-options="fit:true" id="FUSubjectTab" border="false" toolbar="#allbar"></table>
+                </div>  
+            </div>                          
+        </div>
+    </div>
+    <div id="layouteast" data-options="region:'center',split:true,border:false" style="border:0;">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" style="border:0;">
+             <div class="hisui-tabs tabs-gray" fit="true" style="border:0;border-radius:0;">   
+               
+                <div title="主题内容" border="false" style="overflow:hidden;">
+                    <div class="hisui-layout" fit="true">
+                       
+                        <div data-options="region:'center',border:false">
+                            <table id="FUSDetailTab" toolbar="#FUSDbar"></table>
+                        </div>
+                    </div>      
+                </div>
+                
+                <div title="主题ICD" border="false" style="overflow:hidden;">
+                    <div class="hisui-layout" fit="true">
+                       
+                        <div data-options="region:'center',border:false">
+                           <table id="FUSICDTab" toolbar="#FUSICDbar"></table>
+                        </div>
+                    </div>      
+                </div>
+                
+                <div title="主题科室" border="false" style="overflow:hidden;">
+                    <div class="hisui-layout" fit="true">
+                       
+                        <div data-options="region:'center',border:false">
+                            <table id="FUSLocTab" toolbar="#FUSLocbar"></table>
+                        </div>
+                    </div>      
+                </div>
+                <div title="主题安全组" border="false" style="overflow:hidden;">
+                    <div class="hisui-layout" fit="true">
+                       
+                        <div data-options="region:'center',border:false">
+                            <table id="FUSGroupTab"></table>
+                        </div>
+                    </div>      
+                </div>
+                </div>
+            </div>
+            <div data-options="region:'east',split:true,border:false" style="width:350px;border:0;">
+
+                <div class="hisui-panel" fit="true" data-options="title:'内容选择',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="height:100%;border:1px solid #e2e2e2;border-radius:0 0 4px 4px;">
+                    <div class="hisui-layout" fit="true">
+                       
+                        <div data-options="region:'center',border:false">
+                            <table data-options="fit:true" id="FUSDSelectTab" border="false" toolbar="#FUSDSbar"></table>
+                        </div>
+                    </div>      
+                </div>
+            </div>
+      </div>
+    </div>      
+</div>
+
+
+<!--增改弹窗-->
+     <div id="myWin" style="width:280px;height:400px;padding:0px 10px 0px 10px;display:none;">   
+            <table class="addtable">
+               <tr>
+                    <td class="r-label"><label for="Code"><font color=red>*</font>编码</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="Code"/>
+                    </td>
+               </tr>
+                <tr>
+                    <td class="r-label"><label for="Desc"><font color=red>*</font>名称</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="Desc"/>
+                    </td>
+              </tr>  
+               <tr>
+                    <td class="r-label"><label for="Active">发布</label></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" Id="Active"/>
+                     </td>
+               </tr>
+               
+               <tr>
+                    <td class="r-label"><label for="Limit">日期限制</label></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" Id="Limit"/>
+                     </td>
+               </tr>
+               
+               
+               <tr>
+                    <td class="r-label"><label for="Begin">开始日期</label></td>
+                    <td>
+                        <input class="hisui-datebox" id="Begin" style="width:155px;"/>
+                    </td>
+               </tr> 
+               <tr>           
+                    <td class="r-label"><label for="End">结束日期</label></td>
+                    <td>
+                        <input class="hisui-datebox" id="End" style="width:155px;"/>
+                    </td>
+               </tr> 
+                    
+                <tr>           
+                    <td class="r-label"><label for="Level">级别</label></td>
+                    <td>
+                       <div>
+                        <select class="hisui-combobox" type="text" Id="Level" name="Level" style="width:155px;" editable="false">
+                            <option value=''></option>
+                            <option value='1'>一级</option>
+                            <option value='2'>二级</option>
+                            <option value='3'>三级</option>
+                        </select></div>
+                    </td>
+               </tr> 
+               <tr>           
+                    <td class="r-label"><label for="Subject">父层主题</label></td>
+                    <td>
+                        <input class="hisui-combobox" id="Subject" style="width:155px" />
+                    </td>
+               </tr> 
+               
+                
+                                                
+            </table>
+    </div>
+
+<!--增改弹窗 主题内容-->
+     <div id="FUSDWin" style="width:300px;height:640px;padding:0px 10px 0px 10px;display:none;">   
+            <table class="addtable">
+               <tr>
+                    <td class="r-label"><label for="SDCode"><font color=red>*</font>编码</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDCode"/>
+                    </td>
+               </tr>
+                <tr>
+                    <td class="r-label"><label for="SDDesc"><font color=red>*</font>名称</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDDesc"/>
+                    </td>
+              </tr>  
+              
+              <tr>
+                    <td class="r-label"><label for="SDType"><font color=red>*</font>类型</label></td>
+              <td>
+                     
+              <div>
+              <select class="hisui-combobox" type="text" Id="SDType" name="SDType" style="width:155px;" editable="false">
+                <option value='T'>文本型</option>
+                <option value='N'>数值型</option>
+                <option value='S'>单选型</option>
+                <option value='D'>多选型</option>
+                <option value='DT'>多文本</option>
+                <option value='DN'>多数值</option>
+                <option value='DA'>日期型</option>
+              </select></div>
+              </td>
+                    
+              </tr>  
+              
+              
+              
+              <tr>
+                    <td class="r-label"><label for="SDSex"><font color=red>*</font>性别</label></td>
+              <td>
+                     
+              <div>
+              <select class="hisui-combobox" type="text" Id="SDSex" name="SDSex" style="width:155px;" editable="false">
+                <option value='M'>男</option>
+                <option value='F'>女</option>
+                <option value='N'>不限</option>
+              </select></div>
+              </td>
+                    
+              </tr>  
+              
+              <tr>
+                    <td class="r-label"><label for="SDUnit">单位</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDUnit"/>
+                    </td>
+               </tr>
+               
+               <tr>
+                    <td class="r-label"><label for="SDExplain">说明</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDExplain"/>
+                    </td>
+               </tr>
+              
+               <tr>
+                    <td class="r-label"><label for="SDActive">激活</label></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" Id="SDActive"/>
+                     </td>
+               </tr>
+               
+               <tr>
+                    <td class="r-label"><label for="SDRequired">必填</label></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" Id="SDRequired"/>
+                     </td>
+               </tr>
+               
+               
+               <tr>
+                    <td class="r-label"><label for="SDEffDate">开始日期</label></td>
+                    <td>
+                        <input class="hisui-datebox" id="SDEffDate" style="width:155px;"/>
+                    </td>
+               </tr> 
+               <tr>           
+                    <td class="r-label"><label for="SDEffDateTo">结束日期</label></td>
+                    <td>
+                        <input class="hisui-datebox" id="SDEffDateTo" style="width:155px;"/>
+                    </td>
+               </tr> 
+                    
+                <tr>
+                    <td class="r-label"><label for="SDSequence"><font color=red>*</font>顺序号</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDSequence"/>
+                    </td>
+               </tr>
+               <tr>
+                    <td class="r-label"><label for="SDParentDR">页数</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDParentDR"/>
+                    </td>
+               </tr>
+               <tr>
+                    <td class="r-label"><label for="SDCascade">层次</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDCascade"/>
+                    </td>
+               </tr>
+               <tr>
+                    <td class="r-label"><label for="SDSelectNum">显示列数</label></td>
+                    <td>
+                        <input class="hisui-validatebox" type="text" id="SDSelectNum"/>
+                    </td>
+               </tr>
+                                          
+            </table >
+    </div>
+<!--增改弹窗 内容选择-->
+
+     <div id="SDSWin" style="width:300px;height:420px;padding:10px 10px 10px 10px;display:none;">   
+        <form id="sds-save" data-options="fit:true,border:false,plain:true">
+            <table class="addtable">
+               <tr>
+                    <td class="r-label"><label for="SDSTextVal"><font color=red>*</font>文本值</label></td>
+                    <td>
+                        <input class="textbox" type="text" id="SDSTextVal"/>
+                    </td>
+               </tr>
+                <tr>
+                    <td class="r-label"><label for="SDSUnit">单位</label></td>
+                    <td>
+                        <input class="textbox" type="text" id="SDSUnit"/>
+                    </td>
+              </tr>  
+               <tr>
+                    <td class="r-label"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" Id="SDSDefaultValue"/><label for="SDSDefaultValue">默认</label>
+                     </td>
+               </tr>
+               
+               <tr>
+                    <td class="r-label"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" Id="SDSDesc"/><label for="SDSDesc">描述项</label>
+                     </td>
+               </tr>
+               
+               <tr>
+                    <td class="r-label"><label for="SDSSequence"><font color=red>*</font>顺序号</label></td>
+                    <td>
+                        <input class="textbox" type="text" id="SDSSequence"/>
+                    </td>
+               </tr>   
+                
+               <tr>
+                    <td class="r-label"><label for="LinkDetail">关联编码</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" id="LinkDetail" style="width:155px;"/>
+                    </td>
+               </tr>    
+
+               <tr>
+                    <td class="r-label"><label for="ExclusiveDetail">互斥编码</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" id="ExclusiveDetail" style="width:155px;"/>
+                    </td>
+               </tr>                                    
+            </table >
+        </form>
+        
+        <!--div style="height:200px;border:1px solid #ccc;border-top:0px;">
+          <table data-options="fit:true" id="FUSDSTemplateTab" border="false" toolbar="#FUSDSTbar"></table>
+        </div-->
+    </div>
+<!--数据面板工具栏(主题)-->
+    <div id="allbar">
+  
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a> 
+
+    </div> 
+    
+ <!--数据面板工具栏(主题内容)-->
+    <div id="FUSDbar">
+  
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="FUSDadd_btn">新增</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="FUSDupdate_btn">修改</a> 
+
+    </div> 
+  <!--数据面板工具栏(内容选择)-->
+    <div id="FUSDSbar">
+  
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="FUSDSadd_btn">新增</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="FUSDSupdate_btn">修改</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="FUSDSdel_btn">删除</a> 
+    </div>  
+   <!--数据面板工具栏(内容关联)-->
+    <div id="FUSDSTbar">
+  
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="FUSDSTadd_btn">新增</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="FUSDSTupdate_btn">修改</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="FUSDSTdel_btn">删除</a> 
+    </div>   
+    
+    <!--数据面板工具栏(主题ICD)-->
+    <div id="FUSICDbar">
+  
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-import',plain:true,stopAllEventOnDisabled:true" id="FUSICDImport_btn">导入</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="FUSICDDel_btn">删除</a> 
+    </div>  
+     <!--数据面板工具栏(主题科室)-->
+    <div id="FUSLocbar">
+  
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-import',plain:true,stopAllEventOnDisabled:true" id="FUSLocImport_btn">导入</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="FUSLocDel_btn">删除</a> 
+    </div>  
+    
+    
+<script type="text/javascript" src="../scripts/DHCCRMBaseSet.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+</body>     
+</html>
+            
+        
+ 
+
+
+
+
+
+
+

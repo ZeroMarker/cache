@@ -8,31 +8,100 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
-<ADDINS require="RWCard"/> 
+<ADDINS require="RWCard,CmdShell"/> 
+<DHCDOCCURE></DHCDOCCURE>
+<DOCCARD medStepCode="Cure"></DOCCARD>
 <link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
 <Server>
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+/*w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
 s myTriage=$g(%request.Data("Triage",1))
 if myTriage="" s myTriage="N"
-s DocCureUseBase=+(##class(web.DHCDocConfig).GetConfigNode("DocCureUseBase"))
+s DocCureUseBase=+(##class(DHCDoc.DHCDocCure.VersionControl).UseBaseControl(%session.Get("LOGON.HOSPID")))
 s CureNeedTriage=+(##class(web.DHCDocConfig).GetConfigNode("DHCDocCureNeedTriage"))
-s DHCDocCureAppQryNotWithTab=+(##class(web.DHCDocConfig).GetConfigNode("DHCDocCureAppQryNotWithTab"))
+s DHCDocCureAppQryNotWithTab=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAppQryNotWithTab",%session.Get("LOGON.HOSPID"))
+;+(##class(web.DHCDocConfig).GetConfigNode("DHCDocCureAppQryNotWithTab"))
+s DHCDocCureAppointAllowExec=##class(DHCDoc.DHCDocCure.Config).GetCureLocConfig("","CureLocAppAllowExec",%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.HOSPID"))
+s DHCDocCureLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureLinkPage",%session.Get("LOGON.HOSPID"))
+s DHCDocCureRecordLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureRecordLinkPage",%session.Get("LOGON.HOSPID"))
+s DHCDocCureAssLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAssLinkPage",%session.Get("LOGON.HOSPID"))
 d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-s XMLObject=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
+s XMLObject=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))
 s IntervalTimeListJson=##Class(DHCDoc.DHCDocCure.Common).GetIntervalTimeList()
 s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+s AppEndDate=##class(websys.Conversions).DateLogicalToHtml(+$h+7)
 s DateFormat=##class(websys.Conversions).DateFormat()
+s DHCDocCureUseCall=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureUseCall",%session.Get("LOGON.HOSPID"))
+s CureAppVersion=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAppVersion",%session.Get("LOGON.HOSPID"))
+s PrintBath=##class(web.UDHCJFCOMMON).getpath()
+s (ExecDefSttDate,ExecDefEndDate)=""
+s CureExecDateSet=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureExecDateSet",%session.Get("LOGON.HOSPID"))
+if CureExecDateSet'=""{
+	s CureExecSttDateSet=+$p(CureExecDateSet,"@",1)
+	s:CureExecSttDateSet'="" ExecDefSttDate=##class(websys.Conversions).DateLogicalToHtml(+$h+CureExecSttDateSet)
+	s CureExecEndDateSet=+$p(CureExecDateSet,"@",2)
+	s:CureExecEndDateSet'="" ExecDefEndDate=##class(websys.Conversions).DateLogicalToHtml(+$h+CureExecEndDateSet)
+}
+
+s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("DocCure_UIConfigObj",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+ i UIConfigObj="" {
+	 //若用户没有设置过，则走默认设置
+	 s UIConfigObj=##class(web.DHCDocConfig).GetConfigNode1("DocCure_UIConfigObj_Group",%session.Get("LOGON.GROUPID"))
+ }
+ i UIConfigObj="" s UIConfigObj="{}"
+ d ##class(web.DHCDocUtil).GetArrayByObjStr(UIConfigObj,.UIConfigArray)
+ s LayoutConfig=##class(web.DHCDocConfig).GetConfigNode1("DocCure_layoutConfig",%session.Get("LOGON.USERID")_"Z"_%session.Get("LOGON.GROUPID"))
+ if LayoutConfig=""{
+	 s LayoutConfig=1
+ }
+ if LayoutConfig=2 s DHCDocCureAppQryNotWithTab=1 ;如果布局方式为按钮弹窗,则强制不随页签联动
+ s ScheuleGridListOrTab=+$g(UIConfigArray("DocCure_ScheuleGridListOrTab")) ;预约资源页签还是表格 0 页签，1表格
 </Server>
 <style>
 .r-label{
 	padding: 0px 5px 0px 20px;
 }
+.search-table td{
+	word-break: keep-all;
+	word-wrap:break-word;
+	white-space: nowrap;
+}
 .fr-label{
 	padding: 0px 5px;
 }
+.panel-header-cure-high{
+	height:35px!important;
+}
+div.panel-header-cure-high .panel-title{
+	line-height: 35px;
+}
+div.panel-header-cure-high .panel-tool{
+	top: 35%;
+    height: 30px;
+}
+.layout-expand > .panel-header.panel-header-gray .panel-tool a:hover, .layout-panel > .panel-header.panel-header-gray .panel-tool a:hover{background:#0063a7;color:#fff;border:0 solid #0063a7;filter:none}
+div label.list-split-line{
+	border-bottom: 1px dotted #ccc;
+}
+.cure-p-bd-tr{
+	border-top-style:solid;
+	border-left-style:none;
+	border-right-style:solid;
+	border-bottom-style:none;
+	border-radius:0px !important;
+	padding:0px;
+}
+.cure-p-bd-tl{
+	border-top-style:solid;
+	border-left-style:solid;
+	border-right-style:none;
+	border-bottom-style:none;
+	border-radius:0px !important;
+	padding:0px;
+}
+.icon{width: 20px;height: 20px;margin-right: 10px;float: right;}
 </style>
 </head> 
 <body>
@@ -47,25 +116,51 @@ s DateFormat=##class(websys.Conversions).DateFormat()
 			myTriage:"#(myTriage)#",
 			CureNeedTriage:"#(CureNeedTriage)#",
 			DocCureUseBase:"#(DocCureUseBase)#",
-			IntervalTimeListJson:"#(IntervalTimeListJson)#",
+			DHCDocCureAppointAllowExec:"#(DHCDocCureAppointAllowExec)#",
+			IntervalTimeListJson:#(IntervalTimeListJson)#,
 			CurrentDate:"#(CurrentDate)#",
+			ExecStartDate:"#(ExecDefSttDate)#",
+			ExecEndDate:"#(ExecDefEndDate)#",
+			AppEndDate:"#(AppEndDate)#",
 			DateFormat:"#(DateFormat)#",
-			DHCDocCureAppQryNotWithTab:"#(DHCDocCureAppQryNotWithTab)#"
+			DHCDocCureAppQryNotWithTab:"#(DHCDocCureAppQryNotWithTab)#",
+			DHCDocCureLinkPage:"#(DHCDocCureLinkPage)#",
+			DHCDocCureRecordLinkPage:"#(DHCDocCureRecordLinkPage)#",
+			DHCDocCureAssLinkPage:"#(DHCDocCureAssLinkPage)#",
+			DHCDocCureUseCall:"#(DHCDocCureUseCall)#",
+			PrintBath:"#(PrintBath)#",
+			UIConfigObj:"#(UIConfigObj)#",
+			LayoutConfig:"#(LayoutConfig)#",
+			ScheuleGridListOrTab:"#(ScheuleGridListOrTab)#",
+			CureAppVersion:"#(CureAppVersion)#"
 		};
+		if (ServerObj.DateFormat=="4"){
+			//DD/MM/YYYY
+	        ServerObj.DATE_FORMAT= new RegExp("(((0[1-9]|[12][0-9]|3[01])/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])/(02))/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29/02/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))");
+		}else if(ServerObj.DateFormat=="3"){
+			//YYYY-MM-DD
+	    	ServerObj.DATE_FORMAT= new RegExp("(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)");
+		}
 	</SCRIPT>	
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.readcard.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.inittab.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.curecall.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.openwin.js"></script>
 	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
-	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.all.js"></script>
-	<!--<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.js"></script>-->
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.applyapplist.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.applyreslist.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.triagereslist.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.curetriagelist.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.exec.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.worklist.cureassessmentlist.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.worklist.curerecordlist.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureapplist.all.js"></script>
 	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/LodopPrintCommonFun.js"></script>
+	<!--初始化CA服务环境-->
+	<script defer="defer" type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
 </body>
 </html>

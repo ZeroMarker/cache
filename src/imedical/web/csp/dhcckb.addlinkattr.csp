@@ -1,0 +1,123 @@
+<!-- 值域分类维护 sufan 2019-06-18 -->
+<!--dhcckb.addlinkattr.csp --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+<title>值域分类维护</title>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCCKB/>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/addlinkattr.js"></script>
+	<style>
+		.panel-body, .panel-header {
+			border-color: #ccc;
+		}
+	</style>
+</head>
+<body style="padding:10px;background-color:#fff;">
+<div id="mainpanel" class="hisui-layout" fit="true">
+	<div data-options="region:'center',title:'',border:true,collapsible:false,headerCls:'panel-header-gray'"  style="border-radius: 4px!important;">
+		<!-- <div class="hisui-panel" data-options="title:'附加属性维护<font color=red font-weight=bold font-size=12pt>【双击即可编辑】</font>',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">		 -->
+		<div class="hisui-panel" data-options="title:'',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-top:0px;border-radius:0px;"  border=0>		
+			<div id="addattrlist" toolbar="#attrtb"  border="false"></div>
+		</div>
+	</div>
+</div>
+
+<!--附加属性工具栏 -->
+<div id="attrtb" class="toolbar">
+	<div id="info" class="messager-popover info" style="margin:10px 10px 0px 10px;width:97%;">        
+		<span class="messager-popover-icon info"></span><span class="content">双击可编辑，且保存按钮只保存可编辑的行</span>                        
+	</div>
+	<table  style="padding:10px 10px 0px 10px;margin-top:47px" > 
+		<tr>
+	     <!--  <td><a class="hisui-linkbutton" id="save" data-options="iconCls:'icon-save',plain:true" onclick="ShowAllData()">保存</a> </td> -->
+	      <td><input id="addattrcode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码'/></td>					    		
+		  <td style="width:10px"></td>
+		  <td><a href="#" class="hisui-linkbutton" onclick="serchAddattr()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">查询</a></td>
+		  <td style="width:10px"></td>
+		  <td><a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="RefreshAddattr()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">重置</a></td>
+	      <td style="display:none"><a class="hisui-linkbutton" id="save" data-options="iconCls:'icon-add',plain:true" onclick="ShowAllData()">增加</a> </td>
+	      <td style="display:none"><a class="hisui-linkbutton" id="link" data-options="iconCls:'icon-add',plain:true">添加附加属性</a> </td>
+	    </tr>
+	</table>
+	<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+	<div>
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="SaveLinkAttr(0,1)">保存</a>
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="DelLinkAttr()">删除</a>
+	</div>
+</div>
+
+<!--属性、字典、实体全集弹窗-->
+<div id="myWin"  style="width:510px;padding:10px 10px 0px 10px;display:none;overflow:hidden;">  
+	<div id="tabOther" class="hisui-tabs tabs-gray" style="width:490px;height:390px;overflow:hidden;">
+		<div title="属性" style="overflow:hidden;"> 
+			<table data-options="fit:true" style="padding:10px 0px 10px 10px;" >
+				<tr>
+					<td><input id="attrtreecode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码'/></td>					    		
+					<td>
+					<a href="#" style="margin-left:10px;" class="hisui-linkbutton" onclick="serchData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">查询</a>
+					<a href="#" style="margin-left:10px;" id="btnRefresh" class="hisui-linkbutton" onclick="RefreshData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">重置</a>
+				</td>
+				</tr> 
+			</table >
+			<div class="hisui-panel" data-options="fit:false" style="width:488px;height:300px;border:0;border-radius:0px;border-top:0px;border-bottom:0px;padding:0px 5px 10px 10px;">	
+			<!-- <div class="hisui-panel" data-options="fit:true" style="border:1px solid #ccc;border-radius:0px;border-top:0px;padding:0px 5px 10px 10px;">	 -->
+				<ul id="attrtree"></ul>	  <!--wangxuejian 2021-05-20  固定搜索框位置-->	
+			</div>		
+			<!--<ul id="attrtree"></ul>	-->		
+		</div>
+		<div title="字典" style="overflow:hidden;">
+			<div>		
+				<table data-options="fit:true" style="padding:10px 0px 10px 10px;" >
+					<tr>
+						<td><span style="padding:0 4px 0 0">字典</span><input id="dictype" href="#" class="hisui-combobox" style="width:200"/></td>
+						<td>
+						    <a style="margin-left:10px;" href="#" class="hisui-linkbutton" onclick="serchdic()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">查询</a>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding-top:10px"><span style="padding:0 4px 0 0">项目</span><input id="dictreecode" href="#" class="hisui-searchbox" prompt='请输入名称/拼音码' style="width:200"/></td>					    		
+						<td style="padding-top:10px">
+							<a style="margin-left:10px;" href="#" id="btnRefresh" class="hisui-linkbutton" onclick="Refreshdic()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">重置</a>
+						</td>
+					</tr> 
+				</table>
+			</div>			
+			<div class="hisui-panel" data-options="fit:false" style="width:488px;height:300px;border:0;border-radius:0px;border-top:0px;padding:0px 5px 10px 10px;">	
+				<ul id="dictree" ></ul>		
+			</div>
+		
+			<!--<ul id="dictree"></ul>-->					       
+		</div>
+		<div title="实体" style="height:300px;width:200px">		
+			<table data-options="fit:true" id="entitygrid" border="fasle" toolbar="#entitybar"></table>				       
+		</div>						
+	</div>
+</div>	
+<!--entitybar工具栏-->
+<div id="entitybar" class="toolbar" style="padding:10px 0px 10px 10px;">
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+		<td><input id="entityCode" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/>	</td>
+		<td >
+		  	<a style="margin-left:10px;" href="#" class="hisui-linkbutton" onclick="QueryWinDicList()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">查询</a>
+			<a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a> </td>
+		</tr>
+	</table>
+</div>
+
+</body>
+</html>
+
+

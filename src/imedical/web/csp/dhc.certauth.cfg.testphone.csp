@@ -1,0 +1,35 @@
+﻿<html>
+    <head>
+        <title>	手机签名测试 </title>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+        <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        
+        <script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+        <server>
+                s userID = %session.Get("LOGON.USERID")
+                s ssGroupID = %session.Get("LOGON.GROUPID")
+                s userLocID = %session.Get("LOGON.CTLOCID")
+                
+                s signType = "PHONE"
+                s venderCode = $Get(%request.Data("venderCode",1),"")
+        </server>
+        <script language="javascript">
+            var venderCode = "#(venderCode)#";
+            var signType = "#(signType)#";
+            var url = "dhc.certauth.login.qrcode.csp?venderCode="+venderCode+"&signType="+signType+"&debugLevel=1&MWToken="+getMWToken()
+            
+            $(function(){
+                $('#url').attr('src',url);
+            });
+        </script>
+    </head>
+    <body>
+        <iframe id="url" width=100% height=100% src=""></iframe>
+    </body>
+
+</html>

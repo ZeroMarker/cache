@@ -1,7 +1,7 @@
 <csp:content charset="utf-8">
 <CSP:CLASS ERRORPAGE="CIS.AN.Error.csp">
 <server>
-	//If ##Class(websys.SessionEvents).SessionExpired() Quit $$$ERROR($$$CSPSessionTimeout)
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
 	set className=%request.Data("ClassName",1)
 	set queryName=%request.Data("QueryName",1)
 	set argCount=%request.Get("ArgCnt")
@@ -57,10 +57,8 @@
 				continue:(colName="_parentId")&(currentData="")
 				set:(colIndex>1) rowData=rowData_","
 				set value=rs.GetData(colIndex)
-				set value=$replace(value,"\","\\")
-				set value=$replace(value,$c(10),"\n")
-				set value=$replace(value,$c(0),"")
-				set value=$replace(value,"""","\""")
+				//set value=$replace(value,$c(10),"\n")
+				set value=$zconvert(value,"O","JSON")
 				set rowData=rowData_""""_rs.GetColumnName(colIndex)_""":"_""""_value_""""	
 			}	
 			write rowData

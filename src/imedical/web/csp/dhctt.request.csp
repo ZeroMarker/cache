@@ -2,11 +2,12 @@
 
 <script runat="server" language="cache">
 	s act = $g(%request.Data("act",1))
+	s ns = $g(%request.Data("Namespace",1))
 	if (act="getAllTable"){
 		set schema = $g(%request.Data("schema",1))
 		set pre = $g(%request.Data("table",1))	
 		set rs=##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectTable")
-		set sc=rs.Execute(schema,"")  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit
+		set sc=rs.Execute(schema,"",ns)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit
 		w "{""schema"":"""_schema_""",""data"":["
 		if rs.Next() w """"_rs.Data("Table")_""""
 		while rs.%Next() {w ","""_rs.Data("Table") _""""}
@@ -18,12 +19,12 @@
 		set prn = $g(%request.Data("column",1))
 		if schema'="" s inpara=schema_"."_table
 		else  set inpara=table
-		Set tblInfo = $p(##class(web.Util.DHCJFClassGlobal).GetTableInfo(inpara),"!")
+		Set tblInfo = $p(##class(web.Util.DHCJFClassGlobal).GetTableInfo(inpara,ns),"!")
 		Set schema = $p(tblInfo,".")
 		Set table = $p(tblInfo,".",2)
-		if 11=$d(^oddSQL(schema,table)){			
+		if 11=$d(^[ns]oddSQL(schema,table)){			
 			set rs=##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectColumn")
-			set sc=rs.Execute(schema,table,"")  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit		
+			set sc=rs.Execute(schema,table,"",ns)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit		
 			w "{""schema"":"""_schema_""",""table"":"""_table_""",""data"":["
 			if rs.Next() w """"_rs.Data("Column")_""""
 			while rs.%Next() {w ","""_rs.Data("Column") _""""}
@@ -159,7 +160,7 @@
 				Set RuntimeMode = 0
 			}
 			Set SQLStatement="update "_tname_" set "_cname_"="""_cval_""" where %id="""_ival_""""
-			d ##class(web.DHCTTSqlLog).ExecuteSQL(SQLStatement,RuntimeMode)
+			d ##class(web.DHCTTSqlLog).ExecuteSQL(SQLStatement,RuntimeMode,ns)
 		}else{
 			
 		}

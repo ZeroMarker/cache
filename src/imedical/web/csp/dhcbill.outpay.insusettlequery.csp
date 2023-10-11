@@ -1,0 +1,104 @@
+<!-- 
+    * FileName: dhcbill.outpay.insusettlequery.csp
+    * Author: LUANZH
+    * Date: 2022-12-28
+    * Description: 医保结算查询
+   -->
+   <!DOCTYPE html>
+   <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+   </csp:method>
+   <html>
+   <head>
+   <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+   <HISUI/>
+   <DHCBILL/>
+   <ADDINS/>
+   <DOCCARD medStepCode="Other"/>
+   <link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.css'/>
+   <script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+   <script type='text/javascript' src='../scripts/DHCInsuPort.js'></script>
+   <script type='text/javascript' src='../scripts/DHCWeb.OPYBComm.js'></script>
+   <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+   <script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+   <script type='text/javascript' src='../scripts/dhcbill/dhcopbill/dhcbill.opbill.common.js'></script>
+   <script type="text/javascript" src="../scripts/dhcbill/outpay/dhcbill.outpay.insusettlequery.js"></script>
+   <script type="text/javascript" src="../scripts/DHCBillEInvService.js"></script>
+   <script type='text/javascript'>
+		   var GV = {};
+	   </script>
+   <server>
+    set pluLib=##class(BILL.Util.Library).%New()
+	do pluLib.LoadReadCardLib()   //引入读卡公共js
+    do pluLib.%Close()
+   
+	w "<input id='CardTypeRowId' type='hidden'/>",!
+	w "<input id='admStr' type='hidden'/>",!
+	w "<input id='EpisodeID' type='hidden'/>",!
+	w "<input id='PatientID' type='hidden'/>",!
+	w "<input id='accMRowId' type='hidden'/>",!
+	w "<input id='insuAdmType' type='hidden'/>",!
+	w "<input id='admSource' type='hidden'/>",!
+	</server>
+   </head>
+   <body style="padding:10px;">
+	   <div class="hisui-layout" id="aaaId" data-options="fit:true,border:false">
+		   <div data-options="region:'center',title:'医保结算查询',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:400px; border-radius: 0px 0px 4px 4px;">
+			   <div class="hisui-layout" fit="true">
+				   <div data-options="region:'north',collapsible:false,border:false" style="height:130px;">
+					   <table class="search-table" style="width:100%;">
+						   <tr>
+							   <td class="r-label" style="width:56px;"><label>#(..Get("开始日期"))#</label></td>
+							   <td><input id='stDate' class="hisui-datebox textbox" data-options="required:true"></input></td>
+							   <td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+							   <td><input class="textbox" id="patientName"/></td>
+							   <td class="r-label "><label>#(..Get("结算费别"))#</label></td>
+							   <td><input class="hisui-combobox textbox" id="settleType"/></td>
+							   <td class="r-label "><label>#(..Get("状态"))#</label></td>
+							   <td><input class="hisui-combobox textbox" id="statusType"/></td>
+							   <td style='padding-left:10px'>
+								   <a id="btn-Search" href="#" class="hisui-linkbutton" iconCls="icon-w-find" onClick='QryChkPatInfo()'>查询</a> 
+							   </td>
+							   <td style='padding-left:10px'>
+								   <a id="btn-cancelsettle" href="#" class="hisui-linkbutton" onClick='Refund()'>撤销结算</a> 
+							   </td>		  
+						   </tr>
+						   <tr>
+							   <td class="r-label" style="width:56px;"><label>#(..Get("结束日期"))#</label></td>
+							   <td><input id='edDate' class="hisui-datebox textbox" data-options="required:true"/></td>
+							   <td class="r-label "><label>#(..Get("就诊"))#</label></td>
+							   <td><input class="hisui-combobox textbox" id="type"/></td>
+							   <td class="r-label "><label>#(..Get("卡类型"))#</label></td>
+							   <td><input class="textbox" id="CardTypeNew" disabled/></td>
+							   <td class="r-label "><label>#(..Get("卡号"))#</label></td>
+							   <td><input class="textbox" id="CardNo"/></td>
+							   <td style='padding-left:10px'>
+							       <a href="javascript:;" class="hisui-linkbutton btn-width" iconCls="icon-w-card" id="btn-readCard">读卡</a>
+							   </td>
+							   <td style='padding-left:10px'>
+							       <a href="javascript:;" class="hisui-linkbutton" iconCls="icon-w-clean" id="btn-clear">清屏</a>
+							   </td>
+						   </tr>
+						   <tr>
+							   <td class="r-label"><label>#(..Get("登记号"))#</label></td>
+							   <td><input id='patientNo' class="textbox"/></td>
+							   <td class="r-label "><label>#(..Get("收费员"))#</label></td>
+							   <td><input class="textbox" id="operator"/></td>
+							   <td class="r-label "><label></label></td>
+							   <td><input class="textbox" type="hidden"/></td>
+							   <td class="r-label "><label></label></td>
+							   <td><input class="textbox" type="hidden"/></td>
+						   </tr>
+					   </table>
+				   </div>
+				   <div data-options="region:'center',border:false" style="border-top:1px dashed #cccccc;">
+					<table id="insuSettleList"></table>
+				   </div>
+			   </div>
+		   </div>		
+		   
+	   </div>
+   </body>
+   </html>
+   

@@ -5,6 +5,8 @@
 	<DHCTT:HEAD/>
 	<SCRIPT language="CACHE" RUNAT=SERVER>
 		d ##class(web.Util.DHCTTLanguageManager).getLanguage().initFindTableStructure(.t)
+		S CurNamespace = $NAMESPACE
+		s ReqNamespace = $g(%request.Data("Namespace",1),CurNamespace)
 		S findpn = "packageName"
 		S findtn = "tableName"
 		s findmin= "masterIndexName"		
@@ -16,13 +18,13 @@
 		s ip = %request.GetCgiEnv("REMOTE_ADDR")		
 		i $g(^DHCTTTEMP("config",ip,"history"))="on" d
 		.s i=$i(^Temp("DHCTTFindTableStruHistory",%session.Key))		//global history
-		.s:reqTnValue'="" ^Temp("DHCTTFindTableStruHistory",%session.Key,i)=$LB(reqTnValue,..CreateUrl(reqPnValue,reqTnValue,reqMinValue))
-		s cfgevent=##class(%CSP.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
+		.s:reqTnValue'="" ^Temp("DHCTTFindTableStruHistory",%session.Key,i)=$LB(reqTnValue,..CreateUrl(reqPnValue,reqTnValue,reqMinValue,ReqNamespace))
+		s cfgevent=##class(websys.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
 	</SCRIPT>
 		<title>#(t("find table structure"))#</title>
 
-	<SCRIPT language=CACHE RUNAT=SERVER METHOD=CreateUrl RETURNTYPE=%String ARGUMENTS="pn:%String,tn:%String,min:%String">
-		q findurl_"?"_findpn_"="_pn_"&"_findtn_"="_tn_"&"_findmin_"="_min
+	<SCRIPT language=CACHE RUNAT=SERVER METHOD=CreateUrl RETURNTYPE=%String ARGUMENTS="pn:%String,tn:%String,min:%String,ns:%String">
+		q findurl_"?Namespace="_ns_"&"_findpn_"="_pn_"&"_findtn_"="_tn_"&"_findmin_"="_min_"&MWToken="_%request.Get("MWToken")
 	</SCRIPT>
 	<SCRIPT language=CACHE RUNAT=SERVER METHOD=clearHistory>
 		k ^Temp("DHCTTFindTableStruHistory",%session.Key)
@@ -32,25 +34,41 @@
 <body>
 	<input type="hidden" value="#($g(^DHCTTTEMP("config","nameClassTipConfig")))#" id="nameClassTipConfig">
 	<table style="height:94%">
-		<tr><td class='greentitle' >#(t("find table structure"))#:</td></tr>
+		<tr><td class='greentitle' ><span id="OpenNamespace">#(ReqNamespace)#</span>下#(t("find table structure"))#:</td></tr>
 		<tr>	
 			<td></td>
 			<td>
 				<form action="#(findurl)#">
+				Namespace:<select id="Namespace" class="AutoForm" title="Namespace" name="Namespace">
+						<SCRIPT language="CACHE" RUNAT=SERVER>
+						
+						Set $Namespace = "%sys"
+						Set nrs = ##class(%ResultSet).%New("Config.Namespaces:List")
+						Set %sc = nrs.Prepare()
+						If (+%sc=0) { Do ..ShowError(%sc) Quit }
+						Set %sc = nrs.Execute()
+						If (+%sc=0) { Do ..ShowError(%sc) Quit }
+						while(nrs.%Next()){
+							W "<option class=""AutoForm"" value="""_nrs.GetData(1)_""""
+							w:(nrs.GetData(1)=ReqNamespace) " selected"
+							w " >"_nrs.GetData(1)_"</option>"
+						}
+						Set $Namespace = CurNamespace
+						</SCRIPT>
+						</select>
+				
 				#(t("pn"))#: <input type="text" name="packageName" id="packageName" value=#($s(reqPnValue'="":reqPnValue,1:"User"))# required=true/>
 				#(t("tn"))#: <input type="search" name="tableName" id="tableName" autocomplete="off" value="#(reqTnValue)#" placeholder="Class Name" required=true/>	
 				<input id='find' type="submit" value="#(t("find"))#">
+				<input id="MWToken" name="MWToken" value="#(%request.Get("MWToken"))#" type="hidden">
 				</form>
 				<!--&nbsp<a id='find' href="#">#(t("find"))#</a>	-->
 			</td>
 			<td>#(t("pt"))#:
-				<script language=CACHE RUNAT=SERVER>					
-					;set ns = $namespace
-					;zn "dhc-app"
-					s parentTable = ##class(web.Util.DHCJFClassGlobal).SelectParent(reqPnValue,reqTnValue)
+				<script language=CACHE RUNAT=SERVER>
+					s parentTable = ##class(web.Util.DHCJFClassGlobal).SelectParent(reqPnValue,reqTnValue,ReqNamespace)
 					i parentTable '= "" d
-					.w "<a id='parentTable' href='"_..CreateUrl(reqPnValue,parentTable,"")_"' >"_parentTable_"</a>"
-					;zn ns
+					.w "<a id='parentTable' href='"_..CreateUrl(reqPnValue,parentTable,"",ReqNamespace)_"' >"_parentTable_"</a>"
 				</SCRIPT>
 			</td>			
 		</tr>
@@ -61,18 +79,18 @@
 		</tr>
 		<tr valign="top">
 			<td>
-				<div style='height:150; overflow: auto'><table>
+				<div style='height:150; overflow: auto;min-width:140px;'><table>
 				<!--create children table-->
 				<script language=CACHE RUNAT=SERVER>									
 					;set ns = $namespace
 					;zn "dhc-app"
 					s len = 0
-					s childrenTable = ##class(web.Util.DHCJFClassGlobal).SelectChild(reqPnValue,reqTnValue)										
+					s childrenTable = ##class(web.Util.DHCJFClassGlobal).SelectChild(reqPnValue,reqTnValue,ReqNamespace)										
 					i (childrenTable'="") d					
 					.s len = $l(childrenTable,"^")					
 					.f i=1:1:len d
 					..s childTable=$p(childrenTable,"^",i)
-					..w "<tr><td><a href='"_..CreateUrl(reqPnValue,childTable,"")_"' >"_childTable_"</a></td></tr>"
+					..w "<tr><td><a href='"_..CreateUrl(reqPnValue,childTable,"",ReqNamespace)_"' >"_childTable_"</a></td></tr>"
 					;zn ns
 				</SCRIPT>
 				</table></div>
@@ -97,7 +115,7 @@
 						.w "<tr><td></td><td></td><td></td></tr>"									
 						e  d
 						.s mastersRS = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectMaster")
-						.set sc=mastersRS.Execute(reqPnValue,reqTnValue)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit										
+						.set sc=mastersRS.Execute(reqPnValue,reqTnValue,ReqNamespace)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit										
 						.while mastersRS.Next() {	//..CreateUrl(reqPnValue,reqTnValue,mastersRS.GetDataByName("indexName"))
 						.w "<tr align='center'><td><div style='width:95px;'>"_mastersRS.GetDataByName("type")_"</div></td>"
 						.w "<td><div style='width:200px;'>"_$s(mastersRS.GetDataByName("type")="data":"<a href='#'>"_mastersRS.GetDataByName("indexName")_"</a>",1:mastersRS.GetDataByName("indexName"))_"</div></td>"
@@ -117,7 +135,7 @@
 			w:$g(^DHCTTTEMP("config",ip,"history"))="on" t("history table")_":<input type=""button"" value=""-"" text=""delete"" id=""clearHistoryBtn"">"
 			</script>
 			</td>
-			<td><font class='greentitle'>#(t("index info"))#</font>(<a href="#" onclick="exportProps();">导出表属性列表</a>)</td>	
+			<td><!--<font class='greentitle'>#(t("index info"))#</font>(<a href="#" onclick="exportProps();">导出表属性列表</a>)--></td>	
 		</tr>
 		<tr valign="top">
 			<td style="width:190px">
@@ -168,7 +186,7 @@
 							.;w "<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"									
 							e  d
 							.s infoRS = ##class(%ResultSet).%New("web.Util.DHCJFClassGlobal:SelectProperty")
-							.set sc=infoRS.Execute(reqPnValue,reqTnValue,reqMinValue)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit										
+							.set sc=infoRS.Execute(reqPnValue,reqTnValue,reqMinValue,ReqNamespace)  If $$$ISERR(sc) Do DisplayError^%apiOBJ(sc) Quit										
 							.while infoRS.Next() {
 							.s len=len+1
 							.s type=infoRS.GetDataByName(c5),typelen=$l(type,".")
@@ -176,7 +194,7 @@
 							.w "<td><div style='width:100px'><label id='"_c2_"z"_len_"'>"_infoRS.GetDataByName(c2)_"</label></div></td>"
 							.w "<td><div style='width:100px'><label id='"_c3_"z"_len_"'>"_infoRS.GetDataByName(c3)_"</label></div></td>"
 							.w "<td><div style='width:110px'><label id='"_c4_"z"_len_"'>"_infoRS.GetDataByName(c4)_"</label></div></td>"
-							.w "<td><div style='width:220px'  align='left'><label id='"_c5_"z"_len_"'>"_$s($e(type,1)="%":type,1:"<a href="_..CreateUrl($p(type,".",1,typelen-1),$p(type,".",typelen),"")_">"_type_"</a>")_"</div></td>"
+							.w "<td><div style='width:220px'  align='left'><label id='"_c5_"z"_len_"'>"_$s($e(type,1)="%":type,1:"<a href="_..CreateUrl($p(type,".",1,typelen-1),$p(type,".",typelen),"",ReqNamespace)_">"_type_"</a>")_"</div></td>"
 							.w "<td><div style='width:250px'  align='left'><label id='"_c6_"z"_len_"'>"_infoRS.GetDataByName(c6)_"</label></div></td>"
 							.w "<td><div style='width:110px'><label id='"_c7_"z"_len_"'>"_infoRS.GetDataByName(c7)_"</label></div></td>"
 							.w "<td align='left'><div style='width:110px;word-break: break-all;' id='"_c8_"z"_len_"'>"_infoRS.GetDataByName(c8)_"</div></td></tr>"
@@ -226,8 +244,9 @@
 		function exportProps(){
 			var pn = document.getElementById("packageName").value;
 			var cn = document.getElementById("tableName").value;
-			var rtn = tkMakeServerCall("websys.Query","ToExcel",cn+"-props","web.Util.DHCJFClassGlobal","SelectProperty",pn,cn,"");
-			location.href = rtn;
+			var ns = document.getElementById("OpenNamespace").innerText;
+			var rtn = tkMakeServerCall("websys.Query","ToExcel",cn+"-props","web.Util.DHCJFClassGlobal","SelectProperty",pn,cn,"",ns);
+			location.href = rtn+"&MWToken="+websys_getMWToken();
 		}
 	</script>
 	<script type="text/javascript" src="../scripts/dhctt/findtablestructure.js"></script>

@@ -12,29 +12,30 @@
 		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/CPW/CSS/ShowOrder.css" />
 	</head>
 	<body>
+		<csp:Include Page="dhcma.cpw.io.order.show.csp"> 
 	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CPW/Interface/ShowOrder.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CPW/Interface/datagrid-groupview.js"></script>
 		<script language="Cache" RUNAT="SERVER">		
 		    Set EpisodeID=$g(%request.Data("EpisodeID",1))
 		    Set OrderType=$g(%request.Data("OrderType",1))
-			If (EpisodeID'["!!") {
-		    	Set SYSDr=##class(DHCMA.Util.BTS.SYSTEMSrv).GetSYSDr("")
-		    	Set EpisodeID=EpisodeID_"!!"_SYSDr
-		    }
+		    Set HospID=%session.Get("LOGON.HOSPID")
+		    Set LogUser=$g(%session.Data("LOGON.USERID"))
+            Set SYSDr=##class(DHCMA.Util.BTS.SYSTEMSrv).GetSYSDr("")
+            Set UserType=##class(DHCMA.CPW.CPS.ImplementSrv).GetUserType(LogUser_"!!"_SYSDr)
+			Set:EpisodeID'["!!" EpisodeID=EpisodeID_"!!"_SYSDr
+		    
+		    //页面初始化时清除套内已选医嘱临时Global
+		    Kill ^tmpDHCMA.CPW.ARCOSItems(+EpisodeID)
 	   </script>
 	    <script language="javascript" type="text/javascript">
 			var EpisodeID='#(EpisodeID)#'
 			var OrderType='#(OrderType)#'
+			var HospID='#(HospID)#'
+			var UserType='#(UserType)#'
+			
 			$(document).ready(function(){
-				var url = "../scripts/DHCMA/CPW/Interface/ShowOrder.html"
-        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
-   					if(statusTxt=="success") {
-	   					ShowMakeOrderDialog();
-   					} else if (statusTxt=="error") {
-	   					alert("Error: "+xhr.status+": "+xhr.statusText);
-	   				}
-	        	});
+				ShowMakeOrderDialog();
 			});
 		</script>
 	</body>

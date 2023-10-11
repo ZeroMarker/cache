@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<!--dhcdocipbooknew.print.csp 住院证打印csp--> 
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  //i ##Class(websys.SessionEvents).SessionExpired()
  i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
@@ -5,26 +7,78 @@
 </csp:method>
 <HTML XMLNS=TRAK>
 <HEAD>
-	<TITLE>>住院证打印</TITLE>
-	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
-	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
-	<SCRIPT SRC="../scripts/websys.js"></SCRIPT>
+<TITLE>住院证打印</TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS></ADDINS>
+	<server>
+		d ##class(web.DHCXMLPConfig).LODOPInit("1")
+		d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+		s EpisodeID=%request.Get("EpisodeID")
+		s BookIDStr=""
+		if (EpisodeID'=""){
+			//根据门诊记录打印
+			s RowID=0
+			for{
+				s RowID=$O(^DHCDocIPBK(0,"EpisodeIDFrom",EpisodeID,RowID)) Q:RowID=""	
+				continue:'$D(^DHCDocIPBK(RowID)) 
+				s EpisodeIDFrom=$p(^DHCDocIPBK(RowID),"^",2)
+ 				s IsActive=$p(^DHCDocIPBK(RowID),"^",9) ;有效(Y/N)
+				continue:IsActive'="Y"				
+				s CurrentStateID=$p(^DHCDocIPBK(RowID),"^",8)
+ 				s:CurrentStateID'="" BStatu=$P($G(^DHCDocIPBDIC(CurrentStateID)),"^",2)
+				s:CurrentStateID'="" BStatuCode=$P($G(^DHCDocIPBDIC(CurrentStateID)),"^",1)
+				continue:("^Cancel^Admission^Void^")[("^"_BStatuCode_"^") 
+				if (BookIDStr="") s BookIDStr=RowID
+				else  s BookIDStr=BookIDStr_"^"_RowID
+			}
+			//根据住院记录打印
+			s RowID=0
+			for{
+				s RowID=$O(^DHCDocIPBK(0,"EpisodeIDTo",EpisodeID,RowID)) Q:RowID=""	
+				continue:'$D(^DHCDocIPBK(RowID)) 
+				s EpisodeIDFrom=$p(^DHCDocIPBK(RowID),"^",2)
+ 				s IsActive=$p(^DHCDocIPBK(RowID),"^",9) ;有效(Y/N)
+				continue:IsActive'="N"				;未完成的住院证不能归档 
+				s CurrentStateID=$p(^DHCDocIPBK(RowID),"^",8)
+ 				s:CurrentStateID'="" BStatu=$P($G(^DHCDocIPBDIC(CurrentStateID)),"^",2)
+				s:CurrentStateID'="" BStatuCode=$P($G(^DHCDocIPBDIC(CurrentStateID)),"^",1)
+				//continue:("^Cancel^Admission^Void^")[("^"_BStatuCode_"^") 
+				continue:(BStatuCode'="Admission")		//只有办理完住院之后才能归档
+				if (BookIDStr="") s BookIDStr=RowID
+				else  s BookIDStr=BookIDStr_"^"_RowID
+			}  
+		}
+		w "<input TYPE=""HIDDEN"" id=""InvPrintEncrypt"" NAME=""InvPrintEncrypt"" VALUE="""_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_""">"_"</input>",!
+		w "<input TYPE=""HIDDEN"" id=""GetZYZStrMethod"" NAME=""GetZYZStrMethod"" VALUE="""_""_""">"_"</input>",!
+	</server>
 </HEAD>
-
 <BODY>
  	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
  	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
- 	<script type="text/javascript" src="../scripts/DHCDocIPBookNew.Print.js"></script>
-	<server>
-		d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-		w "<input TYPE=""HIDDEN"" id=""InvPrintEncrypt"" NAME=""InvPrintEncrypt"" VALUE="""_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_""">"_"</input>",!
-		w "<input TYPE=""HIDDEN"" id=""GetZYZStrMethod"" NAME=""GetZYZStrMethod"" VALUE="""_""_""">"_"</input>",!
-	</server>
+ 	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/IPBookPrintCommon.js"></script>
+	<!--script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js?needCLodop=1"></script-->
 	<SCRIPT Language="Javascript">
-		var EpisodeID = window.dialogArguments.EpisodeID;
-		ZYZ_Print(EpisodeID);
-		//window.close();
-		setTimeout("window.close();", 3000 )	
+		var EpisodeID="#(EpisodeID)#";
+		var BookIDStr="#(BookIDStr)#";
+		$(function(){
+			setTimeout("DelayedPrint()","500");   ///给与LODOP的准备时间 	
+		})
+		function DelayedPrint(){
+			if (BookIDStr!=""){
+				for (var i=0;i<BookIDStr.split("^").length;i++){
+					var BookID=BookIDStr.split("^")[i]
+					IPBookPrint(BookID)
+				}
+			}
+			setTimeout(function(){
+				//window.opener= null;
+				//window.open("about:blank","_top").close();
+				//window.close();
+				parent.printNext();
+			}, 3000 )	
+		}
+		
 	</SCRIPT>
 </BODY>
 </HTML>

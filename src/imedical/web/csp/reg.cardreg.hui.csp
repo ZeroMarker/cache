@@ -6,13 +6,20 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-<!--EXTHEALTH:HEAD></EXTHEALTH:HEAD-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--
 <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
 <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
 <SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+ -->
 <HISUI></HISUI>
-<ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+<ADDINS require="RWCard,PublicReadPerson,DHCOPPrint,ImageToBase64"/>
+<DOCCARD medStepCode="CardReg"></DOCCARD>
 <style>
+td {
+    margin: 0;
+    padding: 0;
+  }
 body {
 	padding:0;
 	background:#fff;
@@ -23,7 +30,7 @@ body {
 	table-layout:fixed
 }
 .r-label{
-	padding: 0 10px;
+	padding: 0 10px
 }
 .newclsInvalid{
 	border-color: red;
@@ -40,19 +47,19 @@ body {
 	display: none;
 }
 .addressinfo-expand{
-	height: 215px !important;
+	height: 250px !important;
 }
 .addressinfo-collapse{
-	height: 45px !important;
+	height: 90px !important;
 }
 .baseinfo-expand{
-	height: 345px !important;
+	height: 330px !important;
 }
 .baseinfo-collapse{
-	height: 175px !important;
+	height: 170px !important;
 }
 .payinfo-expand{
-	height: 145px !important;
+	height: 130px !important;
 }
 .payinfo-collapse{
 	height: 50px !important;
@@ -77,8 +84,8 @@ LABEL.clsRequired {
 </style>
 <Server>
 d ##Class(websys.Configuration).HeadSession()
-s GetreceipNO=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.CARDIF.ICardINVPRTInfo.ReadReceiptNOForCard"))
-s CardPatUIDefStr=##class(web.DHCBL.UDHCUIDefConfig).ReadCardPatUIDef("","","","",.defaultObj)
+s GetreceipNO=##Class(websys.Page).Encrypt($lb("web.DHCBL.CARDIF.ICardINVPRTInfo.ReadReceiptNOForCard"))
+s CardPatUIDefStr=##class(web.DHCBL.UDHCUIDefConfig).ReadCardPatUIDef("","","","",.defaultObj,%session.Get("LOGON.HOSPID"))
 w "<input id='CardRowID' name='CardRowID' type='hidden' value=''>",$C(13,10)
 w "<input id='PAPMIRowID' name='PAPMIRowID' type='hidden' value=''>",$C(13,10)
 w "<input id='ComputerIP' name='ComputerIP' type='hidden' value=''>",$C(13,10)
@@ -89,15 +96,16 @@ w "<input id='HospitalID' name='HospitalID' type='hidden' value='"_%session.Get(
 
 w "<input id='IDCardNo1' name='IDCardNo1' type='hidden' value=''>",$C(13,10)
 w "<input id='OtherCardInfo' name='OtherCardInfo' type='hidden' value=''>",$C(13,10)
+w "<input id='OtherNameInfo' name='OtherNameInfo' type='hidden' value=''>",$C(13,10)
 w "<input id='AccountType' name='AccountType' type='hidden' value=''>",$C(13,10)
 w "<input id='PassWord' name='PassWord' type='hidden' value=''>",$C(13,10)
 w "<input id='DepPrice' name='DepPrice' type='hidden' value=''>",$C(13,10)
 w "<input id='ReceiptsNo' name='ReceiptsNo' type='hidden' value=''>",$C(13,10)
-w "<input id='DepositPrintEncrypt' name='DepositPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+w "<input id='DepositPrintEncrypt' name='DepositPrintEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
 
-w "<input id='ReadCardINVEncrypt' name='ReadCardINVEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetRegINVPRTData"))_"'>",$C(13,10)
-w "<input id='ReadAccDPEncrypt' name='ReadAccDPEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPrtInfo"))_"'>",$C(13,10)
-w "<input id='ReadFirstPageEncrypt' name='ReadFirstPageEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPatInfoForFirstPage"))_"'>",$C(13,10)
+w "<input id='ReadCardINVEncrypt' name='ReadCardINVEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetRegINVPRTData"))_"'>",$C(13,10)
+w "<input id='ReadAccDPEncrypt' name='ReadAccDPEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPrtInfo"))_"'>",$C(13,10)
+w "<input id='ReadFirstPageEncrypt' name='ReadFirstPageEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPatInfoForFirstPage"))_"'>",$C(13,10)
 
 
 w "<input id='PhotoInfo' name='PhotoInfo' type='hidden' value=''>",$C(13,10)
@@ -107,9 +115,9 @@ w "<input id='InitCardINVPRTEntity' name='InitCardINVPRTEntity' type='hidden' va
 w "<input id='InitAccManagerEntity' name='InitAccManagerEntity' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.PCA.AccManager")_"'>",$C(13,10)
 w "<input id='InitAccPreDepositEncrypt' name='InitAccPreDepositEncrypt' type='hidden' value='"_##class(web.DHCBL.UDHCCommFunLibary).GetClassPropertyList("web.DHCEntity.PCA.AccPreDeposit")_"'>",$C(13,10)
 
-w "<input id='ReadFirstPageEncrypt' name='ReadFirstPageEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPatInfoForFirstPage"))_"'>",$C(13,10)
+w "<input id='ReadFirstPageEncrypt' name='ReadFirstPageEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPatInfoForFirstPage"))_"'>",$C(13,10)
 //打印预交金条的类方法
-w "<input id='ReadAccDPEncrypt' name='ReadAccDPEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPrtInfo"))_"'>",$C(13,10)
+w "<input id='ReadAccDPEncrypt' name='ReadAccDPEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPPrtInfoIF.GetPrtInfo"))_"'>",$C(13,10)
 
 s HospName=""
 i %session.Get("LOGON.HOSPID")'="" s HospName=$p(^CT("HOSP",%session.Get("LOGON.HOSPID")),"^",2)
@@ -120,6 +128,7 @@ s BuildAddrHomeByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrHomeByIDCard
 s BuildAddrBirthByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrBirthByIDCard"))
 s BuildAddrLookUpByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrLookUpByIDCard"))
 s BuildAddrHouseByIDCard=$g(^DHCDocCardConfig(HospCodeNode,"BuildAddrHouseByIDCard"))
+s LimitBirthTimeByAge=+$g(^DHCDocCardConfig(HospCodeNode,"LimitBirthTimeByAge"))
 
 s sysDateFormat=##class(websys.Conversions).DateFormat()
 if (sysDateFormat=4){
@@ -130,7 +139,7 @@ if (sysDateFormat=3){
 }
 s LimitAge=$p($zd(+$h,3),"-",1)-1840
 s ConfigVersion=##class(web.DHCOPConfig).GetVersion()
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+//d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
 d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
 d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
 d ##class(web.UDHCCardCommLinkRegister).GetPWDKeyPressHardJSFunction()
@@ -156,9 +165,7 @@ s DefaultRelationPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTR
 ;职业
 s DefaultOccuptionPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTOCCUPATION","^^^HUIJSON")
 ;性别
-s DefaultSexPara=##class(web.UDHCOPOtherLB).ReadSex("GetSexToHUIJson","")
-;入院来源
-s DefaultIpSourcePara=##class(web.UDHCOPOtherLB).ReadIpSource("GetIpSourceToHUIJson","")
+s DefaultSexPara=##class(web.UDHCOPOtherLB).ReadSex("GetSexToHUIJson","",%session.Get("LOGON.HOSPID"))
 ;籍贯
 s DefaultCTCountryPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("CTCOUNTRY","^^^HUIJSON")
 ;支付方式
@@ -186,7 +193,7 @@ s DefaultHCPDRPara=##class(web.DHCBL.CTBASEIF.ICTCardRegLB).ReadBaseData("HCPDR"
 ;票据信息
 s DefaultCurrentRecNoPara=##class(web.UDHCAccAddDeposit).GetCurrentRecNo(%session.Get("LOGON.USERID"),%session.Get("LOGON.HOSPID"))
 ;患者默认基本信息
-s DefaultCardPatRegConfigPara=##class(web.DHCBL.CARD.UCardPATRegConfig).GetCardPatRegConfig("")
+s DefaultCardPatRegConfigPara=##class(web.DHCBL.CARD.UCardPATRegConfig).GetCardPatRegConfig(sessinStr)
 s PatientNoReg=%request.Get("PatientNoReg")
 ;获取默认的省信息
 s DefaultCTProvince=""
@@ -199,7 +206,6 @@ if +defCardDr'=0{
 	s RegCardConfigXmlData=##class(web.DHCBL.CARD.UCardPATRegConfig).ReadDefaultCardTypeConfigByDR(+defCardDr,"")
 }
 w "<input id='RegCardConfigXmlData' name='RegCardConfigXmlData' type='hidden' value='"_RegCardConfigXmlData_"'>",$C(13,10)
-	
 </Server>
 </head>
 <body>
@@ -218,6 +224,7 @@ w "<input id='RegCardConfigXmlData' name='RegCardConfigXmlData' type='hidden' va
 			BuildAddrBirthByIDCard:"#(BuildAddrBirthByIDCard)#",
 			BuildAddrLookUpByIDCard:"#(BuildAddrLookUpByIDCard)#",
 			BuildAddrHouseByIDCard:"#(BuildAddrHouseByIDCard)#",
+			LimitBirthTimeByAge:"#(LimitBirthTimeByAge)#",
 			CardRefgDOMCache:"#(CardRefgDOMCache)#",
 			
 			DefaultAccPara:"#(DefaultAccPara)#",
@@ -225,7 +232,6 @@ w "<input id='RegCardConfigXmlData' name='RegCardConfigXmlData' type='hidden' va
 			DefaultRelationPara:'#(DefaultRelationPara)#',
 			DefaultOccuptionPara:'#(DefaultOccuptionPara)#',
 			DefaultSexPara:'#(DefaultSexPara)#',
-			DefaultIpSourcePara:'#(DefaultIpSourcePara)#',
 			DefaultCTCountryPara:'#(DefaultCTCountryPara)#',
 			DefaultPaymodePara:'#(DefaultPaymodePara)#',
 			DefaultBankPara:'#(DefaultBankPara)#',
@@ -241,8 +247,6 @@ w "<input id='RegCardConfigXmlData' name='RegCardConfigXmlData' type='hidden' va
 			DefaultCurrentRecNoPara:"#(DefaultCurrentRecNoPara)#",
 			DefaultCardPatRegConfigPara:'#(DefaultCardPatRegConfigPara)#',
 			PatientNoReg:"#(PatientNoReg)#",
-			
-			
 			//逻辑默认数据
 			defaultCountryDr:"#(defaultObj.CountryDr)#",
 			DefaultCTProvince:'#(DefaultCTProvince)#',
@@ -251,13 +255,16 @@ w "<input id='RegCardConfigXmlData' name='RegCardConfigXmlData' type='hidden' va
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
-	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.JS"></script>
+	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
 	<script type="text/javascript" src="../scripts/DHCOPAdm.Common.js"></script>
 	<script type="text/javascript" src="../scripts/Reg/ComboboxQuery.hui.js"></script>
 	<script type="text/javascript" src="../scripts/Reg/CardReg.hui.js"></script>
 	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
-	<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.JS"></script>
-	
+	<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+	<script type="text/javascript" src="../scripts/OPAdm/MisPose/MisPosePublic.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
+	<script type="text/javascript" src="../scripts/DHCBillPayScanCodeService.js"></script>
 </body>
 </html>

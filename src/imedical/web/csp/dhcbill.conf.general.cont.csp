@@ -1,0 +1,191 @@
+﻿<!-- 
+ * FileName: dhcbill.conf.general.cont.csp
+ * Author: ZhYW
+ * Date: 2022-03-17
+ * Description: 通用配置界面-对照配置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<server>
+		set cfgPtId = %request.Get("CfgPtId")
+		set urlType = %request.Get("Type")
+		set limitFlag=%request.Get("LimitFlag")
+		
+		//字典Query
+		set dtClassName="BILL.CFG.COM.DictionaryCtl"
+		set dtQueryName="QryDicListByType"
+		
+		//字典-医保
+		set insuClassName="BILL.CFG.COM.GeneralCfg"   
+		set insuQueryName="QryINSUDic"
+		
+		&SQL(
+			SELECT CPDicCode, CPModCode, CPCode, CPIsReleased, CPPublicFlag,
+				CPCollDataSrc, CPCollDataSrcQry, CPCollDataSrcDicType, CPCollDataSrcQryDicDR,
+				CPTgtDataSrc, CPTgtDataSrcQry, CPTgtDataSrcDicType, CPTgtDataSrcQryDicDR,
+				CPDataMulFlag, CPUpdLevelDicCode
+			INTO :dicCode, :modCode, :ptCode, :isReleased, :publicFlag,
+				:collDataSrc, :collDataSrcQry, :collDataSrcDicType, :collDataSrcQryDicDR,
+				:tgtDataSrc, :tgtDataSrcQry, :tgtDataSrcDicType, :tgtDataSrcQryDicDR,
+				:dataMulFlag, :updLevelDicCode
+			FROM CF_BILL_COM.CfgPoint
+			WHERE %ID = :cfgPtId
+		)
+		set relaCode=dicCode_"."_modCode_"."_ptCode
+		
+		if (collDataSrc="Dictionary") {
+			set srcClassName=dtClassName
+			set srcQueryName=dtQueryName
+			set dataSrcFilterMode="dic"
+			set dataSrcParam=collDataSrcDicType
+		}elseif (collDataSrc="Query"){
+			set srcClassName = $p(collDataSrcQry,"||",1)    //集合数据源Query
+			set srcQueryName = "QryData"
+			set dataSrcParam = $p(collDataSrcQry,"||",2)
+			&SQL(
+				SELECT DataSrcFilterMode
+				INTO :dataSrcFilterMode
+				FROM CF_BILL_COM.Dictionary
+				WHERE %ID = :collDataSrcQryDicDR
+			)
+		}elseif (collDataSrc="DicINSU"){
+			set srcClassName=insuClassName
+			set srcQueryName=insuQueryName
+			set dataSrcFilterMode="dicInsu"
+			set dataSrcParam=collDataSrcDicType
+		}
+		
+		// 生成 tgtClassName tgtQueryName | 目标数据查询的 cls method
+		// dataTgtFilterMode dataTgtTableProperty	|	目标数据查询模式 查询附带参数
+		if (tgtDataSrc="Dictionary") {
+			set tgtClassName=dtClassName
+			set tgtQueryName=dtQueryName
+			set dataTgtFilterMode="dic"
+			set dataTgtParam=tgtDataSrcDicType
+		}elseif (tgtDataSrc="Query"){
+			set tgtClassName = $p(tgtDataSrcQry,"||",1)   //目标数据源Query
+			set tgtQueryName = "QryData"
+			set dataTgtParam = $p(tgtDataSrcQry,"||",2)
+			&SQL(
+				SELECT DataSrcFilterMode
+				INTO :dataTgtFilterMode
+				FROM CF_BILL_COM.Dictionary
+				WHERE %ID = :tgtDataSrcQryDicDR
+			)
+		}elseif (tgtDataSrc="DicINSU"){
+			set tgtClassName=insuClassName
+			set tgtQueryName=insuQueryName
+			set dataTgtFilterMode="dicInsu"
+			set dataTgtParam=tgtDataSrcDicType
+		}
+
+		// 设置默认的检所模式 local
+		set:(dataSrcFilterMode="") dataSrcFilterMode = "local"
+		set:(dataTgtFilterMode="") dataTgtFilterMode = "local"
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false">
+			<div style="padding:10px 10px 0 10px;">
+				<label style="padding-right:7px;">医院</label>
+				<input id="hospital" class="hisui-combobox textbox"/>
+			</div>
+		</div>
+		<div data-options="region:'center',border:false" style="padding:10px 10px 0px 10px;">
+			<div class="hisui-layout" data-options="fit:true" >
+				<div data-options="region:'north',border:false" style="height:270px;">
+					<div id = "src-Table" class="hisui-layout" data-options="fit:true">
+						<div id = "src" data-options="region:'west',border:false">
+							<div id="src-tb" style="padding:3px;">
+								<input id="src-search" class="hisui-searchbox textbox" data-options="prompt:'支持代码/描述检索'" style="width:155px;"/>
+								<input id="src-type" class="hisui-combobox textbox" style="text-align:right" style="width:110px;"/>
+								<div style="margin-top:3px;border-top:1px dashed #cccccc;">
+								<a href="javascript:;" class="hisui-linkbutton" id="srcClear" data-options="iconCls:'icon-clear-screen',plain:true">重置</a>
+								</div>
+							</div>
+							<table id="sourceList"></table>
+						</div>
+						<div id = "tgt" data-options="region:'center',border:false" style="padding-left:10px;">
+							<div class="hisui-layout" data-options="fit:true">
+								<div data-options="region:'west',border:false">
+									<div id="tgt-tb" style="padding:3px;">
+										<input id="tgt-search" class="hisui-searchbox textbox" data-options="prompt:'支持代码/描述检索'" style="width:155px;"/>
+									</div>
+									<table id="tgtList"></table>
+								</div>
+								<div data-options="region:'center',border:false">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="padding:10px 0 0;">
+					<div id="pz-Table" class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'west',border:false">
+							<div id="ret-tb" style="padding:3px;">
+								<input id="ret-search" class="hisui-searchbox textbox" data-options="prompt:'支持代码或者描述检索'"/>
+								<input id="ret-type" class="hisui-combobox textbox" style="text-align:right" style="width:95px;"/>
+								<!--td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-arrow-top" id="btn-moveUp" plain="true">上移</a></td-->
+								<!--td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-arrow-bottom" id="btn-moveDown" plain="true">下移</a></td-->
+							</div>
+							<table id="resultList"></table>
+						</div>
+						<div data-options="region:'center',border:false">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'south',border:false">
+			<div style="text-align:center;padding-bottom:10px;">
+				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onClick="_saveClick()">保存</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	// 全局变量
+	var CV = {
+		RelaCode: "#(relaCode)#",
+		SrcClassName: "#(srcClassName)#",
+		SrcQueryName: "#(srcQueryName)#",
+		TgtClassName: "#(tgtClassName)#",
+		TgtQueryName: "#(tgtQueryName)#",
+		ResClassName: "BILL.CFG.COM.GeneralCfg",
+		ResQueryName: "QryCfgRelaDataCont",
+		DataMulFlag: "#(dataMulFlag)#",
+		DataSrcFilterMode: "#(dataSrcFilterMode)#",
+		DataTgtFilterMode: "#(dataTgtFilterMode)#",		
+		DataSrcParam: "#(dataSrcParam)#",
+		DataTgtParam: "#(dataTgtParam)#",
+		IsReleased:"#(isReleased)#",	// 发布标志
+		PublicFlag:"#(publicFlag)#",	// 公用标志
+		UpdLevelFlag:"#(updLevelDicCode)#",	// 修改级别
+		LimitFlag:"#(limitFlag)#",	// 界面读取权限
+		CSPType:"cont",
+		Type:"#(urlType)#",		// url类型
+		EditIndex:undefined,	// datagrid 行编辑
+		CheckData:"1",			// datagrid 行编辑 数据校验标志
+		ImportMethod:"ImportContByExcel"	// 导入方法	
+	};
+	$("#src-Table").attr("style",";width:"+(($(document).width()-4)/2)+"px;");
+	$(window).resize(function(){
+    	location.reload();
+	});
+	$("#pz-Table").attr("style",";width:"+(($(document).width()-3))+"px;");
+	</script>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.general.cont.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.general.common.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.importorexport.js"></script>
+</body>
+</html>

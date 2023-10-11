@@ -1,0 +1,272 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+			height:1.5em;
+			font-size:80%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;" >
+	<div id="Form">
+		<script language="Cache" RUNAT="SERVER">
+			Set ReportID=$g(%request.Data("ReportID",1))
+			Set ReportInfo=##Class(DHCMed.DTHService.LodopReportSrv).DTHFirstInfoPrint(ReportID)
+			Set PaperNo 				= $p(ReportInfo,"^",1)
+			Set RegAddress 				= $p(ReportInfo,"^",2)
+			Set MEPDCountyCode 			= $p(ReportInfo,"^",3)
+			Set DeathNo 				= $p(ReportInfo,"^",4)
+			Set Name 					= $p(ReportInfo,"^",5)
+			Set Sex 					= $p(ReportInfo,"^",6)
+			Set Nation 					= $p(ReportInfo,"^",7)
+			Set Country 				= $p(ReportInfo,"^",8)
+			Set CardType 				= $p(ReportInfo,"^",9)
+			Set Identify 				= $p(ReportInfo,"^",10)
+			Set Age 					= $p(ReportInfo,"^",11)
+			Set Marital 				= $p(ReportInfo,"^",12)
+			Set Birthday 				= $p(ReportInfo,"^",13)
+			Set Education 				= $p(ReportInfo,"^",14)
+			Set Occupation 				= $p(ReportInfo,"^",15)
+			Set DeathDateTime 			= $p(ReportInfo,"^",16)
+			Set DeathPlace 				= $p(ReportInfo,"^",17)
+			Set Pregnancies 			= $p(ReportInfo,"^",18)
+			Set Company 				= $p(ReportInfo,"^",19)
+			Set RegAddress 				= $p(ReportInfo,"^",20)
+			Set CurrAddress 			= $p(ReportInfo,"^",21)
+			Set FamName 				= $p(ReportInfo,"^",22)
+			Set FamTel 					= $p(ReportInfo,"^",23)
+			Set FamAddr 				= $p(ReportInfo,"^",24)
+			Set AReason 				= $p(ReportInfo,"^",25)
+			Set AInterval 				= $p(ReportInfo,"^",26)
+			Set BReason 				= $p(ReportInfo,"^",27)
+			Set BInterval 				= $p(ReportInfo,"^",28)
+			Set CReason 				= $p(ReportInfo,"^",29)
+			Set CInterval 				= $p(ReportInfo,"^",30)
+			Set DReason 				= $p(ReportInfo,"^",31)
+			Set DInterval 				= $p(ReportInfo,"^",32)
+			Set OtherDiagnose 			= $p(ReportInfo,"^",33)
+			Set OtherDiagnoseInterval 	= $p(ReportInfo,"^",34)
+			Set DiagnoseUnit 			= $p(ReportInfo,"^",35)
+			Set DiagnoseBasis 			= $p(ReportInfo,"^",36)
+			Set RepDocName 				= $p(ReportInfo,"^",37)
+			Set MrNo 					= $p(ReportInfo,"^",38)
+			Set RepDate 				= $p(ReportInfo,"^",39)
+			Set BaseReason 				= $p(ReportInfo,"^",40)
+			Set BaseReasonICD 			= $p(ReportInfo,"^",41)
+			Set ExamMedical 			= $p(ReportInfo,"^",42)
+			Set ExamName				= $p(ReportInfo,"^",43)
+			Set ExamRelation 			= $p(ReportInfo,"^",44)
+			Set ExamTel 				= $p(ReportInfo,"^",45)
+			Set ExamAddress 			= $p(ReportInfo,"^",46)
+			Set ExamDeathReason 		= $p(ReportInfo,"^",47)
+			Set ExamUserName			= $p(ReportInfo,"^",48)
+			Set ExamDate				= $p(ReportInfo,"^",49)
+			Set AddPrintCode			= $p(ReportInfo,"^",50)
+			Set EmptyString	= ""
+
+		   	Set TitleDesc = "居民死亡医学证明（推断）书"
+		   	Set:AddPrintCode=1 TitleDesc = "居民死亡医学证明（推断）书  【补】"
+		   	//CA签名
+			Set CASignImg=""	//Base64图片地址
+			Set CASignID=##class(DHCMed.CA.SignVerify).GetRepSignID("DTH","DTH",ReportID,"S")
+			Set:CASignID'="" CASignImg=##class(CA.BICAService).GetImageBySignID(CASignID)
+		</script>
+		<div>
+			<div style="font-size: 120%;text-align: center;font-weight: bold;">#(TitleDesc)#</div>
+			<div style="float: right;">#(PaperNo)#</div>
+		</div>
+		<div style="font-size: 80%;padding-top:0.5em;padding-bottom:0.3em;">
+			<span style="padding-left:2em;">行政区划代码</span>
+			<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($L(MEPDCountyCode))#>
+				<div style="display:inline-block;border:1px solid #000;width:1em;height:1em;text-align:center;">
+					#($e(MEPDCountyCode,ZLInd))#
+				</div>
+			</CSP:LOOP>
+			<span style="padding-left:6em;">编号</span>
+			<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($L(DeathNo))#>
+				<div style="display:inline-block;border:1px solid #000;width:1em;height:1em;text-align:center;">
+					#($e(DeathNo,ZLInd))#
+				</div>
+			</CSP:LOOP>
+		</div>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-left:none" bordercolor="#000000">
+			<tr>
+				<td rowspan="15" style="border:none;width:1.5em;">第一联填写单位存根</td>
+				<td>死者姓名</td>
+				<td>#(Name)#</td>
+				<td>性别</td>
+				<td>#(Sex)#</td>
+				<td>民族</td>
+				<td>#(Nation)#</td>
+				<td>国家或<br>地区</td>
+				<td>#(Country)#</td>
+			</tr>
+			<tr>
+				<td>有效身份<br>证件类别</td>
+				<td>#(CardType)#</td>
+				<td>证件<br>号码</td>
+				<td>#(Identify)#</td>
+				<td>年龄</td>
+				<td>#(Age)#</td>
+				<td>婚姻<br>状况</td>
+				<td>#(Marital)#</td>
+			</tr>
+			<tr>
+				<td>出生<br>日期</td>
+				<td>#(Birthday)#</td>
+				<td>文化<br>程度</td>
+				<td>#(Education)#</td>
+				<td>个人<br>身份</td>
+				<td colspan="3">#(Occupation)#</td>
+			</tr>
+			<tr>
+				<td>死亡<br>日期</td>
+				<td >#(DeathDateTime)#</td>
+				<td>死亡<br>地点</td>
+				<td>#(DeathPlace)#</td>
+				<td colspan="3">死亡时是否处于妊娠期<br>或妊娠终止后42天内</td>
+				<td >#(Pregnancies)#</td>
+			</tr>
+			<tr>
+				<td>生前<br>工作单位</td>
+				<td >#(Company)#</td>
+				<td>户籍<br>地址</td>
+				<td colspan="2">#(RegAddress)#</td>
+				<td>常住<br>地址</td>
+				<td colspan="2">#(CurrAddress)#</td>
+			</tr>
+			
+			<tr>
+				<td>可联系的<br>家属姓名</td>
+				<td >#(FamName)#</td>
+				<td>联系<br>电话</td>
+				<td colspan="2">#(FamTel)#</td>
+				<td>家属住址<br>或单位</td>
+				<td colspan="2">#(FamAddr)#</td>
+			</tr>
+			<tr>
+				<td colspan="2">致死的主要疾病诊断</td>
+				<td colspan="4">疾病名称（勿填症状体征）</td>
+				<td colspan="2">发病至死亡大概间隔时间</td>
+			</tr>
+			<tr>
+				<td colspan="2">I. (a)直接死亡原因</td>
+				<td colspan="4">#(AReason)#</td>
+				<td colspan="2">#(AInterval)#</td>
+			</tr>
+			<tr>
+				<td colspan="2">(b)引起(a)的疾病或情况</td>
+				<td colspan="4">#(BReason)#</td>
+				<td colspan="2">#(BInterval)#</td>
+			</tr>	
+			<tr>
+				<td colspan="2">(c)引起(b)的疾病或情况</td>
+				<td colspan="4">#(CReason)#</td>
+				<td colspan="2">#(CInterval)#</td>
+			</tr>	
+			<tr>
+				<td colspan="2">(d)引起(c)的疾病或情况</td>
+				<td colspan="4">#(DReason)#</td>
+				<td colspan="2">#(DInterval)#</td>
+			</tr>
+			<tr>
+				<td colspan="2"> II.其他疾病诊断(促进死亡,但与导致死亡无关的其他重要情况）</td>
+				<td colspan="4">#(OtherDiagnose)#</td>
+				<td colspan="2">#(OtherDiagnoseInterval)#</td>
+			</tr>	
+			<tr>
+				<td>生前主要疾病<br>最高诊断单位</td>
+				<td colspan="4">#(DiagnoseUnit)#</td>
+				<td>生前主要疾病<br>最高诊断依据位</td>
+				<td colspan="2">#(DiagnoseBasis)#</td>
+			</tr>	
+			<tr>
+				<td>医师签名</td>
+				<td style="width:6em;padding-left:0.5em;padding-bottom:0.5em;">
+					<CSP:IF CONDITION="CASignImg=EmptyString">
+						<input type='text' style='width:16em;' value=#(RepDocName)#>
+					<CSP:ELSE >
+						<div style='width:16em; text-decoration:underline;display:inline;'>
+							<img src="data:image/png;base64,#(CASignImg)#" alt="CA签名" style="height:20px;" />
+						</div>
+					</CSP:IF>
+				</td>
+				<td>住院号</td>
+				<td>#(MrNo)#</td>
+				<td>医疗卫生<br>机构盖章</td>
+				<td></td>
+				<td>填表日期</td>
+				<td>#(RepDate)#</td>
+			</tr>
+			<tr>
+				<td colspan="5">
+					 (以下由编码人员填写) 根本死亡原因: #(BaseReason)#
+				</td>
+				<td colspan="3">
+					 ICD编码：#(BaseReasonICD)#
+				</td>
+			</tr>
+		</table>
+		
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;" bordercolor="#000000">
+			<div>
+				<div style="font-size: 120%;text-align: center;font-weight: bold;padding-top:1em;"> 死亡调查记录</div>
+			</div>
+			<tr>
+				<td colspan="8" style="height:12em;">
+					<span style="padding-top:0.1em;">死者生前病史及症状体征：#(ExamMedical)#</span>
+					<br>
+					<br>
+					<br>
+					<br>
+					<br>
+					<br>
+					<br>
+					<span style="float: right;">以上情况属实，被调查者签字：&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+				</td>
+			</tr>
+			<tr>
+				<td style="width:5em;">被调查者<br>姓    名</td>
+				<td>#(ExamName)#</td>
+				<td style="width:5em;">与死者<br>关  系</td>
+				<td>#(ExamRelation)#</td>
+				<td style="width:5em;">联系<br>电话</td>
+				<td>#(ExamTel)#</td>
+				<td style="width:5em;">联系地址<br>或工作单位</td>
+				<td>#(ExamAddress)#</td>
+			</tr>
+			<tr>
+				<td>死因推断</td>
+				<td colspan="3">#(ExamDeathReason)#</td>
+				<td>调查者签名</td>
+				<td>#(ExamUserName)#</td>
+				<td>调查日期</td>
+				<td>#(ExamDate)#</td>
+			</tr>
+		</table>
+		<div>
+			<div style="font-size: 70%;padding-top:0.5em">
+				注：①此表填写范围为在家、养老服务机构、其他场所正常死亡者；②被调查者应为死者近亲或知情人；③调查时应出具以下资料：被调查者有效身份证件，居住地居委会或村委会证明，死者身份证和/或户口簿、生前病史卡。
+			</div>
+		</div>
+	
+	</div>	
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

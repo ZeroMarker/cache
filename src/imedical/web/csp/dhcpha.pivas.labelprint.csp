@@ -4,72 +4,124 @@
 	csp: csp/dhcpha.pivas.labelprint.csp
 	js:  scripts/pharmacy/pivas/labelprint.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
-
 <HEAD>
     <title>
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD> </TRAK:HEAD>
     <HISUI />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
+    <PHAPIVASV1 />
+    <PHAPRINTCOM/>
+    <style>
+        .datagrid-row [field] {
+            vertical-align: top;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        .pivas-user-select tr {
+            display: none;
+        }
+
+        .pivas-user-select-line {
+            display: none;
+            height: 180px;
+            border-left: 1px solid #cccccc;
+            position: absolute;
+            right: 208px
+        }
+
+        /* .pivas-repeat{
+            color:transparent
+        }
+        .pivas-repeat:hover{
+            color:black
+        } */
+        #gridWorkTypeWin .layout-split-west{
+            background-color: #fff;
+        }
+        #gridWorkTypeWin .layout-split-east{
+            background-color: #fff;
+        }
+
+    </style>
 </HEAD>
 
 <body style="overflow:hidden;">
-    <div class="dhcpha-win-mask">
-        <img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-    </div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'north',title:'配液打签',iconCls:'icon-print',headerCls:'panel-header-gray',split:true,collapsible:false"
-                    border="true" class="dhcpha-north-r3">
-                    <table class="dhcpha-north-tbl">
+                <div data-options="region:'north',title:'配液打签',iconCls:'icon-print',headerCls:'panel-header-gray',split:true,collapsible:false" border="true" class="pha-pivas-row-3">
+                    <table class="pha-con-table pha-con-table-right" style="float:left">
                         <tr>
+                            <td class="r-label">
+                                <label for="dateStart">#(..Get("用药开始日期"))#</label>
+                            </td>
                             <td>
-                                <label for="dateStart">用药开始日期</label>
                                 <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbLocGrp">#(..Get("科室组"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbLocGrp">科室组</label>
                                 <input id="cmbLocGrp" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbPivaCat">#(..Get("配液大类"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPivaCat">配液大类</label>
                                 <input id="cmbPivaCat" type="text" />
                             </td>
-                            <td>
-                                <label for="cmbPriority">医嘱优先级</label>
-                                <input id="cmbPriority" type="text" />
+                            <td class="r-label">
+                                <label for="cmbPriority">#(..Get("医嘱优先级"))#</label>
                             </td>
                             <td>
-                                <label for="cmbInstruc">用法</label>
+                                <input id="cmbPriority" type="text" />
+                            </td>
+                            <td class="r-label">
+                                <label for="cmbInstruc">#(..Get("用法"))#</label>
+                            </td>
+                            <td>
                                 <input id="cmbInstruc" type="text" />
                             </td>
                             <td>
-
                             </td>
                         </tr>
                         <tr>
+                            <td class="r-label">
+                                <label for="dateEnd">#(..Get("用药结束日期"))#</label>
+                            </td>
                             <td>
-                                <label for="dateEnd">用药结束日期</label>
                                 <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbWard">#(..Get("病区"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbWard">病区</label>
                                 <input id="cmbWard" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbWorkType">#(..Get("工作组"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbWorkType">工作组</label>
                                 <input id="cmbWorkType" type="text" />
                             </td>
-                            <td>
-                                <label for="cmgIncItm">药品</label>
-                                <input id="cmgIncItm" type="text" />
+                            <td class="r-label">
+                                <label for="cmgIncItm">#(..Get("药品"))#</label>
                             </td>
                             <td>
-                                <label for="cmbPack">打包</label>
+                                <input id="cmgIncItm" type="text" />
+                            </td>
+                            <td class="r-label">
+                                <label for="cmbPack">#(..Get("打包"))#</label>
+                            </td>
+                            <td>
                                 <input id="cmbPack" type="text" />
                             </td>
                             <td>
@@ -77,30 +129,51 @@
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="4" style="text-align:left">
-                                <div id="DivBatNo">　　　　批次</div>
+                            <td class="r-label">
+                                #(..Get("批次"))#
                             </td>
-                            <td>
+                            <td colspan="8" style="text-align:left">
+                                <div id="DivBatNo" style="float:left"></div>
+                            </td>
+                            <td class="r-label">
                                 <a class="hisui-linkbutton" plain='false' iconCls='icon-w-find' id="btnFind">查询</a>
                             </td>
-
                         </tr>
                     </table>
+                    <table class="pha-con-table pha-con-table-right pivas-user-select" style="float: right;padding-right:10px;">
+                        <tr>
+                            <td class="r-label">
+                                <label for="cmbNeedUser30">#(..Get("排药"))#</label>
+                                <input id="cmbNeedUser30" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">
+                                <label for="cmbNeedUser40">#(..Get("贴签"))#</label>
+                                <input id="cmbNeedUser40" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">
+                                <label for="cmbNeedUser50">#(..Get("核对"))#</label>
+                                <input id="cmbNeedUser50" />
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="pivas-user-select-line">
+                    </div>
                 </div>
                 <div data-options="region:'center'" border="false">
                     <div class="hisui-layout" fit="true">
-                        <div data-options="region:'west',split:true,width:300" border="false"
-                            style="border-radius: 4px;">
-                            <div id="tabsTotal" class="hisui-tabs" fit="true">
+                        <div data-options="region:'west',split:true,width:300,border:false"  >
+                            <div id="tabsTotal" class="hisui-tabs tabs-gray" fit="true">
                                 <div data-options="title:'病区列表'">
                                     <div class="hisui-layout" fit="true" border="false">
                                         <div data-options="region:'center'" border="false">
                                             <table id="gridWard"></table>
                                         </div>
-                                        <div data-options="region:'south'" border="false"
-                                            style="text-align:center;padding-bottom:10px">
-                                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false"
-                                                style="overflow:hidden;" id="btnFindDetail">查询</a>
+                                        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+                                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" style="overflow:hidden;" id="btnFindDetail">查询</a>
                                         </div>
                                     </div>
                                 </div>
@@ -113,139 +186,101 @@
                                 </div>
                             </div>
                         </div>
-                        <div data-options="region:'center'" border="false" style="border-radius: 4px;">
-                            <div id="tabsDetail" class="hisui-tabs" fit="true">
-                                <div data-options="title:'工作组'">
-                                    <table id="gridWorkType"></table>
-                                </div>
-                                <div data-options="title:'医嘱明细'">
-                                    <div class="hisui-layout" fit="true" border="false">
-                                        <div data-options="region:'center'" border="false">
-                                            <table id="gridOrdExe"></table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div data-options="region:'center',bodyCls:'panel-body-gray'">
+                            <table id="gridOrdExe"></table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="gridWardBar">
-    </div>
-    <div id="gridWorkTypeBar">
+
+    <div id="gridOrdExeBar" style="height:32px;padding-top:2px">
         <table>
             <tr>
+                <td style="padding-top:2px;display:none">
+                    <input class='hisui-radio' type="radio" label='工作组顺序打印' name='wtSortGrp' value='1' checked>
+                </td>
+                <td style="padding-left:10px;padding-top:2px;;display:none">
+                    <input class='hisui-radio' type="radio" label='工作组汇总打印' name='wtSortGrp' value='2'>
+                </td>
                 <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls='icon-print' id="btnPrint">打印</a>
+                    <a class="hisui-linkbutton" plain="true" iconCls='icon-all-select' id="btnSelectAll">全选</a>
+                    <a class="hisui-linkbutton" iconCls='icon-all-unselect' plain="true" id="btnUnSelectAll">全消</a>
+                </td>
+                <td style="padding-left:10px;">
+                    <div class="datagrid-btn-separator"></div>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='true' iconCls='icon-print' id="btnPrint">打印标签</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" plain='true' iconCls='icon-print' id="btnPrintWithArr">打印标签及排药单</a>
                 </td>
                 <td>
                     <div class="datagrid-btn-separator"></div>
                 </td>
-                <td style="padding-left:10px;padding-top:2px;">
-                    <input class='hisui-radio' type="radio" label='工作组顺序打印' name='wtSortGrp' value='1' checked>
-                </td>
-                <td style="padding-left:10px;padding-top:2px;">
-                    <input class='hisui-radio' type="radio" label='工作组汇总打印' name='wtSortGrp' value='2'>
-                </td>
-            </tr>
-        </table>
-    </div>
-    <div id="gridOrdExeBar" style="height:32px;padding-top:2px">
-        <table>
-            <tr>
                 <td>
-                    <span><a class="hisui-linkbutton" iconCls='icon-btn-pack' plain="true" id="btnPack">打包</a></span>
+                    <span><a class="hisui-linkbutton" iconCls='icon-bag' plain="true" id="btnPack">打包</a></span>
                 </td>
                 <td>
-                    <span><a class="hisui-linkbutton" iconCls='icon-btn-pack-cancel' plain="true"
-                            id="btnUnPack">取消打包</a></span>
+                    <span><a class="hisui-linkbutton" iconCls='icon-bag-x' plain="true" id="btnUnPack">取消打包</a></span>
                 </td>
-            </tr>
-        </table>
-    </div>
-    <div id="gridAdmBar">
-        <div>
-            <div><input id="txtPatNo" type="text" class="hisui-validatebox" placeholder="登记号..." style="height:30px" />
-            </div>
-        </div>
-    </div>
-    <div id="needUserWin" class="hisui-dialog" title="选择核对人" closed="true" style="width:245px;height:210px;"
-        data-options="iconCls:'icon-person',modal:true,
-	buttons:[{
-		text:'确定',
-		handler:function(){
-			NeedUserWinSave();
-		}
-	},{
-		text:'取消',
-		handler:function(){
-			$('#needUserWin').window('close');
-		}
-	}]">
-        <div class="hisui-layout" fit="true" border="false">
-            <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
-                <div class="hisui-layout" data-options="fit:true,border:false">
-                    <div data-options="region:'center'" border="false">
-                        <table style="padding-left:5px;padding-top:5px;">
-                            <tr style="height:40px;display:none;">
-                                <td>
-                                    <label for="cmbNeedUser30">排药核对人</label>
-                                </td>
-                                <td>
-                                    <input id="cmbNeedUser30" />
-                                </td>
-                            </tr>
-                            <tr style="height:40px;display:none;">
-                                <td>
-                                    <label for="cmbNeedUser40">贴签核对人</label>
-                                </td>
-                                <td>
-                                    <input id="cmbNeedUser40" />
-                                </td>
-                            </tr>
-                            <tr style="height:40px;display:none;">
-                                <td>
-                                    <label for="cmbNeedUser50">核对核对人</label>
-                                </td>
-                                <td>
-                                    <input id="cmbNeedUser50" />
-                                </td>
-                            </tr>
-                        </table>
+                <td>
+                    <div style="position:absolute;right:10px;top:5px">
+                        <a class="hisui-linkbutton" plain='true' iconCls='icon-set-paper' id="btnPrtConfig">打印设置</a>
                     </div>
-                </div>
-            </div>
-        </div>
+
+                </td>
+            </tr>
+        </table>
     </div>
+    <div id="gridAdmBar" style="padding: 10px">
+        <input id="txtPatNo" />
+    </div>
+
     <!-- 工作组窗体维护 -->
-    <div id="gridPrtWayWin" class="hisui-dialog" title="打印排序方式修改" closed="true" style="width:320px;height:400px;"
-        data-options="iconCls:'',modal:true,
+    <div id="gridWorkTypeWin" class="hisui-dialog" title="打印设置" closed="true" style="width:800px;height:430px;" data-options="iconCls:'icon-w-config',modal:true,closable:false,
 	buttons:[{
-		text:'确定',
-		handler:function(){
-            UpdateWorkTypePrtWay();
-		}
+        id:'btnCfgDefault',
+		text:'恢复默认值'
+	},{
+        text:'确定',
+        id:'btnCfgOk'
 	},{
 		text:'取消',
-		handler:function(){
-			$('#gridPrtWayWin').window('close');
-		}
+		id:'btnCfgCancel'
 	}]">
         <div class="hisui-layout" fit="true">
             <div data-options="region:'center'" border="false" style="padding:10px;padding-bottom: 0px;">
                 <div class="hisui-layout" data-options="fit:true">
-                    <div data-options="region:'center'" style="border:1px solid #cccccc;border-radius: 4px;">
-                        <table id="gridPrtDict"></table>
+                    <div data-options="region:'west',width:400,split:true" style="border:1px solid #cccccc;border-radius: 4px;">
+                        <table id="gridWorkType"></table>
                     </div>
-                    <div data-options="region:'east',width:175,split:true"
-                        style="border:1px solid #cccccc;border-radius: 4px;">
+
+                    <div data-options="region:'center'" style="border:1px solid #cccccc;border-radius: 4px;">
                         <table id="gridPrtWay"></table>
+                    </div>
+                    <div data-options="region:'east',width:200,split:true" style="border:1px solid #cccccc;border-radius: 4px;">
+                        <table id="gridPrtDict"></table>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    <!-- 汇总预览 -->
+    <div id="gridTotalWin" class="hisui-dialog" title="打印" closed="true" style="width:800px;height:400px;padding:10px 10px 0px 10px;" data-options="iconCls:'icon-w-print',modal:true,
+        buttons:[{
+            text:'确认',
+            id:'btnSavePrint' 
+        },{
+            text:'取消',
+            handler:function(){
+                $('#gridTotal').datagrid('clear')
+                $('#gridTotalWin').window('close');
+            }
+        }]">
+        <table id="gridTotal"></table>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/datagrid-dnd/datagrid-dnd.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>

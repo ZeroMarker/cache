@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!--doccure.config.rbcresplan.hui.csp HISUI资源计划维护--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<ADDINS require="CmdShell"></ADDINS>
+<HISUI></HISUI>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+#ScheduleList .datagrid-row-over,#ScheduleList .datagrid-row-selected{
+        background-color: #ffffff;
+}
+#ScheduleList .datagrid-body [class*="datagrid-cell-c1-Week"]:hover{
+    text-decoration: underline;
+    font-weight: bolder;
+    color:blue;
+}
+#ScheduleList .datagrid-body [class*="datagrid-cell-c2-Week"]:hover{
+	cursor:pointer;
+    text-decoration: underline;
+    font-weight: bolder;
+    color:blue;
+}
+.inactive{
+	background-color:#f64c60;
+}
+
+#tabTimeRange .tabs-panels,#tabWeek .tabs-panels{
+	display:none;
+}
+#BtnAdd,#BtnSave,#BtnDelete,#BtnCancel{
+	margin-right:25px;
+}
+iframe{
+	vertical-align:top;
+	display:block;
+}
+.panel-header {
+	border-bottom:0;
+}
+.ImportantFont {
+	color: red;
+	font-weight: bold;
+	font-size: 16px
+}
+.textbox{
+	width:140px!important	
+}
+</style>
+<Server>
+w "<SCRIPT language = 'javascript' >",!
+	w $C(9),"var TRArr=new Array();",!
+	s Rowid=0
+	f  s Rowid=$O(^DHCDocCureRBCTimePeriodSet(Rowid)) q:Rowid=""  d
+	.s SttTime=$P(^DHCDocCureRBCTimePeriodSet(Rowid),"^",3)
+	.s SttTime=$ZT(+SttTime)
+	.s EndTime=$P(^DHCDocCureRBCTimePeriodSet(Rowid),"^",4)
+	.s EndTime=$ZT(+EndTime)
+	.w $C(9),"TRArr["_Rowid_"]='"_SttTime_"^"_EndTime_"';",!
+w "</SCRIPT>"
+s datagridCellName="cell-c2"
+s ToLocFlag=$g(%request.Data("TOLOC",1))
+if ToLocFlag="Y"{
+	s datagridCellName="cell-c1"	
+}
+</Server>
+</head>
+<body>
+	<csp:Include Page="doccure.config.rbcresplan.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		if (websys_isIE==true) {
+		     var script = document.createElement('script');
+		     script.type = 'text/javaScript';
+		     script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird 文件地址
+		     document.getElementsByTagName('head')[0].appendChild(script);
+		}
+		//全局请求后台服务对象
+		var ServerObj={
+			pageCode:"doccure.config.rbcresplan.hui.csp",
+			pageName:"治疗资源计划",
+			ProductLine:"Cure",
+			parentPageCode:"",
+			parentPageName:"",
+			MainCSPIsLink:"N",
+			domSelectors:".hisui-radio",
+			datagridCellName:"#(datagridCellName)#",
+			ToLocFlag:"#(ToLocFlag)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/config.rbcresplan.new.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/config.schetimerange.js"></script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script src="../scripts/../scripts_lib/ckeditor/ckeditor.js" type="text/javascript"></script>
+	<script src="../scripts/dhcmessage.common.js" type="text/javascript"></script>
+	<style>
+		.form-table tr{
+			height:40px;
+		}
+		.textbox.tb200{
+			width:200px;	
+		}
+		.no-data{
+			background: url(../images/no_data.png) center center no-repeat;
+		}
+		
+		/*以下为极简而生*/
+		.ui-lite .no-data{
+			background-image: url(../images/no_data_lite.png);
+			background-size:600px auto;
+		}
+	</style>
+	<server>
+		s isSuper=%request.Get("IsSuper")
+		s type=%request.Get("Type")
+		if type="" s type="T"
+		s user=%session.Get("LOGON.USERID")
+		s loc=%session.Get("LOGON.CTLOCID")
+		s group=%session.Get("LOGON.GROUPID")
+		s hosp=%session.Get("LOGON.HOSPID")
+		s site=%session.Get("LOGON.SITECODE")
+		if site="" s site="DHCHEALTH"
+	</server>
+</head>
+<body class="hisui-layout">
+	<div region="west"  data-options="collapsible:false,border:false,bodyCls:'panel-header-gray'" style='width:400px;padding:10px 10px 10px 10px;'>
+		<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',title:'目录',iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div region="north" data-options="border:false" style='height:31px;'>
+					<div class="datagrid-toolbar" id="index_tree_tb">
+						<table cellspacing="0" cellpadding="0"><tr>
+						<td>
+							<a href="javascript:void(0);" onclick="GV.mm_addCatgory();" class="hisui-linkbutton" data-options="plain:true" iconCls="icon-add"  id="tb_mm_addCatgory">增加分类</a>
+						</td>
+						<td>
+							<a href="javascript:void(0);" onclick="GV.mm_addContent();" class="hisui-linkbutton" data-options="plain:true" iconCls="icon-add"  id="tb_mm_addContent">增加模板</a>
+						</td>
+						<td>
+							<a href="javascript:void(0);" onclick="GV.mm_edit()" class="hisui-linkbutton" data-options="plain:true" iconCls="icon-edit" id="tb_mm_edit">修改</a>
+						</td>
+						<td>
+							<a href="javascript:void(0);" onclick="GV.mm_delete()" class="hisui-linkbutton" data-options="plain:true" iconCls="icon-remove" id="tb_mm_delete">删除</a>
+						</td>
+						</tr></table>
+
+					
+					</div>
+				</div>
+				<div region="center" data-options="border:false" style="padding:0 10px;">
+					<div id="left_tree"></div>
+				</div>
+			</div>
+		</div>
+	</div> <!--end west-->
+	<div data-options="region:'center',border:false" style="padding:10px 10px 10px 0px;">
+		<div id="editor-panel" class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',title:'请选择左侧目录的叶子节点',iconCls:'icon-paper-info'" style="position:relative;padding:10px;">
+			
+			<div class="hisui-layout" data-options="fit:true">
+				<div region="center" data-options="border:false" style="padding:0;">
+					<input type="hidden" id="EditorId"/>
+					<div id="editor-preview" class="msgDiv no-data" style="width:100%;height:100%;overflow:auto;"></div>
+					<div id="editor-wrap" style="width:100%;height:100%;overflow:auto;display:none;" >
+						<textarea id="editor-text"></textarea>
+					</div>
+				</div>
+				
+				<div region="south" data-options="border:false" style="height:40px;text-align:center;padding-top:10px;">
+					<div id="editor-buttons" style="height:30px;text-align:center;display:none;">
+						<a href="javascript:void(0);" id="editor-btn-edit" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'',disabled:true" style="margin-right:10px;">修改</a>
+						<a href="javascript:void(0);" id="editor-btn-save"class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'',disabled:true" style="margin-right:10px;">保存</a>
+						<a href="javascript:void(0);" id="editor-btn-cancel"class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'',disabled:true" >取消</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="left_tree_mm" class="hisui-menu" style="width:150px;">
+		<div id="mm_addCatgory" iconCls="icon-add" onclick="GV.mm_addCatgory();">增加分类</div>
+		<div id="mm_addContent" iconCls="icon-add" onclick="GV.mm_addContent();">增加模板</div>
+		<div id="mm_edit" iconCls="icon-edit" onclick="GV.mm_edit();">修改</div>
+		<div id="mm_delete" iconCls="icon-remove" onclick="GV.mm_delete()">删除</div>
+	</div>
+	
+	<div id="catgory_win" class="hisui-dialog" data-options="modal:true,draggable:false,closed:true,iconCls:'icon-w-add',width:300,title:'增加分类'" style="padding:5px 10px;">
+		<table class="form-table" cellspacing="0" cellpadding="0">
+			<input type="hidden" id="CatgoryId"/>
+			<input type="hidden" id="CatgoryRefType"/>
+			<input type="hidden" id="CatgoryRefObjId"/>
+			<tr><td class="r-label"><span style="color:red;">*</span>#(..Get("分类名称"))#</td><td><input class="textbox tb200" id="CatgoryTitle"/></td></tr>
+			<tr><td class="r-label">#(..Get("备注"))#</td><td><textarea class="textbox tb200" id="CatgorySummary" style="height:50px;overflow:auto;line-height:25px;"></textarea></td></tr>
+		</table>
+	</div><!-- end eait-win -->
+
+	<div id="content_win" class="hisui-dialog" data-options="modal:true,draggable:false,closed:true,iconCls:'icon-w-add',width:300,title:'增加模板'" style="padding:5px 10px;">
+		<table class="form-table" cellspacing="0" cellpadding="0">
+			<input type="hidden" id="ContentId"/>
+			<input type="hidden" id="ContentRefType"/>
+			<input type="hidden" id="ContentRefObjId"/>
+			<input type="hidden" id="ContentCatgory"/>
+			<tr><td class="r-label"><span style="color:red;">*</span>#(..Get("模板名称"))#</td><td><input class="textbox tb200" id="ContentTitle"/></td></tr>
+			<tr><td class="r-label">#(..Get("备注"))#</td><td><textarea class="textbox tb200" id="ContentSummary" style="height:50px;overflow:auto;line-height:25px;"></textarea></td></tr>
+		</table>
+	</div><!-- end eait-win -->
+	
+	<script type="text/javascript">
+		var GV={};
+		GV.isSuper='#(isSuper)#';
+		GV.type='#(type)#';
+		GV.user='#(user)#';
+		GV.loc='#(loc)#';
+		GV.group='#(group)#';
+		GV.hosp='#(hosp)#';
+		GV.site='#(site)#';
+		
+		
+		
+		$(function(){
+			///为极简增加样式类
+			if(typeof HISUIStyleCode=='string' && HISUIStyleCode=='lite'){
+				$('body').addClass('ui-lite')	;
+			}
+		})
+	</script>
+	<script type="text/javascript" src="../scripts/dhcmessage.contenttemplate.js" ></script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+﻿<html>
+<head>
+    <meta charset="UTF-8">
+    <title>河南CA签名板页面</title>
+    <style type="text/css">
+    body{
+        overflow-x:hidden;
+        overflow-y:hidden;
+    }
+    .sign_window
+    {
+        position:fixed;
+        float:left;
+        width:500px;
+        right:5px;
+        bottom:5px;
+    }
+    .enter_sign
+    {
+        float:left;
+        width:100%;
+        height:100%;
+        background:#036FC4;
+        opacity:0.8;
+    }
+    .enter_sign_inner
+    {
+        float:left;
+        background:#036FC4;
+        width:100%;
+        height:30px;
+        line-height:10px;
+    }
+    .enter_sign_inner p
+    {
+        margin-left:10px;
+        color:#ffffff;
+        font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    .obj_id
+    {
+        float:left;
+        width:1280px;
+        height:800px;
+        background:#ffffff;
+        float:left;
+        overflow:hidde
+        border:3px solid #036FC4;
+        opacity:0.8;
+    }
+
+    .sign_button_btn
+    {
+        width:120px;
+        height:40px;
+        font-size:25px;
+        margin:8px 0px;
+        background:#ff0000;
+        color:#ffffff;
+        border:1px solid #ff0000;
+    }
+    </style>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+
+    
+</head>
+<body>
+<div style="width:100%; height:800px; background-repeat:no-repeat; margin:0px;">
+    <div class="s_content">
+        <div class="sign_window" id="sign_window">
+			<div class='enter_sign_inner' id='enter_sign_inner'>
+				<p>签名区域</p>
+			</div>
+			<div class="obj_id"  id="sign_id">
+				  <object id="TInputSign" 
+						classid="clsid:AC920051-CA32-4B5C-9B1C-98D5D7F06472" width="0%" height="0%">
+				  </object>
+				 <SCRIPT language="javascript" type="text/javascript" FOR="TInputSign" EVENT="UnipenTouchCallBack()">
+					TInputSignWebButtonClickCallback();
+				  </SCRIPT>
+			</div>
+			<div style="float:left;background:#036FC4;width:100%;height:60px;">
+				<button id="button_resign" class="sign_button_btn" style="float:left;margin-left:50px;">重签</button>
+				<button  id="button_ok" class="sign_button_btn" style="float:right;margin-right:50px;">确认</button>
+			</div>
+        </div>
+    </div>
+    </div>
+    <script language="javascript">
+        var obj;
+        var obj_PDF;
+        var openT=false;
+        var winState = false;
+        var fileName; // 保存结果唯一标识
+		var signWidth = 120, signHeight = 90;  // sign&fingerSize
+		var fingerImgW = 53, fingerImgH = 60;  // fingerSize
+
+        function ReleaseOcx(){
+            
+        }
+
+        function close_open_button(){
+            if(!openT){
+                $(".sign_window").hide();
+                $("#open_close_sign").text("签字");
+                $("#open_close_sign").css("background-color","#348BCF");
+                obj.HideBoard();
+                openT=true;
+                if(winState){
+                  winState = false;
+                }
+            }else if(openT){
+                $(".sign_window").show();
+                $("#open_close_sign").text("隐藏");
+                $("#open_close_sign").css("background-color","#348BCF");
+                obj.ShowBoard();
+                openT=false;
+                winState = false;
+            }
+        }
+
+        /*
+         *回调
+         */
+        function TInputSignWebButtonClickCallback()
+        {
+            var fname = obj.GetClickedFuncname();
+            if(fname == "NULL")
+            {
+                alert("NULL");
+            }
+            else if(fname == "TInput_close_open")
+            {
+                close_open_button();
+            }
+            else if(fname == "button_resign")
+            {
+                obj.Resign();
+            }
+            else if (fname == "button_ok")
+            {
+                obj.Confirm();
+                obj.ReleaseUnipenTouch(); // 注销ocx
+                //var signBase64 = obj.SaveImageToBase64();
+                fileName = obj.GetPreFilename();
+                var signFingerBase64;
+                var fingerId;
+                try{
+                    var signFileUrl = 'C:/unipen/sign/' + fileName + '_sign.bmp'; // 签名保存路径
+					var signBase64 = obj_PDF.ZoomImageByFile(signFileUrl, signWidth, signHeight, 0)
+					// 录入指纹
+					var isSave = obj.CreateFignerDlg(); // 调用指纹 返回值： -1没有保存      0保存成功
+					if (0 == isSave) {
+						// var fingerBase64 = obj.SaveFingerToBase64();
+						fingerId = obj.GetFingerIdPoints();  // 获取指纹特征点
+						var fingFileUrl = 'C:/unipen/finger/' + fileName + '_finger.bmp'; // 指纹保存路径
+						var fingerBase64 = obj_PDF.ZoomImageByFile(fingFileUrl, fingerImgW, fingerImgH, 1);
+						var signFingerPath = 'C:/unipen/signFinger'; // 签名指纹合并后路径
+						var signFingerName = fileName + '_signFinger.png'; // 签名指纹合并后Name
+						var result = MergeImgs(signFileUrl, fingFileUrl, signFingerPath, signFingerName); // 合并后图片路径
+						signFingerBase64 = obj_PDF.GetBase64FromImage(result);// 获取签名图片Base64流
+                    }else{
+                        alert('该设备不支持指纹');
+                    }
+                    
+                setSignImg(signFingerBase64);
+                
+                window.opener.onclick7(signFingerBase64,signBase64,fingerBase64,fingerId);
+                $("#btnOpen").remove(); // 删除元素
+                
+                } catch(err){
+                    $(".enter_sign").hide();
+                    $("#btnOpen").hide();
+                    alert('JS 发生异常'+err);
+                }
+                obj.HideBoard();
+                openT=true;
+            }
+
+        }
+
+        // 副屏上贴签名结果
+        function setSignImg(imageValue){
+            var signIdDiv = document.getElementById("sign_window");
+
+            var img1 = document.createElement("img");
+                img1.src='data:image/png;base64,'+imageValue;
+                img1.style.cssText = 'margin-bottom : 135px;width:200px;';
+                img1.id='signResult';
+                signIdDiv.innerHTML = '';
+                signIdDiv.style.cssText = 'text-align : center';
+            signIdDiv.appendChild(img1);
+        }
+
+        window.onload = function () {
+            obj = document.getElementById("TInputSign");
+            obj_PDF = new ActiveXObject("UnipenServices.lib");
+            setTimeout(function () { obj.RegisterUnipenTouch(TInput_getButtonsInfo()); obj.ShowBoard();}, 600);
+        };
+
+        // 合并后的图片
+        function MergeImgs(signImgPath,fingerImgPath,signFingerPath,signFingerName) {
+            fingerImgPath = fingerImgPath.replace(/bmp/, "png")
+			signImgPath = signImgPath.replace(/bmp/, "png")
+			var v = obj_PDF.About;
+			var ret = obj_PDF.MergeImages(signImgPath, fingerImgPath, signFingerPath, signFingerName, signWidth, signHeight, fingerImgW, fingerImgH);
+			return ret;
+        };
+
+        function _getTop(e){
+            var offset=e.offsetTop;
+            if(e.offsetParent!=null) offset+=_getTop(e.offsetParent);
+            return offset;
+        }
+        function _getLeft(e){
+            var offset=e.offsetLeft;
+            if(e.offsetParent!=null) offset+=_getLeft(e.offsetParent);
+            return offset;
+        }
+        function _buttonInfo(func, e){
+           _top = _getTop(e);
+           _left = _getLeft(e);
+           s = _top;
+           s += '@'+_left;
+           s += '@'+(e.offsetHeight+_top);
+           s += '@'+(e.offsetWidth+_left);
+           s += '@'+func
+           return s+'@';
+        }
+        function _objectInfo(e){
+           return _buttonInfo("object", e);
+        }
+        //控件调用函数
+        function TInput_getButtonsInfo() {
+           
+           var button_resign=document.getElementById("button_resign");
+           button_resign_btn = _buttonInfo("button_resign", button_resign);
+           
+           
+           var button_ok=document.getElementById("button_ok");
+           button_ok_btn = _buttonInfo("button_ok", button_ok);
+
+            var sign_window_button = document.getElementById("sign_window");
+			activex = (sign_window.offsetWidth - 560) + '@' + (sign_window.offsetLeft - 780) + '@790@1280@object@';
+           s = '' + button_resign_btn + button_ok_btn + activex;
+           return s;
+        }
+	</script>	
+</body>
+</html>

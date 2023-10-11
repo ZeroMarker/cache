@@ -1,0 +1,304 @@
+<!-- 
+ * FileName: dhcbill.checkout.csp
+ * Author: ZhYW
+ * Date: 2021-08-30
+ * Description: 收银台
+-->
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<DOCCARD medStepCode="Bill"/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.checkout.css"/>
+	<server>
+		set groupId=%session.Get("LOGON.GROUPID")
+		set hospId=%session.Get("LOGON.HOSPID")
+		
+		set arguments=%request.Get("arguments")
+		set argumentObj={}.%FromJSON(arguments)
+		set allowPayMent=argumentObj.allowPayMent
+		set insTypeId=argumentObj.insTypeId
+		set typeFlag=argumentObj.typeFlag
+		set accMRowId=argumentObj.accMRowId
+		set accMLeft=argumentObj.accMLeft
+		set prtRowIdStr=argumentObj.prtRowIdStr
+		set totalAmt=argumentObj.totalAmt
+		set discAmt=argumentObj.discAmt
+		set payorAmt=argumentObj.payorAmt
+		set patShareAmt=argumentObj.patShareAmt
+		set insuAmt=argumentObj.insuAmt
+		set payAmt=argumentObj.payAmt
+		
+		set isChgBizType=(" FEE REG OBS " [ (" "_typeFlag_" "))   //是否收费业务
+		
+		set HotKeyTipMsg=""   //快捷键提示信息
+		set maxIndex=9999
+		set CPPPMCode="CPP"
+		set isExtDefPM=0
+		kill PMList
+		//取配置的支付方式
+		set myPMStr=##class(web.UDHCOPGSConfig).ReadPMByINSRowID(insTypeId, hospId)
+		set myGSRowID=##class(web.UDHCOPGSConfig).GetGSRowID(groupId, hospId)
+		set myPMSub=0
+		while($o(^DHCOPGS("GS",myGSRowID,"PM",myPMSub))) {
+			set myPMSub=$o(^DHCOPGS("GS",myGSRowID,"PM",myPMSub))
+			set myGSPMData=$g(^DHCOPGS("GS",myGSRowID,"PM",myPMSub))
+			continue:(myGSPMData="")
+			set myPMRowID=myGSRowID_"||"_myPMSub
+			set myCTPMRowID=$p(myGSPMData,"^",1)
+			continue:(myCTPMRowID="")
+			continue:((myPMStr'="")&&(("^"_myPMStr_"^")'[("^"_myCTPMRowID_"^")))
+			set myCTPMData=$g(^CT("CTPM",myCTPMRowID))
+			set myCTPMCode=$p(myCTPMData,"^",1)
+			set myCTPMDesc=$p(myCTPMData,"^",2)
+			set myCTPMDesc=##class(User.CTPayMode).GetTranByDesc("CTPMDesc", myCTPMDesc, %session.Get("LOGON.LANGID"))
+			set myDefFlag=$p(myGSPMData,"^",4)
+			set myINVPrtFlag=$p(myGSPMData,"^",5)
+			set myRPFlag=$p(myGSPMData,"^",6)
+			set myPMPDFlag=$p(myGSPMData,"^",7)          //预交金
+			set myPMOPCFlag=$p(myGSPMData,"^",8)         //收费
+			set myPMOPRegFlag=$p(myGSPMData,"^",9)       //挂号
+			set myPMOPRefFlag=$p(myGSPMData,"^",10)      //退费
+			set myPMSequence=$p(myGSPMData,"^",11)       //顺序号
+			set myPMHotKey=$p(myGSPMData,"^",12)         //快捷键
+			set myPMIconCls=$p(myGSPMData,"^",13)        //图标
+			set myPMObsChgFlag=$p(myGSPMData,"^",14)     //急诊留观收费
+			set myTypeFlag=$case(typeFlag, "DEP":myPMPDFlag, "REG":myPMOPRegFlag, "REF":myPMOPRefFlag, "OBS":myPMObsChgFlag, :myPMOPCFlag)
+			continue:(myTypeFlag'="Y")
+			if (myCTPMCode=CPPPMCode) set isExtDefPM=1
+			if (myPMSequence="") set myPMSequence=$i(maxIndex)
+			set PMList(myPMSequence)=$lb(myCTPMRowID, myCTPMCode, myCTPMDesc, myRPFlag, myINVPrtFlag, myDefFlag, myPMHotKey, myPMIconCls)
+		}
+		
+		set pluLib=##class(BILL.Util.Library).%New()
+		do pluLib.LoadPaySrvLib()     //引入第三方支付服务接口
+		do pluLib.LoadReadCardLib()   //引入读卡公共js
+		do pluLib.%Close()
+		
+		set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+
+		set needActualMoney=##class(web.DHCBillPageConf).GetPageConfValue("dhcbill.checkout.csp", "NEEDACTUALMONEY", "", hospId)
+		set warrPay=##class(web.DHCBillPageConf).GetPageConfValue("dhcbill.opbill.charge.main.csp", "WARRPAY", "", hospId)
+	</server>
+	<script type="text/javascript">
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		
+		//常量
+		var CV = {
+			Args: #(arguments)#,
+			NeedActualMoney: ("#(needActualMoney)#" == 1),   //现金收费时实收是否必填
+			WarrPay: ("#(warrPay)#" == 1),                   //欠费结算是否需要担保
+			IsChgBizType: ("#(isChgBizType)#" == 1)          //是否收费业务
+		};
+	</script>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="padding:5px;overflow:hidden;">
+		<server>
+			if ('isChgBizType) {
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label'>"_..Get("支付金额")_"</span>",!
+				w "	<input id='selfPayAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+payAmt_",precision:2,disabled:true'>",!
+				w "</div>",!
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label'>"_..Get("账户余额")_"</span>",!
+				w "	<input id='accMLeft' class='hisui-numberbox textbox fontCls' data-options='value:"_+accMLeft_",precision:2,disabled:true'>",!
+				w "</div>",!
+			}else {
+				//取出基本配置
+				set myBCInfo=##class(web.DHCOPConfig).GetOPBaseConfig(hospId)
+				set roundNum=$p(myBCInfo,"^",14)  //0:不舍入，5:四舍五入，6:五舍六入，10:舍分
+				set roundCls=" hidden"   //默认不显示分币误差及现金舍入框
+				set roundCASHAmt=payAmt, roundErrAmt=0, roundErrData=""
+				if (+roundNum'=0) {
+					set roundCls=""    //有分币误差时，显示分币误差及现金舍入框
+					set payRoundInfo=##class(web.DHCBillConsIF).GetManyInvRoundErrAmt(prtRowIdStr, +payAmt)
+					set roundCASHAmt=$p(payRoundInfo,"^",1)
+					set roundErrData=$p(payRoundInfo,"^",2)
+					set roundErrAmt=roundCASHAmt-payAmt
+				}
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label hisui-tooltip' title='"_..Get("费用总额 = 折扣金额 + 记账金额 + 自付金额")_"' data-options='position:""right""'>"_..Get("费用总额")_"</span>",!
+				w "	<input id='invAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+totalAmt_",width:120,precision:2,disabled:true'>",!
+				w "</div>",!
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label'>"_..Get("折扣金额")_"</span>",!
+				w "	<input id='discAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+discAmt_",width:120,precision:2,disabled:true'>",!
+				w "</div>",!
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label'>"_..Get("记账金额")_"</span>",!
+				w "	<input id='payorAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+payorAmt_",width:120,precision:2,disabled:true'>",!
+				w "</div>",!
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label hisui-tooltip' title='"_..Get("自付金额 = 费用总额 - 折扣金额 - 记账金额，是院内优惠后的患者自付金额，与医保无关。")_"' data-options='position:""right""'>"_..Get("自付金额")_"</span>",!
+				w "	<input id='patShareAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+patShareAmt_",width:120,precision:2,disabled:true'>",!
+				w "</div>",!
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label hisui-tooltip' title='"_..Get("医保报销金额 + 个人账户金额")_"' data-options='position:""right""'>"_..Get("医保支付")_"</span>",!
+				w "	<input id='insuAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+insuAmt_",width:120,precision:2,disabled:true'>",!
+				w "</div>",!
+				w "<div class='container-invamt'>",!
+				w "	<span class='container-invamt invamt-label hisui-tooltip' title='"_..Get("自费金额 = 自付金额 - 医保支付")_"' data-options='position:""right""'>"_..Get("自费金额")_"</span>",!
+				w "	<input id='selfPayAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+payAmt_",width:120,precision:2,disabled:true'>",!
+				w "</div>",!
+				w "<div class='container-invamt"_roundCls_"'>",!
+				w "	<span class='container-invamt invamt-label'>"_..Get("分币误差")_"</span>",!
+				w "	<input id='roundErrAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+roundErrAmt_",width:120,precision:2,disabled:true' data='"_roundErrData_"'>",!
+				w "</div>",!
+				w "<div class='container-invamt"_roundCls_"'>",!
+				w "	<span class='container-invamt invamt-label'>"_..Get("现金舍入")_"</span>",!
+				w "	<input id='roundCASHAmt' class='hisui-numberbox textbox fontCls' data-options='value:"_+roundCASHAmt_",width:120,precision:2,disabled:true'>",!
+				w "</div>",!
+			}
+		</server>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;overflow:hidden">
+		<div class="hisui-layout" data-options="fit:true" style="border-top:1px dashed #cccccc;">
+			<div data-options="region:'center',border:false" class="div-spe" style="padding-top:5px;">				
+				<div class="container select-box-container" tabindex="0">
+			       	<server>
+						if (allowPayMent="Y") {
+							w "<div class='container-tool-menu'>",!
+	            			w "   <div id='switchManyPayM' class='container-tool-item'></div>",!
+	        				w "</div>"
+						}
+						set index=0
+						while($o(PMList(index))) {
+							set index=$o(PMList(index))
+							set PayMList=$g(PMList(index))
+							continue:(PayMList="")
+							set PayMStr=$lts(PayMList,"^")
+							set CTPMRowID=$lg(PayMList,1)
+							set CTPMCode=$lg(PayMList,2)
+							set CTPMDesc=$lg(PayMList,3)
+							set RPFlag=$lg(PayMList,4)
+							set INVPrtFlag=$lg(PayMList,5)
+							set DefFlag=$lg(PayMList,6)
+							//存在"预交金"支付方式，且账户余额>0时默认支付方式为"预交金"
+							if ((isExtDefPM=1)&&(+accMLeft>0)) {
+								set DefFlag=$s((CTPMCode=CPPPMCode):"Y",1:"N")
+							}
+							set HotKey=$lg(PayMList,7)
+							set IconCls=$lg(PayMList,8)
+							if (HotKey'="") {
+							 	set myKeyStr=CTPMDesc_"【"_HotKey_"】"
+								set HotKeyTipMsg=$s((HotKeyTipMsg=""):myKeyStr,1:(HotKeyTipMsg_" "_myKeyStr))
+							}
+						 	set selected="", defaultPayM="", defaultPayMAmt="", disabled="false"
+						 	if (DefFlag="Y") {
+							 	set selected=" selected"                    //前边的空格不能少
+							 	set defaultPayM=" default-paymode"
+								set defaultPayMAmt=" default-paymode-amt"
+						 		set disabled="true"
+							}
+						 	if (CTPMCode="QF") {
+							 	//欠费不能使用多种支付方式
+							 	set disabled="true"
+							}
+						 	set payMCodeClass=" "_CTPMCode_"-class"
+						 	set requireCls=$s((RPFlag="Y"):"paym-additionaldata",1:"")
+						 	w "<div id='btnPayMz"_CTPMCode_"' class='select-item div-spe2 paym-btn "_defUIVersion_selected_defaultPayM_"' data='"_PayMStr_"'>",!
+						 		w "	 <span class=""paym-btn-icon "_IconCls_"""></span>",!
+								w "	 <span class=""paym-btn-text "_requireCls_""">"_CTPMDesc_"</span>",!
+						 	w "</div>"
+						 	
+						 	w "<div class='select-item-amt hidden'>",!
+						 	w "   <input id='txtPayMz"_CTPMCode_"' class='hisui-numberbox textbox fontCls paymode-amt"_payMCodeClass_defaultPayMAmt_"' data-options='width:120,height:52,precision:2,disabled:"_disabled_"' data='"_PayMStr_"'/>",!
+							w "</div>",!
+						}
+					</server>
+		    	</div>
+			</div>
+			<div data-options="region:'south',border:false" style="height:#($s((isChgBizType):155,1:115)_"px")#;border-top:1px dashed #cccccc;overflow:hidden;">
+				<server>
+					if (isChgBizType) {
+						w "<div style='padding-top:10px;'>",!
+							w "	<table style='width:100%;border-spacing:0;'>",!
+								w "	<tr>",!
+									w "	<td class='r-label'>"_..Get("账户余额")_"</td>",!
+									w "	<td>",!
+										w "	<input id=""accMLeft"" class=""hisui-numberbox textbox fontCls"" data-options=""value:"_+accMLeft_",precision:2,disabled:true"">",!
+									w "	</td>",!
+									w "	<td class='r-label'>"_..Get("实收")_"</td>",!
+									w "	<td>",!
+										w "	<input id=""actualMoney"" class=""hisui-numberbox textbox fontCls"" data-options=""min:0,precision:2,validType:['checkMaxAmt']""/>",!
+									w "	</td>",!
+									w "	<td class='r-label'>"_..Get("找零")_"</td>",!
+									w "	<td>",!
+										w "	<input id=""backChange"" class=""hisui-numberbox textbox fontCls"" data-options=""precision:2,disabled:true""/>",!
+									w "	</td>",!
+								w "	</tr>",!
+							w "	</table>",!
+						w "	</div>",!
+					}
+				</server>
+				<div class="pl-center">
+					<div class='btn-container'>
+						<a href="javascript:;" class="hisui-linkbutton ok-btn" id="btn-ok">#(..Get("确定"))# (Enter)</a>
+						<a href="javascript:;" class="hisui-linkbutton ok-btn" id="btn-cancel" style="margin-left: 20px;">#(..Get("取消"))# (Esc)</a>
+						<a href="javascript:;" class="hisui-linkbutton ok-btn" id="btn-reset" style="margin-left: 20px;">#(..Get("重置 "))# (Reset)</a>					
+					</div>
+					<div class="msg-popover hidden">
+						<div class="messager-popover info">
+							<span class="messager-popover-icon info"></span>
+							<span class="content">
+								#(..Get("快捷键"))#：#(HotKeyTipMsg)#
+							</span>
+						</div>
+					</div>
+				</div>
+				<div class="pl-footer">
+					<span>#(+$zd(+$h,3))#</span>
+					<span>&copy#(..Get("东华医为科技有限公司版权所有"))#</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="additionDataDlg" class="additional-container" style="width:399px;height:260px;display:none;">		
+		<server>
+			//获取所有附属信息项
+	  		set cfg=##class(web.UDHCOPGSConfig).GetAdditionalDataCfg(groupId, hospId)
+			for i=1:1:$l(cfg,"!") {
+				set cfgData=$p(cfg,"!",i)
+				set code=$p(cfgData,"^",1)
+				set desc=$p(cfgData,"^",2)
+				set comType=$p(cfgData,"^",3)
+				set additionalCodeCls="additional-"_code
+				
+				if (comType="numberbox") {
+					w "<div class='paym-additional "_additionalCodeCls_" hidden'>",!
+					w "	<span class='r-label span-spe'><label>"_..Get(""_desc_"")_"</label></span>",!
+					w "	<input id='"_code_"' class='hisui-numberbox textbox tb270 additional-item item-textbox'/>",!
+					w "</div>",!
+				}elseif (comType="combobox") {
+					w "<div class='paym-additional "_additionalCodeCls_" hidden'>",!
+					w "	<span class='r-label span-spe'><label>"_..Get(""_desc_"")_"</label></span>",!
+					w "	<input id='"_code_"' class='hisui-combobox textbox tb270 additional-item item-combo'/>",!
+					w "</div>",!
+				}elseif (comType="datebox") {
+					w "<div class='paym-additional "_additionalCodeCls_" hidden'>",!
+					w "	<span class='r-label span-spe'><label>"_..Get(""_desc_"")_"</label></span>",!
+					w "	<input id='"_code_"' class='hisui-datebox textbox tb270 additional-item item-combo'/>",!
+					w "</div>",!
+				}else {
+					w "<div class='paym-additional "_additionalCodeCls_" hidden'>",!
+					w "	<span class='r-label span-spe'><label>"_..Get(""_desc_"")_"</label></span>",!
+					w "	<input id='"_code_"' class='textbox tb270 additional-item item-textbox'/>",!
+					w "</div>",!
+				}
+			}
+	   </server>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#common/dhcbill.hotkey.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#common/dhcbill.checkout.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#common/dhcbill.checkout.additionaldata.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+﻿<!-- 
+ * FileName: dhcbill.ipbill.billdtlprint.csp
+ * Author: ZhYW
+ * Date: 2022-12-19
+ * Description: 提供给电子病历组的接口，用于病案归档打印费用清单
+-->
+<!DOCTYPE html>
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<!--HISUI/-->
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+	<server>
+		set EpisodeID=%request.Get("EpisodeID")
+		set HospId=##class(web.UDHCHospitalGroup).GetHospitalByAdm(EpisodeID)
+	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			EpisodeID: "#(EpisodeID)#",
+			HospId: "#(HospId)#"
+		};
+		
+		/**
+		* 打印费用明细
+		*/
+		var printClick = function() {
+			var billId = "";
+			var stDate = "";
+			var endDate = "";
+			var isSplit = 0;
+			var otherQryStr = "" + "!" + isSplit;
+			var splitColFlag = getPageCfgValue("dhcbill.ipbill.billdtl.csp", "BSC", "", CV.HospId);
+			var paramObj = {
+				billId: billId,
+				stDate: stDate,
+				endDate: endDate,
+				episodeId: CV.EpisodeID,
+				otherQryStr: otherQryStr
+			};
+			var params = "";
+			for (var p in paramObj) {
+				if (!paramObj.hasOwnProperty(p)) {
+					continue;
+				}
+				params += ((params == "") ? "" : ";") + p + "=" + paramObj[p];
+			}
+			var fileName = (splitColFlag == 1) ? "DHCBILL-IPBILL-FYQDSL.rpx" : "DHCBILL-IPBILL-FYQD.rpx";
+			fileName = "{" + fileName + "(" + params + ")}";
+			DHCCPM_RQDirectPrint(fileName);
+			setTimeout(function() {
+				if (typeof parent.printNext === "function") {
+					parent.printNext();
+				}
+			}, 3000);
+		}();
+		
+		/*
+		$(function(){
+			$("#btn-print").click(printClick);
+		});
+		*/
+	</script>
+</head>
+<body>
+	<!--测试按钮-->
+	<!--a href="javascript:;" class="hisui-linkbutton" id="btn-print" data-options="iconCls:'icon-w-print'">打印</a></td-->
+</body>
+</html>

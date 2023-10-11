@@ -7,22 +7,34 @@
 	<script language="cache" runat="server">
       s scheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PatholScheme")
       s:(scheme = "") scheme = "<scheme><show><parent><item><code>ordername</code><desc>医嘱项</desc><hidden>N</hidden><width>130</width></item><item><code>AppDate</code><desc>申请日期</desc><hidden>N</hidden></item><item><code>AppTime</code><desc>申请时间</desc><hidden>N</hidden></item><item><code>SpeInfo</code><desc>标本信息</desc><hidden>N</hidden></item><item><code>tmid</code><desc>申请单号</desc><hidden>N</hidden></item><item><code>ClinicDiag</code><desc>临床诊断</desc><hidden>Y</hidden></item><item><code>ClinicRecord</code><desc>临床病历</desc><hidden>Y</hidden></item></parent><child><item><code>Tmrowid</code><desc>Tmrowid</desc><hidden>Y</hidden></item><item><code>RptDate</code><desc>报告日期</desc><hidden>N</hidden><width>70</width><check>Y</check></item><item><code>RptTime</code><desc>报告时间</desc><hidden>Y</hidden><width>70</width><check>N</check></item><item><code>Seeing</code><desc>检查所见:</desc><hidden>N</hidden><width>130</width><check>Y</check></item><item><code>Diagnosis</code><desc>病理诊断:</desc><hidden>N</hidden><width>130</width><check>Y</check></item><item><code>PathId</code><desc>病理号:</desc><hidden>N</hidden><check>Y</check></item></child></show><reference><parent><item><code>ordername</code><desc>医嘱项:</desc><separate>,</separate></item><item><code>SpeInfo</code><desc>标本信息:</desc><separate/></item></parent><child><item><code>RptDate</code><desc>报告日期:</desc><separate>,</separate></item><item><code>RptTime</code><desc>报告时间:</desc><separate>,</separate></item><item><code>Seeing</code><desc>检查所见:</desc><separate>,</separate></item><item><code>Diagnosis</code><desc>病理诊断:</desc><separate>,</separate></item><item><code>PathId</code><desc>病理号:</desc><separate/></item></child><separate>enter</separate></reference><interface>HIS</interface></scheme>"
+      s DateFormat = ##class(websys.Conversions).DateFormat()
    </script>	
     <script type="text/javascript" src="../scripts/emr/js/resource.common.head.js"></script>
 	<script language="javascript">
 		var scheme = '#(scheme)#'
 		var strXml = "";
 		var quoteData = {};		
+        var DateFormat = '#(DateFormat)#';
+        var initFlag = false;
    </script>
 	<title>病理信息</title>
 </head>
 <body class="hisui-layout" data-options="fit:true" style="padding:3px;">
-	<div id="seekform" data-options="region:'north',border:false" style="height:35px;padding-left:3px;">
-		<input class='hisui-radio' id="currentEpisode" value="currentEpisode" type="radio" name="episode" label='本次就诊'>	
-		<input class='hisui-radio' id="allEpisode" value="allEpisode" type="radio" name="episode" label='选择就诊'>
-		<span id="comboxEpisode">
-			<input id="EpisodeList" name="EpisodeList" style="width:120px;"/>
-		</span>
+	<div id="seekform" data-options="region:'north',border:false" style="height:73px;overflow:hidden;">
+        <div style="padding:5 0 0 5;">
+            <label>#(..Get("申请日期"))#</label>
+            <input id="stDate" class="hisui-datebox" style="width:115px"/>
+            <label>#(..Get("至"))#</label>
+            <input id="endDate" class="hisui-datebox" style="width:115px"/>
+            <input id="currentEpisode" class="hisui-checkbox" type="checkbox" data-options="label:'本次就诊',checked:true" style="padding-left:3px;"/>
+        </div>
+        <div style="padding:5 0 0 5;">
+            <input class="hisui-radio" id="oneMonth" type="radio" data-options="name:'rrtMonth',label:'1个月',onCheckChange:function(e,val){upPacsDate(e,val,1)}"/>
+            <input class="hisui-radio" id="threeMonths" type="radio" data-options="name:'rrtMonth',label:'3个月',onCheckChange:function(e,val){upPacsDate(e,val,2)}"/>
+            <input class="hisui-radio" id="sixMonths" type="radio" data-options="name:'rrtMonth',label:'6个月',onCheckChange:function(e,val){upPacsDate(e,val,3)}"/>
+            <input class="hisui-radio" id="otherMonths" type="radio" data-options="name:'rrtMonth',label:'更多',onCheckChange:function(e,val){upPacsDate(e,val,4)}"/>
+            <a href="#" id="search" class="hisui-linkbutton" iconCls="icon-w-find" onclick="queryData()" style="padding-left:5px;">#(..Get("查询"))#</a>
+        </div>
 	</div>
 	<div data-options="region:'south',border:false" class="south">
 		<a href="#" class="hisui-linkbutton query" onclick="getData()" >#(..Get("引用"))#</a>

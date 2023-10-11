@@ -1,0 +1,128 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ if ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+	<head>
+		<TITLE>第二副屏</TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<HISUI></HISUI>
+	</head>
+	<body class="hisui-layout">
+		<FORM name="fEPRMENU">
+			<INPUT TYPE="hidden" name="PatientID" id="PatientID" value="#($g(%request.Data("PatientID",1)))#">
+			<INPUT TYPE="hidden" name="EpisodeID" value="#($g(%request.Data("EpisodeID",1)))#">
+			<INPUT TYPE="hidden" name="mradm" value="#($g(%request.Data("mradm",1)))#">
+			<INPUT TYPE="hidden" name="Decease" value="">
+			<INPUT TYPE="hidden" name="MultipleIDs" value="">
+			<!-- WAITINGLIST -->
+			<INPUT TYPE="hidden" name="WaitingListID" value="">
+			<INPUT TYPE="hidden" name="WLWaitListStatusDR" value="">
+			<!-- ORDERITEM -->
+			<INPUT TYPE="hidden" name="OEOrdItemID" value="">
+			<INPUT TYPE="hidden" name="OEORIItemStatus" value="">
+			<INPUT TYPE="hidden" name="ARCIMDesc" value="">
+			<INPUT TYPE="hidden" name="ItemApptStatus" value="">
+			<!-- CODING -->
+			<INPUT TYPE="hidden" name="PAAdmCodingID" value="">
+			<!-- BILLING -->
+			<INPUT TYPE="hidden" name="BillRowIds" value="">
+			<INPUT TYPE="hidden" name="BillTypes" value="">
+			<!-- BOOKING -->
+			<INPUT TYPE="hidden" name="FollowUpAppt" value="">
+			<INPUT TYPE="hidden" name="apptID" value="">
+			<INPUT TYPE="hidden" name="OperRoomID" value="">
+			<INPUT TYPE="hidden" name="AnaesthesiaID" value=""> <!--OR_Anaesthesia用于在医嘱表加上麻醉表指针//-->
+			<!-- 现在需要再加一个手术表OR_Anaest_Operation（麻醉表的子表）的ID，也在医嘱表中存,需要通过顶部菜单传手术表ID //-->
+			<INPUT TYPE="hidden" name="AnaestOperationID" value=""> 
+			
+			<!-- MEDRECORD -->
+			<INPUT TYPE="hidden" name="ReqIDs" value="">
+			<INPUT TYPE="hidden" name="ReqVolIDs" value="">
+			<!-- EPISODE -->
+			<INPUT TYPE="hidden" name="MultiEpisodeID" value="">
+			<INPUT TYPE="hidden" name="WardID" value="">
+			<!-- MATERNITY -->
+			<INPUT TYPE="hidden" name="canGiveBirth" value="">
+			<!-- NEXT OF KIN - cjb 22/02/2006 56793 -->
+			<INPUT TYPE="hidden" name="NokID" value="">
+			<!-- Attendance - 61395 Tedt 01/07 -->
+			<INPUT TYPE="hidden" name="attendID" value="">
+			<INPUT TYPE="hidden" name="SpecificID" value="">
+			<INPUT TYPE="hidden" name="SinglePatientFlag" value="">
+			<!-- 药理实验项目指针 -->
+			<INPUT TYPE="hidden" name="PPRowId" value="">
+			<!--会计核算成品-帐套-->
+			<INPUT TYPE="hidden" name="AcctBookID" id="AcctBookID" value="">
+			<INPUT TYPE="hidden" name="AcctBookName" id="AcctBookName" value="">
+			<!-- 业务上正在做某事,菜单不能切换   DoingSthName为提示信息,为空表示可以切换-->
+			<input Type="hidden" id="DoingSth" name="DoingSth" value="">
+			<!-- 医技申请单号 PACSApplyNo -->
+			<INPUT TYPE="hidden" name="PACSApplyNo" id="PACSApplyNo" value="">
+		</FORM>
+		<div id="centerPanel">
+			<iframe name="ThirdSreen_main" src="" width="100%" height="100%" scrolling="no" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+			</iframe>
+		</div>
+		<server>
+			//M ^Wanghc("sec")=%request.Data
+			Set MainUrl = $G(%request.Data("MainUrl",1))
+			w "<script type=""text/javascript"">"
+			if ##class(websys.Conversions).IsValidMethodName("CF.BSP.SYS.BL.OpenEvent","GetOpenEvent"){
+			 	Write "var OpenEventJson = "
+			 	d ##class(CF.BSP.SYS.BL.OpenEvent).GetOpenEvent()
+		 	}
+			w ";var DefaultOpt = {""a"":1"
+			Set key = "" For {
+				Set key = $O(%request.Data(key))
+				Quit:key=""
+				Continue:key="TDIRECTPAGE"
+				Continue:key="CacheNoRedirect"
+				Continue:key="CachePassword"
+				Continue:key="CacheUserName"
+				Continue:key="LayoutManager"
+				Continue:key="PASSWORD"
+				Continue:key="MainUrl"
+				Continue:"^DEPARTMENT^Hospital^SSUSERGROUPDESC^"[("^"_key_"^")
+				Continue:"^TPSID^ViewCode^"[("^"_key_"^")
+				W ","""_key_""":"""_$G(%request.Data(key,1))_""""
+				
+			}
+			w "};</script>"
+		</server>
+		<script type="text/javascript">
+			var resizeCenter = function (){
+				var docHeight = $(window).outerHeight();//$(document).height(); 20180910
+				$("#centerPanel").height(docHeight);
+			}
+			$(function(obj){
+				opener.MWSecondScreenWindows["SCR2"] = window;
+				$(window).resize(function(){
+					resizeCenter();
+				});
+				resizeCenter();
+				//frames["SecondSreen_main"].location.href = "#(MainUrl)#";
+				openPageInSecondSreenMain("#(MainUrl)#",DefaultOpt);
+				$(window).unload(function(){
+					if(opener){
+						opener.MWSecondScreenWindows["SCR2"] = null;
+						delete opener.MWSecondScreenWindows.SCR1
+					}
+				});			
+			});
+			function openPageInSecondSreenMain(url,opt){
+				var frm = window.document.forms['fEPRMENU'];
+				if ("object"==typeof opt){
+					for (var o in opt){
+						if(frm && frm[o]) frm[o].value = opt[o];
+					}
+				}
+				frames["SecondSreen_main"].location.href = rewriteUrl(url,opt);	
+			};
+			
+		</script>
+	</body>
+</html>

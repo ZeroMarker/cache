@@ -54,35 +54,26 @@ session['ContainerName']='';
  s UserDR=$G(%session.Data("UserDR"))
  s HospitalDR=$G(%session.Data("HospitalDR"))
  */
+
  
  s USERID=$G(%session.Data("LOGON.USERID"))
  s USERCODE = $G(%session.Data("LOGON.USERCODE"))
  s USERNAME = $G(%session.Data("LOGON.USERNAME"))
- s PatientID=%request.Get("PatientID")
  s HOSPID=$G(%session.Data("LOGON.HOSPID"))
  s CTLOCID=$G(%session.Data("LOGON.CTLOCID"))
- 
+ s UserLanguage =$G(%session.Data("LOGON.LANGID"))
+   
  s (HospCode,LocCode,LocName,HospName)=""
  i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
  i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
  i $l(CTLOCID) s LocCode=$p($g(^CTLOC(CTLOCID)),"^",1)
  i $l(CTLOCID) s LocName=$p($g(^CTLOC(CTLOCID)),"^",2) 
- 
- /** TODO 与his对接的参数：用户代码，科室代码，就诊号(AdmNo)，登记号(RegNo)，病案号(RecordNo)  **/
- //s UserCode="00668"
- s LocationCode="1"
+ ///----------------------END-----------------
  s HospitalCode=HospCode
  
  //处理医院信息 
  s HospitalDR=""
- //i $l(HospitalCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
- s LocCode=##Class(DHCLIS.DHCCommon).UPPER(LocCode)
- //i $l(LocCode) s LocationDR=##Class(DHCLIS.DHCCommon).GetLocationDR(CTLOCID,LocCode,LocName,HospitalDR)
 
- //i $l(USERCODE) s CollectUserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
- 
- //i $l(USERCODE) s DoctorDR=##Class(DHCLIS.DHCCommon).GetDoctorDR(USERCODE,USERNAME,HospCode)
- 
  //职称信息处理
  s PositionTitleRowID=""
  s (PositionTitleCode,PositionTitleName)=""
@@ -94,8 +85,7 @@ session['ContainerName']='';
  ..s TypeData = $g(^CT("TTL",TypeID))
  ..s PositionTitleCode = $p(TypeData,"^",1)
  ..s PositionTitleName = $p(TypeData,"^",2)
-
-
+ 
  
  s AdmNo=%request.Get("EpisodeID")
  s PatientID=%request.Get("PatientID")
@@ -103,24 +93,25 @@ session['ContainerName']='';
  s ReqFormDR=%request.Get("ReqFormDR")
  s RegNo=""
  s RecordNo=""
+ s DischargeStatus=""
+  i $l(AdmNo) d
+  .s DischargeStatus=##class(web.DHCDischargeHistory).GetCurrentDischargeStatus(AdmNo)
+  //获取输血知情同意书电子病历模板id
+  s DocID=##class(DHCLIS.DHCCommon).GetDocIDMTHD(HospitalCode,AdmNo) 
+  //获取当前登录人员主题设置
+  s HISUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+  i HISUIVersion="lite" s HISUIVersion="2"
+  e  s HISUIVersion="1" 
+  //获取当前登录人多语言配置
+  i UserLanguage="20" s UserLanguage="CH"
+  i UserLanguage="1" s UserLanguage="EN"
   
-  
-  s DischargeStatus=##class(web.DHCDischargeHistory).GetCurrentDischargeStatus(AdmNo)
-//获取输血知情同意书电子病历模板id
-  s DocID=""
-  s DocID=##Class(EMRservice.HISInterface.Event.BloodTransfusion).GetInformedConsentDocID()	
-#;	i ret="E" s retVal="-1^医生办理出院"
-#;	i ret="F" s retVal="-1^护士办理出院"
-#;	//i ret="R" s retVal="-1^护士召回病人"
-#;	i ret="T" s retVal="-1^结束费用调整"
- //s webIP=##Class(DHCLIS.DHCOrderList).getDllWebIP()
- //s dllstr=webIP_"/lablis/DHCLabtrakReportPrint.dll#DHCLabtrakReportPrint.DHCLabtrakReportPrint"
-
- 
 </SERVER>
 
 <script Language="JavaScript">
 	var DischargeStatus = "#((DischargeStatus))#" ;
+	var UserLanguage = "#((UserLanguage))#" ;
+	
 	if (DischargeStatus.length > 0) {
 		var DischargeStatusret="";
 		if (DischargeStatus=="E")
@@ -146,15 +137,35 @@ session['ContainerName']='';
 		var re = /rv:11.0/g
 		return re.test(navigator.userAgent.toLowerCase());
 	}
-	var host = window.location.host;
-	
-	var url ='http://'+ host +'/imedicallis/cts/form/Login.aspx?SysCode=CTS';
+   // var ServerIP = window.status.split(':')[2];
+    var host = window.location.host;
+ /*   
+ if(ServerIP==undefined){
+       ServerIP=window.location.host.split(':')[0];
+    }	   
+    if(host.split(':').length>1){
+	   host=ServerIP+":"+host.split(':')[1];
+    }else{
+       host=ServerIP;
+    }
+*/
+	  var MWTokenInfo="";
+	  if(window.location.href.split('MWToken=').length>1){
+		 MWToken= window.location.href.split('MWToken=')[1]; 
+		 MWTokenInfo="&MWToken="+MWToken;
+	  }
+	var http = window.location.href.split(':')[0]; 
+	var url =http+'://'+ host +'/imedicallis/cts/form/Login.aspx?SysCode=CTS';
 	url += '&UserId='+"#((USERID))#"+'&UserName='+"#((USERNAME))#"+'&UserCode='+"#((USERCODE))#";
 	url += '&LocationId='+"#((CTLOCID))#"+'&LocationCode='+"#((LocCode))#"+'&LocationName='+"#((LocName))#";
 	url += '&HospitalCode='+"#((HospitalCode))#"+'&HospitalName='+"#((HospName))#";
 	url += '&PositionTitleCode='+"#((PositionTitleCode))#"+'&PositionTitleName='+"#((PositionTitleName))#";
 	url += '&AdmNo='+"#((AdmNo))#"+'&RegNo='+"#((RegNo))#"+'&RecordNo='+"#((RecordNo))#";
 	url += '&Page='+"#((Page))#"+'&ReqFormDR='+"#((ReqFormDR))#"+'&DocID='+"#((DocID))#";
+	url += '&HostIP='+window.location.host+'&HISUIVersion='+"#((HISUIVersion))#"+MWTokenInfo;
+	url += '&UserLanguage='+UserLanguage;
+	
+	//alert(url);
 	//document.write('C:\\TRAK\\chrome.lnk -start-maximized --app='+encodeURI(url));
 	if (window.screen) {//判断浏览器是否支持window.screen判断浏览器是否支持screen     
 	      var myw = screen.availWidth;   //定义一个myw，接受到当前全屏的宽     
@@ -163,6 +174,7 @@ session['ContainerName']='';
 	      window.resizeTo(myw, myh);     //把当前窗体的长宽跳转为myw和myh     
 	    } 
 		location.href=encodeURI(url);
+		//window.open(encodeURI(url));
 //	if (isIE11()) {
 //		if (window.screen) {//判断浏览器是否支持window.screen判断浏览器是否支持screen     
 //	      var myw = screen.availWidth;   //定义一个myw，接受到当前全屏的宽     

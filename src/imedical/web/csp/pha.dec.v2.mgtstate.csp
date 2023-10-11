@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--煎药状态管理
+	csp:pha.dec.v2.mgtstate.csp
+	js: scripts/pha/dec/v2/mgtstate.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHADECV2/>
+</HEAD>
+<body>
+	<div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+        	<table id="gridDecState" class="hisui-datagrid" title="煎药状态管理" data-options="fit:true,autoSizeColumn:false,fitColumns:true,headerCls:'panel-header-gray',pagination:true,iconCls:'icon-paper'">
+			</table>
+        </div>
+    </div> 
+    <div id="toolBarDecState">
+		<div class="hisui-layout" fit="true" border="false" class="pha-body" style="padding-top:0px;padding-bottom:0px;">
+			<div data-options="region:'north',border:false" >
+				<div class="pha-row">
+	            	<label for="startDate">#(..Get("开始日期"))#</label>
+	               	<div class="pha-col">
+	                    <input id="startDate" type="text" class="hisui-datebox" />
+	                </div> 
+	 				<div class="pha-col">
+		                <input id="startTime" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90"/>
+		            </div>
+		            <div class="pha-col" style="margin-left:10px;">
+		                <label for="cmbDecLoc">#(..Get("煎药室"))#</label>
+		            </div>
+		            <div class="pha-col">
+	                    <input id="cmbDecLoc" class="hisui-combobox" />
+	                </div>
+	                <div class="pha-col">
+		                <label for="txt-prescno">#(..Get("处方号"))#</label>
+		            </div>
+		            <div class="pha-col">
+	                    <input id="txt-prescno" type="text" class="hisui-validatebox" />
+	                </div>
+	                <div class="pha-col">
+	                	<input class='hisui-radio' type="radio" label='全部' name='busType' value="" checked data-options="required:true,requiredSel:true">
+						<input class='hisui-radio' type="radio" label='住院' name='busType' value="I" data-options="required:true,requiredSel:true">
+						<input class='hisui-radio' type="radio" label='门诊' name='busType' value="O" data-options="required:true,requiredSel:true">
+					</div>
+					<div class="pha-col">
+	                	<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryStateInfo()">查询</a>
+					</div>
+					<div class="pha-col">
+	                	<a class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="javascript:cancelState()">撤消</a>
+					</div>
+	            </div>
+	            <div class="pha-row">
+	            	<label for="endDate">#(..Get("截止日期"))#</label>
+	               	<div class="pha-col">
+	                    <input id="endDate" type="text" class="hisui-datebox" />
+	                </div> 
+	 				<div class="pha-col">
+		                <input id="endTime" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90"/>
+		            </div>
+		            <div class="pha-col">
+		                <label for="cmbprocess">#(..Get("当前流程"))#</label>
+		            </div>
+		            <div class="pha-col">
+	                    <input id="cmbprocess" class="hisui-combobox" />
+	                </div>
+	                <div class="pha-col">
+		                <label for="txt-patno">#(..Get("登记号"))#</label>
+		            </div>
+		            <div class="pha-col">
+	                    <input id="txt-patno" type="text" class="hisui-validatebox" />
+	                </div>
+	                <div class="pha-col">
+	                   	<input id="chk-success" class='hisui-checkbox' type="checkbox" label="含已撤消" data-options="onCheckChange:function(event,value){javascript:queryStateInfo()}" >
+	                </div>
+					<div class="pha-col" style="margin-left:74px;">
+	                   	<a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:ClearConditions()">清屏</a>
+	                </div>
+	            </div>
+            </div>	
+        </div>
+    </div> 
+    <script type="text/javascript" src="../scripts/pha/dec/v2/mgtstate.js"></script>
+	<script type="text/javascript" src="../scripts/pha/dec/v2/ux.js"></script>
+</body>
+</HTML>

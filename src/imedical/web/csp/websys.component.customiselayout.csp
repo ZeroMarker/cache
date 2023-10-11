@@ -222,7 +222,7 @@
 							s $p(sorts,",",iselcol)=+sort
 						}
 					}else{
-						s $p(caps,"^",col)=""
+						s $p(caps,"^",col)=cap /*20210715 wanghc 修复诊断列表自定义乌时显示空白元素问题*/
 					}
 				}
 			}else{
@@ -265,6 +265,7 @@
 	i +uSortCol s %request.Data("SortColumnDefault",1)=$p(caps,"^",uSortCol)
 	i +uSort2Col s %request.Data("SortColumn2",1)=$p(caps,"^",uSort2Col)
 </server>
+<csp:if condition=prefid="">
 <script language='javascript'>
 	var local=new Array();
 	local["SYSTEM"]='#(sysdesc)#';
@@ -280,6 +281,21 @@
 	//used in the corresponding script/.js file
 	var compdisplaytype='#(compdisplaytype)#';
 </script>
+<csp:else>
+	<script language='javascript'>
+	var local=new Array();
+	local["SYSTEM"]='#(sysdesc)#';
+	local["LOGON.REGION"]='#($p(%request.Data("SaveAs",1),")")_")")#';
+	local["LOGON.SITECODE"]='#($p(%request.Data("SaveAs",1),")")_")")#';
+	local["LOGON.TRUSTDESC"]='#($p(%request.Data("SaveAs",1),")")_")")#';
+	local["LOGON.HOSPDESC"]='#($p(%request.Data("SaveAs",1),")")_")")#';
+	local["LOGON.GROUPDESC"]='#($p(%request.Data("SaveAs",1),")")_")")#';
+	local["LOGON.USERCODE"]='#($p(%request.Data("SaveAs",1),")")_")")#';
+	local["LOGON.LOCDESC"]='#($p(%request.Data("SaveAs",1),")")_")")#';
+	var isnested=#(+$g(%request.Data("TISNESTED",1)))#;
+	var compdisplaytype='#(compdisplaytype)#';
+</script>
+</csp:if>
 </head>
 
 <BODY>

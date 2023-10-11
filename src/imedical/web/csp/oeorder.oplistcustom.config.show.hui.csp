@@ -1,8 +1,22 @@
 <div class="hisui-layout" data-options="fit:true,split:false">
 	<div data-options="region:'center'" style="border:0px;padding:10px;">
 		<form id="fUIConfig" method="post">
-			
-			<div class="hisui-panel" title="医嘱浏览(仅住院)" style="height:180px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
+			<csp:if condition='isNurseLogin="0"'>
+			<div class="hisui-panel" title="信息总览(仅住院)" style="height:100px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
+				<table class="search-table">
+					<tr>
+						<td class="r-label" style="width:164px;">布局方式</td>
+						<td>
+							<input id="ViewIPDocPatInfoLayOut" class="hisui-combobox textbox" style="width:94px;">
+						</td>
+						<td class="r-label" style=""></td>
+						<td>
+						</td>
+					</tr>
+				</table>
+			</div>
+			</csp:if>
+			<div class="hisui-panel" title="医嘱浏览(仅住院)" style="height:230px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
 				<table class="search-table">
 					<tr>
 						<td class="r-label" style="width:164px;">默认排序方式</td>
@@ -37,18 +51,70 @@
 							<lable>天</lable>
 						</td>
 					</tr>
+					<tr>
+						<td class="r-label" style="width:164px;">默认显示更多条件(仅住院有效)</td>
+						<td>
+							<div id="IPDefDisplayMoreContions" class="hisui-switchbox" style="margin-left:5px" data-options="onText:'是',offText:'否',onClass:'primary',offClass:'gray',checked:false"></div>
+						</td>
+					</tr>
 				</table>
 			</div>
 			<div style="height:10px;"></div>
-			<div class="hisui-panel" title="医嘱录入" style="height:400px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
+			<div class="hisui-panel" title="诊断录入" style="height:95px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
 				<table class="search-table">
 					<tr>
+						<td class="r-label">模板位置:</td>
+						<td colSpan="3">
+							<input id="west" class='hisui-radio' type="radio" label='左边' name='DiagTemplateRegion'>
+							<!--input id="east" class='hisui-radio' type="radio" label='右边' name='DiagTemplateRegion'-->
+							<input id="window" class='hisui-radio' type="radio" label='弹出' name='DiagTemplateRegion'>
+							<input class="hisui-checkbox" type="checkbox"  label="默认折叠模板" name="DefCollapseDiagTemplate"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div style="height:10px;"></div>
+			<div class="hisui-panel" title="医嘱录入" style="height:460px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
+				<table class="search-table">
+					<tr>
+						<td class="r-label">模板位置:</td>
+						<td colSpan="3">
+							<input id="west" class='hisui-radio' type="radio" label='左边' name='TemplateRegion'>
+							<input id="east" class='hisui-radio' type="radio" label='右边' name='TemplateRegion'>
+							<input id="north" class='hisui-radio' type="radio" label='上边' name='TemplateRegion'>
+							<input id="south" class='hisui-radio' type="radio" label='下边' name='TemplateRegion'>
+							<input id="window" class='hisui-radio' type="radio" label='弹出' name='TemplateRegion'>
+							<input class="hisui-checkbox" type="checkbox"  label="默认折叠模板" name="DefCollapseTemplate"/>
+						</td>
+					</tr>
+					<tr>
 						<td class="r-label">布局控制(仅住院)</td>
+						<td class="l-label">
+							<input id="layoutConfig2" class='hisui-radio' type="radio" label='医嘱单在上' name='layoutConfig'>
+						</td>
 						<td>
 							<input id="layoutConfig1" class='hisui-radio' type="radio" label='医嘱单在下' name='layoutConfig'>
 						</td>
-						<td class="r-label l-label">
-							<input id="layoutConfig2" class='hisui-radio' type="radio" label='医嘱单在上' name='layoutConfig'>
+					</tr>
+					<tr>
+						<td class="r-label">模板列表设置(仅住院)</td>
+						<td>
+							<input id="DefaultExpendList" class='hisui-radio' type="radio" label='展开列表' name='Expend'>
+						</td>
+						<td>
+							<input id="DefaultExpendTemplate" class='hisui-radio' type="radio" label='展开模板' name='Expend'>
+						</td>
+					</tr>
+				    <tr>
+						<td class="r-label">医嘱列表/模板高度占比</td>
+						<td colspan="4" style="height:50px;">
+							<input id="OrdListScale" class="hisui-slider" style="width:300px"  data-options="showTip:true,rule:[10,20,30,40,50,60,70,80,90,100],min:10,max:100,tipFormatter:tipFormatter" />
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">医嘱模板宽度占比</td>
+						<td colspan="4" style="height:50px;">
+							<input id="OrdListWScale" class="hisui-slider" style="width:300px"  data-options="showTip:true,rule:[10,20,30,40,50,60,70,80,90,100],min:10,max:100,tipFormatter:tipFormatter" />
 						</td>
 					</tr>
 					<tr>
@@ -60,40 +126,6 @@
 							<input id="OrderPriorConfig2" class='hisui-radio' type="radio" label='横向显示' name='OrderPriorConfig'>
 						</td>
 					</tr>
-					<!--P8.3P版本开始停止使用-->
-					<tr hidden>
-						<td class="r-label">医嘱单显示位置(仅住院)</td>
-						<td>
-							<input id="ShowList1" class='hisui-radio' type="radio" label='列表显示' name='ShowList'>
-						</td>
-						<td class="r-label l-label">
-							<input id="ShowList2" class='hisui-radio' type="radio" label='窗口显示' name='ShowList'>
-						</td>
-					</tr>
-					<tr>
-						<td class="r-label">模板列表设置(仅住院/急诊)</td>
-						<td>
-							<input id="DefaultExpendTemplate" class='hisui-radio' type="radio" label='展开模板' name='Expend'>
-						</td>
-						<td class="r-label l-label">
-							<input id="DefaultExpendList" class='hisui-radio' type="radio" label='展开列表' name='Expend'>
-						</td>
-						<td class="">
-							<input id="DefaultCloseList" class='hisui-radio' type="radio" label='默认关闭' name='Expend'>
-						</td>
-						<td style="padding-left:5px;">
-							<span style="color:red;">(急诊仅支持展开模板)</span>
-						</td>
-					</tr>
-					<!--tr>
-						<td class="r-label">字体</td>
-						<td>
-							<input id="BigFont" class='hisui-radio' type="radio" label='大字体' name='FontSelect'>
-						</td>
-						<td class="r-label l-label">
-							<input id="SmallFont" class='hisui-radio' type="radio" label='普通字体' name='FontSelect'>
-						</td>
-					</tr-->
 					<tr>
 						<td class="r-label">默认医嘱类型(仅住院)</td>
 						<td>
@@ -104,15 +136,6 @@
 						</td>
 						<td class="">
 							<input id="DefaultOutOrderPrior" class='hisui-radio' type="radio" label='出院带药' name='DefaultPriorType'>
-						</td>
-					</tr>
-					<tr>
-						<td class="r-label">医嘱模板显示方式(仅住院/急诊)</td>
-						<td>
-							<input id="DefaultPopTemplate" class='hisui-checkbox' type="checkbox" label='弹出显示'  data-options="onCheckChange:PopTemplateCheckChange">
-						</td>
-						<td class="r-label l-label" colspan="2">
-							<input id="DefaultExpendTemplateOnPopTemplate" class='hisui-checkbox' type="checkbox" label='默认模板弹出并展开' data-options="onChecked:CheckDefExpandTmp">
 						</td>
 					</tr>
 					<tr>
@@ -131,12 +154,6 @@
 							</div>
 						</td>
 				    </tr>
-				    <tr>
-						<td class="r-label">医嘱列表/模板高度占比(仅住院)</td>
-						<td colspan="4" style="height:50px;">
-							<input id="OrdListScale" class="hisui-slider" style="width:300px"  data-options="showTip:true,rule:[10,20,30,40,50,60,70,80,90,100],min:10,max:100,tipFormatter:tipFormatter" />
-						</td>
-					</tr>
 					<tr>
 						<td class="r-label" for="ExaSortByUseCount">检查/检验项目按使用频率排序</td>
 						<td>
@@ -152,7 +169,7 @@
 				</table>
 			</div>
 			<div style="height:10px;"></div>
-			<div class="hisui-panel" title="中草药录入" style="height:125px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
+			<div class="hisui-panel" title="中草药录入" style="height:250px;width:680px;padding-top:10px;" data-options="headerCls:'panel-header-card'">
 				<table class="search-table">
 					<tr>
 						<td class="r-label" style="width:164px;">列数设置</td>
@@ -161,12 +178,26 @@
 						</td>
 					</tr>
 					<tr>
-						<td class="r-label" style="width:164px;">模板设置</td>
-						<td class="">
-							<input id="DefaultCMExpendTempl" class='hisui-radio' type="radio" label='默认展开' name='CMExpend'>
+						<td class="r-label">模板位置:</td>
+						<td colSpan="3">
+							<input id="west" class='hisui-radio' type="radio" label='左边' name='CNTemplateRegion'>
+							<input id="east" class='hisui-radio' type="radio" label='右边' name='CNTemplateRegion'>
+							<input id="north" class='hisui-radio' type="radio" label='上边' name='CNTemplateRegion'>
+							<input id="south" class='hisui-radio' type="radio" label='下边' name='CNTemplateRegion'>
+							<input id="window" class='hisui-radio' type="radio" label='弹出' name='CNTemplateRegion'>
+							<input class="hisui-checkbox" type="checkbox"  label="默认折叠模板" name="CNDefCollapseTemplate"/>
 						</td>
-						<td class="r-label l-label">
-							<input id="DefaultCMCloseTempl" class='hisui-radio' type="radio" label='默认关闭' name='CMExpend'>
+					</tr>
+					<tr>
+						<td class="r-label">模板高度占比</td>
+						<td colspan="4" style="height:50px;">
+							<input id="CNTempScale" class="hisui-slider" style="width:300px"  data-options="showTip:true,rule:[10,20,30,40,50,60,70,80,90,100],min:10,max:100,tipFormatter:tipFormatter" />
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">模板宽度占比</td>
+						<td colspan="4" style="height:50px;">
+							<input id="CNTempWScale" class="hisui-slider" style="width:300px"  data-options="showTip:true,rule:[10,20,30,40,50,60,70,80,90,100],min:10,max:100,tipFormatter:tipFormatter" />
 						</td>
 					</tr>
 				</table>
@@ -184,6 +215,9 @@
 						</td>
 						<td class="">
 							<input id="DefaultCurrentGourpe" class='hisui-radio' type="radio" label='本单元患者' name='InPatientlist'>
+						</td>
+						<td class="">
+							<input id="DefaultCurrentDocContor" class='hisui-radio' type="radio" label='本人管辖' name='InPatientlist'>
 						</td>
 					</tr>
 					<csp:if condition='GroupRowId=""'>

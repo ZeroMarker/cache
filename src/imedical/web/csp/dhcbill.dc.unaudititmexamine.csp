@@ -1,0 +1,113 @@
+<!-- 
+ * FileName: dhcbill.dc.unaudititmexamine.csp
+ * Creator: tangzf
+ * Date: 2022-5-11
+ * Description: 免审核项目审核
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+	<ADDINS require="CmdShell"></ADDINS>
+	<style type="text/css">
+   	#_HospList{
+		width:348px !important	
+	}
+	#_HospUserList{
+		width:348px !important	
+	}
+  	#editForm1 .textbox{
+    	width:140px	!important; /* 文本框宽度减小 tangzf 2019-8-12*/ 
+	}  
+	.Redword {color:red;}
+	.dialog-button{
+		padding-bottom:20px;
+	}
+	</style>
+</head>
+<server>
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_DICDATA")
+</server>
+<body  >
+	<div class="hisui-layout" fit="true">  
+		<div data-options="region:'north'" style="overflow:hidden;border-radius:0px;border-bottom:1px dashed #cccccc;">
+			<table class="search-table">
+					<tr>
+						<td class='r-label'><label>院区</label></td>
+						<td colspan=8><input id="hospital" class="textbox" style="width:230px;" placeholder=""/></td>
+						
+					</tr>
+					<tr>
+						<td class='r-label'><label>分类</label></td>
+						<td><input id="diccbx" class="textbox" style="width:150px" name="ccdic" ></input></td>
+						<td  class="r-label"><label>业务类型</label></td>
+						<td ><input id="BusinessTypeCodeQ" class="textbox" style="width:130px"/></input></td>
+						<td class='r-label'><label>审核标志</label></td> 
+						<td>
+							<select class="hisui-combobox" id="ExamineFlag" style="width:130px" editable="false" >
+								<option value="">全部</option>
+								<option value="Y">审核通过</option>
+								<option value="N">审核拒绝</option>
+								<option value="W">未审核</option>
+							</select>
+						</td>
+<!--						<td class='r-label'><label>指标</label></td>
+ 						<td><input id="IndicatorIdQ" style="width:252px" class="hisui-validatebox textbox" missingMessage="请选择指标"/></td>-->
+						<td class='r-label'><label>关键字</label></td> 
+						<td><input id="dicKey" class="textbox" style="width:230px" placeholder='输入指标名称/项目名称回车查询'></input></td>
+						<td class="r-label"><a id="btnQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onClick='Querydic()'>查询</a></td>
+						<td class="r-label"><a id="btnClearCho" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" >清屏</a>  
+					</td>
+					</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false" style="margin-left: 1px;" >
+			<div id="dg"></div>
+		</div>
+	</div>
+	<div id="inputDescDialog" style="text-align:center;">
+		<table>
+			<tr>
+				<td class="r-label" style="padding-top: 10px">
+					<select class="hisui-combobox" id="Memo" editable="false" style="width:406px">
+					</select>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td class="r-label" style="padding-top: 9px">
+					<textarea class="textbox" style="height:204px;width:399px"></textarea>
+				</td>
+			<tr>
+		</table>
+	</div>
+	<div id="toolbar" class="hisui-toolbar ">
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+				<td  id="ExamineTd" ><a href="#" class="hisui-linkbutton" iconCls="icon-accept" id="Examine" plain="true" onClick='Examine("0")'>审核通过</a></td>	
+				<td id="NotExamineTd" ><a href="#" class="hisui-linkbutton" iconCls="icon-audit-x" id="Examine" plain="true" onClick='Examine("1")'>审核拒绝</a></td>	
+	<!-- 						<td><a href="#" class="hisui-linkbutton" iconCls="icon-copy" id="btnCopy"  plain="true" onClick='CopyUnaudititm()'>单条复制</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-copy" id="btnAllCopy" plain="true" onClick='AllCopyIndexTarItem()'>全部复制</a></td>	
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnImport" plain="true" onClick='Import("")' >导入字典</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出字典</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-help" id="btnTip"  plain="true">说明</a></td> -->
+			</tr>
+		</table> 
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/unaudititmexamine.js"></script>
+	<!--<DHCBILLINSUCloud/>-->
+</body>
+</html>

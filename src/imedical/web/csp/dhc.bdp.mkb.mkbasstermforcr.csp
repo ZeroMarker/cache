@@ -1,0 +1,108 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbasstermforcr.csp
+    @Title：批处理部位、病因
+    @Creator:石萧伟
+    @Editor:丁亚男
+    @Description:批处理部位、病因
+    @CreateDate：2018-11-23
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_AssTermForCR.js"></script>
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+  <style>
+ .m-btn-downarrow, .s-btn-downarrow {
+    top: -4px;
+}  
+/*增加弹窗阴影*/ 
+#proloc_div { box-shadow: 2px 3px 10px #666; }
+  
+ </style>
+</HEAD>
+<BODY>
+     <server>
+    	s termid=%request.Get("termid")
+    	s baseType=%request.Get("baseType")
+    </server> 
+     <div class="hisui-layout" data-options="fit:true,collapsible:false" id="layout">
+		<!--诊断列表-->
+		<div class="datagrid-toolbar" data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border: 1px solid #C0C0C0;overflow:hidden;" title="" >
+			<table>
+				<tr>
+					<td align="right" class="tdlabel">描述</td>
+					<td><input id="TextDesc" type="text" class="hisui-validatebox"  style="width:150px" ></td>
+					<td align="right" class="tdlabel">是否处理</td>
+					<td><input id="TextYN" type="text" style="width:150px" ></td>
+					<td>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAddAll">处理</a>
+					</td>
+					<td  >
+		    			<a href="#" id="mbedit" class="hisui-menubutton" style="width:125px" data-options="menu:'#giveUpMenu',iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true">修改状态&nbsp;&nbsp;&nbsp;</a>
+					</td>
+					<td>
+						<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-format-line-dott',plain:true" id="pro_loc_btn" style="">专业科室</a><br/>
+					</td>
+				</tr>
+			</table>
+     	</div>     
+		<div data-options="region:'center'" style="width:240px;border: 1px solid #C0C0C0;border-top:0px;border-radius:0 0 4px 4px;" > 
+			<table data-options="fit:true" id="termgrid" border="fasle"></table>
+		</div>      
+ 	</div> 
+ 	<!--放弃菜单菜单--> 
+ 	<div id="giveUpMenu" style='width:170px'>
+ 		<div  data-options="iconCls:'icon-ok'" id="hasDelBtn">已处理</div>
+ 		<div  data-options="iconCls:'icon-help'" id="noDelBtn">未处理</div>
+ 		<div  data-options="iconCls:'icon-cancel'" id="btnCancel">放弃</div>
+ 	</div>
+ 	<!--专业科室弹框-->
+ 	<div id="proloc_div" style="position:absolute;background:#FFFFFF;border:1px solid #C0C0C0;width:720px;height:450px;padding:5px;display:none">
+		<!--<div class="hisui-layout" data-options="fit:true,collapsible:false,bodyCls:'panel-header-gray',split:true" >-->
+			<!--专业科室工具栏-->
+			<div class="datagrid-toolbar" id="pro_loc_bar"> <!--data-options="split:false,region:'north',bodyCls:'panel-header-gray'" -->
+		    	 <table>
+				    <tr>
+				    	<td><input type="checkbox"  class="hisui-checkbox" id="checkAllTerms"/> </td> 
+				    	<td width="60px"><span id="checkAllTitle">全选</span></td>	
+				    	<td><div class="datagrid-btn-separator"></div></td> 
+				    	<!--td class="tdlabel">查询</td-->
+		    			<td style="padding-left:4px"><input id="FindTreeText" class="hisui-searchbox" data-options="prompt:'科室...'" placeholder="" style="width:150px"></td>
+				   	 	<td  class="tdlabel" >
+							<input id='myChecktreeFilterCK0' class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+							<input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+							<input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>
+						</td>
+						<td><div class="datagrid-btn-separator"></div></td>
+						<td><a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-refresh" plain="true" id="locRefresh_btn" data-options="stopAllEventOnDisabled:true">清屏</a></td> 
+						<td><a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-save" plain="true" id="locSave_btn" data-options="stopAllEventOnDisabled:true">保存</a></td>
+						<td><a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-cancel" plain="true" id="locClose_btn" data-options="stopAllEventOnDisabled:true">关闭</a></td>
+					</tr>			    	 
+				 </table >		 		
+
+			</div> 
+			<!--专业科室表格-->
+			<div class="hisui-layout" data-options="fit:true,collapsible:false,bodyCls:'panel-header-gray',split:true" >
+				<div border="false" data-options="region:'center',bodyCls:'panel-header-gray'">
+					<div id="catTree" style="" border="true" ></div> 
+				 </div> 
+	     	</div>		
+ 	</div>
+ 	
+    <script type="text/javascript">
+     var  termid="#(termid)#"
+     var  baseType="#(baseType)#" 
+     //var  termid="16384"
+     //var  baseType="part" 
+   </script>	 	
+</BODY>
+</HTML>

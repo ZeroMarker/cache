@@ -1,0 +1,83 @@
+﻿<html>
+    <head>
+        <title> 牙位图 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" href="../scripts/emr/css/bs.op.tooth.css">
+        <link rel="stylesheet" href="../scripts/emr/css/bs.op.deciduous.tooth.css">
+        <link rel="stylesheet" href="../scripts/emr/css/bs.op.permanent.tooth.css">
+        <script language="cache" runat="server">
+            s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+            s dialogID = $Get(%request.Data("dialogID",1),"toothDialog")
+            s product = $Get(%request.Data("product",1),"OP")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            //默认选中恒牙，配置选中其他类型的科室
+            s defaultRadio = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTION","params":{"name":"toothDefaultRadio","defaultValue":{"ToothAll":"","ToothPermanent":"","ToothDeciduous":""},"langID":(langID)}})
+            //默认不能选中牙根牙冠，配置能够显示牙根牙冠的科室
+            s defaultRT = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTION","params":{"name":"toothRTDefault","defaultValue":"","langID":(langID)}})
+        </script>
+        <script language="javascript">
+            var langID = "#(langID)#";
+            var dialogID = "#(dialogID)#";
+            var product = '#(product)#';
+            var userLocID = "#(userLocID)#";
+            var defaultRadio = #(defaultRadio)#;
+            var defaultRT = "#(defaultRT)#";
+            var reg = new RegExp("\\b"+userLocID+"\\b","g");
+            var isClickRT = (defaultRT.search(reg)===-1)?false:true;
+            var returnValue = false;
+            var modalDialogArgs = parent.modalDialogArgs;
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="border:false,fit:true" style="width:100%;height:100%;overflow:hidden;">
+        <div data-options="region:'north',border:false" style="height:65px;padding:10px 10px 0 10px;">
+            <span> #(..Get("类型"))# </span>
+            <input class='hisui-radio' data-options="requiredSel:true" type="radio" label="恒牙" name="toothRadio"
+                id="ToothPermanent" value="ToothPermanent">
+            <input class='hisui-radio' data-options="requiredSel:true" type="radio" label="乳牙" name="toothRadio"
+                id="ToothDeciduous" value="ToothDeciduous">
+            <input class='hisui-radio' data-options="requiredSel:true" type="radio" label="混合牙" name="toothRadio"
+                id="ToothAll" value="ToothAll">
+            <span style="padding-right:10px;margin-left:200px;">#(..Get("当前"))#</span><input id="toothMethod" type="text"
+                class="hisui-combobox" style="width:240px;">
+            <a href="#" style="margin-left:10px;" id="resetTooth" class="hisui-linkbutton">#(..Get("重置"))#</a>
+        </div>
+        <div data-options="region:'center',border:false" style="padding:5px 10px;">
+            <div class="tooth-main">
+                <div id="FlagRight" class="flag-rl" style="width:72px;">
+                    <div class="flag-rl-middle">#(..Get("右"))#</div>
+                </div>
+                <div class="tooth-layout">
+                    <!-- 乳牙上 -->
+                    <div class="deciduous top">
+                    </div>
+                    <!-- 恒牙上 -->
+                    <div class="permanent top">
+                    </div>
+                    <hr id="line" class="cross-line" />
+                    <!-- 恒牙下 -->
+                    <div class="permanent bottom">
+                    </div>
+                    <!-- 乳牙下 -->
+                    <div class="deciduous bottom">
+                    </div>
+                </div>
+                <div id="FlagLeft" class="flag-rl" style="width:72px;">
+                    <div class="flag-rl-middle">#(..Get("左"))#</div>
+                </div>
+            </div>
+        </div>
+        <div data-options="region:'south',border:false" style="height:50px;">
+            <div style="width:fit-content;margin:10px auto;">
+                <a href="#" id="addToRecord" class="hisui-linkbutton">#(..Get("保存"))#</a>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.tooth.js"></script>
+    </body>
+</html>

@@ -23,35 +23,58 @@
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/layout.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reporttarwin.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reportreq.js"></script>
+	<script defer="defer" type="text/javascript" src="../scripts/DHCMA/SS/interface/ToDoctor.js"></script>
+	<!--东华CDSS交互-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
+
 	<!-- 新旧版本兼容配置 -->
 	<server>
 	  d ##class(web.DHCXMLPConfig).LODOPInit()
+	  s EpisodeID=%request.Get("EpisodeID")
+	  s HospID=%session.Get("LOGON.HOSPID")
+	  s LgParam=HospID_"^"_%session.Get("LOGON.CTLOCID")
+	  s AutoPrint=##Class(web.DHCAPPExaReportQuery).GetAutoPrintFlag(EpisodeID,LgParam,"Exa")
 	  /// 新旧版本兼容配置
-	  s version=1 //##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+	   s TreeTypeBody=##Class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("TreeTypeBody",HospID)
+	  if (TreeTypeBody="TreeTypeBody"){s version=0}else{s version=1}
 	  w "<script Language=""JavaScript"">"_$c(13,10)
 	  w "var version="""_$g(version)_""";"_$c(13,10)
 	  w "</script>"
+	  s CheckDiag=##Class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("CheckDiag",HospID)
    </server>
+   <script language="JavaScript"> 
+	var AutoPrint="#(AutoPrint)#";
+	var CheckDiag="#(CheckDiag)#"
+  </script>
 </head>
 <body>
 <div id="MainPanel" class="hisui-layout" fit="true">
 	<div data-options="region:'center',title:''"  border="false">
-		<div id="CenPanel" class="hisui-layout" fit="true" border="false">
-			<div data-options="region:'center',title:'检查方法',headerCls:'panel-header-gray'">
+		<div id="CenPanel" class="hisui-layout" fit="true" >
+			<div data-options="region:'center',title:'检查项目',headerCls:'panel-header-gray'" border="true" style="border-right:0;border-left:0;border-bottom:0;" >
 				<div class="hisui-layout" fit="true">
-					<div data-options="region:'center',title:''" border="false">
-		                <label style="margin:0px 5px;">#(..Get("项目检索"))#</label><input id="item" style="width:245px;border:1px solid #95B8E7;margin:2px 3px;height:25px;" placeholder='#(..Get("请输入名称/拼音码"))#'/>
-		                <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
-		                </table>
-					</div>
-					<div data-options="region:'south',title:''" style='height:350px;' border="false">
+					<div data-options="bodyCls:'panel-header-gray',region:'center',title:''" border="true" style="padding:0px 0px 0px 0px;border-top:0;border-radius:0 0 4px 4px;">
 						<div class="hisui-layout" fit="true">
-							<div id="SelPanel" data-options="region:'center',title:'已开项目列表',headerCls:'panel-header-gray'" style="border-right:0;border-left:0;">
-								<div id="ItemSelList" border="false"></div>
-							</div>
-							<div data-options="region:'south',title:'注意事项',headerCls:'panel-header-gray'" style='height:175px;' border="false">
-								<div id="noteContent" style="background-color:#fff;margin: 0 auto;width: 97%;padding-top:10px;">
+							<div data-options="region:'north',title:'',bodyCls:'panel-header-gray'" style='height:35px;border-right:0;border-left:0;border-top:0;' border="true"> 
+			                	<label style="margin:3px 5px;">#(..Get("项目检索"))#</label><input id="item" class="textbox" style="width:245px;margin:4px 3px;height:24px;" placeholder='#(..Get("请输入名称/拼音码"))#'/>
+			                </div>
+			                <div id="SelPanel" data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="border:0;">
+				                <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
+				                </table>
+			                </div>
+		                </div>
+					</div>
+					<div data-options="region:'south',bodyCls:'panel-header-gray',title:''" style='height:350px;padding:5px 0px 0px 0px;' border="false">
+						<div class="hisui-layout" fit="true">
+							<div id="SelPanel" data-options="region:'center',bodyCls:'panel-body-gray',headerCls:'panel-header-gray',title:'已开项目列表'" style="border-top:0;border-right:0;border-left:0;  border-bottom: 5px solid transparent;border-radius:0 0 4px 4px;">
+								<div class="hisui-layout" fit="true">
+									<div data-options="region:'center',title:'',bodyCls:'panel-header-gray'" border="true" style="border-radius:0 0 4px 4px; border-top:0;background-color: #fff;">
+										<div id="ItemSelList" border="false" style="" ></div>
+									</div>
 								</div>
+							</div>
+							<div data-options="region:'south',bodyCls:'panel-body-gray',headerCls:'panel-header-gray',title:'注意事项'" style='height:175px;padding:0px 0px 5px 0px;border-radius:0 0 4px 4px;' border="true">
+								<div id="noteContent" style="background-color:#fff;"></div>
 							</div>
 						</div>
 					</div>
@@ -59,9 +82,9 @@
 			</div>
 		</div>
 	</div>
-	<div data-options="region:'east',title:'申请单内容',split:true,collapsible:false,headerCls:'panel-header-gray'" style='width:400px;'>
+	<div data-options="region:'east',title:'申请单内容',split:true,collapsible:false,bodyCls:'panel-header-gray' ,headerCls:'panel-header-gray'" border="true" style='width:400px;border-bottom:0;border-right:0;border-left:0;background-color: #fff;'>
 		<div class="hisui-layout" fit="true">
-			<div data-options="region:'center',title:''" style="border-top:0;border-right:0;border-left:0;">
+			<div data-options="region:'center',title:'',bodyCls:'panel-header-gray'" border="true" style="border-radius:0 0 4px 4px; border-top:0;background-color: #fff;">
 				<div class="ui-div-m-l5-r5">
 	                 <div class="panel-title-h">
 	                 	<div>
@@ -69,39 +92,41 @@
 	                	</div>
 	                	<div>
 	                		<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(1)">#(..Get("选择模板"))#</a></span>
-	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:savesymmodel()">#(..Get("保存模板"))#</a></span>
+	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton green btn-temp " onclick="javascript:savesymmodel()">#(..Get("保存模板"))#</a></span>
 	                	</div>
 	                </div>
 	                <div>
-	                    <textarea id="arPatSym" style="padding:5px 3px;width:98%;height:80px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="#(..Get("病人主诉！"))#"></textarea>
+	                    <textarea id="arPatSym" style="padding:5px 3px;width:98%;height:80px;font-size:14px" placeholder="#(..Get("病人主诉！"))#"></textarea>
 	                </div>
 		        </div>
 				<div class="ui-div-m-l5-r5">
 					 <div class="panel-title-h">
 					 	<div>
 							<span class="ui-span-title-lv2">#(..Get("2、检查目的"))#</span>
+							<span class="ui-span-title-lv2" id ="LimitExaPurpNumber" >#(..Get("(限制200字)"))#</span>
 						</div>
 						<div style="float:right;">
 							<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(4)">#(..Get("选择模板"))#</a></span>
-			                <span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:savePurmodel()">#(..Get("保存模板"))#</a></span>
+			                <span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton green btn-temp " onclick="javascript:savePurmodel()">#(..Get("保存模板"))#</a></span>
 		            	</div>
 		             </div>   
 	                <div>
-	                    <textarea id="ExaPurp" style="padding:5px 3px;width:98%;height:100px;font-size:14px;border: 1px solid #95B8E7;" placeholder="#(..Get("请输入检查目的！"))#"></textarea>
+	                    <textarea id="ExaPurp" style="padding:5px 3px;width:98%;height:100px;font-size:14px;" placeholder="#(..Get("请输入检查目的！"))#"></textarea>
 	                </div>
 		        </div>
 		        <div class="ui-div-m-l5-r5">
 	               <div class="panel-title-h">
 	               		<div>
 	                		<span class="ui-span-title-lv2">#(..Get("3、现病史"))#</span>
+	                		<span class="ui-span-title-lv2" id ="LimitarDisHisNumber" >#(..Get("(限制200字)"))#</span>
 	                	</div>
 	                	<div>
 	                		<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(2)">#(..Get("选择模板"))#</a></span>
-	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:saveprehismodel()">#(..Get("保存模板"))#</a></span>
+	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton green btn-temp " onclick="javascript:saveprehismodel()">#(..Get("保存模板"))#</a></span>
 	                	</div>
 	                </div>
 	                <div>
-	                    <textarea id="arDisHis" style="padding:5px 3px;width:98%;height:100px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="#(..Get("请输入现病史描述！"))#"></textarea>
+	                    <textarea id="arDisHis" style="padding:5px 3px;width:98%;height:100px;font-size:14px;" placeholder="#(..Get("请输入现病史描述！"))#"></textarea>
 	                </div>
 		        </div>
 		        <div class="ui-div-m-l5-r5">
@@ -111,23 +136,23 @@
 	                	</div>
 	                	<div>
 	                		<span style="margin-right:10px;float:right;"><a href="#" class="hisui-linkbutton btn-temp" onclick="javascript:showmodel(3)">#(..Get("选择模板"))#</a></span>
-	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton btn-temp btn-lightgreen" onclick="javascript:savesignmodel()">#(..Get("保存模板"))#</a></span>
+	                		<span style="margin-right:20px;float:right;"><a href="#" class="hisui-linkbutton green btn-temp " onclick="javascript:savesignmodel()">#(..Get("保存模板"))#</a></span>
 	                	</div>
 	                </div>
 	                <div>
-	                    <textarea id="arPhySig" style="padding:5px 3px;width:98%;height:100px;font-size:14px;border: 1px solid #95B8E7;color:#999999" placeholder="#(..Get("请输入体征！"))#"></textarea>
+	                    <textarea id="arPhySig" style="padding:5px 3px;width:98%;height:100px;font-size:14px;" placeholder="#(..Get("请输入体征！"))#"></textarea>
 	                </div>
 		        </div>
 		        <div class="ui-div-m-l5-r5">
 	                <div class="panel-title-h"><span class="ui-span-title-lv2">#(..Get("5、诊断"))#</span></div>
-	                <div style="min-height:140px;border:1px solid #95B8E7;margin:8px 0px;overflow-y:scroll;">
+	                <div style="min-height:140px;margin:8px 0px;overflow-y:hide;">
 		                <table id="TmpDiags" border="1" cellspacing="0" cellpadding="1" class="form-table">
 		                </table>
 	                </div>
 		        </div>
 		        <div class="ui-div-m-l5-r5">
 	                <div class="panel-title-h"><span class="ui-span-title-lv2">#(..Get("6、其他项目"))#</span></div>
-	                <div style="min-height:100px;border:1px solid #95B8E7;">
+	                <div style="min-height:100px;">
 		                <table id="TmpOtherOpt" border="1" cellspacing="0" cellpadding="1" class="form-table">
 		                </table>
 	                </div>
@@ -146,9 +171,9 @@
 			<input id="arEmgFlag" type="checkbox" name="arEmgFlag" value="Y" style="margin:15px 0px 0px 45px;vertical-align:text-bottom;"></input>
 			<span style="color:red;font-weight:bold;">加急</span>			
 			</label-->
-			<a href="#" id="bt_sendreq" class="hisui-linkbutton btn-lightgreen m-left-20" data-options="iconCls:''" onclick="sendExaReq()">发送</a>
+			<a href="#" id="bt_sendreq" class="hisui-linkbutton green m-left-20" data-options="iconCls:''" onclick="sendExaReq()">发送</a>
 			<a href="#" id="bt_printreq" class="hisui-linkbutton" data-options="iconCls:''" onclick="printExaReq()">打印</a>
-			<a href="#" id="bt_suredoc" class="hisui-linkbutton btn-lightgreen m-left-20" data-options="iconCls:''" onclick="sureExaReq()">确认</a>
+			<a href="#" id="bt_suredoc" class="hisui-linkbutton green m-left-20" data-options="iconCls:''" onclick="sureExaReq()">确认</a>
 			<a href="#" id="bt_clsdoc" class="hisui-linkbutton" data-options="iconCls:''" onclick="closePopWin()">关闭</a>
 		</div>
 	</div>
@@ -156,7 +181,7 @@
 <!--------------打印相关---------->
 <div id="hiddenEncrypt" style="width:0;height:0;">
 	<form name="DHCIPBILL">
-		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 	</form>
 </div>
 <!-------------部位选择窗------------------->
@@ -196,25 +221,25 @@
 </div>
 <!--------------模板保程序  2017-1-10---------->
 <div id="symwin">
-	<div style="margin-top:20px;">
+	<div style="margin-top:25px;">
 		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="saveSymLoc()">#(..Get("科室模板"))#</a>
 		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="saveSymUser()">#(..Get("个人模板"))#</a>
 	</div>
 </div>
 <div id="prehis">
-	<div style="margin-top:20px;">
+	<div style="margin-top:25px;">
 		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="savePrehisLoc()">#(..Get("科室模板"))#</a>
 		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="savePrehisUser()">#(..Get("个人模板"))#</a>
 	</div>
 </div>
 <div id="patsign">
-	<div style="margin-top:20px;">
+	<div style="margin-top:25px;">
 		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="savePatsignLoc()">#(..Get("科室模板"))#</a>
 		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="savePatsignUser()">#(..Get("个人模板"))#</a>
 	</div>
 </div>
 <div id="patpur">
-	<div style="margin-top:20px;">
+	<div style="margin-top:25px;">
 		<a href="#" class="hisui-linkbutton btn-lightgreen m-left-30" data-options="iconCls:''" onclick="savePatpurLoc()">#(..Get("科室模板"))#</a>
 		<a href="#" class="hisui-linkbutton m-left-30" data-options="iconCls:''" onclick="savePatpurUser()">#(..Get("个人模板"))#</a>
 	</div>

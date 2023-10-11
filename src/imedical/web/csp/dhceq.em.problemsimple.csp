@@ -1,0 +1,193 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--ADDINS require="CmdShell"></ADDINS-->
+<style type="text/css">
+	p {
+	  padding:5px;
+	  text-indent:25px;
+	}
+	.lg_ft{
+		color:red;
+		margin-left:10px;
+	}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	Set RowID=$Get(%request.Data("RowID",1))
+	Set ExObjDR=$Get(%request.Data("ExObjDR",1))
+	Set Status=$Get(%request.Data("Status",1))
+	Set CurRole=$Get(%request.Data("CurRole",1))
+	Set MenuApproveRole=$Get(%request.Data("MenuApproveRole",1))
+	Set EvaluateFlag=$Get(%request.Data("EvaluateFlag",1))
+	Set EvaluateGroup=$Get(%request.Data("EvaluateGroup",1))
+	Set ApproveRoleDR=$Get(%request.Data("ApproveRoleDR",1))
+	Set QXType=$Get(%request.Data("QXType",1))
+	Set Action=$Get(%request.Data("Action",1))
+	Set GetFaultCaseOperMethod=##class(web.DHCEQCommon).GetSysInfo("503004")
+	Set GetFaultReasonOperMethod=##class(web.DHCEQCommon).GetSysInfo("503002")
+	Set GetDealMethodOperMethod=##class(web.DHCEQCommon).GetSysInfo("503003")
+	Set GetFaultTypeOperMethod=""
+	Set GetStopEquipFlag=##class(web.DHCEQCommon).GetSysInfo("990036")
+	Set RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("25",RowID),CurRole,Action)
+	Set LoginLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	Set ReadOnly=$Get(%request.Data("ReadOnly",1))
+	Set LoginLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	Set MRManageTypeDR=##class(web.DHCEQM.DHCEQMCManageType).GetIDByCode(2)
+</Script>
+<style type="text/css">
+	.hisui-textarea
+	{
+		width:308%;
+		height:100%;
+	}
+	.eqbutton
+	{
+		margin-left:23px;
+		width:100px;
+	}
+</style>
+<body class="hisui-layout">
+    <div data-options="region:'center',border:false">
+        <!--div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true"-->
+			<div class="hisui-layout" data-options="fit:true,border:false" style='width:100%;height:100%;display:block;'>
+				<div data-options="region:'center',border:false" style="padding-right:10px;">
+					<div class="eq-table" >
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMRRequestNo" for="MRRequestNo">故障单号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MRRequestNo" disabled="false"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMRHold17" for="MRHold17">客户端IP</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MRHold17" class="hisui-validatebox textbox"></div> <!--modified by wy 2022-4-1-->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMRRequestUserDR_UserName" for="MRRequestUserDR_UserName">提出人</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MRRequestUserDR_UserName" class="hisui-validatebox textbox" data-options="component:'PLAT.L.EQUser'"></input></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMRRequestLocDR_LocDesc" for="MRRequestLocDR_LocDesc">提出科室</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MRRequestLocDR_LocDesc" class="hisui-validatebox textbox" value=#(LoginLoc)# data-options="component:'PLAT.L.Loc',paras:[{name:'LocDesc',type:'4',value:'MRRequestLocDR_LocDesc'},{name:'LinkLocID',type:'4',value:'MRRequestLocDR'}]"></input></div>
+							
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMRRequestDate" for="MRRequestDate">提出日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRRequestDate" value=#(CurDate)#></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMRRequestTel" for="MRRequestTel">联系方式</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MRRequestTel" data-options="validType:'phoneRex'"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMRExObjDR_ExObj" for="MRExObjDR_ExObj">软件名称</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MRExObjDR_ExObj" class="hisui-validatebox textbox" data-options="component:'EM.L.Software',paras:[{name:'Equip',type:'4',value:'MRExObjDR_ExObj'},{name:'vData',type:'2',value:'SSLocID=^SSGroupID=^SSUserID=^EquipAttribute=61^vAllInFlag=Y'},{name:'FacilityFlag',type:'2',value:'0'}]"></input>(编号或名称检索)</div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMRAccessoryOriginalDR_AODesc" for="MRAccessoryOriginalDR_AODesc">软件模块</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MRAccessoryOriginalDR_AODesc" class="hisui-validatebox textbox" data-options="component:'EM.L.SoftwareModule',paras:[{name:'EQRowID',type:'4',value:'MRExObjDR_EQRowID'}]"></input></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMRStartDate" for="MRStartDate">故障日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRStartDate" value=#(CurDate)#></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMRAcceptUserDR_UserName" for="MRAcceptUserDR_UserName">维修工程师</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MRAcceptUserDR_UserName" data-options="component:'EM.L.MaintUser'"></div>
+						</div>	
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMRFaultCaseDR_FCDesc" for="MRFaultCaseDR_FCDesc">故障现象</label></div>
+							<div class="eq-table-td eq-table-input"><input id="MRFaultCaseDR_FCDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.FaultCase',paras:[{name:'type',type:'2',value:'1'}]"></input></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMRFaultCaseRemark" for="MRFaultCaseRemark">现象备注</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="MRFaultCaseRemark" class="hisui-textarea textbox"></textarea></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cMRRemark" for="MRRemark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><textarea id="MRRemark" class="hisui-textarea textbox"></textarea></div>
+						</div>	
+					</div>
+					<table style="width:50%;margin-top:5px;">
+						<td><a id="BSave" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">保存</a></td>
+						<td><a id="BSubmit" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">提交</a></td>
+						<td><a id="BDelete" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">删除</a></td>
+						<td><a id="BSelfCancelSubmit" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">自发撤回</a></td> <!-- add by mwz 2021-01-18 MWZ0048 -->
+						<td><a id="BPicture" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">图片信息</a></td>
+					</table>
+					<p class="lg_ft" style="font-size:18px;">备注:记录软件资产的运维，管理过程中的故障问题，使用意见。并记录这些问题提出时间，解决时间，解决方式</p>
+				<!--/div-->
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+			<INPUT type="hidden" id="RowID" value=#(RowID)#>
+			<INPUT type="hidden" id="MRExObjDR" value=#(ExObjDR)#>
+			<INPUT type="hidden" id="MRAccessoryOriginalDR">
+			<INPUT type="hidden" id="MRStatus" value=#(Status)#>
+			<INPUT type="hidden" id="CurRole" value=#(CurRole)#>
+			<INPUT type="hidden" id="MenuApproveRole" value=#(MenuApproveRole)#>
+			<INPUT type="hidden" id="EvaluateFlag" value=#(EvaluateFlag)#>
+			<INPUT type="hidden" id="EvaluateGroup" value=#(EvaluateGroup)#>
+			<INPUT type="hidden" id="ApproveRoleDR" value=#(ApproveRoleDR)#>
+			<INPUT type="hidden" id="Action" value=#(Action)#>
+			<INPUT type="hidden" id="MRExObjDR_EQOriginalFee">
+			<INPUT type="hidden" id="MRExObjDR_EQRowID">
+			<INPUT type="hidden" id="MRPlace">
+			<INPUT type="hidden" id="MRExObjDR_EQFileNo">
+			<INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+			<INPUT type="hidden" id="NextFlowStep">
+			<INPUT type="hidden" id="GetFaultCaseOperMethod" value=#(GetFaultCaseOperMethod)#>
+			<INPUT type="hidden" id="GetFaultReasonOperMethod" value=#(GetFaultReasonOperMethod)#>
+			<INPUT type="hidden" id="GetDealMethodOperMethod" value=#(GetDealMethodOperMethod)#>
+			<INPUT type="hidden" id="GetFaultTypeOperMethod" value=#(GetFaultTypeOperMethod)#>
+			<INPUT type="hidden" id="SimpleFlag" value="1">
+			<INPUT type="hidden" id="ApproveSetDR">
+			<INPUT type="hidden" id="NextRoleDR">
+			<INPUT type="hidden" id="CancelFlag">
+			<INPUT type="hidden" id="CancelToFlowDR">
+			<INPUT type="hidden" id="ApproveStatus">
+			<INPUT type="hidden" id="GetStopEquipFlag" value=#(GetStopEquipFlag)#>
+			<INPUT type="hidden" id="ApproveTypeCode">
+			<INPUT type="hidden" id="Type">
+			<INPUT type="hidden" id="MRObjLocDR">
+			<INPUT type="hidden" id="EquipDR">
+			<INPUT type="hidden" id="MREquipTypeDR">
+			<INPUT type="hidden" id="MRObjTypeDR">
+			<INPUT type="hidden" id="MREquipStatusDR">
+			<INPUT type="hidden" id="MRRequestUserDR">
+			<INPUT type="hidden" id="MRRequestLocDR" value=#(LoginLocDR)#>
+			<INPUT type="hidden" id="MRFaultCaseDR">
+			<INPUT type="hidden" id="MREmergencyLevelDR">
+			<INPUT type="hidden" id="MRSeverityLevelDR">
+			<INPUT type="hidden" id="MRAcceptUserDR">
+			<INPUT type="hidden" id="MRMaintGroupDR">
+			<INPUT type="hidden" id="MRMaintModeDR">
+			<INPUT type="hidden" id="MRServiceDR">
+			<INPUT type="hidden" id="MRFaultTypeDR">
+			<INPUT type="hidden" id="MRFaultReasonDR">
+			<INPUT type="hidden" id="MRDealMethodDR">
+			<INPUT type="hidden" id="MRMaintResultsDR">
+			<INPUT type="hidden" id="MRSourceTypeDR">
+			<INPUT type="hidden" id="MRExObjDR_EQClassFlag">
+			<INPUT type="hidden" id="ReadOnly" value=#(ReadOnly)#>
+			<INPUT type="hidden" id="MRManageTypeDR" value=#(MRManageTypeDR)#>
+			<INPUT type="hidden" id="MRMaintType" value="0"><!--软件故障报修-->
+			<INPUT type="hidden" id="MRSourceType" value="1"><!--来源-->
+			<!--调用后台方法隐藏元素
+			<INPUT type="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			-->
+		</form>
+	</div>
+	
+<script type='text/javascript' src='../scripts/dhceq/em/busproblem.js'></script>
+</body>
+
+</HTML>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<!--
+	desc: 药房药库-页面维护
+	csp:  pha.sys.v1.page.csp
+	js:   pha/sys/v1/page.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+        .layout-panel-west .datagrid-header {
+            display: none;
+        }
+        .pha-body {
+		    background-color: #fff;
+		}
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+        	<!-- layout start -->
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',border:false,split:true,width:250">
+                    <div class="hisui-panel" title="#(..Get("产品线"))#" data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:''">
+                        <table id="gridPro"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div id="layout-right" class="hisui-layout" fit="true">
+                        <div data-options="region:'north',border:false,split:true,height:300">
+                            <div class="hisui-panel" title="#(..Get("页面"))#" data-options="headerCls:'panel-header-gray',iconCls:'icon-set-col',fit:true,bodyCls:''">
+                                <table id="gridPage"></table>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div class="hisui-panel" title="#(..Get("元素"))#" data-options="headerCls:'panel-header-gray',iconCls:'icon-set-col',fit:true,bodyCls:''">
+                                <table id="gridPageItm"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- layout end -->
+        </div>
+    </div>
+	
+    <!-- 表格工具栏 -->
+    <div id="gridPageBar">
+    	<div class="pha-row">
+    		<div class="pha-col" style="padding-left:5px;">
+                <input id="isFindAll" class="hisui-checkbox" data-pha="class:'hisui-checkbox',save:true,query:true,clear:true" type="checkbox" label="#(..Get("全局检索"))#"/>
+            </div>
+    		<div class="pha-col">
+    			<input id="txtPage" class="hisui-validatebox" data-pha='class:"hisui-validatebox"' placeholder="#(..Get("可输入页面的链接、名称或简拼..."))#" style="width:220px;"/>
+    		</div>
+    		<div class="pha-col">
+    			<a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">#(..Get("查询"))#</a>
+    		</div>
+    	</div>
+    	<div class="pha-line" style="margin-bottom:1px;"></div>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">#(..Get("新增"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEdit">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDel">#(..Get("删除"))#</a>
+    </div>
+    <div id="gridPageItmBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddItm">#(..Get("新增"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditItm">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelItm">#(..Get("删除"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-up" id="btnUpItm">#(..Get("上移"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-down" id="btnDownItm">#(..Get("下移"))#</a>
+    </div>
+	
+    <!-- window or dialog -->
+    <!-- 页面维护 -->
+    <div id="diagPage" class="hisui-dialog" data-options="title:'#(..Get("页面"))#',width:355,height:260,iconCls:'icon-w-add',closed:true,
+	    buttons:[{
+	        text:'#(..Get("保存"))#',
+	        handler:function(){
+	            SavePage();
+	        }
+	    },{
+	        text:'#(..Get("继续新增"))#',
+	        id:'diagPage_btnAdd',
+	        handler:function(){
+	            SavePage(1);
+	        }
+	    },{
+	        text:'#(..Get("关闭"))#',
+	        handler:function(){
+	            $('#diagPage').dialog('close');
+	        }
+	    }]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" class="">
+                <div class="pha-row">
+                    <div class="pha-col" style="text-align:right; width:56px;">
+                        <label for="proId"><span style="color:red">*</span>#(..Get("产品线"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="proId" class="hisui-combobox" data-pha='class:"hisui-combobox",requied:true' />
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col" style="text-align:right; width:56px;">
+                        <label for="pageDesc"><span style="color:red">*</span>#(..Get("名称"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="pageDesc" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true' style="width:253px" />
+                    </div>
+                </div>
+                <div class="pha-row" style="margin-bottom:0px;">
+                    <div class="pha-col" style="text-align:right; width:56px;">
+                        <label for="pageLink"><span style="color:red">*</span>#(..Get("链接"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="pageLink" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true' style="width:253px" />
+                    </div>
+                </div>
+                <div class="pha-row" style="margin-bottom:0px;">
+                    <div class="pha-col" style="text-align:right; width:56px;">
+                        <label for="pageModel">#(..Get("页面模板"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="pageModel" class="hisui-combobox" data-pha='class:"hisui-combobox",requied:false' style="width:270px" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 元素维护 -->
+    <div id="diagPageItm" class="hisui-dialog" data-options="title:'#(..Get("页面元素"))#',width:252,height:207,iconCls:'icon-w-add',closed:true,
+	    buttons:[{
+	        text:'#(..Get("保存"))#',
+	        handler:function(){
+	            SavePageItm();
+	        }
+	    },{
+	        text:'#(..Get("继续新增"))#',
+	        id:'diagPageItm_btnAdd',
+	        handler:function(){
+	            SavePageItm(1);
+	        }
+	    },{
+	        text:'#(..Get("关闭"))#',
+	        handler:function(){
+	            $('#diagPageItm').dialog('close');
+	        }
+	    }]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" class="">
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <div style="text-align:right; width:63px;">
+                        	<label for="pageItmDom"><span style="color:red">*</span>DomId</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="pageItmDom" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true' />
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <div style="text-align:right; width:63px;">
+                        	<label for="pageItmDesc"><span style="color:red">*</span>#(..Get("名称"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="pageItmDesc" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true' />
+                    </div>
+                </div>
+                <div class="pha-row" style="margin-bottom:0px;">
+                    <div class="pha-col">
+                    	<label for="pageItmEleDR"><span style="color:red">*</span>#(..Get("元素类型"))#</label>
+                    </div>
+                    <div class="pha-col">
+                    	<input id="pageItmEleDR" data-pha='class:"hisui-combobox",requied:true' />
+                 	</div>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js" ></script>
+    <script type="text/javascript" src="../scripts/pha/sys/v1/page.js"></script>
+</body>
+
+</html>

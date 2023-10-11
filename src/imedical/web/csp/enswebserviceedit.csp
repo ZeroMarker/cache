@@ -1,0 +1,547 @@
+<style type="text/css">
+	.edit-header{
+		margin-bottom:10px;
+		border-bottom:1px solid #509de1;
+	}
+	.edititle{
+		display:inline-block;
+		width:100px;
+		height:40px;
+		line-height:40px;
+		border-bottom:1px solid #509de1;
+		text-align:center;
+		font-weight:bold;
+	}
+	.editable{
+		padding:0 10px 0 10px;
+		margin:0 auto
+	}
+	.serviceUrl{
+		color: #55b1dd;
+	    text-decoration: none;
+	    margin:0 auto;
+	    display:inline-block;
+	    text-align:center;
+	    width: 88%;
+	    font-size: 16px;
+	    font-weight: 600;
+	}
+	.serviceUrl:hover{
+		color: #CDF;
+		/*#CDF*/
+	}
+</style>
+	
+
+	<!-- 服务注册-新增 -->
+	<div data-options="region:'center',title:'',split:true" >
+		<!-- 基本信息 -->
+		<div class="hisui-panel">
+			<div class="edit-header">
+				<span class="edititle">基本信息</span>
+				<a class="serviceUrl" href="http://114.116.37.147777:57773555/csp/hsb/DHC.Published.PUB0002.BS.PUB0002.CLS?WSDL=1" title="服务地址" target="_blank">http://114.116.37.147777:57773555/csp/hsb/DHC.Published.PUB0002.BS.PUB0002.CLS?WSDL=1</a> 
+			</div>
+			<table style="width:100%;padding-right:20px" >
+				<tr style="height:40px">
+					<!--td class="r-label">服务代码</td>
+					<td>
+						<input class="textbox" name="sercode" readonly style="width:100%;">
+					</td-->
+					<td class="r-label">服务名称</td>
+					<td>
+						<input class="hisui-validatebox textbox" name="sername" data-options="required:true" style="width:100%;">
+					</td>
+					<td class="r-label">服务描述</td>
+					<td>
+						<input class="textbox" name="serdesc" style="width:100%;">
+					</td>
+					<td class="r-label">服务IP</td>
+					<td>
+						<input class="hisui-validatebox textbox" name="serhost" data-options="required:true" style="width:100%;">
+					</td>
+				</tr>
+				<tr style="height:40px">
+					<td class="r-label">服务状态</td>
+					<td>
+						<div id="serflag" name='serflag' class="hisui-switchbox"  data-options="onText:'运行',offText:'停止',
+						size:'small',animated:true,onClass:'primary',offClass:'gray',width:83,height:32" >
+						</div>
+					</td>
+					<td class="r-label">总线代码</td>
+					<td >
+						<input class="textbox" name="busCode" style="width:100%;">
+					</td>
+					<td class="r-label">服务端口</td>
+					<td>
+						<input class="textbox" name="serport" style="width:100%;">
+					</td>  
+				</tr>
+			</table>
+		</div>
+		<!-- 方法编辑 -->
+		<div class="hisui-panel" style="height:200px">
+			<div class="edit-header">
+				<span class="edititle">方法编辑</span>
+			</div>
+			<div class="editable">
+				<table id="medGrid" name="medGrid"></table>
+			</div>
+		</div>
+		<!-- 参数编辑 -->
+		<div class="hisui-panel" style="height:200px" >
+			<div class="edit-header">
+				<span class="edititle">参数编辑</span>
+			</div>
+			<!-- <div class="editable datagrid-view hisui-panel" fit="true">
+				<table id="parGrid" name="parGrid" data-type="uncompleted"></table>
+			</div> -->
+			<div class="editable">
+				<table id="parGrid" name="parGrid"></table>
+			</div>
+		</div>
+		<!-- 功能编辑 -->
+		<div class="hisui-panel" style="height:250px">
+			<div class="edit-header">
+				<span class="edititle">功能编辑</span>
+			</div>
+			<div class="editable">
+				<table class="Functionbar" style="padding: 0 10px 5px 10px;">
+					<tr>
+						<td class="r-label">功能代码</td>
+						<td>
+							<input id="funCode" class="textbox" name="funCode" style="margin-right:20px">
+						</td>
+						<td class="r-label">功能描述</td>
+						<td>
+							<input id="funDesc" class="textbox" name="funDesc" style="margin-right:20px">
+						</td>
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="addFun()">新增</a>
+						</td>
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="findFun()">查询</a>
+						</td>
+					</tr>
+				</table>
+				<table id="funGrid" name="funGrid"></table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'south',title:'',split:true" style="height:50px;">
+		<div class="service-reg-btn" title='按钮' style="text-align:center;margin-top:7px">
+			<a href="#" class="hisui-linkbutton" onclick="saveSerInfo()">保存</a>
+			<a href="#" class="hisui-linkbutton" onclick="returnSer()">返回</a>
+			
+		</div>
+	</div>
+	
+
+<script language="Cache" method="GetServiceInfo" arguments="Input:%String" returntype="%String" runat="server">
+	q %session.Data(Input)
+</script>
+<script language="Cache" runat="server">
+	s %session.Data("serCode") = $Get(%request.Data("serCode",1))
+	s %session.Data("serDesc") = $Get(%request.Data("serDesc",1))
+	s %session.Data("serNote") = $Get(%request.Data("serNote",1))
+	s %session.Data("host") = $Get(%request.Data("host",1))
+	s %session.Data("port") = $Get(%request.Data("port",1))
+	s %session.Data("serFlag") = $Get(%request.Data("serFlag",1))
+	s %session.Data("serWsdl") = $Get(%request.Data("serWsdl",1))
+	s %session.Data("busCode") = $Get(%request.Data("busCode",1))
+
+</script>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js"></script>
+<script type="text/javascript">
+var $URL="web.DHCENS.STBLL.UTIL.PageLoad.cls?";
+var serCode="",medCode="",parCode="",tbm,tbp,tbf;
+var editIndex={"medGrid":"","parGrid":"","funGrid":""}
+var selectIndex={"medGrid":0,"parGrid":0,"funGrid":0};
+$(function(){
+	//初始化基本信息
+	Init();
+	//加载方法列表
+	loadMethod(serCode);
+})
+	
+/*初始化功能列表查询*/
+/* function initSearchbox(){
+	$("#funBar").appendTo(".datagrid-toolbar table tbody tr");
+	$("#funBar").css("display","inline-block");
+} */
+			
+function getServiceInfo(Input) {
+	return #server(..GetServiceInfo(Input))#;
+}
+
+//初始化【基本信息】
+function Init(){  
+	serCode = getServiceInfo('serCode');
+	$('input[name="sercode"]').val(serCode);//服务代码
+	$('input[name="sername"]').val(getServiceInfo('serDesc')).validatebox("validate");//服务名称
+	$('input[name="serdesc"]').val(getServiceInfo('serNote'));//服务描述
+	$('input[name="serhost"]').val(getServiceInfo('host')).validatebox("validate");//服务IP
+	var serFlag=getServiceInfo('serFlag');
+	var flag = serFlag=='Y'?true:false;
+	$('#serflag').switchbox("setValue",flag);//服务状态
+	$('input[name="busCode"]').val(getServiceInfo('busCode'));//总线代码
+	$('input[name="serport"]').val(getServiceInfo('port'));//服务端口
+	var serWsdl=getServiceInfo('serWsdl');//服务地址
+	$('a.serviceUrl').html(serWsdl);
+	$('a.serviceUrl').attr('href',serWsdl);
+	
+}
+	
+	
+	
+//加载服务方法列表
+function loadMethod(serCode){
+	tbm = $HUI.datagrid("#medGrid",{
+	    pagination:true,
+	   // height:137,
+	    afterPageText:'页,共{pages}页', beforePageText:'第', displayMsg:'显示{from}到{to}条，共{total}条',
+	    nowrap: false,        
+	    fitCloumns: true,
+	    minimized:false,
+	    striped:true,
+	    cache:false, 
+	    method:'get',
+	    url:$URL+"action=SerMethodList&input="+serCode,
+	    singleSelect:true,
+	    pageSize:2,
+	    pageList:[2,5,10],
+	    rownumbers:true,
+		columns:[[  
+			{field:'MethodCode',title:'方法名称',sortable:true,width:200},   
+		    {field:'MethodDesc',title:'方法描述',sortable:true,width:200,editor:{type:"text"}}, 
+		    {field:'MethodStatus',title:'方法状态',width:"150",align:"center",editor:{type:"combobox",options:{valueField: 'value',textField: 'desc',data: [{value: 'Y',desc: '运行'},{value: 'N',desc: '停止'}]}},
+		   	 	formatter:function(v,rec){
+			    	var status="";
+		    	/* 	if (rec.MethodStatus=="Y") {
+			    		status='<a href="#" name="run">运行</a>';
+		    		}
+		    		else {
+			    		status='<a href="#" name="stop">停止</a>';
+		    		}
+		    		return status; */
+		    		if (rec.MethodStatus=="Y") {
+			    		status='运行';
+		    		}
+		    		else {
+			    		status='停止';
+		    		}
+		    		return status;
+			 	}   
+			},  
+		    {field:'ReturnVal',title:'返回值类型',width:250},
+		    {field:'btnUpdate',title:'操作',sortable:true,width:300,align:"center",
+		    	formatter:function(value,rowData,rowIndex){
+			    	var editBtn = '<a href="#this" class="editMed" onclick="startEditRow('+"'medGrid',"+rowIndex+')">编辑</a>';
+			    	var cancelBtn = '<a href="#this" class="cancelMed" onclick="cancelEditRow('+"'medGrid',"+rowIndex+')">取消编辑</a>';
+			    	var saveBtn = '<a href="#this" class="saveMed" onclick="endEditRow('+"'medGrid',"+rowIndex+')">保存</a>';
+	                return editBtn+cancelBtn+saveBtn
+		    	}		    
+		    },  
+		]],
+		onAfterEdit:function(rowIndex, rowData, changes){
+			$('.editMed').linkbutton({text:'编辑',plain:true,iconCls:'icon-edit'});
+	        $('.saveMed').linkbutton({text:'保存',plain:true,iconCls:'icon-save'});
+	       	$('.cancelMed').linkbutton({text:'取消',plain:true,iconCls:'icon-redo'});
+	       /* 	$('a[name="run"]').addClass('run');
+		    $('a[name="stop"]').addClass('stop'); */
+			rowData.MethodStatus=changes.MethodStatus?changes.MethodStatus:rowData.MethodStatus
+			
+			saveEditRow("medGrid",rowData);
+		},
+		onClickRow:function(rowIndex, rowData){
+			tbm.selectRow(rowIndex);
+			medCode=rowData.MethodCode;
+			selectIndex["medGrid"]=rowIndex;
+			//加载参数列表
+			var parInput = serCode+"^"+medCode;
+			loadParameter(parInput);
+		},
+	    onLoadSuccess:function(data){ 
+	    	$('.editMed').linkbutton({text:'编辑',plain:true,iconCls:'icon-edit'});
+	        $('.saveMed').linkbutton({text:'保存',plain:true,iconCls:'icon-save'});
+	       	$('.cancelMed').linkbutton({text:'取消',plain:true,iconCls:'icon-redo'});
+	       	/* $('a[name="run"]').addClass('run');
+		    $('a[name="stop"]').addClass('stop'); */
+		    
+		    //获取选中行方法代码
+	    	var index = selectIndex["medGrid"];
+	    	medCode = data.rows[index].MethodCode;
+	    	tbm.selectRow(index);
+	       	//加载参数列表
+	       	var parInput = serCode+"^"+medCode;
+	       	loadParameter(parInput);
+	    }
+	})
+	
+}
+
+
+
+//加载参数列表
+function loadParameter(parInput){
+	tbp = $HUI.datagrid("#parGrid",{
+	    pagination:true,
+	    afterPageText:'页,共{pages}页', beforePageText:'第', displayMsg:'显示{from}到{to}条，共{total}条',
+	    nowrap: false,        
+	    fitCloumns: true,
+	    minimized:false,
+	    striped:true,
+	    cache:false, 
+	    method:'get',
+	    url:$URL+'action=SerParameterList&input='+parInput,
+	    singleSelect:true,
+	    pageSize:2,
+	    pageList:[2,5,10],
+	    rownumbers:true,
+		columns:[[  
+		 	{field:'ParameterCode',title:'参数代码',sortable:true,width:200},    
+		    {field:'ParameterDesc',title:'参数描述',sortable:true,width:200,editor:{type:'text'}},   
+		    {field:'DataType',title:'数据类型',sortable:true,width:250}, 
+		    {field:'btnUpdate',title:'操作',width:300,align:'center',
+		    	formatter:function(value,rowData,rowIndex){
+	                var editBtn = '<a href="#this" class="editPar" onclick="startEditRow('+"'parGrid',"+rowIndex+')">编辑</a>';
+			    	var cancelBtn = '<a href="#this" class="cancelPar" onclick="cancelEditRow('+"'parGrid',"+rowIndex+')">取消</a>';
+			    	var saveBtn = '<a href="#this" class="savePar" onclick="endEditRow('+"'parGrid',"+rowIndex+')">保存</a>';
+	                return editBtn+cancelBtn+saveBtn 
+	              
+	                
+		    	}	
+		    },
+		]],
+		onAfterEdit:function(rowIndex, rowData, changes){
+			$('.editPar').linkbutton({text:'编辑',plain:true,iconCls:'icon-edit'});
+	        $('.cancelPar').linkbutton({text:'取消',plain:true,iconCls:'icon-redo'});
+	        $('.savePar').linkbutton({text:'保存',plain:true,iconCls:'icon-save'});
+			saveEditRow("parGrid",rowData);
+		},
+		onClickRow:function(rowIndex, rowData){
+			tbp.selectRow(rowIndex);
+			selectIndex["parGrid"]=rowIndex;
+			parCode=rowData.ParameterCode;
+			//加载功能列表
+			var funInput=serCode+"^"+medCode+"^"+parCode;
+			loadFunction(funInput);
+		},
+	    onLoadSuccess:function(data){
+		    $('.editPar').linkbutton({text:'编辑',plain:true,iconCls:'icon-edit'});
+	        $('.cancelPar').linkbutton({text:'取消',plain:true,iconCls:'icon-redo'});
+	        $('.savePar').linkbutton({text:'保存',plain:true,iconCls:'icon-save'});
+	        //获取选中行代码
+			var index = selectIndex["parGrid"];
+	    	parCode = data.rows[index].ParameterCode;
+	    	tbp.selectRow(index);
+	        //加载功能列表
+	        var funInput=serCode+"^"+medCode+"^"+parCode;
+	        loadFunction(funInput);
+	    }	
+	})
+}
+	
+	
+//加载功能列表
+function loadFunction(funInput){
+	
+	tbf = $HUI.datagrid("#funGrid",{
+	    pagination:true,
+	    afterPageText:'页,共{pages}页', beforePageText:'第', displayMsg:'显示{from}到{to}条，共{total}条',
+	    nowrap: false,        
+	    fitCloumns: true,
+	    minimized:false,
+	    striped:true,
+	    cache:false, 
+	    method:'get',
+	    queryParams:{input:funInput},
+	    url:$URL+'action=SerFunctionList&input='+funInput,
+	    singleSelect:true,
+	    pageSize:5,
+	    pageList:[2,5,10],
+	    rownumbers:true,
+		columns:[[   
+		    {field:'FunctionCode',title:'功能代码',sortable:true,width:200},   
+		    {field:'FunctionDesc',title:'功能描述',sortable:true,width:200,editor:{type:"text"}}, 
+		    {field:'btnUpdate',title:'操作',width:300,align:'center',
+			    formatter:function(value,rowData,rowIndex){
+				    var editBtn = '<a href="#this" class="editFun" onclick="startEditRow('+"'funGrid',"+rowIndex+')">编辑</a>';
+			    	var cancelBtn = '<a href="#this" class="cancelFun" onclick="cancelEditRow('+"'funGrid',"+rowIndex+')">取消</a>';
+			    	var saveBtn = '<a href="#this" class="saveFun" onclick="endEditRow('+"'funGrid',"+rowIndex+')">保存</a>';
+	                return editBtn+cancelBtn+saveBtn
+		    	}	 
+			},
+		]],
+		onAfterEdit:function(rowIndex, rowData, changes){
+			$('.editFun').linkbutton({text:'编辑',plain:true,iconCls:'icon-edit'});
+	        $('.cancelFun').linkbutton({text:'取消',plain:true,iconCls:'icon-redo'});
+	        $('.saveFun').linkbutton({text:'保存',plain:true,iconCls:'icon-save'});
+			//保存更新信息
+			 saveEditRow("funGrid",rowData);
+		},
+		onClickRow:function(rowIndex, rowData){
+			tbf.selectRow(rowIndex);
+			selectIndex["funGrid"] = rowIndex;
+		},
+	    onLoadSuccess:function(data){  
+	        $('.editFun').linkbutton({text:'编辑',plain:true,iconCls:'icon-edit'});
+	        $('.cancelFun').linkbutton({text:'取消',plain:true,iconCls:'icon-redo'});
+	        $('.saveFun').linkbutton({text:'保存',plain:true,iconCls:'icon-save'});
+	        
+	    }
+	})
+	//$(initSearchbox())
+}
+
+
+
+//启用编辑
+function startEditRow(tabId,rowindex){
+	if(editIndex[tabId]!=undefined){
+		cancelEditRow(tabId,rowindex)
+	}
+	editIndex[tabId]=rowindex;
+	var tbObj=$HUI.datagrid("#"+tabId);
+	tbObj.beginEdit(rowindex);
+	//tbObj.selectRow(rowindex);
+}
+//取消编辑
+function cancelEditRow(tabId,rowindex){
+	editIndex[tabId]=undefined;
+	$HUI.datagrid("#"+tabId).rejectChanges();
+}
+//结束编辑
+function endEditRow(tabId,rowindex){
+	$HUI.datagrid("#"+tabId).endEdit(rowindex);
+}
+
+
+
+//编辑后保存
+function saveEditRow(tabId,rowData){
+	var tbObj=$HUI.datagrid("#"+tabId);
+	var editPar="",action="";
+	if(tabId=="medGrid"){//更新方法
+		action = "saveSerMethodData";
+		var busCode=$('input[name="busCode"]').val();
+		/* 服务代码^方法代码^方法描述^方法状态^返回值类型*/
+		editPar = serCode+"^"+rowData.MethodCode+"^"+rowData.MethodDesc+"^"+rowData.MethodStatus+"^"+rowData.ReturnVal+"^"+busCode;
+	
+	}else if(tabId=="parGrid"){//更新参数
+		action = "saveSerParamsData";
+		/*服务代码^方法代码^参数代码^参数类型^参数描述*/
+		editPar = serCode+"^"+medCode+"^"+rowData.ParameterCode+"^"+rowData.DataType+"^"+rowData.ParameterDesc;
+	}else{//更新功能
+		action = "saveSerFuncData";
+		/*服务代码^方法代码^参数代码^功能代码^功能描述*/
+		editPar = serCode+"^"+medCode+"^"+parCode+"^"+rowData.FunctionCode+"^"+rowData.FunctionDesc;
+	}
+	editPar = encodeURI(editPar);
+	//更新数据
+	$.ajax({ 
+		type: "POST",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		url: "web.DHCENS.STBLL.UTIL.PageLoad.cls?action="+action+"&input="+editPar,
+		dateType: "json",
+		success: function(data){
+			if(data=="1"){
+				editIndex[tabId]=undefined;
+				tbObj.reload();
+				$.messager.alert("提示","更新成功！",'info');	
+			}
+			else{
+				tbObj.rejectChanges();
+				tbObj.beginEdit(editIndex[tabId]);
+				$.messager.alert("提示","更新失败,请重新编辑！",'error');
+				
+			}
+		}
+	}) 
+}
+
+
+//【新增】功能
+function addFun(){
+	var tbObj=$HUI.datagrid("#funGrid");
+	var funCode = $("input[name='funCode']").val();//功能代码
+	var funDesc = $("input[name='funDesc']").val();//功能描述
+	var inputStr = serCode+"^"+medCode+"^"+parCode+"^"+funCode+"^"+funDesc;
+	var action = "saveSerFuncData";
+	/*服务代码^方法代码^参数代码^功能代码^功能描述*/
+	editPar = encodeURI(inputStr);
+	//更新数据
+	$.ajax({ 
+		type: "POST",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		url: "web.DHCENS.STBLL.UTIL.PageLoad.cls?action="+action+"&input="+editPar,
+		dateType: "json",
+		success: function(data){
+			if(data=="1"){
+				$.messager.alert("提示","新增成功！",'info');
+				$("input[name='funCode']").val("");//功能代码
+				$("input[name='funDesc']").val("");//功能描述
+				tbObj.reload();
+			}
+			else{
+				$.messager.alert("提示","新增失败,请重试！",'error');
+				$("input[name='funCode']").val("");//功能代码
+				$("input[name='funDesc']").val("");//功能描述
+					
+			}
+		}
+	}) 
+}
+
+//查询功能
+function findFun(){
+	var funCode=$("input[name='funCode']").val();
+	var funDesc=$("input[name='funDesc']").val();
+	var inputStr = serCode+"^"+medCode+"^"+parCode+"^"+funCode+"^"+funDesc;
+	inputStr = encodeURI(inputStr);
+	loadFunction(inputStr);
+}
+
+
+
+//点击【保存】基本信息
+function saveSerInfo(){
+	/* 服务代码^服务名称^服务描述^服务IP^服务状态^总线代码^服务端口 */
+	//var sercode=$('input[name="sercode"]').val();
+	var sername=$('input[name="sername"]').val();
+	var serdesc=$('input[name="serdesc"]').val();
+	var serflag=$('#serflag').switchbox("getValue");
+	serflag = serflag==true?"Y":"N"
+	var serhost=$('input[name="serhost"]').val();
+	var busCode=$('input[name="busCode"]').val();
+	var serport=$('input[name="serport"]').val();
+	var input=serCode+"^"+sername+"^"+serdesc+"^"+serhost+"^"+serflag+"^"+busCode+"^"+serport;
+	input = encodeURI(input);
+	$.ajax({ 
+		type: "POST",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+		url: "web.DHCENS.STBLL.UTIL.PageLoad.cls?action=EditSG&input="+input,
+		dateType: "json",
+		success: function(data){
+			var dataArr=data.split("^");		
+			if (dataArr[0]=="1") {  
+				$.messager.alert('提示','保存成功','info');
+				$('a.serviceUrl').html(dataArr[1]);
+				$('a.serviceUrl').attr('href',dataArr[1]);
+			}else{  
+				$.messager.alert('提示','保存失败','error');
+			}
+		}
+	}) 
+}
+
+
+//点击【返回】
+function returnSer(){
+	$("body.service").empty().load("enswebserviceregist.csp");
+}
+</script>
+
+
+
+

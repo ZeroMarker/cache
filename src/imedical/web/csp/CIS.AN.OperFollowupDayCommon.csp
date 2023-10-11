@@ -1,0 +1,381 @@
+<html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+I ##Class(websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<head>
+<!-- Put your page Title here -->
+<title>术后随访</title>
+<csp:content charset="UTF-8">
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<HISUI  css="wesys.menugroup.css"/></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<script language="Cache" runat=server method="Get" arguments="item:%String" returntype="%String">
+   quit ##class(CIS.AN.COM.Html).Get(item)
+   </script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operapplication.css" />
+<style>
+ul li
+{
+	list-style-type: none;
+	align-items: center;
+	float:left;
+	margin-top:-3px;
+}
+	.required-color { color:red}
+	.validatebox-invalid {
+		background-image: none;
+		background-color: #fff;
+	}
+.smallSize
+{
+	width:70px;
+	text-align:right;
+	
+}
+.largeSize
+{
+	width:150px;
+	text-align:right;
+	
+}
+table td
+{
+	border:none;
+	padding:2px;
+}
+#DateFollowUp table td
+{
+	border:none;
+	padding:4px;
+}
+.spinner .spinner-arrow
+{
+	margin-left:-4px;
+}
+</style>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DataForm.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/datagrid-cellediting.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperFollowupDayCommon.js"></script>
+
+    <script type="text/javascript" src="../service/dhcanop/js/CIS.AN.OperData.js"></script>
+</head>
+<server>
+	s opsId=%request.Get("opsId")
+</server>
+
+<body >
+<div id="followup_main" class="hisui-layout" data-options="fit:true,border:false">
+
+  <div data-options="region:'north',border:false,iconCls:'icon-paper'" style="height:40px;padding:10px 10px 0 10px;">
+     <ul style="padding:0;margin-top:5px;">
+	     <li style="margin-top:-2px;">
+	     	<label id="patSeximg" style="" name="patSeximg"></label></li>
+	     <li><label id="PatName"  name="PatName" style="font-size:16px;padding-left:10px;">-</label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><label id="PatGender"  name="PatGender">-</label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><label id="PatAge"  name="PatAge">-</label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><font style="color:#666666">#(..Get("登记号:"))#</font>
+		 <label id="RegNo"  name="RegNo"></label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><font style="color:#666666">#(..Get("病案号:"))#</font>
+		 <label id="MedcareNo"  name="MedcareNo"></label></li>	
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>								
+		 <li><label id="PatDeptDesc" >-</label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><label id="AdmReason"  name="AdmReason">-</label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><label id="PatWardDesc">-</label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><label id="PatBedCode" >-</label></li>
+		 <li><label class="line">&nbsp&nbsp/&nbsp&nbsp</label></li>
+		 <li><label id="PatSecret"  name="PatSecret">-</label></li>
+	</ul>
+</div>
+		
+<div data-options="region:'center'" style="padding:5px 5px 10px 10px;border:none;"> 
+     <table id="followupList" style="width:510px;height:579px;border:none;"></table> 
+ </div>
+<div data-options="region:'east',iconCls:'panel-noheader-gray'" style="border:none;width:605px;padding:5px 10px 10px 5px;">
+   <div id="commonDetails" style="float:left;margin:0;padding:0;border:1px solid #ccc;border-radius:4px;">
+   	<form id="followupForm" method="post">
+   		<table style="width:588px;height:577px;border:none;">
+			<tr>
+			
+			<td colspan="8" style="text-align:center;background-color:#f5f6f5">
+			#(..Get("术后身体情况"))#
+			</td>
+			</tr>
+			<tr> 
+			<td colspan="2" class="smallSize">
+			<span style="color:red">*</span>
+			#(..Get("切口出血"))#
+			</td>
+			<td >
+			<input type="checkbox" id="QKCX1" data-formitem="QKCX" class="hisui-checkbox" label=#(..Get("是"))# ></td>
+			<td >
+			<input type="checkbox" id="QKCX2" data-formitem="QKCX" class="hisui-checkbox" label=#(..Get("否"))# ></td>	
+				<input type="hidden" id="QKCX" data-title="切口出血" class="operdata" data-multiple="N" data-required="Y">
+			</tr>
+			<tr>
+			<td  colspan="2" class="smallSize">
+			<span style="color:red">*</span>
+			#(..Get("切口疼痛"))#</td>
+			<td class=""><input type="checkbox" id="QKTT1" data-formitem="QKTT" class="hisui-checkbox" label=#(..Get("否"))#>
+			</td>
+			<td class="">
+			<input type="checkbox" id="QKTT2" data-formitem="QKTT" class="hisui-checkbox" label=#(..Get("轻度"))# >
+			</td>
+			<td class=""><input type="checkbox" id="QKTT3" data-formitem="QKTT" class="hisui-checkbox" label=#(..Get("中度"))# >
+			</td>
+			<td class=""><input type="checkbox" id="QKTT4" data-formitem="QKTT" class="hisui-checkbox" label=#(..Get("重度"))#>
+			</td>
+			<td class=""><input type="checkbox" id="QKTT5" data-formitem="QKTT" class="hisui-checkbox" label=#(..Get("剧痛"))#>
+			</td>
+					<input type="hidden" id="QKTT" data-title=#(..Get("切口疼痛"))# class="operdata" data-multiple="N" data-required="Y">
+			</tr>
+			<tr>
+			<td  colspan="2" class="smallSize">
+			<span style="color:red">*</span>#(..Get("是否发热"))#
+			</td>
+			<td><input type="checkbox" id="SFFR1" data-formitem="SFFR" class="hisui-checkbox" label=#(..Get("是"))#>
+			</td>
+			<td><input type="checkbox" id="SFFR1" data-formitem="SFFR" class="hisui-checkbox" label=#(..Get("否"))#>
+			</td>
+			<td class="smallSize">
+			<span style="color:red;">*</span>#(..Get("排气/排便"))#
+			</td>
+			<td><input type="checkbox" id="PQPB1" data-formitem="PQPB" class="hisui-checkbox" label=#(..Get("异常"))#>
+			</td>
+			<td><input type="checkbox" id="PQPB2" data-formitem="PQPB" class="hisui-checkbox" label=#(..Get("正常"))#>
+			</td>
+			
+			<input type="hidden" id="SFFR" data-title="是否发热" class="operdata" data-multiple="N" data-required="Y">
+			<input type="hidden" id="PQPB" data-title="排气/排便" class="operdata" data-multiple="N" data-required="Y">
+			</tr>
+		<tr>
+		<td  colspan="2" class="smallSize">
+		<span style="color:red">*</span>#(..Get("头痛/晕眩"))#</td>
+		<td><input type="checkbox" id="TTYX1" data-formitem="TTYX" class="hisui-checkbox" label=#(..Get("是"))#>
+		</td>
+		<td><input type="checkbox" id="TTYX2" data-formitem="TTYX" class="hisui-checkbox" label=#(..Get("否"))#>
+		</td>
+		<td class="smallSize">
+		<span style="color:red">*</span>#(..Get("四肢麻木"))#
+		</td>
+		<td><input type="checkbox" id="SZMM1" data-formitem="SZMM" class="hisui-checkbox" label=#(..Get("麻木"))#>
+		</td>
+		<td><input type="checkbox" id="SZMM2" data-formitem="SZMM" class="hisui-checkbox" label=#(..Get("正常"))#>
+		</td>		
+		<input type="hidden" id="TTYX" data-title="头痛/晕眩" class="operdata" data-multiple="N" data-required="Y">
+		<input type="hidden" id="SZMM" data-title="四肢麻木" class="operdata" data-multiple="N" data-required="Y">
+
+		</tr>
+		<tr>
+		<td  colspan="2" class="smallSize">
+		<span style="color:red">*</span>#(..Get("恶心/呕吐"))#</td>
+		<td><input type="checkbox" id="EXOT1" data-formitem="EXOT" class="hisui-checkbox" label=#(..Get("是"))#>
+		</td>
+		<td><input type="checkbox" id="EXOT2" data-formitem="EXOT" class="hisui-checkbox" label=#(..Get("否"))#>
+		</td>
+		<td class="smallSize">
+		<span style="color:red">*</span>#(..Get("无食欲"))#</td>
+		<td><input type="checkbox" id="WSY1" data-formitem="WSY" class="hisui-checkbox" label=#(..Get("是"))#>
+		</td>
+		<td><input type="checkbox" id="WSY2" data-formitem="WSY" class="hisui-checkbox" label=#(..Get("否"))#>
+		</td>
+		<input type="hidden" id="EXOT" data-title="恶心/呕吐" class="operdata" data-multiple="N" data-required="Y">
+		<input type="hidden" id="WSY" data-title="恶心/呕吐" class="operdata" data-multiple="N" data-required="Y"></div>
+	</tr>
+
+<tr>
+<td colspan="8" style="text-align:center;background-color:#f5f6f5">
+#(..Get("生活情况及离院后依从性"))#</td>
+</tr>
+
+<tr> 
+<td colspan="2" class="largeSize">
+<span style="color:red">*</span>#(..Get("能正常工作和日常家务"))#</td>
+<td><input type="checkbox" id="GZJW1" data-formitem="GZJW" class="hisui-checkbox" label=#(..Get("是"))# >
+</td>
+<td><input type="checkbox" id="GZJW2" data-formitem="GZJW" class="hisui-checkbox" label=#(..Get("否"))#>
+</td>
+
+<td colspan="2" class="largeSize">
+<span style="color:red">*</span>#(..Get("感觉舒适，能控制情绪"))#</td>
+<td><input type="checkbox" id="GJQX1" data-formitem="GJQX" class="hisui-checkbox" label=#(..Get("是"))#>
+</td>
+<td><input type="checkbox" id="GJQX2" data-formitem="GJQX" class="hisui-checkbox" label=#(..Get("否"))#>
+</td>
+<input type="hidden" id="GZJW" data-title="能正常工作和日常家务" class="operdata" data-multiple="N" data-required="Y"></div>
+<input type="hidden" id="GJQX" data-title="感觉舒适，能控制情绪" class="operdata" data-multiple="N" data-required="Y">
+</tr>
+<tr>
+<td colspan="2" class="largeSize">
+<span style="color:red">*</span>#(..Get("遵从医嘱服药/活动指导"))#</td>
+<td><input type="checkbox" id="FYHD1" data-formitem="FYHD" class="hisui-checkbox" label=#(..Get("是"))# >
+</td>
+<td><input type="checkbox" id="FYHD2" data-formitem="FYHD" class="hisui-checkbox" label=#(..Get("否"))# >
+</td>
+<td colspan="2" class="largeSize">
+<span style="color:red">*</span>#(..Get("出院后开车饮酒等"))#</td>
+<td><input type="checkbox" id="KCYJ1" data-formitem="KCYJ" class="hisui-checkbox" label=#(..Get("是"))# >
+</td>
+<td><input type="checkbox" id="KCYJ2" data-formitem="KCYJ" class="hisui-checkbox" label=#(..Get("否"))# >
+</td>
+<input type="hidden" id="FYHD" data-title="遵从医嘱服药/活动指导" class="operdata" data-multiple="N" data-required="Y"></div>
+<input type="hidden" id="KCYJ" data-title="出院后开车饮酒等" class="operdata" data-multiple="N" data-required="Y"></div>
+</tr>
+<tr>
+<td colspan="8" style="text-align:center;background-color:#f5f6f5">#(..Get("服务满意度"))#</td>
+</tr>
+<tbody> 
+<tr>
+ <td colspan="2" class="largeSize">
+ 
+ <span style="color:red">*</span>#(..Get("对日间手术的就医流程"))#</td>
+ <td> 
+ <input type="checkbox" id="JYLC1" data-formitem="JYLC" class="hisui-checkbox" label=#(..Get("满意"))# >
+</td>
+ <td> 
+ <input type="checkbox" id="JYLC2" data-formitem="JYLC" class="hisui-checkbox" label=#(..Get("一般"))# >
+</td>
+ <td> <input type="checkbox" id="JYLC3" data-formitem="JYLC" class="hisui-checkbox" label=#(..Get("不满意"))# >
+</td>
+ <input type="hidden" id="JYLC" data-title="对日间手术的就医流程" class="operdata" data-multiple="N" data-required="Y"></div>
+</tr>
+ <tr>
+ <td colspan="2" class="largeSize">
+
+ <span style="color:red">*</span>#(..Get("对医护人员的服务态度"))#</td>
+ <td> <input type="checkbox" id="FWTD1" data-formitem="FWTD" class="hisui-checkbox" label=#(..Get("满意"))#>
+</td>
+ <td>  <input type="checkbox" id="FWTD2" data-formitem="FWTD" class="hisui-checkbox" label=#(..Get("一般"))#>
+</td>
+ <td><input type="checkbox" id="FWTD3" data-formitem="FWTD" class="hisui-checkbox" label=#(..Get("不满意"))#>
+</td>
+ <input type="hidden" id="FWTD" data-title="对医护人员的服务态度" class="operdata" data-multiple="N" data-required="Y"></div></div>
+ 
+ </tr>
+ <tr>
+ <td colspan="2" class="largeSize">
+
+ <span style="color:red">*</span>#(..Get("对本次手术的治疗效果"))#</td>
+ <td> <input type="checkbox" id="ZLXG1" data-formitem="ZLXG" class="hisui-checkbox" label=#(..Get("满意"))#>
+</td>
+ <td> <input type="checkbox" id="ZLXG2" data-formitem="ZLXG" class="hisui-checkbox" label=#(..Get("一般"))#>
+</td>
+ <td> <input type="checkbox" id="ZLXG3" data-formitem="ZLXG" class="hisui-checkbox" label=#(..Get("不满意"))#>
+</td>
+ <input type="hidden" id="ZLXG" data-title="对本次手术的治疗效果" class="operdata" data-multiple="N" data-required="Y"></div></div>
+ </tr>
+ <tr>
+ <td colspan="8" style="text-align:center;background-color:#f5f6f5">#(..Get("其他信息登记"))#</td>
+ </tr>
+ <tr> 
+ <td colspan="2" class="largeSize">
+ 
+ <span style="color:red">*</span>#(..Get("需要再次入院"))#</td>
+  <td> 
+  <input type="checkbox" id="ZCRY1" data-formitem="ZCRY" class="hisui-checkbox" label=#(..Get("是"))#>
+</td>
+   <td>
+   <input type="checkbox" id="ZCRY2" data-formitem="ZCRY" class="hisui-checkbox" label=#(..Get("否"))#></td>
+</tr>
+<tr>
+    <td colspan="2" class="largeSize">
+
+    <span style="color:red">*</span>#(..Get("需要急诊手术"))#
+    </td>
+	<td> 
+	<input type="checkbox" id="JZSS1" data-formitem="JZSS" class="hisui-checkbox" label=#(..Get("是"))#>
+	</td>
+     <td> <input type="checkbox" id="JZSS2" data-formitem="JZSS" class="hisui-checkbox" label=#(..Get("否"))#>
+		</td>
+ 		<input type="hidden" id="ZCRY" data-title="需要再次入院" class="operdata" data-multiple="N" data-required="Y">
+ 	<input type="hidden" id="JZSS" data-title="需要急诊手术" class="operdata" data-multiple="N" data-required="Y">
+ </tr>
+
+<tr>
+<td colspan="2" class="largeSize"> 
+<span style="color:red">*</span>#(..Get("随访方式"))# </div></td>
+<td> <input type="checkbox" id="SFFS1" data-formitem="SFFS" class="hisui-checkbox" label=#(..Get("电话"))#>
+</td>
+<td> <input type="checkbox" id="SFFS2" data-formitem="SFFS" class="hisui-checkbox" label=#(..Get("微信"))#>
+</td>
+</tr>
+<tr>
+<td colspan="2" class="largeSize"> 
+#(..Get("备注"))#</div>
+</td>
+<td colspan="6"> 
+<input type="text" id="Note" name="Note" class="hisui-validatebox operdata"  data-permission="All" style="width:390px;margin-left:0px;" />
+</td>
+ <input type="hidden" id="SFFS" data-title="随访方式" class="operdata" data-multiple="N" data-required="Y"></div></div>
+ </tr>
+ <tr style="height:2px;">
+ </tr>
+  <tr>
+   	<td colspan=8>                                
+   		<a href="#" id="btnSave" class="hisui-linkbutton" style="margin-left:195px;">#(..Get("保存"))#</a>
+               
+                <a href="#" id="btnFinish" class="hisui-linkbutton" style="margin-left:20px;">#(..Get("本次随访完成"))#</a>
+			</td>
+   			</tr>
+<tr style="height:4px;">
+ </tr>
+   			</table>
+	  		
+             </form>
+		</div>
+ </div>
+</div>
+
+
+
+<div id="DateFollowUp" class="hisui-dialog" data-options="closed:true,width:265,height:270,title:'随访次数与日期',modal:true">
+     <form id="operationForm" method="post">
+    <table style="padding:4px;">
+    <tbody>
+    	<tr>	
+    	<td >选择模板</td>
+    	<td>
+    	<select id="Moulds" style="width:178px;" class="hisui-combobox"></select>
+    	</td>
+    	</tr>
+    	<tr>
+    	<td style="">随访次数</td>
+    	<td>
+    	<input type="text" id="Number" class="hisui-validatebox" style="width:171px;"/></td>
+    	</tr>
+    	<tr>
+    	<td>随访日期</td>
+    	<td>
+    	<input type="text" id="Date" class="hisui-datebox" style="width:178px"/></td>
+    	</tr>
+    	<tr>
+    	<td>随访时间</td>
+    	<td style="">
+    	
+    	<input id="FollowUpTimeA" class="hisui-timespinner" style="width:178px;" />
+    	</td>
+    	</tr>
+    	<tr>
+    	<td></td>
+    	</tr>
+    	<tr>
+    	<td colspan=2 > 
+    	<a href="#" id="btnConfirm" class="hisui-linkbutton" style="margin-left:50px;">确认</a>
+          
+    	 <a href="#" id="btnCancel" class="hisui-linkbutton" style="margin-left:20px;">取消</a></td>
+    	</tr>
+    	</tbody>
+    </table>
+    
+     </form>
+    </div>	
+</body>
+</html>
+</html>

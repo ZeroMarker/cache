@@ -1,0 +1,441 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s HOSPID = $g(%session.Data("LOGON.HOSPID"))
+        </script>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding: 10px !important;
+        }
+        .hisui-layout {
+	    	margin-right: 20px;    
+	    }
+        .td_title {
+        	text-align:right;
+        	width: 85px;
+        	height: 30px;
+        	padding-right:5px;
+        	padding-top:10px;
+        }
+        .td_item {
+        	height: 30px;
+        }
+        .div_item {
+	    	height: 30px;
+	    	padding:10px;
+	    }
+        .yAxis>span,.xAxis>p,.box>p,.lines>p {
+	        font-size: 14px;
+	        font-weight: bold;
+        }
+        .yAxis,.xAxis,.box,.lines {
+	        margin: 10px;
+        }
+        .yAxis>table .td_item {
+	    	padding-top: 10px;    
+	    }
+	    .xAxis>table .td_item {
+	    	padding-top: 10px;    
+	    }
+	    .box>table .td_item {
+	    	padding-top: 10px;    
+	    }
+	    .lines>table .td_item {
+	    	padding-top: 10px;    
+	    }
+        .r-label {
+	        padding-left: 20px;
+        }
+		.panel-header-gray {
+			border-top-left-radius: 4px !important;
+			border-top-right-radius: 4px !important;
+		}
+		.panel-body.layout-body {
+			border-bottom-left-radius: 4px !important;
+			border-bottom-right-radius: 4px !important;
+		}
+		.searchbox-text.searchbox-prompt {
+			margin-left: 5px;	
+		}
+		tr {
+			height: 30px;
+		}
+		.lines .combo-text.validatebox-text {
+			width: 68px !important;
+		}
+		#main{
+			height:calc(100% - 40px);	
+		}
+	</STYLE>
+	 <script language="javascript">
+        var HOSPID = "#(HOSPID)#";
+    </script>
+</head>
+<body>
+	<table cellspacing="0" cellpadding="0" style="padding-bottom:10px;">
+		<tr>
+			<td class="r-label" style="padding-left:0">所属医院</td>
+			<td><select id="HospList" class="hisui-combobox" style="width:250px;"></select></td>
+		</tr>						
+	</table>
+	<div id="main">
+		<div class="hisui-layout"
+			 data-options="fit:true,border:false">		
+			<div data-options="region:'west',title:'已维护分值字段模板',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" 
+			  	 style="width:250px;">
+			  	<div class="div_item">
+			  		<input id="searchTemplate"
+			  		   data-options="prompt:'#(..Get("模板名称、关键字"))#'"
+			  		   class="hisui-searchbox"
+			  		   style="width:223px" />
+			  	</div>
+				<div id="templateTree"
+				     data-options="fit:true,animate:true">
+				</div>
+			</div>
+			<div data-options="region:'center',title:'曲线设置',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" 
+			     style="width:420px;">
+			     <div style="margin:10px">
+			     	<a id="btnSave" class="hisui-linkbutton hover-dark">保存</a>
+			     </div>	
+			     <div class="yAxis">
+			     	<span>纵坐标设置</span>
+			     	<table cellpadding="20">
+					<tbody>
+						<tr>
+							<td class="td_title">自适应量程</td>
+							<td class="td_item">
+								<input class="hisui-checkbox" type="checkbox" data-options="boxPosition:'left'" id="Adaptive">
+							</td>
+						</tr>
+						<tr>
+							<td class="td_title">最大值</td>
+							<td class="td_item">
+								<input id="max" class="hisui-numberbox textbox" data-options="precision:1">
+							</td>
+							<td class="td_title">最小值</td>
+							<td class="td_item">
+								<input id="min" class="hisui-numberbox textbox" data-options="precision:1">
+							</td>
+						</tr>
+						<tr>
+							<td class="td_title">间隔值</td>
+							<td class="td_item">
+								<input id="interval" class="hisui-numberbox textbox" data-options="precision:1,min:0.1">
+							</td>
+							<td class="td_title">预警值</td>
+							<td class="td_item">
+								<input id="warn" class="hisui-numberbox textbox" data-options="precision:1">
+							</td>
+						</tr>
+					</tbody>
+					</table>
+			     </div>
+			     <div class="xAxis">
+			     	<p>横坐标设置</p>
+			     	<table cellpadding="20">
+					<tr>
+						<td class="td_title">日期格式</td>
+						<td class="td_item">
+							<select id="datetype" 
+									class="hisui-combobox" 
+									style="width:155px;">
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td class="td_title">跨年显示年</td>
+						<td class="td_item">
+							<input id="year" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'left'">
+						</td>
+					</tr>
+					<tr>
+						<td class="td_title">跨月显示月</td>
+						<td class="td_item">
+							<input id="month" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'left'">
+						</td>
+					</tr>
+					</table>
+			     </div>
+			     <div class="box">
+			     	<p>弹出窗口设置</p>
+			     	<table cellpadding="20">
+					<tbody>
+						<tr>
+							<td class="td_title">left(%)</td>
+							<td class="td_item">
+								<input id="left" class="hisui-numberbox textbox" data-options="value:10,min:5,max:100,suffix:'%'">
+							</td>
+							<td class="td_title">top(%)</td>
+							<td class="td_item">
+								<input id="top" class="hisui-numberbox textbox" data-options="value:10,min:5,max:100,suffix:'%'">
+							</td>
+						</tr>
+						<tr>
+							<td class="td_title">width(%)</td>
+							<td class="td_item">
+								<input id="width" class="hisui-numberbox textbox" data-options="value:80,min:5,max:100,suffix:'%'">
+							</td>
+							<td class="td_title">height(%)</td>
+							<td class="td_item">
+								<input id="height" class="hisui-numberbox textbox" data-options="value:80,min:5,max:100,suffix:'%'">
+							</td>
+						</tr>
+					</tbody>
+					</table>
+			     </div>
+			     <div class="lines">
+			     	<p>曲线颜色设置</p>
+			     	<table cellpadding="20">
+					<tr>
+						<td class="td_title">
+							<input id="LineBackcolor"
+								   class="textbox"
+								   style="width:100px;">
+							</input>
+						</td>
+					</tr>
+					</table>
+			     </div>
+			</div>
+			
+		</div>
+	</div>
+</body>
+<script language="javascript">
+(function(){
+	//自适应量程
+	function initUI() {
+		initSearchCondition();
+		initTemplateTree();
+		listenEvents();
+	}
+	/**
+	* @description: 初始化查询条件
+	*/
+	function initSearchCondition() {
+		$HUI.combobox("#HospList", {
+			valueField: 'HOSPRowId',
+			textField: 'HOSPDesc',
+			loader: function(param, success, error){
+				$cm({
+					ClassName: "web.DHCBL.BDP.BDPMappingHOSP",
+					QueryName: "GetHospDataForCombo",
+					rowid:"",
+					desc:"",
+					tablename:"Nur_IP_NurseRecordsChart",
+					SessionStr:""
+				},function(data){
+					success(data.rows);
+					$('#HospList').combobox('setValue', HOSPID);
+				});
+			},
+			onSelect: function(record) {
+				HOSPID=record.HOSPRowId;
+				initTemplateTree();
+				initConfig();
+			}
+		});
+		$("#LineBackcolor").color({
+			editable: false,
+			onChange: function(value){
+			}
+		})
+		// 查询
+		$('#searchTemplate').searchbox({
+			searcher: function(value) {
+				$HUI.tree('#templateTree','reload');
+				initConfig();
+			},
+			prompt: '模板名称、关键字'
+		});
+		// 自适应量程
+		$("#Adaptive").checkbox({
+            onCheckChange:function(e,value){
+	            $("#max").numberbox({
+		            disabled: value
+		        });
+		        $("#min").numberbox({
+		            disabled: value
+		        });
+		        if (value) {
+			        $("#max").numberbox('setValue','');
+			        $("#min").numberbox('setValue','');
+			    }
+            }
+        });
+        // 日期格式
+        $("#datetype").combobox({
+	    	valueField:'value',
+    		textField:'value',
+			data: [{
+				value: 'yyyy-mm-dd'
+			},{
+				value: 'dd/mm/yyyy'
+			},{
+				value: 'yyyy年mm月dd日'
+			}]
+	    });
+	}
+	/**
+    * @description: 初始化所有模板表格
+    */ 
+    function initTemplateTree() {
+		$HUI.tree('#templateTree', {
+			loader: function(param, success, error) {
+				$cm({
+					ClassName: "NurMp.NursingRecordsChart",
+					QueryName: "GetEmrReportList",
+					keyword: $HUI.searchbox('#searchTemplate').getValue(),
+					hospDR: getHospitalID(),
+					category:"病历曲线"
+				}, function(data) {
+					var addIDAndText = function(node) {
+						node.text=node.tableName;
+					}
+					data.rows.forEach(addIDAndText);
+					success(data.rows);
+				});
+			},
+			onLoadSuccess: function(node, data){
+				$('.tree-indent').css("width", "10px");
+				$('.tree-file').css("display", "none");
+			},
+			autoNodeHeight: true,
+			onClick: function (node) {
+				$cm({
+					ClassName: "NurMp.NurseRecordsChartConfig",
+					MethodName: "getConfig",
+					HospId: getHospitalID(),
+					EmrReportDR:node.id
+				}, function(data) {
+					initConfig(data);
+				});
+			}
+		});
+	}
+	/**
+    * @description: 初始化设置
+    */
+    function initConfig(obj) {
+	    console.log(obj)
+		if (obj===undefined)
+		{
+			$("#Adaptive").checkbox('setValue', false);
+			$("#max").numberbox('setValue',"");
+			$("#min").numberbox('setValue',"");
+			$("#interval").numberbox('setValue',"");
+			$("#warn").numberbox('setValue',"");
+			$("#datetype").combobox('setValue',"");
+			$("#year").checkbox('setValue',false);
+			$("#month").checkbox('setValue',false);
+			$("#LineBackcolor").color('setValue',"#7cb5ec");
+		}else{
+			$("#Adaptive").checkbox('setValue', obj.adaptive);
+			$("#max").numberbox('setValue',obj.max);
+			$("#min").numberbox('setValue',obj.min);
+			$("#interval").numberbox('setValue',obj.interval);
+			$("#warn").numberbox('setValue',obj.warn);
+			$("#datetype").combobox('setValue',obj.datetype);
+			$("#year").checkbox('setValue',obj.year);
+			$("#month").checkbox('setValue',obj.month);
+			$("#LineBackcolor").color('setValue',obj.color);
+		}
+
+	}
+	/**
+    * @description: 颜色代码RGB转16进制
+    */
+	function RGBToHex(color){
+	  // RGB颜色值的正则
+	  var reg = /^(rgb|RGB)/;
+	  if (reg.test(color)) {
+	    var strHex = "#";
+	    // 把RGB的3个数值变成数组
+	    var colorArr = color.replace(/(?:\(|\)|rgb|RGB)*/g, "").split(",");
+	    // 转成16进制
+	    for (var i = 0; i < colorArr.length; i++) {
+	      var hex = Number(colorArr[i]).toString(16);
+	      if (hex.length === 1) {
+	        hex = "0" + hex;
+	      }
+	      strHex += hex;
+	    }
+	    return strHex;
+	  } else {
+	    return color;
+	  }
+	}
+	/**
+    * @description: 事件监听
+    */ 
+	function listenEvents() {
+		$('#btnSave').bind('click', function(e) {
+			if (!$('#templateTree').tree("getSelected")){
+				$.messager.popover({ msg: '请选择模板！', type: 'info' });
+				return;
+			}
+			var saveObj={};
+			saveObj.adaptive=$("#Adaptive").checkbox('getValue');
+			saveObj.max=$("#max").numberbox('getValue');
+			saveObj.min=$("#min").numberbox('getValue');
+			if (!saveObj.adaptive && +saveObj.max <= +saveObj.min) {
+				$.messager.popover({ msg: '最小值必须小于最大值！', type: 'error' });
+				return;
+			}
+			saveObj.interval=$("#interval").numberbox('getValue');
+			if (!saveObj.interval) {
+				$.messager.popover({ msg: '请填写间隔值', type: 'info' });
+				return;
+			}
+			saveObj.warn=$("#warn").numberbox('getValue');
+			saveObj.datetype=$("#datetype").combobox('getValue');
+			saveObj.year=$("#year").checkbox('getValue');
+			saveObj.month=$("#month").checkbox('getValue');
+			saveObj.color=$('#LineBackcolor').color('getValue');
+			saveObj.HospId=getHospitalID();
+			saveObj.EmrReportDR=$('#templateTree').tree("getSelected").id
+			
+			saveObj.top=$("#top").numberbox('getValue');
+			saveObj.left=$("#left").numberbox('getValue');
+			saveObj.width=$("#width").numberbox('getValue');
+			saveObj.height=$("#height").numberbox('getValue');
+			$cm({
+				ClassName: "NurMp.NurseRecordsChartConfig",
+				MethodName: "save",
+				Obj:JSON.stringify(saveObj)
+			},function success(res){
+				if(res==0){
+					$.messager.popover({ msg: '保存成功！', type: 'success' });
+				}else {
+					$.messager.popover({ msg: '保存失败！', type: 'error' });
+				}
+			})
+		});
+	}
+	function getHospitalID() {
+		return HOSPID;	
+		//return $('#HospList').combobox('getValue') || HOSPID;	
+	}
+	initUI();	
+}())
+</script>
+
+</html>

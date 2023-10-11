@@ -6,6 +6,7 @@
 	s SetDepart = $g(%request.Data("SetDepart",1))  //门诊的设置
 	s PageFrom = $g(%request.Data("PageFrom",1))  //门诊的设置
 	s OneItem=%request.Get("OneItem")
+	s Scene=$g(%request.Data("Scene",1))  //场景 1-新窗口打开 2-诊疗界面嵌入
 	s dateNow = $H
 	Write "<script type='text/javascript' language='javascript'>",!
 	write "var episodeId = '"_episodeId_"';",!
@@ -14,6 +15,7 @@
 	write "var PageFrom = '"_PageFrom_"';",!
 	write "var DateNowServer = '"_$ZDATE(dateNow,3)_"';",!
 	Write "var OneItem = """_OneItem_""";",!
+	Write "var Scene = """_Scene_""";",!
 	
 	if timeLineId="EmgView"{
 	    s sc=##class(icare.TimeLineEmergencyView).GetSeeDocDateList(patientID)
@@ -27,7 +29,7 @@
 
 	if OneItem="Diagnose"{ //单类型界面 诊断
 		set PageCount=7
-		w "<title>诊断视图</title>",!
+		w "<title>"_..Get("诊断视图")_"</title>",!
     	Write "<script type='text/javascript' language='javascript'>",!
 		Write "var PageCount = "_PageCount_";",!
     	Write "var DiagnoseInfor = "
@@ -36,7 +38,7 @@
 		Write "</"_"script>",!
 		
 	}elseif OneItem="BloodPressure"{
-		w "<title>血压</title>",!
+		w "<title>"_..Get("血压视图")_"</title>",!
 		set StartDate=%request.Get("StartDate")
 		Write "<script type='text/javascript' language='javascript'>",!
 		write "var queryDate = '"_StartDate_"';",!
@@ -46,7 +48,7 @@
   		Write "<"_"/script>"
 		
 	}elseif OneItem=""{ //整体界面
-		w "<title>集成视图</title>",!
+		w "<title>"_..Get("集成视图")_"</title>",!
 		if SetDepart'="1"{//门诊修改显示科室时不重新生成
 			d ##class(icare.web.TimeLineData).GenTimeLineData(timeLineId,patientID,episodeId)
 		}

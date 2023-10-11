@@ -7,17 +7,27 @@
 <html>
     <head>
         <title> 门诊电子病历 </title>
+		<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
         <HISUI/>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <link rel="stylesheet" type="text/css" href="../scripts/emr/css/opdoc.main.css"/>
-        <script type="text/javascript" src="../scripts/websys.js"></script>
         <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
+        <link rel="stylesheet" href="../scripts/emr/lib/tool/scale-slider/scale-slider.css" />
+        <script type="text/javascript" src="../scripts/emr/lib/tool/scale-slider/scale-slider.js"></script>
+        
+        <ADDINS require="EMRPDFCreator"></ADDINS>
     </head>
     <script language="cache" runat="server">
         s CAServicvice=""
         s IsCAON=##Class(CA.DigitalSignatureService).IsCAON()
-        s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        //最新的程序需要增加产品模块的判断
+        if ($ll((##class(%Dictionary.CompiledMethod).%OpenId("CA.DigitalSignatureService||IsCACTLoc")).DefaultArgs) = "4") {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"OPEMR")
+        } else {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        }
+         
         s HospitalName=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HospitalName")
         s pageType="HISUI"
 
@@ -33,15 +43,19 @@
 
         s patientID = $Get(%request.Data("PatientID",1),"")
         s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s menuName =  $Get(%request.Data("MenuName",1),"门诊病历")
         s mradm = ""
         s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
         s:((episodeID'="")&&(patientID="")) patientID=$p($g(^PAADM(episodeID)),"^",1)
+        s admType=""
+        s:(episodeID'="") admType=$p($g(^PAADM(episodeID)),"^",2)
         
         s id = $Get(%request.Data("id",1),"")
         s chartItemType = $Get(%request.Data("chartItemType",1),"")
         s pluginType = $Get(%request.Data("pluginType",1),"")
         s emrDocId = $Get(%request.Data("emrDocId",1),"")
         s url = $Get(%request.Data("url",1),"")
+        s categoryID = $Get(%request.Data("CategoryID",1),"")
         
         s sessionID = %session.SessionId
         s userCode = %session.Get("LOGON.USERCODE")
@@ -52,8 +66,6 @@
         s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
         s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
         
-        s argConnect = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("NET_CONNECT","")
-        s DECRYPTKEY=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("DECRYPTKEY")
         s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetOPDefaultFontStyle")
         s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
         s useResWindowHotkey=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("useResWindowHotkey","N")
@@ -63,9 +75,10 @@
         s ReturnTemplateIDs = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("ReturnTemplateIDs")
         s isRevokeSign = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsRevokeSign","Y")
 
-        s firstTmpl = ##Class(EMRservice.Ajax.opInterface).GetFirstTmpl(userLocID, ssgroupID, episodeID, userID)
+        s:(emrDocId = "") emrDocId = ##class(EMRservice.Ajax.opInterface).getEMRDocID(userLocID)
+        s firstTmpl = ##Class(EMRservice.Ajax.opInterface).GetFirstTmpl(userLocID, ssgroupID, episodeID, userID, emrDocId, categoryID)
         s:(firstTmpl="") firstTmpl = "null"
-        s savedRecords = ##Class(EMRservice.Ajax.opInterface).getSavedRecords(episodeID, userLocID, ssgroupID)
+        s savedRecords = ##Class(EMRservice.Ajax.opInterface).getSavedRecords(episodeID, userLocID, ssgroupID, categoryID)
         s OPEmrButtons=##Class(EMRservice.BL.opInterface).getOPEmrButtons(userLocID)
         s OPResource=##Class(EMRservice.BL.opInterface).GetOPResource("Panel", "main")
         s OPDisplay=##Class(EMRservice.BL.BLUserPageConfig).GetOPDisplay(userID, userLocID)
@@ -73,7 +86,7 @@
         s IsSetToLog = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("IsSetToLogOP")
 		s escapeRevokeSignDocID = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EscapeRevokeSignDocID")
         s isDirectSignOP = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isDirectSignOP","Y")
-        d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS()
+        d ##Class(EMRservice.Ajax.anySign).OutPutHandSignJS(userLocID,userID,ssgroupID,"OPEMR")
         //病历打印时单页补空白开关 从SystemParameter获取
 		s FirstNeedChangePageFlag = ##Class(EMRservice.SystemParameter).IsFirstNeedChangePage()
         //门诊病历-病历浏览按钮-引用按钮-病历引用数据
@@ -82,12 +95,40 @@
 		s hospitalID = %session.Get("LOGON.HOSPID")
         s isDefaultShowTextEdit = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isDefaultShowTextEdit","N")
 		s escapeRevokeSignDocID = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EscapeRevokeSignDocID")
+		s plantToothTreatmentCategory = ##class(EMRservice.BL.BLPlantToothTreatment).GetLoadedFlag(ssgroupID,userLocID)
+		//是否启用病历信息订阅与发布
+		s OPObserver = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPObserver","N^N")
+		//是否启用门(急)诊复诊病历创建判断 -- 沈阳胸科医院
+		s OEPCreateConfig = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OEPCreateConfig","")
+		s ResourceLocation = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPResourceLocation","east")
+        //接口获取结核病就诊列表(按照就诊时间升序)就诊号串,以","分隔
+        s phthisisEpisodeIDs = ##class(EMRservice.BL.opInterface).getPhthisisRecordAdm(episodeID)
+        //“生殖内分泌、男科、生殖医学科”三个门诊登录科室创建病历时需要给予“是否生殖平台病人”弹窗询问 -- 华西二院个性化需求
+        s tmplDocIDByLocID = ##Class(EMRservice.SystemParameter).getTmplDocIDByUserLocID(userLocID)
+        s MessageScheme = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPMessageScheme","{}")
+        s isShowTmpBrowse = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isShowTmpBrowse","N")
+        s resTabPosition = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("resTabPosition","top")
+        //删除病历时是否需要输入创建者密码
+        s isDeleteVerification = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isDeleteVerificationOP","N")
+        s OPTempQMode = ##Class(EMRservice.SystemParameter).SetOPTempQMode()
+        s OPScaling=##Class(EMRservice.BL.BLUserPageConfig).GetOPScaling(userID, userLocID)
+        s:(OPScaling = "") OPScaling = "0.618"
+		//是否启用所有病历均可撤销签名
+        s isAllRevokeSign = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isAllRevokeSign","Y")
+        s isLock = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("EnableOPLock","N")
+		s:(isLock = "") isLock = "N"
+		s isPatCAOn =  ##Class(EMRservice.Ajax.anySign).IsPatCAOn(userLocID,userID,ssgroupID,"OPEMR")
+	   	s patCAOffReason = ""
+	   	s:($P(isPatCAOn,"^",1) = "0") patCAOffReason = $P(isPatCAOn,"^",2)
+        s isShowScaleSliderBtn = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isShowScaleSliderBtn","N")
+		s:(isShowScaleSliderBtn = "") isShowScaleSliderBtn = "N"			
+        s isPromptRevokeSigned = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isPromptRevokeSigned","Y")
+        s versionID = ##Class(EMRservice.BL.BLScatterData).GetDataVersion(episodeID)
     </script>
 
     <script language="javascript">
         var TAG = "main";
-        var argConnect = "#(argConnect)#"&&{"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"};
-
+        
         var patInfo = {
             SessionID: "#(sessionID)#",
             PatientID: "#(patientID)#",
@@ -102,14 +143,14 @@
             UserLocName: "#(userLocName)#",
             IPAddress: "",
             SecCode: "",
-            HospitalID: "#(hospitalID)#"
+            HospitalID: "#(hospitalID)#",
+            admType: "#(admType)#"
         };
 
         var sysOption = {
             pluginUrl : "#(pluginUrl)#",
             setDefaultFontStyle : "#(setDefaultFontStyle)#",
             pluginType : "#(pluginType)#",
-            argConnect : "#(argConnect)#"&&{"Params":$.parseJSON("#(argConnect)#".replace(/\'/g, "\"")),"Key":"#(DECRYPTKEY)#"},
             CAServicvice : '#(CAServicvice)#',
             useResWindowHotkey : '#(useResWindowHotkey)#',
             OPAutoSave : '#(OPAutoSave)#',
@@ -122,17 +163,37 @@
             isDirectSignOP : '#(isDirectSignOP)#',
             isDefaultShowTextEdit : '#(isDefaultShowTextEdit)#',
 			SwitchCheckDoingSth : '#(SwitchCheckDoingSth)#',
-			escapeRevokeSignDocID : '#(escapeRevokeSignDocID)#'
+			escapeRevokeSignDocID : '#(escapeRevokeSignDocID)#',
+            Observer : '#(OPObserver)#',
+            OEPCreateConfig : '#(OEPCreateConfig)#',
+            PhthisisEpisodeIDs : '#(phthisisEpisodeIDs)#',
+            TmplDocIDByLocID : '#(tmplDocIDByLocID)#',
+            messageScheme : $.parseJSON("#(MessageScheme)#".replace(/\'/g, "\"")),
+            isShowTmpBrowse : '#(isShowTmpBrowse)#',
+            ResTabPosition : '#(resTabPosition)#',
+            ResourceLocation : '#(ResourceLocation)#',
+            isDeleteVerification: '#(isDeleteVerification)#',
+			isAllRevokeSign: '#(isAllRevokeSign)#',
+            OPTempQMode : '#(OPTempQMode)#',
+            isLock: '#(isLock)#',
+            isPromptRevokeSigned: '#(isPromptRevokeSigned)#'
         };
 
         var envVar = {
             readonly : '',
+            emrDocId : '#(emrDocId)#',
             firstTmpl : $.parseJSON('#(firstTmpl)#'),
             savedRecords : $.parseJSON('#(savedRecords)#'),
             opEmrButtons : '#(OPEmrButtons)#',
             opResource : $.parseJSON("#(OPResource)#".replace(/\'/g, "\"")),
             docContext : null,
-            OPDisplay : parseFloat('#(OPDisplay)#')
+            OPDisplay : parseFloat('#(OPDisplay)#'),
+            CategoryID : '#(categoryID)#',
+            hisuiWindowArgs : null,
+	    	OPScaling : parseInt('#(OPScaling)#'),
+            lockedIns : '',
+            lockedID : '',
+            versionID: '#(versionID)#'
         };
 	    
 	    // 锁定页面右键
@@ -142,16 +203,21 @@
 		var param="";
         var FirstNeedChangePageFlag = '#(FirstNeedChangePageFlag)#';
         var CopyOeoris = "#(copyOeoris)#";
+		var plantToothTreatmentCategory = "#(plantToothTreatmentCategory)#";
+		var slider;
+		var patCAOffReason = '#(patCAOffReason)#';
+		var isShowScaleSliderBtn = "#(isShowScaleSliderBtn)#";
+		var menuName = "#(menuName)#"
     </script>
     <body ondragstart="return false" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
-        <div id="main" class="hisui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;">
-            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div id="main" class="hisui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;padding:10px 0px 10px 5px;">
+            <div id="centerLayout" class="hisui-layout" data-options="fit:true,border:true" style="overflow:hidden;">
                 <!--资源区-->
-                <div id="resRegion" data-options="region:'west',border:true,split:true" style="overflow:hidden;">
+                <!-- <div id="resRegion" data-options="region:'west',border:true,split:true" style="overflow:hidden;">
                     <div id="dataTabs" class="hisui-tabs" data-options="fit:true,border:false"></div>
-                </div>
+                </div>-->
                 <!--病历编辑区-->
-                <div id="emrEditor" class="hisui-panel" data-options="region:'center',border:true,split:true" style="overflow:hidden;">
+                <div id="emrEditor" class="hisui-panel" data-options="region:'center',border:true,split:true" style="overflow:hidden;border: 1px solid #E2E2E2; border-radius: 4px;">
                     <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
                         <!--工具栏按钮-->
                         <div id="toolbar" class="hisui-panel" data-options="region:'north',border:false">
@@ -165,6 +231,9 @@
                                     </span>
                                     <span>
                                         <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale5" rate="0.5" title="5:5" iconCls="icon-big-lt-rt-55"></a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale6" rate="0.6" title="6:4" iconCls="icon-big-lt-rt-64"></a>
                                     </span>
                                     <span>
                                         <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale7" rate="0.7" title="7:3" iconCls="icon-big-lt-rt-73"></a>
@@ -213,17 +282,24 @@
                         </div>
                         <!--编辑器emr.opdoc.editor.csp-->
                         <div id="editor" data-options="region:'center',border:false" style="overflow:hidden;">
+                            <div id="lock"></div>
                             <iframe id="editorFrame" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
                         </div>
                         <!--病历实例-->
-                        <div id="insRecords" class="hisui-panel" data-options="region:'south',border:false">
-                            <div id="tmplsTabs" class="hisui-tabs" data-options="fit:true,border:false,tabPosition:'bottom'" tabHeight="26px"></div>
+                        <div id="insRecords" class="hisui-panel" data-options="region:'south',border:false" style="overflow:hidden;">
+                        	<div style="height:26px">
+	                        	<div id="tmplsTabsDiv">
+	                        		<div id="tmplsTabs" class="hisui-tabs" data-options="fit:true,border:false,tabPosition:'bottom'" tabHeight="35px"></div>
+	                        	</div>
+	                        	<div id="abbreviation" style="display:none;float:right">	                        		  			
+	                        	</div>
+                        	</div> 
                         </div>
                         <!--门诊HisUI页面风格改造-特殊字符页面 add by niucaicai 2018-06-19-->
                         <div id="HisUISpecharsWin" class="hisui-dialog" title="特殊字符" data-options="resizable:false,modal:true,isTopZindex:true" style="width:494px;height:450px;padding:0px;">
                             <iframe id="SpecharsWin" frameborder="0" src="" style="width:100%;height:99%;scrolling:no;"></iframe>
                         </div>
-                        <!--门诊HisUI页面风格改造-模板选择页面 add by niucaicai 2018-06-20-->
+                         <!--门诊HisUI页面风格改造-模板选择页面 add by niucaicai 2018-06-20-->
                         <div id="HisUITempClassifyWin" class="hisui-dialog" title="选择模板" data-options="resizable:false,modal:true,isTopZindex:true" style="width:300px;height:500px;padding:0px;">
                             <!-- <iframe id="TempClassifyWin" frameborder="0" src="" style="width:100%;height:99%;scrolling:no;"></iframe> -->
                         </div>
@@ -248,11 +324,10 @@
         <script type="text/javascript" src="../scripts/emr/js/opdoc.iEmrPluginEx.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.template.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.editor.js"></script>
-        <script type="text/javascript" src="../scripts/emr/js/opdoc.hislog.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.hisLog.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.externImage.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.main.js"></script>
-		<script language="cache" runat="server">
-			d ##class(EMRservice.BL.BLCDSSService).getCDSSUrl()
-		</script>
+        <script type="text/javascript" src="../scripts/emr/js/opdoc.lock.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/cdsstool.js"></script>
     </body>
 </html>

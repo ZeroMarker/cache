@@ -4,6 +4,10 @@
 	csp: csp/dhcpha.pivas.batchrulesother.csp
 	js:  scripts/pharmacy/pivas/batchrulesother.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -12,8 +16,8 @@
     </title>
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    </link>
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
     <style>
         .pha-row {
             margin-top: 10px;
@@ -31,55 +35,39 @@
         .pha-line {
             border-bottom: 1px dashed #CCCCCC;
         }
+        .pha-help-info{
+            color: #777;
+        }
     </style>
 </HEAD>
 
-<body>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-side-body">
             <div class="hisui-layout" fit="true">
-                <div data-options="region:'center'" class="dhcpha-hisui-border" style="border-radius: 4px;">
-                    <div class="pha-row">
-                        <div class="pha-col">
-                            <input id="cmbPivaLoc" />
-                        </div>
+                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                    <table class="pha-con-table">
+                        <tr>
+                            <td><input id="cmbPivaLoc" /></td>
+                        </tr>
+                        <tr>
+                            <td><input class="hisui-radio" type="radio" name="radCubage" value="N" id="radCubageN" label="优先小液体量" /></td>
+                            <td><input class="hisui-radio" type="radio" name="radCubage" value="Y" id="radCubageY" label="优先大液体量" /></td>
+                            <td class="pha-help-info">#(..Get("容积规则计算液体量时的排序"))#</td>
+                        </tr>
+                        <tr>
+                            <td> <input class="hisui-radio" type="radio" name="radContinue" value="N" id="radContinueN" label="超出上限归为下一批次" /></td>
+                            <td> <input class="hisui-radio" type="radio" name="radContinue" value="Y" id="radContinueY" label="超出上限归为本批次" /></td>
+                            <td class="pha-help-info"> #(..Get("超出上限归为本批次时,多出的液体量将占用下一批次的液体总量"))#</td>
+                        </tr>
+                    </table>
 
-                    </div>
-                    <div class="pha-line"></div>
-
-                    <div class="pha-row">
-                        <div class="pha-col">
-                            <input class="hisui-radio" type="radio" name="radCubage" value="N" id="radCubageN" label="优先小液体量"/>
-                      
-                        </div>
-                        <div class="pha-col">
-                            <input class="hisui-radio" type="radio" name="radCubage" value="Y" id="radCubageY" label="优先大液体量"/>
-                        </div>
-                        <div class="pha-col">
-                            容积规则计算液体量时的排序
-                        </div>
-
-                    </div>
-                    <div class="pha-line"></div>
-                    <div class="pha-row">
-                        <div class="pha-col">
-                            <input class="hisui-radio" type="radio" name="radContinue" value="N" id="radContinueN" label="超出上限归为下一批次"/>
-                        </div>
-                        <div class="pha-col">
-                            <input class="hisui-radio" type="radio" name="radContinue" value="Y" id="radContinueY" label="超出上限归为本批次"/>
-                        </div>
-                        <div class="pha-col" style="width:auto">
-                            超出上限归为本批次时,多出的液体量将占用下一批次的液体总量
-                        </div>
-                    </div>
-                    <div class="pha-line"></div>
                 </div>
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+
     <script type="text/javascript" src="../scripts/pharmacy/pivas/batchrulesother.js"></script>
 </body>
 

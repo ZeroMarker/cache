@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<!--药房药库-参数设置
+	csp:pha.sys.v1.appprop.csp
+	js: pha/sys/v1/appprop.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+        .panel-body,
+        .panel-header {
+            border-color: #d1d6da;
+        }
+        .layout-expand,
+        .layout-expand-over {
+            background-color: #f9f9fa;
+        }
+        .pha-body {
+		    background-color: #fff;
+		}
+    </style>
+    <script type="text/javascript">
+        $(function () {
+            $('.panel-body').css('border-radius', '0px 0px 4px 4px');
+            $('.panel-header').css('border-radius', '4px 4px 0px 0px');
+        });
+    </script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+
+            <div class="hisui-layout" fit="true">
+                <div title="#(..Get("产品模块"))#" data-options="region:'west',collapsible:false,width:310,headerCls:'panel-header-gray',iconCls:'icon-set-col',border:true,split:true">
+                    <div class="hisui-layout" fit="true">
+                        <div data-options="region:'north',border:false,split:false,height:50">
+                            <div style="padding:10px;">
+                                <input id="conAppAlias" class="hisui-searchbox" style="width:280px">
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false,split:true" style="border-top:1px solid #d1d6da;">
+                            <div id="treeApp"></div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true" id="layout-right">
+                        <div title="#(..Get("参数"))#" data-options="region:'center',headerCls:'panel-header-gray',iconCls:'icon-set-col',border:true">
+                            <table id="gridProp"></table>
+                        </div>
+                        <div title="#(..Get("参数值"))#" data-options="region:'south',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-set-col',border:true,split:true,height:250">
+                            <table id="gridPref"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridPropBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddProp">#(..Get("新增"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditProp">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelProp">#(..Get("删除"))#</a>
+        <input class="hisui-checkbox" type="checkbox" id="chk-QText" label="#(..Get("过滤条件"))#" checked="checked" />
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-import" id="btnImport" style="display:none;">#(..Get("导入"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-export" id="btnExport" style="display:none;">#(..Get("导出"))#</a>
+        <div style="float:right;margin-right:10px;margin-top:5px;"><label id="curAppCode"></label></div>
+    </div>
+    <div id="gridPrefBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPref">#(..Get("新增"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditPref">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelPref">#(..Get("删除"))#</a>
+    </div>
+    <!-- window dialog -->
+    <!-- 参数维护 -->
+    <div id="diagProp" class="hisui-dialog" data-options="closed:true,width:500,height:450,title:'参数',iconCls:'icon-w-add',
+     buttons:[{
+         text:'保存',
+         handler:function(){
+             SaveProp();
+         }
+     },{
+         text:'继续新增',
+         id:'diagProp_btnAdd',
+         handler:function(){
+            SaveProp(1);
+         }
+     },{
+         text:'关闭',
+         handler:function(){
+             $('#diagProp').dialog('close');
+         }
+     }]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" style="overflow:hidden;">
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <div style="text-align: right;width:42px;">
+                            <label for="propCode"><span style="color:red">*</span>#(..Get("代码"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="propCode" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true' spellcheck="false" style="width:422px">
+                    </div>
+                </div>
+
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <div style="text-align: right;width:42px;">
+                            <label for="propDesc"><span style="color:red">*</span>#(..Get("名称"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="propDesc" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true' spellcheck="false" style="width:422px">
+                    </div>
+                </div>
+
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <div style="text-align: right;width:42px;">
+                            <label for="propTypeList">#(..Get("类型"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="propTypeList" class="hisui-combobox" data-pha='class:"hisui-combobox",requied:false' spellcheck="false" style="width:422px">
+                    </div>
+                </div>
+
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <div style="text-align: right;width:42px;">
+                            <label for="propVal">#(..Get("默认值"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="propVal" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:false' spellcheck="false" style="width:422px">
+                    </div>
+                </div>
+
+                <div class="pha-row">
+                    <div class="pha-col">
+                        <div style="text-align: right;width:42px;">
+                            <label for="propMemo"><span style="visibility:hidden;">*</span>#(..Get("说明"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <textarea id="propMemo" class="textbox" data-pha='class:"hisui-validatebox",requied:false' size=12 rows="6" style="height:180px;width:422px;word-break:break-all;line-height:28px;" spellcheck="false" placeholder="#(..Get("参数说明请按如下格式，注意标点统一为中文全角&#10;参数值1：说明1，&#10;参数值n：说明n，&#10;备注等信息"))#"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 参数值维护 -->
+    <div id="diagPref" class="hisui-dialog" data-options="closed:true,width:384,height:288,title:'参数值',iconCls:'icon-w-add',
+     buttons:[{
+         text:'保存',
+         handler:function(){
+             SavePref();
+         }
+     },{
+         text:'继续新增',
+         id:'diagPref_btnAdd',
+         handler:function(){
+            SavePref(1);
+         }
+     },{
+         text:'关闭',
+         handler:function(){
+             $('#diagPref').dialog('close');
+         }
+     }]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" style="overflow:hidden;">
+                <div class="pha-row">
+                    <div class="pha-col" style="width:56px;text-align:right;">
+                        <label for="prefHosp"><span style="color:red">*</span>#(..Get("医院"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="prefHosp" data-pha='class:"hisui-combobox",requied:true' spellcheck="false">
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col" style="width:56px;text-align:right;">
+                        <label for="prefType"><span style="color:red">*</span>#(..Get("类型"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="prefType" class="hisui-combobox" data-pha='class:"hisui-combobox",requied:true' spellcheck="false">
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col" style="width:56px;text-align:right;">
+                        <label for="prefTypePointer"><span style="color:red">*</span>#(..Get("类型值"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="prefTypePointer" data-pha='class:"hisui-combobox",requied:true' spellcheck="false">
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col" style="width:56px;text-align:right;">
+                        <label for="prefVal"><span style="color:red">*</span>#(..Get("参数值"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="prefVal" class="hisui-validatebox" data-pha='class:"hisui-validatebox",requied:true' style="width:294px;" spellcheck="false">
+                    </div>
+                </div>
+                <div class="pha-row" id="divPrefStDate">
+                    <div class="pha-col" style="width:56px;text-align:right;">
+                        <label for="prefStDate">#(..Get("生效日期"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="prefStDate" class="hisui-datebox" data-pha='class:"hisui-datebox"' data-options="width:300" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/sys/v1/appprop.js"></script>
+</body>
+
+</html>

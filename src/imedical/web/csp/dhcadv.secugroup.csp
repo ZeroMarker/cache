@@ -2,6 +2,7 @@
 <head>
 <title></title>
 <HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
@@ -16,6 +17,9 @@
 		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+			var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
+		
 	</script>
 	
 <style>
@@ -101,6 +105,9 @@
 	height: 22px;
 	width: 26px;
 }
+/*多院区改造 cy 2021-04-09 */
+#_HospList+span{max-width:434px}
+#_HospList+span >input{max-width:400px}
 </style>
 </head>
 <body class="hisui-layout">  
@@ -111,12 +118,12 @@
 			<form id="queryForm">
 			<table style="margin-top:5px;margin-bottom:-10px;">
 				<tr>
-					<td class="textLabel"><span style="margin-left:5px;"></span>代码<span style="margin-left:8px;"></span><input type="text" id="SECUCode" name="SECUCode" class="textbox" style="width:45px;"></input> </td>	
-					<td class="textLabel"><span style="margin-left:5px;"></span>描述<span style="margin-left:8px;"></span><input type="text" id="SECUDesc" name="SECUDesc" class="textbox" style="width:45px;"></input> </td>
-					<td><!--hxy 2019-07-20-->
-						<span style='margin-right:8px;margin-left:5px'>医院</span><input id="hospID" name="hospID" class="hisui-combobox" style="width:93px;"></input>				
-					</td>
+					<td class="textLabel" colspan=2><span style="margin-left:10px;"></span><label id="_HospListLabel">医院</label><span style="margin-left:5px;"></span><input type="text" id="_HospList" name="hospID"></input></td> <!--多院区改造 cy 2021-04-09 -->
 					<td ><a class="hisui-linkbutton" style="width:90"  data-options="iconCls:'icon-w-find'" onclick="javascript:QueryBtn()">查询</a> </td>
+				</tr>
+				<tr>
+					<td class="textLabel"><span style="margin-left:10px;"></span>代码<span style="margin-left:5px;"></span><input type="text" id="SECUCode" name="SECUCode" class="textbox" style="width:145px;"></input> </td>	
+					<td class="textLabel"><span style="margin-left:10px;"></span>描述<span style="margin-left:5px;"></span><input type="text" id="SECUDesc" name="SECUDesc" class="textbox" style="width:145px;"></input> </td>
 					<td ><a class="hisui-linkbutton" style="width:90"  data-options="iconCls:'icon-w-clean'" onclick="javascript:ReloadBtn()">重置</a> </td>
 				</tr>
 			</table>
@@ -174,7 +181,7 @@
 													required:true,
 													editable:false
 												}
-											}">医院</th>
+											},hidden:true">医院</th>
 					<th data-options="field:'SECUHospDrID',hidden:true">PHHospDrID</th>
 					<th data-options="field:'ID',hidden:true">id</th>
 				</tr>
@@ -244,7 +251,7 @@
 				<th data-options="field:'SECUWardDr',hidden:true">SECUWardDr</th>								
 				<th id="SECUWardDr" data-options="field:'SECUWard',width:154,editor:{type:'combogrid',
 						options:{
-							url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListWard',
+							//url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListWard',
 							required : true,
 						    id:'id',
 						    fitColumns:true,
@@ -299,7 +306,7 @@
 				<th data-options="field:'SECUGULLocDr',hidden:true">SECUWardDr</th>								
 				<th id="SECUGULLocDr" data-options="field:'SECUGULLoc',width:154,editor:{type:'combogrid',
 						options:{
-							url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListLoc',
+							//url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListLoc',
 							required : true,
 						    id:'id',
 						    fitColumns:true,
@@ -325,7 +332,8 @@
    
 </div> 
 <div id="UserW" class="hisui-window" title="新增安全小组成员" style="width:620px;height:340px;padding:10px;"   
-        data-options="iconCls:'icon-w-paper',minimizable:false" modal='true'>   
+        data-options="iconCls:'icon-w-paper',minimizable:false" modal='true'> 
+        <div id="UserDrs" style="display:none"></div>  
     <!-- toolbar -->
 	<div id="toolbar2" class="toolbar">	
 		<table cellspacing="0" cellpadding="0">
@@ -374,8 +382,8 @@
 						}">人员</th>
 				<th data-options="field:'SECULeadFlag',align:'center',width:80,
 						formatter:function(value,row,index){
-							if (value=='Y'){return 'Y';} 
-							else {return 'N';}
+							if (value=='Y'){return '是';} 
+							else {return '否';}
 						},
 						editor:{
 							type:'combobox',
@@ -387,7 +395,7 @@
 								editable:false
 							}
 						}">是否组长</th>
-						
+				<th data-options="field:'SECURowID',hidden:true">SECURowID</th>		
 			</tr>
 		</thead>
 	</table>

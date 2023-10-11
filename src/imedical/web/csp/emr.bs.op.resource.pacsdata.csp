@@ -1,0 +1,81 @@
+﻿<html>
+    <head>
+        <title> 检查信息 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/bs.op.resource.pacsdata.css" />
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script language="cache" runat="server">
+            s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+            s loginID = $Get(%session.Data("LOGON.SSUSERLOGINID"))
+            s product = $Get(%request.Data("product",1),"OP")
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s userID = $Get(%request.Data("UserID",1),"")
+            s userLocID = $Get(%request.Data("UserLocID",1),"")
+            s scheme =  ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTION","params":{"name":"pacsScheme","defaultValue":"<scheme><show><parent><item><code>EpisodeDate</code><desc>就诊日期</desc><hidden>N</hidden></item><item><code>DeptDesc</code><desc>就诊科室</desc><hidden>N</hidden></item><item><code>ItemName</code><desc>医嘱名称</desc><hidden>N</hidden></item><item><code>OrdCreateDate</code><desc>医嘱日期</desc><hidden>N</hidden></item><item><code>OrdCreateTime</code><desc>医嘱时间</desc><hidden>N</hidden></item><item><code>OEOrdItemDR</code><desc>OEOrdItemDR</desc><hidden>Y</hidden></item><item><code>RptRowID</code><desc>RptRowID</desc><hidden>Y</hidden></item><item><code>RrtDate</code><desc>报告日期</desc><hidden>N</hidden></item><item><code>RrtTime</code><desc>报告时间</desc><hidden>N</hidden></item></parent><child><item><code>OEItemRowID</code><desc>OEItemRowID</desc><hidden>Y</hidden></item><item><code>ExamDesc</code><desc>检查所见:</desc><hidden>N</hidden></item><item><code>strResult</code><desc>诊断意见:</desc><hidden>N</hidden></item><item><code>strOrderName</code><desc>检查方法:</desc><hidden>N</hidden></item></child></show><reference><parent><item><code>EpisodeDate</code><desc>就诊日期:</desc><separate>,</separate></item><item><code>DeptDesc</code><desc>就诊科室:</desc><separate>,</separate></item><item><code>ItemName</code><desc>医嘱名称:</desc><separate/></item></parent><child><item><code>ExamDesc</code><desc>检查所见:</desc><separate>,</separate><check>Y</check></item><item><code>strResult</code><desc>检查意见:</desc><separate>,</separate><check>Y</check></item><item><code>strOrderName</code><desc>检查方法:</desc><check>Y</check><separate/></item></child><separate>enter</separate></reference><interface>HIS</interface><pageConfig></pageConfig></scheme>","langID":(langID)}})
+            s DateFormat = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_DATEFORMAT","params":{"langID":(langID)}})
+        </script>
+        <script language="javascript">
+            var langID = "#(langID)#";
+            var loginID = "#(loginID)#";
+            var product = "#(product)#";
+            var patientID = "#(patientID)#";
+            var episodeID = "#(episodeID)#";
+            var userID = "#(userID)#";
+            var userLocID = "#(userLocID)#";
+            var scheme = '#(scheme)#';
+            var strXml = "";
+            var interface = "";
+            var selectConfig = "";
+            var quoteData = {};
+            //是否启用前端页面配置记录
+            var pageConfig = "";
+            var DateFormat = #(DateFormat)#;
+            var initFlag = false;
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div class="hisui-panel" id="seekform" data-options="region:'north',border:false" style="height:70px;">
+            <div style="padding:5 0 0 5;">
+                <label>#(..Get("报告日期"))#</label>
+                <input id="stDate" class="hisui-datebox" style="width:115px"/>
+                <label>#(..Get("至"))#</label>
+                <input id="endDate" class="hisui-datebox" style="width:115px"/>
+                <label>#(..Get("医嘱分类"))#</label>
+                <select id="pacsCategory" name="pacsCategory" class="hisui-combobox" style="width:100px;"></select>
+                <input id="currentEpisode" class="hisui-checkbox" type="checkbox" data-options="label:'本次就诊',checked:true" style="padding-left:3px;"/>
+            </div>
+            <div style="padding:5 0 0 5;">
+                <input class="hisui-radio" id="oneMonth" type="radio" data-options="name:'rrtMonth',label:'1个月',onCheckChange:function(e,val){upPacsDate(e,val,1)}"/>
+                <input class="hisui-radio" id="threeMonths" type="radio" data-options="name:'rrtMonth',label:'3个月',onCheckChange:function(e,val){upPacsDate(e,val,2)}"/>
+                <input class="hisui-radio" id="sixMonths" type="radio" data-options="name:'rrtMonth',label:'6个月',onCheckChange:function(e,val){upPacsDate(e,val,3)}"/>
+                <input class="hisui-radio" id="otherMonths" type="radio" data-options="name:'rrtMonth',label:'更多',onCheckChange:function(e,val){upPacsDate(e,val,4)}"/>
+                <a href="#" id="search" class="hisui-linkbutton" iconCls="icon-w-find" onclick="queryData()" style="padding-left:3px;">#(..Get("查询"))#</a>
+            </div>
+        </div>
+        <div data-options="region:'south',border:false" style="height:40px;">
+            <a href="#" id="refrence" class="hisui-linkbutton" style="width:80px;float:right;margin:3 5;" onclick="getData()">#(..Get("引用"))#</a>
+        </div>
+        <div data-options="region:'center',border:false">
+            <div id="dataPnl" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <div class="hisui-panel" id="pacsDataPnl" data-options="region:'north',border:false" style="height:60%;padding:3 5 3 5;">
+                    <table class="hisui-datagrid" id="pacsData" data-options="headerCls:'panel-body'" style="width:100%;"></table>
+                </div>
+                <div class="hisui-panel" id="pacsSubDataPnl" data-options="region:'center',border:false" style="padding:3 5 3 5;">
+                    <div class="hisui-panel" data-options="fit:true,border:true" style="width:100%;height:100%;">
+                        <table id="pacsSubData" class="customtable" data-options="headerCls:'panel-body'" style="width:100%;"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.resource.commonfile.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.resource.pacsdata.js"></script>
+    </body>
+</html>

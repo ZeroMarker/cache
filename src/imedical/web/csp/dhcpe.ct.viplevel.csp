@@ -1,0 +1,206 @@
+
+<!--
+ * FileName: dhcpe.ct.viplevel.csp 
+ * Author: xy
+ * Date: 2021-08-07
+ * Description: vip等级维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.panel-header{
+	border-bottom: 0;
+}
+.r-label{
+	padding-left: 10px;
+}
+
+</style>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+	<div data-options="region:'west',border:false,collapsible:false" style="width:360px;padding:10px;">
+		<div class="hisui-panel" fit="true" data-options="title:'VIP等级维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 	<div class="hisui-layout" fit="true">
+		 		<div data-options="region:'north',border:false,collapsible:false" style="height:125px;border-bottom:1px solid #C0C0C0;">
+		 			<table class="search-table">
+		 				<tr>
+		 					<td class="r-label"><label><font color=red>*</font>代码</label></td>
+							<td>
+								<input class="textbox"  id="Code"/>
+							</td>
+							<td class="r-label">
+								<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>
+						</tr>
+						<tr>	
+							<td class="r-label"><label ><font color=red>*</font>描述</label></td>
+							<td>
+								<input class="textbox"  id="Desc"/>
+							</td>
+							<td class="r-label">
+								<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+							</td>
+									
+						</tr>
+						<tr>
+							<td class="r-label"><label>激活</label></td>
+							<td>
+								<input  class='hisui-checkbox' type="checkbox" id="VIPNoActive"  data-options="checked:true" value="Y"/>
+							</td>
+							
+							<td><input type="hidden" id="ID"/></td>
+						</tr>	
+						
+                   </table>
+		 		</div>
+		 		
+		 		<div data-options="region:'center',border:false">
+		 			<table id="VIPGrid" toolbar="#vipbar"></table>
+		 		</div>
+			</div>							
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10px 10px 10px 0;border:0;">
+		<div class="hisui-panel" fit="true" data-options="title:'科室VIP等级详情',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+			<div class="hisui-layout" fit="true">
+		 		<div data-options="region:'north',border:false,collapsible:false" style="height:212px;border-bottom:1px dashed #ccc;">
+		 			<table class="search-table">
+		 				<tr>
+	    	 				<td class="r-label"><label>科室</label></td>
+	    	 				<td colspan="3"><input id="LocList" class="hisui-combobox textbox" style="width:400px;"></td>
+						</tr>
+
+		 				<tr>
+		 					<td class="r-label"><label><font color=red>*</font>体检号编码</label></td>
+							<td>
+								<input class="textbox" id="HPCode"/>
+							</td>
+							
+							<td class="r-label"><label>导诊单提示</label></td>
+							<td>
+								<input class="textbox" id="ZYDInfo"/>
+							</td>
+							<td class="r-label"><label>限额类型</label></td>
+							<td>
+								<select id="GIFlag" class="hisui-combobox"  style="width:150px;" data-options="enterNullValueClear:false,blurValidValue:true">
+									<option value="A" selected>所有</option>
+									<option value="I">个人</option>
+									<option value="G">团体</option>
+									<option value="N">不限</option>
+								</select>
+							</td>
+							
+							
+							
+							<td class="r-label">
+								<a id="BLFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+							</td>	
+						
+						</tr>
+						<tr>
+							<td class="r-label"><label>默认套餐</label></td>
+							<td>
+								<input class="hisui-combogrid" type="text" style="width:154px;" id="OrdSetsDesc"/>
+							</td>
+							
+							<td class="r-label"><label>是否插队</label></td>
+							<td>
+								<input class="hisui-combobox" type="text" style="width:154px;" id="CutInLine"/>
+							</td>
+							
+							<td class="r-label"><label>保密</label></td>
+							<td>
+								<input  class='hisui-checkbox' type="checkbox" id="Secret"/>
+							</td>
+							
+							<td class="r-label">
+								<a id="BLClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+							</td>
+		
+						</tr>
+						<tr>
+							<td class="r-label"><label>报告模板</label></td>
+							<td>
+								<input class="textbox" id="Template"/>
+							</td>
+							
+							<td class="r-label"><label>问卷级别</label></td>
+							<td>
+								<input class="hisui-combobox" type="text" style="width:154px;" id="HMService"/>
+							</td>
+							
+							<td class="r-label"><label>激活</label></td>
+							<td>
+								<input  class='hisui-checkbox' type="checkbox" id="NoActive"  data-options="checked:true" value="Y"/>
+							</td>
+							
+						</tr>
+						
+						<tr>
+							<td class="r-label"><label>体检类型</label></td>
+							<td>
+								<input class="hisui-combobox" type="text" style="width:154px;" id="PatFeeType"/>
+							</td>
+							
+							<td class="r-label"><label>总检类型</label></td>
+							<td>
+								<input class="hisui-combobox" type="text" style="width:154px;" id="GeneralType"/>
+							</td>
+							<td class="r-label"><label>默认</label></td>
+							<td>
+								<input  class='hisui-checkbox' type="checkbox" id="Default"/>
+							</td>
+							<td class="r-label"></td>
+							<td  colspan="2">
+							
+							<td><input type="hidden" id="LVID"/></td>
+							<td><input type="hidden" id="HMServiceDR"/></td>	
+						</tr>
+
+					
+                   </table>
+		 		</div>
+		 		<div data-options="region:'center',border:false">
+		 			<table id="LocVIPGrid" toolbar="#locvipbar"></table>
+		 		</div>
+			</div>		
+		</div>
+	</div>
+</div>
+
+	<!--VIP数据面板工具栏 start-->
+    <div id="vipbar">
+  
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="BAdd">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="BUpdate">修改</a> 
+    </div>
+    <!--VIP数据面板工具栏 end-->
+    
+    <!--科室VIP数据面板工具栏 start-->
+    <div id="locvipbar">
+  
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="BLAdd">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="BLUpdate">修改</a> 
+    </div>
+ 	<!--科室VIP数据面板工具栏 end-->
+
+	<script type="text/javascript" src="../scripts/dhcpe/ct/viplevel.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+</body>		
+</html>

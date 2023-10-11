@@ -1,5 +1,12 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
+ i ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnablePMASystem"){
+ 	Set mysvalue = ##class(BSP.SYS.SRV.AuthItemApply).IsPAMGrant("HIS-BSP-MenuGrant")
+	If mysvalue'=1{
+		s %request.Data("Error:ErrorDesc",1) = "无权使用[菜单管理]界面，请到权力系统分配权限！"
+		s %response.ServerSideRedirect="websys.e403.csp"
+	}
+ }
  quit 1
 </csp:method>
 <!DOCTYPE html>
@@ -140,6 +147,9 @@
 		.panel-title.panel-with-icon {
 		    padding-left: 31px;
 		}
+		.datagrid-cell, .datagrid-cell-group{
+			padding-bottom:1px;
+		}
 	</style>
 </head>
 
@@ -163,7 +173,7 @@
 							<div style="height:30px;">
 							<span class="label first w42">描述</span><input id="menu-caption" class="textbox"/>
 							<span class="label w42">代码</span><input id="menu-name" class="textbox"/>
-							<span class="label">连接组件</span><input id="menu-component" class="textbox"/>
+							<span class="label">组件</span><input id="menu-component" class="textbox"/>
 							<span class="label w42">菜单组</span><input id="menu-submenuof" class="textbox"/>
 							<a href="javascript:void(0);" class="hisui-linkbutton" id="menu-search" iconCls="icon-w-find" style="margin-left:30px;">查询</a>
 							<a href="javascript:void(0);" class="hisui-linkbutton" id="menu-more-btn" style="margin-left:20px;">更多</a>
@@ -339,7 +349,7 @@
 					<tr class="ele-toggle" data-toggle="other,comp,csp">
 						<td class="i-label">快捷键</td>
 						<td><input id="ShortcutKey" name="ShortcutKey" autocomplete="off" class="textbox tb200" /></td>
-						<td></td>
+						<td>A~Z,F1~F12。如值为Q，表示Alt+Q跳转，F3表示F3跳转</td>
 					</tr>
 					<tr class="ele-toggle" data-toggle="other,comp,csp,clickonce,url">
 						<td class="i-label">在新的窗口打开</td>
@@ -382,7 +392,7 @@
 					<tr>
 						<td class="i-label">条件表达式</td>
 						<td><input id="ConditionalExpression" name="ConditionalExpression" autocomplete="off" class="textbox tb200" /></td>
-						<td>如果要隐藏菜单则s val=0。 if (Sex=1) { Set val=0} else {Set val=1}</td>
+						<td>如果要隐藏菜单则s val=0. 例：Set val=0 if (%session.Data("LOGON.USERID")=1) Set val=1</td>
 					</tr>
 					<tr class="ele-toggle" data-toggle="other,comp,csp">
 						<td class="i-label">javascript函数</td>
@@ -419,6 +429,11 @@
 						<td class="i-label">帮助提示层位置</td>
 						<td><input id="HelpStyle" name="HelpStyle" autocomplete="off" class="textbox tb200" value="bottom:10px;right:10px" /></td>
 						<td>帮助块显示位置。如 bottom:10px;right:10px</td>
+					</tr>
+					<tr class="ele-toggle" data-toggle="other,url,comp,csp">
+						<td class="i-label">菜单界面更新日期</td>
+						<td><input id="ModifyDocDateTime" name="ModifyDocDateTime" class="hisui-datetimeboxq textbox" style="width:200px;" /></td>
+						<td>加星后用户点击过菜单则星号消失。空时不启用此功能</td>
 					</tr>
 				</table>
 			</div>

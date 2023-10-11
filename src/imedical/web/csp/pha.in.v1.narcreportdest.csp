@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<!--药房药库 - 毒麻药品管理 - 销毁统计报表
+	csp:  pha.in.v1.narcreportdest.csp
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    </style>
+	
+</head>
+
+<body style="background-color:white">
+	<!-- 整体布局 -->
+	<div class="hisui-layout" fit="true">
+	    <div data-options="region:'center',border:false" class="pha-body">
+	    	<!-- layout start -->
+	        <div class="hisui-layout" fit="true">
+	            <div data-options="region:'north',border:false,split:true,height:95">
+	            	<div id="layout-formPanel" class="hisui-panel"
+			        	data-options="title:'#(..Get("查询条件"))#',headerCls:'panel-header-gray',iconCls:'icon-search',fit:true,bodyCls:''" style="overflow:hidden;">
+			        	<!-- 条件区域 start -->
+				        <table id="qCondition" class="pha-con-table">
+				            <tr>
+				                <td class="r-label">
+				                    <label for="startDate" title='#(..Get("日期为销毁日期"))#' class="hisui-tooltip" data-options="position:'bottom'"><span style="color:red">*</span>#(..Get("开始日期"))#</label>
+				                </td>
+				                <td>
+				                    <input id="startDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" />
+				                </td>
+				                <td class="r-label">
+				                    <label for="endDate" title='#(..Get("日期为销毁日期"))#' class="hisui-tooltip" data-options="position:'bottom'"><span style="color:red">*</span>#(..Get("截止日期"))#</label>
+				                </td>
+				                <td>
+				                    <input id="endDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" />
+				                </td>
+				                <td class="r-label">
+					                <label for="locId"><span style="color:red">*</span>#(..Get("科室"))#</label>
+					            </td>
+					            <td>
+					                <input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:true" />
+					            </td>
+					            
+					            <td>
+									<a id="btnFind" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
+								</td>
+								<td>
+									<a id="btnClear" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+								</td>
+				            <tr>
+				        </table>
+				        <!-- 条件区域 end -->
+	            	</div>
+	            </div>
+	            <div data-options="region:'center',border:false,split:true">
+	                <div id="tabs-region" pha-region="tabs-panel" class="hisui-tabs tabs-gray" data-options="fit:true">
+                	</div>
+	            </div>
+	            
+	        </div>
+	        <!-- layout end -->
+	    </div>
+	</div>
+	
+</body>
+
+</html>
+
+<!-- 加载本页面js -->
+<script type="text/javascript">
+PHA_COM.App.ProCode = 'IN';
+PHA_COM.App.ProDesc = '药库';
+PHA_COM.App.Csp = 'pha.in.v1.narcreportdest.csp';
+PHA_COM.App.Name = '销毁统计报表';
+PHA_COM.App.ParamMethod = '';
+PHA_COM.ResizePhaColParam.auto = false;
+PHA_COM.VAR = {
+	EmptyReport: '../csp/dhcst.blank.backgroud.csp',
+	TabsId: 'tabs-region',
+	hospId: session['LOGON.HOSPID'],
+	groupId: session['LOGON.GROUPID'],
+	userId: session['LOGON.USERID'],
+	locId: session['LOGON.CTLOCID']
+};
+if (typeof websys_writeMWToken !== 'undefined') {
+	PHA_COM.VAR.EmptyReport = websys_writeMWToken(PHA_COM.VAR.EmptyReport);
+}
+$(function() {
+	var rqPanels = [
+		{reportName:'PHAIN_NarcReport_DestroyDetail.rpx', reportText:'销毁明细报表'},
+		{reportName:'PHAIN_NarcReport_DestroyTotal.rpx', reportText:'销毁汇总报表'}
+	];
+	
+	InitLayout(rqPanels);
+	InitDict();
+	InitEvents();
+	InitConfig();
+});
+
+// 初始化 - 表单字典
+function InitDict(){
+	PHA.ComboBox('locId', {
+		placeholder: '科室...',
+		disabled: true,
+		url: PHA_STORE.CTLoc().url
+	});
+	InitDictVal();
+}
+function InitDictVal(){
+	PHA.SetComboVal('locId', session['LOGON.CTLOCID']);
+}
+
+// 初始化 - 事件绑定
+function InitEvents(){
+	$('#btnFind').on("click", Query);
+    $('#btnClear').on("click", Clear);
+}
+
+// 初始化 - 布局
+function InitLayout(rqPanels){
+	var $LayoutTabs = $('#' + PHA_COM.VAR.TabsId);
+	// 页签点击事件
+	$LayoutTabs.tabs({
+		onSelect: function(title, index){
+			var isLoaded = $('#' + PHA_COM.VAR.TabsId).tabs('options').isLoaded;
+			if (isLoaded && PHA_COM.VAR.CONFIG) {
+				Query();
+			}
+		}
+	});
+	// 添加tab页签
+	var rqPanelsLen = rqPanels.length;
+	for (var i = 0; i < rqPanelsLen; i++) {
+		var oneRQPanel = rqPanels[i];
+		var reportName = oneRQPanel["reportName"];
+		var reportText = oneRQPanel["reportText"];
+		var queryId = reportName.replace('.', '_');
+		$LayoutTabs.tabs('add', {
+			queryId: queryId,
+			reportName: reportName,
+			title: reportText,
+			content: '<iframe id="' + queryId + '" style="display:block;width:99.6%;height:99%" src="' + PHA_COM.VAR.EmptyReport + '"/>'
+		});
+	}
+	var tabsOpts = $LayoutTabs.tabs('options');
+	tabsOpts.isLoaded = true;
+	$LayoutTabs.tabs('select',0);
+}
+
+// 查询
+function Query(){
+	var selTab = $('#' + PHA_COM.VAR.TabsId).tabs('getSelected');
+	var selIndex = $('#' + PHA_COM.VAR.TabsId).tabs('getTabIndex', selTab);
+	var oneTabOpts = $('#' + PHA_COM.VAR.TabsId).tabs('getTab', selIndex).panel('options');
+	var reportName = oneTabOpts.reportName;
+	var queryId = oneTabOpts.queryId;
+	
+	var pJson = {
+		startDate: ($('#startDate').datebox('getValue') || ''),
+		endDate: ($('#endDate').datebox('getValue') || ''),
+		locId: ($('#locId').combobox('getValue') || ''),
+		hospId: PHA_COM.VAR.hospId
+	};
+	var pJsonStr = JSON.stringify(pJson);
+	
+	var _reportUrl = 'dhccpmrunqianreport.csp';
+	_reportUrl += '?reportName=' + reportName;
+	_reportUrl += '&hospId=' + PHA_COM.VAR.hospId;
+	_reportUrl += '&pJsonStr=' + pJsonStr;
+	_reportUrl += '&startDate=' + pJson.startDate;
+	_reportUrl += '&endDate=' + pJson.endDate;
+	if (typeof websys_writeMWToken !== 'undefined') {
+		_reportUrl = websys_writeMWToken(_reportUrl);
+	}
+	$('#' + queryId).attr('src', _reportUrl);
+}
+
+// 清除
+function Clear(){
+	$('#startDate').datebox('setValue',  PHA_UTIL.SysDate(PHA_COM.VAR.CONFIG['Com.StDate']));
+	$('#endDate').datebox('setValue',  PHA_UTIL.SysDate(PHA_COM.VAR.CONFIG['Com.EdDate']));
+	InitDictVal();
+	
+	var selTab = $('#' + PHA_COM.VAR.TabsId).tabs('getSelected');
+	var selIndex = $('#' + PHA_COM.VAR.TabsId).tabs('getTabIndex', selTab);
+	var oneTabOpts = $('#' + PHA_COM.VAR.TabsId).tabs('getTab', selIndex).panel('options');
+	var queryId = oneTabOpts.queryId;
+	$('#' + queryId).attr('src', PHA_COM.VAR.EmptyReport);
+}
+
+// 配置初始化
+function InitConfig() {
+	$.cm({
+		ClassName: "PHA.IN.Narc.Com",
+		MethodName: "GetConfigParams",
+		InputStr: PHA_COM.Session.ALL
+	}, function(retJson) {
+		// 传递给全局
+		PHA_COM.VAR.CONFIG = retJson;
+		$('#startDate').datebox('setValue',  PHA_UTIL.SysDate(PHA_COM.VAR.CONFIG['Com.StDate']));
+		$('#endDate').datebox('setValue',  PHA_UTIL.SysDate(PHA_COM.VAR.CONFIG['Com.EdDate']));
+	}, function(error){
+		console.dir(error);
+		alert(error.responseText);
+	});
+}
+</script>

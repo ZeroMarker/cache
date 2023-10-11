@@ -1,7 +1,6 @@
 <!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	//i ##Class(websys.SessionEvents).SessionExpired()
-	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	I ##Class(websys.SessionEvents).SessionExpired() q 1
 	q 1
 </csp:method>
 <!DOCTYPE html>
@@ -13,19 +12,27 @@
 		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 		<DHCHAI:BOOTSTRAP></DHCHAI:BOOTSTRAP>
 		<link rel="stylesheet" type="text/css" href="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css"/>
+		<server>
+			//获取控制设置参数
+			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
+  		</server>
 	</head>
 	<body>
 		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
 		<script type="text/javascript" src="../scripts_lib/Bootstrap-3.3.6/plugins/datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js" charset="utf-8"></script>
 
-		<script type="text/javascript" src="../Scripts/dhchai/Units/Component.js"></script>
-		<script type="text/javascript" src="../Scripts/dhchai/IR/CtlResult/Gui.js"></script>
-		<script type="text/javascript" src="../Scripts/dhchai/IR/CtlResult/Event.js"></script>
-		<script language="Cache" RUNAT="SERVER">		
+		<script type="text/javascript" src="../scripts/dhchai/Units/Component.js"></script>
+		<script type="text/javascript" src="../scripts/dhchai/IR/CtlResult/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/dhchai/IR/CtlResult/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+		<script language="Cache" RUNAT="SERVER">	
+		 If (IsSupportRQ2018'=1) {  //润乾2018支持直接打印，如需引入本方法，本方法影响加载速度
+		    d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
+		 }	
 		set menuCode="DHCHAIAim-MRB-Report"
 		set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
 		set groupId=$g(%session.Data("LOGON.GROUPID"))
-		set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+		set OperAdmin = $g(%request.Data("ParamAdmin",1))
            Set HomeFlag=""
            Set HomeFlag=+$g(%request.Data("HomeFlag",1))
 		   Set HomeInfMrbDate=##class(DHCHAI.BT.Config).GetValByCode("Home-InfMrbDate")
@@ -38,7 +45,7 @@
 			var aHomeDateTo = '#(aHomeDateTo)#';
 			var aHomeDateFrom = '#(aHomeDateFrom)#';
 			$(document).ready(function(){
-				var url = "../Scripts/dhchai/IR/CtlResult/Layout.html"
+				var url = "../scripts/dhchai/IR/CtlResult/Layout.html"
         		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
    					if(statusTxt=="success") {
 	   					InitCtlResultWin();

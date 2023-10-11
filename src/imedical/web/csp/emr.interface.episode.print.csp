@@ -10,14 +10,21 @@
 		s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")	
 		s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
   		s userLocID = $Get(%request.Data("LocID",1),"")
+        s:(userLocID = "") userLocID = %session.Get("LOGON.CTLOCID")
 		s userID = $Get(%request.Data("UserID",1),"")
-  
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s product = $Get(%request.Data("product",1),"OP")
+        s pmdType = $Get(%request.Data("pmdType",1),"EMR")
+        s pmdCode = $Get(%request.Data("pmdCode",1),"")
+        s versionID = ##Class(EMRservice.BL.BLScatterData).GetDataVersion(episodeID)
    </script>
 
 	<script language="javascript">
+	// 门诊医生站"总览&打印"界面调用传入PrintFlag为Y时，病历打印完成自动关闭
+	var PrintFlag = "#($Get(%request.Data("PrintFlag",1),""))#"; 
 	var pluginUrl = "#(pluginUrl)#";
 	var patientId = "#($Get(%request.Data("PatientID",1),""))#";
-	var episodeId = "#($Get(%request.Data("EpisodeID",1),""))#";
+	var episodeId = "#(episodeID)#";
 	
 	var userCode = '#(%session.Get("LOGON.USERCODE"))#';
 	//var userID = '#(userID)#';
@@ -31,11 +38,17 @@
 	
 	var ipAddress = getIpAddress();
 	
+    var product = '#(product)#';
+    var pmdType = '#(pmdType)#';
+    var pmdCode = '#(pmdCode)#';
+    var versionID = '#(versionID)#';
+    var printDocumentID = new Array();
    </script>	
 </head>
 <body style="margin:0;padding:0;">
 	<button type="button" onclick="printDocument()" style="float:right;height:30px;font-size:14px;font-weight:bold;">全部打印</button>
 	<div id="containerWord" style="width:100%;height:95%;"></div>
+    <script type="text/javascript" src="../service/emr-editor/jq/emr-editor.js"></script>
 	<script type="text/javascript" src="../scripts/emr/js/actionlog.js"></script>
 	<script type="text/javascript" src="../scripts/emr/js/interface.episode.print.js"></script>
 	

@@ -1,0 +1,413 @@
+<!--nur.hisui.appointManage.csp 预住院-预约登记-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<HTML lang="zh-CN">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <DOCCARD medStepCode="Other"></DOCCARD>
+    <link href="../scripts/nurse/hisui/css/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui/css/appointManage.css" />
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/resize.js"></script>
+    <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+    <server>
+        Set isShowPatInfoBar = $g(%request.Data("isShowPatInfoBar",1))
+        Set BookingtNo = $g(%request.Data("BookingtNo",1))
+        Set NeedRegist = $g(%request.Data("NeedRegist",1))
+        w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+        w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+    	s WARDBeforehand="",WardLinkLocId=""
+    	s LoginWardId=$o(^PAWARD(0,"WARD_LocationDR",%session.Get("LOGON.CTLOCID"),"")) //%session.Get("LOGON.WARDID")
+    	if (LoginWardId){
+	    	s WARDBeforehand=$p(^PAWARD(LoginWardId),"^",13) //是否是预住院病区
+	    	s linkLocNum=""
+	    	s linkLocId=""
+	    	for {
+		    	s linkLocId=$o(^CTLOC(%session.Get("LOGON.CTLOCID"),"LINK",0,"Loc",linkLocId)) q:linkLocId=""
+		    	continue:'$d(^PAC("ADMLOC",0,"AdmType","I",linkLocId))
+		    	s linkLocNum=linkLocNum+1
+		    	s WardLinkLocId=linkLocId
+		    }
+		    i linkLocNum>1 s WardLinkLocId=""
+	    	//s WardLinkLocId=$o(^CTLOC(%session.Get("LOGON.CTLOCID"),"LINK",0,"Loc",""))
+	    }
+    </server>
+    <script type="text/javascript">
+    var bookingtNo = "#(BookingtNo)#"; 
+    var needRegist = "#(NeedRegist)#" == "" ? "Y" : "#(NeedRegist)#"; //Y:需要登记，N:不登记直接预约床位
+    var isShowPatInfoBar = "#(isShowPatInfoBar)#"; //是否显示患者信息条 N 不显示 其他显示
+    var bookingNum=bookingtNo;
+    var singlePat = false;
+    if (bookingtNo != "") {
+        singlePat = true;
+        needRegist = "N";
+    }
+    var WARDBeforehand="#(WARDBeforehand)#";
+    var WardLinkLocId="#(WardLinkLocId)#";
+    </script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/appointManage.js" charset='gbk'></script>
+    <style>
+    .search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	#eatlist label.radio,#sexGroup  label.radio{
+		margin-right:10px;
+	}
+	.appInfoTab input.textbox {
+		width:117px;
+	}
+	.layout-split-west {
+		border-right-width:4px;
+	}
+	.layout-split-north {
+		border-bottom-width:4px;
+	}
+	</style>
+</head>
+<body style="padding:4px;">
+    <div class="hisui-panel" data-options="fit:true,border:false" style="border-radius:0;">
+    	<div id="main" class="hisui-layout" data-options="clickExpand:true,fit:true">
+		    <div data-options="region:'west',title:'#(..Get("预约列表"))#',split:true,showCollapsedTitle:true" style="width:408px;">
+		    	<div class="hisui-layout" data-options="fit:true">
+		    		<div id="schCondition" data-options="region:'north',title:'',headerCls:'panel-header-gray',split:false" border="false" style="height:281px;overflow:hidden;">
+		    			<table class="search-table">
+			                <tr>
+			                    <td class="r-label td-label">#(..Get("卡号"))#</td>
+			                    <td style="white-space:nowrap;">
+			                        <input id="CardNo" class="textbox" style="width:113px;">
+			                        <!-- <input id="CardTypeNew" class="textbox" placeholder="卡类型" disabled style="width:50px;margin-left:5px;"> -->
+			                    </td>
+			                    <td class="r-label td-label">#(..Get("登记号"))#</td>
+			                    <td><input id="regNO" class="textbox" style="width:113px;"></td>
+			                </tr>
+			                <tr>
+			                    <td class="r-label td-label">#(..Get("开始日期"))#</td>
+			                    <td><input id="appStartDate" class="hisui-datebox textbox" style="width:120px;"></input></td>
+			                    <td class="r-label td-label">#(..Get("结束日期"))#</td>
+			                    <td><input id="appEndDate" class="hisui-datebox textbox" style="width:120px;"></input></td>
+			                </tr>
+			                <tr>
+			                    <td class="r-label td-label">#(..Get("预约科室"))#</td>
+			                    <td><input id="appLocBox" class="hisui-combobox" style="width:120px;"></input></td>
+			                    <td class="r-label td-label">#(..Get("预约病区"))#</td>
+			                    <td><input id="appWardBox" class="hisui-combobox" style="width:120px;"></input></td>
+			                </tr>
+			                <tr>
+			                    <td class="r-label td-label">#(..Get("预约医生"))#</td>
+			                    <td><input id="bookDocBox" class="hisui-combobox" style="width:120px;"></input></td>
+			                    <td class="r-label td-label">#(..Get("姓名"))#</td>
+			                    <td><input id="patName" class="textbox" style="width:113px;"></td>
+			                </tr>
+			                <tr>
+			                    <td class="r-label td-label">#(..Get("紧急情况"))#</td>
+			                    <td><input id="admInitStateBox" class="hisui-combobox" style="width:120px;"></input></td>
+			                    <td class="r-label td-label">#(..Get("入院途径"))#</td>
+			                    <td><input id="inSorceBox" class="hisui-combobox" style="width:120px;"></input></td>
+			                </tr>
+			                <tr class="hidetabrow">
+			                    <td class="r-label td-label">#(..Get("状态"))#</td>
+			                    <td id="eatlist" colspan="3">
+			                        <input class="hisui-radio" type="radio" label="未登记" name="patState" value="2" checked>
+			                        <input class="hisui-radio" type="radio" label="已登记" name="patState" value="1">
+			                        <input class="hisui-radio" type="radio" label="已分配" name="patState" value="0">
+			                        <input class="hisui-checkbox" id="dayOpPatCheck" type="checkbox" data-options="boxPosition:'left'" label=" 日间病人">
+			                    </td>
+			                </tr>
+			                <tr>
+			                    <td colspan="4" style="text-align: center;font-size:0">
+									<a href="#" id="readCardBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'" style="margin-right:10px;">读卡</a>
+			                        <a href="#" id="registerBtn" class="hisui-linkbutton " data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" style="margin-right:10px;">登记</a>
+			                        <a href="#" id="findAppPatListBtn" class="hisui-linkbutton " data-options="iconCls:'icon-w-find'" style="margin-right:10px;">查询</a>
+			                        <a href="#" id="clearSchCondition" class="hisui-linkbutton green " style="">清屏</a>
+			                    </td>
+			                </tr>
+			            </table>
+		    		</div>
+		    		<div data-options="region:'center',title:'',bodyCls:'panel-body-gray',split:false" style="border-width:1px 0 0 0;border-radius:0;">
+		    			<table id="appPatGrid" class="hisui-datagrid" title="" data-options="fit:true,iconCls:'icon-patient',singleSelect:true,autoSizeColumn:true,fitColumns:false,headerCls:'panel-header-gray',rownumbers:true" border="false" style="height:150px;">
+				            <thead data-options="frozen:true">
+				                <tr>
+				                    <th data-options="field:'PatName',width:90,formatter: formatCellTooltip">姓名</th>
+				                </tr>
+				            </thead>
+				            <thead>
+				                <tr>
+				                    <th data-options="field:'Sex',width:40"><span style="margin-left:-3px;">#(..Get("性别"))#</span></th>
+				                    <th data-options="field:'IllStatus',width:40"><span style="margin-left:-3px;">#(..Get("病情"))#</span></th>
+				                    <th data-options="field:'Notes',width:90,formatter: formatCellTooltip">备注</th>
+				                    <th data-options="field:'RegDate',width:90">登记日期</th>
+				                    <th data-options="field:'WaitDay',width:80">等候天数</th>
+				                    <th data-options="field:'OperDate',width:90">手术日期</th>
+				                    <th data-options="field:'OperName',width:100,formatter: formatCellTooltip">手术名称</th>
+				                    <th data-options="field:'BookNO',width:110">住院证号</th>
+				                    <th data-options="field:'RegNO',width:94">登记号</th>
+				                </tr>
+				            </thead>
+				        </table>
+		    		</div>
+		    	</div>
+
+		    </div>
+		    <div id="appPanel" data-options="region:'center',title:'',split:true" style="border:none;">
+		        <div class="hisui-layout" fit=true>
+		            <csp:if condition='isShowPatInfoBar="N"'>
+		                <csp:else>
+		                    <div id="patInfoBar" data-options="region:'north',title:'',headerCls:'panel-header-gray'" border="false" style="height:38px;float:left;">
+		                        <div class="pf-bar">
+		                            <img id="PatPhoto" class="pf-patimg sigle-hide" src="../images/boy.png">
+		                            <span class="pf-value-big sigle-hide" id="pbarPatName"></span>
+		                            <span class="pf-sep sigle-hide">/</span>
+		                            <span class="pf-value sigle-hide" id="pbarSex"></span>
+		                            <span class="pf-sep sigle-hide">/</span>
+		                            <span class="pf-value sigle-hide" id="pbarAge"></span>
+		                            <span class="pf-sep sigle-hide">/</span>
+		                            <span class="pf-key sigle-hide">#(..Get("登记号"))#：</span>
+		                            <span class="pf-value sigle-hide" id="pbarRegNO"></span>
+		                            <span class="pf-sep sigle-hide">/</span>
+		                            <span class="pf-key">#(..Get("科室"))#：</span>
+		                            <span class="pf-value" id="pbarIPLocDesc"></span>
+		                            <span class="pf-sep">/</span>
+		                            <span class="pf-key">#(..Get("电话"))#：</span>
+		                            <span class="pf-value" id="pbarLinkManPhone"></span>
+		                            <span class="pf-sep">/</span>
+		                            <span class="pf-key">#(..Get("预缴押金"))#：</span>
+		                            <span class="pf-value" id="pbarIPDeposit"></span>
+		                            <span class="pf-sep">/</span>
+		                            <span class="pf-key">#(..Get("手术"))#：</span>
+		                            <span class="pf-value" id="pbarOperName"></span>
+		                            <span class="pf-sep">/</span>
+		                            <span class="pf-key">#(..Get("手术日期"))#：</span>
+		                            <span class="pf-value" id="pbarOperDate"></span>
+		                            <img id="pbarAppStatus" class="pf-icon" src="../images/nur_app_signbed.png">
+		                            <img id="pbarDayOper" class="pf-icon" src="../images/nur_app_daysurg.png">
+		                        </div>
+		                    </div>
+		            </csp:if>
+		            <!-- ------------------------ -->
+		            <div data-options="region:'center',title:'',headerCls:'panel-header-gray'" align="center" border="false">
+		                <div class="hisui-layout" fit=true>
+		                    <div data-options="region:'north',title:'#(..Get("预约信息"))#',headerCls:'panel-header-gray',iconCls:'icon-paper',split:true,showCollapsedTitle:true" style="height:211px;overflow: hidden;">
+		                        <table class="appInfoTab search-table">
+		                            <tr>
+		                                <td class="r-label">#(..Get("预约科室"))#</td>
+		                                <td>
+		                                    <input id="LocDesc" disabled="true" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("预约病区"))#</td>
+		                                <td>
+		                                    <input id="WardDesc" disabled="true" disabled="true" class="textbox">
+		                                    <!-- <select id="WardDescBookI" class="hisui-combobox" style="width:158px;"></select> -->
+		                                </td>
+		                                <td class="r-label">#(..Get("预约医生"))#</td>
+		                                <td>
+		                                    <input id="AppDocName" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("预约日期"))#</td>
+		                                <td>
+		                                    <input id="BookingDate" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("状态"))#</td>
+		                                <td>
+		                                    <input id="BookStatus" disabled="true" class="textbox"></input>
+		                                </td>
+		                            </tr>
+		                            <tr>
+		                                <td class="r-label">#(..Get("收证日期"))#</td>
+		                                <td>
+		                                    <input id="CreateDate" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("登记人"))#</td>
+		                                <td>
+		                                    <input id="CreateUser" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("联系电话"))#</td>
+		                                <td>
+		                                    <input id="LinkManPhone" class="textbox" onblur="updateLinkData(1);">
+		                                </td>
+		                                <td class="r-label">#(..Get("联系人"))#</td>
+		                                <td>
+		                                    <input id="LinkMan" class="textbox" onblur="updateLinkData(2);">
+		                                </td>
+		                                <td class="r-label">#(..Get("预约人电话"))#</td>
+		                                <td>
+		                                    <input id="AppointPhone" class="textbox" onblur="updateLinkData(3);">
+		                                </td>
+		                            </tr>
+		                            <tr>
+		                                <td class="r-label">#(..Get("开证医生"))#</td>
+		                                <td>
+		                                    <input id="BookCreateDoc" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("开证科室"))#</td>
+		                                <td>
+		                                    <input id="BookLoc" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("手术日期"))#</td>
+		                                <td>
+		                                    <input id="OperDate" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("手术名称"))#</td>
+		                                <td>
+		                                    <input id="OperName" disabled="true" class="textbox">
+		                                </td>
+		                                <td class="r-label">#(..Get("预缴押金"))#</td>
+		                                <td>
+		                                    <input id="IPDeposit" disabled="true" class="textbox">
+		                                </td>
+		                            </tr>
+		                            <tr>
+		                                <td class="r-label">#(..Get("诊断"))#</td>
+		                                <td colspan="9">
+		                                    <input id="Diagnosis" disabled="true" class="textbox" style="width: 931px;">
+		                                </td>
+		                            </tr>
+		                        </table>
+		                    </div>
+		                    <div class="setradius" data-options="region:'west',title:'#(..Get("病区列表"))#',headerCls:'panel-header-gray',iconCls:'icon-paper',split:true,showCollapsedTitle:true" style="width:309px;">
+		                        <div class="hisui-layout" fit=true>
+		                            <div id="tb" style="height:51px;line-height:50px;border-bottom:1px #ddd solid;border-radius:0;" data-options="region:'north'" border=false>
+		                                <table class="search-table">
+		                                    <tr>
+		                                        <td class="r-label"><label>#(..Get("病区"))#</label></td>
+		                                        <td>
+		                                            <input id="wardSearchbox" href="#" prompt="#(..Get("病区名称或首拼"))#" class="hisui-searchbox" style="width:244px;" />
+		                                        </td>
+		                                    </tr>
+		                                </table>
+		                            </div>
+		                            <div data-options="region:'center'" border=false>
+		                                <table id="wardGrid" fit=true class="hisui-datagrid" border=false singleSelect="true" data-options="fitColumns:false,headerCls:'panel-header-gray',pagination:false,rownumbers:false">
+		                                    <thead data-options="frozen:true">
+		                                        <tr>
+		                                            <th data-options="field:'WardDesc',width:120,formatter: formatCellTooltip">病区</th>
+		                                        </tr>
+		                                    </thead>
+		                                    <thead>
+		                                        <tr>
+		                                        	<th data-options="field:'EmptyNum',width:40"><span style="margin-left:-3px;">#(..Get("空床"))#</span></th>
+		                                            <th data-options="field:'MaleNum',width:40"><span style="margin-left:-3px;">#(..Get("男床"))#</span></th>
+		                                            <th data-options="field:'FeMaleNum',width:40"><span style="margin-left:-3px;">#(..Get("女床"))#</span></th>
+		                                            <th data-options="field:'OtherNum',width:40"><span style="margin-left:-3px;">#(..Get("不限"))#</span></th>
+		                                            <th data-options="field:'LockNum',width:40"><span style="margin-left:-3px;">#(..Get("锁定"))#</span></th>
+		                                            <th data-options="field:'AvailNum',width:40"><span style="margin-left:-3px;">#(..Get("可用"))#</span></th>
+		                                            <th data-options="field:'UnavailNum',width:54"><span style="margin-left:-3px;">#(..Get("不可用"))#</span></th>
+		                                            <th data-options="field:'TotalNum',width:40"><span style="margin-left:-3px;">#(..Get("总数"))#</span></th>
+		                                            <th data-options="field:'InHosNum',width:68"><span style="margin-left:-3px;">#(..Get("在院人数"))#</span></th>
+		                                            <th data-options="field:'AppointNum',width:68"><span style="margin-left:-3px;">#(..Get("预约人数"))#</span></th>
+		                                        </tr>
+		                                    </thead>
+		                                </table>
+		                            </div>
+		                        </div>
+		                    </div>
+		                    <div class="setradius" data-options="region:'center',title:'床位预约',headerCls:'panel-header-gray',iconCls:'icon-paper-bed',split:true">
+		                        <div class="hisui-layout" data-options="fit:true,border:false">
+		                            <div id="dateSumPanel" data-options="region:'north'" style="height:116px;border:none;border-bottom:1px solid #ddd;border-radius:0;">
+		                                <div style="width:100%;height:65px;border:none;border-bottom:1px dashed #ccc;overflow:hidden;">
+		                                    <div style="float:left;width:4%;height:64px;">
+		                                        <img id="preWeek" offsetday="-7" class="change-date-btn " width=32 src="../images/nur_app_preweek.png" />
+		                                    </div>
+		                                    <div style="float:left;width:4%;height:64px;">
+		                                        <img id="preDay" offsetday="-1" class="change-date-btn " width=32 src="../images/nur_app_preday.png" />
+		                                    </div>
+		                                    <div style="float:left;width:84%;height:64px;overflow:hidden;position:relative;border-left:1px dashed #ddd ;">
+		                                        <ul id="changeDateUL" style="width:100%;height:100%;position:absolute;top:0;left:0;">
+		                                        </ul>
+		                                    </div>
+		                                    <div style="float:left;width:4%;height:64px;">
+		                                        <img id="nextDay" offsetday="1" class="change-date-btn " width=32 src="../images/nur_app_nextday.png" />
+		                                    </div>
+		                                    <div style="float:left;width:4%;height:64px;">
+		                                        <img id="nextWeek" offsetday="7" class="change-date-btn " width=32 src="../images/nur_app_nextweek.png" />
+		                                    </div>
+		                                </div>
+		                                <div style="width:100%;height:50px;position:relative;padding:10px;">
+		                                    <span style="margin-right:10px;">#(..Get("床位状态"))#</span><input style="width:130px;" id="bedStatusBox" class="hisui-combobox"></input>
+		                                    <div id="sexGroup" style="display:inline-block;padding-left:7px;">
+		                                        <input class='hisui-radio' type="radio" label='全部' name='bedSexRadio' value='A' checked="checked">
+		                                        <input class='hisui-radio' type="radio" label='不限' name='bedSexRadio' value='N'>
+		                                        <input class='hisui-radio' type="radio" label='男床' name='bedSexRadio' value='M'>
+		                                        <input class='hisui-radio' type="radio" label='女床' name='bedSexRadio' value='F'>
+		                                    </div>
+		                                    <a href="#" id="toggleBedMapType" class="hisui-linkbutton" style="width:84px;position:absolute;top:10px;right:10px">列表</a>
+		                                </div>
+		                            </div>
+		                            <div id="bedContenter" data-options="region:'center'" style="border:none;position:relative;width:100%;height:100%;">
+		                                <div id="bedGridBox" fit=true style="z-index:0;position:absolute;width:100%;height:100%;top:0;left:0;">
+		                                    <table fit=true id="bedGrid" border=false class="hisui-datagrid" singleSelect="true" data-options="fitColumns:false,headerCls:'panel-header-gray',pagination:false,rownumbers:true">
+		                                        <!--thead >
+					                                <th data-options="field:'Operate'">操作</th>
+				                                    <th data-options="field:'BedCode'">床号</th>
+				                                    <th data-options="field:'BedStatus'">床位状态</th>
+				                                    <th data-options="field:'BedSexDesc'">床位性别</th>
+				                                    <th data-options="field:'BedBill'">床位费</th>
+				                                    <th data-options="field:'RegNo'">患者登记号</th>
+				                                    <th data-options="field:'PatName'">患者姓名</th>
+				                                    <th data-options="field:'OperName',width:100,formatter: formatCellTooltip">手术名称</th>
+				                                    <th data-options="field:'OperDate'">手术日期</th>
+				                                    <th data-options="field:'AppDate'">预约日期</th>
+				                                    <th data-options="field:'SpeceilFlag',width:290">可预约天数</th>
+					                            </thead-->
+		                                    </table>
+		                                </div>
+		                                <div id="bedMapBox" style="z-index:1;position:absolute;width:100%;height:100%;top:0;left:0;background:#ffffff;">
+		                                </div>
+		                            </div>
+		                        </div>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+	</div>
+    <!-- 住院证列表 -->
+    <div id="appointment" class="hisui-dialog" title="预约患者查询" style="padding:10px;top: 10px;left: 10px;" data-options="iconCls:'icon-w-find',resizable:true,modal:true,closed:true">
+        <div style="width:100%;height:100%;border:1px #ddd solid;border-radius:3px;">
+            <table id="patBookGrid" fit=true class="hisui-datagrid" data-options="pagination:false" border=false>
+                <thead data-options="frozen:true">
+                    <tr>
+                        <th data-options="field:'IPBookNo'">住院证号</th>
+                        <th data-options="field:'BookStatus',width:60">状态</th>
+                        <th data-options="field:'PatName'">姓名</th>
+                        <th data-options="field:'RegNO'">登记号</th>
+                    </tr>
+                </thead>
+                <thead>
+                    <tr>
+                        <th data-options="field:'Sex'">性别</th>
+                        <th data-options="field:'Age'">年龄</th>
+                        <th data-options="field:'LinkManPhone'">电话</th>
+                        <th data-options="field:'LocDesc'">科室</th>
+                        <th data-options="field:'WardDesc'">病区</th>
+                        <th data-options="field:'BookingDate'">住院证时间</th>
+                        <th data-options="field:'BookCreateDoc'">开证医生</th>
+                        <th data-options="field:'OperName'">日间手术</th>
+                        <th data-options="field:'OperDate'">手术日期</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <!-- 登记模态框 -->
+    <div id="registerModal" class="hisui-dialog" title="登记" style="" data-options="iconCls:'icon-w-edit',modal:true,closed:true">
+        <iframe src="" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+    </div>
+</body>
+
+</html>

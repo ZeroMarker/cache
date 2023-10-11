@@ -1,0 +1,53 @@
+<!--dhcem.consultarr.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script type="text/javascript" src="../scripts/websys.js" ></script>
+<HISUI/>
+<script Language="Javascript">
+	var CstID="#(%request.Get("CstID"))#"     //会诊ID
+	var LgParam="#(%request.Get("LgParam"))#" //LgParam
+	var ModArrTime="#(%request.Get("ModArrTime"))#" //会诊处理-修改到达时间的权限
+</script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultarr.js"></script>
+<head>
+<title></title>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px' border="false">
+			<div id="ArrAreaDiv">
+				<server>
+				  	s CstID=+$g(%request.Data("CstID",1)) /// 会诊ID
+				  	s CanAriFlag=+$g(%request.Data("CanAriFlag",1)) /// 取消到达标识
+				  	s CH=""
+				  	f  s CH=$o(^DHCEMCON(CstID,"I",CH)) q:CH=""  d
+				  	.s ItmID=CstID_"||"_CH
+				  	.s CsLocID=$p(^DHCEMCON(CstID,"I",CH),"^",1)       
+				  	.s CsLocDesc=$p($g(^CTLOC(+CsLocID)),"^",2)  /// 会诊科室
+					.s CsLocDesc=##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTLoc","CTLOCDesc","",CsLocDesc)
+					.s ArrTime=##Class(web.DHCEMConsultCom).GetArrTimeByItmID(ItmID) ///到达时间
+					.s ArrD=$p(ArrTime," ",1)
+					.s ArrT=$p(ArrTime," ",2)
+					.w "<div class='ArrAreaDiv' style='margin:10px 0px;'>"
+					.w "<label style='width:150px;display:inline-block;margin-right:10px;text-align:right;white-space:nowrap;'>"_CsLocDesc_""_"</label>"
+					.w "<input id='Date"_CH_"' class='hisui-datebox textbox' value='"_ArrD_"' style='width:120px;' disabled>"
+					.w "<input id='Time"_CH_"' class='hisui-timespinner textbox' value='"_ArrT_"' style='width:120px;' data-options='showSeconds:true' disabled>"
+					.w:CanAriFlag'=1 "<a style='margin-left:10px' class='hisui-linkbutton' data-options='' data='"_ItmID_"' onclick='saveArr(this)'>保存</a>"
+					.w:CanAriFlag=1 "<a style='margin-left:10px' class='hisui-linkbutton' data-options='' data='"_ItmID_"' onclick='canArr(this)'>取消</a>"
+			        .w "</div>"
+			   </server>
+			</div>
+		</div>
+		<!--div data-options="region:'south',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='height:50px;text-align:center;' border="false">
+			<a style="" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="saveArr()">保存</a>
+		</div-->
+
+	</div>
+</body>
+</html>

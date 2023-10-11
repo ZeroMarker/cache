@@ -1,0 +1,115 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+<script language=Cache runat=server>
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s HospFlag=##class(web.DHCEQCommon).GetSysInfo("990051")
+</script>
+<body class="hisui-layout">
+	<csp:if condition='HospFlag="2"'>
+		<div data-options="region:'north',border:false" style="padding:10px 10px 0 10px;">
+			<label id="_HospListLabel" style="color:red;padding-left:10px;" class='r-label'>医院</label>
+			<input class="hisui-validatebox"  id="_HospList" type="text">
+			<a id="_HospBtn" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">数据关联医院</a>	
+		</div>
+	</csp:if>
+	<div data-options="region:'center',border:false,split:true">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+            <div data-options="region:'west',border:false,split:true,headerCls:'panel-header-gray'" style="width:215px;padding:10px 5px 10px 10px;">
+				<div class="hisui-panel" title="设备类组" data-options="fit:true,border:true,'eqtitle':'listtitle'">
+					<table id="DHCEQCMasterItemList"></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false,split:true" style="padding:10px 10px 10px 0;">
+				<div class="hisui-panel" title="设备项" data-options="fit:true,border:true,'eqtitle':'listtitle'">
+					<div class="hisui-layout" data-options="fit:true,border:false">
+                        <div data-options="region:'north',border:false" style="border-bottom:solid 1px #E2E2E2;padding:0px 0px 5px 0px;">
+							<div class="eq-table">
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label"><label id="cMIDesc" for="MIDesc">描述</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MIDesc"></div>
+									<div class="eq-table-td eq-table-label"><label id="cMIEquipTypeDR_ETDesc" for="MIEquipTypeDR_ETDesc">管理类组</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EquipType'" id="MIEquipTypeDR_ETDesc" disabled="true"></div>
+									<div class="eq-table-td eq-table-label"><label id="cMIStatCatDR_SCDesc" for="MIStatCatDR_SCDesc">设备类型</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.StatCat','paras':[{name:'StatCat',type:'4',value:'MIStatCatDR_SCDesc'},{name:'EquipTypeDR',type:'4',value:'MIEquipTypeDR'}]" id="MIStatCatDR_SCDesc" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cMICatDR_ECDesc" for="MICatDR_ECDesc">设备分类</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MICatDR_ECDesc" ></div>
+									<div class="eq-table-td eq-table-label-button"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a></div>
+								</div>
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label"><label id="cMICode" for="MICode">代码</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MICode"></div>
+									<div class="eq-table-td eq-table-label"><label id="cMIUnitDR_UOMDesc" for="MIUnitDR_UOMDesc">单位</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.UOM'" id="MIUnitDR_UOMDesc" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cMICFDADR_TDesc" for="MICFDADR_TDesc">医疗器械分类</label></div>  <!--modified by LMH 20230327 3341204-->
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.Tree'" id="MICFDADR_TDesc" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cMICFDADR_TCode" for="MICFDADR_TCode">器械分类码</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MICFDADR_TCode"></div>
+									<div class="eq-table-td eq-table-label-button"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+								</div>
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label"><label id="cMIManageLevel" for="MIManageLevel">管理级别</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MIManageLevel" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cKBSMasterItemDR_MIDesc" for="KBSMasterItemDR_MIDesc">参考设备项</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'Plat.L.KBSMasterItem'" id="KBSMasterItemDR_MIDesc" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cMIStandFlag" for="MIStandFlag">是否标准设备项</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-checkbox" type="checkbox" id="MIStandFlag" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cMIStandItemDR_MIDesc" for="MIStandItemDR_MIDesc">标准设备项</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'Plat.L.StandardItem'" id="MIStandItemDR_MIDesc" ></div>
+									<div class="eq-table-td eq-table-label-button"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a></div>
+								</div>
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label"><label id="cMILocalWJWCode" for="MILocalWJWCode">地方卫健编码</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MILocalWJWCode" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cMILocalFinanceCode" for="MILocalFinanceCode">地方财政编码</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MILocalFinanceCode" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cIHTDesc" for="IHTDesc">属性分类</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="IHTDesc" ></div>
+									<div class="eq-table-td eq-table-label"><label id="cMIRemark" for="MIRemark">备注</label></div>
+									<div class="eq-table-td"><textarea id="MIRemark" class="hisui-textarea textbox"></textarea></div>
+									<div class="eq-table-td eq-table-label-button"><a id="BClear" href="#" class="hisui-linkbutton" iconCls="icon-w-clean" data-options="stopAllEventOnDisabled:true">清屏</a></div>
+								</div>
+								<div class="eq-table-tr">
+                  <div class="eq-table-td eq-table-label" id="EquipAttribute" style="padding-bottom:10px"><label>设备属性</label></div>
+									<div id="EquipAttributeList" class="eq-attribute" style="width:1094px"></div>
+								</div>
+							</div>
+						</div>
+						<div data-options="region:'center',border:false" style="position:relative;">
+							 <table id="DHCEQCMasterItem"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="MIRowID">
+			<INPUT type="hidden" id="MIEquipTypeDR">
+			<INPUT type="hidden" id="MIStatCatDR">
+			<INPUT type="hidden" id="MIUnitDR">
+			<INPUT type="hidden" id="MICatDR">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="KBSMasterItemDR">
+			<INPUT type="hidden" id="MIStandItemDR">
+			<INPUT type="hidden" id="MICFDADR">
+			<INPUT type="hidden" id="MICFDAListDR">
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/function/combotreecommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/plat/masteritem.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+﻿<!-- 
+ * FileName: dhcinsu.datacycle.csp
+ * Author: tangzf 
+ * Date: 2020-7-3
+ * Description: 医保数据生命周期查询
+-->
+<!DOCTYPE html>
+<TRAK:HEAD></TRAK:HEAD>
+<HISUI></HISUI>
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/>
+<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<style>
+		.panel-body{
+			border-color:#CCCCCC;
+		}	
+		#coninfopanel .panel-header{
+			border-bottom-width:0px;
+		}
+		#coninfopanel .panel-body{
+			border-radius:0px 0px 4px 4px!important;
+		}
+		.textbox.tb220{
+			width:220px
+		}
+		
+	</style>
+</head>
+
+<body style="padding:0px;">
+    <div class="hisui-layout" data-options="fit:true">
+    	<div data-options="region:'north',border:false,collapsible:false" style="height:134px;">
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-style:none;border-bottom-style:solid;border-radius:0" >
+				<table class='search-table' id='tQueryPanel' >
+					<tr>
+						<td class='r-label td-first-col' ><label>开始日期</label></td>
+						<td><input id="StartDate" class="hisui-datebox textbox"  /> </td>
+						<td class='r-label'><label>结束日期</label></td>
+						<td><input id="EndDate" class="hisui-datebox textbox" /> </td>
+						<td class='r-label'><label>表名</label></td>
+						<td><input id="TableName" required class="textbox tb220"/> </td>
+						<td class='r-label'><a id="btnQuery" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onClick='RunQuery()'>查询</a></td>
+						<td hidden class='r-label'><a id="btnConfig" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-setting'" onClick='Config()'>配置</a></td>
+					</tr>	
+					<tr>
+						<td class='r-label td-first-col'><label>操作类型</label></td>
+						<td><input id="OptType" class="textbox"/> </td>
+						<td class='r-label'><label>字典类型</label></td>
+						<td><input id="DicType" class="textbox"/> </td>
+						<td class='r-label'><label>关键字</label></td>
+						<td><input id="KeyCode" class="textbox tb220" placeholder="根据原始数据和新数据列模糊检索"/> </td>
+						<td class='r-label' hidden ><label>操作员</label></td>
+						<td hidden ><input id="UserCode" class="textbox" /> </td>
+						<td></td><td></td>
+						<td hidden class='r-label'><a id="btnExport" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-export'" onClick='Export()'>导出</a></td>
+					</tr>			
+				</table>
+			</div>
+		</div>
+		<div data-options="region:'center',border:false" style="height:73%" id='coninfopanel' >
+			<div id="dg"></div>
+		</div>
+	</div>
+	<DHCBILLINSUCLOUD/>
+	<script type="text/javascript" src="../scripts/dhcinsu/datacycle.js"></script>
+</body>
+</html>

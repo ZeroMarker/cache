@@ -1,3 +1,7 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <!-- dhcmdt.consportal.csp  MDT会诊门户页面 csp //-->
 <!DOCTYPE html>
 <html lang="en">
@@ -14,7 +18,16 @@
 	<script type="text/javascript" src="../scripts/dhcnewpro/plugins/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/Echarts.js" ></script>
 	<!-- ECharts文件引入 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consportal.js"></script>
+	<SERVER>
+		s IsOpenMoreScreen=##Class(web.DHCMDTConsultQuery).IsOpenMoreScreen()
+		s ToDayDate = ##class(web.DHCEMCommonUtil).DateLogicalToHtml(+$H)
+		w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+		w "var IsOpenMoreScreen="""_IsOpenMoreScreen_""";"_$c(13,10)
+		w "var ToDayDate="""_ToDayDate_""";"_$c(13,10)
+		w "</SCRIPT>"
+	</SERVER>
 </head>
 <body class="background-warp">
 	<div class="container">
@@ -25,9 +38,13 @@
 						<div class="list-icon">
 							<img src="../scripts/dhcnewpro/dhcmdt/images/infomation.png" border=0/>
 						</div>
-						<label>#(..Get("今日会诊"))#<span id="mdtday" style="margin-left:20px;">  XX-XX</span></label>
-						<div class="list-tools">
-						</div>
+						<label>#(..Get("会诊安排(日)"))#</label>
+						<span class='consPlanData'>
+							<a class='hisui-linkbutton l-btn l-btn-small' onclick='SetToDay()' style='width:60px;'>今日</a>
+							<span style='width: 5px;display: inline-block;'></span>
+							<input id='consPlanDate' class='hisui-datebox'/>
+						</span> 
+						<div class="list-tools"></div>
 		            </div>
 	            	<div class="list-order-item-day">
 						<ul id="dailyconsult" class="pf-nav">
@@ -39,7 +56,14 @@
 						<div class="list-icon">
 							<img src="../scripts/dhcnewpro/dhcmdt/images/infomation.png" border=0/>
 						</div>
-						<label>#(..Get("本周安排"))#</label>
+						<label>#(..Get("会诊安排(周)"))#</label>
+						<span class='consPlanData'>
+							<a class='hisui-linkbutton l-btn l-btn-small' onclick='SetNowWeek()' style='width:60px;'>本周</a>
+							<span style='width: 70px;display: inline-block;'></span>
+							<a class='hisui-linkbutton l-btn l-btn-small myWeekbtn' onclick='SetTopWeek()' style=''>上一周</a>
+							<span style='width: 10px;display: inline-block;'></span>
+							<a class='hisui-linkbutton l-btn l-btn-small myWeekbtn' onclick='SetNextWeek()' style=''>下一周</a>
+						</span>
 						<div class="list-tools">
 						</div>
 		            </div>
@@ -48,31 +72,31 @@
 							<div class="week-plan-title">
 								<ul class="week-nav">
 									<li class="week-nav-item border-none"></li>
-									<li class="week-nav-item">#(..Get("周一"))#</li>
-									<li class="week-nav-item">#(..Get("周二"))#</li>
-									<li class="week-nav-item">#(..Get("周三"))#</li>
-									<li class="week-nav-item">#(..Get("周四"))#</li>
-									<li class="week-nav-item">#(..Get("周五"))#</li>
+									<li class="week-nav-item weekM">#(..Get("周一"))#<label id="Week_1"></label></li>
+									<li class="week-nav-item weekM">#(..Get("周二"))#<label id="Week_2"></label></li>
+									<li class="week-nav-item weekM">#(..Get("周三"))#<label id="Week_3"></label></li>
+									<li class="week-nav-item weekM">#(..Get("周四"))#<label id="Week_4"></label></li>
+									<li class="week-nav-item weekM">#(..Get("周五"))#<label id="Week_5"></label></li>
 								</ul>
 							</div>
 							<div class="week-plan-mon">
 								<ul class="week-nav">
 									<li class="week-nav-item week-nav-item-bk border-none">#(..Get("上午"))#</li>
-									<li id="Week_1_AM" class="week-nav-item"></li>
-									<li id="Week_2_AM" class="week-nav-item"></li>
-									<li id="Week_3_AM" class="week-nav-item"></li>
-									<li id="Week_4_AM" class="week-nav-item"></li>
-									<li id="Week_5_AM" class="week-nav-item"></li>
+									<li id="Week_1_AM" class="week-nav-item weekM"></li>
+									<li id="Week_2_AM" class="week-nav-item weekM"></li>
+									<li id="Week_3_AM" class="week-nav-item weekM"></li>
+									<li id="Week_4_AM" class="week-nav-item weekM"></li>
+									<li id="Week_5_AM" class="week-nav-item weekM"></li>
 								</ul>
 							</div>
 							<div class="week-plan-aft">
 								<ul class="week-nav">
 									<li class="week-nav-item week-nav-item-bk border-none">#(..Get("下午"))#</li>
-									<li id="Week_1_PM" class="week-nav-item"></li>
-									<li id="Week_2_PM" class="week-nav-item"></li>
-									<li id="Week_3_PM" class="week-nav-item"></li>
-									<li id="Week_4_PM" class="week-nav-item"></li>
-									<li id="Week_5_PM" class="week-nav-item"></li>
+									<li id="Week_1_PM" class="week-nav-item weekM"></li>
+									<li id="Week_2_PM" class="week-nav-item weekM"></li>
+									<li id="Week_3_PM" class="week-nav-item weekM"></li>
+									<li id="Week_4_PM" class="week-nav-item weekM"></li>
+									<li id="Week_5_PM" class="week-nav-item weekM"></li>
 								</ul>
 							</div>
 						</div>
@@ -80,6 +104,7 @@
 				</div>
 			</div>
 			<div class="view-first-right">
+				
 				<div class="view-first-right-top">
 					<ul class="bt-nav">
 						<li id="appoint" class="bt-nav-item">
@@ -87,7 +112,7 @@
 							<div class="bt-item-center app-center"></div>
 							<div class="bt-item-right app-right"></div>
 							<div class="item-text">
-								<div class="item-warn">#(..Get("预约"))#</div>
+								<div class="item-warn">#(..Get("安排"))#</div>
 							</div>
 						</li>
 						<li id="schedule" class="bt-nav-item bt-nav-item-left">

@@ -1,4 +1,4 @@
-<!--����������-->
+﻿<!--消毒包发放（可以自己创建单据，随意发放消毒包）-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
 	i ##Class(websys.SessionEvents).SessionExpired() q 1
@@ -6,7 +6,7 @@
 </csp:method>
 <html lang="zh-CN">
 <SERVER>
-	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop��ӡ
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
 </SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
@@ -14,76 +14,114 @@
 	<HISUI/>
 	<CSSDHISUI/>
 </head>
-<body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:4px">
-		<div class="hisui-panel" data-options="title:'����������',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="UomTB">
-				<table class="Condition" id="MainCondition">
-					<tr>
-						<td>
-							���ſ���
-							<input id="fromLocDr" name="fromLocDr" class="textbox hisui-combobox">
-						</td>
-						<td>
-							���տ���
-							<input id="toLocDr" name="toLocDr" class="textbox hisui-combobox">
-						</td>
-						<td>
-							<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">��ѯ</a>
-						</td>
-					</tr>
-        			<tr>
-						<td>
-							��ʼ����
-							<input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq" >
-						</td>
-						<td>
-							��������
-							<input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq" >
-						</td>
-						<td>
-        					<a href="#" id="SaveBT" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="width:130px;">����</a>
-        				</td>
-					</tr>	
-					<tr>
-						<td>
-							<label>������</label>
-							<input class="textbox" id="fromUser" name="fromUser">
-							<input class="textbox" hidden id="fromUserDr" name="fromUserDr">
-						</td>
-						<td>
-							<input class='hisui-radio' data-options="checked:'true'" type="radio" label='ȫ��' name='FStatus' value=''>
-        					<input class='hisui-radio' type="radio" label='�½�' name='FStatus' value='N'>
-        					<input class='hisui-radio' type="radio" label='�ύ' name='FStatus' value='Y'>
-        				</td>
-        				<td>
-							<a href="#" id="Print" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-print'">��ӡ���ŵ�</a>
-							<input id="isOPRFlag" name="isOPRFlag" value="Y" hidden >
-						</td>
-        			</tr>
-				</table>
+<body id="OprLayOut" class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'west',border:false" class="GridPadding" style="width:620px;padding-right:0">
+		<div class="hisui-panel" data-options="title:'消毒包发放',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table class="Condition" id="MainCondition"  onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="Type" name="Type" value="Y" type="hidden">
+						<tr>
+							<td><label class="required">*</label><label>起始日期</label><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox" style="width:120px"></td>
+							<td><input id="FStartTime" name="FStartTime" class="textbox hisui-timespinner" data-options="showSeconds:true" style="width:90px"></td>
+							<td><label>发放科室</label><input id="fromLocDr" name="fromLocDr" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>截止日期</label><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox" style="width:120px"></td>
+							<td><input id="FEndTime" name="FEndTime" class="textbox hisui-timespinner" data-options="showSeconds:true" style="width:90px"></td>
+							<td><label>接收科室</label><input id="toLocDr" name="toLocDr" class="textbox hisui-combobox" style="width:120px"></td>
+							<td><input id="LocDefaultFlag" name="LocDefaultFlag" class="hisui-checkbox" type="checkbox" label="默认"></td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<label>标签</label><input id="Label" name="Label" class="textbox" style="width:213px;">
+							</td>
+							<td><label>发放人</label><input class="textbox" id="fromUserDr" name="fromUserDr" style="width:120px"></td>
+							<td>
+								<a href="#" id="SaveBT" class="textbox hisui-linkbutton" data-options="iconCls:'icon-w-add'">新建</a>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2" align="left">
+								<input class='hisui-radio' data-options="checked:'true'" type="radio" label='全部' name='FComplateFlag' value=''>
+								<input class='hisui-radio' type="radio" label='未提交' name='FComplateFlag' value='N'>
+								<input class='hisui-radio' type="radio" label='已提交' name='FComplateFlag' value='Y'>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="MainList"></table>
+				</div>
 			</div>
-			<table id="MainList"></table>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:500px;padding-left:0px">
-		<div class="hisui-panel" data-options="title:'��������',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div  id="InputTB"> 
-				<table  class="Condition ">
-					<tr>
-						<td><label>����</label><input class="hisui-numberbox" id="BarCode" name="BarCode"></td>
-					</tr>
-				</table>
-			</div>
-			<table id="ItemList"></table>
-		</div>
-	</div>
-	
 
-<script type="text/javascript" src="../scripts/cssd/Disp/DispCommon.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Disp/FindWinByOprDisp.js"></script>	
-<script type="text/javascript" src="../scripts/cssd/Disp/OprDispInfo.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Disp/DispPrint.js"></script>
+	<div data-options="region:'center',border:false">
+		<div id="DispLayout" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false" class="GridPadding">
+				<div class="hisui-panel" data-options="title:'已发放标签',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',collapsible:false" style="border:none;border-bottom:1px solid #CCCCCC;">
+							<table class="Condition">
+								<tr>
+									<td colspan="2">
+										<input class="textbox" id="BarCode" name="BarCode" style="width:150px;">
+										<a href="#" id="UseBarCodeBT" class="hisui-linkbutton" data-options="plain:true"></a>
+										<a href="#" title="切换扫码模式" id="BarCodeSwitchBT" class="hisui-linkbutton">切换</a>
+										<input type="password" class="textbox" id="BarCodeHidden" style="border:0px;background:none;opacity:0.0;width:1px;">
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false">
+							<div id="DispTabs" class="hisui-tabs tabs-gray" data-options="tabPosition:'top',fit:true,border:false">
+								<div title="发放详情" data-options="fit:true">
+									<table id="ItemList"></table>
+								</div>
+								<div title="发放汇总" data-options="fit:true">
+									<table id="DispItmSumGrid"></table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'east',border:false" class="GridPadding" style="padding-left:0px;width:300px;">
+				<div class="hisui-panel" data-options="title:'未发放标签',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false,collapsible:false"style="height:130px">
+							<table id="UnDispConditions" class="Condition">
+								<tr>
+									<td><label>起始日期</label><input id="SelReqStartDate1" name="StartDate" class="textbox hisui-datebox" style="width:115px"></td>
+									<td><a href="#" id="SelReqSearchBT" class="textbox hisui-linkbutton"style="width:86px">查询</a></td>
+								</tr>
+								<tr>
+									<td><label>截止日期</label><input id="SelReqEndDate1" name="EndDate" class="textbox hisui-datebox" style="width:115px"></td>
+									<td><a href="#" id="SelReqAddBT" class="textbox hisui-linkbutton">批量添加</a></td>
+								</tr>
+								<tr>
+									<td><label>消毒包</label><input id="packageDesc" name="packageDesc" class="textbox hisui-combobox" style="width:115px"></td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="UnDispGrid"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div>
+		<audio src="" id="snd_ie" hidden="true"></audio>
+	</div>
+
+	<script type="text/javascript" src="../scripts/cssd/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonmedia.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/DispCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/DispPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Disp/OprDispInfo.js"></script>
 </body>
 </html>

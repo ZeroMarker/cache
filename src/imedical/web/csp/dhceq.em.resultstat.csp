@@ -1,0 +1,56 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s InventoryDR=$Get(%request.Data("InventoryDR",1))
+	s StoreLocDR=$Get(%request.Data("StoreLocDR",1))
+	s StoreLoc=##class(web.DHCEQCommon).GetTrakNameByID("dept",StoreLocDR)
+	
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+	s OptFlag=+##class(web.DHCEQCommon).GetSysInfo("992016")
+	d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+</script>
+
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>º”‘ÿ÷–°§°§°§</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true" style="border-color:#ccc">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="DHCEQInventoryResultStat" class="hisui-datagrid" border="0" data-options="fit:true"></table>
+					<!--span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;"></span-->
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--“˛≤ÿ‘™Àÿ-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="InventoryDR" value="#(InventoryDR)#">
+			<INPUT type="hidden" id="StoreLocDR" value="#(StoreLocDR)#">
+			<INPUT type="hidden" id="StoreLoc" value="#(StoreLoc)#">
+			
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<INPUT type="hidden" id="OptFlag" value=#(OptFlag)#>
+			<INPUT TYPE="hidden" id="GetTempNum" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetTempNum")))#>
+			<INPUT TYPE="hidden" id="GetTempList" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetTempList")))#>
+			<INPUT TYPE="hidden" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/resultstat.js'></script>
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
+</body>
+</html>

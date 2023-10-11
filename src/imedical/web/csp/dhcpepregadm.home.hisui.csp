@@ -1,0 +1,156 @@
+
+<!--
+ * FileName: dhcpepregadm.home.hisui.csp
+ * Anchor: xy
+ * Date: 2020-12-29
+ * Description: HISUI 主场团体
+-->
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    /*padding: 0 10px;*/
+}
+.r-label{
+    padding-left: 10px;
+}
+.r-label-1{
+    padding-left: 20px;
+}
+.newclsInvalid{
+    border-color: red;
+    color: red;
+}
+.panel-header{
+    border-bottom: 0;
+}
+
+
+</style>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+    s PGADMDr=$g(%request.Data("PGADMDr",1))
+    s Type=$g(%request.Data("Type",1))      
+</SCRIPT> 
+<script type="text/javascript">
+    var PGADMDr="#(PGADMDr)#"
+    var Type="#(Type)#"
+    
+</script>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+    <div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:102px;padding:10px 10px 0 10px;">
+        <div class="hisui-panel" fit="true" data-options="title:'',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-apply-check'" style="border-radius:4px 4px 0px 0px;">
+            <table class="search-table">
+                <tr> 
+                    <td class="r-label"><label for="BeginDate"><font color="red">*</font>开始日期</label></td>
+                    <td>
+                        <input id="BeginDate" class="hisui-datebox textbox">
+                    </td>
+                    <td class="r-label r-label-1"><label for="Num"><font color="red">*</font>每日人数</label></td>
+                    <td>
+                        <input id="Num" class="hisui-validatebox" type="text">
+                    </td>
+                    <td class="r-label-1">
+                        <a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+                    </td>
+                    
+                    <td class="r-label-1">
+                        <a id="BUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">更新</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label"><label for="EndDate"><font color="red">*</font>结束日期</label></td>
+                    <td>
+                        <input id="EndDate" class="hisui-datebox textbox">
+                    </td>
+                    <td class="r-label r-label-1"><label for="Remark">备注</label></td>
+                    <td>
+                        <input id="Remark" class="hisui-validatebox" type="text">
+                    </td>
+                    <td class="r-label-1">
+                        <a id="BDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+                    </td>   
+                    <td><input type="hidden" id="RowId"/></td>
+
+                </tr>
+                        
+            </table>
+        </div>
+    </div>
+        <div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+            <div class="hisui-panel" fit="true" data-options="bodyCls:'panel-body-gray'" style="height:100%;border-top:0;border-radius:0 0 4px 4px;">
+                    <table data-options="bodyCls:'panel-header-gray'" id="PreGADMHomeGrid"></table>
+                </div>
+            </div>
+</div>
+
+<!--时段信息弹窗-->
+<div id='PreTemplateTimeWin' style="overflow: hidden;"></div>
+ <!--div id='PreTemplateTimeWin' style="display:none;">
+     <div data-options="region:'north',split:false,border:true" style="height:101px;padding:10px;">
+        <div style="border:1px solid #ccc;border-radius:4px 4px 0 0;">
+            <table class="search-table">
+        
+            <tr>
+                <td class="r-label"><label for="StartTime">开始时间</label></td>
+                <td>
+                    <input class="textbox" id="StartTime"/>
+                </td>
+                
+                <td class="r-label"><label for="EndTime">结束时间</label></td>
+                <td>
+                    <input class="textbox" id="EndTime"/>
+                </td>
+                
+                <td style="padding-left:10px">
+                    <a id="BTUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">更新</a>
+                </td>   
+                
+            </tr>
+            
+            <tr>
+                <td class="r-label"><label for="TimeNum">数量</label></td>
+                <td>
+                    <input class="textbox" id="TimeNum"/>
+                </td>
+                <td class="r-label"></td>
+                <td style="padding-left:10px">
+                    <a id="BTDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">删除</a>
+                </td>   
+                
+            </tr>
+        
+        </table>
+    </div>
+    
+        <div style="height:490px;border-top:0px solid #ccc;border-left:1px solid #ccc;border-right:1px solid #ccc;border-bottom:1px solid #ccc;border-radius:0px 0px 4px 4px">
+            <table data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" id="PreTemplateTimeGrid"></table>
+        </div>      
+        
+     </div>
+
+ </div-->
+ 
+ 
+<script type="text/javascript" src="../scripts/DHCPEPreGADM.Home.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  
+</body>     
+</html>
+            
+        

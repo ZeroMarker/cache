@@ -6,14 +6,17 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--
  <script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
  <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
  <SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+  -->
 <HISUI></HISUI>
 <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcdoc/css/simplydatagrid.css"></LINK>
 <style>
-	#panel-footer{
-		margin-top:10px;
+	#panel-footer>*{
+		margin:auto 20px;
 	}
 	#ItemIframeTemplate{
 		width:100%;
@@ -70,6 +73,13 @@
 		overflow-x:auto;
 		overflow-y:hidden;
 	}
+	.panel-header-card{
+		border-color: #ccc;
+	}
+	.panel-header-card+.panel-body{
+		border-color: #ccc;
+		border-radius: 4px;
+	}
 </style>
 <Server>
  s EpisodeID=%request.Get("EpisodeID")
@@ -83,8 +93,10 @@
  s AdmLoc=$P(^PAADM(EpisodeID),"^",4)
  s HospitalDR=$P(^CTLOC(AdmLoc),"^",22)
  i HospitalDR="" s HospitalDR=$O(^CT("HOSP",0))
+ s AdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+ s ConfigPre=$CASE(AdmType,"I":"IP","E":"EP",:"OP")
  //无阴性结果/用药记录可以开立治疗医嘱 
- s EntryTreatOrdWhenNotHaveSkinOrd=##Class(web.DHCDocConfig).GetConfigNode("EntryTreatOrdWhenNotHaveSkinOrd",HospitalDR)
+ s EntryTreatOrdWhenNotHaveSkinOrd=##Class(web.DHCDocConfig).GetConfigNode(ConfigPre_"EntryTreatOrdWhenNotHaveSkinOrd",HospitalDR)
  
 </Server>
   </head>

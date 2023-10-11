@@ -1,0 +1,474 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.nursereferconfig.csp -->
+	<title>常规护理任务配置8.6</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:480px;
+			height:423px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:470px;
+			height:274px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.right-hisui-panel{
+			
+			height: calc(50% - 5px);
+		}
+		table.search-table.processconfig-table td{
+			line-height:28px;	
+		}
+		.search-table td.r-label{
+			padding: 5px;
+			width: 10px;
+    white-space: nowrap;
+    padding-left: 10px;
+    padding-right: 10px;
+		}
+		.search-table td {
+    padding-top: 10px;
+}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:40px;display:none;">
+			<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+			<input id="_HospList" class="textbox"/>
+		</div>
+		
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+
+				<div data-options="region:'west',border:false,split:true" style="width:500px;" >
+					<div class="right-hisui-panel" >
+						<div class="hisui-panel" title="#(..Get("显示设置-任务列表"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="general"></table>
+						</div>
+					</div>
+					
+					<div class="right-hisui-panel" style="margin-top:10px">
+						<div class="hisui-panel" title="#(..Get("显示设置-医嘱单据项"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="order"></table>
+						</div>
+					</div>
+					<div class="right-hisui-panel" style="margin-top:10px" >
+						<div class="hisui-panel" title="#(..Get("显示设置-体征任务项"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="sign"></table>
+						</div>
+					</div>
+					<div class="right-hisui-panel" style="margin-top:10px" >
+						<div class="hisui-panel" title="#(..Get("显示设置-评估任务项"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="assess"></table>
+						</div>
+					</div>
+					<div class="right-hisui-panel" style="margin-top:10px" >
+						<div class="hisui-panel" title="#(..Get("显示设置-治疗处置"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="czzl"></table>
+						</div>
+					</div>
+					<div class="right-hisui-panel" style="margin-top:10px" >
+						<div class="hisui-panel" title="#(..Get("显示设置-护理计划"))#" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="plan"></table>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false,split:true" style="">
+					<div class="hisui-panel"  title="#(..Get("任务规则列表"))#" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+						
+						<table class="search-table processconfig-table" style="">
+							
+							<tr  style="display:none;">
+								<td class="r-label">
+									<label>#(..Get("时间轴顺序"))#</label>
+								</td>
+								<td>
+									<input class="hisui-radio" value="1" name="sortNo" type="radio" label="升" data-options="radioClass:'hischeckbox_square-blue',required:true" id="sortNo_1">
+									<input class="hisui-radio" value="0" name="sortNo" type="radio" label="降" data-options="radioClass:'hischeckbox_square-blue',required:true" id="sortNo_2">
+								</td>
+								<td class="l-label">
+									<span class="plan-notes" style="white-space: nowrap;">#(..Get("说明：勾选后，任务总览业务界面左侧时间按照勾选的设置排序"))#</span>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("时间轴范围-开始时间"))#</label></td>
+								<td>
+								<input id="sortStartTime"  class="textbox hisui-validatebox" data-options="showSeconds:false" style="border-radius: 2px;width:100px;" value="00">
+								</td>
+								<td class="r-label">
+									<span class="plan-notes"></span>
+								</td>
+							</tr>
+							
+							<tr>
+								<td class="r-label"><label>#(..Get("时间轴范围-结束时间"))#</label></td>
+								<td>
+								<input  id="sortEndTime" class="textbox hisui-validatebox" data-options="showSeconds:false" style="border-radius: 2px;width:100px;" value="23">
+								</td>
+								<td class="r-label">
+									<span class="plan-notes"></span>
+								</td>
+							</tr>
+							
+							<tr>
+								<td class="r-label"><label>#(..Get("检索时间-间隔天数"))#</label></td>
+								<td><input id="dayNum"  type="text" class="textbox hisui-validatebox" style="border-radius: 2px;width:100px;" value="0"></td>
+								<td class="l-label">
+									<span class="plan-notes" style="white-space: nowrap;margin-left: 10px;">#(..Get("说明：默认为当天，往后加n天为结束日期"))#</span>
+								</td>
+								
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("检索时间-开始时间"))#</label></td>
+								<td>
+								<input id="startTime" class="textbox hisui-validatebox" data-options="showSeconds:false" style="border-radius: 2px;width:100px;" value="08:00">
+								</td>
+								<td class="r-label">
+									<span class="plan-notes"></span>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("检索时间-结束时间"))#</label></td>
+								<td>
+								<input id="endTime" class="textbox hisui-validatebox" data-options="showSeconds:false" style="border-radius: 2px;width:100px;" value="23:59">
+								</td>
+								<td class="r-label">
+									<span class="plan-notes"></span>
+								</td>
+							</tr>
+						
+							<tr  style="display:none;">
+								<td class="r-label"><label>#(..Get("默认显示"))#</label></td>
+								<td>
+									<input class="hisui-radio" value="1" name="showTable" type="radio" label="表格" data-options="radioClass:'hischeckbox_square-blue',required:true" id="showTable_1">
+									<input class="hisui-radio" value="0" name="showTable" type="radio" label="图表" data-options="radioClass:'hischeckbox_square-blue',required:true" id="showTable_2">
+						
+								
+								</td>
+								<td class="r-label">
+									<span class="plan-notes"></span>
+								</td>
+							</tr>
+							
+							<tr style="display:none;">
+								<td class="r-label"><label>#(..Get("超时时间"))#</label></td>
+								<td><input id="moreThanTime"  type="text" class="textbox hisui-validatebox" style="border-radius: 2px;width:73px;" value="0"></td>
+								<td class="l-label">
+									<span class="plan-notes">#(..Get("说明：默认为当前日期，往前加n小时为结束时间"))#</span>
+								</td>
+								
+							</tr>
+							
+							<tr>
+								<td class="r-label" colspan="2" style="text-align:center;">
+									<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>  
+								</td>
+								
+							</tr>
+						</table>
+		
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="dialogRefer"></div>
+	
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<!--script type="text/javascript" src="../scripts/nurse/hisui/NurseQuestionPlanComConfig.js"></script-->
+<script type="text/javascript">
+	
+var GLOBAL = {
+	HospEnvironment: true,
+	HospitalID: session['LOGON.HOSPID'],
+	WardID: session['LOGON.WARDID'],
+};
+$(function() {
+	///加载左边列表
+	initTable()
+	///加载右侧数据
+	setInputValue("sortStartTime")
+	setInputValue("sortEndTime")
+	setInputValue("startTime")
+	setInputValue("endTime")
+	setInputValue("dayNum")
+	
+})	
+
+
+
+var obj_parmas={}
+///加载右边的控件数据
+function setInputValue(code){
+	var parmas={
+		hospID:GLOBAL.HospitalID,
+		wardID:GLOBAL.WardID,
+		code:code
+	}
+	runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","getSeleteNursingTask",parmas,function(rtn){
+			obj_parmas[code]=rtn.value
+			$("#"+code).val(rtn.value)
+		},'json',false);	
+}
+
+
+function getInsertNursingTask(code,isShow,value){
+	
+	var parmas={
+			hospID:GLOBAL.HospitalID,
+			wardID:GLOBAL.WardID,
+			code:code,
+			isShow:isShow,
+			value:value
+			
+		}
+			
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","getInsertNursingTask",{data:JSON.stringify(parmas)},function(rtn){
+			
+		},'json',false);	
+}
+
+$("#BSave").on("click",function(){
+
+	
+	var sortStartTime=$("#sortStartTime").timespinner("getValue")
+	var sortEndTime=$("#sortEndTime").timespinner("getValue")
+	var startTime=$("#startTime").timespinner("getValue")
+	var endTime=$("#endTime").timespinner("getValue")
+	var dayNum=$("#dayNum").val()
+	getInsertNursingTask("sortStartTime","1",sortStartTime)
+	getInsertNursingTask("sortEndTime","1",sortEndTime)
+	getInsertNursingTask("startTime","1",startTime)
+	getInsertNursingTask("endTime","1",endTime)
+	getInsertNursingTask("dayNum","1",dayNum)
+	$.messager.popover({msg:$g('保存成功！'),type:'success'});
+
+})
+
+function setRadioValue(code){
+	var parmas={
+		hospID:GLOBAL.HospitalID,
+		wardID:GLOBAL.WardID,
+		code:code
+		}
+	runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","getSeleteNursingTask",parmas,function(rtn){
+			var val=rtn.isShow
+			$("input[type=radio][name="+code+"][value="+val+"]").radio("check")
+		},'json',false);	
+}
+function insertView(gid,saveFlag){
+		var id=""
+		if(saveFlag==2){
+			var rows = $('#'+gid).datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				$.messager.alert($g("提示"),$g("请选择一条数据"));
+				return false;
+			}
+			var row = $("#"+gid).datagrid("getSelected");
+			id=row.ID
+		}
+
+		
+		var hospid = session['LOGON.HOSPID']
+		var url="nur.hisui.nursingtask.view.general.insert.csp?id="+id+"&comboxType="+gid+"&hospID="+GLOBAL.HospitalID
+		var text=$g("显示设置")
+		$('#dialogRefer').dialog({    
+    		title: text,    
+    		width: 500,    
+    		height: 400,    
+    		closed: false,    
+    		cache: false,
+    		iconCls:'icon-w-edit',
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:$g('关闭'),
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			},{
+				text:$g('保存'),
+				iconCls:'icon-w-save',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						$.messager.popover({msg:$g('保存成功！'),type:'success'});
+						initTable()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert($g('提示'),$g(rsTxt) , "info");	
+					}
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+    	
+	}
+var grid={
+	 ToolBar:function(gid){
+		var ToolBar = [{
+	        text: $g('新增'),
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        insertView(gid,1)
+		    }
+	    },{
+	        text: $g('修改'),
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        insertView(gid,2)
+		    }
+	    },{
+	        text: $g('删除'),
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					$.messager.alert($g("提示"),$g("请选择需要删除的记录！"));
+					return false;
+				}
+			
+				$.messager.confirm($g('确认'),$g('您确认想要删除记录吗？'),function(r){    
+				    if (r){
+					   var row = $("#"+gid).datagrid("getSelected");
+					   runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetDeleteTaskRuleSettingById",{id:row.ID},function(rtn){
+							if(rtn == 0) {
+								$.messager.popover({msg:$g('删除成功！'),type:'success'});
+								initTable()
+							} else {
+								
+							}
+							
+						},'json',false);
+				    }    
+				}); 
+	        }
+	    }];
+		return ToolBar
+	}
+}	
+
+	
+	// 初始化显示设置
+function initTable(){
+	
+	
+	$('#general').datagrid({fit:true,singleSelect : true,fitColumns:true,idField:"ID",toolbar :grid.ToolBar("general"),columns :[[{field:'text',title:'别名',width:160},{field:'taskItemDesc',title:'任务项',width:160},{field:'sortNo',title:'排序号',width:160}]]});
+	
+	$('#order').datagrid({fit:true,singleSelect : true,fitColumns:true,idField:"ID",toolbar :grid.ToolBar("order"),columns :[[{field:'text',title:'别名',width:160},{field:'taskItemDesc',title:'任务项',width:160},{field:'sortNo',title:'排序号',width:160}]]});
+	
+	$('#sign').datagrid({fit:true,singleSelect : true,fitColumns:true,idField:"ID",toolbar :grid.ToolBar("sign"),columns :[[{field:'text',title:'别名',width:160},{field:'taskItemDesc',title:'任务项',width:160},{field:'sortNo',title:'排序号',width:160}]]});	
+	
+	$('#assess').datagrid({fit:true,singleSelect : true,fitColumns:true,idField:"ID",toolbar :grid.ToolBar("assess"),columns :[[{field:'text',title:'别名',width:160},{field:'taskItemDesc',title:'任务项',width:160},{field:'sortNo',title:'排序号',width:160}]]});	
+	
+	$('#czzl').datagrid({fit:true,singleSelect : true,fitColumns:true,idField:"ID",toolbar :grid.ToolBar("czzl"),columns :[[{field:'text',title:'别名',width:160},{field:'taskItemDesc',title:'任务项',width:160},{field:'sortNo',title:'排序号',width:160}]]});	
+
+	$('#plan').datagrid({fit:true,singleSelect : true,fitColumns:true,idField:"ID",toolbar :grid.ToolBar("plan"),columns :[[{field:'text',title:'别名',width:160},{field:'taskItemDesc',title:'任务项',width:160},{field:'sortNo',title:'排序号',width:160}]]});	
+	
+    reloadSheetParamsGrid("general")
+    reloadSheetParamsGrid("order")
+    reloadSheetParamsGrid("sign")
+    reloadSheetParamsGrid("assess")
+    reloadSheetParamsGrid("plan")
+    reloadSheetParamsGrid("czzl")  
+}
+
+
+
+function reloadSheetParamsGrid(gid){
+	var param={
+		hospID:GLOBAL.HospitalID,
+		wardID:GLOBAL.WardID,
+		type:gid
+	}
+	runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskRuleSettingList",param,function(rtn){
+			$("#"+gid).datagrid("unselectAll");
+			$("#"+gid).datagrid('loadData', rtn)
+			
+	},'json',true);
+	
+}
+
+
+</script>
+</body>
+</html>

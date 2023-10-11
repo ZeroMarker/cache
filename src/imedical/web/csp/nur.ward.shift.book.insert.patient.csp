@@ -1,0 +1,383 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.ward.shift.book.insert.patient.csp -->
+	<title>新增交班患者</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+        #shiftTime td{
+	    	width:50%;
+	    	height:50%;  
+	    	border: 1px solid #ddd;  
+	    }
+	    #shiftTime td div.config{
+	    	
+    		display: inline-block;
+    		height: 100%;
+    		width: 100%;    
+	    }
+	    #shiftTime td div.config-name{
+	    	text-align: center;
+    		font-size: 18px;
+    		font-weight: bold;
+	    }
+	    .config-item{
+			margin-top:10px;    
+		}
+		.config-text{
+			width: 100px;
+    		display: inline-block;	
+		}
+		div.config-content.show{
+			display:block;
+		}
+		div.config-content.hidden{
+			display:none;
+		}
+			table#table-patient td.tdlabel {
+    width: 85px;
+}
+table#table-patient td{
+	padding-bottom: 10px;
+	border-color: #ccc;	
+}
+table#table-patient td .combo{
+	
+	border-color: #ccc !important;	
+}
+.searchbox{
+	border-color: #ccc;	
+}
+	</STYLE>
+</head>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+	
+	<SCRIPT language="cache" RUNAT="SERVER">
+ 		n (%request,%session,%response)
+ 		s ShiftID = $G(%request.Data("ShiftID", 1))
+ 		s WardID = $G(%request.Data("WardID", 1))
+ 		s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+ 	</SCRIPT>
+ 	
+ 	<script language="javascript">
+	   var ShiftID="#(ShiftID)#";
+	   var WardID="#(WardID)#"
+	   var ShiftBookID="#(ShiftBookID)#"
+	</script>  
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:40px;">
+				<span style="margin-right:10px;">#(..Get("登记号"))#</span><input class="hisui-searchbox"  id="desc" name="desc">
+				<span style="margin-right:10px;">#(..Get("病区"))#</span><input class="text"  id="Wards">
+				  													
+		</div>
+		
+		<div data-options="region:'center',split:true,border:false">
+			<table style="width:100%;height:100%;">
+				<tr><td style="height:200px;">
+					<div class="hisui-panel" title="" style="padding:0px;overflow: hidden;heigth:200px;" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+						<table id="dictList"></table>	
+					</div>
+				</td></tr>
+				<tr><td style="height:100px;">
+						<table style="margin-top: 0px;width:100%;" id="table-patient" class="table-patient" border="0" borderColor="#ddd" style="width:100%;height:100%;"></table>
+					
+				</td>
+				<tr><td></td></tr>
+				</tr>
+			</table>
+			
+		
+		</div>
+	
+	</div>
+	
+	<div id="dialogRefer"></div>
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script language="javascript">
+	$.fn.watch = function (callback) {
+        return this.each(function () {
+            //缓存以前的值
+            $.data(this, 'originVal', $(this).val());
+            $(this).on('keyup paste input propertychange', function () {
+                var originVal = $.data(this, 'originVal');
+                var currentVal = $(this).val();
+                if (originVal !== currentVal) {
+                    $.data(this, 'originVal', $(this).val());
+                    callback(currentVal,originVal,$(this));
+                }
+            });
+        });
+    }
+
+</script>
+<script type="text/javascript">
+	$(function(){
+		$method.datagrid("dictList")
+		$("input[name=desc]").watch(function(value,oldval,ele) {
+			console.log(value)
+			$method.gridData("dictList")
+		})
+		
+				///取所有的科室
+        runClassMethodNew("Nur.NIS.Service.Base.Ward","GetallWardNew",{IsQuery:"true",desc: "",hospid: session['LOGON.HOSPID'],bizTable: "Nur_IP_Question"},
+            function(obj){
+	            var wardjson=[]
+	             for(var i=0;i<obj.rows.length;i++){
+		             var json={}
+		             json.value=obj.rows[i].wardid
+		             json.text=obj.rows[i].warddesc
+		             
+		             wardjson.push(json)
+		             
+		          }
+		          
+		          $HUI.combobox("#Wards", {
+			        valueField: "value",
+			        textField: "text",
+			        
+			        selectOnNavigation: false,
+			        panelHeight: "210",
+			        editable: false,
+			        
+			    });
+			    var data={"data":wardjson}
+			    data.onSelect=function(obj){
+				    WardsOnselect(obj)
+				 }
+				$("#Wards").combobox(data)
+			    
+			    
+		          
+		          
+	   },'json',false)
+	})
+	
+	
+	function WardsOnselect(obj){
+		var WardID=obj.value
+		
+		
+		runClassMethod("Nur.NIS.Service.Base.Ward","GetBeds",{"WardID":WardID},
+            function(rtn){
+	            var gridData=[]
+	            for(var i=0;i<rtn.length;i++){
+		        	var patient=rtn[i].patient    
+		        	if(typeof(patient.bedCode)!="undefined"){
+		        		var json={
+				        	bedCode:patient.bedCode,
+				        	regNo:	patient.regNo,
+				        	cname:patient.name,
+				        	inHostDate:patient.inDeptDateTime,
+				        	outHostDate:"",
+				        	episodeID:patient.episodeID
+				        }
+				        gridData.push(json)
+		        	}
+		        }
+			    
+		        $("#dictList").datagrid("unselectAll");
+				$("#dictList").datagrid('loadData', gridData)
+		          
+	   		},'json',false)
+		
+	}
+	
+	
+	var $method={
+		datagrid:function(tableID){
+			$('#'+tableID).datagrid({
+				fit:true,
+				singleSelect : true,
+				fitColumns:true,
+				idField:"ID",
+				rownumbers : true,
+				//toolbar :$method.toolBar(tableID),
+				columns :[[
+					{field:'bedCode',title:$g('床号'),width:80},
+					{field:'regNo',title:$g('登记号'),width:100},
+					{field:'cname',title:$g('姓名'),width:100},
+					{field:'inHostDate',title:$g('入院时间'),width:150},
+					{field:'outHostDate',title:$g('出院时间'),width:150},
+				]],
+				onClickRow:function(index,row){
+					
+				}
+			});	
+			$method.gridData(tableID)
+			$("#table-patient").html("")
+			var xcTopContors=getPatientDialogContors()
+			
+			for(var i=0;i<xcTopContors.length;i++){
+				var key = xcTopContors[i].id
+				createInputHtml("table-patient",xcTopContors,key,0)
+			}
+			var inputw=0
+			for(var i=0;i<xcTopContors.length;i++){
+				var obj = xcTopContors[i]
+				var thisw=$("#"+obj.id).parents("td").outerWidth()-10
+				if(thisw>inputw) inputw=thisw
+			}
+			
+			
+			for(var i=0;i<xcTopContors.length;i++){
+				var obj = xcTopContors[i]
+				$("#"+obj.id).width(inputw)
+				if(obj.type=="combox"){
+					getComboxLocalData(obj)
+				}
+			}
+		},
+		gridData:function(gid){
+			var desc=$("input[name=desc]").val()
+			runClassMethodNew("Nur.SHIFT.Service.ShiftController","QueryEpisodeInfo",{
+				page:1,    //可选项，页码，默认1
+				rows:1000,    //可选项，获取多少条数据，默认50
+				IsQuery:true,
+				RegNo:desc,
+				
+			},function(rs){
+				
+				if(rs.rows.length>0){
+					runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetAllGenral",{"ShiftBookID":ShiftBookID},function(rtn){
+						//患者最新住院记录
+						if(rtn.addPatRole=="2"){
+							var fistRow=rs.rows[0]
+							//取第一条记录
+							rs.rows=[]
+							rs.rows.push(fistRow)
+							
+						}
+						console.log(rs)
+						$("#"+gid).datagrid("unselectAll");
+						$("#"+gid).datagrid('loadData', rs)
+					
+					},'json',false);
+				}
+				
+				
+				
+				
+			},'json',false)
+		},
+		savePatient:function(ShiftID,WardID,Date){
+			var gid="dictList"
+			var row = $("#"+gid).datagrid("getSelected");	
+			if(!row){
+				return false;	
+			}
+			var controlArrs=getPatientDialogContors()
+			var topParms = resultParms(controlArrs)
+			if(topParms==""){
+				$.messager.popover({msg:$g('存在必填项为空！'),type:'error'});
+				return false;	
+			}
+			topParms.WardID=WardID;
+			topParms.Date=Date
+			topParms.ShiftID=ShiftID
+			topParms.PatientID=row.episodeID
+			topParms.UserID=session["LOGON.USERID"]
+			var flag=""
+			runClassMethod("Nur.SHIFT.Service.ShiftDetailController","InsertPatient",{data:JSON.stringify(topParms)},function(rtn){
+				flag=rtn
+			},'json',false)
+			return flag
+		}
+		
+	}
+	
+	
+	
+///新增-患者弹窗的控件
+function getPatientDialogContors(){
+	//var shiftTimeList=GLOBAL.shiftData.shiftTimeList
+	//var detailColumns=GLOBAL.shiftData.detailLeftArea
+	
+
+	var detailColumns=""
+	runClassMethod("Nur.SHIFT.Service.ShiftDetailController","GetDetailLeftData",{"ShiftID":ShiftID},function(rtn){
+			detailColumns=rtn.data
+	},'json',false);
+	
+	
+	var shiftTimeList=""
+	
+	runClassMethod("Nur.SHIFT.Service.ShiftController","GetAreaShiftTime",{"ShiftID":ShiftID},function(rtn){
+			shiftTimeList=rtn.data
+		},'json',false);
+	
+	var shiftTimes=[]
+	for(var i=0;i<shiftTimeList.length;i++){
+		var shiftData=shiftTimeList[i]
+		var TimeID=shiftData.ID
+		var ShiftName=shiftData.ShiftName
+		var array={"text":$g(ShiftName),"value":TimeID}
+		shiftTimes.push(array)
+	}
+	var detailProjects=[]
+	for(var i=0;i<detailColumns.length;i++){
+		var detailProject=detailColumns[i]
+		var text=detailProject.title
+		var projectID=detailProject.ProjectID
+		var array={"text":$g(text),"value":projectID}
+		detailProjects.push(array)
+	}
+	var DeptData=[]
+	runClassMethod("Nur.SHIFT.Service.ShiftController","getAllLocData",{"wardID":WardID},function(rtn){
+	    for(var i=0;i<rtn.length;i++){
+		    var array={"text":$g(rtn[i].desc),"value":rtn[i].rowId}
+			DeptData.push(array)
+		}
+		
+	    
+    },"json",false)
+    
+    /*var dvalue=DeptData[0].value
+    
+    var row = $("#shiftBookArea").datagrid("getSelected");
+    var TimeID=""
+	if (row) {
+		console.log(row)
+		TimeID=row.TimeID
+	}*/
+	
+	
+    
+	
+	var xcTopContors=[
+		{'id':'DeptID','type':'combox','defaultValue':DeptData[0].value,'objData':DeptData,'title':$g('交班科室'),'required':'true'},
+		
+		{'id':'TimeID','type':'combox','defaultValue':"",'objData':shiftTimes,'title':$g('交班班次'),'required':'true'},
+		{'id':'ProjectID','type':'combox','objData':detailProjects,'title':$g('交班项目'),'required':'true'},
+	]
+	return xcTopContors	
+}
+	
+	
+
+</script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+</body>
+</html>

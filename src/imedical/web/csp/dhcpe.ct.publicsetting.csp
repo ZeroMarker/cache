@@ -1,0 +1,326 @@
+<!-- 
+ * FileName: dhcpe.ct.publicsetting.csp
+ * Anchor: yupeng
+ * Date: 2021.08.15
+ * Description: 体检基础配置
+--> 
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0px 10px;
+    
+}
+.r-label{
+    padding-left: 10px;
+}
+
+.newclsInvalid{
+    border-color: red;
+    color: red;
+}
+.panel-header{
+    border-bottom: 0;
+}
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false" id="layout">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " title="" border="false" style="height:480px">
+             <table class='search-table'>
+                
+                <tr>
+                    <td class="r-label"><label for="LocList">科室</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="LocList" style="width:155px">
+                    </td>
+                    
+                     <td class="r-label"><label for="InvDefaulltFee">体检费医嘱</label></td>
+                    <td>
+                        <input class="hisui-combogrid" type="text" Id="InvDefaulltFee" style="width:155px">
+                    </td>
+                    
+                     <td class="r-label"><label for="RoundingFee">凑整费医嘱</label></td>
+                    <td>
+                        <input class="hisui-combogrid" type="text" Id="RoundingFee" style="width:155px">
+                    </td>
+                    
+                    <td class="r-label"><label for="HPNo">体检号长度</label></td>
+                    <td>
+                        <input class="textbox" id="HPNo">
+                    </td>
+                    
+                        
+                </tr>
+                <tr>
+                    <td class="r-label"><label for="StationId_Lab">检验站点</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="StationId_Lab" style="width:155px">
+                    </td>
+                    
+                    <td class="r-label"><label for="StationId_Ris">检查站点</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="StationId_Ris" style="width:155px">
+                    </td>
+                    
+                    <td class="r-label"><label for="StationId_Medical">药品站点</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="StationId_Medical" style="width:155px">
+                    </td>
+                    
+                    <td class="r-label"><label for="StationId_Other">其他站点</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="StationId_Other" style="width:155px">
+                    </td>
+                
+                </tr>
+                <tr>
+                    <td class="r-label"><label for="LABDATA">检验命名空间</label></td>
+                    <td>
+                        <input class="textbox" id="LABDATA">
+                    </td>
+                    
+                    <td class="r-label"><label for="MEDDATA">数据命名空间</label></td>
+                    <td>
+                        <input class="textbox" id="MEDDATA">
+                    </td>
+                 
+                    <td class="r-label"><label for="PisNameSpace">病理命名空间</label></td>
+                    <td>
+                        <select id="PisNameSpace" class="hisui-combobox" editable="false" style="width:155px">
+                        <option value="DHC-PIS">DHC-PIS</option>
+                        <option value="PIS">PIS</option>
+                        </select>
+                    </td>   
+                    
+                    <td class="r-label"><label for="SuperGroup">超级权限安全组</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="SuperGroup" style="width:155px">
+                    </td>       
+                </tr>
+                     <tr>
+                    <td class="r-label"><label for="OrderInterfaceType">插医嘱方式</label></td>
+                    <td>
+                        <select id="OrderInterfaceType" class="hisui-combobox" style="width:155px;" editable="false">
+                        <option value="M">M程序</option>
+                        <option value="N">类方法</option>
+                        </select>
+                     </td>  
+                     
+                     
+                     <td class="r-label"><label for="CashierSystem">视同收费模式</label></td>
+                    <td>
+                        <select id="CashierSystem" class="hisui-combobox" style="width:155px;" editable="false">
+                        <option value="1">个人视同收费</option>
+                        <option value="2">团体视同收费</option>
+                        <option value="3">都视同收费</option>
+                        </select>
+                     </td>  
+                     
+                     
+                     <td class="r-label"><label for="AutoAuditUser">自动提交人</label></td>
+                    <td>
+                        <input class="hisui-combobox" id="AutoAuditUser" style="width:155px"/>
+                    </td>
+                    
+                     <td class="r-label"><label for="PhyExamDrId">默认体检医生</label></td>
+                    <td>
+                        <input class="hisui-combogrid" id="PhyExamDrId" style="width:155px"/>
+                    </td>    
+               </tr>
+               
+                <tr>
+                    <td class="r-label"><label for="ItemAbridgeFlag">医嘱描述取缩写</label></td>   
+                    <td>
+                        <div id="ItemAbridgeFlag" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="LisInterface">启用检验接口</label></td>   
+                    <td>
+                        <div id="LisInterface" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="LisNewVersion">启用新版检验</label></td>  
+                    <td>
+                        <div id="LisNewVersion" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="SendPisInterface">启用新版病理接口</label></td> 
+                    <td>
+                        <div id="SendPisInterface" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                </tr>
+                
+               <tr>
+                    <td class="r-label"><label for="OrderInterface">新版检查申请单</label></td>    
+                    <td>
+                        <div id="OrderInterface" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="MainDoctorGroup">复审</label></td>    
+                    <td>
+                        <div id="MainDoctorGroup" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="CancelPEType">取消体检不删除未检</label></td>    
+                    <td>
+                        <div id="CancelPEType" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="MHospital">年龄是否多院区</label></td> 
+                    <td>
+                        <div id="MHospital" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+               </tr>
+                <tr>
+                    <td class="r-label"><label for="CallVoice">启用叫号接口</label></td>  
+                    <td>
+                        <div id="CallVoice" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="SendOrder">启用平台接口</label></td>  
+                    <td>
+                        <div id="SendOrder" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="IsFeeLocFlag">按科室计费</label></td>    
+                    <td>
+                        <div id="IsFeeLocFlag" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <!--td class="r-label"><label for="IsCardLocFlag">体检卡跨科室使用</label></td>    
+                    <td>
+                        <div id="IsCardLocFlag" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td-->
+
+   		    <td class="r-label"><label for="IsCardLocFlag">体检卡跨科室使用</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="IsCardLocFlag" style="width:155px">
+                    </td>
+
+               </tr>
+               
+                <tr>
+                    <td class="r-label"><label for="IfNetPre">网上预约</label></td> 
+                    <td>
+                        <div id="IfNetPre" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="IfNetCancelPE">网上取消预约记录</label></td>    
+                    <td>
+                        <div id="IfNetCancelPE" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="IfNetRegister">网上预约自动登记</label></td>    
+                    <td>
+                        <div id="IfNetRegister" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                     <td class="r-label"><label for="TransResult">回传结果</label></td>
+                    <td>
+                        <select id="TransResult" class="hisui-combobox" style="width:155px;" editable="false">
+                        <option value="PT">调用平台</option>
+                        <option value="PG">调用各产品组</option>
+                        </select>
+                     </td>
+               </tr>
+               <tr>
+                    <td class="r-label"><label for="SendPisFBWay">病理申请方式</label></td>
+                    <td>
+                        <select id="SendPisFBWay" class="hisui-combobox"  editable="false" style="width:155px;">
+                        <option value="F">前端</option>
+                        <option value="B">后台</option>
+                        </select>
+                    </td>
+                    
+                    <td class="r-label"><label for="IfRecommendItem">根据问卷推荐套餐</label></td>  
+                    <td>
+                        <div id="IfRecommendItem" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <!--td class="r-label"><label for="PreOrder">医嘱预开</label></td> 
+                    <td>
+                        <div id="PreOrder" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td-->
+
+                    <td class="r-label"><label for="PosAdvice">阳征提取建议</label></td>  
+                    <td>
+                        <div id="PosAdvice" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td> 
+
+                    <td class="r-label"><label for="ReturnVisit">体检回访</label></td> 
+          	    <td>
+          		<div id="ReturnVisit" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+          	    </td>
+                </tr>
+				
+				<tr>
+	                <td class="r-label"><label for="RecLocHospital">接收科室可跨院区</label></td> 
+	                <td>
+	                	<div id="RecLocHospital" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+	                </td>
+                    <td class="r-label"><label for="KBHospTagsCode">知识库版本</label></td>
+                    <td>
+                        <input class="textbox" id="KBHospTagsCode">
+                    </td>
+		
+		   <td class="r-label"><label for="ThirdPartyLIS">导入检验细项</label></td>
+                    <td>
+                        <select id="ThirdPartyLIS" class="hisui-combobox"  editable="false" style="width:155px;">
+                        <option value="Y">是</option>
+                        <option value="N">否</option>
+                        </select>
+                    </td>
+					
+					<td class="r-label"><label for="ReturnVisit">使用疾病项目</label></td> 
+	          	    <td>
+	          		<div id="IllItem" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+	          	    </td>
+
+                </tr>
+				
+		<tr>
+				   <td class="r-label"><label>分诊</label></td> 
+	          	   <td>
+	          			<div id="ConsultingRoom" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+	          	    </td>
+				</tr>		
+                <tr>
+                    <td colspan='8' align="center" >
+                        <a id="BSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+                    </td>
+                
+                </tr>   
+                        
+            </table>
+            
+         </div>      
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false" style="border-top:1px solid #ddd;">
+            <table data-options="fit:true" id="PublicSettingGrid"></table> 
+        </div>      
+    </div> 
+            
+<script type="text/javascript" src="../scripts/dhcpe/ct/publicsetting.js"></script>
+<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+  
+</body>     
+</html>
+            
+        
+
+

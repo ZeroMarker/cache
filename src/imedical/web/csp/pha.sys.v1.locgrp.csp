@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!--
+    药房药库 - 科室组维护
+	csp: csp/pha.sys.v1.locgrp.csp
+	js:  scripts/pha/sys/v1/locgrp.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+        .pha-con-table.center{
+            margin: auto;
+            padding-right: 10px;;
+        }
+        .pha-body {
+		    background-color: #fff;
+		}
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',border:false,split:true,width:500">
+                    <div class="hisui-panel" title="科室组" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridLocGrp"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true">
+                        <div data-options="region:'west',border:false,split:true,width:250">
+                            <div class="hisui-panel" title="关联科室 - 双击取消关联" data-options="headerCls:'panel-header-gray',iconCls:'icon-ref',fit:true,bodyCls:''">
+                                <table id="gridLocGrpItm"></table>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div class="hisui-panel" title="可选科室 - 双击关联" id="panelLoc" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                                <table id="gridLoc"></table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridLocGrpBar" class="padding:0">
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="conUserLoc">#(..Get("科室"))#</label>
+                </td>
+                <td>
+                    <input id="conUserLoc" data-pha='class:"hisui-combobox",requied:true'>
+                </td>
+                <td class="r-label" style="display:none;">
+                    #(..Get("类型"))#
+                </td>
+                <td style="display:none;">
+                    <input id="conAppType" data-pha='class:"hisui-combobox"'>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a>
+                </td>
+            </tr>
+        </table>
+
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEdit">修改</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDel">删除</a>
+        </div>
+    </div>
+    <div id="gridLocBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <input id="conAlias" data-pha="class:'hisui-searchbox'">
+            </div>
+            <div class="pha-col">
+                <input class="hisui-checkbox" type="checkbox"  label="仅显示未关联科室" id="conNoGrp">
+            </div>
+        </div>
+
+    </div>
+    <!-- window dialog -->
+    <!-- 属性窗体 -->
+    <div id="diagLocGrp" class="hisui-dialog" data-options="width:320,closed:true,title:'科室组',iconCls:'icon-w-add',
+        buttons:[{
+            text:'保存',
+            handler:function(){
+                // 保存后关闭
+                SaveLocGrp();
+            }
+        },{
+            text:'继续新增',
+            id:'diagLocGrp_btnAdd',
+            handler:function(){
+                // 调用保存再调关闭
+                SaveLocGrp(1);
+            }
+        },{
+            text:'关闭',
+            handler:function(){
+                $('#diagLocGrp').dialog('close');
+            }
+        }]">
+        <div>
+            <table class="pha-con-table center">
+                <tr>
+                    <td class="r-label">
+                        <label for="loc"><span style="color:red">*</span>#(..Get("科室"))#</label>
+                    </td>
+                    <td>
+                        <input id="loc" data-pha='class:"hisui-combobox",requied:true'>
+                    </td>
+                </tr>
+                <tr style="display: none;">
+                    <td class="r-label">
+                        <label for="appCode"><span style="color:red">*</span>#(..Get("类型"))#</label>
+                    </td>
+                    <td>
+                        <input id="appCode" data-pha="class:'hisui-combobox',requied:false">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <label for="locGrpCode"><span style="color:red">*</span>#(..Get("代码"))#</label>
+                    </td>
+                    <td>
+                        <input id="locGrpCode" class='hisui-validatebox' data-pha="class:'hisui-validatebox',requied:true" style="width:200px">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <label class="input-label" for="locGrpDesc"><span style="color:red">*</span>#(..Get("名称"))#</label>
+                    </td>
+                    <td>
+                        <input id="locGrpDesc" class='hisui-validatebox' data-pha="class:'hisui-validatebox',requied:true" style="width:200px">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/sys/v1/locgrp.js"></script>
+</body>
+
+</html>

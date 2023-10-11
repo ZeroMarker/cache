@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--库存盘点实盘录入方式选择界面
+	csp:csp/pha.in.v3.stktk.input.csp
+	js: scripts/pha/in/v3/stktk/input.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
+
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+	<title>
+		<TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+    
+    <!-- 接收参数 -->
+    <server>
+		s stktkId  =  $G(%request.Data("stktkId", 1))
+	</server>
+	<script type = "text/javascript">
+		var stktkId  =  "#(stktkId)#";
+	</script>
+
+</HEAD>
+<body>
+	<div class = "hisui-layout" fit = "true">
+		<div data-options = "region:'center',border:false" class = "pha-body">
+			<div class = "hisui-layout" fit = "true">
+				<div data-options = "region:'center',border:false,split:true">
+					<div id = "panel" class = "hisui-panel" title = #(..Get("库存盘点单列表"))#
+					data-options = "headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">
+						<table id = "gridStktkMain"></table>
+					</div>
+				</div>
+			</div>		
+		</div>
+	</div> 
+	<div id = "gridStktkMainBar" >
+		<table id = "qCondition" class = "pha-con-table">
+			<tr>
+				<td class = "r-label">
+					<label for = "stktkLocId">#(..Get("盘点科室"))#</label>
+				</td>
+				<td>
+					<input id = 'stktkLocId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stDate">#(..Get("开始日期"))#</label>
+				</td>
+				<td>
+					<input id = 'stDate' class = "hisui-datebox" data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "endDate">#(..Get("结束日期"))#</label>
+				</td>
+				<td>
+					<input id = 'endDate' class = "hisui-datebox"  data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+				</td>				
+				<td>
+					<a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-find'" data-options = "stopAllEventOnDisabled:true" id = 'btnFind'>查询</a>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-find'" data-options = "stopAllEventOnDisabled:true" id = 'btnSelStktk'>选取</a>
+				</td>
+				<td>
+					<a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-close'" data-options = "stopAllEventOnDisabled:true" id = 'btnClean'>清屏</a>
+				</td>			
+			</tr>
+		</table>
+	</div>
+	 <div id = "diagSelModel" class = "hisui-dialog" title = #(..Get("选择实盘录入方式"))# style = "width:450px;height:300px;color:white;" data-options = "closable:true,modal:true,closed:true,collapsible:false,resizable:true,iconCls:'icon-w-list',buttons:[{
+		text:'确定',
+		id:'btnSure'
+	},{
+		text:'取消',
+		id:'btnClose'
+	}]">
+		<div fit = "true">
+			<table class = "pha-con-table">
+				<tr>
+					<td colspan=2>
+						<input class = "hisui-radio" type = "radio" label = "按批次录入(根据账盘数据,按药品批次填充实盘数)" name = "inputModel" value = "1" data-options = "required:true,requiredSel:true">
+					</td>
+				</tr>
+				<tr>
+					<td colspan=2>
+						<input class = "hisui-radio" type = "radio" label = "按品种录入(根据账盘数据,按药品品种填充实盘数)" name = "inputModel" value = "3" checked = "true" data-options = "required:true,requiredSel:true">
+					</td>
+				</tr>
+				<tr>
+					<td colspan=2>
+						<input class = "hisui-radio" type = "radio" label = "移动端：按品种录入(移动端，按药品品种填充实盘数)" name = "inputModel" value = "5" data-options = "required:true,requiredSel:true">
+					</td>
+				</tr>
+				<tr>
+					<td colspan=2>
+						<input class = "hisui-radio" type = "radio" label = "移动端：按批次录入(移动端，按药品批次填充实盘数)" name = "inputModel" value = "6" data-options = "required:true,requiredSel:true">
+					</td>
+				</tr>
+				<tr>
+					<td style="padding-left:0px" >
+						<label for = "inputWin" style="padding-left:10px;padding-right:7px">#(..Get("实盘窗口"))#</label>		
+						<input id = 'inputWin' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+					</td>
+				</tr>
+				
+			</table>
+		</div>
+	</div>
+	<!-- 药库公共 -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/com/js/store.js"></script>
+	<!-- 本页js -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/stktk/input.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+﻿<html>
+<head>
+	<HISUI/>
+	<title>老系统病历浏览</title>
+</head>
+
+<script language="cache" runat="server">		 
+	s episodeID = $Get(%request.Data("EpisodeID",1),"")
+	s patientID = +$g(^PAADM(episodeID))
+	//访问老库的三版病历页面
+	//身份号关联新老库患者，需要按照项目情况进行修改，
+	s IDCard = ##class(EMRservice.HISInterface.PatientInfoAssist).IDCard(patientID)
+	s soap = ##class(GetPaadmID.GetPaadmIDSoap).%New()
+	s oldDbepisodeID = soap.GetPaadmid(IDCard)
+	s:(+oldDbepisodeID'=oldDbepisodeID) oldDbepisodeID = ""
+</script>
+
+<script language="javascript">
+$(function () {
+    var oldDbepisodeID= '#(oldDbepisodeID)#';  //这个应该是要传过来的参数
+    if (oldDbepisodeID == "")
+    {
+	    alert ("老系统无此身份证号的患者信息，请知悉！");
+	    window.close();   
+    }else{
+		var src = "http://老库ip地址/dthealth/web/csp/emr.record.browse.patient.csp?EpisodeID="+oldDbepisodeID
+		$("#myFrame").attr("src",src);	
+	}
+});
+</script>
+<body style="padding:0;margin:0" >
+	<iframe style="height:100%; width:100%" id="myFrame" src=""/>
+</body>
+</html>

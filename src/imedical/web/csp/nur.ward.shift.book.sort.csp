@@ -1,0 +1,326 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.nursereferconfig.csp -->
+	<title>交班排序设置</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:480px;
+			height:423px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:470px;
+			height:274px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.right-hisui-panel{
+			
+			height: calc(50% - 5px);
+		}
+		table.search-table.processconfig-table td{
+			line-height:28px;	
+		}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	 	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-cellediting.js"></script>
+
+<SCRIPT language="cache" RUNAT="SERVER">
+ 		s ShiftBookID=$G(%request.Data("ShiftBookID",1))
+ 		s ShiftID=$G(%request.Data("ShiftID",1))
+ 		s type=$G(%request.Data("type",1))
+</SCRIPT>
+<script language="javascript">
+       
+	var ShiftBookID="#(ShiftBookID)#";
+	var ShiftID="#(ShiftID)#"
+	var SortType="#(type)#"
+</script>
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		
+		
+		<div data-options="region:'center',split:true,border:false">
+			
+					<div class="hisui-panel"  title="" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+						
+						<table id="shiftBookProject" style="width:100%;"></table>
+		
+					
+			</div>
+		</div>
+	</div>
+	
+	<div id="dialogRefer"></div>
+	
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<!--script type="text/javascript" src="../scripts/nurse/hisui/NurseQuestionPlanComConfig.js"></script-->
+<script type="text/javascript">
+	$(function() {
+		initLoad()
+	
+})	
+document.onkeydown = function(event) {
+    // 键盘按下时触发
+    console.log('key down');
+};
+function initLoad(){
+	var method="GetAreaGridColumns"
+	var classname="Nur.SHIFT.Service.ShiftProjectController"
+	if(SortType=="2"){
+		classname="Nur.SHIFT.Service.ShiftDetailController"
+		method="GetDetailLeftData"
+	}
+	
+	var gidData=[]
+	var psort={}
+	runClassMethod("Nur.SHIFT.Service.ShiftController","GetShiftWardSort",{"WardID":session['LOGON.WARDID'],"Type":SortType},function(rtn){
+		for(var i=0;i<rtn.length;i++){
+			var AreaName=""
+			var ID=rtn[i].ID
+			var Sort=rtn[i].Sort
+			var ProjectID=rtn[i].ProjectID
+			var ProjectName=rtn[i].ProjectName
+			var column={}
+
+			column["WardID"]=session['LOGON.WARDID']
+			column["ProjectID"]=ProjectID
+			column["ProjectName"]=$g(ProjectName)
+			column["AreaSort"]=Sort
+			column["Type"]=SortType
+			column["ID"]=ID
+			//gidData.push(column)
+			psort[ProjectID]=column
+			
+		}
+	},"json",false)
+	
+		runClassMethod(classname,method,{ShiftID:ShiftID},function(rtn){
+			var rtn=rtn.data
+			for(var i=0;i<rtn.length;i++){
+				var AreaName=rtn[i].title
+				var AreaSort=rtn[i].AreaSort
+				var ProjectID=rtn[i].ProjectID
+				
+				
+				
+				var column=psort[ProjectID]
+				if(column!=null){
+					//column["WardID"]=session['LOGON.WARDID']
+					//column["ProjectID"]=ProjectID
+					column["ProjectName"]=$g(AreaName)
+					//column["AreaSort"]=AreaSort
+					//column["Type"]=SortType
+					//column["ID"]=""
+					gidData.push(column)
+				}else{
+					column={}
+
+					column["WardID"]=session['LOGON.WARDID']
+					column["ProjectID"]=ProjectID
+					column["ProjectName"]=$g(AreaName)
+					column["AreaSort"]=AreaSort
+					column["Type"]=SortType
+					gidData.push(column)
+				}
+				
+			}
+		},'json',false);	
+	
+	var ToolBar = [{
+	        text: $g('保存'),
+	        iconCls: 'icon-save',
+	        handler: function() {
+		        
+		        var rows = $("#shiftBookProject").datagrid('getRows');
+			    for (var i = 0; i < rows.length; i++) {
+			        $("#shiftBookProject").datagrid('endEdit', i);
+			        $("td").removeClass("datagrid-value-changed");
+			    }
+		        
+		        var rows = $("#shiftBookProject").datagrid("getRows");
+
+				console.log(rows)
+				runClassMethod("Nur.SHIFT.Service.ShiftController","GetSaveShiftWardSort",{data:JSON.stringify(rows)},function(rtn){
+					///插入交班日志
+					setTimeout(function(){
+						initLoad()
+					},500)
+					
+					$.messager.popover({msg: $g('保存成功！'),type:'success',timeout: 1000});	
+				})
+		    }
+	    }]
+	$('#shiftBookProject').datagrid({
+		modal:true,
+		isTopZindex:true,
+		width:360,
+		height:500,
+		maximizable:true,
+		resizable:true,
+
+		fit:true,
+		singleSelect : true,
+		fitColumns:true,
+		idField:"ID",
+		toolbar:ToolBar,
+		//onDblClickCell:onDBClickCell,
+		onClickCell:onDBClickCell,
+		//onAfterEdit:afterEdit,
+		columns :[
+			
+			[
+			{field:'ProjectName',title:$g('交班项目'),width:100},
+			{field:'AreaSort',title:$g('序号'),width:100,editor:'numberbox'},
+		]]
+	});	
+	$("#shiftBookProject").datagrid("unselectAll");
+	$("#shiftBookProject").datagrid('loadData', gidData)	
+}
+
+
+// 单击 若有在编辑列关闭编辑
+function onDBClickCell(index, field,value) {
+ 	DetailCellFuc.onDBClickCell(index, field,value)
+}
+function onClickCell(index, field,value) {
+    DetailCellFuc.onClickCell(index, field,value)
+}
+function afterEdit(index, row, changes){
+	DetailCellFuc.afterEdit(index, row, changes)
+	
+}
+$.extend($.fn.datagrid.methods, {
+	getEditingRowIndexs: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var indexs = [];
+		rows.each(function (i, row) {
+			var index = row.sectionRowIndex;
+			if (indexs.indexOf(index) == -1) {
+				indexs.push(index);
+			}
+		});
+		return indexs;
+	},
+	getEditingRowIndex: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var index = -1;
+		rows.each(function (i, row) {
+			index = row.sectionRowIndex;
+			
+		});
+		return index;
+	},
+	
+});
+var DetailCellFuc={
+	onDBClickCell:function(index, field,value){
+		
+		
+		
+		//双击单元格编辑
+		$("#shiftBookProject").datagrid('selectRow', index).datagrid('editCell', {
+	        index: index,
+	        field: field
+	    });
+	},
+	onClickCell:function(index, field,value){
+		//单机单元格取消编辑
+		
+	    var rows = $("#shiftBookProject").datagrid('getRows');
+	    for (var i = 0; i < rows.length; i++) {
+	        $("#shiftBookProject").datagrid('endEdit', i);
+	        $("td").removeClass("datagrid-value-changed");
+	    }
+	},
+	afterEdit:function(index, row, changes){
+		
+		//$("td").removeClass("datagrid-value-changed");
+		var rows = $("#shiftBookProject").datagrid("getRows");
+
+		console.log(rows)
+		/*runClassMethod("Nur.SHIFT.Service.ShiftController","GetSaveShiftWardSort",{data:JSON.stringify(rows)},function(rtn){
+			///插入交班日志
+			setTimeout(function(){
+				initLoad()
+			},500)
+			
+			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});	
+		})*/
+		
+	}
+}
+
+
+</script>
+</body>
+</html>

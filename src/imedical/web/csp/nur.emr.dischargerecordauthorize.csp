@@ -1,0 +1,435 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<!--nur.emr.dischargerecordauthorizeapplylist.csp-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js" ></script>
+	<style type="text/css">
+		body {padding:10px 10px;}
+		#accPanel td {
+			padding:0px 5px;
+		}
+		#tbtoolbar td {
+			padding:0px 5px;
+		}
+		
+		#accPanel {
+			border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border-bottom-style: dashed;
+			border-bottom-color: #e2e2e2;
+		}
+		#patientListDiv .panel-body-noheader{
+			border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border-top-width: 0px;
+		}
+   </style>
+</head>
+
+<body>
+	<div style="width:100%;height:100%;">
+	<div id="searchDiv" style="height:85px;">
+	<div id="accPanel" class="hisui-panel"  title="出院病历授权-授权" style="padding:10px 5px;" data-options="fit:true,headerCls:'panel-header-gray',closable: false,iconCls: 'icon-paper'">
+		<table style="border-spacing:0px">
+			<tr>
+				<td><label>#(..Get("开始日期"))#</label></td>
+				<td><input id="dtb1" class="hisui-datebox textbox datebox-f combo-f" data-options="" style="display: none;"></td>
+				<td><label>#(..Get("结束日期"))#</label></td>
+				<td><input id="dtb2" class="hisui-datebox textbox datebox-f combo-f" data-options="" style="display: none;"></td>
+				<td><label>#(..Get("状态"))#</label></td>
+				<td>
+					<select id="stateBox" class="hisui-combobox" name="state" style="width:100px;" data-options="blurValidValue:true">
+						<option value="">请选择</option>
+					</select>
+				</td>
+				<td><label>#(..Get("申请科室"))#</label></td>
+				<td>
+				    <select id="locBox" class="hisui-combobox" name="loc" style="width:200px;" data-options="blurValidValue:true">
+						<option value="">请选择</option>
+					</select>
+				</td>
+				<td><label>#(..Get("病历类型"))#</label></td>
+				<td>
+				    <select id="recordTypeBox" class="hisui-combobox" name="recordType" style="width:200px;" data-options="blurValidValue:true">
+						<option value="">请选择</option>
+					</select>
+				</td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="applySearch">查询</a></td>
+			</tr>
+		</table>
+	</div>
+	</div>
+	<div id="patientListDiv" style="width:calc(100% - 20px);top:95px;bottom:10px;position:absolute;">
+	<table id="dg" class="hisui-datagrid" title="" data-options="fit:true">
+		<thead>   
+			<tr>
+				<th data-options="field:'authorityID',width:100,checkbox:true"></th>
+				<th data-options="field:'status',width:100">状态</th>   
+				<th data-options="field:'RequestDateTime',width:100">申请时间</th>   
+				<th data-options="field:'requestUserName',width:100">申请人</th>
+				<th data-options="field:'requestUserCTLocName',width:100">申请科室</th>
+				<th data-options="field:'emrCodeDescStr',width:100">授权病历</th>
+				<th data-options="field:'actionDescStr',width:100">授权操作</th>   
+				<th data-options="field:'applyReason',width:100">申请原因</th>  
+				<th data-options="field:'appointDateTime',width:100">授权开始时间</th>
+				<th data-options="field:'appointEndDateTime',width:100">授权结束时间</th>
+				<th data-options="field:'appointRange',width:100">授权类型</th>
+				<th data-options="field:'patName',width:100">患者姓名</th>
+				<th data-options="field:'regNo',width:100">登记号</th> 
+			</tr>   
+		</thead>   
+	</table>
+	<div id="tbtoolbar">
+		<table style="border-spacing:0px">
+			<tr>
+				<td><label>#(..Get("默认授权类型"))#</label></td>
+				<td>
+					<select id="authorizeTypeBox" class="hisui-combobox" name="authorizeType" style="width:100px;" data-options="blurValidValue:true">
+						<option value="">请选择</option>
+					</select>
+				</td>
+				<td><label>#(..Get("默认授权时间"))#</label></td>
+				<td><input id="authorizeTime" class="hisui-numberbox textbox" style="width:100px" value="24"></td>
+				<td><label>#(..Get("小时"))#</label></td>
+				<td><label>|</label></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-select-grant',plain:true" id="btn1">授权选中条目</a></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-refuse-select-grant',plain:true" id="btn2">拒绝选中授权</a></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel-select-grant',plain:true" id="btn3">收回选中授权</a></td>
+			</tr>
+		</table>		
+	</div>
+	</div>
+	</div>
+	</div>
+	<script type="text/javascript">
+
+	
+    var applyDatas = {"total":0,"rows":[]};
+
+	function MsgIsOK(msg){return msg.status == "0";}
+	
+	$(document).ready(function () {
+		$("#dtb1").datebox("setValue",getDayminus_7());
+		$("#dtb2").datebox("setValue",getNowDate());
+		
+		initLoc();
+		initStatus();
+		initRecordType();
+		initAuthorizeType();
+		function applySearch(pageStart,pageEnd){
+			var LocId = $("#locBox").combobox("getValue");
+            var StDate = $("#dtb1").datebox("getValue");
+            var EnDate = $("#dtb2").datebox("getValue");
+            var MouldType = $("#recordTypeBox").combobox("getValue");
+            var IsValid = $("#stateBox").combobox("getValue");
+                                   
+            var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"getAppointAuthority",
+					StDate:StDate,
+					EnDate:EnDate,
+					IsValid:IsValid ,
+					LocId:LocId ,
+					MouldType:MouldType,
+					PageStart:pageStart,
+					PageEnd:pageEnd
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					applyDatas.total = msgData.data.total;
+					applyDatas.rows = msgData.data.rows;
+					$.each(applyDatas.rows, function(i, row){
+					  	if(!!row.RequestDateTime){
+							var tempArr = row.RequestDateTime.split(" ");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.RequestDateTime = tempArr.join(" ");
+						}
+						if(!!row.appointDateTime){
+							var tempArr = row.appointDateTime.split(" ");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.appointDateTime = tempArr.join(" ");
+						}
+						if(!!row.appointEndDateTime){
+							var tempArr = row.appointEndDateTime.split(" ");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.appointEndDateTime = tempArr.join(" ");
+						}
+					});
+					$('#dg').datagrid('clearChecked');
+					$('#dg').datagrid('loadData',applyDatas);
+					
+					var pageNumber = !!$("#dg").data("nurPageNumber") ? $("#dg").data("nurPageNumber") : 1;
+			        var pageSize = !!$("#dg").data("nurPageSize") ? $("#dg").data("nurPageSize") : op.pageSize;
+
+					$("#dg").datagrid('getPager').pagination('refresh', {
+					            pageNumber: pageNumber,
+					            pageSize: pageSize,
+					            total: applyDatas.total
+			        });
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+		}
+		
+		$('#dg').datagrid({
+			toolbar: '#tbtoolbar',
+			pagination:true,
+			nowrap:false,
+			selectOnCheck:true,
+			checkOnSelect:true,
+			idField:"authorityID",
+			pageSize:20,
+			pageList:[20,30,40,50],
+			data: applyDatas
+		});
+		
+		$('#dg').datagrid('getPager').pagination({
+		onSelectPage:function(pageNumber, pageSize){
+				var pageStart=(pageNumber-1)*pageSize+1;
+				var pageEnd=pageNumber*pageSize;
+				$('#dg').data('nurPageNumber', pageNumber);
+				$('#dg').data('nurPageSize', pageSize);
+				applySearch(pageStart,pageEnd);
+			}
+		});
+		
+		$("#applySearch").click(function (event) {
+            var op = $("#dg").datagrid("options");
+            var pageSize = !!$("#dg").data("nurPageSize") ? $("#dg").data("nurPageSize") : op.pageSize;
+            $('#dg').data('nurPageNumber', 1);
+            $('#dg').data('nurPageSize', pageSize);
+            applySearch(1,pageSize);      
+        });
+        
+        function refreshTable(){
+        	var pageNumber = $('#dg').data('nurPageNumber');
+	        var pageSize = $('#dg').data('nurPageSize');
+	        var pageStart=(pageNumber-1)*pageSize+1;
+			var pageEnd=pageNumber*pageSize;
+			applySearch(pageStart,pageEnd);	
+        }
+        
+        $("#btn1").click(function (argument) {
+	        var AuthorityId= "";
+            var rows = $("#dg").datagrid("getChecked");
+            var tempIDs = $.map( rows, function(n){
+  					return n.authorityID;
+			});
+            AuthorityId =  tempIDs.toString();
+            if (AuthorityId == "")
+            {
+	            $.messager.alert($g("提示"), $g("请选择要授权的申请记录"), 'info');
+	            return false;
+	        }
+	        
+	        var AppointSpan = $("#authorizeTime").val();
+	        var AppointRange = $("#authorizeTypeBox").combobox("getValue");
+	        
+	    	var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"appointAuthority",
+					AuthorityId:AuthorityId,
+					AppointSpan:AppointSpan,
+					AppointRange:AppointRange,
+					AppointUser:session['LOGON.USERID']
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					$.messager.alert($g("提示"), $g("授权成功"), 'success');
+					refreshTable();
+				}
+				else{
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+					refreshTable();
+				}
+			}
+	    });
+        $("#btn2").click(function (argument) {
+	    	var AuthorityId= "";
+            var rows = $("#dg").datagrid("getChecked");
+            var tempIDs = $.map( rows, function(n){
+  					return n.authorityID;
+			});
+            AuthorityId =  tempIDs.toString();
+            if (AuthorityId == "")
+            {
+	            $.messager.alert($g("提示"), $g("请选择要拒绝的申请记录"), 'info');
+	            return false;
+	        }
+	        
+	        var html = "<div id='refuseReasonDialog' class='hisui-dialog'></html>";
+
+	        $(html).dialog({
+		    	width:300,
+		    	height:200,
+		    	modal:true,
+		    	close:true,
+		    	content:"<textarea id='refuseReason' class='textbox hisui-validatebox' placeholder='必填项' data-options='required:true' cols='90' rows='6' style='resize:none;height:85px;width:260px;margin-left:17px;margin-top:17px'></textarea>",
+		    	title:$g("拒绝原因"),
+		    	buttons:[{
+			    	text:$g("确认"),
+			    	handler:function(){
+				    	$("#refuseReason").validatebox("validate");
+				    	var RefuseReason = $("#refuseReason").val();
+				    	if (!RefuseReason){
+					    	$.messager.alert($g("提示"), $g("拒绝原因不能为空"), 'info');
+					    	return false;
+					    }
+					 
+				    	var msgData = $cm({
+								ClassName:"NurMp.Discharge.Authority",
+								MethodName:"RefuseAuthority",
+								AuthorityId:AuthorityId,
+								RefuseReason:RefuseReason,
+								RefuseUser:session['LOGON.USERID']
+						},false);
+					
+						if (!!msgData){
+							$("#refuseReasonDialog").dialog("destroy");
+							if (MsgIsOK(msgData)){
+								$.messager.alert($g("提示"), $g("拒绝成功"), 'success');
+								refreshTable();
+							}
+							else{
+								$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+								refreshTable();
+							}
+						}
+				    }
+			    },{
+				    text:$g("取消"),
+			    	handler:function(){
+				    	$("#refuseReasonDialog").dialog("destroy");
+				    }
+				}]
+		    });
+	    });
+        $("#btn3").click(function (argument) {
+	    	var AuthorityId= "";
+            var rows = $("#dg").datagrid("getChecked");
+            var tempIDs = $.map( rows, function(n){
+  					return n.authorityID;
+			});
+            AuthorityId =  tempIDs.toString();
+            if (AuthorityId == "")
+            {
+	            $.messager.alert($g("提示"), $g("请选择要收回的授权记录"), 'info');
+	            return false;
+	        }
+	       
+	    	var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"cancelAuthority",
+					AuthorityId:AuthorityId,
+					RefuseReason:"",
+					RefuseUser:session['LOGON.USERID']
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					$.messager.alert($g("提示"), $g("收回成功"), 'success');
+					refreshTable();
+				}
+				else{
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+					refreshTable();
+				}
+			}   
+	    });
+	    
+	    $("#applySearch").click();
+	});
+	function initLoc()
+	{
+		$HUI.combobox("#locBox",{
+			valueField:'id',
+			textField:'name',
+		});
+		
+		var hopLocJson = $cm({
+				ClassName:"NurMp.Discharge.Authority",
+				MethodName:"getLocData"
+		},false);
+		if (!!hopLocJson && MsgIsOK(hopLocJson))
+		{
+			hopLocJson.data.unshift({id:"-1",name:$g("全部")});
+			$("#locBox").combobox("loadData",hopLocJson.data);
+			$('#locBox').combobox('select', '-1');
+		}
+	}
+	
+	function initAuthorizeType()
+	{
+		$HUI.combobox("#authorizeTypeBox",{
+			valueField:'id',
+			textField:'name',
+		});
+		
+		var authJson = $cm({
+				ClassName:"NurMp.Discharge.Authority",
+				MethodName:"getRange"
+		},false);
+		if (!!authJson && MsgIsOK(authJson))
+		{
+			$("#authorizeTypeBox").combobox("loadData",authJson.data);
+			$('#authorizeTypeBox').combobox('select', 'Personal');
+		}
+	}
+	
+	function initStatus()
+	{
+		$HUI.combobox("#stateBox",{
+			valueField:'id',
+			textField:'name',
+		});
+		var statusJson = $cm({
+				ClassName:"NurMp.Discharge.Authority",
+				MethodName:"getStatus"
+		},false);
+		if (!!statusJson && MsgIsOK(statusJson))
+		{
+			$("#stateBox").combobox("loadData",statusJson.data);
+			$('#stateBox').combobox('select', 'all');
+		}
+	}
+	function initRecordType()
+	{
+		$HUI.combobox("#recordTypeBox",{
+			valueField:'id',
+			textField:'name',
+		});
+		var typeJson = $cm({
+				ClassName:"NurMp.Discharge.Authority",
+				MethodName:"getMouldType"
+		},false);
+		if (!!typeJson && MsgIsOK(typeJson))
+		{
+			$("#recordTypeBox").combobox("loadData",typeJson.data);
+			$('#recordTypeBox').combobox('select', 'all');
+		}
+	}
+	
+	function getNowDate(){
+		var date = (new Date()).format("yyyy-MM-dd");
+		return date;
+	}
+	
+	function getDayminus_7(){
+		var date = (new Date().AddDays(-7)).format("yyyy-MM-dd");
+		return date;
+	}
+   </script>
+</body>
+</html>

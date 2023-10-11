@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <!--配液工作量统计
-	csp:dhcpha.pivas.report.workload.csp
-	js: scripts/pharmacy/pivas/report.workload.js
+	csp: csp/dhcpha.pivas.report.workload.csp
+	js:  scripts/pharmacy/pivas/report.workload.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -10,47 +14,90 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
-    <STYLE>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none"/>
+    <PHAPIVASV1 />
+    <style>
+        .r-label{
+            overflow: hidden;
+            white-space: nowrap;
+        }
 
-    </STYLE>
+        .pha-con-table{
+            padding-right: 10px;
+        }
+    </style>
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-            <div class="hisui-layout" fit="true">
-                <div data-options="region:'north',title:'工作量统计',iconCls:'icon-sum',split:true,headerCls:'panel-header-gray',collapsible:false" class='dhcpha-north-r1'>
-                    <table class="dhcpha-north-tbl">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
+            <div class="hisui-layout js-pha-layout-fit" fit="true">
+                <div data-options="region:'west',title:'工作量统计',iconCls:'icon-sum',split:true,headerCls:'panel-header-gray',collapsible:false">
+                    <table class="pha-con-table">
                         <tr>
-                            <td>
-                                <label for="dateStart">开始日期</label>
-                                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" />
+                            <td class="r-label">
+                                <label for="dateStart">#(..Get("开始时间"))#</label>
                             </td>
                             <td>
-                                <label for="dateEnd">结束日期</label>
-                                <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" />
+                                <input id="dateStart" class="hisui-datebox" data-options="width:120" />
                             </td>
                             <td>
+                                <input id="timeStart" class="hisui-timespinner" data-options="width:100,showSeconds:true" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">
+                                <label for="dateEnd">#(..Get("结束时间"))#</label>
+                            </td>
+                            <td>
+                                <input id="dateEnd" class="hisui-datebox" data-options="width:120" />
+                            </td>
+                            <td>
+                                <input id="timeEnd" class="hisui-timespinner" data-options="width:100,showSeconds:true" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">
+                                <label for="cmbSysType">#(..Get("类型"))#</label>
+                            </td>
+                            <td colspan="2">
+                                <input id="cmbSysType" style="width:226px !important" />
+                            </td>
+                        </tr>
+                        <!-- <tr>
+                            <td>
+                                <label for="cmbWard">病区</label>
+                                <input id="cmbWard" class="hisui-combobox" style="width:214px"/>
+                            </td>
+                        </tr> -->
+                        <tr>
+                            <td style="text-align:center" colspan=3>
                                 <a class="hisui-linkbutton" iconCls="icon-w-find" plain="false" id="btnFind">查询</a>
                             </td>
                         </tr>
                     </table>
                 </div>
-                <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false"  style="overflow:hidden;border-radius: 4px;">
-                    <iframe></iframe>
+                <div data-options="region:'center',title:'',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',border:false">
+                    <!-- <iframe></iframe> -->
+                    <div class="hisui-tabs tabs-gray" fit="true">
+                        <div id="tabPerson" data-options="title:'按人员'">
+                            <iframe style="display:block;width:100%;"></iframe>
+                        </div>
+                        <div id="tabWard" data-options="title:'按病区'">
+                            <iframe style="display:block;width:100%;"></iframe>
+                        </div>
+                        <div id="tabCat" data-options="title:'按类别'">
+                            <iframe style="display:block;width:100%;"></iframe>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/print.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/report.workload.js"></script>
 </body>
 

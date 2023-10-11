@@ -1,0 +1,606 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	.panel-body, .panel-header {
+    border-color: #FFF;
+}
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s DataSource = $G(%request.Data("DataSource", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var DataSource="#(DataSource)#";
+	   var hospID="#(hospID)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-cellediting.js"></script>
+
+</head>
+<body>
+	
+	
+<!--form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<table id="shiftTable" style="width:100%"></table>
+	
+	<div>
+		<table class="search-table" style="width:100%;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+	<div style="width:100%;height:300px">
+		<table id="shiftBookGroupa" style="width:100%;height:300px"></table>
+	</div>
+</form-->
+<div class="hisui-layout" data-options="fit:true,border:false">
+		<!--div data-options="region:'north',border:false" style="height:40px;">
+			<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+			<input id="_HospList" class="textbox"/>
+		</div-->
+		
+		<div data-options="region:'center',border:false,collapsible:true,split:true" style="width:600px;">
+
+				
+				<table id="shiftBookGroup"></table>
+
+		</div>
+</div>
+<!--script type="text/javascript">
+/**点击单元格编辑start**/
+var editIndex = -1;
+var editField = "";
+var curElement = null;
+
+function getSelectionText(curElement) {
+    if (!curElement) {
+        return false;
+    }
+    var selectedText = '';
+    if (typeof document.selection != 'undefined') {
+         selectedText = document.selection.createRange().text;
+    } else {
+         selectedText = curElement.value.substr(curElement.selectionStart, curElement.selectionEnd - curElement.selectionStart);
+    }
+    return selectedText.trim();
+}
+    
+$.extend($.fn.datagrid.defaults.editors, {
+    text: {
+        init: function (container, options) {
+	       var row = $("#shiftBookGroup").datagrid("getSelected");
+	       var field=container.parents("td").attr("field")
+	       var h=container.parents("td").height()
+	  
+	      
+	      
+            var input = $('<textarea autoHeight="true" style="border:none;border-top:1px solid #ddd;min-height:150px;height:'+(h+30)+'px;resize:none;background:#FFF;">').appendTo(container);
+            curElement = input[0];
+            input.parents("td").css("background","#FFF")
+            input.parents("td").css("vertical-align","top")
+            //input.parents("div").css({"display":"inline-block","height": "100%"})
+            /*input.bind('contextmenu', function (e) {
+                e.preventDefault();
+                $('#rightClickMenu').menu('show', {
+                    left: e.pageX,
+                    top: e.pageY
+                });
+            });
+            input.mouseup(function (e) {
+            	curElement = e.target;
+            	window.clipboardContent = getSelectionText(e.target);
+            	
+        	});*/
+            return input;
+        },
+        getValue: function (target) {
+            return $(target).val();
+        },
+        setValue: function (target, value) {
+            $(target).val(value);
+        },
+        resize: function (target, width) {
+            var input = $(target);
+            if ($.boxModel == true) {
+                input.width(width - (input.outerWidth() - input.width()));
+            } else {
+                input.width(width);
+            }
+        }
+    }
+});
+
+
+// 单击 若有在编辑列关闭编辑
+function onDBClickCell(index, field,value) {
+ 	DetailCellFuc.onDBClickCell(index, field,value)
+}
+function onClickCell(index, field,value) {
+    DetailCellFuc.onClickCell(index, field,value)
+}
+function afterEdit(index, row, changes){
+	DetailCellFuc.afterEdit(index, row, changes)
+	
+}
+var DetailCellFuc={
+	onDBClickCell:function(index, field,value){
+		//双击单元格编辑
+		$("#shiftBookGroup").datagrid('selectRow', index).datagrid('editCell', {
+	        index: index,
+	        field: field
+	    }); 
+	},
+	onClickCell:function(index, field,value){
+		//单机单元格取消编辑
+		
+	    var rows = $("#shiftBookGroup").datagrid('getRows');
+	    for (var i = 0; i < rows.length; i++) {
+	        $("#shiftBookGroup").datagrid('endEdit', i);
+	        $("td").removeClass("datagrid-value-changed");
+	    }
+	},
+	afterEdit:function(index, row, changes){
+		///编辑结束保存数据
+		var isNull="",TimeID="",ShiftContent=""
+	    for(var key in changes){
+			isNull=key
+			if(key.indexOf("ShiftContent")>-1){
+				TimeID=key.replace("ShiftContent","")
+				ShiftContent=changes[key]
+			}   
+		}
+		if(isNull!=""){
+			changes.id=row.ID
+			
+			
+			if(TimeID!=""){
+				changes.TimeID=TimeID
+				changes.PatientID=row.PatientID
+				changes.ShiftContent=ShiftContent
+				changes.ShiftID=row.ShiftID
+				console.log(changes)
+				
+			}else{
+			
+			}
+				
+		}
+	}
+}
+</script-->
+
+<script type="text/javascript">
+$(function(){
+	$('body').addClass('active')
+	shiftBookGroup.datagrid()
+	
+})
+var shiftBookGroup={
+	datagrid:function(){
+		
+		var ToolBar = [{
+            text: '新增',
+            iconCls: 'icon-add',
+            handler: function() {
+	            var index=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:'请先保存数据后，进行新增操作',type:'error'});
+					return false;
+				}
+				var Len=$("#shiftBookGroup").datagrid("getRows").length;
+				$("#shiftBookGroup").datagrid("insertRow",{
+					index: Len,
+					row: {
+						id:""
+					}
+				});
+				$("#shiftBookGroup").datagrid("beginEdit", Len);
+				var Editors=$('#shiftBookGroup').datagrid("getEditors",Len);
+				$(Editors[0].target).focus();
+				shiftBookGroup.reloadDetailList(Len,"GroupStartColName","")
+				//shiftBookGroup.reloadDetailList(Len,"GroupEndColName","")
+            }
+        },{
+            text: '保存',
+            iconCls: 'icon-save',
+            handler: function() {
+	            
+				var index=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+				debugger;
+	            var rowEditors=$('#shiftBookGroup').datagrid('getEditors',index);
+
+	            var row=$('#shiftBookGroup').datagrid('getRow',index);
+	            var rtnParms={}
+	            rtnParms.ShiftBookID=ShiftBookID
+				rtnParms.id=row.ID
+				rtnParms.GroupColName=$(rowEditors[0].target).val();
+				rtnParms.GroupStartCol=$(rowEditors[1].target).combobox('getValue');
+				rtnParms.GroupEndCol=GroupEndCol=$(rowEditors[2].target).combobox('getValue');
+				rtnParms.GroupColLevel=2  //默认2级表头
+				
+				if(rtnParms.GroupColName=="" || 
+					rtnParms.GroupStartCol=="" ||
+					rtnParms.GroupEndCol=="" ){
+					$.messager.popover({msg:'保存失败，存在为空的数据',type:'error'});
+					return false;
+				}
+				
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","InsertShiftGroup",{data:JSON.stringify(rtnParms)},function(rtn){
+					if(rtn == 0) {
+						$.messager.popover({msg:'保存成功',type:'success'});
+						shiftBookGroup.loadData()
+					}
+					
+				
+				},'json',false);
+	            
+	            
+	            
+	            
+	            
+	            
+	            
+            }
+        },{
+            text: '删除',
+            iconCls: 'icon-cancel',
+            handler: function() {
+	            var selected = $("#shiftBookGroup").datagrid("getSelected");
+	            if (!selected) {
+					$.messager.popover({msg:'请选择需要删除的记录！',type:'error'});
+					return false;
+				}
+				var rowID=selected.ID;
+				if (rowID) {
+					$.messager.confirm('提示', "确定要删除吗？", function(r){
+						if (r) {
+							runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftGroupById",{"id":rowID},function(rtn){
+								$.messager.popover({msg:'删除成功',type:'success'});
+								shiftBookGroup.loadData()
+							})
+						}
+					});
+				}else{
+					
+				}
+            }
+        }];
+		
+		$('#shiftBookGroup').datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:true,
+			idField:"ID",
+			toolbar :ToolBar,
+			onDblClickRow:function(rowIndex, rowData){
+				
+				debugger;
+				var index=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:'请先保存数据后，进行编辑操作',type:'error'});
+					return false;
+				}
+				
+				$("#shiftBookGroup").datagrid("beginEdit", rowIndex);
+				var Editors=$('#shiftBookGroup').datagrid("getEditors",rowIndex);
+				$(Editors[0].target).focus();
+				shiftBookGroup.reloadDetailList(rowIndex,"GroupStartColName",rowData.GroupStartCol)
+				
+				shiftBookGroup.reloadEndDetailList(rowIndex,"GroupEndColName",rowData.GroupEndCol,rowData.GroupStartCol)
+			},
+			rownumbers : true,
+			columns :[[
+				{field:'GroupColName',title:$g('合并列名'),editor:{type:'text'},width:100},
+				
+				{field:'GroupStartColName',title:$g('开始列名'),width:100,
+				editor:{
+					type:'combobox',
+					options:{
+						multiple:false,
+						valueField:'value',
+						textField:'text',
+						onSelect:function(obj){
+							var value=obj.value
+							var rowIndex=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+							debugger;
+							shiftBookGroup.reloadEndDetailList(rowIndex,"GroupEndColName","",value)
+
+						}
+					}
+				}},
+				
+				{field:'GroupEndColName',title:$g('结束列名'),width:100,
+				editor:{
+					type:'combobox',
+					options:{
+						multiple:false,
+						valueField:'value',
+						textField:'text',
+						onSelect:function(obj){
+							
+							var index=$('#shiftBookGroup').datagrid('getEditingRowIndex');
+							var rowEditors=$('#shiftBookGroup').datagrid('getEditors',index);
+							var row=$('#shiftBookGroup').datagrid('getRow',index);
+							
+							var startCol=$(rowEditors[1].target).combobox('getValue');
+							var endCol=obj.value
+							
+							var b1=parseInt(DetailSortArr[startCol].ListAreaColSort)
+							var b2=parseInt(DetailSortArr[endCol].ListAreaColSort)
+							if(b2<b1){
+								$.messager.popover({msg:'与结束行不能小于开始行！',type:'error'});
+								
+								shiftBookGroup.reloadEndDetailList(index,"GroupEndColName","",startCol)
+								return false;
+								
+							}
+							
+							var isExit=aaa(b1,b2,row.ID)
+							if(isExit>=0){
+								$.messager.popover({msg:'与第'+(isExit+1)+'行数据存在交集！',type:'error'});
+								shiftBookGroup.reloadEndDetailList(index,"GroupEndColName","",startCol)
+								return false;
+							}
+						}
+					}
+				}},
+				
+			]]
+		});	
+	  
+	   shiftBookGroup.loadData()
+		
+	},
+	loadData:function(){
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftGroupList",{"ShiftBookID":ShiftBookID},function(rtn){
+			$("#shiftBookGroup").datagrid("unselectAll");
+			$("#shiftBookGroup").datagrid('loadData', rtn)
+		})	
+	},
+	reloadDetailList:function(rowIndex,rowField,value){
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailList",{"ShiftBookID":ShiftBookID},function(rtn){
+			var rowSpanData=[]
+			var Editor = $('#shiftBookGroup').datagrid('getEditor', {
+				index : rowIndex,  
+				field : rowField  
+		    });
+			var flag=0		
+			for(var i=0;i<rtn.length;i++){
+				var json={}
+				json.text=rtn[i].ListAreaColName
+				json.value=rtn[i].ID
+				json.rowIndex=rowIndex
+				json.index=i
+				rowSpanData.push(json)
+			}
+			debugger
+			$(Editor.target).combobox({
+				data:rowSpanData,
+				width:$(Editor.target).parentsUntil('tr')[0].offsetWidth
+			}).combobox('setValue',value);
+		},'json',false);	
+	},
+	reloadEndDetailList:function(rowIndex,rowField,value,startCol){
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailList",{"ShiftBookID":ShiftBookID},function(rtn){
+			var rowSpanData=[]
+			var Editor = $('#shiftBookGroup').datagrid('getEditor', {
+				index : rowIndex,  
+				field : rowField  
+		    });
+			var flag=0		
+			for(var i=0;i<rtn.length;i++){
+				
+				var json={}
+				json.text=rtn[i].ListAreaColName
+				json.value=rtn[i].ID
+				json.rowIndex=rowIndex
+				json.index=i
+				
+				if(startCol==rtn[i].ID){
+					flag=1
+					rowSpanData.push(json)
+				}else if(flag==1){
+					rowSpanData.push(json)
+				}
+				
+				//rowSpanData.push(json)
+			}
+			debugger
+			$(Editor.target).combobox({
+				data:rowSpanData,
+				width:$(Editor.target).parentsUntil('tr')[0].offsetWidth
+			}).combobox('setValue',value);
+		},'json',false);	
+	}
+}
+$.extend($.fn.datagrid.methods, {
+	getEditingRowIndexs: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var indexs = [];
+		rows.each(function (i, row) {
+			var index = row.sectionRowIndex;
+			if (indexs.indexOf(index) == -1) {
+				indexs.push(index);
+			}
+		});
+		return indexs;
+	},
+	getEditingRowIndex: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var index = -1;
+		rows.each(function (i, row) {
+			index = row.sectionRowIndex;
+			
+		});
+		return index;
+	},
+	
+});
+
+
+
+xcChange.GroupStartCol=function(value,oldvalue){
+	var rowSpanData=[]
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailList",{"ShiftBookID":ShiftBookID},function(rtn){
+		var flag=0		
+		for(var i=0;i<rtn.length;i++){
+			var json={}
+			json.text=rtn[i].ListAreaColName
+			json.value=rtn[i].ID
+			if(value==rtn[i].ID){
+				flag=1
+			}else if(flag==1){
+				rowSpanData.push(json)
+			}
+		}
+		var data={"data":rowSpanData}
+		$("#GroupEndCol").combobox(data)
+		$("#GroupColSpan").val(0)		
+	},'json',false);	
+}
+
+
+xcChange.GroupEndCol=function(value,oldvalue){
+	var rowSpanData=[]
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailList",{"ShiftBookID":ShiftBookID},function(rtn){
+		var StartColValue=$("#GroupStartCol").combo("getValue")	
+		var startIndex=0,endIndex=0
+		for(var i=0;i<rtn.length;i++){
+			if(StartColValue==rtn[i].ID){
+				startIndex=i
+			}
+			if(value==rtn[i].ID){
+				endIndex=i
+			}
+		}
+		$("#GroupColSpan").val(endIndex-startIndex)
+				
+	},'json',false);
+}
+var DetailSortArr={},GroupList=[]
+runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailList",{"ShiftBookID":ShiftBookID},function(rtn){
+		
+		var flag=0		
+		for(var i=0;i<rtn.length;i++){
+			DetailSortArr[rtn[i].ID]=rtn[i]
+		}
+			
+},"json",true)
+
+runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftGroupList",{"ShiftBookID":ShiftBookID},function(rtn){
+				
+		for(var i=0;i<rtn.length;i++){
+			GroupList.push(rtn[i])
+		}
+			
+},"json",true)
+
+///两个数组取交集
+function aaa(b1,b2,rowID){
+	
+	
+	var isExit=-1
+	for(var i=0;i<GroupList.length;i++){
+		var group=GroupList[i]
+		if(rowID==group.ID){
+			continue;	
+		}
+		var a1=group.GroupStartCol
+		var a2=group.GroupEndCol
+		a1=parseInt(DetailSortArr[a1].ListAreaColSort)
+		a2=parseInt(DetailSortArr[a2].ListAreaColSort)
+		
+		if((b1<a1 && b2<a1)||(b1>a2 && b2>a2)){
+			
+		}else{
+			isExit=i
+		}
+		
+	}
+	
+	
+	
+	
+	return isExit
+	
+}
+
+</script>
+	
+</body>
+</html>
+

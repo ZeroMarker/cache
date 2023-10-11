@@ -1,4 +1,4 @@
-<!--ÈİÆ÷ÌõÂëÎ¬»¤-->
+ï»¿<!--æ ‡ç‰Œç»´æŠ¤-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
 	i ##Class(websys.SessionEvents).SessionExpired() q 1
@@ -7,8 +7,9 @@
 <html lang="zh-CN">
 <server>
 	d ##class(web.DHCXMLPConfig).LODOPInit()
+	d ##class(web.CSSDHUI.Util.RQServerConfig).GetApplet()  //æ¶¦ä¹¾æ‰“å°
+	w ##class(web.CSSDHUI.Common.UtilCommon).EncryptInput()
 </server>
-<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -16,34 +17,48 @@
 	<CSSDHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div data-options="region:'center',border:false">
-		<div id="PackageItemTB">
-			<div class="BorderLine"> 
-				<table class="Condition">
+	<div class="hisui-panel" data-options="region:'center',border:false">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+				<table class="Condition" id="Conditions" onkeydown="if(event.keyCode==13){SearchBT.click()}">
 					<tr>
-						<td><label>Ïû¶¾°üÃû³Æ</label><select id="package" name="package" class="hisui-combobox" style="width:145px;"></select></td>
-						<td><label>Éú³ÉÊıÁ¿</label><input class="hisui-numberbox textbox" id="Qty" name="Qty" data-options="min:0,max:100,precision:0"></td>
-						<td><a href="#" id="SearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">²éÑ¯</a></td>
-						<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">ÇåÆÁ</a></td>
+						<td><label>æ¶ˆæ¯’åŒ…</label><input id="PkgDesc" name="PkgDesc" class="hisui-combobox textbox"></td>
+						<td><label>æ ‡ç‰Œ</label><input id="CodedictDesc" name="CodedictDesc" class="textbox"></td>
+						<td><label>ç­èŒæ–¹å¼</label><input id="SterType" name="SterType" class="hisui-combobox textbox"></td>
+						<td><a href="#" id="SearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">æŸ¥è¯¢</a></td>
+						<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">æ¸…å±</a></td>
 					</tr>
 				</table>
 			</div>
-			<table>
-				<tr>
-					<td>
-						<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">±£´æ</a>
-						<a href="#" id="CreateBarcodeBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">Éú³ÉÌõÂë</a>
-						<a href="#" id="PrintBarcodeBT" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true">´òÓ¡ÌõÂë</a>
-						<a href="#" id="PrintItm" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true">´òÓ¡Æ÷ĞµÃ÷Ï¸</a>
-					</td>
-				</tr>
-			</table>
+			<div data-options="border:false,region:'center',collapsible:false,split:true">
+				<table id="GridList"></table>
+			</div>
 		</div>
-		<table id="GridList"></table>
 	</div>
-<script type="text/javascript" src="../scripts/DHCPrtComm.js"></SCRIPT>
-<!--<script type="text/javascript" src="../scripts/cssd/Common/DHCSTPrintCommon.js"></script>-->
-<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>	
-<script type="text/javascript" src="../scripts/cssd/Package/CodeDict.js"></script>
+
+	<!--æ ‡ç‰Œç”ŸæˆDialog-->
+	<div id="AddCodeDictWin" class="hisui-dialog FindWin GridPadding" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'" title="ç”Ÿæˆæ ‡ç‰Œ"  style="width:250px;height:220px">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="FConditions" class="Condition" align="center" style="padding-right:10px">
+					<tr>
+						<td><label>æ¶ˆæ¯’åŒ…</label><input id="FPkgDesc" name="FPkgDesc" class="hisui-combobox textbox"></td>
+					</tr>
+					<tr>
+						<td><label>æ•°é‡</label><input id="Qty" name="Qty" data-options="min:0,max:100,precision:0,isKeyupChange:true" class="hisui-numberbox textbox"></td>
+					</tr>
+					<tr>
+						<td align="center"><a href="#" id="SaveBT" class="hisui-linkbutton">ä¿å­˜</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonHosp.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonData.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Package/AddCodeDictWin.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Package/CodeDict.js"></script>
 </body>
 </html>

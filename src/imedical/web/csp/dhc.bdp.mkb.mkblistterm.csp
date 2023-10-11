@@ -1,0 +1,760 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.mkb.mkblistterm.csp
+	@JS:bdp/MKB/MKP/MKB_ListTerm.js
+	@Title:医用知识库管理--列表型术语维护
+	@Description:术语维护及术语属性、扩展属性及属性内容维护
+	@Creator:基础数据平台组 - 丁亚男
+	@CreateDate:2018-03-26
+*/
+ 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+  <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+ <style type="text/css">
+ /*小气泡显示条数*/
+.badgeDiv {
+    min-width: 20px;
+    line-height: 20px;
+    padding: 2px;
+    background-color: #dddddd;
+    border-radius: 4px;
+    margin: 0 15px 0 0;
+    float: right;
+    text-align: center;
+    font-size: x-small;
+}
+ .titleCls{
+	 color:#c5c5c5;
+ }
+
+ #layoutwest .pagination-info,#layoutwest .pagination-page-list{
+         display:none;
+     }
+ #ComboGrid .pagination-info,#ComboGrid .pagination-page-list{
+     display:none;
+ }
+	
+ .m-btn-downarrow, .s-btn-downarrow {
+    top: -3px;
+}
+
+.menu-rightarrow {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    right: 0;
+    top: 50%;
+    margin-top: -12px;
+}
+.dialog-button {
+	   text-align: center; 
+  } 
+.disabled {
+        pointer-events: none;
+        filter: alpha(opacity=50); 
+        -moz-opacity: 0.5; 
+        opacity: 0.5;
+    }
+/* .combobox-item{
+	 	padding-left: 5px;
+	 	}
+	
+	.eaitor-label .eaitor-checkbox,.eaitor-radio {
+	            appearance: none;
+	            -webkit-appearance: none;
+	            outline: none;
+	            display: none;
+	        }
+	       
+	.eaitor-label .eaitor-checkbox+span,.eaitor-radio+span {
+	            width: 24px;
+	            height: 24px;
+	            display: inline-block;
+	            background: url(../scripts_lib/hisui-0.1.0/dist/css/images/checkbox.png) no-repeat;
+	            background-position-y: 0px;
+	            position: relative;
+	            top:8px;
+	        }
+	.eaitor-label .eaitor-checkbox+span {
+	   			background-position-x: 0px;
+	   		}   
+	.eaitor-label .eaitor-radio+span {
+	   			background-position-x: -120px;
+	   		}	    
+	          
+	.eaitor-label .eaitor-checkbox:checked+span {
+	            background-position-x: -48px 
+	        }
+	.eaitor-label .eaitor-radio:checked+span {
+	            background-position-x: -168px 
+	        }*/
+	 textarea:not(#textareadom){
+	   			height:28px;
+	 		}    
+	#gridExtendPro .panel-body {
+    	border-color: #C0C0C0;
+	}
+	#trconfiggrid .panel-body {
+    	border-color: #C0C0C0;
+	}
+	#trextendconfiggrid .panel-body {
+    	border-color: #C0C0C0;
+	}
+	.m-btn-downarrow, .s-btn-downarrow {
+    	top: -3px;
+	}
+	/*隐藏诊断列表下拉菜单的下拉箭头*/
+	#btnOthers .m-btn-downarrow 
+	{
+		 display: none;
+	}
+	/*修改提示文字的颜色*/
+
+	input::-webkit-input-placeholder { /* WebKit browsers */ 
+
+	color: gray; 
+
+	} 
+
+	input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */ 
+
+	color: gray; 
+
+	} 
+
+	input::-moz-placeholder { /* Mozilla Firefox 19+ */ 
+
+	color: gray; 
+
+	} 
+
+	input:-ms-input-placeholder { /* Internet Explorer 10+ */ 
+
+	color: gray; 
+
+	} 
+	.titleCls{
+		color:#666;
+	}  
+	#asslay .layout-button-down {
+    	background: url(../scripts_lib/hisui-0.1.0/dist/css/images/layout_arrows_black.png) -16px 0px no-repeat;
+	}
+	/*属性面板圆角*/
+	#layout .panel-header-gray {
+    	border-radius: 4px 4px 0px 0px;
+	}
+  /*隐藏下拉框全选按钮*/
+  ._hisui_combobox-selectall{
+    display: none;
+  }
+  /*下拉框的上面的线条显示*/
+  .btop>.combo-panel {
+    border-top-width: 1px;
+}
+</style>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_KnoExpression.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/datagrid-detailview.js"> </script>
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/ChinesePY.js"> </script>
+<!--script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_ComboGridTree.js"></script-->
+
+   <script type="text/javascript"> 
+   	 
+     $(function()
+     {
+         BodyLoadHandler();
+    });
+
+</script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_AssFunction.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_ListTerm.js"></script>
+<script type="text/javascript">var detailstr=[];var leaveflag="";var clickflag="";</script>
+</HEAD>
+<BODY style="padding:4px">
+    <server>
+        s menuid=%request.Get("BDPMENU")   //菜单id
+        s TermID=%request.Get("TermID")   //术语条目id
+        s ProId=%request.Get("ProId")   //属性id
+        s detailId=%request.Get("detailId")   //属性内容id
+        s LeftGridFlag=%request.Get("LeftGridFlag")   //是否显示左侧列表
+        s base=%request.Get("base")
+   </server> 
+    <div class="hisui-layout" data-options="fit:true,collapsible:false" id="layout" border="false" >
+        <!--诊断列表tools:'#myTools',-->
+        <div id="layoutwest"  data-options="region:'west',split:true" border="false" style="width:310px;"  > 
+            <table data-options="fit:true,iconCls:'icon-w-paper'" id="mygrid" title="诊断学-临床实用诊断"  ></table> 
+        </div> 
+        <!--诊断属性-->
+        <div id="mylayoutproperty" data-options="region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-radius: 0px 0px 4px 4px;" title="属性维护">
+           <div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看把" style="margin:150px 0" /></div>
+           <table data-options="fit:true" id="mygridProperty"  style="display:none" border="false" ></table>       
+        </div>
+        <!--辅助功功能区-->
+        <div data-options="region:'east',split:true,headerCls:'panel-header-gray',showCollapsedTitle:true" style="width:400px;overflow:hidden;padding:4px;border-radius: 0px 0px 4px 4px;" title="辅助功能区"> <!--expandMode:dock-->
+            <div id="asslay" class="hisui-layout" data-options="fit:true" border="false" style="">
+                <!--chenghegui Start 收藏夹滑动块-->
+                <div  style="height:100%;width:0;overflow:hidden;left:85%;position:fixed;z-index:9999">
+                    <div id="bookmarks" style="overflow-y:scroll;background:#8B9FB9;height:95%;width:20%;left:100%;position:fixed;opacity:0.9;z-index:9999">
+                    <p style="padding-buttom:30px">收藏夹</p>
+                    </div>
+                </div>
+                <!--收藏夹滑动块 End-->       
+                <div data-options="region:'center',split:true,tools:'#winTools',headerCls:'panel-header-white'" border="false" title="<span style=' border-left: 4px solid #40A2DE;font-size: 14px;line-height: 24px;padding-left: 10px;border-radius:2px 2px 2px 2px;'>自定义查询</span>" style="border-bottom:1px dashed #C0C0C0;">
+                    <div>
+                        <div id="view1" style="display:block" >
+                            <table align="center">
+                                <tr>
+                                    <td><input style="width:165px" class="searchbox searchbox-prompt" id="AssSearch"><span class="searchbox-button" style="margin:1px 0 0 -30px;" id="btnSearchMax"></span></td>
+                                    <td><a href="#" class="hisui-linkbutton" plain=true id="addType" iconImg="../scripts/bdp/Framework/icons/mkb/yesdot.png"></a></td>
+                                    <td id="searchId1" style="display:none"></td><!--获取id-->
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div id="view2" style="display:none">    
+                            <table id="optionContainer" align="center">
+                                <tr id="option1">
+                                    <td><img id="book" src="../scripts/bdp/Framework/icons/mkb/book.png" style="border:0px;cursor:pointer"></td>
+                                    <td><input id="desc1" type="text" style="width:130px"></td>
+                                    <td align="center" width="40px"><a id="relation1" style="border:0px;cursor:pointer">等于</a></td>
+                                    <td><input id="descT1" type="text" style="width:120px"></td>
+                                    <td><img id="addbutton1" src="../scripts_lib/hisui-0.1.0/dist/css/icons/add.png" style="border:0px;cursor:pointer"></td>
+                                    <td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+                                </tr>
+                            </table>
+                            <table align="center">
+                                <tr>
+                                    <td><a href="#" class="hisui-linkbutton l-btn-2" id="btnSearchFunction">查询</a></td>
+                                    <td>&nbsp&nbsp</td>
+                                    <td><img id="mainbar"  src="../scripts/bdp/Framework/icons/mkb/main.png" style="border:0px;cursor:pointer;margin:3px 0 0 0"><a id="toti" href="#"><img id="addTypeF" src="../scripts/bdp/Framework/icons/mkb/nodot.png" style="border:0px;cursor:pointer;margin:3px 0 0 0"></a></td>
+                                    <!--<td><a href="#" class="hisui-linkbutton hisui-tooltip" id="addTypeF">...</a></td>-->
+                                    <td id="searchId2" style="display:none"></td><!--获取id-->
+                                    <td id="bookstr" style="display:none"></td><!--存取搜索串-->
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!--辅助功能区-->    
+                <div id="southlay" data-options="region:'south',split:true,headerCls:'panel-header-white',tools:'#funWinTools'" border="false" title="<span style=' border-left: 4px solid #40A2DE;font-size: 14px;line-height: 24px;padding-left: 10px;border-radius:2px 2px 2px 2px;'>查询结果</span>" style="overflow:hidden;height:450px;"><!--;height:375px-->
+                <!--收藏夹chenghegui start-->
+                <!--
+                <div  ><img  id="imgbookmarks" style="height:auto;width:auto;position:absolute;top:70%;left:70%;z-index:99;cursor:pointer;opacity:0.5" src="../scripts/bdp/Framework/icons/mkb/tooltipbtn.png" alt="收藏夹"></img></div>
+                -->
+                <!--收藏夹 end-->
+                   <!-- <div class="hisui-panel" title="辅助功能" id="funPanel" style="height:350px;width:300px;overflow:hidden" data-options="border:true,tools:'#funWinTools',headerCls:'panel-header-gray'">-->
+                        <!--数据显示区-->
+                        <div id="view3" style="display:block;height:100%">
+                            <div >
+                                <table>
+                                    <tr id="foot">
+                                        <td><img id="imgId" src="../scripts/bdp/Framework/icons/mkb/position.png" style="border:0px;cursor:pointer" style="display:none"></td>
+                                        <td><a href="#" id="diaId" style="display:none"></a></td>
+                                        <td><a href="#" id="diaId3" style="display:none"></a></td><!--存id-->
+                                        <td><a href="#" id="footOne"></a></td>
+                                        <td id="arrow1">></td>
+                                        <td><a href="#" id="footTwo"></a></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div id="grids" style="height:93%">
+                                <iframe id="myiframe" class="myiframe"  frameborder="0" src="" style="width:99%;height:101%;"></iframe>
+                            </div>
+                        </div>
+                        <!--word编辑区-->
+                        <div id="view4" style="display:none;height:100%;padding:10px 0px 10px 5px;">
+                            <iframe id="upload" src="" frameborder="0" width="100%" height="102%" scrolling="no"></iframe>
+                        </div>
+                    <!--</div>-->
+                </div>
+            </div>
+        </div> 
+    </div> 
+        
+    <!--自定义查询toolbar-->
+    <div id="winTools">
+        <a href="#" class="icon-basequery" id="changeWin"></a>
+    </div>
+    <!--放大的toolbar-->
+    <div id="funWinTools">
+    	<!--a href="#" class="icon-apply-check" id="searchCRBtn"></a-->
+        <a href="#" class="icon-collect" id="addbookmarks"></a>
+        <a href="#" class="icon-searchresult" id="assChangebtn"></a>
+        <a href="#" class="icon-spread" id="maxWin"></a>
+    </div>
+    <!--放大的window-->
+    <div id="MaxWin">
+        <div id="maxview1" style="display:none;height:92%;padding:5px 10px 10px 10px;">
+            <div >
+                <table style="padding-bottom:5px;">
+                    <tr id="footLarge">
+                        <td><img id="winimgId" src="../scripts/bdp/Framework/icons/mkb/position.png" style="border:0px;cursor:pointer" style="display:none"></td>
+                        <td><a href="#" id="winfoot1"></a></td>
+                        <td id="arrowMax1">></td>
+                        <td><a href="#" id="winfoot2"></a></td>
+                    </tr>
+                </table>
+            </div>
+         
+            <div id="wingrid" style="height:100%">
+                <iframe id="Maxiframe" class="Maxiframe" frameborder="0" src="" style="width:100%;height:100%"></iframe>
+            </div>
+         
+        </div>
+        <!--word编辑区-->
+        <div id="maxview2" style="display:none;height:98%;padding:5px 5px 0px 5px;">
+            <code id="maxTextCopy" style="display:none"></code>
+            <iframe id="uploadMax" frameborder="0" width="100%" height="99%" scrolling="no"></iframe><!--src="../scripts/bdp/App/BDPSystem/Ueditor/maxIndex.csp"-->
+         </div>
+    </div>
+    <!--放大的window结束-->
+    <!--术语弹窗  <div id="baseWin">
+        <div class="hisui-layout" data-options="fit:true,split:true" border="fasle">
+            <div data-options="region:'north'" style="height:40px" border="false">
+                <table align="center">
+                    <tr>
+                        <td class="tdlabel" ><input id="searchIn" type="text" class="hisui-validatebox" style="width:286px" placeholder='请输入查询条件...'></td>
+                    </tr>
+                </table>
+            </div>
+            <div data-options="region:'center',split:true,iconCls:'icon-add-note',headerCls:'panel-header-gray'" border="false">
+                <div style="height:100%">
+                    <table data-options="fit:true" id="basegrid" border="false"></table></div>
+                </div>
+            </div>
+        </div>
+      </div>-->
+  
+    <!--辅助功能区结束-->     
+   <!--术语新增按钮--> 
+    <!--div id="myTools">
+    	<a href="#" class="icon-w-add" id="btnAdd" ></a>
+    </div-->
+    <!--诊断列表工具条-->
+    <div id="mytbar" data-options="split:false"  style="text-align: left; display:block;" >
+        <input style="width:165px" id="TextSearch" />
+        <span class="searchbox-button" style="margin:1px 0 0 -30px;" id="btnSearch"></span>
+        <!--a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-w-find" style="margin-left:-4px;" data-options="stopAllEventOnDisabled:true" id="btnSearch"></a-->
+        <a  class="hisui-linkbutton l-btn-0" iconCls='icon-refresh' plain="true" data-options="stopAllEventOnDisabled:true" id="btnRel"></a> 
+        <a  class="hisui-linkbutton l-btn-0" iconCls='icon-add' plain="true" data-options="stopAllEventOnDisabled:true" id="btnAdd" ></a>
+        <!--a class="hisui-linkbutton l-btn-0" iconCls="icon-apply-check" plain="true" data-options="stopAllEventOnDisabled:true" id="btnRelatedTerm"></a-->
+        <a  class="hisui-menubutton l-btn-5" style="width:30px;" data-options="menu:'#menuothers',iconCls:'icon-others',stopAllEventOnDisabled:true"  id="btnOthers" ></a>	
+			<div id="menuothers" style="width:165px;height:165px;padding:5px 0 5px 10px;" data-options="hideOnUnhover:false"> 
+        	<a  class="hisui-linkbutton " iconCls='icon-develop' plain="true" style="width:120px;text-align:left;" data-options="stopAllEventOnDisabled:true" id="btnDetailEdit">扩展</a>  
+        	<a  class="hisui-linkbutton " iconCls='icon-arrow-up' plain="true" style="width:120px;text-align:left;" data-options="stopAllEventOnDisabled:true" id="btnTreeCollapse">收缩</a> 
+        	<a  class="hisui-linkbutton " iconCls='icon-toggle' plain="true" style="width:120px;text-align:left;" data-options="stopAllEventOnDisabled:true" id="btnSwitchSortWay">切换排序</a> 
+        	<a  class="hisui-linkbutton " iconCls='icon-details' plain="true" style="width:120px;text-align:left;" data-options="stopAllEventOnDisabled:true" id="btnShowAll">展示全部</a> 
+        	<a  class="hisui-linkbutton " iconCls='icon-import' plain="true" style="width:120px;text-align:left;" data-options="stopAllEventOnDisabled:true" onclick="DataImport()"  id="btnDataImport">导入导出</a>
+        	<a  class="hisui-combotree"  plain="true" style="width:140px;text-align:left;display:none" data-options="stopAllEventOnDisabled:true" id="ProLocDesc"></a>
+        	</div>        
+    	
+    </div>  
+    <!--诊断属性工具条iconCls:'icon-search'-->
+    <div id="mytbarProperty" data-options="split:false" style="text-align: left; display:block;" >
+        <input style="width:165px" id="TextSearchProperty" />
+        <span class="searchbox-button" style="margin:1px 0 0 -30px;" id="btnSearchProperty"></span>
+        <!--a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-w-find" style="margin-left:-4px;" data-options="stopAllEventOnDisabled:true" id="btnSearchProperty"></a-->
+        <a   href="#"  class="hisui-linkbutton l-btn-2" iconCls='icon-refresh' plain="true" data-options="stopAllEventOnDisabled:true" id="btnRelProperty">清屏</a>
+        <a   href="#"  class="hisui-linkbutton l-btn-2" iconCls='icon-add' plain="true" data-options="stopAllEventOnDisabled:true" id="btnAddProperty">新增</a> 
+        <a   href="#"  class="hisui-linkbutton l-btn-2" iconCls='icon-write-order' plain="true" data-options="stopAllEventOnDisabled:true"id="btnUpdateProperty">修改</a> 
+        <!--a   href="#"  class="hisui-linkbutton" iconCls='icon-cancel' plain="true"data-options="stopAllEventOnDisabled:true"  id="btnDelProperty">删除</a-->
+        <!--a   href="#"  class="hisui-linkbutton l-btn-2" iconCls='icon-copyorder' plain="true" data-options="stopAllEventOnDisabled:true"  id="btnCopyProperty">复制</a-->
+        <a href="#" id="btnMoveProperty" class="hisui-menubutton menubutton-toolbar"  data-options="menu:'#menumove',iconCls:'icon-blue-move',stopAllEventOnDisabled:true">位置移动&nbsp;&nbsp;&nbsp;&nbsp;</a>
+			<div id="menumove" style="width:120px;">
+		        <a   href="#"  class="hisui-linkbutton" iconCls='icon-shiftup' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true"id="btnUpProperty">上移</a>
+		        <a   href="#"  class="hisui-linkbutton" iconCls='icon-shiftdown' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true"id="btnDownProperty">下移</a>
+		        <a   href="#"  class="hisui-linkbutton" iconCls='icon-shiftfirst' plain="true" style="width:120px;text-align:left"data-options="stopAllEventOnDisabled:true" id="btnFirstProperty">移到首行</a>
+   			</div> 
+   		<!--a   href="#"  class="hisui-linkbutton l-btn-2" iconCls='icon-copyorder' plain="true" data-options="stopAllEventOnDisabled:true"  id="btnTest">批处理</a-->
+    </div> 
+    <!--中心词右键菜单>
+    <div id="myMenu" class="hisui-menu" style="width:80px;"> 
+        <div onclick="TopData()" iconCls="icon-stick"  id="stick">置顶</div>
+        <div onclick="CancelTopData()" iconCls="icon-cancelstick" id="cancelstick">取消置顶</div>
+        <div onclick="UpdateData()" iconCls="icon-write-order" data-options="">修改</div>
+        <div onclick="DelData()" iconCls="icon-cancel" data-options="">删除</div> 
+        <div  id="CopyList" iconCls="icon-copyorder" data-options="">复制</div>
+        <div onclick="CopyTerm()" iconCls="icon-copyorder" data-options="">复制术语</div>
+        <div class="menu-sep"></div>
+        <div iconCls="icon-changeposition">
+            <span>位置移动</span>
+            <div style="width:80px;">
+                <div onclick="OrderFunLib(1)" iconCls="icon-shiftup" id="shiftup">上移</div>
+                <div onclick="OrderFunLib(2)" iconCls="icon-shiftdown" id="shiftdown">下移</div>
+                <div onclick="OrderFunLib(3)" iconCls="icon-shiftfirst" id="shiftfirst">移到首行</div>
+            </div>
+        </div>
+        <div class="menu-sep"></div>        
+        <div onclick="GuideImage()" iconCls="icon-productimage" data-options="">医为百科</div>    
+    </div--> 
+    
+    <!--属性内容右键菜单-->
+    <div id="myMenuProperty" class="hisui-menu" style="width:80px;">
+        <div onclick="UpdateProperty()" iconCls="icon-write-order" data-options="">修改</div>
+        <div onclick="DelProperty()" iconCls="icon-cancel" data-options="">删除</div>
+       	<div   id="CopyProperty"  iconCls="icon-copyorder" data-options="">复制文本</div>
+        <div class="menu-sep"></div>
+        <div id="positiondiv" iconCls="icon-changeposition">
+            <span>位置移动</span>
+            <div style="width:80px;">
+                <div onclick="OrderProperty(1)" iconCls="icon-shiftup" id="Propertyshiftup">上移</div>
+                <div onclick="OrderProperty(2)" iconCls="icon-shiftdown" id="Propertyshiftdown">下移</div>
+                <div onclick="OrderProperty(3)" iconCls="icon-shiftfirst" id="Propertyshiftfirst">移到首行</div>
+            </div>
+        </div>
+        <div class="menu-sep"></div>      
+        <div iconCls="icon-others">
+            <span>其他</span>
+            <div style="width:220px;">
+                <div onclick="CopyBaseProToSelf()" iconCls="icon-copy-prop" id="prop">复制选中属性到本术语</div>
+                <div onclick="CopyBaseProToOther()" iconCls="icon-copy-proptoother" id="proptoother">复制选中属性到其他术语</div>
+                <div  iconCls="icon-upgrade-proptoterm" id="proptoterm">把选中属性升级为术语</div><!--onclick="PromotePro()"-->
+                <div  iconCls="icon-upgrade-proptocommon"id="proptocommon">把选中属性升级为公有属性</div><!--onclick="PublicPro()"-->
+            </div>
+        </div> 
+        <div onclick="SeeProVersion()" iconCls="icon-apply-check" data-options="">查看版本</div>
+        <div onclick="SeeProChangeLog()" iconCls="icon-apply-check" data-options="">查看日志</div>
+    </div>      
+    <!--诊断列表弹窗-->
+     <div id="myWin" style="width:400px;height:300px;display:none;padding-top:10px">    
+            <!--div title="新增" data-options="iconCls:'icon-add-note'"-->   
+                <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+                    <table>
+                        <tr style="display:none">
+                            <td></td>
+                            <td><input id="MKBTRowId" name="MKBTRowId" type="text" class="hisui-validatebox" ></td>
+                        </tr>
+                        <tr style="display:none">
+                            <td></td>
+                            <td><input id="MKBTCode" name="MKBTCode" type="text" class="hisui-validatebox" ></td>
+                        </tr>
+                        <tr>
+                           <td align="right" class="tdlabel"><font color=red>*</font>中心词</td>
+                           <td><input id="MKBTDesc" name="MKBTDesc" type="text" class="textbox hisui-validatebox"  style="width:300px" data-options="required:true"></td>
+                         </tr>
+                        <tr>
+                           <td align="right" class="tdlabel">检索码</td>
+                           <td><input id="MKBTPYCode" name="MKBTPYCode" type="text" style="width:300px" class="textbox hisui-validatebox" ></td>
+                        </tr>
+                        <tr>
+                            <td align="right" class="tdlabel">备注</td>
+                            <td><textarea id="MKBTNote" name="MKBTNote" type="text"  style="height:110px; width:300px" ></textarea></td>
+                        </tr>
+                    </table >
+                </form>  
+    </div>
+    <!--全局化词表引用编码弹窗 fwkadd-->
+    <div id="myWinRefCode" style="width:80%;height:80%;display:none;"> </div>
+    <!--诊断树形列表弹窗-->
+	 <div id="myWinTree" style="width:750px;height:450px;padding:20px;display:none;">
+			<!--div title="新增" data-options="iconCls:'icon-add-note'"-->   
+				<form id="form-saveTree" method="post" data-options="fit:true,border:false,plain:true"> 
+					<table>
+						<tr style="display:none">
+				 			<td></td>
+	    		   			<td><input id="MKBTRowIdTree" name="MKBTRowId" type="text" class="hisui-validatebox" ></td>
+				 		</tr>
+				 		 <tr style="display:none">
+                            <td></td>
+                            <td><input id="MKBTCodeTree" name="MKBTCode" type="text" class="hisui-validatebox" ></td>
+                        </tr>
+						<tr>
+			               <td align="right" class="tdlabel"><font color=red>*</font>中心词</td>
+			    		   <td><input id="MKBTDescTree" name="MKBTDesc" type="text" class="textbox hisui-validatebox"  style="width:610px" data-options="required:true"></td>
+			    		 </tr>
+			    		<tr>
+			    		   <td align="right" class="tdlabel">检索码</td>
+			    		   <td><input id="MKBTPYCodeTree" name="MKBTPYCode" type="text" style="width:610px" class="textbox hisui-validatebox" ></td>
+			    		</tr>
+			    		<tr>
+			    		   <td align="right" class="tdlabel">上级节点</td>
+			    		   <td><input id="MKBTLastLevelTree" name="MKBTLastLevel" type="text" style="width:617px" class="textbox hisui-combotree" ></td>
+			    		</tr>
+				 		<tr>
+	    		   			<td align="right" class="tdlabel">备注</td>
+				   			<td><textarea id="MKBTNoteTree" name="MKBTNote" type="text"  style="height:80px; width:610px" ></textarea></td>
+				 		</tr>
+					</table >
+				</form>  
+	</div>
+     <!--诊断导入弹窗-->
+    <div id="myWinDataImport" style="width:500px;height:450px;background-color:#FFFFFF;display:none;"> 
+    </div> 
+     <!--诊断导图弹窗-->
+    <div id="myWinGuideImage" style="width:1350px;height:650px;display:none;"> 
+    </div> 
+	<!--术语属性、扩展属性tab弹窗 20200417 谷雪萍修改样式去掉多层五方布局 诊断常用表达式修改表达式时点确定报错-->
+	<div id="myWinProperty" style="width:1010px;height:520px;padding:0 10px;display:none;"> 
+		<div class="hisui-layout" data-options="fit:true" border="false" >
+			<div data-options="region:'west',split:true,border:false" style="width:320px;"> 
+		        <div class="hisui-panel" title="基本信息" style="padding:10px 10px 10px 0px;" data-options="fit:true,headerCls:'panel-header-card'"> 	
+					<form id="form-save-Property" method="post" data-options="fit:true,border:false,plain:true"> 
+						<table >
+							<tr>
+				               <td class="tdlabel" align="right"><font color=red>*</font>属性名称</td>
+				    		   <td><input id="MKBTPDesc" name="MKBTPDesc" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options="required:true"></td>
+				    		 </tr>
+				    		 <tr style='display:none'>
+				    		   <td class="tdlabel" align="right">属性代码</td>
+				    		   <td><input id="MKBTPCode" name="MKBTPCode" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+				    		</tr>
+				    		<tr style='display:none' align="right">
+				    		   <td class="tdlabel">主列名</td>
+				    		   <td><input id="MKBTPName" name="MKBTPName" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+				    		</tr>
+				    		<tr>
+				               <td class="tdlabel" align="right">标识</td>
+				    		   <td><input id="MKBTPFlag" name="MKBTPFlag" type="text" class="textbox hisui-combobox"  style="width:208px" data-options=""></td>
+				    		</tr>
+					 		<tr style="display:none" align="right">
+				    		   <td class="tdlabel">顺序</td>
+				    		   <td><input id="MKBTPSequence" name="MKBTPSequence" type="text" class="textbox hisui-validatebox" style="width:200px" ></td>
+				    		</tr>
+				    		<tr>
+				               <td class="tdlabel" align="right"><font color=red>*</font>格式</td>
+				    		   <td><input id="MKBTPType" name="MKBTPType" type="text" class="textbox hisui-combobox"  style="width:208px" data-options=""></td>
+				    		</tr>
+				    		 <tr>
+				    		   <td class="tdlabel" align="right"><font color=red>*</font>编码规则</td>
+				    		   <td><input id="MKBTPCodeRules" name="MKBTPCodeRules" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options="required:true"></td>
+				    		</tr>
+						</table>
+					</form>  
+				
+				</div>
+			</div>
+			
+			<div data-options="region:'center',border:false,split:true" >
+				<div class="hisui-panel" title="扩展属性" style="padding:10px 10px 10px 0;" data-options="fit:true,headerCls:'panel-header-card'"> 	
+	    			<div style="width:46%;height:100%;float:left;border-right: 1px solid #C0C0C0;">
+			    			<table style="width:100%;height:38px;border-bottom: 1px dashed #C0C0C0;">
+								<tr >
+									<td>
+										<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-refresh' plain="true" id="refresh_btn_ExtendPro">清屏</a> 
+										<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-add' plain="true" id="add_btn_ExtendPro">新增</a> 
+		    							<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-write-order' plain="true" id="update_btn_ExtendPro">修改</a> 
+				    			   </td>
+				    			</tr>
+				    		</table>
+			    			<form id="form-save-ExtendPro" method="post" data-options="fit:true,border:false,plain:true"> 
+								<table >
+									<tr>
+						               <td class="tdlabel" align="right"><font color=red>*</font>名称</td>
+						    		   <td><input id="MKBTEPName" name="MKBTEPName" type="text" class="textbox hisui-validatebox" style="width:196px"  data-options="required:true"></td>
+						    		 </tr>
+						    		<tr>
+						               <td class="tdlabel" align="right"><font color=red>*</font>类型</td>
+						    		   <td><input id="MKBTEPType" name="MKBTEPType" type="text" class="textbox hisui-combobox"  style="width:204px" data-options=""></td>
+						    		</tr>
+					    		</table>
+				    		</form>	    
+			    	</div>
+		        	<div id="gridExtendPro" style="width:52%;height:100%;float: left;margin-left:10px"> 
+		        		<table id="mygridExtendPro"  style='height:390px' ></table>
+		        	</div>
+
+		        </div> <!--hisui-panel-->
+		   </div> <!--center-->	  	 
+		</div>  <!--hisui-layout-->
+	</div> <!--myWinProperty-->
+    <!--诊断属性弹窗>
+    <div id="myWinProperty" style="width:720px;height:450px;"> 
+        <div id="myTabProperty" class="hisui-tabs  tabs-gray" data-options="fit:true,plain:true" border="false"> 
+            <div title="基本信息"  id="myBaseTab" data-options="iconCls:'icon-add-note'" style="padding:10px;">    
+                <div class="hisui-layout" data-options="fit:true" border="false" >
+                    <div data-options="region:'center',border:false">
+                        <form id="form-save-Property" method="post" style="margin-left:100px" data-options="fit:true,border:false,plain:true"> 
+                            <table>
+                                <!--tr style="display:none">
+                                    <td></td>
+                                    <td><input id="MKBTPRowId" name="MKBTPRowId" type="text" class="hisui-validatebox" ></td>
+                                </tr>
+                                <tr>
+                                   <td align="right" class="tdlabel"><font color=red>*</font>属性名称</td>
+                                   <td><input id="MKBTPDesc" name="MKBTPDesc" type="text" class="textbox hisui-validatebox"  style="width:295px;"  data-options="required:true"></td>
+                                 </tr>
+                                 <tr>
+                                   <td align="right" class="tdlabel">主列名称</td>
+                                   <td><input id="MKBTPName" name="MKBTPName" type="text" class="textbox hisui-textbox"  style="width:300px;" data-options=""></td>
+                                </tr>
+                                <tr>
+                                    <td align="right" class="tdlabel">标识</td>
+                                    <td><input id="MKBTPFlag" name="MKBTPFlag" type="text" class='textbox hisui-combobox'  style="width:300px;"   data-options="checked:false" value="Y"></td>
+                                </tr>
+                                <tr>
+                                   <td align="right" class="tdlabel"><font color=red>*</font>格式</td>
+                                   <td><input id="MKBTPType" name="MKBTPType" type="text" class="textbox hisui-combobox"   style="width:300px;" data-options="required:true"></td>
+                                </tr>
+                                <!--tr>
+                                   <td align="right">来源</td>
+                                   <td><input id="MKBTPConfig" name="MKBTPConfig" type="text" class="hisui-combobox"  style="width:156px;" data-options="" disabled="true"></td>
+                                </tr>
+                                <tr>
+                                   <td align="right">起始节点</td>
+                                   <td><input id="MKBTPDefinedNode" name="MKBTPDefinedNode" type="text" class="hisui-combobox"  style="width:156px;" data-options="" disabled="true"></td>
+                                </tr>
+
+                            </table >
+                        </form>  
+                    </div>
+                    <div data-options="region:'south',collapsible:false,border:false" style="height:40px">
+                        <table style="margin-left:250px">
+                            <tr >
+                                <td ><a href="#" class="hisui-linkbutton"  id="save_btn_Property">保存</a></td>
+                                <td ><a href="#" class="hisui-linkbutton"  id="tadd_btn_Property">继续新增</a></td>
+                            </tr>
+                        </table>
+                    </div>   
+                </div> 
+            </div>
+            <div title="扩展属性" id="myExtendTab" data-options="iconCls:'icon-apply-opr'" style="padding:10px">  
+                <div class="hisui-layout" data-options="fit:true" border="false" >
+                    <div data-options="region:'west',collapsible:false,border:false" style="width:350px">
+                        <div class="hisui-layout" data-options="fit:true" border="false" >
+                            <div data-options="region:'center',border:false">
+                                 <form id="form-save-ExtendPro" method="post" data-options="fit:true,border:false,plain:true"> 
+                                    <table >
+                                        <tr>
+                                           <td align="right" class="tdlabel"><font color=red>*</font>名称</td>
+                                           <td><input id="MKBTEPName" name="MKBTEPName" type="text" class="textbox hisui-validatebox" style="width:270px"  data-options="required:true"></td>
+                                         </tr>
+                                        <tr>
+                                           <td align="right" class="tdlabel"><font color=red>*</font>类型</td>
+                                           <td><input id="MKBTEPType" name="MKBTEPType" type="text" class="textbox hisui-combobox"  style="width:278px" data-options=""></td>
+                                        </tr>
+                                    </table>
+                                    </form>
+                             </div>
+                             <div data-options="region:'south',collapsible:false,border:false" style="height:40px">
+                                <table style="margin-left:100px">
+                                    <tr >
+                                        <td ><a href="#" class="hisui-linkbutton" id="refresh_btn_ExtendPro">重置</a></td>
+                                        <td ><a href="#" class="hisui-linkbutton" id="save_btn_ExtendPro">保存</a></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                     <div data-options="region:'center',border:false">
+                        <table id="mygridExtendPro" data-options="border:false" style='width:350px;height:300px' ></table> 
+                     </div>  
+                 </div> 
+            </div>
+        </div>
+    </div--> 
+    <!--复制选中属性到本术语弹窗-->
+     <div id="myWinCopySelf" style="width:400px;height:150px;padding:10px;display:none;">        
+        <form id="form-save-CopySelf" method="post" data-options="fit:true,border:false,plain:true"> 
+            <table>
+                <tr>
+                   <td align="right" class="tdlabel"><font color=red>*</font>属性名称</td>
+                   <td><input id="CopyMKBTPDesc" name="CopyMKBTPDesc" type="text" class="textbox hisui-validatebox" style="width:280px"  data-options="required:true"></td>
+                 </tr>
+            </table >
+        </form>             
+    </div>
+    
+     <!--复制选中属性到其他术语弹窗-->
+    <div id="myWinCopyToOther" style="width:400px;height:600px;padding:10px 10px 0 10px;display:none;">   
+        <div class="hisui-layout" data-options="fit:true" border="false" >
+            <div data-options="region:'north',collapsible:false" style="height:40px;border: 1px solid #C0C0C0;border-bottom: 1px dashed #C0C0C0;border-radius: 4px 4px 0 0;">
+                 <table>
+                    <tr>
+                        <td class="tdlabel">检索</td>
+                        <td><input id="myDescCopyToOther" type="text" class="textbox hisui-validatebox"></td>
+                        <!--td ><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="save_btn_CopyToOtherForm">复制格式</a></td>
+                        <td ><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="save_btn_CopyToOtherAll">完全复制</a></td-->
+                        <!--td>
+                            <input id="myChecktreeFilterCK0" class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+                            <input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+                            <input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>
+                        </td-->
+                    </tr>                    
+                 </table >  
+             </div>
+             <div data-options="region:'center'" style="border: 1px solid #C0C0C0;border-top:0px;border-radius:0 0 4px 4px;">
+                <table id="myChecktree" data-options="fit:true,border:false" style="width:100%;"></table> 
+                <!--<div id="myChecktree" ></div>-->
+             </div>  
+         </div> 
+     </div>
+     <!--复制选中属性到其他术语有重复内容弹窗-->
+    <div id="myWinCopyToOtherRepeat" style="width:1000px;height:400px;display:none;padding:10px 10px 5px 10px;"> 
+    </div> 
+    <!--复制选中术语条目-->
+     <div id="myWinCopyTerm" style="width:400px;height:150px;padding:10px;display:none;">        
+        <form id="form-save-CopyTerm" method="post" data-options="fit:true,border:false,plain:true"> 
+            <table>
+                <tr>
+                   <td align="right" class="tdlabel"><font color=red>*</font>中心词</td>
+                   <td><input id="CopyMKBTDesc" name="CopyMKBTDesc" type="text" class="textbox hisui-validatebox"  style="width:280px"  data-options="required:true"></td>
+                 </tr>
+            </table >
+        </form>             
+    </div>
+    <!--更新部位到包含部位属性的诊断模板-->
+    <div id="myWinUpdateDiaTemplate" style="width:900px;height:500px;display:none;padding:10px;"> 
+    	<div class="hisui-layout" data-options="fit:true" border="false">
+	    	<div data-options="headerCls:'panel-header-gray',region:'center',border:false" >
+				<div id="DiaTemplate"  data-options="fit:true,border:false,plain:true" style="height:100%;width:100%;">
+					<iframe id="myiframeDiaTemplate" name="myiframeDiaTemplate" frameborder="0" src="" title="" border="false" style="height:99%;width:100%;"></iframe>  
+				</div>		
+			</div>
+			<div data-options="headerCls:'panel-header-gray',region:'south',split:true,border:false" style="height:60px;" >
+				<table style="margin-left:250px">
+					<tr >
+	    		   		<td ><a href="#" class="hisui-linkbutton" style="margin-left:10px" id="save_btn_BatchPart">批处理</a></td>
+	    		   		<td ><a href="#" class="hisui-linkbutton" style="margin-left:10px" id="search_btn_RelatedKno" >相关知识点</a></td>
+	    		   		<td ><a href="#" class="hisui-linkbutton" style="margin-left:10px" id="next_btn_term">下一条术语条目</a></td>
+	    			</tr>
+	    		</table>
+			</div>
+		</div>
+    </div> 
+     <!--弹窗术语列表详情并且可编辑-->
+    <div id="myWinDetailEdit" style="width:1000px;height:600px;padding:10px;display:none;">   
+		<iframe id="myiframeDetailEdit" name="myiframeDetailEdit" frameborder="0" src="" title="" border="false" style="height:99%;width:100%;"></iframe> 		
+	</div>
+	<!--弹窗,包含所选部位的术语-->
+    <div id="myWinRelatedTerm" style="width:1100px;height:600px;padding:10px 0 5px 10px;display:none;">   		
+	</div>
+	<!--弹窗,所选术语的引用数据-->
+    <div id="myWinReferedList" style="width:600px;height:600px;padding:10px;display:none;">   		
+	</div> 
+ 	<!--弹窗,所选术语、术语属性的版本-->
+    <div id="myWinVersion" style="width:600px;height:600px;padding:10px 10px 2px 10px;;display:none;">   		
+	</div> 
+	<!--弹窗,所选术语、术语属性的日志-->
+    <div id="myWinChangeLog" style="width:1100px;height:600px;padding:10px 0 0 10px;display:none;">   		
+	</div>
+    <script type="text/javascript">
+    var url="../scripts/bdp/App/BDPSystem/Ueditor/mkbindex.csp"
+    if ("undefined"!==typeof websys_getMWToken){
+		url += "?MWToken="+websys_getMWToken()
+	}
+	$('#upload').attr('src', url);
+    
+    
+     var  menuid="#(menuid)#"
+     var  TermID="#(TermID)#"
+     //var  TermID="41054"
+     var  ProId="#(ProId)#"
+     var  detailId="#(detailId)#"
+     var  LeftGridFlag="#(LeftGridFlag)#"
+     var  ValueExp=tkMakeServerCall("web.DHCBL.MKB.MKBTerm", "GetValueExp", menuid);
+     var base = ValueExp.split("=")[1];
+     var basetype= tkMakeServerCall("web.DHCBL.MKB.MKBTerm", "GetBaseTypeByID",base); 
+  </script>
+</BODY>
+</HTML>

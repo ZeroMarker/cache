@@ -1,83 +1,122 @@
 <!DOCTYPE html>
 <!--住院基数药管理查询  
-	csp: dhcpha.inpha.hisui.querytransreq.csp
-	js:  scripts/pharmacy/inpha/dhcpha.inpha.querytransreq.js
+    csp: dhcpha.inpha.hisui.querytransreq.csp
+    js:  scripts/pharmacy/inpha/dhcpha.inpha.querytransreq.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
+
 <HEAD>
     <title>
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
-<style>
-</style>
+    <HISUI />
+
+    <!-- 兼容极简UI样式 -->
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
+    </link>
+    <script language=javascript>
+        if (typeof HISUIStyleCode == 'string' && HISUIStyleCode == 'lite') {
+            $(function () {
+                $('body').append('<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.lite.css"></link>');
+                var addLiteStyleStr = '';
+                addLiteStyleStr += '<style>';
+                addLiteStyleStr += '    .layout-split-north {';
+                addLiteStyleStr += '	    border-color: #f5f5f5;';
+                addLiteStyleStr += '	}';
+                addLiteStyleStr += '	.layout-split-south {';
+                addLiteStyleStr += '	    border-color: #f5f5f5;';
+                addLiteStyleStr += '	}';
+                addLiteStyleStr += '	.layout-split-east {';
+                addLiteStyleStr += '	    border-color: #f5f5f5;';
+                addLiteStyleStr += '	}';
+                addLiteStyleStr += '	.bg-dhcpha-hisui-container {';
+                addLiteStyleStr += '	    background-color:#f5f5f5;';
+                addLiteStyleStr += '	}';
+                addLiteStyleStr += '</style>';
+                $('body').append(addLiteStyleStr);
+            });
+        }
+    </script>
+    <style>
+    </style>
 </HEAD>
-<body >
-    <div class="hisui-layout"  fit="true" border="false">
-        <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-        	<div class="hisui-layout" fit="true" border="false">
-        		<div  data-options="region:'north',split:true,headerCls:'panel-header-gray',title:'基数药管理',collapsible:false,iconCls:'icon-panel-common-query'" class="dhcpha-north-r2">
-				<table class="dhcpha-north-tbl" cellpadding=0 cellspacing=0>
-	                <tr>
-	                    <td>
-	                        <label for="cmbReqLoc">请求科室</label>
-	                        <input id="cmbReqLoc" class="hisui-combobox" />					
-	                    </td>
-	                    <td style="padding-left:20px">
-	                        <label for="dateStart">起始日期</label>
-							<input id="dateStart" class="hisui-datebox" />
-	                    </td>          
-	                    <td style="padding-left:20px">
-	                        <a class="hisui-linkbutton" iconCls='icon-w-find'  id="btnFind">查询</a>
-	                    </td>
-	    	            <td style="padding-left:20px;display:none">
-	                        <a class="hisui-linkbutton" iconCls=''  id="btnClear1">毒麻药明细打印</a>
-	                    </td> 
-	    	            <td style="padding-left:20px">
-	                        <a class="hisui-linkbutton" iconCls=''  id="btnAddByBASE">基数药补货</a>
-	                    </td>    
-	    	            <td style="padding-left:20px">
-	                        <a class="hisui-linkbutton" iconCls=''  id="btnAddByJSDM">精神毒麻补货</a>
-	                    </td>    
-           
-	                </tr> 
-	                <tr>
-	                    <td>
-	                        <label for="cmbProLoc">供给科室</label>
-	                        <input id="cmbProLoc" class="hisui-combobox" />	
-	                    </td>
-	                    <td>
-	                        <label for="dateEnd">截止日期</label>
-							<input id="dateEnd" class="hisui-datebox" />
-	                    </td>	                    
-	                    <td>
-	                        <a class="hisui-linkbutton" iconCls='icon-w-edit'  id="btnEdit">编辑</a>
-	                    </td> 
-     	                <td style="display:none">
-	                        <a class="hisui-linkbutton" iconCls=''  id="btnAddByBASE1">基数药汇总打印</a>
-	                    </td>  
-	                    <td>
-	                        <a class="hisui-linkbutton" iconCls=''  id="btnAddByDSY">大输液补货</a>
-	                    </td>   
-   
-	                </tr> 
-	              </table>       			
-				</div>
-        		<div data-options="region:'center',headerCls:'panel-header-gray',title:'请求单列表'" iconCls='icon-panel-common'  >
-        			<table id="gridTransReq"></table>
-				</div>
-				<div data-options="region:'east',split:true,width:600,headerCls:'panel-header-gray',title:'请求单明细'" iconCls='icon-panel-common'>
-        			<table id="gridTransReqItm"></table>
-				</div>
-			</div>
-        </div> 
+
+<body>
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-container bg-dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'north',split:true,headerCls:'panel-header-gray',title:'科室备用药品管理',collapsible:false,iconCls:'icon-panel-common-query'" class="dhcpha-north-r2" style="overflow;hidden;">
+                    <table class="dhcpha-north-tbl" cellpadding=0 cellspacing=0>
+                        <tr>
+                            <td>
+                                <label for="cmbReqLoc">#(..Get("请求科室"))#</label>
+                            </td>
+                            <td>
+                                <input id="cmbReqLoc" class="hisui-combobox" />
+                            </td>
+                            <td>
+                                <label for="dateStart">#(..Get("开始日期"))#</label>
+                            </td>
+                            <td>
+                                <input id="dateStart" class="hisui-datebox" />
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" iconCls='icon-w-find' id="btnFind">查询</a>
+                            </td>
+                            <td style="display:none">
+                                <a class="hisui-linkbutton" iconCls='' id="btnClear1">毒麻药明细打印</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" iconCls='' id="btnAddByBASE">科室备药补货</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" iconCls='' id="btnAddByDSY">大输液补货</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="cmbProLoc">#(..Get("供给科室"))#</label>
+                            </td>
+                            <td>
+                                <input id="cmbProLoc" class="hisui-combobox" />
+                            </td>
+                            <td>
+                                <label for="dateEnd">#(..Get("结束日期"))#</label>
+                            </td>
+                            <td>
+                                <input id="dateEnd" class="hisui-datebox" />
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" iconCls='icon-w-edit' id="btnEdit">编辑</a>
+                            </td>
+                            <td style="display:none">
+                                <a class="hisui-linkbutton" iconCls='' id="btnAddByBASE1">基数药汇总打印</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" iconCls='' id="btnAddByJSDM">精神毒麻补货</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div data-options="region:'center',headerCls:'panel-header-gray',title:'请求单列表'" iconCls='icon-panel-common' style="overflow:hidden;">
+                    <table id="gridTransReq"></table>
+                </div>
+                <div data-options="region:'east',split:true,width:600,headerCls:'panel-header-gray',title:'请求单明细'" iconCls='icon-panel-common' style="overflow:hidden;">
+                    <table id="gridTransReqItm"></table>
+                </div>
+            </div>
+        </div>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.store.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.tools.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/inpha/dhcpha.inpha.querytransreq.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.store.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.tools.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/inpha/dhcpha.inpha.querytransreq.js"></script>
 </body>
+
 </HTML>

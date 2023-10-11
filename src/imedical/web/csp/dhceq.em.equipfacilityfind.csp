@@ -9,52 +9,60 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<Style>
+.messager-popover
+{
+	font-weight: normal;
+}
+</Style>
 </HEAD>
 <script language=Cache runat=server>
-	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
 	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
-	//modify by lmm 2020-05-26 1333444
 	s colsets=##Class(web.DHCEQCColSet).GetColSets("","2","","Equip") //用户级设置
 	if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","1","","Equip") //安全组级设置
 	if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","0","","Equip") //系统设置
 	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
-	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
 </script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'设备简易台账'">
+		<div class="hisui-panel" title="设备简易台账" data-options="fit:true,eqtitle:'maintitle',headerCls:'panel-header-gray'">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:100px;">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #e2e2e2;padding-bottom:10px;border-radius:0px;">
 					<div class="eq-table">
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label for="No">设备编号</label></div>
 							<div class="eq-table-td"><input class="hisui-validatebox" id="No" ></div>
 							<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
 							<div class="eq-table-td"><input class="hisui-validatebox" id="Name" ></div>
-							<div class="eq-table-td eq-table-label"><label for="UseLoc">使用科室</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="UseLoc"></div>
-							<!-- <div class="eq-table-td eq-table-label"><label for="BeginInStockDate">入库日期</label></div>
-							<div class="eq-table-td"><input class="hisui-datebox textbox" id="BeginInStockDate" ></div>  -->
-							<div class="eq-table-td eq-table-label"><a id="BAdd" href="#" class="hisui-linkbutton" iconCls="icon-w-add">新增</a></div>
+							<div class="eq-table-td eq-table-label"><label for="MinValue">设备原值</label></div>
+							<div class="eq-table-td"><input style="TEXT-ALIGN: right" class="hisui-validatebox" id="MinValue"></div>
+							<div class="eq-table-td eq-table-label"><label for="Code">编码</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="Code"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
 						</div>
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label for="Code">编码</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="Code" ></div>
-							<div class="eq-table-td eq-table-label"><label for="MinValue">设备原值</label></div>
-							<div class="eq-table-td"><input style="WIDTH: 63px; TEXT-ALIGN: right" class="hisui-validatebox" id="MinValue" >至<input style="WIDTH: 64px; TEXT-ALIGN: right" class="hisui-validatebox" id="MaxValue" ></div>
 							<div class="eq-table-td eq-table-label"><label for="EquipType">管理类组</label></div>
 							<div class="eq-table-td"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EquipType',paras:[{name:'FacilityFlag',type:'2',value:'1'}]" id="EquipType" ></div>
-							<!-- <div class="eq-table-td eq-table-label"><label for="EndInStockDate">至</label></div>
-							<div class="eq-table-td"><input class="hisui-datebox textbox" id="EndInStockDate" value=#(CurDate)# ></div>  -->
-							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+							<div class="eq-table-td eq-table-label"><label for="UseLoc">使用科室</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="UseLoc"></div>
+							<div class="eq-table-td eq-table-label"><label for="MinValue">至</label></div>
+							<div class="eq-table-td"><input style="TEXT-ALIGN: right" class="hisui-validatebox" id="MaxValue" ></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td"></div>
+							<div class="eq-table-td eq-table-label"><a id="BAdd" href="#" class="hisui-linkbutton" iconCls="icon-w-add">新增</a></div>
 						</div>
 					</div>
 				</div>
 				<div data-options="region:'center',border:false" style="position:relative;">
-					 <table id="DHCEQEquipFacilityFind" class="hisui-datagrid"></table>
-					 <span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>
+					<table id="DHCEQEquipFacilityFind" class="hisui-datagrid"></table>
+					<div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 5px 2px 0;padding:5px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -65,20 +73,19 @@
 			<INPUT type="hidden" id="EquipTypeDR">
 			<INPUT type="hidden" id="UseLocDR">
 			<INPUT type="hidden" id="FacilityFlag" value="1">
-			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>	<!-- add by yh 2020-01-15-->
-			<!--add by lmm 2020-05-26 1333444-->
-			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQEquipSave.GetNum")))#>
-			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQEquipSave.GetList")))#>
-			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
-			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
-			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>
+            <INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQ.Plat.LIBCommon.GetTempGlobalData")))#>
+            <INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQ.Plat.LIBCommon.GetTempGlobalData")))#>
+			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
 			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
 			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
-			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>	
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="ClassFlag" value="N">
 		</form>
 	</div>
 	<script type="text/javascript" src="../scripts/dhceq/em/equipfacilityfind.js"></script>
-	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script> 			<!--add by lmm 2020-05-26 1333444-->
-
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
 </body>
 </html>

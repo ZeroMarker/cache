@@ -1,10 +1,14 @@
-<!--����ۺϲ�ѯ-->
+﻿<!--入库综合查询-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  q 1
 </csp:method>
 <html lang="zh-CN">
+ <SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -12,99 +16,104 @@
 	<DHCSTMHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-		<div data-options="region:'north',border:false,headerCls:'panel-header-gray'" class="GridPadding" style="padding-top:0;padding-bottom:0;">
-			<table id="FindConditions" class="Condition">
-				<input id="InciRowid" name="InciRowid" type="hidden">
-				<tr>
-					<td>������</td>
-					<td><input id="RecLoc" name="RecLoc" class="hisui-combobox" style="width:150px;"></td>
-					<td>��ⵥ��</td>
-					<td><input id="InGrNo" name="InGrNo" class="textbox" style="width:143px;"></td>
-					<td>�������</td>
-					<td><select id="IngrTypeId" name="IngrTypeId" class="hisui-combobox" style="width:150px;"></select></td>
-					<td>��Ӧ��</td>
-					<td><select id="Vendor" name="Vendor" class="hisui-combobox" style="width:150px;"></select></td>
-					<td align="left"><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">��ѯ</a></td>
-				</tr>
-				<tr>
-					<td>��ʼ����</td>
-					<td><input id="StartDate" name="StartDate" class="hisui-datebox" style="width:150px;"></td>
-					<td>���ڱ�־</td>
-					<td>
-						<select id="INFOImportFlag" name="INFOImportFlag" class="hisui-combobox" style="width:150px;">
-							<option value="">ȫ��</option>
-							<option value="����">����</option>
-							<option value="����">����</option>
-							<option value="����">����</option>
-						</select>
-					</td>
-					<td>����</td>
-					<td><input id="PhManufacturer" name="PhManufacturer" class="hisui-combobox" style="width:150px;"></td>
-					<td>��ͽ���</td>
-					<td><input id="MinRp" name="MinRp" class="textbox" style="width:143px;"></td>
-					<td align="left"><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">����</a></td>
-				</tr>
-				<tr>
-					<td>��ֹ����</td>
-					<td><input id="EndDate" name="EndDate" class="hisui-datebox" style="width:150px;"></td>
-					<td>�б��־</td>
-					<td>
-						<select id="PublicBidding" name="PublicBidding" class="hisui-combobox" style="width:150px;">
-							<option value="">ȫ��</option>
-							<option value=0>���б�</option>
-							<option value=1>�б�</option>
-						</select>
-					</td>
-					<td>��������</td>
-					<td><input id="INFOMT" name="INFOMT" class="hisui-combobox" style="width:150px;"></td>
-					<td>��߽���</td>
-					<td><input id="MaxRp" name="MaxRp" class="textbox" style="width:143px;"></td>
-					<td align="left"><input id="SpFlag" name="SpFlag" class='hisui-checkbox' type="checkbox" value="Y" label="�����ۼ۲������ۼ�"></td>
-				</tr>
-				<tr>
-					<td>����</td>
-					<td><input id="StkGrpId" name="StkGrpId" class="hisui-stkscgcombotree" style="width:150px;"></td>
-					<td>�б꼶��</td>
-					<td><input id="INFOPBLevel" name="INFOPBLevel" class="hisui-combobox" style="width:150px;"></td>
-					<td>����ۼ�</td>
-					<td><input id="MinSp" name="MinSp" class="textbox" style="width:143px;"></td>
-					<td>�Ƿ����</td>
-					<td>
-						<select id="AuditFlag" name="AuditFlag" class="hisui-combobox" style="width:150px;">
-							<option value="">ȫ��</option>
-							<option value="Y">�����</option>
-							<option value="N">δ���</option>
-						</select>
-					</td>
-					<td align="left"><input id="DateFlag" name="DateFlag" class='hisui-checkbox' type="checkbox" value="Y" label="���������ͳ��"></td>
-				</tr>
-				<tr>
-					<td>������</td>
-					<td><select id="StkCatBox" name="StkCatBox" class="hisui-combobox" style="width:150px;"></select></td>
-					<td>��Ʊ��</td>
-					<td><input id="InvNo" name="InvNo" class="textbox" style="width:143px;"></td>
-					<td>����ۼ�</td> 
-					<td><input id="MaxSp" name="MaxSp" class="textbox" style="width:143px;"></td>
-					<td>ҽ�����</td>
-					<td><input id="InsuType" name="InsuType" class="hisui-combobox" style="width:150px;"></td>
-				</tr>
-				<tr>
-					<td>��������</td>
-					<td><input id="InciDesc" name="InciDesc" class="textbox" style="width:150px;"></td>
-					<td>�Ƶ���</td>
-					<td><input id="CreateUserId" name="CreateUserId" class="hisui-combobox" style="width:150px;"></td>					
-				</tr>
-			</table>
-		</div>
-		<div data-options="region:'center',border:false" class="GridPadding" style="padding-top:0;">
-			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'center',border:false">   
-					<div class="hisui-panel" data-options="title:'��ⵥ��ϸ',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">   
-							<table id="InGdRecDetailGrid"></table>
-					</div>   
+	<div data-options="region:'north',border:false,headerCls:'panel-header-gray'">
+		<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+			<input id="InciRowid" name="InciRowid" type="hidden">
+			<tr>
+				<td>入库科室</td>
+				<td><input id="RecLoc" name="RecLoc" class="hisui-combobox textbox"></td>
+				<td>入库单号</td>
+				<td><input id="InGrNo" name="InGrNo" class="textbox"></td>
+				<td>入库类型</td>
+				<td><select id="IngrTypeId" name="IngrTypeId" class="hisui-combobox textbox"></select></td>
+				<td>供应商</td>
+				<td><select id="Vendor" name="Vendor" class="hisui-combobox  textbox"></select></td>
+				<td colspan="2" align="left"><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+			</tr>
+			<tr>
+				<td>起始日期</td>
+				<td><input id="StartDate" name="StartDate" class="hisui-datebox textbox"></td>
+				<td>进口标志</td>
+				<td>
+					<select id="INFOImportFlag" name="INFOImportFlag" class="hisui-combobox textbox">
+						<option value="">全部</option>
+						<option value="国产">国产</option>
+						<option value="进口">进口</option>
+						<option value="合资">合资</option>
+					</select>
+				</td>
+				<td>生产厂家</td>
+				<td><input id="PhManufacturer" name="PhManufacturer" class="hisui-combobox textbox"></td>
+				<td>最低进价</td>
+				<td><input id="MinRp" name="MinRp" class="textbox"></td>
+				<td colspan="2" align="left"><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+			</tr>
+			<tr>
+				<td>截止日期</td>
+				<td><input id="EndDate" name="EndDate" class="hisui-datebox textbox"></td>
+				<td>招标标志</td>
+				<td>
+					<select id="PublicBidding" name="PublicBidding" class="hisui-combobox textbox">
+						<option value="">全部</option>
+						<option value="N">非招标</option>
+						<option value="Y">招标</option>
+					</select>
+				</td>
+				<td>定价类型</td>
+				<td><input id="INFOMT" name="INFOMT" class="hisui-combobox textbox"></td>
+				<td>最高进价</td>
+				<td><input id="MaxRp" name="MaxRp" class="textbox"></td>
+				<td align="left"><input id="SpFlag" name="SpFlag" class='hisui-checkbox' type="checkbox" value="Y" label="批次售价不等于售价"></td>
+			</tr>
+			<tr>
+				<td>类组</td>
+				<td><input id="StkGrpId" name="StkGrpId" class="hisui-stkscgcombotree textbox"></td>
+				<td>招标级别</td>
+				<td><input id="INFOPBLevel" name="INFOPBLevel" class="hisui-combobox textbox"></td>
+				<td>最低售价</td>
+				<td><input id="MinSp" name="MinSp" class="textbox"></td>
+				<td>是否审核</td>
+				<td>
+					<select id="AuditFlag" name="AuditFlag" class="hisui-combobox textbox">
+						<option value="">全部</option>
+						<option value="Y">已审核</option>
+						<option value="N">未审核</option>
+					</select>
+				</td>
+				<td align="left"><input id="DateFlag" name="DateFlag" class='hisui-checkbox' type="checkbox" value="Y" label="按审核日期统计"></td>
+			</tr>
+			<tr>
+				<td>库存分类</td>
+				<td><select id="StkCatBox" name="StkCatBox" class="hisui-combobox textbox"></select></td>
+				<td>发票号</td>
+				<td><input id="InvNo" name="InvNo" class="textbox"></td>
+				<td>发票日期</td>
+				<td><input id="FBDate" name="FBDate" class="hisui-datebox textbox"></td>
+				<td>最高售价</td> 
+				<td><input id="MaxSp" name="MaxSp" class="textbox"></td>
+			</tr>
+			<tr>
+				<td>收费标记</td>
+				<td><input id="ChargeFlag" name="ChargeFlag" class="textbox hisui-simplecombobox"></td>
+				<td>物资名称</td>
+				<td><input id="InciDesc" name="InciDesc" class="textbox"></td>
+				<td>制单人</td>
+				<td><input id="CreateUserId" name="CreateUserId" class="hisui-combobox textbox"></td>
+			</tr>
+		</table>
+	</div>
+	<div class="hisui-layout" data-options="region:'center',border:false">
+		<div class="hisui-panel GridPadding" style="padding-top:0;" data-options="region:'center',border:false,fit:true">
+			<div id="StockRecQuery" class="hisui-tabs tabs-gray" data-options="region:'center',fit:true">
+				<div class="hisui-layout" data-options="title:'入库单明细',fit:true,headerCls:'panel-header-gray'">
+					<table id="InGdRecDetailGrid"></table>
+				</div>
+				<div title="入库验收单打印"  class="hisui-layout ReportImage" data-options="id:'RecCheck',headerCls:'panel-header-gray',fit:true">
+					<iframe id="StockRecCheck" scrolling="auto" frameborder="0" style="width:100%;height:100%;"></iframe>
 				</div>
 			</div>
 		</div>
+	</div>
 	
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecQuery.js"></script>

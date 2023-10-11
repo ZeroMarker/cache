@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!--药房药库 - 出库汇总统计报表
+	csp:  pha.in.v3.stat.sumtrans.csp
+	js:   pha/in/v3/stat/sumtrans.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+	<style>
+		#report .kw-section-list > li{
+	    	margin-right:10px;
+   		}
+		#report .keywords li{
+			width : 132px;
+		} 
+   	</style>
+</head>
+
+<body>
+	<div class="hisui-panel" fit="true" border="false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'west',border:false,split:true" style="width:305px;">
+				<div class="hisui-panel" data-options="title:'出库汇总',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'center',border:false">
+							<table id="div-conditions" class="pha-con-table">
+								<tr>
+								    <td class="r-label">
+								        <label for="phaLoc"><span style="color:red">*</span>#(..Get("出库科室"))#</label>
+								    </td>
+								    <td>
+								        <input id="phaLoc" data-pha='class:"hisui-combobox",requied:true,query:true,clear:true'/>
+								    </td>
+								</tr>
+								<tr>
+								    <td class="r-label">
+								        <label for="startDate"><span style="color:red">*</span>#(..Get("开始日期"))#</label>
+								    </td>
+								    <td>
+								        <input id="startDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true,clear:true' style="width:160px;"/>
+								    </td>
+								</tr>
+								<tr>
+									<td class="r-label">
+								        <label for="startTime">#(..Get("开始时间"))#</label>
+								    </td>
+									<td>
+										<input id="startTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",query:true,clear:true' style="width:160px;"/>
+									</td>
+								</tr>
+								<tr>
+								    <td class="r-label">
+								        <label for="endDate"><span style="color:red">*</span>#(..Get("截止日期"))#</label>
+								    </td>
+								    <td>
+								        <input id="endDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true,clear:true' style="width:160px;" />
+								    </td>
+								</tr>
+								<tr>
+									 <td class="r-label">
+								        <label for="endTime">#(..Get("截止时间"))#</label>
+								    </td>
+									<td>
+								    	<input id="endTime" class="hisui-timespinner" data-options="showSeconds:true" data-pha='class:"hisui-timespinner",query:true,clear:true' style="width:160px;" />
+									</td>
+								</tr>
+								<tr>
+								    <td class="r-label">
+								        <label for="transFer">#(..Get("统计方式"))#</label>
+								    </td>
+								    <td>
+								        <input id="transFer" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+								    </td>
+								</tr>
+								<tr>
+								    <td class="r-label">
+								        <label for="recLoc">#(..Get("接收科室"))#</label>
+								    </td>
+								    <td>
+								        <input id="recLoc" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+								    </td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="vendor">#(..Get("经营企业"))#</label>
+									</td>
+									<td>
+										<input id='vendor' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="stkGrpType">#(..Get("类组"))#</label>
+									</td>
+									<td>
+										<input id='stkGrpType' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="stkCatGroup">#(..Get("库存分类"))#</label>
+									</td>
+									<td>
+										<input id='stkCatGroup' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="phcCatAll">#(..Get("药学分类"))#</label>
+									</td>
+									<td>
+										<input id='phcCatAll' class="hisui-triggerbox" data-pha='class:"hisui-triggerbox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="manf">#(..Get("生产企业"))#</label>
+									</td>
+									<td>
+										<input id='manf' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="phcForm">#(..Get("剂型"))#</label>
+									</td>
+									<td>
+										<input id='phcForm' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="poisonIdStr">#(..Get("管制分类"))#</label>
+									</td>
+									<td>
+										<input id='poisonIdStr' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+								    <td class="r-label">
+								        <label for="inci">#(..Get("药品名称"))#</label>
+								    </td>
+								    <td>
+								    	<input id="inci" data-pha="class:'hisui-combogrid',query:true,clear:true"/>
+								    </td>
+								</tr>
+								<tr>
+								    <td class="r-label">
+								        <label for="inciName">#(..Get("药品别名"))#</label>
+								    </td>
+								    <td>
+								    	<input id="inciName" placeholder="别名..." class="hisui-validatebox" data-pha='class:"hisui-validatebox",query:true,clear:true' style="width:153px;"/>
+								    </td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="markType">#(..Get("定价类型"))#</label>
+									</td>
+									<td>
+										<input id='markType' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="operateOutType">#(..Get("出库类型"))#</label>
+									</td>
+									<td>
+										<input id='operateOutType' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="importFlag">#(..Get("进口标志"))#</label>
+									</td>
+									<td>
+										<input id='importFlag' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="pbFlag">#(..Get("是否招标"))#</label>
+									</td>
+									<td>
+										<input id='pbFlag' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="pBLevel">#(..Get("招标级别"))#</label>
+									</td>
+									<td>
+										<input id='pBLevel' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="sp">#(..Get("售价范围"))#</label>
+									</td>
+									<td>
+										<input class="hisui-numberbox textbox" data-pha='class:"hisui-numberbox",query:true,clear:true' data-options="isKeyupChange:true"  style="width:70px" id="minSp">
+										&thinsp;-&thinsp;
+										<input class="hisui-numberbox textbox" data-pha='class:"hisui-numberbox",query:true,clear:true' data-options="isKeyupChange:true" style="width:70px" id="maxSp">
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="rp">#(..Get("进价范围"))#</label>
+									</td>
+									<td>
+										<input class="hisui-numberbox textbox" data-pha='class:"hisui-numberbox",query:true,clear:true' data-options="isKeyupChange:true"  style="width:70px" id="minRp">
+										&thinsp;-&thinsp;
+										<input class="hisui-numberbox textbox" data-pha='class:"hisui-numberbox",query:true,clear:true' data-options="isKeyupChange:true" style="width:70px" id="maxRp">
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="summaryType">#(..Get("汇总方式"))#</label>
+									</td>
+									<td>
+										<input id='summaryType' class="hisui-combobox" data-pha='class:"hisui-combobox",query:true,clear:true'/>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'south',border:false" style="height:197px;">
+							<div class="pha-line" ></div>
+							<div class="pha-row" style="margin:5px 0 0 0;">
+								<div class="pha-col">
+									<div id="report"></div>
+								</div>
+							</div>
+							<div class="pha-row" style="text-align:center;margin-top:5px;">
+								<a href="#" id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+								<div class="pha-col">
+									<a href="#" id="btnClear" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false">
+				<csp:Include Page="pha.in.v3.stat.reptab.template.csp"></csp:Include>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/pha/in/v3/stat/com.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/stat/sumtrans.js"></script>
+</body>
+</html>

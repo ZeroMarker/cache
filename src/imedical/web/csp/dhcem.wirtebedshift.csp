@@ -1,3 +1,7 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <!-- dhcem.wirtebedshift.csp  交班日志页面-->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,6 +13,7 @@
 	<HISUI/>
 	<link href="../scripts/dhcnewpro/dhcem/css/base.css" rel="stylesheet">
 	<link href="../scripts/dhcnewpro/dhcem/css/wirtebedshift.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/bedsideshiftscom.js"></script>
 	<script Language="Javascript">
 	/// 引用内容
@@ -20,21 +25,30 @@
 </head>
 <body class="background-warp">
 	<div class="container">
-		<server>
-			s EpisodeID=$Get(%request.Data("EpisodeID",1)) /// 就诊ID
-			s EmType=$Get(%request.Data("EmType",1))       /// 交班类型
-			s bsID=$Get(%request.Data("bsID",1))           /// 交班ID
-			s Pid=$Get(%request.Data("Pid",1))             /// 进程号
-			s bsItemID=$Get(%request.Data("bsItemID",1))   /// 交班子表ID
-			s WriUrl="dhcem.shiftwrite.csp?EpisodeID="_EpisodeID_"&bsID="_bsID_"&bsItemID="_bsItemID_"&Pid="_Pid
-			s HisUrl="dhcem.pattimeaxis.csp?EpisodeID="_EpisodeID_"&EmType="_EmType
-	   </server>
+		
 		<div class="page-east">
-			<iframe src="#(HisUrl)#" width="100%" height="100%" frameborder="0" style="display:block"></iframe>
+			<iframe id="eastiframe"  width="100%" height="100%" frameborder="0" style="display:block"></iframe>
     	</div>
     	<div class="page-center">
-    		<iframe src="#(WriUrl)#" width="100%" height="100%" frameborder="0" style="display:block"></iframe>
+    		<iframe id="centeriframe"  width="100%" height="100%" frameborder="0" style="display:block"></iframe>
 		</div>
 	</div>
 </body>
+<script Language="Javascript">
+	var EpisodeID="#(%request.Get("EpisodeID"))#"; /// 就诊ID
+	var EmType="#(%request.Get("EmType"))#";      /// 交班类型
+	var bsID="#(%request.Get("bsID"))#";         /// 交班ID
+	var Pid="#(%request.Get("Pid"))#";          /// 进程号
+	var bsItemID="#(%request.Get("bsItemID"))#";  /// 交班子表ID
+	var WriUrl="dhcem.shiftwrite.csp?EpisodeID="+EpisodeID+"&bsID="+bsID+"&bsItemID="+bsItemID+"&Pid="+Pid;
+	var HisUrl="dhcem.pattimeaxis.csp?EpisodeID="+EpisodeID+"&EmType="+EmType;
+	if ('undefined'!==typeof websys_getMWToken){
+		WriUrl += "&MWToken="+websys_getMWToken();
+		HisUrl += "&MWToken="+websys_getMWToken();
+	}
+	$("#eastiframe").attr('src',HisUrl);
+	$("#centeriframe").attr('src',WriUrl);
+</script>
+
 </html>
+

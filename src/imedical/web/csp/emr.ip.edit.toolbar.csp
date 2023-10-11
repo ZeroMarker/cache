@@ -1,0 +1,182 @@
+﻿<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.toolbar.css"/>
+<script type="text/javascript" src="../scripts/emr/lib/tool/EMRcolorpicker.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/actionlog.js"></script>
+<script language="cache" runat="server">
+    s productName = ##Class(EMRservice.SystemParameter).GetASRProductName()
+    s moveText = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("CrisisRolling","Y")
+    ///设置病历参考界面呈现方式
+    s setRecordReferencePresentation = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("SetRecordReferencePresentation","Y")
+    s isEnableRevokeComplete = ##Class(EMRservice.SystemParameter).IsEnableRevokeComplete()
+    s:(isEnableRevokeComplete = "") isEnableRevokeComplete = "N"
+    s isSubmitRemarks = ##Class(EMRservice.SystemParameter).IsSubmitRemarks()
+    s isSaveUserConfig = ##Class(EMRservice.SystemParameter).IsSaveUserConfig()
+    s isOpenEvent = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsOpenEvent","N")
+	s confirmAlertType = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("ConfirmAlertType","1")
+	s loadDocMode = ##Class(EMRservice.SystemParameter).GetLoadDocMode()
+	s medRecordCategoryID = ##Class(EMRservice.BL.PersonalTemplate).GetMedRecordCategoryID()
+	s DisableDeleteMacro = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("DISABLE_DELETE_MACRO","Y")
+	
+	//是否医生推送签名相关的菜单按钮
+	s showDocPushSign = "0"
+	
+	//是否显示患者PDF签名相关的菜单按钮
+	s showHandSignMenu = "0", showHandSignQR = "0"
+	if (userLocID = "")&&(%session '= "")
+	{
+		s userLocID = %session.Get("LOGON.CTLOCID")
+	}
+	s handSignOption = ##Class(EMRservice.BL.BLPatSign).GetHandSignOption(userLocID)
+	s isHandSignOn = $p(handSignOption,"^",1)
+	s supportPDF = $p(handSignOption,"^",3)
+	s showQR = $p(handSignOption,"^",4)
+	if (isHandSignOn = "1")&&(supportPDF = "1")
+	{
+		s showHandSignMenu = "1"
+		s:(showQR = "1") showHandSignQR = "1"
+	}
+	s ConfirmMRecordDocID = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("ConfirmMRecordDocID","")
+</script>
+<script language = "javascript">
+    var productName = '#(productName)#'; 
+    var moveText = '#(moveText)#';
+    var setRecordReferencePresentation='#(setRecordReferencePresentation)#';
+    var isEnableRevokeComplete = '#(isEnableRevokeComplete)#';
+    var colorpanelshow = "0";
+    var isSubmitRemarks = '#(isSubmitRemarks)#';
+    var isSaveUserConfig = '#(isSaveUserConfig)#';
+    var isOpenEvent = '#(isOpenEvent)#';
+	var confirmAlertType = '#(confirmAlertType)#';
+	var loadDocMode = $.parseJSON('#(loadDocMode)#'.replace(/\'/g, "\""));
+	var medRecordCategoryID = '#(medRecordCategoryID)#';
+	var DisableDeleteMacro = '#(DisableDeleteMacro)#';
+	var confirmMRecordDocID = '#(ConfirmMRecordDocID)#';
+</script>
+<div id="toolbar" class="hisui-tabs tabs-gray" data-options="fit:true,tools:'#message'">
+    <div title="操作" style="overflow:auto">
+        <a id='save' title="保存" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-save', plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("保存"))#</a>
+        <a id='print' title="打印" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-print',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("打印"))#</a>
+        <a id='autoprint' title='自动续打' href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-print-run',plain:true">#(..Get("自动续打"))#</a>			
+        <a id='printView' title="开启预览" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-eye',plain:true">#(..Get("预览"))#</a>
+        <a id='printOne' title="单独打印" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-print',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("单独打印"))#</a>
+        <a id='batchprint' title="批量打印" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-print',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("批量打印"))#</a>
+        <a id='verifySigned' title="验证CA签名" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-ca-green',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("验证CA签名"))#</a>
+        <div class="group-sep"></div> 
+        <a id='unLock' title="手工解锁" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-unlock',plain:true">#(..Get("手工解锁"))#</a>
+        <a id='applyedit' title="申请编辑病历" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-pen',plain:true" onclick="applyeditOnclick();" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("自动授权"))#</a>
+        <div class="group-sep"></div> 
+        <a id='revision' href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-open-eye',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("显示留痕"))#</a>	        
+        <a id='reference' title="病历参考" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-ref',plain:true">#(..Get("病历参考"))#</a>
+        <a id='binddatareload' title="更新数据" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-refresh',plain:true">#(..Get("更新数据"))#</a>
+        <a id='loadRecord' title="加载全部病程" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-ref',plain:true" onclick="loadAllRecord()">#(..Get("加载全部病程"))#</a>
+        <a id='personalTemplate' title="个人模板管理" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-doctor-adm',plain:true">#(..Get("个人模板管理"))#</a>
+        <a id='createTemplateBtn' title="创建病程" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-save-add',plain:true" onclick="createTemplateBtn()">#(..Get("创建病程"))#</a>
+        <a id='openResource' title="病历资源区" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-book-green',plain:true" onclick="openResource()">#(..Get("病历资源区"))#</a>
+        <div class="group-sep"></div> 
+        <a id='rtnnav' title="返回到导航页面" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-home',plain:true" onclick="getNav()">#(..Get("首页"))#</a>
+    	<div class="fold down" title="折叠展开" alt align="top" border="0" style="width:16px;height:8px;margin-top:54px;background: url(../scripts/emr/image/edit-png2/png/10.png) no-repeat center center;" ></div>
+    </div>
+    <div title="编辑" style="overflow:auto">
+        <div style="width:190px;float:left;">
+            <a id="fontsizepackage" title="字号" href="#" class="hisui-linkbutton" data-options="plain:true">
+                <select id="fontsize" style="width:160px;" size="2"></select>
+            </a>
+            <a id='cut' title="剪切" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cut-blue',plain:true"></a>
+            <a id='copy' title="拷贝" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true"></a>
+            <a id='paste' title="粘贴" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paste',plain:true"></a>
+            <a id='clipboard' title="剪贴板" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paste-board',plain:true"></a>
+            <a id='undo' title="撤销" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" ></a>
+            <a id='redo' title="重做" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true"></a>
+        </div>
+        <div class="group-sep"></div> 
+        <div style="width:130px;float:left;">
+            <a id='fontcolor' title="字体颜色" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-font',plain:true"></a>
+            <a id='bold' href="#" title="粗体" class="hisui-linkbutton" data-options="iconCls:'icon-bold',plain:true"></a>
+            <a id='italic' href="#" title="斜体" class="hisui-linkbutton" data-options="iconCls:'icon-incline',plain:true"></a>
+            <a id='underline' href="#" title="下划线" class="hisui-linkbutton" data-options="iconCls:'icon-underline',plain:true"></a>
+            <a id='strike' href="#" title="删除线" class="hisui-linkbutton" data-options="iconCls:'icon-strikethrough',plain:true"></a>
+            <a id='super' href="#" title="上标"  class="hisui-linkbutton" data-options="iconCls:'icon-superscript',plain:true"></a>
+            <a id='sub' href="#" title="下标" class="hisui-linkbutton" data-options="iconCls:'icon-subscript',plain:true"></a>
+        </div>
+        <div class="group-sep"></div> 
+        <div style="width:130px;float:left;">
+            <a id='alignjustify' href="#" title="两端对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-justify',plain:true"></a>
+            <a id='alignleft' href="#" title="左对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-left',plain:true"></a>
+            <a id='aligncenter' href="#" title="居中对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-center',plain:true" ></a>
+            <a id='alignright' href="#" title="右对齐"  class="hisui-linkbutton" data-options="iconCls:'icon-align-right',plain:true"></a>
+            <a id='indent' title="增加缩进量" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-indentation',plain:true" ></a>
+            <a id='unindent' title="减少缩进量" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-unindent',plain:true"></a>
+        </div>
+        <div class="group-sep"></div>
+        <a id='recording' title="开启语音录入" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-start',plain:true">#(..Get("语音录入"))#</a>
+        <a id='silverLocation' title="定位到上次书写位置" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-position',plain:true">#(..Get("定位"))#</a>
+        <div class="group-sep"></div>
+        <a id='tooth' title="牙位图" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-tooth',plain:true" style="display:none">#(..Get("牙位"))#</a>
+        <a id='spechars' title="特殊符号" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-omega',plain:true" >#(..Get("符号"))#</a>
+        <a id='image' title="图库" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-img',plain:true">#(..Get("图库"))#</a>
+        <a id='eye' href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-eye-deepgrade',plain:true" style="display:none">#(..Get("前房深度公式"))#</a>
+		<div class="group-sep"></div>
+		<select id="math-combox"  style="width:180px;" placeholder='请选择插入的医学公式'></select>		
+    	<div class="fold down" title="折叠展开" alt align="top" border="0" style="width:16px;height:8px;margin-top:54px;background: url(../scripts/emr/image/edit-png2/png/10.png) no-repeat center center;" ></div>
+    </div>
+    <div title="功能" style="overflow:auto">
+    	<a id='confirmRecordCompleted' title="病历提交" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-arrow-rt',plain:true" onclick="changeRecordFinishedStatus()" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("病历提交"))#</a>
+        <div class="group-sep"></div> 
+        <a id='confirmMRecordCompleted' title="确认病案首页完成" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-arrow-rt',plain:true" onclick="changeMRecordFinishedStatus()">#(..Get("预提交"))#</a>
+        <div class="group-sep"></div>		
+        <a id='recordtransfer' title="病历转移" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-to-book',plain:true" onclick="doRecordTransfer()" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("病历转移"))#</a>
+        <div class="group-sep"></div>
+        <a id='authRequest' title="申请权限" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-stamp',plain:true">#(..Get("申请权限"))#</a> 
+        <div class="group-sep"></div>
+        <a id='setDiseases' title="设置病种" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-print',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("设置病种"))#</a>
+        <div class="group-sep"></div> 
+        <a id='favoritesPlus' title="添加收藏" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-favorite-add',plain:true">#(..Get("添加收藏"))#</a>
+        <a id='favorites' title="收藏夹" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-favorite',plain:true">#(..Get("收藏夹"))#</a>
+    	<div class="fold down" title="折叠展开" alt align="top" border="0" style="width:16px;height:8px;margin-top:54px;background: url(../scripts/emr/image/edit-png2/png/10.png) no-repeat center center;" ></div>
+    </div>
+    <div title="表格" style="overflow:auto;">
+        <a id='insertTable' title="插入表格" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-insert-table',plain:true">#(..Get("插入表格"))#</a>
+        <a id='deleteTable' title="删除表格" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-delete-table',plain:true">#(..Get("删除表格"))#</a>
+        <a id='insertRow' title="插入行" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-insert-row',plain:true">#(..Get("插入行"))#</a>
+        <a id='insertCol' title="插入列" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-insert-col',plain:true">#(..Get("插入列"))#</a>
+        <a id='deleteRow' title="删除行" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-delete-row',plain:true">#(..Get("删除行"))#</a>
+        <a id='deleteCol' title="删除列" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-delete-col',plain:true">#(..Get("删除列"))#</a>
+        <a id='splitCells' title="拆分单元格" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-split-cells',plain:true">#(..Get("拆分单元格"))#</a>
+        <a id='addDiagRow' title="增加诊断行" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-split-cells',plain:true" style="display:none" >#(..Get("增加诊断行"))#</a>
+        <a id='addOperRow' title="增加手术行" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-split-cells',plain:true" style="display:none" >#(..Get("增加手术行"))#</a>
+    	<div class="fold down" title="折叠展开" alt align="top" border="0" style="width:16px;height:8px;margin-top:54px;background: url(../scripts/emr/image/edit-png2/png/10.png) no-repeat center center;" ></div>
+    </div>
+    <CSP:IF condition=showHandSignMenu="1">
+    <div title="签名" style="overflow:auto;">
+        <CSP:IF condition=showDocPushSign="1">
+        <a id='cancelPushSign' title="取消推送签名" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-ref',plain:true">取消推送签名</a>
+        <a id='pushSignResult' title="同步签名结果" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-ref',plain:true">同步签名结果</a>
+        <div class="group-sep"></div> 
+        </CSP:IF>
+        <CSP:IF condition=showHandSignQR="1">
+        <a id='patPushSignQR' title="患签二维码" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper',plain:true">患签二维码</a>
+        </CSP:IF>
+        <a id='patPushSignResult' title="同步患签" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper',plain:true">同步患签结果</a>
+        <a id='invalidPatSignPDF' title="患者重签" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper',plain:true">患者重签</a>
+    	<div class="fold down" title="折叠展开" alt align="top" border="0" style="width:16px;height:8px;margin-top:54px;background: url(../scripts/emr/image/edit-png2/png/10.png) no-repeat center center;" ></div>
+    </div>
+    </CSP:IF>
+    <div title="其他" style="overflow:auto">
+        <a id='export' title="病历导出" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-arrow',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("病历导出"))#</a>
+        <a id='delete' title="删除" href="#" class="hisui-linkbutton big" data-options="iconCls:'icon-big-del',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">#(..Get("删除"))#</a>
+    	<div class="fold down" title="折叠展开" alt align="top" border="0" style="width:16px;height:8px;margin-top:54px;background: url(../scripts/emr/image/edit-png2/png/10.png) no-repeat center center;" ></div>
+    </div>	
+</div>
+<div id="message" style="width:350px">  
+    <div id="toolItem" style="float:right;margin-right:25px;">
+	 	<a style="margin-top:3px;padding-right:5px;padding-left:5px" id='save-tab' title="保存" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-big-save', plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)"></a>
+     	<a style="margin-top:3px;padding-right:5px;padding-left:5px" id='print-tab' title="打印" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-big-print',plain:true" onmouseenter="topCenter(this)" onmouseleave="topDel(this)"></a>
+		<a style="margin-top:3px;padding-right:5px;padding-left:5px" id='unLock-tab' title="手工解锁" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-big-unlock',plain:true"></a>
+		<a style="margin-top:3px;padding-right:5px;padding-left:5px" id='rtnnav-tab' title="返回到导航页面" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-big-home',plain:true" onclick="getNav()"></a>
+	</div>
+	<div id="event" style="float:right">
+    </div>
+</div>
+<script type="text/javascript" src="../scripts/emr/js/ip.edit.toolbar.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/ip.toolbar.mrecord.js"></script>

@@ -1,0 +1,58 @@
+<SERVER>
+;s %session.KeepAlive=0
+;s %session.AppTimeout=10
+;s %session.EndSession=1
+;s sc=%session.Login("dhwebservice","dhwebservice",1)
+d %response.SetHeader("Access-Control-Allow-Credentials","true")
+#;s userName=$g(%request.Data("username",1))
+#;s passWord=$g(%request.Data("password",1))
+s APPLoginID=$g(%request.Data("APPLoginID",1))
+s APPPerID=$g(%request.Data("APPPerID",1))
+s ClassName=$g(%request.Data("ClassName",1))
+s MethodName=$g(%request.Data("MethodName",1))
+s MethodType=$g(%request.Data("MethodType",1))
+s:MethodName="GetPersonByLoginId" %session.KeepAlive=0
+i MethodType="Method" d
+ .w ##class(web.INMVueComm).MethodExcute(ClassName,MethodName)
+ .d ##class(web.INMLogComm).SaveLog(ClassName,MethodName,APPLoginID,"PC")
+ 
+i MethodType="RecMethod" d
+ .s ret=##class(web.INMVueComm).MethodExcute(ClassName,MethodName) 
+ .w ##class(web.INMVueComm).StrToJson(ret)
+ .d ##class(web.INMLogComm).SaveLog(ClassName,MethodName,APPLoginID,"PC")
+ 
+i MethodType="LongMethod" d
+ .w ##class(web.INMVueComm).LongMethodExcute(ClassName,MethodName)
+
+i MethodType="RecQuery" d
+ .w ##class(web.INMVueComm).RecQueryExcute(ClassName,MethodName)
+
+i MethodType="Query" d
+ .w ##class(web.INMVueComm).QueryExcute(ClassName,MethodName)
+i MethodType="JsonMethod" d
+ .w ##class(web.INMVueComm).JsonMethodExcute(ClassName,MethodName)
+
+</SERVER><csp:content charset="UTF-8">
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+	s ^TMP("cspUsername")=%request.GetCookie("cspUsername","",1)
+	;单独登录版本重定向，嵌入版本注释掉。
+	;3.0用index.html,4.0用nurmanagement.html
+	;i $g(%request.Data("MethodType",1))="" s %response.Redirect="nurmanagement.html"
+    s expires=$SYSTEM.SQL.DATEADD("s",%session.AppTimeout,%session.LastModified)
+	s expires=$zdh($p(expires," "),3)_","_$zth($p(expires," ",2))
+	s weekday=$zd(expires,11)
+	s tId=""
+	i %request.GetCookie("cspUsername")'="" s tId=%request.GetCookie("cspUsername")
+	e  s tId=%session.SessionId
+	s nurHeader=tId
+	d %response.SetHeader("nmcspusername","nmcspusername="_tId_"; expires="_weekday_", "_$zdt(expires,2)_" GMT; path=/;")
+	i %request.Secure=1
+	{
+		d %response.SetCookie("cspUsername",tId,weekday_", "_$zdt(expires,2)_" GMT","/","",1,0,"None")
+    	Quit 1
+	}
+	else{
+		d %response.SetCookie("cspUsername",%session.SessionId,weekday_", "_$zdt(expires,2)_" GMT","/","",0,0)
+    	Quit 1
+	}
+</script>

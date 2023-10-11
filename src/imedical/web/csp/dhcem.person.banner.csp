@@ -1,3 +1,8 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
 <style>
 .patientInfo{
 	margin-left:50px;
@@ -77,9 +82,9 @@
 	   -->
 	   <div id="InpatListDiv" style="display:block;width:100px;padding-left:100px;">
 			<a id="InPatListBtn" href="#" class="hisui-linkbutton" style="background:#21BA45;">患者列表</a>
-			<div id="patlist" class="hisui-panel"  title="患者列表" 
+			<div id="patlist" class="hisui-window"  title="患者列表" 
 				style="width:1100px;height:660px;overflow:hidden;border:#95B8E7 0px solid;"  
-				data-options="headerCls:'panel-header-gray',resizable:true,modal:true,closed:true,closable:true,onOpen:onOpenPatListWin,onClose:onClosePatListWin">  
+				data-options="headerCls:'panel-header-gray',iconCls:'icon-w-paper',resizable:true,modal:true,closed:true,closable:true,onOpen:onOpenPatListWin,onClose:onClosePatListWin,isTopZindex:true">  
 			    <iframe src="about:blank" width="100%" min-height="350px" height="100%" frameborder="0"></iframe>
 			</div>
 		</div>
@@ -87,40 +92,127 @@
   </div>
   
 <script type="text/javascript">
+function InitPatInfoHover(){
+	var btnsWidth = 50;
+	if (patientListPage!="") btnsWidth = 150;
+	var html = $(".patientbar").data("patinfo");
+	$(".PatInfoItem").html(reservedToHtml(html)).css({height:30,overflow:'hidden',paddingRight:10});
+	$(".PatInfoItem").css('width',$(".patientbar").width()-btnsWidth);
+	$(".PatInfoItem").popover('destroy');
+	setTimeout(function(){
+		var html = $(".patientbar").data("patinfo");
+		//if (($(".PatInfoItem")[0].offsetHeight+13)<$(".PatInfoItem")[0].scrollHeight) {
+			$(".PatInfoItem").popover({
+				width:$(".PatInfoItem").width()+16,trigger:'hover',
+				arrow:false,style:'patinfo',
+				content:"<div class='patinfo-hover-content'>"+reservedToHtml(html)+"</div>"
+			});
+			$(".PatInfoItem").append('<div style="position:absolute;top:0px;right:0px;">...</div>')
+		//}
+	},500);
+};
+
+
+</script>
+
+<server>
+	Set PatListWidth = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","InPatientListWidth")
+	If PatListWidth="" Set PatListWidth = "80%"
+</server>
+
+<script type="text/javascript">
+
 function showPatListWin(){
-	if ($("#InpatListDiv .panel").css('display')!=="none") return ;
-	$("#patlist").panel({isTopZindex:true});
-	$("#patlist").panel("open");
+	if ($("#patlist").find("iframe").get(0).src!=="about:blank") {
+		$("#patlist").find("iframe").get(0).contentWindow.QryEmPatList();	
+	}
+	
+	if ($("#InpatListDiv").data("AutoOpen")==1){
+		$("#patlist").window({closable:false,maximizable:false});
+	}else{
+		$("#patlist").window({closable:true,maximizable:true});
+	}
+	$("#patlist").window("open");
+	
 }
 function hidePatListWin(){
 	if ($("#InpatListDiv").data("AutoOpen")==1){
 		// 未选病人时,不允许隐藏病人列表
 	}else{
-		$("#patlist").panel("close");
+		$("#patlist").window("close");
 	}
 }
 function onOpenPatListWin(){
 	if ($("#patlist").find("iframe").get(0).src=="about:blank") {
 		$("#patlist").find("iframe").get(0).src="dhcem.patlist.csp";	
 	}
-	var opt = {'z-index':9085,'position':'fixed'};
-	var panelJObj = $("#InpatListDiv .panel");
+	
 	var patListJObj = $("#patlist");
 	if ($("#InpatListDiv").data("AutoOpen")==1){
-		panelJObj.css($.extend({},opt,{right:'20px',top:'33px'}));
-		patListJObj.panel('resize',{ width:1220, height:580 } );
+		// 未选中病人时,全屏显示病人列表
+		//patListJObj.window('resize', {left:0,top:0, width:$(document.body).width(), height:$(document.body).height() } );
+		if (calcPosition){
+			var widthHeightOpt = calcPosition({width:"#(PatListWidth)#",height:$(document.body).height()-45},window);
+			patListJObj.window('resize', {left:$(document.body).width()-widthHeightOpt.width-10,top:38, width:widthHeightOpt.width, height:widthHeightOpt.height });
+		}else{
+			patListJObj.window('resize', {left:$(document.body).width()-1200-10,top:38, width:1200, height:$(document.body).height()-45 });
+		}
 	}else{
-		panelJObj.css($.extend({},opt,{right:'20px',top:'33px'}));
-		patListJObj.panel('resize', { width:1220, height:580 });
+		
+		resizeWindow();
 	}
-	$(".window-mask.alldom").show();
+	
+	return;
 }
+
+function resizeWindow(){
+	var patListJObj = $("#patlist");
+	if ("#(PatListWidth)#"=="maximize"){
+		patListJObj.window('maximize'); //20210830
+	}else{
+		if (calcPosition){
+			var widthHeightOpt = calcPosition({width:"#(PatListWidth)#",height:$(document.body).height()-45},window);
+			patListJObj.window('resize', {left:$(document.body).width()-widthHeightOpt.width-10,top:38, width:widthHeightOpt.width, height:widthHeightOpt.height });
+		}else{
+			patListJObj.window('resize', {left:$(document.body).width()-1200-10,top:38, width:1200, height:$(document.body).height()-45 });
+		}
+	}
+}
+
 function onClosePatListWin(){
 	$(".window-mask.alldom").hide();
 }
+
+/// 获取url中的参数
+function getUrlParam(paramName){
+	
+    var paramValue = "";
+    var isFound = false;
+    if (this.location.search.indexOf("?") == 0 && this.location.search.indexOf("=")>1){
+        arrSource = unescape(this.location.search).substring(1,this.location.search.length).split("&");
+        var i = 0;
+        while (i < arrSource.length && !isFound){
+            if (arrSource[i].indexOf("=") > 0){
+                 if (arrSource[i].split("=")[0].toLowerCase()==paramName.toLowerCase()){
+                    paramValue = arrSource[i].split("=")[1];
+                    isFound = true;
+                 }
+            }
+            i++;
+        } 
+    }
+   return paramValue;
+}
+
+
 $(function(){
 	$("#InPatListBtn").click(function(){
-		$("#InpatListDiv .panel").is(':visible')?hidePatListWin():showPatListWin();
+		showPatListWin();
+		//$("#InpatListDiv .panel").is(':visible')?hidePatListWin():showPatListWin();
+	});
+	
+	window.addEventListener('resize',function(){
+		resizeWindow();	
 	});
 });
 </script>

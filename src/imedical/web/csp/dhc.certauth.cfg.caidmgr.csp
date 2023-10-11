@@ -1,0 +1,133 @@
+﻿<html>
+    <head>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+        <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+		<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/js/cfg.caidmgr.js" ></script>
+
+        <server>
+            s userID = %session.Get("LOGON.USERID")
+            s ssGroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s hospID = %session.Get("LOGON.HOSPID")
+			s:(hospID = "")&&(userLocID '= "") hospID = ##Class(CA.BL.HospitalMgr).GetHospitIDByLocID(userLocID)
+            s isOnMulityHospMgr = ##Class(CA.BL.HospitalMgr).IsOnMulityHospMgr()
+        </server>
+
+        <script language="javascript">
+            var logonInfo = {
+                UserID: "#(userID)#",
+                GroupID: "#(ssGroupID)#",
+                CTLocID: "#(userLocID)#",
+                HospID: "#(hospID)#"
+            }; 
+            
+            var sysOption = {
+	        	IsOnMulityHospMgr: "#(isOnMulityHospMgr)#"
+	        };
+        </script>
+    </head>
+
+    <body class="hisui-layout">
+		<div id="hospDiv" data-options="region:'north',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" style="height:50px">
+			<div class="hisui-panel" style="height:44px;">
+				<table cellspacing="5" cellpadding="0">
+		            <tr>
+		            	<td id="_HospListLabel" style="color:red;margin:0 10">选择医院：</td>
+		            	<td><input id="_HospList"></td>
+		            </tr>
+		        </table>
+	        </div>
+        </div>
+		<div id="caTip" style="padding:10px;margin-top:80px;color:red;font-size:16px;text-align:center;height:50px;overflow-y:auto;overflow-x:hidden;display:none;">错误提示</div>
+		<div id="User" data-options="region:'east',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" style="width:700px" >
+            <div class="hisui-panel" data-options="title:'用户列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">
+                <table id="dgUser" ></table>
+            </div>
+            <div id="tbUser" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">
+                <table cellspacing="10" cellpadding="5" >
+                	<tr>
+                        <td class="optname-td">用户工号</td>
+                        <td class="optvalue-td">
+                            <input id="UserCode" type="text" class="textbox tdtext"/>
+                        </td>
+                        <td class="optname-td">用户姓名</td>
+                        <td class="optvalue-td">
+                            <input id="UserName" type="text" class="textbox tdtext"/>
+                        </td>
+                        <td><a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="btnQueryUser" style="width:90px">查询</a> </td>
+                    </tr>
+                    <tr>
+                       	<td class="optname-td">用户状态</td>
+                        <td colspan="3" class="optvalue-td">
+                            <select id="UserStatus" class="hisui-combobox" style="width:160px"/>
+                            	<option value="ALL">所有用户</option>
+								<option value="NOPHONE" selected>未配置手机CA标识</option>
+								<!--option value="NOUKEY" selected>未配置UKeyCA标识</option>
+								<option value="NOFACE" selected>未配置人脸CA标识</option-->
+							</select>
+                        </td>
+                        <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="btnAddPhoneCAID" style="width:180px">添加手机CA用户标识</a> </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div id="CAID" data-options="region:'center',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" >
+            <div class="hisui-panel" data-options="title:'CA标识列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">
+                <table id="dgCAID" ></table>
+            </div>
+            <div id="tbCAID">
+                <table cellspacing="10" cellpadding="5" >
+                	<tr>
+                        <td class="optname-td">用户工号</td>
+                        <td class="optvalue-td">
+                            <input id="CAUserCode" type="text" class="textbox tdtext"/>
+                        </td>
+                        <td class="optname-td">用户姓名</td>
+                        <td class="optvalue-td">
+                            <input id="CAUserName" type="text" class="textbox tdtext"/>
+                        </td>
+                        <td><a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="btnQueryCAID" style="width:90px">查询</a> </td>
+                    </tr>
+                    <tr>
+                    	<td class="optname-td">厂商代码</td>
+                        <td class="optvalue-td">
+                            <select id="VenderCode" class="hisui-combobox" style="width:155px"/>
+                            	<option value="ALL" selected>所有</option>
+                            	<option value="SZXX">深圳小信</option>
+                            	<option value="AHCA">安徽CA</option>
+                            </select>
+                        </td>
+                       	
+                        <td class="optname-td">签名类型</td>
+                        <td class="optvalue-td">
+                            <select id="SignTypeCode" class="hisui-combobox" style="width:155px"/>
+                            	<option value="ALL" selected>所有</option>
+                            	<option value="PHONE">手机</option>
+                            	<option value="UKEY">UKey</option>
+                            </select>
+                        </td>
+                    	<td><a class="hisui-linkbutton" data-options="iconCls:'icon-unuse',plain:true" id="btnDeleteCAID" style="width:150px">删除CA用户标识</a> </td>
+                    </tr>
+                    <!--tr>
+                        <td class="optname-td">CA标识状态</td>
+                        <td class="optvalue-td">
+                            <select id="CAIDStatus" class="hisui-combobox" style="width:155px"/>
+                            	<option value="ALL">所有</option>
+                            	<option value="VALID" selected>有效</option>
+                            </select>
+                        </td>
+                    </tr-->
+                </table>
+            </div>
+        </div>
+        
+    </body>
+</html>

@@ -1,0 +1,960 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    s isPermission = ##Class(NurMp.Service.Template.Model).editAuthority(%request.Get("EpisodeID"),$g(%session.Data("LOGON.CTLOCID")),"DHCNURJZEKHLJLD12345")
+    i isPermission'="0"
+    {
+    s utfo = $ZCONVERT(isPermission,"O","UTF8")
+    s urlo = $ZCONVERT(utfo,"O","URL")
+    s %response.ServerSideRedirect = "nur.emr.permissiondenied.csp?isPermission="_urlo
+    q 1
+    }
+    else
+    {
+    q 1
+    }
+</csp:method>
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type = "text/css" href = "../skin/default/css/websys.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts/nurse/hisui-0.1.0/dist/css/jquery.contextMenu.css" />
+
+<style type="text/css">.datagrid-row-mp-printed
+{
+background:#CDC9A5;
+}
+.marker
+{
+position:absolute;border-radius:50%;z-index:999;
+}
+body * 
+{
+font-family:微软雅黑;font-size:14px
+}
+.commonModalDialog .dialog-content
+{
+overflow:hidden;
+}
+#element_Ul li label.checkbox
+{
+display:inline;
+}
+.datagrid-row-selected
+{
+background: #fced89 !important;color: #000000;
+}
+.datagrid-row-editting
+{
+background: #abbd65;color: #000000;
+}
+.tooltipTable
+{
+border-collapse:collapse;border: 1px solid #509de1;
+}
+.tooltipTable td
+{
+border: 1px solid #509de1;
+}
+.tooltipTable th
+{
+border: 1px solid #509de1;
+}
+img[src = ""]
+{
+opacity: 0;
+}
+ </style></head>
+   <body style="background-color:white;padding:0px;width:100%">
+<div LineNo="1" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_201" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:1380px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_201" style="height:59.76px;width:1380px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_202" style="float:left;height:20.53px;padding-Top:0px;padding-bottom:0px;width:1374px;padding-left:0px;padding-right:0px">
+<div id="LableElement_202" style="height:20.53px;width:1374px;text-align:center;font-family:宋体;font-size:18px;padding:0px;color:#000000">#(..Get("东华标准版数字化医院[总院]"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_203" style="float:left;height:27.38px;padding-Top:0px;padding-bottom:0px;width:1371px;padding-left:0px;padding-right:0px">
+<div id="LableElement_203" style="height:27.38px;width:1371px;text-align:center;font-family:宋体;font-size:24px;padding:0px;color:#000000;font-weight:bold">#(..Get("急诊儿科护理观察记录单"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_204" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:802px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_204" style="height:71px;width:802px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_205" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:31.37px;padding-left:0px;padding-right:0px">
+<div id="LableElement_205" style="height:18.48px;width:31.37px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("科室:"))#</div>
+</div>
+<div id="div_TextElement_206" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:253.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_206" name="TextElement_206" class="textbox" oldVal="" Signature="None" SaveField="Item14" ToolTipContent="False" style="height:28px;width:246.24px" />
+</div>
+<div id="div_LableElement_207" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:31.37px;padding-left:5.61008px;padding-right:0px">
+<div id="LableElement_207" style="height:18.48px;width:31.37px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("病区:"))#</div>
+</div>
+<div id="div_TextElement_208" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:232.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_208" name="TextElement_208" class="textbox" oldVal="" dhccLableFor="DateElement_25" Signature="None" Explanation="病区：" SaveField="Item15" ToolTipContent="False" style="height:28px;width:225.24px" />
+</div>
+<div id="div_LableElement_209" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:45.37px;padding-left:12.23987px;padding-right:0px">
+<div id="LableElement_209" style="height:18.48px;width:45.37px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("病案号:"))#</div>
+</div>
+<div id="div_TextElement_210" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:145.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_210" name="TextElement_210" class="textbox" oldVal="" Signature="None" SaveField="Item16" ToolTipContent="False" style="height:28px;width:138.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_211" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:31.37px;padding-left:0px;padding-right:0px">
+<div id="LableElement_211" style="height:18.48px;width:31.37px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("床号:"))#</div>
+</div>
+<div id="div_TextElement_212" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:75.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_212" name="TextElement_212" class="textbox" oldVal="" Signature="None" SaveField="Item17" ToolTipContent="False" style="height:28px;width:68.24001px" />
+</div>
+<div id="div_LableElement_213" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:31.37px;padding-left:5px;padding-right:0px">
+<div id="LableElement_213" style="height:18.48px;width:31.37px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("姓名:"))#</div>
+</div>
+<div id="div_TextElement_214" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:139.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_214" name="TextElement_214" class="textbox" oldVal="" Signature="None" SaveField="Item18" ToolTipContent="False" style="height:28px;width:132.24px" />
+</div>
+<div id="div_LableElement_215" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:31.37px;padding-left:8.000095px;padding-right:0px">
+<div id="LableElement_215" style="height:18.48px;width:31.37px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("性别:"))#</div>
+</div>
+<div id="div_TextElement_216" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_216" name="TextElement_216" class="textbox" oldVal="" dhccLableFor="CheckElement_29" Signature="None" Explanation="性别：" SaveField="Item19" ToolTipContent="False" style="height:28px;width:81.24001px" />
+</div>
+<div id="div_LableElement_217" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:20px;padding-right:0px">
+<div id="LableElement_217" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("年龄："))#</div>
+</div>
+<div id="div_TextElement_218" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:81.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_218" name="TextElement_218" class="textbox" oldVal="" Signature="None" SaveField="Item20" ToolTipContent="False" style="height:28px;width:74.24001px" />
+</div>
+<div id="div_LableElement_219" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:45.37px;padding-left:10.99989px;padding-right:0px">
+<div id="LableElement_219" style="height:18.48px;width:45.37px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("登记号:"))#</div>
+</div>
+<div id="div_TextElement_220" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:145.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_220" name="TextElement_220" class="textbox" oldVal="" Signature="None" SaveField="Item21" ToolTipContent="False" style="height:28px;width:138.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_22" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:1264px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_22" style="height:38px;width:1264px">
+<div LineNo="1" style="padding:3px">
+<div id="div_ButtonElement_23" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:106px;padding-left:0px;padding-right:0px">
+<a id="ButtonElement_23" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="" style="height:30px;width:106px">#(..Get("新建"))#</a>
+</div>
+<div id="div_DateElement_25" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:121px;padding-left:5px;padding-right:0px">
+<input id="DateElement_25" name="DateElement_25" querybanding="HISUIDataTableElement_34:DateElement_29" oldVal="" SaveField="Item9" format="yyyy-MM-dd" style="height:30px;width:121px" />
+</div>
+<div id="div_TimeElement_26" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:101px;padding-left:0px;padding-right:0px">
+<input id="TimeElement_26" name="TimeElement_26" querybanding="HISUIDataTableElement_34:TimeElement_31" oldVal="" dhccLableFor="TableCell_110" SaveField="Item10" style="height:30px;width:101px" />
+</div>
+<div id="div_DateElement_27" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155px;padding-left:5px;padding-right:0px">
+<input id="DateElement_27" name="DateElement_27" querybanding="HISUIDataTableElement_34:DateElement_29" oldVal="" SaveField="Item11" format="yyyy-MM-dd" style="height:30px;width:155px" />
+</div>
+<div id="div_TimeElement_28" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:93px;padding-left:0px;padding-right:0px">
+<input id="TimeElement_28" name="TimeElement_28" querybanding="HISUIDataTableElement_34:TimeElement_31" oldVal="" SaveField="Item12" style="height:30px;width:93px" />
+</div>
+<div id="div_CheckElement_29" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:118px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_29'  class='hisui-checkbox'  name='CheckElement_29'  querybanding='HISUIDataTableElement_34:RecCancel'  oldVal='' SaveField='Item13'  type='checkbox'  label='#(..Get("显示作废记录"))#'  value='1'  NumberValue='#(..Get("1"))#'  /> 
+</div>
+<div id="div_ButtonElement_30" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_30" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_30" style="height:30px;width:88px">#(..Get("查询"))#</a>
+</div>
+<div id="div_ButtonElement_31" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:106px;padding-left:5px;padding-right:0px">
+<a id="ButtonElement_31" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_31" style="height:30px;width:106px">#(..Get("作废"))#</a>
+</div>
+<div id="div_ButtonElement_32" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:116px;padding-left:5px;padding-right:0px">
+<a id="ButtonElement_32" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="" style="height:30px;width:116px">#(..Get("打印全部"))#</a>
+</div>
+<div id="div_ButtonElement_33" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88px;padding-left:5px;padding-right:0px">
+<a id="ButtonElement_33" href="javascript:void();" class="hisui-linkbutton hover-dark" printInfo="Print" gatherFun="" style="height:30px;width:88px">#(..Get("打印"))#</a>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:5px 10px 5px 10px">
+<div id="div_HISUIDataTableElement_34" style="float:left;width:1410.03px;height:342px">
+<table id="HISUIDataTableElement_34"  name="HISUIDataTableElement_34" style="width:1358px;height:342px"></table><div id="HISUIDataTableElement_34_toolbar" style="height: auto"><a id='editAppend' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="OnHisuiEditAppend('HISUIDataTableElement_34')">新增</a><a id='editRemove' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="OnHisuiEditRemove('HISUIDataTableElement_34')">移除</a><a id='editCancel' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="OnHisuiEditCancel('HISUIDataTableElement_34')">撤销</a><a id='editAccept' href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="OnHisuiEditAccept('HISUIDataTableElement_34')">保存</a><a id='edttEnd' href="javascript:void(0)" class="hisui-linkbutton" style="display: none" data-options="iconCls:'icon-accept',plain:true" onclick="OnHisuiEditEnd('HISUIDataTableElement_34')">结束编辑</a></div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/plugin/datagrid-cellediting.js?ver=2023-05-12_181224" ></script>
+
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </SCRIPT>
+   <SCRIPT Language="Javascript">
+  var HighRiskReportEnable='#(##class(NurMp.Template.EventSet).isReport("e482291ef44b4a32bca11c54813b4646"))#';
+  var WebIp='';
+  var EpisodeID='#(%request.Get("EpisodeID"))#';
+  var TemplateGUID="e482291ef44b4a32bca11c54813b4646";
+  var TemplateIndentity="DHCNURJZEKHLJLD12345";
+  var CAPatientPDF = false;
+  var dtformat = "";
+  var WindowCompleted = false;
+  var HiddenNoSubmit = false;
+  var RequiredAlter = false;
+  var HideSavedAlter = false;
+  var ShowLeaveMark = false;
+   </SCRIPT>
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Service.Template.Model).InitEnvironment(%request.Get("ModelId"),%session.Data("LOGON.CTLOCID"))
+   </SCRIPT>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/HisUITableEdit.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/rightClickHandler.js?ver=2023-05-12_181224" charset="gbk" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/validateboxType.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/ElementUtility.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Foundation.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Condition.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Cascading.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript">
+var LoadFormElements = [
+'TextElement_206','TextElement_208','TextElement_210','TextElement_212','TextElement_214','TextElement_216','TextElement_218','TextElement_220','DateElement_25','TimeElement_26','DateElement_27','TimeElement_28','CheckElement_29'
+];
+
+
+
+$(document).ready(function () {InnerNetDebug();
+CallItemBeforeInit();
+ $('#TextElement_206').validatebox({ID:'TextElement_206' });
+RefHandler('TextElement_206',false,false,true);
+ $('#TextElement_208').validatebox({ID:'TextElement_208' });
+RefHandler('TextElement_208',false,false,true);
+ $('#TextElement_210').validatebox({ID:'TextElement_210' });
+RefHandler('TextElement_210',false,false,true);
+ $('#TextElement_212').validatebox({ID:'TextElement_212' });
+RefHandler('TextElement_212',false,false,true);
+ $('#TextElement_214').validatebox({ID:'TextElement_214' });
+RefHandler('TextElement_214',false,false,true);
+ $('#TextElement_216').validatebox({ID:'TextElement_216' });
+RefHandler('TextElement_216',false,false,true);
+ $('#TextElement_218').validatebox({ID:'TextElement_218' });
+RefHandler('TextElement_218',false,false,true);
+ $('#TextElement_220').validatebox({ID:'TextElement_220' });
+RefHandler('TextElement_220',false,false,true);
+$('#ButtonElement_23').linkbutton({  stopAllEventOnDisabled: 'true',iconCls: 'icon-w-add'}); 
+ $('#ButtonElement_23').click(function () {New('','Callback_ButtonElement_23','DHCNURJZHLGCJLDLR',{"left":"50","width":"1000","height":"1000"},'HISUIDataTableElement_34'); });
+ $('#DateElement_25').dateboxq({ID:'DateElement_25',format2:'yyyy-MM-dd' });
+ $('#TimeElement_26').timespinner({ID:'TimeElement_26' });
+if (/^edit/.test('TimeElement_26') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_26'))) {
+$('#TimeElement_26').unbind("keydown.spinner");
+}
+
+ $('#DateElement_27').dateboxq({ID:'DateElement_27',format2:'yyyy-MM-dd' });
+ $('#TimeElement_28').timespinner({ID:'TimeElement_28' });
+if (/^edit/.test('TimeElement_28') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_28'))) {
+$('#TimeElement_28').unbind("keydown.spinner");
+}
+
+$('#ButtonElement_30').linkbutton({  stopAllEventOnDisabled: 'true',iconCls: 'icon-w-find'}); 
+ $('#ButtonElement_30').click(function () {RecQuery('Gather_ButtonElement_30','Callback_ButtonElement_30','',null); });
+$('#ButtonElement_31').linkbutton({  stopAllEventOnDisabled: 'true',iconCls: 'icon-w-cancel'}); 
+ $('#ButtonElement_31').click(function () {RecCancel('Gather_ButtonElement_31','Callback_ButtonElement_31','',null); });
+$('#ButtonElement_32').linkbutton({  stopAllEventOnDisabled: 'true',iconCls: 'icon-w-print'}); 
+ $('#ButtonElement_32').click(function () {PrintAll('','','DHCNURMoudPrnjzek',null); });
+$('#ButtonElement_33').linkbutton({  stopAllEventOnDisabled: 'true',iconCls: 'icon-w-print'}); 
+ $('#ButtonElement_33').click(function () {Print('','Callback_ButtonElement_33','DHCNURMoudPrnjzek',null); });
+AddCssStyle('.datagrid-header-row{ height: 0px; }.HISUIDataTableElement_34-header-row0{ height: 32px; }.HISUIDataTableElement_34-header-row1{ height: 24px; }.HISUIDataTableElement_34-header-row2{ height: 26px; }');
+$('#HISUIDataTableElement_34').data('filelds',[[],['DateElement_29','TimeElement_31','TextElement_34','TextElement_37','TextElement_40','TextElement_43','TextElement_51','DropRadioElement_54','TextElement_57','TextElement_60','DropRadioElement_64','DropRadioElement_69','TextElement_71','DropRadioElement_105','DropRadioElement_78','DropRadioElement_80','TextElement_83','DropRadioElement_87','TextElement_90','TextElement_92','TextElement_98','TextareaElement_96','TextElement_100']]);
+$('#HISUIDataTableElement_34').data('amendDataDisplay',true);
+ $('#HISUIDataTableElement_34').datagrid({
+title:''
+,updateVerifyRelatedSignField:''
+,bandingTemplateGuid:'a029fa4ec990496b818e38f77c50d942'
+,saveGeneratePic:false
+,saveGeneratePicPrintTemplateEmrCode:'^0'
+,toolbar: '#HISUIDataTableElement_34_toolbar'
+,cellEdit:true
+,cellEditDefaultColumnNo:''
+,autoFocus:true
+,statisticsRowEdit:false
+,editBottomAdd:false
+,onlyRadioDBClickEdit:false
+,fitColumns:false
+,rePrintTemplateIndentity:''
+,autoRowHeight:true
+,striped:false
+,signVerifyNoWarn:false
+,cancelRecShowRed:false
+,HiddenEmptyDyTitle:false
+,ReSetTableHeadMenu:false
+,SwitchTableHeadMenu:false
+,CopyMenu:true
+,SignImgSyncLoad:false
+,RePrintSetMenu:true
+,nowrap:false
+,pagination:true
+,rownumbers:true
+,singleSelect:false
+,checkOnSelect:true
+,selectOnCheck:true
+,resizeHandle:'right'
+,idField:'ID'
+ ,rowStyler:function(index, rowData)
+{
+var tableID='HISUIDataTableElement_34';
+return HISUITableRowStyler(index,rowData,tableID);
+}
+,onBeginEdit:HISUIDataTableElement_34_onBeginEdit
+,onBeforeEdit:HISUIDataTableElement_34_onBeforeEdit
+,onEndEdit:HISUIDataTableElement_34_onEndEdit
+,onCellEdit: function(index, field, value){
+var FormElement = "edit" + this.id + "_" + field;
+var helper = GetElementHelper(FormElement);
+helper.focus(FormElement);
+window.HisuiEditors[this.id].editField = field;
+window.HisuiEditors[this.id].editIndex = index;
+CellEditByOpenWindow(this.id,field);
+}
+,onCellEnterHandler: function(i, f){
+OnHisuiCellEditEnterHandler(this.id,i,f);
+}
+,onBeforeCellEdit: function(i, f){
+return OnHisuiBeforeCellEdit(this.id,i,f);
+}
+,clickToEdit:true
+,dblclickToEdit:false
+,onSelect:OnHisUITableRowSelect
+,onUnselect:OnHisUITableRowUnSelect
+,onRowContextMenu:OnHisUITableRowContextMenu
+,onLoadSuccess:OnHisUITableLoadSuccess
+,pagePosition:'bottom'
+,sortName:'ID'
+,sortOrder:'desc'
+,pageNumber:1
+,pageSize:10
+,scrollbarSize:0
+,pageList:[10,20,30,40,50]
+,frozenColumns:[
+
+]
+,columns:[
+[
+{field:'ID',checkbox:true,rowspan:3},
+{title:$g("日期"),editor:{
+type: 'datebox'
+,options:{
+ID:'editHISUIDataTableElement_34_DateElement_29',required:true,format2:'yyyy-MM-dd'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DateElement_29',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:43}
+,{title:$g("时间"),editor:{
+type: 'timespinner'
+,options:{
+ID:'editHISUIDataTableElement_34_TimeElement_31',required:true}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TimeElement_31',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:43}
+,{title:$g("T℃"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_34',validType:['TextErrorMin[34]','TextErrorMax[43]']}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_34',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:43}
+,{title:$g("P次/分"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_37'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_37',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:62}
+,{title:$g("R次/分"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_40'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_40',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:66}
+,{title:$g("血压<br/>mmHg"),formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_43',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:71}
+,{title:$g("氧饱<br/>和度<br/>％"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_51'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_51',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:45}
+,{title:$g("神志"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_34_DropRadioElement_54',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onHidePanel:function(){var evt = $.Event('keydown', {keyCode: 13,name:'droplistEnter'});$(this).trigger(evt);},data:[
+{Text: $g("清醒"),Value:'1',NumberValue:'1'},{Text: $g("嗜睡"),Value:'2',NumberValue:'2'},{Text: $g("浅昏迷"),Value:'3',NumberValue:'3'},{Text: $g("深昏迷"),Value:'4',NumberValue:'4'},{Text: $g("镇静状态"),Value:'5',NumberValue:'5'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DropRadioElement_54',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:51}
+,{title:$g("瞳孔反射mm"),align:'left',halign:'center',colspan:2}
+,{title:$g("措施及处理"),align:'left',halign:'center',colspan:6}
+,{title:$g("小便"),align:'left',halign:'center',colspan:2}
+,{title:$g("大便"),align:'left',halign:'center',colspan:2}
+,{title:$g("特殊用药"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_98'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_98',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:76}
+,{title:$g("备注"),editor:{
+type: 'cellTextarea'
+,options:{
+ID:'editHISUIDataTableElement_34_TextareaElement_96'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextareaElement_96',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:108}
+,{title:$g("签名"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_100',Signature:'Common',SignatureAuto:'False'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_100',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:3,align:'left',halign:'center',order:'asc',width:69}
+],
+[
+{title:$g("左"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_57'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_57',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:46}
+,{title:$g("右"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_60'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_60',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:45}
+,{title:$g("用氧<br/>L/分"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_34_DropRadioElement_64',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onHidePanel:function(){var evt = $.Event('keydown', {keyCode: 13,name:'droplistEnter'});$(this).trigger(evt);},data:[
+{Text: $g("鼻导管"),Value:'1',NumberValue:'1'},{Text: $g("头罩"),Value:'2',NumberValue:'2'},{Text: $g("面罩"),Value:'3',NumberValue:'3'},{Text: $g("呼吸机"),Value:'4',NumberValue:'4'},{Text: $g("简易呼吸器"),Value:'5',NumberValue:'5'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DropRadioElement_64',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:44}
+,{title:$g("吸氧护<br/>理"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_34_DropRadioElement_69',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onHidePanel:function(){var evt = $.Event('keydown', {keyCode: 13,name:'droplistEnter'});$(this).trigger(evt);},data:[
+{Text: $g("√"),Value:'1',NumberValue:'1'},{Text: $g(""),Value:'2',NumberValue:'2'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DropRadioElement_69',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:58}
+,{title:$g("吸痰"),align:'left',halign:'center',colspan:2}
+,{title:$g("晨晚间<br/>护理"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_34_DropRadioElement_78',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onHidePanel:function(){var evt = $.Event('keydown', {keyCode: 13,name:'droplistEnter'});$(this).trigger(evt);},data:[
+{Text: $g("√"),Value:'1',NumberValue:'1'},{Text: $g(""),Value:'2',NumberValue:'2'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DropRadioElement_78',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:75}
+,{title:$g("体位"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_34_DropRadioElement_80',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onHidePanel:function(){var evt = $.Event('keydown', {keyCode: 13,name:'droplistEnter'});$(this).trigger(evt);},data:[
+{Text: $g("自动"),Value:'1',NumberValue:'1'},{Text: $g("左侧"),Value:'2',NumberValue:'2'},{Text: $g("右侧"),Value:'3',NumberValue:'3'},{Text: $g("平卧"),Value:'4',NumberValue:'4'},{Text: $g("端坐"),Value:'5',NumberValue:'5'},{Text: $g("半卧"),Value:'6',NumberValue:'6'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DropRadioElement_80',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:48}
+,{title:$g("量ml"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_83'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_83',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:48}
+,{title:$g("色"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_34_DropRadioElement_87',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onHidePanel:function(){var evt = $.Event('keydown', {keyCode: 13,name:'droplistEnter'});$(this).trigger(evt);},data:[
+{Text: $g("酱油色"),Value:'1',NumberValue:'1'},{Text: $g("茶色"),Value:'2',NumberValue:'2'},{Text: $g("暗红"),Value:'3',NumberValue:'3'},{Text: $g("洗肉水样"),Value:'4',NumberValue:'4'},{Text: $g("深黄"),Value:'5',NumberValue:'5'},{Text: $g("淡黄"),Value:'6',NumberValue:'6'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DropRadioElement_87',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:48}
+,{title:$g("次数"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_90'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_90',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:46}
+,{title:$g("性状"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_92'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_92',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,rowspan:2,align:'left',halign:'center',order:'asc',width:43}
+],
+[
+{title:$g("量ml"),editor:{
+type: 'validatebox'
+,options:{
+ID:'editHISUIDataTableElement_34_TextElement_71'}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'TextElement_71',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:50}
+,{title:$g("性状"),editor:{
+type: 'combobox'
+,options:{
+ID:'editHISUIDataTableElement_34_DropRadioElement_105',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onHidePanel:function(){var evt = $.Event('keydown', {keyCode: 13,name:'droplistEnter'});$(this).trigger(evt);},data:[
+{Text: $g("白色粘稠"),Value:'1',NumberValue:'1'},{Text: $g("白色稀薄"),Value:'2',NumberValue:'2'},{Text: $g("黄色粘稠"),Value:'3',NumberValue:'3'},{Text: $g("血色分泌物"),Value:'4',NumberValue:'4'}
+ ]
+}
+}
+,formatter: function(value, row, index){
+var tableID = 'HISUIDataTableElement_34';
+return OnHisuiColumnFormatter(value, this, row, tableID,index);
+}
+,field:'DropRadioElement_105',sortable:false,resizable:true,ShowNumerValue:false,ItemsSplitString:',',EmptyDefaultDis:'',WrapFlag:'',SignColumn:false,AlignTargetColumn:'',hidden:false,checkbox:false,align:'left',halign:'center',order:'asc',width:51}
+],
+
+]
+ }).datagrid('enableCellEditing');
+
+$('#HISUIDataTableElement_34').datagrid('getPager').pagination({
+onSelectPage:function(pageNumber, pageSize){
+var PageStart=(pageNumber-1)*pageSize+1;
+var PageEnd=pageNumber*pageSize;
+$('#HISUIDataTableElement_34').data('nurPageNumber', pageNumber);
+$('#HISUIDataTableElement_34').data('nurPageSize', pageSize);
+var queryParam=$('#HISUIDataTableElement_34').attr('queryInfo');
+GetDataFromService(null,["HISUIDataTableElement_34"],'PageStart='+PageStart+'&PageEnd='+PageEnd,queryParam);
+}
+});
+function HISUIDataTableElement_34_onClickRow(rowIndex, rowData) 
+{
+OnHisuiEditClickRow(rowIndex, rowData,'HISUIDataTableElement_34')
+}
+
+function HISUIDataTableElement_34_onBeginEdit(i,d) 
+{
+$('.datagrid-row-editting').removeClass('datagrid-row-editting');
+$("tr[datagrid-row-index = '"+i+"']").addClass("datagrid-row-editting");
+InitAutoSignature();
+}
+
+function HISUIDataTableElement_34_onBeforeEdit(i,d) 
+{
+InitStatisticsRowEdit('HISUIDataTableElement_34',i,d);
+}
+
+function HISUIDataTableElement_34_onEndEdit(i,d) 
+{
+ClearStatisticsRowEdit('HISUIDataTableElement_34',i,d);
+}
+
+window['editHISUIDataTableElement_34_DateElement_29'] = function()
+{
+SetOneValue('editHISUIDataTableElement_34_DateElement_29',GetCurrentDate());
+
+}
+window['editHISUIDataTableElement_34_TimeElement_31'] = function()
+{
+if (/^edit/.test('editHISUIDataTableElement_34_TimeElement_31') && !IsTableCellEdit(GetTableIdByIndentity('editHISUIDataTableElement_34_TimeElement_31'))) {
+$('#editHISUIDataTableElement_34_TimeElement_31').unbind("keydown.spinner");
+}
+
+SetOneValue('editHISUIDataTableElement_34_TimeElement_31',GetServerNowTime());
+
+}
+window['editHISUIDataTableElement_34_TextElement_34'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_34',false,false,true);
+ $('#editHISUIDataTableElement_34_TextElement_34').change(function() {TextNumberWarningValidate($(this).val(),36.3,37.3);  });
+}
+window['editHISUIDataTableElement_34_TextElement_37'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_37',false,false,true);
+ $('#editHISUIDataTableElement_34_TextElement_37').change(function() {TextNumberWarningValidate($(this).val(),60,100);  });
+}
+window['editHISUIDataTableElement_34_TextElement_40'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_40',false,false,true);
+ $('#editHISUIDataTableElement_34_TextElement_40').change(function() {TextNumberWarningValidate($(this).val(),10,30);  });
+}
+window['editHISUIDataTableElement_34_TextElement_51'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_51',false,false,true);
+ $('#editHISUIDataTableElement_34_TextElement_51').change(function() {TextNumberWarningValidate($(this).val(),95,100);  });
+}
+window['editHISUIDataTableElement_34_DropRadioElement_54'] = function()
+{
+$('#editHISUIDataTableElement_34_DropRadioElement_54').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5'});
+SetOneValue('editHISUIDataTableElement_34_DropRadioElement_54',{source:[{Text: $g("清醒"),Value: '1'},{Text: $g("嗜睡"),Value: '2'},{Text: $g("浅昏迷"),Value: '3'},{Text: $g("深昏迷"),Value: '4'},{Text: $g("镇静状态"),Value: '5'}],values:[]});
+}
+window['editHISUIDataTableElement_34_TextElement_98'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_98',false,false,true);
+}
+window['editHISUIDataTableElement_34_TextareaElement_96'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextareaElement_96',false,false,true);
+}
+window['editHISUIDataTableElement_34_TextElement_100'] = function()
+{
+ $('#editHISUIDataTableElement_34_TextElement_100').on('blur', function(){ElementUtility.TextElement.banding('editHISUIDataTableElement_34_TextElement_100', $(this).attr('SignatureFullVal'),true); });
+ $('#editHISUIDataTableElement_34_TextElement_100').on('focus', function(){$(this).val(''); });
+ $('#editHISUIDataTableElement_34_TextElement_100').on('keyup', function(event){if (event.keyCode == 13 || event.keyCode == 46) {} else {RestrictNumerical($(this));} });
+ $('#editHISUIDataTableElement_34_TextElement_100').keydown(function(event){if (event.keyCode == 13)  JobNumEnterToName($(this),false);if (event.keyCode == 46)  ClearSign($(this)); });
+}
+window['editHISUIDataTableElement_34_TextElement_57'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_57',false,false,true);
+}
+window['editHISUIDataTableElement_34_TextElement_60'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_60',false,false,true);
+}
+window['editHISUIDataTableElement_34_DropRadioElement_64'] = function()
+{
+$('#editHISUIDataTableElement_34_DropRadioElement_64').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5'});
+SetOneValue('editHISUIDataTableElement_34_DropRadioElement_64',{source:[{Text: $g("鼻导管"),Value: '1'},{Text: $g("头罩"),Value: '2'},{Text: $g("面罩"),Value: '3'},{Text: $g("呼吸机"),Value: '4'},{Text: $g("简易呼吸器"),Value: '5'}],values:[]});
+}
+window['editHISUIDataTableElement_34_DropRadioElement_69'] = function()
+{
+$('#editHISUIDataTableElement_34_DropRadioElement_69').data('NumberValues',{1:'1',2:'2'});
+SetOneValue('editHISUIDataTableElement_34_DropRadioElement_69',{source:[{Text: $g("√"),Value: '1'},{Text: $g(""),Value: '2'}],values:[]});
+}
+window['editHISUIDataTableElement_34_DropRadioElement_78'] = function()
+{
+$('#editHISUIDataTableElement_34_DropRadioElement_78').data('NumberValues',{1:'1',2:'2'});
+SetOneValue('editHISUIDataTableElement_34_DropRadioElement_78',{source:[{Text: $g("√"),Value: '1'},{Text: $g(""),Value: '2'}],values:[]});
+}
+window['editHISUIDataTableElement_34_DropRadioElement_80'] = function()
+{
+$('#editHISUIDataTableElement_34_DropRadioElement_80').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6'});
+SetOneValue('editHISUIDataTableElement_34_DropRadioElement_80',{source:[{Text: $g("自动"),Value: '1'},{Text: $g("左侧"),Value: '2'},{Text: $g("右侧"),Value: '3'},{Text: $g("平卧"),Value: '4'},{Text: $g("端坐"),Value: '5'},{Text: $g("半卧"),Value: '6'}],values:[]});
+}
+window['editHISUIDataTableElement_34_TextElement_83'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_83',false,false,true);
+}
+window['editHISUIDataTableElement_34_DropRadioElement_87'] = function()
+{
+$('#editHISUIDataTableElement_34_DropRadioElement_87').data('NumberValues',{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6'});
+SetOneValue('editHISUIDataTableElement_34_DropRadioElement_87',{source:[{Text: $g("酱油色"),Value: '1'},{Text: $g("茶色"),Value: '2'},{Text: $g("暗红"),Value: '3'},{Text: $g("洗肉水样"),Value: '4'},{Text: $g("深黄"),Value: '5'},{Text: $g("淡黄"),Value: '6'}],values:[]});
+}
+window['editHISUIDataTableElement_34_TextElement_90'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_90',false,false,true);
+}
+window['editHISUIDataTableElement_34_TextElement_92'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_92',false,false,true);
+}
+window['editHISUIDataTableElement_34_TextElement_71'] = function()
+{
+RefHandler('editHISUIDataTableElement_34_TextElement_71',false,false,true);
+}
+window['editHISUIDataTableElement_34_DropRadioElement_105'] = function()
+{
+$('#editHISUIDataTableElement_34_DropRadioElement_105').data('NumberValues',{1:'1',2:'2',3:'3',4:'4'});
+SetOneValue('editHISUIDataTableElement_34_DropRadioElement_105',{source:[{Text: $g("白色粘稠"),Value: '1'},{Text: $g("白色稀薄"),Value: '2'},{Text: $g("黄色粘稠"),Value: '3'},{Text: $g("血色分泌物"),Value: '4'}],values:[]});
+}
+
+
+
+AddHisuiEditors('HISUIDataTableElement_34');
+AddCellEditDefault('editHISUIDataTableElement_34_DateElement_29','Func^GetCurrentDate');
+AddCellEditDefault('editHISUIDataTableElement_34_TimeElement_31','Func^GetServerNowTime');
+AddCellEditDefault('editHISUIDataTableElement_34_DropRadioElement_54',{source:[{Text: $g("清醒"),Value: '1'},{Text: $g("嗜睡"),Value: '2'},{Text: $g("浅昏迷"),Value: '3'},{Text: $g("深昏迷"),Value: '4'},{Text: $g("镇静状态"),Value: '5'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_34_DropRadioElement_64',{source:[{Text: $g("鼻导管"),Value: '1'},{Text: $g("头罩"),Value: '2'},{Text: $g("面罩"),Value: '3'},{Text: $g("呼吸机"),Value: '4'},{Text: $g("简易呼吸器"),Value: '5'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_34_DropRadioElement_69',{source:[{Text: $g("√"),Value: '1'},{Text: $g(""),Value: '2'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_34_DropRadioElement_78',{source:[{Text: $g("√"),Value: '1'},{Text: $g(""),Value: '2'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_34_DropRadioElement_80',{source:[{Text: $g("自动"),Value: '1'},{Text: $g("左侧"),Value: '2'},{Text: $g("右侧"),Value: '3'},{Text: $g("平卧"),Value: '4'},{Text: $g("端坐"),Value: '5'},{Text: $g("半卧"),Value: '6'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_34_DropRadioElement_87',{source:[{Text: $g("酱油色"),Value: '1'},{Text: $g("茶色"),Value: '2'},{Text: $g("暗红"),Value: '3'},{Text: $g("洗肉水样"),Value: '4'},{Text: $g("深黄"),Value: '5'},{Text: $g("淡黄"),Value: '6'}],values:[]});
+AddCellEditDefault('editHISUIDataTableElement_34_DropRadioElement_105',{source:[{Text: $g("白色粘稠"),Value: '1'},{Text: $g("白色稀薄"),Value: '2'},{Text: $g("黄色粘稠"),Value: '3'},{Text: $g("血色分泌物"),Value: '4'}],values:[]});
+$('#div_HISUIDataTableElement_34').on("mouseup", function(e){var txt = window.getSelection ? window.getSelection().toString() : document.selection.createRange().text;window.TableClipboardContent = txt;});
+CallItemAfterInit();
+CallItemBeforeSetValue();
+
+SetOneValue('TimeElement_26','00:00');
+
+SetOneValue('DateElement_27',GetTomorrowDate());
+
+SetOneValue('TimeElement_28','00:00');
+
+
+InitHiddenField();
+InitDynamicTableTitleLabel();
+DisEnableList(['TextElement_206','TextElement_208','TextElement_210','TextElement_212','TextElement_214','TextElement_216','TextElement_218','TextElement_220'],true);
+ShortcutFormElementFocus();
+setTimeout(function(){
+if (window.HISUIStyleCode == 'lite'){
+$('#DateElement_25').css('width',($('#DateElement_25').css('width').replace('px','')-7)+'px');
+$('#DateElement_27').css('width',($('#DateElement_27').css('width').replace('px','')-7)+'px');
+}
+GetDataFromService(null,null,null,null,false);
+CallItemAfterSetValue();
+DBTableFirstLoadData('HISUIDataTableElement_34',false);
+HisUITable_SelfAdaption(4,'HISUIDataTableElement_34',true,true);
+
+InitPatientPDF();
+InitHandover();
+InitHighRiskReport();
+setTimeout(function(){
+UpdateCAOldFormData();
+InitAutoSignature();
+InitTableCellPopover();
+InitSignDomain();
+BindingLeaveMarkLogEvent();
+WindowCompleted = true;
+setTimeout(PrintActivexUpgrade, 100); 
+setTimeout(function(){
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/shim.min.js?ver=2023-05-12_181224');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js?ver=2023-05-12_181224');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/clipboard.min.js?ver=2023-05-12_181224');
+}, 100); 
+RealTimeSave(+0*1000);
+GetLeaveMarkLogs();
+}, 10); 
+}, 0); 
+ });
+$(window).load(function () {
+$('body').append('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+if ($.type(window.WindowLoadCallBack) === 'function') { window.WindowLoadCallBack(); }
+ });
+function HisuiTableAutoAdaption(){
+HisUITable_SelfAdaption(4,'HISUIDataTableElement_34',true,true);
+}
+function Callback_ButtonElement_23()
+{
+DBTableFirstLoadData('HISUIDataTableElement_34',false);
+}
+function Callback_ButtonElement_30()
+{
+return ['HISUIDataTableElement_34'];
+}
+function Gather_ButtonElement_30()
+{
+var gatherElements = ['DateElement_25','TimeElement_26','DateElement_27','TimeElement_28','CheckElement_29'];
+var gatherImportMap = 'DateElement_25^,TimeElement_26^,DateElement_27^,TimeElement_28^,CheckElement_29^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_31()
+{
+return ['HISUIDataTableElement_34'];
+}
+function Gather_ButtonElement_31()
+{
+var gatherElements = ['HISUIDataTableElement_34'];
+var gatherImportMap = 'HISUIDataTableElement_34^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_33()
+{
+DBTableLoadData('HISUIDataTableElement_34');
+}
+function CallbackEdit_HISUIDataTableElement_34()
+{
+var tableHtmlId = 'HISUIDataTableElement_34';
+DBTableLoadData(tableHtmlId);}
+function CallbackDel_HISUIDataTableElement_34()
+{
+var tableHtmlId = 'HISUIDataTableElement_34';
+DBTableLoadData(tableHtmlId);}
+
+</script> <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/custom.js?ver=2023-05-12_181224" ></script>
+ <script type="text/javascript" src="../scripts_gen/DHCNURJZEKHLJLD12345.js?ver=2023-05-12_181224" ></script>
+<script for="PrintActiveX" event="CheckUpgradeEvent(msg)" language="javascript">
+function PrintActiveX::CheckUpgradeEvent(msg) {
+console.log(msg);
+var reMsg = JSON.parse(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+else if (reMsg.status == "-1") {//升级失败
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+}
+</script>
+<script type='text/template' id='dialogReferTemplate'>
+<div id="dialogRefer" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose'
+	},{
+		text:'清屏',
+		iconCls:'icon-w-clean',
+		id: 'btnClear'
+	},{
+		text:'引用',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='dialogSpecialCharTemplate'>
+<div id="dialogSpecialChar" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnCharClose'
+	},{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnCharRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='menuTemplate'>
+<div id="menu" class="hisui-menu" style="width:100px;"></div>
+</script>
+<script type='text/template' id='HisUITableMenuTemplate'>
+<div id="hisUITableMenu" class="hisui-menu" data-options="onClick:OnHisUiTableMenuHandler" style="width:100px;"></div>
+</script>
+<script type='text/template' id='RePrintSetDialogTemplate'>
+<div id="rePrintDialog" class="hisui-dialog" title="补打设置" style="width:350px;height:300px;" data-options="closed:true,onOpen:function(){RePrintGetPrintinfo();},modal:true,
+	buttons:[
+	{text:'确定',handler:function(){RePrint();}},
+	{text:'取消',handler:function(){$HUI.dialog('#rePrintDialog').close();}}
+	]">
+    <div style="width:350px;height:213px;display:table-cell;vertical-align:middle;text-align:center;">
+        <div style="display:inline-block;">
+            <span id="IsPrint">#(..Get("未打印"))#</span>  <br>
+            #(..Get("打印信息："))#<span id="PrintInfo">#(..Get("无"))#</span>
+            <br>
+            <br>
+            #(..Get("开始页："))#<input id="startPageNo" class="hisui-numberbox textbox" data-options="required:true">
+            <br>
+            <br>
+            #(..Get("开始行："))#<input id="startRowNo" class="hisui-numberbox textbox" data-options="required:true">
+        </div>
+    </div>
+</div>
+</script>
+<script type='text/template' id='CancelHighRisKReportDialogTemplate'>
+<div id='cancelReportDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		撤销原因：
+	   <select id='reasonBox' name='reason' class='hisui-combobox' style='width:200px;'>
+	   	    <option value='撤销'>撤销</option>
+	    		<option value='出院'>出院</option>
+	    		<option value='死亡'>死亡</option>
+	    		<option value='转出'>转出</option>
+	    </select>
+	   <br/>
+	   撤销日期：
+	   <input id="cancelReportDate" class="hisui-datebox textbox datebox-f combo-f" data-options="">
+	   <br/>
+	   撤销时间：
+	   <input id="cancelReportTime" class="hisui-timespinner" data-options="" style="border-radius: 2px;">
+  </div>
+</div>
+</script>
+<script type='text/template' id='SignPWDVerifyDialogTemplate'>
+<div id='signPWDVerifyDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		 密码：<input id="signPWD" class="textbox" type="password">
+  </div>
+</div>
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 	js:	 scripts/pharmacy/pivas/oeaudit.one.js
 -->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
     q 1
 </csp:method>
 <HTML XMLNS=TRAK>
@@ -15,13 +15,10 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
     <HISUI />
-    <link rel="stylesheet" type="text/css"
-        href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    </link>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
-    </link>
+    <PHAPIVASV1 />
+    <link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/pdss.css"/>
 </HEAD>
 <style type="text/css">
     .pha-oe-label {
@@ -82,12 +79,12 @@
 
     .grid-form-high {
         background: #ffe3e3;
-        color:#ff3d2c;
+        color: #ff3d2c;
     }
 
     .grid-form-low {
         background: #fff3dd;
-        color:#ff7e00;
+        color: #ff7e00;
     }
 
     .grid-oe-pass-ok:hover,
@@ -107,10 +104,10 @@
         background: #ffeecf;
     }
 
-    .datagrid-row-selected {
+    /* .datagrid-row-selected {
         background: #ffe48d;
         color: #000000;
-    }
+    } */
 
     .grpViewBase div {
         float: left;
@@ -139,74 +136,112 @@
         width: 170px;
         /* color: #0D82AA;  */
     }
-    .datagrid-group{
-        background-color:#f4f6f5;
+
+    .datagrid-group {
+        background-color: #f4f6f5;
+    }
+
+    .pha-pivas-mark {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border: none;
+        padding: 5px;
+        padding-top: 15px;
     }
 </style>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true">
-                <div data-options="region:'north',title:'配伍详情审核',iconCls:'icon-panel-oeaudit',split:true,headerCls:'panel-header-gray',collapsible:false"
-                    class="dhcpha-hisui-border dhcpha-north-r2" style="border-top:none;">
-                    <table class="dhcpha-north-tbl">
+                <div data-options="region:'north',title:'配伍详情审核',iconCls:'icon-panel-oeaudit',split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',collapsible:false" class="pha-pivas-row-2" style="border-top:none;">
+                    <div style="position: absolute;right: 10px;top: 10px;">
+                        <img src="../scripts/pharmacy/common/image/full-screen.svg" title="全屏" class='pivas-full'></img>
+                        <img src="../scripts/pharmacy/common/image/full-screen-cancel.svg" title="取消全屏" class="pivas-full" style="display: none;"></img>
+                    </div>
+                    <table class="pha-con-table">
                         <tr>
-                            <td>
-                                <label for="dateStart">用药开始日期</label>
-                                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" />
+                            <td class="r-label">
+                                <label for="dateStart">#(..Get("开始日期"))#</label>
                             </td>
                             <td>
-                                <label for="cmbLocGrp">科室组</label>
+                                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" style="width:120px" />
+                            </td>
+                            <td>
+                                <input id="timeStart" class="hisui-timespinner" showSeconds="true" style="width:95px">
+                            </td>
+                            <td class="r-label">
+                                <label for="cmbLocGrp">#(..Get("科室组"))#</label>
+                            </td>
+                            <td>
                                 <input id="cmbLocGrp" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbPivaCat">#(..Get("配液大类"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPivaCat">配液大类</label>
                                 <input id="cmbPivaCat" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbPassStat">#(..Get("审核状态"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPassStat">审核状态</label>
                                 <input id="cmbPassStat" type="text" />
                             </td>
-                            <td style="display:none">
-                                <label for="cmbNurAudit">护士审核</label>
+                            <td style="display:none" class="r-label">
+                                <label for="cmbNurAudit">#(..Get("护士审核"))#</label>
                                 <input id="cmbNurAudit" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmgIncItm">#(..Get("药品"))#</label>
+                            </td>
                             <td colspan="2">
-                                <label for="cmgIncItm">　药品</label>
                                 <input id="cmgIncItm" type="text" />
                             </td>
-                            <td></td>
+                            <td colspan="2">
+                                <input id="chkPhaMark" type="checkbox" class="hisui-checkbox" label="药师标注" />
+                            </td>
 
 
                         </tr>
                         <tr>
-                            <td>
-                                <label for="dateEnd">用药结束日期</label>
-                                <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" />
+                            <td class="r-label">
+                                <label for="dateEnd">#(..Get("结束日期"))#</label>
                             </td>
                             <td>
-                                <label for="cmbWard">病区</label>
+                                <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" style="width:120px" />
+                            </td>
+                            <td>
+                                <input id="timeEnd" class="hisui-timespinner" showSeconds="true" style="width:95px">
+                            </td>
+                            <td class="r-label">
+                                <label for="cmbWard">#(..Get("病区"))#</label>
+                            </td>
+                            <td>
                                 <input id="cmbWard" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbWorkType">#(..Get("工作组"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbWorkType">工作组</label>
                                 <input id="cmbWorkType" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbPassResult">#(..Get("审核结果"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPassResult">审核结果</label>
                                 <input id="cmbPassResult" type="text" />
                             </td>
+                            <td style="text-align:right" class="r-label">
+                                <label for="cmbPriority">#(..Get("优先级"))#</label>
+                            </td>
                             <td style="text-align:left">
-                                <label for="cmbPriority">优先级</label>
                                 <input id="cmbPriority" type="text" />
                             </td>
-                            <td>
-                                <a id="btnFind" class="hisui-linkbutton"
-                                    data-options="iconCls:'icon-w-find',plain:false">查询</a>
+                            <td class="r-label">
+                                <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false">查询</a>
                             </td>
 
                         </tr>
@@ -214,85 +249,85 @@
                 </div>
                 <div data-options="region:'center'" border="false">
                     <div class="hisui-layout" fit="true" border="false">
-                        <div data-options="region:'west',headerCls:'panel-header-gray',width:300,split:true"
-                            border="false" style="border-radius: 4px;">
-                            <div id="tabsOne" class="hisui-tabs" fit="true">
-                                <div data-options="title:'病区列表'">
+                        <div data-options="region:'west',headerCls:'panel-header-gray',width:350,split:true">
+                            <div id="tabsOne" class="hisui-tabs tabs-gray" fit="true" border=false>
+                                <div data-options="title:'病区列表',id:'tabWard'">
                                     <div class="hisui-layout" fit="true" border="false">
                                         <div data-options="region:'center'" border="false">
                                             <table id="gridWard"></table>
                                         </div>
-                                        <div data-options="region:'south'" border="false"
-                                            style="text-align:center;padding-bottom:10px">
-                                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false"
-                                                style="overflow:hidden;" id="btnFindDetail">查询</a>
+                                        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+                                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" style="overflow:hidden;" id="btnFindDetail">查询</a>
                                         </div>
                                     </div>
                                 </div>
-                                <div data-options="title:'按登记号'">
+                                <div data-options="title:'病人列表',id:'tabPat'">
                                     <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'north'" border="false" style="overflow: hidden; height:50px;">
+                                            <table class="pha-con-table">
+                                                <tr>
+                                                    <td class="r-label">
+                                                        <input id="txtPatNo" />
+                                                    </td>
+                                                    <td class="r-label">
+                                                        <a class="hisui-linkbutton js-btn-toggle" plain="false" style="" id="btnCollapseAll">折叠</a>
+                                                        <a class="hisui-linkbutton js-btn-toggle" plain="false" style=" display:none;" id="btnExpandAll">展开</a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
                                         <div data-options="region:'center'" border="false">
-                                            <table id="gridAdm"></table>
+                                            <div id="treePat" style="padding:0px 10px 10px 10px;overflow-x:hidden;"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'"
-                            class="dhcpha-hisui-border" style="border-radius: 4px;">
+                        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-border" style="border-radius: 4px;">
                             <div id="gridOrdItem"></div>
                         </div>
-                        <div id="lyOrdDetail"
-                            data-options="region:'east',split:true,headerCls:'panel-header-gray',width:500,title:'',iconCls:'icon-panel-pivas-drug'"
-                            style="border-radius: 4px;">
+                        <div id="lyOrdDetail" data-options="region:'east',split:true,headerCls:'panel-header-gray',width:500,title:'',iconCls:'icon-panel-pivas-drug'">
                             <div class="hisui-layout" fit="true" border="false">
                                 <div data-options="region:'north'" border="false">
                                     <div style="height:32px;padding-top:2px">
                                         <div style="float:left">
-
-                                            <a class="hisui-linkbutton" iconCls='icon-btn-ordpass' plain="true"
-                                                id="btnAuditOk">审核通过</a>
-                                            <a class="hisui-linkbutton" iconCls='icon-btn-ordrefuse' plain="true"
-                                                id="btnAuditNo">审核拒绝</a>
-                                            <a class="hisui-linkbutton" iconCls='icon-btn-ordcancel' plain="true"
-                                                id="btnCancelAudit">取消审核</a>
+                                            <a class="hisui-linkbutton" iconCls='icon-ok' plain="true" id="btnAuditOk">审核通过</a>
+                                            <a class="hisui-linkbutton" iconCls='icon-no' plain="true" id="btnAuditNo">审核拒绝</a>
+                                            <a class="hisui-linkbutton" iconCls='icon-undo' plain="true" id="btnCancelAudit">取消审核</a>
                                         </div>
-					                    <div class="datagrid-btn-separator"></div>
-					                    <div style="float:left">
-					                    	<a class="hisui-linkbutton" iconCls='icon-stamp' plain="true"
-					                            id="btnPhaRemark">药师标注</a>
-					             		</div>
+                                        <div class="datagrid-btn-separator"></div>
+                                        <div style="float:left">
+                                            <a class="hisui-linkbutton" iconCls='icon-edit' plain="true" id="btnPhaRemark">药师标注</a>
+                                        </div>
                                     </div>
                                     <div style="border-top:1px dashed #cccccc;padding-top:5px"></div>
                                 </div>
-                                <div data-options="region:'center',border:false" class="newScroll"
-                                    style="overflow: hidden;">
-                                    <div
-                                        style="padding-left:10px;padding-right:20px;margin-top:-5px;padding-bottom: 10px;">
+                                <div data-options="region:'center',border:false" class="newScroll" style="overflow: true;">
+                                    <div style="padding-left:10px;padding-right:10px;margin-top:-5px;padding-bottom: 10px;">
                                         <div>
                                             <div>
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        基本信息
+                                                        #(..Get("基本信息"))#
                                                     </div>
                                                     <div class="pha-oe-val" style="width:229px">
                                                         <div class="pha-oe-val-d" id="oePatName" style="width:65px">
-                                                            [姓名]
+                                                            [#(..Get("姓名"))#]
                                                         </div>
                                                         <div class="pha-oe-val-d" id="oePatSex" style="width:50px">
-                                                            [性别]
+                                                            [#(..Get("性别"))#]
                                                         </div>
                                                         <div class="pha-oe-val-d" id="oePatNo" style="width:75px">
-                                                            [登记号]
+                                                            [#(..Get("登记号"))#]
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        床号
+                                                        #(..Get("床号"))#
                                                     </div>
                                                     <div class="pha-oe-val" id="oeBedNo">
-                                                        [床号]
+                                                        [#(..Get("床号]"))#
                                                     </div>
                                                 </div>
                                             </div>
@@ -300,26 +335,26 @@
                                             <div style="clear:both;">
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        身高体重
+                                                        #(..Get("身高体重"))#
                                                     </div>
                                                     <div class="pha-oe-val" style="width:229px">
                                                         <div class="pha-oe-val-d" id="oePatHeight" style="width:65px">
-                                                            [身高]
+                                                            [#(..Get("身高"))#]
                                                         </div>
                                                         <div class="pha-oe-val-d" id="oePatWeight" style="width:50px">
-                                                            [体重]
+                                                            [#(..Get("体重"))#]
                                                         </div>
                                                         <div class="pha-oe-val-d" id="oePatAge" style="width:70px">
-                                                            [年龄]
+                                                            [#(..Get("年龄"))#]
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        体表面积
+                                                        #(..Get("体表面积"))#
                                                     </div>
                                                     <div class="pha-oe-val" id="oePatArea">
-                                                        [体表面积]
+                                                        [#(..Get("体表面积"))#]
                                                     </div>
                                                 </div>
                                             </div>
@@ -328,23 +363,23 @@
                                             <div style="clear:both">
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        用法频次
+                                                        #(..Get("用法频次"))#
                                                     </div>
                                                     <div class="pha-oe-val" style="width:229px">
                                                         <div class="pha-oe-val-d" id="oeInstruc" style="width:115px">
-                                                            [用法]
+                                                            [#(..Get("用法"))#]
                                                         </div>
                                                         <div class="pha-oe-val-d" id="oeFreq" style="width:auto">
-                                                            [频次]
+                                                            [#(..Get("频次"))#]
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        医生
+                                                        #(..Get("医生"))#
                                                     </div>
                                                     <div class="pha-oe-val" id="oeDoctor">
-                                                        [医生姓名]
+                                                        [#(..Get("医生姓名"))#]
                                                     </div>
                                                 </div>
 
@@ -353,10 +388,9 @@
                                             <div style="clear:both">
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        医嘱备注
+                                                        #(..Get("医嘱备注"))#
                                                     </div>
-                                                    <div class="pha-oe-val" style="width:auto;font-weight: normal"
-                                                        id="oeDocRemark">
+                                                    <div class="pha-oe-val" style="width:auto;font-weight: normal" id="oeDocRemark">
 
                                                     </div>
                                                 </div>
@@ -365,11 +399,9 @@
                                             <div style="clear:both">
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        诊断信息
+                                                        #(..Get("诊断信息"))#
                                                     </div>
-                                                    <div class="pha-oe-val"
-                                                        style="width:375px;font-weight: normal;overflow:hidden;height:25px;"
-                                                        id="oeDiag">
+                                                    <div class="pha-oe-val" style="width:375px;font-weight: normal;overflow:hidden;height:25px;" id="oeDiag">
 
                                                     </div>
                                                 </div>
@@ -378,7 +410,7 @@
                                             <div style="clear:both">
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        滴速
+                                                        #(..Get("滴速"))#
                                                     </div>
                                                     <div class="pha-oe-val" id="oeIvgttSpeed" style="width:229px">
 
@@ -386,10 +418,10 @@
                                                 </div>
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        液体总量
+                                                        #(..Get("液体总量"))#
                                                     </div>
                                                     <div class="pha-oe-val" id="oeLiquid">
-                                                        
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -397,10 +429,9 @@
                                             <div style="clear:both">
                                                 <div class="pha-oe-cell">
                                                     <div class="pha-oe-label">
-                                                        药师标注
+                                                        #(..Get("药师标注"))#
                                                     </div>
-                                                    <div class="pha-oe-val" style="width:auto;font-weight: normal"
-                                                        id="oePhaRemark">
+                                                    <div class="pha-oe-val" style="width:auto;font-weight: normal" id="oePhaRemark">
 
                                                     </div>
                                                 </div>
@@ -408,8 +439,7 @@
                                             <div class="pha-oe-row-line"></div>
                                         </div>
                                         <div style="clear:both;padding-top:5px">
-                                            <div
-                                                style="height:200px;width:auto;clear:both;border:1px solid #cccccc;border-radius: 4px">
+                                            <div style="height:200px;width:auto;clear:both;border:1px solid #cccccc;border-radius: 4px">
                                                 <table id="gridOrderDrugs"></table>
                                             </div>
                                         </div>
@@ -426,11 +456,10 @@
                                                         <table id="gridTPN"></table>
                                                     </div>
                                                 </div>
-                                                </div>
-                                                <div id="divMedHistory" style="display:none;">
-                                                    <div id="divMedHistoryGrid">
-                                                        <table id="gridMedHistory"></table>
-                                                    </div>
+                                            </div>
+                                            <div id="divMedHistory" style="display:none;">
+                                                <div id="divMedHistoryGrid">
+                                                    <table id="gridMedHistory"></table>
                                                 </div>
                                             </div>
                                         </div>
@@ -443,58 +472,77 @@
             </div>
         </div>
     </div>
+    </div>
     <div id="gridAdmBar">
         <div>
-            <div style="padding:5px">
-                <input id="txtPatNo" class="hisui-validatebox" placeholder="登记号..." style="height:30px;width:125px;" />
+            <div style="padding-right:6px">
+                <input id="txtPatNo" class="hisui-validatebox" placeholder="#(..Get("登记号"))#..." style="width:100%;" />
             </div>
         </div>
     </div>
     <div id="gridOrdItemBar" style="height:32px;">
-        <a class="hisui-linkbutton" iconCls='icon-btn-pass' plain="true" id="btnAnalyPresc"
-            style="padding-top:5px;padding-bottom:5px;margin-top:0px;">合理分析</a>
-        <a class="hisui-linkbutton" iconCls='icon-btn-pass-tip' plain="true" id="btnMedTips"
-            style="padding-top:5px;padding-bottom:5px;margin-top:0px;display:none;">药典提示</a>
-        <a class="hisui-linkbutton" iconCls='icon-btn-medsee' plain="true" id="btnPrBroswer"
-            style="padding-top:5px;padding-bottom:5px;margin-top:0px;">病历浏览</a>
-        <a class="hisui-linkbutton" iconCls='icon-btn-record' plain="true" id="btnAuditRecord"
-            style="padding-top:5px;padding-bottom:5px;margin-top:0px;">审核记录</a>
+        <a class="hisui-linkbutton" iconCls='icon-analysis' plain="true" id="btnAnalyPresc" style="padding-top:5px;padding-bottom:5px;margin-top:0px;">合理分析</a>
+        <a class="hisui-linkbutton" iconCls='icon-btn-pass-tip' plain="true" id="btnMedTips" style="padding-top:5px;padding-bottom:5px;margin-top:0px;display:none;">药典提示</a>
+        <a class="hisui-linkbutton" iconCls='icon-emr-cri' plain="true" id="btnPrBroswer" style="padding-top:5px;padding-bottom:5px;margin-top:0px;">病历浏览</a>
+        <a class="hisui-linkbutton" iconCls='icon-clock-record' plain="true" id="btnAuditRecord" style="padding-top:5px;padding-bottom:5px;margin-top:0px;">审核记录</a>
 
     </div>
-    <div id="reasonSelectDiv" class="hisui-dialog" title='选择原因' style="width:1000px;height:500px;color:white"
-        data-options="closable:true,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-list',
-	buttons:[{
-		text:'确认',
-		handler:function(){
-			AuditNo();
-		}
-	},{
-		text:'取消',
-		handler:function(){
-			$('#reasonSelectDiv').dialog('close');
-		}
-	}]">
+    <div id="reasonSelectDiv" class="hisui-dialog" title='选择原因' style="width:1000px;height:500px;color:white" data-options="closable:true,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-list',
+		buttons:[{
+			text:'确认',
+			handler:function(){
+				AuditNo();
+			}
+		},{
+			text:'取消',
+			handler:function(){
+				$('#reasonSelectDiv').dialog('close');
+			}
+		}]">
         <div class="hisui-layout" fit="true">
-            <div data-options="region:'center'" class="dhcpha-hisui-container">
+            <div data-options="region:'center',border:false" class="pha-body"  style="padding-bottom: 0px;">
                 <div class="hisui-layout" fit="true" border="false">
-                    <div id="lyWinCen"
-                        data-options="region:'center',split:true,headerCls:'panel-header-gray',title:'配伍原因'"
-                        class="dhcpha-hisui-border">
-                        <table id="treeGridReason"></table>
+                    <div id="lyWinCen" data-options="region:'center',split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',title:'配伍原因'">
+                        <!-- <table id="treeGridReason"></table> -->
+                        <div style="padding: 10px;">
+                            <ul id="treeReason"></ul>
+                        </div>
                     </div>
-                    <div data-options="region:'east',split:true,headerCls:'panel-header-gray',width:400" border="false">
+                    <div data-options="region:'east',split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',width:400" border="false">
                         <div class="hisui-layout" fit="true" border="false">
                             <!--div data-options="region:'center',title:'备注模板列表',split:true,headerCls:'panel-header-gray'">
-	                        <table id="gridRemark"></table>
-	                    </div-->
-                            <div data-options="region:'center',title:'备注',split:false,headerCls:'panel-header-gray',height:200"
-                                class="dhcpha-hisui-border" style="overflow:hidden">
-                                <textarea id="txtReasonNotes"
-                                    style="width:100%;height:100%;overflow:hidden;border:none"></textarea>
+                                <table id="gridRemark"></table>
+                            </div-->
+                            <div data-options="region:'center',title:'备注',split:false,headerCls:'panel-header-gray',height:200" style="overflow:hidden;">
+                                <textarea id="txtReasonNotes" style="width:100%;height:100%;overflow:hidden;border:none"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div id="phaMarkDiv" class="hisui-dialog" title='药师标注 - 清空内容后确认即为删除标注' style="padding:10px 10px 0px 10px;width:420px;color:white;overflow: hidden;" data-options="closable:true,modal:true,closed:true,collapsible:false,resizable:false,closable:false,cache: false,iconCls:'icon-w-list',
+        buttons:[{
+            text:'确认',
+            id:'btnWinAuditRemark'
+        },{
+            text:'取消',
+            handler:function(){
+                $('#phaMarkDiv').dialog('close');
+            }
+        }]">
+        <div>
+            <div class="hisui-panel" title="医嘱标注" style="height:130px;width:400px;overflow: hidden;" data-options="headerCls:'panel-header-card'">
+                <textarea class="pha-pivas-mark" id="conOrdRemark"></textarea>
+            </div>
+            <div style="margin-top:10px;"></div>
+            <div class="hisui-panel" title="配置说明" style="height:130px;width:400px;overflow: hidden;" data-options="headerCls:'panel-header-card'">
+                <textarea class="pha-pivas-mark" id="conExeRemark"></textarea>
+            </div>
+            <div style="margin-top:10px;"></div>
+            <div class="hisui-panel" title="标签打印" style="height:130px;width:400px;overflow: hidden;" data-options="headerCls:'panel-header-card'">
+                <textarea class="pha-pivas-mark" id="conLabelRemark"></textarea>
             </div>
         </div>
     </div>
@@ -503,9 +551,11 @@
     </script>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/echarts/echarts.min.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/datagrid-view/datagrid-groupview.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script>
+    <!-- <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script> -->
     <!--script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.dtpass.js"></script-->
     <!--script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.mkpass.js"></script-->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/pass.js"></script>
+
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>

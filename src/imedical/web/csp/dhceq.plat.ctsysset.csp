@@ -1,0 +1,75 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<style>
+	.layout-split-north{
+		border-bottom:0px;
+		}
+	</style>
+</head>
+<script language=Cache runat=server>
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+ 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+ 	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+ 	s HospFlag=##class(web.DHCEQCommon).GetSysInfo("990051")
+</script>
+
+<body class="hisui-layout">
+	<csp:if condition='HospFlag="2"'>
+		<div data-options="region:'north',border:false,split:true" style="height:45px;padding:10px 10px 0 10px;">
+			<label id="_HospListLabel" style="color:red;padding-left:10px;" class='r-label'>医院</label>
+			<input class="hisui-validatebox"  id="_HospList" type="text">
+			<a id="_HospBtn" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:15px">数据关联医院</a>	
+		</div>
+	</csp:if>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true" title="系统参数配置">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #e2e2e2;padding-bottom:10px">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cSSCode" for="SSCode">代码</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SSCode" data-options="component:'PLAT.L.SySSet'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cSSDesc" for="SSDesc">描述</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SSDesc"></div>
+							<div class="eq-table-td eq-table-label-new"><label for="SSValue">值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SSValue"></div>
+							<div class="eq-table-td eq-table-label-new"><label for="SSAddValue">辅助值</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="SSAddValue"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cSSRemark" for="SSRemark">备注</label></div>
+							<div class="eq-table-td eq-table-input"><input id="RRemark" class="hisui-validatebox textbox"></div>
+							<div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true" style="margin-left:20px">查询</a></div>
+							<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">查询</a></div>
+							<div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-add" data-options="stopAllEventOnDisabled:true">保存</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;">
+					 <table id="tDHCEQSysSet" class="hisui-datagrid" data-options="border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="SSRowID">
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/plat/ctsysset.js"></script>
+</body>
+</html>

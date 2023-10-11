@@ -1,0 +1,99 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /* 
+	@CSP:dhc.bdp.mkb.mkbtermprodetailproperty.csp
+	@JS:MKB_TermProDetail_Property.js
+	@Title:引用属性格式的属性内容维护模块展示
+ 	@Creator:基础数据平台组 - 谷雪萍
+ 	@Description:医用知识库--术语维护界面-引用属性格式的属性内容维护模块展示
+ 	@CreateDate:2018-04-02 
+ */
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+  <script type="text/javascript">var detailstr=[];var leaveflag="";</script>
+ <script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_KnoExpression.js"></script>
+  <style type="text/css">
+  
+  /*设置常用模板项按钮下拉箭头*/
+ .m-btn-downarrow, .s-btn-downarrow {
+    top: -3px;
+}
+</style>
+</HEAD>
+<BODY>
+    <server>
+    	s property=%request.Get("property")
+    	s addTermId=%request.Get("addTermId")
+   </server> 
+	<div class="hisui-layout" data-options="fit:true,collapsible:false" border="false" >
+
+		 <div data-options="region:'center',bodyCls:'panel-header-gray'" title="" style="border-top:1px solid #ffffff;"> 
+			<table data-options="fit:true" id="mygrid" border="false" ></table> 			 
+		 </div> 
+	 	<div data-options="region:'south',title:'',border:false" style="height:80px;padding-top:10px">
+			<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+				<table>
+					<tr style="display:none">
+			 			<td></td>
+    		   			<td><input id="MKBTPDRowId" name="MKBTPDRowId" type="text" class="hisui-validatebox" ></td>
+			 		</tr>		 		
+				</table >
+			</form>  
+		</div>
+
+     </div> 
+     
+	<div id="mytbar" data-options="split:false" style="text-align: left; display:block;" >
+	 	<a href="#" class="hisui-linkbutton l-btn-5" iconCls="icon-add" plain="true" id="btnAddPro" data-options="stopAllEventOnDisabled:true">新增模板项</a>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-save" plain="true" id="save_btn" data-options="stopAllEventOnDisabled:true">保存</a>
+ 		<!--<a href="#" class="hisui-linkbutton l-btn-4" iconCls="icon-cancel" plain="true" id="del_btn" data-options="stopAllEventOnDisabled:true">删除全部</a>-->
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-refresh" plain="true" id="btnRefresh" data-options="stopAllEventOnDisabled:true">重置</a>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-shiftup" plain="true" id="btnUp" data-options="stopAllEventOnDisabled:true">上移</a>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-shiftdown" plain="true" id="btnDown" data-options="stopAllEventOnDisabled:true">下移</a>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-productimage" plain="true" id="btnPreview" data-options="stopAllEventOnDisabled:true">预览</a>
+ 		<!--<a href="#" class="hisui-linkbutton l-btn-4" iconCls="icon-add" plain="true" id="btnAddPart" data-options="stopAllEventOnDisabled:true" style="display:none">引用部位</a>
+ 		<a href="#" class="hisui-linkbutton l-btn-4" iconCls="icon-add" plain="true" id="btnAddPath" data-options="stopAllEventOnDisabled:true" style="display:none">引用病因</a>-->
+	    <a href="#" id="btnComTemplete" class="hisui-menubutton l-btn-6" data-options="menu:'#menuComItem',iconCls:'icon-add',stopAllEventOnDisabled:true">常用模板项&nbsp;&nbsp;&nbsp;&nbsp;</a>
+		<div id="menuComItem" style="width:120px;">
+	        <div iconCls='icon-add' id="btnAddTypeItem" >病情描述</div>	        
+	        <div iconCls='icon-add' id="btnAddPathItem" >病因(公有)</div>	        
+	        <div iconCls='icon-add' id="btnAddPartItem">部位(公有)</div>
+	        <div iconCls='icon-add' id="btnAddPriPathItem" >病因(私有)</div>
+	        <div iconCls='icon-add' id="btnAddPriPartItem">部位(私有)</div>	    	
+	        <div iconCls='icon-add' id="btnAddGenItem">通用描述</div>
+	        <div iconCls='icon-add' id="btnAddLRItem">左右</div>
+		</div>
+	</div> 
+		
+     <div id="myWin" style="padding:10px;display:none;">   
+		<table data-options="fit:true,bodyCls:'panel-header-gray'"  id="UnProGrid" border="true" ></table>			
+	</div>
+
+	<div id="mywintbar" data-options="split:false" style="text-align: left; display:block;" >
+		<input id="TextType" type="text" style="width:100px;"/>
+ 		<input id="TextDesc" class="hisui-validatebox textbox" style="width:120px;">
+ 		<span class="searchbox-button" style="margin:1px 0 0 -34px;" id="btnSearch"></span>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls='icon-refresh' plain="true" id="btnProReset" data-options="stopAllEventOnDisabled:true">清屏</a>
+ 		<a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-save" plain="true" id="btnProSave" data-options="stopAllEventOnDisabled:true">保存</a>
+	</div> 
+	
+	<script type="text/javascript">
+     var  property="#(property)#"
+     var  addTermId="#(addTermId)#"
+     if ((addTermId==undefined)||(addTermId==null))
+     {
+	      addTermId=""
+     }
+  </script>
+ 	<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_TermProDetail_Property.js"></script>
+</BODY>
+</HTML>

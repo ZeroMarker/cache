@@ -1,0 +1,135 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<HTML XMLNS=TRAK>
+<head>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+    .spanclass{color:#008FF0; margin-right:0 10px 0 0;font-size:16px;}
+    .parentspan{color:#666;}
+	.parentspan:before{content: "/";margin:0 10px 0 0;color: #000;}
+    ul{height:40px;line-height:40px;margin-left:10px;}
+    li{float:left;height:30px;line-height:30px;margin:0px 10px 0 0;}
+    li span{color:#000;}
+</style>
+
+<script type="text/javascript" src="../scripts/dhceqbu/em/buildingunit.js"></script>
+</head>
+<server>
+s FRowID=$g(%request.Data("FRowID",1))
+s FBuildingDR=$g(%request.Data("FBuildingDR",1))
+s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</server>
+<body class="hisui-layout">
+	 <!--modify by lmm 2020-05-09 1311841-->
+	<div data-options="region:'north',border:false" style="padding:10px;border-bottom:solid 1px #ccc;">
+		<div data-options="region:'north',border:false" style="height:40px;" style="overflow:hidden"> <!--begin banner显示区域-->
+	    	<ul id="bannerContent">
+	    		<li id="BBuildKey" name="content"><span class="spanclass"></span></li>
+	    		<li id="BBuildName" name="content"><span class="spanclass"></span></li>
+	    		<li id="BFloorNum" style="color:#666;" name="content">总楼层数 : <span></span></li>
+	    		<li id="BUnderFloorNum" class="parentspan" name="content">地下楼层数 : <span></span></li>
+	    		<li id="BBuildingArea" class="parentspan" name="content">建筑面积 : <span></span></li>
+	    	</ul>
+		</div> <!--begin banner显示区域-->
+	</div>
+	<div data-options="region:'center',border:false,split:true" style="width:230px;padding:10px 5px 10px 10px;">
+		<div class="hisui-panel" title="楼层" data-options="fit:true,border:true,'eqtitle':'listtitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<!--div data-options="region:'north',border:false" style="padding-bottom:10px;padding-left:10px;width:110%;border-bottom:solid 1px #ccc;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cFFloorNum" for="FFloorNum">楼层数</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FFloorNum" style="width:80px">
+							<label id="cFFloorIndex" for="FFloorIndex">第</label>
+							<input class="hisui-validatebox textbox" id="FFloorIndex" style="width:20px" disabled>层</div>
+							<div class="eq-table-td eq-table-label"><label id="cFFloorNo" for="FFloorNo">楼层号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FFloorNo"></div>
+			            </div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cFBuildingArea" for="FBuildingArea">建筑面积</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FBuildingArea"></div>
+							<div class="eq-table-td eq-table-label"><label id="cFUtilizationArea" for="FUtilizationArea">使用面积</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FUtilizationArea"></div>
+			            </div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cFHeight" for="FHeight">高度</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FHeight"></div>
+							<div class="eq-table-td eq-table-label"><label id="cFPurpose" for="FPurpose">用途</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="FPurpose"></div>
+			            </div>
+					</div>
+				</div-->
+				<div data-options="region:'center',border:false">
+					<table id="Floor" data-options="fit:true,border:false"></table>
+				
+				</div>
+			</div>
+			
+		</div>
+	</div>
+	<div data-options="region:'east',border:false,split:true" style="width:830px;padding:10px 10px 10px 0;">
+		<div class="hisui-panel" title="房间" data-options="fit:true,border:true,'eqtitle':'listtitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<!--div data-options="region:'north',border:false" style="padding-bottom:10px;padding-right:10px;width:95%;border-bottom:solid 1px #ccc;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cBUDesc" for="BUDesc">描述</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cBUDoorNo" for="BUDoorNo">门牌号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUDoorNo"></div>
+							<div class="eq-table-td eq-table-label"><label id="cBUUseLocDR_DeptDesc" for="BUUseLocDR_DeptDesc">使用科室</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUUseLocDR_DeptDesc" data-options="'component':'PLAT.L.Loc','paras':[{name:'Type',type:'2',value:''},{name:'LocDesc',type:'4',value:'ISBuyLocDR_CTLOCDesc'},{name:'LocType',type:'2',value:'0102'}]"></div>
+			            </div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cBUUnitType" for="BUUnitType">类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUUnitType"></div>
+							<div class="eq-table-td eq-table-label"><label id="cBUStatus" for="BUStatus">状态</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUStatus"></div>
+							<div class="eq-table-td eq-table-label"><label id="cBUPurpose" for="BUPurpose">用途</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUPurpose"></div>
+			            </div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cBURoomFacing" for="BURoomFacing">房间朝向</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BURoomFacing"></div>
+							<div class="eq-table-td eq-table-label"><label id="cBUMinPeople" for="BUMinPeople">容纳人数</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUMinPeople" style="width:65px">
+							-<input class="hisui-validatebox textbox" id="BUMaxPeople" style="width:65px"></div>
+							<div class="eq-table-td eq-table-label"><label id="cBUFloorIndex" for="BUFloorIndex">楼层数</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BUFloorIndex" disabled></div>
+			            </div>					
+					
+					
+					
+					
+					</div>
+				</div-->
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="BuildingUnit" data-options="fit:true,border:false"></table>
+					<span id="sumTotal" style="position:absolute;right:10px;top:2px;"><input id="SeachAll" class="hisui-searchbox" style="height:26px;" data-options="searcher:SearchHander"/></span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+            <input id="FBuildingDR" name="FBuildingDR" type="hidden" value=#(FBuildingDR)#>
+            <input id="BUBuildingDR" name="BUBuildingDR" type="hidden" value=#(FBuildingDR)#>
+            <input id="FRowID" name="FRowID" type="hidden">
+            <input id="BURowID" name="BURowID" type="hidden">
+            <input id="BUUseLocDR" name="BUUseLocDR" type="hidden">
+            <input id="BUFloorIndex" name="BUFloorIndex" type="hidden">
+            <input id="FFloorIndex" name="FFloorIndex" type="hidden">
+			<input type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+		</form>
+	</div>
+
+</body>
+
+</html>

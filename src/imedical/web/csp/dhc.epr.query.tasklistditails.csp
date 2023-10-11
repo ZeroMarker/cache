@@ -1,0 +1,43 @@
+﻿<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/lib/JQuery/themes/default/easyui.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery-1.8.0.min.js" charset="UTF-8"></script>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/jquery.easyui.min.js" charset="UTF-8"></script>
+	<meta http-equiv="Content-Type" content="text/html"/> 
+<title>任务结果明细</title>
+	<script language="cache" runat="server">
+		s GUID = $Get(%request.Data("GUID",1),"")
+		s limit = ##Class(EPRservice.BLL.Query.BLMedicalQueryTasklist).GetInfoByGUID(GUID)
+		s userName 	= $Get(%request.Data("UserName",1),"")
+		s userId 	= $Get(%request.Data("UserID",1),"")
+	</script>
+	<script type="text/javascript" language="javascript">
+		window.returnValue = {"dataLength":"-1","status":"-1","conditionsDesc":""};
+		var conditionsDesc = "入院日期";
+		var resultColumn = "";
+		var queryType = "";
+		var GUID = '#(GUID)#';
+		var limit = #(limit)#;
+		if (limit != "")
+		{
+			queryType = limit.QueryType;
+			if (queryType == "DischDate") conditionsDesc = "出院日期"
+			conditionsDesc = conditionsDesc+limit.ConditionsDesc;
+			resultColumn = limit.ResultColumn;
+		}
+		var userName  = '#(userName)#';
+		var userId  = '#(userId)#';
+		window.returnValue.conditionsDesc = conditionsDesc;
+	</script>
+</head>
+
+<body class="easyui-layout" data-options="fit:true">
+	<div class="easyui-panel gridgap" data-options="region:'south',border:false" style="height:36px;">
+		<div style="float:right;padding-right:15px;padding-top:3px"><a href="#" id="exportAllData" class="easyui-linkbutton">导出</a></div>
+	</div>
+	<div class="easyui-panel gridgap" data-options="region:'center',border:false">
+		<table id="taskResult" style="width:100%"></table>
+	</div>
+	<script type="text/javascript" src="../scripts/epr/js/eprquerytasklistditails.js"></script>
+</body>
+</html>

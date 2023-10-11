@@ -1,18 +1,30 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <!--dhcem.patoverviews.csp-->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html" /> 
-<HISUI/>
 <TRAK:HEAD></TRAK:HEAD>
-
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-	<link rel="stylesheet" href="../scripts_lib/popover1.2.17/jquery.webui-popover.min.css">
-	<script src="../scripts_lib/popover1.2.17/jquery.webui-popover.min.js"></script>
-	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/util.js"></script>
-	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
-	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patoverviews.js"  ></script>
-	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patoverviews.css" />
+<HISUI/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>
+<server>
+	s LgHospID=%session.Get("LOGON.HOSPID")
+	s LgCtLocID=%session.Get("LOGON.CTLOCID")
+	s LgUserID=%session.Get("LOGON.USERID")
+	s LgGroupID=%session.Get("LOGON.GROUPID")
+	s ENABKEUPDLOC=##Class(web.DHCEMComPar).GetAppPropValue("DHCEMDOC","ENABKEUPDLOC",LgHospID,LgCtLocID,LgUserID,LgGroupID)
+	w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+	w "var ENABKEUPDLOC="""_ENABKEUPDLOC_""";"_$c(13,10)
+	w "</SCRIPT>"
+</server>
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patoverviews.css" />
+<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/util.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/emchangeadmloc.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patoverviews.js"  ></script>
  <style> 
  .playcircle{
 		background:	 url(../scripts/dhcnewpro/images/playcircle.gif);
@@ -25,7 +37,6 @@
 html{
 	overflow-y: hidden;	
 }
-.webui-popover-content{padding:0px!important;overflow:hidden}/*hxy 2018-07-06 泡芙*/
 </style> 
 <script Language="Javascript">
    var EpisodeID="#(%request.Get("EpisodeID"))#";        //就诊ID
@@ -34,30 +45,34 @@ html{
 
 </head>
 
-<body style="margin:0px;padding:0px 10px 0 10px;background-color:#ffffff;"><!--hxy 10px-->
+<body style="margin:0px;padding:10px;background-color:#ffffff;"><!--hxy 10px-->
 
 	<div style="width:49%;height:100%;float:left">
-		<div class="hisui-panel bootPanel topPanel">
-		  <div class="panel-heading" ><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>基本信息
-		 	
+		<div class="hisui-panel bootPanel topPanel" data-options=" bodyCls:'panel-header-gray',closable:true,collapsible:true,minimizable:true,maximizable:true"> 
+		  <div class="panel-heading" ><img class="list-icon" style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>
+		  	<span>#(..Get("基本信息"))#</span>
+			<a class='head-btn' id="changeLoc" style='display:none;' onclick="changeLoc()">#(..Get("转科"))#</a>	
 		  </div>
-		  <div class="panel-body body-height" id="patInfo" style="overflow-y: auto;">
+		  <div class="panel-body body-height" id="patInfo" style="overflow-y: auto;border:0px;">
 
 		  </div>
 		</div>
-		<div class="hisui-panel bootPanel bottomPanel">
-		<div class="panel-heading" ><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>诊断信息</div>
-		  	<div class="panel-body body-height" style="padding-top:4px;overflow-y: auto;">
+		<div class="hisui-panel bootPanel bottomPanel" data-options=" bodyCls:'panel-header-gray',closable:true,collapsible:true,minimizable:true,maximizable:true" style="marigin-top:10px;">
+		<div class="panel-heading" ><img class="list-icon" style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>
+			<span>#(..Get("诊断信息"))#</span>
+		</div>
+		  	<div class="panel-body body-height" style="padding-top:2px;overflow-y: auto;border:0px;">
 		    <table  class="hisui-datagrid" 
 			data-options="
 		    method:'get',
+		    fitColumns:true,
 			url:'dhcapp.broker.csp?ClassName=web.DHCEMPatOverview&MethodName=getDiagnosisJson&MRADMID='+EpisodeID,
 			pagination:false">
 				<thead>
 					<tr>
 						<th data-options="field:'DiagType',width:150,id:'diagType'">诊断类型</th>
-						<th data-options="field:'DiagDesc',width:422,id:'diagDesc'">诊断</th>
-						
+						<th data-options="field:'DiagDesc',width:300,id:'diagDesc'">诊断</th>
+						<th data-options="field:'SDSDesc',width:330,id:'SDSDesc'">结构诊断</th>
 					</tr>
 				</thead>
 			</table>
@@ -67,10 +82,11 @@ html{
 	
 	<div style="width:50%;height:100%;float:left;margin-left:10px;">
 	<div class="hisui-panel bootPanel topPanel" data-options="iconCls:'icon-save',closable:true,collapsible:true,minimizable:true,maximizable:true">
-		  <div class="panel-heading" ><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>分诊信息
-		  	<a style='color:#0076CD;float:right;margin-right:20px;text-decoration:underline;cursor: pointer' onclick="linkToCsp()">详情</a>
+		  <div class="panel-heading" ><img class="list-icon" style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>
+		  	<span>#(..Get("分诊信息"))#</span>
+		  	<a class='head-btn' style='' onclick="linkToCsp()">#(..Get("详情"))#</a>
 		  </div>
-		  <div class="panel-body body-height" style="padding-top:4px;overflow-y: auto;">
+		  <div class="panel-body body-height" style="padding-top:2px;overflow-y: auto;border:0px;">
 		    
 		    <table  class="hisui-datagrid" 
 			data-options="
@@ -91,7 +107,7 @@ html{
 				</thead>
 			</table>
 			
-		    <table id="scoreTable" class="hisui-datagrid"  data-options="headerCls:'panel-header-card',fitColumns:true,idField:'code',autoSizeColumn:false,nowrap:false" style="">   
+		    <table id="scoreTable" class="hisui-datagrid"  data-options="headerCls:'panel-header-card',fitColumns:true,idField:'code',autoSizeColumn:false,nowrap:false" style="border:0px;">   
 				<thead>   
 					<tr>
 					    <th data-options="field:'code',hidden:true">主键</th> 
@@ -101,15 +117,16 @@ html{
 					</tr>   
 				</thead>   
 			</table>
-		    <div style='width:100%;border-bottom:2px dotted #D1D1D1'></div>
 		    <table class="table " id="patChcekLevInfo" >	
 		    </table>
 		  </div>
 		</div>
 		
 		<div class="hisui-panel  bootPanel bottomPanel">
-		  <div class="panel-heading"><img style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>流转信息</div>
-		  <div class="panel-body body-height" style="overflow-y:auto">
+		  <div class="panel-heading"><img class="list-icon" style="margin:-3px 8px 0 0;" src="../scripts/dhcnewpro/images/add-notes.png"></img>
+		  	<span>#(..Get("流转信息"))#</span>
+		  </div>
+		  <div class="panel-body body-height" style="overflow-y:auto;border:0px;">
 		    <div id="status-detail" style="font-size:14px;padding:20px 0 0 20px">
 				<ul class="status-list">
 				</ul>
@@ -149,4 +166,20 @@ html{
 </div>
 
 </body>
+<script Language="Javascript">
+	/// cy  2022-07-20 极简风格样式修改
+	if(HISUIStyleCode==="lite"){
+		$(".panel-heading").css({
+			'background':'#fff',
+			'border-bottom':'1px solid #E2E2E2'
+		});
+		$(".list-icon").css('display','none');
+		$(".panel-heading span").css({
+			'left':'8px',
+			'font-weight':700
+		});
+		$(".bootPanel").css('border-color','#E2E2E2');
+		$(".head-btn").css('color','#339EFF');
+	}
+</script>
 </html>

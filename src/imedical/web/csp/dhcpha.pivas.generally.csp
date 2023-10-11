@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液综合查询
-	csp:dhcpha.pivas.generally.csp
-	js: scripts/pharmacy/pivas/generally.js
+<!--
+    配液综合查询
+	csp: csp/dhcpha.pivas.generally.csp
+	js:  scripts/pharmacy/pivas/generally.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,122 +16,58 @@
     </title>
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    </link>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
-    </link>
+    <PHAPRINTCOM />
+    <PHAPIVASV1 />
+    <style>
+        .datagrid-row [field] {
+            vertical-align: top;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        .pivas-user-select tr {
+            display: none;
+        }
+
+        .pivas-user-select-line {
+            display: none;
+            height: 180px;
+            border-left: 1px solid #cccccc;
+            position: absolute;
+            right: 208px;
+        }
+
+        .pivas-grid-div {
+            padding-top: 8px;
+        }
+
+        .pha-body {
+            padding: 10px;
+        }
+
+        .pha-pivas-gene-tips {
+            color: #1278b8;
+            background: #e3f7ff;
+            border-radius: 2px;
+            padding: 1px 4px;
+            padding-left: 6px;
+            position: relative;
+            top: 2px;
+            border: 1px solid #c0e2f7;
+        }
+
+        .dhcpha-date {
+            width: 120px;
+        }
+    </style>
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'north',title:'配液综合查询',iconCls:'icon-panel-pivas-query',split:true,headerCls:'panel-header-gray',collapsible:false"
-                    class="dhcpha-north-r4">
-                    <table class="dhcpha-north-tbl">
-                        <tr>
-                            <td>
-                                <label for="dateOrdStart">用药开始时间</label>
-                                <input id="dateOrdStart" class="hisui-datebox dhcpha-date"></input>
-                                <input id="timeOrdStart" class="hisui-timespinner" showSeconds="true"
-                                    style="width:90px"></input>
-                            </td>
-                            <td>
-                                <input id="cmbPivaLoc" type="text" />
-                            </td>
-                            <td>
-                                <input id="cmbLocGrp" type="text" />
-                            </td>
-                            <td>
-                                <input id="cmbPriority" type="text" />
-                            </td>
-                            <td>
-                                <input id="cmbInstruc" type="text" />
-                            </td>
-                            <td>
-                                <input id="cmbOeoreStat" type="text" class="hisui-combobox" />
-                            </td>
-                            <td>
-                                <input id="txtPrtNo" class="hisui-searchbox" placeholder="流程单号..."
-                                    style="width:154px"></input>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="dateOrdEnd">用药结束时间</label>
-                                <input id="dateOrdEnd" class="hisui-datebox dhcpha-date"></input>
-                                <input id="timeOrdEnd" class="hisui-timespinner" showSeconds="true"
-                                    style="width:90px"></input>
-                            </td>
-                            <td>
-                                <input id="cmbWard" type="text" class="hisui-combobox" />
-                            </td>
-                            <td>
-                                <input id="cmbWorkType" type="text" />
-                            </td>
-                            <td>
-                                <input id="cmbPivaStat" type="text" />
-                            </td>
-                            <td>
-                                <input id="cmbFreq" type="text" />
-                            </td>
-                            <td>
-                                <input id="cmbPrintStop" type="text" class="hisui-combobox" />
-                            </td>
-                            <td>
-                                <input id="txtPrtPNo" class="hisui-validatebox" placeholder="打印序号(1-99)..."></input>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="datePrtStart">打签开始时间</label>
-                                <input id="datePrtStart" class="hisui-datebox dhcpha-date"></input>
-                                <input id="timePrtStart" class="hisui-timespinner" showSeconds="true"
-                                    style="width:90px"></input>
-                            </td>
-                            <td>
-                                <input id="txtPatNo" class="hisui-validatebox" placeholder="登记号..."></input>
-                            </td>
-                            <td>
-                                <input id="txtBarCode" class="hisui-validatebox" placeholder="条码..."></input>
-                            </td>
-                            <td>
-                                <input id="cmbPivaRefuse" type="text" class="hisui-combobox" />
-                            </td>
-                            <td>
-                                <input id="cmbPassResult" type="text" class="hisui-combobox" />
-                            </td>
-                            <td colspan="1">
-                                <input id="cmgIncItm" style="width:100px"></input>
-                            </td>
-                            <td>
-                                <input id="cmbPack" type="text" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="datePrtEnd">打签结束时间</label>
-                                <input id="datePrtEnd" class="hisui-datebox dhcpha-date"></input>
-                                <input id="timePrtEnd" class="hisui-timespinner" showSeconds="true"
-                                    style="width:90px"></input>
-                            </td>
-
-
-                            <td colspan="5" style="text-align:left">
-                                <div>
-                                    <div id="DivBatNo"></div>
-                                </div>
-                            </td>
-                            <td>
-                                <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFind">查询</a>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div data-options="region:'center'" class="dhcpha-hisui-border" style="border-radius: 4px;">
+                <div data-options="region:'center',title:'配液综合查询',iconCls:'icon-panel-pivas-query',headerCls:'panel-header-gray'">
                     <div id="gridGenerally" data-options="fit:true" border="false">
                     </div>
                 </div>
@@ -134,28 +75,135 @@
         </div>
     </div>
     <div id="gridGenerallyBar">
-        <table cellspacing=0 cellpadding=0>
-            <tr>
-                <td>
+        <div>
+            <table class="pha-con-table">
+                <tr>
+                    <td class="r-label">
+                        <label for="dateOrdStart">#(..Get("用药开始时间"))#</label>
+                    </td>
+                    <td>
+                        <input id="dateOrdStart" class="hisui-datebox dhcpha-date">
 
-                    <a class="hisui-linkbutton" iconCls='icon-btn-reprint' plain="true" id="btnPrtLabel">重打标签</a>
-                </td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-                    <!--a class="hisui-linkbutton" iconCls='icon-btn-print-tpn' plain="true" id="btnPrtTPNLabel">重打TPN标签</a-->
+                    </td>
+                    <td>
+                        <input id="timeOrdStart" class="hisui-timespinner" showSeconds="true" style="width:100px">
+                    </td>
+                    <td>
+                        <input id="cmbPivaLoc" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbLocGrp" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbPriority" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbInstruc" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbOeoreStat" type="text" class="hisui-combobox" />
+                    </td>
+                    <td>
+                        <input id="txtPrtNo" class="hisui-searchbox" placeholder="#(..Get(" 流程单号"))#..." style="width:154px">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <label for="dateOrdEnd">#(..Get("用药结束时间"))#</label>
+                    </td>
+                    <td>
+                        <input id="dateOrdEnd" class="hisui-datebox dhcpha-date">
+                    </td>
+                    <td>
+                        <input id="timeOrdEnd" class="hisui-timespinner" showSeconds="true" style="width:100px">
+                    </td>
+                    <td>
+                        <input id="cmbWard" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbWorkType" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbPivaStat" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbFreq" type="text" />
+                    </td>
+                    <td>
+                        <input id="cmbPrintStop" type="text" class="hisui-combobox" />
+                    </td>
+                    <td>
+                        <input id="txtPrtPNo" class="hisui-validatebox" placeholder="#(..Get(" 打印序号(1-n)"))#..." style="width:147px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <label for="datePrtStart">#(..Get("打签开始时间"))#</label>
 
-                    <a class="hisui-linkbutton" iconCls='icon-btn-print-stop' plain="true"
-                        id="btnPrtStopLabel">打印停止标签</a>
-                </td>
-                <td id="tdReqNeedAudit" style="display:none;">
-                    <div class="datagrid-btn-separator"></div>
-                    <a class="hisui-linkbutton" iconCls='icon-paper-ok' plain="true" id="btnRetYes">置为可退药</a>
-                    <a class="hisui-linkbutton" iconCls='icon-paper-no' plain="true" id="btnRetNo">置为不可退药</a>
-                </td>
-            </tr>
-        </table>
+                    </td>
+                    <td>
+                        <input id="datePrtStart" class="hisui-datebox dhcpha-date">
+                    </td>
+                    <td>
+                        <input id="timePrtStart" class="hisui-timespinner" showSeconds="true" style="width:100px">
+                    </td>
+                    <td>
+                        <input id="txtPatNo" class="hisui-validatebox" placeholder="#(..Get(" 登记号"))#..." style="width: 147px;">
+                    </td>
+                    <td>
+                        <input id="txtBarCode" class="hisui-validatebox" placeholder="#(..Get(" 条码"))#..." style="width: 147px;">
+                    </td>
+                    <td>
+                        <input id="cmbPivaRefuse" type="text" class="hisui-combobox" />
+                    </td>
+                    <td>
+                        <input id="cmbPassResult" type="text" class="hisui-combobox" />
+                    </td>
+                    <td colspan="1">
+                        <input id="cmgIncItm" style="width:100px">
+                    </td>
+                    <td>
+                        <input id="cmbPack" type="text" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <label for="datePrtEnd">#(..Get("打签结束时间"))#</label>
+                    </td>
+                    <td>
+                        <input id="datePrtEnd" class="hisui-datebox dhcpha-date">
+                    </td>
+                    <td>
+                        <input id="timePrtEnd" class="hisui-timespinner" showSeconds="true" style="width:100px">
+                    </td>
+
+                    <td colspan="5" style="text-align:left">
+                        <div>
+                            <div id="DivBatNo"></div>
+                        </div>
+                    </td>
+                    <td class="r-label">
+                        <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFind">查询</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="pha-line" style="margin-bottom:1px;"></div>
+        <div>
+            <a class="hisui-linkbutton" iconCls='icon-reprint-inv' plain="true" id="btnPrtLabel">重打标签</a>
+            <a class="hisui-linkbutton" iconCls='icon-print' plain="true" id="btnPrtStopLabel">打印停止标签</a>
+            <a class="hisui-linkbutton" iconCls='icon-print-arr-bo' plain="true" id="btnPrtTable">打印清单</a>
+            <span id="tdReqNeedAudit" style="display:none;">
+                <a class="hisui-linkbutton" iconCls='icon-paper-ok' plain="true" id="btnRetYes">置为可退药</a>
+                <a class="hisui-linkbutton" iconCls='icon-paper-no' plain="true" id="btnRetNo">置为不可退药</a>
+                <!--span class="pha-pivas-gene-tips">
+                	<img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position:relative;top:3px;">
+                	<label style="padding-left:3px">温馨提示：打包的医嘱不需要处理置为可退与否</label>
+                </span>
+                <span style="visibility:hidden">.</span-->
+
+            </span>
+        </div>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
@@ -166,10 +214,5 @@
     <script type="text/javascript" src="../scripts/DHCSTXMLPrint.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/generally.js"></script>
 </body>
-<server>
-    // 加载lodop
-    d ##class(web.DHCXMLPConfig).LODOPInit()
-    //d ##class(web.DHCSTPIVAS.PrintCom).LoadCabPIVALabel()
-</server>
 
 </HTML>

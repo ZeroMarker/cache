@@ -1,0 +1,83 @@
+<!--
+Description: ÎÊ¾íÂ¼Èë  dhcrm.questiondetailset.csp
+Created by yupeng
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html lang="en">  
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <script type="text/javascript" src="../scripts/dhcrm.questiondetailset.js"></script>
+    <style>
+        #Content{
+            padding: 0px;
+            border-Radius: 4px;
+        }
+        
+        .SubjectDiv {
+             padding: 0px;
+        }
+        .f24 {
+             font-size: 24px;
+        }
+        .mt15{
+            margin-top: 15px;
+        }
+        .mt25{
+            margin-top: 25px;
+        }
+        .lh200{
+            line-height: 200%;
+        }
+        .text_i2{
+            text-indent: 2em;
+        }
+        .detail_remark
+        {
+            padding:10px 0px;
+            margin-bottom: 10px;
+        }
+        a{
+            font-size:18px;
+        }
+    </style>
+    <SCRIPT language="Cache" RUNAT="SERVER">
+        s FuplanID=%request.Get("FuplanID")
+        s SubjectOrder=%request.Get("SubjectOrder")
+        s Write=%request.Get("WriteFlag")
+        i Write="Y" s WriteFlag="0"
+        e  s WriteFlag="1"
+        s Job=%request.Get("Job")
+        i SubjectOrder=""
+        {
+            s Job=##class(web.DHCCRM.PatInfo).SetDetailGlobalBySubject(FuplanID)
+        s SubjectOrder=1
+        }
+        
+    </SCRIPT>
+     <Script  type='text/javascript'>
+        var Job=#(Job)#
+    </Script>
+</head>
+
+<body style="background-color: #fff;">
+    
+    <Div id="Content">
+        
+        
+        <div style="padding:0px 0px 0px 0px;">
+            
+            <SCRIPT language="Cache" RUNAT="SERVER">
+                d ##class(web.DHCCRM.PatInfo).OutSurveyToWeb(Job,FuplanID,SubjectOrder,WriteFlag)
+            </SCRIPT>
+        </div>
+    </Div>
+    <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+    <script type="text/javascript" src="../scripts/websys.hisui.js"></script>
+    
+</body>
+</html>

@@ -15,28 +15,34 @@
 	
 	<body>
 	  	<script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
-		<script type="text/javascript"  src="../scripts/DHCMA/CD/QryReport/Qryrepmbbk/Gui.js"></script>
-		<script type="text/javascript"  src="../scripts/DHCMA/CD/QryReport/Qryrepmbbk/Event.js"></script>
+		<script type="text/javascript"  src="../scripts/DHCMA/CD/qryreport/qryrepmbbk/Gui.js"></script>
+		<script type="text/javascript"  src="../scripts/DHCMA/CD/qryreport/qryrepmbbk/Event.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/Util/datagrid-export.js"></script>
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
 
 		<script language="Cache" RUNAT="SERVER">	
 		 	set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
 		    Set LogonHospID=##class(DHCMed.SSService.HospitalSrv).GetCTHospID(LogonLocID)
 		    Set SSHospCode=##class(DHCMed.SSService.HospitalSrv).GetSSHospCode(LogonHospID,"CD")
 		    Set IsSecret=##class(DHCMed.SSIO.FromSecSrv).CheckIsSecret(LogonHospID)
+		    Set LocFlag=+$g(%request.Data("LocFlag",1)) // 科室权限配置
 		    
             Set LogonLocID=""""_LogonLocID_""""
             Set LogonHospID=""""_LogonHospID_""""
             Set SSHospCode=""""_SSHospCode_""""
 			Set IsSecret=""""_IsSecret_""""
-	   </script>
-	    <script language="javascript" type="text/javascript">
-	    	var LogonLocID=#(LogonLocID)#;
+			Set LocFlag=""""_LocFlag_""""
+			
+		</script>
+         <script language="javascript" type="text/javascript">
+	
+            var LogonLocID=#(LogonLocID)#;
 			var LogonHospID=#(LogonHospID)#;
 			var SSHospCode=#(SSHospCode)#;
-			var IsSecret=#(IsSecret)#
+			var IsSecret=#(IsSecret)#;
+			var LocFlag=#(LocFlag)#;
 			$(document).ready(function(){
-				var url = "../scripts/DHCMA/CD/QryReport/Qryrepmbbk/Layout.html"
+				var url = "../scripts/DHCMA/CD/qryreport/qryrepmbbk/Layout.html"
         		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
    					if(statusTxt=="success") {
 	   					InitViewport();

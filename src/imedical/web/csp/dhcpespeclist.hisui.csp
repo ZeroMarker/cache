@@ -15,7 +15,12 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI/>
-
+<Server>
+    s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+    i UIVersion="lite" s LineColor="#E2E2E2"
+    e  s LineColor="#CCCCCC"
+    
+</Server>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -45,7 +50,16 @@
 .SpecList td{
 	padding:10px 0px 10px 10px;
 	line-height:22px;
-	border-right: 1px solid #ccc;
+	border-top: 1px solid #ccc;
+	border-left: 1px solid #ccc;
+	
+	
+}
+.SpecListlite td{
+	padding:10px 0px 10px 10px;
+	line-height:22px;
+	border-top: 1px solid #e2e2e2;
+	border-left: 1px solid #e2e2e2;
 	
 	
 }
@@ -63,15 +77,25 @@ s Month=%request.Get("Month")
 </SCRIPT> 
 <script type="text/javascript">
 	
-	var Month="#(Month)#"
+	var Month="#(Month)#";
+	
+	if (("undefined"==typeof HISUIStyleCode)||(HISUIStyleCode==null)){
+	var LineColor="#cccccc"
+	}else{
+		if(HISUIStyleCode=="lite") {
+			var LineColor="#e2e2e2"
+		}else{
+			var LineColor="#cccccc"
+		}
+	}
 </script>	
 
 	
 </head>
 <body class="hisui-layout">
-<div class="hisui-layout" fit="true">
-	<div data-options="region:'north',border:false,collapsible:false," style="height:95px;padding:10px 10px 0 10px;">
-		<div class="hisui-panel" data-options="title:'标本采集一览',iconCls:'icon-apply-check',headerCls:'panel-header-gray'" style="border:1px solid #ccc;border-radius:0;">
+<div class="hisui-layout" fit="true" style="background-color:inherit;">
+	<div data-options="region:'north',border:false,collapsible:false," style="height:95px;padding:10px 10px 0 10px;background-color:inherit;">
+		<div class="hisui-panel" data-options="title:'标本采集一览',iconCls:'icon-apply-check',headerCls:'panel-header-gray'" style="border:1px solid #(LineColor)#;border-radius:0;">
 			<table class="search-table">
 				<tr>
 					<td align="left" style="width:85px;" class="r-label"><label for="Month">日期所在月份</label></td>
@@ -87,8 +111,8 @@ s Month=%request.Get("Month")
 			</table>
 		</div>
 	</div>
-	<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0px 10px 10px 10px;">
-		<div class="hisui-panel" id="SpecListyDiv" fit="true" style="cursor:pointer;height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+	<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0px 10px 10px 10px;background-color:inherit;">
+		<div class="hisui-panel" id="SpecListyDiv" fit="true" style="cursor:pointer;height:100%;border:1px solid #(LineColor)#;border-top:0;border-radius:0 0 4px 4px;">
 			<SERVER>
 				d ##class(web.DHCPE.BarPrintFind).OutMainHISUI(Month)
 			</SERVER>

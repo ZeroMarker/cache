@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!--docpilotpro.project.hui.csp HISUI立项/项目修改--> 
+<!--docpilotpro.project.hui.csp QP--> 
 <HTML lang="zh-CN">
 <HEAD>
 <meta charset="utf-8">
@@ -10,6 +10,7 @@
 <HISUI></HISUI>
 <ADDINS require="CmdShell"/>
 <style>
+body{background:#fff;}
 .search-table{
 	border-collapse:separate;
 	border-spacing:0 10px;
@@ -32,23 +33,36 @@ LABEL.clsRequired {
     background-position: left center;
     padding-left: 8px;
 }
+.c-table{
+	border-collapse:collapse;
+	border-spacing:0 10px;
+}
+.c-table td{padding:6px 5px;}
+.c-span {margin-right:10px;}
+.c-title {
+	margin-left:15px;
+	border-bottom:3px solid #378EC4;	
+} 
+.datagrid-header {border-top:1px solid #E2E2E2;}
 </style>
 <Server>
 s PPRowId=%request.Get("PPRowId") 
 s Flag=%request.Get("Flag")
-s ArchivesFilesNoStart=+$G(^DHCDocPilotSeting("ArchivesFilesNoStart"))
-s PilotProConfigStr=##class(web.PilotProject.DHCDocPPGroupSeting).GetInitInfo()
+s InHosp=%request.Get("InHosp")
+s ArchivesFilesNoStart=+$G(^DHCDocPilotSeting(%session.Get("LOGON.HOSPID"),"ArchivesFilesNoStart"))
+s PilotProConfigStr=##class(web.PilotProject.DHCDocPPGroupSeting).GetInitInfo(%session.Get("LOGON.HOSPID"))
 s InitProjectEntity=##class(web.PilotProject.DHCDocPilotProCommon).GetClassPropertyList("web.PilotProject.PPA.DHCDocPilotProject")
-s HospName=$p(^CT("HOSP",%session.Get("LOGON.HOSPID")),"^",2)
+i InHosp="" s HospName=$p(^CT("HOSP",%session.Get("LOGON.HOSPID")),"^",2)
+e  s HospName=$p(^CT("HOSP",InHosp),"^",2)
 s PrintPath=##class(web.UDHCJFCOMMON).getpath("","")
 w "<input id='OtherDepStr' name='OtherDepStr' type='hidden' value=''>",$C(13,10)
 w "<input id='OtherDepartment' name='OtherDepStr' type='hidden' value=''>",$C(13,10)
 /*xml*/
 d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
 </Server>
 </head>
-<body>
+<body style="padding:10px;">
 	<csp:Include Page="docpilotpro.project.show.hui.csp">
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
@@ -59,10 +73,12 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##C
 			PilotProConfigStr:"#(PilotProConfigStr)#",
 			InitProjectEntity:"#(InitProjectEntity)#",
 			PrintPath:"#(PrintPath)#",
-			HospName:"#(HospName)#"
+			HospName:"#(HospName)#",
+			InHosp:"#(InHosp)#"
 		};
 	</SCRIPT>
-	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.JS"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
 	<script type="text/javascript" src="../scripts/DocPilotPro/Project.hui.js"></script>
 	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
 	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>

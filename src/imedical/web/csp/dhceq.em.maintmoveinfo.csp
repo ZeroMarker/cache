@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
+</head>
+<script language=Cache runat=server>
+	s SourceType=$Get(%request.Data("SourceType",1))
+	s SourceID=$Get(%request.Data("SourceID",1))
+	s EventType=$Get(%request.Data("EventType",1))
+	s EquipDR=$Get(%request.Data("EquipDR",1))
+	s ObjType=$Get(%request.Data("ObjType",1))
+	s Action=$Get(%request.Data("Action",1))
+	s MRowID=$Get(%request.Data("MRowID",1))
+	i MRowID="" s MRowID=##Class(web.DHCEQMoveNew).GetMoveIDBySourceType(SourceType,SourceID,EventType)
+</script>
+<body class="hisui-layout" >
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel"  data-options="border:false" style="border-bottom:dashed 1px #ccc;padding:15px 0 30px 0;">
+			<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cEQNo" for="EQNo">资产编号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEQName" for="EQName">设备名称</label></div> <!--add by zx 2019-03-14 ZX0061-->
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQName" disabled="true"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cFromDeptType" for="FromDeptType">来源</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="FromDeptType"></div>
+						<div class="eq-table-td eq-table-label"><lable id="cFromDeptID_Desc" for="FromDeptID_Desc"></lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="FromDeptID_Desc" ></div>	
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cMCreateDate" for="MCreateDate">取回日期</label></div>
+						<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="MCreateDate"></div>
+						<div class="eq-table-td eq-table-label"><lable id="cAcceptUser" for="AcceptUser">取回人</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AcceptUser" data-options="'component':'PLAT.L.EQUser'"></div>	
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a></div>
+					</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="MSourceType" value=#(SourceType)#>
+			<INPUT type="hidden" id="MSourceID" value=#(SourceID)#>
+			<INPUT type="hidden" id="MEventType" value=#(EventType)#>
+			<INPUT type="hidden" id="MObjID" value=#(EquipDR)#>
+			<INPUT type="hidden" id="MObjType" value=#(ObjType)#>
+			<INPUT type="hidden" id="Action" value=#(Action)#>
+			<INPUT type="hidden" id="FromDeptID" >
+			<INPUT type="hidden" id="AcceptUserDR" >
+			<INPUT type="hidden" id="MRowID" value=#(MRowID)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/maintmoveinfo.js'></script>
+</body>
+</html>

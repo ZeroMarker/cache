@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--nur.hisui.swapbed.csp 换床(HISUI)--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link href="../scripts/nurse/hisui/css/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<Server>
+	s curEpisodeID=$G(%request.Data("EpisodeID", 1))
+	s curPatient=$G(%request.Data("curPatient", 1))
+	s curMainDoctorID=$G(%request.Data("curMainDoctorID", 1))
+	s curMainNurseID=$G(%request.Data("curMainNurseID", 1))
+	
+	s targetPatient=$G(%request.Data("targetPatient", 1))
+	s targetMainDocID=$G(%request.Data("targetMainDocID", 1))
+	s targetMainNurID=$G(%request.Data("targetMainNurID", 1))
+	
+	s bedSetting=##class(Nur.NIS.Service.Base.BedConfig).GetBedSetting(%session.Get("LOGON.HOSPID"))
+	k bedSettingArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(bedSetting,.bedSettingArr)
+	s MainDocRequired=bedSettingArr("MainDocRequired")
+	s MainDocMulti=bedSettingArr("MainDocMulti")
+	s MainNurseRequired=bedSettingArr("MainNurseRequired")
+	s MainNurseMulti=bedSettingArr("MainNurseMulti")
+</Server>
+<style>
+search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label1{
+	padding:0 10px;
+	text-align:right;
+}
+.switchCls {
+	display:inline-block;
+	color:#509de1;
+	font-size:20px;
+	transform:rotate(90deg);
+}
+.patient {
+	font-weight:bold;
+	color: #509de1;
+	font-size: 18px;
+ }
+  ._hisui_combobox-selectall {
+	 display:none;
+ }
+ ._hisui_combobox-selectall + .combo-panel{
+	 /*border-top-width:1px;*/
+ } 
+</style>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false"> 
+		<csp:Include Page="nur.hisui.patinfobanner.csp">
+		<div data-options="region:'center',split:true,border:false" style="padding:10px 10px 10px 0;">
+			<div style="height:calc(100% - 2px);border:1px solid #ccc;border-radius:4px;">
+				<table class="search-table" style="margin-top:calc(100% - 200px);">
+					<tr>
+						<td colspan="2" style="text-align:center;">
+							<server>
+								w "<span class='patient'>"_curPatient_"</span>"
+							</server>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label1">
+							<server>
+							w "<label for='fromMainDoc' class='"_$case(MainDocRequired,"Y":"clsRequired",:"")_"'>主管医生</label>"
+						   </server>
+						</td>
+						<td>
+							<input id="fromMainDoc" class="hisui-combobox textbox">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label1">
+							<server>
+							w "<label for='fromMainNurse' class='"_$case(MainNurseRequired,"Y":"clsRequired",:"")_"'>主管护士</label>"
+						   </server>
+						</td>
+						<td>
+							<input id="fromMainNurse" class="hisui-combobox textbox">
+						</td>
+					</tr>
+					<tr style="height:40px;">
+						<td colspan="2" style="text-align:center;">
+							<span class="switchCls fa fa-exchange"></span>	
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" style="text-align:center;">
+							<server>
+								w "<span class='patient'>"_targetPatient_"</span>"
+							</server>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label1">
+							<server>
+							w "<label for='toMainDoc' class='"_$case(MainDocRequired,"Y":"clsRequired",:"")_"'>主管医生</label>"
+						   </server>
+						</td>
+						<td>
+							<input id="toMainDoc" class="hisui-combobox textbox">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label1">
+							<server>
+							w "<label for='toMainNurse' class='"_$case(MainNurseRequired,"Y":"clsRequired",:"")_"'>主管护士</label>"
+						   </server>
+						</td>
+						<td>
+							<input id="toMainNurse" class="hisui-combobox textbox">
+						</td>
+					</tr>
+					<tr>
+						<td  colspan="2" style="font-size:0;text-align:center;">
+							<a class="hisui-linkbutton" id="BSave">保存</a>
+							<a class="hisui-linkbutton" id="BCancel" style="margin-left:10px;">取消</a>
+						<td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var ServerObj={
+			EpisodeID:"#(curEpisodeID)#",
+			curMainDoctorID:"#(curMainDoctorID)#",
+			curMainNurseID:"#(curMainNurseID)#",
+			targetMainDocID:"#(targetMainDocID)#",
+			targetMainNurID:"#(targetMainNurID)#",
+			MainDocRequired:"#(MainDocRequired)#",
+			MainDocMulti:"#(MainDocMulti)#",
+			MainNurseRequired:"#(MainNurseRequired)#",
+			MainNurseMulti:"#(MainNurseMulti)#"
+		}
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/swapBed.js"></script>
+</body>
+</html>

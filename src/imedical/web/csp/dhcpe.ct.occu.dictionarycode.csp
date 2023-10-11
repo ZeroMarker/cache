@@ -1,0 +1,178 @@
+<!--
+ * FileName: dhcpe.ct.occu.dictionarycode.csp
+ * Anchor: zhongricheng
+ * Date: 2021-10-14
+ * Description: HISUI 基础数据-职业病基础数据维护
+-->
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script language="JavaScript"> 
+		self.moveTo(0,0) 
+		self.resizeTo(screen.availWidth,screen.availHeight)
+	</script>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+ 		s curDate=+$h
+ 		s hisuiVersion = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+	    if (hisuiVersion = "040")||(hisuiVersion = "lite"){
+		    w "<style>"
+		    w "#CBCodeTree {"
+		    _ "    border-width: 0;"
+		    _ "}"
+		    w "</style>"
+	    } else {
+		    w "<style>"
+		    w ".accordiontree.tree>li {"
+		    _ "    border-bottom: 1px solid #ddd;"
+		    _ "}"
+		    _".accordiontree.tree>li>.tree-node {"
+		    _ "    background-color: #f9f9fa;"
+		    _ "    border-bottom: 1px solid #ddd;"
+		    _ "    height: 34px;"
+		    _ "    line-height: 34px;"
+		    _ "}"
+		    _ ".accordiontree.tree>li>.tree-node .tree-title {"
+		    _ "    color :#000000;"
+		    _ "    font-weight :700;"
+			_ "}"
+			_ ".accordiontree.tree>li>.tree-node.tree-node-hover {"
+			_ "    background-color: #dcf0ff;"
+			_ "}"
+			_ ".accordiontree.tree>li>.tree-node .tree-hit.tree-expanded {"
+		    _ "    background: url(../scripts_lib/hisui-0.1.0/dist/css/images/accordion_arrows-black.png) -5px center no-repeat;"
+			_ "}"
+			_ ".accordiontree.tree>li>.tree-node .tree-hit.tree-collapsed {"
+			_ "    background: url(../scripts_lib/hisui-0.1.0/dist/css/images/accordion_arrows-black.png) -26px center no-repeat;"
+			_ "}"
+		    _ "#CBCodeTree {"
+		    _ "    border: 0;"
+		    _ "}"
+		    w "</style>"
+	    }
+	</SCRIPT>
+	<style>
+	.paddingtd{
+		padding: 0 0 0 10px;
+	}
+	</style>
+</head>
+<body>
+	<div class="hisui-panel" border="false" fit="true" style="padding:10px;">
+		<div class="hisui-layout" border="false" data-options="collapsible:false,fit:true">
+			
+			<!-- 基础代码列表 Start -->
+			<div class="hisui-layout" data-options="region:'west'" style="width: 400px; border:1px solid #ccc; border-radius:4px;">
+				<div class="hisui-layout" data-options="title:'基础代码',region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-template'" border="false" style="">
+					<div data-options="region:'north'" border="false" style="height: 51px; border-bottom:1px solid #CCC; border-radius: 0; padding:10px;">
+						<a class="hisui-linkbutton hover-dark" id="BAddBase" data-options="iconCls:'icon-w-add'" href="#">新增</a>
+						<a class="hisui-linkbutton hover-dark" id="BUpdBase" data-options="iconCls:'icon-w-edit'" href="#" style="margin-left:10px;" disabled>修改</a>
+					</div>
+					
+					<!-- 基础代码 Start -->
+					<div data-options="region:'center'" border="false" style="">
+						<table id="CBCodeList" border="false"></table>
+					</div>
+					<!-- 基础代码 End -->
+				</div>
+			</div>
+			<!-- 基础代码列表 End -->
+			
+			<div class="hisui-layout" data-options="region:'center'" border="false">
+				<div class="hisui-panel" data-options="region:'center'" fit="true" border="false" style="padding:0 2px 2px 10px;">
+					<div class="hisui-layout" border="false" fit="true" style="border:1px solid #ccc; border-radius:4px;">
+						<div class="hisui-layout" data-options="title:'数据明细',region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-set-col'" border="false" style="">
+							<!-- 数据维护 Start --> 
+							<div data-options="region:'north'" border="false" style="height:51px;border-bottom:1px solid #CCC; border-radius:0px; padding:10px;">
+								<a class="hisui-linkbutton hover-dark" id="BUpdTree" data-options="iconCls:'icon-w-update'" href="#" disabled>修改本节点</a>
+								
+								<a class="hisui-linkbutton hover-dark" id="BAddTree" data-options="iconCls:'icon-w-add'" href="#" style="margin-left:10px;" disabled>新增子节点</a>
+							</div>
+							<!-- 数据维护 End --> 
+							
+							<!-- 链接数据明细树 Start -->
+							<div data-options="region:'center'" border="false">
+								<div id="CBCodeTree" class="accordiontree" data-options="animate:true,fit:true,border:false"></div>
+							</div>
+							<!-- 链接数据明细树 End -->
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 基础代码增改弹窗 Start -->
+	<div id="BaseCodeWin" style="width:425px;height:169px;padding:0 10px;display:none;">
+		<table style="border-spacing: 10px; margin:0 auto;">
+			<tr>
+				<td align="right"><label for="BCodeWin">代码</label></td>
+         		<td><input class="hisui-validatebox textbox" data-options="required:true" id="BCodeWin" name="BCodeWin" type="text" style="width: 130px;" disabled></td>
+         		
+				<td align="right" class="paddingtd"><label for="BDescWin">描述</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="required:true" id="BDescWin" name="BDescWin" type="text" style="width: 130px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="BActiveWin">激活</label></td>
+         		<td><input class="hisui-checkbox" id="BActiveWin" name="BActiveWin" type="checkbox" style=""></td>
+         		
+         		<td align="right" class="paddingtd"><label for="BExFlagWin">子节点</label></td>
+         		<td><input class="hisui-checkbox" id="BExFlagWin" name="BExFlagWin" type="checkbox" checked="checked"></td>
+			</tr>
+		</table>
+	</div>
+	<!-- 基础代码增改弹窗 End -->
+	
+	<!-- 明细增改弹窗 Start -->
+	<div id="DetailCodeWin" style="width:471px;height:289px;padding:0 10px;display:none;">
+		<table style="border-spacing: 10px; margin:0 auto;">
+			<tr>
+				<td align="right"><label for="CodeWin">代码</label></td>
+         		<td><input class="hisui-validatebox textbox" data-options="required:true" id="CodeWin" name="CodeWin" type="text" style="width: 130px;"></td>
+         		
+				<td align="right" class="paddingtd"><label for="DescWin">描述</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="required:true" id="DescWin" name="DescWin" type="text" style="width: 130px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="ActiveWin">激活</label></td>
+         		<td><input class="hisui-checkbox" id="ActiveWin" name="ActiveWin" type="checkbox"></td>
+         		
+         		<td align="right" class="paddingtd"><label for="ExFlagWin">子节点</label></td>
+         		<td><input class="hisui-checkbox" id="ExFlagWin" name="ExFlagWin" type="checkbox"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="PlatformCodeWin">平台对照</label></td>
+         		<td><input class="hisui-validatebox textbox" id="PlatformCodeWin" name="PlatformCodeWin" type="text" style="width: 130px;"></td>
+         		
+         		<td align="right" class="paddingtd"><label for="CustomData1Win">自定义1</label></td>
+         		<td><input class="hisui-validatebox textbox" id="CustomData1Win" name="CustomData1Win" type="text" style="width: 130px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="CustomData2Win">自定义2</label></td>
+         		<td><input class="hisui-validatebox textbox" id="CustomData2Win" name="CustomData2Win" type="text" style="width: 130px;"></td>
+         		
+         		<td align="right" class="paddingtd"><label for="CustomData3Win">自定义3</label></td>
+         		<td><input class="hisui-validatebox textbox" id="CustomData3Win" name="CustomData3Win" type="text" style="width: 130px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="ExpandCodeWin">扩展信息</label></td>
+         		<td><input class="hisui-validatebox textbox" id="ExpandCodeWin" name="ExpandCodeWin" type="text" style="width: 130px;"></td>
+         		
+				<td align="right" class="paddingtd"><label for="RemarkWin">备注</label></td>
+				<td><input class="hisui-validatebox textbox" id="RemarkWin" name="RemarkWin" type="text" style="width: 130px;"></td>
+			</tr>
+		</table>
+	</div>
+	<!-- 明细增改弹窗 End -->
+	
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.occu.dictionarycode.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+</body>
+</html>

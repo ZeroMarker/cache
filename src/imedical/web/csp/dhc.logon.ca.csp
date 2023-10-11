@@ -1,47 +1,293 @@
-<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. oeorder.oplistcustom.caaudit.csp --> 
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- ;i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //i ##Class(websys.SessionEvents).SessionExpired() q 1
+ if ##class(websys.Conversions).IsValidMethodName("BSP.SYS.SRV.Token","OverrideSession") d ##class(BSP.SYS.SRV.Token).OverrideSession()
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
  Q 1
 </csp:method>
+<!DOCTYPE html>
 <HTML XMLNS=TRAK>
 <HEAD>
 	<base target = "_self">
 	<title>数据签名</title>
-	<TRAK:HEAD></TRAK:HEAD>
-	   <SCRIPT language="Cache" RUNAT="SERVER">
-	   Set CAServiceError=0
-	   s CAPowerFlag=##Class(CA.DigitalSignatureService).IsCAON()	
-	   i CAPowerFlag="Y" {
-		   try{
-		      Do ##Class(CA.DigitalSignatureService).CASessionDataInit()	 	
-		   }catch(e){
-		   	  Set CAServiceError=1
-		   }
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+   	   Set ScanQRRollInterval = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","ScanQRRollInterval")
+   	   Set ScanQRRollMax = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","ScanQRRollMax")
+   	   If ScanQRRollInterval="" Set ScanQRRollInterval=1
+   	   If ScanQRRollMax="" Set ScanQRRollMax=100
+	   Set NotModal = $G(%request.Data("notModal",1),0)
+	   Set notLoadCAJs = $G(%request.Data("notLoadCAJs",1),0)
+   	   
+	   Set URLFixParam = "&1=1"
+	   Set Version = 1,VenderCode="",AutoSure=0,LocId="",RemainSession=0
+	   Set CurrentHospId = 0
+	   if $d(%session.Data("LOGON.HOSPID")),$G(%session.Data("LOGON.HOSPID"))'="" {Set CurrentHospId = %session.Data("LOGON.HOSPID")}
+	   else { Set CurrentHospId = $G(%request.Data("LOGON.HOSPID",1))}
+	   Set SignUserCode = $G(%request.Data("SignUserCode",1)) 
+	   Set signUserType = $G(%request.Data("signUserType",1))  // ALL
+	   Set LogonType="UKEY"  //初始CA登录方式为UKEY
+	   // 固定一种登录方法, 从会话中拿上一次登录的CALogonType
+	   Set SingleLogon = $G(%request.Data("singleLogon",1),0)
+	   if $d(%request.Data("autoSure",1),as) Set AutoSure = as
+	   if $d(%request.Data("locDesc",1),locDesc) {
+		   	if ((+locDesc)=locDesc){
+				s LocId = locDesc
+			}else{
+				s LocId = ##class(web.CTLoc).GetIdFromCodeDescriptionHosp(locDesc)
+			}
+		    //Set LocId = ##class(web.CTLoc).GetIdFromCodeDescriptionHosp(locDesc)
 	   }
-	   d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
-	   s %session.Data("ContainerName")=""
-	   d ##Class(CA.DigitalSignatureService).OnUsbChanged()
-	   Set SignUserCode = $G(%request.Data("SignUserCode",1))
-	   Set SignUserId = ##class(web.SSUser).GetIdFromCodeOrDescription(SignUserCode)
-
+	   Set LogonTypeList = ##Class(websys.CAInterface).GetLogonTypeList("","LOGON",CurrentHospId) ;"UKEY|UKey登陆|1^PHONE|手机登陆|0^FACE|刷脸登陆|0^PINPHONE|PIN登陆|0"
+	   Set LogonTypeIndex = $p(LogonTypeList,"$",2), DefaultLogonType=$P($p(LogonTypeList,"^",LogonTypeIndex),"|"),LogonType=DefaultLogonType
+	   If $d(%session.Data("CALogonType"),lt) Set:lt'="" LogonType=lt
+	   If $d(%request.Data("logonType",1),lt) Set:lt'="" LogonType=lt
+	   IF (LogonType'="UKEYSURELIST")&&(("^"_LogonTypeList)'[("^"_LogonType_"|")) Set LogonType=DefaultLogonType
+	   Set OriginLogonType = LogonType
+	   //If OriginLogonType="PINPHONE" Set LogonType="PHONE"
+	   //If OriginLogonType="PAGEPHONE" Set LogonType="PHONE"
+	   if OriginLogonType="UKEYSURELIST" Set RemainSession=1 //,LogonType="UKEY"
+	   Set VenderCode=$G(%request.Data("venderCode",1))
+	   Set CAInitInfo = ##class(websys.CAInterface).Init(OriginLogonType,LocId,RemainSession,CurrentHospId,VenderCode)
+	   Set Version = $p(CAInitInfo,"^",1)
+	   Set VenderCode = $p(CAInitInfo,"^",2)
+	   Set CAJsPath = $p(CAInitInfo,"^",3)
+	   Set ScanQRCodeAPPName = $p(CAInitInfo,"^",4)
+	   Set LogonType = $p(CAInitInfo,"^",5)
+	   Set CAServiceError=0
+	   try{
+		  if (LogonType="UKEY")||(LogonType="FACE") Do ##Class(CA.DigitalSignatureService).CASessionDataInit(LogonType,VenderCode)
+	   }catch(e){
+	   	  Set CAServiceError=1
+	   }
+	   Set qrCodeWidth = 200,qrCodeHeight=200,posiTop=10
+	   if OriginLogonType="PAGEPHONE" set qrCodeHeight=550,qrCodeWidth=700,posiTop=0
+	   Set SignUserDesc=""
+   	   if $G(SignUserCode)'="" {
+	   	   Set URLFixParam=URLFixParam_"&SignUserCode="_SignUserCode
+	   	   Set SignUserId=$o(^SSU("SSUSR",0,"SSUSR_Initials",$$ALPHAUP^SSUTIL4(SignUserCode),""))
+	   	   Set:SignUserId>0 SignUserDesc = $p($G(^SSU("SSUSR",SignUserId)),"^",2)
+   	   }
+   	   if %request.Get("MWToken")'="" Set URLFixParam=URLFixParam_"&MWToken="_%request.Get("MWToken")
+	   if $G(signUserType)'="" Set URLFixParam=URLFixParam_"&signUserType="_signUserType
+	   if $G(as)'="" Set URLFixParam=URLFixParam_"&autoSure="_as
+	   if $G(locDesc)'="" Set URLFixParam=URLFixParam_"&locDesc="_locDesc
+	   if NotModal'="" Set URLFixParam=URLFixParam_"&notModal="_NotModal
+	   if notLoadCAJs'="" Set URLFixParam=URLFixParam_"&notLoadCAJs="_notLoadCAJs
+	   Set IPAddr  = ##class(ext.util.String).ClientIP()
+	   if CurrentHospId'="" Set URLFixParam=URLFixParam_"&LOGON.HOSPID="_CurrentHospId
+	   ;if VenderCode'="" Set URLFixParam=URLFixParam_"&venderCode="_VenderCode
+	   Set CurrUserCACertName = ""
+	   if $G(%session.Data("LOGON.USERID"))>0{
+		    Set CurrUserCACertName = ##class(CA.UsrSignatureInfo).GetCertName(%session.Data("LOGON.USERID"))
+	   }
 	  </script>
-
 	   <script language="javascript">
+	    var originLogonType = "#(OriginLogonType)#";
+	   	var logonType = "#(LogonType)#";
+	   	var notLoadCAJs = "#(notLoadCAJs)#";
+	   	var version = "#(Version)#";
+	   	var VenderCode = "#(VenderCode)#";
+	   	var CAJsPath = "#(CAJsPath)#";
+	   	var autoSure = "#(AutoSure)#";
+	   	var qrCodeWidth = #(qrCodeWidth)#;
+	   	var qrCodeHeight = #(qrCodeHeight)#;
+	   	var posiTop = "#(posiTop)#";
 		//CA数字签名-------------
 		var strServerRan = "#($g(%session.Data("ServerRan")))#";
-		var strServerCert = "#($g(%session.Data("ServerCert")))#";  //$G(^CF("CA","ServerCert"))
+		var strServerCert = "#($G(^CF("CA","ServerCert")))#"; //$g(%session.Data("ServerCert"))
 		var strServerSignedData = "#($g(%session.Data("ServerSignedData")))#"; 
-		var session = [];
-		session['LOGON.USERID'] = "#($g(%session.Data("LOGON.USERID")))#";
-		session['LOGON.USERCODE'] = "#($g(%session.Data("LOGON.USERCODE")))#";
+		//session['LOGON.USERID'] = "#($g(%session.Data("LOGON.USERID")))#";
+		//session['LOGON.USERCODE'] = "#($g(%session.Data("LOGON.USERCODE")))#";
 		var caServerErrorAlert = "CA服务器异常，请检查网络或CA服务器！";  
 		var CAServiceError = #(CAServiceError)#;
-		var SignUserCode="#(SignUserCode)#";
-		var SignUserId = "#(SignUserId)#";
-	  </script>
+		var SignUserCode = "#(SignUserCode)#";
+		var signUserType = "#(signUserType)#";
+		var CurrentHospId = "#(CurrentHospId)#";
+		var SignUserDesc = "#(SignUserDesc)#";
+		var CurrUserCACertName = "#(CurrUserCACertName)#";
+		var defaultTip = "";
+		if (SignUserCode){defaultTip="请"+SignUserDesc+"("+SignUserCode+")认证"}
+		var IPAddr = "#(IPAddr)#";
+		if (parent && parent.document.getElementById("IPAddress")){
+			if (parent.document.getElementById("IPAddress").value!="") IPAddr = parent.document.getElementById("IPAddress").value;
+		}
+		
+	</script>
+	 <!--<LINK REL="stylesheet" TYPE="text/css" HREF="../skin/default/css/websys.8.3.css"/>-->
+	 <style>
+	 body{
+	 	BACKGROUND-COLOR: #ffffff;
+	 }
+	 a:hover{
+		font-size:14px;
+	 	color:#fd7201;
+	 }
+	.tabstitle {
+	    font-size: 14px;
+	    color: #15428b;
+	    vertical-align: middle;
+	    text-align: left;
+	    padding: 2px 0 0 4px;
+	    border-width: 0px;
+	    border-bottom: 1px #95B8E7 solid;
+	    padding-left: 0px;
+	}
+	.divnone{
+		display:none;
+	}
+	.qrcodeposi{
+	    /*position: absolute;
+		top: 10px;
+	    left: 50%;
+	    margin-left: -#((qrCodeWidth+16)/2)#px;*/
+	    width: #(qrCodeWidth+16)#px;
+	    height: #(qrCodeHeight+16)#px;
+	    text-align: center;
+	    vertical-align:middle;
+	}
+	.qrcodeexpmask,.qrcodegenmask{
+		opacity: 0.7;
+		filter:alpha(opacity=70);
+	    display: none;
+	    z-index: 1000;
+	    background: #000000;	    
+	}
+	.qrcodemask{
+		display:none;
+	    z-index: 900;
+	}
+	.SdCount{
+		color:red;
+		font-size:16px;
+	}
+	.faceTip{
+		padding:50px;width:280px;height:100px;text-align:center;font-size:18px;
+	}
+	.tabstitle .i-btn.tabactive{
+		filter:none;
+		background-color:#ffffff;
+	}
+	.qrcodegenmask h1,.qrcodeexpmask a{
+		line-height:#(qrCodeHeight+10)#px;
+		color:#dddddd;
+		font-size:16px;
+	}
+	.logonqrcode{
+		width:#(qrCodeWidth)#px;height:#(qrCodeHeight)#px;
+	}
+	.ukeytextbox{
+		width: 200px;
+		height: 30px;
+		background: #FFFFFF;
+		border: 1px solid #CECECE;
+		opacity: 1;
+		border-radius: 2px;
+		padding-left: 5px;
+		box-sizing: content-box;
+	}
+	.ukeylabel{
+		font-size: 14px;
+		font-family: Microsoft YaHei;
+		font-weight: 400;
+		line-height: 20px;
+		width:80px;
+		height:30px;
+		padding-right:5px;
+		display: block;
+	}
+	.ukeybtn{
+		padding: 4px 10px;
+	    line-height: 30px;
+	    height: 30px;
+	    min-width: 80px;
+	    background: #2172BA;
+	    opacity: 1;
+	    border-radius: 4px;
+	    display: inline-block;
+	    color: #ffffff;
+	    text-align: center;
+	    align-items: center;
+	}
+	.ukeybtn:hover{
+		background: #003d74;
+		color:#ffffff;
+	}
+	.disable.ukeybtn{
+		background: #cccccc;
+	}
+	.centerdiv{
+		text-align: center;
+	}
+	.row-mt20{
+		margin-top:20px;
+	}
+	.errorinfo{
+		align:center;
+		padding:5px;
+		height: 19px;
+		font-size: 16px;
+		font-family: Microsoft YaHei;
+		font-weight: 400;
+		line-height: 19px;
+		color: #FA3939;
+	}
+	.sound-tip{
+		width: 200px;
+		height: 19px;
+		font-size: 14px;
+		font-family: Microsoft YaHei;
+		font-weight: 400;
+		line-height: 19px;
+		letter-spacing: 4px;
+	}
+	.sound-numspan{
+		width: 40px;
+		height: 40px;
+		border: 1px solid #C5C5C5;
+		border-radius: 7px;
+	    font-size: 32px;
+	    font-family: Microsoft YaHei;
+	    font-weight: 400;
+	    line-height: 42px;
+	    display: inline-block;
+	}
+	.sound-mphone{
+		width: 99px;
+		height: 99px;
+		background: #2172BA;
+		border-radius: 50%;
+		zoom: 60%;
+		background:url("../skin/default/images/logon/ca_sound_mphone.png");
+	}
+	.bgleft{
+		width:359px;
+		height:259px;
+		background-repeat: no-repeat;	
+	}
+	.soundlogon .bgleft{
+		background-image:url("../skin/default/images/logon/ca_sound.png");
+	}
+	.facephonelogon .bgleft,.facelogon .bgleft{
+		background-image:url("../skin/default/images/logon/ca_face.png");
+	}
+	.ukeylogon .bgleft{
+		background-image:url("../skin/default/images/logon/ca_ukey.png");
+	}
+	.qrcodelogon .bgleft,.pinphonelogon .bgleft{
+		background-image:url("../skin/default/images/logon/ca_qrcode.png");
+	}
+	/*
+	#wrap { width: 600px; height: 390px; padding: 0; overflow: hidden; }*/
+    #facephoneifrm {width:900px;height:500px;}
+    .pagephonelogon .qrcodeposi{
+		height:500px;
+	}
+	</style>
+	 <script type="text/javascript" src="../scripts_lib/qrcode/qrcode.min.js"></script>
+	 <script type="text/javascript" src="../scripts_lib/jQuery/jquery-1.8.0.min.js" charset="utf-8"></SCRIPT>
+	 <script type="text/javascript" src="../scripts_lib/base64.min.js"></script>
 </head>
-<body>
-
+<body style="overflow:hidden;">
 <DIV id="PageContent">
 <TABLE width="100%" id="mDHCDocCAVerify" name="mDHCDocCAVerify">
 </TABLE>
@@ -50,52 +296,292 @@
 	<input type="hidden" id="UserSignedData" name="UserSignedData" value="">
 	<input type="hidden" id="UserCert" name="UserCert" value="">
 	<input type="hidden" id="ContainerName" name="ContainerName" value="">	
-	<TABLE style="WIDTH: 281px; HEIGHT: 146px">
+	<TABLE style="WIDTH: 100%; HEIGHT: 146px">
 		<TBODY>
-			<TR><TD class=maintitle noWrap>证书登录</TD></TR>
-			<TR>
-				<TD class="i-tableborder">
-					<TABLE style="WIDTH: 271px; HEIGHT: 100px">
-						<TBODY><TR><TD>
-							<label Style="WIDTH: 66px; HEIGHT: 22px">证书</label>
-							</TD><TD>
-							<select id="Certificate" name="Certificate" multiple size=4 style="WIDTH: 156px; HEIGHT: 34px">
-							</select>
-							</TD></TR><TR><TD>
-							<label>证书口令</label>
-							</TD><TD>
-							<input type="password" id="CertificatePwd" name="CertificatePwd" style="WIDTH: 156px; HEIGHT: 22px" value="">
-							<input type="text" style="display:none" id="testInput"> 
-							</TD></TR><TR><TD class="" align=right>
-							<a href="#" id="Commit" name="Commit">确认</A>
-							</TD><TD>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-							<a href="#" id="Exit" name="Exit">退出</A>
-							</TD></TR>
+			<tr>
+				<server>
+				If SingleLogon {  
+					for i=1:1:$l(LogonTypeList,"^"){
+						Set itm = $P(LogonTypeList,"^",i),lt=$p(itm,"|")
+						if (OriginLogonType=lt),0{ // 不显示 20201021
+							W "<TD class=maintitle noWrap>"
+							W "<a data-type="""_OriginLogonType_""" href=""#"">"_$p(itm,"|",2)_"</a>"
+							W "</TD>"
+							quit
+						}
+					}
+				}else{
+					W "<td colspan=2 class=""tabstitle"" style=""font-size:12px;"">"
+					for i=1:1:$l(LogonTypeList,"^") {
+						Set itm = $P(LogonTypeList,"^",i),lt=$p(itm,"|")
+						W "<a data-type="""_lt_""" class=""i-btn "
+						if OriginLogonType=lt W "tabactive"
+						W """ href=""dhc.logon.ca.csp?logonType="_lt_URLFixParam_""" target="""" style=""width:80px"">"_$p(itm,"|",2)_"</a>"	
+					}
+					w "</td>"
+				}
+				</server>
+			</tr>
+			<!--<TR><TD class=maintitle noWrap>证书登录</TD></TR>-->
+			<!-- ukey sure list -->
+			<CSP:IF condition=OriginLogonType="UKEYSURELIST">
+				<TR class="ukeylogon">
+					<td class="bgleft">
+						<img/>
+					</td>
+					<TD>
+						<TABLE style="WIDTH:359px;HEIGHT:259px;">
+							<TBODY>
+								<tr style="height:30px;"><td></td></tr>
+								<TR>
+									<TD align=right>
+										<label class="ukeylabel">证书</label>
+									</TD>
+									<TD>
+										<select id="Certificate" name="Certificate" class="ukeytextbox"></select>
+									</TD>
+								</TR>
+								<TR>
+									<td colspan=3>
+										<div class="centerdiv">
+										<a href="#" id="Commit" name="Commit" class='ukeybtn'>确认</A>
+										<a href="#" id="Exit" name="Exit" class='ukeybtn'>退出</A>
+										</div>
+									</td>
+								</TR>
+								<tr style="height:60px;"><td></td></tr>
+							</TBODY>
+						</TABLE>
+					</TD>
+				</TR>
+			</CSP:IF>
+			<!--   ukey -->
+			<CSP:IF condition=OriginLogonType="UKEY">
+			<TR class="ukeylogon">
+				<td class="bgleft">
+					<img/>
+				</td>
+				<TD>
+					<TABLE style="WIDTH:359px;HEIGHT:259px;">
+						<TBODY>
+							<tr style="height:30px;"><td></td></tr>
+							<TR>
+								<TD align=right>
+									<label class="ukeylabel">证书</label>
+								</TD>
+								<TD>
+									<select id="Certificate" name="Certificate" class="ukeytextbox"></select>
+								</TD>
+								<TD> 
+									<a href="#" id="ReloadUKeyList" name="ReloadUKeyList">加载证书</A>
+								</TD>
+							</TR>
+							<TR>
+								<TD align=right>
+									<label class="ukeylabel">证书口令</label>
+								</TD>
+								<TD>
+									<input type="password" id="CertificatePwd" name="CertificatePwd" value="" class="ukeytextbox">
+									<input type="text" style="display:none" id="testInput"> 
+								</TD>
+								<TD></TD>
+							</TR>
+							<TR>
+								<td colspan=3>
+									<div class="centerdiv">
+									<a href="#" id="Commit" name="Commit" class='ukeybtn'>确认</A>
+									<a href="#" id="Exit" name="Exit" class='ukeybtn'>退出</A>
+									</div>
+								</td>
+							</TR>
+							<tr style="height:60px;"><td></td></tr>
 						</TBODY>
 					</TABLE>
 				</TD>
 			</TR>
+			</CSP:IF>
+			<CSP:IF condition=OriginLogonType="PINPHONE">
+			<TR class="pinphonelogon">
+				<td class="bgleft">
+					<img />
+				</td>
+				<TD>
+					<TABLE style="WIDTH:359px;HEIGHT:259px;">
+						<TBODY>
+							<tr style="height:30px;"><td></td></tr>
+							<TR>
+								<TD align=right>
+									<label class="ukeylabel" >用户工号</label>
+								</TD>
+								<TD>
+									<input id="pinUserCertCode" type="text" class="ukeytextbox"/>
+								</TD>
+							</TR>
+							<TR>
+								<TD align=right>
+									<label  class="ukeylabel">PIN码</label>
+								</TD>
+								<TD>
+									<input id="pinPassword" type="password" class="ukeytextbox"/>
+								</TD>
+							</TR>
+							<TR>
+								<td colspan=3>
+									<div class="centerdiv">
+									<a href="#" id="pinphoneCommit" name="pinphoneCommit" class='ukeybtn'>确认</A>
+									</div>
+								</TD>
+							</TR>
+							<tr style="height:30px;"><td></td></tr>
+						</TBODY>
+					</TABLE>
+				</TD>
+			</TR>
+			</CSP:IF>
+			<CSP:IF condition=OriginLogonType="FACEPHONE">
+			<TR class="facephonelogon">
+				<td class="bgleft">
+					<img />
+				</td>
+				<TD>
+					<TABLE style="WIDTH:359px;HEIGHT:259px;">
+						<TBODY>
+							<TR>
+								<TD align=right>
+									<label class="ukeylabel" >用户工号</label>
+								</TD>
+								<TD>
+									<input id="facephoneUserCode" type="text" class="ukeytextbox"/>
+								</TD>
+								<td>
+									<a href="#" id="facephoneCommit" name="facephoneCommit" class='ukeybtn'>开始识别</A>
+								</td>
+							</TR>
+							<TR>
+								<td colspan=3>
+								<iframe id="facephoneifrm" src="about:blank" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0></iframe>
+								</td>
+							</TR>
+							<tr style="height:30px;"><td></td></tr>
+						</TBODY>
+					</TABLE>
+				</TD>
+			</TR>
+			</CSP:IF>
+			<CSP:IF condition=OriginLogonType="PAGEPHONE">
+			<TR class="pagephonelogon">
+				<TD>
+					<div class="qrcodeposi qrcodemask">
+					  <div class="qrcode-img-container" style='border:1px solid #f4f4f4;padding:8px;'>
+					  	<div id="logonqrcode"></div>
+					  </div>
+			      </div>
+				</TD>
+			</TR>
+			</CSP:IF>
+			<CSP:IF condition=OriginLogonType="PHONE">
+			<TR class="qrcodelogon">
+				<td class="bgleft">
+					<img />
+				</td>
+				<TD>
+					<div class="cacontent">
+						<div class="centerdiv row-mt20">
+							<div class="qrcodeposi qrcodeexpmask" >
+						  		<a href="#" onclick="refreshQrcodeClick();">二维码失效，点我刷新</a>
+							</div>
+							<div class="qrcodeposi qrcodegenmask">
+							  	<h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">生成中···</font></h1>
+							</div>
+							<div class="qrcodeposi qrcodemask">
+							  <div class="qrcode-img-container" style='border:1px solid #f4f4f4;padding:8px;'>
+							  	<div id="logonqrcode"></div>
+							  </div>					  
+					     	</div>
+					    </div>
+				     	<div class="centerdiv row-mt20">
+				      		<span style="font-size:14px;">
+							请使用<a href="##" style="display:inline-block;font-size:14px;">#(ScanQRCodeAPPName)#</a>扫码登录
+					  		</span>
+						</div>
+					</div>
+				</TD>
+			</TR>
+			</CSP:IF>
+			<CSP:IF condition=OriginLogonType="FACE">
+			<TR class="facelogon">
+				<td class="bgleft">
+					<img/>
+				</td>
+				<TD align=center>
+					<div class="faceTip">
+						请正对摄像头<span class="SdCount" ></span>
+					</div>
+					<csp:if condition=AutoSure=0>
+					<div>
+						<a class="ukeybtn" id="startFaceSure" onclick="startFaceSure()" href="#">开始人脸识别</a>
+					</div>
+					</csp:if>
+					<select id="Certificate" name="Certificate" style="display:none;"></select>
+				</TD>
+			</TR>
+			</CSP:IF>
+			<CSP:IF condition=OriginLogonType="SOUND">
+			<server>
+			if ##class(websys.Conversions).IsValidClassName("websys.Sound"){
+				d ##class(websys.Sound).Init("HISLogon",1,"HIS","1.0")
+			}
+			</server>
+			<TR class="soundlogon">
+				<td class="bgleft">
+					<img/>
+				</td>
+				<TD>
+					<div class="cacontent">
+						<div class="soundtip centerdiv row-mt20">请靠近话筒,匀速读出以下数字</div>
+						<div class="centerdiv row-mt20 sound-num">
+							<span class="sound-numspan"></span>
+							<span class="sound-numspan"></span>
+							<span class="sound-numspan"></span>
+							<span class="sound-numspan"></span>
+							<span class="sound-numspan"></span>
+							<span class="sound-numspan"></span>
+							<span class="sound-numspan"></span>
+							<span class="sound-numspan"></span>
+						</div>
+						<div class="centerdiv row-mt20">
+							<img class="sound-mphone"/>
+						</div>
+						<div class="centerdiv row-mt20 soundcount" ></div>
+					</div>
+				</TD>
+			</TR>
+			</CSP:IF>
 			<tr><td></td><tr>
 		</TBODY>
 	</TABLE>				
-	<div id="CAInfoDiv" style="color:red;font-size:15pt;align:center;"></div>
+	<div class="centerdiv row-mt20">
+		<div id="CAInfoDiv" class="centerdiv errorinfo"></div>
+	</div>
 </FORM>
 </DIV>
 </DIV>
 </body>
 <script type="text/javascript">
 /// CALogonUserName-ca登录后的用户名，currUserName为会话中的用户或登录界面用户框中的用户名
-var CALogonUserName="",CALogonUserId="",currUserName="",faceSureTime=5;
-var qrcodeMaker;rollMax=100,rollCount = 100; //60*1000
-function GetUserNameByCA(UsrCertCode){
-	var str = tkMakeServerCall("websys.CAInterface","GetUserIdByCert",UsrCertCode)
+var CALogonUserName="",CALogonUserId="",currUserName="",faceSureTime=5,loadCALogonTypeEndTimer="";
+var qrcodeMaker;
+var rollMax=#(ScanQRRollMax)#,rollCount = #(ScanQRRollMax)#; //60*1000
+var ScanQRRollInterval = #(ScanQRRollInterval)#*1000;
+var CAKeyLoadMaxCount = 10;
+function GetUserNameByCA(UsrCertCode,CertNo){
+	var str = tkMakeServerCall("websys.CAInterface","GetUserIdByCert",UsrCertCode,CertNo)
 	CALogonUserName = str.split("^")[1];
 	CALogonUserId = str.split("^")[0];
 	return str;
 }
-function ValidUser(UsrCertCode){
-	//一定要拿一次用户
-	GetUserNameByCA(UsrCertCode);
+function getCurrentUserName(){
+	var currUserName = "";
 	if(session['LOGON.USERCODE']!="") currUserName = session['LOGON.USERCODE'];
 	if ("undefined"!=typeof dialogArguments){
 		if (dialogArguments && dialogArguments.window){
@@ -105,46 +591,586 @@ function ValidUser(UsrCertCode){
 		    }
 		}
     }
+	return currUserName;
+}
+function ValidUser(UsrCertCode,CertNo){
+	//一定要拿一次用户
+	GetUserNameByCA(UsrCertCode,CertNo);
+	if (signUserType=="ALL") return  true;
+	currUserName = getCurrentUserName();
     if (currUserName!="" && CALogonUserName!=currUserName){
-		alert("用户与Key不匹配!");
+		//alert("用户与Key不匹配!");
+		displayError("用户与Key不匹配!请使用当前HIS用户的证书登录。当前HIS用户:" + currUserName + "，当前证书用户:" + CALogonUserName);
 		return false;
     }
     return true;
 }
-function DocumentloadHandler(){
+var websysSignedData = function(strContainerName,strPin,CALogonType){	
+	var pass = false;
+	var strClientSignedData = SignedData(strServerRan, strContainerName);
+    //alert(strClientSignedData);
+	if (!strClientSignedData){ // null false undefined
+		displayError("证书签名失败");
+		return ;
+	}
+    //客户端对随机数的签名
+    var Obj = document.getElementById('UserSignedData')
+    if(Obj)Obj.value=strClientSignedData;
+    //获取客户端证书
+    var varCert = GetSignCert(strContainerName);
+    var Obj = document.getElementById('UserCert')
+    if(Obj)Obj.value=varCert;
+    var varCertCode=GetUniqueID(varCert,strContainerName);
+    CALogonUserName = "";
+    // 判断CA用户与dhc.logon.csp界面的用户是不是同一用户
+    //if (!ValidUser(varCertCode)){return false;}
+    var Obj = document.getElementById('Certificate')
+    if(Obj) Obj.value=strContainerName;
+    var certificateNo=GetCertNo(strContainerName);
+    /* alert(strContainerName+","+strServerRan+","+varCert);*/
+    /*if (version==2){
+    	var ret = tkMakeServerCall("CA.DigitalSignatureService","Login",CALogonUserId,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert,CALogonType,VenderCode);
+    }else{
+	    var ret = tkMakeServerCall("CA.DigitalSignatureService","Login",CALogonUserId,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert);
+    }
+	tkMakeServerCall("websys.CAInterface","LoginAfter",strContainerName,strPin,CALogonType,varCertCode,certificateNo,token);
+	*/
+	var token = "";
+	// 判断CA用户与dhc.logon.csp界面的用户是不是同一用户
+	//if (!ValidUser(varCertCode,certificateNo)){return false;}
+	//CASuccess("",CALogonUserId,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert,CALogonType,VenderCode,strContainerName,strPin,token,CAJsPath);
+	var SignUserCodeArg = getCurrentUserName();
+	if (SignUserCode!="") SignUserCodeArg = SignUserCode;
+	if (signUserType=="ALL") SignUserCodeArg="";
+	CASuccess("","^"+SignUserCodeArg,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert,CALogonType,VenderCode,strContainerName,strPin,token,CAJsPath);
+
+	return ;
+	//alert(CALogonUserId+","+varCertCode+","+strServerRan+","+strClientSignedData+","+certificateNo+","+varCert+","+CALogonType+","+VenderCode+","+strContainerName+","+strPin+","+token);
+	//var ret = tkMakeServerCall("websys.CAInterface","Login",CALogonUserId,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert,CALogonType,VenderCode,strContainerName,strPin,token);
+	//alert(ret);
+	//if (ret!=""){displayError("CA认证失败.错误代码:"+ret);return;}
+	//{IsSucc:true,ContainerName:strContainerName,UserName:UserName,CALogonType:CALogonType,CAUserCertCode:CAUserCertCode,CACertNo:CACertNo,CAToken:CAToken}
+	//window.returnValue={"ContainerName":strContainerName,"UserName":CALogonUserName,"CALogonType":CALogonType,CAUserCertCode:varCertCode,CACertNo:certificateNo,CAToken:token,CAJsPath:CAJsPath};
+	//,ca_key:ca_key}
+	//window.close();
+}
+
+function CASuccess(CALogonUserNameArg,CALogonUserId,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert,CALogonType,VenderCode,strContainerName,strPin,token,CAJsPath){
+	//alert(CALogonUserId+","+varCertCode+","+strServerRan+","+strClientSignedData+","+certificateNo+","+varCert+","+CALogonType+","+VenderCode+","+strContainerName+","+strPin+","+token);
+	var ret = tkMakeServerCall("websys.CAInterface","Login",CALogonUserId,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert,CALogonType,VenderCode,strContainerName,strPin,token,IPAddr);
+	var arr = ret.split("^");
+	if (arr.length>1 && arr[0]<1) {displayError("CA认证失败.错误代码:"+ret);return;}
+	CALogonUserId = arr[0];
+	CALogonUserName = arr[1];
+	//if (ret!=""){displayError("CA认证失败.错误代码:"+ret);return;}
+	//{IsSucc:true,ContainerName:strContainerName,UserName:UserName,CALogonType:CALogonType,CAUserCertCode:CAUserCertCode,CACertNo:CACertNo,CAToken:CAToken}
+	var obj ={
+		"ContainerName":strContainerName,
+		"UserName":CALogonUserName,
+		"CALogonType":CALogonType,
+		"CAUserCertCode":varCertCode,
+		"CACertNo":certificateNo,
+		"CAToken":token,
+		CAJsPath:CAJsPath,
+		CAUserPin:strPin
+	};
+	loadLastCALogonType(closeWindow,obj);
+}
+function loadLastCALogonType(callback,obj){
+	debugger;
+	if (notLoadCAJs==0) {
+		var win = websys_getMenuWin() ;
+		if (!win){
+			if ("undefined"!=typeof dialogArguments){
+				if (dialogArguments){
+					if ( dialogArguments.websys_getMenuWin ) win = dialogArguments.websys_getMenuWin() 
+					if (!win && dialogArguments.window){
+						var invokeWindow = dialogArguments.window.top;
+						//var my = dialogArguments.window.top.websys_getMenuWin();
+						var myGetMenuWinFun = ('undefined'==typeof invokeWindow.websys_getMenuWin_origin)?invokeWindow.websys_getMenuWin:invokeWindow.websys_getMenuWin_origin;
+						win = myGetMenuWinFun();
+						//alert("new = "+win.LastCALogonType);
+					}
+				}
+			}else{
+				win = window;
+			}
+		}
+		//alert(win.MyName+","+win.LastCALogonType);
+		var myLastCALogonType = !win?"" :("undefined"==typeof win.LastCALogonType?"":win.LastCALogonType);
+		if ( win && ( (myLastCALogonType!=obj.CALogonType)|| (""==myLastCALogonType) ) ){
+			if (obj.CAJsPath){
+				var head = win.document.head || win.document.getElementsByTagName("head")[0] || win.document.documentElement;
+				var oscript = win.document.createElement("script");
+				oscript.type="text/javascript";
+				oscript.charset="gb2312";
+				oscript.reload=1;
+				oscript.src = obj.CAJsPath ;
+				head.insertBefore(oscript,head.firstChild);
+				loadCALogonTypeEndTimer = setInterval(function(){
+					CAKeyLoadMaxCount--;
+					if (CAKeyLoadMaxCount<1) clearInterval(loadCALogonTypeEndTimer);
+					if(win.ca_key){
+						if ((win.ca_key.SignType==obj.CALogonType) 
+						|| (win.ca_key.SignType=="PHONE" && obj.CALogonType=="PINPHONE")
+						|| (win.ca_key.SignType=="PHONE" && obj.CALogonType=="PAGEPHONE")){
+							obj.ca_key = win.ca_key||"";
+							obj.varCert = GetSignCert(obj.ContainerName);
+							win.LastCALogonType = obj.CALogonType;
+							clearInterval(loadCALogonTypeEndTimer);
+							if (callback) callback(obj);
+						}
+					}
+				},200);
+			}else{
+				if (callback) callback(obj);
+			}
+		}else{
+			if (callback) callback(obj);
+		}
+	}else{
+		if (callback) callback(obj);
+	}
+}
+function closeWindow(obj){
+	if ("#(NotModal)#"==0){
+		window.returnValue=obj;
+		window.close();	
+	}else{
+		top.websys_showModal("close");
+	}
+}
+/// 人脸识别倒计时
+function SDCountHandler(){
+	setTimeout(function(){
+		var c = $(".SdCount").text();
+		$(".SdCount").text(--c);
+		if(c>0){ 
+			SDCountHandler();
+		}else{
+			$(".SdCount").text(0);
+		}
+	},400);
+}
+function startFaceSure(){
+	$(".SdCount").text(faceSureTime);
+	displayError(defaultTip);
+	SDCountHandler();
+	var strContainerName = "";
 	if (1==CAServiceError){
 		displayError(caServerErrorAlert);
 		return ;
-	}   
+	}
 	GetList();
 	var Obj = document.getElementById('Certificate')
 	if(Obj){
-		Obj.multiple=false;
-		Obj.size=1;
+		if (Obj.selectedIndex==-1){
+			$(".faceTip").html("未发现人脸识别设备。<br/>1。插入人脸识别设备<br/>2。再重新进入此界面");
+			displayError("未发现人脸识别设备");
+			return;
+		}else{
+			$(".faceTip").html("请正对摄像头<span class=\"SdCount\">"+faceSureTime+"</span>");
+			strContainerName=Obj.options[0].value;
+		}
 	}
-	Obj = document.getElementById('Commit')
-	if (Obj){  
-		 Obj.onclick = Commit_Click;
-	}
-	Obj = document.getElementById('Exit')
-	if (Obj){
-		Obj.onclick = Exit_Click;
-	}
-	Obj = document.getElementById('CertificatePwd');
-	if(Obj){
-		Obj.onkeyup = function(){
-			var keycode;
-			try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
-			if(keycode==13){
-				Commit_Click();
+	var ret = CheckPWD(strContainerName,"");
+	if (ret==""){
+		websysSignedData(strContainerName,"","FACE");
+	}else{
+		displayError(ret);
+	}	
+}
+function DocumentloadHandler(){
+	/*$(".tabstitle a").click(function(){
+		location.href = "dhc.logon.ca.csp?logonType="+$(this).data('type');
+	})*/
+	if (originLogonType=="PHONE"){ 			//二维码登录 ,correctLevel:QRCode.CorrectLevel.H
+		qrcodeMaker = new QRCode(document.getElementById("logonqrcode"),{width:qrCodeWidth,height:qrCodeHeight,colorDark:"#000000",colorLight : "#ffffff"});
+		qrcodeLogonClick();
+		return ;
+	}else if (originLogonType=="PAGEPHONE"){ //广西医科大二附院
+		qrcodeLogonClick();
+		return ;
+	}else if (originLogonType=="PINPHONE"){
+		var Obj = document.getElementById('pinUserCertCode');
+		if (Obj){
+			if (session['LOGON.USERCODE']!=""){
+				Obj.value = session['LOGON.USERCODE'];
+				$('#pinPassword').focus();
+			}else{
+				$('#pinUserCertCode').focus();
+			}
+			Obj.onkeyup = function(){
+				var keycode;
+				try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+				if(keycode==13){
+					if(document.getElementById('pinUserCertCode').value!="") $('#pinPassword').focus();
+				}
 			}
 		}
-		Obj.focus();
+		Obj = document.getElementById('pinphoneCommit');
+		if (Obj){  
+			 Obj.onclick = pinphoneCommit_Click;
+		}
+		Obj = document.getElementById('pinPassword');
+		if(Obj){
+			Obj.onkeyup = function(){
+				var keycode;
+				try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+				if(keycode==13){
+					pinphoneCommit_Click();
+				}
+			}
+		}
+	}else if (originLogonType=="FACEPHONE"){
+		var Obj = document.getElementById('facephoneUserCode');
+		if (Obj){
+			Obj.onkeydown = function(e){
+				var keycode;
+				try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+				if(keycode==13){
+					facePhoneLogonClick();
+					websys_cancel();
+					return false;
+				}
+			}
+			Obj.focus();
+		}
+		if (session['LOGON.USERCODE']!=""){
+			var Obj = document.getElementById('facephoneUserCode');
+			if (Obj){
+				Obj.value = session['LOGON.USERCODE'];
+			}
+			facePhoneLogonClick();
+		}
+		Obj = document.getElementById('facephoneCommit');
+		if (Obj){  
+			 Obj.onclick = facePhoneLogonClick;
+		}
+	}else if(originLogonType=="FACE"){
+		if (autoSure==1) setTimeout(startFaceSure,400);
+	}else if (originLogonType=="UKEY"){
+		displayError(defaultTip);
+		Obj = document.getElementById('Exit')
+		if (Obj){
+			Obj.onclick = Exit_Click;
+		}
+		if (1==CAServiceError){
+			displayError(caServerErrorAlert);
+			$('#Commit').addClass('disable');
+			return ;
+		}   
+		GetList();
+		var Obj = document.getElementById('Certificate')
+		if(Obj){
+			Obj.multiple=false;
+			Obj.size=1;
+		}
+		Obj = document.getElementById('Commit');
+		if (Obj){  
+			 Obj.onclick = Commit_Click;
+		}
+		
+		Obj =  document.getElementById("ReloadUKeyList");
+		if (Obj){
+			Obj.onclick = GetList_pnp;
+		}
+		Obj = document.getElementById('CertificatePwd');
+		if(Obj){
+			Obj.onkeyup = function(e){
+				var keycode;
+				try {keycode=websys_getKey(e);} catch(e) {keycode=websys_getKey();}
+				if(keycode==13){
+					Commit_Click();
+				}
+			}
+			Obj.focus();
+		}
+	}else if (originLogonType=="SOUND"){
+		soundMsgTimer = setTimeout(sendSoundMsg("get_hisLoginNum"),300);
+	}else if (originLogonType=="UKEYSURELIST"){
+		Obj = document.getElementById('Exit');
+		if (Obj){
+			Obj.onclick = Exit_Click;
+		}
+		if (1==CAServiceError){
+			displayError(caServerErrorAlert);
+			document.getElementById('Exit').style.display = "";
+			$('#Commit').addClass('disable');
+			return ;
+		}
+		//确认不用显示退出,只能点击确认 
+		document.getElementById('Exit').style.display = "none";  
+		GetList();
+		var Obj = document.getElementById('Certificate')
+		if(Obj){
+			Obj.multiple=false;
+			Obj.size=1;
+		}
+		Obj = document.getElementById('Commit')
+		if (Obj){  
+			 Obj.onclick = function(){
+				displayError("")
+				var strPin = "";
+				var strContainerName = "";
+				var Obj = document.getElementById('Certificate')
+				if(Obj){
+					if (Obj.selectedIndex==-1){
+						displayError("请选择有效证书");
+						return;
+					}else{
+						strContainerName=Obj.options[Obj.selectedIndex].value;
+					}
+				}
+				if(session['ContainerName']!=strContainerName){
+					displayError("证书不匹配 或 证书未登录!");
+					return ;
+				}
+			 	websysSignedData(strContainerName,strPin,"UKEY");
+			 };
+		}
+		/*Obj = document.getElementById('Exit')
+		if (Obj){
+			Obj.onclick = Exit_Click;
+		}*/
+	}
+}
+/*sound start */
+var SoundResendCount = 5;
+function sendSoundMsg(msg){
+	if ("object"== typeof soundWS){
+		if (soundWS.readyState===1){
+			soundWS.send(msg);
+			displayError("");
+			SoundResendCount = 5;
+		}else{
+			SoundResendCount--;
+			if(SoundResendCount>0) soundMsgTimer = setTimeout(function(){sendSoundMsg(msg)},300);
+			displayError("连接语音服务中...");
+		}
+	}else{
+		alert("请开启语音配置");
+	}
+}
+function SoundCountHandler(){
+	setTimeout(function(){
+		var c = $(".soundcount").text();
+		$(".soundcount").text(--c);
+		if(c>0){ 
+			SoundCountHandler();
+		}else{
+			displayError("读入超时！");
+			$(".soundcount").html('<a href="javascript:void(0);" onclick="sendSoundMsg(\'get_hisLoginNum\')">刷新数字</a>');
+		}
+	},1000);
+}
+function soundHISLogon(json){ //声纹认证回调
+	if (json.cmdKey=="logonHisSystem"){
+			//if (document.getElementById("token")) document.getElementById("token").value = json.ExpStr;
+			//if (document.getElementById("CASTypeCode")) document.getElementById("CASTypeCode").value = "BKRAISound";
+			//Logon_click();
+		if (json.P1=='get_hisLoginNum'){
+			var len = json.ExpStr.length;
+			var arr=[];
+			for (var i=0;i<len;i++){
+				arr.push('<span class="sound-numspan">'+json.ExpStr.charAt(i)+'</span>');
+			}
+			$('.soundlogon .sound-num').html(arr.join(''));
+			$('.soundcount').html(10);
+			SoundCountHandler();
+			displayError("");
+		}else{
+			var token = json.account; //.ExpStr;
+			//console.log(token);
+			//token = "ys01";
+			if (token!=""){
+				//"BKRAISound"
+				var rollRtn = tkMakeServerCall("websys.cas.Logon","SoundValidToken",token,"BKRAISound","",token);
+				eval("rollJson="+rollRtn);
+				if (rollJson.retCode=="0"){
+					if (rollJson.signStatus=="FINISH"){
+						loadLastCALogonType(closeWindow,rollJson);
+					}
+				}else{
+					displayError(rollJson.retMsg);
+				}
+			}
+		}
+	}
+}
+function refreshQrcodeClick(){
+	qrcodeLogonClick();
+}
+function drawQrCode(json){
+	try{
+		var qrCode = json.qrCode
+		if (typeof json.authUrl!="undefined"  && json.authUrl!=""){
+			$("#logonqrcode").html('<iframe style="width:#(qrCodeWidth)#px;height:#(qrCodeHeight)#px;" border=0 src="'+json.authUrl+'" frameborder="no" framespacing=0></iframe>');
+		}else if (json.isImage==1){
+			var imageSrc = "";
+			var imageCode = json.imageCode || "";
+			if (imageCode==""){
+				qrCode = qrCode.replace(/\n\r/g,"") ;
+				imageSrc = 'data:image/jpeg;base64,'+qrCode
+			}else{
+				imageSrc = imageCode;
+			}
+			$("#logonqrcode").html('<img style="height:#(qrCodeHeight)#px;width:#(qrCodeWidth)#px" src="'+imageSrc+'"/>');
+		}else{
+			qrcodeMaker.clear()
+			qrcodeMaker.makeCode(qrCode);
+		}	
+		return true;
+	}catch(e){return false;}
+}
+
+function qrcodeStatus(status){
+	// Exp , Gen , Nrm	
+	if (status=="Gen"){
+		if (originLogonType=="PAGEPHONE"){
+			return;
+		}
+		$(".qrcodeexpmask").hide();
+		$(".qrcodemask").hide();
+		$(".qrcodegenmask").css('display',"inline-block");
+	}else if(status=="Exp"){
+		if (originLogonType=="PAGEPHONE"){ //超时后不隐藏区域，显示三方page超时界面
+			return;
+		}
+		$(".qrcodegenmask").hide();
+		$(".qrcodemask").hide();		
+		$(".qrcodeexpmask").css('display',"inline-block");
+	}else if(status=="Nrm"){
+		$(".qrcodegenmask").hide();
+		$(".qrcodeexpmask").hide();
+		$(".qrcodemask").css('display',"inline-block");
+	}
+}
+function qrcodeLogonClick(){
+	qrcodeStatus("Gen");
+	displayError(defaultTip);
+	var json={};
+	$cm({
+		EncryItemName:"#(##class(websys.Page).Encrypt($lb("websys.cas.Logon.GetLoginQR")))#",
+		Content:"", SignUserType:signUserType, SignUserCode:SignUserCode, HospId:CurrentHospId, VenderCode:VenderCode
+	},function(rtn){
+		json = rtn
+		qrcodeStatus("Nrm");
+		if (json.retCode == "0") {
+			if(drawQrCode(json)){
+				setTimeout(roll,ScanQRRollInterval);
+				rollCount=rollMax;
+			}
+			return true;
+		} else {
+			qrcodeStatus("Exp");
+			displayError(json.retMsg);
+			return false;
+		}
+	},function(){
+		qrcodeStatus("Exp");
+		displayError("二维码数据请求异常!");
+	});
+	function roll(){
+		rollCount--;
+		if (rollCount<1) {
+			qrcodeStatus("Exp");
+			return ;
+		}
+		var rollRtn = tkMakeServerCall("websys.cas.Logon","RollResult",json.signGUID,signUserType,SignUserCode,originLogonType,CurrentHospId,VenderCode,IPAddr);
+		eval("rollJson="+rollRtn);
+		if (rollJson.retCode=="0"){
+			if (rollJson.signStatus=="FINISH"){
+				//var strServerRan = "",strPin="",strClientSignedData = "",token="",CAJsPath="";
+				//alert("扫码确认成功,关闭界面");
+				/*CASuccess( rollJson.UserName,rollJson.hisUserID,
+					rollJson.CAUserCertCode,strServerRan,strClientSignedData,
+					rolJson.CACertNo,varCert,logonType,VenderCode,rollJson.ContainerName,strPin,token,CAJsPath);
+				*/
+				loadLastCALogonType(closeWindow,rollJson);
+				//window.returnValue= rollJson; 	//{"ContainerName":"strContainerName","UserName":"06245","CALogonType":"PHONE",CAUserCertCode:"9db3bc2affd7d66fa64a732f36b0702fb47254b14a6aa00ca1bc752134cfdad9",CACertNo:"SN",CAToken:"",CAJsPath:""};
+				//window.close();
+			}else if (rollJson.signStatus=="TOSIGN") { //UNSIGN"){
+				setTimeout(roll,ScanQRRollInterval);
+			}else if (rollJson.signStatus=="EXPIRE"){
+				qrcodeStatus("Exp");
+			}else{
+				qrcodeStatus("Exp");
+				displayError("二维码数据请求异常!");
+			}
+		}else{
+			qrcodeStatus("Exp");
+			displayError(rollJson.retMsg);
+		}
+	}
+}
+
+function drawfaceFrame(json){
+	try{
+		var faceUrl = json.authURL
+		var obj = document.getElementById("facephoneifrm");
+		if (obj){
+			obj.src = faceUrl;
+		}
+		return true;
+	}catch(e){return false;}
+}
+function facePhoneLogonClick(){
+	displayError(defaultTip);
+	var json = {};
+	var Obj = document.getElementById('facephoneUserCode');
+	var usercode = Obj.value;
+	$cm({
+		EncryItemName:"#(##class(websys.Page).Encrypt($lb("websys.cas.Logon.GetLoginFacePhone")))#",
+		BizGuid:usercode,VenderCode:VenderCode
+	},function(rtn){
+		json = rtn
+		if (json.retCode == "0") {
+			if(drawfaceFrame(json)){
+				setTimeout(rollface,ScanQRRollInterval);
+				rollCount=rollMax;
+			}
+			return true;
+		} else {
+			displayError(json.retMsg);
+			return false;
+		}
+		
+	},function(rtn){
+		displayError("人脸数据请求异常!"+rtn);
+	});
+	function rollface(){
+		rollCount--;
+		if (rollCount<1) {
+			return ;
+		}
+		var rollRtn = tkMakeServerCall("websys.cas.Logon","RollFacePhone",json.signGUID,signUserType,SignUserCode);
+		eval("rollJson="+rollRtn);
+		if (rollJson.retCode=="0"){
+			if (rollJson.signStatus=="FINISH"){
+				loadLastCALogonType(closeWindow,rollJson);
+			}else if (rollJson.signStatus=="TOSIGN") { //UNSIGN"){
+				setTimeout(rollface,ScanQRRollInterval);
+			}else if (rollJson.signStatus=="EXPIRE"){
+				//qrcodeStatus("Exp");
+			}else{
+				//qrcodeStatus("Exp");
+				displayError("人脸数据请求异常!");
+			}
+		}else{
+			//qrcodeStatus("Exp");
+			displayError(rollJson.retMsg);
+		}
 	}
 }
 //usb change
 function GetList_pnp() {
+	displayError(defaultTip);
 	GetList();
+	if (logonType=="FACE"){
+		$(".SdCount").text(faceSureTime);
+		//startFaceSure();
+	}
 }
 function GetList(){	
 	var strOption;
@@ -155,20 +1181,44 @@ function GetList(){
 	objListID.options.length = 0;
 	var strTemp = GetUserList();
 	var strTempArr = strTemp.split("&&&");
-	var strItemTempArr;
+	var strItemTempArr,selectedIndex = 0;
 	for (i=0; i<strTempArr.length;i++){
 		if(strTempArr[i]!=""){
 			strItemTempArr = strTempArr[i].split("||");
+			if (CurrUserCACertName=strItemTempArr[0]){
+				selectedIndex = i;
+			}
 			objListID.options[objListID.options.length] = new Option(strItemTempArr[0],strItemTempArr[1]);
 		}
 	}
 	if(objListID.options.length>0)	{
-		objListID.options[0].selected=true;
+		objListID.options[selectedIndex].selected=true;
 		CAServiceError = 0;
 	}else {
-		displayError("请插入证书!");
+		if (logonType=="UKEY"){
+			displayError("请插入证书设备!");
+		}
+		if (logonType=="FACE"){
+			displayError("请插入人脸识别设备!");
+		}
+		
 	}
-}		
+}	
+function pinphoneCommit_Click(){
+	displayError("");
+	var tmpCode = $("#pinUserCertCode").val();
+	var tmpPin  = $("#pinPassword").val();
+	tmpPin = Base64.encode(tmpPin);
+	var rtn = tkMakeServerCall("websys.cas.Logon","PhonePinLogin",tmpCode,tmpPin);
+	eval("rtn = "+(rtn))
+	if (rtn.retCode == "0") {
+		if (rtn.signStatus == "FINISH") {
+			displayError(rtn.retMsg);
+			loadLastCALogonType(closeWindow,rtn);
+		}
+	}
+	displayError(rtn.retMsg);
+}	
 function Commit_Click()
 {   
 	var strContainerName ="";
@@ -198,51 +1248,21 @@ function Commit_Click()
 		}
 	}
 	Obj = document.getElementById('fDHCDocCAVerify')
-	if(Obj)
-	{
-	    ret = Login("fDHCDocCAVerify",strContainerName,strPin);
-	}
-	if (!ret){ 
+	if(Obj) ret = Login("fDHCDocCAVerify",strContainerName,strPin,true);
+	if (!ret){
 		displayError("用户或密码不正确!");
 		return;
 	}
-	var pass = false;
-	var strClientSignedData = SignedData(strServerRan, strContainerName);
-    //alert(strClientSignedData);
-    //客户端对随机数的签名
-    var Obj = document.getElementById('UserSignedData')
-    if(Obj)Obj.value=strClientSignedData;
-    //获取客户端证书
-    var varCert = GetSignCert(strContainerName);
-    var Obj = document.getElementById('UserCert')
-    if(Obj)Obj.value=varCert;
-    var varCertCode=GetUniqueID(varCert);
-    // 判断CA用户与dhc.logon.csp界面的用户是不是同一用户
-    if (!ValidUser(varCertCode)){return false;}
-    var Obj = document.getElementById('Certificate')
-    if(Obj) Obj.value=strContainerName;
-    var certificateNo=GetCertNo(strContainerName);
-    /*
-    alert(strContainerName+","+strServerRan+","+varCert);
-    */
-    var UserID=session['LOGON.USERID'];
-	if (SignUserId!="") UserID = SignUserId;
-
-    var ret = tkMakeServerCall("CA.DigitalSignatureService","Login",UserID,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert);
-    //var ret=cspRunServerMethod(LoginSignMethod,UserID,varCertCode,strServerRan,strClientSignedData,certificateNo,varCert);
-	if (ret!=""){displayError("CA认证失败.\n错误代码:"+ret);return;}
-	tkMakeServerCall("websys.SessionLogon","LoginAfter",strContainerName,strPin);
-	window.returnValue=strContainerName;
-	window.close();
+	websysSignedData(strContainerName,strPin,"UKEY");
 }
 function Exit_Click()
 {
-	window.returnValue= "";
-	window.close();
+	closeWindow("")
 }
 function displayError(info){
 	document.getElementById("CAInfoDiv").innerText = info;
 }
+
 document.body.onload = DocumentloadHandler;
 </script>
 </html>

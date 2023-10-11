@@ -6,9 +6,10 @@
 </csp:method>
 <html lang="zh-CN">
 <SERVER>
-	//d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()	//润乾打印
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()	//润乾打印
 	d ##class(web.DHCBillPrint).InvBillPrintCLSID()
 	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+	w ##class(web.DHCSTMHUI.Common.UtilCommon).EncryptInput()
 </SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
@@ -17,11 +18,10 @@
 	<DHCSTMHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="hisui-layout BorderLine" data-options="region:'north',border:false">
-		<div data-options="region:'west',width:720,border:false">
-			<table id="MainConditions" class="Condition">
+	<div class="hisui-layout BorderLine" data-options="region:'north'" style="height:220px">
+		<div data-options="region:'west',width:760,border:false">
+			<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 				<input id="Inci" name="Inci" type="hidden">
-				<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
 				<tr>
 					<td>条码</td>
 					<td><input id="BarCodeText" name="BarCodeText" class="textbox"></td>
@@ -43,42 +43,51 @@
 					<td><input id="EndDate" name="EndDate" class="hisui-datebox textbox"></td>
 					<td>供应商</td>
 					<td><input id="VendorId" name="VendorId" class="textbox hisui-combobox"></td>
-					<td>已入库</td>
-					<td class="CkPadding"><input id="Status" name="Status" class='hisui-checkbox' type="checkbox" value="Enable"></td>
+					<td colspan="2">已入库
+					<input id="Status" name="Status" class='hisui-checkbox' type="checkbox" value="Enable">
+					批次码
+					<input id="BatchCodeFlag" name="BatchCodeFlag" class='hisui-checkbox' type="checkbox" value="Y"></td>
 				</tr>
 				<tr>
-					<td colspan="6">
-						<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-						<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					<td colspan="1"></td>
+					<td colspan="6" align="left">
 						<a href="#" id="CopyBatNoBT" class="hisui-linkbutton" data-options="">填充效期批号</a>
-						<a href="#" id="Print" class="hisui-menubutton menubutton-blue" style="width:120px;" data-options="menu:'#mm-Print'">打印条码</a>
+						<a href="#" id="Print" class="hisui-menubutton menubutton-blue" style="width:130px;" data-options="menu:'#mm-Print'">打印条码</a>
 						<div id="mm-Print" style="width:120px;" class="menu-no-icon">
 							<div name="PrintBarCode">打印条码</div>
 							<div name="PrintPage">打印本页条码</div>
 							<div name="PrintBarCode2">打印条码2次</div>
 							<div name="PrintPage2">打印本页条码2次</div>
 						</div>
-						<a href="#" id="ImportEdit" class="hisui-menubutton menubutton-blue" style="width:114px;" data-options="menu:'#mm-Import'">导入</a>
-						<div id="mm-Import" style="width:114px;" class="menu-no-icon">
-							<div name="ImpPo">导入订单</div>
-							<div name="ImpSciPo">导入平台订单</div>
-						</div>
+						<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+						<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						<a href="#" id="ImpPo" class="hisui-linkbutton" data-options="">导入订单</a>
+						<a href="#" id="ImpSciPo" class="hisui-linkbutton SCIShow" data-options="">导入平台订单</a>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="1"></td>
+					<td colspan="6" align="left">
+						<input id="File" name="File" data-options="width:248,buttonText:'',buttonIcon:'icon-folder',plain:true">
+						<a href="#" id="ReadBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'" >读取</a>
 						<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+						<a href="#" id="DownExcelTemplet" class="hisui-linkbutton" >下载模板</a>
 					</td>
 				</tr>
 			</table>
 		</div>
-		<div data-options="region:'center'" style="float:left;border:none;border-left:1px solid #ccc;">
+		<div data-options="region:'center'" style="float:left;border:none;border-radius:0px">
+			<div style="float:left;width:1px;background-color:#E2E2E2;margin-top:10px;height:200px"></div>
 			<table id="IngrConditions" class="Condition">
 				<tr>
 					<td>入库部门</td>
 					<td><input id="InGdRecLocId" name="InGdRecLocId" class="textbox hisui-combobox"></td>
-					<td style="text-align:left;"><input id="XK" name="XK" class='hisui-checkbox' type="checkbox" value="Y" label="虚库"></td>
+					<td style="text-align:left;"><input id="XK" name="XK" class='hisui-checkbox' type="checkbox" value="Y" label="暂存库"></td>
 				</tr>
 				<tr>
 					<td>供应商</td>
 					<td><input id="InGdReqVendor" name="InGdReqVendor" class="textbox hisui-combobox"></td>
-					<td><a href="#" id="SaveInGdRecBT" class="hisui-linkbutton" data-options="" style="width:114px;">入库</a></td>
+					<td><a href="#" id="SaveInGdRecBT" class="hisui-linkbutton" data-options="">生成入库单</a></td>
 				</tr>
 				<tr>
 					<td>资金来源</td>
@@ -96,45 +105,45 @@
 		<table id="BarCodeGrid"></table>
 	</div>
 
-	<div id="ImportByPo" class="hisui-dialog ImportByPo" data-options="closed:'true',modal:true" title="条码打印-依据订单" style="width:1100px;height:500px;top:10px;left:50px;">
-		<div class="hisui-layout" data-options="fit:true">
-			 <div data-options="region:'north',border:false">
-				<table id="ImportByPoConditions" class="Condition">
-					<tr>
-						<td>入库科室</td>
-						<td><input id="PoRecLoc" name="PoRecLoc" class="textbox hisui-combobox"></td>
-						<td>起始日期</td>
-						<td><input id="PoStartDate" name="PoStartDate" class="textbox hisui-datebox"></td>
-						<td>订单号</td>
-						<td><input id="PoNo" name="PoNo" class="textbox"></td>
-						<td><a href="#" id="PoReturnBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">导入</a></td>
-					</tr>
-					<tr>
-						<td>供应商</td>
-						<td><input id="VendorBox" name="PoVendorBox" class="textbox hisui-combobox"></td>
-						<td>截止日期</td>
-						<td><input id="PoEndDate" name="PoEndDate" class="textbox hisui-datebox"></td>
-						<td colspan="2">
-							<a href="#" id="PoQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-							<a href="#" id="PoClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清空</a>
-						</td>
-					</tr>
-				</table>
-			</div>
-			<div data-options="region:'west',border:false" class="GridPadding" style="padding-top:0;width:450px;">
-				<div class="hisui-panel" data-options="title:'订单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table id="PoMainGrid"></table>
+	<div id="ImportByPo" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="条码生成-依据订单">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false">
+					<table id="ImportByPoConditions" class="Condition" onkeydown="if(event.keyCode==13){PoQueryBT.click()}">
+						<tr>
+							<td>入库科室</td>
+							<td><input id="PoRecLoc" name="PoRecLoc" class="textbox hisui-combobox"></td>
+							<td>起始日期</td>
+							<td><input id="PoStartDate" name="PoStartDate" class="textbox hisui-datebox"></td>
+							<td>订单号</td>
+							<td><input id="PoNo" name="PoNo" class="textbox"></td>
+							<td><a href="#" id="PoQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="PoReturnBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">导入</a></td>
+						</tr>
+						<tr>
+							<td>供应商</td>
+							<td><input id="PoVendorBox" name="PoVendorBox" class="textbox hisui-combobox"></td>
+							<td>截止日期</td>
+							<td><input id="PoEndDate" name="PoEndDate" class="textbox hisui-datebox"></td>
+							<td></td>
+							<td></td>
+							<td><a href="#" id="PoClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清空</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'west',border:false" class="GridPadding" style="padding-top:0;width:450px;">
+					<div class="hisui-panel" data-options="title:'订单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+						<table id="PoMainGrid"></table>
+					</div>
+				</div>
+				<div class="hisui-panel" data-options="region:'center',border:false" class="GridPadding" style="padding-top:0;padding-left:0;">
+					<div class="hisui-panel" data-options="title:'订单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+						<table id="PoDetailGrid"></table>
+					</div>
 				</div>
 			</div>
-			<div class="hisui-panel" data-options="region:'center',border:false" class="GridPadding" style="padding-top:0;padding-left:0;">
-				<div class="hisui-panel" data-options="title:'订单明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table id="PoDetailGrid"></table>
-				</div>
-			</div>
-		</div>
 	</div>
 
-	<div id="ImportBySciPo" class="hisui-dialog" data-options="closed:'true',modal:true" title="条码打印-依据订单" style="width:1000px;height:500px;top:10px;left:50px;">
+	<div id="ImportBySciPo" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="条码生成-依据订单">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
 				<table id="SearchByPoSciConditions" class="Condition">
@@ -145,7 +154,7 @@
 						<td><input id="SCIPoNo" name="SCIPoNo" class="textbox" disabled></td>
 						<td>申购科室</td>
 						<td><input id="SCIPoReqLoc" name="SCIPoReqLoc" class="textbox" disabled></td>
-						<td><a href="#" id="PoSciQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<!--<td><a href="#" id="PoSciQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>-->
 						<td><a href="#" id="PoSciReturnBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">导入</a></td>
 					</tr>
 					<tr>
@@ -167,8 +176,8 @@
 		</div>
 	</div>
 
-	<div id="BatExpWin" class="hisui-dialog BatExpWin" data-options="closed:'true'" title="批号效期" style="width:220px;">
-		<table class="Condition">
+	<div id="BatExpWin" class="hisui-dialog BatExpWin" data-options="closed:'true',modal:true" title="批号效期" style="width:220px;">
+		<table class="Condition" align="center" style="padding-right:10px">
 			<tr>
 				<td>批号</td>
 				<td><input id="BatNo" name="BatNo" class="textbox"></td>
@@ -185,7 +194,7 @@
 			</tr>
 			<tr>
 				<td colspan="2" style="text-align:center;">
-					<a href="#" id="BatExpSureBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					<a href="#" id="BatExpSureBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">填充</a>
 				</td>
 			</tr>
 		</table>
@@ -204,15 +213,41 @@
 			</div>
 		</div>
 	</div>
-
+	<!-- 调价确认Dialog -->
+	<div id="AdjPriceWin" class="hisui-dialog FindWin" data-options="closed:'true'" title="调价确认" style="width:650px;height:170px;">
+		<table id="AdjPriceConditions" class="Condition">
+			<tr>
+				<td>物资代码</td>
+				<td><input id="Code" name="Code" class="textbox" disabled></td>
+				<td>物资名称</td>
+				<td><input id="Description" name="Description" class="textbox" disabled></td>
+				<td>调价单位</td>
+				<td><input id="AspUomId" name="AspUomId" class="hisui-combobox" disabled style="width: 90px;"></td>
+			</tr>
+			<tr>
+				<td>调前售价</td>
+				<td><input id="PriorSpUom" name="PriorSpUom" class="textbox" disabled></td>
+				<td>调前进价</td>
+				<td><input id="PriorRpUom" name="PriorRpUom" class="textbox" disabled></td>
+			</tr>
+			<tr>
+				<td>调后售价</td>
+				<td><input id="ResultSpUom" name="ResultSpUom" class="textbox"></td>
+				<td>调后进价</td>
+				<td><input id="ResultRpUom" name="ResultRpUom" class="textbox"></td>
+				<td colspan="2" align="left"><a href="#" id="SaveAdjPrBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确定</a></td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/XLSX/xlsx.full.min.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCodeSplit/BarCodeSplitCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCodePrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/AdjWin.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/ImportByPoHV.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/ImportBySciPoHV.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/ImportByECSPoHV.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BtExpWin.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCodePackItm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCode.js"></script>
 </body>
 </html>
-

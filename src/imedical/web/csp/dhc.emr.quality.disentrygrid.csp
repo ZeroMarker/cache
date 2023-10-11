@@ -1,74 +1,105 @@
+ï»¿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
 <html>
 	<head>
-        <title>ÖÕÄ©ÖÊ¿Ø²éÑ¯</title>
-		<link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" />
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
-        <script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+        <title>ç»ˆæœ«è´¨æ§æŸ¥è¯¢</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    	<HISUI/> 
         <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
         <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
         <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
         
 	</head>
 	
-	<body class="hisui-layout" data-options="fit:true,border:false" style="border-top:none;">
-	<div data-options="region:'center',fit:true,headerCls:'panel-header-gray',border:false" style="height:45px;padding:5px">
-		<div class="hisui-panel" title="ÊÖ¹¤ÆÀ·Ö" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-star'">
-			<div id="TableTBar" style="padding:5px;height:30">	
+	<body class="hisui-layout" id= "entryGridLayout" data-options="fit:true,border:false" style="border-top:none;">
+	<div data-options="region:'center',fit:true,headerCls:'panel-header-gray',border:false" style="height:45px;padding:4px">
+		<div class="hisui-panel" title="æ‰‹å·¥è¯„åˆ†" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-star'">
+			<div id="TableTBar" style="padding:5px 10px;height:30">	
 				<div style="float:left;">
 					<select id="comboQualiytStruct" name="qualiytStruct" class="hisui-combobox" style="width:200px;"></select>
  				</div>
- 				<div style="float:right;margin-right:5px;margin-left:5px;">
-		    		<a id="revision" href="#" class="hisui-linkbutton hover-dark" onclick="changeRevisionStatus()"  data-options=""  style="width:100px;" >¹Ø±ÕÁôºÛ</a>
+ 				<div style="float:left;margin-left:10px;">
+					<input id="selectDec" name="textbox" class="hisui-searchbox"  style="width:100px;">
+ 				</div>
+ 				<div style="float:right;margin-left:10px;">
+		    		<a id="revision" href="#" class="hisui-linkbutton hover-dark" onclick="changeRevisionStatus()"  data-options=""  style="width:90px;" >å…³é—­ç•™ç—•</a>
 				</div>
  				<div style="float:right;">
-	 				<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="GetProblemList()" data-options="" style="width:150px;">×Ô¶¯È±Ïİ²é¿´</a>	
+	 				<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="GetProblemList()" data-options="" style="width:120px;">è‡ªåŠ¨ç¼ºé™·æŸ¥çœ‹</a>	
 	 			</div>
 			</div>
 			<div data-options="border:false" style="height:50%;border: 1px #cccccc solid;border-left:none;border-right:none;">
 				<div class="hisui-datagrid" id="dgStructEntry" data-options="border:false,fit:true"></div>
 			</div>
 			<div id="TableTBar" style="padding:5px;height:30">	
-				<div style="float:left;">
-					<span style="color:red;font-size:15px">²¡°¸µÃ·Ö£º</span>
+				<div style="float:left;margin-top:5px">
+					<span style="color:red;font-size:15px">#(..Get("ç—…æ¡ˆå¾—åˆ†"))#:</span>
 					<span id="score"></span>
  				</div>
  				<div style="float:right;">
-	 				<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="CommitEntryItems()"  style="width:100px;">ÆÀ·Ö</a>	
+ 					<!--a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="CreateFormPage('æ‰“å°é¢„è§ˆ',$('#dgCurQualityResult'))" style="width:100px;">æ‰“å°é¢„è§ˆ</a-->	
+	 				<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="CommitEntryItems()"  style="width:100px;">è¯„åˆ†</a>	
 	 			</div>
-	 			
 			</div>
 			<div data-options="border:false" style="height:31%;border: 1px #cccccc solid;border-left:none;border-right:none;">
 				<div class="hisui-datagrid" id="dgCurQualityResult"  data-options="border:false,fit:true"></div>
 			</div>
-			<div id="TableTBar" style="padding:5px;height:30">	
+			<div id="TableTBar" style="padding:10px;height:30">	
 				<div style="float:right;">
-	 				<!--a id="btnSendMsg" href="#" class="hisui-linkbutton hover-dark" onclick="SendMsg()"  style="width:150px ;">·¢ËÍÖÊ¿ØÏûÏ¢</a-->	
+	 				<!--a id="btnSendMsg" href="#" class="hisui-linkbutton hover-dark" onclick="SendMsg()"  style="width:150px ;">å‘é€è´¨æ§æ¶ˆæ¯</a-->	
 	 				<td></td>
- 				    <a id="btnSureZeroError" href="#" class="hisui-linkbutton hover-dark" onclick="SureZeroError()" style="width:200px;background:#2db46a">È·ÈÏ±¾´ÎÖÕÄ©ÖÊ¿ØÎŞÈ±Ïİ</a>	
+ 				    <a id="btnSureZeroError" href="#" class="hisui-linkbutton hover-dark" onclick="SureZeroError()" style="width:200px;background:#2db46a">ç¡®è®¤æœ¬æ¬¡ç»ˆæœ«è´¨æ§æ— ç¼ºé™·</a>	
  				</div>
 			</div>
 		</div>
+	</div>
+	
+	<div class="hisui-window" title="æ—¶æ•ˆæ€§è´¨æ§ç¼ºé™·" id="gridParaStateWin" closed="true" style="width:675px;height:585px;top:10px;left:10px;"	
+		data-options="iconCls:'icon-save',resizable:true,modal:false,isTopZindex:true">		
+		<iframe id = "frameoutPat" frameborder="0" style="width:100%; height:99%;scrolling:no;" src="dhc.emr.quality.qualityresult.csp?RuleID='+ 2 +'&EpisodeID='+EpisodeID+'"></iframe>
 	</div>
 
  	<script language="cache" runat="server">
  		s RuleID=1
 		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientName=$Get(%request.Data("patientName",1))
+		s MedicareNo=$Get(%request.Data("MedicareNo",1))
+		s BedNo=$Get(%request.Data("BedNo",1))
 		s SignUserID = $g(%session.Data("LOGON.USERID"))
 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
 		s CTLocatID = $g(%session.Data("LOGON.CTLOCID"))
 		s action = $Get(%request.Data("action",1))
 		s TriggerDate = $zd(+$h,3)
-		s Score = ##Class(EPRservice.Quality.BOManualCheck).GetScoreByEpisodeID(EpisodeID,SSGroupID,CTLocatID,action)
+		s EmployeeLocName=##Class(EPRservice.Quality.DataGather.AdmInfo).GetCurrentLoc(EpisodeID)
+		s EmployeeDocName=##Class(EPRservice.Quality.DataGather.AdmInfo).GetCurrentDoctor(EpisodeID)
+		//s Score = ##Class(EPRservice.Quality.BOManualCheck).GetScoreByEpisodeID(EpisodeID,SSGroupID,CTLocatID,action)
+		s result = ##Class(%ResultSet).%New("EPRservice.Quality.BORunTimeQuality:GetDocQualityScore")
+	    s sc = result.Execute(EpisodeID,1,"A")
+	    s coulumns=result.GetColumnCount()
+	    While (result.Next())
+	    {
+         s Score=result.Data("FinalScore")
+         
+	    }
 		s InstanceId = $Get(%request.Data("InstanceId",1),"")
 		s emrDocId = $Get(%request.Data("emrDocId",1),"")
 		s YSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("YSSGroup")
 		s KSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("KSSGroup")
+		s PilotSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("PilotSSGroup")
+		s nowIndex=""
+		s PaLocID = $P($G(^PAADM(EpisodeID)),"^",4)
  	</script>
  	<script type="text/javascript">
+		var nowIndex='#(nowIndex)#'
+		var PaLocID = '#(PaLocID)#'
 		var RuleID = '#(RuleID)#'
 		var EpisodeID = '#(EpisodeID)#'
+		var patientName='#(patientName)#'
+		var MedicareNo='#(MedicareNo)#'
+		var BedNo='#(BedNo)#'
 		var SignUserID = '#(SignUserID)#'
 		var SSGroupID = '#(SSGroupID)#'
 		var CTLocatID = '#(CTLocatID)#'
@@ -79,11 +110,13 @@
 		var emrDocId = '#(emrDocId)#'
 		var YSSGroup = '#(YSSGroup)#'
 		var KSSGroup = '#(KSSGroup)#'
+		var EmployeeLocName = '#(EmployeeLocName)#'
+		var EmployeeDocName = '#(EmployeeDocName)#'
+		var PilotSSGroup = '#(PilotSSGroup)#';
+		var pilotSSGroup=PilotSSGroup.split('^');
+		var pilotView=pilotSSGroup.indexOf(SSGroupID)
+		//éƒ¨ç½²1
 	</script>
 	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.EntryGrid.js"></script>
-<div class="hisui-window" title="Ê±Ğ§ĞÔÖÊ¿ØÈ±Ïİ" id="gridParaStateWin" closed="true" style="width:675px;height:585px;top:10px;left:10px;"	
-		data-options="iconCls:'icon-save',resizable:true,modal:false,isTopZindex:true">		
-		<iframe id = "frameoutPat" frameborder="0" style="width:100%; height:99%;scrolling:no;" src="dhc.emr.quality.qualityresult.csp?RuleID='+ 2 +'&EpisodeID='+EpisodeID+'"></iframe>
-	</div>
 </body>
 </html>

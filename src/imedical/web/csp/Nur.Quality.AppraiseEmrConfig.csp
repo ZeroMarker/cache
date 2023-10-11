@@ -1,0 +1,151 @@
+<!-- Nur.Quality.AppraiseEmrConfig.csp -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            
+        </script>
+<HTML lang="zh-CN">
+<Server language="CACHE" runat="Server">
+		s IsManyHosps=##class(Nur.Quality.Service.Comm).%IsManyHosps()
+</Server>
+<script language=javascript>
+	var IsManyHosps="#(IsManyHosps)#"
+</script>
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui/quality/StandardComm.css" />
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/websys.comm.js" charset=gbk></script>
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<STYLE type='text/css'>
+		.datagrid-wrap.panel-body.panel-body-noheader{
+				border-color:#ccc;
+				border-top-right-radius:0;
+				border-top-left-radius:0;
+				border-right:0;
+				border-left:0;
+				border-bottom:0;
+		}
+		.datagrid-toolbar{
+			height:24px;
+			padding:5px
+		}
+		.datagrid-toolbar .l-btn-plain{
+			margin-top:1px!important;
+		}
+		.datagrid-toolbar .hischeckbox_square-blue{
+			margin-top:1px!important;
+		}
+		.hisui-timespinner.timespinner-f.spinner-text.spinner-f.validatebox-text{
+			width:72px!important;
+		}
+		.datebox .combo-arrow{
+			position:relative;
+			left:-4px!important;
+		}
+		.datagrid-wrap.panel-body.panel-body-noheader{
+			border-top-style:dotted;
+		}
+		.zyul li{
+			margin: 2px;
+			float: left;
+			padding: 5px;
+			border-radius: 4px;
+			cursor:pointer;
+			background: rgb(240, 242, 245);
+		}
+		.active{
+			background: #509DE1 !important;
+		}
+	</STYLE>
+</head>	
+<body class="hisui-layout">
+	<div  data-options="region:'north',headerCls:'panel-header-gray',border:false" class="p_10">
+		<ul class="head-ul">
+			<CSP:IF CONDITION='IsManyHosps=1' >
+				<li> <label>医院</label> </li>
+				<li><input id="_HospList"/></li>
+			</CSP:IF>
+		</ul>
+	</div>
+	<div data-options="region:'west',headerCls:'panel-header-gray',border:false" style="padding:3px;width:600px">
+		<div class="hisui-panel" fit="true" data-options="title:'文书工作量统计项目维护',headerCls:'panel-header-gray',iconCls:'icon-set-paper'">
+			<div class="hisui-layout" data-options="fit:true,border:false" > 
+				<div  data-options="region:'north',border:false" style="height:40px;padding:5px">
+					<input  id="inputWorkEmrDesc" class="textbox" name="name" style="width:140px;height:26px;" data-options="" placeholder="请输入查询表头名称">
+					<a href="#"  id="searchWorkBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;height:30px;">查询</a>
+				</div>
+				<div  data-options="region:'center',border:false">
+					<table  id="inputEmrWorkConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:3px;">
+		<div class="hisui-panel" fit="true" data-options="title:'文书与质控项目关系维护',headerCls:'panel-header-gray',iconCls:'icon-set-paper'">
+			<div class="hisui-layout" data-options="fit:true,border:false" > 
+				<div  data-options="region:'north',border:false" style="height:40px;padding:5px">
+					<input  id="inputAppEmrDesc" class="textbox" name="name" style="width:160px;height:26px;" data-options="" placeholder="请输入查询质控项目名称">
+					<a href="#"  id="searchAppBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;height:30px;">查询</a>
+				</div>
+				<div  data-options="region:'center',border:false">
+						<table  id="inputEmrAppConfigTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 文书与之质控项目关系维护编辑框 -->
+	<div id="addAppEmrLinkWin">
+		<table cellpadding="10" style="border-collapse: separate; border-spacing: 8px 8px; padding: 10px 20px;">
+			<tr id="inputAppEmrTitleTr">
+				<td class="label">质控项目</td>
+				<td><select id="inputAppEmrTitle" class="hisui-combobox" style="width:260px;height:26px" data-options="enterNullValueClear:false,required:true"></select></td>
+			</tr>
+			<tr id="inputWorkEmrTitleTr" hidden=true>
+				<td class="label">表头名称</td>
+				<td>
+					<input  id="inputWorkEmrTitle" class="hisui-validatebox textbox" name="name" style="width:230px;height:26px;" data-options="required:true">
+					<input  id="inputWorkEmrSort" class="hisui-validatebox textbox" name="name" style="width:30px;height:26px;" data-options="required:true" placeholder="排序">
+				</td>
+			</tr>
+			<tr>
+				<td class="label">关联模板</td>
+				<td>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" style="height: 270px;width:260px;">
+						<div class='select'>
+							<input id="i-select" class="hisui-checkbox" type="checkbox"/><span class="tip">全选/反选</span>
+						</div>
+						<ul id="jzul" class="zyul">
+						</ul>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">适用范围</td>
+				<td><select id="inputAppEmrArea" style="width:260px;height:26px" ></select></td>
+			</tr>
+			<tr>
+				<td class="label">不适用范围</td>
+				<td><select id="inputAppEmrUnArea"  style="width:260px;height:26px"></select></td>
+			</tr>
+		</table>
+		<div style="text-align: center;">
+			<a href="#"  id="commitBtn" class="hisui-linkbutton" data-options="" style="width:90px;height:30px;">确认</a>
+			<a href="#" id="cancelBtn" class="hisui-linkbutton" data-options="" style="width:90px;height:30px;">取消</a>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.Comm.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.AppraiseEmrConfig.js" charset="gbk"></script>
+</body>
+</html>

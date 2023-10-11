@@ -1,9 +1,20 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
 <csp:content charset="utf-8">
 <script language="Cache" runat="server">
 	d %session.Unlock()
-	s url=%request.Data("url",1)
-	s x="s ret=##class(Nur.NIS.Common.QueryBrokerNew).Dispatch("""_url_""")"
-	x x
+	#;d ##class(NurMp.TemplateSet).Test(500000000)
+	s url=$g(%request.Data("url",1))
+	i url'="" d
+	.s x="s ret=##class(Nur.NIS.Common.QueryBrokerNew).Dispatch("""_url_""")"
+	.x x
+	e  d
+	.s className=%request.Data("className",1)
+	.s methodName=%request.Data("methodName",1)
+	.s ret=##class(Nur.NIS.Common.QueryBrokerNew).Excute(className,methodName)
+	
 	i $IsObject(ret) d
 	.i (ret.%ClassName()="%ArrayOfDataTypes")!(ret.%ClassName()="%ListOfDataTypes") d
 	..d ##class(Nur.NIS.Common.JSON).EncodeByWrite(ret)

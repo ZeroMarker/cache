@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.opbill.emergtrans2ip.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-07-16
  * Description: 急诊费用转住院
 -->
@@ -11,56 +11,92 @@
 </csp:method>
 <html>
 <head>
-    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<ADDINS/>
-	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.emergtrans2ip.css'/>
-	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+	<DOCCARD medStepCode="Bill"/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.opbill.emergtrans2ip.css"/>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPYBComm.js"></script>
 	<server>
-		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-		w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$c(13,10)
-		w "<input id='papmi' name='papmi' type='hidden'>",$c(13,10)
-		w "<input id='episodeId' name='episodeId' type='hidden'>",$c(13,10)
+		set GroupId=%session.Get("LOGON.GROUPID")
+		set HospId=%session.Get("LOGON.HOSPID")
+		
+		//获取门诊收费参数配置
+		set OPBaseCfgStr=##class(web.DHCOPConfig).GetOPBaseConfig(HospId)
+		set AccPINVYBConFlag=$p(OPBaseCfgStr,"^",10)
+		set INVYBConFlag=$p(OPBaseCfgStr,"^",13)
+		set ZeroAmtUseYBFlag=$p(OPBaseCfgStr,"^",37)	// ShangXuehao 2020-11-26 零费用结算是否调用医保
+		
+		//获取收费安全组配置
+		set GroupCfgStr=##class(web.UDHCOPGSConfig).ReadCFByGRowID(GroupId, HospId)
+		set INVXMLName=$p(GroupCfgStr,"^",11)
+		set AccPINVXMLName=$p(GroupCfgStr,"^",12)
+		
+		do ##class(BILL.Util.Library).LoadReadCardLib()     //引入读卡公共js
+		
+		set RefundMode=##class(web.DHCOPBillEmergTrans2IP).GetRefPayMode()   //退费方式
+		set IsNeedRefOPInv=##class(web.DHCOPBillEmergTrans2IP).IsNeedToRefundOPInv(HospId)
+		
+		set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+		
+		w "<input id='ReadOPDataEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPINVPrtIF.GetOPPrtData"))_"'/>",!
+		w "<input id='ReadCommOPDataEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPINVPrtIF.GetOPCommPrtData"))_"'/>",!
+		w "<input id='DeleteHISYBEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCBillConsIF.DelINVPRTForYB"))_"'/>",!
+		w "<input id='DHCVersion' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCOPConfig.GetVersion"))_"'/>",!
+		w "<input id='CardTypeRowId' type='hidden'/>",!
+		w "<input id='patientId' type='hidden'/>",!
 	</server>
+	<script type="text/javascript">
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		//常量
+		var CV = {
+			INVYBConFlag: "#(INVYBConFlag)#",           //是否连接医保(1:是，0:否)
+			AccPINVYBConFlag: "#(AccPINVYBConFlag)#",    //集中打印发票连接医保(1:是，0:否)
+			INVXMLName: "#(INVXMLName)#",
+			AccPINVXMLName: "#(AccPINVXMLName)#",
+			ZeroAmtUseYBFlag: "#(ZeroAmtUseYBFlag)#",
+			IsNeedRefOPInv: "#(IsNeedRefOPInv)#",
+			RefundMode: "#(RefundMode)#"
+		};
+	</script>
 </head>
 <body style="padding:10px;">
 	<div class="hisui-layout" data-options="fit:true">
-		<div data-options="region:'west',border:false" style="width:719px;">
-	        <div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'west',border:false" style="width:720px;">
+	        <div class="hisui-layout" data-options="fit:true">
 	        	<div data-options="region:'center',border:false">
-	        		<div class="hisui-layout" data-options="fit:true,border:false">
-	        			<div data-options="region:'north',border:false" style="height:84px;">
-			                <div class="hisui-panel" data-options="title:'门诊数据',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
-	                            <table class="search-table" style="width:100%;">
-									<tr>
-										<td class="r-label td-first-col"><label>发票号</label></td>
-										<td><input id="receiptNo" type="text" class="textbox"/></td>
-										<td style="float:right;padding-right:10px;">
-											<a href="javascript:;" class="hisui-linkbutton" id="btn-findRcpts" style="margin-right:10px;">收据查询</a><a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'">清屏</a>
-										</td>
-									</tr>
-								</table>
-	                        </div>
+	        		<div class="hisui-layout" data-options="fit:true">
+	        			<div data-options="region:'north',collapsible:false,title:'门诊数据',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:87px;border-radius:0;">
+			                <table class="search-table" style="width:100%;">
+								<tr>
+									<td class="r-label td-first-col"><label>#(..Get("发票号"))#</label></td>
+									<td><input id="receiptNo" class="textbox"/></td>
+									<td style="float:right;padding-right:10px;">
+										<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btn-findRcpts" style="margin-right:10px;">收据查询</a><a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btn-clear" data-options="iconCls:'icon-w-clean'">清屏</a>
+									</td>
+								</tr>
+							</table>
 			            </div>
-			            <div data-options="region:'center',border:false">
-			            	<div class="hisui-panel panel-header-gray" data-options="fit:true" style="border-radius:0 0 4px 4px;">
-								<table id="ordItmList"></table>
-							</div>
+			            <div data-options="region:'center',bodyCls:'panel-body-gray'" style="border-radius:0 0 4px 4px;">
+			            	<table id="ordItmList"></table>
 			            </div>
 	        		</div>
 	        	</div>
-	            <div data-options="region:'east',border:false" class="east-content">
+	            <div data-options="region:'east',border:false" class="east-content" style="background-color:#($s((defUIVersion="lite"):"#f5f5f5",1:"#ffffff"))#;">
 	            	<table>
 	            		<tr>
 	            			<td style="height: 100px;">
-	            				<a href="javascript:;" class="hisui-linkbutton" id="btn-trans" data-options="iconCls:'icon-w-arrow-right'">转入</a>
+	            				<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btn-trans" data-options="iconCls:'icon-w-arrow-right'">转入</a>
 	            			</td>
 	            		</tr>
 	            		<tr>
 	            			<td style="height: 100px;">
-	            				<a href="javascript:;" class="hisui-linkbutton" id="btn-return" data-options="iconCls:'icon-w-arrow-left'">撤回</a>
+	            				<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btn-return" data-options="iconCls:'icon-w-arrow-left'">撤回</a>
 	            			</td>
 	            		</tr>
 	            	</table>
@@ -68,77 +104,69 @@
 	        </div>
 	    </div>
 	    <div data-options="region:'center',border:false">
-	        <div class="hisui-layout" data-options="fit:true,border:false">
-	            <div data-options="region:'north',border:false" style="height:124px;">
-	                <div class="hisui-panel" data-options="title:'住院数据',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
-	                    <table class="search-table">
-							<tr>
-								<td class="r-label td-first-col"><label>病案号</label></td>
-								<td><input id="medicareNo" class="textbox tb135"/></td>
-								<td class="r-label r-label-2"><label>就诊号</label></td>
-								<td><input id="admList" class="textbox tb135"/></td>
-								<td class="r-label r-label-2"><label>入院日期</label></td>
-								<td><input id="admDate" class="textbox tb135" disabled/></td>
-							</tr>
-							<tr>
-								<td class="r-label"><label>姓名</label></td>
-								<td><input id="patName" class="textbox tb135" disabled/></td>
-								<td class="r-label r-label-2"><label>性别</label></td>
-								<td><input id="sex" class="textbox" style="width:35px;margin-right:10px;" disabled/><label>年龄</label><input id="age" class="textbox" style="width:45px;margin-left:10px;" disabled/></td>
-								<td class="r-label r-label-2"><label>就诊费别</label></td>
-								<td><input id="admReason" class="textbox tb135" disabled/></td>
-							</tr>
-						</table>
-	                </div>
+	        <div class="hisui-layout" data-options="fit:true">
+	            <div data-options="region:'north',collapsible:false,title:'住院数据',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:167px;border-radius:0;">
+	                <table class="search-table">
+						<tr>
+							<td class="r-label"><label>#(..Get("病案号"))#</label></td>
+							<td><input id="medicareNo" class="textbox tb135"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("登记号"))#</label></td>
+							<td><input id="patientNo" class="textbox tb135"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("入院时间"))#</label></td>
+							<td><input id="admTime" class="textbox tb135" disabled/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>#(..Get("就诊号"))#</label></td>
+							<td><input id="admList" class="textbox tb135"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("患者姓名"))#</label></td>
+							<td><input id="patName" class="textbox tb135" disabled/></td>
+							<td class="r-label r-label-20"><label>#(..Get("性别"))#</label></td>
+							<td><input id="sex" class="textbox" style="width:35px;margin-right:10px;" disabled/><label>#(..Get("年龄"))#</label><input id="age" class="textbox" style="width:45px;margin-left:10px;" disabled/></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>#(..Get("就诊费别"))#</label></td>
+							<td><input id="admReason" class="textbox tb135" disabled/></td>
+						</tr>
+					</table>
 	            </div>
-	            <div data-options="region:'center',border:false">
-	            	<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
-						<table id="ociItmList"></table>
-					</div>
+	            <div data-options="region:'center',bodyCls:'panel-body-gray'" style="border-radius:0 0 4px 4px;">
+	            	<table id="ociItmList"></table>
 	            </div>
 	        </div>
 	    </div>
 	</div>
-	<div id="rcptsDlg" style="width:950px;height:600px;display:none;padding:10px;">
+	<div id="rcptsDlg" style="width:950px;height:600px;display:none;padding:10px 10px 0 10px;">
 		<div class="hisui-layout" data-options="fit:true,border:false">
-			<div data-options="region:'north',border:false" style="height:91px;">
-                <div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius: 4px 4px 0 0;">
-                    <table class="search-table" style="width:100%;">
-                    	<tr>
-							<td class="r-label win-td-first-col"><label>卡类型</label></td>
-							<td><input id="cardType" class="textbox"/></td>
-							<td class="r-label r-label-1"><label>卡号</label></td>
-							<td><input id="cardNo" type="text" class="textbox" placeholder="刷卡/请输入卡号"/></td>
-							<td class="r-label"><label>登记号</label></td>
-							<td><input id="patientNo" class="textbox"/></td>
-							<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡(F4)</a></td>
-						</tr>
-						<tr>
-							<td class="r-label"><label>开始日期</label></td>
-							<td><input id="stDate" class="hisui-datebox textbox"/></td>
-							<td class="r-label"><label>结束日期</label></td>
-							<td><input id="endDate" class="hisui-datebox textbox"/></td>
-							<td></td>
-							<td></td>
-							<td class="r-label">
-								<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询(F8)</a>
-							</td>
-						</tr>
-					</table>
-                </div>
+			<div data-options="region:'north',bodyCls:'panel-body-gray'" style="height:92px;border-radius:4px 4px 0 0;">
+				<table class="search-table" style="width:100%;">
+                	<tr>
+						<td class="r-label win-td-first-col"><label>#(..Get("卡类型"))#</label></td>
+						<td><input id="CardTypeNew" class="textbox" disabled/></td>
+						<td class="r-label"><label>#(..Get("卡号"))#</label></td>
+						<td><input id="CardNo" type="text" class="textbox" placeholder="#(..Get("刷卡/请输入卡号"))#"/></td>
+						<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+						<td><input id="wPatientNo" class="textbox"/></td>
+						<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡(F4)</a></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+						<td><input id="stDate" class="hisui-datebox textbox"/></td>
+						<td class="r-label"><label>#(..Get("结束日期"))#</label></td>
+						<td><input id="endDate" class="hisui-datebox textbox"/></td>
+						<td class="r-label"><label>#(..Get("病案号"))#</label></td>
+						<td><input id="wMedicareNo" class="textbox"/></td>
+						<td class="r-label">
+							<a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询(F8)</a>
+						</td>
+					</tr>
+				</table>
             </div>
-            <div data-options="region:'center',border:false">
-            	<div class="hisui-panel panel-header-gray" data-options="fit:true" style="border-radius:0 0 4px 4px;">
-					<table id="invList"></table>
-				</div>
-            </div>
-            <div data-options="region:'south',border:false" style="height:45px;padding-top:10px;">
-            	<div style="text-align:center;">
-            		<a href="javascript:;" class="hisui-linkbutton" id="btn-ok" data-options="iconCls:'icon-w-ok'">确认</a>
-				</div>
+            <div data-options="region:'center',bodyCls:'panel-body-gray'" style="border-radius:0 0 4px 4px;">
+            	<table id="invList"></table>
             </div>
 		</div>
 	</div>
-    <script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.emergtrans2ip.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.common.js"></script>
+    <script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.emergtrans2ip.js"></script>
 </body>
 </html>

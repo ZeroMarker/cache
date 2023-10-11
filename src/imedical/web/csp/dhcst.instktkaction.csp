@@ -13,7 +13,8 @@ i Action = "Query" d
 i Action = "QueryDetail" d
 	.S InstId=$Get(%request.Data("Parref",1))
 	.s Others=$g(%request.Data("Params",1))
-	.w ##class(web.DHCST.INStkTkItm).jsDHCSTInStkTkItm(Start,Limit,Sort,Dir,InstId,Others)
+	.s TMPMianInfo=$g(%request.Data("TMPMianInfo",1))
+	.w ##class(web.DHCST.INStkTkItm).jsDHCSTInStkTkItm(Start,Limit,Sort,Dir,InstId,Others,TMPMianInfo)
 	.
 i Action = "Create" d
 	.S Params=$Get(%request.Data("Params",1))
@@ -178,9 +179,9 @@ i Action = "StkTkCompletet" d
 	.s UserId=$Get(%request.Data("UserId",1))
 	.s InputNullFlag=$Get(%request.Data("InputNullFlag",1))
 	.s InputType=$Get(%request.Data("InputType",1))
-	.i InputType=1 d	;实盘方式为"按批次"
+	.i (InputType = 1)||(InputType = 6) d	;实盘方式为"按批次"
 	..s ret=##class(web.DHCST.INStkTkItmWd).INStkTkWdSum(Inst,UserId,InputNullFlag)
-	.i InputType=2 d	;实盘方式为"按品种"
+	.i (InputType = 2)||(InputType = 5) d	;实盘方式为"按品种"
 	..s ret=##class(web.DHCST.InStkTkInput).CompleteInput(Inst,UserId,InputNullFlag)
 	.i ret=0  d
 	..w "{success:'true',info:'"_ret_"'}"
@@ -264,5 +265,17 @@ i Action = "SaveAdjInput" d
 	.e  d
 	..w "{success:'false',info:'"_ret_"'}"
 	.	
+	
+i Action = "SetInputDefaultQty" d
+	.S Inst=$Get(%request.Data("Inst",1))
+	.s UserId=$Get(%request.Data("UserId",1))
+	.s Flag=$Get(%request.Data("Flag",1))
+	.s InstwWin=$Get(%request.Data("InstwWin",1))
+	.s ret=##class(web.DHCST.InStkTkInput).SetInputDefaultQty(Inst,UserId,Flag,InstwWin)
+	.i +ret=0  d
+	..w "{success:'true',info:'"_ret_"'}"
+	.e  d
+	..w "{success:'false',info:'"_ret_"'}"
+	.
 
 </SERVER>

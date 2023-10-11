@@ -9,6 +9,10 @@ The <b>DHCHAI:HEAD</b> tag defines defines standard header info and initialisati
 <csr:action>
 	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 		Set MenuID=$g(%request.Data("MenuID",1))
+		Set OperAdmin = $g(%request.Data("ParamAdmin",1))
+		If (OperAdmin'="") {
+			Set operRst = ##class(DHCHAI.BTS.ConfigSrv).WriteMenuOperSecurity(OperAdmin)
+		}
 		
 		Set HISCode=""  //未设置HIS医院与HAI医院对照关系 必须手工设置
 		Set XUserID=$g(%session.Data("LOGON.USERID"))
@@ -73,6 +77,10 @@ The <b>DHCHAI:HEAD</b> tag defines defines standard header info and initialisati
 			alert('当前登录医院未配置!');
 		}
 		
+		if (typeof $g!="function")
+		{
+			$g=function(a){return a;}
+		}
 	</script>
 		 <script language="javascript" type="text/javascript">
 	 	$(function () {

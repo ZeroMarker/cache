@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--药库 - 药品信息查询
+    csp: csp/pha.in.v3.drugquery.csp
+	js:  scripts/pha/in/v3/DrugInfo/DrugQuery.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+        .text-width {
+            width: 153px
+        }
+
+        .lookup-width {
+            width: 250px;
+        }
+    </style>
+    <script type="text/javascript">
+        var FORONE = '';
+    </script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+            <div class="hisui-panel" title="药品信息查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                <table id="gridDrugInfo"></table>
+            </div>
+        </div>
+    </div>
+    <div id="DrugInfoBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label"><label id='_HospListLabel'>#(..Get("医院"))#</label></td>
+                <td><input id='_HospList' /></td>
+
+                <td class="r-label"><label for="TextInciCode">#(..Get("药品编码"))#</label></td>
+                <td><input id="TextInciCode" class="hisui-validatebox text-width" data-pha='class:"hisui-validatebox",clear:true,query:true' /></td>
+                <td class="r-label"><label for="cmbgridInci">#(..Get("药品名称"))#</label></td>
+                <td><input id="cmbgridInci" class="validatebox-text" data-pha='class:"hisui-lookup",clear:true,query:true' /></td>
+                <td class="r-label"><label for="ComStkGroup">#(..Get("类组"))#</label></td>
+                <td><input id="ComStkGroup" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true' /></td>
+                <td><a id="btnQueryList" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryList()">查询</a></td>
+            </tr>
+            <tr>
+                <td class="r-label"><label for="ComInciStatus">#(..Get("药品状态"))#</label></td>
+                <td><input id="ComInciStatus" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true' /></td>
+                <td class="r-label"><label for="TextInciALian">#(..Get("药品别名"))#</label></td>
+                <td><input id="TextInciALian" class="hisui-validatebox text-width" data-pha='class:"hisui-validatebox",clear:true,query:true' /></td>
+                <td class="r-label"><label for="genePHCCat">#(..Get("药学分类"))#</label></td>
+                <td><input id="genePHCCat" class="validatebox-text" data-pha='class:"hisui-triggerbox",requied:true,clear:true,save:true'></td>
+                <td class="r-label"><label for="ComStkCat">#(..Get("库存分类"))#</label></td>
+                <td><input id="ComStkCat" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true' /></td>
+                <td><a id="btnClean" class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" onclick="javascript:clean()">清屏</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/DrugInfo/DrugQuery.js"></script>
+
+</body>
+
+</html>

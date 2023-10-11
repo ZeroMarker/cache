@@ -1,0 +1,206 @@
+<!--
+ * Description: 医生工作分配类型
+ * FileName: dhcpe.ct.distributetype.csp
+ * Anchor: wangguoying
+ * Date: 2020-02-01
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		.labelWinTd{
+			text-align:right;
+		}
+		.pe-panel-tool{
+			background: #ff0e51;
+   			color: #ffffdf;
+    		padding: 2px;
+   	 		border-radius: 4px;
+		}
+		.inline{
+			 display: -webkit-inline-box;
+		}
+		.pe-active{
+		    background-repeat: no-repeat;
+		    background-image: url(../scripts_lib/hisui-0.1.0/dist/css/images/blue/quare_blue.png);
+		    background-position: -166px 0;
+		    width: 25px;
+		    height: 25px;
+		    margin: 5px 0 0 10px;
+		    text-align: center;
+		    font-size: 12px;
+		    cursor: pointer;
+		}
+		
+   </style>
+</head>
+<body class="hisui-layout">		
+		<!-- 中心布局 begin -->
+		<div style="padding:10px;"  data-options="region:'center',headerCls:'panel-header-gray',border:false" >
+			<div class="hisui-panel" title="分配类型" style="padding:10px" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+				 <div style="width:100%;text-align:center;height: 100px;">
+				 	当前科室：<input id="LocList" type="text" style="width:100px;">
+					<div id="WorkFlow" style="border-bottom:1px dashed #ccc; margin:20px 0;height: 100px;"></div>
+					<div id="flow-menu" class="hisui-menu" style="width:150px;">
+						<div id="InsertPreNode" iconCls="icon-add" onclick="add_flow(1)">插入前置节点</div>
+						<div id="InsertAftNode" iconCls="icon-add" onclick="add_flow(2)">插入后置节点</div>
+						<div id="RemoveNode" iconCls="icon-remove" onclick="delete_flow()">删除节点</div>
+					</div>
+				</div>
+				<input type="hidden" id="NodeCode" value="">
+				<input type="hidden" id="NodeInd" value="">
+				<div id="DataDiv" style="text-align:center;margin-top:60px;" >
+					<table style="display: inline-block">
+						<tr>
+							<td style="vertical-align: text-top;padding:0 5px;">
+								<div id="CSPPanel" class="hisui-panel" title="链接CSP" style="padding:20px 10px 10px 10px;border-radius:4px;width:500px;height:450px;" data-options="headerCls:'panel-header-card'">
+									<table id="LinkList"></table>
+								</div>
+							</td>
+							<td style="vertical-align: text-top; padding:0 5px;">
+								<div id="DocPanel" class="hisui-panel" title="医生集合" style="padding:20px;border-radius:4px;width:500px;height:450px;" data-options="headerCls:'panel-header-card'">
+									<ul id="DocTree" class="hisui-tree" data-options="animate:true,lines:true"></ul>
+									<div id="right-menu" class="hisui-menu" style="width:150px;">
+										<div id="appendNode" iconCls="icon-add" onclick="addNode_click()">新增子节点</div>
+										<div id="delNode" iconCls="icon-remove" onclick="delNode_click()">删除节点</div>
+									</div>	
+								</div>	
+							</td>
+						</tr>
+					</table>			 	
+				 </div>
+			</div>
+		</div>	
+		<!-- //中心布局 end -->
+	</div>
+	
+	<!-- 新增业务类型窗口   -->
+	<div id="AddFlowType" title="新增类型" class="hisui-window"  style="width:350px;height:215px;padding:10px;"
+		data-options="iconCls:'icon-add',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
+		
+			<table style="border-collapse:separate; border-spacing:10px 10px;margin-bottom:10px;">
+				<tr>
+					<td class="labelWinTd">代码:</td>	
+					<td><input id="Win_Code" class="hisui-validatebox textbox " style="width:250px;" data-options="required:true"></td>
+				</tr>
+				<tr>
+					<td class="labelWinTd">描述:</td>	
+					<td><input id="Win_Desc" class="hisui-validatebox textbox" style="width:250px;" data-options="required:true"></td>
+				</tr>
+			</table>
+			<input type="hidden" id="H_Win_Flag">
+			<div style="text-align:center;margin-top:20px;">
+				<a href="#"  onclick="flowType_save();" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				<a href="#"  onclick="flowType_clean();" style="margin-left:50px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>					
+			</div>
+	</div>
+	<!-- //新增业务类型窗口   -->
+	
+	<!-- 新增业务类型窗口   -->
+	<div id="AddLinkUrl" title="新增链接" class="hisui-window"  style="width:350px;height:250px;padding:10px;"
+		data-options="iconCls:'icon-add',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
+		
+			<table style="border-collapse:separate; border-spacing:10px 10px;margin-bottom:10px;">
+				<tr>
+					<td class="labelWinTd">标题:</td>	
+					<td><input id="Win_Link_Title" class="hisui-validatebox textbox " style="width:250px;" data-options="required:true"></td>
+				</tr>
+				<tr>
+					<td class="labelWinTd">链接:</td>	
+					<td><input id="Win_Link_CSP" class="hisui-validatebox textbox" style="width:250px;" data-options="required:true"></td>
+				</tr>
+				<tr>
+					<td class="labelWinTd">顺序:</td>	
+					<td><input id="Win_Link_Sort" class="hisui-numberbox textbox" style="width:256px;" data-options="required:true,min:1"></td>
+				</tr>
+			</table>
+			<div style="text-align:center;margin-top:20px;">
+				<a href="#"  onclick="linkUrl_save();" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				<a href="#"  onclick="linkUrl_clean();" style="margin-left:50px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>					
+			</div>
+	</div>
+	<!-- //新增业务类型窗口   -->
+	
+	
+	<!-- 新增医生窗口   -->
+	<div id="AddDocWin" title="添加医生" class="hisui-window"  style="width:350px;height:250px;padding:10px;"
+		data-options="iconCls:'icon-add',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
+		
+			<table style="border-collapse:separate; border-spacing:10px 10px;margin-bottom:10px;">
+				<tr>
+					<td class="labelWinTd">医生:</td>	
+					<td><select id="Doctor" class="hisui-combogrid"  style="width:250px;">
+            			</select></td>
+				</tr>
+				<tr>
+					<td class="labelWinTd">安全组:</td>
+					<td><select id="Group" class="hisui-combogrid"  style="width:250px;" data-options="
+           				panelWidth: 320,
+            			idField: 'HIDDEN',
+            			textField: 'Description',
+            			method: 'get',
+            			url:$URL+'?ClassName=web.SSGroup&QueryName=LookUp',
+            			onBeforeLoad:function(param){
+							param.desc = param.q;
+						},
+						mode:'remote',
+						delay:200,
+            			columns: [[  
+            				{field:'HIDDEN',hidden:true},          				            			
+							{field:'Code',title:'代码',width:100},
+							{field:'Description',title:'描述',width:150}
+						]],
+						onSelect:function(rowIndex,rowData){
+							
+						},
+            			fitColumns: true,   			
+            			displayMsg:'',
+            			pagination:true,
+						pageSize:50">
+            			</select>
+					</td>
+				</tr>
+				<tr>
+					<td class="labelWinTd">科室:</td>	
+					<td><select id="CTLoc" class="hisui-combogrid"  style="width:250px;" data-options="
+           				panelWidth: 320,
+            			idField: 'HIDDEN',
+            			textField: 'Description',
+            			method: 'get',
+            			url:$URL+'?ClassName=web.CTLoc&QueryName=LookUp',
+            			onBeforeLoad:function(param){
+							param.desc = param.q;
+						},
+						mode:'remote',
+						delay:200,
+            			columns: [[    
+            				{field:'HIDDEN',hidden:true},        				            			
+							{field:'Code',title:'代码',width:100},
+							{field:'Description',title:'描述',width:150}
+						]],
+						onSelect:function(rowIndex,rowData){
+							
+						},
+            			fitColumns: true,
+            			pagination:true,
+            			displayMsg:'',
+						pageSize:20">
+            			</select>
+					</td>					
+				</tr>
+			</table>
+			
+			<div style="text-align:center;margin-top:20px;">
+				<a href="#"  onclick="DocNodeSave();" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				<a href="#"  onclick="DocNodeClear(0);" style="margin-left:50px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>					
+			</div>
+	</div>
+	<!-- //新增医生窗口   -->
+  	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.distributetype.js"></script>
+  	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+</body>
+</html>
+

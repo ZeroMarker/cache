@@ -1,0 +1,301 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s USERCODE = $G(%session.Data("LOGON.USERCODE"))
+ s USERNAME = $G(%session.Data("LOGON.USERNAME"))
+ s HOSPID=$G(%session.Data("LOGON.HOSPID"))
+ s (HospCode,LocCode,LocName,HospName)=""
+ i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+ i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
+ s AdmNo=%request.Get("AdmNo")
+ //处理医院信息 
+ s HospitalDR=""
+ i $l(HospCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
+ //处理用户信息
+ i $l(USERCODE) s CollectUserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
+
+//获取当前登录人员主题设置
+  s HISUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion") 
+  s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.css""/>"   //默认炫彩
+  i HISUIVersion="lite" s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.lite.min.css""/>"  
+  w hrefstr
+</SERVER>
+<!-- Put your page Title here -->
+<title>取血单</title>
+	<!--link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" /-->
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+
+
+</head>
+<body class="hisui-layout">
+    <div data-options="region:'center',split:false,border:false" style="">
+        <div id="div_wholepanel" class="hisui-panel" title="" data-options="headerCls:'panel-header-gray',iconCls:'icon-search',closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true,border:false" style="">
+            <div id="ids" class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'center',border:false" style="">
+                    <div class="hisui-panel" data-options="closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true,titile:'',bodyCls:'panel-header-gray',border:false" style="">
+                        <table id="dg_BDTakeList">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+
+    <div id="XMPlan_window" class="hisui-window" data-options="closed:true" title="所有申请单" style="width: 1150px; height: 600px;">
+        <iframe id="if_XMPlan" src="" style="height: 99%; width: 99%"></iframe>
+    </div>
+   
+    <script type="text/javascript">
+	
+		var me = {
+            findType: '0'
+        };
+        var AdmNo =#((AdmNo))#
+        //全局打印地址
+         var ServerConnectString = window.parent.ServerConnectString;
+        $(function () {
+            //初始化datagrid
+            $("#dg_BDTakeList").datagrid({
+                fit: true,
+                fitColumns: false,
+                headerCls: 'panel-header-gray',
+                title:"取血单列表",
+                pagination: true,
+                nowrap: true,
+                pageSize: 20,
+                pageList: [20, 50, 100, 200],
+                singleSelect: true,
+                checkOnSelect: false,
+                selectOnCheck: false,
+                rownumbers: true,
+                remoteSort: false,
+                border: true,
+                iconCls:'icon-paper',
+                toolbar:[],
+			
+				columns: [[
+					{ field: 'TakeRecordNo', title: '取血单号', width: 150, align: 'left' 
+						
+						//formatter: function (value, rowdata, rowindex) {
+                           // return '<a id=\"danhao' + rowdata.TakeRecordNo + '\"' + 'href=\"#\" onclick=\"BDTakePrint(&quot;' + rowdata.TakeRecordDR + '&quot;)\" style=\"color:blue;\">' + value + '</a>';
+                        //}
+					},
+										
+					{ field: 'PatName', title: '病人姓名', width: 100, align: 'left' },
+					{ field: 'RegNo', title: '登记号', width: 100, align: 'left' },
+					{ field: 'LocationDesc', title: '科室', width: 100, align: 'left' },
+					{ field: 'WardDesc', title: '病区', width: 100, align: 'left' },
+					{ field: 'BedNo', title: '床号', width: 100, align: 'left' },
+                                        { field: 'TakeReqProductInfo', title: '取血信息', width: 200, align: 'left' },
+					{ field: 'ReqFormDR', title: '', width: 100, align: 'left', hidden: true },
+                                        { field: 'IsPrinted', title: '是否打印', width: 100, align: 'left' }
+					//{ field: 'IsIssued', title: '是否发血', width: 100, align: 'left' }
+				]]
+            });
+            $("#dg_BDTakeList").datagrid("loadData", []);
+            SataBDTake();
+             //初始化日期
+            /*var thisDate = GetCurentDate();
+            $("#db_SttDate").datebox('setValue', thisDate);
+            $("#db_EndDate").datebox('setValue', thisDate);
+
+            //初始化申请科室
+            $("#cg_Location").combogrid({
+                //url: '../../sys/ashx/ashBTLocation.ashx?method=Find',
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryWard&FunModul=JSON',
+                method: 'get',
+                panelWidth: 300,
+                multiple: true,
+                idField: 'RowID',
+                textField: 'CName',
+                columns: [[
+                    { field: 'RowID', title: 'ID', width: 40, sortable: true, align: 'center' },
+                    { field: 'Code', title: '代码', width: 70, sortable: true, align: 'center' },
+                    { field: 'CName', title: '名称', width: 150, sortable: true, align: 'center' }
+                ]]
+            });
+           
+            //快速查询
+            $('#XM_RecordNo').keypress(function (event) {
+                if (event.keyCode == "13") {
+                    SataBDTake();
+                }
+            });
+
+            //清空按钮的执行，清空所有文本框的值
+            $('#btn_clear').click(function () {
+                $('#dg_BDTakeList').datagrid('loadData', { total: 0, rows: [] });
+                var Locations = $("#cg_Location").combogrid("setValue", "");
+                
+                var XMPlanNo = $("#XM_RecordNo").val("");
+                var AddUser ="";// $("#cb_AddUser").combobox("setValue", "");
+                var Status = $("#cb_Status").combobox("setValue", "");
+               
+            });*/
+        });
+        //快速选择日期
+        function mnuDateTypeClick(value) {
+            var curDate = GetCurentDate();
+            alert(curDate);
+            if (value == "1") {
+                $('#db_SttDate').datebox('setValue', curDate);
+                $('#db_EndDate').datebox('setValue', curDate);
+                $('#btn_ThisDay').linkbutton('select');
+                $('#btn_7Day').linkbutton('unselect');
+                $('#btn_30Day').linkbutton('unselect');
+            } else if (value == "7") {
+                sttDate = DateParser("d-6");
+                $('#db_SttDate').datebox('setValue', DateFormatter(sttDate));
+                $('#db_EndDate').datebox('setValue', curDate);
+                $('#btn_7Day').linkbutton('select');
+                $('#btn_ThisDay').linkbutton('unselect');
+                $('#btn_30Day').linkbutton('unselect');
+            } else if (value == "30") {
+                sttDate = DateParser("d-29");
+                alert(sttDate);
+                $('#db_SttDate').datebox('setValue', DateFormatter(sttDate));
+                $('#db_EndDate').datebox('setValue', curDate);
+                $('#btn_30Day').linkbutton('select');
+                $('#btn_7Day').linkbutton('unselect');
+                $('#btn_ThisDay').linkbutton('unselect');
+            }
+            SataBDTake();
+        }
+        //选择查询的按钮
+        function mnuFindFastClick(value, icon, name) {
+            me.findFlag = value;
+            $('#mnu_FindFast').menubutton({ menu: '#mnu_FindFastType', iconCls: icon, text: name });
+            $('#XM_RecordNo').focus();
+            $('#XM_RecordNo').select();
+        }
+        //统计取血单
+        function SataBDTake() {
+           /* var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var Locations = $("#cg_Location").combogrid("getValues").toString();
+            var AddUser = "";//$("#cb_AddUser").combobox("getValues").toString();
+            var Status = "";   //$("#cb_Status").combobox("getValues").toString();
+           
+
+            var RegNo = $('#PatientID').val();
+            var SurName = "";
+            var fTakeRecordNo = "";
+            var Labno = "";
+            var FindTxt = $('#XM_RecordNo').val();
+            var FindType = me.findFlag;
+            switch (FindType) {
+                case "RegNo":
+                    RegNo = FindTxt;
+                    break;
+                case "Labno":
+                    Labno = FindTxt;
+                    break;
+                case "SurName":
+                    SurName = FindTxt;
+                    break;
+                default:
+                    fTakeRecordNo = FindTxt;
+                    break;
+            }*/
+
+            $("#dg_BDTakeList").datagrid({
+                //url: "../ashx/ashQueryBDReqForm.ashx?method=StatBDTake&SttDate=" + SttDate + "&EndDate=" + EndDate + "&fTakeRecordNo=" + fTakeRecordNo + "&FAddUserDR=" + AddUser + "&FLocationDR=" + Locations + "&FRegNo=" + RegNo + "&FSurName=" + SurName
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryTakeRecordPackNew&FunModul=JSON&P7='+AdmNo
+
+			})
+			
+        }
+        function QryReqFormInfo(RegNo) {
+            var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var RegNocol = '.RegNo' + RegNo;
+            console.log(RegNocol);
+            $(RegNocol).attr("style", "color:red;");
+            $("#ReqForm_window").window('open');
+
+            $("#if_ReqForm").attr("src", 'frmQueryBDReqFormbyRegNo.aspx?RegNo=' + RegNo + '&SttDate=' + SttDate + '&EndDate=' + EndDate);
+
+        }
+        function QryXMPlanfodetail(XMPlanRowID) {
+            var danhao = '#danhao' + XMPlanRowID;
+            $(danhao).attr("style", "color:red;");
+            $("#XMPlanInfo_window").window('open');
+            $("#if_XMPlanInfo").attr("src", "../../cts/form/frmQueryXMIssInfo.aspx?ReqFormDR=" + ReqRowID);
+        }
+        function BDTakePrint(value){
+                       var connectString = ServerConnectString;
+			param = "DOCTOR"
+			var UserParam = UserID + "" + "";//^HospID
+			var printType = "PrintPreview";
+			var Param = "1@" + connectString + "@" +value + "@" + UserParam + "@" + printType + "@" + param + "@HIS.DHCReportPrintTakeRecord@QueryPrintData";
+
+            window.parent.parent.PrintCommon(Param);
+		}
+		function PrintCommon(Param) {
+			var printUrl = "../../lisprint/print2HIS/ResultPrintForHis.application?Param=" + Param;
+			document.location.href = printUrl;
+		}
+        //导出excel
+        function Export() {
+            //获取所有的属性列
+            var fieldArray = $("#dg_BDTakeList").datagrid('getColumnFields');
+            var titleArray = [];
+            for (var i in fieldArray) {
+                console.log(i)
+                console.log($("#dg_BDTakeList").datagrid('getColumnOption', fieldArray[i]))
+                titleArray.push($("#dg_BDTakeList").datagrid('getColumnOption', fieldArray[i]).title);
+            }
+
+            var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var Locations = $("#cg_Location").combogrid("getValues").toString();
+            var ReqType = $("#cb_ReqType").combobox("getValues").toString();
+
+            var AddUser = ""; //$("#cb_AddUser").combobox("getValues").toString();
+            var Status = $("#cb_Status").combobox("getValues").toString();
+            var IsExcess = $("#cb_IsExcess").combobox("getValue");
+
+            var RegNo = "";
+            var SurName = "";
+            var XMPlanNo = "";
+            var Labno = "";
+            var FindTxt = $('#XM_RecordNo').val();
+            var FindType = me.findFlag;
+            switch (FindType) {
+                case "RegNo":
+                    RegNo = FindTxt;
+                    break;
+                case "Labno":
+                    Labno = FindTxt;
+                    break;
+                case "SurName":
+                    SurName = FindTxt;
+                    break;
+                default:
+                    XMPlanNo = FindTxt;
+                    break;
+            }
+
+            $("#if_download").attr("src", "../ashx/ashQueryBDReqForm.ashx?method=Export2Excel&SttDate=" + SttDate + "&EndDate=" + EndDate + "&FXMPlanNo=" + XMPlanNo + "&FAddUserDR=" + AddUser + "&FLocationDR=" + Locations + "&FStatus=" + Status + "&FReqTypeDR=" + ReqType + "&FIsExcess=" + IsExcess + "&FRegNo=" + RegNo + "&FSurName=" + SurName + "&ItemsName=" + titleArray.toString() + "&ItemsField=" + fieldArray.toString());
+        }
+		</script>
+	
+</body>
+
+</html>
+

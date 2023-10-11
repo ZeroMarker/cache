@@ -5,7 +5,8 @@
 <csr:action>		<!--add by wl 2019-11-20 WL0010 begin-->		
     <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
     ;导入润乾直接打印所需包
-    d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4()    
+    //d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17    
     </SCRIPT>  
 </csr:action>		<!--add by wl 2019-11-20 WL0010 end-->
 <!DOCTYPE html>
@@ -13,12 +14,14 @@
 <HEAD>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 </HEAD>
 
 <script language="cache"  runat="server">
-if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
 s MaintDR=$g(%request.Data("MaintDR",1))
 s ReadOnly="'"_$g(%request.Data("ReadOnly",1))_"'"
 s EquipDR=$p(^DHCEQMaint(MaintDR),"^",1)
@@ -49,7 +52,7 @@ s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
 					</div>
 					<div class="eq-table-tr">
 						<div class="eq-table-td eq-table-label"><label id="cCPMTemplate" for="CPMTemplate">PM模版</label></div>
-						<div class="eq-table-td"><input class="hisui-validatebox" id="CPMTemplate" data-options="'component':'EM.L.PMTemplate','paras':[{name:'Type',type:'4',value:'MTType'}]"></div>
+						<div class="eq-table-td"><input class="hisui-validatebox" id="CPMTemplate" data-options="'component':'EM.L.PMTemplate','paras':[{name:'Type',type:'4',value:'MTType'},{name:'EQRowID',type:'4',value:'EquipDR'}]"></div>		<!--add by czf 1777071 2021-03-03  -->	
 						<div class="eq-table-td eq-table-label"><label id="cRemark" for="Remark">备注</label></div>
 						<div class="eq-table-td"><input class="hisui-validatebox" id="Remark"></div>
 					</div>
@@ -81,7 +84,8 @@ s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
 	            <input id="CPMTemplateDR" value="" type="hidden">
 	            <input type="hidden" id="PrintFlag" value=#(PrintFlag)#> <!--add by wl 2019-11-20 WL0010-->
 				<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--add by wl 2019-11-20 WL0010  -->
-				<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>			
+				<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+				<input type="hidden" id="EquipDR" value=#(EquipDR)#>	<!--add by czf 1777071 2021-03-03  -->	
 			</form>
 		</div>
 	</div>

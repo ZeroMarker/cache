@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--门诊配液-退药
+	csp:pha.opivas.v4.return.csp
+	js: pha/opivas/v4/return.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <script language=javascript>
+        if (typeof HISUIStyleCode == 'string' && HISUIStyleCode == 'lite') {
+            $(function(){
+                $('body').append('<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.lite.css"></link>');
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',border:false,width:700,split:true">
+                    <div class="hisui-panel" title="配液申请单退药" iconCls="icon-drug-audit" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'">
+                        <table id="gridReq"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel" title="药品明细" iconCls="icon-drug-audit" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'">
+                        <table id="gridReqItm"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridReqBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conStDate">#(..Get("开始日期"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox" id='conStDate' data-pha='class:"hisui-datebox",query:true' />
+                </td>
+                <td class="r-label">
+                    <label for="conEdDate">#(..Get("结束日期"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-datebox" id='conEdDate' data-pha='class:"hisui-datebox",query:true' />
+                </td>
+                <td>
+                    <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label" style="padding-left: 8px">
+                    <label for="conPatNo">#(..Get("登记号"))#</label>
+                </td>
+                <td>
+                    <input class="hisui-validatebox" id='conPatNo' style="width:143px" data-pha='class:"hisui-validatebox",query:true,clear:true' />
+                </td>
+                <td>
+                </td>
+                <td>
+                </td>
+                <td>
+                    <a id="btnClean" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridReqItmBar">
+        <a id="btnReturn" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-return'">#(..Get("退药"))#</a>
+    </div>
+    <!-- 读卡 -->
+    <!-- 门诊配液公用 -->
+    <link rel="stylesheet" href="../scripts/pha/opivas/v4/css/ui.css">
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-detailview.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/ux.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/store.js"></script>
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/com.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/opivas/v4/return.js"></script>
+</body>
+
+</html>

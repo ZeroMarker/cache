@@ -1,0 +1,94 @@
+﻿<html>
+    <head>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>	BS-Editor打印插件下载安装 </title>
+
+        <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+
+        <ADDINS require="emrprintplugin"></ADDINS>
+
+        <script language="javascript">
+            function checkPrinter() {
+                try {
+                    
+                    var hasInstalled = false; //获取打印插件是否已经安装
+                    if (hasInstalled) {
+                        recordLog("BS-Editor打印插件已安装");
+                    } else {
+                        recordLog("BS-Editor打印插件未安装,准备下载安装文件");
+                        setTimeout("download()",1000);
+                    }
+                } catch (ex) {
+                    recordLog("程序异常: " + ex.message);
+                }
+            }
+
+            function download() {
+                try {
+                    
+                    emrprintplugin.cmd("Web-Print.exe /quiet /passive /qr",function(){
+                        //vbs运行完成, 安装过程已开始、但通常未结束
+                        recordLog("下载完成, 开始安装");
+                        recordLog("安装完成后，请关闭此页面，重新发起打印操作");
+                        //setTimeout("checkInstall()",1000);
+                    });
+                    
+                    /*
+                    clawPDF.cmd("sintall.bat",function(){
+                        //vbs运行完成, 安装过程已开始、但通常未结束
+                        recordLog("下载完成, 开始安装");
+                        setTimeout("checkInstall()",1000);
+                    });
+                    */
+                } catch (ex) {
+                    alert("error" + ex);
+                }
+            }
+
+            var count = 0;
+            function checkInstall() {
+                try {
+                    
+                } catch (ex) {
+                    alert("error" + ex);
+                }
+            }
+                 
+            function recordLog(txt,nonewline) {
+                txt = emrTrans(txt);
+                nonewline = nonewline || false;
+                if (nonewline) {
+                    document.getElementById("log").value = document.getElementById("log").value + "\r\n" + txt;
+                } else {
+                    document.getElementById("log").value = document.getElementById("log").value + "\r\n\r\n" + txt;
+                }
+            }
+
+            window.onload = function() {
+                setTimeout("checkPrinter()",15000);
+            }
+            //国际化改造获取翻译
+            function emrTrans(value)
+            {
+                if (typeof $g == "function") 
+                {
+                    value = $g(value)
+                }
+                return value;
+            }
+        </script>
+
+    </head>
+
+    <body class="hisui-layout" data-options="border:false,fit:true">
+        <div data-options="region:'center',border:false" style="overflow:hidden;padding:15px;">
+            <textarea id="log" title="日志:" readonly style="width:500px;height:500px;">#(..Get("检查BS-Editor打印插件是否已安装，请稍候..."))#</textarea>
+        </div>
+    </body>
+</html>

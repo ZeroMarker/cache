@@ -1,0 +1,1064 @@
+<!--nur.hisui.nursheetset.csp 护士打印单据csp-->
+<script language="cache" runat="SERVER">
+ 	s execSheetTypeJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtSet","SPSType")
+</script>
+<script language="javascript">
+	var execSheetTypeJson=#(execSheetTypeJson)#
+</script>
+<server>
+	s PrtSheetTypeSel=%request.Get("PrtSheetType") //打印单据类型 ExecSheet:执行单打印 InfuseSheet:输液卡打印 Other:其他打印
+	s FontJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtContentSet","SPCSFont")
+	s AlignJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtContentSet","SPCSAlign")
+	s BoldJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtContentSet","SPCSBold")
+	s ItalicJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtContentSet","SPCSItalic")
+	s PrintPaperJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtSet","SPSPrintPaper")
+	s PrintDirectionJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtSet","SPSPrintDirection")
+	s PrintTypeJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtSet","SPSPrintType")
+	s PrintDuplexJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtSet","SPSPrintDuplex")
+	s OrdAdditionInfoTypeJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("CF.NUR.NIS.SheetPrtContentSet","SPCSOrdAdditionInfoType")
+
+</server>
+<div id="prtsheet_search" data-options="region:'west',split:false,collapsible:false,border:false" style="width:350px;padding:0 10px 10px 10px;">
+	<div id="prtsheetlist_div" class="hisui-panel" data-options="title:'单据',headerCls:'panel-header-gray',iconCls:'icon-paper-info'" fit="true" style="border:1px solid #ccc;">
+   		<div class="hisui-layout" data-options="fit:true">
+   			<csp:if condition='PrtSheetTypeSel="ExecSheet"'>
+				<div data-options="region:'north',split:false,border:false" style="height:121px;border-bottom:1px dashed #ccc;overflow:hidden;">
+					<table ALIGN="left" class="search-table">
+		  	 	 		<tr>
+			            	<td  class="r-label">
+								<label for="execSheetType">#(..Get("类型"))#</label>
+							</td>
+							<td>
+				        		<input id="execSheetType" type="text" class="textbox" style="width:220px;"/>
+				        		<a href="#" id="execSheetType-tip" class="x-btn-text icon-help" style="vertical-align:middle;">&nbsp&nbsp&nbsp&nbsp</a>
+				        	</td>
+			          	</tr>
+			          	<tr>
+			          		<td  class="r-label">
+								<label for="SheetPrintSign">#(..Get("打印标记"))#</label>
+							</td>
+							<td>
+								<input id="SheetPrintSign" type="text" class="textbox" style="width:243px;"/>
+							</td>
+			          	</tr>
+			          	<tr>
+			          		<td  class="r-label">
+								<label for="ExecSheetDataType">#(..Get("数据类型"))#</label>
+							</td>
+							<td>
+								<input class="hisui-radio" type="radio" data-options="requiredSel:true,onCheckChange:ExecSheetDataTypeChange" name="ExecSheetDataType" label="医嘱" id="Ord">
+								<input class="hisui-radio" type="radio" data-options="requiredSel:true,onCheckChange:ExecSheetDataTypeChange" label="执行记录"  name="ExecSheetDataType" id="OrdExec">
+							</td>
+			          	</tr>
+		  	 	 	</table>
+				</div> 
+			</csp:if>
+			<csp:if condition='PrtSheetTypeSel="InfuseSheet"'>
+				<div data-options="region:'north',split:false,border:false" style="height:51px;border-bottom:1px dashed #ccc;">
+					<table ALIGN="left" class="search-table">
+			          	<tr>
+			          		<td  class="r-label">
+								<label for="SheetPrintSign">#(..Get("打印标记"))#</label>
+							</td>
+							<td>
+								<input id="SheetPrintSign" type="text" class="textbox" style="width:243px;"/>
+							</td>
+			          	</tr>
+		  	 	 	</table>
+				</div> 
+			</csp:if>
+			<csp:if condition='PrtSheetTypeSel="XML"'>
+				<div data-options="region:'north',split:false,border:false" style="height:91px;border-bottom:1px dashed #ccc;">
+					<table ALIGN="left" class="search-table">
+		  	 	 		<tr>
+			            	<td  class="r-label">
+								<label for="XMLTemplName">#(..Get("XML模板名"))#</label>
+							</td>
+							<td>
+								<input id="XMLTemplName" href="#" class="textbox hisui-searchbox" data-options="searcher:tabPrtSheetSearch" style="width:225px;"/>
+				        	</td>
+			          	</tr>
+			          	<tr>
+			            	<td  class="r-label">
+								<label for="XMLTemplDesc">#(..Get("模板描述"))#</label>
+							</td>
+							<td>
+								<input id="XMLTemplDesc" href="#" class="textbox hisui-searchbox" data-options="searcher:tabPrtSheetSearch" style="width:225px;"/>
+				        	</td>
+			          	</tr>
+		  	 	 	</table>
+				</div> 
+			</csp:if>
+			<div data-options="region:'center',split:false,border:false">
+				<table id="tabPrtSheet" class="hisui-datagrid" data-options="toolbar:'#custtb'"></table>
+				<div id="custtb" >
+					<a href="javascript:void(0)" id="sheetAdd" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+					<a href="javascript:void(0)" id="sheetDelete" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+					<a href="javascript:void(0)" id="sheetSave" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+					<a href="javascript:void(0)" id="menubtn-toolbar" class="hisui-menubutton menubutton-toolbar" 
+						data-options="menu:'#mm-toolbar',iconCls:'icon-add-note'">更多</a>
+					<div id="mm-toolbar" style="width:100px;">   
+						<div data-options="iconCls:'icon-copy'" onclick="showSheetCopyWin()">复制</div>   
+						<div data-options="iconCls:'icon-export'" onclick="sheetExportClick()">导出</div>  
+						<div data-options="iconCls:'icon-import'" onclick="sheetImportClick()">导入</div>     
+					</div>
+				</div>
+			</div> 
+		</div>
+   </div>
+</div>
+<!--复制弹框-->
+<div id="CopyWin" class="hisui-window" title="复制 " style="width:315px;height:170px;" data-options="iconCls:'icon-w-copy',closed:true">   
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+    	<!--table id="tabPrtSheetCopy"></table-->
+    	<table ALIGN="left" class="search-table">
+ 	 		<tr>
+            	<td  class="r-label">
+					<label for="CopySPSCode">#(..Get("代码"))#</label>
+				</td>
+				<td>
+	        		<input id="CopySPSCode" type="text" class="textbox" style="width:250px;"/>
+	        	</td>
+          	</tr>
+          	<tr>
+            	<td  class="r-label">
+					<label for="CopySPSDesc">#(..Get("名称"))#</label>
+				</td>
+				<td>
+	        		<input id="CopySPSDesc" type="text" class="textbox" style="width:250px;"/>
+	        	</td>
+          	</tr>
+          	<tr>
+          		<td colspan=2 style="text-align:center;">
+          			<a class="hisui-linkbutton" id="BSheetCopy" data-options="iconCls:'icon-w-copy'">复制</a>
+    				<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+          		</td>
+          	</tr>
+ 	 	</table>
+	</div>
+</div>
+<!--打印预览弹框-->
+<div id="SheetPreViewWin" class="hisui-window" title="打印预览入参值(多个以,分割) " style="width:315px;height:126px;overflow:hidden;" data-options="iconCls:'icon-w-eye',closed:true">   
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+    	<table ALIGN="left" class="search-table">
+ 	 		<tr>
+            	<td  class="r-label">
+					<label for="OEOREId">#(..Get("执行记录ID"))#</label>
+				</td>
+				<td>
+	        		<input id="OEOREId" type="text" class="textbox" style="width:208px;"/>
+	        	</td>
+          	</tr>
+          	<tr>
+          		<td colspan=2 style="text-align:center;">
+          			<a class="hisui-linkbutton" id="BSheetPreview" data-options="iconCls:'icon-w-ok'">确定</a>
+    				<a class="hisui-linkbutton" id="BCancelPreview" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+          		</td>
+          	</tr>
+ 	 	</table>
+	</div>
+</div>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+	text-align:right;
+}
+</style>
+<script type="text/javascript">
+//全局请求后台服务对象
+var ServerObj={
+	FontJson:#(FontJson)#,
+	AlignJson:#(AlignJson)#,
+	BoldJson:#(BoldJson)#,
+	ItalicJson:#(ItalicJson)#,
+	PrintPaperJson:#(PrintPaperJson)#,
+	PrintDirectionJson:#(PrintDirectionJson)#,
+	PrintTypeJson:#(PrintTypeJson)#,
+	PrintDuplexJson:#(PrintDuplexJson)#,
+	OrdAdditionInfoTypeJson:#(OrdAdditionInfoTypeJson)#
+};
+var PrtSheetTypeSel="#(PrtSheetTypeSel)#";
+var prtSheetEditRow= undefined;
+function InitSheet(){
+	if (PrtSheetTypeSel =="XML") {
+		$("#prtsheetlist_div").panel("setTitle","模板");
+	}
+	if (PrtSheetTypeSel =="ExecSheet"){
+		InitExecSheetType();
+		InitExecSheetTypeTip();
+	}
+	InitSheetPrintSign();
+	InitTabPrtSheet();
+	$("#BSheetCopy").click(SheetCopy);
+	$("#BCancel").click(function(){
+	 	$("#CopyWin").window('close');
+	});	
+	$("#BCancelPreview").click(function(){
+	 	$("#SheetPreViewWin").window('close');
+	});	
+	$("#BSheetPreview").click(BSheetPreview);
+	$("#sheetAdd").click(sheetAddClick);
+	$("#sheetDelete").click(sheetDeleteClick);
+	$("#sheetSave").click(sheetSaveClick);
+	  
+}
+function InitSheetPrintSign(){
+	if ($("#SheetPrintSign").length){
+		$HUI.combobox("#SheetPrintSign", {
+			url:$URL+"?ClassName=Nur.NIS.Service.OrderExcute.SheetPrintConfig&QueryName=QuerySheetPrtSignConfig&rows=99999",
+			multiple:false,
+			mode:"local",
+			method: "GET",
+			selectOnNavigation:true,
+		  	valueField:'SPSSID',
+		  	textField:'SPSSCode', 
+		  	editable:false,
+		  	loadFilter:function(data){
+				return data.rows;
+			}
+		});
+	}
+}
+function InitExecSheetType(){
+	$HUI.combobox("#execSheetType", {
+		multiple:false,
+		mode:"local",
+		method: "GET",
+		selectOnNavigation:true,
+	  	valueField:'value',
+	  	textField:'text', 
+	  	editable:false,
+	  	data:execSheetTypeJson,
+	  	loadFilter:function(data){
+			for (var i=data.length-1;i>=0;i--){
+				if (data[i].text.indexOf("执行单")<0) data.splice(i,1);
+			}
+			data[0].selected = true;
+			return data;
+		},
+		onSelect:function(rec){
+			$('#tabPrtSheet').datagrid("reload");
+			ClearConfigData();
+			if (rec.value =="Person"){
+				$(".singlepagechg").show();
+			}else{
+				$(".singlepagechg").hide();
+				$("#SPSPrintSinglePageChange").checkbox("uncheck");
+			}
+		},
+		onLoadSuccess:function(){
+			$(".singlepagechg").hide();
+			$("#SPSPrintSinglePageChange").checkbox("uncheck");
+		}
+	});
+}
+function InitExecSheetTypeTip(){
+	var _content = "<ul class='tip_class'>" + 
+		"<li>执行单(病区)：指所选打印医嘱在一个表格内显示。</li>" +
+		"<li>执行单(个人)：指所选打印医嘱按照患者拆分为多个表格显示。</li>";
+	$("#execSheetType-tip").popover({
+		width:400,
+		height:90,
+		trigger:'hover',
+		placement:'right',
+		content:_content
+	});
+}
+function InitTabPrtSheet(){
+	var ToolBar = [{
+			text: '新增',
+			iconCls: '	icon-add',
+			handler: function() {
+				
+				
+			}
+		},{
+			text: '删除',
+			iconCls: 'icon-cancel',
+			handler: function() {
+				
+			}
+	    },{
+			text: '保存',
+			iconCls: 'icon-save',
+			handler: function() {
+				
+			}
+	    },'-',{
+			text: '复制',
+			iconCls: 'icon-copy',
+			handler: function() {
+				
+			}
+	    }];
+	var Columns=[[ 
+		{ field: 'SPSCode', title: '代码',width:140, editor : 
+			{type : 'text',options : {required:true}}
+		},
+		{ field: 'SPSDesc', title: '名称',width:160, editor : 
+			{type : 'text',options : {required:true}}
+		}
+	]];
+	if (PrtSheetTypeSel =="XML") {
+		Columns[0][0].title="XML模板名";
+		Columns[0][0].width=120;
+		
+		Columns[0][1].title="描述";
+		Columns[0][1].width=120;
+		
+		Columns[0].push(
+			{ field: 'SPSXMLDataType', title: '类型',width:85,editor :{
+					type:'combobox',  
+					options:{
+						mode:"local",
+						editable:false,
+						valueField:'value',
+						textField:'text',
+						data:ServerObj.SPSXMLDataTypeJson,
+						required:true,
+						onSelect:function(rec){
+							var rows=$('#tabPrtSheet').datagrid("selectRow",prtSheetEditRow).datagrid("getSelected");
+							if ((rows.SPSXMLDataType)&&(rows.SPSXMLDataType!=rec.value)){
+								$.messager.confirm("提示", "类型修改后会自动清空该模板下所有元素的基础数据项目,是否继续?",
+					                function(r) {
+					                    if (!r) {
+						                    var SPSXMLDataTypeObj=$('#tabPrtSheet').datagrid('getEditor', {index:prtSheetEditRow,field:'SPSXMLDataType'});
+						                    $(SPSXMLDataTypeObj.target).combobox("setValue",rows.SPSXMLDataType);
+					                    }
+					            });
+							}
+						}
+					}
+				},
+				formatter: function(value,row,index){
+					return row.SPSXMLDataTypeDesc;
+				}	
+			}
+		);
+		Columns[0].push(
+			{ field: 'SPSPrintSignDR', title: '打印标记',width:85,editor :{
+					type:'combobox',  
+					options:{
+						mode:"remote",
+						//editable:false,
+						url:$URL+"?ClassName=Nur.NIS.Service.OrderExcute.SheetPrintConfig&QueryName=QuerySheetPrtSignConfig&rows=99999",
+						valueField:'SPSSID',
+						textField:'SPSSCode',
+						loadFilter: function(data){
+							return data['rows'];
+						}
+					}
+				},
+				formatter: function(value,row,index){
+					return row.SPSPrintSignDRDesc;
+				}	
+			}
+		)
+	}
+	$('#tabPrtSheet').datagrid({  
+		fit : true,
+		width : 'auto',
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : false,
+		autoRowHeight : false,
+		loadMsg : '加载中..',  
+		pagination : false, 
+		rownumbers : false,
+		idField:"ID",
+		columns :Columns,
+		//toolbar :ToolBar,
+		nowrap:false,  /*此处为false*/
+		url : $URL+"?ClassName=Nur.NIS.Service.OrderExcute.SheetPrintConfig&QueryName=GetPrtSheetList",
+		onBeforeLoad:function(param){
+			if (prtSheetEditRow != undefined) {
+				$("#tabPrtSheet").datagrid("rejectChanges").datagrid("unselectAll");
+				prtSheetEditRow = undefined;
+			}
+			$('#tabPrtSheet').datagrid("unselectAll");
+			param = $.extend(param,{
+				hospID:parent.GetHospId(),
+				SearchPrtSheetType:GetPrtSheetType(),
+				SearchSheetCode:$("#XMLTemplName").length?$("#XMLTemplName").searchbox('getValue'):"",
+				SearchSheetDesc:$("#XMLTemplDesc").length?$("#XMLTemplDesc").searchbox('getValue'):""
+			});
+		},
+		onDblClickRow:function(rowIndex, rowData){ 
+            if (prtSheetEditRow != undefined) {
+	            $.messager.popover({msg: '有正在编辑的行，请先点击保存!',type: 'error'});
+		        return false;
+			}
+			$('#tabPrtSheet').datagrid("beginEdit", rowIndex);
+			prtSheetEditRow=rowIndex;
+       },
+       onClickRow:function(rowIndex, rowData){
+	       if (rowData.ID) {
+		       PrtSheetChange();
+		       if (PrtSheetTypeSel !="XML") {
+					$("#SheetPrintSign").combobox("select",rowData.SPSPrintSignDR);
+					if (PrtSheetTypeSel =="ExecSheet") {
+					   if (rowData.SPSExecSheetDataType ==""){
+						   $("input[name='ExecSheetDataType']").radio("uncheck");
+					   }else{
+						   $("#"+rowData.SPSExecSheetDataType).radio("check");
+					   }
+				   }
+			   }
+		   }else{
+			   ClearConfigData();
+		   }
+	   }
+	})
+}
+function RefreshSheetPrintSign(SheetID,SPSPrintSignDR){
+	var index=$('#tabPrtSheet').datagrid('getRowIndex',SheetID);
+	$('#tabPrtSheet').datagrid('updateRow',{
+		index: index,
+		row: {
+			SPSPrintSignDR: SPSPrintSignDR
+		}
+	});
+}
+function GetPrtSheetType(){
+	if ($("#execSheetType").length){
+		var SPSType =$("#execSheetType").combobox("getValue");
+	}else{
+		var PrtSheetType=parent.GetSelPrtSheetType();
+		if (PrtSheetType =="Other") {
+			var SPSType = "XML";
+		}else{
+			var SPSType = "InfuseSheet";
+		}
+	}
+	return SPSType;
+}
+function GetSelPrtSheetTypeRowId(){
+	var rows = $("#tabPrtSheet").datagrid("getSelections");
+	if (rows.length > 0) {
+        return  rows[0].ID; 
+    }
+    return '';
+}
+function SheetCopy(){
+	var CopySPSCode = $.trim($("#CopySPSCode").val());
+	if(CopySPSCode==""){
+		$.messager.popover({msg: '代码不能为空!',type: 'error'});
+		$("#CopySPSCode").focus();
+		return false;
+	};
+	var CopySPSDesc=$.trim($("#CopySPSDesc").val());
+	if(CopySPSDesc==""){
+		$.messager.popover({msg: '名称不能为空!',type: 'error'});
+		$("#CopySPSCode").focus();
+		return false;
+	};
+	var selected = $("#tabPrtSheet").datagrid("getSelected");
+	var CopyFromSPSID=selected.ID;
+	$.cm({
+		ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+		MethodName:"CopySheetContent",
+		CopyFromSPSID:CopyFromSPSID,
+		CopySPSCode:CopySPSCode,
+		CopySPSDesc:CopySPSDesc,
+		dataType:"text"
+	},function(rtn){
+		if (rtn ==0) {
+			$.messager.popover({msg: '复制成功！',type: 'success'});
+			$("#CopyWin").window('close');
+			ClearConfigData();
+			$('#tabPrtSheet').datagrid("reload");
+		}else{
+			$.messager.popover({msg: '复制失败！'+rtn,type: 'error'});
+		}
+	})
+}
+function tabPrtSheetSearch(){
+	ClearConfigData();
+	$('#tabPrtSheet').datagrid("reload");
+}
+function ReloadSheetPrintSign(){
+	$("#SheetPrintSign").combobox("reload");
+}
+function showSheetPreviewWin(){
+	var selected = $("#tabPrtSheet").datagrid("getSelected");
+	if (!selected) {
+		$.messager.popover({msg: '请选择需要预览的单据！',type: 'error'});
+		return false;
+	}else if(!selected.ID){
+		$.messager.popover({msg: '请选择已保存的单据！',type: 'error'});
+		return false;
+	}
+	$("#SheetPreViewWin").window({
+	   modal: true,
+	   collapsible:false,
+	   minimizable:false,
+	   maximizable:false,
+	   closed:true
+	}).window('open');
+	$("#OEOREId").val("").focus();
+}
+/**
+ * @param  {} sheetId :模板id
+ * @param  {} oeoreId :医嘱执行记录id
+ * @param  {} type :类型（执行单：sheet、输液卡：card）
+ */
+function BSheetPreview(){
+	var selected = $("#tabPrtSheet").datagrid("getSelected");
+	var SheetID=selected.ID;
+	var OEOREId=$("#OEOREId").val();
+	if (OEOREId==""){
+		$.messager.popover({msg: '执行记录ID不能为空!',type: 'error'});
+		$("#OEOREId").focus();
+		return false;
+	}
+	nurFormPrint(SheetID,OEOREId.split(",").join("^"),PrtSheetTypeSel=="ExecSheet"?"sheet":"card");
+	$("#SheetPreViewWin").window('close');
+}
+function sheetAddClick(){
+	if (prtSheetEditRow == undefined) {
+		var maxRow=$("#tabPrtSheet").datagrid("getRows");
+		$("#tabPrtSheet").datagrid("appendRow", {
+            SPCSID: '',
+            SPSXMLDataType:""
+        })
+        prtSheetEditRow=maxRow.length-1;
+        $("#tabPrtSheet").datagrid("beginEdit", prtSheetEditRow);
+	}else{
+		$.messager.popover({msg: '有正在编辑的行，请先点击保存!',type: 'error'});
+	}
+}
+function sheetDeleteClick(){
+	var rows = $("#tabPrtSheet").datagrid("getSelections");
+	//$("#tabPrtSheet").datagrid("selectRow",prtSheetEditRow).datagrid("getSelected")
+	if (rows.length > 0) {
+		$.messager.confirm("提示", "确定删除吗?",
+        function(r) {
+            if (r) {
+				var ids = [];
+                for (var i = 0; i < rows.length; i++) {
+                    ids.push(rows[i].ID);
+                }
+                var ID=ids.join(',');
+                if (ID==""){
+                    prtSheetEditRow = undefined;
+	                $("#tabPrtSheet").datagrid("rejectChanges").datagrid("unselectAll");
+	                return;
+                }
+                var value=$.m({ 
+					ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig", 
+					MethodName:"HandleSheetItem",
+					rowID:ID, code:"", name:"", hospId:"", event:"DELETE"
+				},false);
+		        if(value=="0"){
+			       $('#tabPrtSheet').datagrid('deleteRow',$('#tabPrtSheet').datagrid('getRowIndex',ID));
+			       ClearConfigData();
+			       //$("#tabPrtSheet").datagrid('load').datagrid('unselectAll');
+			       $.messager.popover({msg: '删除成功!',type: 'success'});
+		        }else{
+			       $.messager.popover({msg: '删除失败:'+value,type: 'error'});
+		        }
+		        prtSheetEditRow = undefined;
+            }
+        });
+	}else{
+		$.messager.popover({msg: '请选择要删除的行!',type: 'error'});
+	}
+}
+function sheetSaveClick(){
+	 var SPSExecSheetDataType="";
+	 if (prtSheetEditRow != undefined) {
+		var rows=$("#tabPrtSheet").datagrid("selectRow",prtSheetEditRow).datagrid("getSelected");
+		var editors = $("#tabPrtSheet").datagrid('getEditors', prtSheetEditRow);
+		var SPSCode = editors[0].target.val();
+		if(SPSCode==""){
+			var fieldOpts = $('#tabPrtSheet').datagrid('getColumnOption',editors[0].field);
+			$.messager.popover({msg: fieldOpts.title+'不能为空!',type: 'error'});
+			$(editors[0].target).focus();
+			return false;
+		};
+		var SPSDesc=editors[1].target.val();
+		if(SPSDesc==""){
+			var fieldOpts = $('#tabPrtSheet').datagrid('getColumnOption',editors[1].field);
+			$.messager.popover({msg: fieldOpts.title+'不能为空!',type: 'error'});
+			$(editors[1].target).focus();
+			return false;
+		};
+		if (PrtSheetTypeSel =="XML") {
+			var SPSXMLDataType=editors[2].target.combobox("getValue");
+			if (!SPSXMLDataType){
+				var fieldOpts = $('#tabPrtSheet').datagrid('getColumnOption',editors[2].field);
+				$.messager.popover({msg: fieldOpts.title+'不能为空!',type: 'error'});
+				$(Editors[2].target).next('span').find('input').focus().select();
+				return false;
+			}
+			var SPSPrintSignDR=editors[3].target.combobox("getValue");
+			var SPSPrintSign=editors[3].target.combobox("getText");
+			if ($.trim(SPSPrintSign)=="") SPSPrintSignDR="";
+			if ((!SPSPrintSignDR)&&(SPSXMLDataType!="Pat")){
+				var fieldOpts = $('#tabPrtSheet').datagrid('getColumnOption',editors[3].field);
+				$.messager.popover({msg: fieldOpts.title+'不能为空!',type: 'error'});
+				$(Editors[3].target).next('span').find('input').focus().select();
+				return false;
+			}
+		}else{
+			var SPSPrintSignDR=$("#SheetPrintSign").combobox("getValue");
+			if (!SPSPrintSignDR){
+				$.messager.popover({msg: '打印标记不能为空!',type: 'error'});
+				$("#SheetPrintSign").next('span').find('input').focus().select();
+				return false;
+			}
+			var SPSXMLDataType="";
+			if (PrtSheetTypeSel=="ExecSheet"){
+				var SPSExecSheetDataType="";
+				var checked=$("input[name='ExecSheetDataType']:checked");
+				if (checked.length) SPSExecSheetDataType=checked[0].id;
+				if (!SPSExecSheetDataType){
+					$.messager.popover({msg: '请选择数据类型！',type: 'error'});
+					return false;
+				}
+			}
+		}
+		var SPSID = rows.ID;
+		if (!SPSID) SPSID="";
+	    saveSheet();
+	 }else{
+		 var rows=$("#tabPrtSheet").datagrid("getSelected");
+		 if (PrtSheetTypeSel =="XML") {
+			return false;
+	     }else{
+		     var SPSID = rows.ID;
+			if (!SPSID) SPSID="";
+			var SPSCode=rows.SPSCode;
+			var SPSDesc=rows.SPSDesc;
+			var SPSPrintSignDR=$("#SheetPrintSign").combobox("getValue");
+			if (!SPSPrintSignDR){
+				$.messager.popover({msg: '打印标记不能为空!',type: 'error'});
+				$("#SheetPrintSign").next('span').find('input').focus().select();
+				return false;
+			}
+			var SPSXMLDataType="";
+			if (PrtSheetTypeSel=="ExecSheet"){
+				var SPSExecSheetDataType="";
+				var checked=$("input[name='ExecSheetDataType']:checked");
+				if (checked.length) SPSExecSheetDataType=checked[0].id;
+				if (!SPSExecSheetDataType){
+					$.messager.popover({msg: '请选择数据类型！',type: 'error'});
+					return false;
+				}
+			}
+			
+		 }
+		 saveSheet();
+	 }
+	 function saveSheet(){
+		 $.m({ 
+			ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig", 
+			MethodName:"HandleSheetItem",
+			rowID:SPSID,
+			code:SPSCode,
+			name:SPSDesc,
+			spsType:GetPrtSheetType(), 
+			hospId:parent.GetHospId(),
+			PrintSignDR:SPSPrintSignDR,
+			SPSXMLDataType:SPSXMLDataType,
+			SPSExecSheetDataType:SPSExecSheetDataType,
+			event:"SAVE"
+		},function(rtn){
+			if(rtn==0){
+			   prtSheetEditRow = undefined;
+			   ClearConfigData();
+			   $("#tabPrtSheet").datagrid('unselectAll').datagrid('load');
+			   $.messager.popover({msg: '保存成功!',type: 'success'});
+			}else{
+				$.messager.popover({msg: '保存失败:'+rtn,type: 'error'});
+			    return false;
+			}
+		}); 
+	 }
+}
+function showSheetCopyWin(){
+	var selected = $("#tabPrtSheet").datagrid("getSelected");
+	if (!selected) {
+		$.messager.popover({msg: '请选择需要复制的单据！',type: 'error'});
+		return false;
+	}else if(!selected.ID){
+		$.messager.popover({msg: '请选择已保存的单据！',type: 'error'});
+		return false;
+	}
+	$("#CopyWin" ).window({
+	   modal: true,
+	   collapsible:false,
+	   minimizable:false,
+	   maximizable:false,
+	   closed:true
+	}).window('open');
+	$("#CopySPSCode").val("").focus();
+	$("#CopySPSDesc").val(selected.SPSDesc+"-复制");
+}
+function sheetExportClick(){
+	var selected = $("#tabPrtSheet").datagrid("getSelected");
+	if (!selected) {
+		$.messager.popover({msg: '请选择需要导出的单据！',type: 'error'});
+		return false;
+	}else if(!selected.ID){
+		$.messager.popover({msg: '请选择已保存的单据！',type: 'error'});
+		return false;
+	}
+	var xlsname=selected.SPSCode+"-"+PrtSheetTypeSel;
+	var Str ="(function test(x){"
+		Str +="var xlApp = new ActiveXObject('Excel.Application');"
+		Str +="var xlBook = xlApp.Workbooks.Add();"
+		Str +="var xlSheet = xlBook.ActiveSheet;"
+		Str +="xlSheet.Columns.NumberFormatLocal = '@';"
+		//设置工作薄名称  
+		Str +="xlSheet.name = '"+xlsname+".xlsx';"; 
+		/*导出格式说明
+		  第一行：单据表(CF.NUR.NIS.SheetPrtSet)表头
+		  第二行：单据表(CF.NUR.NIS.SheetPrtSet)表头对应的数据
+		  非输液单：
+			  第三行：单据内容配置表(CF.NUR.NIS.SheetPrtContentSet)表头
+			  第四行~第N行：单据内容配置表(CF.NUR.NIS.SheetPrtContentSet)表头数据
+		  输液单：
+		  	  第三行：输液单据表格配置表(CF.NUR.NIS.InfuseSheetPrtTabSet)表头
+		  	  第四行：输液单据表格配置表(CF.NUR.NIS.InfuseSheetPrtTabSet)表头数据
+		  	  第五行：表格配置表对应内容配置表(CF.NUR.NIS.SheetPrtContentSet)表头
+		  	  第六行~第N行：表格配置表对应内容配置表(CF.NUR.NIS.SheetPrtContentSet)表头数据
+		  	  
+		  	  第N+1行：输液单据表格配置表(CF.NUR.NIS.InfuseSheetPrtTabSet)表头
+		  	  第N+2行：输液单据表格配置表(CF.NUR.NIS.InfuseSheetPrtTabSet)表头数据
+		  	  第N+3行：表格配置表对应内容配置表(CF.NUR.NIS.SheetPrtContentSet)表头
+		  	  第N+4行~第N+N行：表格配置表对应内容配置表(CF.NUR.NIS.SheetPrtContentSet)表头数据
+		  	  以此类推
+		*/
+		// 1、获取单据打印配置表(CF.NUR.NIS.SheetPrtSet)表头
+		var titleData=$.cm({
+		   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+		   QueryName:"getExportTitle",
+		   packageName:"CF.NUR.NIS",
+		   className:"SheetPrtSet",
+		   rows:99999
+		},false);
+		var j=0;	
+		for (var i=0;i<titleData['total'];i++){
+			var propertyDesc=titleData['rows'][i].propertyDesc;
+			var propertyField=titleData['rows'][i].propertyField;
+			Str +="xlSheet.cells("+(1)+","+(j+1)+")='"+(propertyDesc?propertyDesc:propertyField)+"';";
+			j++;
+		}
+		// 2、获取单据打印配置表(CF.NUR.NIS.SheetPrtSet)导出内容
+		var dataList=$.cm({
+			 ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			 QueryName:"getSheetExportData",
+			 sheetID:selected.ID,
+			 rows:99999
+		},false);
+		var j=0;
+		for (var i=0;i<dataList['total'];i++){
+			var propertyValue=dataList['rows'][i].propertyValue;
+			Str +="xlSheet.cells("+(2)+","+(j+1)+")='"+propertyValue+"';";
+			j++;
+		}
+		if (PrtSheetTypeSel=="InfuseSheet"){
+			//输液单表格配置-内容配置表头
+			var sheetPrtTabContentTitleData=$.cm({
+			   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			   QueryName:"getExportTitle",
+			   packageName:"CF.NUR.NIS",
+			   className:"SheetPrtContentSet",
+			   rows:99999
+			},false);
+			//输液单表格配置表头
+			var sheetPrtTabTitleData=$.cm({
+			   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			   QueryName:"getExportTitle",
+			   packageName:"CF.NUR.NIS",
+			   className:"InfuseSheetPrtTabSet",
+			   rows:99999
+			},false);
+			sheetPrtTabTitleData=sheetPrtTabTitleData["rows"];
+			//输液单表格配置数据
+			var sheetPrtTabData=$.cm({
+			   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			   QueryName:"getSheetTabExportData",
+			   sheetID:selected.ID,
+			   rows:99999
+			},false);
+			sheetPrtTabData=sheetPrtTabData["rows"];
+			var maxRow=3;
+			for (var i=0;i<sheetPrtTabData.length;i++){
+				//导出表格配置表-表头
+				for (var j=0;j<sheetPrtTabTitleData.length;j++){
+					var propertyDesc=sheetPrtTabTitleData[j].propertyDesc;
+					var propertyField=sheetPrtTabTitleData[j].propertyField;
+					Str +="xlSheet.cells("+(maxRow)+","+(j+1)+")='"+(propertyDesc?propertyDesc:propertyField)+"';";
+				}
+				maxRow++;
+				//导出表格配置表-表头数据
+				var sheetPrtTabId=sheetPrtTabData[i].sheetTabId;
+				var propertyValue=sheetPrtTabData[i].propertyValue;
+				var propertyValueArr=propertyValue.split(String.fromCharCode(1));
+				for (var j=0;j<propertyValueArr.length;j++){
+					Str +="xlSheet.cells("+(maxRow)+","+(j+1)+")='"+propertyValueArr[j]+"';";
+				}
+				maxRow++;
+				//导出表格配置表-对应配置表头
+				for (var n=0;n<sheetPrtTabContentTitleData['total'];n++){
+					var propertyDesc=sheetPrtTabContentTitleData['rows'][n].propertyDesc;
+					var propertyField=sheetPrtTabContentTitleData['rows'][n].propertyField;
+					Str +="xlSheet.cells("+(maxRow)+","+(n+1)+")='"+(propertyDesc?propertyDesc:propertyField)+"';";
+				}
+				maxRow++;
+				//导出表格配置表-对应配置内容数据
+				var sheetPrtTabContentData=$.cm({
+				   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+				   QueryName:"getSheetTabContentExportData",
+				   tabId:sheetPrtTabId,
+				   rows:99999
+				},false);
+				sheetPrtTabContentData=sheetPrtTabContentData["rows"];
+				for (var k=0;k<sheetPrtTabContentData.length;k++){
+					var propertyValue=sheetPrtTabContentData[k].propertyValue;
+					var propertyValueArr=propertyValue.split(String.fromCharCode(1));
+					for (var m=0;m<propertyValueArr.length;m++){
+						Str +="xlSheet.cells("+(maxRow)+","+(m+1)+")='"+propertyValueArr[m]+"';";
+					}
+					maxRow++;
+				}
+			}
+			
+		}else{
+			// 3、获取单据打印内容表(CF.NUR.NIS.SheetPrtContentSet)表头
+			var titleData=$.cm({
+			   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			   QueryName:"getExportTitle",
+			   packageName:"CF.NUR.NIS",
+			   className:"SheetPrtContentSet",
+			   rows:99999
+			},false);
+			var j=0;	
+			for (var i=0;i<titleData['total'];i++){
+				var propertyDesc=titleData['rows'][i].propertyDesc;
+				var propertyField=titleData['rows'][i].propertyField;
+				Str +="xlSheet.cells("+(3)+","+(j+1)+")='"+(propertyDesc?propertyDesc:propertyField)+"';";
+				j++;
+			}
+			// 4、获取单据打印内容表(CF.NUR.NIS.SheetPrtContentSet)导出内容
+			var dataList=$.cm({
+				 ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+				 QueryName:"getSheetContentExportData",
+				 sheetID:selected.ID,
+				 rows:99999
+			},false);
+			for (var i=0;i<dataList['total'];i++){
+				var propertyValue=dataList['rows'][i].propertyValue;
+				var propertyValueArr=propertyValue.split(String.fromCharCode(1));
+				for (var j=0;j<propertyValueArr.length;j++){
+					Str +="xlSheet.cells("+(i+4)+","+(j+1)+")='"+propertyValueArr[j]+"';";
+				}
+			}
+		}
+		
+		var filename=xlsname+".xls";
+		Str += "var fname = xlApp.Application.GetSaveAsFilename('"+filename+"', 'Excel Spreadsheets (*.xls), *.xls');" 
+		Str += "if (fname==false) return;"
+		Str += "xlBook.SaveAs(fname);"
+		Str +="xlApp.Visible = false;"
+		Str +="xlApp.UserControl = false;"
+		Str +="xlBook.Close(savechanges=false);"
+		Str +="xlApp.Quit();"
+		Str +="xlSheet=null;"
+		Str +="xlBook=null;"
+		Str +="xlApp=null;"
+		Str +="return 1;}());";
+	//以上为拼接Excel打印代码为字符串
+	CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
+	var rtn =CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+}
+function sheetImportClick(){
+	var str ="(function test(x){"+
+			"var oXL = new ActiveXObject('Excel.Application');"+
+			"var fileName=''; "+
+			"var fileName = oXL.Application.GetOpenFilename ('Excel Spreadsheets (*.xls), *.xls');" +
+			"if (fileName==''){return '';}" +
+			"var oWB = oXL.Workbooks.open(fileName);"+
+			"oWB.worksheets(1).select();"+
+			"var oSheet = oWB.ActiveSheet;  "+
+			"var Spl1=String.fromCharCode(1);"+
+			"var Spl2=String.fromCharCode(2);"+
+			"var Spl3=String.fromCharCode(3);"+
+			"var Spl4=String.fromCharCode(4);"+
+			"var rows =  oSheet.usedrange.rows.count;"+
+			"var columns=oSheet.usedrange.columns.count;"+
+			"var saveDataArr=[],sheetDataArr=[],sheetContentDataArr=[];"+
+			"for (var i = 1; i <= columns; i++) {"+
+				"sheetDataArr.push(oSheet.Cells(2, i).value||'');"+
+			"};"+
+			"saveDataArr.push(sheetDataArr.join(Spl2));"+
+			"if ('"+PrtSheetTypeSel+"'=='InfuseSheet') {"+
+				"var sheetTabSaveDataArr=[],sheetTabContentSaveDataArr=[];"+
+				"var tabContentDataArr=[];"+
+				"for (var i = 4; i <= rows; i++) {"+
+					"var oneDataArr=[];"+
+					"for (var j = 1; j <= columns; j++) {"+
+						"oneDataArr.push(oSheet.Cells(i, j).value||'');"+
+					"};"+
+					"var type=oSheet.Cells(i, 1).value||'';"+
+					"if (type.indexOf('Info')>=0) {"+
+					 	"sheetTabSaveDataArr.push(oneDataArr.join(Spl3));"+
+					 	"if (i > 4) sheetTabContentSaveDataArr.push(tabContentDataArr.join(Spl4));"+
+					 	"tabContentDataArr=[];"+
+					 "};"+
+					 "else if(type ==='') {"+
+					 	"tabContentDataArr.push(oneDataArr.join(Spl3));"+
+					 	"if (i == rows) {"+
+					 		"sheetTabContentSaveDataArr.push(tabContentDataArr.join(Spl4));"+
+					 	"};"+
+					 "};"+
+					 "else {"+
+					 "};"+
+				"};"+
+				"saveDataArr.push(sheetTabSaveDataArr.join(Spl2));"+
+				"saveDataArr.push(sheetTabContentSaveDataArr.join(Spl2));"+
+			"};"+
+			"else {"+
+				"for (var i = 4; i <= rows; i++) {"+
+					"var rowDataArr=[];"+
+					"for (var j = 1; j <= columns; j++) {"+
+						"rowDataArr.push(oSheet.Cells(i, j).value||'');"+
+					"};"+
+					"sheetContentDataArr.push(rowDataArr.join(Spl3));"+
+				"};"+
+				"saveDataArr.push(sheetContentDataArr.join(Spl2));"+
+			"};"+
+			"oXL.Application.Quit();"+
+			"return saveDataArr.join(Spl1);}());";
+	CmdShell.notReturn = 0;    //有返回值调用
+	var rtn =CmdShell.EvalJs(str);     //运行代码且得到返回值 
+	debugger;
+	var Str=rtn.rtn
+	if (Str!=""){
+		var Spl1=String.fromCharCode(1);
+		var Spl2=String.fromCharCode(2);
+		var Spl3=String.fromCharCode(3);
+		var Spl4=String.fromCharCode(4);
+		var sheetDataArr=Str.split(Spl1)[0].split(Spl2);
+		
+		//打印单据保存数据
+		var sheetSaveDataArr=[];
+		var titleData=$.cm({
+		   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+		   QueryName:"getExportTitle",
+		   packageName:"CF.NUR.NIS",
+		   className:"SheetPrtSet",
+		   rows:99999
+		},false);
+		for (var i=0;i<titleData.total;i++){
+			sheetSaveDataArr.push({
+				"field":titleData.rows[i].propertyName,
+				"fieldValue":sheetDataArr[i]
+			})
+		}
+		if (PrtSheetTypeSel=="InfuseSheet"){
+			var sheetTabDataArr=Str.split(Spl1)[1].split(Spl2);
+			var sheetTabContentDataArr=Str.split(Spl1)[2].split(Spl2); 
+			//输液单表格配置
+			var tabTitleData=$.cm({
+			   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			   QueryName:"getExportTitle",
+			   packageName:"CF.NUR.NIS",
+			   className:"InfuseSheetPrtTabSet",
+			   rows:99999
+			},false);
+			var tabContentTitleData=$.cm({
+			   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			   QueryName:"getExportTitle",
+			   packageName:"CF.NUR.NIS",
+			   className:"SheetPrtContentSet",
+			   rows:99999
+			},false);
+			var sheetTabSaveData=[];
+			for (var i=0;i<sheetTabDataArr.length;i++){
+				var oneTabSaveArr=[];
+				for (var j=0;j<tabTitleData.total;j++){
+					oneTabSaveArr.push({
+						"field":tabTitleData.rows[j].propertyName,
+						"fieldValue":sheetTabDataArr[i].split(Spl3)[j]
+					});
+				}
+				var oneTabContentSaveArr=[];
+				var oneSheetTabContentDataArr=sheetTabContentDataArr[i].split(Spl4);
+				for (var m=0;m<oneSheetTabContentDataArr.length;m++){
+					var oneContentSaveArr=[];
+					for (var j=0;j<tabContentTitleData.total;j++){
+						oneContentSaveArr.push({
+							"field":tabContentTitleData.rows[j].propertyName,
+							"fieldValue":oneSheetTabContentDataArr[m].split(Spl3)[j]
+						});
+					}
+					oneTabContentSaveArr.push(oneContentSaveArr);
+				}
+				sheetTabSaveData.push({
+					tabSaveArr:oneTabSaveArr,
+					TabeContentSaveArr:oneTabContentSaveArr
+				});
+			}
+			$.m({
+				ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+				MethodName:"importInfuseSheet",
+				sheetSaveDataArr:JSON.stringify(sheetSaveDataArr),
+				sheetTabSaveData:JSON.stringify(sheetTabSaveData),
+				hospId:parent.GetHospId()
+			},function(rtn){
+				if (rtn ==0) {
+					$.messager.popover({msg: '导入成功！',type: 'success'});
+					$('#tabPrtSheet').datagrid("reload");
+				}else{
+					$.messager.popover({msg: '导入失败！'+rtn,type: 'error'});
+				}
+			})
+		}else{
+			var sheetContentDataArr=Str.split(Spl1)[1].split(Spl2);
+			//单据打印内容保存数据
+			var sheetContentSaveDataArr=[];
+			var titleData=$.cm({
+			   ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+			   QueryName:"getExportTitle",
+			   packageName:"CF.NUR.NIS",
+			   className:"SheetPrtContentSet",
+			   rows:99999
+			},false);
+			for (var i=0;i<sheetContentDataArr.length;i++){
+				var oneContentArr=sheetContentDataArr[i].split(Spl3);
+				var oneContentSaveArr=[];
+				for (var j=0;j<titleData.total;j++){
+					oneContentSaveArr.push({
+						"field":titleData.rows[j].propertyName,
+						"fieldValue":oneContentArr[j]
+					})
+				}
+				sheetContentSaveDataArr.push(oneContentSaveArr);
+			}
+			debugger;
+			$.m({
+				ClassName:"Nur.NIS.Service.OrderExcute.SheetPrintConfig",
+				MethodName:"importSheet",
+				sheetSaveDataArr:JSON.stringify(sheetSaveDataArr),
+				sheetContentSaveDataArr:JSON.stringify(sheetContentSaveDataArr),
+				hospId:parent.GetHospId()
+			},function(rtn){
+				if (rtn ==0) {
+					$.messager.popover({msg: '导入成功！',type: 'success'});
+					$('#tabPrtSheet').datagrid("reload");
+				}else{
+					$.messager.popover({msg: '导入失败！'+rtn,type: 'error'});
+				}
+			})
+		}
+	}
+}
+</script>

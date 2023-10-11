@@ -1,0 +1,34 @@
+﻿<html>
+    <head>
+        <title> 个人短语内容 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script language="cache" runat="server">
+            s userCode = %session.Get("LOGON.USERCODE")
+            s groupId = %session.Get("LOGON.GROUPID")
+        </script>
+        <script language="javascript">
+            var returnValue = parent.modalDialogArgs;
+            var argParams ={
+                userCode: "#(userCode)#",
+                groupId: "#(groupId)#",
+            }
+            $(function(){
+                console.log("OP_KB_Admin-json:",returnValue);
+                sessionStorage.setItem('Info', JSON.stringify(returnValue));
+                sessionStorage.setItem('userInfo',JSON.stringify(argParams));
+                var iframe = document.getElementById("DPNodeContent");
+                var url = window.location.href.split('csp')[0] + 'service/emrdocEditor/edit/personalPhrases/';
+                iframe.setAttribute("src",url);
+            });
+        </script>
+    </head>
+    <body class="hisui-panel" data-options="fit:true,border:false" style="width:100%;height:100%;overflow:hidden;" ondragstart="return false">
+        <iframe id="DPNodeContent" style="width:100%;height:100%;overflow:hidden;" scrolling="no" ></iframe>
+    </body>
+</html>

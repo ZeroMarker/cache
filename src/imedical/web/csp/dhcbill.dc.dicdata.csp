@@ -1,0 +1,121 @@
+<!-- 
+ * FileName: dhcbill.dc.dicdata.csp
+ * Creator: tangzf
+ * Date: 2022-5-11
+ * Description: 数据核查基础字典维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+	<ADDINS require="CmdShell"></ADDINS>
+	
+
+	<style type="text/css">
+  	#_HospList{
+		width:348px !important	
+	}
+	#_HospUserList{
+		width:348px !important	
+	}
+  	.search-table.editinfo .textbox{
+    	width:140px	!important; /* 文本框宽度减小 tangzf 2019-8-12*/ 
+	} 
+	#DicDemo{
+    	width:373px	!important; /* 文本框宽度减小 tangzf 2019-8-12*/ 
+	}
+
+	</style>
+</head>
+<server>
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_DICDATA")
+</server>
+<body>
+	<div class="hisui-layout" fit="true">  
+		<div data-options="region:'north'"style="overflow:hidden;border-radius:0px;border-bottom:1px dashed #cccccc;">
+			<table class="search-table">
+					<tr>
+						<td class='r-label'><label>院区</label></td>
+						<td><input id="hospital" class="textbox" style="width:252px;" placeholder=""/></td>
+					</tr>
+					<tr>
+						<td><label class='r-label'>字典类型</label></td>
+						<td><input id="diccbx" class="hisui-validatebox textbox" style="width:252px"  name="ccdic"></input></td>
+						<td><label class='r-label r-label-20'>关键字</label></td>
+						<td><input id="dicKey" class="textbox" style="width:345px" placeholder='输入关键字回车查询,支持模糊查询'></input></td>
+						<td><label class='r-label r-label-20'>公有标志</label></td>
+						<td><input id="GYFlag" ></input></td>
+						<td class="r-label r-label-20"><a id="btnQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onClick='Querydic()'>查询</a></td>
+						<td class="r-label"><a id="btnClearQ" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onClick='ClearQ()'>清屏</a></td>
+						
+<!-- 						<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnImport" plain="true" onClick='Import("")' >导入字典</a></td>
+						<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出字典</a></td>
+					 -->
+					</tr>
+			</table>
+		</div>
+		<div data-options="region:'center'," >
+			<div id="dg" ></div>
+		</div>
+		<div id="editForm1" data-options="region:'south'"  style="height:92px;border-top-width:1px">
+			<table class='search-table editinfo'  >
+				<tr >
+					<td class='r-label'><label>代码</label></td>
+					<td><input id="DicCode"  class="hisui-validatebox textbox"/></td>
+					<td class="r-label r-label-20"><label>描述</label></td>
+					<td><input id="DicDesc"  class="hisui-validatebox textbox"/></td>
+					<td  class="r-label r-label-20"><label>备注</label></td>
+					<td colspan=3><input id="DicDemo" class="hisui-validatebox textbox"/></input></td>
+					<td class="r-label r-label-20">
+						<a id="btnClear" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-clean'" >清屏</a>  
+					</td>
+					<td class="r-label r-label-20">
+						<a id="btnDelete" href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-cancel'" style="display:none">删除记录</a>  
+					</td>
+				</tr>
+				<tr >
+					<td  class="r-label"><label >对照代码</label></td>
+					<td><input id="ConCode"  class="hisui-validatebox textbox"/></td>
+					<td  class="r-label r-label-20"><label >是否启用</label></td>
+					<td><input id="ActiveFlag"  class="hisui-validatebox" style="width:148px"/></td>
+					<td  class="r-label r-label-20"><label >对照备注</label></td>
+					<td><input id="ConDemo"   class="hisui-validatebox textbox"/></td>
+					<td class="r-label r-label-20"><label id="ConDescStr">对照描述</label></td>
+					<td ><input id="ConDesc"  class="textbox"/></td>
+					<td class="r-label r-label-20">
+						<a id="btnUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:116px">保存记录</a>  
+					</td>
+					<td class="r-label r-label-20">
+						<a id="btnStop" href="#" style="width:116px" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">停用</a>  
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div id="toolbar" class="hisui-toolbar">
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnImport" plain="true" onClick='Import("")' >导入字典</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出字典</a></td>
+			</tr>
+		</table> 
+	</div>  			
+	
+	<script type="text/javascript" src="../scripts/dhcbill/dc/dicdata.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/publicimportexceltoarr.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/xlsx.full.min.js"></script>
+	<!--<DHCBILLINSUCloud/>-->
+</body>
+</html>

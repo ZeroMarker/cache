@@ -2,12 +2,12 @@
 <head>
 <title></title>
 <HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/commonfun.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/hiscomponent.js"></script>
-	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/searchTree.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/eleattrext.js"></script>
 	<script Language="Javascript">
 		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
@@ -17,16 +17,9 @@
 		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
 	</script>
-
-	<script type="text/javascript">
-	 $(document).ready(function(){
-
-		 //var IEVersion =serverCall("ext.util.String","GetIEVersion");
-		 //alert(IEVersion)
-
-	 })	
-	 </script>	
 	<style>
 		.panel-header, .panel-body {
 		    border-color: #ccc;
@@ -49,6 +42,9 @@
 		    border-radius: 0 0 4px 4px !important;
 		   
 		}
+		/*多院区改造 cy 2021-04-09 */
+		#_HospList+span{max-width:124px}
+		#_HospList+span >input{max-width:90px}
 	</style>
 </head>
 <body>
@@ -61,26 +57,27 @@
 				<div style="margin-top:10px;margin-bottom:10px;">
 					<table>
 						<tr>
-							<td ><span style="margin-left:10px;"></span>表单标题<span style="margin-left:10px;"></span><input name="queryField" id="queryField" class="textbox" style="width:120px"/></td>
+							<td class="textLabel" style="display:none;"><span style="margin-left:10px;"></span><label id="_HospListLabel">医院</label><span style="margin-left:10px;"></span><input type="text" id="_HospList" name="hosp"></input> </td> <!--多院区改造 cy 2021-04-09 -->
 							<td ><span style="margin-left:10px;"></span>表单<span style="margin-left:10px;"></span><input style="width:120px" name="queryForm" class='hisui-combobox' 
 			      	  					data-options="valueField:'value',
 			      	  								  textField:'text',
 			      	  								  url:'dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listCombo',
 			      	  								  onSelect: function(rec){    
-		   												commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})		
+		   												QueryDataGrid();		
 													  }" id="queryForm" /></td>
-							<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})">查询</a> </td>					
+							<td ><span style="margin-left:10px;"></span>标题<span style="margin-left:10px;"></span><input name="queryField" id="queryField" class="textbox" style="width:120px"/></td>
+							<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:QueryDataGrid()">查询</a> </td>					
 						</tr>
 						<tr>
-							<td ><span style="margin-left:38px;"></span>类型<span style="margin-left:10px;"></span><input style="width:127px" name="queryStyle" class='hisui-combobox' 
+							<td ><span style="margin-left:10px;"></span>类型<span style="margin-left:10px;"></span><input style="width:120px" name="queryStyle" class='hisui-combobox' 
 		      	  					data-options="valueField:'value',
 		      	  								  textField:'text',
 		      	  								  url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormType',
 		      	  								  onSelect: function(rec){    
-													commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})		
+													QueryDataGrid();		
 												  }" id="queryStyle" /></td>
-							<td ><label><input class='hisui-radio' type="radio" name='queryType' value='Y' id="queryTypey">字典元素</label>
-							<label><input class='hisui-radio' type="radio" name='queryType' value='N' id="queryTypen">全部</label>
+							<td ><span id="dicele"><input class='hisui-radio' type="radio" name='queryType' value='Y' id="queryTypey" label="字典元素"></span>
+								 <span id="allele"><input class='hisui-radio' type="radio" name='queryType' value='N' id="queryTypen" checked="true" label="全部"></span>
 					   	  	<input name="userEdit" id="userEdit" value="#(%request.Get("userEdit"))#" type="hidden" /></td>
 						</tr>
 					</table>								
@@ -159,7 +156,7 @@
 			</div>	
 		</div>	
 	</div>   
-	<div id="dpanel" data-options="region:'east',title:''" style="width:350px;" border="false">
+	<div id="dpanel" data-options="region:'east',title:''" style="width:400px;" border="false">
 		<div class="hisui-panel" data-options="title:'元素属性维护',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">
 			<div id="attrList" toolbar="#atttb" border=false></div>  
 		</div>	

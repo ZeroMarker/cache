@@ -10,6 +10,16 @@
 	<HISUI/>
 	<DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
+<style>
+	.messager-popover
+	{
+		font-weight: normal;
+	}
+	.eqbutton
+	{
+		margin-left:15px;
+	}
+</style>
 <script language=Cache runat=server>
 	s ContractType=$Get(%request.Data("ContractType",1))
 	s Type=$Get(%request.Data("Type",1))
@@ -21,138 +31,136 @@
 	s Action=$Get(%request.Data("Action",1))
 	s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("8",CTRowID),CurRole,Action)
 	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	; Mozy0235	2019-11-27
+	s CopyFlag=$Get(%request.Data("CopyFlag",1))   ///Modefied by ZC0081 2020-09-07  能否复制标识
+	s AuditType=$Get(%request.Data("AuditType",1))	//czf 1914903 2021-05-22
 </script>
 <!--Mozy003012	2020-04-15 修正布局参数-->
 <body class="hisui-layout">
 	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>	<!--Mozy003019		2020-04-28-->
-	<div data-options="region:'center',border:false" style="padding:5px 10px 0px 10px;"><!--Mozy003013	1280246 2020-04-18 修正边距-->
-		<div class="hisui-panel" data-options="fit:true,border:false">
+	<div data-options="region:'center',border:false" style="padding:10px;"><!--Mozy003013	1280246 2020-04-18 修正边距-->
+		<div class="hisui-panel panel-header-gray" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:dashed 0px #ccc;height:275px;">
-					<div data-options="region:'north',border:false" style="position:relative;">
-						<div class="eq-table">
-							<!--Mozy003012	2020-04-15 修正按钮布局-->
-							<div class="eq-table-tr">
-								<!--div class="eq-table-td eq-table-label"><label for="ContractTypeList">合同类型</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'CON.L.Contract.ContractTypeList'" id="ContractTypeList"></div-->
-								<div class="eq-table-td eq-table-label"><label for="CTContractNo">合同号</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTContractNo" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"><label id="cCTContractName" for="CTContractName">合同名称</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTContractName" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTFileNo">档案号</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTFileNo" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTSubType_List">子类型</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'CON.L.GetSubType'" id="CTSubType_List"></div>
-								<!--modify by lmm 2020-06-06 UI-->
-								<div class="eq-table-td"><a id="BPicture" href="#" class="hisui-linkbutton" iconCls="icon-w-img" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">图片信息</a></div><!--Mozy003013	1280246 2020-04-18 修正边距-->
-							</div>
-							<div class="eq-table-tr">
-								<!--div class="eq-table-td eq-table-label"><label for="CTBuyTypeDR_BTDesc">采购方式</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.BuyType'" id="CTBuyTypeDR_BTDesc"></div-->
-								<div class="eq-table-td eq-table-label"><label for="CTManageLocDR_CTLOCDesc">管理部门</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="CTManageLocDR_CTLOCDesc"></div>
-								<div class="eq-table-td eq-table-label"><label id="cCTProviderDR_VDesc" for="CTProviderDR_VDesc">供应商</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="CTProviderDR_VDesc"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTProviderHandler">供方经办人</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTProviderHandler" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTProviderTel">供方电话</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTProviderTel" style="width:148px;"></div>
-								<div class="eq-table-td"><a id="BPayPlan" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">付款计划</a></div>
-								<!--Modify by zx 2020-02-25 BUG ZX0077 电子资料,暂时影藏-->
-								<!--div class="eq-table-td"><a id="BAppendFile" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">电子资料</a></div-->
-							</div>
-							<div class="eq-table-tr">
-								<div class="eq-table-td eq-table-label"><label for="CTSignLocDR_CTLOCDesc">签订部门</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="CTSignLocDR_CTLOCDesc"></div>
-								<div class="eq-table-td eq-table-label"><label id="cCTSignDate" for="CTSignDate">签订日期</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTSignDate"></div>
-								<div class="eq-table-td eq-table-label"><label id="cCTTotalFee" for="CTTotalFee">维保总金额</label></div>	<!--Mozy003011	2020-04-14-->
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTTotalFee" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTPreFeeFee">预付款</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTPreFeeFee" style="width:148px;"></div>
-								<div class="eq-table-td"><a id="BCopy" href="#" class="hisui-linkbutton" iconCls="icon-w-copy" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">复制合同</a></div>
-								<!--div class="eq-table-td"><a id="BScan" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">拍照</a></div-->
-							</div>
-							<div class="eq-table-tr">
-								<div class="eq-table-td eq-table-label"><label for="CTGuaranteePeriodNum">保修期(月)</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTGuaranteePeriodNum" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTStartDate">保修开始日期</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTStartDate"></div>
-								<div class="eq-table-td eq-table-label"><label id="cCTEndDate" for="CTEndDate">保修截止日期</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTEndDate"></div>
-								<div class="eq-table-td eq-table-label"></div>
-								<div class="eq-table-td eq-table-input"></div>
-								<div class="eq-table-td"></div>
-								<!--div class="eq-table-td"><a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">打印</a></div-->
-							</div>
-							<div class="eq-table-tr">
-								<div class="eq-table-td eq-table-label"><label for="CTServiceDR_SVName">服务商</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Service'" id="CTServiceDR_SVName"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTServiceHandler">服务联系人</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTServiceHandler" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"><label for="CTServiceTel">服务电话</label></div>
-								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CTServiceTel" style="width:148px;"></div>
-								<div class="eq-table-td eq-table-label"></div>
-								<div class="eq-table-td eq-table-input"></div>
-								<div class="eq-table-td"></div>
-							</div>
-							<div class="eq-table-tr">
-								<div class="eq-table-td eq-table-label"><label for="CTService">服务条款</label></div>
-								<div class="eq-table-td"><textarea id="CTService" style="width:151px"></textarea></div>
-								<div class="eq-table-td eq-table-label"><label for="CTPayItem">付款条款</label></div>
-								<div class="eq-table-td"><textarea id="CTPayItem" style="width:151px"></textarea></div>
-								<div class="eq-table-td eq-table-label"><label for="CTBreakItem">违约处理</label></div>
-								<div class="eq-table-td"><textarea id="CTBreakItem" style="width:151px"></textarea></div>
-								<!--	Mozy0255	1190551		2020-3-6
-								div class="eq-table-td eq-table-label"><label for="CTQualityItem">质保条款</label></div>
-								<div class="eq-table-td"><textarea id="CTQualityItem" style="width:151px"></textarea></div-->
-								<div class="eq-table-td eq-table-label"></div>
-								<div class="eq-table-td eq-table-input"></div>
-								<div class="eq-table-td"></div>
-							</div>
-							<div class="eq-table-tr">
-								<div class="eq-table-td eq-table-label"><label for="CTRemark">备注</label></div>
-								<div class="eq-table-td"><textarea id="CTRemark" style="width:151px"></textarea></div>
-								<div class="eq-table-td eq-table-label"></div>
-								<div class="eq-table-td eq-table-input"></div>
-								<div class="eq-table-td eq-table-label"></div>
-								<div class="eq-table-td eq-table-input"></div>
-								<div class="eq-table-td eq-table-label"></div>
-								<div class="eq-table-td eq-table-input"></div>
-								<div class="eq-table-td"></div>
-							</div>
-							<!--div class="eq-table-tr">
-								<div class="eq-table-td eq-table-label"><label for="EditOpinion">审批意见</label></div>
-								<div class="eq-table-td"><textarea id="EditOpinion" style="width:151px" colspan="3"></textarea></div>
-								<div class="eq-table-td eq-table-label"><label for="Opinion">审批记录</label></div>
-								<div class="eq-table-td"><textarea id="Opinion" style="width:151px" colspan="3" disabled="true"></textarea></div>
-								<div class="eq-table-td eq-table-label"><label for="RejectReason">拒绝原因</label></div>
-								<div class="eq-table-td"><textarea id="RejectReason" style="width:151px"></textarea></div>
-							</div-->
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:0px;"><!-- MZY0058	1558057		2020-10-18-->
+					<div class="eq-table">
+						<!--Mozy003012	2020-04-15 修正按钮布局-->
+						<div class="eq-table-tr">
+							<!--div class="eq-table-td eq-table-label"><label for="ContractTypeList">合同类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'CON.L.Contract.ContractTypeList'" id="ContractTypeList"></div-->
+							<div class="eq-table-td eq-table-label"><label for="CTContractNo">合同号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTContractNo" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label id="cCTContractName" for="CTContractName">合同名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTContractName" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTFileNo">档案号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTFileNo" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTSubType_List">子类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'CON.L.GetSubType'" id="CTSubType_List"></div>
+							<!--modify by lmm 2020-06-06 UI-->
+							<div class="eq-table-td"><a id="BPicture" href="#" class="hisui-linkbutton" iconCls="icon-w-img" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">图片信息</a></div><!--Mozy003013	1280246 2020-04-18 修正边距-->
 						</div>
+						<div class="eq-table-tr">
+							<!--div class="eq-table-td eq-table-label"><label for="CTBuyTypeDR_BTDesc">采购方式</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.BuyType'" id="CTBuyTypeDR_BTDesc"></div-->
+							<div class="eq-table-td eq-table-label"><label for="CTManageLocDR_CTLOCDesc">管理部门</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Loc'" id="CTManageLocDR_CTLOCDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cCTProviderDR_VDesc" for="CTProviderDR_VDesc">供应商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Vendor'" id="CTProviderDR_VDesc"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTProviderHandler">供方经办人</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTProviderHandler" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTProviderTel">供方电话</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTProviderTel" style="width:148px;"></div>
+							<div class="eq-table-td"><a id="BPayPlan" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">付款计划</a></div>
+							<!--Modify by zx 2020-02-25 BUG ZX0077 电子资料,暂时影藏-->
+							<!--div class="eq-table-td"><a id="BAppendFile" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">电子资料</a></div-->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTSignLocDR_CTLOCDesc">签订部门</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Loc'" id="CTSignLocDR_CTLOCDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cCTSignDate" for="CTSignDate">签订日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTSignDate"></div>
+							<div class="eq-table-td eq-table-label"><label id="cCTTotalFee" for="CTTotalFee">维保总金额</label></div>	<!--Mozy003011	2020-04-14-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTTotalFee" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTPreFeeFee">预付款</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTPreFeeFee" style="width:148px;"></div>
+							<div class="eq-table-td"><a id="BCopy" href="#" class="hisui-linkbutton" iconCls="icon-w-copy" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">复制合同</a></div>
+							<!--div class="eq-table-td"><a id="BScan" href="#" class="hisui-linkbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">拍照</a></div-->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTGuaranteePeriodNum">保修期(月)</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTGuaranteePeriodNum" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTStartDate">保修开始日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTStartDate"></div>
+							<div class="eq-table-td eq-table-label"><label id="cCTEndDate" for="CTEndDate">保修截止日期</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CTEndDate"></div>
+							<!-- MZY0058	1558057		2020-10-18-->
+							<div class="eq-table-td eq-table-label"><label for="CTBuyTypeDR_BTDesc">采购方式</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.BuyType'" id="CTBuyTypeDR_BTDesc"></div>
+							<div class="eq-table-td"></div>
+							<!--div class="eq-table-td"><a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">打印</a></div-->
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTServiceDR_SVName">服务商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Service'" id="CTServiceDR_SVName"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTServiceHandler">服务联系人</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTServiceHandler" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTServiceTel">服务电话</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTServiceTel" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTRemark">备注</label></div>
+							<div class="eq-table-td"><textarea class="textbox" id="CTRemark"></textarea></div>
+							<div class="eq-table-td"></div>
+						</div>
+						<!-- MZY0058	1558057		2020-10-18-->
+						<!--div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CTService">服务条款</label></div>
+							<div class="eq-table-td"><textarea id="CTService" style="width:151px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CTPayItem">付款条款</label></div>
+							<div class="eq-table-td"><textarea id="CTPayItem" style="width:151px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CTBreakItem">违约处理</label></div>
+							<div class="eq-table-td"><textarea id="CTBreakItem" style="width:151px"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="CTQualityItem">质保条款</label></div>
+							<div class="eq-table-td"><textarea id="CTQualityItem" style="width:151px"></textarea></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td"></div>
+						</div-->
+						<div class="eq-table-tr">
+							<!--  MZY0095	2021-09-15	注释
+							<div class="eq-table-td eq-table-label"><label for="CTHold3">维保次数</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTHold3" style="width:148px;"></div>
+							<div class="eq-table-td eq-table-label"><label for="CTHold4">维保预警天数</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CTHold4" style="width:148px;"></div-->
+						</div>
+						<!--div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="EditOpinion">审批意见</label></div>
+							<div class="eq-table-td"><textarea id="EditOpinion" style="width:151px" colspan="3"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="Opinion">审批记录</label></div>
+							<div class="eq-table-td"><textarea id="Opinion" style="width:151px" colspan="3" disabled="true"></textarea></div>
+							<div class="eq-table-td eq-table-label"><label for="RejectReason">拒绝原因</label></div>
+							<div class="eq-table-td"><textarea id="RejectReason" style="width:151px"></textarea></div>
+						</div-->
 					</div>
 				</div>
 				<!--Mozy003012	2020-04-15 修正按钮布局-->
-				<div data-options="region:'center',border:false" style="position:relative;padding:0x;">
-                	<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'合同明细'">
-					 <table id="DHCEQContract" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"> </table>
-                	</div>
-					 <span id="sumTotal" class="eq-total-sum" style="position:absolute;right:20px;top:5px;">合计</span>
-            	</div>
-		     	<!--MZY0025 2020-05-13 UI调整-->
-		     	<div data-options="region:'south',border:false" style="border-bottom:dashed 0px #ccc;height:50px;">
-			        <div style="margin:0px auto;fit:true;padding-top:10px;vertical-align:middle;text-align:center;">
-		            	<a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a>
-		                <a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a>
-		                <a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a>
-		                <a id="BApprove1" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a>
-		                <a id="BApprove2" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a>
-		                <a id="BApprove3" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a>
-		                <a id="BCancelSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">退回</a>
-						<a id="BCancel" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">作废</a>
-			        </div>
-			    </div>
+				<div data-options="region:'center',border:false" style="position:relative;">
+					<table id="DHCEQContract" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"> </table>
+					<div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 10px 2px 0;padding:5px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
+					</div>
+				</div>
 			</div>
+		</div>
+	</div>
+	<!--MZY0025 2020-05-13 UI调整-->
+	<div data-options="region:'south',border:false" style="border-bottom:dashed 0px #ccc;">
+		<div style="padding:0 0 10px 0;fit:true;vertical-align:middle;text-align:center;">
+			<a id="BSave" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+			<a id="BDelete" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">删除</a>
+			<a id="BSubmit" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">提交</a>
+			<a id="BApprove1" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">审核</a>
+			<a id="BApprove2" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">审核</a>
+			<a id="BApprove3" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">审核</a>
+			<a id="BCancelSubmit" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">退回</a>
+			<a id="BCancel" href="#" class="hisui-linkbutton eqbutton" data-options="stopAllEventOnDisabled:true">作废</a>
 		</div>
 	</div>
 	<!--隐藏元素-->
@@ -191,6 +199,9 @@
 			<INPUT type="hidden" id="CTArriveItem" value="">
 			<INPUT type="hidden" id="CheckStandard" value="">
 			<INPUT type="hidden" id="CTQualityItem" value="">	<!--	Mozy0255	1190551		2020-3-6 -->
+			<INPUT type="hidden" id="CopyFlag" value="#(CopyFlag)#">		<!--Modefied by ZC0081 2020-09-07  能否复制标识-->
+			<INPUT type="hidden" id="AuditType" value="#(AuditType)#">
+			<INPUT type="hidden" id="CTHold5" value="#(AuditType)#">	<!--czf 1914903 2021-05-22 合同审批类型-->
 		</form>
 	</div>
 	<script type='text/javascript' src='../scripts/dhceq/em/contract.js'></script>

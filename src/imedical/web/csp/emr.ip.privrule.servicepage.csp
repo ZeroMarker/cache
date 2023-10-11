@@ -1,0 +1,119 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+<head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
+	<HISUI/>
+	<title>	权限配置视图 </title>
+	<script language="cache" runat="server">
+		s hospDesc = %session.Get("LOGON.HOSPDESC")
+		s hospId = %session.Get("LOGON.HOSPID")
+		s hospId = 2
+		s hospGroupId = ##class(EMRservice.BL.BLPrivRuleConfigView).GetHospGroupID(hospId)
+		s hospGroupId =2
+		s userID = %session.Get("LOGON.USERID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		
+   </script>
+    <script language="javascript">
+        var setting = {
+	        hospDesc:'#(hospDesc)#',
+	        hospId:'#(hospId)#',
+	        hospGroupId:'#(hospGroupId)#',
+            userId:'#(userID)#',
+            userloc:'#(userLocID)#',
+           	privRuleType:"",
+           	privRuleTypeDesc:"",
+           	ssgroupid:"",
+			episodeid:"",
+			privrulechanged:false
+        }
+    </script>
+    
+    <style type="text/css">
+	.viewlabel {
+		margin:5 px;
+		padding:5 px;
+		font-size:14px;
+		bold:true;
+	}
+	
+	.datagrid-toolbar table{
+	    float: right;
+	}
+   </style>
+    
+</head>
+<body class="hisui-layout" data-options="border:false">
+	<div data-options="region:'north',title:'权限配置页面',split:true,showCollapsedTitle:true,iconCls:'icon-w-list'" style="height:100px;padding:10px;">
+		<div>
+			<span class="viewlabel" >院区：</span>
+			<input id="txtHospName" style="width:200px;" class="hisui-triggerbox textbox" data-options="plain:true" />
+			<span class="viewlabel" >当前权限类型： </span>
+			<div id="cbxdgPrivType" class="hisui-combogrid" style="width:200px;" >
+			</div>
+			<span class="viewlabel" style="padding:0 0 0 5px">状态：</span>
+			<div id="switchPrivRuleType" 
+				 class="hisui-switchbox" 
+				 style="margin-left:5px" 
+				 data-options="onText:'启用',offText:'禁用',size:'small',animated:true,
+							   onClass:'primary',offClass:'gray'">
+			</div>
+		</div>
+	</div>  
+	<div data-options="region:'east',title:'权限规则测试',iconCls:'icon-w-list',split:true,collapsed:false" style="width:800px;padding:10px;">
+		<div  class="hisui-panel" title="测试信息" style="width:760px;padding:10px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<table> 
+				<tbody>
+					<tr>
+						<td class="r-label">医生工号</td>
+						<td class="r-label">
+							<input id="cbgDbgUser" class="hisui-combogrid">
+						</td>
+						<td class="r-label">
+							<a id="btnTest" href="#" class="hisui-linkbutton">调试</a>
+						</td>
+						<td class="r-label">
+							<a id="btnClean" href="#" class="hisui-linkbutton">重置</a>
+						</td>
+					</tr>
+
+					<tr>
+						<td class="r-label">登录信息</td>
+						<td>
+							<input id="cbgDbgLogon" class="hisui-combogrid">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">患者信息</td>
+						<td>
+							<input id="cbgDbgEpisode" class="hisui-combogrid">
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		
+		<div  class="hisui-panel" style="width:760px;height:220px;padding:5px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<table id="tgdDbgEMRDocument"></table>
+		</div>
+		
+		<div  class="hisui-panel" style="width:760px;height:235px;padding:5px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div id="dgDbgResult" style="height:220px"></div>
+		</div>
+		
+	</div>   
+	<div data-options="region:'center',split:true" style="padding:10px;">
+		<div>
+			<a id='btnUp' title="上移" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-up',plain:true"  onclick="upRow()" >#(..Get("上移"))#</a>
+			<a id='btnDown' title="下移" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-down',plain:true"  onclick="downRow()" >#(..Get("下移"))#</a>
+			<a id='btnGenPri' title="生成" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-save',plain:true" onclick="savePrivRule()" >#(..Get("生成"))#</a>
+		</div>
+		<div class ="hisui-datagrid"  id="dgPrivRule" style="height:620px"></div>
+	</div>
+   <script type="text/javascript" src="../scripts/emr/js/ip.privrule.servicepage.js"></script>
+		
+</body>
+</html>

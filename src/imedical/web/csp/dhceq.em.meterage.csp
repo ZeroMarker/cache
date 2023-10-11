@@ -8,9 +8,16 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<Style>
+.eqbutton
+{
+	margin-left:15px;
+}
+</Style>
 <script type="text/javascript" src="../scripts/dhceq/em/maint.js"></script>
+<script type="text/javascript" src="../scripts/dhceq/em/qctemplate.js"></script> <!--add by zc0127 2023-01-10	引入js-->
 <script type="text/javascript" src="../scripts/hisui/DHCEQCommon.js"></script>
 </head>
 <server>
@@ -23,94 +30,95 @@ s EndDate=$g(%request.Data("EndDate",1))
 s EquipDR=$g(%request.Data("EquipDR",1))
 s MaintTypeDR=$g(%request.Data("MaintTypeDR",1))
 s ReadOnly=$g(%request.Data("ReadOnly",1))   //add by lmm 2020-05-22 1328981
+s CollectFlag=$g(%request.Data("CollectFlag",1))   //add by lmm 2020-08-10 1379412
 </server>
 <body class="hisui-layout">
-	<!--modify by lmm 2020-05-09 1311841-->
-	<div data-options="region:'north',border:false" style="padding:10px;border-bottom:solid 1px #ccc;">
-		<div data-options="region:'north',border:false" style="height:40px;" style="overflow:hidden"> <!--begin banner显示区域-->
-			<iframe id="Banner" frameborder="0" src="" style="width:100%;height:40px;padding-top:10px;"></iframe>
-		</div> <!--begin banner显示区域-->
+	<div data-options="region:'north',border:false" style="padding:10px;border-bottom:solid 1px #e2e2e2;">
+		<div data-options="region:'north',border:false" style="height:70px;" style="overflow:hidden">
+			<iframe id="Banner" frameborder="0" src="" style="width:100%;height:69px;padding-top:10px;"></iframe>
+		</div>
 	</div>
 	<div data-options="region:'center',border:false" style="padding:10px;">
-	    <div class="hisui-panel" data-options="fit:true,border:false" style="width:100%;">
+		<div class="hisui-panel" data-options="fit:true,border:false,eqtitle:'maintitle',headerCls:'panel-header-gray'" style="width:100%;">	<!--	MZY0151	2023-02-01	-->
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'center',border:false" style="padding-bottom:10px;width:150%">
+				<div data-options="region:'center',border:false" style="padding-bottom:10px;">
 			    	<div class="eq-table" style="width:100%">
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cEquip" for="Equip">设备名称</label></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cEquip" for="Equip">设备名称</label></div>
 							<!--modify by lmm 2020-06-17 UI-->
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Equip"  data-options="component:'EM.L.Equip',paras:[{name:'Equip',type:1,value:'Equip'},{name:'VComputerFlag',type:2,value:'Y'}],defaultsize:'width:800,height:245'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPlanName" for="PlanName">计划名称</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPlanName" for="PlanName">计划名称</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PlanName" data-options="component:'EM.L.PlanName',paras:[{name:'BussType',type:4,value:'BussType'},{name:'Name',type:2,value:''},{name:'EquipDR',type:4,value:'EquipDR'},{name:'MaintTypeDR',type:4,value:'MaintTypeDR'}]"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPlanExecute" for="PlanExecute">计划执行单号</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPlanExecute" for="PlanExecute">计划执行单号</label></div>
 							<!--MODIFY BY LMM 2020-04-26 1290572-->
 							<!--modify by lmm 2020-06-17 UI-->
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PlanExecute" data-options="component:'EM.L.PlanExecuteList',paras:[{name:'MPID',type:4,value:'PlanNameDR'},{name:'PEID',type:4,value:'PlanExecuteDR'},{name:'EquipDR',type:4,value:'EquipDR'},{name:'ExecuteFlag',type:2,value:'N'}],defaultsize:'width:600,height:245'"></div>
 			             </div>
 			             <div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cUseLoc" for="UseLoc">使用科室</label></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cUseLoc" for="UseLoc">使用科室</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="UseLoc" data-options="component:'PLAT.L.Loc'"></div>	             
-							<div class="eq-table-td eq-table-label"><label id="cMaintLoc" for="MaintLoc">计量科室</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cMaintLoc" for="MaintLoc">计量科室</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintLoc" data-options="component:'PLAT.L.Loc'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cMaintUser" for="MaintUser">计量人</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cMaintUser" for="MaintUser">计量人</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintUser" data-options="component:'PLAT.L.EQUser'"></div>
 			              </div>
 			              <div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cMaintType" for="MaintType">计量类型</label></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cMaintType" for="MaintType">计量类型</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintType" data-options="component:'EM.L.MaintType',paras:[{name:'MaintTypeDesc',type:1,value:'MaintType'},{name:'MaintType',type:4,value:'BussType'}]"></div>
-							<div class="eq-table-td eq-table-label"><label id="cMaintMode" for="MaintMode">计量方式</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cMaintMode" for="MaintMode">计量方式</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaintMode" data-options="component:'EM.L.MaintMode',paras:[{name:'MaintMode',type:1,value:'MaintMode'},{name:'Type',type:4,value:'BussType'}]"></div>	<!--Mozy0252	826989		2020-3-3-->
 							<!--modify by lmm 2019-09-09 必填项提示修改-->
-							<div class="eq-table-td eq-table-label"><label id="cMaintDate" for="MaintDate">计量日期</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cMaintDate" for="MaintDate">计量日期</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MaintDate" data-required="true" data-options="prompt:'必填项'"></div>            
 			              </div>
 			              <div class="eq-table-tr">
 							<!--Modified By QW20190312BUG:847335-->
-							<div class="eq-table-td eq-table-label"><label id="cMaintFee" for="MaintFee">计量费用</label></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cMaintFee" for="MaintFee">计量费用</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="MaintFee"></div> 
 							<!--End By QW20190312BUG:847335-->		
-							<div class="eq-table-td eq-table-label"><label id="cCertificateValidityDate" for="CertificateValidityDate">计量有效期</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cCertificateValidityDate" for="CertificateValidityDate">计量有效期</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CertificateValidityDate"></div>
-							<div class="eq-table-td eq-table-label"><label id="cCertificateNo" for="CertificateNo">计量证书号</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cCertificateNo" for="CertificateNo">计量证书号</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="CertificateNo" ></div>
 			              </div>
 			              <div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cService" for="Service">服务商</label></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cService" for="Service">服务商</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Service" data-options="component:'EM.L.Service'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cServiceUsers" for="ServiceUsers">服务人</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cServiceUsers" for="ServiceUsers">服务人</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="ServiceUsers" ></div>
-			              	<div class="eq-table-td eq-table-label"><label id="cRemark" for="Remark">备注</label></div>
+			              	<div class="eq-table-td eq-table-label-new"><label id="cRemark" for="Remark">备注</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="Remark" ></div> 
 			              </div>
 			              <div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cServiceHandler" for="ServiceHandler">服务联系人</label></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cServiceHandler" for="ServiceHandler">服务联系人</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="ServiceHandler"></div>
-							<div class="eq-table-td eq-table-label"><label id="cServiceTel" for="ServiceTel">服务电话</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cServiceTel" for="ServiceTel">服务电话</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="ServiceTel" ></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cAffix" for="Affix">附件</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Affix" data-options="component:'EM.G.EQAffix',paras:[{name:'EQRowID',type:4,value:'EquipDR'}]"></div>
 			              </div>
-
 			          </div>
 			      </div>
-		         <!--modify by lmm 2020-05-09 1311841-->
-				  <div data-options="region:'south',border:false" style="height:40px">
+			      <!--	MZY0151	2023-02-01	按钮间距-->
+				  <div data-options="region:'south',border:false" style="height:30px">
 					  <div style="text-align:center;">
-							<a id="BUpdate" href="#" class="hisui-linkbutton" iconCls="icon-w-save">保存</a>
-							<a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit">提交</a>
-							<a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close">删除</a>
-							<a id="BPicture" href="#" class="hisui-linkbutton" iconCls="icon-w-img">附加图片</a>
-							<a id="BFeeInfo" href="#" class="hisui-linkbutton" iconCls="icon-w-paper">费用明细</a>
-							<a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-cancel">作废</a>
+							<a id="BUpdate" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a>
+							<a id="BSubmit" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a>
+							<a id="BDelete" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a>
+							<a id="BPicture" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-img" data-options="stopAllEventOnDisabled:true">附加图片</a>
+							<a id="BFeeInfo" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-paper" data-options="stopAllEventOnDisabled:true">费用明细</a>
+							<a id="BCollection" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-edit" data-options="stopAllEventOnDisabled:true">补录</a>
+							<a id="BCancelSubmit" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-cancel" data-options="stopAllEventOnDisabled:true">作废</a>
 					  </div>
-				  </div>			      
+				  </div>
 			  </div>
 		   </div>
-             <!--Mozy0252	826991		2020-3-3-->
         </div>
         <div id="hiddenEncrypt" style="display:none">
 			<form name="DHCEQ">
 		        <input id="MaintLocDR" name="MaintLocDR">
 		        <input id="EquipDR" name="EquipDR" value=#(EquipDR)#>
-		        <input id="ReadOnly" name="ReadOnly" value=#(ReadOnly)#>    <!--add by lmm 2020-05-22 1328981-->
+		        <input id="ReadOnly" name="ReadOnly" value=#(ReadOnly)#>
 		        <input id="UseLocDR" name="UseLocDR">
 		        <input id="MaintUserDR" name="MaintUserDR">
 		        <input id="MaintTypeDR" name="MaintTypeDR" value=#(MaintTypeDR)#>
@@ -134,9 +142,9 @@ s ReadOnly=$g(%request.Data("ReadOnly",1))   //add by lmm 2020-05-22 1328981
 		        <input id="CertificateNo" name="CertificateNo">
 		        <input id="MaintPlanDR" name="MaintPlanDR">
 		        <input id="PlanExecuteDR" name="PlanExecuteDR">
-				<!--Modified By QW20190312BUG:847335-->
+		        <input id="AffixDR" name="AffixDR">
 				<input id="TotalFee"  name="TotalFee">
-				<!--End By QW20190312BUG:847335-->
+				<input type="hidden" id="CollectFlag" value=#(CollectFlag)#>   <!--modify by lmm 2020-08-10-->
 			</form>
 		</div>
     </div>

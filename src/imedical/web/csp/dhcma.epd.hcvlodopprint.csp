@@ -1,0 +1,347 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			border: none;
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+		}
+		input {
+			border: none;
+			border-bottom: black solid 1pt;
+			font-size: 95%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0px;background-color:#FFF;">
+		<script language="Cache" RUNAT="SERVER">
+			Set LogonLocID=$GET(%session.Data("LOGON.CTLOCID"))
+			Set ReportID=$GET(%request.Data("ReportID",1))
+			Set ReportInfo=##Class(DHCMed.EPDService.HCVReportSrv).GetRepByID(ReportID)
+			Set RepNo 			= $p(ReportInfo,"^",1)
+			Set PatientID	 	= $p(ReportInfo,"^",3)
+			Set objPatient=##class(DHCMed.Base.Patient).GetObjById(PatientID)
+			Set PapmiNo=objPatient.PapmiNo              //登记号
+			Set PatientName=objPatient.PatientName      //姓名
+			Set PatientSex=objPatient.Sex               //性别
+			Set Birthday = objPatient.Birthday
+			//Set PatientAge = ($h-Birthday)/365
+			Set:Birthday'="" Birthday=##Class(DHCMed.SSService.CommonCls).DateLogicalToHtml(Birthday)		
+			Set OrganName = $p(ReportInfo,"^",5)
+			Set OrganID = $p(ReportInfo,"^",6)			
+			Set SerialNum = $p(ReportInfo,"^",7)
+			Set Education = $p($p(ReportInfo,"^",8),$c(2),3)
+			Set Marrige = $p($p(ReportInfo,"^",9),$c(2),3)
+			Set PerMonIncome = $p($p(ReportInfo,"^",10),$c(2),3)
+			Set MedInsType = $p($p(ReportInfo,"^",11),$c(2),3)			
+			Set TestPosDate	= $p(ReportInfo,"^",13)			
+			Set TestMethod = $p($p(ReportInfo,"^",14),$c(2),3)
+			Set TestReason = $p($p(ReportInfo,"^",15),$c(2),3)
+			Set TestReasonExt = $p(ReportInfo,"^",16)
+			Set RecheckDate = $p(ReportInfo,"^",17)
+			Set IsRecheck = $p($p(ReportInfo,"^",18),$c(2),1)
+			Set RechMethod 	= $p($p(ReportInfo,"^",19),$c(2),3)
+			Set Results = $p($p(ReportInfo,"^",20),$c(2),3)
+			Set NucleinRet = $p($p(ReportInfo,"^",21),$c(2),2)
+			Set NucleinRetExt = $p(ReportInfo,"^",22)
+			Set BloodDate = $p(ReportInfo,"^",23)
+			Set IsCheck = $p($p(ReportInfo,"^",24),$c(2),1)
+			Set EntryDate = $p(ReportInfo,"^",25)
+			Set CardNo = $p(ReportInfo,"^",26)
+			Set ReferDate = $p(ReportInfo,"^",27)
+			Set IsRefer = $p($p(ReportInfo,"^",28),$c(2),1)
+			Set ReferResult = $p($p(ReportInfo,"^",29),$c(2),3)
+			Set TreatmentDate = $p(ReportInfo,"^",30)
+			Set Untreated = $p($p(ReportInfo,"^",31),$c(2),3)
+			Set RepUser = $p(ReportInfo,"^",33)
+			Set RepDate = $p(ReportInfo,"^",34)
+			Set Resume = $p(ReportInfo,"^",35)
+
+			// 字典列表
+			Set DicList = ##Class(DHCMed.EPDService.HCVReportSrv).GetRepDicList()
+			Set SexList = $Lg(DicList,1)
+			Set EducationList = $Lg(DicList,2)
+			Set MaritalList = $Lg(DicList,3)
+			Set PerMonIncomeList = $Lg(DicList,4)
+			Set MedInsTypeList = $Lg(DicList,5)
+			Set TestMethodList = $Lg(DicList,6)
+			Set TestReasonList = $Lg(DicList,7)
+			Set ResultsList = $Lg(DicList,8)
+			Set ReferResultList = $Lg(DicList,9)
+			Set UntreatedList = $Lg(DicList,10)
+			
+	   </script>
+	    <!--打印界面内容-->
+		<div id="Form">
+			<table class="RepInfo" border=1 width="95%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+				<div style="width: 95%;font-weight: bold;">
+					<div style="font-size: 120%;text-align: center;">新诊断报告丙肝病例个案调查表</div>
+				</div>
+				<div style="margin-bottom:0.5em;">
+					<span>机构名称:</span>
+					<input type='text' style='border:none;border-bottom:black solid 1pt' value=#(OrganName)#>					
+					<span>机构代码:</span>
+					<input type='text' style='border:none;border-bottom:black solid 1pt' value=#(OrganID)#>					
+					<span>流水号:</span>
+					<input type='text' style='border:none;border-bottom:black solid 1pt' value=#(SerialNum)#>
+				</div>
+				<tr>
+					<td style="padding-left:0.5em;padding-top:0.3em;padding-bottom:0.5em;">
+						患者姓名:
+					 	<input type='text' style='border:none;border-bottom:black dashed 1pt' value=#(PatientName)#>
+						<span style="margin-left:30px;">性别:</span>
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(SexList))#>
+							<CSP:IF CONDITION="$Lg(SexList,ZLInd)=PatientSex">&#9745;</div><CSP:ELSE >&#9633;</CSP:IF>#($Lg(SexList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+				<tr>
+					<td>出生日期:
+						<script language="Cache" RUNAT="SERVER">
+					    	Set BirthdayYear=$p(Birthday,"-",1)
+					    	Set BirthdayMonth=$p(Birthday,"-",2)
+					    	Set BirthdayDay=$p(Birthday,"-",3)
+					    	Set Birthday = BirthdayYear_"年"_BirthdayMonth_"月"_BirthdayDay_"日"
+						</script>
+						<input type='text' style='width:8em;' value=#(Birthday)#>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						婚姻状况:
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(MaritalList))#>
+							<CSP:IF CONDITION='$Lg(MaritalList,ZLInd)=Marrige'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(MaritalList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>				
+				<tr>
+					<td>
+						文化程度:
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EducationList))#>
+							<CSP:IF CONDITION='$Lg(EducationList,ZLInd)=Education'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(EducationList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>				
+				<tr>
+					<td>
+						医保类型:
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(MedInsTypeList))#>
+							<CSP:IF CONDITION='$Lg(MedInsTypeList,ZLInd)=MedInsType'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(MedInsTypeList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						个人月收入:
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(PerMonIncomeList))#>
+							<CSP:IF CONDITION='$Lg(PerMonIncomeList,ZLInd)=PerMonIncome'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(PerMonIncomeList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+			</table>
+			<table class="RepInfo" border=1 width="95%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+				<tr>
+					<td>首次抗体检测日期:
+						<script language="Cache" RUNAT="SERVER">
+					    	Set TestPosDateYear=$p(TestPosDate,"-",1)
+					    	Set TestPosDateMonth=$p(TestPosDate,"-",2)
+					    	Set TestPosDateDay=$p(TestPosDate,"-",3)
+					    	Set TestPosDate = TestPosDateYear_"年"_TestPosDateMonth_"月"_TestPosDateDay_"日"
+						</script>
+						<input type='text' style='width:8em;' value=#(TestPosDate)#>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						首次抗体检测阳性方法：
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(TestMethodList))#>
+							<CSP:IF CONDITION='$Lg(TestMethodList,ZLInd)=TestMethod'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(TestMethodList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+				<tr>
+					<td>首次抗体阳性实验室检测主要原因（单选）：</td>
+				</tr>
+				<tr>
+					<td>
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(TestReasonList))#>
+							<CSP:IF CONDITION='$Lg(TestReasonList,ZLInd)=TestReason'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(TestReasonList,ZLInd))#
+						</CSP:LOOP>
+						<input type='text' style='width:8em;' value=#(TestReasonExt)#>
+					</td>
+				</tr>				
+				<tr>
+					<td>抗体复检日期:
+						<script language="Cache" RUNAT="SERVER">
+							IF (RecheckDate'=""){														
+						    	Set Year=$p(RecheckDate,"-",1)
+						    	Set Month=$p(RecheckDate,"-",2)
+						    	Set Day=$p(RecheckDate,"-",3)
+						    	Set RecheckDate = Year_"年"_Month_"月"_Day_"日"
+							} ELSE {
+						    	Set RecheckDate = RecheckDate								
+							}
+					   </script>
+						<input type='text' style='width:8em;' value=#(RecheckDate)#>		
+						<span style="margin-left:30px;">
+							<CSP:IF CONDITION="IsRecheck=0">&#9745;<CSP:ELSE>&#9633;</CSP:IF>未做
+						</span>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						抗体复检方法：
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(TestMethodList))#>
+							<CSP:IF CONDITION='$Lg(TestMethodList,ZLInd)=RechMethod'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(TestMethodList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						抗体复检结果：
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(ResultsList))#>
+							<CSP:IF CONDITION='$Lg(ResultsList,ZLInd)=Results'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(ResultsList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						丙肝核酸检测结果：
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(ResultsList))#>
+							<CSP:IF CONDITION='$Lg(ResultsList,ZLInd)=NucleinRet'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(ResultsList,ZLInd))#
+						</CSP:LOOP>
+						<span style="margin-left:15px;">病毒载量:</span>
+						<input type='text' style='border:none;border-bottom:black solid 1pt' value=#(NucleinRetExt)#>IU / ml
+					</td>
+				</tr>
+				<tr>
+					<td>采血日期
+						<script language="Cache" RUNAT="SERVER">
+							IF (BloodDate'=""){														
+						    	Set Year=$p(BloodDate,"-",1)
+						    	Set Month=$p(BloodDate,"-",2)
+						    	Set Day=$p(BloodDate,"-",3)
+						    	Set BloodDate = Year_"年"_Month_"月"_Day_"日"
+							} ELSE {
+						    	Set BloodDate = BloodDate								
+							}
+					   </script>
+						<input type='text' style='width:8em;' value=#(BloodDate)#>												
+						<span style="margin-left:30px;">
+							<CSP:IF CONDITION="IsCheck=0">&#9745;<CSP:ELSE>&#9633;</CSP:IF>未检
+						</span>
+					</td>				
+				</tr>
+			</table>
+			<table class="RepInfo" border=1 width="95%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+				<tr>
+					<td>网络直报录入日期
+						<script language="Cache" RUNAT="SERVER">
+					    	Set Year=$p(EntryDate,"-",1)
+					    	Set Month=$p(EntryDate,"-",2)
+					    	Set Day=$p(EntryDate,"-",3)
+					    	Set EntryDate = Year_"年"_Month_"月"_Day_"日"
+					   </script>
+						<input type='text' style='width:8em;' value=#(EntryDate)#>												
+					</td>				
+				</tr>
+				<tr>
+					<td>
+						<span>疫情库卡片编号:</span>
+						<input type='text' style='border:none;border-bottom:black solid 1pt' value=#(CardNo)#>
+					</td>
+				</tr>
+				<tr>
+					<td>转介治疗日期
+						<script language="Cache" RUNAT="SERVER">
+							IF (ReferDate'=""){														
+						    	Set Year=$p(ReferDate,"-",1)
+						    	Set Month=$p(ReferDate,"-",2)
+						    	Set Day=$p(ReferDate,"-",3)
+						    	Set ReferDate = Year_"年"_Month_"月"_Day_"日"
+							} ELSE {
+						    	Set ReferDate = ReferDate								
+							}
+					   </script>
+						<input type='text' style='width:8em;' value=#(ReferDate)#>	
+						<span style="margin-left:30px;">
+							<CSP:IF CONDITION="IsRefer=0">&#9745;<CSP:ELSE>&#9633;</CSP:IF>未转介
+						</span>																	
+					</td>				
+				</tr>
+				<tr>
+					<td>
+						转介结果：
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(ReferResultList))#>
+							<CSP:IF CONDITION='$Lg(ReferResultList,ZLInd)=ReferResult'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(ReferResultList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+				<tr>
+					<td>治疗开始日期
+						<script language="Cache" RUNAT="SERVER">
+							IF (TreatmentDate'=""){														
+						    	Set Year=$p(TreatmentDate,"-",1)
+						    	Set Month=$p(TreatmentDate,"-",2)
+						    	Set Day=$p(TreatmentDate,"-",3)
+						    	Set TreatmentDate = Year_"年"_Month_"月"_Day_"日"
+							} ELSE {
+						    	Set TreatmentDate = TreatmentDate								
+							}
+					   </script>
+						<input type='text' style='width:8em;' value=#(TreatmentDate)#>												
+					</td>				
+				</tr>
+				<tr>
+					<td>
+						未治疗原因：
+						<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(UntreatedList))#>
+							<CSP:IF CONDITION='$Lg(UntreatedList,ZLInd)=Untreated'>&#9745;<CSP:ELSE >&#9633;</CSP:IF>#($Lg(UntreatedList,ZLInd))#
+						</CSP:LOOP>
+					</td>
+				</tr>
+			</table>
+			<table class="RepInfo" border=1 width="95%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+				<tr>
+					<td>
+						<span>填报人:</span>
+						<input type='text' style='border:none;border-bottom:black solid 1pt' value=#(RepUser)#>
+					</td>
+				</tr>
+				<tr>
+					<td>填报日期
+						<script language="Cache" RUNAT="SERVER">
+					    	Set Year=$p(RepDate,"-",1)
+					    	Set Month=$p(RepDate,"-",2)
+					    	Set Day=$p(RepDate,"-",3)
+					    	Set RepDate = Year_"年"_Month_"月"_Day_"日"
+					   </script>
+						<input type='text' style='width:8em;' value=#(RepDate)#>	
+					</td>				
+				</tr>		
+			</table>
+			<table class="RepInfo" border=1 width="95%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+				<tr>
+					<td>
+						<span>备注:</span>
+						<input type='text' style='border:none' value=#(Resume)#>
+					</td>
+				</tr>			
+			</table>			
+		</div>
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

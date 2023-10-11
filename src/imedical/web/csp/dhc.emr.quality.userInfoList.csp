@@ -1,0 +1,96 @@
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+	<head>
+        <title>质控员维护</title>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    	<HISUI/> 
+       
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <style>
+        	.icon{
+	        	width: 20px;
+	        	height: 20px;
+	        	margin-right: 10px;
+	        	float: right;
+	        }
+	        .margin-right-10{
+		    	vertical-align: middle;
+				margin-right:10px;   
+		    }
+	        .margin-10{
+				vertical-align: middle;
+				margin:10px;
+			}
+			.btn-div{
+				font-size:0;
+				margin-top:10px;
+			}
+			.btn-a{
+				width:90px;
+				margin-right:10px;
+				margin-left:10px;	
+			}
+       </style>
+	</head>
+<body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+	<div data-options="region:'center',fit:true,border:false" class="div_center" style="padding:10px;">
+		<div class="hisui-panel" title="质控员维护" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+            	<div data-options="region:'north',border:false" style="overflow:hidden;">
+					<div id="messageListTableTBar" >	
+						<div style="float:left;font-size:0;margin:10px;">
+							<span class="margin-right-10">#(..Get("开始时间"))#</span><input id="inputCreateDateStart" class="hisui-datebox" />
+			 				<span class="margin-10">#(..Get("结束时间"))#</span><input id="inputCreateDateEnd" class="hisui-datebox" />
+							<span class="margin-10">#(..Get("科室"))#</span><select id="locId" class="hisui-combobox" style="width:150px;"></select>
+							<span class="margin-10">#(..Get("用户"))#</span><select id="userInfo" class="hisui-combobox" style="width:150px;"></select>
+			 				
+			 				
+			 				<div class="btn-div">
+			 				<span class="margin-right-10">#(..Get("质控权限"))#</span><select id="checkRange" class="hisui-combobox" style="width:154px;">
+			 				</select>
+			 				<span class="margin-10">#(..Get("医师等级"))#</span><select id="Grade" class="hisui-combobox" style="width:154px;">
+			 				</select>
+			 					<a id="btnSearch" href="#" class="hisui-linkbutton hover-dark btn-a" onclick="doSearch()" data-options="iconCls:'icon-w-find'">查询</a>
+			 					<a id="btnAdd" href="#" class="hisui-linkbutton hover-dark btn-a" onclick="doAdd()" data-options="iconCls:'icon-w-add'" style="margin-right:0;">新增</a>
+			 				</div>
+			 				<!--span style="margin-left:5px;margin-right:0px;"></span><a id="btnUpdate" href="#" class="hisui-linkbutton hover-dark" onclick="doUpdate()" data-options="iconCls:'icon-w-update'" style="width:90px;">修改</a-->
+		 				</div>
+			 		</div>
+			 	</div>
+			 	<div data-options="region:'center',border:false" style="border: 1px #cccccc solid;border-left:none;border-right:none">
+					<table class="hisui-datagrid" id="userList" data-options="border:false,fit:true" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+ 	<script language="cache" runat="server">
+ 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s UserID = %session.Get("LOGON.USERID")
+  		s UserLocID = %session.Get("LOGON.CTLOCID")
+  		s DocID = ""
+ 		s:(UserID '= "") DocID = ##Class(web.SSUser).GetDefaultCareProvider(UserID)
+		s HospitalName = ##Class(EPRservice.BOSysOption).GetValueByName("HospitalName")
+		s FormatDate = ##class(EMRservice.Tools.Tool).GetHISStandardDateTimeFormat("GetFormatExt","Date")
+		s QuaSetPage = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("QuaSetPage")
+		s:(QuaSetPage="") QuaSetPage=1
+		s HospitalID = %session.Get("LOGON.HOSPID")
+ 	</script>
+ 	<script language="javascript">
+ 		var docID = '#(DocID)#';
+ 		var formatDate = '#(FormatDate)#';
+		var userID = '#(UserID)#';
+		var userLocID = '#(UserLocID)#';
+		var HospitalName = '#(HospitalName)#';
+		var SSGroupID = '#(SSGroupID)#';
+		var QuaSetPage = '#(QuaSetPage)#';
+		var HospitalID = '#(HospitalID)#';
+ 	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.MedDoctor.js"></script>	
+</body>
+</html>

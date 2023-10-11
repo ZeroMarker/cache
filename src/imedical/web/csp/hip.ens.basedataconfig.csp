@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  If ##Class(websys.SessionEvents).SessionExpired() quit 1
+  quit 1
+</csp:method>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>基础数据配置</title>
+  <HISUI />
+  <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js"></script>
+  <style type="text/css">
+    .datagrid-wrap.panel-body,
+    .panel-header.panel-header-gray {
+      width: auto !important;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .panel-header,
+    .panel-body {
+      border-color: #ddd;
+    }
+
+    .dialog-button {
+      text-align: center;
+      background: #fff;
+      border: 0 none;
+    }
+
+    .window table {
+      padding: 0;
+      margin: 0;
+    }
+
+    .window table tr td {
+      /* padding: 0;
+      margin: 0; */
+      padding-bottom: 10px;
+    }
+
+    /******2018/12/28***************/
+    .datagrid-htable,
+    .datagrid-btable,
+    .datagrid-ftable {
+      color: #000000;
+      border-collapse: separate;
+      width: 100%;
+    }
+
+    .datagrid-header td,
+    .datagrid-body td,
+    .datagrid-footer td {
+      border-color: #ddd;
+      border-style: solid;
+      width: 25%;
+    }
+
+    .datagrid-header-inner {
+      float: left;
+      width: 100%;
+    }
+
+    .dialog-button {
+      text-align: center;
+      background: #fff;
+      border: 0 none;
+      margin-top: -20px;
+    }
+
+    .tooldis {
+      padding-bottom: 5px;
+      margin-left: 3%;
+      display: inline-block;
+    }
+
+    td>.inputCls {
+      width: 100%;
+      box-sizing: border-box;
+      height: 30px;
+    }
+
+    td[field="deptdesc"] div.datagrid-cell,
+    .datagrid-cell-group {
+      text-overflow: ellipsis;
+      /*2018-12-4 showTip 列数据太多显示...*/
+      padding: 0 8px;
+    }
+
+    ._hisui_combobox-selectall {
+      display: none
+    }
+  </style>
+</head>
+
+<body class="hisui-layout" fit="true">
+  <div data-options="region:'center'">
+    <div class="datagrid-view hisui-panel" fit="true">
+      <table id="mtSourceTb" data-type="uncompleted"></table>
+    </div>
+  </div>
+  <div id="toolbar" style="padding-top:5px;padding-bottom:5px;display:none">
+    <div class="tooldis">
+      <label for="sysDesc">系统描述</label>
+      <input id="sysDesc" style="width:150px;" />
+    </div>
+    <div class="tooldis">
+      <label for="courtyard">院区</label>
+      <input id="courtyard" style="width:150px;">
+    </div>
+
+    <div class="tooldis">
+      <label for="model">模式</label>
+      <select class="hisui-combobox" id="model" style="width:150px;" editable="false">
+        <option value="all">全部</option>
+        <option value="共库">共库</option>
+        <option value="分库">分库</option>
+      </select>
+    </div>
+
+    <div class="tooldis">
+      <label for="status">状态:</label>
+      <select class="hisui-combobox" id="status" name="status" style="width:150px;" editable="false">
+        <option value="all">全部</option>
+        <option value="Y">启用</option>
+        <option value="N">停用</option>
+      </select>
+    </div>
+    <div class="tooldis">
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" id="methodDataSelectBtn"
+        onclick="cfgSearch()">查 询</a>
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="methodDataAddBtn"
+        onclick="cfgAdd()">新增</a>
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" id="methodDataUpdateBtn"
+        onclick="cfgUpdate()">编辑</a>
+      <!-- <a class="hisui-linkbutton" data-options="iconCls:'icon-upload',plain:true" id="methodDataImportBtn"
+        onclick="showImportWin()">导入</a> -->
+      <!-- <a class="hisui-linkbutton" data-options="iconCls:'icon-reload',plain:true" id="methodDataReloadBtn"
+        onclick="cfgReload()">刷新</a> -->
+    </div>
+  </div>
+
+  <!-- 新增编辑模态框 -->
+  <div id="addOrEditDiag" class="hisui-window" title="新增" data-options="title: '新增',
+  width: 600,
+  height: 340,
+  iconCls:'icon-add',
+  modal:true,
+  closed:true," style="display:none;top:200px;left:500px;">
+    <form id="configForm">
+      <table style="margin:0 auto;padding-top:40px">
+        <tr>
+          <td class="r-label required-label">系统代码</td>
+          <td>
+            <input class="hisui-combobox hisui-validatebox" data-options="required:true" id="cfgSysCode"
+              name="cfgSysCode" style="width:200px">
+          </td>
+          <td class="r-label required-label">系统描述</td>
+          <td>
+            <input type="text" class="hisui-validatebox textbox inputCls" data-options="required:true,disabled:true"
+              id="cfgSysDesc" name="cfgSysDesc" autocomplete="off">
+          </td>
+        </tr>
+        <tr>
+          <td class="r-label required-label">所属院区</td>
+          <td>
+            <input id="cfgcourtyard" name="cfgcourtyard" class="hisui-combobox hisui-validatebox"
+              data-options="required:true" style="width:200px">
+          </td>
+          <td class="r-label">科室</td>
+          <td>
+            <input id="dept" class="hisui-combobox hisui-validatebox" name="dept" style="width:200px">
+          </td>
+
+        </tr>
+
+        <tr>
+          <td class="r-label">模式</td>
+          <td>
+            <input id="cfgSysModel" name="cfgSysModel" style="width:200px">
+          </td>
+          <td class="r-label">产品组</td>
+          <td>
+            <input id="cfgProduction" name="cfgProduction" style="width:200px">
+          </td>
+        </tr>
+        <tr>
+          <td class="r-label">版本</td>
+          <td>
+            <input type="text" id="cfgSysVersion" class="textbox inputCls" name="cfgSysVersion" autocomplete="off">
+          </td>
+          <td class="r-label">状态</td>
+          <td>
+            <div id="cfgStatus" class="hisui-switchbox" name="cfgStatus" data-options="onText:'启用',offText:'停用',
+  size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+          </td>
+        </tr>
+        <tr>
+      </table>
+      <div style="text-align:center; margin-top: 30px;">
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-ok'" id="methodDataSaveBtn" onclick="addConfig()">保
+          存</a>
+        <a class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" id="methodInputAddBtn"
+          onclick="cancel()">取消</a>
+      </div>
+    </form>
+  </div>
+
+
+  <div id="funToolbar" style="padding-top:5px;padding-bottom:5px;display:none">
+    <div class="tooldis">
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="addFun()">新增</a>
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="editFun()">编辑</a>
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="rejectEdit()">取消编辑</a>
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="saveFun()">保存</a>
+      <a class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="delFun()">删除</a>
+    </div>
+  </div>
+  <!-- 功能维护模态框 -->
+  <div id="functionConfig" class="hisui-window" title="功能维护" data-options="title: '功能维护',
+  width: 600,
+  height: 500,
+  iconCls:'icon-show-set',
+  modal:true,
+  closed:true," style="display:none;top:100px;left:500px;">
+
+    <div style="margin: 0 auto;padding:20px;height:460px;box-sizing:border-box">
+      <table id="functiinList"></table>
+    </div>
+  </div>
+
+  <!-- 导入模态框 -->
+  <div id="importDig" class="hisui-dialog" title="导入"
+    style="width:500px;height:200px;top:200px;left:500px;padding:32px;"
+    data-options="iconCls:'icon-unload-cloud',resizable:true,modal:false,closed:true">
+    <!-- 文件框 -->
+    <div id="fileArea"></div>
+    <!-- 进度条 -->
+    <div>
+      <div id="pBar" class="easyui-progressbar" data-options="value:60" style="width:400px;"></div>
+    </div>
+  </div>
+</body>
+<script type="text/javascript" src="../scripts/hip.ens.basedataconfig.js"></script>
+<script type="text/javascript" src="../scripts/xlsx.core.min.js"></script>
+<script type="text/javascript" src="../scripts/common.js"></script>
+<script type="text/javascript">
+  $.fn.validatebox.defaults.missingMessage = '该输入项为必输项';
+  $.fn.combobox.defaults.missingMessage = '该输入项为必输项';
+</script>
+
+</html>

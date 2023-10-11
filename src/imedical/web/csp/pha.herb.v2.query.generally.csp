@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--草药房 - 发退药综合查询
+	csp:pha.herb.v2.query.generally.csp
+	js: pha/herb/v2/query.generally.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHAHERBV2 />
+    <style>
+        .pha-label {
+            width: 58px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" id="lyBody">
+                <div data-options="region:'north',border:false,split:true,height:'135'" class="js-pha-con-toggle">
+                    <div class="hisui-panel" title="发、退药综合查询" data-options="headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-sample-stat',fit:true" id="panelCondition">
+                        <table class="pha-con-table nopadding">
+                            <tr>
+                                <td class="r-label">#(..Get("开始时间"))#</td>
+                                <td>
+                                    <input class="hisui-datebox phaherb-datebox" id="conStartDate">
+                                </td>
+                                <td>
+                                    <input class="hisui-timespinner phaherb-timespinner" id="conStartTime" showSeconds="true">
+                                </td>
+                                <td class="r-label">#(..Get("发药药房"))#</td>
+                                <td>
+                                    <input id="conPhaLoc">
+                                </td>
+                                <td class="r-label">#(..Get("领药病区"))#</td>
+                                <td>
+                                    <input id="conWardLoc">
+                                </td>
+                                <td class="r-label">#(..Get("开单科室"))#</td>
+                                <td>
+                                    <input id="conDocLoc">
+                                </td>
+                                <td class="r-label">#(..Get("登记号"))#</td>
+                                <td>
+                                    <input class="hisui-validatebox" id="conPatNo">
+                                </td>
+                                <td>
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="r-label">#(..Get("结束时间"))#</td>
+                                <td>
+                                    <input class="hisui-datebox phaherb-datebox" id="conEndDate">
+                                </td>
+                                <td>
+                                    <input class="hisui-timespinner phaherb-timespinner" id="conEndTime" showSeconds="true">
+                                </td>
+                                <td class="r-label">#(..Get("煎药方式"))#</td>
+                                <td>
+                                    <input id="conCookType">
+                                </td>
+                                <td class="r-label">#(..Get("就诊类型"))#</td>
+                                <td>
+                                    <input id="conAdmType">
+                                </td>
+                                <td class="r-label">#(..Get("处方号"))#</td>
+                                <td>
+                                    <input class="hisui-validatebox" id="conPrescNo">
+                                </td>
+                                <td class="r-label">
+                                    <div id="moreorless"></div>
+                                </td>  
+                                <td>
+                                    
+                                </td>
+                                <td>
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel" title="药品汇总" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridInci"></table>
+                    </div>
+                </div>
+                <div data-options="region:'south',border:false,height:300,split:true">
+                    <div class="hisui-panel" title="业务明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                        <table id="gridOrder"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id = "js-pha-moreorless" >
+		<table class = "pha-con-table">
+            <tr>
+                <td class="r-label">#(..Get("业务人员"))#</td>
+                <td>
+                    <input id="conPhaUser">
+                </td>
+                <td class="r-label">#(..Get("药品剂型"))#</td>
+                <td>
+                    <input id="conForm">
+                </td>
+                <td class="r-label">#(..Get("业务类型"))#</td>
+                <td>
+                    <input id="conIntrType">
+                </td>
+                <td class="r-label">#(..Get("药品名称"))#</td>
+                <td>
+                    <input id="conInci">
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("协定处方"))#</td>
+                <td>
+                    <input id="conAgreePre">
+                </td>
+                <td class="r-label">#(..Get("出院带药"))#</td>
+                <td>
+                    <input id="conOut">
+                </td>
+                <td class="r-label">#(..Get("数量单位"))#</td>
+                <td>
+                    <input id="conUomType">
+                </td>
+            </tr>
+		</table>
+    </div>
+
+    <!-- 本页面js -->
+    <script src="../scripts/pha/herb/v2/query.generally.js"></script>
+</body>
+
+</html>

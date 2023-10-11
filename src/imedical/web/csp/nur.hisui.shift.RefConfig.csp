@@ -1,0 +1,793 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	body {
+        background-color: #fff;
+        padding:10px!important;
+    }
+    .panel-body.panel-body-noheader{
+		border-color: #ccc;
+	}
+    .datagrid .panel-body{
+		border: none;
+		border-radius: 0;
+	}
+	#add-dialog {
+		top:120px;
+		width:482px;
+		padding: 0px 10px;
+	}
+	#property-dialog {
+		top:120px;
+		width:496px;
+		padding: 0px 10px;
+	}
+	.td-button{
+		padding: 10px;
+	}
+	.td-blank {
+		width: 80px;
+	}
+	.form-table {
+		width:100%;
+		border-collapse: separate; 
+		border-spacing:10px;
+		border:1px solid transparent;
+	}
+	.form-table td, .form-table th {
+		margin: 0px !important;
+		padding: 0px !important;
+		height:32px;
+		/* white-space:nowrap !important; */
+		overflow:hidden;
+		border:1px solid transparent;
+	}
+	.form-table td:first-child {
+		width: 70px;
+		text-align: right;
+	}
+	.textareabox-text, input.textbox, textarea.textbox{
+		width: 368px;	
+	}
+	#Align {
+		width: 375px;
+	}
+	textarea{
+		border-color: #40a2de;
+		width: 368px;	
+	}
+	.form-group{
+		padding: 10px 10px 9px 10px;
+		border-bottom: 1px dashed #ccc;
+	}
+	.form-group a {
+		margin-left: 10px;	
+	}
+	.button-group{
+		margin: 2px 0;	
+	}
+	.textEdit {
+		width: 100%;
+		height: 100%;
+		border-color: #ccc;
+		border: none;
+	}
+	#textArea {
+		width: 100%;
+		height: 100%;
+		border-color: #ccc;
+		border: none;
+	}
+	.gridglobal {
+		width:100%;
+		border-collapse: separate;
+		border-spacing: 10px 10px;
+		border:1px solid transparent;
+	}
+	.size {
+		width: 75px !important;
+	}
+	.tdsize {
+		padding:0px;
+	}
+	.gridglobal tr td span {
+		margin-left:5px;
+	}
+</style>
+<Server>
+</Server>
+<script language="cache" RUNAT="SERVER">
+
+</script>
+<script language="javascript">
+
+</script>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<!--div data-options="region:'north',border:false" style="height:45px;">
+			<label id="_HospListLabel" style='color:red;' class='r-label'>#(..Get("医院"))#</label>
+			<input id="_HospList" class="textbox"/>
+		</div-->
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'west',border:false,split:true" style="width:700px;">
+					<div class="hisui-layout" data-options="fit:true,border:false">
+						<div data-options="region:'center',split:true,border:false">
+							<div class="hisui-panel" title="#(..Get("页签引入"))#" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+								<div id="toolbar_Tab">
+									<div class="button-group">
+										<a id="btn-add" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="addTab()">#(..Get("新增"))#</a>
+										<a id="btn-update" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="updateTab()">#(..Get("修改"))#</a>
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeTab()">#(..Get("删除"))#</a>
+									</div>
+								</div>	
+								<table id="tabgrid"></table>
+								<div id="add-dialog" class="hisui-dialog" data-options="shadow:false,modal:true,closed:true,
+									buttons:[
+										{
+											id: 'btn-dialog-save',
+											text:'#(..Get("保存"))#',
+											handler: function(){ saveTab(); }
+										},
+										{
+											id: 'btn-dialog-cancel',
+											text:'#(..Get("取消"))#',
+											handler: function(){$HUI.dialog('#add-dialog').close();}
+										}
+									]">
+									<div class="hisui-panel" data-options="border:false,fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+										<form id="add-form" method="post">
+
+
+											<table class="form-table" data-options="fit:true">
+												<tr>
+													<td class="r-label" style="width:65px;">#(..Get("名称"))#</td>
+													<td>
+														<input placeholder="#(..Get("请输入页签名称"))#" name="Name" class="hisui-validatebox textbox" id="Name" data-options="required:true"> 
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">#(..Get("代码"))#</td>
+													<td>
+														<input placeholder="#(..Get("请输入页签代码"))#" name="Code" class="hisui-validatebox textbox" id="Code" data-options="required:true">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">CSP</td>
+													<td>
+														<input name="Url" class="textbox" id="Url">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">#(..Get("主接口方法"))#</td>
+													<td>
+														<input placeholder="例如：NurMp.Service.Refer.Interface:FindDiagnosis" name="MainFun" class="textbox" id="MainFun">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">#(..Get("主方法参数"))#</td>
+													<td>
+														<input name="MainParemeter" class="textbox" id="MainParemeter">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">#(..Get("次接口方法"))#</td>
+													<td>
+														<input name="SubFun" class="textbox" id="SubFun">
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label">#(..Get("次方法参数"))#</td>
+													<td>
+														<input name="SubParemeter" class="textbox" id="SubParemeter">
+													</td>
+												</tr>
+												<tr>
+													<td>
+														<input name="RowID" id="rowid" type="hidden" value="">
+													</td>
+												</tr>
+											</table>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+				<div data-options="region:'center',border:false,split:true" style="padding-left:5px;">
+					<div class="hisui-panel" title="#(..Get("引入内容"))#" data-options="fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+						<div id="toolbar_TabSub">
+							<div class="button-group">
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="addProperty()">#(..Get("新增"))#</a>
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="updateProperty()">#(..Get("修改"))#</a>
+								<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="removeProperty()">#(..Get("删除"))#</a>
+							</div>
+						</div>	
+						<table id="propertygrid"></table>
+						<div id="property-dialog" class="hisui-dialog" data-options="shadow:false,modal:true,closed:true,
+							buttons:[
+								{
+									id: 'btn-property-save',
+									text:'#(..Get("保存"))#',
+									handler: function(){ saveProperty(); }
+								},
+								{
+									id: 'btn-property-cancel',
+									text:'#(..Get("取消"))#',
+									handler: function(){$HUI.dialog('#property-dialog').close();}
+								}
+							]">
+							<div class="hisui-panel" data-options="border:false,fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+								<form id="property-form" method="post">
+
+
+									<table class="form-table">
+										<tr>
+											<td class="r-label" style="width:60px;">#(..Get("名称"))#</td>
+											<td colspan=3>
+												<input placeholder="#(..Get("请输入属性名称"))#" name="Name" class="hisui-validatebox textbox" id="Name" data-options="required:true"> 
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">#(..Get("代码"))#</td>
+											<td colspan=3>
+												<input placeholder="#(..Get("请输入属性代码"))#" name="Code" class="hisui-validatebox textbox" id="Code" data-options="required:true">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">#(..Get("列宽"))#</td>
+											<td colspan=3>
+												<input name="Width" class="textbox" id="Width">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">#(..Get("对齐方式"))#</td>
+											<td colspan=3> 
+												<select id="Align" class="hisui-combobox" name="Align">
+													<option value="L" selected>Left</option>
+													<option value="C">Center</option>
+													<option value="R">Right</option>
+												</select>
+											</td>
+										</tr>
+										<tr>
+											<td colspan=4><input name="RowID" id="rowid" type="hidden" value=""></td>
+										</tr>
+									</table>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+<script type="text/javascript">
+$(function () {
+	initUI();
+});
+var GLOBAL = {
+	HospEnvironment: true,
+	HospitalID: session['LOGON.HOSPID']
+};
+function initUI() {
+	initHosp();
+	initConfig();
+	initGrid();
+	listenEvents();
+}
+/**
+ * 关联医院
+ */
+function initHosp() {
+	if (typeof GenHospComp == "undefined") {
+		GLOBAL.HospEnvironment = false;
+	}
+	if (GLOBAL.HospEnvironment) {
+		var hospComp = GenHospComp('Nur_IP_ReferTab', session['LOGON.USERID'] + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.CTLOCID'] + '^' + session['LOGON.HOSPID']);
+		hospComp.options().onSelect = function (q, row) {
+			GLOBAL.HospitalID = row.HOSPRowId;
+			initConfig();
+			initGrid();
+		}
+	} else {
+		$m({
+			ClassName: 'NurMp.Common.Base.Hosp',
+			MethodName: 'hospitalName',
+			HospitalID: session['LOGON.HOSPID']
+		}, function (hospDesc) {
+			$HUI.combobox("#_HospList", {
+				width: 350,
+				valueField: 'HOSPRowId',
+				textField: 'HOSPDesc',
+				data: [{
+					HOSPRowId: session['LOGON.HOSPID'],
+					HOSPDesc: hospDesc
+				}],
+				value: session['LOGON.HOSPID'],
+				disabled: true
+			});
+		});
+	}
+}
+/**
+ * 初始化全局配置
+ */
+ function initConfig() {
+	$('#view-form').form("clear");
+	$cm({
+		ClassName: 'NurMp.Common.Logic.Handler',
+            MethodName: 'Find',
+            ClsName:'CF.NUR.EMR.ReferView', 
+            TableName:'Nur_IP_ReferTab', 
+            HospId:GLOBAL.HospitalID
+	}, function (info) {
+		if ((!$.isEmptyObject(info)) && (info.status > -1) && (!!info.data)) {
+			$('#view-form').form("load", info.data);
+		}
+	});
+ }
+/**
+ * @description 初始化表格
+ */
+function initGrid() {
+//	var url = $URL
+//	if('undefined'!==typeof websys_getMWToken)
+//	{
+//		url+="&MWToken="+websys_getMWToken()
+//	}
+	$('#tabgrid').datagrid({
+		url: $URL,
+		queryParams: {
+			ClassName: 'Nur.SHIFT.Emr.RefSetting',
+			QueryName: 'FindReferTabs',
+			HospitalID: GLOBAL.HospitalID,
+		},
+		fit: true,
+		nowrap: false,
+		frozenColumns: [[
+			{ field: 'Name', title: $g('名称'), width: 130 }
+		]],
+		columns: [[
+			{ field: 'Code', title: $g('代码'), width: 80 },
+			{ field: 'Url', title: 'CSP', width: 220 },
+			{ field: 'MainFun', title: $g('主接口方法'), width: 350 },
+			{ field: 'MainParemeter', title: $g('主方法参数'), width: 400 },
+			{ field: 'SubFun', title: $g('次接口方法'), width: 150 },
+			{ field: 'SubParemeter', title: $g('次方法参数'), width: 120 },
+		]],
+		toolbar: "#toolbar_Tab",
+		pagination: true,  //是否分页
+		rownumbers: true,
+		pageSize: 15,
+		pageList: [15, 30, 50],
+		singleSelect: true,
+		loadMsg: $g('加载中..'),
+		rowStyler: function (rowIndex, rowData) {
+			if (rowData.IsStop == 'Y') {
+				return 'font-style:italic;color:gray;';
+			}
+		},
+		onClickRow: function (rowIndex, rowData) {
+			$('#propertygrid').datagrid("reload", {
+				ClassName: "Nur.SHIFT.Emr.RefSetting",
+				QueryName: "FindReferProperty",
+				ParRef: rowData.RowID
+			});
+		},
+		onDblClickRow: function (rowIndex, rowData) {
+			updateTab();
+		}
+	});
+
+	$('#propertygrid').datagrid({
+		url: $URL,
+		queryParams: {
+			ClassName: "Nur.SHIFT.Emr.RefSetting",
+			QueryName: "FindReferProperty",
+			ParRef: "",
+		},
+		fit: true,
+		nowrap: false,
+		columns: [[
+			{ field: 'Name', title: $g('名称'), width: 130 },
+			{ field: 'Code', title: $g('代码'), width: 120 },
+			{ field: 'Width', title: $g('列宽'), width: 100 },
+			{
+				field: 'Align', title: $g('对齐方式'), width: 80, formatter: function (value, row, index) {
+					if (value == "L") {
+						return "Left";
+					} else if (value == "R") {
+						return "Right";
+					} else {
+						return "Center";
+					}
+				}
+			},
+		]],
+		toolbar: "#toolbar_TabSub",
+		pagination: true,  //是否分页
+		rownumbers: true,
+		pageSize: 14,
+		pageList: [14, 30, 50],
+		singleSelect: true,
+		loadMsg: $g('加载中..'),
+		rowStyler: function (rowIndex, rowData) {
+			if (rowData.IsHidden == 'Y') {
+				return 'font-style:italic;color:gray;';
+			}
+		},
+		onDblClickRow: function (rowIndex, rowData) {
+			updateProperty();
+		}
+	});
+}
+/**
+ * @description 添加页签
+ */
+function addTab() {
+	// $("#add-dialog").dialog("open");
+	$("#add-dialog").dialog({
+		title: $g("新增页签"),
+		iconCls: "icon-w-add",
+		closed: false
+	});
+	$('#add-form').form("clear");
+}
+/**
+ * @description 更新页签
+ */
+function updateTab() {
+	var rows = $('#tabgrid').datagrid("getSelections");
+	console.log(rows.ID)
+	if (rows.length == 1) {
+		// $("#add-dialog").dialog("open");
+		$("#add-dialog").dialog({
+			title: $g("修改页签"),
+			iconCls: "icon-w-edit",
+			closed: false
+		});
+		//清空表单数据
+		$('#add-form').form("clear");
+		$('#add-form').form("load", {
+			RowID: rows[0].RowID,
+			Name: rows[0].Name,
+			Code: rows[0].Code,
+			Url: rows[0].Url,
+			MainFun: rows[0].MainFun,
+			MainParemeter: rows[0].MainParemeter,
+			SubFun: rows[0].SubFun,
+			SubParemeter: rows[0].SubParemeter,
+		});
+	}
+	else{
+		$.messager.popover({ msg: $g("请选择要修改的配置数据！"), type: "alert" });
+		}
+}
+/**
+ * 移动页签
+ * @param    {[String]} direction
+ */
+function moveTab(direction) {
+	var rows = $('#tabgrid').datagrid("getSelections");
+	if (rows.length == 1) {
+		var step = direction == "UP" ? -1 : 1;
+		var objParam = { "HospDr": GLOBAL.HospitalID, "RowID": rows[0].RowID, "Step": step };
+		$m({
+			ClassName: 'Nur.SHIFT.Emr.RefSetting',
+			MethodName: 'moveTab',
+			Param: JSON.stringify(objParam)
+		}, function (result) {
+			if (result == '0') {
+				$('#tabgrid').datagrid('reload');
+				// $("#tabgrid").datagrid("selectRecord", rows[0].RowID);					
+			} else {
+				$.messager.popover({ msg: result, type: "error" });
+			}
+		});
+	} else {
+		$.messager.popover({ msg: $("请选择要修改的配置数据！"), type: "alert" });
+	}
+}
+/**
+ * @description 保存页签
+ */
+function saveTab() {
+	var objElement = serializeForm('add-form');
+	objElement["HospDr"] = GLOBAL.HospitalID;
+	console.log(objElement)
+	var rows = $('#tabgrid').datagrid("getSelections");
+	if(!objElement["Name"]){
+		$.messager.popover({ msg: $g("请输入名称！"), type: "alert" });
+		return;
+		}
+	if (!objElement["Code"]) {
+		$.messager.popover({ msg: $g("请输入代码！"), type: "alert" });
+		return;
+	}
+	$m({
+		ClassName: 'Nur.SHIFT.Emr.RefSetting',
+		MethodName: 'saveTab',
+		Param: JSON.stringify(objElement)
+	}, function (result) {
+		if (result == '0') {
+			$.messager.popover({ msg: $g("保存成功！"), type: "success" });
+			$("#add-dialog").dialog("close");
+			$('#tabgrid').datagrid('reload');
+		} else {
+			$.messager.popover({ msg: result, type: "error" });
+		}
+	});
+}
+/**
+ * @description 删除页签
+ */
+function removeTab() {
+	var rows = $('#tabgrid').datagrid("getSelections");
+	if (rows.length == 1) {
+		$.messager.confirm($g("警告"), $g("确定要删除此条配置数据吗？"), function (r) {
+			if (r) {
+				$m({
+					ClassName: 'Nur.SHIFT.Emr.RefSetting',
+					MethodName: 'deleteTab',
+					Id: rows[0].RowID
+				}, function (result) {
+					if (result == '0') {
+						$('#tabgrid').datagrid('reload');
+						$('#propertygrid').datagrid('reload');
+					} else {
+						$.messager.popover({ msg: $g("删除失败！"), type: "error" });
+					}
+				});
+			} else {
+				return;
+			}
+		});
+	} else {
+		$.messager.alert($g("简单提示"), $g("请选择要删除的配置数据！"), "info");
+	}
+}
+/**
+ * @description 添加属性
+ */
+function addProperty() {
+	var rows = $('#tabgrid').datagrid("getSelections");
+	if (rows.length == 0) {
+		$.messager.popover({ msg: $g("请选择要维护的页签！"), type: "alert" });
+		return;
+	}
+	$("#property-dialog").dialog("open");
+	$('#property-dialog').panel({
+		title: $g("新增属性"),
+		iconCls: "icon-w-add",
+		closed: false
+	});
+	$('#property-form').form("clear");
+	$('#property-form').form("load", {
+		Align: "L"
+	});
+}
+/**
+ * 更新属性
+ */
+function updateProperty() {
+	var rows = $('#tabgrid').datagrid("getSelections");
+	if (rows.length == 0) {
+		$.messager.popover({ msg: $g("请选择要维护的页签！"), type: "alert" });
+		return;
+	}
+	var rows = $('#propertygrid').datagrid("getSelections");
+	if (rows.length == 1) {
+		$("#property-dialog").dialog("open");
+		$('#property-dialog').panel({
+			title: $g("修改属性"),
+			iconCls: "icon-w-edit",
+			closed: false
+		});
+		//清空表单数据
+		$('#property-form').form("clear");
+		$('#property-form').form("load", {
+			RowID: rows[0].RowID,
+			Name: rows[0].Name,
+			Code: rows[0].Code,
+			Width: rows[0].Width,
+			Align: rows[0].Align,
+			IsFrozen: rows[0].IsFrozen,
+			IsHidden: rows[0].IsHidden,
+			IsOrderId: rows[0].IsOrderId,
+			IsItemNo: rows[0].IsItemNo,
+			IsResult: rows[0].IsResult,
+			IsAbnormal: rows[0].IsAbnormal
+		});
+		if (rows[0].IsFrozen == "Y") {
+			$("#IsFrozen").checkbox('setValue', true);
+		} else {
+			$("#IsFrozen").checkbox("setValue", false);
+		}
+		if (rows[0].IsHidden == "Y") {
+			$("#IsHidden").checkbox('setValue', true);
+		} else {
+			$("#IsHidden").checkbox("setValue", false);
+		}
+		if (rows[0].IsOrderId == "Y") {
+			$("#IsOrderId").checkbox('setValue', true);
+		} else {
+			$("#IsOrderId").checkbox("setValue", false);
+		}
+		if (rows[0].IsItemNo == "Y") {
+			$("#IsItemNo").checkbox('setValue', true);
+		} else {
+			$("#IsItemNo").checkbox("setValue", false);
+		}
+		if (rows[0].IsResult == "Y") {
+			$("#IsResult").checkbox('setValue', true);
+		} else {
+			$("#IsResult").checkbox("setValue", false);
+		}
+		if (rows[0].IsAbnormal == "Y") {
+			$("#IsAbnormal").checkbox('setValue', true);
+		} else {
+			$("#IsAbnormal").checkbox("setValue", false);
+		}
+	} else {
+		$.messager.popover({ msg: $g("请选择要修改的配置数据！"), type: "alert" });
+	}
+}
+/**
+ * 移动属性
+ * @param    {[String]} direction
+ */
+function moveProperty(direction) {
+	var rows = $('#propertygrid').datagrid("getSelections");
+	if (rows.length == 1) {
+		var step = direction == "UP" ? -1 : 1;
+		var objParam = { "RowID": rows[0].RowID, "Step": step };
+		$m({
+			ClassName: 'NurMp.Service.Refer.Setting',
+			MethodName: 'moveProperty',
+			Param: JSON.stringify(objParam)
+		}, function (result) {
+			if (result == '0') {
+				$('#propertygrid').datagrid('reload');
+			} else {
+				$.messager.popover({ msg: $g("移动失败！"), type: "error" });
+			}
+		});
+	} else {
+		$.messager.popover({ msg: $g("请选择要修改的配置数据！"), type: "alert" });
+	}
+}
+/**
+ * 保存属性
+ */
+function saveProperty() {
+	var rowsTab = $('#tabgrid').datagrid("getSelections");
+	var rowsProperty = $('#propertygrid').datagrid("getSelections");
+	var objElement = serializeForm('property-form');
+	objElement["ParRef"] = rowsTab[0].RowID;
+	if (!objElement["Name"]) {
+		$.messager.popover({ msg: $g("请输入名称！"), type: "alert" });
+		return;
+	}
+	if (!objElement["Code"]) {
+		$.messager.popover({ msg: $g("请输入代码！"), type: "alert" });
+		return;
+	}
+	$m({
+		ClassName: 'Nur.SHIFT.Emr.RefSetting',
+		MethodName: 'saveProperty',
+		Param: JSON.stringify(objElement)
+	}, function (result) {
+		if (result == '0') {
+			$.messager.popover({ msg: $g("保存成功！"), type: "success" });
+			$("#property-dialog").dialog("close");
+			$('#propertygrid').datagrid('reload');
+		} else {
+			$.messager.popover({ msg: result, type: "error" });
+		}
+	});
+}
+/**
+ * 删除属性
+ */
+function removeProperty() {
+	var rows = $('#propertygrid').datagrid("getSelections");
+	if (rows.length == 1) {
+		$.messager.confirm($g("警告"), $g("确定要删除此条配置数据吗？"), function (r) {
+			if (r) {
+				$m({
+					ClassName: 'Nur.SHIFT.Emr.RefSetting',
+					MethodName: 'deletePreperty',
+					Id: rows[0].RowID
+				}, function (result) {
+					if (result == '0') {
+						$('#propertygrid').datagrid('reload');
+					} else {
+						$.messager.popover({ msg: $g("删除失败！"), type: "error" });
+					}
+				});
+			} else {
+				return;
+			}
+		});
+	} else {
+		$.messager.popover({ msg: $g("请选择要删除的配置数据！"), type: "alert" });
+	}
+}
+/**
+ * @description 获取指定form中的所有的<input>对象   
+ */
+function getElements(formId) {
+	var form = document.getElementById(formId);
+	var elements = new Array();
+	var tagElements = form.getElementsByTagName('input');
+	for (var j = 0; j < tagElements.length; j++) {
+		elements.push(tagElements[j]);
+	}
+	return elements;
+}
+/**
+ * @description 序列化form元素 
+ */
+function serializeForm(formId) {
+	var obj = {};
+	var elements = getElements(formId);
+	for (var i = 0; i < elements.length; i++) {
+		if (!elements[i].name) continue;
+		if (elements[i].type == "checkbox") {
+			var ckVal = elements[i].checked ? "Y" : "N";
+			obj[elements[i].name] = ckVal;
+		} else {
+			obj[elements[i].name] = elements[i].value;
+		}
+	}
+	return obj;
+}
+/**
+ * @description 保存全局配置 
+ */
+function saveView() {
+	var arrItems = new Array();
+	var viewelements=serializeForm('view-form');
+	viewelements["RVHospDr"] = GLOBAL.HospitalID;
+	arrItems.push(viewelements);
+	$cm({
+		ClassName: 'NurMp.Common.Logic.Handler',
+		MethodName: 'Save',
+		ClsName: 'CF.NUR.EMR.ReferView',
+		Param: JSON.stringify(arrItems)
+	}, function (result) {
+		if (result.status >= 0) {
+            $.messager.popover({ msg: $g("保存成功！"), type: "success" });
+        } else {
+            $.messager.popover({ msg: result, type: "error" });
+        }
+	});
+}
+/**
+ * @description 事件 
+ */
+function listenEvents() {
+	$('#btnsave').bind('click', saveView);
+}
+</script>
+</html>

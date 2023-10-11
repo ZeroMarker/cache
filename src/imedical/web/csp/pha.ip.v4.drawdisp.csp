@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--
+    住院移动药房-取药发药
+	csp:pha.ip.v4.drawdisp.csp
+	js: pha/ip/v4/drawdisp.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+        .hisui-datebox {
+            width: 120px;
+        }
+
+        .hisui-timespinner {
+            width: 100px;
+        }
+    </style>
+    <link rel="stylesheet" href="../scripts/pha/ip/v4/css/ui.css">
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',border:false,height:135,split:true">
+                    <div class="hisui-panel" title="取药发药" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''" style="overflow:hidden">
+                        <div style="float:left" class="js-con-data">
+                            <div class="pha-row">
+                                <div class="pha-col">#(..Get("备药开始时间"))#</div>
+                                <div class="pha-col">
+                                    <input class="hisui-datebox" id="conStartDate" data-pha="class:'hisui-datebox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">
+                                    <input class="hisui-timespinner" showSeconds=true id="conStartTime" data-pha="class:'hisui-timespinner',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">#(..Get("药房"))#</div>
+                                <div class="pha-col">
+                                    <input id="conPhaLoc" data-pha="class:'hisui-combobox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">#(..Get("备药单号"))#</div>
+                                <div class="pha-col">
+                                    <input class="hisui-validatebox" id="conDrawNo" data-pha="class:'hisui-validatebox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">#(..Get("查询"))#</a>
+                                </div>
+                            </div>
+                            <div class="pha-row">
+                                <div class="pha-col">#(..Get("备药结束时间"))#</div>
+                                <div class="pha-col">
+                                    <input class="hisui-datebox" id="conEndDate" data-pha="class:'hisui-datebox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">
+                                    <input class="hisui-timespinner" showSeconds=true id="conEndTime" data-pha="class:'hisui-timespinner',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">#(..Get("病区"))#</div>
+                                <div class="pha-col">
+                                    <input id="conWardLoc" data-pha="class:'hisui-combobox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col" style="margin-left:10px;">#(..Get("关联号"))#</div>
+                                <div class="pha-col">
+                                    <input class="hisui-validatebox" id="conConnectNo" data-pha="class:'hisui-validatebox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="float:right;padding-right:10px;border-left: 1px solid #cccccc;height:100px;display:none;" class="js-con-data" >
+                            
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'west',border:false,width:400,split:true">
+                    <div class="hisui-panel" title="备药单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridDraw"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <!-- <div style="position: absolute;left:150px;line-height: 37px;z-index:99999;color:#1884cf;font-weight: bold;font-size: 16px;">
+                        备药信息提醒: demo 2020-03-04 11:22:33
+                    </div> -->
+                    <div id="tt-brand" class="hisui-tabs tabs-gray" fit="true">
+                        <div title="汇总" data-options="closable:false">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false">
+                                    <table id="gridDrawInc"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div title="明细" data-options="closable:false">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false">
+                                    <table id="gridDrawOrder"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridDrawBar">
+    	<div class="pha-row">
+            <div class="pha-col">
+                <input class="hisui-validatebox" id="conUser" data-options="placeholder:'领药人工号...'" data-pha="class:'hisui-validatebox',clear:true,query:true" style="width:145px;">
+            </div>
+            <div class="pha-col">
+                <input class="hisui-validatebox" id="conUserName" data-options="placeholder:'领药人姓名...',disabled:true" data-pha="class:'hisui-validatebox',clear:true,query:true" style="width:100px;">
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" data-options="plain:false,iconCls:'icon-w-switch'" id="btnDisp">发药</a>
+            </div>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/drawdisp.js"></script>
+</body>
+
+</html>

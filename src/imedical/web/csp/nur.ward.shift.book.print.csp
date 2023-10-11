@@ -1,0 +1,143 @@
+
+<div style="text-align: center;">
+<div id="accordion-html" style="width: 1070px;height: 1568px;display: inline-block;"></div>
+
+
+</div>
+<script language="javascript" type="text/javascript">   
+    var LODOP; //声明为全局变量 
+ function prn1_preview() {
+	 $("#accordion-html").html("")
+	 
+	//加载统计区域打印内容
+    loadPrintHtmlNew()
+    //加载明细区域打印内容
+    loadDeatilPrintHtml()
+    //return false
+	LODOP=getLodop();         
+	LODOP.PRINT_INIT("");
+	LODOP.SET_PRINT_PAGESIZE(2, "210mm", "297mm", "A4"); //设置打印纸张
+	$(".layui-contorl").each(function(index){
+		var html=$(this).html()	
+		LODOP.ADD_PRINT_TABLE("10px",0,"99.9%","300mm","<div style='padding:10px'>"+html+"</div>");
+	
+		LODOP.SET_PRINT_STYLEA(0,"LinkedItem",index);
+		
+	})
+	
+	LODOP.PRINT();   
+	//$(".main-layout").hide() 
+};
+
+
+function loadPrintHtmlNew(){
+
+	var printheadHtml='<div class="layui-contorl"><table border=0 cellSpacing=0 cellPadding=1 width="100%" style="border-collapse:collapse;text-align:center;"><tr><td style="text-align:center;font-size:24px;font-weight:bold;">护理交接班记录单</td></tr></table></div>'
+	$("#accordion-html").append(printheadHtml)
+	
+	//交班日期
+	var ShiftDate="<div style='display: inline-block;;width:50%;'>日期："+$('#datecombo').datebox("getValue")+"</div><div style='display: inline-block;'>科室/病区："+session['LOGON.CTLOCDESC']+"</div>";
+	var msg=""
+	var printheadHtmlB='<div class="layui-contorl"><table border=0 cellSpacing=0 cellPadding=1 width="100%" style="border-collapse:collapse;"><tr><td style="width:50%">'+ShiftDate+'</td><td>'+msg+'</td></tr></table></div>'
+	$("#accordion-html").append(printheadHtmlB)
+	
+	
+	//加载统计区域
+	var trs=[]
+	var heardTrs=[]
+	$("td.shiftAreaTd .datagrid-view2 table.datagrid-htable").find("tr").each(function(){
+		var tableW=$("td.shiftAreaTd .datagrid-view2 table.datagrid-htable").width()
+		var tds=[]
+		$(this).find("td").each(function(){
+			var text=$(this).text()
+			
+			var thisW=$(this).width()
+			var wd=(thisW/tableW).toFixed(2)*100+"%"
+			console.log(wd)
+			tds.push("<td style='width:"+wd+"; height: 30px;text-align:center;white-space: nowrap;'>"+text+"</td>")
+		})	
+		trs.push("<tr><td style='text-align:center;white-space: nowrap;'>班次</td>"+tds.join("")+"</tr>")
+		
+	})
+	//加载统计数据
+	var shiftTimeList=GLOBAL.ShiftTimes
+	$("td.shiftAreaTd .datagrid-view2 table.datagrid-btable").find("tr").each(function(index){
+		var tds=[]
+		$(this).find("td").each(function(){
+			var text=$(this).text()
+			tds.push("<td style='height: 30px;text-align:center;'>"+text+"</td>")
+		})	
+		var ShiftName="全班"
+		if(typeof(shiftTimeList[index])!="undefined"){
+			ShiftName=shiftTimeList[index].ShiftName
+		}
+		trs.push("<tr><td style='text-align:center;white-space: nowrap;'>"+ShiftName+"</td>"+tds.join("")+"</tr>")
+	})
+	var table='<table border=1 cellSpacing=0 cellPadding=1 width="100%" style="border-collapse:collapse;text-align:center;">'+trs.join("")+"</table>"
+	var html= '<div class="layui-contorl">'+table+'</div>'
+	$("#accordion-html").append(html)
+	
+	
+}
+
+function loadDeatilPrintHtml(){
+	var trs=[]
+	var heardTrs=[]
+	$("td.shiftDetail .datagrid-view2 table.datagrid-htable").find("tr").each(function(){
+		var tableW=$("td.shiftDetail .datagrid-view2 table.datagrid-htable").width()
+		var tds=[]
+		$(this).find("td").each(function(){
+			var text=$(this).text()
+			var rowspan=$(this).attr("rowspan")
+			var colspan=$(this).attr("colspan")
+			var thisW=$(this).width()
+			var wd=(thisW/tableW).toFixed(2)*100+"%"
+			
+			if(typeof(colspan)=="undefined") {colspan=""}else{colspan="colspan="+colspan}
+			if(typeof(rowspan)=="undefined") {rowspan=""}else{rowspan="rowspan="+rowspan}
+			if($(this).is(":hidden")){
+				
+				tds.push("<td "+colspan+" "+rowspan+" style='border:1px solid #000;width:"+wd+"; height: 30px;display:none;'>"+text+"</td>")
+			}else{
+				tds.push("<td "+colspan+" "+rowspan+" style='border:1px solid #000;width:"+wd+"; height: 30px;'>"+text+"</td>")
+			}
+		})	
+		heardTrs.push("<tr>"+tds.join("")+"</tr>")
+		
+	})
+	trs.push("<thead>"+heardTrs.join("")+"</thead>")
+	var tdCount=0
+	$("td.shiftDetail .datagrid-view2 table.datagrid-btable").find("tr").each(function(){
+		var tds=[]
+		tdCount=$(this).find("td").length
+		$(this).find("td").each(function(){
+			var text=$(this).html()
+			if($(text).find(".shiftName").length>0){
+					text=$(this).text()
+			}
+			var rowspan=$(this).attr("rowspan")
+			var colspan=$(this).attr("colspan")
+			
+			if(typeof(colspan)=="undefined") {colspan=""}else{colspan="colspan="+colspan}
+			if(typeof(rowspan)=="undefined") {rowspan=""}else{rowspan="rowspan="+rowspan}
+			if($(this).is(":hidden")){
+				tds.push("<td "+colspan+" "+rowspan+" style='border:1px solid #000;height: 30px;display:none;text-align:left;'>"+text+"</td>")
+			}else{
+				tds.push("<td "+colspan+" "+rowspan+" style='border:1px solid #000;height: 30px;text-align:left;'>"+text+"</td>")
+			}
+		})	
+		trs.push("<tr>"+tds.join("")+"</tr>")
+	})
+	
+	trs.push('<tfoot><tr><td colspan="'+tdCount+'"><div style="text-align:center;display">第<font tdata="PageNO" format="0" color="blue">##</font>页</div></td></tr></tfoot>')
+	
+	var table='<table border=0 cellSpacing=0 cellPadding=1 width="100%" style="border-collapse:collapse;text-align:center;">'+trs.join("")+"</table>"	
+	var html= '<div class="layui-contorl">'+table+'</div>'
+	$("#accordion-html").append(html)
+
+	
+	
+
+}
+
+</script> 

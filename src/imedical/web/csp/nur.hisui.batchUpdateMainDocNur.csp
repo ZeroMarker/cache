@@ -1,0 +1,123 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+
+<HTML lang="zh-CN">
+<!--批量修改主管医生护士,csp: nur.hisui.batchUpdateMainDocNur.csp-->
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8" content="IE=edge">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/batchUpdateMainDocNur.js"></script>
+    <STYLE type='text/css'>
+        body {
+            background-color: #fff;
+        }
+        table{
+        	text-align:inherit;
+        }
+
+        form table td, form table th{
+        	padding:0;
+        }
+		.datagrid-wrap.panel-body.panel-body-noheader {
+			
+		    border-width:0!important;
+		}
+		.hisui-panel.panel-body.panel-body-noheader.panel-noscroll{
+			
+			border-color: #ccc!important;
+		}
+		.datagrid-header-row .datagrid-cell span {
+            white-space: normal !important;
+            word-wrap: normal !important;
+        }
+        .search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.r-label1{
+			text-align: right;
+			padding:0 10px;
+		}
+		.r-label{
+			text-align: right;
+    		padding:0 10px;
+		}
+		._hisui_combobox-selectall {
+			display:none;
+		}
+    </STYLE>
+</head>
+
+<body style="padding:4px;box-sizing: border-box;">
+	<server>
+	s bedSetting=##class(Nur.NIS.Service.Base.BedConfig).GetBedSetting(%session.Get("LOGON.HOSPID"))
+	k bedSettingArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(bedSetting,.bedSettingArr)
+	s MainDocRequired=bedSettingArr("MainDocRequired")
+	s MainDocMulti=bedSettingArr("MainDocMulti")
+	s MainNurseRequired=bedSettingArr("MainNurseRequired")
+	s MainNurseMulti=bedSettingArr("MainNurseMulti")
+</server>
+	<div class="hisui-panel" fit="true" data-options="title:'批量修改主管医生护士',headerCls:'panel-header-gray',iconCls:'icon-mutpaper-tri'" style="padding:0 4px 4px 4px;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',collapsible:false,border:false" style="height:50px;">
+				<table class="search-table">
+					<tr>
+						<td style="padding:0 10px 0 6px;">
+							#(..Get("主管医生"))#
+						</td>
+						<td>
+							<select id="mainDoc" style="width:200px;"></select>
+						</td>
+						<td class="r-label">
+							#(..Get("主管护士"))#
+						</td>
+						<td>
+							<select id="mainNur" style="width:200px;"></select>
+						</td>
+						<td class="r-label">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='searchBtn'>查询</a>
+						</td>
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-pen-paper'" id='updateBtn'>批量修改</a>
+						</td>
+					</tr>
+				</table> 
+			</div>
+			<div id="" data-options="region:'west',title:'患者列表',iconCls:'icon-big-pat-list',headerCls:'panel-header-gray',collapsed:false,split:true" style="border-radius: 0 0 5px 5px;width:700px;">
+				<table id="patSheetGrid" class="hisui-datagrid"></table>
+			</div>
+			<div id="panelLogDetail" data-options="region:'center',title:'修改日志',iconCls:'icon-paper',headerCls:'panel-header-gray' ,border:true" style="padding:4px;">
+				<div class="hisui-layout" data-options="fit:true" style="left: 0px; top: 0px;">
+					<div data-options="region:'center',title:'主管护士修改日志',iconCls:'icon-write-order',headerCls:'panel-header-gray',collapsed:false,split:true"
+						style="">
+						<table id="nurLogGrid" class="hisui-datagrid" ></table>
+					</div>
+					<div data-options="region:'south',title:'主管医生修改日志',iconCls:'icon-doctor-green-pen',headerCls:'panel-header-gray',collapsed:false,split:true" style="height:350px;">
+						<table id="docLogGrid" class="hisui-datagrid" ></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<script type="text/javascript">
+	var ServerObj={
+		MainDocRequired:"#(MainDocRequired)#",
+		MainDocMulti:"#(MainDocMulti)#",
+		MainNurseRequired:"#(MainNurseRequired)#",
+		MainNurseMulti:"#(MainNurseMulti)#",
+	}
+</SCRIPT>
+</body>
+
+</html>

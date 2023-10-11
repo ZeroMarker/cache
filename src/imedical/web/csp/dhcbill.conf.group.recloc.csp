@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.conf.group.recloc.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-24
  * Description: 接收科室设置
 -->
@@ -11,33 +11,35 @@
 </csp:method>
 <html>
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<server>
 		set groupId=+%request.Get("GroupId")
 		set hospId=+%request.Get("HospId")
 		set gsCfgJson=##class(BILL.CFG.COM.GroupAuth).GetGSCfgInfo(groupId, hospId)
-		w "<script type=""text/javascript"">",!
-		w "	var GV = {",!
-		w "		GroupId: "_groupId_",",!
-		w "		HospId: "_hospId_",",!
-		w "	    GSCfgJson: "_gsCfgJson_"",!
-		w " };",!
-		w "<"_"/script>"
 	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			GroupId: "#(groupId)#",
+			HospId: "#(hospId)#",
+			GSCfgJson: #(gsCfgJson)# || {}
+		};
+		//全局变量
+		var GV = {};
+	</script>
 </head>
 
 <body>
 	<div class="hisui-layout" data-options="fit:true">
 		<div data-options="region:'north',border:false" style="border-bottom:1px solid #cccccc;">
 			<div style="padding:3px;">
-				<span><label class="r-label" style="padding-left:7px;">登录科室</label><input id="logonLoc" class="hisui-combobox textbox"/></span>
-				<span><input id="recLocFlag" class='hisui-checkbox' type="checkbox" label="按接收科室设置"></span>
+				<span><label class="r-label" style="padding-left:7px;">#(..Get("登录科室"))#</label><input id="logonLoc" class="hisui-combobox textbox"/></span>
+				<span><input id="recLocFlag" class='hisui-checkbox' type="checkbox" label="#(..Get("按接收科室设置"))#"></span>
 				<div class="messager-popover info" style="width:140px;position:absolute;padding:5px;left:420px;top:3px;">
 					<span class="messager-popover-icon info"></span>
-					<span>请先选择登录科室</span>
+					<span>#(..Get("请先选择登录科室"))#</span>
 				</div>
 			</div>
 		</div>

@@ -1,11 +1,12 @@
-<!--敷料单申请打印-->
+<!--非循环包申请单打印-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	i ##Class(websys.SessionEvents).SessionExpired() q 1
-	q 1
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
 </csp:method>
 <server>
-	d ##class(web.DHCXMLPConfig).LODOPInit()
+	Do ##class(web.DHCXMLPConfig).LODOPInit()
+	Write ##class(web.CSSDHUI.Common.UtilCommon).EncryptInput()
 </server>
 <html lang="zh-CN">
 <head>
@@ -13,74 +14,112 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<CSSDHISUI/>
+<style>
+	.imgbox{
+		position: relative;
+		width: 100px;
+		height: 100px;
+		margin-top: 20px;
+		background: #000000;
+	}
+	.imgbox img{
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		margin: auto;
+		max-width: 100%;
+		max-height: 100%;
+		outline: 1px solid #000;
+	}
+	.selectedpic {
+		border:4px solid #378ec4;
+		padding:0;
+		position: relative;
+		z-index:0
+	}
+	.largeImg img{
+		width:100%;
+		height:auto;
+	}
+	</style>
+	<link href="../scripts/cssd/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
 </head>
-<body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:4px">
-		<div class="hisui-panel" data-options="title:'敷料单申请打印',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="UomTB">
-				<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
-				<input id="txtChkerv" name="txtChkerv" type="hidden">
-				<input id="txtActorv" name="txtActorv" type="hidden">
-				<table id="SelReqConditions" class="Condition">
-					<tr>
-						<td>申请科室</td>
-						<td><input id="SelReqLoc" name="FReqLoc" class="textbox hisui-combobox"></td>
-						<td>接收科室</td>
-						<td><input id="toLocDr" name="toLocDr" class="textbox hisui-combobox">
-						</td>
-						
-					</tr>
-					<tr>
-						<td>开始日期</td>
-						<td><input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq" style="width:155px"></td>
-						<td>结束日期</td>
-						<td><input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq" style="width:155px"></td>
-					</tr>	
-					<tr>
-						<td><label>审核人</label></td>
-						<td><input class="textbox" id="txtChker" name="txtChker" style="width:150px"></td>
-						<td><label>包装人</label></td>
-						<td><input class="textbox" id="txtActor" name="txtActor" style="width:150px"></td>
-						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:130px;">查询</a></td>
-						<td><a href="#" id="LabelGen" class="hisui-linkbutton"  style="width:150px;">标签生成</a></td>
-					</tr>
+<body id="OrdLayout" class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'west',headerCls:'panel-header-gray',border:false" style="width:600px;padding-right:0px">
+		<div class="hisui-panel" data-options="title:'非循环包申请单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table id="SelReqConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<tr>
-							<td><label>灭菌日期</label></td>
-							<td><input id="stedate" name="stedate" class="hisui-dateboxq textbox" style="width:157px"></input></td>
-							<td><label>有效期</label></td>
-							<td>
-							<select id="PackType" name="PackType" class="hisui-combobox" style="width:158px;">
-							<option value="5">常规</option>
-								<option value ="0">7天</option>
-								<option value ="1">14天</option>
-								<option value="2">30天</option>
-								<option value="3">90天</option>
-								<option value="4">180天</option>
-							</select>
-							</td>	
-							<td><a href="#" id="Print" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px;">标签打印</a></td>
-							<td><a href="#" id="GenLableAndPrint" class="hisui-linkbutton"  style="width:150px;">标签生成打印</a></td>			 
+							<td><label>发放科室</label><input id="ToLoc" name="ToLoc" class="textbox hisui-combobox"></td>
+							<td><label>线路</label><input id="LineCode" name="LineCode" class="textbox hisui-combobox"></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" style="width:86px">查询</a></td>
 						</tr>
-				</table>
+						<tr>
+							<td><label>起始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
+							<td><label>申请科室</label><input id="ReqLoc" name="ReqLoc" class="textbox hisui-combobox"></td>
+							<td><a href="#" id="Print" class="hisui-linkbutton">标签打印</a></td>
+						</tr>
+						<tr>
+							<td><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="GridList"></table>
+				</div>
 			</div>
-			<table id="GridList"></table>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:410px;padding-left:0px">
-		<div class="hisui-panel" data-options="title:'标签详情',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="InputTB"> 
-				<table  class="Condition ">
-					<tr>
-						<td><a href="#" id="PrintDetail" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:130px;">标签打印</a></td>
-					</tr>
-				</table>
+	<div class="GridPadding" data-options="title:'',region:'center',border:false,headerCls:'panel-header-gray'" style="width:500px;">
+		<div id="FLApplyLayout" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false,collapsible:false" style="height:400px">
+				<div class="hisui-panel" data-options="title:'标签详情',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<div class="hisui-layout" data-options="fit:true">
+						<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray',collapsible:false">
+							<table id="Usertb" class="Condition">
+								<tr>
+									<td><label class="required">*</label><label>审核人</label><input  id="PackChkUser" name="PackChkUser" class="textbox hisui-combobox" style="width:120px"></td>
+									<td><label class="required">*</label><label>包装人</label><input id="PackUser" name="PackUser" class="textbox hisui-combobox" style="width:120px"></td>
+									<td><label>配包人</label><input id="Packer" name="Packer" class="textbox hisui-combobox" style="width:120px"></td>
+								</tr>
+								<tr>
+									<td><label>灭菌日期</label><input id="SterDate" name="SterDate" class="hisui-datebox textbox" style="width:120px"></td>
+									<td><label>包装材料</label><input id="Material" name="Material" class="textbox hisui-combobox" style="width:120px"></td>
+									<td><label>灭菌器</label><input id="SterMachine" name="SterMachine" class="textbox hisui-combobox" style="width:120px"></td>
+								</tr>
+								<tr>
+									<td><label>批次</label><input class="textbox" id="HeatNo" name="HeatNo" style="width:113px"></td>
+									<td><label>灭菌人</label><input  id="SterUser" name="SterUser" class="textbox hisui-combobox" style="width:120px"></td>
+									<td><a href="#" id="UpdateBT" class="hisui-linkbutton">修改标签</a></td>
+								</tr>
+								<tr>
+									<td><label>备注</label><input class="textbox" id="Remark" name="Remark" style="width:113px"></td>
+									<td><a href="#" id="GenLabelAndPrint" class="hisui-linkbutton">标签生成打印</a></td>
+									<td><a href="#" id="LabelGen" class="hisui-linkbutton">标签生成</a></td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false,collapsible:false">
+							<table id="ItemList"></table>
+						</div>
+					</div>
+				</div>
 			</div>
-			<table id="ItemList"></table>
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-bottom:1px;padding-left:0px;padding-right:0px">
+				<div class="hisui-panel" data-options="title:'器械明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="ItemSListGrid"></table>
+				</div>
+			</div>
 		</div>
-	</div>	
-<script type="text/javascript" src="../scripts/DHCPrtComm.js"></SCRIPT>
-<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Pack/PackCommon.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Pack/FlApplyPrintLabel.js"></script>
+	</div>
+	<csp:Include Page="cssdhui.packageinfo.packagepic.csp">
+	<csp:Include Page="cssdhui.packagepack.labelinfoedit.csp">
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/PackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/FlApplyPrintLabel.js"></script>
 </body>
 </html>

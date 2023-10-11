@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<!--chemo.cfg.templategroupitem.edit.csp  QP--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	body {background:#fff;}
+	.c-span {margin-right:6px;}
+	.c-span2 {margin-left:30px;}
+	.c-ok {color:#21ba45}
+	.c-no {color:#f16e57}
+	.note-head {height:18px;}
+	.c-title{margin-left:10px;color:#017bce;line-height:18px;}
+	.c-label {float:left;width:5px;background:#017BCE;height:18px;}
+	.c-row {margin-bottom:10px;}
+	.c-center {text-align:center;}
+	.label{
+		padding-right:10px;
+		text-align:right;
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+		margin:0 auto;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.panel-header{
+		border-bottom: 0;
+	}
+
+</style>
+<Server>
+	set TPGIID = %request.Get("TPGIID")
+	set TPGID = %request.Get("TPGID")
+	set InHosp = %request.Get("InHosp")
+	;出院带药医嘱
+	s OutOrderPriorRowid=$O(^OECPR(0,"Code","OUT",0))
+	;取药医嘱
+	s OneOrderPriorRowid=$O(^OECPR(0,"Code","ONE",0))
+	;长期医嘱
+	s LongOrderPriorRowid=$O(^OECPR(0,"Code","S",0))
+	;临时医嘱
+	s ShortOrderPriorRowid=$O(^OECPR(0,"Code","NORM",0))
+	;自备药临时医嘱
+	s OMOrderPriorRowid=$O(^OECPR(0,"Code","OM",0))
+	;自备药长期医嘱
+	s OMSOrderPriorRowid=$O(^OECPR(0,"Code","OMST",0))
+	;即刻医嘱
+	s STATOrderPriorRowid=$O(^OECPR(0,"Code","STAT",0))
+	;PRN医嘱
+	s PRNOrderPriorRowid=$O(^OECPR(0,"Code","PRN",0))
+	;长期嘱托
+	s OMCQZTOrderPriorRowid=$O(^OECPR(0,"Code","OMCQZT",0))
+	;临时嘱托
+	s OMLSZTOrderPriorRowid=$O(^OECPR(0,"Code","OMLSZT",0))
+
+	;不能关联的医嘱子类
+	s NotLinkItemCat=##Class(web.DHCDocConfig).GetConfigNode("NotLinkItemCat",InHosp)
+	;皮试用法
+	s SkinTestInstr=##Class(web.DHCDocConfig).GetConfigNode("SkinTestInstr",InHosp)
+	if SkinTestInstr'="" s SkinTestInstr="^"_SkinTestInstr_"^"
+	;外用用法
+	s WYInstr=##Class(web.DHCDocConfig).GetConfigNode("WYInstr")
+	if WYInstr'="" s WYInstr="^"_WYInstr_"^"
+	
+	//可选择用法的非药品子分类
+	s inputInstrNotDrugCat=##Class(web.DHCDocConfig).GetConfigNode("SelectInstrNotDrugCat",InHosp)
+
+</Server>
+</head>
+<body>	
+	<div class="hisui-layout" data-options="fit:true">
+		<table class="search-table">
+			<tr>
+				<td class="label">
+					<label>医嘱名称</label>
+				</td>
+				<td colspan="3">
+					<input id="ItemDesc" class="textbox" style=""/>
+					<input id="ItemRowid" name="ItemRowid" type="hidden">
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label>单次剂量</label>
+				</td>
+				<td>
+					<input  id="ItemDoseQty" class="textbox"/>
+				</td>
+				<td class="r-label">
+					<label>剂量单位</label>
+				</td>
+				<td>
+					<input id="ItemDoseUOM" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label>频次</label>
+				</td>
+				<td>
+					<input id="ItemFrequence" class="hisui-combobox textbox"/>
+				</td>
+				<td class="r-label">
+					<label >用法</label>
+				</td>
+				<td>
+					<input id="ItemInstruction" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label>数量</label>
+				</td>
+				<td><input  id="ItemQty" class="textbox"/>
+				</td>
+				<td class="r-label">
+					<label>单位</label>
+				</td>
+				<td>
+					<input id="ItemBillUOM" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label>疗程</label>
+				</td>
+				<td>
+					<input id="ItemDuration" class="hisui-combobox textbox"/>
+				</td>
+				
+				<td class="r-label">
+					<label>标本</label>
+				</td>
+				<td>
+					<input id="sampleType" class="hisui-combobox textbox"/>
+				</td>
+				<!--
+				<td class="label">
+					<label for="BSAUnitSTD">标准值</label>
+				</td>
+				<td>
+					<input id="BSAUnitSTD" class="textbox">
+				</td>
+				-->
+				
+			</tr>
+			<tr>
+				<td class="label">
+					<label>关联</label>
+				</td>
+				<td>
+					<input id="ItmLinkDoctor" class="textbox"/>
+				</td>
+				<td class="r-label">
+					<label>备注</label>
+				</td>
+				<td>
+					<input  id="remark" class="textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label>医嘱类型</label>
+				</td>
+				<td>
+					<input id="DHCDocOrderType" class="hisui-combobox textbox"/>
+				</td>
+				<td class="r-label">
+					<label>附加说明</label>
+				</td>
+				<td>
+					<input id="OrderPriorRemarks" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label>接收科室</label>
+				</td>
+				<td>
+					<input id="DHCDocOrderRecLoc" class="hisui-combobox textbox"/>
+				</td>
+				<td class="r-label">
+					<label>医嘱阶段</label>
+				</td>
+				<td>
+					<input id="DHCDocOrderStage" class="hisui-combobox textbox"/>
+				</td>
+			</tr>
+		    <tr>
+		    	<td class="label">
+		    		<label>输液流速</label>
+		    	</td>
+		    	<td>
+		    		<input  id="OrderSpeedFlowRate" class="textbox"/>
+		    	</td>
+		    	<td class="r-label">
+		    		<label>流速单位</label>
+		    	</td>
+		    	<td>
+		    		<input id="OrderFlowRateUnit" class="hisui-combobox textbox"/>
+		    	</td>
+		    </tr>
+		    <!--tr><td class="r-label"><label id="CChoseType">草药</label></td><td><input id="ChoseType" name="ChoseType" type="checkbox"></td></tr-->
+			<tr>
+				<td class="label">
+					<label for="SkinTest">皮试</label>
+				</td>
+				<td>
+					<input id="SkinTest" class='hisui-checkbox' type="checkbox" label="">
+				</td>
+				<td class="r-label">
+		    		<label>皮试备注</label>
+		    	</td>
+		    	<td>
+		    		<input id="SkinAction" class="hisui-combobox textbox"/>
+		    	</td>
+		    	
+			</tr>
+			<tr>
+				<td class="label">
+					<label for="MainDrug">是否主药</label>
+				</td>
+				<td>
+					<input id="MainDrug" class='hisui-checkbox' type="checkbox" label="">
+				</td>
+				<td class="label">
+					<label for="Formula">计算公式</label>
+				</td>
+				<td>
+					<input id="Formula" class="textbox">
+				</td>
+		    	
+			</tr>
+			<tr>
+				<td class="label">
+					<label for="BSAUnitSTD">标准值</label>
+				</td>
+				<td>
+					<input id="BSAUnitSTD" class="textbox">
+				</td>
+				<td class="label">
+					<label for="BSAUnit">输入值</label>
+				</td>
+				<td>
+					<input id="BSAUnit" class="textbox">
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label for="MainDrugNote">主药备注</label>
+				</td>
+				<td colspan="3">
+					<textarea id="MainDrugNote" class="textbox" style="width:98%;height:50px;padding:4px;"></textarea>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">
+					<label for="ShowDate">显示日期</label>
+				</td>
+				<td colspan="3">
+					<input id="ShowDate" class="textbox" style="width:99%;">
+				</td>
+			</tr>
+			
+			<!--<tr>
+				<td class="label">
+					<label for="NotifyClinician" id="CNotifyClinician">加急</label>
+				</td>
+				<td>
+					<input id="NotifyClinician" class='hisui-checkbox' type="checkbox" label="">
+				</td>
+		    </tr>-->
+			<tr>
+				<td colspan="4" style="text-align:center;padding-left:15px;">
+					<a id="save" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					<div style="display:inline-block;margin:0 20px;"></div>
+					<a id="clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+				</td>
+			</tr>
+		</table>
+
+	</div>
+					
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			TPGIID: "#(TPGIID)#",
+			TPGID: "#(TPGID)#",
+			InHosp: "#(InHosp)#",
+			NotLinkItemCat: "#(NotLinkItemCat)#"
+			
+			
+		};
+		var ARCOSPrescType="Other"
+		var SkinTestInstr="#(SkinTestInstr)#"
+		var NotLinkItemCat="#(NotLinkItemCat)#"
+		var m_ArcimClassification="";
+		var inputInstrNotDrugCat="#(inputInstrNotDrugCat)#"
+		var OutOrderPriorRowid="#(OutOrderPriorRowid)#";
+		var OneOrderPriorRowid="#(OneOrderPriorRowid)#";
+		var LongOrderPriorRowid="#(LongOrderPriorRowid)#";
+		var ShortOrderPriorRowid="#(ShortOrderPriorRowid)#";
+		var OMOrderPriorRowid="#(OMOrderPriorRowid)#";
+		var OMSOrderPriorRowid="#(OMSOrderPriorRowid)#";
+		var STATOrderPriorRowid="#(STATOrderPriorRowid)#";
+		var PRNOrderPriorRowid="#(PRNOrderPriorRowid)#";
+		var OMCQZTOrderPriorRowid="#(OMCQZTOrderPriorRowid)#";
+		var OMLSZTOrderPriorRowid="#(OMLSZTOrderPriorRowid)#";
+
+		
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/chemo/com/common.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdoc/chemo/cfg/templategroupitem.edit.js"></script>
+	
+</body>
+</html>

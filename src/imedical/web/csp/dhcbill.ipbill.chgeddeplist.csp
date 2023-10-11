@@ -1,0 +1,89 @@
+<!-- 
+ * FileName: dhcbill.ipbill.chgeddeplist.csp
+ * Author: ZhYW
+ * Date: 2023-01-11
+ * Description: 住院结算冲退押金明细
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<server>
+		set args=%request.Get("arguments")
+		set argsObj={}.%FromJSON(args)
+		set EpisodeID=argsObj.EpisodeID
+		set PrtRowId=argsObj.PrtRowId
+	</server>
+</head>
+
+<body style="background-color:#FFFFFF;padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',border:false">
+			<table id="depList"></table>
+	  	</div>
+	</div>
+	<script type="text/javascript">
+		$(function () {
+			$HUI.datagrid("#depList", {
+				fit: true,
+				bodyCls: 'panel-body-gray',
+				singleSelect: true,
+				pagination: true,
+				fitColumns: true,
+				rownumbers: true,
+				pageSize: 20,
+				className: "web.DHCIPBillCashier",
+				queryName: "FindDepList",
+				onColumnsLoad: function(cm) {
+					for (var i = (cm.length-1); i >= 0; i--) {
+						if ($.inArray(cm[i].field, ["TPrtDate"]) != -1) {
+							cm.splice(i, 1);
+							continue;
+						}
+						if ($.inArray(cm[i].field, ["TDepRowId", "TBillFlag", "TUn2PayReason"]) != -1) {
+							cm[i].hidden = true;
+							continue;
+						}
+						if (cm[i].field == "TPrtTime") {
+							cm[i].formatter = function (value, row, index) {
+								return row.TPrtDate + " " + value;
+							};
+						}
+						if (cm[i].field == "TPrtStatus") {
+							cm[i].formatter = function (value, row, index) {
+								return (value == 1) ? $g("正常") : value;
+							};
+						}
+						if (cm[i].field == "TIsReverseDep") {
+							cm[i].formatter = function (value, row, index) {
+								var color = (value == 1) ? "#21ba45" : "#f16e57";
+								return "<font color=\"" + color + "\">" + ((value == 1) ? $g("是") : $g("否")) + "</font>";
+							};
+						}
+						if (!cm[i].width) {
+							cm[i].width = 100;
+							if (cm[i].field == "TPrtTime") {
+								cm[i].width = 160;
+							}
+						}
+					}
+				},
+				url: $URL,
+				queryParams: {
+					ClassName: "web.DHCIPBillCashier",
+					QueryName: "FindDepList",
+					adm: "#(EpisodeID)#",
+					prtRowId: "#(PrtRowId)#"
+				}
+			});
+		});
+	</script>
+</body>
+</html>

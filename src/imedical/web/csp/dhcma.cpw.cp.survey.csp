@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired()
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>		
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>		
+		<link rel="stylesheet" type='text/css' href="../scripts/DHCMA/css/base.css">
+		<DHCMA:HEAD></DHCMA:HEAD>	
+	</head>
+	<body>
+		<csp:Include Page="dhcma.cpw.cp.survey.show.csp"> 
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/CP/Survey/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/CP/Survey/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+		<server>
+			//Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
+			//d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
+	   </server>
+		<script language="Cache" RUNAT="SERVER">
+		    Set Code=$g(%request.Data("Code",1))	    
+			Set EpisodeID=$g(%request.Data("EpisodeID",1))
+			If (EpisodeID'["!!") {
+				Set SYSDr=##class(DHCMA.Util.BTS.SYSTEMSrv).GetSYSDr("")
+		    	Set EpisodeID=EpisodeID_"!!"_SYSDr
+		    }
+		    /*If (IsSupportRQ2018'=1) {  //润乾2018支持直接打印，如需引入本方法，本方法影响加载速度
+		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
+		    }*/
+			Set Code=""""_$g(Code)_""""
+			Set EpisodeID=""""_$g(EpisodeID)_""""
+	   </script>
+	    <script language="javascript" type="text/javascript">
+	   	 	var Code=#(Code)#;
+			var EpisodeID=#(EpisodeID)#;
+			
+			$(document).ready(function(){
+				InitSurveyWin();
+			});
+		</script>
+	</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<!--
+    付款管理 - 确认 | 审核
+	csp:  csp/pha.in.v3.pay.audit.csp
+	js:   scripts/pha/in/v3/pay/audit.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        /* body{
+            width: 1440px;;
+        } */
+        .font-color {
+            color:#666666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center'" class="pha-body" border="false">
+            <div class="hisui-layout" fit="true" id="layout-pay-audit">
+                <div data-options="region:'north', headerCls:'panel-header-gray', iconCls:'icon-pat-fee-det', height:500, split:true, title:'付款单', showCollapsedTitle:true" id="layout-panel-title">
+                    <table id="gridMain"></table>
+                </div>
+                <div data-options="region:'center', headerCls:'panel-header-gray', iconCls:'icon-find-paid-det',title:'单据明细'">
+                    <table id="gridItm"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridMainBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("开始日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" class="hisui-datebox" id="startDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="endDate">#(..Get("结束日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="endDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="loc">#(..Get("采购科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="vendor">#(..Get("经营企业"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="vendor" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                </td>
+                <!-- <td class="r-label">
+                    <label for="no">单号</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="no" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td> -->
+                <td class="r-label">
+                    <label for="filterField">#(..Get("其他"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="filterField" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnFind">查询</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnClean">清屏</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnAuditByPurch">采购确认</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnAuditByAccount">会计确认</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnAuditByTreasure">财务确认</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-checkin'" id="btnVoucher">生成付款凭证</a>
+        </div>
+    </div>
+    <div id="win4Account"  data-options="title:'会计确认',iconCls:'icon-w-ok',modal:true,closable:true,collapsible:false,maximizable:false,minimizable:false" style="padding-right:10px;padding-bottom: 10px;">
+        <table class="pha-con-table">
+            <tr style="height:30px">
+                <td class="font-color">
+                    #(..Get("经营企业："))#
+                </td>
+                <td colspan="3" style="padding-left:0px">
+                    <b id="link-vendor">{{经营企业}}</b>
+                </td>
+            </tr>
+            <tr style="height:30px">
+                <td class="font-color">
+                    #(..Get("付款单号："))#
+                </td>
+                <td colspan="3" style="padding-left:0px">
+                    <b id="link-no">{{付款单号}}</b>
+                </td>
+
+            </tr>
+            <tr style="height:30px">
+                <td class="font-color">
+                    #(..Get("应付金额："))#
+                </td>
+                <td colspan="3" style="padding-left:0px">
+                    <b id="link-amt">{{应付金额}}</b>
+                </td>
+            </tr>
+        </table>
+        <table class="pha-con-table">
+            <tr>
+                <td colspan="4">
+                    <div class="pha-line"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="checkMode">#(..Get("支付方式"))#</label>
+                </td>
+                <td>
+                    <input type="text" data-pha="class:'hisui-combobox',save:true,clear:true,required:true" id="checkMode">
+                </td>
+                <td>
+                    <label for="checkNo">#(..Get("支付单号"))#</label>
+                </td>
+                <td>
+                    <input type="text" class="hisui-validatebox" style="width:153px" data-pha="class:'hisui-validatebox',save:true,clear:true,required:true" id="checkNo">
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <label for="checkDate">#(..Get("支付日期"))#</label>
+                </td>
+                <td>
+                	
+                    <input class="hisui-datebox" data-options="width:160" data-pha="class:'hisui-datebox',save:true,clear:true,required:true" id="checkDate">
+                </td>
+                <td>
+                    <label for="checkAmt">#(..Get("支付金额"))#</label>
+                </td>
+                <td>
+                    <input type="text" class="hisui-numberbox"  data-options="precision:2,forcePrecisionZero:true,fix:false,width:160" data-pha="class:'hisui-numberbox',save:true,clear:true,required:true" id="checkAmt">
+
+                </td>
+            </tr>
+        </table>
+        <div style="text-align: center;">
+            <a class="hisui-linkbutton" id="btnOk4Account">确认</a>
+            <a class="hisui-linkbutton" id="btnCancel4Account" style="margin-left:6px">关闭</a>
+        </div>
+    </div>
+    </div>
+        <div id="win4Voucher"  data-options="title:'生成付款凭证单号',modal:true,iconCls:'icon-w-paper',closable:true,collapsible:false,maximizable:false,minimizable:false" style="padding-bottom: 10px;">
+	        <table class="pha-con-table">
+	            <tr>
+	                <td class="font-color">#(..Get("采购科室： "))#</td>
+	                <td colspan="3" style="padding-left:0px"><b id="voucher-vendor">{{采购科室}}</b> </td>
+	            </tr>
+            </table>
+            <table class="pha-con-table" style="margin-right:10px;border-collapse: collapse">
+	            <tr>
+	                <td style="text-align:right"><label for="voucher-year" style="text-align:right" >#(..Get("年"))#</label></td>
+	            	<td><input id='voucher-year'  class="hisui-numberbox" style ="width:80px" data-pha='class:"hisui-numberbox",required:true,clear:true,save:true'></td>
+	                <td style="text-align:right"><label for="voucher-mon" style="text-align:right" >#(..Get("月"))#</label></td>
+	            	<td><input id='voucher-mon'  class="hisui-numberbox"  style ="width:80px" data-pha='class:"hisui-numberbox",required:true,clear:true,save:true'></td>
+	            </tr>
+	        </table>
+        <div style="text-align: center;margin-top:10px">
+            <a class="hisui-linkbutton" id="btnOk4Voucher">确认</a>
+            <a class="hisui-linkbutton" id="btnCancel4Voucher" style="margin-left:6px">关闭</a>
+        </div>
+    </div>
+    
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/audit.js"></script>
+</body>
+
+</html>

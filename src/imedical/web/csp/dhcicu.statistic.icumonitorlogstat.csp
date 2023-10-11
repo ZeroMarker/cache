@@ -1,0 +1,439 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>ICU检测日志</title>
+<csp:content charset="UTF-8">
+<HISUI/>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/xlsx.full.min.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+    	<form id="conditionForm">
+    		<label style="padding-left:5px;padding-right:6px;">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label style="padding-left:10px;padding-right:6px;">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:10px;">查询</a>
+    		<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-export'" style="margin-left:10px;">导出</a>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false">
+    	<table id="data_grid"></table>
+	</div>
+	<div id="OpDetailsDialog" class="hisui-dialog" data-options="closed:true,width:1040,height:500,modal:true,iconCls:'icon-w-stamp'">
+		<div style="width:1016px;height:440px;margin:10px;border:1px solid #ccc;border-radius:5px;">
+			<table id="data_grid1"></table> 
+		</div>
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		var currentDate ="", currentStatCode="";
+		$(document).ready(function() {
+			var date=new Date();
+			
+    		$("#OperStartDate").datebox("setValue", date.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", date.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: true,
+        		toolbar: "#dataTools",
+        		border:false,
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "web.DHCICUStatisticXZRY",
+            		QueryName: "FindICUMonitorLogStat",
+            		ArgCnt: 3
+        		},
+        		columns: [
+            		[{
+                    	field: "yearMonth",
+                    	title: "年月",
+                    	width: 1,
+                    	hidden: true
+                	},{
+                    	field: "dateT",
+                    	title: "日期",
+                    	width: 90
+                	}, {
+                    	field: "AllPatientCount",
+                    	title: "在住患者数",
+                    	width: 85,
+                    	formatter: function(value, row, index) {
+	                    	if(row.AllPatientCount!="" && row.AllPatientCount!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"AllPatientCount\""+ ")'>" + row.AllPatientCount + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.AllPatientCount;
+			                }
+                        }
+                	}, {
+                    	field: "NewInICUCount",
+                    	title: "当日新进<br/>患者人数",
+                    	width: 70,
+                    	formatter: function(value, row, index) {
+	                    	if(row.NewInICUCount!="" && row.NewInICUCount!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"NewInICUCount\""+ ")'>" + row.NewInICUCount + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.NewInICUCount;
+			                }
+                        }
+                	},
+                	{
+                    	field: "UrinaryCatheterCount",
+                    	title: "留置导尿<br/>管患者数",
+                    	width: 70,
+                    	formatter: function(value, row, index) {
+	                    	if(row.UrinaryCatheterCount!="" && row.UrinaryCatheterCount!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"UrinaryCatheterCount\""+ ")'>" + row.UrinaryCatheterCount + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.UrinaryCatheterCount;
+			                }
+                        }
+                	}, {
+                    	field: "NewUrinaryCatheterCount",
+                    	title: "当日新置导<br/>尿管患者数",
+                    	width: 85,
+                    	formatter: function(value, row, index) {
+	                    	if(row.NewUrinaryCatheterCount!="" && row.NewUrinaryCatheterCount!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"NewUrinaryCatheterCount\""+ ")'>" + row.NewUrinaryCatheterCount + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.NewUrinaryCatheterCount;
+			                }
+                        }
+                	}, {
+                    	field: "CVTubeCount",
+                    	title: "中心静脉插<br/>管患者人数",
+                    	width: 85,
+                    	formatter: function(value, row, index) {
+	                    	if(row.CVTubeCount!="" && row.CVTubeCount!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"CVTubeCount\""+ ")'>" + row.CVTubeCount + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.CVTubeCount;
+			                }
+                        }
+                	}, {
+                    	field: "NewCVTubeCount",
+                    	title: "当日新增中心静<br/>脉插管患者人数",
+                    	width: 115,
+                    	formatter: function(value, row, index) {
+	                    	if(row.NewCVTubeCount!="" && row.NewCVTubeCount!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"NewCVTubeCount\""+ ")'>" + row.NewCVTubeCount + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.NewCVTubeCount;
+			                }
+                        }
+                	},{
+                    	field: "PeripheralVein",
+                    	title: "外周中心静脉<br/>置管患者人数",
+                    	width: 100,
+                    	formatter: function(value, row, index) {
+	                    	if(row.PeripheralVein!="" && row.PeripheralVein!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"PeripheralVein\""+ ")'>" + row.PeripheralVein + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.PeripheralVein;
+			                }
+                        }
+                	},{
+                    	field: "NewPeripheralVein",
+                    	title: "当日新外周中心<br/>静脉置管患者数",
+                    	width: 110,
+                    	formatter: function(value, row, index) {
+	                    	if(row.NewPeripheralVein!="" && row.NewPeripheralVein!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"NewPeripheralVein\""+ ")'>" + row.NewPeripheralVein + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.NewPeripheralVein;
+			                }
+                        }
+                	},{
+                    	field: "InvasiveVentilator",
+                    	title: "有创呼吸<br/>机患者数",
+                    	width: 70,
+                    	formatter: function(value, row, index) {
+	                    	if(row.InvasiveVentilator!="" && row.InvasiveVentilator!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"InvasiveVentilator\""+ ")'>" + row.InvasiveVentilator + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.InvasiveVentilator;
+			                }
+                        }
+                	},{
+                    	field: "BedUp30",
+                    	title: "床头抬高<br/>30°患者数",
+                    	width: 80,
+                    	formatter: function(value, row, index) {
+	                    	if(row.BedUp30!="" && row.BedUp30!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"BedUp30\""+ ")'>" + row.BedUp30 + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.BedUp30;
+			                }
+                        }
+                	},{
+                    	field: "Constraint",
+                    	title: "约束身体<br/>患者数",
+                    	width: 70,
+                    	formatter: function(value, row, index) {
+	                    	if(row.Constraint!="" && row.Constraint!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"Constraint\""+ ")'>" + row.Constraint + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.Constraint;
+			                }
+                        }
+                	}
+                	,{
+                    	field: "DeathCount",
+                    	title: "死亡患者数",
+                    	width: 85,
+                    	formatter: function(value, row, index) {
+	                    	if(row.DeathCount!="" && row.DeathCount!=0){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.dateT+"\"" + "," + "\"DeathCount\""+ ")'>" + row.DeathCount + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.DeathCount;
+			                }
+                        }
+                	}
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = session.DeptID;
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+            	"background-color:" + row.StatusColor + ";";
+        	},
+        	view: groupview,
+        	groupField: "yearMonth",
+        	groupFormatter: function(value, rows) {
+            	return value;
+        	},
+        	onLoadSuccess: function(data) {},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnExport").click(function(){
+	    	exportToExcel();
+    	});
+	});
+	
+	var datagrid1 = $("#data_grid1");
+		datagrid1.datagrid({
+			idField: "RowId",
+			fit: true,
+			rownumbers: true,
+			remoteSort: false,
+			singleSelect:true,
+			striped:true,
+			title: "",
+			nowrap: true,
+			toolbar: "#dataTools",
+			border:false,
+			url: ANCSP.DataQuery,
+			queryParams: {
+				ClassName: "web.DHCICUStatisticXZRY",
+				QueryName: "FindICUMonitorLogStatPatInfo",
+				Arg1: "",
+				Arg2: "",
+				ArgCnt: 2
+			},
+			columns: [
+			[{
+				field: "icuaId",
+				title: "icuaId",
+				width: 40
+			},{
+				field: "patName",
+				title: "患者姓名",
+				width: 80
+			},{
+				field: "patSex",
+				title: "性别",
+				width: 40
+			},{
+				field: "patAge",
+				title: "年龄",
+				width: 40
+			},{
+				field: "icuInDateTime",
+				title: "入科时间",
+				width: 120
+			},{
+				field: "icuOutDateTime",
+				title: "出科时间",
+				width: 120
+			},{
+				field: "wardDesc",
+				title: "病区",
+				width: 100
+			},{
+				field: "icuBed",
+				title: "床位",
+				width: 80
+			},{
+				field: "ResidentDoctor",
+				title: "住院医师",
+				width: 80
+			},{
+				field: "ICUGuardDay",
+				title: "监护天数",
+				width: 80,
+			},{
+				field: "icuDiag",
+				title: "诊断",
+				width: 120
+			},{
+				field: "papmiMedicare",
+				title: "病案号",
+				width: 80
+			},{
+				field: "admNo",
+				title: "住院号",
+				width: 80
+			},{
+				field: "ICUALeaveCondition",
+				title: "转归状态",
+				width: 80
+			},{
+				field: "note",
+				title: "说明",
+				width: 400
+			}]
+			],
+			onBeforeLoad: function(param) {
+				param.Arg1 = currentDate;
+				param.Arg2 = currentStatCode;
+			},
+			pagination: true,
+			pageList: [200, 500],
+			pageSize: 500
+		});
+		
+	function ShowDetails(date,statCode){
+		currentDate = date;
+		currentStatCode = statCode;
+		$("#OpDetailsDialog").dialog("setTitle", "病人信息");
+		$("#OpDetailsDialog").dialog("open");
+		datagrid1.datagrid('reload');
+	}
+	
+	function exportQuery(dataGrid,options){
+			if (!options.limit)options.limit=100000;
+			var data = dhccl.getDatas(ANCSP.DataQuery,options,"json");
+	      	var colNames=[];
+     		var cols = $(dataGrid).datagrid('getColumnFields');
+		    var array = [];
+		    for (var i in cols) {     
+		         //获取每一列的列名对象
+		         var col = $(dataGrid).datagrid("getColumnOption", cols[i]);
+		         //追加对象
+		         colNames.push(col.title.trim());
+		    }   
+    
+			var filename = "ICU检测日志.xlsx";
+			var ws_name = "SheetJS";
+			var list=[];
+			
+			list.push(colNames);
+			for(var i=0;i<data.length;i++){
+				var item=data[i];
+				var row=[];
+				for(var j in cols){
+					var colName=cols[j];
+					row.push(item[colName]);
+				}
+				list.push(row);
+			}
+			if(typeof console !== 'undefined') console.log(new Date());
+			var wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet(list);
+			 
+			/* add worksheet to workbook */
+			XLSX.utils.book_append_sheet(wb, ws, ws_name);
+
+			/* write workbook */
+			if(typeof console !== 'undefined') console.log(new Date());
+			XLSX.writeFile(wb, filename);
+			if(typeof console !== 'undefined') console.log(new Date())
+	}
+	function exportToExcel() {
+		exportQuery("#data_grid",{
+	        ClassName: "web.DHCICUStatisticXZRY",
+            QueryName: "FindICUMonitorLogStat",
+            Arg1: $("#OperStartDate").datebox("getValue"),
+            Arg2: $("#OperEndDate").datebox("getValue"),
+            Arg3: session.DeptID,
+            ArgCnt: 3
+	    });
+	}
+	
+	/*
+	function exportToExcel() {
+    	var datagrid = $("#data_grid");
+    	var rows = datagrid.datagrid("getRows");
+    	
+    	var columns = datagrid.datagrid("options").columns[0];
+    	var columnLength = columns.length;
+    	var sheetRowCount = 3;
+    	
+    	var xlsExcel, xlsBook, xlsSheet;
+    	xlsExcel = new ActiveXObject("Excel.Application");
+    	xlsBook = xlsExcel.Workbooks.Add();
+
+		var excelRow=2,excelColumn=0;
+    	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = column["title"];
+        	}
+        
+        excelRow++;
+		excelColumn=1;
+        for (var i = 0; i < rowLength ; i++) {
+            	row = rows[i];
+            	excelRow++;
+            	excelColumn=0;
+         
+            	for (var j = 0; j < columnLength; j++) {
+                	column = columns[j];
+                	field = column["field"];
+                	excelColumn ++;
+                	xlsSheet.cells(excelRow, excelColumn) = row[field] || "";
+            	}
+       		}
+       		
+    	xlsExcel.Visible = true;
+    	//xlsSheet.PrintPreview;
+    	//xlsSheet.PrintOut();
+}*/
+	</script>
+</body>
+</html>

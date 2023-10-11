@@ -1,0 +1,61 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<ADDINS required="CmdShell"></ADDINS><!--Add By QW20210129 BUG:QW0089 测试需求1734018-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109") 
+s title="批量数据报废"
+s Job=$j
+</SCRIPT>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title=#(title)# data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding:0px 0 10px 0;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label for="KindType">报废类型</label></div>
+							<div class="eq-table-td eq-table-input"><input id="KindType" class="hisui-combobox textbox"></div>
+							<div class="eq-table-td eq-table-label-new"><label for="OperationType">生成类型</label></div>
+							<div class="eq-table-td eq-table-input"><input id="OperationType" class="hisui-combobox textbox"></div>
+							<div class="eq-table-td eq-table-label-new"><label for="NoDealFlag">不处理异常状态数据</label></div>
+							<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox" id="NoDealFlag" ></div>
+							<div class="eq-table-td eq-table-label-button"><a id="BBatchDisuse" href="#" class="hisui-linkbutton" iconCls="icon-w-audit"  data-options="stopAllEventOnDisabled:true">生成单据</a></div>
+	           			</div>
+	            	</div>
+	            </div>
+	            <div id="tab-tools">
+					<div id="btngroup">
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:ImportData()" id="BImport">加载数据</a>
+					</div>
+					<div id="EquipFilter" style="position:absolute;right:10px;top:-2px;">
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;padding:0x;">
+					<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,border:false">
+						<table id="tDHCEQDisuse" class="hisui-datagrid" data-options="toolbar:'#tab-tools'"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="Job" value="#(Job)#">
+			<INPUT type="hidden" id="ChromeFlag" value="#(ChromeFlag)#">
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/em/disuseimport.js"></script>
+</body>
+</html>

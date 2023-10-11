@@ -1,0 +1,121 @@
+<!--设置 nur.hisui.accompanyConfig.csp 陪护配置--> 
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+</script>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html;">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <STYLE type='text/css'>
+        body {
+            background-color: #fff;
+        }
+        .datagrid-cell.datagrid-cell-c2-colUsing.datagrid-editable table>tbody>tr>td {
+	      padding-left:25px    
+	    }
+	    .search-table {
+		    border-collapse:separate;
+			border-spacing:0 10px;
+		}
+	    .r-label{
+			padding-left: 10px;
+		}
+		#OrderConfigDialog{
+			padding:10px;
+		}
+		#AlertConfigDialog{
+			padding:5px;
+		}
+    </STYLE>
+</head>
+
+<body>
+      <div class="hisui-layout"
+        data-options="fit:true">
+            <div data-options="region:'north',border:false,split:false,headerCls:'panel-header-gray'"
+             style="overflow-y:hidden;height:50px;border-bottom:1px dashed #ccc;">
+                <table class="search-table">
+			      <tr>
+			         <td class="r-label">
+					    <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+				     </td>
+					<td>
+						<select id="_HospList"></select>
+					</td>
+				    <td class="r-label">
+					    维护类型
+				     </td>
+					<td>
+						<select id="opType" style="width:200px"></select>
+					</td>
+			      </tr>
+		        </table>
+             </div>
+             <div data-options="region:'center',border:false,split:false,headerCls:'panel-header-gray',border:false">
+				<table id="accomGrid"></table>
+             </div>
+          </div>
+    </div>
+    <div id="readAccomInfoDiv" style="display:inline-block;margin:4px 0 0 5px;">
+      <span>读取陪护人员信息</span>
+      <div id="readAccomInfo" class="hisui-switchbox"  style="margin-top:-3px;" data-options="onText:'启用',offText:'停用',
+		size:'mini',animated:true,onClass:'success',offClass:'gray',onSwitchChange:function(e,obj){
+			$m({ClassName:'Nur.HISUI.AccompanyConfig',
+			    MethodName:'saveOnceConfig',
+			    type:'readAccomInfo',
+			    value:obj.value,
+			    hospId:$HUI.combogrid('#_HospList').getValue()
+			    },false)
+		}">
+	  </div>
+    </div>
+    <div id="OrderConfigDialog">
+       <div class="hisui-panel" data-options="fit:true" style="border-color:#ccc;"> 
+			<table id="OrderConfigGrid"></table>	
+	   </div>
+	</div>
+	<div id="regSearchConfigDialog" style="padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="fit:true" style="border-color:#ccc;"> 
+			<div style="padding:4px;border-bottom:1px solid #ccc;">
+				<input id="groupSearch" href="#" class="hisui-searchbox" style="width:270px;" data-options="prompt:'请输入安全组'"/>
+			</div>
+			<div style="height:462px;">
+				<table id="regSearchConfigGrid"></table>
+			</div>
+		</div>
+	</div>
+	<div id="AlertConfigDialog">
+	   <div id="alertAccomInfo" class="hisui-switchbox" style="margin:5px;"  data-options="onText:'启用',offText:'停用',
+			size:'small',animated:true,onClass:'success',offClass:'gray',onSwitchChange:function(e,obj){
+				$m({ClassName:'Nur.HISUI.AccompanyConfig',
+				    MethodName:'saveOnceConfig',
+				    type:'alertAccomInfo',
+				    value:obj.value,
+				    hospId:$HUI.combogrid('#_HospList').getValue()
+				    },false)
+			}">
+	   </div>
+	   <div style="width:525px;height:210px;">
+	       <div class="hisui-panel" data-options="fit:true,title:'重复添加陪护人员提示设置',headerCls:'panel-header-gray'"> 
+				<table id="AlertConfigGrid"></table>	
+		   </div>
+	   </div>
+	</div>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/accompanyConfig.js"></script>
+</body>
+
+</html>

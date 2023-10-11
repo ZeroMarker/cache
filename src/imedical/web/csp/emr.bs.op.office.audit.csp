@@ -1,0 +1,170 @@
+﻿<html>
+    <head>
+        <title> 门诊诊断证明书审核 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <ADDINS require="RWCard,PublicReadPerson,DHCOPPrint"/>
+        <HISUI/>
+        <DOCCARD medStepCode="EMR"></DOCCARD>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.tools.js"></script>
+        <!-- 读卡 -->
+        <script type="text/javascript" src="../scripts/websys.js"></script>
+        <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+        <script language="cache" runat="server">
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s mradm = ""
+            s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+            s:((episodeID'="")&&(patientID="")) patientID = $p($g(^PAADM(episodeID)),"^",1)
+            s sessionID = %session.SessionId
+            s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+            s loginID = $Get(%session.Data("LOGON.SSUSERLOGINID"))
+            s ssgroupID = %session.Get("LOGON.GROUPID")
+            s hospitalID = %session.Get("LOGON.HOSPID")
+            s userID = %session.Get("LOGON.USERID")
+            s userCode = %session.Get("LOGON.USERCODE")
+            s userName = %session.Get("LOGON.USERNAME")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+            s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+            s pmdType = $Get(%request.Data("pmdType",1),"EMR")
+            s pmdCode = $Get(%request.Data("pmdCode",1),"")
+            s product = $Get(%request.Data("product",1),"OP")
+            s sysOption = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTIONS","params":[{"name":"infoMessage","defaultValue":{}},{"name":"patientNoLength","defaultValue":""},{"name":"diagnoseProofDocCode","defaultValue":""},{"name":"revise","defaultValue":{"del":{"show":"0"},"add":{"show":"0"},"style":{"show":"0"}}}]})
+            s dateFormat = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_DATEFORMAT","params":{"langID":(langID)}})
+        </script>
+         <script language="javascript">
+            var patInfo = {
+                patientID: "#(patientID)#",
+                episodeID: "#(episodeID)#",
+                mradm: "#(mradm)#",
+                sessionID: "#(sessionID)#",
+                langID: "#(langID)#",
+                ssgroupID: "#(ssgroupID)#",
+                hospitalID: "#(hospitalID)#",
+                userID: "#(userID)#",
+                userCode: "#(userCode)#",
+                userName: "#(userName)#",
+                userLocID: "#(userLocID)#",
+                userLocCode: "#(userLocCode)#",
+                userLocName: "#(userLocName)#",
+                ipAddress: "",
+                pmdType: "#(pmdType)#",
+                pmdCode: "#(pmdCode)#"
+            };
+            var envVar = {
+                documentID: "",
+                product: "#(product)#"
+            };
+            var sysOption = #(sysOption)#;
+            var dateFormat = #(dateFormat)#;
+            var pluginType = "";
+            var langID = "#(langID)#";
+            var loginID = "#(loginID)#";
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+        <div class="hisui-panel" data-options="region:'center',border:false" style="overflow:hidden;padding:5px;">
+            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <div id="patLst" data-options="region:'west',border:true,split:true" style="width:550px;">
+                    <div class="hisui-layout" data-options="fit:true">
+                        <div id="seekform" data-options="region:'north',border:false" style="height:150px;padding:5px 3px 3px 3px;">
+                            <table style="border-spacing:4px;border-collapse:separate;">
+                                <tr>
+                                    <td class="r-label">#(..Get("登记号"))#</td>
+                                    <td class="r-label">
+                                        <input id="regNoSearch" class="hisui-searchbox hover-dark" data-options="fit:true,border:false" style="width:190px;"/>
+                                    </td>
+                                    <td class="r-label">#(..Get("开始日期"))#</td>
+                                    <td class="r-label">
+                                        <input id="startDate" class="hisui-datebox" data-options="formatter:dateformatter,fit:true,border:false" style="width:175px;"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="r-label">#(..Get("患者姓名"))#</td>
+                                    <td class="r-label">
+                                        <input id="nameSearch" class="hisui-searchbox hover-dark" data-options="fit:true,border:false" style="width:190px;"/>
+                                    </td>
+                                    <td class="r-label">#(..Get("结束日期"))#</td>
+                                    <td class="r-label">
+                                        <input id="endDate" class="hisui-datebox" data-options="formatter:dateformatter,fit:true,border:false,value:'Today'" style="width:175px;"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="r-label">#(..Get("就诊卡号"))#</td>
+                                    <td class="r-label">
+                                        <input id="cardNoSearch" class="hisui-searchbox hover-dark" data-options="fit:true,border:false" style="width:190px;"/>
+                                    </td>
+                                    <td class="r-label">#(..Get("审核状态"))#</td>
+                                    <td class="r-label">
+                                        <select title="审核状态" id="auditStatus" class="hisui-combobox" data-options="enterNullValueClear:false,blurValidValue:true" style="width:175px;">
+                                            <option value="全部">#(..Get("全部"))#</option>
+                                            <option value="未审核" selected="selected">#(..Get("未审核"))#</option>
+                                            <option value="已审核">#(..Get("已审核"))#</option>
+                                            <option value="已拒绝">#(..Get("已拒绝"))#</option>
+                                            <option value="作废">#(..Get("作废"))#</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="r-label">#(..Get("类型"))#</td>
+                                    <td class="r-label">
+                                        <select title="病历类型" id="recordDocCodeType" class="hisui-combobox" data-options="enterNullValueClear:false,blurValidValue:true" style="width:190px;"></select>
+                                    </td>
+                                    <td class="r-label"></td>
+                                    <td class="r-label">
+                                        <a id="readCard" href="#" class="hisui-linkbutton" onclick="readCardEvent()">#(..Get("读卡"))#</a>
+                                        <a href="#" id="btnSetQuery" class="hisui-linkbutton" onclick="queryData()" style="margin-left:5px;">#(..Get("查询"))#</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div data-options="region:'center',border:false" style="padding:3px;">
+                            <table id="patientListData" title="诊断证明审核完成情况表"></table>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:true">
+                    <div class="hisui-layout" data-options="fit:true,border:false">
+                        <div id="pnlButton" data-options="region:'north',border:false" style="height:50px;padding:10px 0 0 0">
+                            <lable style = "margin:0 5px 0 3px;">#(..Get("审核人"))#</lable>
+                            <select name="auditUsrCombo" id="auditUsrCombo" style="width:200px"></select>
+                            <span style = "margin-left:15px;">
+                                <a href="#" id="btnAuditAndPrint" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>#(..Get("审核并打印"))#</a>
+                                <span style = "margin-left:5px;">
+                                    <a href="#" id="btnOpOfficeAudit" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>#(..Get("审核"))#</a>
+                                </span>
+                                <span style = "margin-left:5px;">
+                                    <a href="#" id="btnPrint" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>#(..Get("打印"))#</a>
+                                </span>
+                                <span style = "margin-left:5px;">
+                                    <a href="#" id="btnRefuse" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>#(..Get("拒绝"))#</a>
+                                </span>
+                                <span style = "margin-left:5px;">
+                                    <a href="#" id="btnViewRevision" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>#(..Get("显示留痕"))#</a>
+                                </span>
+                                <span style = "margin-left:5px;">
+                                    <a href="#" id="btnBrowse" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>#(..Get("病历浏览"))#</a>
+                                </span>
+                            </span>
+                        </div>
+                        <div id="container" data-options="region:'center',border:false" style="overflow:hidden;">
+                            <div id="bsOfficeEditor" style="overflow:hidden;width:100%;height:100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="dialogLog" class="hisui-dialog" title="日志" style="width:1000px;height:500px;padding:10px;" data-options="isTopZindex:true,closed:true,modal:true">
+            <table id="officeLog" class="hisui-datagrid" data-options="headerCls:'panel-header-gray'"></table>
+        </div>
+
+        <script type="text/javascript" src="../service/emr-editor/jq/emr-editor.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.office.toolbar.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.office.audit.js"></script>
+    </body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--设置 docapp.blmap.showview.hui.csp 病理模块展示-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcapp/css/piscom.css" rel="stylesheet">
+<style type="text/css">
+</style>
+<Server>
+s BLTempRowID=$g(%request.Data("BLTempRowID",1))
+s BLContentText=$g(^DHCDocBLTem(BLTempRowID,"ConT"))
+s BLID=$P(^DHCDocBLTem(BLTempRowID),"^",3)
+w !,BLContentText
+if ($g(^DHCDocBLTem(BLTempRowID,"JSStr"))'=""){
+	w "<script type='text/javascript' src='../"_$g(^DHCDocBLTem(BLTempRowID,"JSStr"))_"'></script>"
+}
+s CheckStr=""
+s Mapid=""
+for{
+	 s Mapid=$O(^DHCDocAppBLItemi("Acquir","Y",Mapid))
+	 q:Mapid=""
+	 s ID=$P(^DHCDocAppBLItem(Mapid),"^",1)
+	 s Desc=$P(^DHCDocAppBLItem(Mapid),"^",2)
+	 s SubMapID=$P(^DHCDocAppBLItem(Mapid),"^",6)
+	 Continue:SubMapID'=BLTempRowID
+	 if CheckStr="" s CheckStr=ID_"##"_Desc
+	 else  s CheckStr=CheckStr_"^"_ID_"##"_Desc
+}
+s EpisodeID=0
+for {
+	s EpisodeID=$O(^PAADM(EpisodeID))
+	q:EpisodeID=""
+	q:$G(^PAADM(EpisodeID))'=""
+	}
+s PatientID=0
+for {
+	s PatientID=$O(^PAPER(EpisodeID))
+	q:PatientID=""
+	q:$G(^PAPER(PatientID,"ALL"))'=""
+	}
+</Server>
+</head> 
+<body>
+	<SCRIPT language = 'javascript' >
+		var LgUserID = session['LOGON.USERID'];   /// 用户ID
+		var LgCtLocID = session['LOGON.CTLOCID']; /// 科室ID
+		var LgGroupID = session['LOGON.GROUPID']; /// 安全组ID
+		var LgHospID=session['LOGON.HOSPID'];
+		var EpisodeID="#(EpisodeID)#" //默认用户和就诊都为1
+		var PatientID="#(PatientID)#"
+		var BLID="#(BLID)#"
+		var CheckStr="#(CheckStr)#"
+		var MapCode="LIVN"
+		var itemReqJsonStr=""
+		var ServerObj={
+			DefualtDoc:session['LOGON.USERID']
+			}
+		var PisID=""
+		var ARCIM=""
+		var Arcim=""
+		$(function(){
+			var Obj=eval(BLID) 
+			Obj.Init()
+			addclsRequired()
+		})
+		function addclsRequired(){
+			if (CheckStr!=""){
+				var CheckAry=CheckStr.split("^")
+				for (var i=0;i<CheckAry.length;i++) {
+					var OneCheckStr=CheckAry[i]
+					var ID=OneCheckStr.split("##")[0]
+					if ($("#"+ID).length > 0){
+						$("label[for="+ID+"]").addClass("clsRequired");
+					}
+				}
+			}
+	}
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/listcomponent.js"></script>	
+</body>
+</html>

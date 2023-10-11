@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<!--药房药库-应用程序维护
+	csp:pha.sys.v1.app.csp
+	js: pha/sys/v1/app.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    .layout-panel-west .datagrid-header{
+        display:none;
+    }
+    .pha-body {
+	    background-color: #fff;
+	}
+   </style>
+    <server>
+    	
+   </server>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',border:false,split:true,width:250">   
+                    <div class="hisui-panel" title="#(..Get("产品线"))#" data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:'',
+                    	tools: [{    
+							iconCls: 'icon-reload',
+							handler: QueryPro  
+						}]">
+                        <table id="gridPro"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div id="panel-app" class="hisui-panel" title="#(..Get("产品模块"))#" data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:'',
+                    	tools: [{    
+							iconCls: 'icon-tip'
+						}]">
+                        <table id="gridApp"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridAppBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">#(..Get("新增"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEdit">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDel">#(..Get("删除"))#</a>
+        <!--
+        <div style="float:right; margin-top:2px; right;margin-right:5px;">
+            <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" title="拖动可以改变“产品模块”的显示顺序！" class="hisui-tooltip" data-options="position:'left'" style="position:relative; top:3px; cursor:pointer"></img>
+        </div>
+        -->
+    </div>
+    
+    <!-- window dialog -->
+	<!-- 产品模块维护页面 -->
+	<div id="diagApp" class="hisui-dialog" data-options="closed:true,width:430,height:350,title:'模块',iconCls:'icon-w-add',
+		buttons:[
+			{
+				text: '保存',
+				handler: function(){
+					Save(); // 保存后关闭
+				}
+			},{
+				text: '继续新增',
+				id: 'diagApp_btnAdd',
+				handler: function(){
+					Save(1); // 保存后不关闭
+				}
+			},{
+				text: '关闭',
+				handler: function(){
+					$('#diagApp').dialog('close');
+				}
+			}
+		]" >
+	 <div class="hisui-layout" fit="true">
+	     <div data-options="region:'center',border:false" class="pha-body" style="overflow:hidden">
+	         <div class="pha-container" style="padding-left: 20px;padding-top:10px">
+	             <div class="pha-row">
+	                 <div class="pha-col" style="width:7rem;text-align:right;">
+	                     <label for="proId"><span style="color:red">*</span>#(..Get("产品线"))#</label>
+	                 </div>
+	                 <div class="pha-col">
+	                     <input id="proId" class="hisui-combobox"
+	                         data-pha='class:"hisui-combobox",requied:true' />
+	                 </div>
+	             </div>
+	             <div class="pha-row">
+	                 <div class="pha-col" style="width:7rem;text-align:right;">
+	                     <label for="appCode"><span style="color:red">*</span>#(..Get("代码"))#</label>
+	                 </div>
+	                 <div class="pha-col">
+	                     <input id="appCode" class="hisui-validatebox"
+	                         data-pha='class:"hisui-validatebox",requied:true' style="width:173px;" spellcheck="false" />
+	                 </div>
+	             </div>
+	             <div class="pha-row">
+	                 <div class="pha-col" style="width:7rem;text-align:right;">
+	                     <label for="appDesc"><span style="color:red">*</span>#(..Get("名称"))#</label>
+	                 </div>
+	                 <div class="pha-col">
+	                     <input id="appDesc" class="hisui-validatebox"
+	                         data-pha='class:"hisui-validatebox",requied:true' style="width:173px;" />
+	                 </div>
+	             </div>
+	             <div class="pha-row">
+	                <div class="pha-col" style="width:7rem;text-align:right;">
+	                    <label for="appModuType"><span style="color:red">*</span>#(..Get("类型"))#</label>
+	                </div>
+	                <div class="pha-col">
+	                    <input id="appModuType" class="hisui-combobox"
+	                        data-pha='class:"hisui-combobox",requied:true' />
+	                </div>
+	            </div>
+       			<div class="pha-row">
+	                <div class="pha-col" style="width:7rem;text-align:right;">
+	                    <label for="appForAppNo">#(..Get("用于单号规则"))#</label>
+	                </div>
+	                <div class="pha-col" style="margin-left:-9px">
+	                    <input id="appForAppNo" class="hisui-checkbox" type="checkbox"
+	                        data-pha='class:"hisui-checkbox"' />
+	                </div>
+	            </div>
+	             <div class="pha-row">
+	                <div class="pha-col" style="width:7rem;text-align:right;">
+	                    <label for="appForParams">#(..Get("用于参数设置"))#</label>
+	                </div>
+	                <div class="pha-col" style="margin-left:-9px">
+	                    <input id="appForParams" class="hisui-checkbox" type="checkbox"
+	                        data-pha='class:"hisui-checkbox"' />
+	                </div>
+	            </div>
+	         </div>
+	     </div>
+	 </div>
+	</div>
+	
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/sys/v1/app.js"></script>
+</body>
+
+</html>

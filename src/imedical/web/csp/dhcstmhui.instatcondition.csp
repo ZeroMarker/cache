@@ -19,23 +19,23 @@
 		<div class="hisui-panel" data-options="title:'入库汇总',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
 			<div class="hisui-layout" data-options="fit:true">
 				<div data-options="region:'center',border:false">
-					<table id="Conditions" class="Condition">
+					<table id="Conditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<input id="Inci" name="Inci" type="hidden">
 						<input id="ssStkgrptype" name="ssStkgrptype" type="hidden" value="M">
 						<tr>
-							<td><label class="required">*</label><label>入库科室</label><input id="Loc" name="Loc" class="textbox hisui-combobox" style="width:155px;"></td>
+							<td><label class="required">*</label><label>入库科室</label><input id="Loc" name="Loc" class="textbox hisui-mulcombobox" style="width:155px;"></td>
 						</tr>
 						<tr>
 							<td><label class="required">*</label><label>起始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox" style="width:155px;"></td>
 						</tr>
 						<tr>
-							<td><label>起始时间</label><input id="StartTime" name="StartTime" class=" textbox hisui-timespinner" style="width:155px;"></td>
+							<td><label>起始时间</label><input id="StartTime" name="StartTime" class=" textbox hisui-timespinner" style="width:155px;" data-options="showSeconds:true"></td>
 						</tr>
 						<tr>
 							<td><label class="required">*</label><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox" style="width:155px;"></td>
 						</tr>
 						<tr>
-							<td><label>截止时间</label><input id="EndTime" name="EndTime" class="textbox hisui-timespinner" style="width:155px;"></td>
+							<td><label>截止时间</label><input id="EndTime" name="EndTime" class="textbox hisui-timespinner" style="width:155px;" data-options="showSeconds:true"></td>
 						</tr>
 						<tr>
 							<td><label>统计方式</label><input id="RetFlag" name="RetFlag" class="textbox hisui-combobox" style="width:155px;"></td>
@@ -47,16 +47,22 @@
 							<td><label>资金来源</label><input id="SourceOfFund" name="SourceOfFund" class="textbox hisui-combobox" style="width:155px;"></td>
 						</tr>
 						<tr>
-							<td><label>类组</label><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree" style="width:155px;"></td>
+							<td><label>类组</label><input id="ScgStk" name="ScgStk" multiple="true" class="textbox hisui-stkscgcombotree" style="width:155px;"></td>
 						</tr>
 						<tr>
-							<td><label>库存分类</label><input id="StkCat" name="StkCat" class="textbox hisui-combobox" style="width:155px;"></td>
+							<td><label>库存分类</label><input id="StkCat" name="StkCat" multiple="true" class="textbox hisui-mulcombobox" style="width:155px;"></td>
 						</tr>
 						<tr>
-							<td><label>厂商</label><input id="Manf" name="Manf" class="textbox hisui-combobox CommonInput" style="width:155px;"></td>
+							<td><label>生产厂家</label><input id="Manf" name="Manf" class="textbox hisui-combobox CommonInput" style="width:155px;"></td>
 						</tr>
 						<tr>
 							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>68分类</label><input id="Official" name="Official" class="hisui-combotree textbox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>重点关注分类</label><input id="ClinicalCat" name="ClinicalCat" class="hisui-combobox textbox" style="width:155px;"></td>
 						</tr>
 						<tr>
 							<td>
@@ -83,51 +89,60 @@
 						</tr>
 					</table>
 				</div>
-				<div class="PartLine" data-options="region:'south',border:false" style="height:240px;">
-					<table id="ReportConditions">
-						<tr>
-							<td><input class='hisui-radio' type="radio" label='入库单明细' name='ReportType' value='FlagImportDetail' data-options='checked:true'></td>
-							<td><input class='hisui-radio' type="radio" label='入库单汇总' name='ReportType' value='FlagImportGroupDetail'></td>
-						</tr>
-						<tr>
-							<td><input class='hisui-radio' type="radio" label='单品汇总' name='ReportType' value='FlagItmStat'></td>
-							<td><input class='hisui-radio' type="radio" label='单品批次汇总' name='ReportType' value='FlagItmBatStat'></td>
-						</tr>
-						<tr>
-							<td><input class='hisui-radio' type="radio" label='供应商汇总' name='ReportType' value='FlagVendorStat'></td>
-							<td><input class='hisui-radio' type="radio" label='供应商明细汇总' name='ReportType' value='FlagVendorItmStat'></td>
-						</tr>
-						<tr>
-							<td><input class='hisui-radio' type="radio" label='供应商/库存分类' name='ReportType' value='FlagVendorStkcatCross'></td>
-							<td><input class='hisui-radio' type="radio" label='供应商发票' name='ReportType' value='FlagVendorInvList'></td>
-						</tr>
-						<tr>
-							<td><input class='hisui-radio' type="radio" label='类组汇总' name='ReportType' value='FlagStkGrpStat'></td>
-							<td><input class='hisui-radio' type="radio" label='库存分类汇总' name='ReportType' value='FlagStockStat'></td>
-						</tr>
-						<tr>
-							<td><input class='hisui-radio' type="radio" label='入库/退货单汇总' name='ReportType' value='FlagRecItmSumStat'></td>
-							<td><input class='hisui-radio' type="radio" label='单品汇总(进价)' name='ReportType' value='FlagRpItmSumStat'></td>
-						</tr>
-						<tr>
-							<td><input class='hisui-radio' type="radio" label='供应商发票单据汇总' name='ReportType' value='FlagVendor2InvList'></td>
-						</tr>
-					</table>
-					<table class="Condition" align="center">
-						<tr>
-							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-						</tr>
-					</table>
+				<div data-options="region:'south',border:false" style="height:230px;padding-top:10px;">
+					<div class="boxshadow">
+						<table id="ReportConditions" style="padding-left:10px;">
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='单据明细' name='ReportType' value='FlagImportDetail' data-options='checked:true'></td>
+								<td><input class='hisui-radio' type="radio" label='单据单品汇总' name='ReportType' value='FlagImportGroupDetail'></td>
+							</tr>
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='单品汇总' name='ReportType' value='FlagItmStat'></td>
+								<td><input class='hisui-radio' type="radio" label='单品批次汇总' name='ReportType' value='FlagItmBatStat'></td>
+							</tr>
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='供应商汇总' name='ReportType' value='FlagVendorStat'></td>
+								<td><input class='hisui-radio' type="radio" label='供应商明细汇总' name='ReportType' value='FlagVendorItmStat'></td>
+							</tr>
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='供应商/库存分类' name='ReportType' value='FlagVendorStkcatCross'></td>
+								<td><input class='hisui-radio' type="radio" label='供应商发票' name='ReportType' value='FlagVendorInvList'></td>
+							</tr>
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='类组汇总' name='ReportType' value='FlagStkGrpStat'></td>
+								<td><input class='hisui-radio' type="radio" label='库存分类汇总' name='ReportType' value='FlagStockStat'></td>
+							</tr>
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='单据汇总' name='ReportType' value='FlagRecItmSumStat'></td>
+								<td><input class='hisui-radio' type="radio" label='资金来源汇总' name='ReportType' value='FlagSourceOfFundStat'></td>
+							</tr>
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='供应商发票单据汇总' name='ReportType' value='FlagVendor2InvList'></td>
+							</tr>
+						</table>
+						<table class="Condition" align="center">
+							<tr>
+								<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+								<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							</tr>
+						</table>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 	<div class="hisui-tabs tabs-gray GridPadding" data-options="region:'center'" id="tabs" style="border:0px;padding-left: 0px">
-		<div title="报表" data-options="iconCls:'icon-add-note'" class="ReportImage"></div>
+		<div id="Report" title="报表" data-options="iconCls:'icon-add-note'" class="ReportImage"></div>
+	</div>
+	<div id="tabmm" class="hisui-menu" style="width:150px;">
+	     <div id="tabmm-tabclose">关闭当前</div>
+	     <div id="tabmm-tabcloseall">关闭全部</div>
+	     <div id="tabmm-tabcloseother">关闭其他</div>
+	     <div class="menu-sep"></div>
+	     <div id="tabmm-tabcloseright">关闭右侧</div>
+	     <div id="tabmm-tabcloseleft">关闭左侧</div>
 	</div>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/encode.js"></script>
-	
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InOutStat/INStatCondition.js"></script>
 </body>

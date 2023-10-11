@@ -2,9 +2,8 @@
 <!--门诊欠药单管理 js:pharmacy/outpha/dhcpha.outpha.owe.js--> 
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- //i ##Class(websys.SessionEvents).SessionExpired()
- i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
-q 1
+ d ##Class(websys.SessionEvents).SessionExpired() q 1
+
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -48,9 +47,9 @@ q 1
 	<script language='javascript' src="../scripts/pharmacy/outpha/dhcpha.outpha.printcom.js"></script>
 	<script type="text/javascript" src="../scripts/pharmacy/outpha/dhcpha.outpha.owe.js" ></script>
 	<server>
-		s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
-		s GetCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
-		s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+		s ReadAccExpEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+		s GetCardTypeEncrypt=##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+		s ReadCardTypeEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
 	</server>
 </head>
 <body>
@@ -66,9 +65,9 @@ q 1
 		<div class="container-fluid dhcpha-condition-container">
 		    <div class="row">
 		    	<div class="col-lg-12 col-md-12 col-sm-12">
-		    	    <button class="btn btn-default btn_button btn_important" id="btn-fy"><img src="../scripts/pharmacy/images/disp-default.png" class="dhcpha-btn-image"><br><strong>发药</strong></button>
-				    <button class="btn btn-default btn_button btn_refuse" id="btn-return"><img src="../scripts/pharmacy/images/return-default.png" class="dhcpha-btn-image"><br><strong>退药</strong></button>
-				    <button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-clear"><img src="../scripts/pharmacy/images/clear-default.png" class="dhcpha-btn-image"><br><strong>清屏</strong></button>
+		    	    <button class="btn btn-default btn_button btn_important" id="btn-fy"><img src="../scripts/pharmacy/images/disp-default.png" class="dhcpha-btn-image"><br><strong>#(..Get("发药"))#</strong></button>
+				    <button class="btn btn-default btn_button btn_refuse" id="btn-return"><img src="../scripts/pharmacy/images/return-default.png" class="dhcpha-btn-image"><br><strong>#(..Get("退药"))#</strong></button>
+				    <button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-clear"><img src="../scripts/pharmacy/images/clear-default.png" class="dhcpha-btn-image"><br><strong>#(..Get("清屏"))#</strong></button>
 		    	</div>
 		    </div>
 		 </div>
@@ -77,38 +76,38 @@ q 1
 		 	<div class="row row_style">
 		 		<form class="form-inline">               
 			       <div class="input-group">
-	                    <span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>起止日期</strong></span>
-	                    <input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:6em" placeholder="请选择日期">
+	                    <span for="date-start" class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("起止日期"))#</strong></span>
+	                    <input id="date-start" class="form-control input_style" type="text" style="border-right:none;width:6em" placeholder="#(..Get("请选择日期"))#">
 	                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
 	                          <i class="fa fa-calendar"></i>
 	                    </span>  
 	               </div>
-	               <span><strong>至</strong></span>
+	               <span><strong>#(..Get("至"))#</strong></span>
 	               <div class="input-group">
-	                    <input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:6em" placeholder="请选择日期">
+	                    <input id="date-end" class="form-control input_style" type="text" style="border-right:none;width:6em" placeholder="#(..Get("请选择日期"))#">
 	                    <span  class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
 	                          <i class="fa fa-calendar"></i>
 	                    </span>                       
 	               </div>
-	              	<input class="form-control input_style" type="text" id="txt-prescno" style="width:9em" placeholder="请输入处方号">
-					<input class="form-control input_style" type="text" id="txt-patno" style="width:8em" placeholder="请输入登记号">
-					<input class="form-control input_style" type="text" id="txt-cardno" style="width:8em" placeholder="刷卡/请输入卡号">
+	              	<input class="form-control input_style" type="text" id="txt-prescno" style="width:9em" placeholder="#(..Get("请输入处方号"))#">
+					<input class="form-control input_style" type="text" id="txt-patno" style="width:8em" placeholder="#(..Get("请输入登记号"))#">
+					<input class="form-control input_style" type="text" id="txt-cardno" style="width:8em" placeholder="#(..Get("刷卡/请输入卡号"))#">
 	               	                 
 		           	<div class="btn-group ">  
 	                    <span class="fa fa-credit-card dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
-			            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-readcard">读卡</button>
+			            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-readcard">#(..Get("读卡"))#</button>
 	                </div>
 	               	<div class="input-group" >                                     
 						<input type="checkbox" id="chk-fy" />
-						<lable for="chk-fy"><strong>已发药</strong></lable>	
+						<lable for="chk-fy"><strong>#(..Get("已发药"))#</strong></lable>	
 					</div>
 					<div class="input-group" >                                     
 						<input type="checkbox" id="chk-return" />
-						<lable for="chk-return"><strong>已退药</strong></lable>	
+						<lable for="chk-return"><strong>#(..Get("已退药"))#</strong></lable>	
 					</div>
 		            <div class="btn-group dhcpha-btn-right">  
 	                    <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
-			            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-find">查询</button>
+			            <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-find">#(..Get("查询"))#</button>
 	                </div> 
 	  
 				</form>
@@ -120,7 +119,7 @@ q 1
 		 <div class="row">
 		     <div>
 		           <div class="panel div_content">
-				       <div class="panel-heading"><span class="pal_style"><strong>欠药管理</strong></span></div>
+				       <div class="panel-heading"><span class="pal_style"><strong>#(..Get("欠药管理"))#</strong></span></div>
 					        <div id="nicescroll1">
 					        <table id="grid-owe" class="table table-bordered table_style">
 					        </table>
@@ -129,7 +128,7 @@ q 1
 				   </div>
   
 				   <div class="panel div_content">
-					   <div class="panel-heading"><span class="pal_style"><strong>药品详细列表</strong></span></div>
+					   <div class="panel-heading"><span class="pal_style"><strong>#(..Get("药品详细列表"))#</strong></span></div>
 						  <table id="grid-owedetail" class="table table-bordered table_style">
 						  </table>
 				   </div>

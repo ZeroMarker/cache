@@ -1,0 +1,85 @@
+<!doctype html>
+<!--dhc.orderinsudetail.csp 国家医保编码明细查看-->
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<style>
+	html,body{
+		margin:0;
+		padding:0;	
+		height:100%;
+	}
+</style>
+<Server>
+	s EpisodeID=%request.Get("EpisodeID")
+	s ArcimDr=%request.Get("ArcimDr")
+	s HospID=%session.Get("LOGON.HOSPID")
+	s OrderId=%request.Get("OrderId")
+	s AdmReason=$p($G(^PAADM(EpisodeID,1)),"^",7)
+	if ((OrderId'="")&&(ArcimDr="")){
+		s ArcimDr=$p($G(^OEORD(+OrderId,"I",$P(OrderId,"||",2),1)),"^",2)	
+		s BBExtCodeDR=$p($g(^OEORD(+OrderId,"I",$P(OrderId,"||",2),11)),"^",18)
+		s:BBExtCodeDR'="" AdmReason=BBExtCodeDR
+	}
+	s InstrStr=##class(web.DHCINSUPort).ArcimLinkInsuList(ArcimDr,AdmReason,HospID)
+	s InsuArr=""
+	s retObj=[]
+	if (InstrStr'="")&&($p(InstrStr,"^",1)'="-1"){
+		for i = 1:1:$L(InstrStr,"!") {
+			s OneInsInfo=$P(InstrStr,"!",i)
+			s TarItemRowid=$P(OneInsInfo,"^",1)
+			s TarItemCode=$P(OneInsInfo,"^",2)
+			s TarItemName=$P(OneInsInfo,"^",3)
+			s NationInsuName=$P(OneInsInfo,"^",14)
+			s NationInsuCode=$P(OneInsInfo,"^",13)
+			continue:(NationInsuName="")&&(NationInsuCode="")
+			d retObj.%Push({"id":(TarItemRowid),"TarItemCode":(TarItemCode),"TarItemName":(TarItemName),"NationInsuName":(NationInsuName),"NationInsuCode":(NationInsuCode)})
+		}
+	}
+	s InsuArr=retObj.%ToJSON()
+</Server>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',title:'',border:false" style="padding:10px;;border:0;">
+			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #e2e2e2;border-radius:4px;">
+				<table id="tabOrdDetailInfo"></table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var InsuArr=#(InsuArr)#
+		if (InsuArr.length=="0"){
+			$.messager.alert("提示","没有国家医保数据！","info",function(){
+				websys_showModal("close");
+			});
+		}
+		$(function(){
+			var OrdDetailColumns=[[
+				{field:'TarItemRowid',hidden:true},
+				{field:'NationInsuCode',title:'国家医保编码',align:'left',width:285,auto:false},
+		 		{field:'NationInsuName',title:'国家医保名称',align:'left',width:350,auto:false},
+			]]
+			OrdDetailInfoDataGrid=$("#tabOrdDetailInfo").datagrid({  
+				fit : true,
+				border : false,
+				striped : true,
+				singleSelect : false,
+				fitColumns : true,
+				autoRowHeight : false,
+				rownumbers:false,
+				pagination : false, 
+				showGroup: true,
+				pageSize: 9999, 
+				idField:'TarItemRowid',
+				data:InsuArr,
+				columns :OrdDetailColumns
+			});
+		})
+	</script>
+</body>
+</html>

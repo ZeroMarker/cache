@@ -1,0 +1,194 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--设置 doccure.asstemp.hui.csp 治疗评估展示-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<DHCDOCCURE></DHCDOCCURE>
+<!--<ADDINS require="LODOP"/>-->
+<link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/asscom.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/adaptation.css" rel="stylesheet">
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/storageAllCache.js"></script>
+<Server>
+ s PageShowFromWay=%request.Get("PageShowFromWay")
+ s DoctorID=##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
+ s SSUSRName=$P($g(^SSU("SSUSR",%session.Get("LOGON.USERID"))),"^",2)
+ s SSUSRName=##class(User.SSUser).GetTranByDesc("SSUSRName",SSUSRName,%session.Get("LOGON.LANGID"))
+ ///是否为实习生
+ s PracticeFlag=##class(web.DHCOEOrdItem).practice(DoctorID)
+ d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+ s DateFormat=##class(websys.Conversions).DateFormat()
+</Server>
+</head>
+<SCRIPT language = 'javascript' >
+	var LgUserID = session['LOGON.USERID'];   /// 用户ID
+	var LgCtLocID = session['LOGON.CTLOCID']; /// 科室ID
+	var LgGroupID = session['LOGON.GROUPID']; /// 安全组ID
+	var LgHospID=session['LOGON.HOSPID'];
+	var LgSSUSRName="#(SSUSRName)#";
+	var PracticeFlag="#(PracticeFlag)#";
+	var PageShowFromWay="#(PageShowFromWay)#";
+	var _DateFormat="#(DateFormat)#";
+	if(typeof HISUIStyleCode != "undefined" && HISUIStyleCode=="lite"){
+		loadStyles("../scripts/dhcdoc/dhcdoccure_hui/css/asscom.lite.css");	
+	}
+</SCRIPT> 
+<body>
+	<div id="temp-Panel" class="hisui-layout" fit="true"> 
+		<div data-options="region:'center',bodyCls:'panel-body-gray',border:false" style="padding:10px;">
+			<div id="TesItemID"></div>
+	<Server>
+	s DCAssRowId=%request.Get("DCAssRowId") ;传入的评估记录ID，浏览更新时传入
+	s DCARowId=%request.Get("DCARowId") ;传入的治疗申请ID，若未传入DCAssTempID,则根据此取DCAssTempID
+	s OperateType=%request.Get("OperateType")
+	
+	s DCRowIDStr=%request.Get("DCRowIDStr") ;批量评估传进来的id串，格式：DCAARowId_!_DCAARowId
+	s DCAssTempID=%request.Get("DCAssTempID") ;传入的评估单ID
+	s EpisodeID=%request.Get("DCAdmID")
+	
+	s DCRUpdateStatus="",MapID=""
+	if DCAssRowId'=""{
+		s DCRUpdateStatus=$p($g(^DHCDocCure(+DCAssRowId,"ASS",$p(DCAssRowId,"||",2))),"^",20)	
+	}
+	if DCAssTempID'="" s MapID=DCAssTempID
+	if DCARowId'=""{
+		s AssTemp=##class(DHCDoc.DHCDocCure.Assessment).GetAssTemp(DCARowId,"","")
+		if EpisodeID="" s EpisodeID=$p(AssTemp,"^",1)
+		if MapID="" s MapID=+$p(AssTemp,"^",2)
+	}
+	s CurrentDateTime=##class(DHCDoc.DHCDocCure.Common).GetCurrendDateTime()
+	s PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)
+	s MapCode=""
+	s MapDesc=""
+	s itemReqJsonStr="A"
+	s CacheMapRowIDStr=""
+	s CacheMapIDStr=""
+	s BLIDStr=""
+	s MapStr=""
+	s BLInit=""
+	s BLItemMast=""
+	s BLSaveOther=""
+	s BLLoadOther=""
+	s PrintTemp=""
+	if MapID'=""{
+		s MapCode=$P(^DHCDocAppBLMap(MapID),"^",1)
+		s MapStr=$P(^DHCDocAppBLMap(MapID),"^",3)
+		s MapDesc=$P(^DHCDocAppBLMap(MapID),"^",2)
+		s MapDesc=##class(User.DHCDocAppBLMap).GetTranByDesc("APPMapName",MapDesc,%session.Get("LOGON.LANGID"))
+		if ($g(^DHCDocAppBLMap(MapID,"ShowJS"))'=""){
+			w "<script type='text/javascript' src='../"_$g(^DHCDocAppBLMap(MapID,"ShowJS"))_"'></script>"
+		}
+		
+		s BLInit=$P(^DHCDocAppBLMap(MapID),"^",5)
+		s BLItemMast=$P(^DHCDocAppBLMap(MapID),"^",6)
+		s BLSaveOther=$P(^DHCDocAppBLMap(MapID),"^",7)
+		s BLLoadOther=$P(^DHCDocAppBLMap(MapID),"^",8)
+		s PrintTemp=##Class(web.DHCDocAPPBL).GetPisPrintTemp(MapCode,EpisodeID)
+        s CAImage=""
+        if (DCAssRowId'=""){
+            s myJsonStr=$g(^DHCDocCure(+DCAssRowId,"ASS",$p(DCAssRowId,"||",2),"JsonStr"))
+            s:myJsonStr'="" itemReqJsonStr=myJsonStr
+            s CAImage=##Class(DHCDoc.DHCDocCure.Assessment).GetCAImage(DCAssRowId)
+        }
+		s CacheMapRowIDStr=""
+		s CacheMapIDStr=""
+		s BLIDStr=""
+		d ##class(DHCDoc.DHCDocCure.Assessment).GetCacheMap(MapID,.CacheMapRowIDStr,.CacheMapIDStr,.BLIDStr)
+	}	
+	</Server>
+	
+	</div>
+	<csp:if condition='PageShowFromWay="ShowFromEmrList"'>
+	<csp:else>
+		<div id="btPanel" data-options="region:'south',border:false" style="height:40px;">	
+		<div class="i-p-shadow" style="width:100%;height:40px">   
+			<div class="pt-butttom">
+				<div style="float:left;padding:0px 10px;">
+					<input class="hisui-checkbox" style="padding-left:20px" type="checkbox" label="存为模板" data-options="boxPosition:'right'" id="SaveAsTemp">
+					<a id="BtnNormalCure" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="CureAssTemp_Click('NC')">正常治疗</a>
+					<a id="BtnBetterCure" href="#" class="hisui-linkbutton green" data-options="iconCls:''" onclick="CureAssTemp_Click('BC')">改善治疗</a>
+					<a id="BtnNoEffectCure" href="#" class="hisui-linkbutton yellow" data-options="iconCls:''" onclick="CureAssTemp_Click('NEC')">无效果</a>
+					<a id="BtnAbNormalCure" href="#" class="hisui-linkbutton red" data-options="iconCls:''" onclick="CureAssTemp_Click('ABNC')">异常</a>
+				</div>
+				<div style="float:right;padding-right:40px;">
+					<!--a id="CureAssTempSave" href="#" class="hisui-linkbutton btn-lighttempgreen" data-options="iconCls:''" onclick="Save('N')">暂存</a>-->
+						<csp:if condition='PageShowFromWay="ShowFromAPP"'>
+							<a id="CureAssSave" href="#" class="hisui-linkbutton green" data-options="iconCls:''">保存提交</a>
+						<csp:else>
+							<a id="CureAssSave" href="#" class="hisui-linkbutton green" data-options="iconCls:''">保存提交</a>
+							<a id="CureAssPrt" href="#" class="hisui-linkbutton" data-options="iconCls:''">打印</a>
+						</csp:if>
+					</div>
+				</div>
+			</div> 
+			</div> 
+		</csp:if>
+	</div>
+	<csp:if condition='PageShowFromWay="ShowFromAPP"'>
+	<csp:else>
+		<!--------------打印相关---------->
+		<div id="hiddenEncrypt" style="width:0;height:0;">
+			<form name="DHCIPBILL">
+				<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+			</form>
+		</div>
+	</csp:if>
+	<SCRIPT language = 'javascript' >
+        var itemReqJsonStrSub='#(itemReqJsonStr)#'
+        if (itemReqJsonStrSub!="A"){
+            var itemReqJsonStr=#(itemReqJsonStr)#
+        }else{
+            var itemReqJsonStr="";
+        }
+        var CAImage='#(CAImage)#'
+		//全局请求后台服务对象
+		var ServerObj={
+			DCRowIDStr:"#(DCRowIDStr)#",
+			EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			DCARowId:"#(DCARowId)#",
+			DCRUpdateStatus:"#(DCRUpdateStatus)#",
+			OperateType:"#(OperateType)#",
+			DCAssRowId:"#(DCAssRowId)#",
+			MapID:"#(MapID)#",
+			MapDesc:"#(MapDesc)#",
+			MapCode:"#(MapCode)#",
+			MapStr:"#(MapStr)#",
+			BLInit:"#(BLInit)#",
+			BLItemMast:"#(BLItemMast)#",
+			BLSaveOther:"#(BLSaveOther)#",
+			BLLoadOther:"#(BLLoadOther)#",
+			CacheMapIDStr:"#(CacheMapIDStr)#",
+			CacheMapRowIDStr:"#(CacheMapRowIDStr)#",
+			BLIDStr:"#(BLIDStr)#",
+			PrintTemp:"#(PrintTemp)#",
+			CurrentDateTime:"#(CurrentDateTime)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/assTempShow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/PrintBarCode.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+	<script type='text/javascript' src='../scripts/dhcdoc/dhcdoccure_hui/asstemp/assTempPrint.js'></script>
+	<!-------------------------------->
+	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/listcomponent.js"></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+    <!--初始化CA服务环境-->
+    <script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
+</body>
+</html>

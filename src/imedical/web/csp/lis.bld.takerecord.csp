@@ -1,0 +1,115 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+</HEAD>
+
+<SERVER>
+
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s USERCODE = $G(%session.Data("LOGON.USERCODE"))
+ s USERNAME = $G(%session.Data("LOGON.USERNAME"))
+ s HOSPID=$G(%session.Data("LOGON.HOSPID"))
+ s CTLOCID=$G(%session.Data("LOGON.CTLOCID"))
+ s GROUPID=$G(%session.Data("LOGON.GROUPID"))
+ 
+ s (HospCode,LocCode,LocName,HospName)=""
+ i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+ i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
+ i $l(CTLOCID) s LocCode=$p($g(^CTLOC(CTLOCID)),"^",1)
+ i $l(CTLOCID) s LocName=$p($g(^CTLOC(CTLOCID)),"^",2) 
+ 
+ s USERCODE = $G(%session.Data("LOGON.USERCODE"))
+ s USERNAME = $G(%session.Data("LOGON.USERNAME"))
+ 
+ //s (HospCode,LocCode,LocName,HospName)=""
+ //i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+ //i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
+ 
+ //处理医院信息 
+ s HospitalDR=""
+ i $l(HospCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
+ //处理用户信息
+ i $l(USERCODE) s UserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
+ 
+ s AdmNo=%request.Get("EpisodeID")
+ s PatientID=%request.Get("PatientID")
+ s RegNo=""
+  //获取当前登录人员主题设置
+  s HISUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion") 
+</SERVER>
+
+<script Language="JavaScript">
+	
+	function isIE11() {
+		var re = /rv:11.0/g
+		return re.test(navigator.userAgent.toLowerCase());
+	}
+    var ServerIP = window.status.split(':')[2];
+    var host = window.location.host;
+    if(ServerIP==undefined){
+       ServerIP=window.location.host.split(':')[0];
+    }	   
+     if(host.split(':').length>1){
+	  host=ServerIP+":"+host.split(':')[1];
+     }
+     else{
+       host=ServerIP;
+     }
+	 
+	var http = window.location.href.split(':')[0]; 
+	var url =http+'://'+ host +'/imedicallis/cts/form/frmTakeRecord.aspx?';
+	url += '&UserId='+"#((USERID))#"+'&DocName='+"#((USERNAME))#"+'&DocCode='+"#((USERCODE))#";
+	url += '&LocationId='+"#((CTLOCID))#"+'&LocationCode='+"#((LocCode))#"+'&LocationName='+"#((LocName))#";
+	url += '&HospitalCode='+"#((HospCode))#"+'&HospitalName='+"#((HospName))#"+'&HospitalDR='+"#((HospitalDR))#";
+	url += '&AdmNo='+"#((AdmNo))#"+'&RegNo='+"#((RegNo))#";
+	url += '&HISUIVersion='+"#((HISUIVersion))#"+'&GROUPID='+"#((GROUPID))#";
+	
+	//alert(url);
+	//document.write('C:\\TRAK\\chrome.lnk -start-maximized --app='+encodeURI(url));
+	if (window.screen) {//判断浏览器是否支持window.screen判断浏览器是否支持screen     
+	      var myw = screen.availWidth;   //定义一个myw，接受到当前全屏的宽     
+	      var myh = screen.availHeight;  //定义一个myw，接受到当前全屏的高     
+	      window.moveTo(0, 0);           //把window放在左上脚     
+	      window.resizeTo(myw, myh);     //把当前窗体的长宽跳转为myw和myh     
+	    } 
+		location.href=encodeURI(url);
+		//window.open(encodeURI(url));
+//	if (isIE11()) {
+//		if (window.screen) {//判断浏览器是否支持window.screen判断浏览器是否支持screen     
+//	      var myw = screen.availWidth;   //定义一个myw，接受到当前全屏的宽     
+//	      var myh = screen.availHeight;  //定义一个myw，接受到当前全屏的高     
+//	      window.moveTo(0, 0);           //把window放在左上脚     
+//	      window.resizeTo(myw, myh);     //把当前窗体的长宽跳转为myw和myh     
+//	    } 
+//		location.href=encodeURI(url);
+//	} else {
+//		var wsh = new ActiveXObject('WScript.Shell');
+//    	if ((wsh)) {
+//	     	wsh.Run('C:\\TRAK\\chrome.lnk -start-maximized --app='+encodeURI(url));
+//    	}
+//    	//window.close();
+//	}
+//    //document.write('C:\\TRAK\\chrome.lnk -start-maximized --app='+encodeURI(url));
+//	window.close();
+    
+//
+//	var x =screen.width;
+// 	var y =screen.height;
+// 	var win=window.open (url, 'newwindow', 'height='+y-1+', width='+x+',left=0,top=0, toolbar=no , menubar=no, scrollbars=no, resizable=yes, location=no, status=yes') 
+//	
+ 	//win.document.write(objstr)
+
+	//window.open(url,"_self");
+	
+
+</script>
+
+</HTML>

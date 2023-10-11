@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ ;i ##Class(Nur.CSPDebug).setSession() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<!-- nur.svg.temperature.csp -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>	体温单预览</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ 	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/nurse/temperature/svg/svg27.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/temperature/svg/svgUtils.js" charset="gbk"></script></head>
+	<!-- 兼容IE支持promise对象 -->
+	<script type="text/javascript" src="../scripts_lib/SheetJs/babel-polyfill.js"></script>
+<server>
+    Set ifColorPrint = "false"    
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
+	Set:EpisodeID="" EpisodeID = $g(%request.Data("episodeID",1)),PatientID="",mradm="",Page=""
+	if EpisodeID'="" {
+		set chartID=##class(Nur.NIS.Service.Chart.API.TemperatureChart).getChartID("1",EpisodeID)
+		set ifColorPrint=##class(Nur.NIS.Service.Chart.DAO.Chart).getIfColorPrint(chartID)
+		set missBeatColor="blue"
+		set skinTestTextColor=""
+		set skinTestYText=$p(skinTestTextColor,"^",1)
+		set skinTestYColor=$p(skinTestTextColor,"^",2)
+		set skinTestNText=$p(skinTestTextColor,"^",3)
+		set skinTestNColor=$p(skinTestTextColor,"^",4)
+		set totalPage=##class(Nur.NIS.Service.Chart.DAO.Chart).getChartPages(EpisodeID)
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+		Set Page=$g(%request.Data("page",1))
+	}	
+	
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</server>
+<body style="background-color:#fff;">
+	<div id="drawing" align="center" style="width:100%;height:100%;position:relative;" >
+	</div>
+</body>
+<script type="text/javascript">
+var episodeID="#(EpisodeID)#";
+var chartID="#(chartID)#";
+var ifColorPrint="#(ifColorPrint)#";
+var missBeatColor="#(missBeatColor)#";
+var skinTestYText="#(skinTestYText)#";
+var skinTestYColor="#(skinTestYColor)#";
+var skinTestNText="#(skinTestNText)#";
+var skinTestNColor="#(skinTestNColor)#";
+var userID = session['LOGON.USERID'];
+var locID = session['LOGON.CTLOCID'];
+var page="#(Page)#"==""?1:"#(Page)#";
+var totalPage="#(totalPage)#";
+var CHARTYPE="1";
+var langID=session['LOGON.LANGID'];
+</script>
+<script type="text/javascript">
+var KLINE=-1; //填充斜线的斜率
+var BGAP=1; //填充斜线的截距差
+var fillColor=""; //填充颜色
+var tableObj={},conObj={},curveObj={};
+/*
+ * @Date: 2021-05-13 14:17:48
+ * @LastEditors: SongChao
+ * @LastEditTime: 2021-05-14 10:10:56
+ * @FilePath: /mediway/imedical/web/scripts/nurse/temperature/svg/requestData.js
+ */
+getTable();
+multiRequest(totalPage,3,false);
+
+function getTable(){
+    $cm({
+        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+        MethodName:"getTable",
+        ChartTpye:CHARTYPE, 
+        EpisodeID:episodeID, 
+        Page:page, 
+        UserID:userID,  
+        LocID:locID,  // 科室ID
+        ChartID:chartID
+    },function(tabStyle){
+	    tableObj=tabStyle;
+        //darwTable(tabStyle);
+    });
+}
+
+function multiRequest(total,maxNum,ifPreview) {
+	//var myDate=new Date();
+	//var start=myDate.getTime();
+	// 请求总数量
+	var len = total;
+	if(total<maxNum) maxNum=total;
+	// 根据请求数量创建一个数组来保存请求的结果
+	var result = [];
+	for(var i=0;i<len;i++){
+		result.push(false);	
+	}
+	// 当前完成的数量
+	var count = 0;
+	return new Promise(function(resolve, reject){
+		// 请求maxNum个
+		while (count < maxNum) {
+			next(); 
+		}
+		function next() {
+			var current = count++;
+			// 处理边界条件
+			if (current >= len) {	
+				//var myDate2=new Date();
+				//var end=myDate2.getTime();
+				//console.log("diff: "+(end-start)/1000);		
+				// 请求全部完成就将promise置为成功状态, 然后将result作为promise值返回 
+				!result.includes(false) && resolve(result);
+				//return; 
+				if(!result.includes(false)){
+					setTimeout(printAll(ifPreview),300);
+					return;			
+				}								
+			}			
+			var pagenum=current+1;
+			if(pagenum>total) return;
+			$cm({
+		        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+		        MethodName:"getContentCurve",
+		        ChartTpye:CHARTYPE, 
+		        EpisodeID:episodeID, 
+		        Page:pagenum, 
+		        UserID:userID,  
+		        LocID:locID,  // 科室ID
+		        ChartID:chartID,
+		        langID:langID
+		    },function(ret){
+			    conObj[pagenum]=ret.content;
+	    		curveObj[pagenum]=ret.curve;
+	    		if(pagenum==1){
+		    		//getCurData(pagenum)	
+		    	}
+		        // 保存请求结果 
+				result[current] = true;				
+				// 请求没有全部完成, 就递归
+				if (current < len) {
+					next(); 
+				} 
+		    });
+		} 
+	});
+}
+
+function printAll(ifPreview){
+	var LODOP=getLodop();
+	LODOP.PRINT_INIT("体温单");
+	LODOP.SET_PRINT_PAGESIZE(1, 2100,2970,"A4");        
+	for(var i=1;i<=totalPage;i++){
+		if(conObj[i]){
+			printChart(i,LODOP);	
+			LODOP.NewPage();
+		}
+    }
+    if(ifPreview){
+        LODOP.PREVIEW();
+    }
+    else{
+        LODOP.PRINT();
+        //LODOP.PRINTA();
+    }
+}
+
+/// 打印体温单
+function printChart(pageNum,LODOP){
+    printTable(LODOP,tableObj);
+    printContent(LODOP,conObj[pageNum]);
+    printCurve(LODOP,curveObj[pageNum]);
+}
+
+/// 打印背景表格
+function printTable(LODOP,tableData){
+	// 打印图片
+	if (tableData.images != null && tableData.images.length > 0)
+    {
+        printImages(LODOP,tableData.images);
+    }
+    // 打印线
+	if (tableData.lines!=null && tableData.lines.length > 0)
+    {
+        printLines(LODOP,tableData.lines);
+    }
+    // 打印文本
+    if (tableData.texts != null && tableData.texts.length > 0)
+    {
+        printTexts(LODOP,tableData.texts);
+    }    
+}
+
+/// 打印体温单文本内容
+function printContent(LODOP,conData){
+	console.log(conData);
+    if (conData.lines!=null && conData.lines.length > 0)
+    {
+        printLines(LODOP,conData.lines);
+    }
+    if (conData.texts != null && conData.texts.length > 0)
+    {
+        printTexts(LODOP,conData.texts);
+    }
+    return;
+}
+
+/// 打印体温单折线
+function printCurve(LODOP,curveData){
+	if (curveData.lines!=null && curveData.lines.length > 0)
+    {
+        printLines(LODOP,curveData.lines);
+    }
+    if (curveData.texts != null && curveData.texts.length > 0)
+    {
+        printTexts(LODOP,curveData.texts);
+    }
+    if (curveData.points != null && curveData.points.length > 0)
+    {
+	    printPoints(LODOP,curveData.points);
+    }
+    if (curveData.paths != null && curveData.paths[0] != null && curveData.paths[0].length > 0){
+        printPaths(LODOP,curveData.paths);
+    }
+}
+
+/// 打印图片
+function printImages(LODOP,images){
+	if (images && images.length>0){
+		for (var i=0;i<images.length;i++){
+			var item = images[i]
+			var pleft = item.x;	
+			var ptop = item.y;	
+			var pheight = parseFloat(item.height)*3;
+			var pwidth = parseFloat(item.width)*3;
+			var pval = item.image;
+			LODOP.ADD_PRINT_IMAGE(ptop+"mm",pleft+"mm", pwidth+"mm", pheight+"mm","<img src='"+ pval +"' width="+ pwidth +" height=" + pheight + " x="+ pleft +" y=" + ptop + "/>");
+		}
+	}
+}
+
+/// 打印线
+function printLines(LODOP,lines){
+	if (lines && lines.length>0){
+		for (var i=0;i<lines.length;i++){
+			var item = lines[i];
+			if(item.breakLineFlag=="Y") continue;
+			var pleft1 = item.x1;	
+			var ptop1 = item.y1;	
+			var pleft2 = item.x2;	
+			var ptop2 = item.y2;
+			var plstyle = item.lineStyle == "Dash" ? 1 : 0;
+			var pwidth = item.desc == "折线" ?  2 : parseFloat(item.width) + 1;
+			var pcolor = item.color;
+			if(ifColorPrint=="false") pcolor="#000000"; 
+			LODOP.ADD_PRINT_LINE(ptop1+"mm",pleft1+"mm",ptop2+"mm",pleft2+"mm",plstyle,1);	
+			LODOP.SET_PRINT_STYLEA(0,"FontColor",pcolor);
+		}
+	}
+}
+
+/// 打印文本
+function printTexts(LODOP,texts){
+	if (texts && texts.length>0){
+		for (var i=0;i<texts.length;i++){
+			var pwidth  = 2100
+			var pheight = 2970
+			var item = texts[i];
+			var pleft = item.x;	
+			var ptop = item.y;		
+			var pfstyle = item.fontStyle;
+			var pfname = item.fontFamily;
+			var pfsize = parseFloat(item.fontSize)-0.7;
+			var pcolor = item.fontColor;
+			if(ifColorPrint=="false") pcolor="#000000"; 
+			var underline=item.underline;
+			var anchor="start";
+			if (item.alignment=="Center"){
+				anchor="middle";			
+			} 
+			var pwidth = parseFloat(item.width)+1;
+			var ptext=item.content;
+			if(String(ptext).indexOf("<red>")>-1){
+				ptext=ptext.replace("<red>","");
+				if(ifColorPrint=="true") color="red";
+			}
+			if(ptext!="↑" && ptext!="↓" && (String(ptext).indexOf("↑")>-1 || String(ptext).indexOf("↓")>-1)) {
+				/// 床号/科室扩展方向(向上扩展/向下扩展)
+				if(ptext.indexOf("↑")>-1) var connector="↑";
+				if(ptext.indexOf("↓")>-1) var connector="↓";
+				var array=ptext.split(connector);
+				var textY=ptop;
+				var mixSize=parseFloat(pfsize)/4;
+				for(var j=0;j<array.length;j++){
+					if (j>0) var underline="",direction="";
+					LODOP.ADD_PRINT_TEXT(textY +"mm",pleft+"mm",pwidth+"mm",pheight+"mm",array[j]);
+					setTextStyle(LODOP,pfsize,pfname,pcolor,anchor,pfstyle,underline);
+					if(j<array.length-1){
+						textY=textY-mixSize;
+						LODOP.ADD_PRINT_TEXT(textY +"mm",pleft+(mixSize*(array[0].length/2))+"mm",pwidth+"mm",pheight+"mm",connector);
+						setTextStyle(LODOP,pfsize,pfname,pcolor,anchor,pfstyle,"");
+						textY=textY-mixSize;
+					}
+				}
+			}else{
+				LODOP.ADD_PRINT_TEXT(ptop +"mm",pleft+"mm",pwidth+"mm",pheight+"mm",ptext);
+				setTextStyle(LODOP,pfsize,pfname,pcolor,anchor,pfstyle,underline);	
+			}		
+		}
+	}
+}
+
+/// 设置文本样式
+function setTextStyle(LODOP,pfsize,pfname,pcolor,anchor,pfstyle,underline){
+	LODOP.SET_PRINT_STYLEA(0,"FontSize",pfsize);
+	LODOP.SET_PRINT_STYLEA(0,"FontName",pfname);
+	LODOP.SET_PRINT_STYLEA(0,"FontColor",pcolor);
+	var AlignmentNum = 1
+	if (anchor=="middle")
+	{
+		AlignmentNum = 2
+	}else if(anchor=="end")
+	{
+		AlignmentNum = 3
+	}
+	LODOP.SET_PRINT_STYLEA(0,"Alignment",AlignmentNum);
+	LODOP.SET_PRINT_STYLEA(0,"TextNeatRow","1")
+	if (pfstyle.toLowerCase() == "bold")
+	{
+		LODOP.SET_PRINT_STYLEA(0,"Bold","1")
+	}	
+	if (pfstyle.toLowerCase() == "italic")
+	{
+		LODOP.SET_PRINT_STYLEA(0,"Italic","1")
+	}			
+	if(pfstyle.toLowerCase()=="underline" || underline=="Underline"){  
+		LODOP.SET_PRINT_STYLEA(0,"Underline",1)
+	}
+}
+
+/// 打印点
+function printPoints(LODOP,points){
+	if (points && points.length>0){
+		for (var i=0;i<points.length;i++){			
+			var pwidth  = 2100
+			var pheight = 2970
+			var item = points[i];
+			if(item.breakLineFlag=="Y") continue;
+			var pleft = parseFloat(item.x)-1;	
+			var ptop = parseFloat(item.y)-1;		
+			var pfstyle = item.iconStyle;
+			var pfsize = parseFloat(item.size);
+			var pcolor = item.color;
+			if(ifColorPrint=="false") pcolor="#000000"; 
+			var ptext=item.icon;
+			LODOP.ADD_PRINT_TEXT(ptop +"mm",pleft+"mm",pwidth+"mm",pheight+"mm",ptext);
+			LODOP.SET_PRINT_STYLEA(0,"FontSize",pfsize);
+			LODOP.SET_PRINT_STYLEA(0,"FontName","宋体");
+			LODOP.SET_PRINT_STYLEA(0,"FontColor",pcolor);			
+			LODOP.SET_PRINT_STYLEA(0,"TextNeatRow","1")
+			if(pfstyle){
+				if (pfstyle.toLowerCase() == "bold")
+				{
+					LODOP.SET_PRINT_STYLEA(0,"Bold","1")
+				}	
+				if (pfstyle.toLowerCase() == "italic")
+				{
+					LODOP.SET_PRINT_STYLEA(0,"Italic","1")
+				}			
+				if(pfstyle.toLowerCase()=="underline"){  
+					LODOP.SET_PRINT_STYLEA(0,"Underline",1)
+	    		}
+			}			
+		}
+	}
+}
+
+/*
+* 绘制短绌斜线(斜线填充)
+*/
+function printPaths(LODOP,paths){
+	fillColor=missBeatColor;
+    //填充斜线的公式使用 y=kx+b
+    for (var i=0;i<paths.length;i++)
+    {
+       if(paths[0] && paths[0].length>0 && paths[0][0].hatchStyle && paths[0][0].hatchStyle=='BackwardDiagonal'){
+        	calcIntersection(LODOP,paths[i]);
+       }
+       if(paths[0] && paths[0].length>0 && paths[0][0].hatchStyle && paths[0][0].hatchStyle=='Vertical'){
+        	calcIntersectionVertical(LODOP,paths[i]);
+       }
+    }
+}
+/**
+ * 计算填充线和上边线交点(斜线）
+ */
+ function calcIntersection(LODOP,paths){
+    //draw.line(70, 123.75, 80, 113.75).stroke({ width: 0.15,color:"green" }).attr('id','slantline');
+    //填充斜线的公式使用 y=kx+b
+    var stArray=[];
+    var bSpace=getMaxMinB(paths);
+    var b0=bSpace.min; //起始斜线的截距
+    //if(paths.length%2==0){
+        var bEnd=bSpace.max; //paths[Math.ceil(paths.length/2)].y-KLINE*paths[Math.ceil(paths.length/2)].x;  //截止线截距
+        for(var bDr=b0+BGAP;bDr<bEnd+50;bDr=bDr+BGAP){
+            var xMax=0;
+            var j=1;
+            var x1=-1,y1=-1,x2=-1,y2=-1;
+            for (var i=0;i<paths.length;i++)
+            {
+                var pSt=paths[i];   //直线起点
+                var pEnd=paths[0];  //直线终点  
+                if(i<(paths.length-1)){
+                    var pEnd=paths[i+1];  //直线终点   
+                }
+                var point=calcCrossPoint(pSt,pEnd,bDr);
+                if(point){
+                    stArray.push(point);
+                }
+            }
+            sortArrayByX(stArray);
+            drawSlantLinePrint(LODOP,stArray);
+            stArray=[];
+        } 
+}
+
+/**
+ * 计算填充线和上边线交点（直线）
+ */
+ function calcIntersectionVertical(LODOP,paths){
+    //draw.line(70, 123.75, 80, 113.75).stroke({ width: 0.15,color:"green" }).attr('id','slantline');
+    //填充直线的公式使用 x=b
+    var stArray=[];
+    var bSpace=getMaxMinBV(paths);
+    //if(paths.length%2==0){
+	var eachTopLength=0; // 记录另外一条线的已经遍历的长度
+	var eachBottomLength=0; // 记录先遍历的那条线的长度
+	var BGAP=1;
+    var xEnd=0;//bSpace.max; //paths[Math.ceil(paths.length/2)].y-KLINE*paths[Math.ceil(paths.length/2)].x;  //截止线截距
+        var x1=-1,y1=-1,x2=-1,y2=-1;
+        for (var i=0;i<paths.length;i++)
+        {
+            var pSt=paths[i];   //直线起点
+            var pEnd=paths[0];  //直线终点  
+            if(i<(paths.length-1)){
+                var pEnd=paths[i+1];  //直线终点   
+            }
+            if(0==(pEnd.x-pSt.x)) continue;
+            var k=(pEnd.y-pSt.y)/(pEnd.x-pSt.x);
+	        var b=pSt.y-k*pSt.x;
+            var x0=pSt.x; //起始直线   
+            if(x0==bSpace.max) BGAP=-BGAP;
+            if(BGAP>0){
+	            for(var xDr=x0+BGAP;xDr<=pEnd.x;xDr=xDr+BGAP){	            
+		        	var x=xDr;
+		        	var y=k*x+b;
+		        	var point={"x":x,"y":y,"bDr":xDr,"st":pSt,"end":pEnd};
+		            if(point){
+		                stArray.push(point);
+		                eachBottomLength=eachBottomLength+1;
+		            }
+	    		} 
+            }
+            else{
+	            var l=eachBottomLength-eachTopLength;
+	            for(var j=(l-1);j>=0;j=j-1){	            
+		        	var x=stArray[j].x;
+		        	if(x<pEnd.x){
+			        	break;
+			        }else{
+			        	eachTopLength=eachTopLength+1;
+			        }
+		        	var y=k*x+b;
+		        	var point={"x":x,"y":y,"bDr":x,"st":pSt,"end":pEnd};
+		            if(point){
+		                stArray.push(point);
+		            }
+	    		} 
+            }
+        }
+        sortArrayByX(stArray);
+        drawSlantLinePrint(LODOP,stArray);
+        stArray=[];
+}
+/**
+ * 获得最大和最小截距
+ */
+function getMaxMinB(paths)
+{
+    var minB=paths[0].y-KLINE*paths[0].x;
+    var maxB=paths[Math.ceil(paths.length/2)].y-KLINE*paths[Math.ceil(paths.length/2)].x;  //截止线截距
+    for(var i=1;i<paths.length;i++){
+        var b=paths[i].y-KLINE*paths[i].x
+        if(b<minB){
+            minB=b;
+        }
+        if(b>maxB){
+            maxB=b;
+        }
+    }
+    return {"min":minB,"max":maxB}
+}
+/**
+ * 获得最大和最小截距(直线填满）
+ */
+function getMaxMinBV(paths)
+{
+    var minB=paths[0].x;
+    var maxB=paths[Math.ceil(paths.length/2)].x
+    for(var i=1;i<paths.length;i++){
+        var b=paths[i].x
+        if(b<minB){
+            minB=b;
+        }
+        if(b>maxB){
+            maxB=b;
+        }
+    }
+    return {"min":minB,"max":maxB}
+}
+/**
+ * 根据x坐标升序排列交点
+ */
+function sortArrayByX(arr){
+    for(var i = 1; i < arr.length; i++) {
+        for (var j=0; j < arr.length-i; j++) {
+            if (arr[j].x > arr[j+1].x) {
+                var temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}
+function drawSlantLinePrint(LODOP,stArray){
+    for(var i=0;i<stArray.length;i=i+2)
+    {
+        var pSt=stArray[i];   //直线起点
+        // var pEnd=stArray[0];  //直线终点  
+        if(i<(stArray.length-1)){
+            var pEnd=stArray[i+1];  //直线终点 
+            LODOP.ADD_PRINT_LINE(pSt.y+"mm",pSt.x+"mm",pEnd.y+"mm",pEnd.x+"mm",0,1);
+            LODOP.SET_PRINT_STYLEA(0,"FontColor",fillColor);
+        }           
+    }
+}
+function calcCrossPoint(pSt,pEnd,bDr){
+    if (pEnd.x!=pSt.x){
+        var k=(pEnd.y-pSt.y)/(pEnd.x-pSt.x);
+        var b=pSt.y-k*pSt.x;
+        var x=(bDr-b)/(k-KLINE);
+        var y=KLINE*x+bDr;
+        if ((pEnd.x>pSt.x&&x>=pSt.x&&x<=pEnd.x)||(pEnd.x<pSt.x&&x<=pSt.x&&x>=pEnd.x)) {
+            return {"x":x,"y":y,"bDr":bDr,"st":pSt,"end":pEnd};//x1=x;y1=y;
+        }        
+    }
+    else{
+        if(pSt.y!=pEnd.y){
+            var x=pSt.x
+            var y=KLINE*x+bDr;
+            if ((pEnd.y>pSt.y&&y>=pSt.y&&y<=pEnd.y)||(pEnd.y<pSt.y&&y<=pSt.y&&y>=pEnd.y)){
+                return {"x":x,"y":y,"bDr":bDr,"st":pSt,"end":pEnd};
+            }            
+        }        
+    }
+}
+</script>
+
+</html>

@@ -1,0 +1,108 @@
+<html>
+<head>
+<HISUI />
+<title>	后端生成html展示页 </title>
+<style>
+	button{
+		display:block;margin-top:10px;
+		}
+	#nowShow{
+		color:red;
+		font-weight:bold;
+		}
+</style>
+</head>
+
+<body>
+	<div style="padding-left:200px;overflow:hidden;">
+		<div style="width:200px;float:left;margin-left:-200px;">
+			<span>请输入病历的instanceId</span>
+			<input id="instanceId" onkeydown="keydown(event)"/>
+			<button  onclick="clickbtn('old')">测试</button>
+			<button  onclick="clickbtn('new')">测试[在新窗口打开]</button>
+			<!--<button  onclick="clickbtn('new')">测试[通过本地xml文件]</button>-->
+			<div>
+				<div id="nowShow" style="margin-top:10px;">
+				</div>
+				<div style="margin-top:10px;">
+					<span>已经访问：</span>
+					<textarea id="historyInfo" style="height:380px;width:100%;">
+					</textarea>
+				</div>
+			</div>
+		</div>
+		<div id="main" style="float:left;width:100%;box-sizing:border-box;padding:0 20px;">
+			<iframe id="content" name="content" src=""  style="box-sizing:border-box;width:100%;height:100%"></iframe>
+		</div>
+	</div>
+	<script language="javascript">
+		function keydown(e){
+			if(e.keyCode===13){
+				//回车键按下
+				clickbtn();
+			}
+		}
+		function clickbtn(type){
+			var inputDom = document.getElementById("instanceId");
+			var instanceId = inputDom.value;
+			if(instanceId.replace(" ","")===""){
+				alert("instanceId不能为空！");
+				return;
+				}
+			$.ajax({
+				url:"EMRservice.Ajax.common.cls",
+				async:true,
+				dataType:"html",
+				data:{
+					Class:"EMRservice.BLBSParseXML",
+					Method:"GetEMRHtmlData",
+					OutputType:"Stream",
+					p1:instanceId,
+					p2:"test"
+					},
+				success:function(result,status,xhr){
+					var mainDom = document.getElementById("main");
+					
+					if(type==="new"){
+						var newpage = window.open("");
+						newpage.document.write("<div style=\"color:red;font-weight:bold;position:fixed;\">当前展示:"+instanceId+"</div>");
+					}else{
+						mainDom.innerHTML="";
+						var frame = document.createElement("iframe");
+						frame.style.width="100%";
+						frame.style.height="100%";
+						frame.style.border="none";
+						frame.src="";
+						frame.id = "content";
+						frame.name = "content";
+						mainDom.appendChild(frame);
+						var newpage = window.frames["content"];
+					}	
+					if(result===""){
+						newpage.document.write("<div style=\"width:500px;margin:0 auto;\">无法解析该病历！<br/>请先检查instanceId是否存在;病历状态为删除的不允许返回html！<br/>然后将有问题病历导出xml，联系管理员！<br/>提示：本程序暂不支持压缩病历解析！2022注</div>");
+					}else{
+						newpage.document.write(result);
+						newpage.document.title=instanceId;	
+					}				
+
+					var now = document.getElementById("nowShow");
+					now.innerHTML = "当前展示："+instanceId
+					var info = document.getElementById("historyInfo");
+					var oldInfo = info.value.replace(" ","").replace(/\t/g,"");
+					if(oldInfo.indexOf(instanceId)===-1){
+						if(result===""){
+							instanceId = instanceId+"[空白]";
+							}
+						if(oldInfo!==""){
+							info.value = oldInfo+"\n"+instanceId;
+						}else{
+							info.value = instanceId;
+							}
+						}
+					}
+					
+				});			
+			}
+	</script>
+</body>
+</html>

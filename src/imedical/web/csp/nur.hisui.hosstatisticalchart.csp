@@ -1,0 +1,130 @@
+<!-- HOS统计图表 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	Set type = $GET(%request.Data("type", 1))
+  s curday=##class(websys.Conversions).DateLogicalToHtml(+$h)
+  s EpisodeIDs=""
+  i (type="careIllLevel") {
+    s WardID = %session.Get("LOGON.WARDID")
+    // s data=##class(Nur.NIS.Service.Base.Ward).GetWardPatients(WardID)
+    // f i=1:1:data.Count() {
+    //   s children=data.GetAt(i).GetAt("children")
+    //   f j=1:1:children.Count() {
+    //     s episodeID=children.GetAt(j).GetAt("episodeID")
+    //     s EpisodeIDs=EpisodeIDs_"^"_episodeID
+    //   }
+    // }
+    // s EpisodeIDs=$e(EpisodeIDs,2,*)
+    s EpisodeIDs=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardInBedEpisodeIDs(WardID)
+  }
+// 护理级别 carelevel
+// 不良事件 adverseEvent
+// 工作量 workload
+// PDA扫码率  PDAScanRate
+// 人力分布 manpower
+// 高风险上报 highRiskReport
+// 疑似漏报 suspectedUnderreport
+// 事件发生率 incidenceRate
+// 需关注患者 needCarePat
+// 床护比 bedNurseRatio
+// 护患比 nursePatRatio
+// 离职率 turnover
+// 24小时护理时数 nurseHourADay
+// 离职分布 resignDistribute
+// 医嘱执行 orderExecute
+
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<!-- <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>-->
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script> 
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<csp:if condition='"IIORate"=type'>
+  <!-- <script type="text/javascript" charset=gbk src="../scripts/nurse/hisui-0.1.0/dist/js/echarts-5.4.0.min.js"></script> -->
+  <script type="text/javascript" charset=gbk src="../scripts/nurse/hisui-0.1.0/dist/js/echarts-gauge.js"></script>
+<csp:else>
+  <script type="text/javascript" charset=gbk src="../scripts/nurse/hisui-0.1.0/dist/js/echarts-3.6.2.min.js"></script>
+</csp:if>
+<style type='text/css' id="hoschartStyle">
+body{background: rgba(0,0,0,0.5);position: relative;}
+input.calendar-menu-year{width: 100px;}
+#attYearMonth+span{background: transparent;border-color: transparent;position: absolute;right: 40px;top: 5px;width: 110px!important;}
+#attYearMonth+span>input{background: transparent;color: #fff;width: 60px!important;user-select:none;pointer-events: none;}
+#attYearMonth+.datebox .combo-arrow:hover{background-color: transparent;}
+#attYearMonth+.datebox:hover .combo-arrow{background-color: transparent;}
+#attYearMonth+span>input:focus+span>span{background-color: transparent;}
+</style>
+<script language="javascript">
+  var type = "#(type)#";
+  if (type=="careIllLevel") {
+    var EpisodeIDs = "#(EpisodeIDs)#";
+  }
+  var curday = "#(curday)#";
+</script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.hosfakedata.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.hosstatisticalchart.js" charset=gbk></script>
+</head>
+<body id="hosStatChart">
+<csp:if condition='"carelevel"=type'>
+  <div style="display: flex;height: 100%;">
+    <div id="carelevelChart" style="flex: 1;height: 100%;"></div>
+    <div style="width: 1px;height: 100%;background: rgba(255,255,255,0.2);"></div>
+    <div id="patConditionChart" style="flex: 2;height: 100%;"></div>
+  </div>
+</csp:if>	
+<csp:if condition='"workload"=type'>
+  <div style="display: flex;height: 100%;position: relative;">
+    <div id="workloadChart" style="flex: 1;height: 100%;"></div>
+    <input id="attYearMonth" editable="false" name="attYearMonth" class="hisui-datebox textbox" data-options="onChange:monthChange"/>
+  </div>
+</csp:if>	
+<csp:if condition='"PDAScanRate"=type'>
+  <div style="display: flex;height: 100%;">
+    <div id="PDAScanRateChart" style="flex: 1;height: 100%;"></div>
+  </div>
+</csp:if>	
+<csp:if condition='"manpower"=type'>
+  <div id="title" style="text-align: center;font-weight: bold;color: #fff;position: absolute;left: 50%;transform: translate(-50%,0);top: 4%;">人力分布</div>
+  <div style="display: flex;height: 100%;">
+    <div id="staffTitleChart" style="flex: 1;height: 100%;"></div>
+    <div id="staffEducateChart" style="flex: 1;height: 100%;"></div>
+    <div id="staffQualifyChart" style="flex: 1;height: 100%;"></div>
+    <div id="staffLevelChart" style="flex: 1;height: 100%;"></div>
+  </div>
+</csp:if>	
+<csp:if condition='"highRiskReport"=type'>
+  <div style="display: flex;height: 100%;">
+    <div id="highRiskReportChart" style="flex: 1;height: 100%;"></div>
+  </div>
+</csp:if>	
+<csp:if condition='"suspectedUnderreport"=type'>
+  <div style="display: flex;height: 100%;">
+    <div id="suspectedUnderreportChart" style="flex: 1;height: 100%;"></div>
+  </div>
+</csp:if>	
+<csp:if condition='"IIORate"=type'>
+  <div style="display: flex;height: 100%;">
+    <div id="infusionSheetChart" style="flex: 1;height: 100%;"></div>
+    <div id="injectionSheetChart" style="flex: 1;height: 100%;"></div>
+    <div id="oralMedicineChart" style="flex: 1;height: 100%;"></div>
+  </div>
+</csp:if>	
+<csp:if condition='"careIllLevel"=type'>
+  <div style="display: flex;height: 100%;">
+    <div id="carelevelChart" style="flex: 1;height: 100%;"></div>
+    <div id="patConditionChart" style="flex: 1;height: 100%;"></div>
+  </div>
+</csp:if>	
+</body>
+</html>

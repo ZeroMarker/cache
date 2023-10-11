@@ -1,0 +1,375 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.nurseplantaskexecute.csp HISUI护嘱执行--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<AINURPRINT></AINURPRINT>
+<HISUI></HISUI>
+<style>
+body{
+	background-color:#f5f5f5;
+	width:100%;
+	height:100%;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+
+.r-label{
+	padding-left: 10px;
+}
+.layout-split-west {
+	padding-right: 4px;
+    border-right: 4px ;
+    border-color: transparent;
+}
+/*
+#wardPatientCondition {
+	margin-top: 5px;
+	width: 206px;
+	padding:0 1px;
+}
+*/
+/*
+.tree-file,.tree-folder,.tree-folder-open{
+	display:none;
+}
+*/
+.frmepisodepat{
+	background-color:#bae7ff;
+}
+.hidenode{
+	display: none;
+}
+.tabs-container.tabs-gray .tabs-header{
+	border:0;
+}
+#intType .tabs-panels{
+	display: none;
+}
+#intType .tabs-header{
+	border-radius:0;
+}
+.tabItem_badge{
+	position:absolute;
+	display:inline-block;
+	height:10px;
+	width:10px;
+	background-color:#ee4f38;
+	color:#fff;
+	transform:translateY(-50%) translateX(100%);
+	text-align:center;
+	line-height:18px;
+	border:1px solid transparent;
+	border-radius:10px;
+	top:0;
+	right:10px;
+	box-sizing:border-box;
+}
+#NoSubItemNurseExe .remind,#ItemNurseExe .remind,#transferRecord .remind {
+	margin:10px;
+	line-height:1;
+	font-weight:700;
+}
+#SureTrans + label span {
+	color:#ff9e11;
+}
+
+.patSexIcon {
+	height: 30px;
+	width:30px;
+	vertical-align:middle;
+	margin:0 10px 0 5px;
+}
+.patInfoBanner_patInfoText--name{
+	vertical-align:middle;
+	font-size:18px;
+}
+.patInfoBanner_sep{
+	color:#bbb;
+	vertical-align:middle;
+	padding:0 6px;
+}
+.patInfoBanner_patInfoIcon--icon{
+	width:16px;
+	height:16px;
+	margin:0 5px 2px 0;
+}
+.patInfoBanner_patInfoText a{
+	vertical-align:middle;
+}
+LABEL.clsRequired {
+    font-size: 14px;
+    background-image: url(../images/Required.gif);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 8px;
+}
+
+span.clsRequired{
+	color:red;
+	margin-right:5px;
+	vertical-align:-2px;
+}
+.form-item{
+	margin-bottom:10px;
+	vertical-align:middle;
+	box-sizing:border-box;
+	padding:0;
+}
+.form-item-label{
+	display:flex;
+	vertical-align:middle;
+	justify-content:flex-end;
+	text-align:right;
+	width:20%;
+	height:30px;
+	line-height:30px;
+	display:inline-block;
+}
+.form-item-label label{
+	margin-right:10px;
+	width:calc(100% - 12px);
+	display:inline-block;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+	overflow:hidden;
+}
+.form-item-control-wrapper {
+	width:80%;
+	display:inline-block;
+	vertical-align:top;
+	min-height:30px;
+}
+.form-item-control-wrapper label.radio:first-of-type,.form-item-control-wrapper label.checkbox:first-of-type{
+	margin-left:-7px;
+}
+.form-item-control-wrapper label.radio,.form-item-control-wrapper label.checkbox{
+	vertical-align:top;
+	margin-top:4px;
+	padding-right: 10px;
+}
+.form-item-control-wrapper .combo {
+	margin-right:5px;
+	margin-top:-2px;
+}
+#NurPlanTaskExecuteDiag{
+	max-height:600px;
+	overflow-y:auto !important;
+}
+/*床位 责组的样式*/
+
+.switch {
+	text-align:center;
+	padding-top: 5px;
+}
+.ant-switch{
+	margin:0;
+	padding:0;
+	color:rgba(0,0,0,.65);
+	font-size:14px;
+	font-variant:tabular-nums;
+	line-height:1.5;
+	list-style:none;
+	-webkit-font-feature-settings:"tnum";
+	font-feature-settings:"tnum";
+	position:relative;
+	display:inline-block;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+	min-width:44px;
+	height:22px;
+	line-height:20px;
+	vertical-align:middle;
+	background-color:rgba(0,0,0,.25);
+	border:1px solid transparent;
+	border-radius:100px;
+	cursor:pointer;
+	-webkit-transition:all .36s;
+	transition:all .36s;
+	-webkit-user-select:none;
+	-moz-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+}
+.ant-switch-checked .ant-switch-inner {
+	margin-right:24px;
+	margin-left:6px;
+}
+.ant-switch:focus {
+	outline:0;
+}
+.ant-switch:after {
+	position:absolute;
+	top:1px;
+	left:1px;
+	width:18px;
+	height:18px;
+	background-color:#fff;
+	border-radius:18px;
+	cursor:pointer;
+	-webkit-transition:all .36s cubic-bezier(.78,.14,.15,.86);
+	transition:all .36s cubic-bezier(.78,.14,.15,.86);content:" ";
+}
+.ant-switch-checked:after {
+	left:100%;
+	margin-left:-1px;
+	transform:translateX(-100%);
+}
+.ant-switch-checked {
+	background-color:#1890ff;
+}
+
+.switchIcon{
+	margin:0 10px;
+}
+.current{
+	font-weight:700;
+	color:#017bec;
+}
+.tabs-wrap {
+	width:100% !important
+}
+.patlist-div .panel-header,#patientList{
+	border-radius:0;
+}
+table {
+    border-spacing: 0px;
+}
+</style>
+ </head> 
+ <body class="hisui-layout" data-options="fit:true,border:false">
+ <server>
+ ; 是否显示左侧患者列表 Y 显示 其他 不显示
+ s IsShowPatList=$G(%request.Data("IsShowPatList", 1))
+ s IsShowAllPatient=$G(%request.Data("IsShowAllPatient", 1)) //“Y”，医嘱、护嘱、需测、需评业务默认进入，勾选左侧全病区患者，然后查询数据
+ if (IsShowAllPatient="Y") {
+	 s IsShowPatList="Y" 
+ }
+ s EpisodeID=%request.Get("EpisodeID")
+ s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+ ;查询日期/时间默认范围
+ s SheetDateTimeObj=##class(Nur.NIS.Service.OrderExcute.Execute).GetSheetDateTime("DefaultSee",%session.Get("LOGON.CTLOCID"))
+ s startDate=SheetDateTimeObj.GetAt("startDate")
+ s startTime=SheetDateTimeObj.GetAt("startTime")
+ s endDate=SheetDateTimeObj.GetAt("endDate")
+ s endTime=SheetDateTimeObj.GetAt("endTime")
+ s searchNum=SheetDateTimeObj.GetAt("searchNum")
+ ;获取护理计划通用配置json数据
+ s ComConfig=##Class(Nur.NIS.Service.NursingPlan.NursePlanMake).GetNurPlanCommonConfigForExecute(%session.Get("LOGON.HOSPID"))
+ ;执行状态
+ s taskStatusJson=##class(Nur.NIS.Common.QueryBrokerNew).GetOptionOfProperty("Nur.NIS.TaskRecord","NTRECStatus")
+ ;执行备注
+ s HospId=##class(web.DHCBL.BDP.BDPMappingHOSP).GetDefHospIdByTableName("Nur_IP_QPCommonConfig",%session.Get("LOGON.HOSPID"))
+ s ExecuteNoteJson=##class(Nur.NIS.Service.NursingPlan.TaskRecord).GetExecuteNoteList(HospId)
+ i (##class(websys.Conversions).IsValidMethodName("NurMp.Config","WriteChromePrintCompatibleADDINS")) {
+	d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+ }
+ ; 是否默认勾选转入护理记录、是否允许删除护嘱任务
+ s QPCCOpenNurTaskTrans="N",QPCCOpenDelNureTask="N"
+ s HospId=##class(web.DHCBL.BDP.BDPMappingHOSP).GetDefHospIdByTableName("Nur_IP_QPCommonConfig",%session.Get("LOGON.HOSPID"))
+ s commonId=$o(^CF.NUR.NIS.QPCommonConfigI("QPCCHospitalDRIndex",HospId,""))
+ if (commonId) {
+	s QPCCOpenNurTaskTrans=$lg(^CF.NUR.NIS.QPCommonConfigD(commonId),27)
+	s QPCCOpenDelNureTask=$lg(^CF.NUR.NIS.QPCommonConfigD(commonId),28)
+ }
+ ; 护理分组权限 Y 开启
+ s groupFlag=$g(^NurGroupSetting("switch",%session.Get("LOGON.HOSPID")))
+ ; 护理计划是否启用病历插件更新 Y 开启
+ s EMRPrint = $g(^NursePlanEMRPrint("switch"))
+ // 撤销护嘱记录 Y:允许
+ s IsOpenCancelNursePlan = ##class(Nur.NIS.Service.NursingPlan.NursePlanMake).IsOpenCancelNursePlan(%session.Get("LOGON.HOSPID"))
+ // 是否显示修改时间 2022-09-05 add
+ s IsOpenEditDateTime = ##class(Nur.NIS.Service.NursingPlan.NursePlanMake).IsOpenEditDateTime(%session.Get("LOGON.HOSPID"))
+ // HOS 传入参数
+ s showTaskTabNameHOS = $G(%request.Data("showTaskTabName", 1))
+ // HIS 版本 --来自护理病历的配置
+ s version85 = ##class(Nur.NIS.Service.NursingPlan.Utils).GetVersion85()
+ // portal 传参
+ s portalEpisodeIDS=$G(%request.Data("EpisodeIDS", 1))
+ s portalCodeStr=$G(%request.Data("codeStr", 1))
+ s portalStartDateTime=$G(%request.Data("startDateTime", 1))
+ s portalEndDateTime=$G(%request.Data("endDateTime", 1))
+ s versionNewFlag=##class(websys.Conversions).IsValidClassName("csp.csp.nur.hisui.common.patientlistnew")
+ s versionPatientListNew=##class(websys.Conversions).IsValidClassName("csp.csp.nur.hisui.common.patientlistnew")
+ ;2023.02.28 医生站关于病人信息栏的调用修改	
+ s versionIsInfoBarNew=##class(websys.Conversions).IsValidClassName("csp.csp.dhcdoc.patinfo.banner") 
+ </server>
+  <csp:Include Page="nur.hisui.nurseplantaskexecute.show.csp">
+<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		IsShowPatList:"#(IsShowPatList)#",
+		EpisodeID:"#(EpisodeID)#",
+		CurrentDate:"#(CurrentDate)#",
+		startDate:"#(startDate)#",
+		startTime:"#(startTime)#",
+		endDate:"#(endDate)#",
+		endTime:"#(endTime)#",
+		searchNum:"#(searchNum)#",
+		taskStatusJson:'#(taskStatusJson)#',
+		ExecuteNoteJson:'#(ExecuteNoteJson)#',
+		QPCCOpenNurTaskTrans:"#(QPCCOpenNurTaskTrans)#",
+		QPCCOpenDelNureTask:"#(QPCCOpenDelNureTask)#",
+		groupFlag:"#(groupFlag)#",
+		IsOpenCancelNursePlan:"#(IsOpenCancelNursePlan)#", //ServerObj.IsOpenCancelNursePlan
+		IsOpenEditDateTime:"#(IsOpenEditDateTime)#",   //2022-09-05 add
+		IsShowAllPatient:"#(IsShowAllPatient)#",
+		showTaskTabNameHOS:"#(showTaskTabNameHOS)#",
+		version85:"#(version85)#",
+		portalEpisodeIDS:"#(portalEpisodeIDS)#",
+		portalCodeStr:"#(portalCodeStr)#",
+		portalStartDateTime:"#(portalStartDateTime)#",
+		portalEndDateTime:"#(portalEndDateTime)#",
+		versionNewFlag:"#(versionNewFlag)#",  //0:旧版本  1：新版本
+		versionPatientListNew:"#(versionPatientListNew)#",
+		versionIsInfoBarNew:"#(versionIsInfoBarNew)#",
+	};
+	$.extend(ServerObj, #(ComConfig)#);
+	// portal 跳转
+	if (ServerObj.portalEpisodeIDS && ServerObj.portalEpisodeIDS!="")
+	{
+		// 日期 时间 处理
+		if (ServerObj.portalStartDateTime && ServerObj.portalStartDateTime!="")
+		{
+			ServerObj.startDate = ServerObj.portalStartDateTime.split(" ")[0];
+			ServerObj.startTime = ServerObj.portalStartDateTime.split(" ")[1];
+		}
+		if (ServerObj.portalEndDateTime && ServerObj.portalEndDateTime!="")
+		{
+			ServerObj.endDate = ServerObj.portalEndDateTime.split(" ")[0];
+			ServerObj.endTime = ServerObj.portalEndDateTime.split(" ")[1];
+		}
+	}
+	
+	//打印插件升级
+    window.WebIp = window.location.href.split("/csp/")[0];
+    try {
+    if (
+      PrintActivexUpgrade ||
+      typeof PrintActivexUpgrade ||
+      typeof PrintActivexUpgrade == "function"
+    ) {
+      var EMRPrintFlag = "#(EMRPrint)#"
+      if (EMRPrintFlag == "Y")
+      {
+      	setTimeout(PrintActivexUpgrade, 200);
+      }
+    }
+   } catch(e) {
+      console.log("打印插件升级失败！");
+   }
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/NursePlanTaskExecute.js"></script>
+</body>
+</html>

@@ -17,9 +17,11 @@
 			Set IsUpdateReportNo = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("FBD-IsUpdateReportNo","")
 			Set IsUpdateSampleNo = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("FBD-IsUpdateSampleNo","")		
 			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
+			Set FBDInitAddressByLocalHospital=##class(DHCMed.FBDService.Service).GetDictionary("GetAreaInfo!!FBD-InitAddressByLocalHospital")
+			Set FBDRegionRelateCurrAdd = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("FBD-RegionRelateCurrAdd","")	//传染病病人所属与现住址强制关联
 
 			Set IPOPNo = ##class(DHCMed.FBDService.ReportSrv).GetIPOPNo($g(%request.Data("EpisodeID",1)))
-			Set PatEncryptLevel = ##class(DHCMed.SSIO.FromSecSrv).GetPatEncryptLevel($p($g(^PAADM($g(%request.Data("EpisodeID",1)))),"^",1))
+			//Set PatEncryptLevel = ##class(DHCMed.SSIO.FromSecSrv).GetPatEncryptLevel($p($g(^PAADM($g(%request.Data("EpisodeID",1)))),"^",1))
  	        //根据患者就诊类型判断报告位置
    	        Set AdmType = $p($g(^PAADM($g(%request.Data("EpisodeID",1)))),"^",2)
    	        
@@ -75,10 +77,11 @@
 			var ServerObj={
 				AdmType:"#(AdmType)#",
 				IPOPNo:"#(IPOPNo)#",
-				PatEncryptLevel:"#(PatEncryptLevel)#",
 				PatCurrAddress:"#(PatCurrAddress)#",
 				CurrAddress:"#(CurrAddress)#",
-				DicInfo:"#(DicInfo)#"
+				DicInfo:"#(DicInfo)#",
+				FBDInitAddressByLocalHospital:"#(FBDInitAddressByLocalHospital)#",
+				FBDRegionRelateCurrAdd:"#(FBDRegionRelateCurrAdd)#"
 			}
 			$(window).load(function() {
 				InitReportWin();

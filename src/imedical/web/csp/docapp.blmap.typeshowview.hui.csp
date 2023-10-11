@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--设置 docapp.blmap.typeshowview.hui.csp 病理模块展示-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcapp/css/piscom.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/asscom.css" rel="stylesheet">
+<link href="../scripts/dhcdoc/dhcdoccure_hui/css/adaptation.css" rel="stylesheet">
+<style type="text/css">
+</style>
+<Server>
+s MapID=$g(%request.Data("MapID",1))
+s MapCode=$P(^DHCDocAppBLMap(MapID),"^",1)
+s MapStr=$P(^DHCDocAppBLMap(MapID),"^",3)
+if ($g(^DHCDocAppBLMap(MapID,"ShowJS"))'=""){
+		w "<script type='text/javascript' src='../"_$g(^DHCDocAppBLMap(MapID,"ShowJS"))_"'></script>"
+	}
+s i=1
+s CacheMapRowIDStr=""
+s CacheMapIDStr=""
+s BLIDStr=""
+for{
+	s RowID=$P(MapStr,"||",i)
+	q:RowID=""
+	s i=i+1
+	s BLContentDesc=$P(^DHCDocBLTem(RowID),"^",1)
+	s BLContentText=$g(^DHCDocBLTem(RowID,"ConT"))
+	s BLID=$P(^DHCDocBLTem(RowID),"^",3)
+	s BLIDItemRowid=$O(^DHCDocAppBLItemi("BLTemp",RowID, 0))
+	
+	if (BLIDItemRowid=""){
+		if (CacheMapRowIDStr="") s CacheMapRowIDStr=RowID  
+		e  s CacheMapRowIDStr=CacheMapRowIDStr_"^"_RowID
+		if (CacheMapIDStr="") s CacheMapIDStr=BLID  
+		e  s CacheMapIDStr=CacheMapIDStr_"^"_BLID
+	}
+		
+	if (BLIDStr="") s BLIDStr=BLID  
+	e  s BLIDStr=BLIDStr_"^"_BLID
+	w !,BLContentText
+	if ($g(^DHCDocBLTem(RowID,"JSStr"))'=""){
+		w "<script type='text/javascript' src='../"_$g(^DHCDocBLTem(RowID,"JSStr"))_"'></script>"
+	}
+}
+</Server>
+</head> 
+<body>
+	<SCRIPT language = 'javascript' >
+		var LgUserID = session['LOGON.USERID'];   /// 用户ID
+		var LgCtLocID = session['LOGON.CTLOCID']; /// 科室ID
+		var LgGroupID = session['LOGON.GROUPID']; /// 安全组ID
+		var LgHospID=session['LOGON.HOSPID'];
+		var EpisodeID=1 //默认用户和就诊都为1
+		var PatientID=1
+		var BLIDStr="#(BLIDStr)#"
+		var MapCode="#(MapCode)#"
+		var CacheMapRowIDStr="#(CacheMapRowIDStr)#"
+		var CacheMapIDStr="#(CacheMapIDStr)#"
+		var itemReqJsonStr=""
+		var ServerObj={
+			DefualtDoc:session['LOGON.USERID']
+			}
+		var PisID=""
+		var ARCIM=""
+		var Arcim=""
+		$(function(){
+			if (BLIDStr!=""){
+				var BLIDStrArry=BLIDStr.split("^")
+				for (var i = 0; i < BLIDStrArry.length; i++) {
+					var Obj=eval(BLIDStrArry[i]) 
+					if(typeof(Obj.Init)=="function"){
+						Obj.Init()
+					}
+				}
+			}
+			storageAllCache.storage(CacheMapRowIDStr,CacheMapIDStr)
+		})
+		function addclsRequired(){
+			var CheckStr=tkMakeServerCall("web.DHCDocAPPBL","GetAcquireItem",MapID);
+			var itmmastid=$("#TesItemID").val();
+			if (itmmastid!="") {
+				var HideAry=MapStr.split("||");
+				for (var i=0; i< HideAry.length; i++){
+					var AcquireStr=tkMakeServerCall("web.DHCDocAPPBL","GetAcquireArcItem",MapID,HideAry[i],itmmastid);
+					if (AcquireStr!="") {
+						if (CheckStr=="") CheckStr=AcquireStr;
+						else CheckStr=CheckStr+"^"+AcquireStr;
+					}
+				}
+			}
+			if (CheckStr!=""){
+				var CheckAry=CheckStr.split("^")
+				for (var i=0;i<CheckAry.length;i++) {
+					var OneCheckStr=CheckAry[i]
+					var ID=OneCheckStr.split(String.fromCharCode(1))[0]
+					if ($("#"+ID).length > 0){
+						$("label[for="+ID+"]").addClass("clsRequired");
+					}
+				}
+			}
+		}
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/storageAllCache.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/listcomponent.js"></script>	
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!-- 数据导入 dhceq.tools.datacheck.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<ADDINS require="CmdShell"></ADDINS>
+<style type="text/css">
+	p {
+	  padding:5px;
+	  text-indent:25px;
+	}
+
+	.note{
+		margin:10px;
+		font-size:16px;
+		width:95%;
+	}
+	.fs_border{
+	   border:1px solid #ccc;
+	   height:45px;
+	   margin-top:10px;
+	   padding-top:10px;
+	   padding-left:30px;
+	}
+	.lg_ft{
+		color:red;
+		margin-left:10px;
+	}
+</style>
+</head>
+<script language=Cache runat=server>
+	i ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+</script>
+<body>
+<div id="MainPanel" class="hisui-layout" fit="true">
+	<div data-options="region:'west',border:false" style='width:700px;padding:10px 10px 10px 10px;'>
+		<div class="hisui-panel" data-options="title:'新加数据导入',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div style="margin:10px;">
+				<p>应分别于上线时、上线后一个月、上线后三个月执行该检测。</p>
+				<form action="" method="get">
+					<fieldset class="fs_border" style="height:155px;">
+		    			<legend class="lg_ft">第一步：台账和快照折旧检测</legend>
+		    			<label style="margin-right:5px;">执行方法：
+							<i>w ##class(web.DHCEQ.Plat.BUSCheckResult).CheckEquipDepre(MonthStr)</i>
+						</label>
+						<br/><br/>
+					    <b style="font-size:12px;">参数说明：</b><br/>
+					    <label style="font-size:12px;">
+					    1.MonthStr：检测月份，格式为：yyyy-mm。<br/>
+					    </label>
+					    <br/>
+					    <label id="cDepreMonthStr" for="DepreMonthStr">折旧检测月份</label>
+						<input type="text" class="hisui-validatebox textbox" id="DepreMonthStr" data-options='validParams:"YM"' placeholder="月份必填">
+					    <a id="BCheckDepre" href="#" style="width:120px;margin-left:5px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">执行</a>
+					</fieldset>
+					<fieldset class="fs_border" style="height:195px;">
+		    			<legend class="lg_ft">第二步：月报检测</legend>
+						<label style="margin-right:5px;">执行方法：
+							<i>w ##class(web.DHCEQ.Plat.BUSCheckResult).CheckMonthReport(MonthStr,ReportType)</i>
+						</label>
+						<br/><br/>
+					    <b style="font-size:12px;">参数说明：</b><br/>
+					    <label style="font-size:12px;">
+					    1.MonthStr：检测月份，格式为：yyyy-mm。<br/>
+					    2.ReportType："0" 是实物月结 1是财务月结。<br/>
+					    </label>
+					    <br/>
+					    <label id="cReportMonthStr" for="ReportMonthStr">月报检测月份</label>
+						<input type="text" class="hisui-validatebox textbox" id="ReportMonthStr" data-options='validParams:"YM"' placeholder="月份必填">
+					    <!--label id="cReportType" for="ReportType">月报类型</label>
+						<input type="text" class="hisui-validatebox textbox" id="ReportType" placeholder="月报类型必填"-->
+					    <a id="BCheckReport" href="#" style="width:120px;margin-left:5px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">执行</a>
+					</fieldset>
+					<fieldset class="fs_border" style="height:115px;">
+		    			<legend class="lg_ft">第三步：月报和业务数据对照检测</legend>
+						<label style="margin-right:5px;color:#E35E0E;">1、数据异常或数据不一致时进行此步骤检测。</label><br/>
+						<label>2、资金来源变动结存表与相关业务对照检测。月结任务执行后，即可从报表中查看月报结果。</label>
+					    <br/><br/>
+					    <a id="BCheckBussReport" href="#" style="width:120px;margin-left:5px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">检测</a>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="hisui-tabs tabs-gray" id="TabsData" data-options="region:'center',split:true,border:true" style='padding:10px 10px 10px 0px;border:0px;'>
+		<div data-options="title:'折旧信息错误日志',selected:true,iconCls:'icon-paper'"> 
+			<div id="NoDataPic" style="background:url(../images/no_data.png) no-repeat center;height:100%;width:100%;display:'block';"></div>
+			<div id="tDHCEQDepreError" style="display:'none';"></div>
+		</div>
+		<div data-options="title:'月报检测结果',selected:true,iconCls:'icon-paper'"> 
+			<table id="tDHCEQCheckResultFind" data-options="border:false,fit:true"></table>
+		</div>
+	</div>
+</div>
+<!--折旧检测弹窗-->
+<!--div id="DepreWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="padding:10px;">
+	<div data-options="fit:true">
+		<div class="eq-table">
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"><label id="cDepreMonthStr" for="DepreMonthStr">检测月份</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="DepreMonthStr" data-options='validParams:"YM"' placeholder="月份必填"></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"></div>
+				<div class="eq-table-td"></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"></div>
+				<div class="eq-table-td"></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"></div>
+				<div class="eq-table-td">
+					<a id="BExeCheckDepre" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">执行</a>
+					<a id="BCloseDepre" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="ReportWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="padding:10px;">
+	<div data-options="fit:true">
+		<div class="eq-table">
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"><label id="cReportMonthStr" for="ReportMonthStr">检测月份</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="ReportMonthStr" data-options='validParams:"YM"' placeholder="月份必填"></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"><label id="cReportType" for="ReportType">月报类型</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="ReportType" placeholder="月报类型必填"></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"></div>
+				<div class="eq-table-td"></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"></div>
+				<div class="eq-table-td"></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label"></div>
+				<div class="eq-table-td">
+					<a id="BExeCheckReport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">执行</a>
+					<a id="BCloseReport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div-->
+<div id="hiddenEncrypt" style="display:hidden">
+	<form name="DHCEQ">
+		<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+		<INPUT type="hidden" id="ReportType" value="0">
+	</form>
+</div>
+<script type='text/javascript'>
+	MonthBox('DepreMonthStr');
+	MonthBox('ReportMonthStr');
+</script>
+<script type="text/javascript" src="../scripts/dhceq/tools/datacheck.js"></script>
+</body>
+</html>

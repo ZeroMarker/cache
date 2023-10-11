@@ -1,151 +1,170 @@
-<!--（住院草药）处方追踪 csp:dhcpha/dhcpha.inpha.hmprescnotrack.csp--> 
-<!--（住院草药）处方追踪 csp:pharmacy/inpha/dhcpha.inpha.hmprescnotrack.js--> 
+<!--（住院草药）处方追踪 csp:dhcpha/dhcpha.inpha.hmprescnotrack.csp-->
+<!--（住院草药）处方追踪 csp:pharmacy/inpha/dhcpha.inpha.hmprescnotrack.js-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
-q 1
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
 </csp:method>
 <html lang="zh-CN">
+
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<Server language="CACHE" runat="Server">
-   	s Application=%request.Application
-   </Server>
-	<TRAK:HEAD/>
-	<DHCPHARMACY:COMMONLIB/>
-	<DHCAPP:PHARBOOTSTRAP/>
-	<Server language="CACHE" runat="Server">
-		s Application=%request.Application
-		s gPrescNo = $G(%request.Data("gPrescNo",1))
-		s gAdm = $G(%request.Data("Adm",1))
-   </Server> 
-	<SCRIPT Language="Javascript">
-		var LoadPrescNo="#(gPrescNo)#"
-		var LoadAdm="#(gAdm)#"
-	</script>
-	<link rel="stylesheet" type="text/css" href="#(Application)#scripts/emr/css/summary.css"/>
-	<script type="text/javascript" src="#(Application)#scripts/emr/js/tools.js"></script>
-	<script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmprescnotrack.js"></script>
-<style type="text/css"  >  
-	.wardtitle th.ui-th-column div{
-        white-space:normal !important;
-        height:auto !important;
-        padding:0px;
-    }
-    .checkboxpadding{
-	 	padding-left:5px;
-	}
-    .RowGreen{
-        background-color: #80F0C0;
-    }
-    .RowBlue{
-	 	background-color: #00BFFF;
-	}
-	.history-date ul li.green a{
-		width:440px;
-	}
-	.history-date ul li.green a h3 span.fr{
-		padding-right:160px;
-		font-size:14px;
-		color:#EA0000;
-		font-weight:bold;
-		display:block;
-	}
-</style> 
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+    </Server>
+    <TRAK:HEAD />
+    <DHCPHARMACY:COMMONLIB />
+    <DHCAPP:PHARBOOTSTRAP />
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+        s gPrescNo = $G(%request.Data("gPrescNo",1))
+        s gAdm = $G(%request.Data("Adm",1))
+    </Server>
+    <SCRIPT Language="Javascript">
+        var LoadPrescNo = "#(gPrescNo)#"
+        var LoadAdm = "#(gAdm)#"
+    </script>
+    <link rel="stylesheet" type="text/css" href="#(Application)#scripts/emr/css/summary.css" />
+    <script type="text/javascript" src="#(Application)#scripts/emr/js/tools.js"></script>
+    <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmprescnotrack.js"></script>
+    <style type="text/css">
+        .wardtitle th.ui-th-column div {
+            white-space: normal !important;
+            height: auto !important;
+            padding: 0px;
+        }
+
+        .checkboxpadding {
+            padding-left: 5px;
+        }
+
+        .RowGreen {
+            background-color: #80F0C0;
+        }
+
+        .RowBlue {
+            background-color: #00BFFF;
+        }
+
+        .history-date ul li.green a {
+            width: 440px;
+            height: 70px;
+        }
+
+        .history-date ul li.green a h3 span.fr {
+            padding-right: 160px;
+			font-size:16px;
+            color: #EA0000;
+            font-weight: bold;
+            display: block;
+        }
+        .condition-heading {
+            height: auto !important;
+            font-size: 14px !important;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+            font-weight: normal !important;
+        }
+        #jqGridPager1_center{
+	    	width: 0;
+	    }
+	    h3{
+		    background-color:transparent;
+			color:#000;
+		}
+    </style>
 </head>
-<body >
-	<div id="dhcpha-query-condition">
-		<div class="container-fluid dhcpha-condition-container">
-			<div class="row row_style">
-			</div>					
-		</div> 
-		<div class="row dhcpha-row-split" ></div>
-	</div>
-	 
-	<div class="container-fluid dhcpha-tab-content">
-		<div class="row">
-			<div class="col-lg-6 col-md-6 col-sm-6 dhcpha-col" style="padding-right:0px;padding-left:0px">
-				<div class="container-fluid dhcpha-tab-content-sm">
-					<div class="row">
-						 <div class="tab_style tab_style_bottom">
-							<ul id="tab-ipmonitor" class="nav nav-tabs nav_tabs_style">
-								<li class="active" >
-									<a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false" id="tab-presc">处方列表</a>
-								</li>
-								<li>
-									<a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false" id="tab-patno">登记号</a>
-								</li>
-							</ul>
-						 </div>
-					</div>
-					<div class="row">
-						<div id="monitor-condition">
-							<div  id="div-presc-condition">
-								<div class="panel div_content">
-									<div class="panel-heading" style="height:35px;">
-										<form class="form-inline" style="padding-left:4px;margin-top:-3px;">
-											<div class="input-group">
-												<span  class="input-group-addon dhcpha-input-group-addon-in"><strong>病区</strong></span>		                   
-												<select class="form-control in_select" id="sel-phaward" >				              
-												</select>                   
-											</div>
-											<div class="btn-group" style="padding-left:250px;margin-top:0px;position: absolute;right: 2em;">  
-												<span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
-												<button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal"  type="button" id="btn-find" onclick="javascript:QueryInPhDispList()">查询</button>
-											</div> 
-										</form>
-									</div>
-										<table id="grid-wardpatprelist" class="table table-bordered table_style">
-										</table> 
-										<div id="jqGridPager">
-										</div>  
-								</div> 				
-							</div>
-							<div  id="div-patno-condition">
-								<div class="panel div_content">
-									<div class="panel-heading" style="height:35px;">
-										<form class="form-inline" style="padding-left:4px;margin-top:-3px;">
-											<div style="padding-left:4px;margin-top:-3px">
-												<lable for="chk-shortord"><strong>登记号：</strong></lable>
-												<input id="txt-patno" class="form-control input_style" type="text" style="width:10em;height:25px;font-size:16px"> 
-											</div>
-											<div style="padding-left:250px;margin-top:-25px">
-												<lable for="chk-shortord"><strong>住院号：</strong></lable>
-												<input id="txt-pameno" class="form-control input_style" type="text" style="width:10em;height:25px;font-size:16px"> 
-											</div>
-											<div class="btn-group" style="margin-top:-25px;position: absolute;right: 2em;">  
-												<span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
-												<button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal"  type="button" id="btn-find" onclick="javascript:QueryInPhDispList()">查询</button>
-											</div> 
-										</form>
-									</div>
-									<table id="grid-admlist" class="table table-bordered table_style"></table>
-									<div id="jqGridPager1"></div> 
-								</div>
-								<div class="panel div_content">
-									<div class="panel-heading"><span class="pal_style"><strong>此就诊处方列表</strong></span></div>
-										<table id="grid-admpresclist" class="table table-bordered table_style"></table>
-									</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="col-lg-6 col-md-6 col-sm-6 dhcpha-col dhcpha-col-border-left">	
-				<div class="panel div_content" id="div-tab">
-					<div class="history">
-						<div class="history-date">
-							<ul id="container" style="overflow-x:hidden;"></ul>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+
+<body style="overflow:hidden;padding-top:10px;padding-bottom:10px;">
+    <div id="dhcpha-query-condition">
     </div>
-<csp:Include Page="dhcpha.inpha.presc.csp">
-<csp:Include Page="dhcpha.inpha.hmgetmedbrodisp.csp">
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6 dhcpha-col">
+                <div class="container-fluid dhcpha-tab-content">
+                    <div class="row">
+                        <div class="tab_style tab_style_bottom">
+                            <ul id="tab-ipmonitor" class="nav nav-tabs nav_tabs_style" style="font-size:14px">
+                                <li class="active">
+                                    <a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false" id="tab-presc">处方列表</a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false" id="tab-patno">登记号</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div id="monitor-condition">
+                            <div id="div-presc-condition">
+                                <div class="panel div_content">
+                                    <div class="panel-heading condition-heading">
+                                        <form class="form-inline">
+                                            <div class="input-group">
+                                                <span class="input-group-addon dhcpha-input-group-addon-in">病区</span>
+                                                <select class="form-control in_select" id="sel-phaward">
+                                                </select>
+                                            </div>
+                                            <div class="btn-group" style="padding-left:10px">
+                                                <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                                                <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-find" onclick="javascript:QueryInPhDispList()">查询</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <table id="grid-wardpatprelist" class="table table-bordered table_style">
+                                    </table>
+                                    <div id="jqGridPager">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="div-patno-condition">
+                                <div class="panel div_content">
+                                    <div class="panel-heading condition-heading">
+                                        <form class="form-inline">
+                                            <div class="input-group">
+												<span class="input-group-addon dhcpha-input-group-addon-in">登记号</span>
+												<input id="txt-patno" class="form-control input_style" type="text" style="width:10em">                
+                                            </div>
+                                            <div class="input-group">
+                                                <span class="input-group-addon dhcpha-input-group-addon-in">住院号</span>
+                                                <input id="txt-pameno" class="form-control input_style" type="text" style="width:10em">  
+                                            </div>
+                                            <div class="btn-group" style="padding-left:10px;">
+                                                <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
+                                                <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-find" onclick="javascript:QueryInPhDispList()">查询</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <table id="grid-admlist" class="table table-bordered table_style"></table>
+                                </div>
+                                <div class="panel div_content">
+                                    <div class="panel-heading"><span class="pal_style"><strong>此就诊处方列表</strong></span></div>
+                                    <table id="grid-admpresclist" class="table table-bordered table_style"></table>
+                                </div>
+                                <div id="jqGridPager1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 dhcpha-col">
+                <div class="panel div_content" style="margin:0;margin-right:15px;">
+                    <div class="history">
+                        <div class="history-date">
+                            <ul id="container" style="overflow-x:hidden;"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <csp:Include Page="dhcpha.inpha.presc.csp" />
+    <csp:Include Page="dhcpha.inpha.hmgetmedbrodisp.csp" />
 </body>
+
 </html>

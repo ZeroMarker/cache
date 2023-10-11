@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!--ipdoc.patorderinsuview.hui.csp HISUI住院患者修改医保标志--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/ipdoc/css/inpatinfoview.css" />
+<Server>
+	s EpisodeID=$G(%request.Data("EpisodeID",1))
+	s PatientID=$G(%request.Data("PatientID",1))
+	s ShowBannerFlag=$G(%request.Data("ShowBannerFlag",1))
+	s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+	s AdmReason=$p($G(^PAADM(EpisodeID,1)),"^",7)
+	s AdmDate=$P(^PAADM(EpisodeID),"^",6)
+	s:AdmDate'="" AdmDate=$ZD(AdmDate,3)
+	s OrdGroupSelect=##Class(web.DHCDocConfig).GetConfigNode("ChangeCoverMainInsOrdGroupSelect",%session.Get("LOGON.HOSPID"))
+	s warning=""
+	s AdmReasonYBType=""
+	s:AdmReason'="" AdmReasonYBType=##Class(web.DHCDocOrderCommon).GetInsurFlag(AdmReason,PAAdmType)
+	s:AdmReasonYBType'=1 warning="请选择医保病人进入此界面！"
+	s VisitStatus=$p($g(^PAADM(%request.Get("EpisodeID"))),"^",20)
+	s PAADMBillFlag=$p($g(^PAADM(%request.Get("EpisodeID"))),"^",45)
+	//s HaveMidDischarged=##class(web.DHCDocOrderCommon).GetIsMidDischarged(EpisodeID)
+	s:((PAADMBillFlag="Y")&&(VisitStatus="D")&&(warning="")) warning="此病人已做最终结算！"
+	
+	s isNurseLogin =##class(web.DHCDocMain).isNurseLogin()
+	//排序方式
+	s ViewOrderSortJson=##Class(web.DHCDocInPatUICommon).GetViewOrderSortJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
+	//开出科室
+	s ViewLocDescJson=##Class(web.DHCDocInPatUICommon).GetViewLocDescJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
+	//范围
+	s ViewScopeDescJson=##Class(web.DHCDocInPatUICommon).GetViewScopeDescJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin,PAAdmType)
+	//医嘱单型
+	s ViewNurderBillJson=##Class(web.DHCDocInPatUICommon).GetViewNurderBillJson(%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),isNurseLogin)
+	//获取医嘱重分类列表
+	s OrdReSubCatListJson=##class(web.DHCDocInPatUICommon).GetOrdReSubCatListJson()
+	s OrdISYBListJson="[{'id':'ALL','text':'"_##class(websys.Translation).Get("ipdoc.patorderinsuview.hui.csp","全部")_"'},{'id':'Y','text':'"_##class(websys.Translation).Get("ipdoc.patorderinsuview.hui.csp","医保")_"'},{'id':'N','text':'"_##class(websys.Translation).Get("ipdoc.patorderinsuview.hui.csp","自费")_"'},{'id':'Null','text':'"_##class(websys.Translation).Get("ipdoc.patorderinsuview.hui.csp","标识为空")_"'}]"
+	s OrdLimitDrugListJson="[{'id':'ALL','text':'"_##class(websys.Translation).Get("ipdoc.patorderinsuview.hui.csp","全部")_"'},{'id':'Y','text':'"_##class(websys.Translation).Get("ipdoc.patorderinsuview.hui.csp","限制用药")_"'},{'id':'N','text':'"_##class(websys.Translation).Get("ipdoc.patorderinsuview.hui.csp","非限制用药")_"'}]"
+	s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	s NextDate=##class(websys.Conversions).DateLogicalToHtml(+$h+1)
+	//获取系统日期格式
+	s DateFormat=##class(websys.Conversions).DateFormat()
+	//滚动加载
+	s OrderViewScrollView="" //##Class(web.DHCDocConfig).GetConfigNode("OrderViewScrollView")
+    //是否启用执行记录上的医保标志
+    s InsuInExeFlag= ##class(web.DHCINSUPort).GetOEMainInsCfg(AdmReason,%session.Get("LOGON.HOSPID"))
+    s:InsuInExeFlag=0 InsuInExeFlag="Y"
+	//是否显示banner
+    if (ShowBannerFlag="") s ShowBannerFlag="Y"
+	s NorthHeight=224
+
+
+	if (ShowBannerFlag="N"){
+		s NorthHeight=NorthHeight-43
+	}
+</Server>
+</head>
+<body>
+	<csp:Include Page="ipdoc.patorderinsuview.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			PatientID:"#(PatientID)#",
+			PAAdmType:"#(PAAdmType)#",
+			CurrentDate:"#(CurrentDate)#",
+			NextDate:"#(NextDate)#",
+			ViewOrderSortData:#(ViewOrderSortJson)#,
+			ViewLocDescData:#(ViewLocDescJson)#,
+			ViewScopeDescData:#(ViewScopeDescJson)#,
+			ViewNurderBillData:#(ViewNurderBillJson)#,
+			OrdReSubCatListJson:#(OrdReSubCatListJson)#,
+			OrderViewScrollView:"#(OrderViewScrollView)#",
+			DateFormat:"#(DateFormat)#",
+            InsuInExeFlag:"#(InsuInExeFlag)#",
+            OrdISYBListJson:"#(OrdISYBListJson)#",
+            OrdLimitDrugListJson:"#(OrdLimitDrugListJson)#",
+            AdmDate:"#(AdmDate)#",
+            warning:"#(warning)#",
+			OrdGroupSelect:"#(OrdGroupSelect)#"
+			
+		};
+	
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/OEOrder.Common.js"></script>
+    <script type="text/javascript" src="../scripts/dhcdoc/ipdoc/PatOrderInsuView.js"></script>
+ 
+
+</body>
+</html>

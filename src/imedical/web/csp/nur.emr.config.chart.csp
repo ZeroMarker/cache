@@ -1,0 +1,270 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<!--nur.emr.config.chart.csp-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/chart.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px !important;
+        }
+		.searchTable {
+			border-collapse: separate;
+			border-spacing: 0;
+			border: none;
+		}
+        .table_operate {
+	    	width: 100%;
+			border-collapse: separate;
+			border-spacing: 10px 10px;
+			border: none;
+	    }
+	    .combo_model {
+			width:230px;   
+		}
+		.searchbox {
+			width:270px;
+		}
+		.table_content {
+			width: 100%;
+			border-collapse: separate;
+			border-spacing: 10px 10px;
+			border:none;
+		}
+		.table_content td{
+			overflow:hidden;
+			border:none;
+		}
+		.label_title {
+			font-size: 14px;
+	        font-weight: bold;
+		}
+		.td_label {
+			width:74px;
+			padding-left:14px;
+			text-align:right;
+		}
+		.td_item {
+			width: 30px;
+		}
+		#ScoreItemExt {
+			width: 350px;
+		}
+		.emrtip {
+			margin-left: 14px;
+		}
+		#LineColor + span > input.combo-text.validatebox-text {
+			width: 118px !important;
+		}
+		.layout-split-north {
+			border-bottom: 5px solid #ffffff;
+		}
+		.layout-split-west {
+			border-right: 5px solid #ffffff;
+		}
+	</STYLE>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',split:true,border:false" style="height:35px;">
+			<table class="searchTable">
+				<tr>
+					<td class="l-label" style="width:38px;">
+						<label id="_HospListLabel">医院</label>
+					</td>
+					<td>
+						<input id="_HospList" class="textbox"/>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false" style="padding-top:5px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'west',split:true" style="width:300px;border-color:#ccc;border-radius:4px;">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="height:85px;">
+							<div class="hisui-panel" title="添加模板" data-options="fit:true,border:false,headerCls:'panel-header-gray',iconCls:'icon-add-item'">
+								<table class="table_operate">
+									<tr>
+										<td>
+											<input id="comobo_template" class="hisui-combobox combo_model" name="comobo_template" placeholder="请选择"></input>
+										</td>
+										<td>
+											<a id="btn_add" class="hisui-linkbutton hover-dark showicon" data-options="iconCls:'icon-w-add'"></a>
+										</td>
+									</tr>
+								</table>
+							</div>
+						</div>
+						<div data-options="region:'center',split:true,border:false">
+							<div class="hisui-layout" data-options="fit:true">
+								<div data-options="region:'north',border:false" style="height:85px;border-top:1px solid #ccc;">
+									<div class="hisui-panel" title="已添加模板" data-options="fit:true,border:false,headerCls:'panel-header-gray',iconCls:'icon-template'">
+										<table class="table_operate">
+											<tr>
+												<td>
+													<input id="searchbox_template" class="hisui-searchbox searchbox_model" data-options="prompt:'#(..Get("模板名称、关键字"))#'"/>
+												</td>
+											</tr>
+										</table>
+									</div>
+								</div>
+								<div data-options="region:'center',split:true,border:false">
+									<div class="hisui-panel" data-options="fit:true,border:false,headerCls:'panel-header-gray'">
+										<div id="tree_template" data-options="fit:true,animate:true"></div>
+										<div id="menu_model" class="hisui-menu" style="width:120px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',split:true,border:false" style="padding-left:5px;">
+					<div class="hisui-panel" title="曲线设置" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-green-chart'">
+						<div class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'north',border:false" style="height:50px;">
+								<table class="table_operate">
+									<tbody>
+										<tr>
+											<td>
+												<a id="btn_save" class="hisui-linkbutton hover-dark">保存</a>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<div data-options="region:'center',split:true,border:false">
+								<div class="hisui-panel" data-options="fit:true,border:false">
+									<table class="table_content">
+										<tbody>
+											<tr>
+												<td colspan=4>
+													<label class="label_title">分值字段</label>
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">字段</td>
+												<td class="td_item">
+													<input id="ScoreItem" class="hisui-textbox textbox" type="textbox">
+												</td>
+												<td class="td_label">字段2</td>
+												<td>
+													<input id="ScoreItemExt" class="hisui-textbox textbox" type="textbox" placeholder="日期Item//时间Item//分数Item，多个数据使用^分割">
+													<a class="hisui-tooltip emrtip" href="#" title="曲线图默认使用字段，若同时存在则优先使用字段2" data-options="position:'top'">
+														<i class="icon icon-help">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+													</a>
+												</td>
+											</tr>
+											<tr>
+												<td colspan=4>
+													<label class="label_title">纵坐标</label>
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">自适应量程</td>
+												<td colspan=3 class="td_item">
+													<input id="Adaptive" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'left'">
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">最大值</td>
+												<td class="td_item">
+													<input id="Max" class="hisui-numberbox textbox" data-options="precision:1" type="numberbox">
+												</td>
+												<td class="td_label">最小值</td>
+												<td>
+													<input id="Min" class="hisui-numberbox textbox" data-options="precision:1" type="numberbox">
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">间隔值</td>
+												<td class="td_item">
+													<input id="Interval" class="hisui-numberbox textbox" data-options="precision:1,min:0.1" type="numberbox">
+												</td>
+												<td class="td_label">预警值</td>
+												<td>
+													<input id="Warn" class="hisui-numberbox textbox" data-options="precision:1" type="numberbox">
+												</td>
+											</tr>
+											<tr>
+												<td colspan=4>
+													<label class="label_title">横坐标</label>
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">日期格式</td>
+												<td class="td_item">
+													<select id="DateFormat" class="hisui-combobox" style="width:155px;" type="combobox"></select>
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">跨年显示年</td>
+												<td class="td_item">
+													<input id="Year" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'left'">
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">跨月显示月</td>
+												<td class="td_item">
+													<input id="Month" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'left'">
+												</td>
+											</tr>
+											<tr>
+												<td colspan=4>
+													<label class="label_title">弹出窗口</label>
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">left(%)</td>
+												<td class="td_item">
+													<input id="Left" class="hisui-numberbox textbox" data-options="value:10,min:5,max:100,suffix:'%'" type="numberbox">
+												</td>
+												<td class="td_label">top(%)</td>
+												<td class="td_item">
+													<input id="Top" class="hisui-numberbox textbox" data-options="value:10,min:5,max:100,suffix:'%'" type="numberbox">
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">width(%)</td>
+												<td class="td_item">
+													<input id="Width" class="hisui-numberbox textbox" data-options="value:80,min:5,max:100,suffix:'%'" type="numberbox">
+												</td>
+												<td class="td_label">height(%)</td>
+												<td class="td_item">
+													<input id="Height" class="hisui-numberbox textbox" data-options="value:80,min:5,max:100,suffix:'%'" type="numberbox">
+												</td>
+											</tr>
+											<tr>
+												<td colspan=4>
+													<label class="label_title">曲线样式</label>
+												</td>
+											</tr>
+											<tr>
+												<td class="td_label">颜色</td>
+												<td class="td_item">
+													<input id="LineColor" class="textbox" style="width:155px;" type="color"></input>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.ipbill.charge.main.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-03-04
  * Description: 住院收费
 -->
@@ -12,53 +12,93 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<ADDINS/>
-	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.ipbill.charge.css'/>
-	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
-	<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcbill.ipbill.common.js'></script>
-	<script type='text/javascript' src='../scripts/DHCInsuPort.js'></script>
+	<DOCCARD medStepCode="Bill"/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.ipbill.charge.css"/>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
 	<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 	<server>
-		set PatientListPage="dhcbill.ipbill.inpatlist.csp"
-		if ($g(%request.Data("PatientListPage",1))'="") {
-			set PatientListPage=$g(%request.Data("PatientListPage",1))
+		set GroupId=%session.Get("LOGON.GROUPID")
+		set HospId=%session.Get("LOGON.HOSPID")
+		
+		set PersonBanner="dhcdoc.patinfo.banner.csp"
+		if (%request.Get("PersonBanner")'="") {
+			set PersonBanner=%request.Get("PersonBanner")
 		}
-		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-		w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",!
+		set PatientListPage="dhcbill.ipbill.inpatlist.csp"
+		if (%request.Get("PatientListPage")'="") {
+			set PatientListPage=%request.Get("PatientListPage")
+		}
+		
+		set GSRowID=##class(web.UDHCOPGSConfig).GetGSRowID(GroupId, HospId)
+		
+		set ToolMenus=##class(web.UDHCJFBILLMENU).GetSubListToJson("IPBILLTool", GroupId, HospId)
+		set RightMenus=##class(web.UDHCJFBILLMENU).GetSubListToJson("IPBILLRighty", GroupId, HospId)
+		set DefPayMStr=##class(web.UDHCOPGSConfig).GetGSDefPayMode(GroupId, HospId)  //默认支付方式
+		set DefPayMId=$p(DefPayMStr,"^",1)
+		
+		set DelPayMode=##class(BILL.IP.BL.CancelPay).GetDelPayMode(HospId)   //取消结算模式
+		
+		//取配置"婴儿未结算时母亲是否允许结算"
+		set BabyUnPayAllowMotherPay=##class(web.DHCBillPageConf).GetPageConfValue("dhcbill.ipbill.charge.main.csp", "BABYUNPAYALLOWMOTHERPAY", "", HospId)
+		
+		set CallPMCodeStr=##class(DHCBILL.Common.DHCBILLCommon).GetCallPMCodeStr(HospId)
+		
+		set pluLib=##class(BILL.Util.Library).%New()
+		do pluLib.LoadPaySrvLib()     //引入第三方支付服务接口
+		do pluLib.LoadReadCardLib()   //引入读卡公共js
+		do pluLib.%Close()
+		
+		w "<input id='CardTypeRowId' type='hidden'/>",!
 	</server>
 	<script type="text/javascript">
-		var patientListPage = "#(PatientListPage)#";
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+				
+		//常量
+		var CV = {
+			PayMURL: "dhcbill.ipbill.charge.paym.csp",
+			ToolMenus: #(ToolMenus)#,
+			RightMenus: #(RightMenus)#,
+			DelPayMode: "#(DelPayMode)#",
+			BabyUnPayAllowMotherPay: ("#(BabyUnPayAllowMotherPay)#" == 1),   //婴儿未结算时母亲是否允许结算
+			DefPayMId: "#(DefPayMId)#",
+			CallPMCodeAry: "#(CallPMCodeStr)#" ? "#(CallPMCodeStr)#".split("^") : []
+		}
 	</script>
 </head>
 
 <body class="hisui-layout">
-	<div class="window-mask alldom" style="width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;"></div>
-	<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;">
-		<csp:Include Page="dhcbill.in.patient.banner.csp">
+	<div data-options="region:'north',border:false" style="height:40px;overflow:hidden;">
+		<csp:Include Page="#(PersonBanner)#">
 	</div>
 	<div data-options="region:'center',border:false" style="padding: 0 10px 10px 10px;">
 		<div class="hisui-layout" data-options="fit:true" style="border-top:1px dashed #cccccc;">
-			<div data-options="region:'north',border:false">
-				<table class="search-table" style="width:100%">
+			<div data-options="region:'north',border:false" style="height:90px;">
+				<table class="search-table" style="width:100%;">
 					<tr>
-						<td class="r-label td-first-col"><label>登记号</label></td>
+						<td class="r-label td-first-col"><label>#(..Get("登记号"))#</label></td>
 						<td><input id="patientNo" class="textbox tb220"/></td>
-						<td class="r-label"><label>病案号</label></td>
+						<td class="r-label"><label>#(..Get("病案号"))#</label></td>
 						<td><input id="medicareNo" class="textbox tb220"/></td>
-						<td class="r-label"><label>就诊科室</label></td>
+						<td class="r-label"><label>#(..Get("就诊科室"))#</label></td>
 						<td><input id="admList" class="textbox tb220"/></td>
-						<td class="r-label"><label>结算状态</label></td>
+						<td class="r-label"><label>#(..Get("结算状态"))#</label></td>
 						<td><input id="status" class="textbox tb220"/></td>
 					</tr>
 					<tr>
-						<td class="r-label td-first-col"><label>卡号</label></td>
-						<td colspan="7">
-							<input id="cardNo" class="textbox tb220" placeholder="刷卡/请输入卡号" style="margin-right:5px;"/>
-							<input id="cardType" class="textbox tb120"/>
-							<a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'" style="margin-left:5px;">读卡</a>
+						<td class="r-label td-first-col"><label>#(..Get("卡号"))#</label></td>
+						<td colspan="2">
+							<input id="CardNo" class="textbox tb220" placeholder="#(..Get("刷卡/请输入卡号"))#" style="margin-right:5px;"/>
+							<input id="CardTypeNew" class="textbox tb120" placeholder="#(..Get("卡类型"))#" disabled/>
+						</td>
+						<td colspan="5">
+							<a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'">读卡</a>
+							<a href="javascript:;" class="hisui-linkbutton" id="btn-readInsuCard" style="margin-left:5px;">读医保卡</a>
 							<a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'" style="margin-left:5px;">清屏</a>
 						</td>
 					</tr>
@@ -69,95 +109,102 @@
 					<div id="billListTab" title="账单列表">
 						<div class="hisui-layout" data-options="fit:true">
 							<div id="panelCate" data-options="region:'east',border:false" style="width:250px;padding:10px 10px 0 0;">
-					    		<table id="tCateList" title="分类信息"></table>
+					    		<table id="cateList"></table>
 					   	 	</div>
 					   	 	<div data-options="region:'center',border:false" style="padding:10px 10px 0 10px;">
-					   	 		<table id="tBillList"></table>
+					   	 		<table id="billList"></table>
 					   	 	</div>
 					   	 	<div data-options="region:'south',border:false" style="height:280px;">
 					   	 		<div class="hisui-layout" data-options="fit:true,border:false">
 					   	 			<div data-options="region:'center',border:false" style="padding: 10px;">
 					   	 				<div id="tipDiv" style="display:none;">
-											<span class="tipAmt">应填金额：</span><a href="javascript:;" id="tipAmt" class="tipAmt" onclick="setColumnVal()"></a>
+											<span class="tipAmt">#(..Get("应填金额"))#：</span><a href="javascript:;" id="tipAmt" class="tipAmt" onclick="setColumnVal()"></a>
 										</div>
-					   	 				<table id="tPaymList"></table>
+					   	 				<table id="paymList"></table>
 					   	 			</div>
 					   	 			<div data-options="region:'east',border:false" style="width:770px;padding-right:125px;">
 					   	 				<table class="search-table" style="width:100%">
 					   	 					<tr>
-												<td class="r-label"><label>发票号</label></td>
+												<td class="r-label"><label>#(..Get("发票号"))#</label></td>
 												<td>
-													<input id="currentInv" class="textbox text-bold" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+													<input id="currentInv" class="textbox text-bold" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="display:none;"></a>
 												    <input id="currentInvId" type="hidden"/>
 												</td>
-												<td class="r-label"><label>应收</label></td>
-												<td><input id="receAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/></td>
+												<td class="r-label"><label>#(..Get("应收"))#</label></td>
+												<td><input id="receAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" style="color:#008000" disabled/></td>
 												<td class="r-label"><a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-bill">账单</a></td>
 											</tr>
 											<tr>
-												<td class="r-label"><label>总金额</label></td>
+												<td class="r-label"><label>#(..Get("总金额"))#</label></td>
 												<td><input id="totalAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/></td>
-												<td class="r-label"><label>应退</label></td>
+												<td class="r-label"><label>#(..Get("应退"))#</label></td>
 												<td><input id="refAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" style="color:#ff0000" disabled/></td>
 												<td class="r-label"><a href="javascript:;" class="hisui-linkbutton biggerBtn green" id="btn-disCharge">结算</a></td>
 											</tr>
 											<tr>
-												<td class="r-label"><label>自付金额</label></td>
+												<td class="r-label"><label>#(..Get("自付金额"))#</label></td>
 												<td>
 													<input id="patShareAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/>
 													<input id="discAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" type="hidden"/>
-													<input id="payorShareAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" type="hidden"/>
+													<input id="payorAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" type="hidden"/>
 												</td>
-												<td class="r-label"><label>实收现金</label></td>
+												<td class="r-label"><label>#(..Get("实收现金"))#</label></td>
 												<td><input id="patPaidAmt" class="textbox text-bold"/></td>
 												<td class="r-label"><a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-insuPreCharge">医保预结算</a></td>
 											</tr>
 											<tr>
-												<td class="r-label"><label>医保金额</label></td>
+												<td class="r-label"><label>#(..Get("医保金额"))#</label></td>
 												<td><input id="insuAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/></td>
-												<td class="r-label"><label>找零</label></td>
+												<td class="r-label"><label>#(..Get("找零"))#</label></td>
 												<td><input id="recOrBackMoney" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/></td>
 												<td class="r-label"><a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-cancelCharge">取消结算</a></td>
 											</tr>
 											<tr>
-												<td class="r-label"><label>结算押金</label></td>
+												<td class="r-label"><label>#(..Get("结算押金"))#</label></td>
 												<td>
-													<input id="totalDepAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" type="hidden"/>
-													<input id="selDepAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/><a id="btn-depList" href="javascript:;" title="押金明细" class="hisui-linkbutton hisui-tooltip" data-options="iconCls:'icon-mnypaper-ok',plain:true,position:'bottom'"></a>
+													<input id="selDepAmt" class="hisui-numberbox textbox text-bold" data-options="precision:2" disabled/><a id="btn-depList" href="javascript:;" title="#(..Get("押金明细"))#" class="hisui-linkbutton hisui-tooltip" data-options="iconCls:'icon-mnypaper-ok',plain:true,position:'bottom'"></a>
 												</td>
 												<td colspan="2"></td>
 												<td class="r-label"><a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-insuCancelDivide">取消医保结算</a></td>
 											</tr>
 					   	 				</table>
 					   	 				<div id="depositDlg" style="padding:10px;display:none;">
-											<table id="tDepositList"></table>
+											<table id="depositList"></table>
 										</div>
 					   	 			</div>
 					   	 		</div>
 					   	 	</div>
 						</div>
 					</div>
-					<div id="addDepositTab" title="交押金">
-	    			</div>
-	    			<div id="refDepositTab" title="退押金">   
-	    			</div>
-	    			<div id="halfBillByOrdTab" title="医嘱拆分账单">
-	    			</div>
-	    			<div id="billDetailTab" title="患者费用明细">
-	    			</div>
-	    			<div id="searchDepDet" title="押金明细查询">
-	    			</div>
-	    			<div id="admOrderFee" title="医嘱费用查询">
-	    			</div>
-	    			<div id="searchTarFee" title="收费项目查询">
-	    			</div>
+					<server>
+					if (+GSRowID>0) {
+						set rowId=0
+						while($o(^DHCBILLGROUPSETTABSi(0,"GROUPSETDR",GSRowID,rowId))) {
+							set rowId=$o(^DHCBILLGROUPSETTABSi(0,"GROUPSETDR",GSRowID,rowId))
+							set data=$g(^DHCBILLGROUPSETTABS(rowId))
+							continue:(data="")
+							set myBTDR=$p(data,"^",2)
+							continue:(+myBTDR=0)
+							set tabsData=$g(^DHCBILLTABS(myBTDR))
+							set isActive=$p(tabsData,"^",4)
+							continue:(isActive="N")
+							set myType=$p(tabsData,"^",5)
+							continue:("IPB"'=myType)
+							set id=$p(tabsData,"^",1)
+							set title=$p(tabsData,"^",2)
+							set url=$p(tabsData,"^",3)
+							w "<div id='"_id_"' title='"_title_"' data='"_url_"'></div>",!
+						}
+					}
+					</server>
 				</div>
 			</div>
 		</div>
 	</div>
-	<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcbill.ipbill.config.js'></script>
-	<script type='text/javascript' src='../scripts/dhcbill/dhcipbill/dhcbill.ipbill.charge.checkfee.js'></script>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.charge.main.js"></script>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.charge.common.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.common.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.config.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.charge.checkfee.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.charge.main.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.charge.common.js"></script>
 </body>
 </html>

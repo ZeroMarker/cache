@@ -16,27 +16,50 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<ADDINS/>
-	
+	<DOCCARD medStepCode="PEBill"></DOCCARD>	
 <style>
-   
+.r-label{
+	padding-left: 20px;
+}
+.r-labelnew{
+	padding-left: 10px;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.datagrid-row-selected .icon-paper:before{color:#000000;}
 </style>
 <SCRIPT language="Cache" RUNAT="SERVER"> 
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+//d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+s CTLOCID=%session.Get("LOGON.CTLOCID")
 set CashierMin=$g(^DHCPESetting("DHCPE","CashierMin"))
 set SpecialPayModes=$g(^DHCPESetting("DHCPE","SpecialPayModes"))
-set PayModeDR=$g(^DHCPESetting("DHCPE","InvDefaultPayMode"))
-set ListFlag=$g(^DHCPESetting("DHCPE","InvListFlag"))
+set PayModeDR=$g(^DHCPESetting("DHCPE","InvDefaultPayMode",CTLOCID))
+set ListFlag=$g(^DHCPESetting("DHCPE","InvListFlag",CTLOCID))
 d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-set roundingitem=$g(^DHCPESetting("DHCPE","RoundingFee"))
-set minroundingfee=$g(^DHCPESetting("DHCPE","RoundingFeeLimitMin"))
+set roundingitem=$g(^DHCPESetting("DHCPE","RoundingFee",CTLOCID))
+set minroundingfee=$g(^DHCPESetting("DHCPE","RoundingFeeLimitMin",CTLOCID))
 s ADMType=%request.Get("ADMType")
 s GIADM=%request.Get("GIADM")
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+//w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
 w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
-w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+//w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+//w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+//w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
 
+s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+    if (UIVersion="lite"){  
+		s LineColor="border:1px solid #E2E2E2; "
+		s LineColorNew="#E2E2E2; "
+		s CardTypeComboWidth=120
+	}else{
+		s LineColor="border:1px solid #CCCCCC; "
+		s LineColorNew="#CCCCCC; "
+		s CardTypeComboWidth=90
+	}
 </SCRIPT> 
 <script type="text/javascript">
 	var TransADMType="#(ADMType)#"
@@ -49,26 +72,27 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
 	var minroundingfee="#(minroundingfee)#"
 	var roundingitem="#(roundingitem)#"
 	var PreCashier=0
+	var CurtRegNo=""
 </script>
 
 </head>
 <body>
-<div class="hisui-layout" data-options="fit:true" border="false" id="cashierpanel">
+<div class="hisui-layout" data-options="fit:true" border="false" id="cashierpanel"  style="background-color:inherit;">
 
 
- <div data-options="region:'north',border:false" style="height:300px;padding:10px 10px 0px 10px;">
+ <div data-options="region:'north',border:false" style="height:290px;padding:10px 10px 0px 10px;background-color:inherit;">
  <div class="hisui-panel" data-options="title:'费用管理',headerCls:'panel-header-gray',iconCls:'icon-mnypaper-cfg'">
 	
 	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:240px;">
 
-    <div data-options="region:'west',split:false,collapsible:false,headerCls:'panel-header-gray',border:false" style="width:420px;">
+    <div data-options="region:'west',split:false,collapsible:false,headerCls:'panel-header-gray',border:false" style="width:422px;">
         
         <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
         <input type="hidden" id="Counter"/>
         
         <tr>
-          <td align="right" style="width:60px;">
-            <label for="CardNo">卡号</label>
+          <td align="right" style="width:80px;">
+            <label for="CardNo">#(..Get("卡号"))#</label>
           </td>
           <td style="width:110px;">
             <div>
@@ -76,35 +100,35 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
           </td>
           <td colspan="2" align="left">
             <div>
-              <select class="hisui-combobox" type="text" Id="CardType" name="CardType" style="width:110px;" editable="false"></select>
+              <select class="hisui-combobox" type="text" Id="CardType" name="CardType" style="width:#(CardTypeComboWidth)#px;" editable="false"></select>
               <a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></div>
           </td>
         </tr>  
         <tr>
           <td align="right">
-           <label for="RegNo">登记号</label>
+           <label for="RegNo">#(..Get("登记/体检号"))#</label>
           </td>
          <td> 
-         <input class="hisui-validatebox textbox" type="text" Id="RegNo" style="width:110px;"/></div>
+         <input class="textbox" type="text" Id="RegNo" style="width:110px;"/></div>
          </td>
-          <td align="right" style="width:75px;">
-           <label for="Name">姓名</label>
+          <td style="width:56px;">
+           <label for="Name">&emsp;&emsp;#(..Get("姓名"))#</label>
           </td>
          <td> 
-         <input class="hisui-validatebox textbox" type="text" Id="Name" style="width:110px;"/></div>
+         <input class="textbox" type="text" Id="Name" style="width:110px;"/></div>
          </td>
           </tr>
          
           <tr>
           <td align="right">
-           <label for="StartDate">开始日期</label>
+           <label for="StartDate">#(..Get("开始日期"))#</label>
           </td>
          <td> 
           <div>
               <input class="hisui-datebox" type="text" Id="StartDate" style="width:117px;"/></div>
          </td>
-          <td align="right">
-           <label for="EndDate">结束日期</label>
+          <td >
+           <label for="EndDate">#(..Get("结束日期"))#</label>
           </td>
          <td> 
           <div>
@@ -114,15 +138,19 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
          
          
          <tr>
-          <td  colspan="4" align="right">
-           <div>
-              <input class='hisui-checkbox' type="checkbox" label="启用多选" Id="MultiSelect" /></div>
+         
+          <td align="right">
+              <label>#(..Get("启用多选"))#</label>
+           </td>
+           <td>
+           <input style="padding-left:10px;" class='hisui-checkbox' type="checkbox"  Id="MultiSelect"/>
           </td>
-          
+          <td  colspan="2">
+         </td>
           </tr>
          
         </table>
-        <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;">
+        <table style="width:100%;border-collapse:separate; border-spacing:10px 10px;position:relative;top:20px;">
         <tr align="center">
           <td align="center">
            <a id="Find" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
@@ -133,7 +161,7 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
         
 	   
 	  </div>  
-	 <div data-options="region:'center',border:false">
+	 <div data-options="region:'center',border:false" style="border-radius: 3px 0 0 0;">
       <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-bottom:0;border-right:0;border-radius:0;">
 		<table class="hisui-datagrid" id="CashierTable" data-options="bodyCls:'panel-header-gray',fit:true,border:false"></table>
 			
@@ -144,27 +172,38 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
 	</div>   
 	</div>  
  </div>
- <div data-options="region:'center',border:false" style="padding:5px 10px 10px 10px;">
-  <div class="hisui-panel" data-options="title:'结算费用',headerCls:'panel-header-gray',iconCls:'icon-fee',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+ <div data-options="region:'center',border:false" style="padding:5px 10px 10px 10px;background-color:inherit;">
+  <div class="hisui-panel" data-options="title:'结算费用',headerCls:'panel-header-gray',iconCls:'icon-fee',fit:true" style="border:#(LineColor)#;border-top:0;border-radius:0,0,4px,4px;">
 	
-	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:400px;">
-
-    <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false" style="height:180px;">
-     <table class="hisui-datagrid" id="PreAuditPayTable" data-options="bodyCls:'panel-header-gray',border:false"></table>
-  	</div>
+	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:470px;">
+	
+    <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false" style="height:180px;border-bottom:border:#(LineColor)#; border-radius:0 0 0 0;">
+    
+    <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="height:180px;border-top:0;border-bottom:#(LineColor)#;border-right:0;border-left:0;border-radius:0 0 0 0;">
+	
+    
+     <table class="hisui-datagrid" id="PreAuditPayTable" data-options="bodyCls:'panel-header-gray',border:false" style="height:179px;border-bottom:#(LineColor)#;"></table>
+  	</div></div>
   	
-  	<div data-options="region:'east',headerCls:'panel-header-gray',border:false" style="width:450px;padding:10px;border:1px dashed #ccc;border-top:0;border-bottom:0;border-right:0;">
+  	 <div data-options="region:'center',border:false" style="padding:5px 10px 10px 10px;background-color:inherit;">
+  <div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-fee',fit:true" style="border:0px;">
+	
+	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:270px;">
+	
+    
+  	
+  	<div data-options="region:'east',headerCls:'panel-header-gray',border:false" style="width:450px;padding:10px;border:0;">
   
    	<table style="border-collapse:separate; border-spacing:4px 4px;">
   	
   	
   		<tr>
           <td align="left">
-           <label>应付金额</label>
+           <label>#(..Get("应付金额"))#</label>
           </td>
          
           <td align="left">
-           <label><font color="red">*</font>找零</label>
+           <label><font color="red">*</font>#(..Get("找零"))#</label>
           </td>
         
          
@@ -189,14 +228,14 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
   	
   		<tr>
   		 <td align="left">
-           <label>凑整费</label>
+           <label>#(..Get("凑整费"))#</label>
           </td>
           <td align="left">
-           <label>凑整类型</label>
+           <label>#(..Get("凑整类型"))#</label>
           </td>
          
           <td align="left">
-           <label>凑整备注</label>
+           <label>#(..Get("凑整备注"))#</label>
           </td>
           <td align="left">
            
@@ -234,10 +273,10 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
   	
   		<tr>
           <td align="left">
-           <label>费别</label>
+           <label>#(..Get("费别"))#</label>
           </td>
           <td align="left">
-          <label>医疗类别</label>
+          <label>#(..Get("医疗类别"))#</label>
           </td>
           <td align="left">
           </td>
@@ -258,14 +297,23 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
           </td> 
           
            <td>
-           <div><a id="BBilled" href="#" class="hisui-linkbutton" style="width:100px;">结算</a></div>
+           <div><a id="BBilled" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="width:100px;">结算</a></div>
           </td>
           <td>
-           <div><a id="BPrintDetail" href="#" class="hisui-linkbutton" style="width:100px;">明细打印</a></div>
+           <div><a id="BPrintDetail" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true" style="width:100px;">明细打印</a></div>
           </td>
            
           
-  		</tr>
+  	</tr>
+       	<tr>
+  		
+  	 <td></td>
+  	  <td></td>
+          <td>
+           <div><a id="BMerge" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true" style="width:100px;">费用合并</a></div>
+          </td>
+  	</tr>
+
   		
      </table>
      
@@ -274,7 +322,7 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
   	</div>
   	
   	
-  	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px;">
+  	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px 10px 10px 0px;">
    
   	<table id="PayModeTable" style="border-collapse:separate; border-spacing:4px 4px;">
   	
@@ -286,19 +334,19 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
   		
   		<tr>
           <td align="left">
-           <label><font color="red">*</font>支付方式</label>
+           <label><font color="red">*</font>#(..Get("支付方式"))#</label>
           </td>
          
           <td align="left">
-           <label><font color="red">*</font>付款金额</label>
+           <label><font color="red">*</font>#(..Get("付款金额"))#</label>
           </td>
          
           <td align="left">
-           <label>号码</label>
+           <label>#(..Get("号码"))#</label>
           </td>
           
           <td align="left">
-           <label>备注</label>
+           <label>#(..Get("备注"))#</label>
           </td>
           <td align="left">
           </td>
@@ -324,7 +372,8 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
           </td>
           
           <td>
-          	<a href="#" onclick='AddPayMode()'><img src='../scripts_lib/hisui-0.1.0/dist/css/icons/add.png' border=0 /></a>
+          <div><span onclick='AddPayMode()' style='cursor:pointer;padding:0 10px 0px 3.16px;' class='icon-add' title='费用'></span></div>
+          	<!--a href="#" onclick='AddPayMode()' class="icon-add"></a-->
            </td>
         </tr>
          
@@ -337,20 +386,20 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
   	
   		<tr>
           <td align="left">
-           <label>发票名称</label>
+           <label>#(..Get("发票名称"))#</label>
           </td>
          
           <td align="left">
-           <label>纳税人识别号</label>
+           <label>#(..Get("纳税人识别号"))#</label>
           </td>
          
           <td align="left">
-           <label>当前发票号</label>
+           <label>#(..Get("当前发票号"))#</label>
           </td>
           
          
           <td align="right">
-          <div><input class='hisui-checkbox' type="checkbox" label="不打发票" Id="NoPrintInv" /></div>
+          <div><input class='hisui-checkbox' type="checkbox" Id="NoPrintInv"/><label>#(..Get("不打发票"))#</label></div>
           </td>
         </tr>
   	
@@ -368,7 +417,7 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
           </td>
           
           <td align="right">
-          	<div><input class='hisui-checkbox' type="checkbox" label="医保结算" Id="InsuPay" /></div>
+          	<div><input class='hisui-checkbox' type="checkbox"  Id="InsuPay" /><label>#(..Get("医保结算"))#</label></div>
           </td>
           
          
@@ -376,20 +425,27 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
          
         </table>
    	
-  	</div>
+  	</div></div></div></div>
   	
   
   	</div>
   </div>			
  </div>	
  
- <div data-options="region:'east',border:false" style="width:400px;padding:5px 10px 10px 0px;">
- <div class="hisui-panel" data-options="title:'结算费用明细',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+ <div data-options="region:'east',border:false" style="width:400px;padding:5px 10px 10px 0px;background-color:inherit;">
+ <div class="hisui-panel" data-options="title:'结算费用明细',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="#(LineColor)# border-top:0;border-radius:0,0,4px,4px;background-color:inherit;height: 431px;">
+ 	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:469px;">
  	<table class="hisui-datagrid" id="FeeListTable" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
+ 	</div>
  </div>	
  </div>	
 </div>
 
+<!--拆分弹窗-->
+<div id="SplitWin" style="overflow:hidden;"></div>
+
+<!--费用弹窗-->
+<div id="FeeSplitWin" style="overflow:hidden;"></div>
 
   <script type="text/javascript" src="../scripts/dhcpecashier.hisui.js"></script>
   <script type="text/javascript" src="../scripts/DHCPEPayService.js"></script>
@@ -415,13 +471,14 @@ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##c
   <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
   
   
-   <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
-    <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
-     <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
-      <script type="text/javascript" src="../scripts/DHCPECashierEx.js"></script>
-       <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
-        <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
-         <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECashierEx.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+  <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+  <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
   <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="UIF-8"></script>
+
 </body>		
 </html>

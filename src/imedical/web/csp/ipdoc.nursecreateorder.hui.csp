@@ -28,14 +28,20 @@ if (EpisodeID'=""){
 	s PatientID=%request.Get("PatientID") 
 	s PatientNo=$p(^PAPER(PatientID,"PAT",1),"^",1)
 }*/
+Set langid=20
+if ($d(%session))&&($d(%session.Data)){
+    set langid=+$g(%session.Data("LOGON.LANGID"))
+}
 s wradId=%session.Get("LOGON.WARDID")
 s wardDesc=""
 if (wradId'=""){
 	s wardDesc=$p(^PAWARD(wradId),"^",2)
+	s wardDesc=##class(User.PACWard).GetTranByDesc("WARDDesc",wardDesc,langid)
 }
 s sysDateFormat=##class("websys.Conversions").DateFormat()
 s defStartDate=##class(websys.Conversions).DateLogicalToHtml(+$h+1)
 s defEndDate=##class(websys.Conversions).DateLogicalToHtml(+$h+2)
+
 </Server>
 </head>
 <body>

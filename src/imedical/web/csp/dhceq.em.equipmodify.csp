@@ -7,18 +7,20 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
 <script language=Cache runat=server>
-	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode(require)
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	d ##class(web.DHCEQCommon).InitLodopPrint()		//加载Lodop打印插件及js czf 2022-01-22
 	s RowIDs=$Get(%request.Data("RowIDs",1))
 	s LocationOperMethod=##class(web.DHCEQCommon).GetSysInfo("201008")
 	s GetPath=##class(web.DHCEQStoreMoveSP).GetPath()
-	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	//add by wl 2019-12-14 WL0025 条码打印的分隔符
-	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")   //add by wl 2019-12-14 WL0029
-	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")   //Modefined by zc0060 20200327  增加润乾预览标志 
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
 	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+	s QXType=$Get(%request.Data("QXType",1))
 </script>
 <body class="hisui-layout" >
 	<div data-options="region:'center',border:false" style="padding:10px;">
@@ -30,16 +32,33 @@
 			</div>
 			<div class="eq-table">
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label for="KeeperDR_SSUSRName">使用人</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.SSUser'" id="KeeperDR_SSUSRName"></div>
+					<div class="eq-table-td eq-table-label"><label for="KeeperDR_SSUSRName">保管人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="KeeperDR_SSUSRName"></div>	<!--czf 20210126 1750643人员放大镜错误-->
+					<div class="eq-table-td eq-table-label"><label for="PurposeTypeDR_PTDesc">用途</label></div>		<!--Add by zc0125 2022-11-14 增加用途-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.PurposeType'" id="PurposeTypeDR_PTDesc"></div>	<!--Add by zc0125 2022-11-14 增加用途-->
+				</div>
+				<!--Modify by zx 2020-08-18 ZX0102-->
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label for="UserDR_SSUSRName">使用人</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="UserDR_SSUSRName"></div>	<!--czf 20210126 1750643人员放大镜错误-->
+					<div class="eq-table-td eq-table-label"><label for="BuyTypeDR_BTDesc">采购方式</label></div>														<!--Add by zc0125 2022-11-14 增加采购方式-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.BuyType'" id="BuyTypeDR_BTDesc"></div>	<!--Add by zc0125 2022-11-14 增加采购方式-->
 				</div>
 				<div class="eq-table-tr">
 					<div class="eq-table-td eq-table-label"><label for="LocationDR_LDesc">存放地点</label></div>
 					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Locaton'" id="LocationDR_LDesc"></div>
+					<div class="eq-table-td eq-table-label"><label for="CountryDR_CTCOUDesc">国别/地区</label></div>													<!--Add by zc0125 2022-11-14 增加国别-->
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Country'" id="CountryDR_CTCOUDesc"></div><!--Add by zc0125 2022-11-14 增加国别-->
 				</div>
-				<!-- Mozy0247	1190758	2020-02-17 -->
+				<!--	MZY0153	3244481		2023-02-20	调整位置-->
 				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label for="AccountNo">凭证号</label></div>
+					<div class="eq-table-td eq-table-label"><label for="ManageLocDR_MDesc">管理部门</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="ManageLocDR_MDesc"></div>
+					<div class="eq-table-td eq-table-label"><label for="BrandDR_BDesc">品牌</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Brand'" id="BrandDR_BDesc"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cAccountNo" for="AccountNo">凭证号</label></div>
 					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AccountNo"></div>
 				</div>
 			</div>
@@ -50,7 +69,7 @@
 				<a id="BClose" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">关闭</a>
 			</div>
 		</div>
-		<div class="hisui-panel" data-options="border:false" style="padding:5px 0 10px 0;">
+		<div class="hisui-panel" data-options="border:false" style="padding:5px 0 10px 0;" id="PrintContainer">
 			<div class="eq-table">
 				<div class="eq-table-tr">
 					<div class="eq-table-td eq-table-item">批量打印</div>
@@ -59,7 +78,10 @@
 			<div style="text-align:center;">
 				<a id="BPrintBar" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-print"  data-options="stopAllEventOnDisabled:true">条码打印</a>
 				&nbsp;&nbsp;&nbsp;&nbsp;
-				<a id="BPrintCard" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-card"  data-options="stopAllEventOnDisabled:true">卡片打印</a>
+				<!--MZY0069		1736224,1736431		2021-02-18-->
+				<a id="BPrintCard" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-card"  data-options="stopAllEventOnDisabled:true">卡片(正面)打印</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a id="BPrintCardVerso" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-w-card"  data-options="stopAllEventOnDisabled:true">卡片(背面)打印</a>
 			</div>
 		</div>
 	</div>
@@ -71,16 +93,23 @@
 			<INPUT type="hidden" id="KeeperDR">
 			<input type="hidden" id="LocationOperMethod" value=#(LocationOperMethod)#>
 			<input type="hidden" id="GetRepPath" value=#(GetPath)#>
-			<input type="hidden" id="SplitRowCode" value="#(SplitRowCode)#"> <!--add by wl 2019-12-14 WL0025-->
-			<input type="hidden" id="PrintFlag" value="#(PrintFlag)#"> <!--add by wl 2019-12-14 WL0029-->
-			<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> <!--Modefined by zc0060 20200327  增加润乾预览标志-->
+			<input type="hidden" id="SplitRowCode" value="#(SplitRowCode)#">
+			<input type="hidden" id="PrintFlag" value="#(PrintFlag)#">
+			<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
 			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+			<INPUT type="hidden" id="UserDR">
+			<INPUT type="hidden" id="BrandDR"> <!--Add by QW QW20220426 BUG:QW0159-->
+			<INPUT type="hidden" id="ManageLocDR"> <!--Add by MYL 20220816-->
+			<INPUT type="hidden" id="CountryDR"> <!--Add by zc0125 2022-11-14 增加国别-->
+			<INPUT type="hidden" id="PurposeTypeDR"> <!--Add by zc0125 2022-11-14 增加用途-->
+			<INPUT type="hidden" id="BuyTypeDR"> <!--Add by zc0125 2022-11-14 增加采购方式-->
 		</form>
 	</div>
-	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script> <!--add by wl 2019-12-14 WL0025-->
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
 	<script type='text/javascript' src='../scripts/dhceq/em/equipmodify.js'></script>
 	<script type='text/javascript' src='../scripts/dhceq/plat/printbar.js'></script>
 	<script type='text/javascript' src='../scripts/dhceq/plat/printbarqrcode.js'></script>
-	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script><!-- add by wl 2019-12-16 WL0029-->
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
 </body>
 </html>

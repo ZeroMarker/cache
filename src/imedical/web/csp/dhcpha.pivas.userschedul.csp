@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--人员排班日历
-	csp:dhcpha.pivas.userschedul.csp
-	js: scripts/pharmacy/pivas/userschedul.js
+<!--
+    人员排班日历
+	csp: csp/dhcpha.pivas.userschedul.csp
+	js:  scripts/pharmacy/pivas/userschedul.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,96 +16,135 @@
     </title>
     <TRAK:HEAD>
     </TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/fullcalendar-2.0.2/dist/fullcalendar.css">
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/fullcalendar-2.0.2/dist/moment.min.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/fullcalendar-2.0.2/dist/fullcalendar.min.js"></script>
     <style>
+        .pha-body {
+            background-color: #fff;
+        }
+
+        .layout {
+            background-color: #fff;
+        }
+
         .fc-other-month {
-            background-image: linear-gradient(135deg,rgba(0,0,0,.03) 25%,transparent 25%,transparent 50%,rgba(0,0,0,.03) 50%,rgba(0,0,0,.03) 75%,transparent 75%,transparent);
+            background-image: linear-gradient(135deg, rgba(0, 0, 0, .03) 25%, transparent 25%, transparent 50%, rgba(0, 0, 0, .03) 50%, rgba(0, 0, 0, .03) 75%, transparent 75%, transparent);
             background-color: #FAFCFD;
             background-size: 16px 16px;
         }
 
 
-        .fc-sun, .fc-sat {
+        .fc-sun,
+        .fc-sat {
             background-color: #f4f4f4;
             background-size: 16px 16px;
         }
-		.fc-event-inner{
-			padding-left:10px
-		}
-		.batch-title{
-			color:#007ACF;
-			font-size:15px;
-			font-weight:bold;
-			padding-left:10px
-		}
-		.batch-title-sign{
-			height:14px;
-			margin-top: 3px;
-			border-left:5px solid #007ACF;
-			float:left;
-			margin-right: 10px;
-			}
 
+        .fc-event-inner {
+            padding-left: 10px
+        }
+
+        .fc-button-next,
+        .fc-button-prev {
+            background: #fff;
+            border: 0 !important;
+            border-radius: 0px !important;
+            box-shadow: none;
+        }
+
+        .fc-other-month {
+            background-size: 32px 32px;
+        }
+
+        .fc-header-right {
+            width: initial;
+            text-align: left;
+        }
+
+        .fc-header-left {
+            width: initial;
+            text-align: right;
+        }
+
+        .fc-header-title h2 {
+            color: #000;
+        }
+
+        .fc-header {
+            margin-bottom: -5px;
+        }
+
+        .batch-title {
+            color: #007ACF;
+            font-size: 15px;
+            font-weight: bold;
+            padding-left: 10px
+        }
+
+        .batch-title-sign {
+            height: 14px;
+            margin-top: 3px;
+            border-left: 5px solid #007ACF;
+            float: left;
+            margin-right: 10px;
+        }
+
+        .hisui-validatebox {
+            border-radius: 2px;
+        }
     </style>
 </HEAD>
 
-<body>
-    <div class="hisui-layout"  fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
-		    <div class="hisui-layout" fit="true">
-		        <div data-options="region:'west',width:200,split:true,title:'',headerCls:'panel-header-gray',iconCls:'icon-molecule'" class="dhcpha-hisui-border" style="border-radius: 4px;">
-		            <div id="gridUser">
-		            </div>
-		        </div>
-		     	<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-molecule',border:false" >
-		            <div class="hisui-layout" fit="true">
-				        <div data-options="region:'center',split:true,width:800,title:'',headerCls:'panel-header-gray',iconCls:'icon-molecule'" class="dhcpha-hisui-border" style="border-radius: 4px;padding:10px">
-				            <div id="calUserSche">
-				            </div>
-				        </div>	
-				        <!--div  data-options="region:'center',title:'存假信息',headerCls:'panel-header-gray',iconCls:'icon-molecule'"-->
-				        <div style="display:none">
-				            <div>
-								<div class="batch-title"> 
-									<div class="batch-title-sign"></div>
-										年假
-								</div>
-								<div style="padding-left:25px">
-									10天
-								</div>
-				            </div>
-				            <div>
-								<div class="batch-title"> 
-									<div class="batch-title-sign"></div>
-										存假
-								</div>
-								<div style="padding-left:25px">
-									15天
-								</div>
-				            </div>
-				        </div>
-		            </div>	
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',width:200,split:true,title:'',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-molecule'">
+                    <div id="gridUser">
+                    </div>
+                </div>
+                <div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-molecule',border:false">
+                    <div class="hisui-layout" fit="true">
+                        <div data-options="region:'center',split:true,width:800,title:'',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-molecule'" class="pha-body" style="background-color: #fff;">
+                            <div id="calUserSche">
+                            </div>
+                        </div>
+                        <!--div  data-options="region:'center',title:'存假信息',headerCls:'panel-header-gray',iconCls:'icon-molecule'"-->
+                        <div style="display:none">
+                            <div>
+                                <div class="batch-title">
+                                    <div class="batch-title-sign"></div>
+                                    年假
+                                </div>
+                                <div style="padding-left:25px">
+                                    10天
+                                </div>
+                            </div>
+                            <div>
+                                <div class="batch-title">
+                                    <div class="batch-title-sign"></div>
+                                    存假
+                                </div>
+                                <div style="padding-left:25px">
+                                    15天
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-		        </div>   
-		    </div>
-	    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="gridUserBar">
-    	<table style="width:100%">
-    		<tr>
-                <td>
-                    <input id="txtAlias" class="hisui-validatebox" placeholder="检索条件..."/>
-                </td>
-		    </tr>
-		</table>	   
+    <div id="gridUserBar" class="pha-con-datagrid-toolbar" style="padding:10px;">
+        <input id="txtAlias" class="hisui-validatebox" placeholder="检索条件..." style="width: calc(100% - 7px);" />
     </div>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/fullcalendar-2.0.2/dist/fullcalendar.css"></link>
-	<script type="text/javascript" src="../scripts/pharmacy/plugins/fullcalendar-2.0.2/dist/moment.min.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/plugins/fullcalendar-2.0.2/dist/fullcalendar.min.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+
     <script type="text/javascript" src="../scripts/pharmacy/pivas/userschedul.js"></script>
 </body>
 

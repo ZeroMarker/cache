@@ -1,0 +1,109 @@
+<!--
+*
+*文件名称：insu/com/uploadfile.csp
+*功能说明：通用上传测试
+*修改履历：巩鑫  2023-01-03
+*
+-->
+<html>
+<head>
+	<title>uploadfile.csp</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<EXTHEALTH:HEAD/>   
+	<script type="text/javascript" >
+	 var linkElement = document.createElement('link');
+    //设置 linkElement 的src 为外部CSS文件的路径
+	if ("undefined"==typeof parent.window.HISUIStyleCode || parent.window.HISUIStyleCode==""){
+       // 炫彩版
+     linkElement.rel="stylesheet";  
+	 linkElement.type="text/css";
+	 linkElement.href = '../../../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css';
+     }else if (parent.window.HISUIStyleCode=="lite"){
+       // 极简版
+	linkElement.rel="stylesheet";
+	linkElement.type="text/css";
+    linkElement.href = '../../../scripts_lib/hisui-0.1.0/dist/css/hisui.lite.min.css';
+    }else{
+       // 炫彩版
+	linkElement.rel="stylesheet"; 
+	 linkElement.type="text/css";
+	 linkElement.href = '../../../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css';
+     }
+    //在head 中加上 linkElement 元素
+    document.head.appendChild(linkElement);
+    </script>
+ 	<script type="text/javascript" src="../../../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+ 	<script type="text/javascript" src="../../../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../../../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.lite.min.js" charset="utf-8"></script>
+ 	<script type="text/javascript" src="../../../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+ 	<script type="text/javascript" src="../../../scripts/websys.js"></script>
+ 	<script type="text/javascript" src="../../../scripts/websys.jquery.js" charset="utf-8"></script>
+ 	<link rel="stylesheet" type="text/css" href="../../../scripts/dhcbill/themes/default/dhcbill.css">
+	<script type="text/javascript" src="../../../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../../../scripts/dhcbill/common/dhcbill.common.js"></script>
+    <script type="text/javascript" src="../../../scripts/insu/com/uploadfile.js"></script>		
+    <script type='text/javascript' src='../../../scripts/dhcinsu/dhcinsu.regappy.js'></script>
+	<style>
+
+		/* +gongxin 提示删除数据方法*/
+		#mytitleimg , #mytitle{
+        position: absolute;
+        color: #ffffff;
+        max-width: 400px;
+        font-size: 14px;
+        padding: 4px;
+        background: rgba(40, 40, 40, 0.8);
+        border: solid 1px #e9f7f6;
+        border-radius:5px;
+    }
+	</style>
+</head> 
+
+<body style="padding:0"  >
+	<div class="hisui-tabs tabs-gray" id="FileTabs" data-options="tabPosition:'left',fit:true,border:true,headerWidth:85," style="border-radius:4px 4px 4px 4px">   
+		<div  id="uploadFile" title="上传文件" style="padding:1px 0px 1px 0px"> 
+			<div  id='uploadFileArea' style="height:39px;" >
+				<div   class="rowField" >
+					<input type="hidden" id="ProofType" name='ProofType' value="#($g(%request.Data("ProofType",1)))#"/>  <!-- 上传文件类型（在字典中进行定义） -->
+					<input type="hidden" id="TargetRecDr" name='TargetRecDr' value="#($g(%request.Data("TargetRecDr",1)))#"/>        <!-- 所属数据Dr -->
+					<input type="hidden" id="OpenMode" name='OpenMode' value="#($g(%request.Data("OpenMode",1)))#"/>        <!-- 打开模式 0 上传模式 1 查看模式-->
+					<input type="hidden" id="ExtStr" name='ExtStr' value="#($g(%request.Data("ExtStr",1)))#"/>              <!-- 扩展字符串 --> 
+					<input type="hidden" id="UserDr" name='UserDr' value="#(%session.Get("LOGON.USERID"))#"/>
+					<input type="hidden" id="fileMaxSize" name='fileMaxSize' value="#($g(%request.Data("fileMaxSize",1)))#"/>        <!-- 文件最大大小          单位M (默认为2)-->
+					<input type="hidden" id="FileExtStrs" name='FileExtStrs' value="#($g(%request.Data("FileExtStrs",1)))#"/>              <!-- 文件格式后缀字符串  "txt,png,jpg,..."(默认为图片格式) --> 
+					<input type="hidden" id="ProoFileMaxNum" name='ProoFileMaxNum' value="#($g(%request.Data("ProoFileMaxNum",1)))#"/>   <!-- 最大保存文件个数    (默认为5) --> 
+	
+					<table id="OperatTable" style="width:100%;padding:7px 10px 10px 10px">
+           				<tr >
+                 			<td style="width:clac(100%-150px);">
+                 				<input style="width:580px" id="Picture" type=file name='FileStream' class="textbox"> 
+							</td>
+							<td style="width:200px;">
+								<a href="#" id='btnSave' onclick=""
+					      		class="hisui-linkbutton" style="height:28px; margin-left:10px" >上传文件</a>
+					       
+                 				<a href="#" id='btnClean' onclick=""
+					      		class="hisui-linkbutton" style="height:28px; margin-left:10px" >清空</a>
+							</td>
+          	 			</tr>
+	    			</table>
+				</div>
+	  		</div>
+		</div>
+
+		<div title="附件" style="">
+			  <div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="height:47px;" id="attachDiv">
+					<div class="hisui-tabs tabs-keywords" style="padding:5px 10px 5px 5px;" id="attachType"></div>
+	  			</div>
+				<div data-options="region:'center',title:'',border:false" style="padding:0 5px 10px 0px;">
+					<div id="attach">
+					</div>
+				</div>
+    		</div>
+		</div>
+	</div>	
+	
+</body>
+
+</html>

@@ -21,9 +21,10 @@
    	s style=$Get(%request.Data("style",1))
    	s flag=$Get(%request.Data("flag",1))
    	s chkrelflag=$Get(%request.Data("ChkRelFlag",1))
+   	
    	//验证登录人员权限
    	i action="CheckPermission" d
-   	.s ret= ##class(web.DHCOUTPHA.InfoCommon).CheckPermission(gLocId,gUserId,groupId)
+   	.s ret= ##class(PHA.OP.COM.Method).CheckPermission(gLocId,gUserId,groupId)
    	.w ret
    	//卡类型
 	i action="GetCardType" d
@@ -157,5 +158,30 @@
 	.s locId=$Get(%request.Data("locId",1))
 	.s perFlag=$Get(%request.Data("perFlag",1))
 	.w ##CLASS(PHA.OP.COM.Store).jsGetPhPerList(locId,perFlag)
-
+	
+	//获取发药配药明细列表
+	i action = "GetPrescDetail" d
+	.s params=$Get(%request.Data("params",1))
+	.w ##CLASS(PHA.OP.COM.Store).JsGetPrescItm("",params)
+	
+	// 草药外送调用
+	// 获取省数据集
+	i action="GetProvinceList" d
+	.w ##class(PHA.HERB.PrescLogistics.Query).GetProvinceList(style,combotext)
+	// 获取城市数据集
+	i action="GetCityList"  d
+	.s provId=$Get(%request.Data("provId",1))
+	.w ##class(PHA.HERB.PrescLogistics.Query).GetCityList(style,combotext,provId)
+	// 获取地域数据集
+	i action="GetCityAreaList" d
+   	.s cityrowid=$Get(%request.Data("cityrowid",1))
+	.w ##class(PHA.HERB.PrescLogistics.Query).GetCityAreaList(style,combotext,cityrowid)
+	// 获取草药处方取药方式数据集
+	i action="GetPrescTakeModeStore" d
+	.w ##class(PHA.HERB.PrescLogistics.Query).GetPrescTakeModeStore(style)
+	// 获取地址数据集
+	i action="GetAddressList" d 
+	.s prescno=$Get(%request.Data("prescno",1))
+	.i style="jqGrid" s page=1,rows=999
+	.w ##CLASS(PHA.HERB.PrescLogistics.Query).jsQueryGetAddressList(page,rows,prescno,style)
 </script>

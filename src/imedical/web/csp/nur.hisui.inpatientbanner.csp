@@ -1,0 +1,55 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ 	q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	s PatientListPage=""
+</script>
+<HTML lang="zh-CN">
+<head>
+    <HISUI/>
+</head>
+
+<body>
+<csp:Include Page="dhcdoc.in.patient.banner.csp"></div>
+<script language="javascript">
+var EpisodeID = "#(EpisodeID)#";
+function setPatientInfo(EpisodeID) {
+		$m({
+			ClassName: "web.DHCDoc.OP.AjaxInterface",
+			MethodName: "GetOPInfoBar",
+			CONTEXT: "",
+			EpisodeID: EpisodeID
+		}, function(html) {
+			if (html != "") {
+				$(".PatInfoItem").html(reservedToHtml(html));
+			} else {
+				$(".PatInfoItem").html("获取病人信息失败。请检查【患者信息展示】配置。");
+			}
+		});
+
+		function reservedToHtml(str) {
+			var replacements = {
+				"&lt;": "<",
+				"&#60;": "<",
+				"&gt;": ">",
+				"&#62;": ">",
+				"&quot;": "\"",
+				"&#34;": "\"",
+				"&apos;": "'",
+				"&#39;": "'",
+				"&amp;": "&",
+				"&#38;": "&"
+			};
+			return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g, function(v) {
+				return replacements[v];
+			});
+		}
+}
+if (EpisodeID !== "") {
+	setPatientInfo(EpisodeID)
+}
+    </script>
+</body>
+</html>

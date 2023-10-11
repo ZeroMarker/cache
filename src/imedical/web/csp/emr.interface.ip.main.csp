@@ -1,9 +1,15 @@
 ﻿<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
 <html>
 <head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
 	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" type="text/css" href="../scripts/emr/css/interface.ip.main.css">
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 	<script language="cache" runat="server">
 	    s episodeID = $Get(%request.Data("EpisodeID",1),"")
 		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
@@ -16,8 +22,8 @@
 		//增加验证唯一模板如果被创建,instanceId为空，重写InstanceId
 		if (instanceId="") 
 		{
-			s instanceIdbyDocID = ##class(EMRservice.BL.BLInstanceData).IsHasInstance(episodeID,"",docID)
-			s chartItemType = ##class(EMRservice.BL.BLEMRTemplateCategory).GetChartItemTypeByDocID(docID)
+			s instanceIdbyDocID = ##class(EMRservice.BL.BLInstanceData).IsHasInstance(episodeID,"",$p(docID,",",1))
+			s chartItemType = ##class(EMRservice.BL.BLEMRTemplateCategory).GetChartItemTypeByDocID($p(docID,",",1))
 			s:((chartItemType="Single")&&(instanceIdbyDocID'=0)) instanceId=instanceIdbyDocID
 		}		
 		s status = "NORMAL"
@@ -25,26 +31,28 @@
 		if (instanceId'="")
 		{
 			s objECRecord = ##class(EMRinstance.ECRecord).%OpenId($p(instanceId,"||",1))
-			s docID = objECRecord.ChartItemID
+			s docID = objECRecord.RealChartItemID
 			s characteristic = objECRecord.DocumentCharacteristic
 			s status = ##Class(EMRservice.BL.BLEMRLogs).GetEMRStatusByInstanceID(instanceId)
 		}
 		
 		
 		
-		s categoryID = ##Class(EMRservice.BL.BLClientCategory).GetCategoryIDByDocID(docID)
+		s categoryID = ##Class(EMRservice.BL.BLClientCategory).GetCategoryIDByDocID($p(docID,",",1))
 		s titleCode = $Get(%request.Data("TitleCode",1),"") 
 		if (titleCode '= "")
 		{
-			s tempParam = ##Class(EMRservice.BL.BLClientCategory).GetTempCateByTitle(docID,titleCode)
+			s tempParam = ##Class(EMRservice.BL.BLClientCategory).GetTempCateByTitle($p(docID,",",1),titleCode)
 		}
 		else
 		{
-			s tempParam = ##Class(EMRservice.BL.BLClientCategory).GetTempCateByDocID(docID,episodeID)	
+			s tempParam = ##Class(EMRservice.BL.BLClientCategory).GetTempCateByDocID($p(docID,",",1),episodeID)	
 		}	
 		//兼容后面的jQuery.parseJSON
 		s:(tempParam="") tempParam="{}"
+		s userCode = $Get(%request.Data("UserCode",1),"")
 		s userID = $Get(%request.Data("UserID",1),"")
+		s:((userID = "")&&(userCode '= "")) userID = ##Class(EMRservice.BL.BLPowerUser).GetUserId(userCode)
 		s:(userID = "") userID = %session.Get("LOGON.USERID")
 		s userLocID = $Get(%request.Data("CTlocID",1),"")
 		s:(userLocID = "") userLocID = %session.Get("LOGON.CTLOCID")
@@ -53,7 +61,8 @@
 		s displayType = $Get(%request.Data("DisplayType",1),"")
 		s navShowType = $Get(%request.Data("NavShowType",1),"")
 		s recordShowType = $Get(%request.Data("RecordShowType",1),"")
-
+		s showNav = $Get(%request.Data("ShowNav",1),"")
+		s modeType = $Get(%request.Data("ModeType",1),"")
     </script>
     <script language="javascript">
         var setting = {
@@ -87,6 +96,8 @@
 	    var docID ='#(docID)#';
 	    var navShowType ='#(navShowType)#';
 	    var recordShowType ='#(recordShowType)#';
+		var showNav = '#(showNav)#';
+		var modeType = '#(modeType)#';
     </script>
 	<title>住院病历</title>
 </head>

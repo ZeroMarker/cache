@@ -1,0 +1,73 @@
+<!--nur.hisui.confirmforvue.csp confirm弹框(vue页面适用)-->
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		.messager-button {
+			font-size:0;
+		}
+		#clearBtn {
+			margin-left:10px;
+		}
+	</STYLE>
+</head>
+<body>
+	<server>
+		s okTitle=$G(%request.Data("okTitle",1))
+		s cancelTitle=$G(%request.Data("cancelTitle",1))
+   </server>
+	<div class="hisui-panel" data-options="fit:true,border:false">
+		<div class="messager-body">
+			<div class="messager-icon messager-question"></div>
+			<div id="content" style="margin-left:42px;"></div>
+			<div class="messager-button">
+				<a href="#" class="hisui-linkbutton" id='sureBtn'>#(..Get("确定"))#</a>
+				<a href="#" class="hisui-linkbutton" id='clearBtn'>#(..Get("取消"))#</a>
+			</div>
+		</div>
+	</div>
+</body>
+<SCRIPT language = 'javascript'>
+	$(function(){
+		initConfirmWin();
+		initEvent();
+	})
+	function initConfirmWin(){
+		var opts=websys_showModal('options');
+		var confirmContent=opts.confirmContent;
+		var okTitle=opts.okTitle;
+		var cancelTitle=opts.cancelTitle;
+		$("#content").html(confirmContent);
+		if (okTitle) {
+			$('#BReadCard').linkbutton({ text: okTitle });
+		}
+		if (cancelTitle) {
+			$('#clearBtn').linkbutton({ text: cancelTitle });
+		}
+	}
+	function initEvent(){
+		$("#sureBtn").click(sureBtnClick);
+		$("#clearBtn").click(clearBtnClick);
+	}
+	function sureBtnClick(){
+		if (websys_showModal('options').CallBackFunc) {
+			 websys_showModal('options').CallBackFunc(true);
+		}
+	}
+	function clearBtnClick(){
+		if (websys_showModal('options').CallBackFunc) {
+			 websys_showModal('options').CallBackFunc(false);
+		}
+	}
+</SCRIPT>
+</html>

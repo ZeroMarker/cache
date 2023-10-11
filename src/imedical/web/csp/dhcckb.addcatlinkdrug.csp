@@ -1,0 +1,149 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<head>
+<title>分类关联药品tab</title>
+<HISUI/>
+<DHCCKB/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/common.css">	<!-- 禁止复制 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/addcatlinkdrug.js"></script>
+	<style type="text/css">	
+   </style>
+</head>
+
+<body >	
+
+<!--分类药品关联-->
+<div class="hisui-tabs tabs-gray" id="linkTab" fit="true" border=0>  
+	<div title="关联药品" id="drug" style="padding:10px;">  
+		<div id="toolbar" style="padding:0px 0px 0px 0px;">	
+			<table>			
+				<tr>
+					<td class="tdlabel">大类</td>
+					<td><input id="drugType" class="hisui-combobox" style="width:155px;"/>	</td>
+					<td class="tdlabel">药品</td>
+					<td><input id="drugDesc" class="hisui-searchbox" style="width:155px;" prompt='请输入药品名称' />	</td>
+					<td class="tdlabel">药学分类</td>
+					<td><input id="drugcat" class="hisui-combotree" style="width:200px;" /></td>
+					<td>
+					    <input class='hisui-radio' checked="true" type="radio" data-code="drug" label='已关联' name='FilterCK' value='1'>
+					    <input class='hisui-radio' type="radio" data-code="drug" label='未关联' name='FilterCK' value='2'>
+					</td>
+					<td>
+						<a id="drugSearch"  onclick="findLinkList('drug')" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-right:30px">查询</a>
+					</td>
+				</tr>
+			</table>
+			<div class="tool-bar-line" style="margin-top:4px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>
+			<talbe>
+				<tr>
+					<td>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-add-item',plain:true" id="selmulitm" onclick="selItmMulSelRow()">关联</a>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="remomulitm" onclick="revItmMulSelRow()">移除</a> 
+					</td>
+				</tr>
+			</table> 		
+		</div>
+		<table id="drugTable" data-options="fit:true"  style="border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:solid;" toolbar="#toolbar"></table>
+	</div> 
+	
+	<div title="关联通用名(带剂型)" id="genform" style="overflow:auto;padding:10px;">   
+		<div id="genformtoolbar" style="padding:0px 0px 0px 0px;">	
+			<table>			
+				<tr>
+					<td class="tdlabel">通用名(带剂型)</td>
+					<td><input id="genformDesc" class="hisui-searchbox" style="width:155px;" prompt='请输入通用名' />	</td>
+					<td class="tdlabel">药学分类</td>
+					<td><input id="genformdrugcat" class="hisui-combotree" style="width:155px;" /></td>
+					<td>
+					    <input class='hisui-radio' type="radio"  checked="true" data-code="genform" label='已关联' name='FilterCK' value='1'>
+					    <input class='hisui-radio' type="radio" data-code="genform" label='未关联' name='FilterCK' value='2'>
+					</td>
+					<td>
+						<a id="genformSearch" onclick="findLinkList('genform')" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-right:30px">查询</a>
+					</td>
+				</tr>
+			</table>
+			<talbe>
+				<tr>
+					<td>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-add-item',plain:true" id="genformset" onclick="selItmMulSelRow()" >关联</a>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="genformremove" onclick="revItmMulSelRow()" >移除</a> 
+					</td>
+				</tr>
+			</table > 
+			
+		</div>
+		<table id="genformTable" toolbar="#genformtoolbar"></table>
+	</div>  
+	 
+	<div title="关联通用名" id="gener" style="padding:10px;display:in-line;">   
+		<div id="genertoolbar" style="padding:0px 0px 0px 0px;">	
+			<table>			
+				<tr>
+					<td class="tdlabel">通用名</td>
+					<td><input id="generDesc" class="hisui-searchbox" style="width:155px;" prompt='请输入通用名' />	</td>
+					<td class="tdlabel">药学分类</td>
+					<td><input id="generdrugcat" class="hisui-combotree" style="width:155px;" /></td>
+					<td>
+					    <input class='hisui-radio' type="radio"  checked="true" data-code="gener" label='已关联' name='FilterCK' value='1'>
+					    <input class='hisui-radio' type="radio" label='未关联' data-code="gener" name='FilterCK' value='2'>
+					</td>
+					<td>
+						<a id="generSearch" onclick="findLinkList('gener')" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-right:30px">查询</a>
+					</td>
+				</tr>
+			</table>
+			<talbe>
+				<tr>
+					<td>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-add-item',plain:true" id="generset" onclick="selItmMulSelRow()">关联</a>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="generremove" onclick="revItmMulSelRow()">移除</a> 
+					</td>
+				</tr>
+			</table > 
+			
+		</div>
+		<table id="generTable" toolbar="#genertoolbar"></table>    
+	</div>  
+	
+	<div title="关联成分" id="ingr" style="padding:10px;display:in-line;">   
+		<div id="ingrtoolbar" style="padding:0px 0px 0px 0px;">	
+			<table>			
+				<tr>
+					<td class="tdlabel">成分</td>
+					<td><input id="ingrDesc" class="hisui-searchbox" style="width:155px;" prompt='请输入成分' />	</td>
+					<td class="tdlabel">药学分类</td>
+					<td><input id="ingrdrugcat" class="hisui-combotree" style="width:155px;" /></td>
+					<td>
+					    <input class='hisui-radio' type="radio" checked="true" data-code="ingr" label='已关联' name='FilterCK' value='1'>
+					    <input class='hisui-radio' type="radio" data-code="ingr" label='未关联' name='FilterCK' value='2'>
+					</td>
+					<td>
+						<a id="ingrSearch" onclick="findLinkList('ingr')" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-right:30px">查询</a>
+					</td>
+				</tr>
+			</table>
+			<talbe>
+				<tr>
+					<td>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-add-item',plain:true" id="ingrset" onclick="selItmMulSelRow()">关联</a>
+						<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="ingrremove" onclick="revItmMulSelRow()" >移除</a> 
+					</td>
+				</tr>
+			</table > 
+			
+		</div>
+		<table id="ingrTable" toolbar="#ingrtoolbar"></table>   
+	</div> 
+	
+</div>
+</body>
+</html>

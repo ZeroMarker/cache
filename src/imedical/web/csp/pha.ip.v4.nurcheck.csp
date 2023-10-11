@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!--住院移动药房-护士药品核对
+	csp: csp/pha.ip.v4.nurcheck.csp
+	js:  scripts/pha/ip/v4/nurcheck.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <link rel="stylesheet" href="../scripts/pha/ip/v4/css/ui.css">
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',border:false,height:95,split:true">
+                    <div class="hisui-panel" title="护士领药核对" data-options="headerCls:'panel-header-gray',iconCls:'icon-check-reg',fit:true,bodyCls:''" style="overflow: hidden;">
+                        <div style="float:left">
+                            <div class="pha-row">
+                                <div class="pha-col">
+                                    #(..Get("发药日期"))#
+                                </div>
+                                <div class="pha-col">
+                                    <input class="hisui-datebox" id="conStartDate">
+                                </div>
+                                <div class="pha-col">#(..Get("至"))#</div>
+                                <div class="pha-col">
+                                    <input class="hisui-datebox" id="conEndDate">
+                                </div>
+                                <div class="pha-col">
+                                    #(..Get("药房"))#
+                                </div>
+                                <div class="pha-col">
+                                    <input id="conPhaLoc">
+                                </div>
+                                <div class="pha-col">
+                                    #(..Get("病区"))#
+                                </div>
+                                <div class="pha-col">
+                                    <input id="conWardLoc">
+                                </div>
+                                <div class="pha-col">
+                                    <input class="hisui-checkbox" type="checkbox" label="已核对" id="conAudit">
+                                </div>
+
+                                <div class="pha-col">
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="float:right;padding-right:10px;border-left: 1px solid #cccccc;display:none;">
+                            <div style="float:left">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel" title="发药单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridPhac"></table>
+                    </div>
+                </div>
+                <div data-options="region:'east',width:750,border:false,split:true">
+                    <div class="hisui-layout" fit="true">
+                        <div data-options="region:'north',height:300,border:false,split:true">
+                            <div class="hisui-panel" title="药品汇总" data-options="headerCls:'panel-header-gray',iconCls:'icon-drug',fit:true,bodyCls:''">
+                                <table id="gridPhacInci"></table>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div id="tt-brand" class="hisui-tabs tabs-gray" fit="true">
+                                <div title="患者药品汇总" data-options="closable:false">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridPhacPatInci"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div title="患者药品明细" data-options="closable:false">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridPhacPatInciDetail"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--div class="hisui-panel" title="患者药品汇总" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">
+                                <table id="gridPhacPatInci"></table>
+                            </div-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridPhacBar">
+    	<div class="pha-row">
+            <div class="pha-col">
+                <input class="hisui-validatebox" placeholder="请点击选择用户" readonly id="conUser" value="" data-options="disabled:true">
+                <a class="hisui-linkbutton" id="btnChangeUser">选择用户</a>
+            </div>
+            <div class="pha-col">
+            	<a class="hisui-linkbutton" data-options="plain:false,iconCls:'icon-w-ok'" id="btnPass">核对通过</a>
+            </div>
+            <div class="pha-col">
+            	<a class="hisui-linkbutton" data-options="plain:false,iconCls:'icon-w-ok'" id="btnPassPat">核对通过(患者领药)</a>
+            </div>
+        </div>
+    </div>
+    <div id="userDialog" class="hisui-dialog" title="选择用户" data-options="iconCls:'icon-w-switch',modal:true,closed:true,width:'300',height:'auto',closable:false,
+	buttons:[{
+		text:'确定',
+		handler:function(){
+			SetConUser();
+		}
+	},{
+		text:'取消',
+		handler:function(){
+			$('#userDialog').window('close');
+		}
+	}]">
+        <div style="padding-top:10px">
+            <div class="pha-row" style="text-align:center">
+                <div class="pha-col">#(..Get("工号"))#</div>
+                <div class="pha-col"><input class="hisui-validatebox" id="conUserCode"></div>
+            </div>
+            <div class="pha-row" style="text-align:center">
+                <div class="pha-col">#(..Get("密码"))#</div>
+                <div class="pha-col"><input class="hisui-validatebox" id="conPassWord" type="password"></div>
+            </div>
+        </div>
+    </div>
+    <div id="patGetDialog" class="hisui-dialog" title="领药信息" data-options="iconCls:'icon-w-stamp',modal:true,closed:true,width:'330',height:'auto',closable:false,
+	buttons:[{
+		text:'确定',
+		handler:function(){
+			PassPat();
+		}
+	},{
+		text:'取消',
+		handler:function(){
+			$('#patGetDialog').window('close');
+		}
+	}]">
+        <div style="padding-top:10px;text-align:center;">
+            <div class="pha-row">
+                <div class="pha-col" style="width:4em;text-align:right">#(..Get("姓名"))#</div>
+                <div class="pha-col"><input class="hisui-validatebox" id="conGetName" style="width:180px"></div>
+            </div>
+            <div class="pha-row">
+                <div class="pha-col" style="width:4em;text-align:right">#(..Get("身份证号"))#</div>
+                <div class="pha-col"><input class="hisui-validatebox" id="conGetCard" style="width:180px"></div>
+            </div>
+            <div class="pha-row">
+                <div class="pha-col">
+	                <div class="pha-tip-info" style="width:215px;line-height: 28px;letter-spacing:1px;padding-left: 35px;">
+	                #(..Get("请填写并核实领药人身份信息"))#
+	                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/nurcheck.js"></script>
+</body>
+
+</html>

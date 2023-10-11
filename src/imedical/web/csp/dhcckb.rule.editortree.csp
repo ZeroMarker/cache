@@ -1,0 +1,211 @@
+<html>
+<head>
+	<HISUI/>
+	<DHCCKB/>
+	<link rel="stylesheet" type="text/css" href="../scripts/dhcnewpro/dhcckb/css/rule.editortree.css">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/rule.editortree.js"></script>
+	<script Language="Javascript">
+		var ruleId="#(%request.Get("ruleId"))#"; //ruleId
+</script>
+<style>
+body{font-size:12px;}
+</style>
+
+</head>
+<body class="" style="height:auto">
+	<!--operation 比较操作符-->
+	<ul id="operation" class="dropdown-menu dropdown-context" style="z-index: 3; top: 335px; left: 323px; display: none;">
+		<li onclick="OperaActive('大于','GreaterThen')"><a data="1">大于</a></li>
+		<li onclick="OperaActive('大于或等于','GreaterThenEquals')"><a data="1">大于或等于</a></li>
+		<li onclick="OperaActive('小于','LessThen')"><a data="1">小于</a></li>
+		<li onclick="OperaActive('小于或等于','LessThenEquals')"><a data="1">小于或等于</a></li>
+		<li onclick="OperaActive('等于','Equals')"><a data="1">等于</a></li>
+		<li onclick="OperaActive('Between','Between')"><a data="1">Between</a></li>
+		<li onclick="OperaActive('不等于','NotEquals')"><a data="1">不等于</a></li>
+	</ul>
+	<!--type 输入值类型-->
+	<ul id="inputType" class="dropdown-menu dropdown-context" style="z-index: 3; top: 400px; left: 235px; display: none;">
+		<li onclick="TypeActive('I1')"><a data="1">输入值</a></li>
+		<li onclick="TypeActive('I2')"><a data="2">输入值(带单位)</a></li>
+		<li onclick="TypeActive('I3')"><a data="3">输入值(上下线)</a></li>
+		<li onclick="TypeActive('I5')"><a data="5">选择数据集</a></li>
+	</ul>
+	<!--unit 请选择单位-->
+	<ul id="unit" class="dropdown-menu dropdown-context" style="font-size: 12px; z-index: 3; top: 371px; left: 339px; display: none;">
+		<server>
+   	   	s unitId = ##class(web.DHCCKBCommon).GetUnitData()
+		d ##class(web.DHCCKBRuleEditor).QueryDictonHtml(unitId)
+   	   </server>
+	</ul>
+	<!--variate 请选择变量-->
+	<ul id="drugattr" class="dropdown-menu dropdown-context" style="z-index: 3; top: 335px; left: 323px; display: none;">
+		<server>
+			d ##class(web.DHCCKBRuleEditor).QueryDrugAttr()
+		</server>
+	</ul>
+	<!--variate 数据集面板-->
+	<ul id="dataset" class="dropdown-menu dropdown-context" style="z-index: 3; top: 335px; left: 323px; display: none;">	
+	</ul>
+	<!--下拉框选择-->
+	<ul id="combox" class="dropdown-menu dropdown-context" style="font-size: 12px; z-index: 3; top: 254px; left: 204px; display: none;">
+		<li onclick="chooseCombox('I1')" style="cursor: default"><a>添加条件</a></li>
+		<li onclick="chooseCombox('I1')" style="cursor: default"><a>添加变量</a></li>
+		<li onclick="addeAction('1')" style="cursor: default"><a>添加动作(T)</a></li>
+		<li onclick="addeAction('2')" style="cursor: default"><a>添加动作(E)</a></li>
+		<li onclick="chooseCombox('I1')" style="cursor: default"><a>删除</a></li>
+	</ul>
+	
+	<!--内容st-->	
+	<div id="test" class="node varNode" style="position: absolute; left: 50px; top: 190px;">
+		<span class="line-darkcyan" par_data="" data_id="" onclick="chooseVar(this)">请选择变量1</span>
+		<!--input id="selBox1" class="hisui-combobox" style="width:65px;" /-->
+		<b onclick="showCombox(this)" class="dropIcon">√</b>
+	</div>
+	<div class="node conditionNode" style="position: absolute; left: 190px; top: 190px; display: block; background: rgb(255, 255, 255);">
+		<!--<span class="operation-container" style="font-size: 12px; color: red; font-weight: bold; margin-right: 1px; border: 1px dashed transparent;">大于或等于</span>
+		<span style="display: inline;">
+			<span class="operation-container" style="color: rgb(180, 95, 4); border: 1px dashed transparent;">16</span>
+			<b onclick="showCombox(this)" style="margin-right:5px;font-size:12px;color:#428BCA;border:2px solid #428BCA;border-radius:25px;cursor:pointer;padding-left:4px;padding-right:4px">√</b>
+		</span>-->
+		<span class="operation-container" style="font-size:12px">
+			<!--<span class="line-darkcyan" par_data="" data_id="" onclick="chooseVar(this)">请选择变量1</span>-->
+			<span class="line-red" onclick="chooseOpera(this)">请选择比较操作符</span>
+			<span class="blank" onclick="chooseType(this)">&nbsp;</span>  
+			<span></span>  
+			<span></span>	
+		</span>
+		<b onclick="showCombox(this)" class="dropIcon">√</b>
+	</div>
+	<div class="node varNode" style="position: absolute; left: 340px; top: 190px;">
+		<!--span class="line-darkcyan" par_data="" data_id="" onclick="chooseVar(this)">请选择变量2</span-->
+		<span class="line-darkcyan" onclick="chooseVar(this)" par_data="5" data_id="46">西药的给药途径</span>
+		<b onclick="showCombox(this)" class="dropIcon">√</b>
+	</div>
+	<div class="node conditionNode" style="position: absolute; left: 480px; top: 190px; display: block; background: rgb(255, 255, 255);">
+		<!--<span class="operation-container" style="font-size: 12px; color: red; font-weight: bold; margin-right: 1px; border: 1px dashed transparent;">大于或等于</span>
+		<span style="display: inline;">
+			<span class="operation-container" style="color: rgb(180, 95, 4); border: 1px dashed transparent;">16</span>
+			<b onclick="showCombox(this)" class="dropIcon">√</b>
+		</span>-->
+		<span class="operation-container" style="font-size:12px">
+			
+			<span class="line-red" onclick="chooseOpera(this)" data="Equals">等于</span> 
+			<span class="blank" onclick="chooseType(this)">&nbsp;</span>
+			<span>
+				<span class="line-blue" onclick="chooseDataset(this)" data_id="3922">肌内注射</span>
+			</span>
+			<span></span>
+		</span>
+		<b onclick="showCombox(this)" class="dropIcon">√</b>
+	</div>
+	<div id="actionNode" class="node actionNode" style="position: absolute; left: 830px; top: 190px;">
+		<!--<span id="then" style="display: inline-block;">
+			<!--<span id="_u_r_id__8">
+				<span class="icon icon-cancel" onclick="deleteAction(this)" title="删除当前节点">&nbsp;</span>
+				<span class="operation-container" style="color: green; border: 1px dashed transparent;">赋值:</span>
+				<span>
+					<span class="operation-container" style="color: white;"></span>
+					<span>
+						<span style="">
+							<span class="operation-container" style="color: darkcyan;">投保人.中间结果</span>
+						</span>
+						<span style="display: none;">
+							<span class="operation-container" style="color: rgb(107, 61, 176);">请选择参数</span>
+						</span>
+					</span>
+					<span style="color: red;">=</span>
+					<span>
+						<span class="operation-container" style="color: rgb(253, 253, 253);"></span>
+						<span>
+							<span>
+								<span class="operation-container" style="color: rgb(180, 95, 4);">4&nbsp;</span>
+								<span>
+									<span class="operation-container"></span>
+								</span>
+							</span>
+						</span>
+					</span>
+				</span>
+			</span>
+		</span>
+		
+		<span id="_u_r_id__13" style="display: block;">
+			<span class="icon icon-cancel" onclick="deleteAction(this)" title="删除当前节点">&nbsp;</span>
+			<span class="operation-container" style="color: green; border: 1px dashed transparent;">赋值:</span>
+			<span>
+				<span class="operation-container" style="color: white; border: 1px dashed transparent;"></span>
+				<span>
+					<span style="">
+						<span class="operation-container" style="color: darkcyan; border: 1px dashed transparent;">投保人</span>
+					</span>
+					<span style="display: none;">
+						<span class="operation-container" style="color: rgb(107, 61, 176); border: 1px dashed transparent;">请选择参数</span>
+					</span>
+				</span>
+				<span style="color: red;">=</span>
+				<span>
+					<span class="operation-container" style="color: rgb(253, 253, 253); border: 1px dashed transparent;"></span>
+					<span>
+						<span>
+							<span class="operation-container focus" style="color: rgb(180, 95, 4); border: 1px dashed transparent; display: inline;">3</span>
+							<span>
+								<span class="operation-container"></span>
+							</span>
+						</span>
+					</span>
+				</span>
+			</span>
+		</span>
+		
+		<span id="_u_r_id__14" style="display: block;">
+			<span class="icon icon-cancel" onclick="deleteAction(this)" title="删除当前节点">&nbsp;</span>
+			<span class="operation-container" style="color: green; border: 1px dashed transparent;">赋值:</span>
+			<span class="focus">
+				<span class="operation-container" style="color: white; border: 1px dashed transparent;"></span>
+				<span>
+					<span style="">
+						<span class="operation-container" style="color: darkcyan; border: 1px dashed transparent;">客户</span>
+					</span>
+					<span style="display: none;">
+						<span class="operation-container" style="color: rgb(107, 61, 176);">请选择参数</span>
+					</span>
+				</span>
+				<span style="color: red;">=</span>
+				<span>
+					<span class="operation-container" style="color: rgb(253, 253, 253); border: 1px dashed transparent;"></span>
+					<span>
+						<span>
+							<span class="operation-container" style="color: rgb(180, 95, 4); border: 1px dashed transparent; display: inline;">5</span>
+							<span>
+								<span class="operation-container">
+									<b onclick="showCombox(this)" style="margin-right:5px;font-size:12px;color:#428BCA;border:2px solid #428BCA;border-radius:25px;cursor:pointer;padding-left:4px;padding-right:4px">√</b>
+								</span>
+							</span>
+						</span>
+					</span>
+				</span>
+			</span>-->
+		<!--</span>
+		<br>
+		<span id="else" style="display: inline-block;">
+		</span>-->
+	
+	</div>
+	
+	
+	<svg height="100%" version="1.1" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="overflow: hidden; position: relative;z-index:-1">
+		<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.2.0</desc>
+		<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></defs>
+		<path fill="none" stroke="#787878" d="M140,200C140,200,140,200,180,200" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+		<path fill="none" stroke="#787878" d="M297,200C297,200,297,200,337,200" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+		<path fill="none" stroke="#787878" d="M440,200C440,200,440,200,480,200" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+		<path fill="none" stroke="#787878" d="M587,200C587,200,587,200,627,200" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+	</svg>
+	
+</body>
+</html>

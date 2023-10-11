@@ -11,9 +11,9 @@ Created by wangguoying
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
+	<LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/dhcpe/dhcpe.min.css"></LINK>
 	<script type="text/javascript" src="../scripts/dhchm.questiondetailset.keyword.js"></script>
-	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
-	<script type="text/javascript" src="../scripts/websys.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpe/dhcpe.extend.js"></script>
 	<style>	
 		.f24 {
    			 font-size: 24px;
@@ -35,29 +35,101 @@ Created by wangguoying
 			padding:10px 0px;
 			margin-bottom: 10px;
 		}
+		.tag{
+			background-color: #1a9c90;
+		    padding: 2px;
+		    color: white;
+		    border-radius: 4px;
+		    font-weight: 600;
+		}
 	</style>
 	<SCRIPT language="Cache" RUNAT="SERVER">
 		s EQID=%request.Get("EQID")
-		s QuesID=""
+		s QuesID=%request.Get("QuesID")
 		i EQID'=""
 		{
 			s EQObj=##class(User.DHCHMOQEQuestion).GetObj(EQID)
 			s QuesID=EQObj.QEQCQuestionnaireDR.%Id()
 		}
-		s Job=##class(web.DHCPE.HM.ExamSurveyHandler).QuerySurveyDetail(QuesID,"","","",EQID)
+		s PAADM=%request.Get("PAADM")
+		s PreIADM=%request.Get("PreIADM")
+		s DocFlag=%request.Get("DocFlag")  //是否显示护士填写的主题
+		s:DocFlag="" DocFlag="N"
+		i (PreIADM="")&&(PAADM'="")
+		{
+			s IADM=$O(^DHCPEIADM(0,"PAADM",PAADM,""))
+			s PreIADM=$P(^DHCPEIADM(IADM),"^",4)
+		}
+		s:QuesID="" QuesID=7
+		i PreIADM'=""
+		{
+			s PIBI=$P(^DHCPEPreIADM(PreIADM),"^",1)
+			s RegNo=$P(^DHCPEPreIBI(PIBI),"^",1)
+			s EvaluationId=$G(^DHCPEDataNewEx("PreIADMToHM",PreIADM))
+			i (EvaluationId'="")&&(EQID="")
+			{
+				s QuestionChl=""
+				f  s QuestionChl=$o(^User.DHCHMOQEQuestionI("QEQCQuestionnaireDRIndex",QuesID,EvaluationId,QuestionChl),-1) q:(QuestionChl="")!(EQID'="")  d
+				.s EQID=EvaluationId_"||"_QuestionChl
+			}
+		}
+		i (PAADM="")&&(EQID'="")
+		{
+			s PreIADM=$G(^DHCPEDataNewEx("HMToPreIADM",+EQID))
+			i PreIADM'=""
+			{
+				s IADM = $O(^DHCPEIADM(0,"CRMADM",PreIADM,""))
+				i IADM'=""  s PAADM=$P(^DHCPEIADM(IADM),"^",1)
+			}
+		}
+		s Nurse = $lg(^User.DHCHMOQEQuestionD(+EQID,$P(EQID,"||",2)),9)
+		s NurseName = ""
+		S:Nurse'="" NurseName = $P(^SSU("SSUSR",Nurse),"^",2)	
+		s Job=##class(web.DHCPE.HM.ExamSurveyHandler).QuerySurveyDetail(QuesID,"","","",EQID,"Y")
+		s EQStatus = ""
+		i EQID'="" s EQStatus=##class(web.DHCHM.OEvaluationRecord).GetSurveyStatus(EQID)
 	</SCRIPT>
 	 <Script  type='text/javascript'>
-		var Job=#(Job)#
-		var QuesID=#(QuesID)#
+		var Job="#(Job)#"
+		var QuesID="#(QuesID)#"
+		var EQStatus="#(EQStatus)#"
 	</Script>
 </head>
 
 <body  class="hisui-layout" fit="true" onload="ShowDetailPanel('');">
 	<input type="hidden" id="EQID" value="#(EQID)#">
-	<div id="NorthPanel" data-options="region:'north',headerCls:'panel-header-gray',border:false" style="padding:5px;height:36px;text-align:center;">
-		<SCRIPT language="Cache" RUNAT="SERVER">
-			d ##class(web.DHCPE.HM.ExamSurveyHandler).OutSubjectKeys(Job,QuesID)			
-		</SCRIPT>
+	<input type="hidden" id="H_PAADM" value="#(PAADM)#">
+	<div id="NorthPanel" data-options="region:'north',headerCls:'panel-header-gray',border:false" style="padding:5px 5px 0 5px;height:85px;text-align:center;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+				<SCRIPT language="Cache" RUNAT="SERVER">
+					//w Job,!
+					w "<table><tr><td>"
+					s FirstOrder= ##class(web.DHCPE.HM.ExamSurveyHandler).OutSubjectKeys(Job,QuesID)
+					w "</td></tr>"
+					i PreIADM'=""
+					{
+						s HPNo = $p(^DHCPEPreIADM(PreIADM),"^",27)
+						s PIBI = $p(^DHCPEPreIADM(PreIADM),"^",1)
+						s PatientName = $p(^DHCPEPreIBI(PIBI),"^",2)
+						s BaseDesc = "当前人："_PatientName_"  体检号："_HPNo
+						w "<tr><td><span style='font-weight:700;color:red;padding-left:5px;'>"_BaseDesc_"</span></td></tr>"
+					}
+					w "</table>"			
+				</SCRIPT>
+				<input type="hidden" id="FirstOrder" value="#(FirstOrder)#">
+			</div>
+			<div data-options="region:'east',headerCls:'panel-header-gray',border:false" style="padding:5px;width:150px; text-align:center;">
+				<!--<label><b>护士：</b></label><span class="tag">#(NurseName)#</span>
+				<a id="PreViewBtn" onclick="preview()" href="#" class="hisui-linkbutton" style="margin-top:0px;width:120px" data-options="iconCls:'icon-w-file-open'">预览</a>-->
+				<CSP:IF CONDITION=("3"'=EQStatus)>
+					<a onclick="submit('SUBMIT')" href="#" class="hisui-linkbutton" style="margin-top:10px;width:120px" data-options="iconCls:'icon-w-submit'">提交</a>
+				</CSP:IF>
+				<CSP:IF CONDITION=("3"=EQStatus)>
+					<a onclick="submit('CANCEL')" href="#" class="hisui-linkbutton" style="margin-top:10px;width:120px" data-options="iconCls:'icon-w-back'">撤销提交</a>
+				</CSP:IF>
+			</div>
+		</div>
 	</div>
 	<div id='CenterPanel' data-options="region:'center',headerCls:'panel-header-gray',border:false">
 		<div id='DetailPanelDiv' fit='true' style='height:100%;'>

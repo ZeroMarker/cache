@@ -1,0 +1,328 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.taskoverview.setting 常规护理任务配置界面--> 
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.tdlabel{
+	text-align:right;
+	width:140px;	
+	padding-right: 20px;
+}
+.ant-form-item-required:before {
+    display: inline-block;
+    margin-right: 4px;
+    color: #f5222d;
+    font-size: 14px;
+    font-family: SimSun,sans-serif;
+    line-height: 1;
+    content: "*";
+}
+#myWin tr{
+	display:block;
+	margin-top:5px;	
+}
+#form-save div.panel{
+	margin-top:10px !important;
+}
+span.exeRule{
+	border: 1px solid #40A2DE;
+    display: inline-block;
+    width: 60px;
+    text-align: center;
+    height: 30px;
+    line-height: 30px;
+    cursor: pointer;
+	
+}
+.bgselect{
+	background-color:#40A2DE;
+	border: 1px solid #40A2DE !important;
+	color:#fff;
+}
+</style>
+ </head> 
+ <body>
+ <server>
+ s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+
+  
+ 
+ 
+</server>
+<!--  <csp:Include Page="nur.hisui.taskoverview.show.csp">-->
+<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-layout" data-options="fit:true,border:false" style=""> 
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:51px;border-bottom:1px dashed #ccc;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<label id="_HospListLabel" for="_HospList" >所属医院</label>
+				</td>
+				<td>
+					<input  id="_HospList"/>
+				</td>
+				<td class="r-label">
+					<label for="SearchDesc"></label>
+				</td>
+				<td>
+					<input class="textbox" id="SearchDesc" style="width:170px;" placeholder="请输入任务描述"/>
+				</td>
+				
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>  
+				</td>
+			</tr>
+		</table>
+    </div>
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+    	<table id="tabQuestionList"></table>
+    </div>
+</div>
+
+<div id="myConfigWin" style="width:600px;height:700px;padding:10px;display:none;">
+
+	<iframe scrolling="auto" frameborder="0"  src="" style="width:100%;"></iframe>
+ </div>
+ 
+ <div id="dialogRefer" class="hisui-dialog panel-body panel-body-noborder window-body" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose',
+		handler:closeHandler
+	},{
+		text:'保存',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer',
+		handler:sureReferHandler
+	},{
+		text:'复制',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer',
+		handler:copySureReferHandler
+	}]" style="overflow: hidden; width: 1958px; height: 1153px;" title=""></div>
+ 
+ 
+</div>
+<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		CurrentDate:"#(CurrentDate)#"
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<!--<script type="text/javascript" src="../scripts/nurse/hisui/taskoverview.config.js"></script>-->
+<script type="text/javascript">
+
+///taskoverview.config.js
+
+//页面初始化方法加载
+$(window).load(function() {
+	//隐藏遮罩层
+	$("#loading").hide();
+	//初始化多院区
+	hospList()
+	//加载表单列表
+	loadDataGridList()
+
+})
+
+
+function hospList(){
+	//所属医院下拉列表
+	var hospComp = GenHospComp("Nur_IP_Question");
+	hospComp.jdata.options.onSelect = function(e,t){
+		loadDataGridList();
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		loadDataGridList();
+	}
+	$("#BFind").on("click",function(){
+		loadDataGridList()
+		
+	})
+}
+
+////start loadDataGrid
+function loadDataGridList(){
+	$('#tabQuestionList').datagrid({  
+			fit : true,
+			width : 'auto',
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			loadMsg : '加载中..',  
+			pagination : true, 
+			rownumbers : true,
+			idField:"rowID",
+			pageSize: 15,
+			pageList : [15,50,100,200],
+			columns :dataGridColumns(),
+			toolbar :dataGridToolBar(),
+			autoRowHeight:true,
+			nowrap:false,  /*此处为false*/
+			url : $URL+"?ClassName=Nur.NIS.Service.TaskOverview.Setting&QueryName=GetTaskOverNormList",
+			onBeforeLoad:function(param){
+				$('#tabQuestionList').datagrid("unselectAll");
+				var locId = session['LOGON.CTLOCID']
+				param = $.extend(param,{keyword:$("#SearchDesc").val(),loc:locId,hospDR:$HUI.combogrid('#_HospList').getValue(),groupFlag:""})
+				
+			}
+			
+		})
+	
+}
+
+function dataGridColumns(){
+	var taskType={
+		NORMAL:"正常",
+		SIGNS:"体征",
+		ORDER:"医嘱",
+		EVENT:"事件",
+		SIGNORDER:"体征+医嘱",
+		MUTIPLY:"事件+医嘱",
+		SPECIAL:"特殊",
+		ASSESS:"评估",
+		ORDERASSESS:"医嘱+评估"
+	}
+	var Columns=[[
+  		{ field: 'id',title:'id',width:50,wordBreak:"break-all"},
+		{ field: 'taskCode',title:'Code',width:200,wordBreak:"break-all"},
+		{ field: 'taskDesc',title:'常规护理任务描述',width:200,wordBreak:"break-all"},
+		{ field: 'taskAttr',title:'任务属性',width:90,wordBreak:"break-all",
+			formatter: function(value,row,index){
+				var names=["基本体征","护理评估","治疗处置"]
+				return names[value-1]
+			}},
+		{ field: 'type',title:'类型',width:90,wordBreak:"break-all",
+			formatter: function(value,row,index){
+				return taskType[value]
+			}},
+		{ field: 'exePeriod',title:'执行有效时间设定',width:150,
+			formatter: function(value,row,index){
+				var names=["需执行","本班次","当日","时间段"]
+				return names[value]
+			}
+		},
+		{ field: 'applyPatient',title:'适用人群',width:200,wordBreak:"break-all",
+			formatter: function(value,row,index){
+				var names=["","成人","婴儿","儿童","新生儿"]
+				return names[value]
+			}},
+		{ field: 'locsName',title:'生效科室',width:200,wordBreak:"break-all"},
+		{ field: 'invalidLocs',title:'无效科室',width:200,wordBreak:"break-all"}
+	
+    ]];	
+	return 	Columns
+}
+function dataGridToolBar(){
+	var ToolBar = [{
+        text: '新增',
+        iconCls: 'icon-add',
+        handler: function() {
+			openWin("")				
+       
+        }
+    },{
+        text: '修改',
+        iconCls: 'icon-write-order',
+        handler: function() {
+	        var row = $("#tabQuestionList").datagrid("getSelected");
+			openWin(row.id)
+			
+        }
+    },{
+        text: '删除',
+        iconCls: 'icon-cancel',
+        handler: function() {
+            var row = $("#tabQuestionList").datagrid("getSelected");
+			if (!row) {
+				$.messager.alert("提示","请选择需要删除的记录！");
+				return false;
+			}
+			
+			$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
+			    if (r){
+				    var UserId = session['LOGON.USERID']
+					runClassMethod("CF.NUR.NIS.TaskOverview","DeleteTaskOverNorm",{ID:row.id,UserId:UserId},function(data){
+						$.messager.alert("提示","成功删除记录！");
+						loadDataGridList();
+					},'json',false);
+			    }    
+			}); 
+        }
+    }];
+    return ToolBar
+}
+
+function openWin(id){
+	
+	
+	var hospid = $HUI.combogrid('#_HospList').getValue()
+	
+	
+	var url="nur.hisui.taskoverview.config.csp?taskId="+id+"&hospId="+hospid
+	console.log(url)
+	$('#dialogRefer').dialog({
+        title: '常规护理任务',
+        width: 600,
+        height: 600,
+        	
+        cache: false,
+        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+        modal: true
+    });
+    $("#dialogRefer").dialog("open");	
+}
+
+function closeHandler(){
+	 $('#dialogRefer').dialog('close');	
+}
+function sureReferHandler(){
+	var $iframe = $('#iframeRefer')[0].contentWindow
+	var rsflag = $iframe.saveFunLib("1")
+	if(rsflag){
+		$.messager.popover({msg:'保存成功！',type:'success'});
+		loadDataGridList()
+		$('#dialogRefer').dialog('close');	
+	}
+}
+function copySureReferHandler(){
+	var $iframe = $('#iframeRefer')[0].contentWindow
+	var rsflag = $iframe.saveFunLib("2")
+	if(rsflag){
+		$.messager.popover({msg:'保存成功！',type:'success'});
+		loadDataGridList()
+		$('#dialogRefer').dialog('close');
+	}else{
+		
+	}	
+}
+
+
+</script>
+</body>
+</html>

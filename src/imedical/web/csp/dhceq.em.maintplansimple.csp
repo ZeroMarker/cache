@@ -1,0 +1,131 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s RowID = $Get(%request.Data("RowID",1))
+	s EquipDRStr = $Get(%request.Data("EquipDRStr",1))
+	s ReadOnly = $Get(%request.Data("ReadOnly",1))
+	s QXType = $Get(%request.Data("QXType",1))
+	s MaintLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	s MaintLocDesc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	s AddFlag=$g(%request.Data("AddFlag",1))	// Modfied by zc0122 2022-10-12 增加入参AddFlag
+</script>
+
+<body class="hisui-layout" >
+	<!--div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div-->
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="border:false" style="border-bottom:dashed 1px #ccc;padding:5px 0 10px 0;">
+			<div class="eq-table">
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cPlanNo" for="PlanNo">计划单号</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="PlanNo" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cName" for="Name">计划名称</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Name"></div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input"></div>
+				</div>
+				<!-- MZY0120	2022-04-13	-->
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><lable id="cCycleType" for="CycleType"></lable>周期类型</div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="CycleType"></div>
+					<div class="eq-table-td eq-table-label"><label id="cCycleNum" for="CycleNum">保养周期</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CycleNum"><input class="hisui-validatebox" id="CycleUnit" style="width:50px" data-options="'component':'PLAT.L.CycleUnit'" value="月"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cFromDate" for="FromDate">启用日期</label></div>
+					<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox inputwidth" id="FromDate" data-required="true" data-options="prompt:'必填项'"></div>
+					<div class="eq-table-td eq-table-label"><label id="cPreWarnDaysNum" for="PreWarnDaysNum">预警天数</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox inputwidth" id="PreWarnDaysNum"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cMaintUser" for="MaintUser">执行工程师</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="MaintUser"></div>
+					<div class="eq-table-td eq-table-label"><label id="cMaintLoc" for="MaintLoc">执行科室</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MaintLoc" data-options="'component':'PLAT.L.Loc'"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cMonthStr" for="MonthStr">执行月份</label></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MonthStr" data-options='validParams:"YM"'></div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"><label id="cSDate" for="SDate">执行时间范围</label></div>
+					<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="SDate" disabled="true"></div>
+					<div class="eq-table-td eq-table-label"><lable id="cEDate" for="EDate">至</lable></div>
+					<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EDate" disabled="true"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input">&nbsp;</div>
+					<div class="eq-table-td eq-table-label"></div>
+					<div class="eq-table-td eq-table-input">&nbsp;</div>
+				</div>
+			</div>
+			<div style="text-align:center;padding-top:10px;">
+				<a id="BUpdate" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a id="BSubmit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">提交</a>	<!-- MZY0120	2022-04-13	-->
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a id="BClose" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">关闭</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<!--a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a-->
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="EquipDRStr" value="#(EquipDRStr)#">
+			<input type="hidden" name="ReadOnly" id="ReadOnly" value=#(ReadOnly)#>
+			<input type="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<input type="hidden" name="MaintLocDR" id="MaintLocDR" value=#(MaintLocDR)#>
+			<input type="hidden" name="MaintLocDesc" id="MaintLocDesc" value="#(MaintLocDesc)#">
+			<input type="hidden" id="EquipRangeDR" value=#(EquipDRStr)#>
+			<input type="hidden" name="RowID" id="RowID" value="#(RowID)#">
+			<input type="hidden" name="BussType" id="BussType" value=1>		<!--1,保养用 2,检查用 3,维修用-->
+			<input type="hidden" name="SourceType" id="SourceType" value=3>
+			<input type="hidden" name="CycleType" id="CycleType" value=2>
+			<input type="hidden" name="CycleNum" id="CycleNum" value=1>
+			<input type="hidden" name="PreWarnDaysNum" id="PreWarnDaysNum" value=0>
+			<input type="hidden" name="CycleUnitDR" id="CycleUnitDR">
+			<input type="hidden" name="MaintTypeDR" id="MaintTypeDR" value="">
+			<input type="hidden" name="MaintUserDR" id="MaintUserDR">
+			<input type="hidden" name="MaintModeDR" id="MaintModeDR">
+			<input type="hidden" name="MeasureDeptDR" id="MeasureDeptDR">
+			<input type="hidden" name="MeasureHandler" id="MeasureHandler">
+			<input type="hidden" name="MeasureTel" id="MeasureTel">
+			<input type="hidden" name="ServiceDR" id="ServiceDR">
+			<input type="hidden" name="Status" id="Status">
+			
+			<input type="hidden" name="InvalidFlag" id="InvalidFlag">
+			<input type="hidden" name="Hold1" id="Hold1">
+			<input type="hidden" name="Hold2" id="Hold2">
+			<input type="hidden" name="Hold3" id="Hold3">
+			<input type="hidden" name="Hold4" id="Hold4">
+			<input type="hidden" name="Hold5" id="Hold5">
+			<input type="hidden" name="vStatus" id="vStatus" value="">
+			<input type="hidden" name="Service" id="Service">
+			<input type="hidden" name="ServiceHandler" id="ServiceHandler">
+			<input type="hidden" name="ServiceTel" id="ServiceTel">
+			<input type="hidden" id="AddFlag" value=#(AddFlag)#>	<!--Modfied by zc0122 2022-10-12 增加入参AddFlag-->
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/DHCEQCommon.js'></script>
+    <script type='text/javascript' src='../scripts/dhceq/em/maintplan.js'></script>
+    <script type='text/javascript'>MonthBox('MonthStr');</script>
+</body>
+</html>

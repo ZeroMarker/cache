@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+    住院配液 - 物流交接
+	csp: dhcpha.pivas.distrib.csp
+	js:  scripts/pharmacy/pivas/distrib.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHAPIVASV1 />
+
+    <style>
+        [field="propVal"] {
+            border-right: 0 !important;
+        }
+
+        .pha-record-row {
+            line-height: 28px;
+            /* white-space: break-spaces; */
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        /* #conLoginInfo:focus {
+            border-color: #9ed2f2;
+            box-shadow: 0;
+            background-color: #fff
+        } */
+
+        .pha-record-title {
+            /* font-weight: bold; */
+            font-size: 14px;
+        }
+
+        .pha-record-title>div {
+            float: left;
+            margin-left: 20px;
+        }
+
+        .pha-con-table * {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pha-con-table {
+            padding-right: 10px;
+        }
+
+        .pha-hotkey-pos {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+        }
+
+        .pha-pivas-distrib-reminder {
+            border: 1px solid #c0e2f7;
+            background: #e3f7ff;
+            color: #1278b8;
+            height: 27px;
+            line-height: 27px;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        a {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout js-pha-layout-fit" fit="true">
+                <div data-options="region:'west',border:false,width:510,split:true">
+                    <div class="hisui-panel" title="物流交接" data-options="headerCls:'panel-header-gray',iconCls:'icon-btn-pack',fit:true,bodyCls:''">
+                        <table id="gridDistrib"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel" title="扫描记录" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                        <table id="gridRecord"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridDistribBar" class="pha-con-datagrid-toolbar">
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    #(..Get("交接单号"))#
+                </td>
+                <td>
+                    <div style="position: relative;">
+                        <input id="conNo" class='hisui-validatebox' value="" style="width:310px">
+                        <span class="pha-hotkey-pos">F4</span>
+                    </div>
+                    <!-- <span style="position:relative;left:-28px;">F4</span> -->
+
+                    <!-- <input class='hisui-validatebox' style="width:25px;margin-left: -5px;" value="F4" readonly> -->
+
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" id='btnOk'>确认</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    #(..Get("配送人员"))#
+                </td>
+                <td>
+                    <div style="position: relative;">
+                        <input id="conUser" class='hisui-validatebox' style="width:310px">
+                        <span class="pha-hotkey-pos">F6</span>
+                    </div>
+                    <!-- <input class='hisui-validatebox' style="width:25px;margin-left:-5px" value="F6" readonly> -->
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" id='btnClean'>清屏</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    #(..Get("登录信息"))#
+                </td>
+                <td colspan="2">
+                    <input id="conLoginInfo" class='hisui-validatebox' style="width:calc(100% - 8px)" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    #(..Get("温馨提示"))#
+                </td>
+                <td colspan="2">
+                    <div class="pha-pivas-distrib-reminder">
+                        <span class="messager-popover-icon info" style="margin-top: 5px;margin-left: 10px;"></span>
+                        <span class="hisui-tooltip" title="#(..Get("请先扫描【单号】，再扫描【工牌】确认"))#" >
+                            #(..Get("请先扫描【单号】，再扫描【工牌】确认"))#
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/distrib.js"></script>
+</body>
+
+</html>

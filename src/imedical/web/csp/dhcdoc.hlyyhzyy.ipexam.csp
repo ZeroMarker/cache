@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!-- dhcdoc.hlyyhzyy.ipexam.csp 杭州逸曜审方-住院 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //CA:-------------------start初始化CA服务环境session--------
+ i ##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))="1" d
+ .d ##Class(CA.DigitalSignatureService).CASessionDataInit()
+ //-------------------end初始化CA服务环境session--------
+ I ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<!--<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/ipdoc/css/inpatinfoview.css" />-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<DOCHEAD></DOCHEAD>
+<style>
+input[type="checkbox"]{	 
+    vertical-align:middle;
+}
+.datagrid-header .datagrid-cell span,
+.datagrid-cell, .datagrid-cell-group, .datagrid-header-rownumber, .datagrid-cell-rownumber{
+	font-size: 14px;
+}
+object{
+	display:none;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.panel-header{
+	border-bottom: 0;
+}
+.editcls-TOrderDesc{
+	text-decoration: none;
+	color:black; 
+}
+</style>
+<Server>
+s EpisodeID=%request.Get("EpisodeID")
+s OrderItemStr=%request.Get("OrderItemStr")
+//获取作废原因
+s OECStatusChReasonJson=##Class(web.DHCDocInPatUICommon).GetOECStatusChReason()
+</Server>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:true,title:'',border:false" style="padding:10px;">
+			<div id="prescItem" class="hisui-panel" style="border:1px solid #ccc;border-radius:4px;">
+				<div class="showMsg">
+					<span id='DivMsg' style="font-weight:bold;font-size:20px;color:blue;height:auto;"></span>
+				</div>
+			</div>
+			<div id="outer_container" class="hisui-panel" data-options="fit:true,title:'合理用药审方结果',headerCls:'panel-header-gray',iconCls:'icon-print'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+				<div id="layout_main" class="hisui-layout" data-options="fit:true" style="">
+					<div class="hisui-panel" data-options="region:'center',border:false,border:false" style="padding:3px 0 0 0;" >
+			   			<div class="hisui-panel" fit="true" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-left:0;border-right:0;border-radius:0;">
+				    		<table id="tabOrdList"></table>
+			    		</div>
+			    	</div>
+			   		<div data-options="region:'south',iconCls:'icon-add',collapsible:false,border:false" style="height:120px;padding:10px;">
+						<div class="hisui-panel" fit="true" style="height:100%;border:0;">
+							<table class="search-table" align="center">
+								<tr>
+									<td class="r-label">
+										<label for="StartDate">开始日期</label>
+									</td>
+									<td>
+										<input class="hisui-datebox textbox" id="StartDate"/>
+									</td>
+									<td class="r-label">
+										<label for="EndDate">结束日期</label>
+									</td>
+									<td>
+										<input class="hisui-datebox textbox" id="EndDate"/>
+									</td>
+									<td class="r-label">
+										<label for="OrderDesc">医嘱</label>
+									</td>
+									<td>
+										<input id="OrderDesc" class="textbox" style="width:140px;vertical-align: middle;height: 28px;">
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3" style="padding-left:10px;">
+										<label for="LongOrder">长期医嘱</label>
+										<input id="LongOrder" type="checkbox" class="hisui-checkbox" checked />
+										<label for="ShortOrder">临时医嘱</label>
+										<input id="ShortOrder" type="checkbox" class="hisui-checkbox" checked />
+										<label for="RefuseOrder">拒绝医嘱</label>
+										<input id="RefuseOrder" type="checkbox" class="hisui-checkbox" checked />
+									</td>
+									<td></td><td></td>
+									<td>
+										<a id="Find" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+									</td>
+									<td>
+										<a href="#" class="hisui-linkbutton" id="BClose" data-options="iconCls:'icon-w-close'">关闭页面</a>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<SCRIPT language = 'javascript'>
+		//全局请求后台服务对象
+		var ServerObj={
+			EpisodeID:"#(EpisodeID)#",
+			OrderItemStr:"#(OrderItemStr)#",
+			OECStatusChReasonJson:'#(OECStatusChReasonJson)#',
+			PageShowFromWay:""
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/ipdoc/InPatOrderView.js"></script>
+	<!--初始化CA服务环境-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
+	<!--东华CDSS交互-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
+	<!-- this page js -->
+	<script type="text/javascript" src="../scripts/dhcdoc/interface/HangZhouYiYao/HLYY.IPExam.js"></script>
+</body>
+</html>

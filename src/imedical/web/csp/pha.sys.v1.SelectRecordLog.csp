@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!--下拉框选中记录日志
+	csp:csp/pha.sys.v1.SelectRecordLog.csp
+	js: scripts/pha/sys/v1/SelectRecordLog/SelectRecordLog.js
+-->
+<HTML XMLNS=TRAK>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
+</HEAD>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center'" class="dhcpha-hisui-container">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',width:500" border="false">
+                	<div class="hisui-layout" fit="true">
+                		<div data-options="region:'north',height:350, border:false,split:true">
+                            <div id="panel2" class="hisui-panel" title="下拉框选中记录日志"
+                                data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                                <table id="gridMenu" data-options="fit:true" border="false"></table>
+                            </div>
+                    	 </div>
+                    	 <div data-options="region:'center', border:false,split:true">
+                    	 	<div id="panel" class="hisui-panel" title="下拉框列表"
+                                data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                                <table id="gridCombox"></table>
+                            </div>
+                    	 </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="padding-left:10px;">
+                    <div class="hisui-layout" fit="true">
+                        <div id="panel" class="hisui-panel" title="选中记录日志"
+                            data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                            <table id="gridSelectRecord"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <div id="gridMenuBar">
+        <table>
+            <tr>
+                <td>
+                    <input id="TextCspOrMenuName" class="hisui-validatebox"/>
+                </td>
+                <td style="padding-left:9px">
+                	<a class="hisui-linkbutton" plain='true' iconCls="icon-help" id="btnHelp">#(..Get("帮助"))#</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="gridComboxBar">
+        <table>
+            <tr>
+                <td>
+                    <input id='TextSelectName'  class="hisui-validatebox" />
+                </td>
+                <td style="padding-left:9px">
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveSelect">#(..Get("保存"))#</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="gridSelectRecordBar">
+    	<div class="pha-row">
+        	<div class="pha-col">
+                <label for="dateStart">#(..Get("开始日期"))#</label>
+            </div>
+            <div class="pha-col">   
+                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" />
+            </div>
+        	<div class="pha-col">
+                <label for="comUser">#(..Get("操作人"))#</label>
+            </div>
+            <div class="pha-col"> 
+                <input id='comUser' placeholder="#(..Get("选择操作人"))#..." class="hisui-combobox">
+            </div>
+         	<div class="pha-col" style='padding-left:20px'>
+                <a id="btnFindRecord" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false" >#(..Get("查询"))#</a>
+            </div> 
+    	</div>   
+    	<div class="pha-row">
+        	<div class="pha-col">
+                <label for="dateEnd">#(..Get("结束日期"))#</label>
+            </div>
+            <div class="pha-col">   
+                <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" />
+            </div>    
+       	</div> 
+    </div>
+	<div id="js-help-info">
+		<div>
+			#(..Get("业务界面调用时, 增加如下recordLog属性即可, 均为必填项"))#
+		</div>
+		<div>
+			<pre style="background:#f7f7f9;border: 1px solid #ccc;margin-top: 10px;border-radius: 4px;">
+				<code>
+				    PHA.ComboBox('conWardLoc', {
+				        url: PHA_STORE.WardLoc().url, 
+				        width: combWidth,
+				        recordLog: {
+				            csp: PAGE_CSP,
+				            label: '病区',
+				        }
+				    });
+		    	</code>
+	    	</pre>
+	    </div>
+	</div>
+	
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/sys/v1/SelectRecordLog/SelectRecordLog.js"></script>
+</body>
+
+</HTML>

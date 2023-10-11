@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>自定义项目显示配置</title>
+<csp:content charset="UTF-8">
+<HISUI></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-cellediting.js"></script>
+<style>	
+    * { margin:0;padding:0}
+	.datagrid-toolbar {
+    	height: auto;
+    	padding: 0;
+    	border-width: 0 0 1px 0;
+    	border-style: solid;
+	}
+</style>
+</head>
+<body>
+	<div id="data_tools">
+	    <form id="queryForm" method="post">
+			<div class="form-row-group">
+				<div>
+					<div class="form-row" style="margin:10px 8px 0 10px;">
+						<div class="form-title-normal" style="padding-right:10px;">名称</div>
+						<div class="form-item-normal"><input type="text" id="filterDesc" name="Description" class="hisui-validatebox" style="width:180px;"></div>
+    					<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:20px;">查询</a>
+    					<a id="btnSave" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-save'" style="margin-left:20px;">保存</a>
+					</div>
+				</div>
+			</div>
+		</form>
+    </div>
+    <table id="data_grid"></table>
+	<script type="text/javascript">
+		var stopQuery = false;
+		$(document).ready(function() {
+			var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		border:false,
+        		title: "",
+        		//nowrap: true,
+        		toolbar: "#data_tools",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: ANCLS.BLL.ConfigQueries,
+            		QueryName: "FindAllUserDefDataItem",
+            		ArgCnt: 1
+        		},
+        		columns: [[{
+                    field: "Code",
+                    title: "代码",
+                    width: 120
+                },
+                {
+                    field: "Description",
+                    title: "名称",
+                    width: 300
+                },
+                {
+                    field: "ItemCategoryDesc",
+                    title: "类型",
+                    width: 120
+                },{
+                    field: "DataCategoryDesc",
+                    title: "项目分类",
+                    width: 120
+                },{
+                    field: "ExpireDate",
+                    title: "停用日期",
+                    width: 180,
+                    editor: {
+                        type: 'datebox'
+                    }
+                }
+           	]],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#filterDesc").val()||'';
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	onLoadSuccess: function(data) {
+	        },
+	        onClickCell:function(index, field, value){
+	        },
+	        onBeginEdit:function(index, row){
+	        },
+	        onAfterEdit:function(index, row, changes){
+		        saveData(row,changes.ExpireDate);
+	        }
+    	});
+    	
+    	datagrid.datagrid("enableCellEditing", function(index, field) {});
+
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnSave").click(function() {
+        	datagrid.datagrid('acceptChanges');
+        	$.messager.alert('保存成功','保存数据成功');
+    	});	
+	});
+	
+	function calculateFilledCount(data){
+		totalCount = data.length;
+		filledCount = 0;
+		for(var i=0;i<totalCount;i++){
+			if(data[i].Factor) filledCount++;
+		}
+	}
+	
+	function saveData(row,expireDate){
+		dhccl.saveDatas(ANCSP.MethodService,{
+			ClassName: "CIS.AN.BL.UserDefDataItem",
+        	MethodName: "SaveExpireDate",
+        	Arg1:row.RowId||"",
+        	Arg2:expireDate||row.ExpireDate,
+        	ArgCnt:2
+		},function(data){
+			if(-1<data.indexOf("E^")){
+				$.messager.alert("保存时错误",data,"error");
+			}
+		});
+	}
+	</script>
+</body>
+</html>

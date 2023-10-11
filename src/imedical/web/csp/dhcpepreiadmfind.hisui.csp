@@ -1,0 +1,437 @@
+
+<!-- 
+ * FileName: dhcpepreiadmfind.hisui.csp
+ * Anchor: xy
+ * Date: 2020-11-06
+ * Description: HISUI 个人预约查询
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <DHCPEEXT require="GridExtLib"/>
+    <ADDINS/>
+    <DOCCARD medStepCode="PEReg"></DOCCARD> 
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0px 10px;
+    
+}
+.search-table1{
+    border-collapse:separate;
+    border-spacing:0px 0px;
+    position:relative;
+    top:-6px;
+}
+.r-label{
+    padding-left: 10px;
+}
+.r-label-1{
+    padding-left: 10px;
+}
+.r-label-11{
+    padding-left: 0px;
+}
+.r-label-12{
+    padding-left: 10px;
+}
+/*弹出框里标签右对齐 并且有10px内边距*/
+.tdlabel
+{
+  padding-left: 10px;
+  padding-right: 30px;
+  text-align:right;
+}
+.panel-header{
+    border-bottom: 0;
+}
+
+.circle-tag{
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    color: #fff;
+}
+.complete{
+    background: green;
+}
+.uncomplete{
+    background: red;
+}
+.datagrid-row-selected .icon-paper:before{color:#000000;}
+.datagrid-row-selected .icon-print:before{color:#000000;}
+
+</style>
+<Server>
+    //d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+    d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+    //w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+    w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+    //w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+    //w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+    d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
+    w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+</Server>
+</head>
+<body>
+<div class="hisui-layout" fit="true" style="background-color: inherit;">
+    <div id="layoutcenter" data-options="region:'center',border:false,collapsible:false,bodyCls:'panel-header-gray'" style="padding:10px;background-color: inherit;">
+        <input type="hidden" id="CredNo"/>
+        <div class="hisui-panel" fit="true" data-options="title:'个人预约查询',headerCls:'panel-header-gray',bodyCls:'panel-header-gray',iconCls:'icon-house'" style="border-radius:0 0 4px 4px;">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',collapsible:false,bodyCls:'panel-header-gray'" style="height:215px;border-left:0;border-right:0;border-radius:0px;border-bottom:1px dashed #C0C0C0;">
+                <table class="search-table">
+
+            
+                <tr>
+                    <td class="r-label"><label for="RegNo">#(..Get("登记/体检号"))#</label></td>
+                    <td>
+                        <input class="textbox" id="RegNo" style="width:124px"/>
+                    </td>
+                    <td class="r-label"><label for="Name">#(..Get("姓名"))#</label></td>
+                    <td>
+                        <input class="textbox" id="Name" style="width:124px"/>
+                    </td>
+                    <td class="r-label"><label for="GroupDesc">#(..Get("团体"))#</label></td>
+                    <td>
+                        <input class="hisui-combogrid" type="text" id="GroupDesc" style="width:130px"/>
+                    </td>
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="Status_PREREG" label=#(..Get("预约"))#>
+                    </td>
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="PrintBarCode" label=#(..Get("打印检验条码"))#>
+                    </td>
+                    <td class="r-label r-label-1">
+                        <a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px">查询</a>
+                    </td>
+
+                    <td><input type="hidden" id="IDCard"/></td>
+                    
+                </tr>
+                <tr>
+                    <td class="r-label"><label for="PEStDate">#(..Get("开始日期"))#</label></td>
+                    <td>
+                        <input id="PEStDate" class="hisui-datebox textbox" style="width:131px"/>
+                    </td>
+                    
+                    <td class="r-label"><label for="EndDate">#(..Get("结束日期"))#</label></td>
+                    <td>
+                        <input id="EndDate" class="hisui-datebox textbox" style="width:131px"/>
+                    </td>
+
+                    <td class="r-label"><label for="TeamDesc">#(..Get("分组"))#</label></td>
+                    <td>
+                        <input class="hisui-combogrid" type="text" id="TeamDesc" style="width:130px"/>
+                    </td>
+                    
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="Status_REGISTERED" label=#(..Get("登记"))#>
+                    </td>
+                    
+                    <td class="r-label-12"></td>
+                    
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="PrintItem" label=#(..Get("打印指引单"))#>
+                    </td>
+                    
+                    <td class="r-label r-label-1">
+                        <a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:'true'" style="width:116px">清屏</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label"><label for="CardTypeNew">#(..Get("卡类型"))#</label></td>
+                    <td>
+                        <input class="textbox" id="CardTypeNew"  style="width:124px" disabled />
+                    </td>
+                    <td class="r-label"><label for="CardNo">#(..Get("卡号"))#</label></td>
+                    <td>
+                        <input class="textbox" id="CardNo" style="width:124px"/>
+                    </td>
+                    <td class="r-label"><label for="DepartName">#(..Get("部门"))#</label></td>
+                    <td>
+                        <input class="hisui-combogrid" type="text" id="DepartName" style="width:130px"/>
+                    </td>
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="Status_ARRIVED" label=#(..Get("到达"))#>
+                    </td>
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="PrintSpecItem" label=#(..Get("打印检查条码"))#>
+                    </td>
+                    
+                    <td class="r-label">
+                        <a id="BModifyTest" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:'true'" style="width:116px">修改项目</a>
+                    </td>
+                    
+                </tr>
+                <tr>
+                    
+                    <td class="r-label"><label for="VIPLevel">#(..Get("VIP等级"))#</label></td>
+                    <td>
+                        <input class="hisui-combobox" id="VIPLevel" style="width:131px"/>
+                    </td>
+
+                    <td class="r-label"><label for="Sex">#(..Get("性别"))#</label></td>
+                    <td>
+                        <input class="hisui-combobox" id="Sex" style="width:131px"/>
+                    </td>
+                    
+                    <td class="r-label"><label for="AsType">#(..Get("视同收费类型"))#</label></td>
+                    <td>
+                        <input class="hisui-combobox" id="AsType" style="width:130px"/>
+                    </td>
+
+
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="Status_CANCELPE" label=#(..Get("取消体检"))#>
+                    </td>
+                    <!--td class="r-label"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="NoPrintAmount" label="不打印金额">
+                    </td-->
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="PrintPisRequest" label=#(..Get("打印病理单"))#>
+                    </td>
+                    <td class="r-label r-label-1">
+                        <a id="ReadRegInfo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card',stopAllEventOnDisabled:'true'" style="width:116px">读身份证</a>
+                    </td>
+                    
+                        
+                </tr>
+                    <tr>
+                    
+                    <td class="r-label"><label for="ReCheck">#(..Get("复查"))#</label></td>
+                    <td>
+                        <input class="hisui-combobox" id="ReCheck" style="width:131px"/>
+                    </td>
+
+                    <td class="r-label"><label for="ChargeStatus">#(..Get("收费状态"))#</label></td>
+                    <td>
+                        <input class="hisui-combobox" id="ChargeStatus" style="width:131px"/>
+                    </td>
+                    
+                    <td class="r-label"><label for="AsRemark">#(..Get("视同收费备注"))#</label></td>
+                    <td>
+                        <input class="textbox" id="AsRemark" style="width:123px"/>
+                    </td>
+
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' id="AddType" type="checkbox" label=#(..Get("公费"))#>
+                    </td>
+                    <td class="r-label-12"></td>
+                    <td>
+                        <input class='hisui-checkbox' type="checkbox" id="PrintRisRequest" label=#(..Get("检查申请单"))#>
+                    </td>
+                    <td class="r-label r-label-1">
+                        <a id="BReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card',stopAllEventOnDisabled:'true'" style="width:116px">读卡</a>
+                    </td>
+                    
+    
+                </tr>
+                
+            
+                
+            </table>
+        </div>
+
+        <div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0px;">
+            <div class="hisui-panel" fit="true" style="height:100%;border-radius:0 0 4px 4px;" border="false">
+                    <table data-options="bodyCls:'panel-header-gray'" id="PreIADMFindGrid" toolbar="#allbar"></table>
+            </div>
+        </div>
+        
+                    
+            </div>
+        </div>
+    </div>
+    
+<!--页面右边项目明细-->
+<div id="layouteast" data-options="region:'east',border:false" style="width:390px;border:0;background-color: inherit;">
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" style="padding:10px 10px 10px 0;border:0;background-color: inherit;">
+            <div class="hisui-panel" fit="true" data-options="title:'检查检验明细',headerCls:'panel-header-gray',bodyCls:'panel-header-gray',iconCls:'icon-house-posi-maint'" style="height:100%;border-radius:0 0 4px 4px;">
+                <div class="hisui-layout" fit="true">
+                    <div data-options="region:'north',collapsible:false,bodyCls:'panel-header-gray'" style="height:239px;border-left:0;border-right:0;border-radius:0px;border-bottom:1px dashed #C0C0C0;">
+                        <table class="search-table">
+                            
+                            <tr>
+                                <td class="r-label"><label for="ReportDate">#(..Get("延期日期"))#</label></td>
+                                <td><input id="DelayDate" class="hisui-datebox textbox" style="width:250px"></td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="r-label"><label for="IfComplateAll">#(..Get("全部做完再总检"))#</label></td>
+                                <td>
+                                    <input class="hisui-combobox" type="text" id="IfComplateAll" style="width:250px"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="r-label"><label for="ReportDate">#(..Get("报告约期"))#</label></td>
+                                <td><input id="ReportDate" class="hisui-datebox textbox" style="width:250px"></td>
+                                
+                           </tr>
+                           <tr>
+                                <td class="r-label"><label for="SendMethod">#(..Get("报告送达方式"))#</label></td>
+                                <td>
+                                    <input class="hisui-combobox" type="text" id="SendMethod" style="width:250px"/>
+                                </td>
+                           </tr>        
+                           <tr>
+                             <td class="r-label"><label for="Remark">#(..Get("收表备注"))#</label></td>
+                                <td>
+                                    <textarea id="Remark" class="textbox" style="width:243px; height:30px;"> </textarea>
+                                </td>
+                                
+                           </tr>
+                          
+                                
+                        </table>
+                        
+                        <table class="search-table1">
+                         <tr>
+                               <td style="font-size:15px;color:red" colspan="3">
+                               
+                               <B><label id='PatInfoArr'></label></B>
+                               </td>
+                                <td><input type="hidden" id="PAADM"/></td>  
+                                
+                    
+                           </td>
+                           </tr>
+                        </table>
+                    </div>
+                    <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+                        <table data-options="fit:true" id="OrderItemListGrid" border="false" toolbar="#OrderItemBar" ></table>
+                    </div>
+                </div>      
+            </div>
+        </div>
+     </div>
+   </div>           
+ </div>     
+          
+</div>
+
+ 
+    <!--个人预约查询数据面板工具栏-->
+    <div id="allbar">
+  
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true,stopAllEventOnDisabled:true" id="BPrint">打印</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-undo',plain:true,stopAllEventOnDisabled:true" id="CancelPE">取消体检</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-pat-house-switch ',plain:true,stopAllEventOnDisabled:true" id="BUpdateDepart">修改部门</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-patient',plain:true,stopAllEventOnDisabled:true" id="BUnArrived">到达/取消到达</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper',plain:true,stopAllEventOnDisabled:true" id="UpdatePreAudit">费用</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paid',plain:true,stopAllEventOnDisabled:true" id="BAsCharged">取消/视同收费</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-book-green',plain:true,stopAllEventOnDisabled:true" id="BPreviewReport">报告预览</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper',plain:true,stopAllEventOnDisabled:true" id="BPrintView">指引单预览</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-fee',plain:true,stopAllEventOnDisabled:true" id="PrintPayAagin">补打收费条</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true,stopAllEventOnDisabled:true" id="PrintAagin">补打</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-right-top',plain:true,stopAllEventOnDisabled:true" id="UnCancelPE">撤销取消体检</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-person',plain:true,stopAllEventOnDisabled:true" id="BUpdateVIPLevel">修改VIP</a> 
+    </div>  
+    
+    <!--项目明细数据面板工具栏-->
+    <div id="OrderItemBar">
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-ok ',plain:true,stopAllEventOnDisabled:true" id="BRecpaper">收表</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-del-diag',plain:true,stopAllEventOnDisabled:true" id="BRefuseCheck">弃检</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-exe-order',plain:true,stopAllEventOnDisabled:true" id="BChecked">已检</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clock-blod',plain:true,stopAllEventOnDisabled:true" id="BDelayed">延期</a>
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add-diag',plain:true,stopAllEventOnDisabled:true" id="UnBRefuseCheck">撤销弃检</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel-order ',plain:true,stopAllEventOnDisabled:true" id="BCancelChecked">撤销已检</a> 
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-clock-record',plain:true,stopAllEventOnDisabled:true" id="BCancelDelayed">撤销延期</a> 
+    </div>  
+
+    <!--收费状态弹窗-->
+<div id="PreAuditListWin"  style="display:none;">
+        <div data-options="region:'north',split:false,border:true" style="height:331px;padding:10px;">
+        <div data-options="bodyCls:'panel-header-gray'" style="height:100%;border-radius:4px;">
+                    <table data-options="bodyCls:'panel-header-gray'" id="PreAuditListGrid"></table>
+            </div>
+        </div>
+</div> 
+
+<!--项目明细弹窗-->
+<div id="ItemDetailWin" style="display:none;">
+        <div data-options="region:'north',split:false,border:true" style="height:311px;padding:10px;">
+        <div data-options="bodyCls:'panel-header-gray'" style="height:100%;border-radius:4px;">
+                    <table data-options="bodyCls:'panel-header-gray'" id="ItemDetailGrid"></table>
+            </div>
+        </div>
+</div> 
+
+
+<!--修改预约日期弹窗-->
+<div id="SelectDateWin" style="overflow:hidden;"></div>
+
+<!--费用拆分弹窗-->
+<div id="SplitWin" style="overflow:hidden;"></div>
+
+<!--操作日志弹窗-->
+<div id="RecordListWin" data-options="iconCls:'icon-w-paper'" style="overflow:hidden;"></div>
+
+<!--姓名替换弹窗-->
+<div id="ModifyNameWin" style="overflow:hidden;"></div>
+
+<!--预约明细弹窗-->
+<div id="ItemListWin" style="overflow:hidden;"></div>
+
+<!--诊室位置弹窗-->
+<div id="RoomPlaceWin" style="overflow:hidden;"></div>
+
+<!--打印条码弹窗-->
+<div id="PrintBarCodeWin" style="overflow:hidden;"></div>
+
+<!--修改预约项目弹窗-->
+<div id="ItemEditWin" style="overflow:hidden;"></div>
+
+<!--调查问卷弹窗-->
+<div id="QuestionWin" style="overflow:hidden;"></div>
+
+<script type="text/javascript" src="../scripts/DHCPEPreIADM.Find.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+
+
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+<script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="UIF-8"></script>
+
+<script type="text/javascript" src="../scripts/DHCPEPrintCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPrintDJDCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.PatItemPrint.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.RequestPrint.js"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/DHCPEPrintReportCommon.js"></script>
+<script type="text/javascript" src="../scripts/dhcpe.websocket.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+
+</body>     
+</html>
+            
+        
+ 
+
+
+
+
+

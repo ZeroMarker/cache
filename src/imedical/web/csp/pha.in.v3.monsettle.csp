@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--月结配置
+	csp:csp/pha.in.v3.monsettle.csp
+	js: scripts/pha/in/v3/LocManage/MonSettle.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHALIBV1 />
+    <style>
+		.Text-width {
+			width: 148px;
+		}
+	</style>   
+</HEAD>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <table id="GridMonSettle"></table>				                            
+    </div>
+	<!--月结配置工具栏-->
+	<div id="GridMonSettleBar">
+		<table id="qCondition" class="pha-con-table">
+			<tr>
+                <td class="r-label">
+                     <label id='_HospListLabel'>#(..Get("医院"))#</label>
+                </td>
+                <td colspan = 2>
+                     <input id='_HospList' />
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+		<div class="datagrid-toolbar" style="border-bottom:0">
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd" onclick="javascript:AddSAL()">#(..Get("新增"))#</a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave" onclick="javascript:SaveSAL()">#(..Get("保存"))#</a>
+			<a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete" onclick="javascript:DeleteSAL()">#(..Get("删除"))#</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-help" id="btnHelp" onclick="PHA.HelpWindow({info:$('#ms_help').html()})">#(..Get("帮助"))#</a>
+        </div>
+    </div>
+
+    <div id="ms_help">
+        <table class="pha-help-table">
+            <tr>
+                <td class="r-label"><b>作用范围：</b></td>
+                <td>维护科室则为科室单独配置，不维护科室则为全院级配置。</td>
+            </tr>
+            <tr>
+                <td class="r-label"><b></b></td>
+                <td>科室优先级大于院级。全院级时科室列表取‘科室拓充信息维护’里的所有科室</td>
+            </tr>
+            <tr>
+                <td class="r-label"><b>日报日期范围：</b></td>
+                <td>从昨天往前推多少天一直生成到昨日的日报</td>
+            </tr>
+        </table>
+    </div>
+
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/LocManage/MonSettle.js"></script>
+    
+
+</body>
+</HTML>

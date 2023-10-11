@@ -1,0 +1,89 @@
+<!-- 单人血糖 -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+	Set startDate = $GET(%request.Data("startDate", 1))
+	Set endDate = $GET(%request.Data("endDate", 1))
+	Set hidePageHeader = $GET(%request.Data("hidePageHeader", 1))
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/echarts.min.js"></script>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<style type='text/css'>
+body {background-color: #fff;margin: 0!important;padding: 10px 10px 0;height: calc(100% - 0)!important;}
+.panel-header, .panel-body{width: auto!important;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;margin-top: 3px;}
+.ctcContent .panel-body.panel-body-noheader {border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+.ctcContent .datagrid-row-selected {background: transparent;}
+label.checkbox, label.radio{height: auto;}
+.l-btn-small{outline: none;}
+.PatInfoItem{margin-left: 0!important;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+.severity{display: inline-block;padding: 5px 10px;border-radius: 4px;cursor: pointer;background: white;user-select:none;}
+.severity+.severity{margin-left: 5px;}
+.r-label{padding-right: 10px;}
+#startDate+span>input,#endDate+span>input{width: 82px!important;}
+td.datagrid-value-changed{background: none;}
+.webui-popover .webui-popover-content {white-space: nowrap!important;}
+.PatInfoItem {padding-left: 40px;}
+.PatInfoItem>img {left: 0px;}
+.PatInfoItem>img+span {margin-left: 5px!important;}
+.PatInfoItem>span {white-space: nowrap;height: 30px;display: inline-block;vertical-align: middle;}
+.panel.datagrid>.panel-body.panel-body-noheader{border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+#patFrame{height:40px;}
+</style>
+<script language="javascript">
+  var EpisodeID = "#(EpisodeID)#";
+  var startDate = "#(startDate)#";
+  var endDate = "#(endDate)#";
+  var hidePageHeader = "#(hidePageHeader)#";
+</script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.bgtrendchart.js" charset=gbk></script>
+</head>
+<body>
+<!-- 血糖趋势图 adrsCurveModal-->
+<div>
+	<csp:if condition=hidePageHeader'="Y">
+        <div id="patFrame">
+			<csp:Include Page="dhcdoc.patinfo.banner.csp">
+		</div>
+	</csp:if>
+	<div>
+		<csp:if condition=hidePageHeader'="Y">
+			<hr class="dashed" style="margin:0 0 10px;">
+			<table id="gradeSearch" cellpadding="0" style="border-collapse: collapse;">
+				<tr>
+					<td class="r-label">#(..Get("开始日期"))#</td>
+					<td class="r-label">
+						<input id="startDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setBGDateOption"></input>
+					</td>
+					<td class="r-label">#(..Get("结束日期"))#</td>
+					<td class="r-label">
+						<input id="endDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setBGDateOption"></input>
+					</td>
+					<td class="r-label">
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="getBGRecordData();">#(..Get("查询"))#</a>
+					</td>
+				</tr>
+			</table>
+		</csp:if>
+		<div id="adrsGradeCurve" style="width: 1250px;height: 460px;position: relative;border: 1px solid #cccccc;margin-top: 10px;border-radius: 4px;"></div>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!--
+* Description: 号源管理
+* FileName: dhcpe.sourcemanager.csp
+* Creator: wangguoying
+* Date: 2022-10-09
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    if ##class(websys.SessionEvents).SessionExpired() quit 1
+    quit 1
+</csp:method>
+<html>
+
+<head>
+    <TITLE>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    
+    <link href="../scripts/dhcpe/lib/fullcalendar/5.9.0/main.min.css" rel="stylesheet">
+    <HISUI css="dhcpe/fullcalendar.min.css"/>
+    <style>
+        .expire-cell {
+            background: #fff2f2;
+        }
+
+        .tip {
+            font-weight: 600;
+            color: red;
+        }
+
+        .radio.checked {
+            font-weight: bold;
+            color: red;
+        }
+
+        /**  隐藏月视图下时段日程 **/
+        .fc-dayGridMonth-view .fc-daygrid-dot-event {
+            display: none;
+        }
+        
+        .fc-timeGridWeek-view .fc-scroller.fc-scroller-liquid-absolute {
+            display: none;
+        }
+
+        .fc-timeGridWeek-view .pre-tag {
+            display: none;
+        }
+        .fc .fc-daygrid-body-unbalanced .fc-daygrid-day-events {
+		    position: relative;
+		    min-height: 7em;
+		}
+
+        .fc .fc-timegrid-slot {
+            height: 40px;
+        }
+
+        .event-title {
+   
+            padding-left: 3px;
+        }
+
+        .pre-tag-I {
+            color: #339EFF;
+        }
+
+        .pre-tag-O {
+            color: red;
+        }
+        .fc-h-event .fc-event-main{
+        	color : #000;
+        }
+        .fc-timegrid-event .fc-event-main{
+        	color : #000;
+        }
+    </style>
+</head>
+
+<body class="hisui-layout">
+    <div data-options="region:'center',split:false,border:false" style="padding:10px 9px">
+        <div class="hisui-layout" data-options="fit:true,showTitleOnCollapse:true">
+            <div data-options="region:'west',split:false,title:'号源维护',iconCls:'icon-gen', headerCls:'panel-header-gray', collapsible:true,onCollapse:updateCanlendarSize,onExpand:updateCanlendarSize" style="width:450px;padding:10px;">
+                <div style="padding:10px 10px 10px 0;">
+                    创建模式：<input type="radio" class='hisui-radio' label="直接覆盖" name="CreateMode" data-options="requiredSel:true" value="COVER">
+                    <label style="width:5px;display:inline-block;"></label>
+                    <input type="radio" class='hisui-radio' label="跳过已有记录" checked name="CreateMode" data-options="requiredSel:true" value="SKIP">
+                    <a style="margin-left: 55px;" id="BtnTemplate" class="hisui-linkbutton green">限额模板</a>
+                </div>
+                
+                <div class="hisui-panel" title="按周复制" style="height:150px;" data-options="headerCls:'panel-header-card'" style="padding: 10px;">
+                    <table cellspacing="10">
+                        <tr>
+                            <td>
+                                源日期周
+                            </td>
+                            <td>
+                                <input type="text" class="hisui-datebox" id="SWeekDate" style="width: 120px;">
+                            </td>
+                            <td style="text-align: right;">
+                                &nbsp;&nbsp;目标周
+                            </td>
+                            <td>
+                                <input type="text" class="hisui-datebox" id="TWeekDate" style="width: 120px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align: center;padding-top: 10px;">
+                                <a href="#" id="CopyByWeek" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy'">复制</a>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+                <div style="height: 10px;"></div>
+                <div class="hisui-panel" title="按月复制" style="height:150px;" data-options="headerCls:'panel-header-card'" style="padding: 10px;">
+                    <table cellspacing="10">
+                        <tr>
+                            <td>
+                                源月份
+                            </td>
+                            <td>
+                                <input type="text" class="hisui-monthbox" id="SMonthDate" style="width: 120px;">
+                            </td>
+                            <td style="text-align: right;">
+                                &nbsp;&nbsp; 目标月份
+                            </td>
+                            <td>
+                                <input type="text" class="hisui-monthbox" id="TMonthDate" style="width: 120px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align: center;padding-top: 10px;">
+                                <a href="#" id="CopyByMonth" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy'">复制</a>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+
+                <div style="height: 10px;"></div>
+                <div class="hisui-panel" title="开/停诊" style="height:150px;" data-options="headerCls:'panel-header-card'" style="padding: 10px;">
+                    <table cellspacing="10">
+                        <!--
+                        <tr>
+                            <td style="text-align: right;">
+                                时段
+                            </td>
+                            <td>
+                                <input type="text" id="DefaultTime" style="width: 120px;">
+                            </td>
+                            <td style="text-align: right;">
+                                总数
+                            </td>
+                            <td>
+                                <input type="text" id="TotalNum" class="hisui-numberbox" data-options="min:0,precision:0" style="width: 120px;font-weight: 700;color: red;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: right;">
+                                男
+                            </td>
+                            <td>
+                                <input type="text" id="MaleNum" class="hisui-numberbox" data-options="min:0,precision:0" style="width: 120px;">
+                            </td>
+                            <td style="text-align: right;">
+                                女
+                            </td>
+                            <td>
+                                <input type="text" id="FemaleNum" class="hisui-numberbox" data-options="min:0,precision:0" style="width: 120px;">
+                            </td>
+                        </tr> -->
+                        <tr>
+                            <td>
+                                开始日期
+                            </td>
+                            <td>
+                                <input type="text" class="hisui-datebox" id="QucikBeginDate" style="width: 120px;">
+                            </td>
+
+                            <td style="text-align: right;">
+                                结束日期
+                            </td>
+                            <td>
+                                <input type="text" class="hisui-datebox" id="QucikEndDate" style="width: 120px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align: center;padding-top: 10px;">
+                                <!-- <a href="#" id="QuickCreate" class="hisui-linkbutton green">创建</a> -->
+                                <a href="#" id="BtnOpen" class="hisui-linkbutton green" style="margin-left: 10px;">开诊</a>
+                                <a href="#" id="BtnStop" class="hisui-linkbutton red" style="margin-left: 10px;">停诊</a>
+                                <!-- <a href="#" id="QuickClean" class="hisui-linkbutton yellow" style="margin-left: 10px;">清屏</a> -->
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+                
+            </div>
+
+            <div data-options="region:'center',split:false,border:false,title:'',collapsible:false" style="padding-left:10px;">
+                <div class="hisui-panel" data-options="title:'号源预览',iconCls:'icon-wax-tat-stat', headerCls:'panel-header-gray',fit:true" style="padding: 10px;">
+                    <div id='calendar'></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 号源模板 -->
+    <div id="SourceTemplateWin" style="overflow: hidden;"></div>
+
+    <!-- 时段维护窗口 -->
+    <div id="TimeEditWin" style="overflow: hidden;"></div>
+    
+    <div id="TemplateTimeDialog" style="overflow: hidden;"></div>
+
+    <script type="text/javascript" src="../scripts/dhcpe/lib/tippy/popper.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe/lib/tippy/tippy-bundle.umd.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe/dhcpe.extend.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe/lib/fullcalendar/5.9.0/main.min.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe/lib/fullcalendar/5.9.0/locales-all.js"></script>
+    <script type="text/javascript" src="../scripts/dhcpe.sourcemanager.js"></script>
+    <script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+
+</body>
+
+</html>

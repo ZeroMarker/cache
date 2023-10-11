@@ -1,0 +1,195 @@
+<!-- 
+ * FileName: dhcbill.opbill.except.tip.csp
+ * Author: ZhYW
+ * Date: 2019-09-01
+ * Description: 门诊收费异常提醒
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<head>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<style>
+		body {
+			background-color: #FFFFFF;
+		}
+		ul,li {
+			list-style:none;
+		}
+		li a {
+			color:#666;
+			text-decoration:none;
+		}
+		.list_lh {
+			height:135px;
+			overflow:hidden;
+		}
+		.list_lh li {
+			padding:10px;
+		}
+		.list_lh li.lieven {
+			background:#F0F2F3;
+		}
+		.list_lh li p {
+			height:24px;
+			line-height:24px;
+		}
+		.list_lh li p a {
+			float:left;
+		}
+		.list_lh li p a font{
+			color:#FF3300;
+			display:inline-block;
+		}
+		.list_lh li p span {
+			color:#999;
+			float:right;
+		}
+		.list_lh li p a.btn_lh {
+			background:#28BD19;
+			height:18px;
+			line-height:18px;
+			color:#fff;
+			font-size: 14px;
+			padding:0 5px;
+			margin-top:4px;
+			display:inline-block;
+			float:right;
+		}
+		.btn_lh:hover {
+			color:#fff;
+			text-decoration:none;
+		}
+	</style>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false">
+		<div class="list_lh">
+			<ul>
+				<server>
+					set hospId=%session.Get("LOGON.HOSPID")
+					set userId=%session.Get("LOGON.USERID")
+					
+					set intervalMin=%request.Get("IntervalMin")   //查询配置间隔时间前的异常记录
+					
+					set rowId=0
+					while($o(^DHCINVPRT(0,"PRTFlag","TP",rowId))) {
+						set rowId=$o(^DHCINVPRT(0,"PRTFlag","TP",rowId))
+						set prtData=$g(^DHCINVPRT(rowId))
+						continue:(prtData="")
+						set hospDR=$p(prtData,"^",39)
+						continue:(hospId'=hospDR)
+						set userDR=$p(prtData,"^",21)
+						continue:(userId'=userDR)
+						set papmi=$p(prtData,"^",15)
+						set patNo=$p($g(^PAPER(papmi,"PAT",1)),"^",2)
+						set patName=$p($g(^PAPER(papmi,"ALL")),"^",1)
+						set myDate=$p(prtData,"^",5)
+						set myTime=$p(prtData,"^",20)
+						continue:($SYSTEM.SQL.DATEDIFF("mi", myDate_","_myTime, $h)<intervalMin)  //过滤不足时间的
+						set displayDate=##class(websys.Conversions).DateLogicalToHtml(myDate)
+						set displayTime=##class(websys.Conversions).TimeLogicalToHtml(myTime)
+						set jsonObj={}
+						set jsonObj.patientId=papmi
+						set jsonObj.displayDate=displayDate
+						set jsonObj.displayTime=displayTime
+						w "<li>",!
+						w "	<p><a>"_..Get("患者")_"<font>"_patName_"</font>"_..Get("有异常收费待处理")_"</a><a href='javascript:;' class='btn_lh' data='"_jsonObj.%ToJSON()_"'>"_..Get("处理")_"</a></p>",!
+						w "	<p><a>"_..Get("异常记录时间")_"</a><span>"_displayDate_" "_displayTime_"</span></p>",!
+						w "</li>",!
+					}
+				</server>
+			</ul>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+(function ($) {
+    $.fn.myScroll = function (options) {
+        //默认配置
+        var defaults = {
+            speed: 40,     //滚动速度,值越大速度越慢
+            rowHeight: 24  //每行的高度
+        };
+
+        var opts = $.extend({}, defaults, options);
+        var intId = [];
+
+        function marquee(obj, step) {
+            obj.find("ul").animate({
+                marginTop: '-=1'
+            }, 0, function () {
+                var s = Math.abs(parseInt($(this).css("margin-top")));
+                if (s >= step) {
+                    $(this).find("li").slice(0, 1).appendTo($(this));
+                    $(this).css("margin-top", 0);
+                }
+            });
+        }
+
+        this.each(function (i) {
+            var sh = opts["rowHeight"],
+            speed = opts["speed"],
+            _this = $(this);
+            intId[i] = setInterval(function () {
+                if (_this.find("ul").height() <= _this.height()) {
+                    clearInterval(intId[i]);
+                } else {
+                    marquee(_this, sh);
+                }
+            }, speed);
+
+            _this.hover(function () {
+                clearInterval(intId[i]);
+            }, function () {
+                intId[i] = setInterval(function () {
+                    if (_this.find("ul").height() <= _this.height()) {
+                        clearInterval(intId[i]);
+                    } else {
+                        marquee(_this, sh);
+                    }
+                }, speed);
+            });
+        });
+    }
+})(jQuery);
+
+$(function() {
+	//定时1分钟刷新
+	setInterval(function () {
+        location.reload();
+    }, 1 * 60 * 1000);
+	
+	if ($(".list_lh>ul>li").length == 0) {
+		parent.closeTipWin();
+		return;
+	}
+	parent.openTipWin();
+	$(".list_lh li:even").addClass("lieven");   //给偶数行增加样式
+	$("div.list_lh").myScroll({
+		speed: 50,      //数值越大，速度越慢
+		rowHeight: 68   //li的高度
+	});
+	//给处理按钮绑定事件
+	$(".list_lh li a.btn_lh").click(function() {
+		var _this = $(this);
+		var data = _this.attr("data");
+		var json = JSON.parse(data);
+		var url = "dhcbill.opbill.charge.excepiton.csp?PatientId=" + json.patientId + "&Date=" + json.displayDate;
+		websys_showModal({
+			url: url,
+			title: '异常处理',
+			iconCls: 'icon-w-edit',
+			width: 1250,
+			height: 600,
+			callbackFunc: function() {
+				location.reload();
+			}
+		});
+	});
+});
+</script>
+</html>

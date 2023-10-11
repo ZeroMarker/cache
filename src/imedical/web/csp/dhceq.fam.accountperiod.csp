@@ -1,0 +1,143 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+
+</head>
+<script language=Cache runat=server>
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s (rowid,NewStartDate,NewAPYear,NewAPMonth,NewStartMonth,NewEndMonth,IsCan,LastRowID)=""
+	f  s rowid=$o(^DHCEQAccountPeriod(rowid),-1)   q:(rowid="")||(NewStartDate'="")  Do
+	.s Datalist=$Get(^DHCEQAccountPeriod(rowid))
+	.q:$p(Datalist,"^",16)="Y"
+	.s NewAPYear=$p(Datalist,"^",1)
+	.s NewAPMonth=$p(Datalist,"^",2)+1
+	.i NewAPMonth=13 d
+	..s NewAPYear=NewAPYear+1
+	..s NewAPMonth=1
+	.i NewAPMonth<10 s NewAPMonth="0"_NewAPMonth
+	.s NewStartDate=$p(Datalist,"^",5)+1
+	.s NewStartMonth=$p($ZD(NewStartDate,"3"),"-",1,2)
+	.s NewStartDate=##Class(web.DHCEQCommon).TransValueToPage(NewStartDate,"date")
+	.;s LastRowID=rowid
+	s APEndDate=##Class(web.DHCEQCommon).TransValueToPage(+$H,"date")
+	s NewEndMonth=$p($ZD(+$H,"3"),"-",1,2)
+	///modified by ZY0298
+	//用于提醒是否合理:当年月与开始日期结束日期所在年度都不一致的时候,提示是否执行
+	;s IsCan=0
+	//s NewMonthStr=NewAPYear_"-"_NewAPMonth
+	//i (NewMonthStr'=NewStartMonth)&&(NewMonthStr'=NewEndMonth) s IsCan=0
+	//判断是否是最后一个月的记录，只有最后一个月的记录才可以撤销
+	
+	s LastRowID=$g(^DHCEQAccountPeriod(0))
+	
+	s EquipTypeIDs=##Class(web.DHCEQCommon).GetEquipTypesByGroup()
+	s EquipTypeIDs=##class(web.DHCEQCommon).Replace(EquipTypeIDs,"^",SplitNumCode)
+	s EquipTypeData=##class(web.DHCEQ.Plat.JsonObject).%New() 
+	s Data="["
+	s Len=$L(EquipTypeIDs,SplitNumCode)
+	for i=1:1:Len
+	{
+		s EquipTypeID=$p(EquipTypeIDs,SplitNumCode,i)
+		s EquipType=$p($g(^DHCEQCCode("DHCEQCEquipType",EquipTypeID)),"^",2)
+		if Data'="["  d
+		.s Data=Data_","
+		s Data=Data_"{text:'"_EquipType_"',id:'id"_EquipTypeID_"',selected:'true'}"
+	}
+	s Data=Data_"]"
+	d EquipTypeData.%Set("Data",Data)
+	s EquipTypeData=EquipTypeData.%ToJSON()
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	s HospitalDR=%session.Data("LOGON.HOSPID")
+</script>
+<style type="text/css">
+	.icon
+	{
+		width: 20px;
+		height: 20px;
+		margin-right: 10px;
+		float: right;
+	}
+	.hisui-textarea
+	{
+		width:300%;
+		height:100%;
+	}
+</style>
+<body class="hisui-layout" >
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by wy 2020-4-9 界面首先加载loading bug WY0060-->
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="手工折旧月结" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:160px;">
+					
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cAPYear" for="APYear">年度</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="APYear" value=#(NewAPYear)#></div>
+						<div class="eq-table-td eq-table-label"><label id="cAPMonth" for="APMonth">月份</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="APMonth" value=#(NewAPMonth)#></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BAudit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">执行</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cAPStartDate" for="APStartDate">开始日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="APStartDate" value=#(NewStartDate)#></div>
+						<div class="eq-table-td eq-table-label"><label id="cAPEndDate" for="APEndDate">结束日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="APEndDate" value=#(APEndDate)#></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BCancel" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">撤销</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cAPEquipTypeIDs" for="APEquipTypeIDs">管理类组</label></div>
+						<div id="APEquipTypeIDs" style="width:200%;"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label" ><label for="APRemark" >备注</label></div>
+						<div class="eq-table-td eq-table-input"><textarea id="APRemark" class="hisui-textarea"></textarea></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-label"></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" >
+					<table id="tDHCEQAccountPeriod" class="hisui-datagrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="APRowID">
+			<!--INPUT type="hidden" id="IsCan" value=#(IsCan)#-->
+			<INPUT type="hidden" id="APEquipTypeIDs" value=#(EquipTypeIDs)#>
+			<INPUT type="hidden" id="EquipTypeData" value=#(EquipTypeData)#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="APHospitalDR" value=#(HospitalDR)#>
+			<!--///modified by ZY0298增加元素-->
+			<INPUT type="hidden" id="NewAPYear" value=#(NewAPYear)#>
+			<INPUT type="hidden" id="NewAPMonth" value=#(NewAPMonth)#>
+			<INPUT type="hidden" id="NewStartDate" value=#(NewStartDate)#>
+			<INPUT type="hidden" id="LastRowID" value=#(LastRowID)#>
+			
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/fam/accountperiod.js'></script>
+</body>
+</html>

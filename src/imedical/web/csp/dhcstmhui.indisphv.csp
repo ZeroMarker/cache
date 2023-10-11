@@ -1,0 +1,106 @@
+<!--物资发放制单(高值)-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div id="North" class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+		<table id="Conditions" class="Condition">
+			<input id="RowId" name="RowId" type="hidden">
+			<tr>
+				<td><label>发放科室</label><input id="LocId" name="LocId" class="hisui-combobox textbox"></td>
+				<td>
+					<input id="DisByUser" class="hisui-radio" type="radio" label="发放个人　" name="ReqMode" value="1" data-options="checked:true">
+					<input id="UserList" name="UserList" class="hisui-combobox textbox">
+				</td>
+				<td><label>制单人</label><input id="User" name="User" class="textbox" disabled="true"></td>
+				<td align="left"><input id="CompFlag" name="CompFlag" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="完成"></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:88px">清屏</a></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton">查询发放单</a></td>
+			</tr>
+			<tr>
+				<td><label>接收科室</label><input id="ReqLoc" name="ReqLoc" class="hisui-combobox textbox"></td>
+				<td>
+					<input id="DisByGrp" class="hisui-radio" type="radio" label="发放专业组" name="ReqMode" value="0">
+					<input id="GrpList" name="GrpList" class="hisui-combobox textbox" disabled="true">
+				</td>
+				<td><label>制单日期</label><input id="CreateDate" name="CreateDate" class="hisui-datebox textbox" data-options="disabled:true"></td>
+				<td></td>
+				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'" style="width:88px">完成</a></td>
+			</tr>
+			<tr>
+				<td><label>类组</label><input id="Scg" name="Scg" class="hisui-stkscgcombotree textbox"></td>
+				<td><label style="margin-right:13px;">单号</label><input id="DispNo" name="DispNo" class="textbox" disabled="true"></td>
+				<td><label style="margin-right:14px;">单据备注</label><input id="Remarks" name="Remarks" class="textbox"></td>
+				<td></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton" style="width:88px">取消完成</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<table id="MainGrid"></table>
+	</div>
+
+	<!--批次弹窗-->
+	<csp:Include Page="dhcstmhui.incitmbatwindow.csp">
+
+	<!--查询界面Dialog-->
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询发放单" style="width:1100px;height:600px">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="GridPadding" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'发放单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false">
+							<table id="FConditions" class="Condition" onkeydown="if(event.keyCode==13){FQueryBT.click()}">
+								<tr>
+									<td><label>起始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox" style="width:120px"></td>
+									<td><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox" style="width:120px"></td>
+									<td><label>发放科室</label><input id="FLocId" name="LocId" class="hisui-combobox"></td>
+									<td>
+										<input class="hisui-radio" type="radio" label="全部" name="CompFlag" value="" data-options="checked:true">
+										<input class="hisui-radio" type="radio" label="未完成" name="CompFlag" value="N">
+										<input class="hisui-radio" type="radio" label="已完成" name="CompFlag" value="Y">
+									</td>
+									<td><a href="#" id="FQueryBT" class="hisui-linkbutton">查询</a></td>
+									<td><a href="#" id="FClearBT" class="hisui-linkbutton">清屏</a></td>
+									<td><a href="#" id="FSelectBT" class="hisui-linkbutton">选取</a></td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false,collapsible:false">
+							<table id="FMainGrid"></table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'south',border:false" style="padding-top:0;height:300px;">
+				<div class="hisui-panel" data-options="title:'发放单明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="FDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/IncItmBatWindow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/INDispCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/INDispPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/FindINDisp.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/INDispHv.js"></script>
+</body>
+</html>

@@ -1,71 +1,68 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <!DOCTYPE HTML>
-<html style="overflow: hidden;">
+<html lang="en">
 <head>
-
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-    <link rel="stylesheet" href="../scripts/DHCMA/css/base.css" type="text/css">
-    <link href="../scripts/DHCMA/CPW/BT/DocEdit/themes/default/_css/umeditor.css" type="text/css" rel="stylesheet">
+	<meta charset="utf-8">
+    <title>CKEditor 4 – Classic editor</title>
     <HISUI/>
-    <!--<script type="text/javascript" src="../scripts/DHCMA/CPW/BT/DocEdit/third-party/jquery.min.js"></script>-->
-    <script type="text/javascript" charset="utf-8" src="../scripts/DHCMA/CPW/BT/DocEdit/umeditor.config.js"></script>
-    <script type="text/javascript" charset="utf-8" src="../scripts/DHCMA/CPW/BT/DocEdit/editor_api.js"></script>
-    <script type="text/javascript" src="../scripts/DHCMA/CPW/BT/DocEdit/lang/zh-cn/zh-cn.js"></script>
-    <style type="text/css">
-        h1{
-            font-family: "微软雅黑";
-            font-weight: normal;
-        }
-        .edui-container{
-        	border:none;
-        	box-shadow:none;
-        }
-    </style>
+    <DHCMA:HEAD></DHCMA:HEAD>
+    <script src="../scripts/DHCMA/CPW/BT/ckeditor/ckeditor.js"></script>
 </head>
-<body style="padding:0px;">
+<body style="padding:10px;">
+    <div class="hisui-accordion accordion-gray" style="width:780px;height:435px;" data-options="border:false">   
+    	<div title="编辑适用对象文档" data-options="iconCls:'icon-paper',selected:true" style="border: 0px #ccc solid;">   
+        	<textarea name="editor1" id="editor1" rows="10" cols="80" ></textarea>
+    	</div>   
+    	<div title="编辑进入路径标准" data-options="iconCls:'icon-paper'" style="border: 0px #ccc solid;">   
+        	<textarea name="editor2" id="editor2" rows="10" cols="80" ></textarea>
+    	</div>  
+	</div>
+	<div style="text-align: center;margin-top:10px;"><a id="btnSaveDoc" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></div>
+	
 	<script language="Cache" RUNAT="SERVER">		
-		    Set FormID=$g(%request.Data("FormID",1))  //表单ID
-	   </script>
-    <!--style给定宽度可以影响编辑器的最终宽度-->
-    <script type="text/plain" id="myEditor" style="width:578px;border: 1px solid #d4d4d4;">
-        
-    </script>
-    <div style="text-align: center;"><a id="btnSaveDoc" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></div>
+		Set FormID=$g(%request.Data("FormID",1))  //表单ID
+   </script>    
     <script type="text/javascript">
-        var um = UM.getEditor('myEditor',{
-            //这里可以选择自己需要的工具按钮名称,此处仅选择如下七个
-            //toolbar:['fullscreen source undo redo bold italic underline'],
-			toolbar:[
-				'source | undo redo | bold italic underline | forecolor backcolor | removeformat |',
-				'insertorderedlist insertunorderedlist | cleardoc | ',
-				'justifyleft justifycenter justifyright justifyjustify |',
-				'horizontal'
-			],
-            //focus时自动清空初始化时的内容
-            autoClearinitialContent:true,
-            //关闭字数统计
-            wordCount:false,
-            //关闭elementPath
-            elementPathEnabled:false,
-            //默认的编辑区域高度
-            initialFrameHeight:368
-            //更多其他参数，请参考umeditor.config.js中的配置项
-            
-        });
-        var FormID='#(FormID)#'
-        var textDoc = $m({ClassName:"DHCMA.CPW.BTS.PathFormSrv",MethodName:"GetHelpDoc",
-				"aFormID":FormID
-			},false);
-        UM.getEditor('myEditor').setContent(textDoc, false);
-        
-        $('#btnSaveDoc').on('click', function(){
-			var ContentHtml=UM.getEditor('myEditor').getContent();
+    	var FormID='#(FormID)#'
+    	
+   		// Replace the <textarea id="editor1"> with a CKEditor 4
+      	// instance, using default configuration.
+   		CKEDITOR.replace( 'editor1' ,{			//定义组件
+	   		height:'280px',
+	   		extraPlugins:'confighelper',
+	   		placeholder:'点击编辑适用对象文档！'		
+	   	});
+	   	
+	   	CKEDITOR.replace( 'editor2' ,{			//定义组件
+	   		height:'280px',
+	   		extraPlugins:'confighelper',
+	   		placeholder:'点击编辑进入路径标准文档！'		
+	   	});
+	   	
+	   	var jsonForm=$cm({ClassName:"DHCMA.CPW.BT.PathForm",MethodName:"GetObjById",aId:FormID},false);
+	   	if(jsonForm.FormApply != undefined) CKEDITOR.instances.editor1.setData(jsonForm.FormApply);
+	   	if(jsonForm.FormHelpDoc != undefined) CKEDITOR.instances.editor2.setData(jsonForm.FormHelpDoc);
+	   	
+	   	//保存事件
+	   	$('#btnSaveDoc').on('click', function(){
+			var applyHtml=CKEDITOR.instances.editor1.document.getBody().getText();   //CKEDITOR.instances.editor1.getData();
+			var admitStdHtml=CKEDITOR.instances.editor2.document.getBody().getText();  //CKEDITOR.instances.editor2.getData();
+			
         	var ret = $m({ClassName:"DHCMA.CPW.BT.PathForm",MethodName:"UpdateDoc",
 				"aId":FormID,
-				"aDoc":ContentHtml
+				"aDoc":admitStdHtml,
+				"aApplyDoc":applyHtml
 			},false);
-			$.messager.alert("提示","保存成功");//BY wjf
+			if (+ret>0){
+				$.messager.alert("提示","保存成功！","success");
+			}else{
+				$.messager.alert("错误","保存失败，请稍后重试！","error");	
+			}
+			
 		});
-    </script>
-	
+   	</script>
 </body>
 </html>

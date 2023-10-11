@@ -1,0 +1,119 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css"></style>
+</HEAD>
+<script language=Cache runat=server>
+    s PRRowID=$Get(%request.Data("PRRowID",1))
+    s PRProviderDR=$Get(%request.Data("PRProviderDR",1))
+    s PRLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+    s PRLocDesc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+    s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+    s PRStatus=$Get(%request.Data("PRStatus",1))
+    s Type=$Get(%request.Data("Type",1))
+    s QXType=$Get(%request.Data("QXType",1))
+    s WaitAD=$Get(%request.Data("WaitAD",1))    
+    s ApproveRoleDR=$Get(%request.Data("ApproveRoleDR",1))
+    s CurRole=$Get(%request.Data("CurRole",1))
+    s Action=$Get(%request.Data("Action",1))
+    s RoleStep=##class(web.DHCEQCApproveSet).GetStepByRole(##class(web.DHCEQApproveList).GetApproveSet("19",PRRowID),CurRole,Action)
+</script>
+<body class="hisui-layout" >
+    <div data-options="region:'center',border:false" style="padding:10px;">
+        <div class="hisui-panel" title="付款申请单" data-options="eqtitle:'maintitle',fit:true">
+            <div class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:0px 0px 5px 0px;">
+                    <div class="eq-table">
+                        <div class="eq-table-tr">
+                            <div class="eq-table-td eq-table-label"><label id="cPRRequestNo" for="PRRequestNo">付款单号</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRRequestNo" disabled="true"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRMakeDate" for="PRMakeDate">申请日期</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="PRMakeDate" value=#(CurDate)#></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRLocDR_CTLOCDesc" for="PRLocDR_CTLOCDesc">库房</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="PRLocDR_CTLOCDesc" disabled="true" value=#(PRLocDesc)#></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRCheckNo" for="PRCheckNo">支票号</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRCheckNo"></div>
+                            <div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find"  data-options="stopAllEventOnDisabled:true">查询</a><a id="BCancelSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-close"  data-options="stopAllEventOnDisabled:true">退回</a></div>
+                        </div>
+                        <div class="eq-table-tr">
+                            <div class="eq-table-td eq-table-label"><label id="cPRPayFromType" for="PRPayFromType">付款类型</label></div>
+                            <div class="eq-table-td eq-table-input"><input id="PRPayFromType" class="hisui-combobox textbox"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRSourceType" for="PRSourceType">业务类型</label></div>
+                            <div class="eq-table-td eq-table-input"><input id="PRSourceType" class="hisui-combobox textbox"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRPayMode" for="PRPayMode">付款方式</label></div>
+                            <div class="eq-table-td eq-table-input"><input id="PRPayMode" class="hisui-combobox textbox"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRTotalFee" for="PRTotalFee">小写金额</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRTotalFee" disabled="true"></div>
+                            <div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">保存</a><a id="BAudit" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">审核</a></div>
+                        </div>
+                        <div class="eq-table-tr">
+                            <div class="eq-table-td eq-table-label"><label id="cPRProviderDR_VDesc" for="PRProviderDR_VDesc">供应商</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRProviderDR_VDesc" data-options="'component':'PLAT.L.Vendor'"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRBank" for="PRBank">开户银行(供)</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRBank"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRBankAccount" for="PRBankAccount">银行账号(供)</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRBankAccount"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRChineseFee" for="PRChineseFee">大写金额</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRChineseFee" disabled="true"></div>
+                            <div class="eq-table-td eq-table-label"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">删除</a></div>
+                        </div>
+                        <div class="eq-table-tr">
+                            <div class="eq-table-td eq-table-label"><label id="cPRAccountDate" for="PRAccountDate">付款日期</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="PRAccountDate" value=#(CurDate)#></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRHospBank" for="PRHospBank">开户银行(院)</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRHospBank"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRHospBankNo" for="PRHospBankNo">银行账号(院)</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRHospBankNo"></div>
+                            <div class="eq-table-td eq-table-label"><label id="cPRAgent" for="PRAgent">经手人</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PRAgent"></div>
+                            <!--Modified By QW20210422 QW0099 增加图片上传-->
+                            <div class="eq-table-td eq-table-label"><a id="BPicture" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">图片信息</a><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-close"  data-options="stopAllEventOnDisabled:true">提交</a></div>
+                        </div>
+                        <div class="eq-table-tr">
+                            <div class="eq-table-td eq-table-label"><label id="cPRRemark" for="PRRemark">备注</label></div>
+                            <div class="eq-table-td eq-table-input"><textarea class="textbox" id="PRRemark"></textarea></div>
+                            <!--div class="eq-table-td eq-table-label"><label id="cPRGetPayFlag" for="PRGetPayFlag">收款标记</label></div>
+                            <div class="eq-table-td eq-table-input"><input class="hisui-checkbox" type="checkbox" id="PRGetPayFlag"></div-->
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="position:relative">
+                    <table id="DHCEQPayRecord" class="hisui-datagrid"></table>
+                    
+                    <div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 5px 2px 0;padding:5px 10px;">
+                        <span id="sumTotalicon" class="messager-popover-icon info"></span>
+                        <span id="sumTotal"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--隐藏元素-->
+    <div id="hiddenEncrypt" style="display:hidden">
+        <form name="DHCEQ">
+            <INPUT type="hidden" id="PRRowID" value="#(PRRowID)#">
+            <INPUT type="hidden" id="PRProviderDR" value="#(PRProviderDR)#">
+            <INPUT type="hidden" id="PRLocDR" value="#(PRLocDR)#">
+            <INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+            <INPUT type="hidden" id="CurRole" value="#(CurRole)#">
+            <INPUT type="hidden" id="ApproveRoleDR" value="#(ApproveRoleDR)#">
+            <INPUT type="hidden" id="RoleStep" value=#(RoleStep)#>
+            <INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+            <INPUT type="hidden" id="QXType" value="#(QXType)#">
+            <INPUT type="hidden" id="PRStatus" value="#(PRStatus)#">
+            <INPUT type="hidden" id="Type" value="#(Type)#">
+        </form>
+    </div>
+    <script type='text/javascript' src='../scripts/dhceq/em/buspayrequest.js'></script>
+</body>
+</html>

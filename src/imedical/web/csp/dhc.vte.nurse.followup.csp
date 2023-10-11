@@ -1,0 +1,41 @@
+<!--VTE风险评估列表csp,csp:dhc.vte.nurse.followup.csp--> 
+<html XMLNS=TRAK>
+	<head>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body style="padding:0px;">
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		Set vteIpAndPort = $g(%request.Data("IPAndPort",1)) 
+		</SCRIPT>
+		<script language="javascript" type="text/javascript">
+		//vte 项目访问地址
+		var vteIpAndPort = '#(vteIpAndPort)#';
+		
+		//登陆角色
+		var Role = session["LOGON.GROUPDESC"];
+		var locId = "";
+		var wardId = "";
+		if(Role.indexOf("医生")>-1||Role.indexOf("医师")>-1||Role.indexOf("Doctor")>-1){
+			Role = "doctor";
+			locId = session["LOGON.CTLOCID"];
+		}else{
+			Role = "nurse";
+			wardId = session["LOGON.CTLOCID"];
+		}
+		//登陆用户ID
+		var userId = session["LOGON.USERID"];
+		var userName = session["LOGON.USERNAME"];
+		userName = encodeURI(userName);  //进行汉字编码集转换 否则乱码
+		var iFrameSrc = "https://114.251.193.139:8443/api/followUpDate?locId="+locId+"&wardId="+wardId+"&userId="+userId+"&userName="+userName;
+		</script>
+		<iframe src="" frameborder="0" name="followuplist" id="followuplist" height="100%" width="100%" style ="display:block;position:absolute;"></iframe>
+		
+		<script language="javascript" type="text/javascript">
+			document.getElementById("followuplist").src = iFrameSrc;
+		</script>
+		
+	</body>
+</html>

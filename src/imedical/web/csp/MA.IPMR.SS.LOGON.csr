@@ -1,0 +1,63 @@
+<!-- CSP IPMR.LOGON Rules -->
+<!-- Copyright (c) 2017 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+
+<csr:rule name="IPMR.LOGON" match="IPMR:LOGON">
+<csr:description>
+The <b>IPMR.LOGON</b> tag defines defines standard header info and initialisation for each page. For example javascript utilties, style sheet, theme and initialisation code
+</csr:description>
+<csr:action>
+	<!-- charset=utf-8 -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		Set LogonUserID = $g(%session.Data("LOGON.USERID"))
+		Set LogonUserCode = $g(%session.Data("LOGON.USERCODE"))
+		Set LogonUserName = $g(%session.Data("LOGON.USERNAME"))
+		Set LogonLocID = $g(%session.Data("LOGON.CTLOCID"))
+		Set LogonLocDesc = $g(%session.Data("LOGON.CTLOCID"))
+		Set LogonGroupDesc = $g(%session.Data("LOGON.GROUPDESC"))
+		Set MrClass=$Get(%request.Data("MrClass",1),"")
+		Set:MrClass="" MrClass="I"			// 如果为空，设置为住院病案
+		
+		Set tLogonLocID = ##class(CT.IPMR.DPS.Common).GetIdStringByExCode(LogonLocID,"localhost")
+		Set LogonLocID = ##class(MA.IPMR.BTS.LocationSrv).TransLogonLocID(tLogonLocID,"E")	// 医生登陆 对照后的ID 护士登陆 ""
+		Set LogonWardID = ##class(MA.IPMR.BTS.LocationSrv).TransLogonLocID(tLogonLocID,"W")	// 医生登陆 "" 护士登陆 对照后的ID
+		if (LogonLocID="")&&(LogonWardID="") {	// 登录科室非执行科室 和 病区
+			Set LogonLocID=##class(MA.IPMR.BTS.LocationSrv).TransLocID(tLogonLocID)
+		}
+		Set LogonUserID=##class(CT.IPMR.DPS.Common).GetIdStringByExCode(LogonUserID,"localhost")
+		Set LogonUserID = ##class(MA.IPMR.BTS.SSUserSrv).TransUserID(LogonUserID)
+		Set objUser = ##class(MA.IPMR.BT.SSUser).GetObjById(LogonUserID)
+		if $isobject(objUser) {
+			Set LogonUserCode = objUser.BSCode
+			Set LogonUserName = objUser.BSDesc
+		}
+		Set LogonHospID=##class(MA.IPMR.BTS.HospitalSrv).GetCTHospID(LogonLocID)
+		Set LogonHospString = "",LogonHospDesc=""
+  		Set:LogonHospID'="" LogonHospString=##class(MA.IPMR.BTS.HospitalSrv).GetHospStrById(LogonHospID)
+  		Set:LogonHospDesc="" LogonHospDesc=$p(LogonHospString,"^",2)
+  		
+  		if LogonHospID="" {
+	  		Set LogonHospID=##class(MA.IPMR.BTS.HospitalSrv).GetCTHospID(LogonWardID)
+			Set LogonHospString = "",LogonHospDesc=""
+	  		Set:LogonHospID'="" LogonHospString=##class(MA.IPMR.BTS.HospitalSrv).GetHospStrById(LogonHospID)
+	  		Set:LogonHospDesc="" LogonHospDesc=$p(LogonHospString,"^",2)
+	  	}
+  		Set objMrType = ##class(CT.IPMR.BT.MrType).GetMrType(MrClass,LogonHospID)
+		Set MrTypeID = ""
+		Set:$isobject(objMrType) MrTypeID=objMrType.%Id()
+	</SCRIPT>
+	<script language="javascript" type="text/javascript">
+		Logon = new Object();
+		Logon.HospID   = '#(LogonHospID)#';
+		Logon.HospDesc = '#(LogonHospDesc)#';
+		Logon.LocID = '#(LogonLocID)#';
+		Logon.WardID= '#(LogonWardID)#';
+		Logon.UserID = '#(LogonUserID)#';
+		Logon.UserCode = '#(LogonUserCode)#';
+		Logon.UserName = '#(LogonUserName)#';
+		Logon.GroupDesc = '#(LogonGroupDesc)#';
+		Logon.MrTypeID = '#(MrTypeID)#';
+	</script>
+</csr:action>
+</csr:rule>

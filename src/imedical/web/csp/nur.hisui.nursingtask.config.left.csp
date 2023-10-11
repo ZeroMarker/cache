@@ -1,0 +1,219 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+</style>
+<script language="cache" runat="SERVER">
+
+    s taskId = $G(%request.Data("taskId", 1))
+	s hospId = $G(%request.Data("hospId", 1))
+	
+</script>
+<script language="javascript">
+     
+	    var taskId = "#(taskId)#";
+		var hospId = "#(hospId)#";
+		
+	</script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	<div class="hisui-panel" title="规则组合配置" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table style="width:100%">
+			 <tr>
+			   <td class="tdlabel"><label class="ant-form-item-required">规则组合</label></td>
+			   <td><input id="NTONRelationType" name="NTONRelationType" type="text" class="textbox hisui-validatebox" style="width:50%"></td>
+			 </tr>
+			 <!--<tr>
+			   <td class="tdlabel">类名</label></td>
+			   <td><input id="NTONClassName" name="NTONClassName" type="text" class="textbox hisui-validatebox" style="width:80%"></td>
+			 </tr>
+			 <tr>
+			   <td class="tdlabel">方法名</label></td>
+			   <td><input id="NTONQueryName" name="NTONQueryName" type="text" class="textbox hisui-validatebox" style="width:80%"></td>
+			 </tr>
+			  tr>
+			   <td class="tdlabel">当日执行规则</label></td>
+			   <td><input id="NTONRelationTodayExeRule" name="NTONRelationTodayExeRule" type="text" class="textbox hisui-validatebox" style="width:80%"></td>
+			 </tr>
+			 <tr>
+			   <td class="tdlabel">非当日执行规则</label></td>
+			   <td><input id="NTONRelationNoTodayExeRule" name="NTONRelationNoTodayExeRule" type="text" class="textbox hisui-validatebox" style="width:80%"></td>
+			 </tr>
+			 <tr>
+			   <td class="tdlabel">类名</label></td>
+			   <td><input id="NTONClassName" name="NTONClassName" type="text" class="textbox hisui-validatebox" style="width:80%"></td>
+			 </tr>
+			 <tr>
+			   <td class="tdlabel">方法名</label></td>
+			   <td><input id="NTONQueryName" name="NTONQueryName" type="text" class="textbox hisui-validatebox" style="width:80%"></td>
+			 </tr-->	
+			 	 								
+		</table >
+	</div>
+	
+</form>
+  
+  
+
+<script type="text/javascript">
+$(function(){
+	$('body').addClass('active')
+	
+
+		
+		
+	var data=$cm({
+		ClassName:"Nur.NIS.Service.NursingTask.TaskOptions",
+		QueryName:"GetTaskList",
+		keyword:"",
+		hospDR:hospId,
+		groupFlag:""
+	},false)
+	var RelationType=""
+	if (taskId!=""){
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskRuleById",{"id":taskId},function(rtn){
+			var NTONClassName = rtn.NTONClassName
+			var NTONRelationType = rtn.NTONRelationType
+			var NTONQueryName = rtn.NTONQueryName
+			RelationType=NTONRelationType
+			$("#NTONClassName").val(NTONClassName)
+			$("#NTONQueryName").val(NTONQueryName)
+			$("#NTONRelationType").combobox("setValue",NTONRelationType)
+			
+		},'json',false);
+	}
+	runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetRelationTypeList",{"hospId":hospId,"id":taskId},function(rtn){
+		
+		data=data.rows
+		var dataArr=[],rtnArr=[]
+		for(var i=0;i<data.length;i++){
+			var NTONRelationType=data[i].NTONRelationType;
+			if(RelationType!=""){
+				if(NTONRelationType==RelationType){
+					continue;	
+				}
+			}
+			dataArr.push(NTONRelationType)	
+		}
+		for(var i=0;i<rtn.length;i++){
+			var value=rtn[i].value
+			if(dataArr.indexOf(value)<0){
+				rtnArr.push(rtn[i])
+			}	
+		}
+		$("#NTONRelationType").combobox({"data":rtnArr,"width":300})
+		
+		
+		
+		
+	},'json',false);
+	
+})
+
+function combox(selector){
+	
+	$HUI.combo("#"+selector,{
+		valueField:"value",
+		textField:"text",
+		multiple:false,
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		editable:false
+	});	
+	return $("#"+selector)	
+}
+
+function save(){
+	var parmas={
+		"id":taskId,
+		"NTONHospital":hospId
+		
+	}
+	var NTONRelationType= $("#NTONRelationType").combo("getValue")
+	var NTONClassName= $("#NTONClassName").val()
+	var NTONQueryName= $("#NTONQueryName").val()
+	parmas.NTONRelationType=NTONRelationType;
+	parmas.NTONClassName=NTONClassName;
+	parmas.NTONQueryName=NTONQueryName;
+	console.log(parmas)
+	var rsflag = true;
+	runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","InsertTaskRule",{data:JSON.stringify(parmas)},function(rtn){
+		if(rtn == 0) {
+			//$.messager.popover({msg:'保存成功！',type:'success'});
+		
+		} else {
+			//$.messager.popover('提示','保存失败！'+ rtn , "info");
+			//rsflag = false
+		}
+		rsflag = rtn
+	},'json',false);
+	return rsflag
+}
+
+
+</script>
+	
+</body>
+</html>
+

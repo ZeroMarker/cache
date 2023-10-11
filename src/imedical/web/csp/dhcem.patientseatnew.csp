@@ -15,6 +15,7 @@
 	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
 	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
     <HISUI/>
+	<DOCCARD medStepCode="Other" ></DOCCARD>
     <meta charset="UTF-8"> 
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     
@@ -29,22 +30,32 @@
 	</script>
     <SERVER>
 	    s planPatModel=%request.Get("planPatModel")
+	    s SEATVIEWDEF=##class(web.DHCEMNurExe).GetConfigBySession("SEATVIEWDEF")
+	    s SEATLAYOUTDEF=##class(web.DHCEMNurExe).GetConfigBySession("SEATLAYOUTDEF")
 		w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
 		w "var PlanPatModel="""_planPatModel_""";"_$c(13,10)
+		w "var SEATVIEWDEF="""_SEATVIEWDEF_""";"_$c(13,10)
+		w "var SEATLAYOUTDEF="""_SEATLAYOUTDEF_""";"_$c(13,10)
 		w ";"_$c(13,10)
  		w "</SCRIPT>"
    </SERVER>
     <link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patientseatnew.css" />
     <script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+    <script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
     <script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
     <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patientseatnew.js" charset="gb2312"></script>
     <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/patdragcomm.js" charset="gb2312"></script>
     <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+    <script Language="Javascript">
+	if (HISUIStyleCode=="lite"){
+		document.write('<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/patientseatnew.lite.css">');
+	}
+</script>
 	<SERVER>
 	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
     d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
-    s ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
-    s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+    s ReadAccEncrypt=##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+    s ReadAccExpEncrypt=##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
 </SERVER>
     <title></title>
 </head>
@@ -54,47 +65,69 @@
 	<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="padding:10px;border:none;">
 			
 		<div class="hisui-layout" fit="true">
-			<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:110px;overflow:hidden;border:none;">
-				<a id="plantBtn" class="hisui-linkbutton big" data-options="iconCls:'icon-big-plantBtn',plain:true">安排</a>
+			<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:86px;overflow:hidden;border:none;">
 				
-				<div style="float:right;margin-right:800px;font-size:15px;font-weight:bold;">
-					<div><span>总人数:</span><span id="top_btn_all"></span></div>
-					<div><span>人数明细:</span>
-						<span id="top_btn_man"></span>
-						<span id="top_btn_woman"></span>
-						<span id="top_btn_unman"></span>
-					</div>
-					<div><span>当前空余座位:</span>
-						<span id="top_btn_no"></span>
-					</div>
-
+				<div style="height:35px;">
+					<span style="font-size:20px;">#(..Get("全部患者"))#：</span><span id="top_btn_all" style="font-size:20px;width: 50px;display: inline-block;"></span> 
+					<span style="font-size: 20px;font-weight: 100;color:#ddd;padding-left:60px">|</span>
+					<span style="color:#339eff;font-size: 15px;display: inline-block;width: 46px;text-align: right;">#(..Get("信息"))#：</span>
+					<span style="color:333333;">#(..Get("等候区"))#</span><span class="showNumberSpan" id="top_btn_wait">0</span>
+					
+					<span class="sexArea"></span>
+					
+					<span style="display: inline-block;width:50px;"></span>
+					<span style="font-size: 20px;font-weight: 100;color:#ddd">|</span>
+					<span style="color:#339eff;">#(..Get("剩余座位"))#：</span><span class="showNumberSpan" id="top_btn_no"></span>
 				</div>
 				<div class="tool-bar-line" style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
 				<div style="height:35px;padding-top:8px;">
-					<!--<span style="margin-right:10px;">科室:</span><input id="locListCombo" class="hisui-combobox"/>-->
-					<span style="margin-right:10px;">登记号</span><input id="patRegNo" class="hisui-validatebox textbox"/>
+					<span class="queryItm" onclick="clickQueryItm(this)" filterType="HasNoExecOrd" filterValue="Y">
+						<span style="font-size:20px;position: relative;top: 2px;">#(..Get("需执医嘱人数"))#：</span>
+						<span class="hasNoExecOrdNum my-face" id="top_btn_ord" style="font-size:20px;font-weight:800;color: red;position: relative;top: 2px;border-bottom: 1px solid red;"></span>
+					</span>
+					<span style="display: inline-block;width:50px;"></span>
+					<input id="filterCombo" style="width:110px" class="hisui-combobox"></input>
+					<input id="filterValue" placeholder="#(..Get("检索内容"))#" class="hisui-validatebox textbox"/>
+					<!--<input id="patRegNo" class="hisui-validatebox textbox"/>-->
 					<span style="display:inline-block;width:20px"></span>
+					
+					<div style="float: right;"><!--width:332px;-->
+						<div id="switch1" class="hisui-switchbox" style="float: left;" data-options="onText:'#(..Get("简易"))#',offText:'#(..Get("明细"))#',
+						size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){changeSeatView(obj);}">
+						</div>
+						<div id="switch2" class="hisui-switchbox" style="float: left;margin-left:10px;" data-options="onText:'#(..Get("位置"))#',offText:'#(..Get("紧密"))#',
+						size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){changeSeatViewPosition(obj);}">
+						</div>
+						<div class="qBar" style="margin-left: 10px;">
+							<span class="qBarAdd" onclick="qBarOp('add')">+</span>
+							<span class="qBarVal">100%</span>
+							<span class="qBarSub" onclick="qBarOp('sub')">-</span>
+							<span class="qBarLim">|</span>
+							<span class="qBarReset" onclick="qBarOp('reset')">#(..Get("重置"))#</span>
+						</div>
+					</div>
 				</div>
-				<div class="tool-bar-line" style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
+				<!--div class="tool-bar-line" style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div-->
 				
 			</div>
 		
-			<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="padding:10px;border:none;">	
-				<!-- 座位图区域 -->
-				<div class="vc">
-					<div class="center" style="border:none;">
-						<div id="lef-bottom"></div>
-					</div>
-					<div class="left-side">
-						<div class="hisui-accordion accordion-green" id="obsRoomAccordion"  border=false fit=true>
-							<div id="waitArea" title="等待区<span id='waitNumber'>0</span>" data-options="iconCls:'icon-w-clock',collapsible:false" style=""> 
-								<div class="dg-waitarea">
+			<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'" style="border:none;">	
+				<div id="cc" class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'west',title:'',iconCls:'icon-w-list',split:true,showCollapsedTitle:true" style="width:215px;border:none">
+						<div class="hisui-accordion accordion-green" id="obsRoomAccordion" fit=true data-options="border:false">
+							<div id="waitArea" title="<span id='plantObsRoomBtn' style=''>#(..Get("等待区(点击添加)"))#</span>" data-options="iconCls:'icon-w-clock',collapsible:true,selected:true" style=""> 
+								<!--div class="dg-waitarea"-->
 									<table id="obsPatTable" border=false></table>
-								</div>
+								<!--/div-->
 							</div>   
 						</div>
-					</div>
-				</div>	
+					</div>   
+					<div data-options="region:'center',title:'',split:false" style="border:none;">
+						<div class="center" style="border:none;">
+							<div id="transSeatArea"></div>
+						</div>
+					</div>   
+				</div> 
 			</div>
 		</div>
 		
@@ -102,75 +135,77 @@
 </div>
 
 
-<div id="wind" class="hisui-window" title="输液室座位安排" data-options="iconCls:'icon-save',closed:'true',collapsible:false,minimizable:false,maximizable:false" style="width:680px;height:380px;padding:5px;">
+<div id="wind" class="hisui-window" title="#(..Get("输液室座位安排"))#" data-options="iconCls:'icon-w-save',closed:'true',collapsible:false,minimizable:false,maximizable:false" style="width:536px;height:329px;"><!--padding:5px;-->
 	<div class="hisui-layout" data-options="fit:true">
 		<div data-options="region:'center'" style="border:0px;" border=false>
-			<table class="planPatTable" style="padding-right: 25px;padding-top:10px;">
-				<tr height=42>
-					<td class="input-label">卡类型</td>
+			<table class="planPatTable" style="padding-top:6px;">
+				<tr height=38>
+					<td class="input-label">#(..Get("卡类型"))#</td>
 					<td> 
-						<input id="EmCardType" class="data-input textbox"></input>
-					</td>
-					<td class="input-label">卡号</td>
+						<input id="CardTypeRowId" type="hidden">
+						<input id="CardTypeNew" disabled="disabled" class="data-input textbox"></input>
+					</td> 
+					<td class="input-label">#(..Get("卡号"))#</td>
 					<td> 
 						<input id="CardNum" class="data-input textbox"></input>
+						<a href="#" id="readCardBtn" class="hisui-linkbutton planPat-Btn" iconCls="" style="position: relative;top:-2px">读卡</a>
 					</td>
-					<td>
+					<!--td>
 						<a href="#" id="readCardBtn" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-card">读卡</a>
-					</td>
+					</td-->
 				</tr>
-				<tr height=42>
-					<td class="input-label">登记号</td>
+				<tr height=38>
+					<td class="input-label">#(..Get("登记号"))#</td>
 					<td> 
 						<input id="RegiNum" class="data-input textbox"></input>
 					</td>
-					<td class="input-label">姓名</td>
+					<td class="input-label">#(..Get("姓名"))#</td>
 					<td> 
 						<input id="UserName" class="data-input textbox"></input>
 					</td>
 				</tr>
-				<tr height=42 style="display:none;">
-					<td class="input-label">病人密级</td>
+				<tr height=38 style="display:none;">
+					<td class="input-label">#(..Get("病人密级"))#</td>
 					<td> 
 						<input id="UserSecRank" class="data-input textbox"></input>
 					</td>
-					<td class="input-label">病人级别</td>
+					<td class="input-label">#(..Get("病人级别"))#</td>
 					<td> 
 						<input id="UserRank" class="data-input textbox"></input>
 					</td>
 				</tr>
-				<tr height=42>
-					<td class="input-label">性别</td>
+				<tr height=38>
+					<td class="input-label">#(..Get("性别"))#</td>
 					<td> 
 						<input id="PatSex" class="data-input textbox" disabled="disabled"></input>
 					</td>
-					<td class="input-label">年龄</td>
+					<td class="input-label">#(..Get("年龄"))#</td>
 					<td> 
 						<input id="PatAge" class="data-input textbox" disabled="disabled"></input>
 					</td>
 				</tr>
-				<tr height=42>
-					<td class="input-label">就诊科室</td>
+				<tr height=38>
+					<td class="input-label">#(..Get("就诊科室"))#</td>
 					<td> 
 						<input id="PatLoc" class="data-input textbox" disabled="disabled"></input>
 					</td>
-					<td class="input-label">就诊时间</td>
+					<td class="input-label">#(..Get("就诊时间"))#</td>
 					<td> 
 						<input id="PaAdmTime" class="data-input textbox" disabled="disabled"></input>
 					</td>
 				</tr>
-				<tr height=42>
-					<td class="input-label">当前座位</td>
+				<tr height=38>
+					<td class="input-label">#(..Get("当前座位"))#</td>
 					<td> 
 						<input id="PatSeatNo" class="data-input textbox"></input>
 					</td>
-					<td class="input-label">安排座位</td>
+					<td class="input-label">#(..Get("安排座位"))#</td>
 					<td> 
 						<input id="UserTradeSeatBt" class="data-input textbox"></input>
 					</td>
 				</tr>
-				<tr height=42>
-					<td class="input-label">主管医生</td>
+				<tr height=38>
+					<td class="input-label">#(..Get("主管医生"))#</td>
 					<td> 
 						<input id="PrvDoc" class="data-input textbox" disabled="disabled"></input>
 					</td>
@@ -194,7 +229,7 @@
 				</tr>
 			</table>
 		</div>
-		<div data-options="region:'south',border:false" style="text-align:center;padding:10px 0 0;height:50px;" border=false>
+		<div data-options="region:'south',border:false" style="text-align:center;padding:0 0 10px 0;height:40px;" border=false>
 			<a href="#" id="wriArea" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-edit" data-options="stopAllEventOnDisabled:true">等候</a>
 			<a href="#" id="winArrBtn" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-stamp">安排</a>
 			<a href="#" id="ClearArrBtn" class="hisui-linkbutton planPat-Btn" iconCls="icon-w-export">离开</a>
@@ -204,14 +239,14 @@
 </div>
 
 <!-- 主管医生窗体 -->
-<div id="DocWin" class="hisui-window" title="指定主管医生" data-options="iconCls:'icon-save',closed:'true',collapsible:false,minimizable:false,maximizable:false" style="width:380px;height:200px;padding:5px;">
+<div id="DocWin" class="hisui-window" title="#(..Get("指定主管医生"))#" data-options="iconCls:'icon-w-save',closed:'true',collapsible:false,minimizable:false,maximizable:false" style="width:380px;height:157px;padding:20px;">
 	<div class="hisui-layout" data-options="fit:true">
-		<div id="docbody" style="margin:30px 0px 0px 45px;">
-			主管医生：<input id="ChargDoc" style="width:150px;"/>
+		<div id="docbody" style="margin:0px 0px 20px 63px;">
+			<label class="input-label">#(..Get("主管医生"))#</label><input id="ChargDoc" style="width:150px;"/>
 		</div>
-		<div id="doctool" style="margin:30px 0px 0px 80px;">
-		    <button id="docsure" class="hisui-linkbutton planPat-Btn" style="margin-left:15px">确认</button>
-			<button id="doccancel" class="hisui-linkbutton planPat-Btn" style="margin-left:30px">取消</button>
+		<div id="doctool" style="text-align:center">
+		    <button id="docsure" class="hisui-linkbutton planPat-Btn">#(..Get("确认"))#</button>
+			<button id="doccancel" class="hisui-linkbutton planPat-Btn">#(..Get("取消"))#</button>
 		</div>
 	</div>
 </div>
@@ -219,22 +254,27 @@
 <!--------------右键菜单------------------>
 <div id="menu" class="hisui-menu" style="width:140px; display: none;">  
 	<!--放置一个隐藏的菜单Div-->
-	<div id="btn_NurExec" data-options="iconCls:'icon-check-reg'" onclick="ArrPatSeat()">安排</div>
-	<div id="btn_PrintWrs" data-options="iconCls:'icon-print'" onclick="NurExec()">护士执行</div>
-	<div style="display:none" id="btn_TempMeaSin" data-options="iconCls:'icon-end-adm'" onclick="TempMeaSin()">生命体征</div>
+	<div id="btn_NurExec" data-options="iconCls:'icon-check-reg'" onclick="ArrPatSeat()">#(..Get("安排"))#</div>
+	<div id="btn_PrintWrs" data-options="iconCls:'icon-print'" onclick="NurExec()">#(..Get("护士执行"))#</div>
+	<div style="display:none" id="btn_TempMeaSin" data-options="iconCls:'icon-end-adm'" onclick="TempMeaSin()">#(..Get("生命体征"))#</div>
 	<div class="menu-sep"></div>
-	<div id="btn_PrintBed" data-options="iconCls:'icon-mnypaper-ok'" onclick="ClrPatSeat()">离开座位</div>
-	<div id="btn_ChargeDoc" data-options="iconCls:'icon-print'" onclick="ChargeDoc()">主管医生</div>
+	<div id="btn_PrintBed" data-options="iconCls:'icon-mnypaper-ok'" onclick="ClrPatSeat()">#(..Get("离开座位"))#</div>
+	<div id="btn_ChargeDoc" data-options="iconCls:'icon-print'" onclick="ChargeDoc()">#(..Get("主管医生"))#</div>
 	<div class="menu-sep"></div>
-	<div id="btn_PrintBedCard" data-options="iconCls:'icon-print'" onclick="newPrintXmlMode()">座位卡</div>
+	<div id="btn_PrintBedCard" data-options="iconCls:'icon-print'" onclick="newPrintXmlMode()">#(..Get("座位卡"))#</div>
  </div>
 <!--------------右键菜单------------------>
 </body>
-
+<Server>
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+</Server>
 <!--打印-->
 <div id="hiddenEncrypt" style="width:0;height:0;">
 	<form name="DHCIPBILL">
-		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 	</form>
 </div>
 </html>

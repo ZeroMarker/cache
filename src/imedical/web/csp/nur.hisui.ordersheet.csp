@@ -1,0 +1,163 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- nur.hisui.ordersheet.csp -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>
+            <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+        </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <HISUI />
+        <NURHISUI />
+        <script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
+        <style type="text/css" media="screen">
+	        .datagrid-wrap.panel-body.panel-body-noheader{
+					border-color:#ccc;
+					border-top-right-radius:0;
+					border-top-left-radius:0;
+					border-right:0;
+					border-left:0;
+					border-bottom:0;
+			}
+			/*
+            .panel-icon, .panel-tool{
+                top: 1px;
+                margin-top: 0;
+                height: auto;
+            }
+            */
+            /*
+            .panel-tool a{
+                margin-top: 7px;	
+            }
+            */
+            .iframeshow {
+                display: block;
+                display: initial;
+            }
+            .iframehidden {
+                display: none;
+            }
+            a.buttonStyle{
+	            width:auto;
+	            padding: 6px 13px;
+	            line-height: 16px;
+	            margin: 2px 5px;
+	            border-radius: 5px;
+	            background: 0 0;
+	            
+	            color: #ff4401;
+	            font-weight: bold;
+	        }    
+	            
+	        /*    
+	         a.buttonStyle:hover{
+	            background: #017bce;
+	        }  
+	        */
+	        a.clicked{
+		        
+		        background: #ffe9db;
+		    }
+	        #chartToolBar{
+		        
+		        background: #f9f9fa;
+    			border-color: #ccc;
+    			padding: 3px 5px;
+    			border-radius: 4px 4px 0 0;
+    			filter: none;
+		        border-width: 1px;
+    			border-style: solid;
+		        position: static;
+		        display: flex;
+			    align-items: center;
+			    flex-wrap: wrap;
+			    
+		    }
+
+        </style>
+    </head>
+    <!--ADDINS require="PrintChart"/-->
+    <server> 
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm=""
+	if EpisodeID'="" {
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+	}
+	set SinglePat=$g(%request.Data("SinglePat",1))
+	if SinglePat'="" {
+		set SinglePat="none"
+	}
+    d ##class(web.DHCXMLPConfig).LODOPInit()
+	</server>
+    <body class="hisui-layout">
+    	<!--csp:Include Page="ipdoc.nursepatlist.panel.csp" -->
+        <div data-options="region:'west',border:true,split:false,headerCls:'panel-header-gray',border:false" style="width:380px;padding:4px;display:#(SinglePat)#">
+            <csp:Include Page="nur.hisui.patlist.panel.csp">
+        </div>
+        <div data-options="region:'center',border:true" style="border:0px; padding:4px 4px 4px 0px;display:flex;flex-direction: column;">
+         <div id="chartToolBar">
+            	<div id="locsChange" style="flex: 1;display: flex;align-items: center;flex-wrap: wrap;">
+            	</div>
+            	<div style="display: flex;align-items: center;">
+            		<div id="sheets" style="display: flex;align-items: center;flex-wrap: wrap;"></div>
+	                <!--<a id="changeTypeBtn" title="#(..Get("切换长期/临时医嘱单"))#" href="javascript:void(0)" class="hisui-tooltip buttonStyle" data-options="position:'bottom'">#(..Get("临时医嘱单"))#</a>-->
+	                <!--<a id="nurseSheetBtn" title="#(..Get("护嘱单"))#" href="javascript:void(0)" class="hisui-tooltip buttonStyle" data-options="position:'bottom'">#(..Get("护嘱单"))#</a>-->
+	                <!--input id="pageBox" class="hisui-combobox" name="state" style="width:80px;" data-options="enterNullValueClear:false,blurValidValue:true"></input--> 
+	                <input id="pageInput" name="pageInput" type="number" class="hisui-triggerbox textbox" style="width:60px;" data-options="icon:'icon-paper-arrow-up',plain:true,handler:pageHandler.jumpPage" />
+	                <span id="totalPageSpan" style="margin:0 10px;color:red"></span>
+	                <a id="viewRefreshBtn" title="#(..Get("刷新预览"))#" href="javascript:void(0)" class="hisui-tooltip hisui-linkbutton"  plain="true" iconCls="icon-reload"></a>
+	                <a id="viewZoomInBtn" title="#(..Get("预览界面放大"))#" href="javascript:void(0)" class="hisui-tooltip hisui-linkbutton" data-options="position:'bottom'" plain="true" iconCls="icon-add"></a>
+	                <a id="viewZoomOutBtn" title="#(..Get("预览界面缩小"))#" href="javascript:void(0)" class="hisui-tooltip hisui-linkbutton" data-options="position:'bottom'" plain="true" iconCls="icon-minus"></a>
+	                <a id="firstPageBtn" title="#(..Get("首页"))#" href="javascript:void(0)" class="hisui-tooltip hisui-linkbutton"  plain="true" iconCls="icon-trian-recta-left"></a>
+	                <a id="prePageBtn" title="#(..Get("上一页"))#"  href="javascript:void(0)" class="hisui-tooltip hisui-linkbutton"  plain="true" iconCls="icon-up"></a>
+	                <a id="nextPageBtn" title="#(..Get("下一页"))#"  href="javascript:void(0)" class="hisui-tooltip hisui-linkbutton"  plain="true" iconCls="icon-down"></a>
+	                <a id="lastPageBtn" title="#(..Get("末页"))#"  href="javascript:void(0)" class="hisui-tooltip hisui-linkbutton"  plain="true" iconCls="icon-trian-recta-right"></a>
+	                
+	                <a id="printOutAllPageBtn"  href="javascript:void(0)" class="hisui-menubutton"  plain="true"  data-options="menu:'#mmedit',iconCls:'icon-print-box'">#(..Get("全部打印"))#</a>
+	                <div id="mmedit" style="width:150px;">
+				        <div id="printOutAllPageXuBtn" data-options="iconCls:'icon-print'">#(..Get("打印(续打)"))#</div>
+				        <div id="printCurrPageBtn" data-options="iconCls:'icon-reprint-inv'">#(..Get("打印当前页"))#</div>
+				        <div id="printSelectPageBtn" data-options="iconCls:'icon-reprint-inv'">#(..Get("打印多页"))#</div>
+				        <div id="printSelectedRowsBtn" data-options="iconCls:'icon-paper-arrow-down'">#(..Get("打印选中行"))#</div>
+				        <div id="deletePrintRecBtn" data-options="iconCls:'icon-mnypaper-no'">#(..Get("删除打印记录"))#</div>
+						<div id="arrangeOrderBtn" >#(..Get("重整医嘱"))#</div>
+    				</div>
+	                
+	                
+	                
+                </div>
+            </div>
+            <div  class="hisui-panel" style="position:relative;border-color:#ccc;border-radius: 0 0 4px 4px;border-top-width: 0px;bottom: 44px;top:0px;flex-grow: 1;display: flex;" title=""  data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+            	<div id="leftView" style="background: gray;flex-grow: 15;border-radius: 0 0 0 4px;"></div>
+            	<div id="pageView" style="flex-grow: 70;"></div>
+            	<div id="rightView" style="background: gray;flex-grow: 15;border-radius: 0 0 4px 0;"></div>
+            </div>
+        </div>
+       
+        <script type="text/javascript">
+            var episodeID="#(EpisodeID)#";
+        </script>
+    </body>
+    <div id="selectPageWin">
+        	<div style="margin: 10px;height: calc(100% - 20px);">
+        		<div style="text-align: center;">
+        			<font>#(..Get("从:"))#</font>
+        			<input id="startPageNum" name="startPageNum" class="hisui-numberbox textbox" style="width:60px;"/>
+        			<font>#(..Get("到:"))#</font>
+        			<input id="endPageNum" name="endPageNum" class="hisui-numberbox textbox" style="width:60px;"/>
+        		</div>
+        		<div style="bottom: 0;margin-top: 10px;text-align: center;">
+        			<a href="#"  id="selectPagePrintBtn" class="hisui-linkbutton" style="width:100px;height:30px;">打印</a>
+        		</div>
+        	</div>
+        </div>
+    <script type="text/javascript" src="../scripts/nurse/ordersheet/orderSheet.js" charset="gbk"></script>
+</html>

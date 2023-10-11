@@ -3,7 +3,9 @@
 <!-- Put your page Title here -->
 <title>首台手术统计</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<!--dhcclinic:easyui></dhcclinic:easyui-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI css="wesys.menugroup.css"></HISUI>
 <dhcclinic:head></dhcclinic:head>
 <script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
 <script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
@@ -11,14 +13,26 @@
 <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
 </head>
 <body class="hisui-layout">
-	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+	<div id="dataTools">
      	<form id="conditionForm">
-    		<label style="padding-left:5px;">开始日期</label>
-    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
-    		<label style="padding-left:5px;">结束日期</label>
-    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
-    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
-    		<!--<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-excel'">导出</a>-->
+     		<div class="form-row-group">
+     			<div class="form-rows">
+     				<div class="form-row" style="margin:9px 10px 9px 8px;">
+     					<div class="form-title-right4">开始日期</div>
+		    			<span class="form-item">
+		    				<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox"/>
+		    			</span>
+     					<div class="form-title-right4">结束日期</div>
+		    			<span class="form-item">
+		    				<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox"/>
+		    			</span>
+		    			<span class="form-btn">
+		    				<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
+		    			</span>
+    					<!--<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-excel'">导出</a>-->
+    				</div>
+    			</div>
+    		</div>
     	</form>
     </div>
     <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false ">
@@ -30,17 +44,30 @@
 		$(document).ready(function() {
 			var date=new Date();
 			var month=date.getMonth();
-			date.setMonth(month-1);
-			date.setDate(1);
+			date.setMonth(month-1,1);
+			//date.setDate(1);
 			var lastMonthFirstDay = date;
 			
 			var date=new Date();
 			date.setDate(0);
 			var lastMonthLastDay = date;
 			
-    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
-    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
-	    	
+    		dhccl.parseDateFormat();
+            var ret=dhccl.runServerMethod("web.DHCClinicCom","GetDateFormat");
+              if(ret.result=="j/n/Y") 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("dd/MM/yyyy");
+	            var lastMonthLastDay=lastMonthLastDay.format("dd/MM/yyyy");
+	        
+	        }
+	        else 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("yyyy-MM-dd");
+	            var lastMonthLastDay=lastMonthLastDay.format("yyyy-MM-dd");
+		        }
+		     $("#OperStartDate").datebox("setValue", lastMonthFirstDay);
+    		 $("#OperEndDate").datebox("setValue", lastMonthLastDay);
+    		
     		var datagrid = $("#data_grid");
     		datagrid.datagrid({
         		idField: "RowId",
@@ -48,7 +75,7 @@
         		rownumbers: true,
         		remoteSort: false,
         		singleSelect:true,
-        		striped:true,
+        		striped:false,
         		title: "",
         		nowrap: false,
         		border:false,
@@ -103,7 +130,7 @@
                 {
                     field: "SurgeonDesc",
                     title: "手术医生",
-                    width: 60
+                    width: 100
                 },
                 {
                     field: "AsstDesc",
@@ -112,7 +139,7 @@
                 },{
                     field: "UnplannedSurgery",
                     title: "二次手术",
-                    width: 60,
+                    width: 100,
                     formatter:function(value,row,index){
 	                    var result="";
 	                    if(value=="Y"){
@@ -127,27 +154,27 @@
                 },{
                     field: "TheatreInDT",
                     title: "入室时间",
-                    width: 120
+                    width: 160
                 },{
                     field: "TheatreOutDT",
                     title: "离室时间",
-                    width: 120
+                    width: 160
                 },{
                     field: "AnaStartDT",
                     title: "麻醉开始时间",
-                    width: 120
+                    width: 160
                 },{
                     field: "AnaFinishDT",
                     title: "麻醉结束时间",
-                    width: 120
+                    width: 160
                 }, {
                     field: "OperStartDT",
                     title: "手术开始时间",
-                    width: 120
+                    width: 160
                 },{
                     field: "OperFinishDT",
                     title: "手术结束时间",
-                    width: 120
+                    width: 160
                 },
                 {
                     field: "AnaCareProv",

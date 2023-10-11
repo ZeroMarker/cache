@@ -1,44 +1,47 @@
-<!--¿â´æ±¨ËğÉóºË-->
+ï»¿<!--åº“å­˜æŠ¥æŸå®¡æ ¸-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
 </csp:method>
 <html lang="zh-CN">
 <SERVER>
-d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //ÈóÇ¬´òÓ¡
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //æ¶¦ä¹¾æ‰“å°
 </SERVER>
 <HEAD>
-<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
-<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<HISUI/>
-<DHCSTMHISUI/>
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
 </HEAD>
 <body class="hisui-layout" data-options="fit:true">
 	<div style="padding:10px 10px 8px 10px" data-options="region:'center',border:false">
-		<div class="hisui-panel" data-options="title:'±¨Ëğµ¥¾İ',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+		<div class="hisui-panel" data-options="title:'æŠ¥æŸå•æ®',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
 			<div class="hisui-layout" data-options="fit:true">
-				<div class="BorderLine" data-options="region:'north',border:false">
-					<table id="Conditions" class="Condition">
+				<div class="BorderLine" data-options="region:'north'">
+					<table id="Conditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<input id="Complate" name="Complate" type="hidden" value="Y">
 						<tr>
-							<td>±¨Ëğ¿ÆÊÒ</td>
+							<td>æŠ¥æŸç§‘å®¤</td>
 							<td><input id="SupLoc" name="SupLoc" class="textbox hisui-combobox" ></input></td>
-							<td colspan=2>ÉóºË×´Ì¬</td>
-							<td><input id="Audit" name="Audit" class='textbox hisui-simplecombobox'></td>
-							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">²éÑ¯</a></td>
-							<td><a href="#" id="AduitBT" class="hisui-linkbutton" style="width:88px;">ÉóºËÍ¨¹ı</a></td>
+							<td>åˆ¶å•æ—¥æœŸ</td>
+							<td><input id="Date" name="StartDate" class="hisui-datebox textbox"></td>
+							
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">æŸ¥è¯¢</a></td>
+							<td><a href="#" id="AduitBT" class="hisui-linkbutton" style="width:88px;">å®¡æ ¸é€šè¿‡</a></td>
 						</tr>
 						<tr>
-							<td>ÖÆµ¥ÈÕÆÚ</td>
-							<td><input id="Date" name="StartDate" class="hisui-datebox textbox"></td>
-							<td colspan=2>½áÊøÈÕÆÚ</td>
+							<td colspan="2">
+								<input class="hisui-radio" type="radio" label="å…¨éƒ¨" name="Audit" value="">
+								<input class="hisui-radio" type="radio" label="å·²å®¡æ ¸" name="Audit" value="Y">
+								<input class="hisui-radio" type="radio" label="æœªå®¡æ ¸" name="Audit" value="N" data-options="checked:true">
+							</td>
+							<td>ç»“æŸæ—¥æœŸ</td>
 							<td><input id="Date" name="EndDate" class="hisui-datebox textbox"></td>
-							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">ÇåÆÁ</a></td>
-							<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">´òÓ¡</a></td>	
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">æ¸…å±</a></td>
+							<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:88px;">æ‰“å°</a></td>
 						</tr>
 					</table>
-						
 				</div>
 				<div data-options="region:'center',border:false">
 					<table id="INScrapAuditGrid"></table>
@@ -47,13 +50,12 @@ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //ÈóÇ¬´òÓ¡
 		</div>
 	</div>
 	<div data-options="region:'south',border:false" class="GridPadding" style="padding:0px 10px 10px 10px;height:240px">
-		<div class="hisui-panel" data-options="title:'µ¥¾İÃ÷Ï¸',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" >
+		<div class="hisui-panel" data-options="title:'å•æ®æ˜ç»†',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
 			<table id="INScrapAuditDetailGrid"></table>
-		</div>  
-	</div>   
- <!-- ¼ÓÔØÒ³ÃæµÄJS -->
-<script type="text/javascript" src="../scripts/dhcstmhisui/INScrap/INScrapPrint.js"></script>
-<script type="text/javascript" src="../scripts/dhcstmhisui/INScrap/INScrapAudit.js"></script>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INScrap/INScrapPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INScrap/INScrapAudit.js"></script>
 </body>
 </HTML>
-

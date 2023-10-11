@@ -1,0 +1,86 @@
+<!--
+	说明
+	csp: dhcpe/dhcpeireport.normal.explain.csp
+	A4 大小 一般为  210mm*297mm  595pt*840pt
+	单独的样式放在 style 中，便于浏览器调试
+	尽量不用 px，会受分辨率影响效果
+	不同打印机对 lodop 也有影响，调试时可使用真实打印机的电脑预览
+	&ensp; 半角占位符  &emsp; 全角占位符
+	
+	1英寸 72pt  25.30mm    大特号 63pt  22.14mm    特号 54pt  18.97mm    初号 42pt  14.82mm    小初 36pt  12.70mm
+	一号  26pt   9.17mm    小一   24pt   8.47mm    二号 22pt   7.76mm    小二 18pt   6.35mm    三号 16pt   5.64mm
+	小三  15pt   5.29mm    四号   14pt   4.94mm    小四 12pt   4.23mm    五号 10.5pt 3.70mm    小五 9pt    3.18mm
+	六号  7.5pt  2.56mm    小六   6.5pt  2.29mm    七号 5.5pt  1.94mm    八号 5pt    1.76mm
+-->
+<table class="rptpage">
+	<tr><td style="height:10pt;">&ensp;</td></tr>
+	
+	<tr>
+		<td class="rpttitle">说明</td>
+	</tr>
+		
+	<tr><td style="height:5pt;">&ensp;</td></tr>
+	
+	<tr>
+		<td>
+			<p class="explain-normal">尊敬的&ensp;#(baseinfo.patName)#&ensp;#(baseinfo.patSexDesc)#</p>
+			<p class="explain-normal-first">您好！</p>
+			<p class="explain-normal-first">欢迎您光临#(other.LOCDESC)#，感谢您对我们工作的信任和支持！</p>
+			<p class="explain-normal-first">现将您的健康体检报告呈上，本报告分为总检结论与建议、各科检查情况及小结、各项特殊检查结果及化验单。请您着重关注本次体检的异常情况，仔细阅读专家对您的重点问题给予的提示内容。</p>
+		</td>
+	</tr>
+		
+	<tr><td style="height:10pt;">&ensp;</td></tr>
+		
+	<!-- 报告中的检查项目 strat -->
+	<tr>
+		<td>
+			<table class="explain-item-table">
+				<tr>
+					<th colspan=4>检查科室及项目</th>
+				</tr>
+				<tr>
+					<th>检查科室</th>
+					<th>项目名称</th>
+					<th>检查状态</th>
+					<th>检查日期</th>
+				</tr>
+				
+				<script language="Cache" RUNAT="SERVER">
+					k tempreport("item")
+					s stsort=0
+					for nindex=0:1:(business.stationItem.Size()-1) {
+						s station=business.stationItem.Get(nindex)
+						s itsort=0
+						for mindex=0:1:(station.itemList.Size()-1) {
+							s item=station.itemList.Get(mindex)
+							continue:item.ygFlag="Y"
+							s itsort=itsort+1
+							s:itsort=1 stsort=stsort+1
+							s tempreport("item",stsort,itsort)=station.stationName_"^"_item.itemDesc_"^"_item.examStat_"^"_item.examDate
+						}
+						
+					}
+					s sto=0
+					f {
+						s sto=$o(tempreport("item",sto))
+						q:sto=""
+						s ito=0
+						f {
+							s ito=$o(tempreport("item",sto,ito))
+							q:ito=""
+							s repItmData=$g(tempreport("item",sto,ito))
+							w "<tr>"
+							w:ito=1 "<td rowspan="_$o(tempreport("item",sto,""),-1)_">"_$p(repItmData,"^",1)_"</td>"
+							w "<td>"_$p(repItmData,"^",2)_"</td>"
+							w "<td>"_$p(repItmData,"^",3)_"</td>"
+							w "<td>"_$p(repItmData,"^",4)_"</td>"
+							w "</tr>"
+						}
+					}
+				</script>
+			</table>
+		</td>
+	</tr>
+	<!-- 报告中的检查项目 end -->
+</table>

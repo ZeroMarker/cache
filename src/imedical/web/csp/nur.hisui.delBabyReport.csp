@@ -1,0 +1,424 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.delBabyReport.csp 报产查询-新--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<AINURPRINT></AINURPRINT>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"/>
+
+<style>
+table{
+	text-align:inherit;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+#sum {
+	font-size:18px;
+	color:red;
+	cursor:auto;
+}
+#sum:hover {
+	background-color:#fff;
+}
+.uom {
+	padding-left:5px;
+}
+</style>
+<Server>
+s EpisodeID = $G(%request.Data("EpisodeID", 1))
+s now=$zd(+$h,3)
+s (vaccinRegister,hearingScreening,diseaseScreening)="N"
+s id=$o(^CF.NUR.Delivery.ReportSetI("DRSHospDr",%session.Get("LOGON.HOSPID"),""))
+if (id'=""){
+    s vaccinRegister=$lg(^CF.NUR.Delivery.ReportSetD(id),2)
+    s hearingScreening=$lg(^CF.NUR.Delivery.ReportSetD(id),3)
+    s diseaseScreening=$lg(^CF.NUR.Delivery.ReportSetD(id),4)
+}
+s linkLocIds=""
+s onlySearchByCurLoc = $G(%request.Data("onlySearchByCurLoc", 1)) //是否仅允许查看本科 Y:是 N:不是
+if (onlySearchByCurLoc="Y"){
+	s logonLocId=%session.Get("LOGON.CTLOCID")
+	s sub=0
+	for{
+		s sub=$O(^CTLOC(logonLocId,"LINK",sub)) q:sub=""  d
+		s linkLocID=$P(^CTLOC(logonLocId,"LINK",sub),"^",1)
+		i linkLocIds="" s linkLocIds=linkLocID
+		e  s linkLocIds=linkLocIds_"^"_linkLocID
+	}
+}
+i (##class(websys.Conversions).IsValidMethodName("NurMp.Config","WriteChromePrintCompatibleADDINS")) {
+	d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+}
+</Server>
+</head>
+<body style="padding:4px;">
+	<div class="hisui-layout" id="head-menu" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:124px;">
+			<div class="hisui-panel" data-options="title:'报产查询',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom:0;border-radius:0;">
+				
+                <table class="search-table">
+                    <tr>
+                        <td class="r-label">
+                            #(..Get("开始日期"))#
+                        </td>
+                        <td style="">
+                            <input id="startDate" class="hisui-datebox textbox" style=""/>
+                        </td>
+                        <td class="r-label">
+                            #(..Get("结束日期"))#
+                        </td>
+                        <td style="">
+                            <input id="endDate" class="hisui-datebox textbox" style=""/>
+                        </td>
+                        <td class="r-label">
+                            #(..Get("分娩结果"))#
+                        </td>
+                        <td style="">
+                            <input id="outCome" class="hisui-combobox textbox" style=""/>
+                        </td>
+                        <td class="r-label">
+                            #(..Get("分娩方式"))#
+                        </td>
+                        <td style="">
+                            <input id="deliverMethod" class="hisui-combobox textbox" style=""/>
+                        </td>
+                        <td style="padding:0 10px">
+                        	<a href="#" id="searchBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询</a>
+                        </td>
+                        <td>
+                        	<a href="#" id="printBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-print'">打印</a>
+                        </td>
+                    </tr>
+					<tr>
+                        <td class="r-label">
+                            #(..Get("婴儿性别"))#
+                        </td>
+                        <td style="">
+                           <input id="babySex" class="hisui-combobox textbox" style=""/>
+                        </td>
+                        <td class="r-label">
+                            #(..Get("母亲姓名"))#
+                        </td>
+                        <td style="">
+                            <input id="motherName" class="textbox" style=""/>
+                        </td>
+                        <td class="r-label">
+                            #(..Get("母亲登记号"))#
+                        </td>
+                        <td style="">
+                            <input id="motherRegNo" class="textbox" style=""/>
+                        </td>
+                         <csp:if condition=(onlySearchByCurLoc="Y")>
+                         	<td></td><td></td>
+                         <csp:else>
+                         	<td class="r-label">
+	                            #(..Get("科室"))#
+	                        </td>
+	                        <td style="">
+	                            <input id="department" class="hisui-combobox textbox" style=""/>
+	                        </td>
+                         </csp:if>
+                        
+                        <td style="padding:0 10px">
+                        	<a href="#" id="exportBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-export'">导出</a>
+                        </td>
+                        <td>
+                        	<a href="#" id="vaccinRegisterExportBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-export'">疫苗登记导出</a>
+                        </td>
+					</tr>
+                </table>
+		              
+			</div>
+		</div>		
+		<div data-options="region:'center',border:false,collapsible:false" style="">
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" style="border-top-style:dashed;border-radius:0 0 4px 4px;">
+				<table id="babyGrid"></table>
+			</div>
+		</div>
+	</div>
+	<!--疫苗维护-->
+	<div id="VaccineConfigDialog" class="hisui-dialog" title="疫苗维护" style="width:770px;height:667px;padding:10px;font-size:0;" closed="true"
+		 data-options="iconCls:'icon-w-edit',resizable:true,modal:true">
+		 <div style="width:370px;height:610px;display:inline-block;">
+		 	<div class="hisui-panel" data-options="iconCls:'icon-edit',fit:true,title:'厂家维护',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+				<table id="VaccineManufactTab"></table>
+				<div id="tableCarrySheetToolBar" class="toolbar" style="padding-left:10px;">
+					<table cellpadding="0" cellspacing="0">
+						<tr>
+							<td id="lisRadioSpan">
+								<input class='hisui-radio' type="radio" label='卡介苗' name='vaccineType' value='BCG' id="BCGRadio" checked data-options="required:true,requiredSel:true,onCheckChange:vaccineTypeCheckChange">
+							</td>
+							<td id="pisRadioSpan" style="padding:0 8px 0 20px;">
+								<input class='hisui-radio' type="radio" label='乙肝' name='vaccineType' value='HepatitisB' id="HepatitisBRadio" data-options="required:true,requiredSel:true,onCheckChange:vaccineTypeCheckChange">
+							</td>
+							<td>
+								<div class="datagrid-btn-separator"></div>
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="hisui-linkbutton" onclick="vaccineMFAdd()" data-options="iconCls:'icon-add',plain:true">新增</a>
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="hisui-linkbutton" onclick="deleteVaccineMF()" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+							</td>
+							<td>
+								<a href="javascript:void(0)" class="hisui-linkbutton" onclick="saveVaccineMF()" data-options="iconCls:'icon-save',plain:true">保存</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+			 </div>
+		 </div>
+		 <div  style="width:370px;height:610px;margin-left:10px;display:inline-block;">
+		 	<div class="hisui-panel" data-options="iconCls:'icon-edit',fit:true,title:'批号维护',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+				<table id="VaccineBatchNoTab"></table>
+			 </div>
+		 </div>
+	</div>
+	<!--疫苗登记-->
+	<div id="VaccineRegisterDialog" class="hisui-dialog" title="疫苗登记" style="width:844px;height:589px;padding:10px;" closed="true"
+		 data-options="iconCls:'icon-w-edit',resizable:true,modal:true, buttons:[{
+				text:'保存',
+				iconCls:'icon-w-save',
+				handler:function(){saveVaccineRegister();}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				handler:function(){$('#VaccineRegisterDialog').dialog('close');}
+			}]">
+		 <div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray'">
+		 	<div style="height:50px;">
+				<table class="search-table">
+				 	<tr>
+				 		<td class="r-label" style="width:88px;">#(..Get("父亲姓名"))#</td>
+				 		<td>
+				 			<input id="fatherName" class="textbox" style=""/>
+				 		</td>
+				 		<td class="r-label" style="width:195px;">#(..Get("母亲HBsAg"))#</td>
+				 		<td>
+				 			<input class="hisui-radio" type="radio" label="阳性" name="motherHBsAg" value="+" data-options="required:true,requiredSel:true">
+	                    	<input class="hisui-radio" type="radio" label="阴性" name="motherHBsAg" value="-" data-options="required:true,requiredSel:true">
+	                    	<input class="hisui-radio" type="radio" label="未查" name="motherHBsAg" value="UnCheck" data-options="required:true,requiredSel:true">
+				 		</td>
+				 	</tr>
+				 </table>
+			 </div>
+			 <div style="height:165px;padding:0 10px 10px 10px;">
+			 	<div class="hisui-panel" data-options="iconCls:'icon-w-edit',title:'卡介苗',fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" style="height:250px;overflow:hidden;white-space:nowrap;">
+					<table class="search-table">
+						<tr>
+					 		<td class="r-label" style="width:77px;">#(..Get("厂家"))#</td>
+					 		<td>
+					 			<input id="BCGManufactor" class="hisui-combobox textbox" style=""/>
+					 		</td>
+					 		<td class="r-label" style="width:179px;">#(..Get("批号"))#</td>
+					 		<td>
+					 			<input id="BCGBatchNo" class="hisui-combobox textbox" style=""/>
+					 		</td>
+					 	</tr>
+					 	<tr>
+					 		<td class="r-label">#(..Get("接种剂量"))#</td>
+					 		<td>
+					 			<input id="BCGDose" class="textbox" style=""/><span class="uom">ml</span>
+					 		</td>
+					 		<td class="r-label">#(..Get("接种时间"))#</td>
+					 		<td>
+					 			<input id="BCGDate" class="hisui-datebox textbox" style=""/>
+					 		</td>
+					 		<td class="r-label">
+					 			<input id="BCGTime" class="hisui-timespinner textbox">
+					 		</td>
+					 	</tr>
+					 	<tr>
+					 		<td class="r-label">#(..Get("未接种原因"))#</td>
+					 		<td colspan="4">
+					 			<input id="BCGNotRegisterReason" class="textbox" style="width:687px;"/>
+					 		</td>
+					 	</tr>
+					</table>
+				 </div>
+			 </div>
+			 <div style="height:205px;padding:0 10px 0 10px;">
+				 <div class="hisui-panel" data-options="iconCls:'icon-w-edit',title:'乙肝疫苗',fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" style="height:250px;">
+					<table class="search-table">
+						<tr>
+					 		<td class="r-label">#(..Get("厂家"))#</td>
+					 		<td>
+					 			<input id="HepatitisBManufactor" class="hisui-combobox textbox" style=""/>
+					 		</td>
+					 		<td class="r-label">#(..Get("批号"))#</td>
+					 		<td>
+					 			<input id="HepatitisBBatchNo" class="hisui-combobox textbox" style=""/>
+					 		</td>
+					 	</tr>
+					 	<tr>
+					 		<td class="r-label">#(..Get("接种剂量"))#</td>
+					 		<td>
+					 			<input id="HepatitisBDose" class="textbox" style=""/><span class="uom">μg</span>
+					 		</td>
+					 		<td class="r-label">#(..Get("接种时间"))#</td>
+					 		<td>
+					 			<input id="HepatitisBDate" class="hisui-datebox" style=""/>
+					 		</td>
+					 		<td class="r-label">
+					 			<input id="HepatitisBTime" class="hisui-timespinner textbox">
+					 		</td>
+					 	</tr>
+					 	<!--tr>
+					 		<td class="r-label">#(..Get("疫苗类型"))#</td>
+					 		<td>
+					 			<input id="regNo" class="textbox" style=""/>
+					 		</td>
+					 		<td class="r-label">#(..Get("疫苗有效期"))#</td>
+					 		<td>
+					 			<input id="startDate" class="hisui-datebox" style=""/>
+					 		</td>
+					 		<td class="r-label">
+					 			<input class="hisui-timespinner textbox" id="">
+					 		</td>
+					 	</tr-->
+					 	<tr>
+					 		<td class="r-label">#(..Get("未接种原因"))#</td>
+					 		<td colspan="4">
+					 			<input id="HepatitisBNotRegisterReason" class="textbox" style="width:683px;"/>
+					 		</td>
+					 	</tr>
+					 	<tr>
+					 		<td class="r-label" colspan="2">
+					 			<span>#(..Get("乙肝免疫球蛋白(HBIg)是否注射"))#</span>
+					 			<input class="hisui-radio" type="radio" label="是" name="HBIg" value="Y" data-options="requiredSel:true,onCheckChange:HBIgCheckChange">
+	                    		<input class="hisui-radio" type="radio" label="否" name="HBIg" value="N" data-options="requiredSel:true,onCheckChange:HBIgCheckChange">
+					 		</td>
+					 		<td class="r-label">#(..Get("乙肝免疫球蛋白接种时间"))#</td>
+					 		<td>
+					 			<input id="HBIgDate" class="hisui-datebox textbox" style=""/>
+					 		</td>
+					 		<td class="r-label">
+					 			<input id="HBIgTime" class="hisui-timespinner textbox">
+					 		</td>
+					 	</tr>
+					</table>
+				 </div>
+			 </div>
+			 <div style="height:50px;">
+				 <table class="search-table">
+					<tr>
+				 		<td class="r-label" style="width:90px;">#(..Get("接种人签名"))#</td>
+				 		<td>
+				 			<input id="vaccineRegisterUser" class="textbox" style=""/>
+				 		</td>
+				 	</tr>
+				</table>
+			</div>
+		 </div>
+		 
+	</div>
+	<!--听力筛查-->
+	<div id="HearingScreeningDialog" class="hisui-dialog" title="听力筛查" style="width:407px;height:215px;" closed="true"
+		 data-options="iconCls:'icon-w-config',resizable:true,modal:true,
+		 buttons:[{
+				text:'保存',
+				iconCls:'icon-w-save',
+				handler:function(){saveHearingScreening();}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				handler:function(){$('#HearingScreeningDialog').dialog('close');}
+			}]">
+		 <table class="search-table">
+		 	<tr>
+		 		<td class="r-label">#(..Get("筛查结果"))#</td>
+		 		<td colspan="2" style="font-size:0;">
+		 			<input class="hisui-checkbox" type="checkbox" data-options="checked:true" label="左耳通过" id="leftEar">
+		 			<span style="margin-left:10px;"></span>
+		 			<input class="hisui-checkbox" type="checkbox" data-options="checked:true" label="右耳通过" id="rightEar">
+		 		</td>
+		 	</tr>
+		 	<tr>
+		 		<td class="r-label">#(..Get("筛查时间"))#</td>
+		 		<td>
+		 			<input id="HearingScreeningDate" class="hisui-datebox textbox" style=""/>
+		 		</td>
+		 		<td class="r-label">
+		 			<input id="HearingScreeningTime" class="hisui-timespinner textbox" style=""/>
+		 		</td>
+		 	</tr>
+		 	<tr>
+		 		<td class="r-label">#(..Get("筛查医生"))#</td>
+		 		<td>
+		 			<input id="HearingScreeningDoc" class="textbox" style=""/>
+		 		</td>
+		 	</tr>
+		 </table>
+	</div>
+	<!--疾病筛查-->
+	<div id="DiseaseScreeningDialog" class="hisui-dialog" title="疾病筛查" style="width:435px;height:177px;" closed="true"
+		 data-options="iconCls:'icon-w-config',resizable:true,modal:true,
+		 buttons:[{
+				text:'保存',
+				iconCls:'icon-w-save',
+				handler:function(){saveDiseaseScreening();}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				handler:function(){$('#DiseaseScreeningDialog').dialog('close');}
+			}]">
+		 <table class="search-table">
+		 	<tr>
+		 		<td class="r-label">#(..Get("足跟采血时间"))#</td>
+		 		<td>
+		 			<input id="DiseaseScreeningDate" class="hisui-datebox textbox" style=""/>
+		 		</td>
+		 		<td class="r-label">
+		 			<input id="DiseaseScreeningTime" class="hisui-timespinner textbox" style=""/>
+		 		</td>
+		 	</tr>
+		 	<tr>
+		 		<td class="r-label">#(..Get("采血人"))#</td>
+		 		<td>
+		 			<input id="DiseaseScreeningDoc" class="textbox" style=""/>
+		 		</td>
+		 	</tr>
+		 </table>
+	</div>
+    <script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var now = "#(now)#";
+        var vaccinRegisterFlag="#(vaccinRegister)#";
+        var hearingScreeningFlag="#(hearingScreening)#";
+        var diseaseScreeningFlag="#(diseaseScreening)#";
+        var onlySearchByCurLoc="#(onlySearchByCurLoc)#";
+        var linkLocIds="#(linkLocIds)#";
+        //打印插件升级
+		  window.WebIp = window.location.href.split("/csp/")[0];
+		  try {
+		    if (
+		      PrintActivexUpgrade ||
+		      typeof PrintActivexUpgrade ||
+		      typeof PrintActivexUpgrade == "function"
+		    ) {
+		      PrintActivexUpgrade();
+		    }
+		   } catch(e) {
+		      console.log("打印插件升级失败！");
+		   }
+    </script>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/delBabyReport.js"></script>
+</body>
+</HTML>

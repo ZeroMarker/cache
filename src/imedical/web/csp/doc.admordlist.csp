@@ -19,19 +19,21 @@ iframe{
 s EpisodeID=%request.Get("EpisodeID")
 s PatientID=%request.Get("PatientID")
 s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
+
 </Server>
  </head>
 <body>
 <div class="hisui-layout" data-options="fit:true,border:false">
 	<div data-options="region:'center',fit:true,title:'',border:false,split:false">
 		<csp:if condition='PAAdmType="I"'>
-			<iframe id="framePatientList" src="ipdoc.patorderview.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&PageShowFromWay=ShowFromEmrList&DefaultOrderPriorType=ALL"  width="100%" height="100%" marginheight="0" marginwidth="0" scrolling="no" align="middle" ></iframe>
+			<iframe id="framePatientList" src="ipdoc.patorderview.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&PageShowFromWay=ShowFromEmrList&DefaultOrderPriorType=ALL&MWToken=#(%session.SessionId)#"  width="100%" height="100%" marginheight="0" marginwidth="0" scrolling="no" align="middle" ></iframe>
 		<csp:else>
-			<iframe id="framePatientList" src="oeorder.opbillinfo.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#"  width="100%" height="100%" marginheight="0" marginwidth="0" scrolling="no" align="middle" ></iframe>
+			<iframe id="framePatientList" src="oeorder.opbillinfo.csp?PatientID=#(PatientID)#&EpisodeID=#(EpisodeID)#&MWToken=#(%session.SessionId)#"  width="100%" height="100%" marginheight="0" marginwidth="0" scrolling="no" align="middle" ></iframe>
 		</csp:if>
 	</div>
 </div>
 <SCRIPT language = 'javascript' >
+var switchSysPat="N"
 function getRefData(){
 	var childWindow = $("#framePatientList")[0].contentWindow;
 	if (childWindow.getRefData) {

@@ -14,6 +14,8 @@
 	<script src="../scripts/dhcdoc/dhcapp/layer/layer.js"></script>
 	<!--初始化CA服务环境-->
 	<server>
+	   do ##Class(CA.DigitalSignatureService).OutPutSecXCommon("")
+	   /*
 	   /// 电子病历CA开关
 	   s CAInit=##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))
 	   i CAInit="1" d
@@ -24,9 +26,10 @@
 	   /// 数字签名相关参数
 	   w "<script Language=""JavaScript"">"_$c(13,10)
 	   w "var CAInit="""_$g(CAInit)_""";"_$c(13,10)
-	   w "</script>"	
+	   w "</script>"	*/
 	</server>
 	<!--初始化CA服务环境-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
 	<link rel="stylesheet" href="../scripts/dhcdoc/dhcapp/css/mainframe.css"/>
 	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
 	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
@@ -37,42 +40,36 @@
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reportappwin.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/mainframe.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
-	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OPDocPatInfoBar.js"></script>
 	<!-- 新旧版本兼容配置 -->
 	<server>
 	  /// 新旧版本兼容配置
-	  s version=1 //##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+	  //s version=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
 	  /// 检查分类树收缩展开配置模式
-	  s expFlag=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("ExpNode")
+	  //s expFlag=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("ExpNode")
+	  s TMENU=%request.Get("TMENU")
+	  s HospID=%session.Get("LOGON.HOSPID")
+	  s Opentree=##Class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("Opentree",HospID)
+	  if (Opentree="notopen"){s expFlag=0}else{s expFlag=1}
+	  s TreeTypeBody=##Class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("TreeTypeBody",HospID)
+	  if (TreeTypeBody="TreeTypeBody"){s version=0}else{s version=1}
 	  w "<script Language=""JavaScript"">"_$c(13,10)
 	  w "var version="""_$g(version)_""";"_$c(13,10)
 	  w "var expFlag="""_$g(expFlag)_""";"_$c(13,10)
 	  w "</script>"
 	  s ShowOrderOpenForAllHosp=##class(web.DHCDocConfig).GetConfigNode("ShowOrderOpenForAllHosp")
 	  //登录时以此取接收科室 
- 	 s RecLocByLogonLocFlag=$P($g(^CTLOC(%session.Get("LOGON.CTLOCID"),"DHC")),"^",1)
+ 	  s RecLocByLogonLocFlag=$P($g(^CTLOC(%session.Get("LOGON.CTLOCID"),"DHC")),"^",1)
+	  ;默认跨院
+ 	  s DefOpenAllHosp=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),32)
+ 	  s ParaType=$g(%request.Data("ParaType",1)) 
 	</server>
 	<script language="JavaScript"> 
 	  <!-- 弹出窗体最大化 bianshuai 2017-03-09--> 
 	  //self.moveTo(0,0) 
 	  //self.resizeTo(screen.availWidth,screen.availHeight) 
 	  	//CA:-------------------start 数字签名-----------------
-	   	var CAInit="#(CAInit)#"
-		var strServerRan="#($g(%session.Data("ServerRan")))#"
-		var strServerCert="#($g(%session.Data("ServerCert")))#"
-		var strServerSignedData="#($g(%session.Data("ServerSignedData")))#"
-		var IsCAWin=""
-		var ContainerName=""
-		var caIsPass=0
-		//------------------------------- 
-		function GetList_pnp() 
-		{
-		   var strTemp =GetUserList();
-		   if (strTemp!="") IsCAWin=strTemp;
-		   else IsCAWin="";
-		 }
-		if(CAInit==1) GetList_pnp();
 		var RecLocByLogonLocFlag="#(RecLocByLogonLocFlag)#";
+		var ParaType="#(ParaType)#";
 	</script>
 	<style type="text/css">
 		.treetype li{
@@ -94,94 +91,95 @@
 		}
 	</style>
 </head>
-<body>
-<div id="MainPanel" class="hisui-layout" fit="true">
-	<div data-options="region:'west',title:'本次就诊申请单列表'" style='width:220px;border-right:0;'>
+<body style="padding :10px;#($CASE(TMENU>0,1:"",:"background:white;"))#">
+<div id="MainPanel" class="hisui-layout" style='border-radius:4px 4px 0 0;' fit="true">
+	<div data-options="region:'west',title:'#(..Get("申请单列表"))#'" style='width:220px;border-radius:0 0 0 4px;' >
 		<div id="dgEmPatList" toolbar="#histb" ></div>
 	</div>
-	<div data-options="region:'center',title:'',headerCls:'panel-header-gray'">
+	<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style='border-radius:0 4px 4px 0;'>
 		<div id="CenterPanel" class="hisui-layout" fit="true">
-			<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style='height:76px;' border="false">
-				<div class="item-label">
-					<div style="line-height:35px;margin-left:10px;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;" class="PatInfoItem"></div>
-					<!--div class="pf-patimg">
-						<img id="PatPhoto" src="../scripts/dhcdoc/dhcapp/images/girl.png">
-					</div>
-					<div class="pf-patbase">
-						<ul class="pf-nav">
-							<li class="pf-nav-item"><span class="pf-nav-title pf-patname"><span id="PatName" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatSex" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatAge" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatNo" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBed" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBill" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatDiagDesc" class="ui-span-m"></span></span></li>
+			<csp:if condition='ParaType="SideMenu"'>
+			<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style='height:46px;padding:5px;' border="false">
+				<div class="hisui-panel panel-header-gray"  data-options="fit:true,headerCls:'panel-header-gray'" style="border-radius:4px;">
+					<div>
+						<ul class="kw-section-list keywords" style="padding:0 0 0 5px" id="billTyp">
+							
 						</ul>
-					</div-->
-					
-					<!--<div id="patInfo" style="height:35px"></div>-->
-				</div>
-				<div class="dashline-div"></div>
-				<div>
-					<ul class="pf-nav" id="billTyp">
-						
-					</ul>
-					<div style="float:right;line-height:34px;margin-right:10px;">
-						<input id="ChronicDiag" placeholder="慢病病种" class="textbox">
-						<csp:if condition='ShowOrderOpenForAllHosp="1"'>
-							<input id="OrderOpenForAllHosp" class='hisui-checkbox' type="checkbox" label="跨院">
-						</csp:if>
-						<input id="FindByLogDep" class='hisui-checkbox' type="checkbox" label="按登录取接收科室">
-						<input id="InsurFlag" class='hisui-checkbox' type="checkbox" label="医保">
+						<div style="float:right;line-height:34px;margin-right:10px;">
+							<input id="ChronicDiag" placeholder="#(..Get("慢病病种"))#" class="textbox">
+							<csp:if condition='ShowOrderOpenForAllHosp="1"'>
+								<input id="OrderOpenForAllHosp" class='hisui-checkbox' type="checkbox" label="#(..Get("跨院"))#" data-options="checked:#(DefOpenAllHosp=1)#">
+							</csp:if>
+							<input id="FindByLogDep" class='hisui-checkbox' type="checkbox" label="#(..Get("按登录取接收科室"))#">
+							<input id="InsurFlag" class='hisui-checkbox' type="checkbox" label="#(..Get("医保"))#">
+						</div>
 					</div>
 				</div>
 			</div>
-			<div data-options="region:'center',title:'',headerCls:'panel-header-gray'"  border="false">
+			<csp:else>
+			<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style='height:91px;padding:5px;' border="false">
+				<div class="hisui-panel panel-header-gray"  data-options="fit:true,headerCls:'panel-header-gray'" style="border-radius:4px;">
+					<div class="item-label">
+						<csp:Include Page="dhcdoc.patinfo.banner.csp">
+					</div>
+					<div class="dashline-div"></div>
+					<div>
+						<ul class="kw-section-list keywords" style="padding:0 0 0 5px" id="billTyp">
+							
+						</ul>
+						<div style="float:right;line-height:34px;margin-right:10px;">
+							<input id="ChronicDiag" placeholder="#(..Get("慢病病种"))#" class="textbox">
+							<csp:if condition='ShowOrderOpenForAllHosp="1"'>
+								<input id="OrderOpenForAllHosp" class='hisui-checkbox' type="checkbox" label="#(..Get("跨院"))#" data-options="checked:#(DefOpenAllHosp=1)#">
+							</csp:if>
+							<input id="FindByLogDep" class='hisui-checkbox' type="checkbox" label="#(..Get("按登录取接收科室"))#">
+							<input id="InsurFlag" class='hisui-checkbox' type="checkbox" label="#(..Get("医保"))#">
+						</div>
+					</div>
+				</div>
+			</div>
+			</csp:if>
+			<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style='padding:0px 0px 5px 5px;' border="false">
 				<div id="CenPanel" class="hisui-layout" fit="true" border="false">
-					<div data-options="region:'west',title:'检查项目',split:true,headerCls:'panel-header-gray'" style='width:220px;border-left:0;' >
+					<div data-options="region:'west',title:'#(..Get("项目分类"))#',split:true,headerCls:'panel-header-gray'" style='border-radius:0 0 4px 4px;width:220px;' >
 						<div id="searchPanel" class="hisui-layout" fit="true">
 						<div data-options="region:'north',title:''" border="false" style="height:75px;">
 							<div class="pf-sider-search">
-								<input id="ExaCatCode" style="height:26px;width:170px;" type="text" class="input-mini-search" placeholder="请输入名称/拼音码"/>
-								<img id="PatPhoto" src="../scripts/dhcdoc/dhcapp/images/patnosearch.png">
+								<!--input id="ExaCatCode" style="height:26px;width:170px;" type="text" class="input-mini-search" placeholder="#(..Get("请输入名称/拼音码"))#"/>
+								<img id="PatPhoto" src="../scripts/dhcdoc/dhcapp/images/patnosearch.png"-->
+								<input id="ExaCatCode" href="#" style="height:26px;width:190px;"  class="hisui-searchbox" data-options="searcher:findExaItmTree,prompt:'#(..Get("请输入名称/拼音码"))#'"  />
 							</div>
 							<div> <!--增加快捷检索按钮 qunianpeng 2018/2/1-->
-							<ul class='treetype' style="padding-left:10px;margin-top:-5px;">
-								<li data-type="E,L,P"><a href="#" title='点击查询全部申请'>全部</a></li>
-								<li data-type="E"><a href="#" title='点击查询检验申请'>检查</a></li>
-								<li data-type="L"><a href="#" title='点击查询检验申请'>检验</a></li>
-								<li data-type="P"><a href="#" title='点击查询病理申请'>病理</a></li>								
+							<ul id ="Typelist" class='kw-section-list keywords' style="padding-left:7px;margin-top:-5px;">
+								<li data-type="E,L,P"><a href="#" title='#(..Get("点击查询全部申请"))#'>#(..Get("全部"))#</a></li>
+								<li data-type="L"><a href="#" title='#(..Get("点击查询检验申请"))#'>#(..Get("检验"))#</a></li>
+								<li data-type="E"><a href="#" title='#(..Get("点击查询检查申请"))#'>#(..Get("检查"))#</a></li>
+								<li data-type="P"><a href="#" title='#(..Get("点击查询病理申请"))#'>#(..Get("病理"))#</a></li>								
 							</ul>							
 							</div>
 						</div>
 						<div data-options="region:'center',split:true,title:''" border="false" style="">
-							<div id="CheckPart" style="clear:both;"></div>
+							<div id="CheckPart" style="clear:both; border-top: 1px dashed #ccc;border-radius:4px;"></div>
 						</div>
 						</div>
 					</div>
-					<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="overflow: hidden;">
-						<iframe id="TabMain" scrolling="yes" width=100% height=100%  frameborder="0" src="" ></iframe>
+					<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" border="false" style="overflow: hidden;padding:0px 5px 0px 0px;">
+						<iframe id="TabMain" name="TabMain" scrolling="yes" width=100% height=100%  frameborder="0" src="" ></iframe>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
-<div id="histb">
-	<div style="padding:3px 0px 3px 2px;">
-	<span style="padding-right:10px">#(..Get("就诊记录"))#</span><input id="AdmHis" style="width:130px;"/>
+<div id="histb" style="border: none;">
+	<div style="padding:3px 0px 3px 5px;" >
+	<span style="padding-right:10px">#(..Get("就诊记录"))#</span><input id="AdmHis" style="width:138px;"/>
 	</div>
-	<div style="padding:3px 0px 3px 2px;">
-	<span style="padding-right:10px">#(..Get("检查分类"))#</span><input id="itemCatID" style="width:130px;"/>
+	<div style="padding:3px 0px 3px 5px;">
+	<span style="padding-right:10px">#(..Get("检查分类"))#</span><input id="itemCatID" style="width:138px;"/>
 	</div>
-	<div style="padding:3px 0px 3px 2px;">
-	<span style="padding-right:10px">#(..Get("申请状态"))#</span><input id="repStatus" style="width:130px;"/>
+	<div style="padding:3px 0px 3px 5px;">
+	<span style="padding-right:10px">#(..Get("申请状态"))#</span><input id="repStatus" style="width:138px;"/>
 	</div>
 </div>
 <!--------------知识库消息提示窗------------------>
@@ -195,8 +193,14 @@
       <div id="btn_More" data-options="iconCls:'icon-add'" onclick="MoreInfo()">#(..Get("申请日志"))#</div>        
  </div>
  <!--------------申请日志------------------>
- <div id="PopUpWin">
-    <table id="dmLogList"></table>
-</div>
+  <div id="PopUpWin" class="hisui-dialog" style="width:898px;height:350px" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+ 	<div class="hisui-layout" fit="true">
+		<div id="" data-options="region:'center',border:false,split:false,bodyCls:'panel-header-gray'" style="height: 245px;width: 882px;margin: 10px;border-radius:4px;">
+    		<div class="hisui-panel panel-header-gray" title="" style="height: 243px;width: 880px;" data-options="closable:true,collapsible:true,minimizable:true,maximizable:true">
+    		<table id="dmLogList" style=""></table>
+    		</div>
+    	</div>
+    </div>
+ </div>
 </body>
 </html>

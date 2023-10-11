@@ -1,0 +1,166 @@
+﻿<html>
+    <head>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+        <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+		<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+		<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+		
+		<server>
+    		s PatSignID = $Get(%request.Data("PatSignID",1),"")
+    	</server>
+        <script language="javascript">
+        	//患者推送签名信息表ID CA.DigitalSignPatPush 
+        	var PatSignID = "#(PatSignID)#";
+            //根据signID获取到的PDF等信息
+        	var PatSignInfo = "";
+        	//要展示的PDF的base64编码，设置全局变量，viewer.html读取
+			var PdfValue = "";
+			//患者PDF签名相关证据信息主表ID CA.MobileSignDoc
+			var MobileSignDocID = "";
+			
+			//根据ID获取送签PDF内容并展示
+			function ShowPdf(SignID){
+	            var data = ajaxDATA('Stream', 'CA.BL.Config', 'GetPatSignInfoByID', SignID);
+		        ajaxPOSTSync(data, function (ret) {
+			        if (ret != "")
+			        {
+			            PatSignInfo = $.parseJSON(ret);
+						PdfValue = "data:application/pdf;base64,"+PatSignInfo["ToSignData"];
+						//无签字后的PDF时隐藏切换PDF按钮
+						if (PatSignInfo["SignedData"] == "")
+						{
+							$("#btnViewPDF").hide();
+						}
+			        }
+			        else
+			        {
+				        $.messager.alert("提示","获取PDF相关信息为空,PatSignID为:"+SignID);
+				    }
+		        }, function (ret) {
+		            $.messager.alert("提示","CA.BL.Config GetPatSignInfoByID error:" + ret);
+		        });
+			}
+			
+			//根据CA签名业务流水号、CA签署文件编号获取相关证据信息表ID，如无隐藏相关按钮
+			function GetMobileSignDocID(CABusinessGUID,CAFileGUID)
+			{
+				var data = ajaxDATA('String', 'CA.BL.Config', 'GetMobileSignDocIDByBusDocID', CABusinessGUID, CAFileGUID);
+		        ajaxPOSTSync(data, function (ret) {
+		            MobileSignDocID = ret;
+					//隐藏查看证据信息按钮
+					if ((MobileSignDocID == "")||(PatSignInfo["SignedData"] == ""))
+					{
+						$("#btnViewSignImage").hide();
+					}
+		        }, function (ret) {
+		            $.messager.alert("提示","CA.BL.Config GetMobileSignDocIDByBusDocID error:" + ret);
+		        });
+			}
+			
+        	$(function(){
+                //获取信息，展示PDF
+	        	ShowPdf(PatSignID);
+	        	if (PatSignInfo != "") {
+		        	$("#BusinessGUID").val(PatSignInfo["BusinessGUID"]);
+		        	$("#CABusinessGUID").val(PatSignInfo["CABusinessGUID"]);
+		        	$("#CAFileGUID").val(PatSignInfo["CAFileGUID"]);
+		        }
+	        	$(".textbox").attr("disabled","true");
+	        	
+                //获取是否有证据图片，如无隐藏按钮
+	        	GetMobileSignDocID($("#CABusinessGUID").val(),$("#CAFileGUID").val());
+	        	
+	        	//切换PDF按钮触发
+	        	$("#btnViewPDF").click(function(){
+		     		if (document.getElementById('message').innerText === '当前展示内容为签名证据图片')
+		        	{
+			        	document.getElementById("PDFIframe").style.display="";
+			        	document.getElementById("SImageIframe").style.display="none";
+			        	var viewFlag = $('#btnViewPDF').find("span").eq(1).text() === '点击查看签名后PDF';
+	                	if (viewFlag)
+	                	{
+		                	document.getElementById('message').innerText = "当前展示内容为送签PDF";
+		                }
+	                	else
+	                	{
+		                	document.getElementById('message').innerText = "当前展示内容为签名后PDF";
+		                }
+		                return;
+			        }
+		        	var viewFlag = $('#btnViewPDF').find("span").eq(1).text() === '点击查看签名后PDF';
+	                if (viewFlag)
+	                {
+		                $('#btnViewPDF').find("span").eq(1).text("点击查看送签PDF");
+		                document.getElementById('message').innerText = "当前展示内容为签名后PDF";
+		                PdfValue = "data:application/pdf;base64,"+PatSignInfo["SignedData"];
+		            }
+		            else
+		            {
+			            $('#btnViewPDF').find("span").eq(1).text("点击查看签名后PDF");
+			            document.getElementById('message').innerText = "当前展示内容为送签PDF";
+						PdfValue = "data:application/pdf;base64,"+PatSignInfo["ToSignData"];
+			        }
+			        document.getElementById("PDFIframe").contentWindow.location.reload();
+			        //document.frames('PDFIframe').location.reload();
+		        	//document.frames("iframe").src="../scripts/dhccertauth/lib/web/viewer.html"; 
+		        });
+		        
+		        //查看证据按钮触发
+		        $("#btnViewSignImage").click(function(){
+			        document.getElementById("PDFIframe").style.display="none";
+			        document.getElementById("SImageIframe").style.display="";
+			        document.getElementById('message').innerText = "当前展示内容为签名证据图片";
+			        document.getElementById("SImageIframe").src="dhc.certauth.log.viewsignimage.csp?MobileSignDocID="+MobileSignDocID+"&MWToken="+getMWToken(); 
+		        });
+        	})
+            </script>
+       
+    </head>	
+		
+	<body class="hisui-layout">
+		<div data-options="region:'north',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" style="height:135px" >
+            <div style="width:auto;height:auto;text-align:center" data-options="title:'',headerCls:'panel-header-gray'">
+	        	<table style="margin:auto" cellspacing="10" cellpadding="5" >
+	        		<tr>
+	        			<td class="optname-td">CA签名业务流水号：</td>
+                        <td class="optvalue-td">
+                            <input id="CABusinessGUID" type="text" class="textbox tdtext" style="width:400px"/>
+                        </td>
+                        <td></td>
+	        			<td class="optname-td" style="color:#1095F1" id="message">当前展示内容为送签PDF</td>
+	        		</tr>
+                	<tr>
+                		<td class="optname-td">发起签名业务流水号：</td>
+                        <td class="optvalue-td">
+                            <input id="BusinessGUID" type="text" class="textbox tdtext" style="width:400px"/>
+                        </td>
+                        <td></td>
+                		<td>
+                        	<a class="hisui-linkbutton" data-options="iconCls:'icon-paper',plain:true" id="btnViewPDF" style="width:180px">点击查看签名后PDF</a>
+                        </td>
+                    </tr>
+                    <tr>
+                    	<td class="optname-td">CA签署文件编号：</td>
+                        <td class="optvalue-td">
+                            <input id="CAFileGUID" type="text" class="textbox tdtext" style="width:400px"/>
+                        </td>
+                        <td></td>
+                        <td>
+                        	<a class="hisui-linkbutton" data-options="iconCls:'icon-paper',plain:true" id="btnViewSignImage" style="width:180px">查看签名证据图片</a>
+                        </td>
+                  	</tr>
+                </table>
+            </div>
+        </div>
+        
+        <div data-options="region:'center',title:'',border:false,collapsible:false,split:true,headerCls:'panel-header-gray'" >
+            <iframe id="PDFIframe" name="PDFIframe" src="../scripts/dhccertauth/lib/pdfjs-2.2.228-dist/web/viewer.html" frameborder="0" width="99%" height="99%" border="0"></iframe>
+       		<iframe id="SImageIframe" name="SImageIframe" src="" frameborder="0" width="99%" height="99%" border="0" style="display:none"></iframe>
+       	</div>
+    </body>
+</html>

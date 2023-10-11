@@ -1,0 +1,299 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<NURHISUI />
+<STYLE type='text/css'>
+	body {
+        background-color: #fff;
+    }
+	.panel-body, .panel-header {
+		border-color: #ccc;
+	}
+	.datagrid-wrap.panel-body.panel-body-noheader{
+        border-color:#ccc;
+        border-top-right-radius:0;
+        border-top-left-radius:0;
+    }
+    .btn_right {
+    	float: right;
+    }	
+    .rowCheckbox {
+		display: none;
+	} 
+	#dataGrid {
+		border-color:#ccc
+	}  
+	.searchForm {
+		border-collapse: separate;
+		border-spacing: 0px 2px;
+		border: none;
+		width: 100%;
+		height: 100%;
+		padding: 0 4px;
+	}	
+</STYLE>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+<script language="cache" runat="SERVER">
+     s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',split:true,border:false" style="height:45px">
+			<table class="searchForm">
+				<tr>
+					<td class="rowCheckbox">
+						<input class='hisui-radio' id="ckAllVisit" type="radio" label=#(..Get("历次就诊"))# name='ckAllVisit' data-options="checked:false,radioClass:'hischeckbox_square-blue'">
+					</td>
+					<td>
+						<a id="btnWriteIn" class="hisui-linkbutton btn_right" data-options="iconCls:'icon-w-edit'">#(..Get("写入"))#</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',split:true,border:false">
+			<table id="dataGrid" data-options="fit:true"></table>
+		</div>
+	</div>		
+</body>
+<script type="text/javascript">
+var ModelId = "null";
+var EpisodeID = "#(EpisodeID)#";
+
+ $(function() {
+	// 定义全局变量
+	var GLOBAL = {
+		code: 'Diag',
+		groupID: 'groupDiag',
+		hospitalID: session['LOGON.HOSPID'],
+	    className: 'Nur.SHIFT.Emr.RefHandle',
+	    allVisit: $cm({
+		    ClassName: 'NurMp.Service.Switch.Config',
+		    MethodName:'getDomValue', 
+		    HospitalID: session['LOGON.HOSPID'], 
+		    DomID:'AllVisitFlag',
+		    LocID:session['LOGON.CTLOCID'],
+		    ModelID: ModelId
+		},false),
+		pageRowNum: screen.width > 1600 ? 10 : 7,
+	};
+	/**
+	 * @description: 初始化界面
+	 */
+	function initUI() {
+		initCondition();
+		initData();
+		listenEvents();
+	}
+	/**
+	 * @description: 初始化查询条件
+	 */
+	function initCondition() {
+		if (GLOBAL.allVisit) {
+			$('.rowCheckbox').css('display','block');
+		}
+	}
+	/**
+	 * @description: 诊断加载
+	 */
+	function initData() {
+		$cm({
+	        ClassName: "Nur.SHIFT.Emr.RefSetting",
+	        MethodName: "getReferTabConfig",
+	        HospitalID: GLOBAL.hospitalID,
+	        Code: GLOBAL.code,
+	    }, function (jsonData) {
+	    	var proper={}
+	    	proper = $cm({
+			ClassName: "Nur.SHIFT.Emr.RefSetting",
+			MethodName: "GetProperList",
+			ID:"3"
+				},false);
+			var columns = {}
+			columns=jsonData.columns[0]
+			var Columns=[]
+			data = columns.filter(function(rtn){
+				return proper.find(function(rtn1){
+					return rtn1.ContentID==rtn.field
+					})
+				})
+			Columns.push(data)
+//			var url = $URL
+//			if('undefined'!==typeof websys_getMWToken)
+//			{
+//				url+="&MWToken="+websys_getMWToken()
+//			}		    
+	        $HUI.datagrid('#dataGrid', {
+	            url: $URL,
+	            queryParams: initParameter(jsonData,'ckAllVisit'),
+	            rownumbers: true,
+	            singleSelect: false,
+	            pagination: true,
+	            pageSize: GLOBAL.pageRowNum,
+	            pageList: [GLOBAL.pageRowNum, 20, 30],
+	            frozenColumns: jsonData.frozenColumns,
+	            columns: Columns,
+	            nowrap: jsonData.gridProperty.nowrap == "true"
+	        });        
+	    });
+	}
+
+	/**
+	 * @description: 组织入参
+	 */
+	function initParameter() {
+	    var jsonData = arguments[0];
+		var allVisitFlag = !!arguments[1] ? $('#' + arguments[1]).radio('getValue') : '';
+	    eval(jsonData.paramsCommand);
+	    return jsonData.queryParams;
+	}
+	/**
+	 * @description: 选中内容,带入右侧内容Pannel
+	 */
+	function writeIn() {
+		var gridID = 'dataGrid';
+		var groupID = GLOBAL.groupID;
+		var rows = $('#' + gridID).datagrid('getSelections');
+		if (rows.length == 0) {
+			$.messager.popover({msg: $g('请选择需要引入的内容！'), type: 'error'});
+			return;
+		}
+		var tmp=[];
+		var tmp1=[];
+		for(var i=0;i<rows.length;i++){
+			for(var j in rows[i])
+			{
+				tmp.push(j)
+				tmp1.push(rows[i][j])
+			}
+		}
+		var data=[];
+		tmp.forEach(function(item,i){
+			var arr=[];
+			arr.push(item)
+			arr.push(tmp1[i])
+			data.push(arr)
+			})	
+		var content={}
+		 content = $cm({
+			ClassName: "Nur.SHIFT.Emr.RefSetting",
+			MethodName: "GetShiftDataTabTemplate",
+			dataType: "text",
+			HospitalID:GLOBAL.hospitalID,
+			id:"3"
+			},false)
+		var result = "";
+		if(content=="")
+		{
+			$.messager.popover({msg: $g('模板为空,请配置模板！'), type: 'alert'});
+		}else{
+			result=evaluate(content,data)
+		}
+//		$('#textEdit', parent.document).val(result);
+		updatePreview($("#textEdit", parent.document)[0], result, getCursortPosition($("#textEdit", parent.document)[0]));	}
+			/**
+	 * @description: 获取选中元素的文本
+	 * @param {obj} 
+	 * @return: 光标位置 
+	 */
+	function getCursortPosition(obj) {
+	    var cursorIndex = 0;
+	    if (document.selection) {
+	        // IE Support
+	        obj.focus();
+	        var range = document.selection.createRange();
+	        range.moveStart('character', -obj.value.length);
+	        cursorIndex = range.text.length;
+	    } else if (obj.selectionStart || obj.selectionStart == 0) {
+	        // another support
+	        cursorIndex = obj.selectionStart;
+	    }
+	    return cursorIndex;
+	}
+	/**
+	 * @description: 更新引用信息
+	 * @param {curElement, editContent, curPosition} 
+	 */
+	function updatePreview(curElement, editContent, curPosition) {
+		var startText = curPosition == 0 ? '' : curElement.value.substring(0, curPosition);
+	    if (startText.trim() == '/') {
+	        startText = '';
+	    }
+	    var endText = curElement.value.substring(curPosition);
+	    $("#textEdit",parent.document).val(startText + editContent + endText);  //在原有文本追加
+	}
+
+	/**
+	 * @description: 写入预览
+	 * @param {content} 
+	 */
+	function writToPreview(content) {
+		updatePreview($("#textEdit", parent.document)[0], content, getCursortPosition($("#textEdit", parent.document)[0]));
+	}
+	
+	function evaluate(content,data){
+		var k1={}
+		for(var n=0;n<data.length;n++){
+			k1[data[n][0]]=data[n][1];
+			}
+		var flag = 0;
+		var tmp='';
+		var result='';
+		for(var j=0;j<content.length;j++)
+		{
+			if(content[j]=='{'){
+				flag=1;
+			}else if(content[j]=='}'){
+				flag=0;
+				if(k1[tmp]==""){
+					result=result+"?"
+					}
+				result = result+k1[tmp]
+			  tmp='';
+			}else{
+				if(flag==1){
+					tmp = tmp+content[j];
+				}else{
+					result=result+content[j];
+				}
+			}
+				
+		}
+		var tmp1 = result.trim().split("@")
+		var tmp2=''
+		for(var i = 0; i<tmp1.length;i++)
+		{
+			if(tmp1[i]==""||tmp1[i].includes("?"))
+			{
+				tmp2=tmp2+""
+			}else
+			{
+				tmp2=tmp2+tmp1[i]
+			}
+		}
+		return tmp2;
+
+		}
+	/**
+	 * @description: 监听事件
+	 */
+	function listenEvents() {
+		$('#btnWriteIn').bind('click',writeIn);
+		$('#ckAllVisit').radio('options').onCheckChange = function(e, value) {
+			initData();
+		};
+	}
+	initUI();
+ });
+</script>	
+</html>

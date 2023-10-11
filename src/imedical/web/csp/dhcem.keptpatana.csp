@@ -1,7 +1,11 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <html>
 <head>
 <HISUI/>
-
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
 <title>	分级数据统计 </title>
 <style>
 	.textLabel{
@@ -130,9 +134,10 @@
 		line-height:30px;	
 	}
 	.heading >span{padding-left:10px}/*hxy*/
-	#BedTable > div > div{border:none}/*hxy*/
+	/*#BedTable > div > div{border:none}hxy*/
 	#BedTable > div > div > div > div.datagrid-view2 > div.datagrid-header{border:none}/*hxy*/
 	#typeTable td{padding-left:50px}/*hxy*/
+	#demo .layout-split-north{border-bottom:none}
 </style>
 <script Language="Javascript">
     var HospID=  #($g(%session.Data("LOGON.HOSPID")))#;
@@ -141,37 +146,38 @@
 <script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
 <!-- ECharts单文件引入 -->
 <script type="text/javascript" src="../scripts/dhcadvEvt/echarts/echarts-2.2.1/build/dist/echarts.js" charset="utf-8"></script>
-<script type="text/javascript" src="../scripts/dhcadvEvt/echarts/Echarts.js" ></script>
+<!--script type="text/javascript" src="../scripts/dhcadvEvt/echarts/Echarts.js" ></script-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/Echarts.js"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/keptpatana.js"  ></script>
 </head>
 	
-<body style="padding:4px;"><!--hxy-->
-	<div style="width:100%;height:930px;">
+<body style="padding:10px;"><!--hxy-->
+	<div style="width:100%;height:905px;">
 		<div id="" class="hisui-layout" style="" data-options="fit:true">   
-			<div data-options="region:'north',title:'当天床位占用率',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:260px;overflow:hidden;">
+			<div data-options="region:'north',title:'#(..Get("当天床位占用率"))#',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:250px;overflow:hidden;padding:10px">
 				<div id="BedTable" style="width:30%;height:100%;float:left;">
 					<table id="keptBedTable"></table>
 				</div>
 				
-				<div id="showImgBedInfo" style="width:35%;height:100%;float:left">
+				<div id="showImgBedInfo" class="echartBody" style="width:35%;height:100%;float:left;padding-top:10px">
 					
 				</div>
 				
-				<div id="showImgPatInfo" style="width:35%;height:100%;float:left">
+				<div id="showImgPatInfo" class="echartBody" style="width:35%;height:100%;float:left;padding-top:10px">
 					
 				</div>
 			</div>   
 			
-			<div data-options="region:'center',title:'留观数据统计',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:5px;padding-top:0px;padding-bottom:0">
-				<div id="" class="hisui-layout" style="" data-options="fit:true">   
+			<div data-options="region:'center',title:'#(..Get("留观数据统计"))#',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:5px;padding-top:0px;padding-bottom:0">
+				<div id="demo" class="hisui-layout" style="" data-options="fit:true">   
 					<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray'" style="height:112px;overflow:hidden;border:none">
 						<div style="display:inline-block;height:100px;padding-left:10px">
 							<div style="height:40px;">
-								<span style="margin-right:5px;">开始日期</span>
+								<span style="margin-right:5px;">#(..Get("开始日期"))#</span>
 								<input id="stDate" style="width:160px" class="hisui-datebox textbox"></input>
 							</div>
 							<div style="height:40px">
-								<span style="margin-right:5px;">结束日期</span>
+								<span style="margin-right:5px;">#(..Get("结束日期"))#</span>
 								<input id="endDate" style="width:160px" class="hisui-datebox textbox"></input>
 								<td><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-search-white" style="margin-left:30px">查询</a></td>
 							</div>
@@ -194,16 +200,16 @@
 						<div class="bottomDiv" style="height:250px">
 							<div class="bottomDivLefBorder" id="getHeightDiv" style="height:250px">
 								<div class="bottomDivLef">
-									<div class="heading"><span>在科状态统计</span></div>
-									<div id="zkztEcharts" class="echartBody">
+									<div class="heading"><span>#(..Get("在科状态统计"))#</span></div>
+									<div id="zkztEcharts" class="echartBody" style="padding-top:20px">
 									
 									</div>
 								</div>
 							</div>
 							<div class="bottomDivRigBorder" style="height:250px">
 								<div class="bottomDivRig">
-									<div class="heading"><span>转入院科室统计</span></div>
-									<div id="zryksEcharts" class="echartBody">
+									<div class="heading"><span>#(..Get("转入院科室统计"))#</span></div>
+									<div id="zryksEcharts" class="echartBody" style="padding-top:20px">
 									
 									</div>
 								</div>
@@ -213,16 +219,16 @@
 						<div class="bottomDiv" style="height:250px;margin-top:6px">
 							<div class="bottomDivLefBorder" style="height:250px;padding-top:6px">
 								<div class="bottomDivLef">
-									<div class="heading"><span>分级人数统计</span></div>
-									<div id="fjrsEcharts" class="echartBody">
+									<div class="heading"><span>#(..Get("分级人数统计"))#</span></div>
+									<div id="fjrsEcharts" class="echartBody echartBodyPie" style="padding-top:20px">
 									
 									</div>
 								</div>
 							</div>
 							<div class="bottomDivRigBorder" style="height:250px;padding-top:6px">
 								<div class="bottomDivRig">
-									<div class="heading"><span>重点病种分布</span></div>
-									<div id="zdbzEcharts" class="echartBody">
+									<div class="heading"><span>#(..Get("重点病种分布"))#</span></div>
+									<div id="zdbzEcharts" class="echartBody echartBodyPie" style="padding-top:20px">
 									
 									</div>
 								</div>

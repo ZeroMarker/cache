@@ -1,0 +1,68 @@
+<!-- 
+ * FileName: dhcbill.inv.deliverinv.csp
+ * Author: ZhYW
+ * Date: 2022-07-03
+ * Description: 发票转交
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<server>
+		set RcptType=%request.Get("RcptType")
+	</server>
+	<script type="text/javascript">
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		//常量
+		var CV = {
+			RcptType: "#(RcptType)#"
+		};
+	</script>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="border-bottom:1px dashed #ccc;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label>#(..Get("开始号码"))#</label></td>
+					<td><input id="startNo" class="textbox" readOnly/></td>
+					<td class="r-label r-label-40"><label class="clsRequired">#(..Get("转交人"))#</label></td>
+					<td><input id="deliver" class="hisui-combobox textbox"/></td>
+					<td class="r-label r-label-40"><label class="clsRequired">#(..Get("发票类型"))#</label></td>
+					<td><input id="invType" class="hisui-combobox textbox"/></td>
+					<td class="r-label r-label-40"><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-w-find" id="btn-find">查询</a></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("张数"))#</label></td>
+					<td><input id="number" class="hisui-numberbox textbox"/></td>
+					<td class="r-label r-label-40"><label class="clsRequired">#(..Get("接收人"))#</label></td>
+					<td><input id="receiver" class="hisui-combobox textbox"/></td>
+					<td></td>
+					<td><input class="hisui-checkbox" type="checkbox" label="#(..Get("输入开始号码转交"))#" id="allowEditStNo"></td>
+					<td class="r-label r-label-40"><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-w-clean" id="btn-clear">清屏</a></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>#(..Get("结束号码"))#</label></td>
+					<td><input id="endNo" class="textbox"/></td>
+					<td class="r-label r-label-40"><label>#(..Get("转交开始号码"))#</label></td>
+					<td><input id="deliverStNo" class="textbox" readOnly/></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<table id="deliverInvList"></table>
+		</div>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#/inv/dhcbill.inv.deliverinv.js"></script>
+</body>
+</html>

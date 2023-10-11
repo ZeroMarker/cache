@@ -1,0 +1,367 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--效益分析首页 dhceq.ba.benefitindex.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+ Quit 1
+</csp:method>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+.eq-table{width:100%;}
+.eq_main_card
+{
+	width:19%;
+	height:70px;
+	padding-left:1.25%; /*Modify by zx 2020-04-29 BUG ZX0085*/
+	margin:5px 0;
+	background-color:#fff;
+	float:left;
+	position:relative;
+	text-align:center;
+	padding-top:3px;
+}
+/*Modify by zx 2020-04-29 BUG ZX0085*/
+.eq_main_card:first-child
+{
+	padding-left:0px;
+}
+.eq_main_card .eq_main_header
+{
+	padding-left:10px;
+	padding-right:10px;
+	height:100%;
+	color:#fff;
+	border-radius:4px;
+}
+.eq_main_header div
+{
+	padding-top:5px;
+	height:30px;
+}
+.eq_main_header div span:first-child 
+{
+	text-align:left;
+	display:inline-block;
+	font-size:15px;
+	width:40%;
+}
+.eq_main_header div span:nth-child(2)
+{
+	text-align:right;
+	display:inline-block;
+	font-size:18px;
+	width: 45.2%;
+}
+.eq_main_header div span:nth-child(3)
+{
+	text-align:left;
+	display:inline-block;
+	font-size:15px;
+	width:12.8%;
+	margin-left:2%
+}
+.eq_main_linear1
+{
+	background:#40a2de;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear2
+{
+	background:#a849cb;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear3
+{
+	background:#0d83b0;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear4
+{
+	background:#ffba42;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear5
+{
+	background:#15b398;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear6
+{
+	background:#f16e57;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_echarts{
+	width: 100%;
+	height: 100%;
+	overflow:hidden;
+}
+.eq_swichbox{
+	
+}
+.eq-table-td>a{
+	margin-left:0px;
+}
+label.radio{
+    margin-right: 20px;
+}
+</style>
+
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	Set StartDate=$GET(%request.Data("StartDate",1))
+	Set EndDate=$GET(%request.Data("EndDate",1))
+	If StartDate="" Set StartDate=$PIECE($ZDATE(+$HOROLOG,3),"-",1)_"-01"
+	If EndDate="" Set EndDate=$PIECE($ZDATE(+$HOROLOG,3),"-",1,2)
+	Set YearFlag=$GET(%request.Data("YearFlag",1))
+	If YearFlag="" Set YearFlag="false"
+	Set HalfYear=$GET(%request.Data("HalfYear",1))
+	If HalfYear="" Set HalfYear="false"
+	Set Quarter=$GET(%request.Data("Quarter",1))
+	If Quarter="" Set Quarter="false"
+	Set MonthFlag=$GET(%request.Data("MonthFlag",1))
+	If MonthFlag="" Set MonthFlag="false"
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:130px;">
+		<div style="float:left;height:32%;width:100%;overflow:hidden;">
+			<div style="height:100%;">
+				<div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cStartDate" for="StartDate">开始日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate" data-options='validParams:"YM"' value=#(StartDate)#></div>
+						<div class="eq-table-td eq-table-label-first"><label id="cEndDate" for="EndDate">至</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate" data-options='validParams:"YM"' value=#(EndDate)#></div>
+						<div class="eq-table-td eq-table-input" style="padding-left:20px;"><input class="hisui-radio" type="radio" label="年度" name="PeriodType" id="YearFlag" value=#(YearFlag)#></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="半年度" name="PeriodType" id="HalfYear" value=#(HalfYear)#></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="季度" name="PeriodType" id="Quarter" value=#(Quarter)#></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-radio" type="radio" label="月度" name="PeriodType" id="MonthFlag" value=#(MonthFlag)#></div>
+						<div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+					</div>
+				</div>
+			</div>
+			<!--div style="width:62%;height:100%;float:right;"><p id="hosptitle" style="text-align:left;font-size:18px;font-weight:bold;color:#017BCE;padding-left:10px;">效益分析</p></div-->
+		</div>
+		<div style="float:left;height:68%;width:100%;overflow:hidden;">
+			<div style="padding:0 10px;">
+				<div class="eq_main_card"><div class="eq_main_linear1 eq_main_header" id="BAEQNumAmount"></div></div>
+				<div class="eq_main_card"><div class="eq_main_linear2 eq_main_header" id="BAInOutAmount"></div></div>
+				<!--div class="eq_main_card"><div class="eq_main_linear3 eq_main_header" id="BAInOutPerDay"></div></div-->
+				<div class="eq_main_card"><div class="eq_main_linear4 eq_main_header" id="BAInOutQoQ"></div></div>
+				<div class="eq_main_card"><div class="eq_main_linear5 eq_main_header" id="BAInOutYoY"></div></div>
+				<div class="eq_main_card"><div class="eq_main_linear6 eq_main_header" id="BACheckPerson"></div></div>
+			</div>
+		</div>
+	</div>
+	<div id="tIndexTabs" class="hisui-tabs tabs-gray" data-options="region:'center',iconCls:'icon-paper'" style="padding:0 10px 10px 10px;border:0px;">
+		<div id="tEconomic" data-options="title:'经济效益',selected:true" style="padding:10px;">	
+			<div style='height:290px;width:100%;margin-bottom:10px;'>
+				<div style='float:left;height:100%;width:32.2%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="收入来源分析">
+						<div id="InComeTypeAnaly" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:33.2%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="科室支出项统计">
+						<div id="LocOutItemInfo" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div id="ecstatpanel-tools">
+					<div style="position:absolute;right:30px;margin-top:7px;">
+						<div id="ChartsOrGrid1" class="eq_swichbox" ></div>
+					</div>
+				</div>	
+				<div style='float:left;height:100%;width:33%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,toolbar:'#ecstatpanel-tools',iconCls:'icon-paper'" title="设备类型收益分析" style="overflow:hidden;">
+						<div id="StatCatBenefitView" class="eq_main_echarts" style="display:'block'"></div>
+						<div id="StatCatBenefitGrid" class="hisui-datagrid"  style="display:'none';"></div>
+					</div>
+				</div>
+			</div>
+			<div style='height:295px;width:100%;'>
+				<div id="echospanel-tools">
+					<div style="position:absolute;left:45.5%;margin-top:7px;">
+						<div id="ChartsOrGrid2" class="eq_swichbox" ></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:50%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,toolbar:'#echospanel-tools',iconCls:'icon-paper'" title="全院设备综合分析" style="overflow:hidden;">
+						<div id="HospEquipAnaly" class="eq_main_echarts" style="display:'block';"></div>
+						<div id="HospEquipGrid" class="hisui-datagrid"  style="display:'none';"></div>
+					</div>
+				</div>
+				<div id="eclocpanel-tools">
+					<div style="position:absolute;right:30px;margin-top:7px;">
+						<div id="ChartsOrGrid3" class="eq_swichbox" ></div>
+					</div>
+				</div>			
+				<div style='float:left;height:100%;width:49.2%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,toolbar:'#eclocpanel-tools',iconCls:'icon-paper'" title="科室效益统计分析" style="overflow:hidden;">
+						<div id="LocBenefitView" class="eq_main_echarts" style="display:'block'"></div>
+						<div id="LocBenefitGrid" class="hisui-datagrid"  style="display:'none';"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="tTend" data-options="title:'趋势分析'" style="overflow:auto;padding:10px;">
+			<!--div style='height:50%;width:100%;'>
+				<div style='float:left;height:100%;width:32%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" title="科室效益资产数量分布">
+						<div id="EquipLocDistribute" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:33%;margin-left:1%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" title="设备总支出项统计">
+						<div id="EquipOutFeeAnaly" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:33%;margin-left:1%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" title="设备类型效益资产金额分布">
+						<div id="EquipStatCatDistribute" class="eq_main_echarts"></div>
+					</div>
+				</div>
+			</div-->
+			<div style='height:290px;width:100%;margin-bottom:10px;'>
+				<div style='float:left;height:100%;width:32.2%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="近年服务人次分析">
+						<div id="LatelyCheckPerson" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:33.2%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="近年总支出分析">
+						<div id="LatelyOutFee" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:33%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备总支出项统计">
+						<div id="EquipOutFeeAnaly" class="eq_main_echarts"></div>
+					</div>
+				</div>
+			</div>
+			<div style='height:295px;width:100%;'>
+				<div style='float:left;height:100%;width:32.2%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="近年全院收益分析">
+						<div id="LatelyHospBA" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:33.2%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="科室收入同比-环比">
+						<div id="LocInComeQoY" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:33%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="收入来源同比-环比">
+						<div id="InComeOriginQoY" class="eq_main_echarts"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="tSocial" data-options="title:'社会效益'" style="overflow:auto;padding:10px;">
+			<div style='height:290px;width:100%;margin-bottom:10px;'>
+				<div style='float:left;height:100%;width:50%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="科室检查人次分析">
+						<div id="LocCheckPerson" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:49.2%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="开单医生阳性率分析">
+						<div id="DoctorPositiveRate" class="eq_main_echarts"></div>
+					</div>
+				</div>
+			</div>
+			<div style='height:295px;width:100%;'>
+				<div style='float:left;height:100%;width:50%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="资产检查人次分析">
+						<div id="ItemCheckPeron" class="eq_main_echarts"></div>
+					</div>
+				</div>
+				<div style='float:left;height:100%;width:49.2%;margin-left:0.8%;'>
+					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="资产工作量分析">
+						<div id="ItemWorkLoad" class="eq_main_echarts"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="tEstimateToActual" data-options="title:'同类设备分析'" style="overflow:auto;padding:10px;">
+			<div style='height:90px;width:100%;margin-bottom:10px;'>
+				<div style="float:left"><label><a class="eq-attribute-label">常用效益设备项</a></label></div>
+				<div style="float:right"><a id="BMore" href="#">更多>>></a></div>
+				<div style="clear:both" id="EQItemList"></div>
+			</div>
+			<div style='height:495px;width:100%;'>
+				<div class="hisui-layout" data-options="fit:true,border:false" id="SameEQChart">
+					<div data-options="region:'north',border:false,fit:true">
+						<div id="NoDataPic" style="background:url(../images/no_data.png) no-repeat center;height:100%;width:100%;display:'block';"></div>
+						<div id="SameEQCharts" style="display:'none';">
+							<div style='height:100%;width:33.2%;float:left;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="同类设备效益信息">
+									<div id="SameEQBAInfo" class="eq_main_echarts"></div>
+								</div>
+							</div>
+							<div style='height:100%;width:33.2%;float:left;margin-left:0.7%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="同类设备科室效益统计">
+									<div id="SameEQLocBAInfo" class="eq_main_echarts"></div>
+								</div>
+							</div>
+							<div style='height:100%;width:32.2%;float:left;margin-left:0.7%;'>
+								<div style='float:left;height:240px;width:100%;'>
+			 						<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="同类设备维修信息">
+										<div id="SameEQMaintInfo" class="eq_main_echarts"></div>
+									</div>								
+								</div>
+								<div style='float:left;height:245px;width:100%;margin-top:10px;'>
+			 						<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="同类设备维修时长统计">
+										<div id="SameEQMaintTimeCost" class="eq_main_echarts"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#($JOB)#>
+		</form>
+	</div>
+</body>
+<script type='text/javascript'>
+		MonthBox('StartDate');
+		MonthBox('EndDate');
+</script>
+<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+<script type='text/javascript' src='../scripts/dhceq/common/echarts.js'></script>
+<script type='text/javascript' src='../scripts/dhceq/ba/benefitindex.js'></script>
+</HTML>

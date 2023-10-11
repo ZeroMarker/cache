@@ -1,0 +1,422 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            s EpisodeID = $G(%request.Data("EpisodeID", 1))
+            s Tabs = $G(%request.Data("Tabs", 1))
+            s WardID=$p(^PAADM(EpisodeID),"^",70)
+        </script>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	<script type="text/javascript"
+			src="../scripts/nurse/hisui/shiftLog.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:5px!important;
+        }
+        .td_label {
+	        padding-left:5px;
+        	width:40px;
+        }
+        .td_label_red {
+        	width:40px;
+        	color:red;
+        }
+        .td_select {
+        	width:180px;
+        }
+        .td_button_center {
+	        text-align:center;
+        }
+        .td_button_right {
+	        text-align:right;
+	        padding-right:4px;
+        }
+        .td_date {
+	        width:100px;
+        }
+        .td_char {
+	        width:10px;
+        }
+        .datagrid-wrap.panel-body.panel-body-noheader{
+	        border-color:#ccc;
+	        border-top-right-radius:0;
+	        border-top-left-radius:0;
+	        border-right:0;
+	        border-left:0;
+	        border-bottom:0;
+        }
+        #ulDom li label {
+	        display:inline;
+	    }
+	    .dialogN {
+			width: 220px;
+			height: 80px;
+			padding:10px;
+		}
+	</STYLE>
+	 <script language="javascript">
+        var EpisodeID = "#(EpisodeID)#";
+        var Tabs = "#(Tabs)#";
+        var WardID="#(WardID)#";
+    </script>
+</head>
+
+<body>
+	<div id="layout" class="hisui-layout" data-options="fit:true">
+		<!--左侧框架-->
+		<div data-options="region:'west',split:true,border:false" style="width:650px">
+			<!--Tab页签-->
+			<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true">
+				<SCRIPT language="cache" RUNAT="SERVER">
+				s nursingTabs=##class(Nur.SHIFT.Service.ShiftBizV2).GetNursingRecordTabs(WardID)
+				s riqi=##class(websys.Translation).Get("nur.hisui.shiftLog.csp","日期")
+				s zhi=##class(websys.Translation).Get("nur.hisui.shiftLog.csp","至")
+				for i=1:1:nursingTabs.Count()
+				{
+					s tab=nursingTabs.GetAt(i)
+					s title=tab.GetAt("title")
+					s key=tab.GetAt("key")
+					s type=tab.GetAt("type")
+					
+					
+					if type="NR"
+					{
+						
+w "<div title="""_title_""" id=""NR"_key_""">"
+w "    <div class=""hisui-layout"" data-options=""fit:true"">"
+w "        <!--条件-->"
+w "<div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+w "            <table class=""search-table"" style=""width:100%;height:100%"">"
+w "                <tr>"
+w "                    <td class=""td_label"">"_riqi_"</input></td>"
+w "                    <td class=""td_date""><input id=""nrStartDate"_key_""" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td class=""td_char"" style=""text-align:center"">"_zhi_"</td>"
+w "                    <td class=""td_date""><input id=""nrEndDate"_key_""" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td><a id=""btnSearchNr"_key_""" class=""hisui-linkbutton"">查询</a></td>"
+w "                    <td class=""td_button_right""><a id=""btnOkNr"_key_""" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+w "                </tr>"
+w "            </table>"
+w "        </div>"
+w "        <div data-options=""region:'center',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false"">"
+w "            <div class=""hisui-layout"" data-options=""fit:true,border:false"">"
+w "                <div data-options=""region:'center',split:true"">"
+w "                    <table id=""nr"_key_"Grid"" data-options=""fit:true""></table>"
+w "                </div>"
+w "            </div>"
+w "        </div>"
+w "    </div>"
+w "</div>"
+					}
+					if type="KL"
+					{
+						
+						s itemName=##class(websys.Translation).Get("nur.hisui.shiftLog.csp","科室")
+						w "<div title="""_title_""" id=""Knowledge"">"
+						w "<div class=""hisui-layout"" data-options=""fit:true"">"
+
+						w "<div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+							w "<table class=""search-table"" style=""width:100%;height:100%"">"
+								w "<tr>"
+									w "<td class=""td_label"">"_itemName_"</td>"
+									w "<td colspan=""5"" class=""td_select""><select id=""comboLoc"" class=""hisui-combobox"" style=""width:200px;""></select></td>"
+									w "<td class=""td_button_right""><a id=""btnOkKnow"" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+								w "</tr>"
+							w "</table>"
+						w "</div>"
+						w "<div data-options=""region:'center',split:true,border:false"">"
+							w "<div id=""layoutKnowTree"" class=""hisui-layout"" data-options=""fit:true,border:false"">"
+								
+								w "<div data-options=""region:'west',split:true"" style=""width:280px;border-color:#ccc"">"
+									w "<div id=""knowledgeTree"" data-options=""fit:true,animate:true,border:false""></div>"
+								w "</div>"
+							
+								w "<div data-options=""region:'center',split:true"" style=""border-color:#ccc"">"
+									w "<div id=""panelPreview"" style=""padding:4px;"" style=""border-color:#ccc"">"
+									w "</div>"
+								w "</div>"
+								w "</div>"
+							w "</div>"
+						w "</div>"
+					w "</div>"
+					}
+					if type="OBS"
+					{
+						
+w "<div title="""_title_""" id=""Observation"" config="""_key_""">"
+w "    <div class=""hisui-layout"" data-options=""fit:true"">"
+w "        <!--条件-->"
+w "        <div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+w "            <table class=""search-table"" style=""width:100%;height:100%"">"
+w "                <tr>"
+w "                    <td class=""td_label"">"_riqi_"</input></td>"
+w "                    <td class=""td_date""><input id=""obsStartDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td class=""td_char"" style=""text-align:center"">"_zhi_"</td>"
+w "                    <td class=""td_date""><input id=""obsEndDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td><a id=""btnSearchObs"" class=""hisui-linkbutton"">查询</a></td>"
+w "                    <td class=""td_button_right""><a id=""btnOkObs"" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+w "                </tr>"
+w "            </table>"
+w "        </div>"
+w "        <div data-options=""region:'center',split:true,border:false"">"
+w "            <div class=""hisui-layout"" data-options=""fit:true,border:false"">"
+w "                <div data-options=""region:'center',split:true,border:false"">"
+w "                    <table id=""obsGrid"" data-options=""fit:true""></table>"
+w "                </div>"
+w "            </div>	"
+w "        </div>"
+w "    </div>"
+w "</div>"
+					}
+					if type="SR"
+					{
+						
+w "<div title="""_title_""" id=""History"" config="""_key_""">"
+w "    <div class=""hisui-layout"" data-options=""fit:true"">"
+w "        <!--条件-->"
+w "        <div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+w "            <table class=""search-table"" style=""width:100%;height:100%"">"
+w "                <tr>"
+w "                    <td class=""td_label"">"_riqi_"</input></td>"
+w "                    <td class=""td_date""><input id=""hisDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td><a id=""btnSearchHis"" class=""hisui-linkbutton"">查询</a></td>"
+w "                    <td class=""td_button_right""><a id=""btnOkHis"" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+w "                </tr>"
+w "            </table>"
+w "        </div>"
+w "        <div data-options=""region:'center',split:true,border:false"">"
+w "            <div class=""hisui-layout"" data-options=""fit:true,border:false"">"
+w "                <div data-options=""region:'center',split:true,border:false"">"
+w "                    <table id=""hisGrid"" data-options=""fit:true""></table>"
+w "                </div>"
+w "            </div>	"
+w "        </div>"
+w "    </div>"
+w "</div>"
+					}
+					if type="OI"
+					{
+					
+w "<div title="""_title_""" id=""Exec"" config="""_key_""">"
+w "    <div class=""hisui-layout"" data-options=""fit:true"">"
+w "        <!--条件-->"
+w "        <div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+w "            <table class=""search-table"" style=""width:100%;height:100%"">"
+w "                <tr>"
+w "                    <td class=""td_label"">"_riqi_"</input></td>"
+w "                    <td class=""td_date""><input id=""execStartDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td class=""td_char"">"_zhi_"</td>"
+w "                    <td class=""td_date""><input id=""execEndDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td><a id=""btnSearchExec"" class=""hisui-linkbutton"">查询</a></td>"
+w "                    <td class=""td_button_right""><a id=""btnOkExec"" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+w "                </tr>"
+w "            </table>"
+w "        </div>"
+w "        <div data-options=""region:'center',split:true,border:false"">"
+w "            <div class=""hisui-layout"" data-options=""fit:true,border:false"">"
+w "                <div data-options=""region:'center',split:true,border:false"">"
+w "                    <table id=""execGrid"" data-options=""fit:true""></table>"
+w "                </div>"
+w "            </div>	"
+w "        </div>"
+w "    </div>"
+w "</div>"
+					}
+					if type="LIS"
+					{
+						
+w "<div title="""_title_""" id=""Lis"" config="""_key_""">"
+w "    <div id=""layoutLis"" class=""hisui-layout"" data-options=""fit:true"">"
+w "        <!--条件-->"
+w "        <div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+w "            <table class=""search-table"" style=""width:100%;height:100%"">"
+w "                <tr>"
+w "                    <td class=""td_label"">"_riqi_"</input></td>"
+w "                    <td class=""td_date""><input id=""lisStartDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td class=""td_char"">"_zhi_"</td>"
+w "                    <td class=""td_date""><input id=""lisEndDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td><a id=""btnSearchLis"" class=""hisui-linkbutton"">查询</a></td>"
+w "                    <td class=""td_button_right""><a id=""btnOkLis"" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+w "                </tr>"
+w "            </table>"
+w "        </div>"
+w "        <div data-options=""region:'center',split:true,border:false"">"
+w "            <div class=""hisui-layout"" data-options=""fit:true,border:false"">"
+w "                <div data-options=""region:'center',split:true,border:false"">"
+w "                    <div id=""layoutLisGrid"" class=""hisui-layout"" data-options=""fit:true,border:false"">"
+w "                        <div data-options=""region:'north',split:true,border:false"" style=""height:400px"">"
+w "                            <table id=""lisGrid"" data-options=""fit:true""></table>"
+w "                        </div>"
+w "                        <div data-options=""region:'center',split:true,border:false"">"
+w "                            <table id=""lisSubGrid"" data-options=""fit:true""></table>"
+w "                        </div>"
+w "                    </div>"
+w "                </div>"
+w "            </div>"
+w "        </div>"
+w "    </div>"
+w "</div>"
+					}
+					if type="PACS"
+					{
+					
+w "<div title="""_title_""" id=""Pacs"" config="""_key_""">"
+w "    <div id=""layoutPacs"" class=""hisui-layout"" data-options=""fit:true"">"
+w "        <!--条件-->"
+w "        <div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+w "            <table class=""search-table"" style=""width:100%;height:100%"">"
+w "                <tr>"
+w "                    <td class=""td_label"">"_riqi_"</input></td>"
+w "                    <td class=""td_date""><input id=""pacsStartDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td class=""td_char"">"_zhi_"</td>"
+w "                    <td class=""td_date""><input id=""pacsEndDate"" class=""hisui-datebox textbox"" style=""width:114px""></input></td>"
+w "                    <td><a id=""btnSearchPacs"" class=""hisui-linkbutton"">查询</a></td>"
+w "                    <td class=""td_button_right""><a id=""btnOkPacs"" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+w "                </tr>"
+w "            </table>"
+w "        </div>"
+w "        <div data-options=""region:'center',split:true,border:false"">"
+w "            <div id=""layoutPacsGrid"" class=""hisui-layout"" data-options=""fit:true,border:false"">"
+w "                <div data-options=""region:'north',split:true,border:false"" style=""height:400px"">"
+w "                    <table id=""pacsGrid"" data-options=""fit:true""></table>"
+w "                </div>"
+w "                <div data-options=""region:'center',split:true,border:false"">"
+w "                    <table id=""pacsSubGrid"" data-options=""fit:true""></table>"
+w "                </div>"
+w "            </div>"
+w "        </div>"
+w "    </div>"
+w "</div>"
+					}
+					if type="ER"{
+w "<div title="""_title_""" id=""Epr"">"
+w "    <div class=""hisui-layout"" data-options=""fit:true"">"
+w "<iframe id=""Epr"" scrolling=""auto"" width=""100%"" height=""100%"" frameborder=""0"" src=emr.browse.emr.csp?EpisodeID="_ EpisodeID_"></iframe>;"
+w "</div></div>"	
+					}
+					if type="ERB"
+					{
+w "<div title="""_title_""" id=""Epr"">"
+w "    <div class=""hisui-layout"" data-options=""fit:true"">"
+w "        <!--条件-->"
+w "        <div data-options=""region:'north',split:true,border:false"" style=""height:45px"">"
+w "            <table class=""search-table"" style=""width:100%;height:100%"">"
+w "                <tr>"
+w "                    <td><div id=""groupEpr"">自由搭配引用组合</div></td>"
+w "                    <td class=""td_button_right""><a id=""btnOkEpr"" class=""hisui-linkbutton"" data-options=""iconCls:'icon-w-edit'"">写入</a></td>"
+w "                </tr>"
+w "            </table>"
+w "        </div>"
+w "        <div data-options=""region:'center',split:true,border:false"">"
+w "            <table id=""eprGrid"" data-options=""fit:true""></table>"
+w "        </div>"
+w "    </div>"
+w "</div>"
+					}
+					if type="SB"
+					{
+w "<div title="""_title_""" id=""Char"" style=""padding:5px;"">"
+w "    <div style=""padding:5px;"">"
+w "        <div id=""kw""></div>"
+w "    </div>"
+w "</div>"
+					}
+				}
+				</SCRIPT>
+			</div>
+		</div>
+		<!--右侧框架-->
+		<div id="content" title="预览" data-options="region:'center',split:true,headerCls:'panel-header-gray'" style="padding:5px;">
+			<!--编辑部分-->
+			<textarea id="textEdit" style="width:100%;height:100%;border-color:#ccc"></textarea>	
+		</div>
+	</div>
+	<div id="dialogDomO" class="hisui-dialog" data-options="closed:true">
+		<div id="panelDomD" class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',split:true,border:false" style="height:60px;padding:5px;text-align:center">
+				<select id="comboDom" class="hisui-combobox" style="width:280px;"></select>
+			</div>
+			<div data-options="region:'center',split:true,border:false">
+				<table class="search-table" style="width:100%;height:100%;border:none">
+					<tr>
+						<td class="td_button_center"><a id="btnNoDomO" class="hisui-linkbutton">取消</a></td>
+						<td class="td_button_center"><a id="btnOkDomO" class="hisui-linkbutton">确定</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div id="dialogDomM" class="hisui-dialog" data-options="closed:true">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div id="panelDomM" data-options="region:'north',split:true,border:false" style="height:60px;padding:10px;">
+				<ul id="ulDom" style="list-style-tupe:none;"></ul>
+			</div>
+			<div data-options="region:'center',split:true,border:false">
+				<table class="search-table" style="width:100%;height:100%;border:none">
+					<tr>
+						<td class="td_button_center"><a id="btnNoDomM" class="hisui-linkbutton">取消</a></td>
+						<td class="td_button_center"><a id="btnOkDomM" class="hisui-linkbutton">确定</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div id="dialogDomD" class="hisui-dialog" data-options="closed:true">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div id="panelDomD" data-options="region:'north',split:true,border:false" style="height:100px;padding:10px;">
+				<table class="search-table" style="width:100%;height:100%;border:none">
+					<tr id="row1" style="display:none;">
+						<td class="td_label">
+							#(..Get("日期"))#
+						</td>
+						<td class="td_label">
+							<input id="dateDomD" class="hisui-datebox textbox"></input>
+						</td>
+					</tr>
+					<tr id="row2" style="display:none;">
+						<td class="td_label">
+							时间
+						</td>
+						<td class="td_label">
+							<input id="timeDomD" class="hisui-timespinner textbox"></input>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',split:true,border:false">
+				<table class="search-table" style="width:100%;height:100%;border:none">
+					<tr>
+						<td class="td_button_center"><a id="btnNoDomD" class="hisui-linkbutton">取消</a></td>
+						<td class="td_button_center"><a id="btnOkDomD" class="hisui-linkbutton">确定</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div id="dialogDomN" class="hisui-dialog dialogN" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomN'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomN').close();}
+	}]">
+		数值：<input class="hisui-numberbox textbox" data-options="isKeyupChange:true" id="txtNumber">	
+	</div>
+</body>
+
+</html>

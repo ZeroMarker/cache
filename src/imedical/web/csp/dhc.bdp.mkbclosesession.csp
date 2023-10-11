@@ -1,0 +1,57 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;websys.closesession.csp
+ ;如果是退出菜单,不校验session超时,直接关闭页面
+ ;点退出菜单会二次调用,unload
+ ;i ##Class(websys.SessionEvents).SessionExpired() q 1
+ d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ Do ##Class(web.SSUserLogin).SaveLogoffDateTime($g(%session.Data("LOGON.SSUSERLOGINID")))
+ if ##class(%Dictionary.CompiledMethod).%ExistsId("User.DHCClientLogin||LogoutById")
+ {
+ 	d ##class(User.DHCClientLogin).LogoutById($g(%session.Data("LOGON.SSUSERLOGINID")))
+ }
+ k ^TMP("FP",$j),^TMP("WEB",$j)
+ k ^TMP("reload",%session.SessionId)
+ s %session.EndSession=1
+ ;s ^TMP("close",$h)=""
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SCRIPT Language="JavaScript">
+function sys_close() {
+	
+	
+	if ("#(%request.Get("relogon"))#"=="1"){
+		//var win=window.open("../form.htm",'','top=0,left=0,width='+screen.availWidth+',height='+screen.availHeight+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,maximized=yes');
+		//var win=window.open("dhc.bdp.mkblogon.csp",'','top=0,left=0,width='+screen.availWidth+',height='+screen.availHeight+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,maximized=yes');
+		//原来基础平台的代码在医用知识库下为啥不好使了？ ie不能关闭原来窗口
+		var url="dhc.bdp.mkblogon.csp"
+	    if ("undefined"!==typeof websys_getMWToken){
+			url += "?MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;  //重新登录	
+		
+	}
+	else
+	{
+		if(((window.ActiveXObject)&&((navigator.userAgent.toLowerCase()).match(/msie ([\d.]+)/)[1]))||(("ActiveXObject" in window)))
+        {
+        	newwin = window.open(" ","_parent","");  
+			newwin.close();  
+        }
+        else
+       	{
+	       	newwin = window.open("about:blank","_self","");    //谷歌或者其他浏览器就打开空页面
+	       	newwin.close(); 
+       	}
+		
+	}
+}
+</SCRIPT>
+</HEAD>
+<BODY onload="sys_close();">
+</BODY>
+</HTML>

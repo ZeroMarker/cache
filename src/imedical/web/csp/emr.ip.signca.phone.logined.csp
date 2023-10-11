@@ -1,0 +1,108 @@
+﻿<html>
+<head>
+<HISUI/>
+<meta http-equiv="X-UA-Compatible" content="IE=8">
+<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.sign.css"/>
+<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+<title>已登录</title>
+
+<script language="cache" runat="server">
+	
+	//s userID = %session.Get("LOGON.USERID")
+    //s ssGroupID = %session.Get("LOGON.GROUPID")
+    //s userLocID = %session.Get("LOGON.CTLOCID")		
+    s userID = $Get(%request.Data("userID",1),"")
+    s ssGroupID = $Get(%request.Data("ssGroupID",1),"")
+    s userLocID = $Get(%request.Data("userLocID",1),"")
+    
+    
+    //获取产品组参数，病历时需要判断是否修改级别参数
+	s product = $Get(%request.Data("product",1),"")
+	s episodeID = $Get(%request.Data("episodeID",1),"")
+	s oriSignatureLevel = $Get(%request.Data("oriSignatureLevel",1),"Attending")
+	//s isNeedCallBack = $Get(%request.Data("isNeedCallBack",1),"")
+    s canRevokCheck = $Get(%request.Data("canRevokCheck",1),"")
+	s venderCode = $Get(%request.Data("venderCode",1),"")
+	s signType = $Get(%request.Data("signType",1),"")
+	s debugLevel = $Get(%request.Data("debugLevel",1),"0")
+    s cellName = $Get(%request.Data("cellName",1),"")	
+	
+    s isEnableSelectUserLevel = "N"
+	if (product = "EMR")&&(##class(%Dictionary.CompiledMethod).%ExistsId("EMRservice.SystemParameter||IsEnableSelectUserLevel") = 1)
+	{
+		s isEnableSelectUserLevel = ##Class(EMRservice.SystemParameter).IsEnableSelectUserLevel()	
+	}
+	s isNewUserLevel = ##class(%Dictionary.CompiledMethod).%ExistsId("EMRservice.BL.BLSignRole||GetSignCharacter")
+	
+	s HasLoginedCert = "0", LoginedCertInfo = "", LoginedUserID = "", LoginedUserName = "", LoginedUserCode = ""
+	s loginedCert = ##class(CA.Ajax.DS).GetData("GetLoginedInfo",venderCode,signType)
+	s jsonObj = ##class(CA.Util.Json).FromJson(loginedCert)
+	if (jsonObj.GetAt("retCode") = "0")&&(jsonObj.GetAt("certContainer") '= "")&&(jsonObj.GetAt("signToken") '= "")
+	{
+		s HasLoginedCert = "1"
+		s LoginedCertInfo = loginedCert
+		
+		s hisUserInfo = ##class(CA.DigitalSignatureService).GetHisUserInfoByCert(jsonObj.GetAt("userCertCode"), jsonObj.GetAt("certNo"))
+		s hisUserInfoObj = ##class(CA.Util.Json).FromJson(hisUserInfo)
+		s LoginedUserID = hisUserInfoObj.GetAt("hisUserID")
+		s LoginedUserCode = hisUserInfoObj.GetAt("hisUserCode")
+		s LoginedUserName = hisUserInfoObj.GetAt("hisUserName")
+	}
+</script>
+
+ <script type="text/javascript" language="javascript">
+    
+    var userID = '#(userID)#';
+	var userLocID = '#(userLocID)#';
+	
+    var isEnableSelectUserLevel = '#(isEnableSelectUserLevel)#';
+	var isNewUserLevel = '#(isNewUserLevel)#';
+	var oriSignatureLevel = '#(oriSignatureLevel)#';
+	var episodeID = '#(episodeID)#';
+	
+	var venderCode = '#(venderCode)#';
+	var signType = '#(signType)#';
+	var Const_Vender_Code = "#(venderCode)#";
+	var Const_Sign_Type = "#(signType)#";
+	
+	var cellName = '#(cellName)#';
+	var canRevokCheck = "#(canRevokCheck)#"; 
+    
+	var HasLoginedCert = '#(HasLoginedCert)#';
+	var LoginedCertInfo = "";
+	var LoginedUserName = '#(LoginedUserName)#';
+	var LoginedUserCode = '#(LoginedUserCode)#';
+	var LoginedUserID = '#(LoginedUserID)#';
+	if ("#(HasLoginedCert)#" =="1"){
+		LoginedCertInfo = $.parseJSON('#(LoginedCertInfo)#');
+	}
+	
+	$(function(){
+        if (canRevokCheck == 1) 
+        {
+            $("#checkRevoke").show();
+        }
+        else
+        {
+            $("#checkRevoke").hide();
+        }
+		initCheckInfo(userLocID, episodeID, oriSignatureLevel, cellName);
+		initCheckUser(LoginedUserID, LoginedUserName, LoginedUserCode, LoginedCertInfo);
+    })
+	
+	
+</script>
+</head>
+
+<body>
+	<!--div id="divLogin">
+		<table>
+			<tr>
+				<td colspan=2 class="userName" id="divUserName"></td>
+			</tr>		
+		</table>
+	</div-->
+	<csp:Include Page="emr.ip.signca.phone.check.csp">
+</body>
+</html>

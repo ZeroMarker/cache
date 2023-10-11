@@ -1,37 +1,47 @@
+<csp:method name=OnPerHttp arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q l
+	quit l
+</csp:method>
 <!DOCTYPE HTML>
 <html>
 <head>
 <title>麻醉科手术检索</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<HISUI></HISUI>
 <dhcclinic:head></dhcclinic:head>
 <script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
 <script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
 <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+<style>
+.layout>.panel.layout-panel>.panel-header.panel-header-gray {
+    border-radius: 0px;
+    border-right:0px
+}
+</style>
 </head>
-<body class="hisui-layout">
-	<div data-options="region:'north',title:'',headerCls:'panel-header-gray',border:false" style="height:100px;padding-left:5px;">
+<body class="hisui-layout" style="padding:0px;margin:0px">
+	<div data-options="region:'north',title:'',headerCls:'panel-header-gray',border:false" style="height:90px">
     	<form id="conditionForm">
-    		<p>
-    		<label style="padding-left:5px;">开始日期</label>
-    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
-    		<label style="display:inline-block;width:120px;text-align:right;">结束日期</label>
-    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
-    		<label style="display:inline-block;width:80px;text-align:right;">麻醉医生</label>
-    		<input type="text" id="AnaDoctor" name="AnaDoctor" class="hisui-combobox textbox" data-options="textField: 'Description',valueField: 'RowId'">
+    		<div style="margin:10px 0px">    		
+    		<label class="lableTitle1">开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox" >
+    		<label class="lableTitle2">结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox" >
+    		<label class="lableTitle2">麻醉医生</label>
+    		<input type="text" id="AnaDoctor" name="AnaDoctor" class="hisui-combobox" data-options="textField: 'Description',valueField: 'RowId'">
     		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:20px;">查询</a>
-    		</p>
-    		<p>
-    		<label style="padding-left:5px;">申请科室</label>
-    		<input type="text" id="AppDept" name="AppDept" class="hisui-combobox textbox" data-options="textField: 'Description',valueField: 'RowId'">
-    		<label style="display:inline-block;width:120px;text-align:right;">手术名称包含</label>
-    		<input type="text" id="OperName" name="OperName" class="textbox" style="width:173px;">
-    		<label style="display:inline-block;width:80px;text-align:right;">事件包含</label>
-    		<input type="text" id="EventName" name="EventName" class="textbox" style="width:173px;">
-    		</p>
+    		</div>
+    		<div style="margin:10px 0px">
+    		<label class="lableTitle1">申请科室</label>
+    		<input type="text" id="AppDept" name="AppDept" class="hisui-combobox" data-options="textField: 'Description',valueField: 'RowId'">
+    		<label class="lableTitle2">手术名称包含</label>
+    		<input type="text" id="OperName" name="OperName" class="hisui-validatebox" style="width:174px">
+    		<label class="lableTitle2">事件包含</label>
+    		<input type="text" id="EventName" name="EventName" class="hisui-validatebox" style="width:174px">
+    		</div>
     	</form>
     </div>
-    <div data-options="region:'center',title:'手术查询结果：<span>共<span id=\'badge_opercount\' style=\'margin:0 5px;\'></span>台</span>',headerCls:'panel-header-gray' ">
+    <div style="border:none;" data-options="region:'center',title:'手术查询结果：<span>共<span id=\'badge_opercount\' style=\'margin:0 5px;\'></span>台</span>',headerCls:'panel-header-gray' ">
     	<table id="data_grid"></table>
 	</div>
 	<script type="text/javascript">
@@ -39,25 +49,36 @@
 		$(document).ready(function() {
 			var date=new Date();
 			var month=date.getMonth();
-			date.setMonth(month-1);
-			date.setDate(1);
+			date.setMonth(month-1,1);
+			//date.setDate(1);
 			var lastMonthFirstDay = date;
 			
 			var date=new Date();
 			date.setDate(0);
 			var lastMonthLastDay = date;
-			
-    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
-    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
-    	
-    		var datagrid = $("#data_grid");
+			dhccl.parseDateFormat();
+            var ret=dhccl.runServerMethod("web.DHCClinicCom","GetDateFormat");
+              // alert(ret.result)
+	        if(ret.result=="j/n/Y") 
+	        {var lastMonthFirstDay=lastMonthFirstDay.format("dd/MM/yyyy");
+	         var lastMonthLastDay=lastMonthLastDay.format("dd/MM/yyyy");
+	        
+	        }
+	        else 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("yyyy-MM-dd");
+	            var lastMonthLastDay=lastMonthLastDay.format("yyyy-MM-dd");
+		        }
+		        //alert(1)
+           $("#OperStartDate").datebox("setValue", lastMonthFirstDay);
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay);
+    	var datagrid = $("#data_grid");
     		datagrid.datagrid({
         		idField: "RowId",
         		fit: true,
         		rownumbers: true,
         		remoteSort: false,
         		singleSelect:true,
-        		striped:true,
         		title: "",
         		border:false,
         		//nowrap: true,

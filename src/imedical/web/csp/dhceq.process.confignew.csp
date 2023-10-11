@@ -9,78 +9,89 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
 	// 'dhceq.process.confignew.csp?&OpenFlag=Y&SourceType=1&SourceID='+id+'&Status='+Status;
 	s OpenFlag=$Get(%request.Data("OpenFlag",1))		//是否验收带来
 	s SourceType=$Get(%request.Data("SourceType",1))	//1:验收|2:设备
 	s SourceID=$Get(%request.Data("SourceID",1))
-	
+	///modified by ZY0275 20210712
+	s OCRRowID=""
+	i SourceType=1 s OCRRowID=$p($g(^DHCEQOpenCheckList(SourceID)),"^", 1)
 	s Status=$Get(%request.Data("Status",1))
 	s ReadOnly=$Get(%request.Data("ReadOnly",1))
 </Script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'附属设备'">
+		<div class="hisui-panel  panel-body-gray" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
 			<!--modify by lmm 2020-04-02 LMM0069-->
-				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:5px 0 10px 0;">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:0px 0px 5px 0px;">
 					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label id="cCItemDR_Desc" for="CItemDR_Desc">设备项名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'EM.L.Config.Item'" id="CItemDR_Desc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMIEquipTypeDR_ETDesc" for="MIEquipTypeDR_ETDesc">管理类组</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EquipType'" id="MIEquipTypeDR_ETDesc"></div>
+							<div class="eq-table-td eq-table-label"><label id="cMIStatCatDR_SCDesc" for="MIStatCatDR_SCDesc">设备类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.StatCat','paras':[{name:'StatCat',type:'4',value:'MIStatCatDR_SCDesc'},{name:'EquipTypeDR',type:'4',value:'MIEquipTypeDR'}]" id="MIStatCatDR_SCDesc" ></div>
+							<div class="eq-table-td eq-table-label"><label id="cMIEquipCatDR_ECDesc" for="MIEquipCatDR_ECDesc">设备分类</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MIEquipCatDR_ECDesc" ></div>	
+							<div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true" style="margin-left:40px;margin-right:100px">保存</a></div>
+						</div>
 						<div class="eq-table-tr">
 							<!--div class="eq-table-td eq-table-label"><label id="cCType_Desc" for="CType_Desc">配置类型</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.Config.FromType'" id="CType_Desc" disabled="true"></div-->
-							<div class="eq-table-td eq-table-label"><label for="CItemDR_Desc">设备项</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.Config.Item'" id="CItemDR_Desc"></div>
-							<div class="eq-table-td eq-table-label"><label id="cCItem" for="CItem">名称</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CItem"></div>
+							<div class="eq-table-td eq-table-label"><label id="cCItem" for="CItem">设备名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CItem"></div>
+							<div class="eq-table-td eq-table-label"><label id="cCUnitDR_UOMDesc" for="CUnitDR_UOMDesc">单位</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.UOM'" id="CUnitDR_UOMDesc"></div>
 							<div class="eq-table-td eq-table-label"><label id="cCProviderDR_VDesc" for="CProviderDR_VDesc">供应商</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="CProviderDR_VDesc" disabled="true"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<!--modify by lmm 2020-05-28-->
-							<div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">保存</a></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Vendor'" id="CProviderDR_VDesc"></div>
+							<div class="eq-table-td eq-table-label"><label for="CManuFactoryDR_MDesc">生产厂家</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.ManuFacturer'" id="CManuFactoryDR_MDesc"></div>
+							<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true" style="margin-left:40px;margin-right:100px">删除</a></div>
 						</div>
 						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="CRegisterNo">医疗注册证号</label></div>
+							<div class="eq-table-td"><input id="CRegisterNo" class="hisui-validatebox textbox"></div>
 							<div class="eq-table-td eq-table-label"><label for="CBrandDR_Desc">品牌</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Brand'" id="CBrandDR_Desc"></div>
-							<div class="eq-table-td eq-table-label"><label for="CSpec">规格</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CSpec"></div>
-							<div class="eq-table-td eq-table-label"><label for="CModel">型号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CModel"></div>
-							<div class="eq-table-td eq-table-label"><label for="CManuFactoryDR_MDesc">生产厂家</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.ManuFacturer'" id="CManuFactoryDR_MDesc"></div>
-							<!--modify by lmm 2020-05-28-->
-							<div class="eq-table-td"><a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true" style="margin-left:120px;margin-right:20px">删除</a></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Brand'" id="CBrandDR_Desc"></div>
+							<!--div class="eq-table-td eq-table-label"><label for="CSpec">规格</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CSpec"></div-->
+							<div class="eq-table-td eq-table-label"><label for="CModel">规格型号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CModel"></div>
+							<div class="eq-table-td eq-table-label"><label for="CLeaveFacNo">出厂编号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CLeaveFacNo"></div>
+							<div class="eq-table-td"><a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true" style="margin-left:40px;margin-right:100px">提交</a></div>
 						</div>
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cCPrice" for="CPrice">单价</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CPrice"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CPrice"></div>
 							<div class="eq-table-td eq-table-label"><label id="cCQuantityNum" for="CQuantityNum">总数量</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CQuantityNum"></div>
-							<div class="eq-table-td eq-table-label"><label for="CUnitDR_UOMDesc">单位</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.UOM'" id="CUnitDR_UOMDesc" disabled="true"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CQuantityNum"></div>
 							<div class="eq-table-td eq-table-label"><label for="CCountryDR_CDesc">国别/地区</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Country'" id="CCountryDR_CDesc"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label for="CReceiverDR_SSUSRName">接收人</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="CReceiverDR_SSUSRName"></div>
-							<div class="eq-table-td eq-table-label"><label for="CLocation">存放地点</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CLocation"></div>
-							<div class="eq-table-td eq-table-label"><label for="CGuaranteePeriodNum">保修期(月)</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="CGuaranteePeriodNum"></div>
-							<div class="eq-table-td eq-table-label"><label for="CMeasureFlag">计量标志</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-checkbox" type="checkbox" id="CMeasureFlag"></div>
-						</div>
-						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Country'" id="CCountryDR_CDesc"></div>
 							<div class="eq-table-td eq-table-label"><label for="CLeaveDate">出厂日期</label></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="CLeaveDate"></div>
-							<div class="eq-table-td eq-table-label"><label for="CLeaveFacNo">出厂编号</label></div>
-							<div class="eq-table-td"><textarea id="CLeaveFacNo" class="textbox" style="width:151px"></textarea></div>
+						</div>
+						<div class="eq-table-tr">
+							<!--div class="eq-table-td eq-table-label"><label for="CReceiverDR_SSUSRName">接收人</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.EQUser'" id="CReceiverDR_SSUSRName"></div-->
+							<div class="eq-table-td eq-table-label"><label for="CRecomendYears">厂家建议年限(年)</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CRecomendYears"></div>
+							<div class="eq-table-td eq-table-label"><label for="CLocation">存放地点</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CLocation"></div>
+							<div class="eq-table-td eq-table-label"><label for="CGuaranteePeriodNum">保修期(月)</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="CGuaranteePeriodNum"></div>
+							<div class="eq-table-td eq-table-label"><label for="CMeasureFlag">计量标志</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-checkbox textbox" type="checkbox" id="CMeasureFlag"></div>
+						</div>
+						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label for="CParameters">详细参数</label></div>
-							<div class="eq-table-td"><textarea id="CParameters" class="textbox" style="width:151px"></textarea></div>
+							<div class="eq-table-td"><textarea id="CParameters" class="textbox"></textarea></div>
 							<div class="eq-table-td eq-table-label"><label for="CRemark">备注</label></div>
 							<div class="eq-table-td"><textarea id="CRemark" class="textbox"></textarea></div>
 						</div>
@@ -98,10 +109,10 @@
 			<INPUT type="hidden" id="FromType" value=0>			<!--	0-附属设备 	1-软/硬件配置 	2-其他-->
 			<INPUT type="hidden" id="CSourceType" value=#(SourceType)#>
 			<INPUT type="hidden" id="CSourceID" value=#(SourceID)#>
+			<INPUT type="hidden" id="OCRRowID" value=#(OCRRowID)#>
 			<INPUT type="hidden" id="COpenFlag" value=#(OpenFlag)#>
 			<INPUT type="hidden" id="Status" value=#(Status)#>
 			<INPUT type="hidden" id="ReadOnly" value=#(ReadOnly)#>
-			
 			<INPUT type="hidden" id="CRowID">
 			<INPUT type="hidden" id="CType">
 			<INPUT type="hidden" id="CItemDR">
@@ -111,10 +122,13 @@
 			<INPUT type="hidden" id="CManuFactoryDR">
 			<INPUT type="hidden" id="CCountryDR">
   			<INPUT type="hidden" id="CReceiverDR">
-  			
   			<INPUT type="hidden" id="CInvoiceNo">
+			<INPUT type="hidden" id="MIEquipTypeDR">
+			<INPUT type="hidden" id="MIStatCatDR">
+			<INPUT type="hidden" id="MIEquipCatDR">
 		</form>
 	</div>
 	<script type="text/javascript" src="../scripts/dhceq/process/confignew.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/function/combotreecommon.js"></script>
 </body>
 </html>

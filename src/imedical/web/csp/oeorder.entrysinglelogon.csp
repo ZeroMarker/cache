@@ -30,7 +30,7 @@
  s EpisLoc=$ZCVT(EpisLoc,"O","JS")
  s RepeatOrders=$ZCVT(RepeatOrders,"O","JS")
  s MultiEpisodeID=$ZCVT(MultiEpisodeID,"O","JS")
- s RepeatOrders=##Class(%CSP.Page).EscapeURL($g(RepeatOrders))
+ s RepeatOrders=##Class(websys.Page).EscapeURL($g(RepeatOrders))
  s ordentrydetails="&SUMMFlag="_$g(%request.Data("SUMMFlag",1))
  s DCAARowId=$g(%request.Data("DCAARowId",1))
  
@@ -75,7 +75,8 @@
  s chLINK=""
  if DHCePRChart'="" {
 	s chLINK="epr.chart.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&EpisodeIDs="_MultiEpisodeID_"&mradm="_mradm_"&PAAdmTransactionID="_PAAdmTransactionID_"&OperRoomID="_OperRoomID_"&DischID="_DischID_"&CurrDischID="_CurrDischID_"&DischEpisodes="_DischEpisodes_"&doctype="_$zcvt(doctype,"O","HTML")_"&TWKFL="_TWKFL_"&TWKFLI="_TWKFLI_"&TimeLine="_TimeLine_"&ConsultID="_ConsultID_"&ConsultEpisodeID="_"&DCAARowId="_DCAARowId
-	s chLINK=##class(ext.epr.Chart).RedirctCharURL(DHCePRChart,chLINK)
+	s chLINK=chLINK_"&MWToken="_%session.SessionId
+    s chLINK=##class(ext.epr.Chart).RedirctCharURL(DHCePRChart,chLINK)
 	;s chLINK=$P(chLINK,"websys.csp",1)_"websys.csp"_$P(chLINK,"websys.csp",2)
 	if (NotEMREntry=1){
 		;如果是弹出整个诊疗界面,则不需要显示患者信息,注意修改菜单ID(根据项目上菜单表epr.menu中的Rowid修改)

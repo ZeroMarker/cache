@@ -12,8 +12,6 @@
 		<DHCMA:HEAD></DHCMA:HEAD>
 		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
 		<server>
-			//获取控制设置参数
-			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
    	   		//获取患者现住址
 			Set EpisodeID=$g(%request.Data("EpisodeID",1))	       //当前病人就诊ID
  			Set PatientID=$p($g(^PAADM(+EpisodeID)),"^",1)         //病人ID
@@ -26,6 +24,13 @@
 			Set:CurrAddress="" CurrAddress =##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("DefaultProvinces","")
    	        //获取建卡登记字典对照信息
    	        Set DicInfo=##class(DHCMA.Util.BTS.DictionaryMapSrv).GetDicInfo(EpisodeID,"CD")
+   	        
+	        // 心脑血管报卡单位 
+			Set XNXGReportOrgan = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("XNXGReportOrgan","")
+			// 心脑血管确诊单位哦 
+			Set XNXGDiagnosisUnit =##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("XNXGDiagnosisUnit","")
+			// 心脑血管单位级别
+			Set XNXGUnitLevel =##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("XNXGUnitLevel","")
    	   </server>
 	</head>
 	<body>  
@@ -34,42 +39,40 @@
 		<script type="text/javascript" src="../scripts/DHCMA/CD/reportxnxg/Gui.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CD/reportxnxg/Event.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CD/reportxnxg/Print.js"></script>
-		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
 
 		<script language="Cache" RUNAT="SERVER">
-		    If (IsSupportRQ2018'=1) {
-		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
-            }
-		    
+		
 			Set menuCode="CDQryRepXNXG"
 			Set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
 			Set groupId=$g(%session.Data("LOGON.GROUPID"))
 			Set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"CDReport",groupId)
 			
+			Set LangCode=$g(%session.Data("LOGON.LANGCODE"))
 		    Set ReportID=$g(%request.Data("ReportID",1))	    //报告ID
 			Set PatientID=$g(%request.Data("PatientID",1))
 			Set EpisodeID=$g(%request.Data("EpisodeID",1))
 			Set LocID=$g(%session.Data("LOGON.CTLOCID"))
+		    set LagCode = $g(%session("LOGON.LANGCODE"))
 			Set LocDesc=$p($g(^CTLOC(+LocID)),"^",2)
+			Set LocDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTLoc","CTLOCDesc",LangCode,LocDesc)
 			
-			set LogonHospID=$g(%session.Data("LOGON.HOSPID"))
-		    set objHosp=##class(DHCMed.Base.Hospital).GetObjById(LogonHospID)
-		    Set HospDesc=""
-		    If ($IsObject(objHosp)) {
-		    	Set HospDesc=objHosp.Descs
-		    }
-		    
+		    Set DocName=$g(%session.Data("LOGON.USERNAME"))
+		    Set DocName = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTCareProv","CTPCPDesc",LangCode,DocName)
+			
+			Set LocFlag=+$g(%request.Data("LocFlag",1)) // 科室权限配置
 			Set ReportID=""""_$g(ReportID)_""""
 			Set PatientID=""""_$g(PatientID)_""""
 			Set EpisodeID=""""_$g(EpisodeID)_""""
 			Set LocID=""""_$g(LocID)_""""
 			Set LocDesc=""""_$g(LocDesc)_""""
 			Set LogonHospID=""""_$g(LogonHospID)_""""
-			Set HospDesc=""""_$g(HospDesc)_""""
 			Set EmrOpen=+$g(%request.Data("EmrOpen",1))   //是否由病历浏览打开
 			Set:EmrOpen="" EmrOpen=""""""
 			Set DiagnosDr =$g(%request.Data("DiagnosDr",1))
 			Set DiagnosDr=""""_$g(DiagnosDr)_""""
+			Set LocFlag=""""_LocFlag_""""
+			Set DocName=""""_$g(DocName)_""""
 	   </script>
 	  
 	    <script language="javascript" type="text/javascript">
@@ -79,16 +82,20 @@
             var LocID=#(LocID)#;
             var LocDesc=#(LocDesc)#;
             var LogonHospID=#(LogonHospID)#;
-            var HospDesc=#(HospDesc)#;
 			var EmrOpen=#(EmrOpen)#;
 			var DiagnosDr=#(DiagnosDr)#;
+			var LocFlag=#(LocFlag)#;
+			var DocName=#(DocName)#;
 			//全局请求后台服务对象
 			var ServerObj={
 				PatRegAddress:"#(PatRegAddress)#",
 				RegAddress:"#(RegAddress)#",
 				PatCurrAddress:"#(PatCurrAddress)#",
 				CurrAddress:"#(CurrAddress)#",
-				DicInfo:"#(DicInfo)#"
+				DicInfo:"#(DicInfo)#",
+				XNXGReportOrgan:"#(XNXGReportOrgan)#",
+				XNXGDiagnosisUnit:"#(XNXGDiagnosisUnit)#",
+				XNXGUnitLevel:"#(XNXGUnitLevel)#"
 			}
 		</script>
 	</body>

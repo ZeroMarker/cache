@@ -1,0 +1,179 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+<head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
+	<HISUI/>
+	<title>	权限配置视图 </title>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script language="cache" runat="server">
+		s hospDesc = %session.Get("LOGON.HOSPDESC")
+		s hospId = %session.Get("LOGON.HOSPID")
+		s hospId = 2 
+		s hospGroupId = ##class(EMRservice.BL.BLPrivRuleConfigView).GetHospGroupID(hospId)
+		s hospGroupId =2
+		s userID = %session.Get("LOGON.USERID")
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		
+   </script>
+    <script language="javascript">
+        var setting = {
+	        hospDesc:'#(hospDesc)#',
+	        hospId:'#(hospId)#',
+	        hospGroupId:'#(hospGroupId)#',
+            userId:'#(userID)#',
+            userLocId:'#(userLocID)#',
+           	privRuleType:"",
+           	privRuleTypeDesc:"",
+           	selrow:{},
+           	selrowindex:"",
+           	storeselrow:{},
+           	storeselrowindex:""
+        }
+    </script>
+    
+    <style type="text/css">
+	.viewlabel {
+		margin:5 px;
+		padding:5 px;
+		font-size:14px;
+		bold:true;
+	}
+	
+	.datagrid-toolbar table{
+	    float: right;
+	}
+	
+   </style>
+    
+</head>
+<body class="hisui-layout" data-options="border:false">
+	<div data-options="region:'north',title:'权限配置页面',split:true,showCollapsedTitle:true,iconCls:'icon-w-list'" style="height:100px;padding:10px;">
+		<div>
+			<span class="viewlabel" >院区：</span>
+			<input id="txtHospName" style="width:200px;" class="hisui-triggerbox textbox" data-options="plain:true" />
+			<span class="viewlabel" style="padding:0 0 0 20px">权限类型：</span>
+			<div id="cbxdgPrivType" class="hisui-combogrid" style="width:200px;" >
+			</div>
+			<span class="viewlabel" style="padding:0 0 0 5px">状态：</span>
+			<div id="switchPrivRuleType" 
+				 class="hisui-switchbox" 
+				 style="margin-left:5px" 
+				 data-options="onText:'启用',offText:'禁用',size:'small',animated:true,
+							   onClass:'primary',offClass:'gray'">
+			</div>
+			
+			<a href="#" class="hisui-linkbutton" id="btnSaveConfig" style="margin-left:20px">保存配置</a>
+			
+		</div>
+	</div>   
+	<div data-options="region:'west',iconCls:'icon-w-list',split:true,showCollapsedTitle:true" style="width:500px;padding:10px;">
+		<div style="float:right" >
+			<a id='addPrivStoreItem' title="新增" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="addPrivStoreItem()" >#(..Get("新增"))#</a>
+			<a id='editPrivStoreItem' title="编辑" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="editPrivStoreItem()" >#(..Get("编辑"))#</a>
+			<a id='addPrivStoreToPrj' title="添加到权限" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-right',plain:true" onclick="addPrivStoreToPrjPriv()" >#(..Get("添加到权限"))#</a>
+		</div>
+		<div class = "hisui-datagrid" id="dgPrivStore"></div>
+	</div>   
+	<div data-options="region:'center',split:true" style="padding:10px;">	
+		<div>
+			<a id='btnUp' title="上移" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-up',plain:true"  onclick="upRow()" >#(..Get("上移"))#</a>
+			<a id='btnDown' title="下移" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-down',plain:true"  onclick="downRow()" >#(..Get("下移"))#</a>
+			<a id='btnDelete' title="删除" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true"  onclick="deletePrjPrivItem()" >#(..Get("删除"))#</a>
+			<a id='btnEdit' title="编辑脚本内容" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="editPrivRuleDetail()" >#(..Get("编辑脚本内容"))#</a>
+			<a id='btnGenPri' title="生成脚本" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-save',plain:true" onclick="savePrivRule()" >#(..Get("生成脚本"))#</a>
+			<a id='btnfocus' title="本院重点" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-apply-check',plain:true" onclick="checkPrivRuleStore()" >#(..Get("本院重点"))#</a>
+		</div>
+		<div class = "hisui-datagrid" id="dgPrivRule" ></div>
+	</div>
+	<div id="dialog" class="hisui-dialog" title="编辑脚本" 
+		 style="width:880px;height:560px;top:200px;left:550px;padding:10px" 
+		 data-options="iconCls:'icon-save',resizable:true,modal:true,buttons:[{
+				text:'保存',
+				handler:function(){
+						if (setting.selrow.storecode != $('#txtPrivRuleCode').val())
+						{
+							setting.selrow.storecode = $('#txtPrivRuleCode').val();
+							setting.selrow.haschanged = true;
+							$HUI.dialog('#dialog').close();
+							updatedgPrivRule();
+						}
+						else
+						{
+							$.messager.popover({msg: '无需要保存变更!' ,type:'alert'});
+							return;
+						}
+					}
+			},{
+				text:'关闭',
+				handler:function(){$HUI.dialog('#dialog').close();}
+			}]">
+			<div class="hisui-layout" style="width:100%;height:100%;">
+				<div data-options="region:'north',title:'脚本说明',split:true,showCollapsedTitle:true,headerCls:'panel-header-gray'" style="height:100px;padding:10px;" >
+					<!--脚本名称PrivRuleDesc-->
+					<p id="labelPrivRuleDesc"></p>
+				</div>
+				<div data-options="region:'west',split:true" style="width:350px;padding:10px;">
+					<!--仓库中脚本PrivRuleCode（只读效果）-->
+					<div class="hisui-panel" title="仓库脚本编码<span style='color:red'>(只读)</span>" data-options="headerCls:'panel-header-gray'">
+						<p id="labelStoreRuleCode"></p>
+					</div>
+				</div>
+				<div data-options="region:'center',split:true" style="padding:10px;">
+					<!--当前生效的脚本PrivRuleCode-->
+					<div class="hisui-panel" title="运行脚本编码<span style='color:blue'>(编辑区)</span>" data-options="headerCls:'panel-header-gray'">
+						<textarea id="txtPrivRuleCode" style="width:100%;height:260px"></textarea>
+					</div>
+				</div>
+			</div>
+			   
+			
+	</div>
+	<div id="dialogstore" class="hisui-dialog" title="仓库脚本" 
+		 style="width:880px;height:560px;top:200px;left:550px;padding:10px" 
+		 data-options="onClose:function(){initDialogStore();},iconCls:'icon-save',resizable:true,modal:true,buttons:[{
+				text:'校验',
+				handler:function(){
+						checkPrivStoreItem();	
+					}
+			},{
+				text:'保存',
+				handler:function(){
+						
+						//保存维护的脚本项目
+						savePrivStoreItem();
+						//关闭维护页面
+						$HUI.dialog('#dialogstore').close();
+							
+						
+						
+					}
+			},{
+				text:'关闭',
+				handler:function(){
+					$HUI.dialog('#dialogstore').close();
+					initDialogStore();
+				}
+			}]">
+			
+			<div style="padding:10px">
+				<div>脚本名称:</div>
+				<div style="padding:10px">
+					<textarea id="txtPrivStoreDesc" style="width:820px; height:80px"></textarea>
+				</div>
+			</div>
+			<div style="padding:10px">
+				<div>脚本代码:</div>
+				<div style="padding:10px">
+					<textarea id="txtPrivStoreCode" style="width:820px; height:260px" ></textarea>
+				</div>
+			</div>
+
+	</div>
+   <script type="text/javascript" src="../scripts/emr/js/ip.privrule.configpage.js"></script>
+		
+</body>
+</html>

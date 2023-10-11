@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液排批规则-病区规则
-	csp:dhcpha.pivas.batchrulesward.csp
-	js: scripts/pharmacy/pivas/batchrulesward.js
+<!--
+    配液排批规则-病区规则
+	csp: csp/dhcpha.pivas.batchrulesward.csp
+	js:  scripts/pharmacy/pivas/batchrulesward.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -10,162 +15,139 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <style>
+        .pha-body {
+            background-color: #fff;
+        }
+
+        .layout {
+            background-color: #fff;
+        }
+    </style>
 </HEAD>
 
-<body>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'west',width:500,title:'病区规则',headerCls:'panel-header-gray',split:true" border="true">
-            <table id="gridLocBat" data-options="fit:true" border="false">
-            </table>
-        </div>
-        <div data-options="region:'center'" border="false">
-            <div id="tabsBatchRulesWard" class="hisui-tabs tabs-gray" fit="true" data-options="tabPosition:'top'">
-                <div id="tabBatDrug" data-options="title:'药品顺序规则',selected:true">
-                    <div class="hisui-layout" fit="true" border="false">
-                        <div data-options="region:'center',border:false">
-                            <table id="gridLocBatInc"></table>
-                        </div>
-                    </div>
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'west',width:500,title:'病区规则',headerCls:'panel-header-gray',split:true,iconCls:'icon-house-maint'" border="true">
+                    <table id="gridLocBat" data-options="fit:true" border="false">
+                    </table>
                 </div>
-                <div id="tabBatDrugN" data-options="title:'药品固定规则'">
-                    <div class="hisui-layout" fit="true" border="false">
-                        <div data-options="region:'center',border:false">
-                            <table id="gridLocBatIncFix"></table>
+                <div data-options="region:'center'" border="false">
+                    <div id="tabsBatchRulesWard" class="hisui-tabs tabs-gray" fit="true" data-options="tabPosition:'top'">
+                        <div id="tabBatLiquid" data-options="title:'容积规则',selected:true">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center',border:false">
+                                    <table id="gridLocBatCub"></table>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <!--div id ="tabBatIns" data-options="title:'用法规则'">
-				</div-->
-                <div id="tabBatInsN" data-options="title:'用法固定规则'">
-                    <div class="hisui-layout" fit="true" border="false">
-                        <div data-options="region:'center',border:false" >
-                            <table id="gridLocBatInsFix"></table>
+                        <div id="tabBatDrug" data-options="title:'药品顺序规则'" style="display:none;">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center',border:false">
+                                    <table id="gridLocBatInc"></table>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <!--div id ="tabBatCat" data-options="title:'配液小类规则',selected:true">
-				</div-->
-                <!--div id ="tabBatCatN" data-options="title:'配液小类固定规则'">
-				</div-->
-                <div id="tabBatLiquid" data-options="title:'容积规则'">
-                    <div class="hisui-layout" fit="true" border="false">
-                        <div data-options="region:'center',border:false">
-                            <table id="gridLocBatCub"></table>
+                        <div id="tabBatSort" data-options="title:'顺序规则'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center',border:false">
+                                    <table id="gridLocBatSort"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tabBatDrugN" data-options="title:'药品固定规则'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center',border:false">
+                                    <table id="gridLocBatIncFix"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tabBatInsN" data-options="title:'用法固定规则'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center',border:false">
+                                    <table id="gridLocBatInsFix"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tabBatOrdLinkN" data-options="title:'配液大类规则'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center',border:false">
+                                    <table id="gridLocBatOrdLinkFix"></table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-            </div>
     </div>
     <div id="gridLocBatBar">
-        <table>
-            <tr>
-                <td>
-                    <input id="cmbPivaLoc" />
-                </td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">增加</a>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
-                </td>
-                <td>
-       		 		<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
-                </td>
-		</tr>
-		</table>
+        <div class="pha-row">
+            <div class="pha-col">
+                <input id="cmbPivaLoc" class="hisui-combobox" />
+            </div>
+            <div class="pha-col">
+                <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a>
+            </div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+        </div>
     </div>
-    <div id="gridLocBatIncBar" >
-        <table style="border-top:1px solid white"> 
-            <tr>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddInc">增加</a>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveInc">保存</a>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelInc">删除</a>
-				</td>
-                <td>
-                    <div class="datagrid-btn-separator"></div>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-arrow-top" id="btnUpInc">上移</a>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-arrow-bottom" id="btnDownInc">下移</a>
-                </td>
-
-                <td>
-                	<input type="text" class="hisui-validatebox" style="visibility: hidden;" />
-                </td>
-            </tr>
-		</table>
+    <div id="gridLocBatIncBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddInc">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveInc">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelInc">删除</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-up" id="btnUpInc">上移</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-down" id="btnDownInc">下移</a>
     </div>
     <div id="gridLocBatIncFixBar">
-        <table style="border-top:1px solid white"> 
-            <tr>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddIncFix">增加</a>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveIncFix">保存</a>
-                </td>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelIncFix">删除</a>
-                </td>
-                <td>
-                	<input type="text" class="hisui-validatebox" style="visibility: hidden;" />
-                </td>
-            </tr>
-        </table>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddIncFix">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveIncFix">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelIncFix">删除</a>
     </div>
     <div id="gridLocBatInsFixBar">
-        <table style="border-top:1px solid white"> 
-            <tr>
-                <td>
-					<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddInsFix">增加</a>
-		        </td>
-                <td>
-					<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveInsFix">保存</a>
-		        </td>
-                <td>
-					<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelInsFix">删除</a>
-				</td>
-                <td>
-                	<input type="text" class="hisui-validatebox" style="visibility: hidden;" />
-                </td>
-			</tr>
-		</table>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddInsFix">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveInsFix">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelInsFix">删除</a>
     </div>
     <div id="gridLocBatCubBar">
-            <table style="border-top:1px solid white"> 
-            <tr>
-                <td>
-        			<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddCub">增加</a>
-        		</td>
-				<td>
-					<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveCub">保存</a>
-				</td>    
-				<td>
-					<a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelCub">删除</a>
-				</td>
-                <td>
-                	<input type="text" class="hisui-validatebox" style="visibility: hidden;" />
-                </td>
-                </tr></table>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddCub">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveCub">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelCub">删除</a>
+    </div>
+    <div id="gridLocBatOrdLinkFixBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddOrdLinkFix">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveOrdLinkFix">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelOrdLinkFix">删除</a>
+    </div>
+    <div id="gridLocBatSortBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddSort">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveSort">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelSort">删除</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-up" id="btnUpSort">上移</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-down" id="btnDownSort">下移</a>
+        <div style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;line-height: 26px;border-radius: 4px;position: absolute;right: 1px;top: 1px;">
+            <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;">
+            　 #(..Get("【上移】【下移】全部操作完成后，请点击【保存】"))#
+        </div>
     </div>
 
+    <div id="gridLocBatSortMenu" class="hisui-menu menubutton-toolbar" style="display: none;">
+        <div id="menuInsertSort">插入一行</div>
+        <div class="menu-sep"></div>
+        <div id="menuAddSort">追加一行</div>
+    </div>
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/util.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>

@@ -1,0 +1,211 @@
+
+<!--
+ * FileName: dhcpe.ct.orderdetailrelatecom.csp 
+ * Author: xy
+ * Date: 2021-08-14
+ * Description:  大项和细项对照关系维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.panel-header{
+	border-bottom: 0;
+}
+.r-label{
+	padding-left: 10px;
+}
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<!--站点 start-->
+	<div id="layoutcenter" data-options="region:'west',border:false,collapsible:false" style="width:340px;padding:10px;">
+	  <div class="hisui-panel" fit="true" data-options="title:'站点',headerCls:'panel-header-gray',iconCls:'icon-house'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 <div class="hisui-layout" fit="true">
+			<div data-options="region:'north',border:false,collapsible:false" style="height:92px;border-bottom:1px solid #C0C0C0;">
+		 		<table class="search-table">
+		 			<tr>
+		 				<td class="r-label"><label>#(..Get("科室"))#</label></td>
+	    	 			<td colspan='3'><input id="LocList" class="hisui-combobox textbox" style="width:254px;"></td>
+		 			</tr>
+		 			<tr>
+		 				<td class="r-label"><label>#(..Get("描述"))#</label></td>
+						<td>
+							<input class="textbox" id="Desc"/>
+						</td>	
+						<td class="r-label">
+							<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+						</td>
+						<td><input type="hidden" id="StationID" /></td>					
+					</tr>	
+                 </table>
+		 	</div>
+		 	    <div data-options="region:'center',border:false">
+		 		   <table id="StaionGrid"></table>
+		 	   </div>
+			</div>								
+		</div>
+	</div>
+	<!--站点 end-->
+	<div id="layouteast" data-options="region:'center',border:false" style="border:0;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'west',border:false" style="width:370px;padding:10px 10px 10px 0;border:0;">
+
+				<div class="hisui-panel" fit="true" data-options="title:'项目列表',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+					<div class="hisui-layout" fit="true">
+						<div data-options="region:'north',border:false,collapsible:false" style="height:50px;">
+		 					<table class="search-table">
+		 						<tr>
+		 							<td class="r-label"><label for="ARCDesc">#(..Get("项目名称"))#</label></td>
+									<td>
+										<input class="textbox" id="ARCDesc"/>
+									</td>
+									
+									<td class="r-label">
+										<a id="BAFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+									</td>
+									<td><input type="hidden" id="OrderID"/></td>
+
+		 						</tr>		
+                   			</table>
+		 				</div>	
+		 				<div data-options="region:'center',border:false" style="border-top:1px solid #ccc;">
+		 					<table id="LocOrderGrid"></table>
+		 				</div>
+					</div>		
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:10px 10px 10px 0;border:0;">
+
+				<div class="hisui-panel" fit="true" data-options="title:'细项组合维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+					<div class="hisui-layout" fit="true">
+		 				<div data-options="region:'north',border:false,collapsible:false" style="height:212px;border-bottom:1px dashed #ccc;">
+		 					<table class="search-table">
+		 						<tr>
+		 							<td class="r-label"><label for="ARCIMDesc">#(..Get("当前项目"))#</label></td>
+									<td>
+										<input class="textbox" id="ARCIMDesc" disabled/>
+									</td>
+									
+
+									<td  class="r-label">
+            							<input class='hisui-checkbox' type="checkbox" Id="Required"/>
+            						</td>
+            						<td><label for="Required">#(..Get("是否必填项"))#</label></td>
+         							
+									
+									<td class="r-label">
+										<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+									</td>
+
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="ODDRName"><font color=red>*</font>#(..Get("细项名称"))#<label></td>
+									<td>
+										<input class="hisui-combogrid" type="text" style="width:154px" id="ODDRName"/>
+									</td>
+									<td class="r-label">
+            							<input class='hisui-checkbox' type="checkbox" Id="NoActive" data-options="checked:true" value="Y"/>
+            						</td>
+            						<td><label>#(..Get("激活"))#</label></td>
+									
+									<td class="r-label">
+		 							
+										<a id="BImport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">导入</a>
+									</td>
+
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="Sequence"><font color=red>*</font>#(..Get("顺序号"))#</label></td>
+									<td>
+										<input class="textbox" type="text" id="Sequence"/>
+									</td>
+									
+									<!--td class="r-label"><input class='hisui-checkbox' type="checkbox" Id="Empower"/>
+									</td>
+            						<td><label>单独授权</label></td-->
+            			
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="Cascade">#(..Get("层次"))#</label></td>
+									<td>
+										<input class="textbox" id="Cascade"/>
+									</td>
+									<td></td>
+									<td></td>
+									<!--td class="r-label">
+										<a id="BRelateLoc" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-setting'">授权科室</a>
+									</td-->
+
+									<!--td class="r-label r-label-1">
+										<a id="BDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+									</td-->
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="Parent_DR_Name">#(..Get("父项"))#</label></td>
+									<td>
+										<input class="hisui-combogrid" type="text" style="width:154px" id="Parent_DR_Name"/>
+									</td>
+		 						
+									<td><input type="hidden" id="ARCIMDR"/></td>
+									<td><input type="hidden" id="ODRRowId"/></td>
+									<td><input type="hidden" id="ODRowId"/></td>
+
+		 						</tr>
+		 						
+		 						
+		 						
+		 							
+                   			</table>
+		 				</div>
+		 				<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false"  style="border-top:1px solid #ddd;">
+							<table data-options="fit:true" id="ODRelateComGrid" border="false"   toolbar="#odrrelatebar"></table>
+						</div>
+					</div>		
+				</div>
+			</div>
+	  </div>
+	</div>		
+</div>
+
+
+<!--细项组合 start-->
+<div id="odrrelatebar">
+
+   <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="BAdd">新增</a>
+   <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="BUpdate">修改</a> 
+   <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="BDelete">删除</a> 
+   <!--a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-key',plain:true,stopAllEventOnDisabled:true" id="BRelateLoc">授权科室</a-->    
+</div>
+<!--细项组合 end-->
+
+<!--关联科室授权弹窗 start-->
+	<div id="LocListWin" style="display:none;">
+		<div data-options="region:'north',split:false,border:true" style="height:290px;padding:10px;">
+			<div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+				<table data-options="bodyCls:'panel-header-gray'" id="LocListGrid"></table>
+			</div>
+        </div>
+	</div>
+	<!--关联科室授权弹窗 end-->
+<script type="text/javascript" src="../scripts/dhcpe/ct/orderdetailrelatecom.js"></script>
+<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+</body>		
+</html>
+			

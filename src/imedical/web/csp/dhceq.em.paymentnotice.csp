@@ -1,0 +1,144 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<csr:action>
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    	//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4()
+    	d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()
+	}
+    </SCRIPT>
+</csr:action>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s PNRowID=$Get(%request.Data("PNRowID",1))
+	s KeepTitle=$Get(%request.Data("KeepTitle",1))
+	s title="设备付款通知单"
+	i KeepTitle'=1 s title=""
+	
+	;s PNLocDR=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+	;s PNLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+</script>
+<style type="text/css">
+.hisui-textarea
+{
+	width:320%;
+	height:100%;
+}
+.messager-popover
+{
+	font-weight: normal;
+}
+</style>
+<body class="hisui-layout" >
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="#(title)#" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding:0px 0px 5px 0px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cPNNoticeNo" for="PNNoticeNo">通知单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNNoticeNo" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label id="cPNMakeDate" for="PNMakeDate">通知单号日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="PNMakeDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cPNLocDR_CTLOCDesc" for="PNLocDR_CTLOCDesc">库房</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNLocDR_CTLOCDesc"></div>
+						<div class="eq-table-td eq-table-label">
+							<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a>
+						</div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cPNProviderDR_VDesc" for="PNProviderDR_VDesc">供应商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Vendor'" id="PNProviderDR_VDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cPNBank" for="PNBank">开户行</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNBank"></div>
+						<div class="eq-table-td eq-table-label"><label id="cPNBankAccount" for="PNBankAccount">账号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNBankAccount"></div>
+						<div class="eq-table-td eq-table-label">
+							<a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a>
+						</div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cPNType" for="PNType">付款方式</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNType"></div>
+						<div class="eq-table-td eq-table-label"><label>大写金额</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNTotalFeeA"></div>
+						<div class="eq-table-td eq-table-label"><label>小写金额</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNTotalFee"></div>
+						<div class="eq-table-td eq-table-label">
+							<a id="BApprove" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">审核</a>
+						</div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cPNAccountDate" for="PNAccountDate">付款日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="PNAccountDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cPNPurposeType" for="PNPurposeType">付款用途</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNPurposeType"></div>
+						<div class="eq-table-td eq-table-label"><label id="cPNAgent" for="PNAgent">经办人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PNAgent"></div>
+						<div class="eq-table-td eq-table-label">
+							<a id="BCancel" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">作废</a>
+						</div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="PNRemark">备注</label></div>
+						<div class="eq-table-td eq-table-input"><textarea id="PNRemark" class="hisui-textarea textbox"></textarea></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label">
+							<a id="BPrint" href="#" class="hisui-linkbutton" iconCls="icon-w-print" data-options="stopAllEventOnDisabled:true">打印</a>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="DHCEQPaymentNotice" class="hisui-datagrid" data-options="onClickRow:onClickRow"></table>
+					<div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 5px 2px 0;padding:5px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			
+			<INPUT type="hidden" id="PNRowID" value="#(PNRowID)#">
+			<INPUT type="hidden" id="PNLocDR">
+			<INPUT type="hidden" id="PNLoc">
+			<INPUT type="hidden" id="PNProviderDR">
+			<INPUT type="hidden" id="PNStatus">
+			
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+			
+			<INPUT type="hidden" id="PNLSourceType">
+			<INPUT type="hidden" id="PNLSourceType_Desc">
+			<INPUT type="hidden" id="PNLSourceID">
+			
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/paymentnotice.js'></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
+</body>
+</html>

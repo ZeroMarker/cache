@@ -8,8 +8,12 @@
  <SERVER>
  	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
  	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+	s TabParams=$G(%request.Data("TabParams",1))
 </SERVER>
 <head>
+	<script language=javascript>
+		var gTabParams='#(TabParams)#';
+	</script>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
@@ -19,71 +23,58 @@
 	<div class="GridPadding" data-options="region:'center',border:false,collapsible:false">
 		<div class="hisui-panel" data-options="title:'入库单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'"> 
 			<div class="hisui-layout" data-options="fit:true">
-				<div class="BorderLine" data-options="region:'north',border:false,collapsible:false">
-					<table id="FindConditions" class="Condition">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<input id="FStatusBox" name="FStatusBox" value="Y" type="hidden">
 						<tr>
 							<td>入库科室</td>
 							<td><input id="FRecLoc" name="FRecLoc" class="hisui-combobox" style="width:130px;"></td>
+							<td align="left"><input id="VirtualFlag" name="VirtualFlag" class="hisui-checkbox" type="checkbox" label="暂存库"></td>
 							<td>起始日期</td>
-							<td><input id="StartDate" name="StartDate" class="hisui-datebox" style="width:160px;"></td>
+							<td><input id="StartDate" name="StartDate" class="hisui-datebox" style="width:130px;"></td>
 							<td>供应商</td>
-							<td><select id="FVendorBox" name="FVendorBox" class="hisui-combobox" style="width:160px;"></select></td>
+							<td><input id="FVendorBox" name="FVendorBox" class="hisui-combobox" style="width:150px;"></td>
+							<td align="left"><input class="hisui-radio" type="radio" label="全部" name="Findtype" value="All" data-options="checked:true"></td>
+							<td align="left"><input class="hisui-radio" type="radio" label="赠送" name="Findtype" value="G"></td>
+							<td align="left"><input class="hisui-radio" type="radio" label="换票" name="Findtype" value="A"></td>
 							<td align="right"><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
 							<td align="left">
-								<a href="#" id="AuditBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">审核</a>
-							</td>
-							<td>
-								<a href="#" id="SaveInvBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存发票信息</a>
+								<a href="#" id="AuditBT" class="hisui-linkbutton" style="width:86px;">审核</a>
 							</td>
 						</tr>
 						<tr>
 							<td>制单人</td>
 							<td><input id="CreateUserId" name="CreateUserId" class="hisui-combobox" style="width:130px;"></td>
+							<td><input id="HVFlag" name="HVFlag" class="textbox hisui-simplecombobox" style="width:80px;"></td>
 							<td>截止日期</td>
-							<td><input id="EndDate" name="EndDate" class="hisui-datebox" style="width:160px;"></select></td>
-							<td>赠送或调价换票</td>
-							<td>
-								<select id="Findtype" name="Findtype" class="hisui-combobox" style="width:160px;">
-									<option value="All">全部</option>
-									<option value="G">赠送</option>
-									<option value="A">调价换票</option>
-								</select>
-							</td>
+							<td><input id="EndDate" name="EndDate" class="hisui-datebox" style="width:130px;"></td>
+							<td>类组</td>
+							<td><input id="ScgId" name="ScgId" class="hisui-stkscgcombotree" style="width:150px"></td>
+							<td><input class="hisui-radio" type="radio" label="全部" name="AuditFlag" value=""></td>
+							<td><input class="hisui-radio" type="radio" label="未审核" name="AuditFlag" value="N" data-options="checked:true"></td>
+							<td><input class="hisui-radio" type="radio" label="已审核" name="AuditFlag" value="Y"></td>
 							<td align="right"><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-							<td align="left">
-								<a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
-							</td>
 							<td>
-								<a href="#" id="PrintHVColBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">高值汇总打印</a>
+								<a href="#" id="SaveInvBT" class="hisui-linkbutton" >保存发票</a>
 							</td>
 						</tr>
 						<tr>
 							<td>接收科室</td>
 							<td><input id="RequestLoc" name="RequestLoc" class="hisui-combobox" style="width:130px;"></td>
+							<td></td>
 							<td>入库单号</td>
-							<td><input id="FInGrNo" name="FInGrNo" class="textbox" style="width:153px;"></td>
-							<td>是否审核</td>
-							<td>
-								<select id="AuditFlag" name="AuditFlag" class="hisui-combobox" style="width:160px;">
-									<option value="N">未审核</option>
-									<option value="Y">已审核</option>
-								</select>
-							</td>
-							<td align="right">是否打印</td>
-							<td align="left">
-								<select id="PrintFlag" name="PrintFlag" class="hisui-combobox" style="width:88px;">
-									<option value=1>全部</option>
-									<option value=2>已打印</option>
-									<option value=3>未打印</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>类组</td>
-							<td><select id="ScgId" name="ScgId" class="hisui-stkscgcombotree" style="width:130px"></select></td>
+							<td><input id="FInGrNo" name="FInGrNo" class="textbox" style="width:123px;"></td>
 							<td>物资名称</td>
-							<td><input id="InciDesc" name="InciDesc" class="textbox" style="width:160px"></td>
+							<td><input id="InciDesc" name="InciDesc" class="textbox" style="width:150px"></td>
+							<td ><input class="hisui-radio" type="radio" label="全部" name="PrintFlag" value="1" data-options="checked:true"></td>
+							<td ><input class="hisui-radio" type="radio" label="已打印" name="PrintFlag" value="2"></td>
+							<td ><input class="hisui-radio" type="radio" label="未打印" name="PrintFlag" value="3"></td>
+							<td align="left">
+								<a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+							</td>
+							<td>
+								<a href="#" id="PrintHVColBT" class="hisui-linkbutton" >打印汇总</a>
+							</td>
 						</tr>
 					</table>
 				</div>
@@ -101,6 +92,7 @@
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/ItmTrack/ItmTrackCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/BarCode/BarCodePrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecAudit.js"></script>
 </body>

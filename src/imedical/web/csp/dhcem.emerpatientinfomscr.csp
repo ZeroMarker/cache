@@ -1,0 +1,208 @@
+<!-- 新建预检分诊 -->
+<!-- dhcem.emerpatientinfomscr.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;">
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<title>预检分诊-患者分诊信息</title>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/emerpatientinfom.js"></script>
+<style type="text/css">
+
+    .report_table{
+	    margin: 6px 0 6px 0;
+	    width:100%;
+	 }
+    .report_table td{
+	    /*padding: 5px 10px;*/
+	    padding:5px;
+    	font-size: 12px;
+   		height: 28px;
+	 }
+ 	.tb_td_bk{
+	 	font-color:#666666;
+	 	padding-right:0px !important;
+    	width: 7%;
+    	text-align: right;
+    	white-space: nowrap;
+	}
+	.tb_td_required{
+		font-weight:bold;
+		color: red;
+	}
+	.preflight{
+		border: 1px solid #40a2de	
+	}
+	.preflight_content{
+		border-bottom: 1px solid #509de1;
+		border-radius: 10px;
+		font-size: 14px;	
+	}
+	input{
+		border-top:0px !important;
+		border-left:0px !important;
+		border-right:0px !important;
+		width:100% !important;		
+	}
+	.table_title{
+		font-weight:bold;
+		color: #000;
+		font-size: 13px;
+		line-height: 22px;
+		padding-left: 10px;
+		border-bottom: 2px solid #40a2de;
+		width:100px;
+	}
+    input:not([type]):disabled, input[type='text']:disabled{background-color:#fff}/*hxy 2018-07-12*/
+</style>
+<script Language="Javascript">
+   var EpisodeID="#(%request.Get("EpisodeID"))#";        //就诊ID
+   var PatientID="#(%request.Get("PatientID"))#";        //患者ID
+   var EmPCLvID="#(%request.Get("EmPCLvID"))#";     	 //分诊ID
+</script>
+
+</head>
+<body id="HISUIstyleid" style="padding:0px">
+<div id="cc2" class="hisui-layout" style="" data-options="fit:true">
+	<div data-options="region:'center',title:'分诊信息',split:true,headerCls:'panel-header-gray'" style="padding-top:10px;">
+    	<div class="hisui-panel" title="患者基本信息" style="padding:0 10px;margin-bottom:10px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+    	<!-- <div class="table_title">患者基本信息</div> 
+			<div style="border-bottom: 1px solid #40a2de;"></div>-->
+			<table border="0" cellspacing="0" cellpadding="0" class="report_table">
+				<tr>
+					<td align="right" class="tb_td_bk">卡号：</td>
+					<td width="150px"><input id="PatCardNo" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">登记号：</td>
+					<td width="150px"><input id="PatNo" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">姓名：</td>
+					<td width="150px"><input id="PatName" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">年龄：</td>
+					<td width="150px"><input id="PatAge" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk ">出生日期：</td>
+					<td width="150px"><input id="PatBoD" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">性别：</td>
+					<td width="150px"><input id="PatSex" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk ">民族：</td>
+					<td width="150px"><input id="PatNation" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk ">国籍/地区：</td>
+					<td width="150px"><input id="PatCountry" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">证件号：</td>
+					<td width="150px"><input id="PatIdNo" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">家庭电话：</td>
+					<td width="150px"><input id="PatTelH" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">来诊时间：</td>
+					<td width="150px"><input id="EmRegDate" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">重返标识：</td>
+					<td width="150px"><input id="EmAgainFlag" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">成批就诊：</td>
+					<td width="150px"><input id="EmBatchFlag" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">总人数：</td>
+					<td width="150px"><input id="EmBatchNum" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">家庭住址：</td>
+					<td colspan="3"><input id="PatAddress" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+			</table>
+			</div>
+    	<div class="hisui-panel" title="患者当前信息" style="padding:0 10px;margin-bottom:10px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+    		<!-- <div class="table_title">患者当前信息</div>
+    		<div style="border-bottom: 1px solid #40a2de;"></div> -->
+			<table border="0" cellspacing="0" cellpadding="0" class="report_table">
+				<tr>
+					<td align="right" class="tb_td_bk">既往史：</td>
+					<td colspan="7"><input id="EmPatChkHis" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">患者来源：</td>
+					<td width="150px"><input id="EmPatSource" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">来诊方式：</td>
+					<td width="150px"><input id="EmPatAdmWay" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">意识状态：</td>
+					<td width="150px"><input id="EmAware" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">中毒：</td>
+					<td width="150px"><input id="EmPoisonFlag" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">是否吸氧：</td>
+					<td width="150px"><input id="EmOxygenFlag" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">筛查：</td>
+					<td width="150px"><input id="EmScreenFlag" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">复合伤：</td>
+					<td width="150px"><input id="EmCombFlag" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">ECG：</td>
+					<td width="150px"><input id="EmECGFlag" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">用药情况：</td>
+					<td colspan="7"><input id="EmHisDrugDesc" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">辅助物：</td>
+					<td colspan="7"><input id="EmMaterialDesc" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">生命体征：</td>
+					<td colspan="7"><input id="EmPatChkSign" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">疼痛评分：</td>
+					<td colspan="7"><input id="EmPainLev" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">症状：</td>
+					<td colspan="7"><input id="EmSymDesc" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk">其他：</td>
+					<td colspan="7"><input id="EmOtherDesc" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+			</table>
+			</div>
+    	<div class="hisui-panel" title="ESI预检分诊" style="padding:0 10px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+    		<!-- <div class="table_title">ESI预检分诊</div>
+    		<div style="border-bottom: 1px solid #40a2de;"></div> -->
+    		<table border="0" cellspacing="0" cellpadding="0" class="report_table">
+				<tr>
+					<td align="right" class="tb_td_bk">推荐分级：</td>
+					<td width="150px"><input id="EmRecLevel" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">更改原因：</td>
+					<td width="150px"><input id="EmUpdLevRe" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">护士分级：</td>
+					<td width="150px"><input id="NurseLevel" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">去向：</td>
+					<td width="150px"><input id="Area" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+				<tr>
+					<td align="right" class="tb_td_bk" style="display:none">分诊科室</td>
+					<td width="150px" style="display:none"><input id="EmLocDesc" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">分诊号别：</td>
+					<td colspan="3"><input id="EmPatChkCare" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">医生分级：</td>
+					<td ><input id="EmDocCheckLev" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+					<td align="right" class="tb_td_bk">原因：</td>
+					<td ><input id="EmDocCheckLevReason" disabled="disabled" class="hisui-validatebox textbox" ></input></td>
+				</tr>
+			</table>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+<script Language="Javascript">
+	/// cy  2022-07-20 极简风格样式修改
+	if(HISUIStyleCode==="lite"){
+		$("#HISUIstyleid").css('background-color','#F5F5F5');
+	}
+</script>
+</html>

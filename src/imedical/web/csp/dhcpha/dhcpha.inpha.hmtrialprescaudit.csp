@@ -4,7 +4,9 @@
      csp: csp/dhcpha/dhcpha.inpha.hmtrialprescaudit.csp
      js:  scripts/pharmacy/inpha/dhcpha.inpha.hmtrialprescaudit.js
 -->
-
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
 <html lang="zh-CN">
 
 <head>
@@ -20,17 +22,20 @@
     <TRAK:HEAD />
     <DHCPHARMACY:COMMONLIB />
     <DHCAPP:PHARBOOTSTRAP />
+    <PHAPRINTCOM/>
     <Server language="CACHE" runat="Server">
         s Application=%request.Application
         s gPatNo = $G(%request.Data("gPatNo",1))
+     	s gOeori=$Get(%request.Data("gOeori",1)) 
         s InPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("IA")
         s IEVersion=##class(web.DHCSTKUTIL).GetIEVersion()
     </Server>
     <SCRIPT Language="Javascript">
         var InPhaWay = "#(InPhaWay)#";
         var LoadPatNo = "#(gPatNo)#";
+   		var LoadOrdItmId= "#(gOeori)#";
         if ((("#(IEVersion)#") < 11) && (LoadPatNo != "")) {
-            window.location.href = "#(Application)#csp/dhcpha.inpha.ipmonitor.csp?gPatNo=" + LoadPatNo
+            window.location.href = "#(Application)#csp/dhcpha.inpha.ipmonitor.csp?gPatNo=" + LoadPatNo+"&gOeori="+LoadOrdItmId
         }
     </script>
     <!--调用美康--因医生站为异步调用，药房只能同步调用，所以需要将美康的McConfig.js 另存为 McConfigPharmacy.js -->
@@ -41,6 +46,7 @@
     <!--dhcpha common js-->
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.monitorlog.js"></script>
+    <script type="text/javascript" src="#(Application)#/scripts/pha/op/v4/previewpresc.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmtrialprescaudit.js">
     </script>
     <style type="text/css">

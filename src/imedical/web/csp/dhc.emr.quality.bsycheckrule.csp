@@ -1,0 +1,138 @@
+﻿<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+
+	<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+    <style>	 
+    	 .panel-body.panel-body-noheader {
+    		border-color: #ccc;
+	 }
+	 .patientbar{
+		overflow:hidden;
+		padding:10px 10px 0 10px;
+	 }
+	 .PatInfoItem {
+		font-size: 0;
+		line-height: 40px;
+		overflow:hidden;
+		position: relative;
+	 }
+	 .patinfo-hover-content{
+	 	font-size: 0;
+	 }
+	 .PatInfoItem span, .patinfo-hover-content span{
+		 margin:0;
+		 line-height:30px;
+	 }
+	 .PatInfoItem lable, .patinfo-hover-content lable,.patinfo-hover-content img{
+		 color:#666;
+		 margin-right:5px;
+	 }
+	 .PatInfoItem img{
+		 color:white;
+		 margin-left:5px;
+		 margin-right:5px;
+	 }
+	 .PatInfoItem a img{
+		 margin-top:4px;
+	 }
+	 .patinfo-hover-content span{
+		 line-height:30px;
+	 }
+	 .man{
+		 background:url(../images/man.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .woman{
+		 background:url(../images/woman.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .unman {
+		background: url(../images/unman.png) no-repeat;
+		background-size: cover;
+	 }
+	 .border-div{
+		border:1px solid #E2E2E2;	 
+		height:35px;
+		position:fixed;
+		top:10px;
+		left:10px;
+		right:10px;
+		background: transparent;
+	 }
+	 .layout-split-east{
+		border-left: 5px solid #fff;
+	 }
+    </style>
+</HEAD>
+<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1))
+		//s patientID = $Get(%request.Data("patientID",1))
+		s patientID = ##class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s CTLocatID=$g(%session.Data("LOGON.CTLOCID"))
+		s SSUserID=$g(%session.Data("LOGON.USERID"))
+		s action = $Get(%request.Data("action",1))
+	
+</script>
+<script language="javascript">
+	var patientID = '#(patientID)#';
+    var episodeID = '#(episodeID)#';
+    var SSGroupID = '#(SSGroupID)#';
+    var CTLocatID ='#(CTLocatID)#';
+    var SSUserID ='#(SSUserID)#';
+	var action ='#(action)#';
+	    window.onunload=function(){
+	    var parentWin = window.opener;
+        if(parentWin){
+        parentWin.doSearch()
+    }
+
+}
+</script>
+
+<!-- 为了使自动缺陷查看能够以模态框形式弹出,所以修改页面结构  zyp  20221111 -->
+<BODY class="hisui-layout" data-options="border:false" >
+	<div class="patientbar" data-options="region:'north',border:false" style="height:40px;">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10 0 10 10px; overflow:hidden;">
+		<div class="datagrid-wrap panel-body panel-body-noheader" style="height:99.8%" >
+		<iframe id="left"  width="100%" height="100%" style="border: medium none;"></iframe>
+		</div>
+	</div> 
+	<div data-options="region:'east',border:false,split:true" style="width:600px;padding:5 5 5 0px;overflow:hidden;">
+		<iframe  id="right"  width="100%" height="100%" style="border: medium none;"></iframe>
+	</div> 
+	 <script type="text/javascript">
+	    $(function(){
+		InitPatInfoBanner(episodeID);     
+		var d1Src="emr.record.quality.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeLocID="+CTLocatID+"&action="+action
+		if('undefined' != typeof websys_getMWToken)
+		{
+			d1Src+="&MWToken="+websys_getMWToken()
+		}
+		$("#left").attr("src",d1Src);
+		var d2Src="dhc.emr.quality.bsyentrygrid.csp?EpisodeID="+episodeID+"&action="+action
+		if('undefined' != typeof websys_getMWToken)
+		{
+			d2Src+="&MWToken="+websys_getMWToken()
+		}
+		$("#right").attr("src",d2Src);
+		
+		
+	})
+    	
+    </script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.SYCheckRule.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+</BODY>
+
+</HTML>

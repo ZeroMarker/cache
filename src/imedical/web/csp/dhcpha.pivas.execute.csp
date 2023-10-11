@@ -1,8 +1,14 @@
 <!DOCTYPE html>
-<!--配液状态执行
-	csp:dhcpha.pivas.execute.csp
-	js: scripts/pharmacy/pivas/execute.js
+<!--
+    配液状态执行
+	csp: csp/dhcpha.pivas.execute.csp
+	js:  scripts/pharmacy/pivas/execute.js
 -->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -21,10 +27,9 @@
         var ExecuteWay = "#(ExecuteWay)#" || "";
     </script>
     <HISUI />
-    <link rel="stylesheet" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
-    <link rel="stylesheet" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
- 	<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
-    </link>
+    <PHAPRINTCOM />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
     <STYLE type="text/css">
         .dhcpha-triangle {
             width: 0px;
@@ -37,223 +42,185 @@
         .datagrid-ftable {
             background: rgb(244, 246, 245);
         }
+
         .dhcpha-no-data {
-        height:100%;
-        width:100%;
+            height: 100%;
+            width: 100%;
             background: url('../scripts/pharmacy/common/image/bg-nodata.png') no-repeat center;
         }
 
+        .datagrid-row [field] {
+            vertical-align: top;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        .pivas-user-select tr {
+            display: none;
+        }
+
+        .pivas-user-select-line {
+            display: none;
+            height: 180px;
+            border-left: 1px solid #cccccc;
+            position: absolute;
+            right: 208px;
+        }
+
+        .dhcpha-date {
+            width: 120px !important;
+        }
     </STYLE>
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'north',title:'配液状态执行',iconCls:'icon-panel-pivas-execute',split:true,headerCls:'panel-header-gray',collapsible:false"
-                    class="dhcpha-north-r3">
-                    <table class="dhcpha-north-tbl">
+                <div data-options="region:'north',title:'配液状态执行',iconCls:'icon-panel-pivas-execute',split:true,headerCls:'panel-header-gray',collapsible:false" class="pha-pivas-row-3">
+                    <table class="pha-con-table">
                         <tr>
+                            <td class="r-label">
+                                <label for="cmbPivaLoc">#(..Get("配液中心"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPivaLoc">配液中心</label>
                                 <input id="cmbPivaLoc" type="text" class="hisui-combobox" />
                             </td>
+                            <td class="r-label">
+                                <label for="datePrtStart">#(..Get("打签日期"))#</label>
+                            </td>
                             <td>
-                                <label for="datePrtStart">打签日期</label>
                                 <input id="datePrtStart" class="hisui-datebox dhcpha-date" type="text" />
+                            </td>
+                            <td>
                                 <input id="datePrtEnd" class="hisui-datebox dhcpha-date" type="text" />
                             </td>
+
+                            <td class="r-label">
+                                <label for="cmbLocGrp">#(..Get("科室组"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbLocGrp">科室组</label>
                                 <input id="cmbLocGrp" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbPivaCat">#(..Get("配液大类"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPivaCat">配液大类</label>
                                 <input id="cmbPivaCat" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbPriority">#(..Get("优先级"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPriority">优先级</label>
                                 <input id="cmbPriority" type="text" />
                             </td>
-
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls='icon-w-find' id="btnFind">查询</a>
+                            </td>
                         </tr>
                         <tr>
+                            <td class="r-label">
+                                <label for="cmbPivaStat">#(..Get("配液状态"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPivaStat">配液状态</label>
                                 <input id="cmbPivaStat" type="text" class="hisui-combobox" />
                             </td>
+                            <td class="r-label">
+                                <label for="dateOrdStart">#(..Get("用药日期"))#</label>
+                            </td>
                             <td>
-                                <label for="dateOrdStart">用药日期</label>
                                 <input id="dateOrdStart" class="hisui-datebox dhcpha-date" type="text" />
+                            </td>
+                            <td>
                                 <input id="dateOrdEnd" class="hisui-datebox dhcpha-date" type="text" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbWard">#(..Get("病区"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbWard">病区</label>
                                 <input id="cmbWard" type="text" />
                             </td>
-                            <td>
-                                <label for="cmbWorkType">工作组</label>
-                                <input id="cmbWorkType" type="text" />
+                            <td class="r-label">
+                                <label for="cmbWorkType">#(..Get("工作组"))#</label>
                             </td>
                             <td>
-                                <label for="cmgIncItm">药品</label>
+                                <input id="cmbWorkType" type="text" />
+                            </td>
+                            <td class="r-label">
+                                <label for="cmgIncItm">#(..Get("药品"))#</label>
+                            </td>
+                            <td>
                                 <input id="cmgIncItm" type="text" />
                             </td>
 
                         </tr>
                         <tr>
-                            <td colspan="2" style="text-align:left">
-                                <div id="DivBatNo" style="float:left">　　批次</div>
+                            <td class="r-label">
+                                #(..Get("批次"))#
+                            </td>
+                            <td colspan="4" style="text-align:left">
+                                <div id="DivBatNo" style="float:left"></div>
+                            </td>
+                            <td class="r-label">
+                                <label for="cmbPack">#(..Get("打包"))#</label>
                             </td>
                             <td>
-                                <label for="cmbPack">打包</label>
                                 <input id="cmbPack" type="text" />
                             </td>
-                            <td>
-                                <label for="txtPatNo">登记号</label>
-                                <input id="txtPatNo" type="text" class="hisui-validatebox" style="width:147px" />
+                            <td class="r-label">
+                                <label for="txtPatNo">#(..Get("登记号"))#</label>
                             </td>
                             <td>
-                                <label for="txtPrtNo">流程单号</label>
+                                <input id="txtPatNo" type="text" class="hisui-validatebox" style="width:147px" />
+                            </td>
+                            <td class="r-label">
+                                <label for="txtPrtNo">#(..Get("流程单号"))#</label>
+                            </td>
+                            <td>
                                 <input id="txtPrtNo" type="text" class="hisui-searchbox" style="width:154px" />
                             </td>
                             <td>
-                                <span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-find'
-                                        id="btnFind">查询</a></span>
                             </td>
                         </tr>
                     </table>
                 </div>
 
-                <div data-options="region:'center'" border="false" style="border-radius: 4px;">
-                    <div id="tabsExecute" class="hisui-tabs tabs-gray" fit="true">
-                        <div id="tabOeore" data-options="title:'医嘱明细',selected:true">
-                            <div class="hisui-layout" fit="true" border="false">
-                                <div data-options="region:'center'" border="false">
-                                    <table id="gridOrdExe">
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <div data-options="title:'病区汇总'">
-                            <div class="hisui-layout" fit="true" border="false">
-                                <div data-options="region:'center'" border="false">
-                                    <table id="gridWardBat">
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <div data-options="title:'扫描条码',selected:false">
-                            <div class="hisui-layout" fit="true" border="false">
-                                <div data-options="region:'west',width:400" border="false"
-                                    style="padding:10px 10px 10px 10px;border-right:1px solid #cccccc;border-top-right-radius: 0px;">
-                                    <div class="hisui-layout" fit="true" border="false">
-                                        <div data-options="region:'north',height:80" border="false"
-                                            style="overflow:hidden">
-                                            <div>
-                                                <div style="display:false;">
-                                                
-                                                        <input id="txtGeneNo" class="hisui-validatebox" type="text"
-                                                        placeholder="" style="width:160px;display:none" readonly/>
-                                                        
-                                                        <a class="hisui-linkbutton" plain="false" id="btnScanClean" iconCls="icon-w-clean" style="width:186px">清屏</a>
-                                                    <a class="hisui-linkbutton" plain="false" id="btnPrtWardBat" iconCls="icon-w-print"
-                                                        style="width:186px">装车并打印交接单</a>
-                                                </div>
-                                                <div style="padding-top:10px">
-                                                    <div style="margin-top:-20px">
-                                                        <img id='imgScaning' src="..\scripts_lib\hisui-0.1.0\dist\css\icons\scanning.png"
-                                                            style="position: relative;top:27px;left:5px;">
-                                                        <input id="txtBarCode" class="hisui-validatebox" type="text"
-                                                            style="width:350px;padding-left:25px;" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div data-options="region:'center'" border="false" class="newScroll" >
-                                            <div id="labelContent" style="padding-right:10px;">
-                                                标签内容
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                <div data-options="region:'west',title:'病区汇总',split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-panel-ward',width:530">
+                    <table id="gridWardBat">
+                    </table>
 
-                                <div data-options="region:'center'" border="false"
-                                    style="clear:both;border-top-left-radius: 0px;">
-                                    <div class="hisui-layout" fit="true" border="false"
-                                        style="border-top-left-radius: 0px;">
-                                        <div data-options="region:'north',height:40" border="false"
-                                            style="overflow:hidden;border-bottom:1px solid #cccccc;border-radius: 0px;">
-                                            <div style="line-height: 40px;font-size:15px;font-weight:bold">
-                                                <div style="float:left;width:33.3%;">
-                                                    <div
-                                                        style="float:left;background:#5BC0DE;width:75px;color:white;text-align:center">
-                                                        合计组数
-                                                    </div>
-                                                    <div class="dhcpha-triangle" style="border-left-color: #5BC0DE">
-                                                    </div>
-                                                    <div id="scan-total">0
-                                                    </div>
-                                                </div>
-                                                <div style="float:left;width:33.3%;">
-                                                    <div
-                                                        style="float:left;background:#D9534F;width:75px;color:white;text-align:center">
-                                                        未扫组数
-                                                    </div>
-                                                    <div class="dhcpha-triangle" style="border-left-color:#D9534F">
-                                                    </div>
-                                                    <div id="unscan-total">0
-                                                    </div>
-                                                </div>
-                                                <div style="float:left;width:33.4%;">
-                                                    <div
-                                                        style="float:left;background:#5CB85C;width:75px;color:white;text-align:center;">
-                                                        已扫组数
-                                                    </div>
-                                                    <div class="dhcpha-triangle" style="border-left-color: #5CB85C;">
-                                                    </div>
-                                                    <div id="scaned-total">0
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div data-options="region:'center'" border="false" class="newScroll" >
-                                            <div id="scan-ward">
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+                <div data-options="region:'center',bodyCls:'panel-body-gray'">
+                    <table id="gridOrdExe">
+                    </table>
                 </div>
             </div>
         </div>
     </div>
     <div id="gridOrdExeBar">
-        <div>
+        <div style="height:35px;position: relative;top: 4px;">
+            <div style="float:left">
+                <a class="hisui-linkbutton" plain="true" iconCls='icon-reload' id="btnRefresh">刷新</a>
+            </div>
+            <div class="datagrid-btn-separator"></div>
             <div style="float:left">
                 <a class="hisui-linkbutton" plain="true" iconCls='icon-all-select' id="btnSelectAll">全选</a>
                 <a class="hisui-linkbutton" iconCls='icon-all-unselect' plain="true" id="btnUnSelectAll">全消</a>
             </div>
             <div class="datagrid-btn-separator"></div>
             <div style="float:left">
-                <a class="hisui-linkbutton" plain="true" iconCls='icon-btn-execute' id="btnExecute">执行</a>
-                <a class="hisui-linkbutton" plain="true" iconCls='icon-print' id="btnExecutePrt">装车并打印交接单</a>
+                <a class="hisui-linkbutton" plain="true" iconCls='icon-mutpaper-tri' id="btnExecute">执行</a>
+                <a class="hisui-linkbutton" plain="true" iconCls='icon-print' id="btnExecutePrt" style="display:none;">执行打印交接单</a>
             </div>
             <div class="datagrid-btn-separator"></div>
 
-            <a class="hisui-linkbutton" iconCls='icon-btn-pivas-refuse' plain="true" id="btnRefuse">配液拒绝</a>
+            <a class="hisui-linkbutton" iconCls='icon-disp-x' plain="true" id="btnRefuse">配液拒绝</a>
 
             <!-- <div class="datagrid-btn-separator"></div> -->
             <div style="float:left;margin-left:-20px;display: none;">
                 <div>
-                    <img src="..\scripts_lib\hisui-0.1.0\dist\css\icons\scanning.png"
-                        style="position: relative;top:5px;left:25px;">
+                    <img src="..\scripts_lib\hisui-0.1.0\dist\css\icons\scanning.png" style="position: relative;top:5px;left:25px;">
                     <input class="hisui-validatebox" style="padding-left:25px;width:202px;" id="scanBarCode" />
                 </div>
 
@@ -261,22 +228,31 @@
 
         </div>
     </div>
-    <div id="gridWardBatBar">
-        <a class="hisui-linkbutton" plain="true" iconCls='icon-btn-execute' id="btnExecuteWB">执行</a>
-        <a class="hisui-linkbutton" plain="true" iconCls='icon-print' id="btnExecuteWBPrt">装车并打印交接单</a>
+    <div id="prtSelectDiv" class="hisui-dialog" title='打印交接单' data-options="width:275,closable:false,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-print',
+	buttons:[{
+        text:'确认',
+        id:'btnPrtSelectDivOk'
+	},{
+		text:'取消',
+		handler:function(){
+            $('#prtSelectDiv').window('close')
+		}
+    }]">
+        <div style="overflow: hidden;text-align:center;height:63.44px">
+            <div>
+                <div style="padding-top:10px;">
+                    <input class="hisui-radio" type="radio" label="打印病区批次合计" name="prtPOGSWay" value="0">
+                </div>
+                <div style="padding-top:10px;">
+                    <input class="hisui-radio" type="radio" label="打印药品数量汇总" name="prtPOGSWay" value="1">
+                </div>
+                <!--div><input class="hisui-radio" type="radio" label="按医嘱明细" name="prtPOGSWay" value="2"></div-->
+            </div>
+        </div>
     </div>
-
-
-    <script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mousewheel.min.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.min.js">
-    </script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.export.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/print.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/makelabel.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/scanexecute.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/execute.js"></script>
     <script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 </body>

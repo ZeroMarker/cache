@@ -1,9 +1,33 @@
+<csp:method name="OnPreHTTP" arguments="" returntype="%Boolean">
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" style="font-size:625%;">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>nis</title>
+    <script language="cache" runat="SERVER">
+      s pageName = $G(%request.Data("pageName", 1))
+	  s bedOperation = $G(%request.Data("bedOperation",1)) //¥≤ŒªÕº «∑Òø…≤Ÿ◊˜£¨Y£∫ø…Ω¯––∑÷¥≤°¢ªª¥≤°¢–ﬁ∏ƒ¥≤Œª◊¥Ã¨≤Ÿ◊˜ N:Ωˆø…≤Èø¥°¢…∏—°
+	  if (bedOperation="") s bedOperation="Y"
+	  s deliveryRoomFlag = $G(%request.Data("deliveryRoomFlag",1)) // «∑Ò «≤˙∑ø Y£∫ « ∆‰À˚£∫≤ª «
+      s bedChartFlag = pageName["bedChart"
+      s componentName = $G(%request.Data("componentName", 1))
+      s orderExcuteFlag = pageName["orderExcute/biz/excute"
+    </script>
     <exthealth:head></exthealth:head>
+    <csp:if condition="orderExcuteFlag">
+    	<hisui></hisui>
+    </csp:if>
+    <script language="cache" runat="SERVER">
+      s HISUIStyleCode=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+      if ($g(HISUIStyleCode) ="lite"){
+        w " <link rel=""stylesheet"" type=""text/css"" "
+        w " href=""../scripts/nurse/css/scrollbar.css"" "
+        w " >"
+      }
+    </script>
     <style>
       body {
         background-color: #fff;
@@ -15,13 +39,15 @@
         background-color: #fff;
       }
     </style>
-  <link href="../scripts/nurse/nis/css/app.40d727b1.css" rel="preload" as="style"><link href="../scripts/nurse/nis/css/chunk-vendors.53d7276a.css" rel="preload" as="style"><link href="../scripts/nurse/nis/js/app.43da8ea6.js" rel="preload" as="script"><link href="../scripts/nurse/nis/js/chunk-vendors.c99b2afb.js" rel="preload" as="script"><link href="../scripts/nurse/nis/css/chunk-vendors.53d7276a.css" rel="stylesheet"><link href="../scripts/nurse/nis/css/app.40d727b1.css" rel="stylesheet"></head>
-
-  <body>
+  <link href="../scripts/nurse/nis/css/app.dec5323a.css" rel="preload" as="style"><link href="../scripts/nurse/nis/css/chunk-vendors.2d43cb57.css" rel="preload" as="style"><link href="../scripts/nurse/nis/js/app.cc876995.js" rel="preload" as="script"><link href="../scripts/nurse/nis/js/chunk-vendors.0d78c96f.js" rel="preload" as="script"><link href="../scripts/nurse/nis/css/chunk-vendors.2d43cb57.css" rel="stylesheet"><link href="../scripts/nurse/nis/css/app.dec5323a.css" rel="stylesheet"></head>
+  <body style="font-size: inherit">
     <div id="app"></div>
+    <csp:if condition="orderExcuteFlag">
+      <csp:include page="nur.hisui.handleorderwindow.csp"></csp:include>
+    </csp:if>
     
     <script language="cache" runat="SERVER">
-      w " <script type=""text/javascript"" "
+	    w " <script type=""text/javascript"" "
       w " src=""../scripts/nurse/nis/config/index.js"" "
       w " ></"_"script>"
       if ($d(%session)){
@@ -29,66 +55,50 @@
         s langcode=$p($g(^SS("LAN",langid)),"^",1)
         s %session.Data("LOGON.LANGCODE")=langcode
       }
-    </script>
-    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/form/card.js"></script>
-    
-    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/form/sheet.js"></script>
-    <script type="text/javascript" charset="GB2312" src="../scripts/DHCPrtComm.js"></script>
-    
-    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/InfusionCardPrint.js"></script>
-    
-    
-    <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/PrintBarCode.js"></script>
-    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/NurseSheetPrint.js"></script>
-    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/BedPrint.js"></script>
-    <script type="text/javascript" src="../scripts/nurse/nis/HandleMethod/OrderExcute.js"></script>
-    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/PrintLodop.js"></script>
-
-    
-    <script language="cache" runat="SERVER">
-      s flag2 = ##class(websys.Conversions).IsValidMethodName("Nur.NIS.Common.SystemConfig","GetChromePrintFlag")
-      s chromePrintFlag = "false"
-      if (flag2 = "1") {
-        s chromePrintFlag = ##class(Nur.NIS.Common.SystemConfig).GetChromePrintFlag()
-      }
-      s pageNameNew = $G(%request.Data("pageName", 1))
-      s emrPrintFlag = 1 //ÈúÄË¶ÅÂä†ËΩΩÁóÖÂéÜÊâìÂç∞Êèí‰ª∂
-      if (pageNameNew["bedChart") { //Â∫ä‰ΩçÂõæ‰∏çÂä†ËΩΩÁóÖÂéÜÊâìÂç∞Êèí‰ª∂
-          s emrPrintFlag = 0
-      }
-    </script>
-    <csp:if condition='chromePrintFlag="true"'>
-      <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js">
-      </script>
-      <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js">
-      </script>
-      <csp:if condition="emrPrintFlag=1">
-        <addins require="NurEmrPrint"></addins>
-      </csp:if>
-    </csp:if>
-    <csp:if condition='chromePrintFlag="false"'>
-      <csp:if condition="emrPrintFlag=1">
-        <ainurprint></ainurprint>
-      </csp:if>
-    </csp:if>
-    
-
-    <script language="cache" runat="SERVER">
-      s pageName = $G(%request.Data("pageName", 1))
-      s componentName = $G(%request.Data("componentName", 1))
-      s episodeID = $G(%request.Data("EpisodeID", 1))
+	    s episodeID = $G(%request.Data("EpisodeID", 1))
       s episodeIDs = $G(%request.Data("EpisodeIDS", 1))
       s leftMenuCode = $G(%request.Data("leftMenuCode", 1))
       s ifBaby = $G(%request.Data("ifBaby", 1))
-      s ECPIP = ##class(ext.util.String).ServerIP() //Cache2010Âèä‰ª•Âêé
+
+      s componentArgs = $G(%request.Data("componentArgs", 1))
+      s codeStr = $G(%request.Data("codeStr", 1))
+      s endDateTime = $G(%request.Data("endDateTime", 1))
+      s startDateTime = $G(%request.Data("startDateTime", 1))
+
+      s ECPIP = ##class(ext.util.String).ServerIP() //Cache2010Âèä‰ª•Âê?
       s WebIP = ""
       s flag = ##class(web.DHCDischargeHistory).ifNewBaby(episodeID)
       s nurSetID = $O(^Nur.DHCMGNurseSetD(""))
       i nurSetID'="" s WebIP = $ListGet(^Nur.DHCMGNurseSetD(nurSetID), 3)
-      w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+      w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
       d ##class(web.DHCXMLPConfig).LODOPInit()
     </script>
+    <script type="text/javascript" charset="GB2312" src="../scripts/DHCPrtComm.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/NurPrtComm.js"></script>
+    <csp:if condition="bedChartFlag=1">
+    	
+    	<script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/BedPrint.js"></script>
+    </csp:if>
+    <csp:if condition="orderExcuteFlag">
+      <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/SheetPrint.js"></script>
+      <script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/CardPrint.js"></script>
+		  <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/PrintBarCode.js"></script>
+		  <script type="text/javascript" src="../scripts/nurse/nis/HandleMethod/OrderExcute.js"></script>
+    </csp:if>
+
     <script language="javascript">
+      window.console = {
+        log:function(){}
+      }
+      window.onbeforeunload = function(e) {
+		    if (Number(sessionStorage.getItem("printStatusCode")) === 1) {
+			    e = e || window.event;
+			    if (e) {
+				    e.returnValue= "¥Ú”°≥Ã–ÚŒ¥÷¥––ÕÍ£¨ƒø«∞ÕÀ≥ˆø…ƒ‹‘Ï≥…Œ Ã‚£°";
+			    }
+			    return "¥Ú”°≥Ã–ÚŒ¥÷¥––ÕÍ£¨ƒø«∞ÕÀ≥ˆø…ƒ‹‘Ï≥…Œ Ã‚£°";	
+		    }
+	    }
       window.WebIp = window.location.href.split("/csp/")[0];
       window.pageName="#($g(pageName))#";
       window.componentName = "#($g(componentName))#";
@@ -98,85 +108,19 @@
       window.langID = "#($g(%session.Data("LOGON.LANGID")))#";
       window.langcode = "#($g(langcode))#";
       window.episodeIDs="#($g(episodeIDs))#";
+
+      window.componentArgs="#($g(componentArgs))#";
+      window.codeStr="#($g(codeStr))#";
+      window.endDateTime="#($g(endDateTime))#";
+      window.startDateTime="#($g(startDateTime))#";
       var session = new Object();
-      session['LOGON.TIMEOUT'] = "#($g(%session.Data("LOGON.TIMEOUT")))#";
-      session['LOGON.SITECODE'] = "#($g(%session.Data("LOGON.SITECODE")))#";
-      session['LOGON.REGION'] = "#($g(%session.Data("LOGON.REGION")))#";
+      session['LOGON.HOSPID'] = "#($g(%session.Data("LOGON.HOSPID")))#";
       session['LOGON.USERID'] = "#($g(%session.Data("LOGON.USERID")))#";
       session['LOGON.USERCODE'] = "#($g(%session.Data("LOGON.USERCODE")))#";
-      session['LOGON.USERNAME'] = "#($g(%session.Data("LOGON.USERNAME")))#";
-      session['LOGON.USERTYPE'] = "#($g(%session.Data("LOGON.USERTYPE")))#";
       session['LOGON.GROUPID'] = "#($g(%session.Data("LOGON.GROUPID")))#";
-      session['LOGON.GROUPDESC'] = "#($g(%session.Data("LOGON.GROUPDESC")))#";
-      session['LOGON.LANGID'] = "#($g(%session.Data("LOGON.LANGID")))#";
-      session['LOGON.LANGCODE'] = "#($g(%session.Data("LOGON.LANGCODE")))#";
       session['LOGON.CTLOCID'] = "#($g(%session.Data("LOGON.CTLOCID")))#";
-      session['XMONTHSSHORT'] = "#($g(%session.Data("XMONTHSSHORT")))#";
-      session['CONTEXT'] = "#($g(%session.Data("CONTEXT",1)))#";
-      session['LOGON.WARDID'] = "#($g(%session.Data("LOGON.WARDID")))#";
-      session['LOGON.HOSPID'] = "#($g(%session.Data("LOGON.HOSPID")))#";
-      session['ContainerName'] = "#($g(%session.Data("ContainerName")))#";
-      session['LOGON.WEBIP'] = "#(WebIP)#";
-      function TempShow(Adm) {
-          if (typeof Adm === 'undefined') {// Á©∫Â§ÑÁêÜ
-            Adm = ""
-          }
-          if (window.config.tempPictureFlag === true){ //ÂÖºÂÆπËÄÅÁâà‰ΩìÊ∏©Âçï
-                var ServerIP = ""
-                if ("#(WebIP)#" != "") {
-                  ServerIP = "#(WebIP)#";
-                }
-                var EpisodeID = Adm;
-                var WardId = session['LOGON.WARDID'];
-                var LocId = session['LOGON.CTLOCID'];
-                var httpHead = ServerIP.split('://')[0];
-                var ECPIP = httpHead + "://" + "#(ECPIP)#";
-                if (ECPIP == "") {
-                  ECPIP = ServerIP;
-                }
-                var webservice = ECPIP + window.config.proxyTable.web + "Nur.TemperatureInterface.cls";
-                var FilePath = ECPIP + "/dhcmg/temperature/temperatureChart.xml";
-                var flag = "#(flag)#";
-                var link = ServerIP + "/dhcmg/temperature/Temperature.application?method=ShowWindow&EpisodeID=" + EpisodeID + "&WardId=" + WardId + "&LocId=" + LocId + "&webservice=" + webservice + "&FilePath=" + FilePath + "&flag=" + flag + ""
-                //var link="http://127.0.0.1/dhcmg/DoctorOrderSheet/DHCCDoctorOrderSheet.application?episodeId=179&wardId=10&locId=4&userId=69&webIp=http://127.0.0.1"
-                window.location.href = link;
-          }else{
-              //Êñ∞ÁâàÁöÑ‰ΩìÊ∏©ÂçïÈ¢ÑËßàÁïåÈù¢
-              var url = window.WebIp + "/csp/" + "nur.hisui.temperature.csp"+"?EpisodeID="+Adm
-              var frm = dhcsys_getmenuform();
-              if (frm) {
-                frm.EpisodeID.value = Adm;
-                // frm.PatientID.value = patientID;
-                // frm.mradm.value = mradm;
-              }
-
-              var width, height, left, top;
-              if (window.screen.availWidth > 1900) {
-                width = Math.floor(window.screen.availWidth * 0.79);
-                height = Math.floor(window.screen.availHeight * 0.83);
-                left = (window.screen.availWidth - width) / 2;
-                top = (window.screen.availHeight - height) / 3;
-              } else {
-                width = Math.floor(window.screen.availWidth * 0.98);
-                height = Math.floor(window.screen.availHeight * 0.83);
-                left = (window.screen.availWidth - width) / 3;
-                top = (window.screen.availHeight - height) / 3;
-              }
-              window.open(
-                url,
-                "newwindow",
-                "width=" +
-                width +
-                ",height=" +
-                height +
-                ",top=" +
-                top +
-                ",left=" +
-                left +
-                ",toolbar=no,menubar=yes,scrollbars=yes,resizable=yes,location=no,status=no"
-              );
-          }
-      }
+	  window.bedOperation="#($g(bedOperation))#";
+    window.deliveryRoomFlag="#($g(deliveryRoomFlag))#";
     </script>
-  <script type="text/javascript" src="../scripts/nurse/nis/js/chunk-vendors.c99b2afb.js"></script><script type="text/javascript" src="../scripts/nurse/nis/js/app.43da8ea6.js"></script></body>
+  <script type="text/javascript" src="../scripts/nurse/nis/js/chunk-vendors.0d78c96f.js"></script><script type="text/javascript" src="../scripts/nurse/nis/js/app.cc876995.js"></script></body>
 </html>

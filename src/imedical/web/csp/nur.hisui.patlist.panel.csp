@@ -1,22 +1,29 @@
 <!--nur.hisui.patlist.panel2.csp 护士患者列表-->
-<div class="hisui-panel" title="患者列表" data-options="fit:true,headerCls:'panel-header-gray'">
-	<div class="hisui-layout" data-options="fit:true,headerCls:'panel-header-gray'">
-		<div data-options="region:'north',border:false,headerCls:'panel-header-gray'" style="height:42px;">
-	    	<div style="height:36px;border-bottom:1px dashed #ccc;padding-left:5px;">
+<div class="hisui-panel" title="患者列表"  data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-person'">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false,headerCls:'panel-header-gray',iconCls:'icon-person'" style="padding:2px 5px">
+	    	<div style="height:30px;">
 				<div id="PatClassify"></div>
 			</div>
 			<!--div style="height:30px;border-bottom:1px dashed #ccc;padding:5px;">
 				<input id="findPat" href="#" class="hisui-searchbox"/>
 			</div-->
 		</div>
-		<div data-options="region:'center',border:false" style="border:0px;">
-			<table id="patTable" class="hisui-datagrid" data-options="fit:true,border:false,headerCls:'panel-header-gray'">
-			</table>
+		<div id="patPanel" data-options="region:'center',border:false" style="border:0px;">
+			<table id="patTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			</table>		
 		</div>
 	</div>
 </div>
 <style>
-
+	#PatClassify .kw-section-list>li{
+		margin:2px 5px;	
+	}
+	#patPanel .datagrid-wrap{
+		border:0;
+		border-top:1px solid #ccc;
+		border-radius:0 0 4px 4px;	
+	}
 </style>
 <server>
 	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
@@ -42,13 +49,25 @@ function initPageDom(){
 	initPatTable();
 }
 function initPatClassify(){
+	var classItems=[];
+	if(session['LOGON.WARDID']&&session['LOGON.WARDID']!=""){
+		classItems=[
+	        {text:'本病区',id:'Ward',selected:true},
+	        {text:'在院转科',id:'Transing'}
+	    ]
+	}
+	else {
+		classItems=[
+	        {text:'本人',id:'currentUser',selected:true},
+	        {text:'本单元',id:'currentGroup'},
+	        {text:'本科室',id:'currentLoc'}
+	        
+	    ]
+	}
 	$("#PatClassify").keywords({
 	    singleSelect:true,
 	    labelCls:'red',
-	    items:[
-	        {text:'本病区',id:'Ward',selected:true},
-	        {text:'在院转科',id:'Transing'}
-	    ],
+	    items:classItems,
 	    onClick:function(v){
 		    		var type=v.id;
 		    		patTableLoad(type);
@@ -59,6 +78,28 @@ function initPatClassify(){
 }
 function initPatTable(){
 	//bedCode,name,sex,age,regNo,medicareNo,wardDesc
+	var queryParamsObj={};
+	if(session['LOGON.WARDID']&&session['LOGON.WARDID']!=""){
+		queryParamsObj= {
+            ClassName: "Nur.NIS.Service.Base.InPatientList",
+            QueryName: "getInPatQuery",
+            ResultSetType: 'array',
+            WardID:session['LOGON.WARDID'], 
+            Type:"Ward",
+            SelEpisodeId: episodeID,
+        }
+	}
+	else {
+		queryParamsObj= {
+            ClassName: "Nur.NIS.Service.Base.InPatientList",
+            QueryName: "GetInPatList",
+            ResultSetType: 'array',
+            ALocID:session['LOGON.CTLOCID'],
+            AUserID:session['LOGON.USERID'],
+            ARadioValue:$("#PatClassify").keywords('getSelected')[0].id,
+            SelEpisodeId: episodeID,
+        }
+	}
 	var FrozenColumns=[[
 		{field:'bedCode',title:'床号',width:40},
 		{field:'name',title:'姓名',width:100},
@@ -78,13 +119,7 @@ function initPatTable(){
 		frozenColumns:FrozenColumns,
 		columns:Columns,
 		url: $URL,
-        queryParams: {
-            ClassName: "Nur.NIS.Service.Base.InPatientList",
-            QueryName: "getInPatQuery",
-            ResultSetType: 'array',
-            WardID:session['LOGON.WARDID'], 
-            Type:"Ward"
-        },
+        queryParams: queryParamsObj,
         onSelect:function(index, rowData){			
 			var frm= dhcsys_getmenuform(); //parent.parent.parent.document.forms['fEPRMENU'];
 			if(frm&&frm.canGiveBirth){
@@ -100,21 +135,36 @@ function initPatTable(){
 		onLoadSuccess:function(data){
 			console.log(data);
 			var frm = dhcsys_getmenuform();
-            if(frm){
-                episodeID=frm.EpisodeID.value;
-            }
+			if(!episodeID){
+	            if(frm){
+	                episodeID=frm.EpisodeID.value;
+	            }
+			}
 			$('#patTable').datagrid("selectRecord",episodeID);
 		}
 		
 	});  
 }
 function patTableLoad(type){
-	$('#patTable').datagrid("load",{
+	
+	if(session['LOGON.WARDID']&&session['LOGON.WARDID']!=""){
+		$('#patTable').datagrid("load",{
             ClassName: "Nur.NIS.Service.Base.InPatientList",
             QueryName: "getInPatQuery",
             ResultSetType: 'array',
             WardID:session['LOGON.WARDID'], 
             Type:type
         });
+	}else{
+		$('#patTable').datagrid("load",{
+            ClassName: "Nur.NIS.Service.Base.InPatientList",
+            QueryName: "GetInPatList",
+            ResultSetType: 'array',
+            ALocID:session['LOGON.CTLOCID'],
+            AUserID:session['LOGON.USERID'],
+            ARadioValue:type
+        });
+		
+	}
 }
 </script>

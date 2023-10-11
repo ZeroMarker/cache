@@ -8,8 +8,6 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
-<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
-<script type="text/javascript" src="../scripts/dhcdocconfig/dhcdoc.config.splitprescriptsetting.js"></script>
 </head>
 <style>
 .search-table{
@@ -28,13 +26,13 @@
 		</div>
 		<!--处方类型-->
 	    <div data-options="region:'west',split:true,border:false" style="width:300px;padding:10px 5px 10px 10px;">
-	    	<div class="hisui-panel" title="处方类型" data-options="fit:true,headerCls:'panel-header-gray'" style="">
+	    	<div class="hisui-panel" title="分类" data-options="fit:true,headerCls:'panel-header-gray'" style="">
 	    		<table id="tabSplitPrescType"></table>
 	    	</div>
 	    </div>
 	     <!--处方类型明细-->
 	    <div data-options="region:'center',border:false" style="padding:10px 10px 10px 0;">
-	    	<div class="hisui-panel" title="明细" data-options="fit:true,headerCls:'panel-header-gray'" style="padding:10px;">
+	    	<div id="PrescTypeDetail" class="hisui-panel" title="明细" data-options="fit:true,headerCls:'panel-header-gray'" style="padding:10px;">
 		    	<div style="width:277px;float:left;">
 		    		<div class="hisui-panel card-wrapper" title="医嘱子分类" style="padding:10px;width:277px;">
 		                <select size="4"  multiple="multiple" id="List_SplitPrescTypeItemCat" style="height:215px;width:254px;"></select>
@@ -57,8 +55,8 @@
 		      			</tr>
 		      			<tr>
 							<td colspan="2">
-								<input id="Check_Single" class='hisui-checkbox' type="checkbox" label="单独分处方(成组医嘱拆分分方,单药品单处方)" data-options="onCheckChange:SingleChange">
-								<input id="Check_SingleB" class='hisui-checkbox' type="checkbox" label="单独分处方(成组医嘱拆分分方,同处方类型同处方)" data-options="onCheckChange:SingleBChange">
+								<input id="Check_Single" class='hisui-checkbox' type="checkbox" label="单独分处方(成组医嘱拆分分方，单药品单处方)" data-options="onCheckChange:SingleChange">
+								<input id="Check_SingleB" class='hisui-checkbox' type="checkbox" label="单独分处方(成组医嘱拆分分方，同处方类型同处方)" data-options="onCheckChange:SingleBChange">
 							</td>							
 		      			</tr>
 		      			<tr>
@@ -68,16 +66,40 @@
 		      			</tr>
 						<tr>
 							<td colspan="2">
-					        	<input id="Check_MajorAttr" class='hisui-checkbox' type="checkbox" label="成组医嘱以此类型为主要属性(成组医嘱包含多个处方类型,不勾选默认按照主医嘱处方类型分处方)">
+					        	<input id="Check_MajorAttr" class='hisui-checkbox' type="checkbox" label="成组医嘱以此类型为主要属性(成组医嘱包含多个处方类型，不勾选默认按照主医嘱处方类型分处方)">
 							</td>
 						</tr>
 						<tr>
 							<td colspan="2">
-								<div class="hisui-panel" title="处方关联诊断设置" style="height:100px;width:620px;padding:15px 10px 10px;" data-options="headerCls:'panel-header-card'">
-									<input id="Check_OPLinkDiag" class='hisui-checkbox' type="checkbox" label="门急诊流水患者关联诊断">
-									<input id="Check_EPLinkDiag" class='hisui-checkbox' type="checkbox" label="急诊留观患者关联诊断">
-									<input id="Check_IPOneAndOutLinkDiag" class='hisui-checkbox' type="checkbox" label="住院取药/出院带药">
-									<input id="Check_IPNotOneAndOutLinkDiag" class='hisui-checkbox' type="checkbox" label="住院非取药/非出院带药">
+								<div class="hisui-panel" title="处方关联诊断设置" style="height:140px;width:620px;padding:15px 10px 10px;" data-options="headerCls:'panel-header-card'">
+									<table class="">
+										<tr>
+											<td >
+												<input id="Check_OPLinkDiag" class='hisui-checkbox' type="checkbox" label="门急诊流水患者关联诊断">
+											</td>
+											<td>
+												<input id="Check_EPLinkDiag" class='hisui-checkbox' type="checkbox" label="急诊留观患者关联诊断">
+											</td>
+											<td>
+												<input id="Check_IPOneAndOutLinkDiag" class='hisui-checkbox' type="checkbox" label="住院取药/出院带药">
+											</td>
+										</tr>
+										<tr>
+											<td colspan="3">
+												<input id="Check_IPNotOneAndOutLinkDiag" class='hisui-checkbox' type="checkbox" label="住院非取药/非出院带药">
+											</td>
+										</tr>
+										<tr>
+											<td style="padding-left: 8px;">
+												<label for="LinkDiagNumber">处方诊断打印数限定(默认10)</label>
+											</td>
+											<td style="padding-left: 8px;">
+												<input id="LinkDiagNumber" type="text" class="textbox"/>
+											</td>
+											</td>
+											<td>
+										<tr>
+									</table>
 								</div>
 							</td>
 						</tr>
@@ -94,5 +116,21 @@
 			</div>
 	    </div>
 	</div>
+<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			pageCode:"dhcdoc.config.splitprescriptsetting.csp",
+			pageName:"分处方设置",
+			ProductLine:"OPDoc",
+			parentPageCode:"dhcdoc.config.basicsetting.csp",
+			parentPageName:"医生站设置菜单",
+			MainCSPIsLink:"N",
+			domSelectors:".textbox^.hisui-checkbox^#tabSplitPrescType!table!0^select!select",
+			domNotSelectors:"#_HospList"
+		};
+  </SCRIPT>
+  <script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+ <script type="text/javascript" src="../scripts/dhcdocconfig/dhcdoc.config.splitprescriptsetting.js"></script>
 </body>
 </html>

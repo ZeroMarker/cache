@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--草药状态扫码执行 门诊+住院
+	csp:pha.herb.v2.scanexecute.csp
+	js: pha/herb/v2/scanexecute.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI/>
+	<PHAHERBV2/>
+<style type="text/css">
+    iframe {
+	    width: 100%;
+	    height: 100%;
+	    border: none;
+	    overflow: hidden;
+	    display:block;
+	}
+	.herb-name{
+		float: left;
+	}
+	.herb-qty{
+		float: left;
+		padding-left: 10px;
+
+	}
+	.herb-remark{
+		font-size: 9px;
+		float: left;
+		line-height: normal;
+	}
+	.herb{
+		float: left;
+		width:250px;
+		position:relative;
+		padding-left: 30px;
+		height: 50px;
+		line-height: 50px;
+	}
+</style>
+</head>
+
+<body>       
+    <div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">		
+				<div data-options="region:'center',title:'草药处方状态扫码执行',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray'" id = "pha_herb_v2_scanexe">
+					<div class="hisui-layout" fit="true">	
+						<div data-options="region:'north',border:false,split:false" class="dhcpha-north-tbl-2" style="overflow:hidden" id="presclayout">							
+							<table class="pha-con-table nopadding">
+								<tr>
+									<td class="r-label">#(..Get("执行状态"))#</div>
+									<td>
+										<input id="cmbState">
+									</td>
+									<td class="r-label">#(..Get("药师工号"))#</td>
+									<td>
+										<input id="txtUserCode" class="hisui-validatebox textbox"/>
+									</td>
+									<td class="r-label">#(..Get("处方号"))#</td>
+									<td>
+										<input id="txtPrescNo" class="hisui-validatebox textbox"/>
+									</td>
+									<td class="r-label">
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClear" onclick="javascript:Clear()">清屏</a>
+									</td>
+								</tr>
+							</table>
+						</div>
+						
+						<div data-options="region:'center'" border="false" style="border-radius: 4px;padding:10px;padding-top:0px">
+							<div class="hisui-layout" id="mainLayout" fit="true" border="false">
+								<div data-options="region:'center',split:false,border:true,iconCls:'icon-paper',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" 
+								title="处方列表">
+									<table id="gridPrescList"></table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+		    </div>
+        </div>
+    </div>
+	
+	<script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-detailview.js" ></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/herb/v2/scanexecute.js"></script>
+	
+
+</body>
+
+</html>

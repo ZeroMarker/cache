@@ -9,12 +9,16 @@
 
 <TITLE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 <script type='text/javascript' src='../scripts/dhceq/plat/ftpserver.js'></script>
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
-	Set FtpInfo=##class(web.DHCEQCommon).GetSysInfo("990018")
+	Set SSRowID=$Get(%request.Data("SSRowID",1))		//CZF0138 2021-05-24
+	i SSRowID'="" s FtpInfo=$p($g(^DHCEQCCode("DHCEQCSysSet",SSRowID)),"^",2)
+	e  Set FtpInfo=##class(web.DHCEQCommon).GetSysInfo("990018")
 	Set FtpServer=$p(FtpInfo,"&",1)
 	Set FtpUser=$p(FtpInfo,"&",2)
 	Set FtpPassWord=$p(FtpInfo,"&",3)
@@ -54,8 +58,9 @@
 	<!--隐藏元素-->
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCEQ">
+			<INPUT type="hidden" id="SSRowID" value="#(SSRowID)#">		<!--CZF0138 2021-05-24-->
 			<!--调用后台方法隐藏元素
-			<INPUT type="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##Class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+			<INPUT type="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
 			-->
 		</form>
 	</div>

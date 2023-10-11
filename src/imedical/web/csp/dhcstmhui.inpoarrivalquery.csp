@@ -17,39 +17,52 @@
 </head>
 <body class="hisui-layout" data-options="fit:true">
 	<div data-options="region:'north',border:false"> 
-		<table id="MainConditions" class="Condition">
+		<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 			<tr>
 				<td><label class="required">*</label><label>开始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
 				<td><label class="required">*</label><label>订单科室</label><input id="PoLoc" name="PoLoc" class="textbox hisui-combobox"></td>
 				<td><label>类组</label><input id="StkScg" name="StkScg" class="textbox hisui-stkscgcombotree"></td>
-				<td colspan="2">
-					<input id="AllImp" name="AllImp" class='hisui-checkbox' type="checkbox" value="Y"  label="全部入库">
-					<input id="PartImp" name="PartImp" class='hisui-checkbox' type="checkbox" value="Y" label="部分入库">
-					<input id="NoImp" name="NoImp" class='hisui-checkbox' type="checkbox" value="Y" label="未入库">
+				<td colspan="2" style="text-align:left">
+					<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:88px;">查询</a>
+					<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:88px;">清屏</a>
 				</td>
 			</tr>
 			<tr>
 				<td><label class="required">*</label><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
 				<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
 				<td><label>库存分类</label><input id="StkCat" name="StkCat" class="textbox hisui-combobox"></td>
-				<td colspan="2" style="text-align:left">
-					<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-					<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+				<td colspan="2" style="text-align:left" class="SCIShow">
+					<a href="#" id="CancelInPoBT" class="hisui-linkbutton" style="width:88px;">撤单</a>
+					<a href="#" id="GetECSStateBT" class="hisui-linkbutton" style="width:88px;">同步状态</a>
 				</td>
 			</tr>
-			<tr>
+			<tr class="SCIShow">
 				<td>
 					<label>推送状态</label>
-					<input id="SendFlag" name="SendFlag" class='simplecombobox textbox'></input>
+					<input id="SendFlag" name="SendFlag" class='simplecombobox textbox'>
 				</td>
 				<td>
 					<label>紧急状态</label>
-					<input id="EmFlag" name="EmFlag" class='simplecombobox textbox'></input>
+					<input id="EmFlag" name="EmFlag" class='simplecombobox textbox'>
 				</td>
-				<td></td>
+				<td>
+					<input id="AllImp" name="AllImp" class='hisui-checkbox' type="checkbox" value="Y"  label="全部入库">
+					<input id="PartImp" name="PartImp" class='hisui-checkbox' type="checkbox" value="Y" label="部分入库">
+					<input id="NoImp" name="NoImp" class='hisui-checkbox' type="checkbox" value="Y" label="未入库">
+				</td>
 				<td colspan="2" style="text-align:left">
 					<a href="#" id="SendInPoBT" class="hisui-linkbutton" style="width:88px;">推送平台</a>
 					<a href="#" id="ReminderBT" class="hisui-linkbutton" style="width:88px;">催单</a>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="6" align="left">
+					<a href="#" id="SendOrderBT" class="hisui-linkbutton">同步至阳光平台</a>
+					<a href="#" id="OrderQueryBT" class="hisui-linkbutton">阳光平台订单状态</a>
+					<a href="#" id="DistriQueryBT" class="hisui-linkbutton">阳光平台配送状态</a>
+					<a href="#" id="ProConQueryBT" class="hisui-linkbutton">阳光平台合同产品</a>
+					<a href="#" id="SendPayBT" class="hisui-linkbutton">同步支付单</a>
+					<a href="#" id="QueryPayStatusBT" class="hisui-linkbutton">平台支付单状态</a>
 				</td>
 			</tr>
 		</table>
@@ -70,9 +83,104 @@
 			<iframe id="ReqDetailIFrame" src="" frameborder="0" scrolling="yes" height="99%" width="99.8%" noresize="noresize"></iframe>
 		</div>
 	</div>
-
+<!-- 四川采购平台订单信息查询弹窗 -->
+	<div id="SCInpostatusWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="采购平台订单明细状态信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',border:false">
+				<table id="SCOrderConditions" class="Condition">
+					<tr>
+						<td><label>当前页码</label><input id="SCCurPageNumber" name="SCCurPageNumber" class="textbox" style="width:130px;"></td>
+						<td><label>总页数</label><input id="SCTotalPageCount" name="SCTotalPageCount" class="textbox" style="width:123px;" disabled></td>
+						<td><label>总行数</label><input id="SCTotalRecordCount" name="SCTotalRecordCount" class="textbox" style="width:123px;" disabled></td>
+						<td><a href="#" id="SCPoSearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">查询</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="SCPoDetailStatusGrid"></table>
+			</div>
+		</div>
+	</div>
+	<!-- 四川采购平台订单配送信息查询弹窗 -->
+	<div id="SCDistrstatusWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="采购平台订单配送状态信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',border:false">
+				<table id="SCDistrConditions" class="Condition">
+					<tr>
+						<td><label>当前页码</label><input id="SCCurPage" name="SCCurPage" class="textbox" style="width:130px;"></td>
+						<td><label>总页数</label><input id="SCTotalPage" name="SCTotalPage" class="textbox" style="width:123px;" disabled></td>
+						<td><label>总行数</label><input id="SCTotalRecord" name="SCTotalRecord" class="textbox" style="width:123px;" disabled></td>
+						<td><a href="#" id="SCDistrSearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">查询</a></td>
+						<td><a href="#" id="SCSaveInGdRecBT" class="hisui-linkbutton" data-options="" style="width:114px;">生成入库单</a></td>
+						<td><a href="#" id="SCLinkInGdRecBT" class="hisui-linkbutton" data-options="" style="width:114px;">关联入库单</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="SCPoDistrStatusGrid"></table>
+			</div>
+		</div>
+	</div>
+	<!-- 四川采购平台合同信息查询弹窗 -->
+	<div id="SCProContractWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="采购平台合同产品信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',border:false">
+				<table id="SCProConConditions" class="Condition">
+					<tr><td>起始日期</td>
+						<td><input id="SCProConStartDate" name="SCProConStartDate" class="hisui-dateboxq textbox"></td>
+						<td>截止日期</td>
+						<td><input id="SCProConEndDate" name="SCProConEndDate" class="hisui-dateboxq textbox"></td>
+						<td>总页数</td>
+						<td><input id="SCPCTotalPage" name="SCPCTotalPage" class="textbox" style="width:123px;" disabled></td>
+						<td><a href="#" id="SCProConSearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">查询</a></td>
+					</tr>
+					<tr>
+						<td>起始时间</td>
+						<td><input id="SCProConStartTime" name="SCProConStartTime" class="hisui-timespinner textbox"></td>
+						<td>截止时间</td>
+						<td><input id="SCProConEndTime" name="SCProConEndTime" class="hisui-timespinner textbox"></td>
+						<td>总行数</td>
+						<td><input id="SCPCTotalRecord" name="SCPCTotalRecord" class="textbox" style="width:123px;" disabled></td>
+						<td><a href="#" id="SCProConDownBT" class="hisui-linkbutton" data-options="" style="width:114px;">下载</a></td>
+					</tr>
+					<tr>
+						<td>合同ID</td>
+						<td><input id="SCcontractIds" name="SCcontractIds" class="textbox"></td>
+						<td>当前页码</td>
+						<td><input id="SCPCCurPage" name="SCPCCurPage" class="textbox" style="width:130px;"></td>
+						<td><a href="#" id="SCProConClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="SCProContractGrid"></table>
+			</div>
+		</div>
+	</div>
+	<!-- 四川阳光采购平台待支付单查询弹窗 -->
+	<div id="SCPayStatusWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="阳光采购平台待支付单查询">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',border:false">
+				<table id="SCPayStatusConditions" class="Condition">
+					<tr>
+						<td><label>当前页码</label><input id="SCPayStatusCurPageNumber" name="SCPayStatusCurPageNumber" class="textbox" style="width:130px;"></td>
+						<td><label>总页数</label><input id="SCPayStatusTotalPageCount" name="SCPayStatusTotalPageCount" class="textbox" style="width:123px;" disabled></td>
+						<td><label>总行数</label><input id="SCPayStatusTotalRecordCount" name="SCPayStatusTotalRecordCount" class="textbox" style="width:123px;" disabled></td>
+						<td><a href="#" id="SCPayStatusSearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">查询</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="headerCls:'panel-header-gray',region:'center'">
+				<table id="SCPayStatusGrid"></table>
+			</div>
+		</div>
+	</div>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InPo/InPoCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InPo/InPoPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SunPurPlanSC/QueryPoDetailStatus.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SunPurPlanSC/QueryPoDistributStatus.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SunPurPlanSC/QueryProContract.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SunPurPlanSC/QueryPayStatus.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InPo/InPoArrivalQuery.js"></script>
 
 </body>

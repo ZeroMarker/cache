@@ -11,72 +11,85 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI/>
 <DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+.messager-popover
+	{
+		font-weight: normal;
+	}
+/* added by LMH 20230302 操作栏高度调整迎合合计行上下一致调整*/
+.datagrid-toolbar{
+    height: 31px;
+}
+</style>
 </HEAD>
 <script language=Cache runat=server>
 	s LocID=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
 	s LocType=##class("web.DHCEQ.RM.BUSShareResource").CheckLocType(LocID)
-	s StatusDR=$Get(%request.Data("StatusDR",1))  //Add by QW20200512
+	s StatusDR=$Get(%request.Data("StatusDR",1))
+	s NoCurDateFlag=$Get(%request.Data("NoCurDateFlag",1))
+	s OuterTypeAllFlag=$Get(%request.Data("OuterTypeAllFlag",1))
+	s Title=$Get(%request.Data("Title",1)) 
 </Script>
 <body class="hisui-layout">
 	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'上架设置'">
+		 <!--modified by LMH 20230203 面板、面板边框、表单元素调整  -->
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',headerCls:'panel-header-gray',fit:true,title:'#(Title)#'" style="border-color:#ccc;">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:5px 0 10px 0;"> <!--Modify by QW20200506 资源项begin-->
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;"> <!--Modify by QW20200506 资源项begin-->
 					<div class="eq-table">
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cPOSShareType" for="POSShareType">资源类型</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSShareType" data-required="true" data-options="prompt:'必填项'"></div> <!--Modify by QW20200506 Bug:QW0058 需求号:1294296-->
-							<div class="eq-table-td eq-table-label"><label id="cPOSEquipDR_EQName" for="POSEquipDR_EQName">资产名称</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSEquipDR_EQName" data-options="'component':'EM.L.Equip'"></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cPOSShareType" for="POSShareType">资源类型</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSShareType" data-required="true" data-options="prompt:'必填项'"></div> <!--Modify by QW20200506 Bug:QW0058 需求号:1294296-->
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSEquipDR_EQName" for="POSEquipDR_EQName">资产名称</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSEquipDR_EQName" data-options="'component':'EM.L.Equip'"></div>
 							 <!--Modify by QW20200506 资源项begin-->
-							<div class="eq-table-td eq-table-label"><label id="cPOSShareItemDR_SIDesc" for="POSShareItemDR_SIDesc">资源项</label></div>
-							<div class="eq-table-td "><input class="hisui-validatebox" id="POSShareItemDR_SIDesc" data-options="'component':'RM.L.ShareItem'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSShareItemDR_SIDesc" for="POSShareItemDR_SIDesc">资源项</label></div>
+							<div class="eq-table-td "><input class="hisui-validatebox textbox" id="POSShareItemDR_SIDesc" data-options="'component':'RM.L.ShareItem'"></div>
 							<!--
 							<div class="eq-table-td eq-table-label"><label id="cPOSSub" for="POSSub">辅助信息</label></div>
 							<div class="eq-table-td "><input class="hisui-validatebox" id="POSSub" data-options="'component':'PLAT.L.BuildingUnit'"></div>-->
 							 <!--Modify by QW20200506 资源项end-->
-							<div class="eq-table-td eq-table-label"><label id="cPOSFromDate" for="POSFromDate">设置开始日期</label></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSFromDate" for="POSFromDate">设置开始日期</label></div>
 							<div class="eq-table-td "><input class="hisui-datebox textbox" id="POSFromDate"></div>
-							<!--Modify by QW20200506 修正按钮 begin-->
-							<div class="eq-table-td eq-table-label"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
-							<div class="eq-table-td eq-table-label"><a id="BAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a></div>
-							<!--Modify by QW20200506 end-->
+							<div class="eq-table-td"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:20px">保存</a></div>
+							<div class="eq-table-td"><a id="BAudit" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">审核</a></div>
 						</div>
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cPOSItemDR_MIDesc" for="POSItemDR_MIDesc">设备项</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSItemDR_MIDesc" data-options="'component':'EM.L.GetMasterItem'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPOSModelDR_MDesc" for="POSModelDR_MDesc">规格型号</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSModelDR_MDesc" data-options="'component':'PLAT.L.Model'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPOSLocDR_DeptDesc" for="POSLocDR_DeptDesc">科室</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSLocDR_DeptDesc" data-options="'component':'PLAT.L.Loc'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPOSToDate" for="POSToDate">设置结束日期</label></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cPOSItemDR_MIDesc" for="POSItemDR_MIDesc">设备项</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSItemDR_MIDesc" data-options="'component':'EM.L.GetMasterItem'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSModelDR_MDesc" for="POSModelDR_MDesc">规格型号</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSModelDR_MDesc" data-options="'component':'PLAT.L.Model'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSLocDR_DeptDesc" for="POSLocDR_DeptDesc">科室</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSLocDR_DeptDesc" data-options="'component':'PLAT.L.Loc'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSToDate" for="POSToDate">设置结束日期</label></div>
 							<div class="eq-table-td "><input class="hisui-datebox textbox" id="POSToDate"></div>
-							<!--Modify by QW20200506 修正按钮 begin-->
-							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">查询</a></div>
-							<div class="eq-table-td eq-table-label"><a id="BCancel" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">无效</a></div>
-							<!--Modify by QW20200506 end-->
+							<div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:20px">查询</a></div>
+							<div class="eq-table-td"><a id="BCancel" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">无效</a></div>
 						</div>
 						<div class="eq-table-tr">
 						 	<!--Modify by QW20200506 去掉院区增加状态end-->
 							<!--div class="eq-table-td eq-table-label"><label id="cPOSHospitalDR_HOSPDesc" for="POSHospitalDR_HOSPDesc">院区</label></div>
 							<div class="eq-table-td"><input class="hisui-validatebox" id="POSHospitalDR_HOSPDesc" data-options="'component':'PLAT.L.Hospital'"></div-->
-							<div class="eq-table-td eq-table-label"><label id="cPOSStatus" for="POSStatus">状态</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSStatus"></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cPOSStatus" for="POSStatus">状态</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSStatus"></div>
 							 <!--Modify by QW20200506 去掉院区增加状态end-->
-							<div class="eq-table-td eq-table-label"><label id="cPOSManageLocDR_DeptDesc" for="POSManageLocDR_DeptDesc">管理科室</label></div>
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSManageLocDR_DeptDesc" data-options="'component':'PLAT.L.Loc'"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPOSOuterType" for="POSOuterType">共享方式</label></div> <!--Modify by QW20200506 修改描述begin-->
-							<div class="eq-table-td"><input class="hisui-validatebox" id="POSOuterType"></div>
-							<div class="eq-table-td eq-table-label"><label id="cPOSAutoPutOnFlag" for="POSAutoPutOnFlag">是否自动上架</label></div>
-							<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox' id="POSAutoPutOnFlag"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSManageLocDR_DeptDesc" for="POSManageLocDR_DeptDesc">管理科室</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSManageLocDR_DeptDesc" data-options="'component':'PLAT.L.Loc'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSOuterType" for="POSOuterType">共享类型</label></div> <!--// MZY0141	2974578		2022-11-02	-->
+							<div class="eq-table-td"><input class="hisui-validatebox textbox" id="POSOuterType"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cPOSAutoPutOnFlag" for="POSAutoPutOnFlag">是否自动上架</label></div>
+							<div class="eq-table-td"><input type="checkbox" class='hisui-checkbox textbox' id="POSAutoPutOnFlag"></div>
 						</div>
 					</div>
 				</div>
-				<div data-options="region:'center',border:false" style="position:relative;">
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
 					 <table id="tDHCEQPutOnSet" class="hisui-datagrid" ></table>
-					 <span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span> <!--Add by QW20200506 增加合计-->
-					 <span id="ShareItemWarn" class="eq-total-sum" style="position:absolute;left:10px;top:5px;"></span> <!--Modify by zx 20200609 BUG ZX0100-->
+					<!--modified by LMH 20230302 UI 合计行上下一致调整 -->
+					<div class="messager-popover info" style="position:absolute;right:0px;top:1px;margin:0px 5px 0px 0;padding:5px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -99,6 +112,8 @@
 			<INPUT type="hidden" id="DREquipTypeDR"> <!--列定义参数所需-->
 			<INPUT type="hidden" id="POSShareItemDR"> <!--Add by QW20200506 资源项-->
 			<INPUT type="hidden" id="StatusDR" value=#(StatusDR)#> <!--Add by QW20200512 状态-->
+			<INPUT type="hidden" id="NoCurDateFlag" value=#(NoCurDateFlag)#> <!--Add CSJ 2020-07-03 不使用当前日期标志 需求号：1396144-->
+			<INPUT type="hidden" id="OuterTypeAllFlag" value=#(OuterTypeAllFlag)#> <!--Add CSJ 2020-07-03 共享方式全部标志 需求号：1396144-->
 		</form>
 	</div>
 	<script type="text/javascript" src="../scripts/dhceq/rm/putonset.js"></script>

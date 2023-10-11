@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--库存转移接收查询
+	csp:  csp/pha.in.v3.req.querytrans.csp
+	js:   scripts/pha/in/v3/req/querytrans.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    
+	<!-- 样式扩展 -->
+    <style>
+    	.button-width {
+			width: 90px;
+		}
+		.text-width {
+			width: 80px;
+		}
+    </style>
+
+</head>
+
+<body>
+	<!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true">
+	            <div data-options="region:'west',width:500,border:false,split:true">
+					<div id="panel" class="hisui-panel" title="库存请求单"
+						data-options="headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper',fit:true">
+						<table id="gridInrq"></table> 
+					</div>
+				</div>
+				<div data-options="region:'center',border:false,split:true">
+					 <div id="panel" class="hisui-panel" title="单据明细"
+						data-options="headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper-info',fit:true">
+						<table id="gridInrqiIniti"></table> 
+					</div>
+				</div>
+				<div data-options="region:'east',width:430,border:false,split:true">
+					<div id="panel" class="hisui-panel" title="转移明细对应请求明细"
+						data-options="headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper-ok',fit:true">
+						<table id="gridInitiInrqi"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+    
+    <!-- 库存请求单列表工具栏 -->
+	<div id="gridInrqBar" >
+		<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="recLocId">#(..Get("请求科室"))#</label></td>
+                <td><input id="recLocId"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td><label for="startDate">#(..Get("开始日期"))#</label></td>
+                <td><input id="startDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            </tr>
+            <tr>
+		 		<td class="r-label"><label for="proLocId">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td><label for="endDate">#(..Get("结束日期"))#</label></td>
+                <td><input id="endDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            </tr>
+             <tr>
+		 		<td class="r-label" ><label for="reqStatus">#(..Get("请求状态"))#</label></td>
+                <td colspan = 3><input id="reqStatus"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            </tr>
+            <tr>
+                <td class="r-label"><label for="reqTypeId">#(..Get("申请类型"))#</label></td>
+                <td><input id="reqTypeId"  class="hisui-combobox text-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+            </tr>
+        </table>
+        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+			<a class="hisui-linkbutton button-width"  onclick="javascript:Query()">查询</a>
+           	<a  style="margin-left:10px" class="hisui-linkbutton button-width"  onclick="javascript:Clear()">清屏</a>
+           	<a  style="margin-left:10px" class="hisui-linkbutton button-width"  onclick="javascript:Print()">打印</a>
+		</div>
+	</div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/compoment.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/querytrans.js"></script>
+    
+    
+</body>
+
+</html>

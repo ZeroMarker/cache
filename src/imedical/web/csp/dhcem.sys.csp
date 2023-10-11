@@ -1,13 +1,21 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;" >
 <HISUI/>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcem/css/sysconfig.css"/>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
 <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/sysconfig.js"></script>
 <script Language="Javascript">
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var LgHospDesc="#(%session.Get("LOGON.HOSPDESC"))#"; //医院ID
+		var SYGroupNameFlag=$g("#(%request.Data("SYGroupNameFlag",1))#"); // 产品表 标识 接收菜单维护时传递的参数（标识可多个，用英文逗号分隔）
 </script>
 </head>
 
@@ -27,6 +35,7 @@
 			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSysItmAut(0)" >新增</a></td>
 			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSysItmAut()">保存</a> </td>
 			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelSysItmAut()">删除</a></td>	
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-show-set',plain:true" onclick="javascript:AutTypeWin()">授权类型(shift+q)</a></td>		
 			    </tr>
 			</table>
 		</div>
@@ -122,23 +131,33 @@
 													url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
 													required:true,
 													editable:false,
-													disabled:false
+													disabled:false,
+													onSelect:function(option){ /// 2021-02-08 cy 医院id与描述分开显示
+														var rowIndex=$('#datagrid2').datagrid('getRowIndex',$('#datagrid2').datagrid('getSelected'))
+                    									rowIndex=rowIndex==-1?0:rowIndex
+														var ed=$('#datagrid2').datagrid('getEditor',{index:rowIndex,field:'SAHospDrID'});
+														$(ed.target).val(option.value);  //设置医院ID
+														var ed=$('#datagrid2').datagrid('getEditor',{index:rowIndex,field:'SAHospDr'});
+														$(ed.target).combobox('setValue', option.text);  //设置医院Desc
+                   									
+												}
 												}
 											}">医院</th>
-					<th data-options="field:'SAHospDrID',hidden:true">SAHospDrID</th>
+					<th data-options="field:'SAHospDrID',editor:'text',hidden:true">SAHospDrID</th>
 					<th data-options="field:'ID',hidden:true">id</th>				
 				</tr>
 			</thead>
 		</table>
    </div>    <!--south end-->     
-   <div data-options="region:'west',title:'产品表',split:true,headerCls:'panel-header-gray'" style="width:480px;">
+   <div data-options="region:'west',title:'产品表',split:true,headerCls:'panel-header-gray'" style="width:450px;">
    <div id="toolbar" class="toolbar" >
    <form id="queryForm" action="javascript:void(0);" style="margin-top:5px;margin-bottom:5px">
 			<table cellspacing="0" cellpadding="0" >
 				<tr>
 				<td class="textLabel" style="padding-left:10px;">标识<input style="margin-left:10px" type="text" id="SYGroupName" name="SYGroupName" class="textbox"></input> </td>	
+				<td class="textLabel" style="display:none"><input type="text" id="SYGroupNameFlag" name="SYGroupNameFlag" class="textbox"></input> </td> <!-- 接收菜单维护的参数-->	
 				<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#queryForm'})">查询</a> </td>
-				<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:Reload()">重置</a> </td>
+				<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="ReloadBtn" onclick="javascript:Reload()">重置</a> </td>
 				</tr>
 			</table>
 			</form>
@@ -146,8 +165,8 @@
 			<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>
 			<table cellspacing="0" cellpadding="0" >
 				<tr>
-			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSys()" >新增</a></td>
-			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSys()">保存</a> </td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="addbtn" onclick="javascript:addRowSys()" >新增</a></td>
+			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="delbtn" onclick="javascript:saveSys()">保存</a> </td>
 			      <td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelSys()">删除</a></td>	
 			    </tr>
 			</table>
@@ -164,13 +183,25 @@
 		    nowrap: false,
 		    onDblClickRow:onClickRowSys, 
 		    onClickRow:ClickRowSys,
+		    onLoadSuccess:function(data){
+			    if(SYGroupNameFlag!=''){
+				    if((data.total>0)){
+			    		$('#datagrid').datagrid('selectRow',0);
+			    		ClickRowSys();
+				    }else{
+				    	$('#datagrid1').datagrid({  
+							url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListSysItmAutNull'
+						});	
+				    }
+			    }
+			}, 
 			url:'dhcapp.broker.csp?ClassName=web.DHCEMSys&MethodName=ListSys'">
 			<thead>
 				<tr>
 					<th data-options="field:'SYCode',width:100,editor:{type:'validatebox',options:{required:true}}">代码</th>
 					<th data-options="field:'SYDesc',width:100,editor:{type:'validatebox',options:{required:true}}">描述</th>
 					<th data-options="field:'SYGroupName',width:100,editor:{type:'validatebox',options:{required:true}}">标识</th>
-					<th data-options="field:'SYActiveFlag',align:'center',width:80,
+					<th data-options="field:'SYActiveFlag',align:'center',width:60,
 											formatter:function(value,row,index){
 												if (value=='Y'){return '是';} 
 												else {return '否';}
@@ -207,11 +238,23 @@
    <div data-options="region:'center',title:'产品功能表',headerCls:'panel-header-gray'" style="background:#eee;">
    <!-- toolbar -->
 		<div id="toolbar1" class="toolbar">	
+			<form id="queryForm1" action="javascript:void(0);" style="margin-top:5px;margin-bottom:5px"><!--hxy 2021-04-03 st-->
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+					<td class="textLabel" style="padding-left:10px;">代码<input style="margin-left:10px" type="text" id="SYICode" name="SYICode" class="textbox"></input></td>
+					<td class="textLabel" style="padding-left:10px;">描述<input style="margin-left:10px" type="text" id="SYIDesc" name="SYIDesc" class="textbox"></input></td>	
+					<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid1','formid':'#queryForm1'})">查询</a> </td>
+					<td style="padding-left:10px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="javascript:ReloadItm()">重置</a> </td>
+					</tr>
+				</table>
+			</form>
+			<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div><!--ed-->
 			<table cellspacing="0" cellpadding="0" >
 				<tr>
-			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSysItm()" >新增</a></td>
-			      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSysItm()">保存</a> </td>
-			      <td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelSysItm()">删除</a></td>	
+			      <td style="min-width: 70px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRowSysItm()" >新增</a></td>
+			      <td style="min-width: 70px;"><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:saveSysItm()">保存</a> </td>
+			      <td style="display:none"><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:cancelSysItm()">删除</a></td>
+			      <td id="labelInfo" style="padding-left: 25px;"></td>
 			    </tr>
 			</table>
 		</div>
@@ -227,16 +270,18 @@
 		    pagination:true,
 		    nowrap: false,
 		    onDblClickRow:onClickRowSysItm, 
-		    onClickRow:ClickRowSysItm
+		    onClickRow:ClickRowSysItm,
+		    onLoadSuccess:SysItmSuccess
 			">
 			<!--url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItm&MethodName=ListSysItm&SAId=0'-->
 			<thead>
 				<tr>
 				    <th data-options="field:'SYParRefDr',hidden:true">SYParRefDr</th>
-					<th data-options="field:'SYCode',width:70,editor:{type:'validatebox',options:{required:true}}">代码</th>
-					<th data-options="field:'SYDesc',width:70,editor:{type:'validatebox',options:{required:true}}">描述</th>
-					<th data-options="field:'SYRemark',width:250,editor:{type:'validatebox',options:{required:false}}">备注</th>
+					<th data-options="field:'SYCode',width:100,editor:{type:'validatebox',options:{required:true}}">代码</th>
+					<th data-options="field:'SYDesc',width:150,editor:{type:'validatebox',options:{required:true}}">描述</th>
+					<th data-options="field:'SYRemark',width:300,editor:{type:'validatebox',options:{required:false}}">备注</th>
 					<th data-options="field:'ID',hidden:true">id</th>
+					<th data-options="field:'SYLabel',width:100,editor:{type:'validatebox',options:{required:false}},formatter:formatLabel">标签</th>
 				</tr>
 			</thead>
 		</table>

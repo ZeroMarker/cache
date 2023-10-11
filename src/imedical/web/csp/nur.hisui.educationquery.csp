@@ -1,0 +1,95 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ 	q 1
+</csp:method>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <link href="../scripts/nurse/hisui/css/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+
+<STYLE type='text/css'>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+</STYLE>
+</head>
+
+<body>
+<div class="hisui-layout" data-options="fit:true,border:false">
+	<div data-options="region:'north',border:false,collapsible:false" style="height:100px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" fit="true" data-options="title:'健康宣教查询',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label for="StDate">开始日期</label></td>
+					<td>
+						<input id="sDate" class="hisui-datebox textbox">
+					</td>
+					<td class="r-label"><label for="EdDate">结束日期</label></td>
+					<td>
+						<input id="eDate" class="hisui-datebox textbox">
+					</td>
+					
+					<td class="r-label">
+						<a id="searchBtn" style="margin-right:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+					<!--td class="r-label">
+						<a id="printBtn" style="margin-right:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a>
+					</td-->
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+		<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+			<table id="educationGrid"></table>
+		</div>
+	</div>
+</div>
+<script language="javascript">
+$(function() {
+	var columns=$cm({ClassName: "Nur.NewQuery",MethodName: "getEducationGridColumns",wardID: session['LOGON.WARDID'],hospID:session['LOGON.HOSPID']}, false);
+	/*[
+			{field: "eduDateTime",title: "宣教时间"}
+			,{field: "bedCode",title: "床号"}
+			,{field: "patName",title: "姓名"}
+			,{field: "eduType",title: "宣教分类"}
+			,{field: "eduSubject",title: "宣教主题"}
+			,{field: "eduContent",title: "宣教内容"}
+			,{field: "eduNurse",title: "宣教护士"}
+		];*/
+	//初始化汇总表格
+	$("#educationGrid").datagrid({
+		//autoSizeColumn: true,
+		fit: true,
+		url: $NURURL + '?className=Nur.NewQuery&methodName=educationFind',
+		headerCls: 'panel-header-gray',
+		columns: [columns],
+		showFooter: false,
+		nowrap:false,
+		//pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		//rownumbers: true, //如果为true, 则显示一个行号列
+		onBeforeLoad: function(param) {
+			param.parameter1 = session['LOGON.CTLOCID'];
+			param.parameter2 = $HUI.datebox('#sDate').getValue();
+			param.parameter3 = $HUI.datebox('#eDate').getValue();
+		}
+	});
+	$('#sDate').datebox('setValue', dateCalculate(new Date()));
+	$('#eDate').datebox('setValue', dateCalculate(new Date()));
+	$('#searchBtn').click(function(){$HUI.datagrid('#educationGrid').load();});
+	//$('#printBtn').click(printWorkLoad);
+});
+</script>
+</body>
+</html>

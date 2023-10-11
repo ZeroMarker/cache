@@ -1,7 +1,12 @@
 ﻿<html>
     <head>
         <title> 历史就诊 </title>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
         <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
@@ -66,15 +71,13 @@
                     </div>
                     -->
                 </div>
-                <div class="hisui-panel" data-options="region:'center',border:false">
-                    <div id="msg_start" style="height:0px; overflow:hidden"></div>
+                <div id="msg" class="hisui-panel" data-options="region:'center',border:false">
                     <div id="admHistoryLst" style="min-width:300px;">
                         <!--<script language="cache" runat="server">// 输出
                             //d ##Class(EMRservice.BL.opInterface).GetOPHistory(patientID,2,episodeID,"O", "Y")
                             w ##Class(EMRservice.BL.opInterfaceBase).getHistoryDetailTest()
                         </script>-->
                     </div>
-                    <div id="msg_end" style="height:0px; overflow:hidden"></div>
                 </div>
                 <div id="pnl" class="hisui-panel" data-options="region:'south',border:false" style="height:32px;overflow-x:hidden;background-color:#EEE;">
                     <a href="#" id="btnLoadMore" class="hisui-linkbutton" data-options="plain:true" style="width:100%;color:blue;">#(..Get("加载更多"))#</a>
@@ -88,11 +91,10 @@
                     <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
                         <div class="hisui-panel" id="detailButotnPnl" data-options="region:'north',border:false" style="height:40px;overflow:hidden;padding:5px;">
                             <a href="#" id="backAdmHistoryLst" class="hisui-linkbutton" style="width:60px;">#(..Get("返回"))#</a>
+                            <a href="#" id="refEmrLastDoc" class="hisui-linkbutton" style="display:none;">#(..Get("引用为复诊病历"))#</a>
                             <a href="#" id="refEmrDoc" class="hisui-linkbutton" style="display:none;">#(..Get("病历引用"))#</a>
                             <a href="#" id="prevAdm" class="hisui-linkbutton" title="切换至上一份病历" style="display:none;">#(..Get("上一份病历"))#</a>
                             <a href="#" id="nextAdm" class="hisui-linkbutton" title="切换至下一份病历" style="display:none;">#(..Get("下一份病历"))#</a>
-                            <!--a href="#" id="returnAdm" class="hisui-linkbutton" data-options="plain:true" name="" checked="" onclick=FirstOrReAdmClick(this) style="float:right;color:blue;">复诊病历记录</a>
-                            <a href="#" id="firstAdm" class="hisui-linkbutton" data-options="plain:true" name="" checked="" onclick=FirstOrReAdmClick(this) style="float:right;color:blue;">初诊病历记录</a-->
                             <span id="insComboSpan" style="float:right;">
                                 <select class="hisui-combobox" id="insCombo" style="width:200px;"></select>
                             </span>

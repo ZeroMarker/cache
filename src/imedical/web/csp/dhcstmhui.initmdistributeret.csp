@@ -1,0 +1,77 @@
+<!--物资住院发放退回-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="BorderLine" data-options="region:'north'">
+		<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+			<tr>
+				<td><label>开始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-dateboxq"></td>
+				<td><label>病区</label><input id="WardLoc" name="WardLoc" class="textbox hisui-combobox"></td>
+				<td><label>登记号</label><input id="PatNo" name="PatNo" class="textbox"></td>
+				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="QueryBT" class="hisui-linkbutton" style="width:87px;">查询</a></td>
+			</tr>
+			<tr>
+				<td><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-dateboxq"></td>
+				<td><label>发放单号</label><input id="DispNo" name="DispNo" class="textbox"></td>
+				<td></td>
+				<td><a href="#" id="RetBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">退回</a></td>
+				<td><a href="#" id="AlQueryBT" class="hisui-linkbutton">查询已退</a></td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div class="hisui-panel" data-options="iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray',border:false">
+			<table id="RetGrid"></table>
+		</div>
+	</div>
+	
+	<!--查询窗口-->
+	<div id="FindRetWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="退回单查询">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="hisui-layout" data-options="region:'north',border:false,split:true">
+				<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){FQueryBT.click()}">
+					<input id="FRowId" name="RowId" type="hidden">
+					<tr>
+						<td><label class="required">*</label><label>开始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox"></td>
+						<td><label class="required">*</label><label>病区</label><input id="FWardLoc" name="WardLoc" class="textbox hisui-combobox"></td>
+						<td><a href="#" id="FQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="FClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+					</tr>
+					<tr>
+						<td><label class="required">*</label><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox"></td>
+						<td><label>退回单号</label><input id="FRetNo" name="RetNo" class="textbox"></td>
+						<td><a href="#" id="FPrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">打印</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'west',border:false" class="FindGridWest GridPadding" style="padding-top:0px;">
+				<div class="hisui-panel" data-options="title:'退回单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="AlDispRetMainGrid"></table>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding-top:0px;padding-left:0px;" class="GridPadding">
+				<div class="hisui-panel" data-options="title:'退回明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+					<table id="AlDispRetDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InItmDistribute/FindRetWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InItmDistribute/InItmDistributeRet.js"></script>
+</body>
+</html>

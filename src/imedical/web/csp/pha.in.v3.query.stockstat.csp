@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!--药库-库存统计
+	csp:pha.in.v3.query.stockstat.csp
+	js: pha/in/v3/query/stockstat.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+	<PHAPRINTCOM/>
+    <style type="text/css">
+	    .pha-grid-a {
+			cursor:pointer;    
+		}
+		#btFilterKw .kw-section-list>li {
+			float: left;
+			margin: 4px 4px 4px 0;
+		}
+    </style>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center'" class="pha-body" border="false">
+			<div class="hisui-layout" data-options="fit:true,border:false">   
+				<div data-options="region:'center',bodyCls:'panel-body-gray',headerCls:'panel-header-gray',border:false">
+					<div id="mainTabs" class="hisui-tabs tabs-gray" data-options="border:true" fit="true">   
+						<div title="药品明细">   
+							<table id="gridIncItmLoc"></table>
+						</div>   
+						<div title="批次明细">   
+							<table id="gridIncItmLcBtAll"></table>
+						</div> 
+						<div title="药品-批次" style="padding:10px;">   
+							<div class="hisui-layout" fit="true" border="false">
+								<div data-options="region:'west',split:true,width:470,border:true,title:'库存项目',showCollapsedTitle:true,bodyCls:'panel-body-gray',headerCls:'panel-header-gray'">
+									<table id="gridIncItmLocSimple"></table>
+								</div>
+								<div data-options="region:'center',border:false,bodyCls:'panel-body-gray',headerCls:'panel-header-gray'">
+									<div id="lcBtTabs" class="hisui-tabs" fit="true" data-options="isBrandTabs:true,tools:'#gridIncItmLcBtTool'">   
+									<div title="批次列表"></div>   
+									<div title="有库存" data-options="closable:false">
+										<table id="gridIncItmLcBtNotEmpty"></table>
+									</div>  
+									<div title="无库存" data-options="closable:false">
+										<table id="gridIncItmLcBtEmpty"></table>
+									</div>
+									<div title="全部" data-options="closable:false">
+										<table id="gridIncItmLcBt"></table>
+									</div>
+								</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>  
+				<div data-options="region:'north',split:true,collapsible:false,border:false,bodyCls:'panel-body-gray',headerCls:'panel-header-gray'" style="height:62px;">
+					<div class="hisui-panel" data-options="bodyCls:'panel-body-gray',headerCls:'panel-header-gray'" fit="true" border="true">
+						<div id="con-form">
+							<table class="pha-con-table">
+								<tr>
+									<td class="r-label">
+										<label for="locId">#(..Get("科室"))#</label>
+									</td>
+									<td>
+										<input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',required:true,query:true,clear:true" />
+									</td>
+									<td class="r-label">
+										<label for="date">#(..Get("日期"))#</label>
+									</td>
+									<td>
+										<input id="date" class="hisui-datebox" data-pha='class:"hisui-datebox",required:true,query:true' style="width:160px;"/>
+									</td>
+									<td class="r-label">
+										<label for="scg">#(..Get("类组"))#</label>
+									</td>
+									<td>
+										<input id="scg" class="hisui-combobox" data-pha="class:'hisui-combobox',query:true,clear:true" />
+									</td>
+									<td class="r-label">
+										<label for="stkCat">#(..Get("库存分类"))#</label>
+									</td>
+									<td>
+										<input id="stkCat" data-pha="class:'hisui-combobox',query:true,clear:true" />
+									</td>
+									<td class="r-label">
+										<label for="inciDesc">#(..Get("药品别名"))#</label>
+									</td>
+									<td >
+										<input id="inciDesc" data-pha="class:'hisui-combobox',query:true,clear:true" />
+									</td>
+									
+									<td>
+										<a id="btnFind" href="#" class="hisui-linkbutton" plain="false">查询</a>
+									</td>
+									<td>
+										<a id="btnClear" href="#" class="hisui-linkbutton" plain="false">清屏</a>
+									</td>
+									<td class="r-label">
+										<div id="queBtnToggle"></div>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div> 
+			</div> 
+		</div>
+	</div> 
+	<div id="gridIncItmLcBtTool">
+		<div id="btFilterKw"></div>
+	</div>
+	<div id="gridIncItmLcBtAllTool">
+		<div style="padding:5px">
+			<input id="NotEmptyFlag" checked class="hisui-checkbox" label="过滤无库存批次" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+		</div>
+	</div>
+	<!-- “更多”查询条件 -->
+	<csp:include page="pha.in.v3.query.com.component.csp">
+</body>
+    <script type="text/javascript" src="../scripts/pha/plugins/datagrid-filter/datagrid-filter.js"></script>
+	<script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>	
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/com.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/component.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/stockstat.js"></script>
+</html>

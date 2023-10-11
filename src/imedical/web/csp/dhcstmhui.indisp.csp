@@ -28,7 +28,7 @@
 				<td><label>制单人</label><input id="User" name="User" class="textbox" disabled="true" style="width: 110px;"></td>
 				<td><label style="margin-right:14px;">单据备注</label><input id="Remarks" name="Remarks" class="textbox" style="width: 95px;"></td>
 				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:88px">完成</a></td>
 				<td><a href="#" id="QueryBT" class="hisui-linkbutton">查询发放单</a></td>
 			</tr>
 			<tr>
@@ -38,18 +38,22 @@
 					<input id="GrpList" name="GrpList" class="hisui-combobox" disabled="true" style="width: 127px;">
 				</td>
 				<td><label>制单日期</label><input id="CreateDate" name="CreateDate" class="hisui-datebox textbox" data-options="disabled:true" style="width: 117px;"></td>
-				<td align="left"><label style="margin-right:0;">完成</label><input id="CompFlag" name="CompFlag" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y"></td>
+				<td align="left">
+					<input id="CompFlag" name="CompFlag" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="完成">&nbsp&nbsp
+					<input id="Template" name="Template" class='hisui-checkbox' type="checkbox" value="Y" label="模板">
+				</td>
 				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
-				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:88px">完成</a></td>
+				<td><a href="#" id="FindTemBT" class="hisui-linkbutton" style="width:88px">查询模板</a></td>				
 				<td><a href="#" id="SelInitBT" class="hisui-linkbutton">选取转移单</a></td>
 			</tr>
 			<tr>
 				<td><label>类组</label><input id="Scg" name="Scg" class="hisui-stkscgcombotree" style="width: 140px;"></td>
 				<td><label style="margin-right:13px;">单号</label><input id="DispNo" name="DispNo" class="textbox" disabled="true" style="width: 120px;"></td>
 				<td><label>请领单号</label><input id="ReqNo" name="ReqNo" class="textbox" disabled="true" style="width: 110px;"></td>
-				<td></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
+				
 				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
-				<td><a href="#" id="CanComBT" class="hisui-linkbutton" style="width:88px">取消完成</a></td>
+				<td><a href="#" id="CanComBT" class="hisui-linkbutton">取消完成</a></td>
 				<td><a href="#" id="SelReqBT" class="hisui-linkbutton">选取请领单</a></td>
 			</tr>
 		</table>
@@ -65,7 +69,7 @@
 	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询发放单">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
-				<table id="FConditions" class="Condition">
+				<table id="FConditions" class="Condition" onkeydown="if(event.keyCode==13){FQueryBT.click()}">
 					<tr>
 						<td><label>起始日期</label><input id="FStartDate" name="StartDate" class="textbox hisui-datebox" style="width:115px"></td>
 						<td><label>截止日期</label><input id="FEndDate" name="EndDate" class="textbox hisui-datebox" style="width:115px"></td>
@@ -94,7 +98,7 @@
 	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="选取请领单">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
-				<table id="ReqConditions" class="Condition">
+				<table id="ReqConditions" class="Condition" onkeydown="if(event.keyCode==13){ReqQueryBT.click()}">
 					<input id="CompFlag" name="CompFlag" type="hidden" value="Y">
 					<tr>
 						<td><label>起始日期</label><input id="ReqStartDate" name="StartDate" class="textbox hisui-datebox"></td>
@@ -129,8 +133,8 @@
 	<!--选取转移单Dialog-->
 	<div id="SelInitWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="选取转移单">
 		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'north',border:false">
-				<table id="InitConditions" class="Condition">
+			<div data-options="region:'north',border:false" style="height:90px">
+				<table id="InitConditions" class="Condition" onkeydown="if(event.keyCode==13){InitQueryBT.click()}">
 					<tr>
 						<td><label>起始日期</label><input id="InitStartDate" name="StartDate" class="textbox hisui-datebox"></td>
 						<td><label>供给科室</label><input id="FrLoc" name="FrLoc" class="hisui-combobox"></td>
@@ -164,6 +168,33 @@
 			</div>
 		</div>
 	</div>
+	<!--选取发放单模板Dialog-->
+	<div id="TempWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="发放单模板">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="TempConditions" class="Condition" >
+					<tr>
+						<td><label>起始日期</label><input id="TStartDate" name="StartDate" class="textbox hisui-datebox" style="width:115px"></td>
+						<td><label>截止日期</label><input id="TEndDate" name="EndDate" class="textbox hisui-datebox" style="width:115px"></td>
+						<td><label>发放科室</label><input id="TLocId" name="LocId" class="hisui-combobox"></td>
+						<td><a href="#" id="TQueryBT" class="hisui-linkbutton">查询</a></td>
+						<td><a href="#" id="TClearBT" class="hisui-linkbutton">清屏</a></td>
+						<td><a href="#" id="TSelectBT" class="hisui-linkbutton">选取</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="FindGridWest GridPadding" style="padding-top:0;" data-options="region:'west',border:false">
+				<div class="hisui-panel" data-options="title:'发放单',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="TempMainGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false">
+				<div class="hisui-panel" data-options="title:'发放单明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="TempDetailGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/IncItmBatWindow.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/INDispCommon.js"></script>
@@ -172,5 +203,6 @@
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/FindINDispReq.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/FindInit.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/INDisp.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INDisp/findDispTemplateWin.js"></script>
 </body>
 </html>

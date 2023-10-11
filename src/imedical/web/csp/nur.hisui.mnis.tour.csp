@@ -1,0 +1,134 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s LocID=$g(%session.Data("LOGON.CTLOCID"))
+	s EpisodeID=$g(%request.Data("EpisodeID",1))
+	s PageName=$g(%request.Data("pageName",1))
+	s BabyFlag=$g(%request.Data("babyFlag",1))
+	s ComponentName=$g(%request.Data("componentName",1))
+	i (ComponentName'="") s PageName=ComponentName
+	s PageName=$zcvt(PageName,"L")
+	i (PageName="") s PageName="patrol/biz/singlegradelist"
+	s PageFlag=$s(PageName["single":"S",1:"M")
+	s PageTitle=""
+	i (PageName="patrol/biz/singlegradelist")!(PageName="patrol/biz/gradelist") s PageTitle="分级巡视"
+	i (PageName="patrol/biz/singleinfusionlist")!(PageName="patrol/biz/infusionlist") s PageTitle="输液巡视"
+	i (PageName="patrol/biz/singlebloodlist")!(PageName="patrol/biz/bloodlist") s PageTitle="输血巡视"
+	s PatientListPage="" // banner用到
+	s %request.Data("ifMultiCheck",1)=1
+</script>
+<script language="javascript">
+    var EpisodeID="#(EpisodeID)#";
+    var LocID="#(LocID)#";
+    var PageName="#(PageName)#";
+    var PageFlag="#(PageFlag)#";
+    var PageTitle="#(PageTitle)#";
+    var BabyFlag="#(BabyFlag)#";
+    var patientListPage="";
+</script>
+
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <link rel="stylesheet" href="../scripts/nurse/hisui/css/nur.hisui.mnis.tour.css">
+    <script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.mnis.tour.js" charset='gbk'></script>
+    <style type="text/css">
+    	/*
+    		病人列表上方出现滚动条
+    		更好的修改方式是nur.hisui.common.patientlist.csp
+    		class="west_north_search" style="height:72px;overflow:hidden;">
+		*/
+		#main>.layout>.layout-panel-west {
+	    	border-right: 5px solid #fff;
+	    }
+	    #main>.layout>.layout-panel-center {
+	    	border-left: 5px solid #fff;
+	    }
+		#divPatients>.layout-panel-north>.panel-body {
+		    -moz-border-radius: 0 !important;
+		    -webkit-border-radius: 0 !important;
+		    border-radius: 0 !important;
+		}
+		#divPatients>.layout-panel-center>.panel-body {
+		    -moz-border-radius-topleft: 0 !important;
+		    -moz-border-radius-topright: 0 !important;
+		    -webkit-border-top-left-radius: 0 !important;
+		    -webkit-border-top-right-radius: 0 !important;
+		    border-top-left-radius: 0 !important;
+		    border-top-right-radius: 0 !important;
+		}
+		#main>.layout>.layout-panel-west .west_north_search {
+			padding-top: 5px;
+			border-top-width: 0;
+		}
+    </style>
+
+</head>
+
+<body class="hisui-layout">
+	<div id="main" data-options="region:'center'">
+		<div class="hisui-layout" data-options="fit:true">
+			<csp:if condition=PageFlag="S">
+				<div id="patientPanel" data-options="region:'north',split:false" style="height:40px,minHeight;border:none">
+		        	<csp:Include Page="dhcdoc.in.patient.banner.csp">
+		        </div>
+		        <div id="tourPanel" data-options="region:'center',border:true,title:'#(..Get(PageTitle))#',headerCls:'panel-header-gray',iconCls:'icon-paper-stat'">
+		        	<div id="tourGridTbar" style="padding:10px">
+						<table cellspacing="0" cellpadding="0"><tbody><tr>
+							<td><span class="r-label">#(..Get("开始日期"))#</span></td>
+							<style type='text/css'>
+								.datebox .combo-text {
+									width:118px !important
+								}
+							</style>
+							<td><input id="tourGridStartDate" class="hisui-datebox textbox" type="textbox" style="width:153px;height:30px"/></td>
+							<td><span class="r-label" style="padding-left:10px">#(..Get("结束日期"))#</span></td>
+							<td><input id="tourGridEndDate" class="hisui-datebox textbox" type="textbox" style="width:153px;height:30px"/></td>
+							<td><a id="tourGridFindBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:10px">#(..Get("查询"))#</a></td>
+							<td><a id="tourGridExportBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" style="margin-left:10px">#(..Get("导出"))#</a></td>
+						</tr></tbody></table>
+					</div>
+		        	<table id='tourGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#tourGridTbar'">
+					</table>
+		        </div>
+		    <csp:else>
+		    	<!--
+		    	为了方便维护，统一使用临床病人列表
+		    	-->
+		    	<!--div id="patientPanel" data-options="region:'west',border:true,split:true,title:'病人列表',headerCls:'panel-header-gray',iconCls:'icon-patient'" style="width:250px;overflow-y:auto">
+		    		<csp:Include Page="nur.hisui.mobilecare.patienttree.ant.csp">
+		        </div-->
+		        <csp:Include Page="nur.hisui.common.patientlist.csp">
+		        <div id="tourPanel" data-options="region:'center',border:true,title:'#(PageTitle)#',headerCls:'panel-header-gray',iconCls:'icon-paper-stat'">
+					<div id="tourGridTbar" style="padding:10px">
+						<table cellspacing="0" cellpadding="0"><tbody><tr>
+							<td><span class="r-label">#(..Get("日期"))#</span></td>
+							<style type='text/css'>
+								.datebox .combo-text {
+									width:118px !important
+								}
+							</style>
+							<td><input id="tourGridDate" class="hisui-datebox textbox" type="textbox" style="width:153px;height:30px"/></td>
+							<td><a id="tourGridFindBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:10px">#(..Get("查询"))#</a></td>
+							<td><a id="tourGridExportBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" style="margin-left:10px">#(..Get("导出"))#</a></td>
+						</tr></tbody></table>
+					</div>
+		        	<table id='tourGrid' class="hisui-datagrid" border=false fit=true data-options="headerCls:'panel-header-gray',toolbar:'#tourGridTbar'">
+					</table>
+		        </div>
+	        </csp:if>
+        </div>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<!--
+    药房药库 - 查询公共页面(第二版)
+    creator: Huxt 2022-05-20
+	csp:     pha.sys.v2.pagecom.csp
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    	.pha-scrollbar-hidden {
+	    	overflow: hidden;
+	    }
+	    .pha-scrollbar-hidden-chl {
+	    	width: 100%;
+	    	height: 95%;
+	    	overflow-y: scroll;
+	    }
+    	label.radio,label.checkbox {
+	    	background-position-x: 0px;
+	    }
+    </style>
+</head>
+
+<body style="background-color:white">
+    <server>
+    	s formDivId = ##class(PHA.SYS.PageCom.Query).%GetParameter("FormDivId")
+    	s btnFindId = ##class(PHA.SYS.PageCom.Query).%GetParameter("BtnFindId")
+    	s btnCleanId = ##class(PHA.SYS.PageCom.Query).%GetParameter("BtnCleanId")
+    	s gridMainId = ##class(PHA.SYS.PageCom.Query).%GetParameter("GridMainId")
+    	s gridDetailId = ##class(PHA.SYS.PageCom.Query).%GetParameter("GridDetailId")
+    	s tabsMainId = ##class(PHA.SYS.PageCom.Query).%GetParameter("TabsMainId")
+    	
+    	s pageOptsStr = "{}"
+    	s formCols = 6
+    	s resizeWidth = 0
+		s resizeHeight = 0.5
+		s queryParamKey = "pJsonStr"
+		s pageCode = $Get(%request.Data("code", 1))
+		s reqFormCols = $Get(%request.Data("cols", 1))
+		s reqResizeWidth = $Get(%request.Data("width", 1))
+		s reqResizeHeight = $Get(%request.Data("height", 1))
+		s reqQueryParamKey = $Get(%request.Data("pkey", 1))
+		i pageCode="" w "code不能为空"
+		q:pageCode=""
+		
+		s userId = ##class(PHA.SYS.PageCom.Query).GetSessionVal("LOGON.USERID")
+		s locId = ##class(PHA.SYS.PageCom.Query).GetSessionVal("LOGON.CTLOCID")
+		s groupId = ##class(PHA.SYS.PageCom.Query).GetSessionVal("LOGON.GROUPID")
+		s hospId = ##class(PHA.SYS.PageCom.Query).GetSessionVal("LOGON.HOSPID")
+		s sessionStr = userId _"^" _ locId _ "^" _ groupId _ "^" _ hospId
+		s pageOpts = ##class(PHA.SYS.PageCom.Query).PageOptions({"Csp":(pageCode),"SessionStr":(sessionStr)}, "object")
+		q:('$IsObject(pageOpts))
+		q:('$IsObject(pageOpts.info))
+		q:('$IsObject(pageOpts.items))
+		
+		s otherCfg = pageOpts.info.otherCfg
+		s formCols = $s(reqFormCols '= "": reqFormCols, otherCfg.cols '= "": otherCfg.cols, 1: formCols)
+		s resizeWidth = $s(reqResizeWidth '= "": reqResizeWidth, otherCfg.width '= "": otherCfg.width, 1: resizeWidth)
+		s resizeHeight = $s(reqResizeHeight '= "": reqResizeHeight, otherCfg.height '= "": otherCfg.height, 1: resizeHeight)
+		s queryParamKey = $s(reqQueryParamKey '= "": reqQueryParamKey, otherCfg.pkey = "": "none", 1: otherCfg.pkey)
+		
+		s pageModel = pageOpts.info.pageModel
+		i (pageModel = "ModelLeftRightRep")&&(reqFormCols = "") s formCols = 1
+		d ##class(PHA.SYS.PageCom.Query).InitPageModel(pageModel)
+		s pageOptsStr = pageOpts.%ToJSON()
+		
+		/* 自定义js最后加载 */
+		s %session.Data("loadScripts") = pageOpts.js
+	</server>
+</body>
+</html>
+
+<!-- js代码直接写吧,方便更新 -->
+<script type='text/javascript'>
+/* 初始参数 */
+var formRowHeight = 40;
+var formRows = 1;
+var formCols = #(formCols)#;
+var formDivId = '#(formDivId)#';
+var btnFindId = '#(btnFindId)#';
+var btnCleanId = '#(btnCleanId)#';
+var gridMainId = '#(gridMainId)#';
+var gridDetailId = '#(gridDetailId)#';
+var tabsMainId = '#(tabsMainId)#';
+var resizeWidth = #(resizeWidth)#;
+var resizeHeight = #(resizeHeight)#;
+var queryParamKey = '#(queryParamKey)#';
+var pageOpts = #(pageOptsStr)#;
+var pageInfo = pageOpts.info;
+var pageItems = pageOpts.items;
+var pageForms = [];
+var pageGrids = [];
+var pageRQFiles = [];
+var request = pageInfo.request;
+var COM_VAR = {};
+COM_VAR.formDefault = {};
+COM_VAR.repEmpty = 'dhcst.blank.backgroud.csp';
+COM_VAR.canLoadTab = false;
+
+/* 初始执行 */
+$(function(){
+	if (!pageInfo) {
+		return;
+	}
+	if (!pageItems) {
+		return;
+	}
+	ParseItems();
+	InitLayout();
+	InitForm();
+	InitGrid();
+	InitTabs();
+	InitFormVal();
+	
+	if (pageInfo.otherCfg && pageInfo.otherCfg.query == 'Y') {
+		Query();
+	}
+	COM_VAR.canLoadTab = true;
+});
+
+/* 解析界面元素 */
+function ParseItems(){
+	for (var i = 0; i < pageItems.length; i++) {
+		var pItem = pageItems[i];
+		var com_type = pItem.com_type;
+		if (com_type == 'hisui-datagrid') {
+			pageGrids.push(pItem);
+		} else if (com_type == 'RQFile') {
+			pageRQFiles.push(pItem);
+		} else {
+			pageForms.push(pItem);
+		}
+	}
+}
+
+/* 初始化布局 */
+function InitLayout(){
+	// 调整表单高度
+	var formRows = Math.ceil(pageForms.length / formCols);
+	var formTitle = pageInfo.pageDesc;
+	var layoutFormPanel = $('div[autoHeight="true"]');
+	if (layoutFormPanel.length > 0 && formRows > 0) {
+		var pBodyHeight = 0;
+		if (formRows == 1) {
+			pBodyHeight = 50;
+		} else {
+			pBodyHeight = 50 + ((formRows - 1) * formRowHeight);
+		}
+		var newHeight = 10 + 34 + pBodyHeight + 1;
+		var layoutAll = layoutFormPanel.parent().parent();
+		layoutFormPanel.panel('resize', {
+			height: newHeight
+		});
+		layoutAll.layout('resize');
+	}
+	try {
+		if (formTitle != '') {
+			var $gridBar = $('div[bar="' + formDivId + '"]');
+			if ($gridBar.length > 0) {
+				$gridBar.parent().panel('setTitle', formTitle);
+			}
+			$('#' + formDivId).parent().panel('setTitle', formTitle);
+		}
+	} catch (e) {}
+	// 调整表格面板宽度
+	var resizeWidthPanel = $('div[resizeWidth="true"]');
+	if (resizeWidthPanel.length > 0 && resizeWidth > 0) {
+		var layoutAll = resizeWidthPanel.parent().parent();
+		var newWidth = parseFloat(resizeWidth);
+		if (newWidth < 1) {
+			var layoutAllWidth = layoutAll.width();
+			newWidth = (layoutAllWidth - 20) * newWidth;
+		}
+		resizeWidthPanel.panel('resize', {
+			width: parseInt(newWidth)
+		});
+		layoutAll.layout('resize');
+	}
+	// 调整表格面板高度
+	var resizeHeightPanel = $('div[resizeHeight="true"]');
+	if (resizeHeightPanel.length > 0 && resizeHeight > 0) {
+		var layoutAll = resizeHeightPanel.parent().parent();
+		var newHeight = parseFloat(resizeHeight);
+		if (newHeight < 1) {
+			var layoutAllHeight = layoutAll.height();
+			newHeight = (layoutAllHeight - 20) * newHeight;
+		}
+		resizeHeightPanel.panel('resize', {
+			height: parseInt(newHeight)
+		});
+		layoutAll.layout('resize');
+	}
+}
+
+/* 初始化表单 */
+function InitForm(){
+	var $formDiv = $('#' + formDivId);
+	if ($formDiv.length == 0) {
+		return;
+	}
+	var formCount = pageForms.length;
+	var formRows = Math.ceil(pageForms.length / formCols);
+	var formTitle = pageInfo.pageDesc;
+	// 表单整体布局表格
+	var formHtml = '';
+	var formIdx = 0;
+	formHtml += '<table cellspacing="10">';
+	for (var r = 0; r < formRows; r++) {
+		formHtml += '<tr>';
+		for (var c = 0; c < formCols; c++) {
+			if (formIdx >= formCount) {
+				break;
+			}
+			var oneForm = pageForms[formIdx];
+			formIdx = formIdx + 1;
+			var com_type = oneForm['com_type'];
+			var com_code = oneForm['com_code'];
+			var com_desc = oneForm['com_desc'];
+			if ($('#' + com_code).length > 0) {
+				continue;
+			}
+			if (com_type == 'hisui-linkbutton') {
+				formHtml += '<td colspan="2">';
+				formHtml += '<a id="' + com_code + '" class="hisui-linkbutton">' + com_desc + '</a>';
+				formHtml += '</td>';
+			} else if (com_type == 'hisui-checkbox') {
+				formHtml += '<td colspan="2">';
+				formHtml += '<input id="' + com_code + '" type="checkbox" />';
+				formHtml += '</td>';
+			} else if (com_type == 'hisui-radio') {
+				formHtml += '<td colspan="2">';
+				formHtml += '<div id="' + com_code + '">' + GetRadiosHtml(oneForm) + '</div>';
+				formHtml += '</td>';
+			} else if (com_type == 'hisui-keywords') {
+				formHtml += '<td colspan="2">';
+				formHtml += '<div id="' + com_code + '" data-pha-keywords="true"></div>';
+				formHtml += '</td>';
+			} else {
+				formHtml += '<td style="text-align:right">';
+				formHtml += '<label for="' + com_code + '">';
+				if ([1, '1', 'Y', 'y', 'true', true].indexOf(oneForm['required']) >= 0) {
+					formHtml += '<label style="color:red">*</label>';
+				}
+				formHtml += com_desc + '<label>';
+				formHtml += '</td>';
+				formHtml += '<td>';
+				formHtml += '<input id="' + com_code + '" ';
+				if (oneForm['width']) {
+					formHtml += 'style="width:' + oneForm['width'] + 'px;"';
+				}
+				formHtml += '/>';
+				formHtml += '</td>';
+			}
+		}
+		formHtml += '</tr>';
+	}
+	formHtml += '</table>';
+	$formDiv.append(formHtml);
+	// 表单初始化
+	for (var i = 0; i < formCount; i++) {
+		var oneForm = pageForms[i];
+		var com_type = oneForm['com_type'];
+		var com_code = oneForm['com_code'];
+		var com_desc = oneForm['com_desc'];
+		var typeKey = com_type.split('-')[1];
+		var $oneForm = $('#' + com_code);
+		if ($oneForm.length == 0) {
+			continue;
+		}
+		if (com_type == 'hisui-datetimebox') {
+			var defVal = oneForm.value || '';
+			var defValArr = defVal.split(' ');
+			oneForm.value = PHA_UTIL.GetDate(defValArr[0]) + ' ' + defValArr[1];
+		}
+		COM_VAR.formDefault[com_code] = oneForm.value;
+		switch (com_type) {
+			case 'hisui-linkbutton':
+				InitLinkButton(oneForm);
+				break;
+			case 'hisui-validatebox':
+				InitValidateBox(oneForm);
+				break;
+			case 'hisui-searchbox':
+				InitSearchBox(oneForm);
+				break;
+			case 'hisui-datebox':
+				InitDateBox(oneForm);
+				break;
+			case 'hisui-timespinner':
+				InitTimeSpinner(oneForm);
+				break;
+			case 'hisui-radio':
+				InitRadios(oneForm);
+				break;
+			case 'hisui-keywords':
+				InitKeywords(oneForm);
+				break;
+			case 'hisui-combobox':
+				InitCombobox(oneForm);
+				break;
+			case 'hisui-combogrid':
+				InitComboGrid(oneForm);
+				break;
+			case 'hisui-lookup':
+				InitLookup(oneForm);
+				break;
+			default:
+				$oneForm[typeKey](oneForm);
+		}
+	}
+}
+// 1.按钮
+function InitLinkButton(formOptions) {
+	var defaultOpts = {}
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 过滤无效信息
+	var cfgOpts = {}
+	for (k in formOptions) {
+		if (formOptions[k] === '') {
+			continue;
+		}
+		cfgOpts[k] = formOptions[k];
+	}
+	var initOpts = jQuery.extend(defaultOpts, cfgOpts);
+	if (parseInt(initOpts.width) > 0) {
+		$formObj.width(parseInt(initOpts.width));
+	}
+	// 初始化
+	$formObj['linkbutton'](initOpts);
+	// 绑定点击事件
+	$formObj.on('click', function (e) {
+		if (cfgOpts.fn && cfgOpts.fn != '') {
+			try {
+				if (cfgOpts.fn.indexOf('(') > 0 && cfgOpts.fn.indexOf(')') > 0) {
+					eval(cfgOpts.fn);
+				} else {
+					eval(cfgOpts.fn)(e);
+				}
+			} catch (e) {
+				alert('调用js方法' + cfgOpts.fn + '时报错: <br/>' + ErrMsg(e));
+			}
+		} else if (com_code.toUpperCase().indexOf('FIND') >= 0) {
+			Query();
+		}  else if (com_code.toUpperCase().indexOf('CLEAN') >= 0) {
+			Clean();
+		} else {
+			alert('未指定回调函数！');
+		}
+	});
+}
+// 2. 验证输入框
+function InitValidateBox(formOptions) {
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 初始化
+	$formObj['validatebox'](formOptions);
+	// 回车调用
+	$formObj.on('keydown', function (e) {
+		if (e.keyCode != 13) {
+			return;
+		}
+		var enterFnStr = formOptions.enterFn || '';
+		if (enterFnStr != '') {
+			try {
+				eval(enterFnStr)(e);
+			} catch (e) {
+				alert('调用js方法' + enterFnStr + '时报错: \n' + ErrMsg(e));
+			}
+		} else {
+			Query();
+		}
+	});
+}
+// 3.查询输入框
+function InitSearchBox(formOptions) {
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 查询函数
+	var searcherStr = formOptions.searcher || '';
+	formOptions.searcher = function () {
+		if (searcherStr != '') {
+			try {
+				eval(searcherStr)();
+			} catch (e) {
+				alert('调用js方法' + searcherStr + '时报错: \n' + ErrMsg(e));
+			}
+		} else if (com_code.toUpperCase().indexOf('FIND') >= 0) {
+			Query();
+		} else {
+			alert('未指定回调函数！');
+		}
+	}
+	// 初始化
+	$formObj['searchbox'](formOptions);
+	var $searchInput = $('#' + com_code).searchbox('textbox');
+	$searchInput.attr('placeholder', formOptions.placeholder || '');
+	$searchInput.css('padding-left', '5px');
+	$searchInput.width($searchInput.width() - 4);
+}
+// 4.日期输入框
+function InitDateBox(formOptions) {
+	var defaultOpts = {};
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 过滤无效信息
+	var cfgOpts = {}
+	for (k in formOptions) {
+		if (formOptions[k] === '') {
+			continue;
+		}
+		cfgOpts[k] = formOptions[k];
+	}
+	var initOpts = jQuery.extend(defaultOpts, cfgOpts);
+	// 初始化
+	$formObj['datebox'](initOpts);
+}
+// 5.时间微调框
+function InitTimeSpinner(formOptions) {
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 初始化
+	$formObj['timespinner'](formOptions);
+}
+// 6.单选框
+function InitRadios(formOptions) {
+	// 默认参数
+	var defaultOpts = {}
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	// 过滤无效信息
+	var cfgOpts = {}
+	for (k in formOptions) {
+		if (formOptions[k] === '') {
+			continue;
+		}
+		cfgOpts[k] = formOptions[k];
+	}
+	// 表单初始化
+	var initOpts = jQuery.extend(defaultOpts, cfgOpts);
+	$('[name="' + formOptions.name + '"]').radio(formOptions);
+}
+function GetRadiosHtml(formOptions) {
+	var _radioHtml = '';
+	var _radioDataStr = formOptions.radioData;
+	var _radioData = stringToArray(_radioDataStr);
+	var _radioDataLen = _radioData.length;
+	for (var j = 0; j < _radioDataLen; j++) {
+		_radioHtml += '<input class="hisui-radio" type="radio" label="' + _radioData[j].Description + '" name="' + formOptions.name + '" value="' + _radioData[j].RowId + '">';
+	}
+	return _radioHtml;
+}
+// 7.关键字
+function InitKeywords(formOptions) {
+	// 默认参数
+	var items = stringToArray(formOptions.items, true);
+	var itemIdArr = [];
+	for (var kw = 0; kw < items.length; kw++) {
+		itemIdArr.push(items[kw]['id']);
+	}
+	formOptions.items = items;
+	var defaultOpts = {
+		itemIdArr: itemIdArr,
+		items: items
+	}
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	// 过滤无效信息
+	var cfgOpts = {}
+	for (k in formOptions) {
+		if (formOptions[k] === '') {
+			continue;
+		}
+		cfgOpts[k] = formOptions[k];
+	}
+	// 初始化
+	var initOpts = jQuery.extend(defaultOpts, cfgOpts);
+	initOpts.onClick = function () {
+		var kwOpts = $('#' + com_code).keywords('options');
+		if (kwOpts.notQuery == true) {
+			return;
+		}
+		Query();
+	}
+	$('#' + com_code).keywords(initOpts);
+}
+// 8.下拉框
+function InitCombobox(formOptions) {
+	// 默认参数
+	var dataOpts = GetDataOptions(formOptions, 'array');
+	if (dataOpts.data) {
+		formOptions.data = dataOpts.data;
+		var defaultOpts = {
+			mode: 'local',
+			data: dataOpts.data,
+			valueField: 'RowId',
+			textField: 'Description',
+			onBeforeLoad: function (param) {
+				param.QText = param.q;
+				param.combotext = param.q;
+			}
+		}
+	}
+	if (dataOpts.url) {
+		var defaultOpts = {
+			mode: 'remote',
+			url: dataOpts.url,
+			valueField: 'RowId',
+			textField: 'Description',
+			onBeforeLoad: function (param) {
+				param.QText = param.q;
+				param.combotext = param.q;
+			}
+		}
+	}
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 过滤无效信息
+	var cfgOpts = {}
+	for (k in formOptions) {
+		if (formOptions[k] === '') {
+			continue;
+		}
+		cfgOpts[k] = formOptions[k];
+	}
+	var initOpts = jQuery.extend(defaultOpts, cfgOpts);
+	// 选中调用
+	var onSelectStr = initOpts.onSelect || '';
+	if (onSelectStr != '') {
+		initOpts.onSelect = function (rowData) {
+			try {
+				eval(onSelectStr)(rowData);
+			} catch (e) {
+				alert('调用js方法' + onSelectStr + '时报错: \n' + ErrMsg(e));
+			}
+		}
+	}
+	// 多选
+	if (GetBoolean(initOpts.multiple)) {
+		initOpts.rowStyle = 'checkbox';
+	}
+	// 初始化
+	$formObj['combobox'](initOpts);
+}
+// 9.下拉表格
+function InitComboGrid(formOptions) {
+	// 默认参数
+	var dataOpts = GetDataOptions(formOptions);
+	var defaultOpts = {
+		mode: 'remote',
+		url: dataOpts.url || $URL,
+		idField: 'RowId',
+		textField: 'Description',
+		onBeforeLoad: function (param) {
+			param.QText = param.q;
+			param.combotext = param.q;
+		}
+	}
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 过滤无效信息
+	var cfgOpts = {}
+	for (k in formOptions) {
+		if (formOptions[k] === '') {
+			continue;
+		}
+		if (k == 'pageList' && typeof formOptions[k] == 'string') {
+			formOptions[k] = formOptions[k].split(',');
+		}
+		if (k == 'pageSize') {
+			formOptions[k] = parseInt(formOptions[k]);
+		}
+		cfgOpts[k] = formOptions[k];
+	}
+	// 初始化
+	var initOpts = jQuery.extend(defaultOpts, cfgOpts);
+	$formObj['combogrid'](initOpts);
+}
+// 10.放大镜
+function InitLookup(formOptions) {
+	// 默认参数
+	var dataOpts = GetDataOptions(formOptions);
+	var defaultOpts = {
+		mode: 'remote',
+		url: dataOpts.url || $URL,
+		idField: 'RowId',
+		textField: 'Description',
+		isCombo: true,
+		onBeforeLoad: function (param) {
+			param.QText = param.q;
+			param.combotext = param.q;
+		}
+	}
+	// 配置信息
+	var com_type = formOptions['com_type'];
+	var com_code = formOptions['com_code'];
+	var com_desc = formOptions['com_desc'];
+	var $formObj = $('#' + com_code);
+	if ($formObj.length == 0) {
+		return;
+	}
+	// 过滤无效信息
+	var cfgOpts = {}
+	for (k in formOptions) {
+		if (formOptions[k] === '') {
+			continue;
+		}
+		if (k == 'pageList' && typeof formOptions[k] == 'string') {
+			formOptions[k] = formOptions[k].split(',');
+		}
+		if (k == 'pageSize') {
+			formOptions[k] = parseInt(formOptions[k]);
+		}
+		cfgOpts[k] = formOptions[k];
+	}
+	// 初始化
+	var initOpts = jQuery.extend(defaultOpts, cfgOpts);
+	$formObj['lookup'](initOpts);
+}
+
+/* 初始化表格 */
+function InitGrid(){
+	for (var i = 0; i < pageGrids.length; i++) {
+		InitGridOne(pageGrids[i]);
+	}
+}
+function InitGridOne(gridOpts){
+	if ($('#' + gridOpts.com_code).length == 0) {
+		return;
+	}
+	if (gridOpts.com_code == gridMainId) {
+		$.extend(gridOpts, {
+			// 选择触发查询
+			__onSelect: function(rowIndex, rowData){
+				QueryDetail();
+			},
+			onSelect: function(rowIndex, rowData){
+				var dgOpts = $(this).datagrid('options');
+				return dgOpts.__onSelect.call(this, rowIndex, rowData);
+			},
+			// 取消选择触发查询
+			__onUnselect: function(rowIndex, rowData){
+				var dgOpts = $(this).datagrid('options');
+				if (GetBoolean(dgOpts.singleSelect) == false) {
+					QueryDetail();
+				}
+			},
+			onUnselect: function(rowIndex, rowData){
+				var dgOpts = $(this).datagrid('options');
+				return dgOpts.__onUnselect.call(this, rowIndex, rowData);
+			}
+		});
+	}
+	$.extend(gridOpts, {
+		// 单击开始编辑
+		__onClickCell: function(index, field, value){
+			var dgOpts = $(this).datagrid('options');
+			var colOpts = $(this).datagrid('getColumnOption', field);
+			if (colOpts.editor && dgOpts.editOn == 'click') {
+				PHA_GridEditor.Edit({
+					gridID: this.id,
+					index: index,
+					field: field
+				});
+			}
+		},
+		onClickCell: function(index, field, value){
+			var dgOpts = $(this).datagrid('options');
+			return dgOpts.__onClickCell.call(this, index, field, value);
+		},
+		// 双击开始编辑
+		__onDblClickCell: function(index, field, value){
+			var dgOpts = $(this).datagrid('options');
+			var colOpts = $(this).datagrid('getColumnOption', field);
+			if (colOpts.editor && dgOpts.editOn == 'dblclick') {
+				PHA_GridEditor.Edit({
+					gridID: this.id,
+					index: index,
+					field: field
+				});
+			}
+		},
+		onDblClickCell: function(index, field, value){
+			var dgOpts = $(this).datagrid('options');
+			return dgOpts.__onDblClickCell.call(this, index, field, value);
+		},
+		// 选择首行
+		__onLoadSuccess: function(data){
+			if (data && data.total > 0) {
+				$(this).datagrid('selectRow', 0);
+			} else {
+				if (this.id == gridMainId) {
+					$('#' + gridDetailId).datagrid('loadData', []);
+				}
+			}
+			var $p = $(this).datagrid('getPanel').find('.datagrid-view2').find('.datagrid-header-check').find('input');
+			$p.attr('checked', false);
+		},
+		onLoadSuccess: function(data){
+			var dgOpts = $(this).datagrid('options');
+			return dgOpts.__onLoadSuccess.call(this, data);
+		}
+	});
+	// 查询参数
+	gridOpts.queryParams = {
+		ClassName: gridOpts.ClassName,
+		QueryName: gridOpts.QueryName,
+		MethodName: gridOpts.MethodName
+	}
+	if (gridOpts.showFooter == 1) {
+		gridOpts.queryParams.totalFields = gridOpts.totalFields;
+		gridOpts.queryParams.totalFooter = gridOpts.totalFooter;
+	}
+	// 工具条
+	var toolbarId = $('#' + gridOpts.com_code).attr('bar');
+	if (toolbarId && toolbarId != '') {
+		gridOpts.toolbar = '#' + toolbarId;
+	}
+	// 表格标题
+	try {
+		var $dgPanel = $('#' + gridOpts.com_code).parent();
+		if ($dgPanel.hasClass('hisui-panel')) {
+			$dgPanel.panel('setTitle', gridOpts.com_desc);
+		}
+	} catch(e) {
+		console.log(e);
+	}
+	// 附加属性
+	if (typeof PAGE_COM_Grid == 'object' && PAGE_COM_Grid != null) {
+		$.extend(gridOpts, PAGE_COM_Grid[gridOpts.com_code]);
+		if (gridOpts.col_add_prop) {
+			var gColumns = gridOpts.columns;
+			if (gColumns) {
+				var gColumns0 = gColumns[0];
+				for (var g = 0; g < gColumns0.length; g++) {
+					var gCol = gColumns0[g];
+					var gColProp = gridOpts.col_add_prop[gCol.field];
+					if (!gColProp) {
+						continue;
+					}
+					for (var cp in gColProp) {
+						gCol[cp] = gColProp[cp];
+					}
+				}
+			}
+		}
+	}
+	gridOpts.gridSave = false;
+	gridOpts.url = '';
+	
+	PHA.Grid(gridOpts.com_code, gridOpts);
+}
+function QueryMain(){
+	if ($('#' + gridMainId).length == 0) {
+		return;
+	}
+	try {
+		var dgOpts = $('#' + gridMainId).datagrid('options');
+		dgOpts.url = $URL ;
+		if (dgOpts.paramStr && dgOpts.paramStr != '') {
+			dgOpts.url += '?' + GetAddParamStr('', dgOpts.paramStr);
+		}
+		if (IsNullVal(dgOpts.ClassName) &&
+			IsNullVal(dgOpts.QueryName) &&
+			IsNullVal(dgOpts.MethodName)) {
+			return;
+		}
+		var _queryParam = {
+			ClassName: dgOpts.ClassName,
+			QueryName: dgOpts.QueryName,
+			MethodName: dgOpts.MethodName
+		};
+		if (dgOpts.showFooter == 1) {
+			_queryParam.totalFields = dgOpts.totalFields;
+			_queryParam.totalFooter = dgOpts.totalFooter;
+		}
+		var _formParam = GetFormParams();
+		if (_formParam == null) {
+			return;
+		}
+		_formParam.ColPointer = dgOpts.colsSetId;
+		var _addParam = ParamStr2Object(dgOpts.paramStr);
+		$.extend(_formParam, _addParam);
+		
+		if (queryParamKey == 'none') {
+			_queryParam = $.extend({}, _queryParam, _formParam);
+		} else {
+			_queryParam[queryParamKey] = JSON.stringify(_formParam);
+		}
+		
+		$('#' + gridMainId).datagrid('load', _queryParam);
+	} catch(e){}
+}
+function QueryDetail(){
+	if ($('#' + gridDetailId).length == 0) {
+		return;
+	}
+	try {
+		var dgOpts = $('#' + gridDetailId).datagrid('options');
+		dgOpts.url = $URL;
+		if (dgOpts.paramStr && dgOpts.paramStr != '') {
+			dgOpts.url += '?' + GetAddParamStr('', dgOpts.paramStr);
+		}
+		if (IsNullVal(dgOpts.ClassName) &&
+			IsNullVal(dgOpts.QueryName) &&
+			IsNullVal(dgOpts.MethodName)) {
+			return;
+		}
+		var _queryParam = {
+			ClassName: dgOpts.ClassName,
+			QueryName: dgOpts.QueryName,
+			MethodName: dgOpts.MethodName
+		};
+		if (dgOpts.showFooter == 1) {
+			_queryParam.totalFields = dgOpts.totalFields;
+			_queryParam.totalFooter = dgOpts.totalFooter;
+		}
+		var _formParam = GetFormParams();
+		if (_formParam == null) {
+			return;
+		}
+		_formParam.ColPointer = dgOpts.colsSetId;
+		var _addParam = ParamStr2Object(dgOpts.paramStr);
+		$.extend(_formParam, _addParam);
+		
+		if (queryParamKey == 'none') {
+			_queryParam = $.extend({}, _queryParam, _formParam);
+		} else {
+			_queryParam[queryParamKey] = JSON.stringify(_formParam);
+		}
+		var gridMainData = $('#' + gridMainId).datagrid('getSelections') || [];
+		_queryParam['pJsonArrStr'] = JSON.stringify(gridMainData);
+		
+		$('#' + gridDetailId).datagrid('load', _queryParam);
+	} catch(e){}
+}
+
+/* 初始化Tabs页签 */
+function InitTabs() {
+	if ($('#' + tabsMainId).length == 0) {
+		return;
+	}
+	// 初始化
+	$('#' + tabsMainId).tabs({
+		onSelect: function (title, index) {
+			if (COM_VAR.canLoadTab == false) {
+				return;
+			}
+			QueryTabs();
+		}
+	});
+	// 添加表格
+	for (var i = 0; i < pageGrids.length; i++) {
+		var iGridOpts = pageGrids[i];
+		var com_type = iGridOpts['com_type'];
+		var com_code = iGridOpts['com_code'];
+		var com_desc = iGridOpts['com_desc'];
+		$('#' + tabsMainId).tabs('add', {
+			queryType: com_type,
+			queryId: com_code,
+			title: com_desc,
+			content: '<div id="' + com_code + '"></div>'
+		});
+		InitGridOne(iGridOpts);
+	}
+	// 添加润乾报表
+	for (var i = 0; i < pageRQFiles.length; i++) {
+		var iRQFile = pageRQFiles[i];
+		var com_type = iRQFile['com_type'];
+		var com_code = iRQFile['com_code'];
+		var com_desc = iRQFile['com_desc'];
+		var reportName = iRQFile['reportName'];
+		var reportText = com_desc;
+		var iframeId = reportName + '-' + 'iframe';
+		$('#' + tabsMainId).tabs('add', {
+			queryType: com_type,
+			queryId: reportName,
+			title: reportText,
+			content: '<iframe id="' + iframeId + '" style="display:block;width:99.6%;height:99%" src="' + COM_VAR.repEmpty + '"/>'
+		});
+		$(document.getElementById(iframeId)).parent().css('overflow-x', 'hidden');
+	}
+	$('#' + tabsMainId).tabs('select', 0);
+}
+function QueryTabs() {
+	var selTab = $('#' + tabsMainId).tabs('getSelected');
+	var selIndex = $('#' + tabsMainId).tabs('getTabIndex', selTab);
+	var oneTabOpts = $('#' + tabsMainId).tabs('getTab', selIndex).panel('options');
+	var queryId = oneTabOpts.queryId;
+	var queryType = oneTabOpts.queryType;
+	
+	if (queryType == 'hisui-datagrid') {
+		var dgOpts = $('#' + queryId).datagrid('options');
+		dgOpts.url = $URL;
+		
+		if (IsNullVal(dgOpts.ClassName) &&
+			IsNullVal(dgOpts.QueryName) &&
+			IsNullVal(dgOpts.MethodName)) {
+			return;
+		}
+		var _queryParam = {
+			ClassName: dgOpts.ClassName,
+			QueryName: dgOpts.QueryName,
+			MethodName: dgOpts.MethodName
+		};
+		if (dgOpts.showFooter == 1) {
+			_queryParam.totalFields = dgOpts.totalFields;
+			_queryParam.totalFooter = dgOpts.totalFooter;
+		}
+		
+		var _formParam = GetFormParams();
+		if (_formParam == null) {
+			return;
+		}
+		_formParam.ColPointer = dgOpts.colsSetId;
+		var _addParam = ParamStr2Object(dgOpts.paramStr);
+		$.extend(_formParam, _addParam);
+		
+		if (queryParamKey == 'none') {
+			_queryParam = $.extend({}, _queryParam, _formParam);
+		} else {
+			_queryParam[queryParamKey] = JSON.stringify(_formParam);
+		}
+		
+		$('#' + queryId).datagrid('load', _queryParam);
+	}
+
+	if (queryType == 'RQFile') {
+		var reportName = queryId;
+		if (reportName == '') {
+			return;
+		}
+		var iframeId = reportName + '-' + 'iframe';
+		var formParams = GetFormParams();
+		if (formParams == null) {
+			return;
+		}
+		var _reportUrl = 'dhccpmrunqianreport.csp?reportName=' + reportName;
+		for (var k in formParams) {
+			_reportUrl += '&' + k + '=' + formParams[k];
+		}
+		var _reportHtmlObj = document.getElementById(iframeId);
+		if (_reportHtmlObj) {
+			_reportHtmlObj.src = _reportUrl;
+		}
+	}
+}
+
+/* 表单参数处理 */
+function GetFormParams() {
+	var retFormParams = {};
+	for (var i = 0; i < pageForms.length; i++) {
+		var oneForm = pageForms[i];
+		var com_type = oneForm['com_type'];
+		var com_code = oneForm['com_code'];
+		var com_desc = oneForm['com_desc'];
+		var typeKey = com_type.split('-')[1];
+		var $oneForm = $('#' + com_code);
+		if ($oneForm.length == 0) {
+			continue;
+		}
+		if (com_type == 'hisui-linkbutton') {
+			continue;
+		}
+		switch (com_type) {
+		case 'hisui-validatebox':
+			retFormParams[com_code] = $oneForm.val();
+			break;
+		case 'hisui-searchbox':
+			retFormParams[com_code] = $oneForm.searchbox('getValue');
+			break;
+		case 'hisui-datebox':
+			retFormParams[com_code] = $oneForm.datebox('getValue');
+			break;
+		case 'hisui-timespinner':
+			retFormParams[com_code] = $oneForm.timespinner('getValue');
+			break;
+		case 'hisui-radio':
+			var radioName = oneForm.name;
+			retFormParams[radioName] = $('input[name="' + radioName + '"]:checked').val() || '';
+			break;
+		case 'hisui-keywords':
+			retFormParams[com_code] = GetKeywordsVal(com_code);
+			break;
+		case 'hisui-combobox':
+			retFormParams[com_code] = ($oneForm.combobox('getValues') || []).join(','); // 考虑多选
+			retFormParams[com_code + 'Text'] = $oneForm.combobox('getText');
+			if (retFormParams[com_code] == '') {
+				retFormParams[com_code] = $oneForm.combobox('options')._defVal || '';
+			}
+			break;
+		case 'hisui-combogrid':
+			retFormParams[com_code] = $oneForm.combogrid('getValue');
+			retFormParams[com_code + 'Text'] = $oneForm.combogrid('getText');
+			break;
+		case 'hisui-lookup':
+			retFormParams[com_code] = $oneForm.lookup('getValue');
+			retFormParams[com_code + 'Text'] = $oneForm.lookup('getText');
+			break;
+		case 'hisui-checkbox':
+			var chkVal = $oneForm.checkbox('getValue');
+			var chkOpts = $oneForm.checkbox('options');
+			var valueFmt = chkOpts.valueFmt;
+			if (valueFmt) {
+				var valueFmtArr = valueFmt.split('|');
+				retFormParams[com_code] = (chkVal == true ? valueFmtArr[0] : valueFmtArr[1]);
+			} else {
+				retFormParams[com_code] = chkVal;
+			}
+			break;
+		default:
+			retFormParams[com_code] = $oneForm[typeKey]('getValue');
+		}
+		// 提示必填未填项
+		if (oneForm.required == 1) {
+			if (IsNullVal(retFormParams[com_code])) {
+				PHA.Popover({
+					msg: oneForm['com_desc'] + '是必填项！',
+					type: 'alert'
+				});
+				return null;
+			}
+		}
+	}
+	return retFormParams;
+}
+function SetFormParams(formVals){
+	var _newVal = function(v){
+		if (session['LOGON.' + v]) {
+			return session['LOGON.' + v];
+		}
+		return v;
+	}
+	for (var formId in formVals) {
+		var formVal = formVals[formId];
+		var $oneForm = $('#' + formId);
+		if ($oneForm.length <= 0) {
+			continue;
+		}
+		var formKeyWord = '';
+		var formChildCls = $oneForm.children().eq(0).attr('class') || '';
+		if (formChildCls.indexOf('keywords') >= 0) {
+			formKeyWord = 'keywords';
+		} else if (formChildCls.indexOf('hisui-radio') >= 0) {
+			formKeyWord = 'radio';
+		} else {
+			var formCls = $oneForm.attr('class');
+			formKeyWord = formCls.split('-')[0];
+			formKeyWord = formKeyWord.split(' ')[0];
+		}
+		
+		switch (formKeyWord) {
+			case 'validatebox':
+				$oneForm.val(formVal);
+				$oneForm.validatebox('validate');
+				break;
+			case 'datebox':
+				$oneForm[formKeyWord]('setValue', formVal);
+				break;
+			case 'timespinner':
+				$oneForm[formKeyWord]('setValue', formVal);
+				break;
+			case 'checkbox':
+				var mChk = [1, '1', 'y', 'Y', 'ture', true].indexOf(formVal) >= 0 ? true : false;
+				$oneForm[formKeyWord]('setValue', mChk);
+				break;
+			case 'radio':
+				$oneForm.children().each(function(){
+					$(this).radio('setValue', false);
+					if ($(this).attr('value') == formVal) {
+						$(this).radio('setValue', true);
+					}
+				});
+				break;
+			case 'keywords':
+				SetKeywordVal(formId, formVal);
+				break;
+			case 'combobox':
+				SetComboVal(formId, _newVal(formVal));
+				break;
+			case 'lookup':
+				$oneForm[formKeyWord]('clear');
+				$oneForm[formKeyWord]('setValue', formVal);
+				$oneForm[formKeyWord]('setText', formVal);
+				break;
+			default:
+				$oneForm[formKeyWord]('setValue', formVal);
+		}
+	}
+}
+function InitFormVal(){
+	var c_formVals = {};
+	for (var i = 0; i < pageForms.length; i++) {
+		var oneForm = pageForms[i];
+		var com_code = oneForm['com_code'];
+		var com_type = oneForm['com_type'];
+		if (com_type == 'hisui-linkbutton') {
+			continue;
+		}
+		var formVal = ((oneForm.value == null) || (typeof oneForm.value == 'undefined')) ? '' : oneForm.value;
+		formVal = (com_type == 'hisui-checkbox') ? oneForm.checked : formVal;
+		c_formVals[com_code] = formVal;
+	}
+	SetFormParams(c_formVals);
+}
+
+/* 查询 */
+function Query(){
+	if ($('#' + tabsMainId).length > 0) {
+		QueryTabs();
+	} else if ($('#' + gridMainId).length > 0) {
+		QueryMain();
+	}
+}
+
+/* 清屏 */
+function Clean(){
+	InitFormVal();
+	for (var i = 0; i < pageGrids.length; i++) {
+		var oneGrid = pageGrids[i];
+		var com_code = oneGrid['com_code'];
+		var $dg = $('#' + com_code);
+		var dgCls = $dg.attr('class') || '';
+		if ($dg.length > 0 && dgCls.indexOf('datagrid') >= 0) {
+			$('#' + com_code).datagrid('loadData', []);
+		}
+	}
+	for (var i = 0; i < pageRQFiles.length; i++) {
+		var oneRQFile = pageRQFiles[i];
+		var reportName = oneRQFile['reportName'];
+		var iframeId = reportName + '-' + 'iframe';
+		var _reportHtmlObj = document.getElementById(iframeId);
+		if (_reportHtmlObj) {
+			_reportHtmlObj.src = COM_VAR.repEmpty;
+		}
+	}
+	return;
+}
+
+/* 工具方法 */
+function GetQueryParams(formOptions) {
+	var ClassName = formOptions.ClassName || '';
+	var MethodName = formOptions.MethodName || '';
+	var QueryName = formOptions.QueryName || '';
+	if (ClassName != '' && MethodName != '') {
+		return {
+			ClassName: ClassName,
+			MethodName: MethodName
+		}
+	}
+	if (ClassName != '' && QueryName != '') {
+		return {
+			ClassName: ClassName,
+			QueryName: QueryName
+		}
+	}
+}
+function GetDataOptions(formOptions, rsType) {
+	var retObj = {}
+	if (formOptions.data && formOptions.data != '') {
+		var dataStr = formOptions.data;
+		retObj.data = stringToArray(dataStr);
+		return retObj;
+	}
+	var ClassName = formOptions.ClassName || '';
+	var MethodName = formOptions.MethodName || '';
+	var QueryName = formOptions.QueryName || '';
+	if (ClassName != '' && MethodName != '') {
+		retObj.url = $URL + '?ClassName=' + ClassName + '&MethodName=' + MethodName + GetAddParamStr('&', formOptions.paramStr);
+		return retObj;
+	}
+	if (ClassName != '' && QueryName != '') {
+		retObj.url = $URL + '?ClassName=' + ClassName + '&QueryName=' + QueryName;
+		if (rsType) {
+			retObj.url += '&ResultSetType=' + rsType;
+		}
+		retObj.url = retObj.url + GetAddParamStr('&', formOptions.paramStr);
+		return retObj;
+	}
+	return retObj;
+}
+function GetAddParamStr(pre, pStr){
+	if (!pStr) {
+		return '';
+	}
+	var rStr = '';
+	var pArr = pStr.split('&');
+	for (var p = 0; p < pArr.length; p++){
+		var iStr = pArr[p] || '';
+		if (iStr == '') {
+			continue;
+		}
+		var iArr = iStr.split('=');
+		var iKey = iArr[0] || '';
+		var iVal = iArr[1] || '';
+		iVal = session['LOGON.' + iVal] ? session['LOGON.' + iVal] : iVal;
+		if (iKey == '') {
+			continue;
+		}
+		if (rStr == '') {
+			rStr = iKey + '=' + encodeURIComponent(iVal);
+		} else {
+			rStr += '&' + iKey + '=' + encodeURIComponent(iVal);
+		}
+	}
+	if (pre && rStr != '') {
+		return pre + rStr;
+	}
+	return rStr;
+}
+function stringToArray(str, isText) {
+	var str = str.replace(/ /g, '');
+	var str = str.replace(/：/g, ':');
+	var str = str.replace(/，/g, ',');
+	var retArr = [];
+	var arr = str.split(',');
+	var arrLen = arr.length;
+	for (var i = 0; i < arrLen; i++) {
+		var oneStr = arr[i];
+		var oneArr = oneStr.split(':');
+		var k = oneArr[0];
+		var v = oneArr.length > 1 ? oneArr[1] : k;
+		if (isText) {
+			retArr.push({
+				id: k,
+				text: v
+			});
+		} else {
+			retArr.push({
+				RowId: k,
+				Description: v
+			});
+		}
+	}
+	return retArr;
+}
+function toFloat(num) {
+	if (num == '') {
+		return 0;
+	}
+	if (num.toString().indexOf('%') > 0) {
+		var num = num.toString().replace('%', '');
+		return parseFloat(num / 100);
+	}
+	var num = parseFloat(num);
+	if (num > 1) {
+		return num / 100;
+	}
+	return num;
+}
+function ErrMsg(ex){
+	return ex.message.toString() + '\n' + ex.stack.toString();
+}
+function IsNullVal(v){
+	if (v == null || typeof v == 'undefined' || v == '') {
+		return true;
+	}
+	return false;
+}
+function ParamStr2Object(urlStr){
+	var ret = {};
+	if (!urlStr || urlStr == '') {
+		return ret;
+	}
+	var urlArr = urlStr.split('&');
+	for (var i = 0; i < urlArr.length; i++) {
+		var iParStr = urlArr[i];
+		if (iParStr == '') {
+			continue;
+		}
+		var iParArr = iParStr.split('=');
+		var iKey = iParArr[0];
+		var iVal = iParArr[1];
+		if (iKey && iKey != '') {
+			ret[iKey] = iVal;
+		}
+	}
+	return ret;
+}
+function GetBoolean(val) {
+	return (val == 'Y' || val == 1 || val == '1' || val == 'true') ? true : false;
+}
+
+/* 特殊表单值处理公共方法 */
+function GetKeywordsVal(id) {
+	var kwStr = '';
+	var kwArr = $('#' + id).keywords('getSelected');
+	for (var i = 0; i < kwArr.length; i++) {
+		if (kwStr == '') {
+			kwStr = kwArr[i].id;
+		} else {
+			kwStr = kwStr + '^' + kwArr[i].id;
+		}
+	}
+	return kwStr;
+}
+function SetKeywordVal(id, valArr){
+	var valArrType = Object.prototype.toString.call(valArr);
+	if (valArrType == '[object Undefined]' || valArrType == '[object Null]') {
+		return;
+	}
+	if (valArrType == '[object Object]') {
+		valArr = [valArr];
+	} else if (valArrType == '[object Number]') {
+		valArr = '' + valArr;
+	}
+	if (valArr == '' || valArr.length == 0) {
+		valArr = [];
+	} else {
+		valArr = valArrType == '[object String]' ? valArr.split(',') : valArr;
+	}
+	var setValArr = [];
+	for (var i = 0; i < valArr.length; i++) {
+		var iValData = valArr[i];
+		if (typeof iValData == 'object') {
+			setValArr.push(iValData['id']);
+		} else {
+			setValArr.push(iValData);
+		}
+	}
+	$('#' + id).keywords('clearAllSelected');
+	var kwOpts = $('#' + id).keywords('options');
+	kwOpts.notQuery = true;
+	var itemIdArr = kwOpts.itemIdArr;
+	for (var s = 0; s < setValArr.length; s++) {
+		if (itemIdArr.indexOf(setValArr[s]) >= 0) {
+			$('#' + id).keywords('select', setValArr[s]);
+		}
+	}
+	kwOpts.notQuery = false;
+}
+function SetComboVal(id, valArr, isReload) {
+	$('#' + id).combobox('options')._defVal = valArr;
+	$('#' + id).combobox('setValues', valArr.split(','));
+	PHA.SetComboVal(id, valArr, isReload);
+}
+
+</script>
+
+<server>
+	d ##class(PHA.SYS.PageCom.Query).LoadJs($g(%session.Data("loadScripts")))
+</server>

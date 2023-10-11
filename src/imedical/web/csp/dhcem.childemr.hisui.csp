@@ -1,0 +1,157 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+
+<HISUI/>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
+<title></title>
+
+</head>
+<!--REMS评分窗口 
+  GCS:
+  
+  总分<=4分  4
+  5-7        3
+  8-10       2
+  11-13      1
+  >=14       0 
+  
+  REMS:
+  <=11      4  病死危险率10%
+  12-17     2  10%-50%
+  >15           50%  
+  >18       1  50-100
+-->
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center'" style="border:0px;">
+	    	<div class="hisui-panel" title="" style="padding:5px 10px;border-color:#CCCCCC !important;" data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-paper',closable:true,collapsible:true,minimizable:true,maximizable:true">
+				 <a id="pp" style="display:none;">儿童预警评分规则</a>
+				 
+			      <input type="hidden" id="par" value=#(%request.Get("par"))#>
+	      
+	     <!--  
+	 	 <div style="text-align:center;padding:5px 0 0;height:18px">
+	 	 		<a class="dhc-score">GCS:<span id="remsGcsScore" >0</span>分</a> 
+	 	 </div>
+		 -->
+		 		<table class="esitb" cellspacing="0" cellpadding="0">
+					<tr>
+						<td width=100><div class="tblabel">#(..Get("意识"))#</div></td>
+						<td>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='正常（0分）' name='CHER_Aware' value='0' data-id="1"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='嗜睡（1分）' name='CHER_Aware' value='1' data-id="2"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='激惹（2分）' name='CHER_Aware' value='2' data-id="3"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='昏睡/昏、对疼痛反应下降（3分 红色）' name='CHER_Aware' value='3' data-id="4" id="CHER_Aware_4"></div>
+						</td>
+					</tr>
+					<tr>
+						<td><div class="tblabel">#(..Get("心血管系统"))#</div></td>
+						<td>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='肤色粉红、CRT1-2s（0分）' name='CHER_CardSys' value='0' data-id="1"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='肤色苍白、CRT3s（1分）' name='CHER_CardSys' value='1' data-id="2"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='肤色发灰、CRT4s、心率较正常升高20次/min（2分）' name='CHER_CardSys' value='2' data-id="3"></div>
+				 	       	<div class="tddiv"><input  class='hisui-radio' type="radio" label='肤色灰、皮肤湿冷、CRT≥5s、心率较正常升30次/min或心动过缓（3分 红色）' name='CHER_CardSys' value="3" data-id="4" id="CHER_CardSys_4"></div>
+						</td>
+					</tr>
+					<tr>
+						<td><div class="tblabel">#(..Get("呼吸系统"))#</div></td>
+						<td>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='正常范围无吸气性凹陷（0分）' name='CHER_ResSys' value='0' data-id="1"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='呼吸频率较正常升高10次/min、Fi02 0.3或吸氧流量4L/min（1分）' name='CHER_ResSys' value='1' data-id="2"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='呼吸频率较正常升高20次/min、有吸性凹陷、FIO2 0.4或吸氧流量4L/min（2分）' name='CHER_ResSys' value='2' data-id="3"></div>
+				 			<div class="tddiv"><input  class='hisui-radio' type="radio" label='呼吸频率较正常减少5次/min伴胸骨吸气性凹陷呻吟、FiO2 O.5或吸氧流量8L/min（3分 红色）' name='CHER_ResSys' value='3' data-id="4" id="CHER_ResSys_4"></div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	
+		<div data-options="region:'south',border:false" style="text-align:center;padding:10px 0 0;">
+			<div style="text-align:center;padding-bottom:10px;height:20px">
+				<a class="dhc-score">总分:<span id="childScore">0</span>分</a> 
+				<a class="dhc-score">(<span id="ChildLev">0</span>级)</a> 
+			</div>
+			<div>			   
+				<a href="#" class="hisui-linkbutton" iconCls="" onclick="javascript:$('#EmChildEmrWin').window('close')">取消</a>
+				<a href="#" class="hisui-linkbutton" iconCls="" id="ChildEmrBTN" style="margin-left:5px;">确认</a>
+			</div>
+		</div>
+	</div>
+<script type="text/javascript">
+$(function(){
+      $HUI.radio("[name^='CHER_']",{
+            onCheckChange:function(e,value){
+	           var total=0,GcsTotal=0,HighLevFlag=0;
+			   $('input[name^="CHER_"]:checked').each(function(){
+					num=parseInt($(this).val());
+			        total=total+num;
+			        var id=$(this).attr('id');
+			        if((id == "CHER_Aware_4")||(id == "CHER_CardSys_4")||(id == "CHER_ResSys_4")){
+				    	HighLevFlag=1;    
+				    }else{
+					    
+					}
+			   })
+			   $("#childScore").html(total)	  
+			   var lev=HighLevFlag==1?1:getChildLev(total)
+			   $("#ChildLev").html(lev)  
+            }
+      });
+      $("#ChildEmrBTN").on('click',function(){ChildEmrSure();})  /// 评级主题
+      setTimeout(initChildEmrValue,500);
+      ///儿童早期预警评分 评级主题
+		function ChildEmrSure(){
+			var score=parseInt($("#childScore").html()); 
+			var lev=parseInt($("#ChildLev").html());
+			insertAutoScore("ChildWarn",lev,"儿童早期预警评分",score);
+			var BuleFlag=0;
+		    $('#EmChildEmrWin').window('close')
+		    $('input[name^="CHER_"]').each(function(){
+				if($(this).is(':checked')){
+					BuleFlag=1
+				}  
+			})
+		    if(0==BuleFlag){
+				$("#switchChildEar").removeClass("dhcc-btn-blue");
+				$("#switchChildEar").attr("data-value","");
+			}else{
+				$("#switchChildEar").addClass("dhcc-btn-blue");
+				strChildEmr=getRadioDataId('CHER_Aware')+"#"
+				strChildEmr=strChildEmr+getRadioDataId('CHER_CardSys')+"#"
+				strChildEmr=strChildEmr+getRadioDataId('CHER_ResSys')+"#Y"
+				$("#switchChildEar").attr("data-value",strChildEmr)
+			}
+		}
+})
+function initChildEmrValue(){
+	par=$("#switchChildEar").attr("data-value");
+    var remsIdArr = par.split("#");
+    $HUI.radio('[name="CHER_Aware"][data-id="'+ remsIdArr[0] +'"]').setValue(true);
+    $HUI.radio('[name="CHER_CardSys"][data-id="'+ remsIdArr[1] +'"]').setValue(true);
+    $HUI.radio('[name="CHER_ResSys"][data-id="'+ remsIdArr[2] +'"]').setValue(true);
+}		
+</script>
+<style>
+	.tblabel{
+		padding-top:5px;
+		float:right;
+		margin-right:10px;
+	}
+	.esitb td{
+		/*padding-bottom:5px !important;
+		padding-top:5px !important;*/
+		vertical-align:top;
+	}
+	.tddiv{
+		padding-top:5px;
+		padding-bottom:5px;
+		float:left;
+	}
+</style>
+		
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!--
+    付款管理 - 制单
+    csp:  csp/pha.in.v3.pay.create.csp
+    js:   scripts/pha/in/v3/pay/create.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        #winFindPay {
+            overflow: hidden;
+        }
+        #qCondition a{
+            min-width:90px;
+        }
+        .no-border {
+            border: 0px;
+            background-color: #ffffff;
+        }
+        #btnSum-biz span span{
+            padding: 0px 0px 0px 9px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center'" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',title:'付款 / 制单'"  id="layout-pay-create-panel">
+                    <table id="gridItm"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridItmBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="loc">#(..Get("入库科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="vendor">#(..Get("经营企业"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="vendor" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnSelect" data-pha-btn>查询单据</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnClean" data-pha-btn>清屏</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnPrint" data-pha-btn>打印</a>
+                </td>
+                <!--td class="r-label">
+                    <a class="hisui-linkbutton" id="btnSave" data-pha-btn>保存</a>
+                </td-->
+                <td class="r-label">
+                    <a name="btnGroupFinish" class="hisui-linkbutton" id="btnFinish" data-pha-btn>完成</a>
+                    <a name="btnGroupFinish" class="hisui-linkbutton pha-btn-cancel" id="btnFinishCancel" data-pha-btn style="display: none;">取消完成</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnDelete" data-pha-btn>删除</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnBiz" data-pha-btn>查询应付款单据</a>
+                </td>
+
+            </tr>
+        </table>
+        <div class="pha-banner-container">
+            <div id="payBanner"></div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'" id="btnDeleteItm" data-pha-btn>删除勾选行</a>
+        </div>
+    </div>
+   
+    
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/create.js"></script>
+    <!-- 查询 -->
+    <div id="winQueryPay">
+    </div>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/query.js"></script>
+    <csp:Include Page="pha.in.v3.pay.query.template.csp"></csp:Include>
+    <script type="text/javascript">
+        $('#winQueryPay').append($('#template-pay-query').html())
+        $.parser.parse($('#lyMainView-q').parent());
+    </script>
+    <!-- 应付款 -->
+    <div id="winQueryBiz">
+    </div>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/biz.js"></script>
+    <csp:Include Page="pha.in.v3.pay.biz.template.csp"></csp:Include>
+    <script type="text/javascript">
+        $('#winQueryBiz').append($('#template-pay-biz').html())
+        $.parser.parse($('#lyMainView-biz').parent());
+    </script>
+</body>
+
+</html>

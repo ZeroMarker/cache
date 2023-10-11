@@ -5,6 +5,10 @@
 	q 1
 </csp:method>
 <html lang="zh-CN">
+ <SERVER>
+ 	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+ 	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -13,16 +17,16 @@
 </head>
 <body class="hisui-layout" data-options="fit:true">
 	<div data-options="region:'north',border:false" class="GridPadding" style="padding-top:0;padding-bottom:0;">
-		<table id="FindConditions" class="Condition">
+		<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 			<tr>
 				<td>入库科室</td>
 				<td><input id="FRecLoc" name="FRecLoc" class="hisui-combobox" style="width:145px;"></td>
 				<td>起始日期</td>
-				<td><input id="StartDate" name="StartDate" class="hisui-datebox" style="width:145px;"></td>
+				<td><input id="StartDate" name="StartDate" class="hisui-datebox" style="width:120px;"></td>
 				<td>入库单号</td>
-				<td><input id="FInGrNo" name="FInGrNo" class="textbox" style="width:143px;"></td>
+				<td><input id="FInGrNo" name="FInGrNo" class="textbox" style="width:130px;"></td>
 				<td>是否审核</td>
-				<td><input id="AuditFlag" name="AuditFlag" class="hisui-simplecombobox" style="width:145px;"></td>
+				<td><input id="AuditFlag" name="AuditFlag" class="hisui-simplecombobox" style="width:90px;"></td>
 				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
 				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width: 100px">清屏</a></td>
 			</tr>
@@ -30,12 +34,12 @@
 				<td>供应商</td>
 				<td><select id="FVendorBox" name="FVendorBox" class="hisui-combobox" style="width:145px;"></select></td>
 				<td>截止日期</td>
-				<td><input id="EndDate" name="EndDate" class="hisui-datebox" style="width:145px;"></select></td>
+				<td><input id="EndDate" name="EndDate" class="hisui-datebox" style="width:120px;"></select></td>
 				<td>发票号</td>
-				<td><input id="InvNo" name="InvNo" class="textbox" style="width:143px;"></td>
+				<td><input id="InvNo" name="InvNo" class="textbox" style="width:130px;"></td>
 				<td>验收状态</td>
 				<td>
-					<select id="AcceptFlag" name="AcceptFlag" class="hisui-combobox" style="width:145px;">
+					<select id="AcceptFlag" name="AcceptFlag" class="hisui-combobox" style="width:90px;">
 						<option value="">全部</option>
 						<option value="N">未验收</option>
 						<option value="Y">已验收</option>
@@ -43,6 +47,7 @@
 				</td>
 				<td><a href="#" id="AcceptBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">验收</a></td>
 				<td><a href="#" id="EvaluateBT" class="hisui-linkbutton">供应商评价</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印</a></td>
 				<td><input id="FStatusBox" name="FStatusBox" type="hidden" value="Y"></td>
 			</tr>
 		</table>
@@ -59,18 +64,18 @@
 	</div>
 
 	<!--供应商评价Dialog-->
-	<div id="VendorEvaluateWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="供应商评价" style="width:710px;">
+	<div id="VendorEvaluateWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="供应商评价" style="width:610px;height:450px">
 		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'center',border:false" style="padding: 10px 10px 0px 10px;">
-				<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div data-options="region:'center',border:false" class="GridPadding" style="padding-bottom:0px">
+				<div class="hisui-panel NonBarGrid" data-options="fit:true,bodyCls:'panel-body-gray'" style="border-bottom:1px">
 					<table id="EvaluateGrid"></table>
 				</div>
 			</div>
 			<div data-options="region:'south',border:false">
 				<table class="Condition" align="center">
 					<tr>
-						<td><a href="#" id="SaveBT" class="hisui-linkbutton">保存</a></td>
-						<td><a href="#" id="SubmitBT" class="hisui-linkbutton">提交</a></td>
+						<td><a href="#" id="VSaveBT" class="hisui-linkbutton">保存</a></td>
+						<td><a href="#" id="VSubmitBT" class="hisui-linkbutton">提交</a></td>
 					</tr>
 				</table>
 			</div>
@@ -79,6 +84,7 @@
 
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/VendorEvaluateWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCheck.js"></script>
 </body>
 </html>

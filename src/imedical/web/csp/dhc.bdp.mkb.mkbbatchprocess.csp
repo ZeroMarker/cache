@@ -1,0 +1,199 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+  /*
+    @CSP：dhc.bdp.mkb.mkbbatchprocess.csp
+    @JS:MKB_BatchProcess.js
+    @Title：批处理方法
+    @Creator:基础数据平台-张云越
+    @Description:执行批处理方法
+    @CreateDate：2019-08-20
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ </HEAD>
+ <style type="text/css">
+/*下载按钮
+.load{
+	background:url(../scripts/bdp/Framework/icons/mkb/load.png) no-repeat 0 3px;
+    padding: 0 0px 5px 20px;
+    margin-left: 0px;
+    color: black;
+    //background-position:0 3px;
+    
+}*/
+/*主界面灰色边框*/
+.main{
+	border-radius: 4px;
+	border: 1px solid #bbbbbb;
+}
+</style>
+ <BODY style="padding:4px">
+    <!--主界面-->
+	<div class="hisui-layout" data-options="fit:true" border="false">
+		<div data-options="region:'center'" border="false"> <!--class="main"-->
+			<div data-options="fit:true,bodyCls:'panel-header-gray'" id="mygrid" border="true" toolbar="#allbar"></div>
+		</div>
+	</div>
+	
+	<!-- 增改弹框-->
+	<div id="myWin" style="width:650px;height:290px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table>
+				<tr>
+	               <td class="tdlabel" style="padding:2px 10px 2px 20px"><font color=red>*</font>方法描述</td>
+	    		   <td><input id="MethodDesc" name="MethodDesc" type="text" class="hisui-validatebox"  style="width:500px" data-options=""></td>
+	    		</tr>
+	    		
+	    		<tr>
+	    		   <td class="tdlabel"><font color=red>*</font>方法命令</td>
+	    		   <td><input id="MethodName" name="MethodName" type="text" class="hisui-validatebox" style="width:500px"  data-options=""></td>
+	    		 </tr>
+	    		 
+	    		 <tr>
+	    		   <td class="tdlabel">参数说明</td>
+	    		   <td><input id="ArgDesc" name="ArgDesc" type="text" class="hisui-validatebox" style="width:500px"  ></td>
+	    		 </tr>
+	    		 
+	    		  <tr>
+	    		   <td class="tdlabel">参数的值</td>
+	    		   <td><input id="ArgValue" name="ArgValue" type="text" class="hisui-validatebox" style="width:500px"  ></td>
+	    		 </tr>
+				  
+				 <tr>
+			        <td class="tdlabel">方法类型</td >
+			        <td><input class="hisui-combobox" style="width:508px;" type="text" name = "Flag" id="Flag"  /></td>
+			        
+		         </tr>
+		         <tr style="display:none">
+		 			<td></td>
+		   			<td><input id="ID" name="ID" type="text" class="textbox hisui-validatebox" ></td>
+ 				</tr>
+			</table >
+		</form>
+	</div>
+	<!-- 导入弹框  -->
+	<div id="importWin" style="width:900px;height:400px;padding:10px;display:none;">  
+		<form id="form-save1" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table>			
+				<!--<tr>
+				
+	    		    <td class="tdlabel" style="width:140px" align="right"><font color=red>*</font>下载导入模板</td>
+	    		    <td><input class="hisui-combobox" style="width:430px;" id="SelectDesc"  /></td>
+	    		    <td>
+	    		    	<a href="#" class="hisui-linkbutton hover-dark" data-options="" id="LoadPath" title="下载模板">下载</a>
+					</td>
+	    		</tr>-->
+	    		
+	    		<tr>
+					<td class="tdlabel" style="width:140px" align="right"><font color=red>*</font>导入Excel文件</td>
+					<td>
+						<input class="hisui-validatebox" id="ExcelImportPath" style="width:430px;" data-options="prompt:'请输入服务器上的路径'" />
+						<!--<input  type= "file" id="fileParth" style="display:none;" onchange="doChange(this)">-->
+					</td>
+					<!--<td>
+						<a href="#" class="hisui-linkbutton" data-options="" id="choseParth" style="height:28px;width:60px;" onclick="$('input[id=fileParth]').click();">选择</a>
+					</td>-->
+					<td><a href="#" class="hisui-linkbutton" data-options="" id="ImportData" style="height:28px;width:60px;">导入</a></td>
+				</tr>
+	    		
+		        <tr style="display:none">
+		 			<td></td>
+		   			<td><input id="ID1" name="ID1" type="text" class="textbox hisui-validatebox" ></td>
+ 				</tr>
+			</table >
+		</form>
+		<div class="hisui-layout" data-options="fit:true"  border="false" id="mainlayout" >
+			<!--备注说明--> 
+	    	<div data-options="bodyCls:'panel-header-gray',region:'center',split:true" style="width:280px;padding:4px 4px 0 0" border="false"> 
+				<div class="hisui-panel" title="备注说明" border="true" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" >
+			
+			   		<ul style="padding:20px 10px 0 10px;">
+				 		<li class="notediv">1.导入导出时文件后缀均为.csv格式。</li> 
+				 		<li class="notediv">2.下载下来的模板请勿随意修改，否则会影响数据导入！</li>
+				 		<li class="notediv">3.excel录入时要严格遵循示例格式。</li>
+				 		<li class="notediv">4.若下载时提示文件不存在，说明服务器上没有该模板，请联系开发人员。</li>
+				 		<li class="notediv">5.若导入模板过程中报错或插入失败，请仔细检查录入数据是否正确。修改后的数据可在相应界面手动录入，也可重新导一遍。</li>
+			   			<li class="notediv">6.导入路径为服务器上的路径，默认为D:\Import文件夹下，可根据实际进行修改</li> 
+			   			<li class="notediv">7.注意参数说明</li> 
+			   		</ul>	
+		  		</div>
+	    	</div> 
+	    </div>
+	</div>
+	<!-- 导出弹框  -->
+	<div id="exportWin" style="width:900px;height:400px;padding:10px;display:none;">   
+		<form id="form-save2" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table>		
+				<tr>
+					<td class="tdlabel"><font color=red>*</font>导出文件路径</td>
+					<td>
+						<input id="FilePath" name="FilePath" type="text" class="hisui-validatebox" style="width:300px"  data-options="prompt:'请输入文件夹路径'">
+					</td>
+					<!--<td>
+						<a href="#" class="hisui-linkbutton" data-options="" id="chosePath" style="height:28px;width:60px;" onclick="browseFolder('FilePath')">选择</a>
+					</td>-->
+				</tr>
+				<tr>
+					<td class="tdlabel"><font color=red>*</font>文件名</td>
+					<td><input id="FileName" name="FileName" type="text" class="hisui-validatebox" style="width:300px"  data-options="prompt:'后缀只能为.csv'"></td>
+				</tr>		    		
+	    		<tr>
+					<td><a href="#" class="hisui-linkbutton" data-options="" id="ExportData" style="height:28px;width:60px;">导出</a></td>
+				</tr>
+	    		
+		        <tr style="display:none">
+		 			<td></td>
+		   			<td><input id="ID2" name="ID2" type="text" class="textbox hisui-validatebox" ></td>
+ 				</tr>
+			</table >
+		</form>
+		<div class="hisui-layout" data-options="fit:true"  border="false" id="mainlayout" >
+			<!--备注说明--> 
+	    	<div data-options="bodyCls:'panel-header-gray',region:'center',split:true" style="width:380px;padding:4px 4px 0 0" border="false"> 
+				<div class="hisui-panel" title="备注说明" border="true" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" >
+			
+			   		<ul style="padding:20px 10px 0 10px;">
+				 		<li class="notediv">1.导入导出时文件后缀均为.csv格式。</li> 
+			   			<li class="notediv">2.导出路径为服务器上的路径，默认为D:\Export文件夹下，可根据实际进行修改</li> 
+			   			<li class="notediv">3.导出文件名自己取，如demo.csv</li> 
+			   			<li class="notediv">4.注意参数说明</li>
+			   		</ul>	
+		  		</div>
+	    	</div> 
+	    </div>
+	</div>
+    <div id="allbar" style="padding-top:4px;padding-bottom:4px">  	
+    	<input style="width:165px" class="searchbox searchbox-prompt" id="TextDesc">	
+ 		<span class="searchbox-button" style="margin-left:-34px;" id="btnSearch"></span> 
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="iconCls:'icon-refresh',plain:true,stopAllEventOnDisabled:true" id="btnRefresh">清屏</a>
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn">新增</a>
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改</a>
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>
+		<a href="#" id="btnTemplates" class="hisui-linkbutton" data-options="iconCls:'icon-download',plain:true,stopAllEventOnDisabled:true">下载导入模板</a>
+		<!--
+		<input style="width:165px" id="TextDesc"  />	
+		<a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-w-find" style="margin-left:-4px;" id="btnSearch"></a>   
+		<a href="#" id="btnImEx" class="load" data-options="plain:true">执行</a>
+		<a href="#" id="btnImEx" class="hisui-linkbutton" data-options="iconCls:'icon-import',plain:true,stopAllEventOnDisabled:true">执行导入或导出</a>
+		<a href="#" id="btnIExecute" class="hisui-linkbutton" data-options="iconCls:'icon-import-xls',plain:true,stopAllEventOnDisabled:true">执行导入</a>
+		<a href="#" id="btnEExecute" class="hisui-linkbutton" data-options="iconCls:'icon-export-data',plain:true,stopAllEventOnDisabled:true">执行导出</a>	-->
+    </div>
+    
+    <!--结果弹框-->
+	<div id="myWinpro" class="hisui-dialog" title="结果" style="width:300px;height:150px;" > 
+		<div style="padding: 30px 30px 10px 30px">
+			<div id="pro" class="easyui-progressbar" data-options="" style="width:240px;"></div>
+		</div>  
+	</div> 
+    
+	<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ 	<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+	<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_BatchProcess.js"></script>
+  </BODY>
+ </HTML>

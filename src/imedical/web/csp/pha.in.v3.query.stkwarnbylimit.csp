@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!--药库 - 库存报警（按上下限）
+	csp:pha.in.v3.query.stkwarnbylimit.csp
+	js: pha/in/v3/query/stkwarnbylimit.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+	<PHAPRINTCOM/>
+    <style type="text/css">
+    	.pha-con-toggle {
+	    	display: none;	
+	    }
+	    .pha-grid-a {
+			cursor:pointer;    
+		}
+    </style>
+	<script language="cache" runat="server">
+		s gLowStock = $Get(%request.Data("gLowStock",1))	// 低于下限
+		s gHighStock = $Get(%request.Data("gHighStock",1))	// 高于上限
+		if ((gLowStock = "") && (gHighStock = "")){
+			s gLowStock = "Y"
+			s gHighStock = "Y"
+		}
+	</script>
+	<script type="text/javascript">
+		var gLowStock = '#(gLowStock)#' || "N";
+		var gHighStock = '#(gHighStock)#' || "N";
+	</script>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center'" class="pha-body" border="false">
+			<div class="hisui-layout" data-options="fit:true,border:false">   
+				<div data-options="region:'center',border:false">
+					<table id="gridIncItmLoc"></table>
+				</div> 
+			</div>
+		</div>
+	</div>
+	
+	<div id="gridIncItmLocTool">
+		<table id="con-form" class="pha-con-table">
+			<tr>
+				<td class="r-label">
+		            <label for="locId">#(..Get("科室"))#</label>
+		        </td>
+		        <td>
+		            <input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="scg">#(..Get("类组"))#</label>
+		        </td>
+		        <td>
+		            <input id="scg" class="hisui-combobox" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="stkCat">#(..Get("库存分类"))#</label>
+		        </td>
+		        <td>
+		            <input id="stkCat" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="inciDesc">#(..Get("药品别名"))#</label>
+		        </td>
+		        <td >
+		            <input id="inciDesc" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td>
+		            <input id="moreFlag" class="hisui-checkbox" label="库存量高于上限" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+		        </td>
+		        <td>
+		            <input id="lessFlag" class="hisui-checkbox" label="库存量低于下限" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+		        </td>
+		        <td>
+					<a id="btnFind" href="#" class="hisui-linkbutton" plain="false">查询</a>
+				</td>
+				<td>
+		       		<a id="btnClear" href="#" class="hisui-linkbutton" plain="false">清屏</a>
+				</td>
+				<td class="r-label">
+					<div id="queBtnToggle"><div id="togglePop"></div></div>
+				</td>
+			</tr>
+		</table>
+    </div>
+    <!-- 更多条件，默认折叠 -->
+	<csp:include page="pha.in.v3.query.com.component.csp">
+</body>
+	<script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>	
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/com.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/component.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/stkwarnbylimit.js"></script>
+</html>
+
+
+	

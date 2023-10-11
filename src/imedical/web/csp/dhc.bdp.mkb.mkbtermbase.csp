@@ -1,0 +1,289 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+/*
+	@CSP:dhc.bdp.mkb.mkbtermbase.csp
+	@JS:bdp/MKB/MKP/MKB_TermBase.js
+	@Title:医用知识库管理--知识库注册
+	@Description:知识库及知识库属性、知识库扩展属性维护
+	@Creator:基础数据平台组 - 高姗姗
+	@CreateDate:2018-03-26
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/ChinesePY.js"></script> 
+ <script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_TermBase.js"></script>
+</HEAD>
+ <style type="text/css">
+	.dialog-button {
+		text-align: center;
+	}
+	.disabled {
+            pointer-events: none;
+            filter: alpha(opacity=50); /*IE滤镜，透明度50%*/
+            -moz-opacity: 0.5; /*Firefox私有，透明度50%*/
+            opacity: 0.5; /*其他，透明度50%*/
+        }
+        
+    #gridExtendPro .panel-body {
+    	border-color: #C0C0C0;
+	}
+	#trconfiggrid .panel-body {
+    	border-color: #C0C0C0;
+	}
+	#trextendconfiggrid .panel-body {
+    	border-color: #C0C0C0;
+	}
+	.m-btn-downarrow, .s-btn-downarrow {
+    	top: -3px;
+	}
+	/*属性面板圆角*/
+	#layout .panel-header-gray {
+    	border-radius: 4px 4px 0px 0px;
+	}	
+
+</style>
+<body style="padding:4px">
+	<div class="hisui-layout" data-options="fit:true,collapsible:false" id="layout" border="false" >
+		<!--知识库注册列表-->
+		<div  data-options="region:'west',split:true" style="width:600px" border="false">
+			<table data-options="fit:true,iconCls:'icon-w-paper'" id="mygrid"   title="知识库注册"></table> 
+		</div>
+		<!--知识库属性列表-->
+		<div  id="mylayoutproperty" data-options="region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-radius: 0px 0px 4px 4px;" title="知识库属性维护" >
+			<div id="div-img" style="width:100%;height:100%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据奥，选条数据看看吧" style="margin:150px 0" /></div>
+			<table data-options="fit:true" id="mygridProperty"  style="display:none" border="false"></table> 
+		</div>
+	 </div> 
+	 <!--知识库注册工具条-->
+	 <div id="mytbar" data-options="split:false" style="text-align: left; display:block;" >
+   		<input style="width:165px" class="searchbox searchbox-prompt" id="TextSearchBase">
+   		<span class="searchbox-button" style="margin-left:-34px;" id="btnSearch"></span>
+   		<!--a href="#" class="hisui-linkbutton l-btn-0" data-options="stopAllEventOnDisabled:true" iconCls="icon-w-find" style="margin-left:-4px" id="btnSearch"></a-->
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls="icon-refresh" plain="true" id="btnRefresh">清屏</a>
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls='icon-add' plain="true" id="btnAdd">新增</a> 
+	    <a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls='icon-write-order' plain="true" id="btnUpdate">修改</a> 
+	    <a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls='icon-cancel' plain="true" id="btnDel">删除</a>
+ 	</div>
+ 	<!--知识库属性维护工具条-->
+	<div id="mytbarProperty" data-options="split:false" style="text-align: left; display:block;" >
+    	<input style="width:165px" id="TextSearchProperty" />
+    	<span class="searchbox-button" style="margin-left:-34px;" id="btnSearchProperty"></span>
+    	<!--a href="#" class="hisui-linkbutton l-btn-0" data-options="stopAllEventOnDisabled:true" iconCls="icon-w-find"  style="margin-left:-4px" id="btnSearchProperty"></a-->
+		<!--<a href="#" class="hisui-searchbox" data-options="iconCls:'icon-search'" style="width:165px" id="btnSearchProperty">搜索</a>-->
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls="icon-refresh" plain="true" id="btnRefreshProperty">清屏</a>
+		<a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls='icon-add' plain="true" id="btnAddProperty">新增</a> 
+	    <a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls='icon-write-order' plain="true" id="btnUpdateProperty">修改</a> 
+	    <a href="#" class="hisui-linkbutton l-btn-2" data-options="stopAllEventOnDisabled:true" iconCls='icon-cancel' plain="true" id="btnDelProperty">删除</a>
+	    <a href="#" id="btnMoveProperty" class="hisui-menubutton menubutton-toolbar" data-options="menu:'#menumove',iconCls:'icon-changeposition'">位置移动&nbsp;&nbsp;&nbsp;&nbsp;</a>
+	    <div id="menumove" style="width:120px;">
+	        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-shiftup' plain="true" style="width:120px;text-align:left" id="btnUpProperty">上移</a>
+	        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-shiftdown' plain="true" style="width:120px;text-align:left" id="btnDownProperty">下移</a>
+	        <a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-shiftfirst' plain="true" style="width:120px;text-align:left" id="btnFirstProperty">移到首行</a>
+	    </div>
+    </div>
+	 <!--知识库注册弹窗-->
+      <div id="myWin" style="width:450px;height:480px;padding:10px;display:none;" data-options="iconCls:'icon-add-note'">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table>
+				<tr>
+	               <td class="tdlabel" align="right" id="tdCat">知识库分类</td>
+	    		   <td>
+	    		   		<input id="MKBTBCatDr" name="MKBTBCatDr" type="text" class="textbox hisui-validatebox"  style="display:none"  data-options="">
+	    		   		<input id="MKBTDesc" name="MKBTDesc" type="text" class="textbox hisui-validatebox" readonly="readonly" style="width:248px"  data-options="">&nbsp;&nbsp;
+	    		   		<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnCat">...</a>
+	    		   </td>
+	    		 </tr>
+	    		 <tr style="display:none">
+	               <td class="tdlabel" align="right" >知识库ID</td>
+	    		   <td><input id="MKBTBCode" name="MKBTBCode" type="text" class="textbox hisui-validatebox"  style="width:300px" data-options=""></td>
+	    		 </tr>
+				<tr>
+	               <td class="tdlabel" align="right"><font color=red>*</font>知识库名</td>
+	    		   <td><input id="MKBTBDesc" name="MKBTBDesc" type="text" class="textbox hisui-validatebox" style="width:300px"  data-options="required:true"></td>
+	    		 </tr>
+	    		<tr>
+	    		   <td class="tdlabel" align="right">检索码</td>
+	    		   <td><input id="MKBTBPYCode" name="MKBTBPYCode" type="text" class="textbox hisui-validatebox" style="width:300px"  data-options=""></td>
+	    		</tr>
+	    		<tr>
+	    		   <td class="tdlabel" align="right"><font color=red>*</font>编码规则</td>
+	    		   <td><input id="MKBTBCodeRules" name="MKBTBCodeRules" type="text" class="textbox hisui-validatebox" style="width:300px"  data-options="required:true"></td>
+	    		</tr>
+	    		<tr>
+	               <td class="tdlabel" align="right">标识</td>
+	    		   <td><input id="MKBTBFlag" name="MKBTBFlag" type="text" class="textbox hisui-combobox"  style="width:308px" data-options=""></td>
+	    		</tr>
+	    		<tr>
+	               <td class="tdlabel" align="right"><font color=red>*</font>类型</td>
+	    		   <td><input id="MKBTBType" name="MKBTBType" type="text" class="textbox hisui-combobox"  style="width:308px" data-options=""></td>
+	    		</tr>
+	    		<tr style="display:none">
+	               <td class="tdlabel" align="right">图标</td>
+	    		   <td>
+	    		   		<img id="Image" width="20px" height="20px" border="0" src="../scripts/bdp/Framework/BdpIconsLib/null.png"/>
+	    		   		<input id="MKBTBImage" name="MKBTBImage" type="text" class="textbox hisui-validatebox"  style="display:none"  data-options="">
+	    		   		<a href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true,iconCls:'icon-apply-check',plain:true" id="DataLiftBtn" style="width:120px;">更改图标</a>&nbsp;&nbsp
+	    		   		<a href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true,iconCls:'icon-clear',plain:true" id="cancelbtn" style="width:120px;">清除图标</a>			    		
+	    		   	</td>
+	    		</tr>
+		 		<tr>
+	    		   <td class="tdlabel" align="right">菜单顺序</td>
+	    		   <td><input id="MKBTBSequence" name="MKBTBSequence" type="text" class="textbox hisui-validatebox" style="width:300px"  data-options=""></td>
+	    		</tr>
+	    		<tr>
+	    		   <td class="tdlabel" align="right">出处</td>
+	    		   <td><input id="MKBTBSource" name="MKBTBSource" type="text" class="textbox hisui-validatebox"  style="width:300px" data-options=""></td>
+	    		</tr>
+	    		<tr>
+	    		   <td class="tdlabel" align="right">版本</td>
+	    		   <td><input id="MKBTBVersion" name="MKBTBVersion" type="text" class="textbox hisui-validatebox" style="width:300px"  data-options=""></td>
+	    		</tr>
+	    		<tr>
+	    		   <td class="tdlabel" align="right">备注</td>
+	    		   <td><input id="MKBTBNote" name="MKBTBNote" type="text" class="textbox hisui-validatebox"  style="width:300px" data-options=""></td>
+	    		</tr>
+			</table >
+		</form>  
+	</div>
+	<!--知识库注册分类弹窗-->
+	<div id="catWin" style="width:400px;height:500px;"> 
+		<div class="hisui-layout" data-options="fit:true" border="false" >
+	       	<div data-options="region:'north',collapsible:false,border:false" style="height:40px">
+		    	 <table>
+				    <tr>
+				    	<td>查询</td>
+		    			<td><input id="FindTreeText" type="text" class="hisui-validatebox"></td>
+				   	 	<td>
+							<input id='myChecktreeFilterCK0' class='hisui-radio' type="radio" label='全部' name='FilterCK' value='0'>
+							<input class='hisui-radio' type="radio" label='已选' name='FilterCK' value='1'>
+							<input class='hisui-radio' type="radio" label='未选' name='FilterCK' value='2'>
+						</td>
+					</tr>			    	 
+				 </table >	
+			 </div>
+			 <div data-options="region:'center',border:false">
+				<div id="catTree" data-options="border:false,checkbox:true" style="width:100%;"></div> 
+			 </div>	 
+	     </div> 
+	</div> 	
+	<!--知识库注册图标弹窗-->
+	<div id="imageWin" style="width:650px;height:500px;"> 
+	</div> 
+	<!--知识库属性、扩展属性弹窗-->
+	<div id="myWinProperty" style="width:1040px;height:570px;padding:0 10px"> 
+		<div class="hisui-layout" data-options="fit:true" border="false" >
+			<div data-options="region:'center',border:false">
+				<div class="hisui-layout" data-options="fit:true" border="false" >	
+					<div data-options="region:'west',split:true,border:false" style="width:320px;"> 
+				        <div id="baseProperty" class="hisui-panel" title="基本信息" style="padding:15px 10px 10px 0px;" data-options="fit:true,headerCls:'panel-header-card'"> 
+							
+							<form id="form-save-Property" method="post" data-options="fit:true,border:false,plain:true"> 
+								<table >
+									<tr>
+						               <td class="tdlabel" align="right"><font color=red>*</font>属性名称</td>
+						    		   <td><input id="MKBTBPDesc" name="MKBTBPDesc" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options="required:true"></td>
+						    		 </tr>
+						    		<tr style='display:none'>
+						    		   <td class="tdlabel" align="right">主列名</td>
+						    		   <td><input id="MKBTBPName" name="MKBTBPName" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+						    		</tr>
+						    		<tr>
+						               <td class="tdlabel" align="right">标识</td>
+						    		   <td><input id="MKBTBPFlag" name="MKBTBPFlag" type="text" class="textbox hisui-combobox"  style="width:208px" data-options=""></td>
+						    		</tr>
+							 		<tr style="display:none">
+						    		   <td class="tdlabel" align="right">顺序</td>
+						    		   <td><input id="MKBTBPSequence" name="MKBTBPSequence" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+						    		</tr>
+						    		<tr>
+						               <td class="tdlabel" align="right"><font color=red>*</font>格式</td>
+						    		   <td><input id="MKBTBPType" name="MKBTBPType" type="text" class="textbox hisui-combobox"  style="width:208px" data-options=""></td>
+						    		</tr>
+						    		<tr>
+								   		<td class="tdlabel" align="right"><input id="MKBTBPIsShowInLeftF" name="MKBTBPIsShowInLeft" type="checkbox" class='hisui-checkbox' data-options="checked:true" value="Y"></td>
+								 		<td >显示在纵向展示栏</td>
+						       		 </tr>
+						       		 <tr>
+						    		   <td class="tdlabel" align="right"><font color=red>*</font>编码规则</td>
+						    		   <td><input id="MKBTBPCodeRules" name="MKBTBPCodeRules" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options="required:true"></td>
+						    		</tr>
+						    		<tr>
+						    		   <td class="tdlabel" align="right">百科展示</td>
+						    		   <td><input id="MKBTBPWikiShow" name="MKBTBPWikiShow" type="text" class="textbox hisui-combobox" style="width:208px"  data-options=""></td>
+						    		</tr>
+								</table>
+							</form>  
+						
+						</div>
+					</div>
+					
+					<div data-options="region:'center',border:false,split:true" style="">
+						<div id="baseExtendPro" class="hisui-panel" title="扩展属性" style="padding:10px 0;" data-options="fit:true,headerCls:'panel-header-card'"> 
+					    	<div class="hisui-layout" data-options="fit:true,border:false">
+					    		
+					    		<div data-options="region:'west',split:true,border:false" style="width:320px;"> 
+					    			<div class="hisui-layout" data-options="fit:true,border:false">
+					    				<div data-options="region:'north',split:true,border:false" style="height:43px;border-bottom: 1px dashed #C0C0C0;"	> 
+							    			<table>
+												<tr>
+													<td>
+														<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-refresh' plain="true" id="refresh_btn_ExtendPro" style="margin-left:5px">清屏</a> 
+														<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-add' plain="true" id="add_btn_ExtendPro" style="">新增</a> 
+							    						<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-write-order' plain="true" id="update_btn_ExtendPro" style="">修改</a> 
+								    				</td>
+								    			</tr>
+								    		</table>
+							    		</div>
+					    				<div data-options="region:'center',split:true,border:false" > 	
+							    			<form id="form-save-ExtendPro" method="post" data-options="fit:true,border:false,plain:true"> 
+												<table >
+													<tr>
+										               <td class="tdlabel" align="right"><font color=red>*</font>名称</td>
+										    		   <td><input id="MKBTBEPName" name="MKBTBEPName" type="text" class="textbox hisui-validatebox" style="width:196px"  data-options="required:true"></td>
+										    		 </tr>
+										    		<tr>
+										               <td class="tdlabel" align="right"><font color=red>*</font>类型</td>
+										    		   <td><input id="MKBTBEPType" name="MKBTBEPType" type="text" class="textbox hisui-combobox"  style="width:204px" data-options=""></td>
+										    		</tr>
+									    		</table>
+								    		</form>
+							    		</div>
+							    	</div>
+					    		</div>
+					    		
+					        	<div id="gridExtendPro" data-options="region:'center',split:true" border="false" style="overflow:hidden"> 
+					        		<!--
+					        		<table width="10px" height="430px" border="0 " cellpadding="0" cellspacing="0" style="float:left;border-left:1px solid #C0C0C0" ></table>	
+					        		-->
+					        		<table id="mygridExtendPro"  style='width:365px;height:435px;' ></table>
+					        	</div>
+					        	
+					        </div>
+				        </div>
+				    </div>
+				    
+				</div>  
+			</div>   
+			<div data-options="region:'south',collapsible:false,border:false" style="height:40px">
+				<table style="margin-left:340px">
+					<tr >
+	    		   		<td ><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="width:90px;margin-left:10px" id="save_btn_Property">保存</a></td>
+	    		   		<td ><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="width:90px;margin-left:10px" id="tadd_btn_Property">继续新增</a></td>
+	    		   		<td ><a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="width:90px;margin-left:10px" id="close_btn_Property">关闭</a></td>
+	    			</tr>
+	    		</table>
+	 		</div>	 
+		</div>  
+	</div> 	
+</body>
+</html>

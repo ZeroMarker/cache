@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.ipbill.checkadmfee.csp
- * Anchor: ZhYW, yangchong
+ * Author: ZhYW, yangchong
  * Date: 2018-06-30
  * Description: 住院费用核查
 -->
@@ -12,104 +12,128 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
-	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.ipbill.checkadmfee.css'/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.ipbill.checkadmfee.css"/>
 	<server>
+		set HospId=%session.Get("LOGON.HOSPID")
 		set EpisodeID=%request.Get("EpisodeID")
-		w "<input id='oneKeyCheck' name='oneKeyCheck' type='hidden'>",$c(13,10)
-		w "<script type=""text/javascript"">",!
-		w "	var GV = {",!
-		w "		EpisodeID: """_EpisodeID_""",",!
-		w "		Job: """_$i(^TMP("DHCIPBill","Check"))_"""",!
-		w "	};",!
-		w "</script>"
+		set ViewType=%request.Get("ViewType")
+		set RoleLevel=$s((+%request.Get("RoleLevel")):%request.Get("RoleLevel"),1:1)  //+2022-11-14 ZhYW
+		
+		set costObj=##class(web.DHCIPBillCheckAdmCost).%New()
+		set PID=costObj.GetPID()
+		set AuditLevelCfg=costObj.GetLevelCfg(HospId)   //审核级别配置
+		do costObj.%Close()
+		set RoleLevel=$s((AuditLevelCfg>1):RoleLevel,1:1)   //若配置只需1级审核，则配置优先级高于请求传入
+		
+		set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+		w "<input id='oneKeyCheck' type='hidden'>",!
 	</server>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript">
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		
+		//常量
+		var CV = {
+			PID: "#(PID)#",
+			ViewType: "#(ViewType)#",
+			RoleLevel: "#(RoleLevel)#",
+			AuditLevelCfg: "#(AuditLevelCfg)#"
+		};
+		
+		//全局变量
+		var GV = {
+			EpisodeID: "#(EpisodeID)#"
+		};
+	</script>
 </head>
 
 <body style="padding:10px;">
 	<div class="hisui-layout" data-options="fit:true">
-		<div data-options="region:'west',border:false" style="width:220px;">
-			<div class="hisui-layout" id='head-menu' data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false,title:'患者列表',collapsible:false,tools:'#search-panel-tools'" style="height:114px;overflow:hidden;">
-					<div class="hisui-panel" data-options="fit:true" style="border-bottom-style:dashed;border-bottom-color:#ccc;border-radius:0;">
-						<table class="search-panel-table">
-							<tr>
-								<td class="l-label-td"><input id="patientNo" class="textbox tb200" placeholder="登记号"/></td>
-							</tr>
-							<tr>
-								<td class="l-label-td"><input id="medicareNo" class="textbox tb200" placeholder="病案号"/></td>
-							</tr>
-							<tr class="display-more-td">
-								<td class="l-label-td"><input id="dept" class="textbox tb200" placeholder="科室"/></td>
-							</tr>
-							<tr class="display-more-td">
-								<td class="l-label-td"><input id="ward" class="textbox tb200" placeholder="病区"/></td>
-							</tr>
-							<tr class="display-more-td">
-								<td class="l-label-td"><input id="admReason" class="textbox tb200" placeholder="费别"/></td>
-							</tr>
-							<tr class="display-more-td">
-								<td align="center">
-									<a href="javascript:;" class="hisui-linkbutton" iconCls='icon-w-find' id="btnFind">查询</a>
-									<a href="javascript:;" class="hisui-linkbutton" iconCls='icon-w-clean' id="btnClear" style="margin-left:5px;">清屏</a>
-								</td>
-							</tr>
-						</table>
-					</div>
-					<div id="search-panel-tools">
-						<span id="more-container" class="menu-container">
-							<span class="spread-w-down"></span>
-							<span class="arrows-w-text">更多</span>
-						</span>
-					</div>
+		<div data-options="region:'west',title:'患者列表',collapsible:false,tools:'#search-panel-tools'" style="width:221px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="overflow:hidden;border-bottom:1px dashed #ccc;">
+					<table class="search-panel-table">
+						<tr>
+							<td class="l-label-td"><input id="patientNo" class="textbox tb200" placeholder="#(..Get("登记号"))#"/></td>
+						</tr>
+						<tr>
+							<td class="l-label-td"><input id="medicareNo" class="textbox tb200" placeholder="#(..Get("病案号"))#"/></td>
+						</tr>
+						<tr class="display-more-td">
+							<td class="l-label-td"><input id="dept" class="textbox tb200" placeholder="#(..Get("科室"))#"/></td>
+						</tr>
+						<tr class="display-more-td">
+							<td class="l-label-td"><input id="ward" class="textbox tb200" placeholder="#(..Get("病区"))#"/></td>
+						</tr>
+						<tr class="display-more-td">
+							<td class="l-label-td"><input id="insType" class="textbox tb200" placeholder="#(..Get("费别"))#"/></td>
+						</tr>
+						<tr class="display-more-td">
+							<td align="center">
+								<a href="javascript:;" class="hisui-linkbutton" iconCls='icon-w-find' id="btn-find">查询</a>
+								<a href="javascript:;" class="hisui-linkbutton" iconCls='icon-w-clean' id="btn-clear" style="margin-left:5px;">清屏</a>
+							</td>
+						</tr>
+						<tr>
+							<td align="center">
+								<a href="javascript:;" class="hisui-linkbutton" id="btnOneKeyCheck" style="margin-left:10px;">一键核查</a>
+							</td>
+						</tr>
+					</table>
 				</div>
 				<div data-options="region:'center',border:false">
-					<div class="hisui-panel" data-options="fit:true" style="border-top:0;">
-						<table class="hisui-datagrid" id="patList"></table>
-					</div>
+					<table id="patList"></table>
 				</div>
 			</div>
 		</div>
-		<div data-options="region:'center',border:false" style="padding-left:10px;">
+		<div id="search-panel-tools">
+			<span id="more-container" class="menu-container">
+				<span class="#("spread-"_$s((defUIVersion="lite"):"b",1:"w")_"-down")#"></span>
+				<span class="#("arrows-"_$s((defUIVersion="lite"):"b",1:"w")_"-text")#">#(..Get("更多"))#</span>
+			</span>
+		</div>
+		<div data-options="region:'center',border:false" style="margin-left:10px;padding-right:10px">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="height:35px;overflow:hidden;">
+				<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;background-color:#($s((defUIVersion="lite"):"#f5f5f5",1:"#ffffff"))#;">
 					<div id="ban-sex"></div>
 					<div class="patientInfo">
 						<span class="pat" id="ban-Name"></span>
-						<span class="infoLabel">登记号:</span><span id="ban-patientNo"></span>
+						<span class="infoLabel">#(..Get("登记号"))#:</span><span id="ban-patientNo"></span>
 						<span class="sline">/</span>
-						<span class="infoLabel">病案号:</span><span id="ban-medicareNo"></span>
+						<span class="infoLabel">#(..Get("病案号"))#:</span><span id="ban-medicareNo"></span>
 						<span class="sline">/</span>
-						<span class="infoLabel">床号:</span><span id="ban-bed"></span>
+						<span class="infoLabel">#(..Get("床号"))#:</span><span id="ban-bed"></span>
 						<span class="sline">/</span>
-						<span class="infoLabel">科室:</span><span id="ban-dept"></span>
+						<span class="infoLabel">#(..Get("科室"))#:</span><span id="ban-dept"></span>
 						<span class="sline">/</span>
-						<span class="infoLabel">病区:</span><span id="ban-ward"></span>
+						<span class="infoLabel">#(..Get("病区"))#:</span><span id="ban-ward"></span>
 					</div>
 				</div>
 				<div data-options="region:'center',border:false">
 					<div class="hisui-layout" data-options="fit:true,border:false">
-						<div data-options="region:'north',border:false" style="height:265px;padding-bottom:10px;" >
-							<table class="hisui-datagrid" title="监控点" id="moniList"></table>
+						<div data-options="region:'north',border:false,split:true" style="height:265px;" >
+							<div id="pointToolBar">
+								<div style="padding:10px 0;">
+									<label style="padding:0 10px;">#(..Get("审核状态"))#</label><input id="isAudit" class="textbox"/>
+									<a href="javascript:;" class="hisui-linkbutton" id="btn-audit" style="margin-left:30px;">审核</a>
+									<a href="javascript:;" class="hisui-linkbutton" id="btn-cancel" style="margin-left:10px;">撤销</a>
+								</div>
+							</div>
+							<table title="监控点" id="moniList"></table>
 						</div>
 						<div data-options="region:'center',border:false">
-							<table class="hisui-datagrid" title="明细" id="dtlList"></table>
-						</div>
-						<div id="pointToolBar">
-							<div style="padding:10px 0 10px 0;">
-								<label style="padding-left:10px;padding-right:10px;">审核状态</label><input id="isAudit" class="textbox"/>
-								<a href="javascript:;" class="hisui-linkbutton" id="btnAudit" style="margin-left:30px;">审核</a>
-								<a href="javascript:;" class="hisui-linkbutton" id="btnCancel" style="margin-left:10px;">撤销</a>
-								<a href="javascript:;" class="hisui-linkbutton" id="btnOneKeyCheck" style="margin-left:10px;">一键核查</a>
-							</div>
+							<table title="明细" id="dtlList"></table>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.checkadmfee.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.checkadmfee.js"></script>
 </body>
 </html>

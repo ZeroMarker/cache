@@ -1,0 +1,75 @@
+<!--
+	历年结果对比
+	csp: dhcpe/dhcpeireport.normal.historyrecord.csp
+	A4 大小 一般为  210mm*297mm  595pt*840pt
+	单独的样式放在 style 中，便于浏览器调试
+	尽量不用 px，会受分辨率影响效果
+	不同打印机对 lodop 也有影响，调试时可使用真实打印机的电脑预览
+	&ensp; 半角占位符  &emsp; 全角占位符
+	
+	1英寸 72pt  25.30mm    大特号 63pt  22.14mm    特号 54pt  18.97mm    初号 42pt  14.82mm    小初 36pt  12.70mm
+	一号  26pt   9.17mm    小一   24pt   8.47mm    二号 22pt   7.76mm    小二 18pt   6.35mm    三号 16pt   5.64mm
+	小三  15pt   5.29mm    四号   14pt   4.94mm    小四 12pt   4.23mm    五号 10.5pt 3.70mm    小五 9pt    3.18mm
+	六号  7.5pt  2.56mm    小六   6.5pt  2.29mm    七号 5.5pt  1.94mm    八号 5pt    1.76mm
+-->
+
+<CSP:IF CONDITION='$isObject(business.historyList)&&(business.historyList.Size()>0)'>
+	<style>
+	 	.hr-div {
+		 	width: 100%;
+		    position: relative;
+		    page-break-after: always;
+	 	}
+	 	
+		.hr-table {
+			width: 100%;
+			font-size: 11pt;
+			line-height: 150%;
+			text-align: center;
+			font-family: 宋体;
+		}
+
+		.hr-table td {
+			border: 1pt solid #000000;
+		}
+
+		.hr-head {
+			font-size: 12pt;
+		    vertical-align: middle;
+			font-weight: 700;
+		}
+
+		.hr-content {
+			text-align: left;
+		}
+
+		.hr-content-abn {/* 异常结果 */
+			color: red;
+		}
+	</style>
+	<div class="rptpage">
+		<table style="width: 100%;">
+			<tr><td style="height:10pt;">&ensp;</td></tr>
+			
+			<tr>
+				<td class="rpttitle" id="rpttitle">历年结果对比</td>
+			</tr>
+				
+			<tr><td style="height:5pt;">&ensp;</td></tr>
+		</table>
+	
+		<script language="Cache" RUNAT="SERVER">
+			w "<table class='hr-table'>"
+			for hrIndex=0:1:(business.historyList.Size()-1) {
+				s hrObj=business.historyList.Get(hrIndex)
+				continue:'$isObject(hrObj)
+				w "<tr class='"_$case(hrIndex, 0:"hr-head", :"")_"'>"
+				for tIndex=0:1:(hrObj.Size()-1) {
+					w "<td>"_$s(hrObj.Get("hisdata"_tIndex)="":"/", 1:hrObj.Get("hisdata"_tIndex))_"</td>"
+				}
+				w "</tr>"
+			}
+			w "</table>"
+		</script>
+	</div>
+</CSP:IF>

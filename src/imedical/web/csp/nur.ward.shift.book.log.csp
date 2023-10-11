@@ -1,0 +1,892 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN" style="overflow: hidden;">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.shift.book.csp -->
+	<title>#(..Get("交班本"))#</title>
+	<script language="cache" runat="SERVER">
+		s chromePrintFlag="false"
+		s emrPrintFlag=1
+	</script>
+		 <script type="text/javascript" src="../scripts/websys.js"></script>
+	<!--判断病历是否兼容Chrome和IE打印 start-->   
+	<script language="cache" runat="SERVER">
+	 // init Chrome print
+	 d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+	</script>
+	<!-- init IE print -->
+	<ainurprint></ainurprint>
+	<!-- end -->
+	
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		.detail-table{
+			border-spacing:0;
+			border-collapse:collapse;
+		}
+		.detail-project{
+			overflow: auto;
+    		display: inline-block;
+   			height: 100%;
+    		width: 100%;	
+		}
+		.detail-project li{
+			
+			height: 30px;
+    		line-height: 30px;
+    		text-align: center;
+    		position: relative;
+    		font-weight:normal;
+    		margin-top: 10px;
+    		 cursor:pointer;
+		}
+		.detail-project li.libgselect span.text{
+			background-color:#40A2DE !important;
+			color:#fff !important;
+		}
+		ul{
+			padding:0;
+			margin:0;	
+		}
+		li{
+			list-style:none;
+		}
+		.detail-project li span.text{
+			
+			width: 90%;
+    		display: inline-block;
+    		border-radius: 4px;
+    		background: #eee;
+			
+		}
+		.ant-form-item-required:before {
+    display: inline-block;
+    margin-right: 4px;
+    color: #f5222d;
+    font-size: 14px;
+    font-family: SimSun,sans-serif;
+    line-height: 1;
+    content: "*";
+}
+		.detail-project li span.count{
+			position: absolute;
+    		right: 10px;
+    		top: 7px;
+    		display: inline-block;
+    		height: 16px;
+    		width: 16px;
+    		line-height: 16px;
+    		border-radius: 14px;
+    		background: red;
+    		color: #fff;
+    		font-weight: normal;
+    		font-size:11px;
+		}
+		.detail-project tr:hover{
+			background:#bcf0ff;	
+		}
+		.detailProjectArea .detail-project li span.text:hover{
+			background:#D8EFFF;	
+			color: #017BCE;
+		}
+		.libgselecta{
+			background:#ffe48d !important;
+		}
+		#Loading{
+			display:none;	
+		}
+		span.shiftName,span.projectName{
+    		
+    		height: 24px;
+    		display: inline-block;
+    		margin: 2px 0px;
+    		line-height: 24px;	
+    		border-radius: 3px;
+    		min-width: 50px;
+    		text-align: center;
+    		white-space: nowrap;
+    		padding: 0px 3px;
+		}
+		.shiftDialog table,.detail-project table{
+			border-spacing:0;
+			border-collapse:collapse;
+			
+		}
+		.shiftDialog table td,.detail-project table td{
+			border-spacing:0;
+			border-collapse:collapse;
+			padding:5px;
+			white-space: nowrap;
+		}
+	
+		.detail-project table td{
+			text-align:center;
+			height:35px;	
+		}
+		
+		.shiftDialog td.project {
+		    padding: 10px;
+		    background: #F9F9F9;
+		    height:28px;
+		    width:70px;
+		}
+		
+		.table-shift td{
+			text-align:center;
+			color:#ddd;
+			cursor: pointer;
+		}
+		
+		.table-shift td.shiftSelect{
+			color:#000 !important;
+		}
+		.table-shift td.bgfff{
+			background: #fff !important;
+		}
+		#area .datagrid-body{
+			overflow-y:hidden!important;
+		}
+		.detail-table-patient li {
+		    border-bottom: 1px solid #ddd;
+		    text-align: left;
+		    height: 34px;
+		    line-height: 34px;
+		    position: relative;
+		}
+		.detail-table-patient li:hover{
+			background:#bcf0ff;	
+		}
+		.datagrid-toolbar span.sort-list span:hover{
+			
+		}
+		.patient-bgselect{
+			background:#ffe48d !important;
+		}
+		body{opacity: 0; transition: opacity 0.2s}
+        body.active{opacity: 1}
+        div#northTable .datagrid-header-row td {
+		    text-align: center;
+		}
+		td.shiftAreaTd.panel-noscroll .datagrid-header-row td {
+		    text-align: center;
+		}
+		td.shiftDetail .datagrid-header-row td {
+		    text-align: left;
+		}
+		span.projectName a.panel-tool-close{
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			margin: 0 0 0 2px;
+			vertical-align: top;
+			margin-top: 4px;
+			visibility: hidden;
+		}
+		
+        .switch-off .switch-small{
+	        margin-left:0.3px;
+	       }
+	       .switch-off{
+	       white-space: nowrap;
+	       }
+	       div.window-shadow{
+		      display:none !important;; 
+		      }
+	     div.panel.window{
+		     position: fixed;
+    flex-direction: column;
+    margin:0 !important;
+    position:absolute;
+    top:49% !important;
+    left:50% !important;
+    transform:translate(-50%,-50%);
+    /*height:600px;*/
+    max-height:calc(100% - 30px);
+    max-width:calc(100% - 30px);
+		    }
+
+BODY TEXTAREA:focus{
+	-webkit-box-shadow: 0 0 0 0 #95B8E7;
+    box-shadow: 0 0 0 0 #95B8E7;
+}
+.combo .combo-text{
+	
+    vertical-align: top;
+}
+.shiftAreaTd .datagrid-body{
+	overflow-y: hidden;
+}
+.souInput {
+    display: inline-block;
+    margin-right: 7px;
+    padding: 0px;
+    vertical-align: top;
+}
+table#table-patient td {
+    padding-left: 0px;
+}
+
+#patient-project td,table#signNurse td,table#signHeadNurse td{
+	padding-top: 10px;
+}
+.shiftDetail textarea{
+	padding-left:8px;	
+}
+.custom-content-table td{border-color: #ddd;border-style: solid;border-width: 1px;height: 35px;border: 0px;}
+table.custom-content-table {
+    border:solid 0px #cccccc;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+table.custom-content-table .custominput{
+	height:100%;	
+	
+}
+.shiftDetail .datagrid-cell, .shiftDetail .datagrid-cell-group{
+	display: inline-block;
+	overflow: hidden;
+	white-space: normal;
+	text-overflow: ellipsis;
+	word-wrap: break-word;
+}
+.dialog-button{
+	display:none;
+}
+	</STYLE>
+
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-cellediting.js"></script>
+	
+
+	<script language="cache" runat="SERVER">
+       if ##class(websys.Conversions).IsValidMethodName("websys.StandardTypeItem","GetIdFromCodeOrDescription"){
+	   		Set EnableToken =##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableToken")
+			If EnableToken { // 启用token后，必须传入用效token才可以请求数据\
+			}else{
+				w "<script type=""text/javascript"" >function websys_getMWToken(){return  """"}<"_"/"_"script>"
+			}
+	            
+	    }else{
+		    w " <script type=""text/javascript"" >function websys_getMWToken(){return """"}<"_"/"_"script>"
+		} 
+  </script>
+	<SCRIPT language="cache" RUNAT="SERVER">
+ 		n (%request,%session,%response)
+ 		s WardID=$g(%session.Data("LOGON.WARDID"))
+ 		s ThisWardID = $G(%request.Data("WardID", 1))
+ 		s:ThisWardID'="" WardID=ThisWardID
+ 		s LocID = $G(%request.Data("LocID", 1))
+ 		s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+ 		s ClassID = $G(%request.Data("ClassID", 1))
+ 		s nowDate = $G(%request.Data("nowDate", 1))
+ 	</SCRIPT>
+ 	
+ 	<script language="javascript">
+ 	   var GLOBAL={
+	 	   WardID:"#(WardID)#",
+	 	   LocID:"#(LocID)#",
+	 	   ShiftBookID:"#(ShiftBookID)#",
+	   	   ClassID:"#(ClassID)#",
+	   	   HospID:session['LOGON.HOSPID']
+	   }
+	   var WardID="#(WardID)#";
+	   var StartDate="#(nowDate)#"
+	   var EndDate="#(nowDate)#"
+	</script>
+</head>
+<body style="overflow: hidden;">
+	<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:0.5;">
+		<div class="msg">正在加载数据……</div>
+	</div>
+	<table class="main-layout"  border="0" cellspacing="0" style="width:100%;height:100%;">
+		<tr style="height:32px;" class="tr-layout">
+			<td class="souInputArea" style="padding: 0 0 10 0;">
+				<div class="hisui-layout" data-options="fit:true,border:false" style="line-height: 32px;height: 32px;">
+					<div style="height:32px;position: relative;">
+						
+							
+							<div class="souInput" style="margin-left:0px;"><span style="line-height: 32px;">#(..Get("开始日期"))#</span></div>
+							
+							<div class="souInput" ><input id="datecomboStart" type="text"></div>
+							<div class="souInput" style="margin-left:0px;"><span style="line-height: 32px;">#(..Get("结束日期"))#</span></div>
+							<div class="souInput" ><input id="datecomboEnd" type="text"></div>
+							
+							<div class="souInput ShiftBook"><span style="line-height: 32px;">#(..Get("交班本"))#</span></div>
+							<div class="souInput ShiftBook">
+							
+								<select class="hisui-combogrid" id="ShiftBookList" style="vertical-align: top;width:150px" data-options="
+									            panelWidth: 350,
+									            blurValidValue:true,
+									            idField: 'ID',
+									            textField: 'ShiftBookName',
+									            method: 'get',
+									            onClickRow:function(rowIndex, rowData){
+										          initLoad()
+										        },
+									            columns: [[
+									                {field:'ShiftBookName',title:$g('名称'),width:150,
+									                	 formatter:function(value,row,index){
+										                 	return $g(value)
+										                 }
+									                },
+									                {field:'ShiftBookType',title:$g('类型'),width:80,
+										                formatter:function(value,row,index){
+											                var text=''
+											                if(value==1){
+												               text='病区' 
+												            }else if(value==2){
+													           text='科室'  
+													        }else if(value==3){
+													           text='产房'  
+													        }else if(value==4){
+													           text='新生儿'  
+													        }else{
+													           text='其他'  
+													        }
+																return $g(text)
+										                }
+									                },
+									                {field:'Remarks',title:$g('备注'),width:80,
+									                	formatter:function(value,row,index){
+										                 	return $g(value)
+										                 }
+									                
+									                },
+									                
+									            ]],
+									            fitColumns: true
+									        ">    
+									</select>
+							
+							</div>
+							<div class="souInput Wards"><span style="line-height: 32px;">#(..Get("交班病区"))#</span></div>
+							<div class="souInput Wards">
+								<input id="Wards" style="vertical-align: top;width:200px;height:30px;margin-top: 1px;"> 	
+							</div>
+							<div class="souInput Locs"><span style="line-height: 32px;">#(..Get("交班科室"))#</span></div>
+							<div class="souInput Locs">
+								<input id="Locs"  style="vertical-align: top;width:200px;height:30px;margin-top: 1px;"> 
+									
+							</div>
+							<div class="souInput ShiftClass"><span style="line-height: 32px;">#(..Get("交班班制"))#</span></div>
+							<div class="souInput ShiftClass"> 
+								<select class="hisui-combogrid" id="ShiftClassList" style="vertical-align: top;width:150px" data-options="
+									            panelWidth: 350,
+									            blurValidValue:true,
+									            idField: 'ID',
+									            textField: 'ShiftClassName',
+									            method: 'get',
+									            onClickRow:function(rowIndex, rowData){
+										        	initLoad()
+										        },
+									            columns: [[
+									                {field:'ShiftClassName',title:$g('名称'),width:150,
+									                formatter:function(value,row,index){
+										                 	return $g(value)
+										                 }},
+									                {field:'ShiftClassType',title:$g('类型'),width:80,
+										                formatter:function(value,row,index){
+											                var text=''
+											                if(value==1){
+												               text='单班' 
+												            }else if(value==2){
+													           text='两班'  
+													        }else if(value==3){
+													           text='三班'  
+													        }else if(value==4){
+													           text='四班'  
+													        }else{
+													           text='其他'  
+													        }
+																return $g(text)
+										                }
+									                },
+									                {field:'ShiftIsDefalut',title:$g('默认交班'),width:80,
+										                formatter:function(value,row,index){
+												                var text='否'
+												                if(value==1){
+													               text='是' 
+													            }
+														        return $g(text)
+										                }
+									                },
+									                {field:'isWard',title:$g('全院'),width:80,
+									                	formatter:function(value,row,index){
+												                var text='否'
+												                if(value==0){
+													               text='是' 
+													            }
+														        return $g(text)
+										                }
+									                
+									                }
+									            ]],
+									            fitColumns: true
+									        ">    
+									</select>
+							
+							</div>
+							
+							
+							
+						</div>
+						
+						
+				</div>
+
+			
+			</td>
+		</tr>
+		<tr>
+			<td >
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'center',border:false,split:true" style="">
+						<div id="tt2" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools'" >   
+								
+								
+								<div  title="#(..Get("统计区域"))#" ProjectType="2" style="padding:0px;padding-top:4px;" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+									<div style="border-top:1px solid #ddd;"></div>
+									<table id="project"></table>
+									
+								</div>
+								<div  title="#(..Get("中间区域"))#" ProjectType="2" style="padding:0px;padding-top:4px;" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+									<div style="border-top:1px solid #ddd;"></div>
+									<table id="custom"></table>
+					
+								</div>
+								<div  title="#(..Get("明细区域"))#" ProjectType="2" style="padding:0px;padding-top:4px;" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+									<div style="border-top:1px solid #ddd;"></div>
+									<table id="detail"></table>
+					
+								</div>
+						</div>
+					</div>
+				</div>
+			</td>
+		</tr>
+		
+	</table>
+
+
+
+</div>
+
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+
+
+<script type="text/javascript">
+var bookGenral=""
+var ShiftTimes=""
+$(function(){
+	 
+	var curr_time = new Date()
+    var nowDate=curr_time.getFullYear()+"-"+(curr_time.getMonth()+1)+"-"+curr_time.getDate()
+    $('#datecomboStart').datebox("setValue", nowDate);
+    $('#datecomboEnd').datebox("setValue", nowDate);
+    
+    $('#datecomboStart').datebox("setValue", StartDate);
+    $('#datecomboEnd').datebox("setValue", EndDate);
+	
+	LoadShiftBook()
+	LoadShiftClass()
+	LoadWard()
+	LoadLoc()
+	
+	initLoad()
+	$HUI.tabs("#tt2",{
+		height:$("#tt2").parent().height(),
+		width:$("#tt2").parent().width(),
+		onSelect:function(title){
+			initLoad()
+						
+		}
+	});
+	
+	$("#bright").css({opacity: "1"})
+	 	$('body').addClass('active') 
+	 	$("#Loading").hide()	
+})
+
+function LoadShiftClass(){
+	var rtnA=[],rtnB=[],data=[]
+	///查询全院的班次
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftClassList",{HospID:GLOBAL.HospID, WardID:"", LocID:""},function(rtn){
+			rtnA=rtn
+	},'json',false);
+	///查询本病区的班次
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftClassList",{HospID:GLOBAL.HospID, WardID:GLOBAL.WardID, LocID:""},function(rtn){
+			rtnB=rtn
+	},'json',false);
+	
+	for(var i=0;i<rtnA.length;i++){
+		rtnA[i].isWard=0
+		
+		data.push(rtnA[i])
+	}
+	for(var i=0;i<rtnB.length;i++){
+		rtnB[i].isWard=1
+		data.push(rtnB[i])
+	}
+	//console.log(data)
+	var selectRow=0
+	for(var i=0;i<data.length;i++){
+		if(data[i].ShiftIsDefalut=="1"){
+			selectRow=i
+		}
+	}
+	var trObj = $HUI.combogrid("#ShiftClassList");
+    var grid = trObj.grid();
+    grid.datagrid("loadData",{"total":5,"rows":data});
+ 	grid.datagrid('selectRow',selectRow);	
+ 	if(data.length<=1){
+	    	$(".ShiftClass").hide()    
+	    }
+
+}
+function LoadShiftBook(){
+	var ShiftBookID=""
+	runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftBookByWardList",{"hospID":GLOBAL.HospID,WardID:GLOBAL.WardID},function(rtn){
+		
+
+		var selectIndex=0
+      	var trObj = $HUI.combogrid("#ShiftBookList");
+      	var grid = trObj.grid();
+    	grid.datagrid("loadData",{"total":5,"rows":rtn});
+        grid.datagrid('selectRow',selectIndex);
+        
+        if(rtn.length<=1){
+	    	$(".ShiftBook").hide()    
+	    }
+        
+	},'json',false);	
+
+}
+
+function LoadWard(){
+	
+		var LocArr=[],comboData=[]
+		var comboData=[{
+				"value":GLOBAL.WardID,
+				"text":session["LOGON.CTLOCDESC"]
+			}]
+		
+		$HUI.combo("#Wards",{
+			valueField:"value",
+			textField:"text",
+			multiple:false,
+			selectOnNavigation:false,
+			panelHeight:"auto",
+			editable:true,
+			//data:data
+		});
+		
+		var data={"data":comboData}
+		$("#Wards").combobox(data)
+		if(comboData.length>0){
+			$("#Wards").combobox("setValue",comboData[0].value)
+		}
+		if(comboData.length<=1){
+			$("div.Wards").hide()
+		}
+
+}
+function LoadLoc(){
+	var BookRow = $('#ShiftBookList').combogrid('grid').datagrid('getSelected');
+	var WardID=$("#Wards").combobox("getValue")
+	runClassMethod("Nur.SHIFT.Service.ShiftController","GetLocIDByWardID",{"ShiftBookID":BookRow.ID,"WardID":WardID},function(rtn){
+		
+
+		
+		$HUI.combo("#Locs",{
+			valueField:"value",
+			textField:"text",
+			multiple:false,
+			selectOnNavigation:false,
+			panelHeight:"auto",
+			editable:true,
+			//data:data
+		});
+		
+		var data={"data":rtn}
+		$("#Locs").combobox(data)
+		if(rtn.length>0){
+			//alert(rtn[0].value)
+			$("#Locs").combobox("setValue",rtn[0].value)
+			
+		}
+		if(rtn.length<=1){
+			$("div.Locs").hide()
+		}
+		
+	},"json",false)
+}
+
+// 初始化显示设置
+function initLoad(){
+	var rtnData=[]
+
+
+	var StartDate=$('#datecomboStart').datebox("getValue");
+	var EndDate=$('#datecomboEnd').datebox("getValue");
+		
+		
+	var ShiftBook = $('#ShiftBookList').combogrid('grid').datagrid('getSelected');
+		
+	var LocID=$("#Locs").combobox("getValue")
+	var ShiftClass = $('#ShiftClassList').combogrid('grid').datagrid('getSelected');
+	var columns=[
+	
+			
+			{field:"ShiftDate",title:$g("交班日期")},
+			{field:"AdmName",title:$g("患者姓名")},
+			{field:"BookTimeName",title:$g("交班班次"),formatter:function(value,row,index){return $g(value)}},
+			{field:"OldItemDR",title:$g("原交班项目"),formatter:function(value,row,index){return $g(value)}},
+			{field:"NewItemDR",title:$g("现交班项目"),formatter:function(value,row,index){return $g(value)}},
+			{field:"OldContent",width:300,title:$g("原交班内容"),
+				formatter:function(value,row,index){
+					return value ? '<span style="display:inline-block;width:100%;overflow:hidden;white-space:normal;text-overflow:ellipsis">'+value+'</span>' : ''    
+				}	
+			
+			},
+			{field:"NewContent",width:300,title:$g("现交班内容"),
+				formatter:function(value,row,index){
+					return value ? '<span style="display:inline-block;width:100%;overflow:hidden;white-space:normal;text-overflow:ellipsis">'+$g(value)+'</span>' : ''    
+				}
+			
+			},
+			{field:"OldCount",title:$g("原统计数")},
+			{field:"NewCount",title:$g("现统计数")},
+			{field:"DataType",title:$g("数据类型"),
+				formatter: function(value,row,index){
+					
+					var name={
+							"C":"统计区","M":"中间区","D":"明细区"
+						}
+					return $g(name[value])
+						
+				}
+			},
+			{field:"DataSource",title:$g("数据来源"),
+				formatter: function(value,row,index){
+					console.log(row.OldItemDR)
+					if(row.OldItemDR==""||typeof(row.OldItemDR)=="undefined"){
+						debugger
+						if(row.NewItemDR!=""&&typeof(row.NewItemDR)!="undefined"){
+							value="A"
+						}
+					}
+					
+					
+					var name={
+							
+							"A":"新增","M":"修改","D":"删除","H":"隐藏","R":"恢复"
+							
+						}
+					return $g(name[value])
+						
+				}
+			
+			
+			},
+			{field:"CreateDate",title:$g("操作日期"),width:200},
+			{field:"CreateTime",title:$g("操作时间"),width:200},
+			{field:"UserID",title:$g("操作人"),width:200},
+	]
+	var DataType="C",gid="project"
+	var tab = $('#tt2').tabs('getSelected');
+	var index = $('#tt2').tabs('getTabIndex',tab);
+	if(index==1){
+		DataType="M"
+		gid="custom"
+	}else if(index==2){
+		DataType="D"
+		gid="detail"
+	}
+	
+	var AreaColumns=[]
+	if(DataType=="C"){
+		 AreaColumns=["ShiftDate","BookTimeName","NewItemDR","OldCount","NewCount","DataSource","CreateDate","CreateTime","UserID"]
+	}
+	if(DataType=="M"){
+		 AreaColumns=["ShiftDate","BookTimeName","OldContent","NewContent","CreateDate","CreateTime","UserID"]
+	}
+	if(DataType=="D"){
+		 AreaColumns=["ShiftDate","AdmName","BookTimeName","OldItemDR","NewItemDR","OldContent","NewContent","DataSource","CreateDate","CreateTime","UserID"]
+	}
+	
+	var columnsArrs={}
+	for(var i=0;i<columns.length;i++){
+		var field=columns[i].field
+		columnsArrs[field]=columns[i]
+	}
+	columns=[] 
+	for(var i=0;i<AreaColumns.length;i++){
+		var field=AreaColumns[i]
+		columns.push(columnsArrs[field])
+	}
+	
+	
+	
+		
+	$('#'+gid).datagrid({
+		fit:true,
+		singleSelect : true,
+		fitColumns:true,
+		idField:"ID",
+		pagination : true, 		//是否开启分页
+		rownumbers : true,//是否开启行号
+		idField:"ID",
+		pageSize: 20,//分页数量
+		pageList : [20,50,100,200],
+		columns :[columns],
+		
+	}).datagrid({loadFilter:DocToolsHUINur.lib.pagerFilter});	
+	
+	var StartDate=$('#datecomboStart').datebox("getValue");
+	var EndDate=$('#datecomboEnd').datebox("getValue");
+
+
+	runClassMethod("Nur.SHIFT.Service.ShiftLogController","GetAllRecord",{"WardID":GLOBAL.WardID, "LocID":LocID, "ShiftBookID":ShiftBook.ID, "StartDate":StartDate, "EndDate":EndDate,"ClassID":ShiftClass.ID,"DataType":DataType},function(rtn){
+			//加载术语数据源
+			var projectArr=[]
+			var rtnData=[]
+			for(var i=0;i<rtn.length;i++){
+				
+					rtnData.push(rtn[i])
+				
+			}
+			
+			$("#"+gid).datagrid("unselectAll");
+			$("#"+gid).datagrid('loadData', rtnData)
+			
+			
+	},'json',true);
+     
+}
+
+</script>
+
+<script type="text/javascript">
+
+
+
+$('#datecomboStart').datebox({
+    onSelect: function (date) {
+        var dateH=$('#datecomboStart').datebox("getValue");
+       initLoad()
+    }
+});
+$('#datecomboEnd').datebox({
+    onSelect: function (date) {
+        var dateH=$('#datecomboStart').datebox("getValue");
+       
+    }
+});
+
+$('#datecomboStart').datebox().datebox('calendar').calendar({
+    validator: function (date) {
+        var curr_time = new Date()
+        var d1 = new Date(curr_time.getFullYear(), curr_time.getMonth(), curr_time.getDate());
+        return d1 >= date;
+    }
+});
+$('#datecomboEnd').datebox().datebox('calendar').calendar({
+    validator: function (date) {
+        var curr_time = new Date()
+        var d1 = new Date(curr_time.getFullYear(), curr_time.getMonth(), curr_time.getDate());
+        return d1 >= date;
+    }
+});
+var DocToolsHUINur={
+	lib:{
+		pagerFilter:function pagerFilter(data){
+			if (typeof data.length == 'number' && typeof data.splice == 'function'){	// is array
+				data = {
+					total: data.length,
+					rows: data
+				}
+			}else{
+				if(typeof(data.rows)=='undefined'){
+					var arr = []
+					for (var i in data){
+						arr.push(data[i])
+					}
+					data = {
+						total: arr.length,
+						rows: arr
+					}
+				}
+			}
+			var dg = $(this);
+			var opts = dg.datagrid('options');
+			var pager = dg.datagrid('getPager');
+			pager.pagination({
+				showRefresh:false,
+				onSelectPage:function(pageNum, pageSize){
+					opts.pageNumber = pageNum;
+					opts.pageSize = pageSize;
+					pager.pagination('refresh',{
+						pageNumber:pageNum,
+						pageSize:pageSize
+					});
+					dg.datagrid('loadData',data);
+					dg.datagrid('scrollTo',0); //滚动到指定的行  
+					    
+				}
+			});
+			if (!data.originalRows){
+				data.originalRows = (data.rows);
+			}
+			if (opts.pagination){
+				if (data.originalRows.length>0) {
+					var start = (opts.pageNumber==0?1:opts.pageNumber-1)*parseInt(opts.pageSize);
+					if ((start+1)>data.originalRows.length){
+						//取现有行数最近的整页起始值
+						start=Math.floor((data.originalRows.length-1)/opts.pageSize)*opts.pageSize;
+						opts.pageNumber=(start/opts.pageSize)+1;
+					}
+					//解决页码显示不正确的问题
+					$.extend($.data(pager[0], "pagination").options,{pageNumber:opts.pageNumber});
+					
+					var end = start + parseInt(opts.pageSize);
+					data.rows = (data.originalRows.slice(start, end));
+				}
+			}
+			//console.log(data)
+			return data;
+		}
+	}
+}
+function updateSbgTableSize() {
+    var n = 0;
+    var timer = setInterval(function() {
+        clearInterval(timer);
+    	window.location.reload()
+    }, 200);
+}
+
+
+window.addEventListener("resize", updateSbgTableSize)
+
+</script>
+
+</body>
+</html>

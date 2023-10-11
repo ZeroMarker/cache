@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<!--经营企业信息维护
+	csp:csp/pha.in.v3.config.vendor.csp
+	js: scripts/pha/in/v3/Config/Vendor.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHALIBV1 />
+    <style>
+		.Text-width {
+			width: 153px;
+		}
+		.Date-width {
+			width: 158px !important;
+		}
+		.Condition-width {
+			width: 140px;
+		}
+		.winText-width {
+			width: 153px;
+		}
+		.winText-width2 {
+			width: 148px;
+		}
+		.CheckBox-left {
+			padding-left: 76px;
+		}
+		.check-text {
+			padding-left: 0px;
+		}
+		.check-text1 {
+			margin-left:-6px;
+			display: inline-block;
+			padding-top: 5px;
+		}
+	</style>   
+</HEAD>
+
+        
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false" style="background-color: white">
+			<div class="hisui-layout" fit="true" >
+                <div data-options="region:'west',width:600, border:false,split:true">
+                    <div id="panel" class="hisui-panel" title="经营企业列表"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">	
+                        <table id="GridVendor"></table>				                            
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div id="tabPrt" class="hisui-tabs tabs-gray" fit="true" >   
+						<div id="tabDrugPropLable" title="基本信息" data-options="closable:false,border:false,selected:true" > 
+							<div class="hisui-layout" fit="true">
+								<div class="datagrid-toolbar" style="border-bottom:1px dashed #ccc" data-options="region:'north',border:false">
+									<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnComp" onclick="javascript:UpdateApc()">#(..Get("保存"))#</a>
+								</div>
+								<div id="basicInfo" data-options="region:'center',border:false">
+								<!--
+									<div class="pha-line"></div>		
+								-->		
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="VendorCode">&emsp;&emsp;#(..Get("代码"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="VendorCode" placeholder="请输入代码..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",requied:true,save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="VendorDesc">&emsp;&emsp;&emsp;&emsp;#(..Get("名称"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="VendorDesc" placeholder="请输入名称..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",requied:true,save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="Tel">&emsp;&emsp;#(..Get("电话"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Tel" placeholder="请输入电话..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="VendorCat">&emsp;&emsp;&emsp;&emsp;#(..Get("分类"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="VendorCat" placeholder="请选择分类..." class="Date-width"  data-pha='class:"hisui-combobox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="Fax">&emsp;&emsp;#(..Get("传真"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Fax" placeholder="请输入传真..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="VendorEmail">&emsp;&emsp;&emsp;&emsp;#(..Get("邮箱"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="VendorEmail" placeholder="请输入邮箱..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="Abbrev">&emsp;&emsp;#(..Get("简称"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Abbrev" placeholder="请输入简称..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="Address">&emsp;&emsp;&emsp;&emsp;#(..Get("地址"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Address" placeholder="请输入地址..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="President">&emsp;&emsp;#(..Get("法人"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="President" placeholder="请输入法人..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="PresidentCard">&emsp;#(..Get("法人身份证"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="PresidentCard" placeholder="请输入法人身份证..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="PresidentTel">#(..Get("法人电话"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="PresidentTel" placeholder="请输入法人电话..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="CtrlAcct">&emsp;&emsp;&emsp;&emsp;#(..Get("账户"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="CtrlAcct" placeholder="请输入账户..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="CrAvail">#(..Get("注册资金"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="CrAvail" placeholder="请输入注册资金..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="CrLimit">&emsp;&emsp;&emsp;#(..Get("采购额"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="CrLimit" placeholder="请输入采购额..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="ConPerson">#(..Get("开户银行"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="ConPerson" placeholder="请输入开户银行..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="BankLicApprovalNo">#(..Get("许可证核准号"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="BankLicApprovalNo" placeholder="请输入许可证核准号..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="BankLicNo">#(..Get("许可证号"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="BankLicNo" placeholder="请输入许可证号..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="VendorAlias">&emsp;&emsp;&emsp;#(..Get("助记码"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="VendorAlias" placeholder="请输入助记码..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="EstablishedDate">#(..Get("成立日期"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="EstablishedDate"  class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:true' />
+										</div>
+										<div class="pha-col">
+											<label for="LstPoDate">#(..Get("合同截止日期"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="LstPoDate"  class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:true' />
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="BusinessTerm">#(..Get("营业期限"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="BusinessTerm"  class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="LstBsDate">#(..Get("最后业务日期"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="LstBsDate"   disabled="disabled" class="hisui-datebox dhcpha-date Date-width" data-pha='class:"hisui-datebox",disabled:true,save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="RegAddress">#(..Get("注册地址"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="RegAddress" placeholder="请输入注册地址..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="ResponsiblePerson">&emsp;#(..Get("企业负责人"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="ResponsiblePerson" placeholder="请输入企业负责人..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="DepotAddress">#(..Get("仓库地址"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="DepotAddress" placeholder="请输入仓库地址..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+										<div class="pha-col">
+											<label for="QualityManager">&emsp;#(..Get("质量管理人"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="QualityManager" placeholder="请输入质量管理人..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:true'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="Status">#(..Get("使用状态"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Status" placeholder="请选择使用状态..." class="hisui-combobox Date-width" data-pha='class:"hisui-combobox",save:true,clear:true,query:true'/>
+										</div>
+										
+									</div>
+									<div class="pha-row" hidden="true" >	
+										<div class="pha-col CheckBox-left" >
+											<input id="RCFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox"'  data-pha='class:"hisui-checkbox",save:true,clear:true,query:true'>
+										</div>
+										<div class="pha-col">
+											<label for="RCFlag" >#(..Get("限制供应"))#</label>
+										</div>
+									</div>
+									<div class="pha-row">	
+										
+										<div class="pha-col CheckBox-left">
+											<input id="PoisonCFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox"'  data-pha='class:"hisui-checkbox",save:true,clear:true,query:true'>
+										</div>
+										<div class="pha-col check-text">
+											<label for="PoisonCFlag" disabled="true">#(..Get("麻醉精一药品经营资质(国家级)"))#</label>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col CheckBox-left">
+											<input id="PoisonPFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox"'  data-pha='class:"hisui-checkbox",save:true,clear:true,query:true'>
+										</div>
+										<div class="pha-col check-text">
+											<label for="PoisonPFlag" disabled="true">#(..Get("麻醉精一药品经营资质(省级)"))#</label>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col CheckBox-left">
+											<input id="SecondSpiritFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox"'  data-pha='class:"hisui-checkbox",save:true,clear:true,query:true'>
+										</div>
+										<div class="pha-col check-text">
+											<label for="SecondSpiritFlag" disabled="true">#(..Get("精二药品经营资质"))#</label>
+										</div>
+									</div>
+								</div>
+								
+								
+							</div>
+						</div> 
+						<div id="tabPHCGeLable" title="资质信息" data-options="closable:false">
+							<table id="GridCert"></table>
+						</div>   
+						<div id="tabArcLable" title="业务员信息" data-options="closable:false,border:false" > 
+							<table id="GridPerson"></table>
+						</div> 
+					</div>
+	            </div>
+			</div>
+		</div>
+    </div>
+    <!--资质信息列表工具栏-->
+	<div id="GridCertBar">
+		<div class="pha-line-bar">
+            <a href="#" id="AddCertBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:AddCert()">#(..Get("新增"))#</a>
+			<a href="#" id="UpdateCertBT" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="javascript:UpdateCert()">#(..Get("修改"))#</a>
+        </div>
+	</div>
+	<!--业务员列表工具栏-->
+	<div id="GridPersonBar">
+		<div class="pha-line-bar">
+            <a href="#" id="AddPersonBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"onclick="javascript:AddPerson()">#(..Get("新增"))#</a>
+			<a href="#" id="SavePersonBT" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="javascript:UpdatePerson()">#(..Get("修改"))#</a>
+        </div>
+	</div>
+
+	<!--经营企业列表工具栏-->
+	<div id="GridVendorBar">
+		<div class="pha-row">
+			 <div class="pha-col">
+                <label id='_HospListLabel'>#(..Get("医院"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id='_HospList' class="Text-width"/>
+            </div>
+            <div class="pha-col">
+            	<a id='_HospBtn'></a>
+            </div>
+        </div>   
+        <div class="pha-row">	
+			<div class="pha-col">
+				<label for="VenCode">#(..Get("代码"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="VenCode" placeholder="请输入代码..."  class="hisui-validatebox Condition-width "  data-pha='class:"hisui-validatebox",clear:true,query:0'/>
+			</div>
+			<div class="pha-col">
+				<label for="VenState">#(..Get("状态"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="VenState" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:1'/>
+			</div>
+			<div class="pha-col">
+				<a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false" onclick="javascript:queryVendor()">#(..Get("查询"))#</a>
+			</div>
+		</div>
+		<div class="pha-row">	
+			<div class="pha-col">
+				<label for="VenDesc">#(..Get("名称"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="VenDesc" placeholder="请输入名称..."  class="hisui-validatebox Condition-width" data-pha='class:"hisui-validatebox",clear:true,query:2'/>
+			</div>
+			<div class="pha-col">
+				<label for="VenCat">#(..Get("分类"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="VenCat" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:3'/>
+			</div>
+			<div class="pha-col">
+				<a id="btnAddApc" class="hisui-linkbutton" data-options="iconCls:'icon-w-add',plain:false" onclick="javascript:AddApc()">#(..Get("新增"))#</a>
+			</div>
+		</div>
+    </div>
+    <!--新增经营企业窗口-->
+	<div id="diagAddWin" class="hisui-dialog" data-options="closed:'true',modal:true" title="新增经营企业" style="width:452px;height:167px;">
+		<div class="pha-row">	
+			<div class="pha-col">
+				<label for="AddVenCode">&emsp;&emsp;#(..Get("代码"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="AddVenCode" placeholder="请输入代码..."  class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",requied:true,clear:true,query:0'/>
+			</div>
+			<div class="pha-col">
+				<label for="AddVenDesc">#(..Get("名称"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="AddVenDesc" placeholder="请输入名称..."  class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",requied:true,clear:true,query:1'/>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col">
+				<label for="AddVenStates">#(..Get("使用状态"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="AddVenStates" placeholder="请选择使用状态..."  class="hisui-combobox Condition-width" data-pha='class:"hisui-combobox",clear:true,query:2'/>
+			</div>
+		</div>
+		<div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+		    <a href="#" id="ASaveBT" align="center" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:SaveAddApc()">保存</a>
+		</div>
+	</div>
+	<!--资质弹出窗口-->
+	<div id="diagAddCert" class="hisui-dialog" data-options="closed:'true',modal:true" title="资质编辑" style="width:470px;height:246px;">
+		<div class="pha-row">	
+			<div class="pha-col">
+				<input id="CERTRowId"   type="hidden" class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",clear:true,query:0'/>
+				<label for="CERTType">#(..Get("证件类型"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTType"   class="hisui-combobox winText-width" data-pha='class:"hisui-combobox",requied:true,clear:true,query:1'/>
+			</div>
+			<div class="pha-col">
+				<label for="CERTText">#(..Get("证件编号"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTText"  class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",requied:true,clear:true,query:2' style="width:148px"/>
+			</div>
+		</div>
+		<div class="pha-row">	
+			<div class="pha-col">
+				<label for="CERTDateFrom">#(..Get("效期开始"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTDateFrom" class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:3'/>
+			</div>
+			<div class="pha-col">
+				<label for="CERTDateTo">#(..Get("效期截止"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTDateTo"  class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:4'/>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col">
+				<label for="CERTIssuedDept">#(..Get("发证机关"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTIssuedDept"  class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",clear:true,query:5' style="width:148px"/>
+			</div>
+			<div class="pha-col">
+				<label for="CERTIssuedDate">#(..Get("发证日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTIssuedDate"class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",disabled:true,save:true,clear:true,query:6'/>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col">
+				<label >&emsp;&emsp;#(..Get("标志"))#</label>
+			</div>
+			<div class="pha-col" style="margin-left:-4px">
+				<input id="CERTBlankedFlag" type="checkbox" class="hisui-checkbox"   data-pha='class:"hisui-checkbox",save:true,clear:true,query:7'>
+				<label class="check-text1" for="CERTBlankedFlag" disabled="true">#(..Get("长期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTDelayFlag" type="checkbox" class="hisui-checkbox"   data-pha='class:"hisui-checkbox",save:true,clear:true,query:8'>
+				<label class="check-text1" for="CERTDelayFlag" disabled="true">#(..Get("延期"))#</label>
+			</div>
+			<div class="pha-col" style="padding-left:74px;">
+				<label for="CERTDelayDateTo">#(..Get("延期至"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTDelayDateTo"  class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",disabled:true,save:true,clear:true,query:9'/>
+			</div>
+		</div>
+		<!--div class="pha-row">	
+			<div class="pha-col">
+				<input id="CERTShowFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox",save:true,clear:true,query:10'>
+				<label for="CERTShowFlag" disabled="true">是否展示</label>
+			</div>
+		</div-->
+		<div data-options="region:'south'" border="false" style="text-align:center">
+		    <a href="#" id="SaveCertBT" align="center" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:SaveCert()">#(..Get("保存"))#</a>
+		</div>
+	</div>
+	<!--人员弹出窗口-->
+	<div id="diagAddPerson" class="hisui-dialog" data-options="closed:'true',modal:true" title="人员信息编辑" style="width:500px;height:247px;">
+		<div class="pha-row">	
+			<div class="pha-col">
+				<input id="PersonRowId"   type="hidden" class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",clear:true,query:0'/>
+				<label for="PersonName">&emsp;&emsp;&emsp;&emsp;#(..Get("姓名"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonName"   class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",requied:true,clear:true,query:1' style="width:148px"/>
+			</div>
+			<div class="pha-col">
+				<label for="PersonCard">&emsp;#(..Get("身份证"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonCard"  class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",clear:true,query:2' style="width:148px"/>
+			</div>
+		</div>
+		<div class="pha-row">	
+			<div class="pha-col">
+				<label for="PersonCarrTel">&emsp;&emsp;&emsp;&emsp;#(..Get("手机"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonCarrTel"   class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",clear:true,query:3' style="width:148px"/>
+			</div>
+			<div class="pha-col">
+				<label for="PersonTel">&emsp;&emsp;#(..Get("电话"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonTel"  class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",clear:true,query:4' style="width:148px"/>
+			</div>
+		</div>
+		<div class="pha-row">	
+			<div class="pha-col">
+				<label for="PersonEmail">&emsp;&emsp;&emsp;&emsp;#(..Get("邮箱"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonEmail" class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",clear:true,query:5' style="width:148px"/>
+			</div>
+			<div class="pha-col">
+				<label for="PersonFax">&emsp;&emsp;#(..Get("传真"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonFax" class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",clear:true,query:6' style="width:148px"/>
+			</div>
+		</div>
+		<div class="pha-row">	
+			<div class="pha-col">
+				<label for="PersonStartDate">#(..Get("授权开始日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonStartDate" class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:7'/>
+			</div>
+			<div class="pha-col">
+				<label for="PersonEndDate">#(..Get("截止日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="PersonEndDate" class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:8'/>
+			</div>
+		</div>
+		<!--div class="pha-row">	
+			<div class="pha-col" style="padding-left:98px;">
+				<input id="PersonShowFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox",save:true,clear:true,query:9'>
+				<label for="PersonShowFlag" disabled="true">是否展示</label>
+			</div>
+		</div-->
+		<div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+		    <a href="#" id="SavePersonBT" align="center" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:SavePerson()">#(..Get("保存"))#</a>
+		</div>
+	</div>
+
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/Config/Vendor.js"></script>
+
+</body>
+</HTML>

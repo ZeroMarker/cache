@@ -7,43 +7,50 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
 <server>
 s SubType=$g(%request.Data("SubType",1))
 s SourceType=$g(%request.Data("SourceType",1))
+//Add By QW20201223 BUG: QW0085 报废汇总批量审核 begin
+s QXType=$Get(%request.Data("QXType",1))
+s Type=$Get(%request.Data("Type",1))
+s WaitAD=$Get(%request.Data("WaitAD",1))
+s WaitAD=##Class(web.DHCEQCommon).TransValueFromPage(WaitAD,"bool")
+s StatusDR=$Get(%request.Data("StatusDR",1))
+s KindFlag=$g(%request.Data("KindFlag",1))
+//Add By QW20201223 BUG: QW0085 报废汇总批量审核 end
 </server>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
 		<div class="hisui-panel"  title="汇总申请查询" data-options="fit:true,eqtitle:'maintitle'" style="width:100%;">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<!--modify by lmm 2020-02-26 LMM0060-->
-				<div data-options="region:'north',border:false" style="padding-bottom:10px;width:150%;border-bottom:solid 1px #ccc;">
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;border-bottom:dashed 1px #ccc;">
 					<div class="eq-table">
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cMergeOrderNo" for="MergeOrderNo">汇总单号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MergeOrderNo"></div>
-							<div class="eq-table-td eq-table-label"><lable id="cEquip" for="Equip">设备名称</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Equip" data-options="'component':'EM.L.Equip'"></div>	
-							<div class="eq-table-td eq-table-label"><lable id="cStartDate" for="StartDate">报废申请日期</lable></div>  <!--modify by lmm 2019-08-28 988123-->
-							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="StartDate"></div>
-							<div class="eq-table-td eq-table-button"><a id="BAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="margin-left:120px;margin-right:20px">新增</a></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cMergeOrderNo" for="MergeOrderNo">汇总单号</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="MergeOrderNo"></div>
+							<div class="eq-table-td eq-table-label-new"><lable id="cEquip" for="Equip">设备名称</lable></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="Equip"></div>
+							<div class="eq-table-td eq-table-label-new"><lable id="cStartDate" for="StartDate">报废申请日期</lable></div>
+							<div class="eq-table-td"><input type="text" class="hisui-datebox textbox" id="StartDate"></div>
+							<div class="eq-table-td eq-table-button"><a id="BAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" >新增</a></div>
 						</div>
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cRequestNo" for="RequestNo">报废单号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RequestNo"></div>
-							<div class="eq-table-td eq-table-label"><lable id="cUseLoc" for="UseLoc">使用科室</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UseLoc" data-options="'component':'PLAT.L.Loc'"></div>	
-							<div class="eq-table-td eq-table-label"><lable id="cEndDate" for="EndDate">至</lable></div>
-							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EndDate"></div>
-							<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:120px;margin-right:20px">查询</a></div>
+							<div class="eq-table-td eq-table-label-first"><label id="cRequestNo" for="RequestNo">报废单号</label></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="RequestNo"></div>
+							<div class="eq-table-td eq-table-label-new"><lable id="cUseLoc" for="UseLoc">使用科室</lable></div>
+							<div class="eq-table-td"><input class="hisui-validatebox" id="UseLoc" data-options="'component':'PLAT.L.Loc'"></div>	
+							<div class="eq-table-td eq-table-label-new"><lable id="cEndDate" for="EndDate">至</lable></div>
+							<div class="eq-table-td"><input type="text" class="hisui-datebox textbox" id="EndDate"></div>
+							<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >查询</a></div>
 						</div>
 					</div>
 				</div>
-				<div data-options="region:'center',border:false">
+				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
 					<table id="mergeorderfinddatagrid" data-options="fit:true,border:false"></table>
-				
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:5px;top:0px;"></span>	
 				</div>
 			</div>
 		</div>
@@ -52,6 +59,12 @@ s SourceType=$g(%request.Data("SourceType",1))
 		<form name="DHCEQ">	
             <input id="SubType" name="SubType" type="hidden" value=#(SubType)#>
             <input id="SourceType" name="SourceType" type="hidden" value=#(SourceType)#>
+            <input id="QXType" name="QXType" type="hidden" value=#(QXType)#>
+            <input id="Type" name="Type" type="hidden" value=#(Type)#>
+            <input id="WaitAD" name="WaitAD" type="hidden" value=#(WaitAD)#>
+            <input id="StatusDR" name="StatusDR" type="hidden" value=#(StatusDR)#>
+            <input id="KindFlag" name="KindFlag" type="hidden" value=#(KindFlag)#>
+            <INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>
 		</form>
 	</div>
 <script type='text/javascript' src='../scripts/dhceq/em/mergeorderfind.js'></script>

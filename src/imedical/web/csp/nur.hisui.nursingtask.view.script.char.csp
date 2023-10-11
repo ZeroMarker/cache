@@ -1,0 +1,289 @@
+<script type="text/javascript">
+function closeAllTabs(id){
+	//清空所有的Tab
+	var arrTitle = new Array();
+	var id = "#"+id;//Tab所在的层的ID
+	var tabs = $(id).tabs("tabs");//获得所有小Tab
+	var tCount = tabs.length;
+	if(tCount>0){
+				//收集所有Tab的title
+		for(var i=0;i<tCount;i++){
+			arrTitle.push(tabs[i].panel('options').title)
+		}
+				//根据收集的title一个一个删除=====清空Tab
+		for(var i=0;i<arrTitle.length;i++){
+			$(id).tabs("close",arrTitle[i]);
+		}
+	}
+}
+function resultTabTitles(rowData,tabsId,charId,rtnTitle){
+	//生成tab的title
+	//var title_name = "未执行";
+	var title_name = json[tabsId].name
+	var iconCls=json[tabsId].iconCls
+	
+	closeAllTabs(charId)
+	$HUI.tabs("#"+charId).add({
+		title: title_name,
+		iconCls:iconCls    		
+	});
+	
+	
+	$HUI.tabs("#"+charId).add({
+		title: '<span class="keyname" key="'+0+'">未执行</span>'
+	});
+	
+	var tab = $HUI.tabs("#"+charId).getTab(1)
+	$HUI.tabs("#"+charId).update({
+		tab:tab,
+		options:{
+			content : resultTabContent(rowData,rtnTitle)
+		}	
+	});
+	animateDiv(charId,rowData)
+
+}
+
+function gidChar(tabsId,rowData,rtnTitle){
+	console.log(rowData)
+	var charId=tabsId+'Char'
+	resultTabTitles(rowData,tabsId,charId,rtnTitle)
+	$('#'+charId).tabs({    
+		onSelect:function(title,index){    
+			var key = $(title).attr("key");
+			var tab = $HUI.tabs("#"+charId).getTab(index)
+			$HUI.tabs("#"+charId).update({
+				tab:tab,
+				options:{
+					content : resultTabContent(rowData,rtnTitle)
+				}	
+			});
+			animateDiv(charId,rowData)
+		}    
+	});
+	$('#'+charId).tabs('select',1);  
+}
+function resultTabContent(data,rtn){
+	console.log(data)
+	var codeArrs={}
+	var arrs = []
+	var nums = 1
+	for(var i in data){
+		//nums += data[i].value
+		var val = data[i].list.length
+		if(val>nums){
+			nums = val
+		}
+		codeArrs[data[i].titleCode]=data[i] 
+	}
+	
+		for(var i=0;i<rtn.length;i++){
+			
+			var code=rtn[i].taskItemID+"@"+rtn[i].text
+			
+			if(codeArrs[code]!="" && !isUndefined(codeArrs[code])){
+				var data=codeArrs[code]
+				var value = data.list.length
+				var num = (parseInt(value) / nums) * 100
+				if(num==0){
+					num=1
+				}
+				var html = '<li><div id="bar" code="'+data.titleCode+'" groupCode="'+data.groupCode+'" data-percentage="'+num+'" class="bar"><div style="bottom: 20px;position: relative;">'+data.value+'</div></div><span class="name">'+data.name+'</span></li>'
+				arrs.push(html)
+
+				
+			} 
+		}
+
+	
+	
+	
+	
+
+	/*for(var i in data){
+		var value = data[i].list.length
+		var num = (parseInt(value) / nums) * 100
+		if(num==0){
+			num=1
+		}
+		var html = '<li><div id="bar" code="'+data[i].titleCode+'" groupCode="'+data[i].groupCode+'" data-percentage="'+num+'" class="bar"><div style="bottom: 20px;position: relative;">'+data[i].value+'</div></div><span class="name">'+data[i].name+'</span></li>'
+		arrs.push(html)
+	}*/
+	var htmls ='<div id="chart" style="position: relative;"><ul id="bars" style="margin-top:20px;position: absolute;bottom: 60px;">'+arrs.join("")+'</ul></div>'
+	return htmls;
+}
+
+var showIdAnimateArrs = ["tabsTasksSign","tabsTasksAssess"]
+	//已动画的形式呈现柱状图
+function animateDiv(tabsId,rowData){
+	$("#"+tabsId+" #bars li .bar").each(function(e,d){
+		var f=$(this).data("percentage");
+		if(f > 90){f=90}
+		
+		var ht = $(this).parents("#chart").height()-100
+		console.log(ht)
+		f = ht * (f/100)
+		
+		$(this).animate({height:f+"px"},500)
+		$(this).webuiPopover('destroy');			
+		var barCode = $(this).attr("code")
+		
+		$(this).webuiPopover({
+			title:"",
+			content:function(){
+				console.log(rowData)
+				var list=""
+				for(var i in rowData){
+					var code = rowData[i].titleCode
+					if(barCode==code){
+						list = rowData[i].list
+					}
+				}
+				
+				
+				var patRecord={}
+				for(var i=0;i<list.length;i++){
+					var patId= list[i].patId
+					var patName=list[i].patName
+					var bedCode=list[i].bedCode
+					var pat=bedCode+"/"+patName
+					if(isUndefined(patRecord[pat])){
+						patRecord[pat]=[]
+					}
+					patRecord[pat].push(list[i])
+				}
+				for(var pat in patRecord){
+					var records=patRecord[pat]
+					var dateReocrd={}
+					for(var r=0;r<records.length;r++){
+						var dateStr=records[r].dateStr
+						var timeStr=records[r].exeTime	
+						if(isUndefined(dateReocrd[dateStr])){
+							dateReocrd[dateStr]=[]
+						}
+						dateReocrd[dateStr].push(records[r])
+					}
+					patRecord[pat]=[]
+					patRecord[pat].push(dateReocrd)
+				}
+				console.log(patRecord)
+				
+				
+				var html=[];
+				html.push('<table class="related-factors">');
+				//html.push('<tr class="title"><td>'+$g("ID")+'</td><td class="assess-source">'+$g("来源")+'</td><td class="assess-factors">'+$g("触发因素")+'</td><td class="assess-trggerTime">'+$g("触发时间")+'</td><td class="assess-status">'+$g("触发值")+'</td></tr>');
+				
+				var thHtml=[]
+				var tdHtml=[]
+				for(var pat in patRecord){
+					 thHtml.push("<td>"+pat+"</td>")
+					 var patList=patRecord[pat]
+					 var phtml=""
+					 for(var d=0;d<patList.length;d++){
+						var dateArr=patList[d]
+						
+						for(date in dateArr){
+							var timeData=dateArr[date]
+							phtml=phtml+"<div style='color:red;font-weight: bold;white-space: nowrap;'>"+date+"</div>"
+						
+							for(var t=0;t<timeData.length;t++){
+							
+								var timeStr=timeData[t].exeTime	
+								var exeItemName=timeData[t].exeItemName
+								//+":"+exeItemName
+								phtml=phtml+"<div style='white-space: nowrap;'>"+timeStr+"</div>"
+							}	
+						} 
+						 
+					 }
+					 tdHtml.push("<td>"+phtml+"</td>")
+				}
+				html.push('<tr class="title">'+thHtml.join("")+'</tr>')
+				html.push('<tr class="title" style="vertical-align: top;">'+tdHtml.join("")+'</tr>')
+				html.push('</table>');
+				var htmlCode= html.join('');
+				delete html;
+				return htmlCode;
+						
+						
+			},
+			trigger:'hover',
+			placement:'right',
+			style:'inverse',
+			height:'100%',
+			maxWidth:864,
+			maxHeight:660,
+		});
+		
+		
+		
+		//$(this).webuiPopover('show');
+		
+	})
+}
+
+//双击打印统计时，跳转操作
+	$("body").on("dblclick","li div.bar",function(){
+		
+		var h = $("#nrLayout").find(".tabs-panels").eq(0).height()
+		var text = $(this).siblings("span.name").text();
+		var id = $(this).parents(".hisui-tabs").attr("id")
+		
+		
+		
+
+		TWstartDate = $("#execStDate").datebox("getValue");
+		TWstartTime = $("#execStTime").timespinner("getValue");
+		TWendDate = $("#execEndDate").datebox("getValue");
+		TWendTime = $("#execEndTime").timespinner("getValue");
+		TWsheetCode = $(this).attr("code")
+		
+		
+	
+		var EpisodeIDS=""
+		var slen = $("#patient_search").length
+		if(slen>0){
+			
+			EpisodeIDS = resultPatIds();
+		}else{
+			EpisodeIDS = "#(EpisodeID)#";
+			
+		}
+		EpisodeIDStr = EpisodeIDS
+
+		var iframeUrl=""
+		if(id.indexOf("tabsTasksTreat")>-1){
+			TWsheetCode = "HLZLD"
+			var curUrl = window.location.href.split("/csp/")[0] + "/csp/";
+			var iframeUrl = curUrl + "dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute"
+		}else if(id.indexOf("tabsDoctorOrderExe")>-1){
+			var curUrl = window.location.href.split("/csp/")[0] + "/csp/";
+			var iframeUrl = curUrl + "dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute"
+			//var iframeUrl = curUrl + "dhc.nurse.vue.nis.csp?1=1&pageName=orderExcute/biz/excute?EpisodeIDS="+EpisodeIDS+"&TWflag="+TWflag+"&TWstartDate="+TWstartDate+"&TWstartTime="+TWstartTime+"&TWendDate="+TWendDate+"&TWendTime="+TWendTime+"&TWsheetCode="+TWsheetCode;
+		}else if(id.indexOf("tabsTasksSign")>-1){
+			var stdate = TWstartDate +' '+ TWstartTime
+			var etDate = TWendDate + ' ' + TWendTime
+			var EpisodeID = EpisodeIDS.split("^")[0]
+			var arrs = EpisodeIDS.split("^")
+			TWsheetCode=$(this).attr("groupCode")
+			var iframeUrl = 'nur.hisui.multivitalsignbyday.csp?componentArgs={}&codeStr='+TWsheetCode+'&EpisodeIDS='+EpisodeIDS+'&startDateTime='+stdate+'&endDateTime='+etDate+'&EpisodeID='+arrs[0]
+		}else if(id.indexOf("tabsTasksAssess")>-1){
+			var stdate = TWstartDate +' '+ TWstartTime
+			var etDate = TWendDate + ' ' + TWendTime
+			var text =$(this).parents("li").find("span.name").text()
+			text="常规护理任务-护理评估"
+			var iframeUrl = 'nur.hisui.taskoverview.assess.csp?1=1&EpisodeIDS='+EpisodeIDS+'&startDateTime='+stdate+'&endDateTime='+etDate+'&showTaskTabName='+text+'&code='+TWsheetCode
+		}else if("tabsNurseOrderExe"==id){
+			var text =$(this).parents("li").find("span.name").text()
+			var ptext =  encodeURI(text);  
+			iframeUrl='nur.hisui.nurseplantaskexecute.csp?1=1&episodeIDString='+EpisodeIDS+'&dateFrom='+TWstartDate+'&timeFrom='+TWstartTime+'&dateTo='+TWendDate+'&timeTo='+TWendTime+'&showTaskTabName='+ptext
+		}
+			console.log(iframeUrl)
+		if(iframeUrl !=""){
+			var content = '<iframe scrolling="auto" frameborder="0"  src="'+iframeUrl+'" style="width:100%;height:'+h+'px;"></iframe>';
+			addTab(text,content)
+		}
+
+		
+	})
+</script>

@@ -1,0 +1,569 @@
+
+<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta charset="utf-8" />
+<title>
+	药品知识库
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" href="../scripts/bdp/Framework/css/header.css" />
+    <!-- bootstrap & fontawesome -->
+    <link rel="stylesheet" href="../scripts/bdp/Framework/assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../scripts/bdp/Framework/assets/css/font-awesome.min.css" />
+    <link href="../scripts/bdp/Framework/assets/css/jquery-ui.custom.min.css" rel="stylesheet" />
+    <!-- page specific plugin styles -->
+    <!-- text fonts -->
+    <link rel="stylesheet" href="../scripts/bdp/Framework/assets/css/ace-fonts.css" />
+
+    <!-- ace styles -->
+    <link rel="stylesheet" href="../scripts/bdp/Framework/assets/css/ace.min.css" />
+
+    <!-- ace settings handler -->
+    <script src="../scripts/bdp/Framework/assets/js/ace-extra.min.js"></script>
+
+    <link href="../scripts/bdp/Framework/assets/app.css" rel="stylesheet" />
+	<link href="../scripts/dhcnewpro/dhcckb/css/hos.main.css" rel="stylesheet" />
+  </head>  
+<body>
+	<SCRIPT language="Javascript">
+		function CollapgeMenu() {
+			  if ($(".sidebar-toggle").hasClass("toggleactive")){
+				  $(".menu-icon").css({"margin-left":"0px"})
+			  }else{
+			  	$(".menu-icon").css({"margin-left":"10px"})
+			  }
+			  $(".sidebar-toggle").toggleClass("toggleactive")
+		    try{
+			    //折叠菜单			
+			    window.parent.Fold(true)
+			   
+		    }
+		    catch(e)  {
+			    
+		    }
+
+		}
+	</SCRIPT>
+	<div id="centerPanel" class="centerPanel no-skin">
+	 	<!--左侧菜单-->
+    	<div class="main-container" id="main-container">
+			<script type="text/javascript">
+				try { ace.settings.check('main-container', 'fixed') } catch (e) { }
+			</script>
+			
+			<!-- #section:basics/sidebar -->
+	        <div id="sidebar" class="sidebar responsive sidebar-fixed">
+				<script type="text/javascript">
+				    try { ace.settings.check('sidebar', 'fixed') } catch (e) { }
+			   </script>
+				
+	            <div class="sidebar-toggle sidebar-collapse toggleactive" style="height:36px;" onclick="CollapgeMenu()">
+	            	<img src="../scripts/dhcnewpro/dhcckb/images/collapse.png" style="width:16px; height: 16px;margin: 8px 0;"/>
+	            </div>
+	            
+	            <!--新增搜索框-->
+	           	<div class="sidebar-shortcuts" id="sidebar-shortcuts" style="display:none">
+					<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large" style="width:100%;min-width: 190px">
+						<div class="navbar-header pull-left" style="width:100%">
+							<input id="searchid" type="text" class="form-control" onkeypress="judge_enter();" placeholder="搜索菜单名称"></td>	                      
+	                       	<a id='submit' onclick="SearchMenu()" href="#">
+	                       		<img src="../scripts/dhcnewpro/dhcckb/images/search.png" style="width:16px; height:16px;"/>
+	                         </a>
+	                    </div>
+						<!-- /section:basics/sidebar.layout.shortcuts -->
+					</div>
+
+					<div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">
+					   <img src="../scripts/dhcnewpro/dhcckb/images/search.png" style="width: 16px; height: 16px; margin: 5px;"/>
+					</div>
+				</div><!-- /.sidebar-shortcuts --> 
+				<!--新增搜索框完--> 
+				
+				<script type="text/javascript">
+	          	
+		            function getSession ()
+					{
+						var mystr="";
+						mystr+="^";									///IP
+						mystr+=session['LOGON.USERID']+"^";         ///USERID
+						mystr+=session['LOGON.CTLOCID']+"^";		///CTLOCID
+						mystr+=session['LOGON.GROUPID']+"^";		///GROUPID
+						mystr+="^";                                 ///HospitalID
+						mystr+=session['LOGON.SITECODE']+"^";	    ///SITECODE
+						mystr+="^"                                  ///context
+						return mystr;
+					}
+					
+					//点击搜索按钮,检索关键字标黄底
+					function SearchHighlight(idVal,keyword) 
+					{ 
+					    var pucl = document.getElementById(idVal); 
+					    if("" == keyword) return; 
+					    var temp=pucl.innerHTML; 
+					    var htmlReg = new RegExp("\<.*?\>","i"); 
+					    var arrA = new Array(); 
+					    //替换HTML标签 
+					    for(var i=0;true;i++) 
+					    { 
+					        var m=htmlReg.exec(temp); 
+					        if(m) 
+					        { 
+					            arrA[i]=m; 
+					        } 
+					        else 
+					        { 
+					            break; 
+					        } 
+					        temp=temp.replace(m,"{[("+i+")]}"); 
+					    } 
+					    words = unescape(keyword.replace(/\+/g,' ')).split(/\s+/); 
+					    //替换关键字 
+					    for (w=0;w<words.length;w++) 
+					    { 
+					        var r = new RegExp("("+words[w].replace(/[(){}.+*?^$|\\\[\]]/g, "\\$&")+")","ig"); 
+					        temp = temp.replace(r,"<b style='background-color:#3576f7;'>$1</b>"); 
+					    } 
+					    //恢复HTML标签 
+					    for(var i=0;i<arrA.length;i++) 
+					    { 
+					        temp=temp.replace("{[("+i+")]}",arrA[i]); 
+					    } 
+					    pucl.innerHTML=temp; 
+					} 
+					var MatchSearchIds=""  //满足检索条件的ID串  20210520改为前台判断是否满足检索条件
+
+					function SearchMenu(){
+						var search=document.getElementById("searchid").value;
+						if (0&(search==""))  //检索条件为空时不执行检索
+						{
+							//2020-04-10
+							document.getElementById('navmenu').innerHTML=PreHtmlWord
+							///2020-06-04滚动条（因为overflow-y: auto生成的滚动条不支持鼠标滚轮）
+							document.getElementById("navmenu").style.cssText=""
+							
+						}
+						else
+						{
+							if ((search=="配置")||(search=="peizhi"))
+							{
+								alert("这个检索结果太多了，再给点关键词吧~");
+								return; 
+							}
+							//var mystr=getSession();				
+							MatchSearchIds="" //tkMakeServerCall('web.DHCBL.MKB.Menu','SearchMenu',search);	 //满足检索条件的ID串 20210520改为前台判断是否满足检索条件
+							var obj = tkMakeServerCall('web.DHCCKBHosMain','GetMenu',search);
+							var json = eval(obj);
+							var strr="";
+							
+
+							var	liStatus="open"
+							var	ulStatus="nav-show"
+							var	ulDisplay="display: block;"
+							
+							 for(var i=0; i<json.length; i++)  
+							 {   
+							 
+							     //alert(json[i].text) 
+							     var myCaption=json[i].text
+							     var mySMRowID=json[i].id
+							     var mySMUrl = json[i].url
+							     var mySMRowIDStr="{ID:"+mySMRowID+"}"
+							    /*  if (MatchSearchIds.indexOf(mySMRowIDStr)== -1)  //前台判断是否满足检索条件20210520
+							     {
+								     continue
+							     } */
+							     var menuIcon=""
+								 if (myCaption.indexOf("药品目录")!= -1)  menuIcon="gears"							
+								 else if(myCaption.indexOf("结构化知识")!= -1) menuIcon="book"
+								 else if(myCaption.indexOf("药品规则管理")!= -1) menuIcon="warning"
+								 else if(myCaption.indexOf("审查能力管理")!= -1) menuIcon="wrench"
+								 else if(myCaption.indexOf("接入授权管理")!= -1) menuIcon="puzzle-piece"								
+								 else if(myCaption.indexOf("药品知识检索")!= -1) menuIcon="search-plus"
+								 else if(myCaption.indexOf("监测中心")!= -1) menuIcon="play-circle"								
+								 
+								 else menuIcon="desktop"
+			   		
+								 //strr=strr+"<li class='hsub "+liStatus+"' ><a href='#' class='dropdown-toggle'><i class='menu-icon fa fa-"+menuIcon+"'></i><span class='menu-text'>"+myCaption+"</span><b class='arrow fa fa-angle-down'></b></a>"+"<b class='arrow'></b>"
+								 //strr=getLevel(strr,mySMRowID,mystr,search)   //一级菜单拼接二级菜单*/
+								 strr=strr+"<li class='"+liStatus+"' ><a RowID='"+mySMRowID+"' id='"+mySMRowID+"' onclick=showNavTab('"+mySMRowID+"','"+myCaption+"','"+mySMUrl+"') href='#' class='dropdown-toggle'>"
+								 strr=strr+"<i class='menu-icon fa fa-"+menuIcon+"'></i><span class='menu-text'>"+myCaption+"</span></a>"+"<b class='arrow'></b>"
+								 strr=strr+"</li>"
+							 } 
+							 
+							 document.getElementById('navmenu').innerHTML=strr
+							 SearchHighlight("navmenu",search); 
+							///判断包含可用的滚动条
+							if (!($('#sidebar div.ace-scroll')[0].innerHTML.indexOf('display: block')>-1))
+							{								
+								//2020-04-10解决bug:输入关键字搜索，过滤的菜单数量超过当前显示屏高度，无滚动条，不能查看到所有菜单
+								document.getElementById("navmenu").style.cssText="overflow-y: auto;max-height:"+(document.documentElement.clientHeight-130)+"px";
+							
+							}
+							///2020-06-04滚动条（因为overflow-y: auto生成的滚动条不支持鼠标滚轮）
+							///2020-06-04这段代码 第一次点击一级菜单时，去掉滚动条使用nav nav-list自带的滚动条（因为overflow-y: auto生成的滚动条不支持鼠标滚轮）		
+							$('#navmenu >li>a').click(function(){  ///点击一级菜单
+								document.getElementById("navmenu").style.cssText=""  //解决显示两个滚动条的问题
+							});
+						}						
+						
+					}					
+					
+					function judge_enter(){
+					     if(window.event.keyCode==13){
+					          window.event.keyCode = 0;//阻止刷新页面
+					          SearchMenu()
+					     }
+					}
+					
+			 </script>
+				
+				
+				<SERVER>
+				   // s mystr="^1^102^1^^DHCHEALTH^^"
+					//s search =%request.Get("search")
+				    s search=""
+				    s mystr=""
+					s mystr=mystr_"^"									///IP
+					s mystr=mystr_%session.Data("LOGON.USERID")_"^"         ///USERID
+					s mystr=mystr_%session.Data("LOGON.CTLOCID")_"^"		///CTLOCID
+					s mystr=mystr_%session.Data("LOGON.GROUPID")_"^"		///GROUPID
+					s mystr=mystr_"^"                                ///HospitalID
+					s mystr=mystr_%session.Data("LOGON.SITECODE")_"^"	    ///SITECODE
+					s mystr=mystr_"^"                                  ///context
+				
+					d ##class(web.DHCCKBHosMain).GetHtmlMenu()    	  
+
+				</SERVER>
+				
+				<!--<ul id="navmenu" class="nav nav-list">
+					<li class="hsub open">
+					    <a href="#" class="dropdown-toggle">
+					        <i class="menu-icon fa fa-windows"></i>
+					        <span class="menu-text">药品目录</span>					       
+					    </a>
+					    <b class="arrow"></b>
+					</li>
+					<li class="hsub open">
+					    <a href="#" class="dropdown-toggle">
+					        <i class="menu-icon fa fa-windows"></i>
+					        <span class="menu-text">结构化知识</span>					       
+					    </a>
+					    <b class="arrow"></b>
+					</li>
+					<li class="hsub open">
+					    <a href="#" class="dropdown-toggle">
+					        <i class="menu-icon fa fa-windows"></i>
+					        <span class="menu-text">药品规则管理</span>					       
+					    </a>
+					    <b class="arrow"></b>
+					</li>
+					<li class="hsub open">
+					    <a href="#" class="dropdown-toggle">
+					        <i class="menu-icon fa fa-windows"></i>
+					        <span class="menu-text">审查能力管理</span>					       
+					    </a>
+					    <b class="arrow"></b>
+					</li>
+					<li class="hsub open">
+					    <a href="#" class="dropdown-toggle">
+					        <i class="menu-icon fa fa-windows"></i>
+					        <span class="menu-text">接入授权管理</span>					       
+					    </a>
+					    <b class="arrow"></b>
+					</li>
+					<li class="hsub open">
+					    <a href="#" class="dropdown-toggle">
+					        <i class="menu-icon fa fa-windows"></i>
+					        <span class="menu-text">药品知识检索</span>					       
+					    </a>
+					    <b class="arrow"></b>
+					</li>
+					<li class="hsub open">
+					    <a href="#" class="dropdown-toggle">
+					        <i class="menu-icon fa fa-windows"></i>
+					        <span class="menu-text">监测中心</span>					       
+					    </a>
+					    <b class="arrow"></b>
+					</li>	
+				</ul>
+				-->
+				
+			</div><!-- /.sidebar -->  
+			
+		    <!-- /section:basics/sidebar -->
+	        <div class="main-content">
+	            <div id="pageContent" class="page-content" style="position:relative;">	         
+	                    <ul id="myMainTab" class="nav nav-tabs no-border">
+	                        <li class="active" id="li_home">
+	                            <a onclick="tabChange('home')" href="#content_home" data-toggle="tab"> 
+	                                <!-- #(FirstMenuDesc)# -->首页
+	                            </a>
+	                        </li>
+	                    </ul>
+
+	                    <div id="myTabContent" class="tab-content no-border padding-0" style="width:100%">
+	                        <div class="tab-pane in active" id="content_home" style="background-color:#ffffff">
+	                            <!--  <div class="container">	
+	                                	<iframe src="dhcckb.intrevmonitor.csp" width="1920px" height="1080px"></iframe>                                 
+	                            </div> -->
+	                            <div>	
+	                                	<iframe src="dhcckb.intrevmonitor.csp" width="1920px" height="1080px" frameborder=0></iframe>
+	                                	<!-- <iframe src="dhcckb.intrevmonitornew.csp" width="1920px" height="1080px"></iframe> -->                                 
+	                            </div>
+	                        </div>
+		                </div> 	                         
+	            </div><!-- /.page-content -->
+	        </div><!-- /.main-content -->	          
+	    </div><!-- /.main-container -->
+	</div> <!--centerPanel-->    
+	
+	<div id="mm" class="contextMenu" style="width: 150px;" title="多标签右键菜单">
+        <ul>
+            <li id="tabCloseOther"><i class="red icon-undo bigger-100"></i> 关闭其它</li>
+            <li id="tabCloseAll"><i class="red icon-adjust bigger-100"></i> 关闭全部</li>
+        </ul>
+    </div>
+    <script type="text/javascript">		
+
+		///iframe获取屏幕高度
+		function getiFrameHeight() {
+		
+			var outerHeight=""
+						
+			var winHeight=Math.max(document.documentElement.clientHeight,document.body.clientHeight)
+		    var winHeight=Math.max(winHeight,$(window).height())
+		    //var winHeight=$(window).height()
+
+			var outerHeight=winHeight -$("#menuPanel").height() -$("#myMainTab").height()   //2018-06-07 考虑菜单页签换行  ///$("#myMainTab").height()=29
+			//update 20181126 chenying
+			return outerHeight
+		}
+
+		///2018-11-26 chenying
+		///iframe自适应屏幕高度
+		///拖拽或者缩放时调整iframe高度
+		$(window).resize(function(){
+			setTimeout(function(){
+				var outerHeight=getiFrameHeight()
+		        ///update 20181126 chenying
+				$("iframe[id^='iframe_']").height(outerHeight)   
+			},100);
+		});
+		function openHosIndex(URL){
+			window.open (URL, 'newwindow', 'top=0, left=0, fullscreen=yes, toolbar=no, menubar=no, scrollbars=no, resizable=no,location=n o, status=no')
+		}
+
+		/**********chenghegui*********************/
+		   ///点击导航菜单出现此菜单对应的tab界面
+		function showNavTab(RowID, MenuName, URL, iconurl) {			
+			$("#navmenu [rowid="+ RowID +"]").parent().siblings().children("a").removeClass("navactive")
+			$("#navmenu [rowid="+ RowID +"]").addClass("navactive")
+			var nav = $("#content_" + RowID).get(0);
+		    //alert($("#myaddtabs"))
+		   if ($.isEmptyObject(nav)) {//检查是否已经存在打开的菜单
+		        var htm = '';
+		        htm += '<li style="float:left;" id="li_' + RowID + '">';
+		        htm += '<a onclick="tabChange('+RowID+')" data-toggle="tab" href="#content_' + RowID + '">';
+		        /*if (iconurl==""){
+		            htm += "<img src='../scripts/bdp/Framework/icons/mkb/details.png' /> ";
+		        }else{
+		            htm += "<img src='../scripts/bdp/Framework/BdpIconsLib/"+iconurl+"' /> ";
+		        }*/
+		        htm += MenuName;
+		        htm += '<i class="closeicon" style="cursor:pointer;padding-left:10px;">x</i>';
+		        htm += '</a>';
+		        htm += '</li>';
+		        //alert( $("#myMainTab"))
+		        $("#myMainTab").append(htm);
+		        
+		        var Height=getiFrameHeight(); 
+		        htm = '';
+		        htm += '<div id="content_' + RowID + '" class="tab-pane" >';
+		        htm += '<iframe id="iframe_' + RowID + '" src="' + URL + '"  width="100%" height="'+Height+'" frameborder="0" >';
+		        htm += '系统使用了框架技术，但是您的浏览器不支持框架，请升级您的浏览器以便正常访问。';
+		        htm += '</iframe>';
+		        htm += '</div>';
+		        $("#myTabContent").append(htm);  
+		        navTabStyle(RowID);
+		        /* chenying 保存点击频次和历史记录 */
+		        //var SaveDataStr="BDPMKBMenuClick^"+RowID+"^"+MenuName;
+		        //var SaveFrequency =tkMakeServerCall("web.DHCBL.BDP.BDPDataFrequency","SaveData",SaveDataStr+"^^");
+		        //var SaveHistory =tkMakeServerCall("web.DHCBL.BDP.BDPDataHistory","SaveData",SaveDataStr);
+		        
+		    }
+		    else
+		    {
+		        ///全文检索菜单 重新打开时 ，如果url searchtext 不为空，需要重新检索。
+		        if (URL.indexOf("dhc.bdp.mkb.mkbcontextsearch.csp")>-1)
+		        {
+		            document.getElementById("iframe_"+ RowID).src=URL
+		        }
+		        if (RowID!="home")
+			    {
+				    try
+				    {
+						var Height=getiFrameHeight()
+					    document.getElementById('iframe_' + RowID).height=Height
+				    }
+				    catch(e)
+				    {
+					    
+				    }
+			    }
+		    }
+		    
+		    displayNavTab(RowID);
+		    $("#navmenu").find("li").removeClass("active");
+		    //$("#li_parent_" + parentRowID).addClass("active");
+		    //$("#" + RowID).parent("li").addClass("active");
+		    if ($('#searchResultdiv').length>0){$("#searchResultdiv").remove();}
+		}
+
+		var navNow="";
+		///点击tab的触发事件，用来解决有组件的界面，打开两个tab出现界面空白的问题
+		function tabChange(id){
+			if (id!=""){
+		    var Flag =tkMakeServerCall("web.DHCBL.MKB.Menu","IFComp",id);
+		    if (Flag=="Y"){
+		        if((id!=navNow)&(id!="home")){  
+		            try
+		            {
+		                var url=document.getElementById("iframe_"+ id).src;
+		                var urlArr=url.split("/");
+		                var src=urlArr[urlArr.length-1];
+		                $("#iframe_" + id).attr("src",src);
+		            }
+		            catch(e)
+		            {
+		                
+		                
+		            }
+		            
+		        }
+		    }   
+		    navNow=id
+		    
+		    if (id!="home")
+		    {
+			    try
+			    {
+				    var Height=getiFrameHeight()
+				    document.getElementById('iframe_' + id ).height=Height
+			    }
+			    catch(e)
+			    {
+				    
+			    }
+		    }
+		 }
+		}
+		///打开指定的页面
+		function displayNavTab(RowID) {
+		    $("#myMainTab").find("li").removeClass("active");
+		    $("#myTabContent").find(".tab-pane").removeClass("active");
+		    $('a[href=#content_' + RowID + ']').parent("li").addClass("active");
+		    $("#content_" + RowID).addClass("active");
+		    $("#li_" + RowID).addClass("active");
+		}
+		///横向导航的样式控制
+		function navTabStyle(RowID) {
+		    $("#li_" + RowID).find(".icon-remove").hover(
+		        function () {
+		            $(this).addClass("badge badge-danger");
+		        },
+		        function () {
+		            $(this).removeClass("badge badge-danger");
+		        }
+		    );
+
+		    $("#li_" + RowID).find(".closeicon").click(
+		        function () {
+		            closeNavTab(RowID);
+		        }
+		    );
+		    $("#li_" + RowID).contextMenu('mm', {
+		        bindings: {
+		            'tabClose': function (t) {
+		                if (RowID == 'home') {
+		                } else {
+		                    closeNavTab(RowID);
+		                }
+		            },
+		            'tabCloseOther': function (t) {
+		                $("#myMainTab").children("li").each(function (i, e) {
+		                    if (e.id != "li_home" && e.id != "li_" + RowID) {
+		                        $(e).remove();
+		                    }
+		                });
+		                $("#myTabContent").children("div").each(function (i, e) {
+		                    if (e.id != "content_home" && e.id != "content_" + RowID) {
+		                        $(e).remove();
+		                    }
+		                });
+		                displayNavTab(RowID);
+		            },
+		            'tabCloseAll': function (t) {
+		                $("#myMainTab").children("li").each(function (i, e) {
+		                    if (e.id != "li_home") {
+		                        $(e).remove();
+		                    }
+		                });
+		                $("#myTabContent").children("div").each(function (i, e) {
+		                    if (e.id != "content_home") {
+		                        $(e).remove();
+		                    }
+		                });
+		                displayNavTab("home");
+		            }
+		        }
+		    });
+		}
+		///关闭Tab
+		function closeNavTab(RowID) {
+		    ///如果关闭的是当前正打开的tab页，则需要先打开一个前面紧挨着的页面，然后再关闭
+		    try
+		    {
+			    if ($("#li_" + RowID).hasClass("active")) {
+			        var li = $('a[href=#content_' + RowID + ']').parent("li").prev();
+			        var preRowID = li.attr("id").split("_")[1];
+			        displayNavTab(preRowID);
+			        if(preRowID!="home"){   //解决关闭其他标签，home页报错
+			            var Flag =tkMakeServerCall("web.DHCBL.MKB.Menu","IFComp",preRowID);
+			            if (Flag=="Y"){
+			                var url=document.getElementById("iframe_"+ preRowID).src;
+			                var urlArr=url.split("/");
+			                var src=urlArr[urlArr.length-1];
+			                $("#iframe_" + preRowID).attr("src",src);   
+			            }
+			        }
+			    }
+		    }
+		    catch(e)
+		    {
+			    displayNavTab("home")
+		    }
+		    if (RowID != "home") {
+		        $("#li_" + RowID).remove();
+		        $("#content_" + RowID).remove();
+		    }
+		}
+   </script>         
+	<script src="../scripts/bdp/Framework/assets/js/jquery.min.js"></script>
+    <script src="../scripts/bdp/Framework/assets/js/bootstrap.min.js"></script>
+    <script src="../scripts/bdp/Framework/assets/js/ace-elements.min.js"></script>
+    <script src="../scripts/bdp/Framework/assets/js/ace.min.js"></script>
+    <script src="../scripts/bdp/Framework/assets/jquery.contextmenu.js"></script>
+    <!-- <script src="../scripts/bdp/Framework/assets/uimain.js"></script> -->
+   	<link type="text/css" href="../scripts/dhcnewpro/dhcckb/css/hosStyle.css" rel="stylesheet">
+</body>
+</html>

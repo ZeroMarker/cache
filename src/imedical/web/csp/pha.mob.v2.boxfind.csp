@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--
+	desc: 移动药房 - 物流箱查询
+	csp:  pha.mob.v2.boxfind.csp
+	js:   pha/mob/v2/boxfind.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <TITLE>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </TITLE>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+
+    <style>
+        .panel-body,
+        .panel-header {
+            border-color: #d1d6da;
+        }
+    </style>
+    
+    <server>
+    	s isPharmacy = $g(%request.Data("isPharmacy", 1))
+    	w "<script type='text/javascript'>",!
+    	w "	var isPharmacy = '" _ isPharmacy _ "';"
+    	w "</script>",!
+    </server>
+</head>
+
+<body>
+    <!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <!-- layout start -->
+            <div id="layout-main" class="hisui-layout" fit="true">
+                <div data-options="region:'center',split:true,border:false">
+                    <div class="hisui-panel" title="物流箱列表" data-options="iconCls:'icon-house',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+                        <table id="gridBox"></table>
+                    </div>
+                </div>
+                <div data-options="region:'south',height:300, split:true,border:false">
+                    <div class="hisui-panel" title="物流箱明细列表" data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+                        <table id="gridBoxItm"></table>
+                    </div>
+                </div>
+            </div>
+            <!-- layout end -->
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridBoxBar" class="pha-con-datagrid-toolbar">
+        <table class="pha-con-table">
+            <tr>
+                <td><label for="startDate" title="日期为装箱日期" class="hisui-tooltip" data-options="position:'bottom'"><span style="color:red">*</span>#(..Get("开始日期"))#</label></td>
+                <td><input id="startDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" style="width:160px;" /></td>
+                <td><label for="endDate" title="日期为装箱日期" class="hisui-tooltip" data-options="position:'bottom'"><span style="color:red">*</span>#(..Get("截止日期"))#</label></td>
+                <td><input id="endDate" class="hisui-datebox" data-pha="class:'hisui-datebox',requied:true,save:true,query:true" style="width:160px;" /></td>
+                <td><label for="boxNo">#(..Get("装箱单号"))#</label></td>
+                <td><input id="boxNo" class="hisui-validatebox" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" style="width:153px;" /></td>
+                <td><label for="prescNo">#(..Get("处方号"))#</label></td>
+                <td><input id="prescNo" class="hisui-validatebox" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" style="width:153px;" /></td>
+                <td><a id="btnFind" class="hisui-linkbutton" iconCls="icon-w-find">查询</a></td>
+                <td><a id="btnPrint" class="hisui-linkbutton" iconCls="icon-w-print">打印封箱贴</a></td>
+            </tr>
+            <tr>
+                <td><label for="fromLocId">#(..Get("出发科室"))#</label></td>
+                <td><input id="fromLocId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:false,save:true,query:true,clear:false" /></td>
+                <td><label for="toLocId">#(..Get("到达科室"))#</label></td>
+                <td><input id="toLocId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:false,save:true,query:true,clear:false" /></td>
+                <td><label for="boxStatus">#(..Get("物流状态"))#</label></td>
+                <td><input id="boxStatus" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:false,save:true,query:true,clear:true" /></td>
+                <td></td>
+                <td></td>
+                <td><a id="btnClear" class="hisui-linkbutton" iconCls="icon-w-clean">清屏</a></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/mob/v2/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/mob/v2/boxfind.js"></script>
+</body>
+
+</html>

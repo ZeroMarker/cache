@@ -1,0 +1,180 @@
+<!-- 
+ * FileName: dhcpecomplain.edit.hisui.csp
+ * Anchor: ln
+ * Date: 2023-02-09
+ * Description: HISUI 体检投诉管理
+-->  
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+    <ADDINS/>
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+
+s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+
+i UIVersion="lite" s LineColor="border:1px solid #E2E2E2; border-radius:4px;"
+e  s LineColor="border:1px solid #CCCCCC; border-radius:4px;"
+</SCRIPT>	
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 20px;
+}
+.newclsInvalid{
+	border-color: red;
+	color: red;
+}
+.panel-header{
+	border-bottom: 0;
+}
+</style>
+
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+set RowId=$g(%request.Data("RowId",1))
+
+</SCRIPT> 
+
+<script type="text/javascript">
+	var RowId="#(RowId)#"
+</script>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:true,border:false,title:'',collapsible:false" style="height:760px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="#(LineColor)#">
+			<table class="search-table" >
+				<tr>
+			    	<td class="r-label"><label for="CType">#(..Get("类型"))#</td>
+					<td>
+						<input class="hisui-combobox" id="CType" style="width:160px"/> 
+					</td>
+						
+					<td class="r-label"><label for="Source">#(..Get("事件来源"))#</td>
+					<td>
+						<input class="hisui-combobox" id="Source" style="width:165px"/>
+					</td>
+			    </tr>
+			    <tr>
+			    	<td class="r-label"><label for="tComplainUser">#(..Get("投诉人"))#</label></td>
+					<td>
+						<input class="hisui-combogrid" id="ComplainUser" style="width:160px"/>
+					</td>
+			    	<td class="r-label"><label for="tComplainType">#(..Get("投诉类型"))#</label></td>
+					<td>
+						<input class="hisui-combobox" id="ComplainType" style="width:165px"/>
+					</td>					
+			    </tr>
+			    <tr>
+			        <td class="r-label"><label for="tComplainObject">#(..Get("投诉对象"))#</label></td>
+					<td>
+						<input class="hisui-combobox" id="ComplainObject" style="width:160px"/>
+					</td>
+			    </tr>
+			    <tr>
+			    	<td class="r-label"><label for="tComplainContent">#(..Get("投诉内容"))#</label></td>
+					<td colspan="3">
+						<textarea id="ComplainContent" class="textbox" style="width: -webkit-fill-available; height:60px"> </textarea>
+					</td>
+			    </tr>
+			    <tr>
+			   	 	<td class="r-label"><label for="EventTime">#(..Get("事件时间"))#</label></td>
+					<td>
+						<input class="hisui-datebox textbox" id="EventTime" type="display:none" style="width:155px"/>
+					</td>
+					<td class="r-label"><label for="tComplainCause">#(..Get("投诉原因"))#</label></td>
+					<td>
+						<input class="hisui-combobox" id="ComplainCause" style="width:165px"/>
+					</td>					
+			    </tr>
+			    <tr>
+			    	<td class="r-label"><label for="DisProposal">#(..Get("处置建议"))#</label></td>
+					<td colspan="3">
+						<textarea id="DisProposal" class="textbox" style=" width: -webkit-fill-available; height:60px"> </textarea>
+					</td>					
+			    </tr>
+			    <tr>
+			    	<td class="r-label"><label for="Remark">#(..Get("备注"))#</label></td>
+					<td colspan="3">
+						<textarea id="Remark" class="textbox hisui-validatebox" style=" width: -webkit-fill-available; height:30px"> </textarea>
+					</td>
+			    </tr> 
+			    <tr>
+			        <td class="r-label"><label for="Name">#(..Get("患者姓名"))#</label></td>
+					<td>
+						<input class="textbox" id="Name" style="width:152px"/>
+					</td>
+			    	<td class="r-label"><label for="RegNo">#(..Get("登记号"))#</td>
+					<td>
+						<input class="textbox" id="RegNo" style="width:158px"/>
+					</td>
+			    </tr>
+			    <tr>
+			        <td class="r-label"><label for="IDCard">#(..Get("身份证号"))#</td>
+					<td>
+						<input class="textbox" id="IDCard" style="width:152px"/>
+					</td>
+					<td class="r-label"><label for="PERecord">#(..Get("就诊记录"))#</td>
+					<td>
+						<input class="hisui-combogrid" id="PERecord" style="width:165px"/>
+					</td>			    			
+			    </tr>
+			    <tr>
+			   	 	<td class="r-label"><label for="ClaimantName">#(..Get("申诉人姓名"))#</label></td>
+					<td>
+						<input class="textbox" id="ClaimantName" style="width:152px"/>
+					</td>
+					<td class="r-label"><label for="ClaimantNo">#(..Get("证件号"))#</label></td>
+					<td>
+						<input class="textbox" id="ClaimantNo" style="width:158px"/>
+					</td>
+			    </tr>
+			    <tr>
+			        <td class="r-label"><label for="Relation">#(..Get("与患者关系"))#</label></td>
+					<td>
+						<input class="hisui-combobox" id="Relation" style="width:160px" />
+					</td>
+					<td class="r-label"><label for="Tel">#(..Get("联系电话"))#</label></td>
+					<td>
+						<input class="textbox" id="Tel" style="width:158px"/>
+					</td>
+			    </tr>
+			    <tr>
+                    <td colspan='2'  style="padding-left:180px;">
+						<a id="Update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-arrow-right'">更新</a>
+					</td>
+					<td colspan='2'  style="padding-left:40px;">
+						<a id="Clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					</td>
+	                
+					<td><input type="hidden" id="ComplainUserID"/></td>
+					<td><input type="hidden" id="PERecordID"/></td>
+				</tr>
+			</table>
+		</div>
+	</div>
+		
+</div>
+
+<script type="text/javascript" src="../scripts/DHCPEComplain.Edit.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  
+</body>		
+</html>
+			
+		

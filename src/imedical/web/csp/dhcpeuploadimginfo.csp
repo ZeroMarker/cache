@@ -1,0 +1,119 @@
+<!-- 
+ * FileName: dhcpeuploadimginfo.csp  
+ * Anchor: ln
+ * Date: 
+ * Description: HISUI 图片报告上传
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<ADDINS/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+
+.r-label{
+	padding-left: 10px;
+}
+
+.panel-header{
+	border-bottom: 0;
+}	
+</style>
+<style type="text/css">
+        .test [class*="layout-split-"] {
+            border-width: 10px; /* 自定义边距 */
+        }
+    </style>	
+<script type="text/javascript">
+    // 设置背景色与 body 背景色一致
+    let CustomDiv = $(".test [class*='layout-split-']");
+    CustomDiv.css("border-color", $("body").css("background-color"));
+</script>	
+	
+
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+set CurDate=$ZD($H,8)
+set OEID=$g(%request.Data("OEID",1))
+s:OEID'="" OEID=##class(web.DHCPE.ReportGetInfor).Replace(OEID,"||","-")
+</SCRIPT> 
+ 
+</head>
+<body>
+    <div class="hisui-panel" border="false" fit="true" style="padding:10px;background-color: inherit;">
+        <div class="hisui-layout test" data-options="collapsible:false,fit:true,border:false">
+            <div data-options="region:'north',split:true,headerCls:'panel-header-gray',title:'#(..Get("图片报告上传"))#',iconCls:'icon-apply-check'" style="height: 140px;border:1px solid #e2e2e2;">
+                <table class="search-table">
+			        <tr> 
+			            <td class="r-label"><label>#(..Get("计算机IP"))#</label></td>
+						<td>
+							<input class="textbox" id="ComputeName" disabled/>
+						</td>
+						<td class="r-label"><label for="ItemName">#(..Get("项目名称"))#</label></td>
+						<td>
+							<input id="ItemName" class="hisui-combogrid textbox"/>
+						</td>
+						<td class="r-label">
+			              <input class='hisui-checkbox' type="checkbox"  Id="ReadTxt" label=#(..Get("读取文本"))#>
+			            </td>
+			            <td>
+							<a id="BSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						</td>
+						<td><input type="hidden" id="ItemID"/></td>
+					</tr>
+					<tr>
+					    <td class="r-label"><label>#(..Get("图片路径"))#</label></td>
+						<td>
+							<input class="textbox" id="ImgPath"/>
+						</td>
+						<td class="r-label"><label>#(..Get("文件后缀名"))#</label></td>
+						<td>
+							<input class="textbox" id="LastFileName"/>
+						</td>
+						<td class="r-label"></td>
+						<td>
+							<a id="BUpload" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-upload'">上传</a>
+						</td>
+					</tr>
+					
+			      </table>
+            </div>
+
+            <div data-options="region:'center',split:true,headerCls:'panel-header-gray',title:'#(..Get("已上传报告"))#'" style="border-top:1px solid #e2e2e2;">
+                 <div data-options="region:'center',title:'',border:false" >
+				     <table id="HadUpLoadInfoGrid"></table>
+			    </div>
+            </div>
+
+            <div data-options="region:'west',split:true,headerCls:'panel-header-gray',title:'#(..Get("待上传报告"))#'" style="width: 530px;border:1px solid #e2e2e2;">
+                <div data-options="region:'center',title:'',border:false" >
+				     <table id="WaitUploadInfoGrid"></table>
+			    </div>
+            </div>
+
+            <div data-options="region:'east',split:true,headerCls:'panel-header-gray',title:'#(..Get("未找到信息"))#'" style="width: 530px;border:1px solid #e2e2e2;">
+                 <div data-options="region:'center',title:'',border:false" >
+				     <table id="ErrFileNameGrid"></table>
+			    </div>
+            </div>
+        </div>
+    </div>
+    
+  <script type="text/javascript" src="../scripts/dhcpeuploadimginfo.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+  <script type="text/javascript" src="../scripts/dhcpe.websocket.js"></script>    
+    
+</body>
+</html>

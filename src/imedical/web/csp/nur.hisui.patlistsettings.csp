@@ -1,0 +1,264 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.patlistsettings.csp 护士站-患者列表配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+	text-align: right;
+}
+.days-label {
+	padding-left: 10px;
+}
+.tip{
+	color:gray;
+	padding-left:10px;
+	font-weight:normal;
+}
+.tip i{
+	margin-right:10px;
+}
+.numberbox {
+	width:73px !important;
+}
+.config-title {
+	margin:10px 0 0 0;
+	font-weight:bold;
+}
+.btnCls {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    padding: 0 5px 0 0;
+}
+.opertionSetPanel .panel-tool {
+	top:27%;
+	height:30px;
+}
+/*.opertionSetPanel .panel-tool a:hover {
+	background:#0063a7;
+	color:#fff;
+}*/
+#BSave{
+	position:absolute;
+	right:10px;
+	top:2px;
+	height:30px;
+	line-height:30px;
+}
+#BSave .l-btn-text{
+	line-height:30px;
+}
+.datagrid-cell-rownumber, .datagrid-header-rownumber {
+	width:45px;
+}
+#refreshIntervalTime {
+	margin-right:10px;
+	width:73px !important;
+}
+.tooltip p{
+	line-height:30px;
+}
+#areaConfigTip,#displayConfigTip,#colorConfigTip,#signConfigTip {
+	height:19px;
+	margin-top:-12px;
+}
+.HorizontalLine {
+	border-bottom: 1px dashed #ccc;
+}
+.panel-body {
+	border-top-color:rgb(226, 226, 226);
+}
+.layout-split-west {
+	border-right-width:10px;
+	border-right-color:#fff;
+}
+</style>
+</head>
+
+<body>
+<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-panel" data-options="fit:true,border:false" style="padding:0 10px 10px 10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false" style="height:51px;">
+			<table class="search-table">
+	  	 	 	<tr>
+		            <td>
+		              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		            </td>
+		            <td class="r-label">
+		              <input id="_HospList"/>
+		            </td>
+		          </tr>
+	  	 	 </table>
+		</div>
+		<div data-options="region:'west',split:true,border:false" style="width:300px;">
+			<div class="hisui-panel" data-options="fit:true,title:'适用范围',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" style="">
+				<table id="menuTab"></table>
+			</div>
+		</div>
+		<div class="opertionSetPanel" data-options="region:'center',split:true,border:false" style="">
+			<div class="hisui-panel" data-options="fit:true,title:'操作配置',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg'" style="padding:10px;">
+				<div class="area-div" style="height:108px;">
+					<div class="config-title" style="margin:0;">
+						区域配置<a id="areaConfigTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+					</div>
+					<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-save'">保存</a>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="r-label">
+								<label>等候区</label>
+							</td>
+							<td>
+								<div id="waitingAreaPatShow" class="hisui-switchbox" data-options="onText:'显示',offText:'隐藏',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+								</div>
+							</td>
+							<td class="r-label">
+								<label>转出区</label>
+							</td>
+							<td>
+								<div id="transAreaPatShow" class="hisui-switchbox" data-options="onText:'显示',offText:'隐藏',size:'small',animated:true,onClass:'primary',offClass:'gray'">
+								</div>
+							</td>
+							<td>
+							</td>
+							<td class="r-label">
+								<label>会诊</label>
+							</td>
+							<td>
+								<div id="consultPatShow" class="hisui-switchbox" data-options="onText:'显示',offText:'隐藏',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchCheckChange">
+								</div>
+							</td>
+							<td class="r-label">
+								显示
+							</td>
+							<td>
+								<input id="consultPatShowDays" class="hisui-numberbox textbox" data-options="isKeyupChange:true" />
+							</td>
+							<td class="days-label">
+								天内会诊患者
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">
+								<label>在院转科</label>
+							</td>
+							<td>
+								<div id="transInHospPatShow" class="hisui-switchbox" data-options="onText:'显示',offText:'隐藏',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchCheckChange">
+								</div>
+							</td>
+							<td class="r-label">
+								显示
+							</td>
+							<td>
+								<input id="transInHospPatShowDays" class="hisui-numberbox textbox" data-options="isKeyupChange:true" />
+							</td>
+							<td class="days-label">
+								天内在院转科患者
+							</td>
+							<td class="r-label">
+								<label>出院</label>
+							</td>
+							<td>
+								<div id="disChargeShow" class="hisui-switchbox" data-options="onText:'显示',offText:'隐藏',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchCheckChange">
+								</div>
+							</td>
+							<td class="r-label">
+								显示
+							</td>
+							<td>
+								<input id="disChargeShowDays" class="hisui-numberbox textbox" data-options="isKeyupChange:true"/>
+							</td>
+							<td class="days-label">
+								天内出院患者
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="HorizontalLine"></div>
+				<div class="display-div" style="height:105px;">
+					<div class="config-title" style="margin-bottom:0;">
+						显示配置<a id="displayConfigTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+					</div>
+					<table class="search-table processconfig-table">
+						<tr>
+							<td class="r-label">
+								<label>默认显示方式</label>
+							</td>
+							<td>
+								<div id="patListFold" class="hisui-switchbox" data-options="onText:'折叠',offText:'展开',size:'small',animated:true,onClass:'primary',offClass:'gray',checked:false">
+								</div>
+							</td>
+							<td style="font-size:0;">
+								<label style="vertical-align:middle;padding-right:10px;">多科室分组显示</label>
+								<div id="mulWardPatGroupByWard" class="hisui-switchbox" data-options="onText:'开启',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',checked:true">
+								</div>
+							</td>
+							<td class="r-label" style="font-size:0;">
+								<label style="vertical-align:middle;padding-right:10px;">在院转科患者默认展示方式</label>
+								<div id="transInHospPatExpand" class="hisui-switchbox" data-options="onText:'展开',offText:'折叠',size:'small',animated:true,onClass:'primary',offClass:'gray',checked:true">
+								</div>
+							</td>
+							<td style="font-size:0;">
+								<label style="vertical-align:middle;padding-right:10px;">默认按责组加载</label>
+								<div id="loadBedByWardGroup" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',checked:false">
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">
+								<label>患者列表间隔</label>
+							</td>
+							<td>
+								<input id="refreshIntervalTime" class="hisui-numberbox textbox" data-options="isKeyupChange:true"/>
+							</td>
+							<td>
+								秒自动刷新颜色、图标、标识
+							</td>
+							<td class="r-label" style="font-size:0;">
+								<label style="vertical-align:middle;padding-right:10px;">出院患者默认展示方式</label>
+								<div id="disChargePatExpand" class="hisui-switchbox" data-options="onText:'展开',offText:'折叠',size:'small',animated:true,onClass:'primary',offClass:'gray',checked:true">
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="HorizontalLine"></div>
+				<div class="colorSet-div" style="margin-bottom:10px;">
+					<div class="config-title" style="margin:10px 0;">
+						患者信息颜色<a id="colorConfigTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+					</div>
+					<table id="patInfoColorTab"></table>
+				</div>
+				<div class="HorizontalLine"></div>
+				<div class="signSet-div">
+					<div class="config-title" style="margin:10px 0;">
+						图标、附加标识<a id="signConfigTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+					</div>
+					<table id="patInfoSignTab"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/patListSettings.js"></script>
+</body>
+</html>

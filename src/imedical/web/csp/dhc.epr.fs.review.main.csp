@@ -1,155 +1,136 @@
-<HTML>
-<HEAD>
-    <TITLE>≤°∞∏∏¥∫À</TITLE> 
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">  
-    <script language="cache" runat="server">
-        s userID = %session.Get("LOGON.USERID")
-        if (userID = "")
-        {
-            s userID = "159"    
-        }
-        s ssGroupID = %session.Get("LOGON.GROUPID")
-        if (ssGroupID = "")
-        {
-            s ssGroupID = "54"
-        }
-        s userLocID = %session.Get("LOGON.CTLOCID")
-        if (userLocID = "")
-        {
-            s userLocID = "9"
-        }
-        s dataServiceURL = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("DataServiceURL")
-        s hospitalFlag = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("HospitalFlag")
-        s showTimeLine = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("ShowTimeLine")
-        s superSSGroup = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("SuperSSGroup")
-        s isSuper="0"
-        f i=1:1:$l(superSSGroup,"^")
-        {
-            s superGroupID=$p(superSSGroup,"^",i)
-            s:(superGroupID = ssGroupID) isSuper="1"
-        }
-        
-        s enableAction = "N"
-    </script>
-    <script type="text/javascript">
-        var userID = '#(userID)#';
-        var userLocID = '#(userLocID)#';
-        var isSuper = '#(isSuper)#';
-        var dataServiceURL = '#(dataServiceURL)#';
-        var hospitalFlag = '#(hospitalFlag)#';
-        var showTimeLine = '#(showTimeLine)#';
-        var enableAction = '#(enableAction)#';
-    </script>
-    <script src="../scripts/epr/JQuery/jquery.min.js"></script>
-    <script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
-    <script src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
-    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/metro/easyui.css">
-    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
-
-    <link rel="stylesheet" type="text/css" href="../scripts/epr/css/fs.barcode.code39.css">
-    <script src="../scripts/epr/js/FS.Barcode.Code39.js"></script>
-    <script src="../scripts/epr/js/FS.Review.Common.js"></script>
-    <script src="../scripts/epr/js/FS.Review.Main.js"></script>
-    
-    <style type="text/css">
-        label {
-            font-size:13px;
-            height:25px;   
-            line-height:25px;   
-        }
-    </style>
-</HEAD>
-<body id="reviewMainLayout" class="easyui-layout" data-options="fit:true">
-    <div data-options="region:'center'" style="border:0">
-        <div id="episodeListTableTBar" class="easyui-panel" style="height:75px;border:0">    
-            <table cellpadding="2" cellspacing="0" border="0" style="width:1320px;">
-                <tr>
-                    <td>
-                        <label for="inputType">&nbsp;&nbsp;œ‘ æ¿‡–Õ:&nbsp;&nbsp;</label>
-                        <select id="inputType" name="inputType" style="width:100px;height:25px;"></select>
-                    </td>
-                    <td>
-                        <label for="inputDateStart">&nbsp;&nbsp;∆ º»’∆⁄:&nbsp;&nbsp;</label>
-                        <input id="inputDateStart" class="easyui-datebox" style="width:100px;height:25px;" />
-                    </td>
-                    <td>
-                        <label for="inputDateEnd">&nbsp;&nbsp;Ωÿ÷π»’∆⁄:&nbsp;&nbsp;</label>
-                        <input id="inputDateEnd" class="easyui-datebox" style="width:100px;height:25px;" />
-                    </td>
-                    <td>
-                        <label for="inputDocCommit">&nbsp;&nbsp;“Ω…˙Ã·Ωª:&nbsp;&nbsp;</label>
-                        <input id="inputDocCommit" class="easyui-combobox" style="width:80px;height:25px;" />
-                         
-                    </td>
-                    <td>
-                        <label for="inputNurCommit">&nbsp;&nbsp;ª§ øÃ·Ωª:&nbsp;&nbsp;</label>
-                        <input id="inputNurCommit" class="easyui-combobox" style="width:80px;height:25px;" />
-                        
-                    </td>
-                    <td>
-                        <label for="inputPDFCreated">&nbsp;&nbsp;PDF «∑Ò…˙≥…:&nbsp;&nbsp;</label>
-                        <input id="inputPDFCreated" class="easyui-combobox" style="width:80px;height:25px;" />           
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for="inputMedRecord">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;≤°∞∏∫≈:&nbsp;&nbsp;</label>
-                        <input id="inputMedRecord" class="easyui-textbox" style="width:100px;height:25px;" />
-                    </td>
-                    <td>
-                        <label for="inputRegNo">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;µ«º«∫≈:&nbsp;&nbsp;</label>
-                        <input id="inputRegNo" class="easyui-textbox" style="width:100px;height:25px;" />
-                    </td>
-                    <td id="IPLoctd">
-                        <label for="inputPatientLoc">&nbsp;&nbsp;◊°‘∫ø∆ “:&nbsp;&nbsp;</label>
-                        <div class="datagrid-toolbar" id="inputPatientLocTbar" name="inputPatientLocTbar" style="width:100%;height:30px;">  
-                            <table>  
-                                <tr>  
-                                    <th>ºÏÀ˜:</th>  
-                                    <td>  
-                                        <input type="inputPatientLocText" id="inputPatientLocText" name="inputPatientLocText"/>  
-                                    </td>  
-                                    <td>  
-                                        <div class="dialog-tool-separator"></div>  
-                                    </td>  
-                                    <td>  
-                                        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-no',plain:true" id="inputPatientLocClear">«Âø’</a>  
-                                    </td>  
-                                </tr>  
-                            </table>  
-                        </div>
-                        <select id="inputPatientLoc" name="inputPatientLoc" class="easyui-combogrid" style="width:100px;height:25px;"></select>
-                    </td>
-                    <td>
-                        <a href="#" id="resetBtn" class="easyui-linkbutton" iconCls="icon-reload">÷ÿ÷√&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
-                    </td>
-                    <td>
-                        <a href="#" id="searchBtn" class="easyui-linkbutton" iconCls="icon-search">≤È—Ø&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
-                    </td>
-                    <td>
-                        <a href="#" id="passBtn" class="easyui-linkbutton" iconCls="icon-ok">…Û∫ÀÕ®π˝</a>
-                    </td>
-                    <td>
-                        <a href="#" id="back2DocBtn" class="easyui-linkbutton" iconCls="icon-no">ÕÀªÿ“Ω…˙</a>
-                    </td>
-                    <td>
-                        <a href="#" id="back2NurBtn" class="easyui-linkbutton" iconCls="icon-no">ÕÀªÿª§ ø</a>
-                    </td>
-                    <td>
-                        <a href="#" id="back2AllBtn" class="easyui-linkbutton" iconCls="icon-no">»´≤øÕÀªÿ</a>
-                    </td>
-                </tr>
-            </table>    
-        </div>  
-        <table id="episodeListTable" data-options="fit:true"></table>
-    </div>
-    <div data-options="region:'east'" style="border:0;width:320">
-        <div id="iframeDIV">
-            <iframe id="iframeTrak" src='./dhc.epr.fs.review.timeline.csp' frameBorder=0 scrolling=yes style='height:100%;width:100%'></iframe>
-        </div>
-    </div>
+Ôªø<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>ÁóÖÊ°àÂ§çÊ†∏</title>
+	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")
+		s:(userID = "") userID = "9"
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s:(userLocID = "") userLocID = "117"
+		s dataServiceURL = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("DataServiceURL")
+		s hospitalFlag = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("HospitalFlag")
+		s showTimeLine = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("ShowTimeLine")
+		s enableAction = "Y"
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var userLocID = '#(userLocID)#';
+		var dataServiceURL = '#(dataServiceURL)#';
+		var hospitalFlag = '#(hospitalFlag)#';
+		var showTimeLine = '#(showTimeLine)#';
+		var enableAction = '#(enableAction)#';
+	</script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+	<script src="../scripts/epr/JQuery/jquery.min.js"></script>
+	<script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+	<script src="../scripts/epr/JQuery/easyui-lang-zh_cn.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/fs.barcode.code39.css">
+	<script src="../scripts/epr/js/fs.barcode.code39.js"></script>
+	<script src="../scripts/epr/js/fs.review.common.js"></script>
+	<script src="../scripts/epr/js/fs.review.main.js"></script>
+	<style type="text/css">
+	label {
+		display: inline-block;
+		font-size: 14px;
+		font-family: microsoft yahei;
+		width: 60px;
+		text-align: right;
+	}
+	.tbtextbox {
+		border: 1px solid #95B8E7;
+		vertical-align: middle;
+	}
+	</style>
+</head>
+<body id="reviewMainLayout" class="easyui-layout">
+	<div data-options="region:'north'" style="height:90px;padding:5px;">
+		<table cellpadding="5" cellspacing="0" border="0" style="width:1100px;">
+			<tr>
+				<td>
+					<label for="inputDateStart">Ëµ∑ÂßãÊó•Êúü</label>
+					<input id="inputDateStart" class="easyui-datebox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputDateEnd">Êà™Ê≠¢Êó•Êúü</label>
+					<input id="inputDateEnd" class="easyui-datebox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputDocCommit">ÂåªÁîüÊèê‰∫§</label>
+					<input id="inputDocCommit" class="easyui-combobox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputNurCommit">Êä§Â£´Êèê‰∫§</label>
+					<input id="inputNurCommit" class="easyui-combobox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputPDFCreated">ÊòØÂê¶ÁîüÊàê</label>
+					<input id="inputPDFCreated" class="easyui-combobox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<a href="#" id="resetBtn" class="easyui-linkbutton" data-options="iconCls:'icon-reload'" style="width:80px;">ÈáçÁΩÆ</a>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label for="inputType">ÊòæÁ§∫Á±ªÂûã</label>
+					<input id="inputType" class="easyui-combobox" style="width:100px;height:24px;" />
+				</td>
+				<td id="IPLoctd">
+					<label for="inputPatientLoc">‰ΩèÈô¢ÁßëÂÆ§</label>
+					<div class="datagrid-toolbar" id="inputPatientLocTbar" name="inputPatientLocTbar" style="width:100%;height:30px;">
+						<table>
+							<tr>
+								<th>Ê£ÄÁ¥¢:</th>
+								<td>
+									<input type="inputPatientLocText" id="inputPatientLocText" name="inputPatientLocText"/>
+								</td>
+								<td>
+									<div class="dialog-tool-separator"></div>
+								</td>
+								<td>
+									<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-no',plain:true" id="inputPatientLocClear">Ê∏ÖÁ©∫</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<select id="inputPatientLoc" name="inputPatientLoc" class="easyui-combogrid" style="width:100px;height:24px;"></select>
+				</td>
+				<td>
+					<label for="inputMedRecord">ÁóÖÊ°àÂè∑</label>
+					<input id="inputMedRecord" class="tbtextbox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputRegNo">ÁôªËÆ∞Âè∑</label>
+					<input id="inputRegNo" class="tbtextbox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<label for="inputName">ÂßìÂêç</label>
+					<input id="inputName" class="tbtextbox" style="width:100px;height:24px;" />
+				</td>
+				<td>
+					<a href="#" id="searchBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width:80px;">Êü•ËØ¢</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div data-options="region:'center',border:false">
+		<div id="episodeListTableTBar">
+			<a href="#" id="passBtn" class="easyui-linkbutton" data-options="iconCls:'icon-ok',plain:true">ÂÆ°Ê†∏ÈÄöËøá</a>
+			<a href="#" id="back2DocBtn" class="easyui-linkbutton" data-options="iconCls:'icon-no',plain:true">ÈÄÄÂõûÂåªÁîü</a>
+			<a href="#" id="back2NurBtn" class="easyui-linkbutton" data-options="iconCls:'icon-no',plain:true">ÈÄÄÂõûÊä§Â£´</a>
+			<a href="#" id="back2AllBtn" class="easyui-linkbutton" data-options="iconCls:'icon-no',plain:true">ÂÖ®ÈÉ®ÈÄÄÂõû</a>
+		</div>
+		<table id="episodeListTable" data-options="fit:true"></table>
+	</div>
+	<div data-options="region:'east',collapsed:true" title="Êó∂Èó¥ËΩ¥" style="width:320px;">
+		<div id="iframeDIV">
+			<iframe id="iframeTrak" src='./dhc.epr.fs.review.timeline.csp' frameBorder=0 scrolling=yes style='height:100%;width:100%;'></iframe>
+		</div>
+	</div>
 </body>
-</HTML>
+</html>

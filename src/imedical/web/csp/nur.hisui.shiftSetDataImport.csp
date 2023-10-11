@@ -1,0 +1,255 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetDataImport.csp 交班数据引入配置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{background: white;}
+hr.dashed{border-top: 0;border-bottom: 0;margin:0;margin-bottom:10px;}
+div.hGap{height: 10px;}
+div.vGap{width: 10px;}
+.flex2{flex: 2;}
+.flex3{flex: 3;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+#templateArea:focus{box-shadow:none;}
+</style>
+<Server>
+</Server>
+<script language="cache" RUNAT="SERVER">
+  s tabTypeList=##class(Nur.SHIFT.Service.ShiftSetting).GetTabTypes()
+  s tabTypeList=##class(Nur.JSON).Encode(tabTypeList)
+  s multiFlag=##class(Nur.SHIFT.Service.ShiftBizBase).#MULTIHOSP
+</script>
+<script language="javascript">
+  var multiFlag = "#($g(multiFlag))#";
+	var tabTypeList=JSON.parse('#($g(tabTypeList))#');
+	var tabTypeObj={}
+	tabTypeList.map(function(elem,index) {
+		tabTypeObj[elem.value]=elem.desc
+	});
+	var emrVerList=[{desc:"新版",value:"N"},{desc:"旧版",value:"O"}];
+	var emrVerObj={N:"新版",O:"旧版"}
+</script>
+</head>
+<body style="overflow: hidden;">
+	<table cellpadding="0" cellspacing="0" border="0">
+    <tr>
+			<csp:if condition='1=##class(Nur.SHIFT.Service.ShiftBizBase).#MULTIHOSP'>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+			<csp:else>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>病房类别
+				</td>
+			</csp:if>
+
+			<td class="r-label">
+				<select id="wardType" data-options="editable:false" class="hisui-combobox" style="width:150px;">
+					<option value="W" selected>住院病房</option>
+					<option value="E">急诊病房</option>
+				</select>
+			</td>
+			<td class="r-label">
+        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" style="" onclick="findDIData()">查询</a>
+			</td>
+    </tr>
+  </table>
+  <hr class="dashed">
+        
+  <table id="dataImport" class="hisui-datagrid easyui-draggable" title="数据引入类型"
+			data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:false,toolbar: [{
+			iconCls: 'icon-add',
+			text:'新增',
+			handler: addDIRow
+		},{
+			iconCls: 'icon-cancel',
+			text:'删除',
+			handler: deleteDIRow
+		},{
+			iconCls: 'icon-save',
+			text:'保存',
+			handler: saveDIRow
+		}],
+		onClickRow: selectDIRow,
+		onDblClickRow:editDIRow,
+		onBeforeDrag:beforeDragDIRow,
+		onDrop:dropDIRow,
+		onLoadSuccess:function(){
+			$(this).datagrid('enableDnd');
+		}
+	">   
+		<thead>   
+			<tr>
+				<th data-options="field:'tabID',width:80,editor:{type:'text'}">页签Id</th>   
+				<th data-options="field:'tabName',width:120,editor:{type:'text'}">页签名称</th>   
+				<th data-options="field:'tabType',width:94,formatter:function(value,row){
+				return tabTypeObj[row.tabType];
+			},
+			editor:{
+				type:'combobox',
+				options:{
+					defaultFilter:6,
+					valueField:'value',
+					textField:'desc',
+					data:tabTypeList,
+					onSelect:tabTypeChange,
+					blurValidValue:true
+				}
+			}">页签类型</th>
+					<!-- required:true, -->
+				<th data-options="field:'emrVer',width:78,formatter:function(value,row){
+				return emrVerObj[row.emrVer];
+			},
+			editor:{
+				type:'combobox',
+				options:{
+					defaultFilter:6,
+					valueField:'value',
+					textField:'desc',
+					data:emrVerList,
+				}
+			}">病历版本</th>
+				<th data-options="field:'emrCode',width:150,editor:{type:'validatebox',options:{}}">病历code</th>
+				<th data-options="field:'ruleLocs',width:380,formatter:function(value,row){
+				return getWardsDesc(row.ruleLocs)||'全院';
+			},editor:{
+				type:'combobox',
+				options:{
+					multiple:true,
+					defaultFilter:6,
+					valueField:'wardid',
+					textField:'warddesc'
+				}
+			}">适用范围</th>
+				<th data-options="field:'ruleInvalidLocs',width:380,formatter:function(value,row){
+				return getWardsDesc(row.ruleInvalidLocs);
+			},editor:{
+				type:'combobox',
+				options:{
+					multiple:true,
+					defaultFilter:6,
+					valueField:'wardid',
+					textField:'warddesc'
+				}
+			}">不适用范围</th>   
+				<th data-options="field:'sortNo',width:50">排序</th>   
+				<th data-options="field:'activeFlag',width:78,formatter:function(value,row){
+				return ('Y'==value)?'是':'否';
+			},editor:{type:'icheckbox',options:{on:'Y',off:''}}">是否启用</th>   
+			</tr>   
+		</thead>
+		<tbody>
+		</tbody>   
+	</table>   
+  <div class="hGap"></div>
+	<div class="hisui-panel" id="importContentSet" title="引入内容配置" style="padding:10px;display: flex;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		<div class="flex3">
+		  <table id="contentSet" class="hisui-datagrid" title="内容配置"
+					data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:false,toolbar: [{
+					iconCls: 'icon-add',
+					text:'新增',
+					handler:addCSRow
+				},{
+					iconCls: 'icon-cancel',
+					text:'删除',
+					handler: deleteCSRow
+				},{
+					iconCls: 'icon-save',
+					text:'保存',
+					handler: saveCSRow
+				}],
+				onClickRow: selectCSRow,
+				onDblClickRow:editCSRow,
+				onBeforeDrag:beforeDragCSRow,
+				onDrop:dropCSRow,
+				onLoadSuccess:function(){
+					$(this).datagrid('enableDnd');
+				}
+			">   
+				<thead>   
+					<tr>
+						<th data-options="field:'contentID',width:160,editor:{type:'text'}">引入内容Id</th>   
+						<th data-options="field:'contentName',width:168,editor:{type:'text'}">引入内容名称</th>   
+						<th data-options="field:'field',width:138,formatter:function(value,row){
+							return value;
+						}" editor="selfDefEdit">关联字段</th>
+						<th data-options="field:'sortNo',width:50">排序</th>
+					</tr>
+				</thead>   
+				<tbody>
+				</tbody>   
+			</table>
+		</div>
+	  <div class="vGap"></div>
+	  <div class="flex2">
+			<div class="hisui-panel" id="templateSet" title="模板配置" style="padding:10px;padding-top: 0;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table cellpadding="0" cellspacing="0" border="0">
+					<tr>
+						<td class="selfBtn">
+							<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="" onclick="addDisplaceMark();">
+								<span class="l-btn" style="height: 21.3px;">
+									<span class="l-btn-text" style="line-height: 21.3px;">{}</span>
+								</span>
+							</a>
+							<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="" onclick="addDisplace();">
+								<span class="l-btn" style="height: 21.3px;">
+									<span class="l-btn-text" style="line-height: 21.3px;">@</span>
+								</span>
+							</a>
+						</td>
+						<td class="selfBtn">
+							<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="" onclick="saveTemplate();">
+								<span class="l-btn-left l-btn-icon-left">
+									<span class="l-btn-text">保存</span>
+									<span class="l-btn-icon icon-save">&nbsp;</span>
+								</span>
+							</a>
+						</td>
+					</tr>
+				</table>
+				<textarea id="templateArea" value="BMW" cols="30" rows="10" style="width: 100%;border-radius: 4px;resize: none;box-sizing: border-box;padding: 5px 10px;overflow: auto;"></textarea>
+			</div>
+	  </div>
+
+	</div>    
+
+
+
+
+
+
+
+
+
+	<!-- <csp:Include Page="alloc.exaborough.show.hui.csp"> -->
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+		};
+	</SCRIPT>
+	<!-- <script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script> -->
+	<!-- <script type="text/javascript" src="../scripts/websys.jquery.js"></script> -->
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.shiftSetDataImport.js"></script>
+</body>
+</html>

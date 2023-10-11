@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 申请单退药 (静配通用)
+    csp: pha.ip.v4.returnbyreq.csp
+    js:  pha/ip/v4/returnbyreq.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <PHAPRINTCOM />
+    <style>
+        .pha-ip-return-order-group {
+            padding-left: 0px;
+        }
+
+        .pha-ip-return-order-group>div {
+            float: left;
+            max-width: 200px;
+            overflow: hidden;
+        }
+
+        .pha-ip-moreorless .pha-con-table {
+            /* margin:auto; */
+            padding-right: 10px;
+            ;
+        }
+
+        .pha-ip-moreorless .pha-con-table .r-label {
+            white-space: nowrap;
+        }
+
+        #winRefuseReason {
+            padding: 10px 10px 0px 10px;
+        }
+
+        #winSelectPrintWay .pha-con-table {
+            margin: auto
+        }
+
+        .kw-section-list>li {
+            margin: 10px 10px 10px 0px;
+        }
+        .pha-ip-moreorless .pha-con-table {
+            padding-right: 10px;
+        }
+
+        .pha-ip-moreorless .pha-con-table .r-label {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" id="lyBody">
+                <div data-options="region:'north',border:false,height:100,split:true" style="overflow: hidden;">
+                    <div class="hisui-panel" title="" data-options="headerCls:'panel-header-gray',iconCls:'icon-drug-audit',fit:true,bodyCls:'panel-body-gray'" style="overflow: hidden;">
+                        <div>
+                            <table class="pha-con-table qCondition">
+                                <tr>
+                                    <td class="r-label">
+                                        <label for="startDate">#(..Get("申请开始时间"))#</label>
+                                    </td>
+                                    <td>
+                                        <input class="hisui-datebox pha-datebox" id="startDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                                    </td>
+                                    <td>
+                                        <input class="hisui-timespinner pha-timespinner" id="startTime" data-pha="class:'hisui-timespinner',query:true,clear:true" showSeconds=true>
+                                    </td>
+                                    <td class="r-label">
+                                        <label for="takeLoc">#(..Get("申请科室"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="takeLoc" data-pha="class:'hisui-combobox',query:true,clear:true">
+                                    </td>
+                                    <td class="r-label">
+                                        <label for="patNo">#(..Get("登记号"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="patNo" class="hisui-validatebox" data-pha="class:'hisui-validatebox',query:true,clear:true">
+                                    </td>
+                                    <td class="r-label">
+                                        <label for="bedNo">#(..Get("床号"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="bedNo" class="hisui-validatebox" data-pha="class:'hisui-validatebox',query:true,clear:true">
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton " data-options="iconCls:'icon-w-cancel',plain:false" id="btnRefuse">拒绝退药</a>
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton " data-options="iconCls:'icon-w-back',plain:false" id="btnRefuseCancel">取消拒绝</a>
+                                    </td>
+                                    
+                                </tr>
+                                <tr>
+                                    <td class="r-label">
+                                        <label for="endDate">#(..Get("申请结束时间"))#</label>
+                                    </td>
+                                    <td>
+                                        <input class="hisui-datebox pha-datebox" id="endDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                                    </td>
+                                    <td>
+                                        <input class="hisui-timespinner pha-timespinner" id="endTime" data-pha="class:'hisui-timespinner',query:true,clear:true" showSeconds=true>
+                                    </td>
+                                    <td class="r-label">
+                                        <label for="no">#(..Get("申请单号"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="no" data-pha="class:'hisui-validatebox',query:true,clear:true" class="hisui-validatebox">
+                                    </td>
+                                    <td class="r-label">
+                                        <label for="inci">#(..Get("药品"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="inci" data-pha="class:'hisui-lookup',query:true,clear:true">
+                                    </td>
+                                    <td class="r-label">
+                                        <label for="patName">#(..Get("姓名"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="patName" class="hisui-validatebox" data-pha="class:'hisui-validatebox',query:true,clear:true">
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton " data-options="iconCls:'icon-w-ok',plain:false" id="btnReturn">确认退药</a>
+                                    </td>
+                                    <td>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'west',border:false,split:true,width:700" style="background-color: transparent;">
+                    <div class="hisui-layout" fit="true">
+                        <div data-options="region:'west',border:false,split:true,width:200">
+                            <!--div class="hisui-panel" title="退药科室" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray'">
+                                <table id="gridLoc"></table>
+                            </div-->
+                            <div class="hisui-tabs tabs-gray" fit="true">
+                                <div data-options="title:'退药科室'">
+                                    <table id="gridLoc"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div id="tabsTotal" class="hisui-tabs tabs-gray" fit="true">
+                                <div data-options="title:'退药申请',code:'normal',grid:'gridReq'" selected id="takeLocBaseTab">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridReq"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-options="title:'已退费未退药',code:'refund',grid:'gridRefund'">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridRefund"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-options="title:'已拒绝退药',code:'refuse',grid:'gridRefuse'">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridRefuse"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" class='js-pha-ip-hide-pagination'>
+                    <div id="tabsDetail" class="hisui-tabs tabs-gray" fit="true">
+                        <div data-options="title:'申请明细',code:'order'" selected>
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false">
+                                    <table id="gridReqItm"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-options="title:'药品汇总',code:'inci'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false">
+                                    <table id="gridInci"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- <div data-options="title:'拒绝退药明细',code:'refuse'" selected>
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false">
+                                    <table id="gridReqItm4Refuse"></table>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="winRefuseReason">
+        <table id="gridRefuseReason"></table>
+    </div>
+    <!-- 选择打印方式 -->
+    <div id="winSelectPrintWay" style="overflow: hidden;width: 500px;">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <div id="kwPrintWay"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="gridInciBar">
+        <div style="padding:10px;">
+            <div class="pha-tip-info" style="line-height: 28px;top:10px;right: 10px;letter-spacing:1px">
+                　#(..Get("药品汇总是勾选的申请明细的数据汇总"))#
+            </div>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/returnbyreq.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/inpha/dhcpha.inpha.printreturn.js"></script>
+</body>
+
+</html>

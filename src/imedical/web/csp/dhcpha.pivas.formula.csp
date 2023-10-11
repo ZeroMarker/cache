@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--审核指标公式维护
-	csp:dhcpha.pivas.formula.csp
-	js: scripts/pharmacy/pivas/formula.js
+<!--
+    审核指标公式维护
+	csp: csp/dhcpha.pivas.formula.csp
+	js:  scripts/pharmacy/pivas/formula.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -10,17 +15,39 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <style>
+        .pha-body {
+            background-color: #fff;
+        }
+
+        .layout {
+            background-color: #fff;
+        }
+        
+        .td-top {
+            padding-top: 10px;
+        }
+
+        .td-left {
+            padding-left: 10px;
+        }
+
+
+        .pha-formula-letter {
+            letter-spacing: 2px;
+        }
+
+        
+    </style>
 </HEAD>
 
-<body style="background:white;">
-    <div class="dhcpha-win-mask">
-        <img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-    </div>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true" border="false">
                 <div data-options="region:'west',title:'药学成分指标',width:300,split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-drug-mol',collapsible:false">
                     <table id="gridIngIndex"></table>
@@ -41,7 +68,7 @@
                     <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
                 </td>
                 <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
                 </td>
             </tr>
         </table>
@@ -54,17 +81,17 @@
                     <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddItm">新增</a>
                 </td>
                 <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-edit" id="btnUpdateItm">修改</a>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnUpdateItm">修改</a>
                 </td>
                 <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDeleteItm">删除</a>
+                    <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDeleteItm">删除</a>
                 </td>
                 <td>
             </tr>
         </table>
         </span>
     </div>
-    <div id="gridIngIndItmWin" class="hisui-dialog" title="指标明细" closed="true" style="width:700px;height:500px;" data-options="iconCls:'icon-panel-fx',modal:true,
+    <div id="gridIngIndItmWin" class="hisui-dialog" title="指标明细" closed="true" style="width:700px;height:600px;" data-options="iconCls:'icon-panel-fx',modal:true,
 	buttons:[{
 		text:'确定',
 		handler:function(){
@@ -77,42 +104,50 @@
 		}
 	}]">
         <div class="hisui-layout" fit="true" border="false">
-            <div data-options="region:'center'" class="dhcpha-hisui-container">
+            <div data-options="region:'center',border:false">
                 <div class="hisui-layout" data-options="fit:true">
-                    <div data-options="region:'north',height:250,split:true" border="false">
-                        <div class="hisui-layout" data-options="fit:true" border="false">
-                            <div data-options="region:'west',width:200" border="false">
-                                <table cellpadding=0 cellspacing=0>
-                                    <tr>
-                                        <td>代码<input id="txtIngIndItmCode" type="text" class="hisui-validatebox" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-top: 10px;">名称<input id="txtIngIndItmDesc" type="text" class="hisui-validatebox" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-top: 10px;">下限<input id="txtIngIndItmMin" type="text" class="hisui-validatebox" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-top: 10px;">上限<input id="txtIngIndItmMax" type="text" class="hisui-validatebox" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-top: 10px;">单位<input id="txtIngIndItmUom" type="text" class="hisui-validatebox" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-top: 10px;">备注<input id="txtIngIndItmRemark" type="text" class="hisui-validatebox" /></td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div data-options="region:'center'" border="false">
-                                <div>
-                                    <textarea id="txtIngIndItmFormula" style="width:470px;height:225px;overflow:hidden"></textarea>
-                                </div>
-                            </div>
-                        </div>
+                    <div data-options="region:'north',height:250,split:true" border="false" style="overflow: hidden;">
+                        <table class="pha-con-table" style="float: left;">
+                            <tr>
+                                <td class="r-label">#(..Get("代码"))#</td>
+                                <td><input id="txtIngIndItmCode" type="text" class="hisui-validatebox" /></td>
+                                <!-- <td rowspan="6">
+                                    <textarea id="txtIngIndItmFormula" style="width:100%;height:225px;overflow:hidden"></textarea>
+                                </td> -->
+                            </tr>
+                            <tr>
+                                <td class="r-label">#(..Get("名称"))#</td>
+                                <td><input id="txtIngIndItmDesc" type="text" class="hisui-validatebox" /></td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">#(..Get("下限"))#</td>
+                                <td><input id="txtIngIndItmMin" type="text" class="hisui-validatebox" /></td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">#(..Get("上限"))#</td>
+                                <td><input id="txtIngIndItmMax" type="text" class="hisui-validatebox" /></td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">#(..Get("单位"))#</td>
+                                <td><input id="txtIngIndItmUom" type="text" class="hisui-validatebox" /></td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">#(..Get("备注"))#</td>
+                                <td><input id="txtIngIndItmRemark" type="text" class="hisui-validatebox" /></td>
+                            </tr>
+                        </table>
+                        <table class="pha-con-table" style="float: left;">
+                            <tr>
+                                <td>
+                                    <textarea id="txtIngIndItmFormula" style="width:470px;height:224px;overflow:hidden;" class="pha-formula-letter"></textarea>
+                                </td>
+                            </tr>
+                        </table>
+
                     </div>
                     <div data-options="region:'center'" border="false">
                         <div id="cacuTable">
-                            <div style="padding-left:5px">
+                            <div style="padding-left:10px">
                                 <a class="hisui-linkbutton">+</a>
                                 <a class="hisui-linkbutton">-</a>
                                 <a class="hisui-linkbutton">*</a>
@@ -126,16 +161,13 @@
                                 <!--a class="hisui-linkbutton">计算体重</a-->
                             </div>
                         </div>
-                        <div id="IngredientButtons">                            
+                        <div id="IngredientButtons">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/formula.js"></script>
 </body>

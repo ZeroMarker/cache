@@ -1,0 +1,18 @@
+<!--HIUIS 版本 门诊药房组件-->
+<csr:rule name="PHAOPV4" match="PHAOPV4">
+<csr:description>PHAOPV4</csr:description>
+<csr:action>
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    s Application=%request.Application
+    s DHCPHADATEFMT=##class(PHA.FACE.IN.Com).DateFormat() // 系统日期格式
+	s DHCPHADATEFMT=$case(DHCPHADATEFMT,1:"MM/DD/YYYY",3:"YYYY-MM-DD",4:"DD/MM/YYYY",:"YYYY-MM-DD")
+	s Perv="^^^^"_$G(%session.Data("LOGON.HOSPID"))_"^DHC"
+	s DHCPHARAFMT=##Class(web.DHCSTCOMMPARA).GetCommPropValue("FmtRA",Perv) // 进价金额位数
+	s DHCPHASAFMT=##Class(web.DHCSTCOMMPARA).GetCommPropValue("FmtSA",Perv) // 售价金额位数
+	s DHCPHARAFMT=$s(DHCPHARAFMT="":2,1:+$l($p(DHCPHARAFMT,".",2)))
+	s DHCPHASAFMT=$s(DHCPHASAFMT="":2,1:+$l($p(DHCPHASAFMT,".",2)))
+
+    d ##class(PHA.OP.LIB.V4).Load()
+    </SCRIPT>
+</csr:action>
+</csr:rule>

@@ -1,0 +1,183 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<!--nur.hisui.nurseCustomReportDirectory.csp 自定义报表目录配置界面（综合）-->
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.nurseCustomReportDirectory.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<STYLE type='text/css'>
+		body {
+			background-color: #fff;
+			padding: 0 4px 4px !important;
+			overflow: hidden;
+		}
+
+		.td_item {
+			height: 40px;
+		}
+
+		.datagrid-wrap.panel-body.panel-body-noheader {
+			border-color: #ccc;
+			border-top-right-radius: 0;
+			border-top-left-radius: 0;
+			border-right: 0;
+			border-left: 0;
+			border-bottom: 0;
+		}
+
+		/* .layout>.layout-panel-west,
+		.layout>.layout-panel-center{top:50px!important;bottom: 4px;}
+		.layout>.layout-panel-north>div{height: auto!important;}
+		.layout>.layout-panel-west{left: 4px!important;}
+		.layout>.layout-panel-center{right: 4px!important;}
+		.layout>.layout-expand-west{top:50px!important;left: 4px!important;} */
+		.layout-panel-center>div>div>.panel-body-noheader {
+			border: 0;
+		}
+
+		.layout-panel-center>div {
+			border-color: #cccccc;
+			border-radius: 4px !important;
+		}
+
+		.panel-status-collapse+.layout-panel-center>div {
+			border-radius: 0 4px 4px 0 !important;
+		}
+
+		#groupGridAllDiv {
+			height: 375px;
+		}
+
+		/* border: 1px solid #cccccc;border-top: 0; */
+		#groupGridAllDiv>div>div {
+			border: 1px solid #cccccc;
+			border-top: 0;
+		}
+	</STYLE>
+	<Server>
+		s SSGROUPDirectoryJson= ""
+		//##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.ReportDirectory","DirectoryGroupDR")
+		s SSGROUPDirectorySubJson= "" // ##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.ReportDirectorySub","ReportGroupDR")
+	</Server>
+
+</head>
+
+<body>
+	<div class="demo-exp-code entry-content">
+		<div class="use-prettyprint">
+			<div id="cc" class="hisui-layout" style="width:100%;height:100%; margin-top: 10px;"
+				data-options="clickExpand:true,border:false">
+				<div data-options="region:'north',title:'',split:true,border:false" style="height:50px;">
+					<table cellpadding="0" style="border-collapse: collapse;margin: 10px 5px 5px;">
+						<tr>
+							<td class="r-label">
+								<label id="_HospListLabel" for="_HospList">医院</label>
+							</td>
+							<td class="r-label">
+								<input id="_HospList" />
+							</td>
+							<td class="r-label">模板名称</td>
+							<td class="r-label">
+								<input id="textTemplateName" href="#" class="hisui-searchbox textbox"
+									data-options="searcher:reloadTemplatesGrid" />
+							</td>
+							<td class="r-label">
+								<a id="btnSearch" class="hisui-linkbutton hover-dark"
+									onclick="initAllTemplatesGrid()">查询</a>
+							</td>
+						</tr>
+					</table>
+
+				</div>
+				<div id="hospitalDiv"
+					data-options="region:'west',title:'当前院区所有科室可见',iconCls:'icon-paper',split:true,headerCls:'panel-header-gray',showCollapsedTitle:true"
+					style="width:330px;padding:10px;">
+					<div id="leftTemplateTree" data-options="fit:true,animate:true">
+					</div>
+				</div>
+				<div data-options="region:'center',title:'',split:true">
+					<table id="allTemplatesGrid" class="hisui-datagrid" data-options="fit:true">
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--修改/添加到目录-->
+	<div id="divAdd" class="hisui-dialog" style="width:340px;height:220px;top:120px;left:350px;padding:10px"
+		data-options="iconCls:'icon-w-save',resizable:true,isTopZindex:true,closed:true">
+		<table>
+			<tr>
+				<td class="td_title">描述</td>
+				<td class="td_item">
+					<input id="inputDesc" class="textbox" style="width:220px;">
+					</input>
+				</td>
+			</tr>
+			<tr>
+				<td class="td_title">序号</td>
+				<td class="td_item">
+					<input id="numberNo" class="hisui-numberbox textbox" style="width:80px;">
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!--权限-->
+	<div id="divGroup" style="overflow: hidden; width: 430px; height: 536px;padding: 0 10px 0;"
+		data-options="iconCls:'icon-w-save',resizable:true,modal:false,isTopZindex:true,closed:true">
+		<table cellspacing="0" style="border-collapse: collapse;margin: 10px 0;">
+			<tr>
+				<td>选中目录节点：</td>
+				<td>
+					<input class="hisui-textbox" id="DirectoryText" disabled>
+				</td>
+			</tr>
+		</table>
+		<div>
+			<input id="groupsearch" style="width:410px;" class="hisui-searchbox" />
+			<div id="groupGridAllDiv">
+				<table id="GroupGrid"></table>
+			</div>
+		</div>
+	</div>
+	<!--全病区权限-->
+	<div id="divGroupAll" style="overflow: hidden; width: 430px; height: 502px;padding: 10px 10px 0;"
+		data-options="iconCls:'icon-w-save',resizable:true,modal:false,isTopZindex:true,closed:true">
+		<div>
+			<input id="groupsearchAll" style="width:410px;" class="hisui-searchbox" />
+			<div id="groupGridAllDiv">
+				<table id="GroupGridAll"></table>
+			</div>
+		</div>
+	</div>
+	<!--目录维护-->
+	<div id="directoryDiv" class="hisui-dialog" data-options="closed:true,model:false">
+	</div>
+	<!--菜单-->
+	<div id="menu" class="hisui-menu" style="width:120px;">
+	</div>
+
+	<SCRIPT language='javascript'>
+    // 全局请求后台服务对象
+		/*
+		var ServerObj={
+			SSGROUPDirectoryJson:#(SSGROUPDirectoryJson)#,
+			SSGROUPDirectorySubJson:#(SSGROUPDirectorySubJson)# ,
+		};
+		*/
+	</SCRIPT>
+</body>
+
+</html>

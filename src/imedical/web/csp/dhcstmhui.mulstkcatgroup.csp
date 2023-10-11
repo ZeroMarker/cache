@@ -11,43 +11,48 @@
 	<HISUI/>
 	<DHCSTMHISUI/>
 </head>
+<style>
+	.Condition>tbody>tr>td {
+		padding: 0px;
+}
+</style>
 <body class="hisui-layout" data-options="fit:true">
 	<div class="" data-options="region:'center',border:false">
-	<div class="hisui-layout" data-options="fit:true">
-		<div class="BorderLine" style="padding:10px;overflow:hidden;" data-options="region:'north',border:false">
-			<span>类型:</span>
-			<div style="display:inline-block;">
-				<input class='hisui-radio' type="radio" label='库存类组' name='ScgType' value='M' data-options="checked:true">
-				<input class='hisui-radio' type="radio" label='财务类组' name='ScgType' value='O'>
+		<div class="hisui-layout" data-options="fit:true">
+			<div style="padding:10px 0 0 10px;overflow:hidden;" data-options="region:'north',border:false">
+				<span>类型:</span>
+				<div style="display:inline-block;">
+					<input class='hisui-radio' type="radio" label='库存类组' name='ScgType' value='M' data-options="checked:true">
+					<input class='hisui-radio' type="radio" label='财务类组' name='ScgType' value='O'>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false">
+				<ul id="ScgTree" class="tree"></ul>
+			</div>
+
+			<div id="ScgRightMenu" class="easyui-menu" style="display:none;width:120px;">
+				<div name="AddNode" data-options="iconCls:'icon-add'">增加</div>
+				<div name="UpdateNode" data-options="iconCls:'icon-update'">修改</div>
+				<div name="DelRelation" data-options="iconCls:'icon-cancel-ref'">解除关联</div>
+				<div name="SendBT" data-options="iconCls:'icon-upload-cloud'" class="SCIShow">推送平台</div>
 			</div>
 		</div>
-		<div data-options="region:'center',border:false">
-			<ul id="ScgTree" class="tree"></ul>
-		</div>
-
-		<div id="ScgRightMenu" class="easyui-menu" style="display:none;width:120px;">
-			<div name="AddNode" data-options="iconCls:'icon-add'">增加</div>
-			<div name="UpdateNode" data-options="iconCls:'icon-update'">修改</div>
-			<div name="DelRelation" data-options="iconCls:'icon-cut'">解除关联</div>
-		</div>
-	</div>
 	</div>
 
 	<!-- 增加节点弹窗 -->
-	<div id="MulScgAddWin" class="hisui-dialog" data-options="width:350,height:400,closed:'true',modal:true" title="增加节点">
-		<div class="hisui-layout" data-options="fit:true">
+	<div id="MulScgAddWin" class="hisui-dialog" data-options="width:350,height:420,buttons:'#AddWinTB',closed:'true',modal:true" title="增加节点" style="padding:0 10px;">
+		<div class="GridPadding" class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false">
 				<table class="Condition">
-					<tr>
-						<td><input class='hisui-radio' type="radio" label='类组' name='NodeAddType' value='SCG' data-options="checked:true" id="NodeAddTypeScg"></td>
-						<td><input class='hisui-radio' type="radio" label='库存分类' name='NodeAddType' value='INCSC' id="NodeAddTypeIncsc"></td>
+					<tr >
+						<td align="left"><input class='hisui-radio' type="radio" label='类组' name='NodeAddType' value='SCG' data-options="checked:true" id="NodeAddTypeScg"></td>
+						<td align="left"><input class='hisui-radio' type="radio" label='库存分类' name='NodeAddType' value='INCSC' id="NodeAddTypeIncsc"></td>
 					</tr>
 					<tr>
 						<td colspan="2"><label>代码</label><input id="AddCode" name="AddCode" class="textbox"></td>
 					</tr>
 					<tr>
 						<td colspan="2"><label>名称</label><input id="AddDesc" name="AddCode" class="textbox"></td>
-						<td><a href="#" id="AddConfirmBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
 					</tr>
 				</table>
 			</div>
@@ -55,12 +60,15 @@
 				<table id="NoRelationCatGrid"></table>
 			</div>
 		</div>
+		<div id="AddWinTB">
+			<a href="#" id="AddConfirmBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+		</div>
 	</div>
 
 	<!-- 修改类组弹窗 -->
-	<div id="UpdateScgWin" class="hisui-dialog" data-options="closed:'true',modal:true">
+	<div id="UpdateScgWin" class="hisui-dialog" data-options="width:260,height:207,buttons:'#UpdateWinButton',closed:'true',modal:true">
 		<div data-options="fit:true">
-			<table class="Condition">
+			<table class="Condition" align="center" style="padding-right:10px;">
 				<tr>
 					<td><label>代码</label><input id="UpdateScgCode" name="UpdateScgCode" class="textbox"></td>
 				</tr>
@@ -69,26 +77,28 @@
 				</tr>
 				<tr>
 					<td><label>类组集合</label><input id="UpdateScgSet" name="UpdateScgSet" class="textbox hisui-combobox"></td>
-					<td><a href="#" id="UpdateScgBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
 				</tr>
 			</table>
+		</div>
+		<div id="UpdateWinButton" style="padding-top:0px;">
+			<a href="#" id="UpdateScgBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
 		</div>
 	</div>
 
 	<!-- 修改库存分类弹窗 -->
-	<div id="UpdateCatWin" class="hisui-dialog" data-options="closed:'true',modal:true">
+	<div id="UpdateCatWin" class="hisui-dialog" data-options="width:230,height:167,buttons:'#UpdateCatButton',closed:'true',modal:true">
 		<div data-options="fit:true">
-			<table class="Condition">
+			<table class="Condition" align="center" style="padding-right:10px;">
 				<tr>
 					<td><label>代码</label><input id="UpdateCatCode" name="UpdateCatCode" class="textbox"></td>
 				</tr>
 				<tr>
 					<td><label>名称</label><input id="UpdateCatDesc" name="UpdateCatDesc" class="textbox"></td>
 				</tr>
-				<tr>
-					<td><a href="#" id="UpdateCatBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
-				</tr>
 			</table>
+		</div>
+		<div id="UpdateCatButton" style="padding-top:0px;">
+			<a href="#" id="UpdateCatBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
 		</div>
 	</div>
 

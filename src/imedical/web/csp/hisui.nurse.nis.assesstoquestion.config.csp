@@ -1,0 +1,187 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	Cache Server Page </title>
+
+<HISUI/>
+<style>
+	.td_item {
+        	height:40px;
+        	width:130px;
+        }
+        .td_note {
+        	width:600px;
+        	padding-left:20px;
+        	color:red;
+        }
+</style>
+</head>
+
+<body>
+	<div style="overflow:auto;padding:20px;"> 
+		<table>
+			<tr>
+				<td class="td_label">
+					护理病历带护理问题
+				</td>
+				<td class="td_item" style="margin-left:5px">
+					<div id="EditorUpdateFlag" 
+						 class="hisui-switchbox nurseSwitch"
+						 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:false,onClass:'primary',offClass:'gray'">
+					</div>
+				</td>
+				<td>
+					<a id="btnSaveUpdate" class="hisui-linkbutton hover-dark">保存</a>
+				</td>
+				<td class="td_note">
+					<p>启用时保存护理病历会根据护理计划配置-评估带问题的配置，带出护理问题，关闭则无法带出。</p>
+				</td>
+			</tr>
+			<tr>
+				<td class="td_label">
+					护理计划弹窗提醒
+				</td>
+				<td class="td_item" style="margin-left:5px">
+					<div id="EditorUpdateFlag2" 
+						 class="hisui-switchbox nurseSwitch"
+						 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:false,onClass:'primary',offClass:'gray'">
+					</div>
+				</td>
+				<td>
+					<a id="btnSave2" class="hisui-linkbutton hover-dark">保存</a>
+				</td>
+				<td class="td_note">
+					<p>前提是要开启【护理病历带护理问题】，然后读取评估带问题的配置，在病历保存时给与护理计划的弹窗提醒，关闭则无效。</p>
+				</td>
+			</tr>
+			<tr>
+				<td class="td_label">
+					护理级别弹窗提醒
+				</td>
+				<td class="td_item" style="margin-left:5px">
+					<div id="EditorUpdateFlag3" 
+						 class="hisui-switchbox nurseSwitch"
+						 data-options="onText:'开启',offText:'关闭',checked:false,size:'small',animated:false,onClass:'primary',offClass:'gray'">
+					</div>
+				</td>
+				<td>
+					<a id="btnSave3" class="hisui-linkbutton hover-dark">保存</a>
+				</td>
+				<td class="td_note">
+					<p>前提是要在【护理级别提醒配置】中维护好对应的数据，在病历保存时给与护理级别的弹窗提醒，关闭则无效。</p>
+				</td>
+			</tr>
+		</table>
+	</div>  
+</body>
+<script type="text/javascript">
+	$(function(){
+		init();
+		
+		function init()
+		{
+			// 评估带问题
+			$cm({
+			ClassName:"Nur.NIS.Service.Assess.SwitchConfig",
+				MethodName:"GetAssessToQuesstion"
+			},function(result){
+				if (result==1)
+				{
+					$('#EditorUpdateFlag').switchbox('setValue',true);
+				}else
+				{
+					$('#EditorUpdateFlag').switchbox('setValue',false);
+				}
+			})	
+			// 护理问题弹框提醒
+			$cm({
+			ClassName:"Nur.NIS.Service.Assess.SwitchConfig",
+				MethodName:"GetQuestionRemind"
+			},function(result){
+				if (result==1)
+				{
+					$('#EditorUpdateFlag2').switchbox('setValue',true);
+				}else
+				{
+					$('#EditorUpdateFlag2').switchbox('setValue',false);
+				}
+			})
+			// 护理分级弹框提醒
+			$cm({
+			ClassName:"Nur.NIS.Service.Assess.SwitchConfig",
+				MethodName:"GetNurseGradeRemind"
+			},function(result){
+				if (result==1)
+				{
+					$('#EditorUpdateFlag3').switchbox('setValue',true);
+				}else
+				{
+					$('#EditorUpdateFlag3').switchbox('setValue',false);
+				}
+			})
+		}
+		// 评估带问题
+		$('#btnSaveUpdate').bind('click',function(){
+			var chkval = $('#EditorUpdateFlag').switchbox('getValue')
+			var flag = (chkval == true) ? 1:0
+			$cm({
+				ClassName:"Nur.NIS.Service.Assess.SwitchConfig",
+				MethodName:"SaveAssessToQuesstion",
+				flag:flag
+			},function(result){
+				$.messager.popover({msg: '保存成功！',type:'info'});
+				init()
+			})
+		});
+
+		// 护理计划弹框提醒
+		$('#btnSave2').bind('click',function(){
+			var chkval = $('#EditorUpdateFlag2').switchbox('getValue')
+			var flag = (chkval == true) ? 1:0
+			$cm({
+				ClassName:"Nur.NIS.Service.Assess.SwitchConfig",
+				MethodName:"SaveQuestionRemind",
+				flag:flag
+			},function(result){
+				$.messager.popover({msg: '保存成功！',type:'info'});
+				init()
+			})
+		});
+				
+		// 护理分级弹框提醒
+		$('#btnSave3').bind('click',function(){
+			var chkval = $('#EditorUpdateFlag3').switchbox('getValue')
+			var flag = (chkval == true) ? 1:0
+			$cm({
+				ClassName:"Nur.NIS.Service.Assess.SwitchConfig",
+				MethodName:"SaveNurseGradeRemind",
+				flag:flag
+			},function(result){
+				$.messager.popover({msg: '保存成功！',type:'info'});
+				init()
+			})
+		});
+
+
+		/*
+		$('#EditorUpdateFlag').switchbox('options').onSwitchChange = function(e,obj){
+			var chkval = obj.value
+			var flag = (chkval == true) ? 1:0
+			$cm({
+				ClassName:"Nur.NIS.Service.Assess.SwitchConfig",
+				MethodName:"SaveAssessToQuesstion",
+				flag:flag
+			},function(result){
+				
+			})
+		};
+		*/
+})
+</script>
+</html>

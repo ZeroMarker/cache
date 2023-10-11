@@ -1,0 +1,116 @@
+<html>
+<!-- 验证session过期 页面班次时间配置 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<head>
+
+    <title>通用规则配置</title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/bundle.js"></script>
+    <style>
+    body{
+	 	background:#ffffff;   
+    }
+    .header{
+	 	display:flex;
+	 	flex-wrap:no-wrap; 
+	 	height: 44px;
+	 	padding:10px 10px 0 10px;
+	 	justify-content:left; 
+	 	align-content:center;
+	 	display:none;
+    }
+    #content{
+	    height: 100%;
+	    width:100%;
+    }
+    .up{
+	 	width:100%;  
+	 	display:flex;
+	 	flex-direction:column;
+	 	flex-wrap:nowrap;
+    }
+    .up .header_sign{
+	 	font-weight:bold;
+	 	display:inline-block;
+	 	padding-left:4px; 
+	 	text-align:right;
+	 	margin-bottom:10px;
+	 	margin-left:23px;
+    }
+    .down{
+	 	height:calc(100% - 30px);
+	 	width:100%;
+	 	display:flex; 	
+    }
+    .two,.three{
+	 	display:none;   
+    }
+    label.radio{
+		margin-top:-3px;    
+	}
+	.panel-body, .panel-header{
+		border-color:#ccc;	
+	}
+    </style>
+</head>
+
+<body>
+
+	<div class="header">
+		<div style="display:none;"><csp:Include Page="nur.hisui.common.hosp.combobox.csp"></div>
+		<div style="padding-left:10px;"><a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" id="search">查询</a></div>
+		<div style="padding-left:10px;"><a href="#" class="hisui-linkbutton hover-dark" id="save">保存</a></div>
+	</div>
+	<div id="content">
+		<div class="up">
+			<div class="one">
+				<span class="header_sign">签名规则</span>
+				<span style="padding-right:5px;padding-left:5px;">交班签名</span>
+				<input id="sign_1" class="hisui-radio" type="radio" label="按患者签名" name="in_sign" value="1" data-options="radioClass:'hischeckbox_square-blue',required:true" style="margin-top:-2px;">
+				<input id="sign_0" class="hisui-radio" type="radio" label="按班次签名" name="in_sign" value="0" data-options="radioClass:'hischeckbox_square-blue',required:true">
+				<span style="padding-left:50px;padding-right:5px;">接班签名</span>
+				<input id="signPatient_1" class="hisui-radio" type="radio" label="有" name="out_sign" value="1" data-options="radioClass:'hischeckbox_square-blue',required:true">
+				<input id="signPatient_0" class="hisui-radio" type="radio" label="无" name="out_sign" value="0" data-options="radioClass:'hischeckbox_square-blue',required:true">
+				<span style="padding-left:50px;padding-right:5px;">打印是否CA签名</span>
+				<input id="signCA_1" class="hisui-radio" type="radio" label="是" name="ca_sign" value="1" data-options="radioClass:'hischeckbox_square-blue',required:true">
+				<input id="signCA_0" class="hisui-radio" type="radio" label="否" name="ca_sign" value="0" data-options="radioClass:'hischeckbox_square-blue',required:true">
+			</div>
+			<div class="two">
+				<span class="header_sign">交班内容继承规则</span>
+				<input class="hisui-radio" type="radio" label="不继承" name="extends" value="no" data-options="radioClass:'hischeckbox_square-blue',required:true">
+				<input class="hisui-radio" type="radio" label="当天继承" name="extends" value="today" data-options="radioClass:'hischeckbox_square-blue',required:true,checked:true">
+				<input class="hisui-radio" type="radio" label="跨天继承" name="extends" value="next" data-options="radioClass:'hischeckbox_square-blue',required:true">
+			</div>
+			<div class="three">
+				<span class="header_sign">撤销签名权限规则</span>
+				<input class="hisui-radio" type="radio" label="交班护士本人" name="sign_rule" value="self" data-options="radioClass:'hischeckbox_square-blue',required:true">
+				<input class="hisui-radio" type="radio" label="护士长" name="sign_rule" value="Headnurse" data-options="radioClass:'hischeckbox_square-blue',required:true,checked:true">
+			</div>
+		</div>
+		<div class="down">
+			<label style="width:100px;font-weight:bold;">合并交班规则</label>
+			<table id="dg" class="hisui-datagrid" data-options="fit:true,singleSelect: true,
+	headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		</div>
+	</div>
+	
+	
+    <script type="text/javascript">
+    	var development=false
+    	var target=document.createElement("script")
+    	target.type = "text/javascript";
+    	
+        if (development) {
+            target.src = "http://127.0.0.1/imedical/web/scripts/nurse/hisui/nur.hisui.generalruleconfig.js"; // 本地跑服务
+        } else {
+            target.src = "../scripts/nurse/hisui/nur.hisui.generalruleconfig.js"; 
+        }
+        document.getElementsByTagName('body')[0].appendChild(target);
+    </script>
+</body>
+</html>

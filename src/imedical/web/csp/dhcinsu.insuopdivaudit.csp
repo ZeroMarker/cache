@@ -1,0 +1,146 @@
+<!-- 
+ * FileName:	dhcinsu.insuopdivaudit.csp
+ * User:		HanZH
+ * Date:		2022-10-17
+ * Function:	
+ * Description: 医保门诊收费审核			
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html;"-->
+<title>医保门诊收费审核</title>
+
+<TRAK:HEAD></TRAK:HEAD>
+
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script>
+<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/>
+<script type="text/javascript" src="../scripts/dhcinsu/mi.common.js"></script>
+<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+
+ <style>
+.layout>.panel>.panel-header {
+    border-radius: 4px 4px 0 0 !important;
+}
+.datagrid-wrap {
+	border-radius:0 0 4px 4px !important;	
+	border-color:#cccccc !important;
+	border-top:0px !important;
+}
+.dg-class .datagrid-wrap{
+	border-radius:0px !important;	
+	border-color:#cccccc !important;
+	border-top:1px dashed #cccccc !important;	
+}
+.hisui-panel {
+	border-bottom:0px !important;	
+}
+.south-class .panel-noscroll{
+	border:0px !important;
+}
+.layout-panel-west {
+    padding-right: 10px;
+}
+.PortCom{
+	width:270px !important;	
+}
+.PubComWin .panel-body-noheader{
+	border-top:1px solid #cccccc !important;
+	border-radius:0px !important;			
+}
+.tb300{
+	width:440px !important ;	
+}
+.nobottom{
+	border-bottom-width:0
+}
+</style>
+</head>
+<script type="text/javascript">
+</script>
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+   		<div data-options="region:'north',border:false" style="height:350px;">
+   			<div class="hisui-layout" data-options="fit:true">
+   				<div data-options="region:'north',title:'门诊慢病结算',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" style="overflow:hidden;height:128px;border-bottom-style:dashed;border-radius:0px">
+   					<table class="search-table" style="border-collapse: separate;border-spacing: 0 10px;">
+						<tr>
+							<td class="r-label td-first-col"><label>开始日期</label></td>
+							<td><input id="StartDate" class="textbox hisui-datebox" /></td>
+							<td class="r-label"><label>登记号</label></td><!--普通textbox-->
+							<td><input id="RegNo" class="textbox"/></td>
+							<td class="r-label "><label>发票号</label></td><!--禁用样式-->
+							<td><input id="InvNo"  class="textbox"></td>
+							<td class="r-label"><label>是否集中打印发票</label></td><!--普通textbox-->
+							<td><input id="CPPFlag" class="hisui-combobox" style="width:155px"/></td>
+							<td class="r-label" align="right" ><a id="btnQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" >查询</a></td>
+							<td class="r-label" align="right" ><a id="btnCheckMB" href="#" class="hisui-linkbutton" style="width:120px"  data-options="iconCls:'icon-w-find'" >慢病查询</a></td>
+						</tr>
+						
+						<tr>
+							<td class="r-label"><label>结束日期</label></td>
+							<td><input id="EndDate" class="textbox hisui-datebox" /></td>
+							<!--td class="r-label" ><label>病人类型</label></td>
+							<td ><input id="PatTypeD" class="textbox"></td>
+							<td class="r-label" ><label>门诊慢病</label></td>
+							<td ><input id="DiagDesc" class="textbox"></td-->
+							<td class="r-label " ><label>选中发票金额</label></td><!--禁用样式-->
+							<td><input id="InvAmt" style='color:red' class="textbox"></td>
+							<td class="r-label"><label>录入数量</label></td><!--普通textbox-->
+							<td><input id="UseQty" class="textbox"/></td>
+							<td class="r-label" ><label>身份证号</label></td>
+							<td ><input id="sfz" class="textbox"/></td>
+							<!--td class="r-label" align="right" ><a id="btnReadCard" href="#" class="hisui-linkbutton" style="width:120px"  data-options="iconCls:'icon-w-find'" >读医保卡</a></td-->
+						</tr>
+					</table>
+   				</div>
+   				<div data-options="region:'center',border:false">
+					<div id="InvGrid"></div> 
+				</div>
+   			</div>
+		</div>
+		<div data-options="region:'center',border:false" style="padding-top:10px;background-color:#F5F5F5">		
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'west',title:'医嘱明细',collapsible:false,iconCls:'icon-apply-check',headerCls:'panel-header-gray nobottom'," style="width:1000px;border-top:1px dashed #e2e2e2;">
+					<div id="orGrid"></div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<div id="ItmGrid"></div>
+				</div>
+			</div>
+     	</div>
+	</div> 
+	<!--接门诊慢病结算toolbar-->
+	<div id="InvToolBar" class="hisui-toolbar" style="border-top:1px dashed #ccc;">
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-int-bill" id="btn-InsuDiv" plain="true">医保结算</a></td>
+					<!--td><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="btn-InsuDivPrint" plain="true">医保结算单</a></td-->
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<!--医嘱明细toolbar-->
+	<div id="orToolBar" class="hisui-toolbar">  
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-save-to" id="btn-zf" plain="true">调自费</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-save-to" id="btn-yb" plain="true">调医保</a></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insuopdivaudit.js"></script>
+</body>
+</html>

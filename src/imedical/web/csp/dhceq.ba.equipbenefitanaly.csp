@@ -1,0 +1,343 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--效益分析设备设置-详细 dhceq.ba.equipbenefitanaly.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+.eq-table{width:100%;}
+.eq-table-item{padding-top:5px;font-weight:blod;}
+.eq-table-lable{width:2%;color:#666;text-align:right;font-weight:blod;font-size:14px;}
+.eq-table-lable-large{width:12%;color:#666;text-align:right;font-weight:blod;}
+.eq-table-info{width:10%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;}
+.eq_main_card
+{
+	width:19%;
+	height:70px;
+	padding-left:1.25%; /*Modify by zx 2020-04-29 BUG ZX0085*/
+	/*margin:5px 0;*/
+	background-color:#fff;
+	float:left;
+	position:relative;
+	text-align:center;
+}
+/*Modify by zx 2020-04-29 BUG ZX0085*/
+.eq_main_card:first-child
+{
+	padding-left:0px;
+}
+.eq_main_card .eq_main_header
+{
+	padding-left:10px;
+	padding-right:6px;
+	height:100%;
+	color:#fff;
+	border-radius:4px;
+}
+.eq_main_header div
+{
+	padding-top:5px;
+	height:30px;
+}
+.eq_main_header div span:first-child 
+{
+	text-align:left;
+	display:inline-block;
+	font-size:14px;
+	width:42%;
+}
+.eq_main_header div span:nth-child(2)
+{
+	text-align:right;
+	display:inline-block;
+	font-size:14px;
+	width: 38%;
+}
+.eq_main_header div span:nth-child(3)
+{
+	text-align:left;
+	display:inline-block;
+	font-size:14px;
+	width:18%;
+	margin-left:2%
+}
+.eq_main_linear1
+{
+	background:#40a2de;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear2
+{
+	background:#a849cb;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear3
+{
+	background:#0d83b0;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear4
+{
+	background:#ffba42;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear5
+{
+	background:#15b398;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_main_linear6
+{
+	background:#f16e57;
+	background-image:url('../images/eq-num.png'),url('../images/eq-amount.png');
+	background-repeat:no-repeat,no-repeat;
+	background-position:top left,bottom right;
+	transition:background 1s;
+	-webkit-transition:background 1s;
+}
+.eq_echarts{
+	width: 100%;
+	height: 100%;
+	overflow:hidden;
+}
+.eq-table-lable{
+	padding-right:10px;
+}
+.eq-table-td-new1
+{
+	padding-top:10px;
+	display:table-cell;
+	white-space:nowrap;
+	/*white-space:normal;*/
+	vertical-align: middle;
+	width:35px;
+}
+.link-top {
+	margin-top:10px;
+    height: 1px;
+    border-top: solid #CCC 1px;
+}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s EQRowID=$Get(%request.Data("EQRowID",1))
+	s StartDate=$Get(%request.Data("StartDate",1))
+	s EndDate=$Get(%request.Data("EndDate",1))
+	s Job=$Get(%request.Data("Job",1))
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'west',border:true,collapsible:false,headerCls:'panel-header-gray',split:true,iconCls:'icon-paper'" style="width:300px;" title="设备信息">
+				<div>
+					<div class="eq-table-td-new1 eq-table-lable" id="cStartDate" for="StartDate">日期</div>
+					<div class="eq-table-td-new1 eq-table-input"><input class="hisui-datebox textbox" id="StartDate" data-options='validParams:"YM"' style="width:240px" value=#(StartDate)#></div>
+				</div>
+				<div>
+					<div class="eq-table-td-new1 eq-table-lable"><label id="cEndDate" for="EndDate">至</label></div>
+					<div class="eq-table-td-new1 eq-table-input"><input class="hisui-datebox textbox" id="EndDate" data-options='validParams:"YM"' style="width:240px" value=#(EndDate)#></div>
+				</div>
+				<div>
+					<div class="eq-table-td-new1 eq-table-lable"></div>
+					<div class="eq-table-td-new1 eq-table-input" style="width:240px;text-align:center;"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+				</div>
+				<div class="link-top"></div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td-new1 eq-table-lable" id="cEQName">名称:</div>
+					<div class="eq-table-td-new1 eq-table-info" id="EQName"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQNo">编号:</div>
+					<div class="eq-table-td eq-table-info" id="EQNo"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQModel">规格:</div>
+					<div class="eq-table-td eq-table-info" id="EQModel"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQUseLoc">科室:</div>
+					<div class="eq-table-td eq-table-info" id="EQUseLoc"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQProvider">供应商:</div>
+					<div class="eq-table-td eq-table-info" id="EQProvider"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQManuFactory">生产厂商:</div>
+					<div class="eq-table-td eq-table-info" id="EQManuFactory"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQLeaveFactoryNo">出厂编号:</div>
+					<div class="eq-table-td eq-table-info" id="EQLeaveFactoryNo"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQOriginalFee">原值:</div>
+					<div class="eq-table-td eq-table-info" id="EQOriginalFee"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQStartDate">启用日期:</div>
+					<div class="eq-table-td eq-table-info" id="EQStartDate"></div>
+				</div>
+				<div class="eq-table-tr">
+					<div class="eq-table-td eq-table-lable" id="cEQLimitYearsNum">折旧年限:</div>
+					<div class="eq-table-td eq-table-info" id="EQLimitYearsNum"></div>
+				</div>
+			</div>
+			<div data-options="region:'center',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="设备360全景图" style="padding:10px">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'north',border:true,collapsible:false,border:false" style="height:80px;" title="">
+						<div class="eq_main_card"><div class="eq_main_linear1 eq_main_header" id="BAEQInOutAmount"></div></div>	<!--收支-->
+						<div class="eq_main_card"><div class="eq_main_linear2 eq_main_header" id="BAEQCheckPerson"></div></div>	<!--人次，曝光次数-->	
+						<div class="eq_main_card"><div class="eq_main_linear3 eq_main_header" id="BAEQWorkAmount"></div></div>	<!--工作量，阳性率-->	
+						<div class="eq_main_card"><div class="eq_main_linear4 eq_main_header" id="BAEQCostAmount"></div></div>	<!--固定成本，非固定成本-->	
+						<div class="eq_main_card"><div class="eq_main_linear5 eq_main_header" id="BAEQMaintAmount"></div></div>	<!--维修次数，维护次数-->
+					</div>
+					<div data-options="region:'center',border:true,collapsible:false,border:false" title="">
+						<div style='height:50%;width:100%;margin-bottom:10px;'>
+							<div style='float:left;height:100%;width:49%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备收支统计">
+									<div id="EQInOutAnaly" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备工作量统计">
+									<div id="EQWorkLoadAnaly" class="eq_echarts"></div>
+								</div>
+							</div>
+						</div>
+						<div style='height:40%;width:100%;margin-bottom:10px;'>
+							<div style='float:left;height:100%;width:49%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备固定成本统计">
+									<div id="EQFixedCost" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备变动成本统计">
+									<div id="EQVariableCost" class="eq_echarts"></div>
+								</div>
+							</div>
+						</div>
+						<div style='height:50%;width:100%;margin-bottom:10px;'>
+							<div style='float:left;height:100%;width:49%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="检查人次分析">
+									<div id="PatientNum" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="平均扫描时长">
+									<div id="AvgTime" class="eq_echarts"></div>
+								</div>
+							</div>
+						</div>
+						<div style='height:40%;width:100%;margin-bottom:10px;'>
+							<div style='float:left;height:100%;width:49%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="预期-实际检查收入对比">
+									<div id="CompareServiceIncome" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="预期-实际耗材费对比">
+									<div id="CompareMaterialFee" class="eq_echarts"></div>
+								</div>
+							</div>
+						</div>
+						<div style='height:50%;width:100%;margin-bottom:10px;'>
+							<div style='float:left;height:100%;width:49%;'>
+								<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="预期-实际维修费对比">
+									<div id="CompareMaintFee" class="eq_echarts"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="预期-实际人员费对比">
+									<div id="CompareFeeOfEmployee" class="eq_echarts"></div>
+								</div>
+							</div>
+						</div>
+						<div style='height:40%;width:100%;margin-bottom:10px;'>
+		 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备收支明细">
+								<div id="EQInOutGrid" style="width:100%;height:100%;" class="hisui-datagrid"></div>
+							</div>
+						</div>
+						<div style='height:40%;width:100%;margin-bottom:10px;'>
+		 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="使用耗材明细">
+								<div id="EQConsumableGrid" style="width:100%;height:100%;" class="hisui-datagrid"></div>
+							</div>
+						</div>
+						<div style='height:40%;width:100%;margin-bottom:10px;'>
+							<div style='float:left;height:100%;width:49%;'>
+			 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="科研/论文">
+									<div id="EQResearchInfo" style="width:100%;height:100%;" class="hisui-datagrid"></div>
+								</div>
+							</div>
+							<div style='float:left;height:100%;width:50%;margin-left:1%;'>
+		 						<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="功能开发">
+									<div id="EQFuncDevelopment" style="width:100%;height:100%;" class="hisui-datagrid"></div>
+								</div>								
+							</div>
+						</div>
+						<div style='height:40%;width:100%;margin-bottom:10px;'>
+		 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备运行信息">
+								<div id="EQOperatingInfo" style="width:100%;height:100%;" class="hisui-datagrid"></div>
+							</div>
+						</div>
+						<div style='height:40%;width:100%;margin-bottom:10px;'>
+		 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备维修记录">
+								<div id="EQMaintRequestInfo" style="width:100%;height:100%;" class="hisui-datagrid"></div>
+							</div>
+						</div>	
+						<div style='height:40%;width:100%;'>
+		 					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'" title="设备维保记录">
+								<div id="EQMaintenanceInfo" style="width:100%;height:100%;" class="hisui-datagrid"></div>
+							</div>
+						</div>	
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="EQRowID" value=#(EQRowID)#>
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#(Job)#>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/common/echarts.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/ba/equipbenefitanaly.js"></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</body>
+<script type='text/javascript'>
+MonthBox('StartDate');
+MonthBox('EndDate');
+</script>
+</HTML>

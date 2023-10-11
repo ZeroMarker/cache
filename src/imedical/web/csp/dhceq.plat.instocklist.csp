@@ -7,9 +7,20 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 </head>
+	<!--add by csj 2020-11-11 添加润乾打印相关配置-->
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    //d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17 
+	}   
+    </SCRIPT>  
 <server>
 s BussType=$g(%request.Data("BussType",1)) //add by csj 20200213 添加发票业务参数
 s ShowType=$g(%request.Data("ShowType",1))
@@ -22,46 +33,60 @@ s MenuName=$g(%request.Data("MenuName",1))
 s HasInvoiceType=$g(%request.Data("HasInvoiceType",1))
 s RequestLocDR=$g(%request.Data("RequestLocDR",1))
 s Status=$g(%request.Data("Status",1))	;add by csj 20200103
+//Modify by zx 2020-12-11 导出处理
+if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
 </server>
+<!--Modify By ZX 2020-09-09 增加审核日期查询并调整布局 BUG ZX0108-->
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel"  title="入库明细" data-options="fit:true,eqtitle:'maintitle'" style="width:100%;">
+		<div class="hisui-panel"  title="入库明细" data-options="fit:true,eqtitle:'maintitle'">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="padding-bottom:10px;width:150%;border-bottom:solid 1px #ccc;">
+				<div data-options="region:'north',border:false" style="padding-bottom:10px;border-bottom:solid 1px #ccc;">
 					<div class="eq-table">
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cProvider" for="Provider">供应商</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Provider" data-options="'component':'PLAT.L.Vendor'" value=#(Provider)#></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Provider" data-options="'component':'PLAT.L.Vendor'" value=#(Provider)#></div>
+							<div class="eq-table-td eq-table-label"><label id="cInvoiceNos" for="InvoiceNos">发票号</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="InvoiceNos"></div>
+							<div class="eq-table-td eq-table-label"><label id="cHasInvoiceType" for="HasInvoiceType">包含发票</label></div>
+							<div class="eq-table-td eq-table-input"><input id="HasInvoiceType" class="hisui-combobox textbox" value=#(HasInvoiceType)#></div>
 							<div class="eq-table-td eq-table-label"><label id="cStatus" for="Status">发票状态</label></div>	<!--add by csj 2020-03-04 添加发票状态查询-->
 							<div class="eq-table-td eq-table-input"><input id="Status" class="hisui-combobox textbox" value=#(Status)#></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-input"></div>
-							<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:120px;margin-right:20px">查询</a></div>
 							<div class="eq-table-td eq-table-button"><a id="BAudit" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" style="margin-left:120px;margin-right:20px">发票审核</a></div><!--add by csj 2020-03-04 添加发票审核-->
 						</div>
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cISNo" for="ISNo">入库单号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ISNo"></div>
-							<div class="eq-table-td eq-table-label"><label id="cInvoiceNos" for="InvoiceNos">发票号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="InvoiceNos"></div>
-							<div class="eq-table-td eq-table-label"><label id="cHasInvoiceType" for="HasInvoiceType">包含发票</label></div>
-							<div class="eq-table-td eq-table-input"><input id="HasInvoiceType" class="hisui-combobox textbox" value=#(HasInvoiceType)#></div>						
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ISNo"></div>
+							<div class="eq-table-td eq-table-label"><lable id="cStartAuditDate" for="StartAuditDate">发票审核日期</lable></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="StartAuditDate"></div>
+							<div class="eq-table-td eq-table-label"><lable id="cEndAuditDate" for="EndAuditDate">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EndAuditDate"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="margin-left:120px;margin-right:20px">查询</a></div>					
 						</div>
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cName" for="Name">设备名称</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Name"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Name"></div>
 							<div class="eq-table-td eq-table-label"><label id="cMinPrice" for="MinPrice">原值</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MinPrice"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MinPrice"></div>
 							<div class="eq-table-td eq-table-label"><label id="cMaxPrice" for="MaxPrice">至</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MaxPrice"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MaxPrice"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-button"><a id="BExport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" style="margin-left:120px;margin-right:20px">导出</a></div>
 						</div>
 						<div class="eq-table-tr">
 							<div class="eq-table-td eq-table-label"><label id="cEquipType" for="EquipType">类组</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipType" data-options="'component':'PLAT.L.EquipType'"></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="EquipType" data-options="'component':'PLAT.L.EquipType'"></div>
 							<div class="eq-table-td eq-table-label"><lable id="cStartDate" for="StartDate">入库审核日期</lable></div>
 							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="StartDate"></div>
 							<div class="eq-table-td eq-table-label"><lable id="cEndDate" for="EndDate">至</lable></div>
 							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EndDate"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-input"></div>
+							<div class="eq-table-td eq-table-button"><a id="BColSet" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" style="margin-left:120px;margin-right:20px">导出列设置</a></div> 
 						</div>
 					</div>
 				</div>
@@ -82,9 +107,15 @@ s Status=$g(%request.Data("Status",1))	;add by csj 20200103
             <input id="MapType" name="MapType" type="hidden" value=#(MapType)#>
             <input id="MenuName" name="MapType" type="hidden" value=#(MenuName)#>
             <input id="RequestLocDR" name="RequestLocDR" type="hidden" value=#(RequestLocDR)#>
+            <INPUT type="hidden" id="PrintFlag" value=#(PrintFlag)#>  	<!--add by csj 2020-11-11 添加润乾打印相关配置-->
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#> <!--Modify by zx 2020-12-11 BUG ZX0121 导出处理-->
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#><!--Modify by zx 2020-12-11 BUG ZX0121 临时global需要Job-->
 		</form>
 	</div>
+<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script> 	<!-- MZY0113	2435347		2022-01-25-->
 <script type='text/javascript' src='../scripts/dhceq/plat/instocklist.js'></script>
+<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script> 	<!--add by csj 2020-11-11 添加润乾打印相关配置-->
 </body>
 
 </html>

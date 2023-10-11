@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <title>复核反馈查询</title> 
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">  
+    <script language="cache" runat="server">
+        s userID = %session.Get("LOGON.USERID")
+        if (userID = "")
+        {
+            s userID = "159"    
+        }
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        if (userLocID = "")
+        {
+            s userLocID = "9"
+        }
+        s timeSpan = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("StatusQueryTimeSpan")
+    </script>
+    <script type="text/javascript">
+        var userID = '#(userID)#';
+        var userLocID = '#(userLocID)#';
+        var timeSpan = '#(timeSpan)#';
+    </script>
+    <script src="../scripts/epr/JQuery/jquery.min.js"></script>
+    <script src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+    <script src="../scripts/epr/JQuery/easyui-lang-zh_cn.js"></script>
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/metro/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+    
+    <script src="../scripts/epr/js/fs.review.statusquery.js"></script>
+    
+    <style type="text/css">
+        label {
+            font-size:13px;
+            height:25px;   
+            line-height:25px;   
+        }
+    </style>
+</head>
+<body id="statusQueryLayout" class="easyui-layout" data-options="fit:true">
+    <div data-options="region:'center'" style="border:0">
+        <div id="reviewInfoTableTBar" class="easyui-panel" style="height:45px;border:0;padding:5px">    
+            <table border="0" style="width:1200px;">
+                <tr>
+                    <td>
+                        <label for="inputType">&nbsp;&nbsp;显示类型:&nbsp;&nbsp;</label>
+                        <select id="inputType" name="inputType" style="width:100px;height:25px;"></select>
+                    </td>
+                    <td>
+                        <label for="inputDateStart">&nbsp;&nbsp;起始日期:&nbsp;&nbsp;</label>
+                        <input id="inputDateStart" class="easyui-datebox" style="width:100px;height:25px;" />
+                    </td>
+                    <td>
+                        <label for="inputDateEnd">&nbsp;&nbsp;截止日期:&nbsp;&nbsp;</label>
+                        <input id="inputDateEnd" class="easyui-datebox" style="width:100px;height:25px;" />
+                    </td>
+                    <td style="font-size:13px;padding:5px 0;">
+                        &nbsp;&nbsp;诊疗组:&nbsp;&nbsp;
+                        <input id="cbMedUnit" type="checkbox" name="medunit" value="M" checked="true"><label for="cbMedUnit">本单元</label>
+                        <input id="cbDept" type="checkbox" name="medunit" value="A"><label for="cbDept">本科</label>
+                    </td>
+                    <td>
+                        <label for="inputMedRecord" style="margin:3px 0;">&nbsp;&nbsp;病案号:&nbsp;&nbsp;</label>
+                        <input id="inputMedRecord" type="text" style="border:solid 1px #ddd;width:100px;height:25px;" />
+                    </td>
+                    <td>
+                        <label for="inputRegNo" style="margin:3px 0;">&nbsp;&nbsp;登记号:&nbsp;&nbsp;</label>
+                        <input id="inputRegNo" type="text" style="border:solid 1px #ddd;width:100px;height:25px;" />
+                    </td>  
+                    <td>
+                        <a href="#" id="resetBtn" class="easyui-linkbutton" iconCls="icon-reload">重置&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                    </td>
+                    <td>
+                        <a href="#" id="searchBtn" class="easyui-linkbutton" iconCls="icon-search">查询&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <table id="reviewInfoTable" data-options="fit:true"></table>
+    </div>
+</body>
+</html>

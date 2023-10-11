@@ -1,0 +1,140 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+
+<head>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta charset="UTF-8" http-equiv="Content-Type ; content=text/html"/>
+<TRAK:HEAD></TRAK:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language="cache" runat="server">
+s ReadOnly=$Get(%request.Data("ReadOnly",1))
+s RowID=$Get(%request.Data("RowID",1))
+s UserFlag=$Get(%request.Data("UserFlag",1))
+s ImportFlag=$Get(%request.Data("ImportFlag",1))
+s GetUpdate=##Class(websys.Page).Encrypt($lb("web.DHCEQAdjustData.SaveAdjustData"))
+s GetComponentID=##class(web.DHCEQCommon).GetComponentID("DHCEQAdjustDataA")
+s GetUpdateList=##Class(websys.Page).Encrypt($lb("web.DHCEQAdjustData.SaveAdjustDataList"))
+s GetExecute=##Class(websys.Page).Encrypt($lb("web.DHCEQAdjustData.ExecuteAdjustData"))
+s GetInvalid=##Class(websys.Page).Encrypt($lb("web.DHCEQAdjustData.InvalidAdjustData"))
+s GetData=##Class(websys.Page).Encrypt($lb("web.DHCEQAdjustData.GetAdjustData"))
+s GetEquipByID=##Class(websys.Page).Encrypt($lb("web.DHCEQEquip.GetEquipByID"))
+s GetDelete=##Class(websys.Page).Encrypt($lb("web.DHCEQAdjustData.DeleteAdjustData"))
+s GetDataList=##Class(websys.Page).Encrypt($lb("web.DHCEQAdjustData.GetAdjustDataList"))
+s GetComponentItemInfo=##Class(web.DHCEQCommon).GetComponentItemInfo("DHCEQAdjustDataA","","DataType","1")
+s GetItemDataTypeInfo=##Class(web.DHCEQCommon).GetComponentItemInfo("DHCEQAdjustDataA","","DataType","0")
+s GetPYMethod=##Class(websys.Page).Encrypt($lb("web.DHCEQCHanZiEncoding.GetEncoding"))
+</script>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false">
+		<div class="hisui-panel" data-options="border:false" id="eqTable" style="padding:0px 10px 10px 10px;">
+			<div>
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cRequestUser"><span style="color:red">*</span>要求调整人</label></div>
+						<div class="eq-table-td eq-table-input"><input id="RequestUser" name="RequestUser" style="" value="" class="hisui-validatebox textbox" data-required=true  data-options=" prompt:'必填项'" /></div>
+						<div class="eq-table-td eq-table-label"><label id="cType">调整类型</label></div>
+						<div class="eq-table-td eq-table-input"><input   class="hisui-combobox" id="Type" name="Type" data-options=" prompt:''" disabled/></div>
+						<div class="eq-table-td eq-table-label"><label id="cLDepreTotal">累计折旧</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LDepreTotal" name="LDepreTotal" style="TEXT-ALIGN: right; " value="" class="hisui-validatebox textbox" disabled /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLOriginalFee">原值</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LOriginalFee" name="LOriginalFee" style="TEXT-ALIGN: right; " value="" class="hisui-validatebox textbox" disabled /></div>					
+                    </div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cLEquip"><span style="color:red">*</span>设备</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LEquip" name="LEquip" style="" value="" class="hisui-validatebox textbox" data-required=true  data-options=" prompt:'必填项'" /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLNo">设备编号</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LNo" name="LNo" style="" value="" class="hisui-validatebox textbox" disabled /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLEQStatus">设备状态</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LEQStatus" name="LEQStatus" style="" value="" class="hisui-validatebox textbox" disabled /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLNetFee">净值</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LToStatCat" name="LToStatCat" style="" value="" class="hisui-validatebox textbox" data-required=true  data-options=" prompt:'必填项'" /></div>
+                    </div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cLFromLoc">原科室</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LFromLoc" name="LFromLoc" style="" value="" class="hisui-validatebox textbox" disabled /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLFromEquipType">原类组</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LFromEquipType" name="LFromEquipType" style="" value="" class="hisui-validatebox textbox" disabled /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLFromStatCat">原类型</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LFromStatCat" name="LFromStatCat" style="" value="" class="hisui-validatebox textbox" disabled /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLFromOrigin">原来源</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LFromOrigin" name="LFromOrigin" style="" value="" class="hisui-validatebox textbox" disabled /></div>                        
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cLToLoc"><span style="color:red">*</span>到科室</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LToLoc" name="LToLoc" style="" value="" class="hisui-validatebox textbox" data-required=true  data-options=" prompt:'必填项'" /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLToEquipType"><span style="color:red">*</span>到类组</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LToEquipType" name="LToEquipType" style="" value="" class="hisui-validatebox textbox" data-required=true  data-options=" prompt:'必填项'" /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLToStatCat"><span style="color:red">*</span>到类型</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LToStatCat" name="LToStatCat" style="" value="" class="hisui-validatebox textbox" data-required=true  data-options=" prompt:'必填项'" /></div>
+						<div class="eq-table-td eq-table-label"><label id="cLToOrigin"><span style="color:red">*</span>到来源</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LToOrigin" name="LToOrigin" style="" value="" class="hisui-validatebox textbox" data-required=true  data-options=" prompt:'必填项'" /></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cContent"><span style="color:red">*</span>调整内容</label></div>
+						<div class="eq-table-td eq-table-input"><textarea id="Content" name="Content" style="" class="textbox" data-required=true  data-options=" prompt:'必填项'" /></textarea></div>
+						<div class="eq-table-td eq-table-label"><label id="cRemark">备注</label></div>
+						<div class="eq-table-td eq-table-input"><textarea id="Remark" name="Remark" style="" class="textbox"></textarea></div>
+						<div class="eq-table-td eq-table-label"><label id="cReportFlag">是否影响报表</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-checkbox" id="ReportFlag" name="ReportFlag" type="checkbox"   /></div>					
+                    </div>
+				</div>
+
+				<div class="eq-clearfix"  style="padding-top: 10PX;">
+					<div style="margin:0px auto;fit:true;vertical-align:middle;text-align:center;">
+						<a id="BUpdate" name="BUpdate" class="hisui-linkbutton" style="margin-right:10px" data-options="disabled:false,iconCls:'icon-w-save'" >保存</a>
+        				<a id="BDelete" name="BDelete" class="hisui-linkbutton" style="margin-right:10px" data-options="disabled:false,iconCls:'icon-w-close'">删除</a>
+        				<a id="BExecute" name="BExecute" class="hisui-linkbutton" style="margin-right:10px" data-options="disabled:false,iconCls:'icon-w-run'">执行</a>
+        				<a id="BPrint" name="BPrint" class="hisui-linkbutton" data-options="disabled:false,iconCls:'icon-w-print'">打印</a>
+					</div>	
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">    
+        <input TYPE="HIDDEN" id="ReadOnly" name="ReadOnly" value=#(ReadOnly)# >
+        <input TYPE="HIDDEN" id="RowID" name="RowID" value=#(RowID)# >
+        <input TYPE="HIDDEN" id="Status" name="Status" value="" >
+        <input TYPE="HIDDEN" id="Hold1" name="Hold1" value="0" >
+        <input TYPE="HIDDEN" id="LEquipDR" name="LEquipDR" value="" >
+        <input TYPE="HIDDEN" id="LRowID" name="LRowID" value="" >
+        <input TYPE="HIDDEN" id="LFromLocDR" name="LFromLocDR" value="" >
+        <input TYPE="HIDDEN" id="LFromEquipTypeDR" name="LFromEquipTypeDR" value="" >
+        <input TYPE="HIDDEN" id="LFromStatCatDR" name="LFromStatCatDR" value="" >
+        <input TYPE="HIDDEN" id="LFromOriginDR" name="LFromOriginDR" value="" >
+        <input TYPE="HIDDEN" id="LToLocDR" name="LToLocDR" value="" >
+        <input TYPE="HIDDEN" id="LToEquipTypeDR" name="LToEquipTypeDR" value="" >
+        <input TYPE="HIDDEN" id="LToStatCatDR" name="LToStatCatDR" value="" >
+        <input TYPE="HIDDEN" id="LToOriginDR" name="LToOriginDR" value="" >
+        <input TYPE="HIDDEN" id="LEQStatusDR" name="LEQStatusDR" value="" >
+        <input TYPE="HIDDEN" id="GetComponentID" name="GetComponentID" value=#(GetComponentID)# >
+        <input TYPE="HIDDEN" id="GetUpdate" name="GetUpdate" value=#(GetUpdate)#>
+        <input TYPE="HIDDEN" id="GetUpdateList" name="GetUpdateList" value=#(GetUpdateList)# >
+        <input TYPE="HIDDEN" id="GetExecute" name="GetExecute" value=#(GetExecute)# >
+        <input TYPE="HIDDEN" id="GetInvalid" name="GetInvalid" value=#(GetInvalid)# >
+        <input TYPE="HIDDEN" id="GetData" name="GetData" value=#(GetData)# >
+        <input TYPE="HIDDEN" id="UserFlag" name="UserFlag" value=#(UserFlag)#>
+        <input TYPE="HIDDEN" id="GetEquipByID" name="GetEquipByID" value=#(GetEquipByID)# >
+        <input TYPE="HIDDEN" id="GetDelete" name="GetDelete" value=#(GetDelete)# >
+        <input TYPE="HIDDEN" id="ImportFlag" name="ImportFlag" value=#(ImportFlag)# >
+        <input TYPE="HIDDEN" id="GetDataList" name="GetDataList" value=#(GetDataList)# >
+        <input TYPE="HIDDEN" id="GetComponentItemInfo" name="GetComponentItemInfo" value=#(GetComponentItemInfo)# >
+        <input TYPE="HIDDEN" id="GetItemDataTypeInfo" name="GetItemDataTypeInfo" value=#(GetItemDataTypeInfo)# >
+        <input TYPE="HIDDEN" id="GetPYMethod" name="GetPYMethod" value=#(GetPYMethod)# >
+    	</form>
+    </div>
+    <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js?needCLodop=" charset="UTF-8"></script>
+    <script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>   
+    <script src="../scripts/hisui/DHCEQCommon.js" type="text/javascript"></script>
+    <script src="../scripts/DHCEQLookUp.js" type="text/javascript"></script>
+    <script src="../scripts/DHCEQReportCommon.js" type="text/javascript"></script>
+    <script src="../scripts/hisui/DHCEQAdjustData.js" type="text/javascript"></script>
+    <script src="../scripts_gen/hisui/DHCEQAdjustDataA.js" type="text/javascript"></script>
+</body>
+</html>

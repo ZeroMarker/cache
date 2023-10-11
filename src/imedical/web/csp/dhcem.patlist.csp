@@ -10,6 +10,7 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<ADDINS require="RWCard"/> 
 	<HISUI/>	
+	<DOCCARD medStepCode="Other" ></DOCCARD>
 	<script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
 	<link href="../scripts/dhcnewpro/dhcem/css/base.css" rel="stylesheet">
 	<link href="../scripts/dhcnewpro/dhcem/css/patlist.css" rel="stylesheet">
@@ -25,10 +26,11 @@
 	    s LgCtLocID=%session.Get("LOGON.CTLOCID")
 	    s LgUserID=%session.Get("LOGON.USERID")
 	    s LgGroupID=%session.Get("LOGON.GROUPID")
-	    s LISTDEFDATE=##Class(web.DHCAppComPar).GetAppPropValue("DHCEMDOC","LISTDEFDATE",LgHospID,LgCtLocID,LgUserID,LgGroupID)
-  
+	    s LISTDEFDATE=##Class(web.DHCEMComPar).GetAppPropValue("DHCEMDOC","LISTDEFDATE",LgHospID,LgCtLocID,LgUserID,LgGroupID)
+	    s CROSSLISTSEARCH=##Class(web.DHCEMComPar).GetAppPropValue("DHCEMDOC","CROSSLISTSEARCH",LgHospID,LgCtLocID,LgUserID,LgGroupID)
 		w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
 		w "var LISTDEFDATE="""_LISTDEFDATE_""";"_$c(13,10)
+		w "var CROSSLISTSEARCH="""_CROSSLISTSEARCH_""";"_$c(13,10)
 	 	w "</SCRIPT>"
 	  </server>
 	<server>
@@ -66,7 +68,7 @@
 			
 		}
 		.pb-toolbar{height:40px;line-height: 40px;}
-		.pb-toolbar a{margin:10px;padding:5px 4px;} /*hxy 2020-02-21 原：8px->4x*/
+		.pb-toolbar a{margin-left:10px;padding:5px 4px;} /*hxy 2020-02-21 原：8px->4x*/
 		.pb-toolbar img{margin-right:10px;padding-bottom:2px;vertical-align:middle;}
 		.pb-toolbar a:hover{
 			background-color: #E3E3E3;
@@ -97,22 +99,24 @@
 		<div data-options="region:'west',headerCls:'panel-header-gray'" style="width:200px;padding:10px;background-color:#F9F9F9;" border="false">
 			<div class="pf-sider">
 				<ul>
-					<li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('D')"><img src="../scripts/dhcnewpro/images/askpat.png"/>待诊患者(<span  id="EmPatLevWait">0</span>)</a></li><!--hxy 2018-09-17 **病人-->
-					<li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('H')"><img src="../scripts/dhcnewpro/images/compat.png"/>已诊患者(<span id="EmPatLevUnWait">0</span>)</a></li>
+					<li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('D')"><img src="../scripts/dhcnewpro/images/askpat.png"/>#(..Get("待诊患者"))#(<span  id="EmPatLevWait">0</span>)</a></li><!--hxy 2018-09-17 **病人-->
+					<li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('H')"><img src="../scripts/dhcnewpro/images/compat.png"/>#(..Get("已诊患者"))#(<span id="EmPatLevUnWait">0</span>)</a></li>
+					<li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('C')"><img src="../scripts/dhcnewpro/images/compat.png"/>#(..Get("完成患者"))#(<span id="EmPatLevComp">0</span>)</a></li>
 					<!--
 					<li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('E')"><img src="../scripts/dhcnewpro/images/emepat.png"/>急诊留观病人(<span>0</span>)</a></li>
 					<li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('R')"><img src="../scripts/dhcnewpro/images/respat.png"/>抢救留观病人(<span>0</span>)</a></li>
 					-->
 					<SERVER>
-					s LgHospID=%session.Get("LOGON.HOSPID")
-					s TmpArr=""
-					D ##Class(web.DHCEMDocMainOutPat).jsonWard(LgHospID,.TmpArr)
-					s ID=""
-					F  s ID=$o(TmpArr(ID)) Q:ID=""  D
-					.s Desc=$g(TmpArr(ID))
-					.s image=$s(Desc["抢救":"respat",1:"emepat")
-					.w "<li name='"_Desc_"'><a href='javascript:void(0);' onclick='LoadEmPatByCurType("_ID_")'><img src='../scripts/dhcnewpro/images/"_image_".png'/>"_Desc_"(<span>0</span>)</a></li>"
-			   </SERVER>
+						s LgHospID=%session.Get("LOGON.HOSPID")
+						s TmpArr=""
+						D ##Class(web.DHCEMDocMainOutPat).jsonWard(LgHospID,.TmpArr)
+						s ID=""
+						F  s ID=$o(TmpArr(ID)) Q:ID=""  D
+						.s Desc=$g(TmpArr(ID))
+						.s image=$s((Desc["抢救")||(Desc["Emergency"):"respat",1:"emepat")
+						.w "<li class='wardclass' name='"_Desc_"'><a href='javascript:void(0);' onclick='LoadEmPatByCurType("_ID_")'><img src='../scripts/dhcnewpro/images/"_image_".png'/>"_Desc_"(<span>0</span>)</a></li>"
+			   		</SERVER>
+			   		 <li><a href="javascript:void(0);" onclick="LoadEmPatByCurType('B')"><img src="../scripts/dhcnewpro/images/compat.png"/>#(..Get("离院患者"))#(<span id="EmPatLevLeaveHosp">0</span>)</a></li>
 				</ul>
 			</div>			
 		</div>   
@@ -121,33 +125,33 @@
 				<div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style="height:90px;" border="false">
 				<div class="pf-condition">
 					<div style="height:40px">
-						<label>开始日期</label><input id="StartDate" class="hisui-datebox textbox">
-						<label>登记号/姓名</label><input style="width:140px" id="TmpCondition" class="hisui-validatebox">
-						<label>卡号</label><input style="width:140px" id="EmCardNo" class="hisui-validatebox">
-						<input id="EmCardType" class="textbox" style="width:100px;"/>
+						<label>#(..Get("开始日期"))#</label><input id="StartDate" class="hisui-datebox textbox">
+						<label>#(..Get("登记号"))#/#(..Get("姓名"))#</label><input style="width:140px" id="TmpCondition" class="hisui-validatebox">
+						<label>#(..Get("卡号"))#</label><input style="width:140px" id="EmCardNo" class="hisui-validatebox">
+						<input id="CardTypeNew" class="hisui-validatebox" disabled="disabled" style="width:100px;"/>
 						<a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'" onclick="ReadCard()">读卡</a>
-						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search-white'" onclick="QryEmPatList()">查询</a>
-						<span id="more" style="display:none" class="more">更多<i class="more-bk-down"></i></span>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="QryEmPatList(1)">查询</a>
+						<span id="more" style="display:none" class="more">#(..Get("更多"))#<i class="more-bk-down"></i></span>
 					</div>
 					<div style="height:35px">
-						<label>结束日期</label><input id="EndDate" class="hisui-datebox textbox">
-						<label>主管医生</label><span style="width:16px;display: inline-block;"></span>
+						<label>#(..Get("结束日期"))#</label><input id="EndDate" class="hisui-datebox textbox">
+						<label>#(..Get("主管医生"))#</label><span style="width:16px;display: inline-block;"></span>
 						<input style="width:147px;" id="concDoc" class="hisui-combobox">
-						<label>床号</label><input style="width:140px" id="roomSeatCode" class="hisui-validatebox">
-						<label>号别</label><input id="Care" class="textbox" style="width:147px;"/>
+						<label>#(..Get("床号"))#</label><input style="width:140px" id="roomSeatCode" class="hisui-validatebox">
+						<label>#(..Get("号别"))#</label><input id="Care" class="textbox" style="width:147px;"/>
 						
 					</div>
 				</div>
 				
 				
 				</div>
-				<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:0px 5px;" border="false">
-					<div id="PatPanel" class="hisui-layout" fit="true" style="border:1px solid #E3E3E3;">   
+				<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:0px 10px 10px 10px;" border="false">
+					<div id="PatPanel" class="hisui-layout" fit="true" style="border:1px solid #CCC;border-radius:4px;">   
 					    <div data-options="region:'north',title:'',headerCls:'panel-header-gray'" style="height:40px;" border="false">
 							<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true"  border="false">    
-								<div title="本人患者" data-options="iconCls:'icon-add-note',selected:true" style=""></div>  <!--hxy 2018-09-17 **病人-->
-								<div title="本组患者" data-options="iconCls:'icon-add-note',selected:true" style=""></div>
-								<div title="本科室患者" data-options="iconCls:'icon-add-note'" style="overflow:auto;"></div>  <!--hxy 2018-09-17 **病人-->
+								<div title="本人患者" data-options="iconCls:'',selected:true" style=""></div>  <!--hxy 2018-09-17 **病人-->
+								<div title="本组患者" data-options="iconCls:'',selected:true" style=""></div>
+								<div title="本科室患者" data-options="iconCls:''" style="overflow:auto;"></div>  <!--hxy 2018-09-17 **病人-->
 							</div>
 						</div>
 						<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding:0px;" border="false">
@@ -158,26 +162,37 @@
 			</div> 
 		</div>   
 	</div>
-	<div id="histb">
+	<div id="histb" style="margin-top:-4px;">
 		<div class="pb-toolbar">
-			<a id="bt_call" href="#" class="pb-linkbutton" onclick="CallPatient()"><img src="../scripts/dhcnewpro/images/call.png"/>呼叫</a>
-			<a id="bt_recall" href="#" class="pb-linkbutton" onclick="ReCallPatient()"><img src="../scripts/dhcnewpro/images/recall.png" />重复呼叫</a>
-			<a id="bt_calsel" href="#" class="pb-linkbutton" onclick="CallSelPatient()"><img src="../scripts/dhcnewpro/images/call.png"/>选择呼叫</a>
-			<a id="bt_cross" href="#" class="pb-linkbutton" onclick="OutCallQueue()"><img src="../scripts/dhcnewpro/images/cross.png" />过号</a>
-			<a id="bt_outcall" href="#" class="pb-linkbutton" onclick="OutCallQueueCP()"><img src="../scripts/dhcnewpro/images/cross.png" />过号重排</a>
-			<a id="bt_endadm" href="#" class="pb-linkbutton" onclick="ComplateAdm()"><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/end_adm.png" />完成就诊</a>
-			<a href="#" class="btn-danger lb-area" onclick="TransPatToArea('红区');">红区(*)</a>
-			<a href="#" class="btn-orange lb-area" onclick="TransPatToArea('橙区');">橙区(*)</a><!--hxy 2020-02-21-->
-			<a href="#" class="btn-warning lb-area" onclick="TransPatToArea('黄区');">黄区(*)</a>
-			<a href="#" class="btn-olive lb-area" onclick="TransPatToArea('绿区');">绿区(*)</a>
+			<a id="bt_call" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ring-blue',plain:true" onclick="CallPatient()">#(..Get("呼叫"))#</a><!--implementPrint-->
+			<a id="bt_recall" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-big-ring',plain:true" onclick="ReCallPatient()">#(..Get("重复呼叫"))#</a>
+			<a id="bt_calsel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ring-blue',plain:true" onclick="CallSelPatient()">#(..Get("选择呼叫"))#</a>
+			<a id="bt_cross" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-skip-no',plain:true" onclick="OutCallQueue()">#(..Get("过号"))#</a>
+			<a id="bt_outcall" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-skip-no',plain:true" onclick="OutCallQueueCP()">#(..Get("过号重排"))#</a>
+			<a id="bt_endadm" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-end-adm',plain:true" onclick="ComplateAdm()">#(..Get("完成就诊"))#</a>
+			<a href="#" class="btn-danger lb-area" onclick="TransPatToArea('红区');">#(..Get("红区"))#(*)</a>
+			<a href="#" class="btn-orange lb-area" onclick="TransPatToArea('橙区');">#(..Get("橙区"))#(*)</a><!--hxy 2020-02-21-->
+			<a href="#" class="btn-warning lb-area" onclick="TransPatToArea('黄区');">#(..Get("黄区"))#(*)</a>
+			<a href="#" class="btn-olive lb-area" onclick="TransPatToArea('绿区');">#(..Get("绿区"))#(*)</a>
+			<a href="#" class="btn-dark lb-area" onclick="TransPatToArea('全病区');" id="AllWard" style="display:none">#(..Get("全病区"))#</a>
 		</div>
 	</div>
 	<div id="PatLabWin" style="padding:3px 2px;background-color:#FFF;"></div>
 </body> 
 <Server>
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
 d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
 </Server>
+<script Language="Javascript">
+	/// cy  2022-07-20 极简风格样式修改
+	if(HISUIStyleCode==="lite"){
+		$("#PatPanel").css("border","1px solid #E2E2E2");
+	}else{
+	
+	
+	}
+</script>
+
 </html>

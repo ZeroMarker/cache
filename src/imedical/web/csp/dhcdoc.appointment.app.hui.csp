@@ -10,6 +10,7 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard"/>
+<DOCCARD medStepCode="OPAdmReg"></DOCCARD>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -105,7 +106,7 @@
 }
 .diytable td[id*="_table_"]:hover{
 	cursor:pointer;
-	background:#FFCFCF;
+	background:#FFE48D;
 }
 .td-selecct{
 	background-color: #40a2de;
@@ -129,16 +130,40 @@
 	s PatNo=""
 	s:PatientID'="" PatNo=$p($G(^PAPER(PatientID,"PAT",1)),"^",2)
 	
-	w "<input id='XMLObject' name='XMLObject' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+	w "<input id='XMLObject' name='XMLObject' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
 	
-	;读卡相关引用
-	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-	w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+	;读卡相关引用	
 	w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+	/*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)*/
 
-	
+	// 公共卡卡号
+	s CommonCardNoStr=##class(web.DHCOPRegConfig).GetSpecConfigNode("CommonCardNo")
+	s CurrentCommonCardNoStr=""
+	if (CommonCardNoStr'=""){
+		for i=1:1:$L(CommonCardNoStr,"&"){
+			s OneCommonCardNo=$P(CommonCardNoStr,"&",i)
+			s CardRowid=""
+			for {
+				s CardRowid=$O(^DHCCARDi("CF",0,"CardNo",OneCommonCardNo,CardRowid))
+				q:CardRowid=""
+				s ActiveFlag=$P(^DHCCARD("CF",CardRowid),"^",10) 
+				Continue:ActiveFlag'="N"
+				if (CurrentCommonCardNoStr=""){
+					s CurrentCommonCardNoStr=OneCommonCardNo 
+				}else{
+					s CurrentCommonCardNoStr=CurrentCommonCardNoStr_"&"_OneCommonCardNo 
+				}
+				q 		
+			}
+		}
+		s CommonCardNoStr=CurrentCommonCardNoStr
+		}
+	// 身份证证件类型ID
+	s IDCredTypeId=$o(^PAC("CARD",0,"Code","01",""))
+	s nowDate=+$h
 </Script> 
 
 <SCRIPT language = 'javascript' >
@@ -150,7 +175,10 @@
 			PatNumLength:"#(PatNumLength)#",
 			CanNoCardApp:"#(CanNoCardApp)#",
 			selectcolor:"#(selectcolor)#",
-			PatNo:"#(PatNo)#"
+			PatNo:"#(PatNo)#",
+			CommonCardNoStr:"#(CommonCardNoStr)#",
+			IDCredTypeId:"#(IDCredTypeId)#",
+			nowDate:"#(nowDate)#"
 		};
 	</SCRIPT>
  </head> 

@@ -1,8 +1,8 @@
-<!-- 
+﻿<!-- 
  * FileName: dhcbill.conf.opbillsys.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-12
- * Description: ����ϵͳ��������
+ * Description: 门诊系统参数配置
 -->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
@@ -12,9 +12,12 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
+	<server>
+		set EnablePMASystem=##class(BILL.Interface.Inside.AuthItemApply).GetEnablePMASystem()
+	</server>
 	<style>
 	.container>div {
 		height: 390px;
@@ -29,6 +32,17 @@
 		padding-left: 95px;
 	}
 	</style>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			EnablePMASystem: "#(EnablePMASystem)#"
+		};
+		
+		//全局变量
+		var GV = {
+			CfgJsonObj: {}
+		};
+	</script>
 </head>
 
 <body>
@@ -36,112 +50,133 @@
 		<div data-options="region:'north',border:false">
 			<table class="search-table">
 				<tr>
-					<td class="r-label"><label>ҽԺ</label></td>
+					<td class="r-label"><label>#(..Get("医院"))#</label></td>
 					<td><input id="hospital" class="hisui-combobox textbox"/></td>
 				</tr>
 			</table>
 		</div>
 		<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:0 10px 10px;">
 			<div class="hisui-tabs tabs-gray" data-options="fit:true">
-				<div title="�����շ�" style="padding:10px;">
-					<div class="hisui-panel" title="�������߾�����Ϣ" style="width:700px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+				<div title="门诊收费" style="padding:10px;">
+					<div class="hisui-panel" title="检索患者就诊信息" style="width:755px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
 						<table class="search-table">
 							<tr>
-								<td class="r-label" style="width:140px;"><label>���������ʽ</label></td>
+								<td class="r-label" style="width:195px;"><label>#(..Get("门诊检索方式"))#</label></td>
 								<td><input id="outSearchMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'��������'},{id:'1',text:'����ʱ��'}]"/>
+									data:[{id:'0',text:'按照日期'},{id:'1',text:'按照时间'}]"/>
 								</td>
-								<td class="r-label" style="width:197px;">����ֵ<label></label></td>
+								<td class="r-label" style="width:197px;">#(..Get("门诊值"))#<label></label></td>
 								<td><input id="outTimeRange" class="hisui-numberbox textbox" data-options="required:true"/></td>
 							</tr>
 							<tr>
-								<td class="r-label"><label>���������ʽ</label></td>
+								<td class="r-label"><label>#(..Get("急诊检索方式"))#</label></td>
 								<td><input id="emergSearchMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'��������'},{id:'1',text:'����ʱ��'}]"/>
+									data:[{id:'0',text:'按照日期'},{id:'1',text:'按照时间'}]"/>
 								</td>
-								<td class="r-label r-label-1"><label>����ֵ</label></td>
+								<td class="r-label"><label>#(..Get("急诊值"))#</label></td>
 								<td><input id="emergTimeRange" class="hisui-numberbox textbox" data-options="required:true"/></td>
 							</tr>
 						</table>
 					</div>
-					<div class="hisui-panel" title="ҽ����������" style="width:700px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+					<div class="hisui-panel" title="医嘱结算设置" style="width:755px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
 						<table class="search-table">
 							<tr>
-								<td class="r-label"><label>�Ƿ�����Ƥ��ҽ���շ�</label></td>
+								<td class="r-label"><label>#(..Get("是否限制皮试医嘱收费"))#</label></td>
 								<td><input id="skinOrderMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'��'},{id:'1',text:'��'}]"/>
+									data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
 								</td>
-								<td class="r-label r-label-1"><label>ҩƷҽ���շ�ģʽ</label></td>
+								<td class="r-label r-label-1"><label>#(..Get("药品医嘱收费模式"))#</label></td>
 								<td><input id="prescOrderMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'û������'},{id:'1',text:'���մ�������'},{id:'2',text:'���տ���ҽ������'},{id:'3',text:'���ս��տ�������'}]"/>
+									data:[{id:'0',text:'没有限制'},{id:'1',text:'按照处方限制'},{id:'2',text:'按照开单医生限制'},{id:'3',text:'按照接收科室限制'}]"/>
 								</td>
 							</tr>
 							<tr>
-								<td class="r-label"><label>�ѱ�����</label></td>
+								<td class="r-label"><label>#(..Get("费别类型"))#</label></td>
 								<td><input id="useFareType" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'���ѱ����ҽ��'},{id:'1',text:'����ȫ��ҽ��'}]"/>
+									data:[{id:'0',text:'按费别接收医嘱'},{id:'1',text:'接收全部医嘱'}]"/>
 								</td>
-								<td class="r-label"><label>����ҽ��</label></td>
+								<td class="r-label"><label>#(..Get("连接医保"))#</label></td>
 								<td><input id="prtConInsu" class="hisui-combobox textbox" data-options="
 								panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-								data:[{id:'0',text:'��'},{id:'1',text:'��'}]"/>
+								data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
 								</td>
 							</tr>
 							<tr>
-								<td class="r-label"><label>���ﵥ��ӡģʽ</label></td>
+								<td class="r-label"><label>#(..Get("导诊单打印模式"))#</label></td>
 								<td><input id="guidePrtMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'N',text:'����ӡ'},{id:'F',text:'�շѴ���ӡ'},{id:'D',text:'ҽ��վ��ӡ'}]"/>
+									data:[{id:'N',text:'不打印'},{id:'F',text:'收费处打印'},{id:'D',text:'医生站打印'}]"/>
 								</td>
-								<td class="r-label"><label>�Ƿ�ѡ���ֽ���</label></td>
+								<td class="r-label"><label>#(..Get("是否选择病种结算"))#</label></td>
 								<td><input id="skcFootMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'��'},{id:'1',text:'��'}]"/>
+									data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
 								</td>
 							</tr>
 							<tr>
-								<td class="r-label"><label>�Ƿ�ѡ���·ѱ����</label></td>
+								<td class="r-label"><label>#(..Get("是否选择新费别结算"))#</label></td>
 								<td><input id="newAdmReaFootMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'��'},{id:'1',text:'��'}]"/>
+									data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
+								</td>
+								<td class="r-label"><label>#(..Get("异常收费提醒间隔时间"))#</label></td>
+								<td><input id="intervalMin" class="hisui-combobox textbox" data-options="
+									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
+									data:[{id:'',text:'不提醒'},{id:'5',text:'5分钟'},{id:'10',text:'10分钟'},{id:'15',text:'15分钟'},{id:'20',text:'20分钟'}]"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("价格为零的医嘱结算是否进账单"))#</label></td>
+								<td><input id="zeroPriceChargeMode" class="hisui-combobox textbox" data-options="
+									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
+									data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
+								</td>
+								<td class="r-label"><label>#(..Get("零费用结算是否调用医保"))#</label></td>
+								<td><input id="zeroAmtUseYB" class="hisui-combobox textbox" data-options="
+									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
+									data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
 								</td>
 							</tr>
 						</table>
 					</div>
 					<div style="width:700px;text-align:center;">
-						<a href="javascript:;" class="hisui-linkbutton" id="btn-saveCharge" data-options="iconCls:'icon-w-save'">����</a>
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-saveCharge" data-options="iconCls:'icon-w-save'">保存</a>
 					</div>
 				</div>
-				<div title="���Ｏ�д�ӡ��Ʊ">
+				<div title="门诊集中打印发票">
 					<table class="search-table">
 						<tr>
-							<td class="r-label"><label>����ҽ��</label></td>
+							<td class="r-label"><label>#(..Get("连接医保"))#</label></td>
 							<td><input id="accPayConInsu" class="hisui-combobox textbox" data-options="
 								panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-								data:[{id:'0',text:'��'},{id:'1',text:'��'}]"/>
+								data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
 							</td>
 						</tr>
 						<tr>
 							<td colspan="2" style="text-align:center;">
-								<a href="javascript:;" class="hisui-linkbutton" id="btn-saveAccPay" data-options="iconCls:'icon-w-save'">����</a>
+								<a href="javascript:;" class="hisui-linkbutton" id="btn-saveAccPay" data-options="iconCls:'icon-w-save'">保存</a>
 							</td>
 						</tr>
 					</table>
 				</div>
-				<div title="�����˷����" style="padding:10px 10px 0px 10px;">
-					<div class="hisui-panel" title="�˷���˹���" style="width:700px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+				<div title="门诊退费审核" style="padding:10px 10px 0px 10px;">
+					<div class="hisui-panel" title="退费审核过程" style="width:755px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
 						<table class="search-table">
 							<tr>
-								<td class="r-label"><label>���ģʽ</label></td>
+								<td class="r-label"><label>#(..Get("审核模式"))#</label></td>
 								<td><input id="auditingMode" class="hisui-combobox textbox" data-options="
 									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-									data:[{id:'0',text:'��������'},{id:'1',text:'������'},{id:'2',text:'����������'}]"/>
+									data:[{id:'0',text:'不需申请'},{id:'1',text:'需申请'},{id:'2',text:'需申请后审核'}]"/>
 								</td>
+								<td class="r-label" style="width:335px;"><label>#(..Get("检查、治疗医嘱审核模式"))#</label></td>
+								<td><input id="treatItmReqMode" class="hisui-combobox textbox"data-options="
+									panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
+									data:[{id:'0',text:'先撤销执行再审核'},{id:'1',text:'先审核再撤销执行'}]"/></td>
 							</tr>
 						</table>
 						<div class="container">
@@ -152,39 +187,38 @@
 								<table id="superAuditLocList"></table>
 							</div>
 						</div>
-						
 					</div>
-					<div class="hisui-panel" title="��������" style="width:700px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+					<!--div class="hisui-panel" title="其他设置" style="width:755px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
 						<table class="search-table">
 							<tr>
-								<td class="r-label"><label>��Ҫ��˵ļ��ʱ��</label></td>
+								<td class="r-label"><label>#(..Get("需要审核的间隔时间"))#</label></td>
 								<td><input id="auditSpaceTime" class="hisui-numberbox textbox"/></td>
 							</tr>
 						</table>
-					</div>
+					</div-->
 					<div style="width:700px;text-align:center;">
-						<a href="javascript:;" class="hisui-linkbutton" id="btn-saveAudit" data-options="iconCls:'icon-w-save'">����</a>
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-saveAudit" data-options="iconCls:'icon-w-save'">保存</a>
 					</div>
 				</div>
-				<div title="����" style="padding:10px;">
-					<div class="hisui-panel" title="Ѻ��ת��ת������" style="width:700px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
+				<div title="其他" style="padding:10px;">
+					<div class="hisui-panel" title="押金转入转出设置" style="width:755px;padding-top:10px;" data-options="headerCls:'panel-header-card-gray'">
 						<table class="search-table">
 							<tr>
-								<td class="r-label"><label>����Ԥ����תסԺѺ��</label></td>
+								<td class="r-label"><label>#(..Get("门诊预交金转住院押金"))#</label></td>
 								<td><input id="accPreToDep" class="hisui-combobox textbox" data-options="
 								panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-								data:[{id:'0',text:'��'},{id:'1',text:'��'}]"/>
+								data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
 								</td>
-								<td class="r-label" style="width:197px;"><label>סԺѺ��ת�����˻�</label></td>
+								<td class="r-label" style="width:252px;"><label>#(..Get("住院押金转门诊账户"))#</label></td>
 								<td><input id="depToAccPre" class="hisui-combobox textbox" data-options="
 								panelHeight:'auto',valueField:'id',textField:'text',required:true,editable:false,
-								data:[{id:'0',text:'��'},{id:'1',text:'��'}]"/>
+								data:[{id:'0',text:'否'},{id:'1',text:'是'}]"/>
 								</td>
 							</tr>
 						</table>
 					</div>
 					<div style="width:700px;text-align:center;">
-						<a href="javascript:;" class="hisui-linkbutton" id="btn-saveOther" data-options="iconCls:'icon-w-save'">����</a>
+						<a href="javascript:;" class="hisui-linkbutton" id="btn-saveOther" data-options="iconCls:'icon-w-save'">保存</a>
 					</div>
 				</div>
 			</div>

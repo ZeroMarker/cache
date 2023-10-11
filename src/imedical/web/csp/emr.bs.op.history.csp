@@ -1,0 +1,95 @@
+﻿<html>
+    <head>
+        <title> 历史就诊 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.tools.js"></script>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/bs.op.history.css"/>
+        <script language="cache" runat="server">
+            s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+            s loginID = $Get(%session.Data("LOGON.SSUSERLOGINID"))
+            s product = $Get(%request.Data("product",1),"OP")
+            s patientID = $Get(%request.Data("PatientID", 1), "")
+            s episodeID = $Get(%request.Data("EpisodeID", 1), "")
+            s userLocID = $Get(%request.Data("UserLocID", 1), "")
+            s ssgroupID = $Get(%request.Data("SsgroupID", 1), "")
+            s userID = $Get(%request.Data("UserID", 1), "")
+            s userCode = $Get(%request.Data("UserCode", 1), "")
+            s hospitalID = $Get(%request.Data("HospitalID", 1), "")
+            s admType = $Get(%request.Data("AdmType", 1), "")
+            s sysOption = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTIONS","params":[{"name":"getHistoryDataMethod","defaultValue":"GET_ALLOPHISTORY"},{"name":"isSwitchHistoryOERecord","defaultValue":"N"}]})
+            s refTemplateID = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_REFCREATETEMPLATEID","params":{"userLocID":(userLocID),"langID":(langID)}})
+        </script>
+        <script language="javascript">
+            var langID = "#(langID)#";
+            var loginID = "#(loginID)#";
+            var product = '#(product)#';
+            var patientID = '#(patientID)#';
+            var episodeID = '#(episodeID)#';
+            var userLocID = '#(userLocID)#';
+            var ssgroupID = '#(ssgroupID)#';
+            var userID = '#(userID)#';
+            var userCode = '#(userCode)#';
+            var hospitalID = '#(hospitalID)#';
+            var admType = '#(admType)#';
+            var sysOption = #(sysOption)#;
+            var refTemplateID = #(refTemplateID)#;
+            var admIDs = new Array();
+            var currentAdmID = "";
+            var patInfo = parent.patInfo;
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="border:false,fit:true">
+        <div id="admHisLst" class="hisui-panel" data-options="region:'center',border:false" style="overflow-x:hidden;color:red">
+            <div class="hisui-layout" data-options="border:false,fit:true">
+                <div id="btnPnl" class="hisui-panel" data-options="region:'north',border:false" style="padding-left:5px;height:60px;overflow-x:hidden;">
+                    <div id="stdpnl" class="hisui-layout" data-options="border:true,fit:true">
+                        <div class="hisui-panel" data-options="region:'center',border:false" style="overflow-x:hidden;padding:5px 0px 0px 0px;">
+                            <input class='hisui-radio' type="radio" name='flag' id="All" label='全院' value='2'></input>
+                            <input class='hisui-radio' type="radio" name='flag' id="CurDept" label='本科室' value='1'></input>
+                            <input class='hisui-radio' type="radio" name='flag' id="CurDoc" label='本医师' value='0'></input>
+                        </div>
+                        <div class="hisui-panel" data-options="region:'south',border:false" style="height:30px;overflow-x:hidden;padding:5px 0px 0px 0px;">
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeAll" label='全部' value=''></input>
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeO" label='门诊' value='O'></input>
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeE" label='急诊' value='E'></input>
+                            <input class='hisui-radio' type="radio" name='flagAdmType' id="TypeI" label='住院' value='I'></input>
+                        </div>
+                    </div>
+                </div>
+                <div id="msg" class="hisui-panel" data-options="region:'center',border:false">
+                    <div id="admHistoryLst" style="min-width:300px;"></div>
+                </div>
+                <div id="pnl" class="hisui-panel" data-options="region:'south',border:false" style="height:32px;overflow-x:hidden;background-color:#EEE;">
+                    <a href="#" id="btnLoadMore" class="hisui-linkbutton" data-options="plain:true" style="width:100%;color:blue;">#(..Get("加载更多"))#</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="admHisDetail" class="hisui-panel" data-options="region:'north',border:false" style="height:1px;overflow-x:hidden;">
+            <div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+                <div class="hisui-panel" id="detailButotnPnl" data-options="region:'north',border:false" style="height:40px;overflow:hidden;padding:5px;">
+                    <a href="#" id="backAdmHistoryLst" class="hisui-linkbutton" style="width:60px;">#(..Get("返回"))#</a>
+                    <a href="#" id="refTemplateID" class="hisui-linkbutton" style="display:none;">#(..Get("引用为复诊病历"))#</a>
+                    <a href="#" id="refEmrDoc" class="hisui-linkbutton" style="display:none;">#(..Get("病历引用"))#</a>
+                    <a href="#" id="prevAdm" class="hisui-linkbutton" title="切换至上一份病历" style="display:none;">#(..Get("上一份病历"))#</a>
+                    <a href="#" id="nextAdm" class="hisui-linkbutton" title="切换至下一份病历" style="display:none;">#(..Get("下一份病历"))#</a>
+                    <span id="insComboSpan" style="float:right;">
+                        <select class="hisui-combobox" id="insCombo" style="width:200px;"></select>
+                    </span>
+                </div>
+                <div id="admHisPnl" data-options="region:'center',border:false" style="overflow-y:hidden;border-top: 1px solid #E8E8E8;">
+                    <iframe id="frameDetail" src="" style="width:100%;height:100%;" frameborder="0" scrolling="no"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.history.js"></script>
+    </body>
+</html>

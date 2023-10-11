@@ -1,0 +1,125 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<!--nur.emr.business.multrecords.csp-->
+<script language="cache" runat="server">
+	// 病人信息条内的病人列表
+	s PatientListPage=$G(%request.Data("PatientListPage", 1))
+	// 就诊号
+    s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	// 是否通过病人列表的点击事件往头菜单传递病人信息（1:传递，非1:不传递）
+	s PassToMenuFlag=$G(%request.Data("PassToMenuFlag", 1))
+	// 编辑权限相关（新版停用）
+	s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+	// 默认打开的表单Guid或者ModelID
+    s DefaultCode = $G(%request.Data("DefaultCode", 1))
+	// 是否是单个表单的样式（1:隐藏，非1:显示）
+	s SingleTemplate = $G(%request.Data("SingleTemplate", 1))
+	// 自定义的病人基本信息条页面csp 
+	s CustomBanner= ##class(NurMp.Common.Base.Patient).GetBannerCsp($G(%request.Data("CustomBanner", 1)))
+	// 隐藏病人基本信息条(1:隐藏，非1:显示) 增加判断：如果csp不存在，则强制隐藏病人基本信息条
+	s HideBanner = $s(($G(%request.Data("HideBanner", 1))=1)||(CustomBanner=""):1,1:0)
+	// 模板列表页面csp
+	s TempListPage= $S($G(%request.Data("TempListPage", 1))="":"nur.emr.business.templist.csp",1:%request.Data("TempListPage", 1))
+	// 表单页面csp
+	s RecordTabPage= $S($G(%request.Data("RecordTabPage", 1))="":"nur.emr.business.recordtab.csp",1:%request.Data("RecordTabPage", 1))
+	// 右键弹窗页面csp
+	s DialogPage= $S($G(%request.Data("DialogPage", 1))="":"nur.emr.business.dialog.csp",1:%request.Data("DialogPage", 1))
+	// 模板列表页面的宽度
+	s TempListWidth = $S($G(%request.Data("TempListWidth", 1))="":"232px",1:%request.Data("TempListWidth", 1))
+</script>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="X-UA-Compatible"
+		  content="IE=edge,chrome=1">
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+	<STYLE type='text/css'>
+
+	</STYLE>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/helper.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/multrecords.js" charset=gbk></script>
+	<script language="javascript">
+		var patientListPage = "#(PatientListPage)#";
+        var EpisodeID = "#(EpisodeID)#";
+        var AuthorityFlag = "#(AuthorityFlag)#";
+        var DefaultCode = "#(DefaultCode)#";
+        var PassToMenuFlag = "#(PassToMenuFlag)#";
+    </script>
+</head>
+<body class="s_body">
+	<!--等候加载提示-->
+	<div id="loading" class="custom_step_loading">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+		<br><br><span class="loading_words">#(..Get("正在初始化界面..."))#</span>
+	</div>
+	<div class="hisui-layout color_layout" data-options="fit:true">  
+		<div data-options="region:'west',split:true,headerCls:'panel-header-gray',iconCls:'icon-all-select'" title="就诊信息" style="width:313px">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" class="double_row_layout_north">
+					<div class="hisui-panel pnSearch" data-options="fit:true,border:false,headerCls:'panel-header-gray',iconCls:'icon-all-select'">
+						<table class="search_table">
+							<tr>
+								<td>#(..Get("开始"))#</td>
+								<td>
+									<input id="startDate" class="hisui-dateboxq textbox dbSearch" data-options="required:true">
+								</td>
+								<td>
+									<div id="swType" class="hisui-switchbox switch" data-options="onText:'#(..Get("历次"))#',offText:'#(..Get("本次"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+								</td>
+							</tr>
+							<tr>
+								<td>#(..Get("结束"))#</td>
+								<td>
+									<input id="endDate" class="hisui-dateboxq textbox dbSearch" data-options="required:true">
+								</td>
+								<td>
+									<a id="btnFind" class="hisui-linkbutton hover-dark">查询</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<div class="hisui-panel" data-options="fit:true,border:false,headerCls:'panel-header-gray',iconCls:'icon-search'" style="border-radius:0;border-top:1px solid #e2e2e2;">
+						<table id='gridAdms' class="hisui-datagrid" data-options="fit:true,border:false"></table>
+					</div>
+				</div>
+			</div>
+		</div> 
+		<div data-options="region:'center',border:false">
+			<div class="hisui-layout color_layout" data-options="fit:true,split:true">	
+				<csp:if condition="HideBanner'=1">
+					<div  class="banner_row_layout_north" data-options="region:'north',border:false">
+						<csp:Include Page="#(CustomBanner)#">
+					</div>
+				</csp:if>
+				<div data-options="region:'center',border:false">
+					<div class="hisui-layout content-layout color_layout" data-options="fit:true,border:false">
+						<csp:if condition="SingleTemplate'=1">
+							<script language="cache" runat="server">
+								w "<div data-options=""region:'west',split:true,title:'模板列表',headerCls:'panel-header-gray',showCollapsedTitle:true,iconCls:'icon-template',onCollapse:function(){autoResizeTable('1');},onExpand:function(){autoResizeTable('2');}"" style=""width:calc("_TempListWidth_")"">"
+							</script>
+								<csp:Include page="#(TempListPage)#">
+							</div>
+						</csp:if>
+						<div data-options="region:'center',border:false,headerCls:'panel-header-gray'">
+							<csp:Include Page="#(RecordTabPage)#">
+						</div>
+					</div>
+				</div>	
+			</div>
+		</div>
+	</div>
+	<csp:Include Page="#(DialogPage)#">
+</body>
+</html>

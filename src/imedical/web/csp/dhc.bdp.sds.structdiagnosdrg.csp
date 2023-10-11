@@ -1,0 +1,75 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+/*
+	@CSP:dhc.bdp.sds.structdiagnosdrg.csp
+	@Title:结构化诊断DRG
+	@Description:结构化诊断调用DRG
+	@Creator:基础数据平台组 - 高姗姗
+	@CreateDate:2021-11-04
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <Server>
+	 s EpisodeID=%request.Get("EpisodeID")
+	 s PatientID=%request.Get("PatientID")
+</Server>
+</HEAD>
+
+<body style="padding:4px;">
+	  
+	
+		智能分组消息(<a id="DrgDetail">详情</a>)
+		<br>
+		<div id="DrgDiv"  style="" > 
+		
+		</div>
+		<div id="DrgUrl" style="display:none"></div>
+		<SCRIPT language = 'javascript' >
+		var EpisodeID="#(EpisodeID)#"
+		var PatientID="#(PatientID)#"
+		var DiagInfo=""
+		var rowids=parent.$('#tabDiagnosEntry' ).getDataIDs();
+		for(var i=0;i<rowids.length;i++){
+			var ICDDiagnosDesc=parent.GetCellData(rowids[i],"DiagnosICDDesc");
+			var MRCIDCode=parent.GetCellData(rowids[i],"MRCIDCode");
+			var MainDiagFlag=parent.GetCellData(rowids[i],"MainDiagFlag");
+			if (ICDDiagnosDesc=="") continue;
+			var EditFlag="";
+			if (DiagInfo==""){
+				DiagInfo=ICDDiagnosDesc+"^"+MRCIDCode+"^"+MainDiagFlag+"^"+EditFlag
+			}else{
+				DiagInfo=DiagInfo+"&"+ICDDiagnosDesc+"^"+MRCIDCode+"^"+MainDiagFlag+"^"+EditFlag
+			}
+		}
+    	$m({
+			ClassName:"web.DHCBL.MKB.SDSDiagnosFuseInterface",
+			MethodName:"GetDrgInfo",
+			EpisodeID:EpisodeID,
+			PatientID:PatientID,
+			DiagInfo:DiagInfo
+		},function(data){
+			$("#DrgDiv").html(data.split("&^")[0])
+			$("#DrgUrl").html(data.split("&^")[1])
+		});
+		
+		$("#DrgDetail").bind("click",function(){
+			if ($("#DrgUrl").html()==""){
+				$.messager.popover({msg: '无分组消息！',type:'success',timeout: 1000});
+			}else{
+				var url="http://192.168.0.113:8080/drg"+$("#DrgUrl").html()
+				parent.ShowDrgDetail(url)
+			}
+		})
+
+ 		</SCRIPT>
+</body>
+</html>

@@ -1,3 +1,7 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <!-- dhcemc.scorepersys.csp  急诊个人评分系统 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,78 +13,65 @@
 	<HISUI/>
 	<link href="../scripts/dhcnewpro/dhcemc/css/base.css" rel="stylesheet">
 	<link href="../scripts/dhcnewpro/dhcemc/css/scorepersys.css" rel="stylesheet">
+	<script src="../scripts/dhcnewpro/plugins/layer/layer.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>		
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcemc/scorepersys.js"></script>
+	<script Language="Javascript">
+	if(HISUIStyleCode==="lite"){///2023-02-03 极简风格样式修改
+	document.write("<style>.pf-nav .pf-nav-item-li:hover{cursor: pointer;background: #EFF9FF;color: #339EFF;border: 1px solid #339eff;}</style>");
+	document.write("<style>.pf-nav .pf-nav-item-li{border-radius: 2px;display: block;text-align: center;background: #E5E5E5;color: #000000;text-decoration: none;padding: 0 9px;border: 1px solid #E5E5E5;}</style>")
+	document.write("<style>.pf-nav .item-li-select{background-color: #EFF9FF;background-image: url(../scripts_lib/hisui-0.1.0/dist/css/images/lite/keywords_arrow.png);background-position: right 0 bottom 0;background-repeat: no-repeat;color: #339EFF;border: 1px solid #48B9FF;}</style>");
+	document.write("<style>.bd-center-form,.panel-line{border-color: #e2e2e2;}</style>");
+	}
+</script>
+
 </head>
-<body class="background-warp">
-	<div class="container">
-		<div class="bd-left">
-			<div class="panel-north">
-				<div class="list-title">
-					<div class="list-icon">
-						<img src="../scripts/dhcnewpro/dhcem/images/infomation.png" border=0/>
-					</div>
-					<label>急诊医生评分</label>
-					<div class="list-tools">
-					</div>
-	            </div>
-	        	<div class="list-order-item">
-	        		<div style="padding:10px 0px 3px 10px;">
-						<label style="margin:0px 5px;">开始日期</label><input id="StartDate" class="hisui-datebox textbox" style="width:155px;">
-					</div>
-					<div style="padding:10px 0px 3px 10px;">
-						<label style="margin:0px 5px;">结束日期</label><input id="EndDate" class="hisui-datebox textbox" style="width:155px;">
-					</div>
-					<div style="padding:10px 0px 3px 60px;">
-						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="find_click()" style="margin-left:20px;">查询</a>
-					</div>
-				</div>
-			</div>
-			<div class="panel-line"></div>
-			<div class="panel-center">
+<body  class="hisui-layout" fit="true">
+		<div data-options="region:'west',headerCls:'panel-header-gray',title:'',border:false" style="width:270px;padding:10px 0px 10px 10px;">
+			<div class="hisui-panel" title="急诊医生评分" style="" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
 				<table id="bmDetList"></table>
 			</div>
 		</div>
-		<div class="bd-center">
-			<div class="bd-center-north">
-				<div class="item-label">
-					<div class="pf-patimg">
-						<img id="PatPhoto" src="../scripts/dhcnewpro/images/girl.png">
+		<div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-header-gray',title:''" border="false"  style="height:auto;padding:10px">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',title:'',headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" style="height:90px;">
+					<div style="height:40px;">
+						<csp:Include Page="dhcdoc.patinfo.banner.csp">
 					</div>
-					<div class="pf-patbase">
-						<ul class="pf-nav">
-							<li class="pf-nav-item"><span class="pf-nav-title pf-patname"><span id="PatName" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatSex" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatAge" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatNo" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBed" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatBill" class="ui-span-m"></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
-							<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatDiagDesc" class="ui-span-m"></span></span></li>
+					<div class="panel-line"></div>
+					<div>
+						<ul class="pf-nav" id="form-name">
+							<li class='pf-nav-item-li item-li item-li-select' id='APACHE' data-name='APACHE II评分表'><span>#(..Get("APACHE II评分表"))#</span></li>
+							<li class='pf-nav-item-li item-li' id='crams' data-name='crams'><span>#(..Get("CRAMS评分"))#</span></li>
+							<li class='pf-nav-item-li item-li' id='XZCSPF' data-name='XZCSPF'><span>#(..Get("修正创伤评分"))#</span></li>
+							<li class='pf-nav-item-li item-li' id='Glasgow昏迷评分' data-name='Glasgow昏迷评分'><span>#(..Get("Glasgow昏迷评分"))#</span></li>
+							<li class='pf-nav-item-li item-li' id='ISS' data-name='ISS'><span>#(..Get("创伤严重程度评分(ISS)"))# </span></li>
 						</ul>
 					</div>
 				</div>
-				<div class="dashline-div"></div>
-				<div>
-					<ul class="pf-nav" id="form-name">
-						<li class='pf-nav-item-li item-li item-li-select' id='APACHE' data-name='APACHE II评分表'><span>APACHE II评分表</span></li>
-						<li class='pf-nav-item-li item-li' id='crams' data-name='crams'><span>CRAMS评分</span></li>
-						<li class='pf-nav-item-li item-li' id='XZCSPF' data-name='XZCSPF'><span>修正创伤评分</span></li>
-						<li class='pf-nav-item-li item-li' id='Glasgow昏迷评分' data-name='Glasgow昏迷评分'><span>Glasgow昏迷评分</span></li>
-						<li class='pf-nav-item-li item-li' id='ISS' data-name='ISS'><span>创伤严重程度评分(ISS) </span></li>
-					</ul>
+				<div border="false"data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-header-gray',title:''">
+					<div class="hisui-panel" border="false" title="" style="padding-top:10px;" data-options="fit:true,bodyCls:'panel-header-gray',headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+						<div class="bd-center-form" style="top:10px !important;">
+							<iframe id="FormMain" scrolling="yes" width=100% height=100%  frameborder="0" src="" ></iframe>
+						</div>
+					</div>
+
 				</div>
 			</div>
-			<div class="bd-center-form">
-				<iframe id="FormMain" scrolling="yes" width=100% height=100%  frameborder="0" src="" ></iframe>
-			</div>
 		</div>
-	</div>
+<div id="tbtoolbar" style="height:130px;">
+		<div style="padding:10px 0px 0px 10px;">
+			<label style="margin:0px 10px 0px 5px;">#(..Get("开始日期"))#</label><input id="StartDate" class="hisui-datebox textbox" style="width:155px;">
+		</div>
+		<div style="padding:10px 0px 10px 10px;">
+			<label style="margin:0px 10px 0px 5px;">#(..Get("结束日期"))#</label><input id="EndDate" class="hisui-datebox textbox" style="width:155px;">
+		</div>
+		<div style="text-align:center;">
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="find_click()">查询</a>
+		</div>
+	</div> 
+
+
 </body>
 </html>

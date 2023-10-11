@@ -59,8 +59,6 @@ label[for='Check_IPDefaultCMPrescType']{
 	width:310px !important;
 }
 </style>
-<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
-<script type="text/javascript" src="../scripts/dhcdocconfig/dhcdoc.config.cmdocconfig.js"></script>
  </head> 
   <body>
   <div class="hisui-panel" data-options="fit:true,border:false" style="padding:10px;">
@@ -105,11 +103,20 @@ label[for='Check_IPDefaultCMPrescType']{
 								        	<input id="Combo_DefaultFrequence" type="text"  class="textbox"/>
 								        </td>
 								        <td class="r-label">
-								        	<label for="Combo_DefaultInstr">默认用法</label>
+								        	<label for="Combo_DefaultInstr">默认使用方式</label>
 								        </td>
 								        <td>
 								        	<input id="Combo_DefaultInstr" type="text"  class="textbox"/>
 								        </td>
+								        <td class="r-label">
+								        	<label for="Combo_TakingMedicineMethod">取药方式</label>
+								        </td>
+								        <td>
+								        	<style>.icon{width: 20px;height: 20px;margin-right: 10px;float: right;}</style>
+								        	<input id="Combo_TakingMedicineMethod" type="text"  class="textbox"/>
+								        	<a id="ConfigTakingMedicineMethod" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'"></a>
+								        </td>
+					      			</tr>
 					      			</tr>
 					      			<tr>
 										<!--td  class="r-label">
@@ -175,9 +182,9 @@ label[for='Check_IPDefaultCMPrescType']{
 										</td>
 										<td colspan="6" class="r-label-1" title="需要维护对应的子类接收科室才能生效，切记">
 											<label for="List_CNMedNormDefaultRefLoc">门急诊默认接收科室</label>
-											<input id="List_CNMedNormDefaultRefLoc" type="text"/>
+											<input class="textbox" id="List_CNMedNormDefaultRefLoc" type="text"/>
 											<label for="List_CNMedNormIPDefaultRefLoc">住院默认接收科室</label>
-											<input id="List_CNMedNormIPDefaultRefLoc" type="text"/>
+											<input class="textbox" id="List_CNMedNormIPDefaultRefLoc" type="text"/>
 										</td>
 									</tr>
 									<tr>
@@ -191,7 +198,7 @@ label[for='Check_IPDefaultCMPrescType']{
 									</tr>
 									<tr>
 										<td colspan="6" ALIGN="center">
-											<a id="SaveDetails" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>  
+											<a id="SaveDetails" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>    
 										</td>
 									</tr>
 					  	      	</table>
@@ -244,20 +251,28 @@ label[for='Check_IPDefaultCMPrescType']{
 											<input id="Check_CMOpenForAllHosp" class='hisui-checkbox' type="checkbox">
 										</td>
 									</tr>
-									<tr>
+									<!--tr>
 										<td class="r-label">
 											<label for="Check_CMOrdNeedTCMDiag">录入草药需存在中医诊断</label>
 										</td>
 										<td>
 											<input id="Check_CMOrdNeedTCMDiag" class='hisui-checkbox' type="checkbox">
 										</td>
-									</tr>
+									</tr-->
 									<tr>
 										<td class="r-label">
 											<label for="Check_CMOrdSameArcName">同处方不允许录入相同通用名的医嘱</label>
 										</td>
 										<td>
 											<input id="Check_CMOrdSameArcName" class='hisui-checkbox' type="checkbox">
+										</td>
+									</tr>
+									<tr>
+										<td class="r-label">
+											<label for="Check_NoStockOnePrompt">草药库存不足一次性提示</label>
+										</td>
+										<td>
+											<input id="Check_CMNoStockOnePrompt" class='hisui-checkbox' type="checkbox">
 										</td>
 									</tr>
 									<tr style="height:15px;">
@@ -323,6 +338,9 @@ label[for='Check_IPDefaultCMPrescType']{
 				  	      	<div class="hisui-panel card-wrapper card-wrapper-max" title="煎药方式">
 				  	      		<table id="tabCNMedCookArcMode"></table>
 				  	      	</div>
+				  	      	<div class="hisui-panel card-wrapper card-wrapper-max" title="医嘱类型用法对照">
+				  	      		<table id="tabCNMedInstrContrast"></table>
+				  	      	</div>
 						</div>
 						<div data-options="region:'south',split:false,border:false" style="height:50px;padding:10px;text-align:center;">
 							<a id="SavePublic" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>  
@@ -343,5 +361,39 @@ label[for='Check_IPDefaultCMPrescType']{
 				<table id="CookArcItem"></table>
 		</div>
 </div>
+ <div id="CookInstr-dialog" class="hisui-dialog" title="煎药方式使用方式" style="padding:10px;top:50px;width:300px;height:500px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
+		<div class="hisui-panel" style="border-color:#ccc;" data-options="border:true,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
+			<div class="hisui-layout" fit="true" style="padding:0px;">
+				<div data-options="region:'center',border:false">
+					<select id="CookInstrList" multiple style="height:100%;width:98%;"></select>
+				</div>
+				<div data-options="region:'south',border:false" style="height:45px;text-align:center;padding-top:5px;">
+					<a id="BCookInstrSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+				</div>
+			</div>
+		</div>
+</div>
+ <div id="ConfigTakingMedicineMethod-dialog" class="hisui-dialog" title="取药方式维护" style="padding:10px;top:50px;width:600px;height:600px;" data-options="iconCls:'icon-w-save',shadow:false,modal:true,closed:true">
+		<div class="hisui-panel" style="border-color:#ccc;" data-options="border:true,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
+				<table id="ConfigTakingMedicineMethodtab"></table>
+		</div>
+</div>
+<SCRIPT language = 'javascript' >
+	//全局请求后台服务对象
+	var ServerObj={
+		pageCode:"dhcdoc.config.cmdocconfig.csp",
+		pageName:"草药录入设置",
+		ProductLine:"OPDoc",
+		parentPageCode:"dhcdoc.config.basicsetting.csp",
+		parentPageName:"医生站设置菜单",
+		MainCSPIsLink:"N",
+		domSelectors:".textbox^.hisui-checkbox^#tabCMPrescType!table!1^select!select^#tabCMPrescTypeLinkFee!table!0^#tabCNMeditemInstr!table!0^#tabCNMedPackMode!table!0^#tabFrequence!table!0^#tabCNMedAddLongOrder!table!0^!tabCNMedCookArcMode!table!0",
+		domNotSelectors:"#_HospList"
+	};
+  </SCRIPT>
+  <script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
+  <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+  <script type="text/javascript" src="../scripts/dhcdocconfig/dhcdoc.config.cmdocconfig.js"></script>
+
 </body>
 </html>

@@ -1,0 +1,430 @@
+<!--nur.hisui.orderexecexcute.csp 医嘱执行(执行执行记录)-->
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html;">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<NURHISUI />
+	<HISUI />
+	<ADDINS require="RWCard,CmdShell"/>
+	<DOCCARD medStepCode="Other"></DOCCARD>
+	<Server>
+	s SwitchSysPat=$G(%request.Data("SwitchSysPat", 1))
+	s execSetting=##class(Nur.NIS.Service.OrderExcute.QueryOrder).GetExecConfig(%session.Get("LOGON.HOSPID"))
+	s EpisodeID=$G(%request.Data("EpisodeID", 1))
+	s searchByAdm=$G(%request.Data("searchByAdm", 1)) //仅查询传入的就诊患者数据 Y:是 其他:不是
+	if (searchByAdm="Y"){
+		s fixedEpisodeID=EpisodeID
+		s fixedRegNo=##class(Nur.NIS.Service.Base.Patient).GetRegNo(fixedEpisodeID)
+		s fixMedNo=##class(Nur.NIS.Service.Base.Patient).GetMedicareNo(fixedEpisodeID)
+		s fixAdmType=$p(^PAADM(fixedEpisodeID),"^",2)
+	}else{
+		s fixedEpisodeID="",fixedRegNo="",fixMedNo="",fixAdmType=""
+	}
+	s searchByLogDep=$G(%request.Data("searchByLogDep", 1)) //按登录科室作为接收科室默认条件 Y:是 其他:不是
+	if (searchByLogDep="Y"){
+		s fixedRecLocId=%session.Get("LOGON.CTLOCID")
+	}else{
+		s fixedRecLocId=""
+	}
+	s searchByLogDoc=$G(%request.Data("searchByLogDoc", 1)) //按登录医生作为开单医生默认条件 Y:是 其他:不是
+	if (searchByLogDoc="Y"){
+		s UserId=%session.Get("LOGON.USERID")
+		s fixedDocId=$P($g(^SSU("SSUSR",UserId)),"^",14)
+		s fixedDocName=$p($g(^CTPCP(fixedDocId,1)),"^",2)
+		s fixedDocName=##class(User.CTCareProv).GetTranByDesc("CTPCPDesc",fixedDocName)
+	}else{
+		s fixedDocId="",fixedDocName=""
+	}
+   </Server>
+	<!--script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script-->
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.orderExecExcute.js" charset='gbk'></script>
+	<STYLE type='text/css'>
+		.accordion>.panel>.panel-header, .layout>.panel>.panel-header, .panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, .panel.window>.panel-header, .tabs-panels>.panel>.panel-header {
+		    -moz-border-radius: 0;
+		    -webkit-border-radius: 0;
+		    /*border-radius: 5px 5px 0 0;*/
+		    padding: 5px;
+		}
+		.td-btn {
+			padding-left: 10px;
+		}
+
+		.table-border {
+			border-width: 1px;
+			border-style: dashed solid solid;
+			border-color: #ccc;
+			border-radius: 0px 0px 4px 4px;
+		}
+		.messager-popover .content {
+	        height:100%;
+		    float: left;
+		    margin-top: -1px;
+		}
+		.search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.r-label1{
+			text-align: right;
+			padding:0 10px;
+		}
+		.r-label{
+			text-align: right;
+    		padding:0 10px;
+		}
+		.span-label{
+			text-align: right;
+    		padding-right:10px;
+    		vertical-align:middle;
+		}
+		.combo-p>.panel-body.panel-body-noheader {
+			max-height:410px;
+		}
+		search-table .textbox{
+			width:118px !important;
+		}
+		search-table .combo{
+			width:123px !important;
+		}
+		#executeDialog {
+			border:0;
+		}
+		#executeDialog .dialog-button {
+			padding-top:0;
+		}
+		/*查询模式样式*/
+		.switch {
+			text-align:center;
+			padding-top: 5px;
+		}
+		.ant-switch{
+			margin:0;
+			padding:0;
+			color:rgba(0,0,0,.65);
+			font-size:14px;
+			font-variant:tabular-nums;
+			line-height:1.5;
+			list-style:none;
+			-webkit-font-feature-settings:"tnum";
+			font-feature-settings:"tnum";
+			position:relative;
+			display:inline-block;
+			-webkit-box-sizing:border-box;
+			box-sizing:border-box;
+			min-width:44px;
+			height:22px;
+			line-height:20px;
+			vertical-align:middle;
+			background-color:rgba(0,0,0,.25);
+			border:1px solid transparent;
+			border-radius:100px;
+			cursor:pointer;
+			-webkit-transition:all .36s;
+			transition:all .36s;
+			-webkit-user-select:none;
+			-moz-user-select:none;
+			-ms-user-select:none;
+			user-select:none;
+		}
+		.ant-switch-checked .ant-switch-inner {
+			margin-right:24px;
+			margin-left:6px;
+		}
+		.ant-switch:focus {
+			outline:0;
+		}
+		.ant-switch:after {
+			position:absolute;
+			top:1px;
+			left:1px;
+			width:18px;
+			height:18px;
+			background-color:#fff;
+			border-radius:18px;
+			cursor:pointer;
+			-webkit-transition:all .36s cubic-bezier(.78,.14,.15,.86);
+			transition:all .36s cubic-bezier(.78,.14,.15,.86);content:" ";
+		}
+		.ant-switch-checked:after {
+			left:100%;
+			margin-left:-1px;
+			transform:translateX(-100%);
+		}
+		.ant-switch-checked {
+			background-color:#1890ff;
+		}
+		.switchIcon{
+			margin:0 10px;
+			top:-2px;
+		}
+		.current{
+			color:#017bce;
+		}
+		.current_lite{
+			color:rgb(51, 158, 255);
+		}
+		.divisionline{
+			display:inline-block;
+			height:21px;
+			border-right:1px solid #ccc;
+			vertical-align:middle;
+		}
+	</STYLE>
+</head>
+<csp:Include Page="nur.hisui.handleorderwindow.csp">
+<body style="padding:4px;box-sizing: border-box;">
+		<div class="hisui-panel" fit="true" data-options="title:'执行记录执行',headerCls:'panel-header-gray',iconCls:'icon-write-order'">
+			<div id="main" class="hisui-layout" fit=true>
+				<csp:if condition='fixedEpisodeID=""'>
+					<div data-options="region:'north',collapsible:false,iconCls:'icon-patient',border:false" style="height:130px;">
+						<table class="search-table"style="font-size:0;">
+							<tr>
+								<td class="r-label">#(..Get("登记号"))#</td>
+								<td>
+									<input id="regNoInput" class="textbox">
+								</td>
+								<td class="r-label">#(..Get("病案号"))#</td>
+								<td>
+									<input id="medNoInput" class="textbox">
+								</td>
+								<td class="r-label">#(..Get("卡号"))#</td>
+								<td>
+									<input id="cardNoInput" class="textbox">
+								</td>
+								<td class="r-label">#(..Get("就诊类型"))#</td>
+								<td ><input id="patTypeBox" class="hisui-combobox" name="patTypeBox" style="" data-options="enterNullValueClear:false,panelHeight:'auto'" ></input></td>
+								
+								<td class="r-label">#(..Get("账单状态"))#</td>
+								<td>
+									<input id="searchBillStatus" class="hisui-combobox textbox">
+								</td>
+								
+								<td class="td-btn">
+									<a id="readCardBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id='clearBtn'>清屏</a>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">#(..Get("开单医生"))#</td>
+								<td>
+									<input id="searchDoctor" class="hisui-combobox textbox">
+								</td>
+								<td class="r-label">#(..Get("开单科室"))#</td>
+								<td>
+									<input id="searchUserLoc" class="hisui-combobox textbox" name="searchOrdAddLoc"  data-options="enterNullValueClear:false,panelHeight:'auto'" ></input>
+								</td>
+								<td class="r-label">#(..Get("接收/使用科室"))#</td>
+								<td>
+									<input id="otherLoginLocs" class="hisui-combobox textbox" name="otherLoginLocs"  data-options="enterNullValueClear:false,panelHeight:'auto'"></input>
+								</td>
+								<td class="r-label">#(..Get("就诊科室"))#</td>
+								<td>
+									<input id="searchPatAdmLoc" class="hisui-combobox textbox" name="searchPatAdmLoc"  data-options="enterNullValueClear:false,panelHeight:'auto'"></input>
+								</td>
+								<td class="r-label">#(..Get("执行状态"))#</td>
+								<td>
+									<input id="searchExecedStatus" class="hisui-combobox textbox">
+								</td>
+								
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='queryOrderBtn'>查询</a>
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" id='orderPrintBtn'>打印</a>
+								</td>
+							</tr>
+							<tr>
+								<td class="r-label">#(..Get("医嘱项"))#</td>
+								<td>
+									<input id="searchArcim" class="hisui-combobox textbox">
+								</td>
+								<td class="r-label">#(..Get("开始日期"))#</td>
+								<td>
+									<input id="startDate" class="hisui-datebox textbox">
+								</td>
+								
+								<!--td class="r-label">已执行</td>
+								<td><input id="ifExced" class='hisui-checkbox' type="checkbox" label=""></td-->
+								<td class="r-label">#(..Get("结束日期"))#</td>
+								<td>
+									<input id="endDate" class="hisui-datebox textbox">
+								</td>
+								<td class="r-label" colspan="2">
+									<div class="switch">
+										<label>#(..Get("按开单科室"))#</label>
+										<button id="switchBtn" type="button" role="switch" class="switchIcon ant-switch" aria-checked="true" ant-click-animating="false">
+											<span class="ant-switch-inner"></span>
+										</button>
+										<label>#(..Get("按接收科室"))#</label>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+				<csp:else>
+					<div data-options="region:'north',collapsible:false,iconCls:'icon-patient',border:false" style="height:130px;">
+						<table class="search-table"style="font-size:0;">
+							<tr>
+								<td class="r-label">#(..Get("登记号"))#</td>
+								<td>
+									<input id="regNoInput" class="textbox" style="width:126px;">
+								</td>
+								<td class="r-label">#(..Get("病案号"))#</td>
+								<td>
+									<input id="medNoInput" class="textbox" style="width:126px;">
+								</td>
+								<td class="r-label">#(..Get("卡号"))#</td>
+								<td>
+									<input id="cardNoInput" class="textbox" style="width:126px;">
+								</td>
+								<td class="r-label">#(..Get("就诊类型"))#</td>
+								<td ><input id="patTypeBox" class="hisui-combobox" name="patTypeBox" style="" data-options="enterNullValueClear:false,panelHeight:'auto'"  style="width:133px;"></input></td>
+								
+								<td class="r-label">#(..Get("账单状态"))#</td>
+								<td>
+									<input id="searchBillStatus" class="hisui-combobox textbox" style="width:133px;">
+								</td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='queryOrderBtn'>查询</a>
+								</td>
+								
+							</tr>
+							<tr>
+								<td class="r-label">#(..Get("开单医生"))#</td>
+								<td>
+									<input id="searchDoctor" class="hisui-combobox textbox" style="width:133px;">
+								</td>
+								<td class="r-label">#(..Get("开单科室"))#</td>
+								<td>
+									<input id="searchUserLoc" class="hisui-combobox textbox" name="searchOrdAddLoc"  data-options="enterNullValueClear:false,panelHeight:'auto'"  style="width:133px;"></input>
+								</td>
+								<td class="r-label">#(..Get("接收科室"))#</td>
+								<td>
+									<input id="otherLoginLocs" class="hisui-combobox textbox" name="otherLoginLocs"  data-options="enterNullValueClear:false,panelHeight:'auto'" style="width:133px;"></input>
+								</td>
+								<td class="r-label">#(..Get("就诊科室"))#</td>
+								<td>
+									<input id="searchPatAdmLoc" class="hisui-combobox textbox" name="searchPatAdmLoc"  data-options="enterNullValueClear:false,panelHeight:'auto'" style="width:133px;"></input>
+								</td>
+								<td class="r-label">#(..Get("执行状态"))#</td>
+								<td>
+									<input id="searchExecedStatus" class="hisui-combobox textbox" style="width:133px;">
+								</td>
+								
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id='clearBtn'>清屏</a>
+								</td>
+								
+							</tr>
+							<tr>
+								<td class="r-label">#(..Get("医嘱项"))#</td>
+								<td>
+									<input id="searchArcim" class="hisui-combobox textbox" style="width:133px;">
+								</td>
+								<td class="r-label">#(..Get("开始日期"))#</td>
+								<td>
+									<input id="startDate" class="hisui-datebox textbox" style="width:133px;">
+								</td>
+								<td class="r-label">#(..Get("结束日期"))#</td>
+								<td>
+									<input id="endDate" class="hisui-datebox textbox" style="width:133px;">
+								</td>
+								<td class="r-label" colspan="2">
+									<div class="switch">
+										<label>#(..Get("按开单科室"))#</label>
+										<button id="switchBtn" type="button" role="switch" class="switchIcon ant-switch" aria-checked="true" ant-click-animating="false">
+											<span class="ant-switch-inner"></span>
+										</button>
+										<label>#(..Get("按接收科室"))#</label>
+									</div>
+								</td>
+								<td></td><td></td>
+								<td class="td-btn">
+									<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" id='orderPrintBtn'>打印</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</csp:if>
+				<div data-options="region:'center',title:'',border:false" style="border-top: 1px dashed #ccc;border-radius:0 0 4px 4px;" >
+					<div id="center" class="hisui-layout" fit=true border=false>
+						<div data-options="region:'center',iconCls:'icon-w-list',headerCls:'panel-header-gray'" title="" border=false>
+							<!-- style="border-width: 1px;border-style: dashed solid solid;border-color:#ccc;border-radius: 0px 0px 4px 4px;" -->
+							<table id='ordGrid' class="hisui-datagrid" border=false title="" fit=true data-options="headerCls:'panel-header-gray',toolbar:'#custtb',">
+							</table>
+							<div id="custtb" style="padding:2px 10px 2px 38px;font-size:0;">
+								<csp:if condition='fixedEpisodeID=""'>
+									<span class="span-label">#(..Get("患者"))#</span>
+									<input id="patComBoBox" class="hisui-combobox" name="patComBoBox" style="" data-options="enterNullValueClear:false,panelHeight:'auto',panelMaxHeight:'410px'"></input>
+								<csp:else>
+									<span class="span-label">#(..Get("患者"))#</span>
+									<input id="patComBoBox" class="hisui-combobox" name="patComBoBox" style="width:133px;" data-options="enterNullValueClear:false,panelHeight:'auto',panelMaxHeight:'410px'"></input>
+								</csp:if>
+								<div class="divisionline" style="margin-left:10px;"></div>
+								<!-- <input class='hisui-checkbox' type="checkbox" label="已收费">
+							<input class='hisui-checkbox' type="checkbox" label="已执行"> -->
+								<a id="execOrdsBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-accept',plain:true">执行</a>
+								<a id="cancelOrdsBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel-order',plain:true">撤销执行</a>
+								<div class="divisionline" style="margin-right:10px;"></div>
+								<input class="hisui-checkbox" type="checkbox" label="按下医嘱时间排序" id="orderByOrdDate" data-options="onCheckChange:ordGridReload">
+								<span id="summeryInfo" style="float:right;line-height:28px;"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="executeDialog" class="hisui-dialog" title="医技执行" style="width:341px;height:165px;overflow-y:hidden;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,buttons:[
+			{
+				text:'执行',
+				handler:function(){}
+			},
+			{
+				text:'取消',
+				handler:function(){$HUI.dialog('#executeDialog').close();}
+			}
+		]">
+				<table class="search-table">
+					<tr>
+						<td class="r-label1">#(..Get("开始日期"))#</td>
+						<td>
+							<input id="executeDate" class="hisui-datebox textbox">
+						</td>
+						<td class="r-label1">
+							<input id="executeTime" class="hisui-timespinner" data-options="showSeconds:true" style="width:120px;">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label1">#(..Get("执行人"))#</td>
+						<td>
+							<input id="executeUser" class="textbox" disabled>
+						</td>
+					</tr>
+				</table>
+		</div>
+</body>
+<SCRIPT language = 'javascript'>
+	var SwitchSysPat="#(SwitchSysPat)#"
+	var execSetting=#(execSetting)#
+	var fixedEpisodeID="#(fixedEpisodeID)#"
+	var fixedRecLocId="#(fixedRecLocId)#"
+	var fixedDocId="#(fixedDocId)#"
+	var fixedDocName="#(fixedDocName)#"
+	var fixedRegNo="#(fixedRegNo)#"
+	var fixMedNo="#(fixMedNo)#"
+	var fixAdmType="#(fixAdmType)#"
+</SCRIPT>
+</html>

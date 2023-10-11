@@ -1,0 +1,132 @@
+<html >
+<head>
+<title>字典数据引用出处</title>
+<HISUI/>
+<DHCCKB/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/dicsourceutil.js"></script>
+	<style type="text/css">
+		.datagrid-row-selected {
+	  		background: #ADFAFC;
+		}
+		.panel-header, .panel-body {
+		    border-color: #ccc;
+		}
+   </style>
+</head>
+
+<body >	
+	<div class="hisui-layout"  fit="true">
+		<!--查询条件区-->
+		<div data-options="region:'west',title:''"  style="width:500px;padding:10px 0px 10px 10px;" border=0>					
+			<div class="hisui-panel" data-options="title:'字典列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:600px;border:1px solid #ccc;border-top:0;border-radius:0px;">	
+				<div id="title" class="hisui-panel" style="padding:2px 0px 2px 2px; height:110px;border:0">
+					<table>
+						<tr>
+							<td>
+								<span style="padding-right:2px;">字典</span>
+								<input id="dicType" type="text" class="hisui-combobox" />
+							</td>
+							<td>
+								<span style="padding-right:2px;">属性</span>
+								<input id="propType" type="text" class="textbox hisui-combotree" />
+							</td>
+							<td>
+								<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="find">查询</a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<span style="padding-right:2px;">院区</span>
+								<input id="hosp" type="text" class="hisui-combobox" />
+							</td>
+							<td>
+								<span style="padding-right:2px;">检索</span>
+								<input id="queryCode" href="#" class="hisui-searchbox" style="width:155px;" prompt='请输入代码/名称/拼音码'/>
+							</td>
+							<td>
+								<a style="" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a>
+							</td>
+						</tr>	
+						<tr>
+							<td>
+								<a style=""class="hisui-linkbutton" data-options="iconCls:'icon-set-paper',plain:true" id="resetvalue">批量修改规则引用</a>
+							</td>
+							<td>
+								<input class="hisui-checkbox" type="checkbox" label="未引用" id="referenceFlag">
+							</td>
+						</tr>					
+					</table>					
+				</div>
+				<div id="showlist" fit="true" style="fit:true;border:0;border-top:1px solid #ccc;height:400px;">
+					<div id="list" style="height:100%"><div id="diclist"></div></div>				
+					<div id="tree" style="height:100%;display:none"><ul id="dictree"></ul></div>
+				</div>
+	    	</div>			
+						
+		</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:10px 10px 10px 10px;">
+			<div class="hisui-panel" data-options="title:'应用列表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+				<div id="linkattrlist" toolbar="#linktb"></div>
+	    	</div>		
+		</div> 
+	</div>	
+	<div id="exaction" class="hisui-dialog" title="确认更改操作" style="width:650px;height:350px;top:250px;left:500px;padding:10px;"
+    data-options="iconCls:'icon-save',resizable:true,modal:true,closed:true,toolbar:[
+	{
+		text:'帮助',
+		iconCls:'icon-help',
+		handler:function(){alert('更改操作不可逆请谨慎操作！')}
+	}],buttons:[{
+		text:'保存',
+		id:'sssss',
+		handler:function(){SaveResetData()}
+	},{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#exaction').close();}
+	}]">   
+	<!-- 不可用表格-->
+			<form>
+			  <table>
+				
+				<tr >
+					<td>将引用<br>更改为：</td> 
+					<td><input class="hisui-combobox"  data-options="mode:'remote'" href="#" id="reactionnamerule" style='width:560px;'/></td> 
+				 </tr>
+				</table>
+			</form>
+
+</div>
+<div id="linktb">
+	<div id="toolbar" class="toolbar" >
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+		      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-edit" id="updruledic">修改规则字典</a></td>
+		    </tr>
+		</table>
+	</div>
+</div>
+<!-- 修改字典归属窗口 -->
+<div id="UpdDicWin" style="padding:0px 1px;display:none;">   
+	<div style="padding:8px;">
+		<div  style="margin:12px 10px;">
+			<label style="margin:0px 10px 0px 50px;">字典</label><input style="width:155px;" id="dicDesc" class="hisui-combobox" />
+		</div>
+		<div  style="margin:12px 10px;">
+			<label style="margin:0px 10px 0px 50px;">数据</label><input style="width:155px;" id="dicData" class="hisui-combobox" />
+    	</div>
+    	<div  style="margin:12px 10px;">
+			<label style="margin:0px 10px 0px 50px;">属性</label><input id="dicprop" class="textbox hisui-combotree" />
+    	</div>
+    </div>
+    <div style="padding:2px;">
+    	<a style="margin-left:67px;" href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="saveDiction()">保存</a>
+		<a style="margin-left:42px;" href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="closeDicWin()">取消</a>
+    </div>
+</div>
+</body>
+</html>

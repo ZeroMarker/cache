@@ -1,0 +1,366 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<script src="../scripts/websys.js"></script>
+	<HISUI></HISUI>
+	<server>
+	d ##Class(websys.Component).GetComponentMessages(.t,"websys.Component.CustomiseLayout")
+	s %request.Data("SSUser",1)=$g(t("SSUser"),"User"),%request.Data("SSGroup",1)=$g(t("SSGroup"),"Group")
+	s %request.Data("CTHospital",1)=$g(t("CTHospital"),"Hospital"),%request.Data("PACTrust",1)=$g(t("PACTrust"),"Trust")
+	s %request.Data("SITE",1)=$g(t("SITE"),"Site"),%request.Data("SYS",1)=$g(t("SYS"),"System"),%request.Data("NONE",1)=$g(t("NONE"),"NONE")
+	s %request.Data("REGION",1)=$g(t("REGION"),"Region"),%request.Data("CTLoc",1)="科室"
+	Set prefid=$g(%request.Data("PREFID",1),0)  /*0-当前用户 , '0--管理员可修改不同人*/
+	Set hasPrefer=0
+	set context=$g(%request.Data("CONTEXT",1))
+	Set pageName=$g(%request.Data("PAGENAME",1))
+	If (pageName="") Set pageName=%request.Data("COMPName",1)
+	Set columnsLb = ""
+	// 定义列存储
+	Set cmap = $lb("code","name","showFormat","colWidth","colFontSize","isHidden","horAlign")
+	// 取默认定义
+	if ($p(context,"K",2,999)'="") { ;for when sites sillily save lookup columns without context
+		set rs=##Class(%Library.ResultSet).%New($p(context,"K",2,999))
+		set rscols=rs.GetColumnCount()
+		for j=1:1:rscols {
+			Set $list(columnsLb,j)=$lb(rs.GetColumnName(j),rs.GetColumnHeader(j),"@","","",0,"")
+		}
+		do rs.Close()
+		Set rs=""
+	}
+	//--完成默认
+	S seUserId = $g(%session.Data("LOGON.USERID")),seGroupId=$g(%session.Data("LOGON.GROUPID"))
+	S seHospId = $g(%session.Data("LOGON.HOSPID")),seSiteCode=$g(%session.Data("LOGON.SITECODE"))
+	S seTrustId = $g(%session.Data("LOGON.TRUSTID")),seRegion=$g(%session.Data("LOGON.REGION"))
+	s seLodId = $g(%session.Data("LOGON.CTLOCID"))
+	s uSet=##Class(websys.Preferences).GetDataExLE(seUserId,seGroupId,seHospId,seSiteCode,context,"PRTCOLUMNS",pageName,.app,.appid,.activecontext,seTrustId,seRegion,seLodId)
+	i app="User.SSUser" {
+		i 'prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("SSUser",1)_" ("_$g(%session.Data("LOGON.USERCODE"))_") ",appid=seUserId
+		i prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("SSUser",1)_" ("_$lg(##Class(web.SSUser).GetCodeDescriptionFromId(appid),3)_") " ;_context
+		s %request.Data("SaveAs",1)=%request.Data("DISPLAYCONTEXT",1),%request.Data("HSAVEAS",1)="U"
+	}
+	i app="User.CTLoc" {
+		i 'prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("CTLoc",1)_" ("_$g(%session.Data("LOGON.CTLOCDESC"))_") ",appid=seLodId
+		i prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("CTLoc",1)_" ("_$lg(##Class(web.SSGroup).GetCodeDescriptionFromId(appid),1)_") " ;_context
+		s %request.Data("SaveAs",1)=%request.Data("DISPLAYCONTEXT",1),%request.Data("HSAVEAS",1)="L"
+	}
+	i app="User.SSGroup" {
+		i 'prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("SSGroup",1)_" ("_$g(%session.Data("LOGON.GROUPDESC"))_") ",appid=seGroupId
+		i prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("SSGroup",1)_" ("_$lg(##Class(web.SSGroup).GetCodeDescriptionFromId(appid),1)_") " ;_context
+		s %request.Data("SaveAs",1)=%request.Data("DISPLAYCONTEXT",1),%request.Data("HSAVEAS",1)="G"
+	}
+	i app="User.CTHospital" {
+		i 'prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("CTHospital",1)_" ("_$g(%session.Data("LOGON.HOSPDESC"))_") ",appid=seHospId
+		i prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("CTHospital",1)_" ("_$lg(##Class(web.CTHospital).GetCodeDescriptionFromId(appid),1)_") " ;_context
+		s %request.Data("SaveAs",1)=%request.Data("DISPLAYCONTEXT",1),%request.Data("HSAVEAS",1)="H"
+	}
+	i app="User.PACTrust" {
+		i 'prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("PACTrust",1)_" ("_$g(%session.Data("LOGON.TRUSTDESC"))_") ",appid=seTrustId
+		i prefid s %request.Data("DISPLAYCONTEXT",1)=%request.Data("PACTrust",1)_" ("_$lg(##Class(web.PACTrust).GetCodeDescriptionFromId(appid),1)_") " ;_context
+		s %request.Data("SaveAs",1)=%request.Data("DISPLAYCONTEXT",1),%request.Data("HSAVEAS",1)="R"
+	}
+	i app="SITE" {
+		s %request.Data("DISPLAYCONTEXT",1)=%request.Data("SITE",1)_" ("_$g(%session.Data("LOGON.SITECODE"))_") ",appid=seSiteCode
+		s %request.Data("SaveAs",1)=%request.Data("DISPLAYCONTEXT",1),%request.Data("HSAVEAS",1)="T"
+	}
+	i app="REGION" {
+		s %request.Data("DISPLAYCONTEXT",1)=%request.Data("REGION",1)_" ("_$g(%session.Data("LOGON.REGION"))_") ",appid=seRegion
+		s %request.Data("SaveAs",1)=%request.Data("DISPLAYCONTEXT",1),%request.Data("HSAVEAS",1)="N"
+	}
+	i '$d(%request.Data("SaveAs",1)) {  //app="SYS" {
+		s %request.Data("DISPLAYCONTEXT",1)=%request.Data("SYS",1)_" ("_$g(%session.Data("LOGON.SITECODE"))_") " , appid="SYS"
+		s %request.Data("SaveAs",1)=%request.Data("SITE",1)_" ("_$g(%session.Data("LOGON.SITECODE"))_")"_" "_activecontext,%request.Data("HSAVEAS",1)="T"
+	}
+	// 初始化配置值（不包含列信息）
+	Set KeyList = $lb("headerCfg","footerCfg","sortColCfg","sortOrdCfg","showLineCfg","LandscapeOrientation"
+	,"lm","rm","tm","bm","ShrinkToFit","sortColCfg2","sortOrdCfg2","PrintTitleRows","StopRunInNotRecord")
+	for j=1:1:$ll(KeyList) Set CfgPList($lg(KeyList,j)) = ""
+	Set CfgPList("LandscapeOrientation") = 1
+	Set CfgPList("StopRunInNotRecord") = 0
+	if (uSet'=""){
+		 // cell1_$c(2)_cell2...$c(4)第二列定义$c(4)第三列定义...$c(5)2头内容$c(5)3尾内容$c(5)4排序列$c(5)5顺序$c(5)6显示线条$c(5)7打印方向
+		 // _$c(5)_8左边距_$c5_9右边距_$c5_10上边距_$c5_11下边距_C5_12文本内容自适应_C5..._16在无数据时不运行
+		 Set hasPrefer=1
+		 Set uSetLb = $lfs(uSet,$c(5))
+		 Set preColumnsLb = $lfs($lg(uSetLb,1),$c(4)) // $lfs(uSet,$c(4))
+		 for i=1:1:$ll(preColumnsLb) Set $list(preColumnsLb,i)=$lfs($lg(preColumnsLb,i),$c(2))
+		 Set columnsLb = preColumnsLb
+		 for j=1:1:$ll(KeyList) Set CfgPList($lg(KeyList,j)) = $lg(uSetLb,j+1)
+		 Set CfgPList("LandscapeOrientation") = $lg(uSetLb,7,1) //打印方向应该默认成1
+	}
+	Set GroupId = %session.Data("LOGON.GROUPID")
+	set customSaveMenuId = ##class(websys.Menu).GetIdFromCodeOrDescription("System.Component.CustomiseSave")
+	Set customSaveMenuJson = ##class(websys.Menu).Json(customSaveMenuId,GroupId)
+	W "<script type=""text/javascript"">"
+	Set JsonObj = ##class(ext.util.JsonObject).%New()
+	W "var queryJson = ["
+	For i=1:1:$ll(columnsLb){
+		Set item = $lg(columnsLb,i)
+		for j=1:1:$ll(cmap){
+			Do JsonObj.Put($lg(cmap,j),$lg(item,j))
+		}
+		if i'=1 W ","
+		W JsonObj.Json()
+		Do JsonObj.Clear()
+	}
+	w "];",!
+	w "var customSaveMenuJson="_customSaveMenuJson_";",!
+	w "var cmapArr = ["""_$lts(cmap,""",""")_"""];",!
+	for j=1:1:$ll(KeyList){
+		 W "var "_$lg(KeyList,j)_" = """_$zcvt(CfgPList($lg(KeyList,j)),"O","JS")_""";",!
+	 }
+	w "</script>"
+</server>
+<style>
+label.titlelink{
+	cursor: pointer;
+    color: blue;
+    border-bottom: 1px solid;
+}
+.r-label{
+	padding:5px 10px;
+}
+label.i-key{
+	color:#666666;
+}
+input.iw300,select.iw300{
+	width:300px;
+	font-size:10px;
+}
+input.iw295,select.iw295{
+	width:295px;
+	font-size:10px;
+}
+.ml5{
+	margin-left:5px;
+}
+.mytip{
+	width: 16px;
+    display: inline-block;
+    text-decoration: none;
+}
+.layout>.layout-panel>.panel-header{
+	border-top-right-radius: 4px;
+    border-top-left-radius: 4px;
+}
+.layout>.layout-panel>.layout-body{
+
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+</style>
+</head>
+<body style="padding:10px 10px 0 10px;box-sizing: border-box;">
+	<div class="hisui-layout" data-options='fit:true'>
+	<div data-options="region:'north',border:true,split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-write-order',title:'导出或打印信息设置'" style="height:140px;overflow:hidden;">
+		 <table>
+		 	<tr>
+			 	<td class="r-label"><label class="i-key">保存到:</label></td>
+			 	<td><label id="saveastype">#(%request.Data("SaveAs",1))#</label></td>
+			 	<td style="width:300px;"></td>
+			 	
+		 	</tr>
+		 	<tr>
+			 	<td class="r-label"><label class="i-key">上下文内容:</label></td>
+			 	<td>#(context)#</td>
+			 	<td></td>
+			 	<td>
+				 	<a href="javascript:void(0)" id="switchMenu" class="menubutton-blue hisui-menubutton" data-options="menu:'#smenu'">切换保存</a>
+				 	<div id="smenu">
+				 	<server>
+			 		k MyTempData
+					Set var="MyTempData"
+					do decode^json(customSaveMenuJson,var,"","")
+					for i=0:1:$O(MyTempData(""),-1){
+						w "<div onclick="""_$G(MyTempData(i,"link"))_""">"_$G(MyTempData(i,"text"))_"</div>"
+					}
+					</server>
+					 </div>
+				</td>
+				<td style="width:16px;"></td>
+				<td>
+					<a href="#" id="saveBtn" class='hisui-linkbutton' data-options="iconCls:'icon-w-save'">保存</a>
+				</td>
+				<td style="width:16px;">
+				</td>
+				<td>
+					<a href="#" id="delBtn" class='hisui-linkbutton' data-options="iconCls:'icon-w-close'">删除</a>
+				</td>
+		 	</tr>
+		 	<tr>
+		 		<td class="r-label"><label class="i-key">界页代码:</label></td>
+		 		<td>#(pageName)#</td>
+		 		<td></td>
+		 		<td></td>
+		 		<td></td>
+		 	</tr>
+		 </table>
+	</div>
+
+	<div data-options="region:'center',split:true,headerCls:'panel-header-gray',collapsible:false,border:true,iconCls:'icon-write-order',title:'列定义'">
+		<table id="columnsTbl"></table>
+	</div>
+	<div data-options="region:'east',split:true,headerCls:'panel-header-gray',collapsible:false,border:true,iconCls:'icon-paper',title:'界面配置'" style="width:470px;">
+		<div style="width:300px;margin:0 auto;">
+		</div>
+		<table>
+			<tr style="height:40px;">
+			 	<td class="r-label" style="width:100px;">
+			 		<label>标题内容</label>
+			 		<a href="#" title='此内容会在表格第一行显示。可写入m表达式，如: $p(^CT("HOSP",%session.Data("LOGON.HOSPID")),"^",2)_"日志列表"' class="hisui-tooltip icon-tip mytip" data-options="position:'bottom',tipWidth:400">&nbsp;</a>
+			 	</td>
+			 	<td>
+			 		<div>
+			 		<input class="textbox iw295" id="headerCfg" placeholder='"某医院登录日志列表"' >
+			 		</div>
+			 	</td>
+			 	<td>
+			 	</td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label" style="width:100px;">
+		 			<label>落款内容</label>
+		 			<a href="#" title='此内容会在表格最后一行显示。可写入m表达式，如："制表日期："_$zd(+$h,3)_"  制表人："_%session.Data("LOGON.USERNAME")' class="hisui-tooltip icon-tip mytip" data-options="position:'bottom',tipWidth:400">&nbsp;</a>
+		 		</td>
+			 	<td>
+			 		<div>
+			 		<input id="footerCfg" class="textbox iw295" placeholder='"制表日期："_$zd(+$h,3)_" 制表人："'>
+			 		</div>
+			 	</td>
+			 	<td>
+			 	</td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label"><label>第一排序列</label></td>
+		 		<td><input id="sortColCb" class='iw300'></td>
+		 		<td></td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label"><label>顺序</label></td>
+		 		<td>
+		 		<select id="sortColOrderCb" class="hisui-combobox iw300" data-options="editable:false,panelHeight:'auto'">
+		 		<option value="1">顺序</option>
+		 		<option value="2">倒序</option>
+		 		</select></td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label"><label>第二排序列</label></td>
+		 		<td><input id="sortColCb2" class='iw300'></td>
+		 		<td></td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label"><label>顺序</label></td>
+		 		<td>
+		 		<select id="sortColOrderCb2" class="hisui-combobox iw300" data-options="editable:false,panelHeight:'auto'">
+		 		<option value="1">顺序</option>
+		 		<option value="2">倒序</option>
+		 		</select></td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label" style="width:60px;"><label>显示线条</label></td>
+			 	<td>
+			 		<select id="showLineCb" class="hisui-combobox iw300" data-options="editable:false,panelHeight:'auto'">
+			 		<option value="N">不显示</option>
+			 		<option value="Y">显示</option>
+			 		</select>
+			 	</td>
+			 	<td>
+			 	</td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label" style="width:60px;"><label>打印方向</label></td>
+			 	<td>
+			 		<select id="LandscapeOrientationCb" class="hisui-combobox iw300" data-options="editable:false,panelHeight:'auto'">
+			 		<option value="1">纵向</option>
+			 		<option value="2">横向</option>
+			 		</select>
+			 	</td>
+			 	<td>
+			 	</td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label" style="width:60px;"><label>字体大小自适应</label></td>
+			 	<td>
+			 		<select id="ShrinkToFit" class="hisui-combobox iw300" data-options="editable:false,panelHeight:'auto'">
+			 		<option value="0">否</option>
+			 		<option value="1">是</option>
+			 		</select>
+			 	</td>
+			 	<td>
+			 	</td>
+		 	</tr>
+		 	<tr style="height:40px;">
+		 		<td class="r-label" style="width:60px;">
+		 			<label>固定行</label>
+		 			<a href="#" title="如须要固定1,2两行，可配置成$1:$2" class="hisui-tooltip icon-tip mytip" data-options="position:'top'">&nbsp;</a>
+		 		</td>
+		 		<!--,showEvent:'click',hideEvent:'dblclick'-->
+			 	<td>
+			 		<input id="PrintTitleRows" class="textbox iw295">
+			 	</td>
+			 	<td>
+			 	</td>
+		 	</tr>
+		  	<tr style="height:40px;">
+		 		<td class="r-label" style="width:60px;">
+		 			<label>无数据时不导出</label>
+		 		</td>
+			 	<td>
+			 		<select id="StopRunInNotRecord" class="hisui-combobox iw300" data-options="editable:false,panelHeight:'auto'">
+			 		<option value="0">导出</option>
+			 		<option value="1">不导出</option>
+			 		</select>
+			 	</td>
+			 	<td>
+			 	</td>
+		 	</tr>
+		 	<tr>
+		 		<td></td>
+			 	<td colspan=3>
+			 		<div style='width:250px'>
+			 			<div style="margin:0px auto;width:140px;"><div><label class='r-label'>上边距</label><input id="topMargin" class="textbox" style="width:30px;"><label class='ml5'>cm</label></div></div>
+			 		</div>
+			 	</td>
+			</tr>
+		 	<tr>
+			 	<td class='r-label'><label>左边距</label></td>
+			 	<td colspan=3>
+			 		<input id="leftMargin" class="textbox" style="width:30px;"><label class='ml5'>cm</label>
+			 		<div style='float:right;width:140px'>
+			 			<div style="width:140px;"><div><label class='r-label'>右边距</label><input id="rightMargin" class="textbox" style="width:30px;"><label class='ml5'>cm</label></div></div>
+			 		</div>
+			 	</td>
+			 		
+			 	</td>
+			<tr>
+				<td></td>
+			 	<td colspan=3>
+			 		<div style='width:250px'>
+			 			<div style="margin:0 auto;width:140px;"><div><label class='r-label'>下边距</label><input id="bottomMargin" class="textbox" style="width:30px;"><label class='ml5'>cm</label></div></div>
+			 		</div>
+			 	</td>
+		 	</tr>
+		 	
+		 </table>
+	</div>
+	</div>
+	<script type ="text/javascript">
+	var context = "#(context)#",prefid="#(prefid)#",pageName="#(pageName)#";
+	var saveAsTypeCode = "#($g(%request.Data("HSAVEAS",1)))#";
+	var localCode=[];
+	localCode["U"]={objectType:"User.SSUser",objectReference:"#(seUserId)#",desc:"#(%request.Data("SSUser",1))# (#($zcvt($g(%session.Data("LOGON.USERCODE")),"O","JS"))#)"}
+	localCode["L"]={objectType:"User.CTLoc",objectReference:"#(seLodId)#",desc:"#(%request.Data("CTLoc",1))#(#($zcvt($g(%session.Data("LOGON.CTLOCDESC")),"O","JS"))#)"}
+	localCode["G"]={objectType:"User.SSGroup",objectReference:"#(seGroupId)#",desc:"#(%request.Data("SSGroup",1))# (#($zcvt($g(%session.Data("LOGON.GROUPDESC")),"O","JS"))#)"};
+	localCode["N"]={objectType:"User.Region",objectReference:"#(seRegion)#",desc:"#(%request.Data("REGION",1))# (#($g(%session.Data("LOGON.REGION")))#)"}
+	localCode["H"]={objectType:"User.CTHospital",objectReference:"#(seHospId)#",desc:"#(%request.Data("CTHospital",1))# (#($zcvt($g(%session.Data("LOGON.HOSPDESC")),"O","JS"))#)"}
+	localCode["R"]={objectType:"User.PACTrust",objectReference:"#(seTrustId)#",desc:"#(%request.Data("PACTrust",1))# (#($zcvt($g(%session.Data("LOGON.TRUSTDESC")),"O","JS"))#)"}
+	localCode["T"]={objectType:"SITE",objectReference:"#(seSiteCode)#",desc:"#(%request.Data("SITE",1))# (#($g(%session.Data("LOGON.SITECODE")))#)"}
+	localCode["S"]={objectType:"SYS",objectReference:"#(seSiteCode)#",desc:"#(%request.Data("SYS",1))# (#($g(%session.Data("LOGON.SITECODE")))#)"}
+	</script>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/websys.query.customisecolumn.js"></script>
+</body>
+</html>

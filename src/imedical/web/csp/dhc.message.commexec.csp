@@ -1,0 +1,64 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<title>	消息处理 </title>
+<script src="../scripts/websys.js" type="text/javascript"></script>
+<HISUI />
+<script src="../scripts/dhcmessage.common.js" type="text/javascript"></script>
+<script type='text/javascript' src='../scripts/websys.jquery.js'></script>
+<script type='text/javascript' src='../scripts/websys.encrypt.js'></script>
+<style>
+	.r-label{
+		padding:5px 10px 5px 0;
+		text-align:right;
+	}
+</style>
+<server>
+	s CheckPwd=%request.Get("CheckPwd")
+
+</server>
+</head>
+
+<body>
+	<div style="width:350px;margin:10px auto;">
+		<table style="width:100%;line-height:30px;">
+			<tr>
+				<td class="r-label">备注:</td>
+				<td><textarea id="execNote" class="textbox" style="width:200px;height:50px;line-height:25px;overflow:auto;" ></textarea></td>
+			</tr>
+			
+			<csp:if Condition=CheckPwd=1>
+				<tr>
+					<td class="r-label">处理人工号:</td>
+					<td><input type="text" class="textbox" style="width:200px;height:25px;line-height:25px;" id="execUserCode" value="#(%session.Get("LOGON.USERCODE"))#"/></td>
+				</tr>
+				<tr>
+					<td class="r-label">密码:</td>
+					<td><input type="password" class="textbox" style="width:200px;height:25px;line-height:25px;" id="execUserPwd"/></td>
+				</tr>
+			<csp:else>
+				<tr>
+					<td class="r-label">处理人工号:</td>
+					<td><input type="text" class="textbox" style="width:200px;height:25px;line-height:25px;" id="execUserCode" readonly="readonly" value="#(%session.Get("LOGON.USERCODE"))#"/></td>
+				</tr>
+			</csp:if>
+			
+			<tr>
+				<td colspan=2 style="text-align:center;">
+					<a class="hisui-linkbutton" href="javascript:void(0);" style="margin-right:10px;" data-options="stopAllEventOnDisabled:true,disabled:true" id="btn-ok">处理</a>
+					<a class="hisui-linkbutton" href="javascript:void(0);" data-options="stopAllEventOnDisabled:true" id="btn-close">关闭</a>
+				</td>
+			</tr>
+		</table>	
+	</div>
+	<script type='text/javascript'>
+		var GV={};
+		GV.DetailsId="#(%request.Get("MsgDetailsId"))#";
+		GV.UserId="#(%session.Get("LOGON.USERID"))#";
+	</script>
+	<script type='text/javascript' src='../scripts/dhc.message.commexec.js'></script>
+</body>
+</html>

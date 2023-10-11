@@ -1,0 +1,46 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCMA:HEAD></DHCMA:HEAD>
+	</head>
+	<style>
+		#winInHosDetail .datagrid-wrap {
+			border:1px solid #ccc;
+		}
+		</style>
+	<body>
+	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+	    <script type="text/javascript" src="../scripts/DHCMA/CPW/Export/datagrid-export.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/CP/InHosQuery/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/CP/InHosQuery/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/Util/xlxs/grid2excel.js"></script>		
+		<script type="text/javascript" src="../scripts/DHCMA/CPW/Interface/datagrid-groupview.js"></script>
+	    <script language="Cache" RUNAT="SERVER">
+		    set menuCode="CPWCPInHosQuery"
+			set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+			set groupId=$g(%session.Data("LOGON.GROUPID"))
+			set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"CPWManage",groupId)
+	   </script>
+	   
+	    <script language="javascript" type="text/javascript">    
+	        
+			$(document).ready(function(){
+				var url = "../scripts/DHCMA/CPW/CP/InHosQuery/Layout.html"
+        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
+   					if(statusTxt=="success") {
+	   					InitInHosQueryWin();
+   					} else if (statusTxt=="error") {
+	   					alert("Error: "+xhr.status+": "+xhr.statusText);
+	   				}
+	        	});
+			});
+		</script>
+	</body>
+</html>

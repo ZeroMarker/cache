@@ -1,0 +1,92 @@
+﻿<HTML>
+<HEAD>
+    <TITLE>申请权限页面</TITLE>
+    <HISUI/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/pasthistory.css"/>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s PapmiNo = ""
+		s currPatient = ""
+		if (patientID'="")
+		{
+			s papmiNo = ##Class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiNo(patientID)
+			s currPatient = ##class(EMRservice.HISInterface.PatientInfoAssist).Name(patientID)
+		}
+		s userID = %session.Get("LOGON.USERID")
+		s currAuthor=""
+		if (userID'="")
+		{
+			s currAuthor = ##class(EMRmeta.PowerUser).GetUserName(userID)
+		}
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s userLocDes = %session.Get("LOGON.CTLOCDESC")
+        s userSSGroupID = %session.Get("LOGON.GROUPID")	
+	</script>
+	<script type="text/javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var papmiNo = '#(papmiNo)#';
+		var currPatient = '#(currPatient)#';
+		var userID = '#(userID)#';
+		var currAuthor = '#(currAuthor)#';
+		var userLocID = '#(userLocID)#';
+		var userLocDes = '#(userLocDes)#';
+        var userSSGroupID = '#(userSSGroupID)#';
+	</script>
+</HEAD>
+
+<BODY class="hisui-layout" data-options="fit:true">
+	<div class="hisui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;padding:5px;">
+        <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+		
+            <div id="west" class="hisui-panel" data-options="region:'west',border:false,split:true" style="width:650px;height:500px;">
+                <div id="typeTab" class="hisui-tabs tabs-gray" data-options="fit:true,border:true,isBrandTabs:true" style=""> 
+					<div title="既往病史" style="padding:0px;">
+					</div>
+					<div title="按就诊日期显示" id="typeAdmDate" style="padding:0px;">
+						<div class="hisui-panel" id="pasthistoryByDate" data-options="fit:true,border:false" style="overflow:hidden;">
+						</div> 
+						
+					</div>   
+					<div title="按疾病类型显示" id="typeDiagnose" style="padding:0px;">
+						<div class="hisui-layout" data-options="fit:true,border:false" style="overflow:auto;">
+							<div data-options="region:'center',border:false" class='navcategory'>
+								<ol class="categorytree" id="ulcategory"></ol> 
+							</div>
+						
+						
+							<!--div class="hisui-panel" id="typeDiagnosePanel" data-options="region:'center',fit:true,border:false" style="overflow:auto;">
+								<div class="hisui-panel" id="diagPanel1" title="高血压" style="width:626px;height:400px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:true,collapsed:false"></div>
+								<div class="hisui-panel" id="diagPanel2" title="风寒" style="width:626px;height:400px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:true,collapsed:false"></div>
+							</div-->
+						</div>
+					</div>
+				</div> 
+            </div>	
+            
+            <div id="center" class="hisui-panel" data-options="region:'center',border:false,split:true" style="overflow:auto;">
+                <div class="hisui-panel" title="本次就诊既往史编辑" data-options="iconCls:'icon-write-order',border:false,collapsible:false" style="width:463px;height:250px;">
+					<textarea class="textbox" id="textArea" placeholder="在此书写本次既往史内容" data-options="border:false" style="width:456px;height:211px;padding-top:2px;"></textarea>   
+                </div>
+				
+				<div class="hisui-panel" title="" data-options="border:false" style="width:463px;height:2px;"></div>
+				
+				<div class="hisui-panel" id="AllergyEnterPanel" title="双击下面输入框录入过敏信息" data-options="iconCls:'icon-write-order',border:false,collapsible:false" style="width:463px;height:142px;">
+					<textarea class="textbox" id="textAreaAllergy" placeholder="双击录入过敏信息" data-options="border:false" style="width:456px;height:103px;padding-top:2px;" readonly ondblclick="openAllergyWin()"></textarea>
+				</div>
+	
+				<div class="hisui-panel" data-options="border:false" align="center" style="width:456px;height:60px;padding-top:15px;">
+					<a href="#" class="hisui-linkbutton" id="btnCommit" style="background:#21BA45;" onClick="insertToEMR()">插入到病历中</a>
+				</div>
+            </div>
+            
+        </div>
+    </div>
+	<script type="text/javascript" src="../scripts/emr/js/ip.pasthistory.js"></script>
+</BODY>
+</HTML>

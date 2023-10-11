@@ -1,10 +1,17 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+</csp:method>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;">
+<TRAK:HEAD></TRAK:HEAD> 
+<EXTHEALTH:EXT321/>
 <EASYUI:CLINICAL/>	
 	<script type="text/javascript" src="../scripts/dhcpha/jQuery/datagrid-detailview.js"></script>
 	<script type="text/javascript" src="../scripts/dhcpha/jQuery/easyui-lang-zh_CN.js" charset="utf-8"></script>
-	
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+    <script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
 	    
 	<style type="text/css">
 	.patInfo{
@@ -53,26 +60,26 @@
 			<div id="patInfo" class="patInfo"></div>
 		</div>
 		<!--用药信息-->
-		<div data-options="region:'center',title:'医嘱列表'" >
+		<div data-options="region:'center',title:'#(..Get("医嘱列表"))#'" >
 			<div id="medInfo" toolbar="#tb"></div>
 		</div>
 		<!--建议填写-->
-		<div data-options="region:'east',title:'建议信息'" style="width:870px;">
+		<div data-options="region:'east',title:'#(..Get("建议信息"))#'" style="width:580px;">
 			<div id="mainpanel" class="easyui-layout" fit="true">
-				<div data-options="region:'north',title:''" style="height:350px; margin-top:10px;">
+				<div data-options="region:'center',title:''">
 					<div id="Adivises"></div>
 				</div>
-				<div data-options="region:'center'" style="background:E8F1FF;border: 2px solid #95B8E7;">
+				<div data-options="region:'south'" style="background:E8F1FF;border: 0px solid #95B8E7;height:150px;">
 					<div>
 							<div id="bt" style="margin-left:5px;margin-top:15px;background:E8F1FF;">
-							<a href="#" id="Main" class="easyui-linkbutton" iconCls="icon-ok">模板维护</a>
-							<a href="#" id="Btn_Lab" class="easyui-linkbutton" iconCls="icon-ok">引用检验</a>
-							<a href="#" id="Quote" class="easyui-linkbutton" iconCls="icon-ok">引用建议</a>
-							<a href="#" id="Sure" class="easyui-linkbutton" iconCls="icon-ok">提交建议</a>
-							<a href="#" id="Del" class="easyui-linkbutton" iconCls="icon-cancel">删除建议</a>
+							<a href="#" id="Main" class="easyui-linkbutton" iconCls="icon-ok">#(..Get("模板维护"))#</a>
+							<a href="#" id="Btn_Lab" class="easyui-linkbutton" iconCls="icon-ok">#(..Get("引用检验"))#</a>
+							<a href="#" id="Quote" class="easyui-linkbutton" iconCls="icon-ok">#(..Get("引用建议"))#</a>
+							<a href="#" id="Sure" class="easyui-linkbutton" iconCls="icon-ok">#(..Get("提交建议"))#</a>
+							<a href="#" id="Del" class="easyui-linkbutton" iconCls="icon-cancel">#(..Get("删除建议"))#</a>
 						</div>
 					</div>
-					<textarea id="textarea" style="width:810px;height:100px;font-size:14px;margin-left:5px;margin-top:10px;border: 1px solid #95B8E7;">请输入建议信息...</textarea>
+					<textarea id="textarea" style="width:810px;height:100px;font-size:14px;margin-left:5px;margin-top:10px;border: 1px solid #95B8E7;">#(..Get("请输入建议信息..."))#</textarea>
 					<span id="ordstr" style="display:none"></span>
 					<span id="AdvID" style="display:none"></span>
 				</div>
@@ -86,18 +93,23 @@
 	<div id="medAdvTempWin"></div>
 	<!--药品列表按钮-->
 	<div id="tb" style="padding:5px;height:auto">
-		<a href="#" class="easyui-linkbutton" iconCls="icon-ok" plain="true" onclick="javascript:addOrdInfo()">添加药品</a>
+		<a href="#" class="easyui-linkbutton" iconCls="icon-ok" plain="true" onclick="javascript:addOrdInfo()">#(..Get("添加药品"))#</a>
 		<!-- <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('S','')">长期医嘱</a>
 		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('NORM','')">临时医嘱</a>
 		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('OUT','')">出院带药</a>
 		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('OTHER','')">其他</a> -->
-		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('','AppType')" style= "display:none">模块筛选</a>
-		<input name="ordFiter" type="radio" id="chk-a" onclick="javascript:LoadPatMedInfo('','')" value=""/><lable for="chk-a">全部</lable>
-		<input name="ordFiter" type="radio" id="chk-s" onclick="javascript:LoadPatMedInfo('','')" value="S"/><lable for="chk-s">长期医嘱</lable>
-		<input name="ordFiter" type="radio" id="chk-norm" onclick="javascript:LoadPatMedInfo('','')" value="NORM"/><lable for="chk-norm">临时医嘱</lable>
-		<input name="ordFiter" type="radio" id="chk-out" onclick="javascript:LoadPatMedInfo('','')" value="OUT"/><lable for="chk-out">出院带药</lable>
-		<input name="ordFiter" type="radio" id="chk-ather" onclick="javascript:LoadPatMedInfo('','')" value="OTHER"/><lable for="chk-ather">其他</lable>
-		<input type="checkbox" id="chk-all" onclick="javascript:LoadPatMedInfo('','')"/><lable for="chk-all">包含已停</lable>
+		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:LoadPatMedInfo('','AppType')" style= "display:none">#(..Get("模块筛选"))#</a>
+		<input name="ordFiter" type="radio" id="chk-a" checked="true" onclick="javascript:LoadPatMedInfo('','')" value=""/><lable for="chk-a">#(..Get("全部"))#</lable>
+		<input name="ordFiter" type="radio" id="chk-s" onclick="javascript:LoadPatMedInfo('','')" value="S"/><lable for="chk-s">#(..Get("长期医嘱"))#</lable>
+		<input name="ordFiter" type="radio" id="chk-norm" onclick="javascript:LoadPatMedInfo('','')" value="NORM"/><lable for="chk-norm">#(..Get("临时医嘱"))#</lable>
+		<input name="ordFiter" type="radio" id="chk-out" onclick="javascript:LoadPatMedInfo('','')" value="OUT"/><lable for="chk-out">#(..Get("出院带药"))#</lable>
+		<input name="ordFiter" type="radio" id="chk-ather" onclick="javascript:LoadPatMedInfo('','')" value="OTHER"/><lable for="chk-ather">#(..Get("其他"))#</lable>
+		<input type="checkbox" id="chk-all" onclick="javascript:LoadPatMedInfo('','')"/><lable for="chk-all">#(..Get("包含已停"))#</lable>
+		<a href="#" class="easyui-linkbutton" iconCls="icon-ok" plain="true" onclick="javascript:PassOrd()">#(..Get("审核"))#</a>
 	</div>
 </body>
 </html>
+
+<!-- print common -->
+<server>d ##class(PHA.COM.Print).LoadCommon()</server>
+<script type="text/javascript" src="../scripts/dhcpha/clinical/cpwprintcom.js"></script>

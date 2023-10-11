@@ -1,0 +1,142 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/css/base.css">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			border: none;
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+		}
+		input {
+			border: none;
+			border-bottom: black solid 1px;
+			font-size: 95%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<div id="Form">
+		<script language="Cache" RUNAT="SERVER">
+		    Set ReportID=$g(%request.Data("ReportID",1))
+			Set ReportInfo=##Class(DHCMed.EPDService.LodopReportInfo).GetHBVReportInfo(ReportID)
+		   	Set PatientName 	= $p(ReportInfo,"^",1)
+		   	Set PatientSex 		= $p(ReportInfo,"^",2)
+		   	Set Birthday 		= $p(ReportInfo,"^",3)
+		   	Set HBVHBsAgPositive= $p(ReportInfo,"^",4)
+		   	Set HBVDiluteList 	= $p(ReportInfo,"^",5)
+		   	Set HBVALT 			= $p(ReportInfo,"^",6)
+		   	Set HBVSymbolDate 	= $p(ReportInfo,"^",7)
+		   	Set HBVLiverResult 	= $p(ReportInfo,"^",8)
+		   	Set HBVSerumList 	= $p(ReportInfo,"^",9)
+		   	Set HBVSymbol 		= $p(ReportInfo,"^",10)
+		   	Set HBVUnknown 		= $p(ReportInfo,"^",11)
+		   	Set Contact 		= $p(ReportInfo,"^",12)
+		   	// 字典列表
+		   	Set HBVDicData = ##Class(DHCMed.EPDService.LodopReportInfo).GetHBVRepDicList()
+		   	Set HBVListOne 		= $Lg(HBVDicData,1)
+		   	Set HBVListTwo 		= $Lg(HBVDicData,2)
+		   	Set HBVListThr 		= $Lg(HBVDicData,3)
+		   	Set HBVListFor	 	= $Lg(HBVDicData,4)
+		 	Set EpidemicContactList	 	= $Lg(HBVDicData,5)
+		</script>
+		<div style="font-size: 120%;font-weight: bold;text-align: center;">
+				<span>乙肝病例附卡</span>
+		</div>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td style="width:30%">
+					患者姓名:
+					<input type='text' style='border:none;' value=#(PatientName)#>
+				</td>
+				<td style="width:30%">
+					性别:
+					<input type='text' style='border:none;' value=#(PatientSex)#>
+				</td>
+				<td style="width:30%">
+					<script language="Cache" RUNAT="SERVER">
+						Set BirthdayYear=$p(Birthday,"-",1)
+						Set BirthdayMonth=$p(Birthday,"-",2)
+						Set BirthdayDay=$p(Birthday,"-",3)
+						Set Birthday = BirthdayYear_"年"_BirthdayMonth_"月"_BirthdayDay_"日"
+					</script>
+					出生日期:
+					<input type='text' style='border:none;' value=#(Birthday)#>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="padding-left:0.5em;padding-bottom:0.5em;">
+					一、HBsAg阳性时间:
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(HBVListOne))#>
+						<CSP:IF CONDITION="$Lg(HBVListOne,ZLInd)=HBVHBsAgPositive"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(HBVListOne,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4" style="padding-left:0.5em;padding-bottom:0.5em;">
+					二、首次出现乙肝症状和体征的时间:
+					<script language="Cache" RUNAT="SERVER">
+						Set HBVSymbolDateYear=$p(HBVSymbolDate,"-",1)
+						Set HBVSymbolDateMonth=$p(HBVSymbolDate,"-",2)
+					</script>
+					<input type='text' style='width:3em;border:none;border-bottom:black solid 1px' value=#(HBVSymbolDateYear)#>年
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1px' value=#(HBVSymbolDateMonth)#>月
+					<span><CSP:IF CONDITION="HBVSymbol=1"><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>无症状</span>
+					<span><CSP:IF CONDITION="HBVUnknown=1"><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>不详</span>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="padding-left:0.5em;padding-bottom:0.5em;">
+					三、本次ALT:
+					<input type='text' style='width:5em;border:none;border-bottom:black solid 1px' value=#(HBVALT)#>U/L
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="padding-left:0.5em;padding-bottom:0.5em;">
+					四、抗-HBc IgM:
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(HBVListThr))#>
+						<CSP:IF CONDITION="$Lg(HBVListThr,ZLInd)=HBVDiluteList"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(HBVListThr,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="padding-left:0.5em;padding-bottom:0.5em;">
+					五、肝组织穿刺检测结果:
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(HBVListTwo))#>
+						<CSP:IF CONDITION="$Lg(HBVListTwo,ZLInd)=HBVLiverResult"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(HBVListTwo,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="padding-left:0.5em;padding-bottom:0.5em;">
+					六、恢复期血清HBsAg阴转,抗HBs阳转:
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(HBVListFor))#>
+						<CSP:IF CONDITION="$Lg(HBVListFor,ZLInd)=HBVSerumList"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(HBVListFor,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="padding-left:0.5em;padding-bottom:0.5em;">
+					七、密切接触者是否有相同症状:
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EpidemicContactList))#>
+						<CSP:IF CONDITION="$Lg(EpidemicContactList,ZLInd)=Contact"><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EpidemicContactList,ZLInd))#
+					</CSP:LOOP>
+				</td>
+			</tr>
+		</table>
+	</div>	
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

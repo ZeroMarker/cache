@@ -1,0 +1,169 @@
+<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-layout" data-options="fit:true,border:false" style="width:100%;height:100%;"> 
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:135px;border-bottom:1px dashed #ccc;">
+		<table class="search-table" style="height:auto">
+			<csp:if condition='versionNewFlag="0"'>
+				<tr>
+					<td class="r-label">
+						<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+					</td>
+					<td>
+						<input id="_HospList"/>
+					</td>
+				</tr>
+			</csp:if>
+			<tr>
+				<td class="r-label">
+					<label for="SearchDesc">分类/护理问题</label>
+				</td>
+				<td>
+					<input class="textbox" id="SearchDesc" style="width:170px;" placeholder="请输入问题分类/护理问题"/>
+				</td>
+			</tr>
+			<tr>	
+				<td class="r-label">
+					<label for="IsNurAd">是否生成护嘱</label>
+				</td>
+				<td>
+					<input class="textbox" id="IsNurAd" style="width:120px;"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label for="status">状态</label>
+				</td>
+				<td>
+					<input class="textbox" id="status" style="width:120px;"/>
+				</td>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>  
+				</td>
+			</tr>
+		</table>
+    </div>
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false" style="height:'100%'"> 
+    	<table id="tabQuestionList"></table>
+    </div>
+</div>
+
+<!--增加/修改弹框-->
+
+<div id="QuestionEditWin" class="hisui-window" title="护理问题配置" style="width:345px;height:177px;" data-options="iconCls:'icon-w-batch-cfg',closed:true">   
+	<div id="quesion-layout" class="hisui-layout" data-options="fit:true,border:false">
+		 <div data-options="region:'north',split:false,title:'',border:false" style="height:252px;overflow:hidden;">
+    		<table class="search-table">
+				<tr id="QuestionCategoryTR">
+					<td class="r-label">
+						<label for="QuestionCategory" class="clsRequired">诊断分类</label>
+					</td>
+					<td>
+						<input id="QuestionCategory" class="hisui-combobox textbox" style="width:250px;"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label for="QuestionLevel" class="clsRequired">问题层级</label>
+					</td>
+					<td>
+						<input class="hisui-combobox textbox" id="QuestionLevel" style="width:250px;"/>
+					</td>
+				</tr>
+				<!--主问题对应下方输入框-->
+				<tr class="main-question-tr">
+					<td class="r-label">
+						<label for="QuestionCode">问题编码</label>
+					</td>
+					<td>
+						<input class="textbox" id="QuestionCode" disabled style="width:243px;"/>
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+						<label for="Question" class="clsRequired">护理主问题</label>
+					</td>
+					<td>
+						<input class="textbox" id="Question" style="width:854px;"/>
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+						<label for="QuestionLongName">问题定义</label>
+					</td>
+					<td>
+						<textarea class="textbox" id="QuestionLongName" style="height:73px;width:854px;"></textarea>
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+						<label for="QuestionApplyArea">适用范围</label>
+					</td>
+					<td>
+						<input class="hisui-combobox textbox" id="QuestionApplyArea" style="width:250px;"/>
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+					</td>
+					<td>
+						<input class="hisui-checkbox" type="checkbox" data-options="checked:true" label="是否生成护嘱" id="IsNursingAdvice"/>
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+					</td>
+					<td>
+						<input class="hisui-checkbox" type="checkbox" data-options="checked:true" label="是否为手动增加的问题" id="IsHandle">
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+						<label for="QuestionType" class="clsRequired">问题分类</label>
+					</td>
+					<td>
+						<input class="hisui-combobox textbox" id="QuestionType" style="width:250px;"/>
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+						<label for="StDate"class="clsRequired">启用日期</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox" id="StDate" data-options="formatter:myformatter,parser:myparser" style="width:250px;"/>
+					</td>
+				</tr>
+				<tr class="main-question-tr">
+					<td class="r-label">
+						<label for="EndDate">截止日期</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox" id="EndDate" data-options="formatter:myformatter,parser:myparser" style="width:250px;"/>
+					</td>
+				</tr>
+				<!--子问题对应下方输入框-->
+				<tr class="sub-question-tr">
+					<td class="r-label">
+						<label for="MainQuestion" class="clsRequired">护理主问题</label>
+					</td>
+					<td>
+						<input class="hisui-combobox textbox" id="MainQuestion" style="width:250px;"/>
+					</td>
+				</tr>
+			</table>
+	    </div>
+	    <div class="hisui-panel" data-options="region:'center',split:true,border:false" style="overflow:auto;">
+			<div style="display:inline-block;vertical-align:top;margin-left:19px;">
+				<label class="clsRequired">护理子问题</label>
+			</div>
+	    	<div style="display:inline-block;width:858px;height:333px;margin-left:5px;border:1px solid #ccc;border-radius:4px">
+	    		<table id="tabSubQuestionEdit"></table>
+	    	</div>
+	    </div>
+	    <div data-options="region:'south',split:false,border:false" style="height:50px;line-height:50px;text-align:center;">
+	    	<a class="hisui-linkbutton" id="BSaveQuestion" data-options="iconCls:'icon-w-ok'">确定</a>
+	    	<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+	    </div>
+	</div>
+</div>
+

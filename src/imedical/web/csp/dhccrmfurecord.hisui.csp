@@ -1,0 +1,285 @@
+
+<!-- 
+ * FileName: dhccrmfurecord.hisui.csp
+ * Anchor: yupeng
+ * Date: 2020-11-26
+ * Description: 随访记录HISUI
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    
+}
+.search-table1{
+    border-collapse:separate;
+    border-spacing:0 0px;
+    
+}
+.r-label{
+    padding-left: 10px;
+}
+.r-label-1{
+    padding-left: 20px;
+}
+.r-label-11{
+    padding-left: 0px;
+}
+/*弹出框里标签右对齐 并且有10px内边距*/
+.tdlabel
+{
+  padding-left: 10px;
+  padding-right: 30px;
+  text-align:right;
+}
+
+</style>
+
+<SCRIPT language="Cache" RUNAT="SERVER"> 
+    s Job=$j    
+</SCRIPT> 
+<script type="text/javascript">
+   var Job='#(Job)#'
+</script>
+<OBJECT id="DHCTel"  style="DISPLAY: none" classid='clsid:A418F5E7-CFEF-4C27-9488-FDE1987D9198' codebase="../addins/client/DHCTel.CAB#version=1,0,0,0" > </OBJECT>
+</head>
+<body style="padding:10px;">
+<input type="hidden" id="PersonID"/>
+<input type="hidden" id="FuplanID"/>
+
+<div class="hisui-layout" data-options="fit:true" border="false">
+
+
+ <div data-options="region:'north',split:true,border:false" style="height:295px;">
+ <div class="hisui-panel" data-options="title:'患者列表',headerCls:'panel-header-gray',iconCls:'icon-patient-info'">
+    
+    <div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:255px;">
+
+    <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false">
+        
+      <table class="search-table">
+      <tr>
+        <td class="r-label">
+          <label for="papmino">登记号</label>
+        </td>
+        <td>
+          <input class="hisui-validatebox" type="text" id="papmino" />
+        </td>
+        <td class="r-label">
+          <label for="patname">姓名</label>
+        </td>
+        <td>
+          <input class="hisui-validatebox" type="text" id="patname" />
+        </td>
+        <td class="r-label">
+          <label for="telno">电话</label>
+        </td>
+        <td>
+          <input class="hisui-validatebox" type="text" id="telno" />
+        </td>
+         
+        <td class="r-label">
+          <input class='hisui-checkbox' type="checkbox"  label="已随访" Id="FollowFlag" data-options="boxPosition:'right'"/>
+          </td>
+          
+        <td class="r-label">
+          <input class='hisui-checkbox' type="checkbox"  label="联系不上" Id="Condition" data-options="boxPosition:'right'"/>
+          </td>
+          
+        <td class="r-label">
+          <input class='hisui-checkbox' type="checkbox"  label="暂时联系不上" Id="ZSCondition" data-options="boxPosition:'right'"/>
+          </td>   
+        
+          
+         <td class="r-label r-label-1">
+           <a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+         </td>
+      </tr>
+      <tr>
+        <td class="r-label">
+          <label for="BeginDate">开始日期</label>
+        </td>
+        <td>
+          <input id="BeginDate" class="hisui-datebox textbox" />
+        </td>
+        <td class="r-label">
+          <label for="EndDate">结束日期</label>
+        </td>
+        <td>
+          <input id="EndDate" class="hisui-datebox textbox" />
+        </td>
+        
+        
+         <td class="r-label">
+          <label for="PatLoc">科室</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="PatLoc" style="width:153px" />
+        </td>
+        <td></td>
+         <td></td>
+        <td></td>
+          <td class="r-label r-label-1">
+           <a id="DelNoQR" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">删除未随访</a>
+         </td>
+      </tr>
+    </table>
+        
+        
+       
+      </div>  
+     <div data-options="region:'center',border:false">
+       <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-left:0;border-bottom:0;border-right:0;border-radius:0;">
+        <table class="hisui-datagrid" id="PatListTab" data-options="bodyCls:'panel-header-gray',fit:true,border:false"></table>
+            
+        </div>
+      </div>
+      
+    </div>   
+    </div>  
+ </div>
+ <div data-options="region:'center',split:true,border:false">
+  <div class="hisui-panel" data-options="title:'详细信息',headerCls:'panel-header-gray',iconCls:'icon-template',fit:true" style="border:1px solid #e2e2e2;border-top:0;border-radius:0,0,4px,4px;">
+    
+    <div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+
+    <div data-options="region:'west',headerCls:'panel-header-gray'" style="width:360px;padding:10px 0 0 0px;border:0;border-right:1px solid #e2e2e2;border-radius:0;">
+    <table class="search-table1" align="center">
+    
+     <tr>
+        <td class="r-label">
+            <a id="DoTel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">拨号</a>
+        </td>
+        <td class="r-label">
+            <a id="StopTel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">挂断</a>
+        </td>
+        <td class="r-label">
+            <a id="DoRadio" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">播放</a>
+        </td>
+      
+    
+    </table>
+    <table class="search-table" style="padding:0 0 0 30px;">
+   
+      <tr>
+        <td class="r-label">
+          <label for="fusubject">随访主题</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="fusubject" disabled="true" style="width:157px" />
+        </td>
+      </tr>  
+      <tr>
+        <td class="r-label">
+          <label for="mrtel">联系电话</label>
+        </td>
+        <td>
+          <input id="mrtel" class="hisui-validatebox textbox" data-options="required:true,validType:'mobilephone'" style="width:150px" />
+        </td>
+      </tr>
+      
+      <tr>  
+        <td class="r-label">
+          <label for="mrname">姓名</label>
+        </td>
+        <td>
+          <input id="mrname" class="textbox textbox" disabled="true" style="width:150px" />
+        </td>
+      </tr>
+      
+      
+      <tr>
+      
+      <td class="r-label"><label for="SetDead">院外死亡</label></td>
+       <td><input class='hisui-checkbox' type="checkbox" Id="SetDead"/>
+          </td>
+          
+      </tr> 
+      
+      <tr>
+        <td class="r-label">
+          <label for="LinkCondition1">第一次联系情况</label>
+        </td>
+        <td>
+        <input class="hisui-combobox" id="LinkCondition1" style="width:157px" editable="false"/>
+           
+        </td>
+      </tr>  
+      
+      <tr>
+        <td class="r-label">
+          <label for="LinkCondition2">第二次联系情况</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="LinkCondition2" style="width:157px" editable="false"/>
+        </td>
+      </tr>  
+      
+      <tr>
+        <td class="r-label">
+          <label for="LinkCondition3">第三次联系情况</label>
+        </td>
+        <td>
+          <input class="hisui-combobox" id="LinkCondition3" style="width:157px" editable="false"/>
+        </td>
+      </tr> 
+      
+      <tr>
+        <td align="center">
+            <a id="PatSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+        </td>
+        
+        <td align="center">
+            <a id="LinkConfig" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'">联系不上原因</a>
+        </td>
+        
+      </tr>  
+      <tr>
+        <td id="RTimeLabel" colspan="2" align="center">
+        </td>
+      </tr>   
+      
+    </table>  
+     
+    </div>
+    <div id="QuestionTab" class="hisui-tabs tabs-gray" data-options="region:'center',border:false">
+     
+     
+      </div>
+    
+   
+  
+    </div>
+  </div>            
+ </div> 
+ 
+
+</div>
+<div id="lywindow">
+       
+</div>
+
+<div id="LinkConfigDiv" style="width:800px;height:600px;padding:10px 10px 10px 10px;display:none;">  
+ <div class="hisui-panel" data-options="fit:true" style="border:1px solid #e2e2e2;border-radius:0,0,4px,4px;">
+    <table class="hisui-datagrid" id="LinkConfigTab" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
+ </div> 
+ </div> 
+
+<script type="text/javascript" src="../scripts/DHCCRMFURecord.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+</body>     
+</html>
+            
+        

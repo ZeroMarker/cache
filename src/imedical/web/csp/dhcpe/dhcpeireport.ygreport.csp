@@ -1,0 +1,340 @@
+<!--
+ * FileName: dhcpeireport.ygreport.csp
+ * Anchor: zhongricheng
+ * Date: 2020-04-09
+ * Description: 乙肝报告
+-->
+<!--
+ * 注意: 修改的时候尽量不用 px 使用 pt
+ * A4 size   595.44*841.68 pt    210*297 mm
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+
+<html>
+	<head>
+		<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+		<!--meta http-equiv="X-UA-Compatible" content="IE=5"/-->
+		<!-- 595.44*841.68 pt  210*297 mm-->
+		<script language="Cache" RUNAT="SERVER">
+			s ID=%request.Get("ID")
+			s Type=%request.Get("Type")  // ID的类型
+			
+			s RptJson=##class(web.DHCPE.ReportOutToWeb).GetReportInforNew(ID,Type)
+			s ShowPage=0
+			i RptJson.Size()>0 {
+				s ShowPage=1
+				s baseinfo=RptJson.baseinfo
+				s business=RptJson.business
+				s footer=RptJson.footer
+				s other=RptJson.other
+			}
+		</script>
+		<style>
+        	/* 设置报告全局样式 */
+			/* dhcpeireport.normal.css
+				A4大小 210mm*297mm
+				lodop打印时，一般会在js中设置 Top,Left,Width,Height，且不同打印机的实际打印尺寸不一样
+				所以以下class设置的宽度需要按实际来调整 page rptpage human-div
+				198*285
+			 */
+			body{
+				margin: 0;
+				padding: 0;
+			}
+			.page {
+				width: 190mm;
+				padding: 0mm 10mm;
+				margin: 0 auto;
+			}
+
+			.rptbase {
+			    width: 100%;
+			    margin: 0 auto;
+			    table-layout: fixed;
+				font-size: 12pt;
+			    font-family: 宋体;
+			}
+
+			.rptpage {
+			    width: 100%;
+			    margin: 0 auto;
+				font-size: 12pt;
+			    font-family: 宋体;
+			    /*page-break-after: always;*/
+			}
+
+			.rpttitle {
+				text-align: center;
+				font-size: 22pt;
+				font-family: 隶书;
+			}
+
+			table {
+				border-collapse: collapse;
+			}
+
+			/* 封面样式 */
+			.cover-info-tab {
+				font-size: 13pt;
+				margin: 0 auto;
+				line-height: 140%;
+			}
+
+			.cover-info-text {
+				text-align: right;
+				font-weight: bold;
+			}
+
+			.cover-info-val {
+				text-align: center;
+				border-bottom: 1pt solid #000000;
+			}
+
+			/* 总检结论与建议 */
+			.summary-con {
+				margin: 1pt 0;
+				line-height: 160%;
+				font-size: 11pt;
+				font-weight: 700;
+			}
+
+			.summary-adv {
+				margin: 1pt 0;
+				line-height: 160%;
+				font-size: 11pt;
+				text-align: justify; /* 两端对齐 */
+			}
+
+			.summary-foot {
+				line-height: 160%;
+				font-size: 11pt;
+				text-align: right;
+				font-weight: 700;
+			}
+
+			.summary-doc {
+				width: 90pt;
+			    display: inline-block;
+				text-align: left;
+			}
+
+			/* 体检结果 */
+			.rlt-table {
+				width: 100%;
+				font-size: 11pt;
+				line-height: 140%;
+			}
+
+			.rlt-title {
+				background-color: #ccc;
+				font-size: 13pt;
+				height: 18pt;
+			    vertical-align: middle;
+				font-weight: 700;
+			}
+
+			.rlt-title td {
+				border-top: 1pt solid #000000;
+				border-bottom: 1pt solid #000000;
+			}
+
+			.rlt-head {
+				font-size: 12pt;
+				font-weight: 700;
+			}
+
+			.rlt-head td {
+				border-top: 1pt solid #000000;
+				border-bottom: 1pt solid #000000;
+			}
+
+			.rlt-content{
+				padding-bottom: 5pt;
+			}
+
+			.rlt-content-txt {
+				text-align: right;
+				font-weight: 700;
+			}
+
+			.rlt-content-val {
+				text-align: center;
+			}
+
+			.rlt-content-abn {/* 异常结果 */
+				color: red;
+			}
+
+			.rlt-foot {
+				font-size: 11pt;
+				line-height: 260%;
+				text-align: right;
+				font-weight: 700;
+			}
+		</style>
+	</head>
+
+	<body>
+        <div id='ReportDiv' class="page">
+        	
+        	<CSP:IF CONDITION=(ShowPage=1)>
+				<!-- 封面 start -->
+				<table class="rptpage cover-info-tab">
+	 				<tr style='height:5pt;'><td colspan=8></td></tr>
+					
+					<tr style='height:40pt;'>
+						<td colspan=8 style="text-align:center; font-size:32pt; font-family:隶书">#(other.HOSPDESC)#</td>
+					</tr>
+	 				<tr style='height:5pt;'><td colspan=8></td></tr>
+					<tr style='height:30pt;'>
+						<td colspan=8 style="text-align:center; font-size:24pt; font-family:楷体">乙肝检查报告</td>
+					</tr>
+	 				<tr style='height:10pt;'><td colspan=8></td></tr>
+	 				
+	 				<tr>
+						<td class='cover-info-text' style='width: 11%;'>姓&ensp;&ensp;名：</td>
+						<td class='cover-info-val' style='width: 15%;'>#(baseinfo.patName)#</td>
+						<td class='cover-info-text' style='width: 9%;'>性别：</td>
+						<td class='cover-info-val' style='width: 10.5%;'>#(baseinfo.patSex)#</td>
+						<td class='cover-info-text' style='width: 9%;'>年龄：</td>
+						<td class='cover-info-val' style='width: 10.5%;'>#(baseinfo.patAge)#</td>
+						<td class='cover-info-text' style='width: 15%;'>体检编号：</td>
+						<td class='cover-info-val' style='width: 20%;'>#(business.hpNo)#</td>
+					</tr>
+					
+	 				<tr>
+						<td class='cover-info-text'>证件号：</td>
+						<td class='cover-info-val' colspan=3>#(baseinfo.patIDCard)#</td>
+						<td class='cover-info-text'>婚姻：</td>
+						<td class='cover-info-val'>#(baseinfo.patMar)#</td>
+						<td class='cover-info-text'>联系电话：</td>
+						<td class='cover-info-val'>#(baseinfo.patTel)#</td>
+					</tr>
+					
+	 				<tr>
+						<td class='cover-info-text'>单&ensp;&ensp;位：</td>
+						<td class='cover-info-val' colspan=5>#(business.company)#</td>
+						<td class='cover-info-text'>体检日期：</td>
+						<td class='cover-info-val'>#(business.arrDate)#</td>
+	 				</tr>
+				</table>
+				<!-- 封面 End -->
+				
+				<!--输出其它csp结果 Start-->
+				<div class="rptpage">
+					<table style="width: 100%;">
+						<tr><td style="height:10pt;">&ensp;</td></tr>
+						
+						<tr>
+							<td class="rpttitle">体检结果</td>
+						</tr>
+							
+						<tr><td style="height:5pt;">&ensp;</td></tr>
+						
+						<tr>
+							<td>
+							
+							</td>
+						</tr>
+					</table>
+					
+					<script language="Cache" RUNAT="SERVER">
+						for aindex=0:1:(business.stationItem.Size()-1) {
+							s station=business.stationItem.Get(aindex)
+							for bindex=0:1:(station.itemList.Size()-1) {
+								s item=station.itemList.Get(bindex)
+								continue:item.ygFlag'="Y"
+								d:item.reportFormat="RF_CAT" $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.result.cat","OnPageCSPROOT")  // ##class(%CSP.Page).Include("dhcpeireport.normal.result.cat.csp")
+								d:item.reportFormat="RF_NOR" $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.result.nor","OnPageCSPROOT")  // ##class(%CSP.Page).Include("dhcpeireport.normal.result.nor.csp")
+								d:item.reportFormat="RF_RIS" $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.result.ris","OnPageCSPROOT")  // ##class(%CSP.Page).Include("dhcpeireport.normal.result.ris.csp")
+								d:item.reportFormat="RF_LIS" $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.result.lis","OnPageCSPROOT")  // ##class(%CSP.Page).Include("dhcpeireport.normal.result.lis.csp")
+								d:item.reportFormat="RF_EKG" $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.result.ekg","OnPageCSPROOT")  // ##class(%CSP.Page).Include("dhcpeireport.normal.result.ekg.csp")
+								d:item.reportFormat="RF_PIS" $zobjclassmethod("csp.csp.dhcpe.dhcpeireport.normal.result.pis","OnPageCSPROOT")  // ##class(%CSP.Page).Include("dhcpeireport.normal.result.pis.csp")
+								;w:'((aindex=(business.stationItem.Size()-1))&&(bindex=(station.itemList.Size()-1))) "<br>"
+							}
+						}
+					</script>
+				</div>
+				<!-- 输出其它csp结果 End -->
+				
+				<!-- 体检结论 Start -->
+				<table class="rptpage">
+					<tr><td style="height:10pt;">&ensp;</td></tr>
+					
+					<tr>
+						<td class="rpttitle">总检结论与建议</td>
+					</tr>
+						
+					<tr><td style="height:5pt;">&ensp;</td></tr>
+					
+					<tr>
+						<td>
+							<script language="Cache" RUNAT="SERVER">
+								if (business.ygSummaryAdvice.Size()>0) {
+									for sindex=0:1:(business.ygSummaryAdvice.Size()-1) {
+										s summary=business.ygSummaryAdvice.Get(sindex)
+										w "<p class='summary-con'>"_(sindex+1)_"、"_summary.conclusion_"</p>"
+										w "<p class='summary-adv'>&emsp;&emsp;"_summary.advice_"</p>"
+										w "<br>"
+									}
+								} else {
+									w "<p class='summary-adv'>"_business.examYGSummary_"</p>"
+								}
+							</script>
+							
+							<!-- vue 写法 - ->
+							<template v-for="(summary, nindex) in business.summaryAdvice">
+								<p class="summary-con">{{nindex+1}}、{{summary.conclusion}}</p>
+								<p class="summary-adv">&emsp;&emsp;{{summary.advice}}</p>
+								<br>
+							</template-->
+						</td>
+					</tr>
+					
+					<script language="Cache" RUNAT="SERVER">
+						if (business.caAduitUser'="") {
+							s auditDoctor = "<img class='summary-doc' src='data:image/png;base64,"_business.caAduitUser_"'/>"
+						} else {
+							s auditDoctor = business.auditDoctor
+						}
+						
+						if (business.caMainDoctor'="") {
+							s mainDoctor = "<img class='summary-doc' src='data:image/png;base64,"_business.caMainDoctor_"'/>"
+						} else {
+							s mainDoctor = business.mainDoctor
+						}
+					</script>
+					<tr>
+						<td class='summary-foot'>
+							<table style='width:60%; float:right;'>
+								<tr>
+									<td><b>初审医生：</b></td>
+									<td class='summary-doc' style="text-align:left;">#(auditDoctor)#</td>
+									<td><b>初审日期：</b></td>
+									<td style="text-align:left;">#(business.auditDate)#</td>
+									<td style="width:30pt;"></td>
+								</tr>
+								<CSP:IF CONDITION=(business.mainDoctor'="")>
+									<tr>
+										<td><b>复审医生：</b></td>
+										<td class='summary-doc' style="text-align:left;">#(mainDoctor)#</td>
+										<td><b>复审日期：</b></td>
+										<td style="text-align:left;">#(business.mainDate)#</td>
+										<td></td>
+									</tr>
+								</CSP:IF>
+							</table>
+						</td>
+					</tr>
+				</table>
+				<!-- 体检结论 End -->
+        	<CSP:ELSE>
+        		<p style="font-size:16pt; color:red;"> #(ID_"  "_Type)#无报告数据! </p>
+			</CSP:IF>
+		</div>
+	</body>
+</html>

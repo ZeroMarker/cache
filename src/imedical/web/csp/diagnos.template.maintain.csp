@@ -1,0 +1,100 @@
+<!--diagnos.template.maintain.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<script type="text/javascript" src="../scripts/dhcdoc/common/funs.js"></SCRIPT>
+<!--结构化诊断接口引用-->
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/MKB/SDS/StructDiagnosExpCss.css" />
+<script type="text/javascript" src="../scripts/bdp/MKB/SDS/StructDiagnosExpList.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/SDS/StructDiagnosExpEditor.js"></script>
+<server>
+	s CopyItemFlag=$G(%request.Data("CopyItemFlag",1))
+</server>
+<style>
+	#z-q-container{
+		border:1px solid #9ed2f2;
+	}
+</style>
+</head>
+<body class="hisui-layout" data-options="fit:true" style="padding:0px;background-color:white;box-sizing:border-box;">
+	<div data-options="region:'west',collapsible:false,border:false" style="width:380px;padding:10px 5px 10px 10px;">
+        <div class="hisui-panel panel-noscroll panel-body" data-options="fit:true,title:'',bodyCls:'panel-body-gray'" style="border-radius:5px;">
+            <div class="hisui-layout" data-options="fit:true" >
+                <div data-options="region:'north',collapsible:false,border:false,title:'#($CASE(CopyItemFlag,"Y":"",:..Get("模板分类")))#',headerCls:'panel-header-gray',iconCls:'icon-template'" style="height:#($CASE(CopyItemFlag,"Y":40,:75))#px;padding-left: 5px;border-bottom:1px dashed #ccc;overflow:hidden;display:table">
+                    <div id="kwFavType" style="display:table-cell;vertical-align:middle"></div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <table id="tabCatList"></table>
+                </div>	
+                <csp:if condition='CopyItemFlag="Y"'>
+                    <div data-options="region:'south',collapsible:false,border:false,title:'',bodyCls:'panel-body-gray'" style="height:40px;overflow:hidden;text-align:center;padding-top:5px;">
+                        <a id="BSaveItemToCat" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save',onClick:SaveItemToCat">#(..Get("保存到选择分类"))#</a>
+                    </div>
+                </csp:if>		
+            </div>
+        </div>
+	</div>
+	<div data-options="region:'center',collapsible:false,border:false" style="padding:10px 5px 10px 5px;">
+        <div class="hisui-panel panel-noscroll panel-body" data-options="fit:true,title:'',bodyCls:'panel-body-gray'" style="border-radius:5px;">
+            <div class="hisui-layout" data-options="fit:true" style="box-sizing:border-box;">
+                <div data-options="region:'center',collapsible:false,border:false,title:'#(..Get("模板项目"))#',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:75px;overflow:hidden;">
+                    <table id="tabItemList"></table>
+                </div>			
+            </div>
+        </div>
+	</div>
+	<csp:if condition=(CopyItemFlag'="Y")>
+		<div data-options="region:'east',collapsible:false,border:false" style="width:400px;padding:10px 10px 10px 5px;">
+            <div class="hisui-panel panel-noscroll panel-body" data-options="fit:true,title:'',bodyCls:'panel-body-gray'" style="border-radius:5px;">
+                <div class="hisui-layout" data-options="fit:true" style="box-sizing:border-box;">
+                    <div data-options="region:'center',collapsible:false,border:false,title:'#(..Get("证型"))#',headerCls:'panel-header-gray',iconCls:'icon-other-yellow'" style="height:75px;overflow:hidden;">
+                        <table id="tabSyndList"></table>
+                    </div>			
+                </div>
+            </div>
+        </div>
+	</csp:if>
+	<div id="menu" class="hisui-menu" style="width:200px;display:none;">   
+    	<div key="User.CTLoc" data-options="iconCls:'icon-copy'">#(..Get("复制到科室"))#</div>
+    	<div key="User.SSUser" data-options="iconCls:'icon-copy'">#(..Get("复制到个人"))#</div>
+    	<div data-options="iconCls:'icon-copy'">
+    		<span>#(..Get("复制到其他登录科室"))#</span>
+    		<div style="width:200px;max-height:400px;overflow:auto;">
+			<server>
+				s LocList=[].%FromJSON(##class(DHCDoc.Diagnos.Fav).GetUserLogLocs(%session.Get("LOGON.USERID")))
+				Set langid=##class(DHCDoc.Util.RegisteredObject).%LanguageID()
+				for i=1:1:LocList.%Size(){
+					s LocObj=LocList.%Get(i-1)
+					s LocID=LocObj.id,LocDesc=LocObj.text,AuthFlag=LocObj.AuthFlag
+					continue:LocID=%session.Get("LOGON.CTLOCID")
+					s LocDesc=##class(User.CTLoc).GetTranByDesc("CTLOCDesc",LocDesc,langid)
+					&HTML<<div locid=#(LocID)# data-options="disabled:#($CASE(AuthFlag,1:"false",:"true"))#">#(LocDesc)#</div>>
+				}
+			</server>
+	        </div>  
+    	</div>
+    </div>
+    <!--结构化诊断录入引用-->
+    <csp:Include Page="dhc.bdp.sds.structdiagnosexp.csp">
+</body>
+<script type="text/javascript">
+	var ServerObj={
+		CONTEXT:'#($G(%request.Data("CONTEXT",1)))#',
+		FavAuth:{
+			'User.CTHospital':#(##class(DHCDoc.Diagnos.Fav).GetHospAuth())#,
+			'User.CTLoc':#(##class(DHCDoc.Diagnos.Fav).GetLocAuth())#,
+			'User.SSUser':1		//个人始终有权限,不取菜单配置
+		},
+		CopyItemFlag:'#(CopyItemFlag)#',
+		PAAdmType:'#(##class(DHCDoc.Order.Common).GetLocAdmType(%session.Data("LOGON.CTLOCID")))#',
+		SDSDiagEntry:#(##class(web.DHCDocDiagnosEntryV8).GetSDSDiagEntryFlag(%session.Data("LOGON.CTLOCID")))#
+	};
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/diagnos.template.maintain.js"></script>
+</html>

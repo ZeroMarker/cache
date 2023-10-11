@@ -1,0 +1,95 @@
+<!--dhcmdt.consdiscuss.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--<HISUI/>-->
+<HISUI Version="0.1.0"></HISUI>
+<title>	MDT讨论详情展现 </title>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
+<script type="text/javascript">
+	var CstID = getParam("CstID")
+	var bizCode = "onMDTChat";
+	var bizId = CstID;
+	websys_on(bizCode+bizId,function(data){ /*进入房间后才能监听房间消息*/
+		if (data.eventType=='join'){
+			console.log(data.fromUser +"加入->"+data.toUser+"房间号");
+		}else if (data.eventType=='leave'){
+			console.log(data.username +"离开->"+data.toUser+"房间号");
+		}else{
+			console.log("收到->房间号："+data.extend.opt.usercode+":"+data.usercode+":"+data.toUser+", 文本内容："+data.extend.opt.content);
+			
+			if(data.extend.opt.ParCode==="ConsTalk"){
+				jumpDiscuss(data.extend.opt.CstID);
+			}else{
+				saveMdtOp(data.extend.opt.usercode,data.extend.opt.content);
+			}
+		}
+	});	
+	
+	window.onunload = function(){
+		websys_leaveChatRoom(bizCode,bizId);
+	};
+	
+	websys_emit(bizCode,{type:"cross-device",bizId:bizId,content:"",mdt:""});
+	
+	
+	function saveMdtOp(userCode,mdtOpinion){
+		$.cm({ 
+			ClassName:"web.DHCMDTConsult",
+			MethodName:"UpdConItmOpionUserCode",
+			MdtID:CstID,
+			UserCode:userCode,
+			MdtOpinion:mdtOpinion,
+			dataType:"text"
+		},function(ret){
+			if (ret != 0){
+				$.messager.alert("提示:","保存失败！"+ret,"warning");
+			}else{
+				SetMdtDiscuss()
+			}
+			return;
+		});		
+	}
+
+	
+	function SetMdtDiscuss(){
+		$.cm({ 
+			ClassName:"web.DHCMDTConsultQuery",
+			MethodName:"GetMdtDiscuss",
+			MdtID:CstID,
+			Type:1,
+			dataType:"text"
+		},function(retData){
+			var text=(retData.replace(new RegExp("\n","g"),"<br/>")||"暂时无内容!");
+			$("#mdtDiscuss").html(text);
+		});
+	}
+	SetMdtDiscuss();
+	
+	function jumpDiscuss(CstID){
+		var url="dhcmdt.consdiscuss.csp?CstID="+CstID; ///
+		var _opWin=window.open("",bizCode+bizId+"Win");
+		if(_opWin) _opWin.close();
+		window.location.href=url;
+	}
+
+	
+	function returnPage(){
+		window.history.back(-1);	
+	}
+</script>
+</head>
+
+<body>
+	<span style="position: absolute;background: #7777DA;position: absolute;color: #fff;padding: 4px 10px;border-radius: 5px;cursor: pointer;" onclick="returnPage()">返回</span>
+	<div style="font-size: 20px;font-weight: 600;text-align: center;">MDT会诊讨论内容实时展现</div>
+	<div id="mdtDiscuss" style="font-size: 17px;line-height: 20px;"></div>
+</body>
+</html>

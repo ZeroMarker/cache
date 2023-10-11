@@ -1,0 +1,291 @@
+<!-- dhcem.obs -->
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>床位图副屏</title>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+		<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+
+		<style type="text/css">
+			/*li的首个span样式*/
+			.inittxt {
+				margin: 0 10px;
+			}
+
+			.info {
+				position: relative;
+				top: -16px;
+			}
+
+			ul li {
+				list-style: none;
+				white-space: nowrap;
+			}
+
+			#status-detail li {
+				position: relative;
+				padding: 0 0 0 25px;
+				line-height: 45px;
+				border-left: 1px solid #48C086;
+			}
+
+			#status-detail li:first-child {
+				/*color: red;*/
+				padding-top: 0;
+				/*border-left-color: #fff;*/
+			}
+
+			#status-detail li .node-icon {
+				position: absolute;
+				left: -6px;
+				top: 50%;
+				width: 11px;
+				height: 11px;
+				background: url(../scripts/dhcnewpro/images/order-icons.png) -21px -72px no-repeat;
+			}
+
+			#status-detail li:first-child .node-icon {
+				background-position: -21px -72px;
+			}
+
+			#status-detail li .time {
+				margin-right: 20px;
+				position: relative;
+				display: inline-block;
+				vertical-align: middle;
+				/* margin-top: -20px; */
+			}
+
+			#status-detail li .txt {
+				max-width: 500px;
+				position: relative;
+				display: inline-block;
+				vertical-align: middle;
+			}
+
+			#status-detail li.first .time {
+				margin-right: 20px;
+			}
+
+			#status-detail li.first .txt {
+				max-width: 600px;
+			}
+
+			/*最后的li字体颜色*/
+			#status-detail li:last-child {
+				color: #000000;
+				border-left-color: #fff;
+			}
+
+			/*
+				#status-detail li:last-child .circle{
+					background: url(../scripts/dhcnewpro/images/playcircle.gif);
+				}
+				*/
+			.status-list li {
+				color: #686868
+			}
+
+			/*浅灰背景色*/
+			.single-gray {
+				background-color: #eee !important;
+			}
+
+			/*圆形*/
+			.circle {
+				width: 12px;
+				height: 12px;
+				background: #4EAC7E;
+				border-radius: 50px;
+				float: left;
+				margin-left: -31px;
+				margin-top: 0px;
+			}
+
+			.playcircle {
+				background: url(../scripts/dhcnewpro/images/playcircle.gif);
+				width: 23px;
+				height: 23px;
+				float: left;
+				margin-left: -37px;
+				margin-top: -2px;
+			}
+			.panel-body, .panel-header {
+			    border-color: #ccc;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="hisui-layout" data-options="clickExpand:true,fit:true">
+			<div data-options="region:'center',title:'',split:true,bodyCls:'panel-header-gray'"
+				style="	border: none;">
+				<div class="hisui-layout" data-options="clickExpand:true,fit:true">
+					<div data-options="region:'north',title:'诊断列表',split:true,bodyCls:'panel-header-gray',headerCls:'panel-header-gray',iconCls:'icon-paper'"
+						style="height:300px;">
+						<table id="diagTable"></table>
+					</div>
+					<div data-options="region:'south',title:'医嘱费用类别占比',split:true,bodyCls:'panel-header-gray',headerCls:'panel-header-gray'"
+						style="height:100px;">
+						<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,border:false">
+							<div class="clearBlockMargin" id="imgViewDesc"
+								style="width:100%;height:30px;box-sizing: border-box;">
+							</div>
+							<div class="clearBlockMargin" id="imgView"
+								style="border:1px solid #3b8b3b;width:100%;box-sizing: border-box;">
+
+							</div>
+						</div>
+					</div>
+					<div data-options="region:'center',title:'状态视图',split:true,bodyCls:'panel-header-gray',headerCls:'panel-header-gray'" style="">
+						<div id="status-detail" style="font-size:14px;padding:20px 0 0 15px">
+							<ul class="status-list"></ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+
+	<script type="text/javascript">
+		var LgUserID = session['LOGON.USERID'];  /// 用户ID
+		var LgLocID = session['LOGON.CTLOCID'];  /// 科室ID
+		var LgHospID = session['LOGON.HOSPID'];  /// 医院ID
+		var LgGroupID = session['LOGON.GROUPID'] /// 安全组ID
+		var LgParam=LgHospID+"^"+LgLocID+"^"+LgGroupID+"^"+LgUserID
+		
+		PatientID = getParam("PatientID");   /// 病人ID
+		EpisodeID = getParam("EpisodeID");   /// 就诊ID
+		//alert(EpisodeID);
+		
+	
+		var colorArr = ["#ff32a1", "#d952d1", "#9152d9", "#494dee", "#327eb2", "#449be2", "#39c6c8", "#2ab66a", "#aade5f",
+			"#ffb746", "#ff793e", "#ff5252", "#f16e57"
+		];
+		
+		
+		$cm({
+			ClassName:"web.DHCEMPatThisOrd",
+			MethodName:"GetOrdByAdmDataToJsonNew",
+			Params:EpisodeID+"^^"+LgHospID
+		},function(jsonData){
+			showImgView(jsonData.ItmPriceScale);
+		});
+
+		function showImgView(datas) {
+			if (datas.length == 0) return;
+			var imgViewWidth = $("#imgView").width();
+			$("#imgView").html("");
+			$("#imgViewDesc").html("");
+			var len = datas.length;
+			for (var i = 0; i < len; i++) {
+				var itmData = datas[i];
+				var orderTypeDesc = itmData.OrderTypeDesc;
+				var scale = itmData.Scale;
+				var itmWidth = imgViewWidth * scale;
+				addViewItm(orderTypeDesc, scale, itmWidth);
+
+			}
+		}
+
+
+		function addViewItm(desc, scale, itmWidth) {
+			var viewItmNum = $(".viewItm").length;
+			var itmColor = colorArr[viewItmNum];
+			var itmHtml = '<div class="viewItm"  style="display:inline-block;width:' + itmWidth +
+				'px;height:10px;background:' + itmColor + '"></div>'
+
+			var imgViewDescItm = '<div style="display:inline-block;width:10px;height:10px;background:' + itmColor +
+				';border-radius:10px"></div>';
+			imgViewDescItm = imgViewDescItm + '<div style="display:inline-block;">' + desc + (scale * 100).toFixed(1) +
+				'%</div>';
+
+			$("#imgView").append(itmHtml);
+			$("#imgViewDesc").append(imgViewDescItm);
+		}
+
+
+		var columns = [
+			[{
+					field: 'DiagType',
+					title: '诊断类型',
+					width: 100
+				},
+				{
+					field: 'DiagDesc',
+					title: '诊断',
+					width: 100
+				},
+				{
+					field: 'SDSDesc',
+					title: '结构诊断',
+					width: 100
+				}
+			]
+		]
+		
+
+		$HUI.datagrid('#diagTable', {
+			url:LINK_CSP+"?ClassName=web.DHCEMPatOverview&MethodName=getDiagnosisJson&MRADMID="+EpisodeID,
+			fit: true,
+			rownumbers: true,
+			columns: columns,
+			fitColumns: true,
+			pageSize: 60,
+			pageList: [60],
+			border: false,
+			loadMsg: '正在加载信息...',
+			rownumbers: false,
+			pagination: true,
+			singleSelect: true,
+			selectOnCheck: false,
+			checkOnSelect: false,
+			title: '',
+			iconCls: 'icon-paper',
+			headerCls: 'panel-header-gray', //ed
+		})
+
+
+		$cm({
+			ClassName:"web.DHCEMPatCurStatus",
+			MethodName:"FindAdmstatusTotal",
+			EpisodeID:EpisodeID,
+			dataType:'text'
+		},function(retData){
+			showCircleView(retData);
+		});
+
+		function showCircleView(data) {
+			var list = data.split("$$");
+			var listlen = list.length;
+			var singlelist = list[listlen - 2].split("^")
+			$('.show-status').append('<li style="padding-left:30px;" id="current-time">' + singlelist[0] +
+				'&nbsp;&nbsp;&nbsp;' + singlelist[1] + '</li>')
+			var singlelen = singlelist.length;
+			if (singlelen > 3) {
+				$('#current-status').html(singlelist[3])
+			} else if (singlelen = 3) {
+				$('#current-status').html(singlelist[2])
+			}
+
+
+			for (var i = 0; i < list.length - 1; i++) {
+				$(".status-list").append('<li>' +
+					'<div class="circle"></div>' +
+					'<span class="info">' +
+					'<span class="inittxt">' + list[i].split("^")[2] + '</span>' +
+					'<span class="time">' + list[i].split("^")[0] + '&nbsp;&nbsp;&nbsp;' + list[i].split("^")[1] +
+					'</span>' +
+					'<span class="txt">' + list[i].split("^")[3] + '&nbsp;&nbsp;&nbsp;' + "操作人:" + list[i].split("^")[4] +
+					'</span>' +
+					'<span>' +
+					'</li>')
+			}
+			$(".status-list li:last-child > div").removeClass("circle");
+			$(".status-list li:last-child > div").addClass("playcircle")
+
+		}
+	</script>
+</html>

@@ -1,0 +1,404 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetItem.csp 交班项目配置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{background: white;}
+hr.dashed{border-top: 0;border-bottom: 0;margin:0;margin-bottom:10px;}
+div.hGap{height: 10px;}
+div.vGap{width: 10px;}
+.flex2{flex: 2;}
+.flex3{flex: 3;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.panel-tool a{margin: 0;}
+.panel-tool a{outline: none;}
+.modalTable tr td{padding-bottom:10px;}
+.modalTable tr td.r-label{white-space: nowrap;}
+.modalTable tr td .textbox{width: 300px;box-sizing: border-box;}
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+.validatebox-text{box-sizing: border-box;}
+.locs+span>input{box-sizing: content-box;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+#type+span>input.combo-text.validatebox-text,#detailFlag+span>input.combo-text.validatebox-text,#sumFlag+span>input.combo-text.validatebox-text{width: 269px!important;}
+#template:focus{box-shadow:none;}
+form table td, form table th{
+	padding:0;	
+}
+</style>
+<Server>
+</Server>
+<script language="cache" RUNAT="SERVER">
+  s multiFlag=##class(Nur.SHIFT.Service.ShiftBizBase).#MULTIHOSP
+</script>
+<SCRIPT language = 'javascript'>
+var multiFlag = "#($g(multiFlag))#";
+var typeObj={
+	0:"原有",
+	1:"现有",
+	2:"自定义",
+	3:"SQL"
+}
+var itemSRCList=[
+	{value:1,desc:"分班自定义"},
+	{value:2,desc:"全班自定义"},
+	{value:3,desc:"跨天自定义"},
+	{value:4,desc:"统计区带入"}
+];
+var itemSRCObj={}
+itemSRCList.map(function(elem,index) {
+	itemSRCObj[elem.value]=elem.desc
+});
+var showTypeList=[
+	{value:'M',desc:"用户录入"},
+	{value:'A',desc:"自动获取"}
+];
+var showTypeObj={}
+showTypeList.map(function(elem,index) {
+	showTypeObj[elem.value]=elem.desc
+});
+var showFormatList=[],showFormatObj={}
+</SCRIPT>
+</head>
+<body style="overflow: hidden;">
+	<table cellpadding="0" cellspacing="0">
+    <tr>
+			<csp:if condition='1=##class(Nur.SHIFT.Service.ShiftBizBase).#MULTIHOSP'>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+			<csp:else>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>病房类别
+				</td>
+			</csp:if>
+			<td class="r-label">
+				<select id="wardType" data-options="editable:false" class="hisui-combobox" style="width:150px;">
+					<option value="W" selected>住院病房</option>
+					<option value="E">急诊病房</option>
+				</select>
+			</td>
+			<td class="r-label">
+        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" style="" onclick="findSSData()">查询</a>
+			</td>
+    </tr>
+  </table>
+  <hr class="dashed">
+  
+  
+  
+ <table id="statisticsSet" class="hisui-datagrid" title="统计区配置"
+			data-options="
+			singleSelect:true,
+			autoSizeColumn:false,
+			fitColumns:true,
+			collapsible:true,
+			headerCls:'panel-header-gray',
+			iconCls:'icon-paper',
+			pagination:false,
+
+			striped : true,
+			rownumbers : true,
+			toolbar: [{
+			iconCls: 'icon-add',
+			text:'新增',
+			handler: addSSRow
+		},{
+			iconCls: 'icon-cancel',
+			text:'删除',
+			handler: deleteSSRow
+		}],
+		onClickRow:selectSSRow,
+		onDblClickRow:editSSRow,
+		onCollapse:function(){
+			$('#middleSet').datagrid('getPanel').panel('expand',true)
+		},
+		onExpand:function(){
+			$('#middleSet').datagrid('getPanel').panel('collapse',true);
+			expandFlag='statisticsSet'
+		}
+	">   
+		<thead>   
+			<tr>
+				<th data-options="field:'name',width:40">项目名称</th>
+				<th data-options="field:'sortNo',width:40">优先级排序</th>
+				<th data-options="field:'positionColumn',width:50,formatter:function(value,row){
+				return value;
+			}">显示位置</th>
+				<th data-options="field:'type',width:40,formatter:function(value,row){
+				return ''===value?'':typeObj[value];
+			}">类型</th>
+				<th data-options="field:'ruleLocs',width:70,formatter:function(value,row){
+				return getWardsDesc(value)||'全院';
+			}">适用范围</th>
+				<th data-options="field:'ruleInvalidLocs',width:100,formatter:function(value,row){
+				return getWardsDesc(value);
+			}">不适用范围</th>
+				<th data-options="field:'shiftDesc',width:50">交班描述</th>
+				<th data-options="field:'methodExpression',width:100">方法</th>
+				<th data-options="field:'detailFlag',width:100,formatter:function(value,row){
+				return ('Y'==value)?'是':'否';
+			}">是否带入</th>
+			<th data-options="field:'sumFlag',width:100,formatter:function(value,row){
+				return ('Y'==value)?'是':'否';
+			}">是否统计区显示</th>
+			</tr>   
+		</thead>   
+		<tbody>
+		</tbody>   
+	</table> 
+  <div class="hGap"></div>  
+  <table id="middleSet" class="hisui-datagrid" title="中间区配置"
+			data-options="bodyCls:'middleSet',singleSelect:true,autoSizeColumn:false,fitColumns:true,collapsible:true,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:false,toolbar: [{
+			iconCls: 'icon-add',
+			text:'新增',
+			handler: addMSRow
+		},{
+			iconCls: 'icon-cancel',
+			text:'删除',
+			handler: deleteMSRow
+		},{
+			iconCls: 'icon-save',
+			text:'保存',
+			handler: saveMSRow
+		}],
+		onClickRow:selectMSRow,
+		onDblClickRow:editMSRow,
+		onCollapse:function(){
+			$('#statisticsSet').datagrid('getPanel').panel('expand',true)
+		},
+		onExpand:msExpand
+	">   
+		<thead>   
+			<tr>
+				<th rowspan="2" data-options="field:'itemSRC',width:94,formatter:function(value,row){
+					return itemSRCObj[value];
+				},
+				editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'value',
+						textField:'desc',
+						data:itemSRCList,
+						onSelect:itemSRCChange,
+						blurValidValue:true
+					}
+				}">来源</th>
+					<!-- type:'combobox', -->
+				<th rowspan="2" data-options="field:'name',width:150,formatter:function(value,row){
+					return value;
+				}" editor="selfDefEdit">项目名称</th>
+						<!-- blurValidValue:true -->
+				<th colspan="2">显示位置</th> 
+				<th rowspan="2" data-options="field:'wholeLine',width:78,formatter:function(value,row){
+				return ('Y'==value)?'是':'';
+			},editor:{type:'icheckbox',options:{on:'Y',off:''}}">占据整行</th>
+				<th rowspan="2" data-options="field:'showType',width:84,formatter:function(value,row){
+					return value?showTypeObj[value]:'';
+				},
+				editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'value',
+						textField:'desc',
+						data:showTypeList,
+						onSelect:showTypeChange
+					}
+				}">类型</th>
+						<!-- blurValidValue:true -->
+				<th rowspan="2" data-options="field:'showFormat',width:140,formatter:function(value,row){
+					return showFormatObj[value];
+				},
+				editor:{
+					type:'combobox',
+					options:{
+						valueField:'value',
+						textField:'desc',
+					}
+				}">显示格式</th>
+						<!-- data:showFormatList, -->
+				<th rowspan="2" data-options="field:'ruleLocs',width:200,formatter:function(value,row){
+					return getWardsDesc(row.ruleLocs)||'全院';
+				},editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						multiple:true,
+						separator:',',
+						valueField:'wardid',
+						textField:'warddesc'
+					}
+				}">适用范围</th>
+				<th rowspan="2" data-options="field:'ruleInvalidLocs',width:200,formatter:function(value,row){
+					return getWardsDesc(row.ruleInvalidLocs);
+				},editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						multiple:true,
+						valueField:'wardid',
+						textField:'warddesc'
+					}
+				}">不适用范围</th>   
+				<th rowspan="2" data-options="field:'shiftDesc',width:130,editor:{type:'validatebox'}">描述</th>
+				<th rowspan="2" data-options="field:'methodExpression',width:130,editor:{type:'validatebox'}">方法</th>
+			</tr>
+			<tr>
+				<th data-options="field:'positionRow',width:38,editor:{type:'numberbox'}">行</th>
+				<th data-options="field:'positionColumn',width:38,editor:{type:'numberbox'}">列</th>
+			</tr>
+		</thead>   
+		<tbody>
+		</tbody>   
+	</table> 
+  <!-- 模态框 -->
+  <div id="statisticsModal" class="hisui-dialog" title="交班项目配置" style="padding: 10px 10px 0;width: 450px;" 
+	data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+			text:'保存',
+			handler:saveSSRow
+		},{
+			text:'取消',
+			handler:function(){$HUI.dialog('#statisticsModal').close();}
+		}]"> 
+		<form id="ssForm">
+			<table cellpadding="0" cellspacing="0" class="modalTable">
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>项目名称
+					</td>
+					<td>
+						<input id="name" class="hisui-validatebox textbox" data-options="required:true">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>优先级排序
+					</td>
+					<td>
+						<input id="sortNo" class="hisui-validatebox textbox" data-options="required:true">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>显示位置 列
+					</td>
+					<td>
+						<input id="positionColumn" class="hisui-validatebox textbox" data-options="required:true">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						类型
+					</td>
+					<td>
+						<select id="type" class="hisui-combobox" name="state" style="width:300px;" data-options="enterNullValueClear:false,blurValidValue:true">
+							<option value="0">原有</option>
+							<option value="1">现有</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						适用范围
+					</td>
+					<td>
+						<select id="ruleLocs" class="locs" style="width:300px;"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						不适用范围
+					</td>
+					<td>
+						<select id="ruleInvalidLocs" class="locs" style="width:300px;"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						交班描述
+					</td>
+					<td>
+						<input id="shiftDesc" class="textbox">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						方法
+					</td>
+					<td>
+						<input id="methodExpression" class="hisui-validatebox textbox">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>是否带入
+					</td>
+					<td>
+						<select id="detailFlag" style="width:298px;" class="hisui-validatebox" data-options="required:true"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<span class="labelStar">*</span>是否统计区显示
+					</td>
+					<td>
+						<select id="sumFlag" style="width:298px;" class="hisui-validatebox" data-options="required:true"></select>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">模板格式</td>
+					<td>
+		        <a href="javascript:void(0)" id="" onclick="addDisplaceMark();" class="hisui-linkbutton hover-dark" style="">{}</a>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label" style="padding-bottom:0;"></td>
+					<td style="padding-bottom:0;">
+					  <textarea id="template" value="BMW" cols="30" rows="4" style="width: 100%;border-radius: 2px;resize: none;box-sizing: border-box;padding: 0 10px;overflow: auto;"></textarea>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+	<SCRIPT language = 'javascript' >
+    $HUI.combobox("#detailFlag",{
+			editable:false,valueField:'value', textField:'text',panelHeight:"auto",required:true,
+			data:[
+				{value:'Y',text:'带入交班明细'}
+				,{value:'N',text:'不带入交班明细'}
+			],
+			defaultFilter:4
+		});
+		$HUI.combobox("#sumFlag",{
+			editable:false,valueField:'value', textField:'text',panelHeight:"auto",required:true,
+			data:[
+				{value:'Y',text:'统计区显示'}
+				,{value:'N',text:'统计区不显示'}
+			],
+			defaultFilter:4
+		});
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.shiftSetItem.js"></script>
+</body>
+</html>

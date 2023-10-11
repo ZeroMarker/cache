@@ -1,0 +1,80 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<Style>
+.messager-popover
+{
+	font-weight: normal;
+}
+.eqbutton
+{
+	margin-left:15px;
+}
+</Style>
+</HEAD>
+<script language=Cache runat=server>
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+	s colsets=##Class(web.DHCEQCColSet).GetColSets("","2","","Equip") //用户级设置
+	if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","1","","Equip") //安全组级设置
+	if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","0","","Equip") //系统设置
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")	
+</script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'泛类设备台账',headerCls:'panel-header-gray'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #e2e2e2;height:50px;border-radius:0px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label for="Name">设备名称</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="Name" ></div>
+							<div class="eq-table-td eq-table-label-new"><label for="EquipType">管理类组</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EquipType',paras:[{name:'FacilityFlag',type:'2',value:'1'}]" id="EquipType" ></div>
+							<div class="eq-table-td eq-table-label-new"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a><a id="BAdd" href="#" class="hisui-linkbutton eqbutton" iconCls="icon-w-add">新增</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;">
+					<table id="DHCEQEquipFacilityFind" class="hisui-datagrid" data-options="fitColumns:true"></table>
+					<div class="messager-popover info" style="position:absolute;right:0px;top:-2px;margin:2px 5px 2px 0;padding:5px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="EquipTypeDR">
+			<INPUT type="hidden" id="UseLocDR">
+			<INPUT type="hidden" id="FacilityFlag" value="1">
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>
+			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQEquipSave.GetNum")))#>
+			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQEquipSave.GetList")))#>
+			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>
+			<INPUT type="hidden" id="SplitRowCode" value=#(SplitRowCode)#>
+			<INPUT type="hidden" id="ClassFlag" value="Y">
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhceq/em/equipfacilityfind.js"></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
+</body>
+</html>

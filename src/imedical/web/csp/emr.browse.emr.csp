@@ -1,5 +1,10 @@
-﻿﻿<html>
+﻿ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+        i ##Class(websys.SessionEvents).SessionExpired() 
+		q 1
+</csp:method>﻿
+﻿<html>
 <head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
 	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
 	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/browse.emr.css"/>
@@ -7,12 +12,15 @@
 	<script language="cache" runat="server">
 		s episodeID = $Get(%request.Data("EpisodeID",1),"")
 		s action = $Get(%request.Data("Action",1),"")
-		s viewType = $Get(%request.Data("ViewType",1),"")
+		s viewType = $Get(%request.Data("ViewType",1),"PDF")         //Editor  PDF
 		s instanceID = $Get(%request.Data("InstanceID",1),"")
 		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
 		s episodeDept = ##class(EPRservice.HISInterface.PatientInfoAssist).CurrentDept(episodeID)	
 		s episodeLocID = $p(episodeDept,"^",1)
         s admType = $p(^PAADM(episodeID),"^",2)  //值:I、O、E
+		s docIDs = $Get(%request.Data("DocIDs",1),"")
+		s userLocID = %session.Get("LOGON.CTLOCID") 
+		s historyDefaultSelectDocID = $Get(%request.Data("OPHistoryDefaultSelectDocID",1),"")
   </script>
 	<script language="javascript">
 		var patientID = '#(patientID)#';
@@ -22,18 +30,22 @@
 		var viewType = '#(viewType)#';  //值Editor PDF
 		var action = '#(action)#';
         var admType = '#(admType)#';
+		var docIDs = '#(docIDs)#';
+		var userLocID = '#(userLocID)#';
+		var historyDefaultSelectDocID = '#(historyDefaultSelectDocID)#';      //门诊历史病历浏览住院病历时调用此csp，此参数用于配置默认选中模板的DocID
    </script>
 	<title>病历浏览</title>
 </head>
-<body class="hisui-layout" data-options="border:false">
-	<div data-options="region:'east',border:false" style="width:210px;padding:0;">
-		
+<body class="hisui-layout" data-options="border:false" style="padding-right:10px">
+	<div data-options="region:'east',border:false" style="width:231px;padding:0 10px;">	
 		<div class="hisui-layout" data-options="fit:true,border:false">
-			<div data-options="region:'north',border:false" style="height:30px;padding:0;">
+			<div data-options="region:'north',border:false" style="height:36px;padding-top:4px;">
 				<input type="text" class="hisui-searchbox" id="selectCategory" data-options="width:210,prompt:emrTrans('输入病历名称搜索!')" />
 			</div>
-			<div data-options="region:'center',border:false" class='navcategory'>
-				<ol class="categorytree" id="ulcategory"></ol> 
+			<div data-options="region:'center',border:false" style="padding-top:2px">
+				<div class="hisui-panel navcategory" data-options="border:false,fit:true" style="border:1px solid #D9D9D9;">
+					<ol class="categorytree" id="ulcategory"></ol> 
+				</div>
 			</div>
 		</div>
 	</div>

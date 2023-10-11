@@ -1,0 +1,111 @@
+<!-- 
+ * FileName:	dhcinsu.insuservqry.csp
+ * User:		DingSH
+ * Date:		2021-01-07
+ * Function:	医保服务查询(主界面)
+ * Description: 
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insuservqrycom.js"></script>
+	<server>
+	 	set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+	</server>
+	<style>
+	.tabs-panels .panel-body {
+		overflow: hidden;
+	}
+	.r-label:not(.td-first-col){
+		padding-left:50px !important;
+	}
+		
+	.cs-navi-tab{
+		display: block;
+		color:black;
+		text-decoration: none;
+		height:36px;
+		line-height:36px;
+		padding-left:20px;
+	}
+	.cs-navi-tab:hover {
+	  background-color: #E3E3E3;
+	}
+	.cs-tab-menu {
+		width:120px;
+	}
+	.cs-home-remark {
+		padding: 10px;
+	}
+	.accordion .accordion-header{
+		border-top-width:0;
+	}
+	.accordion .accordion-header:hover{
+		background:#3EA2E4;
+	}
+	.accordion .accordion-header-selected{
+		background:#0E8BDD;
+	}
+	.panel-title{
+		font-size:14px;
+		padding-left:7px;
+		line-height:27px
+	}
+	.layout-split-west {
+    border-right: 10px solid #($s((defUIVersion="lite"):"#f5f5f5",1:"#ffffff"))#;
+	}
+	</style>
+	
+	 <server>
+	     s SecdClass=%request.Get("SecdClass")
+	     s HospDr=%session.Get("LOGON.HOSPID")
+	     s paneltitle =##class(web.INSUDicDataCom).GetDicDataDescByCode("infoqury00A",SecdClass,HospDr)
+		 s:paneltitle="" paneltitle="信息查询"  
+    </server>
+</head>
+<body style="padding:10px;">
+	<div id="cc2" class="hisui-layout" data-options="clickExpand:true,fit:true">   
+		<!--div class="cs-navi-title" data-options="region:'west',title:'&nbsp医保服务查询',split:true,showCollapsedTitle:true" style="width:200px;">
+		<div title=""  data-options="selected:true">
+			<server>
+			d ##class(DHCINSU.ServQry.Manager).GetServQryCSPMenu()
+			</server>
+		</div>
+		</div--> 
+		<div data-options="region:'west',split:true" style="overflow:auto;width:197px;background:white;"> 
+			<div class="panel-header" style="height:28px;border-radius:0;border:0px;border-bottom:1px solid #e2e2e2">
+				<div class="panel-title" style="">#(paneltitle)#</div>
+				<div class="panel-tool">
+					<a href="javascript:void(0)" class="layout-button-left"></a>
+				</div>
+			</div> 
+			<div title=""  data-options="selected:true" >
+				<server>
+					s SecdClass=%request.Get("SecdClass")
+					s HospDr=%session.Get("LOGON.HOSPID")
+					d ##class(DHCINSU.ServQry.Manager).GetServQryCSPMenu(SecdClass,HospDr)
+				</server>
+			</div>	  
+		</div> 
+		<div data-options="region:'center',split:true,bodyCls:'panel-header-gray'" style='border-radius:0;border:1px solid #($s((defUIVersion="lite"):"#e2e2e2",1:"rgb(80,157,225)"))#;'>
+			<div id="tabs" class="hisui-tabs " data-options="isBrandTabs:true,fit:true,border:false">
+				<div title="首页" ></div>
+			</div>
+		</div>    
+	</div> 
+    <script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insuservqry.js"></script>
+	<script type="text/javascript" src="../scripts_lib/xlsx/xlsx.core.min.js"></script>
+	<script type="text/javascript" src="../scripts_lib/xlsx/es6-promise.auto.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/exceltool.js"></script>
+</body>
+</html>

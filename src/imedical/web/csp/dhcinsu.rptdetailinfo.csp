@@ -1,0 +1,138 @@
+<!-- 
+ * FileName:	dhcinsu.rptdetailinfo.csp
+ * Creator:		LuJH
+ * Date:		2022-07-07
+ * Function:	报告明细信息查询-5402
+ * MianCSP：	dhcinsu.insuservqry.csp
+ * Description: 
+-->
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<HISUI></HISUI>
+<DHCBILL/>
+<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.insuservqrycom.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script>
+<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/>
+<script type="text/javascript" src="../scripts/dhcinsu/mi.common.js"></script>
+ <style>
+.layout>.panel>.panel-header {
+   	/*border-radius: 4px 4px 0 0 !important;*/
+    border-bottom:0;
+}
+.datagrid-wrap {
+	/*border-radius:0 0 4px 4px !important;	*/
+	border-color:#cccccc !important;
+	border-top:0px !important;
+}
+.dg-class .datagrid-wrap{
+	border-radius:0px !important;	
+	border-color:#cccccc !important;
+	border-top:1px dashed #cccccc !important;	
+}
+
+.layout-panel-west {
+    padding-right: 10px;
+}
+
+.PortCom{
+	width:270px !important;	
+}
+.PubComWin .panel-body-noheader{
+	border-top:1px solid #cccccc !important;
+	border-radius:0px !important;			
+}
+#edgTB {
+    padding-bottom: 5px !important;
+    padding-top: 5px !important;
+}
+#addInfoParamShow input{
+	width:70px ;	
+}
+.tb300{
+	width:400px !important ;	
+}
+</style>
+
+</head>
+<script type="text/javascript">
+	var WESTDGWIDTH = 535; // 固定左下
+	var windHeight = $(window).height() * 0.55;
+	var windowWidth = $(window).width() - WESTDGWIDTH;
+	var tmpJob=$.m({ClassName: "INSU.MI.PortConfig", MethodName: "SaveBrowseConfig", Height:windHeight,EDGwidth:windowWidth}, false);
+</script>
+<server>
+	s dgHieght=605.22	// 默认的
+	s EDGwidth = 1088 // 默认的
+	s WESTDGWIDTH=535 // 与JS中WESTDGWIDTH保持一致
+	
+	
+	i $g(^CacheTemp("INSU.MI.PortConfig","BrowseConfig",$j))'=""  d
+	.s dgHieght=$g(^CacheTemp("INSU.MI.PortConfig","BrowseConfig",$j))
+	i $g(^CacheTemp("INSU.MI.PortConfig","EDGwidth",$j))'=""  d
+	.s EDGwidth=$g(^CacheTemp("INSU.MI.PortConfig","EDGwidth",$j))
+	
+	
+	k ^CacheTemp("INSU.MI.PortConfig","EDGwidth",$j)
+	k ^CacheTemp("INSU.MI.PortConfig","BrowseConfig",$j)
+</server>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false" style="height:350px;padding:10px">
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="hisui-tabs" data-options="region:'north',title:'检查报告明细信息',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" style="height:87px;border-radius:0;border:1px solid #e2e2e2;">
+					<table id="HisQueryTab" class='search-table'>
+						<tr>
+							<td class="r-label td-first-col"><label class="clsRequired">医保类型</label></td>
+                  		 	<td>
+             					<input id="INSUType" class="textbox" />
+                    		</td>
+							<td class="r-label td-first-col"><label class="clsRequired">人员编号</label></td>
+							<td><input id="psn_no" class="textbox" style="border-spacing: 0 10px;"/></td>
+							<td class="r-label"><label class="clsRequired" >报告单号</label></td>
+							<td><input id="rpotc_no" name="rpotc_no" class="textbox"/></td>
+							<td class="r-label"><label class="clsRequired">机构编号</label></td>
+							<td><input id="fixmedins_code" name="fixmedins_code" class="textbox"/></td>						
+							<td><a href="" class="hisui-linkbutton" id="btnFind" style="margin-left:15px" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center'" id="dg-Layout">
+					<div id="dg" ></div> 
+				</div>
+			</div>
+			
+		</div>
+		<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px ;">		
+			<div class="hisui-layout" id="cc-layout" data-options="fit:true">
+				<div data-options="region:'west',title:'检验报告信息',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" style="width:#(WESTDGWIDTH)#px;border-radius:0 0 4px 4px;border:1px solid #e2e2e2;">
+					<div id="wdg" style="border-top:0"></div>
+				</div>
+				<div data-options="region:'center',title:'检验明细信息',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-radius:0 0 4px 4px;border:1px solid #e2e2e2">
+					<div id="edg"></div>
+				</div>
+			</div>
+     	</div>
+	</div>
+
+
+
+
+<script type="text/javascript" src="../scripts/dhcinsu/dhcinsu.rptdetailinfo.js"></script>
+<script type="text/javascript" src="../scripts_lib/xlsx/xlsx.core.min.js"></script>
+<script type="text/javascript" src="../scripts_lib/xlsx/es6-promise.auto.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcinsu/common/exceltool.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbdocmanage.csp
+    @JS:MKB_DocManage.js
+    @Title：文献管理
+    @Creator:石萧伟
+    @Description:文献管理
+    @CreateDate：2018-04-11
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_DocManage.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/FileSaver.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/jszip.min.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/excel-gen.js"></script>
+<style>
+.accordion .accordion-header {
+    border-top: 0px solid #ffffff;
+}
+.load{
+	background:url(../scripts/bdp/Framework/icons/mkb/load.png) no-repeat 0 3px;
+    padding: 0 10px 5px 20px;
+    margin: 10px 0 0 0;
+    color: #666666;
+    /*background-position:0 3px;*/
+    border-left: 10px solid #ffffff;
+}
+.load:hover {
+	background-color: #cee4ff;
+	border-left: 10px  solid #cee4ff;
+	}
+</style>
+</HEAD>
+<BODY>
+     <div class="hisui-layout" data-options="fit:true" border="false" id="layout">
+		<div data-options="region:'center',split:true" border="false" style="padding:4px">
+			<table data-options="fit:true,bodyCls:'panel-header-gray'" id="mygrid" border="true" toolbar="#allbar"></table> <!--toolbar="#allbar"-->
+		</div>      
+ 	</div> 
+	 <!--<div id="maxWindow"></div>-->
+     <!--文献表单-->
+     <div id="myWin" style="width:600px;height:500px;padding:10px;display:none;">   
+		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			<table id="addtable" align="center">
+				<tr align="center" id="for_updata">
+				 <td class="tdlabel" id="txtchooses"><font color=red>*</font>上传文献</td>
+				 <td style="padding-left:10px"><iframe id="upload" src="" width="400px" height="36px" scrolling="no" frameborder="0"></iframe></td>
+				</tr>
+				<tr>	
+	               <td class="tdlabel"><font color=red>*</font>代码</td>
+	    		   <td style="padding-left:14px;padding-bottom:5px"><input id="MKBDMCode" name="MKBDMCode" type="text" class="hisui-validatebox"  style="width:379px;color:#999999; background-color:#F0F0F0;" data-options="" readonly="true"></td>
+	    		</tr>
+	    		<tr>
+	    		   <td class="tdlabel"><font color=red>*</font>名称</td>
+	    		   <td style="padding-left:14px;padding-bottom:5px"><input id="MKBDMDesc" name="MKBDMDesc" type="text" class="hisui-validatebox" style="width:379px"></td>
+	    		 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">文献出处</td>
+	    		   <td style="padding-left:14px;padding-bottom:5px"><input id="MKBDMSource" name="MKBDMSource" type="text" class="hisui-validatebox" style="width:379px"></td>
+	    		 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">文献分类</td>
+	    		   <td style="padding-left:14px;padding-bottom:5px"><input id="MKBDMClassify" name="MKBDMClassify" type="text" class="hisui-validatebox" style="width:379px"></td>
+	    		 </tr>
+				 <tr>
+				   <td class="tdlabel">关键词</td>
+				   <td style="padding-left:14px;padding-bottom:5px"><input id="MKBDMKeyWord" name="MKBDMKeyWord"  type="text" class="hisui-validatebox" style="width:379px"><td>
+				 </tr>	    		 
+	    		 <tr>
+	    		   <td class="tdlabel">审核状态</td>
+	    		   <td style="padding-left:14px;padding-bottom:5px"><input id="MKBDMFlag" name="MKBDMFlag"  style="width:386px;"></td>
+	    		 </tr>
+	    		 <tr>
+	    		   <td class="tdlabel">备注</td>
+	               <td style="padding-left:14px;padding-bottom:5px"><textarea id="MKBDMNote" name="MKBDMNote" type="text" class="hisui-validatebox" style="width:379px;height:100px"  ></textarea></td>
+				 </tr>
+				 <tr>
+				 <!--文献类型-->
+				   <td><input id="MKBDMType" name="MKBDMType"  style="width:200px;" type="hidden" ></td>
+				 </tr>
+				 <tr>
+				 <!--存放路径-->
+				   <td><input id="MKBDMPath" name="MKBDMPath"  style="width:200px;" type="hidden" ></td>
+				 </tr>
+			</table >
+		</form>
+	</div>
+	 <!--预览弹窗--> 
+	<div id="win"></div>
+    <!--数据面板工具栏-->
+    <div id="allbar">
+    	<input style="width:165px" id="TextDesc"/>
+ 		<span class="searchbox-button" style="margin-left:-34px;" id="btnSearch"></span>
+    	<a href="#" class="hisui-linkbutton l-btn-2" data-options="iconCls:'icon-refresh',plain:true,stopAllEventOnDisabled:true" id="btnRefresh">清屏</a>
+    	<a href="#" class="hisui-linkbutton l-btn-4" data-options="iconCls:'icon-upload',plain:true,stopAllEventOnDisabled:true" id="add_btn">上传文献</a>
+    	<a href="#" class="hisui-linkbutton l-btn-4" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="update_btn">修改文献</a>
+    	<span class="loadspan"><a href="#" class="load" data-options="plain:true" id="onload_btn">下载</a></span><!--hisui的lingkbutton将a标签的download冲掉了，不能直接用linkbutton来做下载按钮-->
+    	<a href="#" class="hisui-linkbutton l-btn-2" data-options="iconCls:'icon-detailsview',plain:true,stopAllEventOnDisabled:true" id="pre_btn" >预览</a>
+    	<a href="#" class="hisui-linkbutton l-btn-2" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn">删除</a>	
+    	<a href="#" class="load" data-options="plain:true" id="onloaddata_btn">导出</a>
+    </div>
+    <table id="table1" style="display:none"></table>
+    
+    <script type="text/javascript">
+	    var url="dhc.bdp.mkb.mkbuploadfile.csp"
+	    if ("undefined"!==typeof websys_getMWToken){
+			url += "?MWToken="+websys_getMWToken()
+		}
+		$('#upload').attr('src', url);
+  </script>
+    
+</BODY>
+</HTML>

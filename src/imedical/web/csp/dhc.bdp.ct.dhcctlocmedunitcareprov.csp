@@ -1,0 +1,114 @@
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+ // dhc.bdp.ct.dhcctlocmedunitcareprov.csp
+ // 名称: 医疗单元关联医护人员
+ // 修改人:基础数据平台-gaoshanshan
+ // 修改日期:2023-02-28
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/> 
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/Care/DHC_CTLoc_MedUnitCareProv.js"></script>
+</HEAD>
+<style>
+.tbclass{
+    text-align: right;
+}
+.dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break:keep-all;
+    word-wrap:break-word;
+    white-space:nowrap;
+}
+</style>
+<BODY> 
+    <div class="hisui-layout" data-options="fit:true" border="false" > 
+            <div data-options="region:'north' ,split:false,collapsible:false,bodyCls:'panel-body-gray' " style="border-bottom:1px dashed #C0C0C0;overflow:hidden" title="" border="true">  
+                 <table cellspacing=10 >
+                    <tr>
+                    	<td class="">医生工号</td>
+			    		<td><input id="TextCode" type="text" class="hisui-validatebox" style="width:150px"></td>
+			    		<td class="">医生姓名</td>
+			    		<td><input id="TextDesc" type="text" class="hisui-validatebox" style="width:150px"></td>
+			    		<td class="">查看历史</td>
+			    		<td><input id="checkhistory" class='hisui-checkbox' type="checkbox"></td>
+                        <td class="tdlabel-b"><a href="#" class="hisui-linkbutton" iconCls="icon-w-find" id="btnSearch" >查询</a></td>
+                        <td class="tdlabel-b"><a href="#" class="hisui-linkbutton" iconCls="icon-w-reset" id="btnRefresh" >重置</a></td>
+                    </tr>     
+                 </table > 
+             </div>  
+            <div data-options="region:'center',bodyCls:'panel-body-gray'" border="true"> 
+                <table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
+             </div>  
+     </div> 
+      
+    <div id="myWin" style="width:auto;height:auto;resizable:true;display:none;"> 
+        <div title="基本信息" style="padding:10px;">
+            <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+                <table cellspacing=10>
+                	<input type="hidden" id="MUCPParRef" name="MUCPParRef">
+                	 <input type="hidden" id="MUCPRowId" name="MUCPRowId">
+                	  <tr>
+                       <td class="tbclass"><font color=red>*</font>医生姓名</td>
+                       <td><input id="MUCPDoctorDR" name="MUCPDoctorDR" type="text" class="textbox" style="width:207px" data-options="required:true"></td>
+                      </tr>
+                     <tr>
+                       <td class="tbclass"><font color=red>*</font>医生工号</td>
+                       <td><span id="CTPCPCode"></span></td>
+                     </tr>
+                      <tr>
+                       <td class="tbclass"><font color=red>*</font>开始日期</td>
+                       <td><input id="MUCPDateFrom" name="MUCPDateFrom" type="text" class='hisui-datebox' style="width:207px" data-options="required:true"></td>
+                      </tr>
+                      <tr>
+                       <td class="tbclass">结束日期</td>
+                       <td><input id="MUCPDateTo" name="MUCPDateTo" type="text" class='hisui-datebox' style="width:207px"></td>
+                      </tr>
+                      <tr>
+                       <td class="tbclass">开始时间</td>
+                       <td><input id="MUCPTimeFrom" name="MUCPTimeFrom" type="text" class='hisui-timespinner' style="width:207px" ></td>
+                      </tr>
+                      <tr>
+                       <td class="tbclass">结束时间</td>
+                       <td><input id="MUCPTimeTo" name="MUCPTimeTo" type="text" class='hisui-timespinner' style="width:207px" ></td>
+                      </tr>
+                      <tr>
+                       <td class="tbclass">组长标志</td>
+                       <td><input class='hisui-checkbox' type="checkbox" label="" id="MUCPLeaderFlag" name="MUCPLeaderFlag" checked="checked" value="Y"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">门诊出诊标志</td>
+                       <td><input class='hisui-checkbox' type="checkbox" label="" id="MUCPOPFlag" name="MUCPOPFlag" checked="checked" value="Y"></td>
+                     </tr>
+                     <tr>
+                       <td class="tbclass">住院出诊标志</td>
+                       <td><input class='hisui-checkbox' type="checkbox" label="" id="MUCPIPFlag" name="MUCPIPFlag" checked="checked" value="Y"></td>
+                     </tr>
+                </table >
+            </form>
+         </div> 
+    </div>
+   
+    <!--工具栏-->
+    <div id="mybar">
+        <a  href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAdd">新增</a> 
+        <a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true"id="btnUpdate">修改</a> 
+        <!--a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true"  id="btnDel">删除</a-->
+    </div>
+</BODY>
+ </html>
+ 

@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script language="cache" runat="server">
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s:(patientID="") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+            s ipAddress = $Get(%request.Data("IPAddress",1),"")
+            s productSourceType = $Get(%request.Data("ProductSourceType",1),"EMR")
+            s isPrintDirectly = $Get(%request.Data("IsPrintDirectly",1),"Y")
+            s pluginUrl = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("PluginUrl")
+            s setDefaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")
+            s collectMedicalRecordConfig = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("CollectMedicalRecordConfig","")
+        </script>
+        <style type="text/css">
+            td[field="printQuality"] div.datagrid-cell, .datagrid-cell-group{
+                text-overflow: ellipsis;
+                padding: 0 8px;
+            }
+            .panel-body, .panel-header{
+	        	border-color:#cccccc;
+	        }
+        </style>
+        <script language = "javascript"> 
+            var episodeID = '#(episodeID)#';
+            var patientID = "#(patientID)#";
+            var ipAddress = "#(ipAddress)#";
+            var productSourceType = "#(productSourceType)#";
+            var isPrintDirectly = "#(isPrintDirectly)#";
+            var pluginUrl = "#(pluginUrl)#";
+            var setDefaultFontStyle = "#(setDefaultFontStyle)#";
+            var userID = '#(%session.Get("LOGON.USERID"))#';
+            var userName = '#(%session.Get("LOGON.USERNAME"))#';
+            var userLocID ='#(%session.Get("LOGON.CTLOCID"))#';
+            var collectMedicalRecordConfig = "#(collectMedicalRecordConfig)#".split("!");
+            var tempParam = "";
+            ///批量打印序列
+            var envVar = {
+                InsIDCount: 0,
+                BatchPrintList: new Array()
+            };
+            var gl = {
+                patientId:patientID,
+                episodeId:episodeID,
+                userId:userID,
+                userName:userName
+            };
+            var treegridObj = $HUI.treegrid("#printList",{});
+        </script>
+        <title> 批量打印 </title>
+    </head>
+
+    <body style="padding:0px">
+	    <div class="hisui-layout" data-options="fit:true,border:false" style="">
+	    	<div data-options="region:'center',border:false" style="padding:10px;">
+		        <table class='hisui-treegrid' id="printList"></table>
+		        <div id="editor" style="width:0px;height:0px;overflow:hidden;">
+		            <div id="containerWord" style="width:0px;height:0px;overflow:hidden;"></div>
+		            <div id="containerGrid" style="width:0px;height:0px;overflow:hidden;"></div>
+		        </div>
+	        </div>
+	   </div>
+	        <script type="text/javascript" src="../scripts/emr/js/ip.batchprint.js"></script>
+	        <script type="text/javascript" src="../scripts/emr/js/ip.batchprint.editor.js"></script>
+	        <script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>	
+    </body>
+</html>

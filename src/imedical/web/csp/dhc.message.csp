@@ -5,8 +5,20 @@
 <!doctype html>
 <html>
 <head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+ 	<server>
+	if ##class(%Dictionary.MethodDefinition).%ExistsId("websys.hisui.Configuration||HeadSession") {
+ 		d ##class(websys.hisui.Configuration).HeadSession()
+ 	}
+ 	
+ 	set MsgDetailsId=%request.Get("MsgDetailsId"),UserId=%session.Get("LOGON.USERID")
+ 	if MsgDetailsId>0 {
+	 	if $lg($g(^websys.DHCMessageDetailsD(MsgDetailsId)),7)'=UserId s MsgDetailsId=""
+	 }
+ 	</server>
 	<script src="../scripts/websys.js" type="text/javascript"></script>
 	<HISUI />
+	<script src="../scripts/dhcmessage.common.js" type="text/javascript"></script>
 	<style>
 		.badge {
 		    display: inline-block;
@@ -33,18 +45,12 @@
 			margin:10px 0 0 0;
 		}
 		#left-box{
-			width:405px; /*450px; -45px*/
-			height:497px;
-			float:left;
+			
 		}
 		#left-box .panel.datagrid .panel-body{
 			border-color:#ddd;
 		}
-		#right-box{
-			width: 793px; /*748px;   +45px*/
-			margin-left:10px;
-			height:495px;
-			float:left;
+		#right-box {
 			border:1px solid #ddd;
 		    -moz-border-radius: 4px;
 		    -webkit-border-radius: 4px;
@@ -380,35 +386,98 @@
 			border:#189b54;
 			background:#189b54;
 		}
-
+ 		.msg-adm-content-diag{
+			display:inline-block;
+			overflow: hidden; 
+			width:auto;
+			max-width: 640px;
+			height: 25px;
+			text-overflow: ellipsis;
+			vertical-align: bottom;
+			cursor:pointer;
+		}
+		.block-icon{
+			display:inline-block;
+			width:20px;
+			height:18px;	
+		}
+		.datagrid-row>td{
+			border-left-width:0;
+		}
+		.msg-link .msg-btn{
+			margin-left:10px;	
+		}
+		
+		/*极简ui的改造 内容不多就不单独做了*/
+		.ui-lite .msg-adm-head{
+			border-radius:25px;	
+		}
+		.ui-lite .msg-adm-head.sex-male{
+			background-image: url(../images/man_lite.png);
+		}
+		.ui-lite .msg-adm-head.sex-female{
+			background-image: url(../images/woman_lite.png);
+		}
+		.ui-lite .msg-adm-head.sex-unknown{
+			background-image: url(../images/unman_lite.png);
+		}
+		.ui-lite .no-data{
+			background-image: url(../images/no_data_lite.png);
+			background-size:600px auto;
+		}
+		/*消息界面 极简ui的表格工具栏按钮 和炫彩一样*/
+		.ui-lite .datagrid-toolbar .l-btn-plain .l-btn-icon-left .l-btn-icon {
+			padding:0;
+			height:22px;
+			width:26px;
+			left:5px;	
+		}
+		.ui-lite .datagrid-toolbar .l-btn-plain.l-btn-disabled .l-btn-icon-left .l-btn-icon {
+			background-color: transparent;
+			opacity: .5;
+	    	filter: alpha(opacity=50);
+		}
+		.ui-lite .icon-eye {
+		    background: url('../scripts_lib/hisui-0.1.0/dist/css/icons/eye.png') center center no-repeat;
+		}
+		.ui-lite .icon-eye:before {
+			display:none;	
+		}
+		.ui-lite .datagrid-toolbar .l-btn-plain .l-btn-text {
+			color:#666;	
+			height:22px;	
+			line-height:22px;	
+		}
+		.ui-lite .datagrid-toolbar .l-btn-plain.l-btn-disabled .l-btn-text {
+		    opacity: .6;
+		    filter: alpha(opacity=60);
+		}
+		.ui-lite .datagrid-toolbar .l-btn-plain:hover {
+		    padding: 0;
+		    border: 0;
+		    background-color: #dbedf9;
+		}
+		.ui-lite .datagrid-toolbar .l-btn-plain:hover .l-btn-text {
+		    color: #0379d0;
+		}
+		/*消息界面 极简ui的表格工具栏按钮 和炫彩一样  end*/
 	</style>
 </head>
 <!--dhc.message.csp-->
-<body>
-	<table width="100%" id="search-tb">
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:51px;padding:10px;">
+	<table width="100%" id="search-tb" style="border-spacing: 0;">
 		<tr>
 			<td class="r-label" style="width:57px;">#(..Get("消息类型"))#</td>
 			<td>
-				<select id="ActionTypeArg" class="hisui-combobox" style="width:160px;" data-options='onSelect:ActionTypeArgOnChange'>
-				  <option value ="" selected>#(##class(websys.Translation).Get("DIC","全部"))#</option>
-				  <server>
-				    Set:$d(%session.Data("LOGON.LANGID"))#2 langId=%session.Data("LOGON.LANGID")
-				    Set:$g(langId)="" langId = 20
-				  	set ActionDr="" for  set ActionDr=$o(^websys.DHCMessageActionTypeD(ActionDr)) q:ActionDr=""  d
-				  	.q:$lg(^websys.DHCMessageActionTypeD(ActionDr),7)="N" //未激活的不显示
-				  	.q:(%request.Get("OnlyMarquee")=1)&&($lg(^websys.DHCMessageActionTypeD(ActionDr),22)'="Y")
-				 	.set ActionCode = $lg(^websys.DHCMessageActionTypeD(ActionDr),2)
-					.set ActionDesc = $lg(^websys.DHCMessageActionTypeD(ActionDr),3)
-					.Set ActionDesc = ##class(websys.TranslationEPR).GetTrans("websys.DHCMessageActionType","DHCActionDesc",langId,ActionDesc)
-					.w "<option value =",ActionCode,">",ActionDesc,"</option>"
-				 </server>
+				<select id="ActionTypeArg" class="hisui-combobox" style="width:160px;" data-options='onSelect:ActionTypeArgOnChange,defaultFilter:4'>
 				</select>
 			</td>
 			<td class="r-label">#(..Get("发送日期"))#</td>
 			<td>
-				<input id="sdate" type="text" class="hisui-datebox" style="width:160px;">
+				<input id="sdate" type="text" class="hisui-datebox" style="width:140px;">
 				<span style="padding:0 10px">#(..Get("至"))#</span>	
-				<input id="edate" type="text" class="hisui-datebox" style="width:160px;">
+				<input id="edate" type="text" class="hisui-datebox" style="width:140px;">
 			</td>
 			<td class="r-label">#(..Get("状态"))#</td>
 			<td>
@@ -417,23 +486,29 @@
 				  <option value ="Y" >#(..Get("已处理"))#</option>
 				</select>
 			</td>
-			<td>
+			<td style="padding-left:10px;">
 				<input class='hisui-radio' type="radio" label='#(..Get("紧急"))#' name='MsgLevel' value='D,V' data-options='onCheckChange:MsgMsgLevelOnChange'>
 	            <input class='hisui-radio' type="radio" label='#(..Get("普通"))#' name='MsgLevel' value='I,G' data-options='onCheckChange:MsgMsgLevelOnChange'>
 	            <input class='hisui-radio' type="radio" label='#(..Get("全部"))#' name='MsgLevel' value='D,V,I,G' data-options='onCheckChange:MsgMsgLevelOnChange'>
+			</td>
+			<td style="padding-left:10px;padding-right:10px;">
+				<input class='hisui-checkbox' type="checkbox" label='#(..Get("仅本人收到"))#' name='OnlySelfReceive' id="OnlySelfReceive" data-options='onCheckChange:OnlySelfReceiveOnChange'>
 			</td>
 			<td style="text-align:right;">
 				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-white-search',onClick:findMessageList" >查询</a>      
 			</td>
 		</tr>
 	</table>
-	<div id="main-box">
-		<div id="left-box">
+	</div><!--end north-->
+
+		<div id="left-box" data-options="region:'west',border:false" style="width:425px;padding:0 10px 10px 10px;">
 			<table id="messagelist"></table>
 		</div>
-		<div id="right-box"></div>
-		<div style="clear:both"></div>
-	</div>
+		<div id="layout-center"  data-options="region:'center',border:false" style="padding:0 10px 10px 0px;">
+			<div id="right-box" class="hisui-panel" data-options="fit:true"></div>
+		</div>
+
+
 	<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
 	<script src="../scripts/dhc.message.js" type="text/javascript"></script>
 		<script id="otherReplyTpl" type="text/x-jquery-tmpl">
@@ -511,8 +586,8 @@
 						<span class="font-btn italic">I</span>
 					</div>
 					<div style="float:right">
-						<a href='javascript:void(0)' class="msg-btn" onclick='reply("S");'>仅发给发出人</a>
-						<a href='javascript:void(0)' class="msg-btn" onclick='reply("A");'>发送给相关人</a>
+						<a href='javascript:void(0)' {{if typeof ShowReplyS =='string' && ShowReplyS=='N'}}style="display:none;"{{/if}} class="msg-btn" onclick='reply("S");'>仅发给发出人</a>
+						<a href='javascript:void(0)' {{if typeof ShowReplyA =='string' && ShowReplyA=='N'}}style="display:none;"{{/if}} class="msg-btn" onclick='reply("A");'>发送给相关人</a>
 					</div>
 					<div style="clear:both"></div>
 				</div>
@@ -543,10 +618,10 @@
 							<span class="label">#(..Get("主治医生"))#</span>
 							<span>${AdmDoctor}</span>
 						</p>
-						<p class="msg-adm-content-row">
+						<div class="msg-adm-content-row" >
 							<span class="label">#(..Get("主要诊断"))#</span>
-							{{html Diagnosis}}
-						</p>
+							<div class="msg-adm-content-diag">{{html Diagnosis}}</div>
+						</div>
 					</div>
 				</div>
 			{{/if}}
@@ -554,14 +629,62 @@
 		</div>
 	  </script>
 	<script type="text/javascript">
+		if(typeof session=='undefined') var session={};
+	
 		var currSelectedMsgJson={};
 		var sessionUserId = #($g(%session.Data("LOGON.USERID")))#;
 		var sessionUserName = "#($g(%session.Data("LOGON.USERNAME")))#";
 		var dateformat="#(##class(websys.Conversions).DateFormat())#";   //系统的日期格式配置
+		
+		var ShowByCatgory='#(##class(websys.DHCMessageConfig).GetShowByCatgory())#';
+		var ShowOneKeyRead='#(##class(websys.DHCMessageConfig).GetShowOneKeyRead())#';
+		
+		var ActionTypeJson={};
+		ActionTypeJson['N']=#(##class(websys.DHCMessageActionTypeMgr).GetComboData("1","","N",1))#;
+		ActionTypeJson['B']=#(##class(websys.DHCMessageActionTypeMgr).GetComboData("1","","B",1))#;
+		ActionTypeJson['']=#(##class(websys.DHCMessageActionTypeMgr).GetComboData("1","","",1))#;
+		var STATIC_ARG={};  //静态条件参数  仅由js改变  不由页面选择元素改变 如消息大类
+		
+		
+		
 		var request={};
 		request.OnlyMarquee="#(%request.Get("OnlyMarquee"))#";
 		request.DetailsId="#(%request.Get("DetailsId"))#";
 		request.DataInd="#(%request.Get("DataInd"))#";
+		
+		request.MsgDetailsId='#(MsgDetailsId)#';  //只打开一个
+		if (request.MsgDetailsId>0) {
+			request.OnlyMarquee='';
+			request.DetailsId='';
+			request.DataInd='';
+			
+		}
+		
+		request.IsTpsOpen="#(%request.Get("IsTpsOpen"))#";
+		
+		request.LevelType='#(%request.Get("LevelType"))#';
+		request.ActionCode='#(%request.Get("ActionCode"))#';
+		request.Catgory='#(%request.Get("Catgory"))#';
+		
+		///是不是正常打开
+		var IsNormalOpen=true;
+		if (request.MsgDetailsId>0) {
+			IsNormalOpen=false;
+		}
+		if (request.OnlyMarquee==1) {
+			IsNormalOpen=false;
+		}
+		if (request.IsTpsOpen=='1') {  //第三方打开
+			IsNormalOpen=false;
+		}
+		
+		$(function(){
+			/// 消息界面暂时比较简单 直接写在一个csp
+			if(typeof HISUIStyleCode=='string' && HISUIStyleCode=='lite'){
+				$('body').addClass('ui-lite')	;
+			}
+		
+		})
 	</script>
 </body>
 </html>

@@ -1,0 +1,40 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+<head>
+<ExtHealth:Head/> 
+<HISUI/>
+<!-- 3、4版病历使用html展示 -->
+<title>病历浏览</title>
+<script language="cache" runat="server">
+	s userid = %session.Get("LOGON.USERID")
+	s userloc = %session.Get("LOGON.CTLOCID")
+	s ssgroupid = %session.Get("LOGON.GROUPID")
+	s episodeID = $Get(%request.Data("EpisodeID",1),"")
+	s product = "IP"
+	s module = "View"
+	s patientID = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"module":(module),"action":"GET_PTIDBYEPID","params":{"episodeID":(episodeID)}})
+	s recordID = $Get(%request.Data("recordID",1),"")
+	s emrVersion = $Get(%request.Data("emrVersion",1),"") 
+</script>
+<script language="javascript">
+	var userid = "#(userid)#";
+	var userloc = "#(userloc)#";
+	var ssgroupid = "#(ssgroupid)#";
+	var product = "#(product)#";
+	var module = "#(module)#";
+	var patientID = '#(patientID)#';
+	var episodeID = '#(episodeID)#';
+	var recordID = "#(recordID)#"; //病历的唯一标识,3版instanceId，4版DocId
+	var emrVersion = "#(emrVersion)#"; //病历版本
+</script>
+</head>
+
+<body style="padding:0;margin:0px;background-color:#fff">
+	<div id="main" style="width:100%;height:100%;box-sizing:border-box;"></div>
+</body>
+<script type="text/javascript" src="../scripts/emr/js/bs.tools.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/bs.browse.browsform.html.js"></script>
+</html>

@@ -12,7 +12,7 @@
 		d ##class(web.DHCXMLPConfig).LODOPInit()
    </script>
 	<HISUI/>
-    <!--初始化CA服务环境-->
+    <!--初始化CA服务环境
 	<server>
 		/// 电子病历CA开关
 		s CAInit=##Class(web.DHCDocSignVerify).GetCAServiceStatus(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))
@@ -25,7 +25,8 @@
 		w "<script Language=""JavaScript"">"_$c(13,10)
 		w "var CAInit="""_$g(CAInit)_""";"_$c(13,10)
 		w "</script>"	
-	</server>
+	</server>-->
+	<script src="../scripts/websys.js"></script>
 	<!--------------打印相关---------->
 	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
 	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
@@ -44,6 +45,9 @@
 	<server>
 	  s LgHospID=%session.Get("LOGON.HOSPID")
 	  s LgGroupID=%session.Get("LOGON.GROUPID")
+	  s LgLocID=%session.Get("LOGON.CTLOCID")
+	  s LgUserID=%session.Get("LOGON.USERID")
+	  s LgParams=LgHospID_"^"_LgLocID_"^"_LgUserID_"^"_LgGroupID
 	  /// 多科会诊填写标识
 	  s MulWriFlag=##Class(web.DHCEMConsultCom).GetEmSysConfig("MULWRIFLAG",LgHospID)
 	  /// 会诊评价标识：停用
@@ -58,6 +62,28 @@
 	  s DocaNeedOpin = ##Class(web.DHCEMConsultCom).GetEmSysConfig("DOCNEEDOPIN",LgHospID)
 	  /// 发送是否自动授权查看病历
 	  s DefOpenAcc = ##class(web.DHCEMConsultCom).GetEmSysConfig("DEFOPENACC",LgHospID)
+	  /// 发送默认开启病历授权小时数 hxy 2021-01-14
+	  s DefOpenAccHour = ##class(web.DHCEMConsultCom).GetEmSysConfig("DEFOPENACCHOUR",LgHospID)
+	  /// 发送是否自动授权医嘱 hxy 2021-01-18
+	  s DefOpenAccOrd = ##class(web.DHCEMConsultCom).GetEmSysConfig("DEFOPENACCORD",LgHospID)
+	  /// 会诊发送默认开启医嘱授权小时数 hxy 2021-01-27
+	  s DefOpenAccOrdHour = ##class(web.DHCEMConsultCom).GetEmSysConfig("DEFOPENACCORDHOUR",LgHospID)
+	  /// 拒绝接收是否需要填写原因 hxy 2021-01-20
+	  s RefReason = ##class(web.DHCEMConsultCom).GetEmSysConfig("REFREASON",LgHospID)
+	  /// 取消接收是否需要填写原因 hxy 2021-01-21
+	  s RevAccReason = ##class(web.DHCEMConsultCom).GetEmSysConfig("REVACCREASON",LgHospID)
+	  /// 医师会诊申请时是否必须指定职称 hxy 2021-02-07
+	  s IsMustPrvTp = ##class(web.DHCEMConsultCom).GetEmSysConfig("ISMUSTPRVTP",LgHospID)
+	  /// 发送时是否自动打印申请单 hxy 2021-02-09
+	  s SendAutoPri = ##class(web.DHCEMConsultCom).GetEmSysConfig("SENDAUTOPRI",LgHospID)
+	  /// 申请时会诊时间是否允许填写 hxy 2021-02-19
+	  s ReqTimeFill = ##class(web.DHCEMConsultCom).GetEmSysConfig("REQTIMEFILL",LgHospID)
+	  /// 默认急诊就诊类型会诊性质为急会诊 hxy 2021-02-24
+	  s DefETypeCNAT = ##class(web.DHCEMConsultCom).GetEmSysConfig("DEFETYPECNAT",LgHospID)
+	  /// 启用'到达'状态后是否只对急会诊流程有效 hxy 2021-03-31
+	  s ArrJustForE = ##class(web.DHCEMConsultCom).GetEmSysConfig("ARRJUSTFORE",LgHospID)
+	  /// 会诊处理-修改到达时间的权限 hxy 2021-04-01
+	  s ModArrTime = ##class(web.DHCEMConsultCom).GetEmSysConfig("MODARRTIME",LgHospID)
 	  /// 是否允许请会诊医生对本次参与会诊的科室和医生进行增加和删除功能
 	  s ModCsFlag = ##class(web.DHCEMConsultCom).GetEmSysConfig("MOSCSFLAG",LgHospID)
 	  /// 会诊打印走的模式
@@ -66,6 +92,13 @@
 	  s NoAdmValidDaysLimit=""
 	  i ##class(websys.Conversions).IsValidMethodName("DHCDoc.DHCDocConfig.CommonFunction","GetConfigNode1") d
 	  .s NoAdmValidDaysLimit=##Class(web.DHCDocConfig).GetConfigNode1("NoAdmValidDaysLimit",LgGroupID,LgHospID)
+	  /// 会诊未完成是否可以打印会诊记录单
+	  s ConsNoCompCanPrt = ##class(web.DHCEMConsultCom).GetEmSysConfig("CONSNOCOMPCANPRT",LgHospID)
+	  s NoCompHideOpin = ##class(web.DHCEMConsultCom).GetEmSysConfig("NOCOMPHIDEOPIN",LgHospID)
+	  /// 医师会诊是否启用大科标识 hxy 2021-06-21
+	  s LeaderFlag=##Class(web.DHCEMConsultCom).GetEmSysConfig("LEADERFLAG",LgHospID)
+	  /// 会诊地点-默认 hxy 2022-03-21
+	  s AuditDefPlace=##class(web.DHCEMConsultCom).GetEmSysConfig("AUDITDEFPLACE",LgParams)
 	  w "<script Language=""JavaScript"">"_$c(13,10)
 	  w "var MulWriFlag="""_$g(MulWriFlag)_""";"_$c(13,10)
 	  w "var WriEvaCsFlag="""_$g(WriEvaCsFlag)_""";"_$c(13,10)
@@ -74,14 +107,30 @@
 	  w "var ConsUseStatusCode="""_$g(ConsUseStatusCode)_""";"_$c(13,10)
 	  w "var DocaNeedOpin="""_$g(DocaNeedOpin)_""";"_$c(13,10)
 	  w "var DefOpenAcc="""_$g(DefOpenAcc)_""";"_$c(13,10)
+	  w "var DefOpenAccHour="""_$g(DefOpenAccHour)_""";"_$c(13,10)
+	  w "var DefOpenAccOrd="""_$g(DefOpenAccOrd)_""";"_$c(13,10)
+	  w "var DefOpenAccOrdHour="""_$g(DefOpenAccOrdHour)_""";"_$c(13,10)
+	  w "var RefReason="""_$g(RefReason)_""";"_$c(13,10)
+	  w "var RevAccReason="""_$g(RevAccReason)_""";"_$c(13,10)
+	  w "var IsMustPrvTp="""_$g(IsMustPrvTp)_""";"_$c(13,10)
+	  w "var SendAutoPri="""_$g(SendAutoPri)_""";"_$c(13,10)
+	  w "var ReqTimeFill="""_$g(ReqTimeFill)_""";"_$c(13,10)
+	  w "var DefETypeCNAT="""_$g(DefETypeCNAT)_""";"_$c(13,10)
+	  w "var ArrJustForE="""_$g(ArrJustForE)_""";"_$c(13,10)
+	  w "var ModArrTime="""_$g(ModArrTime)_""";"_$c(13,10)
 	  w "var ModCsFlag="""_$g(ModCsFlag)_""";"_$c(13,10)
 	  w "var PrintModel="""_$g(PrintModel)_""";"_$c(13,10)
 	  w "var NoAdmValidDaysLimit="""_$g(NoAdmValidDaysLimit)_""";"_$c(13,10)
+	  w "var ConsNoCompCanPrt="""_$g(ConsNoCompCanPrt)_""";"_$c(13,10)
+	  w "var NoCompHideOpin="""_$g(NoCompHideOpin)_""";"_$c(13,10)
+	  w "var LeaderFlag="""_$g(LeaderFlag)_""";"_$c(13,10)
+	  w "var AuditDefPlace="""_$g(AuditDefPlace)_""";"_$c(13,10)
 	  w "</script>"
 	</server>
 </head>
 
 <body>
+	<input type="hidden" id="reasonInput"/>
 	<div class="hisui-layout" fit="true">
 		<div data-options="region:'center',border:true,title:'',headerCls:'panel-header-gray',collapsible:false" style="overflow:hidden;border:0">
 			<!-- 申请单内容区 -->
@@ -89,26 +138,33 @@
 				<!-- 申请单按钮区 -->
 				<div id="OpBtns" class="p-toolbar">
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="SaveCstNo()" id="bt_save">保存</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="SendCstNo()" id="bt_send">发送</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="RemoveCstNo()" id="bt_remove">删除</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="SureCstNo()" id="bt_sure">确认</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star',plain:true" onclick="EvaRCstNo()" id="bt_reva">评价</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-blue',plain:true" onclick="SaveCstNo('Send')" id="bt_send">发送</a><!--hxy 2021-04-12 SendCstNo()-->
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="RemoveCstNo()" id="bt_remove">删除</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-stamp-pass',plain:true" onclick="SureCstNo()" id="bt_sure">确认</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-stamp-cancel',plain:true" onclick="CanSureCstNo()" id="bt_revsure">取消确认</a><!--hxy 2021-01-07-->
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-orange-body',plain:true" onclick="EvaRCstNo()" id="bt_reva">评价</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-orange-border',plain:true" onclick="CanEvaRCstNo()" id="bt_revreva">取消评价</a><!--hxy 2021-01-08-->
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="CanCstNo()" id="bt_can">取消</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="AcceptCstNo()" id="bt_acc">接收</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" onclick="RevAccCstNo()" id="bt_revacc">取消接收</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-close',plain:true" onclick="RefCstNo()" id="bt_ref">拒绝接收</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" onclick="RevAccCstNoJudg()" id="bt_revacc">取消接收</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-close',plain:true" onclick="RefCstNoJudg()" id="bt_ref">拒绝接收</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-down',plain:true" onclick="AriCstNo()" id="bt_arr">到达</a><!--hxy 2021-03-23-->
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" onclick="CanAriCstNo()" id="bt_revarr">取消到达</a><!--hxy 2023-02-01-->
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" onclick="PreCompCstNo()" id="bt_precom">暂存</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" onclick="CompCstNo()" id="bt_com">完成</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" onclick="RevCompCstNo()" id="bt_revcom">取消完成</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-yellow',plain:true" onclick="EvaCstNo()" id="bt_ceva">评价</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-orange-body',plain:true" onclick="EvaCstNo()" id="bt_ceva">评价</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-orange-border',plain:true" onclick="CanEvaCstNo()" id="bt_revceva">取消评价</a><!--hxy 2021-01-09-->
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true" onclick="PrintCstHtml()" id="bt_print">打印</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="OpenAuthorize()" id="bt_openemr">开启授权</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-close',plain:true" onclick="ClsAuthorize()" id="bt_colseemr">关闭授权</a>
-					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-blue-edit',plain:true" onclick="OpenCsOrderWin()" id="bt_order">医嘱录入</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-pat-write',plain:true" onclick="OpenCsOrderWin()" id="bt_order">医嘱录入</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-pat-write',plain:true" onclick="OpenSurgWin()" id="bt_Surg">手术申请</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-person',plain:true" onclick="PatBaseWin()" id="bt_patemr">查看病历</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-person',plain:true" onclick="PatPacsAndLis()" id="bt_patsee">检查检验</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true" onclick="PatHisCst()">历次会诊</a>
 					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy-sos',plain:true" onclick="OpenCsLogWin()"id="bt_log">会诊日志</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-pat-write',plain:true" onclick="OpenEmrWin()" id="bt_emrwin" style="display:none">编写病历</a><!--hxy 2021-05-20-->
 				</div>
 				<!-- 申请单操作区 -->
 				<div class="p-content" id="p-content">
@@ -116,9 +172,9 @@
 						<span>#(..Get("会诊申请单"))#</span><span class="tip"></span>
 					</div>
 					<div style="margin:10px 0px;">
-			            <label class="twoLagLabel" style="width:100px;">#(..Get("会诊类型"))#</label>
+			            <label class="twoLagLabel" style="">#(..Get("会诊类型"))#</label>
 						<input id="CstType" style="width:150px;"/>
-						<label class="twoLagLabel" style="width:120px;">#(..Get("会诊性质"))#</label>
+						<label class="twoLagLabel" style="width:150px;">#(..Get("会诊性质"))#</label>
 						<div id="itemProp" style="width:200px;display:inline;"></div>
 						<!--
 						<server>
@@ -134,73 +190,80 @@
 						-->
 		            </div>
 		            <div style="margin:10px 0px;">
-		            	<label class="twoLagLabel" style="width:100px;">#(..Get("医院"))#</span></label>
+		            	<label class="twoLagLabel" style="width:56px;">#(..Get("医院"))#</span></label>
 						<input id="CstHosp" style="width:150px;">
-						<label class="twoLagLabel" style="width:120px;">#(..Get("外院名称"))#</label>
+						<label class="twoLagLabel" style="width:150px;">#(..Get("外院名称"))#</label>
 						<input id="CstUnit" class="hisui-validatebox" style="width:143px;" disabled>
-						<label class="twoLagLabel" style="width:100px;">#(..Get("外院科室"))#</label>
+						<label class="twoLagLabel" style="width:151px;">#(..Get("外院科室"))#</label>
 						<input id="CstLoc" style="width:150px;">
 		            </div>
-		            <div style="margin:15px 0px;">
-			            <label class="twoLagLabel" style="width:100px;">#(..Get("申请科室"))#</label>
+		            <div style="margin:10px 0px;">
+			            <label class="twoLagLabel" style="">#(..Get("申请科室"))#</label>
 			            <input id="CstRLoc" class="hisui-validatebox" style="width:143px;" disabled>
-						<label class="twoLagLabel" style="width:120px;">#(..Get("申请医师"))#</label>
+						<label class="twoLagLabel" style="width:150px;">#(..Get("申请医师"))#</label>
 						<input id="CstRDoc" class="hisui-validatebox" style="width:143px;" disabled>
-		            	<label class="twoLagLabel" style="width:100px;">#(..Get("联系人"))#</label>
+		            	<label class="twoLagLabel" style="width:151px;">#(..Get("联系人"))#</label>
 						<input id="CstUser" class="hisui-validatebox" style="width:143px;">
 		            </div>
 		            <div style="margin:10px 0px;">
-						<label class="twoLagLabel" style="width:100px;">#(..Get("联系电话"))#</label>
+						<label class="twoLagLabel" style="">#(..Get("联系电话"))#</label>
 						<input id="CstTele" class="hisui-validatebox" data-options="validType:'mobile'" style="width:143px;">	
-						<label class="twoLagLabel" style="width:120px;">#(..Get("会诊地址"))#</label>
-						<input id="CstAddr" class="hisui-validatebox" style="width:407px;" disabled>
+						<label class="twoLagLabel" style="width:150px;">#(..Get("会诊地址"))#</label>
+						<input id="CstAddr" class="hisui-validatebox" style="width:457.5px;"><!--disabled-->
 					</div>
 					<div style="margin:10px 0px;">
-						<label class="twoLagLabel" style="width:100px;">#(..Get("会诊日期"))#</label>
-						<input id="CstDate" class="hisui-datebox textbox" style="width:150px;" disabled>
-						<label class="twoLagLabel" style="width:120px;">#(..Get("会诊时间"))#</label>
+						<label class="twoLagLabel" style="">#(..Get("会诊日期"))#</label>
+						<input id="CstDate" class="hisui-datebox textbox" style="width:150px;" editable="fasle" disabled>
+						<label class="twoLagLabel" style="width:150px;">#(..Get("会诊时间"))#</label>
 						<input id="CstTime" class="hisui-timespinner textbox" style="width:150px;" disabled>
-						<label class="twoLagLabel" style="width:100px;">#(..Get("院区"))#</label>
-						<input id="HospArea" style="width:150px;"/>
+						<label class="twoLagLabel" style="width:151px;">#(..Get("院区"))#</label>
+						<input id="HospArea" style="width:150px;" disabled/>
 					</div>
 					<div id ="CompAreaDiv" style="margin:10px 0px;">
-						<label class="twoLagLabel" style="width:100px;">#(..Get("完成日期"))#</label>
+						<label class="twoLagLabel" style="">#(..Get("完成日期"))#</label>
 						<input id="CstCompDate" class="hisui-datebox textbox" style="width:150px;" disabled>
-						<label class="twoLagLabel" style="width:120px;">#(..Get("完成时间"))#</label>
-						<input id="CstCompTime" class="hisui-timespinner textbox" style="width:150px;" disabled>
+						<label class="twoLagLabel" style="width:150px;">#(..Get("完成时间"))#</label>
+						<input id="CstCompTime" class="hisui-timespinner textbox" style="width:150px;" data-options="showSeconds:true" disabled>
 					</div>
-		            <div style="margin:10px 0px;">
+					<div id="ArrAreaDiv" style="margin:10px 0px;"><!--hxy 2021-03-31-->
+						<label class="twoLagLabel" style="">#(..Get("到达日期"))#</label>
+						<input id="CstArrDate" class="hisui-datebox textbox" style="width:150px;" disabled>
+						<label class="twoLagLabel" style="width:150px;">#(..Get("到达时间"))#</label>
+						<input id="CstArrTime" class="hisui-timespinner textbox" style="width:150px;" data-options="showSeconds:true" disabled>
+					</div>
+		            <div style="margin-top:10px">
 			            <label style="font-weight:bold;" >#(..Get("会诊科室"))#</label>
 			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="InsCsLocItem()" id="bt_saveloc">保存科室</a>
-						<div style="min-height:90px;padding-top:10px;">
+						<div id="CstDet" style="min-height:90px;padding-top:10px;">
 							<table id="dgCstDetList"></table>
 			            </div>
 		            </div>
-		            <div style="margin:10px 0px;">
-			            <label style="font-weight:bold;color:red;"><sapn style="color:red">*</span>#(..Get("病情摘要"))#</label>
+		            <div style="">
+			            <label style="font-weight:bold;color:red;line-height:32px;display:inline-block"><sapn style="color:red">*</span>#(..Get("病情摘要"))#</label>
 			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="OpenEmr(1)" id="QueEmr">#(..Get("引用"))#</a>
-						<div style="height:140px;padding-top:10px;">
-							<textarea id="ConsTrePro" style="width:100%;height:100%;resize:none;"></textarea>
+						<div style="height:140px;padding-top:0px;">
+							<textarea id="ConsTrePro" style="width:99.2%;height:100%;resize:none;border-radius:4px;"></textarea>
 			            </div>
 		            </div>
-		            <div id="MarIndDiv" style="margin:10px 0px;display:none;">
-			            <label style="font-weight:bold;">#(..Get("会诊指征"))#</label>
+		            <div id="MarIndDiv" style="margin-top:5px;display:none;">
+			            <label style="font-weight:bold;line-height:32px;display:inline-block">#(..Get("会诊指征"))#</label>
 						<div style="height:140px;border:1px solid #ccc;margin:8px 0px;overflow-y:scroll">
 							<table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table"></table>
 			            </div>
 		            </div>
-		            <div style="margin:10px 0px;">
-			            <label style="font-weight:bold;color:red;"><sapn style="color:red">*</span>#(..Get("会诊理由及要求"))#</label>
-						<div style="height:140px;padding-top:10px;">
-							<textarea id="ConsPurpose" style="width:100%;height:100%;resize:none;" required></textarea>
+		            <div style="margin-top:5px">
+			            <label style="font-weight:bold;color:red;line-height:32px;display:inline-block"><sapn style="color:red">*</span>#(..Get("会诊理由及要求"))#</label>
+			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="OpenEmr(3)" id="QueEmr3">#(..Get("引用"))#</a><!--hxy 2021-01-12-->
+						<div style="height:140px;padding-top:0px;">
+							<textarea id="ConsPurpose" style="width:99.2%;height:100%;resize:none;border-radius:4px;" required></textarea>
 			            </div>
 		            </div>
-		            <div id="Opinion" style="margin:10px 0px;">
-			            <label style="font-weight:bold;">#(..Get("会诊结论"))#</label>
+		            <div id="Opinion" style="margin-top:5px">
+			            <label style="font-weight:bold;line-height:32px;display:inline-block">#(..Get("会诊结论"))#</label>
 			            <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="OpenEmr(2)" id="QueEmr2">#(..Get("引用"))#</a>
-			            <span id="bt_TempSave" style="margin-left:10px;"><a href="#" onclick="javascript:savesymmodel()">#(..Get("保存模板"))#</a></span>
-				        <span id="bt_TempQue" style="margin-left:10px;"><a href="#" onclick="javascript:showmodel()">#(..Get("选择模板"))#</a></span>
-						<div style="height:260px;padding-top:10px;">
+			            <span id="bt_TempSave" style="margin-left:10px;"><a href="javascript:void(0)" onclick="javascript:savesymmodel()">#(..Get("保存模板"))#</a></span>
+				        <span id="bt_TempQue" style="margin-left:10px;"><a href="javascript:void(0)" onclick="javascript:showmodel()">#(..Get("选择模板"))#</a></span>
+						<div style="height:260px;padding-top:0px;">
 							<textarea id="ConsOpinion"  style="width:100%;height:100%;resize:none;"></textarea>
 			            </div>
 		            </div>
@@ -212,7 +275,7 @@
 		            </div>
 		            <div id="ConsEvaR" style="margin:10px 0px;display:none;">
 			            <label style="font-weight:bold;">#(..Get("申请医生评价"))#</label>
-			            <span id="" style="margin-left:10px;"><a href="#" onclick="javascript:openAppraisePageR()">#(..Get("申请科室评价表"))#</a></span> 
+			            <span id="" style="margin-left:10px;color:#339eff"><a href="#" onclick="javascript:openAppraisePageR()">#(..Get("申请科室评价表"))#</a></span> 
 						<div style="height:30px;padding-top:5px;">
 							<label>#(..Get("满意度"))#</label>
 							<input class='hisui-radio' type="radio" label='#(..Get("优"))#' name='CstEvaRFlag' value='1'>
@@ -228,7 +291,7 @@
 		            </div>
 		            <div id="ConsEva" style="margin:10px 0px;display:none;">
 			            <label style="font-weight:bold;">#(..Get("会诊医生评价"))#</label>
-			            <span id="" style="margin-left:10px;"><a href="#" onclick="javascript:openAppraisePageC()">#(..Get("会诊科室评价表"))#</a></span>
+			            <span id="" style="margin-left:10px;color:#339eff"><a href="#" onclick="javascript:openAppraisePageC()">#(..Get("会诊科室评价表"))#</a></span>
 						<div style="height:30px;padding-top:5px;">
 							<label>#(..Get("满意度"))#</label>
 							<input class='hisui-radio' type="radio" label='#(..Get("优"))#' name='CstEvaFlag' value='1'>
@@ -249,7 +312,7 @@
 	<!--------------打印相关---------->
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCIPBILL">
-			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 		</form>
 	</div>
 	<!-------------------------------->
@@ -258,10 +321,10 @@
 		<iframe id="TabMain" scrolling="yes" width=100% height=99.5%  frameborder="0" src=""></iframe>
 	</div>
 	<!--------------模板保程序  2017-1-10---------->
-	<div id="symwin" style="background:#C6E2FF">
-		<div style="margin-left:20px;margin-top:20px;">
-			<div style="height:25px;width:90px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA;cursor: pointer;" onclick="javascript:saveSymLoc()"><img src="../scripts/dhcnewpro/images/keshi.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><div style="margin-left:5px;padding-top: 5px;float:left;font-size:14px;">科室模板</div></div>
-			<div style="float:right;margin:-26px 30px 0 0;height:25px;width:85px;border:1 solid #FFFAFA;border-radius:5px;text-align:center;background-color:#FFFAFA;cursor: pointer;" onclick="javascript:saveSymUser()"><img src="../scripts/dhcnewpro/images/person.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><span style="margin-left:4px;padding-top: 4px;float:left;font-size:14px;">个人模板</span></div>
+	<div id="symwin" style="background:#FFF">
+		<div style="margin-left:20px;margin-top:20px;" class="temp-panel">
+			<div class="temp-button" style="height:25px;width:90px;border-radius:5px;text-align:center;background-color:#FFFAFA;cursor: pointer;padding:5px;" onclick="javascript:saveSymLoc()"><img src="../scripts/dhcnewpro/images/keshi.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><div style="margin-left:5px;padding-top: 5px;float:left;font-size:14px;">科室模板</div></div>
+			<div class="temp-button" style="float:right;margin:-36px 30px 0 0;height:25px;width:85px;border-radius:5px;text-align:center;background-color:#FFFAFA;cursor: pointer;padding:5px;" onclick="javascript:saveSymUser()"><img src="../scripts/dhcnewpro/images/person.PNG" style="padding-top: 3px;float:left;margin-left: 3px;"><span style="margin-left:4px;padding-top: 4px;float:left;font-size:14px;">个人模板</span></div>
 		</div>
 	</div>
 </body>

@@ -1,0 +1,222 @@
+<csp:content charset=utf-8> 
+<SERVER>
+	;dhcdoc.orderinterface.csp ;医嘱操作界面的弹框html lx 2021-04-27
+ 	If ##Class(websys.SessionEvents).SessionExpired() Quit $$$ERROR($$$CSPSessionTimeout)
+	s Type=$g(%request.Data("Type",1))
+	s NeedSign=$g(%request.Data("NeedSign",1))
+	s label1="执行日期",label2="执行时间"
+	i Type="AddExec" s label1="要求"_label1,label2="要求"_label2
+	s ^templx("Sign")=$lb(Type,NeedSign)
+</SERVER>
+<style>
+#DiagWin {
+	overflow: hidden;
+}
+
+#DiagWin table tr{
+	height: 35px;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 5px;
+}
+.r-label{
+	/*padding-left: 10px;*/
+	padding-left: 0px;
+}
+.hisui-radio+.radio{
+	margin-right: 5px;
+}
+#DiagWin_Info {
+	text-align: center;
+	color:green;
+	display: inline-block;
+    width: 100%;
+    margin-top: 10px;
+}
+</style>
+
+<csp:if condition='Type="S"'>
+    <!--minimum height 295 px  ; width 380 px-->
+	<div id='DiagWin' style='height:228px;'>
+		<span id="DiagWin_Info"></span>
+		<table class='search-table' style='margin:0 auto;border:none;'>
+	       	 <tr>
+	       		 <td class='r-label'>#(..Get("是否预停"))#</td>
+	       		 <td><input class='hisui-checkbox' type='checkbox' id='isExpStopOrderCB'/></td>
+	       	 </tr>
+	       	 <tr>
+	       		 <td class='r-label'>#(..Get("停止日期"))#</td>
+	       		 <td><input id='winStopOrderDate' disabled='false' class='hisui-datebox textbox' required='required'></input></td>
+	       	 </tr>	       
+	       	 <tr>
+	       		 <td class='r-label'>#(..Get("停止时间"))#</td>
+	       		 <td><input id='winStopOrderTime' class='hisui-timespinner textbox' data-options='showSeconds:true' style='width:155px' onkeydown='ipdoc.patord.view.StopTimeFocusJump(5)' /></td>
+	       	 </tr>
+	       	 <tr>
+	       		 <td class='r-label'>#(..Get("执行次数"))#</td>
+	       		 <td><input id='winStopOrderTimes' editable='false' class='textbox'></input></td>
+	       	 </tr>
+	       	 <tr>
+	       		 <td class='r-label'>#(..Get("密码"))#</td>
+	       		 <td><input type='password' id='winPinNum' style='' class='hisui-validatebox textbox' data-options='required:true' onkeydown='ipdoc.patord.view.DiagDivKeyDownHandle("Confirm","#(Type)#")'/></td>
+	       	 </tr>
+		</table>
+	</div>
+<csp:elseif condition=((Type="C")||(Type="U"))>
+    <!--minimum height 180 px ; width 380 px-->
+	<div id='DiagWin' style='height:108px;'>
+		<span id="DiagWin_Info"></span>
+		<table class='search-table' style='margin:0 auto;border:none;'>
+			<tr>
+				<td class='r-label'>#(..Get("作废/撤销原因"))#</td>
+				<td><input id='OECStatusChReason' class='textbox'></input></td>
+			 </tr>
+			 <tr>
+				<td class='r-label'>#(..Get("密码"))#</td>
+				<td><input type='password' id='winPinNum' class='hisui-validatebox textbox' data-options='required:true' onkeydown='ipdoc.patord.view.DiagDivKeyDownHandle("Confirm","#(Type)#")'/> </td>
+			 </tr>
+	   </table>
+	</div>
+<csp:elseif condition='Type="A"'>
+    <!--minimum height 245 px  ; width 380 px-->
+	<div id='DiagWin' style='border-width:10px 10px 0px 10px;border-style: solid;border-color:#FFF;height: calc(100% - 10px);'>
+		<div style='margin:0 auto;border:none;'>
+			<textarea rows=7 style='width: calc(100% - 5px);' data-options='required:true' id='OrderNotes'></textarea>
+		</div>
+	</div>
+<csp:elseif condition='Type="NurA"'>
+    <!--minimum height 245 px  ; width 380 px-->
+	<div id='DiagWin' style='margin-top: 5px;'>
+		<div style='margin:0 auto;border:none;'>
+			<textarea rows=7 style='width:95%;margin:5px;' data-options='required:true' id='OrderExecNotes'></textarea>
+		</div>
+	</div>
+<csp:elseif condition=((Type="NurC")||(Type="NurS")||(Type="NurCD"))>
+    <!--minimum height 135 px  ; width 380 px-->
+	<div id='DiagWin' style=''>
+		<table class='search-table' style='margin:0 auto;border:none;'>
+			<tr>
+				<td class='r-label'>#(..Get("请选择原因"))#</td>
+				<td><input id='OECStatusChReason' class='textbox'></input></td>
+			</tr>
+		</table>
+	</div>
+<csp:elseif condition=((Type="NurR")||(Type="AddExec"))>
+	<csp:if condition=(NeedSign="Y")>
+    <!--minimum height 215 px  ; width 550 px-->
+		<div id='DiagWin' style=''>
+			<table class='search-table' style='margin:0 auto;border:none;'>
+				<tr>
+					<td class='r-label'>#(..Get(label1))#</td>
+					<td><input id='winRunOrderDate' type='text' class='hisui-datebox' style='width: 154px;' required='required'></input></td>
+					<td class='r-label'>#(..Get(label2))#</td>
+					<td><input id='winRunOrderTime' class='hisui-timespinner textbox' data-options='showSeconds:true' style='width: 154px;'  onkeydown='ipdoc.patord.view.StopTimeFocusJump(5)'/></td>
+				</tr>
+				<tr>
+					<td class='r-label required-label'>#(..Get("工号"))#</td>
+					<td><input id='NurseCodeFirst' class='hisui-validatebox textbox' data-options='required:true'/></td>
+					<td class='r-label required-label'>#(..Get("密码"))#</td>
+					<td><input type='password' id='winPinNumFirst' class='hisui-validatebox textbox' data-options='required:true'/></td>
+				</tr>
+				<tr>
+					<td class='r-label required-label'>#(..Get("工号"))#</td>
+					<td><input id='NurseCodeSecond' class='hisui-validatebox textbox' data-options='required:true'/></td>
+					<td class='r-label required-label'>#(..Get("密码"))#</td>
+					<td><input type='password' id='winPinNumSecond' class='hisui-validatebox textbox' data-options='required:true'/></td>
+				</tr>
+			</table>
+		</div>
+	<csp:else>
+    <!--minimum height 180 px  ; width 380 px-->
+		<div id='DiagWin' style=''>
+			<table class='search-table' style='margin:0 auto;border:none;'>
+				<tr>
+					<td class='r-label'>#(..Get(label1))#</td>
+					<td><input id='winRunOrderDate' type='text' class='hisui-datebox' style='width: 154px;' required='required'></input></td>
+				</tr>
+				<tr>
+					<td class='r-label'>#(..Get(label2))#</td>
+					<td><input id='winRunOrderTime' class='hisui-timespinner textbox' data-options='showSeconds:true' style='width: 154px;'  onkeydown='ipdoc.patord.view.StopTimeFocusJump(5)'/></td>
+				</tr>
+				
+			</table>
+		</div>
+	</csp:if>
+<csp:elseif condition='Type="NurUpdateEndTime"'>
+    <!--minimum height 135 px  ; width 380 px-->
+	<div id='DiagWin' style=''>
+		<table class='search-table' style='margin:0 auto;border:none;'>
+			<tr>
+				<td class='r-label'>#(..Get("结束时间"))#</td>
+				<td><input id='winHourEndTime' class='hisui-combobox'/></td>
+			</tr>		
+		</table>
+	</div>
+	
+<csp:elseif condition='Type="NurSeeOrd"'>
+    <!--minimum height 255 px  ; width 380 px-->
+	<div id='DiagWin' style=''>
+		<table class='search-table' style='margin:0 auto;border:none;'>
+			<tr>
+				<td class='r-label'>#(..Get("类型"))#</td>
+				<td><input id='SeeOrdType' class='textbox' /></td>
+			</tr>
+			<tr>
+				<td class='r-label'>#(..Get("日期"))#</td>
+				<td><input id='SeeOrdDate' class='hisui-datebox textbox' /></td>
+			</tr>
+			<tr>
+				<td class='r-label'>#(..Get("时间"))#</td>
+				<td><input id='SeeOrdTime' class='hisui-timespinner textbox' data-options='showSeconds:true' onkeydown='ipdoc.patord.view.StopTimeFocusJump(7)' /></td>
+			</tr>
+			<tr>
+				<td class='r-label'>#(..Get("备注"))#</td>
+				<td><input id='SeeOrdNotes' class='textbox' onkeydown='ipdoc.patord.view.DiagDivKeyDownHandle("Confirm","#(Type)#")'/></td>
+			</tr>
+		</table>
+	</div>
+<csp:elseif condition='Type="NurCancelSeeOrd"'>
+    <!--minimum height 215 px  ; width 380 px-->
+	<div id='DiagWin' style=''>
+	    <table class='search-table' style='margin:0 auto;border:none;'>
+	        <tr>
+	            <td class='r-label'>#(..Get("日期"))#</td>
+	            <td><input id='SeeOrdDate' class='hisui-datebox textbox' /></td>
+	        </tr>
+	        <tr>
+	            <td class='r-label'>#(..Get("时间"))#</td>
+	            <td><input id='SeeOrdTime' class='hisui-timespinner textbox' data-options='showSeconds:true'/></td>
+	        </tr>
+	        <tr>
+	            <td class='r-label'>#(..Get("备注"))#</td>
+	            <td>
+	                <input id='SeeOrdNotes' class='textbox'/>
+	            </td>
+	        </tr>
+	    </table>
+	</div>	
+<csp:elseif condition='Type="CancelPreStopOrd"'>
+    <!--minimum height 140 px  ; width 380 px-->	
+	<div id='DiagWin' style='margin-top: 5px;'>
+	    <table class='search-table' style='margin:0 auto;border:none;'>
+	        <tr>
+	            <td class='r-label'>#(..Get("密码"))#</td>
+	            <td>
+	                <input type='password' id='winPinNum' class='hisui-validatebox textbox' data-options='required:true' onkeydown='ipdoc.patord.view.DiagDivKeyDownHandle("Confirm","#(Type)#")' />
+	            </td>
+	        </tr>
+	    </table>
+	</div>
+<csp:elseif condition='Type="ExecAppend"'>	
+    <!--minimum height 285 px  ; width 380 px-->
+	<div id='DiagWin' style='margin-top: 5px;'>
+		<div style="padding-left: 10px;">
+		<input class='hisui-radio' type='radio' label=#(..Get("首次"))# name='ExecAppendradio' id='ExecAppendSCradio' value='10'>
+		<input class='hisui-radio' type='radio' label=#(..Get("接瓶"))# name='ExecAppendradio' value='11'>
+		</div>
+		<div style='height:165px;'>
+			<table id='ExecAppendOrdList' cellpadding='5' style='margin:5px;border:none;'></table>
+		</div>
+	</div>
+</csp:if>

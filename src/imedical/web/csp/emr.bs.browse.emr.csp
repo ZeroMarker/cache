@@ -1,0 +1,97 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired()
+	q 1
+</csp:method>
+<html>
+
+<head>
+	<ExtHealth:Head />
+	<HISUI />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/bs.interfaceviewcategory.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/bs.browse.emr.css" />
+	<script type="text/javascript" src="../scripts/emr/js/bs.tools.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s action = $Get(%request.Data("Action",1),"")
+		s viewType = $Get(%request.Data("ViewType",1),"")
+		s instanceID = $Get(%request.Data("InstanceID",1),"")
+		s categorydir = $Get(%request.Data("categorydir",1),"")
+		s product = "IP"
+		s module = "View"
+		s patientID = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"params":{"episodeID":(episodeID)},"product":(product),"module":(module),"action":"GET_PTIDBYEPID"})
+		s episodeDept = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"params":{"episodeID":(episodeID)},"product":(product),"module":(module),"action":"GET_DEPTIDBYEPID"})
+		s episodeLocID = $p(episodeDept,"^",1)
+        s admType = $p(^PAADM(episodeID),"^",2)  //值:I、O、E
+		s docIDs = $Get(%request.Data("DocIDs",1),"")
+		s userLocID = %session.Get("LOGON.CTLOCID") 
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+		s historyDefaultSelectDocID = $Get(%request.Data("OPHistoryDefaultSelectDocID",1),"")
+  </script>
+	<script language="javascript">
+		var categorydir = "#(categorydir)#";
+		var ssgroupID = '#(ssgroupID)#';
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var episodeLocID = '#(episodeLocID)#';
+		var instanceID = '#(instanceID)#';
+		var viewType = '#(viewType)#';  //值EditorHtml PDF
+		var action = '#(action)#';
+        var admType = '#(admType)#';
+		var docIDs = '#(docIDs)#';
+		var userLocID = '#(userLocID)#';
+		var product = "#(product)#";
+		var module = "#(module)#";
+		var historyDefaultSelectDocID = '#(historyDefaultSelectDocID)#';      //门诊历史病历浏览住院病历时调用此csp，此参数用于配置默认选中模板的DocID
+   </script>
+
+	<title>病历浏览</title>
+</head>
+
+<body style="padding:10px 10px 0px 10px;background-color:#fff;box-sizing:border-box;">
+	<div id="browse" class="hisui-layout" data-options="border:false,fit:true">
+		<!--布局1，默认使用 -->
+		<div data-options="region:'east',border:false" style="width:231px;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="height:36px;padding-left:10px">
+					<input type="text" class="hisui-searchbox" id="selectCategory"
+						data-options="width:220,prompt:emrTrans('输入病历名称搜索!')" />
+				</div>
+				<div data-options="region:'center',border:false" style="padding-left:10px">
+					<div class="hisui-panel navcategory" data-options="border:false,fit:true"
+						style="border:1px solid #D9D9D9;">
+						<ol class="categorytree" id="ulcategory"></ol>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="browseContent" data-options="region:'center',border:false" style="padding:0;margin:0;"></div>
+		<div id="logdialog" class="hisui-dialog" title="操作记录明细" style="width:950px;height:500px;padding:0;margin:0;"
+			data-options="iconCls:'icon-w-list',modal:true,isTopZindex:true,closed:true">
+			<iframe id="logiframe" frameborder="0" src="" style="width:100%;height:99%;padding:0;margin:0;"></iframe>
+		</div>
+	</div>
+
+	<div id="interbslayout" class="hisui-layout" data-options="fit:true">
+		<!--布局2，配置categorydir=south使用 -->
+		<div id="interbrowseContent" data-options="region:'center',border:false"></div>
+		<div data-options="region:'south',border:false" style="height:50px;">
+			<div class="hisui-layout" data-options="border:false,fit:true">
+				<div data-options="region:'center',border:false">
+					<div id="interulcategory" class="internavcategory"></div>
+				</div>
+				<div id="tab-tools" data-options="region:'east',border:false,split:true"
+					style="width:220px;height:100%;margin:10px 5px;">
+					<span class="tab_search">
+						<input type="text" class="hisui-searchbox" id="interselectCategory" style="width:200px;"
+							data-options="prompt:emrTrans('输入病历名称搜索!')" />
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/emr/js/bs.browse.emrinter.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/bs.browse.emr.js"></script>
+</body>
+
+</html>

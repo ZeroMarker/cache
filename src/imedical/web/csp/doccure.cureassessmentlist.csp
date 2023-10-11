@@ -12,13 +12,23 @@
 </head> 
 <Server>
 	s DCARowIdStr=$g(%request.Data("DCARowIdStr",1))
+	s PageShowFromWay=$g(%request.Data("PageShowFromWay",1))
+	;ShowFromEmr 信息总览 ShowFromEmrList  病历浏览 不允许增删改查评估记录
+	if PageShowFromWay="ShowFromEmr" s PageShowFromWay="ShowFromEmrList"
+	s DHCDocCureLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureLinkPage",%session.Get("LOGON.HOSPID"))
+	s DHCDocCureRecordLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureRecordLinkPage",%session.Get("LOGON.HOSPID"))
+	s DHCDocCureAssLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAssLinkPage",%session.Get("LOGON.HOSPID"))
 </Server>
 <body>
 	<csp:Include Page="doccure.cureassessmentlist.show.csp">
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
-			DCARowIdStr:"#(DCARowIdStr)#"
+			DCARowIdStr:"#(DCARowIdStr)#",
+			DHCDocCureLinkPage:"#(DHCDocCureLinkPage)#",
+			DHCDocCureRecordLinkPage:"#(DHCDocCureRecordLinkPage)#",
+			DHCDocCureAssLinkPage:"#(DHCDocCureAssLinkPage)#",
+			PageShowFromWay:"#(PageShowFromWay)#"
 		}
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/app.cureassessmentlist.js"></script>

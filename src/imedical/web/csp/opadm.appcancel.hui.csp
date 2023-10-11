@@ -8,7 +8,8 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
-<ADDINS require="RWCard"/>
+<ADDINS require="RWCard,CmdShell"/>
+<DOCCARD medStepCode="OPAdmReg"></DOCCARD>
 <style>
 .newclsInvalid{
 	border-color: red;
@@ -28,13 +29,22 @@
 </style>
 <Server>
 	s vRBASID=%request.Get("vRBASID")
+	s (HospitalID,RegNo)=""
+	if (vRBASID){
+		s RBLocDr=$P(^RB("RES",+vRBASID),"^",1)
+		s HospitalID=$P(^CTLOC(RBLocDr),"^",22)
+	}
+	s PatientID=%request.Get("PatientID")
+	i PatientID'=""{
+		s RegNo=$p(^PAPER(PatientID,"PAT",1),"^",1)	
+	}
 	s sysDateFormat=##class(websys.Conversions).DateFormat()
 	s CurDay=##class(websys.Conversions).DateLogicalToHtml(+$h)
 	w "<input id='PatientID' name='PatientID' type='hidden' value=''>",$C(13,10)
-	w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
-	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	/*w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
 </Server>
 </head>
 <body class="hisui-layout" data-options="split:true">
@@ -44,9 +54,13 @@
 		var ServerObj={
 			sysDateFormat:"#(sysDateFormat)#",
 			CurDay:"#(CurDay)#",
-			vRBASID:"#(vRBASID)#"
+			vRBASID:"#(vRBASID)#",
+			PatientID:"#(PatientID)#",
+			RegNo:"#(RegNo)#",
+			HospitalID:"#(HospitalID)#"
 		};
 	</SCRIPT>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>

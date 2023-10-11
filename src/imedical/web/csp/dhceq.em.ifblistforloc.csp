@@ -3,8 +3,10 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 </head>
 <script language="cache" runat="server">
 	s SourceType = $Get(%request.Data("SourceType",1))
@@ -15,7 +17,9 @@
 	{
 		s ElementID = $Get(%request.Data("ElementID",1))
 		s TemplateID = $Get(%request.Data("TemplateID",1))
-		s Status=$Piece($G(^DHCEQBuyRequest(SourceID)),"^",16)
+        //modified by ZY20230103
+        s BuyRequestID=$Piece($G(^DHCEQBuyRequestList(SourceID)),"^",1)
+        s Status=$Piece($G(^DHCEQBuyRequest(BuyRequestID)),"^",16)
 	}
 	elseif(SourceType=2){
 		s Status=$Piece($G(^DHCEQBuyPlan(SourceID)),"^",6)	//add by CSJ 2020-03-17 来源为采购计划
@@ -24,7 +28,7 @@
 </script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'推荐产品信息'">
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
 				<div data-options="region:'center',border:false">
 					<table id="tDHCEQIFBList"  data-options="border:false"></table>

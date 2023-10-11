@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 急诊留观虚拟长期发药
+    csp: pha.ip.v4.emdisp.csp
+    js:  pha/ip/v4/emdisp.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <PHAPRINTCOM />
+    <ADDINS require="CMgr,CmdShell,PrjSetTime" />
+    <style>
+        .pha-ip-person-toggle {}
+
+        .pha-ip-takeloc-notify {
+            color: red;
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            background: #fff;
+            font-style: italic
+        }
+
+
+        .pha-ip-disp-order-group {
+            padding-left: 30px;
+        }
+
+        .pha-ip-disp-order-group>div {
+            float: left;
+            max-width: 200px;
+            overflow: hidden;
+        }
+
+        .pha-grid-a {
+            cursor: pointer;
+        }
+
+        .pha-tips-group div {
+            margin-left: 5px;
+        }
+
+        .pha-tips {
+            font-size: 12px;
+            line-height: 22px;
+            padding-left: 5px;
+            padding-right: 5px;
+            border-radius: 2px;
+            position: relative;
+            top: 3px;
+            float: left;
+        }
+
+        .pha-tips-owe {
+            background-color: #F6704E;
+            color: #fff
+        }
+        #winSelectPrintWay table{
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',border:false,height:63,split:true" style="overflow: hidden;">
+                    <div class="hisui-panel" title="" data-options="headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-drug-audit',fit:true,bodyCls:'panel-body-gray'" style="overflow: hidden;">
+                        <div style="float:left">
+                            <table class="pha-con-table qCondition">
+                                <tr>
+                                    <td class="r-label">
+                                        #(..Get("用药日期"))#
+                                    </td>
+                                    <td class="r-label">
+                                        <input class="hisui-datebox pha-datebox" id="startDate" data-pha="class:'hisui-datebox',query:true,clear:true">
+                                    </td>
+                                    <td class="r-label">
+                                        #(..Get("至"))#
+                                    </td>
+                                    <td class="r-label">
+                                        <input class="hisui-datebox pha-datebox" id="endDate" data-pha="class:'hisui-datebox',query:true,clear:true">
+                                    </td>
+                                    <td class="r-label">
+                                        #(..Get("发药类别"))#
+                                    </td>
+                                    <td class="r-label">
+                                        <input id="dispCat" data-pha="class:'hisui-combobox',query:true,clear:true">
+                                    </td>
+                                    <td class="r-label">
+                                        <label for="patNo">#(..Get("登记号</label>"))#
+                                    </td>
+                                    <td>
+                                        <input id="patNo" class="hisui-validatebox" data-pha="class:'hisui-validatebox',query:true,clear:true">
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClean">清屏</a>
+                                    </td>
+                                    <td class="r-label">
+                                        <a class="hisui-linkbutton" plain="false" iconCls='icon-w-print' id="btnDispPrint">发药并打印</a>
+                                    </td>
+                                    <td class="r-label">
+                                        <a class="hisui-linkbutton" plain="false" iconCls='icon-w-ok' id="btnDisp">发药</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'west',border:false,split:true,width:450">
+                    <div class="hisui-tabs tabs-gray" fit="true" id="tabsTotal">
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div id="tabsDetail" class="hisui-tabs tabs-gray" fit="true">
+                        <div data-options="title:'医嘱明细',code:'order'" selected>
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false">
+                                    <table id="gridOrder"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-options="title:'药品汇总',code:'inci'">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'center'" border="false">
+                                    <table id="gridInci"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div id="gridOrderBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-reload" id="btnRefresh">刷新</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-all-select" id="btnAllSelect">选择全部数据</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-all-unselect" id="btnAllUnSelect">取消选择全部数据</a>
+    </div>
+    <div id="gridInciBar">
+        <div style="padding:10px;">
+            <div class="pha-tip-info" style="line-height: 28px;top:10px;right: 10px;letter-spacing:1px">
+                　#(..Get("药品汇总是勾选的医嘱明细的数据汇总"))#
+            </div>
+        </div>
+    </div>
+    <!-- 选择打印方式 -->
+    <!-- 选择打印方式 -->
+    <div id="winSelectPrintWay" style="overflow: hidden;width: 500px;">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    #(..Get("您确定【发药】吗？"))#
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div id="kwPrintWay"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/emdisp.js"></script>
+    <script src="../scripts/pharmacy/inpha/ipprintcom.js"></script>
+</body>
+
+</html>

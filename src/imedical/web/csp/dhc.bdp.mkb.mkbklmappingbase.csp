@@ -1,0 +1,215 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbknoregister.csp
+    @JS:MKB_KnoRegister.js
+    @Title：知识点映射注册
+    @Creator:石萧伟
+    @Description:知识点映射注册
+    @CreateDate：2018-05-02
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_KLMappingBase.js"></script>
+<style>
+ .pagination-info,.pagination-page-list{
+         display:none;
+     } 
+::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+    color: gray;
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+   color:    gray;
+   opacity:  1;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+   color:    gray;
+   opacity:  1;
+}
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+   color:    gray;
+} 
+ .m-btn-downarrow, .s-btn-downarrow {
+    top: -4px;
+}
+             
+</style>
+</HEAD>
+<BODY>
+     <div class="hisui-layout" data-options="fit:true" id="layout">
+
+     	<!--中心操作区-->
+		<div id="layoutcenter" data-options="region:'center',split:true" border="false" style="padding:4px 4px 4px 0px">
+			<div class="hisui-layout hisui-panel" data-options="fit:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" title="规则维护" border="true">
+				<div class="datagrid-toolbar" data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom: 1px dashed #C0C0C0;overflow:hidden;" border="false">
+				   <!--<a href="#" class="hisui-linkbutton" iconCls="icon-mappingknow" data-options="plain:true" id="btnRegister">注册知识点映射</a>-->
+				   <a href="#" class="hisui-linkbutton l-btn-5" data-options="iconCls:'icon-mappingknow',plain:true,stopAllEventOnDisabled:true" id="btnAddBase">注册新规则</a>
+				   <a href="#" id="mbedit" class="hisui-menubutton menubutton-toolbar l-btn-6" data-options="menu:'#addMenu',iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" style="width:150px">新增扩展列</a>
+				   <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-lockdata" data-options="plain:true,stopAllEventOnDisabled:true" id="btnForbid">锁死</a>
+				   <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-save" data-options="plain:true,stopAllEventOnDisabled:true" id="btnSave" style='border-left:1px solid #C0C0C0'>保存</a>
+				   <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-reload" data-options="plain:true,stopAllEventOnDisabled:true" id="btnRefresh">重置</a>
+		     	</div>
+		     	<div id="centerlayout" class='centerlayout' data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false" style="border-color:white;">
+		     		<div class="hisui-layout" data-options="fit:true">
+			     		<div data-options="region:'west',split:true,headerCls:'panel-header-gray',collapsible:false" border="false" style="width:380px;border-color:white;padding:1px 0px 30px 10px">
+			     			<div id='lockForm' class="hisui-panel" title="基本信息"  data-options="fit:true,headerCls:'panel-header-card'" style="overflow:hidden;"> 
+				     			<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+			     					<table align='center' style="padding-top:10px" cellspacing='10'>
+			     						<tr>
+			     							<td align='right'><font color=red>*</font>标题</td>
+			     							<td><input class="hisui-validatebox" id="MKBKMBDesc" name="MKBKMBDesc" style="width:250px;"></td>
+			     						</tr>
+			     						<tr>
+			     							<td align='right'><font color=red>*</font>知识点1</td>
+			     							<td><input id="MKBKMBKnowledge1" name="MKBKMBKnowledge1" class="dis_class" style="width:257px;"></td>
+			     						</tr>
+			     						<tr>
+			     							<td align='right'><font color=red>*</font>知识点2</td>
+			     							<td><input id="MKBKMBKnowledge2" name="MKBKMBKnowledge2" class="dis_class" style="width:257px;"></td>
+			     						</tr>
+			     						<tr>
+			     							<td align='right'>映射关系</td>
+			     							<td><input id="MKBKMBMappingRelation" class="dis_class" name="MKBKMBMappingRelation"  style="width:257px;"></td>
+			     						</tr>
+			     						<tr id='disable_id'>
+			     							<td align='right'>标识</td>
+			     							<td><input id="MKBKMBIdentify" name="MKBKMBIdentify"  style="width:257px;"></td>
+			     						</tr>			     						
+			     						<tr>
+			     							<td align='right'>备注</td>
+			     							<td><textarea id="MKBKMBNote" name="MKBKMBNote" type="text" style="width:250px;height:80px"  ></textarea></td>
+			     						</tr>		     						
+							    		 <tr>
+							    		   <td align="right"><input class='hisui-checkbox' type="checkbox" id="MKBKMBFlagF" data-options="checked:false" value="N"></td>
+							    		   <td><span id="menu_save">同步生成右键菜单</span></td>										  
+										 </tr>
+										 <tr>
+			     							<!--代码-->
+			     							<td style='display:none'><input id="MKBKMBCode" name="MKBKMBCode"  style="width:257px;"></td>
+			     						</tr>
+			     						<tr>
+			     							<!--顺序-->
+			     							<td style='display:none'><input id="MKBKMBSequence" name="MKBKMBSequence"  style="width:257px;"></td>
+			     						</tr>				     						
+			     					</table>
+				     			</form>
+			     			</div>
+			     		</div>
+			     		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'"  style="border-color:white;padding:0px 10px 30px 0px">
+				     		<div id='overshow' class="hisui-panel" title="列信息"  data-options="fit:true,headerCls:'panel-header-card'"> 
+				     			<!--主列信息-->
+				     			<div id="addMainCo">
+				     				<!--展示列1-->
+									<div  class='maindiv' id='Awhole' style='margin:20px 10px 10px 10px;width:98%;overflow:hidden;border:1px solid #C0C0C0'>
+										<div>
+											<!--存放id和code,列源-->
+											<div class='hiddenRowid' style='display:none'></div>
+											<div class='hiddenCode' style='display:none'></div>
+										</div>
+										<div style='float:left;height:100%;width:7%' align='center' ><p style='margin:10px;background-color:#00BB00;color:white;border-radius:5px 5px 5px 5px;'>列1</p></div>
+										<div  style='float:left;padding:10px;border-left:#40a2de solid 0px'>
+											<table cellspacing='10'>
+												<tr>
+													<td align='right'><font color=red>*</font>列名</td>
+													<td><input id='forreload1' class="resizeA hisui-validatebox" type="text"  style="width:250px;"></td>
+												</tr>
+												<tr>
+													<td align='right'><font color=red>*</font>列源</td>
+													<td><input id='forload1' class='source1'  style="width:257px;"></td>
+													<td class='sourceknow1'>（知识点1）</td>
+												</tr>
+												<tr>
+													<td ><img  src='../scripts_lib/hisui-0.1.0/dist/css/icons/add.png' onclick='addMainColumn(this,1)' style='border: 0px;cursor:pointer'></td>
+												</tr>
+											</table>
+										</div>
+									</div>
+									<!--展示列2-->
+									<div  class='maindiv' id='Bwhole' style='margin:10px 10px 10px 10px;width:98%;overflow:hidden;border:1px solid #C0C0C0'>
+										<div>
+											<!--存放id和code-->
+											<div class='hiddenRowid' style='display:none'></div>
+											<div class='hiddenCode' style='display:none'></div>
+										</div>
+										<div style="float:left;height:100%;width:7%;" align='center'><p style='margin:10px;background-color:#00BB00;color:white;border-radius:5px 5px 5px 5px;'>列2</p></div>
+										<div style="float:left;padding:10px;border-left:#40a2de solid 0px">
+											<table cellspacing='10'>
+												<tr>
+													<td align='right'><font color=red>*</font>列名</td>
+													<td><input id='forreload2' class="resizeA hisui-validatebox" type="text" style="width:250px;"></td>
+												</tr>
+												<tr>
+													<td align='right'><font color=red>*</font>列源</td>
+													<td><input class='source2'  id='forload2' style="width:257px;"></td>
+													<td class='sourceknow2'>（知识点2）</td>
+												</tr>
+												<tr>
+													<td ><img  src='../scripts_lib/hisui-0.1.0/dist/css/icons/add.png' onclick='addMainColumn(this,2)' style='border: 0px;cursor:pointer'></td>
+												</tr>
+											</table>
+										</div>
+									</div>
+				     			</div>
+				     			<!--扩展列-->
+								<div id="registerMain">	
+								</div>
+							</div>
+						</div>	
+					</div>
+					
+				</div>
+			</div>
+		</div> 
+		<!--左侧列表展示-->
+		 <div id="layoutwest" data-options="region:'west',split:true" border="false" style="width:252px;padding:4px 0px 4px 4px"  > 
+            <table data-options="fit:true,iconCls:'icon-w-paper'" id="mappingbasegrid" border="true"  toolbar="#leftTools" title="规则注册" style="border-color:blue;"></table> 
+        </div>      
+ 	</div>
+ 	<!--左侧工具栏-->
+ 	<div id="leftTools">
+ 		<!--<a id="TextDesc" class="hisui-searchbox" style="width:170px"></a>-->
+ 		<input style="width:165px" id="TextDesc" />
+ 		<span class="searchbox-button" style="margin-left:-34px;" id="btnSearch"></span>
+ 		<a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-refresh" data-options="plain:true" id="btnLeftRefresh"></a>
+ 	</div>
+ 	<!--添加小按钮-->
+ 	<!--<div id="basetools"> 
+ 		 <a href="#" class="hisui-tooltip icon-w-add" id="btnAddBase"></a>
+ 	</div>-->
+ 	<!--新增扩展属性菜单--> 
+ 	<div id="addMenu" style='width:170px'>
+ 		<div  data-options="iconCls:'icon-combobox'" id="addCombobox">新增下拉框</div>
+ 		<div  data-options="iconCls:'icon-radio'" id="addRadio">新增单选框</div>
+ 		<div  data-options="iconCls:'icon-checkbox'" id="addCheckbox">新增复选框</div>
+ 		<div  data-options="iconCls:'icon-singletext'" id="addText">新增文本</div>
+ 		<div  data-options="iconCls:'icon-textarea'" id="addTexts">新增多行文本</div>
+ 		<div  data-options="iconCls:'icon-mtpaper-undo'" id="addTerm">新增引用术语</div> 		
+ 	</div>
+ 	<!--添加多行窗口-->
+ 	<div id="myWin" style="width:450px;height:450px;top:30px;padding:10px;display:none;">
+ 	<div><p>每行代表一个选项，可以添加多个选项</p></div>
+ 	<div align="center"><textarea id="buttons" type="text" style="width:400px;height:320px;"></textarea></div>
+ 	</div>
+ 	<!--解锁密码-->
+ 	<div id='lockWin' style="width:300px;height:180px;display:none;padding-top:20px">
+ 		<div align='center'><font color=red>*</font>请输入解锁密码！</div>
+ 		<div align='center' style='padding-top:10px'><input type="password" id='lockpassword' class="hisui-validatebox" style="width:200px" data-options="required:true,missingMessage:'请输入密码'"></input></div>
+ 	</div>
+ 	<div id="leftBarForMove" class="hisui-menu" style="width:80px;">
+        <a href="#"  class="hisui-linkbutton" iconCls='icon-cancel' plain="true" data-options="stopAllEventOnDisabled:true" id="btnDelForM">删除</a>
+        <a href="#"  class="hisui-linkbutton" iconCls='icon-shiftup' plain="true" data-options="stopAllEventOnDisabled:true" id="btnUpForM">上移</a> 
+        <a href="#"  class="hisui-linkbutton" iconCls='icon-shiftdown' plain="true" data-options="stopAllEventOnDisabled:true"id="btnDownForM">下移</a>  		
+ 	</div>
+</BODY>
+</HTML>
+																						

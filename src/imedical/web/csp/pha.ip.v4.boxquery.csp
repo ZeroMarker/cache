@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--住院移动药房-物流箱查询
+	csp:pha.ip.v4.boxquery.csp
+	js: pha/ip/v4/boxquery.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM/>
+    <link rel="stylesheet" href="../scripts/pha/ip/v4/css/ui.css">
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/mobprint.js"></script>
+    <script src="../scripts/pharmacy/common/js/dhcpha.common.phaxmlprint.js"></script>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',border:false,height:95,split:true">
+                    <div class="hisui-panel" title="物流箱查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <div class="js-con-data">
+                            <div class="pha-row">
+                                <div class="pha-col">#(..Get("装箱时间"))#</div>
+                                <div class="pha-col">
+                                    <input class="hisui-datebox pha-datebox" id="conStartDate" data-pha="class:'hisui-datebox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">
+                                    <input class="hisui-timespinner pha-timespinner" id="conStartTime"  showSeconds=true data-pha="class:'hisui-timespinner',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">#(..Get("至"))#</div>
+                                <div class="pha-col">
+                                    <input class="hisui-datebox pha-datebox" id="conEndDate" data-pha="class:'hisui-datebox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">
+                                    <input class="hisui-timespinner  pha-timespinner" id="conEndTime" showSeconds=true data-pha="class:'hisui-timespinner',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">#(..Get("药房"))#</div>
+                                <div class="pha-col">
+                                    <input id="conPhaLoc" data-pha="class:'hisui-combobox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">#(..Get("是否可用"))#</div>
+                                <div class="pha-col">
+                                    <input id="conStat" data-pha="class:'hisui-combobox',clear:true,query:true">
+                                </div>
+                                <div class="pha-col">
+                                    <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a>
+                                </div>
+                                <div class="pha-col">
+                                    <a class="hisui-linkbutton" iconCls="icon-w-clean" id="btnClean">清屏</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'west',border:false,width:300,split:true">
+                    <div class="hisui-panel" title="病区" data-options="headerCls:'panel-header-gray',iconCls:'icon-house',fit:true,bodyCls:''">
+                        <table id="gridWard"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-panel" title="物流箱" data-options="headerCls:'panel-header-gray',iconCls:'icon-pack',fit:true,bodyCls:''">
+                        <table id="gridBox"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridBoxBar">
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-print-box'" id="btnPrint">补打物流箱标签</a>
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-pack-cancel'" id="btnCancel">取消物流箱标签</a>
+
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/ip/v4/boxquery.js"></script>
+</body>
+
+</html>

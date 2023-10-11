@@ -1,0 +1,130 @@
+<!-- dhcem.obs.doc.pat.number.csp 急诊留观患者数量-->
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	留观抢救室患者数量 </title>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<style type="text/css">
+	.hosnews{background:rgba(0, 0, 0, 0.5);height:100%;display: flex;justify-content: center;align-items: center;box-sizing: border-box;}
+	.hosnews:last-of-type{margin-right: 0;}
+	.hosnews>img{margin-right: 15px;vertical-align: middle;margin-left: 20px;width:45px;}
+	.hosnews>div{display: inline-block;vertical-align: middle;}
+	.hosnews>div>p{font-family: 'Source Han Sans CN';color: #ffffff;font-size: 14px;line-height: 0px;}
+	.hosnews>div>p:first-of-type{font-size: 14px;}
+	.hosnewsp{min-width:110px}
+	</style>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgCtLocDesc="#(%session.Get("LOGON.CTLOCDESC"))#";  //科室描述
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+</script>
+</head>
+
+<body>
+	<div style="height: 100%;margin:0;display:flex;flex-direction:column;background:rgba(0,0,0,0);justify-content: space-between;">
+		<div style="width:100%;height:50%;padding-bottom:10px">
+			<div style="width:50%;height:100%;padding-right:10px;float:left;box-sizing: border-box;">
+				<div class="hosnews" style="">
+					<img src="../images/dhcnewpro/obs.png" alt="">
+				    <div style="">
+				      <p style="font-size:26px" id="obsnum">0</p>
+				      <p class="hosnewsp">留观患者&nbsp</p>
+				    </div>
+				</div>
+			</div>
+			<div style="width:50%;height:100%;padding-left:10px;float:left;box-sizing: border-box;">
+				<div class="hosnews">
+					<img src="../images/dhcnewpro/sav.png" alt="">
+				    <div style="">
+				      <p style="font-size:26px" id="rescuenum">0</p>
+				      <p class="hosnewsp">抢救患者&nbsp</p>
+				    </div>
+				</div>
+			</div>
+			<!--div class="hosnews" style="border-right:solid 10px transparent">
+			    <img src="../images/dhcnewpro/obs.png" alt="">
+			    <div style="">
+			      <p>15</p>
+			      <p>留观患者</p>
+			    </div>
+		  	</div>
+			<div class="hosnews" style="border-left:solid 10px transparent">
+			    <img src="../images/dhcnewpro/sav.png" alt="">
+			    <div style="">
+			      <p>2</p>
+			      <p>抢救患者</p>
+			    </div>
+			</div-->
+		</div>
+		
+		<div style="width:100%;height:50%;padding-top:10px">
+			<div style="width:50%;height:100%;padding-right:10px;float:left;box-sizing: border-box;">
+				<div class="hosnews" style="">
+					<img src="../images/dhcnewpro/in.obs.png" alt="">
+				    <div style="">
+				      <p style="font-size:26px" id="inhosp">0</p>
+				      <p class="hosnewsp">今日入留抢</p>
+				    </div>
+				</div>
+			</div>
+			<div style="width:50%;height:100%;padding-left:10px;float:left;box-sizing: border-box;">
+				<div class="hosnews">
+					<img src="../images/dhcnewpro/go.obs.png" alt="">
+				    <div style="">
+				      <p style="font-size:26px" id="dishosp">0</p>
+				      <p class="hosnewsp">今日出留抢</p>
+				    </div>
+				</div>
+			</div>
+			<!--div class="hosnews" style="border-right:solid 10px #fff">
+			    <img src="../images/dhcnewpro/in.obs.png" alt="">
+			    <div style="">
+			      <p>7</p>
+			      <p>今日入留抢</p>
+			    </div>
+			</div>
+			<div class="hosnews" style="border-left:solid 10px #fff">
+			    <img src="../images/dhcnewpro/go.obs.png" alt="">
+			    <div style="">
+			      <p>8</p>
+			      <p>今日出留抢</p>
+			    </div>
+			</div-->
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	
+	$(function(){
+		initValue();
+	})
+	function initValue(){
+		var LgParams=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID;
+		runClassMethod("web.DHCEMDocPatIndex","GetObsAreaAnaData",{"LgParam":LgParams},function(jsonObject){
+			var ObsPatNum=jsonObject.ObsPatNum.split(":");
+			if ((ObsPatNum[0].indexOf("抢救")>=0)&&(ObsPatNum[0].split("^")[1]!="")){
+				$("#rescuenum").text(ObsPatNum[0].split("^")[1]);
+			}
+			if ((ObsPatNum[1].indexOf("留观")>=0)&&(ObsPatNum[1].split("^")[1]!="")){
+				$("#obsnum").text(ObsPatNum[1].split("^")[1]);
+			}
+			if(jsonObject.InLocPatNum!=""){
+				$("#inhosp").text(jsonObject.InLocPatNum);
+			}
+			if(jsonObject.DisHospPatNum!=""){
+				$("#dishosp").text(jsonObject.DisHospPatNum);
+			}
+		},'json',false)
+	}
+	
+</script>
+
+</html>

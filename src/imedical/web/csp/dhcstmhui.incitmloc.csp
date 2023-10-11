@@ -5,6 +5,10 @@
 	q 1
 </csp:method>
 <html lang="zh-CN">
+<SERVER>
+	d ##class(web.DHCBillPrint).InvBillPrintCLSID()
+	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+</SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -13,48 +17,91 @@
 </head>
 <body class="hisui-layout" data-options="fit:true">
 	<div class="" data-options="region:'center',border:false">
-	<div class="hisui-layout" data-options="fit:true">
-	<div class="BorderLine" data-options="region:'north',border:false,headerCls:'panel-header-gray'">
-		<table id="MainConditions" class="Condition">
-			<input id="RowId" name="RowId" type="hidden">
-			<input id="Inci" name="Inci" type="hidden">
-			<tr>
-				<td>科室</td>
-				<td><input id="ItmLoc" name="ItmLoc" class="hisui-combobox" style="width:160px;"></td>
-				<td>物资名称</td>
-				<td><input id="Incidesc" name="Incidesc" class="textbox" style="width:160px;"></td>
-				<td>货位</td>
-				<td><input id="StkBinReasonId" name="StkBinReasonId" class="hisui-combobox" style="width:160px;"></input></td>
-				<td>包含不可用</td>
-				<td class="CkPadding"><input id="NotUseFlag" name="NotUseFlag" class='hisui-checkbox checkbox' style="text-align:right" type="checkbox" value="N"></input></td>
-				<td ><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-				<td valign="top" colspan="2"><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
-				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-			</tr>
-			<tr>
-				<td>类组</td>
-				<td><input id="StkGrpId" name="StkGrpId" class="hisui-stkscgcombotree" style="width:160px;"></td>
-				<td>库存类型</td>
-				<td>
-					<select id="StockType" name="StockType" class="hisui-combobox" style="width:160px;">
-						<option value="">全部</option>
-						<option value="-1">负库存</option>
-						<option value="0">零库存</option>
-						<option value="1">正库存</option>
-					</select>
-				</td>
-				<td>管理组</td>
-				<td><input id="LocMarReasonId" name="LocMarReasonId" class="hisui-combobox" style="width:160px;"></input></td>
-			</tr>
-		</table>
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+				<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+					<input id="RowId" name="RowId" type="hidden">
+					<input id="Inci" name="Inci" type="hidden">
+					<tr>
+						<td>科室</td>
+						<td><input id="ItmLoc" name="ItmLoc" class="hisui-combobox" style="width:160px;"></td>
+						<td>物资名称</td>
+						<td><input id="Incidesc" name="Incidesc" class="textbox" style="width:160px;"></td>
+						<td>货位</td>
+						<td><input id="StkBinReasonId" name="StkBinReasonId" class="hisui-combobox" style="width:160px;"></input></td>
+						<td>包含不可用</td>
+						<td class="CkPadding"><input id="NotUseFlag" name="NotUseFlag" class='hisui-checkbox checkbox' style="text-align:right" type="checkbox" value="Y"></input></td>
+						<td ><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px;">查询</a></td>
+						<td><a href="#" id="CreateLimits" class="hisui-linkbutton" style="width:118px;">生成上下限</a></td>
+						<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px;">清屏</a></td>
+					</tr>
+					<tr>
+						<td>类组</td>
+						<td><input id="StkGrpId" name="StkGrpId" class="hisui-stkscgcombotree" style="width:160px;"></td>
+						<td>库存类型</td>
+						<td>
+							<select id="StockType" name="StockType" class="hisui-combobox" style="width:160px;">
+								<option value="">全部</option>
+								<option value="-1">负库存</option>
+								<option value="0">零库存</option>
+								<option value="1">正库存</option>
+							</select>
+						</td>
+						<td>管理组</td>
+						<td><input id="LocMarReasonId" name="LocMarReasonId" class="hisui-combobox" style="width:160px;"></input></td>
+						<td></td>
+						<td></td>
+						<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:100px;">保存</a></td>
+						<td>
+							<a href="#" id="Print" class="hisui-menubutton menubutton-blue" data-options="menu:'#mm-Print'" style="width:118px">打印条码</a>
+							<div id="mm-Print" style="width:120px;" class="menu-no-icon">
+								<div name="PrintHBarCode">打印条码</div>
+								<div name="PrintHPage">打印本页条码</div>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="ItmLocGrid"></table>
+			</div>
+		</div>
 	</div>
-	<div data-options="region:'center',border:false">
-		<table id="ItmLocGrid"></table>
+
+	<div id="CreateLimitEdit" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="维护科室库存上下限" style="width:500px;height:250px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',split:true,border:false" style="overflow:hidden;">
+				<table id="condition" class="Condition" align="center">
+					<tr>
+						<td>起始日期</td>
+						<td><input id="StartDate" name="StartDate" class="hisui-datebox textbox"></td>
+						<td>科室</td>
+						<td align="right"><input id="FItmLoc" name="FItmLoc" class="hisui-combobox"></td>
+					</tr>
+					<tr>
+						<td>截止日期</td>
+						<td><input id="EndDate" name="EndDate" class="hisui-datebox textbox"></td>
+						<td>类组</td>
+						<td align="right"><input id="FStkGrpId" name="FStkGrpId" class="hisui-stkscgcombotree"></td>
+					</tr>
+					<tr>
+						<td>上限系数</td>
+						<td><input id="maxlimts" name="maxlimts" class="textbox"></td>
+						<td>下限系数</td>
+						<td align="right"><input id="minlimts" name="minlimts" class="textbox"></td>
+					</tr>
+					<tr>
+						<td>业务类型</td>
+						<td colspan="3" align="left"><input id="TransType" name="TransType" multiple="true" class="hisui-mulcombobox" style="width:385px"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
 	</div>
-	</div>
-	</div>
+
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonHosp.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/IncItmloc/IncItmloc.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/IncItmloc/CreateLimits.js"></script>
 </body>
 </html>

@@ -1,0 +1,55 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	Set QXType=$Get(%request.Data("QXType",1))
+</Script>
+</HEAD>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<!--div class="hisui-panel"  title="信息资产" data-options="fit:true,eqtitle:'maintitle'"-->
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div id="main" class="hisui-tabs tabs-gray" data-options="fit:true">  
+					<div title="信息设备" style="overflow:hidden;">
+                        <iframe id="tab0" frameborder="0" src="" style="width:100%;height:100%;"></iframe>
+					</div>   
+					<div title="软件资产" style="overflow:hidden;">
+                        <iframe id="tab1" frameborder="0" src="" style="width:100%;height:100%;"></iframe>
+					</div>   
+				</div>
+				
+    		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+		<INPUT type="hidden" id="QXType" value=#(QXType)#>
+		</form>
+	</div>
+</body>
+<script type="text/javascript">
+$(function(){
+    var myTabs=new Array();  
+    myTabs[0]="dhceq.em.equipfind.csp?QXType=0&ReadOnly=&UseLocDR="
+    myTabs[1]="dhceq.em.equipfindo.csp?IsDisused=N"
+    $('#tab0').attr('src', myTabs[0]);
+    $HUI.tabs("#main",{
+        onSelect:function(title,index){
+            $.messager.popover({type:'info',msg:'切换到【'+title+'】'}); 
+            $('#tab'+index).attr('src', myTabs[index]);                 
+        }
+    });
+}); 
+</script>
+</HTML>

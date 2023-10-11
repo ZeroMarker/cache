@@ -18,32 +18,37 @@
 	<DHCBILL/>
 	<server>
 		do ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("BILLCONDITION")
+		set EnablePMASystem=##class(BILL.Interface.Inside.AuthItemApply).GetEnablePMASystem()
 	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			BillCondition: [
+           		{value: 'OD', text: $g('下医嘱计费')},
+            	{value: 'OE', text: $g('医嘱执行计费')},
+            	{value: 'NE', text: $g('护士执行计费')},
+           		{value: 'CR', text: $g('发药计费')}
+			],
+			EnablePMASystem: "#(EnablePMASystem)#"
+		};
+		
+		//全局变量
+		var GV = {};
+	</script>
 </head>
 <body>
 	<div class="hisui-layout" data-options="fit:true">
 		<div data-options="region:'north',border:false" style="overflow:hidden;">
 			<table class="search-table">
 				<tr>
-					<td class="r-label"><label>医院</label></td>
+					<td class="r-label"><label>#(..Get("医院"))#</label></td>
 					<td colspan="4"><input id="Hospital" class="hisui-combobox textbox"/></td>
 				</tr>
 				<tr>
-					<td class="r-label"><label>医嘱子类</label></td>
+					<td class="r-label"><label>#(..Get("医嘱子类"))#</label></td>
 					<td><input id="tTBArcCatCombo" class="hisui-combobox textbox"/></td>
-					<td class="r-label" style="padding-left:50px;"><label>计费点</label></td>
-					<td><input id="tTBBillConCombo" class="hisui-combobox textbox" style="width:200px" data-options=" 
-				        valueField:'id',
-				        textField:'name',
-				        data:[{id:'',name:'All'},{id:'OD',name:'Order Entry or Discontinued'},{id:'OE',name:'Order Executed'},{id:'NE',name:'Nurse Executed'},{id:'CR',name:'Pharmacy Collected or Return'}],
-						onSelect:function(rec){
-							FindClick();
-						},
-						onChange:function(newValue,oldValue) {
-							if(newValue=='') {
-								FindClick();
-							}
-						}"/></td>
+					<td class="r-label r-label-50"><label>#(..Get("计费点"))#</label></td>
+					<td><input id="tTBBillConCombo" class="hisui-combobox textbox"/></td>
 				</tr>
 			</table>
 		</div>
@@ -52,12 +57,12 @@
 				<table cellspacing="0" cellpadding="0">
 					<tbody>
 						<tr>
-							<td><a href="#" class="hisui-linkbutton" iconCls="icon-add" id="BtnAdd" plain="true">新增</a></td>
-							<td><a href="#" class="hisui-linkbutton" iconCls="icon-write-order" id="BtnUpdate" plain="true">修改</a></td>
-							<td><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="BtnSave" plain="true">保存</a></td>
-							<td><a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnDelete" plain="true">删除</a></td>
-							<td><a href="#" class="hisui-linkbutton" iconCls="icon-reload" id="BtnFind" plain="true">刷新</a></td>
-							<td><span style="color:#FF0000">提示：医嘱子类可多选维护</span></td>
+							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-add" id="BtnAdd" plain="true">新增</a></td>
+							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-write-order" id="BtnUpdate" plain="true">修改</a></td>
+							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-save" id="BtnSave" plain="true">保存</a></td>
+							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnDelete" plain="true">删除</a></td>
+							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-reload" id="BtnFind" plain="true">刷新</a></td>
+							<td><span style="color:#FF0000">#(..Get("提示：医嘱子类可多选维护"))#</span></td>
 						</tr>
 					</tbody>
 				</table>

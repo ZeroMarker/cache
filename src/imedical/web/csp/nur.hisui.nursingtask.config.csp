@@ -1,0 +1,684 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.nursereferconfig.csp -->
+	<title>常规护理任务配置8.6</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:480px;
+			height:423px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:470px;
+			height:274px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.right-hisui-panel{
+			
+			height: calc(50% - 5px);
+		}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:40px;">
+			<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+			<input id="_HospList" class="textbox"/>
+		</div>
+		
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'west',border:false,split:true" style="width:260px;">
+					<div class="hisui-panel"  title="任务规则类别" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+						<table id="gridList-left"></table>
+					</div>
+				</div>
+				<div data-options="region:'east',border:false,split:true" style="padding-left:5px;width:450px;" >
+					<div class="right-hisui-panel" >
+						<div class="hisui-panel" title="体征任务" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="gridList-right-top"></table>
+						</div>
+					</div>
+					<div class="right-hisui-panel" style="margin-top:10px" >
+						<div class="hisui-panel" title="评估任务" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="gridList-right-down"></table>
+						</div>
+					</div>
+					<div class="right-hisui-panel" style="margin-top:10px" >
+						<div class="hisui-panel" title="治疗处置" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+							<table id="gridList-right-order"></table>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false,split:true" style="">
+					<div class="hisui-panel"  title="任务规则列表" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+						<iframe id="gridList-center" scrolling="auto" frameborder="0"  src="" style="width:100%;height:100%"></iframe>
+		
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="dialogRefer"></div>
+	
+	<script type="text/javascript" charset=gbk>
+
+$(function(){
+	initUI();
+});
+var GLOBAL = {
+	HospEnvironment: true,
+	HospitalID: session['LOGON.HOSPID']
+};
+function initUI(){
+	initHosp();//加载头部医院
+	leftGrid.list() //加载左边列表
+	//rightGrid.top()//加载右边列表
+	//rightGrid.down()
+}
+/**
+ * 关联医院
+ */
+function initHosp(){
+	if (typeof GenHospComp == "undefined") {
+		GLOBAL.HospEnvironment = false;
+	}
+	if(GLOBAL.HospEnvironment){
+		//var hospComp = GenHospComp('Nur_IP_ReferTab', session['LOGON.USERID'] + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.CTLOCID'] + '^' + session['LOGON.HOSPID']);  
+		var hospComp = GenHospComp("Nur_IP_BPChartConfig",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+
+		hospComp.options().onSelect = function(q, row){
+			debugger
+			GLOBAL.HospitalID = row.HOSPRowId;
+			leftGrid.list()
+		}
+	}else{
+		$m({
+			ClassName: 'NurMp.Common.Tools.Hospital', 
+			MethodName: 'hospitalName', 
+			HospitalID: session['LOGON.HOSPID']
+		},function(hospDesc){
+			$HUI.combobox("#_HospList", {
+				width:350,
+				valueField: 'HOSPRowId',
+				textField: 'HOSPDesc',
+				data: [{
+					HOSPRowId: session['LOGON.HOSPID'],
+					HOSPDesc: hospDesc
+				}],
+				value: session['LOGON.HOSPID'],
+				disabled: true
+			});
+		});
+	}
+}
+
+
+//左边列表所有的操作
+var leftGrid={
+	className:"Nur.NIS.Service.NursingTask.TaskOptions",
+	queryName:"GetTaskList",
+	list:function(){
+		$('#gridList-left').datagrid({  
+			fit : true,
+			width : 'auto',
+			border : false,
+			singleSelect : true,
+			
+			autoRowHeight : false,
+			loadMsg : '加载中..',  
+			pagination : false, 
+			rownumbers : true,
+			idField:"id",
+			pageSize: 15,
+			pageList : [15,50,100,200],
+			columns :leftGrid.columns(),
+			//toolbar :leftGrid.toolBar(),
+			autoRowHeight:true,
+			nowrap:false,  /*此处为false*/
+			//url : $URL+"?ClassName="+leftGrid.className+"&QueryName="+leftGrid.queryName,
+			onBeforeLoad:function(param){
+				$('#gridList-left').datagrid("unselectAll");
+				var locId = session['LOGON.CTLOCID']
+				param = $.extend(param,{keyword:$("#leftSearchDesc").val(),hospDR:$HUI.combogrid('#_HospList').getValue(),groupFlag:""})
+				
+			},
+			onClickRow:function(rowIndex, rowData){
+				
+				//centerGrid.refresh()
+				//centerGrid.getList("#gridList-center")
+				centerGrid.refresh()
+			},
+			onLoadSuccess:function(rowData){
+				if(rowData.rows.length>0){
+					$('#gridList-left').datagrid("selectRow",0);
+					
+				}
+				centerGrid.refresh()
+			}
+		})
+		var parmas={
+			keyword:"",
+			hospDR:$HUI.combogrid('#_HospList').getValue(),
+			groupFlag:""}
+        runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskList",parmas,function(rtn){
+			$('#gridList-left').datagrid("unselectAll");
+			$('#gridList-left').datagrid("loadData",rtn);
+		},'json',false);
+	},
+	columns:function(){
+		var Columns=[[
+	  		//{ field: 'id',title:'ID',width:50,wordBreak:"break-all",align:'center'},
+			{ field: 'NTONRelationTypeName',title:'规则组合',width:140,wordBreak:"break-all"},
+			{ field: 'NTONCount',title:'规则数',width:60,wordBreak:"break-all",align:'center'},
+			//{ field: 'NTONRelationTodayExeRule',title:'当日执行规则',width:100,wordBreak:"break-all"},
+			//{ field: 'NTONRelationNotTodayExeRule',title:'非当日执行规则',width:100,wordBreak:"break-all"},
+			//{ field: 'taskAttr',title:'规则数',width:50,wordBreak:"break-all",align:'center'},
+			//{ field: 'NTONClassName',title:'类名',width:200,wordBreak:"break-all"},
+			//{ field: 'NTONQueryName',title:'方法名',width:200,wordBreak:"break-all"}
+	
+	    ]];	
+		return 	Columns
+	},
+	toolBar:function(){
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {leftGrid.openWin("")}
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        var row = $("#gridList-left").datagrid("getSelected");
+		    	leftGrid.openWin(row.id)    
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#gridList-left").datagrid("getSelected");
+	            
+				if (!row) {
+					$.messager.alert("提示","请选择需要删除的记录！");
+					return false;
+				}
+			
+				$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
+				    if (r){
+					   var row = $("#gridList-left").datagrid("getSelected");
+					   runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","DeleteTaskRuleById",{id:row.id},function(rtn){
+							if(rtn == 0) {
+								$.messager.popover({msg:'删除成功！',type:'success'});
+								leftGrid.list()
+							} else {
+								//$.messager.popover('提示','保存失败！'+ rtn , "info");
+								//rsflag = false
+							}
+							
+						},'json',false);
+				    }    
+				}); 
+	        }
+	    }];
+	    return ToolBar
+	},
+	openWin:function(id){
+		var hospid = $HUI.combogrid('#_HospList').getValue()
+		var url="nur.hisui.nursingtask.config.left.csp?taskId="+id+"&hospId="+hospid
+    	$('#dialogRefer').dialog({    
+    		title: '规则组合配置',    
+    		width: 500,    
+    		height: 400,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			},{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					var rsflag = $iframe.save()
+					
+					if(rsflag=="0"){
+						$.messager.popover({msg:'保存成功！',type:'success'});
+						leftGrid.list()
+						$('#dialogRefer').dialog('close');
+					}else if(rsflag=="2"){
+						$.messager.popover({msg:'保存失败！规则组合不能为空!',type:'error'});
+					}else{
+						$.messager.popover({msg:'保存失败！关联类型已存在,请重新选择!',type:'error'});
+					}	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}	
+}
+var centerGrid={
+	className:"Nur.NIS.Service.TaskOverview.Setting",
+	queryName:"GetTaskOverNormList",
+	refresh:function(){
+		centerGrid.list("#gridList-center")
+	},
+	list:function(gid){
+		$(gid).datagrid({  
+			fit : true,
+			width : 'auto',
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			loadMsg : '加载中..',  
+			pagination : false, 
+			rownumbers : true,
+			idField:"id",
+			pageSize: 15,
+			pageList : [15,50,100,200],
+			columns :centerGrid.columns(),
+			toolbar :centerGrid.toolBar(gid),
+			autoRowHeight:true,
+			nowrap:false,
+			//url : $URL+"?ClassName="+leftGrid.className+"&QueryName="+leftGrid.queryName,
+			onDblClickRow:function(rowIndex, rowData){
+				centerGrid.openWin(rowData.ID)
+				
+			},
+			onClickRow:function(rowIndex, rowData){
+				rightGrid.refresh() 
+			},
+			onLoadSuccess:function(rowData){
+				
+				rightGrid.refresh()
+			}
+		})
+		centerGrid.getList(gid)
+	},
+	getList:function(gid){
+		setTimeout(function(){
+			var row = $("#gridList-left").datagrid("getSelected");
+			var pid=""
+			if(row!=null){
+				pid=row.id	
+			}
+			var params = {
+				keyword:"",
+				pid: pid,
+				taskAttr: ""
+			};
+			runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","findTaskRuleRecordList",params,function(rtn){
+				
+				$(gid).datagrid("unselectAll");
+				$(gid).datagrid('loadData', rtn)
+				if(rtn.length>0){
+					$(gid).datagrid("selectRow",0);
+				}
+				rightGrid.refresh()  
+			},'json',false);
+		}, 20);
+	},
+	columns:function(){
+		var Columns=[[
+	  		{ field: 'ID',title:'ID',width:50,wordBreak:"break-all"},
+			{ field: 'NTONTaskDesc',title:'规则描述',width:300,wordBreak:"break-all"},
+			//{ field: 'NTONTaskItem',title:'任务',width:300,wordBreak:"break-all"},
+			{ field: 'NTONApplyPatient',title:'适用人群',width:200,wordBreak:"break-all"},
+			{ field: 'NTONValidLocs',title:'生效科室',width:200,wordBreak:"break-all"},
+			{ field: 'NTONInvalidLocs',title:'无效科室',width:200,wordBreak:"break-all"},
+			{ field: 'NTONValidWards',title:'生效病区',width:200,wordBreak:"break-all"},
+			{ field: 'NTONInvalidWards',title:'无效病区',width:200,wordBreak:"break-all"},
+	    ]];	
+		return 	Columns
+	},
+	toolBar:function(gid){
+		
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		    	centerGrid.openWin("")    
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		   		var row = $(gid).datagrid("getSelected");
+		   		if (!row) {
+					$.messager.alert("提示","请选择一条需要修改的记录！");
+					return false;
+				}
+				centerGrid.openWin(row.ID)     
+		        
+		   }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $(gid).datagrid("getSelected");
+				if (!row) {
+					$.messager.alert("提示","请选择需要删除的记录！");
+					return false;
+				}
+				
+				$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
+				
+				    if (r){
+					   
+					   var row = $("#gridList-center").datagrid("getSelected");
+					   runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","DeleteTaskRuleConfig",{id:row.ID,UserId:session['LOGON.USERID']},function(rtn){
+							if(rtn == 0) {
+								$.messager.popover({msg:'删除成功！',type:'success'});
+								centerGrid.refresh()
+								leftGrid.list()
+							} else {
+								//$.messager.popover('提示','保存失败！'+ rtn , "info");
+								//rsflag = false
+							}
+							
+						},'json',false);
+				    }    
+				}); 
+	        }
+	    }];
+	    return ToolBar
+	},
+	openWin:function(id,taskType){
+		
+		var rows = $('#gridList-left').datagrid("getSelections");
+		//未选中左侧列表，默认选中第一行
+		if(rows.length==0){
+			$.messager.alert("提示","请选择一条左侧的任务");
+			return false;
+		}
+		var row = $("#gridList-left").datagrid("getSelected");
+		var hospid = $HUI.combogrid('#_HospList').getValue()
+		 var dgwidth = $(window).width() - 100;
+        var dgheight = $(window).height() - 150;
+		var url="nur.hisui.nursingtask.config.center.csp?pid="+row.id+"&taskId="+id+"&hospId="+hospid+"&taskType="+taskType+"&relationType="+row.NTONRelationType
+	
+		var text="体征任务"
+		$('#dialogRefer').dialog({    
+    		title: "任务规则配置",    
+    		width: 600,    
+    		height: dgheight,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			},{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						$.messager.popover({msg:'保存成功！',type:'success'});
+						centerGrid.refresh()
+						leftGrid.list()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+    	
+	}	
+}
+
+
+var rightGrid={
+	top:function(){
+		rightGrid.list("#gridList-right-top","1")
+	},
+	down:function(){
+		rightGrid.list("#gridList-right-down","2")
+	},
+	order:function(){
+		rightGrid.list("#gridList-right-order","3")
+	},
+	refresh:function(){
+		rightGrid.top();
+		rightGrid.down();
+		rightGrid.order();
+	},
+	list:function(gid,taskType){
+	
+		$(gid).datagrid({  
+			fit : true,
+			width : 'auto',
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			loadMsg : '加载中..',  
+			pagination : false, 
+			rownumbers : true,
+			idField:"id",
+			pageSize: 15,
+			pageList : [15,50,100,200],
+			columns :[[
+		  		{ field: 'ID',title:'ID',width:50,wordBreak:"break-all"},
+				{ field: 'NTONTaskDesc',title:'任务项别名',width:100,wordBreak:"break-all"},
+				{ field: 'NTONTaskItemName',title:'任务项',width:300,wordBreak:"break-all"},
+		    ]],
+			toolbar :rightGrid.toolBar(gid,taskType),
+			autoRowHeight:true,
+			nowrap:false,  /*此处为false*/
+			onDblClickRow:function(rowIndex, rowData){
+				rightGrid.openWin(rowData.ID,taskType)
+			},
+		})
+		setTimeout(function(){
+			
+			var row = $("#gridList-center").datagrid("getSelected");
+			var pid=""
+			if(row!=null){
+				pid=row.ID	
+			}
+			if(pid!=""){
+				var params = {
+					keyword:"",
+					pid: pid,
+					taskAttr: taskType
+				};
+				runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","findTaskRuleItemDefineRecord",params,function(rtn){
+					$(gid).datagrid("unselectAll");
+					$(gid).datagrid('loadData', rtn)
+				},'json',false);
+			}
+			
+		}, 20);
+	},
+	toolBar:function(gid,taskType){
+		
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        var rows = $('#gridList-center').datagrid("getSelections");
+		        //未选中左侧列表，默认选中第一行
+				if(rows.length==0){
+					$.messager.alert("提示","请选择一条左侧的任务");
+					return false;
+				}
+		    	rightGrid.openWin("",taskType)    
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		   		var row = $(gid).datagrid("getSelected");
+		   		if (!row) {
+					$.messager.alert("提示","请选择一条需要修改的记录！");
+					return false;
+				}
+				rightGrid.openWin(row.ID,taskType)     
+		        
+		   }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $(gid).datagrid("getSelected");
+				if (!row) {
+					$.messager.alert("提示","请选择需要删除的记录！");
+					return false;
+				}
+				
+				$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
+				
+				    if (r){
+					   
+					   var row = $(gid).datagrid("getSelected");
+					   runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","DeleteTaskRuleItemDefine",{id:row.ID},function(rtn){
+							if(rtn == 0) {
+								$.messager.popover({msg:'删除成功！',type:'success'});
+								centerGrid.refresh()
+							} else {
+								//$.messager.popover('提示','保存失败！'+ rtn , "info");
+								//rsflag = false
+							}
+							
+						},'json',false);
+				    }    
+				}); 
+	        }
+	    }];
+	    return ToolBar
+	},
+	openWin:function(id,taskType){
+		
+		
+		
+
+		var row = $("#gridList-center").datagrid("getSelected");
+		var hospid = $HUI.combogrid('#_HospList').getValue()
+		var url="nur.hisui.nursingtask.config.right.csp?pid="+row.ID+"&taskId="+id+"&hospId="+hospid+"&taskType="+taskType+"&relationType="+row.NTONRelationType
+		var text="配置任务项"
+		$('#dialogRefer').dialog({    
+    		title: text,    
+    		width: 600,    
+    		height: 500,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			},{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						$.messager.popover({msg:'保存成功！',type:'success'});
+						rightGrid.refresh()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+    	
+	}	
+}
+
+
+	</script>
+</body>
+</html>

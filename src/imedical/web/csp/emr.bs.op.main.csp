@@ -1,0 +1,194 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+    <head>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/css/bs.op.main.css"/>
+        <script type="text/javascript" src="../scripts/websys.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/bs-colorpicker.js"></script>
+        <link rel="stylesheet" type="text/css" href="../scripts/emr/lib/tool/scale-slider/bs-scale-slider.css"/>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/scale-slider/bs-scale-slider.js"></script>
+        <title> 门诊电子病历 </title>
+    </head>
+    <script language="cache" runat="server">
+        s patientID = $Get(%request.Data("PatientID",1),"")
+        s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        s mradm = ""
+        s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+        s:((episodeID'="")&&(patientID="")) patientID = $p($g(^PAADM(episodeID)),"^",1)
+        s admType = ""
+        s:(episodeID'="") admType = $p($g(^PAADM(episodeID)),"^",2)
+        s sessionID = %session.SessionId
+        s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+        s loginID = $Get(%session.Data("LOGON.SSUSERLOGINID"))
+        s ssgroupID = %session.Get("LOGON.GROUPID")
+        s hospitalID = %session.Get("LOGON.HOSPID")
+        s userID = %session.Get("LOGON.USERID")
+        s userCode = %session.Get("LOGON.USERCODE")
+        s userName = %session.Get("LOGON.USERNAME")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+        s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+        s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+        s pmdType = $Get(%request.Data("pmdType",1),"EMR")
+        s pmdCode = $Get(%request.Data("pmdCode",1),"")
+        s docCode = $Get(%request.Data("docCode",1),"")
+        s docCategoryCode = $Get(%request.Data("docCategoryCode",1),"")
+        s product = $Get(%request.Data("product",1),"OP")
+        //s firstTmpl = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory("{""action"":""GET_DEFAULTTEMPLATE"",""product"":"""_product_""",""params"":{""userLocID"":"""_userLocID_""",""ssgroupID"":"""_ssgroupID_""",""episodeID"":"""_episodeID_""",""userID"":"""_userID_""",""docCode"":"""_docCode_""",""docCategoryCode"":"""_docCategoryCode_"""}}") //""
+        s firstTmpl = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_DEFAULTTEMPLATE","params":{"userLocID":(userLocID),"ssgroupID":(ssgroupID),"episodeID":(episodeID),"userID":(userID),"docCode":(docCode),"docCategoryCode":(docCategoryCode),"langID":(langID)}})
+        s:(firstTmpl = "") firstTmpl = "null"
+        s savedRecords = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SAVEDRECORDS","params":{"userLocID":(userLocID),"ssgroupID":(ssgroupID),"episodeID":(episodeID),"docCategoryCode":(docCategoryCode),"langID":(langID)}})
+        //"[]"
+        
+        s versionID = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_VERSIONID","params":{"episodeID":(episodeID),"langID":(langID)}})
+        
+        /*sysOption*/
+        s toolButtons = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_TOOLBUTTONS","params":{"userLocID":(userLocID),"langID":(langID)}})
+        s resourceTabs = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_RESOURCETABS","params":{"visibleType":"Panel","langID":(langID)}})
+        s scale = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_USER_CONFIG","params":{"userID":(userID),"userLocID":(userLocID),"configType":"bsEditorScale","langID":(langID)}})
+        s sysOption = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTIONS","params":[{"name":"resourceDisplay","defaultValue":"0.382"},{"name":"infoMessage","defaultValue":{}},{"name":"setLog","defaultValue":"N"},{"name":"deleteVerification","defaultValue":"N"},{"name":"isShowTmpBrowse","defaultValue":"N"},{"name":"requiredFlag","defaultValue":"Y"},{"name":"returnTemplateIDs","defaultValue":"Y"},{"name":"isRevokeSign","defaultValue":"Y"},{"name":"escapeRevokeSign","defaultValue":""},{"name":"isAllRevokeSign","defaultValue":"N"},{"name":"isDirectSign","defaultValue":"Y"},{"name":"isDefaultShowTextEdit","defaultValue":"N"},{"name":"autoSave","defaultValue":""},{"name":"isLock","defaultValue":"N"}]})
+        s CAService = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_CASERVICE","params":{"userLocID":(userLocID),"ssgroupID":(ssgroupID),"userID":(userID),"langID":(langID)}})
+        if (CAService = 1) {
+            d ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_CASERVICE_JS","params":{"pageType":"BS","langID":(langID)}})
+        }
+        d ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"OUTPUT_HANDSIGNJS","params":{"userLocID":(userLocID),"ssgroupID":(ssgroupID),"userID":(userID),"langID":(langID)}})
+    </script>
+    <script language="javascript">
+        var patInfo = {
+            diseaseID: "",
+            patientID: "#(patientID)#",
+            episodeID: "#(episodeID)#",
+            mradm: "#(mradm)#",
+            admType: "#(admType)#",
+            sessionID: "#(sessionID)#",
+            langID: "#(langID)#",
+            ssgroupID: "#(ssgroupID)#",
+            hospitalID: "#(hospitalID)#",
+            userID: "#(userID)#",
+            userCode: "#(userCode)#",
+            userName: "#(userName)#",
+            userLocID: "#(userLocID)#",
+            userLocCode: "#(userLocCode)#",
+            userLocName: "#(userLocName)#",
+            ipAddress: "",
+            secCode: "",
+            pmdType: "#(pmdType)#",
+            pmdCode: "#(pmdCode)#"
+        };
+        var envVar = {
+            docCode: "#(docCode)#",
+            docCategoryCode: "#(docCategoryCode)#",
+            firstTmpl: #(firstTmpl)#,
+            savedRecords: #(savedRecords)#,
+            product: "#(product)#",
+            lockedDocumentID : '',
+            lockedID : '',
+            versionID: #(versionID)#
+        };
+        var sysOption = #(sysOption)#;
+        sysOption.toolButtons = #(toolButtons)#;
+        sysOption.resourceTabs = #(resourceTabs)#;
+        sysOption.scale = parseInt(#(scale)#);
+        sysOption.CAService = #(CAService)#;
+        var modalDialogArgs = "";
+        var slider = "";
+        var langID = "#(langID)#";
+        var loginID = "#(loginID)#";
+   </script>
+    <body ondragstart="return false" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div id="main" class="hisui-panel" data-options="region:'center',border:true,split:true" style="overflow:hidden;">
+            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <div class="hisui-panel" data-options="region:'center',border:true,split:true" style="overflow:hidden;">
+                    <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                        <div id="toolbar" class="hisui-panel" data-options="region:'north',border:false">
+                            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                                <div id="pnlResScale" data-options="region:'east',border:false">
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale1" rate="0.1" title="1:9" iconCls="icon-big-lt-rt-19"></a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale3" rate="0.3" title="3:7" iconCls="icon-big-lt-rt-37"></a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale5" rate="0.5" title="5:5" iconCls="icon-big-lt-rt-55"></a>
+                                    </span>
+                                    <span>
+                                        <a href="#" class="hisui-linkbutton" data-options="plain:true" id="btnScale7" rate="0.7" title="7:3" iconCls="icon-big-lt-rt-73"></a>
+                                    </span>
+                                </div>
+                                <div id="pnlButton" data-options="region:'center',border:false">
+                                    <span id="hiddenSpan" style="height:1px;width:1px;border:0px">
+                                        <input type="password" id="chartOnBlur" value="页面离开的时候，获取焦点" style="height:1px;width:1px;border:0px"/>
+                                    </span>
+                                    <span id="toolbarTemplate" style="display:none">
+                                        <a class="hisui-linkbutton" data-options="plain:true" iconCls="icon-save">test</a>
+                                    </span>
+                                </div>
+                                <div id="textedit" data-options="region:'south',border:false" style="display:none;">
+                                    <span id="formatButton">
+                                        <!--文字大小修改(正常项目不开放)
+                                        <a id="fontSize" title="字号" href="#" class="hisui-linkbutton" data-options="plain:true">
+                                            <select id="fontSizeCom" class="hisui-combobox" style="width:160px;"></select>
+                                        </a>-->
+                                        <a id='cut' title="剪切" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cut-blue',plain:true"></a>
+                                        <a id='copy' title="拷贝" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true"></a>
+                                        <a id='paste' title="粘贴" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paste',plain:true"></a>
+                                        <a id='undo' title="撤销" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-back',plain:true" ></a>
+                                        <a id='redo' title="重做" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-redo',plain:true"></a>
+                                        <a id='fontcolor' title="字体颜色" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-font',plain:true" colorpanelshow="0"></a>
+                                        <a id='bold' href="#" title="粗体" class="hisui-linkbutton" data-options="iconCls:'icon-bold',plain:true"></a>
+                                        <a id='italic' href="#" title="斜体" class="hisui-linkbutton" data-options="iconCls:'icon-incline',plain:true"></a>
+                                        <a id='underline' href="#" title="下划线" class="hisui-linkbutton" data-options="iconCls:'icon-underline',plain:true"></a>
+                                        <a id='strikethrough' href="#" title="删除线" class="hisui-linkbutton" data-options="iconCls:'icon-strikethrough',plain:true"></a>
+                                        <a id='sup' href="#" title="上标"  class="hisui-linkbutton" data-options="iconCls:'icon-superscript',plain:true"></a>
+                                        <a id='sub' href="#" title="下标" class="hisui-linkbutton" data-options="iconCls:'icon-subscript',plain:true"></a>
+                                        <a id='alignjustify' href="#" title="两端对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-justify',plain:true"></a>
+                                        <a id='alignleft' href="#" title="左对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-left',plain:true"></a>
+                                        <a id='aligncenter' href="#" title="居中对齐" class="hisui-linkbutton" data-options="iconCls:'icon-align-center',plain:true" ></a>
+                                        <a id='alignright' href="#" title="右对齐"  class="hisui-linkbutton" data-options="iconCls:'icon-align-right',plain:true"></a>
+                                        <a id='indent' title="增加缩进量" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-indentation',plain:true" ></a>
+                                        <a id='outdent' title="减少缩进量" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-unindent',plain:true"></a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="container" data-options="region:'center',border:false" style="overflow:hidden;">
+                            <div id="lock"></div>
+                            <div id="bsEditor" style="overflow:hidden;width:100%;height:100%;"></div>
+                        </div>
+                        <div id="insRecords" class="hisui-panel" data-options="region:'south',border:false">
+                            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                                <div data-options="region:'center',border:false">
+                                    <div id="tmplsTabs" class="hisui-tabs" data-options="fit:true,border:false,tabPosition:'bottom'" tabHeight="35px"></div>
+                                </div>
+                                <div id="abbreviation" data-options="region:'east',border:false" style="width:250px;overflow:hidden;">
+                                    <div class="scale-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="resRegion" data-options="region:'east',border:true,split:true" style="overflow:hidden;">
+                    <div id="dataTabs" class="hisui-tabs" data-options="fit:true,border:false"></div>
+                </div>
+            </div>
+        </div>
+        
+        <script type="text/javascript" src="../scripts/emr/js/cdsstool.js"></script>
+        <script type="text/javascript" src="../service/emr-editor/jq/emr-editor.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.common.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.hislog.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.quality.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.histools.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.toolbar.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.privilege.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.template.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.audit.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.service.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.main.js"></script>
+    </body>
+</html>

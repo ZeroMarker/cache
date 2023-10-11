@@ -1,0 +1,106 @@
+﻿<html>
+<head>
+
+<title>	clawPDF打印机下载安装 </title>
+
+<script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+
+<ADDINS require="EMRPDFCreator,clawPDF"></ADDINS>
+
+<script language="javascript">
+
+function checkPrinter() {
+	EMRPDFCreator.notReturn = 0;
+	try {
+		var ret = EMRPDFCreator.Exec('{"action":"is_printer_exist","printerName":"clawPDF"}');
+   	   	if (ret.status == '200') {
+	   	   	var ret2 = JSON.parse(ret.rtn);
+	   	   	if (ret2.status == '0') {
+		   	   	if (ret2.data == "1") {	
+		   	   		recordLog("clasPDF打印机已安装");
+		   	   	} else {	
+		   	   		recordLog("clawPDF打印机未安装,准备下载安装文件");
+		   	   		setTimeout("download()",1000);
+		   	   	}
+	   	   	} else {
+		   	    recordLog("数据异常："+ret.rtn);
+	   	   	}
+   	   	} else {
+   	   		recordLog("数据异常："+JSON.stringify(ret));
+   	   	}
+	} catch (ex) {
+		recordLog("程序异常: " + ex.message);
+	}
+}
+
+function download() {
+	try {
+		
+		clawPDF.cmd("clawPDF_0.8.5_setup.msi /quiet /passive /qr",function(){
+	    	//vbs运行完成, 安装过程已开始、但通常未结束
+	    	recordLog("下载完成, 开始安装");
+	    	recordLog("安装完成后，请关闭此页面，重新发起患者签名操作");
+	    	//setTimeout("checkInstall()",1000);
+		});
+		
+		/*
+		clawPDF.cmd("sintall.bat",function(){
+	    	//vbs运行完成, 安装过程已开始、但通常未结束
+	    	recordLog("下载完成, 开始安装");
+	    	setTimeout("checkInstall()",1000);
+		});
+		*/
+	} catch (ex) {
+		alert("error" + ex);
+	}
+}
+
+var count = 0;
+function checkInstall() {
+	try {
+		var ret = EMRPDFCreator.Exec('{"action":"is_printer_exist","printerName":"clawPDF"}');
+   	   	if (ret.status == '200') {
+	   	   	var ret2 = JSON.parse(ret.rtn);
+	   	   	if (ret2.status == '0') {
+		   	   	if (ret2.data == "1") {	
+		   	   		recordLog("clawPDF打印机已安装完成");
+		   	   	} else {
+			   	   	count = count + 1;	
+		   	   		recordLog("安装中 " + count + " ......",true);
+		   	   		if (count > 20) {
+		   	   			recordLog("安装失败，请联系管理员！");
+		   	   			return;
+		   	   		}
+		   	   		setTimeout("checkInstall()",3000);
+		   	   	}
+	   	   	}
+   	   	} else {
+	   	   	recordLog("数据异常：" + ret.msg);
+   	   	}
+	} catch (ex) {
+		alert("error" + ex);
+	}
+}
+     
+function recordLog(txt,nonewline) {
+	nonewline = nonewline || false;
+	if (nonewline) {
+		document.getElementById("log").value = document.getElementById("log").value + "\r\n" + txt;
+	} else {
+		document.getElementById("log").value = document.getElementById("log").value + "\r\n\r\n" + txt;
+	}
+}
+
+window.onload = function() {
+	setTimeout("checkPrinter()",15000);
+}   	
+</script>
+        
+</head>
+
+<body>
+	<div id="cadiv2" align="center" valign="middle" style="overflow:auto;width:800px;height:500px">
+	    <textarea id="log" title="日志:" style="width:650px;height:480px;">检查clawPDF是否已安装，请稍候...</textarea>
+    </div>    
+</body>
+</html>

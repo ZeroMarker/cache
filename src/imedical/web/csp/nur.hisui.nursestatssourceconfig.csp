@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--nur.hisui.nursestatsconfig.csp 护理统计配置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<Server>
+</Server>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.datagrid-body td, .datagrid-footer td, .datagrid-header td
+{
+    word-break: break-all !important;
+}
+</style>
+<Server>
+s SSSourceTypeJson=##class(Nur.NIS.Service.ReportV2.Tools).GetOptionOfProperty("CF.NUR.NIS.StatsSourceConfig","SSSourceType")
+</Server>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+	    <div data-options="region:'north',border:false,split:false" style="height:51px;overflow:hidden;border-right:0px;border-left:0px;border-bottom:1px dashed #ccc;">
+	    	<div class="hisui-panel" data-options="border:false" style="border-radius:0;">
+		    	<table class="search-table">
+					<tr>
+						<!-- 数据源属于基础数据、不需要配置医院2022.5.16
+						<td class="r-label">
+							<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+						</td>
+						<td>
+							<input id="_HospList"/>
+						</td>
+						-->
+						<td class="r-label">
+							<label for="SearchType">类型</label>
+						</td>
+						<td>
+							<input id="SearchType" class="hisui-combobox textbox"/>
+						</td>
+						<td class="r-label">
+							<label for="SearchDesc">编码/名称</label>
+						</td>
+						<td>
+							<input id="SearchDesc" class="hisui-searchbox textbox" data-options="searcher:RefreshData"/>
+						</td>
+						<td  class="r-label">
+							<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>   
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	    <div data-options="region:'center',border:false,split:false" style="">
+	    	<div class="hisui-panel" fit="true" style="border:0;">
+		   		<table id="NurseStatsSourceTab"></table>
+		   </div>
+	    </div>   
+	</div>
+	
+	<!--复制弹框-->
+	<div id="CopyWin" class="hisui-window" title="复制 " style="width:550px;height:410px;" data-options="iconCls:'icon-w-copy',closed:true">   
+	    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+	    	<table ALIGN="left" class="search-table">
+	    	   <tr>
+	            	<td  class="r-label">
+						<label for="CopySourceCode">编码</label>
+					</td>
+					<td>
+		        		<input id="CopySourceCode" type="text" class="textbox" style="width:250px;"/>
+		        	</td>
+		        </tr>
+		        <tr>	 	 		
+	            	<td  class="r-label">
+						<label for="CopySourceDesc">名称</label>
+					</td>
+					<td>
+		        		<input id="CopySourceDesc" type="text" class="textbox" style="width:250px;"/>
+		        	</td>
+	          	</tr>
+	 	 		<tr>
+	            	<td  class="r-label">
+						<label for="CopySourceType">类型</label>
+					</td>
+					<td>
+		        		<select id="CopySourceType" style="width:250px;"/>
+		        	</td>
+		        </tr>
+		         <tr>	 	 		
+	            	<td  class="r-label">
+						<label for="CopySourceExpression">方法表达式</label>
+					</td>
+					<td>
+		        		<textarea id="CopySourceExpression" class="hisui-textbox" data-options="multiline:true" style="width:420px;height:110px;"></textarea>
+		        	</td>
+	          	</tr>
+	          	<tr>	 	 		
+	            	<td  class="r-label">
+						<label for="CopySourceRemark">备注</label>
+					</td>
+					<td>
+		        		<textarea id="CopySourceRemark" class="hisui-textbox" data-options="multiline:true" style="width:420px;height:60px;"></textarea>
+		        	</td>
+	          	</tr>
+	          	<tr>
+	          		<td colspan=2 style="text-align:center;">
+	          			<a class="hisui-linkbutton" id="BReportCopy" data-options="iconCls:'icon-w-copy'">复制</a>
+	    				<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+	          		</td>
+	          	</tr>
+	 	 	</table>
+		</div>
+	</div>
+	
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		SSSourceTypeJson:#(SSSourceTypeJson)#
+	};
+</SCRIPT>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<!-- <script type="text/javascript" src="../scripts/nurse/hisui/plugins/jquery.textcomplete.min.js"></script> -->
+	<script type="text/javascript" src="../scripts/nurse/hisui/NurseStatsSourceConfig.js"></script>
+</body>
+</html>

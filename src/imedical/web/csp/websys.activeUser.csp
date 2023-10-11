@@ -1,0 +1,235 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired() q 1
+	if ##class(websys.Conversions).IsValidMethodName("BSP.SYS.SRV.Token","OverrideSession") && ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableToken") d ##class(BSP.SYS.SRV.Token).OverrideSession()
+	quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE>激活用户</TITLE>
+	<!-- websys.activeUser.csp -->
+	<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+	<SCRIPT type='text/javascript' SRC="../scripts/websys.js"></SCRIPT>
+	<HISUI />
+	<server>
+		Set CurrentStep = $g(%request.Data("CurrentStep",1),1)
+		Set NextStep = CurrentStep+1
+		Set IsUnActiveUser = ##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.IsUnActiveUser"))
+		Set UserCodeSure = ##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.UserCodeSure"))
+		Set SendSMByUserCodeEnc = ##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.SendSMByUserCode"))
+		Set ValidSMTokenEnc = ##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.ValidSMToken"))
+		k %session.Data("FORGETPWD")
+		s event=##class(websys.Page).Encrypt($lb("websys.Configuration.CSPServerConnect"))
+	</server>
+	<script type="text/javascript">
+		var currentStep = #(CurrentStep)#;
+		var nextStep = #(NextStep)#;
+		var isUnActiveUserEnc = "#(IsUnActiveUser)#";
+		var userCodeSureEnc = "#(UserCodeSure)#";
+		var sendSMByUserCodeEnc = "#(SendSMByUserCodeEnc)#";
+		var validSMTokenEnc = "#(ValidSMTokenEnc)#";
+		function tkMakeServerCall(tkclass, tkmethod) {
+			if ((tkclass == '') || (tkmethod == '')) return '';
+			var args = new Array('#(event)#', tkclass, tkmethod);
+			for (var i = 2; i < tkMakeServerCall.arguments.length; i++) {
+				args[i + 1] = tkMakeServerCall.arguments[i];
+			}
+			var retval = cspHttpServerMethod.apply(this, args);
+			return retval;
+		}
+	</script>
+	<style>
+		.contable td {
+			padding-top: 10px;
+		}
+
+		.ccon {
+			margin: 30px auto;
+			width: 600px;
+		}
+
+		#smTokenTimeout {
+			color: #18af66;
+			margin-left: 5px;
+		}
+
+		.titleTip {
+			font-weight: bold;
+			color: #18af66;
+			margin: 5px;
+		}
+	</style>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',title:'',split:false,border:false" style="overflow:hidden;height:80px;">
+		<div id="hstepnav" style="margin:20px auto;width:460px;">
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="overflow:hidden;">
+		<div class="ccon" style="display:none;"></div>
+		<div class="ccon">
+			<div class="titleTip">请填写在iMedical系统中的工号,以便找到对应身份信息</div>
+			<div style="margin:20px auto;width:260px;">
+				<table class="contable">
+					<tr>
+						<td>HIS账号</td>
+						<td><input id="fusername" name="fusername" class="textbox" autocomplete="off"></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td><a class="hisui-linkbutton surebtn" id="usurebtn"
+								data-options="iconCls:'icon-w-ok',step:'wusername'">确定</a></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="ccon" style="display:none;">
+			<div class="titleTip">请使用密保手机<span id="MobileTip"></span>获得短信验证码</div>
+			<div style="margin:20px auto;width:260px;">
+				<table class="contable">
+					<tr>
+						<td></td>
+						<td>
+							<a class="hisui-linkbutton"
+								data-options="iconCls:'icon-submit',plain:true,stopAllEventOnDisabled:true" href="#"
+								id="sendShortMessageBtn" style="border:1px solid #18af66;">免费获取验证码</a>
+						</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>验证码</td>
+						<td><input id="fshortmessage" name="fshortmessage" class="textbox" autocomplete="off"></td>
+						<td><span id="smTokenTimeout"></span></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td>
+							<a class="hisui-linkbutton surebtn"
+								data-options="iconCls:'icon-w-ok',step:'wshortmessage'">确定</a>
+						</td>
+						<td></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="ccon" style="display:none;width:200px;">
+			<span class="titleTip">激活用户成功</span>
+			<a class="hisui-linkbutton surebtn" data-options="iconCls:'icon-w-ok',step:'wend'">登录</a>
+		</div>
+	</div>
+	<script type="text/javascript">
+		var g_myUserCode = "";
+		var myIntval = null;
+		var myTimeout = 60;
+		var g_SMDisable = false;
+		$(function () {
+			$("#hstepnav").hstep({
+				//showNumber:false,
+				stepWidth: 150,
+				currentInd: currentStep,
+				items: [{
+					title: '填写账号'
+				}, {
+					title: '身份验证'
+					//,context:"<div>张三</div> 2020-07-03 10:10"
+				}, {
+					title: "激活完成"
+				}]
+			});
+			$("#fusername").on('keydown', function (e) {
+				if (e.keyCode == 13) {
+					var $usurebtn = $('#usurebtn');
+					$usurebtn.linkbutton("enable");
+					$usurebtn.trigger("hover").trigger("mouseenter").focus();
+				}
+			});
+			function NextStepPage(step) { /*进入下一步界面*/
+				$(".ccon").each(function (ind) {
+					if (ind == (step - 1)) $(this).hide();
+					if (ind == step) $(this).show();
+				});
+				$("#hstepnav").hstep('setStep', step);
+			}
+			function uSureClick() {
+				g_myUserCode = $('#fusername').val();
+				if (g_myUserCode == "") { $.messager.popover({ msg: '请填写用户账号!', type: 'alert' }); return; }
+				// 先检查用户是否未激活！！			
+				$cm({ EncryItemName: isUnActiveUserEnc, userCode: g_myUserCode }, function (rtn) {
+					if (rtn.success == 1) {
+						$cm({ EncryItemName: userCodeSureEnc, userCode: g_myUserCode }, function (rtn) {
+							if (rtn.success == 1) {
+								var phone = rtn.results;
+								if (phone != "") {
+									$("#MobileTip").html(phone);
+									NextStepPage(2);
+								}
+							} else {
+								$.messager.popover({ msg: rtn.msg, type: 'alert' });
+							}
+						});
+					} else {
+						$.messager.popover({ msg: rtn.msg, type: 'alert' });
+					}
+				});
+			}
+			function sSureClick() {
+				if (!g_SMDisable) { $.messager.popover({ msg: '请先点击按钮，获取短信验证码!', type: 'alert' }); return; }
+				//获取通过短信登录且得到用户
+				var smToken = $("#fshortmessage").val();
+				if (smToken == "") { $.messager.popover({ msg: '请填写短信验证码!', type: 'alert' }); return; }
+				var rtnStr = cspHttpServerMethod(validSMTokenEnc, g_myUserCode, smToken,"ActiveUser");
+				eval("var rtn=" + rtnStr);
+				if (rtn.success == 1) {
+					NextStepPage(3);
+					$.messager.popover({ msg: rtn.msg, type: 'alert' });
+				} else {
+					$.messager.popover({ msg: rtn.msg, type: 'alert' });
+				}
+			}
+			function eSureClick() {
+				if (opener){
+					window.close();
+					if (opener&&opener.location) opener.location.reload();
+				}else{
+					websys_showModal('close');
+					location.reload();
+				}
+			}
+			$('#usurebtn').click(uSureClick);
+			$(".surebtn").click(function () {
+				var opt = $(this).linkbutton("options");
+				switch (opt.step) {
+					case "wusername": ;
+						break;
+					case "wshortmessage": sSureClick();
+						break;
+					case "wend": eSureClick();
+						break;
+					default:
+				}
+				return;
+			});
+			$("#sendShortMessageBtn").click(function () {
+				if (g_SMDisable) return false;
+				g_SMDisable = true;
+				var rtnStr = cspHttpServerMethod(sendSMByUserCodeEnc, g_myUserCode);
+				eval("var rtn=" + rtnStr);
+				if (rtn.success == 1) {
+					$("#sendShortMessageBtn").linkbutton('disable');
+					myTimeout = rtn.results;
+					clearInterval(myIntval);
+					$("#smTokenTimeout").html("");
+					myIntval = setInterval(function () {
+						if (myTimeout > 0) { $("#smTokenTimeout").html((--myTimeout) + "秒"); }
+						else { clearInterval(myIntval); g_SMDisable = false; $("#sendShortMessageBtn").linkbutton('enable'); }
+					}, 1000);
+				} else {
+					g_SMDisable = false;
+					$.messager.popover({ msg: rtn.msg, type: 'alert' });
+				}
+			});
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/> 
+  <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+  <style>
+  	p{
+		font-size:120%;
+		margin:5px
+	}
+	
+  </style>
+</HEAD>
+<BODY>
+	<!--主界面-->
+	<div id="div" class="hisui-layout" data-options="fit:true" border="false" tabindex = "0">
+		
+		<div data-options="region:'center'" title="平台配置" border="false">
+			<div id="validateWin" style="display:none">
+				<table style="margin:0 0 0 20px">
+					<tr >
+						<td><p>请输入密码:</p></td>	
+						<td><input class="validatebox-text" id="validate" type="password"></input></td>	
+					</tr>
+					
+				</table>
+			</div>
+			<div id="bdpvalidateWin" style="display:none">
+				<table style="margin:0 0 0 20px">
+					<tr >
+						<td><p>请输入密码:</p></td>	
+						<td><input class="validatebox-text" id="bdpvalidate" type="password"></input></td>	
+					</tr>
+					
+				</table>
+			</div>
+			<div id="hiddendiv" >
+				<table style="float:left;width:50%;">
+					<tr>
+						<td>
+							<p style="margin:30px 30px 10px 30px;">默认显示条数</p>		
+							<div id="rownum" style="width:77%;margin:0 30px 30px 30px;padding:10px;border:1px solid #C0C0C0;">
+							
+								<table>
+									
+					            </table>
+							</div>
+						</td>
+						
+					</tr>
+					<tr>
+						<td id='tdftpconfig'>	
+							<div style="margin:30px 30px 10px 20px;"><table>
+								<tr><td align="right"><p>FTP配置</p></td><td><input type="checkbox" id="FTPActiveflag" style="display:none"></input></td></tr>
+				           		</table></div>		
+							<div id="ftpconfig" style="width:77%;margin:0 30px 30px 30px;padding:10px;border:1px solid #C0C0C0;">
+								<table>
+								
+				           		</table>
+							</div>
+						</td>
+					</tr>
+				</table>
+				<table style="float:left;width:50%;">
+					<tr>
+						<td valign="top">
+							<p style="margin:30px 30px 10px 30px;">其他配置</p>		
+							<div id="otherconfig" style="width:77%;margin:0 30px 30px 30px;padding:10px;border:1px solid #C0C0C0;">
+								
+								<table>
+									
+					            </table>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+			
+		</div>
+		<div data-options="region:'south'" border="false" style="height:50px;">
+			<a id="edit" style="position:absolute;left:50%" >修改</a>
+		</div>
+	</div>
+	<div id="grids" style="width:410px;height:400px;top:30px;padding:10px;display:none;">
+	</div>
+</BODY>
+<script type="text/javascript">
+	$('#FTPActiveflag').checkbox({disabled:true})
+    function IEVersion() {
+        var userAgent = navigator.userAgent; //取得浏览器的userAgent字符串  
+        var isIE = userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1; //判断是否IE<11浏览器  
+        var isEdge = userAgent.indexOf("Edge") > -1 && !isIE; //判断是否IE的Edge浏览器  
+        var isIE11 = userAgent.indexOf('Trident') > -1 && userAgent.indexOf("rv:11.0") > -1;
+       if(isIE||isIE11){
+	       $('.combo').css({'width':164})   //适配ie下拉框等特殊控件样式
+	   }
+    }
+    
+	var str=tkMakeServerCall('web.DHCBL.BDP.BDPPlatformConfig','FindStr');
+	var strarr=str.split('^');
+	for(var i=0;i<=strarr.length-1;i++){
+		var itemarr=strarr[i].split(',');
+		if(itemarr[1].indexOf('BDPPageSize')>=0){
+			if(itemarr[6]=='Y')
+			{
+				var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">'+itemarr[3]+'</p><input editflag="'+itemarr[7]+'" type="text" style="display:none" class="hidevalue validatebox-text" id="'+itemarr[1]+'" value="'+itemarr[3]+'"></input></td></tr>';
+				$('#rownum table').append(tr)
+				if(itemarr[4]=="N"){
+					$('#'+itemarr[1]).numberbox({    
+						   min:0  
+					});
+				}
+
+			}
+		}
+		else if(itemarr[1].indexOf('FTP')>=0){
+			if(itemarr[6]=='Y')
+			{
+				if(itemarr[4]=="P"){
+					if(itemarr[7]=='Y'){
+						var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">******</p><input editflag="'+itemarr[7]+'" type="text" style="display:none" class="hidevalue validatebox-text" id="'+itemarr[1]+'" value="'+itemarr[3]+'"></input></td></tr>';
+					}
+					else{
+						var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">******</p><p editflag="'+itemarr[7]+'"  style="display:none" class="hidevalue " id="'+itemarr[1]+'" >'+itemarr[3]+'</p></td></tr>';
+					}
+					
+				}
+				else{
+					var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">'+itemarr[3]+'</p><input editflag="'+itemarr[7]+'" type="text" style="display:none" class="hidevalue validatebox-text" id="'+itemarr[1]+'" value="'+itemarr[3]+'"></input></td></tr>';
+				}
+				//var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">'+itemarr[3]+'</p><input editflag="'+itemarr[7]+'" type="text" style="display:none" class="hidevalue validatebox-text" id="'+itemarr[1]+'" value="'+itemarr[3]+'"></input></td></tr>';
+				$('#ftpconfig table').append(tr)
+				if(itemarr[4]=="N"){
+					$('#'+itemarr[1]).numberbox({    
+						   min:0  
+					});
+				}
+				if(itemarr[4]=="C"){
+					$('#'+itemarr[1]).attr('type','checkbox').removeClass('hidevalue').prev().removeClass('showvalue').hide();
+					$('#'+itemarr[1]).checkbox({ 
+					});  
+					$('#'+itemarr[1]).checkbox('setDisable',true)
+					if(itemarr[3]=='true'){
+						$('#'+itemarr[1]).checkbox('setValue',true);
+					}
+				}
+				
+			}
+			if(itemarr[1]=="FTPActiveflag"){
+				if(itemarr[3]=='false'){
+					$('#tdftpconfig').hide()
+				}
+				else{
+					$('#FTPActiveflag').checkbox('setValue',true);
+				}
+			}
+
+		}
+		else{
+			if(itemarr[6]=='Y')
+			{
+				if(itemarr[4]=="P"){
+					if(itemarr[7]=='Y'){
+						var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">******</p><input editflag="'+itemarr[7]+'" type="text" style="display:none" class="hidevalue validatebox-text" id="'+itemarr[1]+'" value="'+itemarr[3]+'"></input></td></tr>';
+					}
+					else{
+						var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">******</p><p editflag="'+itemarr[7]+'"  style="display:none" class="hidevalue " id="'+itemarr[1]+'" >'+itemarr[3]+'</p></td></tr>';
+					}
+					
+				}
+				else{
+					var tr='<tr><td align="right"><p>'+itemarr[2]+':</p></td><td><p class="showvalue">'+itemarr[3]+'</p><input editflag="'+itemarr[7]+'" type="text" style="display:none" class="hidevalue validatebox-text" id="'+itemarr[1]+'" value="'+itemarr[3]+'"></input></td></tr>';
+				}
+				$('#otherconfig table').append(tr)
+				if(itemarr[4]=="N"){
+					$('#'+itemarr[1]).numberbox({    
+					    min:0  
+					});
+				}
+				
+				if(itemarr[4]=="D"){
+					$('#'+itemarr[1]).removeClass('hidevalue');
+					$('#'+itemarr[1]).datebox({ 
+					});  
+					$('#'+itemarr[1]).next().addClass('hidevalue').hide().children('.combo-text').css('width','129px')
+				}
+				if(itemarr[4]=="C"){
+					$('#'+itemarr[1]).attr('type','checkbox').removeClass('hidevalue').prev().removeClass('showvalue').hide();
+					$('#'+itemarr[1]).checkbox({ 
+					});  
+					$('#'+itemarr[1]).checkbox('setDisable',true)
+					if(itemarr[3]=='true'){
+						$('#'+itemarr[1]).checkbox('setValue',true);
+					}
+				}
+				if(itemarr[4]=="CB"){
+					if(itemarr[5]==""){
+						$.messager.alert('提示信息',itemarr[2]+'类型为下拉框但配置项说明为空!')
+					}
+					else{
+						$('#'+itemarr[1]).removeClass('hidevalue');
+						var exp=itemarr[5].split(';')
+						$('#'+itemarr[1]).combobox({    
+						    url:$URL+exp[0],    
+						    valueField:exp[1],    
+						    textField:exp[2]
+						});  
+						$('#'+itemarr[1]).next().addClass('hidevalue').hide().children('.combo-text').css('width','129px')
+					}
+				}
+			}
+		}
+	}
+	$(document).keydown(function(event){
+		if((event.shiftKey==true)&&(event.key=="B")){
+			$('#validateWin').show();
+			$('#bdpvalidate').val('');
+			var bdpvalidateWin = $HUI.dialog("#validateWin",{
+				//iconCls:'icon-addlittle',
+				resizable:true,
+				title:'组内配置验证',
+				modal:true,
+				width:300,
+				//heoght:500,
+				buttonAlign : 'center',
+				buttons:[{
+					text:'确定',
+					//iconCls:'icon-save',
+					id:'save_btn',
+					handler:function(){
+						if($('#validate').val()=='bdp'){
+							$('#validate').val('')
+							var url="dhc.bdp.bdpconfigadmin.csp"
+							if ("undefined"!==typeof websys_getMWToken){
+								url += "?MWToken="+websys_getMWToken()
+							}
+							$("#grids").show();
+						    var mygrids = $HUI.dialog("#grids",{
+								//iconCls:'icon-addlittle',
+								resizable:true,
+								title:'配置项列表',
+								modal:true,
+								width:1000,
+								height:550,
+								content:'<iframe frameborder="0" src="'+url+'" width="100%" height="99%" scrolling="no"></iframe>',
+								buttonAlign : 'center',
+								buttons:[]
+							});
+							bdpvalidateWin.close()
+						}
+						else{
+							$.messager.alert('错误提示','密码输入有误!！','error')
+//							$.messager.show({
+//								title:'提示信息',
+//								msg:'密码输入有误!',
+//								timeout:1000,
+//								showType:'show',
+//								style: { 
+//									right: '', 
+//									bottom: ''
+//								} 
+//							});
+
+						}
+					}
+				}]
+			});
+			
+		}
+	});
+	$('#edit').linkbutton({    
+	    onClick:function(){
+		   	if($(this).text()=='修改'){
+				
+				$('#validate').val('');
+				$('#validateWin').show();
+				var myWin = $HUI.dialog("#validateWin",{
+					//iconCls:'icon-addlittle',
+					resizable:true,
+					title:'验证',
+					modal:true,
+					width:300,
+					//heoght:500,
+					buttonAlign : 'center',
+					buttons:[{
+						text:'确定',
+						//iconCls:'icon-save',
+						id:'save_btn',
+						handler:function(){
+							if($('#validate').val()=='admin'){
+								$('#edit').linkbutton({text:'保存'})
+								$('.showvalue').hide()
+								$('.hidevalue').each(function(){
+									if($(this).attr('editflag')=='Y'){
+										$(this).show()	
+										
+									}
+									else if($(this).parent().find('input').attr('editflag')=='Y'){
+										$(this).show()	
+									}
+									else if($(this)[0].tagName=='P'){
+										$(this).show()	
+									}
+									else{
+										$(this).parent().find('p').show()	
+									}
+									
+								})
+								$('input[type=checkbox]').checkbox('setDisable',false)
+								myWin.close()
+								$('#tdftpconfig').show()
+							}
+							else{
+								$.messager.alert('错误提示','密码输入有误!！','error')
+//								$.messager.show({
+//									title:'提示信息',
+//									msg:'密码输入有误!',
+//									timeout:1000,
+//									showType:'show',
+//									style: { 
+//										right: '', 
+//										bottom: ''
+//									} 
+//								});
+
+							}
+						}
+					}]
+				});	
+			}
+		    else{
+			    var strval="";var flagnull="";
+				$(this).linkbutton({text:'修改'})	
+				$('.hidevalue').each(function(){
+					var taget=this;var id=""; var type="";var value="";
+					if($(this)[0].tagName=="SPAN"){
+						taget=$(this).children('input:first')
+						id=$(this).prev().attr('id');
+						type=$(this).prev().attr('type');
+						value=$(taget).val()
+					}
+					else if($(this)[0].tagName=="DIV"){
+						taget=$(this).children('input:first')
+						id=$(taget).attr('id');
+						type=$(taget).attr('type');
+						value=$(taget).checkbox('getValue')
+					}
+					else if($(this)[0].tagName=="P"){
+						id=$(this).attr('id');
+						type=$(this).attr('type');
+						value=$(taget)[0].textContent
+					}
+					else{
+						id=$(this).attr('id');
+						type=$(this).attr('type');
+						value=$(taget).val()
+					}
+					if(value==""){
+						console.log($(this))
+						flagnull=1
+					}
+					if(strval==""){
+						strval=id+'^'+value+'^'+type
+					}
+					else{
+						strval=strval+';'+id+'^'+value+'^'+type
+					}
+				})
+				$('input[type=checkbox]').each(function(){
+					id=$(this).attr('id');
+					type=$(this).attr('type');
+					value=$(this).checkbox('getValue')
+					if(strval==""){
+						strval=id+'^'+value+'^'+type
+					}
+					else{
+						strval=strval+';'+id+'^'+value+'^'+type
+					}
+				});
+				if(flagnull==""){
+					var rtn=tkMakeServerCall('web.DHCBL.BDP.BDPPlatformConfig','SaveData',strval);
+					if(rtn.indexOf("success:'true'")>=0){
+						var rtnstr=tkMakeServerCall('web.DHCBL.BDP.BDPPlatformConfig','FindStr');
+						var rtnstrarr=rtnstr.split('^');
+						$('.showvalue').each(function(){
+							var prevdom=$(this).parent().prev().find('p').text().split(':')
+							for(var i=0;i<=rtnstrarr.length-1;i++){
+								var itemarr=rtnstrarr[i].split(',');
+								if(prevdom[0]==itemarr[2]){
+									if(itemarr[4]!='P'){
+										$(this).text(itemarr[3])
+									}
+								}
+							}
+						}).show();
+						$('.hidevalue').hide()
+						$('input[type=checkbox]').checkbox('setDisable',true)
+						if($('#FTPActiveflag').checkbox('getValue')==false){
+							$('#tdftpconfig').hide()
+						}
+						$.messager.show({
+							title:'提示信息',
+							msg:'保存成功!',
+							timeout:1000,
+							showType:'show',
+							style: { 
+								right: '', 
+								bottom: ''
+							} 
+						});
+					}
+				}
+				else{
+					$.messager.show({
+						title:'提示信息',
+						msg:'存在为空的配置项!',
+						//timeout:500,
+						showType:'show',
+						style: { 
+							right: '', 
+							bottom: ''
+						} 
+					});
+				}
+			}
+		
+		}
+	});  
+	IEVersion()
+	$('#div').focus();
+</script>
+</HTML>

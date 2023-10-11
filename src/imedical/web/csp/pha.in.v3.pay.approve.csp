@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+    付款管理 - 预审
+	csp:  csp/pha.in.v3.pay.approve.csp
+	js:   scripts/pha/in/v3/pay/approve.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center'" class="pha-body" border="false">
+            <div class="hisui-layout" fit="true" id="layout-pay-approve">
+                <div data-options="region:'north', headerCls:'panel-header-gray', split:true, iconCls:'icon-find-fee-itm',showCollapsedTitle:true,title:'付款管理 / 预审',height:137">
+                    <table id="qCondition" class="pha-con-table">
+                        <tr>
+                            <td class="r-label">
+                                <label for="startDate">#(..Get("开始日期"))#</label>
+                            </td>
+                            <td class="r-label">
+                                <input type="text" id="startDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                            </td>
+                            <td class="r-label">
+                                <label for="loc">#(..Get("采购科室"))#</label>
+                            </td>
+                            <td class="r-label">
+                                <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                            </td>
+                            <td class="r-label">
+                                <label for="approveStatus">#(..Get("审核状态"))#</label>
+                            </td>
+                            <td class="r-label">
+                                <input type="text" id="approveStatus" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                            </td>
+                            <td class="r-label">
+                                <label for="bizType">#(..Get("业务范围"))#</label>
+                            </td>       
+                            <td class="r-label">
+                                <input type="text" id="bizType" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                            </td>                  
+                            <td class="r-label">
+                                <a class="hisui-linkbutton" id="btnFind">查询</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">
+                                <label for="endDate">#(..Get("结束日期"))#</label>
+                            </td>
+                            <td class="r-label">
+                                <input type="text" id="endDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                            </td>
+                            <td class="r-label">
+                                <label for="vendor">#(..Get("经营企业"))#</label>
+                            </td>
+                            <td class="r-label">
+                                <input type="text" id="vendor" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                            </td>
+                            <td class="r-label">
+                                <label for="invStatus">#(..Get("发票情况"))#</label>
+                            </td>
+                            <td class="r-label">
+                                <input type="text" id="invStatus" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                            </td>
+                            <td class="r-label">
+                                <label for="invNo">#(..Get("发票号"))#</label>
+                            </td>
+                            <td class="r-label">
+                                <input type="text" id="invNo" style="width:153px" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true" class="hisui-validatebox">
+                            </td>
+                            <td class="r-label">
+                                <a class="hisui-linkbutton" id="btnClean">清屏</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div data-options="region:'center'" border="false" style="background-color:#f5f5f5">
+                    <div class="hisui-layout" fit="true" >
+                        <div data-options="region:'west',split:true, headerCls:'panel-header-gray',iconCls:'icon-house',width:500,showCollapsedTitle:true,title:'经营企业'">
+                            <table id="gridVendor"></table>
+                        </div>
+                        <div data-options="region:'center', headerCls:'panel-header-gray',iconCls:'icon-pat-fee-det',title:'应付款单据'">
+                            <table id="gridBiz"></table>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'south',split:true, headerCls:'panel-header-gray',iconCls:'icon-find-paid-det',height:300,title:'应付款单据明细'">
+                    <table id="gridBizItm"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 操作栏 -->
+    <div id="gridBizBar">
+        <div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnApprove">审核通过</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-undo'" id="btnApproveCancel">取消审核</a>
+        </div>
+    </div>
+    <div id="gridBizItmBar">
+        <div>
+            <div id="swRefreshType" class="hisui-switchbox" data-options="onText:$g('自动刷新'),offText:$g('手动刷新'),offClass:'primary'" style="margin-left:10px;">
+            </div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-reload'" id="btnRefresh">刷新应付款单据明细</a>
+        </div>
+    </div>
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/pay/approve.js"></script>
+</body>
+
+</html>

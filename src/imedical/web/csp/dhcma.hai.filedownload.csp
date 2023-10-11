@@ -1,0 +1,55 @@
+<script runat="server" language="cache" charset=utf-8>
+	set act = $g(%request.Data("act",1))
+	Set dirname = $g(%request.Data("dirname",1)) //##class(web.Util.DHCJFXMLOperate).GetPhysicalPath($g(%request.Data("dirname",1)))
+	if (act="download"){
+		s filename = $g(%request.Data("filename",1))
+		s pathname = ##class(%File).NormalizeFilename(dirname_"/"_filename)
+		if (##class(%File).Exists(pathname)){
+			s stream=##class(%FileCharacterStream).%New()
+			s stream.Filename=pathname
+			d stream.Rewind()
+			while('stream.AtEnd){ w stream.ReadLine(),!}
+			d stream.Clear()
+			s stream=""
+			s %response.ContentType = "text/xml; charset=utf-8"
+			d %response.Flush()
+		}else{
+			s %response.ContentType = "text/xml; charset=utf-8"
+			d %response.Abort()
+			w "404 没找到"_dirname_filename_"文件"	
+		}
+	} elseif(act="upload"){
+		If ($data(%request.MimeData("FileStream",1))){
+			New fileStream,bytes,file
+			Set fileStream = %request.MimeData("FileStream",1)
+			Set file = ##class(%FileBinaryStream).%New()
+			s pathname = ##class(%File).NormalizeFilename(dirname_"/"_fileStream.FileName)
+			Set file.Filename=pathname			
+			Do fileStream.Rewind()
+			While('fileStream.AtEnd){
+				Set bytes = fileStream.Read(1024)
+				Do file.Write(bytes)
+			}
+			Do file.Flush()
+			Do file.%Save()
+			Do file.%Close()
+			Set file=""
+		}
+	}
+	Quit "" 
+</script>
+<script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
+	set filename = $g(%request.Data("filename",1))
+	s act = $g(%request.Data("act",1))
+	if (act="download"){
+		 if ( ($zcvt(%request.UserAgent,"U")["MSIE") || ($zcvt(%request.UserAgent,"U")["TRIDENT") ) { //IE
+            Set filename = $zconvert($zconvert(filename,"O","UTF8"),"O","URL") // URLEncoder.encode(filename, "UTF-8")
+        } else {  
+            Set filename = filename //new String(filename.getBytes("UTF-8"), "ISO8859-1");  
+        } 
+		Do %response.SetHeader("Content-Disposition", "attachment; filename="_filename)
+		//set %response.ContentType = "text/xml; charset=utf-8"
+	} elseif(act="upload"){
+	}
+	Quit 1 
+</script>

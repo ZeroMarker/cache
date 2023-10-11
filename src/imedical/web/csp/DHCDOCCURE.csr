@@ -1,0 +1,57 @@
+<csr:rule name="DHCDOCCURE.COMMON" match="DHCDOCCURE">
+<csr:action>
+	<div id="loading-mask" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<script type="text/javascript">
+	var _PageCureObj={
+		StartLodopPrint:"Y", //是否启用lodop打印
+		LogUserID:session['LOGON.USERID'],
+		LogCTLocID:session['LOGON.CTLOCID'],
+		LogGroupID:session['LOGON.GROUPID'],
+		LogHospID:session['LOGON.HOSPID']
+	}
+	$.parser.onComplete = function () {
+        if (parser_pc) clearTimeout(parser_pc);
+        parser_pc = setTimeout(parser_closes, 1000);
+    } 
+    if (websys_isIE==true) {
+	     var script = document.createElement('script');
+	     script.type = 'text/javaScript';
+	     script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird 文件地址
+	     document.getElementsByTagName('head')[0].appendChild(script);
+	}
+	//if(HISUIStyleCode=="lite"){
+	if(typeof HISUIStyleCode != "undefined" && HISUIStyleCode=="lite"){
+		loadStyles("../scripts/dhcdoc/css/common.lite.css");	
+	}else{
+		loadStyles("../scripts/dhcdoc/css/common.css");	
+	}
+	var parser_pc;
+    function parser_closes() {
+        $('#loading-mask').fadeOut('normal', function () {
+            $(this).remove();
+        });
+    }
+	function loadStyles(url) {
+		var ExistFlag=false;
+		$("link").each(function(i,e){
+			if(e.outerHTML.indexOf(url)>=0){
+				ExistFlag=true;
+			}
+		});	
+		if(!ExistFlag){		
+			var link = document.createElement("link");
+			link.type = "text/css";
+			link.rel = "stylesheet";
+			link.href = url;
+			document.getElementsByTagName("head")[0].appendChild(link);
+		}
+	 }
+	</script>
+	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	;调用电子病历ca签名，
+ 	do ##Class(CA.DigitalSignatureService).OutPutSecXCommon("")
+	</SCRIPT>
+</csr:action>
+</csr:rule>

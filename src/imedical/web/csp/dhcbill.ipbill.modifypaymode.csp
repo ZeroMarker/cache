@@ -1,0 +1,99 @@
+<!-- 
+ * FileName: dhcbill.ipbill.modifypaymode.csp
+ * Author: tangzf 
+ * Date: 2021-03-18
+ * Description: 住院支付方式修改
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.modifypaymode.css"/>
+	<server>
+		set DefDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+		set PageID=##class(web.DHCBillWebPage).GetWebPageRowId("ModifyPayMode")
+	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			DefDate: "#(DefDate)#",
+			PageID: "#(PageID)#",
+			AdmType: "IP"
+		};
+		
+		//全局变量
+		var GV = {
+			EditIndex: undefined,
+			BeforePayMID: "",
+			AddType: "Add"      // Add 新增  可以选择所有 ,Update:更新 根据配置
+		};
+	</script>
+</head>
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'center',title:'发票明细',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-apply-check',height:'400px'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',collapsible:false,border:false" style="height:91px;border-bottom:1px solid rgb(226,226,226);border-radius:0;">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+							<td><input id="StartDate" class="hisui-datebox textbox"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("结束日期"))#</label></td>
+							<td><input id="EndDate" class="hisui-datebox textbox"/></td>
+							<td class="r-label r-label-20"><a href="#" class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a></td>
+							<td>
+								<div id="tip" class="messager-popover info" style="position:absolute;">
+									<span class="messager-popover-icon info"></span>
+									<span class="content" style="color:rgb(18,120,184);">
+										<span>#(..Get("自付金额=总金额-折扣金额-记账金额"))#</span>
+									</span>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>#(..Get("发票号"))#</label></td>
+							<td><input id="InvNo" class="textbox"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("登记号"))#</label></td>
+							<td><input id="RegNo" class="textbox"/></td>
+							<td class="r-label r-label-20"><a href="#" class="hisui-linkbutton" iconCls="icon-w-clean" id="btnClear">清屏</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="invList"></table>
+				</div>
+			</div>
+		</div>
+		<div style="width:500px;" data-options="region:'east',title:'支付方式',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',collapsible:false,border:false" style="height:51px;border-radius:0;">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>#(..Get("结算押金"))#</label></td>
+							<td><input id="Deposit" class="textbox" disabled style="font-weight:bold;"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("平衡金额"))#</label></td>
+							<td><input id="BalanceAmt" disabled style="color:red;font-weight:bold;" class="textbox"/></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false" style="border-radius:0 0 4px 4px;border-top:1px dashed #e2e2e2">
+					<table id="paymList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="dg">
+		<td><a href="#" class="hisui-linkbutton" iconCls="icon-add" id="btnAdd" plain="true">新增</a></td>
+		<td><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="btnSave" plain="true">保存</a></td>
+		<td><a href="#" class="hisui-linkbutton" iconCls="icon-reload" id="btnRefresh" plain="true">刷新</a></td>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/modifypaymode.js"></script>
+</body>
+</html>

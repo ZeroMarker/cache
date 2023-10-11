@@ -1,0 +1,235 @@
+<!--
+ * Description: 调查问卷主题维护
+ * FileName: dhcpe.ct.hm.questionsubject.csp
+ * Anchor: wangguoying
+ * Date: 2020-08-15
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s QuestionDR=%request.Get("QuestionDR")
+	</SCRIPT>
+	<style>
+		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			text-align:right;
+			padding:0 10px;
+		}
+   </style>
+</head>
+<body class="hisui-layout">
+	<input id="QuestionDR" type="hidden" value="#(QuestionDR)#">
+		<div id='WestPanel' data-options="region:'center',border:false" style="padding-right:10px;" >				
+			<div id='SubjectPanel' class="hisui-panel" title="主题维护" fit="true" style="height:100%;"  data-options="headerCls:'panel-header-gray',iconCls:'icon-book',closable:false,collapsible:false,minimizable:false,maximizable:false">
+				<!--	内部五方	-->
+				<div class="hisui-layout" fit="true">
+					<!--	北方区域	-->
+					<div data-options="region:'north',border:false" style="height:203px" >
+						<table class="hisui-table">
+							<tr>
+								<td class="labelTd">编码</td>
+								<td><input id="SCode" class="hisui-validatebox textbox" style="width:180px;" ></td>
+								
+								<td class="labelTd">描述</td>
+								<td><input id="SDesc" class="hisui-validatebox textbox" style="width:180px;" ></td>	
+													
+								
+							</tr>
+							<tr>
+								<td class="labelTd">顺序</td>
+								<td><input id="SOrder" class="hisui-validatebox textbox" style="width:180px;" ></td>
+								<td class="labelTd">性别</td>
+								<td><select id="SSex" class="hisui-combobox" style="width:186px;" data-options="enterNullValueClear:false,blurValidValue:true">
+									<option value="M">男</option>
+									<option value="F">女</option>
+									<option value="N" selected >不限</option>	
+								</select></td>	
+								
+							</tr>
+							<tr>
+								<td class="labelTd">年龄</td>
+								<td >
+									<input id="MinAge" class="hisui-numberbox" data-options="min:0" type="text" style="width:80px;" >
+									-
+									<input id="MaxAge" class="hisui-numberbox" data-options="min:0" type="text" style="width:80px;" >
+								</td>	
+								<td class="labelTd">备注</td>
+								<td><input id="SRemark" class="hisui-validatebox textbox" style="width:180px;" ></td>						
+							</tr>
+							<tr>
+								<td class="labelTd">激活</td>
+								<td><input id="SActive" class="hisui-checkbox" type="checkbox" checked >
+									<label style="margin-left:10px;" for="DocFlag">护士填写</label>
+									<input id="DocFlag" class="hisui-checkbox" type="checkbox" >
+								</td>						
+							</tr>
+							<tr>
+								<td colspan="4" style="text-align:center">
+									<a href="javascript:void(0);" onclick="suject_save();" style="" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" >保存</a>
+									<a href="javascript:void(0);" onclick="subject_clean()" style="margin-left:20px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" >清屏</a>
+								</td>
+							</tr>
+						</table>
+						<input id="SubjectDR" type="hidden">
+					</div>
+					<!--	//北方区域	-->
+					
+					<!--	中心区域	--> 
+					<div data-options="region:'west',border:false" style="border-top:1px dotted #ccc" >
+						<table id="SubjectList" data-options="border:false"></table>
+					</div>
+					<!--	//中心区域	--> 
+				</div>
+				<!--	//内部五方	--> 
+			</div>
+		</div>
+	
+		<div id="EastPanel" style="width:400px;" data-options="region:'east',border:false">
+			<div id='QuesPanel' class="hisui-panel" title="问卷内容" fit="true" style="height:100%;"  data-options="headerCls:'panel-header-gray',iconCls:'icon-template',closable:false,collapsible:false,minimizable:false,maximizable:false">
+			<!--	内部五方	-->
+			<div class="hisui-layout" fit="true">
+				<!--	北方添加问题区域	-->
+				<div data-options="region:'north',border:false" style="padding:10px;height:83px;text-align: center;" >
+					<a onclick="open_detailWin('');" class="hisui-linkbutton big" data-options="iconCls:'icon-big-slide-add',plain:true" >新&nbsp;&nbsp;增</a>
+					<a onclick="select_detail();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-search',plain:true" style="margin-left:30px;" >从已存在记录添加</a>
+				</div>
+				<!--	//北方添加问题区域	-->
+				
+				<!--	中心主题与问题关联列表区域	--> 
+				<div data-options="region:'west',border:false" style="border-top:1px dotted #ccc" >
+					<table id="QDLinkDG" data-options="border:false,bodyCls:'panel-body-gray'" ></table>
+				</div>
+				<!--	//中心主题与问题关联列表区域	--> 
+				
+				<!--	选项列表区域	--> 
+				<div data-options="region:'south',border:false" style="border-top:1px dotted #ccc;height:230px;" >
+					<div id="LockDiv" style="position:absolute; top:0; left:0; z-index:27888;text-align:center; width:100%; height:100%;background:#DDDDDB;  filter:alpha(opacity=40); opacity:0.4;">
+						<div style="margin-top:100px;color:red;">选项维护区域</div>
+					</div>	
+					<input type="hidden" id="H_DetailID">
+					<input type="hidden" id="H_DetailType">
+					<table id="QDOptionDG" data-options="border:false,bodyCls:'panel-body-gray'" ></table>
+				</div>
+				<!--	//选项列表区域	--> 
+				
+			</div>
+			<!--	//内部五方	-->
+		</div>
+	</div>
+	
+	
+	
+	<!--	问题维护窗口	--> 
+	<div id="DetailEditWin" title="问卷内容维护" class="hisui-dialog"  style="width:640px;height:475px;"
+		data-options="iconCls:'icon-edit',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true,
+			buttons:[{
+				text:'保存',
+				iconCls:'icon-w-ok',
+				handler:save_detail
+			},{
+				text:'清屏',
+				iconCls:'icon-w-clean',
+				handler:DetailWin_clean
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				handler:close_detailWin
+			}]"> 	
+			<table class="hisui-table">
+				<tr>
+					<td class="labelTd">编码</td>	
+					<td><input id="WD_Code" class="hisui-validatebox" type="text" style="width:180px;" data-options="validType:'checkQDCodeExist',required:true" ></td>
+					<td class="labelTd">描述</td>
+					<td><input id="WD_Desc" class="hisui-validatebox" type="text" style="width:180px;" data-options="required:true" ></td>			
+					<td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox" checked id='WD_Active'></td>
+					<td>激活</td>
+				</tr>
+				<tr>
+					<td class="labelTd">类型</td>
+					<td><select id="WD_Type" class="hisui-combobox" style="width:189px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true">
+							<option value="T">说明型</option>
+							<option value="N">数值型</option>
+							<option value="D">日期型</option>
+							<option value="S">单选型</option>
+							<option value="M">多选型</option>
+						</select>
+					</td>
+					<td class="labelTd">显示列数</td>
+					<td><input id="WD_ColNum" class="hisui-validatebox" type="text" style="width:180px;"></td>
+					<td style="padding-left:10px;"><input class='hisui-checkbox' type="checkbox" id='DRequired'></td>
+					<td>必填</td>
+				</tr>
+				<tr>
+					<td class="labelTd">上限</td>
+					<td><input id="WD_MaxVal" class='hisui-numberbox textbox' data-options='min:0,precision:2,formatter:function(value){if(value.indexOf(".00")>0){value = parseInt(value);}return value;}' type="text" style="width:187px;" ></td>	
+					<td class="labelTd">下限</td>
+					<td><input id="WD_MinVal" class='hisui-numberbox textbox' data-options='min:0,precision:2,formatter:function(value){if(value.indexOf(".00")>0){value = parseInt(value);}return value;}' type="text" style="width:187px;" ></td>			
+				</tr>
+				<tr>
+					<td class="labelTd">参考范围</td>
+					<td >
+						<input id="WD_RangeMin" class='hisui-numberbox textbox' data-options='min:0,precision:2,formatter:function(value){if(value.indexOf(".00")>0){value = parseInt(value);}return value;}' type="text" style="width:85px;" >
+						-
+						<input id="WD_RangeMax" class='hisui-numberbox textbox' data-options='min:0,precision:2,formatter:function(value){if(value.indexOf(".00")>0){value = parseInt(value);}return value;}' type="text" style="width:85px;" >
+					</td>
+					<td class="labelTd">单位</td>	
+					<td><input id="WD_Unit" class="hisui-validatebox" type="text" style="width:180px;" ></td>			
+				</tr>
+				<tr>
+					<td class="labelTd">性别</td>	
+					<td><select id="WD_Sex" class="hisui-combobox" style="width:189px;" data-options="enterNullValueClear:false,blurValidValue:true">
+							<option value="M">男</option>
+							<option value="F">女</option>
+							<option value="N" selected >不限</option>	
+						</select>
+					</td>
+					<td class="labelTd">外部关联码</td>
+					<td><input class="hisui-validatebox" type="text" style="width:180px;" id='WD_LinkCode'></td>
+				</tr>
+				<tr>
+					<td class="labelTd">关联单位</td>
+					<td><input id="WD_LinkUnit" class="hisui-validatebox" type="text" style="width:180px;" ></td>	
+					<td class="labelTd">关联描述</td>
+					<td><input id="WD_LinkDesc" class="hisui-validatebox" type="text" style="width:180px;" ></td>			
+				</tr>
+				<tr>
+						
+					<td class="labelTd">关联分隔符</td>
+					<td><input id="WD_LinkBreak" class="hisui-validatebox" type="text" style="width:180px;" ></td>
+					<td class="labelTd">父记录</td>
+					<td><input id="WD_ParRef" style="width:188px;" ></td>			
+				</tr>
+				<tr>
+					<td class="labelTd">备注</td>
+					<td colspan="5"><textarea rows='4' id="WD_Remark" style="width:100%" class='hisyui-validatebox' ></textarea></td>
+				</tr>
+			</table>
+			<input type="hidden" id="WD_ID" value="">
+			<input type="hidden" id="WD_Subject" value="">
+	</div>
+	<!--	//问题维护窗口	--> 
+	
+	<!--	问题选择窗口	--> 
+	<div id="DetailSelectWin" style="overFlow:hidden;"></div>
+	<!--	//问题选择窗口	--> 
+	
+	<!--	选项关联问题窗口	--> 
+	<div id="DOLinkDetailWin" style="overFlow:hidden;"></div>
+	<!--	//选项关联问题窗口	--> 
+	
+  	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.hm.questionsubject.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+</body>
+</html>
+

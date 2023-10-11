@@ -1,0 +1,113 @@
+﻿<html>
+<head>
+    <title>测试UKey签名</title>
+    
+    <script type="text/javascript" src="../scripts/dhccertauth/lib/jquery-1.8.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+	
+	<server>
+    	s SignTypeCode = "UKEY"
+    	s VenderCode = ##class(CA.DSService).GetCAVenderCode("",SignTypeCode)
+    	s jsPath = ##Class(CA.DSService).GetJSPath(SignTypeCode,VenderCode)
+		w "<script type=""text/javascript"" src="""_jsPath_"""></script>",!
+			
+		s userCode = %session.Get("LOGON.USERCODE")
+		s userName = %session.Get("LOGON.USERNAME")
+    </server>
+	
+  <script type="text/javascript" language="javascript">
+		function caSign() {
+			debugger;
+			
+			//校验用户UKey及口令
+			var key =  document.getElementById("cbxKey").value;
+			var pwd = document.getElementById("txtPassword").value;
+			if ("" == key || "" == pwd) return; 
+			
+			if (!Login("", key, pwd)) return;
+		
+			//var sn = key;
+			//var pass = pwd;
+			//var loginsc = Login("",sn,pass);
+			//alert("login:" + loginsc);
+			
+			var content = "123";
+			
+			var hash = ca_key.HashData(content);
+			alert("hash:" + hash)
+			
+			//var loginObj = ca_key.LoginForm({forceLogin:true});
+			//var key = loginObj.certContainer;
+			
+			var signData = ca_key.SignedData(content,key);
+			alert("signData:" + signData);
+			
+			var info = ca_key.getUsrSignatureInfo(key);
+			alert("certificate:" + info["certificate"]);
+			alert("certificateNo:" + info["certificateNo"]);
+			alert("signImage:" + info["signImage"]);
+			alert("UsrCertCode:" + info["UsrCertCode"]);
+		}
+		
+		
+		//获取用户证书列表，可能同时有多个证书
+		function GetCAUserList() {
+			var keyCombo = document.getElementById("cbxKey").options;
+			keyCombo.length = 0;
+			var lst = GetUserList();  //CA JS API
+			alert(lst);
+			var arrUsers = lst.split('&&&');
+			for (var i = 0; i < arrUsers.length; i++) {
+				var user = arrUsers[i];
+				if (user != "") {
+					var keyName = user.split('||')[0];
+					var uniqueID = user.split('||')[1];
+					var opt = new Option(keyName, uniqueID);
+					keyCombo.options[keyCombo.length] = opt;
+				}
+			}
+		}
+    </script>
+    
+ </head>
+    
+<body>    
+    
+	<div id="cadiv" align="center" valign="middle" style="overflow:auto;width:100%;height:100%">
+
+    <form id="caAuditForm" name="caAuditForm" width="100%" height="100%" style="margin-right: 0px;margin-bottom: 0px;margin-top: 0px;">
+    
+	    <tr align="center" valign="center">
+	    <td>选择证书:</td>
+	    <td>
+	    <select name="cbxKey" id="cbxKey" style="width: 130px; height:90%; margin-right: 0px;margin-bottom: 10px;margin-top: 0px;"></select>
+	    </td>
+    
+	    </tr>
+	    <tr align="center" valign="center">
+	    <td>证书口令:</td>
+	    <td>
+	    <input type="password" id="txtPassword" name="txtPassword" style="width: 130px; height:90%; margin-right: 0px;margin-bottom: 10px;margin-top: 0px;"/>
+	    </td>
+	    </tr>
+    
+	    <tr>
+	    <td align="center" colspan="2">
+	    <input type="button" id="submit" name="submit" onclick="caSign()" value="确  定" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+	    </td>
+	    </tr>
+    
+    	<tr>
+	    <td align="center" colspan="2">
+	    <input type="button" id="load" name="load" onclick="GetCAUserList()" value="加载证书" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+	    </td>
+	    </tr>
+	    
+	    </table> 
+    </form>
+    
+    </div>
+        
+</body>
+
+</html>

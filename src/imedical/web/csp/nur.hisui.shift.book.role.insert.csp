@@ -1,0 +1,358 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s RoleType = $G(%request.Data("RoleType", 1))
+    s hospId =$G(%request.Data("hospId", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var RoleType="#(RoleType)#";
+	   var hospId ="#(hospId)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<table id="shiftTable" style="width:100%"></table>
+	
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+<div style="margin-bottom: 5px;display:none; " id="comboxSearch">
+	<table>
+		<tr>
+			<td>
+				<input type="text" class="textbox hisui-validatebox startDayReport" style="width:170px;" />
+			</td>
+
+			<td>
+				<a class="hisui-linkbutton btnTaskSearch"  data-options="iconCls:'icon-w-find'">查询</a>  
+			</td>
+		</tr>
+	</table>
+</div>
+<script type="text/javascript">
+
+
+
+var xcTopContors=""
+var xcChange={}
+xcChange.WardID2=function(wardID){
+	
+	$HUI.combobox("#LocID", {
+        valueField: "rowId",
+        textField: "desc",
+        multiple: true,
+        selectOnNavigation: false,
+        panelHeight: "210",
+        editable: false,
+        
+    });
+    if(typeof(wardID)!="undefined"){
+	    runClassMethod("Nur.SHIFT.Service.ShiftController","getAllLocData",{"wardID":wardID},function(rtn){
+		    var data={"data":rtn}
+			$("#LocID").combobox(data)
+			
+		    
+	    },'json',false)
+    }
+	
+	
+}
+var wardjson=[]
+var json={
+	control:function(id){
+
+		var IsDefaultData=[
+		{"text":"是","value":"1"},
+		{"text":"否","value":"0"}
+		]
+		var filterData=[]
+		var filterLocData=[]
+		
+		var param={
+			ShiftBookID:ShiftBookID,
+			RoleType:RoleType
+		}
+		debugger;
+		var entity=""
+		if(id!="" && typeof(id)!="undefined"){
+			runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftBookRoleById",{id:id},function(rtn){
+				entity=rtn
+			},'json',false);
+		}
+		
+
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftBookRoleList",param,function(rtn){
+				debugger;
+				
+
+				
+				for(var i=0;i<rtn.length;i++){
+					var wardID=rtn[i].WardID
+					var wards=wardID.split(",")
+					if(entity!=""){
+						if(wardID==entity.WardID){
+							continue;
+						}
+					}
+					for(var j=0;j<wards.length;j++){
+						
+						filterData.push(wards[j])
+					}
+				}
+				
+		},'json',false);
+		console.log(filterData)
+		
+        runClassMethodNew("Nur.NIS.Service.Base.Ward","GetallWardNew",{IsQuery:"true",desc: "",hospid: hospId,bizTable: "Nur_IP_Question"},
+            function(obj){
+	             for(var i=0;i<obj.rows.length;i++){
+		             var json={}
+		             json.value=obj.rows[i].wardid
+		             json.text=obj.rows[i].warddesc
+		             if(filterData.indexOf(obj.rows[i].wardid)==-1){
+		             	wardjson.push(json)
+		             }
+		          }
+	   },'json',false)
+		
+		var defaultValue="",IsDefault=""
+		if(entity!=""){
+			defaultValue=entity.WardID
+			IsDefault=entity.IsDefault+""
+		}
+		
+		var controlArrs=[
+			{'id':'WardID','type':'combox','filterData':filterData,'objData':wardjson,'defaultValue':defaultValue,'required':'true','title':'生效病区','style':'width:307px;'},	
+			{'id':'IsDefault','type':'combox','objData':IsDefaultData,'title':'默认交班本','required':'true','defaultValue':IsDefault,'style':'width:307px;'},
+		
+		]
+		
+		if(RoleType==2){
+			var locData=[]
+			var defaultValue=""
+			var defaultLocValue=""
+			if(entity!=""){
+				defaultValue=entity.WardID.split(",")[0]
+
+				var json={}
+		            
+		       wardjson.push(json)
+		          
+		        runClassMethod("Nur.SHIFT.Service.ShiftController","getAllLocData",{"wardID":defaultValue},function(rtn){
+	    			for(var i=0;i<rtn.length;i++){
+		    			var json={value:rtn[i].rowId,text:rtn[i].desc}
+		    			locData.push(json)
+		    		}
+					
+	    
+   				 },'json',false)   
+   				var LocIDS= entity.LocID
+   				var len=LocIDS.split("^").length
+   				var LocValue=[]
+				for(var i=0;i<len;i++){
+					var LocID=LocIDS.split(",")[i]
+	
+					LocValue.push(LocID)
+				}
+				defaultLocValue=LocValue.join(",")
+			}
+		
+			
+			entity=""
+			wardjson=[]
+			runClassMethodNew("Nur.NIS.Service.Base.Ward","GetallWardNew",{IsQuery:"true",desc: "",hospid: hospId,bizTable: "ExchangeSettingV2"},
+	            function(obj){
+		             for(var i=0;i<obj.rows.length;i++){
+			             var json={}
+			             json.value=obj.rows[i].wardid
+			             json.text=obj.rows[i].warddesc
+			             
+			             	wardjson.push(json)
+			             
+			          }
+		   },'json',false)
+			controlArrs=[
+				{'id':'WardID','type':'combox','defaultValue':defaultValue,'objData':wardjson,'required':'true','title':'生效病区','onSelect':wardSelect,'style':'width:307px;'},
+				{'id':'LocID','type':'combox','defaultValue':defaultLocValue,'objData':locData,'required':'true','title':'生效科室','multiple':'true','style':'width:307px;',},
+				{'id':'IsDefault','type':'combox','objData':IsDefaultData,'title':'默认交班本','required':'true','defaultValue':'1','style':'width:307px;'},
+			
+			]
+		}
+		
+		return controlArrs
+	},
+	create:function(tableID,id){
+		var controlArrs=json.control(id)
+		for(var i=0;i<controlArrs.length;i++){
+			var key = controlArrs[i].id
+			createInputHtml(tableID,controlArrs,key,0)
+		}
+		for(var i=0;i<controlArrs.length;i++){
+			
+			rsInputType(controlArrs[i])
+		}
+	},
+	setValue:function(id,className,methodName){
+		
+		runClassMethod(className,methodName,{id:id},function(rtn){
+			entity=rtn
+		},'json',false);
+
+	},
+	save:function(id,className,methodName){
+		var parms = ""
+		var controlArrs=json.control()
+		var topParms = resultParms(controlArrs)
+		var downParms = ""
+		var rsTxt=""
+		if(topParms!=""){
+			var rtnParms=setAllParms([parms,topParms,downParms])
+			rtnParms.id=id
+			rtnParms.ShiftBookID=ShiftBookID
+			rtnParms.RoleType=RoleType
+			rtnParms.ActiveFlag=1
+			runClassMethod(className,methodName,{data:JSON.stringify(rtnParms)},function(rtn){
+				if(rtn == 0) {
+					
+				} else if(rtn == 1){
+					//$.messager.alert('提示','保存失败！'+ rtn , "info");
+					rsTxt = "保存失败！"
+				}else if(rtn == 2){
+					rsTxt = "保存失败，已存在默认交班本"
+				}
+				
+			
+			},'json',false);
+		
+			
+		}else{
+			rsTxt = "保存失败,存在必填项为空！"
+		}
+		return rsTxt
+	}
+	
+}
+
+function wardSelect(obj){
+	var wardID=obj.value
+	$HUI.combobox("#LocID", {
+        valueField: "rowId",
+        textField: "desc",
+        multiple: true,
+        selectOnNavigation: false,
+        panelHeight: "210",
+        editable: false,
+        
+    });
+    if(typeof(wardID)!="undefined"){
+	    runClassMethod("Nur.SHIFT.Service.ShiftController","getAllLocData",{"wardID":wardID},function(rtn){
+		    var data={"data":rtn}
+			$("#LocID").combobox(data)
+			
+		    
+	    },'json',false)
+    }
+}
+$(function(){
+	$('body').addClass('active')
+
+	json.create("shiftTable",id)
+	
+})
+
+function saveFunLib(){
+	return json.save(id,"Nur.SHIFT.Service.ShiftConfigController","InsertShiftBookRole")
+	
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

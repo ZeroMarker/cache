@@ -1,67 +1,38 @@
-﻿<!--厂商信息维护-->
+﻿<!--生产厂家信息维护-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  q 1
 </csp:method>
 <html lang="zh-CN">
+<SERVER>
+	s TabParams=$G(%request.Data("TabParams",1))
+</SERVER>
 <head>
+	<script language=javascript>
+		var gTabParams='#(TabParams)#';
+	</script>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<DHCSTMHISUI/>
-	<style>
-		.itm_table{
-			text-align: right;
-			border-spacing:0px 5px;
-		}
-		.itm_table>tbody>tr>td{
-			padding: 0px 0px 0px 8px;
-		}
-		.CkPadding{
-			text-align:left;
-			padding: 0px 0px 0px 1px
-		}
-		.tdwidth{
-			width:100px
-		}
-		.imgbox{
-			position: relative;
-			width: 360px;
-			height: 440px;
-			margin-top: 20px;
-			background: #000000;
-		}
-		.imgbox img{
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			margin: auto;
-			max-width: 100%;
-			max-height: 100%;
-			outline: 1px solid #000;
-		}
-		.selectedpic { border:4px solid #378ec4; padding:0;position: relative;z-index:0}
-	</style>
-	<link href="../scripts/dhcstmhisui/Common/webuploader/webuploader.css" type="text/css" rel="stylesheet"/>
-	<link href="../scripts/dhcstmhisui/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'west',border:false,collapsible:false" style="width:630px;">
-		<div class="hisui-panel" title="厂商列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+	<div class="GridPadding" data-options="region:'west',border:false,collapsible:false" style="width:640px;">
+		<div class="hisui-panel" title="生产厂家列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
 			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',border:false,collapsible:false" style="border-bottom:none;">
-					<table id="MainConditions" class="Condition">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<tr>
-							<td><label>代码</label><input id="ManfCode" name="ManfCode" class="textbox" style="width:120px;"></td>
-							<td><label>名称</label><input id="ManfDesc" name="ManfDesc" class="textbox" style="width:120px;"></td>
-							<td><label>状态</label><select id="Status" name="Status" class='hisui-combobox' style="width:80px;">
-								<option value="" selected>全部</option>
-								<option value="Y">使用</option>
-								<option value="N">停用</option>
-							</select></td>
+							<td><label>名称</label><input id="ManfDesc" name="ManfDesc" class="textbox"></td>
+							<td><label>状态</label>
+								<select id="Status" name="Status" class='hisui-combobox textbox'>
+									<option value="" selected>全部</option>
+									<option value="Y">使用</option>
+									<option value="N">停用</option>
+								</select>
+							</td>
+							<td class="SCIShow"><a href="#" id="SendBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:88px">推送平台</a></td>
 							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
 						</tr>
 					</table>
@@ -72,193 +43,130 @@
 			</div>
 		</div>
 	</div>
-	<div class="hisui-tabs tabs-gray GridPadding" data-options="region:'center'" style="padding-left:0;border:none;"> 
-		<div title="厂商基本信息">
-			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;padding:5px;">
-					<a href="#" id="AddBT_1" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
-					<a href="#" id="SaveBT_1" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+	<div class="GridPadding" data-options="region:'center',border:false" style="padding-left:0px;">
+		<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-tabs tabs-gray" data-options="fit:true"> 
+				<div title="基本信息">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;">
+							<a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+							<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+							<a href="#" id="LinkBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">对照</a>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="BasicConditions" class="Condition">
+								<input id="RowId" name="RowId" type="hidden">
+								<tr>
+									<td><label>代码</label><input id="ManfCode_1" name="ManfCode" class="textbox" placeholder="为空则自动生成..."></td>
+								</tr>
+								<tr>
+									<td><span class="required">*</span><label>名称</label><input id="ManfDesc_1" name="ManfDesc" class="hisui-validatebox textbox" data-options="required:true"></td>
+								</tr>
+								<tr>
+									<td><label>电话</label><input id="Tel" name="Tel" class="textbox"></td>
+								</tr>
+								<tr>
+									<td><label>地址</label><input id="Address" name="Address" class="textbox"></td>
+								</tr>
+								<tr>
+									<td><label>使用状态</label><select id="Status_1" name="Status" class='hisui-combobox textbox'>
+										<option value="Y" selected>使用</option>
+										<option value="N">停用</option>
+									</select></td>
+								</tr>
+							</table>
+						</div>
+					</div>
 				</div>
-				<div data-options="region:'center',border:false">
-					<table id="BasicConditions" class="Condition">
-						<input id="RowId" name="RowId" type="hidden">
-						<tr>
-							<td><label>代码</label><input id="ManfCode_1" name="ManfCode" class="textbox" placeholder="为空则自动生成..." style="width:250px;"></td>
-						</tr>
-						<tr>
-							<td><span class="required">*</span><label>名称</label><input id="ManfDesc_1" name="ManfDesc" class="hisui-validatebox" data-options="required:true" style="width:250px;"></td>
-						</tr>
-						<tr>
-							<td><label>电话</label><input id="Tel" name="Tel" class="textbox" style="width:250px;"></td>
-						</tr>
-						<tr>
-							<td><label>地址</label><input id="Address" name="Address" class="textbox" style="width:250px;"></td>
-						</tr>
-						<tr>
-							<td><label>上级厂商</label><input id="ParManf" name="ParManf" class="hisui-combobox" style="width:256px;"></td>
-						</tr>
-						<tr>
-							<td><label>使用状态</label><select id="Status_1" name="Status" class='hisui-combobox' style="width:256px;">
-								<option value="Y" selected>使用</option>
-								<option value="N">停用</option>
-							</select></td>
-						</tr>
-					</table>
-				</div>
-			</div>
-		</div>
-		<div title="资质信息" data-options="closable:false" style="overflow:auto;">
-			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;padding:5px;">
-					<a href="#" id="AddBT_2" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
-					<a href="#" id="SaveBT_2" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
-				</div>
-				<div data-options="region:'center',border:false">
-					<table id="QualifyConditions" class="Condition">
-						<tr>
-							<input id="comLicRowId" name="comLicRowId" type="hidden">
-							<td><label>工商执照</label><input id="comLicText" name="comLicText" class="textbox" style="width:180px;"></td>
-							<td><label>效期</label><input id="comLicDateTo" name="comLicDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
-						</tr>
-						<tr>
-							<input id="orgCodeRowId" name="orgCodeRowId" type="hidden">
-							<td><label>机构代码</label><input id="orgCodeText" name="orgCodeText" class="textbox" style="width:180px;"></td>
-							<td><label>效期</label><input id="orgCodeDateTo" name="orgCodeDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
-						</tr>
-						<tr>
-							<input id="insBusLicRowId" name="insBusLicRowId" type="hidden">
-							<td><label>器械经营许可证</label><input id="insBusLicText" name="insBusLicText" class="textbox" style="width:180px;"></td>
-							<td><label>效期</label><input id="insBusLicDateTo" name="insBusLicDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
-						</tr>
-						<tr>
-							<input id="insProLicRowId" name="insProLicRowId" type="hidden">
-							<td><label>器械生产许可证</label><input id="insProLicText" name="insProLicText" class="textbox" style="width:180px;"></td>
-							<td><label>效期</label><input id="insProLicDateTo" name="insProLicDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
-						</tr>
-						<tr>
-							<input id="prodEprsHygLicRowId" name="prodEprsHygLicRowId" type="hidden">
-							<td><label>生产企业卫生许可证</label><input id="prodEprsHygLicText" name="prodEprsHygLicText" class="textbox" style="width:180px;"></td>
-							<td><label>效期</label><input id="prodEprsHygLicDateTo" name="prodEprsHygLicDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
-						</tr>
-						<tr>
-							<input id="socialCreditCodeRowId" name="socialCreditCodeRowId" type="hidden">
-							<td><label>社会信用码</label><input id="socialCreditCodeText" name="socialCreditCodeText" class="textbox" style="width:180px;"></td>
-							<td><label>效期</label><input id="socialCreditCodeDateTo" name="socialCreditCodeDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
-						</tr>
-						<tr>
-							<input id="businessRegNoRowId" name="businessRegNoRowId" type="hidden">
-							<td><label>工商注册号</label><input id="businessRegNoText" name="businessRegNoText" class="textbox" style="width:180px;"></td>
-							<td><label>效期</label><input id="businessRegNoDateTo" name="businessRegNoDateTo" class="hisui-datebox textbox" style="width:127px;"></td>
-						</tr>
-						<tr>
-							<input id="taxLicRowId" name="taxLicRowId" type="hidden">
-							<td><label>税务登记证</label><input id="taxLicText" name="taxLicText" class="textbox" style="width:180px;"></td>
-						</tr>
-					</table>
-				</div>
-			</div>
-		</div>
-		<div title="资质图片" data-options="closable:false">
-			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',border:false" style="border-bottom:1px dashed #CCCCCC;padding:5px;">
-					<a href="#" id="UpLoadBT" class="hisui-linkbutton" data-options="iconCls:'icon-upload-cloud',plain:true">上传</a>
-					<a href="#" id="TakePhotoBT" class="hisui-linkbutton" data-options="iconCls:'icon-camera',plain:true">拍照</a>
-				</div>
-				<div data-options="region:'center',border:false">
-					<table class="Condition">
-						<tr>
-							<td><label>资质信息</label><select id="Qualifications" name="Qualifications" class="hisui-combobox" style="width:200px;">
-								<option value="" selected disabled>请选择资质信息...</option>
-								<option value="comLic">工商执照</option>
-								<option value="orgCode">机构代码</option>
-								<option value="insBusLic">器械经营许可证</option>
-								<option value="insProLic">器械生产许可证</option>
-								<option value="prodEprsHygLic">生产企业卫生许可证</option>
-								<option value="socialCreditCode">社会信用码</option>
-								<option value="taxLic">税务登记证</option>
-							</select></td>
-						</tr>
-					</table>
+				<div title="资质信息" data-options="closable:false" style="overflow:auto;">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false">
+							<a href="#" id="AddCertBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+							<a href="#" id="SaveCertBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">修改</a>
+							<a href="#" id="CertUpLoadBT" class="hisui-linkbutton" data-options="iconCls:'icon-upload-cloud',plain:true">上传</a>
+							<a href="#" id="CertTakePhotoBT" class="hisui-linkbutton" data-options="iconCls:'icon-camera',plain:true">拍照</a>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="CertGrid"></table>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div id="UpLoadWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:600px;height:480px" title="图片上传"> 
-		<div class="hisui-layout" data-options="fit:true">   
-			<div class="BorderLine" data-options="region:'north',border:false" style="height:58px;">
-				<table class="Condition">
+	<!--资质窗口-->
+	<div id="AddCertWin" class="hisui-dialog" data-options="closed:'true',modal:true" title="资质编辑" style="width:650px;height:320px;">
+		<table id="AddCertConditions" class="Condition" align="center">
+			<tr>
+				<input id="CERTRowId" name="CERTRowId" type="hidden">
+				<td><label>证件类型</label><input id="CERTType" name="CERTType" class="hisui-combobox textbox width:200px;" style="width:200px;"></td>
+				<td><label>证件编号</label><input id="CERTText" name="CERTText" class="textbox" style="width:250px;"></td>
+			</tr>
+			<tr>
+				<td><label>效期开始</label><input id="CERTDateFrom" name="CERTDateFrom" class="hisui-dateboxq textbox" style="width:200px;"></td>
+				<td><label>效期截止</label><input id="CERTDateTo" name="CERTDateTo" class="hisui-dateboxq textbox" style="width:257px;"></td>
+			</tr>
+			<tr>
+				<td><label>发证机关</label><input id="CERTIssuedDept" name="CERTIssuedDept" class="textbox" style="width:193px;"></td>
+				<td><label>发证日期</label><input id="CERTIssuedDate" name="CERTIssuedDate" class="hisui-dateboxq textbox" style="width:257px;"></td>
+			</tr>
+			<tr>
+				<td><input id="CERTBlankedFlag" name="CERTBlankedFlag" class='hisui-checkbox' type="checkbox" value="Y" label="长期标志">
+					<!--<input id="CERTDelayFlag" name="CERTDelayFlag" class='hisui-checkbox' type="checkbox" value="Y" label="延期标志">--></td>
+				<td><label>延期至</label><input id="CERTDelayDateTo" name="CERTDelayDateTo" class="hisui-dateboxq textbox" style="width:257px;"></td>
+			</tr>
+			<tr>
+				<td><label>是否展示</label><input id="CERTShowFlag" name="CERTShowFlag" class="hisui-combobox textbox" style="width:200px;"></td>
+			</tr>
+			<tr>
+				<td colspan="2" align="center"><a href="#" id="ACertSaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+			</tr>
+		</table>
+	</div>
+	<!--四川阳光采购 企业下载对照 -->
+	<div id="SCCompanyWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="企业信息">
+		<div class="hisui-layout" data-options="fit:true">
+			<div class="BorderLine" data-options="region:'north',border:false,headerCls:'panel-header-gray'">
+				<table id="SCComConditions" class="Condition">
 					<tr>
-						<td><div id="AddPicBT">添加图片</div></td>
-						<td><div id="UpLoadPicBT" class="hisui-linkbutton">上传图片</div></td>
+						<td>企业ID</td>
+						<td><input id="SCComCode" name="SCComCode" class="textbox"></td>
+						<td>起始日期</td>
+						<td><input id="SCStartDate" name="SCStartDate" class="hisui-dateboxq textbox"></td>
+						<td>截止日期</td>
+						<td><input id="SCEndDate" name="SCEndDate" class="hisui-dateboxq textbox"></td>
+						<td><a href="#" id="SCComQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="SCComDownloadBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-download'" style="width:116px">下载</a></td>
+					</tr>
+					<tr>
+						<td>企业名称</td>
+						<td><input id="SCComName" name="SCComName" class="textbox"></td>
+						<td>当前页码</td>
+						<td><input id="SCCurPageNumber" name="SCCurPageNumber" class="textbox"></td>
+						<td><a href="#" id="SCComMatchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">对照</a></td>
+						<td><a href="#" id="SCComCanMatchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消对照</a></td>
+					</tr>
+					<tr>
+						<td>总页数</td>
+						<td><input id="SCTotalPageCount" name="SCTotalPageCount" class="textbox" disable></td>
+						<td>总行数</td>
+						<td><input id="SCTotalRecordCount" name="SCTotalRecordCount" class="textbox" disable></td>
+						<td><a href="#" id="SCComClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
 					</tr>
 				</table>
-			</div> 
-			<div data-options="region:'center',border:false">   
-				<div id="PicList" class="uploader-list" style="padding:10px;"></div>
+			</div>
+			<div data-options="region:'center',border:false" style="width:500px;padding-top:0;">
+				<table id="SCCominfoGrid"></table>
 			</div>
 		</div>
 	</div>
-	<div id="ManfPicWin" class="hisui-dialog FindWin" data-options="modal:true,closed:'true'" title="厂商图片信息">
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="GridPadding" data-options="region:'west',border:false" style="width:320px;">
-				<div class="hisui-panel" title="资质信息" data-options="headerCls:'panel-header-card-gray'">
-					<table id="Conditions" class="Condition">
-						<tr>
-							<td align="left"><input id="comLic" name="comLic" class='hisui-checkbox' type="checkbox" value="Y" label="工商执照"></td>
-							<td align="left"><input id="insBusLic" name="insBusLic" class='hisui-checkbox' type="checkbox" value="Y" label="器械经营许可证"></td>
-						</tr>
-						<tr>
-							<td align="left"><input id="orgCode" name="orgCode" class='hisui-checkbox' type="checkbox" value="Y" label="机构代码"></td>
-							<td align="left"><input id="insProLic" name="insProLic" class='hisui-checkbox' type="checkbox" value="Y" label="器械生产许可证"></td>
-						</tr>
-						<tr>
-							<td align="left"><input id="socialCreditCode" name="socialCreditCode" class='hisui-checkbox' type="checkbox" value="Y" label="社会信用码"></td>
-							<td align="left"><input id="prodEprsHygLic" name="prodEprsHygLic" class='hisui-checkbox' type="checkbox" value="Y" label="生产企业卫生许可证"></td>
-						</tr>
-						<tr>
-							<td align="left"><input id="taxLic" name="taxLic" class='hisui-checkbox' type="checkbox" value="Y" label="税务登记证"></td>
-						</tr>
-					</table>
-				</div>
-				<div>
-					<table class="Condition">
-						<tr>
-							<td colspan="2"><label>资质信息</label><select id="Qualification" name="Qualification" class="hisui-combobox" style="width:180px;">
-								<option value="" selected disabled>请选择图片重新归档为...</option>
-								<option value="comLic">工商执照</option>
-								<option value="orgCode">机构代码</option>
-								<option value="insBusLic">器械经营许可证</option>
-								<option value="insProLic">器械生产许可证</option>
-								<option value="prodEprsHygLic">生产企业卫生许可证</option>
-								<option value="socialCreditCode">社会信用码</option>
-								<option value="taxLic">税务登记证</option>
-							</select></td>
-						</tr>
-						<tr>
-							<td align="left"><a href="#" id="PicQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-							<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
-						</tr>
-						<tr>
-							<td align="left"><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-							<td><a href="#" id="DeleteBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除</a></td>
-						</tr>
-					</table>
-				</div>
-			</div>
-			<div class="GridPadding" data-options="region:'center',border:false" style="padding-left:0;">
-				<div class="hisui-panel" title="图片列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-img',fit:true">
-					<ul id="PicLists" style="padding:10px;"></ul>
-				</div>
-			</div>
-		</div>
-	</div>
+	<!--文件窗口-->
+	<csp:Include Page="dhcstmhui.picuploadwin.csp">
+	
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonHosp.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/jquery.tmpl.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/Viewer/viewer.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/webuploader/webuploader.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonuploader.js"></script>	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/PhManf/PicWindow.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/ApcVendor/AddCertWin.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/SunPurPlanSC/QueryCompany.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/PhManf/PhManfNew.js"></script>
 </body>
 </html>

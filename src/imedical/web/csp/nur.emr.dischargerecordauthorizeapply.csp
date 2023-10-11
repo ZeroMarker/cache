@@ -1,0 +1,1174 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<!--nur.emr.dischargerecordauthorizeapply.csp-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js" ></script>
+	<style type="text/css">
+		body {padding:10px 10px;}
+		.divradius{
+			border-radius: 4px;
+			-webkit-border-radius:4px;
+			-moz-border-radius:4px;
+			border:1px solid #ccc;
+		}
+		.tdwidth100{
+			width:100px;
+		}
+		#accPanel td {
+			padding:0px 5px;
+		}
+		.checkpadding10{
+			padding-right:10px;
+		}
+		#SMTZSingleStatus,#SMTZStatus,#CCTStatus,#JKXJStatus,#XTDStatus{
+			color:red;
+			margin-left:20px;
+		}
+   </style>
+</head>
+
+<body>
+<div style="width:100%;height:100%;">
+	<div id="searchDiv" style="height:85px">
+	<div id="accPanel" class="hisui-panel"  title="出院病历申请-患者查询" style="padding:10px 5px;" data-options="fit:true,headerCls:'panel-header-gray',closable: false,iconCls: 'icon-paper'">
+		<table style="border-spacing:0px">
+			<tr>
+				<td><label>#(..Get("病区"))#</label></td>
+				<td>
+					<select id="locBox" class="hisui-combobox" name="loc" style="width:200px;" data-options="blurValidValue:true">
+					<option value="">请选择</option>
+					</select>
+				</td>
+				<td><label>#(..Get("出院时间"))#</label></td>
+				<td><input id="dtb1" class="hisui-datebox textbox datebox-f combo-f" data-options="" style="display: none;"></td>
+				<td><label>至</label></td>
+				<td><input id="dtb2" class="hisui-datebox textbox datebox-f combo-f" data-options="" style="display: none;"></td>
+				<td><label>#(..Get("登记号"))#</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="" style="width:100px" id="regNo"></td>
+				<td><label>#(..Get("病案号"))#</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="" style="width:100px" id="medNo"></td>
+				<td><label>#(..Get("姓名"))#</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="" style="width:100px" id="patName"></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="patSearch">查询</a></td>
+			</tr>
+		</table>
+	</div>
+	</div>
+	<div id="patientListDiv" style="height:148px">
+	<table id="dg" class="hisui-datagrid" title="" data-options="fit:true">
+		<thead>   
+			<tr>
+				<th data-options="field:'regNo',width:100">登记号</th>   
+				<th data-options="field:'medCareNo',width:100">病案号</th>   
+				<th data-options="field:'bedCode',width:100">床号</th>
+				<th data-options="field:'patName',width:100">姓名</th>
+				<th data-options="field:'sex',width:100">性别</th>
+				<th data-options="field:'age',width:100">年龄</th>   
+				<th data-options="field:'ctlocDesc',width:100">科室</th>  
+				<th data-options="field:'wardDesc',width:100">病区</th>
+				<th data-options="field:'AdmDate',width:100">入院时间</th>
+				<th data-options="field:'DischgDate',width:100">出院时间</th>
+				<th data-options="field:'diag',width:100">诊断</th>
+				<th data-options="field:'MainDoctor',width:100">管床医生</th> 
+			</tr>   
+		</thead>   
+	</table>
+	</div>
+	<div id="tabDiv" style="top:243px;bottom:10;position:absolute;">
+		<div id="tt-brand-gray" class="hisui-tabs tabs-gray" data-options="onSelect:onTabSelect,fit:true,isBrandTabs:true">
+			<div title="出院病历" data-options="iconCls:'icon-add-note'" style="padding:20px;"></div>   
+			<div id="HLBLTab" title="护理病历" style="padding:10px;">
+				<div style="width:100%;height:100%;">
+						<table style="width:100%;height:calc(100% - 40px);">					
+						<tbody>
+						<tr>
+							<td width="50%">
+								<div class="kkk111 divradius" style="width:100%;">
+									
+									<csp:Include page="nur.emr.business.templist.csp?TempCheckFlag=1">
+									
+								</div>
+							</td>
+							<td width="50%" style="padding-left:10px;">
+								<div class="kkk111 divradius" style="width:100%;">
+										<div style="margin:10px;">
+										<table style="border-spacing:10px">					
+										<tbody>
+										<tr>
+											<td class="r-label" width="100px">#(..Get("授权病历"))#</td>
+											<td id="hlblTemplate"></td>
+										</tr>
+										<tr>
+											<td class="r-label required-label" width="100px">#(..Get("授权操作类型"))#</td>
+											<td id="HLBLOptContainer">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label required-label" width="100px" style="vertical-align:top">#(..Get("申请原因"))#</td>
+											<td>
+												<textarea id="hlblNote" class="textbox hisui-validatebox" placeholder="必填项" data-options="required:true" cols="90" rows="6" style="resize:none;height:85px;width:260px;"></textarea>
+											</td>
+										</tr>
+										<tr>
+											<td></td>
+											<td>
+												<div style="margin-top:10px">
+												<a href="#" class="hisui-linkbutton hover-dark" id="HLBLApply">申请</a>
+												<span style="display:inline-block;width:16px;"></span>
+												<a href="#" class="hisui-linkbutton hover-dark" id="HLBLApplyHistory">申请历史</a>
+											    </div>
+											</td>
+										</tr>
+										</tbody>
+										</table>
+										</div>
+								</div>
+							</td>
+						</tr>
+						</tbody>
+						</table>
+				</div>
+			</div>   
+			<div id="SMTZTab" title="生命体征" style="padding:10px;">
+				<div style="width:100%;height:100%;">
+				<div>
+					<div id="switch1" class="hisui-switchbox" style="width:120px;margin-left:2px;margin-bottom:10px;" data-options="onText:'单时间点',offText:'整体',
+size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){wohlePGSwitchChange(obj);}"></div>
+				</div>
+				<div style="width:100%;height:calc(100% - 66px);">
+					<table style="width:100%;height:100%;border-spacing:0px;">					
+						<tbody>
+						<tr>
+							<td id="wholePGTD" width="50%">
+								<div class="kkk222 divradius" style="overflow-y:auto;padding:10px;">
+								 	<div>
+								 		<table style="border-spacing:0px">
+								 			<tr>
+								 				<td><span>#(..Get("日期"))#</span></td>
+								 				<td><span style="margin-left:10px"><input id="smtzdt" class="hisui-datebox textbox datebox-f combo-f" data-options="required:true,onChange:smtzCheckChange" style="display: none;"></span></td>
+								 				<td><span style="margin-left:10px"><input id="smtztime" class="hisui-timespinner" data-options="required:true,onChange:smtzCheckChange" style="border-radius: 2px;"></span></td>
+								 			</tr>
+										</table>
+								 	</div>
+								 	<div>
+								 		<div>
+								 			<table>
+								 			<thead>
+								 			<tr>
+								 				<td colspan="4">
+								 					<input class="hisui-checkbox" type="checkbox" id="smtzItemAll" data-options="onCheckChange:smtzItemAllCheckChange" label="全选">
+								 					<label id='SMTZSingleStatus' style="vertical-align: middle;"></label>
+								 				</td>
+								 			</tr>
+								 			</thead>					
+											<tbody id="smtzContainer">
+											</tbody>
+											</table>
+								 		</div>
+								 	</div>
+								</div>
+							</td>
+							<td id="singlePGTD" width="50%" style="padding-left:10px;">
+								<div class="kkk222 divradius" style="padding:10px;" id="smtzApplyContainer">
+									<div>
+										<table style="border-spacing:10px">					
+										<tbody>
+										<tr>
+											<td class="r-label tdwidth100">#(..Get("授权病历"))#</td>
+											<td><span id="smtzTemplate">#(..Get("生命体征"))#</span><span id='SMTZStatus'></span></td>
+										</tr>
+										<tr>
+											<td class="r-label tdwidth100 required-label">#(..Get("授权操作类型"))#</td>
+											<td id="SMTZOptContainer">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label required-label tdwidth100" style="vertical-align:top">#(..Get("申请原因"))#</td>
+											<td>
+												<textarea id="smtzNote" class="textbox hisui-validatebox" placeholder="必填项" data-options="required:true" cols="90" rows="6" style="resize:none;height:85px;width:260px;"></textarea>
+											</td>
+										</tr>
+										<tr>
+											<td></td>
+											<td>
+												<div style="margin-top:10px">
+												<a href="#" class="hisui-linkbutton hover-dark" id="SMTZApply">申请</a>
+												<span style="display:inline-block;width:16px;"></span>
+												<a href="#" class="hisui-linkbutton hover-dark" id="SMTZApplyHistory">申请历史</a>
+												</div>
+											</td>
+										</tr>
+										</tbody>
+										</table>
+									</div>
+								</div>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+				</div>
+			</div>  
+			<div id="XTDTab" title="血糖单" style="padding:20px;">
+				<div>
+					<table style="border-spacing:10px">					
+						<tbody>
+						<tr>
+							<td class="r-label tdwidth100">#(..Get("授权病历"))#</td>
+							<td>#(..Get("血糖单"))#<span id='XTDStatus'></span></td>
+						</tr>
+						<tr>
+							<td class="r-label required-label">#(..Get("授权操作类型"))#</td>
+							<td id="XTDOptContainer">
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label required-label" style="vertical-align:top">#(..Get("申请原因"))#</td>
+							<td>
+								<textarea id="xtdNote" class="textbox hisui-validatebox" placeholder="必填项" data-options="required:true" cols="90" rows="6" style="resize:none;height:85px;width:260px;"></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>
+								<div style="margin-top:10px">
+								<a href="#" class="hisui-linkbutton hover-dark" id='XTDApply'>申请</a>
+								<span style="display:inline-block;width:16px;"></span>
+								<a href="#" class="hisui-linkbutton hover-dark" id="XTDApplyHistory">申请历史</a>
+								</div>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="CCTTab" title="产程图" style="padding:20px;">
+				<div>
+					<table style="border-spacing:10px">					
+						<tbody>
+						<tr>
+							<td class="r-label tdwidth100">#(..Get("授权病历"))#</td>
+							<td>#(..Get("产程图"))#<span id='CCTStatus'></span></td>
+						</tr>
+						<tr>
+							<td class="r-label required-label">#(..Get("授权操作类型"))#</td>
+							<td id="CCTOptContainer">
+								
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label required-label" style="vertical-align:top">#(..Get("申请原因"))#</td>
+							<td>
+								<textarea id="cctNote" class="textbox hisui-validatebox" placeholder="必填项" data-options="required:true" cols="90" rows="6" style="resize:none;height:85px;width:260px;"></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>
+								<div style="margin-top:10px">
+								<a href="#" class="hisui-linkbutton hover-dark" id="CCTApply">申请</a>
+								<span style="display:inline-block;width:16px;"></span>
+								<a href="#" class="hisui-linkbutton hover-dark" id="CCTApplyHistory">申请历史</a>
+								</div>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="XKXJTab" title="健康宣教" style="padding:20px;">
+				<div>
+					<table style="border-spacing:10px">					
+						<tbody>
+						<tr>
+							<td class="r-label tdwidth100">#(..Get("授权病历"))#</td>
+							<td>#(..Get("健康宣教"))#<span id='JKXJStatus'></span></td>
+						</tr>
+						<tr>
+							<td class="r-label required-label">#(..Get("授权操作类型"))#</td>
+							<td id="JKXJOptContainer">
+								
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label required-label" style="vertical-align:top">#(..Get("申请原因"))#</td>
+							<td>
+								<textarea id="jkxjNote" class="textbox hisui-validatebox" placeholder="必填项" data-options="required:true" cols="90" rows="6" style="resize:none;height:85px;width:260px;"></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>
+								<div style="margin-top:10px">
+								<a href="#" class="hisui-linkbutton hover-dark" id="JKXJApply">申请</a>
+								<span style="display:inline-block;width:16px;"></span>
+								<a href="#" class="hisui-linkbutton hover-dark" id="JKXJApplyHistory">申请历史</a>
+								</div>
+							</td>
+						</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+	<script type="text/javascript">
+	var windowLoaded = false;
+	var EpisodeID = "";
+	var currentRegNo="";
+	var DefaultCode = null;
+	var SMTZMode = "singleTime";
+	var DADischObsApplyMode = null;
+	var GV = {
+		BaseFlag: true,
+		SwitchInfo: new Object(),
+		TempNodeState: new Object(),
+		LocRootId: null,
+		Steps: []
+	};
+	var mouldTypeObj={"HLBL":$g("护理病历"),"SMTZ":$g("生命体征"),"XTD":$g("血糖单"),"CCT":$g("产程图"),"JKXJ":$g("健康宣教")};
+	var applyHLBLList = [];
+	var patDatas = {"total":0,"rows":[]};
+	var queryObj = GetQueryObject();
+	var queryRegNo = queryObj["regNo"];
+	var queryMouldType = queryObj["mouldType"];
+	
+	function wohlePGSwitchChange(obj){
+		if(obj.value === false){
+			$("#smtzdt").datebox("hidePanel");
+            $("#wholePGTD").hide();
+            $("#smtzTemplate").text($g("生命体征(整体)"));
+            SMTZMode = "whole";
+            $("#singlePGTD").css("padding-left","0px");
+        }
+        else{
+	        $("#wholePGTD").show();
+	        SMTZMode = "singleTime";
+	        $("#smtzTemplate").text("");
+	        $("#singlePGTD").css("padding-left","10px");
+        }
+        
+        var date = "";
+		var time = "";
+		
+		if(SMTZMode == "singleTime"){  	   
+       	   date = $("#smtzdt").datebox('getValue');
+           time = $("#smtztime").timespinner('getValue');
+        }
+	
+		getStatusByMould("SMTZ",date,time);
+	}
+	function customCheckTemplate(node,checked){
+		var template={id:node.guid,name:node.text};
+		if (node.type !== "leaf")
+			return false;
+		if (checked){
+			if ($.inArray(template,applyHLBLList)==-1)
+			{
+				applyHLBLList.push(template);
+			}
+		}
+		else{
+			applyHLBLList = $.grep(applyHLBLList, function(n,i){
+			  return n.id == template.id;
+			}, true);
+		}
+		var templateNames =$.map(applyHLBLList, function(n){
+		  return n.name;
+		});
+		
+		$("#hlblTemplate").text(templateNames.toString());
+
+	}
+	function getMWTokenUrl(url){
+		if ('undefined'!==typeof websys_getMWToken){
+			if(url.indexOf("?")==-1){
+				url = url+"?MWToken="+websys_getMWToken()
+			}else{
+				url = url+"&MWToken="+websys_getMWToken()
+			}
+		}
+		return url;
+	}
+	function MsgIsOK(msg){return msg.status == "0";}
+	$(document).ready(function () {
+		$("#dtb1").datebox("setValue",getDayminus_7());
+		$("#dtb2").datebox("setValue",getNowDate());
+		
+		$("#regNo").keydown(function(event){
+			if (event.keyCode==13){
+				var tempregNo = $.trim($(this).val());
+				var completionZeroNum = 10 - tempregNo.toString().length;
+				var newVal = "";
+				for(var i = 0;i<completionZeroNum;i++)
+				{
+					newVal += "0"
+				}
+				newVal += $.trim($(this).val());
+				$("#regNo").val(newVal);
+			}
+		});
+		
+		$HUI.combobox("#locBox",{
+			valueField:'id',
+			textField:'name',
+		});
+		
+		var hopLocJson = $cm({
+				ClassName:"NurMp.Discharge.Authority",
+				MethodName:"getLocData"
+		},false);
+		if (!!hopLocJson && MsgIsOK(hopLocJson))
+		{
+			$("#locBox").combobox("loadData",hopLocJson.data)
+			$('#locBox').combobox('select', session['LOGON.CTLOCID']);
+			$('#locBox').combobox('validate');
+		}
+		
+		requestTemplate();
+		$('#dg').datagrid({
+			data: patDatas,
+			singleSelect:true,
+			idField:"no",
+			nowrap:false,
+			onSelect:function(rowIndex, rowData){
+				EpisodeID = rowData.no;
+				currentRegNo = rowData.regNo;
+				
+				clearHLBL();
+				clearSMTZ();
+				clearCCT();
+				clearJKXJ();
+				clearXTD();
+				initSMTZItems();
+				
+				var tempAdmDate = rowData.AdmDate;
+				var tempDischgDate = rowData.DischgDate;
+				var opt = $("#smtzdt").datebox("options");
+				opt.minDate = $.fn.datebox.defaults.parser(tempAdmDate.split(" ")[0]).format("yyyy-MM-dd");
+				opt.maxDate = $.fn.datebox.defaults.parser(tempDischgDate.split(" ")[0]).format("yyyy-MM-dd");	
+				var tab = $('#tt-brand-gray').tabs('getSelected');
+				var index = $('#tt-brand-gray').tabs('getTabIndex',tab);
+				onTabSelect(tab.panel('options').title,index);
+			}
+		});
+		$("#SMTZApplyHistory").click(function(){
+			var url = "nur.emr.dischargerecordauthorizeapplylist.csp?type=SMTZ&EpisodeID="+EpisodeID;
+			url = getMWTokenUrl(url);
+			websys_createWindow(url, $g("申请历史"), "top=5%,left=10,width=98%,height=90%,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");
+		});
+		$("#HLBLApplyHistory").click(function(){
+			var url = "nur.emr.dischargerecordauthorizeapplylist.csp?type=HLBL&EpisodeID="+EpisodeID;
+			url = getMWTokenUrl(url);
+			websys_createWindow(url, $g("申请历史"), "top=5%,left=10,width=98%,height=90%,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");
+		});
+		$("#CCTApplyHistory").click(function(){
+			var url = "nur.emr.dischargerecordauthorizeapplylist.csp?type=CCT&EpisodeID="+EpisodeID;
+			url = getMWTokenUrl(url);
+			websys_createWindow(url, $g("申请历史"), "top=5%,left=10,width=98%,height=90%,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");	
+		});
+		$("#JKXJApplyHistory").click(function(){
+			var url = "nur.emr.dischargerecordauthorizeapplylist.csp?type=JKXJ&EpisodeID="+EpisodeID;
+			url = getMWTokenUrl(url);
+			websys_createWindow(url, $g("申请历史"), "top=5%,left=10,width=98%,height=90%,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");
+		});
+		$("#XTDApplyHistory").click(function(){
+			var url = "nur.emr.dischargerecordauthorizeapplylist.csp?type=XTD&EpisodeID="+EpisodeID;
+			url = getMWTokenUrl(url);
+			websys_createWindow(url, $g("申请历史"), "top=5%,left=10,width=98%,height=90%,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");	
+		});
+		$("#patSearch").click(function (argument) {
+            var LocId = $("#locBox").combobox("getValue");
+            var DisStaDate = $("#dtb1").datebox("getValue");
+            var DisEndDate = $("#dtb2").datebox("getValue");;
+            var RegNo = $("#regNo").val();
+            var MedNo = $("#medNo").val();
+			var Name = $("#patName").val();
+            //if(!LocId){
+	        //	$.messager.alert($g("提示"), $g("必须选择病区"), 'info');
+	        //}
+	        
+	        //if (!DisStaDate || !DisEndDate){
+		    //	$.messager.alert($g("提示"), $g("必须选择出院时间段"), 'info');
+		    //}
+		    
+		    if (!LocId && !DisStaDate && !DisEndDate && RegNo == "" && MedNo == "" && Name == ""){
+				$.messager.alert($g("提示"), $g("查询条件不能为空，必须填写一个"), 'info');
+			}
+                       
+            var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"getOutHopPat",
+					LocId:LocId,
+					DisStaDate:DisStaDate,
+					DisEndDate:DisEndDate,
+					RegNo:RegNo,
+					MedNo:MedNo,
+					Name:Name
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					
+					patDatas.total = msgData.data.length;
+					patDatas.rows = msgData.data;
+					$.each( patDatas.rows, function(i, row){
+					  	if(!!row.AdmDate){
+							var tempArr = row.AdmDate.split(",");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.AdmDate = tempArr.join(" ");
+						}
+						if(!!row.DischgDate){
+							var tempArr = row.DischgDate.split(",");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.DischgDate = tempArr.join(" ");
+						}
+					});
+					$('#dg').datagrid('loadData',patDatas);
+					if(!!queryRegNo && !!queryMouldType){
+				
+						if(patDatas.total === 1 && msgData.data[0].regNo === queryRegNo){
+							$('#dg').datagrid('selectRow',0);
+						}
+						$('#tt-brand-gray').tabs('select',mouldTypeObj[queryMouldType]);
+					}
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+            
+        });
+        
+        $("#HLBLApply").click(function (argument) {
+	       if (applyHLBLList.length == 0){
+		       $.messager.alert($g("提示"), $g("请选择要申请的护理病历"), 'info');
+		       return false;
+	       }
+	       var templateGuids = $.map( applyHLBLList, function(n){
+			  return n.id;
+		   });
+		   var templateNames = $.map( applyHLBLList, function(n){
+			  return n.name;
+		   });
+		   var opts = [];
+		   $("input[name='hlblopt']").each(function(i){
+			   if($(this).prop("checked"))
+			     opts.push($(this).val());
+		   });
+		   if (opts.length == 0){
+		   		$.messager.alert($g("提示"), $g("请选择要申请的动作"), 'info');
+		   		return false;
+		   }
+		   if (!$("#hlblNote").val()){
+				$.messager.alert($g("提示"), $g("请填写申请原因"), 'info');
+				return false;
+		   }
+		   
+           var tEpisodeID = EpisodeID;
+           var Actions =opts.join("|");
+           var TCIndentity = templateGuids.join("|");
+           var MoudName=templateNames.join("|");
+           var requestLocID = session['LOGON.CTLOCID'];
+           var requestUserID = session['LOGON.USERID'];
+           var applyReason = $("#hlblNote").val();
+           var MouldType = "HLBL";  
+         
+           var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"applyHLBLAuthority",
+					EpisodeID:tEpisodeID,
+					Actions:Actions,
+					TCIndentity:TCIndentity,
+					MoudName:MoudName,
+					requestLocID:requestLocID,
+					requestUserID:requestUserID,
+					applyReason:applyReason,
+					MouldType:MouldType
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					clearHLBL();
+					$.messager.alert($g("提示"), $g("申请成功"), 'success');
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+                                  
+        });
+        
+        $("#XTDApply").click(function (argument) {
+	       var opts = [];
+		   $("input[name='xtdopt']").each(function(i){
+			   if($(this).prop("checked"))
+			     opts.push($(this).val());
+		   });
+		   if (opts.length == 0){
+		   		$.messager.alert($g("提示"), $g("请选择要申请的动作"), 'info');
+		   		return false;
+		   }
+		   if (!$("#xtdNote").val()){
+				$.messager.alert($g("提示"), $g("请填写申请原因"), 'info');
+				return false;
+		   }
+	       
+           var tEpisodeID = EpisodeID;
+           var Actions = opts.join("|");
+           var MoudName = "血糖单";
+           var requestLocID = session['LOGON.CTLOCID'];
+           var requestUserID = session['LOGON.USERID'];
+           var applyReason = $("#xtdNote").val();
+           var MouldType = "XTD";  
+           
+           var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"applyAuthority",
+					EpisodeID:tEpisodeID,
+					Actions:Actions,
+					MoudName:MoudName,
+					requestLocID:requestLocID,
+					requestUserID:requestUserID,
+					applyReason:applyReason,
+					MouldType:MouldType
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					clearXTD();
+					$.messager.alert($g("提示"), $g("申请成功"), 'success');
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+                                  
+        });
+        
+        $("#JKXJApply").click(function (argument) {
+	       var opts = [];
+		   $("input[name='jkxjopt']").each(function(i){
+			   if($(this).prop("checked"))
+			     opts.push($(this).val());
+		   });
+		   if (opts.length == 0){
+		   		$.messager.alert($g("提示"), $g("请选择要申请的动作"), 'info');
+		   		return false;
+		   }
+		   if (!$("#jkxjNote").val()){
+				$.messager.alert($g("提示"), $g("请填写申请原因"), 'info');
+				return false;
+		   }
+	       
+           var tEpisodeID = EpisodeID;
+           var Actions = opts.join("|");
+           var MoudName = "健康宣教";
+           var requestLocID = session['LOGON.CTLOCID'];
+           var requestUserID = session['LOGON.USERID'];
+           var applyReason = $("#jkxjNote").val();
+           var MouldType = "JKXJ";  
+           
+           var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"applyAuthority",
+					EpisodeID:tEpisodeID,
+					Actions:Actions,
+					MoudName:MoudName,
+					requestLocID:requestLocID,
+					requestUserID:requestUserID,
+					applyReason:applyReason,
+					MouldType:MouldType
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					clearJKXJ();
+					$.messager.alert($g("提示"), $g("申请成功"), 'success');
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+                                  
+        });
+        
+        $("#CCTApply").click(function (argument) {
+	       var opts = [];
+		   $("input[name='cctopt']").each(function(i){
+			   if($(this).prop("checked"))
+			     opts.push($(this).val());
+		   });
+		   if (opts.length == 0){
+		   		$.messager.alert($g("提示"), $g("请选择要申请的动作"), 'info');
+		   		return false;
+		   }
+		   if (!$("#cctNote").val()){
+				$.messager.alert($g("提示"), $g("请填写申请原因"), 'info');
+				return false;
+		   }
+	       
+           var tEpisodeID = EpisodeID;
+           var Actions = opts.join("|");;
+           var MoudName = "产程图";
+           var requestLocID = session['LOGON.CTLOCID'];
+           var requestUserID = session['LOGON.USERID'];
+           var applyReason = $("#cctNote").val();
+           var MouldType = "CCT";  
+           
+           var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"applyAuthority",
+					EpisodeID:tEpisodeID,
+					Actions:Actions,
+					MoudName:MoudName,
+					requestLocID:requestLocID,
+					requestUserID:requestUserID,
+					applyReason:applyReason,
+					MouldType:MouldType
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					clearCCT();
+					$.messager.alert($g("提示"), $g("申请成功"), 'success');
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+                                  
+        });
+        
+        $("#SMTZApply").click(function (argument) {
+	       var ItemS = "";
+	       var TPDate = "";
+	       var TPTime = "";
+	       if(SMTZMode == "singleTime"){
+	       	   if(!$("#smtzdt").datebox('getValue')){
+		       	   $.messager.alert($g("提示"), $g("日期必须选择"), 'info');
+	       	   	   return false;
+	       	   }
+	       	   if(!$("#smtztime").timespinner('getValue')){
+		       	   $.messager.alert($g("提示"), $g("时间必须选择"), 'info');
+	       	   	   return false;
+	       	   }
+	       	   
+	       	   TPDate = $("#smtzdt").datebox('getValue');
+               TPTime = $("#smtztime").timespinner('getValue');
+	       	   ItemS = smtzGetItemkeys();
+	           if (ItemS == ""){
+		       		$.messager.alert($g("提示"), $g("请选择生命体征细分项"), 'info');
+					return false;
+		       }
+	       }
+	       var opts = [];
+		   $("input[name='smtzopt']").each(function(i){
+			   if($(this).prop("checked"))
+			     opts.push($(this).val());
+		   });
+		   if (opts.length == 0){
+		   		$.messager.alert($g("提示"), $g("请选择要申请的动作"), 'info');
+		   		return false;
+		   }
+		   if (!$("#smtzNote").val()){
+				$.messager.alert($g("提示"), $g("请填写申请原因"), 'info');
+				return false;
+		   }
+		  
+           var tEpisodeID = EpisodeID;
+           var Actions = opts.join("|");
+           var MoudName=$("#smtzTemplate").text();
+           var requestLocID = session['LOGON.CTLOCID'];
+           var requestUserID = session['LOGON.USERID'];
+           var applyReason = $("#smtzNote").val();
+           
+           var MouldType = "SMTZ";  
+           
+           var msgData = $cm({
+					ClassName:"NurMp.Discharge.Authority",
+					MethodName:"applyTPAuthority",
+					TPDate:TPDate,
+					TPTime:TPTime,
+					EpisodeID:tEpisodeID,
+					Actions:Actions,
+					MoudName:MoudName,
+					ItemS:ItemS,
+					requestLocID:requestLocID,
+					requestUserID:requestUserID,
+					applyReason:applyReason,
+					MouldType:MouldType			
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					clearSMTZ();
+					$.messager.alert($g("提示"), $g("申请成功"), 'success');
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+                                  
+        });
+        
+        getDischAuthConfig();
+        initSMTAppear();
+        if (!!queryRegNo){
+	        $("#dtb1").datebox("setValue","");
+			$("#dtb2").datebox("setValue","");
+	        $("#regNo").val(queryRegNo);
+	    	$("#patSearch").click();
+	    }
+        	
+        windowLoaded = true;
+	});
+	$("#searchDiv,#patientListDiv,#tabDiv").width(window.screen.availWidth-20);
+	if (HISUIStyleCode=='lite'){
+		$(".kkk111").height(document.body.offsetHeight-85-148-36-20-26);//极简-26
+		$(".kkk222").height(document.body.offsetHeight-85-148-36-20-10-26-20-24);
+	}
+	else{
+		$(".kkk111").height(document.body.offsetHeight-85-148-36-20-8);//炫彩-8
+		$(".kkk222").height(document.body.offsetHeight-85-148-36-20-10-26-20-8);
+	}
+	
+	
+	function smtzCheckChange(event,value){
+		var smtzTemplate = [];
+		$("input[name='smtzItem']").each(function(i){
+			if($(this).prop("checked")){
+				smtzTemplate.push($(this).attr("label"));
+			}
+		});
+		var dt = $("#smtzdt").datebox('getValue');
+		var time = $("#smtztime").timespinner('getValue');
+		var template = smtzTemplate.toString();
+		if (!!template)
+			$("#smtzTemplate").text( dt + " " + time + "(" + template + ")");
+		else
+			$("#smtzTemplate").text( dt + " " + time);
+		
+		var tdate = "";
+		var ttime = "";
+		
+		if(SMTZMode == "singleTime"){  	   
+       	   tdate = $("#smtzdt").datebox('getValue');
+           ttime = $("#smtztime").timespinner('getValue');
+        }
+	
+		getStatusByMould("SMTZ",tdate,ttime);
+	}
+	function smtzGetItemkeys()
+	{
+		var smtzItems = [];
+		$("input[name='smtzItem']").each(function(i){
+			if($(this).prop("checked")){
+				smtzItems.push($(this).val());
+			}
+		});
+		return smtzItems.join("|");
+	}
+	function smtzItemAllCheckChange(event,value){
+		if (!!value){
+			$("input[name='smtzItem']").each(function(i){
+				$(this).checkbox("setValue",true);
+			});
+		}
+		else{
+			$("input[name='smtzItem']").each(function(i){
+				$(this).checkbox("setValue",false);
+			});
+		}
+	}
+	
+	function initSMTZItems(){
+	var msgData = $cm({
+			ClassName:"NurMp.Discharge.Authority",
+			MethodName:"GetItem",
+			hospitalID:session['LOGON.HOSPID'],
+			episodeID:EpisodeID,
+			locId:session['LOGON.CTLOCID'],
+			wardId:session['LOGON.WARDID']
+	},false);
+	
+	if (!!msgData){
+		if (MsgIsOK(msgData)){
+			$("#smtzContainer").empty();
+			var html = "";
+			var groups=[];
+			var group = null;
+			$.each(msgData.data,function(i,n){
+				if (i%4 == 0)
+				{ 
+					if (!!group)
+						groups.push(group);
+					group = [];
+				}
+				group.push(n);
+			});
+			if (!!group)
+				groups.push(group);
+			$.each(groups,function(i,n){
+				html += "<tr>";
+				for(var kk=0;kk<n.length;kk++){
+					html += "<td><input class='hisui-checkbox smtzChk' data-options='required:true,onCheckChange:smtzCheckChange' type='checkbox' name='smtzItem' value='"+n[kk].id+"' label='"+n[kk].name+"'></td>";
+				}
+				html += "</tr>";
+			});
+			$("#smtzContainer").append(html);
+			$(".smtzChk").each(function(){$(this).checkbox({});});
+		}
+		else
+			$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+	}
+	}
+	function initSMTAppear(){
+		if (DADischObsApplyMode == "whole"){
+			$("#wholePGTD").hide();
+			$("#switch1").hide();
+			$("#smtzTemplate").text("生命体征(整体)");
+			$("#smtzApplyContainer").removeClass();
+			$("#smtzApplyContainer").css("padding","8px");
+			$("#smtzApplyContainer td").removeClass("tdwidth100");
+		}
+		else if (DADischObsApplyMode == "singleTime"){
+			$("#switch1").switchbox("setActive",false);
+		}
+	}
+	initSMTZItems();
+	
+	function getStatusByMould(mould,date,time){
+		var msgData = $cm({
+				ClassName:"NurMp.Discharge.Authority",
+				MethodName:"getMouldStatus",
+				episodeID:EpisodeID,
+				EmrCode:"",
+				hospitalID:session['LOGON.HOSPID'],
+				MouldType:mould,
+				Date:date,
+				Time:time,
+				singleFlag:SMTZMode == "singleTime"	? 1 : 0
+		},false);
+		if (!!msgData){
+			if (MsgIsOK(msgData)){
+				var status = msgData.data;
+				if(!!status)
+					status = "(" + status + ")";
+				if (mould == "SMTZ"){
+				
+					if(SMTZMode == "singleTime"){  	   
+			       	   $("#SMTZSingleStatus").text(status);
+			       	   $("#SMTZStatus").text("");
+		            }
+		            else
+		            {
+			            $("#SMTZStatus").text(status);
+			            $("#SMTZSingleStatus").text("");
+		            }     
+				}
+				else if (mould == "XTD"){
+					$("#XTDStatus").text(status);
+				}
+				else if (mould == "CCT"){
+					$("#CCTStatus").text(status);
+				}
+				else if (mould == "JKXJ"){
+					$("#JKXJStatus").text(status);
+				}
+			}
+		}
+		else{
+			$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+		}
+	}
+	
+	function getDischAuthConfig(){
+			var msgData = $cm({
+					ClassName:"NurMp.Service.Switch.Config",
+					MethodName:"GetDischAuthConfigInfo",
+					HospitalID:session['LOGON.HOSPID']
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					DADischObsApplyMode = msgData.data.DADischObsApplyMode.model;
+					if (msgData.data.DABirthDiagramControl.value == 'true'){//产程图
+						if (!!msgData.data.DABirthDiagramControlOpType.optType)
+						{
+							
+							$.each( msgData.data.DABirthDiagramControlOpType.optType, function(i, n){
+							    var html = "<input name='cctopt' data-options='required:true' class='checkpadding10 hisui-checkbox' type='checkbox' label='"+n.name+"' id='cctopt"+i+"' value='"+n.id+"'>";			
+							    $("#CCTOptContainer").append(html);
+							    $("#cctopt"+i).checkbox({});
+							});
+						}	
+					}
+					else{
+						$(".tabs > li").eq(4).hide();
+						$("#CCTTab").hide();
+					}
+					if (msgData.data.DABloodSugarControl.value == 'true'){//血糖单
+						if(!!msgData.data.DABloodSugarControlOpType.optType){
+						$.each(msgData.data.DABloodSugarControlOpType.optType, function(i, n){
+						    var html = "<input name='xtdopt' data-options='required:true' class='checkpadding10 hisui-checkbox' type='checkbox' label='"+n.name+"' id='xtdopt"+i+"' value='"+n.id+"'>";			
+						    $("#XTDOptContainer").append(html);
+						    $("#xtdopt"+i).checkbox({});
+						});
+						}
+					}
+					else{
+						$(".tabs > li").eq(3).hide();
+						$("#XTDTab").hide();
+					}
+					if (msgData.data.DAHealthEduControl.value == 'true'){//健康宣教
+						if(!!msgData.data.DAHealthEduControlOpType.optType){
+						$.each(msgData.data.DAHealthEduControlOpType.optType, function(i, n){
+						    var html = "<input name='jkxjopt' data-options='required:true' class='checkpadding10 hisui-checkbox' type='checkbox' label='"+n.name+"' id='jkxjopt"+i+"' value='"+n.id+"'>";			
+						    $("#JKXJOptContainer").append(html);
+						    $("#jkxjopt"+i).checkbox({});
+						});
+						}
+					}
+					else{
+						$(".tabs > li").eq(5).hide();
+						$("#JKXJTab").hide();
+					}
+					if (msgData.data.DAEmrControl.value == 'true'){//护理病历
+						if (!!msgData.data.DAEmrControlOpType.optType){
+						$.each(msgData.data.DAEmrControlOpType.optType, function(i, n){
+						    var html = "<input name='hlblopt' data-options='required:true' class='checkpadding10 hisui-checkbox' type='checkbox' label='"+n.name+"' id='hlblopt"+i+"' value='"+n.id+"'>";			
+						    $("#HLBLOptContainer").append(html);
+						    $("#hlblopt"+i).checkbox({});
+						});
+						}
+					}
+					else{
+						$(".tabs > li").eq(1).hide();
+						$("#HLBLTab").hide();
+					}
+					if (msgData.data.DAObsControl.value == 'true'){//生命体征
+						if(!!msgData.data.DAObsControlOpType.optType){
+						$.each(msgData.data.DAObsControlOpType.optType, function(i, n){
+						    var html = "<input name='smtzopt' data-options='required:true' class='checkpadding10 hisui-checkbox' type='checkbox' label='"+n.name+"' id='smtzopt"+i+"' value='"+n.id+"'>";			
+						    $("#SMTZOptContainer").append(html);
+						    $("#smtzopt"+i).checkbox({});
+						});
+						}
+					}
+					else{
+						$(".tabs > li").eq(2).hide();
+						$("#SMTZTab").hide();
+					}
+					
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+	}
+	function getNowDate(){
+		var date = (new Date()).format("yyyy-MM-dd");
+		return date;
+	}
+	
+	function getDayminus_7(){
+		var date = (new Date().AddDays(-7)).format("yyyy-MM-dd");
+		return date;
+	}
+	function clearHLBL(){
+		unCheckAllTemplate();
+		applyHLBLList = [];
+		$("input[name='hlblopt']").each(function(i){
+		   $(this).checkbox("setValue",false);
+	    });
+	    $("#hlblNote").val("");
+	    $("#hlblTemplate").text("");
+	}
+	function clearSMTZ(){
+		$("input[name='smtzItem']").each(function(i){
+			$(this).checkbox("setValue",false);
+		});
+		$("input[name='smtzopt']").each(function(i){
+		   $(this).checkbox("setValue",false);
+	    });
+	    $("#smtzNote").val("");
+	    
+	    $("#smtzdt").datebox("setValue","");
+		$("#smtztime").timespinner("setValue","");
+	}
+	function clearCCT(){
+		$("input[name='cctopt']").each(function(i){
+		   $(this).checkbox("setValue",false);
+	    });
+	    $("#cctNote").val("");
+	}
+	function clearXTD(){
+		$("input[name='xtdopt']").each(function(i){
+		   $(this).checkbox("setValue",false);
+	    });
+	    $("#xtdNote").val("");
+	}
+	function clearJKXJ(){
+		$("input[name='jkxjopt']").each(function(i){
+		   $(this).checkbox("setValue",false);
+	    });
+	    $("#jkxjNote").val("");
+	}
+	function customTempTreeFormatter(node, text) {
+	    if (!!node.applyStatus) {
+	        text = text + '&nbsp;&nbsp;<span style="color:red;">' + '(' + node.applyStatus + ')' + '</span>';
+	    }
+	    return text;
+	}
+	function onTabSelect(title,index){
+		if(!!windowLoaded && title==$g('护理病历'))
+		{
+			refreshTempTree();
+		}
+		else{
+			var mouldType = "";
+			var date = "";
+			var time = "";
+			//"SMTZ":$g("生命体征"),"XTD":$g("血糖单"),"CCT":$g("产程图"),"JKXJ":$g("健康宣教")
+			if (title == $g("生命体征")){
+				mouldType = "SMTZ";
+				if(SMTZMode == "singleTime"){  	   
+		       	   date = $("#smtzdt").datebox('getValue');
+	               time = $("#smtztime").timespinner('getValue');
+	            }
+			}
+			else if (title == $g("血糖单")){
+				mouldType = "XTD";
+			}
+			else if (title == $g("产程图")){
+				mouldType = "CCT";
+			}
+			else if (title == $g("健康宣教")){
+				mouldType = "JKXJ";
+			}
+			getStatusByMould(mouldType,date,time);
+		}
+	}
+	function GetQueryObject() {
+	    var url = location.search;
+	    var theRequest = new Object();
+
+	    if (url.indexOf("?") != -1) {
+	        var str = url.substr(1);
+	        strs = str.split("&");
+	        for (var i = 0; i < strs.length; i++) {
+	            var item = strs[i];
+	            var key = item.split("=")[0];
+	            var value = item.split("=")[1];
+	            theRequest[key] = decodeURI(value);
+	        }
+	    }
+	    return theRequest;
+	}
+   </script>
+</body>
+</html>

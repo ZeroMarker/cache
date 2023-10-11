@@ -18,21 +18,36 @@
 	<ADDINS/>
 	
 <style>
-
+.r-label{
+	padding-left: 10px;
+}
+.r-labelnew{
+	padding-left: 10px;
+}
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
 </style>
 
 <SCRIPT language="Cache" RUNAT="SERVER"> 
 		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
 		w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
         d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
         set ListFlag=$g(^DHCPESetting("DHCPE","InvListFlag"))
-		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
         set CanChangePayModes=$g(^DHCPESetting("DHCPE","CanChangePayModes"))
         s isApply=%request.Get("isapply")
         i isApply="" s isApply=1
+        s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+	    i UIVersion="lite" s LineColor="border-top:1px solid #E2E2E2; border-bottom: 1px dashed #E2E2E2;border-radius:0;"
+	    e  s LineColor="border-top:1px solid #CCCCCC; border-bottom: 1px dashed #CCCCCC;border-radius:0;"
+	    i UIVersion="lite" s LineColorNew="#E2E2E2;"
+	    e  s LineColorNew="#CCCCCC;"
 </SCRIPT> 
 <script type="text/javascript">
 	var CanChangePayModes="#(CanChangePayModes)#"
@@ -45,77 +60,81 @@
 
 </head>
 <body>
-<div class="hisui-layout" data-options="fit:true" border="false">
+<div class="hisui-layout" data-options="fit:true" border="false" style="background-color:inherit;">
 
 
- <div data-options="region:'north',border:false" style="height:446px;padding:10px 10px 0px 10px;">
+ <div data-options="region:'north',border:false" style="height:448px;padding:10px 10px 0px 10px;background-color:inherit;">
  <div class="hisui-panel" data-options="title:title,headerCls:'panel-header-gray',iconCls:'icon-find-ord-det'">
 	
 	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false" style="height:400px;">
 
     <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false">
         
-        <table style="width:1350px;border-collapse:separate; border-spacing:10px 10px;">
+        <table style="border-collapse:separate; border-spacing:0 10px;">
        
         <tr>
-           <td align="right"><label for="InvNo">发票号</label></td>
-			<td>
+           <td class="r-labelnew"><label for="InvNo">#(..Get("发票号"))#</label></td>
+			<td style="padding-left:10px;">
 				<input class="textbox" id="InvNo" style="width:110px;">
 			</td>
-			<td align="right"><label for="CardNo">卡号</label></td>
+			<td class="r-label"><label for="CardNo">#(..Get("卡号"))#</label></td>
 			 <td>
 				<input class="textbox" id="CardNo" style="width:110px;"/>
 			</td>
-			<td>
+			<td style="padding-left:10px;">
 				<input class="textbox" disabled id="CardTypeNew" style="width:117px;"/> 
 			</td>
-			<td>
+			<td class="r-label">
 				<a id="BReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
 			</td>
-			<td align="right"><label for="PatName">姓名</label></td>
+			<td class="r-label"><label for="PatName">#(..Get("姓名"))#</label></td>
 			<td>
 				<input class="textbox" id="PatName">
 			</td>
-			<td align="right"><label for="BeginDate">开始日期</label></td>
+			<td class="r-label"><label for="BeginDate">#(..Get("开始日期"))#</label></td>
 			<td>
 				<input id="BeginDate" class="hisui-datebox textbox">
 			</td>
-			<td>
-				<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+			<td style="padding-left:20px;">
+				<a id="BFind" href="#" class="hisui-linkbutton" style="width:100px;" data-options="iconCls:'icon-w-find'">查询</a>
 			</td>
 			
-			<td>
-				<a id="BPrintList" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印清单</a>
+			<td style="padding-left:20px;">
+			<a id="BPrintProve" href="#" class="hisui-linkbutton">收据证明</a>
+			</td>
+			
+			<td style="padding-left:20px;">
+				<a id="BPrintList" href="#" class="hisui-linkbutton">打印清单</a>
 			</td>
 			
         </tr> 
         <tr>
-        <td align="right"><label for="RegNo">登记号</label></td>
-		<td>
+        <td class="r-labelnew"><label for="RegNo">#(..Get("登记号"))#</label></td>
+		<td style="padding-left:10px;">
 			<input class="textbox" id="RegNo" style="width:110px;">
 		</td>
 			
-		<td align="right"><label for="User">收费员</label></td>
+		<td class="r-label"><label for="User">#(..Get("收费员"))#</label></td>
 		<td colspan="2">
-			<input class="textbox" id="User" style="width:244px;">
+			<input class="textbox" id="User" style="width:245px;">
 		 </td>	
          <td>
 		</td>
-        <td align="right"><label for="RPFlag">日结标志</label></td>
+        <td class="r-label"><label for="RPFlag">#(..Get("日结标志"))#</label></td>
 		<td>
-		<input class="hisui-combogrid" id="RPFlag" style="width:155px" data-options="editable:false,panelHeight:'auto'">
+		<input class="hisui-combobox" id="RPFlag" style="width:155px" data-options="editable:false,panelHeight:'auto'">
 		</td>
 		
-		<td align="right"><label for="EndDate">结束日期</label></td>
+		<td class="r-label"><label for="EndDate">#(..Get("结束日期"))#</label></td>
 		<td>
 			<input id="EndDate" class="hisui-datebox textbox">
 		</td>
-		
-		<td>
-			<a id="BPrintProve" href="#" class="hisui-linkbutton">收据证明</a>
-		</td>
-		<td>
-			<a id="BGREPrint" href="#" class="hisui-linkbutton">原号补打发票</a>
+		<td style="padding-left:20px;">
+				<a id="BClear" href="#" class="hisui-linkbutton" style="width:100px;"  data-options="iconCls:'icon-w-clean'">清屏</a>
+			</td>
+	
+		<td style="padding-left:20px;">
+			<a id="BGREPrint" href="#" class="hisui-linkbutton">原号补打</a>
 		</td>
 			<td><input type="hidden" id="RPFRowId"/></td>
 			<td><input type="hidden" id="RPFInvNo"/></td>
@@ -126,6 +145,7 @@
 			<input type="hidden" id="CurRegNo"/>
 			
          </tr> 
+         
          	
         </table>
         
@@ -133,7 +153,7 @@
 	   
 	  </div>  
 	 <div data-options="region:'center',border:false">
-      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border:0;border-top:1px solid #ccc;border-radius:0;">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border:0;border-top:1px solid #(LineColorNew)#;border-radius:0;">
 		<table class="hisui-datagrid" id="InvListQueryTab" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>	
 		</div>
      
@@ -142,32 +162,32 @@
 	</div>   
 	</div>  
  </div>
- <div data-options="region:'center',border:false" style="padding:10px;">
-  <div class="hisui-panel" data-options="title:'退费',headerCls:'panel-header-gray',iconCls:'icon-fee-arrow',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+ <div data-options="region:'center',border:false" style="padding:10px;background-color:inherit;">
+  <div class="hisui-panel" data-options="title:'退费',headerCls:'panel-header-gray',iconCls:'icon-fee-arrow',fit:true" style="border:1px solid #(LineColorNew)#;border-top:0;border-radius:0,0,4px,4px;">
 	
 	<div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
 
   	<div data-options="region:'east',headerCls:'panel-header-gray'" style="width:200px;padding:10px 10px 10px 30px;border:0;">
   
-    <table style="border-collapse:separate; border-spacing:4px 4px;border:1px dashed #ccc;border-top:0;border-bottom:0;border-right:0;">
+    <table style="border-collapse:separate; border-spacing:4px 4px;border:1px dashed #(LineColorNew)#;border-top:0;border-bottom:0;border-right:0;">
   	
   		<tr>
   		<td align="left" style="width:20px;"></td>
   		<td align="left">
-           <label><font color="red">*</font>应退合计</label>
+           <label><font color="red">*</font>#(..Get("应退合计"))#</label>
          </td>
         </tr> 
          <tr>
          <td align="left"></td>
   		 <td align="left">
-            <div align="right"><input class="hisui-numberbox textbox" Id="BackAmount" data-options="precision:2" style="width:100px;" disabled="true"/></div>
+            <div ><input class="hisui-numberbox textbox" Id="BackAmount" data-options="precision:2" style="width:100px;" disabled="true"/></div>
           </td>
         </tr> 
         
         <tr>
         <td align="left"></td>
   		<td align="left">
-           <label>新收据金额</label>
+           <label>#(..Get("新收据金额"))#</label>
          </td>
         </tr> 
          <tr>
@@ -193,28 +213,28 @@
   	</div>
   	
   	
-  	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px;">
+  	<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:9px 0px 0px 9px;">
    
   	<table id="PayModeTable" style="border-collapse:separate; border-spacing:4px 4px;">
   	
   		<tr>
           <td align="left">
-           <label><font color="red">*</font>支付方式</label>
+           <label><font color="red">*</font>#(..Get("支付方式"))#</label>
           </td>
           <td align="left">
-           <label><font color="red">*</font>已付金额</label>
+           <label><font color="red">*</font>#(..Get("已付金额"))#</label>
           </td>
           <td align="left">
-           <label><font color="red">*</font>退款金额</label>
+           <label><font color="red">*</font>#(..Get("退款金额"))#</label>
           </td>
           <td align="left">
-           <label>号码</label>
+           <label>#(..Get("号码"))#</label>
           </td>
           <td align="left">
-           <label>退款方式</label>
+           <label>#(..Get("退款方式"))#</label>
           </td>
           <td align="left">
-          <label>备注</label>
+          <label>#(..Get("备注"))#</label>
           </td>
         </tr>
   	
@@ -289,28 +309,28 @@
   		
   		<tr>
           <td align="left">
-           <label>发票名称</label>
+           <label>#(..Get("发票名称"))#</label>
           </td>
          
           <td align="left">
-           <label>纳税人识别号</label>
+           <label>#(..Get("纳税人识别号"))#</label>
           </td>
          
           <td align="left">
-           <label>当前发票号</label>
+           <label>#(..Get("当前发票号"))#</label>
           </td>
           
            <td align="left">
-           <label>费别</label>
+           <label>#(..Get("费别"))#</label>
           </td>
            <td align="left">
-          <label>医疗类别</label>
+          <label>#(..Get("医疗类别"))#</label>
           </td>
           <td  style="width:108px;">
           	<div align="center"><input class='hisui-checkbox' type="checkbox" label="没打发票" Id="NoPrintInv" style="width:100px;" disabled="true"/></div>
           </td>
          
-          <td align="right">
+          <td >
            </td>
         </tr>
   	
@@ -337,7 +357,7 @@
           </div>
           </td> 
           
-           <td align="right">
+           <td >
            <div><a id="BRefund" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">退费</a></div>
            <div><a id="BAllRefund" href="#" class="hisui-linkbutton" style="width:100px;" data-options="stopAllEventOnDisabled:'true'">全退</a></div>
            <div><a id="RepeatPrint" href="#" class="hisui-linkbutton" style="width:100px;">过号重打</a></div>
@@ -355,8 +375,8 @@
   </div>			
  </div>	
  
- <div data-options="region:'east',border:false" style="width:530px;padding:10px 10px 10px 0px;">
- <div class="hisui-panel" data-options="title:'收据明细',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="border:1px solid #ccc;border-top:0;border-radius:0,0,4px,4px;">
+ <div data-options="region:'east',border:false" style="width:530px;padding:10px 10px 10px 0px;background-color:inherit;">
+ <div class="hisui-panel" data-options="title:'收据明细',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="border:1px solid #(LineColorNew)#;border-top:0;border-radius:0,0,4px,4px;">
  	<table class="hisui-datagrid" id="ordItmList" data-options="bodyCls:'panel-header-gray',singleSelect:true,border:false"></table>
  </div>	
  </div>	
@@ -375,7 +395,7 @@
   <script type="text/javascript" src="../scripts/DHCPEPayService.js"></script>
   <script type="text/javascript" src="../scripts/DHCBillMisPosPay.js"></script>
   <script type="text/javascript" src="../scripts/DHCBillPayService.js"></script>
-  
+  <script type="text/javascript" src="../scripts/DHCBillPayScanCodeService.js"></script>
   <script type="text/javascript" src="../scripts/websys.js"></script>
   <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
   <script type="text/javascript" src="../scripts/websys.List.js"></script>
@@ -387,13 +407,13 @@
   
   
    <script type="text/javascript" src="../scripts/DHCWeb.OPOEData.js"></script>
-    <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
-     <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
-      <script type="text/javascript" src="../scripts/DHCPECashierEx.js"></script>
-       <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
-        <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
-         <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
-  <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+   <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+   <script type="text/javascript" src="../scripts/DHCPEPrintBarCommon.js"></script>
+   <script type="text/javascript" src="../scripts/DHCPECashierEx.js"></script>
+   <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+   <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+   <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+   <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
 </body>		
 </html>
 			

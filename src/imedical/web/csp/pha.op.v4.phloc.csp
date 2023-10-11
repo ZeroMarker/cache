@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<!--门诊药房维护
+    csp: csp/pha.op.v4.phloc.csp
+    js:  scripts/pha/op/v4/phloc.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+    <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <PHALIBV1 />
+    <PHAOPV4 />
+    <style type="text/css">
+    .pha-col-cell{
+        display: inline-block;
+        float:left;
+        width:130px;
+        vertical-align:middle;
+    }
+    .pha-clear {
+        clear: both;
+    }
+    .dhcpha-north-tbl td {
+        text-align: left;
+        
+        width:50%;
+    }
+
+    .dhcpha-north-tbl tr {
+        height: 30px;
+    }
+    
+    .dhcpha-north-tbl {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        border-spacing: 0px;
+        width:100%;
+    }
+    .pha-body {
+	    background-color: #fff;
+	}
+
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div style="width:250px" data-options="region:'west',border:false" >
+                    <div class="hisui-panel" title="门诊药房科室维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                        <table id="gridPhLoc"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style='padding-left:10px' >
+                    <div id="tabsOne" class="hisui-tabs tabs-gray" data-options="fit:true,bodyCls:''">   
+                        <div id="divPhlConfig" title="药房设置" >
+                            <div class="hisui-layout" fit="true">
+                                <div  data-options="region:'west',border:false"  style='padding:10px;width:330px'>
+                                    <div class="hisui-panel" title="门诊药房流程" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''">
+                                        <table id="gridPhlFlow"></table>
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',border:false" style='padding:10px 10px 10px 0;' >
+                                    <div class="hisui-panel" title="药房参数" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''"  style="overflow:hidden;" >
+                                        <div class="hisui-layout" fit="true">
+                                            <div data-options="region:'center',border:false" style='overflow:auto;' >
+                                                <div style="width:290px;padding:10px 0px 0px 10px;;float:left;">
+                                                    <div class="hisui-panel pha-panel-padding-top" title="公共"  data-options="headerCls:'panel-header-card-gray'">
+                                                        <table class="dhcpha-north-tbl">
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="pha-col" >
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="提前摆药" id="preDispFlag" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="pha-col" >
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="跨科室退药" id="retOtherFlag" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr hidden="true">
+                                                                <td>
+                                                                    <div class="pha-col" >
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="中草药" id="zcyFlag" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                    <div style="height:10px;"></div>
+                                                    <div class="hisui-panel pha-panel-padding-top" title="收费环节"  data-options="headerCls:'panel-header-card-gray'" >
+                                                        <table class="dhcpha-north-tbl">
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="pha-col" >
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:true,boxPosition:'left',disabled:true" label="分窗口" >
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="pha-col" >
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="发送处方到摆药机" id="sendDataFlag" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan=2>
+                                                                    <div class="pha-col">取药算法</div>
+                                                                    <div class="pha-col" >
+                                                                        <input id="arithmetFlag" class='hisui-combobox' data-pha="class:'hisui-combobox',clear:true,save:true" style="width:200px"/>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                    <div style="height:10px;"></div>
+                                                    <div class="hisui-panel pha-panel-padding-top" title="报到环节"  data-options="headerCls:'panel-header-card-gray'"  >
+                                                        <table class="dhcpha-north-tbl" style="padding-left: 10px;">
+                                                            <tr>
+                                                                <td>
+                                                                    <input class="hisui-radio"  type="radio" label="收费时报到" id="quePosi" name='quePosi' value="1" data-options="required:true" data-pha="class:'hisui-radio',clear:true,save:true">                                                                  
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <input class="hisui-radio"  type="radio" label="收费后报到" id="quePosi" name='quePosi' value="2" data-options="required:true" data-pha="class:'hisui-radio',clear:true,save:true">
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <input class="hisui-radio"  type="radio" label="配药时报到" id="quePosi" name='quePosi' value="3" data-options="required:true" data-pha="class:'hisui-radio',clear:true,save:true">
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                    <div style="height:10px;"></div>
+                                                    <div hidden="true" class="hisui-panel pha-panel-padding-top" data-options="headerCls:'panel-header-card-gray' ,title:''"  style="padding:10px 10px 10px 0px;">
+                                                        <table class="dhcpha-north-tbl">
+                                                            <tr>
+                                                                <td >
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="boxPosition:'left'" label="自动处方审核" id="autoPrescAudit" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>  
+                                                                </td>
+                                                                <td>
+                                                                    <div class="pha-col">等待时间(秒)</div>
+                                                                    <div class="pha-col">
+                                                                        <input id="waitAuditTime" class='hisui-numberbox textbox' data-pha="class:'hisui-numberbox',clear:true,save:true"  style="width:32px"/>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div style="width:290px;float:left;padding:10px 0px 0px 10px">
+                                                    <div class="hisui-panel pha-panel-padding-top" title="发药/直接发药环节"  data-options="headerCls:'panel-header-card-gray'"  >
+                                                        <table class="dhcpha-north-tbl">
+                                                            <tr>
+                                                                <td >
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="发药机" id="sendMachineFlag" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>  
+                                                                </td>
+                                                                <td>
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="叫号药架亮灯" id="callAsLightUp" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td ></td>
+                                                                <td>
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="刷卡药架亮灯" id="queryAsLightUp" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td ></td>
+                                                                <td>
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="发药药架灭灯" id="dispAsLightDown" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                        <div class="pha-line"></div>
+                                                        <table class="dhcpha-north-tbl">
+                                                            <tr>
+                                                                <td >
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="发药叫号" id="dispAsCall" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>  
+                                                                </td>
+                                                                <td>
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="叫号上屏" id="callAsUpScreen" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td ><div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="发药下屏" id="dispAsDownScreen" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                </td>
+                                                            </tr>                                   
+                                                        </table>
+                                                    </div>
+                                                    
+                                                    <div style="height:10px;"></div>
+                                                    <div class="hisui-panel pha-panel-padding-top" title="其他"  data-options="headerCls:'panel-header-card-gray'">
+                                                        <table class="dhcpha-north-tbl">
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="pha-col">
+                                                                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false,boxPosition:'left'" label="显示屏" id="screenFlag" data-pha="class:'hisui-checkbox',clear:true,save:true">
+                                                                    </div>  
+                                                                </td>
+                                                                <td>
+                                                                    <input class="hisui-radio" type="radio" label="收费上屏" id="upScreenFlag" name="upScreenFlag" value="1" data-options="required:true" data-pha="class:'hisui-radio',clear:true,save:true">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td></td>
+                                                                <td>
+                                                                    <input class="hisui-radio" type="radio" label="报到上屏" id="upScreenFlag" name="upScreenFlag"  value="2" ddata-options="required:true" data-pha="class:'hisui-radio',clear:true,save:true">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td ></td>
+                                                                <td>
+                                                                    <input class="hisui-radio" type="radio" label="配药完成上屏" id="upScreenFlag" name="upScreenFlag" value="3" data-options="required:true" data-pha="class:'hisui-radio',clear:true,save:true">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan=2>
+                                                                    <div class="pha-col">#(..Get("显示路径"))#</div>
+                                                                    <div class="pha-col">
+                                                                        <input id="screenPath" class='hisui-validatebox' data-pha="class:'hisui-validatebox',clear:true,save:true"  style="width:200px"/>
+                                                                    </div> 
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--div data-options="region:'south',border:false" style="text-align:center;padding-top:10px;height:50px;overflow:hidden;">
+                                                <a class="hisui-linkbutton" plain='false' iconCls="icon-w-save" id="btnSavePhlConfig">保2存</a>
+                                            </div-->
+                                        </div>
+                                        
+                                    </div>  
+                                </div>
+                                <div data-options="region:'south',border:false" style="text-align:center;height:36px;overflow:hidden;">
+                                    <a class="hisui-linkbutton" plain='false' iconCls="icon-w-save" id="btnSavePhlConfig">保存</a>
+                                </div>
+                            </div>
+                            
+                        </div>   
+                        <div title="人员权限" >   
+                            <table id="gridPhLocPer"></table>
+                        </div> 
+                        <div title="发药窗口"> 
+                            <div class="hisui-layout" fit="true" id="lyThird">
+                                <div data-options="region:'center',border:false" style='padding:10px'>
+                                    <div class="hisui-panel" title="发药窗口" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''" >
+                                        <table id="gridPhLocWin"></table>
+                                    </div>  
+                                </div>
+                                <div data-options="region:'east',border:false,width:350" style='padding:10px 10px 10px 0'>
+                                    <div class="hisui-panel" title="窗口指定科室" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''" >
+                                        <table id="gridPhWinLoc"></table>
+                                    </div>                              
+                                </div>
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridPhLocBar">
+        <div class="pha-row">
+            <div class="pha-col" style="display:none">
+                <label id="_HospListLabel">医院</label>
+            </div>
+            <div class="pha-col">
+                <input id="_HospList" style="width:100px">
+            </div>
+        </div>
+        <div class="pha-line"></div>
+        <div class="pha-row">
+            <div class="pha-col" style="display:none">
+                <label id="phLocListLabel" >药房科室</label>
+            </div>
+            <div class="pha-col">
+                <input id="phLocList" class = "hisui-combobox" style="width:100px" placeholder = "药房科室">
+            </div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPhLoc">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSavePhLoc">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelPhLoc">删除</a>
+        </div>
+    </div>
+    <div id="gridPhLocPerBar">
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPer">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSavePer">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelPer">删除</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-translate-word" id="btnTranslatePer">翻译</a>
+        </div>
+    </div>
+    <div id="gridPhLocWinBar">
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddWin">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveWin">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelWin">删除</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-translate-word" id="btnTranslateWin">翻译</a>
+        </div>
+    </div>
+    <div id="gridPhWinLocBar">
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddWinLoc">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveWinLoc">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelWinLoc">删除</a>
+        </div>
+    </div>
+    <div id="gridPhlFlowBar">
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddFlow">新增</a>
+            <!--a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveFlow">保存</a-->
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelFlow">删除</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-translate-word" id="btnTranslateFlow">翻译</a>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/op/v4/phloc.js"></script>
+</body>
+
+</html>

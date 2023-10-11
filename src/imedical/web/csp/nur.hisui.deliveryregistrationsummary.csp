@@ -1,0 +1,109 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+
+<HTML lang="zh-CN">
+<!--护理病历是否填写查询,csp: nur.hisui.deliveryregistrationsummary.csp-->
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+     <script language="cache" runat="SERVER">
+		s chromePrintFlag="false"
+		s emrPrintFlag=1
+	</script>
+	<!--判断病历是否兼容Chrome和IE打印 start-->   
+	<script language="cache" runat="SERVER">
+	 // init Chrome print
+	 d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+	</script>
+	<!-- init IE print -->
+	<ainurprint></ainurprint>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+
+   <script type="text/javascript"
+            src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" 
+    		src="../scripts_lib/lodop/LodopFuncs.js" ></script>
+    <script type="text/javascript"
+            src="../scripts/nurse/hisui/deliveryregistrationsummary.js"></script>
+    <STYLE type='text/css'>
+          body {
+            background-color: #fff;
+        }
+        table{
+        	text-align:inherit;
+        }
+
+        form table td, form table th{
+        	padding:0;
+        }
+.datagrid-wrap.panel-body.panel-body-noheader {
+	
+    border-width:0!important;
+}
+.hisui-panel.panel-body.panel-body-noheader.panel-noscroll{
+	
+	border-color: #ccc!important;
+}
+.datagrid-toolbar{
+	height:32px;
+}
+ .datagrid-header-row .datagrid-cell span {
+            white-space: normal !important;
+            word-wrap: normal !important;
+        }
+    </STYLE>
+</head>
+
+<body>
+<div class="hisui-layout" id="head-menu" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false,collapsible:false" style="padding:10px 10px 0px 10px;height:95px;">
+			<div class="hisui-panel" data-options="title:'分娩登记表',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-bottom:1px dotted #ccc;border-top:0;border-radius:0;padding:10px;">
+                <table cellpadding="0" style="border-spacing:0;border-collapse: collapse;">
+                    <tr>
+						<td class="r-label">
+							#(..Get("日期"))#
+						</td>
+						<td>
+                            <input id="startDate" class="hisui-datebox textbox">
+						</td>
+						<td style="padding: 0 5px;">
+							#(..Get("至"))#
+						</td>
+						<td class="r-label">
+                            <input id="endDate" class="hisui-datebox textbox">
+						</td>
+						<td class="r-label">
+							#(..Get("住院号"))#
+						</td>
+						<td class="r-label">
+                            <input id="medicareNo" class="hisui-searchbox" style="width:120px">
+						</td>
+						<td class="r-label">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='searchBtn'>查询</a>
+						</td>
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" id='exportBtn'>导出</a>
+						</td>
+                    </tr>
+                </table>
+			</div>
+		</div>		
+		<div data-options="region:'center',border:false,collapsible:false" style="padding:0 10px 10px 10px;">
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'" style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+                <table id="tableGrid" class="hisui-datagrid" ></table>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,76 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.ncpaccompanyrecord.csp 新冠陪护--> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="DHCOPPrint,RWCard,CmdShell"/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+#NCPAccompanyRecEditWin .panel,#NCPAccompanyRecSubEditWin .panel{
+	margin:10px;
+}
+#NCPReport_Yes + label,#NCPReportResult_Negative + label,#AccompanyActive_Yes + label {
+	margin-left:-7px;
+}
+#NCPReport_No + label {
+	margin-left:13px;
+}
+.divid{
+	display:inline-block;
+	width:10px;
+}
+#NCPAccompanyRecSubEditWin table tr {
+	height:30px;
+}
+</style>
+ </head> 
+ <body style="padding:4px;">
+ <server>
+ s defEpisodeID = $G(%request.Data("defEpisodeID", 1)) //入院登记页面调用时需传入就诊号
+ s wardId = $G(%request.Data("defWardId", 1)) //入院登记页面调用时需传入登记时选择的病区id
+ if ('wardId) s wardId=%session.Get("LOGON.WARDID")
+ //s CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+ //s CurrentTime=##class(websys.Conversions).TimeLogicalToHtml($p($h,",",2))
+ //d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+ //d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
+ w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+ //w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+ //w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
+ //w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+ //w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+
+ </server>
+  <csp:Include Page="nur.hisui.ncpaccompanyrecord.show.csp">
+<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		wardId:"#(wardId)#",
+		defEpisodeID:"#(defEpisodeID)#"
+	};
+
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/NCPAccompanyRecord.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.COMMHardManager.js"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+
+</body>
+</html>

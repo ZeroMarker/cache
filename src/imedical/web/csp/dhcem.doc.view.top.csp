@@ -1,0 +1,129 @@
+<!-- dhcem.doc.view.top.csp 急诊医生门户 顶部视图 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<title>hos门户使用-急诊医生 今日接诊情况</title>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script><!--hxy 2022-11-11-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/echarts.min.js" charset="utf-8"></script>
+<style type="text/css">
+	.view{background:rgba(0,0,0,0.5);}
+</style>
+<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgCtLocDesc="#(%session.Get("LOGON.CTLOCDESC"))#";  //科室描述
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+</script>
+
+</head>
+
+<body style="width:100%;height:100%;background:rgba(0,0,0,0);justify-content: space-between;display: flex;flex-direction: column;}">
+	<!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+	<div id="mainCharts" class="view" style="width:100%;"></div>
+</body>
+
+<script type="text/javascript">
+	
+	// 初始化页面
+	$(function(){
+		
+		initPage();
+		initData();	
+	})
+	
+	// 初始化页面布局
+	function initPage(){
+		
+		var bodyHeight=$('body').height();	
+		var viewHeight = parseInt(bodyHeight)-0+'px';
+		$('.view').css({height:viewHeight});
+	}
+	// 数据加载
+	function initData(){
+		var LgParams=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID;
+		runClassMethod("web.DHCEMDocMessageInterface","WorkLoadToDay",{"LgParam":LgParams},function (data){
+			if(data == null){
+				return;
+			}else{
+				// 今日接诊情况统计
+				initView(data);
+			}
+		})
+	}
+	// 初始化视图
+	function initView(valuedata){
+		
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		option = {
+			title: {
+	          text: "今日接诊情况统计",
+			  textStyle:{
+				color:'#fff',
+				fontSize:'20px',/**/
+				fontWeight:'normal'/**/
+			  },
+	          x:'center',
+	          y:'top',
+	          top:'20',/*hxy 2022-11-04 10->20*/
+	          bottom:'0',
+			  textAlign:'left'
+	       },
+	      grid:{
+	          left: '5%',
+	          right: '10%',
+	          bottom: '5%',
+	          top: '80',
+	          containLabel: true
+		  },/*hxy 2022-11-04*/
+		  xAxis: {
+		    type: 'category',
+		    axisLabel:{
+				color:'#fff'
+			},
+			axisLine: {
+		        lineStyle: {
+		            color:  'rgba(255,255,255,0.2)',
+		                width: 1
+		        }
+		    },
+		    data: ['已就诊', '待就诊', '今日挂号数']
+		  },
+		  yAxis: {
+		    type: 'value',
+		    axisLabel:{
+				color:'#fff'
+			},
+			splitLine: {
+		      lineStyle: {
+		         color: "rgba(255,255,255, 0.2)"
+		      }
+			}
+		  },
+		  series: [
+		    {
+		      data: valuedata ,  ///[50, 25, 75],
+		      type: 'bar',
+		      barWidth : 40, //柱图宽度
+		      itemStyle: {
+		        color:'#2CEBC999'
+		      }
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#mainCharts")[0]);
+		option&&myChart.setOption(option);
+	}
+	
+</script>
+</html>

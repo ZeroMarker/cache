@@ -1,0 +1,96 @@
+﻿<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+	<head>
+        <title>门诊病历质控查询</title>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    	<HISUI/> 
+       
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	    <style>
+	   		.label-span{
+		   		margin:10px;
+		   		vertical-align: middle;	
+		   	} 
+		   	.btn-a{
+				margin-left:10px;
+				width:90px;   	
+			}
+			.btn-a-long{
+				margin-left:10px;
+			}
+			.btn-div{
+				width:250px;
+				height:200px;
+				overflow:auto;   	
+			}
+			#discussHistory{
+				margin:10px;	
+			}
+			#reAssign{
+				margin:10px 10px 10px 0;	
+			}
+	   </style>
+	</head>
+<body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+	<div data-options="region:'center',fit:true,border:false" style="padding:10px;" class="bg-div">
+		<div class="hisui-panel" title="门诊病历质控查询" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+				<div data-options="region:'north',border:false" style="height:90px;overflow:hidden;">
+					<div id="messageListTableTBar" style="padding:10px 0;height:30">	
+						<div style="float:left;font-size:0;">
+							<span style="margin-left:10px;margin-right:0px;">#(..Get("科室"))# </span><select id="ctLocID" class="hisui-combobox" style="width:150px;margin-top:10px"></select>
+			 				<span class="label-span">#(..Get("开始时间"))#</span><input id="inputCreateDateStart" class="hisui-datebox" />
+			 				<span class="label-span">#(..Get("结束时间"))#</span><input id="inputCreateDateEnd" class="hisui-datebox" />
+			 				<span class="label-span">#(..Get("抽取比例"))#</span><input id="extractRatio" class="hisui-numberspinner" data-options="placeholder:'抽取比例：1-100',min:1,max:100">
+			 				<span class="label-span">#(..Get("抽取数量"))#</span><input id="extractNums" class="hisui-numberspinner" data-options="placeholder:'抽取数量：1-1000人',min:1,max:1000">
+			 				
+			 				<!--<span class="label-span"">是否完成 </span><select id="FinishedFlag" class="hisui-combobox" style="width:150px;">
+			 				<option value="Y">已完成</option>
+			 				<option value="N">未完成</option>
+			 				<option value="">全部</option>
+			 				</select>-->
+			 				<a id="btnSearch" href="#" class="hisui-linkbutton hover-dark btn-a" onclick="doSearch()" data-options="iconCls:'icon-w-find'">抽取</a>
+			 				<a id="btnAssign" href="#" class="hisui-linkbutton hover-dark btn-a" onclick="Assign()" data-options="iconCls:'icon-w-ok'" disabled>分配</a>
+			 				<a id="btnDiscuss" href="#" class="hisui-linkbutton hover-dark btn-a" onclick="OpenDiscussWin()" data-options="iconCls:'icon-w-edit'">讨论</a>
+			 				<a href="#" id="checkHistory" class="hisui-menubutton btn-a-long">分配历史数据</a>
+			 				<div id='historyList' class="btn-div"></div>
+			 				<a href="#" id="discussHistory" class="hisui-menubutton btn-a-long">讨论历史数据</a>
+			 				<div id='discussList' class="btn-div"></div>
+			 				<a id="reAssign" href="#" class="hisui-linkbutton hover-dark btn-a" onclick="ReAssign()" data-options="iconCls:'icon-w-update'" disabled style="width:120px;">转分配</a>
+		 				</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="border: 1px #cccccc solid;border-left:none;border-right:none;">
+					<table class="hisui-datagrid" id="patientListTable" data-options="fit:true,border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+ 	<script language="cache" runat="server">
+ 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s UserID = %session.Get("LOGON.USERID")
+  		s UserLocID = %session.Get("LOGON.CTLOCID")
+  		s HospitalID = %session.Get("LOGON.HOSPID")
+  		s DocID = ""
+ 		s:(UserID '= "") DocID = ##Class(web.SSUser).GetDefaultCareProvider(UserID)
+		s HospitalName = ##Class(EPRservice.BOSysOption).GetValueByName("HospitalName")
+		s FormatDate = ##class(EMRservice.Tools.Tool).GetHISStandardDateTimeFormat("GetFormatExt","Date")
+ 	</script>
+ 	<script language="javascript">
+ 		var docID = '#(DocID)#';
+ 		var formatDate = '#(FormatDate)#';
+		var userID = '#(UserID)#';
+		var userLocID = '#(UserLocID)#';
+		var HospitalName = '#(HospitalName)#';
+		var SSGroupID = '#(SSGroupID)#';
+		var HospitalID = '#(HospitalID)#';
+ 	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.Outpatient.js"></script>	
+</body>
+</html>

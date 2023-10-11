@@ -1,0 +1,129 @@
+<!-- 修改记录模态框 -->
+<style>
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+#vsmlStartDate+.datebox>input,#vsmlEndDate+.datebox>input{width: 83px!important;}
+.vsmlTable .datagrid-view2>.datagrid-body{max-height: 350px!important;}
+.vsmlTable .panel-body{border-color: #cccccc;}
+.PatInfoItem span {word-break: break-all;}
+#patFrame{height:40px;}
+</style>
+<div id="vsmlModal" class="hisui-dialog" title="#(..Get("修改记录"))#" style="top: 50px;left: 300px;padding: 5px 10px 10px;width: 1250px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true"> 
+	<div id="patFrame" style="margin-bottom: 5px;">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<form id="vsmlForm" style="padding: 10px 0;">
+		<table cellpadding="0" style="border-collapse: collapse;">
+			<tr>
+				<td class="r-label" style="padding-left: 10px;">
+					#(..Get("日期"))#
+				</td>
+				<td>
+			    <input id="vsmlStartDate" style="width: 120px;" class="hisui-datebox textbox" data-options="required:true"></input>
+				</td>
+				<td style="padding: 0 5px;">#(..Get("至"))#</td>
+				<td class="r-label">
+			    <input id="vsmlEndDate" style="width: 120px;" class="hisui-datebox textbox" data-options="required:true"></input>
+				</td>
+				<td>
+	        <a href="#" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-find'" onclick="vsmlPage=1;getVsmlList();">#(..Get("查询"))#</a>
+				</td>
+			</tr>
+		</table>
+	</form>
+  <div class="vsmlTable">
+    <table id="modifyLogs" class="hisui-datagrid" data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:true,toolbar:'#vsmlForm',pageList:[20,50,100,200]"></table>
+  </div>
+</div>
+<script type="text/javascript">
+var vsmlFlag=3,vsmlPage=1,vsmlPageSize=20,vsmlEpisode;
+// 更新模态框位置
+function updateModalPos(id) {
+  var offsetLeft=(window.innerWidth-$('#'+id).parent().width())/2;
+  var offsetTop=(window.innerHeight-$('#'+id).parent().height())/2;
+  $('#'+id).dialog({
+    left: offsetLeft,
+    top: offsetTop
+  }).dialog("open");
+}
+function getVsmlList() {
+	updateModalPos("vsmlModal");
+	var vsmlCol=[[  
+		{title: "id", field: "id", width: 50},
+		{title: "操作", field: "操作", width: 60},
+		{title: "操作日期", field: "操作日期", width: 80},
+		{title: "操作时间", field: "操作时间", width: 76},
+		{title: "操作用户", field: "操作用户", width: 80},
+		{title: "数据日期", field: "数据日期", width: 80},
+		{title: "数据时间", field: "数据时间", width: 76},
+		{title: "体征项", field: "体征项", width: 120},
+		{title: "原有值", field: "原有值", width: 80},
+		{title: "新值", field: "新值", width: 80}
+  ]];
+	vsmlFlag=false;
+  $cm({
+    ClassName: 'Nur.NIS.Service.VitalSign.Temperature',
+    QueryName: 'GetTempModifyLog',
+    page: vsmlPage,
+    rows: vsmlPageSize,
+		episodeID:EpisodeID,
+		start:$("#vsmlStartDate").datebox("getValue"),
+		end:$("#vsmlEndDate").datebox("getValue"),
+		locID:session["LOGON.CTLOCID"]
+  }, function (res) {
+		res.rows.map(function (r,i) {
+			res.rows[i]["操作"]=$g(r["操作"]);
+		})
+		$('#modifyLogs').datagrid({
+			columns :vsmlCol,
+			pageSize:vsmlPageSize,
+			loadMsg : '加载中..',  
+			data:res,
+			onLoadSuccess:function(data){
+			},
+			onClickRow:function(index,row){
+			}
+		}).datagrid("getPager").pagination({
+	    onSelectPage:function(p,size){
+	    	console.log(arguments);
+				vsmlPage=p;
+				vsmlPageSize=size;
+				if (vsmlFlag) {
+					vsmlFlag=false;
+					getVsmlList();
+				} else {
+					vsmlFlag=true;
+				}
+	    },
+	    onRefresh:function(p,size){
+	    	console.log(arguments);
+				vsmlPage=p;
+				vsmlPageSize=size;
+				getVsmlList();
+	    },
+	    onChangePageSize:function(size){
+	    	console.log(arguments);
+				vsmlPage=1;
+				vsmlPageSize=size;
+	    }
+		}).pagination('select', vsmlPage);
+		// $(".vsmlBar").css('height', $("#vsmlModal .PatInfoItem").height()+'px');
+		updateModalPos("vsmlModal");
+  });
+}
+function openVsmlModal() {
+	if (3==vsmlFlag) {
+		$('#vsmlStartDate').datebox('setValue', dateCalculate(new Date(), -90));
+		$('#vsmlEndDate').datebox('setValue', formatDate(new Date()));
+	}
+	vsmlPage=1;
+	if(vsmlEpisode!=EpisodeID){
+		vsmlEpisode=EpisodeID;
+		InitPatInfoBanner(EpisodeID);
+	}
+	getVsmlList();
+}
+// setTimeout(function(){
+// 	openVsmlModal();
+// },800);
+</script>

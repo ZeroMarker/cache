@@ -9,54 +9,65 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
-<!--add by lmm 2019-09-01 988161 begin-->
+<DHCEQ:HISUI></DHCEQ:HISUI>
+
 <SCRIPT language="Cache" RUNAT="SERVER">
  s colsets=##Class(web.DHCEQCColSet).GetColSets("","2","","Equip") //用户级设置
  if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","1","","Equip") //安全组级设置
  if (colsets="") s colsets=##Class(web.DHCEQCColSet).GetColSets("","0","","Equip") //系统设置
+ s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
 </Script>
-<!--add by lmm 2019-09-01 988161 end-->
+
 <style type="text/css">
 .west{
     width:200px;
     padding:10px;
   }
+ .messager-popover
+{
+	font-weight: normal;
+}
 </style>
 <script type='text/javascript' src='../scripts/dhceq/em/catequip.js'></script>
 <script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script>
 </head>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px">
-		<div class="hisui-panel"  title="分类查找设备" data-options="fit:true,eqtitle:'maintitle'">
-			<div class="hisui-layout" data-options="fit:true,border:false">
+		<div class="hisui-panel" title="设备台账" data-options="fit:true,eqtitle:'maintitle',headerCls:'panel-header-gray'">
+			<div class="hisui-layout" data-options="fit:true,border:false" style="padding: 3px 5px;">
 				<div data-options="region:'center',border:false" style="padding:0px;position:relative">
-					<table id="tDHCEQEquipList" data-options="border:false,fit:true,eqtitle:'listtitle'" title="设备台账">	
-					</table>
-					<div>
-					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;"></span>
+					<table id="tDHCEQEquipList" data-options="border:false"></table>
+					<div class="messager-popover info" style="position:absolute;right:0px;top:0px;margin:2px 5px 2px 0;padding:4px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal"></span>
 					</div>
 				</div>
-				<div data-options="region:'west',border:false,eqtitle:'listtitle'" class="west" title="设备分类">
-					<ul id="tDHCEQCEquipCatTree" data-options="animate:true"></ul>	<!--modified by csj 2020-02-24-->
-  				</div>
 			</div>
 		</div>
 	</div>
-	<!--add by lmm 2019-09-01 988161 begin-->
+	<div data-options="region:'west',border:false" style="padding:10px 0 10px 10px; width: 250px;">
+		<div class="hisui-panel" data-options="fit:true,eqtitle:'maintitle',headerCls:'panel-header-gray',title:'设备分类'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',border:false" style="position:relative">
+					<div data-options="region:'west',eqtitle:'listtitle'" class="west" style="padding:3px 10px 10px 10px ;">
+						<ul id="tDHCEQCEquipCatTree" data-options="animate:true"></ul>
+  					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div id="hiddenEncrypt" style="display:hidden">
 		<form name="DHCEQ">
-			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#><!--add by csj 2020-02-24 1190963-->
-			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQEquipSave.GetNum")))#>
-			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQEquipSave.GetList")))#>
-			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
-			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
-			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##Class(%CSP.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>
+			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQEquipSave.GetNum")))#>
+			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQEquipSave.GetList")))#>
+			<INPUT TYPE="hidden" name="GetColSets" id="GetColSets" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCColSet.GetColSets")))#>
+			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" name="GetHospitalDesc" id="GetHospitalDesc" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQCommon.GetHospitalDesc")))#>
 		</form>
 	</div>	
-	<!--add by lmm 2019-09-01 988161 begin-->
 </body>
 
 </html>
-

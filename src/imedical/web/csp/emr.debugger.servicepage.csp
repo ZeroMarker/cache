@@ -1,0 +1,64 @@
+<html>
+<head>
+
+	<HISUI/>
+	<title>	电子病历调试页面 </title>
+
+</head>
+
+<body class="hisui-tabs" fit="true" id="tabDbgSvr">
+	
+	<div title="外部接口测试页" data-options="fit:true" style="padding:10px;" >   
+		<iframe scrolling="auto" frameborder="0" src="emr.debugger.thirdinterfaceservice.csp" style="width:100%;height:100%;"></iframe>
+	</div> 
+	
+	<div title="绑定数据测试页" data-options="fit:true" style="padding:10px;" >   
+		<iframe scrolling="auto" frameborder="0" src="emr.debugger.bindfieldservice.csp" style="width:100%;height:100%;"></iframe>
+	</div>
+	
+	<div title="病历文书修复工具页" data-options="fit:true" style="padding:10px;" >   
+		<iframe scrolling="auto" frameborder="0" src="emr.debugger.fbeditormodifytools.csp" style="width:100%;height:100%;"></iframe>
+	</div>
+	
+	<script language="javascript">
+	
+		$(function(){
+            var tabs = $('#tabDbgSvr').tabs().tabs('tabs');
+            for(var i=0; i<tabs.length; i++){
+	            ///鼠标悬浮选中Tab页
+                tabs[i].panel('options').tab.unbind().bind('mouseenter',{index:i},function(e){
+                    $('#tabDbgSvr').tabs('select', e.data.index);
+                    
+                    //依据选择情况刷新Tab页面内容，解决Tab中DataGrid无法自适应显示
+					contentTab0 = '<iframe scrolling="auto" frameborder="0" src="emr.debugger.fbeditormodifytools.csp" style="width:100%;height:100%;"></iframe>'
+					contentTab1 = '<iframe scrolling="auto" frameborder="0" src="emr.debugger.thirdinterfaceservice.csp" style="width:100%;height:100%;"></iframe>'
+					contentTab2 = '<iframe scrolling="auto" frameborder="0" src="emr.debugger.bindfieldservice.csp" style="width:100%;height:100%;"></iframe>'
+					
+					var current_tab = $('#tabDbgSvr').tabs('getSelected');
+					
+					 $('#tabDbgSvr').tabs('update', {
+                        tab: current_tab,
+                        options: {
+                            content: function(){
+		                            switch (e.data.index){
+		                            	case 0: 
+		                            		contentTab = contentTab1
+		                            		break;
+		                            	case 1:
+		                            		contentTab = contentTab2
+		                            		break;
+		                            	default:
+		                            		contentTab = contentTab0
+		                            		break;
+		                            }
+		                            return contentTab
+	                            }
+                        }
+					 })
+                });
+            }
+        })
+        
+	</script>
+</body>
+</html>

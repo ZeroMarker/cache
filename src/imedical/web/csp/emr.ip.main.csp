@@ -1,10 +1,16 @@
 ﻿<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
 <html>
 <head>
+	
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
 	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.main.css">
-	<script type="text/javascript" src="../scripts/websys.js"></script>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 	<script language="cache" runat="server">
 	    s episodeID = $Get(%request.Data("EpisodeID",1),"")
 		s patientID = $Get(%request.Data("PatientID",1),"")
@@ -13,6 +19,11 @@
 		s userID = %session.Get("LOGON.USERID")
 		s userLocID = %session.Get("LOGON.CTLOCID")
 		s hospitalID = %session.Get("LOGON.HOSPID")
+        s tabParam = $Get(%request.Data("TabParam",1),"")
+        
+        s admType=""
+        s:(episodeID'="") admType=$p($g(^PAADM(episodeID)),"^",2)
+        
     </script>
     <script language="javascript">
         var setting = {
@@ -21,7 +32,13 @@
             categoryId: '#(categoryID)#',
             userId:'#(userID)#',
             userLocId:'#(userLocID)#',
-			hospitalID:'#(hospitalID)#'
+            hospitalID:'#(hospitalID)#',
+            tabParam:'#(tabParam)#',
+            admType:'#(admType)#'
+        }
+        if (setting.tabParam != undefined && setting.tabParam != "")
+        {
+            setting.tabParam = JSON.parse(unescape(utf8to16(base64decode(setting.tabParam))));
         }
     </script>
 	<title>住院病历</title>
@@ -36,8 +53,6 @@
     <div id="dialog"></div> 
    <script type="text/javascript" src="../scripts/emr/js/ip.main.js"></script>
    <script type="text/javascript" src="../scripts/emr/js/ip.userconfig.js"></script>
-   <script language="cache" runat="server">
-		d ##class(EMRservice.BL.BLCDSSService).getCDSSUrl()
-   </script>
+   <script type="text/javascript" src="../scripts/emr/js/cdsstool.js"></script>
 </body>  
 </html>

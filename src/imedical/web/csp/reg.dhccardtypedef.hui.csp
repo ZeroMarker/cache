@@ -15,7 +15,6 @@ body{
 .search-table{
 	border-collapse:separate;
 	border-spacing:0 10px;
-	/*padding: 0 10px;*/
 }
 .r-label{
 	padding-left: 10px;
@@ -29,16 +28,46 @@ label[for='cOutStatus'],label[for='cInStatus'],label[for='cDisInStatus']{
 .FindLabel{
 	padding:0px 10px 0 10px;	
 }
+.combo2-arrow {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    margin-left: 10px;
+    background: url(../images/uiimages/input-btn-expand.png)	no-repeat center center;
+    background-color: #abddff;
+    cursor: pointer;
+    border: 1px solid #40a2de;
+    vertical-align: top;
+}
+li {margin-bottom:5px;padding:5px;border-radius:4px;}
+.c-span,.c-span2 {margin-right:5px;}
+.c-span2 {margin-left:20px;}
+li:hover {cursor:pointer;background:#D9E7F1;color:#000;border-radius:4px;}
+.left {float:left;padding:10px;height:90%;width:300px;}
+.right {float:left;padding:10px;height:90%;width:300px;}
+.mzul {padding:20px 10px;}
+.zyul {padding:5px 10px;float:left;width:45%;}
+.zyul2 {padding:5px 10px;float:left;}
+.hidden {display:none;}
+.active {background:#509DE1;color:#fff;}
+.select {padding:22px 10px 3px 10px;}
+.selected {background:#E50027;}
+.default {color:#E50027;}
+.set {color:#509DE1}
+
 </style>
 <Server>
-Set NowDate=##class(websys.Conversions).DateLogicalToHtml(+$HOROLOG) 
+s NowDate=##class(websys.Conversions).DateLogicalToHtml(+$h) 
 
-Set HospName=""
-Set hospid=%session.Get("LOGON.HOSPID") If hospid'="" Set HospName=$PIECE($GET(^CT("HOSP",hospid)),"^",2)
-Set sysDateFormat=##class(websys.Conversions).DateFormat()
-Set SearchCardNoMode=##class(web.DHCDocConfig).GetConfigNode("SearchCardNoModeConfig")
-If SearchCardNoMode=0 Set SearchCardNoMode=""
-Set sysDateFormat=##class("websys.Conversions").DateFormat()
+s HospName=""
+s hospid=%session.Get("LOGON.HOSPID") i hospid'="" s HospName=$p($g(^CT("HOSP",hospid)),"^",2)
+s sysDateFormat=##class(websys.Conversions).DateFormat()
+s SearchCardNoMode=##class(web.DHCDocConfig).GetConfigNode("SearchCardNoModeConfig")
+if SearchCardNoMode=0 s SearchCardNoMode=""
+s sysDateFormat=##class("websys.Conversions").DateFormat()
+s sessinStr="^"_%session.Get("LOGON.USERID")_"^"_%session.Get("LOGON.CTLOCID")_"^"_%session.Get("LOGON.GROUPID")_"^"_%session.Get("LOGON.HOSPID")_"^"_%session.Get("LOGON.SITECODE")_"^"
+s DefaultPatTypePara=##class(web.UDHCOPOtherLB).ReadPatType("GetPatTypeToHUIJson","",sessinStr)
+s ExtCardJson=##class(DHCDoc.Interface.CardManage).GetExtCardJson(hospid)
 </Server>
 <SCRIPT language = 'javascript' >
 		function myformatter(date){
@@ -74,15 +103,26 @@ function myparser(s){
 	<csp:Include Page="reg.dhccardtypedef.show.hui.csp">
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
-		
 		var ServerObj={
 			SearchCardNoMode:"#(SearchCardNoMode)#",
-			sysDateFormat:"#(sysDateFormat)#"
+			sysDateFormat:"#(sysDateFormat)#",
+			pageCode:"reg.dhccardtypedef.hui.csp",
+			DefaultPatTypePara:'#(DefaultPatTypePara)#',
+			pageName:"卡类型配置",
+			ProductLine:"Reg",
+			parentPageCode:"",
+			parentPageName:"",
+			MainCSPIsLink:"N",
+			domSelectors:".textbox^.hisui-switchbox",
+			domNotSelectors:".datebox^#SearchCode^#SearchDesc^#_HospUserList^#SearchCardNoMode^#AllowAgeNoCreadCard^#CanNoCread^#Hosp^#ForeignInfoByAge",
+			ExtCardJson:"#(ExtCardJson)#"
 		};
 	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/tanslatecomponent.js"></script>
 	<script type="text/javascript" src="../scripts/Reg.DHCCardTypeDefJson.js"></script>
 	<script type="text/javascript" src="../scripts/Reg.DHCCardTypeDef.hui.js"></script>
 	

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js"></script>
+
+<style type="text/css">
+/*  2020-06-11新增部分 */
+	.service-reg-bar {
+		width: 900px;
+		heght:60px;
+		display:block;
+	    background-color: #fff;
+	    margin: 0 auto;
+	    border: none;
+	    padding: 15px 0 13px;	
+	}
+
+	.service-reg-bar>li{
+		width: 300px;
+	    float: left;
+	    text-align: center;
+	    list-style-type: none;
+	    position: relative;
+	}
+
+	.service-reg-bar>li>span
+	{
+		background: none repeat scroll 0 0 #fff;
+	    border: 4px solid #ccc;
+	    border-radius: 30px;
+	    color: #ccc;
+	    display: block;
+	    margin: 3px auto;
+	    padding: 5px 0px;
+	    width: 30px;
+	    height: 20px;
+	    position: relative;
+	    z-index: 2;
+	}
+
+	.service-reg-bar .step-line {
+	    background: none repeat scroll 0 0 #ccc;
+	    border: 0 none;
+	    height: 6px;
+	    left: 0px;
+	    position: absolute;
+	    top: 19px;
+	    width: 150px;
+	    margin-top: 18px;
+	}
+	.service-reg-bar .step-line-short {
+	    left: 150px;
+	}
+	.service-reg-bar .step-line-long {
+	    width: 300px;
+	}
+	.service-reg-bar>li.current {
+	    color: #40a2de;
+	}
+	.service-reg-bar>li.current>span {
+	    border-color: #40a2de;
+	    color: #40a2de;
+	}
+	.service-reg-bar>li.current>hr {
+	    background-color: #40a2de;
+	}
+
+	.service-reg-btn{
+		text-align: center;
+	}
+
+	.service-reg-content{
+		margin:0 auto;	
+		padding:20px;
+	}
+	.service-reg-step1 , .service-reg-step2,service-reg-step3{
+		margin:0 auto;	
+	}
+	.service-reg-step1>table,  .service-reg-step2>table{
+		margin:0 auto;
+		
+	}
+	.service-type{
+		display:block;
+		border: 1px solid  #cecaca;;
+		width: 500px;
+		line-height: 30px;
+		padding: 0px 10px;
+		margin-bottom: 5px;
+	}
+	.service-type>td{
+		display:block;	
+	}
+	.service-type.active,.service-type:hover{
+		color:#40a2de;
+		border-color:#40a2de;
+	}
+	.service-type.active span.picfg,.service-type:hover span.picfg{
+		display:inline-block;
+	}
+	span.picfg{
+		width: 19px;
+		height: 19px;
+		padding: 5px;
+		float: right;
+		display:none;
+	}
+	.funtoolbar{
+		display:inline-block;	
+	}
+	.serCoding>.combo{
+		margin-right:20px;	
+	}
+	.panel-header, .panel-body {
+    border-color: #ddd;
+}
+</style>
+</head>
+<body class="hisui-layout" fit="true">
+<div data-options="region:'center'" id="serviceList">
+	
+	<div class="datagrid-view hisui-panel" fit="true" id="divMethodListDg">
+    	<table id="ServiceGrid"  data-type="uncompleted" ></table>
+    </div>
+    <!-- <div id='divServiceGrid'>
+    	<table id="ServiceGrid"></table>
+    </div> -->
+</div>
+<!-- 查询 -->
+	<div id="serviceBar" style="padding-top:5px;padding-bottom:5px;display:none">   
+		<table class="Functionbar" >
+			<tr>
+				<td class="r-label">服务代码</td>
+				<td>
+					<input id="serCode" class="textbox" style="margin-right:20px">
+				</td>
+				<td class="r-label">服务名称</td>
+				<td >
+					<input id="serDesc" class="textbox" style="margin-right:20px">
+				</td>
+				<td class="r-label">服务状态</td>
+				<td class="serCoding">
+					<select id="serStatus" class="hisui-combobox" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true">
+						<option value="">全部</option>
+						<option value="Y">运行</option>
+						<option value="N">停止</option>
+					</select>
+				</td>
+				<td class="r-label">服务类型</td>
+				<td class="serCoding">
+					<select id="serType" class="hisui-combobox" style="width:155px;" data-options="enterNullValueClear:false,blurValidValue:true">
+						<option value="">全部</option>
+						<option value="SOAP">SOAP</option>
+						<option value="HL7">HL7</option>
+						<option value="REST">REST</option>
+						<option value="FILE">FILE</option>	
+					</select>
+				</td>
+				<td >
+					<a class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="findService()">查询</a>
+				</td>
+				<td>
+					 <a class="hisui-linkbutton" data-options="iconCls:'icon-reload',plain:true" onclick="reloadService()">刷新</a>
+				</td>
+				<td>
+					 <a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="showAddModal()">新增</a>
+				</td>
+			</tr>
+		
+		</table>
+	</div> 
+
+<!-- 新增模态框 -->
+<div id="addServiceDialog" class="hisui-window" title='新增服务' data-options="iconCls:'icon-add',modal:true,closed:true,top:'50px',resizable:false," style="width:600px;height:300px;text-align:center;display:none" >
+	<div  style="padding: 20px;">
+		<form id="ff1" method="post" accept-charset="utf-8">
+			<table id="t1" style="margin: 0 auto;">
+		    	<tr style="line-height: 35px;">               
+		        	<td class="r-label">服务名称</td>
+					<td style="margin-right: 50px;display: inline-block;">
+						<input class="hisui-validatebox textbox" name="sername" data-options="required:true" style="width:100%;">
+					</td>
+					<td class="r-label">服务描述</td>
+					<td>
+						<input class="textbox" name="serdesc" style="width:100%;">
+					</td>
+					
+	            </tr>
+	            <tr style="line-height: 35px;">  
+	            	<td class="r-label">服务IP</td>
+					<td style="margin-right: 50px;display: inline-block;">
+						<input class="hisui-validatebox textbox" name="serhost" data-options="required:true" style="width:100%;">
+					</td>
+					<td class="r-label">服务状态</td>
+					<td>
+						<div id="serflag" name='serflag' class="hisui-switchbox"  data-options="onText:'运行',offText:'停止',
+						size:'small',animated:true,onClass:'primary',offClass:'gray',width:83,height:32" >
+						</div>
+					</td>
+					
+				</tr>
+	            <tr style="line-height: 35px;">  
+	            	<td class="r-label">总线代码</td>
+					<td style="margin-right: 50px;display: inline-block;">
+						<input class="hisui-validatebox textbox" name="busCode" data-options="required:true" style="width:100%;">
+					</td>
+					<td class="r-label">服务端口</td>
+					<td>
+						<input class="hisui-validatebox textbox" name="serport" data-options="required:true" style="width:100%;">
+					</td>  
+				</tr> 
+				<tr style="line-height: 35px;">  
+	            	<td class="r-label">方法代码</td>
+					<td style="margin-right: 50px;display: inline-block;">
+						<input class="hisui-validatebox textbox" name="medCode" data-options="required:true" style="width:100%;">
+					</td>
+					<td class="r-label">方法名称</td>
+					<td>
+						<input class="textbox" name="medDesc" style="width:100%;">
+					</td>  
+				</tr> 
+	        </table>
+	    </form>
+	</div>
+	<div style="text-align:center; margin-top: 30px;">
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-ok'" id="methodDataSaveBtn" onclick="addService()">保 存</a>
+		<a class="hisui-linkbutton" data-options="iconCls:'icon-cancel'" id="methodInputAddBtn" onclick="cancel()">取消</a>
+	</div>
+</div>
+</body>
+<!-- <script type="text/javascript" src="../scripts/enswebserviceregist.js"></script>
+ -->
+ <script type="text/javascript">
+   var tb;
+	$(function(){
+		loadEnsWebServiceClient();
+		
+	})
+	
+	//显示新增模态框
+	function showAddModal(){
+		$('#addServiceDialog').css('display','block');
+		$('#addServiceDialog').window('open')
+	}
+	
+	//验证必填
+	function validateInput(){
+		//$("#patno").val("12345678").validatebox("validate");
+		//$('input[name="sername"]').validatebox("validate");
+		if(!($('input[name="sername"]').val())) {
+			$.messager.alert('提示','服务名称不能为空','info');
+			return false
+		}
+		if(!($('input[name="serhost"]').val())) {
+			$.messager.alert('提示','服务IP不能为空','info');
+			return false
+		}
+		if(!($('input[name="busCode"]').val())) {
+			$.messager.alert('提示','总线代码不能为空','info');
+			return false
+		}
+		if(!($('input[name="serport"]').val())) {
+			$.messager.alert('提示','服务端口不能为空','info');
+			return false
+		} 
+		if(!($('input[name="medCode"]').val())) {
+			$.messager.alert('提示','方法代码不能为空','info');
+			return false
+		} 
+		return true
+		
+	} 
+	
+	//保存新增服务信息
+	function addService(){
+		if(validateInput()){
+			var sername=$('input[name="sername"]').val();//服务名称
+			var serdesc=$('input[name="serdesc"]').val();//服务描述
+			var serflag=$('#serflag').switchbox("getValue");//服务状态
+			serflag = serflag==true?"Y":"N"
+			var serhost=$('input[name="serhost"]').val();//服务IP
+			var busCode=$('input[name="busCode"]').val();//总线代码
+			var serport=$('input[name="serport"]').val();//服务端口
+			var medCode=$('input[name="medCode"]').val();//方法代码
+			var medDesc=$('input[name="medDesc"]').val();//方法名称
+			var input="^"+sername+"^"+serdesc+"^"+serhost+"^"+serflag+"^"+busCode+"^"+serport+"^"+medCode+"^"+medDesc;
+			input = encodeURI(input);
+			//新增服务
+			 $.ajax({ 
+				type: "POST",
+				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+				url: "web.DHCENS.STBLL.UTIL.PageLoad.cls?action=EditSG&input="+input,
+				dateType: "json",
+				success: function(data){
+					var dataArr=data.split("^");		
+					if (dataArr[0]=="1") {  
+						$.messager.alert('提示','保存成功','info');
+						$('#addServiceDialog').window('close')
+						//加载服务列表
+						loadEnsWebServiceClient();
+					}else{  
+						$.messager.alert('提示','保存失败','error');
+					}
+				}
+			})
+		}/* else{
+			$.messager.alert('提示','请您填写必填项','info');
+		}   */
+	}
+	
+	
+	function cancel(){
+		$('#addServiceDialog').window('close');
+	}
+
+
+	/*初始化服务列表查询*/
+/* 	function initSearchbox(){
+		$("#serviceBar").appendTo(".datagrid-toolbar table tbody tr");
+		$("#serviceBar").css("display","inline-block");
+	} */
+		
+	//加载服务列表
+	function loadEnsWebServiceClient() {
+	    tb=$HUI.datagrid('#ServiceGrid', {
+	        //title:'WSDL服务列表',
+	        //height:500,
+	        fit:true,
+	        pagination:true,
+	        afterPageText:'页,共{pages}页', beforePageText:'第', displayMsg:'显示{from}到{to}条，共{total}条',
+	        nowrap: false,        
+	        fitCloumns: true,
+	        minimized:false,
+	        striped:true,
+	        cache:false, 
+	        method:'get',
+	        url:'web.DHCENS.STBLL.UTIL.PageLoad.cls?action=ServiceList',
+	        singleSelect:true,
+			columns:[[ 
+			    {field:'rowId',title:'序号',sortable:true,width:40},   
+			    {field:'serCode',title:'服务代码',sortable:true,width:120}, 
+			    {field:'serDesc',title:'服务名称',width:300},  
+			    {field:'serNote',title:'服务描述',width:230},
+			    {field:'serFlag',title:'服务状态',sortable:true,width:100,align:"center",
+			    	formatter:function(v,rec){
+				    	var status="";
+			    		if (rec.serFlag=="Y") {
+				    		status='<a href="#" name="run" class="status">运行</a>';
+			    		}
+			    	 	else {
+				    		status='<a href="#" name="stop" class="status">停止</a>';
+			    		} 
+			    		return status;
+				 	}   
+			    },
+			    {field:'serType',title:'服务类型',width:80},  
+			    {field:'productionName',title:'更新',sortable:true,width:200,
+			    	formatter:function(value,rowData,rowIndex){ 
+			    		var editBtn = '<a href="#this" class="editSer" onclick="editRow('+rowIndex+')">编辑</a>';
+		               	return editBtn
+					}
+			    }, 
+			]],
+		    onLoadSuccess:function(data){  
+		        $('.editSer').linkbutton({text:'编辑',plain:true,iconCls:'icon-edit'});
+		        $('a[name="run"]').addClass('run');
+		        $('a[name="stop"]').addClass('stop');
+		    },
+		    toolbar:"#serviceBar",
+	    })
+	    //$(initSearchbox());	
+	}
+	
+	//查询
+	function findService(){
+		var busCode = "";
+		var serCode = $("#serCode").val();    
+		var serDesc = $("#serDesc").val();
+		var serStatus = $("#serStatus").combobox("getValue");
+		var serType = $("#serType").combobox("getValue");
+		var seachPar = busCode+"^"+serCode+"^"+serDesc+"^"+serStatus+"^"+serType;
+		$("#ServiceGrid").datagrid("load",{input:seachPar});
+	   	//$(initSearchbox());
+	}
+
+	
+	//刷新
+	function reloadService(){
+		tb.reload();
+	}
+	
+	
+	//编辑
+	function editRow(rowindex) {
+		tb.selectRow(rowindex);
+		var row = tb.getSelected();
+		
+		//显示编辑界面
+		var ServObj={};
+		ServObj.serCode=row['serCode'];//服务代码
+		ServObj.serDesc=row['serDesc'];//服务名称
+		ServObj.serNote=row['serNote'];//服务描述
+		ServObj.serType = row['serType'];//服务类型
+		ServObj.serFlag=row['serFlag'];//服务状态
+		ServObj.serWsdl=row['serWsdl'];//服务地址
+		ServObj.host=row['host'];//服务IP
+		ServObj.port=row['port'];//服务端口
+		ServObj.busCode=row['serBusCode'];//总线代码
+		var url="enswebserviceedit.csp"
+		$("body.service").empty();
+		$("body.service").load(url,ServObj);
+	} 
+
+</script>
+</html>

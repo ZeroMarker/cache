@@ -1,0 +1,61 @@
+﻿<HTML>
+<HEAD>
+    <TITLE>申请权限页面</TITLE>
+    <HISUI/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/pasthistory.css"/>
+    <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+    <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s currPatient = ""
+		if (patientID'="")
+		{
+			s currPatient = ##class(EMRservice.HISInterface.PatientInfoAssist).Name(patientID)
+		}
+		s userID = %session.Get("LOGON.USERID")
+		s currAuthor=""
+		if (userID'="")
+		{
+			s currAuthor = ##class(EMRmeta.PowerUser).GetUserName(userID)
+		}
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s userLocDes = %session.Get("LOGON.CTLOCDESC")
+        s userSSGroupID = %session.Get("LOGON.GROUPID")
+		s tempdate = $Get(%request.Data("tempdate",1),"")
+	</script>
+	<script type="text/javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var currPatient = '#(currPatient)#';
+		var userID = '#(userID)#';
+		var currAuthor = '#(currAuthor)#';
+		var userLocID = '#(userLocID)#';
+		var userLocDes = '#(userLocDes)#';
+        var userSSGroupID = '#(userSSGroupID)#';
+		var tempdateStr = '#(tempdate)#';
+		var tempdateObj = JSON.parse(unescape(utf8to16(base64decode(tempdateStr))));
+	</script>
+</HEAD>
+
+<BODY class="hisui-layout" data-options="fit:true">
+	<div id="west" class="hisui-panel" data-options="region:'west',border:false,split:false" style="overflow:hidden;width:125px;padding:4px;">
+		<div class="hisui-panel panel-header-gray" title="" data-options="border:true" style="overflow:auto;height:412px;">
+			<ul id="dateList"></ul>
+		</div>
+	</div>	
+	
+	<div id="center" class="hisui-panel" data-options="region:'center',border:false,split:false" style="overflow:auto;padding:4 4 4 0;">
+		<div class="hisui-panel panel-header-gray" title="" data-options="border:true,fit:true" style="height:426px;padding:4px;">
+			<div class="hisui-panel" id="EMRpasthistoryPanel" title="入院记录既往史" style="width:488px;height:150px;padding:15 5 5 5;" data-options="headerCls:'panel-header-card-gray'">选择左侧日期，显示具体信息</div>
+			
+			<div class="hisui-panel" data-options="border:false,fit:false,split:false" style="width:488px;overflow:auto;">
+				<ul id="pastHisTree"></ul>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/emr/js/ip.pasthistoryByDate.js"></script>
+</BODY>
+</HTML>

@@ -1,0 +1,255 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+		overflow: hidden;
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s RoleType = $G(%request.Data("RoleType", 1))
+    s hospId =$G(%request.Data("hospId", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var RoleType="#(RoleType)#";
+	   var hospId ="#(hospId)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	<div class="hisui-panel" style="height:99%;border:1px solid #ccc" title="" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+			
+	<table class="xctable" id="shiftTable" style="width:100%"></table>
+	</div>
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+<div style="margin-bottom: 5px;display:none; " id="comboxSearch">
+	<table>
+		<tr>
+			<td>
+				<input type="text" class="textbox hisui-validatebox startDayReport" style="width:170px;" />
+			</td>
+
+			<td>
+				<a class="hisui-linkbutton btnTaskSearch"  data-options="iconCls:'icon-w-find'">查询</a>  
+			</td>
+		</tr>
+	</table>
+</div>
+<script type="text/javascript">
+
+
+
+var xcTopContors=""
+var xcChange={}
+
+var wardjson=[]
+var json={
+	control:function(id){
+
+		
+		var filterData=[]
+		var filterLocData=[]
+		
+		var param={
+			ShiftBookID:ShiftBookID
+		}
+		debugger;
+		var entity=""
+		if(id!="" && typeof(id)!="undefined"){
+			runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftLocById",{id:id},function(rtn){
+				entity=rtn
+			},'json',false);
+		}
+		
+		//过滤需要列表中已经存在的病区
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftLocList",param,function(rtn){
+				for(var i=0;i<rtn.length;i++){
+					var wardID=rtn[i].LocID
+					var wards=wardID.split(",")
+					if(entity!=""){
+						if(wardID==entity.WardID){
+							continue;
+						}
+					}
+					for(var j=0;j<wards.length;j++){
+						filterData.push(wards[j])
+					}
+				}
+				
+		},'json',false);
+		console.log(filterData)
+		///取所有的科室
+        runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetAllDept",{desc: "",hospid: hospId},
+            function(obj){
+	             for(var i=0;i<obj.length;i++){
+		             var json=obj[i]
+		             if(filterData.indexOf(obj[i].LocID)==-1){
+		             	wardjson.push(json)
+		             }
+		          }
+	   },'json',false)
+		
+		var defaultValue="",LocDesc=""
+		if(entity!=""){
+			defaultValue=entity.LocID
+			LocDesc=entity.LocDesc
+		}
+		
+		var controlArrs=[
+			{'id':'LocID','type':'combox','filterData':filterData,'objData':wardjson,'defaultValue':defaultValue,'multiple':'true','required':'true','title':'科室'},			
+			{'id':'LocDesc','type':'text','defaultValue':LocDesc,'required':'true','title':'显示别名'},			
+
+		]
+
+		
+		return controlArrs
+	},
+	create:function(tableID,id){
+		var controlArrs=json.control(id)
+		for(var i=0;i<controlArrs.length;i++){
+			var key = controlArrs[i].id
+			createInputHtml(tableID,controlArrs,key,0)
+		}
+		var inputw=0
+		for(var i=0;i<controlArrs.length;i++){
+			var obj = controlArrs[i]
+			var thisw=$("#"+obj.id).parents("td").outerWidth()-17
+			if(thisw>inputw) inputw=thisw
+		}
+		
+		for(var i=0;i<controlArrs.length;i++){
+			var obj = controlArrs[i]
+			$("#"+obj.id).width(inputw)
+			if(obj.type=="combox"){
+				getComboxLocalData(obj)
+			}
+		}
+	},
+	save:function(id,className,methodName){
+		var parms = ""
+		var controlArrs=json.control()
+		var topParms = resultParms(controlArrs)
+		var downParms = ""
+		var rsTxt=""
+		if(topParms!=""){
+			var rtnParms=setAllParms([parms,topParms,downParms])
+			rtnParms.id=id
+			rtnParms.ShiftBookID=ShiftBookID
+			rtnParms.RoleType=RoleType
+			rtnParms.ActiveFlag=1
+			runClassMethod(className,methodName,{data:JSON.stringify(rtnParms)},function(rtn){
+				if(rtn == 0) {
+					
+				} else if(rtn == 1){
+					//$.messager.alert('提示','保存失败！'+ rtn , "info");
+					rsTxt = "保存失败！"
+				}else if(rtn == 2){
+					rsTxt = "保存失败，已存在默认交班本"
+				}
+				
+			
+			},'json',false);
+		
+			
+		}else{
+			rsTxt = "保存失败,存在必填项为空！"
+		}
+		return rsTxt
+	}
+	
+}
+
+
+$(function(){
+	$('body').addClass('active')
+
+	json.create("shiftTable",id)
+	
+})
+
+function saveFunLib(){
+	return json.save(id,"Nur.SHIFT.Service.ShiftConfigController","InsertShiftBookLoc")
+	
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

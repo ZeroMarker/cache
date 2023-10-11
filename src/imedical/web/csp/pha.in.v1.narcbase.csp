@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!--
+	desc: 毒麻药品管理 - 科室基数管理
+	csp:  pha.in.v1.narcbase.csp
+	js:   pha/in/v1/narcbase.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+    	.pha-detail-tips {
+    		border:0px;
+    		cursor:pointer;
+    	}
+    </style>
+</head>
+
+<body>
+	<!-- 整体布局 -->
+	<div class="hisui-layout" fit="true" border="false">
+		<div data-options="region:'center',border:false" class="pha-body">
+			<!-- layout start -->
+			<div class="hisui-layout" fit="true">
+				<div data-options="region:'west',width:500, split:true,border:false">
+					<div id="panelNarcDrug" class="hisui-panel" title="#(..Get("毒麻精药品列表"))#"
+						data-options="iconCls:'icon-house',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+						<table id="gridNarcDrug"></table>
+					</div>
+				</div>
+				<div data-options="region:'center', split:true,border:false">
+					<div class="hisui-panel" title="#(..Get("药品批次库存基数"))#"
+						data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+						<table id="gridNarcDrugBat"></table>
+					</div>
+				</div>
+			</div>
+			<!-- layout end -->
+		</div>
+	</div>
+	
+	<div id="gridNarcDrugBar">
+		<table class="pha-con-table">
+	        <tr>
+	            <td class="r-label">
+	                <label for="poisonIdStr"><span style="color:red">*</span>#(..Get("管制分类"))#</label>
+	            </td>
+	            <td>
+	                <input id="poisonIdStr" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:true" />
+	            </td>
+	            
+				<td>
+					<a id="btnFindNarcDrug" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
+				</td>
+			</tr>
+			<tr>
+	            <td class="r-label">
+	                <label for="inciText">#(..Get("药品"))#</label>
+	            </td>
+	            <td>
+	            	<input id="inciText" class="hisui-validatebox" data-pha="class:'hisui-validatebox',save:true,query:true,clear:true" placeholder='#(..Get("输入药品简拼或代码"))#...' style="width:288px;"/>
+	            </td>
+	            
+				<td>
+					<a id="btnClearNarcDrug" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div id="gridNarcDrugBatBar">
+		<table class="pha-con-table">
+	        <tr>
+	            <td class="r-label">
+	                <label for="baseLocId"><span style="color:red">*</span>#(..Get("基数科室"))#</label>
+	            </td>
+	            <td>
+	                <input id="baseLocId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:true" />
+	            </td>
+	            <td class="r-label">
+	                <label for="baseStatus">#(..Get("库存状态"))#</label>
+	            </td>
+	            <td>
+	                <input id="baseStatus" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+	            </td>
+	            
+				<td>
+					<a id="btnFindNarcDrugBat" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
+				</td>
+				<td>
+					<a id="btnClearNarcDrugBat" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+				</td>
+			</tr>
+		</table>
+		<div class="pha-line"></div>
+        <div class="pha-line-bar">
+        	<a id="btnSave" class="hisui-linkbutton" plain='true' iconCls="icon-save">#(..Get("保存"))#</a>
+		</div>
+	</div>
+	
+	<div id="dialogSelReason" class="easyui-dialog" style="width:300px;height:157px"
+		data-options="title:'选择调整原因',modal:true,closed:true">
+		<table class="pha-con-table" style="margin:10px 10px 0px 10px;">
+	        <tr>
+	            <td>
+	                <input id="adjReason" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:true" />
+	            </td>
+			</tr>
+		</table>
+		<div class="pha-row" style="margin-bottom:20px;text-align:center;">
+			<div class="pha-col">
+				<a id="saveReason" class="hisui-linkbutton" plain='false'>保存</a>
+			</div>
+			<div class="pha-col">
+				<a id="closeReason" class="hisui-linkbutton" plain='false'>关闭</a>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 加载本页面js -->
+	<script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v1/narcbase.js"></script>
+</body>
+
+</html>

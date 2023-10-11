@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!--
+    备用基数药品
+	csp: csp/pha.ip.v4.basedrug.csp
+	js:  scripts/pha/ip/v4/basedrug.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <style>
+        .dialog-button {
+            padding-top: 0px;
+        }
+        .pha-body {
+		    background-color: #fff;
+		}
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',height:95,split:true,border:false">
+                    <div class="hisui-panel" title="备用药品维护" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:'panel-body-gray'">
+                        <table class="pha-con-table" style="float: left;">
+                            <tr>
+                                <td class="r-label">
+                                    <span style="color:red;">*</span>
+                                    <label id="_HospListLabel">#(..Get("医院"))#</label>
+                                </td>
+                                <td>
+                                    <input id="_HospList">
+                                </td>
+                                <td class="r-label">
+                                    <span style="color:red;">*</span>#(..Get("主科室"))#
+                                </td>
+                                <td>
+                                    <input type="text" id="mainLoc">
+                                </td>
+                                <!-- <td class="r-label">
+                                    #(..Get("药品"))#
+                                </td>
+                                <td>
+                                    <input type="text" id="filterText" class="hisui-validatebox">
+                                </td> -->
+                                <td>
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                                </td>
+                                <!-- <td>
+                                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-predrug'" id="btnReplace">批量替换药品</a>
+                                </td> -->
+                                <td>
+                                    <!-- <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">帮助</a> -->
+                                </td>
+                            </tr>
+                        </table>
+                        <!-- @todo 有时间再加 -->
+                        <table class="pha-con-table" style="float: right;padding-right: 10px;display: none;">
+                            <tr>
+                                <td class="r-label">
+                                    <label for="fileName">#(..Get("文件选择"))#</label>
+                                </td>
+                                <td>
+                                    <input id='fileName' data-pha>
+                                </td>
+                                <td>
+                                    <a class="hisui-linkbutton" id='btnImport'>导入</a>
+                                </td>
+                                <td>
+                                    <a class="hisui-linkbutton" id="btnDownLoad">导入模板下载</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true">
+                        <div data-options="region:'west',width:500,split:true, title:'备用药科室列表',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                            <table id="gridBaseLoc"></table>
+                        </div>
+                        <div data-options="region:'center',split:true,title:'备用药品列表',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" id="lyCenterCenter">
+                            <table id="gridBaseDrug"></table>
+                        </div>
+                        <!-- <div data-options="region:'east',width:400,split:true,title:'可选药品'">
+                            <table id="gridDrug"></table>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gridBaseLocBar">
+        <!-- <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input type="text" class="hisui-searchbox">
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div> -->
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddBaseLoc">新增</a>
+        <!-- <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveBaseLoc">保存</a> -->
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDeleteBaseLoc">删除</a>
+    </div>
+    <div id="gridBaseDrugBar">
+        <!-- <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input type="text" class="hisui-searchbox">
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div> -->
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddBaseDrug">新增</a>
+        <!-- <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddBaseDrugMulti">批量新增</a> -->
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDeleteBaseDrug">删除勾选行</a>
+        <!-- <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveBaseDrug">保存</a> -->
+    </div>
+    <div id="winSelectLoc" style="padding:10px;">
+        <table id="gridSelectLoc">
+        </table>
+        <div id="gridSelectLocBar">
+            <table class="pha-con-table">
+                <tr>
+                    <td>
+                        <input type="text" id="departmentGroup" placeholder="部门组">
+                    </td>
+
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" id="locFilterText" placeholder="模糊条件">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="winSelectDrug" style="padding:10px;">
+        <table id="gridSelectDrug">
+        </table>
+        <div id="gridSelectDrugBar">
+            <table class="pha-con-table">
+                <tr>
+                    <td>
+                        <input type="text" id="arcItmCat" placeholder="医嘱子类">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                       <input type="text" id="drugFilterText" placeholder="模糊条件">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script src="../scripts/hisui/websys.comm.js"></script>
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/basedrug.js"></script>
+</body>
+
+</html>

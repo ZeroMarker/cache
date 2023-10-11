@@ -1,0 +1,150 @@
+<!-- 
+ * FileName: dhcpeadmroomrecord.hisui.csp
+ * Anchor: xy
+ * Date: 2020-12-1
+ * Description: HISUI 诊室调整
+-->
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/DHCPECommon.hisui.css"/>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 10px;
+}
+
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:142px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-w-edit'" style="border:1px solid #E2E2E2;border-radius:4px 4px 0 0;">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label for="RegNo">#(..Get("登记号"))#</label></td>
+					<td>
+						<input class="textbox" id="RegNo"/>
+					</td>
+					
+					<td class="r-label r-label-1"><label for="Name">#(..Get("姓名"))#</label></td>
+					<td>
+						<input class="textbox"  id="Name"/>
+					</td>
+					
+					<td class="r-label r-label-1"><label for="AreaDesc">#(..Get("分区信息"))#</label></td>
+					<td>
+						<input class="hisui-combogrod"  id="AreaDesc"/>
+					</td>
+					
+					
+					<td class="r-label">
+						<a id="BUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:120px">调整</a>
+					</td>
+								
+					<td >
+						<a id="BFindRoomInfo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:150px">诊室信息</a>
+					</td>
+					
+							
+				</tr>
+				<tr>
+				
+					
+					
+					<td class="r-label r-label-1"><label for="Sex">#(..Get("性别"))#</label></td>
+					<td>
+						<input class="textbox" id="Sex" disabled/>
+					</td>
+					
+					<td class="r-label r-label-1"><label for="Dob">#(..Get("出生日期"))#</label></td>
+					<td>
+						<input class="textbox" id="Dob" disabled/>
+					</td>
+					
+					
+					
+					<td class="r-label r-label-1"><label for="RoomDesc">#(..Get("诊室"))#</label></td>
+					<td>
+						<input class="hisui-combogrid"  id="RoomDesc"/>
+					</td>
+			
+					
+					<td class="r-label">
+						<a id="BStopRoom" href="#" class="hisui-linkbutton" style="width:150px" data-options="iconCls:'icon-w-back'" style="width:120px">取消排队</a>
+					</td>	
+		
+					<td>
+						<a id="BResumeRoom" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'" style="width:150px">恢复诊室</a>
+					</td>			
+					
+				</tr>
+				
+				<tr>
+						
+					<td class="r-label r-label-1"><label for="IDCard">#(..Get("证件号"))#</label></td>
+					<td>
+						<input class="textbox" id="IDCard" disabled/>
+					</td>
+					<td class="r-label r-label-1"><label for="CurRoomInfo">#(..Get("当前诊室"))#</label></td>
+					<td>
+						<input class="textbox" id="CurRoomInfo" disabled/>
+					</td>
+					
+					<td><input type="hidden" id="PAADM"/></td>
+				  	<td><input type="hidden" id="RoomRecordID"/></td>
+				  	
+
+					<td class="r-label">
+						<a id="BPauseRoom" href="#" class="hisui-linkbutton" style="width:150px" data-options="iconCls:'icon-w-pause-circle'" style="width:120px">暂停排队</a>
+					</td>	
+		
+					<td >
+						<a id="BRefuseSelect" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-home'" style="width:150px">放弃选择诊室</a>
+					</td>	
+				</tr>
+					
+					
+			</table>
+		</div>
+	</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #E2E2E2;border-top:0;border-radius:0 0 4px 4px;">
+					<table data-options="bodyCls:'panel-header-gray'" id="AdmRoomRecordGrid"></table>
+			</div>
+        </div>
+	      
+</div>
+
+  <div id="RegisterRecordWin" data-options="iconCls:'icon-w-paper'" style="padding:10px;">
+		
+      <table id="RegisterRecordList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true"></table>
+      
+</div>
+<div id="ArrivedRecordWin" data-options="iconCls:'icon-w-paper'" style="padding:10px;">
+		
+      <table id="ArrivedRecordList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true"></table>
+      
+</div> 
+<script type="text/javascript" src="../scripts/DHCPEAdmRoomRecord.hisui.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+
+</body>		
+</html>

@@ -16,8 +16,11 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<ADDINS/>
-	
+	<DOCCARD medStepCode="PEBill"></DOCCARD>
 <style>
+body{
+	background: backgroundcolor;
+}
 .search-table{
 	border-collapse:separate;
 	border-spacing:0 10px;
@@ -26,88 +29,106 @@
 .r-label{
 	padding-left: 10px;
 }
-.r-label-1{
-	padding-left: 20px;
-}
+
 /*弹出框里标签右对齐 并且有10px内边距*/
 .tdlabel
+{
+  padding-left: 20px;
+  padding-right: 10px;
+  text-align:right;
+}
+.tdlabel-1
 {
   padding-left: 10px;
   padding-right: 10px;
   text-align:right;
 }
-.panel-header{
-	border-bottom: 0;
-}
+.dialog-button {
+	text-align: center;
+	padding-top:0px;
 
+	padding-bottom:20px;
+}
 </style>
+<script type="text/javascript">
+if (("undefined"==typeof HISUIStyleCode)||(HISUIStyleCode==null)){
+	var backgroundcolor="#fff"
+}else{
+	if(HISUIStyleCode=="lite") {
+		var backgroundcolor="#F5F5F5"
+	}else{
+		var backgroundcolor="#fff"
+	}
+}
+</script>
+
 	<server>
-		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+		//do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		//w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
 		w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+		//w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+		//w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
         d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
 	</server>
 </head>
-<body>
-<div class="hisui-layout" fit="true">
-	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:135px;padding:10px 10px 0 10px;">
-		<div class="hisui-panel" data-options="title:'体检卡管理',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-bottom: 1px dashed #C0C0C0;border-radius:0;">
+<body style="padding:10px;box-sizing: border-box;">
+<div class="hisui-panel" fit="true" data-options="title:'体检卡管理',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:92px;border-bottom:1px dashed #e2e2e2;border-radius:0">
 			<table class="search-table">
 				<tr>
-					<td class="r-label" id="cRegNo">登记号</td>
+					<td class="r-label" id="cRegNo">#(..Get("登记号"))#</td>
 					<td>
 						<input class="textbox" id="RegNo"/>
 					</td>
 					
-					<td class="r-label r-label-1"><label for="BeginDate">开始日期</label></td>
+					<td class="r-label"><label for="BeginDate">#(..Get("开始日期"))#</label></td>
 					<td>
 						<input id="BeginDate" class="hisui-datebox textbox"/>
 					</td>
 					
-					<td class="r-label r-label-1" id="cCardTypeNew">卡类型</td>
+					<td class="r-label" id="cCardTypeNew">#(..Get("卡类型"))#</td>
 					<td>
 						<input class="textbox" disabled id="CardTypeNew"/> 
 					</td>
 
-					<td class="r-label r-label-1"><label for="TJCardType">体检卡类型</label></td>
+					<td class="r-label"><label for="TJCardType">#(..Get("体检卡类型"))#</label></td>
 					<td>
 						<input class="hisui-combobox" id="TJCardType"/>
 					</td>
 					
-					<td class="r-label r-label-1">
+					<td class="r-label">
 						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
 					</td>
 					
-					<td class="r-label r-label-1">
+					<td>
 						<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
 					</td>
 							
 				</tr>
 				<tr>
-					<td class="r-label"><label for="Name">姓名</label></td>
+					<td class="r-label"><label for="Name">#(..Get("姓名"))#</label></td>
 					<td>
 						<input class="textbox" id="Name"/>
 					</td>
 					
-					<td class="r-label r-label-1"><label for="EndDate">结束日期</label></td>
+					<td class="r-label"><label for="EndDate">#(..Get("结束日期"))#</label></td>
 					<td>
 						<input id="EndDate" class="hisui-datebox textbox"/>
 					</td>
 					
-					<td class="r-label r-label-1" id="cCardNo">卡号</td>
+					<td class="r-label" id="cCardNo">#(..Get("卡号"))#</td>
 					<td>
 						<input class="textbox" id="CardNo"/>
 					</td>
 					
-					<td class="r-label r-label-1"><label for="Status">状态</label></td>
+					<td class="r-label"><label for="Status">#(..Get("状态"))#</label></td>
 					<td>
 						<input class="hisui-combobox" id="Status"/>
 					</td>
 					
-					<td class="r-label r-label-1">
+					<td class="r-label">
 						<a id="BReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
 					</td>
 
@@ -115,119 +136,138 @@
 				
 			</table>
 		</div>
-	</div>
-		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
-			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-					<table data-options="bodyCls:'panel-header-gray'" id="AdvancePaymentGrid" toolbar="#allbar"></table>
+		    <div data-options="region:'center',title:'',border:false">
+				<table id="AdvancePaymentGrid" toolbar="#allbar"></table>
 			</div>
         </div>
 	      
 </div>
 
    <!--增改弹窗-->
-     <div id="myWin" style="width:550px;height:500px;padding:10px;display:none;">   
+     <div id="myWin" style="width:530px;height:640px;display:none;">   
 		<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
 
-			<table id="addtable">
+			<table class="search-table" id="addtable">
 			    <tr>
-			    	<td class="tdlabel" id="cACardTypeNew">卡类型</td>
+			    	<td class="tdlabel" style="padding-top:10px;">#(..Get("卡类型"))#</td>
 					<td>
 						<input class="textbox" disabled id="ACardTypeNew"/> 
 					</td>
 						
-					<td class="tdlabel" id="cACardNo">卡号</td>
+					<td class="tdlabel-1">#(..Get("卡号"))#</td>
 					<td>
 						<input class="textbox" id="ACardNo"/>
 					</td>
 			    </tr>
 			    <tr>
-			    	<td class="tdlabel"><label for="ATJCardType">体检卡类型</label></td>
+			    	<td class="tdlabel" style="padding-top:10px;"><label>#(..Get("体检卡类型"))#</label></td>
 					<td>
 						<input class="hisui-combobox" id="ATJCardType" style="width:155px"/>
 					</td>
-			    	<td class="tdlabel"><label for="AStatus">状态</label></td>
+			    	<td class="tdlabel-1"><label>#(..Get("状态"))#</label></td>
 					<td>
 						<input class="hisui-combobox" id="AStatus" style="width:155px"/>
 					</td>
 			    </tr>
 			    <tr>
-			    	<td class="tdlabel" id="cARegNo">登记号</td>
+			    	<td class="tdlabel" id="cARegNo">#(..Get("登记号"))#</td>
 					<td>
 						<input class="textbox" id="ARegNo"/>
 					</td>
 					
-			    	<td class="tdlabel"><label for="AName">姓名</label></td>
+			    	<td class="tdlabel-1"><label>#(..Get("姓名"))#</label></td>
 					<td>
 						<input class="textbox" id="AName"/>
 					</td>
 		
 			    </tr>
 			     <tr>
-			   	 	<td class="tdlabel"><label for="Sex">性别</label></td>
+			   	 	<td class="tdlabel"><label>#(..Get("性别"))#</label></td>
 					<td>
 						<input class="textbox" id="Sex"/>
 					</td>
-					<td class="tdlabel"><label for="Age">年龄</label></td>
+					<td class="tdlabel-1"><label>#(..Get("年龄"))#</label></td>
 					<td>
 						<input class="textbox" id="Age"/>
 					</td>
 			    </tr>
+				<tr>
+			   	 	<td class="tdlabel"><label>#(..Get("联系电话"))#</label></td>
+					<td>
+						<input class="textbox" id="Tel"/>
+					</td>
+					<td class="tdlabel-1"><label>#(..Get("证件号"))#</label></td>
+					<td>
+						<input class="textbox" id="IDCard"/>
+					</td>
+			    </tr>
+			    <tr>
+			   	 	<td class="tdlabel"><label>#(..Get("截止日期"))#</label></td>
+					<td>
+						<input class="hisui-datebox textbox" id="EndLineDate" type="display:none"/>
+					</td>
+					<td class="tdlabel-1"><label>#(..Get("折扣系数"))#</label></td>
+					<td>
+						<input class="textbox" id="Rebate" style="width:130px;"><label style="padding-left:5px;">%</label>
+					</td>
+			    </tr>
 			     <tr>
-			   	 	<td class="tdlabel"><label for="Amount">卡金额</label></td>
+			   	 	<td class="tdlabel"><label>#(..Get("卡金额"))#</label></td>
 					<td>
 						<input class="textbox" id="Amount" disabled/>
 					</td>
 					
-					<td class="tdlabel"><label for="NoPrintFlag">不打发票</label></td>
+					<td class="tdlabel-1"><label>#(..Get("不打发票"))#</label></td>
 					<td>
 						<input class='hisui-checkbox' type="checkbox" id="NoPrintFlag"/>
 					</td>
 			    </tr>
 			    <tr>
-			    	<td class="tdlabel"><label for="Remark">备注</label></td>
+			    	<td class="tdlabel"><label>#(..Get("备注"))#</label></td>
 					<td colspan="4">
-						<textarea id="Remark" type="text" style="width:385px; height:60px;border:1px solid #40a2de"> </textarea>
+						<textarea id="Remark" class="textbox" style="width:380px; height:60px"> </textarea>
 					</td>
 
 			    </tr>
 			    <tr>
-			   	 	<td class="tdlabel"><label for="Fee">充值金额</label></td>
+			   	 	<td class="tdlabel"><label>#(..Get("充值金额"))#</label></td>
 					<td>
 						<input class="textbox" id="Fee"/>
 					</td>
-					<td class="tdlabel"><label for="PayMode">支付方式</label></td>
+					<td class="tdlabel-1"><label>#(..Get("支付方式"))#</label></td>
 					<td>
 						<input class="hisui-combobox" type="text" id="PayMode" style="width:155px"/>
 					</td>
 			    </tr>
 			    <tr>
-			   	 	<td class="tdlabel"><label for="MRemark">金额变动备注</label></td>
+			   	 	<td class="tdlabel"><label>#(..Get("金额变动备注"))#</label></td>
 					<td>
 						<input class="textbox" id="MRemark"/>
 					</td>
-					<td class="tdlabel"><label for="No">号码</label></td>
+					<td class="tdlabel-1"><label>#(..Get("号码"))#</label></td>
 					<td>
 						<input class="textbox" id="No"/>
 					</td>
 			    </tr>
 	
 			     <tr>
-			   	 	<td class="tdlabel"><label for="InvName">发票名称</label></td>
+			   	 	<td class="tdlabel"><label>#(..Get("发票名称"))#</label></td>
 					<td>
 						<input class="textbox" id="InvName"/>
 					</td>
-					<td class="tdlabel"><label for="CurInv">发票号</label></td>
+					<td class="tdlabel-1"><label>#(..Get("发票号"))#</label></td>
 					<td>
 						<input class="textbox" id="CurInv" disabled/>
 					</td>
 			    </tr>
-				 
-	
-				<tr>		
+				<tr>
+			   	 	<td class="tdlabel"><label>#(..Get("纳税人识别号"))#</label></td>
+					<td>
+						<input class="textbox" id="TaxpayerNum"/>
+					</td>
 					<td><input type="hidden" id="RowID"/></td>
 					<td><input type="hidden" id="PADM"/></td>
-					
-				</tr>
+			    </tr> 
 	             								
 			</table >
 		</form>

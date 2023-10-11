@@ -1,6 +1,7 @@
 <html>
 <head>
 <HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/commonfun.js"></script>
@@ -14,6 +15,8 @@
 		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
 	</script>
 	<style>
 		.panel-header, .panel-body {
@@ -30,12 +33,17 @@
 		    border-radius: 4px 4px 0 0 !important;
 		   
 		}
-		
+		/*多院区改造 cy 2021-04-09 */
+		#_HospList+span{max-width:234px}
+		#_HospList+span >input{max-width:200px}
 	</style>
 
 </head> 
 <body>
 	<div id="mainpanel" class="hisui-layout" fit="true">
+		<div data-options="region:'north',title:'',headerCls:'panel-header-gray',split:false" style='height:40px;padding:10px 5px 0 10px' border="false"><!--多院区改造 cy 2021-04-15-->
+			<label id="_HospListLabel" style='margin-right:10px;'>医院</label><input id="_HospList">
+		</div>
 		<div data-options="region:'west',title:'事件分类树',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:300px;">
 			<ul class="hisui-tree" id="tree" data-options="lines:true"></ul>
 		</div> 
@@ -57,6 +65,7 @@
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="insertitm" style="display:none;">新增子分类</a></td>
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="delete">删除</a> </td>
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="save">保存</a> </td>
+		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" id="copy" onclick="javascript:EventCopy()">复制</a> </td>
 		    </tr>
 		</table>
 	</div>
@@ -68,6 +77,31 @@
 		      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="savquerysec">保存</a> </td>
 		    </tr>
 		</table>
+	</div>
+	<!--复制事件分类-->
+	<div id="copydialog"
+	        class="hisui-dialog"  	
+			style="width:400px;height:300px;"
+			data-options="title:'复制事件分类',modal:true,closed:true,
+				toolbar:[{
+					text:'保存',
+					iconCls:'icon-save',
+					handler:function(){SaveEventCopy();}
+				}]">
+		 <div style="padding:10px 60px 20px 60px">
+		 	<form id="copyEvent" class="hisui-form" >		
+			<table cellpadding="5">
+				<tr>
+					<td >代码</td>
+					<td ><input id="copyCode" type="text"  class="hisui-validatebox" data-options="required:true" style="width:200px"/></td>
+				</tr>
+				<tr>
+					<td >描述</td>
+					<td ><input id="copyName" type="text" class="hisui-validatebox"  data-options="required:true" style="width:200px" /></td>	
+				</tr>
+			</table>
+			</form>
+		</div>
 	</div>
 </body>
 </html>

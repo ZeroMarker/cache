@@ -1,0 +1,311 @@
+<!--dhcem.basedemo.csp  知识库演示demo csp //-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCCKB/>
+	<link href="../scripts/dhcnewpro/dhcckb/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcckb/css/basedemo.css" rel="stylesheet">
+
+	<link href="../scripts/dhcnewpro/dhcckb/css/pdss.css" rel="stylesheet">
+
+	<!-- <link href="../scripts/dhcnewpro/dhcckb/css/pdss_bs.css" rel="stylesheet"> -->
+	<!-- <link href="../scripts/dhcnewpro/dhcckb/pdss/css/pdss.alpha.css" rel="stylesheet"> -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<!-- 源文件-->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/pdss.js"></script>
+
+	
+	<!-- <script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/pdss_bs.js"></script> -->
+<!-- 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/pdss/pdss.alpha.js"></script> -->
+	
+	<!-- 混淆加密-->
+	<!--
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/pdss_nec.js"></script>
+	
+		
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcpresc/auditpopup.js" charset="gb2312"></script>-->
+	
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/basedemo.js"></script>
+	
+</head>
+ <style>
+	.icon{with:20px;height:20px;margin-right:10px;float:right;}
+	.ckb-view-body-lists{background:#FFF;}    
+</style>
+<body class="background-warp">
+	<div class="container">
+		<div class="nav-tool">
+			<label class="left-20">选择模板</label><input id="TakTemp" class="hisui-combotree" style="width:230px;"/>
+			<div class="nav-tools">
+				
+				<label id="TempLabel" class="left-20 ">模板标题</label><input id="TempTitle" class="hisui-validatebox" style="width:143px;"/>
+				<input id="standardRadio" class="hisui-checkbox" name="standardFlag" type="checkbox" label="标准模板" data-options="" style="height:25px">
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true"onclick="InsTemp()">保存模板</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-paper-submit',plain:true" onclick="TakCheck()">审查</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true" onclick="ClrPanel()">清空</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="DelTemp()">删除模板</a>
+				<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-paper-submit',plain:true" onclick="OpenPdss()" style="display:none">审查【弹窗】</a>
+			</div>
+		</div>
+		<div class="pat-base">
+			<div class="table_title">病人基本信息</div>
+			<div style="border-bottom: 1px solid #40a2de;"></div>
+			<div class="pat-base-area">
+				<label class="left-20">病人姓名</label><input id="PatName" class="hisui-validatebox" style="width:143px;"/>
+				<label class="left-2-font">性别</label><input id="PatSex" class="hisui-validatebox" style="width:143px;"/>
+				<label class="left-40">出生日期</label><input id="PatBDay" class="hisui-datebox" style="width:143px;"/>
+				<label class="left-2-font">身高</label><input id="Height" class="hisui-validatebox" style="width:143px;"/><label>CM</label>
+				<label class="left-2-font">体重</label><input id="Weight" class="hisui-validatebox" style="width:143px;"/><label>KG</label>
+			</div>
+			<div class="pat-base-area">
+				<!-- <label class="left-20">肝损状态</label><input id="Liver" class="hisui-validatebox" style="width:150px;"/>
+				<label class="left-40">肾损状态</label><input id="Renal" class="hisui-validatebox" style="width:150px;"/> -->
+				<label class="left-20">特殊人群</label><input id="SpecGrps" class="hisui-validatebox" style="width:150px;"/>
+				<label class="left-2-font">怀孕</label><input id="PreFlag" class="hisui-validatebox" style="width:143px;"/>
+				<label class="left-2-font">职业</label><input id="ProFess" class="hisui-validatebox" style="width:143px;"/>
+				<label class="left-2-font">类别</label><input id="PatType" class="hisui-validatebox" style="width:143px;"/>
+			</div>
+		</div>
+		<div class="pat-adm">
+			<div class="table_title">本次就诊信息</div>
+			<div style="border-bottom: 1px solid #40a2de;"></div>
+			<!-- 过敏/疾病诊断/检验指标/手术列表 -->
+			<div class="list">
+				<!-- 过敏列表 -->
+				<div class="list-first">
+					<div class="list-title">
+						<label>过敏源</label>
+						<div class="list-tools">
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="add('itemAyg')">添加</a>
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true" onclick="clr('itemAyg')">清除</a>
+						</div>
+		            </div>
+					<div class="list-order-item">
+						<table id="itemAyg" class="hisui-datagrid" title="" fit="true" data-options="rownumbers:true,headerCls:'panel-header-gray',singleSelect:true,url:'',nowrap:false,onDblClickRow:onClickRow">
+							<thead>   
+								<tr>
+									<th data-options="field:'Warn',width:40,align:'center',formatter:takCellUrl">操作</th>
+									<th data-options="field:'item',width:200,editor:{type:'text',options:{required:true}}">过敏源</th>
+								</tr>
+							</thead>
+						</table>
+					</div>
+				</div>
+				<!-- 疾病诊断 -->
+				<div class="list-second">
+					<div class="list-title">
+						<label>疾病诊断</label>
+						<div class="list-tools">
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="add('itemDis')">添加</a>
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true" onclick="clr('itemDis')">清除</a>
+						</div>
+		            </div>
+					<div class="list-order-item">
+						<table id="itemDis" class="hisui-datagrid" title="" fit="true" data-options="rownumbers:true,headerCls:'panel-header-gray',singleSelect:true,url:'',nowrap:false,onDblClickRow:onClickRow">
+							<thead>   
+								<tr>
+									<th data-options="field:'Warn',width:40,align:'center',formatter:takCellUrl">操作</th>
+									<th data-options="field:'Type',width:80,editor:{type:'combobox',options:{
+											data:DisFlagArr,
+											valueField:'value', 
+											textField: 'text',
+											panelHeight:'auto'										
+										}}, formatter:FormatterType">类型</th>
+									<th data-options="field:'item',width:180,editor:{type:'text',options:{required:true}}">疾病诊断</th>
+								</tr> 
+							</thead>
+						</table>
+					</div>
+				</div>
+				<!-- 检验指标 -->
+				<div class="list-third">
+					<div class="list-title">
+						<label>检验</label>
+						<div class="list-tools">
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="add('itemLab')">添加</a>
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true" onclick="clr('itemLab')">清除</a>
+						</div>
+		            </div>
+					<div class="list-order-item">
+						<table id="itemLab" class="hisui-datagrid" title="" fit="true" data-options="rownumbers:true,headerCls:'panel-header-gray',singleSelect:true,url:'',nowrap:false,onDblClickRow:onClickRow">
+							<thead>   
+								<tr>
+									<th data-options="field:'Warn',width:40,align:'center',formatter:takCellUrl">操作</th>
+									<th data-options="field:'Type',width:80,editor:{type:'combobox',options:{
+											data:LabArray,
+											valueField:'value', 
+											textField: 'text',
+											panelHeight:'auto'										
+										}}">类型</th>
+									<th data-options="field:'item',width:140,editor:{type:'text',options:{required:true}}">检验</th>   
+									<th data-options="field:'Val',width:60,editor:{type:'text',options:{required:true}}">值</th>   
+									<th data-options="field:'Uom',width:80,editor:{type:'text',options:{required:true}}">单位</th>
+								</tr> 
+							</thead>
+						</table>
+					</div>
+				</div>
+				<!-- 手术列表 -->
+				<div class="list-four">
+					<div class="list-title">
+						<label>手术</label>
+						<div class="list-tools">
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="add('itemOper')">添加</a>
+							<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true" onclick="clr('itemOper')">清除</a>
+						</div>
+		            </div>
+					<div class="list-order-item">
+						<table id="itemOper" class="hisui-datagrid" title="" fit="true" data-options="rownumbers:true,headerCls:'panel-header-gray',singleSelect:true,url:'',nowrap:false,onDblClickRow:onClickRow">
+							<thead>   
+								<tr>
+									<th data-options="field:'Warn',width:40,align:'center',formatter:takCellUrl">操作</th>
+									<th data-options="field:'item',width:200,editor:{type:'text',options:{required:true}}">手术</th>
+								</tr> 
+							</thead>
+						</table>
+					</div>
+				</div>
+			</div>
+			<!-- 医嘱列表 -->
+			<div class="list-order">
+            	<div class="list-title">
+					<label>医嘱列表</label>
+					<div class="list-order-tools">
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="add('itemOrder')">添加</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-no',plain:true" onclick="delord('itemOrder')">删除</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-clear-screen',plain:true" onclick="clr('itemOrder')">清除</a>
+					</div>
+	            </div>
+				<div class="list-order-item">
+					<table id="itemOrder" class="hisui-datagrid" title="" fit="true" data-options="rownumbers:true,headerCls:'panel-header-gray',singleSelect:true,url:'',nowrap:false,onDblClickRow:onClickRow">
+						<thead>   
+							<tr>
+								<th data-options="field:'Warn',width:40,align:'center',formatter:takCellWarn">警</th>
+								<th data-options="field:'SeqNo',width:40,editor:{type:'text',options:{required:true}},hidden:true">序号</th>
+								<!--<th data-options="field:'PhDesc',width:200,editor:{type:'text',options:{required:true}}">医嘱名称</th>-->
+								<th data-options="field:'PhDesc',width:200,
+									editor:{
+										type:'combogrid',
+										options:{
+												required : true,
+											    idField:'CDDesc',
+											    textField:'CDDesc',
+											    fitColumns:true,
+											    fit: true,//自动大小  
+												pagination : true,
+												panelWidth:600,								
+												mode:'remote', 	
+												url:'dhcapp.broker.csp?ClassName=web.DHCCKBBaseDemo&MethodName=QueryDicComgrid&id=DrugData',
+												columns:[[
+														{field:'ID',hidden:true},
+														{field:'CDCode',title:'代码',width:60},
+														{field:'CDDesc',title:'名称',width:100},
+														{field:'CDImg',title:'',width:20}													
+														]],
+													onSelect:function(rowIndex, rowData) {		
+					                   					fillValue(rowIndex, rowData);
+					                				}		   
+												}
+										}">医嘱名称</th>
+								<th data-options="field:'PForm',width:100,
+									editor:{
+										type:'combobox',
+										options:{											
+											valueField:'text',
+											textField:'text',
+											mode:'remote', 	
+											url:'dhcapp.broker.csp?ClassName=web.DHCCKBBaseDemo&MethodName=JsTakDataByType&type=form',									
+										}
+									}">剂型</th>   
+								<th data-options="field:'DosQty',width:100,editor:{type:'text',options:{required:true}}">单次剂量</th>
+								<th data-options="field:'DosUom',width:100,
+									editor:{
+										type:'combobox',
+										options:{
+											valueField:'text',
+											textField:'text',
+											mode:'remote', 	
+											url:'dhcapp.broker.csp?ClassName=web.DHCCKBBaseDemo&MethodName=JsTakDataByType&type=unit',
+											required:false 
+										}
+									}">剂量单位</th>
+								<th data-options="field:'Instr',width:100,
+									editor:{
+										type:'combobox',
+										options:{
+											valueField:'text',
+											textField:'text',
+											mode:'remote', 	
+											url:'dhcapp.broker.csp?ClassName=web.DHCCKBBaseDemo&MethodName=JsTakDataByType&type=premet',
+											required:false 
+										}
+									}">用法</th>
+								<th data-options="field:'Freq',width:100,
+									editor:{
+										type:'combobox',
+										options:{
+											valueField:'text',
+											textField:'text',
+											mode:'remote', 	
+											url:'dhcapp.broker.csp?ClassName=web.DHCCKBBaseDemo&MethodName=JsTakDataByType&type=freq',
+											required:false 
+										}
+									}">频次</th>
+								<th data-options="field:'Duration',width:100,editor:{type:'text',options:{required:true}}">疗程</th>								
+								<th data-options="field:'LinkSeqNo',width:60,editor:{type:'text',options:{required:true}},hidden:false">关联</th>
+								 <th data-options="field:'OrderPriority',width:80,editor:{type:'combobox',options:{
+											data:PriorityArr,
+											valueField:'value', 
+											textField: 'text',
+											panelHeight:'auto'										
+								}}">医嘱类型</th>
+								<th data-options="field:'OrdDate',width:120,editor:{type:'datebox'},hidden:false">医嘱时间</th>
+								<th data-options="field:'OrdEndDate',width:120,editor:{type:'datebox'},hidden:false">医嘱停止时间</th>
+								<th data-options="field:'FirstMark',width:70,
+									editor:{
+										type:'combobox',
+										options:{
+											valueField:'text',
+											textField:'text',
+											mode:'remote', 	
+											url:'dhcapp.broker.csp?ClassName=web.DHCCKBBaseDemo&MethodName=JsTakDataByType&type=firstuse',
+							
+										}}"
+								>首次标记</th>
+								<th data-options="field:'DrugSpeedProp',width:70,editor:{type:'text'}">给药速度</th> 
+								<th data-options="field:'DrugSpeedPropUnit',width:100,
+									editor:{
+										type:'combobox',
+										options:{
+											valueField:'text',
+											textField:'text',
+											mode:'remote', 	
+											url:'dhcapp.broker.csp?ClassName=web.DHCCKBBaseDemo&MethodName=JsTakDataByType&type=unit',
+											required:false 
+										}
+									}">给药速度单位</th>		
+								 <th data-options="field:'Skin',width:80,editor:{type:'combobox',options:{
+											data:SkinArray,
+											valueField:'value', 
+											textField: 'text',
+											panelHeight:'auto'										
+								}}">皮试结果</th>						
+								<th data-options="field:'PrescNum',width:70,editor:{type:'text'}">处方号</th>  
+							</tr> 
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="win"><div class="recmedical"></div></div>
+</body>
+</html>

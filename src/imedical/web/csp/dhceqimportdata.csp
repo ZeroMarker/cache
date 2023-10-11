@@ -1,6 +1,11 @@
 <HTML>
 
 <HEAD>
+	<!--add by csj 2020-10-19 需求号：1514313-->
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+	<HISUI/>
 
 <!-- Put your page Title here -->
 
@@ -14,7 +19,11 @@
 
 <SCRIPT SRC="../scripts/websys.js"></SCRIPT>
 
-
+<!--add by csj 2020-10-19 需求号：1514313-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+ if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+ s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+</Script>
 
  <LINK REL="stylesheet" TYPE="text/css" HREF="../scripts/websys.css"></LINK>
 
@@ -35,16 +44,17 @@
 	  <table width="200" border="1">
 
      	 <tr>
-
-       		 <th scope="row"><input name="OpenFile" type="file" id="OpenFile" value="按钮" size="80"></th>
-
+     	 	 <th scope="row"><input name="OpenFile" type="file" id="OpenFile" value="按钮" size="80"></th>
+		 <!--add by csj 2020-10-19 谷歌浏览器选择文件-->
+			 <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'" style="width:200px" id="ReadExcel">选择文件</a></td>
        		 <td><input name="LoadFile" type="button" id="LoadFile" onclick="javascript:LoadFile()" value="装载文件"></td>
-
+		 <!--add by csj 2020-10-19 谷歌浏览器装载文件-->
+			 <td><input name="LoadFile" type="button" id="LoadFile_Chrome" onclick="javascript:LoadFile_Chrome()" value="装载文件"></td>
        		 <td><input name="BTestData" type="button" id="BTestData" onclick="javascript:TestData()" value="数据测试"></td>
 
        		 <td><input name="BAppendData" type="button" id="BAppendData" onclick="javascript:AppendData()" value="追加数据"></td>
 
-			 <td><input name="BInitData" type="button" id="BInitData" onclick="javascript:InitData()" value="新装数据"></td>
+			 <!--td><input name="BInitData" type="button" id="BInitData" onclick="javascript:InitData()" value="新装数据"></td-->
 
     	     <td>&nbsp;</td>
 
@@ -71,11 +81,11 @@
         <option value="ORIGIN">设备来源</option>
 				<option value=" ">   </option>
 		<option value="PURPOSETYPE">设备用途</option>
-				<option value=" ">   </option>
+				<option value=" ">   </option-->
         <option value="EQUIPCAT">设备分类</option>
-				<option value=" ">   </option-->
+				<option value=" ">   </option>
 		<option value="CTUOM">设备单位及设备工作量单位</option>
-				<option value=" ">   </option-->
+				<option value=" ">   </option>
 		<option value="APCVendor">供应商</option>
 	      		<option value=" ">   </option>
 		<option value="MANUFACTURER">生产厂商</option>
@@ -90,19 +100,21 @@
 				<option value=" ">   </option>
 		<option value="EQUIP">设备</option>
 				<option value=" ">   </option>
-		<!--option value="TreeMap">设备级别树</option> //设备级别树 DJ 2010-10-20
+		<option value="TreeMap">设备级别树</option> //设备级别树 DJ 2010-10-20
 				<option value=" ">	 </option>
-		<option value="ContrastInfo">对照类型表</option>					//设备对照类型表	Mzy0018	2009-07-20
-				<option value=" ">   </option>
+		<!--option value="ContrastInfo">对照类型表</option>					//设备对照类型表	Mzy0018	2009-07-20
+				<option value=" ">   </option-->
 		<option value="AffixInfo">设备附件信息</option>					//设备附件信息	JDL0025	2009-09-7
 				<option value=" ">   </option>
-		<option value="ChangeAccountInfo">设备调账信息</option>					//设备调账信息	JDL0025	2009-09-7
-				<option value=" ">   </option-->
+		<option value="EquipAttribute">设备属性</option>				//设备属性 2022-03-31 czf
+				<option value=" ">   </option>
+		<!--option value="ChangeAccountInfo">设备调账信息</option>					//设备调账信息	JDL0025	2009-09-7
+				<option value=" ">   </option-->        //Modfied by zc0123 2022-10-17  放出导出列导入程序 begin
 		<option value="COLUMNS">设备导出列设置</option>					//设备导出列设置		2009-09-22
+				<option value=" ">   </option>			 //Modfied by zc0123 2022-10-17  放出导出列导入程序 end
+		<option value="Tree">设备通用树</option>
 				<option value=" ">   </option>
-		<!--option value="Tree">设备通用树</option>					//设备导出列设置		2009-09-22
-				<option value=" ">   </option>
-		<option value="UserDefine">定义导入数据</option>					//可用来修改临时导入信息用		2009-12-22
+		<!--option value="UserDefine">定义导入数据</option>					//可用来修改临时导入信息用		2009-12-22
 				<option value=" ">   </option-->
 		<option value="LocType">科室职能</option>					//科室定义 DJ 2010-07-02
 				<option value=" ">   </option>
@@ -138,7 +150,7 @@
 				<option value=" ">   </option>
 		<option value="Accessory">配件</option>
 				<option value=" ">   </option>
-		<option value="Hospital">医院</option>          //标准设备项 Add By  CZF 2017-12-18
+		<!--option value="Hospital">医院</option>          //标准设备项 Add By  CZF 2017-12-18
 				<option value=" ">   </option>
 		<option value="KBMstItem">标准设备项</option>
 				<option value=" ">   </option>
@@ -147,7 +159,9 @@
 		<option value="MatchCatEquip">设备分类匹配</option>
 				<option value=" ">   </option>
 		<option value="UpdHospKBMstItem">整个项目标准设备项更新</option>
-				<option value=" ">   </option>		
+				<option value=" ">   </option-->
+		<option value="UpdKBSMstItem">更新参考设备项库</option>
+				<option value=" ">   </option>	
 		<!--option value="UpdateLeaveFactoryNo">更新出厂编号</option>
 				<option value=" ">   </option>
 		<option value="UpdateDisusedDate">更新报废日期</option>
@@ -163,14 +177,14 @@
 		<!--add by ZY0197-->
 		<option value="UpdateComponentInfo">更新组件设置</option>
 				<option value=" ">   </option>
-		<option value="UpdateMenu">菜单更新</option>
+		<!--option value="UpdateMenu">菜单更新</option>
 				<option value=" ">   </option>
 		<option value="UpdateComponent">组件更新</option>
 				<option value=" ">   </option>
 		<option value="UpdCompMeassage">组件Message更新</option>
 				<option value=" ">   </option>
 		<option value="UpdateComponentItem">组件元素更新</option>
-				<option value=" ">   </option>
+				<option value=" ">   </option-->
 		<option value="UpdateMasterItem">调整设备项</option>
 				<option value=" ">   </option>
 		<option value="ChangeAccount">设备调账</option>
@@ -182,13 +196,15 @@
 				<option value=" ">   </option>
 		<!--add by zx 2019-06-01 end-->
 		<!--add by zc0052 2019-10-30 begin PM相关信息导入-->
+		<!-- MZY0076	2021-05-25	注释旧导入方法>
 		<option value="MaintItem">保养项目</option>
+				<option value=" ">   </option-->
+		<option value="PMMaintItem">预防性维护项目</option>
 				<option value=" ">   </option>
 		<option value="PMReport">PM模板</option>
 				<option value=" ">   </option>
 		<!--add by zc0052 2019-10-30 end-->
 		<!--Add By QW 20190410 BUG:QW0027 资金来源核算项目及功能分类-->
-		<option value=" ">   </option>
 		<option value="FinaceItem">核算项目</option>
 		<option value=" ">   </option>
 		<option value="FunctionCat">功能分类</option>
@@ -205,6 +221,30 @@
 		<option value=" ">   </option>
 		<option value="GroupMenu">安全组菜单</option>
 		<option value=" ">   </option>
+		<option value="ImportMenu">菜单导入</option>
+		<option value=" ">   </option>
+		<option value="MaintPlan">维护计划导入</option><!--add by CSJ 2020-09-15 导入维护计划记录-->
+				<option value=" ">   </option>
+		<!--option value="SysMenus">功能模块菜单</option>
+				<option value=" ">   </option>
+		<option value="ImOtherCode">动态库编码</option>	
+		<option value=" ">   </option>
+		<option value="FacEquip">未在帐设备</option>
+				<option value=" ">   </option>
+		<option value="UpdEquipCat">更新设备分类</option>
+				<option value=" ">   </option-->	
+		<option value="ComponentItemVisit">安全组敏感信息</option>	<!--Modefied by czf 2021-07-20-->
+				<option value=" ">   </option>	
+		<option value="UPDVendor">更新供应商</option>	<!--Modefied by czf 2022-09-13-->
+				<option value=" ">   </option>	
+		<option value="AppendFile">导入电子资料</option>	<!--czf 2022-09-18-->
+				<option value=" ">   </option>
+		<option value="OpenCheckList">导入验收单</option>	<!--czf 2022-09-25-->
+				<option value=" ">   </option>
+		<!--option value="UpdateDepreInfo">设备折旧信息</option>
+				<option value=" ">   </option-->
+		<option value="UpdEquipCatYears">更新设备分类年限</option>
+				<option value=" ">   </option>
       </select>
 
     </td>
@@ -288,51 +328,48 @@
 <SCRIPT SRC="../scripts/DHCFImportData.js"></SCRIPT>
 
 <script language="javascript">
-
-	var ErrorTextObj=document.all.ErrorText
-
-	var ErrorText=""
-
-	function SetGloble(TmpStr)
-
-	{  #server(web.DHCEQImportData2CSP.SetGloble(TmpStr))#;
-
-	}
-
-	function DisplayError(RetClass,i)
-
+<!--start by csj 2020-10-19 谷歌浏览器兼容处理 需求号：1514313-->
+	if(websys_isIE)
 	{
-
-		window.status="插入数据:"+i+"行"
-
-		if ((RetClass!="")&&(RetClass!="Ok"))
-
-			{
-
-				RetStr=ConvertEnter("第"+(i+1)+"行"+RetClass);
-
-				if (ErrorText=="") {ErrorText=RetStr;}
-
-				else {ErrorText=ErrorText+"\n"+RetStr;}
-
-			}		
-
+		$("#ReadExcel").parent().hide();
+		$("#LoadFile_Chrome").parent().hide();
 	}
-
+	else
+	{
+		$("#ReadExcel").parent().siblings("[scope='row']").hide();
+		$("#LoadFile").parent().hide();
+		var RowInfo=""
+		$("#ReadExcel").on("click",ReadExcel)
+	}
+	<!-- MZY0110	1961775		2021-12-31  -- >
+	function ReadExcel()
+	{
+		RowInfo=websys_ReadExcelEQ({isText:true});
+		if ((RowInfo=="")||(RowInfo.length<=1))
+		{
+			alertShow("没有数据导入！")
+			return 0;
+		}
+		var Error=""
+		ExcelCols=RowInfo[0].length;					
+		for(var i=0;i<RowInfo.length;i++){
+			RowInfo[i]=RowInfo[i].join("^")
+		}
+		console.log(RowInfo)
+	}
 	function AppendData()
 
-		{ReadTable("Append")}
+		{websys_isIE?ReadTable("Append"):ReadTable_Chrome("Append")}
 
 	function InitData()
 
-		{ReadTable("Init")}
+		{websys_isIE?ReadTable("Init"):ReadTable_Chrome("Init")}
 
 	function TestData()
 
-		{ReadTable("Test")}
-
+		{{websys_isIE?ReadTable("Test"):ReadTable_Chrome("Test")}}
+	<!--end by csj 2020-10-19-->
 	function ReadTable(ChangeType)
-
 	{	window.status="程序进行中";
 
 		if ((ChangeType=="")||(ChangeType==undefined)) {ChangeType="Test"}
@@ -378,7 +415,7 @@
 			{   var TmpArray=TableRead("TableData",m)
 			    if ((m==0)&&(ChangeType=="Init")) 
 
-							{	RetClass=#server(web.DHCEQImportData2CSP.UpData("Clear","",TableListObj.value))#;
+							{	RetClass=tkMakeServerCall("web.DHCEQImportData2CSP","UpData","Clear","",TableListObj.value);
 
 								ErrorTextObj.value=RetClass
 							}
@@ -392,7 +429,7 @@
 							if ((Hosp!="")&&((HospArr.indexOf(Hosp)==-1)))
 							{
 								HospArr.push(Hosp);
-								RetString=#server(web.DHCEQImportData2CSP.DelHospKBMstItem(Hosp))#;
+								RetString=tkMakeServerCall("web.DHCEQImportData2CSP","DelHospKBMstItem",Hosp);
 							}
 							if ((RetString!="")&&(RetString!="OK"))
 							{
@@ -404,7 +441,7 @@
 								return;
 							}
 						}				//add by czf end 20180521
-						RetClass=#server(web.DHCEQImportData2CSP.UpData(ChangeType,TmpArray[i],TableListObj.value))#;
+						RetClass=tkMakeServerCall("web.DHCEQImportData2CSP","UpData",ChangeType,TmpArray[i],TableListObj.value);
 
 						delete TmpArray[i];
 
@@ -420,10 +457,204 @@
 		window.status="完毕"
 
 	}
+	<!--start by csj 2020-10-19 谷歌浏览器兼容处理 需求号：1514313-->
+	function ReadTable_Chrome(ChangeType)
+	{	window.status="程序进行中";
 
+		if ((ChangeType=="")||(ChangeType==undefined)) {ChangeType="Test"}
+
+		ErrorTextObj.value=""
+
+		ErrorText=""
+
+		var TableListObj=document.all.TableList;
+
+		if (TableListObj.value=="") 
+
+			{alert("没有选中相应的数据");
+
+			 TableListObj.focus();
+
+			 return;
+
+		}
+
+		if (!TableListObj) {window.status="完毕";return}
+
+
+		var RetStr=""
+
+		var RetClass=""
+		
+		var RetString=""
+		
+		var HospArr=new Array();
+      
+   		if (ChangeType=="Init") 
+
+		{	RetClass=tkMakeServerCall("web.DHCEQImportData2CSP","UpData","Clear","",TableListObj.value);
+
+			ErrorTextObj.value=RetClass
+		}
+		else{
+			var TmpArray=JSON.parse(JSON.stringify(RowInfo));
+			TmpArray.splice(0,1)
+			if ((TableListObj.value=="UpdHospKBMstItem")&&(ChangeType=="Append"))	//add by czf begin 20180521
+			{
+				for (var i=0;i<TmpArray.length;i++){
+					var RowStr=TmpArray[i].split("^");
+					var Hosp=RowStr[6];
+					if ((Hosp!="")&&((HospArr.indexOf(Hosp)==-1)))
+					{
+						HospArr.push(Hosp);
+						RetString=tkMakeServerCall("web.DHCEQImportData2CSP","DelHospKBMstItem",Hosp);
+					}
+					if ((RetString!="")&&(RetString!="OK"))
+					{
+						if (ErrorText=="") {ErrorText=RetString;}
+						else {ErrorText=ErrorText+"\n"+RetString;}
+						ErrorTextObj.value=ErrorText;
+						ErrorText=""
+						window.status="完毕"
+						return;
+					}
+				}
+			}				//add by czf end 20180521
+			else{
+				for (var i=0;i<TmpArray.length;i++){
+					RetClass=tkMakeServerCall("web.DHCEQImportData2CSP","UpData",ChangeType,TmpArray[i],TableListObj.value);
+
+					delete TmpArray[i];
+
+					DisplayError(RetClass,i)
+				}
+
+			}
+		}
+
+		ErrorTextObj.value=ErrorText;
+
+		ErrorText=""
+
+		window.status="完毕"
+
+	}
+	
+	function LoadFile_Chrome()
+	{	ErrorTextObj.value=""
+		window.status="程序进行中"
+		var ss="<table id="+"TableDataTitle"+" width=2000 border=1>"+"</table>"
+		ss=ss+"<div style="+"overflow:auto;height=450"+">"
+		ss=ss+"<table id="+"TableData"+" border=1>"+"</table></div>"
+		document.all.aaa.innerHTML=ss
+		
+
+		if (RowInfo=="") {alert("没有要装入的文件");OpenFileObj.focus();window.status="完毕";return}
+		CircleNums=1
+		for (Circle=1;Circle<CircleNums+1;Circle++)
+		{ 
+			var TemData=JSON.parse(JSON.stringify(RowInfo));			
+			if (Circle==1) 
+			{  
+				TableFill("TableDataTitle",TemData,1,1,Circle);
+				TableFill("TableData",TemData,2,"",Circle)
+			}
+			else 
+			{ TableFill("TableData",TemData,1,"",Circle)
+			}
+		}
+		window.status="完毕"
+	}
+	<!-- MZY0110	1961775		2021-12-31  -->
+	function websys_ReadExcelEQ(options)
+	{
+		var async=options&&options.async?options.async:0;
+		var isText=options&&options.isText?options.isText:false;
+		var strArr=[];
+		strArr.push('Function vbs_Test');
+		strArr.push('Set xlApp = CreateObject("Excel.Application")');
+		strArr.push('fName=xlApp.GetSaveAsFilename ("","Excel xlsx (*.xlsx), *.xlsx,Excel xls (*.xls), *.xls",,"'+websys_unicode_trans.selectImportFile+'")');
+		strArr.push("If fName=False Then");
+		strArr.push(" xlApp.Quit");
+		strArr.push(" Set xlApp=Nothing");
+		strArr.push(" vbs_Test=0");
+		strArr.push(" Exit Function");
+		strArr.push("End If");
+		strArr.push('Set xlBook = xlApp.Workbooks.Open(fName)');
+		strArr.push('msgbox "选中Excel文件为: "&fName');
+		strArr.push('Set xlSheet = xlBook.ActiveSheet');
+		strArr.push('rtn = "["');
+		strArr.push('rc=xlSheet.UsedRange.Rows.Count');
+		strArr.push('cc=xlSheet.UsedRange.Columns.Count');
+		if(false===isText)
+		{
+			strArr.push('arr = xlSheet.Range(xlSheet.Cells(1,1),xlSheet.Cells(rc,cc)).Value2');
+		}
+		strArr.push('For ri = 1 To rc');
+		strArr.push(' rowstr = "["');
+		strArr.push(' For ci = 1 To cc');
+		if(isText)
+		{
+			strArr.push('  cellVal = xlSheet.Cells(ri,ci).Text');
+		}else
+		{
+			strArr.push('  cellVal = arr(ri,ci)');
+		}
+		strArr.push('  colstr="""" & Replace(cellVal,"""","\\""") & """"');
+		strArr.push('    If rowstr <> "[" Then');
+		strArr.push('        rowstr = rowstr & ","');
+		strArr.push('     End If');
+		strArr.push('       rowstr = rowstr & colstr');
+		strArr.push(' Next');
+		strArr.push(' rowstr = rowstr & "]"');
+		strArr.push(' If rtn = "[" Then');
+		strArr.push('    rtn = rtn & rowstr');
+		strArr.push(' Else');
+		strArr.push('    rtn = rtn & "," & rowstr');
+		strArr.push(' End If');
+		strArr.push('Next');
+		strArr.push('rtn = rtn & "]"');
+		strArr.push('xlBook.Close(False)');
+		strArr.push('xlApp.Quit');
+		strArr.push('Set xlSheet= Nothing');
+		strArr.push('Set xlBook= Nothing');
+		strArr.push('Set xlApp=Nothing');
+		strArr.push('vbs_Test=rtn');
+		strArr.push('End Function\n');
+		var rtn="";
+		var exec=strArr.join("\n");
+		var o;
+		
+		if(websys_isIE)
+		{
+			var IECmdShell=new ActiveXObject("MSScriptControl.ScriptControl");
+			IECmdShell.Language='VBScript';
+			IECmdShell.Timeout=10*60*1000;
+			IECmdShell.AddCode(exec);
+			try{
+				rtn=IECmdShell.Run("vbs_Test");
+				eval("var o=("+rtn+")");
+			}catch(e)
+			{
+				o=[];
+				alert(e.message);
+			}
+		}
+		else
+		{
+			CmdShell.notReturn=async;
+			rtn=CmdShell.EvalJs(exec,"VBScript");
+			if(rtn.status==200)
+			{
+				eval("var o=("+rtn.rtn+")");
+			}else
+			{
+				o=[];alert(rtn.msg);
+			}
+		};
+		return o||[];
+	}
 </script>
-
 </body>
 
 </HTML>
-

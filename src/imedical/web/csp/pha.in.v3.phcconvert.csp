@@ -1,0 +1,153 @@
+<!-- 草药处方类型转换系数维护
+	 csp: csp/pha.in.v3.phcconvert.csp
+	 js:  scripts/pha/in/v3/phcconvert.js
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <TITLE>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </TITLE>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+
+    <style>
+        .panel-body,
+        .panel-header {
+            border-color: #e2e2e2;
+        }
+
+        .layout-expand,
+        .layout-expand-over {
+            background-color: #f9f9fa;
+        }
+
+        .dialog-button {
+            padding-top: 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options='region:"north",split:true,border:false,split:false,height:40' class="pha-body-layout" style="overflow:hidden;">
+            <table class="pha-con-table">
+                <tr>
+                    <td class="r-label"><label id='_HospListLabel'>#( ..Get("医院"))#</label></td>
+                    <td><input id='_HospList' /></td>
+                </tr>
+            </table>
+        </div>
+        <div data-options="region:'center',border:false" class="pha-body">
+            <!-- layout start -->
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center', split:true,border:false">
+                    <div class="hisui-panel" title="#(..Get(" 草药处方类型转换系数维护"))#" data-options="iconCls:'icon-drug',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+                        <table id="gridPhcConvert"></table>
+                    </div>
+                </div>
+            </div>
+            <!-- layout end -->
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridPhcConvertBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label for="prescType">#(..Get("处方类型"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="prescType" class="hisui-combobox" data-pha="class:'hisui-combobox',save:false,query:true,clear:true" />
+            </div>
+            <div class="pha-col">
+                <label for="phcId">#(..Get("药品名称"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="phcId" class="hisui-combobox" data-pha="class:'hisui-combobox',save:false,query:true,clear:true" />
+            </div>
+
+            <div class="pha-col">
+                <a id="btnFind" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
+            </div>
+            <div class="pha-col">
+                <a id="btnClear" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+            </div>
+        </div>
+        <div class="pha-line"></div>
+
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">#(..Get("新增"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnUpdate">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">#(..Get("删除"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-export" id="btnExport" style="display:none;">#(..Get("导出"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-import" id="btnImport" style="display:none;">#(..Get("导入"))#</a>
+
+    </div>
+
+    <!-- 维护弹窗 -->
+    <div id="maintainWin">
+        <table class="pha-con-table" style="margin:auto;position: relative;left: -5px;">
+            <tr>
+                <td class="r-label">
+                    <label for="fromType"><span style="color:red">*</span>#(..Get("类型"))#</label>
+                </td>
+                <td>
+                    <input id="fromType" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true,required:true" />
+                </td>
+                <td style="padding-left:30px;padding-right:10px;"></td>
+                <td class="r-label">
+                    <label for="toType"><span style="color:red">*</span>#(..Get("转换类型"))#</label>
+                </td>
+                <td>
+                    <input id="toType" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true,required:true" />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="fromPhcId"><span style="color:red">*</span>#(..Get("药品"))#</label>
+                </td>
+                <td>
+                    <input id="fromPhcId" class="hisui-combobox" data-pha="class:'hisui-combogrid',save:true,query:true,clear:true,required:true" />
+                </td>
+                <td style="padding-left:25px;padding-right:15px;">
+                    <!--img src="../scripts_lib/hisui-0.1.0/dist/css/icons/transfer.png" /-->
+                    <a class="hisui-linkbutton" plain='true' id="btn-transfer" iconCls="icon-transfer"></a>
+                </td>
+                <td class="r-label">
+                    <label for="toPhcId"><span style="color:red">*</span>#(..Get("转换药品"))#</label>
+                </td>
+                <td>
+                    <input id="toPhcId" class="hisui-combobox" data-pha="class:'hisui-combogrid',save:true,query:true,clear:true,required:true" />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="fromNum"><span style="color:red">*</span>#(..Get("数量"))#</label>
+                </td>
+                <td>
+                    <input id="fromNum" class="hisui-numberbox" data-pha="class:'hisui-numberbox',save:true,query:true,clear:true,required:true" style="width:233px;" />
+                </td>
+                <td style="padding-left:30px;padding-right:10px;"></td>
+                <td class="r-label">
+                    <label for="toNum"><span style="color:red">*</span>#(..Get("转换数量"))#</label>
+                </td>
+                <td>
+                    <input id="toNum" class="hisui-numberbox" data-pha="class:'hisui-numberbox',save:true,query:true,clear:true,required:true" style="width:233px;" />
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/phcconvert.js"></script>
+</body>
+
+</html>

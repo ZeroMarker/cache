@@ -1,0 +1,122 @@
+﻿<!--发票台账汇总-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<SERVER>
+	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()
+</SERVER>
+<head>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" style="width:340px;" data-options="region:'west',border:false" >
+		<div class="hisui-panel" data-options="title:'发票台账汇总',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table id="Conditions" class="Condition" align="center" style="padding-right:10px" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="Inci" name="Inci" type="hidden">
+						<input id="ssStkgrptype" name="ssStkgrptype" type="hidden" value="M">
+						<tr>
+							<td><label class="required">*</label><label>入库科室</label><input id="Loc" name="Loc" class="textbox hisui-mulcombobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>起始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>起始时间</label><input id="StartTime" name="StartTime" class=" textbox hisui-timespinner" style="width:155px;" data-options="showSeconds:true"></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>截止时间</label><input id="EndTime" name="EndTime" class="textbox hisui-timespinner" style="width:155px;" data-options="showSeconds:true"></td>
+						</tr>
+						<tr>
+							<td><label>统计方式</label><input id="RetFlag" name="RetFlag" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>资金来源</label><input id="SourceOfFund" name="SourceOfFund" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>类组</label><input id="ScgStk" name="ScgStk" multiple="true" class="textbox hisui-stkscgcombotree" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>库存分类</label><input id="StkCat" name="StkCat" multiple="true" class="textbox hisui-mulcombobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>生产厂家</label><input id="Manf" name="Manf" class="textbox hisui-combobox CommonInput" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td>
+								<input class="hisui-radio" type="radio" label="全部" name="HvFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="高值" name="HvFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="非高值" name="HvFlag" value="N">
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input class="hisui-radio" type="radio" label="全部" name="ChargeFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="收费" name="ChargeFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="非收费" name="ChargeFlag" value="N">
+							</td>
+						</tr>
+						<tr>
+							<td><label>换票赠送</label><input id="AdjCheque" name="AdjCheque" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>入库类型</label><input id="OperateType" name="OperateType" class="textbox hisui-combobox" style="width:155px;"></td>
+						</tr>
+						<tr>
+							<td><label>发票号</label><input id="InvNo" name="InvNo" class="textbox" style="width:148px;"></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'south',border:false" style="height:110px;padding-top:10px;">
+					<div class="boxshadow">
+						<table id="ReportConditions" style="padding-left:10px;">
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='供应商库存分类' name='ReportType' value='FlagVenCat' checked></td>
+							</tr>
+							<tr>
+								<td><input class='hisui-radio' type="radio" label='单品汇总' name='ReportType' value='FlagInciStat'></td>
+							</tr>
+						</table>
+						<table align="center" style="border-spacing:10px 10px">
+							<tr>
+								<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+								<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="hisui-tabs tabs-gray GridPadding" data-options="region:'center'" id="tabs" style="border:0px;padding-left: 0px">
+		<div id="Report" title="报表" data-options="iconCls:'icon-add-note'" class="ReportImage"></div>
+	</div>
+	<div id="tabmm" class="hisui-menu" style="width:150px;">
+		<div id="tabmm-tabclose">关闭当前</div>
+		<div id="tabmm-tabcloseall">关闭全部</div>
+		<div id="tabmm-tabcloseother">关闭其他</div>
+		<div class="menu-sep"></div>
+		<div id="tabmm-tabcloseright">关闭右侧</div>
+		<div id="tabmm-tabcloseleft">关闭左侧</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/encode.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InGdRec/DHCSTINGdRecCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/InvManage/InvStat.js"></script>
+</body>
+</html>

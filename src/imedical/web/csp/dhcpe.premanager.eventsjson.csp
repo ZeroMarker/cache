@@ -1,0 +1,43 @@
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s dateType = %request.Get("dateType")
+	s start = %request.Get("start")
+	s end = %request.Get("end")
+	s locId = %session.Get("LOGON.CTLOCID")
+	s userId = %session.Get("LOGON.USERID")
+	s start = $ZDH($E(start,1,10),3)
+	s end = $ZDH($E(end,1,10),3)
+	s arr = []
+	i dateType = "PM"{	//限额维护
+		s arr = ##class(web.DHCPE.Calendar.EventSources).GetPMEventArr(start,end,locId)
+	}elseif dateType = "DS"{ //号源池
+		s admId = %request.Get("AdmId")
+		s ^tmpwgy("DS")=$lb(start,end,admId,userId)
+		s arr = ##class(web.DHCPE.Calendar.EventSources).GetDataSourceEventArr(start,end,admId,userId)
+	}elseif dateType = "JDFPM"{ //京东方限额维护
+		s arr = ##class(web.DHCPE.Calendar.JDF.EventSources).GetPMEventArr(start,end,locId)
+	}elseif dateType = "JDFDS"{ //号源池
+		s admId = %request.Get("AdmId")
+		s VIPID = %request.Get("VIPID")
+		s sexID = %request.Get("SexID")
+		s arr = ##class(web.DHCPE.Calendar.JDF.EventSources).GetDataSourceEventArr(start,end,sexID,VIPID,admId,locId)
+	}elseif dateType = "EndoscopeSource"{	//内镜号源维护
+		s arr = ##class(web.DHCPE.Endoscope.SourcePool).GetSourceEventArr(start,end)
+	}elseif dateType = "EndoscopeDocSource"{	//内镜医生号源维护
+		s arr = ##class(web.DHCPE.Endoscope.SourcePool).GetDocSourceEventArr(start,end)
+	}elseif dateType = "EndoscopeDocSourceView"{	//内镜医生号源展示
+		s arr = ##class(web.DHCPE.Endoscope.SourcePool).GetDocSourceEventArrDetail(start,end)
+	}elseif dateType = "SM"{	//号源维护  8.5
+		s arr = ##class(web.DHCPE.SourceManager).GetSourceEventArr(start,end,locId)
+	}elseif dateType = "HOME"{ //主场号源池
+		s PGADM = %request.Get("PGADM")
+		s arr = ##class(web.DHCPE.PreHomeTeam).GetDocSourceEventArr(start,end,PGADM)
+	}elseif dateType = "SELECTDATE" {  //时间段选择
+		s PIADM = %request.Get("piadm")
+		s PreClass = %request.Get("preClass")
+		s ExtStr = %request.Get("extStr")
+		s arr = ##class(web.DHCPE.Calendar.EventSources).GetDataSourceEventArr(start,end,PreClass,PIADM,ExtStr,locId)
+	}
+	
+	w arr.%ToJSON()			
+</SCRIPT>
+

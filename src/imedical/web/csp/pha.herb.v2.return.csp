@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--草药直接退药  
+	csp: pha.herb.v2.return.csp
+	js:  pha/herb/v2/return.js
+-->
+<HTML XMLNS=TRAK>
+	<!-- 验证session过期 -->
+    <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+        d ##Class(websys.SessionEvents).SessionExpired() q 1
+    </csp:method>
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+	<PHAHERBV2/>
+	<style>
+        .pha-con-table.nopadding{
+            position:relative;
+            left:-10px;
+        }
+    </style>
+    <!--link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link-->
+</HEAD>
+<body >
+    <div class="hisui-layout"  fit="true" border="false">
+        <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="pha-body">
+        	<div class="hisui-layout" fit="true" border="false">
+				<div data-options="region:'center',title:'直接退药',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray'" id="pha_herb_v2_return">
+					<div class="hisui-layout" fit="true" border="false">
+						<div data-options="region:'north',border:false,split:false" style="overflow:hidden;padding:0px 0px 0px 10px;">
+							<table class="pha-con-table nopadding">
+								<tr>
+									<td class="r-label">
+										<label for="dateStart">#(..Get("开始日期"))#</label>
+									</div>
+									<td>
+										<input id="dateColStart" class="hisui-datebox phaherb-datebox"></input>
+									</td>
+									<td>
+										<input id="timeColStart" class="hisui-timespinner phaherb-timespinner" showSeconds="true"></input>
+									</td>
+									<td class="r-label">
+										#(..Get("退药科室"))#
+									</td>
+									<td>
+										<input id="cmbPhaLoc">
+									</td>	
+									<td class="r-label">
+										#(..Get("登记号"))#
+									</td>
+									<td>
+										<input id="txtPatNo" class="hisui-validatebox"/>
+									</div>
+									<td>
+										<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a> 
+									</td>				             
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="dateEnd">#(..Get("截止日期"))#</label>
+									</td>
+									<td>
+										<input id="dateColEnd" class="hisui-datebox phaherb-datebox"></input>
+									</td>
+									<td>
+										<input id="timeColEnd" class="hisui-timespinner phaherb-timespinner" showSeconds="true"></input>
+									</td>
+									<td class="r-label">
+										#(..Get("患者姓名"))#
+									</td>
+									<td>
+										<input id="txtPatName" class="hisui-validatebox"/>
+									</td>
+									<td class="r-label">
+										#(..Get("处方号"))#
+									</td>
+									<td>
+										<input id="txtPrescNo" class="hisui-validatebox"/>
+									</td>
+								</tr>  
+							</table>
+						</div>
+
+						<div data-options = "region:'center',border:false,split:true" style="border-radius: 4px;padding:10px;padding-top:0px">
+							<div class = "hisui-layout" fit = "true" id="layout-herb—grid">
+								<div data-options = "headerCls:'panel-header-gray',iconCls:'icon-paper-eye-r',region:'west',split:true,border:true,title:'处方预览'">
+									<iframe id="ifrm-PreViewPresc" src="" style="border:0px;width:100%;height:99%;"></iframe> 
+								</div>
+								<div data-options = "region:'center',border:false">
+									<div class = "hisui-layout" fit = "true" id="layout-herb—grid-list">
+										<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center', split:true, title:'处方列表'" >
+											<table id="gridDispPresc"></table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>  			
+				</div>
+			</div>
+        </div> 
+    </div>
+
+	<!-- 表格工具栏 -->
+ 	<div id="gridDispBar" style="height:30px;padding-top:2px">
+ 		<a class="hisui-linkbutton" iconCls='icon-herb-pre' plain="true" id="btnReturn">退药</a>
+ 	</div>
+	<!-- 选择退药原因窗口js -->
+	<script type="text/javascript" src="../scripts/pha/herb/v2/returnreason.js"></script>
+	<!-- 本页面js -->
+	<script type="text/javascript" src="../scripts/pha/herb/v2/return.js"></script>
+
+<csp:Include Page="pha.herb.v2.retreason.csp" />
+</body>
+</HTML>
+

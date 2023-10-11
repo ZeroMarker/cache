@@ -1,0 +1,160 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache"
+        runat="SERVER">
+            
+        </script>
+<HTML lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type"
+          content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <script type="text/javascript" src="../scripts/nurse/hisui/quality/datagrid-export.js"></script>
+    <script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<STYLE type='text/css'>
+		ul{
+			margin: 0px;
+			padding: 0px;
+			overflow: hidden;
+			display: flex;
+    		flex-wrap: wrap;
+		}
+
+		.datagrid-wrap.panel-body.panel-body-noheader{
+				border-color:#e2e2e2;
+				border-top-right-radius:0;
+				border-top-left-radius:0;
+				border-right:0;
+				border-left:0;
+				border-bottom:0;
+		}
+		.datagrid-toolbar{
+			height:24px;
+			padding:5px
+		}
+		.datagrid-toolbar .l-btn-plain{
+			margin-top:1px!important;
+		}
+		.datagrid-toolbar .hischeckbox_square-blue{
+			margin-top:1px!important;
+		}
+		.hisui-timespinner.timespinner-f.spinner-text.spinner-f.validatebox-text{
+			width:72px!important;
+		}
+		.datebox .combo-arrow{
+			position:relative;
+			left:-4px!important;
+		}
+		
+		/*重写switchbox样式*/
+		.has-switch label {
+			width: 33.5% !important;
+			margin-left: 1px;
+		}
+		#problemSummaryTabs .tabs-header {
+			border-radius: 0;
+		}
+		.datagrid-toolbar {
+			padding-left:0;
+		}
+	</STYLE>
+	<link rel='stylesheet' type='text/css' href='../scripts/nurse/hisui/quality/Nur.Quality.AuditMain.css'/>
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+</head>	
+<body class="m_body white_background">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+			<div class="hisui-panel" fit="true" data-options="title:'质控问题汇总',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+				<div class="hisui-layout" data-options="fit:true,border:false" > 
+					<div data-options="region:'north',headerCls:'panel-header-gray'" style="height:91px;border-top:0;border-right:0;border-left:0;border-radius:0;">
+						<table class="search_table">
+							<tr>
+								<td><label>#(..Get("病区"))#</label></td>
+								<td><select id="inputWardID" class="hisui-combobox xxl_combobox" data-options="enterNullValueClear:false"></select></td>
+								<td><label>#(..Get("关键字查询"))#</label></td>
+								<td>
+									<select id="inputMainSelect" class="hisui-combobox" name="state" data-options="enterNullValueClear:false" style="width:140px;"></select>
+								</td>
+								<td>
+									<input  id="inputMainInput" class="textbox" name="name" style="width:150px;" data-options="" placeholder="#(..Get("请输入查询关键字"))#">
+								</td>
+								<td>
+									<input class='hisui-radio' type="radio" label="#(..Get("所有患者"))#" name='selectPat' value='allPat' id='allPat'>
+								</td>
+								<td>
+									<input class='hisui-radio' type="radio" label="#(..Get("我的患者"))#" name='selectPat' value='selfPat' id='selfPat'>
+								</td>							
+								<td><a href="#"  id="searchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+								<td><a href="#" id="exportBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">导出</a></td>
+							</tr>
+							<tr>
+								<td><label>#(..Get("病历"))#</label></td>
+								<td><select id="inputEmrCode" class="hisui-combobox xxl_combobox"  data-options="enterNullValueClear:false"></select></td>
+								<td colspan=2><div id="patSwitch"></div></td>
+								<td colspan=4 id="dateInput">
+									<label style="margin-right:10px;">#(..Get("出院时间"))#</label>
+									<input id="inputOutHopStartDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px;"></input><span style="margin:0 4px;">至</span><input id="inputOutHopEndDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px">
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+						<div id="problemSummaryTabs" class="hisui-tabs tabs-gray" data-options="fit:true,border:false" style="border-top:1px solid #ccc;">   
+							<div title="#(..Get("护理评估未评"))#" style="padding-top:2px;">
+								<table  id="limitationOfTimeTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',bodyCls:'table-splitline',fit:true" style="border-top:0"></table>
+							</div>   
+							<div title="#(..Get("体温单未测"))#" style="padding-top:2px;">
+								<table  id="temperatureCompleteTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',bodyCls:'table-splitline',fit:true" style="border-right:0;border-bottom:0;border-left:0;border-radius:0;border-top:1px solid #e2e2e2 !important;"></table>
+							</div>
+							<div title="#(..Get("备注问题"))#" style="padding-top:2px;">
+								<table  id="notesProblemTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',bodyCls:'table-splitline',fit:true" style="border-right:0;border-bottom:0;border-left:0;border-radius:0;border-top:1px solid #e2e2e2 !important;"></table>
+							</div>
+							<div title="#(..Get("评价问题"))#" style="padding-top:2px;">
+								<table  id="appraiseProblemTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',bodyCls:'table-splitline',fit:true" style="border-right:0;border-bottom:0;border-left:0;border-radius:0;border-top:1px solid #e2e2e2 !important;"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-->备注<!-->
+	<div id="showInputEmrNote" style="padding:10px;">
+		<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<input id="auditMainID" value="" style="display: none"/>
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div class="single_row_layout_north nc_bottom_dashed_border_north_region" data-options="region:'north',border:false" style="border-radius:0;border-bottom:1px solid #e2e2e2;">
+					<table class="search_table">
+						<tr>
+							<td>
+								<input id="inputEmtNoteStartDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px" placeholder="备注开始日期">
+								<span class="nur_label" style="margin:0 1px;">至</span>
+								<input id="inputEmtNoteEndDate" class="hisui-datebox textbox datebox-f combo-f" style="width:120px" placeholder="备注结束日期">
+							</td>
+							<td>
+								<a href="#"  id="searchNoteBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:90px;height:30px;">查询</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table  id="inputEmrNoteTable" class="hisui-datagrid" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,border:false"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.Comm.js" charset="gbk"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/quality/Nur.Quality.ProblemSummary.js" charset="gbk"></script>
+</body>
+
+</html>

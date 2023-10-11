@@ -9,14 +9,17 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
+<DOCHEAD></DOCHEAD>
 <STYLE type='text/css'>
 .search-table{
 	border-collapse:separate;
 	border-spacing:0 10px;
 	table-layout: fixed;
+	margin: 0 auto;
 }
 .r-label{
-	padding-left: 10px;
+	padding-left: 0px;
+	width: 58px;
 }
 </STYLE>
 <Server>
@@ -52,24 +55,24 @@ var SaveReferStr="#(SaveReferStr)#";
 </head> 
 <body  class="hisui-layout" data-options="fit:true,border:false">
 <div class="hisui-panel" data-options="region:'center',border:false,split:false" style="overflow-x:hidden;padding:10px;">
-	<div class="hisui-panel" fit="true" data-options="title:'诊疗计划单模板',headerCls:'panel-header-gray',iconCls:'icon-edit'" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
+	<div class="hisui-panel" fit="true" data-options="title:'#(..Get("诊疗计划单模板"))#',headerCls:'panel-header-gray',iconCls:'icon-edit'" ><!--style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;"-->
 		<!--树状结构-->
 		<table id="AssPlanFav" ></table> 
 	</div> 
 </div>
 
 <csp:if condition='Edit="Yes"'>
-<div id="win" class="hisui-dialog" title="编辑" style="width:575px;height:330px;" data-options="iconCls:'icon-w-edit',modal:true">  
+<div id="win" class="hisui-dialog" title="#(..Get("编辑"))#" style="width:575px;height:330px;" data-options="iconCls:'icon-w-edit',modal:true">  
 	<div style=""> 
-	    <table class="table search-table" style="">
+	    <table class="table search-table" >
 			<tr style="">
 				<td class="r-label">
-					<lable for ="PatSymptom">患者问题</lable>
+					<lable for ="PatSymptom">#(..Get("患者问题"))#</lable>
 				<td>
 					<textarea id ="PatSymptom" style="width:200px;height:100px;"></textarea>
 				</td>
 				<td class="r-label">
-					<lable for ="ExpectedGoal">预期目标</lable>
+					<lable for ="ExpectedGoal">#(..Get("预期目标"))#</lable>
 				</td>
 				<td>
 					<textarea id ="ExpectedGoal" style="width:200px;height:100px;"></textarea>
@@ -78,7 +81,7 @@ var SaveReferStr="#(SaveReferStr)#";
 			
 			<tr style="">
 				<td class="r-label">
-					<lable for ="editforMeasures">措施</lable>
+					<lable for ="editforMeasures">#(..Get("措施"))#</lable>
 				</td>
 				<td colspan="3">
 					<textarea id ="editforMeasures" style="width:480px;height:100px;"></textarea>
@@ -86,9 +89,9 @@ var SaveReferStr="#(SaveReferStr)#";
 			</tr>
 			<tr style="text-align:center;">
 				<td colspan="4">
-					<a id="CancelBtn" href="#" class="hisui-linkbutton">取消</a>
+					<a id="CancelBtn" href="#" class="hisui-linkbutton">#(..Get("取消"))#</a>
 					
-					<a id="SaveBtn" href="#" class="hisui-linkbutton" style="margin-left:10px;">保存</a>
+					<a id="SaveBtn" href="#" class="hisui-linkbutton" style="margin-left:10px;">#(..Get("保存"))#</a>
 				</td>
 			</tr>
 		</table>
@@ -157,7 +160,8 @@ var SaveReferStr="#(SaveReferStr)#";
 			        RowID: RowID,
 			        PatSymptom: PatSymptom,
 			        ExpectedGoal: ExpectedGoal,
-			        Measures: Measures
+			        Measures: Measures,
+                    MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
 			    },
 				success: function (data){
 					
@@ -190,7 +194,7 @@ var SaveReferStr="#(SaveReferStr)#";
 	    ]];
 	    var PlanListBar = [
 	    	{
-	            text: '添加',
+	            text: '新增',
 	            iconCls: 'icon-add',
 	            handler: function() {
 		            if (EditRowID){
@@ -207,7 +211,7 @@ var SaveReferStr="#(SaveReferStr)#";
 						parent: parent,
 						data: [{
 							RowID:EditRowID,
-							Title: '未定义'
+							Title: $g('未定义')
 						}]
 					})
 					$('#AssPlanFav').treegrid('beginEdit',EditRowID);
@@ -220,7 +224,7 @@ var SaveReferStr="#(SaveReferStr)#";
 	            }
 			},{
 				text: '删除',
-	            iconCls: 'icon-cancel',
+	            iconCls: 'icon-remove',
 	            handler: function() {
 			        var node = $('#AssPlanFav').treegrid('getSelected');
 					if (!node){
@@ -238,7 +242,8 @@ var SaveReferStr="#(SaveReferStr)#";
 							    cache: false,
 							    data: {
 							        action: 'DeleteAPFNode',
-							        RowID: RowID
+							        RowID: RowID,
+                                    MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
 							    },
 								success: function (data){
 									LoadAssPlanFavData();
@@ -310,7 +315,8 @@ var SaveReferStr="#(SaveReferStr)#";
                 action: 'LoadAssPlanFav',
                 UserType:UserType,
                 SaveTypeStr:SaveType,
-                SaveReferStr:SaveRefer
+                SaveReferStr:SaveRefer,
+                MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
             },
 			success: function (data){
 				debugger
@@ -356,7 +362,8 @@ var SaveReferStr="#(SaveReferStr)#";
                 Title: EditData.Title,
                 UserType:UserType,
                 SaveType:SaveType,
-                SaveRefer:SaveRefer
+                SaveRefer:SaveRefer,
+                MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
             },
 			success: function (data){
 				LoadAssPlanFavData();

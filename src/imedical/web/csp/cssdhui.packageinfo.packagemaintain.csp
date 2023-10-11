@@ -1,155 +1,226 @@
-<!--Ïû¶¾°üĞÅÏ¢Î¬»¤-->
+ï»¿<!--æ¶ˆæ¯’åŒ…ä¿¡æ¯ç»´æŠ¤-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
 </csp:method>
 <html lang="zh-CN">
+<server>
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+	d ##class(web.CSSDHUI.Util.RQServerConfig).GetApplet()  //æ¶¦ä¹¾æ‰“å°
+	w ##class(web.CSSDHUI.Common.UtilCommon).EncryptInput()
+</server>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<CSSDHISUI/>
 	<style>
-		.itm_table{
-			text-align: right;
-			border-spacing:0px 5px;
-		}
-		.itm_table>tbody>tr>td{
-			padding: 0px 0px 0px 8px;
-		}
-		.CkPadding{
-			text-align:left;
-			padding: 0px 0px 0px 1px
-		}
 		.tdwidth{
 			width:100px
-			}
+		}
 		.imgbox{
-		    position: relative;
-		    width: 120px;
-		    height: 120px;
-		    margin-top: 10px;
-		    background: #000000;
-		    
+			position: relative;
+			width: 120px;
+			height: 120px;
+			margin-top: 10px;
+			background: #000000;
 		}
 		.imgbox img{
-		    position: absolute;
-		    top: 0;
-		    bottom: 0;
-		    left: 0;
-		    right: 0;
-		    margin: auto;
-		    max-width: 100%;
-		    max-height: 100%;
-		    outline: 1px solid #000;
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			margin: auto;
+			max-width: 100%;
+			max-height: 100%;
+			outline: 1px solid #000;
 		}
-		.selectedpic { border:4px solid #378ec4; padding:0;position: relative;z-index:0}		
+		.selectedpic { border:4px solid #378ec4; padding:0;position: relative;z-index:0}
+		.selectedfile { background: #378ec4;}
+		.selectedfile a{
+			color: #fff;
+		}
 		.largeImg img{
 			width:100%;
 			height:445px;
 		}
 	</style>
-
- <link href="../scripts/cssd/Common/webuploader/webuploader.css" type="text/css" rel="stylesheet"/>
- <link href="../scripts/cssd/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
+	<link href="../scripts/cssd/Common/webuploader/webuploader.css" type="text/css" rel="stylesheet"/>
+	<link href="../scripts/cssd/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="hisui-panel GridPadding" data-options="region:'center',border:false">   
-		<div class="hisui-panel" data-options="iconCls:'icon-paper',title:'Ïû¶¾°üÁĞ±í',headerCls:'panel-header-gray',split:true,collapsible:false,fit:true">
-			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',collapsible:false,border:false" class="BorderLine"> 
-					<table class="itm_table" id="Conditions" >
-						<tr>
-							<td>Ïû¶¾°üÃû³Æ</td>
-							<td><input id="packageDesc" name="packageDesc" class="textbox" style="width:120px"></td>
-							<td>°üÀàĞÍ</td>
-							<td>
-								<select id="PackType" name="PackType" class="hisui-combobox" style="width:120px">
-									<option value="1" selected>Ñ­»·°ü</option>
-									<option value="2">·ÇÑ­»·°ü</option>
-									<option value="3">Ò×Ëğ¼ş</option>
-									<option value="4">°ü×°ÈİÆ÷</option>
-								</select>
-							</td>
-							<td>¿ÉÓÃ</td>
-							<td>
-								<select id="NotUse" name="NotUse" class="hisui-combobox" style="width:120px">
-									<option value="" selected>È«²¿</option>
-									<option value="Y">¿ÉÓÃ</option>
-									<option value="N">²»¿ÉÓÃ</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>Ïû¶¾°ü±ğÃû</td>
-							<td><input id="Alias" name="Alias" class="textbox" style="width:120px"></td>
-							<td>°ü·ÖÀà</td>
-							<td>
-								<select id="PackClassDr" name="PackClassDr" class="hisui-combobox" style="width:120px"></select>
-							</td>
-							<td>°üÊôĞÔ</td>
-							<td>
-								<select id="PackTypeDetail" name="PackTypeDetail" class="hisui-combobox" style="width:120px">
-									<option Value="1" selected>ÊÖÊõÆ÷Ğµ°ü</option>
-									<option Value="2" >ÆÕÍ¨°ü</option>
-                                	<option Value="7" >·óÁÏ°ü</option>
-                                	<option Value="8" >Ò»´ÎĞÔ</option>
-                                	<option Value="9" >¼±¾È°ü</option>
-                                	<option Value="10">×¨¿ÆÆ÷Ğµ°ü</option>
-                                	<option Value="3" >ÇåÏ´¿ğ</option>
-                                	<option Value="4" >ÇåÏ´³µ</option>
-									<option Value="5" >Ãğ¾ú¿ğ</option>
-                                	<option Value="6" >Ãğ¾ú³µ</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="">
-								<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px">²éÑ¯</a>
-								<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px">ÇåÆÁ</a>
-								<a href="#" id="ViewPicBT"class="hisui-linkbutton" data-options="iconCls:'icon-w-eye'" style="width:120px">ä¯ÀÀÍ¼Æ¬</a>
-							</td>
-						</tr>
-					</table>
+	<div class="GridPadding" data-options="region:'center',border:false,collapsible:false">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false,collapsible:false" style="padding-right:10px">
+				<div class="hisui-panel" title="æ¶ˆæ¯’åŒ…åˆ—è¡¨" data-options="headerCls:'panel-header-gray',iconCls:'icon-write-order',split:true,collapsible:false,fit:true">
+					<div class="hisui-layout" data-options="fit:true">
+						<div class="BorderLine" data-options="region:'north',collapsible:false" >
+							<table id="Conditions" class="Condition" style="height:145px" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+								<tr>
+									<td><label>æ¶ˆæ¯’åŒ…</label><input id="FPkgDesc" name="PkgDesc" class="textbox" style="width:118px"></td>
+									<td><label>åŒ…å±æ€§</label><input id="FAttributeId" name="AttributeId" class="textbox hisui-combobox" style="width:125px"></td>
+									<td style="text-align:left">ç”Ÿç‰©ç›‘æµ‹</td>
+									<td><div id="BioFlag" name="BioFlag"></div></td>
+									<td>
+										<a href="#" id="QueryLogBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-book'">æ—¥å¿—</a>
+									</td>
+								</tr>
+								<tr>
+									<td><label>åŒ…åˆ†ç±»</label><input id="FPkgClassId" name="PkgClassId" class="textbox hisui-combobox" style="width:125px"></td>
+									<td><label>ç­èŒæ–¹å¼</label><input id="FSterTypeId" name="SterTypeId" class="textbox hisui-combobox" style="width:125px"></td>
+									<td>å¤–æ¥å™¨æ¢°</td>
+									<td><div id="ExtFlag" name="ExtFlag"></div></td>
+									<td>
+										<a href="#" id="CertTakePhotoBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-camera'">æ‹ç…§</a>
+									</td>
+								</tr>
+								<tr>
+									<td><label>ç§‘å®¤</label><input id="FLoc" name="PLoc" class="textbox hisui-combobox"style="width:125px"></td>
+									<td><label>æ˜¯å¦å¯ç”¨</label><input id="FNotUse" name="NotUse" class="textbox hisui-combobox"style="width:125px"></td>
+									<td colspan="4">
+										<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">æŸ¥è¯¢</a>
+										<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">æ¸…å±</a>
+										<a href="#" id="ViewPicBT"class="hisui-linkbutton" data-options="iconCls:'icon-w-img'">æµè§ˆå›¾ç‰‡</a>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false">
+							<table id="PackageList"></table>
+						</div>
+					</div>
 				</div>
-				<div data-options="region:'center',border:false">
-					<table id="PackageList"></table>
+			</div>
+			<div data-options="title:'æ¶ˆæ¯’åŒ…æ˜ç»†',region:'east',headerCls:'panel-header-gray',iconCls:'icon-write-order',collapsible:true" style="width:450px;border-bottom:0px;border-radius:0 0 4px 4px;">
+				<div class="hisui-panel" data-options="border:false,headerCls:'panel-header-gray',fit:true">
+					<table id="ItemList"></table>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:550px;padding-left:0px">
-		<div class="hisui-panel" data-options="title:'Ïû¶¾°üÃ÷Ï¸',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<table id="ItemList"></table>
+
+	<div id="ViewPic" class="hisui-dialog" data-options="closed:'true',modal:true,iconCls:'icon-w-img'" style="width:950px;height:550px" title="å›¾ç‰‡æµè§ˆ">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table class="Condition" id="Conditions" style="height:60px">
+					<tr style="vertical-align:'center';">
+						<td><div href="#" id="AddViewPicBT">æ·»åŠ æ–‡ä»¶</div></td>
+						<td><a href="#"  id="UpLoadViewPicBT" class="hisui-linkbutton">ä¸Šä¼ </a></td>
+						<td><a href="#" id="DeletePicBT" class="hisui-linkbutton">åˆ é™¤</a></td>
+						<td><a href="#" id="FileDownBT" class="hisui-linkbutton">ä¸‹è½½</a></td>
+						<td hidden><input id="PkgId" name="PkgId" class="textbox" style="width:120px" >
+						<input id="PkgDesc" name="PkgDesc" class="textbox" style="width:120px" ></td>
+					</tr>
+				</table>
+			</div>
+			<div class="GridPadding" data-options="region:'west',border:false" style="padding-top:0px;width:200px;">
+				<div class="hisui-panel" title="å›¾ç‰‡åˆ—è¡¨" data-options="headerCls:'panel-header-gray',iconCls:'icon-img',fit:true">
+					<ul id="PicsList" class="" style="padding:5px 30px 5px 30px;"></ul>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'center',border:false" style="padding-top:0px;width:800px;">
+				<div class="hisui-panel" title="å›¾ç‰‡å±•ç¤º" data-options="headerCls:'panel-header-gray',iconCls:'icon-img',fit:true">
+					<img id="showimg"></img>
+				</div>
+			</div>
+			<div class="GridPadding" data-options="region:'east',border:false" style="padding-left:0;padding-top:0px;width:250px;">
+				<div class="hisui-panel" title="æ–‡ä»¶åˆ—è¡¨(åŒå‡»é¢„è§ˆ)" data-options="headerCls:'panel-header-gray',iconCls:'icon-img',fit:true">
+					<ul id="PdfLists" style="padding:10px;"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="ShowPdfWin" class="hisui-dialog FindWin" data-options="closed:'true'" title="PDFé¢„è§ˆ" style="width:1400px;height:700px;">
+		<div id="showPdf">
+			<iframe id="pdfContainer" src="" width="1400px" height="650px" frameborder="0"></iframe>
 		</div>
 	</div>
 
-<div id="ViewPic" class="hisui-dialog" data-options="closed:'true',modal:true,iconCls:'icon-w-img'" style="width:950px;height:550px" title="Í¼Æ¬ä¯ÀÀ">
-	<div class="hisui-layout" data-options="fit:true">
-		<div data-options="region:'north',border:false">
-			<table class="Condition" id="Conditions" style="height:60px">
-				<tr>
-					<td><div id="AddViewPicBT">Ìí¼ÓÍ¼Æ¬</div></td>
-					<td><div id="UpLoadViewPicBT" class="hisui-linkbutton">ÉÏ´«Í¼Æ¬</div></td>
-					<td><a href="#" id="DeletePicBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">É¾³ıÍ¼Æ¬</a></td>
-				</tr>
-			</table>
-		</div>
-		<div data-options="region:'center',border:false,headerCls:'panel-header-gray'" style="border-bottom:1px #cccccc solid;border-top:1px #cccccc solid;">
-			<ul id="PicsList" class="uploader-list" style="padding:5px 35px 5px 35px;"></ul>
-		</div>
-		<div data-options="region:'east',border:false,headerCls:'panel-header-gray'" style="border:1px #cccccc solid;width:750px;padding-left:0px" Class="largeImg">
-			<img id="showimg"></img>
+	<!--å¦å­˜æ˜ç»†Dialog-->
+	<div id="SelReqWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true,iconCls:'icon-w-paper'" title="å¦å­˜æ˜ç»†">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',border:false">
+				<table id="SelReqConditions" class="Condition">
+					<tr>
+						<td><label>æ¶ˆæ¯’åŒ…</label><input id="SelReqPkgId" name="PkgDesc" class="textbox"></td>
+						<td><label>æ¶ˆæ¯’åŒ…åˆ†ç±»</label><input id="SelReqPkgClassId" name="PkgClassId" class="hisui-combobox textbox"></td>
+						<td><a href="#" id="SelReqQueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">æŸ¥è¯¢</a></td>
+						<td><a href="#" id="SelReqAddBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">æ·»åŠ æ˜ç»†</a></td>
+					</tr>
+				</table>
+			</div>
+			<div class="GridPadding" style="width:560px;padding-top:0;" data-options="region:'west',border:false" >
+				<div class="hisui-panel" data-options="title:'æ¶ˆæ¯’åŒ…',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="PackageGrid"></table>
+				</div>
+			</div>
+			<div class="GridPadding" style="padding-top:0;padding-left:0;" data-options="region:'center',border:false" >
+				<div class="hisui-panel" data-options="title:'æ¶ˆæ¯’åŒ…æ˜ç»†',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+					<table id="ItemGrid"></table>
+				</div>
+			</div>
 		</div>
 	</div>
-</div>
-   	<script type="text/javascript" src="../scripts/cssd/Common/jquery.tmpl.js"></script>	
-   	<script type="text/javascript" src="../scripts/cssd/Common/Viewer/viewer.js"></script>	
-	<script type="text/javascript" src="../scripts/cssd/Common/webuploader/webuploader.js"></script>	
-	<script type="text/javascript" src="../scripts/cssd/Common/commonuploader.js"></script>	
+
+	<!-- æ¶ˆæ¯’åŒ…ç»´æŠ¤ç•Œé¢ -->
+	<div id="AddPkgWin" class="hisui-dialog FindWin" title="æ¶ˆæ¯’åŒ…ä¿¡æ¯" data-options="modal:true,minimizable:false,closed:true,width:745">
+		<table id="AddPkgCondition" class="Condition" style="display:inline;padding-left:10px" align="center">
+			<input name="PkgId" value="" type="hidden">
+			<tr>
+				<td><label>ä»£ç </label><input id="PkgCode" name="PkgCode" class="textbox" disabled></td>
+				<td><label class="required">*</label><label>åç§°</label><input id="PkgDesc" name="PkgDesc" class="textbox"></td>
+				<td><label>åˆ«å</label><input id="PkgAlias" name="PkgAlias" class="textbox"></td>
+				
+			</tr>
+			<tr>
+				<td><label class="required">*</label><label>åŒ…å±æ€§</label><input id="PkgAttributeId" name="PkgAttributeId" class="textbox hisui-combobox"></td>
+				<td><label class="required">*</label><label>åŒ…åˆ†ç±»</label><input id="PkgClassId" name="PkgClassId" class="textbox hisui-combobox"></td>
+				<td><label>è§„æ ¼</label><input id="PkgSpecId" name="PkgSpecId" class="textbox hisui-combobox"></td></td>
+			</tr>
+			<tr>
+				<td><label class="required">*</label><label>åŒ…è£…ææ–™</label><input id="PkgMaterialId" name="PkgMaterialId" class="textbox hisui-combobox"></td>
+				<td><label class="required">*</label><label>å•ä»·</label><input id="PkgPrice" name="PkgPrice" class="textbox hisui-numberbox" data-options="precision:2,fix:false,min:0"></td>
+				<td><label class="required">*</label><label>æœ‰æ•ˆæœŸ</label><input id="PkgLength" name="PkgLength" class="textbox hisui-numberbox" data-options="min:1"></td>
+			</tr>
+			<tr>
+				<td><label class="required">*</label><label>å•ä½</label><input id="PkgUom" name="PkgUom" class="textbox hisui-combobox"></td>
+				<td><label class="required">*</label><label>ç­èŒæ–¹å¼</label><input id="PkgSterType" name="PkgSterType" class="textbox hisui-combobox"></td>
+				<td><label>ç§‘å®¤</label><input id="PkgReqLoc" name="PkgReqLoc" class="textbox hisui-combobox"></td>
+			</tr>
+			<tr>
+				<td><label>æœ€å¤§ä½¿ç”¨æ¬¡æ•°</label><input id="PkgWorkTimes" name="PkgWorkTimes" class="textbox hisui-numberbox" data-options="min:0"></td>
+				<td><label>å‚å•†</label><input id="Firm" name="Firm" class="textbox hisui-combobox"></td>
+				<td><label>å¤‡æ³¨</label><input id="PkgRemark" name="PkgRemark" class="textbox"></td>
+			</tr>
+			<tr>
+				<td><label>å™¨æ¢°æ•°é‡</label><input id="WorkCost" name="WorkCost" class="hisui-numberbox textbox" data-options="precision:0,fix:false,min:1" ></td>
+			</tr>
+			<tr>
+				<td align="left"><label>å¯ç”¨ç”Ÿç‰©ç›‘æµ‹</label><input id="PkgBioFlag" name="PkgBioFlag" class="hisui-checkbox" type="checkbox" value="Y" ></td>
+				<td align="left"><label style="padding-left:5px">å¤–æ¥å™¨æ¢°</label><input id="IsExt" name="IsExt" class="hisui-checkbox" type="checkbox" value="Y"></td>
+				<td align="left"><label style="padding-left:20px">å¯ç”¨</label><input id="PkgUseFlag" name="PkgUseFlag" class="hisui-checkbox" type="checkbox" value="Y"></td>
+			</tr>
+			<tr>
+				<td colspan="3" align="center"><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">ä¿å­˜</a></td>
+			</tr>
+		</table>
+	</div>
+
+	<CSP:INCLUDE PAGE="cssdhui.packageinfo.matcompare.csp">
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonHosp.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonData.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/jquery.tmpl.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/commonEditor.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/Viewer/viewer.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/webuploader/webuploader.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
 	<script type="text/javascript" src="../scripts/cssd/Package/Viewer.js"></script>
-	<script type="text/javascript" src="../scripts/cssd/Package/Pic.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Package/EditDetail.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Package/SelReq.js"></script>
 	<script type="text/javascript" src="../scripts/cssd/Package/PackageList.js"></script>
 </body>
 </html>

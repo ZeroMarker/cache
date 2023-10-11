@@ -1,0 +1,74 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+
+<html>
+	<head>
+	<ExtHealth:Head/>
+	<HISUI/>
+        <title>内涵质控修正情况</title>
+        
+        <script type="text/javascript" src="../scripts/datagrid-export.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+         <script language="cache" runat="server">
+	 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+			s UserID = %session.Get("LOGON.USERID")
+	  		s UserLocID = %session.Get("LOGON.CTLOCID")
+			s HospitalID = %session.Get("LOGON.HOSPID")
+ 	    </script>
+	 	<script language="javascript">
+			var userID = '#(UserID)#';
+			var userLocID = '#(UserLocID)#';
+			var SSGroupID = '#(SSGroupID)#';
+			var HospitalID = '#(HospitalID)#';
+	 	</script>
+        <style>
+        	span.combo.datebox{
+	       	   width:160px !important;	   
+	       }
+	       hisui-panel panel-body{
+		       height:737px;
+		   }
+       </style>
+	</head>
+<body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden">
+	<div data-options="region:'east',border:false,split:true" class="b_color" style="overflow:hidden;padding:10px;padding-left:0;width:514px;height:775px">
+		<div class="hisui-panel" title="内涵质控总览" data-options="split:true,headerCls:'panel-header-gray'" style="width:500px;height:773px">
+			<div id="view1" style="height:50%;width:100%">
+			</div>
+		</div>
+	</div>
+	
+	<div data-options="region:'center',border:false" class="b_color" style="padding:10px 5px 10px 10px;">
+		<div class="hisui-panel" title="内涵质控修正情况" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:500px" >
+			<div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+            	<div data-options="region:'north',border:false" style="height:90px;overflow:hidden;">
+					<div id="messageListTableTBarTop" style="padding:10px;height:90">
+						<div style="height:30;padding-bottom:10px">
+							<span style="padding-right:10px;">#(..Get("阶段"))#</span><select id="AdmType" class="hisui-combobox" style="width:120px;"></select>
+							<span style="margin-left:20px;padding-right:10px;">#(..Get("病案号"))#</span><input id="MedicareNo" class="hisui-validatebox textbox" style="width:120px;">
+							<span id="StartText" style="margin-left:2px;padding-right:10px;">#(..Get("起始日期"))#</span><input id="inputCreateDateStart" class="hisui-datebox" />
+			 				<span id="EndText" style="margin-left:2px;padding-right:10px;">#(..Get("截止日期"))#</span><input id="inputCreateDateEnd" class="hisui-datebox" />
+							
+						</div>	
+						<div style="height:30">
+							<span style="padding-right:10px;;">#(..Get("科室"))#</span><select id="ctLocID" class="hisui-combobox" style="width:120px;"></select>
+							<span style="margin-left:5px;padding-right:10px;">#(..Get("显示类型"))#</span><select id="Type" class="hisui-combobox" style="width:128px;"></select>
+							
+			 				<span style="margin-left:96px;"></span><a id="btnSearch" href="#" class="hisui-linkbutton hover-dark" onclick="doSearch()" data-options="iconCls:'icon-w-find'" style="width:90px;">查询</a>
+			 				<span style="margin-left:20px;"></span><a id="btnSearch" href="#" class="hisui-linkbutton hover-dark" onclick="exportExcel()" data-options="iconCls:'icon-w-export'" style="">导出表格</a>
+						</div>		 		
+					</div>	
+			 	</div>
+			 	<div data-options="region:'center',border:false" style="border: 1px #cccccc solid;border-left:none;border-right:none;width:900px">
+					<table class="hisui-datagrid" id="patientListTable" data-options="border:false,fit:true" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../scripts/quality/DHC.EMR.Quality.AiRepair.js"></script>	
+</body>
+</html>

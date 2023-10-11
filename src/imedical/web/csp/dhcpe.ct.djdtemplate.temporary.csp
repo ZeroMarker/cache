@@ -1,0 +1,143 @@
+<!--
+ * FileName: dhcpe.ct.djdtemplate.temporary.csp
+ * Author: zhongricheng
+ * Date: 2021-09-17
+ * Description: 导检单格式预览
+ * 
+ * 注意: 修改的时候尽量不用 px 使用 pt
+ * A4 size   595.44*841.68 pt    210*297 mm
+ * Lodop 宽度  580pt   205mm
+ * 边框、背景色 需要放在 td 上 否则打印不出现
+ * 注释中不能带有 尖括号的标签 否则会报错
+ * https://222.132.155.205:11443/imedical/web/csp/dhcpe.ct.djdtemplate.temporary.csp?PAADM=1478&Part=H-General^B-Formatter1^F-Receive&ExStrs=undefined&HospID=2
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s Part=$g(%request.Data("Part",1))  // 指引单部位 H-General  B-Formatter2  F-Pagination
+	s ExpStrs=%request.Get("ExStrs") // 扩展信息  是否打印打印过的项目^
+
+	s PAADM=$g(%request.Data("PAADM",1))
+	S UserID=$g(%request.Data("UserID",1))
+	s LocID=$g(%request.Data("LocID",1))
+	s HospID=$g(%request.Data("HospID",1))
+</SCRIPT>
+
+<div id="DJDDiv-#(PAADM)#">
+	<SCRIPT language="Cache" RUNAT="SERVER">
+		s HeadData=##class(%Library.DynamicObject).%New()
+		s BodyData=##class(%Library.DynamicObject).%New()
+		s FootData=##class(%Library.DynamicObject).%New()
+		i PAADM'="" {
+			s:LocID="" LocID=$p($g(^PAADM(+PAADM)),"^",4)
+			//w PAADM_"PAADM--"
+			s DJDData=##class(web.DHCPE.PrintNewDirect).GetDJDData(PAADM,"PAADM",ExpStrs,UserID,LocID,HospID)
+			
+			if ($IsObject(DJDData)&&(DJDData.code=0)) {
+				s HeadData=DJDData.data.head
+				s BodyData=DJDData.data.body
+				s FootData=DJDData.data.foot
+			}
+		}
+		s HeadPart=$p(Part,"^",1)
+		s BodyPart=$p(Part,"^",2)
+		s FootPart=$p(Part,"^",3)
+		
+		s cssCode = "<style type='text/css'>"
+				  _ ".DJDPageDiv{"
+				  _ "	font-family: 宋体;"
+				  _ "	margin: 0 25pt;"
+				  _ "	width: 580pt;"
+				  _ "}"
+				  _ ".DJDPageDiv *{"
+				  _ "	font-family: 宋体;"
+				  _ "	font-size: 12pt;"
+				  _ "}"
+				  _ ".DJDPageDiv table {"
+				  _ "	width: 540pt;"
+				  _ "	border-collapse: collapse;"
+				  _ "	line-height: 130%;"
+				  _ "}"
+				  _ ".DJDPageDiv #"_HeadPart_" {"
+				  _ "	padding-top: 10mm;"
+				  _ "}"
+				  _ ".DJDPageDiv #"_FootPart_" {"
+				  _ "	padding-bottom: 10mm;"
+				  _ "}"
+				  _ ".text{"
+				  _ "	font-weight: 700;"
+				  _ "	text-align: right;"
+				  _ "}"
+				  _ ".val{"
+				  _ "	text-align: left;"
+				  _ "	border-bottom: 1px solid #aaa;"
+				  _ "}"
+				  _ "</style>"
+
+		// 以下开始调用不同模板
+		w "<div id='H-Div-"_PAADM_"'>"
+		w cssCode
+		w "<div class='DJDPageDiv'><div id='"_HeadPart_"'>"
+		d:HeadPart="H-Simple" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdheader.simple","OnPageCSPROOT")
+		d:HeadPart="H-General" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdheader.general","OnPageCSPROOT")
+		d:HeadPart="H-Fully" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdheader.fully","OnPageCSPROOT")
+		d:HeadPart="H-Custom" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdheader.custom","OnPageCSPROOT")
+		w:HeadPart'="" "<input type='hidden' id='H-Div-Height-"_PAADM_"'>"
+		w "</div></div>"
+		w "</div>"
+
+		w "<div id='B-Div-"_PAADM_"'>"
+		w cssCode
+		w "<div class='DJDPageDiv'><div id='"_BodyPart_"'>"
+		d:BodyPart="B-Formatter1" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdbodyer.formatter1","OnPageCSPROOT")
+		d:BodyPart="B-Formatter2" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdbodyer.formatter2","OnPageCSPROOT")
+		d:BodyPart="B-Formatter3" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdbodyer.formatter3","OnPageCSPROOT")
+		d:BodyPart="B-Formatter4" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdbodyer.formatter4","OnPageCSPROOT")
+		d:HeadPart="B-Custom" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdbodyer.custom","OnPageCSPROOT")
+		w:BodyPart'="" "<input type='hidden' id='B-Div-Height-"_PAADM_"'>"
+		w "</div></div>"
+		w "</div>"
+
+		w "<div id='F-Div-"_PAADM_"'>"
+		w cssCode
+		w "<div class='DJDPageDiv'><div id='"_FootPart_"'>"
+		d:FootPart="F-Pagination" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdfooter.pagination","OnPageCSPROOT")
+		d:FootPart="F-Tips" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdfooter.tips","OnPageCSPROOT")
+		d:FootPart="F-PageAndTips" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdfooter.pageandtips","OnPageCSPROOT")
+		d:FootPart="F-Receive" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdfooter.receive","OnPageCSPROOT")
+		d:HeadPart="F-Custom" $zobjclassmethod("csp.csp.dhcpe.djd.dhcpe.djdfooter.custom","OnPageCSPROOT")
+		w:FootPart'="" "<input type='hidden' id='F-Div-Height-"_PAADM_"'>"
+		w "</div></div>"
+		w "</div>"
+	</SCRIPT>
+
+	<script type="text/javascript">
+		let PAADM = #(PAADM)#
+		let tHeadObj = document.getElementById("H-Div-Height-" + PAADM);
+		let tHeadInpObj = document.getElementById("H-Div-" + PAADM);
+		if (tHeadObj && tHeadInpObj) {
+			// pt = px * 0.75
+			// mm = px * 0.26458
+			tHeadObj.value = Math.ceil(tHeadInpObj.offsetHeight * 0.26458);
+		}
+
+		let tBodyObj = document.getElementById("B-Div-Height-" + PAADM);
+		let tBodyInpObj = document.getElementById("B-Div-" + PAADM);
+		if (tBodyObj && tBodyInpObj) {
+			// pt = px * 0.75
+			// mm = px * 0.26458
+			tBodyObj.value = Math.ceil(tBodyInpObj.offsetHeight * 0.26458);
+		}
+
+		let tFootObj = document.getElementById("F-Div-Height");
+		let tFootInpObj = document.getElementById("F-Div-" + PAADM);
+		if (tFootObj && tFootInpObj) {
+			// pt = px * 0.75
+			// mm = px * 0.26458
+			tFootObj.value = Math.ceil(tFootInpObj.offsetHeight * 0.26458);
+		}
+	</script>
+
+</div>

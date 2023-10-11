@@ -1,0 +1,88 @@
+<!-- dhcem.nur.work.card.csp 护士站右下角图标格式(hos门户使用)-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<title>hos门户护士站卡片小图标</title>
+
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+<style type='text/css' id="hosnewsStyle">
+.hosnews{font-size: 0;height: 40px;display: inline-block;background-color:rgba(0, 0, 0, 0.5);box-shadow:0px 3px 6px rgba(0, 0, 0, 0.16);cursor: pointer;}
+.hosnews>img{margin-right: 15px;vertical-align: middle;margin-left: 20px;width:45px;}
+.hosnews>div{display: inline-block;vertical-align: middle;}
+.hosnews>div>p{font-family: 'Source Han Sans CN';color: #ffffff;font-size: 14px;line-height: 0px;}
+.hosnews>div>p:first-of-type{font-size: 14px;}
+</style>
+<style type="text/css">
+		
+</style>
+
+</head>
+
+<body style="height: 100%;margin:0;display:flex;flex-direction:column;background:rgba(0,0,0,0);justify-content: space-between;">
+	
+</body>
+
+
+<script type="text/javascript">
+	/// 一行显示4个
+	var oneRowItemNumber=4;	
+	var oneItemWidth = '';
+
+	$(function(){
+		initPage();
+		
+		initView();	
+	})
+	
+	function initPage(){
+		var bodyWidth = $('body').width();
+		oneItemWidth = parseInt(bodyWidth/oneRowItemNumber)-10;
+	}
+	
+	function initView(){
+		
+		runClassMethod("web.DHCEMNurWorkCard","cardNumber",{},function(jsonObject){
+			writeHtml(jsonObject);
+		},'json',false)
+		
+	}
+	
+	function writeHtml(allData){
+		$('body').html('');
+		
+		
+		if(!allData.length) return;
+		var allRow = Math.ceil(allData.length/4);
+		var bodyHeight=$('body').height();
+		var rowHeight = parseInt(bodyHeight/allRow)-10+'px';
+		
+		
+		var allHtml='';
+		for (var i in allData){
+			var itemData = allData[i];
+			if(i%4==0){
+				allHtml+=i?'</div>':''
+				allHtml+='<div style="height:'+rowHeight+';overflow: hidden;display: flex;flex-direction: row;justify-content: space-between;">'
+			}
+			allHtml+=
+				'<div class="hosnews" style="background:rgba(0,0,0,0.5);width:'+oneItemWidth+';height:100%;display: flex;justify-content: center;align-items: center;">'+
+					'<img src="../images/dhcnewpro/'+itemData.type+'.png" alt="">'+
+				    '<div>'+
+				      '<p style="font-size:26;font-weight:bold;">'+itemData.value+'</p>'+
+				      '<p style="min-width:90px">'+itemData.name+'</p>'+
+				      //'<p>'+itemData.value+'</p>'+
+				    '</div>'+
+				'</div>'
+		}
+		allHtml+=allData.length?'</div>':'';
+		
+		$('body').append(allHtml);	
+	}
+</script>
+
+</html>

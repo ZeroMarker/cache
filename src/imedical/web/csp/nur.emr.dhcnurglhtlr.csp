@@ -1,0 +1,1293 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    s isPermission = ##Class(NurMp.Service.Template.Model).editAuthority(%request.Get("EpisodeID"),$g(%session.Data("LOGON.CTLOCID")),"DHCNURGLHTLR")
+    i isPermission'="0"
+    {
+    s utfo = $ZCONVERT(isPermission,"O","UTF8")
+    s urlo = $ZCONVERT(utfo,"O","URL")
+    s %response.ServerSideRedirect = "nur.emr.permissiondenied.csp?isPermission="_urlo
+    q 1
+    }
+    else
+    {
+    q 1
+    }
+</csp:method>
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type = "text/css" href = "../skin/default/css/websys.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts/nurse/hisui-0.1.0/dist/css/jquery.contextMenu.css" />
+
+<style type="text/css">.datagrid-row-mp-printed
+{
+background:#CDC9A5;
+}
+.marker
+{
+position:absolute;border-radius:50%;z-index:999;
+}
+body * 
+{
+font-family:微软雅黑;font-size:14px
+}
+.commonModalDialog .dialog-content
+{
+overflow:hidden;
+}
+#element_Ul li label.checkbox
+{
+display:inline;
+}
+.datagrid-row-selected
+{
+background: #fced89 !important;color: #000000;
+}
+.datagrid-row-editting
+{
+background: #abbd65;color: #000000;
+}
+.tooltipTable
+{
+border-collapse:collapse;border: 1px solid #509de1;
+}
+.tooltipTable td
+{
+border: 1px solid #509de1;
+}
+.tooltipTable th
+{
+border: 1px solid #509de1;
+}
+img[src = ""]
+{
+opacity: 0;
+}
+ </style></head>
+   <body style="background-color:white;padding:0px;width:100%">
+<div LineNo="1" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_3" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_3" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("日期输入"))#</div>
+</div>
+<div id="div_DateElement_2" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155px;padding-left:0px;padding-right:0px">
+<input id="DateElement_2" name="DateElement_2" oldVal="" SaveField="CareDate" format="yyyy-MM-dd" style="height:30px;width:155px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_85" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_85" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("时间输入"))#</div>
+</div>
+<div id="div_TimeElement_84" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:152px;padding-left:0px;padding-right:0px">
+<input id="TimeElement_84" name="TimeElement_84" oldVal="" SaveField="CareTime" style="height:30px;width:152px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_77" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:54px;padding-left:0px;padding-right:0px">
+<div id="LableElement_77" style="height:23.76px;width:54px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("年龄："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_5" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:58.42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_5" style="height:18.48px;width:58.42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("70岁以上"))#</div>
+</div>
+<div id="div_DropRadioElement_4" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_4' name='DropRadioElement_4' oldVal='' SaveField='Item2' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="5" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_7" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:58.42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_7" style="height:18.48px;width:58.42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("70岁以下"))#</div>
+</div>
+<div id="div_DropRadioElement_6" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_6' name='DropRadioElement_6' oldVal='' SaveField='Item3' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="6" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_76" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:54px;padding-left:0px;padding-right:0px">
+<div id="LableElement_76" style="height:23.76px;width:54px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("意识："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="7" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_9" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_9" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("模糊"))#</div>
+</div>
+<div id="div_DropRadioElement_8" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_8' name='DropRadioElement_8' oldVal='' SaveField='Item4' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="8" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_11" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_11" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("谵妄状态"))#</div>
+</div>
+<div id="div_DropRadioElement_10" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_10' name='DropRadioElement_10' oldVal='' SaveField='Item5' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="9" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_13" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_13" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("嗜睡"))#</div>
+</div>
+<div id="div_DropRadioElement_12" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_12' name='DropRadioElement_12' oldVal='' SaveField='Item6' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="10" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_15" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_15" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("昏迷"))#</div>
+</div>
+<div id="div_DropRadioElement_14" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_14' name='DropRadioElement_14' oldVal='' SaveField='Item7' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="11" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_78" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:54px;padding-left:0px;padding-right:0px">
+<div id="LableElement_78" style="height:23.76px;width:54px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("情绪："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="12" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_17" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_17" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("烦躁"))#</div>
+</div>
+<div id="div_DropRadioElement_16" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_16' name='DropRadioElement_16' oldVal='' SaveField='Item8' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="13" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_19" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_19" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("焦虑"))#</div>
+</div>
+<div id="div_DropRadioElement_18" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_18' name='DropRadioElement_18' oldVal='' SaveField='Item9' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="14" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_21" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_21" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("恐惧"))#</div>
+</div>
+<div id="div_DropRadioElement_20" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_20' name='DropRadioElement_20' oldVal='' SaveField='Item10' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="15" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_79" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:54px;padding-left:0px;padding-right:0px">
+<div id="LableElement_79" style="height:23.76px;width:54px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("活动："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="16" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_23" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:78.21px;padding-left:0px;padding-right:0px">
+<div id="LableElement_23" style="height:18.48px;width:78.21px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("术后2天以上"))#</div>
+</div>
+<div id="div_DropRadioElement_22" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_22' name='DropRadioElement_22' oldVal='' SaveField='Item11' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="17" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_25" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_25" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("行走不稳"))#</div>
+</div>
+<div id="div_DropRadioElement_24" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_24' name='DropRadioElement_24' oldVal='' SaveField='Item12' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="18" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_27" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_27" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("不能自主活动"))#</div>
+</div>
+<div id="div_DropRadioElement_26" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_26' name='DropRadioElement_26' oldVal='' SaveField='Item13' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="19" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_80" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:90px;padding-left:0px;padding-right:0px">
+<div id="LableElement_80" style="height:23.76px;width:90px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("管道种类："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="20" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_29" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_29" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("胃管"))#</div>
+</div>
+<div id="div_DropRadioElement_28" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_28' name='DropRadioElement_28' oldVal='' SaveField='Item14' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="21" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_31" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_31" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("尿管"))#</div>
+</div>
+<div id="div_DropRadioElement_30" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_30' name='DropRadioElement_30' oldVal='' SaveField='Item15' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="22" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_33" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:70px;padding-left:0px;padding-right:0px">
+<div id="LableElement_33" style="height:18.48px;width:70px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("静脉留置针"))#</div>
+</div>
+<div id="div_DropRadioElement_32" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_32' name='DropRadioElement_32' oldVal='' SaveField='Item16' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="23" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_35" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_35" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("吸氧管"))#</div>
+</div>
+<div id="div_DropRadioElement_34" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_34' name='DropRadioElement_34' oldVal='' SaveField='Item17' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="24" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_37" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_37" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输液管"))#</div>
+</div>
+<div id="div_DropRadioElement_36" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_36' name='DropRadioElement_36' oldVal='' SaveField='Item18' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="25" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_39" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_39" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("其他"))#</div>
+</div>
+<div id="div_DropRadioElement_38" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_38' name='DropRadioElement_38' oldVal='' SaveField='Item19' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="26" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_81" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:54px;padding-left:0px;padding-right:0px">
+<div id="LableElement_81" style="height:23.76px;width:54px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("疼痛："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="27" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_41" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_41" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("难以忍受"))#</div>
+</div>
+<div id="div_DropRadioElement_40" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_40' name='DropRadioElement_40' oldVal='' SaveField='Item20' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="28" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_43" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_43" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("可忍受"))#</div>
+</div>
+<div id="div_DropRadioElement_42" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_42' name='DropRadioElement_42' oldVal='' SaveField='Item21' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="29" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_82" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:54px;padding-left:0px;padding-right:0px">
+<div id="LableElement_82" style="height:23.76px;width:54px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("沟通："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="30" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_45" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:70px;padding-left:0px;padding-right:0px">
+<div id="LableElement_45" style="height:18.48px;width:70px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("差、不配合"))#</div>
+</div>
+<div id="div_DropRadioElement_44" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_44' name='DropRadioElement_44' oldVal='' SaveField='Item22' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="31" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_47" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_47" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("一般理解"))#</div>
+</div>
+<div id="div_DropRadioElement_46" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_46' name='DropRadioElement_46' oldVal='' SaveField='Item23' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="32" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_73" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_73" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("总分："))#</div>
+</div>
+<div id="div_NumberElement_72" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="NumberElement_72" name="NumberElement_72" class="hisui-numberbox" oldVal="" SaveField="Item36" style="height:30px;width:155.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="33" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_83" style="float:left;height:23.76px;padding-Top:0px;padding-bottom:0px;width:90px;padding-left:0px;padding-right:0px">
+<div id="LableElement_83" style="height:23.76px;width:90px;text-align:left;font-family:微软雅黑;font-size:18px;padding:0px;color:#000000">#(..Get("预防措施："))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="34" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_49" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_49" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("悬挂警示标示"))#</div>
+</div>
+<div id="div_DropRadioElement_48" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_48' name='DropRadioElement_48' oldVal='' SaveField='Item24' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="35" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_51" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_51" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("加强宣教"))#</div>
+</div>
+<div id="div_DropRadioElement_50" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_50' name='DropRadioElement_50' oldVal='' SaveField='Item25' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="36" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_53" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_53" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("妥善固定管道"))#</div>
+</div>
+<div id="div_DropRadioElement_52" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_52' name='DropRadioElement_52' oldVal='' SaveField='Item26' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="37" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_55" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:70px;padding-left:0px;padding-right:0px">
+<div id="LableElement_55" style="height:18.48px;width:70px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("严格交接班"))#</div>
+</div>
+<div id="div_DropRadioElement_54" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_54' name='DropRadioElement_54' oldVal='' SaveField='Item27' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="38" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_57" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_57" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("适当约束"))#</div>
+</div>
+<div id="div_DropRadioElement_56" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_56' name='DropRadioElement_56' oldVal='' SaveField='Item28' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="39" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_59" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:98px;padding-left:0px;padding-right:0px">
+<div id="LableElement_59" style="height:18.48px;width:98px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("加强巡视及护理"))#</div>
+</div>
+<div id="div_DropRadioElement_58" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_58' name='DropRadioElement_58' oldVal='' SaveField='Item29' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="40" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_61" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:112px;padding-left:0px;padding-right:0px">
+<div id="LableElement_61" style="height:18.48px;width:112px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("遵医嘱使用镇静剂"))#</div>
+</div>
+<div id="div_DropRadioElement_60" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_60' name='DropRadioElement_60' oldVal='' SaveField='Item30' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="41" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_63" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_63" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("其他措施"))#</div>
+</div>
+<div id="div_DropRadioElement_62" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_62' name='DropRadioElement_62' oldVal='' SaveField='Item31' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="42" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_65" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_65" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("评估者签名："))#</div>
+</div>
+<div id="div_TextElement_64" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_64" name="TextElement_64" class="textbox" oldVal="" Signature="Common" SignatureAuto="False" SignatureShow="FIFO" SignatureSplit="," SaveField="Item32" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="43" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_67" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_67" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("大组长监管："))#</div>
+</div>
+<div id="div_TextElement_66" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_66" name="TextElement_66" class="textbox" oldVal="" Signature="Common" SignatureAuto="False" SignatureShow="FIFO" SignatureSplit="," SaveField="Item33" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="44" style="padding:5px 10px 5px 10px">
+<div id="div_ButtonElement_74" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:88px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_74" href="javascript:void();" class="hisui-linkbutton hover-dark" buttonType="savebutton" GatherSpecifyFiledsData="" gatherFun="" style="height:30px;width:88px">#(..Get("保存"))#</a>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/plugin/datagrid-cellediting.js?ver=2023-04-11_120509" ></script>
+
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </SCRIPT>
+   <SCRIPT Language="Javascript">
+  var HighRiskReportEnable='#(##class(NurMp.Template.EventSet).isReport("6f86ed917b4547f98617e1297eb03450"))#';
+  var WebIp='';
+  var EpisodeID='#(%request.Get("EpisodeID"))#';
+  var TemplateGUID="6f86ed917b4547f98617e1297eb03450";
+  var TemplateIndentity="DHCNURGLHTLR";
+  var CAPatientPDF = false;
+  var dtformat = "";
+  var WindowCompleted = false;
+  var HiddenNoSubmit = false;
+  var RequiredAlter = false;
+  var HideSavedAlter = false;
+  var ShowLeaveMark = false;
+   </SCRIPT>
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Service.Template.Model).InitEnvironment(%request.Get("ModelId"),%session.Data("LOGON.CTLOCID"))
+   </SCRIPT>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/HisUITableEdit.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/rightClickHandler.js?ver=2023-04-11_120509" charset="gbk" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/validateboxType.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/ElementUtility.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Foundation.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Condition.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Cascading.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript">
+var LoadFormElements = [
+'DateElement_2','TimeElement_84','DropRadioElement_4','DropRadioElement_6','DropRadioElement_8','DropRadioElement_10','DropRadioElement_12','DropRadioElement_14','DropRadioElement_16','DropRadioElement_18','DropRadioElement_20','DropRadioElement_22','DropRadioElement_24','DropRadioElement_26','DropRadioElement_28','DropRadioElement_30','DropRadioElement_32','DropRadioElement_34','DropRadioElement_36','DropRadioElement_38','DropRadioElement_40','DropRadioElement_42','DropRadioElement_44','DropRadioElement_46','NumberElement_72','DropRadioElement_48','DropRadioElement_50','DropRadioElement_52','DropRadioElement_54','DropRadioElement_56','DropRadioElement_58','DropRadioElement_60','DropRadioElement_62','TextElement_64','TextElement_66'
+];
+
+
+
+var Data_DropRadioElement_4=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_6",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_6",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_6",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_6=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_4",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_4",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_4",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_8=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_10",Disable:true,IsHide:false},{ID:"DropRadioElement_12",Disable:true,IsHide:false},{ID:"DropRadioElement_14",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_10",Disable:true,IsHide:false},{ID:"DropRadioElement_12",Disable:true,IsHide:false},{ID:"DropRadioElement_14",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_10",Disable:false,IsHide:false},{ID:"DropRadioElement_12",Disable:false,IsHide:false},{ID:"DropRadioElement_14",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_10=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_8",Disable:true,IsHide:false},{ID:"DropRadioElement_12",Disable:true,IsHide:false},{ID:"DropRadioElement_14",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_8",Disable:true,IsHide:false},{ID:"DropRadioElement_12",Disable:true,IsHide:false},{ID:"DropRadioElement_14",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_8",Disable:false,IsHide:false},{ID:"DropRadioElement_12",Disable:false,IsHide:false},{ID:"DropRadioElement_14",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_12=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_8",Disable:true,IsHide:false},{ID:"DropRadioElement_10",Disable:true,IsHide:false},{ID:"DropRadioElement_14",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_10",Disable:true,IsHide:false},{ID:"DropRadioElement_8",Disable:true,IsHide:false},{ID:"DropRadioElement_14",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_8",Disable:false,IsHide:false},{ID:"DropRadioElement_10",Disable:false,IsHide:false},{ID:"DropRadioElement_14",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_16=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_18",Disable:true,IsHide:false},{ID:"DropRadioElement_20",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_18",Disable:true,IsHide:false},{ID:"DropRadioElement_20",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_18",Disable:false,IsHide:false},{ID:"DropRadioElement_20",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_18=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_16",Disable:true,IsHide:false},{ID:"DropRadioElement_20",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_16",Disable:true,IsHide:false},{ID:"DropRadioElement_20",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_16",Disable:false,IsHide:false},{ID:"DropRadioElement_20",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_20=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_16",Disable:true,IsHide:false},{ID:"DropRadioElement_18",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_16",Disable:true,IsHide:false},{ID:"DropRadioElement_18",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_16",Disable:false,IsHide:false},{ID:"DropRadioElement_18",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_22=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_24",Disable:true,IsHide:false},{ID:"DropRadioElement_26",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_24",Disable:true,IsHide:false},{ID:"DropRadioElement_26",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_24",Disable:false,IsHide:false},{ID:"DropRadioElement_26",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_24=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_22",Disable:true,IsHide:false},{ID:"DropRadioElement_26",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_22",Disable:true,IsHide:false},{ID:"DropRadioElement_26",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_22",Disable:false,IsHide:false},{ID:"DropRadioElement_26",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_26=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_22",Disable:true,IsHide:false},{ID:"DropRadioElement_24",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_22",Disable:true,IsHide:false},{ID:"DropRadioElement_24",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_22",Disable:false,IsHide:false},{ID:"DropRadioElement_24",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_28=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_30",Disable:false,IsHide:false},{ID:"DropRadioElement_32",Disable:false,IsHide:false},{ID:"DropRadioElement_34",Disable:false,IsHide:false},{ID:"DropRadioElement_36",Disable:false,IsHide:false},{ID:"DropRadioElement_38",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_30=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_28",Disable:false,IsHide:false},{ID:"DropRadioElement_32",Disable:false,IsHide:false},{ID:"DropRadioElement_34",Disable:false,IsHide:false},{ID:"DropRadioElement_36",Disable:false,IsHide:false},{ID:"DropRadioElement_38",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_32=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_28",Disable:false,IsHide:false},{ID:"DropRadioElement_30",Disable:false,IsHide:false},{ID:"DropRadioElement_34",Disable:false,IsHide:false},{ID:"DropRadioElement_36",Disable:false,IsHide:false},{ID:"DropRadioElement_38",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_34=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false},{ID:"DropRadioElement_38",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_28",Disable:false,IsHide:false},{ID:"DropRadioElement_30",Disable:false},{ID:"DropRadioElement_32",Disable:false,IsHide:false},{ID:"DropRadioElement_36",Disable:false,IsHide:false},{ID:"DropRadioElement_38",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_38=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_28",Disable:true,IsHide:false},{ID:"DropRadioElement_30",Disable:true,IsHide:false},{ID:"DropRadioElement_32",Disable:true,IsHide:false},{ID:"DropRadioElement_34",Disable:true,IsHide:false},{ID:"DropRadioElement_36",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_28",Disable:false,IsHide:false},{ID:"DropRadioElement_30",Disable:false,IsHide:false},{ID:"DropRadioElement_32",Disable:false,IsHide:false},{ID:"DropRadioElement_34",Disable:false,IsHide:false},{ID:"DropRadioElement_36",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_40=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_42",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_42",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_42",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_42=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_40",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_40",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_40",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_44=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_46",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_46",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_46",Disable:false,IsHide:false}]}];
+
+var Data_DropRadioElement_46=[{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"1",Childs:[{ID:"DropRadioElement_44",Disable:true,IsHide:false}]},{Sign:"EqText",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"2",Childs:[{ID:"DropRadioElement_44",Disable:true,IsHide:false}]},{Sign:"EqEmptyArray",IsPrompt:"False",ExecType:"Promptly",PromptMsg:$g(""),Value:"",Childs:[{ID:"DropRadioElement_44",Disable:false,IsHide:false}]}];
+
+$(document).ready(function () {InnerNetDebug();
+CallItemBeforeInit();
+ $('#DateElement_2').dateboxq({ID:'DateElement_2',required:true });
+ $('#TimeElement_84').timespinner({ID:'TimeElement_84',required:true });
+if (/^edit/.test('TimeElement_84') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_84'))) {
+$('#TimeElement_84').unbind("keydown.spinner");
+}
+
+ $('#DropRadioElement_4').DropDropRadio({ID:'DropRadioElement_4',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_4 });
+$('#DropRadioElement_4').data('NumberValues',{1:'0',2:'2'});
+ $('#DropRadioElement_6').DropDropRadio({ID:'DropRadioElement_6',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_6 });
+$('#DropRadioElement_6').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_8').DropDropRadio({ID:'DropRadioElement_8',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_8 });
+$('#DropRadioElement_8').data('NumberValues',{1:'0',2:'3'});
+ $('#DropRadioElement_10').DropDropRadio({ID:'DropRadioElement_10',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_10 });
+$('#DropRadioElement_10').data('NumberValues',{1:'0',2:'3'});
+ $('#DropRadioElement_12').DropDropRadio({ID:'DropRadioElement_12',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_12 });
+$('#DropRadioElement_12').data('NumberValues',{1:'0',2:'2'});
+ $('#DropRadioElement_14').DropDropRadio({ID:'DropRadioElement_14',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_14 });
+$('#DropRadioElement_14').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_16').DropDropRadio({ID:'DropRadioElement_16',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_16 });
+$('#DropRadioElement_16').data('NumberValues',{1:'0',2:'3'});
+ $('#DropRadioElement_18').DropDropRadio({ID:'DropRadioElement_18',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_18 });
+$('#DropRadioElement_18').data('NumberValues',{1:'0',2:'2'});
+ $('#DropRadioElement_20').DropDropRadio({ID:'DropRadioElement_20',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_20 });
+$('#DropRadioElement_20').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_22').DropDropRadio({ID:'DropRadioElement_22',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_22 });
+$('#DropRadioElement_22').data('NumberValues',{1:'0',2:'3'});
+ $('#DropRadioElement_24').DropDropRadio({ID:'DropRadioElement_24',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_24 });
+$('#DropRadioElement_24').data('NumberValues',{1:'0',2:'2'});
+ $('#DropRadioElement_26').DropDropRadio({ID:'DropRadioElement_26',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_26 });
+$('#DropRadioElement_26').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_28').DropDropRadio({ID:'DropRadioElement_28',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_28 });
+$('#DropRadioElement_28').data('NumberValues',{1:'0',2:'3'});
+ $('#DropRadioElement_30').DropDropRadio({ID:'DropRadioElement_30',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_30 });
+$('#DropRadioElement_30').data('NumberValues',{1:'0',2:'2'});
+ $('#DropRadioElement_32').DropDropRadio({ID:'DropRadioElement_32',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_32 });
+$('#DropRadioElement_32').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_34').DropDropRadio({ID:'DropRadioElement_34',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_34 });
+$('#DropRadioElement_34').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_36').DropDropRadio({ID:'DropRadioElement_36',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_36 });
+$('#DropRadioElement_36').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_38').DropDropRadio({ID:'DropRadioElement_38',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_38 });
+$('#DropRadioElement_38').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_40').DropDropRadio({ID:'DropRadioElement_40',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_40 });
+$('#DropRadioElement_40').data('NumberValues',{1:'0',2:'3'});
+ $('#DropRadioElement_42').DropDropRadio({ID:'DropRadioElement_42',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_42 });
+$('#DropRadioElement_42').data('NumberValues',{1:'0',2:'1'});
+ $('#DropRadioElement_44').DropDropRadio({ID:'DropRadioElement_44',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_44 });
+$('#DropRadioElement_44').data('NumberValues',{1:'0',2:'3'});
+ $('#DropRadioElement_46').DropDropRadio({ID:'DropRadioElement_46',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true,onChange:AfterChange_DropRadioElement_46 });
+$('#DropRadioElement_46').data('NumberValues',{1:'0',2:'1'});
+ $('#NumberElement_72').numberbox({ID:'NumberElement_72',validType:[] });
+ $('#DropRadioElement_48').DropDropRadio({ID:'DropRadioElement_48',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_48').data('NumberValues',{1:'1',2:'2'});
+ $('#DropRadioElement_50').DropDropRadio({ID:'DropRadioElement_50',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_50').data('NumberValues',{1:'1',2:'2'});
+ $('#DropRadioElement_52').DropDropRadio({ID:'DropRadioElement_52',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_52').data('NumberValues',{1:'1',2:'2'});
+ $('#DropRadioElement_54').DropDropRadio({ID:'DropRadioElement_54',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_54').data('NumberValues',{1:'1',2:'2'});
+ $('#DropRadioElement_56').DropDropRadio({ID:'DropRadioElement_56',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_56').data('NumberValues',{1:'1',2:'2'});
+ $('#DropRadioElement_58').DropDropRadio({ID:'DropRadioElement_58',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_58').data('NumberValues',{1:'1',2:'2'});
+ $('#DropRadioElement_60').DropDropRadio({ID:'DropRadioElement_60',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_60').data('NumberValues',{1:'1',2:'2'});
+ $('#DropRadioElement_62').DropDropRadio({ID:'DropRadioElement_62',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_62').data('NumberValues',{1:'1',2:'2'});
+ $('#TextElement_64').validatebox({ID:'TextElement_64',required:true,Signature:'Common',SignatureAuto:'False' });
+ $('#TextElement_64').on('blur', function(){ElementUtility.TextElement.banding('TextElement_64', $(this).attr('SignatureFullVal'),true); });
+ $('#TextElement_64').on('focus', function(){$(this).val(''); });
+ $('#TextElement_64').on('keyup', function(event){if (event.keyCode == 13 || event.keyCode == 46) {} else {RestrictNumerical($(this));} });
+ $('#TextElement_64').keydown(function(event){if (event.keyCode == 13)  JobNumEnterToName($(this),false);if (event.keyCode == 46)  ClearSign($(this)); });
+ $('#TextElement_66').validatebox({ID:'TextElement_66',Signature:'Common',SignatureAuto:'False' });
+ $('#TextElement_66').on('blur', function(){ElementUtility.TextElement.banding('TextElement_66', $(this).attr('SignatureFullVal'),true); });
+ $('#TextElement_66').on('focus', function(){$(this).val(''); });
+ $('#TextElement_66').on('keyup', function(event){if (event.keyCode == 13 || event.keyCode == 46) {} else {RestrictNumerical($(this));} });
+ $('#TextElement_66').keydown(function(event){if (event.keyCode == 13)  JobNumEnterToName($(this),false);if (event.keyCode == 46)  ClearSign($(this)); });
+$('#ButtonElement_74').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_74').click(function () {SaveAndCloseWindow('','','',null); });
+CallItemAfterInit();
+CallItemBeforeSetValue();
+SetOneValue('DateElement_2',GetCurrentDate());
+
+SetOneValue('TimeElement_84',GetServerNowTime());
+
+SetOneValue('DropRadioElement_4',{source:[{Text: $g(""),Value: '1'},{Text: $g("2"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_6',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_8',{source:[{Text: $g(""),Value: '1'},{Text: $g("3"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_10',{source:[{Text: $g(""),Value: '1'},{Text: $g("3"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_12',{source:[{Text: $g(""),Value: '1'},{Text: $g("2"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_14',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_16',{source:[{Text: $g(""),Value: '1'},{Text: $g("3"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_18',{source:[{Text: $g(""),Value: '1'},{Text: $g("2"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_20',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_22',{source:[{Text: $g(""),Value: '1'},{Text: $g("3"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_24',{source:[{Text: $g(""),Value: '1'},{Text: $g("2"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_26',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_28',{source:[{Text: $g(""),Value: '1'},{Text: $g("3"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_30',{source:[{Text: $g(""),Value: '1'},{Text: $g("2"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_32',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_34',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_36',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_38',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_40',{source:[{Text: $g(""),Value: '1'},{Text: $g("3"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_42',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_44',{source:[{Text: $g(""),Value: '1'},{Text: $g("3"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_46',{source:[{Text: $g(""),Value: '1'},{Text: $g("1"),Value: '2'}],values:[]});
+SetOneValue('NumberElement_72','0');
+SetOneValue('DropRadioElement_48',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[{Text: $g("√"),Value: '2'}]});
+SetOneValue('DropRadioElement_50',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[{Text: $g("√"),Value: '2'}]});
+SetOneValue('DropRadioElement_52',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[{Text: $g("√"),Value: '2'}]});
+SetOneValue('DropRadioElement_54',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[{Text: $g("√"),Value: '2'}]});
+SetOneValue('DropRadioElement_56',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_58',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[{Text: $g("√"),Value: '2'}]});
+SetOneValue('DropRadioElement_60',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[]});
+SetOneValue('DropRadioElement_62',{source:[{Text: $g(""),Value: '1'},{Text: $g("√"),Value: '2'}],values:[]});
+
+InitHiddenField();
+InitDynamicTableTitleLabel();
+ShortcutFormElementFocus();
+setTimeout(function(){
+if (window.HISUIStyleCode == 'lite'){
+$('#DateElement_2').css('width',($('#DateElement_2').css('width').replace('px','')-7)+'px');
+}
+GetDataFromService(null,null,null,null,false);
+CallItemAfterSetValue();
+
+InitPatientPDF();
+InitHandover();
+InitHighRiskReport();
+setTimeout(function(){
+UpdateCAOldFormData();
+InitAutoSignature();
+InitTableCellPopover();
+InitSignDomain();
+BindingLeaveMarkLogEvent();
+WindowCompleted = true;
+setTimeout(PrintActivexUpgrade, 100); 
+setTimeout(function(){
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/shim.min.js?ver=2023-04-11_120509');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js?ver=2023-04-11_120509');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/clipboard.min.js?ver=2023-04-11_120509');
+}, 100); 
+GetLeaveMarkLogs();
+}, 10); 
+}, 0); 
+ });
+$(window).load(function () {
+$('body').append('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+if ($.type(window.WindowLoadCallBack) === 'function') { window.WindowLoadCallBack(); }
+ });
+function AfterChange_DropRadioElement_4(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_4');
+var datas=GetDataSource('DropRadioElement_4',Data_DropRadioElement_4,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_4');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_4');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_6(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_6');
+var datas=GetDataSource('DropRadioElement_6',Data_DropRadioElement_6,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_6');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_6');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_8(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_8');
+var datas=GetDataSource('DropRadioElement_8',Data_DropRadioElement_8,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_8');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_8');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_10(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_10');
+var datas=GetDataSource('DropRadioElement_10',Data_DropRadioElement_10,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_10');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_10');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_12(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_12');
+var datas=GetDataSource('DropRadioElement_12',Data_DropRadioElement_12,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_12');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_12');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_14(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_14');
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_16(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_16');
+var datas=GetDataSource('DropRadioElement_16',Data_DropRadioElement_16,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_16');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_16');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_18(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_18');
+var datas=GetDataSource('DropRadioElement_18',Data_DropRadioElement_18,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_18');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_18');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_20(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_20');
+var datas=GetDataSource('DropRadioElement_20',Data_DropRadioElement_20,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_20');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_20');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_22(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_22');
+var datas=GetDataSource('DropRadioElement_22',Data_DropRadioElement_22,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_22');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_22');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_24(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_24');
+var datas=GetDataSource('DropRadioElement_24',Data_DropRadioElement_24,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_24');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_24');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_26(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_26');
+var datas=GetDataSource('DropRadioElement_26',Data_DropRadioElement_26,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_26');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_26');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_28(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_28');
+var datas=GetDataSource('DropRadioElement_28',Data_DropRadioElement_28,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_28');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_28');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_30(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_30');
+var datas=GetDataSource('DropRadioElement_30',Data_DropRadioElement_30,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_30');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_30');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_32(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_32');
+var datas=GetDataSource('DropRadioElement_32',Data_DropRadioElement_32,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_32');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_32');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_34(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_34');
+var datas=GetDataSource('DropRadioElement_34',Data_DropRadioElement_34,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_34');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_34');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_36(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_36');
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_38(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_38');
+var datas=GetDataSource('DropRadioElement_38',Data_DropRadioElement_38,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_38');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_38');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_40(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_40');
+var datas=GetDataSource('DropRadioElement_40',Data_DropRadioElement_40,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_40');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_40');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_42(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_42');
+var datas=GetDataSource('DropRadioElement_42',Data_DropRadioElement_42,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_42');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_42');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_44(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_44');
+var datas=GetDataSource('DropRadioElement_44',Data_DropRadioElement_44,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_44');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_44');
+}
+});
+Update_NumberElement_72();
+
+}
+function AfterChange_DropRadioElement_46(newValue,oldValue)
+{
+var currentvalue=GetValueById('DropRadioElement_46');
+var datas=GetDataSource('DropRadioElement_46',Data_DropRadioElement_46,currentvalue,true);
+$.each(datas,function(i,dataNew)
+{
+if(dataNew.ExecType == "DataLoading" && WindowCompleted) return;
+if(dataNew.ExecType == "DataLoaded" && !WindowCompleted) return;
+if(dataNew.IsPrompt == "True")
+{
+$.messager.confirm($g("提示"), dataNew.PromptMsg, function (r) {
+if (r) {
+ChangeData(dataNew,currentvalue,'DropRadioElement_46');
+}
+});
+}
+else{
+ChangeData(dataNew,currentvalue,'DropRadioElement_46');
+}
+});
+Update_NumberElement_72();
+
+}
+function Update_NumberElement_72()
+{
+var val=NumberSum(['DropRadioElement_4','DropRadioElement_6','DropRadioElement_8','DropRadioElement_10','DropRadioElement_12','DropRadioElement_14','DropRadioElement_16','DropRadioElement_18','DropRadioElement_20','DropRadioElement_22','DropRadioElement_24','DropRadioElement_26','DropRadioElement_28','DropRadioElement_30','DropRadioElement_32','DropRadioElement_34','DropRadioElement_36','DropRadioElement_38','DropRadioElement_40','DropRadioElement_42','DropRadioElement_44','DropRadioElement_46']);
+SetOneValue('NumberElement_72',val);
+
+}
+
+</script> <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/custom.js?ver=2023-04-11_120509" ></script>
+ <script type="text/javascript" src="../scripts_gen/DHCNURGLHTLR.js?ver=2023-04-11_120509" ></script>
+<script for="PrintActiveX" event="CheckUpgradeEvent(msg)" language="javascript">
+function PrintActiveX::CheckUpgradeEvent(msg) {
+console.log(msg);
+var reMsg = JSON.parse(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+else if (reMsg.status == "-1") {//升级失败
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+}
+</script>
+<script type='text/template' id='dialogReferTemplate'>
+<div id="dialogRefer" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose'
+	},{
+		text:'清屏',
+		iconCls:'icon-w-clean',
+		id: 'btnClear'
+	},{
+		text:'引用',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='dialogSpecialCharTemplate'>
+<div id="dialogSpecialChar" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnCharClose'
+	},{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnCharRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='menuTemplate'>
+<div id="menu" class="hisui-menu" style="width:100px;"></div>
+</script>
+<script type='text/template' id='HisUITableMenuTemplate'>
+<div id="hisUITableMenu" class="hisui-menu" data-options="onClick:OnHisUiTableMenuHandler" style="width:100px;"></div>
+</script>
+<script type='text/template' id='RePrintSetDialogTemplate'>
+<div id="rePrintDialog" class="hisui-dialog" title="补打设置" style="width:350px;height:300px;" data-options="closed:true,onOpen:function(){RePrintGetPrintinfo();},modal:true,
+	buttons:[
+	{text:'确定',handler:function(){RePrint();}},
+	{text:'取消',handler:function(){$HUI.dialog('#rePrintDialog').close();}}
+	]">
+    <div style="width:350px;height:213px;display:table-cell;vertical-align:middle;text-align:center;">
+        <div style="display:inline-block;">
+            <span id="IsPrint">#(..Get("未打印"))#</span>  <br>
+            #(..Get("打印信息："))#<span id="PrintInfo">#(..Get("无"))#</span>
+            <br>
+            <br>
+            #(..Get("开始页："))#<input id="startPageNo" class="hisui-numberbox textbox" data-options="required:true">
+            <br>
+            <br>
+            #(..Get("开始行："))#<input id="startRowNo" class="hisui-numberbox textbox" data-options="required:true">
+        </div>
+    </div>
+</div>
+</script>
+<script type='text/template' id='CancelHighRisKReportDialogTemplate'>
+<div id='cancelReportDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		撤销原因：
+	   <select id='reasonBox' name='reason' class='hisui-combobox' style='width:200px;'>
+	   	    <option value='撤销'>撤销</option>
+	    		<option value='出院'>出院</option>
+	    		<option value='死亡'>死亡</option>
+	    		<option value='转出'>转出</option>
+	    </select>
+	   <br/>
+	   撤销日期：
+	   <input id="cancelReportDate" class="hisui-datebox textbox datebox-f combo-f" data-options="">
+	   <br/>
+	   撤销时间：
+	   <input id="cancelReportTime" class="hisui-timespinner" data-options="" style="border-radius: 2px;">
+  </div>
+</div>
+</script>
+<script type='text/template' id='SignPWDVerifyDialogTemplate'>
+<div id='signPWDVerifyDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		 密码：<input id="signPWD" class="textbox" type="password">
+  </div>
+</div>
+</script>
+</body>
+</html>

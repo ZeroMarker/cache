@@ -9,46 +9,53 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
 <DHCEQ:HISUI></DHCEQ:HISUI>
 <DHCEQ:Report></DHCEQ:Report>
-<HISUI/>
 </HEAD>
 
+<!--///modified by ZY0303 2022-06-16  2657405-->
+<SCRIPT language="Cache" RUNAT="SERVER">
+s DepreFlag=$Get(%request.Data("DepreFlag",1))
+s CurUserID=##Class(web.DHCEQCommon).getMapIDBySource("user",%session.Get("LOGON.USERID"))
+s CurLocID=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+s USERNAME=%session.Get("LOGON.USERNAME")
+s CurGroupID=%session.Get("LOGON.GROUPID")
+s CurLocDesc=##class(web.DHCEQCommon).GetTrakNameByID("dept",CurLocID)
+s HospitalDR=##Class(web.DHCEQCommon).GetHospital()
+s HOSPDESC=##Class(web.DHCEQCommon).GetHospitalDesc()
+</Script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
 		<div class="hisui-panel" title="设备逾龄统计" data-options="'eqtitle':'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="height:130px">
+				<div data-options="region:'north',border:false" style="height:100px">
 					<div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><lable for="EquipType">管理类组</lable></div> <!--modify hly 2019/5/29-->
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.EquipType'" id="EquipType"></div> <!--modify hly 2019/5/29-->
-							<div class="eq-table-td eq-table-label"><lable for="StatCat">设备类型</lable></div> <!--modify hly 2019/5/29-->
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.StatCat'" id="StatCat"></div> <!--modify hly 2019/5/29-->
-							<div class="eq-table-td eq-table-label"><lable for="pEquipCat">设备分类</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'EM.L.EquipCat'" id="pEquipCat"></div>							
-							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
-							<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
+							<div class="eq-table-td eq-table-label-first"><lable for="EquipType">管理类组</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.EquipType'" id="EquipType"></div> <!--modify hly 2019/5/29-->
+							<div class="eq-table-td eq-table-label-new"><lable for="StatCat">设备类型</lable></div> <!--modify hly 2019/5/29-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.StatCat'" id="StatCat"></div> <!--modify hly 2019/5/29-->
+							<div class="eq-table-td eq-table-label-new"><lable for="pEquipCat">设备分类</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'EM.L.EquipCat'" id="pEquipCat"></div>							
+							<div class="eq-table-td eq-table-label-new"><lable for="pMinValue">原值</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"   id="pMinValue"></div>
+							<div class="eq-table-td eq-table-label-new"><lable for="pMaxValue">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  id="pMaxValue"></div>
+							<div class="eq-table-td eq-table-label-button"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
 						</div>
 						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><lable for="pItem">设备名称</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'EM.L.GetMasterItem'" id="pItem"></div>					
-							<div class="eq-table-td eq-table-label"><lable for="pTransSDate">开始日期</lable></div>
+							<div class="eq-table-td eq-table-label-first"><lable for="pUseLoc">科室</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'PLAT.L.Loc'" id="pUseLoc"></div>
+							<div class="eq-table-td eq-table-label-new"><lable for="pItem">设备项</lable></div><!-- modify by cjc 2022-07-28 2679725-->
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox"  data-options="'component':'EM.L.GetMasterItem'" id="pItem"></div>					
+							<div class="eq-table-td eq-table-label-new"><lable for="pTransSDate">开始日期</lable></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="pTransSDate" value=#(CurMonth)#></div>
-							<div class="eq-table-td eq-table-label"><lable for="pTransEDate">至</lable></div>
+							<div class="eq-table-td eq-table-label-new"><lable for="pTransEDate">至</lable></div>
 							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="pTransEDate" value=#(CurMonth)#></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td eq-table-label"></div>
-						</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><lable for="pUseLoc">科室</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Loc'" id="pUseLoc"></div>
-							<div class="eq-table-td eq-table-label"><lable for="pMinValue">原值</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"   id="pMinValue"></div>
-							<div class="eq-table-td eq-table-label"><lable for="pMaxValue">至</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="pMaxValue"></div>
-							<div class="eq-table-td eq-table-label"><label for="IncludeFlag">包含子类</label></div>
-							<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox"  id="IncludeFlag" ></div>		
+							<div class="eq-table-td eq-table-label-new"><label for="pIncludeFlag">包含子类</label></div>
+							<div class="eq-table-td eq-table-input"><input class='hisui-checkbox textbox' type="checkbox"  id="pIncludeFlag" ></div>	
+							<div class="eq-table-td eq-table-label-button"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
 						</div>
 					</div>
 				</div>
@@ -71,9 +78,19 @@
 			<INPUT TYPE="hidden" name="StatCatDR" id="StatCatDR"> <!--modify hly 2019/5/29-->
 			<INPUT TYPE="hidden" name="pEquipCatDR" id="pEquipCatDR">
 			<INPUT TYPE="hidden" name="pItemDR" id="pItemDR">
+			<!--///modified by ZY0303 2022-06-16  2657405-->
+		    <INPUT TYPE="hidden" name="CurHospID" id="CurHospID" value=#(HospitalDR)#>
+			<INPUT TYPE="hidden" name="CurGroupID" id="CurGroupID" value=#(CurGroupID)#>
+		    <INPUT TYPE="hidden" name="CurLocID" id="CurLocID" value=#(CurLocID)#>
+			<INPUT TYPE="hidden" name="GROUPID" id="GROUPID" value=#(CurGroupID)#>
+		    <INPUT TYPE="hidden" name="CTLOCID" id="CTLOCID" value=#(CurLocID)#>
+			<INPUT TYPE="hidden" name="USERNAME" id="USERNAME" value=#(USERNAME)#>
 		</form>
 	</div>
 	<script type='text/javascript'>
+	setElement("USERNAME",encodeURI(getElementValue("USERNAME")));
+	///modified by ZY0303 2022-06-16  2657405
+	setElement("GGROURPID",SessionObj.GGROURPID)
 		//modified by csj 20190128
 		function setSelectValue(vElementID,item)
 		{

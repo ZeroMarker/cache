@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.opbill.charge.main.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-06-03
  * Description: 门诊收费
 -->
@@ -12,239 +12,251 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<ADDINS/>
-	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.opbill.charge.css'/>
-	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
-	<script type='text/javascript' src='../scripts/DHCInsuPort.js'></script>
-	<script type='text/javascript' src='../scripts/DHCWeb.OPYBComm.js'></script>
-	<script type='text/javascript' src='../scripts/DHCBillPayService.js'></script>
-	<script type='text/javascript' src='../scripts/DHCBillMisPosPay.js'></script>
+	<DOCCARD medStepCode="Bill"/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.opbill.charge.css"/>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#plugin/datagrid/datagrid-detailview.js"></script>
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<script type="text/javascript" src="../scripts/DHCWeb.OPYBComm.js"></script>
 	<server>
-		set GroupId=$g(%session.Data("LOGON.GROUPID"))
-		set HospId=$g(%session.Data("LOGON.HOSPID"))
+		set GroupId=%session.Get("LOGON.GROUPID")
+		set HospId=%session.Get("LOGON.HOSPID")
+		
 		set ReloadFlag=%request.Get("ReloadFlag")
-		set MedDeptFlag=%request.Get("MedDeptFlag")
+		set MedDeptFlag=%request.Get("MedDeptFlag")   //医技科室单独挂的收费界面时传入的参数
+		set ReloadFlag=$s((MedDeptFlag'=""):MedDeptFlag,1:ReloadFlag)
+		set CardTypeRowId=%request.Get("CardTypeRowId")
+		set SelectPatRowId=%request.Get("SelectPatRowId")
+		set SelectAdmRowId=%request.Get("SelectAdmRowId")
+		
+		set PersonBanner="dhcdoc.patinfo.banner.csp"
+		if (%request.Get("PersonBanner")'="") {
+			set PersonBanner=%request.Get("PersonBanner")
+		}
 		set PatientListPage=""
-		if ((ReloadFlag="")&&(MedDeptFlag="")) {
+		if ((ReloadFlag="")&&(+SelectPatRowId=0)) {
 			set PatientListPage="dhcbill.opbill.outpatlist.csp"
 			if (%request.Get("PatientListPage")'="") {
 				set PatientListPage=%request.Get("PatientListPage")
 			}
 		}
-		
-		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+
 		//获取门诊收费参数配置
 		set OPBaseCfgStr=##class(web.DHCOPConfig).GetOPBaseConfig(HospId)
 		set INVYBConFlag=$p(OPBaseCfgStr,"^",13)         //是否连接医保(1:是，0:否)
+		set IntervalMin=$p(OPBaseCfgStr,"^",19)          //异常收费提醒间隔时间
 		set SKCFootFlag=$p(OPBaseCfgStr,"^",35)          //是否选择病种结算(1:是，0:否)
 		set NewAdmReaFootFlag=$p(OPBaseCfgStr,"^",36)    //是否选择新费别结算(1:是，0:否)
-		//获取收费安全组配置
-		set OPGroupCfgStr=##class(web.UDHCOPGSConfig).ReadCFByGRowID(GroupId, HospId)
+		set ZeroAmtUseYBFlag=$p(OPBaseCfgStr,"^",37)	 //零费用结算是否调用医保(1:是，0否)
 		
-		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",!
-		w "<input id='ReadOPDataEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCOPINVPrtIF.GetOPPrtData"))_"'>",!
-		w "<input id='ReadCommOPDataEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCOPINVPrtIF.GetOPCommPrtData"))_"'>",!
-		w "<input id='DeleteHISYBEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCBillConsIF.DelINVPRTForYB"))_"'>",!
-		w "<input id='GetOPReceiptNoEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.udhcOPBillIF.GetReceiptNO"))_"'>",!
-		w "<input id='CheckOrdApprovedEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCOPOrdApproved.CheckOrdApproved"))_"'>",!
-		w "<input id='AutoAddNewOrdEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCOEORDOPIF.AutoAddNewOrder"))_"'>",!
-		w "<input id='ReadSoundServiceEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCBL.SQuoteIF.SoundPrice.SoundService"))_"'>",!
-		w "<input id='DHCVersion' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPConfig.GetVersion"))_"'>",!
-		w "<input id='OPOrdCheckStockEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPCashier.CheckStockEnough"))_"'>",!
-		w "<input id='OPOrdStopItemEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPItemMast.StopOrdItmBroker"))_"'>",!
-		w "<input id='GetARCIMMaxQtyEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCDocOrderEntry.GetARCIMMaxQty"))_"'>",!
-		w "<input id='OPOEInfoEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPItemMast.IMInfoBroker"))_"'>",!
-		w "<input id='reloadFlag' type='hidden' value='"_ReloadFlag_"'>",!
-		w "<input id='medDeptFlag' type='hidden' value='"_MedDeptFlag_"'>",!
-		w "<input id='papmi' type='hidden'>",!
-		w "<input id='admStr' type='hidden'>",!
-		w "<input id='episodeId' type='hidden'>",!
-		w "<input id='billByAdmSelected' type='hidden'>",!
-		w "<input id='paymCode' type='hidden'>",!
-		w "<input id='admSource' type='hidden'>",!
-		w "<input id='requiredFlag' type='hidden'>",!
-		w "<input id='patShareSum' type='hidden'>",!
-		w "<input id='curDeptShare' type='hidden'>",!
-		w "<input id='accMRowId' type='hidden'>",!
-		w "<input id='accMLeft' type='hidden'>",!
+		//获取收费安全组配置
+		set GroupCfgStr=##class(web.UDHCOPGSConfig).ReadCFByGRowID(GroupId, HospId)
+		set ChargeFlag=$case(+$p(GroupCfgStr,"^",3),1:"Y",:"N")
+		set RequiredInvFlag=$case(+$p(GroupCfgStr,"^",5),1:"Y",:"N")
+		set INVXMLName=$p(GroupCfgStr,"^",11)
+		
+		//+2022-10-20 ZhYW 取是否按选择的病种自动勾选对应医嘱配置
+		set IsChkOrdByChronicCode=##class(web.DHCOPCashier).IsChkOrdByChronicCode(HospId)
+		//+2023-03-15 ZhYW 取成组医嘱是否一起收费配置
+		set IsTgtChrgGroupOrd=##class(web.DHCOPCashier).IsTgtChrgGroupOrd(HospId)
+		
+		set pluLib=##class(BILL.Util.Library).%New()
+		do pluLib.LoadPaySrvLib()     //引入第三方支付服务接口
+		do pluLib.LoadReadCardLib()   //引入读卡公共js
+		do pluLib.%Close()
+		
+		w "<input id='ReadCommOPDataEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPINVPrtIF.GetOPCommPrtData"))_"'/>",!
+		w "<input id='DeleteHISYBEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCBillConsIF.DelINVPRTForYB"))_"'/>",!
+		w "<input id='GetOPReceiptNoEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.udhcOPBillIF.GetReceiptNO"))_"'/>",!
+		w "<input id='AutoAddNewOrdEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOEORDOPIF.AutoAddNewOrder"))_"'/>",!
+		w "<input id='ReadSoundServiceEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCBL.SQuoteIF.SoundPrice.SoundService"))_"'/>",!
+		w "<input id='DHCVersion' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCOPConfig.GetVersion"))_"'/>",!
+		w "<input id='OPOrdCheckStockEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCOPCashierIF.CheckStockEnough"))_"'/>",!
+		w "<input id='OPOrdStopItemEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCOPItemMast.StopOrdItmBroker"))_"'/>",!
+		w "<input id='GetARCIMMaxQtyEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCDocOrderEntry.GetARCIMMaxQty"))_"'/>",!
+		w "<input id='OPOEInfoEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCOPItemMast.IMInfoBroker"))_"'/>",!
+		w "<input id='ReadOPDataEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPINVPrtIF.GetOPPrtData"))_"'/>",!
+		set LockAdm=##class(web.DHCBillPageConf).GetPageConfValue("dhcbill.opbill.charge.main.csp", "LOCKADM", "", HospId)
+		
+		w "<input id='CardTypeRowId' type='hidden' value='"_CardTypeRowId_"'/>",!
+		w "<input id='selectPatRowId' type='hidden' value='"_SelectPatRowId_"'/>",!
+		w "<input id='selectAdmRowId' type='hidden' value='"_SelectAdmRowId_"'/>",!
+		w "<input id='reloadFlag' type='hidden' value='"_ReloadFlag_"'/>",!
+		w "<input id='medDeptFlag' type='hidden' value='"_MedDeptFlag_"'/>",!
+		w "<input id='patientId' type='hidden'/>",!
+		w "<input id='admStr' type='hidden'/>",!
+		w "<input id='episodeId' type='hidden'/>",!
+		w "<input id='accMRowId' type='hidden'/>",!
 	</server>
 	<script type="text/javascript">
-		var patientListPage = "#(PatientListPage)#";
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		
+		//常量
+		var CV = {
+			AllowPayMent: "N",                         //允许使用多种支付方式("Y":是，"N":否)
+			BillByAdmSelected: true,                   //true:结算选中就诊，false:结算所有就诊
+			INVYBConFlag: "#(INVYBConFlag)#",          //是否连接医保(1:是，0:否)
+			ChargeFlag: "#(ChargeFlag)#",              //安全组是否有收费权限("Y":是，"N":否)
+			RequiredInvFlag: "#(RequiredInvFlag)#",    //结算是否需要发票标识("Y":是，"N":否)
+			INVXMLName: "#(INVXMLName)#",
+			PrescClsCount: 10,                         //此数为处方颜色类的数量，如需修改为>10，需再新增class
+			ZeroAmtUseYBFlag: "#(ZeroAmtUseYBFlag)#",
+			LockAdm: ("#(LockAdm)#" == 1),              //是否启用就诊记录加锁
+			IsChkOrdByChronicCode: ("#(IsChkOrdByChronicCode)#" == 1),       //是否按选择的病种自动勾选对应医嘱
+			IsTgtChrgGroupOrd: ("#(IsTgtChrgGroupOrd)#" == 1)				 //成组医嘱是否一起收费
+		};
+		
+		//全局变量
 		var GV = {
-			AllowPayMent: "N",                                   //允许使用多种支付方式("Y":是，"N":否)
-			BillByAdmSelected: 1,                                //1:结算选中就诊，0:结算所有就诊
-			INVYBConFlag: "#(INVYBConFlag)#",                    //是否连接医保(1:是，0:否)
-			OPGroupCfgStr: "#(OPGroupCfgStr)#",
-			RequiredInvFlag: "Y",                                //结算是否需要发票标识("Y":是，"N":否)
-			INVXMLName: "INVPrtFlag2007",
-			PrescClsCount: 10,                                   //此数为处方颜色类的数量，如需修改为>10，需再新增class
-			UnBillOrdObj: {},                                    //不结算的医嘱
-			EditRowIndex: undefined,
-			DisableChargeBtn: false
+			UnBillOrdObj: {},                          //不结算的医嘱
+			EditRowIndex: undefined
 		};
 	</script>
 </head>
 
 <body class="hisui-layout">
-	<csp:if condition=PatientListPage'="">
-		<div class="window-mask alldom" style="width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;"></div>
-	</csp:if>
-	<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;">
-		<csp:Include Page="dhcbill.out.patient.banner.csp">
+	<div data-options="region:'north',border:false" style="height:40px;overflow:hidden;">
+		<csp:Include Page="#(PersonBanner)#">
 	</div>
-	<div data-options="region:'center',border:false" style="padding:0 10px;">
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px;">
 		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'north',border:false" style="height:205px;overflow:hidden;">
-				<div class="hisui-panel" data-options="title:'患者信息查询',fit:true,headerCls:'panel-header-gray',iconCls:'icon-find-fee-itm'">
-					<table class="search-table" style="float:left;">
-						<tr>
-							<td class="r-label"><label>卡类型</label></td>
-							<td><input id="cardType" class="hisui-combobox textbox tb105"/>
-							<a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card'" style="margin-left:3px;">读卡(F4)</a></td>
-							<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean'">清屏(F7)</a></td>
-						</tr>
-						<tr>
-							<td class="r-label"><label>卡号</label></td>
-							<td><input id="cardNo" class="textbox tb225" placeholder="刷卡/请输入卡号"/></td>
-							<td class="r-label"></td>
-						</tr>
-						<tr>
-							<td class="r-label"><label>登记号</label></td>
-							<td><input id="patientNo" class="textbox tb225"/></td>
-							<td class="r-label"></td>
-						</tr>
-						<csp:if condition=NewAdmReaFootFlag=1>
-						<tr>
-							<td class="r-label"><label>结算费别</label></td>
-							<td><input id="chargeInsType" class="hisui-combobox textbox tb225"/></td>
-							<td class="r-label"></td>
-						</tr>
-						</csp:if>
-					</table>
-					<div style="float:right;padding-right:10px;">
-						<div class="insType-box">
-							<table id="insTypeList"></table>
+			<div data-options="region:'center',border:false" style="padding-right:10px;">
+				<div class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'north',collapsible:false,title:'患者信息查询',headerCls:'panel-header-gray',iconCls:'icon-find-fee-itm'" style="height:207px;overflow:hidden;">
+						<table class="search-table" style="float:left;">
+							<tr>
+								<td class="r-label"><label>#(..Get("卡类型"))#</label></td>
+								<td>
+									<input id="CardTypeNew" class="textbox tb110" disabled value="#($s((+CardTypeRowId'=0):##class(User.DHCCardTypeDef).GetTranByDesc("CTDDesc", $p($g(^DHCCARDTYPEDef(CardTypeRowId)),"^",2), %session.Get("LOGON.LANGID")),1:""))#"/>
+									<a href="javascript:;" class="hisui-linkbutton" id="btn-readCard" data-options="iconCls:'icon-w-card',#($s(((ReloadFlag'="")&&(MedDeptFlag="")):"disabled:true",1:"disabled:false"))#" style="margin-left:5px;">读卡 (F4)</a>
+								</td>
+								<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-clear" data-options="iconCls:'icon-w-clean',#($s(((ReloadFlag'="")&&(MedDeptFlag="")):"disabled:true",1:"disabled:false"))#">清屏 (F7)</a></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("卡号"))#</label></td>
+								<td><input id="CardNo" class="textbox tb235" placeholder="#(..Get("刷卡/请输入卡号"))#" value="#(%request.Get("CardNo"))#" #($s(((ReloadFlag'="")&&(MedDeptFlag="")):"disabled",1:""))#/></td>
+								<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-readInsuCard" data-options="iconCls:'icon-w-card',#($s(((ReloadFlag'="")&&(MedDeptFlag="")):"disabled:true",1:"disabled:false"))#">读医保卡</a></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("登记号"))#</label></td>
+								<td><input id="patientNo" class="textbox tb235" #($s((ReloadFlag'=""):"disabled",1:""))# value="#($s((+SelectPatRowId'=0):$p($g(^PAPER(SelectPatRowId,"PAT",1)),"^",1),1:""))#"/></td>
+								<td class="r-label"></td>
+							</tr>
+						</table>
+						<div style="float:right;padding-right:10px;">
+							<div class="insType-box">
+								<table id="insTypeList"></table>
+							</div>
+							<div class="admList-box">
+								<table id="admList"></table>
+							</div>
 						</div>
-						<div class="admList-box">
-							<table id="admList"></table>
+					</div>
+					<div data-options="region:'center',border:false" style="padding-top:10px;">
+						<div class="hisui-accordion accordion-gray" data-options="fit:true,border:false">
+							<div data-options="iconCls:'icon-paper',title:'医嘱明细'">
+								<div id="ordlist-tb">
+									<table style="border-spacing: 0 2px;">
+										<tr>
+											<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-add" id="btn-add" plain="true">新增</a></td>
+											<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-cancel" id="btn-delete" plain="true">删除</a></td>
+											<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-save" id="btn-save" plain="true">保存(F10)</a></td>
+											<td class="r-label" style="padding-left:30px;"><label>#(..Get("就诊医生"))#</label></td>
+											<td><input id="admDoc" class="hisui-combobox textbox tb110"/></td>
+											<td class="r-label" style="padding-left:20px;"><label>#(..Get("付数"))#</label></td>
+											<td><input id="multNum" class="hisui-numberbox textbox tb110" data-options="min:1,isKeyupChange:true"/></td>
+										</tr>
+									</table>
+								</div>
+								<table id="ordItmList"></table>
+							</div>
+							<div data-options="iconCls:'icon-paper',title:'分类金额'">
+								<table id="cateList"></table>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div data-options="region:'center',border:false" style="padding:10px 0;">
-				<div id="ordlist-tb">
-					<table>
+			<div data-options="region:'east',collapsible:false,title:'收费结算',headerCls:'panel-header-gray',iconCls:'icon-fee'" style="width:#($s((ReloadFlag=""):"330px",1:"320px"))#;">
+				<table class="search-table" style="margin:auto;width:100%;">
+					<tr>
+						<td class="r-label"><label>#(..Get("费用总额"))#</label></td>
+						<td><input id="patShareSum" class="hisui-numberbox textbox fontCls" data-options="min:0,precision:2,disabled:true"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("当前科室金额"))#</label></td>
+						<td><input id="curDeptShare" class="hisui-numberbox textbox fontCls" data-options="min:0,precision:2,disabled:true"/></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>#(..Get("公费单位"))#</label></td>
+						<td><input id="healthCareProvider" class="hisui-combobox textbox" data-options="disabled:true"/></td>
+					</tr>
+					<csp:if condition=(NewAdmReaFootFlag=1)>
 						<tr>
-							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-add" id="btn-add" plain="true">新增</a></td>
-							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-cancel" id="btn-delete" plain="true">删除</a></td>
-							<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-save" id="btn-save" plain="true">保存(F10)</a></td>
-							<td class="r-label" style="padding-left:30px;"><label>就诊医生</label></td>
-							<td><input id="admDoc" class="hisui-combobox textbox tb105"/></td>
-							<td class="r-label" style="padding-left:20px;"><label>付数</label></td>
-							<td><input id="multNum" class="hisui-numberbox textbox tb105" data-options="min:1,isKeyupChange:true"/></td>
+							<td class="r-label"><label>#(..Get("结算费别"))#</label></td>
+							<td><input id="chargeInsType" class="hisui-combobox textbox" data-options="#($s((ReloadFlag'=""):"disabled:true",1:"disabled:false"))#"/></td>
 						</tr>
+					</csp:if>
+					<tr>
+						<td class="r-label"><label>#(..Get("医疗类别"))#</label></td>
+						<td><input id="insuAdmType" class="hisui-combobox textbox"/></td>
+					</tr>
+					<csp:if condition=(SKCFootFlag=1)>
+					<tr>
+						<td class="r-label"><label>#(..Get("病种"))#</label></td>
+						<td><input id="insuDic" class="hisui-combobox textbox"/></td>
+					</tr>
+					</csp:if>
+					<tr>
+						<td class="r-label"><label>#(..Get("当前票据号"))#</label></td>
+						<td><input id="receiptNo" class="textbox" style="font-weight: bold;" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="display:none;"></a></td>
+					</tr>
+				</table>
+				<div style="text-align:center;margin-top:-10px;">
+					<table class="search-table" style="margin:auto;">
+						<tr>
+							<td><a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-charge" data-options="#($case(ChargeFlag,"Y":"disabled:false",:"disabled:true"))#">结算(F9)</a></td>
+							<td><a href="javascript:;" class="hisui-linkbutton biggerBtn btn-spacing" id="btn-patCal">计算器</a></td>
+						</tr>
+						<csp:if condition=((MedDeptFlag="")&&(ReloadFlag=""))>
+						<tr>
+							<td><a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-skipNo">跳号</a></td>
+						</tr>
+						<csp:elseif condition=(MedDeptFlag'="")>
+						<tr>
+							<td><a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-rapidReg">就诊登记</a></td>
+						</tr>
+						</csp:else>
+						</csp:if>
 					</table>
 				</div>
-        		<table id="ordItmList"></table>
-        	</div>
+				<div id="item-tip">
+					<div class="messager-popover info tip-area">
+						<span class="content">
+							<span class="change-content"></span>
+						</span>
+					</div>
+				</div>
+				<csp:if condition=(IntervalMin'="")>
+					<div class="i-right">
+						<div id="exceptlist" class="hisui-panel" title="收费异常提醒" style="width:280px;height:170px;overflow:hidden;" data-options="closed:true,closable:true,headerCls:'panel-header-gray'">  
+							<iframe src="dhcbill.opbill.except.tip.csp?MWToken=#(%request.Get("MWToken"))#&IntervalMin=#(IntervalMin)#" width="100%" height="100%" frameborder="0"></iframe>
+						</div>
+					</div>
+				</csp:if>
+			</div>
 		</div>
 	</div>
-	<div data-options="region:'east',border:false" style="width:#($s((ReloadFlag=""):"320px",1:"305px"))#;padding:0 10px 10px 0;">
-		<div class="hisui-panel" data-options="title:'收费结算',fit:true,headerCls:'panel-header-gray',iconCls:'icon-fee'">
-			<table class="search-table" style="width:100%;">
-				<tr>
-					<td class="r-label"><label>费用总额</label></td>
-					<td><input id="patRoundSum" class="hisui-numberbox textbox fontCls" data-options="min:0,precision:2,disabled:true"/></td>
-				</tr>
-				<tr>
-					<td class="r-label"><label>当前科室金额</label></td>
-					<td><input id="curDeptRoundShare" class="hisui-numberbox textbox fontCls" data-options="min:0,precision:2,disabled:true"/></td>
-				</tr>
-				<!--tr>
-					<td class="r-label"><label>实付</label></td>
-					<td><input id="actualMoney" class="hisui-numberbox textbox fontCls" data-options="min:0,precision:2"/></td>
-				</tr>
-				<tr>
-					<td class="r-label"><label>应找</label></td>
-					<td><input id="change" class="hisui-numberbox textbox fontCls" data-options="precision:2,disabled:true"/></td>
-				</tr-->
-				<tr>
-					<td class="r-label"><label>公费单位</label></td>
-					<td><input id="healthCareProvider" class="hisui-combobox textbox" data-options="disabled:true"/></td>
-				</tr>
-				<!--tr>
-					<td class="r-label"><label>支付方式</label></td>
-					<td><input id="paymode" class="hisui-combobox textbox"/></td>
-				</tr-->
-				<tr>
-					<td class="r-label"><label>医疗类别</label></td>
-					<td><input id="insuAdmType" class="hisui-combobox textbox"/></td>
-				</tr>
-				<csp:if condition=SKCFootFlag=1>
-				<tr>
-					<td class="r-label"><label>病种</label></td>
-					<td><input id="insuDic" class="hisui-combobox textbox"/></td>
-				</tr>
-				</csp:if>
-				<tr>
-					<td class="r-label"><label>当前票据号</label></td>
-					<td><input id="receiptNo" class="textbox" style="font-weight: bold;" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="display:none;"></a></td>
-				</tr>
-				<tr>
-					<td class="r-label"><label for="payMentFlag">多种支付</label></td>
-					<td><input id="payMentFlag" class="hisui-checkbox" type="checkbox"/></td>
-				</tr>
-				<tr>
-					<td colspan="2" style="text-align:center">
-						<a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-charge">结算(F9)</a>
-						<a href="javascript:;" class="hisui-linkbutton biggerBtn btn-spacing" id="btn-patCal">计算器</a>
-					</td>
-				</tr>
-				<csp:if condition=((MedDeptFlag="")&&(ReloadFlag=""))>
-				<tr>
-					<td colspan="2" style="text-align:center">
-						<a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-reg">挂号(F6)</a>
-						<a href="javascript:;" class="hisui-linkbutton biggerBtn btn-spacing" id="btn-skipNo">跳号</a>
-					</td>
-				</tr>
-				</csp:if>
-				<csp:if condition=(MedDeptFlag'="")>
-				<tr>
-					<td colspan="2" style="padding-left:#($s((ReloadFlag=""):"37px",1:"29px"))#;">
-						<a href="javascript:;" class="hisui-linkbutton biggerBtn" id="btn-rapidReg">就诊登记</a>
-					</td>
-				</tr>
-				</csp:if>
-			</table>
-		</div>
-	</div>
-	<div id="appendDlg" style="width:480px;height:280px;display:none;">
-		<table class="search-table" style="width:100%;">
-			<tr>
-				<td class="r-label"><label class="clsRequired">支票号</label></td>
-				<td><input id="checkNo" class="textbox tb250"/></td>
-			</tr>
-			<tr>
-				<td class="r-label"><label>支票日期</label></td>
-				<td><input id="chequeDate" class="hisui-datebox textbox tb250"/></td>
-			</tr>
-			<tr>
-				<td class="r-label"><label>银行</label></td>
-				<td><input id="bank" class="hisui-combobox textbox tb250"/></td>
-			</tr>
-			<tr>
-				<td class="r-label"><label>对方账户号</label></td>
-				<td><input id="payAccNo" class="textbox tb250"/></td>
-			</tr>
-		</table>
-	</div>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.charge.main.js"></script>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.charge.patinfo.js"></script>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.charge.oelist.js"></script>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.charge.bill.js"></script>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.common.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.common.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.charge.main.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.charge.patinfo.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.charge.oelist.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.charge.catelist.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.charge.bill.js"></script>
 </body>
 </html>

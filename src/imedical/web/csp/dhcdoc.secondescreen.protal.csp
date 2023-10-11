@@ -1,0 +1,48 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ if ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--dhcdoc.secondescreen.protal.csp 超融合双屏展示集成--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- /*自动将http的不安全请求升级为https*/ -->
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<STYLE type='text/css'>
+.panel-header>div.panel-tool>a.layout-button-left{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-down{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-up{
+	display:none
+}
+</STYLE>
+<Server>
+	s title=$g(%request.Data("title",1))
+	s frameurl=$g(%request.Data("frameurl",1))
+	s frameurl=$replace(frameurl,"!@","&")
+</Server>
+</head>
+<body>
+<csp:Include Page="dhcdoc.secondescreen.protal.show.csp">
+<script type="text/javascript">
+	var ServerObj={
+		title:"#(title)#",
+		frameurl:"#(frameurl)#"
+	};
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoc.secondescreen.protal.js"></script>
+</body>
+</html>

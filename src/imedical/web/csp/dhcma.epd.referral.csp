@@ -11,54 +11,55 @@
 		<HISUI/>
 		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
 		<server>
-			//»ñÈ¡¿ØÖÆÉèÖÃ²ÎÊı
+			//é‘¾å³°å½‡éºÑƒåŸ—ç’å‰§ç–†é™å‚›æšŸ
 			Set IsSupportRQ2018 = ##class(DHCMed.SSService.ConfigSrv).GetValueByKeyHosp("SSIsSupportRQ2018","")
    	   </server>
 	</head>
 	< body >
+	    <csp:Include Page="dhcma.epd.referral.show.csp">  
 		<script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
-		<script type="text/javascript" src="../scripts/DHCMA/EPD/referral/Gui.js"></script>
-		<script type="text/javascript" src="../scripts/DHCMA/EPD/referral/Event.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/EPD/referral/gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/EPD/referral/event.js"></script>
 		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 		<SCRIPT language="Cache" RUNAT="SERVER">
-			If (IsSupportRQ2018'=1) {  //ÈóÇ¬2018Ö§³ÖÖ±½Ó´òÓ¡£¬ÈçĞèÒıÈë±¾·½·¨£¬±¾·½·¨Ó°Ïì¼ÓÔØËÙ¶È
-		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //ÈóÇ¬´òÓ¡
+			If (IsSupportRQ2018'=1) {  //å¨‘ï¸¿å’•2018é€îˆ›å¯”é©å­˜å¸´éµæ’³åµƒé”›å±½î›§é—‡?å¯®æ›å†éˆî„æŸŸå¨‰æ›ªç´éˆî„æŸŸå¨‰æ›å¥–éå¶…å§æä»‹?ç†·å®³
+		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //å¨‘ï¸¿å’•éµæ’³åµƒ
 		    }
 			set menuCode="EPDQryRefReport"
 			set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
 			set groupId=$g(%session.Data("LOGON.GROUPID"))
             set operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"EPDRefReport",groupId)
-			Set ReportID=$g(%request.Data("ReportID",1))	    //±¨¸æID
+			Set ReportID=$g(%request.Data("ReportID",1))	    //é¶ãƒ¥æ†¡ID
 			Set PatientID=$g(%request.Data("PatientID",1))
 			Set EpisodeID=$g(%request.Data("EpisodeID",1))
 			set LogonHospID=$g(%session.Data("LOGON.HOSPID"))
+		    set LagCode = $g(%session("LOGON.LANGCODE"))
 		    set objHosp=##class(DHCMed.Base.Hospital).GetObjById(LogonHospID)
 		    Set HospDesc=""
 		    If ($IsObject(objHosp)) {
 		    	Set HospDesc=objHosp.Descs
+				Set HospDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTHospital","HOSPDesc",LagCode,HospDesc)
 		    }
+			set DocName=$g(%session.Data("LOGON.USERNAME"))
+			Set:DocName'="" DocName = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTCareProv","CTPCPDesc",LagCode,DocName)
 		    
 			Set ReportID=""""_$g(ReportID)_""""
 			Set PatientID=""""_$g(PatientID)_""""
 			Set EpisodeID=""""_$g(EpisodeID)_""""
 			Set HospDesc=""""_$g(HospDesc)_""""
+			Set DocName=""""_$g(DocName)_""""
+			
 		</Script>
 		 <script language="javascript" type="text/javascript">
 	      	var ReportID=#(ReportID)#;
             var PatientID=#(PatientID)#;
             var EpisodeID=#(EpisodeID)#;
             var HospDesc=#(HospDesc)#;
-            
-			$(document).ready(function(){
-				var url = "../scripts/DHCMA/EPD/referral/Layout.html"
-        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
-   					if(statusTxt=="success") {
-	   					InitReportWin();
-   					} else if (statusTxt=="error") {
-	   					alert("Error: "+xhr.status+": "+xhr.statusText);
-	   				}
-	        	});
+            var DocName=#(DocName)#;
+            $(window).load(function() {
+				InitReportWin();
 			});
+	   		
 		</script>
 	</body>
 </html>

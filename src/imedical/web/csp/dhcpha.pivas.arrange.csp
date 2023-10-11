@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液中心排药统计
-	csp:dhcpha.pivas.arrange.csp
-	js: scripts/pharmacy/pivas/arrange.js
+<!--
+    配液中心排药统计
+	csp: csp/dhcpha.pivas.arrange.csp
+	js:  scripts/pharmacy/pivas/arrange.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -12,141 +17,192 @@
     <TRAK:HEAD>
     </TRAK:HEAD>
     <HISUI/>
+    <PHAPIVASV1 />
     <PHAPRINTCOM/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <!-- <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" /> -->
     <STYLE>
         .panel-title {
             height: 24px;
+        }
+        .r-label{
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .pha-con-table{
+            padding-right: 10px;
+            margin:auto;
         }
     </STYLE>
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+	<div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-            <div class="hisui-layout" fit="true">
-                <div data-options="region:'west',split:true,headerCls:'panel-header-gray',title:'配液排药统计',collapsible:true,iconCls:'icon-panel-arrange'" style="width:350px;">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
+            <div class="hisui-layout js-pha-layout-fit" fit="true">
+                <div data-options="region:'west',split:true,headerCls:'panel-header-gray',title:'配液排药统计',collapsible:true,iconCls:'icon-panel-arrange'" style="width:400px;">
                     <div class="hisui-layout" fit="true">
-                        <div data-options="region:'center'" class="newScroll" border="false" style="overflow:hidden">
-                            <table class="dhcpha-north-tbl">
+                        <div data-options="region:'center'" class="newScroll" border="false" style="overflow-x: hidden;">
+                            <table class="pha-con-table" >
                                 <tr>
-                                    <td>
-                                        <label for="cmbPivaLoc">配液中心</label>
+                                    <td class="r-label">
+                                        <label for="cmbPivaLoc">#(..Get("配液中心"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbPivaLoc" type="text" class="hisui-combobox" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="dateOrdStart">用药开始时间</label>
+                                    <td class="r-label">
+                                        <label for="dateOrdStart">#(..Get("用药开始时间"))#</label>                            
+                                    </td>
+                            		<td>
                                         <input id="dateOrdStart" class="hisui-datebox dhcpha-date" type="text" data-options="width:120" />
+                                    </td>
+                            		<td>
                                         <input id="timeOrdStart" class="hisui-timespinner" showSeconds="true" data-options="width:90">
-
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="dateOrdEnd">用药结束时间</label>
+                                    <td class="r-label">
+                                        <label for="dateOrdEnd">#(..Get("用药结束时间"))#</label>                            
+                                    </td>
+                            		<td>
                                         <input id="dateOrdEnd" class="hisui-datebox dhcpha-date" type="text" data-options="width:120" />
+                                    </td>
+                            		<td>
                                         <input id="timeOrdEnd" class="hisui-timespinner" showSeconds="true" data-options="width:90">
-
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="datePrtStart">打签开始时间</label>
+                                    <td class="r-label">
+                                        <label for="datePrtStart">#(..Get("打签开始时间"))#</label>                            
+                                    </td>
+                            		<td>
                                         <input id="datePrtStart" class="hisui-datebox dhcpha-date" type="text" data-options="width:120" />
+                                    </td>
+                                    <td>
                                         <input id="timePrtStart" class="hisui-timespinner" showSeconds="true" data-options="width:90">
 
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="datePrtEnd">打签结束时间</label>
+                                    <td class="r-label">
+                                        <label for="datePrtEnd">#(..Get("打签结束时间"))#</label>                            
+                                    </td>
+                            		<td>
                                         <input id="datePrtEnd" class="hisui-datebox dhcpha-date" type="text" data-options="width:120" />
+                                    </td>
+                                    <td>
                                         <input id="timePrtEnd" class="hisui-timespinner" showSeconds="true" data-options="width:90">
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbWard">病区</label>
+                                    <td class="r-label">
+                                        <label for="cmbWard">#(..Get("病区"))#</label>                            
+                                    </td>
+                            		<td  colspan=2>
                                         <input id="cmbWard" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbLocGrp">科室组</label>
+                                    <td class="r-label">
+                                        <label for="cmbLocGrp">#(..Get("科室组"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbLocGrp" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbWorkType">工作组</label>
+                                    <td class="r-label">
+                                        <label for="cmbWorkType">#(..Get("工作组"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbWorkType" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbPriority">医嘱优先级</label>
+                                    <td class="r-label">
+                                        <label for="cmbPriority">#(..Get("医嘱优先级"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbPriority" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbPivaStat">配液状态</label>
+                                    <td class="r-label">
+                                        <label for="cmbPivaStat">#(..Get("配液状态"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbPivaStat" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbPassResult">配伍审核</label>
+                                    <td class="r-label">
+                                        <label for="cmbPassResult">#(..Get("配伍审核"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbPassResult" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbBatNo">批次</label>
+                                    <td class="r-label">
+                                        <label for="cmbBatNo">#(..Get("批次"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbBatNo" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="txtPogsNo">流程单号</label>
-                                        <input id="txtPogsNo" type="text" class="hisui-searchbox" style="width:214px" />
+                                    <td class="r-label">
+                                        <label for="txtPogsNo">#(..Get("流程单号"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
+                                        <input id="txtPogsNo" type="text" class="hisui-searchbox" style="width:220px" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="txtPatNo">登记号</label>
-                                        <input id="txtPatNo" type="text" class="hisui-validatebox" style="width:207px" />
+                                    <td class="r-label">
+                                        <label for="txtPatNo">#(..Get("登记号"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
+                                        <input id="txtPatNo" type="text" class="hisui-validatebox" style="width:213px" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbInstruc">用法</label>
+                                    <td class="r-label">
+                                        <label for="cmbInstruc">#(..Get("用法"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbInstruc" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbPack">打包</label>
+                                    <td class="r-label">
+                                        <label for="cmbPack">#(..Get("打包"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbPack" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="cmbArranged">已排药</label>
+                                    <td class="r-label">
+                                        <label for="cmbArranged">#(..Get("已排药"))#</label>                            
+                                    </td>
+                            		<td colspan=2>
                                         <input id="cmbArranged" type="text" />
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <label for="timeArrStart">排药时间</label>
-                                        <input id="timeArrStart" class="hisui-timespinner" showSeconds="true" data-options="width:105" />
-                                        <input id="timeArrEnd" class="hisui-timespinner" showSeconds="true" data-options="width:105">
+                                    <td class="r-label">
+                                        <label for="timeArrStart">#(..Get("排药时间"))#</label>                            
+                                    </td>
+                            		<td>
+                                        <input id="timeArrStart" class="hisui-timespinner" showSeconds="true" style="width:120px">
+                                    </td>
+                            		<td> 
+                                        <input id="timeArrEnd" class="hisui-timespinner" showSeconds="true" style="width:90px">
                                     </td>
                                 </tr>
                             </table>
@@ -158,7 +214,7 @@
                         </div>
                     </div>
                 </div>
-                <div data-options="region:'center'" class="dhcpha-hisui-border" style="border-radius: 4px;">
+                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
                     <table id="gridInc"></table>
                 </div>
             </div>

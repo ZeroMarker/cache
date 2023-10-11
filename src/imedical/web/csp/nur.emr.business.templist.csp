@@ -1,0 +1,91 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache" runat="server">
+	// 是否以模板列表作为最左侧的树(1:是，非1:否)
+    s BaseTempFlag = $G(%request.Data("BaseTempFlag", 1))
+    // 默认选中的模板ID
+    s ModelID = $G(%request.Data("ModelID", 1))
+    // 强制隐藏更多按钮
+    s ShowBtnMore = $G(%request.Data("ShowBtnMore", 1))
+    // 是否显示多选框
+	s TempCheckFlag=$G(%request.Data("TempCheckFlag", 1))
+</script>
+
+<!--nur.emr.business.templist.csp-->
+<!--模板列表通用样式-->
+<STYLE type='text/css'>
+	.accordion-gray.accordion .accordion-header {
+		border: 0;
+		margin-top: 0;
+	}
+	.accordion-gray.accordion .accordion-body {
+		border-top:1px solid #e2e2e2;
+		border-left: 0;
+		border-right: 0;
+		border-bottom: 0;
+	}
+	.accordion .accordion-header .panel-tool {
+		padding-top: 3px;
+	}
+	#tempAccordion .panel-status-collapse:nth-child(2) {
+		border-bottom: 1px solid #e2e2e2;
+	}
+	#tempAccordion .accordion-header-parent:nth-child(2) .accordion-header {
+		border-top: 1px solid #e2e2e2;
+	}
+	#tempAccordion .tree-title, #tempAccordion .tree-icon {
+		color:black;
+	}
+</STYLE>
+
+<!--引入js脚本-->
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/records/templist.js" charset=gbk></script>
+<script language="javascript">
+    var ModelID = "#(ModelID)#";
+    var ShowBtnMore = "#(ShowBtnMore)#";
+    var TempCheckFlag="#(TempCheckFlag)#";
+</script>
+
+<div class="hisui-layout" data-options="fit:true">
+	<csp:if condition="BaseTempFlag'=1">
+	 	<div data-options="region:'north',border:false" style="height:39px;border-radius:0;">
+			<div class="hisui-panel" data-options="fit:true,border:false" style="border-bottom:1px solid #e2e2e2;border-radius:0;padding:4px;">
+				<input id="TemplateSearch" class="hisui-searchbox" data-options="prompt:'#(..Get("名称、简拼"))#'" style="width:217px"/>
+				<a id="btnMore" class="hisui-linkbutton" href="#" style="width:58px;display:none;">更多</a>
+			</div>
+		</div> 
+		<div data-options="region:'center',border:false,iconCls:'icon-template'" >
+			<div id="tempAccordion" class="hisui-accordion accordion-gray" data-options="fit:true,border:false">   
+				<div title="当前模板" data-options="iconCls:'icon icon-paper-bed',border:false,selected:true">   
+					<ul id="curTemplateTree" data-options="animate:true,fit:true"></ul>
+				</div> 
+				<div title="转科模板" data-options="iconCls:'icon-paper-switch',border:false">   
+					<ul id="transTemplateTree" data-options="animate:true,fit:true"></ul>
+				</div>   
+			</div>
+		</div> 
+		<div id="windowMore" class="hisui-window" title="更多模板" data-options="iconCls:'icon-w-list',closed:true" style="width:300px;height:680px;top:10px;left:400px;padding:5px">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',split:true,border:false" style="height:35px;">
+					<input id="moreSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("名称、简拼"))#'" style="width:290px"/>
+				</div>
+				<div data-options="region:'center',border:false">
+					<div id="templateTabs" class="hisui-tabs tabs-gray" data-options="region:'center',fit:true"></div>
+				</div>
+			</div>
+		</div>
+		<div id="menuTemplate" class="hisui-menu" style="width:120px;"></div>
+	</csp:if>
+	<csp:if condition="BaseTempFlag=1">
+		<div data-options="region:'north'" style="height:39px;border-top:none;border-right:none;border-left:none;">
+			<div style="padding:4px;border:none;">
+				<input id="TemplateSearch" class="hisui-searchbox" data-options="prompt:'#(..Get("名称、简拼"))#'" style="width:240px"/>
+			</div>
+		</div> 
+		<div data-options="region:'center',border:false,iconCls:'icon-template'">
+			<ul id="TemplateUl" data-options="animate:true,fit:true" style="padding:4px;"></ul>
+		</div> 
+	</csp:if>
+</div>

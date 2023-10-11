@@ -1,0 +1,205 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.bedchartmenu.csp 床位右键配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+</style>
+</head>
+
+<body>
+<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-layout" data-options="fit:true,border:false" style=""> 
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:51px;border-bottom:1px dashed #ccc;">
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+				</td>
+				<td>
+					<input id="_HospList"/>
+				</td>
+				<!--<td class="r-label">
+					<label for="SearchDesc">名称</label>
+				</td>
+				<td>
+					<input class="textbox" id="SearchDesc" style="width:270px;" placeholder="请输入名称"/>
+				</td>
+				<td class="r-label">
+					<label for="SearchType">数据类型</label>
+				</td>
+				<td>
+					<input class="textbox" id="SearchType"/>
+				</td>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>  
+				</td>-->
+			</tr>
+		</table>
+    </div>
+    <div class="hisui-panel" data-options="region:'center',split:true,border:false"> 
+    	<table id="BedChartMenuList"></table>
+    </div>
+</div>	
+<!--增加/修改弹框-->
+<div id="BedChartMenuEditWin" class="hisui-window" title="新增床位右键配置" style="width:477px;height:638px;" data-options="iconCls:'icon-w-batch-cfg',closed:true">   
+	<table class="search-table">
+		<tr>
+			<td class="r-label">
+				<label for="Subgroup" class="clsRequired">分组</label>
+			</td>
+			<td>
+				<input class="hisui-numberbox textbox" id="Subgroup" style="width:154px;"/>
+				<label for="SerialId" class="clsRequired" style="margin-left:10px;">序号</label>
+				<input class="hisui-numberbox textbox" id="SerialId" style="width:154px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="MenuName" class="clsRequired">菜单名称</label>
+			</td>
+			<td>
+				<input class="textbox" id="MenuName" style="width:355px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="Type" class="clsRequired">菜单类型</label>
+			</td>
+			<td>
+				<input class="hisui-combobox  textbox" id="Type"style="width:362px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="MenuUrl">链接/CSP</label>
+			</td>
+			<td>
+				<input class="textbox" id="MenuUrl" style="width:355px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="Para">菜单参数</label>
+			</td>
+			<td>
+				<input class="textbox" id="Para" style="width:355px;" placeholder="多个参数用“&”连接"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="BabyPara">婴儿菜单参数</label>
+			</td>
+			<td>
+				<input class="textbox" id="BabyPara" style="width:355px;" placeholder="多个参数用“&”连接"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="IconUrl">图标url</label>
+			</td>
+			<td>
+				<input class="textbox" id="IconUrl" style="width:355px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="Formwork">打印调用模板</label>
+			</td>
+			<td>
+				<input class="hisui-combobox  textbox" id="Formwork" style="width:363px;"/>
+				<!--label class="r-label" for="forbidRepeatPrint">禁止护士补打</label>
+				<input class="hisui-checkbox" type="checkbox" id="forbidRepeatPrint"-->
+			</td>
+		</tr>
+		<!--<tr>
+			<td class="r-label">
+				<label for="Expression">打印方法</label>
+			</td>
+			<td>
+				<input class="textbox" id="Expression" style="width:355px;"/>
+			</td>
+		</tr>-->
+		<tr>
+			<td class="r-label">
+				<label for="Area" class="clsRequired">调用区域</label>
+			</td>
+			<td>
+				<input class="hisui-combobox  textbox" id="Area" style="width:362px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="WinTop">弹窗上边距</label>
+			</td>
+			<td style="font-size:0;">
+				<input class="textbox" id="WinTop" style="width:129px;"/>
+				<label class="r-label" for="WinLeft">弹窗左边距</label>
+				<input class="textbox" id="WinLeft" style="width:129px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="WinWidth">弹窗宽度</label>
+			</td>
+			<td style="font-size:0;">
+				<input class="textbox" id="WinWidth" style="width:129px;"/>
+				<label class="r-label" for="WinHeight" style="padding-left:25px;">弹窗高度</label>
+				<input class="textbox" id="WinHeight" style="width:129px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="Ward">病区</label>
+			</td>
+			<td>
+				<input class="hisui-combobox  textbox" id="Ward" style="width:362px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="Group">安全组</label>
+			</td>
+			<td>
+				<input class="hisui-combobox  textbox" id="Group" style="width:362px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label for="isActive">启用</label>
+			</td>
+			<td>
+				<input class="hisui-checkbox" type="checkbox" checked id="isActive">
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" style="text-align:center;">
+				<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-ok'">确定</a>
+				<a class="hisui-linkbutton" id="BCancel" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">取消</a> 
+			</td>
+		</tr>
+	</table>
+</div>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/tanslatecomponent.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/bedchartmenu.js"></script>
+</body>
+</html>

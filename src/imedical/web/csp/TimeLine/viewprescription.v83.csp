@@ -7,6 +7,7 @@
 <head>
 
 <title>	¥¶∑Ω‘§¿¿ </title>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
  <server>
 	s PrescNo = $g(%request.Data("PrescNo",1))
 	s EpisodeID = $g(%request.Data("EpisodeID",1))
@@ -15,6 +16,25 @@
 	s presType = ##class(web.DHCDocPrescript).IsPrescType(PrescNo) //##Class(icare.TimeLineOutpatientView).IsPrescType(PrescNo)
 </server>
  <script type="text/javascript">
+	var getTokenUrl=function(url){
+		
+		if(typeof url=='string' && url.indexOf('.csp')>-1) {
+			var token='';
+			if(typeof websys_getMWToken=='function' ){
+				token= websys_getMWToken();
+			}
+			
+			var arr=url.split('#');
+			arr[0]=arr[0]+(arr[0].indexOf('?')>-1?'&':'?')+'MWToken='+token; 
+			url=arr.join('#');
+		}
+		
+		//alert('getTokenUrl:'+url)
+		
+		return url;
+	}
+ 
+ 
  	var PrescNo="#($ZCVT(PrescNo,"O","JSON"))#";
  	var EpisodeID="#($ZCVT(EpisodeID,"O","JSON"))#";
  	var XMLTemplateXY="#($ZCVT(XMLTemplateXY,"O","JSON"))#";
@@ -25,8 +45,9 @@
  	var pathname=window.location.pathname;
 	pathname=pathname.split("/csp/")[0];
 	pathcsp=pathname+"/csp/"+pathcsp;
-	var query="paramsstr=DHCOUTPHA^"+PrescNo+"^"+(IsCYPresc=="1"?"Y":"N")+"&PrtType=DISPPREVIEW"
-	window.location.href=pathcsp+'?'+query;
+	var query="paramsstr=DHCOUTPHA^"+PrescNo+"^"+(IsCYPresc=="1"?"Y":"N")+"&PrtType=DISPPREVIEW";
+	var previevUrl=pathcsp+'?'+query;
+	window.location.href=getTokenUrl(previevUrl);
  </script>
 </head>
 

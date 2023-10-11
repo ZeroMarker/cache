@@ -1,0 +1,498 @@
+<!-- 
+	creator: Huxt 2021-08-24
+	desc:    药房药库 - lodop打印预览公共csp
+	csp:     csp/pha.com.lodoppreview.csp
+	others:  需要在csp中引入: <ADDINS require="CmdShell" />
+-->
+<csp:content charset="utf-8">
+<script language="Cache" method="OnPreHTTP" arguments="" returntype="%Boolean"> 
+	Quit 1
+</script>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 获取请求数据 -->
+<Server language="CACHE" runat="Server">
+	s Application = %request.Application
+	s Title = $g(%request.Data("Title", 1))
+	
+	/* 加载JS */
+	w "",!
+	s iJs = ""
+	for {
+		s iJs = $o(%request.Data("jsLoad", iJs))
+		q:(iJs = "")
+		s jsLoad = $g(%request.Data("jsLoad", iJs))
+		w "<script type='text/javascript' src='" _ Application _ jsLoad _ "' charset='gb2312'></script>",!
+	}
+	
+	/* 会话变量 */
+	s pUserId = $g(%request.Data("USERID", 1))
+	s pLocId = $g(%request.Data("CTLOCID", 1))
+	s pGroupId = $g(%request.Data("GROUPID", 1))
+	k SeesionData
+	s userCode = "", userName = ""
+	i (pUserId '= "") {
+		s userCode = $p(^SSU("SSUSR", pUserId), "^", 1)
+		s userName = $p(^SSU("SSUSR", pUserId), "^", 2)
+	}
+	s SeesionData("LOGON.USERID") = pUserId
+	s SeesionData("LOGON.USERCODE") = userCode
+	s SeesionData("LOGON.USERNAME") = userName
+	s locDesc = "", hospId = "", hospDesc = ""
+	i (pLocId '= "") {
+		s locDesc = $p(^CTLOC(pLocId), "^", 2)
+		s hospId = $p(^CTLOC(pLocId), "^", 22)
+		s hospDesc = $p($g(^CT("HOSP", +hospId)), "^", 2)
+	}
+	s SeesionData("LOGON.CTLOCID") = pLocId
+	s SeesionData("LOGON.CTLOCDESC") = locDesc
+	s SeesionData("LOGON.HOSPID") = hospId
+	s SeesionData("LOGON.HOSPDESC") = hospDesc
+	s groupDesc = ""
+	i (pGroupId '= "") {
+		s groupDesc = $p(^SSU("SSGRP", pGroupId), "^", 1)
+	}
+	s SeesionData("LOGON.GROUPID") = pGroupId
+	s SeesionData("LOGON.GROUPDESC") = groupDesc
+	
+	/* JS全局变量 */
+	w "<script type='text/javascript'>",!
+	w "	var session = new Array();",!
+	s sKey = ""
+	f {
+		s sKey = $o(SeesionData(sKey))
+		q:(sKey = "")
+		w "	session['" _ sKey _ "'] = '" _ SeesionData(sKey) _ "';" ,!
+		s %session.Data(sKey) = SeesionData(sKey)
+	}
+	w "	var jsFunctionArr = [];",!
+	s fnIdx = 0
+	s iFn = ""
+	for {
+		s iJs = $o(%request.Data("jsFunction", iJs))
+		q:(iJs = "")
+		s jsFunction = $g(%request.Data("jsFunction", iJs))
+		s jsFunction = $replace(jsFunction, """", "\""")
+		w "	jsFunctionArr[" _ fnIdx _ "] = " _ $c(34) _ jsFunction _ $c(34) _ ";" ,!
+		s fnIdx = fnIdx + 1
+	}
+	w "</script>",!
+	
+	/* CSS样式 */
+	s IsWebBrowser = $g(%request.Data("IsWebBrowser", 1))
+	s closePrompt = $g(%request.Data("closePrompt", 1))
+	s notCloseWin = $g(%request.Data("notCloseWin", 1))
+	s tabPosition = $g(%request.Data("tabPosition", 1))
+	s tabPosition = $zcvt(tabPosition, "L")
+	w "<style>",!
+	if (tabPosition = "top") {
+	    w ".lodop_tab {",!
+	    w "	height:30px;",!
+	    w "	border-bottom:1px dashed gray;",!
+	    w "}",!
+		w ".lodop_tab_item {",!
+		w "	padding-left: 10px;",!
+		w "	padding-right: 10px;",!
+		w "	height:30px;",!
+		w "	background-color:#F0F0F0;",!
+		w "	float:left;",!
+		w "	border-radius: 4px 4px 0px 0px;",!
+		w "	text-align:center;",!
+		w "	line-height:30px;",!
+		w "	cursor:pointer;",!
+		w "	margin: 0 2px 2px 2px;",!
+		w "	outline: none",!
+		w "}",!
+		w ".lodop_tab_item:hover {",!
+		w "	background-color:#E0E0E0 !important;",!
+		w "}",!
+		w ".lodop_tab_item_label {",!
+		w "	float:left;",!
+		w "}",!
+		w ".lodop_tab_item_close {",!
+		w "	float:right;",!
+		w "	margin-left:10px;",!
+		w "}",!
+		w ".lodop_tab_item_close:hover {",!
+		w "	color:red !important;",!
+		w "	font-weight:bold;",!
+		w "}",!
+		w ".lodop_content {",!
+	    w "	position: fixed;",!
+	    w "	left: 10px;",!
+	    w "	top: 41px;",!
+	    w "}",!
+	} else {
+	    w ".lodop_tab {",!
+	    w "	width:300px;",!
+	    w "	overflow:auto;",!
+	    w "	overflow-x:hidden;",!
+	    w "	border-radius:2px;",!
+	    w "}",!
+		w ".lodop_tab_item {",!
+		w "	padding-left: 10px;",!
+		w "	padding-right: 10px;",!
+		w "	width:100%;",!
+		w "	background-color:#F0F0F0;",!
+		w "	float:left;",!
+		w "	border-radius: 2px 2px 2px 2px;",!
+		w "	text-align:center;",!
+		w "	line-height:30px;",!
+		w "	cursor:pointer;",!
+		w "	margin: 0 2px 2px 2px;",!
+		w "	outline: none",!
+		w "}",!
+		w ".lodop_tab_item:hover {",!
+		w "	background-color:#E0E0E0 !important;",!
+		w "}",!
+		w ".lodop_tab_item_label {",!
+		w "	float:left;",!
+		w "	height:30px;",!
+		w "	width:248px;",!
+		w "	text-align:left;",!
+		w "	overflow:hidden;",!
+		w "	text-overflow: ellipsis;",!
+		w "	white-space: nowrap;",!
+		w "}",!
+		w ".lodop_tab_item_close {",!
+		w "	float:right;",!
+		w "	margin-right:20px;",!
+		w "}",!
+		w ".lodop_tab_item_close:hover {",!
+		w "	color:red !important;",!
+		w "	font-weight:bold;",!
+		w "}",!
+		w ".lodop_content {",!
+	    w "	position: fixed;",!
+	    w "	left: 320px;",!
+	    w "	top: 10px;",!
+	    w "}",!
+	}
+	w "</style>",!
+</Server>
+<!-- 公共csr文件 -->
+<TITLE>LODOP打印预览</TITLE>
+<TRAK:HEAD></TRAK:HEAD>
+<!-- 公共js文件 -->
+<script type="text/javascript" src="#(Application)#scripts_lib/bootstrap-3.3.5/js/jquery-1.11.0.min.js" charset="uft-8"></script>
+<script type="text/javascript" src="#(Application)#scripts_lib/lodop/LodopFuncs.js" charset="uft-8"></script>
+<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/lodopcom.js" charset="gb2312"></script>
+<script type="text/javascript" src="#(Application)#scripts/pha/com/v1/js/phalodop.js" charset="gb2312"></script>
+<style>
+	.btn-outter {
+		color: #fff;
+	    background: #40A2DE;
+	    filter: none;
+	    border: 0 solid #40A2DE;
+	    border-radius: 0;
+	    display: inline-block;
+	    height: 30px;
+	    cursor: pointer;
+	}
+	.btn-inner {
+		min-width: 0;
+	    line-height: 30px;
+	    padding: 0 15px;
+	    cursor: pointer;
+	}
+	.btn-outter:hover {
+	    background: #378EC4;
+	}
+</style>
+
+</head>
+
+<body style="padding:10px;background-color:white;overflow:hidden;">
+	<!-- 隐藏 -->
+	<span id="LODOP_PREVIEW_NEED_CLOSE" style="display:none;">N</span>
+	<div id="LODOP_PREVIEW_IN_BROWSE" style="display:none;">标记是否在网页中预览</div>
+	<!-- 页签 -->
+	<div id="LODOP_PREVIEW_TAB" class="lodop_tab">
+	</div>
+	<!-- 预览区域 -->
+	<div id="LODOP_PREVIEW_CONTENT" class="lodop_content">
+		<div id="DO_ACTION">
+			<a id="PREVIEW_ZOOM_HIGHT" class="btn-outter"><span class="btn-inner">适高</span></a>
+			<a id="PREVIEW_ZOOM_NORMAL" class="btn-outter"><span class="btn-inner">正常</span></a>
+			<a id="PREVIEW_ZOOM_WIDTH" class="btn-outter"><span class="btn-inner">适宽</span></a>
+			<a id="PREVIEW_ZOOM_IN" class="btn-outter"><span class="btn-inner">放大</span></a>
+			<a id="PREVIEW_ZOOM_OUT" class="btn-outter"><span class="btn-inner">缩小</span></a>
+			<a id="PREVIEW_GOFIRST" class="btn-outter" style="margin-left:10px;"><span class="btn-inner">首页</span></a>
+			<a id="PREVIEW_GOPRIOR" class="btn-outter"><span class="btn-inner">上一页</span></a>
+			<a id="PREVIEW_GONEXT" class="btn-outter"><span class="btn-inner">下一页</span></a>
+			<a id="PREVIEW_GOLAST" class="btn-outter"><span class="btn-inner">尾页</span></a>
+			<a id="PREVIEW_SETUP" class="btn-outter" style="margin-left:10px;"><span class="btn-inner">设置</span></a>
+			<a id="PREVIEW_PRINT" class="btn-outter"><span class="btn-inner">打印</span></a>
+		</div>
+	</div>
+</body>
+</html>
+
+<script language="javascript" type="text/javascript">
+	/**
+	 * 初始化入口
+	 */
+	var IsWebBrowser = "#(IsWebBrowser)#";
+	var notCloseWin = "#(notCloseWin)#";
+	var tabPosition = "#(tabPosition)#";
+	var closePrompt = "#(closePrompt)#";
+	var CUR_TAB_INDEX = -1;
+	var PRINT_CLICK_TIME = -1;
+	$(function(){
+		if (notCloseWin != "Y") {
+			winOptions = "width=" + (window.screen.availWidth - 19) + ",height=" + (window.screen.availHeight - 65)+ ",menubar=no,status=yes,toolbar=no,resizable=yes,top=0,left=0";
+			window.open(window.location.href + '&notCloseWin=Y', 'LODOP_PREVIEW', winOptions);
+			closeCurWin();
+			return;
+		}
+		if (jsFunctionArr.length == 0) {
+			closeCurWin();
+			return;
+		}
+		lodop_loading();
+		setTimeout(function(){
+			InitTask();
+			lodop_loaded();
+		}, 0);
+		/* 打印之后是否关闭 */
+		var tmp_Lodop_Interval = setInterval(function(){
+			if (typeof PHA_LODOP == 'undefined') {
+				return;
+			}
+			var lpLen = PHA_LODOP.TempArr.length;
+			for (var il = 0; il < lpLen; il++) {
+				var iLodopObj = PHA_LODOP.TempArr[il];
+				if (iLodopObj.autoClose) {
+					if (iLodopObj.isClosed) {
+						continue;
+					}
+					var jobId = iLodopObj.jobId;
+					var printTimes = iLodopObj.GET_VALUE("PRINTED_TIMES", jobId);
+					if (printTimes > 0) {
+						iLodopObj.isClosed = true;
+						var domId = iLodopObj.id;
+						var tabObj = $('div[linkTo=' + domId + ']').eq(0);
+						colseTab(tabObj);
+					}
+				}
+			}
+		}, 1);
+	});
+	/*
+	 * 任务入口
+	 */
+	function InitTask(){
+		/* 调用打印函数 */
+		for (var i = 0; i < jsFunctionArr.length; i++){
+			var jsFunction = jsFunctionArr[i];
+			try {
+				eval(jsFunction);
+			} catch (e) {
+				var eStr = '';
+				for (var k in e) {
+					eStr = (eStr == '') ? (k + ': ' + e[k]) : (eStr + '\n' + k + ': ' + e[k]);
+				}
+				alert(eStr);
+			}
+		}
+		if (PHA_LODOP.TempArr.length == 0) {
+			closeCurWin();
+			return;
+		}
+		/* 页签点击事件 */
+		var winWidth = $(window).width();
+		var winHeight = $(window).height();
+		var contentWidth, contentHeight;
+		if (tabPosition == 'top') {
+			contentWidth = winWidth - 21;
+			contentHeight = winHeight - 51;
+		} else {
+			contentWidth = winWidth - 330;
+			contentHeight = winHeight - 47;
+			$('#LODOP_PREVIEW_TAB').height(contentHeight + 30);
+		}
+		var pTabs = $('#LODOP_PREVIEW_TAB').children();
+		for (var i = 0; i < pTabs.length; i++) {
+			// 布局
+			var iTab = pTabs[i];
+			var linkTo = $(iTab).attr('linkTo');
+			$('#' + linkTo).width(contentWidth);
+			$('#' + linkTo).height(contentHeight);
+			$('#' + linkTo).children().width(contentWidth);
+			$('#' + linkTo).children().height(contentHeight);
+			if (i == 0) {
+				selectTab(iTab)
+			}
+			// 点击页签
+			$(iTab).on('click', function(e){
+				selectTab(this);
+			});
+			// 点击关闭
+			$(iTab).children().eq(1).on('click', function(e){
+				var $pTab = $(this).parent();
+				colseTab($pTab);
+			});
+		}
+		/* 按钮事件 */
+		$('#DO_ACTION').children().each(function(){
+			$(this).on('click', function(){
+				var tmpIndex = CUR_TAB_INDEX;
+				if (tmpIndex < 0) {
+					return;
+				}
+				var tmpLodop = PHA_LODOP.TempArr[tmpIndex];
+				if (this.id == 'PREVIEW_PRINT') {
+					/*
+					var curTime = (new Date()).getTime();
+					if (PRINT_CLICK_TIME > 0 && curTime - PRINT_CLICK_TIME < 1000) {
+						return; // 点击太快 TODO...
+					}
+					PRINT_CLICK_TIME = curTime;
+					*/
+					if (tmpLodop) {
+						if (tmpLodop.autoClose) {
+							CUR_TAB_INDEX = -1;
+						}
+						tmpLodop.DO_ACTION(this.id, 0);
+					}
+				} else {
+					if (tmpLodop) {
+						tmpLodop.DO_ACTION(this.id, 0);
+					}
+				}
+			});
+		});
+	}
+	/*
+	 * 选中tab执行此方法
+	 */
+	function selectTab(dom){
+		lodop_loading();
+		var thisId = dom.id;
+		var thisLinkTo = $(dom).attr('linkTo');
+		$(dom).css('background-color', '#c9c7c7');
+		$('#' + thisLinkTo).css('display', 'none');
+		var tTabs = $('#LODOP_PREVIEW_TAB').children();
+		for (var j = 0; j < tTabs.length; j++) {
+			var jTab = tTabs[j];
+			var jLinkTo = $(jTab).attr('linkTo');
+			if (jTab.id != thisId) {
+				$(jTab).css('background-color', '#F7F7F7');
+				$('#' + jLinkTo).css('display', 'none');
+			}
+		}
+		setTimeout(function(){
+			Lodop_DoPreview(dom);
+			$('#' + thisLinkTo).css('display', 'block');
+			lodop_loaded();
+		}, 0);
+		setTimeout(function(){
+			$(dom).focus();
+		}, 0);
+	}
+	/*
+	 * 关闭tab执行此方法
+	 */
+	function colseTab(pTab){
+		CUR_TAB_INDEX = -1;
+		var $pTab = $(pTab);
+		var $prev = $pTab.prev();
+		var $next = $pTab.next();
+		var linkTo = $pTab.attr('linkTo');
+		$pTab.remove();
+		$('#' + linkTo).remove();
+		if ($prev.length > 0) {
+			selectTab($prev[0]);
+		} else if($next.length > 0) {
+			selectTab($next[0]);
+		} else {
+			if (closePrompt == 'Y') {
+				// 提示用户关闭
+				if (confirm("打印完成，是否确认关闭窗口？")) {
+					$('#LODOP_PREVIEW_NEED_CLOSE').text('Y');
+					setTimeout(function() {
+						closeCurWin();
+					}, 1000);
+				}
+			} else {
+				// 直接关闭不提示(默认)
+				$('#LODOP_PREVIEW_NEED_CLOSE').text('Y');
+				setTimeout(function() {
+					closeCurWin();
+				}, 1000);
+			}
+		}
+	}
+	function closeCurWin(){
+		$('#LODOP_PREVIEW_NEED_CLOSE').text('Y');
+		if (IsWebBrowser == "Y") {
+			return;
+		}
+		window.opener = null;
+		window.open('', '_self');
+		window.close();
+	}
+	/*
+	 * 执行LODOP预览方法
+	 */
+	function Lodop_DoPreview(dom){
+		var lodopIndex = $(dom).attr('lodopIndex');
+		if (PHA_LODOP.TempArr[lodopIndex] && !PHA_LODOP.TempArr[lodopIndex].IsDoPreview) {
+			var jobId = PHA_LODOP.TempArr[lodopIndex].PREVIEW();
+			PHA_LODOP.TempArr[lodopIndex].IsDoPreview = true;
+			PHA_LODOP.TempArr[lodopIndex].jobId = jobId;
+		}
+		CUR_TAB_INDEX = lodopIndex;
+	}
+	/*
+	 * 显示loading遮罩层
+	 */
+	function lodop_loading() {
+	    var mask_bg = document.createElement("div");
+	    mask_bg.id = "mask_bg";
+	    mask_bg.style.position = "absolute";
+	    mask_bg.style.top = "0px";
+	    mask_bg.style.left = "0px";
+	    mask_bg.style.width = "100%";
+	    mask_bg.style.height = "100%";
+	    mask_bg.style.backgroundColor = "#E1E1E1";
+	    mask_bg.style.opacity = 0.6;
+	    mask_bg.style.zIndex = 10001;
+	    document.body.appendChild(mask_bg);
+	 
+	    var mask_msg = document.createElement("div");
+	    mask_msg.style.position = "absolute";
+	    mask_msg.style.top = "35%";
+	    mask_msg.style.left = "42%";
+	    mask_msg.style.backgroundColor = "white";
+	    mask_msg.style.border = "#336699 1px solid";
+	    mask_msg.style.textAlign = "center";
+	    mask_msg.style.fontSize = "1.1em";
+	    mask_msg.style.fontWeight = "bold";
+	    mask_msg.style.padding = "0.5em 3em 0.5em 3em";
+	    mask_msg.style.zIndex = 10002;
+	    mask_msg.innerText = "正在加载数据,请稍后...";
+	    mask_bg.appendChild(mask_msg);
+	}
+	/*
+	 * 关闭遮罩层
+	 */
+	function lodop_loaded() {
+	    var mask_bg = document.getElementById("mask_bg");
+	    if (mask_bg != null){
+	        mask_bg.parentNode.removeChild(mask_bg);
+	    }
+	}
+	window.onbeforeunload = function (event) {
+		/*
+		var event = event || window.event;
+		if (event) {
+			event.returnValue = "确定要关闭窗口吗？";
+		}
+		return '确定要关闭窗口吗？';
+		*/
+	}
+</script>

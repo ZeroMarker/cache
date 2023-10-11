@@ -7,6 +7,7 @@
 
 <!-- Put your page Title here -->
 <title>	Cache Server Page </title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI/>
 <style type="text/css">
 	body{
@@ -37,6 +38,7 @@
 	    background-color: #FFC706;
 	}
 </style>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
 </head>
 
 <body>
@@ -45,6 +47,7 @@
 		<div style="padding:10px">
 		<table>	
 			<tr>
+				
 				<td class="r-label">代码</td>
 				<td>
 					<input id="upCode" style="width:193px;" class="hisui-validatebox textbox" data-options="required:true,validType:'length[1,50]'">
@@ -106,6 +109,10 @@
 		<table>
 			<tr>
 				<td>
+					<label id="_HospListLabel" style='color:red;margin:0 0 0 10px' class='r-label'>医院</label>
+					<input id="_HospList" class="textbox"/>
+				</td>
+				<td>
 					<input class="hisui-textbox" name="name" id="searchInput" style="height:30px;padding-left:4px;" placeholder="请输入上报类型">
 				</td>
 				<td style="padding-left: 10px;">
@@ -138,8 +145,12 @@
     </div>
 
 	<script language="javascript">
-	
-  var watcherObj = {};// 定义一个可以监听的变量（左上角表格数据）
+	var HOSPID = "#($g(%session.Data("LOGON.HOSPID")))#";
+  var watcherObj = {}, currentId="";// 定义一个可以监听的变量（左上角表格数据）
+  var GLOBAL = {
+		HospEnvironment: true,
+		HospitalID: session['LOGON.HOSPID']
+	};
   Object.defineProperty(watcherObj, "currentId", {
     get: function() {
       return currentId;
@@ -152,25 +163,24 @@
       // 级联请求数据处理位置 getDataRightUpTableData(watcherObj.currentId)
     }
   });
-  var watcherObjRightUp={};
+  var watcherObjRightUp={},currentIdRU="";
   Object.defineProperty(watcherObjRightUp,"currentId",{
 	get:function(){
-      return currentId;
+      return currentIdRU;
 	},
 	set: function(newVal){
-      	currentId = newVal;
+      	currentIdRU = newVal;
 		getLeftDownData(newVal);// 请求左侧下边的数据表格信息
 		getDataRightDownTable(0);// 权限数据表格清零
-		console.log(watcherObj,'songxx')
 	}  
   })
-  var watcherObjLeftDown={};
+  var watcherObjLeftDown={}, currentIdLD="";
   Object.defineProperty(watcherObjLeftDown,"currentId",{
 	get:function(){
-		return currentId;	
+		return currentIdLD;	
 	},
 	set:function(newVal){
-      	currentId = newVal;
+      	currentIdLD = newVal;
 		getDataRightDownTable(newVal);// 请求权限数据
 		console.log(newVal);
 	}	  
@@ -209,14 +219,14 @@
 			iconCls:"icon-set-zero"	
 		})
 		$("#pUpRight").panel({
-			title:"工作流层级设置",
+			title:"上报父流程设置",
 			width:WUR,
 			height:HUR,
 			headerCls:"panel-header-gray",
 			iconCls:"icon-set-zero"	
 		})
 		$("#pdownLeft").panel({
-			title:"工作流层级设置",
+			title:"上报子流程设置",
 			width:WDL,
 			height:HDL,
 			headerCls:"panel-header-gray",
@@ -235,7 +245,7 @@
 		$cm({
 			ClassName:'NurMp.DHCNurAdverseWorkflow',
 			MethodName:'getType',
-			parr:tmpStr	
+			parr:tmpStr + "^" + GLOBAL.HospitalID
 		},function(res){
 			var tmpData=res.data;
 			$("#upLeftTable").datagrid({
@@ -283,6 +293,7 @@
 					return;	
 				}
 				console.log(newval,oldval,'xxx');
+				
 				if(newval=="Group"){
 					$("#direct").combobox('clear');      
 					$("#direct").combobox('loadData',SaveGroup)
@@ -302,6 +313,7 @@
 			required:true,
 			data:targetDirect,
 			onChange:function(newval,oldval){
+				
 				console.log(newval,oldval,'song');
 			}
 		});
@@ -337,7 +349,9 @@
 					getDataRightDownTable(tmpAdverseId);
 					$HUI.dialog('#aa').close();
 					rightDownSelectRow="";
-				}	
+				}else{
+					$.messager.popover({msg: res.msg,type:'info',timeout: 1000});
+				}
 			})
 		},
 		},{
@@ -354,7 +368,7 @@
 		var tmpRowId=leftDownSelectRow.Id;
 		var tmpparentId=rightUpSelectRow==""?"":rightUpSelectRow.Id;
 		$HUI.dialog(('#cc'),{
-		title: '工作流层级修改',
+		title: '上报子流程设置',
 		width:400,
 		height:180,
 		iconCls:'icon-save',
@@ -383,6 +397,8 @@
 					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 					getLeftDownData(tmpparentId)
 					leftDownSelectRow="";
+				}else {
+					$.messager.popover({msg: res.msg,type:'info',timeout: 1000});
 				}	
 			})
 			// console.log(tmpCode,tmpDesc,tmpFlag)
@@ -420,7 +436,7 @@
 		$("#upDesc").validatebox("validate");
 		// 修改数据
 		$HUI.dialog(('#dd'),{
-		title: '工作流层级修改',
+		title: '上报父流程修改',
 		width:400,
 		height:214,
 		iconCls:'icon-save',
@@ -448,6 +464,8 @@
 					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 					getDataRightUpTableData(tmpParentId)
 					rightUpSelectRow="";
+				}else {
+					$.messager.popover({msg: res.msg,type:'info',timeout: 1000});
 				}	
 			})
 			console.log(tmpCode,tmpDesc,tmpFlag)
@@ -460,10 +478,19 @@
 	}
 	function insert() {
 		// 右上表格新增插入数据
+		try {
+			$('#upRightTable').datagrid('selectRow',0);
+			if (!$('#upRightTable').datagrid('getSelected').Id) {
+				$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+				return;
+			}
+		}catch(e) {
+			console.log(e);
+		}
 		$('#upRightTable').datagrid('clearSelections')
 		var row = $('#upRightTable').datagrid('getSelected');
 		if (row) {
-			var index = $('#tt').datagrid('getRowIndex', row);
+			var index = $('#upRightTable').datagrid('getRowIndex', row);
 		} else {
 			index = 0;
 		}
@@ -476,12 +503,18 @@
 		$('#upRightTable').datagrid('beginEdit', index);
 	}
 	function saverow(target) {
+		$('#upRightTable').datagrid('selectRow',0);
 		$('#upRightTable').datagrid('endEdit', 0);
 		var parentId=$("#upLeftTable").datagrid('getSelected').Id;
 		if(!parentId){
 			return;
 		}
 		var tmp=$('#upRightTable').datagrid('getSelected')
+		if (!tmp.ModulDes || !tmp.ModulPriorityFlag || !tmp.ModuleCode) {
+			$('#upRightTable').datagrid('beginEdit', 0);
+			$.messager.popover({msg: '请填写数据！',type:'info',timeout: 1000});
+			return;
+		}
 		// 行保存数据
 		var str='AdverseType|'+parentId+"^ModuleCode|"+tmp.ModuleCode+"^ModulDes|"+tmp.ModulDes+"^ModulPriorityFlag|"+tmp.ModulPriorityFlag;
 		$cm({
@@ -493,11 +526,27 @@
 			if(res.status==0){
 				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 				getDataRightUpTableData(parentId)
-			}	
+			}else {
+				$('#upRightTable').datagrid('beginEdit', 0);
+				$.messager.popover({msg: res.msg,type:'info',timeout: 1000});	
+			}
 		})
 	}
 		
 	function insertLD() {
+		if (!watcherObjRightUp.currentId) {
+			$.messager.popover({msg: '请选择上报父流程设置！',type:'info',timeout: 1000});
+			return;
+		}
+		try {
+			$('#downLeftTable').datagrid('selectRow',0);
+			if (!$('#downLeftTable').datagrid('getSelected').Id) {
+				$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+				return;
+			}
+		}catch(e) {
+			console.log(e);	
+		}
 		// 右上表格新增插入数据
 		$('#downLeftTable').datagrid('clearSelections')
 		var row = $('#downLeftTable').datagrid('getSelected');
@@ -518,7 +567,19 @@
 		
 	function insertRD() {
 		// 右下表格新增插入数据
-		
+		if (!watcherObjLeftDown.currentId) {
+			$.messager.popover({msg: '请选择上报子流程设置！',type:'info',timeout: 1000});
+			return;
+		}
+		try {
+			$('#downRightTable').datagrid('selectRow',0);
+			if (!$('#downRightTable').datagrid('getSelected').Id) {
+				$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+				return;
+			}
+		} catch(e) {
+			console.log(e);	
+		}
 		$('#downRightTable').datagrid('clearSelections')
 		var row = $('#downRightTable').datagrid('getSelected');
 		if (row) {
@@ -539,8 +600,14 @@
 		if(!parentId){
 			return;
 		}
+		$('#downLeftTable').datagrid('selectRow',0);
 		$('#downLeftTable').datagrid('endEdit', 0);
 		var tmp=$('#downLeftTable').datagrid('getSelected')
+		if (!tmp.AdiutCode || !tmp.AdiutDesc) {
+			$('#downLeftTable').datagrid('beginEdit', 0);
+			$.messager.popover({msg: '请填写数据！',type:'info',timeout: 1000});
+			return;
+		}
 		// 行保存数据
 		console.log(tmp);
 		// var str='AdverseType|'+watcherObj.currentId+"^AdiutCode|"+tmp.AdiutCode+"^AdiutDesc|"+tmp.AdiutDesc;
@@ -556,7 +623,10 @@
 			if(res.status==0){
 				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 				getLeftDownData(parentId)
-			}	
+			}else {
+				$('#downLeftTable').datagrid('beginEdit', 0);
+				$.messager.popover({msg: res.msg,type:'info',timeout: 1000});	
+			}
 		})
 	}
 	
@@ -565,8 +635,14 @@
 		if(!parentId){
 			return;
 		}
+		$('#downRightTable').datagrid('selectRow',0);
 		$('#downRightTable').datagrid('endEdit', 0);
 		var tmp=$('#downRightTable').datagrid('getSelected')
+		if (!tmp.PerSetPointTo || !tmp.PerSetType) {
+			$('#downRightTable').datagrid('beginEdit', 0);
+			$.messager.popover({msg: '请填写数据！',type:'info',timeout: 1000});
+			return;
+		}
 		// 行保存数据watcherObjLeftDown
 		// var str='AdverseType|'+watcherObj.currentId+"^PerSetType|"+tmp.PerSetType+"^PerSetPointTo|"+tmp.PerSetPointTo;
 		var str='AdverseType|'+parentId+"^PerSetType|"+tmp.PerSetType+"^PerSetPointTo|"+tmp.PerSetPointTo;
@@ -580,7 +656,10 @@
 			if(res.status==0){
 				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 				getDataRightDownTable(parentId)
-			}	
+			}else {
+				$('#downRightTable').datagrid('beginEdit', 0);
+				$.messager.popover({msg: res.msg,type:'info',timeout: 1000});	
+			}
 		})
 	}
 	function cancelrow(target) {
@@ -588,12 +667,16 @@
 	}
 	function upTableRU(rowId,parentId){
 		// 模块工作流上调级别
-		console.log(rowId)
+		if (!rowId) {
+			$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+			return;
+		}
 		$cm({
 			ClassName:'NurMp.DHCNurAdverseWorkflow',
 			MethodName:'changePriority',
 			Type:'UP',
-			id:rowId
+			id:rowId,
+			AdverseType: watcherObj.currentId
 		},function(res){
 			if(res.status==0){
 				getDataRightUpTableData(parentId)	
@@ -604,12 +687,16 @@
 	}
 	function downTableRU(rowId,parentId){
 		// 模块工作流下调级别
-		console.log(rowId)
+		if (!rowId) {
+			$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+			return;
+		}
 		$cm({
 			ClassName:'NurMp.DHCNurAdverseWorkflow',
 			MethodName:'changePriority',
 			Type:'DOWN',
-			id:rowId
+			id:rowId,
+			AdverseType: watcherObj.currentId
 		},function(res){
 			if(res.status==0){
 				getDataRightUpTableData(parentId)	
@@ -620,7 +707,10 @@
 	}
 	function downTableLD(rowId,parentId){
 		// 审核工作流下调级别
-		console.log(rowId)
+		if (!rowId) {
+			$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+			return;
+		}
 		$cm({
 			ClassName:'NurMp.DHCNurAdverseAdiutflow',
 			MethodName:'changePriority',
@@ -635,7 +725,10 @@
 		})
 	}
 	function upTableLD(rowId,parentId){
-		console.log(rowId)
+		if (!rowId) {
+			$.messager.popover({msg: '请先保存数据！',type:'info',timeout: 1000});
+			return;
+		}
 		$cm({
 			ClassName:'NurMp.DHCNurAdverseAdiutflow',
 			MethodName:'changePriority',
@@ -657,6 +750,7 @@
 			AdverseId:currId	
 		},function(res){
 			var tmpData=res.data;
+      		currentIdRU = "";
 			// console.log(res.data)
 			$("#upRightTable").datagrid({
 				fit:true,
@@ -666,8 +760,8 @@
 					watcherObjRightUp.currentId=rowData.Id
 				},
 				columns:[[
-					{field:'ModuleCode',title:'代码',width:70,editor:{type:'text',options:{required:true}}},
-					{field:'ModulDes',title:'描述',width:150,editor:{type:'text',options:{required:true}}},
+					{field:'ModuleCode',title:'代码',width:70,editor:{type:'validatebox',options:{required:true}}},
+					{field:'ModulDes',title:'描述',width:150,editor:{type:'validatebox',options:{required:true}}},
 					{
 						field:'ModulPriorityFlag',
 						title:'是否定义优先级',
@@ -748,6 +842,9 @@
 									},function(res){
 										if(res.status==0){
 											$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+											getLeftDownData();//刷新左下角表格
+											getDataRightDownTable(); //刷新右下角表格
+											rightUpSelectRow = "";
 											var parentId=$("#upLeftTable").datagrid('getSelected').Id;
 											if(!parentId){
 												return;
@@ -774,6 +871,7 @@
 			AdverseId:currId	
 		},function(res){
 			var tmpData=res.data;
+			currentIdLD="";
 			$("#downLeftTable").datagrid({
 				fit:true,
 				singleSelect:true,
@@ -786,9 +884,9 @@
 						field:'AdiutCode',
 						title:'代码',
 						width:100,
-						editor:{type:'text',options:{required:true}}
+						editor:{type:'validatebox',options:{required:true}}
 					},
-					{field:'AdiutDesc',title:'描述',width:150,editor:{type:'text',options:{required:true}}},
+					{field:'AdiutDesc',title:'描述',width:150,editor:{type:'validatebox',options:{required:true}}},
 					{
 						field:'yxj',
 						title:'优先级',
@@ -847,6 +945,8 @@
 									},function(res){
 										if(res.status==0){
 											$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+											getDataRightDownTable(); //刷新右下角表格
+											leftDownSelectRow="";
 											var parentId=$("#upRightTable").datagrid('getSelected').Id;
 											if(!parentId){
 												return;
@@ -900,6 +1000,7 @@
 								data:TypeArr,
 								required:true,
 								onSelect:function(newValue, oldValue){
+									
 									// 选择框发生变化的时候
 									if(newValue.Id=="User"){
 										targetArr=UserArr;	
@@ -911,8 +1012,11 @@
 										targetArr=BigGroup
 									}
 									// console.log(targetArr)
+									
 									var editor=$("#downRightTable").datagrid("getEditor",{index:0,field:'PerSetPointTo'})
 									$(editor.target).combobox('loadData',targetArr)
+									$(editor.target).combobox('clear')
+									
 								}
 							}
 						}
@@ -923,6 +1027,7 @@
 						width:100,
 						resizable:true,
 						formatter:function(value,row,index){
+							
 							if(row.PerSetType=="User"){
 								targetArr=UserArr;	
 							}else if(row.PerSetType=="Group"){
@@ -932,6 +1037,7 @@
 							}else if(row.PerSetType=="LocGroup"){
 								targetArr=BigGroup
 							}
+							
 							if(value==undefined){
 								return value;
 							}else{
@@ -939,14 +1045,17 @@
 								var resault=[];
 								for(var i=0;i<targetArr.length;i++){
 									tmpVal.forEach(function(item){
+										
 										if(parseInt(targetArr[i].Id)==parseInt(item)){
 											resault.push(targetArr[i].Desc)
 										}
 									})
 									// if(parseInt(targetArr[i].Id)==parseInt(value)) return targetArr[i].Desc;	
 								}
+								
 								return resault.join(",");
 							}
+							
 						},
 						editor:{
 							type:'combobox',
@@ -1004,6 +1113,7 @@
 									},function(res){
 										if(res.status==0){
 											$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+											rightDownSelectRow="";
 											var parentId=$("#downLeftTable").datagrid('getSelected').Id;
 											if(!parentId){
 												return;
@@ -1031,7 +1141,7 @@
 		TypeArr=res.data;
 		console.log(TypeArr,"typeArr")
 		var newData=TypeArr.map(function(item){
-			return item.Id;	
+			return item.Id;
 		});
 		newData.forEach(function(item){
 				/*var TypeArr="", // 权限定义类型数据存储
@@ -1044,7 +1154,8 @@
 				$cm({
 					ClassName:'NurMp.DHCNurAdversePerSetflow',
 					MethodName:'getTypeInfo',
-					Type:item	
+					Type:item,
+					HospId: HOSPID	
 				},function(res){
 					SaveGroup=res.data;	
 					// console.log(SaveGroup);
@@ -1054,7 +1165,8 @@
 				$cm({
 					ClassName:'NurMp.DHCNurAdversePerSetflow',
 					MethodName:'getTypeInfo',
-					Type:item	
+					Type:item,
+					HospId: HOSPID	
 				},function(res){
 					LocRoom=res.data;	
 					//console.log(SaveGroup);
@@ -1063,7 +1175,8 @@
 				$cm({
 					ClassName:'NurMp.DHCNurAdversePerSetflow',
 					MethodName:'getTypeInfo',
-					Type:item	
+					Type:item,
+					HospId: HOSPID	
 				},function(res){
 					UserArr=res.data;	
 					// console.log(UserArr);
@@ -1073,7 +1186,8 @@
 				$cm({
 					ClassName:'NurMp.DHCNurAdversePerSetflow',
 					MethodName:'getTypeInfo',
-					Type:item	
+					Type:item,
+					HospId: HOSPID	
 				},function(res){
 					BigGroup=res.data;	
 					// console.log(BigGroup);
@@ -1082,7 +1196,46 @@
 		})
 	})
 }
+	/**
+	 * @description 初始化医院
+	 */
+	function initHosp(){
+		if (typeof GenHospComp == "undefined") {
+			GLOBAL.HospEnvironment = false;
+		}
+		if(GLOBAL.HospEnvironment){
+			var opt = { width: 250 };
+			var hospComp = GenHospComp("Nur_IP_DHCNurAdverseEvent", session['LOGON.USERID'] + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.CTLOCID'] + '^' + GLOBAL.HospitalID, opt); 
+			hospComp.options().onSelect = function(q, row){
+				GLOBAL.HospitalID = row.HOSPRowId;
+				getDataLeftTable();
+				currId=""
+				getDataRightUpTableData(currId);
+				getLeftDownData(currId);
+				getDataRightDownTable(currId);
+			}
+		}else{
+			$m({
+				ClassName: 'NurMp.Common.Tools.Hospital', 
+				MethodName: 'hospitalName', 
+				HospitalID: GLOBAL.HospitalID
+			},function(hospDesc){
+				$HUI.combobox("#_HospList", {
+					width:250,
+					valueField: 'HOSPRowId',
+					textField: 'HOSPDesc',
+					data: [{
+						HOSPRowId: GLOBAL.HospitalID,
+						HOSPDesc: hospDesc
+					}],
+					value: GLOBAL.HospitalID,
+					disabled: true
+				});
+			});
+		}
+	}
 	$(function(){
+		initHosp();
 		$("#dd").dialog('close');
 		$("#cc").dialog('close');
 		$("#aa").dialog('close');

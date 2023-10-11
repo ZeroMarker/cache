@@ -2,39 +2,50 @@
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
 </csp:method>
+<ADDINS required="CmdShell"></ADDINS>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<DHCEQ:HISUI></DHCEQ:HISUI>
 	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
 </head>
 <server>
 	s SourceID=$g(%request.Data("SourceID",1))
 	s SourceType=$g(%request.Data("SourceType",1))
 	s SourceName=$g(%request.Data("SourceName",1))
+	s EquipRangeDR=$g(%request.Data("EquipRangeDR",1))  ///Modefied by zc0098 2021-1-29 添加参数EquipRangeDR
 	s ComputerFlag=$g(%request.Data("ComputerFlag",1))  //add by lmm 2019-05-03
-	s Title=$CASE(SourceName,"MaintPlan":"选择保养设备","InspectPlan":"选择巡检设备","MeteragePlan":"选择计量设备","3":"计划单","4":"申请单")
+	s Title=$CASE(SourceName,"MaintPlan":"选择保养设备","InspectPlan":"选择巡检设备","MeteragePlan":"选择计量设备","3":"计划单","4":"申请单","PMTemplate":"PM模板范围维护")  ///Modefied by zc0098 2021-1-29 添加PM模板范围维护
 	s vStatus=$g(%request.Data("vStatus",1))   ///modify by zc0053 2019-11-25 在dhceq.plat.equiprange.csp?中添加参数vStatus控制按钮灰化 
+	//add by csj 2020-11-17 添加润乾打印相关配置
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if (PreviewRptFlag=0){
+		//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    	d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()
+	}
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	s CancelFlag=$g(%request.Data("CancelFlag",1))
 </server>
 <body class="hisui-layout">
-	<!--modify by lmm 2020-01-03 1040240 布局调整-->
 	<div data-options="region:'center',border:false" style="padding:10px 10px 0px 10px;">
 		<div class="hisui-panel" data-options="fit:true,border:false">
-			<!--modify by lmm 2020-01-16 1040240 调整列表高度及制定类组类型宽度-->
 			<div class="hisui-layout" data-options="fit:true,border:false" style="height:100%;">
-				<div data-options="region:'north',border:false" style="height:40px;">
-					<div id="redkw"></div>
+				<div data-options="region:'north',border:false" style="height:40px; width:100%;">	
+					<div style="width:35%;height:100%;float:right; text-align:center;">
+						<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true" >保存</a>
+						<a>&nbsp&nbsp&nbsp&nbsp</a>
+						<a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a>
+					</div>
+					<div id="redkw" style="width:65%;height:100%;float:right;"></div>
 				</div>
 				<div data-options="region:'center',border:false" style="width:100%;overflow:hidden;position:relative;">
 					<div id="div-Datagrid" style="height:99%;width:100%;position:relative;overflow:hidden;">
-	
-
 						<div id="div-DHCEQEquip" style="float:left;height:100%;width:100%;position:relative;">
 							<div class="hisui-panel" title="设备列表" data-options="'eqtitle':'listtitle',fit:true">
 								<table id="DHCEQEquip"></table>
-									<!--modify by lmm 2020-02-10 1040239-->
 									<span id="span-BEquip" style="position:absolute;right:1%;top:10px;">
 									<a id="BEquip" href="#" onclick='javascript:AddgridData("5")'><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/add.png"/></a>
 									</span>
@@ -45,7 +56,6 @@
 							<div id="div-DHCEQMastitem" style="float:left;height:100%;width:49.5%;">
 								<div id="panel-DHCEQMastitem" class="hisui-panel" title="设备项列表" data-options="'eqtitle':'listtitle',fit:true">
 									<table id="DHCEQMastitem" data-options="border:true"></table>
-										<!--modify by lmm 2020-02-10 1040239-->
 										<span id="span-BMastite" style="position:absolute;right:51%;top:10px;">
 										<a id="BMastitem" href="#" onclick='javascript:AddgridData("6")'><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/add.png"/></a>
 										</span>
@@ -54,7 +64,6 @@
 							<div id="div-DHCEQLoc" style="float:right;height:100%;width:49.5%;">
 								<div id="panel-DHCEQLoc" class="hisui-panel" title="科室列表" data-options="'eqtitle':'listtitle',fit:true">
 									<table id="DHCEQLoc"></table>
-										<!--modify by lmm 2020-02-10 1040239-->
 										<span id="span-BLoc" style="position:absolute;right:1%;top:10px;">
 										<a id="BLoc" href="#" onclick='javascript:AddgridData("4")'><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/add.png"/></a>
 										</span>
@@ -105,23 +114,26 @@
 			</div>
 		</div>
 	</div>
-	
-	
+
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCEQ">	
             <input id="SourceID" name="SourceID" type="hidden" value=#(SourceID)#>
             <input id="SourceType" name="SourceType" type="hidden" value=#(SourceType)#>
             <input id="SourceName" name="SourceName" type="hidden" value=#(SourceName)#>
             <input id="ComputerFlag" name="ComputerFlag" type="hidden" value=#(ComputerFlag)#>  <!--add by lmm 2019-05-30-->
-			<input type="hidden" name="EquipRangeDR" id="EquipRangeDR">
+			<input type="hidden" name="EquipRangeDR" id="EquipRangeDR" value=#(EquipRangeDR)#>  <!--Modefied by zc0098 2021-1-29 添加EquipRangeDR赋值-->
 			<input type="hidden" name="EquipRangeEquipTypeDR" id="EquipRangeEquipTypeDR">
 			<input type="hidden" name="EquipRangeStatCatDR" id="EquipRangeStatCatDR">
 			<input type="hidden" id="vStatus" value=#(vStatus)# >	<!--modify by zc0053 2019-11-25 在dhceq.plat.equiprange.csp?中添加参数vStatus控制按钮灰化 -->
 			<!--div id="tb">
 			<input class="hisui-searchbox" id="Search" style="width:250%" data-options="searcher:SearchHander">
 			</div-->
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<INPUT type="hidden" id="CancelFlag" value=#(CancelFlag)#> <!--MZY0112	2434030		2022-01-21-->
 		</form>
 	</div>
 <script type='text/javascript' src='../scripts/dhceq/plat/equiprange.js'></script>
+<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script>
 </body>
 </html>

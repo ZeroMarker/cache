@@ -1,0 +1,122 @@
+<html>
+<!--dhcckb.drugdetail.csp-->
+<head>
+	<HISUI/>
+	<DHCCKB/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<!-- <script type="text/javascript" src="../scripts/dhcadvEvt/common.js"></script> -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/drugdetail.js"></script>	
+</head>
+	<style>
+	.datagrid {
+	    border-radius: 4px 4px 4px 4px;
+	    border: 1px solid #ccc;
+	}
+	</style>
+<body>
+	<script language="Cache" runat="server">
+		w $$$cspStrictJavaScriptStart
+		w "var AddRuleFlag="_##class(web.DHCCKBCommon).GetAddRuleFlag()_";"
+		//w "var DrugData="_##class(web.DHCCKBCommon).GetDrugData()_";"
+		w "var globalparref="_##class(web.DHCCKBCommon).GetGlobalData()_";"
+		w $$$cspJavaScriptEnd										
+	</script>
+<div class="hisui-layout" fit="true"> 
+	<div data-options="region:'west',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='width:650px;padding:10px 5px 10px 10px' border="false">
+		<div id="dicTable"></div>
+		<div id="toolbar" style="padding:10px 0px 0px 15px">
+			<table cellspacing="4" cellpadding="0" >
+				<tr>
+					<td> <span style="padding:0 32px 0 0">医院</span><input id="hospId" class="hisui-combobox textbox" style="width:150px;"/></td>
+					<td><span style="padding:0 4px 0 0">药品类型</span><input id="dicType" href="#" class="hisui-combobox"  style="width:150"/></td>
+			   		<td><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="find">查询</a></td>
+			    </tr>
+			    <tr>
+					<td><span style="padding:0 4px 0 0">药品名称</span><input id="queryCode" href="#" class="hisui-searchbox" style="width:150" prompt='请输入代码/名称/拼音码'/></td>
+					<td><span style="padding:0 4px 0 0">药品属性</span><input id="dicAttr" href="#" class="hisui-combobox"  style="width:150"/></td>
+					<td><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a></td>
+			    </tr>
+			    <tr>
+					<td><span style="padding:0 4px 0 0">字典类型</span><input id="dictiontype" href="#" class="hisui-combobox"  style="width:150"/></td>
+			    </tr>
+			</table>	
+			<div style="margin-top:4px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>			
+			<table cellspacing="0" cellpadding="0" >
+				<tr>
+			      <td><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" id="copy" style="display:none">复制规则</a></td>
+			      <td><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-paper',plain:true" id="copyProp" style="display:none">复制属性</a></td>
+			      <td><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-export-data',plain:true" id="export" style="display:none">导出</a></td>
+			    </tr>
+			</table>		
+		</div>
+	</div>
+	<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px 10px 10px 5px' border="false">
+		
+		<div class="hisui-panel" data-options="title:'规则',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">		
+			<ul id="ruleTree"></ul>
+		</div>
+		<!--<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:0px 0px 10px 0px' border=0>
+				<div id="indicTable" toolbar="#indic_tb"></div>
+			</div>
+			<div data-options="region:'south',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='height:500px;padding:0px 0px 0px 0px' border=0>
+				<div id="dirTable" toolbar="#dir_tb"></div>
+			</div>
+		</div>-->
+	</div>
+</div>
+<!-- 规则树右键菜单 -->
+<div id="right" class="hisui-menu">
+	<div onclick="CloseRule()" data-options="iconCls:'icon-no'">关闭</div>
+</div>
+<!-- 规则导出 -->
+<div id="exportWin" class="hisui-dialog" title="导出" style="width:650px;height:450px;top:100px;left:500px;padding:0px;" data-options="iconCls:'icon-w-export',resizable:true,modal:true,closed:true,
+	buttons:[
+		{
+            iconCls: 'icon-download',
+            text:'导出规则',
+            handler: function(){Export('rule')}
+        },{
+            iconCls: 'icon-export-data',
+            text:'导出知识',
+            handler: function(){Export('know')}
+        },{
+            iconCls: 'icon-export-all',
+            text:'导出全部',
+             handler: function(){Export('all')}
+        },
+		{
+			iconCls: 'icon-w-close',
+			text:'关闭',
+			handler:function(){$HUI.dialog('#exportWin').close();}
+	}]">   
+	<table cellspacing="4" cellpadding="0" >
+		<tr>
+			<td class="tdlabel">开始日期</td>
+			<td><input id="exStDate" class="hisui-datebox" style="width:150px;" data-options="onSelect:onChangeDate"/></td>
+			<td class="tdlabel" style="padding-left:10px;">结束日期</td>
+			<td><input id="exEndDate" href="#" class="hisui-datebox" style="width:150"  data-options="onSelect:onChangeDate"/></td>
+			<td style="padding-left:20px;"><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="exportReset">重置</a></td>
+	   		<td style="padding-left:20px; display:none"><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="exportFind">查询</a></td>
+	    </tr>
+	    <tr>
+			<td class="tdlabel">医院</td>
+			<td><input id="exportHospId" class="hisui-combobox textbox" style="width:150px;"/></td>
+			<td class="tdlabel" style="padding-left:10px;" >字典类型</td>
+			<td><input id="exDicType" href="#" class="hisui-combobox" style="width:150px;"></td>	
+	   		<td style="padding-left:20px; display:none"><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="exportReset">重置</a></td>
+	    </tr>		   
+	</table>
+	<div style="margin-top:4px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>		
+	<div id="exportmsg">	
+		<div id="exportPath"> </div>	
+		<div id="selectdrug" style="width:630px;height:250px;overflow:auto"></div>    
+	</div>
+	<!-- <div id="exDrugList" fit="true"></div> -->
+</div>
+</body>
+</html>

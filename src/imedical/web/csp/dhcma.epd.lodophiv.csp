@@ -1,0 +1,353 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<TITLE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/css/base.css">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		.RepInfo td{
+			border: none;
+			padding-left: 0.5em;
+			padding-bottom: 0.5em;
+		}
+		input {
+			border: none;
+			border-bottom: black solid 1pt;
+			font-size: 95%;
+		}
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<script language="Cache" RUNAT="SERVER">
+		Set ReportID=$GET(%request.Data("ReportID",1))
+		Set ReportInfo=##Class(DHCMed.EPDService.LodopReportInfo).GetHIVReportInfo(ReportID)
+		Set RepNo 			= $p(ReportInfo,"^",1)
+		Set PatientName 	= $p(ReportInfo,"^",2)
+		Set MEPDFamName 	= $p(ReportInfo,"^",3)
+		Set Nation 			= $p(ReportInfo,"^",4)
+		Set HIVMarriage 	= $p(ReportInfo,"^",5)
+		Set HIVEducation 	= $p(ReportInfo,"^",6)
+		Set MEPDAddress 	= $p(ReportInfo,"^",7)
+		Set HIVDiaTypeOne 	= $p(ReportInfo,"^",8)
+		Set HIVDiaTypeTwo 	= $p(ReportInfo,"^",9)
+		Set HIVDiaTypeThr 	= $p(ReportInfo,"^",10)
+		Set HIVDiaTypeFour 	= $p(ReportInfo,"^",11)
+		Set HIVDiaTypeFiv 	= $p(ReportInfo,"^",12)
+		Set HIVSexPeriod	= $p(ReportInfo,"^",13)
+		Set HIVSexPeriodTwo = $p(ReportInfo,"^",14)
+		Set HIVSexPeriodThr = $p(ReportInfo,"^",15)
+		Set HIVSexPeriodFour= $p(ReportInfo,"^",16)
+		Set HIVSexPeriodFiv = $p(ReportInfo,"^",17)
+		Set HIVTrachomaInfList = $p(ReportInfo,"^",18)
+		Set HIVDrugHistory 	= $p(ReportInfo,"^",19)
+		Set HIVInjection 	= $p(ReportInfo,"^",20)
+		Set HIVUnmarHistory = $p(ReportInfo,"^",21)
+		Set HIVUnmarried 	= $p(ReportInfo,"^",22)
+		Set HIVFixedCom 	= $p(ReportInfo,"^",23)
+		Set HIVMSMHistory 	= $p(ReportInfo,"^",24)
+		Set HIVMSM 			= $p(ReportInfo,"^",25)
+		Set HIVBloodDona 	= $p(ReportInfo,"^",26)
+		Set HIVBloodTran 	= $p(ReportInfo,"^",27)
+		Set HIVExposure 	= $p(ReportInfo,"^",28)
+		Set HIVOperation 	= $p(ReportInfo,"^",29)
+		Set HIVQtResume 	= $p(ReportInfo,"^",30)
+		Set OtherHIVQtResume= $p(ReportInfo,"^",31)
+		Set HIVUnknown 		= $p(ReportInfo,"^",32)
+		Set HIVStdHistory 	= $p(ReportInfo,"^",33)
+		Set HIVPobSourceList= $p(ReportInfo,"^",34)
+		Set HIVPosSource 	= $p(ReportInfo,"^",35)
+		Set HIVSimSourceList= $p(ReportInfo,"^",36)
+		Set HIVSimSource 	= $p(ReportInfo,"^",37)
+		Set HIVTestResult 	= $p(ReportInfo,"^",38)
+		Set HIVResultDate 	= $p(ReportInfo,"^",39)
+		Set HIVTestCompany 	= $p(ReportInfo,"^",40)
+		Set HIVDigSureDate 	= $p(ReportInfo,"^",41)
+		Set RepLocDesc 		= $p(ReportInfo,"^",42)
+		Set LocTelephone 	= $p(ReportInfo,"^",43)
+		Set RepUserName 	= $p(ReportInfo,"^",44)
+		Set RepDate 		= $p(ReportInfo,"^",45)
+		Set HIVResume 		= $p(ReportInfo,"^",46)
+		Set HIVMotherPose 	= $p(ReportInfo,"^",47)
+		
+		// 字典列表
+		Set HIVDicData = ##Class(DHCMed.EPDService.LodopReportInfo).GetHIVRepDicList()
+		Set MaritalList 		= $Lg(HIVDicData,1)
+		Set EducationList 		= $Lg(HIVDicData,2)
+		Set EpdSex2PeriodList 	= $Lg(HIVDicData,3)
+		Set EpidemicTrachomaInfList = $Lg(HIVDicData,4)
+		Set PossibleSourceList = $Lg(HIVDicData,5)
+		Set SimpleSourceList = $Lg(HIVDicData,6)
+	</script>
+	<div id="Form">
+		<div style="width: 95%;font-weight: bold;">
+			<div style="float: right;">注意保密</div>
+			<div style="font-size: 120%;text-align: center;">艾滋病信息附卡</div>
+		</div>
+		<div style="margin-bottom:0.5em;">
+			<span>卡片编号:</span>
+			<input type='text' style='border:none;border-bottom:black solid 1pt' value=#(RepNo)#>
+		</div>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+		<tr>
+			<td colspan="4" style="padding-left:0.5em;padding-top:0.3em;padding-bottom:0.5em;">
+				患者姓名:
+			 	<input type='text' style='border:none;border-bottom:black dashed 1pt' value=#(PatientName)#>
+			 	(患儿家长姓名:
+			 	<input type='text' style='width:5em;border:none;border-bottom:black dashed 1pt' value=#(MEPDFamName)#>
+			 	)
+				<div style="float:right;margin-right:10pt;">
+					<span>民族：</span>
+					<input type='text' style='width:5em;border:none;border-bottom:black dashed 1pt' value=#(Nation)#>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="4" style="padding-left:0.5em;padding-bottom:0.5em;">
+				婚姻状况:
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(MaritalList))#>
+					<CSP:IF CONDITION='$Lg(MaritalList,ZLInd)=HIVMarriage'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(MaritalList,ZLInd))#
+				</CSP:LOOP>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="4" style="padding-left:0.5em;padding-bottom:0.5em;">
+				文化程度:
+				<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EducationList))#>
+					<CSP:IF CONDITION='$Lg(EducationList,ZLInd)=HIVEducation'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EducationList,ZLInd))#
+				</CSP:LOOP>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="8" style="padding-left:0.5em;padding-bottom:0.5em;">
+				户籍地址:
+				<input type='text' style='width:30em;border:none;border-bottom:black solid 1pt' value=#(MEPDAddress)#>
+			</td>
+		</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td>
+					疾病名称:
+				</td>
+			</tr>
+			<tr>
+				<td >
+					<span><CSP:IF CONDITION='HIVDiaTypeOne=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>艾滋病病毒感染</span>
+				</td>
+				<td style="width:30%;">
+					<span><CSP:IF CONDITION='HIVDiaTypeTwo=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>艾滋病</span>
+				</td>
+			</tr>
+			<tr>
+				<td >
+					梅毒（
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EpdSex2PeriodList))#>
+						<CSP:IF CONDITION='$Lg(EpdSex2PeriodList,ZLInd)=HIVSexPeriod'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EpdSex2PeriodList,ZLInd))#
+					</CSP:LOOP>
+					）
+				</td>
+				<td>
+					<span><CSP:IF CONDITION='HIVDiaTypeThr=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>淋病</span>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					生殖道沙眼衣原体感染（
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(EpidemicTrachomaInfList))#>
+						<CSP:IF CONDITION='$Lg(EpidemicTrachomaInfList,ZLInd)=HIVTrachomaInfList'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(EpidemicTrachomaInfList,ZLInd))#
+					</CSP:LOOP>
+						）
+				</td>
+				<td>
+					<span><CSP:IF CONDITION='HIVDiaTypeFour=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>尖锐湿疣</span>
+					<span><CSP:IF CONDITION='HIVDiaTypeFiv=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>生殖器疱疹</span>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;" bordercolor="#000000">
+			<tr>
+				<td>
+					接触史：（可多选）
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<div>
+						<span><CSP:IF CONDITION='HIVDrugHistory=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>注射毒品史</span>
+						（<span>在您记忆中有<input type='text' style='width:4em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVInjection)#>人与您共用过注射器</span>）
+					</div>
+					<div>
+						<span><CSP:IF CONDITION='HIVUnmarHistory=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>非婚异性性接触史</span>
+						（<span>在您记忆中有<input type='text' style='width:4em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVUnmarried)#>人与您有过非婚性行为</span>）
+					</div>
+					<div>
+						<span><CSP:IF CONDITION='HIVMSMHistory=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>男男性行为史</span>
+						（<span>在您记忆中有<input type='text' style='width:4em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVMSM)#>人与您有过同性性行为</span>）
+					</div>
+					<div>
+						<span><CSP:IF CONDITION='HIVFixedCom=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>配偶/固定性伴阳性</span>
+					</div>
+					<div style="display:inline-block;width:23%;">
+						<span><CSP:IF CONDITION='HIVBloodDona=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>献血(浆)史</span>
+					</div>
+					<div style="display:inline-block;width:23%;">
+						<span><CSP:IF CONDITION='HIVBloodTran=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>输血/血制品史</span>
+					</div>
+					<div style="display:inline-block;width:23%;">
+						<span><CSP:IF CONDITION='HIVMotherPose=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>母亲阳性</span>
+					</div>
+					<div style="display:inline-block;width:23%;">
+						<span><CSP:IF CONDITION='HIVExposure=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>职业暴露史</span>
+					</div>
+					<div style="display:inline-block;width:23%;">
+						<span><CSP:IF CONDITION='HIVOperation=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>手术史</span>
+					</div>
+					<div style="display:inline-block;width:46%;">
+						<span><CSP:IF CONDITION='HIVQtResume=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>其他</span>
+						<input type='text' style='width:8em;border:none;border-bottom:black dashed 1pt' value=#(OtherHIVQtResume)#>(请注明)
+					</div>
+					<div style="display:inline-block;width:23%;">
+						<span><CSP:IF CONDITION='HIVUnknown=1'><span class='unicode-checked'>&#9745;</span><CSP:ELSE><span class='unicode-unchecked'>&#9633;</span></CSP:IF>不详</span>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td>
+					性病史:#(HIVStdHistory)#
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td>
+					最可能的感染途径(单选):
+				</td>
+			</tr>
+			<tr>
+				<td colspan="8" style="padding-left:0.5em;padding-bottom:0.5em;">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(PossibleSourceList))#>
+						<div style="display:inline-block;width:30%;">
+							<CSP:IF CONDITION='$Lg(PossibleSourceList,ZLInd)=HIVPobSourceList'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(PossibleSourceList,ZLInd))#
+							<CSP:IF CONDITION='$Lg(PossibleSourceList,ZLInd)["其他"'>
+								<input type='text' style='width:6em;border:none;border-bottom:black dashed 1pt' value=#(HIVPosSource)#>(请注明)
+							</CSP:IF>
+						</div>
+					</CSP:LOOP>
+					
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td>
+					检测样本来源(单选):
+				</td>
+			</tr>
+			<tr>
+				<td colspan="8" style="padding-left:0.5em;padding-bottom:0.5em;">
+					<CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="1" TO=#($Ll(SimpleSourceList))#>
+						<div style="display:inline-block;width:30%;">
+							<CSP:IF CONDITION='$Lg(SimpleSourceList,ZLInd)=HIVSimSourceList'><span class='unicode-checked'>&#9745;</span><CSP:ELSE ><span class='unicode-unchecked'>&#9633;</span></CSP:IF>#($Lg(SimpleSourceList,ZLInd))#
+							<CSP:IF CONDITION='$Lg(SimpleSourceList,ZLInd)="其他"'>
+								<input type='text' style='width:6em;border:none;border-bottom:black dashed 1pt' value=#(HIVPosSource)#>(请注明)
+							</CSP:IF>
+						</div>
+					</CSP:LOOP>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td>
+					实验室检测结论:#(HIVTestResult)#
+				</td>
+			</tr>
+			<tr>
+				<td colspan="8" style="padding-left:0.5em;padding-bottom:0.5em;">
+					确认（替代策略）检测阳性日期:
+					<script language="Cache" RUNAT="SERVER">
+			    		Set HIVResultDateYear=$p(HIVResultDate,"-",1)
+			    		Set HIVResultDateMonth=$p(HIVResultDate,"-",2)
+			    		Set HIVResultDateDay=$p(HIVResultDate,"-",3)
+					</script>
+					<input type='text' style='width:3em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVResultDateYear)#>年
+					<input type='text' style='width:1.2em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVResultDateMonth)#>月
+					<input type='text' style='width:1.2em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVResultDateDay)#>日
+				</td>
+			</tr>
+			<tr>
+				<td colspan="8" style="padding-left:0.5em;padding-bottom:0.5em;">
+					确认（替代策略）检测单位:
+					<input type='text' style='width:25em;border:none;border-bottom:black solid 1pt' value=#(HIVTestCompany)#>
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td colspan="8" style="padding-left:0.5em;padding-bottom:0.5em;">
+					艾滋病确诊日期*:
+					<script language="Cache" RUNAT="SERVER">
+			    		Set HIVDigSureDateYear=$p(HIVDigSureDate,"-",1)
+			    		Set HIVDigSureDateMonth=$p(HIVDigSureDate,"-",2)
+			    		Set HIVDigSureDateDay=$p(HIVDigSureDate,"-",3)
+					</script>
+					<input type='text' style='width:3em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVDigSureDateYear)#>年
+					<input type='text' style='width:1.2em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVDigSureDateMonth)#>月
+					<input type='text' style='width:1.2em;border:none;border-bottom:black dashed 1pt;text-align: center;' value=#(HIVDigSureDateDay)#>日
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td  style="padding-left:0.5em;padding-bottom:0.5em;">
+					报告单位(科室)：
+					<input type='text' style='width:8em;border:none;border-bottom:black solid 1pt' value=#(RepLocDesc)#>
+				</td>
+				<td  style="padding-left:0.5em;padding-bottom:0.5em;">
+					科室联系电话：
+					<input type='text' style='width:8em;border:none;border-bottom:black solid 1pt' value=#(LocTelephone)#>
+				</td>
+			</tr>
+			<tr>
+				<td  style="padding-left:0.5em;padding-bottom:0.5em;">
+					报告医生：
+					<input type='text' style='width:8em;border:none;border-bottom:black solid 1pt' value=#(RepUserName)#>
+				</td>
+				<td  style="padding-left:0.5em;padding-bottom:0.5em;">
+					填卡日期:
+					<script language="Cache" RUNAT="SERVER">
+			    		Set RepDateYear=$p(RepDate,"-",1)
+			    		Set RepDateMonth=$p(RepDate,"-",2)
+			    		Set RepDateDay=$p(RepDate,"-",3)
+					</script>
+					<input type='text' style='width:3em;border:none;border-bottom:black solid 1pt' value=#(RepDateYear)#>年
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt' value=#(RepDateMonth)#>月
+					<input type='text' style='width:1.2em;border:none;border-bottom:black solid 1pt' value=#(RepDateDay)#>日
+				</td>
+			</tr>
+		</table>
+		<table class="RepInfo" border=1 width="97%" cellspacing="0" cellpadding="0" style="border-collapse:collapse" bordercolor="#000000">
+			<tr>
+				<td  style="padding-left:0.5em;padding-bottom:0.5em;height:3em">
+					备注：
+					<input type='text' style='border:none;' value=#(HIVResume)#>
+				</td>
+			</tr>
+		</table>
+		<span style="padding-left:4em;padding-top:0.5em;">*只有确诊艾滋病病人时填写此项</span>
+	</div>
+	</body>
+	<script type="text/javascript">
+		var radio = (document.body.clientWidth)/746;						//746是lodop的A4打印大致宽度
+		if (radio.toFixed(1) != '1.0') {
+			document.body.style.fontSize = Math.round(radio * 12) + 'pt';	//12是pt和px的相对系数
+		}
+	</script>
+</html>

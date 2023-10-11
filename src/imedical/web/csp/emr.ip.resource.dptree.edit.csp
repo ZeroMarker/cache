@@ -1,0 +1,122 @@
+﻿<html>
+    <head>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script> 
+        <script language="cache" runat="server">
+            s defaultFontStyle = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("SetDefaultFontStyle")      
+        </script>
+        <script language = "javascript">
+            //当前元素路径
+            var currentPath = ""; 
+            //元素code的最大值
+            var maxElementObj = {"MIString":"","MINumber":"","MIDateTime":"","MIMonoChoice":"","MIMultiChoice":"","MIDictionary":""};
+            var defaultFontStyle = "#(defaultFontStyle)#".replace(/\'/g, "\"");   
+            defaultFontStyle = $.parseJSON(('{'+defaultFontStyle+'}'));
+            var loadFlag = false;
+            var userLocID = '#(%session.Get("LOGON.CTLOCID"))#';
+            var nodeID = '#($Get(%request.Data("NodeID",1),""))#';
+            var DPNode = "";
+            var returnValues = new Object();
+            //监听窗口大小，修改文档body的值
+            window.onresize = function(){
+                var bodySet = $("body");
+                bodySet.css({"width":""+window.dialogWidth,"height":""+window.dialogHeight});
+            };
+        </script>
+        <title> 科室短语节点内容 </title> 
+    </head>
+    <body class="hisui-layout" data-options="border:false,fit:true" style="margin:0px 3px;">
+        <div data-options="region:'north'" style="height:93px;">
+            <div>
+                <span>#(..Get("节点名称"))#</span>
+                <span><input class="hisui-validatebox" id="nodeText" type="text" name="nodeText" /></span>
+                <span><button class="hisui-linkbutton hover-dark" id="publicSave" type="button">#(..Get("保存并发布"))#</button></span>
+                <span><button id="nodeStatus" type="button" style="display:none;"></button></span>
+            </div>
+            <div>
+                <span>#(..Get("节点描述"))#</span>
+                <span><textarea id="nodeDesc" rows="3" cols="66"></textarea></span>
+            </div>
+        </div>
+        <div id="element" data-options="region:'west'" style="width:70px;">
+            <a id="MIString" href="#" class="hisui-linkbutton" data-options="plain:true,fit:true">#(..Get("字符"))#</a>
+            <a id="MINumber" href="#" class="hisui-linkbutton" data-options="plain:true,fit:true">#(..Get("数字"))#</a>
+            <a id="MIDateTime" href="#" class="hisui-linkbutton" data-options="plain:true,fit:true">#(..Get("时间"))#</a>
+            <a id="MIMonoChoice" href="#" class="hisui-linkbutton" data-options="plain:true,fit:true">#(..Get("单选"))#</a>
+            <a id="MIMultiChoice" href="#" class="hisui-linkbutton" data-options="plain:true,fit:true">#(..Get("多选"))#</a>
+            <a id="MIDictionary" href="#" class="hisui-linkbutton" data-options="plain:true,fit:true">#(..Get("字典"))#</a>
+        </div>
+        <div data-options="region:'east',title:'属性设置',split:true" style="width:260px;">
+            <div id="setPropty" class="hisui-accordion" data-options="fit:true">
+            <div title="基本属性" id="property"></div> 
+            <div title="数据绑定" id="dataw" >  
+                <div id="databind" class="hisui-tabs" data-options="fit:true,border:false">
+                    <div id="DataBase" data-options="title:'HIS数据',border:false" style="overflow:hidden;">
+                        <div style="height:45%;width:100%;"><table id="dataBaseCategory"></table></div>  
+                        <div style="height:45%;width:100%;"><table id="dataBaseDeital"></table></div>
+                        <div style="height:10%;float:right;vertical-align:baseline;"><a id='sureSelect' href="javascript:void(0);" class="hisui-linkbutton">#(..Get("确定"))#</a></div>
+                    </div>
+                    <div id="EPR" data-options="title:'病历数据',fit:true,border:false" style="overflow:hidden;">
+                        <div id="DataEMR" class="hisui-layout" data-options="fit:true" style="overflow:hidden;">
+                            <div data-options="region:'north'" style="height:240px;dispaly:none">
+                                <ul id="dataEMRCategory" class="hisui-tree"></ul>
+                            </div>
+                            <div data-options="region:'center'" style="height:200px;dispaly:none">
+                                <ul id="dataEMRDeital" class="hisui-tree"></ul>
+                            </div>
+                            <div data-options="region:'south'" style="height:50px;">
+                                <label for="vtype">#(..Get("设置取值类型"))#</label>
+                                <input id="valueType" class="hisui-combobox" name="vtype" style="width:150px;float:right" />
+                                <a id='confirmSelect' href="javascript:void(0);" class="hisui-linkbutton" style="float:right">#(..Get("确定"))#</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+               </div>
+            </div>
+        </div>
+        
+        <div data-options="region:'center'">
+            <div class="hisui-layout" data-options="fit:true">
+                <div data-options="region:'west',title:'元素大纲',split:true" style="width:180px;">
+                    <ul id="elementTree"></ul>
+                </div>
+                <div id="container" data-options="region:'center',border:false">
+                    <div class="hisui-layout" data-options="fit:true,border:false">
+                        <div data-options="region:'north',border:false" id="toolBox" class="tool-box" style="height:38px;margin:3px;" >
+                            <input id="font" class="hisui-combobox" name="font" style="width:100px;margin-top:2px;" />
+                            <input id="fontSize" class="hisui-combobox" name="fontSize" data-options="enterNullValueClear:false" style="width:80px;margin-top:2px;" /> 
+                            <a id='bold' href="javascript:void(0);" title="粗体" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-bold'" onClick="toolButtonClick('bold')"></a>
+                            <a id='italic' href="javascript:void(0);" title="斜体" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-incline'" onClick="toolButtonClick('italic')"></a>
+                            <a id='underline' href="javascript:void(0);" title="下划线" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-underline'" onClick="toolButtonClick('underline')"></a>
+                            <a id='strike' href="javascript:void(0);" title="删除线" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-strikethrough'" onClick="toolButtonClick('strike')"></a>
+                            <a id='super' href="javascript:void(0);" title="上标"  class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-superscript'" onClick="toolButtonClick('super')"></a>
+                            <a id='sub' href="javascript:void(0);" title="下标" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-subscript'" onClick="toolButtonClick('sub')"></a>           
+                            <a id='alignjustify' href="javascript:void(0);" title="两端对齐" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-align-justify'" onClick="toolButtonClick('justify')"></a>
+                            <a id='alignleft' href="javascript:void(0);" title="左对齐" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-align-left'" onClick="toolButtonClick('alignleft')"></a>
+                            <a id='aligncenter' href="javascript:void(0);" title="居中对齐" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-align-center'" onClick="toolButtonClick('aligncenter')"></a>
+                            <a id='alignright' href="javascript:void(0);" title="右对齐"  class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-align-right'" onClick="toolButtonClick(alignright)"></a>
+                            <a id='indent' title="增加缩进量" href="javascript:void(0);" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-unindent'" onClick="toolButtonClick('indent')"></a>
+                            <a id='unindent' title="减少缩进量" href="javascript:void(0);" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-indentation'" onClick="toolButtonClick('unindent')"></a>
+                            <a id='cut' title="剪切" href="javascript:void(0);" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cut-blue'" onClick="toolButtonClick('cut')"></a>
+                            <a id='copy' title="拷贝" href="javascript:void(0);" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-copy'" onClick="toolButtonClick('copy')"></a>
+                            <a id='paste' title="粘贴" href="javascript:void(0);" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paste'" onClick="toolButtonClick('paste')"></a>
+                            <a id='undo' title="撤销" href="javascript:void(0);" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-undo'" onClick="toolButtonClick('undo')"></a>
+                            <a id='redo' title="重做" href="javascript:void(0);" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-redo'" onClick="toolButtonClick('redo')"></a>
+                            <a id='spechars' title="特殊符号" href="#" class="hisui-linkbutton " data-options="iconCls:'icon-omega',plain:true"  onClick="toolButtonClick('spechars')"></a>
+                        </div>
+                        <div data-options="region:'center',border:false" style="overflow:hidden;">
+                            <object id='plugin' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>
+                                <param name='product' value='GlobalEMR'/>
+                            </object> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="../scripts/emr/js/ip.resource.dptree.edit.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/ip.record.edit.knowledgebase.getdatabindrecord.js"></script>
+    </body>
+</html>

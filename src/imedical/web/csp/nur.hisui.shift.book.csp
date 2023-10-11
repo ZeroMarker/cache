@@ -1,0 +1,1887 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html>
+<head>
+
+	<!-- nur.hisui.shift.project.csp -->
+	<title>交班项目维护9.0</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		#add-dialog {
+			top:120px;
+			width:480px;
+			height:423px;
+			padding: 0px 10px;
+		}
+		#property-dialog {
+			top:120px;
+			width:470px;
+			height:274px;
+			padding: 0px 10px;
+		}
+		.td-button{
+			padding: 10px;
+		}
+		.td-blank {
+			width: 80px;
+		}
+		.form-table {
+			width:100%;
+			border-collapse: separate; 
+			border-spacing:10px;
+		}
+		.form-table td, .form-table th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.textareabox-text, input.textbox, textarea.textbox{
+			width: 368px;	
+		}
+		#Align {
+			width: 375px;
+		}
+		textarea{
+			border-color: #40a2de;
+			width: 368px;	
+		}
+		.form-group{
+			padding: 10px 10px 9px 10px;
+			border-bottom: 1px dashed #ccc;
+		}
+		.form-group a {
+			margin-left: 10px;	
+		}
+		.button-group{
+			margin: 2px 0;	
+		}
+		.textEdit {
+			width: 100%;
+			height: 100%;
+			border-color: #ccc;
+			border: none;
+		}
+		.right-hisui-panel{
+			
+			height: calc(50% - 5px);
+		}
+		table.search-table.processconfig-table td{
+			line-height:28px;	
+		}
+		.syxm span {
+		    border: 1px solid #ccc;
+		    padding: 5px;
+		   
+		    margin-left: 5px;
+		    margin-top: 5px;
+		    display: inline-block;
+		    background: #f9f9fa;
+		}
+		.syxm span.bgselect{
+			background: #ffe48d;
+		}
+		#ShiftSetting td{
+			width:140px;
+			min-width:140px;	
+		}
+		.datagrid-toolbar{
+			overflow: auto;
+		}
+		.l-btn-left{
+			white-space: nowrap;
+		}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:40px;">
+			<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+			<input id="_HospList" class="textbox"/>
+		</div>
+		
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'west',border:false,collapsible:true,split:true" style="width:450px;">
+					<div class="hisui-panel"  title="交班本维护" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+						<table id="shiftBook"></table>
+		
+					</div>
+				</div>
+				
+				<div data-options="region:'center',border:false,split:true" style="">
+					<div id="tt2" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools'" style="height:250px;">   
+						<div title="通用配置" ProjectType="1" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<div class="datagrid-toolbar">
+			    				<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onclick="saveTwo()" id="saveTwo"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">保存</span><span class="l-btn-icon icon-save">&nbsp;</span></span></a>
+			    				<!--a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onclick="importBzb()" id="importBzb"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">导入外部数据源</span><span class="l-btn-icon icon-save">&nbsp;</span></span></a-->
+			    						
+			    						
+			    			</div>
+			    			
+							<table id="ShiftSetting" class="table-patient" ></table>
+			
+						</div>
+						<!-- div title="班次维护" ProjectType="1" style="padding:0px;display:none;" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<table id="shiftBookTime"></table>
+			
+						</div-->
+						<div  title="统计区域" ProjectType="2" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<table id="shiftBookArea"></table>
+			
+						</div>
+						<div  title="中间区域" ProjectType="2" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<table id="shiftBookCustom"></table>
+			
+						</div>
+						<div  title="明细区域" ProjectType="2" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<table id="shiftBookDetail"></table>
+			
+						</div>
+						
+						<!--div  title="多级表头" ProjectType="2" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<table id="shiftBookGroup"></table>
+			
+						</div-->
+						<div  title="适用病区" ProjectType="2" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							
+							<table id="shiftBookWard"></table>
+							
+						</div>
+						<div  title="屏蔽病区" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<table id="shiftBookHideWard"></table>
+						</div>
+						<div  title="科室交班" ProjectType="2" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+							<table id="shiftBookLoc"></table>
+			
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div id="dialogRefer"></div>
+	
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<!--script type="text/javascript" src="../scripts/nurse/hisui/NurseQuestionPlanComConfig.js"></script-->
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+<script type="text/javascript">
+function importBzb(){
+	if(!shiftBookSelected()){
+			        return false;
+			    }
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+	     runClassMethod("Nur.SHIFT.Service.ShiftPrintController","GetIntoDataSocure",{"ShiftBookID":ShiftBookRow.ID},function(rtn){
+				$.messager.popover({msg:'导入成功！',type:'success'});
+					
+		},'json',false);	
+	
+	}
+var CAData=[
+	{"text":"启用","value":"1"},
+	{"text":"禁用","value":"2"}
+	]
+	
+	var CustomData=[
+	{"text":"默认隐藏","value":"1"},
+	{"text":"默认显示","value":"2"}
+	]
+	
+	var cxData=[
+	{"text":"签名护士","value":"1"},
+	{"text":"病区护士","value":"2"},
+	//{"text":"护士长","value":"3"}
+	]
+	var cxqmData=[
+	{"text":"本人签名","value":"1"},
+	{"text":"全部签名","value":"2"}
+	]
+	var mxData=[
+	{"text":"横向显示","value":"1"},
+	{"text":"纵向显示","value":"2"},
+	
+	]
+	var qmData=[
+	{"text":"交班护士","value":"1"},
+	{"text":"接班护士","value":"2"},
+	{"text":"护士长","value":"3"},
+	]
+	var yrData=[
+	{"text":"引用","value":"1"},
+	{"text":"交班内容","value":"2"},
+	]
+	var qmfs=[
+	{"text":"班次","value":"1"},
+	{"text":"患者","value":"2"},
+	]
+	var qmxs=[
+		{"text":"选择护士","value":"1"},
+		{"text":"登录护士","value":"2"},
+	]
+	var GroupTypeData=[
+	{"text":"无","value":"0"},
+	{"text":"合并多级表头列","value":"1"},
+	{"text":"合并多级表头行","value":"2"},
+	{"text":"合并签名列与交班内容列","value":"3"},
+	]
+	var MultipleProjectData=[
+	{"text":"单选","value":"1"},
+	{"text":"多选","value":"2"},
+	]
+	xcChange.OpenSign=function(value){
+		
+		if(value=="2"){
+			$("tr[name=SignType]").hide()	
+			$("tr[name=SignData]").hide()
+			$("tr[name=RevokeRole]").hide()
+			$("tr[name=RevokeRange]").hide()
+			$("tr[name=RevokeEdit]").hide()
+		}else{
+			$("tr[name=SignType]").show()	
+			$("tr[name=SignData]").show()
+			$("tr[name=RevokeRole]").show()
+			$("tr[name=RevokeRange]").show()
+			$("tr[name=RevokeEdit]").show()
+		}
+		
+		
+		
+		//alert(value)
+		//$("#ShiftSetting").html("")
+		/*var contors=[]
+		for(var i=0;i<allcontors.length;i++){
+			var json={}
+			for(key in allcontors[i]){
+				json[key]=allcontors[i][key]
+			}
+			if(json.id=="SignType" && value==2){
+				json.isDisabled="disabled"
+			}
+			contors.push(json)
+		}
+		
+		for(var i=0;i<contors.length;i++){
+			var key = contors[i].id
+			createInputHtml("ShiftSetting",contors,key,0)
+		}*/
+		
+			
+	}
+	xcChange.SignData=function(value){
+		if(value==0||value==""){
+			$("tr[name=RevokeRole]").hide()	
+			$("tr[name=RevokeRange]").hide()
+		}else{
+			$("tr[name=RevokeRole]").show()	
+			$("tr[name=RevokeRange]").show()
+		}
+	}
+	xcChange.GroupType=function(value){
+		if(value==1){
+			$("tr[name=GroupContentTitle]").show()	
+			$("tr[name=GroupSignTitle]").show()	
+		}else if(value==0 || value==2){
+			
+			$("tr[name=GroupContentTitle]").hide()	
+			$("tr[name=GroupSignTitle]").hide()
+		}else if(value==3){
+			$("tr[name=GroupContentTitle]").show()
+			$("tr[name=GroupSignTitle]").hide()
+		}
+	}
+	xcChange.OpenSignA=function(value){
+		ShowOpenSign()
+	}
+	xcChange.OpenSignB=function(value){
+		ShowOpenSign()
+	}
+	
+	xcChange.OpenSignC=function(value){
+		if(value==2){
+			//$("tr[name=RevokeHeadRole").hide()
+			$("tr[name=RevokeHeadRange]").hide()	
+		}else{
+			//$("tr[name=RevokeHeadRole").show()
+			$("tr[name=RevokeHeadRange]").show()		
+		}
+	}
+	xcChange.ContentStyle=function(value){
+		if(value==2){
+			
+			$("tr[name=isProjectStyle]").hide()	
+		}else{
+			
+			$("tr[name=isProjectStyle]").show()		
+		}
+	}
+	
+	
+	
+	function ShowOpenSign(){
+		if($("tr[name=OpenSignB]").length>0 && $("tr[name=OpenSignA]").length>0){
+			var valueB=$("#OpenSignB").combo("getValue")
+			var valueA=$("#OpenSignA").combo("getValue")
+			if(valueA==2 && valueB==2){
+				$("tr[name=SignType]").hide()
+				$("tr[name=RevokeRole]").hide()	
+				$("tr[name=RevokeRange]").hide()
+				$("tr[name=RevokeEdit]").hide()	
+			}else{
+				$("tr[name=SignType]").show()
+				$("tr[name=RevokeRole]").show()	
+				$("tr[name=RevokeRange]").show()
+				$("tr[name=RevokeEdit]").show()		
+			}
+		}
+	}
+	var szData=[
+	{"text":"护士长","value":"1"},
+	{"text":"病区护士","value":"2"},
+	//{"text":"护士长","value":"3"}
+	]
+	var newBabyData=[
+	{"text":"不统计","value":"1"},
+	{"text":"统计","value":"2"}
+	]
+	var addPatData=[
+	{"text":"全部记录","value":"1"},
+	{"text":"最新记录","value":"2"}
+	]
+	var isSignValidData=[
+	{"text":"允许","value":"1"},
+	{"text":"不允许","value":"2"}
+	]
+	var isSortTypeData=[
+		{"text":"默认排序","value":"1"},
+		{"text":"指定排序","value":"2"}
+	]
+	var isProjectStyleData=[
+		{"text":"交班班次","value":"1"},
+		{"text":"交班日期","value":"2"}
+	]
+	var	allcontors=[	
+		{'remark':"横向显示：明细区域交班内容为横向呈现，纵向显示：明细区域交班内容纵向显示",'id':'ContentStyle','type':'combox','objData':mxData,'title':'交班本类型','required':'true','style':'width:107px;','defaultValue':"1"},
+		{'remark':"全部记录：新增患者时，取所有住院记录，最新记录：新增患者时，取最后一次住院记录",'id':'addPatRole','type':'combox','objData':addPatData,'title':'新增患者检索范围','required':'true','style':'width:107px;','defaultValue':"1"},
+			
+		{'remark':"启用后，统计区域会显示全班，各个项目的累计形式，可通过'统计区域'页签进行设置",'id':'OpenAllShift','type':'combox','objData':CAData,'title':'是否全班统计','required':'true','style':'width:107px;','defaultValue':'1'},
+		{'remark':"护士长：护士长权限登录才显示“设置”按钮，病区护士：所有护士登录显示“设置”按钮",'id':'SettingRole','type':'combox','objData':szData,'title':'"设置"按钮权限','required':'true','style':'width:107px;','defaultValue':"1"},
+		{'remark':"不统计：不显示新生儿患者，统计：查询全部交班患者",'id':'ShowBaby','type':'combox','objData':newBabyData,'title':'是否统计新生儿','required':'true','style':'width:107px;','defaultValue':"1"},
+		
+		{'remark':"班次：在统计区域显示签名信息，患者：在明细区域会显示签名信息",'id':'SignType','type':'combox','objData':qmfs,'title':'签名方式','required':'true','style':'width:107px;','defaultValue':"1"},
+		{'remark':"选择护士：签名时，通过弹出框形式，选择签名护士，登录护士：签名时，默认为登录护士签名",'id':'SignStyle','type':'combox','objData':qmxs,'title':'签名形式','required':'true','style':'width:107px;','defaultValue':"1"},
+
+		{'remark':"启用后，采用CA签名的方式，页面会显示CA签名按钮",'id':'OpenCA','type':'combox','objData':CAData,'title':'是否CA签名','required':'true','style':'width:107px;','defaultValue':'2'},
+		
+		{'remark':"启用后，在护士长专业组登录时，会显示护士长签名按钮",'id':'OpenSignC','type':'combox','objData':CAData,'title':'启用护士长签名','required':'true','style':'width:107px;','defaultValue':'2'},
+		{'remark':"本人签名：护士长只能撤销自己的签名记录，全部签名：护士长可以撤销所有签名记录",'id':'RevokeHeadRange','type':'combox','objData':cxqmData,'title':'护士长签名撤销范围','required':'true','style':'width:107px;','defaultValue':'2'},
+		{'remark':"启用后，交班业务界面会显示交班签名按钮",'id':'OpenSignA','type':'combox','objData':CAData,'title':'启用交班签名','required':'true','style':'width:107px;','defaultValue':'1'},
+		{'remark':"启用后，交班业务界面会显示接班签名按钮",'id':'OpenSignB','type':'combox','objData':CAData,'title':'启用接班签名','required':'true','style':'width:107px;','defaultValue':'1'},
+		{'remark':"启用后：可以对非当日的班次进行签名，禁用：只能对当天的班次进行签名",'id':'OpenSupplementarySign','type':'combox','objData':CAData,'title':'是否开启补签','required':'true','style':'width:107px;','defaultValue':'1'},
+		
+		
+		
+		//{'id':'SignData','type':'combox','objData':qmData,'title':'签名来源','required':'true','multiple':'true','style':'width:107px;','defaultValue':"1,2"},
+
+		{'remark':"签名护士：有签名记录的护士才能撤销，病区护士：病区所有护士都可以撤销，",'id':'RevokeRole','type':'combox','objData':cxData,'title':'交接班签名撤销权限','required':'true','style':'width:107px;','defaultValue':'2'},
+		{'remark':"本人签名：只能撤销操作人的签名记录，全部签名：可以撤销所有签名记录",'id':'RevokeRange','type':'combox','objData':cxqmData,'title':'交接班签名撤销范围','required':'true','style':'width:107px;','defaultValue':'2'},
+		{'remark':"允许：签名后允许继续编辑，不允许：签名后不允许继续编辑",'id':'isSignValid','type':'combox','objData':isSignValidData,'title':'签名后编辑权限','required':'true','style':'width:107px;','defaultValue':'1'},
+		
+		{'remark':"允许：签名后允许继续统计，不允许：签名后不允许继续统计",'id':'isSignStatistics','type':'combox','objData':isSignValidData,'title':'签名后统计权限','required':'true','style':'width:107px;','defaultValue':'1'},
+		
+		//{'id':'RevokeEdit','type':'combox','objData':CAData,'title':'签名后不可编辑','required':'true','style':'width:107px;','defaultValue':'1'},
+		{'remark':"默认隐藏：业务界面隐藏中间区域，默认显示：业务界面显示中间区域",'id':'ShowCustom','type':'combox','objData':CustomData,'title':'中间区域','required':'true','style':'width:107px;','defaultValue':'1'},
+		{'remark':"默认隐藏：业务界面隐藏没有交班项目的记录，默认显示：业务界面显示有交班项目的记录",'id':'IsDefalutNotNull','type':'combox','objData':CustomData,'title':'无交班项目患者','required':'true','style':'width:107px;','defaultValue':'1'},
+		
+		{'remark':"单选：明细区域左侧交班项目只能单选，多选：明细区域左侧交班项目可以多选",'id':'MultipleProject','type':'combox','objData':MultipleProjectData,'title':'明细列左侧项目','required':'true','style':'width:107px;','defaultValue':"1"},
+		{'remark':"默认隐藏：明细区域隐藏交班内容列，纵向显示：明细区域显示交班内容列",'id':'ContentShow','hidden':"hidden",'type':'combox','objData':CustomData,'title':'显示交班内容列','required':'true','style':'width:107px;','defaultValue':"2"},
+		//{'remark':"启用：加载交班内容列，禁用：不加载交班内容列",'id':'ContentType','type':'combox','objData':CAData,'title':'交班内容隐显','required':'true','style':'width:107px;','defaultValue':"1"},
+		
+		
+		{'remark':"默认排序：先按照项目排序，再按照指定列排序，指定排序：按照指定列排序",'id':'isSortType','type':'combox','objData':isSortTypeData,'title':'明细列排序规则','required':'true','style':'width:107px;','defaultValue':'1'},
+		{'remark':"交班班次：显示各班次的交班项目。交班日期：显示交班日期内所有项目。",'id':'isProjectStyle','type':'combox','objData':isProjectStyleData,'title':'明细列项目显示方式','required':'true','style':'width:107px;','defaultValue':'1'},
+		
+		
+		
+		
+		//{'id':'IntoShuyu','type':'combox','objData':CAData,'title':'术语开关','required':'true','style':'width:307px;','defaultValue':"1"},
+		
+		
+		//{'id':'GroupType','type':'combox',"isHidden":'true','objData':GroupTypeData,'title':'多级表头方式','required':'true','style':'width:307px;','defaultValue':"0"},
+		
+		//{'id':'GroupContentTitle','type':'text',"isHidden":'true','title':'多级表头-交班内容列','style':'width:300px;'},
+		//{'id':'GroupSignTitle','type':'text',"isHidden":'true','title':'多级表头-签名列','style':'width:300px;'},
+		
+		
+		//{'id':'SignTip','type':'text','title':'签名成功提示','style':'width:300px;'},
+		//{'id':'RevokeTip','type':'text','title':'撤销成功提示','style':'width:300px;'},
+		//{'id':'InHospBeforeEdit','type':'combox','objData':CAData,'title':'入院前不编辑','style':'width:307px;','defaultValue':2},
+		//{'id':'InHospAfterEdit','type':'combox','objData':CAData,'title':'出院后不编辑','style':'width:307px;','defaultValue':2},
+		//{'id':'DetailShowType','type':'combox','objData':mxData,'title':'明细显示规则','required':'true','style':'width:307px;','defaultValue':2},
+		//{'id':'In','type':'combox','objData':yrData,'title':'引用菜单','required':'true','multiple':'true','style':'width:307px;','defaultValue':"1,2"},
+
+	]
+	
+	
+	
+	
+	function createGenralHtml(){
+		var contors=[]
+		for(var i=0;i<allcontors.length;i++){
+			var json={}
+			for(key in allcontors[i]){
+				json[key]=allcontors[i][key]
+			}
+			contors.push(json)
+		}
+		
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetAllGenral",{ShiftBookID:ShiftBookRow.ID},function(rtn){
+				entity=rtn
+				console.log(rtn)
+				var html='<span class="ant-form-item"><label style="white-space: nowrap;">说明</label></span>'
+				var content='适用病区列表为空时，全部病区都可以使用，适用病区列表记录不为空时，只有列表中的病区才能使用'		
+				$("#ShiftSetting").html("<tr><td class='tdlabel'>"+html+"</td><td colspan='2'>"+content+"</td></tr>")
+				var contorRemark={}
+				for(var i=0;i<contors.length;i++){
+					var key = contors[i].id
+					createInputHtml("ShiftSetting",contors,key,0)
+					contorRemark[key]=contors[i].remark
+					
+				}
+				for(var i=0;i<contors.length;i++){
+					var obj = contors[i]
+					rsInputType(obj)
+				}
+				
+				if(typeof(entity.OpenCA)=="undefined"){
+					saveTwo()
+				
+				}
+				$("#ShiftSetting").find("tr").each(function(){
+					var name=$(this).attr("name")
+					if(typeof(contorRemark[name])!="undefined"){
+						var html='<span class="ant-form-item"><label class="ant-form-item-required" style="white-space: nowrap;">'+contorRemark[name]+'</label></span>'
+						$(this).append("<td>"+html+"</td>")	
+					}
+				})
+			
+		},'json',false);
+		
+		
+	}
+	
+	
+	function saveTwo(){
+		if(!shiftBookSelected()){
+	        return false;
+	    }
+		var topParms = resultParms(allcontors)
+
+		var rsTxt=""
+		if(topParms!=""){
+			var rtnParms=setAllParms(["",topParms,""])
+			
+			var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+
+
+			console.log(rtnParms)
+			runClassMethod("Nur.SHIFT.Service.ShiftConfigController","SaveGenral",{data:JSON.stringify(rtnParms),ShiftBookID:ShiftBookRow.ID},function(rtn){
+				successmsg("保存成功！")
+			
+			},'json',false);
+		
+			
+		}else{
+			
+		}
+	
+	}
+</script>
+<script type="text/javascript">
+	
+var GLOBAL = {
+	HospEnvironment: true,
+	HospitalID: session['LOGON.HOSPID']
+};
+$(function() {
+	//hospComp = GenHospComp("Nur_IP_ExecuteSheet",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+	/*hospComp = GenHospComp("Nur_IP_BPChartConfig",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+
+	///var hospComp = GenHospComp("ARC_ItemCat")
+	// console.log(hospComp.getValue());     //获取下拉框的值
+	hospID=hospComp.getValue();
+	hospComp.options().onSelect = function(i,d){
+		// 	HOSPDesc: "东华标准版数字化医院[总院]"
+		// HOSPRowId: "2"
+		console.log(arguments);
+		GLOBAL.HospitalID=d.HOSPRowId;    	
+       	initTable()
+	}  ///选中事件	
+*/
+	initHosp()
+	$HUI.tabs("#tt2",{
+		height:$("#tt2").parent().height(),
+		onSelect:function(title){
+			
+						
+		}
+	});
+	shiftBook.datagrid()
+	
+	
+})	
+
+function initHosp(){
+	//var GLOBAL={HospEnvironment:true}
+	
+	if (typeof GenHospComp == "undefined") {
+		GLOBAL.HospEnvironment = false;
+	}
+	if(GLOBAL.HospEnvironment){
+		var hospComp = GenHospComp('Nur_IP_ReferTab', session['LOGON.USERID'] + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.CTLOCID'] + '^' + session['LOGON.HOSPID']);  
+		//var hospComp = GenHospComp("Nur_IP_BPChartConfig",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+
+		hospComp.options().onSelect = function(q, row){
+			GLOBAL.HospitalID=row.HOSPRowId;
+			shiftBook.datagrid()
+			
+		}
+	}else{
+		$m({
+			ClassName: 'NurMp.Common.Tools.Hospital', 
+			MethodName: 'hospitalName', 
+			HospitalID: session['LOGON.HOSPID']
+		},function(hospDesc){
+			$HUI.combobox("#_HospList", {
+				width:350,
+				valueField: 'HOSPRowId',
+				textField: 'HOSPDesc',
+				data: [{
+					HOSPRowId: session['LOGON.HOSPID'],
+					HOSPDesc: hospDesc
+				}],
+				value: session['LOGON.HOSPID'],
+				disabled: true
+			});
+		});
+	}
+}
+
+function alertmsg(msg){
+	
+	$.messager.alert("提示",msg);	
+}
+function successmsg(msg){
+	$.messager.popover({msg:msg,type:'success'});
+}
+var shiftBook={
+	datagrid:function(){
+		$('#shiftBook').datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:false,
+			idField:"ID",
+			rownumbers : true,
+			toolbar :shiftBook.toolBar("shiftBook"),
+			columns :[[
+				//{field:'ShiftBookCode',title:'交班本code',width:100},
+				{field:'ShiftBookName',title:'名称',width:160},
+				{field:'ShiftBookType',title:'交班本类型',width:100,formatter: function(value,row,index){
+						var text=""
+						if(value=="1"){text="病区"}
+						if(value=="2"){text="科室"}
+						if(value=="3"){text="产房"}
+						if(value=="4"){text="新生儿"}
+						return text
+					},
+				},
+				//{field:'ShiftPrintTemplate',title:'打印模板',width:260},
+				{field:'Remarks',title:'说明',width:230},
+				
+				
+				//{field:'ValidWard',title:'适用病区',width:260},
+				//{field:'InvalidWard',title:'不适用病区',width:260},
+				//{field:'ValidLoc',title:'适用科室',width:260},
+				//{field:'InvalidLoc',title:'不适用科室',width:260},
+				
+			]],
+			onClickRow:function(index,rowData){
+				console.log(rowData)
+				clickbook()
+			}
+		});	
+	   var param={
+			hospID:GLOBAL.HospitalID
+		}
+		
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftBookList",param,function(rtn){
+				$("#shiftBook").datagrid("unselectAll");
+				$("#shiftBook").datagrid('loadData', rtn)
+				$("#shiftBook").datagrid("clearSelections");
+				$("#shiftBook").datagrid("unselectAll");
+				
+				
+				if(rtn.length>0){
+					$('#shiftBook').datagrid("selectRow",0);
+					
+					shiftBookArea.datagrid()
+					shiftBookCustom.datagrid()
+					shiftBookDetail.datagrid()
+					shiftBookGroup.datagrid()
+					shiftBookWard.datagrid(1,"#shiftBookWard")
+					shiftBookWard.datagrid(2,"#shiftBookHideWard")
+					shiftBookLoc.datagrid()
+					
+					createGenralHtml()
+				}else{
+					
+					shiftBook.clearAllGrid("shiftBookArea")
+					shiftBook.clearAllGrid("shiftBookCustom")
+					shiftBook.clearAllGrid("shiftBookDetail")
+					shiftBook.clearAllGrid("shiftBookGroup")
+					shiftBook.clearAllGrid("shiftBookWard")
+					shiftBook.clearAllGrid("shiftBookLoc")
+					$("#ShiftSetting").html("")
+				}
+				
+				
+				
+		},'json',true);
+		
+	},
+	clearAllGrid:function(gid){
+		$("#"+gid).datagrid("unselectAll");
+		$("#"+gid).datagrid('loadData', [])
+	},
+	toolBar:function(gid){
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        shiftBook.insertView(gid,1)
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBook.insertView(gid,2,"请选择需要修改的记录！")
+		    }
+	    },{
+	        text: '复制',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBook.insertView(gid,3,"请选择需要复制的记录！")
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					alertmsg("请选择需要删除的记录！")
+					return false;
+				} 
+				$.messager.confirm('确认','您确认想要删除吗？',function(r){    
+				if (r){
+			   runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftBookById",{id:row.ID},function(rtn){
+					if(rtn == 0) {
+						successmsg("删除成功！")
+						shiftBook.datagrid()
+						clickbook()
+					} else {
+						
+					}
+					
+				},'json',false);
+				}})
+	        }
+	        
+	    }];
+		return ToolBar
+	},
+	copy:function(gid){
+		shiftBook.insertView(gid,3,"请选择需要复制的记录！")
+		 
+	},
+	insertView:function(gid,saveFlag,msg){
+		var id=""
+		if(saveFlag==2 || saveFlag==3){
+			var rows = $('#'+gid).datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				//$.messager.alert("提示"),msg));
+				alertmsg(msg)
+				return false;
+			}
+			var row = $("#"+gid).datagrid("getSelected");
+			if (!row) {
+				alertmsg(msg)
+				return false;
+			} 
+			id=row.ID
+			console.log(row)
+		}
+		
+		var url="nur.hisui.shift.book.insert.csp?id="+id
+		$('#dialogRefer').dialog({    
+    		title: "交班本维护",    
+    		width: 430,    
+    		height: 450,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					var rsTxt = $iframe.saveFunLib(GLOBAL.HospitalID,saveFlag)
+					if(rsTxt==""){
+						successmsg("保存成功！")
+						
+						
+						
+						shiftBook.datagrid()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}
+	
+}
+
+function clickbook(){
+	
+	shiftBookArea.datagrid()
+	shiftBookCustom.datagrid()
+	shiftBookDetail.datagrid()
+	shiftBookGroup.datagrid()
+	shiftBookWard.datagrid(1,"#shiftBookWard")
+	shiftBookWard.datagrid(2,"#shiftBookHideWard")
+	shiftBookLoc.datagrid()
+	createGenralHtml()	
+	
+}
+function shiftBookSelected(){
+	var row = $("#shiftBook").datagrid("getSelected");
+	if (!row) {
+		alertmsg("请选择一条左侧列表的记录！")
+		return false;
+	} 	
+	return true;
+}
+
+var shiftBookArea={
+	datagrid:function(){
+		$('#shiftBookArea').datagrid({
+			fit:true,
+			singleSelect : true,
+			//fitColumns:true,
+			idField:"ID",
+			rownumbers : true,
+			toolbar :shiftBookArea.toolBar("shiftBookArea"),
+			columns :[[
+				//{field:'ShiftProjectID',title:'交班项目',width:100},
+				{field:'AreaName',title:'项目名称',width:160},
+				{field:'AreaColor',title:'字体颜色',width:100},
+				{field:'AreaWidth',title:'列宽',width:100},
+				{field:'AreaSort',title:'统计区排序',width:100},
+				{field:'ListAreaSort',title:'明细区排序',width:100},
+
+				{field:'IntoNext',title:'是否延续',width:100,
+					formatter: function(value,row,index){
+						if(value=="0"){
+							return "<span style='color:#ddd'>否</span>"
+						}else if(value=="1"){
+							return "当日"
+						}else if(value=="2"){
+							return "跨天"
+						}else{
+							return ""
+						}
+					},
+				},
+				/*{field:'EditorFlag',title:'是否编辑',width:100,
+					formatter: function(value,row,index){
+						if(value=="0"){
+							return ""
+						}else{
+							return "是")
+						}	
+					},
+				},*/
+				{field:'SumMethod',title:'全班形式',width:100,
+					formatter: function(value,row,index){
+						if(value=="1"){
+							return "累计"
+						}else if(value=="2"){
+							return "最新值"
+						}else if(value=="3"){
+							return "最高值"
+						}else{
+							return "<span style='color:#ddd'>不带入</span>"
+						}
+						return ""		
+					},
+				},
+				{field:'AreaShow',title:'是否显示(统计)',width:100,
+					formatter: function(value,row,index){
+						if(value=="1"){
+							return "是"
+						}else{
+							return "<span style='color:#ddd'>否</span>"
+						}		
+					},
+				},
+				{field:'ListAreaInto',title:'是否显示(明细)',width:100,
+					formatter: function(value,row,index){
+						if(value=="1"){
+							return "是"
+						}else{
+							return "<span style='color:#ddd'>否</span>"
+						}	
+					},
+				},
+				
+				
+				
+				
+			]],
+			onDblClickRow:function(){
+				shiftBookArea.insertView("shiftBookArea",2)	
+			}
+		});	
+	  
+	   var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+	   console.log(ShiftBookRow)
+	   var param={
+			ShiftBookID:ShiftBookRow.ID
+		}
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftAreaList",param,function(rtn){
+				$("#shiftBookArea").datagrid("unselectAll");
+				$("#shiftBookArea").datagrid('loadData', rtn)
+				
+		},'json',true);
+		
+	},
+	toolBar:function(gid){
+		<!--a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onclick="importBzb()" id="importBzb"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">导入外部数据源</span><span class="l-btn-icon icon-save">&nbsp;</span></span></a-->
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookArea.insertView(gid,1,1)
+		    }
+	    },
+	    {
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBookArea.insertView(gid,2)
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					
+					alertmsg("请选择需要删除的记录！")
+					return false;
+				} 
+				$.messager.confirm('确认','您确认想要删除吗？',function(r){    
+				if (r){
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftAreaById",{id:row.ID},function(rtn){
+					if(rtn == 0) {
+						successmsg("删除成功！")
+						clickbook()
+					} else {
+						
+					}
+					
+				},'json',false);
+				}})
+	        }
+	    },{
+	        text: '导入外部数据源',
+	        iconCls: 'icon-import',
+	        handler: function() {
+		        importBzb()
+		    }
+	    }];
+		return ToolBar
+	},
+	insertView:function(gid,saveFlag,type){
+		var id=""
+		if(saveFlag==2){
+			var rows = $('#shiftBook').datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			}
+			var row = $("#"+gid).datagrid("getSelected");
+			
+			if (!row) {
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			} 
+			
+			id=row.ID
+			
+			console.log(row)
+			
+		}
+		//alert(type)
+		var titleText="交班本-统计区域配置"
+		if(type==2){
+			titleText="交班本-统计区域配置-原有"
+		}
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		var url="nur.hisui.shift.book.insert.area.csp?id="+id+"&ShiftBookID="+ShiftBookRow.ID+"&type="+type
+		$('#dialogRefer').dialog({    
+    		title: titleText,    
+    		width: 500,    
+    		height: 600,    
+    		closed: false,    
+    		cache: false,
+    		rownumbers : true,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					console.log(123)
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						successmsg("保存成功！")
+						shiftBookArea.datagrid()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}
+	
+}
+var shiftBookCustom={
+	datagrid:function(){
+		$('#shiftBookCustom').datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:true,
+			idField:"ID",
+			rownumbers : true,
+			toolbar :shiftBookCustom.toolBar("shiftBookCustom"),
+			columns :[[
+				{field:'DataSource',title:'来源',width:60,formatter: function(value,row,index){
+						if(value=="2"){
+							return "手动录入"
+						}else{
+							return "自动统计"
+						}
+					},
+				},
+				//{field:'ShiftProjectID',title:'交班项目',width:100},
+				{field:'AreaName',title:'项目名称',width:160},
+				{field:'EditorFlag',title:'编辑状态',width:60,formatter: function(value,row,index){
+						if(value=="0"){
+							return "<span style='color:#ddd'>禁用</span>"
+						}else{
+							return "启用"
+						}
+					},},
+				//{field:'AreaSort',title:'排序号',width:60},
+				{field:'AreaRow',title:'行号',width:60},
+				{field:'AreaCol',title:'列号',width:60},
+				//{field:'RowSpan',title:'合并行数',width:60},
+				{field:'Colspan',title:'合并列数',width:60},
+				
+				//{field:'IntoNext',title:'带入下个班次',width:160},
+				//{field:'ValidPatient',title:'不适用患者',width:260},
+				
+			]]
+			,onDblClickRow:function(){
+				shiftBookCustom.insertView("shiftBookCustom",2)	
+			}
+		});	
+	  
+	   var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+	   var param={
+			ShiftBookID:ShiftBookRow.ID
+		}
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftAreaCustomList",param,function(rtn){
+				$("#shiftBookCustom").datagrid("unselectAll");
+				$("#shiftBookCustom").datagrid('loadData', rtn)
+				
+		},'json',true);
+		
+	},
+	toolBar:function(gid){
+		var ToolBar = [{
+	        text: '新增(统计)',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookCustom.insertView(gid,1,1)
+		    }
+	    },{
+	        text: '新增(录入)',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookCustom.insertView(gid,3,2)
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBookCustom.insertView(gid,2)
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					alertmsg("请选择需要删除的记录！")
+					return false;
+				} 
+				$.messager.confirm('确认','您确认想要删除吗？',function(r){    
+				if (r){
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftAreaCustomById",{id:row.ID},function(rtn){
+					if(rtn == 0) {
+						successmsg("删除成功！")
+						clickbook()
+					} else {
+						
+					}
+					
+				},'json',false);
+				}})
+	        }
+	    }];
+		return ToolBar
+	},
+	insertView:function(gid,saveFlag,DataSource){
+		var id=""
+		if(saveFlag==2){
+			var rows = $('#shiftBook').datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			}
+			var row = $("#"+gid).datagrid("getSelected");
+			if (!row) {
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			} 
+			id=row.ID
+			DataSource=row.DataSource
+		}
+		
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		var url="nur.hisui.shift.book.insert.custom.csp?id="+id+"&ShiftBookID="+ShiftBookRow.ID+"&DataSource="+DataSource
+		$('#dialogRefer').dialog({    
+    		title: "交班本-中间区域配置",    
+    		width: 460,    
+    		height: 500,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					console.log(123)
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						successmsg("保存成功！")
+						shiftBookCustom.datagrid()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}
+	
+}
+
+var shiftBookDetail={
+	datagrid:function(){
+		$('#shiftBookDetail').datagrid({
+			fit:true,
+			singleSelect : true,
+			
+			idField:"ID",
+			rownumbers : true,
+			toolbar :shiftBookDetail.toolBar("shiftBookDetail"),
+			columns :[[
+				{field:'FildNameType',title:'明细列类型',width:100,
+					formatter: function(value,row,index){
+						if(value=="1"){
+							return "患者信息列"
+						}else if(value=="2"){
+							return "项目列"
+						}else if(value=="4"){
+							
+							return "班次列"	
+						}else if(value=="5"){
+							
+							return "班次内容列"	
+						}else if(value=="6"){
+							
+							return "自定义列"	
+						}else{
+							return "自定义列"
+						}
+					}
+				
+				
+				},
+				{field:'ListAreaColName',title:'明细列名',width:200},
+				{field:'ListAreaColWidth',title:'明细列宽',width:100},
+				{field:'ListAreaColSort',title:'列序号',width:100},
+				
+				//{field:'ListAreaColFildName',title:'字段名',width:130},
+				
+				
+				{field:'IsMergeColumn',title:'合并状态',width:100,formatter: function(value,row,index){
+						
+					
+						if(value=="1"){
+							return "启用"
+						}else{
+							return "<span style='color:#ddd'>禁用</span>"
+						}
+					},
+				},
+				
+				{field:'FildEditFlag',title:'编辑状态',width:100,
+					formatter: function(value,row,index){
+						
+						if(value=="1"){
+							return "启用"
+						}else{
+							return "<span style='color:#ddd'>禁用</span>"
+						}
+					},
+				},
+				{field:'FildHide',title:'隐显状态',width:100,formatter: function(value,row,index){
+						
+					
+						if(value=="0"){
+							return "显示"
+						}else{
+							return "<span style='color:#ddd'>隐藏</span>"
+						}
+					},
+				},
+				{field:'FildSortName',title:'排序名称',width:100},
+				
+				
+				/*{field:'ProjectClassName',title:'类方法',width:260,
+					formatter: function(itemInfo,row,index){
+						if(typeof(row.FildClassName)=="undefined"){
+							return ""
+						}
+						if(typeof(row.FildParameter)=="undefined"){
+							row.FildParameter=""
+						}
+						
+						return row.FildClassName+":"+row.FildMethodName+"("+row.FildParameter+")"
+					}, 
+					styler: function (value, row, index) {
+	                    return 'white-space: normal;word-break:break-all;';
+	                },
+				},
+				*/
+				
+			]]
+			,onDblClickRow:function(){
+				shiftBookDetail.insertView("shiftBookDetail",2)	
+			}
+		});	
+	  
+	   var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+	   var param={
+			ShiftBookID:ShiftBookRow.ID
+		}
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailList",param,function(rtn){
+				$("#shiftBookDetail").datagrid("unselectAll");
+				$("#shiftBookDetail").datagrid('loadData', rtn)
+				
+		},'json',true);
+		
+	},
+	toolBar:function(gid){
+		var ToolBar = [
+		{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookDetail.insertView(gid,1,1)
+		    }
+	    },
+	    /*{
+	        text: '新增(项目列)',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookDetail.insertView(gid,1,2)
+		    }
+	    },
+	    {
+	        text: '新增(班次列)',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookDetail.insertView(gid,1,4)
+		    }
+	    },*/
+	   /* {
+	        text: '新增(自定义)',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookDetail.insertView(gid,1,3)
+		    }
+	    },*/
+	    {
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBookDetail.insertView(gid,2)
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					alertmsg("请选择需要删除的记录！")
+					return false;
+				} 
+				$.messager.confirm('确认','您确认想要删除吗？',function(r){    
+				if (r){
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftDetailById",{id:row.ID},function(rtn){
+					if(rtn == 0) {
+						successmsg("删除成功！")
+						clickbook()
+					} else {
+						
+					}
+					
+				},'json',false);
+				}})
+	        }
+	    },
+	    {
+	        text: '设置多级表头',
+	        iconCls: 'icon-set-col',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+				var url="nur.hisui.shift.book.insert.group.csp?ShiftBookID="+ShiftBookRow.ID
+				$('#dialogRefer').dialog({    
+		    		title: "交班本-多级表头-项目列",    
+		    		width: 600,    
+		    		height: 400,    
+		    		closed: false,    
+		    		cache: false,
+			        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+		    		modal: true ,
+		    		buttons:[]  
+				});   
+				$("#dialogRefer").dialog("open");
+		    }
+	    },
+	    /*{
+	        text: '多级表头-班次列',
+	        iconCls: 'icon-set-col',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+				
+				var GroupContentTitle=""
+				var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetAllGenral",{ShiftBookID:ShiftBookRow.ID},function(rtn){
+					GroupContentTitle=rtn.GroupContentTitle
+					if(typeof(GroupContentTitle)=="undefined"){
+						GroupContentTitle=""
+					}
+					
+				},"json",false)
+				
+				
+				
+				
+				
+		        var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+				var url="nur.hisui.shift.book.insert.group.time.csp?ShiftBookID="+ShiftBookRow.ID
+				$('#dialogRefer').dialog({    
+		    		title: "交班本-多级表头-班次列",    
+		    		width: 600,    
+		    		height: 400,    
+		    		closed: false,    
+		    		cache: false,
+			        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+		    		modal: true ,
+		    		buttons:[]  
+				});   
+				$("#dialogRefer").dialog("open");
+		    }
+	    }*/];
+		return ToolBar
+	},
+	insertView:function(gid,saveFlag,type){
+		var id=""
+		if(saveFlag==2){
+			var rows = $('#shiftBook').datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			}
+			var row = $("#"+gid).datagrid("getSelected");
+			if (!row) {
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			} 
+			id=row.ID
+			type=row.FildNameType
+		}
+		
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		var url="nur.hisui.shift.book.insert.detail.csp?id="+id+"&ShiftBookID="+ShiftBookRow.ID+"&FildNameType="+type
+		$('#dialogRefer').dialog({    
+    		title: "交班本-明细区域配置",    
+    		width: 530,    
+    		height: 600,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					console.log(123)
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						successmsg("保存成功！")
+						shiftBookDetail.datagrid()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}
+	
+}
+var shiftBookGroup={
+	datagrid:function(){
+		$('#shiftBookGroup').datagrid({
+			fit:true,
+			singleSelect : true,
+			
+			idField:"ID",
+			rownumbers : true,
+			toolbar :shiftBookGroup.toolBar("shiftBookGroup"),
+			columns :[[
+				{field:'GroupColName',title:'列名',width:100},
+				{field:'GroupColLevel',title:'级别',width:100,
+					formatter: function(value,row,index){
+						if(value=="2"){
+							return "二级"
+						}else if(value=="3"){
+							return "三级"
+						}else if(value=="4"){
+							return "四级"
+						}
+						return ""
+					},
+				
+				},
+				{field:'GroupColSpan',title:'合并列',width:100},
+				
+				{field:'GroupColSort',title:'序号',width:130},
+				
+			]]
+		});	
+	  
+	   var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+	   var param={
+			ShiftBookID:ShiftBookRow.ID
+		}
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftGroupList",param,function(rtn){
+				$("#shiftBookGroup").datagrid("unselectAll");
+				$("#shiftBookGroup").datagrid('loadData', rtn)
+				
+		},'json',true);
+		
+	},
+	toolBar:function(gid){
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookGroup.insertView(gid,1)
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBookGroup.insertView(gid,2)
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $("#"+gid).datagrid("getSelected");
+	            
+				if (!row) {
+					alertmsg("请选择需要删除的记录！")
+					return false;
+				} 
+				$.messager.confirm('确认','您确认想要删除吗？',function(r){    
+				if (r){
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftGroupById",{id:row.ID},function(rtn){
+					if(rtn == 0) {
+						successmsg("删除成功！")
+						clickbook()
+					} else {
+						
+					}
+					
+				},'json',false);
+				}})
+	        }
+	    }];
+		return ToolBar
+	},
+	insertView:function(gid,saveFlag){
+		var id=""
+		if(saveFlag==2){
+			var rows = $('#shiftBook').datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			}
+			var row = $("#"+gid).datagrid("getSelected");
+			if (!row) {
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			} 
+			id=row.ID
+		}
+		
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		var url="nur.hisui.shift.book.insert.group.csp?id="+id+"&ShiftBookID="+ShiftBookRow.ID
+		$('#dialogRefer').dialog({    
+    		title: "交班本-多级表头配置",    
+    		width: 600,    
+    		height: 420,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+					console.log(123)
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						successmsg("保存成功！")
+						shiftBookGroup.datagrid()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}
+	
+}
+</script>
+<script type="text/javascript">
+
+
+
+var shiftBookWard={
+	gid:"#shiftBookWard",
+	datagrid:function(RoleType,GirdID){
+		var columns=[
+			{field:'WardName',title:"病区名称",width:100},
+				
+		]	
+		shiftBookWard.gid=GirdID
+		$(shiftBookWard.gid).datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:true,
+			idField:"ID",
+			rownumbers : true,
+			toolbar :shiftBookWard.toolBar(shiftBookWard.gid,RoleType),
+			columns :[columns]
+		});	
+	  
+	   var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftBookRoleList",{ShiftBookID:ShiftBookRow.ID,RoleType:RoleType},function(rtn){
+				$(shiftBookWard.gid).datagrid("unselectAll");
+				$(shiftBookWard.gid).datagrid('loadData', rtn)
+				
+		},'json',false);
+		
+	},
+	toolBar:function(gid,RoleType){
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookWard.insertView(gid,1,RoleType)
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBookWard.insertView(gid,2,RoleType)
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $(gid).datagrid("getSelected");
+	            
+				if (!row) {
+					alertmsg("请选择需要删除的记录！")
+					return false;
+				} 
+				$.messager.confirm('确认','您确认想要删除吗？',function(r){    
+				if (r){
+					runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftBookRoleById",{id:row.ID},function(rtn){
+						if(rtn == 0) {
+							successmsg("删除成功！")
+							clickbook()
+						} else {
+							
+						}
+						
+					},'json',false);
+				}})
+
+	        }
+	    }];
+		return ToolBar
+	},
+	insertView:function(gid,saveFlag,RoleType){
+		var id=""
+		if(saveFlag==2){
+			var rows = $('#shiftBook').datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			}
+			var row = $(gid).datagrid("getSelected");
+			if (!row) {
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			} 
+			id=row.ID
+		}
+		//alert(GLOBAL.HospitalID)
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		var url="nur.hisui.shift.book.insert.ward.csp?id="+id+"&ShiftBookID="+ShiftBookRow.ID+"&hospId="+GLOBAL.HospitalID+"&RoleType="+RoleType
+		var title="交班本-适用病区维护"
+		if(RoleType==2){
+			title="交班本-屏蔽病区维护"
+		}
+		$('#dialogRefer').dialog({    
+    		title: title,    
+    		width: 400,    
+    		height: 400,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+				
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						successmsg("保存成功！")
+						clickbook()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}
+	
+}
+
+
+var shiftBookLoc={
+	gid:"#shiftBookLoc",
+	datagrid:function(){
+		var columns=[
+			{field:'LocDesc',title:"显示名称",width:100},
+			{field:'LocName',title:"科室名称",width:400},
+				
+		]	
+		$(shiftBookLoc.gid).datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:true,
+			idField:"ID",
+			rownumbers : true,
+			toolbar :shiftBookLoc.toolBar(shiftBookLoc.gid),
+			columns :[columns]
+		});	
+	  
+	   var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftLocList",{ShiftBookID:ShiftBookRow.ID},function(rtn){
+				$(shiftBookLoc.gid).datagrid("unselectAll");
+				$(shiftBookLoc.gid).datagrid('loadData', rtn)
+				
+		},'json',false);
+		
+	},
+	toolBar:function(gid,RoleType){
+		var ToolBar = [{
+	        text: '新增',
+	        iconCls: 'icon-add',
+	        handler: function() {
+		        if(!shiftBookSelected()){
+			        return false;
+			    }
+		        shiftBookLoc.insertView(gid,1)
+		    }
+	    },{
+	        text: '修改',
+	        iconCls: 'icon-write-order',
+	        handler: function() {
+		        shiftBookLoc.insertView(gid,2)
+		    }
+	    },{
+	        text: '删除',
+	        iconCls: 'icon-cancel',
+	        handler: function() {
+	            var row = $(gid).datagrid("getSelected");
+	            
+				if (!row) {
+					alertmsg("请选择需要删除的记录！")
+					return false;
+				} 
+				$.messager.confirm('确认','您确认想要删除吗？',function(r){    
+				if (r){
+					runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftLocById",{id:row.ID},function(rtn){
+						if(rtn == 0) {
+							successmsg("删除成功！")
+							clickbook()
+						} else {
+							
+						}
+						
+					},'json',false);
+				}})
+
+	        }
+	    }];
+		return ToolBar
+	},
+	insertView:function(gid,saveFlag){
+		var id=""
+		if(saveFlag==2){
+			var rows = $('#shiftBook').datagrid("getSelections");
+			//未选中左侧列表，默认选中第一行
+			if(rows.length==0){
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			}
+			var row = $(shiftBookLoc.gid).datagrid("getSelected");
+			if (!row) {
+				alertmsg("请选择需要修改的记录！")
+				return false;
+			} 
+			id=row.ID
+		}
+		//alert(GLOBAL.HospitalID)
+		var ShiftBookRow = $('#shiftBook').datagrid("getSelected");
+		var url="nur.hisui.shift.book.insert.loc.csp?id="+id+"&ShiftBookID="+ShiftBookRow.ID+"&hospId="+GLOBAL.HospitalID
+
+		$('#dialogRefer').dialog({    
+    		title: "科室交班",    
+    		width: 400,    
+    		height: 400,    
+    		closed: false,    
+    		cache: false,
+	        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+    		modal: true ,
+    		buttons:[{
+				text:'保存',
+				iconCls:'icon-w-edit',
+				id: 'btnRefer',
+				handler:function(){
+					var $iframe = $('#iframeRefer')[0].contentWindow
+				
+					var rsTxt = $iframe.saveFunLib()
+					if(rsTxt==""){
+						successmsg("保存成功！")
+						clickbook()
+						$('#dialogRefer').dialog('close');	
+					}else{
+						$.messager.alert('提示',rsTxt , "info");	
+					}
+				}
+			},{
+				text:'关闭',
+				iconCls:'icon-w-close',
+				id: 'btnClose',
+				handler:function(){
+					$('#dialogRefer').dialog('close');	
+				}
+			}]  
+		});   
+		$("#dialogRefer").dialog("open");
+	}
+	
+}
+
+
+
+</script>
+
+</body>
+</html>

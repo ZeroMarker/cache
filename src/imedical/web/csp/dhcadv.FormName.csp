@@ -3,6 +3,7 @@
 <title></title>
 <ADDINS require="CmdShell" />
 <HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
@@ -17,14 +18,19 @@
 		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
 	</script>
-<style type="text/css">
+	<style type="text/css">
 		.datagrid-row-selected {
 	  		background: #ADFAFC;
 		}
 		.panel-header, .panel-body {
 		    border-color: #ccc;
 		}
+		/*多院区改造 cy 2021-04-09 */
+		#_HospList+span{max-width:234px}
+		#_HospList+span >input{max-width:200px}
    </style>
 </head>
 <body >
@@ -32,12 +38,14 @@
 	<div id="toolbar" class="datagrid-toolbar">
 		<div style="margin-top:10px;margin-bottom:10px;">
 			<tr>
+			<td class="textLabel"><span style="margin-left:10px;"></span><label id="_HospListLabel">医院</label><span style="margin-left:10px;"></span><input type="text" id="_HospList" name="hosp"></input></td> <!--多院区改造 cy 2021-04-09 -->
+			<td><a href="#" id="_HospBtn" data-options="iconCls:'icon-w-key'" class="hisui-linkbutton" style="margin-left:10px;">数据关联医院</a></td><!--多院区改造 cy 2021-04-09 -->
 			<td><span style="margin-left:10px;"></span>代码<span style="margin-left:10px;"></span><input type="text" name="queryCode" class="textbox" /> </td>	
 			<td><span style="margin-left:10px;"></span>描述<span style="margin-left:10px;"></span><input type="text" name="queryName" class="textbox" /> </td>        
 			<td><input class="hisui-radio" type="radio" value="Y" name="queryType" checked="true" id="queryTypey" label="表单"></td> 
 			<td><input class="hisui-radio" type="radio" value="N" name="queryType" label="布局表单"></td> 
 			<td><input class="hisui-radio" type="radio" value="A" name="queryType" label="全部"></td> 
-			<td ><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})">查询</a> </td>					
+			<td ><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onclick="javascript:Query()">查询</a> </td>  <!--多院区改造 cy 2021-04-09 -->					
 			</tr>								
 		</div>
 		<div class="tool-bar-line" style="border-bottom-color:#cccccc; border-bottom-width: 1px; border-bottom-style: dashed;">	</div>
@@ -56,6 +64,7 @@
 		</table>
 	</div>
 	<table id="datagrid" class="hisui-datagrid" fit="true" title=""
+		
 		data-options="
 		toolbar:'#toolbar',
 		border:false,
@@ -76,86 +85,90 @@
 				<th data-options="field:'jsPath',width:100,editor:{type:'validatebox',options:{required:true,validType:'isBlank'}}">引用js</th>
 				<th data-options="field:'ID',hidden:true">id</th>
 				<th data-options="field:'type',width:30,
-								formatter:function(value,row,index){
-									if(value=='Y'){return '是';}
-									else {return '否';}
-								},
-								editor:{
-										type:'combobox',
-										options:{
-											valueField:'value',
-											textField:'text',
-											url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listState',
-											required:true
-										}
-									}">表单</th>
+					formatter:function(value,row,index){
+						if(value=='Y'){return '是';}
+						else {return '否';}
+					},
+					editor:{
+						type:'combobox',
+						options:{
+							valueField:'value',
+							textField:'text',
+							url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listState',
+							required:true
+						}
+					}">表单</th>
 				<th data-options="field:'cat',hidden:true">cat</th>
-				<th data-options="field:'catDesc',width:100,editor:{
-										type:'combobox',
-										options:{
-											valueField:'value',
-											textField:'text',
-											mode:'remote',
-											url:'dhcapp.broker.csp?ClassName=web.DHCADVFormCat&MethodName=listCombo',
-											onSelect:function(data){  
-												$('#datagrid').datagrid('getSelected').cat=data.value
-											},
-											onChange:function(n,o){
-												if(n==''){
-													$('#datagrid').datagrid('getSelected').cat=0
-												}
-											}	
-										}
-									}">分类</th>
+				<th data-options="field:'catDesc',width:100,
+					editor:{
+						type:'combobox',
+						options:{
+							valueField:'value',
+							textField:'text',
+							mode:'remote',
+							url:'dhcapp.broker.csp?ClassName=web.DHCADVFormCat&MethodName=listCombo',
+							onSelect:function(data){  
+								$('#datagrid').datagrid('getSelected').cat=data.value
+							},
+							onChange:function(n,o){
+								if(n==''){
+									$('#datagrid').datagrid('getSelected').cat=0
+								}
+							},
+							onHidePanel : function() {	
+								chkcomboxvalue(this);
+								var _value = $(this).combobox('getValue');
+								$('#datagrid').datagrid('getSelected').cat=_value;
+							}
+						}
+					}">分类</th>
 				<th data-options="field:'active',width:40,
-								formatter:function(value,row,index){
-									if(value=='Y'){return '是';}
-									else {return '否';}
-								},
-								editor:{
-										type:'combobox',
-										options:{
-											valueField:'value',
-											textField:'text',
-											url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listState',
-											required:true
-										}
-									}">是否可用</th>
-				<th data-options="field:'width',width:20,editor:{type:'validatebox'}">宽</th>					
+					formatter:function(value,row,index){
+						if(value=='Y'){return '是';}
+						else {return '否';}
+					},
+					editor:{
+						type:'combobox',
+						options:{
+							valueField:'value',
+							textField:'text',
+							url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listState',
+							required:true
+						}
+					}">是否可用</th>
+				<th data-options="field:'width',width:20,editor:{type:'validatebox'}">宽</th>
+				<th data-options="field:'HospDr',hidden:true">医院ID</th>					
 			</tr>
 		</thead>
 	</table> 
 
-
-<!--复制表单-->
-<div id="copy"
-        class="hisui-dialog"  	
-		style="width:800px;height:200px;background-color:'#E0ECFF'"
-		data-options="title:'复制表单',modal:true,closed:true,
-			toolbar:[{
-				text:'保存',
-				iconCls:'icon-save',
-				handler:function(){saveFormCopy();}
-			}]">
-	 <div style="padding:10px 60px 20px 60px">
-	 	<form id="copyForm" class="hisui-form" >		
-		<table cellpadding="5">
-			<input id="subParref" type="hidden"  />
-			<input id="subId" type="hidden"  />
-			<tr>
-				<td >code</td>
-				<td ><input id="copyCode" type="text"  class="hisui-validatebox" data-options="required:true" style="width:500px"/></td>
-			</tr>
-			<tr>
-				<td >名称</td>
-				<td ><input id="copyName" type="text" class="hisui-validatebox"  data-options="required:true" style="width:500px" /></td>	
-			</tr>
-		</table>
-		</form>
+	<!--复制表单-->
+	<div id="copy"
+	        class="hisui-dialog"  	
+			style="width:800px;height:200px;background-color:'#E0ECFF'"
+			data-options="title:'复制表单',modal:true,closed:true,
+				toolbar:[{
+					text:'保存',
+					iconCls:'icon-save',
+					handler:function(){saveFormCopy();}
+				}]">
+		 <div style="padding:10px 60px 20px 60px">
+		 	<form id="copyForm" class="hisui-form" >		
+			<table cellpadding="5">
+				<input id="subParref" type="hidden"  />
+				<input id="subId" type="hidden"  />
+				<tr>
+					<td >代码</td>
+					<td ><input id="copyCode" type="text"  class="hisui-validatebox" data-options="required:true" style="width:500px"/></td>
+				</tr>
+				<tr>
+					<td >名称</td>
+					<td ><input id="copyName" type="text" class="hisui-validatebox"  data-options="required:true" style="width:500px" /></td>	
+				</tr>
+			</table>
+			</form>
+		</div>
 	</div>
-</div>
-
- 
 </body>
 
 </html>

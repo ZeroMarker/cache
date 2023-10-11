@@ -7,11 +7,24 @@
 <meta http-equiv="x-ua-compatible" content="edge">
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 s RowID=$g(%request.Data("RowID",1))
 s Status=$g(%request.Data("Status",1))
+//add by csj 2020-11-17 添加润乾打印相关配置
+s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+if (PreviewRptFlag=0){
+	//d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17 
+} 
+//Add By  QW20201223 BUG: QW0085 报废汇总批量审核 begin
+s CurRole=$Get(%request.Data("CurRole",1))
+s QXType=$Get(%request.Data("QXType",1))
+s Type=$Get(%request.Data("Type",1))
+s WaitAD=$Get(%request.Data("WaitAD",1))
+s Action=##class(web.DHCEQCommon).GetSysInfo("601007")  
+//Add By QW20201223 BUG: QW0085 报废汇总批量审核 end   
 </SCRIPT>
 <server>
 s SourceType=$g(%request.Data("SourceType",1))
@@ -19,28 +32,30 @@ s SubType=$g(%request.Data("SubType",1))
 </server>
 </HEAD>
 <body class="hisui-layout"> 
-	<div data-options="region:'west',border:false,split:true" style="padding:10px 0px 10px 10px;width:600px;"> 
-		<div class="hisui-panel" title="报废单" data-options="fit:true,border:true,'eqtitle':'maintitle'">
+	<div data-options="region:'center',border:false" style="width:100%">
+	<div id="cc2" class="hisui-layout" style="width:100%;height:100%;"> 
+	<div data-options="region:'west',border:false,split:true" style="padding:10px 0px 10px 10px;width:650px;"><!--modified by wy 2022-7-8 HISUI界面2612985 -->
+		<div class="hisui-panel" title="报废单" data-options="fit:true,'eqtitle':'maintitle'">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:112px;">
-					<div class="eq-table" style="width:100%">
-						<div class="eq-table-tr">					
-							<div class="eq-table-td eq-table-label"><lable id="cRequestNo" for="RequestNo">报废单号</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RequestNo"></div>					
-				    	</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><lable id="cEquip" for="Equip">设备名称</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Equip" data-options="'component':'EM.L.Equip'"></div>	
-							<div class="eq-table-td eq-table-label"><lable id="cStartDate" for="StartDate">报废申请日期</lable></div>  <!--modify by lmm 2019-08-28 988123-->
-							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="StartDate"></div>
-				    	</div>
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><lable id="cUseLoc" for="UseLoc">使用科室</lable></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UseLoc" data-options="'component':'PLAT.L.Loc'"></div>	
-							<div class="eq-table-td eq-table-label"><lable id="cEndDate" for="EndDate">至</lable></div>
-							<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EndDate"></div>
-				    	</div>
-					</div>	
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table-tr">					
+						<div class="eq-table-td eq-table-label-first"><lable id="cRequestNo" for="RequestNo">报废单号</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RequestNo"></div>					
+						<div class="eq-table-td eq-table-label-new"><lable id="cStartDate" for="StartDate">报废申请日期</lable></div>  <!--modify by lmm 2019-08-28 988123--><!--modified by wy 2022-5-16 HISUI界面2612985 begin-->
+						<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="StartDate"></div>
+					    <div class="eq-table-td eq-table-label-first"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+				    </div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><lable id="cEquip" for="Equip">设备名称</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Equip" data-options="'component':'EM.L.Equip'"></div>	
+						<div class="eq-table-td eq-table-label-new"><lable id="cEndDate" for="EndDate">至</lable></div>
+						<div class="eq-table-td eq-table-input"><input type="text" class="hisui-datebox textbox" id="EndDate"></div>
+						<div class="eq-table-td eq-table-label-first"><a id="BAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a></div>
+				    </div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><lable id="cUseLoc" for="UseLoc">使用科室</lable></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UseLoc" data-options="'component':'PLAT.L.Loc'"></div>	<!--modified by wy 2022-5-16 HISUI界面2612985 end-->
+				    </div>	
 				</div>
 				<div data-options="region:'center',border:false">
 					<table id="DHCEQDisuse"></table>
@@ -48,24 +63,25 @@ s SubType=$g(%request.Data("SubType",1))
 			</div>	
 		</div>	
 	</div>
-	<div data-options="region:'center',border:false,split:true" style="width:600px;padding:10px 10px 10px 5px;">
-		<div class="hisui-panel" title="汇总单" data-options="fit:true,border:true,'eqtitle':'maintitle'">
-			<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;height:112px;">
-				<div class="eq-table" style="width:100%">
-					<div class="eq-table-tr">					
-						<div class="eq-table-td eq-table-label"><lable id="cMergeOrderNo" for="MergeOrderNo">汇总单号</lable></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MergeOrderNo"></div>					
-			    	</div>
-					<div class="eq-table-tr">
-						<div class="eq-table-td eq-table-label"><lable id="cRemark" for="Remark">备注</lable></div>
-						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Remark" style="height:65px;width:300px;"></div>	
-			    	</div>
+	<div data-options="region:'center',border:false,split:true" style="padding:10px 10px 10px 5px;width:650px"><!--modified by wy 2022-7-8 HISUI界面2612985 begin-->
+		<div class="hisui-panel" title="汇总单" data-options="fit:true,'eqtitle':'maintitle'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
+				<div class="eq-table-tr">					
+					<div class="eq-table-td eq-table-label-first"><lable id="cMergeOrderNo" for="MergeOrderNo">汇总单号</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="MergeOrderNo"></div>
+					<div class="eq-table-td eq-table-label-new"><lable id="cRemark" for="Remark">备注</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Remark" ></div>	
+					<div class="eq-table-td eq-table-label-first"><a id="BPicture" href="#" class="hisui-linkbutton" >图片信息</a></div> <!--add by csj 2020-11-19-->					
 			    </div>
 			</div>
-			<div data-options="region:'center',border:false,fit:true" style="height:79.5%;">
+			<div data-options="region:'center',border:false,fit:true"><!--modified by wy 2022-7-8 HISUI界面2612985 end-->
 				<table id="DHCEQMergeOrder"></table>
+				</div>
 			</div>			
 		</div>
+	</div>
+	</div>
 	</div>
 	<!--隐藏元素-->
 	<div id="hiddenEncrypt" style="display:hidden">
@@ -75,10 +91,17 @@ s SubType=$g(%request.Data("SubType",1))
 			<input id="SourceType" type="hidden" value=#(SourceType)#>
 			<input id="SubType" type="hidden" value=#(SubType)#>		
 			<input id="UseLocDR" type="hidden">		
-			<input id="EquipDR" type="hidden">		
+			<input id="EquipDR" type="hidden">
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> 	<!--add by csj 2020-11-17 添加润乾打印相关配置-->	
+            <input id="CurRole" name="CurRole" type="hidden" value=#(CurRole)#>
+            <input id="QXType" name="QXType" type="hidden" value=#(QXType)#>
+            <input id="Type" name="Type" type="hidden" value=#(Type)#>
+            <input id="WaitAD" name="WaitAD" type="hidden" value=#(WaitAD)#>
+            <input id="Action" name="Action" type="hidden" value=#(Action)#>
 		</form>
 	</div>
 <script type="text/javascript" src="../scripts/dhceq/em/mergeorder.js"></script>
+<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script> 	<!--add by csj 2020-11-17 添加润乾打印相关配置-->
 </body>
 
 </html>

@@ -5,18 +5,31 @@
  q 1
 </csp:method>
 <html lang="zh-CN">
+<SERVER>
+	s TabParams=$G(%request.Data("TabParams",1))
+</SERVER>
 <head>
+	<script language=javascript>
+		var gTabParams='#(TabParams)#';
+	</script>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<DHCSTMHISUI/> 
 </head> 
+<style>
+.CkPadding {
+    text-align: left;
+    padding: 0px 0px 0px 10px !important;
+}
+</style>
 <body class="hisui-layout" data-options="fit:true">
 	<div class="GridPadding" style="width:340px;" data-options="region:'west',border:false" >
 		<div class="hisui-panel" data-options="title:'效期报警',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
 			<div class="hisui-layout" data-options="fit:true">
 				<div data-options="region:'center',border:false">
-					<table id="Conditions" class="Condition">
+					<table id="Conditions" class="Condition" align="center" style="padding-right:10px" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="Inci" name="Inci" type="hidden">
 						<tr>
 							<td>科室</td>
 							<td><input id="PhaLoc" name="PhaLoc" class="textbox hisui-combobox" style="width:150px;"></td>
@@ -34,6 +47,10 @@
 							<td><input id="StkCat" name="StkCat" class="textbox hisui-combobox" style="width:150px;"></td>
 						</tr>
 						<tr>
+							<td>物资名称</td>
+							<td><input id="InciDesc" name="InciDesc" class="textbox" style="width:150px;"></td>
+						</tr>
+						<tr>
 							<td>包括零批次</td>
 							<td class="CkPadding"><input id="ZeroFlag" name="ZeroFlag" class="hisui-checkbox" type="checkbox" value="Y"></td>
 						</tr>
@@ -44,82 +61,84 @@
 						<tr>
 							<td>过期</td>
 							<td class="CkPadding"><input id="ZeroMonth" name="ZeroMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#EE4F38;"></td>
+							<input class="text" id="month0" disabled="true" style="width:122px;background-color:#EE4F38;"></td>
 						</tr>
 						<tr>
 							<td>1月</td>
 							<td class="CkPadding"><input id="OneMonth" name="OneMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#FD930C;"></td>
+							<input class="text"  id="month1" disabled="true" style="width:122px;background-color:#FD930C;"></td>
 						</tr>
 						<tr>
 							<td>2月</td>
 							<td class="CkPadding"><input id="TwoMonth" name="TwoMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#D17604;"></td>
+							<input class="text" id="month2" disabled="true" style="width:122px;background-color:#D17604;"></td>
 						</tr>
 						<tr>
 							<td>3月</td>
 							<td class="CkPadding"><input id="ThreeMonth" name="ThreeMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#955606;"></td>
+							<input class="text" id="month3" disabled="true" style="width:122px;background-color:#955606;"></td>
 						</tr>
 						<tr>
 							<td>4月</td>
 							<td class="CkPadding"><input id="FourMonth" name="FourMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#8BE550;"></td>
+							<input class="text" id="month4" disabled="true" style="width:122px;background-color:#8BE550;"></td>
 						</tr>
 						<tr>
 							<td>5月</td>
 							<td class="CkPadding"><input id="FiveMonth" name="FiveMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#50B90C;"></td>
+							<input class="text" id="month5" disabled="true" style="width:122px;background-color:#50B90C;"></td>
 						</tr>
 						<tr>
 							<td>6月</td>
 							<td class="CkPadding"><input id="SixMonth" name="SixMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#328100;"></td>
+							<input class="text" id="month6" disabled="true" style="width:122px;background-color:#328100;"></td>
 						</tr>
 						<tr>
 							<td>7月</td>
 							<td class="CkPadding"><input id="SevenMonth" name="SevenMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#449BE3;"></td>
+							<input class="text" id="month7" disabled="true" style="width:122px;background-color:#449BE3;"></td>
 						</tr>
 						<tr>
 							<td>8月</td>
 							<td class="CkPadding"><input id="EightMonth" name="EightMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#0670C7;"></td>
+							<input class="text" id="month8" disabled="true" style="width:122px;background-color:#0670C7;"></td>
 						</tr>
 						<tr>
 							<td>9月</td>
 							<td class="CkPadding"><input id="NineMonth" name="NineMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#125891;"></td>
+							<input class="text" id="month9" disabled="true" style="width:122px;background-color:#125891;"></td>
 						</tr>
 						<tr>
 							<td>10月</td>
 							<td class="CkPadding"><input id="TenMonth" name="TenMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#D952D1;"></td>
+							<input class="text" id="month10" disabled="true" style="width:122px;background-color:#D952D1;"></td>
 						</tr>
 						<tr>
 							<td>11月</td>
 							<td class="CkPadding"><input id="ElevenMonth" name="ElevenMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#C10EB5;"></td>
+							<input class="text" id="month11" disabled="true" style="width:122px;background-color:#C10EB5;"></td>
 						</tr>
 						<tr>
 							<td>12月</td>
 							<td class="CkPadding"><input id="TwelveMonth" name="TwelveMonth" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;background-color:#891083;"></td>
+							<input class="text" id="month12" disabled="true" style="width:122px;background-color:#891083;"></td>
 						</tr>
 						<tr>
 							<td>正常</td>
 							<td class="CkPadding"><input id="Normal" name="Normal" class="hisui-checkbox" type="checkbox" value="Y">
-							<input class="text" disabled="true" style="width:120px;"></td>
+							<input class="text" id="monthNormal" disabled="true" style="width:122px;"></td>
 						</tr>
 					</table>
 				</div>
-				<div class="PartLine" data-options="region:'south',border:false" style="height:51px;">
-					<table class="Condition" align="center">
-						<tr>
-							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-						</tr>
-					</table>
+				<div data-options="region:'south',border:false" style="height:60px;padding-top:10px;">
+					<div class="boxshadow">
+						<table class="Condition" align="center" style="padding-right:10px">
+							<tr>
+								<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+								<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							</tr>
+						</table>
+					</div>
 				</div>
 			</div>
 		</div>

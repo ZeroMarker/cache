@@ -9,8 +9,8 @@
 <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
 <SCRIPT SRC="../scripts/websys.js"></SCRIPT>
 <SCRIPT SRC="/csp/broker/cspbroker.js"></SCRIPT><SCRIPT SRC="/csp/broker/cspxmlhttp.js"></SCRIPT>
-<script type="text/javascript" src="../SCRIPTS/dhtmlxcommon.js"></script>
-<script type="text/javascript" src="../SCRIPTS/dhtmlxcombo.js"></script>
+<!--script type="text/javascript" src="../scripts/dhtmlxcommon.js"></script>
+<script type="text/javascript" src="../scripts/dhtmlxcombo.js"></script-->
 <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 <!--
 <script type="text/javascript" src="../SCRIPTS/jQuery/jquery.js"></script>
@@ -20,7 +20,8 @@
 <!-- <TRAK:HEAD></TRAK:HEAD> -->
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI/>
-
+<DOCHEAD/>
+<ADDINS require="CmdShell"/>
 <STYLE type='text/css'>
 body {
 	overflow:hidden;
@@ -33,6 +34,7 @@ table,tr,td,th{
 	border:1px solid #ddd;
 	border-collapse:collapse;
 	text-align:center;
+	border-left: none;
 }
 .no-border-tab{
 	border:0;
@@ -64,7 +66,6 @@ table,tr,td,th{
 	position:relative;/** 必须，若不设置，拷贝得来的表头将相对于其设置该属性为该值的父节点（或间接父节点）定位，如果没有，则相对于body */
 }
 /*
-
 #TableHead{
 	display:block;
 	position:absolute;
@@ -73,6 +74,9 @@ table,tr,td,th{
 	right:0;
 }
 */
+#TableHead>tr>th {
+	background-color:#F8F8F8; /** 表头背景颜色 */
+}
 #weekTable>td,#weekTable>th{
 	font-size: 14px;
 	width:60px;
@@ -141,7 +145,8 @@ table,tr,td,th{
 </HEAD>
 <BODY >
 
-<DIV style="height:100%;background:#fff;">
+<DIV id="schdDiv" class="c-bg-body" style="padding:10px;">
+<div class="hisui-panel" title="出诊查询" fit="true" style="height:100%;" data-options="headerCls:'panel-header-gray',iconCls:'icon-search',closable:false,collapsible:false,minimizable:false,maximizable:false">
 <SCRIPT language=cache RUNAT=SERVER>
  	n (%request,%session,%response,msg)
  	;s UserID=%session.Get("LOGON.USERID")
@@ -183,6 +188,12 @@ table,tr,td,th{
 		s CTLocHospDr=$p(^CTLOC(DepDr),"^",22)
 		continue:(LogonHospId'="")&&(CTLocHospDr'=LogonHospId)
 		continue:'$d(^CTPCP(DocDr,1))
+		s RESDateActiveFrom=$p($g(^RB("RES",ResRowId)),"^",22)
+		s RESDateActiveTo=$p($g(^RB("RES",ResRowId)),"^",23)
+		s RESScheduleRequired=$p($g(^RB("RES",ResRowId)),"^",6)
+		continue:$g(RESScheduleRequired)="N" 
+		continue:(RESDateActiveFrom'="")&&(RESDateActiveFrom>+$h)
+		continue:(RESDateActiveTo'="")&&(RESDateActiveTo<+$h)
 		s DocTypeDr=$p(^CTPCP(DocDr,1),"^",4)
 		s DocTypeDesc=$p(^CT("CPT",DocTypeDr),"^",2)
 		s ResRowidd=$o(^RB("RES",0,"CTPCP",DocDr,DepDr,""))
@@ -211,6 +222,8 @@ table,tr,td,th{
 					continue:TRRowId=""
 					s status=$P($G(^RBAS(ResRowId,ASChildSub,"DHC")),"^",10)
 					i status'="" s status=$P(^DHCRBCASStatus(status),"^",1)
+					;过滤待审核排班
+					continue:(status="AUD") 
 					s ASIrregularFlag=$p($g(^RBAS(ResRowId,ASChildSub)),"^",13)
 					//便民和体检VIP在排班报表里不显示
 					continue:ASIrregularFlag="A"
@@ -355,7 +368,7 @@ table,tr,td,th{
 					s cellclass="normalschedule"
 					s:((AdmWeek=1)||(AdmWeek=3)||(AdmWeek=5)) cellclass="oddschedule"
 					s celltip=""
-					i StopRegNoFlag="Y"{
+					if (StopRegNoFlag="Y"){
 						s cellclass="stopregnoschedule"
 						s celltip="停正号"
 					}
@@ -367,7 +380,17 @@ table,tr,td,th{
 						s cellclass="replaceschecule"
 						s celltip="替诊:"_TRDoc
 					}
-					w !,"<td  class='"_cellclass_"'><label title='"_celltip_"'>"_DocDesc_"</label></td>"
+					if (cellclass="stopregnoschedule"){
+						w !,"<td  class='"_cellclass_"' style='BACKGROUND-COLOR: pink;'><label title='"_celltip_"'>"_DocDesc_"</label></td>"
+					}elseif(cellclass="stopschedule"){
+						w !,"<td  class='"_cellclass_"' style='BACKGROUND-COLOR: #E04141;'><label title='"_celltip_"'>"_DocDesc_"</label></td>"	
+					}elseif(cellclass="replaceschecule"){
+						w !,"<td  class='"_cellclass_"' style='BACKGROUND-COLOR: #3399FF;'><label title='"_celltip_"'>"_DocDesc_"</label></td>"
+						
+					}else{
+					
+						w !,"<td  class='"_cellclass_"'><label title='"_celltip_"'>"_DocDesc_"</label></td>"
+					}
 					i celltip'=""  {
 						s DocDesc=DocDesc_"("_celltip_")"
 					}
@@ -527,7 +550,18 @@ table,tr,td,th{
 							s cellclass="stopschedule"
 							s celltip="被替诊:"_TRDoc
 						}
-						w !,"<td class='DateTD "_cellclass_"'><label title='"_celltip_"'>"_Qty_"</label></td>"
+						if (cellclass="stopregnoschedule"){
+							w !,"<td class='DateTD "_cellclass_"' style='BACKGROUND-COLOR: pink;'><label title='"_celltip_"'>"_Qty_"</label></td>"
+						}elseif(cellclass="stopschedule"){	
+							w !,"<td class='DateTD "_cellclass_"' style='BACKGROUND-COLOR: #E04141;'><label title='"_celltip_"'>"_Qty_"</label></td>"
+						}elseif(cellclass="replaceschecule"){
+							w !,"<td class='DateTD "_cellclass_"' style='BACKGROUND-COLOR: #3399FF;'><label title='"_celltip_"'>"_Qty_"</label></td>"
+							
+						}else{
+						
+							w !,"<td class='DateTD "_cellclass_"'><label title='"_celltip_"'>"_Qty_"</label></td>"
+						}
+						//w !,"<td class='DateTD "_cellclass_"'><label title='"_celltip_"'>"_Qty_"</label></td>"
 					}
 					w !,"</tr>"
 					s NextRow="Y"
@@ -544,9 +578,11 @@ s DateStr=##class(web.DHCRBResSession).GetDateStr()
 s WeekStr=##class(web.DHCRBResSession).GetWeekStr()
 s WeekScheduleRowIDStr=##class(web.DHCRBResSession).GetWeekScheduleRowIDStr()
 </SCRIPT>
+</div>
 </DIV>
 <SCRIPT language=javascript>
-$("#wrap").css('height',$(window).height()-50);
+$("#schdDiv").css('height',$(window).height()-40);
+$("#wrap").css('height',$(window).height()-20-34-51);
 function Find_click() {
 	var obj=document.getElementById('WeekNum');
 	if ((obj)){
@@ -557,7 +593,8 @@ function Find_click() {
 		var Hospital=$HUI.combogrid('#_HospUserList').getValue();
 		if (Hospital==undefined) Hospital="";
 	    var url="dhcopadm.schedulebyweek.csp?WeekNum="+WeekNum+"&Dep="+Dep+"&SortByFloor="+SortByFloor+"&Hospital="+Hospital;
-		window.location=url
+		url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
+        window.location=url
 	}
 }
 var obj=document.getElementById("Find");
@@ -691,8 +728,11 @@ function LoadLoc(hospitalid){
 					if ((row["Code"].toUpperCase().indexOf(q)>=0)||(row["Alias"].toUpperCase().indexOf(q)>=0)||(row["Desc"].toUpperCase().indexOf(q)>=0)) return true;
 				},
 				onLoadSuccess:function(){
+				     var sbox = $HUI.combobox("#DepartMent");
 				     var dep='#(Depart)#';
-		 			 $("#DepartMent").combobox('setValues',dep.split(","));
+				     for (i=0;i<dep.split(",").length;i++){
+						if (dep.split(",")[i]!="")  sbox.select(dep.split(",")[i]);
+						}
 				},
 				onSelect:function(rec){
 					/*if (rec){
@@ -830,6 +870,55 @@ function Export_click() {
 	    }
 	    appExcel.Visible = true;
 	    appExcel.Workbooks.Add().Worksheets.Item(1).Paste();
+	     $(".stopschedule").each(function(index, sel){
+		    var offSet_X=3;	//偏移量根据项目不同，初始值可能也不同
+		    var offSet_Y=1;
+		    if (!$(sel).siblings("td").hasClass("LocTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    if (!$(sel).siblings("td").hasClass("SessTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    if (!$(sel).siblings("td").hasClass("DocTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    var x=$(sel).parent().index()+offSet_X;
+		    var y=$(sel).index()+offSet_Y;
+		    appExcel.Cells(x,y).Interior.ColorIndex=3;
+	    });
+	    $(".stopregnoschedule").each(function(index, sel){
+		    var offSet_X=3;
+		    var offSet_Y=1;
+		    if (!$(sel).siblings("td").hasClass("LocTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    if (!$(sel).siblings("td").hasClass("SessTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    if (!$(sel).siblings("td").hasClass("DocTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    var x=$(sel).parent().index()+offSet_X;
+		    var y=$(sel).index()+offSet_Y;
+		    console.log(x,y,$(sel).children("label").text(),appExcel.Cells(x,y).value)
+		    appExcel.Cells(x,y).Interior.ColorIndex=38;
+	    });
+	    $(".replaceschecule").each(function(index, sel){
+		    var offSet_X=3;
+		    var offSet_Y=1;
+		    if (!$(sel).siblings("td").hasClass("LocTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    if (!$(sel).siblings("td").hasClass("SessTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    if (!$(sel).siblings("td").hasClass("DocTD")) {
+			    offSet_Y=offSet_Y+1
+		    }
+		    var x=$(sel).parent().index()+offSet_X;
+		    var y=$(sel).index()+offSet_Y;
+		    appExcel.Cells(x,y).Interior.ColorIndex=41
+	    });
 	    appExcel = null;
 	}else{
 		tableToExcel("weekTable");

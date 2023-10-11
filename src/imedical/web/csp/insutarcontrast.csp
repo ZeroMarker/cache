@@ -18,15 +18,15 @@
 
 <HISUI></HISUI>
 <DHCBILL/>
+<ADDINS require="CmdShell"/>
 <script type="text/javascript" src="../scripts/jsonfun.js"></script>
 <!--<style type="text/css">
 	.insudiv { position:absolute; background: #666;left:-1000px;top:-1000px; border: solid 1px #000;z-index:999; display:none}
 </style> tangzf 2019-8-14 -  --> 
-
 <link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
 <script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
 <script type="text/javascript" src="../scripts/INSUExtend.js"></script>
-<script type="text/javascript" src="../scripts/DHCINSUPort.js"></script>
+<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
 
  <style>
 .textbox{
@@ -58,9 +58,9 @@
 	<div class="hisui-layout" data-options="fit:true" >   
    		<div class="hisui-layout" data-options="region:'north'" id='north-panel' >
    			<div data-options="region:'center'" style='padding-right:10px'>
-   				<div data-options="region:'north'" id='searchTablePanel' style="height:167px">
+   				<div data-options="region:'north'" id='searchTablePanel' style="height:166px">
    					<div class="hisui-panel"   data-options="title:'医院目录',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
-   						<table class='search-table' style="width:100%" >
+   						<table id="HisQueryTab" class='search-table' style="width:100%" >
    							<tr>
    								<td class="r-label td-first-col"><label>医保</label></td>
 								<td><input id="insuType" class="textbox"  /></td>
@@ -87,25 +87,25 @@
 				</div>
 			</div>
 			<div  data-options="region:'east'" style='width:500px' > <!-- east -->
-     			<div data-options="region:'north',fit:true"   style="height:167px">
-     				<div class="hisui-panel"    data-options="title:'医保目录(回车查询)',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
+     			<div data-options="region:'north',fit:true"   style="height:166px">
+     				<div class="hisui-panel"    data-options="title:'医保目录(双击可对照)',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
    						<table class='search-table' style="width:100%" >
    							<tr>
-								<td class="r-label td-first-col"><label>医保编码</label></td>
-								<td><input id="InsuCode" class="textbox"/></td>
-								<td class="r-label"><label>医保名称</label></td>
-								<td><input id="InsuDesc"  class="textbox"/></td>
-
+								<td class="r-label td-first-col"><label>查询条件</label></td>
+								<td><input id="right-QClase" class="textbox"/></td>
+								<td class="r-label"><label>关键字</label></td>
+								<td><input id="right-KeyWords" class="textbox" placeholder='输入关键字检索...'/></td>
 							</tr>
    							<tr>
-								<td class="r-label td-first-col"><label>拼音码</label></td>
-								<td><input id="Insurj"  class=" textbox"/></td>
-								<td class="r-label"><label>默认生效日期</label></td>
+								<td class="r-label" style="width:113px"><label>对照默认生效日期</label></td>
 								<td><input id="dd"  class="hisui-datebox  textbox"/></td>
+								<td class="r-label"><label>同步刷新目录</label></td>
+								<td><div id="csconflg" ></div><a href="javascript:;" id="csconflg-tips" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a></td>
 							</tr>
 							<tr>
-								<td class="r-label"><label>批准文号</label></td>
-								<td><input id="PZWH" class="textbox"/></td>
+								<td class="r-label" style="width:113px"><label>失效日期(撤销用)</label></td>
+								<td><input id="canceldate"  placeholder = "默认当天" class="hisui-datebox  textbox"/></td>
+								<td class='r-label' colspan='2' style="text-align:left"><a id="Config"  href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-setting'">界面配置</a></td>
 							</tr>		
    						</table>
    					</div>
@@ -116,7 +116,7 @@
      		</div>								<!-- east -->	
     	</div>
      	<div  data-options="region:'south'" class="south-panel" style='height:210px' id='coninfopanel' >
-     		<div class="hisui-panel" style='padding-top:4px' id='south-panel' data-options="collapsible:true,title:'对照记录',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" >
+     		<div class="hisui-panel" style='padding-top:4px' id='south-panel' data-options="collapsible:true,title:'对照记录(双击可撤销)',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" >
      			<div id="coninfo" ></div>
      		</div>
      	</div>
@@ -127,8 +127,9 @@
 			<tbody>
 				<tr>
 					<td><a href="#" class="hisui-linkbutton" iconCls="icon-search" id="btnFind" plain="true" onClick='Query()' >查询</a></td>
-					<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出</a></td>
 					<td><a href="#" class="hisui-linkbutton" iconCls="icon-upload-cloud" id="btnUpload" plain="true" onClick='Upload()' >上传对照</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnImport" plain="true" onClick='Import("")' >导入对照</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出对照</a></td>
 					<td hidden><a href="#" class="hisui-linkbutton" iconCls="icon-filter" id="btnUpload" plain="true" onClick='autoMatch("Desc")' >名称匹配</a></td>
 					<td hidden><a href="#" class="hisui-linkbutton" iconCls="icon-filter" id="btnUpload" plain="true" onClick='autoMatch("ApprovalNumber")' >批准文号匹配</a></td>
 				</tr>
@@ -140,13 +141,14 @@
 		<table cellspacing="0" cellpadding="0">
 			<tbody>
 				<tr>
-					<!--td><a href="#" class="hisui-linkbutton" iconCls="icon-search" id="btnFind" plain="true" onClick='Query()' >查询</a></td-->
-					<td><span style='font-size:22px;color:blue;'><input class="hisui-checkbox" type="checkbox" style='font-size:22px'data-options="checked:true,boxPosition:'right'" label="是否刷新医保目录" id="csconflg"></span></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-search" id="right-btnFind" plain="true" >查询</a></td>
+					<td><a href="#" class="hisui-linkbutton" iconCls="icon-compare" id="right-btnCon" plain="true"  >对照</a></td>
 				</tr>
 			</tbody>
 		</table>
 	</div>
 	<DHCBILLINSUCloud/>
 	<script type="text/javascript" src="../scripts/insutarcontrast.js"></script>
+</div>
 </body>
 </html>

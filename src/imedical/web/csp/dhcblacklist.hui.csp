@@ -9,6 +9,7 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard"/>
+<DOCCARD medStepCode="BlackList"></DOCCARD>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -28,12 +29,15 @@ td{
 }
 </style>
 <Server>
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+/*w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
 d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)*/
 s CurrDate=##Class(websys.Conversions).DateLogicalToHtml($h)
 s MCurrDate=##Class(websys.Conversions).DateLogicalToHtml($h-30)
+Set LimitAppDays=$p($g(^BlackDateAndCountConfig("Config")),"^",1)
+s FCurrDate=##Class(websys.Conversions).DateLogicalToHtml($h+LimitAppDays)
+s BlackISActiveJson="[{'id':'All','text':'全部'},{'id':'Y','text':'有效'},{'id':'N','text':'无效'}]"
 </Server>
 </head>
 <body>
@@ -43,8 +47,18 @@ s MCurrDate=##Class(websys.Conversions).DateLogicalToHtml($h-30)
 		var ServerObj={
 			CurrDate:"#(CurrDate)#",
 			MCurrDate:"#(MCurrDate)#",
+			FCurrDate:"#(FCurrDate)#",
+			pageCode:"dhcblacklist.hui.csp",
+			pageName:"黑名单维护",
+			ProductLine:"OPAdm",
+			parentPageCode:"",
+			parentPageName:"",
+			MainCSPIsLink:"N",
+			domSelectors:".hisui-numberbox",
+			BlackISActiveJson:"#(BlackISActiveJson)#"
 		};
 	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
 	 <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	 <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
 	 <script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>

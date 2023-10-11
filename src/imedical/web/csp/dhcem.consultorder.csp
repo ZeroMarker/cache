@@ -29,31 +29,47 @@
 </head>
 <body>
 	<div class="hisui-layout" fit="true">
-		<div data-options="region:'center',headerCls:'panel-header-gray',title:''" style="border-left:1px solid #E3E3E3;overflow: hidden;border:0;">
-			<div id="tabsReg" class="hisui-tabs" fit="true">   
-				<div title="#(..Get("Ò½ÖöÂ¼Èë"))#">
+		<div data-options="region:'center',headerCls:'panel-header-gray',title:''" style="border-left:1px solid ;padding:10px;overflow: hidden;border:0;">
+			<div id="tabsReg" class="hisui-tabs tabs-gray" fit="true">   
+				<div title="#(..Get("Ò½ÖöÂ¼Èë"))#" style="overflow:hidden;">
 					<server>
 					s lnk = "oeorder.oplistcustom.new.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&FixedEpisodeID="_EpisodeID_"&EmConsultItm="_EmConsultItm
 					w "<iframe name='dataframe184' src='"_lnk_"' width='100%' height='100%' frameborder='0' scrolling='no'></iframe>"
 					</server>
 				</div>   
-				<div title="#(..Get("²ÝÒ©Â¼Èë"))#" style="overflow:auto;">  
+				<div title="#(..Get("²ÝÒ©Â¼Èë"))#" style="overflow:hidden;">  
 					<iframe src="about:blank" name='CMdataframe' width="100%" min-height="500px" height="100%" frameborder="0"></iframe> 
 					<!--server>
 					s lnk = "opdoc.oeorder.cmlistcustom.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&forceRefresh=true"
 					w "<iframe name='sdfadf' src='"_lnk_"' width='100%' height='100%' frameborder='0' scrolling='no'></iframe>"
 					</server-->
 				</div>
-				
+				<!--
+				<div title="#(..Get("Ò½¼¼Í£Ò½Öö"))#" style="overflow:auto;">  
+					<server>
+					s lnk = "doc.surgeryord.hui.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&FixedEpisodeID="_EpisodeID
+					w "<iframe name='dataframe185' src='"_lnk_"' width='100%' height='100%' frameborder='0' scrolling='no'></iframe>"
+					</server>
+				</div>
+				-->
 				<SERVER>
-			   		s IsObsAdm = ##class(web.DHCADMVisitStat).GetStayStatus(EpisodeID)   ///Áô¹Û×´Ì¬
-			   		i IsObsAdm=1 d
-			   		.;s lnk = "doc.surgeryord.hui.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&EntryFrom="
-			   		.s lnk = "doc.emstopord.hui.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&EntryFrom="
-			   		.W "<div title='"_##class(websys.Translation).Get("dhcem.consultorder.csp","Áô¹ÛÍ£Ò½Öö")_"' style='overflow:auto;'>"
-			   		.w "<iframe name='dataframe185' src='"_lnk_"' width='100%' height='100%' frameborder='0' scrolling='no'></iframe>"
-			   		.w "</div>"
+			   		;s IsObsAdm = ##class(web.DHCADMVisitStat).GetStayStatus(EpisodeID)   ///Áô¹Û×´Ì¬
+			   		;s OrdType=$P(^PAADM(EpisodeID),"^",2)
+			   		;i (OrdType="E")||(OrdType="O") d
+			   		
+			   		;s lnk = "about:blank" ;"doc.emstopord.hui.csp?PatientID="_PatientID_"&EpisodeID="_EpisodeID_"&mradm="_mradm_"&EntryFrom="
+			   		;W "<div title='"_##class(websys.Translation).Get("dhcem.consultorder.csp","Í£Ò½Öö")_"' style='overflow-y:hidden;'>"
+			   		;w "<iframe name='dataframe185' src='"_lnk_"' width='100%' height='100%' frameborder='0' scrolling='no'></iframe>"
+			   		;w "</div>"
 			   </SERVER>  
+			   <!--
+			   <div title="#(..Get("Í£Ò½Öö(¼±ÕïÍ£³¤Öö)"))#" style="overflow:auto;">  
+					<iframe src="about:blank" name='CMdataframe1' width="100%" min-height="500px" height="100%" frameborder="0"></iframe> 
+				</div>
+				-->
+				<div title="#(..Get("Í£Ò½Öö"))#" style="overflow:hidden;padding:10px">  
+					<iframe src="about:blank" name='CMdataframe2' width="100%" min-height="500px" height="100%" frameborder="0"></iframe> 
+				</div>
 			</div>
 		</div>
 		<div data-options="region:'south',border:true" style="border:0px;display:none;">

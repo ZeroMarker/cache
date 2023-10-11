@@ -1,0 +1,1186 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	.datagrid-sort-icon{
+		display:none !important;	
+	}
+	#templateArea {
+			margin:5px 5px 5px 5px;
+			width: -webkit-fill-available;
+			height: 80%;
+			border:1px
+			solid #bbb
+		}
+	#addDisplaceMark {
+            position: absolute;
+            display: none;
+            padding: 10px;
+            width: 100px;
+            background: #e0edf7;
+            border-radius: 6px;
+        }
+
+    #addDisplaceMark::before {
+	        content: "";
+	        position: relative;
+	        top: -20px;
+	        left: 5px;
+	        width: 0;
+	        height: 0;
+	        display: block;
+	        border-left: 10px solid transparent;
+	        border-right: 10px solid transparent;
+	        border-bottom: 10px solid #e0edf7;
+    }
+    #addDisplace {
+            position: absolute;
+            display: none;
+            padding: 10px;
+            width: 250px;
+            background: #e0edf7;
+            border-radius: 6px;
+        }
+
+    #addDisplace::before {
+	        content: "";
+	        position: relative;
+	        top: -20px;
+	        left: 50px;
+	        width: 0;
+	        height: 0;
+	        display: block;
+	        border-left: 10px solid transparent;
+	        border-right: 10px solid transparent;
+	        border-bottom: 10px solid #e0edf7;
+    }
+</style>
+<script language="javascript">
+	   var x=window.innerWidth;
+	   var y=window.innerHeight;
+       function resizeFresh(){
+        	if(x!=window.innerWidth||y!=window.innerHeight){
+            	location.reload()
+        	}
+        	$('#Loading').show()
+       }
+       $(document).ready(function(){
+		$("#AM").mouseover(function(){
+			$("#addDisplaceMark").show();
+		$("#AM").mouseout(function(){
+			$("#addDisplaceMark").hide();
+		});
+	});
+		$("#AD").mouseover(function(){
+			$("#addDisplace").show();
+		$("#AD").mouseout(function(){
+			$("#addDisplace").hide();
+		});
+	});
+})
+	</script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	 <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-cellediting.js"></script>
+
+</head>
+<body onresize="resizeFresh()">
+	<div id="Loading" hidden="hidden" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:0.5;">
+		<div class="msg">#(..Get("正在加载数据……"))#</div>
+	</div>	
+	<div class="hisui-layout" data-options="fit:true,border:false">
+			<div data-options="region:'north',border:false" style="height:40px;padding-top:5px;">
+				<label id="_HospListLabel" style='color:red;' class='r-label'>#(..Get("医院"))#</label>
+				<input id="_HospList" class="textbox"/>
+			</div>		
+			<div data-options="fit:true,region:'center',border:false,collapsible:true,split:true">
+					<table style="width:100%;height:90%;" data-options="border:false">
+						<tr>
+							<td colspan="2" style="height:55%;width:100%;vertical-align: top;padding-left:10px;padding-right:10px;padding-bottom:5px;">
+							  <div class="hisui-panel" title=#(..Get("数据引入类型"))# style="width:100%;padding-top: 0" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+								<table id="shiftBookGroup" data-options="fit:true,border:false"style="width:100%;"></table>
+							  </div>
+							</td>
+						</tr>
+						<tr>
+							<td style="width:50%;vertical-align: top;padding-left:10px;padding-right:10px;" data-options="fit:true">
+							  	<div class="hisui-panel" id="templateSet" title=#(..Get("内容配置"))# data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+									<table id="shiftBookGroup1" data-options="border:false"></table>
+								</div>
+							</td>
+							<td style="width:50%;vertical-align: top;padding-right:10px;" data-options="fit:true">
+								<div class="hisui-panel" id="templateSet" title=#(..Get("模板配置"))# data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+									<table cellpadding="0" cellspacing="0" border="0">
+										<tr>
+											<td class="selfBtn">
+												<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="AM" onclick="addDisplaceMark();">
+													<span class="l-btn" style="height: 21.3px;">
+														<span class="l-btn-text" style="line-height: 21.3px;">{}</span>
+													</span>
+												</a>
+												<div class="content" id="addDisplaceMark">
+        											<span>#(..Get("点击”{}“符号引入关联字段"))#</span>
+   												</div>
+												<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="AD" onclick="addDisplace();">
+													<span class="l-btn" style="height: 21.3px;">
+														<span class="l-btn-text" style="line-height: 21.3px;">@</span>
+													</span>
+												</a>
+												<div class="content1" id ="addDisplace">
+        											<span>#(..Get("所有需配置的内容需用“@”符号包裹起来，如@引入内容1{关联字段1}@引入内容2{关联字段2}@，其中引入内容为自定义"))#</span>
+   												</div>
+											</td>
+											<td class="selfBtn">
+												<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="" onclick="saveTemplate();">
+													<span class="l-btn-left l-btn-icon-left">
+														<span class="l-btn-text">#(..Get("保存"))#</span>
+														<span class="l-btn-icon icon-save">&nbsp;</span>
+													</span>
+												</a>
+											</td>
+										</tr>
+									</table>
+									<textarea data-options="fit:true" id="templateArea" style="resize: none;box-sizing: border-box;"></textarea>
+								</div>					
+							</td>
+						</tr>
+					</table>
+			</div>
+	</div>
+</body>
+
+<script type="text/javascript">
+var GLOBAL = {
+	HospEnvironment: true,
+	HospitalID: session['LOGON.HOSPID']
+};
+$(function(){
+	$('body').addClass('active')
+	shiftBookGroup.datagrid()
+	referConfig.datagrid()
+    initHosp()
+})
+var referConfig={
+	gid:"#shiftBookGroup1",
+	datagrid:function(){	
+		var ToolBar = [{
+            text: $g('新增'),
+            iconCls: 'icon-add',
+            handler: function() {
+	            var index=$(referConfig.gid).datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:$g('请先保存数据后，进行新增操作'),type:'error'});
+					return false;
+				}
+				var selected = $(shiftBookGroup.gid).datagrid('getSelected')
+				var Len=$(referConfig.gid).datagrid("getRows").length;
+				if(selected){
+				$(referConfig.gid).datagrid("insertRow",{
+					index: Len,
+					row: {
+						id:""
+					}
+				});
+				}
+				else{
+					$.messager.popover({msg:$g('请先选择数据引入类型中的行！'),type:'alert'})
+					}
+				$(referConfig.gid).datagrid("beginEdit", Len);
+				var Editors=$(referConfig.gid).datagrid("getEditors",Len);
+				$(referConfig.gid).datagrid("scrollTo", Len);
+				$(referConfig.gid).datagrid("selectRow", Len);
+				$(Editors[3].target).attr('disabled',true)
+				var index=$(referConfig.gid).datagrid('getEditingRowIndex');
+				var SortNo = index+1
+				$(Editors[3].target).val(SortNo)
+				var selected = $(shiftBookGroup.gid).datagrid('getSelected')
+				var ParRef = selected.TabID
+				$(Editors[2].target).combobox({
+					onSelect:function(record){
+						var rows = $(referConfig.gid).datagrid('getRows');
+						$(Editors[0].target).val(record.value)
+						$(Editors[0].target).attr('disabled',true)
+						for(var i=0;i<rows.length;i++){
+							if(rows[i].Field==record.text){
+								$.messager.popover({msg:$g('该字段已选择,请重新选择字段！'),type:'error'});
+								$(Editors[0].target).val("")
+								$(Editors[2].target).combobox()
+								}
+						}
+						
+						}
+					})
+				reloadDetailList(referConfig.gid,Len,"Field","","Nur.SHIFT.Emr.RefSetting","FindReferPropertyList",{"ParRef":ParRef})
+            }
+        },{
+            text: $g('保存'),
+            iconCls: 'icon-save',
+            handler: function() {	            
+				var index=$(referConfig.gid).datagrid('getEditingRowIndex');			
+	            var rowEditors=$(referConfig.gid).datagrid('getEditors',index);
+	            var row=$(referConfig.gid).datagrid('getRow',index);
+	            var selected = $(shiftBookGroup.gid).datagrid('getSelected')
+	            var rows = $(referConfig.gid).datagrid('getSelections')
+	            var rtnParms={}
+	            if(rows.length==1){
+		            var ID = selected.TabID
+					rtnParms.id=row.ID
+					rtnParms.ShiftDataTabID=ID
+					rtnParms.ContentName=$(rowEditors[1].target).val();
+					rtnParms.Field=$(rowEditors[2].target).combobox('getText');
+					rtnParms.ContentID=$(rowEditors[2].target).combobox('getValue');
+					rtnParms.SortNo=$(rowEditors[3].target).val();
+					if(!rtnParms.ContentID){
+						$.messager.popover({msg:$g('请选择关联字段！'), type: 'alert' });
+						return;
+						}
+					runClassMethod("Nur.SHIFT.Emr.RefSetting","saveProper",{data:JSON.stringify(rtnParms)},function(rtn){
+						if(rtn == 0) {
+							$.messager.popover({msg:$g('保存成功'),type:'success'});
+							runClassMethod("Nur.SHIFT.Emr.RefSetting","GetProperList",{"ID":ID},function(rtn){
+								$(referConfig.gid).datagrid("unselectAll");
+								$(referConfig.gid).datagrid('loadData', rtn)
+							})
+						}				
+					},'json',false);
+	            
+            	}
+            	else{
+	            	$.messager.popover({msg:$g('无需保存的信息！'), type: 'error' });
+	            	}
+            
+            }
+        },{
+            text: $g('删除'),
+            iconCls: 'icon-cancel',
+            handler: function() {
+	            var selected = $(referConfig.gid).datagrid("getSelected");
+	            if (!selected) {
+						$.messager.popover({msg:$g('请选择需要删除的记录！'),type:'error'});
+						return false;
+					}
+					var rowID=selected.ID;
+					if (rowID) {
+								$.messager.confirm($g("警告"), $g("确定要删除此条配置数据吗？"), function (r) {
+									if(r){
+										$cm({
+											ClassName:'Nur.SHIFT.Emr.RefSetting',
+											MethodName:'DeleteProperByID',
+											ID:rowID
+											},function(data){
+												if(0==data){
+													$.messager.popover({msg: $g('删除成功！'),type:'success'});
+													referConfig.loadData()
+													$(referConfig.gid).datagrid("unselectAll");
+													}
+												else {
+									    		$.messager.popover({msg: JSON.stringify(data),type:'alert'});
+									    	}
+												});
+									}
+								});
+					}else{
+						$.messager.popover({msg: $g('请先选择要删除的行！'),type:'alert'});
+					}
+	            }
+        },{
+	        text:$g("上移"),
+	        iconCls: 'icon-arrow-top',
+	        handler:function(){
+		        var rows = $(referConfig.gid).datagrid("getSelections");
+		        var selected = $(shiftBookGroup.gid).datagrid("getSelected")
+				if (rows.length == 1) {
+					var ID=selected.TabID
+					var step = -1;
+					var objParam = { "TabID":ID, "RowID": rows[0].ID, "Step": step };
+					$cm({
+						ClassName: 'Nur.SHIFT.Emr.RefSetting',
+						MethodName: 'moveProper',
+						dataType: "text",
+						param: JSON.stringify(objParam)
+					}, function (result) {
+						if (result == '0') {
+							runClassMethod("Nur.SHIFT.Emr.RefSetting","GetProperList",{"ID":ID},function(rtn){
+								$(referConfig.gid).datagrid("selectRecord", rows[0].ID);	
+								$(referConfig.gid).datagrid('loadData', rtn)
+							})
+				
+						} else {
+							$.messager.popover({ msg: result, type: "error" });
+						}
+					});
+				} else {
+					$.messager.popover({ msg: $g("请选择要移动的配置数据！"), type: "alert" });
+				}
+		        }
+	    },{
+	        text:$g("下移"),
+	        iconCls: 'icon-arrow-bottom',
+	        handler:function(){
+		        var rows = $(referConfig.gid).datagrid("getSelections");
+		        var selected = $(shiftBookGroup.gid).datagrid("getSelected")
+				if (rows.length == 1) {
+					var ID=selected.TabID
+					var step = 1;
+					var objParam = { "TabID":ID, "RowID": rows[0].ID, "Step": step };
+					$cm({
+						ClassName: 'Nur.SHIFT.Emr.RefSetting',
+						MethodName: 'moveProper',
+						dataType: "text",
+						param: JSON.stringify(objParam)
+					}, function (result) {
+						if (result == '0') {
+							runClassMethod("Nur.SHIFT.Emr.RefSetting","GetProperList",{"ID":ID},function(rtn){
+								$(referConfig.gid).datagrid("selectRecord", rows[0].ID);	
+								$(referConfig.gid).datagrid('loadData', rtn)
+							})
+				
+						} else {
+							$.messager.popover({ msg: result, type: "error" });
+						}
+					});
+				} else {
+					$.messager.popover({ msg: $g("请选择要移动的配置数据！"), type: "alert" });
+				}
+		        }
+	    }];
+		
+		$(referConfig.gid).datagrid({
+			fit:true,
+			singleSelect : true,
+			fitColumns:true,
+			idField:"ID",
+			toolbar :ToolBar,
+			remoteSort:false,  
+    		sortName:'SortNo',  
+   		 	sortOrder:'asc',
+			onDblClickRow:function(rowIndex, rowData){
+				var index=$(referConfig.gid).datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:$g('请先保存数据后，进行新增操作'),type:'error'});
+					return false;
+				}
+				
+				$(referConfig.gid).datagrid("beginEdit", rowIndex);
+				var Editors=$(referConfig.gid).datagrid("getEditors",rowIndex);
+				$(Editors[0].target).focus();
+				$(Editors[0].target).attr('disabled',true)
+				$(Editors[3].target).attr('disabled',true)
+				$(Editors[2].target).combobox({
+					onSelect:function(record){
+						$(Editors[0].target).val(record.value)
+						}
+					})
+				var selected = $(shiftBookGroup.gid).datagrid('getSelected')
+				var ParRef = selected.TabID
+				reloadDetailList(referConfig.gid,rowIndex,"Field",rowData.Field,"Nur.SHIFT.Emr.RefSetting","FindReferPropertyList",{"ParRef":ParRef})
+			},
+			rownumbers : true,
+			columns :[[
+
+				{field:'ContentID',title:$g('引入内容Id'),editor:{type:'text'},width:100},
+				{field:'ContentName',title:$g('引入内容名称'),editor:{type:'text'},width:100},
+				{field:'Field',title:$g('关联字段'),width:110,editor:{
+					type:'combobox',
+							options:{
+								multiple:false,
+								valueField:'value',
+								textField:'text',
+								placeholder:$g("请选择关联字段"),
+							}
+				}},
+				{field:'SortNo',title:$g('排序'),editor:{type:'text'},width:100},
+			]]
+		});	
+	  
+
+		
+	},
+	
+	loadData:function(){
+		var selected = $(shiftBookGroup.gid).datagrid('getSelected')
+		var ID = selected.TabID
+		runClassMethod("Nur.SHIFT.Emr.RefSetting","GetProperList",{"ID":ID},function(rtn){
+			$(referConfig.gid).datagrid("unselectAll");
+			$(referConfig.gid).datagrid('loadData', rtn)
+		},'json',true)
+	}
+
+}
+
+
+
+var shiftBookGroup={
+	gid:"#shiftBookGroup",
+	datagrid:function(){		
+		var ToolBar = [{
+            text: $g('新增'),
+            iconCls: 'icon-add',
+            handler: function() {
+	            var index=$(shiftBookGroup.gid).datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:$g('请先保存数据后，进行新增操作'),type:'error'});
+					return false;
+				}
+				var Len=$(shiftBookGroup.gid).datagrid("getRows").length;
+				$(shiftBookGroup.gid).datagrid("insertRow",{
+					index: Len,
+					row: {
+						id:""
+					}
+				});
+				$(shiftBookGroup.gid).datagrid("scrollTo", Len);
+				$(shiftBookGroup.gid).datagrid("beginEdit", Len);
+				$(shiftBookGroup.gid).datagrid("selectRow", Len);
+				var Editors=$(shiftBookGroup.gid).datagrid("getEditors",Len);
+				$(Editors[0].target).attr('placeholder',$g("输入页签id"));
+				$(Editors[1].target).attr('placeholder',$g("输入页签描述"));
+				$(Editors[2].target).attr('placeholder',$g("输入页签缩写"));
+				$(Editors[5].target).attr('placeholder',$g("输入病历code"));
+				$(Editors[4].target).combobox('disable')
+				$(Editors[5].target).attr('disabled', true)
+				$(Editors[8].target).attr('disabled',true)
+				var index=$(shiftBookGroup.gid).datagrid('getEditingRowIndex');
+				var SortNo = index+1
+				$(Editors[8].target).val(SortNo)
+				$(Editors[9].target).checkbox({checked:true})
+				reloadDetailList(shiftBookGroup.gid,Len,"TabType","","Nur.SHIFT.Emr.RefSetting","FindReferDataList",{HospitalID:"2"})
+				getallWardNew(Len,"RuleLocs","")
+				getallWardNew(Len,"RuleInvalidLocs","")
+				$(Editors[3].target).combobox({
+					onSelect:function()
+					{
+						var rows = $(shiftBookGroup.gid).datagrid('getRows');
+						var value=$(Editors[3].target).combobox('getValue')
+						if(value==9){
+							$(Editors[4].target).combobox('enable')
+							$(Editors[5].target).attr('disabled', false)
+							}
+						for(var i=0;i<rows.length;i++){
+							if(rows[i].TabID==value){
+								$.messager.popover({msg:'该页签已选择,请重新选择页签！',type:'error'});
+								$(Editors[0].target).val("")
+								$(Editors[3].target).combobox()
+								}
+						}
+					}
+					})
+
+            }
+        },{
+            text: $g('保存'),
+            iconCls: 'icon-save',
+            handler: function() {
+				var index=$(shiftBookGroup.gid).datagrid('getEditingRowIndex');				
+	            var rowEditors=$(shiftBookGroup.gid).datagrid('getEditors',index);
+	            var row=$(shiftBookGroup.gid).datagrid('getRow',index);
+	            var rows = $(shiftBookGroup.gid).datagrid('getSelections')
+	            var rtnParms={}
+	            if(rows.length==1){
+					rtnParms.id=row.ID
+					rtnParms.TID=$(rowEditors[0].target).val();
+					rtnParms.TabDesc=$(rowEditors[1].target).val();
+					rtnParms.TabName=$(rowEditors[2].target).val();
+					rtnParms.TabType=$(rowEditors[3].target).combobox('getText');
+					if(rtnParms.TabType==""){
+						return false
+						}
+					rtnParms.EmrVer=$(rowEditors[4].target).combobox('getValue');
+					rtnParms.EmrCode=$(rowEditors[5].target).val();
+					var text = $(rowEditors[6].target).combobox('getText');
+					if(text=="")
+					{
+						rtnParms.RuleLocs="全院"
+					}
+					else{
+					rtnParms.RuleLocs=$(rowEditors[6].target).combobox('getText');
+					}
+					rtnParms.RuleInvalidLocs=$(rowEditors[7].target).combobox('getText');
+					if(rtnParms.RuleInvalidLocs.includes(rtnParms.RuleLocs)){
+						$.messager.popover({msg:$g('适用范围与不适用范围重复！'), type: 'error' });
+						return false
+						}
+//					var str1=(rtnParms.RuleLocs).split(",")
+//					var str2=(rtnParms.RuleInvalidLocs).split(",")
+//					console.log(str1)
+//					console.log(str2)
+					rtnParms.SortNo=$(rowEditors[8].target).val();
+					if($(rowEditors[9].target).checkbox('getValue')==true)
+					{
+					rtnParms.ActiveFlag=1	
+					}
+					else{
+						rtnParms.ActiveFlag=0
+						}
+					var TabID = $(rowEditors[3].target).combobox('getValue');
+					var selected=$(shiftBookGroup.gid).datagrid("getSelected");
+					if(isNaN(TabID))
+					{
+						rtnParms.TabID=selected.TabID
+					}
+					else{
+					rtnParms.TabID=TabID
+					}
+					rtnParms.HospitalID=GLOBAL.HospitalID;
+					rtnParms.WardType="W"
+					runClassMethod("Nur.SHIFT.Emr.RefSetting","saveTabs",{data:JSON.stringify(rtnParms)},function(rtn){
+						if(rtn == 0) {
+							$.messager.popover({msg:$g('保存成功'),type:'success'});
+							runClassMethod("Nur.SHIFT.Emr.RefSetting","GetTabsList",{HospitalID:GLOBAL.HospitalID},function(rtn){
+								$(shiftBookGroup.gid).datagrid("unselectAll");
+								$(shiftBookGroup.gid).datagrid('loadData', rtn)
+							})
+						}
+					
+					},'json',false);
+	            }else{
+		            $.messager.popover({msg:$g('无需要保存的记录!'), type: 'error' });
+		            } 
+            }
+        },{
+            text: $g('删除'),
+            iconCls: 'icon-cancel',
+            handler: function() {
+	            var selected = $(shiftBookGroup.gid).datagrid("getSelected");
+	            if (!selected) {
+					$.messager.popover({msg:'请选择需要删除的记录！',type:'error'});
+					return false;
+				}
+				var rowID=selected.ID;
+				if (rowID) {
+					$.messager.confirm($g("警告"), $g("确定要删除此条配置数据吗？"), function (r) {
+						if(r){
+								$cm({
+									ClassName:'Nur.SHIFT.Emr.RefSetting',
+									MethodName:'DeleteTabByID',
+									ID:rowID
+									},function(data){
+										if(0==data){
+											$.messager.popover({msg: $g('删除成功！'),type:'success'});
+											runClassMethod("Nur.SHIFT.Emr.RefSetting","GetTabsList",{HospitalID:GLOBAL.HospitalID},function(rtn){
+												$(shiftBookGroup.gid).datagrid('loadData', rtn)
+									})
+											$(shiftBookGroup.gid).datagrid('unselectAll')
+											runClassMethod("Nur.SHIFT.Emr.RefSetting","GetProperList",{},function(rtn){
+												$(referConfig.gid).datagrid('loadData', rtn)
+									},"json",false)
+											$("#templateArea").val("")
+											}
+										else {
+							    		$.messager.popover({msg: JSON.stringify(data),type:'alert'});
+							    	}
+										});
+						}
+					});
+				}else{
+					$.messager.popover({msg: $g('请先选择要删除的行！'),type:'alert'});
+				}
+            }
+        },{
+	        text:$g('上移'),
+	        iconCls:'icon-arrow-top',
+	        handler: function(){
+		        var rows = $(shiftBookGroup.gid).datagrid("getSelections");
+				if (rows.length == 1) {
+					var step = -1;
+					var objParam = { "HospDr":GLOBAL.HospitalID, "RowID": rows[0].ID, "Step": step };
+					$cm({
+						ClassName: 'Nur.SHIFT.Emr.RefSetting',
+						MethodName: 'MoveTabs',
+						dataType: "text",
+						Param: JSON.stringify(objParam)
+					}, function (result) {
+						if (result == '0') {
+							runClassMethod("Nur.SHIFT.Emr.RefSetting","GetTabsList",{HospitalID:GLOBAL.HospitalID},function(rtn){
+//								$(shiftBookGroup.gid).datagrid("unselectAll");
+								$(shiftBookGroup.gid).datagrid("selectRecord", rows[0].ID);	
+								$(shiftBookGroup.gid).datagrid('loadData', rtn)
+							})
+				
+						} else {
+							$.messager.popover({ msg: result, type: "error" });
+						}
+					});
+				} else {
+					$.messager.popover({ msg: $g("请选择要移动的配置数据！"), type: "alert" });
+				}
+		        }
+	    },{
+		    text:$g('下移'),
+		    iconCls:'icon-arrow-bottom',
+		    handler:function(){
+		        var rows = $(shiftBookGroup.gid).datagrid("getSelections");
+				if (rows.length == 1) {
+					var step = 1;
+					var objParam = { "HospDr":GLOBAL.HospitalID, "RowID": rows[0].ID, "Step": step };
+					$cm({
+						ClassName: 'Nur.SHIFT.Emr.RefSetting',
+						MethodName: 'MoveTabs',
+						dataType: "text",
+						Param: JSON.stringify(objParam)
+					}, function (result) {
+						if (result == '0') {
+							runClassMethod("Nur.SHIFT.Emr.RefSetting","GetTabsList",{HospitalID:GLOBAL.HospitalID},function(rtn){
+//								$(shiftBookGroup.gid).datagrid("unselectAll");
+								$(shiftBookGroup.gid).datagrid("selectRecord", rows[0].ID);	
+								$(shiftBookGroup.gid).datagrid('loadData', rtn)
+							})
+				
+						} else {
+							$.messager.popover({ msg: result, type: "error" });
+						}
+					});
+				} else {
+					$.messager.popover({ msg: $g("请选择要移动的配置数据！"), type: "alert" });
+				}
+		        }
+		        }];
+		
+		$(shiftBookGroup.gid).datagrid({
+			fit:true,
+			singleSelect: true,
+			fitColumns:true,
+			idField:"ID",
+			toolbar :ToolBar,
+			remoteSort:false, 
+    		sortName:'SortNo',  
+   		 	sortOrder:'asc',
+			onClickRow:function(rowIndex, rowData){
+				referConfig.loadData()
+				getTemplateSetData()
+			},
+			rowStyler: function (rowIndex, rowData) {
+				if (rowData.ActiveFlag == 0) {
+					return 'font-style:italic;color:gray;';
+				}
+			},
+			onDblClickRow:function(rowIndex, rowData){
+				var index=$(shiftBookGroup.gid).datagrid('getEditingRowIndex');
+				if(index>=0){
+					$.messager.popover({msg:$g('请先保存数据后，进行新增操作'),type:'error'});
+					return false;
+				}
+				$(shiftBookGroup.gid).datagrid("beginEdit", rowIndex);
+				var Editors=$(shiftBookGroup.gid).datagrid("getEditors",rowIndex);
+				$(Editors[0].target).focus();
+				$(Editors[8].target).attr('disabled',true)
+				var selected=$(shiftBookGroup.gid).datagrid("getSelected");
+				var value=selected.TabID
+				if(value!=9)
+				{
+					$(Editors[4].target).combobox('disable')
+					$(Editors[5].target).attr('disabled', true)
+				}
+				console.log(rowData)
+				reloadDetailList(shiftBookGroup.gid,rowIndex,"TabType",rowData.TabType,"Nur.SHIFT.Emr.RefSetting","FindReferDataList",{HospitalID:"2"})
+				if(rowData.RuleLocs=="全院")
+				{
+					getallWardNew(rowIndex,"RuleLocs","")
+				}
+				else{
+					getallWardNew(rowIndex,"RuleLocs",rowData.RuleLocs)
+					}
+				if(typeof rowData.RuleInvalidLocs=="undefined"){
+					getallWardNew(rowIndex,"RuleInvalidLocs","")
+					}
+				else{
+					getallWardNew(rowIndex,"RuleInvalidLocs",rowData.RuleInvalidLocs)
+					}
+			    $(Editors[3].target).combobox({
+					onSelect:function()
+					{
+						var value=$(Editors[3].target).combobox('getValue')
+						if(value==9){
+							$(Editors[4].target).combobox('enable')
+							$(Editors[5].target).attr('disabled', false)
+						}
+//						$(Editors[0].target).val(value)
+					}
+					})
+			},
+			rownumbers : true,
+			columns :[[		
+					{field:'TID',title:$g('页签Id'),editor:{type:'text'},width:100},
+					{field:'TabDesc',title:$g('页签描述'),editor:{type:'text'},width:100},
+					{field:'TabName',title:$g('页签缩写'),editor:{type:'text'},width:100},
+					{field:'TabType',title:$g('页签类型'),width:120,editor:{
+							type:'combobox',
+							options:{
+								multiple:false,
+								valueField:'value',
+								textField:'text',
+								placeholder:$g("请选择页签类型"),
+							}
+						}},
+					{field:'EmrVer',title:$g('病历版本'),width:100,formatter:function(value,row){
+						if("N"==value)
+						{
+							return $g("新版")
+						}else if("O"==value)
+						{
+							return $g("旧版")
+						}else
+						{
+							return ""
+						}
+						},editor:{
+							type:'combobox',
+							options:{
+								multiple:false,
+								valueField:'value',
+								textField:'text',
+								data:[{text:$g('新版'),value:'N'},{text:$g('旧版'),value:'O'}],
+								placeholder:$g("请选择病历版本"),
+							}
+						}},
+					{field:'EmrCode',title:$g('病历code'),editor:{type:'text'},width:100},
+					{field:'RuleLocs',title:$g('适用范围'),width:100,editor:{
+							type:'combobox',
+							options:{
+								multiple:true,
+								valueField:'value',
+								textField:'text',
+								placeholder:$g("默认全院"),
+							}
+						}},
+					{field:'RuleInvalidLocs',title:$g('不适用范围'),width:100,editor:{
+										type:'combobox',
+										options:{
+											multiple:true,
+											valueField:'value',
+											textField:'text',
+											placeholder:$g("请选择"),
+										}
+									}},
+					{field:'SortNo',title:$g('排序'),editor:{type:'text'},width:100},
+					{field:'ActiveFlag',title:$g('是否启用'),formatter:function(value,row){
+				return (1==value)?$g('是'):$g('否');
+			},editor:{
+						type:'checkbox',
+						options:{
+							on:1,
+							off:0
+							}
+					}},		
+	
+					]]
+				
+			});	
+	  
+	  
+		runClassMethod("Nur.SHIFT.Emr.RefSetting","GetTabsList",{HospitalID:GLOBAL.HospitalID},function(rtn){
+			$(shiftBookGroup.gid).datagrid("unselectAll");
+			$(shiftBookGroup.gid).datagrid('loadData', rtn)
+		},"json",false)
+	},
+	
+}
+function reloadDetailList(gid,rowIndex,rowField,value,className,methodName,parmas){
+	runClassMethod(className,methodName,parmas,function(rtn){
+		
+		var rowSpanData=[]
+		var Editor = $(gid).datagrid('getEditor', {
+			index : rowIndex,  
+			field : rowField  
+	    });
+		var flag=0		
+		for(var i=0;i<rtn.length;i++){
+			var json={}
+			json.text=rtn[i].text
+			json.value=rtn[i].value
+			json.csp=rtn[i].csp
+			rowSpanData.push(json)
+		}
+		$(Editor.target).combobox({
+			data:rowSpanData,
+			width:$(Editor.target).parentsUntil('tr')[0].offsetWidth
+		}).combobox('setValue',value);
+	},'json',true);	
+}
+$.extend($.fn.datagrid.methods, {
+	getEditingRowIndexs: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var indexs = [];
+		rows.each(function (i, row) {
+			var index = row.sectionRowIndex;
+			if (indexs.indexOf(index) == -1) {
+				indexs.push(index);
+			}
+		});
+		return indexs;
+	},
+	getEditingRowIndex: function (jq) {
+		var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+		var index = -1;
+		rows.each(function (i, row) {
+			index = row.sectionRowIndex;
+			
+		});
+		return index;
+	},
+	
+});
+var selectDIIndex,editDIIndex,hospComp,hospID,wardList,diTableData,wardID,wardDescObj={},fieldListAssemble={},fieldObj={},
+diTableData={"total":0,"rows":[]};
+var selectCSIndex,editCSIndex,csTableData;
+csTableData={"total":0,"rows":[]}
+// 添加置换符
+function addDisplaceMark() { 
+	var row = $(referConfig.gid).datagrid('getSelected')
+	if (!row) {
+		$.messager.alert($g("提示"),$g("请选择一条字段！"));
+		return false;
+	}
+	var focuIndex=$("#templateArea").getCurPos()
+	var text="{"+row.ContentID+"}";
+	console.log(text)
+	var oldText=$("#templateArea").val()	
+	var newText=oldText+text
+	var aaa=0
+	if(focuIndex>=0){
+		newText=oldText.slice(0,focuIndex) + text + oldText.slice(focuIndex)
+		aaa=parseInt(focuIndex)+text.length
+		
+		var leftCount=0,rightCount=0
+		for(var i=focuIndex;i>=0;i--){
+			var a=(oldText.slice(i-1,i))
+			if(a=="{"){
+				leftCount=leftCount+1
+			}
+			if(a=="}"){
+				rightCount=rightCount+1
+			}
+		}
+		if(rightCount!=leftCount){
+			
+			$("#templateArea").setCurPos(focuIndex,focuIndex)
+			//$.messager.alert("提示","请在其他");
+			$.messager.popover({msg:$g('当前位置无法插入'),type:'error'});
+			return false;	
+		}
+		
+		
+		//alert(aaa)
+	}
+	
+	insertText($("#templateArea")[0],text)	
+	$("#templateArea").setCurPos(aaa,aaa)
+//	$("#templateArea").val(aaa)
+}
+
+function addDisplace() {
+	var row = $(referConfig.gid).datagrid('getSelected')
+	if (!row) {
+		$.messager.alert($g("提示"),$g("请选择一条字段！"));
+		return false;
+	}
+	var focuIndex=$("#templateArea").getCurPos()
+	var text="{"+row.ContentID+"}";
+	console.log(text)
+	var oldText=$("#templateArea").val()	
+	var newText=oldText+text
+	var aaa=0
+	if(focuIndex>=0){
+		newText=oldText.slice(0,focuIndex) + text + oldText.slice(focuIndex)
+		aaa=parseInt(focuIndex)+text.length
+		
+		var leftCount=0,rightCount=0
+		for(var i=focuIndex;i>=0;i--){
+			var a=(oldText.slice(i-1,i))
+			if(a=="{"){
+				leftCount=leftCount+1
+			}
+			if(a=="}"){
+				rightCount=rightCount+1
+			}
+		}
+		if(rightCount!=leftCount){
+			
+			$("#templateArea").setCurPos(focuIndex,focuIndex)
+			//$.messager.alert("提示","请在其他");
+			$.messager.popover({msg:$g('当前位置无法插入'),type:'error'});
+			return false;	
+		}
+		
+		
+		//alert(aaa)
+	}
+	insertText($("#templateArea")[0],"@")
+}
+
+function getTemplateSetData() {
+	var pRow=$(shiftBookGroup.gid).datagrid('getSelected')
+	if (!pRow||!pRow.ID) {
+    	$("#templateArea").val('');
+    	return;
+	} 
+  $cm({
+    ClassName: 'Nur.SHIFT.Emr.RefSetting',
+    MethodName: 'GetShiftDataTabTemplate',
+    dataType: "text",
+    id: pRow.TabID,
+    HospitalID:GLOBAL.HospitalID
+  }, function (data) {
+  	$("#templateArea").val(data)
+  });
+}
+function saveTemplate() {
+	var pRow = $(shiftBookGroup.gid).datagrid('getSelected');
+	if (!pRow) {
+		return $.messager.popover({msg: $g('请先选择数据引入类型中的行！'),type:'alert'});
+	}
+	if (!pRow.ID) {
+		return $.messager.popover({msg: $g('请先保存选中的行！'),type:'alert'});
+	}
+	console.log(pRow)
+    $cm({
+        ClassName: 'Nur.SHIFT.Emr.RefSetting',
+        MethodName: 'saveShiftDataTabTemplate',
+        dataType:"text",
+        id: pRow.ID,
+        data:$("#templateArea").val()
+    }, function (data) {
+    	console.log(data);
+    	if (0==data) {
+    		$.messager.popover({msg: $g('模板保存成功！'),type:'success'});
+    	} else {
+    		$.messager.popover({msg: JSON.stringify(data),type:'alert'});
+    	}
+    });
+}
+function insertText(obj,str) {
+  if (document.selection) {
+    var sel = document.selection.createRange();
+    sel.text = str;
+  } else if (typeof obj.selectionStart === 'number' && typeof obj.selectionEnd === 'number') {
+    var startPos = obj.selectionStart,
+        endPos = obj.selectionEnd,
+        cursorPos = startPos,
+        tmpStr = obj.value;
+    obj.value = tmpStr.substring(0, startPos) + str + tmpStr.substring(endPos, tmpStr.length);
+    cursorPos += str.length;
+    obj.selectionStart = obj.selectionEnd = cursorPos;
+  } else {
+    obj.value += str;
+  }
+}
+
+function getallWardNew(rowIndex,rowField,value) {
+	// 获取病区
+    $cm({
+        ClassName: 'Nur.NIS.Service.Base.Ward',
+        QueryName: 'GetallWardNew',
+        desc: '',
+        hospid: GLOBAL.HospitalID,
+        bizTable: 'CF_NUR_SHIFT.ShiftDataTab',
+        rows: 10000
+    }, function (rtn) {
+			var rowSpanData=[]
+			var Editor = $('#shiftBookGroup').datagrid('getEditor', {
+				index : rowIndex,  
+				field : rowField  
+		    });
+		    var wardlist=rtn.rows
+			var flag=0		
+			for(var i=0;i<wardlist.length;i++){
+				var json={}
+				json.text=wardlist[i].warddesc
+				json.value=wardlist[i].wardid
+				rowSpanData.push(json)
+			}
+			if(value==""){
+				$(Editor.target).combobox({
+					data:rowSpanData,
+					width:$(Editor.target).parentsUntil('tr')[0].offsetWidth
+				})
+			}
+			else{
+				$(Editor.target).combobox({
+					data:rowSpanData,
+					width:$(Editor.target).parentsUntil('tr')[0].offsetWidth
+				}).combobox('setValue',value);
+				}
+		},'json',false);	
+}
+function initHosp(){
+	//var GLOBAL={HospEnvironment:true}
+	
+	if (typeof GenHospComp == "undefined") {
+		GLOBAL.HospEnvironment = false;
+	}
+	if(GLOBAL.HospEnvironment){
+		var hospComp = GenHospComp('', session['LOGON.USERID'] + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.CTLOCID'] + '^' + session['LOGON.HOSPID']);  
+		//var hospComp = GenHospComp("Nur_IP_BPChartConfig",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+
+		hospComp.options().onSelect = function(q, row){
+		GLOBAL.HospitalID=row.HOSPRowId;
+		runClassMethod("Nur.SHIFT.Emr.RefSetting","GetTabsList",{HospitalID:GLOBAL.HospitalID},function(rtn){
+			$(shiftBookGroup.gid).datagrid("unselectAll");
+			$(shiftBookGroup.gid).datagrid('loadData', rtn)
+		},"json",false)
+		runClassMethod("Nur.SHIFT.Emr.RefSetting","GetProperList",{},function(rtn){
+			$(referConfig.gid).datagrid('loadData', rtn)
+		},"json",false)	
+		runClassMethod("Nur.SHIFT.Emr.RefSetting","GetShiftDataTabTemplate",{},function(rtn){
+			$("#templateArea").val(rtn)
+		},"text",false)		
+		}
+	}else{
+		$m({
+			ClassName: 'NurMp.Common.Tools.Hospital', 
+			MethodName: 'hospitalName', 
+			HospitalID: session['LOGON.HOSPID']
+		},function(hospDesc){
+			$HUI.combobox("#_HospList", {
+				width:350,
+				valueField: 'HOSPRowId',
+				textField: 'HOSPDesc',
+				data: [{
+					HOSPRowId: session['LOGON.HOSPID'],
+					HOSPDesc: hospDesc
+				}],
+				value: session['LOGON.HOSPID'],
+				disabled: true
+			});
+		});
+	}
+}
+$.fn.extend({
+		// 获取当前光标位置的方法
+		getCurPos:function() {
+			var curCurPos = '';
+			var all_range = '';
+			if (navigator.userAgent.indexOf("MSIE") > -1) { //IE
+
+				if( $(this).get(0).tagName == "TEXTAREA" ){ 
+					// 根据body创建textRange
+					all_range = document.body.createTextRange();
+					// 让textRange范围包含元素里所有内容
+					all_range.moveToElementText($(this).get(0));
+				} else {
+					// 根据当前输入元素类型创建textRange
+					all_range = $(this).get(0).createTextRange();
+				}
+
+				// 输入元素获取焦点
+				$(this).focus();
+
+				// 获取当前的textRange,如果当前的textRange是一个具体位置而不是范围,textRange的范围从start到end.此时start等于end
+				var cur_range = document.selection.createRange();
+
+				// 将当前的textRange的end向前移"选中的文本.length"个单位.保证start=end
+				cur_range.moveEnd('character',-cur_range.text.length)
+
+				// 将当前textRange的start移动到之前创建的textRange的start处, 此时当前textRange范围变为整个内容的start处到当前范围end处
+				cur_range.setEndPoint("StartToStart",all_range);
+
+				// 此时当前textRange的Start到End的长度,就是光标的位置
+				curCurPos = cur_range.text.length;
+			} else {
+				// 文本框获取焦点
+				$(this).focus();
+				// 获取当前元素光标位置
+				curCurPos = $(this).get(0).selectionStart;
+			}
+			// 返回光标位置
+			return curCurPos;
+		},
+		// 设置当前光标位置方法
+		setCurPos:function(start,end) {
+			if(navigator.userAgent.indexOf("MSIE") > -1){
+				var all_range = '';
+
+				if( $(this).get(0).tagName == "TEXTAREA" ){ 
+					// 根据body创建textRange
+					all_range = document.body.createTextRange();
+					// 让textRange范围包含元素里所有内容
+					all_range.moveToElementText($(this).get(0));
+				} else {
+					// 根据当前输入元素类型创建textRange
+					all_range = $(this).get(0).createTextRange();
+				}
+
+				$(this).focus();
+
+				// 将textRange的start设置为想要的start
+				all_range.moveStart('character',start);
+
+				// 将textRange的end设置为想要的end. 此时我们需要的textRange长度=end-start; 所以用总长度-(end-start)就是新end所在位置
+				all_range.moveEnd('character',-(all_range.text.length-(end-start)));
+
+				// 选中从start到end间的文本,若start=end,则光标定位到start处
+				all_range.select();
+			}else{
+				// 文本框获取焦点
+				$(this).focus();
+
+				// 选中从start到end间的文本,若start=end,则光标定位到start处
+				$(this).get(0).setSelectionRange(start,end);
+			}
+		},
+	});
+</script>
+</html>
+

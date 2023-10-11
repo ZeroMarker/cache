@@ -1,0 +1,87 @@
+﻿<html>
+    <head>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.tools.js"></script>
+        <title> 选择模板 </title>
+    </head>
+    <script language="cache" runat="server">
+        s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+        s loginID = $Get(%session.Data("LOGON.SSUSERLOGINID"))
+        s product = $Get(%request.Data("product",1),"OP")
+        s sysOption = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTIONS","params":[{"name":"defaultTemplate","defaultValue":"Template"},{"name":"isCollapse","defaultValue":"1"},{"name":"isShowTmpBrowse","defaultValue":"N"},{"name":"searchTempMode","defaultValue":"EnterQuery"}]})
+    </script>
+    <script language="javascript">
+        var sysOption = #(sysOption)#;
+        var patInfo = parent.patInfo;
+        var envVar = parent.envVar;
+        var tempTreeData = "";
+        var tempTreeDataArgs = {
+            params: {
+                episodeID: patInfo.episodeID,
+                eventID: "",
+                eventType: "",
+                resultType: "List",
+                userID: patInfo.userID,
+                userLocID: patInfo.userLocID,
+                ssgroupID: patInfo.ssgroupID,
+                docCode: envVar.docCode,
+                docCategoryCode: envVar.docCategoryCode,
+                otherCTLocID: "",
+                text: "",
+                diseaseCodeAndName: "",
+                isCollapse: sysOption.isCollapse
+            },
+            product: envVar.product
+        };
+        var createArgs = {
+            action: "ISCAN_CREATE",
+            params:{
+                episodeID: patInfo.episodeID
+            },
+            product: envVar.product
+        };
+        var pluginType = "";
+        var langID = "#(langID)#";
+        var loginID = "#(loginID)#";
+    </script>
+    <body id="templateLayout" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+        <div class="hisui-layout" data-options="region:'west'" style="width:300px;">
+            <div class="hisui-panel" data-options="region:'north',border:false" style="height:80px;padding:10px 10px 0 10px;">
+                <div id="searchPnl" class="hisui-panel" data-options="fit:true,border:false" style="overflow:hidden;padding:3px">
+                    <span>
+                        <input id="searchBox" href="#" class="hisui-searchbox" style="width:280px;float:left;"></input>
+                    </span>
+                    <span>
+                        <div id= "switch" class="hisui-switchbox" style="margin:0 0 3px 3px" data-options="onText:'展开',offText:'折叠',size:'small',checked:false,animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,value){switchCollapse(event,value);}"></div>
+                    </span>
+                    <div style="margin-top:10px">
+                        <input class='hisui-radio' type="radio" label="基础模板" name="template" id="Template">
+                        <input class='hisui-radio' type="radio" label="科室模板" name="template" id="LocTemplate">
+                        <input class='hisui-radio' type="radio" label="个人模板" name="template" id="PerTemplate">
+                    </div>
+                </div>
+            </div>
+      
+            <div class="hisui-panel" data-options="region:'center',border:false,autoScroll:true" style="padding:0px 10px;">
+                <ul id="templateTree" class="hisui-tree" data-options="lines:true"></ul>
+            </div>
+
+            <div class="hisui-panel" data-options="region:'south',border:false" align="center" style="height:40px;padding:5px 0px;border-top: 1px solid 9C9C9C;">  
+                <a href="#" id="confirm" class="hisui-linkbutton">#(..Get("确认"))#</a>
+                <a href="#" id="cancel" class="hisui-linkbutton">#(..Get("取消"))#</a>
+            </div>
+        </div>
+
+        <div class="hisui-panel" data-options="region:'center',border:false,title:'模板浏览'" style="overflow:hidden;">
+            <div id="bsTempEditor" style="overflow:hidden;width:100%;height:100%;"></div>
+        </div>
+        <script type="text/javascript" src="../service/emr-editor/jq/emr-editor.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.templateclassify.js"></script>
+    </body>
+</html>

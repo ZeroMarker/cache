@@ -1,0 +1,169 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+	Set AuthorityFlag = $GET(%request.Data("AuthorityFlag", 1))
+	Set DefaultCode = $GET(%request.Data("DefaultCode", 1))
+	Set SinglePatient = $GET(%request.Data("SinglePatient", 1))
+	Set IsShowPatList = $GET(%request.Data("IsShowPatList", 1))
+	Set IsShowPatInfoBannner = $GET(%request.Data("IsShowPatInfoBannner", 1))
+	If (##class(websys.Conversions).IsValidMethodName("NurMp.Config","WriteChromePrintCompatibleADDINS")) {
+		Do ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+  }
+ 	Set CurrentDate=##class(websys.Conversions).DateLogicalToHtml(+$HOROLOG)
+ 	Set vsGenelConfig=##class(Nur.NIS.Service.VitalSign.MRCObservationItem).getVSGenelConfig()
+ 	Set vsGenelConfig=##class(Nur.JSON).Encode(vsGenelConfig)
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<AINURPRINT></AINURPRINT>
+<HISUI/>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.singlevitalsign.js" charset=gbk></script>
+<style type='text/css'>
+body {background-color: #fff;margin: 4px!important;height: calc(100% - 8px)!important;}
+#vsDate+.datebox>input,#stopDate+.datebox>input,#eduDate+.datebox>input,#beginDate+.datebox>input,#endDate+.datebox>input{width: 80px!important;}
+.datagrid-td-merged>div,.datagrid-td-merged>div table td input{width: 100%!important;}
+.datagrid-td-merged>div table td .combo input,.datagrid-row div table td .combo input{width: calc(100% - 30px)!important;}
+.vsContent{overflow: hidden;}
+.vsContent .datagrid-row-selected {background: transparent;}
+a[name="symbol"] .l-btn-text {padding: 0 5px;line-height: 20px;}
+.vsContent .tooltip {background-color: #ffffff;border: 1px solid #ccc;}
+.vsContent .tooltip.tooltip-bottom{display: none!important;}
+td.datagrid-value-changed{background: transparent;}
+td.warning>div td>input{border:none!important;}
+#rightContent{overflow: hidden;}
+.datagrid-editable-input.error{border-color:red!important;}
+.vsContent .datagrid-view2 td.fControl{background: #e4e4e4!important;}
+.tooltip.tooltip-top>.tooltip-arrow{width: 7px;height: 7px;border-width: 1px;background: white;transform: rotate(45deg);bottom: 7px;border-right: 1px solid #cccccc;border-bottom: 1px solid #cccccc;}
+.layout-panel-west>.panel-header{border-bottom: 0px;}
+#patFrame{height:40px;}
+</style>
+<style class="datagridCell" type="text/css"></style>
+<script language="javascript">
+  var blurTimer;
+  var EpisodeID = "#(EpisodeID)#";
+	window.EpisodeIDStr = EpisodeID;	
+  // 监听EpisodeIDStr
+	Object.defineProperties(window, {
+    EpisodeIDStr: {
+      configurable: true,
+      set: function (newValue) {
+        console.log('你修改了 EpisodeIDStr 的值：' + newValue);
+				if (EpisodeID!=newValue) clearTimeout(blurTimer);
+				EpisodeID=newValue;
+				if (EpisodeID) getPatInformation(EpisodeID,init)
+      }
+    }
+	});
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+  var IsShowPatList = "#(IsShowPatList)#";
+  var vsGenelConfig = JSON.parse('#(vsGenelConfig)#');
+  var modify=vsGenelConfig.modify;
+  var timePoint=vsGenelConfig.timePoint.split(',');
+  var IsShowPatInfoBannner = "#(IsShowPatInfoBannner)#";
+  IsShowPatList="Y"==IsShowPatList?true:false;
+  IsShowPatInfoBannner="Y"==IsShowPatInfoBannner?true:false;
+	//打印插件升级
+  window.WebIp = window.location.href.split("/csp/")[0];
+  try {
+    if (
+      PrintActivexUpgrade ||
+      typeof PrintActivexUpgrade ||
+      typeof PrintActivexUpgrade == "function"
+    ) {
+      PrintActivexUpgrade();
+    }
+   } catch(e) {
+      console.log("打印插件升级失败！");
+   }
+	//全局请求后台服务对象
+	var ServerObj={
+		CurrentDate:"#(CurrentDate)#"
+	};
+</script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+</head>
+<body>
+<div id="nrLayout" class="hisui-layout" data-options="fit:true">
+	<csp:if condition='"Y"=IsShowPatList'>
+		<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+	</csp:if>
+	<!-- 右侧内容 -->
+	<div id="rightContent" data-options="region:'center',title:'',split:true" style="border:0;overflow:hidden;">
+		<div class="vsContent">
+			<csp:if condition='"Y"=IsShowPatInfoBannner'>
+                <div id="patFrame">
+					<csp:Include Page="dhcdoc.patinfo.banner.csp">
+                </div>
+			</csp:if>
+			<div>
+				<div id="toolbar" style="position: relative;padding: 10px 0;">
+					<table cellpadding="0" style="border-collapse: collapse;">
+						<tr>
+							<td class="r-label" style="padding-left: 10px;">
+								#(..Get("日期"))#
+							</td>
+							<td class="r-label">
+						    <input id="vsDate" class="hisui-datebox textbox" style="width: 115px;" data-options="onChange:getTempDataByDay"></input>
+							</td>
+							<td class="r-label">
+				        <a id="preDay" href="#" class="hisui-linkbutton hover-dark" onclick="preDay();">#(..Get("上一日"))#</a>
+							</td>
+							<td class="r-label">
+				        <a id="nextDay" href="#" class="hisui-linkbutton hover-dark" onclick="nextDay();">下一日</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="preShow();">#(..Get("预览"))#</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="openBptcModal();">#(..Get("体征趋势图"))#</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="openPatEvtModal();">#(..Get("患者事件"))#</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="openVsddModal();">#(..Get("数据明细"))#</a>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" onclick="openVsmlModal();">#(..Get("修改记录"))#</a>
+							</td>
+							<td class="r-label">
+								<a href="#" id="vsReminder_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+							</td>
+						</tr>
+					</table>
+		      <a href="#" class="hisui-linkbutton hover-dark" onclick="endEditTableCell(1);" style="position: absolute;right: 10px;top: 11px;">#(..Get("保存"))#</a>
+				</div>
+		  	<table id="singleVSTable"></table>
+			</div>
+		</div>
+	</div>  	
+</div>
+<!-- 血压趋势图配置 -->
+<!--csp:Include Page="nur.hisui.bptrendchart.csp"-->
+<!-- 体征趋势图 -->
+<csp:Include Page="nur.hisui.signtrendchart.csp">
+<!-- 患者事件 -->
+<csp:Include Page="nur.hisui.patientevent.csp">
+<!-- 数据明细 -->
+<csp:Include Page="nur.hisui.vsdatadetail.csp">
+<!-- 修改记录 -->
+<csp:Include Page="nur.hisui.vsmodifylog.csp">
+<div style="display:none" id="toolTips"></div>
+</body>
+</html>

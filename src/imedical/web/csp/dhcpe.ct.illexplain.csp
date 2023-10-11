@@ -1,0 +1,121 @@
+<!-- 
+ * FileName: dhcpe.ct.illexplain.csp
+ * Anchor: yupeng
+ * Date: 2021-08-14
+ * Description: 疾病解释维护-多院区
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    
+}
+.r-label{
+    padding-left: 10px;
+}
+
+</style>
+</head>
+
+<server>
+    s selectrow=%request.Get("selectrow")   //选中的通用名ID
+    s selectrowDesc=%request.Get("selectrowDesc")
+    s Type=%request.Get("Type")
+	s SelectLocID=%request.Get("SelectLocID")
+</server> 
+ <script type="text/javascript">
+      var  selectrow="#(selectrow)#" 
+      var  selectrowDesc="#(selectrowDesc)#" 
+      var  Type="#(Type)#" 
+      var  SelectLocID="#(SelectLocID)#"
+</script>
+<body style="padding:10px;box-sizing: border-box;">
+<div class="hisui-panel" fit="true" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:135px;border-bottom:1px solid #e2e2e2;border-radius:0">
+			<table class="search-table">
+                <tr>
+                
+                    <td class="r-label"><label>#(..Get("科室"))#</label></td>
+                    <td ><input id="LocList" class="hisui-combobox textbox"></td>
+                
+                    <td style="padding-left: 10px;"><label for="ILLSName">#(..Get("疾病名称"))#</label></td>
+                    <td>
+                        <input class="textbox" id="ILLSName" disabled/>
+                    </td>
+              
+                    <td style="padding-left: 10px;">
+                        <input class='hisui-checkbox' type="checkbox" id="NoActive" data-options="checked:true" value="Y"/><label>#(..Get("激活"))#</label>
+                    </td>
+                    
+                   
+                    <td style="padding-left: 10px;">
+                        <input class='hisui-checkbox' type="checkbox" id="Empower" data-options="checked:false" value="N"/><label>#(..Get("单独授权"))#</label>
+                    </td>
+                    
+                    
+                    <td style="padding-left: 10px;">
+                        <a id="add_btn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+                    </td>
+                    
+                    <td style="padding-left: 10px;">
+                        <a id="update_btn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+                    </td>
+                                      
+                    <td style="padding-left: 10px;">
+                        <a id="BRelateLoc" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-key',stopAllEventOnDisabled:true">数据关联科室</a>
+                    </td>
+                   
+                    <td><input type="hidden" id="ExplainRowId"/></td>
+                </tr>
+                <tr>
+                    <td class="r-label" id='TIllExplain'><label for="IllExplain">#(..Get("疾病解释"))#</label></td>
+                    <td colspan='8'>
+                        <textarea id="IllExplain" class="textbox hisui-validatebox" style="width:875px; height:70px;"> </textarea>
+                 	</td>
+                </tr>
+                				
+			</table>
+		</div>
+			<div data-options="region:'center',title:'',border:false" >
+				<table id="ILLExplainGrid"></table>
+			</div>
+	</div>
+</div>
+			
+			
+        
+
+<!--关联科室授权弹窗-->
+<div id="LocListWin"  style="display:none;">
+        <div data-options="region:'north',split:false,border:true" style="height:290px;padding:10px;">
+        <div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+                    <table data-options="bodyCls:'panel-header-gray'" id="LocListGrid"></table>
+            </div>
+        </div>
+</div>
+   
+<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpeillexplain.js"></script>
+<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
+</body>     
+</html>
+            
+        
+ 
+
+
+

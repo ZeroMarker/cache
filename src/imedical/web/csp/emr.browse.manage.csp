@@ -1,0 +1,41 @@
+﻿ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+        i ##Class(websys.SessionEvents).SessionExpired() 
+		q 1
+</csp:method>﻿
+﻿<html>
+<head>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s instanceID = $Get(%request.Data("InstanceID",1),"")
+		s action = $Get(%request.Data("Action",1),"")
+		s patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s admType = $p(^PAADM(episodeID),"^",2)  //值:I、O、E
+		s scheme = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("BrowseToolbar","")
+		s ssgroupID = %session.Get("LOGON.GROUPID")
+  </script>
+	<script language="javascript">
+		var patientID = '#(patientID)#';
+		var episodeID = '#(episodeID)#';
+		var action = '#(action)#';
+		var admType = '#(admType)#';
+		var instanceID = '#(instanceID)#';
+		var scheme = '#(scheme)#';
+		var ssgroupID = '#(ssgroupID)#';
+   </script>
+	<title>病历浏览</title>
+</head>
+<body id="manageLayout" class="hisui-layout" data-options="border:false" style="">
+	<div id="" data-options="region:'center',border:false" style="padding:0;margin:0;">
+		<iframe id="frameBrowseManage" frameborder="0" src="" style="width:100%;height:100%;overflow:hidden;" scrolling="no"></iframe>
+	</div>
+	<div id="toolbar" data-options="region:'south',border:false" style="padding:0;margin:0;height:30px;background-color:#DDDDDD;display:none;">
+		<a id='export' href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" style="display:none;width:120px;float:left">病历导出</a>
+	    <a id='print' href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="margin-left:45px;display:none;width:100px;float:left">打印</a>
+	</div>
+	<script type="text/javascript" src="../scripts/emr/js/browse.manage.js"></script>
+</body> 
+</html>

@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>BJCA手机证书扫码激活页面</title>
+    <base target= "_self">
+    <HISUI/>
+    
+    <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+    <script type="text/javascript" src="../scripts/dhccertauth/lib/qrcode.min.js"></script>
+   	<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+    <script type="text/javascript" src="../scripts/dhccertauth/js/cfg.certactivation.js"></script>
+    
+    <server>
+    	s SignTypeCode = "PHONE"
+        s HospID = %session.Get("LOGON.HOSPID")
+    	s QRCodeType = ##Class(CA.ConfigCommon).GetValueWithDefault("PhoneQRCodeType","TEXT",HospID)
+    	
+    	s VenderCode = ##class(CA.DSService).GetCAVenderCode("",SignTypeCode)
+    	s jsPath = ##Class(CA.DSService).GetJSPath(SignTypeCode,VenderCode)
+		w "<script type=""text/javascript"" src="""_jsPath_"""></script>",!
+			
+		s userCode = %session.Get("LOGON.USERCODE")
+		s userName = %session.Get("LOGON.USERNAME")
+		
+		//激活页面默认停用
+		s isUse = $Get(%request.Data("isUse",1),"N")
+    </server>
+    
+    <script type="text/javascript">
+    	var QRCodeType = "#(QRCodeType)#";
+    	var qrCode = "";
+		var signGUID = "";
+		var imageCode = "";
+		var qrcodeMaker = "";
+		var isUse = "#(isUse)#";
+		
+    	var logonInfo = {
+           	UserCode: "#(userCode)#",
+           	UserName: "#(userName)#"
+        };   
+            
+    	var caInfo = {
+	    	SignTypeCode : "#(SignTypeCode)#",
+	    	VenderCode : "#(VenderCode)#"
+    	}; 
+   </script>
+    
+    
+</head>
+<body>
+<div data-options="title:'',collapsible:false,headerCls:'panel-header-gray'" >
+   <div id="main" class="hisui-panel" data-options="region:'center'" style="padding:10px">
+        <table cellpadding="5">
+            <tr>
+                <td class="label">用户工号</td>
+                <td>
+                    <input id="tbxUserCode" class="textbox" disabled="true" style="width:200px;">
+                </td>
+                <td></td>
+                <td class="label">用户姓名</td>
+                <td>
+                    <input id="tbxUserName" class="textbox" disabled="true" style="width:200px;">
+                </td>
+            </tr>
+            <tr>
+                <td class="label">身份证号</td>
+                <td colspan="3">
+                    <input id="IdentityID" class="hisui-validatebox textbox" data-options="required:true" style="width:200px;">
+                </td>
+                <td>
+                    <a id="btnVerify" href="javascript:cvoid(0)" class="hisui-linkbutton" data-options="iconCls:'ion-muti-key'">校验身份证号</a>
+                </td>
+            </tr>
+        </table>
+
+        <div id="mgrimage" style= "display:none;margin-top:15px;">
+			<div id="caOperTip" style="padding:15px;font-size:16px;margin-left:15px;">请扫描下方二维码进行激活</div>
+			<div id="divqrcodeimg" style="text-align:center;vertical-align:middle;margin-left:25px;">
+			    <CSP:IF condition=QRCodeType="IMAGE">
+			        <img id="qrcodeimg" style="width:280px;height:280px;" src=""/>
+			    </CSP:IF>
+			    <CSP:IF condition=QRCodeType="TEXT" style="display:none;">
+			        <div id="qrcodeimg" style="width:380px;height:280px;"></div>
+			    </CSP:IF>
+			</div>
+			<div id="divqrcodegen" style="height:280px;text-align:center;vertical-align:middle;background:#000000;display:none;">
+			    <h1 style="line-height:160px"><font color="#15425B">二维码生成中...</font></h1>
+			</div>
+    	</div>
+    </div> 
+    <div id="caTip" style="padding:10px;margin-top:80px;color:red;font-size:16px;text-align:center;height:50px;overflow-y:auto;overflow-x:hidden;display:none;">错误提示</div>  
+</div>
+
+</body>
+</html>

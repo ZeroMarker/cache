@@ -8,6 +8,7 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
+<ADDINS require="CmdShell"></ADDINS>
 <link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet">
 <style type="text/css">
 xmp {
@@ -56,7 +57,24 @@ li {border-bottom:1px solid #ddd;padding:5px 10px 5px 20px;}
 </style>
 
 <Server>
-	
+s MapType=$g(%request.Data("MapType",1))
+s menuid=%request.Get("BDPMENU")
+if menuid'=""{
+	s menuobj=##class(User.BDPMenu).%OpenId(menuid)
+	if $IsObject(menuobj){
+		s ValueExpression=menuobj.ValueExpression
+		if ValueExpression'=""{
+			for loop=1:1:$l(ValueExpression,"&"){
+				s value=$p(ValueExpression,"&",loop)
+				continue:value=""
+				s Field=$p(value,"=",1)
+				s FieldVal=$p(value,"=",2)
+				if Field="MapType" s MapType=FieldVal
+			}
+		}
+	}
+}
+
 </Server>
 </head> 
 <body>
@@ -64,11 +82,12 @@ li {border-bottom:1px solid #ddd;padding:5px 10px 5px 20px;}
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
-			
+			MapType:"#(MapType)#"
 		};
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>	
 	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
 	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>

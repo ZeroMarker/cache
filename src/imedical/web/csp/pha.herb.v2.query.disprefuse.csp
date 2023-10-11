@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--草药查询-拒绝发药查询
+	csp:pha.herb.v2.query.disprefuse.csp
+	js: scripts/pha/herb/v2/query.disprefuse.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+        s EpisodeID = $G(%request.Data("EpisodeID",1))
+   </Server>
+  	<SCRIPT Language="Javascript">
+        var EpisodeID = "#(EpisodeID)#" || "";
+   </script>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHAHERBV2/>
+	<style type="text/css">
+		/*
+		.pha-body {
+			background-color: #fff;
+		}
+		.layout {
+			background-color: #fff;
+		}
+		*/
+    </style>
+</HEAD>
+<body>
+	<div class = "hisui-layout" fit = "true">
+        <div data-options = "region:'center',border:false,headerCls:'panel-header-gray'" class = "pha-body">
+            <div class = "hisui-layout" fit = "true">
+                <div id ="pha_herb_v2_queryrefusedisp" data-options = "headerCls:'panel-header-gray',region:'center',split:true,title:'拒绝发药查询'" >
+                    <table id="gridRefuseDisp"></table>   
+                </div>  
+            </div>  
+        </div>      
+    </div> 
+    <div id="toolBarRefuseDisp">
+		<table class="pha-con-table nopadding">
+			<tr>
+				<td class="r-label">#(..Get("开始时间"))#</td>
+				<td>
+					<input class="hisui-datebox pha-datebox" id="conStartDate">
+				</td>
+				<td>
+					<input class="hisui-timespinner phaherb-timespinner" id="conStartTime" showSeconds="true">
+				</td>
+				<td class="r-label">#(..Get("发药科室"))#</td>
+				<td>
+					<input class="hisui-combobox" id="conPhaLoc">
+				</td>
+				<td>
+					<a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnQuery" onclick="javascript:queryRefuseDisp()">查询</a>
+				</td>
+				<td>
+					<a class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" id="cancelRefuse" onclick="javascript:cancelRefuse()">撤消拒绝</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">#(..Get("结束时间"))#</td>
+				<td>
+					<input class="hisui-datebox pha-datebox" id="conEndDate">
+				</td>
+				<td>
+					<input class="hisui-timespinner phaherb-timespinner" id="conEndTime" showSeconds="true">
+				</td>
+				<td class="r-label">#(..Get("登记号"))#</td>
+				<td>
+					<input class="hisui-validatebox" id="conPatNo">
+				</td>
+				<td>
+					<a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClear" onclick="javascript:Clear()">清屏</a>
+				</td>
+			</tr>
+		</table> 
+    </div>   
+    <script type="text/javascript" src="../scripts/pha/herb/v2/query.disprefuse.js"></script>
+</body>
+</HTML>

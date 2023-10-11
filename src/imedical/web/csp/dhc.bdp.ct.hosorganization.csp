@@ -1,0 +1,169 @@
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ // dhc.bdp.ct.hosorganization.csp
+ // 名称: HOS 机构
+ // 修改人:基础数据平台-钟荣枫
+ // 修改日期:2022年11月10日
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/> 
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/HOS/CT_BDP_CT.HOS_Organization.js"></script>
+</HEAD>
+<style>
+	.tbclass{
+	    text-align: right;
+   }
+   .dialog-button {
+    padding: 0px 10px 20px 10px;
+    text-align: center;
+    border: none;
+    background-color: #fff;
+}
+form table td, form table th {
+    margin: 0;
+    padding: 0px;
+    word-break: keep-all;	
+    word-wrap:break-word;
+    white-space: nowrap;
+}
+</style>
+<BODY> 
+    <div class="hisui-layout" data-options="fit:true" border="false" > 
+            <div data-options="region:'north' ,split:false,collapsible:false,headerCls:'panel-header-gray' " style="border-bottom:1px dashed #C0C0C0;overflow: hidden;" title="" border="false">  
+                 <table cellspacing=10 >
+                    <tr>
+                    	<td class="tbclass">代码</td>
+			    		<td><input id="TextCode" type="text" class="hisui-validatebox" style="width:150px"></td>
+			    		<td class="tbclass">名称</td>
+			    		<td><input id="TextDesc" type="text" class="hisui-validatebox" style="width:150px"></td>
+			    		
+                       <td ><a href="#" class="hisui-linkbutton" iconCls="icon-w-find" id="btnSearch" >查询</a></td>
+                       <td ><a href="#" class="hisui-linkbutton" iconCls="icon-w-reset" id="btnRefresh" >重置</a></td>
+                    </tr>     
+                 </table > 
+             </div>  
+            <div data-options="region:'center'" border="false"> 
+                <table data-options="fit:true" id="mygrid" border="false" toolbar="#mybar"></table> 
+             </div>  
+     </div> 
+      
+    <div id="myWin" style="width:auto;height:600px;resizable:true;display:none;"> 
+            <div title="基本信息" style="padding:10px;">
+                <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+                    <table cellspacing=10>
+                    	<tr style="display:none">
+                           <td class="tbclass">ID</td>
+                           <td><input id="ID" name="ID" type="text" class="textbox hisui-validatebox"  style="width:200px" data-options=""></td>
+                        </tr>
+                         <tr>
+                           <td class="tbclass"><font color=red>*</font>代码</td>
+                           <td><input id="ORGCode" name="ORGCode" type="text" class="textbox hisui-validatebox"  style="width:200px" data-options="required:true"></td>
+                           <td class="tbclass"><font color=red>*</font>名称</td>
+                           <td><input id="ORGDesc" name="ORGDesc" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options="required:true"></td>
+                           <td class="tbclass">统一社会信用代码</td>
+                           <td><input id="ORGUSCC" name="ORGUSCC" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                        </tr>
+                        <tr>
+                           <td class="tbclass">组织简称</td>
+                           <td><input id="ORGAbbrev" name="ORGAbbrev" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">上级组织</td>
+                           <td><input id="ORGORGCode" name="ORGORGCode" type="text" class="textbox hisui-combobox" style="width:207px"  data-options=""></td>
+                           <td class="tbclass">组织小类</td>
+                           <td><input id="ORGORGMCCode" name="ORGORGMCCode" type="text" class="textbox hisui-combobox" style="width:207px"  data-options=""></td>
+                         </tr>
+                         <tr rowspan="2">
+                            <td class="tbclass" >组织简介</td>
+                           <td colspan="5"><input id="ORGIntro" name="ORGIntro" type="text" class="textbox hisui-textarea" style="height:60px; width:-webkit-fill-available"  data-options=""></td>        
+                         </tr>
+                         <tr>
+                           <td class="tbclass">组织法人</td>
+                           <td><input id="ORGLegalEntity" name="ORGLegalEntity" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">组织负责人</td>
+                           <td><input id="ORGHeader" name="ORGHeader" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">组织所在国家</td>
+                           <td><input id="ORGCountryCode" name="ORGCountryCode" type="text" class="textbox hisui-combobox" style="width:207px"  data-options=""></td>
+                         </tr>
+
+                         <tr>
+                           <td class="tbclass">组织地址</td>
+                           <td><input id="ORGAddress" name="ORGAddress" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">组织邮编</td>
+                           <td><input id="ORGZipCode" name="ORGZipCode" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass"></td>
+                           <td><input id="ORGPROVCode" name="ORGPROVCode" type="text" class="textbox hisui-combobox" style="width:207px"  data-options=""></td>
+                         </tr>
+                         
+                         <tr>
+                           <td class="tbclass">联系电话</td>
+                           <td><input id="ORGTel" name="ORGTel" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">传真</td>
+                           <td><input id="ORGFax" name="ORGFax" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass"></td>
+                           <td><input id="ORGCITYCode" name="ORGCITYCode" type="text" class="textbox hisui-combobox" style="width:207px"  data-options=""></td>
+                         </tr>
+                         <tr>
+                         	<td class="tbclass">邮箱</td>
+                           <td><input id="ORGEmail" name="ORGEmail" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">官网</td>
+                           <td><input id="ORGWebSite" name="ORGWebSite" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass"></td>
+                           <td><input id="ORGDISTRCode" name="ORGDISTRCode" type="text" class="textbox hisui-combobox" style="width:207px"  data-options=""></td>
+                         </tr>
+                         <tr>
+                           <td class="tbclass">建立日期</td>
+                           <td><input id="ORGFoundDate" name="ORGFoundDate" type="text" class='hisui-datebox' style="width:207px" data-options=""></td>
+                           <td class="tbclass">注销日期</td>
+                           <td><input id="ORGCancelDate" name="ORGCancelDate" type="text" class='hisui-datebox' style="width:207px" data-options=""></td>
+                         	<td class="tbclass">是否有效</td>
+							<td>
+								<input id="ORGActivity" name="ORGActivity" class='hisui-checkbox' type="checkbox"    data-options="" value="Y">
+							</td>
+                         </tr>
+                         <tr>
+                           <td class="tbclass"><font color=red>*</font>开始日期</td>
+                           <td><input id="ORGStartDate" name="ORGStartDate" type="text" class='hisui-datebox' style="width:207px" data-options="required:true"></td>
+                           <td class="tbclass">结束日期</td>
+                           <td><input id="ORGEndDate" name="ORGEndDate" type="text" class='hisui-datebox' style="width:207px"></td>
+                           <td class="tbclass">排序号</td>
+                           <td><input id="ORGSeqNo" name="ORGSeqNo" type="text" class="textbox hisui-validatebox" style="width:200px" validType="NotNegativeInteger" data-options=""></td>
+                         </tr>
+                        
+                         <tr>
+                           <td class="tbclass">拼音码</td>
+                           <td><input id="ORGPYCode" name="ORGPYCode" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">五笔码</td>
+                           <td><input id="ORGWBCode" name="ORGWBCode" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">备注</td>
+                           <td><input id="ORGMark" name="ORGMark" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                         </tr>
+                         <tr>
+                           <td class="tbclass">标准编码</td>
+                           <td><input id="ORGStandardCode" name="ORGStandardCode" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">标准名称</td>
+                           <td><input id="ORGStandardDesc" name="ORGStandardDesc" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                           <td class="tbclass">原系统编码</td>
+                           <td><input id="ORGCodeBefore" name="ORGCodeBefore" type="text" class="textbox hisui-validatebox" style="width:200px"  data-options=""></td>
+                         </tr>
+                    </table >
+                </form>
+             </div> 
+    </div>
+   
+    <!--工具栏-->
+    <div id="mybar">
+        <a  href="#"  class="hisui-linkbutton"   data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="btnAdd">新增</a> 
+        <a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true"id="btnUpdate">修改</a> 
+        <a  href="#"  class="hisui-linkbutton"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true"  id="btnDel">删除</a>
+    </div>
+
+</BODY>
+ </html>
+ 

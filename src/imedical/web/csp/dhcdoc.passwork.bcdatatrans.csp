@@ -1,0 +1,49 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+i ##Class(websys.SessionEvents).SessionExpired() q 1
+// dhcdoc.passwork.bcdatatrans.csp QP
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ 
+ quit 1
+</csp:method>
+
+<!--<csp:content charset="utf-8">-->
+
+<script language="Cache" runat="server">
+	;基础数据平台组陈莹，组内保存方法调用公共csp
+	;dhc.bdp.ext.entitydatatrans.csp
+	d ..TestRequest()
+	s myreqstr=""
+	s pClassName="pClassName"
+	s pClassMethod="pClassMethod"
+	s pEntityName = "pEntityName"
+	s myClassName = $g(%request.Data(pClassName,1))
+	s myClassMethod = $g(%request.Data(pClassMethod,1))
+	s myEntityName =$g(%request.Data(pEntityName,1))
+	if (myClassName=""){
+		
+	}
+	;test
+	
+	s myreqstr=""
+	
+	k myparaArray
+	s myparaArray=""
+	s myrtn=##class(web.BDP.sys.EntityBroker).CMExecute(myClassName,myClassMethod, myEntityName)
+	w myrtn
+	k myparaArray
+</script>
+
+<script language="Cache" Method="TestRequest" runat="server">
+	s myreqstr=""
+	s mystr=""
+	f {
+		s myreqstr=$o(%request.Data(myreqstr))
+		q:(myreqstr="")
+		s:(mystr'="") mystr=mystr_"&"
+		s mystr=mystr_""_myreqstr_"="_%request.Data(myreqstr,1)
+	}
+	;"dhc.bdp.ext.entitydatatrans.csp?"_
+	s ^TMPExtRequest("entitydatatrans")="dhc.bdp.ext.entitydatatrans.csp?"_mystr
+	;s myClassName=$g(%request.Data(pClassName))
+	;
+</script>

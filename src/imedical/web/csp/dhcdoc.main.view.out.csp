@@ -9,6 +9,7 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<DOCCARD medStepCode="AdmQuery"></DOCCARD>
 <link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/dhcdocCustomExt.css" />
 <link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/uiimage.css" />
 <script type="text/javascript" src="../scripts/framework/dhcc.icare.MixGridPanel.js" ></script>
@@ -17,19 +18,19 @@
 <script type="text/javascript" src="../scripts/DHCVisComputerMark.js" ></script>	
 
 <server>
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+//d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
 Set DocMarkJson=##class(web.DHCOPAdmReg).FindDocMarkStr(%session.Get("LOGON.USERID"),%session.Get("LOGON.CTLOCID"),1)
 set LengthMark=$L(DocMarkJson,"],[")
 set DocMarkJson="['','☆ 全部']"_","_DocMarkJson
-Set ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
-Set ReadAccEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
-Set nextButtonJs=##Class(%CSP.Page).Encrypt($lb("web.DHCVISQueueManage.RunNextButton"))
-s frontCall=##Class(%CSP.Page).Encrypt($lb("web.DHCVISQueueManage.FrontQueueInsert"))
-s recall=##Class(%CSP.Page).Encrypt($lb("web.DHCVISQueueManage.RecallButton"))
-s SetSessionDataMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderEntry.SetSessionData"))
-s GetSessionDataMethod=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderEntry.GetSessionData"))
+//Set ReadAccExpEncrypt=##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+Set ReadAccEncrypt=##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLS.getaccinfofromcardno"))
+Set nextButtonJs=##Class(websys.Page).Encrypt($lb("web.DHCVISQueueManage.RunNextButton"))
+s frontCall=##Class(websys.Page).Encrypt($lb("web.DHCVISQueueManage.FrontQueueInsert"))
+s recall=##Class(websys.Page).Encrypt($lb("web.DHCVISQueueManage.RecallButton"))
+s SetSessionDataMethod=##Class(websys.Page).Encrypt($lb("web.DHCDocOrderEntry.SetSessionData"))
+s GetSessionDataMethod=##Class(websys.Page).Encrypt($lb("web.DHCDocOrderEntry.GetSessionData"))
 
-w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_ReadAccExpEncrypt_"'>",$C(13,10)
+//w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_ReadAccExpEncrypt_"'>",$C(13,10)
 w "<input id='ReadAccEncrypt' name='ReadAccEncrypt' type='hidden' value='"_ReadAccEncrypt_"'>",$C(13,10)
 w "<input id='nextButtonJs' name='nextButtonJs' type='hidden' value='"_nextButtonJs_"'>",$C(13,10)
 w "<input id='frontCall' name='frontCall' type='hidden' value='"_frontCall_"'>",$C(13,10)
@@ -38,9 +39,9 @@ w "<input id='recall' name='recall' type='hidden' value='"_recall_"'>",$C(13,10)
 w "<input id='SetSessionDataMethod' name='SetSessionDataMethod' type='hidden' value='"_SetSessionDataMethod_"'>",$C(13,10)
 w "<input id='GetSessionDataMethod' name='GetSessionDataMethod' type='hidden' value='"_GetSessionDataMethod_"'>",$C(13,10)
 s DocDr=##Class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
-Set SetSkipStatus=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOutPatientList.SetSkipStatus"))
-Set SetArrivedStatus=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOutPatientList.SetArrivedStatus"))
-Set SaveDHCVISIP=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOutPatientList.SaveDHCVISIP"))
+Set SetSkipStatus=##Class(websys.Page).Encrypt($lb("web.DHCDocOutPatientList.SetSkipStatus"))
+Set SetArrivedStatus=##Class(websys.Page).Encrypt($lb("web.DHCDocOutPatientList.SetArrivedStatus"))
+Set SaveDHCVISIP=##Class(websys.Page).Encrypt($lb("web.DHCDocOutPatientList.SaveDHCVISIP"))
 Set LogonDocDr=##Class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
 </server>
 </head>
@@ -76,7 +77,8 @@ Set LogonDocDr=##Class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.US
 	..;s tabTitle=$s(tabTitle="DHCOE":"医嘱录入",tabTitle="DHCOECM":"草药录入",tabTitle="DHCMEDCINEMRDIAGNOS":"诊断录入",1:tabTitle)
 	..s cspframe = "dataframe"_chartObj.%Id()
 	..s cspname="epr.chart.csp?PatientID=&EpisodeID=&EpisodeIDs=&mradm=&ChartID="_chartObj.%Id()_"&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID="
-	..s cspname=##class(ext.epr.Chart).RedirctCharURL(chartObj.%Id(),cspname)
+	..s cspname=cspname_"&MWToken="_%session.SessionId
+    ..s cspname=##class(ext.epr.Chart).RedirctCharURL(chartObj.%Id(),cspname)
 	..i chartObj.ChartSettings.Count()>0 d
 	...s CTProfileParamsType = chartObj.ChartSettings.GetAt(1).ItemType
 	...s CTProfileParamsId = chartObj.ChartSettings.GetAt(1).Item

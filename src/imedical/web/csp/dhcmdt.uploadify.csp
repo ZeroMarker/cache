@@ -1,0 +1,117 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+<head>
+<meta content="text/html;charset=utf-8"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!-- dhcmdt.uploadify.csp -->
+<title>	MDT会诊上传文件 </title>
+<script Language="Javascript">
+	var SessionID= "#(%session.SessionId)#";
+	var UserId = "#($g(%session.Data("LOGON.USERID")))#;"
+	var MdtCstID = "#(%request.Get("MdtCstID"))#";
+	var SeeCstType = "#(%request.Get("seeCstType"))#";
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+</script>
+<HISUI/>
+<link rel="stylesheet" href="../scripts/dhcnewpro/plugins/uploadify/uploadify.css" />
+<link rel="stylesheet" href="../scripts/dhcnewpro/plugins/imgshow/css/boxImg.css" />
+<SERVER>
+	s HospID = %session.Data("LOGON.HOSPID")
+	s MdtCstID = %request.Get("MdtCstID")
+
+	s nowday=$tr($zd(+$h,3),"-","")
+	s fileNamePress = ##class(web.DHCMDTFile).GetSaveImgName(MdtCstID)
+	w "<SCRIPT>"
+	;w "var fileNamePress="""_fileNamePress_""";"_$c(13,10)
+	w "</SCRIPT>"
+</SERVER>
+
+</head>
+
+<body class="hisui-layout">
+<div data-options="region:'center',border:false" style="padding:10px" >
+	<div class="onlyImgDiv" style="width: 100%;height: 100%;display:none;"></div>
+	<div id="contentLayout" data-options="fit:true" class="hisui-layout" style="">
+	  	<!--
+	    <div data-options="region:'north',title:'',split:true,border:false" style="height:62px;padding-top:5px;overflow: hidden">
+	   		<table style="padding-top:5px">
+	   			<tr>
+	   				
+	   				<td style="padding-left:10px;padding-top:8px"><input type="radio" class="hisui-radio" name="uploadType"  label='检查' data-options="checked:true" value="1"></td>
+	   				<td style="padding-left:10px;padding-top:8px"><input type="radio" class="hisui-radio" name="uploadType" label='检验' value="2"></td>
+	   				<td style="padding-left:10px;padding-top:8px"><input type="radio" class="hisui-radio" name="uploadType" label='其他' value="3"></td>
+	   			</tr>
+	   		</table>
+			
+	    </div>
+	    -->
+	    
+	    <div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray',border:false,collapsible:false" style="">
+	    	<div class="hisui-panel" title="上传图片" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:true,collapsible:true,minimizable:true,maximizable:true">
+	    		<div id="imgDiv"></div>
+	    	</div>
+	    </div>
+	   
+	    <div data-options="region:'west',title:'',headerCls:'panel-header-gray',border:false," style="width:500px;padding-right:5px;">
+	    	<div class="hisui-panel" title="上传记录" style="" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper',closable:true,collapsible:true,minimizable:true,maximizable:true">
+	    		<table id="uploadTable"></table> 
+	    	</div>
+	    </div>
+	</div>
+</div>
+<div id="toolbar" class="toolbar">	
+	<table cellspacing="0" cellpadding="0" >
+		<tr>
+			 <td><a style="margin-left:-3px;" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:deleteImg()">删除</a></td>	
+			 <td style="padding-left:0px;width:350px" >
+			 	<div style="width: 1px;height: 16px;float: left;margin:8px 0 0 0;border-left: 1px solid #ccc;padding-left:0px;"></div>
+			 	<div style="width: 27px;height: 30px;float: left;margin-right: 0;padding-left:0px;">		
+			 	<a style="width: 27px;height: 30px;" class="hisui-linkbutton" id ="uploadify-a" data-options="iconCls:'icon-upload',plain:true" onclick=""></a>
+				</div>
+			 	<div id="atta-tr" style="width: 127px;height: 20px;float: left;padding-left:0px;">		
+				
+				<a href="javascript:void(0);" style="width:100px;height:30px;color:#666;" class=" hisui-linkbutton filebox-button" data-options="iconCls:'',plain:true" id='btn-atta'>#(..Get("上传文件"))#</a>
+				</div>
+			</td>
+	    </tr>
+	</table>
+</div>
+
+</body>
+<script type="text/javascript" >
+
+	var GV={};
+	var dirname="\\dhcmdt\\#(nowday)#\\1"+"\\"
+	var FTPFOLDERNAME=serverCall("web.DHCEMComPar","GetAppPropValue",{AppCode:"DHCMDT",FunCode:"FTPFOLDERNAME",Hosp:"#(%session.Get("LOGON.HOSPID"))#"})
+	FTPFOLDERNAME==""?"":dirname="\\"+FTPFOLDERNAME+dirname
+
+	GV.dir=dirname
+	GV.SessUserId='#(%session.Get("LOGON.USERID"))#';
+	GV.normalCode="2000";
+	GV.importantCode="2008";
+	GV.sendMessage=function(){
+		$('#sendBtn').click();
+	}
+	GV.enableSend=function(){
+		$('#sendBtn').linkbutton('enable');	
+	}
+	GV.disableSend=function(){
+		$('#sendBtn').linkbutton('disable');	
+	}
+
+</script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/imgshow/js/boxImg.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/uploadify/jquery.uploadify.min.js" ></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/layout.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/dhcmdt.uploadify.js"></script>
+<link rel="stylesheet" href="../scripts/dhcnewpro/dhcmdt/css/uploadify.css"/>
+
+
+<!--遮罩-->
+<div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;opacity: 0.8;display:none;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">#(..Get("需要同步删除ftp服务器文件,这需要一点时间,请稍等···"))#</font></h1></div>
+</html>

@@ -1,0 +1,157 @@
+<!-- 多人血糖 -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+	Set AuthorityFlag = $GET(%request.Data("AuthorityFlag", 1))
+	Set DefaultCode = $GET(%request.Data("DefaultCode", 1))
+	Set SinglePatient = $GET(%request.Data("SinglePatient", 1))
+  Set episodeIDs = $GET(%request.Data("EpisodeIDS", 1))
+  Set componentArgs = $GET(%request.Data("componentArgs", 1))
+  Set codeStr = $GET(%request.Data("codeStr", 1))
+  Set endDateTime = $GET(%request.Data("endDateTime", 1))
+  Set startDateTime = $GET(%request.Data("startDateTime", 1))
+  Set IsShowAllPatient = $GET(%request.Data("IsShowAllPatient", 1))
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/websys.js"></script>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.multivitalsignbyday.js" charset=gbk></script>
+<style type='text/css' class="eduExeStyle">
+body {background-color: #fff;margin: 4px!important;height: calc(100% - 8px)!important;}
+.panel-header, .panel-body{width: auto!important;}
+#startMVSDay+.datebox>input,#endMVSDay+.datebox>input{width: 83px!important;box-sizing: content-box;}
+.spinner>.hisui-timespinner{width: 60px!important;}
+.multiContent{overflow: hidden;}
+.multiContent .panel-body.panel-body-noheader {border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+.l-btn-small{outline: none;}
+li.showNode>ul>li.showNode>div>span.tree-line{background: none!important;}
+.PatInfoItem{margin-left: 0!important;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+td.datagrid-value-changed{background: none;}
+#mm>div{text-align: center;}
+#mm>div:hover{background: #dbedf9!important;}
+.vsContent .datagrid-row-selected {background: transparent;}
+.tooltip {background-color: #ffffff;border: 1px solid #ccc;}
+a[name="symbol"] .l-btn-text {padding: 0 5px;line-height: 20px;}
+.tooltip.tooltip-bottom{display: none!important;}
+td.datagrid-value-changed{background: transparent;}
+.datagrid-td-merged>div table td .combo input,.datagrid-row div table td .combo input{width: calc(100% - 32px)!important;}
+.datagrid-row div table td span.combo{width: auto!important;}
+#multiVSPanel .datagrid-view2 td.warning{color: rgb(246, 164, 5);border: 2px solid rgb(246, 164, 5)!important;}
+#multiVSPanel .datagrid-view2 td.warning>div{width: 106px;}
+#opeTabs.tabs-container.tabs-gray .tabs-header {border-bottom: 0;border-right: 0;border-left: 0;border-radius: 0;}
+
+#opeTabs+div .datagrid-view2>div>div.datagrid-header-inner>table>tbody>tr>td,#opeTabs+div .datagrid-view2>div>table>tbody>tr>td{width: 125px!important;}
+span.tempBtn{display: inline-block;font-weight: bold;width: 20px;height: 20px;text-align: center;border: 1px solid green;color: green;float: right;cursor: pointer;user-select: none;}
+.datagrid-editable-input.error{border-color:red!important;}
+</style>
+<script language="javascript">
+  var EpisodeID = "#(EpisodeID)#";
+	window.EpisodeIDStr = EpisodeID;	
+	var checkTimer=0;
+  // 监听EpisodeIDStr
+	Object.defineProperties(window, {
+    EpisodeIDStr: {
+      configurable: true,
+      set: function (newValue) {
+        console.log('你修改了 EpisodeIDStr 的值：' + newValue);
+				episodeIDsStr= newValue;
+				clearTimeout(checkTimer);
+				checkTimer=setTimeout(function() {
+					getPatientsByEpisodeIDs();
+				},50);
+      }
+    }
+	});
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+  episodeIDsStr="#($GET(episodeIDs))#";
+  window.componentArgs="#($GET(componentArgs))#";
+  window.codeStr="#($GET(codeStr))#";
+  window.endDateTime="#($GET(endDateTime))#";
+  window.startDateTime="#($GET(startDateTime))#";
+  window.IsShowAllPatient="#($GET(IsShowAllPatient))#";
+</script>
+</head>
+<body>
+<div id="mvsLayout" class="hisui-layout" data-options="fit:true">
+	<csp:if condition='"Y"=IsShowAllPatient'>
+		<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+	</csp:if>
+	<!-- 右侧内容 -->
+	<div id="rightContent" data-options="region:'center',title:'',split:true" style="border:0;">
+		<div class="multiContent">
+			<div id="multiVSPanel" class="hisui-panel" title="体征批量采集" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="overflow-y: hidden;">
+				<div style="position: relative;margin: 10px 0;">
+					<table cellpadding="0" style="border-collapse:collapse;">
+				    <tr>
+							<td class="r-label" style="padding-left: 10px;">
+				        #(..Get("开始日期"))#
+							</td>
+							<td class="r-label">
+				        <input id="startMVSDay" class="hisui-datebox textbox" style="width: 118px;" disabled></input>
+							</td>
+							<td class="r-label">
+				        #(..Get("结束日期"))#
+							</td>
+							<td class="r-label">
+				        <input id="endMVSDay" class="hisui-datebox textbox" style="width: 118px;" disabled></input>
+							</td>
+							<td class="r-label">
+								<input class="hisui-checkbox" disabled checked type="checkbox" data-options="onCheckChange:getPatientsTempDataByTime" label="需测信息" id="needMeasure">
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-print'" onclick="onPrintBtnClick()">#(..Get("打印"))#</a>
+							</td>
+							<td class="r-label">
+								<a href="#" id="vsReminder_tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+							</td>
+				    </tr>
+				  </table>
+		      <a id="multiSaveBtn" href="#" class="hisui-linkbutton hover-dark" onclick="endEditTableCell(1);" style="position: absolute;right: 10px;top: 0;">#(..Get("保存"))#</a>
+		    </div>
+				<div id="opeTabs" class="hisui-tabs tabs-gray" style="height: 37px;margin-bottom: 2px;"></div>
+				<table id="multiVSTable"></table>
+			</div>
+		</div>
+	</div>  	
+</div>
+<!-- 右键菜单 -->
+<div id="mm" style="position: absolute;border: 1px solid #40a2de;display: none;background: white;">
+	<div id="mm1" onclick="preShow();" style="padding: 5px 10px;cursor: pointer;">#(..Get("预览"))#</div>
+	<div id="mm2" onclick="openSingleVSModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("单人录入"))#</div>
+	<div id="mm3" onclick="openPatEvtModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("事件登记"))#</div>
+	<div id="mm4" onclick="openVsddModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("数据明细"))#</div>
+	<div id="mm5" onclick="openVsmlModal();" style="padding: 5px 10px;cursor: pointer;">#(..Get("修改记录"))#</div>
+</div>
+<!-- 单人体征模态框 -->
+<div id="singleVSModal" class="hisui-dialog" title="单人体征" style="top: 25px;left: 25px;padding: 5px 10px 0;" 
+data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true">
+	<iframe src="" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+</div>
+<!-- 患者事件 -->
+<csp:Include Page="nur.hisui.patientevent.csp">
+<!-- 数据明细 -->
+<csp:Include Page="nur.hisui.vsdatadetail.csp">
+<!-- 修改记录 -->
+<csp:Include Page="nur.hisui.vsmodifylog.csp">
+<div style="display:none" id="toolTips"></div>
+</body>
+</html>

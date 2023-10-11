@@ -1,0 +1,87 @@
+﻿<!-- Copyright (c) 2001 TrakHealth Pty Limited. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+	<head>
+        <title>质控条目维护</title>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <style>
+        .myswitch{
+	        margin-left:35px;
+            width: 49px;
+            height: 21px;
+            background-color: rgb(19, 206, 102);
+            border-radius: 10px;
+            position: relative;
+            text-align:left;
+        }
+        .myswitch span{
+            display: inline-block;
+            width: 15.4px;
+            height: 15.4px;
+            background-color: white;
+            border-radius: 100%;
+            margin: 3px;
+            position: relative;
+        }
+        .spanClose{
+            left: 28px;
+        }
+        .spanOpen{
+            left: 0px;
+        }
+        .switchClose{
+            background-color: gray;
+        }
+        .switchOpen{
+            background-color:rgb(19, 206, 102) ;
+        }
+
+        
+    </style>
+	</head>
+<body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+	<div data-options="region:'center',fit:true,border:false" style="padding:5px;">
+		<div class="hisui-panel" title="质控条目维护" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+            	<div data-options="region:'north',border:false" style="height:50px;overflow:hidden;">
+					<div id="messageListTableTBar" style="padding:10px;height:30">	
+						<div style="float:left;">
+							质控标准 <select id="comboQualiytRule" class="hisui-combobox" style="width:150px;"></select>
+			 				<span style="margin-left:5px;margin-right:0px;">质控结构 </span><select id="comboQualiytStruct" class="hisui-combobox" style="width:150px;"></select>
+			 				<span style="margin-left:5px;margin-right:0px;"></span><a id="btnSearch" href="#" class="hisui-linkbutton hover-dark" onclick="doSearch()" data-options="iconCls:'icon-w-find'" style="width:90px;">查询</a>
+		 				</div>
+			 		</div>
+			 	</div>
+			 	<div data-options="region:'center',border:false" style="border: 1px #cccccc solid;border-left:none;border-right:none">
+					<table class="hisui-datagrid" id="ruleList" data-options="border:false,fit:true" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+ 	<script language="cache" runat="server">
+ 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s UserID = %session.Get("LOGON.USERID")
+  		s UserLocID = %session.Get("LOGON.CTLOCID")
+  		s DocID = ""
+ 		s:(UserID '= "") DocID = ##Class(web.SSUser).GetDefaultCareProvider(UserID)
+		s HospitalName = ##Class(EPRservice.BOSysOption).GetValueByName("HospitalName")
+		s FormatDate = ##class(EMRservice.Tools.Tool).GetHISStandardDateTimeFormat("GetFormatExt","Date")
+ 	</script>
+ 	<script language="javascript">
+ 		var docID = '#(DocID)#';
+ 		var formatDate = '#(FormatDate)#';
+		var userID = '#(UserID)#';
+		var userLocID = '#(UserLocID)#';
+		var HospitalName = '#(HospitalName)#';
+		var SSGroupID = '#(SSGroupID)#'
+ 	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.PoolList.js"></script>	
+</body>
+</html>

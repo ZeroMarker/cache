@@ -1,0 +1,140 @@
+<div class="hisui-layout"  title="" data-options="fit:true">
+	<div id="PatListSearchCons" data-options="region:'north',border:false" style="height:95px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'#(..Get("预住院审批列表"))#',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-top:0;border-bottom: 1px dashed #ccc;border-radius:0;">
+			<table class="search-table">
+				<tr>
+	   			    <td class="r-label"><label>#(..Get("登记号"))#</label></td>
+	   				<td>
+						<input class="hisui-validatebox" id="patientNo"/>
+					</td>
+					<td class="r-label"><label>#(..Get("患者姓名"))#</label></td>
+					<td>
+						<input class="hisui-validatebox" id="patientName"/>
+					</td>
+	   			<csp:if condition='BookPreLocDocLimit="1"'>
+		   				<td class="r-label" colspan="5" style="text-align:left;">
+			   			<input  class="hisui-radio" id = "DocSearch1" type="radio" label="#(..Get("未审核"))#" name="DocSearch" value="1" data-options="radioClass:''">
+						<input class="hisui-radio" id = "DocSearch2" type="radio" label="#(..Get("未审核(报告已全出)"))#" name="DocSearch" value="2" data-options="radioClass:''">
+						<input class="hisui-radio"  id = "DocSearch3"  type="radio" label="#(..Get("未审核(报告未全出)"))#" name="DocSearch" value="3" data-options="radioClass:''">
+						<input class="hisui-radio"  id = "DocSearch4" type="radio" label="#(..Get("已审核"))#" name="DocSearch" value="4" data-options="radioClass:''">
+						<input class="hisui-radio"  id = "DocSearch5"  type="radio" label="#(..Get("全部"))#" name="DocSearch" value="5" data-options="radioClass:''">	   			
+		   				</td >
+		   		<csp:else>
+		   			<csp:if condition='BookPreLocNurseLimit="1"'>
+							<td class="" colspan="5" style="text-align:left;padding:0 5px 0 10px">
+							<input class="hisui-radio" style="margin: 0 5px;" id = "NurseSearch1" type="radio" label="#(..Get("医生已审核通过"))#" name="NurseSearch" value="1" data-options="radioClass:''">
+							<input class="hisui-radio"  style="margin: 0 5px;" id = "NurseSearch2" type="radio" label="#(..Get("医生未审核"))#" name="NurseSearch" value="2" data-options="radioClass:''">
+							<input class="hisui-radio" style="margin: 0 5px;" id = "NurseSearch3" type="radio" label="#(..Get("护士已审核"))#" name="NurseSearch" value="3" data-options="radioClass:''">
+							<input class="hisui-radio" style="margin: 0 5px;" id = "NurseSearch4" type="radio" label="#(..Get("全部"))#" name="NurseSearch" value="4" data-options="radioClass:''">
+		   					</td >
+					<csp:else >
+						<csp:if condition='BookPreLocCashLimit="1"'>
+						<td class="" colspan="5" style="text-align:left;">
+							<input class="hisui-radio" id = "CashSearch1" type="radio" label="#(..Get("医生及护士审核通过"))#" name="CashSearch" value="1" data-options="radioClass:''">
+							<input class="hisui-radio" id = "CashSearch2" type="radio" label="#(..Get("医生及护士审核不通过"))#" name="CashSearch" value="2" data-options="radioClass:''">
+							<input class="hisui-radio" id = "CashSearch3" type="radio" label="#(..Get("未审核"))#" name="CashSearch" value="3" data-options="radioClass:''">
+							<input class="hisui-radio" id = "CashSearch4" type="radio" label="#(..Get("全部"))#" name="CashSearch" value="4" data-options="radioClass:''">
+		   				</td >
+						</csp:if>
+					</csp:if>
+				</csp:if>
+				<td class="r-label"><a id="Search" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+				</tr>
+			</table>	
+		</div>
+	</div>
+	<div id="PatListDiv" data-options="region:'center',border:false" style="padding:0 10px 10px 10px;"> 
+		<div class="hisui-panel" fit="true" data-options="bodyCls:'panel-body-gray' " style="height:100%;border-top:0;border-radius:0 0 4px 4px;">
+    		<table id="patientListData"></table>
+    	</div>
+    </div>
+</div>
+<div id="DocAgree-dialog" class="hisui-dialog" title="#(..Get("医生审批"))#" style="width:269px;height:200px;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true">
+	<div class="hisui-panel" style="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<label class="left_label" for="DocMark">#(..Get("医生审批结果"))#</label>
+				</td>
+				<td class="" colspan="2">
+					<input class="hisui-radio" id = "DocAgreeYes" type="radio" label="#(..Get("通过"))#" name="DocAgree" value="Y" data-options="radioClass:''">
+					<input class="hisui-radio" id = "DocAgreeNo" type="radio" label="#(..Get("不通过"))#" name="DocAgree" value="N" data-options="radioClass:''">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label class="left_label" for="DocMark">#(..Get("备注"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="DocMark"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label class="left_label" id="DocReasonlabe" for="DocReason">#(..Get("不通过原因"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="DocReason"/>
+				</td>
+			</tr>
+			<tr>
+			<td colspan="2" style="text-align: center;padding:0 0 0 10px;"><a href="javascript:void(0)" id="DocArgeeSave" data-options="iconCls:'icon-w-save'" class="hisui-linkbutton">#(..Get("保存"))#</a></td>
+			</tr>
+		</table>
+	</div>
+</div>
+<div id="NurseAgree-dialog" class="hisui-dialog" title="#(..Get("护士审批"))#" style="width:279px;height:240px;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true">
+	<div class="hisui-panel" style="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
+		<table class="search-table">
+			<tr>
+				<td class="r-label" style="width:90px">
+					<label class="left_label" for="DocMark">#(..Get("护士审批结果"))#</label>
+				</td>
+				<td class="" colspan="2">
+					<input class="hisui-radio" id = "NurseAgreeYes" type="radio" label="#(..Get("通过"))#" name="NurseAgree" value="Y" data-options="radioClass:'hischeckbox_square-blue'">
+					<input class="hisui-radio" id = "NurseAgreeNo" type="radio" label="#(..Get("不通过"))#" name="NurseAgree" value="N" data-options="radioClass:'hischeckbox_square-blue'">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label class="left_label" for="NurseMark">#(..Get("备注"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="NurseMark"/>
+				</td>
+			</tr>
+			<tr id="NurseReasontr">
+				<td class="r-label">
+					<label class="left_label" id="NurseReasonlabe" for="DocReason">#(..Get("不通过原因"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="NurseReason"/>
+				</td>
+			</tr>
+			<tr id="NurseBedlabletr">
+				<td class="r-label">
+					<label class="left_label" id="NurseBedlable" for="NurseBed">#(..Get("期望住院床位"))#</label>
+				</td>
+				<td>
+					<input class="textbox" id="NurseBed"/>
+				</td>
+			</tr>
+			<tr id="NurseBedtr">
+				<td class="r-label">
+					<label class="left_label" id="NurseBedDatelable" for="NurseBedDate">#(..Get("期望住院日期"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox" id="NurseBedDate"/>
+				</td>
+			</tr>
+			<tr>
+			<td colspan="2" style="text-align: center;padding:0 0 0 10px;"><a href="javascript:void(0)" id="NurseArgeeSave" data-options="iconCls:'icon-w-save'" class="hisui-linkbutton">#(..Get("保存"))#</a></td>
+			</tr>
+		</table>
+	</div>
+</div>
+<div class="window-mask alldom" style="width:100%;height:100%;z-index:3;top:55px;left:0px;position:absolute;filter:alpha(opacity=100);opacity: 1;font-size:1px;background-color:#ccc;text-align:center;padding-top: 20%;">
+	<h1>
+		<p><strong style="color:red">#(..Get("当前操作人员无权使用该页面，请去维护预住院审批权限."))#<strong></p>
+	</h1>
+</div>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--
+    采购计划 - 辅助 - 依据标准库存
+    csp:  csp/pha.in.v3.plan.createbystock.csp
+    js:   scripts/pha/in/v3/plan/createbystock.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <meta charset="gbk">
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        .pha-grid-a {
+            cursor: pointer;
+        }
+
+        .datagrid-header-check {
+            visibility: hidden;
+        }
+    </style> 
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div id="mainDiv-stock" data-options="region:'center',border:false" class="pha-body" >
+            <div class="hisui-layout" fit="true">
+                <div data-options = "region:'center',border:false,split:true">
+                    <div  class = "hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',title:'采购计划 / 辅助制单 / 依据库存上下限'" id="layout-plan-createbystock-panel">
+                        <table id="gridPlan"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridPlanBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="loc">#(..Get("采购科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="roundType">#(..Get("取整类型"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="roundType" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="stkCatGrp">#(..Get("类组"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="stkCatGrp" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                </td>
+
+                <td class="r-label"><a class="hisui-linkbutton" id="btnFind">查询</a></td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="commonRange">#(..Get("特定范围"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="commonRange" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <label for="roundPercent">#(..Get("取整比例"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="roundPercent" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="stkCat">#(..Get("库存分类"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="stkCat" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                </td>
+
+                <td class="r-label"><a class="hisui-linkbutton" id="btnClean">清屏</a></td>
+                <td class="r-label"><a class="hisui-linkbutton" onclick="PHA.HelpWindow({info:$('#createbystock_help').html()})"> 帮助</a></td>
+                <!-- <td class="r-label"><a class="hisui-linkbutton" id="btnSave">勾选数据复制到采购计划制单</a></td> -->
+                <!-- <td class="r-label">
+                    <a class="hisui-menubutton menubutton-blue" data-options="menu:'#btnToolsGrp'">保存</a>
+                    <div id="btnToolsGrp" class='menu-no-icon'>
+                        <div id="btnToolsUseQty">保存所有记录</div>
+                        <div id="btnToolsUseQty">保存勾选记录</div>
+                        <div id="btnToolsUseQty">保存数量不为空的记录</div>
+                    </div>
+                </td> -->
+            </tr>
+        </table>
+
+        <div class="pha-line"></div>
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-all-select'" id="btnCheckAll">勾选全部记录</a>
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-all-unselect'" id="btnUnCheckAll">取消勾选全部记录</a>
+        <a class="pha-a-split">|</a>
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'" id="btnDelete">删除勾选记录</a>
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-copy'" id="btnCopyGo">复制勾选记录到制单</a>
+        <a class="pha-a-split">|</a>
+        <!-- <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-undo'" id="btnDeleteUndo">撤销删除</a> -->
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-set-paper'" id="btnSetQty2Advice">设置未填采购数量等于建议数量</a>
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-set-zero'" id="btnSetQty2Zero">设置未填采购数量等于零</a>
+    </div>
+    <div id="createbystock_help">
+        <table class="pha-help-table">
+            <tr>
+                <td colspan=2>
+                    #(..Get("以”阿莫西林胶囊“为例，包装规格【50粒/盒】，大包装规格【100盒/箱】，补货标准【200盒】"))#
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("补货标准："))#</td>
+                <td>#(..Get("指科室药品信息维护中的补货标准，如设置为50盒，则代表50盒为一个补货标准"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("大包装单位："))#</td>
+                <td>#(..Get("指药品信息维护中的大包装单位"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("包装单位："))#</td>
+                <td>#(..Get("指科室药品信息维护中的入库单位"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("取整比例："))#</td>
+                <td>#(..Get("当计算出的数值小于取整比例时，数值向下取整，否则向上取整"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("举例1："))#</td>
+                <td>#(..Get("取整类型设包装单位，取整比例设0.5，当计算出的建议数量为10.4盒时，则按10盒处理"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("举例2："))#</td>
+                <td>#(..Get("取整类型设补货标准，取整比例设0.3，当计算出的建议数量为100盒时，则按200盒处理"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("举例3："))#</td>
+                <td>#(..Get("取整类型设大包装单位，取整比例设0.8，当计算出的建议数量为40盒时，则按0盒处理"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label">#(..Get("建议采购量："))#</td>
+                <td>#(..Get("等于当前库存"))#<b>#(..Get("减去"))#</b>#(..Get("标准库存"))#</td>
+            </tr>
+        </table>
+
+    </div>
+    <!-- 加载本页面js -->
+    <link rel="stylesheet" type="text/css" href="../scripts/pha/in/v3/com/css/ui.lite.css" />
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/createbystock.js"></script>
+</body>
+
+</html>

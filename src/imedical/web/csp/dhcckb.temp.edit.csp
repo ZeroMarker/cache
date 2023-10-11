@@ -1,0 +1,110 @@
+<html >
+<head>
+<title>临床知识库模板维护</title>
+<HISUI/>
+<DHCCKB/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/temp.edit.css"/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/temp.edit.js"></script>
+</head>
+
+<body >	
+<div class="hisui-layout"  fit="true">
+	<div data-options="region:'west',title:''"  style="width:420px; padding:4px 4px 4px 4px;" border=0>			
+		<div class="hisui-panel" data-options="title:'模板维护',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+			<!-- <div id="tempToolbar" style="padding:10px 0px 0px 10px">							
+				<table cellspacing="0" cellpadding="0" >
+					<tr>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="insert">新增</a></td>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="save">保存</a> </td>
+				      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="delete">删除</a></td>	
+				    </tr>
+				</table>
+			</div>
+			<div id="templist" toolbar="#tempToolbar"  border="false"></div> sufan 2020-03-05 做成树，要维护不同的模板-->
+			<div style="padding:10px 0px 10px 11px;">
+				<input id="tempsearch" href="#" class="hisui-searchbox" prompt='请输入描述'/>
+				<a style="margin-left:40px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick = "QueryTemp()" id="search">查询</a>
+			</div>
+			<ul id="tempTree"></ul>
+    	</div>				
+	</div>
+	<div data-options="region:'center',collapsible:false,headerCls:'panel-header-gray'" border=0>
+		<div id="PatPanel" class="hisui-layout" fit="true" style="">   
+			<div data-options="region:'west',title:''"  style="width:420px; padding:4px 4px 4px 0px;" border=0>			
+				<div class="hisui-panel" data-options="title:'实体属性',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+					<div id="attrToolbar" style="padding:10px 0px 0px 10px;">	
+						<table>
+						<tr>	
+							<td>实体<input id="entityType" href="#" class="hisui-combobox" style="width:150;"/></td>	
+							<td><input id="queryEnt" href="#" class="hisui-searchbox" style="width:155px;" prompt='请输入代码/名称/拼音码'/></td>
+						</tr>
+						<tr>							
+							<td>字典<input id="dicType" href="#" class="hisui-combobox" style="width:150"/></td>	
+							<td><input id="queryDic" href="#" class="hisui-searchbox" style="width:155px;" prompt='请输入代码/名称/拼音码'/></td>
+						</tr>
+					</table>
+						<!--
+						<input id="queryCode" href="#" class="hisui-searchbox" style="width:155px;" prompt='请输入代码/名称/拼音码'/>	
+						<td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a> </td>
+						-->
+					</div>
+					<div id="attrlist" toolbar="#attrToolbar"  border="false"></div>
+		    	</div>				
+			</div>
+			<div data-options="region:'center',title:''"  style="" border=0>			
+					
+					<div style="position:absolute;top:30%;left:20%"><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="addTempElem">添加</a></div>
+					<div style="position:absolute;top:40%;left:20%"><a class="hisui-linkbutton" data-options="iconCls:'icon-unuse',plain:true" id="removeTempElem">移除</a></div>
+					
+			</div>
+			<div data-options="region:'east',title:''"  style="width:400px; padding:4px 4px 4px 4px;" border=0>			
+				<div class="hisui-panel" data-options="title:'模板关联属性',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0;border-radius:0px;">	
+					<div id="tempElement"  border="false"></div>
+		    	</div>				
+			</div>
+		</div>  
+	</div> 
+	<!--
+	<div data-options="region:'east',title:''"  style="width:300px; padding:10px 0px 0px 10px;" border=0>					
+	</div>
+	-->
+</div>
+<!-- 树右键菜单 -->
+<div id="right" class="hisui-menu" style="">
+	<div onclick="newCreateItmCat('S')" data-options="iconCls:'icon-add'">新增同级</div>
+	<div onclick="newCreateItmCat('N')" data-options="iconCls:'icon-add'">新增下级</div>
+	<div onclick="newCreateItmCat('U')" data-options="iconCls:'icon-reset'">更新</div>
+	<div onclick="DeleTree()" data-options="iconCls:'icon-cancel'">删除</div>
+</div>	
+<!-- 同级 -->
+<div id="samewin">
+	<table border="1" cellspacing="0" cellpadding="1" class="form-table">
+		<tr>
+			<td align="right" class="tb_td_bk">描述：</td>
+			<td><input id="sametpdesc" class="ui-input"/></td>
+		</tr>
+		<tr >
+			<td align="right" class="tb_td_bk">代码：</td>
+			<td><input id="sametpcode" class="ui-input"/></td>
+		</tr>
+		<tr style="display:none;">
+			<td align="right" class="tb_td_bk">上级ID：</td>
+			<td><input id="lastsameId" class="ui-input" disabled="disabled"/></td>
+		</tr>
+		<tr>
+			<td align="right" class="tb_td_bk">上级：</td>
+			<td><input id="lastsamedesc" class="ui-input" disabled="disabled"/></td>
+		</tr>
+	</table>
+	<div id="icw_bt" style="float:right;margin-top:10px;margin-right:100px;">
+		<a href="#" id="saveTree" class="hisui-linkbutton" iconCls="icon-w-save">保存</a>
+		<a href="#" id="canwin"   style="margin-left:10px;" class="hisui-linkbutton" iconCls="icon-w-cancel">取消</a>
+	</div>
+</div>
+</body>
+</html>

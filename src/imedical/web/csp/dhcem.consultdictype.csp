@@ -9,9 +9,13 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--hxy 2020-05-27-->
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/consultdictype.js"></script>
+	<script Language="Javascript">
+   	var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+   </script>
 	<style>
 	.datagrid {
 	    border-radius: 4px 4px 4px 4px;
@@ -21,11 +25,11 @@
 </head>
 <body>
 <div class="hisui-layout" fit="true">
-	<div data-options="region:'west',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='width:570px;padding:10px 5px 10px 10px' border="false">
+	<div data-options="region:'west',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='width:540px;padding:10px 5px 10px 10px' border="false">
 		<div id="main" toolbar="#main_tb"></div>
 	</div>
 	<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px 10px 10px 5px' border="false">
-		<div id="" class="hisui-tabs tabs-gray" fit=true>
+		<div id="tab" class="hisui-tabs tabs-gray" fit=true>
 			<div title="项目属性设置" style="">
 				<div class="hisui-layout" fit="true">
 					<div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style='padding:10px' border="false">
@@ -48,7 +52,8 @@
 </div>
 <div id="main_tb">
 	<div style="height:10px"></div>
-	<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox"></input>	<!--hxy 2019-07-18-->
+	<!--<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospDrID" name="hospDrID" class="hisui-combobox" style="width:350px"></input>	<!--hxy 2019-07-18-->
+	<label id="_HospListLabel" style='margin-right:10px;margin-left:10px'>医院</label><input id="_HospList"><!--hxy 2020-05-27-->
 	<a style="margin-left:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="queryBTN">查询</a>
 	<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>	
 	<table cellspacing="0" cellpadding="0" >
@@ -56,6 +61,7 @@
 	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-add" onclick="insertRow()">新增</a></td>
 	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-cancel" onclick="deleteRow()">删除</a></td>
 	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-save" onclick="saveRow()">保存</a></td>
+	      <td><a href="#" class="hisui-linkbutton" plain="true" iconCls="icon-copy" onclick="copyRow()">复制</a></td>
 	    </tr>
 	</table>
 </div>
@@ -114,6 +120,21 @@
 	</div>
 	<div style="text-align:center;padding-top:10px">
 		<a href="#" class="hisui-linkbutton" iconCls="icon-save" onclick="treeItmSave()">保存</a>
+	</div>
+</div>
+
+<!--复制-->
+<div id="copyWin" class="hisui-dialog" style="width:400px;height:150px;padding:10px;" data-options="title:'复制',modal:true,closed:true,iconCls:'icon-w-paper'">
+	<div> 
+		<table style="border-spacing: 2px;">
+			<tr>
+				<td style="width:50px;padding-right:10px;" align="right">医院</td>
+				<td><input id="HospArr" style="width:280px;"/></td>	
+			</tr>
+		</table>
+	</div>
+	<div style="text-align:center;padding-top:10px">
+		<a href="#" class="hisui-linkbutton" iconCls="icon-save" onclick="saveCopy()">保存</a>
 	</div>
 </div>
  

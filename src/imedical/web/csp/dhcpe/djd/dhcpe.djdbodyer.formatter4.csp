@@ -1,0 +1,60 @@
+<!--
+Body 项目格式4
+dhcpe/djd/dhcpe.djdbodyer.formatter4.csp
+ -->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	w "<table>",!
+	// 这里用来定义每列宽度
+	w "<tr style='border-bottom:0.5pt dashed #ccc;'>",!
+	w "<th style='width:220pt;' align='center'>体检项目</th>",!
+	w "<th style='width:60pt;' align='center'>医护签名</th>",!
+	w "<th style='width:60pt;' align='center'>受检签名</th>",!
+	w "<th style='width:240pt;' align='center'>提示信息</th>",!
+	w "</tr>",!
+	
+	s length=BodyData.%Size()
+	f i=1:1:length {
+		s TypeInfo=BodyData.%Get(i-1)
+		
+		w "<tr style='height:2pt;'><td></td><td></td><td></td></tr>",!
+		
+		// 分类
+		w "<tr>",!
+		w "<td valign='top' style='background-color:#faf9de;'><b>&ensp;"_TypeInfo.TypeName_"</b></td>",!
+		w "<td style='background-color:#faf9de;'></td>",!
+		w "<td style='background-color:#faf9de;'></td>",!
+		w "<td rowspan="_(TypeInfo.ItemNum+1)_" valign='top' style='background-color:#faf9de;'>"_TypeInfo.TypeNotice_"</td>",!
+		w "</tr>",!
+		
+		
+		//s SignDesc=SignDesc_$s(SignDesc'="":"<br>",1:"")_$case(TypeInfo.PatSign,"Y":"&ensp;受检者签名",:"")
+		
+		// 标本
+		s SpecList=TypeInfo.SpecList
+		s specLen=SpecList.%Size()
+		s stripeNum=0
+		f j=1:1:specLen {
+			s borderInfo="border-bottom:0.5pt dashed #ccc;"
+			s:j=specLen borderInfo="border-bottom:0.5pt solid #777;"
+			
+			// 项目
+			s specItemNum=SpecList.%Get(j-1).SpecItemNum  // 合管的
+			s ItemList=SpecList.%Get(j-1).ItemList
+			s itemLen=ItemList.%Size()
+			f k=1:1:itemLen {
+				s stripeNum=stripeNum+1
+				s bgColor=""
+				s:stripeNum#2=0 bgColor="background-color:#f0f0f0;"  // 条纹
+				
+				w "<tr>",!
+				w "<td"_$s(((specLen'=j)&&(itemLen=k)):" style='"_borderInfo_"'",1:"")_">&ensp;"_ItemList.%Get(k-1).ItemName_"</td>",!
+				w:k=1 "<td rowspan="_specItemNum_" style='border-bottom:0.5pt solid #000;"_$s(((specLen'=j)&&(itemLen=k)):borderInfo,1:"")_"'></td>",!
+				w:k=1 "<td rowspan="_specItemNum_" style='border-bottom:0.5pt solid #000;"_$s(((specLen'=j)&&(itemLen=k)):borderInfo,1:"")_"'></td>",!
+				w "</tr>",!
+			}
+			
+			w:specLen=j "<tr style='height:2pt;'><td colspan=4 style='"_borderInfo_"'></td></tr>",!
+		}
+	}
+	w "</table>",!
+</SCRIPT>

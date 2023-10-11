@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<!--限制用药-配置界面
+	csp:csp/pha.in.v3.locdruglist.csp
+	js: scripts/pha/in/v3/LocDrugList/LocDrugList.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<HEAD>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+
+    <style>
+        .Text-width {
+            width: 485px !important;
+        }
+
+        .Text-width-loc {
+            width: 385px !important;
+        }
+    </style>
+</HEAD>
+
+
+<body>
+    <div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'north',border:false,split:true" class="pha-body-layout" style="overflow:hidden">
+                <table class="pha-con-table">
+                    <tr>
+                        <td class="r-label">
+                            <label for="cmbHos"> #(..Get("医院"))#</label>
+                        </td>
+                        <td>
+                            <input id="cmbHos" class="hisui-combobox  com-width">
+                        </td>
+                        <td>
+                            <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryList()">查询</a>
+                        </td>
+                        <td>
+                            <a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" onclick="javascript:clean()">清屏</a>
+                        </td>
+                        <td class="r-label">
+                            <label for="conFile">#(..Get("文件选择"))#</label>
+                        </td>
+                        <td>
+                            <input id='conFileBox' data-pha />
+                        </td>
+                        <td>
+                            <a id='btnFileBox' class="hisui-linkbutton">导入</a>
+                        </td>
+                        <td>
+                            <a class="hisui-linkbutton" data-options="iconCls:'icon-w-download'" id="btnDownLoad">导入模板下载</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div data-options="region:'center'" border="false" class="pha-body" style="padding-top:0px;">
+                <div class="hisui-layout" fit="true">
+                    <div id="tabPrt" class="hisui-tabs tabs-gray" fit="true">
+                        <div id="tabPHCGeLable" title="按科室维护药品" data-options="closable:false" style="padding:10px">
+                            <div class="hisui-layout" fit="true">
+                                <div data-options="region:'west',width:360, border:false,split:true">
+                                    <div id="panel1" class="hisui-panel" title="科室目录" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                        <table id="LocGird"></table>
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',border:false">
+                                    <div id="tabARCOrPHCG" class="hisui-tabs tabs-gray" fit="true">
+                                        <div id="tabARCLable" title="医嘱项" data-options="closable:false,selected:true" style="padding:10px">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'west',width:460,border:false">
+                                                    <div id="panel2" class="hisui-panel" title="科室-医嘱项<font color='green'>(已维护)</font>" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                        <table id="LocInciArcimGrid"></table>
+                                                    </div>
+                                                </div>
+                                                <div data-options="region:'center',border:false" style="padding-left:10px;">
+                                                    <div id="panel3" class="hisui-panel" title="科室-医嘱项<font color='red'>(未维护)</font>" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                        <table id="LocWithOutDrugARCGrid"></table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="tabPHCGeLable" title="处方通用名" data-options="closable:false" style="padding:10px">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'west',width:460,border:false">
+
+                                                    <div id="panel4" class="hisui-panel" title="科室-处方通用名<font color='green'>(已维护)</font>" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                        <table id="LocWithPHCGGrid"></table>
+                                                    </div>
+                                                </div>
+                                                <div data-options="region:'center',border:false" style="padding-left:10px;">
+                                                    <div id="panel5" class="hisui-panel" title="科室-处方通用名<font color='red'>(未维护)</font>" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                        <table id="LocWithOutPHCGGrid"></table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--div id="tabDOCLable" title="审核医生维护"
+                                            data-options="closable:false,selected:true"
+                                            style="padding:10px">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'west',width:400,border:false">
+                                                    <div id="panel2" class="hisui-panel"
+                                                        title="科室-审核医生<font color='green'>(已维护)</font>"
+                                                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                        <table id="LocWithDocGrid"></table>
+                                                    </div>
+                                                </div>
+                                                <div data-options="region:'center',border:false"
+                                                    style="padding-left:10px;">
+                                                    <div id="panel3" class="hisui-panel"
+                                                        title="科室-审核医生<font color='red'>(未维护)</font>"
+                                                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                        <table id="LocWithOutDocGrid"></table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div-->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tabArcLable" title="按药品维护科室" data-options="closable:false,border:false,selected:false" style="padding:10px">
+                            <div class="hisui-layout" fit="true">
+                                <div data-options="region:'west',width:510, border:false,split:true">
+                                    <div id="tabDrugArcOrPhcg" class="hisui-tabs tabs-gray" fit="true">
+                                        <div id="tabARCLable" title="医嘱项" data-options="closable:false,selected:true">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'center',split:true,bodyCls:'panel-body-gray'" border="false">
+                                                    <table id="DrugArcGird"></table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="tabPHCGeLable" title="处方通用名" data-options="closable:false,border:false">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'center',bodyCls:'panel-body-gray'" border="false">
+                                                    <table id="DrugPHCGGird" border="false"></table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--div id="tabDOCLable" title="审核医生维护"
+                                            data-options="closable:false,border:false,selected:true">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'center',bodyCls:'panel-body-gray'"
+                                                    border="false">
+                                                    <table id="DocGird" border="false"></table>
+                                                </div>
+                                            </div>
+                                        </div-->
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',border:false">
+                                    <div class="hisui-layout" fit="true">
+                                        <div data-options="region:'west',width:410,border:false,split:true">
+                                            <div id="panel6" class="hisui-panel" title="医生科室列表<font color='green'>(已维护)</font>" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                <table id="DrugWithLocGird"></table>
+                                            </div>
+                                        </div>
+                                        <div data-options="region:'center',border:false">
+                                            <div id="panel7" class="hisui-panel" title="医生科室列表<font color='red'>(未维护)</font>" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                <table id="DrugWithOutLocGird"></table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="LocBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id='cmbDocLoc' placeholder="选择医生科室..." >
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="LocAndArcBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="LULocInciArcim" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true' placeholder="选择医嘱项...">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="LocWithOutArcBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="LULocInciArcimNo" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true' placeholder="选择医嘱项...">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="ArcBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="LUArcimAndLoc" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true' placeholder="选择医嘱项...">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="ArcAndLocBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id='cmbDrugDocLoc' placeholder="选择医生科室..." class="hisui-combobox">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="ArcWithOutLocBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id='cmbDrugDocLocNo' placeholder="选择医生科室..." class="hisui-combobox">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="LocInciPhcgBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="LULocPhcg" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true' placeholder="选择处方通用名...">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="LocInciPhcgNoBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="LULocPhcgNo" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true' placeholder="选择处方通用名...">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="PHCGMainBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="LUPHCGMain" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true' placeholder="选择处方通用名...">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="TextLocDocBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="TextLocDoc" href="#" class="hisui-searchbox" placeholder="医生模糊检索..." />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="TextLocDocNoBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="TextLocDocNo" href="#" class="hisui-searchbox" placeholder="医生模糊检索..." />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="TextLocDocMainBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="TextLocDocMain" href="#" class="hisui-searchbox" placeholder="医生模糊检索..." />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script type="text/javascript" src="../scripts/pha/in/v3/LocDrugList/LocDrugList.js"></script>
+    <!-- 导入excel文件读取插件 -->
+    <script type="text/javascript" src="../scripts/pha/plugins/xlsx/xlsx.full.min.js"></script>
+
+</body>
+
+</HTML>

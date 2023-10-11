@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<!--限制用药-配置界面
+	csp:csp/pha.in.v3.druglimit.csp
+	js: scripts/pha/in/v3/DrugLimit/DrugLimit.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<HEAD>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+
+    <style>
+        .com-width {
+            width: 313px !important;
+        }
+
+        .Text-width {
+            width: 480px !important;
+        }
+    </style>
+</HEAD>
+
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+            <div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">
+                <div data-options="region:'center',title:'限制用药维护',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray',collapsible:true">
+                    <div class="hisui-layout" fit="true" style="background-color: #fff;">
+                        <div data-options="region:'north',border:false,split:true" class="dhcpha-north-tbl-2" style="overflow:hidden">
+                            <table class="pha-con-table">
+                                <tr>
+                                    <td>
+                                        <label for="cmbHos"><span style="color:red;">*</span>#(..Get("医院"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="cmbHos" class="hisui-combobox  com-width">
+                                    </td>
+                                    <td>
+                                        <label for="cmbPhaLoc">#(..Get("药房"))#</label>
+                                    </td>
+                                    <td>
+                                        <input id="cmbPhaLoc" class="hisui-combobox com-width">
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:queryList()">查询</a>
+                                    </td>
+                                    <td>
+                                        <a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" onclick="javascript:clean()">清屏</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div data-options="region:'center'" border="false" class="pha-body" style="padding-top:0px;background-color: #fff;">
+
+                            <div class="hisui-layout" fit="true">
+                                <div data-options="region:'west',width:500, border:false,split:true">
+
+                                    <div id="tabPrt" class="hisui-tabs tabs-gray" fit="true">
+                                        <div id="tabDrugPropLable" title="药品属性" data-options="closable:false,border:false">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'center',bodyCls:'panel-body-gray'" border="false">
+                                                    <table id="gridDrugProp" border="false"></table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="tabPHCGeLable" title="处方通用名" data-options="closable:false">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'center',split:true,bodyCls:'panel-body-gray'" border="false">
+                                                    <table id="gridPhcGe"></table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="tabArcLable" title="医嘱项" data-options="closable:false,border:false,selected:true">
+                                            <div class="hisui-layout" fit="true">
+                                                <div data-options="region:'center',bodyCls:'panel-body-gray'" border="false">
+                                                    <table id="gridArc" border="false"></table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div data-options="region:'center',border:false">
+                                    <div class="hisui-layout" fit="true">
+                                        <div data-options="region:'west',width:372,border:false,split:true">
+                                            <div id="panel" class="hisui-panel" title="限制条件" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">
+
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="cmbDocLoc">#(..Get("医生科室"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='cmbDocLoc' placeholder="选择医生科室..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comAdmloc">#(..Get("就诊科室"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comAdmloc' placeholder="选择就诊科室..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comAdmward">#(..Get("就诊病区"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comAdmward' placeholder="选择就诊病区..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comDoclevel">#(..Get("医生职称"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comDoclevel' placeholder="选择医生职称..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comdoc">#(..Get("指定医生"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comdoc' placeholder="选择指定医生..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comAdmtype">#(..Get("就诊类型"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comAdmtype' placeholder="选择就诊类型..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comadmPayType">#(..Get("患者费别"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comadmPayType' placeholder="选择患者费别..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+												<div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comRegisteredType">#(..Get("挂号职称"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comRegisteredType' placeholder="选择挂号职称..." class="hisui-combobox">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="pamino" title="输入多个登记号用','号隔开，输入完点击Enter键自动补零" class="hisui-tooltip" data-options="position:'right'">&emsp;#(..Get("登记号"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='pamino' placeholder="输入患者登记号..." class="hisui-validatebox" style="width:253px">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="qty">#(..Get("限制数量"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='qty' placeholder="输入限制数量..." class="hisui-numberbox" style="width:148px">
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='PHCDFUom' placeholder="药学基本单位" class="hisui-numberbox" style="width:100px" disabled="true">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="QtyStartDate" title="统计消耗数量的起止时间段：不填则默认取配置每月的消耗，填则必须在'限制日期'范围内，建议小于一月效率较高。" class="hisui-tooltip" data-options="position:'right'">#(..Get("消耗日期"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id="QtyStartDate" class="hisui-datebox dhcpha-date" type="text" style="width:113px" />
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <label for="QtyEndDate">#(..Get("至"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id="QtyEndDate" class="hisui-datebox dhcpha-date" type="text" style="width:113px" />
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="ActiveStartDate" title="限制条件有效的时间段：填则按开医嘱日期判断是否有效，不填则始终有效。" class="hisui-tooltip" data-options="position:'right'">#(..Get("限制日期"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id="ActiveStartDate" class="hisui-datebox dhcpha-date" type="text" style="width:113px" />
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <label for="ActiveEndDate">#(..Get("至"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id="ActiveEndDate" class="hisui-datebox dhcpha-date" type="text" style="width:113px" />
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row" style="border-top:1px solid #ccc">
+                                                </div>
+                                                <div class="pha-row">
+                                                    <div class="pha-col">
+                                                        <label for="comCtrlLevel">#(..Get("管控级别"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='comCtrlLevel' placeholder="选择管控级别..." class="hisui-combobox ">
+                                                    </div>
+                                                </div>
+                                                <div class="pha-row" id="promptDiv">
+                                                    <div class="pha-col">
+                                                        <label for="prompt" title="维护提醒信息，将会在医生开医嘱时提示该信息。" class="hisui-tooltip" data-options="position:'right'">#(..Get("提醒信息"))#</label>
+                                                    </div>
+                                                    <div class="pha-col">
+                                                        <input id='prompt' placeholder="输入提醒信息..." class="hisui-validatebox" style="width:253px">
+                                                    </div>
+                                                </div>
+
+                                                <!--div class="pha-col" style="margin-left:1px;" >
+					                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-save" onclick="javascript:Save()">保存组合</a>
+					                            </div-->
+
+                                                <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+                                                    <a class="hisui-linkbutton" iconCls='icon-w-save' plain="false" style="overflow:hidden;" id="btnSave" onclick="javascript:Save()">保存</a>
+                                                    <a class="hisui-linkbutton" iconCls='icon-w-clean' plain="false" style="overflow:hidden;margin-left:20px;" id="btnClearCond" onclick="javascript:btnClearCond()">清除</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div data-options="region:'center',border:false">
+                                            <div class="hisui-layout" fit="true" id="comblist">
+                                                <div data-options="region:'center',border:false">
+                                                    <div id="panel" class="hisui-panel" title="限制组合信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+                                                        <table id="gridCom"></table>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="PhcGeBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="PHCGeneric" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true'>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="ArcBar">
+        <table class="pha-con-table">
+            <tr>
+                <td>
+                    <input id="inciArcim" class="validatebox-text" data-pha='class:"hisui-lookup",requied:true,clear:true,save:true'>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="splitComBar">
+        <div style="padding:1px">
+
+            <a class="hisui-linkbutton" plain="false" iconCls="icon-w-save" onclick="javascript:SetDefVal()">保存组合</a>
+            <a class="hisui-linkbutton" plain="false" iconCls="icon-remove" onclick="javascript:SetDefVal()">删除组合</a>
+        </div>
+    </div>
+    </div>
+    <div id="ComBar">
+        <div style="padding:1px">
+            <!--a class="hisui-linkbutton" plain="false" iconCls="icon-remove" onclick="javascript:DeleteComb()">删除组合</a-->
+            <!--a class="hisui-linkbutton" plain="false" iconCls="icon-remove" onclick="javascript:SetDefVal()">删除组合明细</a-->
+        </div>
+    </div>
+    </div>
+    <div id="TextPropBar">
+        <table class="pha-con-table" style="width:100%">
+            <tr>
+                <td>
+                    <input id="TextProp" class="hisui-validatebox" style="width:calc(100% - 20px);" data-pha='class:"hisui-validatebox",save:true,clear:true' placeholder="属性模糊检索...">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!--限制组合信息工具栏-->
+    <div id="gridComBar">
+        <div class="datagrid-toolbar" style="border-bottom:0;">
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-copy" id="btnCopy" onclick="javascript:Copy()">复制</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnCopy" onclick="javascript:updateCom()">修改</a>
+        </div>
+    </div>
+    <!--医嘱项弹框-复制限制组合信息-->
+    <div id="diagArcCopy" class="hisui-dialog" data-options="closed:true,width:500,height:600,title:'医嘱项-复制限制组合信息：仅能未维护限制属性的医嘱项'" style="padding:10px">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" style="border:1px solid #cccccc;border-radius: 4px;">
+                <div id="gridArcCopy"></div>
+            </div>
+        </div>
+    </div>
+    <!--医嘱项弹框-工具栏-->
+    <div id="gridArcCopyBar">
+        <div style="padding:1px">
+            <div class="pha-drug-inc-text">
+                <input id="TextCopyArc" href="#" class="hisui-searchbox" style="width:500" placeholder="医嘱项模糊检索..." />
+            </div>
+        </div>
+    </div>
+    <!--处方通用名弹框-复制限制组合信息-->
+    <div id="diagPhcgCopy" class="hisui-dialog" data-options="closed:true,width:500,height:600,title:'处方通用名-复制限制组合信息：仅能未维护限制属性的处方通用名'" style="padding:10px">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" style="border:1px solid #cccccc;border-radius: 4px;">
+                <div id="gridPhcgCopy"></div>
+            </div>
+        </div>
+    </div>
+    <!--处方通用名弹框-工具栏-->
+    <div id="gridPhcgCopyBar">
+        <div style="padding:1px">
+            <div class="pha-drug-inc-text">
+                <input id="TextCopyPhcg" href="#" class="hisui-searchbox" style="width:500" placeholder="医嘱项模糊检索..." />
+            </div>
+        </div>
+    </div>
+    <!-- 限制用药组合明细修改 -->
+    <div id="diagUpdateCom" class="hisui-dialog" data-options="closed:true,width:430,height:660,title:'限制组合信息修改'">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <input id="upCombRowid" type="hidden" class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",clear:true,query:true' />
+                    <label for="upDocLoc">#(..Get("医生科室"))#</label>
+                </td>
+                <td>
+                    <input id='upDocLoc' placeholder="选择医生科室..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upAdmloc">#(..Get("就诊科室"))#</label>
+                </td>
+                <td>
+                    <input id='upAdmloc' placeholder="选择就诊科室..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upAdmward">#(..Get("就诊病区"))#</label>
+                </td>
+                <td>
+                    <input id='upAdmward' placeholder="选择就诊病区..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upDoclevel">#(..Get("医生职称"))#</label>
+                </td>
+                <td>
+                    <input id='upDoclevel' placeholder="选择医生职称..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="updoc">#(..Get("指定医生"))#</label>
+                </td>
+                <td>
+                    <input id='updoc' placeholder="选择指定医生..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upAdmtype">#(..Get("就诊类型"))#</label>
+                </td>
+                <td>
+                    <input id='upAdmtype' placeholder="选择就诊类型..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                <td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upadmPayType">#(..Get("患者费别"))#</label>
+                </td>
+                <td>
+                    <input id='upadmPayType' placeholder="选择患者费别..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                     <label for="uprgisteredType">#(..Get("挂号职称"))#</label>
+                </td>
+                <td>
+                    <input id='uprgisteredType' placeholder="选择挂号职称..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="uppamino" title="输入完点击Enter键自动补零" class="hisui-tooltip" data-options="position:'right'">#(..Get("登记号"))# </label>
+                </td>
+                <td>
+                    <input id='uppamino' placeholder="输入患者登记号..." class="hisui-validatebox" style="width:253px" data-pha='class:"hisui-validatebox",query:true,clear:true'>
+                <td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upqty">#(..Get("限制数量"))#</label>
+                </td>
+                <td>
+                    <input id='upqty' placeholder="输入限制数量..." class="hisui-numberbox" style="width:142px;" data-pha='class:"hisui-numberbox",query:true,clear:true'>
+                    <input id='upPHCDFUom' placeholder="药学基本单位" class="hisui-validatebox" style="width:100px;margin-left:6px;" disabled="true" data-pha='class:"hisui-validatebox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upQtyStartDate" title="统计消耗数量的起止时间段：不填则默认取配置每月的消耗，填则必须在'限制日期'范围内，建议小于一月效率较高。" class="hisui-tooltip" data-options="position:'right'">#(..Get("消耗日期"))#</label>
+                </td>
+                <td>
+                    <input id="upQtyStartDate" class="hisui-datebox dhcpha-date" style="width:113px" data-pha='class:"hisui-datebox",query:true,clear:true' />
+                    <div class="pha-col">
+                        <label for="upQtyEndDate">#(..Get("至"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="upQtyEndDate" class="hisui-datebox dhcpha-date" style="width:113px" data-pha='class:"hisui-datebox",query:true,clear:true' />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="upActiveStartDate" title="限制条件有效的时间段：填则按开医嘱日期判断是否有效，不填则始终有效。" class="hisui-tooltip" data-options="position:'right'">#(..Get("限制日期"))#</label>
+                </td>
+                <td>
+                    <input id="upActiveStartDate" class="hisui-datebox dhcpha-date" style="width:113px" data-pha='class:"hisui-datebox",query:true,clear:true'>
+                    <div class="pha-col">
+                        <label for="upActiveEndDate">#(..Get("至"))#</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="upActiveEndDate" class="hisui-datebox dhcpha-date" style="width:113px" data-pha='class:"hisui-datebox",query:true,clear:true' />
+                    </div>
+                </td>
+
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <table table id="qConditioni" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="upCtrlLevel">&emsp;&emsp;&emsp;#(..Get("管控级别"))#</label>
+                </td>
+                <td>
+                    <input id='upCtrlLevel' placeholder="选择管控级别..." data-pha='class:"hisui-combobox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr id="upPromptDiv">
+                <td class="r-label">
+                    <label for="upprompt" title="维护提醒信息，将会在医生开医嘱时提示该信息。" class="hisui-tooltip" data-options="position:'right'">#(..Get("提醒信息"))#</label>
+                </td>
+                <td>
+                    <input id='upprompt' placeholder="输入提醒信息..." class="hisui-validatebox" style="width:253px" data-pha='class:"hisui-validatebox",query:true,clear:true'>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="UpRemark">#(..Get("备注"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id='UpRemark' class="hisui-validatebox" style="width:253px" data-pha='class:"hisui-validatebox",query:true,clear:true'>
+                </td>
+            </tr>
+        </table>
+        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+            <a href="#" id="SaveUpCom" align="center" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:SaveUpCom()">保存</a>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="../scripts/pha/com/v1/css/ui.css">
+    </link>
+    <script type="text/javascript" src="../scripts/pha/in/v3/DrugLimit/DrugLimit.js"></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/preview.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
+
+</body>
+
+</HTML>

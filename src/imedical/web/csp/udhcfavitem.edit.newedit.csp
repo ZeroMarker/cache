@@ -39,7 +39,7 @@ s inputInstrNotDrugCat=##Class(web.DHCDocConfig).GetConfigNode("SelectInstrNotDr
 ;滴速用法
 s DrippingSpeedInstr=##Class(web.DHCDocConfig).GetConfigNode("DrippingSpeedInstr")
 ;可以录入小数的子类
-s GetARCItemSubCatID=##Class(%CSP.Page).Encrypt($lb("web.DHCDocOrderEntry.GetARCItemSubCatIDBroker"))
+s GetARCItemSubCatID=##Class(websys.Page).Encrypt($lb("web.DHCDocOrderEntry.GetARCItemSubCatIDBroker"))
 s AllowEntryDecimalItemCat=##class(web.DHCDocConfig).GetConfigNode("AllowEntryDecimalItemCat")
 if DrippingSpeedInstr'="0" s DrippingSpeedInstr="^"_DrippingSpeedInstr_"^"
 s ARCOSPrescType=##Class(web.UDHCFavItemNew).GetARCOSPrescType(ARCOSRowid)
@@ -75,6 +75,7 @@ if SkinTestInstr'="" s SkinTestInstr="^"_SkinTestInstr_"^"
 ;外用用法
 s WYInstr=##Class(web.DHCDocConfig).GetConfigNode("WYInstr")
 if WYInstr'="" s WYInstr="^"_WYInstr_"^"
+s HISUIStyleCode=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
 </Server>
 <SCRIPT Language="Javascript">
 var ARCOSItemRowid="#(ARCOSItemRowid)#"
@@ -111,24 +112,24 @@ var WYInstr="#(WYInstr)#"
 		<table class="search-table">
 			<tr>
 				<td class="label">
-					<label id="CItemDesc">医嘱名称</label>
+					<label id="CItemDesc">#(..Get("医嘱名称"))#</label>
 				</td>
 				<td colspan="3">
-					<input id="ItemDesc" class="textbox" style=""/>
+					<input id="ItemDesc" class="textbox" style="width:100%;"/>
 					<input id="ItemRowid" name="ItemRowid" style="display:none;">
 					<!--img name="imgItemDesc" id="imgItemDesc" src="../images/websys/lookup.gif" style="margin-left:-20px;"-->
 				</td>
 			</tr>
 			<tr>
 				<td class="label">
-					<label id="CItemDoseQty">单次剂量</label>
+					<label id="CItemDoseQty">#(..Get("单次剂量"))#</label>
 				</td>
 				<td>
 					<input  id="ItemDoseQty" class="textbox"/>
 					<input  id="OrderFreqTimeDoseStr" class="textbox" style="display:none;"/>
 				</td>
 				<td class="r-label">
-					<label id="CItemDoseUOM">剂量单位</label>
+					<label id="CItemDoseUOM">#(..Get("剂量单位"))#</label>
 				</td>
 				<td>
 					<input id="ItemDoseUOM" class="hisui-combobox textbox"/>
@@ -136,14 +137,14 @@ var WYInstr="#(WYInstr)#"
 			</tr>
 			<tr>
 				<td class="label">
-					<label id="CItemFrequence">频次</label>
-					<input  id="OrderFreqWeekStr" class="textbox" style="display:none;"/>
+					<label id="CItemFrequence">#(..Get("频次"))#</label>
+					<input  id="OrderFreqDispTimeStr" class="textbox" style="display:none;"/>
 				</td>
 				<td>
 					<input id="ItemFrequence" class="hisui-combobox textbox"/>
 				</td>
 				<td class="r-label">
-					<label id="CItemInstruction">用法</label>
+					<label id="CItemInstruction">#(..Get("用法"))#</label>
 				</td>
 				<td>
 					<input id="ItemInstruction" class="hisui-combobox textbox"/>
@@ -151,12 +152,12 @@ var WYInstr="#(WYInstr)#"
 			</tr>
 			<tr>
 				<td class="label">
-					<label id="CItemQty">数量</label>
+					<label id="CItemQty">#(..Get("数量"))#</label>
 				</td>
 				<td><input  id="ItemQty" class="textbox"/>
 				</td>
 				<td class="r-label">
-					<label id="CItemBillUOM">单位</label>
+					<label id="CItemBillUOM">#(..Get("单位"))#</label>
 				</td>
 				<td>
 					<input id="ItemBillUOM" class="hisui-combobox textbox"/>
@@ -164,13 +165,13 @@ var WYInstr="#(WYInstr)#"
 			</tr>
 			<tr>
 				<td class="label">
-					<label id="CItemDuration">疗程</label>
+					<label id="CItemDuration">#(..Get("疗程"))#</label>
 				</td>
 				<td>
 					<input id="ItemDuration" class="hisui-combobox textbox"/>
 				</td>
 				<td class="r-label">
-					<label id="CsampleType">标本</label>
+					<label id="CsampleType">#(..Get("标本"))#</label>
 				</td>
 				<td>
 					<input id="sampleType" class="hisui-combobox textbox"/>
@@ -178,13 +179,13 @@ var WYInstr="#(WYInstr)#"
 			</tr>
 			<tr>
 				<td class="label">
-					<label id="CItmLinkDoctor">关联</label>
+					<label id="CItmLinkDoctor">#(..Get("关联"))#</label>
 				</td>
 				<td>
 					<input  id="ItmLinkDoctor" class="textbox"/>
 				</td>
 				<td class="r-label">
-					<label id="Cremark">备注</label>
+					<label id="Cremark">#(..Get("备注"))#</label>
 				</td>
 				<td>
 					<input  id="remark" class="hisui-combobox textbox"/>
@@ -192,13 +193,13 @@ var WYInstr="#(WYInstr)#"
 			</tr>
 			<tr>
 				<td class="label">
-					<label id="CDHCDocOrderType">医嘱类型</label>
+					<label id="CDHCDocOrderType">#(..Get("医嘱类型"))#</label>
 				</td>
 				<td>
 					<input id="DHCDocOrderType" class="hisui-combobox textbox"/>
 				</td>
 				<td class="r-label">
-					<label id="COrderPriorRemarks">附加说明</label>
+					<label id="COrderPriorRemarks">#(..Get("附加说明"))#</label>
 				</td>
 				<td>
 					<input id="OrderPriorRemarks" class="hisui-combobox textbox"/>
@@ -206,13 +207,13 @@ var WYInstr="#(WYInstr)#"
 			</tr>
 			<tr>
 				<td class="label">
-					<label id="CDHCDocOrderType">接收科室</label>
+					<label id="CDHCDocOrderType">#(..Get("接收科室"))#</label>
 				</td>
 				<td>
 					<input id="DHCDocOrderRecLoc" class="hisui-combobox textbox"/>
 				</td>
 				<td class="r-label">
-					<label id="CDHCDocOrderStage">医嘱阶段</label>
+					<label id="CDHCDocOrderStage">#(..Get("医嘱阶段"))#</label>
 				</td>
 				<td>
 					<input id="DHCDocOrderStage" class="hisui-combobox textbox"/>
@@ -220,13 +221,13 @@ var WYInstr="#(WYInstr)#"
 			</tr>
 		    <tr>
 		    	<td class="label">
-		    		<label id="COrderSpeedFlowRate">输液流速</label>
+		    		<label id="COrderSpeedFlowRate">#(..Get("输液流速"))#</label>
 		    	</td>
 		    	<td>
 		    		<input  id="OrderSpeedFlowRate" class="textbox"/>
 		    	</td>
 		    	<td class="r-label">
-		    		<label id="COrderFlowRateUnit">流速单位</label>
+		    		<label id="COrderFlowRateUnit">#(..Get("流速单位"))#</label>
 		    	</td>
 		    	<td>
 		    		<input id="OrderFlowRateUnit" class="hisui-combobox textbox"/>
@@ -235,13 +236,13 @@ var WYInstr="#(WYInstr)#"
 		    <!--tr><td class="r-label"><label id="CChoseType">草药</label></td><td><input id="ChoseType" name="ChoseType" type="checkbox"></td></tr-->
 			<tr>
 				<td class="label">
-					<label for="MustEnter" id="CMustEnter">必开项目</label>
+					<label for="MustEnter" id="CMustEnter">#(..Get("必开项目"))#</label>
 				</td>
 				<td>
 					<input id="MustEnter" class='hisui-checkbox' type="checkbox" label="">
 				</td>
-				<td class="r-label" title="仅新模式检查可用">
-		    		<label id="COrderBodyPartLabelText">部位信息</label>
+				<td class="r-label" title="#(..Get("仅新模式检查可用"))#">
+		    		<label id="COrderBodyPartLabelText">#(..Get("部位信息"))#</label>
 		    	</td>
 		    	<td>
 		    		<input id="OrderBodyPartLabelText" class="textbox"/>
@@ -251,13 +252,13 @@ var WYInstr="#(WYInstr)#"
 			<!--目前商议的都走皮试引导窗口，那维护皮试相关信息的意义就不大了，但是考虑到部分医生对某些药品是否需要皮试可能与药剂室有冲突，还是放开了展示style="display:none;"-->
 			<tr >
 		    	<td class="label">
-					<label for="SkinTest" id="CSkinTest">皮试</label>
+					<label for="SkinTest" id="CSkinTest">#(..Get("皮试"))#</label>
 				</td>
 				<td>
 					<input id="SkinTest" class='hisui-checkbox' type="checkbox" label="">
 				</td>
 		    	<td class="r-label">
-		    		<label id="CSkinAction">皮试备注</label>
+		    		<label id="CSkinAction">#(..Get("皮试备注"))#</label>
 		    	</td>
 		    	<td>
 		    		<input id="SkinAction" class="hisui-combobox textbox"/>
@@ -265,13 +266,13 @@ var WYInstr="#(WYInstr)#"
 		    </tr>
 		    <tr>
 		    	<td class="label">
-					<label for="NotifyClinician" id="CNotifyClinician">加急</label>
+					<label for="NotifyClinician" id="CNotifyClinician">#(..Get("加急"))#</label>
 				</td>
 				<td>
 					<input id="NotifyClinician" class='hisui-checkbox' type="checkbox" label="">
 				</td>
 				<td class="r-label">
-					<label for="RemoveCeler" id="CRemoveCeler">快速例外</label>
+					<label for="RemoveCeler" id="CRemoveCeler">#(..Get("快速例外"))#</label>
 				</td>
 				<td>
 					<input id="RemoveCeler" class='hisui-checkbox' type="checkbox" label="">
@@ -279,16 +280,20 @@ var WYInstr="#(WYInstr)#"
 		    </tr>
 			<tr>
 				<td colspan="4" style="text-align:center;padding-left:15px;">
-					<a id="Save" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					<csp:if condition='HISUIStyleCode="lite"'>
+						<a id="Save" href="#" class="hisui-linkbutton green" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+					<csp:else>
+						<a id="Save" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">#(..Get("保存"))#</a>
+					</csp:if>
 					<div style="display:inline-block;margin:0 20px;"></div>
-					<a id="Clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+					<a id="Clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
 				</td>
 			</tr>
 		</table>
 	 </div>
 </div>   
-<SCRIPT type="text/javascript" SRC='../SCRIPTS/DHCOPAdm.Common.js'></SCRIPT>
-<SCRIPT type="text/javascript" SRC='../SCRIPTS/DHCWeb.OPCommon.js'></SCRIPT>
+<SCRIPT type="text/javascript" SRC='../scripts/DHCOPAdm.Common.js'></SCRIPT>
+<SCRIPT type="text/javascript" SRC='../scripts/DHCWeb.OPCommon.js'></SCRIPT>
 <script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>
 <script type="text/javascript" src="../scripts/udhcfavitem.edit.newedit.js"></script>
 </body> 

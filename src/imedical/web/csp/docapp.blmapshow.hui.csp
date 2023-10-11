@@ -18,10 +18,21 @@ xmp {
 }
 .pt-butttom{border:1px solid #fff;}
 .pt-butttom a{
-	margin:8px 0px 0px 60px;
+	margin:8px 0px 0px 30px;
 }
 .pt-butttom .l-btn-text{
 	min-width:60px
+}
+.clsRequired {
+	font-size: 14px;
+	background-image: url(../images/Required.gif);
+	background-repeat: no-repeat;
+	background-position: left center;
+	padding-left: 8px;
+}
+#itemList input[type="checkbox"]{
+	width:16px;
+	height:16px;
 }
 </style>
 <link href="../scripts/dhcdoc/dhcapp/css/base.css" rel="stylesheet">
@@ -43,8 +54,8 @@ xmp {
 <body>
 	<div id="mainPanel" class="hisui-layout" fit="true"> 
 		<div data-options="region:'center',headerCls:'panel-header-gray'" border="false">
-			<div id="mPanel" class="hisui-panel" id ="ItemListTitle" title="MapDesc" style="min-width:400px;height:150px;padding:0px 10px 20px 10px;" data-options="headerCls:'panel-header-gray'">
-				<table id="itemList" border="1" cellspacing="0" cellpadding="1" class="item-table"></table>
+			<div id="mPanel" class="hisui-panel" id ="ItemListTitle" title="MapDesc" style="min-width:400px;height:170px;padding:0px 0px 0px 0px;" data-options="headerCls:'panel-header-gray'">
+				<table id="itemList" border="0" cellspacing="0" cellpadding="1" class="item-table"></table>
 			</div>
 			<div id="TesItemID"></div>
 	<Server>
@@ -53,6 +64,7 @@ xmp {
 	s MapDesc=%request.Get("MapDesc")
 	s PisID=%request.Get("itemReqID")
 	s itemReqID=%request.Get("itemReqID")
+	s EmConsultItm=%request.Get("EmConsultItm")
 	s mListDataDoc=%request.Get("ARCIMStr")
 	s ARCIM=%request.Get("ARCIM")
 	s pid=%request.Get("pid")
@@ -139,20 +151,26 @@ xmp {
 	w !,"var LgGroupID = session['LOGON.GROUPID']; "
 	w !,"var LgHospID=session['LOGON.HOSPID'];"
 	w !,"</SCRIPT>"
-	s PrintSet=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("PrintSet")
+	;s PrintSet=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("PrintSet")
+	s LgParam=%session.Get("LOGON.HOSPID")_"^"_%session.Get("LOGON.CTLOCID")
+	s PrintSet=##Class(DHCDoc.DHCApp.BasicConfig).GetAppPrtSetConfig("","Pis",LgParam)
 	s DefualtDoc=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("DocDr")
 	s CheckSpecEditor=##class(DHCDoc.DHCApp.BasicConfig).CheckSpecEditor(PisID,EpisodeID)
-	s TCTWomen=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("TCTWomen")
+	s TCTWomen=##class(DHCDoc.DHCApp.BasicConfig).CheckTCTWomenConfig(EpisodeID,%session.Get("LOGON.CTLOCID"))
+	
 	s LIVSpecFix=##class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("LIVSpecFix")
+	;医嘱录入必须有西医诊断子类
+    s OrdNeedMMDiagCat=##Class(web.DHCDocConfig).GetConfigNode("OrdNeedMMDiagCat",%session.Get("LOGON.HOSPID"))
+    s OrdNeedMMDiagCat="^"_OrdNeedMMDiagCat_"^"
 	</Server>
 	</div>
 	
-	<div id="btPanel" data-options="region:'south',headerCls:'panel-header-gray'" style="height:50px;" border="false">		
+	<div id="btPanel" data-options="region:'south',headerCls:'panel-header-gray'" style="height:50px;border-top: 1px solid #dddddd;border-left: 0px solid;border-right: 0px solid;border-bottom: 0px solid" border="true">		
 			<div class="pt-butttom">
-				<div style="float:right;padding-right:90px;">
-					<a id="CancelBLApply" href="#" class="hisui-linkbutton btn-lightred" data-options="iconCls:''" onclick="Cancle()">取消申请</a>
-					<a id="SaveBLApply" href="#" class="hisui-linkbutton btn-lightgreen" data-options="iconCls:''" onclick="Save()">保存</a>
-					<a id="SendBLApply" href="#" class="hisui-linkbutton btn-lightgreen" data-options="iconCls:''" onclick="Send()">发送</a>
+				<div style="text-align:center">
+					<a id="CancelBLApply" href="#" class="hisui-linkbutton red" data-options="iconCls:''" onclick="Cancle()">取消申请</a>
+					<a id="SaveBLApply" href="#" class="hisui-linkbutton green" data-options="iconCls:''" onclick="Save()">保存</a>
+					<a id="SendBLApply" href="#" class="hisui-linkbutton green" data-options="iconCls:''" onclick="Send()">发送</a>
 					<a id="PrintBLBar" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="PrintBar()">打印条码</a>
 					<a id="PrintBLApply" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="Print()">打印</a>
 				</div>
@@ -164,7 +182,7 @@ xmp {
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCIPBILL">
 			<!--INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='vx0iPRmdKcQ5ygin9LZpbfNHGNWefEeUP6zSq_ro82Y-'-->
-			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 		</form>
 	</div>
 	<SCRIPT language = 'javascript' >
@@ -195,7 +213,9 @@ xmp {
 		}else{
 			var itemReqJsonStr=""
 		}
+		var OrdNeedMMDiagCat="#(OrdNeedMMDiagCat)#"
 		var itemReqID="#(itemReqID)#"
+		var EmConsultItm="#(EmConsultItm)#"
 		//全局请求后台服务对象
 		var ServerObj={
 			BLInit:"#(BLInit)#",
@@ -223,5 +243,8 @@ xmp {
 	<script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/common/listcomponent.js"></script>
 	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js"></script>
+	<script defer="defer" type="text/javascript" src="../scripts/DHCMA/SS/interface/ToDoctor.js"></script>
+	<!--东华CDSS交互-->
+	<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
 </body>
 </html>

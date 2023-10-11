@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>重症评分模板</title>
+<csp:content charset="UTF-8">
+<dhcicu:easyui></dhcicu:easyui>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/icu/css/iconan.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/icu/css/custom.css" />
+<script src="../scripts/websys.js" type="text/javascript"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Constant.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.DateTime.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Framework.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.SystemConfig.js" ></script>
+<script language="Cache" method="OnPreHTTP" returntype="%Boolean"> 
+   i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+   // 转化用户ID
+   set userId=%request.Get("userId")
+   
+   //转换科室ID
+   set deptId=%request.Get("deptId")
+   
+   // 将医院ID和安全组ID设置为固定值
+   set hospId=2
+   
+   set groupId=%request.Get("groupId")
+   
+   if (##class(User.SSUser).%ExistsId(userId))
+   {
+	   set %session.Data("LOGON.USERID")=userId
+	   set SSUser=##class(User.SSUser).%OpenId(userId)
+	   set %session.Data("LOGON.USERCODE")=SSUser.SSUSRInitials
+	   set %session.Data("LOGON.USERName")=SSUser.SSUSRName
+   }
+   
+   if (##class(User.CTLoc).%ExistsId(deptId))
+   {
+		set %session.Data("LOGON.CTLOCID")=deptId   
+   }
+   
+   if (##class(User.SSGroup).%ExistsId(groupId))
+   {
+		set %session.Data("LOGON.GROUPID")=userId   
+   }
+   
+   if (##class(User.CTHospital).%ExistsId(hospId))
+   {
+		set %session.Data("LOGON.HOSPID")=hospId   
+   }
+    
+   quit 1
+   
+</script>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:190px;background:#F4F4F4;padding:0;">
+		<div style="margin-left:calc(50% - 510px); border:1px solid #ccc; float:left;">
+			<div title="评分折线图" class="hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-chart'" style="width:500px;height:185px;">
+				<div id="scoreChart" style="width:495px;height:245px;"></div> 
+			</div>
+		</div>
+		<div style="margin-left:5px; border:1px solid #ccc; float:left;">
+			<div class="hisui-panel" style="width:420px;height:185px;">
+				<table id="dataView"></table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0;background:#F4F4F4;">
+		<div id="pageNoTabs" style="margin-left:calc(50% - 500px);width:921px;height:30px;border: 1px solid #ccc;background-color:#eee;">
+						
+		</div>
+		<div style="margin-left:calc(50% - 500px);">
+			<canvas id="myCanvas" width="795" height="1500" style="position:relative;background-color:white;"></canvas> 
+		</div>
+	</div>  
+	<div data-options="region:'south',border:false" style="height:40px;background:#F4F4F4;">
+        <div class="button-list">
+            <a href="#" id="btnSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" data-permission="All">保存</a>
+            <a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a>
+            <a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" data-permission="All">刷新</a>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/json2.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/LodopFuncs.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/JsBarcode.all.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.CASignature.js"></script>
+
+<!--begin 打印和归档需要引用相关JS -->
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/dhcan.canvas.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/dhcan.archivecontext.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.RecordBrowser.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/jr-qrcode.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/echarts.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.editplugin.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.editpluginmanager.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.pagenotabsview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.displaysheet.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.lodopprintview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.sheetsettings.js"></script>
+<!--begin 打印和归档需要引用相关JS -->
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhcicu.sheetcontext.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhcicu.scoretemplate.js"></script>
+
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--药房流程配置
+	csp:pha.sys.v1.process.csp
+	js: scripts/pha/sys/v1/process.js
+-->
+<!DOCTYPE html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHAHERBV2/>
+</HEAD>
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false"> 
+            <table id="gridProcess"></table>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="toolBarProcess">
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label id="_HospListLabel">#(..Get("医院"))#</label>
+                </td>
+                <td colspan = 3>
+                    <input id="_HospList" />
+                </td>  
+            </tr>
+            
+            <tr>         
+			    <td class="r-label"> #(..Get("药房名称"))# </td>
+			    <td>
+				    <input id="cmbPhaLoc" data-pha='class:"hisui-combobox"' />
+			    </td>
+                <td class="r-label"> #(..Get("类型"))# </td>
+                <td>
+                    <input id="cmbType" data-pha='class:"hisui-combobox"' />
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind" id="btnFind" onclick="javascript:QueryData()">查询</a>
+                </td>
+            </tr>
+        </table>  
+        <div class="pha-line"></div>
+        <div>
+        	<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd" onclick="javascript:AddNewRow()">新增</a>
+        	<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave" onclick="javascript:SaveProcess()">保存</a>
+            <a style="border:1px solid #c0e2f7;background:#e3f7ff;color:#1278b8;height: 27px;line-height: 27px;border-radius: 4px;">
+                <img src="../scripts_lib/hisui-0.1.0/dist/css/icons/tip.png" style="position: relative;left:10px;top:3px;"></img>
+                #(..Get(" 【 获 取 处 方 】 流 程 仅 限 移 动 端 使 用 且 为 系 统 流 程 不 允 许 修 改， PC 端 默 认 不 走 此 流 程 。"))#
+            </a>
+        </div>
+    </div>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/store.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/sys/v1/process.js"></script>
+</body>
+
+</HTML>

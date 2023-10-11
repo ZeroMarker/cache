@@ -1,0 +1,289 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>		
+<csr:action>		<!--modify by wl 2019-12-13 WL0021 begin-->		
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075") //add by WL 2019-11-11 WL0010 增加润乾打印预览标志
+	if (PreviewRptFlag=0){
+    //d ##class(web.DHCBL.RQ.ServerConfig).GetApplet4() 
+    d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()	//CZF0135 2021-03-17
+	}   
+    </SCRIPT>  
+</csr:action>		<!--modify by wl 2019-12-13 WL0021 end-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+	<script language=Cache runat=server>
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s EquipDR=$Get(%request.Data("EquipDR",1))
+	/*
+	s (EquipDR,StoreLocDR,InitYear,StartDate,EndDate,DMDeviceSource)=""
+	i BELRowID'=""
+	{
+		s EquipDR=$p($g(^DHCEQBenefitEquipList(BELRowID)),"^",1)
+		///add by ZY0272 20210628
+		i EquipDR="" q
+		s StoreLocDR=$p($g(^DHCEQEquip(EquipDR)),"^",67)
+		s InitYear=$p($g(^DHCEQBenefitEquipList(BELRowID)),"^",2)
+	}
+	*/
+	s Title="设备效益全景图"
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+	</script>
+<style type="text/css">
+/*文本描述信息div实现table布局*/
+.eq-table{width:100%;}
+.eq-table-item{padding-top:5px;font-weight:blod;}
+.eq-table-lable{width:8%;color:#666;text-align:right;}
+.eq-table-lable-large{width:12%;color:#666;text-align:right;}/*标题相对长的列*/
+.eq-table-info{width:10%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div><!--add by zx 2019-05-05 界面首先加载loading ZX0063-->
+	
+	<div data-options="region:'north',border:false" style="height:70px;overflow:hidden;padding:10px 150px;">
+		<iframe id="Banner" frameborder="0" src="" style="width:100%;"></iframe>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:10px 150px;">
+		<div class="hisui-panel" data-options="fit:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false" id="EquipCard">
+				<div data-options="region:'north',border:false" style="padding:10px;">
+					<div class="eq-table" style="position:relative;">
+						<div class="eq-table-tr">
+							<div class="eq-table-td" style="font-weight:900; padding-top:0px"><span>总体概况</span></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-lable">初始年度：</div>
+							<div class="eq-table-td eq-table-info" id="">2020</div>
+							<div class="eq-table-td eq-table-lable">总收入：</div>
+							<div class="eq-table-td eq-table-info" id="">210000</div>
+							<div class="eq-table-td eq-table-lable">总支出：</div>
+							<div class="eq-table-td eq-table-info" id="">20000</div>
+							<div class="eq-table-td eq-table-lable">净收益：</div>
+							<div class="eq-table-td eq-table-info" id="">190000</div>
+							<div class="eq-table-td eq-table-lable"></div>
+							<div class="eq-table-td eq-table-info"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-lable">检查人次：</div>
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable">工作量：</div>
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable">阳性率：</div>
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable">投资回收期：</div>
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable"></div>
+							<div class="eq-table-td eq-table-info"></div>
+						</div>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-lable">固定成本：</div> <!--add by zx 2019-03-14 ZX0061-->
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable">非固定成本：</div>
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable">患者满意度：</div>
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable">培养研究生人数：</div>
+							<div class="eq-table-td eq-table-info" id=""></div>
+							<div class="eq-table-td eq-table-lable"></div>
+							<div class="eq-table-td eq-table-info"></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false"  style="padding:10px;"> <!-- style="overflow:hidden"-->
+					<div style='height:50%;width:100%;'>
+					
+								<table class="hisui-datagrid" data-options="pagination:true">
+									<div class="eq-table-tr">
+										<div class="eq-table-td" style="font-weight:900;"><span>项目收益详细</span></div>
+									</div>
+									<thead>
+										<tr>
+											<th data-options="field:'code',width:120">项目</th>   
+											<th data-options="field:'name',width:80,align:'right'">工作量</th>  
+											<th data-options="field:'name',width:80,align:'right'">工作量占比</th>    
+											<th data-options="field:'price',width:80,align:'right'">单价</th>
+											<th data-options="field:'num',width:80,align:'right'">总额</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>项目</td><td>10</td><td>20</td><td>20</td><td>200</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>20</td><td>30</td><td>40</td><td>800</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>30</td><td>50</td><td>60</td><td>1800</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>20</td><td>30</td><td>40</td><td>800</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>30</td><td>50</td><td>60</td><td>1800</td>
+										</tr>
+									</tbody> 
+								</table>
+					</div>
+					<div style='height:10%;width:100%;'>
+					
+									<div class="eq-table-tr">
+										<div class="eq-table-td" style="font-weight:900;"><span>固定成本详细</span></div>
+									</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable">人员工资：</div> <!--add by zx 2019-03-14 ZX0061-->
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">培训：</div>
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">水：</div>
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">电：</div>
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">折旧：</div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+					</div>
+					<div style='height:10%;width:100%;'>
+					
+									<div class="eq-table-tr">
+										<div class="eq-table-td" style="font-weight:900;"><span>非固定成本详细</span></div>
+									</div>
+										<div class="eq-table-tr">
+											<div class="eq-table-td eq-table-lable">维修费：</div> <!--add by zx 2019-03-14 ZX0061-->
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">维保费：</div>
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">保养：</div>
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">质控：</div>
+											<div class="eq-table-td eq-table-info" id=""></div>
+											<div class="eq-table-td eq-table-lable">计量：</div>
+											<div class="eq-table-td eq-table-info"></div>
+										</div>
+					</div>
+					<div style='height:50%;width:100%;'>
+					
+								<table class="hisui-datagrid" data-options="pagination:true">
+									<div class="eq-table-tr">
+										<div class="eq-table-td" style="font-weight:900;"><span>耗材使用详细</span></div>
+									</div>
+									<thead>
+										<tr>
+											<th data-options="field:'code',width:120">耗材名称</th>   
+											<th data-options="field:'name',width:80,align:'right'">使用数量</th>    
+											<th data-options="field:'price',width:80,align:'right'">单价</th>
+											<th data-options="field:'num',width:80,align:'right'">总额</th>
+											<th data-options="field:'name',width:80,align:'right'">总量占比</th>  
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>项目</td><td>10</td><td>20</td><td>200</td><td>20</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>20</td><td>40</td><td>800</td><td>30</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>30</td><td>60</td><td>1800</td><td>50</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>20</td><td>40</td><td>800</td><td>30</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>30</td><td>60</td><td>1800</td><td>50</td>
+										</tr>
+									</tbody> 
+								</table>
+					</div>
+					<div style='height:50%;width:100%;'>
+					
+								<table class="hisui-datagrid" data-options="pagination:true">
+									<div class="eq-table-tr">
+										<div class="eq-table-td" style="font-weight:900;"><span>社会效益详细</span></div>
+									</div>
+									<thead>
+										<tr>
+											<th data-options="field:'code',width:120">项目</th>   
+											<th data-options="field:'name',width:80">工作量</th>   
+											<th data-options="field:'price',width:80">单价</th>
+											<th data-options="field:'num',width:80">总额</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>项目</td><td>10</td><td>20</td><td>200</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>20</td><td>40</td><td>800</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>30</td><td>60</td><td>1800</td>
+										</tr>
+									</tbody> 
+								</table>
+					</div>
+					<div style='height:50%;width:100%;'>
+					
+								<table class="hisui-datagrid" data-options="pagination:true">
+									<div class="eq-table-tr">
+										<div class="eq-table-td" style="font-weight:900;"><span>保修记录</span></div>
+									</div>
+									<thead>
+										<tr>
+											<th data-options="field:'code',width:120">合同名称</th>   
+											<th data-options="field:'name',width:80">开始时间</th>   
+											<th data-options="field:'price',width:80">结束时间</th>
+											<th data-options="field:'num',width:80">总金额</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>项目</td><td>10</td><td>20</td><td>200</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>20</td><td>40</td><td>800</td>
+										</tr>
+										<tr>
+											<td>项目</td><td>30</td><td>60</td><td>1800</td>
+										</tr>
+									</tbody> 
+								</table>
+					</div>
+					<div style='height:50%;width:100%;'>
+					
+						<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="效益趋势图">
+							<div id="HospEquipAnaly" class="eq_main_echarts"></div>
+						</div>
+					</div>
+					
+				</div>
+				
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="EquipDR" value=#(EquipDR)#>
+			<INPUT type="hidden" id="SplitNumCode" value="#(SplitNumCode)#">
+			<INPUT type="hidden" id="SplitRowCode" value="#(SplitRowCode)#">
+			<INPUT type="hidden" id="HospitalDesc" value="#(HospitalDesc)#">
+			<INPUT type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#"> 
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts_lib/echarts3.6.2/echarts.min.js"></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/echarts.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/ba/benefitequip.js'></script>
+
+</body>
+</html> 

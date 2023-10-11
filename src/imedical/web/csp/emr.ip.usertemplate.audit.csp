@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<HISUI/>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+		<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+		<script language="cache" runat="server">
+			s userID = %session.Get("LOGON.USERID")
+			s ssgroupID = %session.Get("LOGON.GROUPID")
+			s userLocID = %session.Get("LOGON.CTLOCID")
+			s userHospitalId = %session.Get("LOGON.HOSPID")
+			s GetAllLoc = $Get(%request.Data("GetAllLoc",1),"")
+			s maxLevel = $Get(%request.Data("MaxLevel",1),"")	//最高几级审核，例如最高三级，配置值为3
+			s roleLevel = $Get(%request.Data("RoleLevel",1),"")		//当前角色为第几级角色，例如第二级，配置为2
+	    </script>
+	    <script language="javascript">
+		    var roleLevel = '#(roleLevel)#';
+	    	var userLocId = '#(userLocID)#';
+			var ssgroupId = '#(ssgroupID)#';
+			var userId = '#(userID)#';
+			var userHospitalId = '#(userHospitalId)#';
+			var GetAllLoc = '#(GetAllLoc)#';
+			var loadTempFlag = true;	//是否可以加载文档标志位
+			var StatusAndId = "2^pendAudit";	//状态^tableId 有三种:2^pendAudit,3^pendModify,1^passAudit
+			var maxLevel = '#(maxLevel)#';
+			var tmpValue = ""
+			if ((roleLevel != "")&&(parseInt(roleLevel) != NaN))
+			{
+				tmpValue = parseInt(roleLevel)-1;
+				tmpValue = (tmpValue == 0) ? "" : "."+tmpValue;
+				StatusAndId = "2"+tmpValue+"^pendAudit";
+			}
+			var openTemplateInfo = {
+				"RowId":"",
+				"Code":"",
+				"TemplateVersionId":""
+			};	//存储打开的科室模板的信息
+	    </script>
+	    <style>
+		    .layout-split-north {
+				border-bottom-width: 10px
+			}
+			.layout-split-west {
+				border-right-width: 10px
+			}
+			.tabs-gray .tabs-panels {
+				border-radius: 0
+			}
+	    </style>
+		<title>科室模板审核</title>
+	</head>
+	<body style="padding:10px">
+		<div id="userTemplateAudit" class="hisui-layout" data-options="border:false,fit:true">
+			<div class="hisui-panel" data-options="region:'west',border:false,title:'',split:true,iconCls:'icon-add-note'" style="overflow:heidden;width:800px">
+				<div id="westNorth" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+					<div data-options="region:'north',border:true,title:'科室模板审核-查询',headerCls:'panel-header-gray',collapsible:false,split:true" style="height:100px;overflow:hidden;">
+						<div style="padding:10px 0 10px 10px;">
+							<div style="padding-top:2px;display:inline-block;">
+								<label style="padding-right:10px">#(..Get("模板名称"))#</label><input id="templateName" class="textbox" style="width:174px">
+							</div>
+							<a href="#" class="hisui-linkbutton" id="btnSearch" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-find'" style="margin-left:98px">#(..Get("查询"))#</a>
+							<a href="#" class="hisui-linkbutton" id="btnCancel" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-update'" style="margin-left:10px">#(..Get("清空"))#</a>
+						</div>
+						<div id="hosAndLoc" style="padding:0 0 10px 10px;display:none">
+							<div id="hospitalDiv" style="padding:0 15px 10px 1px;display:inline-block">
+								<label style="padding-right:10px">#(..Get("选择院区"))#</label><input id="selectHospital" type="combobox" class="hisui-combobox textbox tdtext" style="width:180px"/>
+							</div>
+							<div id="locDiv" style="padding:0 15px 10px 1px;display:inline-block;margin-left:80px">
+								<label style="padding-right:10px">#(..Get("选择科室"))#</label><input id="selectLoc" type="combobox" class="hisui-combobox textbox tdtext" style="width:180px"/>
+							</div>
+						</div>
+		            </div>
+					<div class="hisui-panel" data-options="region:'south',bodyCls:'panel-body-gray'" style="height:52px;border-top:1px solid #e2e2e2;border-radius:0 0 4px 4px;padding:10px">
+						<input id="allSelect" class="hisui-checkbox" type="checkbox" data-options="onChecked:selectAllData,onUnchecked:unSelectData" label="全选">
+						<a href="#" class="hisui-linkbutton" id="btnCommit" data-options="stopAllEventOnDisabled:true" style="float:right;">#(..Get("审签"))#</a>
+						<a href="#" class="hisui-linkbutton" id="btnWithdraw" data-options="stopAllEventOnDisabled:true" style="float:right;display:none">#(..Get("撤回"))#</a>
+					</div>
+					<div data-options="region:'center',border:false" style="border-radius:4px 4px 0 0;">
+						<div id="statusTypeTabs" class="hisui-tabs tabs-gray" data-options="fit:true" style="border-radius:0">
+							<div title="待审核模板">
+								<table id="pendAudit"></table>
+							</div>
+							<div title="待审核修正模板">
+								<table id="pendModify"></table>
+							</div>
+							<div title="已审核模板">
+								<table id="passAudit"></table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="hisui-panel" data-options="region:'center',title:'',collapsible:false,bodyCls:'panel-body-gray'">
+				<div class="hisui-layout" data-options="fit:true" style="overflow:hidden">
+		            <div data-options="region:'north',border:false" style="height:50px;overflow:hidden;border-bottom: 1px double #e2e2e2;border-radius:4px 4px 0 0">
+						<div style="padding:10px;">
+							<label style="padding-right:10px">#(..Get("路径"))#</label><input id="userTemplatePath" class="textbox" style="width:92%" disabled/>
+						</div>
+		            </div>
+					<div class="hisui-panel" data-options="region:'south',border:false" style="height:60px;border-top: 1px double #e2e2e2;border-radius:0 0 4px 4px;overflow:heidden;">
+						<div style="padding:10px;overflow:heidden;">
+							<label style="padding-right:10px">#(..Get("备注"))#</label><textarea class="textbox" id="txaMemo" rows="2" style="width:60%;position:absolute;top:10px;overflow:heidden;"></textarea>
+							<a href="#" class="hisui-linkbutton" id="btnModify" data-options="stopAllEventOnDisabled:true" style="float:right;">#(..Get("修改模板"))#</a>
+							<a href="#" class="hisui-linkbutton" id="btnBack" data-options="stopAllEventOnDisabled:true" style="float:right;margin-right:10px">#(..Get("需要修正"))#</a>
+						</div>
+					</div>
+					<div data-options="region:'center',border:false">
+		                <div id="divPlugin" style="overflow:hidden;width:100%;height:100%"></div>
+		            </div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript" src="../scripts/emr/js/ip.usertemplate.audit.js"></script>
+</html>

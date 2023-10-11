@@ -1,8 +1,8 @@
 ﻿<!--基础物资信息维护-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -25,651 +25,102 @@
 		.tdwidth{
 			width:100px
 		}
-		.imgbox{
-			position: relative;
-			width: 360px;
-			height: 440px;
-			margin-top: 20px;
-			background: #000000;
+		.l-btn-plain .l-btn-icon-left .l-btn-text {
+			margin: 0px -5px 0px 11px;
 		}
-		.imgbox img{
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			margin: auto;
-			max-width: 100%;
-			max-height: 100%;
-			outline: 1px solid #000;
-		}
-		.selectedpic { border:4px solid #378ec4; padding:0;position: relative;z-index:0}
 	</style>
-
-	<link href="../scripts/dhcstmhisui/Common/webuploader/webuploader.css" type="text/css" rel="stylesheet"/>
-	<link href="../scripts/dhcstmhisui/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
 	<div class="hisui-panel GridPadding" data-options="region:'center',border:false">
-	<div class="hisui-panel" data-options="iconCls:'icon-paper',title:'物资列表',headerCls:'panel-header-gray',split:true,collapsible:false,fit:true">
-		<div class="hisui-layout" data-options="fit:true">
-			<div id="Conditions" data-options="region:'north',collapsible:false,border:false" class="BorderLine">
-				<table class="itm_table">
-					<input id="FChargeBox" name="Charge" type="hidden">
-					<input id="FInci" name="Inci" type="hidden">
-					<tr>
-						<td>物资代码</td>
-						<td><input id="FInciCode" name="InciCode" class="textbox" style="width:100px"></td>
-						<td>建档开始</td>
-						<td><input id="FCreateStartDate" name="CreateStartDate" class="hisui-datebox" style="width:120px"></td>
-						<td>可用</td>
-						<td>
-							<select id="FNotUseBox" name="NotUse" class="hisui-combobox" style="width:100px">
-								<option value="" selected>全部</option>
-								<option value="N">可用</option>
-								<option value="Y">不可用</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>物资名称</td>
-						<td><input id="FInciDesc" name="InciDesc" class="textbox" style="width:107px"></td>
-						<td>建档截止</td>
-						<td><input id="FCreateEndDate" name="CreateEndDate" class="hisui-datebox" style="width:120px"></td>
-						<td>高值</td>
-						<td>
-							<select id="FHighPriceBox" name="HighPrice" class="hisui-combobox" style="width:100px">
-								<option value="" selected>全部</option>
-								<option value="Y">高值</option>
-								<option value="N">非高值</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>物资别名</td>
-						<td><input id="FInciAlias" name="Alias" class="textbox" style="width:100px"></td>
-						<td>更新开始</td>
-						<td><input id="FUpdateStartDate" name="UpdateStartDate" class="hisui-datebox" style="width:120px"></td>
-						<td>医嘱项</td>
-						<td>
-							<select id="FArcBox" name="ArcBox" class="hisui-combobox" style="width:100px">
-								<option value="" selected>全部</option>
-								<option value="Y">已确认</option>
-								<option value="N">未确认</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>类组</td>
-						<td><input id="FStkGrpBox" name="StkGrp" class="hisui-stkscgcombotree" style="width:107px"></td>
-						<td>更新截止</td>
-						<td><input id="FUpdateEndDate" name="UpdateEndDate" class="hisui-datebox" style="width:120px"></td>
-						<td colspan="2">
-						<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px">查询</a>
-						</td>
-					</tr>
-					<tr>
-						<td>库存分类</td>
-						<td><input id="FStkCatBox" name="StkCat" class="hisui-combobox" style="width:107px"></td>
-						<td>供应商</td>
-						<td><input id="FVendorBox" name="Vendor" class="hisui-combobox" style="width:120px"></td>
-						<td colspan="2">
-						<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px">清屏</a>
-						</td>
-					</tr>
-				</table>
-			</div>
-			<div data-options="region:'center',border:false">
-				<table id="tabDrugList"></table>
-			</div>
-		</div>
-	</div>
-	</div>
-	<div class="hisui-panel GridPadding" data-options="region:'east',border:false" style="padding-left:0px;width:580px;">
-		<div id="BasicInciData" class="hisui-panel" data-options="iconCls:'icon-paper',title:'库存项',headerCls:'panel-header-gray',fit:true" >
+		<div class="hisui-panel" data-options="iconCls:'icon-paper',title:'物资列表',headerCls:'panel-header-gray',split:true,collapsible:false,fit:true">
 			<div class="hisui-layout" data-options="fit:true">
-				<div style="border-bottom:1px dashed #CCCCCC;padding:5px;" data-options="region:'north',border:false">
-					<a href="#" id="AddInciBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
-					<a href="#" id="SaveInciBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
-					<a href="#" id="AddSaveInciBT" class="hisui-linkbutton" data-options="iconCls:'icon-save-to',plain:true">另存</a>
-					<a href="#" id="GetMaxCodeBT" class="hisui-linkbutton" data-options="iconCls:'icon-max-no',plain:true">获取最大码</a>
-					<a href="#" id="LinkArcimBT"class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true">关联医嘱项</a>
-					<a href="#" id="SciBT"class="hisui-linkbutton" data-options="iconCls:'icon-paper-link',plain:true">供应链物资</a>
-					<a href="#" id="UpPicBT"class="hisui-linkbutton" data-options="iconCls:'icon-upload-cloud',plain:true">上传图片</a>
-					<a href="#" id="ViewPicBT"class="hisui-linkbutton" data-options="iconCls:'icon-img',plain:true">浏览图片</a>
-					<a href="#" id="InciCfgBT"class="hisui-linkbutton" data-options="iconCls:'icon-batch-cfg',plain:true">配置必填项</a>
-				</div>
-				<hr class="PartLine">
-				<div data-options="region:'center',border:false" >
-					<table class="itm_table">
-						<input id="Inci" name="Inci" type="hidden">
-						<input id="NIRowId" name="NIRowId" type="hidden">
-						<input id="AspStatus" name="AspStatus" type="hidden">
-						<input id="Asp" name="Asp" type="hidden">
-						<input id="UseFlag" name="UseFlag" type="hidden">
-						<input id="RegNoId" name="RegNoId" type="hidden">
+				<div id="Conditions" data-options="region:'north',collapsible:false" class="BorderLine">
+					<table class="itm_table" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="FInci" name="Inci" type="hidden">
 						<tr>
-							<td class="tdwidth">物资代码</td>
-							<td><input id="InciCode" name="InciCode" class="textbox"></td>
-							<td class="tdwidth">物资名称</td>
-							<td><input id="InciDesc" name="InciDesc" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>规格</td>
+							<td>物资代码</td>
+							<td><input id="FInciCode" name="InciCode" class="textbox" style="width:100px"></td>
+							<td>建档开始</td>
+							<td><input id="FCreateStartDate" name="CreateStartDate" class="hisui-datebox" style="width:120px"></td>
+							<td>可用</td>
 							<td>
-							<input id="Spec" name="Spec" class="textbox" style="width:86px">
-							<a href="#" id="SpecBT" class="hisui-linkbutton">列表</a>
+								<select id="FNotUseBox" name="NotUse" class="hisui-combobox" style="width:100px">
+									<option value="" selected>全部</option>
+									<option value="N">可用</option>
+									<option value="Y">不可用</option>
+								</select>
 							</td>
-							<td>型号</td>
-							<td><input id="Model" name="Model" class="textbox"></td>
 						</tr>
 						<tr>
-							<td>品牌</td>
-							<td><input id="Brand" name="Brand" class="textbox"></td>
-							<td>简称</td>
-							<td><input id="Abbrev" Name="Abbrev" class="textbox"></td>
+							<td>物资名称</td>
+							<td><input id="FInciDesc" name="InciDesc" class="textbox" style="width:107px"></td>
+							<td>建档截止</td>
+							<td><input id="FCreateEndDate" name="CreateEndDate" class="hisui-datebox" style="width:120px"></td>
+							<td>高值</td>
+							<td>
+								<select id="FHighPriceBox" name="HighPrice" class="hisui-combobox" style="width:100px">
+									<option value="" selected>全部</option>
+									<option value="Y">高值</option>
+									<option value="N">非高值</option>
+								</select>
+							</td>
 						</tr>
 						<tr>
-							<td>基本单位</td>
-							<td><input id="BUom" name="BUom" class="hisui-combobox textbox"></td>
-							<td>入库单位</td>
-							<td><input id="PUom" name="PUom" class="hisui-combobox textbox"></td>
+							<td>物资别名</td>
+							<td><input id="FInciAlias" name="Alias" class="textbox" style="width:100px"></td>
+							<td>更新开始</td>
+							<td><input id="FUpdateStartDate" name="UpdateStartDate" class="hisui-datebox" style="width:120px"></td>
+							<td>医嘱项</td>
+							<td>
+								<select id="FArcBox" name="ArcBox" class="hisui-combobox" style="width:100px">
+									<option value="" selected>全部</option>
+									<option value="Y">已确认</option>
+									<option value="N">未确认</option>
+								</select>
+							</td>
 						</tr>
 						<tr>
 							<td>类组</td>
-							<td><input id="StkGrpBox" name="StkGrp" class="textbox hisui-stkscgcombotree"></td>
+							<td><input id="FStkGrpBox" name="StkGrp" class="hisui-stkscgcombotree" style="width:107px"></td>
+							<td>更新截止</td>
+							<td><input id="FUpdateEndDate" name="UpdateEndDate" class="hisui-datebox" style="width:120px"></td>
+							<td colspan="2">
+							<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px">查询</a>
+							</td>
+						</tr>
+						<tr>
 							<td>库存分类</td>
-							<td><input id="StkCatBox" name="StkCat" class="hisui-combobox textbox"></td>
-						</tr>
-						<tr>
-							<td>批号要求</td>
-							<td>
-								<input id="BatchNoReq" name="BatchNoReq" class="hisui-combobox textbox">
-							</td>
-							<td>效期要求</td>
-							<td>
-								<input id="ExpDateReq" name="ExpDateReq" class="hisui-combobox textbox">
+							<td><input id="FStkCatBox" name="StkCat" class="hisui-combobox" style="width:107px"></td>
+							<td>供应商</td>
+							<td><input id="FVendorBox" name="Vendor" class="hisui-combobox" style="width:120px"></td>
+							<td colspan="2">
+							<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px">清屏</a>
 							</td>
 						</tr>
 						<tr>
-							<td>账簿分类</td>
-							<td><input id="BookCatBox" name="BookCat" class="hisui-combobox textbox"></td>
-							<td>监管级别</td>
-							<td><input id="SupervisionBox" name="Supervision" class="hisui-combobox textbox"></td>
-						</tr>
-						<tr>
-							<td>本位码</td>
-							<td><input id="StanderCode" name="StanderCode" class="textbox"></td>
-							<td>协和码</td>
-							<td><input id="XieHeCode" name="XieHeCode" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>备注</td>
-							<td><input id="Remarks" name="Remarks" class="textbox"></td>
-							<td></td>
+							<td>生产厂家</td>
+							<td><input id="FManfBox" name="Manf" class="hisui-combobox textbox" style="width:107px"></td>
 						</tr>
 					</table>
-					<hr class="PartLine">
-					<table class="itm_table">
-						<tr>
-							<td class="tdwidth">进价</td>
-							<td><input id="RpPUom" name="RpPUom" class="textbox"></td>
-							<td class="tdwidth">价格生效日期</td>
-							<td><input id="PreExeDate" name="PreExeDate" class="hisui-datebox textbox"></td>
-						</tr>
-						<tr>
-							<td class="tdwidth">售价</td>
-							<td><input id="SpPUom" name="SpPUom" class="textbox"></td>
-						</tr>
-					</table>
-					<hr class="PartLine">
-					<table class="itm_table">
-						<tr>
-							<td class="tdwidth">厂商</td>
-							<td><input id="ManfBox" name="Manf" class="hisui-combobox textbox"></td>
-							<td class="tdwidth">注册证号</td>
-							<td>
-							<input id="RegCertNo" name="RegCertNo" class="textbox" style="width:86px">
-							<a href="#" id="RegCertNoBT" class="hisui-linkbutton">维护</a>
-							</td>
-						</tr>
-						<tr>
-							<td>发证日期</td>
-							<td><input id="RegCertDate" name="RegCertDate" class="hisui-datebox textbox"></td>
-							<td>注册证效期</td>
-							<td style="text-align:left;">
-								<input id="RegCertExpDate" name="RegCertExpDate" class="hisui-datebox textbox">
-							</td>
-						</tr>
-						<tr>
-							<td>注册证名称</td>
-							<td><input id="RegItmDesc" name="RegItmDesc" class="textbox"></td>
-							<td>长期</td>
-							<td class="CkPadding">
-								<input id="RegValidLong" name="RegValidLong" value="Y" class='hisui-checkbox' type="checkbox">
-								延长效期
-								<input id="RegCertExpDateExtended" name="RegCertExpDateExtended" value="Y" class='hisui-checkbox' type="checkbox">
-							</td>
-						</tr>
-						<tr>
-							<td>注册证全称</td>
-							<td><input id="RegCertName" name="RegCertName" class="textbox"></td>
-						</tr>
-					</table>
-					<table class="itm_table">
-						<tr>
-							<td class="tdwidth">招标名称</td>
-							<td><input id="PbBox" name="Pb" class="hisui-combobox textbox"></td>
-							<td class="tdwidth">招标进价</td>
-							<td><input id="PbRp" name="PbRp" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>招标供应商</td>
-							<td><input id="PbVendor" name="PbVendor" class="hisui-combobox textbox"></td>
-							<td>招标配送商</td>
-							<td><input id="PbCarrier" name="PbCarrier" class="hisui-combobox textbox"></td>
-						</tr>
-						<tr>
-							<td>招标级别</td>
-							<td><input id="PbLevel" name="PbLevel" class="hisui-combobox textbox"></td>
-							<td>招标日期</td>
-							<td><input id="PbDate" name="PbDate" class="hisui-datebox textbox"></td>
-						</tr>
-					</table>
-					<table class="itm_table">
-						<tr>
-							<td class="tdwidth">国(省)别</td>
-							<td><input id="ComFrom" name="ComFrom" class="textbox"></td>
-							<td class="tdwidth">条码</td>
-							<td><input id="BarCode" name="BarCode" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>产地</td>
-							<td><input id="OriginBox" name="Origin" class="hisui-combobox textbox"></td>
-							<td>效期长度(月)</td>
-							<td><input id="ExpireLen" name="ExpireLen" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>进口标志</td>
-							<td><input id="ImportFlagBox" name="ImpFlag" class="hisui-combobox textbox"></td>
-							<td>最高售价</td>
-							<td><input id="MaxSp" name="MaxSp" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>灭菌分类</td>
-							<td><input id="SterileCatBox" name="SterileCat" class="hisui-combobox textbox"></td>
-							<td>灭菌时间长度(天)</td>
-							<td><input id="SterileDateLen" name="SterileDateLen" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>质量层次</td>
-							<td><input id="QualityLevelBox" name="QualityLev" class="hisui-combobox textbox"></td>
-							<td>质标编号</td>
-							<td><input id="QualityNo" name="QualityNo" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>质地</td>
-							<td><input id="Quality" name="Quality" class="textbox"></td>
-							<td>风险类别</td>
-							<td><input id="RiskCategoryBox" name="RiskCategory" class="hisui-combobox textbox"></td>
-						</tr>
-						<tr>
-							<td>耗材级别</td>
-							<td><input id="ConsumableLevelBox" name="ConsumableLevel" class="hisui-combobox textbox"></td>
-							<td>官方分类</td>
-							<td><input id="OfficialBox" name="Official" class="hisui-combobox textbox"></td>
-						</tr>
-					</table>
-					<hr class="PartLine">
-					<table class="itm_table" style="text-align:left;padding:0px 0px 0px 60px">
-						<tr>
-							<td><input id="HighPrice" name="HighPrice" value="Y" class='hisui-checkbox' type="checkbox" label="高值标志"></td>
-							<td><input id="HighRiskFlag" name="HighRiskFlag" value="Y" class='hisui-checkbox' type="checkbox" label="跟台标志"></td>
-							<td><input id="BaFlag" name="BaFlag" value="Y" class='hisui-checkbox' type="checkbox" label="一次性标志"></td>
-							<td><input id="PackCharge" name="PackCharge" value="Y" class='hisui-checkbox' type="checkbox" label="打包收费标志"></td>
-						</tr>
-						<tr>
-							<td><input id="ImplantationMat" name="ImplantationMat" value="Y" class='hisui-checkbox' type="checkbox" label="植入标志"></td>
-							<td><input id="NoLocReq" name="NoLocReq" value="Y" class='hisui-checkbox' type="checkbox" label="禁止请领标志"></td>
-							<td><input id="InHosFlag" name="InHosFlag" value="Y" class='hisui-checkbox' type="checkbox" label="本院物资目录"></td>
-							<td><input id="MatFlag" name="MatFlag" value="Y" class='hisui-checkbox' type="checkbox" label="计量标志"></td>
-						</tr>
-					</table>
-					<hr class="PartLine">
-					<table class="itm_table">
-						<tr>
-							<td class="tdwidth">大包装单位</td>
-							<td><input id="PackUomBox" name="PackUom" class="hisui-combobox textbox"></td>
-							<td class="tdwidth">系数</td>
-							<td><input id="PackUomFac" name="PackUomFac" class="textbox"></td>
-						</tr>
-						<tr>
-							<td>别名</td>
-							<td colspan="3">
-							<input id="AliasStr" name="AliasStr" class="textbox" readOnly="true" style="width:356px;">
-							<a href="#" id="AliasBT" class="hisui-linkbutton">维护</a>
-							</td>
-						</tr>
-						<tr>
-							<td>存储条件</td>
-							<td colspan="3">
-							<input id="StoreCond" name="StoreCond" class="textbox" readOnly="true" style="width:356px;">
-							<a href="#" id="StoreCondBT" class="hisui-linkbutton">维护</a>
-							</td>
-						</tr>
-						<tr>
-							<td>用途</td>
-							<td colspan="3"><input id="Application" name="Application" class="textbox" style="width:356px;float:left"></td>
-						</tr>
-						<tr>
-							<td>功能</td>
-							<td colspan="3"><input id="MaterinalFunction" name="MaterinalFunction" class="textbox" style="width:356px;float:left"></td>
-						</tr>
-					</table>
-					<table class="itm_table">
-						<tr>
-							<td class="tdwidth"><input id="ZeroStkFlag" name="ZeroStk" value="Y" class='hisui-checkbox' type="checkbox" label="零库存标志"></td>
-							<td colspan=3>院区零库存
-							<input id="HospZeroStr" name="HospZeroStr" class="textbox" readOnly="true" style="width:280px">
-							<a href="#" id="ZeroBT" class="hisui-linkbutton">维护</a>
-							</td>
-						</tr>
-						<tr>
-							<td><input id="NotUseFlag" name="NotUseFlag" value="Y" class='hisui-checkbox' type="checkbox" label="不可用标志"></td>
-							<td><input id="NotUseReasonBox" name="NotUseReason" class="hisui-combobox textbox"></td>
-							<td class="tdwidth">请求类型</td>
-							<td><input id="ReqTypeBox" name="ReqType" class="hisui-combobox textbox"></td>
-						</tr>
-						<tr>
-							<td>供给科室</td>
-							<td><input id="SupplyLocBox" name="SupplyLoc" class="hisui-combobox textbox"></td>
-							<td>首请科室</td>
-							<td><input id="FirstReqLocBox" name="FirstReqLoc" class="hisui-combobox textbox"></td>
-						</tr>
-					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="tabDrugList"></table>
 				</div>
 			</div>
 		</div>
 	</div>
-	<div id="FindMaxCode" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:300px;height:280px" title="查找最大码">
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="BorderLine" data-options="region:'center',border:false" style="padding:10px 0 0 0">
-				<table id="MaxCodeConditions" style="text-align:right; border-spacing:12px 5px;">
-					<tr>
-						<td>
-						<input class='hisui-radio' type="radio" label='按分类' name='MaxCodeType' id='MaxCodeCat' value='Cat' data-options='checked:true'>
-						</td>
-						<td>
-						<input class='hisui-radio' type="radio" label='按代码前缀' name='MaxCodeType' id='MaxCodeFirCode' value='FirCode'>
-						</td>
-					</tr>
-					<tr>
-						<td>类组</td>
-						<td><input id="MaxStkGrp" name="StkGrp" class="textbox hisui-combobox"></td>
-					</tr>
-					<tr>
-						<td>库存分类</td>
-						<td><input id="MaxStkCat" name="StkCat" class="textbox hisui-combobox"></td>
-					</tr>
-					<tr>
-						<td>前缀</td>
-						<td><input id="MaxFirCode" name="FirCode" class="textbox" disabled="true"></td>
-					</tr>
-					<tr>
-						<td>最大码</td>
-						<td><input id="MaxCode" name="MaxCode" class="textbox" disabled="true"></td>
-					</tr>
-					<tr>
-						<td colspan="2" align="center">
-							<a href="#" id="FindMaxCodeBT" class="hisui-linkbutton">查询</a>
-							<a href="#" id="ChoiMaxCodeBT" class="hisui-linkbutton">确定</a>
-						</td>
-					</tr>
-				</table>
-			</div>
-		</div>
-	</div>
-	<div id="UpLoader" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:600px;height:480px" title="图片上传">
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="BorderLine" data-options="region:'north',border:false">
-				<table class="Condition" style="height:55px">
-					<tr>
-						<td><div id="AddPicBT">添加图片</div></td>
-						<td><div id="UpLoadPicBT" class="hisui-linkbutton">上传图片</div></td>
-					</tr>
-				</table>
-			</div>
-			<div data-options="region:'center',border:false">
-				<div id="PicList" class="uploader-list" style="padding:5px 30px 5px 30px;"></div>
-			</div>
-		</div>
-	</div>
-	<div id="IncSpecEdit" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:300px;height:400px" title="规格列表">
-		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'center',border:false" style="padding:5px 5px 5px 5px;">
-				<div class="hisui-panel" data-options="title:'',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table id="IncSpecEditGrid"></table>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id="IncAliasEdit" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:300px;height:400px" title="别名列表">
-		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'center',border:false" style="padding:5px 5px 5px 5px;">
-				<div class="hisui-panel" data-options="title:'',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table id="IncAliasEditGrid"></table>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id="StoreConEdit" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:350px;height:380px" title="存储条件">
-		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'center',border:false" style="padding:5px 5px 5px 5px;">
-				<div class="hisui-panel" data-options="title:'',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table class="" style="text-align:center;">
-						<input id="ISC" name="ISC" type="hidden">
-						<tr>
-							<td><input id="CommonTemp" name="CommonTemp" value="Y" class='hisui-checkbox' type="checkbox" label="常温"></td>
-							<td><input id="Dry" name="Dry" value="Y" class='hisui-checkbox' type="checkbox" label="干燥"></td>
-						</tr>
-						<tr>
-							<td><input id="AirTight" name="AirTight" value="Y" class='hisui-checkbox' type="checkbox" label="密闭"></td>
-							<td><input id="Dark" name="Dark" value="Y" class='hisui-checkbox' type="checkbox" label="避光"></td>
-						</tr>
-						<tr>
-							<td><input id="Ventilate" name="Ventilate" value="Y" class='hisui-checkbox' type="checkbox" label="通风"></td>
-							<td><input id="Radiation" name="Radiation" value="Y" class='hisui-checkbox' type="checkbox" label="防辐射"></td>
-						</tr>
-						<tr>
-							<td><input id="MeltPack" name="MeltPack" value="Y" class='hisui-checkbox' type="checkbox" label="熔封"></td>
-							<td><input id="GloomyCool" name="GloomyCool" value="Y" class='hisui-checkbox' type="checkbox" label="阴凉"></td>
-						</tr>
-						<tr>
-							<td><input id="CoolGloomy" name="CoolGloomy" value="Y" class='hisui-checkbox' type="checkbox" label="凉暗"></td>
-							<td><input id="Seal" name="Seal" value="Y" class='hisui-checkbox' type="checkbox" label="密封"></td>
-						</tr>
-						<tr>
-							<td><input id="ColDst" name="ColDst" value="Y" class='hisui-checkbox' type="checkbox" label="冷藏"></td>
-							<td><input id="Freeze" name="Freeze" value="Y" class='hisui-checkbox' type="checkbox" label="冷冻"></td>
-						</tr>
-						<tr>
-							<td><input id="DampProof" name="DampProof" value="Y" class='hisui-checkbox' type="checkbox" label="防潮"></td>
-						</tr>
-						<tr>
-							<td><label>最低温度</label><input id="MinTemp" name="MinTemp" class="textbox" style="width:60px"></td>
-							<td><label>最高温度</label><input id="MaxTemp" name="MaxTemp" class="textbox" style="width:60px"></td>
-						</tr>
-						<tr>
-							<td><label>最低湿度</label><input id="MinHumidity" name="MinHumidity" class="textbox" style="width:60px"></td>
-							<td><label>最高湿度</label><input id="MaxHumidity" name="MaxHumidity" class="textbox" style="width:60px"></td>
-						</tr>
-						<tr>
-							<td colspan="2" style="text-align:center;">
-							<a href="#" id="StoreConSaveBT" class="hisui-linkbutton" data-options="">保存</a>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id="IncZeroEdit" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:300px;height:400px" title="院区零库存">
-		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'center',border:false" style="padding:5px 5px 5px 5px;">
-				<div class="hisui-panel" data-options="title:'',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table id="IncZeroEditGrid"></table>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id="ViewPic" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:450px;height:550px" title="图片浏览">
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="BorderLine" data-options="region:'north',border:false">
-					<table class="Condition" style="height:55px">
-						<tr>
-							<td><div id="SetMainPicBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-star'">设置主图片</div></td>
-							<td><div id="DeletePicBT" class="hisui-linkbutton">删除图片</div></td>
-						</tr>
-					</table>
-			</div>
-			<div data-options="region:'center',border:false">
-				<ul id="PicsList" class="" style="padding:5px 30px 5px 30px;">
-				</ul>
-			</div>
-		</div>
-	</div>
-	<div id="LinkArcWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:1100px;height:500px" title="医嘱项">
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="BorderLine" data-options="region:'north',border:false">
-				<table id="ArcConditions" class="Condition">
-					<tr>
-						<td>医嘱项代码</td>
-						<td><input id="ArcCode" name="ArcCode" class="textbox"></td>
-						<td>医嘱大类</td>
-						<td><input id="OrdCatBox" name="OrdCatBox" class="textbox hisui-combobox"></td>
-						<td><input id="Nolink" name="Nolink" value="Y" class='hisui-checkbox' type="checkbox" label="仅未关联的医嘱"></td>
-						<td><a href="#" id="ArcQueryBT" class="hisui-linkbutton">查询</a></td>
-						<td><a href="#" id="ArcLinkBT" class="hisui-linkbutton">关联</a></td>
-					</tr>
-					<tr>
-						<td>医嘱项名称</td>
-						<td><input id="ArcDesc" name="ArcDesc" class="textbox"></td>
-						<td>医嘱子类</td>
-						<td><input id="OrdSubCatBox" name="OrdSubCatBox" class="textbox hisui-combobox"></td>
-						<td></td>
-						<td><a href="#" id="ArcClearBT" class="hisui-linkbutton">清屏</a></td>
-					</tr>
-				</table>
-			</div>
-			<div data-options="region:'center',border:false" style="padding:5px 5px 5px 5px;">
-				<div class="hisui-panel" data-options="border:false,iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table id="LinkArcGrid"></table>
-				</div>
-			</div>
+	<div class="hisui-panel GridPadding" data-options="region:'east',border:false" style="padding-left:0px;width:600px;">
+		<div id="BasicInciData" class="hisui-panel" data-options="iconCls:'icon-paper',title:'库存项',headerCls:'panel-header-gray',fit:true" >
+			<csp:Include Page="dhcstmhui.druginfoincipart.csp">
 		</div>
 	</div>
 
-	<div id="SciWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:1100px;height:500px" title="供应链云平台物资">
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="BorderLine" data-options="region:'north',border:false">
-				<table id="SciConditions" class="Condition">
-					<tr>
-						<td>开始日期</td>
-						<td><input id="SciStartDate" name="SciStartDate" class="hisui-datebox" style=""></td>
-						<td>截止日期</td>
-						<td><input id="SciEndDate" name="SciEndDate" class="hisui-datebox" style=""></td>
-						<td>名称</td>
-						<td><input id="SciDesc" name="SciDesc" class="textbox"></td>
-						<td><input id="CreatedFlag" name="CreatedFlag" value="Y" class='hisui-checkbox' type="checkbox" label="已经生成库存项"></td>
-						<td><a href="#" id="SciQueryBT" class="hisui-linkbutton">查询</a></td>
-						<td><a href="#" id="SciPickBT" class="hisui-linkbutton">选取</a></td>
-						<td><a href="#" id="SciClearBT" class="hisui-linkbutton">清屏</a></td>
-						<td><a href="#" id="NewItmSynSCIBT" class="hisui-linkbutton">同步</a></td>
-					</tr>
-				</table>
-			</div>
-			<div data-options="region:'center',border:false" style="padding:5px 5px 5px 5px;">
-				<div class="hisui-panel" data-options="border:false,iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
-					<table id="SciGrid"></table>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id="RegNo" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:520px;height:380px" title="维护注册证信息">
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="BorderLine" data-options="region:'center',border:false" style="padding:10px 0 0 0">
-				<table border="0" id="RegNoConditions" style="text-align:right; border-spacing:12px 5px;">
-					<input id="MRCRowID" name="MRCRowID" type="hidden">
-					<tr>
-						<td>注册证号</td>
-						<td><input id="MRCNo" name="MRCNo" class="textbox"></td>
-						<td>注册证类型</td>
-						<td><input id="MRCCategory" name="MRCCategory" class="textbox hisui-combobox"></td>
-					</tr>
-					<tr>
-						<td>注册人名称</td>
-						<td><input id="MRCRegName" name="MRCRegName" class="textbox"></td>
-						<td>注册人住所</td>
-						<td><input id="MRCRegPerAddress" name="MRCRegPerAddress" class="textbox"></td>
-					</tr>
-					<tr>
-						<td>代理人名称</td>
-						<td><input id="MRCRegAgent" name="MRCRegAgent" class="textbox"></td>
-						<td>代理人住所</td>
-						<td><input id="MRCAgentAddress" name="MRCAgentAddress" class="textbox"></td>
-					</tr>
-					<tr>
-						<td>产品名称</td>
-						<td><input id="MRCInciDesc" name="MRCInciDesc" class="textbox"></td>
-						<td>规格型号</td>
-						<td><input id="MRCSpecForm" name="MRCSpecForm" class="textbox"></td>
-					</tr>
-					<tr>
-						<td>结构及组成</td>
-						<td colspan="3"><input id="MRCStructure" name="MRCStructure" class="textbox" style="width:400px"></td>
-					</tr>
-					<tr>
-						<td>适用范围</td>
-						<td colspan="3"><input id="MRCAppliedRange" name="MRCAppliedRange" class="textbox" style="width:400px"></td>
-					</tr>
-					<tr>
-						<td>备注</td>
-						<td colspan="3"><input id="MRCRemark" name="MRCRemark" class="textbox" style="width:400px"></td>
-					</tr>
-					<tr>
-						<td>批准日期</td>
-						<td><input id="MRCApprovalDate" name="MRCApprovalDate" class="textbox hisui-datebox"></td>
-						<td>有效期至</td>
-						<td><input id="MRCValidUntil" name="MRCValidUntil" class="textbox hisui-datebox"></td>
-					</tr>
-					<tr>
-						<td></td>
-						<td><a href="#" id="saveRegNoBT" class="hisui-linkbutton">确定</a></td>
-						<td></td>
-						<td><a href="#" id="cancalRegNoBT" class="hisui-linkbutton">取消</a></td>
-					</tr>
-				</table>
-			</div>
-		</div>
-	</div>
+	<!--页面元素授权-->
+	<csp:Include Page="dhcstmhui.pageelementauthor.csp">
 	
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonHosp.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/jquery.tmpl.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/Viewer/viewer.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/webuploader/webuploader.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonuploader.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/DrugInfoCommon.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/GetMaxCode.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/RegNo.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/IncSpecEdit.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/IncAliasEdit.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/DrugStoreCon.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/IncZeroEdit.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/SciItm.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/ViewPic.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/productPic.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/ShowArcinfoForLinkInci.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/BasicDrugInfoDetail.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/DrugInfo/BasicDrugInfoList.js"></script>
 </body>

@@ -1,0 +1,160 @@
+﻿<html>
+<head>
+<HISUI/>
+<meta http-equiv="X-UA-Compatible" content="IE=8">
+<link rel="stylesheet" type="text/css" href="../scripts/emr/css/ip.sign.css"/>
+<script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+<title>已登录</title>
+
+<script language="cache" runat="server">
+	
+	//s userID = %session.Get("LOGON.USERID")
+    //s ssGroupID = %session.Get("LOGON.GROUPID")
+    //s userLocID = %session.Get("LOGON.CTLOCID")		
+    s userID = $Get(%request.Data("userID",1),"")
+    s ssGroupID = $Get(%request.Data("ssGroupID",1),"")
+    s userLocID = $Get(%request.Data("userLocID",1),"")
+    
+    
+    //获取产品组参数，病历时需要判断是否修改级别参数
+	s product = $Get(%request.Data("product",1),"")
+	s episodeID = $Get(%request.Data("episodeID",1),"")
+	s instanceID = $Get(%request.Data("instanceID",1),"")
+	s oriSignatureLevel = $Get(%request.Data("oriSignatureLevel",1),"Attending")
+    s canRevokCheck = $Get(%request.Data("canRevokCheck",1),"")
+	s isNeedCallBack = $Get(%request.Data("isNeedCallBack",1),"")
+	s venderCode = $Get(%request.Data("venderCode",1),"")
+	s signType = $Get(%request.Data("signType",1),"")
+	s debugLevel = $Get(%request.Data("debugLevel",1),"0")
+    s cellName = $Get(%request.Data("cellName",1),"")
+	
+    s isEnableSelectUserLevel = "N"
+	if (product = "EMR")&&(##class(%Dictionary.CompiledMethod).%ExistsId("EMRservice.SystemParameter||IsEnableSelectUserLevel") = 1)
+	{
+		s isEnableSelectUserLevel = ##Class(EMRservice.SystemParameter).IsEnableSelectUserLevel()	
+	}
+	s isNewUserLevel = ##class(%Dictionary.CompiledMethod).%ExistsId("EMRservice.BL.BLSignRole||GetSignCharacter")
+	
+	s HasLoginedCert = "0", LoginedCertInfo = "", LoginedUserID = "", LoginedUserName = "", LoginedUserCode = ""
+	s loginedCert = ##class(CA.Ajax.DS).GetData("GetLoginedInfo",venderCode,signType)
+	s jsonObj = ##class(CA.Util.Json).FromJson(loginedCert)
+	if (jsonObj.GetAt("retCode") = "0")&&(jsonObj.GetAt("certContainer") '= "")&&(jsonObj.GetAt("signToken") '= "")
+	{
+		s HasLoginedCert = "1"
+		s LoginedCertInfo = loginedCert
+		s LoginedUserName = jsonObj.GetAt("hisUserName")
+		s LoginedUserCode = jsonObj.GetAt("hisUserCode")
+		s LoginedUserID = jsonObj.GetAt("hisUserID")
+	}
+	
+	//写死的测试值
+	s HasLoginedCert = "1"
+	s LoginedCertInfo = loginedCert
+	s LoginedUserName = "医生01"
+	s LoginedUserCode = "ys01"
+	s LoginedUserID = "18881"
+	s userID = "18881"
+	s userLocID = "191"
+	s ssGroupID = "29"
+</script>
+
+ <script type="text/javascript" language="javascript">
+    
+    var userID = '#(userID)#';
+	var userLocID = '#(userLocID)#';
+	
+    var isEnableSelectUserLevel = '#(isEnableSelectUserLevel)#';
+	var isNewUserLevel = '#(isNewUserLevel)#';
+	var oriSignatureLevel = '#(oriSignatureLevel)#';
+	var episodeID = '#(episodeID)#';
+	var instanceID = '#(instanceID)#';
+	var isNeedCallBack = '#(isNeedCallBack)#';
+	var venderCode = '#(venderCode)#';
+	var signType = '#(signType)#';
+	var cellName = '#(cellName)#';
+	var canRevokCheck = "#(canRevokCheck)#"; 
+    
+	var HasLoginedCert = '#(HasLoginedCert)#';
+	var LoginedCertInfo = "";
+	var LoginedUserName = '#(LoginedUserName)#';
+	var LoginedUserCode = '#(LoginedUserCode)#';
+	var LoginedUserID = '#(LoginedUserID)#';
+	
+	///跟据UserID获取用户签名角色范围
+	function getUpperDoc(userID,userLocID)
+	{
+		$.ajax({
+			type: 'POST',
+			dataType: 'text',
+			url: '../EMRservice.Ajax.anySign.cls',
+			async: false,
+			cache: false,
+			data: {
+				Action : 'getUpperDocJson',
+				episodeID: episodeID,
+				instanceID: instanceID,
+				userID: userID,
+				ctLocID: userLocID,
+				venderCode: venderCode,
+				signType: signType
+			},
+			success: function (ret) {
+				var arr = $.parseJSON(ret);
+				if (arr.err == "") {
+					if ((arr.DataBoard || "") == "1") {
+						typeObj.DataBoard.isOn = true;
+						typeObj.signTypeCount += 1;
+					}
+					if ((arr.PDFBoard || "") == "1") {
+						typeObj.PDFBoard.isOn = true;
+						typeObj.signTypeCount += 1;
+					}
+					if ((arr.PDFPad || "") == "1") {
+						typeObj.PDFPad.isOn = true;
+						typeObj.signTypeCount += 1;
+					}
+					if ((arr.PDFWeChat || "") == "1") {
+						typeObj.PDFWeChat.isOn = true;
+						typeObj.signTypeCount += 1;
+					}
+				} else { 
+					alert('获取上级医师列表失败！' + arr.err); 
+				}
+			},
+			error: function (ret) {
+				alert('获取上级医师列表失败！' + ret); 
+			}
+		});
+	}
+	
+	$(function(){
+        if (canRevokCheck == 1) 
+        {
+            $("#checkRevoke").show();
+        }
+        else
+        {
+            $("#checkRevoke").hide();
+        }
+    
+		initCheckInfo(userLocID, episodeID, oriSignatureLevel, cellName);
+		//initCheckUser(LoginedUserID, LoginedUserName, LoginedUserCode, LoginedCertInfo);
+    })
+	
+	
+</script>
+</head>
+
+<body>
+	<div id="divLogin">
+		<table>
+			<tr id="trUpperDoc">
+				<td align="right">#(..Get("上级医师"))#</td>
+				<td><input id="txtUpperDoc" name="txtUpperDoc" class="hisui-combobox level"/></td>
+			</tr>	
+		</table>
+	</div>
+	<csp:Include Page="emr.ip.signca.phone.check.csp">
+</body>
+</html>

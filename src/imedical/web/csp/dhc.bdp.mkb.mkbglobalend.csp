@@ -1,0 +1,349 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbglobalend.csp
+    @JS:
+    @Title：全局化词表1.0
+    @Creator:chendailei
+    @Description:全局化词表1.0
+    @CreateDate：2019-12-03
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/browserscroll.css" /> 
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/MKP/datagrid-detailview.js"> </script>
+
+ <script type="text/javascript" src="../scripts/bdp/MKB/Framework/FileSaver.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/jszip.min.js"></script>
+<script type="text/javascript" src="../scripts/bdp/MKB/Framework/excel-gen.js"></script>
+
+<style>
+#ttt{
+	width:auto;
+	height:auto;
+}
+#addglobalref{
+	width:auto;
+}
+/*#layoutedit{
+	overflow-y:hidden;
+}*/
+.tabs-panels
+{
+	height:auto;
+}
+/*不显示分页信息*/
+#layoutglobal .pagination-info,#layoutglobal .pagination-page-list
+{
+     display:none;
+}
+/*隐藏诊断列表下拉菜单的下拉箭头*/
+#btnOthers .m-btn-downarrow 
+{
+	 display: none;
+}
+html, body{
+    width: 100%;
+    height: 100%;
+} 
+.hisui-layout {
+	width: 100%;
+    height: 100%;
+}
+/*#test {
+	width: 100%;
+    height: 100%;
+}
+#test1 {
+	height: 100%;
+}
+#tt{
+	height: 100%;
+}
+#myeditgrid{
+	height:100%;
+}*/
+.l-btn-icon.icon-max-no,.l-btn-icon.icon-right-arrow{
+	height:16px;
+	width:16px;
+}
+.hidecls{
+	display:none;
+}
+.load{
+	background:url(../scripts/bdp/Framework/icons/mkb/commitkno.png) no-repeat 0 3px;
+   
+    padding: 0 10px 5px 20px;
+    margin: 10px 0 0 0;
+    color: #666666;
+    border-left: 10px solid #ffffff;
+    text-align: center;
+    cursor: pointer;
+}
+.load:hover {
+	background-color: #EAF2FF; /* link-button的背景色 */
+	border-left: 10px  solid #EAF2FF;
+}
+</style>
+</HEAD>
+<BODY>
+	<server>
+    	s DataDesc=%request.Get("DataDesc") 
+    	s SearchGlobalDesc=%request.Get("SearchGlobalDesc")		//查询的术语描述
+    	s jumpoption=%request.Get("jumpoption")
+    	s mergeidstr=%request.Get("mergeidstr")		//待合并的项
+    	
+    	 
+   </server> 
+     <div class="hisui-layout" id="test" data-options="fit:true" >
+        <!--功能菜单区-->
+        <div id="layoutmenu" data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray',border:false ">
+            <table style="padding-top:1px;padding-bottom:1px;">
+				<tr>
+					<td>
+						<a  class="hisui-menubutton" data-options="menu:'#menuadd',iconCls:'icon-add',stopAllEventOnDisabled:true"  id="menu_btn" >新增</a><br/>
+						 <div id="menuadd" style="width:30px;height:120px">
+        					<a  class="hisui-linkbutton " iconCls='icon-add' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="AddGlobal">新增术语</a>  
+        					<!--<a  class="hisui-linkbutton " iconCls='icon-add' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="AddGloalias">新增别名</a> !-->
+        					<a  class="hisui-linkbutton " iconCls='icon-add' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="AddGloalName">新增名称</a> 
+         				</div>
+						<!--<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true,iconCls:'icon-add',plain:true" id="adddia_btn" style="">新增</a><br/>-->
+					</td>
+					<td>
+						<a  class="hisui-menubutton" data-options="menu:'#menuedit',iconCls:'icon-write-order',stopAllEventOnDisabled:true"  id="menu_edit" >修改</a><br/>
+						 <div id="menuedit" style="width:30px;height:120px">
+        					<a  class="hisui-linkbutton " iconCls='icon-write-order' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="PYMEdit">音节处理</a>  
+                                     				
+         				</div>
+					</td>										
+					<td>
+						<a  class="hisui-menubutton" data-options="menu:'#menusearch',iconCls:'icon-productimage',stopAllEventOnDisabled:true"  id="menu_search" >查询</a><br/>
+						 <div id="menusearch" style="width:30px;height:150px">
+        					<a  class="hisui-linkbutton " iconCls='icon-import' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SearchRef">引用场景</a>  
+        					<a  class="hisui-linkbutton " iconCls='icon-batch-cfg' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SearchSet">条件配置</a>	
+        					<a  class="hisui-linkbutton " iconCls='icon-batch-cfg' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="CreateWord">组词查询</a>			
+        					<a  class="hisui-linkbutton " iconCls='icon-batch-cfg' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="ConditionSearch">组合查询</a>
+        					<a  class="hisui-linkbutton " iconCls='icon-batch-cfg' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="ICDSearch">ICD查询</a>			
+         				</div>
+					</td>										
+					<td>
+						<a  class="hisui-menubutton" data-options="menu:'#menudelete',iconCls:'icon-cancel',stopAllEventOnDisabled:true"  id="menu_delete" >删除</a><br/>
+						 <div id="menudelete" style="width:30px;height:120px">
+         					<a  class="hisui-linkbutton " iconCls='icon-cancel' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="DelData">删除术语</a>  
+
+         				</div>
+					</td>
+					<td>
+						<a  class="hisui-menubutton" data-options="menu:'#menudatahandle',iconCls:'icon-cut-blue',stopAllEventOnDisabled:true"  id="menu_datahandle" >数据清洗</a><br/>
+						 <div id="menudatahandle" style="width:30px;height:auto">
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SpaceData">空格处理</a>  
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="FullData">全角/半角</a>
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SameMerge">同名合并</a>
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="RefHandle">引用处理</a>
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="MergeData">术语合并</a> 
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="GlobalMark">诊断标记</a> 
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SplitData">拆词处理</a> 
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="RecoverData">数据恢复</a> 
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SuffixHandle">后缀处理</a> 
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:160px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SplitGlobal">术语拆分</a> 
+        					<a  class="hisui-linkbutton " iconCls='icon-star-yellow' plain="true" style="width:160px;text-align:left" data-options="stopAllEventOnDisabled:true" id="AliasSelfCheck">别名自检</a> 
+         				</div>
+					</td>
+					<td>
+					   <a  class="hisui-menubutton" data-options="menu:'#menustatistics',iconCls:'icon-slice-stat',stopAllEventOnDisabled:true"  id="menu_statistics" >数据统计</a><br/>
+					   <div id="menustatistics" style="width:30px;height:160px">
+					   		<!--<a  class="hisui-linkbutton " iconCls='icon-slice-stat' plain="true" style="width:140px;text-align:left" data-options="stopAllEventOnDisabled:true" id="Echartssta">Echarts</a> 
+					   		<!--<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" iconCls='icon-slice-stat' plain="true" id="export_btn">数据导出</a>--> 
+					   		<a  class="hisui-linkbutton " iconCls='icon-export' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="ExportSame">导出重复</a> 
+					   		<!--<a  class="hisui-linkbutton " iconCls='icon-import' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="importData">数据导入</a> --> 
+					   		<a  class="hisui-linkbutton " iconCls='icon-import' plain="true" style="width:140px;text-align:left" data-options="stopAllEventOnDisabled:true" id="HospitalReference">ICD引用导入</a>  
+					   		
+					   		<a  class="hisui-linkbutton " iconCls='icon-import' plain="true" style="width:140px;text-align:left" data-options="stopAllEventOnDisabled:true" id="InsertData">导入数据</a>  
+					   		
+					   </div>
+					   
+					</td>
+					<td>
+					 	<a  class="hisui-menubutton" data-options="menu:'#menudatashow',iconCls:'icon-analysis',stopAllEventOnDisabled:true"  id="menu_datashow" >数据展示</a><br/>
+					   <div id="menudatashow" style="width:150px;height:120px">
+					   <div data-options="iconCls:'icon-analysis'">
+            				<span>数据排序</span>
+           						 <div class='menu-no-icon'>
+                				 <div id="freqsort">频次排序</div>
+                				 <div id="pysort">检索码排序</div>
+                				 <div id="termsort">实用诊断排序</div>
+						 <div id="locsort">专业科室排序</div>
+            		  			</div>
+            		   </div>
+					   	 <!--<a  class="hisui-linkbutton " iconCls='icon-analysis' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="DataSort">数据排序</a> -->
+					   </div>
+					</td>											
+				</tr> 
+			 </table>
+        </div>
+        <!--左侧区-->
+        <div id="layoutglobal"  data-options="collapsible:false,iconCls:'icon-paper',region:'west',split:true" border="false" style="width:310px">
+           <table data-options="fit:true,iconCls:'icon-w-paper'" id="globalgrid"  title="全局化词表" ></table> 
+        </div>    
+        <!--右侧主操作区（展示+功能操作）-->
+        <!--诊断属性-->
+        <div id="layoutedit" title="属性维护" data-options="region:'center',split:true,headerCls:'panel-header-gray'" >
+           <!--<div  data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' "  style="height:35px;overflow:hidden; " title="" border="false"> 
+		 	
+			 <div style='border-top: 1px dashed #C0C0C0;'></div>
+		 </div>--> 
+           <div id="tt" class="hisui-tabs tabs-gray"  border="false"  >
+           	<div title="属性维护" id="ttt" >
+           		<table data-options="fit:true" id="myeditgrid" border="false" ></table> 
+           	</div> 
+           	<div title="引用场景" id="reftabs" >
+           		<table data-options="fit:true" id="referencecenterlistgrid" border="false"  ></table> 
+           	</div>
+           	<div title="扩展展示" id="ExDisplay" >
+           	    <table data-options="fit:true" id="ExDisplaygrid" border="false"  ></table> 
+           	</div> 
+           </div>   
+        </div>
+
+		<div id="reflist" data-options="iconCls:'icon-paper',region:'east',headerCls:'panel-header-gray',showCollapsedTitle:true,split:true,split:true,collapsed:true,tools:'#supTools'" style="width:450px;overflow:hidden;" title="辅助功能区" >
+			<div id="tab_div" class="tabs-gray" data-options="fit:true" border="false"></div>
+		</div>
+    </div>
+    <!--左侧工具栏-->
+    <div id="globalTools" data-options="split:false"  style="text-align: left; display:block;">
+         <input style="width:165px" id="westTextDesc" />
+         <span class="searchbox-button" style="margin:1px 0 0 -30px;" id="globalbtnSearch"></span>
+         <a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-refresh" plain="true" data-options="stopAllEventOnDisabled:true" id="globalbtnWestRefresh"></a>    
+         <a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-add"  plain="true" data-options="stopAllEventOnDisabled:true" id="globaladd_btn"></a>
+         <a  class="hisui-menubutton l-btn-5" style="width:30px;" data-options="menu:'#menuothers',iconCls:'icon-others',stopAllEventOnDisabled:true"  id="btnOthers" ></a>
+         <div id="menuothers" style="width:120px;height:130px">
+        	<a  class="hisui-linkbutton " iconCls='icon-ok' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="Yconfirm">已确认</a>  
+        	<a  class="hisui-linkbutton " iconCls='icon-no' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="Nconfirm">未确认</a>
+        	<a  class="hisui-linkbutton " iconCls='icon-gen' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="SameGlobal">同名术语</a>
+        	<a  class="hisui-linkbutton " iconCls='icon-cancel-top' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="CancelAllTop">取消置顶</a>
+        	<!--<a  class="hisui-linkbutton " iconCls='icon-reload' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="ChangePage">扩展展示</a>
+        	<a  class="hisui-linkbutton " iconCls='icon-search' plain="true" style="width:120px;text-align:left" data-options="stopAllEventOnDisabled:true" id="customizedsearch">定制查询</a>-->
+         </div>
+    </div>
+    <!--引用场景工具栏-->
+    <!--
+    <div id="referenceTools" data-options="split:false"  style="text-align: left; display:block;">
+         <a href="#" class="hisui-linkbutton l-btn-2" iconCls="icon-add"  plain="true" data-options="stopAllEventOnDisabled:true" id="refdiag_add">诊断</a>
+         <a href="#" class="hisui-linkbutton l-btn-3" iconCls="icon-add"  plain="true" data-options="stopAllEventOnDisabled:true" id="refdiagexp_add">表达式</a>
+    </div>
+    -->
+    <!--辅助功能区工具栏-->
+    <div id="supTools" data-options="split:false" style="text-align:left;display:block">
+        <a class="hisui-linkbutton" iconCls='icon-right-arrow' plain="true" data-options="stopAllEventOnDisabled:true" id="reduceWin"></a>
+    	<a class="hisui-linkbutton" iconCls='icon-max-no' plain="true" data-options="stopAllEventOnDisabled:true" id="enlargeWin"></a>
+    </div>
+    <!--新增弹窗-->
+    <div id="myWin" style="width:400px;height:350px;top:30px;padding:10px;display:none;">    
+            <!--div title="新增" data-options="iconCls:'icon-add-note'"-->   
+                <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+                    <table>
+                        <tr>
+                           <td align="right" class="tdlabel"><font color=red>*</font>术语名</td>
+                           <td><input id="MKBGDesc" name="MKBGDesc" type="text" class="textbox hisui-validatebox"  style="width:258px" data-options="required:true"></td>
+                         </tr>
+                         <!--<tr>
+                           <td align="right" class="tdlabel">英文名</td>
+                           <td><input id="MKBGEnName" name="MKBGEnName" type="text" class="textbox hisui-validatebox"  style="width:258px" ></td>
+                         </tr>
+                        <tr>
+                           <td align="right" class="tdlabel">检索码</td>
+                           <td><input id="MKBGPYCode" name="MKBGPYCode" type="text" style="width:258px" class="textbox hisui-validatebox" ></td>
+                        </tr>-->
+                        <tr>
+                            <td align="right" class="tdlabel">备注</td>
+                            <td><textarea id="MKBGNote" name="MKBGNote" type="text"  style="height:100px; width:258px" ></textarea></td>
+                        </tr>
+                    </table >
+                </form>  
+    </div>
+    <!--查询配置弹窗-->
+    <div id="SearchSetWin" style="width:460px;height:400px;top:30px;padding:10px;display:none;">
+         <table>
+             <tr>
+             <td align="right" class="tdlabel">处理状态</td>
+             <td><select id="statebox" style="width:265px;"></select></td>
+             </tr>
+             <tr>
+             <td align="right" class="tdlabel">业务域</td>
+             <td><select id="markbox" style="width:265px;"></select></td>
+             </tr>
+             <tr>
+             <td align="right" class="tdlabel">频次</td>
+             <td><input class='hisui-radio' type='radio' label='降序' name='LocFreqFlag' value='Y' id="LocFreq">
+             <input class='hisui-radio' type='radio'   label='升序'  name='LocFreqFlag' value='N' id="LocFreq"  ></td>
+             </tr>
+             <!--tr>
+             <td align="right" class="tdlabel">诊断频次</td>
+             <td><input id="Freqnum" name="Freqnum" type="text" class="textbox hisui-validatebox"  style="width:258px"></td>
+             </tr-->
+         </table>
+    </div>
+    <!--组词查询弹窗-->
+    <div id="CreateWordWin" style="width:460px;height:400px;top:30px;padding:10px;display:none;">
+         <table>
+             <tr>
+             <td align="right" class="tdlabel">前缀</td>
+             <td><select id="prefixbox" style="width:265px;"></select></td>
+             </tr>
+             <tr>
+             <td align="right" class="tdlabel">主干词</td>
+             <td><select id="stembox" style="width:265px;"></select></td>
+             </tr>
+             <tr>
+             <td align="right" class="tdlabel">后缀</td>
+             <td><select id="suffixbox" style="width:265px;"></select></td>
+             </tr>
+             <!--tr>
+             <td align="right" class="tdlabel">诊断频次</td>
+             <td><input id="Freqnum" name="Freqnum" type="text" class="textbox hisui-validatebox"  style="width:258px"></td>
+             </tr-->
+         </table>
+    </div>
+    <!--查询配置弹窗-->
+    <div id="PYEditWin" style="width:460px;height:400px;top:30px;padding:10px;display:none;">
+         <table>
+             <tr>
+             <td align="right" class="tdlabel"><font color=red>*</font>请输入多音字节</td>
+             <td><input id="StrDesc" name="StrDesc" type="text" class="textbox hisui-validatebox"  style="width:258px" data-options="required:true"></td>
+             </tr>
+             <tr>
+             <td align="right" class="tdlabel"><font color=red>*</font>请输入拼音码</td>
+             <td><input id="StrPYM" name="StrPYM" type="text" class="textbox hisui-validatebox"  style="width:258px" data-options="required:true"></td>
+             </tr>
+         </table>
+    </div>
+	<div id="ProgressWin" style="width:420px;height:100px;padding:10px;display:none;">
+		<div id="DialogDiv">
+			<div id="progress"  class="easyui-progressbar" style="width:400px;top:10px;"></div>
+		</div>
+	</div>
+	<table id="table1" style="display:none"></table>
+    <script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_Globalend.js"></script>
+    <script type="text/javascript">
+     var  DataDesc="#(DataDesc)#"
+     if ((DataDesc==undefined)||(DataDesc==null))
+     {
+	      DataDesc=""
+     }
+     var SearchGlobalDesc="#(SearchGlobalDesc)#"
+     var jumpoption="#(jumpoption)#"
+     var mergeidstr="#(mergeidstr)#"
+     
+ </script>
+</BODY>
+</HTML>

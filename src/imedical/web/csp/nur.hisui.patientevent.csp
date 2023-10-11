@@ -1,0 +1,231 @@
+<!-- 患者事件模态框 -->
+<style>
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+#patEvtDate+.datebox>input{width: 83px!important;}
+#patEvtTime{width: 50px!important;}
+#eventType+.combo>input{width: 95px!important;;}
+.tooltip-right {background-color: #000;}
+.patEvtTable .datagrid-view2>.datagrid-body{max-height: 350px!important;}
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;}
+.patEvtTable .panel-body{border-color: #cccccc;}
+#patFrame{height:40px;}
+</style>
+<div id="patEvtModal" class="hisui-dialog" title="#(..Get("患者事件"))#" style="top: 50px;left: 300px;padding: 5px 10px 10px;width: 1250px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true">
+	<div id="patFrame" style="margin-bottom: 5px;">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<form id="patEvtForm" style="padding: 10px 0;">
+		<table cellpadding="0" style="border-collapse: collapse;">
+			<tr>
+				<td class="r-label" style="padding-left: 8px;">
+					<span class="labelStar">*</span>#(..Get("日期时间"))#
+				</td>
+				<td class="r-label">
+			    <input id="patEvtDate" style="width: 120px;" class="hisui-datebox textbox" data-options="required:true"></input>
+				</td>
+				<td>
+					<input id="patEvtTime" style="width: 80px;" class="hisui-timespinner" data-options="required:true">
+			    <input id="patEvtId" type="hidden"></input>
+				</td>
+				<td class="r-label" style="padding-left: 10px;">
+					#(..Get("类型"))#
+				</td>
+				<td class="r-label">
+					<select id="eventType" class="hisui-combobox" style="width:130px;" data-options="required:true"></select>
+				</td>
+				<td class="r-label">
+	        <a href="#" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-add'" onclick="saveEventLog(1);">#(..Get("新增"))#</a>
+				</td>
+				<td class="r-label">
+	        <a href="#" class="hisui-linkbutton hover-dark"  data-options="iconCls:'icon-w-edit'" onclick="saveEventLog(0);">#(..Get("修改"))#</a>
+				</td>
+			</tr>
+		</table>
+	</form>
+  <div class="patEvtTable">
+    <table id="patientEvents" class="hisui-datagrid" data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:true,toolbar:'#patEvtForm',pageList:[20,50,100,200]"></table>
+  </div>
+</div>
+<script type="text/javascript">
+var patEvtFlag=3,patEvtPage=1,patEvtPageSize=20,eventTypeObj={},patEvtEpisode;
+// 更新模态框位置
+function updateModalPos(id) {
+  var offsetLeft=(window.innerWidth-$('#'+id).parent().width())/2;
+  var offsetTop=(window.innerHeight-$('#'+id).parent().height())/2;
+  $('#'+id).dialog({
+    left: offsetLeft,
+    top: offsetTop
+  }).dialog("open");
+}
+function saveEventLog(flag) {
+	console.log(flag);
+  //flag:1保存事件，0修改事件
+  var eventLogId=$("#patEvtId").val();
+  if (!flag && !eventLogId) {
+    $.messager.popover({msg: $g('请先选择需要修改的记录行。'),type:'alert'});
+    return;
+  }
+  if (flag) eventLogId=""; //新增
+  // console.log($('#patEvtForm').form('validate'));
+  // var typeDesc = $("#eventType").combobox("getText");
+  // if (["入院", "出院", "死亡"].indexOf(typeDesc)>-1) {
+  //   $.messager.popover({msg: $g('入院、出院、死亡是自动带入事件，不能新增和修改。'),type:'alert'});
+  //   return;
+  // }
+  var date = $("#patEvtDate").datebox("getValue");
+  var time = $("#patEvtTime").timespinner("getValue");
+  var typeID = $("#eventType").combobox("getValue");
+  $cm({
+    ClassName: 'Nur.NIS.Service.VitalSign.Event',
+    MethodName: "InsertTempEvent",
+    dataType: "text",
+    episodID:EpisodeID,
+    date:date,
+    time:time,
+    typeID:typeID,
+    userID:session["LOGON.USERID"],
+    rowID:eventLogId,
+    locID:session["LOGON.CTLOCID"]
+  }, function(res) {
+    if (0==res) {
+      getPatEvtList();
+      $("#eventType").combobox("clear");
+      $("#patEvtId").val('');
+    } else {
+      $.messager.popover({msg: res,type:'alert'});
+			return false;
+    }
+  });
+}
+function deletePatEvent(id,e) {
+	e.stopPropagation();
+	console.log(arguments);
+	$.messager.confirm("作废", "你确定要作废这条记录？", function (r) {
+		if (r) {
+	    $cm({
+        ClassName: 'Nur.NIS.Service.VitalSign.Event',
+        MethodName: 'VoidTempEvent',
+    		dataType: "text",
+        rowID:id,
+		    userID:session["LOGON.USERID"],
+		    locID:session["LOGON.CTLOCID"]
+	    }, function (data) {
+	    	console.log(data);
+	    	if (0==data) {
+	    		$.messager.popover({msg: $g('作废成功。'),type:'success'});
+					getPatEvtList();
+	    	} else {
+	    		$.messager.popover({msg: data,type:'alert'});
+	    	}
+	    });
+		}
+	});
+}
+function getPatEvtList() {
+	updateModalPos("patEvtModal");
+	var patEvtCol=[[  
+	  {title: "日期", field: "date", width: 120 },
+	  {title: "时间", field: "time", width: 120 },
+	  {title: "类型", field: "type", width: 120 },
+	  {title: "用户", field: "userName", width: 120 },
+	  {title: "操作", field: "ID", width: 80,
+			formatter: function(value,row,index){
+				return '<span class=\'l-btn-icon icon-cancel gradeBtn\' onclick=\'deletePatEvent('+value+',event)\'>&nbsp;</span>';
+			}
+		}
+  ]];
+	patEvtFlag=false;
+  $cm({
+    ClassName: 'Nur.NIS.Service.VitalSign.Event',
+    QueryName: 'FindTempEvent',
+    page: patEvtPage,
+    rows: patEvtPageSize,
+		episodID:EpisodeID
+  }, function (res) {
+		$('#patientEvents').datagrid({
+			columns :patEvtCol,
+			pageSize:patEvtPageSize,
+			loadMsg : '加载中..',  
+			data:res,
+			onLoadSuccess:function(data){
+			},
+			onClickRow:function(index,row){
+				console.log(arguments);
+				// if (["入院", "出院", "死亡"].indexOf(row.type)>-1) {
+				// 	$('#patientEvents').datagrid("unselectRow", index);
+				// 	return;
+				// }
+				if (1!=eventTypeObj[row.typeID].editFlag) {
+					$('#patientEvents').datagrid("unselectRow", index);
+					return;
+				}
+	      $("#patEvtId").val(row.ID);
+			  $("#patEvtDate").datebox("setValue",row.date);
+			  $("#patEvtTime").timespinner("setValue",row.time);
+			  $("#eventType").combobox("setValue",row.typeID);
+			}
+		}).datagrid("getPager").pagination({
+	    onSelectPage:function(p,size){
+				patEvtPage=p;
+				patEvtPageSize=size;
+				if (patEvtFlag) {
+					patEvtFlag=false;
+					getPatEvtList();
+				} else {
+					patEvtFlag=true;
+				}
+	    },
+	    onRefresh:function(p,size){
+				patEvtPage=p;
+				patEvtPageSize=size;
+				getPatEvtList();
+	    },
+	    onChangePageSize:function(size){
+				patEvtPage=1;
+				patEvtPageSize=size;
+	    }
+		}).pagination('select', patEvtPage);
+		// $(".patEvtTable .datagrid-view2>.datagrid-body").css('height', Math.min(350,35*res.rows.length)+'px');
+		// var $view2=$(".patEvtTable .datagrid-view2");
+		// $view2.parent().height($view2.height());
+		updateModalPos("patEvtModal");
+		$('#patEvtForm').form('disableValidation');
+  });
+}
+function openPatEvtModal() {
+	$('#patEvtDate').datebox('setValue', formatDate(new Date()));
+	$('#patEvtTime').timespinner('setValue', new Date().toString().split(' ')[4].slice(0,5));
+	$("#eventType").combobox("clear");
+	if (3==patEvtFlag) {
+		// 获取事件类型
+	  $cm({
+	    ClassName: 'Nur.NIS.Service.VitalSign.Event',
+	    QueryName: 'FindEventTypeList',
+	    rows: 9999
+	  }, function (res) {
+			var data=[];
+			res.rows.map(function (d) {
+				eventTypeObj[d.id]=d;
+				if (1==d.editFlag) {
+					data.push(d)
+				}
+			})
+			$("#eventType").combobox({  
+				defaultFilter:6,
+				valueField:'id',
+				textField:'desc',
+			  data:data
+			}); 
+	  });
+		setTimeout(function(){
+			getPatEvtList();
+		}, 300);
+	}
+	if(patEvtEpisode!=EpisodeID){
+		patEvtEpisode=EpisodeID;
+		InitPatInfoBanner(EpisodeID);
+	}
+	getPatEvtList();
+}
+</script>

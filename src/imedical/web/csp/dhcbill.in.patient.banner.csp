@@ -1,5 +1,5 @@
 <style>
-	.PatImage {
+.PatImage {
 		position: absolute;
 		top: 3px;
 		width: 30px;
@@ -8,23 +8,35 @@
 	 	margin-left: 10px;
 	}
 	
-	.PatInfoItem {
-		padding: 9px 0;
-		margin-left: 5px !important;
-	}
+	 .PatInfoItem {
+		/*position: absolute;
+		top: 3px;
+		left: 39px;*/
+		/*margin-left:10px;*/ /*20220426 因医生站修改头像图片属性导致*/
+		padding: 0 10px;
+		font-size: 0;
+		height:40px;
+		line-height: 40px;
+		overflow:hidden;
+		position: relative;
+	 }
 	
 	.PatInfoItem span {
 		color: black;
-		margin: 0 5px;
+		margin: 0 0px;
+		line-height: 30px;
 	}
 	 
 	.PatInfoItem img {
 		 color: white;
-		 margin: 0 5px;
 	}
 	
 	.PatInfoItem a img{
 		margin-top: 4px;
+	}
+	
+	.patinfo-hover-content span{
+		 line-height: 30px;
 	}
 	
 	.i-btn-right{
@@ -33,24 +45,20 @@
 	    top: 3px;
  	}
 	
-	.baseIcon img{
-		margin-left: 5px;
-		margin-right: 5px;
-	}
-	
 	.unman {
-	 	background:url(../images/unman.png) no-repeat;
+	 	background: url(../images/unman.png) no-repeat;
 	 	background-size: cover;
 		position: absolute;
-		top: 3px;
 		left: 10px;
 	 	width: 30px;
 	 	height: 30px;
 	    border-radius: 30px;
+	    margin-top: 5px;
 	}
 	
 	.tip-txt {
-		margin-left: 45px;
+		margin-left: 40px;
+		margin-bottom: 10px;
 		color: #666666;
 	}
 </style>
@@ -60,7 +68,7 @@
    <div class="i-btn-right">
    	   <div id="InpatListDiv" style="display:inline;">
 			<a id="InPatListBtn" href="#" class="hisui-linkbutton" style="background:#21BA45;">患者列表</a>
-			<div id="patlist" class="hisui-panel" title="患者列表" 
+			<div id="patlist" class="hisui-panel" title="患者列表" iconCls="icon-paper"
 				style="width:990px;height:560px;overflow:hidden;"
 				data-options="resizable:true,modal:true,closed:true,closable:true,onOpen:onOpenPatListWin,onClose:onClosePatListWin,headerCls:'panel-header-gray'">  
 			    <iframe src="about:blank" width="100%" min-height="350px" height="100%" frameborder="0"></iframe>
@@ -69,6 +77,35 @@
 	</div>
 	</csp:if>
 </div>
+<script type="text/javascript">
+	function initPatInfoHover() {
+	    var btnsWidth = 50;
+	    if ((typeof patientListPage != "undefined") && patientListPage) {
+	        btnsWidth = 150;
+	    }
+	    var html = $(".patientbar").data("patinfo");
+	    $(".PatInfoItem").html(reservedToHtml(html)).css({
+	        height: 40,
+	        overflow: 'hidden',
+	        'padding-right': 10
+	    });
+	    $(".PatInfoItem").css("width", $(".patientbar").width() - btnsWidth);
+	    $(".PatInfoItem").popover("destroy");
+	    setTimeout(function () {
+	        var html = $(".patientbar").data("patinfo");
+	        if (($(".PatInfoItem")[0].offsetHeight + 13) < $(".PatInfoItem")[0].scrollHeight) {
+	            $(".PatInfoItem").popover({
+	                width: $(".PatInfoItem").width() + 16,
+	                trigger: 'hover',
+	                arrow: false,
+	                style: 'patinfo',
+	                content: "<div class=\"patinfo-hover-content\">" + reservedToHtml(html) + "</div>"
+	            });
+	            $(".PatInfoItem").append("<div style=\"position:absolute;top:0px;right:0px;\">...</div>")
+	        }
+	    }, 500);
+	};
+</script>
 <csp:if condition=PatientListPage'="">
 <script type="text/javascript">
 	function showPatListWin() {
@@ -97,7 +134,8 @@
 
 	function onOpenPatListWin() {
 		if ($("#patlist").find("iframe").get(0).src == "about:blank") {
-			$("#patlist").find("iframe").get(0).src = "undefined" == typeof patientListPage ? "dhcbill.ipbill.inpatlist.csp" : patientListPage;
+			var url = ("undefined" == typeof patientListPage) ? "dhcbill.ipbill.inpatlist.csp" : patientListPage;
+			$("#patlist").find("iframe").get(0).src = websys_writeMWToken(url);
 		}
 		var opt = {
 			'z-index': 9085,
@@ -117,11 +155,11 @@
 		} else {
 			panelJObj.css($.extend({}, opt, {
 					right: '10px',
-					top: '36px'
+					top: '46px'
 				}));
 			patListJObj.panel('resize', {
-				width: 1120,
-				height: $(document.body).height() - 46
+				width: 1129,
+				height: $(document.body).height() - 56
 			});
 		}
 		$(".window-mask.alldom").show();

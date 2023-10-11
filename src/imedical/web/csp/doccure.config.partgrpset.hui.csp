@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--治疗部位/穴位组设置 doccure.config.partgrpset.hui.csp-->
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
+<STYLE type='text/css'>
+.editcls1 {
+	margin-top:-7px;
+}
+.r-label{
+	padding: 0px;
+}
+.c-label{
+	text-align: center;
+}
+.table-form,.table-set{
+	border-collapse:separate;
+	border-spacing:10px 10px;
+}
+.table-set .table-textarea{
+	height:80px;
+	width:535px;
+}
+</STYLE> 
+<Server>
+s SuperFlag=$g(%request.Data("SuperFlag",1)) ;超级权限，可查看所有
+s menuid=%request.Get("BDPMENU")
+if menuid'=""{
+	s menuobj=##class(User.BDPMenu).%OpenId(menuid)
+	if $IsObject(menuobj){
+		s ValueExpression=menuobj.ValueExpression
+		if ValueExpression'=""{
+			for loop=1:1:$l(ValueExpression,"&"){
+				s value=$p(ValueExpression,"&",loop)
+				continue:value=""
+				s Field=$p(value,"=",1)
+				s FieldVal=$p(value,"=",2)
+				if Field="SuperFlag" s SuperFlag=FieldVal
+			}
+		}
+	}
+}
+</Server>
+</head>
+<body>
+	<csp:Include Page="doccure.config.partgrpset.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			pageCode:"doccure.config.partgrpset.hui.csp",
+			pageName:"治疗部位/穴位组设置",
+			ProductLine:"Cure",
+			parentPageCode:"",
+			parentPageName:"",
+			MainCSPIsLink:"N",
+			domSelectors:".textbox^.hisui-checkbox^.hisui-switchbox^select!select",
+			SuperFlag:"#(SuperFlag)#"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/config.partgrpset.js"></script>
+</body>
+</html>

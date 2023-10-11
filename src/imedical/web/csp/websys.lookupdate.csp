@@ -177,11 +177,20 @@ function lookupSelectDate(dateval) {
 	var par_win=window.opener;
 	if(window.opener.dialogWindow){par_win = window.opener.dialogWindow}	//2013-09-26
 	try {par_win.#(fld)#_lookupSelect(dateval);} catch(err) {}
-	window.close();
-	//NB: may not work with N6
-	var evt = par_win.document.createEventObject();
+	debugger;
+	//NB: may not work with N6 
+	// 2022-07-28 by wanghc
 	var obj=par_win.document.getElementById('#(fld)#')
-	if (obj) obj.fireEvent("onchange",evt);
+	if(document.createEventObject){
+		var evt = par_win.document.createEventObject();
+		if (obj) obj.fireEvent("onchange",evt);
+	}else if (document.createEvent){
+		var  evObj = par_win.document.createEvent( 'Event' );
+     	evObj.initEvent( 'change', true, false );
+      	if (obj && obj.dispatchEvent) obj.dispatchEvent(evObj);
+	}
+	
+	window.close();
 }
 function OnKeyDownHandler(e) {
 	var eKey=websys_getKey(e);

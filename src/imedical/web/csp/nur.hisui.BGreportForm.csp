@@ -1,0 +1,125 @@
+<!-- 血糖报告表 -->
+<!-- 血糖预警系统 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s PatientListPage=""
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	s AuthorityFlag = $G(%request.Data("AuthorityFlag", 1))
+	s DefaultCode = $G(%request.Data("DefaultCode", 1))
+	s SinglePatient = $G(%request.Data("SinglePatient", 1))
+</script>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+<style type='text/css'>
+/**{box-sizing: border-box;}*/
+body {background-color: #fff;padding: 5px!important;display: flex;overflow: hidden;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+#wardPatientCondition {margin-top: 5px;width: 206px;padding:0 1px;}
+.panel-header, .panel-body{width: auto!important;}
+#ctcRecordModal input.textbox{width: 600px;}
+.healDetail,.healDetailADRs,.healDetailCurve{line-height: 27px;width: 100%;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;margin-top: 3px;}
+#evaluateTree .tree-icon{display: none;}
+#evaluateInput+.searchbox>input{width: 170px!important;}
+#adrsInput+.searchbox>input{width: 230px!important;}
+#startDate+.datebox>input,#endDate+.datebox>input{width: 80px!important;}
+.adrsContent{display: flex;}
+.adrsContent>div:first-of-type{flex: 3;}
+.adrsContent>div:last-of-type{flex: 2;}
+/*.panel-body.panel-body-noheader {border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}*/
+.deleteBtn{cursor: pointer;color: #00f;}
+.adrsContent h3{background: transparent;font-size: 16px;line-height: 30px;}
+label.checkbox, label.radio{height: auto;}
+.adrsContent table tr>td:first-of-type{width: 70px;vertical-align: top;}
+.adrsContent table tr td{word-break: break-all;}
+.l-btn-small{outline: none;}
+td[field="adrsDesc"]>div{line-height: 30px;}
+ul>li.showNode>div>span.tree-join{background: url(../scripts_lib/hisui-0.1.0/dist/css/images/blue/tree_lines.png) -97px center no-repeat!important;}
+ul>li.showNode>div>span.tree-expanded{background: url(../scripts_lib/hisui-0.1.0/dist/css/images/blue/tree_lines.png) -17px center no-repeat!important;}
+li.showNode>ul>li.showNode>div>span.tree-line{background: none!important;}
+.unman {background: url(../images/unman.png) no-repeat;background-size: cover;}
+.r-label{padding-right: 5px;}
+#ward+span>input{width: 145px!important;}
+#wardPatientSearchBox+span>input{width: 145px!important;padding-left: 7px;}
+</style>
+<script language="javascript">
+  var EpisodeID = "#(EpisodeID)#";
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+</script>
+</head>
+<body>
+<div style="width: 100%;" class="ctcContent">
+	<div id="adrsPanel" class="hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding: 5px 0;overflow-y: hidden;border: 0;">
+		<table cellpadding="0" style="width: 100%;">
+			<tr>
+				<td style="padding-left: 41px;">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;"></span>
+					院区
+					<select id="_HospList"></select>
+				</td>
+			</tr>
+	    <tr style="line-height: 22px;">
+	    	<td>
+	    		<table>
+	    			<tr>
+							<td class="r-label" style="padding-left: 10px;">
+				        查询范围
+				        <input id="startDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setDateboxOption"></input>
+							</td>
+							<td class="r-label">
+				        ~
+				        <input id="endDate" class="hisui-datebox textbox" style="width: 118px;" data-options="onChange:setDateboxOption"></input>
+							</td>
+							<td class="r-label">
+								病区
+								<select id="ward" style="width: 180px;" data-options="valueField:'wardid',textField:'warddesc'" class="hisui-combobox" name="state">
+								</select>
+							</td>
+							<td class="r-label">
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" onclick="getBGRecordByDays()">查询</a>
+				        <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-export'" onclick="getBGRecordByDays()">导出</a>
+							</td>
+	    			</tr>
+	    		</table>
+	    	</td>
+	    </tr>
+	  </table>
+		<table id="bloodGlucose" data-options="pagination:true,pageSize:20,pageList:[20,50,100,200]"></table>
+	</div>
+</div>
+<!-- 开立医嘱、会诊模态框 -->
+<div id="retestModal" class="hisui-dialog" title="血糖" style="top: 25px;left: 25px;padding: 5px 10px 0;" 
+data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true">
+	<table>
+		<tr>
+			<td id="detailCondition"></td>
+			<td>
+    		<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("请输入患者姓名或病案号"))#'" style="width:185px;"/>
+			</td>
+		</tr>
+	</table>
+	<table id="patientDetail" data-options="pagination:true,pageSize:20,pageList:[20,50,100,200]"></table>
+	<table id="testnumDetail" data-options="pagination:true,pageSize:20,pageList:[20,50,100,200]"></table>
+</div>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.BGreportForm.js" charset=gbk></script>
+</body>
+</html>

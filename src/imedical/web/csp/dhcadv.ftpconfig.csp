@@ -2,6 +2,8 @@
 <head>
 <title></title>
 <HISUI/>
+
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
@@ -17,11 +19,15 @@
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
 		var LgHospDesc="#(%session.Get("LOGON.HOSPDESC"))#"; //医院ID
+		var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
 	</script>
 
-<style>
-
-</style>
+	<style>
+		/*多院区改造 cy 2021-04-09 */
+		#_HospList+span{max-width:234px}
+		#_HospList+span >input{max-width:200px}
+	</style>
 </head>
 <body>
 	<!-- toolbar -->
@@ -31,17 +37,16 @@
 			<td><span style="margin-left:10px;"></span>代码<span style="margin-left:10px;"></span><input type="text" name="queryCode" id="code"class="textbox" /> </td>	
 			<td><span style="margin-left:10px;"></span>描述<span style="margin-left:10px;"></span><input type="text" name="queryName" id="desc" class="textbox" /> </td>        
 			<td><!--hxy 2019-07-20-->
-			<span style='margin-right:10px;margin-left:5px'>医院</span><input id="hospID" name="hospID" class="hisui-combobox"></input>				
-			</td>
-			<td ><span style="margin-left:10px;"></span><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onclick="javascript:findftplist()">查询</a> </td>					
-			</tr>								
+			<td class="textLabel"><span style="margin-left:10px;"></span><label id="_HospListLabel">医院</label><span style="margin-left:10px;"></span><input type="text" id="_HospList" name="hosp"></input></td> <!--多院区改造 cy 2021-04-09 -->
+
+			<td ><span style="margin-left:10px;"></span><a class="hisui-linkbutton"  data-options="iconCls:'icon-w-find'" onclick="javascript:findftplist()">查询</a> </td></tr>								
 		</div>
 		<div class="tool-bar-line" style="border-bottom-color:#cccccc; border-bottom-width: 1px; border-bottom-style: dashed;">	</div>
 		<table cellspacing="0" cellpadding="0">
 		    <tr>
 				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addRow()" >新增</a> </td>
 				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="javascript:save()">保存</a> </td>
-				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:remove()">删除</a> </td>	
+				<td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:delRow()">删除</a> </td>	
 		     </tr>
 		</table>
 	</div>
@@ -84,7 +89,7 @@
 											$(ed.target).combobox('setValue', option.text);  //设置科室Desc
 			}
 									}
-						}">医院</th><!--hxy 2019-07-03-->
+						},hidden:true">医院</th><!--hxy 2019-07-03-->
 						<th data-options="field:'hospDrID',editor:'text',hidden:true">hospDrID</th> <!--hxy 2019-07-03-->
 					</tr>
 				</thead>

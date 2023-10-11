@@ -1,51 +1,37 @@
-<csp:method name=OnPreHTTP
-            arguments=""
-            returntype=%Boolean>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
     i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
     q 1
 </csp:method>
-<script language="cache"
-        runat="SERVER">
-            s EpisodeID = $G(%request.Data("EpisodeID", 1))
-			s PatientListPage=""
-        </script>
+<script language="cache" runat="server">
+	// 病人信息条内的病人列表
+	s PatientListPage=$G(%request.Data("PatientListPage", 1))
+	// 就诊号
+    s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	// 是否是单个病人的样式（1:隐藏病人列表，非1:显示）
+	s SinglePatient = $G(%request.Data("SinglePatient", 1))
+	// 自定义的病人基本信息条页面csp 
+	s CustomBanner= ##class(NurMp.Common.Base.Patient).GetBannerCsp($G(%request.Data("CustomBanner", 1)))
+	// 隐藏病人基本信息条(1:隐藏，非1:显示) 增加判断：如果csp不存在，则强制隐藏病人基本信息条
+	s HideBanner = $s(($G(%request.Data("HideBanner", 1))=1)||(CustomBanner=""):1,1:0)
+	// 病人列表页面csp
+	s PatListPage= $S($G(%request.Data("PatListPage", 1))="":"nur.emr.business.patlist.csp",1:%request.Data("PatListPage", 1))
+	// 病人列表页面的宽度
+	s PatListWidth = $S($G(%request.Data("PatListWidth", 1))="":"255px",1:%request.Data("PatListWidth", 1))
+</script>
 <html lang="zh-CN">
 <head>
-	<meta http-equiv="Content-Type"
-		  content="text/html; charset=utf-8">
-	<title>
-		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
-	</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<!--nur.hisui.recordsBrowser.csp-->
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
-	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
-	<script type="text/javascript"
-			src="../scripts/nurse/hisui-0.1.0/dist/js/recordsBrowser.js" charset=gbk></script>
+	<HISUI/> 
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
 	<STYLE type='text/css'>
-		body {
-            background-color: #fff;
-            padding:5px!important;
-        }
-		.west_patients {
-			width: 225px;
-		}
-		.west_north_search {
-			padding: 5px;
-			height: 30px;
-		}
-		#wardPatientCondition {
-			margin-top: 5px;
-			width: 208px;
-		}
-		.west_center_list {
-			padding: 0 10px;
-		}
-		.center_templates {
-			border: none;
-		}
+		html{overflow:hidden;}
 		.center_north_patinfo {
-			height:38px;
-			border:none
+			height:34px;
+			overflow:hidden;
 		}
 		.center_center_list {
 			border: none;
@@ -53,79 +39,108 @@
 		}
 		.center_center_tree {
 			border: none;
-			border-top: 1px solid #509de1;
+			border-top: 1px solid #ccc;
 			padding: 10px;
 		}
-		.PatInfoItem{
-	        top:0 !important;
-	        left:0 !important;
-	        margin-left:0 !important;
-        }
-		.searchbox .searchbox-prompt {
-			padding-left: 5px !important;
+		#iframeContent{
+			padding: px;
+            margin: 0px;
+            border-style: none;
+            border-width: 0px;
+            box-sizing: border-box;
+            display: block
+		}
+		.center_center_list>.layout>.panel.layout-panel>.panel-header {
+			border-radius: 4px 4px 0 0;
 		}
 	</STYLE>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/helper.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/recordsBrowser.js" charset=gbk></script>
+	<script language = "Cache" runat = "server">
+   		d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </script>
 	<script language="javascript">
+		if ("undefined" == typeof EnableLocalWeb || 0 == EnableLocalWeb || "undefined" == typeof NurEmrPrint) {
+			document.write('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+		}
+		var patientListPage = "#(PatientListPage)#"
         var EpisodeID = "#(EpisodeID)#";
+        var SinglePatient = "#(SinglePatient)#";
     </script>
 </head>
-<body>
-	<div class="hisui-layout" data-options="fit:true">   
-		<div data-options="region:'west',split:true,headerCls:'panel-header-gray'"
-			 class="west_patients">
-			<div class="hisui-layout" 
-				 data-options="fit:true,border:false">
-				<div data-options="region:'north',split:true,border:false" 
-					 class="west_north_search">
-					<input id="wardPatientSearchBox"
-						   class="hisui-searchbox"
-						   style="width:208px;border:none;"
-						   data-options="prompt:'#(..Get("姓名、登记号、床号"))#'"/>
-				</div> 
-				<div data-options="region:'center',title:'患者列表',split:true,iconCls:'icon-patient',border:false"
-					 class="west_center_list">
-					<ul id="patientTree" 
-						data-options="animate:true">
-					</ul>
-				</div> 
-			</div> 
-		</div>  
-		<div class="center_templates"
-			 data-options="region:'center',split:true">
-			<div class="hisui-layout" 
+<body class="s_body">
+	<!--等候加载提示-->
+	<div id="loading" class="custom_step_loading">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+		<br><br><span class="loading_words">#(..Get("正在初始化界面..."))#</span>
+	</div>			
+	<div class="hisui-layout main-layout color_layout" data-options="fit:true">
+		<csp:if condition="SinglePatient'=1">
+		 	<script language="cache" runat="server">
+				w "<div data-options=""region:'west',split:true,title:'患者列表',showCollapsedTitle:true"" style=""width:calc("_PatListWidth_")"">"
+			</script>
+		    	<csp:Include page="#(PatListPage)#">
+		   	</div>
+		</csp:if>	
+		<div class="center_templates" data-options="region:'center',split:true,border:false">
+			<div id="patinfoLayout"
+				 class="hisui-layout color_layout" 
 				 data-options="fit:true,split:true"
 				 style="border:none;">
-				<div class="center_north_patinfo"
-					 data-options="region:'north',split:false">
-					<csp:Include Page="dhcdoc.in.patient.banner.csp">
-				</div>
+				<csp:if condition="HideBanner'=1">
+					<div class="center_north_patinfo"
+						 data-options="region:'north',border:false">
+						<csp:Include Page='#(CustomBanner)#'>
+					</div>
+				</csp:if>
 				<div class="center_center_list" 
 				     data-options="region:'center',split:true"
 					 style="border:none;">
 					<div class="hisui-layout" 
 						 data-options="fit:true,split:true"
 						 style="border:none;">
-						<div data-options="region:'west',title:'图片列表',headerCls:'panel-header-gray',showCollapsedTitle:true,split:true,iconCls:'icon-apply-check'" 
+						<div data-options="region:'west',title:'#(..Get("单据列表"))#',headerCls:'panel-header-gray',showCollapsedTitle:true,split:true,iconCls:'icon-apply-check'" 
 							 style="width:230px;">
 							<div class="hisui-layout" 
 							     data-options="fit:true,split:true">
-								<div data-options="region:'north',split:true" 
-									 style="height:40px;border:none;padding:5px;">
+								<div data-options="region:'north'" 
+									 style="height:39px;padding:4px;border:none;border-bottom:1px solid #e2e2e2;border-radius:0px;">
 									<input id="picturedReocrdsSearchBox" 
 									       class="hisui-searchbox" 
-										   style="width:210px"
+										   style="width:215px;margin:0px;"
 										   data-options="prompt:'#(..Get("汉语名称、简拼"))#'"/>
 								</div> 
 								<div class="center_center_tree"
-									 data-options="region:'center',tools:'#tab-tools',split:true,iconCls:'icon-template'" >
+									 data-options="region:'center',tools:'#tab-tools',iconCls:'icon-template'" >
 									<ul id="picturedRecordsTree" 
 										data-options="animate:true">
 									</ul>
 								</div> 
 							</div>
 						</div> 
-						<div id="imgBox" title="图片浏览" data-options="region:'center',split:true,headerCls:'panel-header-gray'">
-							<iframe name="iframeImg" id="iframeImg" src="" scrolling="auto" width="100%" height="99.6%" frameborder="0"></iframe>
+						<div id="imgBox" title="内容" data-options="region:'center',headerCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+							<div class="hisui-layout" data-options="fit:true">
+								<div data-options="region:'north',border:false" style="height:40px;padding:4px;">
+									<a href="#" id="btnPageStart" class="hisui-linkbutton " >首页</a>
+									<a href="#" id="btnPageUp" class="hisui-linkbutton " >上一页</a>
+									<a href="#" id="btnPageDown" class="hisui-linkbutton " >下一页</a>
+									<a href="#" id="btnPageEnd" class="hisui-linkbutton " >尾页</a>
+									<span style="font-size:15px;margin-left:40px;">#(..Get("第"))#</span>
+									<input id="searchPageNo" 
+										   class="hisui-searchbox" 
+										   style="width:100px;text-align:center"
+										   data-options="prompt:'#(..Get("页码"))#'"/>
+									<span style="font-size:15px">#(..Get("页"))#</span>
+									<a href="#" id="btnPageGo" class="hisui-linkbutton" >跳转</a>
+									<a href="#" id="btnPrint" class="hisui-linkbutton" >打印</a>
+								</div>
+								<div data-options="region:'center',border:false">
+									<iframe name="iframeContent" id="iframeContent" src="about:blank" scrolling="auto" width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0" allowtransparency="yes"></iframe>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>	

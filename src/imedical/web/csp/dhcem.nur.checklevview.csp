@@ -1,0 +1,257 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcem.nur.checklevview.csp 急诊护士工作量-->
+<html>
+<head>
+<HISUI/>
+<title>hos门户使用-急诊护士工作量</title>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/echarts.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/format.echarts.js" charset="utf-8"></script>
+<style type="text/css">
+
+	.view{background:rgba(0,0,0,0.5);}
+		
+</style>
+</head>
+
+<body style="width:100%;height:100%;background:rgba(0,0,0,0);justify-content: space-between;display: flex;flex-direction: column;overflow:hidden;">
+	<!-- 为 ECharts 准备一个定义了宽高的 DOM -->
+	<div id="topCharts" class="view" style="width:100%;"></div>
+	<div id="mainCharts" class="view" style="width:100%;"></div>
+	<div id="bottomCharts" class="view" style="width:100%;"></div>
+</body>
+
+<script type="text/javascript">
+	
+	$(function(){
+		initPage();
+		
+		initView();	
+	})
+	
+	function initPage(){
+		var bodyHeight=$('body').height();	
+		var viewHeight = parseInt(bodyHeight/3)-10+'px';
+		$('.view').css({height:viewHeight});
+	}
+	
+	function initView(){
+//		showEchartsBar('main1','分级人数统计',['Ⅰ级', 'Ⅱ级', 'Ⅲ级', 'Ⅳa', 'Ⅳb'],[5, 20, 36, 10,23]);
+//		showEchartsBar('main2','绿色通道统计',['红区', '橙区', '黄区', '绿区'],[5, 20, 36, 10]);
+//		showEchartsBar('main3','当月工作量统计',['分诊', '治疗', '采血'],[325, 20, 86]);
+
+		$cm({
+			ClassName:"web.DHCEMNurMessageInterface",
+			MethodName:"GetMainStaData",
+			HospID:""
+		},function(jsonData){
+			topChart(jsonData);  // 分诊级别分布
+			mainChart(jsonData); // 绿色通道分布
+			bottomChart(jsonData); // 分诊科室分布
+		});
+		
+	}
+	
+	// 分诊级别
+	function topChart(jsonData){
+		
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		var option = {
+			title: {
+	          text: "分诊级别分布",
+			  textStyle:{
+				color:'#fff',
+				fontWeight: "normal",
+				fontSize:20,
+			  },
+	          x:'center',
+	          y:'top',
+	          top:'20',
+			  textAlign:'left'
+	       },
+	       grid: {
+	          left: '5%',
+	          right: '10%',
+	          bottom: '5%',
+	          top: '80',
+	          containLabel: true,
+	        },
+		  xAxis: {
+		    type: 'category',
+		    axisLabel:{
+				color:'#fff'
+			},
+			axisLine: {
+		        lineStyle: {
+		            color:  'rgba(255,255,255,0.2)',
+		                width: 1,
+		        }
+		    },
+		    data: ['Ⅰ级', 'Ⅱ级', 'Ⅲ级', 'Ⅳa', 'Ⅳb']
+		  },
+		  yAxis: {
+		    type: 'value',
+		    axisLabel:{
+				color:'#fff'
+			},
+			splitLine: {
+		      lineStyle: {
+		         color: "rgba(255,255,255, 0.2)"
+		      }
+			}
+		  },
+		  series: [
+		    {
+		      data: jsonData.LevSta,
+		      type: 'bar',
+		      barWidth : 40,
+		      itemStyle: {
+		        color:'#2CEBC999'
+		      }
+		    }
+		  ]
+		};
+		
+		var myChart = echarts.init($("#topCharts")[0]);
+		option&&myChart.setOption(option);
+	}
+	
+	// 绿色通道
+	function mainChart(jsonData){
+		
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		var option = {
+          tooltip: {
+            trigger: 'item'
+          },
+          title: {
+   			   text: "绿色通道分布",
+   			   left: 'center',
+   			   top: "5%",
+   					textStyle:{
+   						color:'white',
+   						fontWeight:'normal',
+						fontSize:20,
+   					}
+   			 },
+          legend: {
+            //left: 'center',
+		    x:'center',
+		    //y:'bottom',
+		    textStyle: {
+	            color: '#FFF',
+	            fontSize: '14px'
+	        },
+	        bottom: "4%"
+          },
+          series: [
+           {
+			  color:['#38c1ff99','#2CEBC999','#7ADD7A','#D7DB7499','#FFB16E99'],
+              name: '指标',
+              type: 'pie',
+              radius: ['40%', '70%'],
+              avoidLabelOverlap: false,
+              label: {
+               show: false,
+               position: 'center'
+              },
+              emphasis: {
+               label: {
+                 show: true,
+                 fontSize: '40',
+                 fontWeight: 'bold'
+               }
+              },
+              labelLine: {
+               show: false
+              },
+              data: jsonData.GreLevSta /*[
+					{ value: 30, name: 'Ⅰ级' },
+					{ value: 25, name: 'Ⅱ级' },
+					{ value: 15, name: 'Ⅲ级' },
+					{ value: 8, name: 'Ⅳa' },
+					{ value: 2, name: 'Ⅳb' }
+				]*/
+            }
+          ]
+        };
+		
+		var myChart = echarts.init($("#mainCharts")[0]);
+		option&&myChart.setOption(option);
+	}
+	
+	// 分诊科室分布
+	function bottomChart(jsonData){
+		
+		// 格式化数据
+		// var bar_datas = ChartDataFormate(data, false)
+		
+		var option = {
+          tooltip: {
+            trigger: 'item'
+          },
+          title: {
+   			   text: "分诊科室分布",
+   			   left: 'center',
+   			   top: "5%",
+   					textStyle:{
+   						color:'white',
+   						fontWeight:'normal',
+						fontSize:20,
+   					}
+   			 },
+          legend: {
+            //top: '5%',
+            //left: 'center',
+		    x:'center',
+		    //y:'bottom',
+		    textStyle: {
+	            color: '#FFF',
+	            fontSize: '14px'
+	        },
+	        bottom: "4%"
+          },
+          series: [
+           {
+			  color:['#38c1ff99','#2CEBC999','#7ADD7A','#D7DB7499','#FFB16E99'],
+              name: '指标',
+              type: 'pie',
+              radius: ['40%', '70%'],
+              avoidLabelOverlap: false,
+              label: {
+               show: false,
+               position: 'center'
+              },
+              emphasis: {
+               label: {
+                 show: true,
+                 fontSize: '40',
+                 fontWeight: 'bold'
+               }
+              },
+              labelLine: {
+               show: false
+              },
+              data: jsonData.LocSta/*[
+					{ value: 20, name: '急诊内科' },
+					{ value: 15, name: '急诊外科' },
+					{ value: 8, name: '急诊儿科' },
+					{ value: 3, name: '急诊妇科' },
+					{ value: 1, name: '急诊产科' }
+				]*/
+            }
+          ]
+        };
+		
+		var myChart = echarts.init($("#bottomCharts")[0]);
+		option&&myChart.setOption(option);
+	}
+</script>
+</html>

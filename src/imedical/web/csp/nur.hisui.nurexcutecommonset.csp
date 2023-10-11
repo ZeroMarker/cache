@@ -1,0 +1,573 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.nurexcutecommonset.csp 护士执行通用设置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.labeltitle {
+		font-weight:bold;
+	}
+	.labeltitle-td {
+		text-align:left;
+	}
+	.setdiv {
+		float:left;
+		width:50%;
+	}
+	.textcom {
+		width:73px !important;
+	}
+	/*switch样式*/
+	.switch {
+		text-align:center;
+		font-size:0;
+	}
+	.ant-switch{
+		margin:0;
+		padding:0;
+		color:rgba(0,0,0,.65);
+		font-size:14px;
+		font-variant:tabular-nums;
+		line-height:1.5;
+		list-style:none;
+		-webkit-font-feature-settings:"tnum";
+		font-feature-settings:"tnum";
+		position:relative;
+		display:inline-block;
+		-webkit-box-sizing:border-box;
+		box-sizing:border-box;
+		min-width:44px;
+		height:22px;
+		line-height:20px;
+		vertical-align:middle;
+		background-color:rgba(0,0,0,.25);
+		border:1px solid transparent;
+		border-radius:100px;
+		cursor:pointer;
+		-webkit-transition:all .36s;
+		transition:all .36s;
+		-webkit-user-select:none;
+		-moz-user-select:none;
+		-ms-user-select:none;
+		user-select:none;
+	}
+	.ant-switch-checked .ant-switch-inner {
+		margin-right:24px;
+		margin-left:6px;
+	}
+	.ant-switch:focus {
+		outline:0;
+	}
+	.ant-switch:after {
+		position:absolute;
+		top:1px;
+		left:1px;
+		width:18px;
+		height:18px;
+		background-color:#fff;
+		border-radius:18px;
+		cursor:pointer;
+		-webkit-transition:all .36s cubic-bezier(.78,.14,.15,.86);
+		transition:all .36s cubic-bezier(.78,.14,.15,.86);content:" ";
+	}
+	.ant-switch-checked:after {
+		left:100%;
+		margin-left:-1px;
+		transform:translateX(-100%);
+	}
+	.ant-switch-checked {
+		background-color:#1890ff;
+	}
+	.switchIcon{
+		margin:0 10px;
+		top:-5px;
+	}
+	.current{
+		color:#017bec;
+		font-weight:bold;
+	}
+</style>
+</head>
+
+<body>
+	<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false" style="height:51px;border-bottom:1px dashed #ccc;">
+			<table class="search-table">
+	  	 	 	<tr>
+		            <td class="r-label">
+		              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		            </td>
+		            <td>
+		              <input id="_HospList"/>
+		            </td>
+		            <td class="r-label">
+		              <a id="BtnSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>   
+		            </td>
+		         </tr>
+	  	 	 </table>
+		</div>
+		<div data-options="region:'center',split:false,border:false" style="">
+			<div class="setdiv">
+				<table class="search-table">
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">处理医嘱配置</label>
+						</td>
+					</tr>
+					<tr>
+					    <td class="r-label">
+					    	<label for="seeDTLaterOrdDT" style="vertical-align:middle;">晚于医嘱开立时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" checked disabled id="seeDTLaterOrdDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="seeDTLaterOrdSttDT" style="vertical-align:middle;">晚于医嘱开始时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" checked id="seeDTLaterOrdSttDT">
+						</td>
+					</tr>
+					<tr>
+						<td  class="r-label" colspan="5" style="height:150px;">
+							<table id="seeDTLaterOrdSttDTTab"></table>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="seeDTBeforeDisDT" style="vertical-align:middle;">早于患者出院时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" checked disabled id="seeDTBeforeDisDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="seeOrdShowNotes" style="vertical-align:middle;">显示备注输入框</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="seeOrdShowNotes" data-options="onCheckChange:seeOrdShowNotesChange">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label>备注必填</label>
+						</td>
+						<td colspan="3">
+							<input class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="接收必填" id="seeReceiveRequired">
+							<input class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="拒绝必填" id="seeRefuseRequired">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">执行配置</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="execLaterOrdDT" style="vertical-align:middle;">晚于医嘱开立时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox"  checked disabled id="execLaterOrdDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="execLaterOrdSttDT" style="vertical-align:middle;">晚于医嘱开始时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox"  checked disabled id="execLaterOrdSttDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="execLaterOrdSeeDT" style="vertical-align:middle;">晚于医嘱处理时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" checked disabled id="execLaterOrdSeeDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="execBeforeDisDT" style="vertical-align:middle;">早于患者出院时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox"  checked disabled id="execBeforeDisDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="longOrdExecLimit" style="vertical-align:middle;">长期医嘱执行时间限制</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="longOrdExecLimit">
+						</td>
+						<td class="r-label" style="padding-left:0;">
+							<label>可早于执行时间</label>
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox textcom" id="minute" data-options="min:0"/>
+						</td>
+						<td  class="r-label">
+							<label>分钟</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label"></td><td></td>
+						<td class="r-label"  style="padding-left:0;">
+							<label>可晚于执行时间</label>
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox textcom" id="longOrdLaterMin" data-options="min:0"/>
+						</td>
+						<td class="r-label">
+							<label>分钟</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="tempOrdExecLimit" style="vertical-align:middle;">临时医嘱执行时间限制</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="tempOrdExecLimit">
+						</td>
+						<!--td class="r-label" style="padding-left:0;">
+							<label>可早于执行时间</label>
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox textcom" id="minute2" data-options="min:0"/>
+						</td>
+						<td class="r-label">
+							<label>分钟</label>
+						</td-->
+						<td class="r-label" style="padding-left:0;">
+							<label>可晚于执行时间</label>
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox textcom" id="tempOrdLaterMin" data-options="min:0"/>
+						</td>
+						<td class="r-label">
+							<label>分钟</label>
+						</td>
+					</tr>
+					<!--tr>
+						<td class="r-label"></td><td></td>
+						<td class="r-label" style="padding-left:0;">
+							<label>可晚于执行时间</label>
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox textcom" id="tempOrdLaterMin" data-options="min:0"/>
+						</td>
+						<td class="r-label">
+							<label>分钟</label>
+						</td>
+					</tr-->
+					<tr>
+						<td class="r-label">
+							<label>医嘱执行默认显示时间</label>
+						</td>
+						<td colspan="4" style="text-align:left;">
+							
+							<select id="defaultDT" class="hisui-combobox" style="width:213px;">  
+							    <option value="0">当前时间</option>   
+							    <option value="1">要求执行时间</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="editeDefaultDT" style="vertical-align:middle;">允许修改默认显示时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="editeDefaultDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="drugAudit" style="vertical-align:middle;">药师审核后执行</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="drugAudit">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="LisOrdSyncVBDT" style="vertical-align:middle;">检验医嘱执行时间同步为采血时间</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="LisOrdSyncVBDT">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="ordExectedNotCancel" style="vertical-align:middle;">非药品医嘱医技执行后不允许撤销</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="ordExectedNotCancel">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="docSign" style="vertical-align:middle;">双签支持本科医生</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="docSign">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="seeAndExecUserCanSame" style="vertical-align:middle;">处理执行支持同一用户</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="seeAndExecUserCanSame">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="filterCureApplyOrd" style="vertical-align:middle;">过滤治疗类医嘱</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="filterCureApplyOrd">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="setdiv">
+				<table class="search-table">
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">护士-执行权限控制</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="nurExecNotControl" style="vertical-align:middle;">不控制</label>
+					    </td>     
+						<td>
+							<input class="hisui-radio" type="radio" id="nurExecNotControl" name="nurExecControl" value="0" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="nurExecLimitOrdDeptOrRec" style="vertical-align:middle;">开单科室与接收科室执行</label>
+					    </td>     
+						<td>
+							<input class="hisui-radio" type="radio" id="nurExecLimitOrdDeptOrRec" name="nurExecControl" value="1" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">护士-撤销权限控制</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="cancelExecNotControl" style="vertical-align:middle;">不控制</label>
+					    </td>     
+						<td>
+							<input class="hisui-radio" type="radio" id="cancelExecNotControl" name="cancelExecOrder" value="2" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="cancelExecNot" style="vertical-align:middle;">不能撤销(护士长除外)</label>
+					    </td>     
+						<td>
+							<input class="hisui-radio" type="radio" id="cancelExecNot" name="cancelExecOrder" value="0" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="cancelUserExec" style="vertical-align:middle;">撤销本人执行(护士长除外)</label>
+					    </td>     
+						<td>
+							<input class="hisui-radio" type="radio" id="cancelUserExec" name="cancelExecOrder" value="1" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="cancelLocExec" style="vertical-align:middle;">撤销本科执行(护士长除外)</label>
+					    </td>     
+						<td>
+							<input class="hisui-radio" type="radio" id="cancelLocExec" name="cancelExecOrder" value="3" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="cancelWardExec" style="vertical-align:middle;">撤销本病区执行(护士长除外)</label>
+					    </td>     
+						<td>
+							<input class="hisui-radio" type="radio" id="cancelWardExec" name="cancelExecOrder" value="4" data-options="required:true,requiredSel:true">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">皮试医嘱控制</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="changeSkinTestResut" style="vertical-align:middle;">仅护士长修改皮试皮试结果/撤销皮试医嘱</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="changeSkinTestResut">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="skinTestNotesRequired" style="vertical-align:middle;">皮试备注必填</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="skinTestNotesRequired">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label" colspan="3">
+							<div class="switch">
+								<label>#(..Get("先执行后置皮试结果"))#</label>
+								<button id="skinOrdExecSequence" type="button" role="switch" class="switchIcon ant-switch ant-switch-checked" aria-checked="true" ant-click-animating="false">
+									<span class="ant-switch-inner"></span>
+								</button>
+								<label class="current">#(..Get("置皮试结果同步执行"))#</label>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label>置皮试结果可晚于实际执行时间</label>
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox textcom" id="skinResultDTLaterMin" data-options="min:0"/>
+						</td>
+						<td class="r-label" style="text-align:left;">
+							<label>分钟</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">手术室医嘱控制</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="SHOrdNeedSee" style="vertical-align:middle;">术中医嘱手术室执行时自动处理</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="SHOrdNeedSee">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="SZOrdOnlySurgeryRoomSee" style="vertical-align:middle;">术中医嘱仅允许手术室处理/撤销处理</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="SZOrdOnlySurgeryRoomSee">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="SZOrdOnlySurgeryRoomExec" style="vertical-align:middle;">术中医嘱仅允许手术室执行/撤销执行</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="SZOrdOnlySurgeryRoomExec">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">医嘱数据行点击设置</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="ClickAutoCheckRow" style="vertical-align:middle;">点击任意位置勾选整行</label>
+					    </td>     
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="ClickAutoCheckRow">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+					    	<label for="checkRowBackColor" style="vertical-align:middle;">选中行背景色</label>
+					    </td>     
+						<td>
+							<input id="checkRowBackColor" class="textbox" style="width:80px;"/>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">查询配置</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label>患者人数上限(已执行/已打印)</label>
+						</td>
+						<td>
+							<input class="hisui-numberbox textbox textcom" id="searchMaxPatNum" data-options="min:0"/>
+							
+						</td>
+						<td class="r-label" style="text-align:left;">
+							<label>人</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label>患者列表切换患者自动查询医嘱</label>
+						</td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="patChangeAutoSearchOrd">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label labeltitle-td">
+							<label class="labeltitle">模糊搜索配置</label>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label>切换单据保留模糊检索条件</label>
+						</td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="chgSheetKeepSearchCondition">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">
+							<label>切换单据保留模糊检索内容</label>
+						</td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" id="chgSheetKeepSearchContent">
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>	
+	</div>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.nurexcutecommonset.js"></script>
+</body>
+</html>

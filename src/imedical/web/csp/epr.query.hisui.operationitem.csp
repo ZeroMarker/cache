@@ -1,0 +1,144 @@
+﻿<html>
+<head>
+	<title>电子病历综合查询单元编辑</title>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/query.css"/>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	 <script type="text/javascript" src="../scripts/epr/js/hisui.dateformat.js"></script>
+	 <script type="text/javascript" src="../scripts/epr/lib/js-xlsx/xlsx.full.min.js" charset="UTF-8" ></script>
+    <!--引入js-xlsx-->
+	 <script type="text/javascript" language="javascript">
+	 
+	 var importData=[]
+	</script>
+	<script language="cache" runat="server">
+            s typeCodeData = ##Class(web.eprajax.query.basicoperation).GetQueryItemType()
+            s StdData = ##Class(web.eprajax.query.basicoperation).GetStdDictionary()
+        </script>
+    <script language="javascript">
+        var typeCodeData = eval(#(typeCodeData)#);
+        var StdData = eval(#(StdData)#);
+        var categoryItemId = "";
+    </script>
+</head>
+<body style="padding:10px 10px 0px 10px;background-color:#fff">
+  	<div class="hisui-layout" data-options="fit:true" id="cc">    
+		<div data-options="region:'south',headerCls:'panel-header-gray',border:false" style="height:50px;margin-left:10px">
+			<div style="float:right">
+				<input id="filechoose" />
+				<span style="margin-left:10px;"></span>
+				<a href="#" id="ImportData" class="hisui-linkbutton fright">导入</a>
+   			</div>
+		 </div>
+		<div data-options="region:'west',title:'检索类别',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:350px;padding:10px">
+			<div style="width:290px;">
+				<ul id="cbtreeCategory1" data-options="animate:true"></ul>
+				<div id="mm" class="hisui-menu" style="width:190px;height:110px;overflow-y:auto;">
+	                <div id="addParentQueryCategory">添加节点</div>
+	                <div id="addChildQueryCategory">添加子节点</div>
+	                <div id="editQueryCategory">编辑节点</div>
+	           </div>
+			</div>
+		</div>
+  		<div data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding-left:10px">
+			<div class="hisui-layout" data-options="border:false,fit:true">
+				<div data-options="region:'center',title:'单元列表',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-radius:0px;">
+					<table id="showItems" class="hisui-datagrid">			
+						<thead>   
+							<tr>
+								<th data-options="field:'ID',width:80,hidden:true" style="">Id</th>
+								<th data-options="field:'CategoryID',width:80,hidden:true">项目分类</th>
+								<th data-options="field:'Title',width:90,editor:{type:'textarea',options:{required:true,}}">项目描述</th>
+								<th data-options="field:'ItemCode',width:340,editor:{type:'textarea',options:{required:true,}}">项目代码</th>
+								<th data-options="field:'Name',width:90,editor:{type:'textarea',options:{required:true,}}">项目名称</th>
+								<th data-options="field:'Sequence',width:80,editor:{type:'numberbox',options:{required:true,}}">顺序编号</th>
+								<th data-options="field:'Remark',width:80,editor:{type:'textarea',options:{required:true,}}">项目备注</th>
+								<!-- <th data-options="field:'StdDic',width:80,editor:{type:'textarea',options:{required:true,}}">字典代码</th> -->
+								<th data-options="field:'ItemIsActive',width:80,align:'center',editor:{type:'switchbox',options:{onClass:'primary',offClass:'gray',onText:'启用',offText:'禁用'}}">是否有效</th>
+								<th data-options="field:'TypeCode',width:100,editor:{type:'combobox',options:{valueField:'id',textField:'text',data:typeCodeData,method:'get',required:true,blurValidValue:true,}}">项目类型</th>
+								<th data-options="field:'stdDicDesc',width:100,editor:{type:'combobox',options:{valueField:'Code',textField:'Description',data:StdData,method:'get',required:true,blurValidValue:true,}}">字典类型</th>   
+							</tr>   
+						</thead>   		
+					</table>
+				</div>
+			</div>	
+			<div id="QuertCatory" class="hisui-dialog" title="检索类别" style="width:365px;height:285px;top:210px;left:500px;padding:10px;" data-options="iconCls:'icon-w-card'">   
+				<div class="div-table">
+					<input class="hisui-validatebox textbox" type="text" id="QueryCategoryId" placeholder="CategoryId" style="width:280px;display:none"/>
+					<input class="hisui-validatebox textbox" type="text" id="QueryCategoryParentId" placeholder="Title" style="width:280px;display:none"/>
+					<div class="row-item-long">
+						<div class="row-item-long-label"><label>#(..Get("项目代码"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="QueryCategoryCode" placeholder="Code" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">
+						<div class="row-item-long-label"><label>#(..Get("项目名称"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="QueryCategoryName" placeholder="Name" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">
+						<div class="row-item-long-label"><label>#(..Get("项目备注"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="QueryCategoryRemark" placeholder="Remark" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">
+						<div class="row-item-long-label"><label>#(..Get("顺序编号"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="QueryCategorySequence" placeholder="Sequence" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">					
+						<div class="row-item-long-label"><label>#(..Get("是否有效"))#</label></div>
+						<div class="row-item-long-input"><div id="QueryCategoryIsActive" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){console.log(event);console.log(obj);}"></div></div>
+				    </div>
+				    <div style="text-align:center">
+					    <a href="#" id="btSaveQuertCatory" class="hisui-linkbutton">#(..Get("保存"))#</a>
+						<span style="margin-left:10px;"></span>
+						<a href="#" id="btCancelQuertCatory" class="hisui-linkbutton">#(..Get("取消"))#</a>
+				    </div>
+		   		</div>
+			</div>
+			<div id="QueryItem" class="hisui-dialog" title="添加单元" style="width:365px;height:405px;top:190px;left:500px;padding:10px;" data-options="iconCls:'icon-w-card'">   
+				<div class="div-table">
+					<input class="hisui-validatebox textbox" type="text" id="rowIndex" readonly="readonly" style="width:365px;display:none"/> 
+					<input class="hisui-validatebox textbox" type="text" id="selectRowId" readonly="readonly" style="width:365px;display:none"/> 
+					<input class="hisui-validatebox textbox" type="text" id="selectCategoryId" placeholder="CategoryId" style="width:250px;display:none"/>
+					<div class="row-item-long">
+						<div class="row-item-long-label"><label>#(..Get("项目描述"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="selectTitle" placeholder="Title" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">
+						<div class="row-item-long-label"><label>#(..Get("项目代码"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="selectCode" placeholder="Code" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">
+						<div class="row-item-long-label"><label>#(..Get("项目名称"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="selectName" placeholder="Name" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">					
+						<div class="row-item-long-label"><label>#(..Get("项目备注"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="selectRemark" placeholder="Remark" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">					
+						<div class="row-item-long-label"><label>#(..Get("顺序编号"))#</label></div>
+						<div class="row-item-long-input"><input class="hisui-validatebox textbox" type="text" id="selectSequence" placeholder="Sequence" style="width:270px;"/></div>
+					</div>
+					<div class="row-item-long">					
+						<div class="row-item-long-label"><label>#(..Get("项目类型"))#</label></div>
+						<div class="row-item-long-input"><input id="selectTypeCode" class="hisui-combobox" style="width:278px;"/></div>
+					</div>
+					<div class="row-item-long">					
+						<div class="row-item-long-label"><label>#(..Get("字典类型"))#</label></div>
+						<div class="row-item-long-input"><input id="selectStd" class="hisui-combobox" style="width:278px;"/></div>
+					</div>
+					<div class="row-item-long">					
+						<div class="row-item-long-label"><label>#(..Get("是否有效"))#</label></div>
+						<div class="row-item-long-input"><div id="selectIsActive" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){console.log(event);console.log(obj);}"></div></div>
+					</div>
+				</div>
+				<div style="text-align:center">
+					<a href="#" id="btSaveQueryItem" class="hisui-linkbutton">#(..Get("保存"))#</a>
+					<span style="margin-left:10px;"></span>
+					<a href="#" id="btCancelQueryItem" class="hisui-linkbutton">#(..Get("取消"))#</a>
+				</div>
+			</div>	
+		</div> 
+	</div> 
+    <script type="text/javascript" src="../scripts/epr/js/query.hisui.operationitem.js"></script>
+</body>
+</html>

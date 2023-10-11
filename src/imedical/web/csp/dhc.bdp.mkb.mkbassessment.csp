@@ -1,0 +1,425 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbassessment.csp
+    @JS:MKB_Assessment.js
+    @Title：评估表
+    @Creator:chenghegui
+    @Description:评估分值
+    @CreateDate：2018-05-09
+*/
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/browserscroll.css" /> 
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<server>
+if ##class(websys.Conversions).IsValidMethodName("web.DHCXMLPConfig","LODOPInit")
+{
+	try
+	{
+		d ##class(web.DHCXMLPConfig).LODOPInit("1") //lodop打印
+	}
+	catch(e)
+	{
+		d ##class(web.DHCXMLPConfig).LODOPInit() //lodop打印
+		
+	}
+}
+</server>
+<style id="styleLable">
+ *{
+     padding:0;
+     margin:0;
+ }
+ ul{   
+    list-style: none;
+  }
+ a{ text-decoration:none} 
+.assesshead{
+    padding: 5px 30px 5px 30px;
+    margin-bottom: 10px;
+    margin-top: 0;
+    font-size: 30px !important;
+    color: #333;
+    font-weight: 400;
+    height: auto;
+}
+.contentul li{
+    float:left;  
+    padding:5px 10px 5px 30px;
+    margin:5px  
+}
+.contentul{
+    overflow:hidden;
+    padding:10px 5px 20px 5px;
+}
+.txtcontentul li{
+    float:left;  
+    padding:5px 30px 5px 30px;
+    margin:5px  
+}
+.txtcontentul{
+    overflow:hidden;
+    padding:5px 5px 0 5px;
+}
+
+.titleh3
+{
+     font-size: 16px;
+     font-weight: 400;
+     background-color:#ffffff;
+     color:#000;
+     border-left:0px solid #85c8ff;
+}
+.assesscontent
+{
+  padding:30px 10px 0 10px;
+  margin: 0px 30px 0 30px;
+}
+.divul
+{
+    padding:0;
+    border-bottom:2px solid #FFFFFF
+}
+.allcontent
+{
+    background-color:#FFFFFF;
+    padding:0;
+    overflow:hidden;
+    width:80%;
+    margin:10px 110px;
+    -moz-box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+    -webkit-box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+.welcome{
+  margin:0 0 5px 50px;
+}
+#footer{
+   padding:0;
+   margin:0 10px 10px 0;
+   border-top:1px dashed #c0c0c0;
+   border-left:1px none #333;
+   border-right:1px none #333;
+   border-bottom:1px none #c0c0c0;
+}
+#header{
+    border-top:1px none #333;
+    border-left:1px none #333;
+    border-right:1px none #333;
+    border-bottom:1px solid #c0c0c0;
+    height:35px;
+    overflow:hidden;
+}
+#divassess span{
+      margin:10px 40px 10px 5px;
+    }
+ .pagination-info,.pagination-page-list{
+         display:none;
+     }
+.titlelabel{
+	min-width:180px;
+    width:28%;
+    padding-right:20px;
+  }
+.titlelabel2{
+	min-width:130px;
+    width:20%;
+    padding-right:20px;
+  }
+.tabletitle{
+  margin: 10px 10px 0 10px;
+}         
+</style>
+</head>
+<body style="padding:4px;background-color: white;">
+
+     <div  class="hisui-layout" data-options="fit:true" id="hisuilayout" >
+        <!--中心操作区-->
+        <div  data-options="region:'center',split:true,headerCls:'panel-header-gray'"  style="border-color:#cccccc;">
+            <div  class="hisui-layout" data-options="fit:true">
+       <!--e5eff7-->
+                <div id="layoutcenter" style="background-color:#FFFFFF" data-options="region:'center',border:false" >
+                </div>
+                <!--<div id="footer"  style="height:40px" data-options="region:'south'">
+                    <div style="float:left;margin-right:50px"><a href="#" class="hisui-linkbutton" iconCls="icon-totalscore" data-options="plain:true" id="btnSave" style="">计算总分</a></div>
+                    <div style="float:left;padding:5px;background:url(../scripts/bdp/Framework/icons/mkb/assessmentbg.png) repeat-x center center;" id="divassess"><p>总分:<span id="allscore"></span>风险评估:<span id="grade"></span>结论:<span id="result"></span></p></div>
+                    <input type="hidden" id="allvalue"></input>
+                </div>-->
+                <div id="footer"   data-options="region:'south',minHeight:'90',split:true">
+                    <!--<div style="float:left;margin-right:50px"><a href="#" class="hisui-linkbutton" iconCls="icon-totalscore" data-options="plain:true" id="btnSave" style="">计算总分</a></div>-->
+                    <!--<div style="padding:5px;   background:url(../scripts/bdp/Framework/icons/mkb/assessmentbg.png)   repeat-x center center;" id="divassess"><p>总分:<span id="allscore"></span>风险评估:<span id="grade"></span>结论:<span id="result"></span></p></div>-->
+                    <div style="min-height:21px;   background:url(../scripts/bdp/Framework/icons/mkb/assessmentbg.png)   repeat-x center center;" id="divassess"><div id="ScoreCont" style="float:left">总分:<span id="allscore"></span></div><div id="GradeCont" style="float:left">风险评估:<span id="grade"></span></div><div id="ResultCont">结论:<span id="result"></span></div></div>
+                    <div id="Savebtn" style="padding:5px;float:left" ><p style="padding-top:5px;float:left">描述:<input type="text" id="desc" style="margin-left:40px;width:700px;border:none;" placeholder="可编辑补充信息"></input></p></div>
+                    <input type="hidden" id="allvalue"></input>
+                </div>
+            </div>
+        </div> 
+        
+        <!--左侧列表展示-->
+         
+    </div>
+
+    <!--左侧工具栏-->
+    <div id="leftTools" style="display:block">
+        <input id="TextDesc">
+        <span class="searchbox-button" style="margin-left:-34px;" id="btnSearch"></span>
+        <a href="#" class="hisui-linkbutton" iconCls="icon-refresh l-btn-0" data-options="plain:true" id="btnLeftRefresh"></a>
+    </div>
+    <script type="text/javascript">
+    /*$(function(){
+        var sdflag= GetURLParams("sdflag"); //区分是否是由结构化诊断进入此页面
+        var id=GetURLParams("id");
+        if(sdflag==null) sdflag="";
+       if(sdflag=="") {     //不是结构化诊断进入 则动态添加左侧列表和检索框
+           $("#layoutcenter").html('<div id="div-img" style="width:100%;height:300px;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据哦，选条数据看看吧" style="margin:100px 0" /></div>');
+           $(".assessfoot").css("left","300px"); 
+           $("#hisuilayout").layout('add',{
+                id:"layoutwest", 
+                region:'west',
+                split:true,
+                border:false,
+                width:350
+            })
+            var tablehtml= '<table data-options="fit:true,iconCls:'+"'icon-w-paper'"+'"  id="leftgrid" border="true" title="评估表"></table>'
+            //alert(tablehtml)
+            $("#layoutwest").append(tablehtml);
+       var basecolumns =[[
+            {field:'MKBABRowId',title:'RowId',width:100,hidden:true,sortable:true},
+            {field:'MKBABCode',title:'代码',width:100,sortable:true,hidden:true},
+            {field:'MKBABDesc',title:'标题',width:100,sortable:true},
+            {field:'MKBABNote',title:'备注',width:100,sortable:true,hidden:true}
+        ]];
+        // 左侧列表
+        $('#leftgrid').datagrid({
+            url:$URL,
+            queryParams:{
+                ClassName:"web.DHCBL.MKB.MKBAssessmentBase",
+                QueryName:"GetList"
+            },
+            autoRowHeight: true,
+            columns: basecolumns,  //列信息
+            pagination: true,   //pagination   boolean 设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+            pageSize:15,
+            pageList:[5,10,15,20,25,30,50,75,100,200,300,500,1000],
+            singleSelect:true,
+            remoteSort:false,
+            idField:'MKBABRowId',
+            ClassTableName:'User.MKBAssessmentBase',
+            SQLTableName: 'MKB_AssessmentBase',
+           // rownumbers:true,    //设置为 true，则显示带有行号的列。
+            fitColumns:true,//设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+            scrollbarSize :0,
+            onSelect:function(index,row){
+                id = row.MKBABRowId;
+                 //动态生成右侧评分控件界面
+                var centerHtml= $.m({ClassName:'web.DHCBL.MKB.MKBAssessment',MethodName:'CreateAssessmentHtml',id:id},false);
+                $("#layoutcenter").html("<div class='allcontent'>"+centerHtml+"</div>");
+                $.parser.parse();  //渲染hisui 样式
+                $("#grade").text("");
+                $("#result").text("");
+                $("#allscore").text("");
+                RefreshSearchData("User.MKBAssessmentBase2",id,"A",row.MKBABDesc);
+                
+            },
+            onLoadSuccess:function(data){
+                $(this).datagrid('columnMoving');
+            }
+            
+        });
+         $("#leftgrid").datagrid({
+                    toolbar:"#leftTools"
+          })
+        ShowUserHabit('leftgrid');    
+        //左侧检索
+        $("#TextDesc").searchcombobox({
+            url:$URL+"?ClassName=web.DHCBL.BDP.BDPDataHistory&QueryName=GetDataForCmb1&ResultSetType=array&tablename=User.MKBAssessmentBase2",
+			onSelect:function () 
+				{	
+					$(this).combobox('textbox').focus();
+					SearchFunLib()
+			        
+		        }            
+        }) 
+        $('#TextDesc').combobox('textbox').bind('keyup',function(e){ 
+            if (e.keyCode==13){ 
+                SearchFunLib() 
+            }
+        }); 
+        $("#btnSearch").click(function(e) { 
+            SearchFunLib();
+        });
+        SearchFunLib=function(){
+            var desc=$("#TextDesc").combobox('getText')
+            $('#leftgrid').datagrid('load', { 
+                ClassName:"web.DHCBL.MKB.MKBAssessmentBase",
+                QueryName:"GetList",
+                'desc':desc
+            });
+            $('#mygrid').datagrid('unselectAll');
+        }
+       //左侧重置
+       $("#btnLeftRefresh").click(function(e){
+           $("#TextDesc").combobox('setValue','');
+           $('#leftgrid').datagrid('load',  {
+                ClassName:"web.DHCBL.MKB.MKBAssessmentBase",
+                QueryName:"GetList"
+            });
+           $('#leftgrid').datagrid('unselectAll');
+           $("#layoutcenter").html('<div id="div-img" style="width:100%;height:90%;text-align:center;vertical-align: middle;"><img src="../scripts/bdp/Framework/icons/mkb/noselect-warn.png" alt="没有数据哦，选条数据看看吧" style="margin:100px 0" /></div>');
+       })
+       }else{
+            var centerHtml= $.m({ClassName:'web.DHCBL.MKB.MKBAssessment',MethodName:'CreateAssessmentHtml',id:id},false);
+            $("#layoutcenter").append("<div id='allcontent' class='allcontent'>"+centerHtml+"</div>");
+            $.parser.parse();  //渲染hisui 样式 
+            if(sdflag=="sd"){
+                //GetURLParams("allvalue")
+                var str=GetURLParams("allvalue");
+                if(!!str){
+                       allvalue=str.split("[%AND]");
+                }else{
+                       allvalue=[];
+                    }
+                 $.each(allvalue,function(index,value){
+                     if(value!=""){
+                         var $thisid=value.split("[iAndv]")[0];
+                         var $thisval=value.split("[iAndv]")[1];
+                         var $thistype=$thisid.split("_")[0];
+                         if($thistype=="C"){
+                             $("#"+$thisid).find("select").combobox('setValue',$thisval);
+                        }
+                        if($thistype=="R"){
+                            $("#"+$thisid).find("input[value='"+$thisval+"']").radio("setValue",true); 
+                        }
+                        if($thistype=="CB"){
+                            if($thisval!=""){
+                                var $thisvalnew1=$thisval.split("[CBVa]");
+                            }
+                            $("#"+$thisid).find("input").each(function(index){
+                                    var $thisvalnew2=$thisvalnew1[index+1];
+                                    $("#"+$thisid).find("input[value='"+$thisvalnew2+"']").checkbox("setValue",true);
+                                  
+                                })
+                            
+                        }
+                        if(($thistype=="TX")){
+                             $("#"+$thisid).find("input").val($thisval);
+                        }
+                        if($thistype=="TA"){
+                             $("#"+$thisid).find("textarea").val($thisval);
+                        }
+                     }
+                                 
+                  })
+                 
+                
+            }
+            
+            //$(".hisui-checkbox").removeAttr('id');
+       }
+       
+       $("#btnSave").click(function(e){
+           var allvalue=GetAllValue();
+            $("#allvalue").val(allvalue);
+           if(CheckAll()=="true"){
+               getTheCheckBoxValue();
+           }
+       })
+       //获得所有选择的值
+       GetAllValue = function(){
+           var allvalueid=[];
+           $(".contentul").each(function(){
+                var $thisid=$(this).attr("id");
+                var $thistype=$thisid.split("_")[0];
+                var $thisval=""
+                if($thistype=="C"){
+                     $thisval=$("#"+$thisid).find(".combo-value").val();
+                }
+                if($thistype=="R"){
+                     $thisval=$("#"+$thisid).find("input:checked").val();
+                }
+                if($thistype=="CB"){
+                    $("#"+$thisid).find("input:checked").each(function(index){
+                           $thisval=$thisval+"[CBVa]"+$("#"+$thisid).find("input:checked").eq(index).val();
+                        })
+                }
+                if(($thistype=="TX")){
+                     $thisval=$("#"+$thisid).find("input").val();
+                }
+                if($thistype=="TA"){
+                     $thisval=$("#"+$thisid).find("textarea").val();
+                }
+                allvalueid.push($thisid+"[iAndv]"+$thisval)
+           })
+          return allvalueid.join("[%AND]"); 
+         
+       }
+      
+       //判断是否选完
+       CheckAll = function(){
+           var rt="true"
+            //判断复选框是否选一个
+            var boxradio=[];
+            $(".contentul").each(function(){
+                //筛选出单选和复选的id
+                var $thisid=$(this).attr("id")
+                if(($thisid.indexOf("R")!=-1)||($thisid.indexOf("CB")!=-1))
+                {
+                    boxradio.push($thisid)
+                }
+           })
+            var flagradioarrey=[];
+           $.each(boxradio,function(index,value){
+                   flagradioarrey[index]="false";
+                    $("#"+value).find(".radio").each(function(){
+                        if($(this).hasClass("checked")){
+                            flagradioarrey[index]="true";
+                        } 
+                    })
+                    $("#"+value).find(".checkbox").each(function(){
+                        if($(this).hasClass("checked")){
+                            flagradioarrey[index]="true";
+                        } 
+                    })
+               })
+            if(flagradioarrey.indexOf("false")!=-1){
+                $.messager.alert("提示信息","还有未填写题目,请选完后计算总分","info");
+                rt="false";
+                $("#grade").text("");
+                $("#result").text("");
+                $("#allscore").text("");
+            }
+            return rt
+       }
+       //获得总分
+      getTheCheckBoxValue= function(){ 
+            var checkBoxValue = 0;  
+            var checkbox = $("#layoutcenter input:checked");  
+            var selectbox = $(".combo-value"); 
+            selectbox.each(function(){
+                if(!!$(this).val()){
+                     checkBoxValue = (checkBoxValue-0)+($(this).val().split("_")[1]-0)*10;   //乘以10后面再除以10  解决js计算小数时丢失精度
+                    }
+                })
+            checkbox.each(function(){ 
+                checkBoxValue = (checkBoxValue-0)+($(this).val().split("_")[1]-0)*10; //减0 转换成number类型
+            })  
+           $("#allscore").text(checkBoxValue/10);
+           var rankHtml= $.m({ClassName:'web.DHCBL.MKB.MKBAssessment',MethodName:'GetDescByIdScore',id:id,score:checkBoxValue/10},false);
+           $("#grade").text(rankHtml.split("[DANDS]")[1]);
+           $("#result").text(rankHtml.split("[DANDS]")[0]);
+       }
+      
+      })*/
+    </script>
+     <script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_Assessment.js"> </script>
+</body>
+</html>

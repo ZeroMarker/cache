@@ -1,0 +1,140 @@
+<!-- 
+    * FileName: dhcbill.outpay.settlement.csp
+    * Author: Lxy
+    * Date: 2022-12-12
+    * Description: 门诊外院报销结算
+   -->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+if ##class(websys.SessionEvents).SessionExpired() quit 1
+quit 1
+</csp:method>
+<html>
+<head>
+   <EXTHEALTH:HEAD/>
+   <HISUI/>
+   <DHCBILL/>
+   <ADDINS/>
+   <DOCCARD medStepCode="Bill"/>
+   <link rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.outpay.addinv.css"/>
+   <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+   <script type="text/javascript" src="../scripts/DHCWeb.OPYBComm.js"></script>
+   <script type="text/javascript" src="../scripts/DHCBillEInvService.js"></script>
+   <server>
+		set defUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys", "HISUIDefVersion")
+		set GroupId=%session.Get("LOGON.GROUPID")
+		set HospId=%session.Get("LOGON.HOSPID")
+
+		set PersonBanner="dhcdoc.patinfo.banner.csp"
+		if (%request.Get("PersonBanner")'="") {
+			set PersonBanner=%request.Get("PersonBanner")
+		}
+
+		//获取收费安全组配置
+		set GroupCfgStr=##class(web.UDHCOPGSConfig).ReadCFByGRowID(GroupId, HospId)
+		set RequiredInvFlag=$case(+$p(GroupCfgStr,"^",5),1:"Y",:"N")   //结算是否需要发票标识("Y":是，"N":否)
+		set INVXMLName=$p(GroupCfgStr,"^",11)
+		
+		set PBODType=##class(BILL.OUTPAY.BL.ConFigCommon).IsEnterHISDetail(HospId)
+		set PBODType=$Case(PBODType,"1":"PBD","0":"PBO",:"")
+
+		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+
+		set pluLib=##class(BILL.Util.Library).%New()
+		do pluLib.LoadReadCardLib()   //引入读卡公共js
+		do pluLib.%Close()
+
+		w "<input id='GetOPReceiptNoEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.udhcOPBillIF.GetReceiptNO"))_"'/>",!
+		w "<input id='GetCardTypeEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'/>",!
+		w "<input id='ReadCardTypeEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'/>",!
+		w "<input id='ReadAccExpEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'/>",!
+		w "<input id='ReadOPDataEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("BILL.OUTPAY.BL.ChargeCtl.GetOutPayPrtData"))_"'/>",!
+		w "<input id='DHCVersion' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCOPConfig.GetVersion"))_"'/>",!
+		w "<input id='CardTypeRowId' type='hidden'/>",!
+		w "<input id='PatientId' type='hidden'/>",!
+		w "<input id='EpisodeID' type='hidden'/>",!
+		w "<input id='admStr' type='hidden'/>",!
+		w "<input id='BilgDeptCode' type='hidden'/>",!
+		w "<input id='BilgDeptName' type='hidden'/>",!
+		w "<input id='admSource' type='hidden'/>",!
+		w "<input id='insuAdmType' type='hidden'/>",!
+		w "<input id='insuDic' type='hidden'/>",!
+		w "<input id='accMRowId' type='hidden'/>",!
+   </server>
+   <script type="text/javascript">
+	if (websys_isIE) {
+		$.getScript("../scripts/dhcbill/plugin/bluebird/bluebird.min.js");
+	}
+	
+	//常量
+	var CV = {
+		RequiredInvFlag: "#(RequiredInvFlag)#",    //结算是否需要发票标识("Y":是，"N":否)
+		INVXMLName: "#(INVXMLName)#",
+		PBODType:"#(PBODType)#",
+	};
+	
+	//全局变量
+	var GV = {
+		EditRowIndex: undefined
+	};
+   </script>
+</head>
+
+<body class="hisui-layout">
+ <div data-options="region:'north',border:false" style="height:40px;overflow:hidden;">
+	   <csp:Include Page="#(PersonBanner)#">
+   </div>
+    <div data-options="region:'center',border:false" style="padding:0px 10px 10px 10px;">
+	   <div class="hisui-layout" data-options="fit:true">
+		   <div data-options="region:'north',bodyCls:'panel-body-gray'" style="height:135px;border-radius:4px 4px 0 0;">
+			   <table class="search-table">
+				   <tr>
+					   <td class="r-label"><label>#(..Get("登记号"))#</label></td>
+					   <td><input class="textbox" id="patientNo"/></td>
+					   <td class="r-label r-label-40"><label>#(..Get("卡号"))#</label></td>
+					   <td><input class="textbox" id="CardNo"/></td>
+					   <td class="r-label r-label-40"><label>#(..Get("卡类型"))#</label></td>
+					   <td><input class="textbox" id="CardTypeNew" disabled/></td>
+					   <td class="r-label-40">
+						   <a href="javascript:;" class="hisui-linkbutton btn-width" iconCls="icon-w-card" id="btn-readCard" onClick='readHFMagCardClick()'>读卡</a>
+					   </td>
+					   <td class="r-label-40">
+						   <a href="javascript:;" class="hisui-linkbutton btn-width" iconCls="icon-w-clean" id="btn-clearBtn" onClick='clear_Click()'>清屏</a>
+					   </td>
+				   </tr>
+				   <tr>
+					   <td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+					   <td><input id="startDate" class="hisui-datebox textbox"/></td>
+					   <td class="r-label r-label-40"><label>#(..Get("结束日期"))#</label></td>
+					   <td><input id="endDate" class="hisui-datebox textbox"/></td>
+					   <td class="r-label r-label-40"><label class="clsRequired">#(..Get("结算费别"))#</label></td>
+					   <td><input class="textbox" id="admReason"/></td>
+					    <td class="r-label-40">
+						   <a href="javascript:;" class="hisui-linkbutton btn-width" iconCls="icon-w-find" id="btn-findBtn" onClick='findClick()'>查询</a>
+					   </td>
+					    <td class="r-label-40">
+						   <a href="javascript:;" class="hisui-linkbutton btn-width" iconCls="icon-w-paid" id="btn-settlement" onClick='InvSettlement()'>结算</a>
+					   </td>
+				   </tr>
+				    <tr>
+					   <td class="r-label"><label>#(..Get("发票范围"))#</label></td>
+					   <td><input class="textbox" id="invRange"/></td>
+				       <td class="r-label r-label-40"><label>#(..Get("当前票据号"))#</label></td>
+				       <td><input id="receiptNo" class="textbox" style="font-weight: bold;" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="display:none;"></a></td>
+					   <td class="r-label"></td>
+					   <td></td>
+					   <td class="r-label-40">
+						  <a href="javascript:;" class="hisui-linkbutton btn-width"  id="btn-insuProcess" onClick='InsuProcess()'>医保审核</a>
+					   </td>
+				   </tr>
+			   </table>
+		   </div>
+		   <div data-options="region:'center',bodyCls:'panel-body-gray'"  style="border-radius:0 0 4px 4px;">
+			   <table id="InvList"></table>
+		   </div>
+	   </div>
+   </div>
+   <script type='text/javascript' src="../scripts/dhcbill/dhcopbill/dhcbill.opbill.common.js"></script>
+   <script type="text/javascript" src="../scripts/dhcbill/outpay/dhcbill.outpay.settlement.js"></script>
+</body>
+</html>

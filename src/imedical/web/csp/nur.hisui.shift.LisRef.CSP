@@ -1,0 +1,434 @@
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<NURHISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+        }
+ 		.panel-body, .panel-header {
+			border-color: #ccc;
+		}
+		.datagrid-wrap.panel-body.panel-body-noheader{
+	        border-color:#ccc;
+	        border-top-right-radius:0;
+	        border-top-left-radius:0;
+        }
+	    .btn_right {
+	    	float: right;
+	    	margin-right: 2px;
+	    }	
+		.searchGrid {
+			border-color:#ccc;
+		}
+		#groupLisSub {
+			height: 40px;
+		} 
+		.searchForm {
+			border-collapse:separate;
+			border-spacing:0px 2px;
+			border:none;
+			width:100%;
+			height:100%;
+			padding: 0 4px;
+		}
+		.rowCheckbox {
+			display: none !important;
+		} 
+	</STYLE>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+<script language="cache" runat="SERVER">
+     s EpisodeID = $G(%request.Data("EpisodeID", 1))
+     s ModelId = $G(%request.Data("ModelId", 1))
+</script>
+</head>
+<body>
+	<div id="layoutBody" class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',split:true,border:false" style="height:45px">
+			<table class="searchForm">
+				<tr>
+					<td style="width:40px;">#(..Get("开始"))#</input></td>
+					<td style="width:150px"><input id="startDate" class="hisui-datebox textbox" style="width:114px"></input></td>
+					<td style="width:40px;">#(..Get("结束"))#</td>
+					<td style="width:150px"><input id="endDate" class="hisui-datebox textbox" style="width:114px"></input></td>
+					<td class="rowCheckbox">
+						#(..Get("就诊"))#
+						<select class="hisui-combobox" id="visitNo" style="width:220px;"></select>
+					</td>
+					<td style="width:120px"><a id="btnSearch" class="hisui-linkbutton btn_right" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+					<td><a id="btnWriteIn" class="hisui-linkbutton btn_right" data-options="iconCls:'icon-w-edit'">#(..Get("写入"))#</a></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'center',split:true,border:false">
+					<div id="layoutMult" class="hisui-layout" data-options="fit:true,border:false">
+						<div data-options="region:'north',split:true,border:false">
+							<table class="searchGrid" id="dataGrid" data-options="fit:true"></table>
+						</div>
+						<!--div data-options="region:'center',split:true,border:false">
+							<table class="searchGrid" id="dataSubGrid" data-options="fit:true"></table>
+						</div-->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+var EpisodeID = "#(EpisodeID)#";
+var ModelId = "#(ModelId)#";
+ $(function() {
+	// 定义全局变量
+	var GLOBAL = {
+		code: 'Lis',
+		groupID: 'groupLisSub',
+		hospitalID: session['LOGON.HOSPID'],
+	    className: 'Nur.SHIFT.Emr.RefHandle',
+		pageRowNum: screen.width > 1600 ? 9 : 7,
+		layoutHeight: $('#layoutBody').layout('panel','center').panel('options').height,
+		allVisit: $cm({
+		    ClassName: 'Nur.SHIFT.Emr.RefConfig',
+		    MethodName:'getDomValue', 
+		    HospitalID:session['LOGON.HOSPID'], 
+		    DomID:'AllVisitFlag',
+		    LocID:session['LOGON.CTLOCID'],
+			ModelID: ModelId
+		},false)
+	};
+	/**
+	 * @description: 初始化界面
+	 */
+	function initUI() {
+		initCondition();
+		initData();
+		listenEvents();
+	}
+	/**
+	* @description: 获取入院时间
+	* @param {episodeID} 
+	* @return: inDate
+	*/
+	function getInHospDateTime(episodeID) {
+	var inDate = 'Today';
+	var inDate = $m({
+	    ClassName: 'Nur.SHIFT.Emr.RefSetting',
+	    MethodName: 'GetInHospDate',
+	    EpisodeID: episodeID
+	}, false);
+	return inDate == '' ? 'Today' : inDate;
+	};
+	/**
+	 * @description: 初始化查询条件
+	 */
+	function initCondition() {
+		resetLayout(false);
+		var inHospDate = getInHospDateTime(EpisodeID);
+	    $('#startDate').datebox('setValue', inHospDate);
+	    $('#endDate').datebox('setValue', 'Today');
+//		var url = $URL + '?ClassName=' + GLOBAL.className + '&MethodName=getEpisodeIDs&EpisodeID=' + EpisodeID;
+//		if('undefined'!==typeof websys_getMWToken)
+//		{
+//			url+="&MWToken="+websys_getMWToken()
+//		}
+	    if (GLOBAL.allVisit) {
+		    $('.rowCheckbox').css('display','block');
+			$("#visitNo").combobox({  
+				valueField: 'id',
+				textField: 'desc',
+				value: EpisodeID,
+				url: $URL + '?ClassName=' + GLOBAL.className + '&MethodName=getEpisodeIDs&EpisodeID=' + EpisodeID,
+				defaultFilter:4,
+				onSelect: function(record) {
+					EpisodeID = record.id;
+					$('#btnSearch').click();
+				}
+		    }); 
+		}
+	}
+	/**
+	 * @description: 检验结果加载
+	 */
+	function initData() {
+		$cm({
+	        ClassName: "Nur.SHIFT.Emr.RefSetting",
+	        MethodName: "getReferTabConfig",
+	        HospitalID: GLOBAL.hospitalID,
+	        Code: GLOBAL.code
+	    }, function (jsonData) {
+	    	var proper={}
+	    	proper = $cm({
+			ClassName: "Nur.SHIFT.Emr.RefSetting",
+			MethodName: "GetProperList",
+			ID:"6"
+				},false);
+			var columns = {}
+			columns=jsonData.columns[0]
+			var Columns=[]
+			data = columns.filter(function(rtn){
+				return proper.find(function(rtn1){
+					return rtn1.ContentID==rtn.field
+					})
+				})
+			Columns.push(data)
+			var url = $URL
+			if('undefined'!==typeof websys_getMWToken)
+			{
+				url+="&MWToken="+websys_getMWToken()
+			}		    
+	        $HUI.datagrid('#dataGrid', {
+	            url: $URL,
+	            queryParams: initParameter(jsonData,'startDate','endDate'),
+	            rownumbers: true,
+	            singleSelect: true,
+				pageSize: GLOBAL.pageRowNum,
+	            pageList: [GLOBAL.pageRowNum, 20, 30],
+				singleSelect: true,
+				loadMsg: $g('正在加载信息...'),
+				pagination: true,
+	            frozenColumns: jsonData.frozenColumns,
+	            columns: Columns,
+	            nowrap: jsonData.gridProperty.nowrap == "true",
+	            rowStyler: function (rowIndex, rowData) {
+					var existReport = eval("rowData." + jsonData.paramsConfig.isResultCode) || ''; 
+	                if (!!existReport) {
+	                    return 'color:green;font-weight:bold;';
+	                }
+	            },
+//	            onClickRow: function (rowIndex, rowData) {
+//	                var param1 = eval("rowData." + jsonData.paramsConfig.isOrderIdCode) || '';
+//	                var param2 = eval("rowData." + jsonData.paramsConfig.isItemNoCode) || '';    //为了兼容不同接口入参，增加检验号
+//					var param3 = eval("rowData." + jsonData.paramsConfig.isResultCode) || '';    //为了兼容不同接口入参，增加报告ID
+//					if (!param3) {
+//						$.messager.popover({msg:$g('未出报告!'),type:'error'});
+//						resetLayout(false);
+//						return;
+//					}
+//	                initDataDetail(param1,param2,param3);
+//	            }
+	        });
+	    });
+	}
+	/**
+	 * @description: 初始化检验结果详细信息
+	 * @param {param1,param2,param3}
+	 */
+	function initDataDetail(param1,param2,param3) {
+		resetLayout(true);
+	    $cm({
+	       ClassName: "Nur.SHIFT.Emr.RefSetting",
+	        MethodName: "getReferTabConfig",
+	        HospitalID: GLOBAL.hospitalID,
+	        Code: GLOBAL.code + "-Detail"
+	    }, function (jsonData) {
+	    	organizeColumns(jsonData);
+//			var url = $URL
+//			if('undefined'!==typeof websys_getMWToken)
+//			{
+//				url+="&MWToken="+websys_getMWToken()
+//			}
+	        $HUI.datagrid('#dataSubGrid', {
+	            url: $URL,
+	            queryParams: initParameter(jsonData,'startDate','endDate',param1,param2,param3),
+	            rownumbers: true,
+	            frozenColumns: jsonData.frozenColumns,
+	            columns: jsonData.columns,
+				rowStyler: function (rowIndex, rowData) {
+					var abFlag = eval("rowData." + jsonData.paramsConfig.isAbnormalCode);
+	                if (abFlag == 'H') {
+		               setTimeout(function(){
+			           		 $('#dataSubGrid').datagrid('selectRow',rowIndex);	
+			           },200);
+	                   return 'color:red;';
+	                }else if (abFlag == 'L') {
+		               setTimeout(function(){
+			           		 $('#dataSubGrid').datagrid('selectRow',rowIndex);	
+			           },200);
+	                   return 'color:blue;';
+	                }
+	            }
+	        });
+	    });
+	}
+	/**
+	 * @description: 获取入院时间
+	 * @param {flag} 
+	 */
+	function resetLayout(flag) {
+		if (flag) {
+			$('#layoutMult').layout('panel','north').panel('resize',{height:GLOBAL.layoutHeight * 0.5});
+			$('#layoutMult').layout('resize');
+		}else{
+			$('#layoutMult').layout('panel','north').panel('resize',{height:GLOBAL.layoutHeight-40});
+			$('#layoutMult').layout('resize');
+		}	    
+	}
+	/**
+	 * @description: 组织入参
+	 */
+	function initParameter() {
+	    var jsonData = arguments[0];
+	    var startDate = !!arguments[1] ? $('#' + arguments[1]).datebox('getValue') : '';
+	    var endDate = !!arguments[2] ? $('#' + arguments[2]).datebox('getValue') : '';
+		var oeoreId = arguments[3];
+	    var labNo = arguments[4];
+		var reportId =  arguments[5];
+	    eval(jsonData.paramsCommand);
+	    return jsonData.queryParams;
+	}
+	/**
+	 * @description: 选中内容,带入右侧内容Pannel
+	 */
+	function writeIn() {
+		var gridID = 'dataGrid';
+		var groupID = GLOBAL.groupID;
+		var rows = $('#' + gridID).datagrid('getSelections');
+		if (rows.length == 0) {
+			$.messager.popover({msg: $g('请选择需要引入的内容！'), type: 'error'});
+			return;
+		}
+		var tmp=[];
+		var tmp1=[];
+		for(var i=0;i<rows.length;i++){
+			for(var j in rows[i])
+			{
+				tmp.push(j)
+				tmp1.push(rows[i][j])
+			}
+		}
+		var data=[];
+		tmp.forEach(function(item,i){
+			var arr=[];
+			arr.push(item)
+			arr.push(tmp1[i])
+			data.push(arr)
+			})	
+		var content={}
+		 content = $cm({
+			ClassName: "Nur.SHIFT.Emr.RefSetting",
+			MethodName: "GetShiftDataTabTemplate",
+			dataType: "text",
+			HospitalID: GLOBAL.hospitalID,
+			id:"6"
+			},false)
+		var result = "";
+		if(content=="")
+		{
+			$.messager.popover({msg: $g('模板为空,请配置模板！'), type: 'alert'});
+		}else{
+			result=evaluate(content,data)
+		}
+		console.log(content)
+//		$('#textEdit', parent.document).val(result);
+		updatePreview($("#textEdit", parent.document)[0], result, getCursortPosition($("#textEdit", parent.document)[0]));	}
+			/**
+	 * @description: 获取选中元素的文本
+	 * @param {obj} 
+	 * @return: 光标位置 
+	 */
+	function getCursortPosition(obj) {
+	    var cursorIndex = 0;
+	    if (document.selection) {
+	        // IE Support
+	        obj.focus();
+	        var range = document.selection.createRange();
+	        range.moveStart('character', -obj.value.length);
+	        cursorIndex = range.text.length;
+	    } else if (obj.selectionStart || obj.selectionStart == 0) {
+	        // another support
+	        cursorIndex = obj.selectionStart;
+	    }
+	    return cursorIndex;
+	}
+	/**
+	 * @description: 更新引用信息
+	 * @param {curElement, editContent, curPosition} 
+	 */
+	function updatePreview(curElement, editContent, curPosition) {
+		var startText = curPosition == 0 ? '' : curElement.value.substring(0, curPosition);
+	    if (startText.trim() == '/') {
+	        startText = '';
+	    }
+	    var endText = curElement.value.substring(curPosition);
+	    $("#textEdit",parent.document).val(startText + editContent + endText);  //在原有文本追加
+	}
+
+	/**
+	 * @description: 写入预览
+	 * @param {content} 
+	 */
+	function writToPreview(content) {
+		updatePreview($("#textEdit", parent.document)[0], content, getCursortPosition($("#textEdit", parent.document)[0]));
+	}
+	
+	function evaluate(content,data){
+		var k1={}
+		for(var n=0;n<data.length;n++){
+			k1[data[n][0]]=data[n][1];
+			}
+		var flag = 0;
+		var tmp='';
+		var result='';
+		for(var j=0;j<content.length;j++)
+		{
+			if(content[j]=='{'){
+				flag=1;
+			}else if(content[j]=='}'){
+				flag=0;
+				if(k1[tmp]==""){
+					result=result+"?"
+					}
+				result = result+k1[tmp]
+			  tmp='';
+			}else{
+				if(flag==1){
+					tmp = tmp+content[j];
+				}else{
+					result=result+content[j];
+				}
+			}
+				
+		}
+		var tmp1 = result.trim().split("@")
+		var tmp2=''
+		for(var i = 0; i<tmp1.length;i++)
+		{
+			if(tmp1[i]==""||tmp1[i].includes("?"))
+			{
+				tmp2=tmp2+""
+			}else
+			{
+				tmp2=tmp2+tmp1[i]
+			}
+		}
+		return tmp2;
+		}
+	/**
+	 * @description: 监听事件
+	 */
+	function listenEvents() {
+		$('#btnSearch').bind('click',function(e) {
+			$('#' + GLOBAL.groupID).empty();
+			resetLayout(false);
+			initData();
+		}); 
+		$('#btnWriteIn').bind('click',writeIn);
+	}
+	initUI();
+});
+</script>
+
+</html>

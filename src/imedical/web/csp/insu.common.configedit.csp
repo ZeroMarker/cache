@@ -1,0 +1,541 @@
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+<script type="text/javascript" src="../scripts/insu.common.configedit.js"></script>
+<script type="text/javascript" src="../scripts/bill.einv.importorexportcom.js"></script>
+
+	<style type="text/css">
+		#formulBtn{
+			margin:5px 5px ;
+		}
+		
+		.textbox.tb120 {
+			width: 120px;
+		}
+		
+	#StrategySubList a{
+		display:inline-block;
+		height:25px;
+		line-height:25px;
+		width:230px;
+		margin:5px 10px 5px 0px;
+		text-align:center ;
+		overflow:hidden; 
+		text-overflow:ellipsis;
+		color: #444;
+		background: #fafafa;
+		background-repeat: repeat-x;
+		border: 1px solid #bbb;
+		background: -webkit-linear-gradient(top,#ffffff 0,#eeeeee 100%);
+		background: -moz-linear-gradient(top,#ffffff 0,#eeeeee 100%);
+		background: -o-linear-gradient(top,#ffffff 0,#eeeeee 100%);
+		background: linear-gradient(to bottom,#ffffff 0,#eeeeee 100%);
+		background-repeat: repeat-x;
+		filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#ffffff,endColorstr=#eeeeee,GradientType=0);
+		-moz-border-radius: 5px 5px 5px 5px;
+		-webkit-border-radius: 5px 5px 5px 5px;
+		border-radius: 5px 5px 5px 5px;
+		
+	}
+	#StrategySubList a:hover{
+		background: #eaf2ff;
+		color: #000000;
+		border: 1px solid #b7d2ff;
+		filter: none;
+	}
+	#Eidtformul{
+		padding:5px ;
+	}
+	#Eidtformul a{
+		padding:5px;
+		background:#fff ;
+	}
+	#Eidtformul a:hover{
+		background:#D2E9FF ;
+	}
+	.areaTitle {
+		height:20px;
+	}
+	.areaTitleBtn{
+		height:20px;	
+	}
+	
+	#Eidtformul .l-btn-left {
+    position: relative;
+    overflow: hidden;
+    margin: -5px;
+    padding: 0;
+	}
+	
+.panel-icon, .panel-tool
+{
+		position: absolute;
+		top:30%;
+		margin-top:-8px;
+		height:30px;
+}
+
+.areaTitleLayout{
+		border-style: solid;
+		border-width:3px 0px 1px 0px;
+		border-top-color:#2EC3E9;
+		border-bottom-color:#D1D2D1;
+		
+		background-color:#FFFFFF;
+		margin:0px 0px 3px 0px;
+		padding:0px;
+		width:100%;
+		height:35px;
+}
+
+.areaTitle{
+	font-size:16px;
+	color:#000079;
+	height:100%;
+	padding:0px;
+	margin:0px;
+	float:left;
+	padding:6px 0px 0px 5px;
+}
+
+.areaTitle_edit{
+	height:100%;
+	padding:0px;
+	padding-left:22px;
+	margin:0px;
+	float:left;
+	padding-top:4px;
+}
+
+.areaTitle_msg{
+	padding:0px;
+	font-size:12px;
+	text-align:right;
+	float:right;
+	margin:0px;
+	padding:0px 10px;
+	/*display:inline-block;
+	overflow:hidden;*/
+	float:left;
+}
+
+.areaTitleBtn{
+	height:100%;
+	padding:4px 10px 0px 0px;
+	margin:0px;
+	float:right;
+}
+
+.gridDivCss{
+	position:relative;
+	overflow:auto;
+	margin:0px 0px 0px 0px;
+	padding:0px;
+}
+
+.rowStyle{
+	clear:both;
+	text-align:left;
+}
+
+.rowField{
+	float:left;
+}
+
+.fieldLabel{
+		float:left;
+		font-size:13px;
+		font-weight:bold;
+		text-align:right;
+		width:70px;
+		padding-top:5px;
+}
+	
+.fieldText{
+		float:left;
+		font-size:13px;
+		background-color:#ECF5FF;
+		padding:0px;
+		text-align:left;
+		margin-left:5px;
+		padding-left:2px;
+}
+
+.fieldLayout{
+		float:left;
+		font-size:13px;
+		padding:0px;
+		text-align:center;
+		text-align:right;
+		margin-left:5px;
+}
+	</style>
+</head>
+
+<body>
+
+	<!-- 数据来源(0 医保控费项目库 1 第三方导入到医保控费的his项目 2 直接从his的收费项目表中查询 3 备注与中心词之间的关系)  -->
+	<input type="hidden" id="DataFrom" value="3" />
+	<input type="hidden" id="rowid" value="" />          <!-- 选择的项目Dr-->
+	<input type="hidden" id="ItmCode" value="" />     <!-- 选择的项目编码 -->
+	<input type="hidden" id="ItmDesc" value="" />     <!-- 选择的项目名称 -->
+	<input type="hidden" id="HaveExpFlg" name="HaveExpFlg" value="0"/>     <!-- 是否有公式 1 有 0 无-->
+
+	<div id="layout" class="hisui-layout" fit="true">
+		<div data-options="region:'center'" border="false">
+			<div id="layout" class="hisui-layout" fit="true">
+				<div data-options="region:'center'" border="false" style="padding:5px;">
+
+			
+				<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'配置点列表',tools:'#common-edit-btn'" style="border-radius:0 0 4px 4px;">
+					<table class="hisui-datagrid" id="DictionaryGV"></table>
+				</div>
+				<div id="common-edit-btn" class="panel-tool">
+					<input id="keywordIn" type="text" name="Commonkey" class="hisui-searchbox" style="width:200px;" />
+					
+					<span style="width:20px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					<!--
+					<a id="CommonImprot" style="width:95px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-import',plain:true" href="#">导入</a>
+					<a id="open_edit_win" style="width:95px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" href="#">编辑</a>
+					-->
+					<a id="ItmCom_AuditC_Btn" style="width:150px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-no',plain:true" href="#">本页审核取消</a>
+					<a id="ItmCom_Audit_Btn" style="width:150px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" href="#">本页审核通过</a>
+					<a id="ItmCom_AuditChange_Btn" style="width:110px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" href="#">审核提交</a>
+					
+					
+					<a href="javascript:void(0)" id="mbedit" style="width:115px;" class="hisui-menubutton" data-options="menu:'#mmedit'">更多</a>
+					<div id="mmedit" style="width:120px;">
+						<div id="open_edit_win" data-options="iconCls:'icon-add'">增加/更新</div>
+						<div class="menu-sep"></div>
+						<div id="CommonImprot" data-options="iconCls:'icon-import'">导入</div>
+					</div>
+				</div>
+				
+				
+				</div>
+				<div data-options="region:'south'" border="false" style="height:120px;padding:5px;">
+					<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'验证方法入参格式'" style="border-radius:0 0 4px 4px;padding:5px;">
+						<div id="inputPamInfo">&nbsp;</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div data-options="region:'east'" border="false" style="width:900px;padding:5px;">
+			<div id="layout_strategy_edit" class="hisui-layout" fit="true">
+				<div data-options="region:'north'" border="false" style="height:350px; padding:0px">
+					<!--<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'策略明细',tools:'#strategy-edit-btn'" style="border-radius:0 0 4px 4px;"> -->
+					<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'配置因素',tools:'#strategy-edit-btn'" style="border-radius:0 0 4px 4px;">
+						<table class="hisui-datagrid" id="StrategyGV"></table>
+					</div>
+					<div id="strategy-edit-btn" class="panel-tool">
+					<!--
+					<a href="javascript:void(0)" id="mbedit" style="width:120px;" class="hisui-menubutton" data-options="menu:'#mmedit_strategy',iconCls:'icon-edit'">操作</a>
+					<div id="mmedit_strategy" style="width:120px;">
+					-->
+					
+						<input id="strategykeySearchmain" type="text" name="strategykey" class="hisui-searchbox" style="width:180px;margin-right:20px;" />
+						<span style="width:20px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+						<a id="StrategySaveAll" style="width:110px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" href="#">审核通过(all)</a>
+						
+						
+						<a id="StrategyRedo" style="width:100px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" href="#">策略再解析</a>
+						<a id="StrategyAdd" style="width:80px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" href="#">增加</a>
+						<a id="StrategyRemove" style="width:80px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" href="#">删除</a>
+						<a id="updateCommitC" style="width:150px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-no',plain:true" href="#">本页审核取消</a>
+						<a id="updateCommit" style="width:150px;height:30px;display:none;" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" href="#">本页审核通过</a>
+						<a id="DeletConFactorBtn" style="width:110px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" href="#">删除</a>
+						<a id="AuditChangeCommit" style="width:110px;height:30px;" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" href="#">修改提交</a>
+					<!--
+					</div>-->
+					</div>
+					
+				</div>
+				
+				<div data-options="region:'center'" border="false" style="padding:5px 0px 0px 0px;">
+					<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'配置公式',tools:'#Expression-optionArea'" style="border-radius:0 0 4px 4px;">
+						<!-- -->
+				<div class="rowStyle" id="EidtGroupFormu" style="width:100%;">
+					<div style="width:100%;">
+						<input type="hidden" id="ExpressionDr" />
+						<div id="Eidtformul" style="height:151px;width:97%;overflow:auto;border:1px solid #666;"></div>
+					</div>
+					<div id="formulBtn">
+						<div class="default">
+							<a style="width:40px;" class="hisui-linkbutton btn" href="#">(</a>
+							<a style="width:40px;margin-left:10px;" class="hisui-linkbutton btn" href="#">)</a>
+							<a style="width:40px;margin-left:10px;" class="hisui-linkbutton btn" href="#">||</a>
+							<a style="width:55px;margin-left:10px;" class="hisui-linkbutton btn" href="#">&&</a>
+							<a style="width:40px;margin-left:10px;" class="hisui-linkbutton btn" href="#">'</a>  <!-- +dongkf 2015 04 23 -->
+							<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-remove'" href="#" id="ClearAll">清空</a>
+							<!--
+							<a style="width:70px;margin-left:10px;" class="easyui-linkbutton" href="#" data-options="iconCls:'icon-remove'" href="#" id="BackFormul">回退</a>
+							-->
+							<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-cancel'" id="DeleteFormul">删除</a>
+							<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-save'" id="SaveFormul">保存</a>
+							
+						</div>
+						<div id="StrategySubList"></div>
+						<div id="WarnInfo" style="hieght:24px;color:red;">&nbsp;</div>
+						<div style="clear:both;"></div>
+						
+					</div>
+				</div>
+						<!-- -->
+					</div>
+					
+					<div id="Expression-optionArea" class="panel-tool">
+						<div  class="rowStyle">
+							<div  class="rowField" style="width:80px;"><input type="radio" id="FormulaTypeExpress" class='hisui-radio' label='表达式' name="FormulaType" value="1"></div>
+							<div  class="rowField" style="width:80px;"><input type="radio" name="FormulaType" class='hisui-radio' label='与关系' value="2" data-options="checked:'true'"></div>
+							<div  class="rowField" style="width:80px;"><input type="radio" name="FormulaType" class='hisui-radio' label='或关系' value="3"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		
+
+		</div>
+	</div>
+
+	<!-- 知识库明细追加 -->
+	<div id="addDictionary" style="padding:10px;">
+		<div class="hisui-panel" title="" fit="true" style="padding:5px" data-options="headerCls:'panel-header-card'">
+			<div id="layout" class="hisui-layout" fit="true">
+				<div data-options="region:'center'" border="false" style="padding:5px;">
+					<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'影响元素列表',tools:'#keyword-search-menu'" style="border-radius:0 0 4px 4px;">
+						<table class="hisui-datagrid" id="AddStrategyGV"></table>
+					</div>
+					<div id="keyword-search-menu" class="panel-tool">
+						<input id="strategykeySearch" type="text" name="strategykey" class="hisui-searchbox" style="width:180px;" />
+						
+						<a href="javascript:void(0)" id="factormore" style="width:115px;" class="hisui-menubutton" data-options="menu:'#factormedit'">更多</a>
+						<span style="width:20px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+						<div id="factormedit" style="width:120px;">
+							<div id="open_factor_edit_win" data-options="iconCls:'icon-add'">增加/更新</div>
+							<div class="menu-sep"></div>
+							<div id="FactorImprot" data-options="iconCls:'icon-import'">导入</div>
+						</div>
+						
+					</div>
+				</div>
+				<div data-options="region:'south'" border="false" style="height:50px; padding:5px;">
+					<div class="rowStyle" style="float:right;">
+						<div class="rowField" style="width:110;">
+							<a id="addCancelBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="width:100px">关闭</a>
+						</div>
+						<div class="rowField" style="width:110;">
+							<a id="addConfirmBtn"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="width:100px">增加</a>
+							<input type="hidden" id="AddOpenMode" value="0"/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 备注信息修改 -->
+	<div id="Edit_Common_Area" style="padding:10px;">
+		<div class="hisui-panel panel-header-gray" title="" fit="true" style="padding:10px 5px;" data-options="">
+			<div class="rowStyle">
+				<div class="rowField" style="width:250px;height:35px;">
+					<input type="hidden" id="ConfigDr" value=""/>
+					<input type="hidden" id="ConfigIndex" value=""/>
+					<div class="fieldLabel" style="width:100px;">配置点编码:&nbsp;</div>
+					<input id="ConfigCode" name="ConfigCode" class="textbox" style="width:120px"/>
+				</div>
+				<div class="rowField" style="width:350px;">
+					<div class="fieldLabel" style="width:100px;">配置点描述:&nbsp;</div>
+					<input id="ConfigDesc" name="ConfigDesc" class="textbox" style="width:200px"/>
+				</div>
+			</div>
+			
+			<div class="rowStyle">
+				<div class="rowField" style="width:650px;height:70px;">
+					<div class="fieldLabel" style="width:100px;">备注:&nbsp;</div>
+					<textarea id="ConfigCommon" rows="3" cols="30" class="textbox" style="width:520px;height:60px;"></textarea>
+				</div>
+			</div>
+			
+			<div class="rowStyle">
+				<div class="rowField" style="width:250px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">启用标志:&nbsp;</div>
+					<input id="ConfigActiveFlg" name="ConfigActiveFlg" class="textbox" style="width:120px"/>
+				</div>
+				<div class="rowField" style="width:350px;">
+					<div class="fieldLabel" style="width:100px;">院区编码:&nbsp;</div>
+					<input id="HospitalNo" name="HospitalNo" class="textbox" style="width:200px"/>
+				</div>
+			</div>
+			
+			<div class="rowStyle">
+				<div class="rowField" style="width:650px;;margin-top:10px;">
+						<div class="fieldLabel" style="width:285px;">&nbsp;</div>
+						<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-remove'" href="#" id="ClearEdit">清空</a>
+						<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-cancel'" id="DeleteCommon">删除</a>
+						<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-save'" id="SaveCommon">保存</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 备注信息修改 -->
+	<div id="Edit_Factor_Area" style="padding:10px;">
+		<div class="hisui-panel panel-header-gray" title="" fit="true" style="padding:10px 5px;" data-options="">
+			<div class="rowStyle">
+				<div class="rowField" style="width:300px;height:35px;">
+					<input type="hidden" id="SelFactorDr" value=""/>
+					<input type="hidden" id="SelFactorIndex" value=""/>
+				
+					<div class="fieldLabel" style="width:100px;">因素编码:&nbsp;</div>
+					<input id="FactorCode" name="FactorCode" class="textbox" style="width:170px"/>
+				</div>
+				<div class="rowField" style="width:330px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">因素描述:&nbsp;</div>
+					<input id="FactorDesc" name="FactorDesc" class="textbox" style="width:200px"/>
+				</div>
+			</div>
+			<div class="rowStyle">
+				<div class="rowField" style="width:650px;height:70px;">
+					<div class="fieldLabel" style="width:100px;">备注信息:&nbsp;</div>
+					<textarea id="FactorCommon" rows="3" cols="30" class="textbox" style="width:500px;height:60px;"></textarea>
+				</div>
+			</div>
+			<div class="rowStyle">
+				<div class="rowField" style="width:300px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">验证类名:&nbsp;</div>
+					<input id="CheckClsName" name="CheckClsName" class="textbox" style="width:170px"/>
+				</div>
+				<div class="rowField" style="width:330px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">验证方法名:&nbsp;</div>
+					<input id="CheckMethodName" name="CheckMethodName" class="textbox" style="width:200px"/>
+				</div>
+			</div>
+			<div class="rowStyle">
+				<div class="rowField" style="width:300px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">入参标记:&nbsp;</div>
+					<input id="InputPamTag" name="InputPamTag" class="textbox" style="width:170px"/>
+				</div>
+				<div class="rowField" style="width:300px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">query生成:&nbsp;</div>
+					<input id="queryflg" name="queryflg" class='hisui-checkbox' type="checkbox" style="width:170px"/>
+				</div>
+			</div>
+			
+			
+			<div id="queryInfoArea" class="rowStyle" style="display:none">
+				<div class="rowField" style="width:300px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">query类名:&nbsp;</div>
+					<input id="queryClass" name="queryClass" class="textbox" style="width:170px"/>
+				</div>
+				<div class="rowField" style="width:300px;height:35px;">
+					<div class="fieldLabel" style="width:100px;">query方法:&nbsp;</div>
+					<input id="queryMethod" name="queryClass" class="textbox" style="width:170px"/>
+				</div>
+			</div>
+			<div class="rowStyle">
+				<div class="rowField" style="width:550px;;margin-top:10px;">
+						<div class="fieldLabel" style="width:200px;">&nbsp;</div>
+						<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-remove'" href="#" id="ClearFactor">清空</a>
+						<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-cancel'" id="DeleteFactor">删除</a>
+						<a style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-save'" id="SaveFactor">保存</a>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+	
+	<!--增加配置数据集-->
+	<div id="Edit_ConfigMap_Area" style="padding:10px;">
+		<div class="hisui-panel" title="" fit="true" style="padding:5px" data-options="headerCls:'panel-header-card'">
+			<div id="layout" class="hisui-layout" fit="true">
+				<div data-options="region:'center'" border="false" style="padding:5px;">
+					<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'元素配置数据',tools:'#keyword-search-menu'" style="border-radius:0 0 4px 4px;">
+						<table class="hisui-datagrid" id="ConfigFacDetailGV"></table>
+					</div>
+				</div>
+				<div data-options="region:'south'" border="false" style="padding:5px;height:150px">
+					<div class="rowStyle">
+						<input type='hidden' id='CofingFactorDr' value=""/>
+						<input type='hidden' id='queryflg' value="0"/>
+						<div class="rowField" style="width:300px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">配置编码:&nbsp;</div>
+							<input id="ProCode" name="ProCode" class="textbox" style="width:170px"/>
+							<input id="ProCodeCombo" name="ProCodeCombo" type='combobox' class="textbox" style="width:170px;display:none"/>
+						</div>
+						<div class="rowField" style="width:330px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">配置名称:&nbsp;</div>
+							<input id="ProName" name="ProName" class="textbox" style="width:200px"/>
+						</div>
+					</div>
+					<div class="rowStyle">						
+						<div class="rowField" style="width:300px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">元素可选值:&nbsp;</div>
+							<input id="ProValue" name="ProValue" class="textbox" style="width:170px"/>
+						</div>
+						<div class="rowField" style="width:330px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">有效标志:&nbsp;</div>
+							<input id="ProActiveFlg" name="ProActiveFlg" class="textbox" style="width:200px"/>
+						</div>
+					</div>
+					<div class="rowStyle" style="float:right;padding-right:150px;">
+						<div class="rowField" style="width:110;margin-right:100px">
+							<a id="DelFactorPro" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="width:100px">删除</a>
+						</div>
+						<div class="rowField" style="width:110;">
+							<a id="addFacotrPro"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="width:100px">保存</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 影响因素可选值集合维护 -->
+	<div id="FactorDic_Details_Area" style="padding:10px;">
+		<div class="hisui-panel" title="" fit="true" style="padding:5px" data-options="headerCls:'panel-header-card'">
+			<div id="layout" class="hisui-layout" fit="true">
+				<div data-options="region:'center'" border="false" style="padding:5px;">
+					<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray panel-header-big',title:'影响因素可选值',tools:'#keyword-search-menu'" style="border-radius:0 0 4px 4px;">
+						<table class="hisui-datagrid" id="FactorDicDetailGV"></table>
+					</div>
+				</div>
+				<div data-options="region:'south'" border="false" style="padding:5px;height:150px">
+					<div class="rowStyle">
+						<input type='hidden' id='FactorDicDr' value=""/>
+						<input type='hidden' id='FactorDetailDr' value=""/>
+						<div class="rowField" style="width:300px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">编码:&nbsp;</div>
+							<input id="FDetailCode" name="FDetailCode" class="textbox" style="width:170px"/>
+						</div>
+						<div class="rowField" style="width:330px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">名称:&nbsp;</div>
+							<input id="FDetailName" name="FDetailName" class="textbox" style="width:200px"/>
+						</div>
+					</div>
+					<div class="rowStyle">						
+						<div class="rowField" style="width:300px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">备注/值:&nbsp;</div>
+							<input id="FDetaiValue" name="FDetaiValue" class="textbox" style="width:170px"/>
+						</div>
+						<div class="rowField" style="width:330px;height:35px;">
+							<div class="fieldLabel" style="width:100px;">有效标志:&nbsp;</div>
+							<input id="FDetaiActiveFlg" name="FDetaiActiveFlg" class="textbox" style="width:200px"/>
+						</div>
+					</div>
+					<div class="rowStyle" style="float:right;padding-right:30px;">
+						<div class="rowField" style="width:350;margin-right:100px">
+							<a id="FDetaiClearBtn" style="width:100px;margin-left:10px;" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-remove'" href="#">清空</a>
+							<a id="FDetaiDelBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" style="width:100px">删除</a>
+
+							<a id="FDetaiAddBtn"  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="width:100px">保存</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

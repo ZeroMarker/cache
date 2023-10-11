@@ -10,6 +10,7 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>	
 <ADDINS require="RWCard"/>
+<DOCCARD medStepCode="OPAdmReg"></DOCCARD>
 <style> 
 .calenderTableClass{
 	line-height:2;
@@ -33,8 +34,9 @@
 	height:90px;
 	border-style:none;
 	padding-left:5px;
-	border-radius:8px 8px 8px 8px; 
+	/*border-radius:8px 8px 8px 8px; */
 }
+
 .OneCalenTable{
 	font-weight:bold;
 	vertical-align:top;
@@ -58,16 +60,26 @@
     background-repeat: no-repeat;
     background-position: left center;
 }
-.divcss5-3{border-top:1px dashed #000;border-color:#ccc;height:2px;width:725px}
+.divcss5-3{border-top:1px dashed #ccc;height:2px;width:665px}
 .selectCls{
-	background:#FF5151 !important; 
+	background:#22A3F2 !important; 
+}
+.selectColor{
+	color:white;
+	font-weight: 800;
+}
+#ColorSynopsis span{
+	display:inline-block;
+	width:40px;
+	height:30px;
+	margin-left:5px;
 }
 </style> 
 <SCRIPT language="Cache" RUNAT="SERVER">
 	d ##class(web.DHCXMLPConfig).LODOPInit()
 	s selectcolor="#FF5151" ;选中颜色
 	s nowDate=$ZD(+$H,3)
-	
+	Set langid=##class(DHCDoc.Util.RegisteredObject).%LanguageID()
 	s AppMethCodeStr=$g(%request.Data("AppMethCodeStr",1)) //传入的预约方式Code
 	s CanAddApponit=$g(%request.Data("CanAddApponit",1))   //传入的当日加号是否可用标识 "Y"/"N"
 	s CanNoCardApp=$g(%request.Data("CanNoCardApp",1)) //传入是否可以无卡预约 Y 可以 N 不可以 默认不可以
@@ -78,6 +90,7 @@
 	s logonlocdr=%session.Get("LOGON.CTLOCID")
 	s logonlocdesc=""
 	s:logonlocdr'="" logonlocdesc=$P($G(^CTLOC(logonlocdr)),"^",2)
+	s logonlocdesc=##class(User.CTLoc).GetTranByDesc("CTLOCDesc",logonlocdesc,langid)
 	s:logonlocdesc["-" logonlocdesc=$P(logonlocdesc,"-",2)
 	
 	;登记号长度
@@ -87,15 +100,15 @@
 	s NowDateHtml=$ZD(+$H,sysDateFormat)
 	;打印
 	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-	w "<input id='XMLObject' name='XMLObject' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
+	w "<input id='XMLObject' name='XMLObject' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$C(13,10)
 	
 	
 	;读卡相关引用
-	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-	w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
 	w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+	/*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+	w "<input id='ReadAccExpEncrypt' name='ReadAccExpEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)	
+	w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+	w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)*/
 
 	
 </Script> 
@@ -116,7 +129,7 @@
 		
 	</SCRIPT>
  </head> 
-<body id='mainlayout' class="hisui-layout" onload="BodyLoadHandler()" data-options="fit:true,border:false">
+<body id='mainlayout' class="hisui-layout" data-options="fit:true,border:false">
 	<csp:Include Page="dhcdoc.appointment.show.hui.csp">
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/tools/tools.hui.js"></script>

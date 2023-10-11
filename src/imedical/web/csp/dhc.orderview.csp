@@ -3,6 +3,7 @@
 <head>
 
 <title>	医嘱查看 </title>
+<script src="../scripts/websys.js"></script>
 <HISUI />
 <script src="../scripts/dhc.orderview.js"></script>
 <style>
@@ -14,12 +15,34 @@
 </style>
 </head>
 <body>
+	<server>
+		///将ARG_开头的参数放到一个对象中
+		s ARGObj=##class(BSP.SYS.COM.ProxyObject).%New()
+		s p="ARG_"
+		for {
+			s p=$o(%request.Data(p))
+			q:p=""
+			q:$e(p,1,4)'="ARG_"	
+			s argName=$e(p,5,$l(p))
+			d ARGObj.%Set(argName,%request.Get(p))
+		}
+	
+	</server>
 	<script type="text/javascript">
-		var GV={ord:'#(%request.Get("ord"))#'};
+		var GV={ord:'#(%request.Get("ord"))#',
+				ordViewType:'#(%request.Get("ordViewType"))#',
+				ordViewBizId:'#(%request.Get("ordViewBizId"))#'
+				,hideSensitiveInfo:'#(%request.Get("hideSensitiveInfo"))#'
+				,ARGDATA:#(ARGObj.%ToJSON())#
+		};
 		$(function(){
 			$('body').orderview({
 				type:'container',
-				ord:GV.ord
+				ord:GV.ord,
+				ordViewType:GV.ordViewType,
+				ordViewBizId:GV.ordViewBizId
+				,hideSensitiveInfo:GV.hideSensitiveInfo
+				,ARGDATA:GV.ARGDATA
 			})	
 		})
 	</script>

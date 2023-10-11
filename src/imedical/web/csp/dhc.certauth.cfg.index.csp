@@ -1,0 +1,142 @@
+﻿<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>数字签名管理</title>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+        <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        
+        <script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js"></script>
+        <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+        
+        <server>
+            s userID = %session.Get("LOGON.USERID")
+            s ssGroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s isOnMulityHospMgr = ##Class(CA.BL.HospitalMgr).IsOnMulityHospMgr()
+            s tabOptions = $Get(%request.Data("TabOptions",1),"")
+            s:(tabOptions = "") tabOptions = "servmgr|servreg|deptmgr|ssgroupmgr|signmodel|certmgr|certregmgr|caidmgr|causermgr"
+            s firstTab = $p(tabOptions,"|",1)
+            s tabOptions = "|"_tabOptions_"|"
+        </server>
+
+        <script language="javascript">
+        	var sysOption = {
+	        	IsOnMulityHospMgr: "#(isOnMulityHospMgr)#"
+	        }
+        	
+            var logonInfo = {
+                UserID: "#(userID)#",
+                GroupID: "#(ssGroupID)#",
+                CTLocID: "#(userLocID)#"
+            };
+            
+            var firstTab = "#(firstTab)#";
+            
+            $(function(){
+           		initTabs();  
+           		var url = $('#'+firstTab).attr("data-url");
+           		if (url.indexOf('?') > -1) {
+                   	url = url + "&UserID=" + logonInfo.UserID + "&MWToken=" + getMWToken();
+           		} else {
+                    url = url + "?MWToken=" + getMWToken();
+                }
+                $('#'+firstTab).attr('src', url);                
+            })
+
+            //在点击第一次页签时传src
+            function initTabs(){
+                $HUI.tabs("#mainTab",{
+                    onSelect:function(title,index)
+                    {
+                        $(".artIframe").each(function(){
+                            if ($(this).is(':visible'))
+                            {
+                               url = $(this).attr("data-url");
+                               if (url.indexOf('?') > -1) {
+	                               	url = url + "&UserID=" + logonInfo.UserID + "&MWToken=" + getMWToken();
+                               } else {
+                               		url = url + "?UserID=" + logonInfo.UserID + "&MWToken=" + getMWToken();
+                               }
+                               if($(this).attr("src") == undefined)
+                               {
+                                   $(this).attr("src",url);
+                               }
+                            }
+                        });
+                    }
+                });
+            }
+        </script>
+       
+    </head>
+    
+    <body>
+        <div class="hisui-layout" data-options="fit:true">
+            <div data-options="region:'center',border:false" style="padding:0 4px 4px 4px">
+                <div data-options="fit:true" class="hisui-tabs" id="mainTab">
+                    <CSP:IF condition=($f(tabOptions,"|servmgr|")'=0)>
+	                    <div title='系统配置' data-options="fit:true" style='padding:4px'>
+	                        <iframe class="artIframe" id="servmgr" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.servmgr.csp" src=""> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|servreg|")'=0)>
+	                    <div title='签名服务管理' data-options="fit:true" style='padding:4px'>
+	                        <iframe class="artIframe" id="servreg" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.servreg.csp"> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|deptmgr|")'=0)>
+	                    <div title='签名科室管理' data-options="fit:true" style='padding:4px'>
+	                        <iframe class="artIframe" id="deptmgr" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.deptmgr.csp"> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|ssgroupmgr|")'=0)>
+	                    <div title='签名安全组管理' data-options="fit:true" style='padding:4px'>
+	                        <iframe class="artIframe" id="ssgroupmgr" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.ssgroupmgr.csp"> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|signmodel|")'=0)>
+	                    <div title='签名模块管理' data-options="fit:true" style='padding:4px'>
+	                        <iframe class="artIframe" id="signmodel" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="websys.default.hisui.csp?WEBSYS.TCOMPONENT=CF.BSP.CA.SignModel"> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|certmgr|")'=0)>
+	                    <div title='签名证书管理' data-options="fit:true"  style='padding:4px' >
+	                        <iframe class="artIframe" id="certmgr" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.certmgr.csp"> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|certregmgr|")'=0)>
+	                    <div title='签名证书关联' data-options="fit:true"  style='padding:4px' >
+	                        <iframe class="artIframe" id="certregmgr" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.certregmain.csp"> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|caidmgr|")'=0)>
+	                    <div title='CA标识管理' data-options="fit:true" style='padding:4px'>
+	                        <iframe class="artIframe" id="caidmgr" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.caidmgr.csp"> </iframe>
+	                    </div>
+                    </CSP:IF>
+                    <CSP:IF condition=($f(tabOptions,"|causermgr|")'=0)>
+	                    <!--div title='签名用户管理' data-options="fit:true" style='padding:4px'>
+	                        <iframe class="artIframe" id="causermgr" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.causermgr.csp"> </iframe>
+	                    </div-->
+                    </CSP:IF>
+                    <!--div title='手机登录测试' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="testphone" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.testphone.csp"> </iframe>
+                    </div>
+                    <div title='Ukey签名测试' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="testukey" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.testukey2.csp"> </iframe>
+                    </div-->
+                    <!--div title='签名证书注册' data-options="fit:true"  style='padding:4px' >
+                        <iframe class="artIframe" id="certreg" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.certreg.csp"> </iframe>
+                    </div-->
+                    <div title='CA证书激活' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="activation" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="dhc.certauth.cfg.certactivation.csp"> </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

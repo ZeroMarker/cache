@@ -1,0 +1,78 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s RowIDs=$Get(%request.Data("RowIDs",1))
+	s RRowIDs=$Get(%request.Data("RRowIDs",1))
+	s ROutTypeDR=$Get(%request.Data("ROutTypeDR",1))
+	s ROutType=""
+	i ROutTypeDR'="" s ROutType=$p($g(^DHCEQCCode("DHCEQCOutType",ROutTypeDR)),"^",2)
+	s QXType=""
+	s WaitAD="off"
+	s CurRole=$Get(%request.Data("CurRole",1))
+	s CancelOper="N"
+	s Length=$l(RowIDs,",")
+	s RFromLocDR=$p($g(^DHCEQEquip(+RowIDs)),"^",67)
+	s TotalFee=0
+	for i=1:1:Length
+	{
+		s rowid=$p(RowIDs,",",i)
+		//s RFromLocDR=$p($g(^DHCEQEquip(rowid)),"^",67)
+		s TotalFee=TotalFee+$p($g(^DHCEQEquip(rowid)),"^",27)
+	}
+	s RFromLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",RFromLocDR)
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+</script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel panel-body-gray" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">			
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cRFromLocDR_CTLOCDesc" for="RFromLocDR_CTLOCDesc">库房</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  id="RFromLocDR_CTLOCDesc" disabled="true"></div>
+						<div class="eq-table-td eq-table-label"><label></label></div>
+						<div class="eq-table-td eq-table-label15"><a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save"  data-options="stopAllEventOnDisabled:true">生成减少单</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cROutTypeDR_CTDesc" for="ROutTypeDR_CTDesc">减少类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.OutType'" id="ROutTypeDR_CTDesc"></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="DHCEQEquipReturn" class="hisui-datagrid"></table>
+					<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:2px;">合计</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="RowIDs" value=#(RowIDs)#>
+			<INPUT type="hidden" id="RFromLocDR" value=#(RFromLocDR)#>
+			<INPUT type="hidden" id="RFromLoc" value=#(RFromLoc)#>
+			<INPUT type="hidden" id="RRowIDs" value=#(RRowIDs)#>
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+			<INPUT type="hidden" id="WaitAD" value=#(WaitAD)#>
+			<INPUT type="hidden" id="CurRole" value=#(CurRole)#>
+			<INPUT type="hidden" id="CancelOper" value=#(CancelOper)#>
+			<INPUT type="hidden" id="Length" value=#(Length)#>
+			<INPUT type="hidden" id="TotalFee" value=#(TotalFee)#>
+			<input type="hidden" id="SplitRowCode" value="#(SplitRowCode)#">
+			<INPUT type="hidden" id="ROutTypeDR" value="#(ROutTypeDR)#">
+			<INPUT type="hidden" id="ROutType" value="#(ROutType)#">
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/equipoutstock.js'></script>
+</body>
+</html>

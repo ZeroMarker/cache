@@ -1,23 +1,22 @@
 <div id="Ordlayout_main"class="hisui-layout" data-options="fit:true,border:false">
 	<!--信息总览界面布局-->
 	<csp:if condition='PageShowFromWay="ShowFromEmr"'> <!--ShowFromEmrList-->
-		<div data-options="region:'center'" style="border:1px solid #CCC;">
-			<!--
+		<div data-options="region:'center',bodyCls:'panel-body-gray'">
+			<!--再改回使用原生布局，20201210tanjishan防止局部刷新切换患者时医嘱表格的高度有轻微变化，
+			从而导致医疗待办接缝处出现白色缝隙的问题-->
 			<div id="OrdSearch-div" class="hisui-layout" data-options="fit:true,border:false">
-				<div id="OrdSearch" data-options="region:'north',border:false" style="height:84px;">-->
-			<div id="OrdSearch-div" class="layout" style="width: 100%; height: 100%;"><!--width: 1371px; height: 458px;-->
-				<div class="panel layout-panel layout-panel-north" style="left: 0px; top: 0px; width: 1371px;height: 80px;">
-				<div id="OrdSearch" style="height: 100%; width: 100%;" class="panel-body panel-body-noheader panel-body-noborder layout-body">
+				<div id="OrdSearch" data-options="region:'north',border:false" style="height:80px;">
 					<div class="hisui-tabs tabs-gray" id="OrdReSubCatList">
 			    		<div title="医嘱浏览" data-options="iconCls:'icon-add-note'">   
 						</div>
 						<marquee scrolldelay=50 onMouseOver=this.stop(); onMouseOut=this.start(); id="MessageMarquee"></marquee>
 			    	</div>
-			    	<div class="fixedh3-div" style="padding-left:5px;">
+			    	<div class="fixedh3-div">
 			    		<input id="OrderTypeAll" value="ALL" class='hisui-radio' type="radio" data-options="label:'#(..Get("全部"))#',name:'PriorType_Radio',disable:false">
 				        <input id="OrderTypeS" value="S" class='hisui-radio' type="radio" data-options="label:'#(..Get("长嘱"))#',name:'PriorType_Radio',disable:false,checked:true">
-				        <input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false">        
-			    	    <span class="fixedmargin-span">#(..Get("医嘱"))#</span><span style="margin-left:5px;"><input id="orderDesc" class="textbox" style="width:140px"></span>
+				        <input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false">
+				        <input id="OrderTypeOUT" value="OUT" class='hisui-radio' type="radio" data-options="label:'#(..Get("出院带药"))#',name:'PriorType_Radio',disable:false">       
+			    	    <span class="fixedmargin-span">#(..Get("医嘱"))#</span><span style="margin-left:5px;"><input id="orderDesc" class="textbox" style="width:120px"></span>
 			    	    <span class="fixedmargin-span">#(..Get("排序"))#</span>
 			    	    <span>
 				    	    <!--select id="OrderSortId" class="hisui-combobox" style="width:100px;"></select-->
@@ -31,8 +30,8 @@
 			    	    <span style="margin-left:10px;"><span id="moreBtn" onclick="ipdoc.patord.view.toggleExecInfo(this);" class='toggle-btn'>#(..Get("更多"))#</span></span>
 			    	</div>
 			    	<!--div class="dashline-div" id="dashline" style="display:none;"></div-->
-			    	<div id="more" class="fixedh2-div" style="padding-left:11px;display:none;"> <!--underline-div-->
-				        <span>#(..Get("开医嘱人"))#</span><span>
+			    	<div id="more" class="fixedh2-div" style="display:none;"> <!--underline-div-->
+				        <span class="fixedmargin-span" style="margin-left: 3px;">#(..Get("开医嘱人"))#</span>
 				        	<select id="doctorList" style="width:100px;"></select>
 				        </span>
 				        <span class="fixedmargin-span">#(..Get("开出科室"))#</span>
@@ -44,24 +43,33 @@
 				        <span>
 				        	<select id="nursebillDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
 				        </span>
+				        <span class="fixedmargin-span">#(..Get("用法"))#</span>
+				        <span>
+				        	<select id="InstrDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
+				        </span>
+				        <span class="fixedmargin-span">#(..Get("频次"))#</span>
+				        <span>
+				        	<select id="SFreq" class="hisui-combobox" name="state" style="width:80px;"></select>
+				        </span>
+						<span style="fixedmargin-span">
+							<a id="Datescope" class="hisui-linkbutton" href="#">日期检索</a>
+						</span>
 			    	</div>
 				</div>
-				</div>
-				<!--<div  data-options="region:'center'" style="border:0px;">-->
-				<div class="panel layout-panel layout-panel-center" style="left: 0px; top: 80px; width: calc(100%);height: calc(100% - 84px);">
-				<div style="border: 0px; width: 100%; height: 100%;" class="panel-body panel-body-noheader layout-body panel-noscroll">
+				<div  data-options="region:'center'" style="border:0px;overflow:hidden;">
 					<table id="tabInPatOrd"></table>
-				</div>
 				</div>
 			</div>
 		</div>
 		<!--csp:if condition='isNurseLogin="1"'-->
-			<div data-options="region:'east',title:'执行医嘱',headerCls:'panel-header-gray',split:true,collapsed:true,collapsible:true" style="width:360px;">
+			<div data-options="region:'east',title:'执行医嘱',headerCls:'panel-header-gray',split:true,collapsed:true,
+				collapsible:true"
+				style="width:360px;">
 				<div class="hisui-layout" data-options="fit:true,border:false,split:true">
     				<div data-options="region:'north',border:false" style="height:41px;">
     					<div style="height:30px;padding:5px 0;border-bottom:1px solid #ccc;"><span style="padding-left:5px;">#(..Get("执行日期"))#&nbsp;#(..Get("从"))#&nbsp;</span><input id="execBarExecStDate" class="hisui-datebox textbox" style="width:120px;"><span>&nbsp;#(..Get("到"))#&nbsp;</span><input id="execBarExecEndDate" class="hisui-datebox textbox" style="width:120px;"></div>
     				</div>
-    				<div data-options="region:'center',border:false">
+    				<div data-options="region:'center',border:false" style="overflow:hidden;">
     					<table id="tabInPatOrdExec"></table>
     				</div>
     			</div>
@@ -69,32 +77,29 @@
 		<!--/csp:if-->
 	<csp:else>
 		<!--联动医嘱录入、医嘱复制、病历浏览医嘱布局 -->
-		<div data-options="region:'center'" style="border:1px solid #ccc;border-radius:4px;">
-		
-			<!--
+		<div data-options="region:'center',bodyCls:'panel-body-gray'" style="overflow:hidden;">
 			<div id="OrdSearch-div" class="hisui-layout" data-options="fit:true,border:false">
-				<div id="OrdSearch" data-options="region:'north',border:false" style="height:44px;">
-				-->
-			<div id="OrdSearch-div" class="layout" style="width: 100%; height: 100%;"><!--width: 1371px; height: 458px;-->
-				<div class="panel layout-panel layout-panel-north" style="left: 0px; top: 0px; width: 100%;height: 41px;">
-				<div id="OrdSearch"  style="height: 100%; width: 100%;" class="panel-body panel-body-noheader panel-body-noborder layout-body">
-					<div class="fixedh3-div" style="padding-left:5px;">
+				<div id="OrdSearch" data-options="region:'north',border:false" style="height:41px;">
+					<div class="fixedh3-div">
 						<csp:if condition='DefaultOrderPriorType="ALL"'>
 							<input id="OrderTypeAll" value="ALL" class='hisui-radio' type="radio" data-options="label:'#(..Get("全部"))#',name:'PriorType_Radio',disable:false,checked:true">
 							<input id="OrderTypeS" value="S" class='hisui-radio' type="radio" data-options="label:'#(..Get("长嘱"))#',name:'PriorType_Radio',disable:false">
-					        <input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false">        
+					        <input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false">
+					        <input id="OrderTypeOUT" value="OUT" class='hisui-radio' type="radio" data-options="label:'#(..Get("出院带药"))#',name:'PriorType_Radio',disable:false">        
 						<csp:else>
 							<input id="OrderTypeAll" value="ALL" class='hisui-radio' type="radio" data-options="label:'#(..Get("全部"))#',name:'PriorType_Radio',disable:false">
 					        <csp:if condition='DefaultOrderPriorType="S"'>
 					        	<input id="OrderTypeS" value="S" class='hisui-radio' type="radio" data-options="label:'#(..Get("长嘱"))#',name:'PriorType_Radio',disable:false,checked:true">
-					        	<input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false">        
+					        	<input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false">  
+					        	<input id="OrderTypeOUT" value="OUT" class='hisui-radio' type="radio" data-options="label:'#(..Get("出院带药"))#',name:'PriorType_Radio',disable:false">       
 				    	    <csp:else>
 				    	    	<input id="OrderTypeS" value="S" class='hisui-radio' type="radio" data-options="label:'#(..Get("长嘱"))#',name:'PriorType_Radio',disable:false">
-					        	<input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false,checked:true">        
+					        	<input id="OrderTypeOM" value="OM" class='hisui-radio' type="radio" data-options="label:'#(..Get("临嘱"))#',name:'PriorType_Radio',disable:false,checked:true">
+					        	<input id="OrderTypeOUT" value="OUT" class='hisui-radio' type="radio" data-options="label:'#(..Get("出院带药"))#',name:'PriorType_Radio',disable:false">         
 				    	    </csp:if>
 						</csp:if>
 			    		
-			    	    <span class="fixedmargin-span">#(..Get("医嘱"))#</span><span style="margin-left:5px;"><input id="orderDesc" class="textbox" style="width:140px;vertical-align: middle;height: 28px;"></span>
+			    	    <span class="fixedmargin-span">#(..Get("医嘱"))#</span><span style="margin-left:5px;"><input id="orderDesc" class="textbox" style="width:120px;vertical-align: middle;height: 28px;"></span>
 			    	    <span class="fixedmargin-span">#(..Get("排序"))#</span>
 			    	    <span>
 				    	    <select id="OrderSortId" class="hisui-combobox" name="state" style="width:100px;"></select>
@@ -114,8 +119,8 @@
 			    	    <!--a id="changeBigBtn" class="hisui-linkbutton fixedmargin-span" href="#">放大</a-->
 			    	</div>
 			    	<!--div class="dashline-div" id="dashline" style="display:none;"></div-->
-			    	<div id="more" class="fixedh2-div" style="padding-left:11px;display:none;">
-				        <span>#(..Get("开医嘱人"))#</span><span>
+			    	<div id="more" class="fixedh2-div" style="display:none;">
+				        <span class="fixedmargin-span"  style="margin-left: 3px;">#(..Get("开医嘱人"))#</span><span>
 				        	<select id="doctorList" style="width:100px;"></select>
 				        </span>
 				        <span class="fixedmargin-span">#(..Get("开出科室"))#</span>
@@ -131,24 +136,34 @@
 				        <span>
 				        	<select id="nursebillDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
 				        </span>
+				        <span class="fixedmargin-span">#(..Get("用法"))#</span>
+				        <span>
+				        	<select id="InstrDesc" class="hisui-combobox" name="state" style="width:80px;"></select>
+				        </span>
+				        <span class="fixedmargin-span">#(..Get("频次"))#</span>
+				        <span>
+				        	<select id="SFreq" class="hisui-combobox" name="state" style="width:80px;"></select>
+				        </span>
 			    	</div>
 				</div>
-				</div>
-				<!--<div  data-options="region:'center'" style="border:0px;">-->
-				<div class="panel layout-panel layout-panel-center" style="left: 0px; top: 40px; width: calc(100%);height: calc(100% - 44px);">
-					<div style="border: 0px; width: 100%; height: 100%;" class="panel-body panel-body-noheader layout-body panel-noscroll">
-						<table  id="tabInPatOrd"></table>
-					</div>
+				<csp:if condition='PageShowFromWay="ShowFromDocToDo"'> 
+				    <div id="ShowDocToDoInfoDIV">
+				        <span id="ShowDocToDoInfoInfo">#($G(DocToInfoMsg))#</span>
+				    </div>
+				</csp:if>
+				
+				<div  data-options="region:'center'" style="border:0px;overflow:hidden;">
+					<table  id="tabInPatOrd"></table>
 				</div>
 			</div>
 		</div> 
 		<csp:if condition='PageShowFromWay="ShowFromEmrList"'>
-			<div data-options="region:'east',title:'执行医嘱',headerCls:'panel-header-gray',split:true,collapsed:true,collapsible:true" style="width:500px;">
+			<div data-options="region:'east',title:'执行医嘱',headerCls:'panel-header-gray',split:true,collapsed:true,collapsible:true" style="width:360px;">
 				<div class="hisui-layout" data-options="fit:true,border:false,split:true">
     				<div data-options="region:'north',border:false" style="height:41px;">
-    					<div style="height:30px;padding:5px 0;border-bottom:1px solid #ccc;"><span style="margin-left:5px;">#(..Get("执行日期"))#&nbsp;#(..Get("从"))#&nbsp;</span><input id="execBarExecStDate" class="hisui-datebox textbox"><span>&nbsp;#(..Get("到"))#&nbsp;</span><input id="execBarExecEndDate" class="hisui-datebox textbox"></div>
+    					<div style="height:30px;padding:5px 0;border-bottom:1px solid #ccc;"><span style="margin-left:5px;">#(..Get("执行日期"))#&nbsp;#(..Get("从"))#&nbsp;</span><input id="execBarExecStDate" class="hisui-datebox textbox" style="width:120px;"><span>&nbsp;#(..Get("到"))#&nbsp;</span><input id="execBarExecEndDate" class="hisui-datebox textbox" style="width:120px;"></div>
     				</div>
-    				<div data-options="region:'center',border:false">
+    				<div data-options="region:'center',border:false" style="overflow:hidden;">
     					<table id="tabInPatOrdExec"></table>
     				</div>
     			</div>
@@ -158,3 +173,69 @@
 </div>
 <!--右键菜单div-->
 <div id='RightKeyMenu' class='hisui-menu' style='display:none;'></div>
+<div id="OrderSaveMenu" class="hisui-menu" style="height:auto!important;width:140px;">
+	<div data-options="iconCls:'icon-paper-new'">
+		<span>#(..Get("医嘱模板"))#</span>
+		<div style="height:auto!important;width:100px!important;"> 
+		    <div data-options="iconCls:'icon-copy'" name="menucopy" key="User.SSUser">#(..Get("个人"))#</div>
+		    <csp:if condition='##class(DHCDoc.Util.RegisteredObject).%GetConfig1("OrdFavLocAuth",%session.Get("LOGON.GROUPID"),%session.Get("LOGON.HOSPID"))'>
+		    	<div data-options="iconCls:'icon-copy'" name="menucopy" key="User.CTLoc">#(..Get("科室"))#</div>
+		    </csp:if>
+		    <csp:if condition='##class(DHCDoc.Util.RegisteredObject).%GetConfig1("OrdFavHospAuth",%session.Get("LOGON.GROUPID"),%session.Get("LOGON.HOSPID"))'>
+				<div data-options="iconCls:'icon-copy'" name="menucopy" key="User.CTHospital">#(..Get("全院"))#</div>
+			</csp:if>
+	    </div>
+	</div>
+	<div class="menu-sep"></div>
+	<div id="SaveToARCOS" data-options="iconCls:'icon-paper-group'">#(..Get("医嘱套"))#</div>
+	<div class="menu-sep"></div>
+	<div id="SaveToUserUse" data-options="iconCls:'icon-doctor'">#(..Get("用户常用"))#</div>
+</div>
+<div id="OrderCopyMenu" class="hisui-menu" style="height:auto!important;width:160px;">
+	<div id="OrdCopyToLong_Toolbar" key="S" data-options="iconCls:'icon-copy-prn'">#(..Get("复制为长期"))#</div>
+	<div class="menu-sep"></div>
+	<div id="OrdCopyToNorm_Toolbar" key="NORM" data-options="iconCls:'icon-copy-sos'">#(..Get("复制为临时"))#</div>
+	<div class="menu-sep"></div>
+	<div id="OrdCopyToOut_Toolbar" key="OUT" data-options="iconCls:'icon-copy-drug'">#(..Get("复制为出院带药"))#</div>
+	<div class="menu-sep"></div>
+	<div id="OrdCopyToVirLong_Toolbar" key="VirLong" data-options="iconCls:'icon-copy-prn'">#(..Get("复制为虚拟长期"))#</div>
+</div>
+<div id="Datedialog" class="hisui-dialog" title="日期选择" style="padding:10px;width:490px;height:190px;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true">
+	<div class="hisui-panel"  data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false">
+		<table class="search-table">
+			<tr>
+				<td class="r-label">
+					<label class="left_label" for="OrdStartSDate">#(..Get("开立医嘱日期"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox"  id="OrdStartSDate"/>
+				</td>
+				<td class="r-label">
+					<label class="left_label" for="OrdStartEDate">#(..Get("至"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox"  id="OrdStartEDate"/>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<label class="left_label" for="OrdStopSDate">#(..Get("医嘱停止日期"))#</label>
+			
+				</td>
+				<td>
+					<input class="hisui-datebox textbox"  id="OrdStopSDate"/>
+				</td>
+				<td class="r-label">
+					<label class="left_label" for="OrdStopEDate">#(..Get("至"))#</label>
+				</td>
+				<td>
+					<input class="hisui-datebox textbox"  id="OrdStopEDate"/>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2" style="text-align: center;"><a href="javascript:void(0)" id="BFindDate" data-options="iconCls:'icon-w-find'" class="hisui-linkbutton">#(..Get("查询"))#</a></td>
+				<td colspan="2" style="text-align: center;"><a href="javascript:void(0)" id="BClearDate" data-options="iconCls:'icon-w-reset'" class="hisui-linkbutton">#(..Get("重置"))#</a></td>
+			</tr>
+		</table>
+	</div>
+</div>

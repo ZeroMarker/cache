@@ -7,6 +7,7 @@
 <html>
     <head>
         <title>门诊电子病历</title>
+        <ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         
         <!--南方医院-->
@@ -50,7 +51,7 @@
                         <div id="tmplsTabs" class="easyui-tabs" data-options="fit:true,border:false,plain:true,tabPosition:'bottom',justified:true,narrow:true,pill:true" style="">
                         </div>
                     </div>
-                    <table id="msgTable" class="right" style="width:300px;height:100%;table-layout:fixed;display:none;" border=0 cellspacing=0 cellpadding=1> 
+                    <table id="msgTable" class="right" style="width:400px;height:100%;table-layout:fixed;display:none;" border=0 cellspacing=0 cellpadding=1> 
                         <tr> 
                             <td id="msgtd" style="vertical-align:middle;background-color:red;text-align:center;font-family:MicrosoftYaHei;font-size:120%;color:black;display:inline-block"></td> 
                         </tr> 
@@ -103,9 +104,14 @@
     
         s CAServicvice=""
         s IsCAON=##Class(CA.DigitalSignatureService).IsCAON()
-        s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
-        s HospitalName=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HospitalName")
 
+        //最新的程序需要增加产品模块的判断
+        if ($ll((##class(%Dictionary.CompiledMethod).%OpenId("CA.DigitalSignatureService||IsCACTLoc")).DefaultArgs) = "4") {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"OPEMR")
+        } else {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        }
+        s HospitalName=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HospitalName")
         s:((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1") CAServicvice="1"   
     
         s patientID = $Get(%request.Data("PatientID",1),"")
@@ -166,6 +172,10 @@
         s:Allergy'="" AllergyLen = $L(Allergy,",")
 		s hospitalID = %session.Get("LOGON.HOSPID")
 		s escapeRevokeSignDocID = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName("EscapeRevokeSignDocID")
+		//是否启用病历信息订阅与发布
+		s OPObserver = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("OPObserver","N^N")
+        // 删除病历时是否要求验证创建者密码
+        s isDeleteVerification = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("isDeleteVerificationOP","N")
     </script>
     
     <script language="javascript">
@@ -208,7 +218,9 @@
             IsSetToLog : '#(IsSetToLog)#',
             ResTabPosition : '#(resTabPosition)#',
             isDirectSignOP : '#(isDirectSignOP)#',
-			escapeRevokeSignDocID : '#(escapeRevokeSignDocID)#'
+			escapeRevokeSignDocID : '#(escapeRevokeSignDocID)#',
+            Observer : '#(OPObserver)#',
+            isDeleteVerification: '#(isDeleteVerification)#'
         };
         
         var envVar = {
@@ -222,10 +234,10 @@
             docContext : null,
             OPDisplay : parseFloat('#(OPDisplay)#'),
             OPHeight : '#(OPHeight)#',
-            lockWarning : '#(lockWarning)#'
+            lockWarning : '#(lockWarning)#',
+            groupTempParam : new Array()
         };
 		var AllergyLen ='#(AllergyLen)#';
-		var param="";
     </script>
     
     <script language="cache" runat="server">        

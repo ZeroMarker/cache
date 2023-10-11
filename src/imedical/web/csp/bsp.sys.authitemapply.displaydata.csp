@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<Server>
+	Set ID = $G(%request.Data("ID",1))
+
+	Set DisplayData = "{}",AuthNewDesc=""
+	If ID>0{
+		Set AuthNewDesc = $lg(^BSP.SYS.AuthItemApplyD(ID),14)
+		Set DisplayData = $lg(^BSP.SYS.AuthItemApplyD(ID),16)
+	}
+	if DisplayData="" Set DisplayData = "{}"
+</server>
+<script type="text/javascript">
+	var ID = "#(ID)#";
+	var AuthNewDesc = "#(AuthNewDesc)#";
+	var DisplayData = #(DisplayData)#;
+</script>
+<style>
+	td.l-value{
+        text-align: left;
+        padding-right: 20px;
+    }
+    body {
+	    background-color: #f5f5f5;
+    }
+    .auth-change-tbl td{
+	    padding:5px;
+	    border:1px solid #ccc;
+    }
+    .auth-change-tbl th{
+    	background: #e2e2e2;
+    	padding: 5px;
+    	border: 1px solid #cccccc;
+    }
+    #cancelBtn{
+	    position: absolute;
+	    right: 10px;
+	    bottom: 10px;
+	}
+ </style>
+</head>
+<body>
+<div class="auth-title">
+<a class="hisui-linkbutton" data-options="iconCls:'icon-stamp-cancel'" id='cancelBtn'>撤销申请</a>
+</div>
+	<script type="text/javascript">
+		function gen(){
+			$("#cancelBtn").click(function(){
+				$cm({ClassName :"BSP.SYS.SRV.AuthItemApply",MethodName:"Cancel",AuthId:ID},function(json){
+					if (json.code==200){
+						$.messager.popover({msg: '撤销申请成功',type: 'success',timeout: 2000,showType: 'slide'});
+						websys_showModal("options").reloadMth.call()
+					}else{
+						$.messager.alert('提示',json.msg);
+					}
+				});
+			});
+			var rowsDataObj = DisplayData;
+			var html = ['<div>'+AuthNewDesc+'</div>'];
+			rowsDataObj.forEach(function(rowData){
+				html.push('<div class="auth-row-data">')
+				html.push('<div class="kw-chapter"><a></a>'+rowData['desc']+'</div><div class="kw-line"></div>');
+				
+				html.push('<table border="0" cellspacing="0" cellpadding="0"  class="auth-change-tbl">');
+				html.push("<tr><th>变化项</th><th>老值</th><th>新值</th></tr>");
+				rowData.details.forEach(function(colsData){
+					html.push("<tr><td>"+colsData['colName']+"</td><td>"+(colsData['oldDataDesc']||"")+"</td><td>"+colsData['newDataDesc']+"</td></tr>");
+				});
+				html.push('</table>');
+				html.push('</div>')
+			});
+			$('.auth-title').append(html.join(''));
+		}
+		$(gen);
+	</script>
+</body>
+</html>

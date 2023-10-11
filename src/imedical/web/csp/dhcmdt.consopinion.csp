@@ -1,0 +1,64 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcmdt.consopinion.csp mdt会诊意见 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
+	<script src="../scripts/websys.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
+	<!--<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/cadigitalsign.js"></script>-->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcem/casigncom.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consopinion.js"></script>
+	<!-- 配置 -->
+	<server>
+	  s LgHospID=%session.Get("LOGON.HOSPID")	  
+	  /// 是否启用 CA签名
+	  s CAFLAG=##Class(web.DHCMDTCom).GetEmSysConfig("CAFLAG",LgHospID)
+	  /// 默认:讨论录入区域直接录入,1:按照专家逐个填写
+	  s CONSDISRUL=##Class(web.DHCMDTCom).GetEmSysConfig("CONSDISRUL",LgHospID)
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var isCaFlag="""_$g(isCaFlag)_""";"_$c(13,10)
+	  w "var CONSDISRUL="""_$g(CONSDISRUL)_""";"_$c(13,10)
+	  w "</script>"
+	</server>
+</head>
+<body style="background:#fff"> 
+    
+     <input type="hidden" id="LocID"  value=#(%request.Get("LocID"))#>
+     <input type="hidden" id="ItmID"  value=#(%request.Get("ItmID"))#>
+     <input type="hidden" id="CsStatCode"  value=#(%request.Get("CsStatCode"))#>
+     <input type="hidden" id="UserID"  value=#(%request.Get("UserID"))#>
+     <input type="hidden" id="CstID"  value=#(%request.Get("CstID"))#>
+    
+	<div  style="padding:0px 1px;">
+		 <div style="margin:10px 0px;">
+			<div style="padding:8px 8px 0px 20px;">
+				<textarea id="mdtOpinion"  style="width:760px;height:350px;resize:none;"></textarea>
+			</div>
+		</div>
+		<div id="Tools" style="text-align: right;padding-top:10px;padding-bottom:5px;text-align:center">
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="mdtCancel()" id="bt_canel">取消</a>
+			<a href="#" class='hisui-linkbutton' data-options="iconCls:'icon-w-save'" onclick='mdtSave()' id='bt_save'>保存</a>
+			<a href="#" class='hisui-linkbutton' data-options="iconCls:'icon-w-save'" onclick='mdtSignCs()' id='bt_sign'>签名</a>
+			
+			<SERVER>
+				i CONSDISRUL=1 d
+				.;w ""
+			
+				i CAFLAG=1 D
+				.;w ""
+		   </SERVER>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	s PatientListPage=""
+	s iframeCode = $G(%request.Data("iframeCode", 1))
+	s SinglePatient = $G(%request.Data("SinglePatient", 1))
+	s IsShowPatList = $G(%request.Data("IsShowPatList", 1))
+	s IsShowPatInfoBannner = $G(%request.Data("IsShowPatInfoBannner", 1))
+	s EpisodeID = $GET(%request.Data("EpisodeID", 1))
+    s fixedEpisodeIDStr=""
+	s onlyTaskedPat = $GET(%request.Data("onlyTaskedPat", 1))
+    i onlyTaskedPat="Y" {
+    	d %session.Unlock()
+        s LocID = %session.Get("LOGON.CTLOCID")
+        s WardID = %session.Get("LOGON.WARDID")
+        s GroupID = %session.Get("LOGON.GROUPID")
+        s HospID=%session.Get("LOGON.HOSPID")
+        i ("ToBeHandled"=iframeCode) { // 需处理
+            s fixedEpisodeIDStr=##class(Nur.Interface.OutSide.PortalUC.OrderExecute).getWardNeedToDealOrdNums(LocID, WardID, GroupID, HospID)
+        }else{
+            s fixedEpisodeIDStr=##class(Nur.Interface.OutSide.PortalUC.Patient).getWardTaskedPats(WardID, LocID,iframeCode)
+        }
+    }
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<style type='text/css' class="eduExeStyle">
+*{box-sizing: border-box;}
+body {background-color: #fff;padding: 4px 4px 2px!important;}
+.mainBody>object{width: 0;}
+</style>
+<script language="javascript">
+  var iframeCode = "#(iframeCode)#";
+  var fixedEpisodeIDStr = "#(fixedEpisodeIDStr)#";
+  var onlyTaskedPat = "#(onlyTaskedPat)#";
+  var SinglePatient = "#(SinglePatient)#";
+  var IsShowPatList = "#(IsShowPatList)#";
+  var IsShowPatInfoBannner = "#(IsShowPatInfoBannner)#";
+  console.log(fixedEpisodeIDStr)
+  console.log(onlyTaskedPat)
+  if ((onlyTaskedPat=="Y")&&fixedEpisodeIDStr) {
+    var hrefs=window.location.href.split('?');
+    //var searches=hrefs[1].split('&');
+    //for(var i=0;i<searches.length;i++) {
+    //    if(searches[i].indexOf('onlyTaskedPat=')>-1) {
+    //        searches.splice(i,1);
+    //        break;
+    //    }
+    //}
+    //searches.push('fixedEpisodeIDStr='+fixedEpisodeIDStr);
+    //var newHref=hrefs[0]+'?'+searches.join('&');
+    if("ToBeHandled"==iframeCode) { // 需处理
+        var newHref='dhc.nurse.vue.orderexcute.csp?PatientTree=1&ifMultiCheck=1&pageConfigCode=OrderExcute&specifySheetCode=DefaultSee&IsShowAllPatient=Y&fixedEpisodeIDStr='+fixedEpisodeIDStr;
+        //var newHref='nur.hisui.hospatlist.csp?fixedEpisodeIDStr='+fixedEpisodeIDStr+'&iframeCode=ToBeHandled&SinglePatient='+SinglePatient+'&IsShowPatList='+IsShowPatList+'&IsShowPatInfoBannner='+IsShowPatInfoBannner;
+    }else{
+        var newHref='nur.hisui.hospatlist.csp?fixedEpisodeIDStr='+fixedEpisodeIDStr+'&iframeCode='+iframeCode+'&SinglePatient='+SinglePatient+'&IsShowPatList='+IsShowPatList+'&IsShowPatInfoBannner='+IsShowPatInfoBannner;
+    }
+    console.log(newHref)
+    window.location.href=newHref;
+    //return;
+  }
+	// var EpisodeID = "#(EpisodeID)#";
+	var EpisodeID = "";
+	/**
+	* @description 展示病人标题信息
+	* @param {EpisodeID} 患者就诊号
+	*/
+	function setPatientInfo(EpisodeID) {
+		$m({
+			ClassName: "web.DHCDoc.OP.AjaxInterface",
+			MethodName: "GetOPInfoBar",
+			CONTEXT: "",
+			EpisodeID: EpisodeID
+		}, function(html) {
+			if (html != "") {
+				$(".PatInfoItem").html(reservedToHtml(html));
+				var n=0;
+				var timer = setInterval(function() {
+					$(".ctcAEPatBar").height($(".ctcAEPatBar>.patientbar>.PatInfoItem").height());
+					updateDomSize();
+					n++;
+					if(n>9) {
+						clearInterval(timer);
+					}
+				},50);
+			} else {
+				$(".PatInfoItem").html($g("获取病人信息失败。请检查【患者信息展示】配置。"));
+			}
+			updateIFrameHeight();
+		});
+
+		function reservedToHtml(str) {
+			var replacements = {
+				"&lt;": "<",
+				"&#60;": "<",
+				"&gt;": ">",
+				"&#62;": ">",
+				"&quot;": "\"",
+				"&#34;": "\"",
+				"&apos;": "'",
+				"&#39;": "'",
+				"&amp;": "&",
+				"&#38;": "&"
+			};
+			return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g, function(v) {
+				return replacements[v];
+			});
+		}
+	}
+	function updateDomSize() {
+		$('iframe#fertility').height($('#rightContent').height()-$('.ctcAEPatBar').height());
+	}
+	var paramObj={"groupSort":"N","transInHospFlag":"Y","transInHospPatShowDays":"3","consultationFlag":"N","disChargeFlag":"Y","disChargeShowDays":"3","waitingAreaPatFlag":"Y","transAreaPatShow":"Y","mulWardPatGroupByWard":"Y","maternalBabySplit":"N","babyFlag":"2"}
+  var episodeIds=[];
+	if (EpisodeID) {
+		episodeIds.push(EpisodeID);
+	} else {
+		var res=$cm({
+			ClassName: 'Nur.NIS.Service.Base.Ward',
+			MethodName: 'GetWardPatientsList',
+			searchParamObj: JSON.stringify(paramObj)
+		}, false);
+		res.map(function (r) {
+			r.children.map(function (c) {
+				if (c.episodeID) episodeIds.push(c.episodeID);
+				if (c.children) {
+					c.children.map(function (c1) {
+						if (c1.episodeID) episodeIds.push(c1.episodeID);
+					})
+				}
+			})
+		})
+	}
+  //EpisodeID = episodeIds[0];
+  // 监听EpisodeIDStr
+	Object.defineProperties(window, {
+    EpisodeIDStr: {
+      configurable: true,
+      set: function (newValue) {
+        console.log('你修改了 EpisodeIDStr 的值：' + newValue);
+				EpisodeID=newValue;
+				if (EpisodeID) {
+					var frm = dhcsys_getmenuform();
+					console.log(frm);
+					if (frm) {
+						frm.EpisodeID.value=EpisodeID;
+					}
+					setPatientInfo(EpisodeID);
+					updateDomSize();
+					var csp="nur.emr.dhcnurhzryhlpgdlist.csp";
+					if ("FFRA"==iframeCode) {
+						csp="nur.emr.dhcnurnjsgcrmyymorseddpgd.csp";
+					}
+					if ("PURA"==iframeCode) {
+						csp="nur.emr.dhcnurnycfxpglbb.csp";
+					}
+					if ("AOSA"==iframeCode) {
+						csp="nur.emr.dhcnurhzzlnlpdblist.csp";
+					}
+					if ("TRQ"==iframeCode) {
+						csp="nur.hisui.transferbedrecord.csp";
+					}
+					if ("GLMO"==iframeCode) {
+						csp="ipdoc.nursecreateorder.hui.csp";
+					}
+					console.log($('iframe#fertility'));
+					console.log(csp+'?EpisodeID='+EpisodeID+"&MWToken="+websys_getMWToken());
+					$('iframe#fertility').attr('src',csp+'?EpisodeID='+EpisodeID+"&MWToken="+websys_getMWToken());
+				}
+      }
+    }
+	});
+  var SinglePatient = "#(SinglePatient)#";
+  var IsShowPatList = "#(IsShowPatList)#";
+  var IsShowPatInfoBannner = "#(IsShowPatInfoBannner)#";
+  IsShowPatList="Y"==IsShowPatList?true:false;
+	if (!IsShowPatList) {
+		setTimeout(function() {
+			EpisodeIDStr = EpisodeID;
+		}, 200);
+	}
+  IsShowPatInfoBannner="Y"==IsShowPatInfoBannner?true:false;
+	function updateIFrameHeight() {
+		var n=0;
+		var timer = setInterval(function(){
+			var innerHeight=window.innerHeight;
+			var patHeight=$(".PatInfoItem").height();
+			$(".ctcAEPatBar").height(patHeight)
+			$("iframe").height(innerHeight-patHeight-12)
+			n++;
+			if(n>6) {
+				clearInterval(timer);
+			}
+		},200);
+	}
+	window.addEventListener("resize",updateIFrameHeight);
+	updateIFrameHeight();
+</script>
+</head>
+<body class="mainBody">
+	<div id="nrLayout" class="hisui-layout" data-options="fit:true">
+		<csp:if condition='"Y"=IsShowPatList'>
+			<csp:Include Page="nur.hisui.common.patientlistnew.csp">
+		</csp:if>
+		<!-- 右侧内容 -->
+		<div id="rightContent" data-options="region:'center',title:'',split:true" style="border:0;overflow:hidden;">
+			<div class="ctcContent">
+				<csp:if condition='"Y"=IsShowPatInfoBannner'>
+					<div style="position: relative;line-height: 30px;" class="ctcAEPatBar">
+						<csp:Include Page="dhcdoc.patinfo.banner.csp">
+					</div>
+				</csp:if>
+				<div style="padding: 4px 5px 1px 1px;">
+					<iframe style="width: 100%;" id="fertility" src="" frameborder="0"></iframe>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script language="javascript">
+		window.EpisodeIDStr = EpisodeID;
+		var frm = dhcsys_getmenuform();
+		console.log(frm);
+	</script>
+</body>
+</html>

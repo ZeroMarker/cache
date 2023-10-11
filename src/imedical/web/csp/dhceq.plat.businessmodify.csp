@@ -9,64 +9,125 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 <style type="text/css">
 i{display:block;width:30px;}
+.eq-table-td
+{
+	width:fit-content;
+}
+.eq-table-tr>.eq-table-td:nth-child(1)
+{
+	width:65px;
+}
+.eq-table-tr>.eq-table-td:nth-child(3)
+{
+	width:65px;
+}
 </style>
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
 	s BussType=$Get(%request.Data("BussType",1))
 	s BussNo=$Get(%request.Data("BussNo",1))
+	s WaitAD = $Get(%request.Data("WaitAD",1))
+	s Type = $Get(%request.Data("Type",1))
+	s BussCode = $Get(%request.Data("BussCode",1))
 </Script>
 <body class="hisui-layout">
-	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'单据修改'">
-			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="height:60px;border-bottom:dashed 1px #ccc;">
-					<div class="eq-table">
-						<div class="eq-table-tr">
-							<div class="eq-table-td eq-table-label"><label id="cBussType" for="BussType">业务类型</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="BussType" value="#(BussType)#"></div>
-							<div class="eq-table-td eq-table-label"><label id="cBussNo" for="BussNo">业务单号</label></div>
-							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="BussNo" value="#(BussNo)#"></div>
-							<div class="eq-table-td eq-table-label"></div>
-							<div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+	<div data-options="region:'north',border:false" style="height:105px;padding:10px;">
+		<div class="hisui-panel" data-options="fit:true,eqtitle:'maintitle',title:'单据查询'" style="padding-bottom:10px;">
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cBussType" for="BussType">业务类型</label></div>
+				<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="BussType" value="#(BussType)#"></div>
+				<div class="eq-table-td eq-table-label-new"><label id="cBussNo" for="BussNo">业务单号</label></div>
+				<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="BussNo" value="#(BussNo)#"></div>
+				<div class="eq-table-td eq-table-label-first"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'单据信息'" style="overflow:hidden;">
+			<div id="BusinessMain" style="background:url(../images/no_data.png) no-repeat center;height:100%;width:100%;display:block;"></div>
+			<div id="InStockInfo" style="height:100%;width:100%;">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'north',border:false" style="padding-bottom:10px;border-bottom:solid 1px #ccc;">
+						<div class="eq-table">
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label-first"><label id="cISInStockNo" for="ISInStockNo">入库单号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISInStockNo"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISLocDR_CTLOCDesc" for="ISLocDR_CTLOCDesc">库房</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISLocDR_CTLOCDesc"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISBuyLocDR_CTLOCDesc" for="ISBuyLocDR_CTLOCDesc">采购部门</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISBuyLocDR_CTLOCDesc" data-options="'itype':'9','property':'PLAT.L.Loc'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISBuyUserDR_SSUSRName" for="ISBuyUserDR_SSUSRName">采购人</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISBuyUserDR_SSUSRName" data-options="'itype':'9','property':'PLAT.L.EQUser'"></div>
+								<div class="eq-table-td eq-table-label-first"><a id="BModify" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">修改申请</a></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label-first"><label id="cISEquipTypeDR_ETDesc" for="ISEquipTypeDR_ETDesc">管理类组</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISEquipTypeDR_ETDesc" data-options="'itype':'9','property':'PLAT.L.EquipType'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISProviderDR_VDesc" for="ISProviderDR_VDesc">供货商</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISProviderDR_VDesc" data-options="'itype':'9','property':'PLAT.L.Vendor'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISOriginDR_ODesc" for="ISOriginDR_ODesc">设备来源</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISOriginDR_ODesc" data-options="'itype':'9','property':'PLAT.L.Origin'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cISInDate" for="ISInDate">制单日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="ISInDate" data-options="'itype':'5','property':''"></div>
+								<div class="eq-table-td eq-table-label-first"></div>
+								<div class="eq-table-td"></div>
+							</div>
 						</div>
 					</div>
+					<div data-options="region:'center',border:false" style="border-radius:0px;">
+						<table id="DHCEQBusinessList" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-add-note'" class="hisui-datagrid"></table>
+					</div>
 				</div>
-				<div data-options="region:'center',border:false" style="padding:10px;">
-					<div class="hisui-layout" data-options="fit:true,border:false" id="BusinessContent">
-						<div data-options="region:'north',border:false,fit:true" style="padding:10px;"><!--主单区域-->
-							<div style="background:url(../images/no_data.png) no-repeat center;height:100%;width:100%" id="BusinessMain"></div>
-						</div>
-						<div data-options="region:'center',border:false" style="padding:10px;"><!--明细区域-->
-							<div class="hisui-panel" data-options="eqtitle:'edittitle',title:'主单信息'" style="padding:10px;margin-bottom:10px;">
-								<div class="eq-table">
-									<div class="eq-table-tr">
-										<div class="eq-table-td eq-table-label"><label id="cISInStockNo" for="ISInStockNo">入库单号</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISInStockNo"></div>
-										<div class="eq-table-td eq-table-label"><label id="cISLocDR_CTLOCDesc" for="ISLocDR_CTLOCDesc">库房</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISLocDR_CTLOCDesc"></div>
-										<div class="eq-table-td eq-table-label"><label id="cISBuyLocDR_CTLOCDesc" for="ISBuyLocDR_CTLOCDesc">采购部门</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISBuyLocDR_CTLOCDesc" data-options="'itype':'9','property':'PLAT.L.Loc'"><i class="icon-blue-edit"></i></div>
-										<div class="eq-table-td eq-table-label"><label id="cISBuyUserDR_SSUSRName" for="ISBuyUserDR_SSUSRName">采购人</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISBuyUserDR_SSUSRName" data-options="'itype':'9','property':'PLAT.L.EQUser'"><i class="icon-blue-edit"></i></div>
-									</div>
-									<div class="eq-table-tr">
-										<div class="eq-table-td eq-table-label"><label id="cISEquipTypeDR_ETDesc" for="ISEquipTypeDR_ETDesc">管理类组</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISEquipTypeDR_ETDesc" data-options="'itype':'9','property':'PLAT.L.EquipType'"><i class="icon-blue-edit"></i></div>
-										<div class="eq-table-td eq-table-label"><label id="cISProviderDR_VDesc" for="ISProviderDR_VDesc">供货商</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISProviderDR_VDesc" data-options="'itype':'9','property':'PLAT.L.Vendor'"><i class="icon-blue-edit"></i></div>
-										<div class="eq-table-td eq-table-label"><label id="cISOriginDR_ODesc" for="ISOriginDR_ODesc">来源</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISOriginDR_ODesc" data-options="'itype':'9','property':'PLAT.L.Origin'"><i class="icon-blue-edit"></i></div>
-										<div class="eq-table-td eq-table-label"><label id="cISInDate" for="ISInDate">制单日期</label></div>
-										<div class="eq-table-td eq-table-input" style="display:flex;"><input class="hisui-validatebox" disabled="true" id="ISInDate" data-options="'itype':'5','property':''"><i class="icon-blue-edit"></i></div>
-									</div>
-								</div>
+			</div>
+			<div id="OpenCheckInfo" style="height:100%;width:100%;">
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cOCRHold1" for="OCRHold1">验收单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCRHold1"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cOCROpenCheckDate" for="OCROpenCheckDate">开箱日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" disabled="true" id="OCROpenCheckDate"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cOCRCheckDate" for="OCRCheckDate">验收日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" disabled="true" id="OCRCheckDate"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cOCLUseLocDR_CTLOCDesc" for="OCLUseLocDR_CTLOCDesc">使用科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLUseLocDR_CTLOCDesc" data-options="'component':'PLAT.L.Loc'"></div>
+						<div class="eq-table-td eq-table-label-first"><a id="BOCModify" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">修改申请</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cOCLName" for="OCLName">设备名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLName"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cOCLOriginalFee" for="OCLOriginalFee">设备原值</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLOriginalFee"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cOCLQuantity" for="OCLQuantity">数量</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLQuantity"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cOCLModelDR_MDesc" for="OCLModelDR_MDesc">规格型号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="OCLModelDR_MDesc" data-options="'component':'PLAT.L.Model'"></div>
+						<div class="eq-table-td eq-table-label-first"></div>
+					</div>
+				</div>
+			</div>
+			<div id="ContractInfo" style="height:100%;width:100%;">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'north',border:false" style="padding-bottom:10px;border-bottom:solid 1px #ccc;">
+						<div class="eq-table">
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label-first"><label id="cCTContractNo" for="CTContractNo">合同号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="CTContractNo"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cCTContractName" for="CTContractName">合同名称</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="CTContractName"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cCTSignLocDR_CTLOCDesc" for="CTSignLocDR_CTLOCDesc">签订部门</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="CTSignLocDR_CTLOCDesc"  data-options="'itype':'9','property':'PLAT.L.Loc'"></div>
+								<div class="eq-table-td eq-table-label-new"><label id="cCTSignDate" for="CTSignDate">签订日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" disabled="true" id="CTSignDate" data-options="'itype':'5','property':''"></div>
+								<div class="eq-table-td eq-table-label-first"><a id="BCONModify" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">修改申请</a></div>
 							</div>
-							<table id="DHCEQBusinessList" data-options="border:false,title:'明细信息',headerCls:'panel-header-gray',iconCls:'icon-add-note'" class="hisui-datagrid"></table>
 						</div>
+					</div>
+					<div data-options="region:'center',border:false" style="border-radius:0px;">
+						<table id="DHCEQContractBusinessList" data-options="border:true,fit:true,headerCls:'panel-header-gray',iconCls:'icon-add-note'" class="hisui-datagrid"></table>
 					</div>
 				</div>
 			</div>
@@ -74,6 +135,11 @@ i{display:block;width:30px;}
 	</div>
 	<INPUT type="hidden" id="BussID">
 	<INPUT type="hidden" id="MainFlag" value="Y">
+	<INPUT type="hidden" id="DCRRowID">
+	<INPUT type="hidden" id="DCRStatus">
+	<INPUT type="hidden" id="WaitAD" value="#(WaitAD)#">
+	<INPUT type="hidden" id="Type" value=#(Type)#>
+	<INPUT type="hidden" id="BussCode" value="#(BussCode)#">
 	<script type='text/javascript' src='../scripts/dhceq/plat/businessmodify.js'></script>
 	<script type='text/javascript' src='../scripts/dhceq/plat/businessmodifycommon.js'></script>
 </body>

@@ -2,9 +2,8 @@
 <!--门诊草药审方 js:pharmacy/outpha/dhcpha.outpha.hmprescaudit.js--> 
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- //i ##Class(websys.SessionEvents).SessionExpired()
- i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
-q 1
+ d ##Class(websys.SessionEvents).SessionExpired() q 1
+
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -17,17 +16,20 @@ q 1
 	<DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
 	<DHCAPP:PHARBOOTSTRAP/>
 	<ADDINS/>
+	<PHAPRINTCOM/>
 	<server>
 		s Application=%request.Application
 		s gPatNo = $G(%request.Data("gPatNo",1))
+    	s gOeori=$Get(%request.Data("gOeori",1)) 
 		s OutPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("OA")
-		s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
-		s GetCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
-		s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+		s ReadAccExpEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+		s GetCardTypeEncrypt=##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+		s ReadCardTypeEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
 	</server>
 	 <SCRIPT Language="Javascript">
        	var OutPhaWay="#(OutPhaWay)#";
        	var LoadPatNo="#(gPatNo)#";
+   		var LoadOrdItmId= "#(gOeori)#";
    </SCRIPT>
    	<!--调用美康--因医生站为异步调用，药房只能同步调用，所以需要将美康的McConfig.js 另存为 McConfigPharmacy.js -->
 	<!--并修改 this.MC_Is_SyncCheck = false ; 为 this.MC_Is_SyncCheck = true; -->
@@ -40,6 +42,7 @@ q 1
 	<!--dhcpha js-->
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.prescinfo.js"></script>
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.printcom.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pha/op/v4/previewpresc.js"></script>
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.hmprescaudit.js" ></script>
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.monitorlog.js" ></script>
 </head>
@@ -122,7 +125,7 @@ q 1
 	 		<div class="col-lg-6 col-md-6 col-sm-6" style="padding-right:0px;padding-left:0px" id="col-left">
 				<div class="panel div_content">
 					<div class="panel-heading"><span class="pal_style"><strong>处方预览</strong></span></div>
-					<iframe id="ifrm-presc" src="" style="border:0px;width:100%;height:437px"></iframe>
+					<iframe id="ifrm-presc" src="" style="border:0px;width:100%;height:95%;"></iframe>
 				</div>
 			</div>    
 			 <div class="col-lg-6 col-md-6 col-sm-6 dhcpha-col dhcpha-col-border-left" id="col-right">

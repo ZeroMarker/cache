@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<head>
+
+<!-- nur.hisui.temperature.printset.csp -->
+<title>	体温单打印配置 </title>
+<meta charset="utf-8"/>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+
+<style>
+	body{
+		background-color:#fff;
+		padding:4px 4px 7px 4px!important;
+	}
+	#toolbar span.combo{
+		width:310px!important;
+		position:relative;
+	}
+	#toolbar span.combo>span{
+		right:0;
+		position:absolute;	
+	}
+	#_HospListLabel{
+		display:none;	
+	}
+	.datagrid-toolbar{
+		padding:0px;	
+	}
+	form table td{
+		padding-bottom:10px;	
+	}
+	#chart-form .checkbox{
+		margin-left:-6px;	
+	}
+	.panel-body, .panel-header{
+		border-color:#ccc	
+	}
+	.chartConfig>div{
+		padding-bottom:10px;
+		border-bottom:1px dashed #ccc;
+		margin-bottom:10px;	
+	}
+	.chartConfig>div:last-child{
+		border:0;
+		margin:0;
+	}
+	.chartConfig p.title{
+		font-weight:bold;	
+	}
+	.chartConfig>div>table>tbody>tr>td{
+		padding-top:10px;	
+	}
+	.show-img {
+		margin-left:30px;
+        border: 1px dashed #d9d9d9;
+        width: 98px;
+        height: 88px;
+        padding:10px;
+        position:relative;
+        display:none;
+	}
+	.bg-layer {
+		display:none;
+		width: 100px;
+		height: 96px;
+		top: 6px;
+		left:8px;
+		position: absolute;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 10;
+	}
+	.bg-layer>a.icon{
+		top:40px;
+		position:absolute;
+		display:inline-block;
+		width:16px;
+		height:16px;
+		cursor:pointer;	
+	}
+	.bg-layer>a.icon-w-eye{
+		left:30px;
+	}
+	.bg-layer>a.icon-w-close{
+		left:54px;
+	}
+	.delLogo{
+		top:0px;
+		right:0;
+		position:absolute;		
+		width:16px;
+		height:16px;
+		cursor:pointer;		
+		background-color:#40A2DE;
+	}
+	.delLogo>a{
+		width:100%;
+		height:100%;
+		display:inline-block;	
+	}
+	.mainCon{
+		display: flex;
+  		justify-content: space-between;	
+	}
+	.mainCon p{
+		padding-bottom:10px;	
+	}
+	.mainCon ul{
+		width: 139px;
+		border: 1px solid #d9d9d9;
+		padding: 10px 10px 0 10px;	
+	}
+	.mainCon ul>li{
+		height: 20px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;	
+	}
+	.mainCon ul>li.active{
+		border: 1px dashed #999;	
+	}
+	.mainCon ul>li>span{
+		width: 100%;
+		display: inline-block;
+		border-top: 1px solid #000;	
+	}
+	.mainCon ul>li:nth-child(2) span {
+		border-top: 2px solid #000;
+	}
+	.mainCon .effectArea{
+		position:relative;	
+	}
+	.effectArea a{
+		display: inline-block;
+		width: 31px;
+		height: 31px;
+		position: absolute;
+		cursor: pointer;
+		background:url(../images/uiimages/border.png);	
+	}
+	.effectArea a.left{
+		left:0;	
+	}
+	.effectArea a.btn-top{
+		top:0;
+		background-position: 0 0;	
+	}
+	.effectArea a.btn-horizontal{
+		top:43px;	
+		background-position: -42px 0;
+	}
+	.effectArea a.btn-bottom{
+		top:85px;
+		background-position: -86px 0;	
+	}
+	.effectArea a.btn-rightDiagonal{
+		top:126px;	
+		background-position: -130px 0;
+	}
+	.effectArea a.topActive{
+		background-position: 0 -46px;	
+	}
+	.effectArea a.horizontalActive{
+		background-position: -42px -46px;
+	}
+	.effectArea a.bottomActive{
+		background-position: -86px -46px;	
+	}
+	.effectArea a.rightDiagonalActive{
+		background-position: -130px -46px;
+	}	
+	.effectArea a.bottom{
+		bottom:0;		
+	}
+	.effectArea a.btn-left{
+		left: 40px;	
+		background-position: -174px 0;
+	}
+	.effectArea a.btn-vertical{
+		left: 83px;
+		background-position: -218px 0;
+	}
+	.effectArea a.btn-right{
+		left: 126px;
+		background-position: -264px 0;
+	}
+	.effectArea a.btn-leftDiagonal{
+		left: 170px;
+		background-position: -309px 0;
+	}
+	.effectArea a.leftActive{
+		background-position: -174px -46px;
+	}
+	.effectArea a.verticalActive{
+		background-position: -218px -46px;
+	}
+	.effectArea a.rightActive{
+		background-position: -264px -46px;
+	}
+	.effectArea a.leftDiagonalActive{
+		background-position: -309px -46px;
+	}
+	.effectArea .text{
+		width: 158px;
+		height: 115px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin-left: 43px;	
+	}
+	.effectArea .text .border{
+		position: absolute;
+		box-sizing: border-box;
+		border-bottom: 1px dashed #d9d9d9;
+		transform-origin: bottom center;
+		animation: slash 5s infinite ease;	
+	}
+	.effectArea .text .line-left{
+		left: -17px;
+        top: 57px;	
+        width: 115px;
+  		transform: rotateZ(90deg);
+	}
+	.effectArea .text .line-right{
+		left: 140px;
+        top: 57px;
+        width: 115px;
+  		transform: rotateZ(90deg);
+	}
+	.effectArea .text .line-top{
+		left: 41px;
+		top: 0;
+		width: 158px;
+	}
+	.effectArea .text .line-bottom{
+		left: 41px;
+		top: 115px;
+		width: 158px;
+	}	
+	.effectArea .text .diagonal{
+		left: 21px;
+        top: 57px;
+        width: 98%;
+		position: absolute;
+		box-sizing: border-box;
+		border-bottom: 1px dashed #d9d9d9;
+		transform-origin: bottom center;
+		animation: slash 5s infinite ease;	
+	}
+	.effectArea .text .line-leftDiagonal{
+		transform: rotateZ(35.5deg);
+	}
+	.effectArea .text .line-rightDiagonal{
+		transform: rotateZ(144.5deg);
+	}
+	.effectArea .text .center{
+		position: absolute;
+		box-sizing: border-box;
+		border-bottom: 1px dashed #d9d9d9;
+		transform-origin: bottom center;
+		animation: slash 5s infinite ease;	
+	}
+	.effectArea .text .line-horizontal{
+		left: 41px;
+		top: 57px;
+		width: 158px;
+	}
+	.effectArea .text .line-vertical{
+		width: 113px;
+		left: 62px;
+		top: 57px;
+		transform: rotateZ(90deg);
+	}
+	.effectArea .text .active{
+		border-bottom: 1px solid #000;
+	}
+	.effectArea .text .boldActive {
+		border-bottom: 2px solid #000;
+	}
+</style>
+</head>
+<body>
+	<div class="hisui-layout layout" data-options="fit:true">
+	    <div data-options="region:'west',split:true,border:false" style="width:340px;">
+	    	<div class="hisui-panel" fit="true" data-options="title:'体温单列表',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		    	<div id="toolbar">
+		    		<div class="form-group" style="padding:10px;border-bottom:1px dashed #ccc;">
+	                    <select id="_HospList"></select>
+	                </div>
+	                <div class="button-group">
+	                    <a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="openChart();">新增</a>
+                		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="openChart(1)">修改</a>
+                		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" onclick="copyChart('chartList')">复制</a>
+                		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" onclick="openHospChart()">跨院区复制</a>
+                		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="deleteChart()">删除</a>
+	                </div>
+	            </div>
+	            <table id="chartList" border="0"></table>
+            </div>
+        </div>       
+        
+        <div data-options="region:'center',title:'',split:true,border:false">        
+	        <div data-options="region:'center',split:true,fit:true" style="height:calc(100% - 50px)">
+	        	<div class="hisui-accordion accordion-gray" data-options="border:false,fit:true">
+			        <div class="chartConfig outerConfig" title="表格外内容配置" data-options="iconCls:'icon-set-paper'" style="padding:10px 10px 0;">
+			        	<div>
+			        		<p class="title">表头图片配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                        <td class="r-label">图片</td>
+			                        <td colspan="3">
+			                        	<input class="hisui-filebox textbox" id="logo" data-options="width:275,buttonText:'选择',prompt:'图片文件',plain:true,onChange:chooseImg" accept="image/*" />
+			                        </td>
+			                        <td rowspan="3">
+			                            <div class="show-img" onmouseover="$('.delLogo').show()" onmouseout="$('.delLogo').hide()">
+			                                <img src="" alt="表头图片" width="100%" height="100%"/>
+			                                <div class="delLogo">
+			                                	<a class="icon icon-w-close" onclick="deleteImg()"></a>
+			                                </div>
+			                                <div class="bg-layer" style="display:none;">
+			                                	<a class="icon icon-w-eye" onclick="previewImg()"></a>
+			                                    <a class="icon icon-w-close" onclick="deleteImg()"></a>
+			                                </div>
+			                            </div>
+			                        </td>
+			                    </tr>
+			                    <tr>
+			                        <td class="r-label">尺寸 长</td>
+			                        <td class="r-label"><input class="hisui-numberbox textbox" id="height" data-options="min:0" style="width:120px"></td>
+			                        <td class="r-label">宽</td>
+			                        <td><input class="hisui-numberbox textbox" id="width" data-options="min:0" style="width:120px"></td>
+			                        <td></td>
+			                    </tr>
+			                    <tr>
+			                        <td class="r-label">打印坐标 X</td>
+			                        <td><input class="hisui-numberbox textbox" id="xAxis" data-options="min:0" style="width:120px"></td>
+			                        <td class="r-label">Y</td>
+			                        <td><input class="hisui-numberbox textbox" id="yAxis" data-options="min:0" style="width:120px"></td>
+			                   </tr>
+			                </table>
+			        	</div>
+			        	
+			        	<div>
+			        		<p class="title">个人配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                        <td class="r-label">入院日期格式</td>
+			                        <td colspan="3">
+			                        	<select id="dateformat" class="dateformat" style="width:200px;"></select> 
+			                        </td>
+			                    </tr>
+			                    <tr>
+			                        <td class="r-label">换床显示规则</td>
+			                        <td class="r-label">
+			                        	<select id="changebedrules" class="changebedrules" style="width:200px;"></select> 
+			                        </td>
+			                        <td class="r-label">
+			                        	<input class="hisui-numberbox textbox" id="recentlyNums" data-options="min:1" style="width:60px;display:none;">
+			                        </td>
+			                        <td><span class="unit" style="display:none;">次</span></td>
+			                    </tr>
+			                    <tr>
+			                        <td class="r-label">转科显示规则</td>
+			                        <td colspan="3">
+			                        	<select id="changedeptrules" class="changedeptrules" style="width:200px;"></select> 
+			                        </td>
+			                   </tr>
+			                   <tr>
+			                        <td class="r-label">床号/科室显示方向</td>
+			                        <td colspan="3">
+			                        	<select id="bedlocextdirec" class="bedlocextdirec" style="width:200px;"></select> 
+			                        </td>
+			                   </tr>
+			                </table>
+			        	</div>
+			        	
+			        	<div>
+			        		<p class="title">打印配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                        <td>
+			                        	<input id="ifColorPrint" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="是否彩打">
+			                        </td>
+			                    </tr>
+			                </table>
+			        	</div>
+			        </div>
+
+			        <div class="chartConfig textConfig" title="表格文字配置" data-options="iconCls:'icon-set-paper'" style="padding:10px 10px 0;">
+						<div>
+			        		<p class="title">血压显示规则配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr class="bpShowRule">
+			                    	<td class="r-label">显示次数</td>
+			                        <td class="r-label">
+			                        	<select id="bpShowNums" class="bpshownums" data-options="onSelect:changeBPShowNums" style="width:93px;"></select> 
+			                        </td>	
+			                        <td class="r-label twoBPInSameCol" colspan="2">
+			                        	<input id="twoBPInSameCol" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="上/下午同列显示">
+			                        </td>	
+			                        <td class="r-label ifSequence" colspan="2">
+			                        	<input id="ifSequence" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="依次显示">
+			                        </td>   
+			                        <td class="r-label">上/下午间隔点</td>
+			                        <td class="r-label">
+			                        	<select id="intervalTime" class="intervaltime" style="width:93px;"></select> 
+			                        </td>			                        		                        		
+			                    </tr>
+			                    <tr class="bpShowRule2">	
+			                    	<td class="r-label am-point">上午间隔点</td>
+			                        <td class="r-label am-point">
+			                        	<select id="intervalTimeAM" class="intervaltime" style="width:93px;"></select> 
+			                        </td>
+			                        <td class="r-label am-point2">上午间隔点2</td>
+			                        <td class="r-label am-point2">
+			                        	<select id="intervalTimeAM2" class="intervaltime" style="width:93px;"></select> 
+			                        </td>				                        
+			                        <td class="r-label pm-point">下午间隔点</td>
+			                        <td class="r-label pm-point">
+			                        	<select id="intervalTimePM" class="intervaltime" style="width:93px;"></select> 
+			                        </td>
+			                        <td class="r-label pm-point2">下午间隔点2</td>
+			                        <td class="pm-point2">
+			                        	<select id="intervalTimePM2" class="intervaltime" style="width:93px;"></select> 
+			                        </td>		                        			                        
+			                    </tr>
+			                </table>
+			        	</div>
+			        	
+			        	<div>
+			        		<p class="title" style="padding-bottom:10px;">文字配置</p>
+			        		<table id="text-dg" style="height:426px;"></table>
+		            	</div>				
+			        </div>
+			        
+			        <div class="chartConfig textConfig" title="表格内容配置" data-options="iconCls:'icon-set-paper'" style="padding:10px 10px 0;">
+			            <div>
+			        		<p class="title">时间点配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                        <td class="r-label">时间点</td>
+			                        <td class="r-label">
+			                        	<input placeholder="多个时间点以 , 分割" class="hisui-validatebox textbox" id="timing" style="width:120px;"/>
+			                        </td>
+			                        <td class="r-label">一页天数</td>
+			                        <td class="r-label">
+			                        	<input id="days" class="hisui-numberbox textbox" data-options="isKeyupChange:true,precision:0,min:0">
+			                        </td>
+			                        <td class="r-label">时间点</td>
+			                        <td>
+			                        	<input placeholder="多个时间点以 , 分割" class="hisui-validatebox textbox" id="redTime" style="width:120px;"/>
+			                        </td>
+			                    </tr>
+			                </table>
+			        	</div>
+						
+						<div>
+							<p class="title" style="padding-bottom:10px;">表格配置</p>
+			                <table id="sheet-dg" style="height:360px"></table>
+			            </div>
+			            
+			            <div>
+			            	<p class="title">折线配置</p>
+							<table cellpadding="0" cellspacing="0">
+								<tr>
+									<td><input id="ifPointCellCenter" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="数据点小格居中"></td>
+			                	</tr>
+			                </table>
+			            </div>
+			            <div>
+			                <table id="curve-dg" style="height:260px"></table>
+			            </div>
+			        </div>
+			        <div class="chartConfig printConfig" title="打印规则配置" data-options="iconCls:'icon-set-paper'" style="padding:10px 10px 0;">
+						<div>
+			        		<p class="title">事件规则配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                        <td class="r-label">
+			                        	<input id="ifEventPortrait" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="同一时间点事件纵向显示">
+			                        </td>
+			                        <td class="r-label">
+			                        	<input id="ifDeathEventDelay" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="同时段有生命体征时死亡事件后延一格显示">
+			                        </td>
+			                        <td>
+			                        	<input id="ifBreakTransLoc" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="转科事件前后折线断开">
+			                        </td>
+			                    </tr>
+			                </table>
+			        	</div>
+						<div>
+			                <table id="event-dg" style="height:300px"></table>
+			            </div>
+			            
+			            <div>
+			        		<p class="title">术后日数显示规则配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                    	<td class="r-label">手术事件</td>
+			                        <td class="r-label">
+			                        	<select id="operEvent" class="tempeventdict" style="width:67px;"></select> 
+			                        </td>
+			                        <td class="r-label">术后天数</td>
+			                        <td class="r-label">
+			                        	<input id="operDays" class="hisui-numberbox textbox" data-options="isKeyupChange:true,precision:0,min:0" style="width:67px;">
+			                        </td>
+			                        <td class="r-label">术次样式</td>
+			                        <td class="r-label">
+			                        	<select id="operNumStyle" class="operationfreq" style="width:182px;"></select> 
+			                        </td>
+			                        <td class="r-label">
+			                        	<input id="operNumAfterDay" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="术次在天数后">
+			                        </td>
+			                        <td align="right">
+			                        	<input id="operNumAfterEvent" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="术次在事件后">
+			                        </td>
+			                    </tr>
+			                    <tr>
+			                    	<td class="r-label">多次分割符</td>
+			                        <td class="r-label">
+			                        	<input class="hisui-validatebox textbox" id="separator" style="width:60px;"/>
+			                        </td>
+			                        <td class="r-label">术次和天数连接符</td>
+			                        <td class="r-label">
+			                        	<input class="hisui-validatebox textbox" id="connector" style="width:60px;"/>
+			                        </td>
+			                        <td class="r-label" colspan="2">
+			                        	<input id="operChangePage" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="换页只显示最后">
+			                        </td>
+			                        <td class="r-label">
+			                        	<input id="onlyLastOperDay" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="只显示最后一次手术天数">
+			                        </td>
+			                        <td align="right">
+			                        	<input id="operDayCalcZero" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="手术天数从0计">
+			                        </td>
+			                    </tr>
+			                    <tr>
+			                        <td class="r-label" colspan="2">
+			                        	<input id="onlyTwoOperDay" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="只计算最近两次手术">
+			                        </td>
+			                        <td class="r-label" colspan="2">
+			                        	<input id="firstDayZero" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="术后天数外手术首日显示0">
+			                        </td>
+			                        <td class="r-label" colspan="2">
+			                        	<input id="onlyCurOperDayOutMD" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="术后天数外手术只显示当前手术天数">
+			                        </td>
+			                        <td align="right" colspan="2">
+			                        	<input id="onlyRecentOperDayFD" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="术后天数内手术首日只计算最近一次手术天数">
+			                        </td>
+			                    </tr>
+			                </table>
+			        	</div>
+			        	
+			        	<div>
+			        		<p class="title">分娩日数显示规则配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                    	<td class="r-label">分娩事件</td>
+			                        <td class="r-label">
+			                        	<select id="deliverEvent" class="tempeventdict" style="width:67px;"></select> 
+			                        </td>
+			                        <td class="r-label">
+			                        	<input id="birthInOperDays" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="计算在手术天数中">
+			                        </td>
+			                        <td>
+			                        	<input id="birthNotCalcOperNum" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="不计算在术次中">
+			                        </td>
+			                    </tr>			                    
+			                </table>
+			        	</div>
+			        	
+			        	<div>
+			        		<p class="title" style="padding-bottom:10px;">复降规则配置</p>
+			                <table id="afterDrop-dg" style="height:220px"></table>
+			            </div>
+			            
+			            <div>
+			        		<p class="title" style="padding-bottom:10px;">突然发热规则配置</p>
+			                <table id="suddenFever-dg" style="height:120px"></table>
+			            </div>
+			            
+			            <div>
+			        		<p class="title" style="padding-bottom:10px;">复测规则配置</p>
+			                <table id="retest-dg" style="height:120px"></table>
+			            </div>
+			            
+			            <div>
+			        		<p class="title">脉搏短绌规则配置</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                    	<td class="r-label">
+			                        	<input id="ifShowMissBeat" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="是否显示">
+			                        </td>
+			                    	<td class="r-label">心率</td>
+			                        <td class="r-label">
+			                        	<select id="heartBeat" class="tempdict" style="width:100px;"></select> 
+			                        </td>
+			                        <td class="r-label">脉搏</td>
+			                        <td class="r-label">
+			                        	<select id="pluse" class="tempdict" style="width:100px;"></select> 
+			                        </td>
+			                        <td class="r-label">显示样式</td>
+			                        <td class="r-label">
+			                        	<select id="fillStyle" class="pulsedificitstyle" style="width:90px;"></select> 
+			                        </td>
+			                        <td class="r-label">颜色</td>
+			                        <td>
+			                        	<input id="fillColor" class="textbox" style="width:60px;" /> 
+			                        </td>
+			                    </tr>
+			                    <tr>
+			                    	<td colspan="3">
+			                        	<input id="onlySamePointHPConnect" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="仅同一时间点的脉搏和心率相连">
+			                        </td>
+			                    </tr>			                    
+			                </table>
+			        	</div>
+			            
+			            <div>
+			        		<p class="title" style="padding-bottom:10px;">超出标尺规则及断线配置</p>
+			                <table id="overScale-dg" style="height:300px"></table>
+			            </div>
+			            
+			            <div>
+			        		<p class="title">过敏结果显示规则</p>
+			        		<table cellpadding="0" cellspacing="0">
+			                    <tr>
+			                    	<td class="r-label">阳性</td>
+			                        <td class="r-label">
+			                        	<select id="skinTestY" class="allergyresult" style="width:80px;"></select> 
+			                        </td>
+			                        <td class="r-label">颜色</td>
+			                        <td class="r-label">
+			                        	<input id="skinTestYColor" class="textbox" style="width:60px;" /> 
+			                        </td>
+			                        <td class="r-label">阴性</td>
+			                        <td class="r-label">
+			                        	<select id="skinTestN" class="allergyresult" style="width:80px;"></select> 
+			                        </td>
+			                        <td class="r-label">颜色</td>
+			                        <td class="r-label">
+			                        	<input id="skinTestNColor" class="textbox" style="width:60px;" /> 
+			                        </td>
+			                        <td>
+			                        	<input id="ifShowMultMed" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="多个药物过敏时显示“多种药物”">
+			                        </td>
+			                    </tr>			                    
+			                </table>
+			        	</div>
+			        	
+			        </div>			        
+				</div>
+		    </div>
+		     
+	        <div data-options="region:'south',split:true" style="padding:10px;text-align:center;">
+		    	<a id="save" class="hisui-linkbutton" onclick="saveChartConfig()">保存</a>
+		    </div>		
+		</div>
+	</div>
+	
+	<!-- 新增/修改体温单列表数据 -->
+	<div id="chart-dialog" class="hisui-dialog" title="新增/修改" style="width: 340px;height:336px;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				text:'保存',
+				handler:function(){ saveChart(); }
+			},
+			{
+				text:'取消',
+				handler:function(){$HUI.dialog('#chart-dialog').close();}
+			}
+		]">
+	    <div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false" style="padding:0 10px;">
+	        <form id="chart-form" method="post">
+	            <table cellpadding="0" cellspacing="0" border="0">
+	                <tr>
+	                    <td><input name="chartId" id="chartId" type="hidden" value=""></td>
+	                </tr>
+	                <tr style="display:none;">
+	                    <td class="r-label">单据类型</td>
+	                    <td>
+	                        <select placeholder="请选择" name="chartType" id="chartType" style="width:240px;"></select> 
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td class="r-label"><label class="clsRequired">表单名称</label></td>
+	                    <td>
+	                        <input placeholder="请输入" name="chartName" class="hisui-validatebox textbox" id="chartName" data-options="required:true" style="width:233px;"/>
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td class="r-label">适用范围</td>
+	                    <td>
+	                    	<select placeholder="请选择" name="applyArea" id="applyArea" style="width:240px;"></select> 
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td class="r-label">不适用范围</td>
+	                    <td>
+	                    	<select placeholder="请选择" name="notApplyArea" id="notApplyArea" style="width:240px;"></select> 
+	                   	</td>
+	                </tr>
+	                <tr>
+	                    <td class="r-label">是否启用</td>
+	                    <td>
+	                        <input class="hisui-checkbox" type="checkbox" data-options="checked:true" id="ifActive" name="ifActive">
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td class="r-label">是否新生儿</td>
+	                    <td>
+	                        <input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="ifNewBaby" name="ifNewBaby" style="margin-left:-6px;">
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td class="r-label">年龄</td>
+	                    <td>
+	                        <input placeholder="请输入" name="childAge" id="childAge" class="hisui-numberbox textbox" data-options="isKeyupChange:true,precision:0,min:0">
+	                    	<span style="margin-left:4px;">天</span>
+	                    </td>
+	                </tr>
+
+	            </table>
+	        </form>
+	    </div>
+	</div>
+	
+	<!-- 跨院区复制 -->
+	<div id="otherHospChart-dialog" class="hisui-dialog" title="跨院区复制" style="width: 900px;height:400px;padding:10px 10px 0 10px;border-color:#ccc;" data-options="iconCls:'icon-w-copy',shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				text:'引用',
+				handler:function(){ copyChart('otherHospChartList'); }
+			},
+			{
+				text:'取消',
+				handler:function(){ $HUI.dialog('#otherHospChart-dialog').close(); }
+			}
+		]">
+	    <div class="hisui-panel" title="" data-options="headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+	        <table id="otherHospChartList" border="0"></table>
+	    </div>
+	</div>
+	
+	<!-- 线框定义 -->
+	<div id="line-dialog" class="hisui-dialog" title="线框定义" style="width: 420px;height:280px;padding:10px 10px 0 10px;border:0;" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				text:'确定',
+				handler:function(){ saveLines(); }
+			},
+			{
+				text:'取消',
+				handler:function(){ $HUI.dialog('#line-dialog').close(); }
+			}
+		]">
+	    <div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+	        <div class="mainCon">
+		        <div class="lineDefine">
+		        	<div class="form-group">
+	          			<p>线框定义</p>
+	          			<p><input name="lineColor" id="lineColor" class="textbox" /></p>
+	        		</div>
+	        		<div class="form-group">
+	        			<p>线框粗细</p>
+	          			<ul></ul>
+	        		</div>
+		        </div>
+		        <div class="effectArea" style="margin-top:5px;">
+		        	
+		        </div>
+	        </div>
+	    </div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.temperature.printset.js"></script>
+</body>
+</html>

@@ -1,27 +1,46 @@
 <server>
+	set HospId=%session.Get("LOGON.HOSPID")
 	set BaseCfgStr=##class(web.DHCOPConfig).ReadOPSPConfig(HospId)
 	set Dep2PreFlag=$p(BaseCfgStr,"^",47)
+	set AllowedPartRefund=##class(web.DHCIPBillDeposit).IsAllowedPartRefund(HospId)  //+2022-09-06 ZhYW 取是否允许部分退配置
 </server>
 <div class="hisui-layout" data-options="fit:true">
-	<div data-options="region:'north',border:false" style="height:'auto';">
+	<div data-options="region:'north',border:false" style="height:'auto';overflow:hidden;">
+		<csp:if condition=(%request.Get("RefundAmt")'="")>
+		<div style="padding:10px 10px 0 10px;">
+			<div class="tip-messager" style="line-height:30px;height:30px;">
+	            <span style="font-weight:bold;margin-left:40px;">
+					#(..Get("需退金额"))#：<strong id="totalRefAmt">#(%request.Get("RefundAmt"))#</strong>
+					&emsp;/&emsp;
+					#(..Get("已退金额"))#：<strong id="refedAmt" style="color:red;">0.00</strong>
+					&emsp;/&emsp;
+					#(..Get("未退金额"))#：<strong id="toRefAmt" style="color:red;">#(%request.Get("RefundAmt"))#</strong>
+	        	</span>
+			</div>
+		</div>
+		</csp:if>
 		<table class="search-table">
 			<tr>
-				<td class="r-label td-first-col-58"><label>金额</label></td>
-				<td><input id="refAmt" class="hisui-numberbox textbox" data-options="precision:2,disabled:true" style="color: #FF0000;font-weight: bold;"/></td>
-				<td class="r-label r-label-1"><label>退款方式</label></td>
+				<td class="r-label"><label>#(..Get("金额"))#</label></td>
+				<td><input id="refAmt" class="hisui-numberbox textbox" data-options="precision:2,disabled:#(+AllowedPartRefund=0)#" style="color: #FF0000;font-weight: bold;"/></td>
+				<td class="r-label r-label-1"><label>#(..Get("退款方式"))#</label></td>
 				<td><input id="refMode" class="hisui-combobox textbox"/></td>
-				<td class="r-label r-label-1"><label>押金类型</label></td>
+				<td class="r-label r-label-1"><label>#(..Get("押金类型"))#</label></td>
 				<td><input id="refDepositType" class="hisui-combobox textbox"/></td>
 			</tr>
 			<tr>
-				<td class="r-label"><label>当前票号</label></td>
-				<td><input id="refRcptNo" class="textbox" style="font-weight: bold;" disabled/><a href="javascript:;" id="btn-refRcptTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a></td>
-				<td class="r-label r-label-1"><label>退款原因</label></td>
+				<td class="r-label"><label>#(..Get("当前票号"))#</label></td>
+				<td><input id="refRcptNo" class="textbox" style="font-weight:bold;" disabled/><a href="javascript:;" id="btn-refRcptTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="display:none;margin-left:2px;"></a></td>
+				<td class="r-label r-label-1"><label>#(..Get("退款原因"))#</label></td>
 				<td><input id="refReason" class="hisui-combobox textbox"/></td>
 				<csp:if condition=Dep2PreFlag=1>
-				<td class="r-label r-label-1"><label>门诊预交金票号</label></td>
-				<td><input id="accPreRcptNo" class="textbox" style="font-weight: bold;" disabled/></td>
+				<td class="r-label r-label-1"><label>#(..Get("门诊预交金票号"))#</label></td>
+				<td><input id="accPreRcptNo" class="textbox" style="font-weight:bold;" disabled/></td>
 				</csp:if>
+			</tr>
+			<tr>
+				<td class="r-label"><label>#(..Get("备注"))#</label></td>
+				<td colspan="3"><input class="textbox tb-colspan" id="refRemark"/></td>
 			</tr>
 		</table>
 		<div style="text-align:center;padding-bottom:10px;">
@@ -29,7 +48,7 @@
 			<div style="display:inline-block;margin:0 5px;"></div>
 			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-refReprint">补打收据</a>
 			<div style="display:inline-block;margin:0 5px;"></div>
-			<csp:if condition=Dep2PreFlag=1>
+			<csp:if condition=(Dep2PreFlag=1)>
 			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-transOPAcc">转门诊账户</a>
 			<div style="display:inline-block;margin:0 5px;"></div>
 			</csp:if>
@@ -39,4 +58,4 @@
 		<table id="refDepList"></table>
 	</div>
 </div>
-<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.deposit.refund.js"></script>
+<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.deposit.refund.js"></script>

@@ -8,38 +8,46 @@
 <!-- Put your page Title here -->
 <title>	 </title>
 <HISUI></HISUI>
+<style type='text/css'>
+	.datagrid>.panel-body-noheader {
+		border-color:#ccc;
+	}
+	body {
+		background-color:#fff;
+	}
+</style>
 </head>
 
 <body>
 <div>
 	<div>
-	<table>
+	<table style="padding-bottom:10px;">
 		<tr>
 			<td>
  				<input class='hisui-radio' type="radio" label='全部' name='getOrder' id="allFlag" data-options="radioClass:'hischeckbox_square-blue'">
 			</td>
 			
-			<td>
+			<td style="padding-left:10px;">
 				<input class='hisui-radio' type="radio" label='上次接单' name='getOrder' id="lastFlag" data-options="radioClass:'hischeckbox_square-blue'">
 			</td>
-			<td>
+			<td style="padding-left:10px;">
 				<input class='hisui-radio' type="radio" label='本次接单' name='getOrder' id="thisFlag" data-options="radioClass:'hischeckbox_square-blue',checked:true" >
 			</td>
 			<td style="padding-left:10px;">
 				<a id="SearchAll" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-find',onClick:PatListTabDataGridLoad">查询</a>
 			</td >
 			<td style="padding-left:10px;">
-				<a href="#" class="hisui-linkbutton" id="endRecOrd" data-options="iconCls:'icon-pause',onClick:endRecOrdClick">结束当前接单</a>
+				<a href="#" class="hisui-linkbutton" id="endRecOrd" data-options="iconCls:'icon-w-pause-circle',onClick:endRecOrdClick">结束当前接单</a>
 			</td>
 			<td style="padding-left:10px;">
-				<a href="#" class="hisui-linkbutton" id="cancelOrd" data-options="iconCls:'icon-re-ignore',onClick:cancelOrdClick">撤销接单</a>
+				<a href="#" class="hisui-linkbutton" id="cancelOrd" data-options="iconCls:'icon-w-back',onClick:cancelOrdClick">撤销接单</a>
 			</td>
 		</tr>
 	</table>
 	
 	</div>
     <table id="PatListTab"
-         class="hisui-datagrid">
+         class="hisui-datagrid" fit=true>
     </table>
                    
 	     
@@ -94,29 +102,58 @@ function PatListTabDataGridLoad(){
 	}
 //结束当前接单按钮
 function endRecOrdClick(){
-	var canFLag = window.confirm("是否结束当前接单?");
-	if(!canFLag) return;
 	$cm({
+		ClassName : "Nur.DHCNurOPReceiveOrd",
+	    MethodName : "getOrdStatus",
+	    regNo : regNo,
+	    dataType:'text'
+		},function(ret){
+			if(ret==''){return showMessageBox("没有有效的接单任务");}
+			else if(ret=='F'){return showMessageBox("已结束接单无需重复操作");}
+				$.messager.confirm("提示", "是否结束当前接单?", function (r) {
+		if (r) {
+			$cm({
 		ClassName : "Nur.DHCNurOPReceiveOrd",
 	    MethodName : "endRecOrd",
 	    regNo : regNo,       //登记号，在url里
 	    userId: userId,  //用session获取  session['LOGON.USERID'],
-	    state:"F"
+	    state:"F",
+	    dataType:'text'
 		},function(ret){
 			//console.log(ret);
 			if(ret=="0"){
-	 			alert("操作成功!");
+	 			showMessageBox("操作成功!", 'success');
+	 			PatListTabDataGridLoad();
  				}
  			else{
-	 			alert(ret);
+	 			showMessageBox(ret);
  				}
 			});
+		}
+	});
+			});
 	}
+function ifHasSelection(){
+var rowsData = $HUI.datagrid('#PatListTab').getSelections();
+for (var i = 0; i < rowsData.length; i++) {
+		var arcimDesc = rowsData[i].arcimDesc;
+		var oeoreId = rowsData[i].oeoreId;
+		//console.log(oeoreId);
+		if(arcimDesc.indexOf("____")>-1) continue ;
+		return true;
+}
+return false;
+}
+function showMessageBox(msg, type){
+	if (type == 'success') $.messager.popover({ msg: msg, type: 'success', timeout: 1000 });
+	else if (!type || type == 'alert') $.messager.popover({ msg: msg, type: 'alert', timeout: 5000, style: { height: 'auto', top: '', left: '' } });
+}
 //撤销接单按钮
 function cancelOrdClick(){
-	var canFLag = window.confirm("是否撤销接单任务?");
-    if(!canFLag) return;
-    var rowsData = $HUI.datagrid('#PatListTab').getSelections();  //获取选中的是那行数据
+	if (!ifHasSelection()) return showMessageBox('请选择需要撤销接单的医嘱');
+	$.messager.confirm("提示", "是否撤销当前接单?", function (r) {
+		if (r) {
+			var rowsData = $HUI.datagrid('#PatListTab').getSelections();  //获取选中的是那行数据
 	//console.log(rowsData.length);
 	for (var i = 0; i < rowsData.length; i++) {
 		var arcimDesc = rowsData[i].arcimDesc;
@@ -132,13 +169,15 @@ function cancelOrdClick(){
 						//alert(ret);
 						console.log(ret);
 						if(ret!="0"){
-	 			 			alert(ret);
+	 			 			showMessageBox(ret);
 	 						}
 						});
  					
  				}
 
     PatListTabDataGridLoad();
+		}
+	});
 	}
 	//初始化表格
 function InitPatListTabDataGrid(){
@@ -148,7 +187,7 @@ function InitPatListTabDataGrid(){
 		{field:'infuseState',title:'状态',width:80},
 		{field:'arcimDesc',title:'医嘱名称',width:250},
 		{field:'doseQtyUnit',title:'剂量',width:80},
-		{field:'phOrdQtyUnit',title:'总量',width:60},
+		{field:'phOrdQtyUnit',title:'总量',width:80},
 		{field:'overTime',title:'输液用时',width:80},
 		{field:'recOrdDateTime',title:'接单时间',width:135},
 		{field:'recOrdUser',title:'接单人',width:100},
@@ -156,10 +195,14 @@ function InitPatListTabDataGrid(){
 		{field:'oeoreId',title:'oeoreId',width:100},
 		{field:'select',title:'选择',width:80,checkbox:'true'},		
     ]]
+    var height = $('body').height() - $('body').children(0).children(0).height();
     var PatListTabDataGrid=$("#PatListTab").datagrid({
+	    height: height,
 		fit : false,
-		border : false,
-		striped : true,
+		//border : false,
+		//striped : true,
+		titleNoWrap:false,
+		nowrap:false,
 		singleSelect : false,
 		fitColumns : false,
 		autoRowHeight : false,

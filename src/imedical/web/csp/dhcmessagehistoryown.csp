@@ -2,70 +2,148 @@
  i ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
 </csp:method>
-<HTML XMLNS=TRAK>
-	<HEAD>
-		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-		<JQUERY:EASYUI132/>
-		<script type="text/javascript" src="../scripts_lib/ckeditor/ckeditor.js"></script>
-		<style>
-		#preView{
-			display:none;
-			position:absolute;
-			width:400px;
-			height:200px;
-			max-width:600px;
-			min-width:400px;
-			min-height:200px;
-			margin:10px;
-			background-color:#f9fbff;
-			border-radius:10px 10px 10px 10px;
-			z-index:1000;
-			border: 1px #95B8E7 solid;
-			overflow: auto;
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts_lib/ckeditor/ckeditor.js"></script>
+	<script src="../scripts/dhcmessage.common.js" type="text/javascript"></script>
+	<style>
+		.form-table{
+			width:100%;	
 		}
-		h1,h2,h3,h4,h5,h6 {
-			display:block!important;
+		.form-table td{
+			padding:5px 0;	
 		}
-		.i-searchbox tr{
-			height:40px;	
+		.form-table td.r-label{
+			padding-right:10px;
 		}
-		.i-searchbox tr>td:nth-child(1),.i-searchbox tr>td:nth-child(3){
-			text-align:right;	
-			width:80px;
+		.form-table td.l-value{
+			padding-right:20px;
 		}
-		</style>
-	</HEAD>
+		.search-table{
+			width:auto;	
+		}
+		.search-table td{
+			padding:5px 0;	
+		}
+		.search-table td.r-label{
+			padding-right:10px;
+		}
+		.search-table td.l-value{
+			padding-right:20px;
+		}
+		body{
+			background:#fff;	
+		}
+	</style>
+	<server>
+		set ActionCodes=%request.Get("ActionCodes")
+	</server>
+</head>
+<body style="padding:10px;box-sizing: border-box;">
+	<div class="hisui-panel" data-options="fit:true,title:'个人发送历史',headerCls:'panel-header-gray'">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',border:false" style="padding: 5px 10px;border-bottom: 1px dashed #E2E2E2; ">
+				<table class="search-table" cellspacing="0" cellpadding="0" border="0">
+					<tr>
+						<td class="r-label">消息类型</td>
+						<td class="l-value">
+							<select id="ActionType" class="textbox hisui-combobox" data-options="defaultFilter:4">
+							  <option value ="">全部</option>
+							  <server>
+							  	set ActionDr="" for  set ActionDr=$o(^websys.DHCMessageActionTypeD(ActionDr)) q:ActionDr=""  d
+							  	.q:'$d(^websys.DHCMessageContentI("TypeOrderObj",ActionDr))  //没有使用过的不显示
+							 	.set ActionCode = $lg(^websys.DHCMessageActionTypeD(ActionDr),2)
+							 	.q:(ActionCodes'="")&&((","_ActionCodes_",")'[(","_ActionCode_","))  //消息类型过滤
+								.set ActionDesc = $lg(^websys.DHCMessageActionTypeD(ActionDr),3)
+								.Set Seq=$lg(^websys.DHCMessageActionTypeD(ActionDr),28)
+								.set SortArr( $s(Seq'="":1,1:2), $s(Seq'="":Seq,1:" "),ActionCode )=ActionDesc_"^"_ActionDr
+								for i=1:1:2  d
+								.s Seq="" for  s Seq=$o(SortArr(i,Seq)) q:Seq=""  d
+								..s ActionCode="" for  s ActionCode=$o(SortArr(i,Seq,ActionCode)) q:ActionCode=""  d
+								...s ActionDesc=SortArr(i,Seq,ActionCode),ActionDr=$p(ActionDesc,"^",2),ActionDesc=$p(ActionDesc,"^",1)
+								...w "<option value =",ActionDr,">",ActionDesc,"</option>"
+							 </server>
+							</select>
+						</td>
+						<td class="r-label">开始日期</td>
+						<td class="l-value"><input type="text" class="textbox hisui-datebox" id="DateStart" /></td>
+						<td class="r-label">结束日期</td>
+						<td class="l-value"><input type="text" class="textbox hisui-datebox" id="DateEnd" /></td>
+						<td ><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="FindBtn">查询</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:0">
+				<table id="tDHCMessageContent"></table>
+			</div>
+		</div> <!--end layout-->
+	</div> <!--end main panel-->
 	
-	<body>
-		<div id="preView"></div>
-		<div id='Loading' style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">加载中···</font></h1></div>
-		<DIV id="PageContent" style="height:100%">
-			<table width="100%">
-				<tbody><tr><td class="maintitle">发送历史</td></tr><tr><td class="i-tableborder"><table width="100%" class="i-searchbox"><tbody><tr>
-					<td><label id="cDateStart">开始日期</label></td>
-					<td><div class="i-input"><input id="DateStart" name="DateStart" style="width:200px;height:24px" class="easyui-datebox" value=""></div></td>
-					<td><label id="cDateEnd">结束日期</label></td>
-					<td><div class="i-input"><input id="DateEnd" name="DateEnd" style="width:200px;height:24px" class="easyui-datebox"  value=""></div></td>
-					<td><a href="#" id="FindBtn" name="FindBtn" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a></td>
-				</tr></tbody></table></td></tr></tbody>
-			</table> <!--查询条件区table-->
-			<table width="100%">
-			<tbody><tr><td class="listtitle">发送历史列表</td></tr><tr><td class="i-tableborder">
-			<TABLE ID="tDHCMessageContent"></TABLE>   <!--Content的datagrid-->
-			</td></tr></tbody></table><!--列表table-->
-			<TABLE ID="test"></TABLE>
-		</DIV>
-		<div id="mydialog" title="消息内容修改" modal=true  class="easyui-dialog" closed=true style="width:800px;height:555px;">
-	    	<textarea name="editor1" id="editor1" rows="10" cols="80">
-            </textarea>
- 		</div>
-		<script type="text/javascript">	
-			var dateformat="#(##class(websys.Conversions).DateFormat())#";
-			var now = "#($zd(+$h,##class(websys.Conversions).DateFormat()))#";
-			$(function(){$("#Loading").fadeOut("fast");});
-		</script>
-		<script src="../scripts/websys.jquery.js" type="text/javascript" ></script>
-		<script src="../scripts/dhcmessagehistoryown.js" type="text/javascript" ></script>
-	</body>
-</HTML>
+	<div id="mydialog" title="消息明细记录管理" modal=true  draggable=false class="hisui-dialog" closed=true iconCls="icon-w-list" style="width:1050px;height:555px;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',border:false" style="padding: 5px 10px;border-bottom: 1px dashed #E2E2E2; ">
+				<input type="hidden" id="DetailsContentId" name="DetailsContentId" value="" />
+				<table class="search-table" cellspacing="0" cellpadding="0" border="0">
+					<tr>
+						<td class="r-label">接收用户</td>
+						<td class="l-value"><input type="text" class="textbox" id="DToUser" /></td>
+						
+						<td class="r-label">处理状态</td>
+						<td class="l-value"><input type="text" class="textbox" id="DExecFlag" /></td>
+						
+						<td >
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="DFindBtn">查询</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="DClearBtn" style="margin-left:10px;">清屏</a>
+						</td>
+						
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:0">
+				<table id="tDHCMessageDetails"></table>
+			</div>
+		</div> <!--end layout-->
+	</div> <!--end mydialog 消息明细记录管理-->
+	<div id="mydialog2" title="明细管理" modal=true  draggable=false class="hisui-dialog" closed=true iconCls="icon-w-list" style="width:950px;height:555px;overflow:hidden;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',border:false" style="padding: 5px 10px;border-bottom: 1px dashed #E2E2E2;height:111px;overflow:hidden; ">
+				<div id="tpscontent" style="height:48px;line-height:24px;overflow:hidden;border:1px dashed #E2E2E2;margin:5px 0;padding:0 5px;word-break:break-all;">
+					
+				</div>
+			
+				<input type="hidden" id="DetailsContentId2" name="DetailsContentId2" value="" />
+				<table class="search-table" cellspacing="0" cellpadding="0" border="0">
+					<tr>
+						<td class="r-label">接收者</td>
+						<td class="l-value"><input type="text" class="textbox" id="DKeyName" /></td>
+						
+						<td ><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="DFindBtn2">查询</a></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:0">
+				<table id="tDHCMessageDetails2"></table>
+			</div>
+		</div> <!--end layout-->
+	</div> <!--end mydialog2 其它发送方式 消息明细记录管理-->
+	
+	<div id="mydialog-editor" title="消息内容修改" modal=true  class="hisui-dialog" iconCls="icon-w-paper"  closed=true style="width:800px;height:555px;">
+    	<textarea name="editor1" id="editor1" rows="10" cols="80">
+        </textarea>
+	</div>
+	<script type="text/javascript">	
+		var dateformat="#(##class(websys.Conversions).DateFormat())#";
+		var now = "#($zd(+$h,##class(websys.Conversions).DateFormat()))#";
+		var GV={};
+		GV.ActionCodes='#(ActionCodes)#';
+		GV.SessUserId='#(%session.Get("LOGON.USERID"))#';
+	</script>
+	<script src="../scripts/dhcmessagehistoryown.js" type="text/javascript" ></script>
+</body>
+</html>
+

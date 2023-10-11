@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液退药
-	csp:dhcpha.pivas.return.csp
-	js:scripts/pharmacy/pivas/return.js
+<!--
+    配液退药
+	csp: csp/dhcpha.pivas.return.csp
+	js:	 scripts/pharmacy/pivas/return.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -10,127 +15,138 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
+    <HISUI />
+    <PHAPIVASV1 />
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mCustomScrollbar.css" />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
     <STYLE type="text/css">
-        .dhcpha-tmp-border{
-			border:1px solid #cccccc;
-			border-radius:4px;
+        .dhcpha-tmp-border {
+            border: 1px solid #e2e2e2;
+            border-radius: 4px;
+        }
+
+        #pha-return-scan-area {
+            border-bottom: 1px solid #e2e2e2 !important;
+            padding-left: 1px;
+            padding-right: 1px;
+            padding-top: 1px;
+            overflow: hidden;
+            border-bottom-right-radius: 0px !important;
+            border-bottom-left-radius: 0px !important;
+        }
+
+        #labelContent {
+            border-top-right-radius: 0px !important;
+            border-top-left-radius: 0px !important;
+        }
+
+        #tabsReturn .layout-split-west,
+        #tabsReturn .layout-split-east {
+            border-color: #ffffff;
         }
     </STYLE>
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-
-            <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'north',title:'配液退药',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-label-stop',collapsible:false" class="dhcpha-north-r1">
-                    <table class="dhcpha-north-tbl">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',title:'配液退药',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-label-stop',collapsible:false" class="pha-pivas-row-1">
+                    <table class="pha-con-table">
                         <tr>
+                            <td class="r-label">
+                                <label for="dateStart">#(..Get("用药日期"))#</label>
+                            </td>
                             <td>
-                                <label for="dateStart">用药日期</label>
                                 <input id="dateStart" class="hisui-datebox" data-options="width:120" />
+                            </td>
+                            <td>
                                 <input id="dateEnd" class="hisui-datebox" data-options="width:120" />
                             </td>
                             <td>
                                 <input id="cmbWard" />
                             </td>
                             <td>
-                                <input id="txtPatNo" class="hisui-validatebox" placeholder="登记号..." />
+                                <input id="txtPatNo" class="hisui-validatebox" placeholder="#(..Get(" 登记号"))#..." />
                             </td>
                             <td>
-                                <input id="txtBarCode" class="hisui-validatebox" placeholder="条码..." />
+                                <input id="txtBarCode" class="hisui-validatebox" placeholder="#(..Get(" 条码"))#..." />
                             </td>
                             <td>
                                 <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">查询</a>
-                             </td>
-                            <td>                           
+                            </td>
+                            <td>
                                 <a class="hisui-linkbutton" plain="false" iconCls="icon-w-back" id="btnReturn">退药</a>
                             </td>
                         </tr>
                     </table>
                 </div>
-            	<div data-options="region:'center'" border="false" style="border-radius: 4px;" >
-            		<div id="tabsReturn" class="hisui-tabs tabs-gray" fit="true">    
-		                <div id="tabPatOeore" data-options="title:'待退明细',selected:false" class="dhcpha-hisui-container">
-		                    <div class="hisui-layout" fit="true" border="false">                
-				                <div data-options="region:'west',border:false,split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-pat',width:490" class="dhcpha-hisui-border" style="border-radius:4px;">
-				                    <table id="gridPat"></table>
-				                </div>
-				                <div data-options="region:'center',border:false,headerCls:'panel-header-gray',iconCls:'icon-panel-common'" class="dhcpha-hisui-border" style="border-radius:4px;">
-				                    <table id="gridOrdExe"></table>
-				                </div>
-				             </div>
-				         </div>
-						<div data-options="title:'扫描退药',selected:true" class="dhcpha-hisui-container">
-		                    <div class="hisui-layout" fit="true" border="false">
-		                        <div data-options="region:'west',width:400,split:true" class="dhcpha-hisui-border" style="border-radius:4px;">
-		  							<div class="hisui-layout" fit="true" border="false">
-				  						<div data-options="region:'north',height:37" border="false" style="border-bottom:1px solid #cccccc;padding-left:5px;padding-right:13px;padding-top:1px;overflow:hidden">
-	                                    	<table>
-	                                    		<tr>
-	                                    			<td>
-														<input id="txtScanCode" class="hisui-validatebox" type="text" placeholder="条码..." style="width:165px"/>
-													</td>
-													<td>
-					                            		<input id="cmbScanRetReason" type="text"  class="hisui-combobox"/>
-					                            	</td>
-					                            <tr>
-	                                    	</table>
-		                                </div>
-		  								<div data-options="region:'center'" border="false" class="newScroll" id="labelContent">
-		                                    <div id="labelContent" style="padding-right:10px;">
-		                                    	标签内容
-		                                    </div>
-		  								</div>
-		  							
-		  							</div>
-		                        </div>
-				                <div data-options="region:'center',border:false" class="dhcpha-hisui-border" style="border-radius:4px;">
-				                    <table id="gridWard"></table>
-				                </div>
-				                <div data-options="region:'east',width:405,border:false,split:true" class="dhcpha-hisui-border" style="border-radius:4px;">
-				                    <table id="gridArc"></table>
-				                </div>
-		                    </div>
-		                </div>
-				     </div>
-				 </div> 
-                
+                <div data-options="region:'center',border:false">
+                    <div id="tabsReturn" class="hisui-tabs tabs-gray" fit="true">
+                        <div id="tabPatOeore" data-options="title:'待退明细',selected:false" class="pha-body" style="background-color: #ffffff;">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'west',split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-panel-pat',width:490">
+                                    <table id="gridPat"></table>
+                                </div>
+                                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-panel-common'">
+                                    <table id="gridOrdExe"></table>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-options="title:'扫描退药',selected:true" class="pha-body" style="background-color: #ffffff;">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'west',width:420,split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'north',height:48" border="false" id="pha-return-scan-area">
+                                            <table cellspacing="8">
+                                                <tr>
+                                                    <td>
+                                                        <input id="txtScanCode" class="hisui-validatebox" type="text" placeholder="#(..Get("条码"))#..." style="width:174px" />
+                                                    </td>
+                                                    <td>
+                                                        <input id="cmbScanRetReason" type="text" class="hisui-combobox" />
+                                                    </td>
+                                                <tr>
+                                            </table>
+                                        </div>
+                                        <div data-options="region:'center'" border="false" class="newScroll">
+                                            <div id="labelContent" style="text-align:center;padding-top:10px;padding: 10px;">
+                                                <!-- UI需求, 2930189 -->
+                                                <!-- img src="../scripts/pharmacy/common/image/bg-label-nodata.png" width="365px" -->
+                                                <img src="../scripts/pharmacy/common/image/bg-nodata2.png" width="365px">
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                                    <table id="gridWard"></table>
+                                </div>
+                                <div data-options="region:'east',width:405,split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                                    <table id="gridArc"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-    <div id="retReasonWin" class="hisui-dialog" title="选择退药原因" closed="true" style="width:285px;height:140px;" data-options="iconCls:'icon-w-list',modal:true,
-	buttons:[{
-		text:'确定',
-		handler:function(){
-			Return();
-		}
-	},{
-		text:'取消',
-		handler:function(){
-			$('#retReasonWin').window('close');
-		}
-	}]">
-	    <div class="hisui-layout" fit="true" border="false">
-	        <div data-options="region:'center'" class="dhcpha-hisui-container" style="padding:0px">
-		        <div class="hisui-layout" data-options="fit:true,border:false" >
-		            <div data-options="region:'center'" border="false">
-		                <table style="padding-left:5px;padding-top:5px;">
-		                    <tr style="height:40px;">
-		                        <td>
-		                            <input id="cmbRetReason" />
-		                        </td>
-		                    </tr>
-		                </table>
-		            </div>
-		        </div>
-	        </div>
+    <div id="retReasonWin" class="hisui-dialog" title="选择退药原因" closed="true" data-options="iconCls:'icon-w-list',modal:true,width:280,
+		buttons:[{
+			text:'确定',
+			handler:function(){
+				Return();
+			}
+		},{
+			text:'取消',
+			handler:function(){
+				$('#retReasonWin').window('close');
+			}
+		}]">
+        <div style="padding-left: 10px;padding-top: 10px;">
+            <input id="cmbRetReason">
         </div>
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/plugins/CustomScrollbar/jquery.mousewheel.min.js"></script>
@@ -139,8 +155,12 @@
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/print.js"></script>
-	<script type="text/javascript" src="../scripts/pharmacy/pivas/makelabel.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/makelabel.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/return.js"></script>
+    <script type="text/javascript" src="../scripts/pha/plugins/handlebars/handlebars-v4.7.6.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/qrcode/qrcode.min.js"></script>
+
+    <csp:Include Page="dhcpha.pivas.temp.label.csp"></csp:Include>
 </body>
 
 

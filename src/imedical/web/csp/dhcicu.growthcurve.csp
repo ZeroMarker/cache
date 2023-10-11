@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- dhcicu.growthcurve.csp -->
+<title>新生儿生命曲线</title>
+<csp:content charset="UTF-8">
+<dhcclinic:easyui></dhcclinic:easyui>
+
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/icu/css/iconan.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/icu/css/custom.css" />
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Constant.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Datetime.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Framework.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.SystemConfig.js" ></script>
+
+<script language="Cache" method="OnPreHTTP" returntype="%Boolean">
+   set userId=%request.Get("userId")
+   // 转化用户ID
+   set userId="22465"
+   
+   set deptId=%request.Get("deptId")
+   // 转化科室ID
+   set deptId="61"
+   
+   // 将医院ID和安全组ID设置为固定值
+   set hospId=2, groupId=114
+   
+   if (##class(User.SSUser).%ExistsId(userId))
+   {
+	   set %session.Data("LOGON.USERID")=userId
+	   set SSUser=##class(User.SSUser).%OpenId(userId)
+	   set %session.Data("LOGON.USERCODE")=SSUser.SSUSRInitials
+	   set %session.Data("LOGON.USERName")=SSUser.SSUSRName
+   }
+   
+   if (##class(User.CTLoc).%ExistsId(deptId))
+   {
+		set %session.Data("LOGON.CTLOCID")=deptId   
+   }
+   
+   if (##class(User.SSGroup).%ExistsId(groupId))
+   {
+		set %session.Data("LOGON.GROUPID")=userId   
+   }
+   
+   if (##class(User.CTHospital).%ExistsId(hospId))
+   {
+		set %session.Data("LOGON.HOSPID")=hospId   
+   }
+    
+    quit 1
+   
+</script>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:5px;background:#F4F4F4;padding:0;">
+		
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0;background:#F4F4F4;">
+		<div style="margin-left:calc(50% - 500px);">
+			<canvas id="myCanvas" width="795" height="1500" style="position:relative;background-color:white;"></canvas> 
+		</div>
+	</div>  
+	<div data-options="region:'south',border:false" style="height:40px;background:#F4F4F4;">
+        <div class="button-list">
+        	<a href="#" id="btnRefresh" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" data-permission="All">刷新</a>
+            <a href="#" id="btnPrint" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" data-permission="All">打印</a>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/json2.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/LodopFuncs.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/JsBarcode.all.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.CASignature.js"></script>
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/dhcan.canvas.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/dhcan.archivecontext.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.RecordBrowser.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/jr-qrcode.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/echarts.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.editplugin.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.editpluginmanager.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.pagenotabsview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.displaysheet.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.lodopprintview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.sheetsettings.js"></script>
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.icugrowthcurve.js"></script>
+
+</html>

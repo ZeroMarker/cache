@@ -10,47 +10,31 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<DHCSTMHISUI/>
-	<style>
-		.imgbox{
-		    position: relative;
-		    width: 360px;
-		    height: 440px;
-		    margin-top: 20px;
-		    background: #000000;
-		    
-		}
-		.imgbox img{
-		    position: absolute;
-		    top: 0;
-		    bottom: 0;
-		    left: 0;
-		    right: 0;
-		    margin: auto;
-		    max-width: 100%;
-		    max-height: 100%;
-		    outline: 1px solid #000;
-		}
-		.selectedpic { border:4px solid #378ec4; padding:0;position: relative;z-index:0}
-	</style>
-
- <link href="../scripts/dhcstmhisui/Common/webuploader/webuploader.css" type="text/css" rel="stylesheet"/>
- <link href="../scripts/dhcstmhisui/Common/Viewer/viewer.css" type="text/css" rel="stylesheet"/>
-	
-</head> 
+</head>
 <body class="hisui-layout" fit="true">
 	<div class="GridPadding" data-options="region:'center',border:false,collapsible:false">
 		<div class="hisui-panel" title="合同信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-write-order',fit:true">
 			<div class="hisui-layout" data-options="fit:true">
 				<div data-options="region:'north',border:false,collapsible:false">
-					<table id="MainConditions" class="Condition">
+					<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<tr>
+							<td><label>科室</label><input id="ConLoc" name="ConLoc" class="hisui-combobox textbox"></td>
 							<td><label>合同号</label><input id="ContractNo" name="ContractNo" class="textbox"></td>
-							<td><label>备注</label><input id="Remark" name="Remark" class="textbox"></td>
-							<td><label>供应商</label><input id="Vendor" name="Vendor" class="hisui-combobox textbox"></td>
+							<td>
+								<input class="hisui-radio" type="radio" label="全部" name="AuditFlag" value="">
+								<input class="hisui-radio" type="radio" label="已审核" name="AuditFlag" value="Y" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="未审核" name="AuditFlag" value="N">
+							</td>
 							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
 							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+							<td><a href="#" id="UpPicBT"class="hisui-linkbutton" data-options="iconCls:'icon-w-upload'">上传</a></td>
+						</tr>
+						<tr>
+							<td><label>供应商</label><input id="Vendor" name="Vendor" class="hisui-combobox textbox"></td>
+							<td><label>备注</label><input id="Remark" name="Remark" class="textbox"></td>
+							<td></td>
 							<td><a href="#" id="AddBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a></td>
-							<td><a href="#" id="UpPicBT"class="hisui-linkbutton">上传图片</a></td>
+							<td><a href="#" id="CompBT"class="hisui-linkbutton" data-options="iconCls:'icon-w-submit'">提交</a></td>
 						</tr>
 					</table>
 				</div>
@@ -64,86 +48,68 @@
 		<div class="hisui-layout" data-options="fit:true">
 			<div class="GridPadding" data-options="region:'west',border:false,collapsible:false" style="padding-top:0;width:600px;">
 				<div class="hisui-panel" title="合同物资信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-write-order',fit:true">
+					<div id="ScgBox" class="BorderLine" data-options="region:'north',headerCls:'panel-header-gray'">
+						<table class="Condition">	
+							<td><label>类组</label></td>
+							<td><input id="Scg" name="Scg" class="hisui-stkscgcombotree" style="width:150px;"></td>
+						</table>
+					</div>
 					<table id="ItmGrid"></table>
 				</div>
 			</div>
 			<div class="GridPadding" data-options="region:'center',border:false,collapsible:false" style="padding-top:0;padding-left:0;">
 				<div class="hisui-panel" title="供应商物资信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
-					<table id="VendorItmGrid"></table>
+					<table id="VendorBox" class="Condition">
+						<td>供应商</td>
+						<td><select id="ItmVendor" name="Vendor" class="hisui-combobox" style="width:150px;"></select></td>
+						<td><a href="#" id="IncItmFilterBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						<td><a href="#" id="IncItms" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+					</table>
+					<table id="VendorItmGrid"></table>	
 				</div>
 			</div>
 		</div>
 	</div>
-	<div id="AddWin" class="hisui-dialog" data-options="closed:true,modal:true" title="合同信息" style="width:300px;">
-		<table id="Conditions" class="Condition" align="center">
-			<tr>
-				<td><span class="required">*</span><label>合同号</label><input id="FContractNo" name="ContractNo" class="hisui-validatebox textbox" data-options="required:true" style="width:180px;"></td>
-			<tr>
-				<td><span class="required">*</span><label>备注</label><input id="FRemark" name="Remark" class="hisui-validatebox textbox" data-options="required:true" style="width:180px;"></td>
-			</tr>
-			<tr>
-				<td><span class="required">*</span><label>供应商</label><input id="FVendor" name="Vendor" class="hisui-validatebox textbox" data-options="required:true" style="width:187px;"></td>
-			</tr>
-			<tr>
-				<td><label>生效日期</label><input id="StartDate" name="StartDate" class="hisui-datebox textbox" style="width:187px;"></td>
-			</tr>
-			<tr>
-				<td><span class="required">*</span><label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-validatebox hisui-datebox" data-options="required:true" style="width:187px;"></td>
-			</tr>
-				<td align="center"><input id="LcFlag" name="LcFlag" class='textbox hisui-checkbox' type="checkbox" value="Y" label="临采标志"></td>
-			</tr>
-			<tr>
-				<td align="center"><input id="StopFlag" name="StopFlag" class='textbox hisui-checkbox' type="checkbox" value="Y" label="停用标志"></td>
-			</tr>
-		</table>
-		<hr class="PartLine"/>
-		<table class="Condition" align="center">
-			<tr>
-				<td><a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
-				<td><a href="#" id="CloseBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a></td>
-			</tr>
-		</table>
-	</div>
-	<div id="ViewPic" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:450px;height:550px" title="图片浏览"> 
-		<div class="hisui-layout" data-options="fit:true">
-			<div class="BorderLine" data-options="region:'north',border:false">
-				<table class="Condition" id="Conditions">
-					<tr>
-						<td><a href="#" id="SetMainPicBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-star'">设置主图片</a></td>
-						<td><a href="#" id="DeletePicBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">删除图片</a></td>
-					</tr>
-				</table>
-			</div>
-			<div data-options="region:'center',border:false"> 
-				<ul id="PicsList" class="" style="padding:5px 30px 5px 30px;">
-				</ul>
-			</div>	   
-		</div>
-	</div>
-	<div id="UpLoader" class="hisui-dialog" data-options="closed:'true',modal:true" style="width:600px;height:480px" title="图片上传"> 
-		<div class="hisui-layout" data-options="fit:true">   
-			<div class="BorderLine" data-options="region:'north',border:false">
-				<table class="Condition" style="height:55px">
-					<tr>
-						<td><div id="AddPicBT">添加图片</div></td>
-						<td><div id="UpLoadPicBT" class="hisui-linkbutton">上传图片</div></td>					
-					</tr>
-				</table>
-			</div> 
-			<div data-options="region:'center',border:false">   
-				<div id="PicList" class="uploader-list" style="padding:5px 30px 5px 30px;"></div>
-			</div>	   
-		</div>
-	</div>
 	
+	<div id="AddWin" class="hisui-dialog" data-options="closed:true,modal:true" title="合同信息" style="width:280px;">
+		<table id="Conditions" class="Condition" align="center" style="padding-bottom:0px;padding-right:10px">
+			<tr>
+				<td><span class="required">*</span><label>科室</label><input id="FConLoc" name="ConLoc" class="hisui-combobox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td><span class="required">*</span><label>合同号</label><input id="FContractNo" name="ContractNo" class="hisui-validatebox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td><span class="required">*</span><label>备注</label><input id="FRemark" name="Remark" class="hisui-validatebox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td><span class="required">*</span><label>供应商</label><input id="FVendor" name="Vendor" class="hisui-validatebox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td><label>生效日期</label><input id="StartDate" name="StartDate" class="hisui-datebox textbox"></td>
+			</tr>
+			<tr>
+				<td><span class="required">*</span><label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-validatebox hisui-datebox textbox" data-options="required:true"></td>
+			</tr>
+			<tr>
+				<td style="padding-left:15px" align="left"><label>临采标志</label><input id="LcFlag" name="LcFlag" class='textbox hisui-checkbox' type="checkbox" value="Y"></td>
+			</tr>
+			<tr>
+				<td style="padding-left:15px" align="left"><label>停用标志</label><input id="StopFlag" name="StopFlag" class='textbox hisui-checkbox' type="checkbox" value="Y"></td>
+			</tr>
+		</table>
+		<table class="Condition" align="center" style="border-spacing:0px;padding-bottom:10px">
+			<tr>
+				<td><a href="#" id="ISaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+				<td><a href="#" id="ICloseBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a></td>
+			</tr>
+		</table>
+	</div>
+	<!--文件窗口-->
+	<csp:Include Page="dhcstmhui.picuploadwin.csp">
+
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonHosp.js"></script>
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/jquery.tmpl.js"></script>	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/Viewer/viewer.js"></script>	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/webuploader/webuploader.js"></script>	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonuploader.js"></script>	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Contract/ViewPic.js"></script>	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/Contract/productPic.js"></script>	
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Contract/ItmInfo.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/Contract/Contract.js"></script>
 </body>

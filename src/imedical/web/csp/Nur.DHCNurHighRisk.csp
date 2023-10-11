@@ -1,6 +1,6 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-     i ##Class(websys.SessionEvents).SessionExpired() q 1
-    q 1
+     If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+    Quit 1
 </csp:method>
 <html>
 <head>
@@ -9,7 +9,9 @@
 <title>	高风险预报 </title>
 <meta charset="utf-8"/>
 <HISUI/>
-
+<script  language="Cache" runat="server">
+Do ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+</script>
 <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js" charset="utf-8"></script>
 <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js" charset="utf-8"></script>
 <style type="text/css">
@@ -134,7 +136,7 @@
 	<form class="header" onsubmit="return false">
 		<table id="tableUp">
 			<tr>
-				<td class='r-label'><span>上报时间:</span></td>
+				<td class='r-label'><span>#(..Get("上报时间："))#</span></td>
 				<td>
 					<input id="db1" class="hisui-datebox textbox"  data-options='onSelect:onStart'/>
 				</td>
@@ -144,11 +146,11 @@
 				</td>
 				<td>
 					<input class='hisui-checkbox' type="checkbox" data-options="onCheckChange:checkBoxChange,checked:true" label="当日上报" id="checkbox_current">
-					<label style="font-weight:bold;padding-left:10px;line-height:32px;">审核状态:</label>
+					<label style="font-weight:bold;padding-left:10px;line-height:32px;">#(..Get("审核状态:"))#</label>
 					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkAll" label="全选" value="all" id="checkboxAll">
 					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="审核通过" id="check_RvPassed">
-					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="待审核"  id="check_RvPend">
-					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="待科护长审核"  id="check_KRv">
+					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="待护士长审核"  id="check_RvPend">
+					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="待科护士长审核"  id="check_KRv">
 					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="待护理部审核"  id="check_HRv">
 					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="驳回"  id="check_BH">
 					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkBoxChange" label="撤销"  id="check_CX">
@@ -157,18 +159,18 @@
 		</table>
 		<table id="tableDown">
 			<tr>
-				<td class='r-label'><span>预报结局:</span></td>
+				<td class='r-label'><span>#(..Get("预报结局:"))#</span></td>
 				<td>
 					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkJJChange" label="驳回" id="JJ_BH">
 					<input class='hisui-checkbox' type="checkbox" data-options="checked:true,onCheckChange:checkJJChange" label="撤销" id="JJ_CX">
 				</td>
 				<td style="padding:0 10px;line-height:24px;">|</td>
 				<td class='r-label'>
-					<span>列表模板:</span>
+					<span>#(..Get("列表模板:"))#</span>
 					<select id="dfCB" style="width: 200px; display: none;" class="combobox-f combo-f"></select>
 				</td>
 				<td class='r-label'>
-					<span>上报科室:</span>
+					<span>#(..Get("上报科室:"))#</span>
 					<select id="iconokBox" style="width:200px;"></select>
 				</td>
 				<td>
@@ -180,9 +182,11 @@
 			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="surePr()">审核</a> 
 			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="rollBackBh()">驳回</a>
 			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="rollBackPr()">撤销审核</a> 
-			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="rollBackSb()">撤销上报</a> 
-			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="meetingMs()">会诊意见</a> 
+			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="rollBackSb()">撤销上报</a>
+			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="Delete()">删除</a> 
+			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="meetingMs()">会诊意见</a>
 			<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="print()">打印</a>
+			<!--<a id="btn" href="#" class="hisui-linkbutton" style="margin:0 4px" onclick="exportData()">导出</a>-->
 		</div>
 	</form>
 	<div class="down" style="height:300px">
@@ -193,6 +197,7 @@
 	               <th field="ck" checkbox="true" rowspan="2"></th>
 	                <th data-options="field:'assessStatus',width:160,align:'center',formatter:changeStatus" rowspan="2">状态</th>
 	                <th data-options="field:'statusdetail',width:80,formatter:changeDate" rowspan="2">状态明细</th>
+					<th data-options="field:'rowid',width:70,formatter:viewRecord" rowspan="2">病历预览</th>
 	            </tr>
 	        </thead>
 			 <thead>
@@ -291,17 +296,17 @@
 		</div>
 		<div id="rollBackCx" style="padding:10px">
 			<span class="messager-icon messager-question"></span>
-			<div style="margin:10px 0;" >确定撤销上报本次高风险预报吗？</div>
+			<div style="margin:10px 0;" >#(..Get("确定撤销上报本次高风险预报吗？"))#</div>
 			<div>
 				<table cellpadding="5">
 					<tr style="padding-bottom:5px;">
-						<td>撤销原因</td>
+						<td>#(..Get("撤销原因"))#</td>
 						<td>
 							<input id="cxYY">
 						</td>
 					</tr>
 					<tr>
-						<td class="r-label">撤销时间</td>
+						<td class="r-label">#(..Get("撤销时间"))#</td>
 						<td>
 							<input id="datetimeboxCX" class="hisui-datetimebox textbox" data-options="onSelect:onSelectCX,showSeconds:false,required:true"/>
 						</td>
@@ -312,21 +317,21 @@
 		<div id="meetingMs" style="padding:10px">
 			<table cellpadding="5">
 				</tr>
-					<td>会诊意见</td>
+					<td>#(..Get("会诊意见"))#</td>
 					<td>
 						<select id="meetingIdea" style="width:200px;"></select>
 					</td>
 				</tr>
 				</tr>
-					<td>会诊签名</td>
+					<td>#(..Get("会诊签名"))#</td>
 					<td>
 						<select id="meetingSign" style="width:200px;"></select>
 					</td>
 				</tr>
 				<tr>
-					<td class="r-label">撤销时间</td>
+					<td class="r-label">#(..Get("会诊时间"))#</td>
 					<td>
-						<input id="cxDT" class="hisui-datetimebox textbox" data-options="onSelect:onSelectCX,showSeconds:false"/>
+						<input id="cxDT" class="hisui-datetimebox textbox" data-options="onSelect:onSelectCX,showSeconds:false,required:true"/>
 					</td>
 				</tr>		
 			</table>
@@ -356,7 +361,7 @@
 			MethodName:'getElementByAdverse',
 			AdverseDR:ID
 		},function(res){
-			console.log(res);
+			// console.log(res);
 			var hasParent=false; //false: 默认是只有一级的表头,true:有两级的表头
 			var columns=[];
 			var childArr=[];
@@ -372,8 +377,10 @@
 					obj.field=inrItem.code;
 					obj.rowspan=hasParent ? 2 : 1;
 					obj.width=inrItem.desc=='诊断'?240:140;
-					
-					obj.resizable=true
+					obj.resizable=true;
+					if (inrItem.desc=='总分') {
+						obj.formatter=showDetail;
+					}
 				}else{
 					var childLength=inrItem.childen.length;
 					obj.colspan=childLength;
@@ -395,13 +402,72 @@
 			if(childArr.length>0){
 				columns.push(childArr)
 			}
-			console.log(columns,'song')
+			// console.log(columns,'song')
+			
+			var date=startDate+","+endDate; // 拼装日期
+			var statusSH=RvPassed_init+","+RvPend_init+","+KRv_init+","+HRv_init+","+BH_init+","+CX_init; //拼装审核状态
+		
+			var YbJJ=JJBH+","+JJCX; // 拼装预报结局
+			var upId=$("#dfCB").combobox('getValue') // 获取列表模板的id
+			var upLoc=$("#iconokBox").combobox('getValues') // 获取上报科室的选中项
+			var upLocStr=upLoc.join(',');
+			var tmpStr=date+"^"+currentUpDate+"^"+statusSH+"^"+YbJJ+"^"+upId+"^"+upLocStr;
+		 	// console.log(RvPassed_init,RvPend_init,KRv_init,HRv_init,BH_init,CX_init)
+			currentRowId=""
+			// console.log(tmpStr);
 			$("#dtgrid").datagrid({
 				columns:columns,
+					queryParams:{
+					ClassName:'NurMp.DHCNurEventFind',
+					//QueryName:'GetReportData',
+					QueryName:'GetReportDataByElement',
+					parr:tmpStr,
+				},
+				nowrap:false,
+				pagination:true,
+				singleSelect:false,
+				onSelect:function(rowIndex, rowData){
+					//currentRowId=rowData.MultId;
+					//console.log(currentRowId);
+					// currentRowStatus=rowData.assessStatus;
+					//console.log(userGroupId,userId,rowIndex, currentRowStatus);
+					var res=$("#dtgrid").datagrid('getSelections');
+					var idArr=res.map(function(item){
+						return item.rowid;
+					})
+					currentRowId=idArr.join("^");
+					//console.log(currentRowId);
+				},
+				onUnselect:function(rowIndex,rowData){
+					var res=$("#dtgrid").datagrid('getSelections');
+				
+					var idArr=res.map(function(item){
+						return item.rowid;
+					})
+					currentRowId=idArr.join("^");
+					//console.log(currentRowId);
+				},
+				onSelectAll:function(){
+					var res=$("#dtgrid").datagrid('getSelections');
+					
+					var idArr=res.map(function(item){
+						return item.rowid;
+					})
+					currentRowId=idArr.join("^");
+					//console.log(currentRowId);
+				},
+				onUnselectAll:function(){
+					var res=$("#dtgrid").datagrid('getSelections');
+					var idArr=res.map(function(item){
+						return item.rowid;
+					})
+					currentRowId=idArr.join("^");
+					//console.log(currentRowId);
+				}
 			})
-			setTimeout(function(){
-				search();		
-			},50)
+//			setTimeout(function(){
+//				search();		
+//			},50)
 		})
 	}
 	
@@ -447,21 +513,21 @@
 			});
 			return;
 		}*/
-		$.messager.confirm("信息提示", "确定审核通过吗？",function(r){
+		$.messager.prompt("信息提示", "确定审核通过吗？",function(r){
 			if(r){
 				$cm({
 					ClassName:'NurMp.DHCNurAdverseMultAdiut',
 					MethodName:'Operate',
 					MultDataDR:currentRowId, 
 					OperateCode:'审核', 
-					OperateNote:'', 
+					OperateNote:r, 
 					OperateGroup:userGroupId, 
 					OperateUser:userId,
 					OperateDate:'',
 					OperateType:$("#dfCB").combobox('getValue')
 				},function(res){
 					if(res.status=='0'){
-						$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+						$.messager.popover({msg: '审核成功！',type:'success',timeout: 1000});
 						currentRowId='';
 						$("#dtgrid").datagrid("reload")	
 						$("#dtgrid").datagrid("clearSelections")	
@@ -478,7 +544,28 @@
 	}
 	function print(){
 		var date=startDate+","+endDate; // 拼装日期
-		var statusSH=RvPassed_init+","+RvPend_init+","+KRv_init+","+HRv_init+","+BH_init+","+CX_init; //拼装审核状态
+		
+		var statusSH="";
+		if ($("#check_RvPassed").checkbox('getValue') == true) {
+			statusSH=statusSH+","+RvPassed_init;
+		}
+		if ($("#check_RvPend").checkbox('getValue') == true) {
+			statusSH=statusSH+","+RvPend_init;
+		}
+		if ($("#check_KRv").checkbox('getValue') == true) {
+			statusSH=statusSH+","+KRv_init;
+		}
+		if ($("#check_HRv").checkbox('getValue') == true) {
+			statusSH=statusSH+","+HRv_init;
+		}
+		if ($("#check_BH").checkbox('getValue') == true) {
+			statusSH=statusSH+","+BH_init;
+		}
+		if ($("#check_CX").checkbox('getValue') == true) {
+			statusSH=statusSH+","+CX_init;
+		}
+		
+		//var statusSH=RvPassed_init+","+RvPend_init+","+KRv_init+","+HRv_init+","+BH_init+","+CX_init; //拼装审核状态
 		var YbJJ=JJBH+","+JJCX; // 拼装预报结局
 		var upId=$("#dfCB").combobox('getValue') // 获取上报类型的id
 		var upLoc=$("#iconokBox").combobox('getValues') // 获取上报科室的选中项
@@ -500,6 +587,48 @@
 	      }
 	    //PrintModuleCode="DHCNURMoudPrnGWSB";
 		AINursePrintAll(serverURL, PrintModuleCode, "0", tmpStr);
+	}
+	function Delete(){
+		// 删除提示框
+		if(session['LOGON.GROUPDESC'].indexOf("护理部")<0){
+			$.messager.popover({
+				msg: '请联系护理部删除!',
+				type:'error',
+			});	
+			return;
+		}
+		if(currentRowId==""){
+			$.messager.popover({
+				msg: '未选中有效数据！',
+				type:'error',
+			});	
+			return;
+		}
+		$.messager.confirm("删除", "确定删除此条上报记录吗？",function(r){
+			if(r){
+				$cm({
+					ClassName:'NurMp.DHCNurAdverseMultAdiut',
+					MethodName:'Delete',
+					MultDataDR:currentRowId, 
+					OperateCode:'删除', 
+					OperateNote:'', 
+					OperateGroup:userGroupId, 
+					OperateUser:userId,
+					OperateDate:'',
+					OperateType:$("#dfCB").combobox('getValue')
+				},function(res){
+					if(res.status=='0'){
+						$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+						currentRowId='';
+						$("#dtgrid").datagrid("reload")	
+						$("#dtgrid").datagrid("clearSelections")	
+					}else if(res.status=="-1"){
+						$.messager.alert("提示", res.msg,'error');
+					}	
+				})	
+			}
+		});
+		return;		
 	}
 	function rollBackPr(){
 		// 撤销审核提示框
@@ -625,7 +754,7 @@
 					{
 						text:'取消',
 						handler:function(){
-							console.log('取消')	
+							//console.log('取消')	
 							$("#rollBackCx").dialog("close")
 						}
 					},
@@ -785,7 +914,7 @@
 				{
 					text:'取消',
 					handler:function(){
-						console.log('取消')	
+						//console.log('取消')	
 						$("#meetingMs").dialog("close")
 					}
 				},
@@ -811,7 +940,7 @@
 			MethodName:'getTypeInfo',
 			Type:'User'	
 		},function(res){
-			console.log(res);
+			//console.log(res);
 			
 			$("#meetingSign").combobox({
 				// 会诊签名
@@ -865,11 +994,11 @@
 			});
 			var currentObj=res[tmpLenth-1];// 当前的状态
 			var firstObj=res[0];
-			console.log(currentObj)
+			//console.log(currentObj)
 			// 当前的状态
-			var StrHtml='<i><span></span></i><p>当前状态：<span>'+currentObj.Status+'</span></p><p>'+currentObj.OperateDate+' '+currentObj.OperateTime+'</p>'
+			var StrHtml='<i><span></span></i><p>#(..Get("当前状态:"))#<span>'+currentObj.OperateCode+'</span></p><p>'+currentObj.OperateDate+' '+currentObj.OperateTime+'</p>'
 			// 目前的状态
-			var LastHtmlStr='<div class="current_down"><div class="icon_s"><span></span><i></i></div><div class="status"><p>'+currentObj.OperateCode+'</p><p>审核意见：'+currentObj.Status+'</p></div><div class="date">'+currentObj.OperateDate+' '+currentObj.OperateTime+'</div><div class="peo">操作人:'+currentObj.OperateUser+'</div></div>';
+			var LastHtmlStr='<div class="current_down"><div class="icon_s"><span></span><i></i></div><div class="status"><p>'+currentObj.OperateCode+'</p><p>#(..Get("审核意见："))#'+currentObj.OperateNote+'</p></div><div class="date">'+currentObj.OperateDate+' '+currentObj.OperateTime+'</div><div class="peo">#(..Get("操作人："))#'+currentObj.OperateUser+'</div></div>';
 			// 初始的状态
 			var FirstHtmlStr='<div class="current_down done first"><div class="icon_s"><span></span><i></i></div><div class="status"><p>'+firstObj.OperateCode+'</p></div><div class="date">'+firstObj.OperateDate+' '+firstObj.OperateTime+'</div><div class="peo">操作人:'+firstObj.OperateUser+'</div></div>';
 			var allStr=''
@@ -882,13 +1011,13 @@
 					if(index==0||index==tmpLenth-1){
 						return true;	
 					}
-					tmpStr+='<div class="current_down done"><div class="icon_s"><span></span><i></i></div><div class="status"><p>'+item.OperateCode+'</p><p>审核意见：'+item.Status+'</p></div><div class="date">'+item.OperateDate+' '+item.OperateTime+'</div><div class="peo">操作人:'+item.OperateUser+'</div></div>'
+					tmpStr+='<div class="current_down done"><div class="icon_s"><span></span><i></i></div><div class="status"><p>'+item.OperateCode+'</p><p>#(..Get("审核意见："))#'+item.Status+'</p></div><div class="date">'+item.OperateDate+' '+item.OperateTime+'</div><div class="peo">#(..Get("操作人："))#'+item.OperateUser+'</div></div>'
 				})
 				allStr=	LastHtmlStr+tmpStr+FirstHtmlStr
 			}
 			$("#current_title").html(StrHtml)
 			$("#contentStatus").html(allStr);
-			console.log(allStr)
+			//console.log(allStr)
 			$('#dd').dialog('open').dialog('refresh');
 			$('#dd').dialog('resize',{
 				width:600,
@@ -934,7 +1063,18 @@
 		tmpVal=tmp.split("_")[1];
 		if(tmpVal=="current"){
 			// 当日上报选项，默认为true
-			currentUpDate=value
+			currentUpDate=value;
+			
+			if (value) {
+				$('#db1').datebox('setValue','Today');
+				$('#db2').datebox('setValue','Today');
+				$('#db1').datebox('disable');
+				$('#db2').datebox('disable');
+			}else{
+				$('#db1').datebox('enable');
+				$('#db2').datebox('enable');
+			}
+			
 		}else if(tmpVal=="RvPassed"){
 			RvPassed_init=value==true?tmpVal:""
 		}else if(tmpVal=="RvPend"){
@@ -961,13 +1101,12 @@
 			$HUI.checkbox("#check_BH").setValue(true);
 			$HUI.checkbox("#check_CX").setValue(true);
 		}else{
-			return;
-			/*$HUI.checkbox("#check_RvPassed").setValue(false);
+			$HUI.checkbox("#check_RvPassed").setValue(false);
 			$HUI.checkbox("#check_RvPend").setValue(false);
 			$HUI.checkbox("#check_KRv").setValue(false);
 			$HUI.checkbox("#check_HRv").setValue(false);
 			$HUI.checkbox("#check_BH").setValue(false);
-			$HUI.checkbox("#check_CX").setValue(false);*/
+			$HUI.checkbox("#check_CX").setValue(false);
 		}	
 	}	
 // 以上是审核状态相关的函数
@@ -993,7 +1132,7 @@
 		var month=tmpM<10?"0"+tmpM:tmpM;
 		var day=date.getDate();
 		startDate=year+"-"+month+"-"+day;
-		window.console.log(startDate)
+		//window.console.log(startDate)
 	}
 	function onEnd(date){
 		// 结束时间的函数
@@ -1002,7 +1141,7 @@
 		var month=tmpM<10?"0"+tmpM:tmpM;
 		var day=date.getDate();
 		endDate=year+"-"+month+"-"+day;
-		window.console.log(endDate)
+		//window.console.log(endDate)
 			
 	}
 	function selectHandler(){
@@ -1012,30 +1151,50 @@
 		// 状态明细渲染图标
 		return "<span style='margin-right:24px;cursor:pointer' class='icon icon-paper' href='javascript:;' onclick=GetDetails('"+row.rowid+"')></span>"
 	}
+	function viewRecord(value,row,index){
+		return "<style='margin-right:24px;cursor:pointer' class='icon icon-book' href='javascript:;' onclick=showTotals('"+row.rowid+"')></span>"
+	}
 	function showDetail(value,row,index){
 		// 总分重新渲染
 		if(!value){
 			return "";	
 		}else{
-			return "<span style='cursor:pointer' onclick=showTotals('"+row.adm+","+row.MultId+"')>"+value+"</span>"	
+			return "<span style='cursor:pointer;color:red;font-weight:bold;' onclick=showTotals('"+row.rowid+"')>"+value+"</span>"	
 		}
 	}
 	function showTotals(val){
 		// 总分弹框
 		// val为患者就诊号
-		var target=val.split(",");
+		var admId=$m({
+			ClassName: 'NurMp.DHCNurEventFind',
+			MethodName: 'getEpisodeID',
+			id:val
+		},false)
+		//var target=val.split(",");
 		var location=window.location.href.split("/csp/")[0]
 		// http://114.115.136.233/imedical/web/csp/Nur.DHCNurHighRisk.csp
-		location=location+"/csp/DHCNURDDZCLR.csp?EpisodeID="+target[0]+"&NurMPDataID="+target[1];
+		//location=location+"/csp/DHCNURDDZCLR.csp?EpisodeID="+target[0]+"&NurMPDataID="+target[1];
+		var emrType=$("#dfCB").combobox('getValue');
+		var typeDr=emrType.split(',')[0];
+		var emrGuid=emrType.split(',')[1];
+		var emrcode=tkMakeServerCall("NurMp.Service.Template.Model","getCodeByGuid",emrGuid);
+		var location=location+"/csp/nur.emr." + emrcode.toLowerCase() + ".csp?EpisodeID="+admId+"&NurMPDataID="+val;
+		//if (typeDr == '12') {
+		//	location=location+"/csp/nur.emr.dhcnurdgyblr.csp?EpisodeID="+admId+"&NurMPDataID="+val;
+		//}else if (typeDr == '13') {
+		//	location=location+"/csp/nur.emr.dhcnurddzclr.csp?EpisodeID="+admId+"&NurMPDataID="+val;
+		//}else {
+		//	location=location+"/csp/nur.emr.dhcnuryclr.csp?EpisodeID="+admId+"&NurMPDataID="+val;
+		//}
 		$("#ifram").attr('src',location)
 		$("#ifram").on("load",function(){
 	        var iframBody=$("#ifram").body;
-	        console.log($("#iframe").contents().find("body").html(),'sl');
+	        //console.log($("#iframe").contents().find("body").html(),'sl');
 	    });
 		$cm({
 			ClassName:'Nur.NIS.Service.Base.Patient',
 			MethodName:'GetPatient',
-			EpisodeID:target[0]
+			EpisodeID:admId
 		},function(res){
 			/*<span style="margin:0 5px;font-weight:bold">43床</span>|<span style="margin:0 5px;font-weight:bold">秦海先</span>|<span>33岁</span>|<span style="margin:0 5px;">000000001</span>|<span style="margin:0 5px;">全自费</span>|<span style="margin:0 5px;">内分泌科</span>|<span style="margin:0 5px;">内分泌护理单元</span>*/
 			var htmlStr='<span style="margin:0 5px;font-weight:bold">'+res.bedCode+'床</span>|<span style="margin:0 5px;font-weight:bold">'+res.name+'</span>|<span>'+res.age+'</span>|<span style="margin:0 5px;">'+res.regNo+'</span>|<span style="margin:0 5px;">'+res.admReason+'</span>|<span style="margin:0 5px;">'+res.ctLocDesc+'</span>|<span style="margin:0 5px;">'+res.wardDesc+'</span>'
@@ -1049,7 +1208,7 @@
 		$cm({
 			ClassName:'Nur.NIS.Service.Base.Patient',
 			MethodName:'GetChunkIcons',
-			episodeIDString:target[0]	
+			episodeIDString:admId	
 		},function(res){
 			var htmlStr=''
 			res[0].forEach(function(item){
@@ -1083,15 +1242,6 @@
 		        {field:'score',title:'分值',width:60,align:'center'}
 			]],
 			data:[
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'},
-				{item:'我想打人',score:'2'}
 			]	
 		})
 		
@@ -1117,12 +1267,13 @@
 			parr:''	
 		},function(res){
 			var tmpData=res.data;
-			console.log(tmpData);
+			//console.log(tmpData);
 			$HUI.combobox("#dfCB",{
 				valueField:'Id', textField:'Name',
 				data:tmpData,
 				selectOnNavigation:false,
 				editable:true,
+				value:tmpData[0].Id,
 				defaultFilter:4,
 				onSelect:function(record){
 					changeTit();
@@ -1208,14 +1359,24 @@
 			parr:''	
 		},function(res){
 			var tmpData=res.data;
-			$HUI.combobox("#iconokBox",{
+			$HUI.combobox("#iconokBox", {
 				valueField:'Id', 
 				textField:'Desc', 
 				multiple:true,
+				rowStyle:'checkbox', //显示成勾选行形式
 				editable:true,
 				defaultFilter:4,
 				selectOnNavigation:false,
-				data:tmpData
+				data:tmpData,
+				onLoadSuccess: function() {
+					var arrvalues = [];
+					$.map(tmpData, function (data) {
+						if ($.inArray(data.Id, arrvalues) == -1) {
+							arrvalues.push(data.Id);
+						}
+					});
+					$(this).combobox('setValues',arrvalues);
+				}
 			});	
 		})
 	}
@@ -1223,9 +1384,18 @@
 				//var tmp=$HUI.checkbox("#check_RvPassed").setValue(false)
 		var date=startDate+","+endDate; // 拼装日期
 		var statusSH=RvPassed_init+","+RvPend_init+","+KRv_init+","+HRv_init+","+BH_init+","+CX_init; //拼装审核状态
+		
 		var YbJJ=JJBH+","+JJCX; // 拼装预报结局
 		var upId=$("#dfCB").combobox('getValue') // 获取列表模板的id
 		var upLoc=$("#iconokBox").combobox('getValues') // 获取上报科室的选中项
+		if (upLoc.length == 0) {
+			var locstore = $("#iconokBox").combobox('getData');
+			$.map(locstore, function (data) {
+				if ($.inArray(data.Id, upLoc) == -1) {
+					upLoc.push(data.Id);
+				}
+			});
+		}
 		var upLocStr=upLoc.join(',');
 		var tmpStr=date+"^"+currentUpDate+"^"+statusSH+"^"+YbJJ+"^"+upId+"^"+upLocStr;
 		 // console.log(RvPassed_init,RvPend_init,KRv_init,HRv_init,BH_init,CX_init)
@@ -1233,22 +1403,68 @@
 			$.messager.popover({msg: '上报时间有未填项！',type:'alert'});
 			return;	
 		}
+		debugger;
 		// console.log(JJBH,JJCX,currentUpDate,startDate,endDate)
+		//console.log(tmpStr);
 		getTableData(tmpStr)
 	}
+	function exportData(){
+		var date=startDate+","+endDate; // 拼装日期
+		var statusSH=RvPassed_init+","+RvPend_init+","+KRv_init+","+HRv_init+","+BH_init+","+CX_init; //拼装审核状态
+		var YbJJ=JJBH+","+JJCX; // 拼装预报结局
+		var upId=$("#dfCB").combobox('getValue') // 获取列表模板的id
+		var upLoc=$("#iconokBox").combobox('getValues') // 获取上报科室的选中项
+		var upLocStr=upLoc.join(',');
+		var tmpStr=date+"^"+currentUpDate+"^"+statusSH+"^"+YbJJ+"^"+upId+"^"+upLocStr;
+		if(!startDate || !endDate){
+			$.messager.popover({msg: '上报时间有未填项！',type:'alert'});
+			return;	
+		};
+		var emrId=upId.split(',')[0];
+		var queryName="exportEventDataDD";
+		var excelName="跌倒坠床预报评估单";
+		if (emrId=="12") {
+			queryName="exportEventDataDG";
+			excelName="导管预报评估单";
+		}
+		if (emrId=="14") {
+			queryName="exportEventDataYC";
+			excelName="压疮预报评估单";
+		}
+		var rtn=$cm({
+			dataType: "text",
+			ResultSetType: "Excel",
+			ExcelName: excelName,
+			ClassName: "NurMp.DHCNurForecast",
+			QueryName: queryName,
+			parr: tmpStr
+		},false);
+		location.href = rtn;
+	}
 	$(function(){
-		getTableData();
+		
+		//getTableData();
 		getLocData();// 获取科室的数据信息
 		calculate();
 		getUpData();// 获取上报类型下拉列表
 		$(window).on("resize",function(){
 			calculate();
 		})
-	var currentDate=getDate();
+		var currentDate=getDate();
 		$('#db1').datebox('setValue', currentDate);
 		$('#db2').datebox('setValue', currentDate);
+
+		
+		
+		$('#db1').datebox('disable');
+		$('#db2').datebox('disable');
 		
 	$("#btn1").click(function(){
+		var upId=$("#dfCB").combobox('getValue') // 获取列表模板的id
+		if(!upId){
+			$.messager.popover({msg: '请选择列表模板！',type:'alert'});
+			return;	
+		}
 		search();
 		return;
 		//var tmp=$HUI.checkbox("#check_RvPassed").setValue(false)
@@ -1265,44 +1481,21 @@
 			return;	
 		}
 		// console.log(JJBH,JJCX,currentUpDate,startDate,endDate)
-		
-		console.log(tmpStr);
+		// console.log(tmpStr);
 		getTableData(tmpStr)
 		return;
-		$cm({
-			ClassName:'NurMp.DHCNurEventFind',
-			QueryName:'GetReportDataByElement',
-			parr:tmpStr	
-		},function(res){
-			console.log(res);	
-		})
+//		$cm({
+//			ClassName:'NurMp.DHCNurEventFind',
+//			QueryName:'GetReportDataByElement',
+//			parr:tmpStr	
+//		},function(res){
+//			console.log(res);	
+//		})
 	})
-	/*
-	$("#dtgrid").datagrid({
-		data:[
-			{status:"审核",upLX:"想上报",statusdetail:"1",pgsj:"2019-1-16 09:22",zf:'14'},
-			{status:"待审核",upLX:"不想上报",pgsj:"2019-1-16 09:22"},
-			{status:"已审核",upLX:"上报你管啊",pgsj:"2019-1-16 09:22"},
-			{status:"撤销审核",upLX:"想上报咋了想上报咋",pgsj:"2019-1-16 09:22"},
-			{status:"审核通过",upLX:"想上报",pgsj:"2019-1-16 09:22"},
-		],
-		pagination:true,
-		checkOnSelect:false,
-		selectOnCheck:false,
-		singleSelect:true,
-		onCheck:function(rowIndex, rowData){
-			console.log(rowIndex, rowData,'选中');
-		},
-		onUncheck:function(rowIndex, rowData){
-			console.log(rowIndex, rowData,'取消选中');
-		},
-		onCheckAll:function(rows){
-			console.log(rows,'全部选中');		
-		},
-		onUncheckAll:function(rows){
-			console.log(rows,'取消全部选中');
-		}
-	})*/
+	setTimeout(function(){
+			changeTit();
+			search();
+		},300);
 });
 </script>
 </body>

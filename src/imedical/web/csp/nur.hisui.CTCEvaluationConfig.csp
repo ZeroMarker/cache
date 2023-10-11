@@ -1,0 +1,228 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetDataImport.csp 交班数据引入配置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{background: white;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+/*#ctcConfig{padding-left: 10px;padding-right: 10px;margin-top: -0.5em;padding-top: 10px;}*/
+#ctcConfig{padding-left: 10px;}
+#ctcConfig>div{flex: 1;margin-right: 10px;}
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;}
+#tbEvaluate .l-btn-text,#tbADRs .l-btn-text{padding: 0 10px;}
+.datagrid-toolbar{width: 100%;}
+.panel-body.panel-body-noheader{border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+</style>
+<script language="javascript">
+	var gradeNumList=[
+		{desc:"分级0",value:0},
+		{desc:"分级1",value:1},
+		{desc:"分级2",value:2},
+		{desc:"分级3",value:3},
+		{desc:"分级4",value:4},
+		{desc:"分级5",value:5}
+	];
+	var gradeNumObj={};
+	gradeNumList.map(function(elem,index) {
+		gradeNumObj[elem.value]=elem.desc;
+	});
+</script>
+</head>
+<body style="overflow: hidden;padding: 0;">
+	<div style="position: relative;padding-top: 10px;">
+		<table cellpadding="0" style="margin-left: 10px;border-collapse: collapse;">
+	    <tr>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+	    </tr>
+	  </table>
+	  <hr class="dashed" style="margin: 10px 0;">
+	</div>
+	<div id="ctcConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;">
+		<div class="evaluate">
+			<div class="hisui-panel" title="评价系统"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table id="tbEvaluate" cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+					<tr>
+						<td class="r-label">
+							<input id="evaluateInput" style="width: 150px;" class="hisui-searchbox" data-options="prompt:'评价系统',searcher:filterEvaluate">
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-add'" onclick="addESRow();">增加</a>
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="saveESRow();">保存</a>
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-cancel'" onclick="deleteESRow();">删除</a>
+						</td>
+					</tr>
+				</table>
+			  <table id="evaluateSystem" class="hisui-datagrid"
+					data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,
+					onClickRow: selectESRow,
+					onDblClickRow:editESRow,
+					onBeforeDrag:beforeDragESRow,
+					onDrop:dropESRow,
+					onLoadSuccess:function(){
+						$(this).datagrid('enableDnd');
+					}
+				">
+					<thead>   
+						<tr>
+							<th data-options="field:'sysCode',width:80,editor:{type:'text'}">系统code</th>   
+							<th data-options="field:'sysDesc',width:200,editor:{type:'text'}">系统描述</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>   
+				</table>
+			</div>
+		</div>
+		<div class="ADRs">
+			<div class="hisui-panel" title="不良反应"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table id="tbADRs" cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+					<tr>
+						<td class="r-label">
+							<input id="ADRsInput" style="width: 150px;" class="hisui-searchbox" data-options="prompt:'不良反应',searcher:filterADRs">
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-add'" onclick="addADRsRow();">增加</a>
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="saveADRsRow();">保存</a>
+						</td>
+						<td class="r-label">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-cancel'" onclick="deleteADRsRow();">删除</a>
+						</td>
+					</tr>
+				</table>
+			  <table id="ADRsTable" class="hisui-datagrid"
+					data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,
+					onClickRow: selectADRsRow,
+					onDblClickRow:editADRsRow,
+					onBeforeDrag:beforeDragADRsRow,
+					onDrop:dropADRsRow,
+					onLoadSuccess:function(){
+						$(this).datagrid('enableDnd');
+					}
+				">   
+					<thead>   
+						<tr>
+							<th data-options="field:'adrsCode',width:80,editor:{type:'text'}">不良反应code</th>   
+							<th data-options="field:'adrsDesc',width:200,editor:{type:'text'}">不良反应描述</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>   
+				</table>
+			</div>
+		</div>
+		<div class="grade">
+			<div class="hisui-panel" id="templateSet" title="标准内容" style="padding:10px;padding-top: 0;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<table cellpadding="0" style="width: 100%;">
+					<tr>
+						<td class="selfBtn">
+							<title style="display: block;font-size: 16px;font-weight: bold;">定义：</title>
+						</td>
+						<td class="selfBtn" style="text-align: right;">
+							<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="saveADRsContentAndGrades();">保存</a>
+						</td>
+					</tr>
+				</table>
+				<div style="margin-bottom: 8px;">
+				  <textarea id="definition" value="BMW" cols="30" rows="3" style="width: 100%;border-radius: 4px;resize: none;border-color: #cccccc;box-sizing: border-box;padding: 5px 10px;overflow: auto;"></textarea>
+				</div>
+				<!-- <table id="gradeTable" class="hisui-datagrid" title="分级"></table> -->
+			  <table id="gradeTable" class="hisui-datagrid" title="分级"
+						data-options="singleSelect:true,autoSizeColumn:false,fitColumns:true,nowrap:false,headerCls:'panel-header-gray',iconCls:'icon-paper',pagination:false,toolbar: [{
+						iconCls: 'icon-add',
+						text:'新增',
+						handler:addGradeRow
+					}],
+					onDblClickRow:editGradeRow
+				">   
+					<thead>
+						<tr>
+							<th data-options="field:'gradeNum',width:70,formatter:function(value,row){
+								return gradeNumObj[value];
+							},
+							editor:{
+								type:'combobox',
+								options:{
+									defaultFilter:6,
+									valueField:'value',
+									textField:'desc',
+									data:gradeNumList,
+									blurValidValue:true
+								}
+							}">分级</th>
+							<th data-options="field:'gradeDesc',wordBreak:'break-all',width:160,editor:{type:'text'}">描述</th>
+							<th data-options="field:'measure',wordBreak:'break-all',width:160,editor:{type:'textarea',options:{height:'50px'}}">措施</th>
+							<th data-options="field:'field',width:50,formatter:function(value,row){
+								var ids=row.id.split('||');
+								ids[0]=ids[0]||0;
+								return '<span class=\'l-btn-icon icon-no gradeBtn\' onclick=\'deleteGradeRow('+ids[0]+','+ids[1]+','+ids[2]+','+'this'+')\'>&nbsp;</span>';
+							}">操作</th>
+							<!-- <th data-options="field:'field',width:50,formatter:function(value,row){
+								return '<span class=\'l-btn-icon icon-no gradeBtn\' onclick=\'deleteGradeRow('+row.id.toString()+')\'>&nbsp;</span>';
+							}">操作</th> -->
+								<!-- return '<a class=\'hisui-linkbutton\' data-options=\'iconCls:icon-no,plain:true\' onclick=\'deleteGradeRow('+row.id+')\'>保存</a>'; -->
+								<!-- return '<a>保存</a>'; -->
+						</tr>
+					</thead>   
+					<tbody>
+					</tbody>   
+				</table>
+				<div>
+					<title style="display: block;font-size: 16px;font-weight: bold;line-height: 32px;">引申注释：</title>
+				  <textarea id="extendedNotes" value="BMW" cols="30" rows="3" style="width: 100%;border-radius: 4px;resize: none;border-color: #cccccc;box-sizing: border-box;padding: 5px 10px;overflow: auto;"></textarea>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		// $('#ihsTab').tabs({
+		// 	width:window.innerWidth-20,
+		// 	height:window.innerHeight-80
+		// });
+		// function ihsWardsShow(flag) {
+		// 	if (flag) {
+		// 		$("#ctcConfig").show().next('div.panel').hide();
+		// 	} else {
+		// 		$("#ctcConfig").hide().next('div.panel').show();
+		// 	 //  $('#ihsWardsTable').datagrid('resize',{
+		// 	 //    width:window.innerWidth-20-2,
+		// 	 //    height:window.innerHeight-20-90
+		// 		// });
+		// 	}
+		// }
+	</script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.CTCEvaluationConfig.js"></script>
+</body>
+</html>

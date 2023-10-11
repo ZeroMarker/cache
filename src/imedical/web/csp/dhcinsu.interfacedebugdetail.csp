@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!-- 
+ * FileName: dhcinsu.interfacedebugdetail.csp
+ * Creator: lizhi
+ * Date: 2022-7-6
+ * Description: 接口注册调试弹框
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<TRAK:HEAD></TRAK:HEAD>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhcinsu/interfacemgrcommon.js"></script> 
+	<style>
+	.datagrid-row-selected .editcls{
+		color:#fff;
+	}
+	.editcls{
+		display: block;
+		width: 60px;
+		height: 18px;
+		text-align: center;
+		border-radius: 5px;
+		background-color: #F06D55;
+		color: #fff;
+	}
+	.formatcls{
+		display: block;
+		width: 60px;
+		height: 18px;
+		text-align: center;
+		border-radius: 5px;
+		background-color: green;
+		color: #fff;
+	}
+	</style>
+	<DHCBILL/>
+	<server>
+		do ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_TARITEMS")
+	</server>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css'/>
+	<script type="text/javascript" src="../scripts/dhcinsu/common/dhcinsu.common.js"></script>
+</head>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div id="debugDetail" class="hisui-layout" data-options="region:'center',fit:true" >
+	        <table class="search-table"  align="left" style="margin-bottom: 5px;">
+	            <tr>   
+	            	<td class="r-label">接口代码</td>
+	                <td>
+	                	<input class="textbox" type="text" id="debugCode" name="debugCode" disabled style="width:297px;color:red"></input>
+	               		<!-- <a href="javascript:;" id="debugNameTxt" name="debugNameTxt" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true">接口名称</a>   -->
+	                </td>
+	                <td class="r-label">接口名称</td>
+	                <td>
+	                	<input class="textbox" type="text" id="debugName" name="debugName" disabled style="width:300px;color:red"></input>
+	                </td>
+	            </tr>  
+	            <tr>   
+	            	<td class="r-label">调试方法</td>
+	                <td colspan="3"  style="height:100px !important;">
+	               		<textarea class="textbox" id="debugMethod" name="debugMethod" disabled style="margin-top: 2px;overflow:scroll;overflow-x:hidden;height:97%;width:680px;resize:none;white-space:normal;font-size:16px;color:red"></textarea>  
+	                </td>
+	             </tr>
+	               <tr> 
+	            	<td class="r-label">入参</td>
+	                <td style="height:200px;width:680px;" colspan="10">
+						<table id="inputListTabD" class="hisui-datagrid"></table>
+	                </td>
+	            </tr>  
+	            <tr> 
+	            	<td class="r-label">出参</td>
+	                <td colspan="3">
+	                	<textarea class="textbox" id="outputListTabD" name="outputListTabD" style="overflow:scroll;overflow-x:hidden;height:180px;width:680px;resize:none;white-space:normal;"></textarea>  
+	                </td>
+	            </tr>  
+	        </table>  
+		    <div style="text-align:center;padding-top: 5px;padding-bottom: 20px;">
+				<a class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" id="debugBtn">调试</a>
+			</div>
+			<form>
+				<div id="inputDescDialog" style="text-align:center;">
+					<table>
+						<tr>
+							<td  class="r-label" id="dataformat">
+							 	<a class="hisui-linkbutton" data-options="" onclick="dataformat(0)">格式化</a>
+							</td>
+							<td  class="r-label" id="datacompress">
+							 	<a class="hisui-linkbutton" data-options="" onclick="dataformat(1)">压缩</a>
+							</td>
+						</tr>
+					</table>
+					<textarea style="height:85%;width:96%;margin-top:5px;"></textarea>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div id="interfaceinputDetail" class="hisui-window" title="参数可视化" data-options="iconCls:'icon-w-save',top:'10px',closed:true,
+	modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false,collapsible:false" 
+	style="width:850px;height:700px;text-align:center;overflow:hidden;">
+		<form id="ff1" method="post" accept-charset="utf-8">   
+			<div class="hisui-toolbar datagrid-toolbar">
+				<table cellspacing="0" cellpadding="0">
+					<tr>
+<!-- 						<td class='r-label'><a href="#" class="hisui-linkbutton" iconCls="icon-add"  id="insertdebugrow" plain="true" onClick='insertinputListTabD(0)'>添加上方同级节点</a></td>
+						<td class='r-label'><a href="#" class="hisui-linkbutton" iconCls="icon-add"  id="insertdebugrow" plain="true" onClick='insertinputListTabD(1)'>添加下方同级节点</a></td>	
+						<td class='r-label'><a href="#" class="hisui-linkbutton" iconCls="icon-add"  id="insertdebugrowchild" plain="true" onClick='insertinputListTabD(2)'>添加下级节点</a></td>	
+						<td class='r-label'><a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="deletedebugrow" plain="true" onClick='deleteinputListTabD()'>删除</a></td> -->	
+						<td class='r-label'><a href="#" class="hisui-linkbutton" iconCls="icon-edit"  id="insertdebugrowchild" plain="true" onClick='EditDetail()'>修改模板</a></td>
+						<td class='r-label'><a href="#" class="hisui-linkbutton" iconCls="icon-save" id="inputDetailSaveBtn" plain="true" onClick='inputDetailSaveBtn()' >保存</a></td>
+					</tr>
+				</table> 
+			</div>
+			<div data-options="region:'center',border:false"style="height:520px" >
+				<table id="inputListTabDetail" class="hisui-treegrid"></table>
+			</div>
+	    </form>
+		<form>
+		<div id="EditDescDialog" style="text-align:center;">
+			<table>
+				<tr>
+					<td class="r-label">数据类型</td>
+					<td >
+						<select class="hisui-combobox" id="datatype" editable="false" style="width:100px" data-options="onChange:datatypechange" >
+								<option value="">默认</option>
+								<option value="json">json</option>
+								<option value="xml">xml</option>
+								<option value="separator">分隔符</option>
+						</select>
+					</td>
+					<td  class="r-label" id="dataformat">
+					<!-- 	<a class="hisui-linkbutton" data-options="" onclick="dataformat()">格式化</a> -->
+					</td>
+					<td  class="r-label" id="datacompress">
+					<!-- 	<a class="hisui-linkbutton" data-options="" onclick="dataformat()">格式化</a> -->
+					</td>
+				</tr>
+			</table>
+				<textarea style="height:85%;width:96%;margin-top:5px;"></textarea>
+			</div>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcinsu/interfacedebugdetail.js"></script>
+</body>
+</html>

@@ -1,0 +1,791 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html>
+<head>
+	
+	<!-- nur.hisui.shift.book.csp -->
+	<title>交班项目维护9.0</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+        #shiftTime td{
+	    	
+	    	height:50%;  
+	    	border: 1px solid #ddd;  
+	    }
+	    #shiftTime td div.config{
+	    	
+    		display: inline-block;
+    		height: 100%;
+    		width: 100%;    
+	    }
+	    #shiftTime td div.config-name{
+	    	text-align: center;
+    		font-size: 18px;
+    		font-weight: bold;
+	    }
+	    .config-item{
+			margin-top:10px;    
+		}
+		.config-text{
+			width: 100px;
+    		display: inline-block;	
+		}
+		div.config-content.show{
+			display:block;
+		}
+		div.config-content.hidden{
+			display:none;
+		}
+	</STYLE>
+	 <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+	 <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:40px;">
+			<table cellpadding="0" cellspacing="0">
+				<tr>
+
+					<td class="r-label">
+						<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+					</td>
+					<td class="r-label">
+						<select id="_HospList" style="width:200px;"></select>
+					</td>
+			
+					<td class="r-label">病区</td>
+					<td class="r-label">
+						<select id="wardBox" style="width:200px;"></select>
+					</td>
+					<td class="r-label" style="display:none;">科室</td>
+					<td class="r-label" style="display:none;">
+						<select id="locBox" style="width:200px;"></select>
+					</td>
+					<td>
+						<a href="#" class="hisui-linkbutton hover-dark" onclick="shiftList.datagrid()" data-options="iconCls:'icon-w-find'" id="search">查询</a>
+					</td>
+					
+				</tr>
+			</table>
+		</div>
+		
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'west',border:false,collapsible:true,split:true" style="width:500px;">
+					<div class="hisui-panel"  title="班次列表" style="padding:0px" data-options="fit:true,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray'">
+						<table id="shiftList"></table>
+		
+					</div>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:true,split:true" style="padding-left:5px;" >
+					
+					<div class="hisui-panel" title="班次时间" style="padding:0px;overflow: hidden;" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+						<div class="datagrid-toolbar">
+		    				<!--table cellspacing="0" cellpadding="0">
+		    					<tbody>
+		    						<tr>
+		    						<td><a href="javascript:void(0)" class="l-btn" onClick="saveShiftTime()"  id="saveShiftTime"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">保存</span><span class="l-btn-icon icon-save">&nbsp;</span></span></a></td>
+		    						</tr>
+		    					</tbody>
+		    				</table-->
+		    				
+		    				<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" onClick="saveShiftTime()" id="saveShiftTime"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">保存</span><span class="l-btn-icon icon-save">&nbsp;</span></span></a></td>
+		    				
+			    		</div>
+						<table id="shiftTime" style="width:100%;height:100%" cellpadding="0" cellspacing="0" border="0" >
+							<tr>
+								<td style="width:50%;">
+									<div class="config">
+										<div class="config-name">第一班</div>
+										<div class="config-content" style="padding: 10px;"></div>
+									</div>
+								</td>
+								<td style="width:50%;">
+									<div class="config">
+										<div class="config-name">第二班</div>
+										<div class="config-content" style="padding: 10px;"></div>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td style="width:50%;">
+									<div class="config">
+										<div class="config-name">第三班</div>
+										<div class="config-content" style="padding: 10px;"></div>
+									</div>
+								</td>
+								<td style="width:50%;">
+									<div class="config">
+										<div class="config-name">第四班</div>
+										<div class="config-content" style="padding: 10px;"></div>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+					
+					
+				</div>
+				
+			</div>
+		</div>
+	</div>
+	<div class="content">
+			<input type="hidden" name="id">
+			<div class="config-item">
+				<span class="config-text">班次</span>
+				<input class="hisui-validatebox textbox" name="ShiftName" data-options="required:false" style="width:110px">
+
+			</div>
+			<div class="config-item">
+				<span class="config-text">开始时间</span>
+				<select id="Select_start" class="hisui-combobox" name="ShiftStartSymbol" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+					<option value="0">今日</option>
+					<option value="-1">前日</option>
+					<option value="1">次日</option>
+				</select>
+				<input class="hisui-timespinner" name="ShiftStartTime" data-options="showSeconds:true,required:false" style="width:90px;border-radius: 2px;">
+				
+			</div>
+			<div class="config-item">
+				<span class="config-text">结束时间</span>
+				<select id="Select_end" class="hisui-combobox" name="ShiftEndSymbol" style="width:117px;" data-options="panelHeight:'auto',enterNullValueClear:false,blurValidValue:true">
+					<option value="0">今日</option>
+					<option value="-1">前日</option>
+					<option value="1">次日</option>
+				</select>
+				<input class="hisui-timespinner" name="ShiftEndTime" data-options="showSeconds:true,required:false" style="width:90px;border-radius: 2px;">
+				
+			</div>
+			<div class="config-item">
+				<span class="config-text">颜色</span>
+				<input id="Color" type="color" name="ShiftColor" class="hisui-validatebox textbox" data-options="required:false" style="width:110px">
+
+			</div>
+			<div class="config-item">
+				<span class="config-text">打印模板</span>
+				<input id="ShiftTempCode" type="text" name="ShiftTempCode" class="hisui-validatebox textbox" data-options="required:false" style="width:210px">
+			</div>
+		
+	</div>
+	<div id="dialogRefer"></div>
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+
+<script type="text/javascript">
+var hospID = ""; // 医院id
+var proObj = "";
+var wardID = ""; // 病区id
+var locID = ""; // 病区id
+var hospComp=""
+var isMultiHosp=true // 多院区是否开启，
+var shiftSystem = [];
+var timeStr="" // 当前可编辑的时间班次
+window.onload = function () {
+    
+    //hospComp = GenHospComp("Nur_IP_ExchangeItem",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+
+	//hospID=hospComp.getValue();
+	initHosp()
+	Init()
+
+};
+
+function initHosp(){
+	var GLOBAL={HospEnvironment:true}
+	if (typeof GenHospComp == "undefined") {
+		GLOBAL.HospEnvironment = false;
+	}
+	if(GLOBAL.HospEnvironment){
+		var hospComp = GenHospComp('Nur_IP_ReferTab', session['LOGON.USERID'] + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.CTLOCID'] + '^' + session['LOGON.HOSPID']);  
+		//var hospComp = GenHospComp("Nur_IP_BPChartConfig",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+
+		hospComp.options().onSelect = function(q, row){
+			GLOBAL.HospitalID=row.HOSPRowId;
+			Init()
+			
+		}
+	}else{
+		$m({
+			ClassName: 'NurMp.Common.Tools.Hospital', 
+			MethodName: 'hospitalName', 
+			HospitalID: session['LOGON.HOSPID']
+		},function(hospDesc){
+			$HUI.combobox("#_HospList", {
+				width:350,
+				valueField: 'HOSPRowId',
+				textField: 'HOSPDesc',
+				data: [{
+					HOSPRowId: session['LOGON.HOSPID'],
+					HOSPDesc: hospDesc
+				}],
+				value: session['LOGON.HOSPID'],
+				disabled: true
+			});
+		});
+	}
+}
+
+
+
+function Init() {
+    var hospComp = GenHospComp("ARC_ItemCat")
+	
+    var hospID = hospComp.getValue();
+    $("#_HospList").combogrid({
+        onSelect: function () {
+            hospID = hospComp.getValue();
+            // console.log('song',hospID)
+            getWardData(hospID);
+        },
+    });
+    // 病区内容获取
+    getWardData(hospID);
+	shiftList.datagrid();
+	//contextHtml(4)
+	//create("")
+}
+
+
+
+
+
+function getWardData(hospid) {
+    $cm({
+            ClassName: "Nur.NIS.Service.Base.Ward",
+            QueryName: "GetallWardNew",
+            desc: "",
+            hospid: hospid,
+            bizTable: "ExchangeSettingV2",
+        },
+        function (obj) {
+            wardID = "";
+            $HUI.combobox("#wardBox", {
+                valueField: "wardid",
+                textField: "warddesc",
+                multiple: false,
+                selectOnNavigation: false,
+                panelHeight: "210",
+                editable: true,
+                data: obj.rows,
+                onChange: function (newval) {
+	                wardID=newval
+                    getLocData(newval)
+                    //shiftList.datagrid();
+                },
+            });
+            getLocData(wardID)
+        }
+    );
+}
+function getLocData(wardID) {
+	locID=""
+    $HUI.combobox("#locBox", {
+        valueField: "rowId",
+        textField: "desc",
+        multiple: false,
+        selectOnNavigation: false,
+        panelHeight: "210",
+        editable: true,
+        onChange: function (newval) {
+            locID=newval
+            shiftList.datagrid();
+        },
+    });
+    runClassMethod("Nur.SHIFT.Service.ShiftSetting","getAllLocData",{"wardID":wardID},function(rtn){
+	    var data={"data":rtn}
+		$("#locBox").combobox(data)
+	    
+    })
+}
+function control(){
+	var SymbolData=[
+		{"text":"今日","value":"0"},
+		{"text":"次日","value":"1"},
+		{"text":"前日","value":"-1"}
+		
+		]
+		
+	var ProjectTips=[]
+		
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftProjectList",{"ProjectType":2,"desc":""},function(rtn){
+			
+			var projectArr=[]
+			for(var i=0;i<rtn.length;i++){
+				var json={}
+				json.value=rtn[i].ID
+				json.text=rtn[i].ProjectName	
+				ProjectTips.push(json)
+			}
+			
+			
+		},'json',false);	
+	
+	var controlArrs=[
+			{'id':'ID','type':'text','hidden':'true','title':'ID'},
+			{'id':'ShiftName','type':'text','title':'班次名称','required':'true'},
+			{'id':'kssj','title':'开始时间','required':'true'},
+			{'id':'ShiftStartSymbol','pid':'kssj','type':'combox','objData':SymbolData,'defaultValue':'0','required':'true','style':'width:100px;'},
+			{'id':'ShiftStartTime','pid':'kssj','type':'timebox','required':'true','placeholder':'格式:HH:mm:ss','style':'width:calc(100% - 120px);'},
+			{'id':'jssj','title':'结束时间','required':'true'},
+			{'id':'ShiftEndSymbol','pid':'jssj','type':'combox','objData':SymbolData,'defaultValue':'0','required':'true','style':'width:100px;'},
+			{'id':'ShiftEndTime','pid':'jssj','type':'timebox','required':'true','placeholder':'格式:HH:mm:ss','style':'width:calc(100% - 120px);'},
+			{'id':'ShiftColor','type':'color','title':'颜色'},
+			{'id':'ShiftTempCode','type':'text','title':'打印模板'},
+			{'id':'ShiftProjectIDSy','type':'combox','objData':ProjectTips,'title':'默认术语'},
+		]
+		return controlArrs	
+	
+}
+var controls={}
+function create(rowID){
+	
+	var EntityArrs=[]
+	if(rowID!=""){
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftTimeList",{ShiftClassId:rowID},function(rtn){
+					EntityArrs=rtn
+		},"json",false)
+	}
+	var row = $("#shiftList").datagrid("getSelected");
+	var type=parseInt(row.ShiftClassType)
+	$("div.config-content").each(function(index){
+		if(index>=type){
+			return	
+		}
+		if(EntityArrs.length>0){
+			var topParms=EntityArrs[index]
+			var parmas={}
+			for(var key in topParms){
+				parmas[key+index]=topParms[key]
+			}
+			
+			/*entity["ID"+index]=topParms["ID"+index]
+			entity["ShiftName"+index]=topParms["ShiftName"+index]
+		 	entity["ShiftStartSymbol"+index]=topParms["ShiftStartSymbol"+index]
+		 	entity["ShiftStartTime"+index]=topParms["ShiftStartTime"+index]
+		 	entity["ShiftEndSymbol"+index]=topParms["ShiftEndSymbol"+index]
+		 	entity["ShiftEndTime"+index]=topParms["ShiftEndTime"+index]
+		 	entity["ShiftColor"+index]=topParms["ShiftColor"+index]
+			entity["ShiftTempCode"+index]=topParms["ShiftTempCode"+index]*/
+			 
+		}
+			
+			
+					
+		var $this=$(this)
+		var tableID="shiftTime"+index
+		$this.html('<table id="'+tableID+'" style="width: 100%;"></table>')
+		var entity=EntityArrs[index]
+		var controlArrs=control()
+		for(var i=0;i<controlArrs.length;i++){
+			var id=controlArrs[i].id
+			var pid=controlArrs[i].pid
+			
+			
+			
+			if(!isUndefined(entity)){
+				if(!isUndefined(entity[id])){
+					controlArrs[i].defaultValue=entity[id]+""
+				}
+			}
+			
+			
+			
+			
+			
+			id=id+""+index
+			controlArrs[i].id=id
+			if(typeof(pid)!="undefined"){
+				pid=pid+""+index
+				controlArrs[i].pid=pid
+			}
+			
+			
+			
+			
+		}
+		controls[tableID]=controlArrs
+		doHtml(controlArrs,tableID)
+		/*for(var i=0;i<controlArrs.length;i++){
+			var key = controlArrs[i].id
+			createInputHtml(tableID,controlArrs,key,0)
+		}*/
+		$this.find("td").css("border","0")
+		/*$("#ShiftColor"+index).attr("type","color")
+		 $("#ShiftColor"+index).color({
+			editable:true,
+			required:true,
+			width:110,
+			height:30
+		});*/
+	})
+	
+	
+	/*$("#ShiftColor").attr("type","color")
+	 $("#ShiftColor").color({
+		editable:true,
+		required:true,
+		width:110,
+		height:30
+	});
+	*/
+}
+</script>
+<script type="text/javascript">
+	
+	
+	var shiftList={
+		datagrid:function(){
+			$("div.config-content").each(function(index){
+				$(this).html("")	
+			})
+			$('#shiftList').datagrid({
+				fit:true,
+				singleSelect : true,
+				fitColumns:false,
+				idField:"ID",
+				rownumbers : true,
+				toolbar :shiftList.toolBar("shiftList"),
+				columns :[[
+					//{field:'ID',title:'ID',width:80},
+					{field:'ShiftClassType',title:'类别',width:80,formatter: function(value,row,index){
+						var text=""
+						if(value=="1"){text=$g("单班制")}
+						if(value=="2"){text=$g("两班制")}
+						if(value=="3"){text=$g("三班制")}
+						if(value=="4"){text=$g("四班制")}
+						return text
+					}
+					
+					},
+					{field:'ShiftClassName',title:'名称',width:150},
+					
+					{field:'ShiftIsDefalut',title:'默认交班',width:100,formatter: function(value,row,index){
+						var text=""
+						if(value=="1"){text=$g("是")}
+						if(value=="0"){text=$g("否")}
+						return text
+					}},
+					{field:'ShiftEmrCode',title:'打印模板',width:100},
+					//{field:'HospID',title:'HospID',width:100},
+					//{field:'ShiftWardID',title:'WardID',width:100},
+					//{field:'ShiftLocID',title:'LocID'},
+					
+				]],
+				onClickRow:function(index,row){
+					var type=row.ShiftClassType
+					var rowID=row.ID
+					$("div.config-content").each(function(index){
+						
+						var $this=$(this)
+						$(this).html("")
+						
+					})
+					console.log(rowID)
+					create(rowID)
+					
+					/*$("div.config-content").each(function(index){
+						
+						var $this=$(this)
+						var i=index
+						$this.find("input[name=ID"+i+"]").val("")
+						$this.find("input[name=ShiftName"+i+"]").val("")
+	 					$this.find("select[comboname=ShiftStartSymbol"+i+"]").combobox("setValue","0")
+			 			$this.find("input[name=ShiftStartTime"+i+"]").val("")
+			 			$this.find("select[comboname=ShiftEndSymbol"+i+"]").combobox("setValue","0")
+			 					
+	 					$this.find("input[name=ShiftEndTime"+i+"]").val("")
+	 					$this.find("input[name=ShiftColor"+i+"]").val("")
+	 					$this.find("input[name=ShiftTempCode"+i+"]").val("")
+	 					
+						if(index<type){
+							$(this).removeClass("hidden").addClass("show")
+						}else{
+							$(this).addClass("hidden").removeClass("show")
+							
+						}
+					})
+					runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftTimeList",{ShiftClassId:rowID},function(rtn){
+							for(var i=0;i<rtn.length;i++){
+							var index=parseInt(rtn[i].Type)-1
+							var $this=$("div.config-content").eq(index)
+								$this.find("input[name=ID"+i+"]").val(rtn[i].ID)
+								$this.find("input[name=ShiftName"+i+"]").val(rtn[i].ShiftName)
+			 					$this.find("select[comboname=ShiftStartSymbol"+i+"]").combobox("setValue",rtn[i].ShiftStartSymbol)
+			 					$this.find("input[name=ShiftStartTime"+i+"]").val(rtn[i].ShiftStartTime)
+			 					$this.find("select[comboname=ShiftEndSymbol"+i+"]").combobox("setValue",rtn[i].ShiftEndSymbol)
+			 					$this.find("input[name=ShiftEndTime"+i+"]").val(rtn[i].ShiftEndTime)
+			 					//$this.find("input[name=ShiftColor"+i+"]").val(rtn[i].ShiftColor)
+			 					
+			 					
+			 					
+			 					$this.find("input[name=ShiftTempCode"+i+"]").val(rtn[i].ShiftTempCode)
+			 					console.log(rtn[i].ShiftColor)
+			 					$("#ShiftColor"+i).color("setValue",rtn[i].ShiftColor)
+			 					$("#ShiftColor"+i).color({
+									editable:true,
+									required:true,
+									width:110,
+									height:30
+								});
+			 					
+							}
+							
+					},'json',true);*/
+				}
+			});	
+		  var hospComp = GenHospComp("ARC_ItemCat")
+	
+    		var hospID = hospComp.getValue();
+		  
+			runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftClassList",{HospID:hospID, WardID:wardID, LocID:locID},function(rtn){
+					$("#shiftList").datagrid("unselectAll");
+					$("#shiftList").datagrid('loadData', rtn)
+					
+			},'json',true);
+			
+		},
+		toolBar:function(gid){
+			var ToolBar = [{
+		        text: '新增',
+		        iconCls: 'icon-add',
+		        handler: function() {
+			        shiftList.insertView(gid,1)
+			    }
+		    },{
+		        text: '修改',
+		        iconCls: 'icon-write-order',
+		        handler: function() {
+			        
+			        var row = $("#"+gid).datagrid("getSelected");
+		            
+					if (!row) {
+						$.messager.alert("提示","请选择需要修改的记录！");
+						return false;
+					} 
+			        
+			        shiftList.insertView(gid,2)
+			    }
+		    },{
+		        text: '删除',
+		        iconCls: 'icon-cancel',
+		        handler: function() {
+		            var row = $("#"+gid).datagrid("getSelected");
+		            
+					if (!row) {
+						$.messager.alert("提示","请选择需要删除的记录！");
+						return false;
+					} 
+					$.messager.confirm($g('确认'),$g('您确认想要删除吗？'),function(r){    
+				if (r){
+					runClassMethod("Nur.SHIFT.Service.ShiftConfigController","DeleteShiftClassById",{id:row.ID},function(rtn){
+						if(rtn == 0) {
+							$.messager.popover({msg:'删除成功！',type:'success'});
+							shiftList.datagrid()
+						} else {
+							
+						}
+						
+					},'json',false);
+					}})
+		        }
+		        
+		    }];
+			return ToolBar
+		},
+		insertView:function(gid,saveFlag){
+			var id=""
+			if(saveFlag==2){
+				
+				var row = $("#"+gid).datagrid("getSelected");
+				id=row.ID
+			}
+			
+			
+			var url="nur.hisui.shift.time.insert.csp?id="+id
+			$('#dialogRefer').dialog({    
+	    		title: "班次配置",    
+	    		width: 450,    
+	    		height: 500,    
+	    		closed: false,    
+	    		cache: false,
+		        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+	    		modal: true ,
+	    		buttons:[{
+					text:'关闭',
+					iconCls:'icon-w-close',
+					id: 'btnClose',
+					handler:function(){
+						$('#dialogRefer').dialog('close');	
+					}
+				},{
+					text:'保存',
+					iconCls:'icon-w-edit',
+					id: 'btnRefer',
+					handler:function(){
+						var $iframe = $('#iframeRefer')[0].contentWindow
+						var hospComp = GenHospComp("ARC_ItemCat")
+						var hospID = hospComp.getValue();
+						var rsTxt = $iframe.saveFunLib(hospID,wardID,locID)
+						if(rsTxt==""){
+							$.messager.popover({msg:'保存成功！',type:'success'});
+							shiftList.datagrid()
+							$('#dialogRefer').dialog('close');	
+						}else{
+							$.messager.alert('提示',rsTxt , "info");	
+						}
+					}
+				}]  
+			});   
+			$("#dialogRefer").dialog("open");
+		}
+		
+	}
+
+
+
+	
+	
+	
+	function contextHtml(num){
+		var html=$(".content").html()
+		$("div.config-content").each(function(index){
+			if(index<num){
+				$(this).html(html)
+			}else{
+				$(this).html("")
+			}
+		})
+	}
+	
+	function saveShiftTime(){
+		var row = $("#shiftList").datagrid("getSelected");
+		if (!row) {
+			$.messager.alert("提示","请选择一条左边的记录！");
+			return false;
+		} 
+		var ShiftClassID=row.ID
+		
+		
+		/*$("div.config-content.show").each(function(index){			
+			var $this=$(this)
+			var tableID="shiftTime"+index
+		
+			
+			var topParms = resultParms(controls[tableID])
+			console.log(topParms)
+		})*/
+		
+		debugger;
+		
+		var parmasArr=[]
+		var type=parseInt(row.ShiftClassType)
+		$("div.config-content").each(function(index){
+			if(index>=type){
+				return	
+			}
+			/*var parmas={
+				id:$(this).find("input[name=id]").val(),
+				ShiftName:$(this).find("input[name=ShiftName"+index+"]").val(),
+			 	ShiftStartSymbol:$(this).find("select[comboname=ShiftStartSymbol"+index+"]").combobox("getValue"),
+			 	ShiftStartTime:$(this).find("input[name=ShiftStartTime"+index+"]").val(),
+			 	ShiftEndSymbol:$(this).find("select[comboname=ShiftEndSymbol"+index+"]").combobox("getValue"),
+			 	ShiftEndTime:$(this).find("input[name=ShiftEndTime"+index+"]").val(),
+			 	ShiftColor:$(this).find("input[name=ShiftColor"+index+"]").val(),
+			 	ShiftClassID:ShiftClassID,
+			 	Type:(index+1)
+			}*/
+		
+			
+			var valueIsNull=false
+			var $this=$(this)
+			var tableID="shiftTime"+index
+			if(isUndefined(controls[tableID])){
+				return false;
+			}
+			var topParms = resultParms(controls[tableID])
+
+			if(topParms==""){
+				$.messager.alert('提示',"保存失败！存在为空数据" , "info");
+				parmasArr=[]
+				return false;
+			}
+			var parmas={
+				id:topParms["ID"+index],
+				ShiftName:topParms["ShiftName"+index],
+			 	ShiftStartSymbol:topParms["ShiftStartSymbol"+index],
+			 	ShiftStartTime:topParms["ShiftStartTime"+index],
+			 	ShiftEndSymbol:topParms["ShiftEndSymbol"+index],
+			 	ShiftEndTime:topParms["ShiftEndTime"+index],
+			 	ShiftColor:$("#ShiftColor"+index).color("getValue"),
+				
+			 	ShiftClassID:ShiftClassID,
+			 	Type:(index+1)
+			}
+			console.log(parmas)
+			
+			
+			
+			
+			for(var key in parmas){
+				if(key=="id"){
+					continue;	
+				}
+				var val=parmas[key]
+				if(val==""){
+					valueIsNull=true	
+				}	
+			}
+			if(valueIsNull){
+				$.messager.alert('提示',"保存失败！存在为空数据" , "info");
+				parmasArr=[]
+				return false;
+			}else{
+				//parmas.ShiftTempCode=$(this).find("input[name=ShiftTempCode]").val(),
+				parmas.ShiftTempCode=topParms["ShiftTempCode"+index],
+				parmas.ShiftProjectIDSy=topParms["ShiftProjectIDSy"+index],
+				parmasArr.push(parmas)
+				
+			}
+		})
+		
+		if(parmasArr.length>0){
+			for(var i=0;i<parmasArr.length;i++){
+				var parmas=parmasArr[i]
+				runClassMethod("Nur.SHIFT.Service.ShiftConfigController","InsertShiftTime",{data:JSON.stringify(parmas)},function(rtn){
+					
+					
+				},'json',false);
+				
+			}
+			$.messager.popover({msg:'保存成功！',type:'success'});
+			
+		}
+		
+	}
+	
+	
+</script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+</body>
+</html>

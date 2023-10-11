@@ -1,0 +1,346 @@
+<csp:method name=OnPerHttp arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q l
+	quit l
+</csp:method>
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>班次配置</title>
+<csp:content charset="UTF-8">
+<HISUI></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<style>
+	div.form-row .form-title {
+    	display: inline-block;
+    	text-align: center;
+    	text-align: justify;
+    	text-justify: distribute-all-lines;
+    	text-align-last: right;
+	}
+	.dialog-button {
+		padding:0 10px 10px 10px
+	}
+	div.form-row {
+    	margin:10px 10px 0 6px
+	}
+</style>
+</head>
+<body class="hisui-layout">
+	<div id="dataTools">
+		<a href="#" id="btnAdd" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addData();">新增</a>
+		<a href="#" id="btnEdit" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="javascript:editData();">修改</a>
+		<a href="#" id="btnDel" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="javascript:delData();">删除</a>
+	</div>
+	<table id="dataBox"></table>
+	<div id="dataDialog" class="hisui-dialog" data-options="modal:true,closed:true,width:538,height:247">
+		<form id="dataForm">
+			<div class="form-rows">
+				<div>
+					<div class="form-row">
+						<div class="form-title">人员状态</div>
+						<div class="form-item">
+							<input type="text" id="Status" name="Status" class="hisui-combobox" data-options="required:true"/>
+						</div>
+						<div class="form-title">楼层</div>
+						<div class="form-item" style="margin-right: 0px;">
+							<input type="text" id="Floor" name="Floor" class="hisui-combobox" data-options="">
+						</div>
+					</div>
+				</div>
+				<div>
+					<div class="form-row">
+						<div class="form-title">手术间</div>
+						<div class="form-item">
+							<input type="text" id="Location" name="Location" class="hisui-combobox" data-options="">
+						</div>
+						<div class="form-title">班次周期</div>
+						<div class="form-item" style="margin-right: 0px;">
+							<input type="text" id="ShiftDuration" name="ShiftDuration" class="hisui-validatebox" data-options="" style="width:174px;">
+						</div>
+					</div>
+				</div>
+				<div>
+					<div class="form-row">
+						<div class="form-title">开始时间</div>
+						<div class="form-item">
+							<input type="text" id="ShiftStartTime" name="ShiftStartTime" class="hisui-timespinner" data-options="showSeconds:true" style="width:181px;">
+						</div>
+						<div class="form-title">结束时间</div>
+						<div class="form-item" style="margin-right: 0px;">
+							<input type="text" id="ShiftEndTime" name="ShiftEndTime" class="hisui-timespinner" data-options="showSeconds:true" style="width:181px;">
+						</div>
+					</div>
+				</div>
+				<div>
+					<div class="form-row">
+						<div class="form-title">是否生效</div>
+						<div class="form-item">
+							<select type="text" id="Active" name="Active" class="hisui-combobox" style="width:181px;"/>
+								<option value=""></option>
+								<option value="Y">是</option>
+								<option value="N">否</option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+			<input type="hidden" id="Dept" name="Dept" />
+			<input type="hidden" id="RowId" name="RowId" />
+		</form>
+	</div>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DataForm.js"></script>
+	<script type="text/javascript">
+var crewshift = {
+    datagrid: null
+};
+
+$(document).ready(function() {
+    var columns = [
+        [
+            { field: "DeptDesc", title: "科室", width: 150 },
+            { field: "FloorDesc", title: "楼层", width: 150 },
+            { field: "LocationDesc", title: "手术间", width: 150 },
+            { field: "StatusDesc", title: "状态", width: 150 },
+            { field: "ShiftDuration", title: "换班周期", width: 150 },
+            { field: "ShiftStartTime", title: "班次开始时间", width: 165 },
+            { field: "ShiftEndTime", title: "班次结束时间", width: 165 },
+            { 
+            	field: "Active", 
+            	title: "有效性", 
+            	width: 150,
+            	formatter:function(value,row,index){
+	                if(value=="Y")return "是";
+	               	return "否";
+                }
+            }
+        ]
+    ];
+
+    crewshift.datagrid = $("#dataBox");
+    crewshift.datagrid.datagrid({
+        headerCls: 'panel-header-gray',
+        border:false,
+        columns: columns,
+        fit: true,
+        iconCls:"icon-paper",
+        singleSelect: true,
+        rownumbers: true,
+        pagination: true,
+        pageList: [10, 20, 30, 40, 50, 100, 200],
+        pageSize: 200,
+        toolbar: "#dataTools",
+        url: ANCSP.DataQuery,
+        queryParams: {
+            ClassName: ANCLS.BLL.ConfigQueries,
+            QueryName: "FindCrewShift",
+            Arg1: "",
+            Arg2: "",
+            Arg3: session.HospID,
+            ArgCnt: 3
+        },
+        onSelect: function(index, row) {
+            crewshift.form.form("load", row);
+        },
+        onBeforeLoad: function(param) {
+            param.Arg1 = "";
+            param.Arg2 = "";
+            param.Arg3 = session.HospID;
+            param.ArgCnt = 3;
+        },
+        onLoadSuccess: function(data) {}
+    });
+
+    crewshift.dialog = $("#dataDialog");
+    crewshift.dialog.dialog({
+        buttons: [{
+            text: "保存",
+            iconCls: "icon-w-save",
+            handler: function() {
+                crewshift.form.submit();
+            }
+        }, {
+            text: "取消",
+            iconCls: "icon-w-close",
+            handler: function() {
+                crewshift.dialog.dialog("close");
+            }
+        }],
+        onClose: function() {
+            crewshift.form.form("clear");
+        },
+        onOpen: function() {
+            initDefaultValue();
+        }
+    });
+
+    crewshift.form = $("#dataForm");
+    crewshift.form.form({
+        onSubmit: function(param) {
+            param.Dept = session.DeptID;
+            param.HospitalID = session.HospID;
+            var isValid = $(this).form("validate");
+            if (isValid) saveData();
+            return isValid;
+        },
+        success: function(data) {
+            //console.log("success:" + data);
+            crewshift.form.form("clear");
+            crewshift.datagrid.datagrid("reload");
+            if (crewshift.dialog) {
+                crewshift.dialog.dialog("close");
+            }
+        }
+    });
+    
+    $("#Status").combobox({
+	    textField:'Description',
+	    valueField:'RowId',
+	    url:ANCSP.DataQuery,
+	    limitToList: true,
+	    onBeforeLoad:function(param){
+		   	param.ClassName = ANCLS.BLL.ConfigQueries;
+            param.QueryName = "FindCrewStatus";
+           	param.Arg1 = "" //session.DeptID;
+            param.Arg2 = "Y";
+            param.Arg3 = session.HospID;
+            param.ArgCnt = 3;
+	   	}
+	});
+    
+    $("#Floor").combobox({
+	    textField:'Description',
+	    valueField:'RowId',
+	    url:ANCSP.DataQuery,
+	    limitToList: true,
+	    onBeforeLoad:function(param){
+		   	param.ClassName = ANCLS.BLL.ConfigQueries;
+            param.QueryName = "FindOperFloor";
+            param.Arg1 = session.HospID;
+            param.ArgCnt = 1;
+	   	}
+	});
+	
+	$("#Location").combobox({
+	    textField:'Description',
+	    valueField:'RowId',
+	    url:ANCSP.DataQuery,
+	    limitToList: true,
+	    onBeforeLoad:function(param){
+		   	param.ClassName = ANCLS.BLL.ConfigQueries;
+            param.QueryName = "FindOperRoom";
+           	param.Arg1 = "";
+            param.Arg2 = "R";
+            param.Arg3 = session.HospID;
+            param.ArgCnt = 3;
+	   	}
+	});
+});
+
+/**
+ * 新增按钮处理函数
+ * @param {DataForm} dataForm - 数据表单对象
+ * @author chenchangqing 20170811
+ */
+function addData() {
+    if (crewshift.dialog) {
+        crewshift.dialog.dialog({
+            title: "新增科室班次",
+            iconCls: "icon-w-add"
+        });
+        if (crewshift.form[0].RowId) {
+            crewshift.form[0].RowId.value = "";
+        }
+        crewshift.dialog.dialog("open");
+    }
+}
+
+/**
+ * 修改按钮处理函数
+ */
+function editData() {
+    if (hasRowSelected(true)) {
+        if (crewshift.dialog) {
+            crewshift.dialog.dialog({
+                title: "修改科室班次",
+                iconCls: "icon-w-edit"
+            });
+            var selectedRow = crewshift.datagrid.datagrid("getSelected");
+            crewshift.form.form("load", selectedRow);
+            crewshift.dialog.dialog("open")
+        } else {
+            crewshift.form.submit();
+        }
+    }
+}
+
+/**
+ * 保存数据处理函数
+ */
+function saveData() {
+    var param = crewshift.form.serializeJson();
+    if (!param.RowId) param.CreateUser = session.UserID;
+    param.Dept = session.DeptID;
+    param.HospitalID = session.HospID;
+
+    dhccl.saveDatas(ANCSP.DataService, $.extend(param, {
+        ClassName: "CF.AN.CrewShift",
+        UpdateUser: session.UserID
+    }), function(data) {
+
+    });
+
+}
+
+/**
+ * 删除按钮处理函数
+ */
+function delData() {
+    if (hasRowSelected(true)) {
+        $.messager.confirm("确认", "你的操作不可逆转，是否删除该数据记录？", function(result) {
+            if (result) {
+                var selectedRow = crewshift.datagrid.datagrid("getSelected");
+                var rowId = selectedRow["RowId"];
+                var msg = dhccl.removeData("CF.AN.CrewShift", rowId);
+                dhccl.showMessage(msg, "删除", null, null, function() {
+                    crewshift.form.form("clear");
+                    crewshift.datagrid.datagrid("reload");
+                });
+            }
+        });
+    }
+}
+
+/**
+ * 查询按钮处理函数
+ */
+function queryData() {
+    crewshift.datagrid.datagrid("reload");
+}
+
+/**
+ * 判断数据表格是否选中一行
+ * @param {string} showPrompt - 未选中行时是否提示
+ */
+function hasRowSelected(showPrompt) {
+    var result = false;
+    if (crewshift.datagrid) {
+        var selectedRow = crewshift.datagrid.datagrid("getSelected");
+        if (selectedRow) {
+            result = true;
+        } else {
+            result = false;
+        }
+    }
+    if (!result && showPrompt) {
+        $.messager.alert("提示", "请先选择一行再进行操作！", "warning");
+    }
+    return result;
+}
+
+function initDefaultValue(dataForm) {
+    $("#Dept").val(session.DeptID);
+}
+	</script>
+</body>
+</html>

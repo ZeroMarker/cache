@@ -5,9 +5,6 @@
  q 1
 </csp:method>
 <html lang="zh-CN">
- <SERVER>
- d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
-</SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
@@ -15,43 +12,73 @@
 	<DHCSTMHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" style="width:300px;" data-options="region:'west',border:false" sytle="padding-right:0px;padding-left=0px" >
+	<div class="GridPadding" style="width:320px;" data-options="region:'west',border:false" sytle="padding-right:0px;padding-left=0px" >
 		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',bodyCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
 			<div class="hisui-layout" data-options="fit:true">
 				<div data-options="region:'center',border:false" >
-					<table id="MainConditions" class="Condition">
+					<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<input id="RowId" name="RowId" type="hidden">
 						<tr>
-							<td>科室</td>
-							<td><input id="SupLoc" name="SupLoc" class="hisui-combobox textbox" style="width:155px;"></td>
+							<td>盘点科室</td>
+							<td><input id="SupLoc" name="SupLoc" class="hisui-combobox textbox"></td>
 						</tr>
 						<tr>
-							<td>单号</td>
-							<td><input id="InstNo" name="InstNo" class="textbox" disabled="true" style="width:148px;"></td>
+							<td>盘点单号</td>
+							<td><input id="InstNo" name="InstNo" class="textbox" disabled="true"></td>
 						</tr>
 						<tr>
 							<td>制单日期</td>
-							<td><input id="InstDate" name="InstDate" class="hisui-datebox textbox" data-options="disabled:true" style="width:155px;" ></td>
+							<td><input id="InstDate" name="InstDate" class="textbox" disabled="true"></td>
 						</tr>
 						<tr>
 							<td>制单时间</td>
-							<td><input id="InstTime" name="InstTime" class="hisui-timespinner textbox" data-options="disabled:true" style="width:155px;"></td>
+							<td><input id="InstTime" name="InstTime" class="textbox" disabled="true"></td>
 						</tr>
 						<tr>
 							<td>完成标志</td>
-							<td style="float:left"><input id="Comp" name="Comp" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" ></td>
-						</tr>
-						<tr>
-							<td>备注</td>
-							<td><input id="Remark" name="Remark"  class="textbox" style="width:148px;"></td>
+							<td style="float:left"><input id="CompFlag" name="CompFlag" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" ></td>
 						</tr>
 						<tr>
 							<td>类组</td>
-							<td><input id="ScgStk" name="ScgStk" class="hisui-stkscgcombotree textbox" style="width:155px;"></td>
+							<td><input id="StkScg" name="StkScg" class="hisui-stkscgcombotree textbox"></td>
 						</tr>
 						<tr>
 							<td>库存分类</td>
-							<td><select id="StkCatBox" name="StkCatBox" class="hisui-combobox " style="width:155px;"></select></td>
+							<td><input id="StkCat" name="StkCat" class="hisui-combobox textbox"></td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<input class="hisui-radio" type="radio" label="入库单位" id="TkUom1" name="TkUom" value="1">
+								<input class="hisui-radio" type="radio" label="基本单位" id="TkUom0" name="TkUom" value="0" data-options="checked:true">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<input class="hisui-radio" type="radio" label="全部" id="HVFlag" name="HVFlag" value="" >
+								<input class="hisui-radio" type="radio" label="高值" id="HVFlagY" name="HVFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="非高值" id="HVFlagN" name="HVFlag" value="N" data-options="checked:true">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<input class="hisui-radio" type="radio" label="全部" id="HVFlag" name="ChargeFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="收费" id="HVFlagY" name="ChargeFlag" value="Y" >
+								<input class="hisui-radio" type="radio" label="不收费" id="HVFlagN" name="ChargeFlag" value="N">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<input class="hisui-radio" type="radio" label="全部" id="ManaFlag" name="ManaFlag" value="" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="关注" id="ManaFlagY" name="ManaFlag" value="Y">
+								<input class="hisui-radio" type="radio" label="非关注" id="ManaFlagN" name="ManaFlag" value="N">
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<input class="hisui-radio" type="radio" label="全部" id="NotUseFlag" name="NotUseFlag" value="" >
+								<input class="hisui-radio" type="radio" label="可用" id="NotUseFlagY" name="NotUseFlag" value="N" data-options="checked:true">
+								<input class="hisui-radio" type="radio" label="不可用" id="NotUseFlagN" name="NotUseFlag" value="Y">
+							</td>
 						</tr>
 						<tr>
 							<td>进价范围</td>
@@ -62,101 +89,92 @@
 						</tr>
 						<tr>
 							<td>起始货位</td>
-							<td><input id="StartLocStkBin" name="StartLocStkBin" class="hisui-combobox textbox" style="width:155px;"></td>
+							<td><input id="FrStkBin" name="FrStkBin" class="hisui-combobox textbox"></td>
 						</tr>
 						<tr>
 							<td>终止货位</td>
-							<td><input id="EndLocStkBin" name="EndLocStkBin" class="hisui-combobox textbox" style="width:155px;"></td>
+							<td><input id="ToStkBin" name="ToStkBin" class="hisui-combobox textbox"></td>
 						</tr>
 						<tr>
-							<td>随机数</td>
-							<td><input id="RandomNum" name="RandomNum"  class="textbox" style="width:148px;"></td>
-						</tr>
-						<tr>
-							<td>包含不可用</td>
-							<td style="float:left"><input id="IncludeNotUse" name="IncludeNotUse" class='hisui-checkbox'  type="checkbox" value="Y" ></td>	
-						</tr>
-						<tr>
-							<td>仅不可用</td>
-							<td style="float:left"><input id="NotUseFlag" name="NotUseFlag" class='hisui-checkbox' type="checkbox" value="Y"  ></td>	
-						</tr>
-						<tr>
-							<td>高值标志</td>
-							<td><input id="HVFlag" name="HVFlag" class="hisui-simplecombobox textbox" style="width:155px; "></td>
-						</tr>
-						<tr>
-							<td>默认单位</td>
-							<td>
-								<select id="TkUom" class="hisui-combobox " name="TkUom" style="width:155px;">
-									<option value="0">基本单位</option>
-									<option value="1">入库单位</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>重点关注</td>
-							<td><input id="ManageDrugFlag" name="ManageDrugFlag" class="hisui-simplecombobox textbox" style="width:155px;"></td>
+							<td>抽查数</td>
+							<td><input id="RandomNum" name="RandomNum" class="textbox"></td>
 						</tr>
 						<tr>
 							<td>管理组</td>
-							<td><select id="LocManGrp" name="LocManGrp" style="width:155px;"></select></td>
+							<td><input id="LocManGrp" name="LocManGrp" class="hisui-combobox textbox"></td>
+						</tr>
+						<tr>
+							<td>过滤零库存</td>
+							<td style="float:left"><input id="IfZero" name="IfZero" class="hisui-checkbox textbox" type="checkbox" value="Y"></td>
+						</tr>
+						<tr>	
+							<td>器械管理类别</td>
+							<td ><input id="Supervision" name="Supervision" class="textbox hisui-combobox" ></td>
+						</tr>
+						<tr>
+							<td>备注</td>
+							<td><input id="Remarks" name="Remarks" class="textbox"></td>
 						</tr>
 					</table>
 				</div>
-				<div class="" data-options="region:'south',border:false" style="height:55px;">
-					<table id="Bar" class="Condition" align="center">
-						<tr>
-							<td><a href="#" id="SaveBT" class="hisui-linkbutton" >账盘</a></td>
-							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
-							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-						</tr>
-					</table>
+				<div data-options="region:'south',border:false" style="height:55px;padding-top:10px;">
+					<div class="boxshadow">
+						<table id="Bar" class="Condition" align="center">
+							<tr>
+								<td><a href="#" id="SaveBT" class="hisui-linkbutton">账盘</a></td>
+								<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+								<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							</tr>
+						</table>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 	<div class="hisui-layout" data-options="region:'center'" id="tabs" style="border:0px;padding-left:0px">
-		<div data-options="region:'north',border:false"  class="GridPadding" style="height:220px;padding-left: 0px">
+		<div data-options="region:'north',border:false"  class="GridPadding" style="height:250px;padding-left: 0px">
 			<div title="盘点单列表"  class="hisui-panel" data-options="iconCls:'icon-paper',bodyCls:'panel-header-gray',fit:true,headerCls:'panel-header-gray'">
 				<table id="MasterGrid"></table>	
 			</div>
 		</div>
-		<div  data-options="region:'center',border:false" class="GridPadding" style="padding-top:0;padding-left: 0px">
+		<div  data-options="region:'center',border:false" class="GridPadding" style="padding-top:0;padding-left:0px">
 			<div title="盘点明细信息" class="hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',bodyCls:'panel-header-gray',fit:true">
 				<table id="DetailGrid"></table>
 			</div>
 		</div>
 	</div>
-	</div>
-	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询条件" style="width:250px;height:200px;top:100px;left:300px;padding:10px;">
-		<div>
-			<table>
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询条件" style="width:260px;height:260px;">
+			<table class="Condition" align="center" style="padding-right:10px" onkeydown="if(event.keyCode==13){FSuerBT.click()}">
 				<tr>
 					<td>科室</td>
-					<td><input id="FLocId" name="FLocId" class="hisui-combobox" style="width:167px;"/></td>
+					<td><input id="FLoc" name="FLoc" class="textbox hisui-mulcombobox "></td>
 				</tr>
 				<tr>
 					<td>起始日期</td>
-					<td><input id="FStartDate" name="FStartDate" class="hisui-datebox" style="width:167px;"/></td>
+					<td><input id="FStartDate" name="FStartDate" class="hisui-dateboxq textbox"></td>
 				</tr>
 				<tr>
 					<td>截止日期</td>
-					<td><input id="FEndDate" name="FEndDate" class="hisui-datebox" style="width:167px;"/></td>
+					<td><input id="FEndDate" name="FEndDate" class="hisui-dateboxq textbox"></td>
 				</tr>
-					<input id="FInstComp" name="FInstComp" class='textbox' type="hidden" value=""/>
+				<tr style="hidden:true">
+					<td>完成标志</td>
+					<td><input id="FInstComp" name="FInstComp" class="textbox hisui-simpleCombobox"></td>
 					<input id="FStkTkComp" name="FStkTkComp" class='textbox'  type="hidden" value="N"/>
 					<input id="FAdjComp" name="FAdjComp" class='textbox'  type="hidden" value="N"/>
-				<tr>
-					<td align="center" colspan="2"><a href="#" id="FCancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'">取消</a><span style="padding-left: 10px"></span><a href="#" id="FSuerBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">确认</a></td>
 				</tr>
 			</table>
-		</div>
+			<table class="Condition" align="center">
+				<tr>
+					<td><a href="#" id="FSuerBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">确认</a></td>
+					<td><a href="#" id="FCancelBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a></td>
+				</tr>
+			</table>
 	</div>
-	
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/encode.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/InStkTkCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/INStkTkPrint.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/FindWin.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/InStkTk/InStkTk.js"></script>
 </body>
 </html>
-

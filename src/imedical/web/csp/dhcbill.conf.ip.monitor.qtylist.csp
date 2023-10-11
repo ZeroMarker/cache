@@ -56,20 +56,23 @@
 							type: 'combobox',
 							options: {
 								panelHeight: 150,
-								url: $URL,
 								required: true,
 								method: 'get',
 								mode: 'remote',
-								delay: 500,
+								delay: 300,
 								valueField: 'ArcimRowID',
 								textField: 'ArcimDesc',
 								blurValidValue: true,
 								onBeforeLoad: function (param) {
-									param.ClassName = "DHCDoc.DHCDocConfig.ArcItemConfig";
-									param.QueryName = "FindAllItem";
-									param.ResultSetType = "array";
-									param.Alias = param.q;
-									param.HospId = GV.HospId;
+									if ($.trim(param.q).length > 1) {
+										$.extend($(this).combobox("options"), {url: $URL})
+										param.ClassName = "BILL.COM.ItemMast";
+										param.QueryName = "FindARCItmMast";
+										param.ResultSetType = "array";
+										var sessionStr = PUBLIC_CONSTANT.SESSION.USERID + "^" + "" + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + GV.HospId;
+										param.alias = param.q;
+										param.sessionStr = sessionStr;
+									}
 								},
 								onSelect: function(rec) {
 									var row = GV.QtyList.getRows()[GV.EditRowIndex];
@@ -107,6 +110,12 @@
 			onLoadSuccess: function(data) {
 				GV.EditRowIndex = undefined;
 			},
+			onBeginEdit: function(index, row) {
+				var ed = GV.QtyList.getEditor({index: index, field: "TRulesDesc"});
+				if (ed) {
+					$(ed.target).next("span").find("input").focus();
+				}
+			},
 			onEndEdit: function(index, row, changes) {
 				onEndEditHandler(index, row);
 			}
@@ -124,7 +133,7 @@
 		*/
 		function saveClick() {
 			var row = GV.QtyList.getRows()[GV.EditRowIndex];
-			if (!row){
+			if (!row) {
 				return;
 			}
 			if (!endEditing()) {
@@ -142,9 +151,12 @@
 				MethodName: "SaveRules",
 				jsonStr: JSON.stringify(jsonObj)
 			}, function (rtn) {
-				var type = (rtn.success == "0") ? "success" : "error";
-				$.messager.popover({msg: rtn.msg, type: type});
-				GV.QtyList.reload();
+				if (rtn.success == 0) {
+					$.messager.popover({msg: rtn.msg, type: "success"});
+					GV.QtyList.reload();
+					return;
+				}
+				$.messager.popover({msg: rtn.msg, type: "error"});
 			});
 		}
 
@@ -175,21 +187,25 @@
 				$.messager.popover({msg: "请选择需要删除的行", type: "info"});
 				return;
 			}
+			if (!row.TCDRowID) {
+				return;
+			}
 			$.messager.confirm("确认", "确认删除？", function(r) {
-				if (r) {
-					$.cm({
-						ClassName: "web.DHCIPBillCostMonitorConfig",
-						MethodName: "DeleteCD",
-						id: row.TCDRowID
-					}, function(rtn) {
-						if (rtn.success == "0") {
-							$.messager.popover({msg: rtn.msg, type: "success"});
-							GV.QtyList.reload();
-						}else {
-							$.messager.popover({msg: rtn.msg, type: "error"});
-						}
-					});
+				if (!r) {
+					return;
 				}
+				$.cm({
+					ClassName: "web.DHCIPBillCostMonitorConfig",
+					MethodName: "DeleteCD",
+					id: row.TCDRowID
+				}, function(rtn) {
+					if (rtn.success == 0) {
+						$.messager.popover({msg: rtn.msg, type: "success"});
+						GV.QtyList.reload();
+						return;
+					}
+					$.messager.popover({msg: rtn.msg, type: "error"});
+				});
 			});
 		}
 
@@ -232,9 +248,8 @@
 				GV.QtyList.endEdit(GV.EditRowIndex);
 				GV.EditRowIndex = undefined;
 				return true;
-			} else {
-				return false;
 			}
+			return false;
 		}
 	});
 </script>

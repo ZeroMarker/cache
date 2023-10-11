@@ -9,6 +9,7 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard"/>
+<DOCCARD medStepCode="Order"></DOCCARD>
 <style>
 /*时间轴*/
 .events-wrapper {
@@ -215,9 +216,12 @@
  w "<SCRIPT Language=""Javascript"">"
 	d ##class(web.DHCDocOrderListCommon).GetMessageArray("opdoc.outpatrecadm.csp",%session.Get("LOGON.LANGID"))
  w "</SCRIPT>"
- d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
- w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+ /*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+ w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)*/
  w "<input id='CardBillCardTypeValue' name='CardBillCardTypeValue' type='hidden' value=''>",$C(13,10)
+ //s NewDocGotoWhere=##class(web.DHCDocConfig).GetConfigNode1("NewDocGotoWhere",%session.Get("LOGON.GROUPID"))
+ s SessionStr=##class(DHCDoc.Util.RegisteredObject).%SessionStr()
+ s NewDocGotoWhere=##Class(DHCDoc.OPDoc.Workflow).GetDefaultWorkflowItem(SessionStr)
 </Server>
   </head>
 <body>
@@ -228,7 +232,8 @@
 			EpisodeID:"#(EpisodeID)#",
 			PatientID:"#(PatientID)#",
 			mradm:"#(mradm)#",
-			RegNo:"#(RegNo)#"
+			RegNo:"#(RegNo)#",
+			NewDocGotoWhere:"#(NewDocGotoWhere)#"
 		};
 		//页面加载完之后在赋值，防止事件未定义导致报错
 		$(function(){

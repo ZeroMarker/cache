@@ -1,0 +1,45 @@
+<!--消息平台处理消息csp,csp:dhc.vte.risk.message.csp--> 
+<html XMLNS=TRAK>
+	<head>
+		<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!--TRAK:HEAD></TRAK:HEAD-->
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	</head>
+	<body style="padding:0px;">
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+		Set EpisodeID = $g(%request.Data("EpisodeID",1))
+		Set eventId = $g(%request.Data("eventId",1))
+		Set MsgDetailsId = $g(%request.Data("MsgDetailsId",1))
+		Set msgDetailsId = $g(%request.Data("msgDetailsId",1))
+		</SCRIPT>
+		
+		 <script language="javascript" type="text/javascript">
+		var patientid = '#(EpisodeID)#';
+		var eventId = '#(eventId)#';
+		var MsgDetailsId = '#(MsgDetailsId)#';
+		var msgDetailsId = '#(msgDetailsId)#';
+		if(MsgDetailsId==null||MsgDetailsId==""){
+			MsgDetailsId = msgDetailsId;
+		}
+		 //登陆科室ID
+		var locId = session["LOGON.CTLOCID"];
+		//登陆用户ID
+		var userId = session["LOGON.USERID"];
+		var userName = session["LOGON.USERNAME"];
+		userName = encodeURI(userName);  //进行汉字编码集转换
+		
+		//var iFrameSrc = "http://127.0.0.1:8081/api/patientRiskEval?EpisodeID="+patientid+"&LocID="+locId+"&UserID="+userId+"&Role=doctor"
+		var iFrameSrc = "https://114.251.193.139:8443/api/handleDhcHisMsg?EpisodeID="+patientid+"&LocID="+locId+"&UserID="+userId+"&Role=doctor&UserName="+userName+"&eventId="+eventId+"&msgDetailsId="+MsgDetailsId;
+
+		</script>
+		
+		<iframe src="" frameborder="0" name="vtelist" id="vtelist" height="100%" width="100%" style ="display:block;position:absolute;"></iframe>
+		
+		<script language="javascript" type="text/javascript">
+			document.getElementById("vtelist").src = iFrameSrc;
+		</script>
+		
+	</body>
+</html>
+

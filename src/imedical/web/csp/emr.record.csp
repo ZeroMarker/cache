@@ -46,7 +46,12 @@
 		s mainDoc = $p(##class(EMRservice.HISInterface.PatientInfoAssist).MainDoc(episodeID), "^", 2) 
 		s CAServicvice = ""
 		s IsCAON = ##Class(CA.DigitalSignatureService).IsCAON()
-		s IsCACTLoc = ##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        //最新的程序需要增加产品模块的判断
+        if ($ll((##class(%Dictionary.CompiledMethod).%OpenId("CA.DigitalSignatureService||IsCACTLoc")).DefaultArgs) = "4") {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERID"),%session.Get("LOGON.GROUPID"),"IPEMR")
+        } else {
+            s IsCACTLoc=##Class(CA.DigitalSignatureService).IsCACTLoc(%session.Get("LOGON.CTLOCID"))
+        }
 		if ((IsCAON = "Y")||(IsCAON="1"))&&(IsCACTLoc = "1") {
 			 s CAServicvice = "1"
 			 d ##Class(CA.DigitalSignatureService).OutPutSecXCommon()
@@ -69,6 +74,7 @@
 		s isOpenEvent = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("IsOpenEvent","N")
 		s hospitalID = %session.Get("LOGON.HOSPID")
 		s moveText = ##class(EMRservice.BL.BLSysOption).GetOptionValueByName2("CrisisRolling","Y")
+        s loadDocMode = ##Class(EMRservice.SystemParameter).GetLoadDocMode()
   </script>
 	<script language="javascript">
 	  var patientID = '#(patientID)#';
@@ -126,6 +132,7 @@
 	  var isOpenEvent = '#(isOpenEvent)#';
 	  var hospitalID='#(hospitalID)#';
 	  var moveText = '#(moveText)#';
+      var loadDocMode = $.parseJSON('#(loadDocMode)#'.replace(/\'/g, "\""));
    </script>
 	<title>病历内容</title>
 </head>
@@ -155,10 +162,11 @@
 						<div class="ribbon-group-sep" style="height:100%"></div>
 						<div class="ribbon-group" style="height:100%;padding:0;margin:0;">
 							<a id='binddatareload' title="更新数据" href="#" class="easyui-linkbutton" data-options="plain:true">更新数据</a>
+							<a id='loadRecord' title="加载全部病程" href="#" class="easyui-linkbutton" data-options="plain:true" onclick="loadAllRecord()" style="display:none;">加载全部病程</a>
 							<a id='reference' title="病历参考" href="#" class="easyui-linkbutton" data-options="plain:true">病历参考</a>							
 							<a id='image' title="图库" href="#" class="easyui-linkbutton" data-options="plain:true">图库</a>							
 							<a id='plampoint' title="掌纹" href="#" class="easyui-linkbutton" data-options="plain:true">掌纹</a>						
-							<a id='confirmRecordCompleted' title="确认病历全部完成" href="#" class="easyui-linkbutton" data-options="plain:true" onclick="changeRecordFinishedStatus()" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">送病案室</a>	
+							<a id='confirmRecordCompleted' title="提交病历" href="#" class="easyui-linkbutton" data-options="plain:true" onclick="changeRecordFinishedStatus()" onmouseenter="topCenter(this)" onmouseleave="topDel(this)">提交病历</a>	
 						</div>	
 						<div class="ribbon-group-sep" style="height:100%"></div>
 						<div class="ribbon-group" style="height:100%;padding:0;margin:7px 0 0 0;">

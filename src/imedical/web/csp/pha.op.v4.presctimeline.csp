@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--处方时间线
+	csp: csp/pha.op.v4.presctimeline.csp
+	js:  scripts/pha/op/v4/presctimeline.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <PHALIBV1 />
+     <server>
+        s prescNo= $g(%request.Data("prescNo",1),"")
+    </server>
+    <SCRIPT Language="Javascript">
+        var PHA_PrescNo= "#(prescNo)#";
+    </SCRIPT>
+</head>
+
+<body>
+     <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false">
+            <div class="hisui-layout" fit="true">
+                <div data-options="headerCls:'panel-header-gray',region:'center',bodyCls:'panel-body-gray'">
+					<div id="presctimeline" style="overflow-x:hidden;height:100%"></div>
+                </div>
+			</div>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/op/v4/presctimeline.js"></script>
+</body>
+
+</html>

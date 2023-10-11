@@ -1,0 +1,130 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+I ##Class(websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--dhcdoc.passwork.bctranslate.csp  QP--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	body {background:#fff;}
+	.c-span {margin-right:10px;}
+	.c-span2 {margin-left:30px;}
+	.c-ok {color:#21ba45}
+	.c-no {color:#f16e57}
+	.note-head {height:18px;}
+	.c-title{margin-left:10px;color:#017bce;line-height:18px;}
+	.c-label {float:left;width:5px;background:#017BCE;height:18px;}
+	.c-row {margin-bottom:10px;}
+	.c-center {text-align:center;}
+</style>
+<Server>
+	set MID = %request.Get("MID")
+	set Hosp = %request.Get("Hosp")
+	set InModule = %request.Get("InModule")
+	
+</Server>
+</head>
+<body style="padding:10px;">	
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',collapsible:true,split:true" title="翻译类型" style="width:405px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',split:false,border:false" style="height:95px;padding:10px;border-bottom:1px dashed #ccc;">
+					<div class="c-row">
+						<label class="c-span">产&nbsp;&nbsp;品&nbsp;&nbsp;线&nbsp;</label><input id="product" class="textbox" style="width:225px;"/>
+						<span class="c-span"></span>
+						<a id="Find" class="hisui-linkbutton">查询</a>
+					</div>
+					<div>
+						<label class="c-span">描述/表名</label><input id="InName" class="textbox" style="width:218px;"/>
+						<span class="c-span"></span>
+						<a id="Clear" class="hisui-linkbutton">清屏</a>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<div id="i-type"></div>
+				</div> 
+		
+			</div>
+		</div>
+		<div data-options="region:'center'" title="翻译元素">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',split:false,border:false" style="height:95px;padding:10px;border-bottom:1px dashed #ccc;">
+					<div class="c-row">
+						<label class="c-span">语&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;言</label>
+		    			<input id="TextLanguage" type="text" class="textbox hisui-combobox" style="width:200px">
+		    			<span class="c-span"></span>
+		    			<label class="c-span">字段名</label>
+		    			<input id="TextFieldName" type="text" class="textbox hisui-combobox" style="width:250px">
+					</div>
+					<div>
+						<label class="c-span">翻译前中文</label><input id="TextFieldDesc" class="textbox" style="width:513px;"/>
+						<span class="c-span"></span>
+						<a id="ItemFind" class="hisui-linkbutton">查询</a>
+						<span class="c-span"></span>
+						<a id="ItemClear" class="hisui-linkbutton">清屏</a>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<div id="i-list"></div>
+				</div> 
+		
+			</div>
+			
+			
+		</div> 
+		
+		<div id="myWin" style="width:500px;height:300px;padding:10px;display:none;">   
+			<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+				<table  align="center">
+					<tr style="display:none;">
+			 			<td></td>
+			   			<td><input id="ID" name="ID" type="text" class="textbox hisui-validatebox"></td>
+			 		</tr>
+					<tr>
+		               <td class="tdlabel"><font color=red>*</font>表名</td>
+		    		   <td><input id="BTTableName" name="BTTableName" type="text" class=" hisui-combobox" style="width:307px" data-options="required:true"></td>
+		    		 </tr>	    		 
+		    		 <tr>
+		    		   <td class="tdlabel"><font color=red>*</font>字段名</td>
+		    		   <td><input id="BTFieldName" name="BTFieldName" type="text" class=" hisui-combobox" style="width:307px" data-options="required:true"></td>
+		    		 </tr>
+		    		 
+		    		 <tr>
+		    		   <td class="tdlabel"><font color=red>*</font>语言</td>
+		    		   <td><input id="BTLanguages" name="BTLanguages" type="text" class=" hisui-combobox" style="width:307px" data-options="required:true"></td>
+		    		 </tr>
+		    		 <tr>
+		    		   <td class="tdlabel"><font color=red>*</font>翻译前中文</td>
+		    		   <td><input id="BTFieldDesc" name="BTFieldDesc" type="text" class=" hisui-validatebox" style="width:300px" data-options="required:true"></td>
+		    		 </tr>
+		    		 <tr>
+		    		   <td class="tdlabel"><font color=red>*</font>翻译后内容</td>
+		    		   <td> 
+		    		   		<input id="BTTransDesc" name="BTTransDesc" type="text" class=' hisui-validatebox' style="width:300px" data-options="required:true">
+		    		   </td>
+		    		 </tr>
+				</table >
+			</form>
+		</div>
+	
+	</div>
+					
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			MID: "#(MID)#",
+			Hosp: "#(Hosp)#",
+			InModule: "#(InModule)#"
+		};
+	</SCRIPT>
+    <script type="text/javascript" src="../scripts/dhcdoc/passwork/bctranslate.js"></script>
+	
+</body>
+</html>

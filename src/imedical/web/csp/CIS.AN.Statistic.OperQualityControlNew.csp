@@ -1,0 +1,461 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- CIS.AN.Statistic.OperQualityControlNew.csp  -->
+<title>麻醉质控统计(新)</title>
+<csp:content charset="UTF-8">
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<HISUI></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',title:'查询条件',iconCls:'icon-search',headerCls:'panel-header-gray' " style="height:90px;padding-left:5px;padding-top:10px;">
+    	<form id="conditionForm">
+    		<label>开始日期</label>
+    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
+    		<label>结束日期</label>
+    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-search'">查询</a>
+    		<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-print'">打印</a>
+    		<span><font color="red">*说明：只统计<b>术毕</b>，<b>完成</b>，<b>恢复</b>，<b>停止</b>状态的手术</font></span>
+    	</form>
+    </div>
+    <div data-options="region:'center',title:'麻醉质控统计结果',headerCls:'panel-header-gray' ">
+    	<table id="data_grid"></table>
+	</div>
+	<div id="OpDetailsDialog" class="hisui-dialog" data-options="closed:true,width:1040,height:500,modal:true">
+		<table id="data_grid1"></table> 
+	</div>
+	<script type="text/javascript">
+		var stopQuery = true;
+		var currentStatCode ="";
+		$(document).ready(function() {
+			var date=new Date();
+			var month=date.getMonth();
+			date.setMonth(month-1);
+			date.setDate(1);
+			var lastMonthFirstDay = date;
+			
+			var date=new Date();
+			date.setDate(0);
+			var lastMonthLastDay = date;
+			
+    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
+    	
+    		var datagrid = $("#data_grid");
+    		datagrid.datagrid({
+        		idField: "RowId",
+        		fit: true,
+        		rownumbers: true,
+        		remoteSort: false,
+        		singleSelect:true,
+        		striped:true,
+        		title: "",
+        		nowrap: true,
+        		toolbar: "",
+        		url: ANCSP.DataQuery,
+        		queryParams: {
+            		ClassName: "CIS.AN.BL.AnaestQualityControlStatistic",
+            		QueryName: "FindAnaQualityControlStat",
+            		Arg1: "",
+            		Arg2: "",
+            		Arg3: session.DeptID,
+            		Arg4: session.UserID,
+            		ArgCnt: 4
+        		},
+        		columns: [
+            		[{
+                    	field: "SeqNo",
+                    	title: "序号",
+                    	width: 100
+                	},
+                	{
+                    	field: "OperQualityTitle",
+                    	title: " 质控指标",
+                    	width: 250
+                	},
+                	{
+                    	field: "CountCode",
+                    	title: "CountCode",
+                    	width: 100,
+                    	hidden: true
+                	},
+                	{
+                    	field: "Count",
+                    	title: "分子",
+                    	width: 130,
+                    	formatter: function(value, row, index) {
+	                    	if(row.Count!="" && row.Count!=0 && row.CountCode!=""){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.OperQualityTitle+"\"" + "," + "\""+row.CountCode + "\""+ ")'>" + row.Count + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.Count;
+			                }
+                        }
+                	},
+                	{
+                    	field: "TotalCode",
+                    	title: "TotalCode",
+                    	width: 100,
+                    	hidden: true
+                	},
+                	{
+                    	field: "Total",
+                    	title: "分母",
+                    	width: 130,
+                    	formatter: function(value, row, index) {
+	                    	if(row.Total!="" && row.Total!=0 && row.TotalCode!=""){
+		                    	var result = "<a href='#' onclick='ShowDetails("+ "\""+row.OperQualityTitle+"\"" + "," + "\""+row.TotalCode + "\""+ ")'>" + row.Total + "</a>";
+	                        	return result;
+		                    }else{
+			                    return row.Total;
+			                }
+                        }
+                	},
+                	{
+                    	field: "Rate",
+                    	title: "指标值",
+                    	width: 160
+                	}
+            	]
+        	],
+        	onBeforeLoad: function(param) {
+            	param.Arg1 = $("#OperStartDate").datebox("getValue");
+            	param.Arg2 = $("#OperEndDate").datebox("getValue");
+            	param.Arg3 = session.DeptID;
+            	param.Arg4 = session.UserID;
+            	
+            	if (stopQuery) return false;
+        	},
+        	rowStyler: function(index, row) {
+            	return "";
+        	},
+        	onLoadSuccess: function(data) {},
+        	pagination: true,
+        	pageList: [200, 500],
+        	pageSize: 500
+    	});
+    	stopQuery = false;
+    	datagrid.datagrid('reload');
+    	$("#btnQuery").click(function() {
+        	stopQuery = false;
+        	datagrid.datagrid('reload');
+    	});
+    	
+    	$("#btnPrint").click(function(){
+	    	printGrid();
+    	});
+	});
+	
+	var datagrid1 = $("#data_grid1");
+		datagrid1.datagrid({
+			idField: "RowId",
+			fit: true,
+			rownumbers: true,
+			remoteSort: false,
+			singleSelect:true,
+			striped:true,
+			title: "",
+			nowrap: true,
+			toolbar: "#dataTools",
+			border:false,
+			url: ANCSP.DataQuery,
+			queryParams: {
+				ClassName: "CIS.AN.BL.AnaestQualityControlStatistic",
+				QueryName: "FindOperStatDetail",
+				Arg1: session.UserID,
+				Arg2: currentStatCode,
+				ArgCnt: 2
+			},
+			columns: [
+			[{
+				field: "StatusDesc",
+				title: "手术状态",
+				width: 60,
+				styler: function(value, row, index) {
+                	return "background-color:" + row.StatusColor + ";";
+                }
+			},{
+				field: "SourceTypeDesc",
+				title: "急诊择期",
+				width: 60,
+				styler: function(value, row, index) {
+                    switch (row.SourceType) {
+                        case "B":
+                            return "background-color:" + SourceTypeColors.Book + ";";
+                        case "E":
+                            return "background-color:" + SourceTypeColors.Emergency + ";";
+                        default:
+                            return "background-color:white;";
+                    }
+                }
+			},{
+				field: "OperDate",
+				title: "手术日期",
+				width: 80
+			},{
+				field: "PatName",
+				title: "患者姓名",
+				width: 70
+			},{
+				field: "PatGender",
+				title: "性别",
+				width: 35
+			},{
+				field: "PatAge",
+				title: "年龄",
+				width: 40
+			},{
+				field: "PatDeptDesc",
+				title: "科室",
+				width: 120
+			},{
+				field: "PatBedCode",
+				title: "床号",
+				width: 40
+			},{
+				field: "RegNo",
+				title: "登记号",
+				width: 90
+			},{
+				field: "MedcareNo",
+				title: "住院号",
+				width: 70
+			},{
+				field: "OperDesc",
+				title: "手术名称",
+				width: 200
+			},{
+				field: "OperClass",
+				title: "手术分级",
+				width: 80,
+				hidden: false
+			},{
+				field: "SurgeonDesc",
+				title: "手术医生",
+				width: 70
+			},{
+				field: "AnesthesiologistDesc",
+				title: "麻醉医生",
+				width: 70
+			},{
+				field: "AnaExpertDesc",
+				title: "麻醉指导",
+				width: 70
+			},{
+				field: "AnaAssistantDesc",
+				title: "麻醉助手",
+				width: 70
+			},{
+				field: "AnNurse",
+				title: "麻醉护士",
+				hidden: false,
+				width: 70
+			},{
+				field: "AnaMethodDesc",
+				title: "麻醉方法",
+				sortable: true,
+				width: 120
+			},{
+				field: "ASAClassDesc",
+				title: "ASA分级",
+				width: 70
+			},{
+				field: "CircualNurseDesc",
+				title: "巡回护士",
+				width: 70
+			},{
+				field: "ScrubNurseDesc",
+				title: "器械护士",
+				width: 70
+			},{
+				field: "PACUInDT",
+				title: "入恢复室时间",
+				width: 100
+			},{
+				field: "PACUOutDT",
+				title: "出恢复室时间",
+				width: 100
+			},{
+				field: "OperDeptDesc",
+				title: "手术科室",
+				width: 90
+			},{
+				field: "AnaDeptDesc",
+				title: "麻醉科室",
+				width: 70
+			},{
+				field: "OpsId",
+				title: "手术Id",
+				width: 60
+			},{
+				field: "TheatreOutTransLocDesc",
+				title: "术后去向",
+				width: 100
+			}]
+			],
+			onBeforeLoad: function(param) {
+				param.Arg1 = session.UserID;
+				param.Arg2 = currentStatCode;
+			},
+			onDblClickRow: function(rowIndex, rowData) {
+                var iLeft = (window.screen.width-10-1060)/2; 
+      			var iTop=(window.screen.availHeight-40-660)/2;
+                var nwin='width='+1060+',height='+660+ ',top='+iTop+',left='+iLeft+',resizable=no,menubar=no,scrollbars=yes';
+                var url = "CIS.AN.AnaestRecordDetail.csp?moduleCode=AnaestRecord&readonly=true&opsId="+rowData.OpsId;
+                window.open(url,'_blank',nwin);
+	        },
+			pagination: true,
+			pageList: [200, 500],
+			pageSize: 500
+		});
+
+	function ShowDetails(title,statCode){
+		currentStatCode = statCode;
+		$("#OpDetailsDialog").dialog({
+			title: title,
+			iconCls:"icon-edit",
+            buttons:[{
+                text:"退出",
+                iconCls:"icon-w-cancel",
+                handler:function(){
+                    $("#OpDetailsDialog").dialog("close");
+                }
+            },{
+                text:"查看麻醉记录单",
+                iconCls:"icon-paper-blue-line",
+                handler:function(){
+                    var rowData = datagrid1.datagrid("getSelected");
+                    if(rowData){
+	                    var iLeft = (window.screen.width-10-1060)/2; 
+		      			var iTop=(window.screen.availHeight-40-660)/2;
+		                var nwin='width='+1060+',height='+660+ ',top='+iTop+',left='+iLeft+',resizable=no,menubar=no,scrollbars=yes';
+		                var url = "CIS.AN.AnaestRecordDetail.csp?moduleCode=AnaestRecord&readonly=true&opsId="+rowData.OpsId;
+		               if ("undefined"!==typeof websys_getMWToken){
+							url += "&MWToken="+websys_getMWToken()
+					   }
+		                window.open(url,'_blank',nwin);
+	                }else{
+		                $.messger.alert("提示","请选择一行")
+		            }
+                }
+            }]
+		})
+		$("#OpDetailsDialog").dialog("open");
+		datagrid1.datagrid('reload');
+	}
+	
+	function printGrid(){
+		var lodop = getLodop();
+    	createPrintPage(lodop);
+    
+    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    	lodop.SET_PRINT_MODE("PRINT_DUPLEX", 2);
+    	lodop.SET_PREVIEW_WINDOW(1, 2, 0, 0, 0, "");
+    	lodop.SET_PRINT_MODE("AUTO_CLOSE_PREWINDOW", 1); //打印后自动关闭预览窗口
+    	lodop.PREVIEW();
+	}
+	
+	function createPrintPage(lodop){
+		var datagrid = $("#data_grid");
+    	var dataList = datagrid.datagrid("getData");
+    	
+    	var length = dataList.rows.length;
+    	var data,row,rowLength;
+    	var gridHtml=[];
+    	var linedItemNo=1;
+	    	
+    	gridHtml=[
+                "<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:14px;}",
+                "th {font-size:14px;font-weight:bold;text-align:center;} tr>td {text-align:center} tr {height:24px;} ",
+                "tr {height:35px;} .cell-operation {text-align:left;} table {table-layout:fixed;} .item-desc {width:200px;overflow:hidden;}</style>"
+        ];
+    	gridHtml.push('<table>');
+    	gridHtml.push('<thead><tr>');
+    	gridHtml.push('<th style="width:80px;">序号</th>');
+    	gridHtml.push('<th style="width:200px;">质控指标</th>');
+    	gridHtml.push('<th style="width:120px;">分子</th>');
+    	gridHtml.push('<th style="width:120px;">分母</th>');
+    	gridHtml.push('<th style="width:120px;">指标值</th>');
+    	gridHtml.push('</tr></thead>');
+    	gridHtml.push('<tbody>');
+	    
+    	for(var j=0;j<dataList.rows.length;j++){
+	    	row = dataList.rows[j];
+	    	gridHtml.push('<tr>');
+	    	gridHtml.push('<td>'+row.SeqNo+'</td>');
+	    	gridHtml.push('<td>'+row.OperQualityTitle+'</td>');
+	    	gridHtml.push('<td>'+row.Count+'</td>');
+	    	gridHtml.push('<td>'+row.Total+'</td>');
+	    	gridHtml.push('<td>'+row.Rate+'</td>');
+	    	gridHtml.push('</tr>');
+    	}
+    	
+    	gridHtml.push('</tbody></table>');
+    	
+    	lodop.ADD_PRINT_TABLE(120,40,"RightMargin:0.8cm",850,gridHtml.join(''));
+	    	
+    	setHeader();
+    	
+    	function setHeader(){
+	    	lodop.SET_PRINT_PAGESIZE(1, 0, 0, "A4");
+    		lodop.SET_PRINT_STYLE("FontName", "微软雅黑");
+    		lodop.SET_PRINT_STYLE("FontSize", 11);
+    		lodop.ADD_PRINT_TEXT(10, 300, 300, 30, "东华标准版数字化医院");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 21); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	
+    		lodop.ADD_PRINT_TEXT(60, 350, 400, 20, "麻醉质控报告");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 18); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		//lodop.SET_PRINT_STYLEA(0, "AlignJustify", 1) //两端对齐，居中
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    		
+    		lodop.ADD_PRINT_TEXT(90, 200, 560, 20, session.UserName);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 3) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    		
+    		var starDate=$("#OperStartDate").datebox("getValue");
+    		var endDate=$("#OperEndDate").datebox("getValue");
+    		var dateInfo=starDate+"至"+endDate;
+    		lodop.ADD_PRINT_TEXT(90, 40, 400, 20, dateInfo);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 10); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 1) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    		
+   			lodop.ADD_PRINT_TEXT(990, 0, 760, "BottomMargin:0.8cm", "第#页/共&页");
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 12); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 2) //居中对齐
+    		lodop.SET_PRINT_STYLEA(0, "VOrient", 1) //下边距锁定
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 3) //页号
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	}
+    	
+    	function setMonth(month)
+    	{
+	    	lodop.ADD_PRINT_TEXT(90, 40, 150, 20, month);
+    		lodop.SET_PRINT_STYLEA(0, "FontSize", 15); //设置字体
+    		lodop.SET_PRINT_STYLEA(0, "Bold", 1); //加粗
+    		lodop.SET_PRINT_STYLEA(0, "Alignment", 1) //靠右对齐
+    		lodop.SET_PRINT_STYLEA(0, "ItemType", 1) //页眉
+    		lodop.SET_PRINT_STYLEA(0, "LinkedItem", linedItemNo) //关联项目
+    	}
+	}
+
+	</script>
+</body>
+</html>

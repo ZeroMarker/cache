@@ -1,0 +1,103 @@
+<!-- 
+ * FileName: dhcbill.dc.checkresult.csp
+ * Author: tangzf
+ * Date: 2022-05-17
+ * Description: 数据核查结果展示
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+		<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+
+	<style>
+	<!-- 	.layout>.panel>.panel-header {
+		    -moz-border-radius: 4px 4px 0 0;
+		    -webkit-border-radius: 4px 4px 0 0;
+		    border-radius: 4px 4px 0 0;
+		}
+		.layout>.panel>.panel-body {
+		    -moz-border-radius: 0 0 4px 4px;
+		    -webkit-border-radius: 0 0 4px 4px;
+		    border-radius: 0 0 4px 4px;
+		}
+		.no-data {
+			width: 100%;
+			height: 100%;
+			background: url(../images/no_data.png) center center no-repeat;
+		}
+		.layout-panel-west {
+		    padding-right: 10px;
+		}
+		label.checkbox {
+		    margin-left: -6px;
+		}
+		.textbox.tb320 {
+			width: 320px;
+		} -->
+	</style>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',title:'核查结果',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper-info'" style="width:500px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="overflow:hidden;border-radius:0px;border-bottom:1px solid #cccccc;">
+					<table class="search-table">
+						<tr>
+							<td class='r-label'><label>院区</label></td>
+							<td><input id="hospital" class="textbox" style="width:142px;" placeholder=""/></td>
+						</tr>
+						<tr>
+							<td class='r-label'><label>关键字</label></td>
+							<td><input id="search" placeholder="" class="textbox" style="width:142px;"/></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="montList"></table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',title:'核查明细',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="overflow:hidden;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="overflow:hidden;border-radius:0px;border-bottom:1px dashed #cccccc;">
+					<table class="search-table">
+							<tr>
+								<td><label class='r-label'>审核标志</label></td>
+								<td><div><input id="CheckFlag" type="checkbox" style="margin-top:5px" /></div></td>
+								<td><label class='r-label'>关键字</label></td>
+								<td><div><input placeholder="输入关键字回车检索" id="search1" class="searchbox textbox" style="width:202px;"/></div></td>
+								<td class='r-label'><a id="btnFind"  onclick="loadConfPage()"  href="#" class="hisui-linkbutton" style="width:116px" data-options="iconCls:'icon-w-find'" >查询</a></td>		
+							</tr>
+					</table>  
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="ckDet"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="dgTB" class="hisui-toolbar" >
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td><a id="btnAudit"  onclick="Audit()"  href="#" class="hisui-linkbutton" plain=true data-options="iconCls:'icon-save'" >审核</a></td>		
+					<td class='r-label'><label>审核备注</label></td>
+					<td><div><input id="AuditDemo" class="textbox" style="width:144px;"/></div></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/checkresult.js"></script>
+</body>
+</html>

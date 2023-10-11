@@ -1,0 +1,101 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<body class="hisui-layout">
+    <script language=Cache runat=server>
+        s LSourceType=$Get(%request.Data("LSourceType",1))
+        s LSourceID=$Get(%request.Data("LSourceID",1))
+        s ReadOnly=$Get(%request.Data("ReadOnly",1))
+        s LRowID=$Order(^DHCEQLand(0,"Source",LSourceType,LSourceID,0))
+        s (LEquipDR,EQName)=""
+        if LSourceType=0
+        {
+            s EQName=$p($g(^DHCEQOpenCheckList(LSourceID)),"^",2)
+        }
+        elseif LSourceType=1
+        {
+            s LEquipDR=LSourceID
+            s EQName=$Piece($Get(^DHCEQEquip(LEquipDR)),"^",1)
+        }
+    </script>
+    <div data-options="region:'center',border:false">
+        <div class="hisui-panel" data-options="border:false" style="padding:10px;">
+            <div>
+                <!--div class="eq-table">
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-item">基本信息</div>
+                    </div>
+                </div-->
+                <div class="eq-table">
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cLEquipDR_EQName" for="LEquipDR_EQName">土地名称</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LEquipDR_EQName" disabled="true" value="#(EQName)#"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLOwnerKind" for="LOwnerKind">权属性质</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LOwnerKind"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLOwnerFlag" for="LOwnerFlag">产权形式</label></div>
+                        <div class="eq-table-td eq-table-input"><input class='hisui-validatebox' id="LOwnerFlag"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cLOwnerCertificate" for="LOwnerCertificate">权属证明</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LOwnerCertificate"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLCertificateNo" for="LCertificateNo">权属证号</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LCertificateNo"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLHold1" for="LHold1">权属人</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LHold1"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                    	<div class="eq-table-td eq-table-label"><label id="cLOwnershipYear" for="LOwnershipYear">权属年限</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LOwnershipYear"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLCertificateDate" for="LCertificateDate">发证日期</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="LCertificateDate"></div>
+                    	<div class="eq-table-td eq-table-label"><label id="cLPlace" for="LPlace">坐落位置</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LPlace"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                    	<div class="eq-table-td eq-table-label"><label id="cLSelfOwnArea" for="LSelfOwnArea">独用面积(m²)</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LSelfOwnArea"></div>
+                       	<div class="eq-table-td eq-table-label"><label id="cLShareArea" for="LShareArea">分摊面积(m²)</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LShareArea"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLSelfUsedArea" for="LSelfUsedArea">在用面积(m²)</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LSelfUsedArea"></div>
+                    </div>
+                    <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><label id="cLLendingArea" for="LLendingArea">出借面积(m²)</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LLendingArea"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLRentArea" for="LRentArea">出租面积(m²)</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LRentArea"></div>
+                        <div class="eq-table-td eq-table-label"><label id="cLIdleArea" for="LIdleArea">闲置面积(m²)</label></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LIdleArea"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'south',border:false" class="footer">
+        <div class="footer-box">
+            <div style="float:left;width:100%;"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+        </div>
+    </div>
+
+    <!--隐藏元素-->
+    <div id="hiddenEncrypt" style="display:hidden">
+        <form name="DHCEQ">
+            <INPUT type="hidden" id="LSourceType" value="#(LSourceType)#">
+            <INPUT type="hidden" id="LSourceID" value="#(LSourceID)#">
+            <INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+            <INPUT type="hidden" id="LRowID" value="#(LRowID)#">
+            <INPUT type="hidden" id="LEquipDR" value="#(LEquipDR)#">
+        </form>
+    </div>
+    <script type='text/javascript' src='../scripts/dhceq/em/land.js'></script>
+</body>
+</html>

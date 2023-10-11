@@ -2,6 +2,10 @@
 	set act = $g(%request.Data("act",1))
 	Set dirname = $g(%request.Data("dirname",1)) //##class(web.Util.DHCJFXMLOperate).GetPhysicalPath($g(%request.Data("dirname",1)))
 	if (act="download"){
+		if ($d(%request.Data("errorMsg",1), errorMsg)) {
+			Write "{""fileFullName"":"""",""msg"":"""_##class(ext.util.String).EvalJSON(errorMsg)_"""}"
+			Quit "" 
+		}
 		if (ServerType="HTTP"){
 			set rtn = ##class(websys.File).HTTPDownLoad(dirname,filename,.stream)
 		}else{
@@ -28,6 +32,10 @@
 			if $g(filename)=""{
 				try{ ;前台是file提交fileStream是File对象  ;用Uploadfiy提交fileStream是%CSP.BinaryStream对象 
 					Set filename = fileStream.FileName
+					Set filename = $p(filename,"\",$l(filename,"\"))  //在信任站点情况下 文件名会包含客户端本地的路径
+					Set filename = $p(filename,"/",$l(filename,"/"))
+					
+					
 				}catch(e){
 					Set filename = "undefined.dat"
 				}
@@ -35,7 +43,7 @@
 			if (ServerType="HTTP"){
 				set rtn = ##class(websys.File).HTTPUpload(fileStream,dirname,filename)
 			}else{
-				set rtn = ##class(websys.File).FTPUpload(fileStream,dirname,fileStream.FileName)
+				set rtn = ##class(websys.File).FTPUpload(fileStream,dirname,filename)
 			}
 			if (+rtn>0){
 				Write "{""fileFullName"":"""_##class(ext.util.String).EvalJSON($p(rtn,"^",2))_"""}"
@@ -48,9 +56,11 @@
 </script>
 <script language=Cache method=OnPreHTTP arguments="" returntype=%Boolean>
 	Set ServerType="HTTP"
-	Set Obj=##Class(websys.DHCMessageConfig).%OpenId(1)
-	if Obj{
-		Set ServerType = Obj.DHCMCAttaServerType,Obj=""
+	if $D(^oddDEF("websys.DHCMessageConfig","a","DHCMCAttaServerType")){
+		Set Obj=##Class(websys.DHCMessageConfig).%OpenId(1)
+		if Obj{
+			Set ServerType = Obj.DHCMCAttaServerType,Obj=""
+		}
 	}
 	if $d(%request.Data("servertype",1)) Set ServerType = $g(%request.Data("servertype",1))
 	; 附件服务器与消息服务器是同一台服务器时 flash上传文件,新起会话,破坏旧会话,导致会话超时
@@ -65,12 +75,16 @@
 	set act = $g(%request.Data("act",1))
 	if (act="download"){
 		//2018-5-14 修复pdf,xlsx等下载下来无法正确查看问题
-		set ext=$p(filename,".",$l(filename,"."))   
-		d ##class(%CSP.StreamServer).FileClassify(ext,.type,.bin,.charset)
-		s %response.CharSet=charset
-		set %response.ContentType=type  
-		//if filename'="" set ^cryze("filedownload",filename)=type_","_bin_","_charset
-		Do %response.SetHeader("Content-Disposition", "attachment; filename="_##class(%CSP.Page).EscapeURL(filename))
+		set ext=$p(filename,".",$l(filename,".")) 
+		if ",xls,xml,xlsx,doc,docx,txt,csv,pdf,html,js,css,jpg,jpeg,png,bmp,gif,"[(","_ext_","){   //图片也改为允许
+			d ##class(%CSP.StreamServer).FileClassify(ext,.type,.bin,.charset)
+			s %response.CharSet=charset
+			set %response.ContentType=type  
+			//if filename'="" set ^cryze("filedownload",filename)=type_","_bin_","_charset
+			Do %response.SetHeader("Content-Disposition", "attachment; filename="_##class(%CSP.Page).EscapeURL(filename))
+		}else{
+			q 0
+		}
 	} elseif(act="upload"){
 	}
 	Quit 1

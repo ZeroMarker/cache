@@ -1,109 +1,147 @@
 <!DOCTYPE html>
-<!--配液大屏
-	csp:dhcpha.pivas.screen.wardstate.csp
-	js: scripts/pharmacy/pivas/screenwardstate.js
---> 
+<!--
+    配液大屏
+	csp: csp/dhcpha.pivas.screen.wardstate.csp
+	js:  scripts/pharmacy/pivas/screenwardstate.js
+-->
+
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
-	q 1
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
 </csp:method>
 <HTML XMLNS=TRAK>
-	<HEAD>
-		<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
-		<TRAK:HEAD>
-		</TRAK:HEAD>
-		<HISUI/>
-	    <link rel="stylesheet" type="text/css" href="../scripts/dhcpha/css/dhcpha.hisui.css" ></script> 
-		<style type="text/css">
-		.pivas-ward{
-			float:left;
-			width:250px;
-			font-size:17px;
-			border:2px solid #509DE1;
-			margin:5px	
-		}
-		.has-switch span.switch-warning {
-			background:#cccccc
-		}
-		.has-switch span.switch-warning:hover,
-		.has-switch span.switch-warning:focus,
-		.has-switch span.switch-warning:active,
-		.has-switch span.switch-warning.active,
-		.has-switch span.switch-warning.disabled,
-		.has-switch span.switch-warning[disabled] {
-		  color: #ffffff;
-		  background-color: #cccccc;
-		}
-		.has-switch span.switch-warning:active,
-		.has-switch span.switch-warning.active {
-		  background-color: #cccccc;
-		}
-		</style>
-	</HEAD>
-	<body>
-		<div class="hisui-layout" fit="true" border="false">
-			<div data-options="region:'north',height:65" style="background:#337ab7;color:white;font-weight:700;font-size:17px;height:56px;overflow:hidden" border="false">
-				<div style="border-bottom:2px solid white;height:54px">
-					<div style="float:left;text-align:center;padding:5px 10px 5px 10px;border-right: 2px solid white;width:20%;">
-						<div id="txtHospName" style="font-size:17px">
-							医院名称
-						</div>
-						<div id="txtLocName" style="font-size:17px">
-							配液和中心
-						</div>
-					</div>
-					<div style="float:left;width:60%;text-align:center;font-weight:700;font-size:30px;line-height:50px;">
-						<div id="clockTimeNow" >
-							<span id="clockDate" style="font-size:30px">日期</span>
-							<span id="clockTime" style="font-size:30px">时间</span>
-						</div>
-					</div>
-					<div style="float:right;text-align:center;padding:5px 10px 5px 10px;border-left: 2px solid white;width:10%;">
-						<div style="font-size:17px">
-							东华医为
-						</div>
-						<div style="font-size:17px">
-							MediWay
-						</div>
-					</div>
-				</div>
-				<div style="height:10px;width:100%;clear:both;background:white;">
-					<div id="timeDis" style="width:0px;background:#337ab7;height:10px">
-					</div>
-				</div>
-			</div>
-			<div data-options="region:'center'" border="false">
-				<div class="hisui-layout" fit="true" border="false">
-					<div data-options="region:'north'"  border="false" style="height:35px;border-bottom:1px solid #cccccc;line-height: 30px;">
-						<div id="swcBatNoList" style="float:left">	
-						</div>
-					</div>
-				<div data-options="region:'center',border:false" class="dhcpha-hisui-container">
-					<!--预留,暂时先做表格的-->
-					<!--div class="pivas-ward">
-						<div style="border-bottom:2px solid #509DE1;font-weight:bold">
-							中西医结合八百病区
-						</div>
-						<div style="width:100%">
-							<div style="width:50%;float:left">
-								打签 200 
-							</div>
-							<div style="width:50%;float:left">
-								分签 400
-							</div>
-						</div>
-					</div-->
-					<table id="gridWardState">
-    
-					</table>
-				</div>
-				</div>
 
-			</div>
-		</div>
-	    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-	    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-	    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script> 
-		<script type="text/javascript" src="../scripts/pharmacy/pivas/screenwardstate.js"></script>
-	</body>
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <style>
+        .pha-body {
+            padding: 10px;
+        }
+
+        .pha-pivas-screen-body {
+            /* padding: 10px */
+        }
+
+        .pha-pivas-screen-banner {
+            height: 120px;
+            /* border-radius: 4px; */
+            background-size: 100% 100%;
+            background-image: url(../scripts/pharmacy/images/pivas-screen-banner.png);
+        }
+
+        .pha-pivas-screen-banner * {
+            font-size: 20px;
+            color: #fff
+        }
+
+        .pha-pivas-screen-banner>div {
+            float: left;
+            text-align: center;
+        }
+
+        .pha-pivas-screen-banner .pha-left {
+            width: 25%;
+            padding-top: 28px;
+        }
+
+        .pha-pivas-screen-banner .pha-right {
+            width: 25%;
+            padding-top: 28px;
+        }
+
+        .pha-pivas-screen-banner .pha-center {
+            width: calc(50% - 4px);
+            padding-top: 44px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .pha-pivas-screen-banner .pha-split {
+            margin-top: 21px;
+            background: url(../scripts/pharmacy/images/pivas-screen-banner-split.png);
+            width: 2px;
+            height: 80px;
+            background-image: linear-gradient(180deg, #ffffff 0%, #5bb2ff 100%);
+        }
+
+        #swcBatNoList>div {
+            margin-left: 10px;
+        }
+
+        #swcBatNoList>div:first-child {
+            margin-left: 0px;
+        }
+
+    </style>
+</HEAD>
+
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'north',border:false,split:true" style="overflow: hidden;height: 130px;">
+                    <div class="pha-pivas-screen-body">
+                        <div class="pha-pivas-screen-banner">
+                            <div class="pha-left">
+                                <div id="hospName">医院名称</div>
+                                <div id="locName" style="padding-top:13px">科室名称</div>
+                            </div>
+                            <div class="pha-split">
+                            </div>
+                            <div class="pha-center" id="timeInfo">
+                                日期时间
+                                <!-- 2022年06月23日 12:13:12 星期一 -->
+                            </div>
+                            <div class="pha-split">
+                            </div>
+                            <div class="pha-right">
+                                <div>#(..Get("东华医为"))#</div>
+                                <div style="padding-top:13px">
+                                    <!-- <div class="pha-logo"></div> -->
+                                    <img src="../scripts/pharmacy/images/logon-mediway.png" style="width: 4.5em;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                    <table id="gridWardState">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridWardStateBar" class="pha-con-datagrid-toolbar">
+        <div style="float: left;">
+            <table class="pha-con-table">
+                <tr>
+                    <td>
+                        <div>#(..Get("批次"))#</div>
+                    </td>
+                    <td>
+                        <div id="swcBatNoList"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="float: right;display: none;">
+            <div style="margin: 6px 4px 0px 0px;">
+                <a class="hisui-linkbutton pivas-full" data-options="iconCls:'icon-all-screen',plain:true" ></a>
+                <a class="hisui-linkbutton pivas-full js-pivas-full-exit" data-options="iconCls:'icon-all-screen',plain:true" style="display:none;" ></a>
+            </div>
+            <!-- <img src="../scripts/pharmacy/common/image/full-screen.svg" title="全屏" class='pivas-full'></img> -->
+            <!-- <img src="../scripts/pharmacy/common/image/full-screen-cancel.svg" title="取消全屏" class="pivas-full" style="display: none;"></img> -->
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/screenwardstate.js"></script>
+</body>
+
 </HTML>

@@ -4,7 +4,11 @@
  ; Let's trap the errors and try and avoid those 5294 errors
  s $zt="Error^"_$zn
  if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
- i ##Class(websys.SessionEvents).SessionExpired() q 1
+ Set TMENU=$g(%request.Data("TMENU",1))
+ // 20210826 增加判断, 如果系统超时后,再点击[重新登录]菜单,不能q 1
+ 
+ if ##Class(websys.SessionEvents).SessionExpired()&&(TMENU'=4) q 1
+ Do %session.Lock()
  n j,TFORM,TEVENT,TMENU,TNAVGOTO,TWKFL,TWKFLI,TPAGCNT,TPAGID,TSRTITM,TryAgain,e,val,TREPORT,thisdev,TOVERRIDE,compid,TWKFLL,TWKFLJ,Tinserted
  s thisdev=$I
  s %response.ServerSideRedirect=""
@@ -48,7 +52,7 @@
  d:TMENU'="" ..Menu()
  ;m ^Temp("Upgrade","websys.csp","session",2)=%session.Data
  ;m ^Temp("Upgrade","websys.csp","request",2)=%request.Data
-
+ d %session.%Save()
  ;
  ;如果没有工作流,Kill, 如果工作流发生变化,将前面保存的临时工作流Id信息删除
  i 'TWKFL k ^TMP("find",%session.SessionId)
@@ -109,7 +113,8 @@
 	}
 	d msg.%Save()
  } else {
-	d ##Class(websys.Lock).LockClearSession(%session.SessionId)
+ 	// 2021-06-06 只有TRAK_main中打开时清锁
+	if %request.Get("TMENUOPENFRM")="main" d ##Class(websys.Lock).LockClearSession(%session.SessionId)
  }
  d msg.%Close()
  ;

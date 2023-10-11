@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--docdoc.cure.secondescreen.hui.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<STYLE type='text/css'>
+.panel-header>div.panel-tool>a.layout-button-left{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-down{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-up{
+	display:none
+}
+</STYLE>
+<Server>
+	;界面展示来源：AssEntry(治疗评估) ApplyEntry(治疗申请)
+	s PageShowFromWay=$g(%request.Data("PageShowFromWay",1))		
+	s DCAssRowId=$g(%request.Data("DCAssRowId",1))
+	s AssUrl=$g(%request.Data("AssUrl",1))
+	s EpisodeID=$g(%request.Data("EpisodeID",1))
+	i DCAssRowId'="" d
+	.s EpisodeID=$p(^DHCDocCure(+DCAssRowId),"^",1)
+	
+	s PatientID=$p($g(^PAADM(EpisodeID)),"^",1)
+	s CuDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	s PreDate=##class(websys.Conversions).DateLogicalToHtml(+$h-90)
+</Server>
+</head>
+<body>
+<csp:Include Page="docdoc.cure.secondescreen.show.hui.csp">
+<script type="text/javascript">
+	var ServerObj={
+		PageShowFromWay:"#(PageShowFromWay)#",
+		DCAssRowId:"#(DCAssRowId)#",
+		AssUrl:"#(AssUrl)#",
+		EpisodeID:"#(EpisodeID)#",
+		PatientID:"#(PatientID)#",
+		CuDate:"#(CuDate)#",
+		PreDate:"#(PreDate)#"
+	};
+</SCRIPT>
+
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.openwin.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/oeorder.cure.secondescreen.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/applydatagrid.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+</body>
+</html>

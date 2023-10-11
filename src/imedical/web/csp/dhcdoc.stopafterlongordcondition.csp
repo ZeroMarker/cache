@@ -1,0 +1,113 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--dhcdoc.stopafterlongordcondition.csp-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
+    <meta http-equiv="Content-Type" content="text/html;"/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI></HISUI>
+    <style>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+		padding: 0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.panel-header{
+		border-bottom: 0;
+	}
+	#panel-footer{
+		text-align: center;
+		height:40px;
+		line-height:40px;
+	}
+	</style>
+<server>
+ s type=%request.Get("type")
+ s DateFormat=##class(websys.Conversions).DateFormat()
+ s DealExecStartOnZeroBySpecOrder=##class(web.DHCDocConfig).GetDHCCTLOCFieldValue(%session.Get("LOGON.CTLOCID"),31)
+</server>
+ <script type="text/javascript" src="../scripts/dhcdoc/StopAfterLongOrdCondition.js"></script>
+</head>
+<body class="hisui-layout" data-options="fit:true,border:false">
+  	<div data-options="region:'center',split:true,title:'',border:false" style="padding:5px 10px;overflow:hidden;"> 
+ 		 <div class="hisui-panel" fit="true" border="false" style="height:100%;margin:0 auto;overflow:hidden;">
+ 		 	<table class="search-table">
+ 		 	<csp:if condition='type="NeedDischgCond"'>
+   		 		<tr>
+					<td class="r-label">
+						<label for="Combo_DischargeConditionSel">#(..Get("出院条件"))#</label>
+					</td>
+					<td>
+						<input class="textbox" id="Combo_DischargeConditionSel" style="width:240px;"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label for="Combo_DischargeMethod">#(..Get("离院方式"))#</label>
+					</td>
+					<td>
+						<input class="textbox" id="Combo_DischargeMethod" style="width:240px;"/>
+					</td>
+				</tr>
+			</csp:if>
+	   		<csp:if condition='type="NeedDeathDate"'>
+   		 		<tr>
+					<td class="r-label">
+						<label for="DeathDate">#(..Get("死亡日期"))#</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox" id="DeathDate" style="width:240px;" data-options="formatter:myformatter,parser:myparser"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label for="DeathTime">#(..Get("死亡时间"))#</label>
+					</td>
+					<td>
+						<input class="hisui-timespinner textbox" id="DeathTime" style="width:240px;" data-options="showSeconds:true"/>
+					</td>
+				</tr>
+ 		 	</csp:if>
+ 		 		<tr>
+ 		 			<td class="r-label">
+						<label for="DeathDate">#(..Get("停长嘱日期"))#</label>
+					</td>
+					<td>
+						<input class="hisui-datebox textbox" id="LongOrdStopDate" style="width:240px;" data-options="formatter:myformatter,parser:myparser"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label">
+						<label for="DeathDate">#(..Get("停长嘱时间"))#</label>
+					</td>
+					<td>
+						<input class="hisui-timespinner textbox" id="LongOrdStopTime" style="width:240px;" data-options="showSeconds:true"/>
+					</td>
+ 		 		</tr>
+ 		 		<tr>
+ 		 			<td class="r-label" colspan="2" style="color:red;font-weight:bold;text-align: left;"><div id='tip'></div></td>
+ 		 		</tr>
+ 		 	</table>
+   		 	<div id="panel-footer">
+				<a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				<div style="display:inline-block;margin:0 20px;"></div>
+				<a href="#" id="BCancel" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a>
+			</div>
+ 		 </div>
+  	</div>
+  	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			type:"#(type)#",
+			DateFormat:"#(DateFormat)#",
+			DealExecStartOnZeroBySpecOrder:"#(DealExecStartOnZeroBySpecOrder)#"
+		};
+	</SCRIPT>
+</body>
+</html>

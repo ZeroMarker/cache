@@ -1,0 +1,257 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s USERCODE = $G(%session.Data("LOGON.USERCODE"))
+ s USERNAME = $G(%session.Data("LOGON.USERNAME"))
+ s HOSPID=$G(%session.Data("LOGON.HOSPID"))
+ s (HospCode,LocCode,LocName,HospName)=""
+ i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+ i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
+ s AdmNo=%request.Get("AdmNo")
+ //处理医院信息 
+ s HospitalDR=""
+ i $l(HospCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
+ //处理用户信息
+ i $l(USERCODE) s CollectUserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
+ 
+ //获取当前登录人员主题设置
+  s HISUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion") 
+  s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.css""/>"   //默认炫彩
+  i HISUIVersion="lite" s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.lite.min.css""/>"  
+  w hrefstr
+</SERVER>
+<!-- Put your page Title here -->
+<title>知情同意书</title>
+	 <!--link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" /-->
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+	
+</head>
+<body class="hisui-layout">
+    <div data-options="region:'center',split:false,border:false" style="">
+        <div class="hisui-panel" title="" data-options="headerCls:'panel-header-gray',iconCls:'icon-search',closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true,border:false" style="">
+            <div id="ids" class="hisui-layout" data-options="fit:true,border:false">
+             
+                <div data-options="region:'center',border:false,headerCls:'panel-header-gray'">
+                    <div class="hisui-panel" data-options="closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true,titile:'',bodyCls:'panel-header-gray',border:false" style="">
+                        <table id="dg_BDAdverseReactionSampleList">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="ReactionInfo_window" class="hisui-window" title="详细信息" data-options="closed:true" style="width: 1200px; height: 550px; padding: 5px;">
+        <iframe id="if_ReactionInfo" src="" frameborder="0" style="height: 99%; width: 100%"></iframe>
+    </div>
+    
+    <script type="text/javascript">
+	
+		var me = {
+            findType: '0'
+        };
+         var AdmNo =#((AdmNo))#
+        $(function () {
+            //初始化datagrid
+            $("#dg_BDAdverseReactionSampleList").datagrid({
+                fit: true,
+                fitColumns: false,
+                title: "不良反应单列表",
+                headerCls: 'panel-header-gray',
+                pagination: true,
+                nowrap: true,
+                pageSize: 20,
+                pageList: [20, 50, 100, 200],
+                singleSelect: true,
+                checkOnSelect: false,
+                selectOnCheck: false,
+                rownumbers: true,
+                remoteSort: false,
+                border: true,
+                iconCls:'icon-paper',
+                toolbar:[],
+                columns: [[
+                    { field: 'BDAdverseReactionRowID', title: 'RowID', hidden: true, width: 120, align: 'left' },
+                    {
+                        field: 'ReactionNo', title:  '不良反应单号', sortable: true, width: 120, align: 'left'
+                       
+                    },
+                    { field: 'PatName', title: '姓名', sortable: true, width: 70, align: 'left' },
+                    
+                    { field: 'SpeciesName', title: '性别', sortable: true, width: 50, align: 'left' },
+                    {
+                        field: 'AgeDesc', title:  '年龄', sortable: true, width: 60, align: 'left'
+                      
+                    },
+
+                    
+                    {
+                        field: 'StatusDesc', title:  '状态', sortable: true, width: 80, align: 'left'
+                       
+                    },
+                    { field: 'AddDate', title: '创建日期', sortable: true, width: 100, align: 'left' },
+                    { field: 'AddTime', title:  '创建时间', sortable: true, width: 80, align: 'left' },
+                    { field: 'AddUserName', title:  '创建人', sortable: true, width: 70, align: 'left' },
+                    { field: 'RegNo', title:'登记号', sortable: true, width: 90, align: 'left', },
+                    { field: 'MedicalRecordNo', title: '病案号', sortable: true, width: 80, align: 'left', hidden: true },
+                    { field: 'LocationName', title:  '科室', sortable: true, width: 150, align: 'left' },
+                    { field: 'WardName', title:  '病区', sortable: true, width: 150, align: 'left' },
+                    { field: 'BedNo', title:  '床号', sortable: true, width: 50, align: 'left' },
+                    { field: 'Diagnosis', title:  '诊断', sortable: true, width: 150, align: 'left' },
+
+                    { field: 'StartTransfusionDate', title: '开始输血日期', sortable: true, width: 100, align: 'left' },
+                    { field: 'StartTransfusionTime', title: '开始输血时间', sortable: true, width: 100, align: 'left' },
+                    { field: 'AdverseReactionDate', title: '不良反应日期', sortable: true, width: 100, align: 'left' },
+                    { field: 'AdverseReactionTime', title:  '不良反应时间', sortable: true, width: 100, align: 'left' },
+                    { field: 'RectionPerformance', title:  '不良反应表现症状', sortable: true, width: 250, align: 'left' },
+                    //{ field: 'ResultIn', title:  TranslateDataMTHD("ReactionNo","不良反应导致结果",""), sortable: true, width: 80, align: 'left' },
+                    { field: 'ResultDate', title:  '结果发生日期', sortable: true, width: 100, align: 'left' },
+                    { field: 'ResultTime', title:  '结果发生时间', sortable: true, width: 100, align: 'left' },
+                    { field: 'ResultNote', title:  '结果原因说明', sortable: true, width: 100, align: 'left' },
+                    { field: 'ClinicalTreatment', title:  '临床处理情况', sortable: true, width: 250, align: 'left' },
+                    //{ field: 'IDNumber', title: '身份证号', sortable: true, width: 130, align: 'left' },
+                    { field: 'ABOName', title: 'ABO', sortable: true, width: 60, align: 'left' },
+                    { field: 'RHName', title: 'RH', sortable: true, width: 60, align: 'left' },
+                    //{ field: 'Ethnicity', title: '民族', sortable: true, width: 60, align: 'left' },
+                ]]
+            });
+            $("#dg_BDAdverseReactionSampleList").datagrid("loadData", []);
+            QueryBDAdverseReactionSampleList();
+            //初始化日期
+            /*var thisDate = GetCurentDate();
+            $("#db_SttDate").datebox('setValue', thisDate);
+            $("#db_EndDate").datebox('setValue', thisDate);
+
+            //初始化申请科室
+            $("#cg_Location").combogrid({
+                //url: '../../sys/ashx/ashBTLocation.ashx?method=Find',
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryWard&FunModul=JSON',
+                method: 'get',
+                panelWidth: 300,
+                multiple: true,
+                idField: 'RowID',
+                textField: 'CName',
+                columns: [[
+                    { field: 'RowID', title: 'ID', width: 40, sortable: true, align: 'center' },
+                    { field: 'Code', title: '代码', width: 70, sortable: true, align: 'center' },
+                    { field: 'CName', title: '名称', width: 150, sortable: true, align: 'center' }
+                ]]
+            });
+            //初始化创建人
+            $("#cb_AddUser").combogrid({
+                //url: '../../sys/ashx/ashCodeTable.ashx?Model=SYSUser&GlobalParam=&Method=Query&page=1&rows=20&sort=RowID&order=asc',
+                url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryUser&FunModul=JSON',
+                idField: 'RowID',
+                textField: 'CName',
+                method: 'get',
+                panelWidth: 300,
+                multiple: true,
+                columns: [[
+                    { field: 'RowID', title: 'ID', width: 40, sortable: true, align: 'center' },
+                    { field: 'Code', title: '代码', width: 70, sortable: true, align: 'center' },
+                    { field: 'CName', title: '名称', width: 150, sortable: true, align: 'center' }
+                ]]
+            });
+
+            //            //初始化创建人
+            //            $("#cb_AddUser").combogrid({
+            //                url: '../../sys/ashx/ashSYSUser.ashx?method=Find',
+            //                valueField: 'RowID',
+            //                textField: 'CName',
+            //                multiple: true
+            //            });
+            //快速查询
+            $('#vdb_RecordNo').keypress(function (event) {
+                if (event.keyCode == "13") {
+                    QueryBDAdverseReactionSampleList();
+                }
+            });
+            //清空按钮的执行，清空所有文本框的值
+            $('#btn_clear').click(function () {
+                $('#dg_BDAdverseReactionSampleList').datagrid('loadData', { total: 0, rows: [] });
+                var Locations = $("#cg_Location").combogrid("setValue", "");
+                var ReqType = $("#cb_ReqType").combobox("setValue", "");
+                var ReqFormNo = $("#vdb_RecordNo").val("");
+                var AddUser = $("#cb_AddUser").combogrid("setValue", "");
+                var Status = $("#cb_Status").combobox("setValue", "");
+                var IsExcess = $("#cb_IsExcess").combobox("setValue", "");
+            });*/
+        });
+        //选择查询的按钮
+        function mnuFindFastClick(value, icon, name) {
+            me.findFlag = value;
+            $('#mnu_FindFast').menubutton({ menu: '#mnu_FindFastType', iconCls: icon, text: name });
+            $('#vdb_RecordNo').focus();
+            $('#vdb_RecordNo').select();
+        }
+        //查询
+        function QueryBDAdverseReactionSampleList() {
+           /* var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var Status = $("#cb_Status").combobox("getValues").toString();
+            var Locations = $("#cg_Location").combogrid("getValues").toString();
+            var AddUser = $("#cb_AddUser").combogrid("getValues").toString();
+            var RegNo = "";
+            var SurName = "";
+            var RecordNo = "";
+            var Labno = "";
+            var FindTxt = $('#vdb_RecordNo').val();
+            var FindType = me.findFlag;
+            switch (FindType) {
+                case "RegNo":
+                    RegNo = FindTxt;
+                    break;
+                case "Labno":
+                    Labno = FindTxt;
+                    break;
+                case "SurName":
+                    SurName = FindTxt;
+                    break;
+                default:
+                    RecordNo = FindTxt;
+                    break;
+            }*/
+            $("#dg_BDAdverseReactionSampleList").datagrid({
+                //url: "../ashx/ashQueryBDAdverseReactionSample.ashx?method=StatBDAdverseReactionSample&SttDate=" + SttDate + "&EndDate=" + EndDate + "&FRecordNo=" + RecordNo + "&FAddUserDR=" + AddUser + "&FLocationDR=" + Locations + "&FRegNo=" + RegNo + "&FSurName=" + SurName + "&FStatus=" + Status
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QueryBDAdverseReactionSample&FunModul=JSON&P8='+AdmNo
+
+			})
+        }
+        //输出excel
+        function Export() {
+
+            ExportGridToExcel("不良反应表", $('#dg_BDAdverseReactionSampleList'));
+
+        }
+        //查询不良反应详细信息
+        function QryReactionInfo(ReactionDR) {
+            var ReactionDRcol = '#RecordNo' + ReactionDR;
+            $(ReactionDRcol).attr("style", "color:red;");
+            $("#ReactionInfo_window").window('open');
+            $("#if_ReactionInfo").attr("src", 'frmAdverseReactionInfo.aspx?ReactionDR=' + ReactionDR);
+        }
+        //autodivheight();
+        function autodivheight() {
+            $("#ReactionInfo_window").height(document.documentElement.clientHeight - 100);
+
+        }
+        window.onresize = autodivheight;
+		</script>
+	
+</body>
+
+</html>
+

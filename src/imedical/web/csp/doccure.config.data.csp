@@ -1,14 +1,78 @@
 <csp:content charset="utf-8"> 
 <SERVER>
- s action=$Get(%request.Data("action",1))
- s GroupID=%session.Get("LOGON.GROUPID")
- s DocID=%session.Get("LOGON.USERID")
- s CTLOCID=%session.Get("LOGON.CTLOCID")
- s para=$Get(%request.Data("para",1))
- s ^DHCIETest("action",1)=action_"&"_GroupID_"&"_DocID_"&"_CTLOCID_"&"_para
- s CFGFlag=##class(web.DHCDocConfig).GetConfigNode1("TreeMaintain",GroupID)
- if action="cure"{
-	 d ##class(DHCDoc.DHCDocCure.Config).BuildMenuJson(para)
- }
+	s action=$Get(%request.Data("action",1))
+	s GroupID=%session.Get("LOGON.GROUPID")
+	s DocID=%session.Get("LOGON.USERID")
+	s CTLOCID=%session.Get("LOGON.CTLOCID")
+	s para=$Get(%request.Data("para",1))
+	s ^DHCIETest("action",1)=action_"&"_GroupID_"&"_DocID_"&"_CTLOCID_"&"_para
+	s CFGFlag=##class(web.DHCDocConfig).GetConfigNode1("TreeMaintain",GroupID)
+	if action="cure"{
+		d ##class(DHCDoc.DHCDocCure.Config).BuildMenuJson(para)
+	}
+	elseif action="Config_Set" {
+		s HospId=%request.Get("HospId")
+		s UserID=%request.Get("UserID")
+		s GroupID=%request.Get("GroupID")
+		s LoginGroupRowId=%request.Get("LoginGroupRowId")
+		s AppListScale=%request.Get("AppListScale")
+		if (AppListScale="") s AppListScale="60"
+		s SingleAppointMode=%request.Get("SingleAppointMode")
+		s ScheuleGridListOrTab=%request.Get("ScheuleGridListOrTab")
+		s UIConfigObj="{"
+		s UIConfigObj=UIConfigObj_"DocCure_layoutConfig1:"_%request.Get("layoutConfig1")
+		s UIConfigObj=UIConfigObj_","_"DocCure_layoutConfig2:"_%request.Get("layoutConfig2")
+		s UIConfigObj=UIConfigObj_","_"DocCure_AppListScale:"_%request.Get("AppListScale")
+		s UIConfigObj=UIConfigObj_","_"DocCure_SingleAppointMode:"_%request.Get("SingleAppointMode")
+		s UIConfigObj=UIConfigObj_","_"DocCure_ScheuleGridListOrTab:"_%request.Get("ScheuleGridListOrTab")
+		s UIConfigObj=UIConfigObj_"}"
+		
+		if (GroupID=""){
+			;用户配置需加上安全组
+			s UserIDGrp=UserID_"Z"_LoginGroupRowId
+			d ##class(web.DHCDocConfig).SaveConfig1("DocCure_UIConfigObj",UserIDGrp,UIConfigObj,HospId)
+			
+			//操作方式设置  页签展示业务操作列表
+			s layoutConfig1=%request.Get("layoutConfig1")
+			i layoutConfig1="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("DocCure_layoutConfig",UserIDGrp,"1",HospId)	
+			}
+			//操作方式设置  按钮弹窗展示业务操作列表
+			s layoutConfig2=%request.Get("layoutConfig2")
+			i layoutConfig2="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("DocCure_layoutConfig",UserIDGrp,"2",HospId)	
+			}
+		}else{
+			d ##class(web.DHCDocConfig).SaveConfig1("DocCure_UIConfigObj_Group",GroupID,UIConfigObj,HospId)
+			//操作方式设置  页签展示业务操作列表
+			s layoutConfig1=%request.Get("layoutConfig1")
+			i layoutConfig1="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("DocCure_layoutConfig_Group",GroupID,"1",HospId)	
+			}
+			//操作方式设置  按钮弹窗展示业务操作列表
+			s layoutConfig2=%request.Get("layoutConfig2")
+			i layoutConfig2="true" {
+				d ##class(web.DHCDocConfig).SaveConfig1("DocCure_layoutConfig_Group",GroupID,"2",HospId)	
+			}
+			
+		}
+		
+		w "{'success': true,'message':'保存成功.'}"
+	}elseif action="RestoreDefault" {
+		s HospId=%request.Get("HospId")
+		s UserID=%request.Get("UserID")
+		s GroupID=%request.Get("GroupID")
+		s LoginGroupRowId=%request.Get("LoginGroupRowId")
+		if (GroupID=""){
+			;用户配置需加上安全组
+			s UserIDGrp=UserID_"Z"_LoginGroupRowId
+			d ##class(web.DHCDocConfig).SaveConfig1("DocCure_UIConfigObj",UserIDGrp,"",HospId)
+			d ##class(web.DHCDocConfig).SaveConfig1("DocCure_layoutConfig",UserIDGrp,"",HospId)	
+		}else{
+			d ##class(web.DHCDocConfig).SaveConfig1("DocCure_UIConfigObj_Group",GroupID,"",HospId)
+			d ##class(web.DHCDocConfig).SaveConfig1("DocCure_layoutConfig_Group",GroupID,"",HospId)	
+		}
+		w "{'success': true,'message':'保存成功.'}"
+	}
  q 
 </SERVER>

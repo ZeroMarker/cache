@@ -1,0 +1,95 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<DHCEQ:Report></DHCEQ:Report>
+<style type="text/css">
+.eq_main_echarts{
+	width: 100%;
+	height: 100%;
+}
+.eq_main_ul
+{
+	padding:30px;
+}
+.eq_main_ul li
+{
+	padding:10px 10px;
+}
+.eq_main_ul li:not(:last-child) {
+	border-bottom:1px #e0e0e0 solid;
+}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s QXType=$Get(%request.Data("QXType",1))
+	s StartMonth=$Get(%request.Data("StartMonth",1))
+	s EndMonth=$Get(%request.Data("EndMonth",1))
+	i StartMonth="" s StartMonth=CurMonth
+	i EndMonth="" s EndMonth=CurMonth
+	
+	s UseLocDR=$Get(%request.Data("UseLocDR",1))
+	s UseLoc=##class(web.DHCEQCommon).GetTrakNameByID("dept",UseLocDR)
+	s EquipDR=$Get(%request.Data("EquipDR",1))
+	s Equip=$Get(%request.Data("Equip",1))
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="height:60px">
+					<div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><lable for="Equip">设备名称</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.Equip'" id="Equip" value=#(Equip)#></div>
+							<div class="eq-table-td eq-table-label"><lable for="UseLoc">科室</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="UseLoc" value=#(UseLoc)#></div>
+							<div class="eq-table-td eq-table-label"><lable for="StartMonth">开始月份</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartMonth" value=#(StartMonth)# data-options='validParams:"YM"'></div>
+							<div class="eq-table-td eq-table-label"><lable for="EndMonth">至</lable></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndMonth" value=#(EndMonth)# data-options='validParams:"YM"'></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="overflow:hidden;">
+					<iframe id="ReportFile" name="ReportFile" src=#(ReportFileSrc)# width=100% height=100% scrolling="no"></iframe>
+				</div>
+				<div data-options="region:'south',border:false" style="height:300px;overflow:hidden;">
+					<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="设备收入支出">
+						<div id="RevenueExpenditure" class="eq_main_echarts"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+			<INPUT TYPE="hidden" name="UseLocDR" id="UseLocDR" value=#(UseLocDR)#>
+			<INPUT TYPE="hidden" name="EquipDR" id="EquipDR" value=#(EquipDR)#>
+			
+			<INPUT TYPE="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)#>
+			<INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+		</form>
+	</div>
+	<script type='text/javascript'>
+		MonthBox('StartMonth');
+		MonthBox('EndMonth');
+	</script>
+	<script type="text/javascript" src="../scripts_lib/echarts3.7.2/echarts.min.js"></script>
+	<script type='text/javascript' src='../scripts/dhceq/common/echarts.js'></script>
+	<script type='text/javascript' src='../scripts/dhceq/ba/inoutdetailnew.js'></script>
+</body>
+</HTML>

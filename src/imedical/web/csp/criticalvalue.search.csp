@@ -5,12 +5,18 @@
 <!doctype html>
 <html>
 <head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<!--criticalvalue.search.csp-->
 	<title>	危急值查询 </title>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
 	<HISUI />
+	<script type="text/javascript" src="../scripts/dhccriticalvalue/common.js"></script>
 	<style>
 	.r-label{
 		padding-left:15px;	
+	}
+	#maintable .r-label:first-child{
+		padding-left:0px;	
 	}
 	</style>
 	<server>
@@ -22,6 +28,20 @@
 		i CarProvTpDR>0 Set Type = $p(^CT("CPT",CarProvTpDR),"^",4)
 		s EmrViewLink=##class(web.DHCAntCVOptions).GetBaseOpt("EmrViewLink")
 		s IsForOE=%request.Get("IsForOE")
+		s OnlyCurrLoc=%request.Get("OnlyCurrLoc")
+		s ExecTimeUsedData=##class(web.DHCAntCVOptions).GetBaseOpt("ExecTimeUsedData") //处理时间查询条件基础数据
+		if ExecTimeUsedData="" s ExecTimeUsedData="[]"
+		s ReceiveMode=##class(web.DHCAntCVOptions).GetBaseOpt("ReceiveMode")
+		s AllowChangeSysPat=%request.Get("AllowChangeSysPat")  //是否允许切换系统患者
+		s OnlyView=%request.Get("OnlyView") //仅查看
+		s HasNewOrderExecQuery=##class(%Dictionary.QueryDefinition).%ExistsId("web.DHCDocInPatPortalCommon||FindOrderExecDet")
+		s HospControl=%request.Get("HospControl")  //院区控制 LOGON当前登录院区，ALL所有院区，CUSTOM选择院区
+		s HospDesc=""
+		if %session.Get("LOGON.HOSPID")>0 s HospDesc=$p(^CT("HOSP",%session.Get("LOGON.HOSPID")),"^",2)
+		s ShowRecStatus=(ReceiveMode>0)
+		s RECTIMELIMIT=+(##class(web.DHCAntCVOptions).GetBaseOpt("RecTimeLimit"))  //及时接收时间限制分钟
+		s EXECTIMELIMIT=+(##class(web.DHCAntCVOptions).GetBaseOpt("ExecTimeLimit"))   //及时处理时间限制分钟
+		
 	</server>
 	<script type="text/javascript">
 		if(typeof GV=="undefined") var GV={};
@@ -34,35 +54,78 @@
 		GV.IsForOE="#(IsForOE)#";  //是不是门急诊查询界面  是 只保留日期查询条件 1分钟刷新一次
 		GV.ReportType="#(%request.Get("ReportType"))#";  //支持传入类型 查某单一类型危急值
 		GV.HospId="#(%session.Get("LOGON.HOSPID"))#";
+		GV.OnlyCurrLoc="#(OnlyCurrLoc)#";  //是否只查当前科室或病区的危急值
+		GV.ExecTimeUsedData=#(ExecTimeUsedData)#;
+		GV.ReceiveMode="#(ReceiveMode)#";
+		GV.AllowChangeSysPat="#($zcvt(AllowChangeSysPat,"O","JS"))#";
+		GV.OnlyView="#($zcvt(OnlyView,"O","JS"))#";
+		GV.HasNewOrderExecQuery='#(HasNewOrderExecQuery)#';
+		GV.HospControl="#($zcvt(HospControl,"O","JS"))#";
+		GV.HospDesc="#($zcvt(HospDesc,"O","JS"))#";
+		GV.RECTIMELIMIT="#(RECTIMELIMIT)#";
+		GV.EXECTIMELIMIT="#(EXECTIMELIMIT)#";
 	</script>
 	<script type="text/javascript" src="../scripts_lib/xlsx/grid2excel.js" charset="utf-8"></script>
 </head>
 
 <body class="hisui-layout">
-	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" fit="true" title="危急值查询" data-options="headerCls:'panel-header-gray'">
+	<div data-options="region:'center',border:false" style="padding:10px;background-color: transparent;">
+		<div class="hisui-panel" fit="true" title="危急值查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
 		<div class="hisui-layout" fit="true" id="center-layout">
-			<div data-options="region:'north',border:false" style="height:52px;padding:10px">
-					<table  cellspacing="0" cellpadding="0" >
-						<tr>
-							<td class="r-label">开始日期</td>
-							<td ><input class="hisui-datebox textbox" id="DateFrom" /></td>
+			<div data-options="region:'north',border:false" style="height:51px;padding:5px 10px;overflow:hidden;">
+					<table id="maintable"  cellspacing="0" cellpadding="0" >
+						<tr style="height:40px;">
+							<td class="r-label f-item">#(..Get("开始日期"))#</td>
+							<td class="l-value f-item" ><input class="hisui-datebox textbox" id="DateFrom" /></td>
 							
-							<td class="r-label">结束日期</td>
-							<td ><input class="hisui-datebox textbox" id="DateTo" /></td>
+							<td class="r-label f-item">#(..Get("结束日期"))#</td>
+							<td class="l-value f-item"><input class="hisui-datebox textbox" id="DateTo" /></td>
+							
+							<csp:if condition=HospControl="CUSTOM">
+								<td class="r-label f-item">#(..Get("院区"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pHospId" /></td>
+							</csp:if>
 							
 							<csp:if condition=IsForOE'=1>
-								<td class="r-label">就诊类型</td>
-								<td ><input class="textbox" id="pAdmType" /></td>
+								<td class="r-label f-item">#(..Get("登记号"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pPapmiNo" /></td>
 								
-								<td class="r-label">就诊科室</td>
-								<td ><input class="textbox" id="pAdmLoc" /></td>
+								<td class="r-label f-item">#(..Get("就诊类型"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pAdmType" /></td>
+								
+								<csp:if condition=OnlyCurrLoc'=1>
+								<td class="r-label f-item">#(..Get("就诊科室"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pAdmLoc" /></td>
+								</csp:if>
+								<td class="r-label f-item">#(..Get("主管医生"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pAdmDocId" /></td>
+								<!--
+								<td class="r-label f-item">#(..Get("报告状态"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pStatus" /></td>
+								-->
+								<csp:if condition=ShowRecStatus=1>
+								<td class="r-label f-item">#(..Get("接收状态"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pRecStatus" /></td>
+								</csp:if>
+								<td class="r-label f-item">#(..Get("处理状态"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pExecStatus" /></td>
+								
+								<td class="r-label f-item">#(..Get("联系结果"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pExecConResult" /></td>
+								
+								<td class="r-label f-item">#(..Get("报告类型"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pReportType" /></td>
+								
+								<td class="r-label f-item">#(..Get("报告科室"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pRepLoc" /></td>
+								
+								<td class="r-label f-item">#(..Get("下医嘱科室"))#</td>
+								<td class="l-value f-item"><input class="textbox" id="pOrdLoc" /></td>
 
-								<td class="r-label">报告状态</td>
-								<td ><input class="textbox" id="pStatus" /></td>
-								
-								<td class="r-label">报告类型</td>
-								<td ><input class="textbox" id="pReportType" /></td>
+								<csp:if condition=ExecTimeUsedData'="[]">
+									<td class="r-label f-item">#(..Get("处理用时"))#</td>
+									<td class="l-value f-item"><input class="textbox" id="pExecTimeUsed" /></td>
+								</csp:if>
 							</csp:if>
 							
 							<td style="padding-left:20px;"><a href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a></td>
@@ -70,7 +133,7 @@
 						</tr>
 					</table>
 			</div><!--end layout center-layout  region north-->
-			<div data-options="region:'center',border:false" style="border-top:1px solid #ddd;padding-top:4px;">
+			<div data-options="region:'center',border:false" style="border-top:1px dashed #E2E2E2;padding-top:0px;">
 				<table id="reportList"></table>
 			</div><!--end layout center-layout  region center-->
 		</div> <!--end layout center-layout -->

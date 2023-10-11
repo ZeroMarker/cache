@@ -1,15 +1,11 @@
-<csp:method name=OnPreHTTP
-            arguments=""
-            returntype=%Boolean>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
     i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
     q 1
 </csp:method>
 <script language="cache"
         runat="SERVER">
-            s EpisodeID = $G(%request.Data("EpisodeID", 1))
-            s PrnCode = $G(%request.Data("PrnCode", 1))
-            s PageNum = $G(%request.Data("PageNum", 1))
             s HospitalID = $G(%request.Data("HospitalID", 1))
+            s ImagePath = $G(%request.Data("ImagePath", 1))
         </script>
 <SERVER>
 </SERVER>
@@ -31,10 +27,11 @@
 </head>
 <body>
 	<script language="cache" runat="SERVER">
-		s objStream=##class(NurMp.RecordsBrowser).getFtpFile(EpisodeID,PrnCode,PageNum,HospitalID)
+		s objStream=##class(NurMp.Service.Image.List).getFtpFile(HospitalID,ImagePath)
 		s status=objStream.GetAt("status")
 		i status'=0 {
-			 w "<span style='color:red;display:block;font-size:16px;'>"_status_"</span>"
+			 s msg=objStream.GetAt("msg")
+			 w "<span style='color:red;display:block;font-size:16px;'>"_msg_"</span>"
 		}else{
 			s imgStream=objStream.GetAt("imgStream")
 			d imgStream.Rewind()

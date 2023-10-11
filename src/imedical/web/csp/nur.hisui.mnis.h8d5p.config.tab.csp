@@ -1,0 +1,506 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i "    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1"
+    q 1
+</csp:method>
+
+<html lang="zh-CN">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+    </title>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset="gbk"></script>
+    <script language="Cache" runat="Server">
+		s tab=%request.Get("tab"),mytabdata=##class(Nur.HISUI.MNIS.H8D5P.Config).ResolveInterface(tab)
+	</script>
+</head>
+
+<body class="hisui-layout">
+    <style type="text/css">
+	    #main {
+			padding:10px;
+			border-color:#ccc;
+		}
+		.layout-split-north {
+		    border-bottom:10px solid #fff;
+		}
+		.layout-split-south {
+		    border-top:10px solid #fff;
+		}
+		.layout>.panel>.panel-body-noheader {
+			-moz-border-radius:4px;
+		    -webkit-border-radius:4px;
+		    border-radius:4px;
+		}
+		.layout>.panel>.panel-body,.datagrid>.panel-body-noheader {
+		    border-color: #ccc;
+		}
+    </style>
+    <script type="text/javascript">
+    var menu="#(tab)#",mytabdata=JSON.parse("#(mytabdata)#");
+    function init() {
+		var toolbar = [], panels = [], datagrids = [];
+		for (var i = 0; i < mytabdata.length; i++) {
+			if (mytabdata[i] == "CTHospital") {
+				toolbar.push(mytabdata[i]);
+			} else if (mytabdata[i].type == "datagrid") {
+				datagrids.push(mytabdata[i]);
+			}
+		}
+		if (toolbar.length > 0 && panels.length == 0 && datagrids.length == 1) {
+			var div = '<div class="hisui-layout" data-options="fit:true"><div data-options="region:\'north\',split:true" style="height:50px;"></div><div data-options="region:\'center\'"></div></div>';
+			$(div).appendTo("#main");
+			$.parser.parse($('#main'));
+			var north = $('#main').children(0).layout('panel', 'north');
+			var hospId = $.m({
+				ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+				MethodName: 'GetDefHospIdByTableName',
+				tableName: 'CT_NUR_MNIS.MainModule',
+				HospID: session && session['LOGON.HOSPID'] || ''
+			}, false);
+			if (toolbar.length == 1 && toolbar[0] == 'CTHospital') {
+				north.append('<table style="padding-top:4px;"><tr><td><span class="r-label" style="color:red;padding-left:10px;">医院</span></td><td style="margin-top:4px;"><input id="_HospList" class="combo-text validatebox-text" autocomplete="off" style="width:210px;height:28px;line-height:28px;" data-options="enterNullValueClear:false,panelMaxHeight:\'400px\'"></td></tr></table>');
+				GenHospComp('CT_NUR_MNIS.MainModule', '', { width: 210 });
+			}
+			var id = datagrids[0].id;
+			var center = $('#main').children(0).layout('panel', 'center');
+			center.append('<table id="' + id + '"></table>');
+			var toolbar = datagrids[0].toolbar;
+			for (var j = 0; j < toolbar.length; j++) {
+				if (toolbar[j] == "save") {
+					toolbar[j] = {
+						iconCls: 'icon-save',
+						text: '保存',
+						handler: function() {
+							toolbarOnClick(id, "save");
+						}
+					};
+				} else if (toolbar[j] == "add") {
+					toolbar[j] = {
+						iconCls: 'icon-add',
+						text: '新增',
+						handler: function() {
+							toolbarOnClick(id, "add");
+						}
+					};
+				} else if (toolbar[j] == "delete") {
+					toolbar[j] = {
+						iconCls: 'icon-cancel',
+						text: '删除',
+						handler: function() {
+							toolbarOnClick(id, "delete");
+						}
+					};
+				}
+			}
+			var columns = datagrids[0].columns[0];
+			for (var j = 0; j < columns.length; j++) {
+				if (!columns[j].hasOwnProperty('title')) {
+					columns[j].title = columns[j].field;
+				}
+				if (!columns[j].hasOwnProperty('width')) {
+					columns[j].width = 80;
+				} else if (columns[j].width == 0) {
+					columns[j].hidden = true;
+				}
+				if (columns[j].editor == 'text') {
+					columns[j].editor = { type:'text' };
+				}
+			}
+			columns.push({
+				field: '_id',
+				text: '_id',
+				width: 0,
+				hidden: true
+			});
+			$HUI.datagrid('#' + id.split('.').join('\\.'), {
+				autoSizeColumn: false,
+				border: false,
+				idField: '_id',
+				singleSelect: true,
+				headerCls: 'panel-header-gray',
+				iconCls: 'icon-paper',
+				rownumbers: true,
+				fit: true,
+				title: datagrids[0].title || '',
+				titleNoWrap: false,
+				toolbar: toolbar,
+				nowrap: false,
+				fontSize: 12,
+				lineHeight: 12,
+				columns:[ columns ],
+				onDblClickRow: function(index, row) {
+					gridOnDblClick(id, index);
+				}
+			});
+			gridOnFindClick(id);
+			$('#_HospList').combogrid('options').onSelect = function() {
+				gridOnFindClick(id);
+			};
+		} else if (toolbar.length > 0 && panels.length == 0 && datagrids.length == 2) {
+			var mainHeight = $('#main').height();
+			var southHeight = (mainHeight - 50) / 2;
+			var div = '<div class="hisui-layout" data-options="fit:true"><div data-options="region:\'north\',split:true" style="height:50px;"></div><div data-options="region:\'center\'"></div><div data-options="region:\'south\',split:true" style="height:' + southHeight + 'px;"></div></div>';
+			$(div).appendTo("#main");
+			$.parser.parse($('#main'));
+			var north = $('#main').children(0).layout('panel', 'north');
+			var hospId = $.m({
+				ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+				MethodName: 'GetDefHospIdByTableName',
+				tableName: 'CT_NUR_MNIS.MainModule',
+				HospID: session && session['LOGON.HOSPID'] || ''
+			}, false);
+			if (toolbar.length == 1 && toolbar[0] == 'CTHospital') {
+				north.append('<table style="padding-top:4px;"><tr><td><span class="r-label" style="color:red;padding-left:10px;">医院</span></td><td style="margin-top:4px;"><input id="_HospList" class="combo-text validatebox-text" autocomplete="off" style="width:210px;height:28px;line-height:28px;" data-options="enterNullValueClear:false,panelMaxHeight:\'400px\'"></td></tr></table>');
+				GenHospComp('CT_NUR_MNIS.MainModule', '', { width: 210 });
+			}
+			var datagrid = datagrids[0], id = datagrid.id;
+			var center = $('#main').children(0).layout('panel', 'center');
+			center.append('<table id="' + id + '"></table>');
+			var toolbar = datagrid.toolbar;
+			for (var j = 0; j < toolbar.length; j++) {
+				if (toolbar[j] == "save") {
+					toolbar[j] = {
+						iconCls: 'icon-save',
+						text: '保存',
+						handler: function() {
+							toolbarOnClick(datagrids[0].id, "save");
+						}
+					};
+				} else if (toolbar[j] == "add") {
+					toolbar[j] = {
+						iconCls: 'icon-add',
+						text: '新增',
+						handler: function() {
+							toolbarOnClick(datagrids[0].id, "add");
+						}
+					};
+				} else if (toolbar[j] == "delete") {
+					toolbar[j] = {
+						iconCls: 'icon-cancel',
+						text: '删除',
+						handler: function() {
+							toolbarOnClick(datagrids[0].id, "delete");
+						}
+					};
+				}
+			}
+			var columns = datagrid.columns[0];
+			for (var j = 0; j < columns.length; j++) {
+				if (!columns[j].hasOwnProperty('title')) {
+					columns[j].title = columns[j].field;
+				}
+				if (!columns[j].hasOwnProperty('width')) {
+					columns[j].width = 80;
+				} else if (columns[j].width == 0) {
+					columns[j].hidden = true;
+				}
+				if (columns[j].editor == 'text') {
+					columns[j].editor = { type:'text' };
+				}
+			}
+			columns.push({
+				field: '_id',
+				text: '_id',
+				width: 0,
+				hidden: true
+			});
+			$HUI.datagrid('#' + id.split('.').join('\\.'), {
+				autoSizeColumn: false,
+				border: false,
+				idField: '_id',
+				singleSelect: true,
+				headerCls: 'panel-header-gray',
+				iconCls: 'icon-paper',
+				rownumbers: true,
+				fit: true,
+				title: datagrid.title || '',
+				titleNoWrap: false,
+				toolbar: toolbar,
+				nowrap: false,
+				fontSize: 12,
+				lineHeight: 12,
+				columns:[ columns ],
+				onDblClickRow: function(index, row) {
+					gridOnDblClick(datagrids[0].id, index);
+				}
+			});
+			var datagrid = datagrids[1], id = datagrid.id;
+			var south = $('#main').children(0).layout('panel', 'south');
+			south.append('<table id="' + id + '"></table>');
+			var toolbar = datagrids[1].toolbar;
+			for (var j = 0; j < toolbar.length; j++) {
+				if (toolbar[j] == "save") {
+					toolbar[j] = {
+						iconCls: 'icon-save',
+						text: '保存',
+						handler: function() {
+							toolbarOnClick(datagrids[1].id, "save");
+						}
+					};
+				} else if (toolbar[j] == "add") {
+					toolbar[j] = {
+						iconCls: 'icon-add',
+						text: '新增',
+						handler: function() {
+							toolbarOnClick(datagrids[1].id, "add");
+						}
+					};
+				} else if (toolbar[j] == "delete") {
+					toolbar[j] = {
+						iconCls: 'icon-cancel',
+						text: '删除',
+						handler: function() {
+							toolbarOnClick(datagrids[1].id, "delete");
+						}
+					};
+				}
+			}
+			var columns = datagrid.columns[0];
+			for (var j = 0; j < columns.length; j++) {
+				if (!columns[j].hasOwnProperty('title')) {
+					columns[j].title = columns[j].field;
+				}
+				if (!columns[j].hasOwnProperty('width')) {
+					columns[j].width = 80;
+				} else if (columns[j].width == 0) {
+					columns[j].hidden = true;
+				}
+				if (columns[j].editor == 'text') {
+					columns[j].editor = { type:'text' };
+				}
+			}
+			columns.push({
+				field: '_id',
+				text: '_id',
+				width: 0,
+				hidden: true
+			});
+			$HUI.datagrid('#' + id.split('.').join('\\.'), {
+				autoSizeColumn: false,
+				border: false,
+				idField: '_id',
+				singleSelect: true,
+				headerCls: 'panel-header-gray',
+				iconCls: 'icon-paper',
+				rownumbers: true,
+				fit: true,
+				title: datagrid.title || '',
+				titleNoWrap: false,
+				toolbar: toolbar,
+				nowrap: false,
+				fontSize: 12,
+				lineHeight: 12,
+				columns:[ columns ],
+				onDblClickRow: function(index, row) {
+					gridOnDblClick(datagrids[1].id, index);
+				}
+			});
+			var inherit = false;
+			if (datagrid.hasOwnProperty("inherit")) {
+				if (datagrid.inherit[0] == datagrids[0].id) {
+					$('#' + datagrids[1].id.split('.').join('\\.')).datagrid('options').inherit = datagrid.inherit;
+					$('#' + datagrids[0].id.split('.').join('\\.')).datagrid('options').onSelect = function(index, row) {
+						gridOnFindClick(datagrids[1].id);
+					};
+					$('#' + datagrids[0].id.split('.').join('\\.')).datagrid('options').onLoadSuccess = function(data) {
+						$('#' + datagrids[1].id.split('.').join('\\.')).datagrid('loadData', []);
+					};
+					inherit = true;
+				}
+			}
+			if (inherit) {
+				gridOnFindClick(datagrids[0].id);
+				$('#_HospList').combogrid('options').onSelect = function() {
+					gridOnFindClick(datagrids[0].id);
+				};
+			} else {
+				gridOnFindClick(datagrids[0].id);
+				gridOnFindClick(datagrids[1].id);
+				$('#_HospList').combogrid('options').onSelect = function() {
+					gridOnFindClick(datagrids[0].id);
+					gridOnFindClick(datagrids[1].id);
+				};
+			}
+		}
+	}
+	function extend() {
+		$.extend($.fn.datagrid.methods, {
+			getEditingRowIndexs: function (jq) {
+				var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+				var indexes = [];
+				rows.each(function (i, row) {
+					var index = row.sectionRowIndex;
+					if (indexes.indexOf(index) == -1) {
+						indexes.push(index);
+					}
+				});
+				return indexes;
+			}
+		});
+	}
+	function gridEndEditing(id) {
+		var indexes = $('#' + id.split('.').join('\\.')).datagrid('getEditingRowIndexs');
+		for (var i = 0; i < indexes.length; i++) {
+			if ($('#' + id.split('.').join('\\.')).datagrid('validateRow', indexes[i])) $('#' + id.split('.').join('\\.')).datagrid('endEdit', indexes[i])
+			else return false;
+		}
+		return true;
+	}
+	function gridOnDblClick(id, index) {
+		$('#' + id.split('.').join('\\.')).datagrid('selectRow', index).datagrid('beginEdit', index);
+	}
+	function gridOnDeleteClick(id) {
+		gridEndEditing(id);
+		var selectedRows = $('#' + id.split('.').join('\\.')).datagrid('getSelections');
+		if (selectedRows.length) {
+			$.messager.confirm("提示", "确定删除该条记录?", function (result) {
+				if (result) {
+					var err = 0, msg = '', calls = 0;
+				    selectedRows.forEach(function(row) {
+					    var rowId = row['_id'] || '', data = {};
+					    for (var o in row) {
+						    if (o != '_id') data[o] = row[o];
+						}
+					    var queryParams = {
+							ClassName: 'Nur.HISUI.MNIS.H8D5P.Config',
+							MethodName: 'Custom0355',
+							menu: menu,
+							component: id,
+							hospId: $('#_HospList').length ? $('#_HospList').combogrid('getValue') : '',
+							json: JSON.stringify(data),
+							id: rowId
+						};
+					    $cm(queryParams, function(ret) {
+							calls++;
+							if (String(ret).indexOf('"success":0') > -1) {
+								var success = eval('(' + ret + ')');
+								err = 2, msg = success.msg;
+							} else if (!(parseInt(ret) < 0)) {
+								if (err == 0) err = 1;
+							} else err = 2, msg = ret;
+							if (calls == selectedRows.length) {
+								if (err == 2) {
+									$.messager.popover({ msg: '删除失败:' + msg, type: 'alert', timeout: 5000 });
+								}
+								if (err == 1) {
+									$.messager.popover({ msg: '删除成功!', type: 'success', timeout: 1000 });
+									gridOnFindClick(id);
+								}
+							}
+						});
+					});
+				}
+			});
+		}
+	}
+	function gridOnSaveClick(id) {
+		var parentId = gridParentSelectedRowId(id);
+		if (parentId == null) return;
+		gridEndEditing(id);
+		var selectedRows = $('#' + id.split('.').join('\\.')).datagrid('getChanges');
+	    var err = 0, msg = '', calls = 0;
+	    selectedRows.forEach(function(row) {
+		    var rowId = row['_id'] || '', data = {};
+		    for (var o in row) {
+			    if (o != '_id') data[o] = row[o];
+			}
+		    var queryParams = {
+				ClassName: 'Nur.HISUI.MNIS.H8D5P.Config',
+				MethodName: 'Custom0800',
+				menu: menu,
+				component: id,
+				hospId: $('#_HospList').length ? $('#_HospList').combogrid('getValue') : '',
+				json: JSON.stringify(data),
+				id: rowId,
+				parentId: parentId
+			};
+		    $cm(queryParams, function(ret) {
+				calls++;
+				if (String(ret).indexOf('"success":0') > -1) {
+					var success = eval('(' + ret + ')');
+					err = 2, msg = success.msg;
+				} else if (!(parseInt(ret) < 0)) {
+					if (err == 0) err = 1;
+				} else err = 2, msg = ret;
+				if (calls == selectedRows.length) {
+					if (err == 2) {
+						$.messager.popover({ msg: '保存失败:' + msg, type: 'alert', timeout: 5000 });
+					}
+					if (err == 1) {
+						$.messager.popover({ msg: '保存成功!', type: 'success', timeout: 1000 });
+						gridOnFindClick(id);
+					}
+				}
+			});
+		});
+	}
+	function gridOnAddClick(id) {
+		var parentId = gridParentSelectedRowId(id);
+		if (parentId == null) return;
+		var options = $('#' + id.split('.').join('\\.')).datagrid('options');
+		var columns = options.columns[0];
+		var row = {};
+		for (var i = 0; i < columns.length; i++) {
+			var name = columns[i].field;
+			row[name] = '';
+		}
+		var rows = $('#' + id.split('.').join('\\.')).datagrid('getRows').length;
+		$('#' + id.split('.').join('\\.')).datagrid('insertRow', {
+			index: rows,
+			row: row
+		});
+		gridOnDblClick(id, rows);
+	}
+	function gridOnFindClick(id) {
+		var parentId = gridParentSelectedRowId(id);
+		if (parentId == null) return;
+		$.ajax({
+			type: 'post',
+			url: 'nur.hisui.mnis.h8d5p.config.request.csp',
+			data: {
+				ClassName: 'Nur.HISUI.MNIS.H8D5P.Config',
+				MethodName: 'Custom1220',
+				menu: menu,
+				component: id,
+				hospId: $('#_HospList').length ? $('#_HospList').combogrid('getValue') : '',
+				parentId: parentId
+			},
+			dataType: 'json',
+			success: function(result) {
+				$('#' + id.split('.').join('\\.')).datagrid('clearSelections');
+				$('#' + id.split('.').join('\\.')).datagrid('loadData', result);
+			}
+		});
+	}
+	function gridParentSelectedRowId(id) {
+		var inherit = $('#' + id.split('.').join('\\.')).datagrid('options').inherit;
+		if (inherit) {
+			var selectedRows = $('#' + inherit[0].split('.').join('\\.')).datagrid('getSelections');
+			if (selectedRows.length) return selectedRows[selectedRows.length - 1]['_id'];
+			else return null;
+		}
+		return '';
+	}
+	function toolbarOnClick(id, action) {
+		if (action == "add") {
+			gridOnAddClick(id);
+		} else if (action == "save") {
+			gridOnSaveClick(id);
+		} else if (action == "delete") {
+			gridOnDeleteClick(id);
+		}
+	}
+	$(function() {
+		init();
+		extend();
+	});
+	</script>
+	<div id="main" data-options="region:'center',border:false">
+	</div>
+</body>
+
+</html>

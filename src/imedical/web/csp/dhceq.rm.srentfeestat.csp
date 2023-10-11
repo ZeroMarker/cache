@@ -11,6 +11,16 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI/>
 <DHCEQ:HISUI></DHCEQ:HISUI>
+<style>
+	.messager-popover
+	{
+		font-weight: normal;
+	}
+/* added by LMH 20230302 操作栏高度调整迎合合计行上下一致调整*/
+.datagrid-toolbar{
+    height: 31px;
+}
+</style>
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
     s CurUser=##Class(web.DHCEQCommon).getMapIDBySource("user",%session.Get("LOGON.USERID"))
@@ -19,29 +29,30 @@
 <body class="hisui-layout">
 	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
 	<div data-options="region:'center',border:false" style="padding:10px;">
-		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'调配费用统计'">
+		<!--modified by LMH 20230206 面板标题、面板边框、间距、表单元素、合计行样式调整  -->
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',headerCls:'panel-header-gray',fit:true,title:'调配费用统计'">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:5px 0 10px 0;">
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label id="cLoc" for="Loc">科室</label></div>
-					<div class="eq-table-td"><input class="hisui-validatebox" id="Loc" data-options="'component':'PLAT.L.Loc'"></div>
-					<div class="eq-table-td eq-table-label"><label id="cStartDate" for="StartDate">开始日期</label></div>
-					<div class="eq-table-td ">
-						<input class="hisui-datebox textbox" id="StartDate">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cLoc" for="Loc">科室</label></div>
+						<div class="eq-table-td"><input class="hisui-validatebox textbox" id="Loc" data-options="'component':'PLAT.L.Loc'"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cStartDate" for="StartDate">开始日期</label></div>
+						<div class="eq-table-td "><input class="hisui-datebox textbox" id="StartDate"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cEndDate" for="EndDate">结束日期</label></div>
+						<div class="eq-table-td "><input class="hisui-datebox textbox" id="EndDate"></div>
+						<div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" data-options="stopAllEventOnDisabled:true" style="margin-left:20px">查询</a></div>
 					</div>
-					<div class="eq-table-td eq-table-label"><label id="cEndDate" for="EndDate">结束日期</label></div>
-					<div class="eq-table-td ">
-						<input class="hisui-datebox textbox" id="EndDate">
-					</div>
-					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" data-options="stopAllEventOnDisabled:true">查询</a></div>
 				</div>
-			</div>
-			<div data-options="region:'center',border:false" style="position:relative">
-				<table id="tDHCEQSRentFeeStat" class="hisui-datagrid"></table>
-				<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;">合计</span>	
-			</div>
-    	</div>
-	</div>
+				<div data-options="region:'center',border:false" style="position:relative">
+					<table id="tDHCEQSRentFeeStat" class="hisui-datagrid"></table>
+					<!--modified by LMH 20230302 UI 合计行上下一致调整 -->
+					<div class="messager-popover info" style="position:absolute;right:0px;top:1px;margin:0px 5px 0px 0;padding:5px 10px;">
+						<span id="sumTotalicon" class="messager-popover-icon info"></span>
+						<span id="sumTotal" >合计</span>
+					</div>
+				</div>
+    		</div>
+		</div>
 	</div>
 	<!--隐藏元素-->
 	<div id="hiddenEncrypt" style="display:hidden">

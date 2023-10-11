@@ -1,0 +1,161 @@
+<!-- 
+ * FileName: dhcinsu.pageconfig.csp
+ * Modify: tangzf 
+ * Date: 2019-7-9
+ * Description: 医保界面配置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<!--meta http-equiv="Content-Type" content="text/html;"-->
+
+<TRAK:HEAD></TRAK:HEAD>
+<HISUI></HISUI>
+<DHCBILL/>
+ <style>
+ .r-label {
+    padding-left: 0px;
+    width: 50px
+}
+.textbox{
+    width:200px	!important; /* 文本框宽度减小 */ 
+} </style>
+</head>
+<server>
+	s ParamDicType=(%request.Get("ParamDicType"))
+	s ParamHospId=(%request.Get("ParamHospId"))
+</server>
+<SCRIPT Language="JavaScript">
+	var ParamDicType="#(ParamDicType)#";
+	var ParamHospId="#(ParamHospId)#";
+	var SaveDicId='';
+</script>
+<body style='padding:10px'>
+	<div class="hisui-panel" style="width:400px;height:389px" >
+		<table class='search-table' style="width:100%" >
+			<tr>
+				<td class="r-label td-first-col"><label>字典</label></td>
+				<td class="r-label"><input id="ConfType" class="textbox"/></td>
+				<td><a onclick="Save()" id="Save"  href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></td>
+			</tr>
+			<tr>
+				<td class="r-label td-first-col"><label>配置点</label></td>
+				<td class="r-label"><input id="DicType" class="textbox"/></td>
+				<td><a onclick="Close()" id="Close"  href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a></td>	
+				
+			</tr>
+			<tr>
+				<td class="r-label"><label>原值</label></td>
+				<td class="r-label"><input disabled id="OldDicVal" class="textbox"/></td>
+				<td><a href="javascript:;" id="csconflg-tips" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a></td>
+			</tr>	
+			<tr>
+				<td class="r-label"><label>新值</label></td>
+				<td class="r-label"><input id="NewDicTextVal" class="textbox"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>新日期</label></td>
+				<td class="r-label"><input id="NewDicDateVal" class="hisui-datebox textbox"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><input id="NewDicVal" hidden class="textbox"/></td>
+			</tr>
+		</table>
+	</div>  
+	<SCRIPT Language="JavaScript">
+		
+		$('#ConfType').combobox({   
+		 	panelHeight:100, 
+		    valueField:'Code',   
+		    textField:'Desc',
+		    editable:false,
+		    data: [{
+					Code: 'INSUCONACTDATE',
+					Desc: '界面默认对照日期配置'
+				},
+				{
+					Code: 'FilterByTarCate',
+					Desc: '是否按照收费项大类过滤'
+				}
+				],
+			onSelect:function(data){
+				$('#DicType').combobox('clear');
+				//$('#DicType').combobox('reload');
+				$('#DicType').combobox('disable');	
+				var ConfType = getValueById('ConfType');
+				var DicVal = tkMakeServerCall("web.INSUDicDataCom","GetDicByCodeAndInd",'SYS',ConfType,6,ParamHospId);
+				SaveDicId = tkMakeServerCall("web.INSUDicDataCom","GetDicByCodeAndInd",'SYS',ConfType,1,ParamHospId);
+				setValueById('OldDicVal',DicVal);
+				
+				var DicDemo = tkMakeServerCall("web.INSUDicDataCom","GetDicByCodeAndInd",'SYS',ConfType,5,ParamHospId);
+				// 提示信息
+			    $("#csconflg-tips").popover({
+				    trigger:'hover',
+				    placement:'top',
+				    content:DicDemo,
+				    width :200,
+				    offsetTop:15,
+				    cache:false
+			    });	
+			    if (ConfType=="INSUCONACTDATE"){
+				   	$('#NewDicDateVal').datebox({disabled:false});
+				    $('#NewDicTextVal').attr('disabled','disabled');
+				    setValueById('NewDicTextVal','');
+				    //$('#NewDicVal').attr('class','hisui-datebox textbox'); 
+				    //$.parser.parse(); 
+				}else{
+					$('#NewDicDateVal').datebox({disabled:true});
+				    $('#NewDicTextVal').removeAttr('disabled');
+				    setValueById('NewDicDateVal',''); 
+				}
+			}
+		}); 
+		$HUI.combobox('#DicType',{
+			valueField : 'id',
+			textField : 'cDesc',
+			url : $URL,
+			defaultFilter:4, 
+			onBeforeLoad:function(param){
+				param.ClassName = 'web.INSUDicDataCom';
+				param.QueryName = 'QueryDic';
+				param.Type = getValueById('ConfType');
+				param.Code = '';
+				param.HospDr = "#(ParamHospId)#";
+				param.ResultSetType= 'array'
+			},
+			loadFilter:function(data){
+				if (data.length > 0){
+	            	data.splice(data.length - 1, 1); 
+				}
+				return data;
+			}
+		})
+		function Save(){
+			if(SaveDicId==""){
+				$.messager.alert('提示','没有需要保存的数据','info');
+				return;
+			}
+			var tmpVal="";
+			var ConfType = getValueById('ConfType');
+			if (ConfType=="INSUCONACTDATE"){
+				    tmpVal = getValueById('NewDicDateVal');
+				}else{
+					tmpVal = getValueById('NewDicTextVal');
+				}
+			var NewDicVal = "{" + '"' + 'INDIDDicBill1' + '"' + ":" +'"' + tmpVal + '"'+"}" ;
+			
+			var rtn = tkMakeServerCall("web.INSUDicDataCom","UpdaDicInfoByJson", NewDicVal ,SaveDicId);
+			$.messager.alert('提示','保存成功','info',function(){
+				websys_showModal('close');
+			});
+		}
+		function Close(){
+			websys_showModal('close');		
+		}
+	</script>				
+</body>
+</html>

@@ -1,0 +1,200 @@
+﻿<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>CA身份认证</title>
+        <HISUI/>
+        
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+       
+        <server>
+        	//session信息
+            s userID = %session.Get("LOGON.USERID")
+            s ssGroupID = %session.Get("LOGON.GROUPID")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+    		
+            //获取产品组参数，病历时需要判断是否修改级别参数
+			s product = $Get(%request.Data("product",1),"")
+			s episodeID = $Get(%request.Data("episodeID",1),"")
+			s canRevokCheck = $Get(%request.Data("canRevokCheck",1),"")
+			s oriSignatureLevel = $Get(%request.Data("oriSignatureLevel",1),"Attending")
+			s venderCode = $Get(%request.Data("venderCode",1),"")
+			s signType = $Get(%request.Data("signType",1),"")
+			s debugLevel = $Get(%request.Data("debugLevel",1),"0")
+            s cellName = $Get(%request.Data("cellName",1),"")
+			
+			//是否可以使用扫码登录，值域：1或0，默认：0
+			//是否可以使用Pin码登录，值域：1 或 0，默认：0
+			//是否可以使用人脸识别登录，值域：1或0，默认：0
+			//是否支持推送签名，值域：1或0，默认：0
+			s EnableQRCode = "1"
+			s EnablePinLogon = "0"
+			s EnableFaceLogon = "0"
+			s EnablePushSign = "0"
+			//登录二维码类型，值域：IMAGE 或 TEXT, 默认：IMAGE
+			//登录二维码是否需要指定用户工号才能创建，值域：1 或 0，默认：0
+			s QRCodeType = "", QRCodeNeedUserCode = ""
+			//获取扫码APP名称
+			s ScanQRCodeAPPName = ""
+			
+			s serviceID = ##class(CA.ConfigService).GetIDByCode(venderCode, signType)
+			s serviceObj = ##class(CA.ConfigService).%OpenId(serviceID)
+			if (serviceObj '= "")
+			{
+				s QRCodeType = serviceObj.QRCodeType
+				s QRCodeNeedUserCode = serviceObj.QRCodeNeedUserCode
+				s EnablePinLogon = serviceObj.EnablePinLogon
+				s EnableFaceLogon = serviceObj.EnableFaceLogon
+				s EnablePushSign = "0" ///serviceObj.EnablePushSign    //推送签名暂时屏蔽
+				s ScanQRCodeAPPName = serviceObj.ScanQRCodeAPPName
+			}
+			s:(QRCodeType = "") QRCodeType = "IMAGE"
+			s:(QRCodeNeedUserCode = "") QRCodeNeedUserCode = "0"
+			s:(EnablePinLogon = "") EnablePinLogon = "0"
+			s:(EnableFaceLogon = "") EnableFaceLogon = "0"
+			s:(EnablePushSign = "") EnablePushSign = "0"
+			s:(ScanQRCodeAPPName="") ScanQRCodeAPPName="医为科技APP"
+			
+			s HasLoginedCert = "0", LoginedCertInfo = "", LoginedUserID = "", LoginedUserName = "", LoginedUserCode = ""
+			s loginedCert = ##class(CA.Ajax.DS).GetData("GetLoginedInfo",venderCode,signType)
+			s jsonObj = ##class(CA.Util.Json).FromJson(loginedCert)
+			if (jsonObj.GetAt("retCode") = "0")&&(jsonObj.GetAt("certContainer") '= "")&&(jsonObj.GetAt("signToken") '= "")
+			{
+				s HasLoginedCert = "1"
+				s LoginedCertInfo = loginedCert
+				s hisUserInfo = ##class(CA.DigitalSignatureService).GetHisUserInfoByCert(jsonObj.GetAt("userCertCode"), jsonObj.GetAt("certNo"))
+				s hisUserInfoObj = ##class(CA.Util.Json).FromJson(hisUserInfo)
+				s LoginedUserID = hisUserInfoObj.GetAt("hisUserID")
+				s LoginedUserCode = hisUserInfoObj.GetAt("hisUserCode")
+				s LoginedUserName = hisUserInfoObj.GetAt("hisUserName")
+			}
+        </server>
+
+        <script language="javascript">
+        	var userID = "#(userID)#"; 
+			var userLocID = "#(userLocID)#"; 
+			var ssGroupID = "#(ssGroupID)#"; 
+			
+			var Const_Vender_Code = "#(venderCode)#";
+			var Const_Sign_Type = "#(signType)#";
+			
+			var product = "#(product)#"; 
+			var episodeID = "#(episodeID)#"; 
+			var oriSignatureLevel = "#(oriSignatureLevel)#"; 
+			var canRevokCheck = "#(canRevokCheck)#"; 
+            var cellName = "#(cellName)#"; 
+			
+			//js全局变量初始化：当前登录证书信息
+			var HasLoginedCert = "#(HasLoginedCert)#";
+			if (HasLoginedCert =="1"){
+				var LoginedCertInfo = $.parseJSON('#(LoginedCertInfo)#');
+			}else{
+				var LoginedCertInfo = "";
+			}
+			var LoginedUserName = "#(LoginedUserName)#";
+			var LoginedUserCode = "#(LoginedUserCode)#";
+			var LoginedUserID = "#(LoginedUserID)#";
+			
+			//js全局变量初始化：证书登录方式相关的信息
+			var rtnLogin = "";
+			var userCertCode = "";
+			//---二维码
+			var EnableQRCode = "#(EnableQRCode)#";
+			var QRCodeType = "#(QRCodeType)#";
+			var QRCodeNeedUserCode = "#(QRCodeNeedUserCode)#";
+			//---Pin码
+			var EnablePinLogon = "#(EnablePinLogon)#";
+			//---人脸识别
+			var EnableFaceLogon = "#(EnableFaceLogon)#";
+			//---推送签名
+			var EnablePushSign = "#(EnablePushSign)#";
+			
+            //在点击第一次页签时传src
+            function initTabs(){
+                $HUI.tabs("#mainTab",{
+                    onSelect:function(title,index)
+                    {
+                        $(".artIframe").each(function(){
+                            if ($(this).is(':visible'))
+                            {
+	                           if($(this).attr("src") == undefined)
+                               {
+	                               var url = SetUrl($(this).attr("data-url"));
+                                   $(this).attr("src",url);
+                               }
+                            }
+                        });
+                    }
+                });
+            }
+            
+            function SetUrl(url) {
+				if (url.indexOf('?') > -1) {
+				   	url = url + "&";
+				} else {
+					url = url + "?";
+				}
+				url = url + "product="+product+"&venderCode="+Const_Vender_Code+"&signType="+Const_Sign_Type+"&episodeID="+episodeID+"&oriSignatureLevel="+oriSignatureLevel+"&canRevokCheck="+canRevokCheck;
+				url = url + "&userID="+userID+"&userLocID="+userLocID+"&ssGroupID="+ssGroupID+"&cellName="+cellName;
+				return url;
+	        }
+            
+            function closeWindow(result) {
+            	if (typeof(result) == 'object') {
+            		result = JSON.stringify(result);
+            	}
+            	
+				returnValue = result;
+				parent.closeDialog("loginQrcode");
+            }
+            
+            $(function(){
+           		initTabs();
+           		if (HasLoginedCert=="1") {
+	                var url = SetUrl("emr.ip.signca.phone.logined.csp");
+	                $('#frameLogined').attr('src', url);      
+                } else {
+	                var url = SetUrl("emr.ip.signca.phone.qr.csp?authType=QRCODE"); 
+	                $('#frameQR').attr('src', url);      
+	            }
+            })
+        </script>
+    </head>
+    <body>
+        <div class="hisui-layout" data-options="fit:true">
+            <div data-options="region:'center',border:false" style="padding:2px 4px 4px 4px">
+                <div class="hisui-tabs tabs-gray" data-options="fit:true" id="mainTab">
+                    
+                    <CSP:IF condition=HasLoginedCert="1">
+                    <div title='已登录' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="frameLogined" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="emr.ip.signca.phone.logined.csp"> </iframe>
+                    </div>
+                    </CSP:IF>
+                    
+                    <CSP:IF condition=EnableQRCode="1">
+                    <div title='扫码登录' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="frameQR" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="emr.ip.signca.phone.qr.csp?authType=QRCODE"> </iframe>
+                    </div>
+                    </CSP:IF>
+                    
+                    <CSP:IF condition=EnablePinLogon="1">
+                    <div title='Pin码登录' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="framePin" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="emr.ip.signca.phone.qr.csp?authType=PIN"> </iframe>
+                    </div>
+                    </CSP:IF>
+                    
+                    <CSP:IF condition=EnableFaceLogon="1">
+                    <div title='人脸识别' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="frameFace" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="emr.ip.signca.phone.qr.csp?authType=FACE"> </iframe>
+                    </div>
+                    </CSP:IF>
+                    
+                    <CSP:IF condition=EnablePushSign="1">
+                    <div title='推送签名' data-options="fit:true" style='padding:4px'>
+                        <iframe class="artIframe" id="framePush" scrolling='yes' width='100%' height='100%'  frameborder='0' data-url="emr.ip.signca.phone.push.csp"> </iframe>
+                    </div>
+                    </CSP:IF>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

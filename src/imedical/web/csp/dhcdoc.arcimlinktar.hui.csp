@@ -1,0 +1,73 @@
+<!--dhcdoc.arcimlinktar.hui.csp HUI收费项查看-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML XMLNS=TRAK>
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html; charset=GB18030"/>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+</style>
+<Server>
+s ARCIMRowId=%request.Get("ARCIMRowId")
+</Server>
+ </head>
+<body style="background:#fff;padding:10px;box-sizing:border-box;">
+	<div class="hisui-panel" data-options="bodyCls:'panel-body-gray'" fit="true">
+		<table id="OrderPriceGrid"></table>
+	</div>
+<SCRIPT language = 'javascript' >
+	var ARCIMRowId="#(ARCIMRowId)#";
+	$(function(){
+		loadOrderPriceGridGrid();
+	});
+	function loadOrderPriceGridGrid(){
+		var Columns=[[    
+			{field:'olttariffdr', hidden:true},
+	        {title:'收费项目代码',field:'tarcode',width:130},
+	        {title:'收费项目名称',field:'tardesc',width:180},
+	        {title:'数量',field:'tarnum', width:40},
+	        {title:'单位',field:'taruom', width:100},
+	        {title:'开始日期',field:'tarDate',width:100},
+	        {title:'结束日期',field:'tarDateTo', width:100},
+	        {title:'基价模式',field:'OLTBascPriceFlag',width:100},
+	        {title:'多部位计价一次',field:'OLTBillOnceFlag', width:120},
+	        {title:'价格',field:'tarprice',width:80,align:'right'}
+	    ]];
+		$.q({
+		    ClassName:"DHCDoc.Order.AcrimLinkTar",
+		    QueryName:"QueryArcimLinkTar",
+		    arcimrowid:ARCIMRowId,
+		    HospID:session['LOGON.HOSPID'],
+		    LangID:session['LOGON.LANGID']
+		},function(GridData){
+			$HUI.datagrid('#OrderPriceGrid',{
+			    fit : true,
+				fitColumns:true,
+			    data:GridData,
+			    idField:'olttariffdr',
+			    width:970,
+			    height:460,
+			    border: false,
+			    columns:Columns,
+			    rowStyler: function(index,row){
+				    if (row.tarnum==""){
+						return 'background-color:#6293BB;color:#fff;';
+					}
+			    }
+			});
+		}); 
+	}
+   </SCRIPT>
+  
+</body>
+
+</html>

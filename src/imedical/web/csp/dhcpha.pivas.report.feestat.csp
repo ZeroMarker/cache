@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配置费用统计
-	csp:dhcpha.pivas.report.feestat.csp
-	js: scripts/pharmacy/pivas/report.feestat.js
+<!--
+    配置费用统计
+	csp: csp/dhcpha.pivas.report.feestat.csp
+	js:  scripts/pharmacy/pivas/report.feestat.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -10,55 +15,67 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
-
+    <HISUI />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <style>
+        .pha-con-table{
+            padding-right: 10px;
+        }
+    </style>
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-
-            <div class="hisui-layout" fit="true">
-                <div data-options="region:'north',title:'配置费用统计',iconCls:'icon-sum',split:true,headerCls:'panel-header-gray',collapsible:false" class='dhcpha-north-r1'>
-                    <table class="dhcpha-north-tbl">
+        <div data-options="region:'center',split:true,border:false" class="pha-body">
+            <div class="hisui-layout js-pha-layout-fit" fit="true">
+                <div data-options="region:'west',title:'配置费用统计',iconCls:'icon-sum',split:true,headerCls:'panel-header-gray',collapsible:false,width:450">
+                    <table class="pha-con-table">
                         <tr>
+                            <td class="r-label">
+                                <label for="cmbPivaLoc">#(..Get("配液中心"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbPivaLoc">配液中心</label>
                                 <input id="cmbPivaLoc" type="text" />
                             </td>
-                            <td>
-                                <label for="dateStart">开始日期</label>
-                                <input id="dateStart" class="hisui-datebox dhcpha-date" type="text" />
-                            </td>
-                            <td>
-                                <label for="dateEnd">结束日期</label>
-                                <input id="dateEnd" class="hisui-datebox dhcpha-date" type="text" />
-                            </td>
+                            <tr>
+                                <td class="r-label">
+                                    <label for="dateStart">#(..Get("开始日期"))#</label>
+                                </td>
+                                <td>
+                                    <input id="dateStart" class="hisui-datebox" type="text" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="r-label">
+                                    <label for="dateEnd">#(..Get("结束日期"))#</label>
+                                </td>
+                                <td>
+                                    <input id="dateEnd" class="hisui-datebox" type="text" />
+                                </td>    
+                            </tr>
+                            
                             <td style="display:none">
                                 <input class='hisui-radio' type="radio" label='按病区汇总' name='radioFee' value='feeSum' data-options="checked:true">
                                 <!--input class='hisui-radio' type="radio" label='按明细' name='radioFee' value='feeDetail'-->
                             </td>
-                            <td>
+                            <td colspan="2" style="text-align: center;">
                                 <a class="hisui-linkbutton" iconCls="icon-w-find" plain="false" id="btnFind">查询</a>
                             </td>
                         </tr>
                     </table>
                 </div>
-                <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false" style="overflow:hidden;border-radius:4px;">
+                <div data-options="region:'center',title:'',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',border:true" style="overflow:hidden;">
                     <iframe></iframe>
                 </div>
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/print.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/report.feestat.js"></script>
 </body>
 
 </HTML>
+

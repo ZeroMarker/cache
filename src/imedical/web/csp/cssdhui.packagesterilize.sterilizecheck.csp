@@ -1,4 +1,4 @@
-<!--�������-->
+﻿<!--灭菌验收-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
 	i ##Class(websys.SessionEvents).SessionExpired() q 1
@@ -12,46 +12,126 @@
 	<CSSDHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px">
-		<div class="hisui-panel" data-options="title:'�������Ϣ',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="UomTB">
-				<div> 
-					<table class="Condition" id="MainCondition">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding-right:0px;">
+		<div class="hisui-panel" data-options="title:'灭菌单信息',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false" style="height:310px">
+					<table class="Condition" id="MainCondition" onkeydown="if(event.keyCode==13){SearchBT.click()}">
 						<input id="FComplateFlag" name="FComplateFlag" type="hidden">
-						<tr>
-							<td><label>�������</label><input class="textbox" id="MachineNo" name="MachineNo" style="width:130px"></td>
-							<td><label>�������</label><input class="textbox" id="SterPro" name="SterPro" style="width:130px"></td>
-							<td><a href="#" id="SearchBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:110px">��ѯ</a></td>
+	 					<tr>
+							<td>灭菌科室</td><td><input class="textbox hisui-combobox" id="SterInLoc" name="SterInLoc" style="width:114px"></td>
+							<td>起始日期</td><td><input id="FStartDate" name="FStartDate" class="textbox hisui-datebox" style="width:114px"></td>
+							<td>截止日期</td><td><input id="FEndDate" name="FEndDate" class="textbox hisui-datebox" style="width:114px"></td>
+							<td><a href="#" id="SearchBT" class="hisui-linkbutton" style="width:86px">查询</a></td>
 						</tr>
 						<tr>
-							<td><label>�����</label><input class="textbox" id="SterUser" name="SterUser" style="width:130px"><input class="textbox" hidden id="SterUserValue" name="SterUserValue"></td>
-							<td><label>����</label><input class="textbox" id="MachineCount" name="MachineCount" style="width:130px"></td>
-							<td><a href="#" id="OKBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:110px">���պϸ�</a></td>
-							
+							<td>灭菌器</td><td><input class="hisui-combobox textbox" id="MachineNoValue" name="MachineNoValue" style="width:114px"></td>
+							<td>灭菌程序</td><td><input class="textbox" id="SterProValue" name="SterProValue" style="width:114px"></td>
+							<td>灭菌批号</td><td><input class="textbox" id="MachineCount" name="MachineCount" style="width:107px"></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" style="width:86px">清屏</a></td>
 						</tr>
 						<tr>
-							<td><label>��ʼ����</label><input id="FStartDate" name="FStartDate" class="textbox hisui-dateboxq" style="width:137px"></td>
-							<td><label>��������</label><input id="FEndDate" name="FEndDate" class="textbox hisui-dateboxq" style="width:137px"></td>
-							<td><a href="#" id="FailBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:110px">���ղ��ϸ�</a></td>
+							<td colspan=3>
+								<div>
+									<input class="hisui-radio" type="radio" label="全部" name="QueryState" value="" data-options="checked:true">
+									<input class="hisui-radio" type="radio" label="合格" name="QueryState" value="1">
+									<input class="hisui-radio" type="radio" label="不合格" name="QueryState" value="2">
+									<input class="hisui-radio" type="radio" label="未验收" name="QueryState" value="0">
+								</div>
+							</td>
+							<td colspan=3 style="text-align:center;">
+								<div>
+									<input class="hisui-radio" type="radio" label="全部" name="QueryCheck" value="" data-options="checked:true">
+									<input class="hisui-radio" type="radio" label="生物" name="QueryCheck" value="1">
+									<input class="hisui-radio" type="radio" label="化学" name="QueryCheck" value="2">
+									<input class="hisui-radio" type="radio" label="物理" name="QueryCheck" value="3">
+								</div>
+							</td>
+							<td>
+								<a href="#" id="ViewPicBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:86px">图片</a>
+							</td>
+						</tr>
+						<tr>
+							<td>标签</td>
+							<td  colspan=2><input class="textbox" id="Label" name="Label" style="width:170px"></td>
+						</tr>
+					</table>
+					<div data-options="region:'center'" style="border:none;border-top:1px dashed #ccc;border-radius:0px;">
+						<table class="Condition" id="MonitorCondition">
+							<tr>
+								<td>验收时间</td><td><input id="CheckTime" name="CheckTime" class=" textbox hisui-timespinner" data-options="min:'06:00',showSeconds:true" style="width:114px"></td>
+								<td>验收人</td><td><input class="textbox" id="CheckUserValue" name="CheckUserValue" style="width:114px"></td>
+								<td>不合格原因</td><td><input id="UnqualifiedReason" name="UnqualifiedReason" class="textbox hisui-combobox" style="width:100px"></td>
+								<td>
+									<a href="#" id="TakePhotoBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:86px">拍照</a>
+								</td>
+							</tr>
+							<tr>
+								<td colspan=4 style="text-align:left">
+									<input class="hisui-filebox" id="FileSel" name="FileSel" data-options="width:180,buttonText:'',buttonIcon:'icon-folder',plain:true,prompt:'请选择文件'">&nbsp;&nbsp;
+									<a href="#" id="FileMatchBT" class="hisui-linkbutton">文件匹配</a>
+								</td>
+								<td>
+									<a href="#" id="OKBT" class="hisui-linkbutton">验收合格</a>
+								</td>
+								<td>
+									<a href="#" id="FailBT" class="hisui-linkbutton">验收不合格</a>
+								</td>
+								<td>
+									<a href="#" id="CancelBT" class="hisui-linkbutton">取消验收</a>
+								</td>
+							</tr>
+							<tr>
+								<td style="text-align:left">监测类型</td>
+								<td colspan=3><div id="Check" name="Check"></div></td>
+								<td>
+									<a href="#" id="MonitorOK" class="hisui-linkbutton">监测合格</a>
+								</td>
+								<td>
+									<a href="#" id="MonitorFail" class="hisui-linkbutton">监测不合格</a>
+								</td>
+								<td>
+									<a href="#" id="CancelMonitorBT" class="hisui-linkbutton">取消监测</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="MainList"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:500px;padding-left:10px;">
+		<div class="hisui-panel" data-options="title:'灭菌单详情',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',collapsible:false" style="border:none;border-bottom:1px solid #CCCCCC;">
+					<table class="Condition">
+						<tr>
+							<td><label>标签</label><input id="Label" class="textbox" style="width:134px"></td>
+							<td><a href="#" id="CheckFailBT" class="hisui-linkbutton">验收不合格</a></td>
 						</tr>
 					</table>
 				</div>
+				<div data-options="region:'center',border:false">
+					<div id="SterCheckTabs" class="hisui-tabs tabs-gray" data-options="tabPosition:'top',fit:true,border:false">
+						<div title="灭菌详情" data-options="fit:true">
+							<table id="ItemList"></table>
+						</div>
+						<div title="灭菌汇总" data-options="fit:true">
+							<table id="ItemListSum"></table>
+						</div>
+					</div>
+				</div>
 			</div>
-				<table id="MainList"></table>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:520px;padding-left:10px">
-		<div  class="hisui-panel" data-options="title:'�������',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" style="padding-bottom:10%">
-			<table class="Condition">
-				<tr>
-					<td><label>���ϸ�ԭ��</label><input id="UnqualifiedReason" class="textbox hisui-combobox" style="width:140px"></td>
-					<td style="padding-left:30px"><a href="#" id="CheckFailBT" class="hisui-linkbutton" style="width:100px;">���ղ��ϸ�</a></td>
-				</tr>
-			</table>
-			<table id="ItemList"></table>
-		</div>
-	</div>
-<script type="text/javascript" src="../scripts/cssd/Sterilize/SterCheck.js"></script>
-<script type="text/javascript" src="../scripts/cssd/Sterilize/SterCommon.js"></script>
+
+	<CSP:INCLUDE PAGE="cssdhui.packagesterilize.sterilizechart.csp">
+	<CSP:INCLUDE PAGE="cssdhui.commonfile.csp">
+	<script type="text/javascript" src="../scripts/cssd/Sterilize/SterCommon.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Sterilize/SterCheck.js"></script>
 </body>
 </html>

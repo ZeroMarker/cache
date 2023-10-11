@@ -1,0 +1,134 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.patdetailinfo.csp 患者详细信息弹框--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+.search-table{
+	table-layout:fixed;
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-input input{
+	width:150px; /*calc(100% - 7px)*/
+}
+.r-input .mergeInput {
+	width:calc(100% - 7px);
+}
+._hisui_combobox-selectall {
+	display:none;
+}
+</style>
+</head>
+
+<body>
+<server>
+	s PatientListPage=""
+	s wardID=$G(%request.Data("wardID", 1))
+	i wardID="" s wardID=%session.Get("LOGON.WARDID")
+	s saveOperation = $G(%request.Data("saveOperation", 1)) //是否允许修改主管医生护士(N:不可以,其他:可以)
+	s EpisodeID = $G(%request.Data("EpisodeID", 1))
+	s detailInfoObj=##class(Nur.NIS.Service.Base.Patient).getPatientByBedCardConfig(EpisodeID,%session.Get("LOGON.HOSPID"),wardID)
+	k detailInfoArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(detailInfoObj,.detailInfoArr)
+	s bedSetting=##class(Nur.NIS.Service.Base.BedConfig).GetBedSetting(%session.Get("LOGON.HOSPID"))
+	k bedSettingArr
+	d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(bedSetting,.bedSettingArr)
+	s MainDocRequired=bedSettingArr("MainDocRequired")
+	s MainDocMulti=bedSettingArr("MainDocMulti")
+	s MainNurseRequired=bedSettingArr("MainNurseRequired")
+	s MainNurseMulti=bedSettingArr("MainNurseMulti")
+</server>
+<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+	<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+</div>
+<div class="hisui-layout" data-options="fit:true,border:false">
+	<div data-options="region:'north',split:false,title:'',border:false" style="height:41px;border-bottom:1px dashed #ccc;">	
+		<!--div style="position: relative;" class="ctcAEPatBar">
+			<csp:Include Page="dhcdoc.in.patient.banner.csp">
+		</div-->
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<div class="hisui-panel" data-options="region:'center',split:false,border:false" style="overflow:hidden;">
+		<table class="search-table">
+			<server>
+				s saveBtnDisplay="N"
+				s row=""
+				for {
+					s row=$o(detailInfoArr(row)) Q:row=""
+					w "<tr>"
+					s col="",colNum=0
+					for {
+						s col=$o(detailInfoArr(row,col)) Q:col=""
+						s itemId=$g(detailInfoArr(row,col,"itemId"))
+						s itemDesc=$g(detailInfoArr(row,col,"itemDesc"))
+						s itemValue=$g(detailInfoArr(row,col,"itemValue"))
+						s column=$g(detailInfoArr(row,col,"column"))
+						s labelClass=""
+						s colspan=$case($l(column,"^"),3:5,2:3,:1)
+						s labelClass=""
+						if (itemId="mainDoctor"){
+							if (MainDocRequired="Y"){
+								s labelClass=labelClass_" clsRequired"
+							}
+							s saveBtnDisplay="Y"
+						}
+						if (itemId="mainNurse"){
+							if (MainNurseRequired="Y"){
+								s labelClass=labelClass_" clsRequired"
+							}
+							s saveBtnDisplay="Y"
+						}
+						if (colNum<((column-1)*2)){
+							w "<td class='r-label'></td>"
+							w "<td class='r-input'></td>"
+							s colNum=colNum+2
+						}
+						w "<td class='r-label'><label class='"_labelClass_"' for='"_itemId_"'>"_itemDesc_"</label></td>"
+						w "<td class='r-input' colspan="_colspan_"><input class='textbox "_$case(colspan,1:"",:"mergeInput")_"' disabled id='"_itemId_"'/></td>"
+						s colNum=colNum+colspan+1
+					}
+					
+					w "</tr>"
+				}
+			</server>
+		</table>
+		<server>
+		w "<div style='text-align:center;'>"
+		if (saveBtnDisplay="Y")&&(saveOperation'="N"){
+			w "<a class='hisui-linkbutton' id='btnSave'>保存</a>"
+		}
+		w "<a class='hisui-linkbutton' id='btnCancel' style='margin-left:20px;'>取消</a>"
+		w "</div>"
+		</server>
+	</div>
+</div>
+<script type="text/javascript">
+	var ServerObj={
+		EpisodeID:"#(EpisodeID)#",
+		detailInfoObj:#(detailInfoObj)#,
+		MainDocRequired:"#(MainDocRequired)#",
+		MainDocMulti:"#(MainDocMulti)#",
+		MainNurseRequired:"#(MainNurseRequired)#",
+		MainNurseMulti:"#(MainNurseMulti)#",
+		saveOperation:"#(saveOperation)#"
+	}
+	patientListPage:"#(PatientListPage)#"
+</SCRIPT>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/patDetailInfo.js"></script>
+</body>
+</html>

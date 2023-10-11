@@ -1,4 +1,10 @@
-<!--dhcpesendaudit.hisui.csp-->
+
+<!-- 
+ * FileName: dhcpesendaudit.hisui.csp
+ * Author: 	 xueying
+ * Date: 	 2019-10-18
+ * Description: HISUI粘贴
+-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  if ##class(websys.SessionEvents).SessionExpired() quit 1
@@ -19,84 +25,88 @@
 .r-label{
 	padding-left: 10px;
 }
-.r-label-1{
-	padding-left: 60px;
-}
-.newclsInvalid{
-	border-color: red;
-	color: red;
-}
-.panel-header{
-	border-bottom: 0;
-}
-
-
 </style>
 </head>
-<body>
-<div class="hisui-layout" fit="true">
-	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:135px;padding:10px 10px 0 10px;">
-		<div class="hisui-panel" data-options="title:'粘贴',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
+
+
+<body style="padding:10px;box-sizing: border-box;">
+<div class="hisui-panel" fit="true" data-options="title:'粘贴',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="background-color:inherit;">
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:92px;border-bottom:1px solid #e2e2e2;border-radius:0">
 			<table class="search-table">
 				<tr>
-				  <td class="r-label"><label for="DoRegNo">登记号</label></td>
+				  <td class="r-label"><label for="DoRegNo">#(..Get("登记号"))#</label></td>
 					<td>
 						<input class="textbox" id="DoRegNo">
 					</td>
-					<td class="r-label r-label-1" ><label for="StartDate">开始日期</label></td>
+					
+					<td class="r-label" ><label for="StartDate">#(..Get("开始日期"))#</label></td>
 					<td>
 						<input id="StartDate" class="hisui-datebox textbox">
 					</td>
-					<td class="r-label r-label-1"><label for="PGADM_DR_Name">团体</label></td>
+					
+					<td class="r-label"><label for="PGADM_DR_Name">#(..Get("团体"))#</label></td>
           			<td> 
               			<input class="hisui-combobox" type="text" Id="PGADM_DR_Name">
          			 </td>
-					<td class="l-label r-label-1">
-						<input class='hisui-checkbox' id="AutoSend" type="checkbox" data-options="checked:true" value="1" label="自动粘贴">
+         			 
+					<td style="padding-left: 10px">
+						<input class='hisui-checkbox' id="AutoSend" type="checkbox" data-options="checked:true" value="1"><label>#(..Get("自动粘贴"))#</label>
 					</td>
-					<td class="r-label r-label-1">
+					
+					<td class="r-label">
 						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
 					</td>
 				</tr>
 				<tr>
-				 	<td class="r-label"> <label for="Sex_DR_Name">性别</label></td>
+				 	<td class="r-label"> <label for="Sex_DR_Name">#(..Get("性别"))#</label></td>
 				 	<td>
            				<input class="hisui-combobox" type="text" Id="Sex_DR_Name" style="width:155px;">
           		 	</td>
-         			 <td class="r-label r-label-1"><label for="EndDate">结束日期</label></td>
+          		 	
+         			 <td class="r-label"><label for="EndDate">#(..Get("结束日期"))#</label></td>
 					<td>
 						<input id="EndDate" class="hisui-datebox textbox" >
 					</td>
 					
-					<td class="r-label r-label-1"><label for="VIPLevel">类别</label></td>
+					<td class="r-label"><label for="VIPLevel">#(..Get("VIP等级"))#</label></td>
           			<td>
             			<input class="hisui-combobox" type="text" Id="VIPLevel">
          			 </td>
-         			 <td class="l-label r-label-1">
-						<input class='hisui-checkbox' id="NoSend" type="checkbox" label="未粘贴">
-					</td>
-					<td class="r-label r-label-1">
+         			 
+         			 <td style="padding-left: 10px">
+						<input class='hisui-checkbox' id="NoSend" type="checkbox"><label>#(..Get("未粘贴"))#</label>
+					 </td>
+					
+					<td class="r-label">
 						<a id="Bclear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
 					</td>
 				</tr>
 					
 			</table>
 		</div>
-	</div>
-		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
-			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-					<table data-options="bodyCls:'panel-header-gray'" id="SendAuditQueryTab"></table>
+				<div data-options="region:'center',title:'',border:false" >
+					<table id="SendAuditQueryTab"></table>
 				</div>
-        	</div>
-</div>
+			</div>
+		</div>
+		
+
+ 
+ <!--结果对比弹窗 start-->
 <div id="ContrastWin" data-options="iconCls:'icon-w-paper'" style="padding:10px;">
       <table id="QryContrastWin" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true"></table>
   </div>
+<!--结果对比弹窗 end-->
+
+<div id="ResultViewWin" style="overflow:hidden;"></div> <!--体检结果预览弹窗-->
 
 <script type="text/javascript" src="../scripts/DHCPESendAudit.hisui.js"></script>
 <script type="text/javascript" src="../scripts/DHCPEPrintReportCommon.js"></script>
 <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
 <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+<script type="text/javascript" src="../scripts/hisui/DHCPECommon.hisui.js"></script>
+<script type="text/javascript" src="../scripts/DHCPECommon.hisui.js"></script>
   
   
 </body>		

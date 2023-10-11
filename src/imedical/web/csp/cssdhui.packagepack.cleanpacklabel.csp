@@ -1,11 +1,12 @@
-<!--Ïû¶¾°ü±êÇ©´òÓ¡-->
+ï»¿<!--æ¶ˆæ¯’åŒ…æ ‡ç­¾æ‰“å°-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
 </csp:method>
 <server>
-	d ##class(web.DHCXMLPConfig).LODOPInit()
+	Do ##class(web.DHCXMLPConfig).LODOPInit()
+	Write ##class(web.CSSDHUI.Common.UtilCommon).EncryptInput()
 </server>
 <html lang="zh-CN">
 <head>
@@ -14,127 +15,107 @@
 	<HISUI/>
 	<CSSDHISUI/>
 </head>
-<body class="hisui-layout" data-options="fit:true">
+<body id ="Layout" class="hisui-layout" data-options="fit:true">
 	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px">
-		<div class="hisui-panel" data-options="title:'Ïû¶¾°ü±êÇ©´òÓ¡',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="UomTB">
-				<div>
-					<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
-					<table class="Condition" id="cleantable">
-					<input id="cleantypev" name="cleantypev" type="hidden">
-					<input id="cleanCodev" name="cleanCodev" type="hidden">
-					<input id="cleanStrov" name="cleanStrov" type="hidden">
-					<input id="Iscmt" name="Iscmt" type="hidden">
-					<tr>
-						<td>
-							<label>ÈÕÆÚ</label>
-							<input id="cleandate" name="cleandate" class="hisui-dateboxq textbox" style="width:130px"></input>
-						</td>
-						<td>
-							<label>ÇåÏ´»úºÅ</label>
-							<input id="cleanmachine" name="cleanmachine" class="textbox" style="width:130px"></input>
-						</td>
-					</tr> 
-					<tr>
-						<td>
-							<label>ÇåÏ´¼Ü</label>
-							<input id="cleanCode" name="cleanCode" class="textbox" style="width:124px"></input>
-						</td>
-						<td align="right">
-							<a href="#" id="query" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">²éÑ¯</a>
-						</td>                        
-					</tr>
-				</table>
+		<div class="hisui-panel" data-options="title:'æ¸…æ´—å•',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false">
+					<table class="Condition" id="CleanTable" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<tr>
+							<td colspan="2"><label>èµ·å§‹æ—¥æœŸ</label><input id="CleanStartDate" name="CleanStartDate" class="hisui-datebox textbox"></td>
+							<td colspan="2"><label>æˆªæ­¢æ—¥æœŸ</label><input id="CleanEndDate" name="CleanEndDate" class="hisui-datebox textbox"></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label>æ¸…æ´—æœº</label><input id="CleanMachine" name="CleanMachine" class="textbox hisui-combobox"></td>
+							<td><label>æ¶ˆæ¯’åŒ…</label><input id="Pkg" name="Pkg" class="textbox hisui-combobox"></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label>ç­èŒæ–¹å¼</label><input id="SterTypeId" name="SterTypeId" class="textbox hisui-combobox"></td>
+							<td><label>æ ‡ç­¾</label><input id="Label" name="Label" class="textbox"></td>
+						</tr>
+						<tr>
+							<td colspan="3" align="left">
+								<input class='hisui-radio' type="radio" label='å…¨éƒ¨' name='AttributeCode' value='' data-options="checked:true" id="Attribute">
+								<input class='hisui-radio' type="radio" label='æ ‡ç‰Œè¿½æº¯åŒ…' name='AttributeCode' value='1' id='Attribute_1'>
+								<input class='hisui-radio' type="radio" label='æ™®é€šå¾ªçŽ¯åŒ…' name='AttributeCode' value='2' id='Attribute_2'>
+							</td>
+						</tr>
+						<tr>
+							<td>å¤–æ¥å™¨æ¢°</td>
+							<td><div id="ExtFlag" name="ExtFlag"></div></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">æŸ¥è¯¢</a></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="CleanList"></table>
 				</div>
 			</div>
-				<table id="tabDrugList"></table>
+		</div>
+	</div>
+	<div class="GridPadding" data-options="region:'east',headerCls:'panel-header-gray',split:true,border:false" style="width:750px;">
+		<div class="hisui-panel" data-options="title:'æ¶ˆæ¯’åŒ…æ ‡ç­¾',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false">
+					<table class="Condition" id="Usertb">
+						<tr>
+							<td><label class="required">*</label><label>å®¡æ ¸äºº</label><input id="PackChkUser" name="PackChkUser" class="textbox hisui-combobox" style="width:150px;"></td>
+							<td><label class="required">*</label><label>åŒ…è£…äºº</label><input id="PackUser" name="PackUser" class="textbox hisui-combobox" style="width:150px;"></td>
+							<td><label>é…åŒ…äºº</label><input id="Packer" name="Packer" class="textbox hisui-combobox" style="width:150px;"></td>
+						</tr>
+						<tr>
+							<td><label>ç­èŒæ—¥æœŸ</label><input id="SterDate" name="SterDate" class="hisui-datebox textbox" style="width:150px;"></td>
+							<td><label>åŒ…è£…ææ–™</label><input id="MaterialId" name="MaterialId" class="textbox hisui-combobox" style="width:150px;"></td>
+							<td><label>æŽ¥æ”¶ç§‘å®¤</label><input id="ToLoc" name="ToLoc" class="textbox hisui-combobox" style="width:150px;"></td>
+						</tr>
+						<tr>
+							<td><label>ç­èŒå™¨</label><input id="SterMachine" name="SterMachine" class="textbox hisui-combobox" style="width:150px;"></td>
+							<td><label>æ‰¹æ¬¡</label><input id="HeatNo" name="HeatNo" class="textbox " style="width:143px;"></td>
+							<td><label>ç­èŒäºº</label><input id="SterUser" name="SterUser" class="textbox hisui-combobox" style="width:150px;"></td>
+						</tr>
+						<tr>
+							<td><label class="required">*</label><label>ç”Ÿæˆä¸ªæ•°</label><input id="LabelQty" name="LabelQty" class="hisui-numberbox textbox" data-options="isKeyupChange:true" style="width:150px;"></td>
+							<td><label>åŒ…è£…æ•°</label><input id="packNum" name="packNum" class="hisui-numberbox textbox"data-options="isKeyupChange:true" style="width:150px;"> </td>
+							<td><a href="#" id="GenLabel" class="hisui-linkbutton" style="width:100px;">æ ‡ç­¾ç”Ÿæˆ</a>
+						</tr>
+						<tr>
+							<td><label>å¤‡æ³¨</label><input id="Remark" name="Remark" class="textbox" style="width:143px;"></td>
+							<td></td>
+							<td><a href="#" id="LabelPrintBT" class="hisui-linkbutton" style="width:100px;">æ ‡ç­¾æ‰“å°</a>
+							<a href="#" id="LabelPrintWithoutBT" class="hisui-linkbutton" style="width:100px;">æ— æ˜Žç»†æ‰“å°</a></td>
+						</tr>
+						<tr hidden>
+							<td></td>
+							<td><a href="#" id="ordSetUp" class="hisui-linkbutton" style="width:100px;">è®¾ç½®</a></td>
+							<td><a href="#" id="ordCompose" class="hisui-linkbutton" style="width:100px;">ç»„åˆ</a>
+							<a href="#" id="CancelCompose" class="hisui-linkbutton" style="width:100px;">å–æ¶ˆç»„åˆ</a></td>
+						</tr>
+					</table>
+					<div data-options="region:'center'" style="border:none;border-top:1px dashed #ccc;border-radius:0px;">
+						<table class="Condition" id="MonitorCondition">
+							<tr>
+								<td><label>æ ‡ç‰Œ</label><input id="CodeDict" name="CodeDict" class="textbox" onkeyup="this.value=this.value.replace(/[^\d]/g,'') " onafterpaste="this.value=this.value.replace(/[^\d]/g,'')"  style="width:100px;"></td>
+								<td><a href="#" id="CodeDictPrintBT" class="hisui-linkbutton">æ ‡ç‰Œæ‰“å°</a></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="ItmList"></table>
+				</div>
+			</div>
 		</div>
 	</div>
 
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:700px;padding-left:10px">
-			<div class="hisui-panel" data-options="title:'Ïû¶¾°ü±êÇ©Ã÷Ï¸',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" style="padding-left:5px;padding-right:5px;margin-bottom:5px">
-		<div>
-			<table  class="Condition" id="Usertb">
-			   <input id="txtChkerv" name="txtChkerv" type="hidden">
-			   <input id="txtActorv" name="txtActorv" type="hidden">
-				<tr>
-					<td><label>ÉóºËÈË</label><input class="textbox" id="txtChker" name="txtChker" style="width:150px"></td>
-					<td><label>°ü×°ÈË</label><input class="textbox" id="txtActor" name="txtActor" style="width:150px"></td>
-				</tr>
-				<tr>
-					<td>
-						<label>Ãð¾úÈÕÆÚ</label><input id="stedate" name="stedate" class="hisui-datebox textboxq" style="width:158px"></input>
-					</td>
-					<td><label>ÓÐÐ§ÆÚ</label> <select id="PackType" name="PackType" class="hisui-combobox" style="width:158px;">
-					<option value="5">³£¹æ</option>
-						<option value ="0">7Ìì</option>
-						<option value ="1">14Ìì</option>
-						<option value="2">30Ìì</option>
-						<option value="3">90Ìì</option>
-						<option value="4">180Ìì</option>
-					</select>
-					</td>
-					<td hidden><label>Ãð¾ú·½Ê½</label><input id="SterType" name="SterType" class="textbox hisui-combobox" style="width:138px">
-					</td>				 
-				</tr>
-				<tr>
-					<td><label>·¢·Å¿ÆÊÒ</label><input id="ToLoc" name="ToLoc" class="textbox hisui-combobox" style="width:158px"></td>
-					<td>
-						<label>¹øºÅ</label><input class="textbox" id="PotNo" name="PotNo" style="width:158x">
-						<input class="textbox" id="PotNoValue" name="PotNoValue" hidden>
-						<input class="textbox" id="PotNoSterType" name="PotNoSterType" hidden></td>
-					</td>
-					<td><label>Â¯´Î</label><input class="textbox" id="HeatNo" name="HeatNo" style="width:158x"></td>
-				</tr>
-			</table>
-		</div>
-		<div class="hisui-layout" data-options="fit:true">
-			<div  data-options="title:'',region:'south',border:false,headerCls:'panel-header-gray'" style="height:400px;padding-top:5px;padding-bottom:20%">
-				<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" style="border-color:#ccc">
-					<div id="UocTB">
-					<table  class="Condition">
-						<tr>
-							<td>ÊÖÊõ°ü:</td>
-							<td><a href="#" id="oprGen" class="hisui-linkbutton">±êÇ©Éú³É</a></td>
-							<td><a href="#" id="oprPrint" class="hisui-linkbutton">±êÇ©´òÓ¡</a></td>
-							<td><a href="#" id="oprPrintNot" class="hisui-linkbutton">ÎÞÃ÷Ï¸</a></td>
-							<td><a href="#" id="extPrint" class="hisui-linkbutton">ÍâÀ´´òÓ¡</a></td>
-							<td>±àÂë</td>
-							<td><input id="FixLabel" name="FixLabel" class="textbox" onkeyup="this.value=this.value.replace(/[^\d]/g,'') " onafterpaste="this.value=this.value.replace(/[^\d]/g,'')"></input></td>
-							<td hidden><a href="#" id="fixLabelquery" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">²éÑ¯</a></td>
-						</tr>
-					</table>
-					</div>
-					<table id="OprList"></table>
-				</div>
-			</div>
-				<div data-options="title:'',region:'center',border:false,headerCls:'panel-header-gray'">
-					<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true" style="border-color:#ccc">
-						<div id="UoTb">
-							<table  class="Condition">
-							<tr>
-								<td>ÆÕÍ¨°ü:</td>
-								<td>Éú³É¸öÊý</td>
-								<td><input id="num" name="num" class="hisui-numberbox textbox" style="width:80px"></input></td>
-								<td hidden>°ü×°Êý</td>
-								<td hidden><input id="packNum" name="packNum" class="hisui-numberbox textbox" style="width:80px"></input></td>
-								<td><a href="#" id="ordGen" class="hisui-linkbutton">±êÇ©Éú³É</a></td>
-								<td><a href="#" id="ordPrint" class="hisui-linkbutton">±êÇ©´òÓ¡</a></td>
-								<td><a href="#" id="ordPrintNot" class="hisui-linkbutton">ÎÞÃ÷Ï¸´òÓ¡</a></td>
-							</tr>
-							</table>
-						</div>	
-					<table id="OrdList"></table>
-			 			</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<CSP:INCLUDE PAGE="cssdhui.packagepack.cleanpackdetail.csp?type=car">
-	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></SCRIPT>
-	<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
-	<script type="text/javascript" src="../scripts/cssd/Pack/PackCommon.js"></script>
-	<script type="text/javascript" src="../scripts/cssd/Pack/CleanPackLabel.js"></script>
+<CSP:INCLUDE PAGE="cssdhui.packagepack.cleanpackdetail.csp?type=car">
+<CSP:INCLUDE PAGE="cssdhui.packagepack.findpackageitem.csp">
+<csp:Include Page="cssdhui.packageinfo.packagepic.csp">
+
+<script type="text/javascript" src="../scripts/cssd/Common/jquery.tmpl.js"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Pack/PackCommon.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Pack/LabelPrint.js"></script>
+<script type="text/javascript" src="../scripts/cssd/Pack/CleanPackLabel.js"></script>
+
 </body>
 </html>

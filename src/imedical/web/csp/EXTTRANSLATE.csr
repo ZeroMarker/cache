@@ -10,19 +10,52 @@ The <b>TRAK:TRANSLATE</b> inserts the system title from the MEDTRAK configuratio
 
 <csr:action>
 	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
-		s LogonDesc="",HospDesc="",LogonLocDesc=""
-		if $d(%session),$g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.CTLOCID")){
-			s LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
-			if (LogonLocID>0){
-				s LogonLocDesc=$s(LogonLocID'="":$P(^CTLOC(LogonLocID),"^",2),1:"")
-				if $l(LogonLocDesc,"-") =2 s LogonLocDesc =  $p(LogonLocDesc,"-",2) 
-				Set HospId = $P(^CTLOC(LogonLocID),"^",22)
-				If HospId>0 Set HospDesc = $p(^CT("HOSP",HospId),"^",2)
+		Set LangId=20
+		If $d(%session),$d(%session.Data("LOGON.LANGID")){
+			Set LangId = %session.Data("LOGON.LANGID")
+			If LangId="" Set LangId=20
+		}
+		Set Languages=$p($g(^SS("LAN",LangId)),"^",1)
+		Set ParamExp = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","SysTitleTmpl" _ Languages)
+		if ParamExp'=""{
+			Do ##class(BSP.SYS.BL.Param).FillSession(.mplist)
+			Set SplitDepDescDash = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","SplitDepDescDash") 
+			If (SplitDepDescDash="")||(SplitDepDescDash=1){
+				if $l(mplist("SessLocDesc"),"-") =2 s mplist("SessLocDesc") =  $p(mplist("SessLocDesc"),"-",2) 
 			}
-			s LogonDesc=" "_%session.Data("LOGON.USERNAME")_" "_%session.Data("LOGON.GROUPDESC")_" "_LogonLocDesc_" "_HospDesc
-	    }
-	    ;$p($g(^CF("SM",1)),"^",5)
-		w LogonDesc
+			Set RealPara = ##class(BSP.SYS.BL.Param).ParseTmpl(ParamExp,.mplist)
+			Write RealPara 
+		}else{
+			s LogonDesc="",HospDesc="",LogonLocDesc="",LocalIPLabel=""
+			if $d(%session),$g(%session.Data("LOGON.USERID")),$g(%session.Data("LOGON.CTLOCID")){
+				s LogonID = %session.Data("LOGON.SSUSERLOGINID")
+				s ClientIP = $P($g(^SST("LOG",LogonID,"ADDR")),"^",1)
+				s LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+				if (LogonLocID>0){
+					Set GroupDesc = %session.Data("LOGON.GROUPDESC")
+					s LogonLocDesc=$s(LogonLocID'="":$P(^CTLOC(LogonLocID),"^",2),1:"")
+					Set SplitDepDescDash = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","SplitDepDescDash") 
+					If (SplitDepDescDash="")||(SplitDepDescDash=1){
+						if $l(LogonLocDesc,"-") =2 s LogonLocDesc =  $p(LogonLocDesc,"-",2) 
+					}
+					Set HospId = $P(^CTLOC(LogonLocID),"^",22)
+					If HospId>0 Set HospDesc = $p(^CT("HOSP",HospId),"^",2)
+					
+					if ##class(websys.Conversions).IsValidMethodName("web.DHCBL.Authorize.BDPTranslation","GetTransDesc"){
+						Set LangId = %session.Data("LOGON.LANGID")
+						If LangId="" Set LangId=20
+						Set Languages=$p($g(^SS("LAN",LangId)),"^",1)
+						Set GroupDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.SSGroup","SSGRPDesc",Languages,GroupDesc)
+						Set LogonLocDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTLoc","CTLOCDesc",Languages,LogonLocDesc)
+						Set HospDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTHospital","HOSPDesc",Languages,HospDesc)
+					}
+					Set LocalIPLabel = ##class(websys.Translation).Get("DIC","±¾»úIP£º")
+				}
+				s LogonDesc=" "_%session.Data("LOGON.USERNAME")_" "_GroupDesc_" "_LogonLocDesc_" "_HospDesc_" "_LocalIPLabel_ClientIP
+			}
+			;$p($g(^CF("SM",1)),"^",5)
+			w LogonDesc
+		}
 	</SCRIPT>
 </csr:action>
 </csr:rule>

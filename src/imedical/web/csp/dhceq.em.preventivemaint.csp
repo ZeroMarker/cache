@@ -1,0 +1,227 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<csr:action>	
+    <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+    ;导入润乾直接打印所需包
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062") 
+	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	if ((PrintFlag=1)&&(PreviewRptFlag=0)){
+    	d ##class(web.DHCEQ.Util.RQServerConfig).GetApplet()  //Modify by zx 2021-5-28 
+	}   
+    </SCRIPT>  
+</csr:action>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+.eq-content-equip
+{
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+}
+.eq-content-equip::-webkit-scrollbar {
+  display: none;
+}
+.eq-content-equip>div
+{
+	padding:10px;
+}
+.eq-equipcat
+{
+	font-weight:900;
+    border-bottom: 1px solid #E0E0E0;
+}
+.eq-equiplist
+{
+	color:#666;
+    border-bottom: 1px solid #E0E0E0;
+}
+.eq-equiplist:last-child
+{
+    border-bottom: none;
+}
+.eq-equiplist>div
+{
+	display:inline-block;
+}
+.eq-equiplist>div>div:last-child
+{
+	margin-left:10px;
+}
+/*hisui中checkbox高度改写*/
+.eq-equiplist label.checkbox
+{
+	height: 25px;
+}
+.eq-equiplist>div>span
+{
+	background:#AAAAAA;
+	color:#FFFFFF;
+	display:inline-block;
+	border-radius:5px;
+	padding:2px 5px;
+	margin:0px 5px;
+	cursor: pointer;
+}
+.eq-equiplist-spanclick
+{
+	background:#40a2de;
+	color:#FFFFFF;
+}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	s MTRowID=$g(%request.Data("RowID",1))
+	s MTType=$g(%request.Data("BussType",1)) ;BussType	1,保养用 2,检查用 3,维修用
+	s QXType=$g(%request.Data("QXType",1))
+	s MTMaintLocDR=$g(%request.Data("MaintLocDR",1))
+	s MTEquipDR=$g(%request.Data("EquipDR",1))
+	s MTMaintTypeDR=$g(%request.Data("MaintTypeDR",1))
+	s PELPlanExecuteDR=$g(%request.Data("PlanExecuteID",1))
+	s PELPlanExecuteListDR=$g(%request.Data("PlanExecuteListID",1))
+	s ReadOnly=$g(%request.Data("ReadOnly",1))
+	s DHCEQTomcatServer=##class(web.DHCEQCommon).GetSysInfo("990045")
+	s FTPPictureFilePath=##class(web.DHCEQCommon).GetSysInfo("990005")
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+	s PMReportDR=$o(^DHCEQPMReport(0,"MaintDR",+MTRowID,""))
+	//Modify by zx 2021-05-28 无效处理屏蔽
+	//s EquipInfo=##Class(web.DHCEQEquip).GetEquipByID("","",MTEquipDR)
+	//s TemplatePath=##Class(web.DHCEQStoreMoveSP).GetPath()
+	//s MaintDate=##class(web.DHCEQCommon).TransValueToPage(+$H,"date")
+</Script>
+<body class="hisui-layout"> 
+<!--Modefied by zc0134 2023-04-21 调整页面样式 begin-->
+<div data-options="region:'north',border:false" style="height:210px;" > 
+	<div class="hisui-layout" data-options="fit:true,border:false">
+    	<div data-options="region:'north',border:false" style="height:40px;" style="overflow:hidden"> <!--begin banner显示区域-->
+        	<iframe id="Banner" frameborder="0" src="" style="width:100%;height:40px;padding-top:10px;"></iframe>
+        </div>
+		<div data-options="region:'north',border:false" style="padding:50px 10px 0px 10px;"> 
+			<div class="hisui-panel" data-options="fit:true,border:true,'eqtitle':'maintitle'" style="padding:10px 10px;">
+				<div class="eq-table" >
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cMTEquip" for="MTEquip">设备名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" style="width:117px;" id="MTEquip" data-options="component:'EM.L.Equip',paras:[{name:'Equip',type:1,value:'MTEquip'},{name:'NeedUseLoc',type:2,value:''},{name:'StockStatuType',type:2,value:''},{name:'VBAFlag',type:2,value:''},{name:'QXType',type:2,value:''},{name:'VComputerFlag',type:2,value:''},{name:'PlanNameDR',type:2,value:''},{name:'VProviderDR',type:2,value:''},{name:'IncludeBussFlag',type:2,value:''},{name:'FacilityFlag',type:2,value:''},{name:'VModelDR',type:2,value:''},{name:'VNo',type:2,value:''},{name:'vContractListDR',type:4,value:'ContractDR'}],defaultsize:'width:800,height:245'"><a id="BDetail" href="#" style="text-decoration:underline; margin: 0 0 0 10px;" class="showicon hisui-linkbutton element-square-btn"  iconCls="icon-w-paper"></a></div>	
+						<div class="eq-table-td eq-table-label-new"><label id="cMTPlanName" for="MTPlanName">计划名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTPlanName" data-options="component:'EM.L.PlanName',paras:[{name:'BussType',type:4,value:'MTType'},{name:'Name',type:2,value:''},{name:'EquipDR',type:4,value:'MTEquipDR'},{name:'MaintTypeDR',type:4,value:'MTMaintTypeDR'}]"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cMTPlanExecute" for="MTPlanExecute">计划执行单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTPlanExecute" data-options="component:'EM.L.PlanExecuteList',paras:[{name:'MPID',type:4,value:'MTSourceID'},{name:'PEID',type:4,value:'PELPlanExecuteDR'},{name:'EquipDR',type:4,value:'MTEquipDR'},{name:'ExecuteFlag',type:2,value:'N'}],defaultsize:'width:800,height:245'"></div>
+				        <div class="eq-table-td eq-table-label-new"><label id="cMTUseLocDR_CTLOCDesc" for="MTUseLocDR_CTLOCDesc">使用科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTUseLocDR_CTLOCDesc" data-options="component:'PLAT.L.Loc'"></div>	             
+				    </div>
+				    <div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cMTMaintUserDR_SSUSRName" for="MTMaintUserDR_SSUSRName">保养人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTMaintUserDR_SSUSRName" data-options="component:'PLAT.L.EQUser'"></div>
+				        <div class="eq-table-td eq-table-label-new"><label id="cMTMaintDate" for="MTMaintDate">保养日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MTMaintDate" data-required="true" value="#(CurDate)#" data-options="prompt:'必填项'"></div>            
+						<div class="eq-table-td eq-table-label-new"><label id="cMTMaintTypeDR_MTDesc" for="MTMaintTypeDR_MTDesc">保养类型</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTMaintTypeDR_MTDesc" data-options="component:'EM.L.MaintType',paras:[{name:'MaintTypeDesc',type:1,value:'MTMaintTypeDR_MTDesc'},{name:'MaintType',type:4,value:'MTType'}],defaultsize:'width:400,height:175'"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cMTMaintModeDR_MMDesc" for="MTMaintModeDR_MMDesc">保养方式</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTMaintModeDR_MMDesc" data-options="component:'EM.L.MaintMode',paras:[{name:'MaintMode',type:1,value:'MTMaintModeDR_MMDesc'},{name:'Type',type:4,value:'MTType'}],defaultsize:'width:400,height:175'"></div>	<!--Mozy0252	826989		2020-3-3-->
+				    </div>
+					<!--Add by zc0119 2022-6-20 添加保养费用信息  begin-->
+					<div class="eq-table-tr">
+				    	<div class="eq-table-td eq-table-label-first"><label id="cMTMaintFee" for="MTMaintFee">保养费用</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="MTMaintFee" ></div> 
+						<div class="eq-table-td eq-table-label-new"><label id="cMTRemark" for="MTRemark">备注</label></div>
+						<div class="eq-table-td eq-table-input"><textarea id="MTRemark" class="textbox"></textarea></div> 
+						</div>
+					<!--Add by zc0119 2022-6-20 添加保养费用信息  end-->
+				    <div class="eq-table-tr"  style="display: none">
+						<div class="eq-table-td eq-table-label"><label id="cMTServiceDR_SVName" for="MTServiceDR_SVName">服务商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTServiceDR_SVName" data-options="component:'EM.L.Service'"></div>
+						<div class="eq-table-td eq-table-label"><label id="cMTServiceUsers" for="MTServiceUsers">服务人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="MTServiceUsers" ></div> 
+						<div class="eq-table-td eq-table-label"><label id="cMTMaintLocDR_CTLOCDesc" for="MTMaintLocDR_CTLOCDesc">保养科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MTMaintLocDR_CTLOCDesc" data-options="component:'PLAT.L.Loc'"></div>
+				    </div>
+				    <div class="eq-table-tr" style="display: none">
+						<div class="eq-table-td eq-table-label"><label id="cMTServiceHandler" for="MTServiceHandler">服务联系人</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="MTServiceHandler"></div>
+						<div class="eq-table-td eq-table-label"><label id="cMTServiceTel" for="MTServiceTel">服务电话</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="MTServiceTel" ></div>
+				    	<div class="eq-table-td eq-table-label"><label id="cMTMaintFee" for="MTMaintFee">保养费用</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-textbox textbox" id="MTMaintFee" ></div> 
+				    </div>
+			    </div>				
+			</div>	
+		</div>
+	</div>
+</div>
+<div data-options="region:'center',border:false" style="padding:0px 5px 10px 10px;">
+	<div class="hisui-panel" title="保养内容" data-options="iconCls:'icon-w-edit',fit:true">
+		<div style="float:left;width:99%;height:100%;border-left:#ccc solid 1px;overflow:hidden;">
+			<div style="width:98%;height:99%;padding:1% 1% 0 1%;">
+				<div style="border-left:#666 solid 5px;padding-left:5px;" id="TemplateDesc">模板名称</div> <!--Modify by zx 2021-08-24 BUG-->
+				<div class="eq-template" id="ChooseContent" style="height:95%;overflow-x:hidden;overflow-y:auto;"><!--内容生成--></div>
+			</div>
+		</div>		
+	</div>
+</div>
+<div data-options="region:'east',border:false" style="width:650px;padding:0px 5px 10px 10px;"><!--Modified By wy 20230216 3222412 UI页面改造 end-->
+	<div class="hisui-panel" data-options="border:false,fit:true,'eqtitle':'listtitle'">
+		<table id="tDHCEQPicAndAppendFile" class="hisui-datagrid" data-options="iconCls:'icon-w-img'" title="图片/电子资料"></table>
+	</div>
+</div>
+<!--Modefied by zc0134 2023-04-21 调整页面样式 end-->
+	<div data-options="region:'south',border:false" style="height:40px">
+		<div style="text-align:center;">
+			<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">保存</a>
+			<a id="BSubmit" href="#" class="hisui-linkbutton" iconCls="icon-w-submit" data-options="stopAllEventOnDisabled:true">提交</a>
+			<a id="BDelete" href="#" class="hisui-linkbutton" iconCls="icon-w-close" data-options="stopAllEventOnDisabled:true">删除</a>
+			<a id="BPMReport" href="#" class="hisui-linkbutton" iconCls="icon-w-print" iconCls="icon-search" data-options="stopAllEventOnDisabled:true">打印</a>
+			<a id="BCancel" href="#" class="hisui-linkbutton" iconCls="icon-w-stamp" data-options="stopAllEventOnDisabled:true">作废</a>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<input id="ReadOnly" name="ReadOnly" value=#(ReadOnly)#>
+			<input id="MTRowID" value=#(MTRowID)#>
+			<input id="MTEquipDR" name="MTEquipDR" value=#(MTEquipDR)#>
+			<input id="MTUseLocDR" name="MTUseLocDR">
+			<input id="MTMaintLocDR" name="MTMaintLocDR" value=#(MTMaintLocDR)#>
+			<input id="MTMaintUserDR" name="MTMaintUserDR">
+			<input type="hidden" id="CurDate" value=#(CurDate)#>
+			<input id="MTType" name="MTType" value=#(MTType)#>
+			<input id="MTSourceID" name="MTSourceID">
+			<input id="MTMaintTypeDR" name="MTMaintTypeDR">
+			<input id="MTMaintModeDR" name="MTMaintModeDR">
+			<input id="MTNormalFlag" name="MTNormalFlag">
+			<input id="MTManageLocDR" name="MTManageLocDR">
+			<input id="MTStatus" name="MTStatus">
+			<input id="MTMeasureDeptDR" name="TMMeasureDeptDR">
+			<input id="MTServiceDR" name="MTServiceDR">
+			<input id="MTMaintPlanDR" name="MTMaintPlanDR">
+			<input id="PELPlanExecuteDR" name="PELPlanExecuteDR" value=#(PELPlanExecuteDR)#>
+			<input id="PELPlanExecuteListDR" name="PELPlanExecuteListDR" value=#(PELPlanExecuteListDR)#>
+			<input id="MTTotalFee" name="MTTotalFee">
+			<input id="PMRTemplateDR" name="PMRTemplateDR">
+			<input type="hidden" id="DHCEQTomcatServer" value=#(DHCEQTomcatServer)#>	
+			<input type="hidden" id="FTPPictureFilePath" value=#(FTPPictureFilePath)#>
+			<input type="hidden" id="PrintFlag" value=#(PrintFlag)#>
+			<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			<input type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+			<input type="hidden" id="PMReportDR" value=#(PMReportDR)#>
+			<!--Modify by zx 2021-05-28 无效处理屏蔽
+			<input type="hidden" id="EquipInfo" value=#(EquipInfo)#>
+			<input type="hidden" id="TemplatePath" value="#(TemplatePath)#">
+			<input type="hidden" id="MaintDate" value=#(MaintDate)#>-->
+		</form>
+	</div>
+    <script type="text/javascript" src="../scripts/dhceq/em/preventivemaint.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/em/qctemplate.js"></script>
+	<script type='text/javascript' src='../scripts/DHCCPMRQCommon.js'></script><!--MZY0084	1965521,1967736		2021-07-27-->
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+﻿<html>
+<head>
+    <HISUI/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="../scripts/emr/css/medicalhistory.css"/>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+	<script language="cache" runat="server">
+		s episodeID = $Get(%request.Data("EpisodeID",1),"")
+		s patientID = $Get(%request.Data("PatientID",1),"")
+		s:(patientID = "") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+		s hospitalID = $Get(%request.Data("HospitalID",1),"")
+		s:(hospitalID = "") hospitalID = %session.Get("LOGON.HOSPID")
+		s userID = $Get(%request.Data("UserID",1),"")
+		s:(userID = "") userID = %session.Get("LOGON.USERID")
+		s userName = ""
+		s:(userID '= "") userName = ##Class(EMRservice.BL.BLPowerUser).GetUserName(userID)
+		s HasPatEncryptLevel = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("HasPatEncryptLevel")
+	</script>
+    <script language = "javascript">
+		var episodeID = '#(episodeID)#';
+		var patientID = '#(patientID)#';
+		var hospitalID = '#(hospitalID)#';
+		var userID = '#(userID)#';
+		var userName = '#(userName)#';
+		var HasPatEncryptLevel = '#(HasPatEncryptLevel)#';
+    </script>
+    <style>
+    .row{
+			margin:20px;
+		}
+		
+  </style>
+    <title>诊前问诊</title>
+</head>
+<body style="padding:10px;">
+	<div id="templateLayout" class="hisui-layout" data-options="fit:true">
+	   	<div id="north" data-options="region:'north',split:true,border:false,bodyCls:'panel-header-gray'" style="height:51px;overflow:hidden;border:1px solid #e2e2e2;border-radius:4px;">
+			<div id="patientInfo" class="patientInfo" style=""></div>
+	   	</div>
+	   	<div id="west" data-options="region:'west',split:true,border:false" style="width:350px;">
+	   		<div class="hisui-panel" data-options="fit:true,title:'目录',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		   		<div id="categorylist" style="padding:10px 10px 10px 5px;">
+					<ul id="CategoryTree"></ul>
+				</div>
+			</div>
+	   	</div>	
+	   	<div data-options="region:'center',border:false" style="overflow:auto;">
+	   		<div id="contentLayout" class="hisui-layout" data-options="fit:true">
+	   			<div data-options="region:'center',border:false" style="overflow:auto;">
+	   				<div id="content" style="">
+	   			
+	   				</div>
+	   			</div>
+	   			<div data-options="region:'south',border:false" class="south" style="overflow:hidden;">
+					<div class="saveButton"><a href="#" class="hisui-linkbutton" style="width:60px;" onclick="SaveData()">提交</a></div>
+				</div>
+	   		</div>
+	   	</div>
+   	</div>
+    <script type="text/javascript" src="../scripts/emr/js/medicalhistory.js"></script> 
+    <script type="text/javascript" src="../scripts/emr/js/record.baseformlogs.js"></script>   
+</body>
+</html>

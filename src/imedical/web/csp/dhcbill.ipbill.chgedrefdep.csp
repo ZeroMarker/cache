@@ -1,0 +1,78 @@
+<!-- 
+ * FileName: dhcbill.ipbill.chgedrefdep.csp
+ * Author: ZhYW
+ * Date: 2021-02-03
+ * Description: 出院结算第三方退款
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<server>
+		set prtRowId=%request.Get("PrtRowId")
+		
+		do ##class(BILL.Util.Library).LoadPaySrvLib()     //引入第三方支付服务接口
+		
+		set prtRefundInfo=##class(BILL.IP.BL.ChgedRefundDep).GetPrtRefundInfo(prtRowId)
+		set refundSum=$fn($zabs($p(prtRefundInfo,"^",1)),"",2)   //退费总额
+		set notRefundSum=$fn($p(prtRefundInfo,"^",2),"",2)       //未退总额
+	</server>
+	<script type="text/javascript">
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		
+		//常量
+		var CV = {
+			PrtRowId : "#(prtRowId)#"
+		};
+		
+		//全局变量
+		var GV = {
+			EditRowIndex: undefined
+		};
+	</script>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',bodyCls:'panel-header-gray'" style="height:52px;border-radius:4px 4px 0 0;">
+			<div style="padding:10px;">
+				<span><label style="padding-right:10px;">退费方式</label><input id="refundMode" class="textbox"/></span>
+				<input class="hisui-checkbox" type="checkbox" label="包含已退完记录" id="isAll">
+				<div class="messager-popover info" style="position:absolute;height:17px;left:360px;top:8px;right:10px;">
+					<span class="messager-popover-icon info"></span>
+					<span class="pay">
+						<span>
+							<span>需退总额：</span><span class="sum">#(refundSum)#</span>
+							<span class="sline">/</span>
+							<span>未退总额：</span><span class="sum">#(notRefundSum)#</span>
+						</span>
+						<span>
+							<span class="sline">/</span>
+							<span class="mode"></span>
+							<!--
+							<span class="mode">已退金额：</span><span class="amt"></span>
+							<span class="sline">/</span>
+							<span class="mode">未退金额：</span><span class="amt"></span>
+							-->
+						</span>
+					</span>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+			<table id="refundList"></table>
+		</div>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.chgedrefdep.js"></script>
+</body>
+</html>

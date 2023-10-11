@@ -1,0 +1,162 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<!--nur.hisui.nursehistoryimage.csp-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/nurseHistoryImage.js" charset='gbk'></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:5px!important;
+        }
+        label {
+	    	margin:0 0 0 10px;
+	    }
+	    .LayoutTable {
+			border-collapse:separate; 
+			border-spacing:0px 4px;
+		}
+		#dialog-model {
+			top:120px;
+			width:300px;
+			height:180px;
+			padding-bottom:0!important;
+		}
+	</STYLE>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:true,border:false" style="height:40px;">
+			<table cellpadding="10">
+				<tr>
+					<td>
+						<label id="_HospListLabel" style='color:red;' class='r-label'>医院</label>
+						<input id="_HospList" class="textbox"/>
+					</td>
+					<td>
+						<label class="r-label">模板名称<label>
+						<input id="searchDesc" class="hisui-searchbox" style="width:200px;"/>
+					</td>
+					<td>
+						<label class="r-label">任务状态<label>
+						<select id="taskStatus" class="hisui-combobox" style="width:100px;">
+						</select>
+					</td>
+					<td>
+						<label class="r-label">任务类型<label>
+						<select id="taskType" class="hisui-combobox" style="width:100px;">
+						</select>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'west',title:'模板',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:400px;">
+					<div class="hisui-panel" data-options="border:false,fit:true">
+						<div id="toolbar">
+							<div class="button-group">
+								<a id="addToTask"
+								   href="javascript:void(0)" 
+								   class="hisui-linkbutton" 
+								   data-options="iconCls:'icon-arrow-right',plain:true">
+								  添加到任务列表
+								</a>
+							</div>
+						</div>	
+						<table id="TemplateGrid" class="hisui-datagrid" data-options="fit:true,border:false">   
+							<thead> 
+								<tr>
+									<th field="ck" checkbox="true"></th>
+									<th data-options="field:'TName',width:300">名称</th>   
+									<th data-options="field:'TKey',width:180">关键字</th> 
+									<th data-options="field:'TGuid',width:300">GUID</th>
+								</tr>   
+							</thead>
+						</table>
+						<div id="dialog-model" class="hisui-dialog" title="新增/修改" 
+							 data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,
+							buttons:[
+								{
+									id: 'btn-dialog-save',
+									text:'保存'
+								},
+								{
+									id: 'btn-dialog-cancel',
+									text:'取消'
+								}
+							]">
+							<div class="hisui-panel" style="padding:10px" data-options="border:false,fit:true">
+								<form id="form-model" method="post" >
+									<table>
+										<tr>
+											<td><input name="Guids" id="Guids" type="hidden" value=""></td>
+										</tr>
+										<tr>
+											<td class="r-label">任务类型</td>
+											<td>
+												<select id="TaskType" class="hisui-combobox" style="width:200px;"></select>
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">打印模板</td>
+											<td>
+												<select id="printModel" class="hisui-combobox" style="width:200px;"></select>
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">起始日期</td>
+											<td>
+												<input id="StartDate" class="hisui-datebox textbox datebox" data-options="required:true" style="width:200px;">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">终止日期</td>
+											<td>
+												<input id="EndDate" class="hisui-datebox textbox datebox" data-options="required:true" style="width:200px;">
+											</td>
+										</tr>
+									</table>
+								</form>
+							</div>
+						</div>				
+					</div>
+				</div>
+				<div data-options="region:'center',title:'生成',headerCls:'panel-header-gray',iconCls:'icon-update'">	
+					<table id="HistoryGrid" class="hisui-datagrid" data-options="fit:true,border:false">   
+						<thead> 
+							<tr>
+								<th data-options="field:'HName', width:200, align:'left', nowrap:false">名称</th> 
+								<th data-options="field:'HPrintName', width:200, align:'left', nowrap:false">打印模板名称</th>
+								<th data-options="field:'HTaskType', width:80, align:'center'">任务类型</th><th data-options="field:'HDateFrom', width:100, align:'center'">起始日期</th>
+								<th data-options="field:'HDateTo', width:100, align:'center'">终止日期</th>
+								<th data-options="field:'HCreateStatus', width:80, align:'center'">状态</th>
+								<th data-options="field:'HUserName', hidden:true, width:110, align:'center'">更新人</th>
+								<th data-options="field:'HUpdateDateTime', hidden:true, width:160, align:'center'">更新时间</th>
+								<th data-options="field:'HGuid', hidden:true">GUID</th>
+								<th data-options="field:'HID', hidden:true">ID</th>
+								<th data-options="field:'HLog', width:50, align:'center', formatter:formatLog">日志</th>
+								<th data-options="field:'HOperate', width:100, align:'center', formatter:formatOper">操作</th>
+							</tr>   
+						</thead>
+					</table>
+					<div id="dialog-log" class="hisui-dialog" data-options="iconCls:'icon-paper',shadow:false,modal:true,closed:true"></div>				
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

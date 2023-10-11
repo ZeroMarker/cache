@@ -9,30 +9,50 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
 <DHCEQ:HISUI></DHCEQ:HISUI>
 <DHCEQ:Report></DHCEQ:Report>
-<HISUI/>
 </HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+;;add by ZY0250 2020-01-06  处理预折旧数据操作
+s DepreFlag=$Get(%request.Data("DepreFlag",1))
+s CurUserID=##Class(web.DHCEQCommon).getMapIDBySource("user",%session.Get("LOGON.USERID"))
+s CurLocID=##Class(web.DHCEQCommon).getMapIDBySource("dept",%session.Get("LOGON.CTLOCID"))
+s CurLocDesc=##class(web.DHCEQCommon).GetTrakNameByID("dept",CurLocID)
+s HospitalDR=##Class(web.DHCEQCommon).GetHospital()
+s HOSPDESC=##Class(web.DHCEQCommon).GetHospitalDesc()
+s EquipTypeIDS=##Class(web.DHCEQCommon).GetEquipTypesByGroup()
+s EquipTypeIDS=##Class(web.DHCEQCommon).Replace(EquipTypeIDS,"^",",")
+</Script>
 <body class="hisui-layout">
 	<div data-options="region:'center',border:false" style="padding:10px;">
 		<div class="hisui-panel" title="资产折旧报表明细" data-options="'eqtitle':'maintitle',fit:true">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false" style="height:50px">
+                <div data-options="region:'north',border:false" style="height:70px">
 					<div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
 					<div class="eq-table-tr">
 					<div class="eq-table-td eq-table-label"><lable  for="pMonthStr">月份</lable></div>
 					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="pMonthStr" data-options='validParams:"YM"' value=#(CurMonth)#></div>
-					<div class="eq-table-td eq-table-label"><lable id="cpEquipType" for="pEquipType">管理类组</lable></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.EquipType'" id="pEquipType"></div>
+					<div class="eq-table-td eq-table-label"><lable id="cpEquipTypes" for="pEquipTypes">管理类组</lable></div>
+					<div class="eq-table-td eq-table-input"><input id="pEquipTypes" class="hisui-combogrid textbox"></div>
+					<!--div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.EquipType'" id="pEquipType"></div-->
+					<!--///modified by ZY  20220919   2944834-->
+                    <div class="eq-table-td eq-table-label"><label id="cGroupIDTwo" for="GroupIDTwo">科室职能</label></div>
+                    <div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.LocGroupType','paras':[{'name':'Type','type':'2','value':'2'}]," id="pLocGroupType"></div>
 					<div class="eq-table-td eq-table-label"><lable id="cpUseLoc" for="pUseLoc">科室</lable></div>
 					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Loc'" id="pUseLoc"></div>
 					<div class="eq-table-td eq-table-label"><lable id="cpFundsType" for="pFundsType">资金来源</lable></div>
 					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.FundsType'" id="pFundsType"></div>
 					<div class="eq-table-td eq-table-label"><lable id="cpHospital" for="pHospital">院区</lable></div>
 					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Hospital'" id="pHospital"></div>
+					<div class="eq-table-td eq-table-label"><lable id="cOrigin" for="Origin">来源</lable></div>
+					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox"  data-options="'component':'PLAT.L.Origin'" id="pOrigin"></div>
 					<div class="eq-table-td eq-table-label"></div>
 					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
 					<div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
+					<div class="eq-table-td eq-table-label"><a id="BDepre" href="#" class="hisui-linkbutton">(预)计提折旧</a></div>
+					<!--add by ZY0298 只有使用手工折旧的时候才放开下面的按钮-->
+					<!--div class="eq-table-td eq-table-label"><a id="BHandWork" href="#" class="hisui-linkbutton">手工折旧月结</a></div-->	
 				</div>
 				<div class="eq-table-tr" style="display: none">
 					<div class="eq-table-td eq-table-label"><lable id="cStartDate" for="StartDate">日期</lable></div>
@@ -89,7 +109,8 @@
 		<form name="DHCEQ">
 			<INPUT TYPE="hidden" name="PrintFlag" id="PrintFlag" value=#(PrintFlag)#>
 			<INPUT TYPE="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)#>
-			<INPUT TYPE="hidden" name="ReportFilePrintSrc" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>		    <INPUT TYPE="hidden" name="EquipTypeDR" id="EquipTypeDR">
+			<INPUT TYPE="hidden" name="ReportFilePrintSrc" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>		    
+			<INPUT TYPE="hidden" name="EquipTypeDR" id="EquipTypeDR">
 		    <INPUT TYPE="hidden" name="pEquipTypeDR" id="pEquipTypeDR">
 		    <INPUT TYPE="hidden" name="pUseLocDR" id="pUseLocDR">
 		    <INPUT TYPE="hidden" name="pFundsTypeDR" id="pFundsTypeDR">
@@ -103,37 +124,25 @@
 		    <INPUT TYPE="hidden" name="ItemDR" id="ItemDR">
 		    <INPUT TYPE="hidden" name="StatCatDR" id="StatCatDR">
 		    <INPUT TYPE="hidden" name="EquipCatDR" id="pEquipCatDR">
+		    <INPUT TYPE="hidden" name="CurHospID" id="CurHospID" value=#(HospitalDR)#>
+			<INPUT TYPE="hidden" name="CurGroupID" id="CurGroupID">
+		    <INPUT TYPE="hidden" name="CurLocID" id="CurLocID" value=#(CurLocID)#>
+		    <INPUT TYPE="hidden" name="EquipTypeIDS" id="EquipTypeIDS" value=#(EquipTypeIDS)#>
 			<INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+			<INPUT TYPE="hidden" name="DepreFlag" id="DepreFlag" value=#(DepreFlag)#>
+            <INPUT TYPE="hidden" name="pLocGroupTypeDR" id="pLocGroupTypeDR">
+            <INPUT TYPE="hidden" name="pOriginDR" id="pOriginDR">
 		</form>
 	</div>
+	<script type='text/javascript' src='../scripts/dhceq/stat/monthdeprelist.js'></script>
 </body>
 <script type='text/javascript'>
+///modified by ZY0250 2020-01-06  处理预折旧数据操作
+setElement("CurGroupID",SessionObj.GGROURPID)
 MonthBox('pMonthStr');
-function setSelectValue(vElementID,rowData)
+if (getElementValue("DepreFlag")!=1)
 {
-	if(vElementID=="pUseLoc")
-	{
-		setElement("pUseLocDR",rowData.TRowID);
-		setElement("pUseLoc",rowData.TName);
-	}
-	//add hly 2019/5/28
-	if(vElementID=="pEquipType")
-	{
-		setElement("pEquipTypeDR",rowData.TRowID);
-		setElement("pEquipType",rowData.TName);
-	}
-	//add hly 2019/5/28
-	if(vElementID=="pFundsType")
-	{
-		setElement("pFundsTypeDR",rowData.TRowID);
-		setElement("pFundsType",rowData.TName);
-	}
-	//add hly 2019/5/28
-	if(vElementID=="pHospital")
-	{
-		setElement("pHospitalDR",rowData.TRowID);
-		setElement("pHospital",rowData.TName);
-	}
+	hiddenObj("BDepre",1);
 }
 </script>
 

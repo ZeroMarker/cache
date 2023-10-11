@@ -1,0 +1,43 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	//i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+	<SERVER>
+		// ?type=1&actionType=install
+		s file = ""
+		s file1 = "install_lodop32.exe"
+		s file2 = "install_lodop64.exe"
+		s file3 = "CLodop_Setup_for_Win32NT.exe"
+		s file4 = "CLodop_Setup_for_Win64NT_6.570EN.exe"	
+		s type = $g(%request.Data("type",1), "1")
+		x ("s file = file" _ type)
+		if (type < 3) {
+			s lodopDesc = "Lodop"
+		} else {
+			s lodopDesc = "CLodop"
+		}
+		s actionType = $g(%request.Data("actionType",1), "install")
+		if (actionType = "install") {
+			s actionDesc = "安装"
+		} else {
+			s actionDesc = "升级"
+		}
+	</SERVER>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>#(actionDesc)# #(lodopDesc)#</title>
+	</head>
+	<script type="text/javascript">
+		var lodopDesc = "#(lodopDesc)#";
+		var actionDesc = "#(actionDesc)#";
+		var file = "#(file)#";		
+	</script>
+<body style='padding:10px;'>
+	<font color='#FF00FF'>#(lodopDesc)# 打印控件需要 #(actionDesc)# !点击这里
+	<a href='../addins/server/lodop/#(file)#'
+			target='_self'>执行#(actionDesc)#</a>，#(actionDesc)#后请重新登录系统。</font>
+</body>
+
+</html>

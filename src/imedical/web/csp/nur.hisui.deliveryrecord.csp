@@ -1,0 +1,443 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--nur.hisui.deliveryrecord.csp HISUI分娩记录--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"/>
+
+<Server>
+  s EpisodeID=%request.Get("EpisodeID")
+  s PatientListPage=""
+  d ##class(web.DHCXMLPConfig).LODOPInit("1")
+  s hospId=%session.Get("LOGON.HOSPID")
+  s hospId=##class(web.DHCBL.BDP.BDPMappingHOSP).GetDefHospIdByTableName("Nur_IP_DeliveryManage",hospId,"")
+  // 获取新生儿详情配置项目
+  s newBabyDetailObj=##class(Nur.NIS.Service.Delivery.Record).getNewBabyDetailItem(hospId)
+  k newBabyDetailArr
+  d ##Class(DHCDoc.Util.FromJSON).FromJSONToArr(newBabyDetailObj,.newBabyDetailArr)
+  s deliveryOtherSetObj=##class(Nur.JSON).Encode(##class(Nur.NIS.Service.Delivery.RecordConfig).getDeliveryOtherSet(hospId))
+</Server>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+}
+.r-label{
+	padding-left: 10px;
+}
+.btn{
+	padding:10px 0;
+	
+}
+#newBabyDetailTable td{
+	white-space:nowrap;
+}
+#pfonel,#pftwol {
+	width:51px;
+}
+#pfoner,#pftwor {
+	width:51px;
+	margin-left:5px;
+}
+#newBabyDetailTable tr td {
+	position:relative;
+}
+.apgarPopover{
+	content:"";
+	position:absolute;
+	width:155px;
+	height:30px;
+	cursor:pointer;
+	left:0;
+	top:0;
+}
+.apgarPopover2 {
+	content:"";
+	position:absolute;
+	width:51px;
+	height:30px;
+	cursor:pointer;
+	left:100px;
+	top:0;
+}
+</style>
+</head>
+<body style="padding:4px;box-sizing: border-box;">
+	<div id="loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-panel" fit="true" data-options="title:'分娩记录',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',collapsible:false,bodyCls:'panel-body-gray'" style="border-top:0;border-left:0;border-right:0;border-bottom-style:dashed;height:92px;">
+				<div style="position: relative;" class="ctcAEPatBar" style="height:40px;">
+					<!--csp:Include Page="dhcdoc.in.patient.banner.csp"-->
+					<csp:Include Page="dhcdoc.patinfo.banner.csp">
+				</div>
+				
+				<div class="btn hisui-panel" data-options="bodyCls:'panel-body-gray'" style="border-radius:0;border-bottom:0;border-right:0;border-left:0;">
+			      <table style="border-spacing:0;">
+			        <tr>
+			                <td class="r-label" >
+			                    #(..Get("孕次"))#
+			                </td>
+			          		<td>
+			          			<input class="hisui-numberbox textbox" id="gravida" data-options="precision:0,fix:false,min:0">
+			          		</td>
+			          		<td class="r-label" >
+			                    #(..Get("产次"))#
+			                </td>
+			                <td>
+			          			<input class="hisui-numberbox textbox" id="para" data-options="precision:0,fix:false,min:0">
+			          		</td>
+			          		<td class="r-label" >
+			                    #(..Get("怀胎数"))#
+			                </td>
+				          <td>
+				          	<input class="hisui-numberbox textbox" id="pregnancyNumber" data-options="precision:0,fix:false,min:0">
+				          </td>
+				          <td style="padding-left:10px;">
+				          	<a href="#" id="saveGP" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="SaveMotherGP()">#(..Get("保存"))#</a>
+				          </td>
+			          </tr>
+			      </table>
+			    </div>
+			</div>
+			<div data-options="region:'center',title:'',border:false" style="">
+				<table id='tabDeliveryRecord'></table>
+			</div>
+		</div>
+	</div>
+	 <div id="newBabyDetailDialog" title="新生儿详情" style="width:480px;overflow-y:auto;">
+		<table id="newBabyDetailTable" class="search-table">
+			<tr>
+				<td class="r-label">#(..Get("序号"))#</td>
+				<td>
+					<input id="NO" class="textbox" disabled>
+				</td>
+			</tr>
+			<server>
+				s saveBtnDisplay="N"
+				s row=""
+				for {
+					s row=$o(newBabyDetailArr(row)) Q:row=""
+					w "<tr>"
+					s col=""
+					for {
+						s col=$o(newBabyDetailArr(row,col)) Q:col=""
+						s itemId=$g(newBabyDetailArr(row,col,"itemId"))
+						s itemDesc=$g(newBabyDetailArr(row,col,"itemDesc"))
+						s itemType=$g(newBabyDetailArr(row,col,"itemType"))
+						s itemRequired=$g(newBabyDetailArr(row,col,"itemRequired"))
+						s itemUom=$g(newBabyDetailArr(row,col,"itemUom"))
+						s itemAticve=$g(newBabyDetailArr(row,col,"itemAticve"))
+						continue:itemAticve="N"
+						s labelClass=""
+						//下拉单选,下拉多选,单行文本,日期,时间,数字 closed:true,
+						w "<td class='r-label'><label class='"_$case(itemRequired,"Y":"clsRequired",:"")_"' for='"_itemId_"'>"_itemDesc_"</label></td>"
+						if (itemType=1){
+							// 下拉单选
+							w "<td class='r-input'><input class='hisui-combobox textbox' id='"_itemId_"'/>"
+						}elseif(itemType=2){
+							//下拉多选
+							w "<td class='r-input'><input class='hisui-combobox textbox' id='"_itemId_"'/>"
+						}elseif(itemType=3){
+							//单行文本
+							w "<td class='r-input'><input class='textbox' id='"_itemId_"'/>"
+						}elseif(itemType=4){
+							//日期
+							w "<td class='r-input'><input class='hisui-datebox textbox' id='"_itemId_"'/>"
+						}elseif(itemType=5){
+							//时间
+							w "<td class='r-input'><input class='hisui-timespinner textbox' id='"_itemId_"'/>"
+						}elseif(itemType=6){
+							//数字
+							w "<td class='r-input'><input class='hisui-numberbox textbox' id='"_itemId_"'/>"
+						}
+						//项目单位
+						if (itemUom'=""){
+							w "<span style='margin-left:5px;'>"_itemUom_"</span>"
+						}
+						if (itemId="one"){
+							w "<span class='apgarPopover' id='PoPOne'></span>"
+						}
+						if (itemId="five"){
+							w "<span class='apgarPopover' id='PoPFive'></span>"
+						}
+						//Apgar评分-自定义分钟
+						if (itemId="pfonel"){
+							w "<input class='textbox' id='pfoner' disabled/>"
+							w "<span class='apgarPopover2' id='OtherOne'></span>"
+						}
+						if (itemId="pftwol"){
+							w "<input class='textbox' id='pftwor' disabled/>"
+							w "<span class='apgarPopover2' id='OtherTwo'></span>"
+						}
+						w "</td>"
+					}
+					
+					w "</tr>"
+				}
+			</server>
+		</table>
+	</div>
+	<!--Apgar悬浮框-->
+	<div id="radioGrop">
+      <table class="radioTb">
+          <tr>
+            <td>#(..Get("肌张力"))#<td>
+              <td id="jzl" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='jzl' value='0' id="jzl0">
+                  <label for="jzl0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='jzl' value='1' id="jzl1">
+                  <label for="jzl1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='jzl' value='2' id="jzl2">
+                  <label for="jzl2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("呼吸"))#<td>
+              <td id="breath" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='breath' value='0' id="breath0">
+                  <label for="breath0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='breath' value='1' id="breath1">
+                  <label for="breath1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='breath' value='2' id="breath2">
+                  <label for="breath2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("脉搏"))#<td>
+              <td id="mb" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='mb' value='0' id="mb0">
+                  <label for="mb0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='mb' value='1' id="mb1">
+                  <label for="mb1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='mb' value='2' id="mb2">
+                  <label for="mb2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("反射"))#<td>
+              <td id="fs" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='fs' value='0' id="fs0">
+                  <label for="fs0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='fs' value='1' id="fs1">
+                  <label for="fs1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='fs' value='2' id="fs2">
+                  <label for="fs2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("肤色"))#<td>
+              <td id="fus" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='fus' value='0' id="fus0">
+                  <label  for="fus0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='fus' value='1' id="fus1">
+                  <label  for="fus1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='fus' value='2' id="fus2">
+                  <label for="fus2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+      </table>
+    </div>
+    <div id="FiveradioGrop">
+      <table class="radioTb">
+          <tr>
+            <td>#(..Get("肌张力"))#<td>
+              <td id="Fivejzl" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivejzl' value='0' id="Fivejzl0">
+                  <label for="Fivejzl0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivejzl' value='1' id="Fivejzl1">
+                  <label for="Fivejzl1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivejzl' value='2' id="Fivejzl2">
+                  <label for="Fivejzl2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("呼吸"))#<td>
+              <td id="Fivebreath" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivebreath' value='0' id="Fivebreath0">
+                  <label for="Fivebreath0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivebreath' value='1' id="Fivebreath1">
+                  <label for="Fivebreath1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivebreath' value='2' id="Fivebreath2">
+                  <label for="Fivebreath2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("脉搏"))#<td>
+              <td id="Fivemb" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivemb' value='0' id="Fivemb0">
+                  <label for="Fivemb0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivemb' value='1' id="Fivemb1">
+                  <label for="Fivemb1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivemb' value='2' id="Fivemb2">
+                  <label for="Fivemb2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("反射"))#<td>
+              <td id="Fivefs" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefs' value='0' id="Fivefs0">
+                  <label for="Fivefs0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefs' value='1' id="Fivefs1">
+                  <label for="Fivefs1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefs' value='2' id="Fivefs2">
+                  <label for="Fivefs2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+          <tr>
+            <td>#(..Get("肤色"))#<td>
+              <td id="Fivefus" >
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefus' value='0' id="Fivefus0">
+                  <label  for="Fivefus0">#(..Get("0分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefus' value='1' id="Fivefus1">
+                  <label  for="Fivefus1">#(..Get("1分"))#</label>
+                  <input class='hisui-radio' type="radio" data-options="required:true" name='Fivefus' value='2' id="Fivefus2">
+                  <label for="Fivefus2">#(..Get("2分"))#</label>
+              </td>
+          </tr>
+      </table>
+    </div>
+      <div id="OTOneradioGrop">
+          <table class="radioTb">
+              <tr>
+                  <td>#(..Get("肌张力"))#<td>
+                  <td id="OTOnejzl" >
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnejzl' value='0' id="OTOnejzl0">
+                      <label for="OTOnejzl0">#(..Get("0分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnejzl' value='1' id="OTOnejzl1">
+                      <label for="OTOnejzl1">#(..Get("1分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnejzl' value='2' id="OTOnejzl2">
+                      <label for="OTOnejzl2">#(..Get("2分"))#</label>
+                  </td>
+              </tr>
+              <tr>
+                  <td>#(..Get("呼吸"))#<td>
+                  <td id="OTOnebreath" >
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnebreath' value='0' id="OTOnebreath0">
+                      <label for="OTOnebreath0">#(..Get("0分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnebreath' value='1' id="OTOnebreath1">
+                      <label for="OTOnebreath1">#(..Get("1分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnebreath' value='2' id="OTOnebreath2">
+                      <label for="OTOnebreath2">#(..Get("2分"))#</label>
+                  </td>
+              </tr>
+              <tr>
+                  <td>#(..Get("脉搏"))#<td>
+                  <td id="OTOnemb" >
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnemb' value='0' id="OTOnemb0">
+                      <label for="OTOnemb0">#(..Get("0分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnemb' value='1' id="OTOnemb1">
+                      <label for="OTOnemb1">#(..Get("1分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnemb' value='2' id="OTOnemb2">
+                      <label for="OTOnemb2">#(..Get("2分"))#</label>
+                  </td>
+              </tr>
+              <tr>
+                  <td>#(..Get("反射"))#<td>
+                  <td id="OTOnefs" >
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefs' value='0' id="OTOnefs0">
+                      <label for="OTOnefs0">#(..Get("0分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefs' value='1' id="OTOnefs1">
+                      <label for="OTOnefs1">#(..Get("1分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefs' value='2' id="OTOnefs2">
+                      <label for="OTOnefs2">#(..Get("2分"))#</label>
+                  </td>
+              </tr>
+              <tr>
+                  <td>#(..Get("肤色"))#<td>
+                  <td id="OTOnefus" >
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefus' value='0' id="OTOnefus0">
+                      <label  for="OTOnefus0">#(..Get("0分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefus' value='1' id="OTOnefus1">
+                      <label  for="OTOnefus1">#(..Get("1分"))#</label>
+                      <input class='hisui-radio' type="radio" data-options="required:true" name='OTOnefus' value='2' id="OTOnefus2">
+                      <label for="OTOnefus2">#(..Get("2分"))#</label>
+                  </td>
+              </tr>
+          </table>
+      </div>
+      <div id="OTTworadioGrop">
+        <table class="radioTb">
+            <tr>
+                <td>#(..Get("肌张力"))#<td>
+                <td id="OTTwojzl" >
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwojzl' value='0' id="OTTwojzl0">
+                    <label for="OTTwojzl0">#(..Get("0分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwojzl' value='1' id="OTTwojzl1">
+                    <label for="OTTwojzl1">#(..Get("1分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwojzl' value='2' id="OTTwojzl2">
+                    <label for="OTTwojzl2">#(..Get("2分"))#</label>
+                </td>
+            </tr>
+            <tr>
+                <td>#(..Get("呼吸"))#<td>
+                <td id="OTTwobreath" >
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwobreath' value='0' id="OTTwobreath0">
+                    <label for="OTTwobreath0">#(..Get("0分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwobreath' value='1' id="OTTwobreath1">
+                    <label for="OTTwobreath1">#(..Get("1分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwobreath' value='2' id="OTTwobreath2">
+                    <label for="OTTwobreath2">#(..Get("2分"))#</label>
+                </td>
+            </tr>
+            <tr>
+                <td>#(..Get("脉搏"))#<td>
+                <td id="OTTwomb" >
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwomb' value='0' id="OTTwomb0">
+                    <label for="OTTwomb0">#(..Get("0分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" required name='OTTwomb' value='1' id="OTTwomb1">
+                    <label for="OTTwomb1">#(..Get("1分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwomb' value='2' id="OTTwomb2">
+                    <label for="OTTwomb2">#(..Get("2分"))#</label>
+                </td>
+            </tr>
+            <tr>
+                <td>#(..Get("反射"))#<td>
+                <td id="OTTwofs" >
+                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofs' value='0' id="OTTwofs0">
+                    <label for="OTTwofs0">#(..Get("0分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofs' value='1' id="OTTwofs1">
+                    <label for="OTTwofs1">#(..Get("1分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofs' value='2' id="OTTwofs2">
+                    <label for="OTTwofs2">#(..Get("2分"))#</label>
+                </td>
+            </tr>
+            <tr>
+                <td>#(..Get("肤色"))#<td>
+                <td id="OTTwofus" >
+                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofus' value='0' id="OTTwofus0">
+                    <label  for="OTTwofus0">#(..Get("0分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofus' value='1' id="OTTwofus1">
+                    <label  for="OTTwofus1">#(..Get("1分"))#</label>
+                    <input class='hisui-radio' type="radio" data-options="required:true" name='OTTwofus' value='2' id="OTTwofus2">
+                    <label for="OTTwofus2">#(..Get("2分"))#</label>
+                </td>
+            </tr>
+        </table>
+    </div>
+<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+		EpisodeID:"#(EpisodeID)#",
+		newBabyDetailObj:#(newBabyDetailObj)#,
+		deliveryOtherSetObj:#(deliveryOtherSetObj)#
+	};
+</SCRIPT>
+<Script type="text/javascript" src="../scripts/nurse/pinyin/pinyin_dict_firstletter.js"></Script> 
+<Script type="text/javascript" src="../scripts/nurse/pinyin/pinyinUtil.js"></Script>  
+<script type="text/javascript" src="../scripts/nurse/nis/NursePrintComm/DHCPrtComm.js"></script>
+<script type="text/javascript" charset="GB2312" src="../scripts/nurse/nis/NursePrintComm/NurPrtComm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/deliveryRecord.js"></script>
+</body>
+</html>

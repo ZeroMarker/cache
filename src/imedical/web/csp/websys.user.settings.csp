@@ -4,8 +4,9 @@
 <script type="text/javascript" src="../scripts/websys.js"></script>
 <HISUI/>
 <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
-<script type="text/javascript" src="../scripts/websys.encrypt.js"></script>
+<script type="text/javascript" src="../scripts/websys.encrypt.js" charset="utf-8"></script>
 <script type="text/javascript" src="../scripts/jquery.edit.password.js"></script>
+<script type="text/javascript" src="../scripts/websys.validpassword.js"></script>
 </head>
 <style>
 body{
@@ -22,7 +23,7 @@ body{
 lu.left{
 	float: left;
 	background:#F0F0F0;
-    height: 345px;
+    height: 390px;
     width: 150px;
     list-style: none;
     display: block;
@@ -40,7 +41,7 @@ lu.left{
 .vline{
 	border-right: 1px solid #D1D4D6;
 	width:1px;
-	height:345px;
+	height:390px;
 	float:left;
 	margin-left:5px;
 }
@@ -87,29 +88,58 @@ lu.left{
     top: 4px;
     left:4px;*/
  }
+ .user-img{
+ 	background-position:center center;
+ 	width:30px;
+ 	height:30px;
+ 	display:inline-block;
+ 	border-radius: 50%;
+    overflow: hidden;
+ }
  .infoLabel{
 	 color:#CFCDCB;
  }
  .center div.item table{
  	margin:0 auto;
  }
+ .cttbody{
+	 height:350px;
+	 overflow:auto;
+ }
 </style>
 <body>
 <server>
+	Set HISNotAllowEditPassword = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISNotAllowEditPassword")
+	If $d(%session.Data("LOGON.CASTypeCode")) Set HISNotAllowEditPassword = (%session.Data("LOGON.CASTypeCode")="MWHOSAuth2")
+	Set EditPasswordForPIN = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EditPasswordForPIN")
+	Set EnablePostLogon = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnablePostLogon")
 	Set changepassword = $G(%request.Data("changepassword",1))
 	W "<script type=""text/javascript"">"
 	S UserCode = %session.Get("LOGON.USERCODE")
 	s UserID = %session.Get("LOGON.USERID")
 	S myHOSPDesc="",myLoc="",myGroup=""
-	w !,"var UpdateLocSave=""",##class(%CSP.Page).Encrypt($lb("dhc.dao.SSUser.UpdateDefaultDeptById"))_""";"
+	w !,"var RSID = '"_$I(^websys.Counters("tpagid"))_"';"
+	w !,"var FIXKEY = 'ABCDEF0123456789';"
+	i EnablePostLogon{
+		w !,"var UpdateLocSave=""",##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.UpdateDefaultPostById"))_""";"
+	}else{
+		w !,"var UpdateLocSave=""",##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.UpdateDefaultDeptById"))_""";"
+	}
 	s persistPWD=$p($g(^SSU("SSUSR",UserID)),"^",3)
 	s persistPIN=$p($g(^SSU("SSUSR",UserID)),"^",15)
-	w !,"var persistPWD=""",##class(web.Util.Encryption).MD5HexStr(persistPWD)_""";" //##class(%CSP.Page).Encrypt($lb("web.SSUser.IsValidUserMd5Password"))_""";"
+	w !,"var persistPWD=""",##class(web.Util.Encryption).MD5HexStr(persistPWD)_""";" //##class(websys.Page).Encrypt($lb("web.SSUser.IsValidUserMd5Password"))_""";"
 	w !,"var persistPIN=""",##class(web.Util.Encryption).MD5HexStr(persistPIN)_""";"
-	w !,"var savePswEnc=""",##class(%CSP.Page).Encrypt($lb("dhc.dao.SSUser.UpdatePsw"))_""";"
-	w !,"var savePinEnc=""",##class(%CSP.Page).Encrypt($lb("dhc.dao.SSUser.UpdatePin"))_""";"
+	w !,"var savePswEnc=""",##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.UpdatePsw"))_""";"
+	w !,"var savePinEnc=""",##class(websys.Page).Encrypt($lb("dhc.dao.SSUser.UpdatePin"))_""";"
+	w !,"var IsValidUserMd5PasswordEnc = """_##class(websys.Page).Encrypt($lb("web.SSUser.IsValidUserMd5Password"))_""""
 	//W !,"var otherLocData=",##class(ext.util.JsonObject).ClassQuery2Json("web.SSUserOtherLogonLoc","LookUpLoc",0,500,UserCode),";"
 	s objUser = ##class(User.SSUser).%OpenId(UserID,0)
+	Set SexDr = objUser.SSUSRFreeText2
+	If SexDr>0,$d(^CT("SEX",SexDr)),$P(^CT("SEX",SexDr),"^",2)="女"{
+		Set UserImgCls = "pic-usr-doctor-woman"
+	}else{
+		Set UserImgCls = "pic-usr-dep-director"
+	}
 	s myLocId = +objUser.SSUSRDefaultDeptDRGetObjectId()
 	if myLocId>0 {
 		s myLoc=objUser.SSUSRDefaultDeptDR.CTLOCDesc
@@ -122,19 +152,26 @@ lu.left{
 	s myDateFrom = objUser.SSUSRDateFrom
 	if myDateFrom'="" set myDateFrom = ##class(websys.Conversions).DateLogicalToHtml(myDateFrom)
 	s myLangDesc = objUser.SSUSRCTLANDR.CTLANDesc
-	S (CtcpId,myEmail,myTel,myMobile)=""
+	Set SessUserInsuNo = objUser.SSUSRFreeText3 //$p($g(^SSU("SSUSR",SessUserId)),"^",124)
+	S (CtcpId,myEmail,myTel,myMobile,CtpcpRepNo,UserCardNo)=""
 	s ShowContactForm=1 //是否显示联系信息表单标志
 	if ##class(%Dictionary.CompiledProperty).%ExistsId("web.Entity.CT.SSUser||SSUSRMobile") { //基础数据平台组将联系信息存到了SS_User表
 		if (objUser.SSUSRCareProvDR) s CtcpId = objUser.SSUSRCareProvDRGetObjectId()
 		s myEmail = objUser.SSUSREmail //Mail
 		s myTel = objUser.SSUSRPager //办公电话
 		S myMobile = objUser.SSUSRMobile //移动电话
+		s CtpcpRepNo = objUser.SSUSRCareProvDR.CTPCPUnit //资格证号
+		S CtpcpMedicalNo = objUser.SSUSRCareProvDR.CTPCPTextOne //执业医师号
+		s UserCardNo = objUser.SSUSRFreeText1 //身份证号
 	}else{
-		if (objUser.SSUSRCareProvDR){
+		if (objUser.SSUSRCareProvDRGetObjectId()>0){
 			s CtcpId = objUser.SSUSRCareProvDRGetObjectId()
 			s myEmail = objUser.SSUSRCareProvDR.CTPCPEmail //Mail
 			s myTel = objUser.SSUSRCareProvDR.CTPCPTelO //办公电话
 			S myMobile = objUser.SSUSRCareProvDR.CTPCPMobilePhone //移动电话
+			s CtpcpRepNo = objUser.SSUSRCareProvDR.CTPCPUnit //资格证号
+			S CtpcpMedicalNo = objUser.SSUSRCareProvDR.CTPCPTextOne //执业医师号
+			s UserCardNo = objUser.SSUSRCareProvDR.CTPCPTextTwo //身份证号
 		}else{
 			s ShowContactForm=0 //联系信息用的是人员表 且此用户未关联人员表 不显示
 		}
@@ -144,6 +181,35 @@ lu.left{
 	if ##class(websys.DHCMessageConfig).MsgAudioIsDisabled(%session.Get("LOGON.USERID")) {
 		Set EnableMsgAudio="false"
 	}
+	Set HISUIDefVersionKey = "HISUIDefVersion",PLOMouseEventKey="PatListOpenMouseEvent",CALDMEventKey="CALogonDirectMenu",FontSizeSelectEventKey="FontSizeSelect"
+	Set EnableMultiScreenDisplayKey="EnableMultiScreenDisplay"
+	Set HISUIDefVersionID = $O(^websys.StandardTypeD("STD","websys","ITM",0,"Code",$zu(28,HISUIDefVersionKey,5),0))
+	Set PLOMouseEventID = $O(^websys.StandardTypeD("STD","websys","ITM",0,"Code",$zu(28,PLOMouseEventKey,5),0))
+	Set CALDMEventID = $O(^websys.StandardTypeD("STD","websys","ITM",0,"Code",$zu(28,CALDMEventKey,5),0))
+	Set EnableMultiScreenDisplayID = $O(^websys.StandardTypeD("STD","websys","ITM",0,"Code",$zu(28,EnableMultiScreenDisplayKey,5),0))
+	Set FontSizeSelectEventID = $O(^websys.StandardTypeD("STD","websys","ITM",0,"Code",$zu(28,FontSizeSelectEventKey,5),0))
+	Set IsCALogon = ##class(websys.CAInterface).IsCaLogon(%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.USERCODE"),"","","")
+	Set ValidShortMSG = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","ValidShortMSG") //验证短信
+	Set PinMinLength = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","PINMinLength")
+	Set PinIsContainWordAndNum = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","PINIsContainWordAndNum")
+	Set FontSizeSelect=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys",FontSizeSelectEventKey)
+	If PinIsContainWordAndNum="" Set PinIsContainWordAndNum="N"
+	Set PinPasswordOtherValid = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","PinPasswordOtherValid")
+    
+    if EnablePostLogon{
+	    d ##class(BSP.IMP.BDP.Interface).GetDefaultLocGroupPost(UserID,,,.myPostId,.myHospId)
+	    Set myPostDesc = $listget($g(^CT.BDP.CT.HOSPostD(myPostId)),3)
+	    Set myHOSPDesc=$p($g(^CT("HOSP",+myHospId)),"^",2)
+	    Set myPostDesc=##class(websys.TranslationEPR).GetTrans("CT.BDP.CT.HOSPost","POSTDesc","",myPostDesc)
+		Set myHOSPDesc=##class(websys.TranslationEPR).GetTrans("User.CTHospital","HOSPDesc","",myHOSPDesc)
+    	Set DefaultLocationTitle = myPostDesc_" "_myHOSPDesc
+    }else{
+	    Set myLoc=##class(websys.TranslationEPR).GetTrans("User.CTLoc","CTLOCDesc","",myLoc)
+		Set myGroup=##class(websys.TranslationEPR).GetTrans("User.SSGroup","SSGRPDesc","",myGroup)
+		Set myHOSPDesc=##class(websys.TranslationEPR).GetTrans("User.CTHospital","HOSPDesc","",myHOSPDesc)
+	    Set DefaultLocationTitle = myLoc_" "_myGroup_" "_myHOSPDesc
+    }
+    
 	w !,"var UserId = """,UserID_""";"
 	w !,"var myUserCode=""",myUserCode,""";"
 	w !,"var CtcpId = """,CtcpId,""";"
@@ -153,16 +219,34 @@ lu.left{
 	w !,"var myMobile=""",myMobile,""";"
 	w !,"var EnableMsgAudio=",EnableMsgAudio_";"
 	w !,"var isContainWordAndNum="""_##class(websys.Configuration).GetFieldValue("PwdContainWordAndNum")_""";"
+	w !,"var PasswordOtherValid="""_##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","PasswordOtherValid")_""";"
 	w !,"var minLength="""_(+##class(web.CFSM).GetPasswordMinLength())_""";"
+	w !,"var pinIsContainWordAndNum="""_PinIsContainWordAndNum_""";"
+	w !,"var PinPasswordOtherValid="""_PinPasswordOtherValid_""";"
+	w !,"var pinMinLength="""_(+PinMinLength)_""";"
 	w !,"var changepassword="""_changepassword_""";"
+	w !,"var HisuiStyle="""_##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys",HISUIDefVersionKey)_""";"
+	w !,"var PatListOpenMouseEvent="""_##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys",PLOMouseEventKey)_""";"
+	w !,"var CALDMEvent="""_##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys",CALDMEventKey)_""";"
+	w !,"var EnableMultiScreenDisplayVal="""_##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys",EnableMultiScreenDisplayKey)_""";"
+	w !,"var ValidShortMSG="""_ValidShortMSG_""";"
+	w !,"var EnablePostLogon = """_EnablePostLogon_""";"
+	w !,"var FontSizeSelectVal="""_FontSizeSelect_""";"
+	w !,"var session=[];session[""LOGON.USERID""]="""_$g(%session.Data("LOGON.USERID"))_""";"
 	W "</script>"
 </server>
 <div class="contain">
 	<csp:if condition="changepassword'=1">
 	<lu class="left">
 		<li class="active" data-ref="updateUserInfo">#(..Get("修改个人信息"))#</li>
-		<li data-ref="updatePsw">#(..Get("修改密码"))#</li>
-		<li data-ref="updatePin">#(..Get("修改签名密码"))#</li>
+		<csp:if condition="HISNotAllowEditPassword'=1">
+			<li data-ref="updatePsw">#(..Get("修改密码"))#</li>
+		</csp:if>
+		<csp:if condition="(HISNotAllowEditPassword=0)&&(EditPasswordForPIN=1)">
+		<csp:else>
+			<li data-ref="updatePin">#(..Get("修改签名密码"))#</li>
+		</csp:if>
+		<li data-ref="updateBizCfg">#(..Get("修改业务习惯"))#</li>
 	</lu>
 	<div class="vline"></div>
 	</csp:if>
@@ -170,7 +254,7 @@ lu.left{
 	<div class="center">
 		<csp:if condition="changepassword'=1">
 		<div class="item active" data-name="updateUserInfo">
-			<div class="man"></div>
+			<div class="#(UserImgCls)# user-img"></div>
 			<div class="userInfo">
 				<span>#(myUserName)#</span>
 				<span class="sline">/</span>
@@ -180,32 +264,53 @@ lu.left{
 				<span class="sline">/</span>
 				<span class="infoLabel">#(..Get("开始日期:"))#</span><span>#(myDateFrom)#</span>
 			</div>
-			<div>
+			<div class="cttbody">
 				<table class="usertbl">
 					<tr class="row">
 						<td class="r-label">#(..Get("默认登录位置"))#</td>
 						<td>
-							<input id="defaultLocGroup" class="textbox" value="#(myLoc)# #(myGroup)# #(myHOSPDesc)#" style="width:254px;" readonly>
+							<input id="defaultLocGroup" class="textbox" value="#(DefaultLocationTitle)#" style="width:254px;" readonly>
 						</td>
 						<td>
-							<a id="updateDefaultLoc" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'"></a>
+							<a id="updateDefaultLoc" href="javascript:void(0)" class="showicon hisui-linkbutton" data-options="iconCls:'icon-w-edit'"></a>
 						</td>
 					</tr>
 					<csp:if condition=ShowContactForm=1>
 					<tr><td class="r-label">#(..Get("办公邮箱"))#</td><td><input id="userEmail" class="hisui-validatebox textbox" style="width:254px;" data-options="validType:'email'" value="#(myEmail)#"/></td><td></td></tr>
 					<tr><td class="r-label">#(..Get("办公电话"))#</td><td><input id="officeTel" class="textbox hisui-validatebox" style="width:254px;" data-options='validType:"length[7,13]"' value="#(myTel)#"/></td><td></td></tr>
 					<tr><td class="r-label">#(..Get("移动电话"))#</td><td><input id="MobieNum" class="textbox hisui-validatebox"style="width:254px;" data-options='validType:"length[11,14]"' value="#(myMobile)#"/></td><td></td></tr>
+					
+
+
 					</csp:if>
 					<tr><td class="r-label">#(..Get("消息提示音"))#</td><td><div id="msgAudioSB"></div></td><td></td></tr>
+					
+
 					<tr><td></td><td></td></tr>
 					<csp:if condition=ShowContactForm=1>
-					<tr><td></td><td><a id="updateUserInfo" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">#(..Get("保存修改"))#</a></td><td></td></tr>
+					<tr><td></td>
+					<td><a id="updateUserInfo" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">#(..Get("保存修改"))#</a></td>
+					<csp:if condition=ShowContactForm=1>
+					<td><a id="getOtherUserInfo" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">#(..Get("获得证件信息"))#</a></td>
+					</csp:if>
+					</tr>
 					</csp:if>
 				</table>
 			</div>
 		</div>
 		</csp:if>
-		
+		<csp:if condition="changepassword'=1">
+		<div class='item' data-name="updateBizCfg">
+			<table>
+			<tr><td class="r-label">#(..Get("患者列表弹出方式"))#</td><td><div id="patListOpenType"></div></td><td></td></tr>
+			<csp:if condition="IsCALogon=1">
+			<tr><td class="r-label">#(..Get("证书登录时跳转方式"))#</td><td><div id="CALogonDirectMenu"></div></td><td></td></tr>
+			</csp:if>
+			<tr><td class="r-label">#(..Get("系统风格"))#</td><td><div id="hisuiStyleCode"></div></td><td></td></tr>
+			<tr><td class="r-label">#(..Get("显示扩展屏"))#</td><td><div id="EnableMultiScreenDisplay"></div></td><td></td></tr>
+			</table>
+		</div>
+		</csp:if>
 		<div class='item editpswdiv #($select((changepassword=1):"active",1:""))#' data-name="updatePsw"></div>
 		
 		<csp:if condition="changepassword'=1">
@@ -215,17 +320,104 @@ lu.left{
 </div>
 
 <script type="text/javascript">
-var otherLocData=[];
-$(function(){
-	function initOtherLocData(){
+var uniUserPwdComplexityCfg=#(##class(BSP.SYS.BL.UserPwdComplexity).GetUserPwdComplexityCfg())#;  
+var sSureClick = function(){
+	var smToken = $("#fshortmessage").val();
+	if (smToken!=""){
 		$cm({
 			ClassName:"dhc.dao.SSUser",
-			QueryName:"LookUpLoc",
-			User:"#(%session.Data("LOGON.USERCODE"))#",
-			rows:500
+			MethodName:"ValidSMToken",
+			userCode:"#(UserCode)#",
+			SMToken:smToken
 		},function(rtn){
-			otherLocData = rtn.rows;
+			if (rtn.success==1){
+				// 保存数据
+				$("#mobiePINWin").window('close');
+				saveData();
+			}else{
+				$.messager.popover({msg:rtn.msg ,type:'alert'});
+			}
 		});
+	}
+}
+var sendMS = function(){
+	dhcsys_createMask({msg:"修改邮箱与手机号时要求短信验证。<br/>发送短信中，请等待...",fontSize:'20px',opacity:80});
+	$cm({
+		ClassName:"dhc.dao.SSUser",
+		MethodName:"SendSMByUserCode",
+		userCode:"#(UserCode)#",
+		UserPhone:$('#MobieNum').val()
+	},function(rtn){
+		dhcsys_closeMask();
+		if (rtn.success==1){
+			var  myIntval= 0;
+			$("#mobiePINWin").show().window({
+				title:"验证码验证",width:300,height:260,modal:true,isTopZindex:true,resizable:true,closable:true,
+				collapsible:false,minimizable:false,maximizable:false}).window('open');
+			myTimeout = rtn.results;
+			clearInterval(myIntval);
+			$("#smTokenTimeout").html(""); 
+			$("#fshortmessage").val("");
+			myIntval = setInterval(function(){
+				if(myTimeout>0){$("#smTokenTimeout").html((--myTimeout)+"秒");}
+				else {clearInterval(myIntval); }
+			}, 1000);
+		}else{
+			$.messager.popover({msg:rtn.msg ,type:'alert'});
+		}
+	});
+}
+
+var saveDataByCfg = function(){
+	var myNewEmail = $("#userEmail").val();
+	var myNewTel = $("#officeTel").val();
+	var myNewMobile = $("#MobieNum").val();
+	if (ValidShortMSG==1 &&( myMobile!=myMobile || myEmail!=myNewEmail ) ){
+		sendMS();		
+	}else{
+		saveData();
+	}
+}
+var saveData = function(){
+	var myNewEmail = $("#userEmail").val();
+	var myNewTel = $("#officeTel").val();
+	var myNewMobile = $("#MobieNum").val();
+	if (ShowContactForm!="1"){ //(CtcpId==""){
+		$.messager.alert("提示","医护人员才能修改!");
+		return ;
+	}
+	$cm({ClassName:"dhc.dao.SSUser",MethodName:"Save",
+		"dto.UserID":UserId,
+		"dto.Email":myNewEmail,
+		"dto.TelO":myNewTel,
+		"dto.Mobile":myNewMobile
+	},function(rtn){
+		myEmail = myNewEmail;
+		myTel = myNewTel;
+		myMobile = myNewMobile;
+		$.messager.popover({msg:rtn.msg,type:'success'});
+	});
+}
+var otherLocData=[];
+var validPasswordOpt = {
+	 "encodeKey":"#(%session.SessionId)#",
+	 "usercode":"#(%session.Data("LOGON.USERCODE"))#",
+	 "username":"#(%session.Data("LOGON.USERNAME"))#",
+	 userHello:"#(..Get("请"))#[#(%session.Data("LOGON.USERNAME"))#]#(..Get("用户输入密码"))#",
+	 "popsw":"#(##class(dhc.dao.SSUser).Encode())#",
+	 "isValidUserEncypt":"#(##class(websys.Page).Encrypt($lb("web.SSUser.IsValidUserMd5Password")))#"
+};
+$(function(){
+	function initOtherLocData(){
+		if (1==EnablePostLogon) {
+			$cm({ClassName:"dhc.dao.SSUser",QueryName:"LookUpPost",User:"#(%session.Data("LOGON.USERCODE"))#",rows:500},function(rtn){
+				otherLocData = rtn.rows;
+			});
+		}else{
+			$cm({ClassName:"dhc.dao.SSUser",QueryName:"LookUpLoc",User:"#(%session.Data("LOGON.USERCODE"))#",rows:500 },function(rtn){
+				otherLocData = rtn.rows;
+			});
+		}
 	}
 	initOtherLocData();
 	var dg;
@@ -234,8 +426,14 @@ $(function(){
 		var qlocVal = $("#qLoc").val();
 		if (qlocVal!=""){
 			$.each(otherLocData,function(ind,row){
-				if(row["Loc"].indexOf(qlocVal)==0 || row["LocAlias"].indexOf(qlocVal.toUpperCase())==0){
-					return _tmp.push(row);
+				if (1==EnablePostLogon){
+					if(row["PostDesc"].indexOf(qlocVal)>-1 || row["PostAlias"].indexOf(qlocVal.toUpperCase())>-1){
+						return _tmp.push(row);
+					}
+				}else{
+					if(row["Loc"].indexOf(qlocVal)>-1 || row["LocAlias"].indexOf(qlocVal.toUpperCase())>-1){
+						return _tmp.push(row);
+					}
 				}
 			});
 			return _tmp;
@@ -253,11 +451,11 @@ $(function(){
 		},function(rtn){
 			$("#defaultLocGroup").popover('hide')
 			if(rtn.success==1){
-				//{"code":"1","message":"保存默认科室成功！","success":"1"}
-				/*$("#defaultHosp").text(rtn.Hosp); //<label id="defaultHosp" >#(myHOSPDesc)#</label>
-				$("#defaultLoc").text(rtn.Loc);
-				$("#defaultGroup").text(rtn.Group);*/
-				$("#defaultLocGroup").val(rtn.Hosp+" "+rtn.Loc+" "+rtn.Group);
+				if (1==EnablePostLogon) {
+					$("#defaultLocGroup").val(rtn.PostDesc+" "+rtn.HospDesc);
+				}else{
+					$("#defaultLocGroup").val(rtn.Hosp+" "+rtn.Loc+" "+rtn.Group);
+				}
 				// 保存成功后，otherLocData数据修改
 				initOtherLocData();
 			}else{
@@ -303,36 +501,27 @@ $(function(){
 	}
 	//editor:{"type":"switchbox","options":{onClass:"warning",offClass:"success",onText:"普通",offText:"默认",animated:true,size:"small","onSwitchChange":function(event,val){}}}'>
 	function initOtherLocGrid(){
-		$("#defaultLocGroup").popover({
-		//title:"修改默认科室",
-		title:"",
-		arrow:false,
-		placement:"bottom",
-		//backdrop:true,
-		//trigger:'manual',
-		width:500,
-		onHide:function(){
-			$("#defaultLocGroup").removeClass('active');
-		},
-		onShow:function(){
-			$("#defaultLocGroup").addClass('active');
-			$("#findOtherLocBtn").linkbutton();
-			dg = $("#logonLocGrid");
-			dg.datagrid({
-				headerCls:'panel-header-gray',
-				toolbar:'#tb',
-				height:250,
-				loadFilter:pagerFilter,
-				onDblClickRow:dblClickRowHandler,
-				onClickRow:clickRowHandler
-			}).datagrid('loadData', getData());				
-			$("#qLoc").keyup(function(){
-				dg.datagrid("loadData",getData());
-			});
-		},
-		content:'<div id="tb">\
-			<span style="font-size:12px;padding:0 5px;">科室查询</span>\
-			<input id="qLoc" style="width:120px;line-height:22px;height:22px;border:1px solid #ccc;font-size:12px;" placeholder="科室描述或简拼" class="textbox">\
+		var cntt = '';
+		if (1==EnablePostLogon){
+			cntt = '<div id="tb">\
+			<span style="font-size:12px;padding:0 5px;">#(..Get("岗位查询"))#</span>\
+			<input id="qLoc" style="width:120px;line-height:22px;height:22px;border:1px solid #ccc;font-size:12px;" placeholder="#(..Get("岗位描述或简拼"))#" class="textbox">\
+			<a id="findOtherLocBtn" href="javascript:void(0)" data-options="iconCls:\'icon-w-find\'">查询</a>\
+			</div>\
+			<table id="logonLocGrid" title=""\
+				data-options="rownumbers:true,fitColumns:true,singleSelect:true,autoRowHeight:false,pagination:true,height:300,showPageList:false">\
+				<thead>\
+					<tr>\
+						<th field="OtherId" data-options="hidden:true">岗位Id</th>\
+						<th field="PostDesc" width="160">岗位</th>\
+						<th field="HOSPDesc" width="150">医院</th>\
+					</tr>\
+				</thead>\
+			</table>'
+		}else{
+			cntt = '<div id="tb">\
+			<span style="font-size:12px;padding:0 5px;">#(..Get("科室查询"))#</span>\
+			<input id="qLoc" style="width:120px;line-height:22px;height:22px;border:1px solid #ccc;font-size:12px;" placeholder="#(..Get("科室描述或简拼"))#" class="textbox">\
 			<a id="findOtherLocBtn" href="javascript:void(0)" data-options="iconCls:\'icon-w-find\'">查询</a>\
 			</div>\
 			<table id="logonLocGrid" title=""\
@@ -346,10 +535,39 @@ $(function(){
 					</tr>\
 				</thead>\
 			</table>'
+		}
+		$("#defaultLocGroup").popover({
+			//title:"修改默认科室",
+			title:"",
+			arrow:false,
+			placement:"bottom",
+			//backdrop:true,
+			//trigger:'manual',
+			width:500,
+			onHide:function(){
+				$("#defaultLocGroup").removeClass('active');
+			},
+			onShow:function(){
+				$("#defaultLocGroup").addClass('active');
+				$("#findOtherLocBtn").linkbutton();
+				dg = $("#logonLocGrid");
+				dg.datagrid({
+					headerCls:'panel-header-gray',
+					toolbar:'#tb',
+					height:250,
+					loadFilter:pagerFilter,
+					onDblClickRow:dblClickRowHandler,
+					onClickRow:clickRowHandler
+				}).datagrid('loadData', getData());				
+				$("#qLoc").keyup(function(){
+					dg.datagrid("loadData",getData());
+				});
+			},
+			content:cntt
 		});	
 	}
 	$("#msgAudioSB").switchbox({size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function (e,o){
-			top.toggleMsgAudio();
+			websys_getTop().toggleMsgAudio();
 		}
 	}).switchbox("setValue",EnableMsgAudio,true);
 	$("#updateDefaultLoc").click(function(){
@@ -373,34 +591,26 @@ $(function(){
 			focusById("MobieNum");
 			return false;
 		}
-		myEmail = $("#userEmail").val();
-		myTel = $("#officeTel").val();
-		myMobile = $("#MobieNum").val();
-		if (ShowContactForm!="1"){ //(CtcpId==""){
-			$.messager.alert("提示","医护人员才能修改!");
-			return ;
-		}
-		$cm({ClassName:"dhc.dao.SSUser",MethodName:"Save",
-			"dto.UserID":UserId,
-			"dto.Email":myEmail,
-			"dto.TelO":myTel,
-			"dto.Mobile":myMobile
-		},function(rtn){
-			$.messager.popover({msg:rtn.msg,type:'success'});
-		});
+		saveDataByCfg();
 	});
 	$(".editpswdiv").editpassword({
 		oldLabel:$g("旧密码"),
 		newLabel:$g("新密码"),
 		cnfLabel:$g("确认密码"),
 		updateLabel:$g("修改密码"),
-		persistent:persistPWD,
+		//persistent:persistPWD,
 		isContainWordAndNum:isContainWordAndNum=="N"?false:true,
+		PasswordOtherValid:PasswordOtherValid,
+		uniUserPwdComplexityCfg:uniUserPwdComplexityCfg,  //统一的用户密码复杂度 2023-02-07
 		minLength:minLength,
 		closeAfterSave:changepassword==1?true:false,
-		//validEnc:UpdatePasswordMd5,
+		validEnc:IsValidUserMd5PasswordEnc,
 		userName:myUserCode,
-		saveEnc:savePswEnc
+		saveEnc:savePswEnc,
+		encryHandler:function(pwd){
+			var k = FIXKEY+(RSID-1),l=RSID.length;
+			return e7(pwd,k.slice(l)); 
+		}
 	});
 	$(".editpinpswdiv").editpassword({
 		oldLabel:$g("旧签名密码"),
@@ -409,8 +619,9 @@ $(function(){
 		updateLabel:$g("修改签名密码"),
 		//encryItem:UpdatePasswordMd5,
 		persistent:persistPIN,
-		isContainWordAndNum:isContainWordAndNum=="N"?false:true,
-		minLength:minLength,
+		isContainWordAndNum:pinIsContainWordAndNum=="N"?false:true,
+		PasswordOtherValid:PinPasswordOtherValid,
+		minLength:pinMinLength,
 		userName:myUserCode,
 		saveEnc:savePinEnc
 	}); 
@@ -423,7 +634,158 @@ $(function(){
 		con.find(".item").removeClass("active");
 		con.find("[data-name='"+name+"']").addClass("active");
 	});
+	$("#hisuiStyleCode").keywords({
+		singleSelect:true,
+		onClick:function(item){
+			$cm({
+				ClassName:"websys.Preferences",
+				MethodName:"SetData",
+				objectType:"User.SSUser",
+				objectReference:session["LOGON.USERID"],
+				appKey:"STANDARD",
+				appSubKey:"websys||#(HISUIDefVersionID)#",
+				Data:item.id,
+				add:1
+			},function(rtn){
+				if (rtn==1){
+					$.messager.popover({
+						msg: '新访问的界面将以【'+item.text+"】风格显示",
+						type: 'success',
+						showType: 'slide'  //show,fade,slide
+					});
+				}
+			});
+		},
+		items:[
+		{text:'炫彩',id:"blue",selected:(HisuiStyle=="blue"||HisuiStyle=="")?true:false},
+		{text:'极简',id:"lite",selected:HisuiStyle=="lite"?true:false}
+		]
+	});
+	$("#patListOpenType").keywords({
+		singleSelect:true,
+		onClick:function(item){
+			$cm({
+				ClassName:"websys.Preferences",
+				MethodName:"SetData",
+				objectType:"User.SSUser",
+				objectReference:session["LOGON.USERID"],
+				appKey:"STANDARD",
+				appSubKey:"websys||#(PLOMouseEventID)#",
+				Data:item.id,
+				add:1
+			},function(rtn){
+				if (rtn==1){
+					$.messager.popover({
+						msg: '已配置成：在【'+item.text+"】，打开病人列表界面",
+						type: 'success',
+						showType: 'slide'  //show,fade,slide
+					});
+				}
+			});
+		},
+		items:[
+		{text:'点击时',id:"click",selected:PatListOpenMouseEvent=="click"?true:false},
+		{text:'鼠标悬浮时',id:"mouseenter",selected:PatListOpenMouseEvent=="mouseenter"?true:false}
+		]
+	});
+	
+	$("#CALogonDirectMenu").keywords({
+		singleSelect:true,
+		onClick:function(item){
+			$cm({
+				ClassName:"websys.Preferences",
+				MethodName:"SetData",
+				objectType:"User.SSUser",
+				objectReference:session["LOGON.USERID"],
+				appKey:"STANDARD",
+				appSubKey:"websys||#(CALDMEventID)#",
+				Data:item.id,
+				add:1
+			},function(rtn){
+				if (rtn==1){
+					$.messager.popover({
+						msg: '已配置成：在登录界面,使用证书登录后，会进入【'+item.text+"】功能界面",
+						type: 'success',
+						showType: 'slide'  //show,fade,slide
+					});
+				}
+			});
+		},
+		items:[
+		{text:'头菜单',id:"1",selected:CALDMEvent=="1"?true:false},
+		{text:'选科室',id:"0",selected:CALDMEvent=="0"?true:false}
+		]
+	});
+	if(websys_getTop() && websys_getTop().SetDisableSecondScreenByCfg) websys_getTop().SetDisableSecondScreenByCfg(EnableMultiScreenDisplayVal);
+	$("#EnableMultiScreenDisplay").keywords({
+		singleSelect:true,
+		onClick:function(item){
+			$cm({
+				ClassName:"websys.Preferences",
+				MethodName:"SetData",
+				objectType:"User.SSUser",
+				objectReference:session["LOGON.USERID"],
+				appKey:"STANDARD",
+				appSubKey:"websys||#(EnableMultiScreenDisplayID)#",
+				Data:item.id,
+				add:1
+			},function(rtn){
+				if (rtn==1){
+					if(websys_getTop() && websys_getTop().SetDisableSecondScreenByCfg) websys_getTop().SetDisableSecondScreenByCfg(item.id);
+					$.messager.popover({
+						msg: '已配置成功',
+						type: 'success',
+						showType: 'slide'  //show,fade,slide
+					});
+				}
+			});
+		},
+		items:[
+		{text:'禁用',id:"0",selected:EnableMultiScreenDisplayVal=="0"?true:false},
+		{text:'仅多屏时',id:"1",selected:EnableMultiScreenDisplayVal=="1"?true:false},
+		{text:'多屏或宽屏时',id:"2",selected:EnableMultiScreenDisplayVal=="2"?true:false},/*考虑应用分屏*/
+		{text:'总是开启',id:"3",selected:EnableMultiScreenDisplayVal=="3"?true:false}
+		]
+	});
 })
 </script>
+<div id="mobiePINWin" style="display:none;" >
+	<div style="padding:10px;margin: 10px auto;width: 250px;">
+		<div>
+			<label style="margin-right:10px">验证码</label>
+			<input id="fshortmessage" name="fshortmessage" placeholder="请输入验证码" class="textbox" autocomplete="off">
+			<span id="smTokenTimeout"></span>
+		</div>
+		<div style="text-align: center;margin-top: 20px;">
+			<a class="hisui-linkbutton surebtn" onclick="sSureClick();">确定</a>
+		</div>
+	</div>
+</div>
+<csp:if condition=ShowContactForm=1>
+	<script type="text/javascript">
+	$("#getOtherUserInfo").click(function(){
+		$('<div></div>').appendTo('body').validpassword($.extend({
+			width:300,
+			height:240,
+			success:function(){
+				$m({ClassName:'BSP.SYS.SRV.SSUser',MethodName:"GetCardInfo"},function(rtn){
+					var arr = rtn.split('^');
+					if (arr.length>3){
+						var h = '';
+						if (CtcpId>0){
+							h += '<tr><td class="r-label">'+$g("资格证号")+'</td><td><input class="textbox" value="'+arr[0]+'" style="width:254px;background:#eeeeee;" readonly></td><td></td></tr>'
+								 +'<tr><td class="r-label">'+$g("执业医师号")+'</td><td><input class="textbox" value="'+arr[1]+'" style="width:254px;background:#eeeeee;" readonly></td><td></td></tr>';
+						}
+						h += '<tr><td class="r-label">'+$g("身份证号")+'</td><td><input class="textbox" value="'+arr[2]+'" style="width:254px;background:#eeeeee;" readonly></td><td></td></tr>'
+							+'<tr><td class="r-label">'+$g("国家医保编码")+'</td><td><input class="textbox" value="'+arr[3]+'" style="width:254px;background:#eeeeee;" readonly></td><td></td></tr>';
+						$('#MobieNum').closest('tr').after(h);
+						$('#getOtherUserInfo').remove();
+					}
+				});
+			}
+		}, validPasswordOpt));
+	});
+	</script>
+</csp:if>
 </body>
 </html>

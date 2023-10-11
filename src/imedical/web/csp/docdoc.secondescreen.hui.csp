@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--docdoc.secondescreen.hui.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<STYLE type='text/css'>
+.panel-header>div.panel-tool>a.layout-button-left{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-down{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-up{
+	display:none
+}
+</STYLE>
+<Server>
+	s OrderId=$g(%request.Data("OrderId",1))
+	s iframeurl=$g(%request.Data("iframeurl",1))
+	
+	s EpisodeID=$p($g(^OEORD(+OrderId)),"^",1)
+	s PatientId=$p(^PAADM(EpisodeID),"^",1)
+	s RegNo=$p(^PAPER(PatientId,"PAT",1),"^",1)   
+	s OrdId=+OrderId
+	s SubId=$p(OrderId,"||",2)
+	s (OrderType,VisitNumberReportId)=""
+	s ArcimRowId=$p($g(^OEORD(OrdId,"I",SubId,1)),"^",2)
+	s ItemCatRowid=$p($g(^ARCIM(+ArcimRowId,$p(ArcimRowId,"||",2),1)),"^",10)
+	i ItemCatRowid'="" s OrderType=$P(^ARC("IC",ItemCatRowid),"^",7)
+	s OrderViewFlag=##Class(web.DHCDocInPatPortalCommon).GetOrderViewFlag(ArcimRowId,OrderId)
+	
+	s (DCARowId,VisitNumberReportId,ExamPortUrl)=""
+	
+	;治疗申请ID
+	s DCARowId=$o(^DHCDocCure(0,"OEORI",OrderId,0))
+		
+	;获取检验报告
+	s LabReportObj=##Class(DHCDoc.GetInfo.Second.ScreenMethod).GetLabReportByOrd(OrderId)
+	s VisitNumberReportId=LabReportObj.VisitNumberReportId
+	
+	;获取检查报告
+	s ExamReportObj=##Class(DHCDoc.GetInfo.Second.ScreenMethod).GetExamReportByOrd(OrderId)
+	s ExamPortUrl=ExamReportObj.ExamPortUrl
+	
+	;获取病理报告
+	s PisReportObj=##Class(DHCDoc.GetInfo.Second.ScreenMethod).GetPisReportByOrd(OrderId)
+	s PisPortUrl=PisReportObj.PisPortUrl
+	
+</Server>
+</head>
+<body>
+<csp:Include Page="docdoc.secondescreen.show.hui.csp">
+<script type="text/javascript">
+	var ServerObj={
+		EpisodeID:"#(EpisodeID)#",
+		OrderId:"#(OrderId)#",
+		OrderType:"#(OrderType)#",
+		OrderViewFlag:"#(OrderViewFlag)#",
+		DCARowId:"#(DCARowId)#",
+		VisitNumberReportId:"#(VisitNumberReportId)#",
+		ExamPortUrl:"#(ExamPortUrl)#",
+		PisPortUrl:"#(PisPortUrl)#",
+		iframeurl:"#(iframeurl)#"
+	};
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/oeorder.secondescreen.js"></script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+
+<!--
+ * FileName: dhcpe.ct.odstandardcom.csp 
+ * Author: xy
+ * Date: 2021-08-14
+ * Description:  细项选择维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	
+<style>
+
+    
+
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.panel-header{
+	border-bottom: 0;
+}
+.r-label{
+	padding-left: 10px;
+}
+.r-label-1{
+	padding-left: 40px;
+}
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" fit="true">
+    <!--站点 start-->
+	<div id="layoutcenter" data-options="region:'west',border:false,collapsible:false" style="width:340px;padding:10px;">
+	  <div class="hisui-panel" fit="true" data-options="title:'站点',headerCls:'panel-header-gray',iconCls:'icon-house'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		 <div class="hisui-layout" fit="true">
+			<div data-options="region:'north',border:false,collapsible:false" style="height:92px;border-bottom:1px solid #C0C0C0;">
+		 		<table class="search-table">
+		 			<tr>
+		 				<td class="r-label"><label>#(..Get("科室"))#</label></td>
+	    	 			<td colspan='3'><input id="LocList" class="hisui-combobox textbox" style="width:254px;"></td>
+		 			</tr>
+		 			<tr>
+		 				<td class="r-label"><label>#(..Get("描述"))#</label></td>
+						<td>
+							<input class="textbox" id="Desc"/>
+						</td>	
+						<td class="r-label">
+							<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+						</td>
+						<td><input type="hidden" id="StationID" /></td>					
+					</tr>	
+                 </table>
+		 	</div>
+		 	    <div data-options="region:'center',border:false">
+		 		   <table id="StaionGrid"></table>
+		 	   </div>
+			</div>								
+		</div>
+	</div>
+	<!--站点 end-->
+	<div id="layouteast" data-options="region:'center',border:false" style="border:0;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'west',border:false" style="width:340px;padding:10px 10px 10px 0;border:0;">
+
+				<div class="hisui-panel" fit="true" data-options="title:'细项',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+					<div class="hisui-layout" fit="true">	
+						<div data-options="region:'north',border:false,collapsible:false" style="height:50px;">
+		 					<table class="search-table">
+		 						<tr>
+		 							<td class="r-label"><label for="ODDesc">#(..Get("描述"))#</label></td>
+									<td>
+										<input class="textbox" id="ODDesc"/>
+									</td>
+									
+									<td class="r-label">
+										<a id="BODFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+									</td>
+
+		 						</tr>		
+                   			</table>
+		 				</div>
+		 				<div data-options="region:'center',border:false">
+		 					<table  id="OrderDetailTab"></table>
+		 				</div>
+					</div>		
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="padding:10px 10px 10px 0;border:0;">
+              <!--细项选择 start-->
+				<div class="hisui-panel" fit="true" data-options="title:'细项选择维护',headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+					<div class="hisui-layout" fit="true">
+		 				<div data-options="region:'north',border:false,collapsible:false" style="height:335px;">
+		 					<table class="search-table">
+		 						<tr>
+		 							<td class="r-label"><label for="ODSDesc">#(..Get("细项描述"))#</label></td>
+									<td>
+										<input class="textbox" id="ODSDesc" disabled/>
+									</td>
+
+									<td colspan="2"  class="r-label r-label-1">
+            							<input class='hisui-checkbox' type="checkbox" id="NatureValue"/><label for="NatureValue">#(..Get("正常值"))#</label>
+         							</td>
+									
+									<td class="r-label r-label-1">
+										<a id="BODSFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:116px;">查询</a>
+									</td>		
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="Sort">#(..Get("顺序号"))#</label></td>
+									<td>
+										<input class="textbox" id="Sort"/>
+									</td>
+									
+									<!--td colspan="2"  class="r-label r-label-1">
+            							<input class='hisui-checkbox' type="checkbox" Id="Summary" /><label>进小结</label>
+         							</td-->
+         							
+         							<td colspan="2"  class="r-label r-label-1">
+            							<input class='hisui-checkbox' type="checkbox" id="HDValue"/><label>#(..Get("荒诞值"))#</label>
+         							</td>
+         							
+         							<td class="r-label r-label-1">
+										<a id="BAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="width:116px;">新增</a>
+									</td>
+
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="Sex">#(..Get("性别"))#</label></td>
+									<td>
+										<input class="hisui-combobox" type="text" style="width:154px" id="Sex"/>
+									</td>
+									
+									<!--td colspan="2"  class="r-label r-label-1">
+            							<input class='hisui-checkbox' type="checkbox" id="NoPrint"/><label>#(..Get("不打印"))#</label>
+         							</td-->
+         							<td colspan="2"  class="r-label r-label-1">
+            							<input class='hisui-checkbox' type="checkbox" id="NoActive" data-options="checked:true" value="Y"/><label>#(..Get("激&nbsp;&nbsp;&nbsp;活"))#</label>
+         							</td>
+         							
+         							<td class="r-label r-label-1">
+										<a id="BUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'" style="width:116px;">修改</a>
+									</td>
+
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label>#(..Get("年龄范围"))#</label></td>
+									<td>
+										<input class="textbox" style="width:61px;" id="AgeMin"/><label style="padding-left:5px;padding-right:5px;">-</label><input class="textbox" style="width:61px;" id="AgeMax"/>
+									</td>
+							
+									<td colspan="2"  class="r-label r-label-1">
+            							<input class='hisui-checkbox' type="checkbox" Id="Default" /><label>#(..Get("默&nbsp;&nbsp;&nbsp;认"))#</label>
+         							</td>
+         							
+         							<td class="r-label r-label-1">
+										<a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:116px;">清屏</a>
+									</td>
+									
+         							<!--td class="r-label r-label-1">
+										<a id="BPower" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-key'">单独授权</a>
+									</td-->
+									
+									<!--td class="r-label r-label-1">
+										<a id="BRelateLoc" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-setting',stopAllEventOnDisabled:true">授权科室</a>
+									</td-->
+									
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="Reference">#(..Get("参考范围"))#</label></td>
+									<td>
+										<input class="textbox" style="width:61px;" id="ReferenceMin"/><label style="padding-left:5px;padding-right:5px;">-</label><input class="textbox" style="width:61px;" id="ReferenceMax"/>
+		 							</td>
+		 							
+		 							<td style="padding-left:40px">
+		 								<input class="textbox" style="width:61px;" id="Unit"/>
+									</td>
+									
+
+		 						</tr>
+		 						<tr>
+		 						
+		 							<td class="r-label"><label for="TextVal">#(..Get("文本值"))#</label></td>
+									<td colspan="3">
+										<textarea id="TextVal" class="textbox" style="width:277px; height:50px;"> </textarea>
+									</td>
+									
+		 						</tr>
+		 						<tr>
+		 							<td class="r-label"><label for="EyeSee">#(..Get("所见"))#</label></td>
+									<td colspan="3">
+										<textarea id="EyeSee" class="textbox" style="width:277px; height:50px;"> </textarea>
+									</td>
+									
+									<td><input type="hidden" id="ParRef"/></td>
+									<td><input type="hidden" id="ODRowID"/></td>
+									
+									<td><input type="hidden" id="ODSRowID"/></td>
+									
+									<td><input type="hidden" id="ChildSub"/></td>
+									<td><input type="hidden" id="ODType"/></td>
+									<td><input type="hidden" id="CurNatureValue"/></td>
+									
+		 						</tr>
+		 						<!--tr>
+		 							<td class="r-label"><label for="Default">#(..Get("默认"))#</label></td>
+									<td>
+										<input class='hisui-checkbox' type="checkbox" id="Default"/><label style="padding-left:5px;padding-right:5px;">#(..Get("激活"))#</label><input style="padding-left:5px;padding-right:5px;" class='hisui-checkbox' type="checkbox" id="NoActive" data-options="checked:true" value="Y"/>
+									</td>
+									
+		 						</tr-->
+		 								
+                   			</table>
+		 				</div>
+		 				<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false"  style="border-top:1px solid #ddd;">
+							<table data-options="fit:true" id="ODStandardComGrid" border="false" ></table>
+						</div>
+					</div>		
+				</div>
+			</div>
+	  </div>
+	</div>		
+</div>
+
+<!--细项选择 end-->
+
+<!--关联科室授权弹窗 start-->
+	<div id="LocListWin" style="display:none;">
+		<div data-options="region:'north',split:false,border:true" style="height:290px;padding:10px;">
+			<div style="height:100%;border:1px solid #ccc;border-radius:4px;">
+				<table data-options="bodyCls:'panel-header-gray'" id="LocListGrid"></table>
+			</div>
+        </div>
+	</div>
+<!--关联科室授权弹窗 end-->
+<script type="text/javascript" src="../scripts/dhcpe/ct/odstandardcom.js"></script>
+<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+</body>		
+</html>
+			
+		
+ 

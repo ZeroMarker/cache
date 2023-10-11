@@ -1,0 +1,65 @@
+<!-- 
+ * FileName: dhcbill.conf.page.opcharge.csp
+ * Author: ZhYW
+ * Date: 2021-11-04
+ * Description: 门诊收费页面配置
+-->
+<!DOCTYPE html>
+<html>
+<head>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+	<style>
+	.r-label-1 {
+		padding-left: 30px;
+	}
+	</style>
+	<server>
+		set pageId=+%request.Get("PageId")
+		set site="HOSPITAL"
+		set lockAdmCode="LOCKADM"
+		set warrPayCode="WARRPAY"
+		kill codeAry
+		set codeAry(1)=lockAdmCode
+		set codeAry(2)=warrPayCode
+		set codeStr=##class(ext.util.String).Join(.codeAry, "^")
+		w "<script type=""text/javascript"">",!
+		w "	var GV = {",!
+		w "		PageId: "_pageId_",",!
+		w "		Site: """_site_""",",!
+		w "		CodeStr: """_codeStr_""",",!
+		w "		LockAdmCode: """_lockAdmCode_""",",!
+		w "		WarrPayCode: """_warrPayCode_"""",!
+		w "	};",!
+		w "</script>"
+	</server>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false">
+			<div style="padding:10px 10px 0 10px;">
+				<label style="padding-right:7px;">医院</label>
+				<input id="hospital" class="hisui-combobox textbox"/>
+			</div>
+		</div>
+		<div data-options="region:'center',border:false">
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><label>是否启用就诊记录加锁</label></td>
+					<td><div id="lockAdm"></div></td>
+					<td class="r-label r-label-1"><label>欠费结算是否需要担保</label></td>
+					<td><div id="warrPayCode"/></div></td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'south',border:false">
+			<div style="text-align:center;padding-bottom:10px;">
+				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbillconfig/dhcbill.conf.page.opcharge.js"></script>
+</body>
+</html>

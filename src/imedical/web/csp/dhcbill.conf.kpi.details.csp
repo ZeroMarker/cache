@@ -12,18 +12,19 @@
 </csp:method>
 <html>
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<server>
-		set KPIID=+%request.Get("KPIID")
-		w "<script type=""text/javascript"">",!
-		w "	var GV = {",!
-		w "		KPIID: """_KPIID_"""",!
-		w "	};",!
-		w "</script>"
+		set KPIID=%request.Get("KPIID")
+		set KPIJsonData=##class(web.DHCBillCommon).GetClsPropValById("User.DHCBillKPISetting", KPIID)
 	</server>
+	<script type="text/javascript">
+		var GV = {
+			KPIID: "#(KPIID)#",
+			KPIJsonData: #(KPIJsonData)# || {}
+		};
+	</script>
 </head>
 
 <body>

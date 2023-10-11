@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--辅助转移(依据入库单)
+	csp:  csp/pha.in.v3.trans.createbyrec.csp
+	js:   scripts/pha/in/v3/trans/createbyrec.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    
+	<!-- 样式扩展 -->
+    <style>
+    	.button-width {
+			width: 90px;
+		}
+		.text-width {
+			width: 120px !important;
+		}
+		#startDate,#endDate {
+			width: 140px;
+		}
+    </style>
+
+</head>
+
+<body>
+	<!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true" >
+		        <div class="hisui-panel" data-options="headerCls:'panel-header-gray',bodyCls:'',region:'west',width:500,split:true,title:'辅助转移(依据入库单)-入库单',collapsible:true,showCollapsedTitle:true" >
+	                <table id="gridRec"></table>
+	            </div>
+	            <div data-options="headerCls:'panel-header-gray',region:'center',split:true,title:'单据明细'" >
+	            	<table id="gridReci"></table>    
+	            </div>
+			</div>
+		</div>
+    </div>
+    
+    <!-- 库存转移单列表工具栏 -->
+	<div id="gridRecBar" >
+		<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="proLocId">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+            	<td><label for="startDate">#(..Get("开始日期"))#</label></td>
+                <td><input style="width:153px" id="startDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+                
+            </tr>
+            <tr>
+		 		<td class="r-label"><label for="vendorId">#(..Get("经营企业"))#</label></td>
+                <td><input id="vendorId"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                <td><label for="endDate">#(..Get("结束日期"))#</label></td>
+                <td><input style="width:153px" id="endDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            	
+            </tr>
+            <tr>
+             	<td td class="r-label"><label for="transFlag" disabled="true">#(..Get("已转移"))#</label></td>
+		 		<td><input id="transFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox",clear:true,query:true'></td>
+            </tr>
+        </table>
+        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+			<a id="btnQuery" class="hisui-linkbutton button-width"  data-pha-event='click:Query'>查询</a>
+           	<a id="btnClear" style="margin-left:10px" class="hisui-linkbutton button-width" data-pha-event='click:Clear'>清屏</a>
+		</div>
+        <div class="pha-line"></div>
+        <div class="datagrid-toolbar" style="margin-left:10px;border-bottom:0;padding:2px 0px 4px 0px;">
+        	<div class="pha-col" style="border-bottom:0;padding:3px 0;">
+				<label for="recLocId">#(..Get("请求科室"))#</label>
+			</div>	
+			<div class="pha-col" style="padding-top:2px">
+				<input id="recLocId" class="hisui-combobox com-width" data-pha='class:"hisui-combobox",required:true'> 
+			</div>
+        	<a id="btnCreateByRec" class="hisui-linkbutton" plain='true' iconCls="icon-stamp-pass"  data-pha-event='click:CreateByRec' >#(..Get("生成库存转移单"))#</a>
+		</div>
+	</div>
+
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/trans/createbyrec.js"></script>
+    
+</body>
+
+</html>

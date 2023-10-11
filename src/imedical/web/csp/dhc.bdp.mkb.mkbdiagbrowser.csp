@@ -1,0 +1,121 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbdiagbrowser.csp
+    @JS:MKB_DiagBrowser.js
+    @Title：诊断浏览器
+    @Creator:chenghegui
+    @Description:查看诊断图谱
+    @CreateDate：2018-03-28
+*/
+</csp:method>
+<!DOCTYPE html>
+<html>
+ <head> 
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+  </head>
+   <HISUI/> 
+    <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css"/>
+  <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/browserscroll.css" /> 
+    <!--导入的为ECharts3的js --> 
+  <script type="text/javascript" src="../scripts/bdp/App/BDPSystem/echarts/build/dist/echarts3.0.js"></script> 
+  <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"> </script>
+  <script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_DiagBrowser.js"></script> 
+  <style>
+  div.dialog-button{
+     text-align:center !important
+  }
+  .datagrid-header-check input{
+      display:none;
+  }
+  .tplist{
+        max-height:200px;
+       overflow:auto;
+  }
+	.hidecls {/*去掉引用起始节点的拼音码--石萧伟*/
+	    display: none;
+	}
+  #detail{
+	  overflow:auto;
+  }	 
+  #detailWindow >div{
+	  border:1px solid #C0C0C0;
+	  border-radius:4px;
+  }
+  #detailWindow >table{
+	  border:1px solid #C0C0C0;
+	  border-radius:4px;
+  }
+</style>   
+   
+ <body style="padding:4px;">
+  <div id="allpanel" class="hisui-layout" style="" data-options="fit:true" border="false"> 
+    <div data-options="region:'west',split:true,collapsible:false" style="width:320px"  border="false" > 
+        <table title="知识" id="listgrid" toolbar="#leftTools" data-options="iconCls:'icon-w-paper',fit:true"></table> 
+    </div> 
+
+    <div data-options="region:'center'" border="true" style="border:1px solid #C0C0C0;border-radius:4px"> 
+        <div id="main_2" style="padding:10px"> 
+            <!--<input type="text" id="search" style="color:gray;margin-left:17px;margin-right:0" oninput="filter()" onfocus="if(this.value == '搜索框') {this.value = '';this.style.color='#000'}" onblur="if(this.value =='') {this.value = '搜索框';this.style.color='#999'}" />-->
+            <input id="search" class="hisui-searchbox"  data-options="prompt:'检索属性'" />
+            <a href="#" id="commit" class="hisui-linkbutton big" data-options="iconCls:'icon-commitknobig',plain:true" style="position:fixed;z-index: 9999;left:85%">知识提交</a>
+        </div> 
+        <div id="allmain" style="width:100%;height:92%"> 
+        <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM --> 
+            <div id="main" style="height:95%;width:100%"> 
+            </div> 
+            <span id="main_1" style="margin-left:10px;height:2%;color:#A52A2A">节点关系提示区</span> 
+        </div> 
+    </div> 
+ </div> 
+	<div id="leftTools">
+		<input style="width:100px" id="baseSelect">
+		<input style="width:165px" class="searchbox searchbox-prompt" id="searchbox">
+		<!--<a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-w-find" style="margin-left:-4px" id="btnLeftSearch" data-options="stopAllEventOnDisabled:true"></a>-->
+		<span class="searchbox-button" style="margin:1px 0 0 -34px;" id="btnSearch"></span>
+		<a href="#" class="hisui-linkbutton l-btn-0" iconCls="icon-refresh" plain="true" id="btnReset" data-options="stopAllEventOnDisabled:true"></a>
+	</div>
+   <div id="dialog"  style="width:840px;height:560px;padding:10px;display:none">   
+    <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+    <table>
+        <tbody>
+             <tr><td colspan="2">
+                <table style="padding-left:32px">
+                    <tbody>
+                        <tr>
+                            <td class="tdlabel">术语</td><td><input id="termbox" name="MKBKMTermDr" class="hisui-combobox" style="width:314px"></td>
+                            <td class="tdlabel">属性</td><td><input id="probox" name="MKBKMProDr"class="hisui-combobox" style="width:314px" ></td>
+                         </tr>
+                    </tbody>
+                </table>
+             </td></tr>
+             <tr><td class="tdlabel">内容</td><td><div id="detail" style="width:678px;height:200px;padding:0;border:1px solid #9ed2f2;border-radius:4px" ></div>
+             </td></tr>
+             <tr><td class="tdlabel">已选内容</td><td><input id="MKBKMDetailI" name="MKBKMDetail" class="textbox" style="width:672px;display:none" ></input><input id="MKBKMDetailI2" name="MKBKMDetail2" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr style="display:none"><td>路径</td><td><input id="MKBKnoPathI" name="MKBKMPath" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr style="display:none"><td>类型</td><td><input id="MKBKnoTypeI" name="MKBKMType" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr style="display:none"><td>代码</td><td><input id="MKBKnoCodeI" name="MKBKMCode" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel">出处</td><td><input id="MKBKMSourceI" name="MKBKMSource" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel">备注</td><td><input id="MKBKMNoteI" name="MKBKMNote" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel">名称</td><td><input id="MKBKnoDescI" name="MKBKMDesc" class="textbox" style="width:672px;" ></input></td></tr>
+             <tr><td class="tdlabel"><font color=red>*</font>上传文献</td>
+	             <td><iframe id="upload" src="" frameborder="0" width="680" height="40" scrolling="no" frameborder="0" style="padding-left:-2px"></iframe></td>
+             </tr>
+        </tbody>
+    </table>
+    </form>
+    </div>
+     <div id="detailWindow" style="width:640px;height:580px;top:60px;left:450px;padding:10px;overflow-y:scroll" data-options="modal:false,iconCls:'icon-w-paper'"></div>
+     <script type="text/javascript">
+	    var url="dhc.bdp.mkb.mkbuploadfilecommit.csp"
+	    if ("undefined"!==typeof websys_getMWToken){
+			url += "?MWToken="+websys_getMWToken()
+		}
+		$('#upload').attr('src', url);
+  </script>
+ </body>
+</html>

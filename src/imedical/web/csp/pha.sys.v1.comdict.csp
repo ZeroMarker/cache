@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<!--药房药库-公共字典维护-不放开用户
-	csp:pha.sys.v1.comdict.csp
-	js: pha/sys/v1/comdict.js
+<!--
+    药房药库-公共字典维护-不放开用户
+	csp: pha.sys.v1.comdict.csp
+	js:  pha/sys/v1/comdict.js
 -->
 <html>
 <!-- 验证session过期 -->
@@ -18,23 +19,41 @@
     </TRAK:HEAD>
     <HISUI />
     <PHALIBV1 />
+    <style>
+        .pha-body {
+		    background-color: #fff;
+		}
+    </style>
+    <SERVER>
+        s comCode = $g(%request.Data("comCode",1))
+    </SERVER>
+    <script language=javascript>
+        var COMCODE = "#(comCode)#"
+    </script>
 </head>
 
 <body>
     <div class="hisui-layout" fit="true">
         <div data-options="region:'center',border:false" class="pha-body">
-            <div class="hisui-layout" fit="true">
-                <div data-options="region:'center',border:false">
-                    <div class="hisui-panel"
-                        data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray',iconCls:'icon-paper-info'">
-                        <table id="gridComDict"></table>
+            <!-- layout start -->
+            <div class="hisui-layout" fit="true" border="false" data-options="clickExpand:true" id="lyMain">
+                <div data-options="region:'west',width:435, split:true,border:false">
+                    <div class="hisui-panel" title="#(..Get("字典类型"))#" data-options="iconCls:'icon-paper-group',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+                        <table id="gridComDictType"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center', split:true,border:false">
+                    <div class="hisui-panel" title="#(..Get("字典类型值"))#" data-options="iconCls:'icon-paper-info',headerCls:'panel-header-gray',fit:true,bodyCls:''" id="panelMain">
+                        <table id="gridComDictTypeVal"></table>
                     </div>
                 </div>
             </div>
+            <!-- layout end -->
         </div>
     </div>
+
     <!-- 表格工具栏 -->
-    <div id="gridComDictBar">
+    <div id="gridComDictTypeBar">
         <div class="pha-row">
             <div class="pha-col">
                 <input id="conQText" data-pha='class:"hisui-searchbox"'>
@@ -42,13 +61,30 @@
         </div>
         <div class="pha-line"></div>
         <div>
-            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">增加</a>
-            <div class="pha-col"> <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a></div>
-            <div class="pha-col"> <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
-            </div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-export" id="btnExport">导出</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-import" id="btnImport">导入</a>
         </div>
     </div>
+    <div id="gridComDictTypeValBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <input id="conQTextVal" data-pha='class:"hisui-searchbox"'>
+            </div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddVal">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveVal">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDeleteVal">删除</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-translate-word" id="btnTranslateVal">翻译</a>
+        </div>
+    </div>
+
     <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js"></script>
     <script type="text/javascript" src="../scripts/pha/sys/v1/comdict.js"></script>
 </body>
 

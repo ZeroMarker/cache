@@ -4,7 +4,7 @@
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD SoundScenes="chartbook"></EXTHEALTH:HEAD>
-	<HISUI/>
+	<HISUI></HISUI>
 	<script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
 	<style>
 		#tabsReg .tabs-panels>.panel>.panel-body{
@@ -13,6 +13,9 @@
 		#BButtonBar{
 			overflow:hidden;
 			float:right;
+		}
+		body{
+			background-color:#ffffff;
 		}
 	</style>
 </head>
@@ -48,11 +51,17 @@
 	if ($g(%request.Data("SwitchSysPat",1))'=""){
 		Set SwitchSysPat = $g(%request.Data("SwitchSysPat",1))
 	}
+	Set patListCollapse=$g(%request.Data("patListCollapse",1)) //1表示收起,默认为空表示 展开
+	Set currentChartTitle=$g(%request.Data("currentChartTitle",1)) //默认第一次显示哪个页签，检查列表
 	Set tabItems = "[]"
 	if ChartBookID>0{
 		Set tabItems = ##class(epr.ChartBook).ToJson(ChartBookID)
 	}
 	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm=""
+	if %request.Get("FixedEpisodeID")'="" {
+		Set SwitchSysPat = "N"
+		Set EpisodeID = %request.Get("FixedEpisodeID")
+	}
 	if EpisodeID'="" {
 		Set PatientID = +^PAADM(EpisodeID)
 		Set mradm = $P(^PAADM(EpisodeID),"^",61)
@@ -60,7 +69,7 @@
 		Set %request.Data("mradm",1) = mradm
 	}
 	Set AnaesthesiaID = $g(%request.Data("AnaesthesiaID",1))
-	Set BannerHeight=$G(%request.Data("BannerHeight",1),"36px")
+	Set BannerHeight=$G(%request.Data("BannerHeight",1),"40px")
 	Set AllowColumnEdit = ##class(web.SSGroup).GetAllowWebColumnManager(%session.Data("LOGON.GROUPID"))
 	Set LayoutType=1 ;1, | 2,
 	if $g(%request.Data("LayoutType",1))'="" Set LayoutType=$g(%request.Data("LayoutType",1))
@@ -79,7 +88,8 @@
 	;Set LayoutType=2,ShowButtons=0,NoPatientBanner="Y"
 	
 </server>
-<body class="hisui-layout">
+<body style="padding:4px;">
+	<div id="mylayout" class="hisui-layout" fit=true>
 	<script type="text/javascript">
 	var SSUserLoginId = "#($g(%session.Data("LOGON.SSUSERLOGINID")))#";
 	var ChartBookID="#(ChartBookID)#"
@@ -88,37 +98,60 @@
 	var switchSysPat = "#(SwitchSysPat)#";
 	var PersonBanner="#(PersonBanner)#";
 	var BannerHeight = "#(BannerHeight)#";
+	var patListCollapse = "#(patListCollapse)#";
+	var currentChartTitle = "#(currentChartTitle)#";
+	var reqEpisodeID="#($g(EpisodeID))#";
+	var reqPatientID="#($g(PatientID))#";
+	var reqMradm="#($g(mradm))#";
+	var AnaesthesiaID = "#($g(AnaesthesiaID))#";
+	if (reqEpisodeID>0){
+		if (switchSysPat=="N") { //不切换病人 重写dhcsys_getmenuform 实现不切换头菜单病人
+			var fEPRMENU = {"EpisodeID":{value:reqEpisodeID},"PatientID":{value:reqPatientID},"mradm":{value:reqMradm},"DoingSth":{value:""},"AnaesthesiaID":{value:AnaesthesiaID}};
+			if(dhcsys_getmenuform){
+				dhcsys_getmenuform_origin = dhcsys_getmenuform;
+			}
+			var dhcsys_getmenuform = function (){
+				return window.fEPRMENU;
+			}
+		}
+	}
 	/**
 	*刷新病人信息条
 	*/
 	var refreshBar = function (){
-		var frm = dhcsys_getmenuform();
-		if (frm) {
-			var papmi = frm.PatientID.value;
-			var adm = frm.EpisodeID.value;
-			if (adm > 0 ){
-				/*if($(".patientInfo").length>0){
-					$.m({ClassName:"web.DHCDocMain",MethodName:"GetPatientBaseInfo",papmi:papmi,adm:adm},function(html){
-						$(".patientInfo").html("");
-						var patJson = $.parseJSON(html);
-						patJson.baseIconProfile=reservedToHtml(patJson.baseIconProfile);
-						$("#patientInfoTpl").tmpl(patJson).appendTo(".patientInfo");
-					});
-				}*/
-				if($(".PatInfoItem").length>0){
-					$.m({ClassName:"web.DHCDoc.OP.AjaxInterface",MethodName:"GetOPInfoBar",CONTEXT:"",EpisodeID:adm},function(html){
-						if (html!=""){
-							$(".PatInfoItem").html(reservedToHtml(html));
-							$(".PatInfoItem").find("img").eq(0).css("top",0);
-						}else{
-							$(".PatInfoItem").html("获取病人信息失败。请检查【患者信息展示】配置。");
-						}
-					});
+		if(typeof InitPatInfoBanner=='function'){
+			return InitPatInfoBanner();
+		}else{  // 兼容9.0以前的老项目
+			var frm = dhcsys_getmenuform();
+			if (frm) {
+				var papmi = frm.PatientID.value;
+				var adm = frm.EpisodeID.value;
+				if (adm > 0 ){
+					/*if($(".patientInfo").length>0){
+						$.m({ClassName:"web.DHCDocMain",MethodName:"GetPatientBaseInfo",papmi:papmi,adm:adm},function(html){
+							$(".patientInfo").html("");
+							var patJson = $.parseJSON(html);
+							patJson.baseIconProfile=reservedToHtml(patJson.baseIconProfile);
+							$("#patientInfoTpl").tmpl(patJson).appendTo(".patientInfo");
+						});
+					}*/
+					if($(".PatInfoItem").length>0){
+						$.m({ClassName:"web.DHCDoc.OP.AjaxInterface",MethodName:"GetOPInfoBar",CONTEXT:"",EpisodeID:adm},function(html){
+							if (html!=""){
+								$(".patientbar").data("patinfo",html);
+								if ("function"==typeof InitPatInfoHover) {InitPatInfoHover();}
+								else{$(".PatInfoItem").html(reservedToHtml(html))}
+								$(".PatInfoItem").find("img").eq(0).css("top",0);
+							}else{
+								$(".PatInfoItem").html("获取病人信息失败。请检查【患者信息展示】配置。");
+							}
+						});
+					}
+				}else{
+					// 未选病人自动弹出病人列表
+					$("#InpatListDiv").data("AutoOpen",1);
+					if(window.showPatListWin) showPatListWin();
 				}
-			}else{
-				// 未选病人自动弹出病人列表
-				$("#InpatListDiv").data("AutoOpen",1);
-				if(window.showPatListWin) showPatListWin();
 			}
 		}
 	};
@@ -132,7 +165,7 @@
 	<server>
 	if PatientListPanel="" {
 		if NoPatientBanner="N" {
-			w "<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:1px;overflow:hidden;padding-top:10px;"">"
+			w "<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:0px;overflow:hidden;"">"
 			d ..Include(PersonBanner)
 			w "</div>"
 		}
@@ -140,7 +173,7 @@
 		w "	<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
 		w "</div>"
 		if ShowButtons {
-			w "	<div id=""ButtonBarReg"" data-options=""region:'south',border:true"" style=""height:52px;"">"
+			w "	<div id=""ButtonBarReg"" data-options=""region:'south',border:false"" style=""height:52px;"">"
 			w "		<div id=""BButtonBar""></div>"
     		w "	</div>"
 		}
@@ -150,15 +183,15 @@
 			w !,"<div  class=""hisui-layout"" data-options=""fit:true"">"
 			;w !,"<div class=""window-mask alldom"" style=""width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;""></div>"
 			if NoPatientBanner="N" {
-				w !,"<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:1px;overflow:hidden;padding-top:10px;"">"
+				w !,"<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:0px;overflow:hidden;"">"
 				d ..Include(PersonBanner)
 				w !,"</div>"
 			}
-			w !,"<div data-options=""region:'center',border:true"" style=""border:0px;padding-bottom:10px;"">"
+			w !,"<div data-options=""region:'center',border:true"" style=""border:0px;"">"
 			w !,"	<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
 			w !,"</div>"
 			if ShowButtons {
-				w !,"	<div id=""ButtonBarReg"" data-options=""region:'south',border:true"" style=""height:52px;"">"
+				w !,"	<div id=""ButtonBarReg"" data-options=""region:'south',border:false"" style=""height:52px;"">"
 				w !,"		<div id=""BButtonBar""></div>"
 	    		w !,"	</div>"
 			}
@@ -166,20 +199,21 @@
 			w !,"</div>"
 		}else{ //第一种布局, 病人信息条肯定是北边
 			if NoPatientBanner="N" {
-				w "<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:1px;overflow:hidden;padding-top:10px;"">"
+				w "<div data-options=""region:'north',border:false"" style=""height:"_BannerHeight_";padding:0px;overflow:hidden;"">"
 				d ..Include(PersonBanner)
 				w "</div>"
 			}
 			if ShowButtons {
-				w "<div class=""hisui-layout"" data-options=""region:'center',border:true"" style=""border:0px;z-index:3"">"
-				;w "	<div class=""window-mask alldom"" style=""width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;""></div>"
-				w "	<div data-options=""region:'center',border:true"" style=""border:0px;"">"
-				w "		<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
+				w "<div data-options=""region:'center',border:true"" style=""border:0px;z-index:3"">"
+				w "	<div class=""hisui-layout"" data-options=""fit:true"">" //增加layout,实现自适应
+				w "		<div data-options=""region:'center',border:true"" style=""border:0px;"">"
+				w "			<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
+				w "		</div>"
+				w "		<div id=""ButtonBarReg"" data-options=""region:'south',border:false"" style=""height:52px;"">"
+				w "			<div id=""BButtonBar""></div>"
+				w "		</div>"
 				w "	</div>"
-				w "	<div id=""ButtonBarReg"" data-options=""region:'south',border:true"" style=""height:52px;"">"
-				w "		<div id=""BButtonBar""></div>"
-	    		w "	</div>"
-	    		w "</div>"
+				w "</div>"
 			}else{ //无信息条 无按钮bar
 				w "<div data-options=""region:'center',border:true"" style=""border:0px;"">"
 				w "	<div id=""tabsReg"" class=""hisui-tabs tabs-gray"" data-options=""fit:true""></div>"
@@ -194,19 +228,30 @@
 	</div>
 <script type="text/javascript">
 var chartBookItems = [];
-var fEPRMENU = {"EpisodeID":{value:"#(EpisodeID)#"},"PatientID":{value:"#(PatientID)#"},"mradm":{value:"#(mradm)#"},"AnaesthesiaID":{value:"#(AnaesthesiaID)#"}};
+// head中增加了对switchSysPat=N的处理,没选病人时,可以进入护士补录
+if ("undefined"==typeof fEPRMENU || (fEPRMENU && fEPRMENU.EpisodeID && (fEPRMENU.EpisodeID.value==""||fEPRMENU.EpisodeID.value===undefined)) ){  /*head已从头菜单中取出了信息,放到当前界面了*/
+	fEPRMENU = {"EpisodeID":{value:"#(EpisodeID)#"},"PatientID":{value:"#(PatientID)#"},"mradm":{value:"#(mradm)#"},"DoingSth":{value:""},"AnaesthesiaID":{value:"#(AnaesthesiaID)#"}};
+	if (switchSysPat==="N"){
+		if(websys_getMenuWin){
+			websys_getMenuWin_origin = websys_getMenuWin;
+		}
+		var websys_getMenuWin = function (){
+			return window ;
+		}
+		if(dhcsys_getmenuform){
+			dhcsys_getmenuform_origin = dhcsys_getmenuform;
+		}
+		var dhcsys_getmenuform = function (){
+			return window.fEPRMENU;
+		}
+	}
+}
 
-if (switchSysPat==="N"){
-	if(dhcsys_getmenuform){
-		dhcsys_getmenuform_origin = dhcsys_getmenuform;
-	}
-	var dhcsys_getmenuform = function (){
-		return window.fEPRMENU;
-	}
+getConfigUrl = window.getConfigUrl||function (userId,groupId,ctlocId){
+	return {title:"诊疗配置",url:"oeorder.oplistcustom.config.hui.csp?MWToken=#($g(%request.Data("MWToken",1)))#",width:700,height:525};	
 }
-function getConfigUrl(userId,groupId,ctlocId){
-	return {title:"诊疗配置",url:"oeorder.oplistcustom.config.hui.csp",width:700,height:525};	
-}
+
+
 //重新load当前页面,并加载数据
 var hrefRefresh = function (forceRefresh){
 	// 解锁病人
@@ -229,7 +274,7 @@ var hrefRefresh = function (forceRefresh){
 			if (adm > 0){
 				// isXhrRefresh=空,false都是全局刷新,或第一次刷新
 				if ((curIframe.src=="about:blank")||!isXhrRefresh){
-					var objParam = {PatientID: papmi, EpisodeID: adm, mradm: mradm, AnaesthesiaID:AnaesthesiaID, forceRefresh: (forceRefresh || false)};
+					var objParam = {PatientID: papmi, EpisodeID: adm, mradm: mradm, AnaesthesiaID:AnaesthesiaID, forceRefresh: (forceRefresh || false),MWToken:websys_getMWToken()};
 					// 把菜单中表达式转成json--->加到xhrRefresh入参中
 					var veArr = valueExp.split("&");
 					for(var ve=0; ve<veArr.length; ve++){
@@ -255,16 +300,20 @@ var hrefRefresh = function (forceRefresh){
 				}
 			}else{
 				 if (curIframe.contentDocument){
-				 	curIframe.contentDocument.body.innerHTML="请选择患者"
+				 	curIframe.contentDocument.body.innerHTML=$g("请选择患者")
 				 }
 			}
 		}
 	}
 }
 var createTab = function(tabItems){
+	currentChartTitleIndex = 0 ;
 	for (var ind=0;ind<tabItems.length;ind++){
 		var item = tabItems[ind];
+		if (currentChartTitle==ind) currentChartTitleIndex=ind;
+		if (currentChartTitle==item.title) currentChartTitleIndex=ind;
 		var jsonItem = {
+			selected:(ind==currentChartTitleIndex)?true:false,
 			id:item.id, 
 			title:item.title,
 			closable:false,
@@ -310,7 +359,7 @@ function switchTabByEMRAndOpt(tabName,tabOption,cfg){
 function invokeChartFun(tabName,funName){
 	//alert("tabName"+tabName+",funName="+funName);
 	var tab = $("#tabsReg").tabs('getTab',tabName);
-	if (!tab) { console.log("未找到【"+tabName+"】页签!");return ;}
+	if (!tab) { console.log("未找到【"+tabName+"】页签!");return -1;}
 	var newTabframe = tab.find("iframe").get(0);
 	if ( newTabframe ){
 		var fun = "";
@@ -325,21 +374,39 @@ function invokeChartFun(tabName,funName){
 				args[j++]=invokeChartFun.arguments[i];
 			}
 			return fun.apply(newTabframe,args);
-		}			
+		}else{
+			return -3;
+		}		
+	}else{
+		return -2
 	}
-	return ;
+	return 0;
 }
 var resetEprMenuForm = function(){
 	setEprMenuForm("","","","","");
 }
-var setEprMenuForm = function(adm,papmi,mradm,canGiveBirth,anaId){
-       //episodeId,patientId,mradm,"",AnaesthesiaID
-	var frm = dhcsys_getmenuform();
-	if((frm) &&(frm.EpisodeID.value != adm)){
-		frm.EpisodeID.value = adm;
-		frm.PatientID.value = papmi;
-		frm.AnaesthesiaID.value= anaId;
-		frm.mradm.value = mradm;
+/**
+@param arg5 {Object|String}    {AnaesthesiaID:111,xx:222} or 111
+*/
+var setEprMenuForm = function(adm,papmi,mradm,canGiveBirth,options){
+    //episodeId,patientId,mradm,"",AnaesthesiaID
+	var menuWin = websys_getMenuWin();  // 获得头菜单Window对象
+	if (menuWin){		
+		var frm = dhcsys_getmenuform();
+		if((frm) &&(frm.EpisodeID.value != adm)){
+			if (menuWin.MainClearEpisodeDetails) menuWin.MainClearEpisodeDetails();  //清除头菜单上所有病人相关信息
+			frm.EpisodeID.value = adm; 			//DHCDocMainView.EpisodeID;
+			frm.PatientID.value = papmi; 		//DHCDocMainView.PatientID;
+			frm.mradm.value = mradm; 				//DHCDocMainView.EpisodeID;
+			if( "undefined"!==typeof canGiveBirth && frm.canGiveBirth) frm.canGiveBirth.value = canGiveBirth;
+			if ("object"===typeof options){
+				for (var p in options ){
+					if (frm[p]) frm[p].value = options[p];
+				}
+			}else if ("string"===typeof options){
+				frm.AnaesthesiaID.value= options;
+			}
+		}
 	}
 }
 /**
@@ -354,10 +421,11 @@ function doSwitch(PatientID,EpisodeID,mradm) {
 		parent.parent.hidePatListWin();
 	}
 }
+@param arg4 {Object|String}    {AnaesthesiaID:111,xx:222} or 111
 */
-function switchPatient(patientId,episodeId,mradm,AnaesthesiaID){
+function switchPatient(patientId,episodeId,mradm,canGiveBirth,AnaesthesiaID){
 	$("#InpatListDiv").data("AutoOpen",0);
-	setEprMenuForm(episodeId,patientId,mradm,"",AnaesthesiaID);
+	setEprMenuForm(episodeId,patientId,mradm,canGiveBirth,AnaesthesiaID);
 	refreshBar();
 	hrefRefresh();
 }
@@ -399,7 +467,11 @@ function refDataBtnHandler(){
 			var toPageTitle=rtn.toTitle;
 			if (toPageTitle!=""){
 				parent.switchTabByEMR(toPageTitle,{oneTimeValueExp:"copyOeoris="+rtn.data+"&copyTo="});
-				parent.$("#CreatNewBook").dialog('close')
+				if (parent.CloseHISUIWindow){
+					parent.CloseHISUIWindow();
+				}else{
+					parent.$("#CreatNewBook").dialog('close')
+				}
 			}
 		}
 	}else{
@@ -474,8 +546,10 @@ function init(){
 			}
 		}	
 	});
-	$("#tabsReg").tabs('select',0);
+	$("#tabsReg").tabs('select',currentChartTitleIndex);
 	refreshBar();
+	if (patListCollapse==1) $("#mylayout").layout('collapse','west'); 
+	if ($(".patientbar").length>0 &&("function"==typeof InitPatInfoHover)) $(".patientbar").closest('.panel-body').panel('options').onResize=InitPatInfoHover;
 }
 function soundCloseEMR(){
 	if (patientListPage=="emr.browse.patientlist.csp"){
@@ -526,6 +600,7 @@ $.parser.onComplete = function(context){
 		<div id="mm-tabs-cfg" onclick="tabsRight.cfg();">配置</div>
 	</div>
 </csp:if>
+</div>
 </body>
 </html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>

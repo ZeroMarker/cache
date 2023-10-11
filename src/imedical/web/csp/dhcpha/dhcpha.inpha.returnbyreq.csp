@@ -4,7 +4,10 @@
     csp: csp/dhcpha/dhcpha.inpha.returnbyreq.csp
     js:  scripts/pharmacy/inpha/dhcpha.inpha.returnbyreq.js
 -->
-
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <html lang="zh-CN">
 
 <head>
@@ -19,7 +22,22 @@
     <DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
     <Server language="CACHE" runat="Server">
         s Application=%request.Application
+        s InputStr = $G(%request.Data("InputStr",1))
+        s qStartDate = $p(InputStr, "#", 1)
+        s qEndDate = $p(InputStr, "#", 2)
     </Server>
+    <SCRIPT Language="Javascript">
+        var LoadStartDate = "#(qStartDate)#";
+        var LoadEndDate= "#(qEndDate)#";
+    </script>
+    <style type="text/css">
+        .checkboxpadding {
+            padding-left: 5px;
+        }
+        lable strong {
+            padding-left: 5px;
+        }
+   </style>
     <!--css-->
     <link rel="stylesheet" type="text/css"
         href="#(Application)#scripts_lib/jquery.jqGrid-4.6.0/css/themes/ui.multiselect.css">
@@ -54,6 +72,7 @@
     <!--jqgrid样式与医生站统一-->
     <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/css/dhcpha.jqGrid.css">
     </script>
+    <DHCPHARMACYLANG/>
     <!--dhcpha common js-->
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.js"></script>
@@ -70,10 +89,16 @@
                 <div class="col-lg-7 col-md-7 col-sm-7">
                     <button class="btn btn-default btn_button btn_important" id="btn-return"><img
                             src="#(Application)#scripts/pharmacy/images/return-default.png"
-                            class="dhcpha-btn-image"><br><strong>退药</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("退药"))#</strong></button>
+                    <button class="btn btn-default btn_button btn_refuse" id="btn-refuse"><img 
+                            src="#(Application)#scripts/pharmacy/images/refdisp-default.png" 
+                            class="dhcpha-btn-image"><br><strong>#(..Get("拒绝退药"))#</strong></button>
+                    <button class="btn btn-default btn_button btn_refuse" id="btn-cancelrefuse"><img 
+                            src="#(Application)#scripts/pharmacy/images/return-default.png" 
+                            class="dhcpha-btn-image"><br><strong>#(..Get("取消拒绝"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common" id="btn-clear"><img
                             src="#(Application)#scripts/pharmacy/images/clear-default.png"
-                            class="dhcpha-btn-image"><br><strong>清屏</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("清屏"))#</strong></button>
                 </div>
                 <div class="col-lg-5 col-md-5" id="dhcpha-patinfo">
                 </div>
@@ -84,20 +109,15 @@
             <div class="row row_style row-padding-left-1">
                 <form class="form-inline">
                     <div class="input-group">
-                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>退药科室</strong></span>
-                        <select class="form-control in_select" id="sel-phaloc">
-                        </select>
-                    </div>
-                    <div class="input-group">
                         <span for="date-start"
-                            class="input-group-addon dhcpha-input-group-addon-in"><strong>申请日期</strong></span>
+                            class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("申请日期"))#</strong></span>
                         <input id="date-start" class="form-control input_style" type="text"
                             style="border-right:none;width:86px" placeholder="请选择日期">
                         <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
                             <i class="fa fa-calendar"></i>
                         </span>
                     </div>
-                    <span><strong>至</strong></span>
+                    <span><strong>#(..Get("至"))#</strong></span>
                     <div class="input-group">
                         <input id="date-end" class="form-control input_style" type="text"
                             style="border-right:none;width:86px" placeholder="请选择日期">
@@ -105,29 +125,50 @@
                             <i class="fa fa-calendar"></i>
                         </span>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" style="padding-left:10px">
+                        <select class="form-control in_select" id="sel-phaloc">
+                        </select>
+                    </div>
+                    <div class="input-group" style="padding-left:10px">
                         <select class="form-control in_select" id="sel-phaward">
                         </select>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" style="padding-left:10px">
                         <input type="checkbox" id="chk-specloc">
-                        <lable for="chk-specloc"><strong>特殊科室</strong></lable>
+                        <lable for="chk-specloc" style="padding-left:5px"><strong>#(..Get("特殊科室"))#</strong></lable>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" style="padding-left:10px">
                         <input type="checkbox" id="chk-advrefund">
-                        <lable for="chk-advrefund"><strong>已退费未退药</strong></lable>
+                        <lable for="chk-advrefund" style="padding-left:5px"><strong>#(..Get("已退费未退药"))#</strong></lable>
+                    </div>
+                    <div class="input-group" style="padding-left:10px">
+                        <input type="checkbox" id="chk-refuse">
+                        <lable for="chk-advrefund" style="padding-left:5px"><strong>#(..Get("已拒绝退药"))#</strong></lable>
                     </div>
                     <div class="form-group dhcpha-col-split">
                     </div>
-                    <input class="form-control input_style" type="text" id="txt-patno" style="width:8em"
-                        placeholder="请输入登记号">
-                    <div class="btn-group" style="position: absolute;right: 2em;">
+                    <div class="input-group">
+                        <select class="form-control in_select" id="sel-type">
+                        </select>                      
+                    </div>
+                    <div class="input-group">
+                        <input class="form-control input_style" type="text" id="txt-val" style="margin-right:10px;width:8em;" 
+                            placeholder="#(..Get("请输入信息"))#...">
+                    </div>
+                    <div class="btn-group">
                         <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
                         <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
-                            id="btn-find">查询</button>
+                            id="btn-find">#(..Get("查询"))#</button>
                     </div>
                 </form>
             </div>
+            <!--div class="row row_style row-padding-left-1">
+                <div class="input-group">
+                    <span class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("退药科室"))#</strong></span>
+                    <select class="form-control in_select" id="sel-phaloc">
+                    </select>
+                </div>
+            </div-->
         </div>
         <div class="row dhcpha-row-split"></div>
     </div>
@@ -135,7 +176,7 @@
         <div class="row">
             <div class="col-lg-4 col-md-4 col-sm-4 dhcpha-col">
                 <div class="panel div_content">
-                    <div class="panel-heading"><span class="pal_style"><strong>退药申请单列表</strong></span></div>
+                    <div class="panel-heading"><span class="pal_style"><strong>#(..Get("退药申请单列表"))#</strong></span></div>
                     <table id="grid-reqlist" class="table table-bordered table_style">
                     </table>
                     <div id="jqGridPager1"></div>
@@ -143,13 +184,13 @@
             </div>
             <div class="col-lg-8 col-md-8 col-sm-8 dhcpha-col dhcpha-col-border-left">
                 <div class="panel div_content">
-                    <div class="panel-heading"><span class="pal_style"><strong>药品明细列表</strong></span>
+                    <div class="panel-heading"><span class="pal_style"><strong>#(..Get("药品明细列表"))#</strong></span>
                     </div>
                     <table id="grid-reqdetail" class="table table-bordered table_style">
                     </table>
                 </div>
                 <div class="panel div_content">
-                    <div class="panel-heading"><span class="pal_style"><strong>单品汇总</strong></span>
+                    <div class="panel-heading"><span class="pal_style"><strong>#(..Get("单品汇总"))#</strong></span>
                     </div>
                     <table id="grid-reqtotal" class="table table-bordered table_style">
                     </table>
@@ -157,6 +198,55 @@
             </div>
         </div>
     </div>
+<!-- 拒绝退药原因选择 -->
+<div class="modal fade" id="modal-inpharefusereason" tabindex="-1" role="dialog" aria-hidden="false">
+    <div class="modal-dialog" style="width:500px">
+        <div class="modal-content" style="height:250px">
+            <div class="modal-header modal_header_style">
+                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" ><span style="color:#fff;" aria-hidden="true">&times;</span></button>
+                 <span class="modal-title" style="background-color:#556983;"><i class="fa fa-medkit" aria-hidden="true"></i>　#(..Get("拒绝退药原因选择"))#</span>
+            </div>
+
+            <div class="modal-body">
+                <div style="margin-left:30px;margin-top:40px;margin-bottom:40px">
+                    <select class="input-sm  dhcpha-text-custom" id="sel-refusereason">               
+                    </select>
+                </div>
+            </div>
+            <div align="center">
+                <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal" id="btn-refusereason-sure">#(..Get("确定"))#</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 打印方式选择 -->
+<div class="modal fade" id="modal-returnprinttype" tabindex="-1" role="dialog" aria-hidden="false" style="padding-top:150px;">
+    <div class="modal-dialog" style="width:260px">
+        <div class="modal-content" style="height:240px">
+            <div class="modal-header modal_header_style">
+                 <button type="button" class="close" data-dismiss="modal" aria-label="Close" ><span style="color:#fff;" aria-hidden="true">&times;</span></button>
+                 <span class="modal-title" style="background-color:#556983;"><i class="fa fa-medkit" aria-hidden="true"></i>　　#(..Get("打印方式选择"))#</span>
+            </div>
+            <div class="modal-body" align="center" style="padding:30px;padding-top:0px;">
+                <div class="input-group checkboxpadding" style="margin-top:25px">
+                    <input type="checkbox" id="chk-prtdefault">
+                    <lable for="chk-prtdefault"><strong>#(..Get("默认打印"))#</strong></lable>
+                </div>
+                <div class="input-group checkboxpadding" style="margin-top:10px">
+                    <input type="checkbox" id="chk-prttotal">
+                    <lable for="chk-prttotal"><strong>#(..Get("打印汇总"))#</strong></lable>
+                </div>
+                <div class="input-group checkboxpadding" style="margin-top:10px">
+                    <input type="checkbox" id="chk-prtdetail">
+                    <lable for="chk-prtdetail"><strong>#(..Get("打印明细"))#</strong></lable>
+                </div>
+            </div>
+            <div style="text-align:center;">
+                <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal" id="btn-print-sure">#(..Get("确定"))#</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 
 </html>

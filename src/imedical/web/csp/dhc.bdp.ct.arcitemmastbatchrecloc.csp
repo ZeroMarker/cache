@@ -1,0 +1,267 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+/*
+ // dhc.bdp.ct.arcitemmastbatchrecloc.csp
+ 	ARC_ItmMastRecLoc.js
+// 名称: 接收科室生成
+// 描述: 基础数据-医嘱与结果-医嘱项接收科室批量生成
+// 编写者: 基础数据平台组-钟荣枫
+// 编写日期: 2022-6-20
+ */ 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <style type="text/css">.Authorize{}</style>
+ <style>
+ .pagination-info{
+         display:none;
+     }
+body{
+    moz-user-select: -moz-none;
+	-moz-user-select: none;
+	-o-user-select:none;
+	-khtml-user-select:none;
+	-webkit-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+    }
+    .tbclass{
+	    text-align: right;
+   }
+   .l-btn-text {
+    min-width: 0;
+    line-height: 30px;
+    padding: 0 15px 0 12px;
+    margin: 0;
+}
+ </style>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+
+</HEAD>
+<body >  
+
+<script type="text/javascript" src="../scripts/bdp/AppHISUI/OrderItem/ARC_ItemMastBatchRecLoc.js"></script>
+<div class="hisui-layout" data-options="fit:true" border="false">   
+	<div  data-options="region:'center'" style="padding:8px;overflow:hidden" border="false">
+   			<table style="float:left;">
+	   			<tr >
+			    	<td style="margin-right:2px;">
+			    		<div id="itemmastgrid" title="医嘱项" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="text-align:center;" >   
+						</div>
+						
+			    	</td>
+			    	<td  style="WIDTH:45px;margin-right:2px;">
+			    		<table align="center">   
+			    			<tr >
+			    				<!--<td><a class="i-btn i-btn-primary" href="#" id="addItemMast" name="addItemMast" style="HEIGHT: 20px;WIDTH: 43px;border-radius: 0;color: white;background: #40A2DE;border: 1px solid #40A2DE;">&gt;&gt;</a></td>-->
+			    				<td><a href="#" class="hisui-linkbutton" id="addItemMast" name="addItemMast" style="HEIGHT: 30px; WIDTH:45px">&gt;&gt;</a></td>
+			    			</tr>
+			    			<tr ><td>&nbsp;</td></tr>
+			    			<tr>
+			    				<td><a href="#" class="hisui-linkbutton" id="delItemMast" name="delItemMast" style="HEIGHT: 30px; WIDTH:45px">&lt;&lt;</a></td>
+			    				<!--<td><a class="i-btn i-btn-primary" href="#" id="delItemMast" name="delItemMast" style="HEIGHT: 20px;WIDTH: 43px;border-radius: 0;color: white;background: #40A2DE;border: 1px solid #40A2DE;">&lt;&lt;</a></td>-->
+			    			</tr>
+			    		</table>
+						
+					</td>
+					
+					<td style="">
+				    	<div id="selecteditemmastgrid" title="选中的医嘱项" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="">   
+			       			  
+						</div> 
+			    	</td>
+	   			
+	   			</tr>
+   			</table>
+   			
+   			<!--<div id="separator" class="datagrid-btn-separator" /> -->
+   			<table style="float:right;">
+   				<tr style="">
+   					<td style="margin-right:2px;border-left:1px dashed #ccc;padding-left:10px;">
+						<div id="patlocgrid"  title="病人科室" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="text-align:center;">   
+			       			 
+						</div>
+					</td>
+					<td style="WIDTH:45px;margin-right:2px;"> 
+						<table align="center">   
+			    			<tr >
+			    				<td><a href="#" class="hisui-linkbutton" id="addPatLoc" name="addPatLoc" style="HEIGHT: 30px; WIDTH:45px">&lt;&lt;</a></td>
+			    				<!--<td><a class="i-btn i-btn-primary" href="#" id="addPatLoc" name="addPatLoc" style="HEIGHT: 20px;WIDTH: 43px;border-radius: 0;color: white;background: #40A2DE;border: 1px solid #40A2DE;">&lt;&lt;</a></td>-->
+			    			</tr>
+			    			<tr ><td>&nbsp;</td></tr>
+			    			<tr >
+			    				<td><a href="#" class="hisui-linkbutton" id="delPatLoc" name="delPatLoc" style="HEIGHT: 30px; WIDTH:45px">&gt;&gt;</a></td>
+			    				<!--<td><a class="i-btn i-btn-primary" href="#" id="delPatLoc" name="delPatLoc" style="HEIGHT: 20px;WIDTH: 43px;border-radius: 0;color: white;background: #40A2DE;border: 1px solid #40A2DE;">&gt;&gt;</a></td>-->
+			    			</tr>
+			    			
+			    		</table>
+					</td>
+			    	<td style="margin-right:2px;">
+				    	<div id="locgrid" title="科室" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="text-align:center;">   
+			       			 
+						</div>  
+			    	</td>
+			    	<td style="WIDTH:45px;margin-right:2px;">
+			    		<table align="center">
+			    			<tr>
+			    				<td><a href="#" class="hisui-linkbutton" id="addRecLoc" name="addRecLoc" style="HEIGHT: 30px; WIDTH:45px">&gt;&gt;</a></td>
+			    				<!--<td><a class="i-btn i-btn-primary" href="#" id="addRecLoc" name="addRecLoc" style="HEIGHT: 20px;WIDTH: 43px;border-radius: 0;color: white;background: #40A2DE;border: 1px solid #40A2DE;">&gt;&gt;</a></td>-->
+			    			</tr>
+			    			<tr ><td>&nbsp;</td></tr>
+			    			<tr >
+			    				<td><a href="#" class="hisui-linkbutton" id="delRecLoc" name="delRecLoc" style="HEIGHT: 30px; WIDTH:45px">&lt;&lt;</a></td>
+			    				<!--<td><a class="i-btn i-btn-primary" href="#" id="delRecLoc" name="delRecLoc" style="HEIGHT: 20px;WIDTH: 43px;border-radius: 0;color: white;background: #40A2DE;border: 1px solid #40A2DE;">&gt;&gt;</a></td>-->
+			    			</tr>
+			    		</table>
+			    	</td>
+			    	<td style="">
+						<div id="reclocgrid"  title="接收科室" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="text-align:center;">   
+						</div>
+					</td>
+   				</tr>
+   			</table>	
+	 </div> 
+	<div id="South" data-options="region:'south',bodyCls:'panel-header-gray'" style="border-top: 1px dashed #C0C0C0;height:130px;overflow:hidden" border="false">
+		 <table cellspacing=10>
+	    	<tr>
+	    		<td class="tbclass"><font color=red>*</font>开始日期</td>
+				<td>
+					<input id="ARCRLDateFrom" name="ARCRLDateFrom" class="textbox hisui-datebox"  data-options=""/>
+				</td>
+				<td class="tbclass">开始时间</td>
+				<td>
+					<input id="ARCRLTimeFrom" name="ARCRLTimeFrom" class="textbox hisui-timespinner" data-options="showSeconds:true">
+				</td>
+				
+				<td  colspan="2"><font color=red>*</font>病人科室与接收科室生成规则</td>
+				<td class="tbclass">就诊类型</td>
+				<td><select id="ARCRLClinicType" name="ARCRLClinicType"  type="text" style="width:155px;" class="textbox hisui-combobox" ></select></td>
+				<td class="tdlabel-b">
+					<a href="#" id="btnCreat" class="hisui-linkbutton" style="width:120px;" data-options="iconCls:'icon-w-add',stopAllEventOnDisabled:true">生成预览</a>
+				</td>
+	    	</tr>
+	    	<tr>
+	    		<td class="tbclass">结束日期</td>
+				<td>
+					<input id="ARCRLDateTo" name="ARCRLDateTo" class="textbox hisui-datebox"  data-options=""/>
+				</td>
+				<td class="tbclass">结束时间</td>
+				<td>
+					<input id="ARCRLTimeTo" name="ARCRLTimeTo" class="textbox hisui-timespinner" data-options="showSeconds:true">
+				</td>
+				
+				<td colspan="2">
+					<div style="">
+						<input class='hisui-radio' type="radio" name='rule'  id="OneToOne"  label="一对一" value="0" checked="true" data-options="">
+						<input class='hisui-radio' type="radio" name='rule' id="ManyToMany"  label="一对多[循环]" value="1" data-options="">	
+					</div>
+				</td>
+				<td class="tbclass">默认</td>
+				<td >
+					<input class='hisui-checkbox' data-options="" type="checkbox" id="ARCRLDefaultFlag" style=""  >
+				</td>
+				
+				<td class="tdlabel-b">
+					<a href="#" id="btnAdd" class="hisui-linkbutton" style="width:120px;" data-options="iconCls:'icon-w-setting',stopAllEventOnDisabled:true">手工维护</a>
+				</td>
+	    	</tr>
+	    		
+	    	<tr>
+	    		<td class="tbclass"><font color=red>*</font>功能</td>
+				<td >
+					<input id="ARCRLFunction" type="text" class="textbox hisui-combobox" data-options="required:true" >
+				</td>
+				<td class="tbclass">医嘱优先级</td>
+				
+				<td >
+					<input id="ARCRLOrderPriorityDR" type="text" class="textbox hisui-combobox" data-options="" >
+				</td>
+				<td class="tbclass">医院</td>
+				<td>
+					<input  id="ARCRLCTHospitalDR" name="ARCRLCTHospitalDR" type="text" class="textbox hisui-combobox" data-options="" style="">
+				</td>
+				<td class="tbclass" colspan="2">&nbsp;</td>
+
+				<td class="tdlabel-b">
+					<a href="#" id="btnClear" class="hisui-linkbutton" style="width:120px;" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true">重置</a>
+				</td>
+	    	</tr>
+	    </table >
+	</div>
+	
+</div>    
+<!--医嘱项查询工具栏-->			    
+<div id="itemmastbar">
+ <table style="" cellspacing=10>
+ 	<tr>
+		<td class="tbclass">医院</td>
+		<td>
+			<input  id="ItemHospital" name="ItemHospital" type="text" class="textbox hisui-combobox" data-options="" style="">
+		</td>
+	</tr> 
+	<tr>
+		<td class="tbclass">医嘱子类</td>
+		<td>
+			<input  id="OrderCatDR" name="OrderCatDR" type="text" class="textbox hisui-combobox" data-options="" style="">
+		</td>
+	</tr>
+	<tr>
+		<td class="tbclass">描述</td>
+		<td>
+			<input id="ItemMastDesc" type="text" class="textbox hisui-searchbox" style="">
+			<a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnItemMastRefresh"></a>
+		</td>
+
+	</tr>
+  </table>      
+</div>
+<!--科室查询工具栏-->	
+<div id="locbar">
+	<table style="" cellspacing=10>
+		<tr>
+			<td class="tbclass">医院</td>
+    		<td>
+				<input  id="LocHospital" name="LocGroup" type="text" class="textbox hisui-combobox" data-options="" style="width:120px;">
+    		</td>
+    	</tr>   
+		<tr>
+			<td class="tbclass">科室部门组</td>
+    		<td>
+				<input  id="LocGroup" name="LocGroup" type="text" class="textbox hisui-combobox" data-options="" style="width:120px;">
+    		</td>
+    	</tr>
+		<tr>
+			<td class="tbclass">科室描述</td>
+    		<td>
+    			<input id="LocDesc" type="text" class="textbox hisui-searchbox" style="width:120px;">
+    			<a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnLocRefresh"></a>
+    		</td>
+    		
+		</tr>
+	</table>        
+</div>		    
+<!--生成弹窗 width:1200px;height:500px;-->	
+<div id="WinCreate" data-options="" style="padding-top:10px;padding-left:10px;padding-right:10px;display:none;overflow:hidden">
+
+	<table data-options="fit:true,bodyCls:'panel-body-gray'" id="creategrid" style="" ></table>
+</div>
+<!--手工维护弹窗 width:1100px;height:550px;-->	
+<div id="AddByHands" style="padding:10px;overflow:hidden;">
+	<lable id="addhtml" ></lable>
+	 
+</div>
+<!--数据检测弹窗-->
+<!-- -->	
+<div id="WinResult"  style="padding-top:10px;padding-left:10px;padding-right:10px;display:none;">
+	
+	<table data-options="fit:true,bodyCls:'panel-body-gray'" id="resultgrid" style="padding:10px;"></table>
+</div>
+
+</body>
+</html>

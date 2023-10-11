@@ -1,0 +1,494 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s DataSource = $G(%request.Data("DataSource", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+    s FildNameType=$G(%request.Data("FildNameType", 1))
+    
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var DataSource="#(DataSource)#";
+	   var hospID="#(hospID)#";
+	   var FildNameType="#(FildNameType)#";
+	   
+	   
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	<div class="hisui-panel" style="height:99%;border:1px solid #ccc;overflow: hidden;" title="" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+	
+	<table class="xctable" id="shiftTable" style="width:100%"></table>
+	</div>
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+	<div class="vsReminder" style="display:none;"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a></div>
+
+<script type="text/javascript">
+
+
+var entity=""
+var xcTopContors=""
+var xcContors=""
+var xcChange={
+	'FildNameType2':function(value,oldValue){
+		
+		var showIds=[
+				{"key":"1","value":["ProjectTip","ListAreaColName","ListAreaColWidth","ListAreaColSort","ListAreaColFildName",
+				"FildEditFlag","FildHide","IntoLast","FildSortName","FildRemark"]},
+				{"key":"2","value":["ListAreaColName","ListAreaColWidth","ListAreaColSort","ListAreaColFildName",
+				]},
+				{"key":"3","value":["FildParameter","FildMethodName","FildClassName","ListAreaColName","ListAreaColWidth","ListAreaColSort","ListAreaColFildName",
+				"FildEditFlag","FildHide","IntoLast","FildSortName","FildRemark"]},
+				]
+		var $thisId =$(this).attr("id")
+		var controlArrs=json.control()
+		changeNew(controlArrs,showIds,$thisId,value)
+		
+		
+		
+	}
+	
+}
+
+var dicts={
+	data:function(type){
+		var dicts={
+			"shift_detail_group":[{value:"1",text:"患者信息列"},{value:"2",text:"交班内容列"}],
+			"shift_open":[{value:"1",text:"启用"},{value:"0",text:"禁用"}],
+			"shift_yesorno":[{value:"1",text:"是"},{value:"0",text:"否"}],
+			"shift_fild_type":[{value:"1",text:"患者信息列"},
+							 {value:"2",text:"项目列"},
+							 {value:"4",text:"班次列"},
+							 {value:"5",text:"班次内容列"},
+							 {value:"6",text:"自定义列"},
+							 ],
+			"shift_age":[
+						{value:"1",text:"新生儿(<28天)"},
+						{value:"2",text:"28天<婴儿<=1岁"},
+						{value:"3",text:"1岁<儿童<=14岁"},
+						{value:"4",text:"成人(>14岁)"},
+						
+						],
+			"shift_book_type":[
+						{value:"1",text:"病区"},
+						{value:"2",text:"科室"},
+						{value:"3",text:"产房"},
+						{value:"4",text:"新生儿"},
+						],
+			"shift_into_next":[
+						{value:"0",text:"否"},
+						{value:"1",text:"当日"},
+						{value:"2",text:"跨天"},
+						],
+			"shift_sum_method":[
+						{value:"0",text:"不带入"},
+						{value:"1",text:"累计"},
+						{value:"2",text:"最新值"},
+						{value:"3",text:"最高值"},
+						],
+		}
+		return dicts[type]
+	}
+}
+
+function FildNameTypeOnSelect(obj){
+	/*var controlArrs=[
+			{'id':'FildNameType','type':'combox','objData':FildNameTypeData,'title':'列类型','required':'true','defaultValue':"1","onSelect":FildNameTypeOnSelect},
+			{'id':'ProjectTip','type':'combox','multiple':'true','objData':ProjectTips,'defaultValue':defaultValue,'title':'列内容'},
+			{'id':'FildClassName','type':'text','title':'自定义类名','isDisabled':'true'},
+			{'id':'FildMethodName','type':'text','title':'自定义方法名'},
+			{'id':'FildParameter','type':'text','title':'参数'},
+			{'id':'ListAreaColName','type':'text','title':ListAreaColName,'required':'true'},
+			{'id':'ListAreaColWidth','type':'text','title':ListAreaColWidth,'required':'true'},
+			{'id':'ListAreaColSort','type':'text','title':'列序号','required':'true','defaultValue':(filtData.length+1)*10+""},
+			{'id':'ListAreaColFildName','hidden':"hidden",'type':'combox','filterData':filtData,'objData':FildNameData,'title':'列字段名','defaultValue':FildNameData[0].value,'required':'true'},
+			{'id':'IsMergeColumn','type':'combox','objData':FildEditFlag,'title':'设置为合并列','defaultValue':"0",'required':'true'},
+			{'id':'FildEditFlag','type':'combox','objData':FildEditFlag,'title':'列编辑状态','required':'true','defaultValue':"0"},
+			{'id':'FildHide','type':'combox','objData':FildHideFlag,'title':'列隐显状态','required':'true','defaultValue':"0"},
+			{'id':'IntoLast','type':'combox','objData':FildEditData,'title':'引入内容','required':'true','defaultValue':"0"},
+			
+			{'id':'FildSortName','type':'text','title':'排序名称'},
+			//{'id':'FildRemark','type':'text','title':'列备注'},
+		]*/
+	if(obj.value=="2"||obj.value=="4"){		
+		var hideIds=['FildClassName','ProjectTip','FildMethodName','FildParameter','IsMergeColumn','FildEditFlag','IntoLast','FildSortName','ProjectItem']		
+		for(var i=0;i<hideIds.length;i++){
+			$("tr[name="+hideIds[i]+"]").hide().addClass("IsHide")
+		}
+	}else if(obj.value=="5"){		
+		var hideIds=['FildClassName','ProjectTip','FildMethodName','FildParameter','ListAreaColWidth','IsMergeColumn','FildEditFlag','IntoLast','ProjectItem','FildSortName']		
+		for(var i=0;i<hideIds.length;i++){
+			$("tr[name="+hideIds[i]+"]").hide().addClass("IsHide")
+		}
+	}else if(obj.value=="1"){
+		
+		var hideIds=['FildClassName','FildMethodName','FildParameter']		
+		for(var i=0;i<hideIds.length;i++){
+			$("tr[name="+hideIds[i]+"]").hide().addClass("IsHide")
+		}
+		
+		
+		
+	}else if(obj.value=="6"){
+		
+		var hideIds=['ProjectTip','FildClassName','FildMethodName','FildParameter']		
+		for(var i=0;i<hideIds.length;i++){
+			$("tr[name="+hideIds[i]+"]").hide().addClass("IsHide")
+		}
+		
+		
+		
+	}else{
+		$("tr.xc-design").show().removeClass("IsHide")
+		$("tr.xc-design.IsHidden").hide()	
+	}
+}
+
+var json={
+	control:function(){
+		var ActiveFlagData=dicts.data("shift_open")
+		var FildEditData=dicts.data("shift_yesorno")
+		var DataSourceData=[
+		{"text":"手动输入","value":"1"},
+		{"text":"统计带入","value":"2"}
+		]
+		var FildNameData=[
+		{"text":"ShiftItem1","value":"ShiftItem1"},
+		{"text":"ShiftItem2","value":"ShiftItem2"},
+		{"text":"ShiftItem3","value":"ShiftItem3"},
+		{"text":"ShiftItem4","value":"ShiftItem4"},
+		{"text":"ShiftItem5","value":"ShiftItem5"},
+		{"text":"ShiftItem6","value":"ShiftItem6"},
+		{"text":"ShiftItem7","value":"ShiftItem7"},
+		{"text":"ShiftItem8","value":"ShiftItem8"},
+		{"text":"ShiftItem9","value":"ShiftItem9"},
+		{"text":"ShiftItem10","value":"ShiftItem10"},
+		{"text":"ShiftItem11","value":"ShiftItem11"},
+		{"text":"ShiftItem12","value":"ShiftItem12"},
+		{"text":"ShiftItem13","value":"ShiftItem13"},
+		{"text":"ShiftItem14","value":"ShiftItem14"},
+		{"text":"ShiftItem15","value":"ShiftItem15"},
+		{"text":"ShiftItem16","value":"ShiftItem16"},
+		{"text":"ShiftItem17","value":"ShiftItem17"},
+		{"text":"ShiftItem18","value":"ShiftItem18"},
+		{"text":"ShiftItem19","value":"ShiftItem19"},
+		{"text":"ShiftItem20","value":"ShiftItem20"},
+		]
+		
+		var FildDefaultTxtData=[]
+		var param={
+			ShiftBookID:ShiftBookID
+		}
+		FildNameData=[]
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftBookTimeByBookID",{ShiftBookID:ShiftBookID},function(rtn){
+				
+				for(var i=0;i<rtn.length;i++){
+					var json={
+						text:rtn[i].ShiftName,
+						value:rtn[i].ID
+					}
+					FildDefaultTxtData.push(json)	
+					
+				}
+				
+		},'json',false);
+		
+		
+		
+		var filtData=[]
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailList",{ShiftBookID:ShiftBookID},function(rtn){
+				for(var i=0;i<rtn.length;i++){
+					filtData.push(rtn[i].ListAreaColFildName)	
+				}
+				console.log(filtData)
+				for(var i=1;i<=20;i++){
+					var text="ShiftItem"+i
+					var value="ShiftItem"+i
+					if(filtData.indexOf(text)<0){
+						var jsn={"text":text,"value":value}
+						FildNameData.push(jsn)
+					}
+				}
+		},'json',false);
+	
+		var FildNameTypeData=dicts.data("shift_fild_type")
+		
+		
+		
+		
+		var ProjectTips=[]
+		
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftProjectList",{"ProjectType":2,"desc":""},function(rtn){
+			
+			var projectArr=[]
+			for(var i=0;i<rtn.length;i++){
+				var json={}
+				json.value=rtn[i].ID
+				json.text=rtn[i].ProjectName	
+				ProjectTips.push(json)
+			}
+			
+			
+		},'json',false);
+		
+		var defaultValue=""
+		if(entity!=""){
+			if(typeof entity.FildMethodName!='undefined'){
+				var names=entity.FildMethodName.split("|")
+				var dvalues=[]
+				for(var i=0;i<names.length;i++){
+					if(names[i]!=""){
+					dvalues.push("Nur.NIS.Service.Base.Patient"+":"+names[i])
+					}	
+				}
+				defaultValue=dvalues.join(",")
+			}	
+			
+		}
+		var groupData=dicts.data("shift_detail_group")
+		
+		var AgeData=[
+		{"text":"新生儿(<28天)","value":"1"},
+		{"text":"28天<婴儿<=1岁","value":"2"},
+		{"text":"1岁<儿童<=14岁","value":"3"},
+		{"text":"成人(>14岁)","value":"4"}
+		]
+		
+		var FildEditFlag=[
+		{"text":"启用","value":"1"},
+		{"text":"禁用","value":"0"}
+		]
+		var FildHideFlag=[
+			{"text":"显示","value":"0"},
+			{"text":"隐藏","value":"1"},
+			
+		]
+		var ListAreaColName="明细列名"
+		var ListAreaColWidth="明细列宽"
+		if(FildNameType==2){
+			ListAreaColName="项目列名"
+			ListAreaColWidth="项目列宽"
+		}
+		var Projects=[]
+		
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","GetShiftProjectList",{"ProjectType":1,"desc":""},function(rtn){
+			
+			var projectArr=[]
+			for(var i=0;i<rtn.length;i++){
+				var json={}
+				json.value=rtn[i].ID
+				json.text=rtn[i].ProjectName	
+				Projects.push(json)
+			}
+			
+			
+		},'json',false);
+		
+		var controlArrs=[
+			{'id':'FildNameType','type':'combox','objData':FildNameTypeData,'title':'列类型','required':'true','defaultValue':"1","onSelect":FildNameTypeOnSelect},
+			{'id':'ProjectTip','type':'combox','multiple':'true','objData':ProjectTips,'defaultValue':defaultValue,'title':'列内容'},
+			{'id':'FildClassName','type':'text','title':'自定义类名','isDisabled':'true'},
+			{'id':'FildMethodName','type':'text','title':'自定义方法名'},
+			{'id':'FildParameter','type':'text','title':'参数'},
+			{'id':'ListAreaColName','type':'text','title':ListAreaColName,'required':'true'},
+			{'id':'ListAreaColWidth','type':'text','title':ListAreaColWidth,'required':'true'},
+			{'id':'ListAreaColSort','type':'text','title':'列序号','required':'true','defaultValue':(filtData.length+1)*10+""},
+			{'id':'ListAreaColFildName','hidden':"hidden",'type':'combox','filterData':filtData,'objData':FildNameData,'title':'列字段名','defaultValue':FildNameData[0].value,'required':'true'},
+			{'id':'IsMergeColumn','type':'combox','objData':FildEditFlag,'title':'合并状态','defaultValue':"0",'required':'true'},
+			{'id':'FildEditFlag','type':'combox','objData':FildEditFlag,'title':'列编辑状态','required':'true','defaultValue':"0"},
+			{'id':'FildHide','type':'combox','objData':FildHideFlag,'title':'列隐显状态','required':'true','defaultValue':"0"},
+			{'id':'IntoLast','type':'combox','objData':FildEditData,'title':'引入内容','required':'true','defaultValue':"0"},
+			
+			{'id':'FildSortName','type':'text','title':'排序名称'},
+			{'id':'ProjectItem','type':'combox','multiple':'true','objData':Projects,'defaultValue':defaultValue,'title':'术语'},
+			
+			//{'id':'FildRemark','type':'text','title':'列备注'},
+		]
+		
+		var FildControl={
+			1:["FildNameType","ProjectTip","ListAreaColName","ListAreaColWidth","ListAreaColSort","ListAreaColFildName","FildHide","IsMergeColumn",
+				"FildEditFlag","IntoLast","FildSortName","FildRemark"],
+			2:["FildNameType","ListAreaColName","ListAreaColWidth","ListAreaColSort","ListAreaColFildName","FildHide"],
+			4:["FildNameType","ListAreaColName","ListAreaColWidth","ListAreaColSort","ListAreaColFildName","FildHide"],
+			3:["FildNameType","FildParameter","FildMethodName","FildClassName","ListAreaColName","ListAreaColWidth","ListAreaColSort","ListAreaColFildName",
+				"FildHide","FildEditFlag","IntoLast","FildSortName","FildRemark"],
+		}
+		
+		debugger;
+		/*var newContors=FildControl[FildNameType]
+		var xcContors=[]
+		for(var i=0;i<controlArrs.length;i++){
+			var key = controlArrs[i].id
+			if(newContors.indexOf(key)>-1){
+				xcContors.push(controlArrs[i])
+			}
+		}*/
+		
+		
+		
+		return controlArrs
+	},
+	create:function(tableID){
+		var controlArrs=json.control()
+		doHtml(controlArrs,tableID)
+		/*for(var i=0;i<controlArrs.length;i++){
+			var key = controlArrs[i].id
+			createInputHtml(tableID,controlArrs,key,0)
+		}
+		
+		var inputw=0
+		for(var i=0;i<controlArrs.length;i++){
+			var obj = controlArrs[i]
+			var thisw=$("#"+obj.id).parents("td").outerWidth()-17
+			if(thisw>inputw) inputw=thisw
+		}
+		
+		for(var i=0;i<controlArrs.length;i++){
+			var obj = controlArrs[i]
+			$("#"+obj.id).width(inputw)
+			if(obj.type=="combox"){
+				getComboxLocalData(obj)
+			}
+		}*/
+		
+	},
+	setValue:function(id,className,methodName){
+		
+		runClassMethod(className,methodName,{id:id},function(rtn){
+			entity=rtn
+		},'json',false);
+
+	},
+	save:function(id,className,methodName){
+		
+	}
+	
+}
+
+
+$(function(){
+	$('body').addClass('active')
+	if(id!=""){
+		json.setValue(id,"Nur.SHIFT.Service.ShiftConfigController","GetShiftDetailById")
+	}
+	json.create("shiftTable")
+	
+})
+
+function saveFunLib(){
+	var controlArrs=json.control()
+	var rtnParms = resultParms(controlArrs)
+	var rsTxt=""
+	if(rtnParms!=""){
+		
+		rtnParms.id=id
+		rtnParms.ShiftBookID=ShiftBookID
+		//rtnParms.FildNameType=FildNameType
+		runClassMethod("Nur.SHIFT.Service.ShiftConfigController","InsertShiftDetail",{data:JSON.stringify(rtnParms)},
+			function(rtn){
+				if(rtn == 1){
+					rsTxt = "保存失败！"
+				}else if(rtn == 2){
+					rsTxt = "报错失败，存在相同的组名"
+				}
+		
+		},'json',false);
+	
+		
+	}else{
+		rsTxt = "保存失败,存在必填项为空！"
+	}
+	return rsTxt
+	
+	
+	
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

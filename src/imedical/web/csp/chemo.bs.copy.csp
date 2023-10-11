@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--chemo.bs.copy.csp  QP--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	body {background:#fff;}
+	.PatImage{
+		position: absolute;
+		top: 3px;
+		width:30px;
+	 	height:30px;
+	 	border-radius:30px;
+	 	margin-left: 10px;
+ 	}
+	 .PatInfoItem{
+		position: absolute;
+	    top: 6px;
+	    left: 39px;
+	    margin-left:10px;
+	 }
+	 .PatInfoItem span{
+		 color:black;
+		 margin:0 5px;
+	 }
+	 .PatInfoItem a{
+		 color:white;
+		 margin:5px;
+	 }
+	 .PatInfoItem a img{
+		 margin-top:4px;
+	 }
+	 #win-min,#win-close{
+		 opacity:1;
+		 background-color:white;
+		 border-radius:3px;
+	 }
+	 #win-min:hover,#win-close:hover{
+		 background-color:red;
+		 background-image:'';
+	}
+	 .man{
+		 background:url(../images/man.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .woman{
+		 background:url(../images/woman.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.note-head {height:18px;}
+	.c-title{margin-left:10px;color:#017bce;line-height:18px;}
+	.c-label {float:left;width:5px;background:#017BCE;height:18px;}
+	.table-row {margin-bottom:20px;}
+	.c-sapn {margin-right:10px;}
+	.ui-jqgrid {border:0 !important;}
+	.c-span {margin-right:10px;}
+</style>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/themes/ui.multiselect.css">
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/themes/redmond/jquery-ui-1.8.2.custom.css">
+<link rel="stylesheet" type="text/css" href="../scripts_lib/jquery.jqGrid-4.6.0/css/ui.jqgrid.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/ipdoc/css/dhcdocCustomjqGrid.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/tools/flatpickr/flatpickr.css">
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdocCustomEasyUI.css">
+
+<script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/json2.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/jquery.jqGrid.src.js"></script>
+<script type="text/javascript" src="../scripts_lib/jquery.jqGrid-4.6.0/js/i18n/grid.locale-cn.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/tools/flatpickr/flatpickr.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/thpy/com/common.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/thpy/bs/copy.js"></script>
+<Server>
+	set PatientID = %request.Get("PatientID")
+	set EpisodeID = %request.Get("EpisodeID")
+	set PAAdmType = %request.Get("PAAdmType")
+	set PLID = %request.Get("PLID")
+	
+	s OrderPriorRemarksStr=##class(DHCDoc.THPY.COM.Func).GetPriorRemarks("JSON")
+	s OrderActionJSON=##Class(web.DHCDocOrderCommon).GetOrderAction("JSON")
+	s OrderFlowRateUnitStr=##Class(web.DHCDocOrderCommon).GetOrderFlowRateUnit("JSON")
+	s GetExceedStr=##Class(web.DHCDocExceedReason).GetExceedStr("","json")
+	s MRCBodyPartStr=##class(web.DHCDocOrderCommon).GetMRCBodyPart("JSON")
+	s OrderStageStr=##class(web.DHCDocOrderCommon).GetOrderStage("JSON")
+	s AntUseReasonStr=##class(web.DHCDocOrderCommon).GetAntUseReason("JSON")
+	s OrdCateGoryStr=##class(DHCDoc.DHCDocConfig.SubCatContral).GetOrdCateGoryStr()
+	s OrderActionStr=##Class(web.DHCDocOrderCommon).GetOrderAction()
+	s OrderPriorStr=##class(DHCDoc.THPY.COM.Func).GetOrderPrior("JSON")
+
+	s ListColSetCls="DHCDoc.THPY.CFG.ColSet"	//	web.DHCDocOrderListCommon
+	s ListColSetMth="GetListColSet"
+	k colNames,colModelAry,ParamAry
+	s colNames=""
+	//从后台返回的下拉列表数据
+	
+	s ParamAry("OrderPrior")=OrderPriorStr  //改从前台产生
+	s ParamAry("OrderPriorRemarks")=OrderPriorRemarksStr
+	i OrderPriorRemarksStr'="" s ParamAry("OrderPriorRemarks")=":"_";"_OrderPriorRemarksStr
+	s ParamAry("OrderAction")=OrderActionJSON
+	i OrderActionStr'="" s ParamAry("OrderAction")=":"_";"_OrderActionJSON
+	s ParamAry("OrderFlowRateUnit")=OrderFlowRateUnitStr
+	i OrderFlowRateUnitStr'="" s ParamAry("OrderFlowRateUnit")=":"_";"_OrderFlowRateUnitStr
+	///病人相关，放到js里处理初始化数据
+	s ParamAry("OrderBillType")=""	//PrescriptTypeStr
+	s ParamAry("ExceedReason")=GetExceedStr
+	i GetExceedStr'="" s ParamAry("ExceedReason")=":"_";"_GetExceedStr
+	s ParamAry("OrderBodyPart")=MRCBodyPartStr  
+	i MRCBodyPartStr'="" s ParamAry("OrderBodyPart")=":"_";"_MRCBodyPartStr
+	s ParamAry("OrderStage")=OrderStageStr  
+	i OrderStageStr'="" s ParamAry("OrderStage")=":"_";"_OrderStageStr
+	s ParamAry("AntUseReason")=AntUseReasonStr  
+	i AntUseReasonStr'="" s ParamAry("AntUseReason")=":"_";"_AntUseReasonStr
+	i OrdCateGoryStr'="" s ParamAry("OrdCateGory")=":"_";"_OrdCateGoryStr
+	d ##class(DHCDoc.THPY.CFG.ColSet).ReadListColSet(ListColSetCls,ListColSetMth,.colNames,.colModelAry,.ParamAry)
+
+ 	
+	w "<SCRIPT Language=""Javascript"">",!
+	w "var ListConfigObj={colNames:null,colModel:null};",!
+	w "var colNamesAry=new Array();",!
+	w "var colModelAry=new Array();",!
+	for i=1:1:$l(colNames,",") {
+		s colName=$p(colNames,",",i)
+		continue:colName=""
+		s colModel=colModelAry(colName)
+		w "colNamesAry.push('"_colName_"');",!
+		w "colModelAry.push("_colModel_");",!
+	}
+	w "ListConfigObj.colNames=colNamesAry;",!
+	w "ListConfigObj.colModel=colModelAry;",!
+	w "</SCRIPT>",!
+</Server>
+</head>
+<body style="padding:10px;">	
+	<csp:Include Page="thpy.bs.copy.show.csp">	
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			PatientID: "#(PatientID)#",
+			EpisodeID: "#(EpisodeID)#",
+			PAAdmType: "#(PAAdmType)#",
+			PLID: "#(PLID)#"
+		};
+		
+	</SCRIPT>
+	
+</body>
+</html>

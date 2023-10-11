@@ -20,12 +20,21 @@
 .arcosnew,#AddTabName-tr,#AddGroup-tr{
 	display:none;
 }
+.panel-header-card{
+	border-color: #ccc;
+}
+.panel-header-card + .panel-body{
+	border-color: #ccc;
+	border-radius: 4px;
+}
 </style>
 <Server>
-    s MenuName = "System.OEOrder.OrgFav.Save.SetSaveForLocation"
-    s MenuAuthOrderOrgFav = ##class(web.DHCDocOrderCommon).IsHaveMenuAuthOrderOrgFav(%session.Get("LOGON.GROUPID"), MenuName)
+	s MenuAuthOrderOrgFav = ##class(DHCDoc.Order.Fav).GetLocAuth()
+    s HospMenuAuthOrderOrgFav = ##class(DHCDoc.Order.Fav).GetHospAuth()
     s Type=%request.Get("Type")
     s XCONTEXT=%request.Get("XCONTEXT")
+	s HospARCOSAuthority=+##class(DHCDoc.Order.Sets).GetHospAuth()
+	s LocARCOSAuthority=+##class(DHCDoc.Order.Sets).GetLocAuth()
 </Server>
 </head>
 <body class="hisui-layout">
@@ -33,9 +42,12 @@
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
 		var ServerObj={
-			MenuAuthOrderOrgFav:"#(MenuAuthOrderOrgFav)#",
+			MenuAuthOrderOrgFav:#(MenuAuthOrderOrgFav)#,
+			HospMenuAuthOrderOrgFav:#(HospMenuAuthOrderOrgFav)#,
 			Type:"#(Type)#",
-			XCONTEXT:"#(XCONTEXT)#"
+			XCONTEXT:"#(XCONTEXT)#",
+			HospARCOSAuthority:#(HospARCOSAuthority)#,
+			LocARCOSAuthority:#(LocARCOSAuthority)#
 		};
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/Doc.OrdSavetoTemplate.hui.js"></script>

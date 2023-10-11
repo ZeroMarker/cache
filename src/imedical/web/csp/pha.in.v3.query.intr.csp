@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!--药库-台账查询
+	csp:pha.in.v3.query.intr.csp
+	js: pha/in/v3/query/intr.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+	<PHAPRINTCOM/>
+    <style type="text/css">
+    	.pha-con-toggle {
+	    	display: none;	
+	    }
+	    .pha-grid-a {
+			cursor:pointer;    
+		}
+    </style>
+
+</head>
+<body>
+	<div class="hisui-layout" fit="true" border="false">
+		<div data-options="region:'center'" class="pha-body" border="false">
+			<div class="hisui-layout" data-options="fit:true,border:false">   
+				<div data-options="region:'north',iconCls:'icon-paper',border:true,height:450,split:true,title:'台账查询',showCollapsedTitle:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+					<table id="gridIncItmLoc"></table>
+				</div> 
+				<div data-options="region:'center',title:'台账明细',iconCls:'icon-paper-info',border:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+					<table id="gridIntrDetail"></table>
+				</div> 
+			</div>
+		</div>
+	</div>
+	<div id="gridIncItmLocTool">
+		<table id="con-form" class="pha-con-table">
+			<tr>
+				<td class="r-label">
+					<label for="startDate"><span style="color:red">*</span>#(..Get("开始时间"))#</label>
+	            <td>
+	                <input class="hisui-datebox pha-datebox" id="startDate" data-pha="class:'hisui-datebox',query:true,clear:true" style="width:120px">
+	            </td>
+	            <td>
+	                <input class="hisui-timespinner pha-timespinner" id="startTime" data-pha="class:'hisui-timespinner',query:true,clear:true" showSeconds=true style="width:100px">
+	            </td>
+				<td class="r-label">
+		            <label for="locId"><span style="color:red">*</span>#(..Get("科室"))#</label>
+		        </td>
+		        <td>
+		            <input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="inciDesc">#(..Get("药品别名"))#</label>
+		        </td>
+		        <td >
+		            <input id="inciDesc" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td class="r-label">
+		            <label for="scg">#(..Get("类组"))#</label>
+		        </td>
+		        <td>
+		            <input id="scg" class="hisui-combobox" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+				<td>
+		            <input id="consumeFlag" class="hisui-checkbox" label="包含未发生业务" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+		        </td>
+		        <td>
+					<a id="btnFind" href="#" class="hisui-linkbutton" plain="false">查询</a>
+				</td>
+				
+			</tr>
+			<tr>
+		    	<td class="r-label">
+					<label for="endDate"><span style="color:red">*</span>#(..Get("截止时间"))#</label>
+	            <td>
+	                <input class="hisui-datebox pha-datebox" id="endDate" data-pha="class:'hisui-datebox',query:true,clear:true" style="width:120px">
+	            </td>
+	            <td>
+	                <input class="hisui-timespinner pha-timespinner" id="endTime" data-pha="class:'hisui-timespinner',query:true,clear:true" showSeconds=true style="width:100px">
+	            </td>
+		        <td class="r-label">
+		            <label for="businessType">#(..Get("业务类型"))#</label>
+		        </td>
+		        <td colspan=3>
+		            <input id="businessType" data-pha="class:'hisui-combobox',query:true,clear:true" style="width:500px;" />
+		        </td>
+		        <td class="r-label">
+		            <label for="stkCat">#(..Get("库存分类"))#</label>
+		        </td>
+		        <td>
+		            <input id="stkCat" data-pha="class:'hisui-combobox',query:true,clear:true" />
+		        </td>
+		        <td>
+		            <input id="aspFlag" class="hisui-checkbox" label="显示业务损益" type="checkbox" data-pha="class:'hisui-checkbox',query:true,clear:true" />
+		        </td>
+		       	<td>
+		       		<a id="btnClear" href="#" class="hisui-linkbutton" plain="false">清屏</a>
+				</td>
+				<td class="r-label">
+					<div id="queBtnToggle"><div id="togglePop"></div></div>
+				</td>
+		    </tr>	    
+		</table>
+    </div>
+    <!-- “更多”查询条件 -->
+	<csp:include page="pha.in.v3.query.com.component.csp">
+</body>
+	<script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-groupview.js"></script>	
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/com.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/component.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v3/query/intr.js"></script>
+</html>
+
+
+	

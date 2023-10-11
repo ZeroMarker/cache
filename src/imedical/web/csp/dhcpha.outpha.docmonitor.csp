@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <!--药师审核查询
-	csp:dhcpha.outpha.docmonitor.csp
-	js:scripts/pharmacy/outpha/dhcpha.outpha.docmonitor.js
+    csp:dhcpha.outpha.docmonitor.csp
+    js: scripts/pharmacy/outpha/dhcpha.outpha.docmonitor.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,17 +14,26 @@
     </title>
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI/>
+    
     <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <script language=javascript>
+        if (window.HISUIStyleCode == 'lite') {
+            $(function(){
+                $('body').append('<link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.lite.css"></link>');
+            });
+        }
+    </script>
     <style>
         .dialog-button {
             text-align: center;
         }
-		.window .window-header {
-		   border: none;
-		}
+        .window .window-header {
+           border: none;
+        }
     </style>
     <SERVER>
         s patNo=$Get(%request.Data("gPatNo",1)) 
+        s ordItmId=$Get(%request.Data("gOeori",1)) 
         s admId=$Get(%request.Data("EpisodeID",1)) 
         s userId=$G(%session.Data("LOGON.USERID")) 
         s ctCpId=$p($g(^SSU("SSUSR",userId)),"^",14) 
@@ -29,15 +41,16 @@
         i ctCpId'="" d 
         .s carPrvTpId=$p($g(^CTPCP(ctCpId,1)),"^",4) 
         .i carPrvTpId'="" d 
-		..s internalType=$p($g(^CT("CPT",carPrvTpId)),"^",4) 
-		..i internalType="DOCTOR" s ifDoctor="Y"
+        ..s internalType=$p($g(^CT("CPT",carPrvTpId)),"^",4) 
+        ..i internalType="DOCTOR" s ifDoctor="Y"
     </SERVER>
     <script language=javascript>
         var LoadPatNo = "#(patNo)#" || "";
+        var LoadOrdItmId= "#(ordItmId)#" || "";
         var LoadAdmId = "#(admId)#" || "";
         var LoadIfDoctor = "#(ifDoctor)#" || "";
         if (LoadAdmId != "") {
-            window.resizeTo(1000, 562);
+            window.resizeTo(1200, 562);
         }
     </script>
 </HEAD>
@@ -46,20 +59,24 @@
     <div class="hisui-layout" fit="true" border="false">
         <div data-options="region:'center',split:true,border:false,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
             <div class="hisui-layout" fit="true" border="false">
-                <div id="layoutNorth" data-options="region:'north',split:true,iconCls:'icon-panel-common-query',headerCls:'panel-header-gray',title:'药师审核查询',collapsible:false" class="dhcpha-north-r1">
+                <div id="layoutNorth" data-options="region:'north',split:true,iconCls:'icon-panel-common-query',headerCls:'panel-header-gray',title:'药师审核查询',collapsible:false" class="dhcpha-north-r1" style="overflow:hidden;">
                     <table class="dhcpha-north-tbl">
                         <tr>
                             <td>
-                                <label>#(..Get("开始日期"))#</label>
+                                <label for="dateStart" style="margin-right:5px;">#(..Get("开始日期"))#</label>
                                 <input id="dateStart" class="hisui-datebox" />
                             </td>
                             <td>
-                                <label>#(..Get("结束日期"))#</label>
+                                <label for="dateEnd" style="margin-right:5px;">#(..Get("结束日期"))#</label>
                                 <input id="dateEnd" class="hisui-datebox" />
                             </td>
                             <td>
-                                <label for="txtPatNo">登记号</label>
-                                <input id="txtPatNo" class="hisui-validatebox" />
+                                <label for="txtPatNo" style="margin-right:5px;">#(..Get("登记号"))#</label>
+                                <input id="txtPatNo" class="hisui-validatebox" style="border-radius: 2px;" />
+                            </td>
+                            <td>
+                                <label for="cmbStat" style="margin-right:5px;">#(..Get("状态"))#</label>
+                                <input id="cmbStat"/>
                             </td>
                             <td>
                                 <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" id="btnFind">查询</a>
@@ -88,24 +105,24 @@
             </tr>
         </table>
     </div>
-    <div id="appealWin" class="hisui-dialog" title="医生申诉" closed="true" style="width:700px;height:500px;"  data-options="iconCls:'icon-w-edit',modal:true,
-	buttons:[{
-		text:'确定',
-		handler:function(){
-			SaveAppeal();
-		}
-	},{
-		text:'取消',
-		handler:function(){
-			$('#appealWin').window('close');
-		}
-	}]">
+    <div id="appealWin" class="hisui-dialog" title="医生申诉" closed="true" style="width:700px;height:520px;"  data-options="iconCls:'icon-w-edit',modal:true,
+        buttons:[{
+            text:'确定',
+            handler:function(){
+                SaveAppeal();
+            }
+        },{
+            text:'取消',
+            handler:function(){
+                $('#appealWin').window('close');
+            }
+        }]">
         <div class="hisui-layout" data-options="fit:true" border="false">
-            <div data-options="region:'center'" class="dhcpha-hisui-container">
+            <div data-options="region:'center'" class="dhcpha-hisui-container pha-dialog-padding-bottom">
                 <div class="hisui-layout" data-options="fit:true" border="false">
                     <div data-options="region:'north',split:true,collapsible:false,height:200" border="false">
                         <div class="hisui-layout" data-options="fit:true">
-                            <div data-options="region:'center',headerCls:'panel-header-gray'" style="border:#D0CDC7 1px solid">
+                            <div data-options="region:'center',headerCls:'panel-header-gray'" style="border:#e2e2e2 1px solid">
                                 <table id="gridReason"></table>
                             </div>
                         </div>
@@ -114,8 +131,8 @@
                         <div id="txtNotes">
                         </div>
                     </div>
-                    <div data-options="region:'south',split:true,height:125" style="overflow:hidden;border:#D0CDC7 1px solid">
-                        <textarea id="txtAppeal" style="height:100%;width:100%;overflow:hidden;border:none" placeholder="请输入申诉内容..."></textarea>
+                    <div data-options="region:'south',split:true,height:125,border:false" style="overflow:hidden;">
+                        <textarea id="txtAppeal" class="validatebox-text" style="height: calc(100% - 8px); width: calc(100% - 8px); overflow: hidden; border-radius: 4px;" placeholder="#(..Get("请输入申诉内容"))#"></textarea>
                     </div>
                 </div>
             </div>

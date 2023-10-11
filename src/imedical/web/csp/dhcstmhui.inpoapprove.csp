@@ -1,8 +1,8 @@
 ﻿<!--订单验收-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
 </csp:method>
 <html lang="zh-CN">
 <SERVER>
@@ -18,24 +18,23 @@
 	<div data-options="region:'center',border:false" class="GridPadding">
 		<div class="hisui-panel" data-options="title:'订单',headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
 			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',border:false">
-					<table id="MainConditions" class="Condition">
+				<div data-options="region:'north',border:false,collapsible:false">
+					<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 						<input id="Inci" name="Inci" type="hidden">
 						<tr>
 							<td><label class="required">*</label><label>开始日期</label><input id="StartDate" name="StartDate" class="textbox hisui-datebox"></td>
 							<td><label>请求科室</label><input id="ReqLoc" name="ReqLoc" class="textbox hisui-combobox"></td>
 							<td><label>订单号</label><input id="PoNo" name="PoNo" class="textbox"></td>
-							<td>取消原因</td>
-							<td><input id="CancelReason" name="CancelReason" class="textbox hisui-combobox" style="width: 95px;"></td>
+							<td><label>取消原因</label><input id="CancelReason" name="CancelReason" class="textbox hisui-combobox" style="width: 95px;"></td>
 							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
 							<td><a href="#" id="DenyBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" style="width: 100px;">拒绝</a></td>
+							<td><a href="#" id="EvaluateBT" class="hisui-linkbutton">供应商评价</a></td>
 						</tr>
 						<tr>
 							<td><label class="required">*</label><label>截止日期</label><input id="EndDate" name="EndDate" class="textbox hisui-datebox"></td>
 							<td><label>供应商</label><input id="Vendor" name="Vendor" class="textbox hisui-combobox"></td>
 							<td><label>验收状态</label><input id="ApproveFlag" name="ApproveFlag" class="textbox hisui-simpleCombobox"></td>
-							<td>包含已取消</td>
-							<td style="text-align:left" class="CkPadding"><input id="IncludeCancelInPo" name="IncludeCancelInPo" class='hisui-checkbox' type="checkbox" value="Y"></td>
+							<td style="text-align:left" class="CkPadding"><input id="IncludeCancelInPo" name="IncludeCancelInPo" class='hisui-checkbox' type="checkbox" value="Y" label="包含已取消"></td>
 							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
 							<td><a href="#" id="CancelBT" class="hisui-linkbutton" style="width: 100px;">取消订单</a></td>
 						</tr>
@@ -43,10 +42,9 @@
 							<td><label class="required">*</label><label>订单科室</label><input id="PoLoc" name="PoLoc" class="textbox hisui-combobox"></td>
 							<td><label>物资名称</label><input id="InciDesc" name="InciDesc" class="textbox"></td>
 							<td><label>随行单号</label><input id="SxNo" name="SxNo" class="textbox"></td>
-							<td>包含支配科室</td>
-							<td style="text-align:left" class="CkPadding"><input id="DefLocPP" name="DefLocPP" class='hisui-checkbox' type="checkbox" value="Y"></td>
+							<td style="text-align:left" class="CkPadding"><input id="DefLocPP" name="DefLocPP" class='hisui-checkbox' type="checkbox" value="Y" label="包含支配科室"></td>
 							<td><a href="#" id="ApproveBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">验收</a></td>
-							<td><a href="#" id="EvaluateBT" class="hisui-linkbutton">供应商评价</a></td>
+							<td><a href="#" id="CalApproveBT" class="hisui-linkbutton" style="width: 100px;">取消验收</a></td>
 						</tr>
 					</table>
 				</div>
@@ -61,21 +59,20 @@
 			<table id="PoDetailGrid"></table>
 		</div>
 	</div>
-	
 	<!--供应商评价Dialog-->
 	<div id="VendorEvaluateWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="供应商评价"
-		style="width:710px;">
+		style="width:720px;">
 		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'center',border:false" style="padding: 10px 10px 0px 10px;">
-				<div class="hisui-panel panel-header-gray" title="" data-options="fit:true,bodyCls:'panel-body-gray'">
+			<div data-options="region:'center',border:false" class="GridPadding" style="padding-bottom:0px">
+				<div class="hisui-panel NonBarGrid" data-options="fit:true,bodyCls:'panel-body-gray'">
 					<table id="EvaluateGrid"></table>
 				</div>
 			</div>
 			<div data-options="region:'south',border:false">
 				<table class="Condition" align="center">
 					<tr>
-						<td><a href="#" id="SaveBT" class="hisui-linkbutton">保存</a></td>
-						<td><a href="#" id="SubmitBT" class="hisui-linkbutton">提交</a></td>
+						<td><a href="#" id="VSaveBT" class="hisui-linkbutton">保存</a></td>
+						<td><a href="#" id="VSubmitBT" class="hisui-linkbutton">提交</a></td>
 					</tr>
 				</table>
 			</div>

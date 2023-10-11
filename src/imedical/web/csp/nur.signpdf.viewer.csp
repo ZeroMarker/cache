@@ -1,0 +1,93 @@
+<html>
+	<head>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+	<script language="cache" runat="server">
+		s yourBusinessID  = $Get(%request.Data("yourBusinessID",1),"")
+		s codeBase = "../service/DHCMG/EMRPDFViewer.cab#version=1,0,4"
+		d ##class(Nur.Util.Tools).tkMakeServerCall()
+   </script>
+	<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script> 
+	<script type='text/javascript'> 
+		var yourBusinessID='#(yourBusinessID)#';
+    	var pdfBase64 = "";
+    	//值域： 空值\A4\A5\B5，空值默认为A4
+    	var pageSize = "A4"; 	
+		//获取PDF的Base64数据
+		function getPDFBase64() {
+			//根据yourBusinessID获取PDF的Base64数据
+			var reMsg = "";
+			var reMsg = $m({
+            ClassName: "NurMp.CA.DHCNurPatSignAjax",
+            MethodName: "GetImage",
+            action: "viewPDFBase64",
+            yourBusinessID:yourBusinessID
+        	}, false, function (rtn) {
+            console.log("获取图片失败!");
+        	});	
+			return reMsg; 
+		} 
+		//浏览PDF的Base64
+		function viewPDFBase64() { 
+		    pdfBase64 = getPDFBase64();
+		    
+		    document.getElementById("emrPDFViewer").ShowErrorMsg = true;
+			var flag = document.getElementById("emrPDFViewer").ViewBase64(pdfBase64,pageSize);
+			document.getElementById("emrPDFViewer").focus(); //为了鼠标滚动生效
+		    return flag;
+		}
+		//打印当前已加载的PDF
+		function printPDF() {
+			document.getElementById("emrPDFViewer").Print();
+		}
+		//打印PDF的Base64
+		function printPDFBase64() {
+			pdfBase64 = getPDFBase64();
+			document.getElementById("emrPDFViewer").PrintBase64(pdfBase64, pageSize);
+		}
+		function onLoad() {
+			//自适应宽高
+			var pdfFrame = undefined;
+			if (window.parent.frames.length > 0) 
+			{
+				$.each($(window.parent.document).find('iframe'), function (i, frame) 
+				{
+			    	if (!!$(frame).attr("id") && $(frame).attr("id") == "pdfFrame") 
+			    	{
+			        	pdfFrame = frame;
+			        }
+			    });
+			}
+			if (pdfFrame) 
+			{
+				var pdfFrameHeight = $(window.parent.document).find(pdfFrame).height();
+				var scrollBarWidth = window.parent.getScrollBarWidth();
+				var btnsAreaHeight = $("#btnsArea").outerHeight(true);
+				$("#emrPDFViewer").height(pdfFrameHeight - btnsAreaHeight - scrollBarWidth - 6);
+			}
+			//如果需要，可以页面自动加载你的PDF
+			viewPDFBase64();
+		}	
+		</script>
+	</head>
+	<body onload='onLoad()'> 
+      	<div height='30px' id='btnsArea'>
+    		<table cellpadding="10" style="text-align:center; margin:0px auto;"> 
+                <tr>
+					<td>
+                    	<a id='confirm1' href="#" class="hisui-linkbutton"  style='font-size:24px;' onclick='viewPDFBase64();'>刷新PDF</a>
+                    </td>
+                    <td>
+                    	<a id='confirm2' href="#" class="hisui-linkbutton"  style='font-size:24px;display:none;' onclick='printPDF();'>打印当前已加载的PDF</a>
+                    </td>
+					<td>
+						<a id='confirm3' href="#" class="hisui-linkbutton"  style='font-size:24px;' onclick='printPDFBase64();'>打印PDF</a>
+                    </td>
+				</tr>
+           </table>
+    	</div>
+    	<div>
+    		<object id='emrPDFViewer' name='emrPDFViewer' width='100%' height='100%' classid='clsid:3950CF56-A5F8-4742-9076-8736C3D28EE3' codebase='#(codeBase)#'></object>
+        </div>     
+    </body>
+</html>

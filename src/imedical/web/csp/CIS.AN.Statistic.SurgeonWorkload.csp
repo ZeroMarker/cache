@@ -3,7 +3,9 @@
 <head>
 <title>手术医生工作量统计</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
 <dhcclinic:head></dhcclinic:head>
 <script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
 <script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
@@ -11,15 +13,28 @@
 <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
 </head>
 <body class="hisui-layout">
-	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+	<div id="dataTools">
     	<form id="conditionForm">
-    		<label style="padding-left:5px;">开始日期</label>
-    		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
-    		<label style="padding-left:5px;">结束日期</label>
-    		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
-    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
-    		<!--<a id="btnExcel" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-export'">导出</a>-->
-    		<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'">打印</a>
+    		<div class="form-row-group">
+     			<div class="form-rows">
+     				<div class="form-row" style="margin:9px 10px 9px 8px;">
+     					<div class="form-title-right4">开始日期</div>
+		    			<span class="form-item">
+		    				<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox"/>
+		    			</span>
+     					<div class="form-title-right4">结束日期</div>
+		    			<span class="form-item">
+		    				<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox"/>
+		    			</span>
+		    			<span class="form-btn">
+		    				<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
+		    			</span>
+		    			<span class="form-btn">
+    						<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'">打印</a>
+		    			</span>
+    				</div>
+    			</div>
+    		</div>
     	</form>
     </div>
     <div data-options="region:'center',title:'',headerCls:'panel-header-gray',border:false ">
@@ -31,17 +46,30 @@
 		$(document).ready(function() {
 			var date=new Date();
 			var month=date.getMonth();
-			date.setMonth(month-1);
-			date.setDate(1);
+			date.setMonth(month-1,1);
+			//date.setDate(1);
 			var lastMonthFirstDay = date;
 			
 			var date=new Date();
 			date.setDate(0);
 			var lastMonthLastDay = date;
 			
-    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
-    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
-    	
+    		dhccl.parseDateFormat();
+            var ret=dhccl.runServerMethod("web.DHCClinicCom","GetDateFormat");
+              if(ret.result=="j/n/Y") 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("dd/MM/yyyy");
+	            var lastMonthLastDay=lastMonthLastDay.format("dd/MM/yyyy");
+	        
+	        }
+	        else 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("yyyy-MM-dd");
+	            var lastMonthLastDay=lastMonthLastDay.format("yyyy-MM-dd");
+		        }
+		     $("#OperStartDate").datebox("setValue", lastMonthFirstDay);
+    		 $("#OperEndDate").datebox("setValue", lastMonthLastDay);
+    		
     		var datagrid = $("#data_grid");
     		datagrid.datagrid({
         		idField: "RowId",
@@ -49,7 +77,7 @@
         		rownumbers: true,
         		remoteSort: false,
         		singleSelect:true,
-        		striped:true,
+        		striped:false,
         		title: "",
         		nowrap: true,
         		border:false,

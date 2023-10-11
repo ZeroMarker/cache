@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液大类维护
-	csp:dhcpha.pivas.orderlink.csp
-	js: scripts/pharmacy/pivas/orderlink.js
+<!--
+    配液大类维护
+	csp: csp/dhcpha.pivas.orderlink.csp
+	js:  scripts/pharmacy/pivas/orderlink.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,107 +16,121 @@
     </title>
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+    <style>
+        .pha-col-label {
+            width: 5em;
+            text-align: right;
+        }
+
+        .pha-body {
+            background-color: #fff;
+        }
+
+        .layout {
+            background-color: #fff;
+        }
+    </style>
 </HEAD>
 
-<body style="background:white">
-    <div class="dhcpha-win-mask">
-        <img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-    </div>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true">
                 <div data-options="region:'west',width:350,title:'配液大类维护',headerCls:'panel-header-gray',iconCls:'icon-panel-orderlink',split:true,collapsible:false">
                     <table id="gridOrderLink"></table>
                 </div>
-                <div data-options="region:'center',title:'配液大类规则',headerCls:'panel-header-gray',iconCls:'icon-panel-orderlink-fx'">
+                <div data-options="region:'center',title:'配液大类规则',headerCls:'panel-header-gray',iconCls:'icon-panel-orderlink-fx'" style="border-right:0">
                     <div class="hisui-layout" fit="true" border="false">
-                        <div data-options="region:'west',width:250,border:false,split:true" style="border-right:1px solid #ccc">
+                        <div data-options="region:'west',width:300,border:false,split:true" style="border-right:1px solid #ccc">
                             <table id="gridPivasCat"></table>
                         </div>
                         <div data-options="region:'center',border:false" style="border-right:1px solid #ccc;border-left:1px solid #ccc;">
-                            <table id="gridInstruct"></table>
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'west',width:300,border:false,split:true" style="border-right:1px solid #ccc;">
+                                    <div style="border-bottom:1px solid #ccc;">
+                                        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveLiquid">保存</a>
+                                    </div>
+                                    <div style="padding:10px">
+                                        <div class="hisui-panel" title="液体量（ml）" data-options="headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+                                            <div class="pha-row">
+                                                <div class="pha-col pha-col-label">
+                                                    #(..Get("最小液体量"))#
+                                                </div>
+                                                <div class="pha-col">
+                                                    <input id="txtPolMinVol" type="text" class="hisui-numberbox" data-options="width: 170" />
+                                                </div>
+                                            </div>
+                                            <div class="pha-row">
+                                                <div class="pha-col pha-col-label">
+                                                    #(..Get("最大液体量"))#
+                                                </div>
+                                                <div class="pha-col">
+                                                    <input id="txtPolMaxVol" type="text" class="hisui-numberbox" data-options="width: 170" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top:10px"></div>
+                                        <div class="hisui-panel" title="年龄（岁）" data-options="headerCls:'panel-header-gray'">
+                                            <div class="pha-row">
+                                                <div class="pha-col pha-col-label">
+                                                    #(..Get("最小年龄"))#
+                                                </div>
+                                                <div class="pha-col">
+                                                    <input id="txtPolMinAge" type="text" class="hisui-numberbox" data-options="width: 170" />
+                                                </div>
+                                            </div>
+                                            <div class="pha-row">
+                                                <div class="pha-col pha-col-label">
+                                                    #(..Get("最大年龄"))#
+                                                </div>
+                                                <div class="pha-col">
+                                                    <input id="txtPolMaxAge" type="text" class="hisui-numberbox" data-options="width: 170" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',border:false" style="border-left:1px solid #ccc;">
+                                    <table id="gridInstruct"></table>
+                                </div>
+                            </div>
                         </div>
-                        <div data-options="region:'east',width:300,border:false,split:true" style="border-left:1px solid #ccc;">
-                            <table id="gridLiquid">
-                                <tr>
-                                    <td>
-                                        最小下限量<input id="txtPolMinVol" type="text" class="hisui-validatebox" style="width:160px;margin-left:10px" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        最大上限量<input id="txtPolMaxVol" type="text" class="hisui-validatebox" style="width:160px;margin-left:10px" />
-                                    </td>
-                                </tr>
 
-                            </table>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div id="gridOrderLinkBar">
-        <table cellspacing=0 cellpadding=0>
+        <table class="pha-con-table">
             <tr>
                 <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">增加</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelete">删除</a>
+                    <label id="_HospListLabel" style="display: none;">#(..Get("医院"))#</label>
+                    <input id="_HospList">
                 </td>
             </tr>
         </table>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-translate-word" id="btnTranslate">翻译</a>
+        </div>
     </div>
     <div id="gridPivasCatBar">
-        <table cellspacing=0 cellpadding=0>
-            <tr>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPoli">增加</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSavePoli">保存</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelPoli">删除</a>
-                </td>
-            </tr>
-        </table>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPoli">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSavePoli">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelPoli">删除</a>
     </div>
     <div id="gridInstructBar">
-        <table cellspacing=0 cellpadding=0>
-            <tr>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPols">增加</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSavePols">保存</a>
-                </td>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelPols">删除</a>
-                </td>
-            </tr>
-        </table>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPols">新增</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSavePols">保存</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelPols">删除</a>
     </div>
-
-    <div id="gridLiquidBar">
-        <table cellspacing=0 cellpadding=0>
-            <tr>
-                <td>
-                    <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveLiquid">保存</a>
-                </td>
-            </tr>
-        </table>
-        </span>
-    </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/orderlink.js"></script>
 </body>

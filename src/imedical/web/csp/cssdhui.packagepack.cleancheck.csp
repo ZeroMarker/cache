@@ -1,8 +1,8 @@
 ﻿<!--验收-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-	i ##Class(websys.SessionEvents).SessionExpired() q 1
-	q 1
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -12,52 +12,95 @@
 	<CSSDHISUI/>
 
 </head>
-<body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:10px">
-		<div class="hisui-panel" data-options="title:'清洗信息验收',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
-			<div id="UomTB">
-				<table class="Condition" id="cleantable">
-					<input id="cleantypev" name="cleantypev" type="hidden">
-					<input id="cleanCodev" name="cleanCodev" type="hidden">
-					<input id="cleanStrov" name="cleanStrov" type="hidden">
-					<input id="Iscmt" name="Iscmt" type="hidden">
-					<tr>
-						<td>开始日期
-							<input id="FStartDate" name="FStartDate" class="hisui-dateboxq textbox" style="width:120px"></input>
-						</td>
-						<td align="left" style="padding-left:30px">结束日期
-							<input id="FEndDate" name="FEndDate" class="hisui-dateboxq textbox" style="width:120px"></input>
-						</td>
-						<td style="padding-left:30px">
-							<a href="#" id="checknpass" class="hisui-linkbutton">验收不合格</a>
-						</td>
-					</tr>
-					<tr>
-						<td style="text-align:left">清洗机号
-							<input id="cleanmachine" name="cleanmachine" class="textbox" style="width:113px"></input>
-						</td>
-						<td style="padding-left:30px">
-							<a href="#" id="query" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-							<a href="#" id="check" class="hisui-linkbutton">验收合格</a>
-							
-						</td>
-					</tr>
-				</table>
+<body id="Layout" class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',headerCls:'panel-header-gray',split:true,border:false" style="padding-right:0px">
+		<div class="hisui-panel" data-options="title:'清洗验收',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false,collapsible:false">
+					<table class="Condition" id="cleantable" onkeydown="if(event.keyCode==13){query.click()}">
+						<input id="Iscmt" name="Iscmt" type="hidden">
+						<tr>
+							<td>
+								<label>清洗科室</label><input class="textbox hisui-combobox" id="CleanLoc" name="CleanLoc" style="width:114px">
+							</td>
+							<td>
+								<label>起始日期</label><input id="StartDate" name="StartDate" class="hisui-datebox textbox" style="width:114px">
+							</td>
+							<td>
+								<label>截止日期</label><input id="EndDate" name="EndDate" class="hisui-datebox textbox" style="width:114px">
+							<td>
+								<a href="#" id="Query" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="width:100px">查询</a></td>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>清洗机</label><input id="CleanMachine" name="CleanMachine" class="textbox hisui-combobox" style="width:114px">
+							</td>
+							<td>
+								<label>验收时间</label><input id="CheckTime" name="CheckTime" class="textbox hisui-timespinner" data-options="showSeconds:true" style="width:114px">
+							</td>
+							<td>
+								<label>不合格原因</label><input id="UnqualifiedReason" name="UnqualifiedReason" class="textbox hisui-combobox" style="width:114px">
+							</td>
+							<td>
+								<a href="#" id="CheckNPass" class="hisui-linkbutton" style="width:100px">验收不合格</a>
+							</td>
+						</tr>
+						<tr>
+							<td colspan=2 style="text-align:left">
+								<label>匹配文件</label><input class="hisui-filebox" id="FileSel" name="FileSel" data-options="width:180,buttonText:'',buttonIcon:'icon-folder',plain:true,prompt:'请选择文件'">&nbsp;&nbsp;
+								<a href="#" id="FileMatchBT" class="hisui-linkbutton" style="width:115px;text-align:right">机器文件匹配</a>
+							</td>
+							<td>
+								<label>验收人</label><input id="Checker" name="Checker" class="textbox hisui-combobox" style="width:114px">
+							</td>
+							<td>
+								<a href="#" id="ViewPicBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:100px">图片</a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<label>清洗方式</label><input id="CleanType" name="CleanType" class="textbox hisui-combobox" style="width:114px">
+							</td>
+							<td colspan=2 >
+								<input class='hisui-radio' type="radio" label='全部' name='CleanState' value='' data-options="checked:true">
+								<input class='hisui-radio' type="radio" label='未验收' name='CleanState' value='2'>
+								<input class='hisui-radio' type="radio" label='合格' name='CleanState' value='1'>
+								<input class='hisui-radio' type="radio" label='不合格' name='CleanState' value='0'>
+								<a href="#" id="TakePhotoBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:100px">拍照</a>
+							</td>
+							<td >
+								<a href="#" id="CancelBT" class="hisui-linkbutton" style="width:100px">取消验收</a>
+							</td>
+						</tr>
+						<tr>
+							<td colspan=3>
+								<a href="#" id="ClearBT" class="hisui-linkbutton" style="width:100px">清屏</a>
+							</td>
+							<td>
+								<a href="#" id="Check" class="hisui-linkbutton" style="width:100px">验收合格</a>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="tabDrugList"></table>
+				</div>
 			</div>
-			<table id="tabDrugList"></table>
 		</div>
 	</div>
-	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:630px;padding-left:0px">
-		<div class="hisui-panel" data-options="title:'清洗明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" style="padding-bottom:10%">
-			<table class="Condition" hidden>
-				<tr>
-					<td><label>不合格原因</label><input id="UnqualifiedReason" class="textbox hisui-combobox" style="width:140px"></td>
-					<td style="padding-left:30px"><a href="#" id="CheckFailBT" class="hisui-linkbutton" style="width:100px;">验收不合格</a></td>
-				</tr>
-			</table>
-			<table id="ItemList"></table>
+	<div class="GridPadding" data-options="title:'',region:'east',border:false,headerCls:'panel-header-gray'" style="width:480px;padding-left:10px;">
+		<div class="hisui-panel" data-options="title:'清洗明细',iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true" >
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'center',border:false">
+					<table id="ItemList"></table>
+				</div>
+			</div>
 		</div>
-	</div>	
+	</div>
+	
+	<CSP:INCLUDE PAGE="cssdhui.packagesterilize.sterilizechart.csp">
+	<CSP:INCLUDE PAGE="cssdhui.commonfile.csp"> 
 	<script type="text/javascript" src="../scripts/cssd/Clean/CleanCommon.js"></script>
 	<script type="text/javascript" src="../scripts/cssd/Clean/CleanCheck.js"></script>
 </body>

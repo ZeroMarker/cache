@@ -1,0 +1,48 @@
+<style>
+.helpInfo{position: relative;}
+.helpInfo>.helpFlag{font-size: 0;width: 58px;height: 18px;}
+.helpInfo>.helpFlag>span.icon{display: inline-block;width: 18px;}
+.helpInfo>.helpDetail{position: absolute;border-radius: 4px;z-index: 10;overflow: visible;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);background: #fff;border: 1px solid #cccccc;padding: 10px;width: 300px;right: -12px;top: 25px;display: none;}
+.helpInfo:hover>.helpDetail{display: block;}
+.helpInfo>.helpDetail:after {position: absolute;content: "";width: 10px;height: 10px;border-left: 1px solid #cccccc;border-top: 1px solid #cccccc;transform: rotate(45deg);background: white;top: -6px;right: 15px;}
+.helpInfo>.helpDetail>p {line-height: 20px;overflow: hidden;display: flex;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+.helpInfo>.helpDetail>p>i.dot {margin-top: 5px;}
+.helpInfo>.helpDetail>p>span{text-align: left;flex: 1;}
+</style>
+<table cellpadding="0" style="display: inline-block;" id="bgWarn">
+  <tr>
+		<td class="r-label">
+      <div class="helpInfo">
+        <a href="javascript:void(0);" class="helpFlag">
+          <span class="icon icon-help">&nbsp;</span>
+        </a>
+        <div class="helpDetail">
+        </div>
+      </div>
+		</td>
+  </tr>
+</table>
+<script type="text/javascript">
+// 获取血糖预警配置
+$cm({
+    ClassName: 'Nur.NIS.Service.VitalSign.BloodGlucoseCfg',
+    QueryName: 'GetBGWarn',
+    rows: 999999999999999,
+    hospDR: session['LOGON.HOSPID']
+}, function (data) {
+	data=data.rows;
+	console.log(data);
+	warnCondition=data.filter(function(e) {
+		return 'R'==e.type; //取高危的数据
+	});
+	warnCondition.map(function(e,i) {
+		if ('R'==e.type) { //取高危的数据
+  		// var item='<span class="severity" onclick="toggleStatus(this,'+i+');" style="color: '+e.color+';border: 1px solid '+e.color+';">'+e.name+'</span>';
+  		// $("#bgWarn tr td:eq(0)").append(item);
+  		var detail='<p><i class="dot" style="background: '+e.color+';"></i><span>'+e.variableDesc+e.docMeasure+'</span></p>';
+  		$("#bgWarn .helpDetail").append(detail);
+		}
+	});
+});
+</script>

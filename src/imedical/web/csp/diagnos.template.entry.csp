@@ -1,0 +1,60 @@
+<!--diagnos.template.entry.csp--> 
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<script type="text/javascript" src="../scripts_lib/mary-btnbar/marybtnbar.js"></SCRIPT>
+<link rel="stylesheet" type="text/css" href="../scripts_lib/mary-btnbar/marybtnbar.css"/>
+<script type="text/javascript" src="../scripts/dhcdoc/common/hui.ext.js"></SCRIPT>
+<Server>
+	s TemplateRegion=$G(%request.Data("TemplateRegion",1))
+	s:(TemplateRegion="")&&(EpisodeID="") TemplateRegion="west"
+	s bodySpace=$SELECT(TemplateRegion="window":10,1:0)
+</Server>
+<style>
+	.datagrid>.panel-body.panel-body-noheader{
+		border-radius: 0px;
+	}
+    body {
+        background: #fff;
+    }
+</style>
+</head>
+<body>
+	<div class="hisui-panel" data-options="fit:true,border:true,bodyCls:'panel-body-gray',onResize:function(){if($('#layoutMain').hasClass('layout')) $('#layoutMain').layout('resize')},style:{'padding':'#(bodySpace)#px'}" >
+		<div id="layoutMain" class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',collapsible:false,border:false," style="height:46px;padding-left:10px;border-bottom:1px dashed #ddd;overflow:hidden;">
+				<div id="kwFavType" style="margin:5px 5px 5px 0"></div>
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-batch-cfg',onClick:FavEditClick" style="position:absolute;top:5px;right:5px;">诊断模板维护</a>
+			</div>
+			<div data-options="region:'center',border:false,onResize:function(){if($('#layoutFav').hasClass('layout')) $('#layoutFav').layout('resize');}">
+				<div id="layoutFav" class="hisui-layout" data-options="fit:true">
+					<div data-options="region:'north',collapsible:false,border:false,bodyCls:'panel-body-gray'" style="height:44px;padding:3px 0px;border-bottom:1px solid #ddd;">
+						<div id="FavCatBar"></div>
+					</div>
+					<div data-options="region:'center',border:false">
+						<table id="tabFav"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	var ServerObj={
+		CONTEXT:'#($G(%request.Data("CONTEXT",1)))#',
+		EpisodeID:'#($G(%request.Data("EpisodeID",1)))#',
+		FavAuth:{
+			'User.CTHospital':#(##class(DHCDoc.Diagnos.Fav).GetHospAuth())#,
+			'User.CTLoc':#(##class(DHCDoc.Diagnos.Fav).GetLocAuth())#,
+			'User.SSUser':1		//个人始终有权限,不取菜单配置
+		},
+		SDSDiagEntry:#(##class(web.DHCDocDiagnosEntryV8).GetSDSDiagEntryFlag(%session.Data("LOGON.CTLOCID")))#
+	};
+</script>
+<script type="text/javascript" src="../scripts/dhcdoc/diagnos.template.entry.js"></script>
+</html>

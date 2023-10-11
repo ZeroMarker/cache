@@ -1,0 +1,189 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	
+    s id = $G(%request.Data("id", 1))
+    s ShiftBookID = $G(%request.Data("ShiftBookID", 1))
+    s DataSource = $G(%request.Data("DataSource", 1))
+    s hospID=$G(%request.Data("hospID", 1))
+	
+</script>
+<script language="javascript">
+       var id="#(id)#";
+	   var ShiftBookID="#(ShiftBookID)#";
+	   var DataSource="#(DataSource)#";
+	   var hospID="#(hospID)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<div class="hisui-panel" title="基本配置" style="" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="shiftTable" style="width:100%">
+		</table>
+	</div>
+	
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+
+<script type="text/javascript">
+
+
+var entity=""
+var xcTopContors=""
+var xcChange={}
+var json={
+	control:function(){
+		var controlArrs=[
+			{'id':'DictDescription','type':'text','title':'描述','required':'true','style':'width:300px;'},
+			{'id':'DictType','type':'text','title':'类型','required':'true','style':'width:300px;'},
+			{'id':'DictLabel','type':'text','title':'标签名','required':'true','style':'width:300px;'},
+			{'id':'DictValue','type':'text','title':'数据值','required':'true','style':'width:300px;'},
+			
+			{'id':'DictSort','type':'text','title':'排序','required':'true','style':'width:300px;'},
+		]
+		
+		
+		return controlArrs
+	},
+	create:function(tableID){
+		var controlArrs=json.control()
+		for(var i=0;i<controlArrs.length;i++){
+			var key = controlArrs[i].id
+			createInputHtml(tableID,controlArrs,key,0)
+		}
+	},
+	setValue:function(id,className,methodName){
+		runClassMethod(className,methodName,{id:id},function(rtn){
+			entity=rtn
+		},'json',false);
+	},
+}
+
+
+$(function(){
+	$('body').addClass('active')
+	if(id!=""){
+		json.setValue(id,"Nur.SHIFT.Config.ShiftDict","GetShiftDictByID")
+	}
+	json.create("shiftTable")
+	
+})
+function saveFunLib(type){
+	//return json.save(id,"Nur.SHIFT.Config.ShiftDict","InsertShiftClass")
+	var parms = ""
+	var controlArrs=json.control()
+	var topParms = resultParms(controlArrs)
+	var downParms = ""
+	var rsTxt=""
+	if(topParms!=""){
+		var rtnParms=setAllParms([parms,topParms,downParms])
+		rtnParms.id=id
+		if(type==2){
+			rtnParms.id=""
+		}
+		runClassMethod("Nur.SHIFT.Config.ShiftDict","InsertShiftDict",{data:JSON.stringify(rtnParms)},function(rtn){
+			if(rtn == 0) {
+				
+			} else if(rtn == 1){
+				//$.messager.alert('提示','保存失败！'+ rtn , "info");
+				rsTxt = "保存失败！"
+			}else if(rtn == 2){
+				rsTxt = "报错失败，存在相同的组名"
+			}
+			
+		
+		},'json',false);
+	
+		
+	}else{
+		rsTxt = "保存失败,存在必填项为空！"
+	}
+	return rsTxt
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

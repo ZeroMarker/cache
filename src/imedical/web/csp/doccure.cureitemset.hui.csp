@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<ADDINS require="CmdShell"></ADDINS>
 <HISUI></HISUI>
 <link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
 <STYLE type='text/css'>
@@ -21,7 +22,7 @@ body{
 	text-align: center;
 	padding: 0px; 
 }
-.form_table,.plan_table{
+.form_table,.plan_table,.crt_table{
 	border-collapse:separate;
 	border-spacing:0px 10px;
 }
@@ -33,20 +34,30 @@ textarea{
 	height:80px;
 	border-color:#40a2de
 }
-#tree_panel ul{
-	list-style-type: none;
-	display: flex; 
-	flex-wrap: wrap
-	justify-content: flex-start;
-	align-items: center;
+.t-hidden{
+	display:none	
 }
 </STYLE> 
 <Server>
-s DocCureUseBase=+(##class(web.DHCDocConfig).GetConfigNode("DocCureUseBase"))
+s DocCureUseBase=+(##class(DHCDoc.DHCDocCure.VersionControl).UseBaseControl(%session.Get("LOGON.HOSPID")))
 </Server>
 </head>
 <body class="hisui-layout" data-options="fit:true,border:false">
 	<csp:Include Page="doccure.cureitemset.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			pageCode:"doccure.cureitemset.hui.csp",
+			pageName:"治疗项目设置",
+			ProductLine:"Cure",
+			parentPageCode:"",
+			parentPageName:"",
+			MainCSPIsLink:"N",
+			domSelectors:".textbox^.hisui-switchbox",
+			domNotSelectors:"#Check_QueryAll"
+		};
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/tools/pageDom.js"></script>
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcapp/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/common/common.js"></script>

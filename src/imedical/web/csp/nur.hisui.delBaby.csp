@@ -1,48 +1,25 @@
-<csp:method name=OnPreHTTP
-            arguments=""
-            returntype=%Boolean>
-    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
-    q 1
-</csp:method>
-<script language="cache"
-        runat="SERVER">
-            s EpisodeID = $G(%request.Data("EpisodeID", 1))
-            s now=$zd(+$h,3)
-        </script>
+<!DOCTYPE html>
+<!--nur.hisui.delBaby.csp 报产查询--> 
 <HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<ADDINS require="CmdShell"/>
+<style>
+table{
+	text-align:inherit;
+}
 
-<head>
-    <meta http-equiv="Content-Type"
-          content="text/html; charset=utf-8">
-    <title>
-        <EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
-    </title>
-    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-    <HISUI/>
-    <script type="text/javascript"
-            src="../scripts/DHC.WMR.PinYinHead.js"></script>
-    <script type="text/javascript"
-            src="../scripts/nurse/hisui/utils.js"></script>
-    <script type="text/javascript"
-            src="../scripts/nurse/hisui/delBabySearch.js"></script>
-    <STYLE type='text/css'>
-        body {
-            background-color: #fff;
-        }
-        table{
-        	text-align:inherit;
-        }
-
-        form table td, form table th{
-        	padding:0;
-        }
+form table td, form table th{
+	padding:0;
+}
 .datagrid-wrap.panel-body.panel-body-noheader {
 	
     border-width:0!important;
-}
-.hisui-panel.panel-body.panel-body-noheader.panel-noscroll{
-	
-	border-color: #ccc!important;
 }
 .datagrid-toolbar{
 	height:32px;
@@ -54,19 +31,30 @@ td .l-btn.l-btn-small.l-btn-plain{
 td .combo.datebox{
 	width:123px !important;
 }
-    </STYLE>
+#sum {
+	font-size:18px;
+	color:red;
+	cursor:auto;
+}
+#sum:hover {
+	background-color:#fff;
+}
+</style>
+<Server>
+ s EpisodeID = $G(%request.Data("EpisodeID", 1))
+ s now=$zd(+$h,3)
+</Server>
 </head>
-
 <body>
-<div class="hisui-layout" id="head-menu" data-options="fit:true,border:false">
-		<div data-options="region:'north',border:false,collapsible:false" style="padding:10px 10px 0px 10px;height:95px;">
-			<div class="hisui-panel" data-options="title:'报产查询',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-bottom:1px dotted #ccc;border-top:0;border-radius:0;padding:10px;">
+	<div class="hisui-layout" id="head-menu" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false,collapsible:false" style="padding:4px 4px 0px 4px;height:88px;">
+			<div class="hisui-panel" data-options="title:'报产查询',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom:0;border-radius:0;padding:10px;">
 				
 		                <table 
 		                       style="border-spacing:0">
 		                    <tr>
 		                        <td class="r-label">
-		                            开始时间
+		                            #(..Get("开始时间"))#
 		                        </td>
 		                        <td style="">
 		                            <input id="startDate"
@@ -74,8 +62,8 @@ td .combo.datebox{
 		                                   style="width:120px;margin-right:20px;">
 		                            </input>
 		                        </td>
-		                        <td class="r-label" style="padding-left:30px;">
-		                            结束时间
+		                        <td class="r-label" style="padding-left:10px;">
+		                            #(..Get("结束时间"))#
 		                        </td>
 		                        <td style="">
 		                            <input id="endDate"
@@ -83,8 +71,8 @@ td .combo.datebox{
 		                                   style="width:120px;">
 		                            </input>
 		                        </td>
-		                        <td class="r-label" style="padding-left:30px;">
-		                            分娩结果
+		                        <td class="r-label" style="padding-left:10px;">
+		                            #(..Get("分娩结果"))#
 		                        </td>
 		                        <td style="">
 		                            <select id="outCome"
@@ -92,7 +80,16 @@ td .combo.datebox{
 		                                    style="width:120px;">
 		                            </select>
 		                        </td>
-		                        <td style="padding:0 20px">
+		                        <td class="r-label" style="padding-left:10px;">
+		                            #(..Get("科室"))#
+		                        </td>
+		                        <td style="">
+		                            <select id="department"
+		                                    class="hisui-combobox"
+		                                    style="width:120px;">
+		                            </select>
+		                        </td>
+		                        <td style="padding:0 10px">
 		                         <a href="#"
 				                   id="searchBtn"
 				                   class="hisui-linkbutton hover-dark"
@@ -101,15 +98,24 @@ td .combo.datebox{
 				                    查询
 				                 </a>
 		                        </td>
+		                        <td>
+		                         <a href="#"
+				                   id="printBtn"
+				                   class="hisui-linkbutton hover-dark"
+				                   data-options="iconCls:'icon-w-print'"
+				                   >
+				                    打印
+				                 </a>
+		                        </td>
 		                    </tr>
 							
 		                </table>
 		              
 			</div>
 		</div>		
-		<div data-options="region:'center',border:false,collapsible:false" style="padding:0 10px 10px 10px;">
-			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray'" style="border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-					<table id="babyGrid" class="hisui-datagrid" >
+		<div data-options="region:'center',border:false,collapsible:false" style="padding:0 4px 4px 4px;">
+			<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" style="border-top-style:dashed;border-radius:0 0 4px 4px;">
+					<table id="babyGrid" >
 	            	</table>
 			</div>
 		</div>
@@ -118,6 +124,8 @@ td .combo.datebox{
         var EpisodeID = "#(EpisodeID)#";
         var now = "#(now)#";
     </script>
+	<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+    <script type="text/javascript" src="../scripts/nurse/hisui/delBabySearch.js"></script>
 </body>
-
-</html>
+</HTML>

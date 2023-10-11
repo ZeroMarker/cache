@@ -1,9 +1,13 @@
+<csp:method name=OnPerHttp arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q l
+	quit l
+</csp:method>
 <!DOCTYPE HTML>
 <html>
 <head>
 <title>麻醉医生工作量汇总</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<HISUI></HISUI>
 <dhcclinic:head></dhcclinic:head>
 <script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
 <script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
@@ -11,16 +15,16 @@
 <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
 </head>
 <body class="hisui-layout">
-	<div id="dataTools" style="padding-left:5px;padding-top:10px;padding-bottom:10px;">
+	<div id="dataTools" style="padding:10px 0px 10px 0px">
     	<form id="conditionForm">
-    		<label style="padding-left:5px;">开始日期</label>
+    		<label class="lableTitle1">开始日期</label>
     		<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox textbox" >
-    		<label style="padding-left:5px;">结束日期</label>
+    		<label class="lableTitle2">结束日期</label>
     		<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox textbox" >
-    		<label style="padding-left:5px;">麻醉医生</label>
+    		<label class="lableTitle2">麻醉医生</label>
     		<input type="text" id="AnaDoctor" name="AnaDoctor" class="hisui-combobox textbox" data-options="textField:'Description',valueField:'RowId'">
-    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'">查询</a>
-    		<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'">打印</a>
+    		<a id="btnQuery" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-find'" style="margin-left:10px">查询</a>
+    		<a id="btnPrint" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-print'" style="margin-left:10px">打印</a>
     		<!--<a id="btnExport" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-export'">导出</a>-->
     	</form>
     </div>
@@ -33,17 +37,29 @@
 		$(document).ready(function() {
 			var date=new Date();
 			var month=date.getMonth();
-			date.setMonth(month-1);
-			date.setDate(1);
+			date.setMonth(month-1,1);
+			//date.setDate(1);
 			var lastMonthFirstDay = date;
 			
 			var date=new Date();
 			date.setDate(0);
 			var lastMonthLastDay = date;
-			
-    		$("#OperStartDate").datebox("setValue", lastMonthFirstDay.format("yyyy-MM-dd"));
-    		$("#OperEndDate").datebox("setValue", lastMonthLastDay.format("yyyy-MM-dd"));
-    		
+			dhccl.parseDateFormat();
+            var ret=dhccl.runServerMethod("web.DHCClinicCom","GetDateFormat");
+              // alert(ret.result)
+	        if(ret.result=="j/n/Y") 
+	        {var lastMonthFirstDay=lastMonthFirstDay.format("dd/MM/yyyy");
+	         var lastMonthLastDay=lastMonthLastDay.format("dd/MM/yyyy");
+	        
+	        }
+	        else 
+	        {
+		        var lastMonthFirstDay=lastMonthFirstDay.format("yyyy-MM-dd");
+	            var lastMonthLastDay=lastMonthLastDay.format("yyyy-MM-dd");
+		        }
+		        //alert(1)
+           $("#OperStartDate").datebox("setValue", lastMonthFirstDay);
+    		$("#OperEndDate").datebox("setValue", lastMonthLastDay);
     		$("#AnaDoctor").combobox({
 	    		textField:'Description',
 	    		valueField:'RowId',
@@ -71,7 +87,6 @@
         		rownumbers: true,
         		remoteSort: false,
         		singleSelect:true,
-        		striped:true,
         		title: "",
         		nowrap: true,
         		toolbar: "#dataTools",

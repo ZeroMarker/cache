@@ -1,0 +1,351 @@
+<!-- dhcpresc.mainin.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<SERVER>
+	    s OverTime=+##class(web.DHCPRESCCommonUtil).GetPrescSysConfig("INOVERTIME",%session.Get("LOGON.HOSPID")) //阅读超时时间
+	    s isOwnSys = ##class(web.DHCPRESCCommonUtil).GetSysConfig("ISOWNREASYS",%session.Get("LOGON.HOSPID")) 	//是否使用第三方合理用药
+	    s:OverTime="" OverTime=60
+		w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+		w "var OverTime="""_OverTime_""";"_$c(13,10)
+		w "var isOwnSys="""_isOwnSys_""";"_$c(13,10)
+ 		w "</SCRIPT>"
+ 		i isOwnSys = 1  d
+		.w "<link rel='stylesheet' type='text/css' href='../CUSTOM/PassJs/McCssAll.css' />"_$c(13,10)
+		.w "<script type='text/javascript' src='../CUSTOM/PassJs/McConfig.js'></script>"_$c(13,10)
+		.w "<script type='text/javascript' src='../CUSTOM/PassJs/McJsAll.js'></script>"_$c(13,10)
+		.w "<script type='text/javascript' src='../CUSTOM/PassJs/McLoader.js'></script>"_$c(13,10)
+		.w "<script type='text/javascript' src='../scripts/dhcnewpro/dhcpresc/auditdockdruguser.js'></script>"
+   </SERVER>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/plugins/font-awesome/font-awesome.min.css"/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcpresc/css/main.css"/>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/websys.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcpresc/mainin.js"></script>
+	<script Language="Javascript">
+		var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+		var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+		var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+		var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+		var LgCtLocDesc="#(%session.Get("LOGON.CTLOCDESC"))#";      	//科室
+		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var MenuModule="I";
+		//var MenuModule="#(%request.Get("MenuModule"))#"; //菜单模式 只查住院传&MenuModule=I；只查门急诊传&MenuModule=OE
+	</script>
+	<style>
+		.example{
+			position:relative;
+		}
+		p{
+			position:absolute;
+			top:170px;
+			left:80px;
+			font-size:20px;
+			color:#C0C0C0;
+		}
+	</style>
+</head>
+<body style="padding:5px;">
+<input id="admId"  class="textbox"  hidden type="text" />
+<input id="patientId"  class="textbox"  hidden type="text" />
+<input id="mradm"  class="textbox" hidden  type="text" />
+<audio autoplay="autoplay" id="auto" src=""></audio>
+
+<div id="mainPanel" class="hisui-layout" fit="true"  data-options="clickExpand:true">
+	<div data-options="region:'north',title:'',bodyCls:'panel-header-gray'" style="height:40px;border-radius:4px 4px 0px 0px;border-bottom:0px;">
+		<div id="tt-keywords" class="hisui-tabs tabs-gray" fit="true" border="false"> 
+			 <div title="新任务" data-options=""></div> <!-- end新任务 -->
+			 <div title="已完成" data-options="closable:false"></div> <!-- end已完成 --> 
+			 <div title="需要修改" data-options="closable:false"></div> <!-- end需要修改 -->
+			 <div title="双签通过" data-options="closable:false"></div> <!-- end双签通过 -->
+			 <div title="通过" data-options="closable:false"></div> <!-- end通过 -->
+		</div><!--end tabs -->
+		<div style="padding-right:10px;margin-top:-35px;float:right;">
+			<span><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-open-book',plain:true" id="batch">批量审核</a></span>
+			<span><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-star-empty',plain:true" id="collection">案例收藏</a></span>
+			<span><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-right',plain:true" id="monitoring" style="display:none">开始监测</a></span>
+			<span><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-right',plain:true" id="away" style="display:none">我要离开</a></span>
+		</div>
+	</div> <!-- end north  -->
+	<div data-options="region:'center',title:'',border:false" style="padding-top:1px;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'west',title:'',collapsible:false,bodyCls:'panel-header-gray'" style="width:180px;border-radius:0px 4px 4px 4px;">
+			 	 <div class="hisui-layout" fit="true">
+				 	<div id="auditList" toolbar='#tb'></div>
+				 </div>
+			</div><!-- end west -->
+			<div data-options="region:'center',title:'',border:false,collapsible:false,bodyCls:'panel-header-gray'" style="padding:0px 0px 0px 5px;border-radius:4px 0px 4px 4px;" >
+				<div id="aPanel" class="hisui-layout" fit="true" border="false" >
+					<div data-options="region:'north',title:'',bodyCls:'panel-header-gray'" style="height:120px;border-radius:4px 0px 4px 4px;" >
+						<div class="hisui-layout" fit="true" >
+							<!--<div data-options="region:'west',title:'',border:false,headerCls:'panel-header-gray'">-->
+							<div style="height:100%;width:100%;float:left">
+								<table style="border-collapse:separate; border-spacing:0px 6px;">
+									<tr style="height:0">
+									    <td width="10"></td>
+										<td ></td>
+										<td></td>
+										<td width="30"></td>
+										<td ></td>
+										<td></td>
+										<td width="30"></td>
+										<td ></td>
+										<td></td>
+										<td width="30"></td>
+										<td ></td>
+										<td></td>
+										<td width="30"></td>
+										<td ></td>
+										<td></td>			
+									</tr>
+									<tr>
+										<td></td>
+										<td class="tdtext" >姓名：</td> 	
+					        			<td style="width:70px;float:left;"><span id="patName"></span></td>
+										<td></td>
+										<td class="tdtext">性别：</td>
+										<td style="width:60px;float:left;"><span id="sex"></span></td>
+										<td></td>
+										<td class="tdtext">年龄：</td>	
+					        			<td style="width:100px;float:left;"><span id="age"></span></td>
+										<td></td>
+					        			<td class="tdtext">体重：</td>
+					        			<td style="width:30px;float:left;"><span id="weight"></span></td>
+					        			<td></td>
+										<td class="tdtext">登记号：</td>
+					        			<td style="width:60px;float:left;"><span id="patNo"></span></td>
+					        		</tr>
+					        		<tr>
+										<td></td>
+										<td class="tdtext">就诊号：</td>
+					        			<td style="width:70px;float:left;"><a href="#" id="admNo"></a></td>
+										<td></td>
+										<td class="tdtext">科室：</td>
+					        			<td style="width:100px;float:left;"><span id="loc"></span></td>
+										<td></td>
+					        			<td class="tdtext">医嘱医生：</td>
+					        			<td style="width:100px;float:left;"><span id="doc"></span></td>
+										<td></td>
+					        			<td class="tdtext">床号：</td>
+					        			<td style="width:30px;float:left;"><span id="bedNo"></span></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td class="tdtext">西医诊断：</td>
+					        			<td colspan="4"><span id="diag"></span></td>
+					        			<td></td>
+										<td class="tdtext">中医诊断：</td>
+										<td colspan="5"><span id="chndiag"></span></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td class="tdtext">医生批注：</td> 	
+					        			<td colspan="4"><span id="audremark"></span></td>
+					        			<td></td>
+					        			<td class="tdtext">过敏史：</td>
+					        			<td colspan="5"><span id="allegry"></span></td>
+
+									</tr>
+								</table>
+							</div>
+							<!--<div data-options="region:'center',title:'',border:false,headerCls:'panel-header-gray'">-->
+							<div style="border-left:1px solid #F1F1F1;width:320px;height:100%;right:0px;position:absolute" >
+								<div style="height:80px;margin-top:10px">
+									<div style="height: 100%;width: 100%;display: inline-block;">
+										<div style="width:20px;height:20px;margin-left:45px;">
+											<img id="docimg" border="0px" />
+										</div>
+										<!-- <span class="" style="margin-left:100px;" id="prescdoc"></span><br> -->
+										<a id="docname"></a>
+										<span id="msgnum"></span>
+										<div>
+											<div style="margin-left: 180px;position: relative;top: -30px;">
+												<span style="">科室电话：</span> 	
+						        				<span id="locTelphone"></span>
+											</div>
+											<div style="margin-left: 180px;position: relative;top: -10px;">
+												<span style="">联系电话：</span> 	
+						        				<span id="docTelphone"></span>
+											</div>
+										</div>
+									</div>
+									
+								</div>	
+							</div>
+						</div><!-- end layout -->
+					</div> <!-- end north -->
+					<div data-options="region:'center',title:'',bodyCls:'panel-header-gray'" style="border:none;padding-top:5px;padding-bottom:5px;">
+						<div id="bPanel" class="hisui-layout" fit="true" border="false">
+							<div data-options="region:'west',title:'',collapsible:false,headerCls:'panel-header-gray'" style="width:850px" border="false">
+								<div class="hisui-layout" fit="true">
+									<div id="presc-keywords" class="hisui-tabs tabs-gray" fit="true"> 
+										<!-- <div title="医嘱信息" >
+					            			  <div id="ordInfo"></div>  
+					            			<table id="ordInfo" toolbar="" border="true"></table>
+					        			</div>  end 处方信息 -->
+					        			<div title="医嘱信息">
+					        	 			<div class="hisui-layout" fit="true">
+						            			<!-- <div data-options="region:'north',border:false,bodyCls:'panel-header-gray'" style="height:55px;padding-top:5px;display:none;">
+	    											<table class="search-table" style="border-spacing:0 4px"><!--hxy 2018-10-23 border-spacing-->
+														<!--<tr >
+															<td class ="r-label"><span style="">医嘱日期</span></td>
+															<td class ="r-label"><input id="sel-stDate" style="width:115px" class="hisui-datebox textbox"></input></td>
+															<td class ="r-label">至</td>
+															<td class ="r-label"><input id="sel-edDate" style="width:115px" class="hisui-datebox textbox"></input></td>
+															<td class ="r-label"><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-w-find" onclick="searchOeordList()">查询</a></td>													</tr>
+														</tr>
+													</table>
+	    										</div>  -->
+	    										<div data-options="region:'center',split:true,border:false,title:'',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding: 2px 0px 0px 0px;">
+													<div class="hisui-panel" data-options="title:'',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" style="border-left:0px;border-right:0px;border-bottom:0px;border-radius:0px;" >	
+														<div class="hisui-layout" fit="true">
+						 									<div id="ordInfo"></div>
+						 								</div>
+						 							</div>
+												</div>
+											</div>
+											</div>	
+					        	 		<div title="检验信息">
+					        	 			<div class="hisui-layout" fit="true">
+						            			<!-- <div data-options="region:'north',border:false,headerCls:'panel-header-gray'" style="height:75px;padding-top:5px">
+	    											<table class="search-table" style="border-spacing:0 4px"><!--hxy 2018-10-23 border-spacing-->
+														<!--<tr>
+															<td class ="r-label"><span style="">申请时间</span></td>
+															<td class ="r-label"><input id="sel-stDate" style="width:115px" class="hisui-datebox textbox"></input></td>
+															<td class ="r-label">至</td>
+															<td class ="r-label"><input id="sel-edDate" style="width:115px" class="hisui-datebox textbox"></input></td>
+															<td class ="r-label"><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-w-find" >查询</a></td>													</tr>
+														</tr>
+														<tr>	
+															<td class ="r-label" colspan="3">
+																<input id="radio1" class='hisui-radio' type="radio" data-options="label:'当天',disable:false,name:'wantEat',onCheckChange:function(event,value){upLisDate(event,value)}"/>
+																<input id="radio4" class='hisui-radio' type="radio" data-options="label:'更多',name:'wantEat',disable:false,onCheckChange:function(event,value){upLisDate(event,value)}">
+																<input id="thisAdm" class='hisui-checkbox' type="checkbox" data-options="label:'当前就诊',checked:true,onCheckChange:function(event,value){thisAdm=value==true?'Y':'N';}"></input>
+															</td>
+														</tr>
+													</table>
+	    										</div>  -->
+	    										<div data-options="region:'center',split:true,title:'',headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" style="padding: 2px 2px 0px 2px;">
+													<div class="hisui-panel" data-options="title:'检验列表',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'" style="" >	
+														<div class="hisui-layout" fit="true">
+						 									<div id="lisOrdTable"></div>
+						 								</div>
+						 							</div>
+												</div>
+												<div id="" data-options="region:'south',iconCls:'icon-paper',title:'',border:false,split:false,headerCls:'panel-header-gray'" style="height:260px;padding: 2px 2px 2px 2px;">
+													<div class="hisui-panel" data-options="title:'<div class=\'flo-left\' id=\'detailOrdName\'>检验名称</div><div class=\'td-lable\' id=\'lisOrdInfo\'></div>',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'" style="" >	
+														<div class="hisui-layout" fit="true">	
+															<div id="lisOrdDetailTable"></div>
+														</div>
+													</div>
+												</div>
+											</div>
+								  		</div> <!-- end 检验信息 -->
+								  		<div title="检查信息">
+					            			<div class="hisui-layout" fit="true">
+						            			<!-- <div data-options="region:'north',border:false,bodyCls:'panel-header-gray'" style="height:75px;padding-top:5px">
+	    											<table class="search-table" style="border-spacing:0 4px"><!--hxy 2018-10-23 border-spacing-->
+													<!-- 	<tr>
+															<td class ="r-label"><span style="">申请时间</span></td>
+															<td class ="r-label"><input id="sel-stDate" style="width:115px" class="hisui-datebox textbox"></input></td>
+															<td class ="r-label">至</td>
+															<td class ="r-label"><input id="sel-edDate" style="width:115px" class="hisui-datebox textbox"></input></td>
+															<td class ="r-label"><a href="#" id="search" class="hisui-linkbutton cancel-Btn" iconCls="icon-w-find" >查询</a></td>													</tr>
+														</tr>
+														<tr>
+															<td class ="r-label" colspan="3">
+																<input id="radio1" class='hisui-radio' type="radio" data-options="label:'当天',disable:false,name:'wantEat',onCheckChange:function(event,value){upLisDate(event,value)}"/>
+																<input id="radio4" class='hisui-radio' type="radio" data-options="label:'更多',name:'wantEat',disable:false,onCheckChange:function(event,value){upLisDate(event,value)}">
+																<input id="thisAdm" class='hisui-checkbox' type="checkbox" data-options="label:'当前就诊',checked:true,onCheckChange:function(event,value){thisAdm=value==true?'Y':'N';}"></input>
+															</td>
+														</tr>
+													</table>
+	    										</div>  -->
+	    										<div data-options="region:'center',split:true,title:'',headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" style="padding: 2px 0px 0px 0px;">
+													<div class="hisui-panel" data-options="title:'',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray',bodyCls:'panel-header-gray'" style="border-left:0px;border-right:0px;border-bottom:0px;border-radius:0px;" >	
+														<div class="hisui-layout" fit="true">
+						 									<div id="inspectDetail"></div>
+						 								</div>
+						 							</div>
+												</div>
+											</div>
+								  		</div> <!-- end 检查信息 -->
+				        			</div> <!-- end tabs -->
+								</div> <!-- end layout -->
+							</div> <!-- end west  -->
+							<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="padding-left:5px;" border="false">
+								<div id="err-keywords" class="hisui-panel" data-options="title:'不合理问题',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" fit="true">
+					            	<div class="hisui-layout" fit="true">	
+					            		<div id="proInfo" ></div>
+									</div> <!-- end tabs -->
+								</div> <!-- end layout -->
+							</div> <!-- end center -->
+						</div> <!-- end bPanel -->
+					</div><!--  end center -->
+					<div data-options="region:'south',title:'',bodyCls:'panel-header-gray'" style="height:42px;">
+						<div style="margin-top:5px;">
+							<span style="margin-left:10px;color:#7fb80e" id="timelabel">剩余</span><span style="color:#7fb80e" id="rematime"></span>
+							<span style="margin-left:20px;color:#7fb80e" >快速录入</span>
+							<span style="margin-left:5px;"><input id="inselitm"  class="hisui-combotree" style="width:460px;" /></span>
+							<span style="margin-left:20px;color:#7fb80el;" id="marklabel">备注</span>
+							<span style="margin-left:5px;"><input id="remark" style="width:300px;" type="text" placeholder="请录入" class="textbox" /></span>
+							<!-- <a style="display:none" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="OpenEmr()" id="QueEmr">引用</a> -->
+							<a href="#" class="hisui-linkbutton red" id="mody" >必须修改</a>
+							<a href="#" class="hisui-linkbutton yellow" id="signpass">双签通过</a>
+							<a href="#" class="hisui-linkbutton green" id="pass">通过</a>
+							<span style="margin-left:30px;" id="audreslabel" hidden>审核结果:</span><span style="color:#7fb80e;margin-left:10px;" id="audres" hidden></span>
+						</div>
+					</div> <!-- end south -->
+				</div><!-- end aPanel -->
+			</div><!-- end center -->
+		</div> <!-- layout center  -->
+	</div> <!-- end center  -->
+</div><!--end mainPanel -->
+<div id="onlinedialog" class="hisui-dialog" title="开启监测" style="width:400px;height:300px;" data-options="iconCls:'icon-save',closed: true,modal:true,buttons:[{
+		text:'开始监测',
+		handler:function(){auditStart();}
+	}]">   
+	
+	<div class="example">
+		<img src="../scripts/dhcnewpro/dhcpresc/images/sttask.png" >
+		<p id="tips"></p>
+	</div>
+</div> 
+<div id="tb" class="datagrid-toolbar" style="border:0px;">
+	<div id="queryForm" style="margin:5px 0px 5px 2px;">
+    	<input class="hisui-searchbox" data-options="searcher:searchAuditList,prompt:'请输入登记号'" style="width:170px" id="search"> 
+    </div>  
+</div>
+
+<!-- Shy 引用弹窗 2023-01-04 -->
+<div id="oeordWin" class="hisui-dialog" title="医嘱引用" style="width:600px;height:500px;padding:10px;"
+	data-options="iconCls:'icon-save',resizable:true,modal:true,closed:true
+	,buttons:[{
+		text:'引用',
+		handler:function(){DrawInfo()}
+	},{
+		text:'关闭',
+		handler:function(){$HUI.dialog('#oeordWin').close();}
+	}]"> 
+		
+			<table id="oeordList" toolbar="" border="true"></table>
+		
+</div>
+<div id="newsWin" class="hisui-window" title="消息沟通" style="overflow: hidden;" data-options="closed:true,width:800,height:700">
+	<iframe id="newsContact" name="newsContact" src="" style="width:100%;height:100%"></iframe>
+</div>
+</body>
+</html>
+

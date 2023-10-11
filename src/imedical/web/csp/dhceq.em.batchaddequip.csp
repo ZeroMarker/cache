@@ -1,0 +1,60 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<server>
+s BussType=$g(%request.Data("BussType",1))
+s FromLocDR=$g(%request.Data("FromLocDR",1))
+s FromLoc = ##Class(web.DHCEQCommon).GetTrakNameByID("dept", FromLocDR)
+s EquipTypeDR=$g(%request.Data("EquipTypeDR",1))
+s EquipType=##Class(web.DHCEQCommon).GetTrakNameByID("equiptype", EquipTypeDR)
+s title=$g(%request.Data("title",1))  //Modefied  by zc 2021115  zc0107 title改成取值
+</server>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div class="hisui-panel panel-header-gray" data-options="fit:true,eqtitle:'maintitle'">  <!--Modefied  by zc 2021115  zc0107 title改成取值 -->
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cFromLoc" for="FromLoc">科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="FromLoc" data-options="'component':'PLAT.L.Loc'" value=#(FromLoc)#></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cEquipType" for="EquipType">类组</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipType" data-options="'component':'PLAT.L.EquipType'" value=#(EquipType)#></div>
+						<div class="eq-table-td eq-table-label-button"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-search" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">查询</a></div>  <!--modified by LMH 20220915 2909778 纠正图标引用出错-->
+						<div class="eq-table-td"><a id="BAdd" href="#" class="hisui-linkbutton" iconCls="icon-w-add" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">新增</a></div>     <!--modified by LMH 20220915 2909778 纠正图标引用出错-->
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label-first"><label id="cEquipName" for="EquipName">设备名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipName"></div>
+						<div class="eq-table-td eq-table-label-new"><label id="cBatchFlag" for="SingleFlag">单台</label></div>
+						<div class="eq-table-td eq-table-input"><input type="checkbox" class="hisui-checkbox" id="SingleFlag"></div>
+						<div class="eq-table-td eq-table-label-button"></div>
+						<div class="eq-table-td"></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="batchaddequipdatagrid" data-options="border:false,fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+            <input id="BussType" name="BussType" type="hidden" value=#(BussType)#>
+            <input id="FromLocDR" name="FromLocDR" type="hidden" value=#(FromLocDR)#>
+            <input id="EquipTypeDR" name="EquipTypeDR" type="hidden" value=#(EquipTypeDR)#>
+            <input id="title" name="title" type="hidden" value=#(title)#>  <!--Modefied  by zc 2021115  zc0107 title改成取值 -->
+		</form>
+	</div>
+<script type='text/javascript' src='../scripts/dhceq/em/batchaddequip.js'></script>
+</body>
+
+</html>

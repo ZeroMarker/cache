@@ -4,6 +4,9 @@
     csp: csp/dhcpha/dhcpha.inpha.hmtrialprescdisp.csp
     js:  scripts/pharmacy/inpha/dhcpha.inpha.hmtrialprescdisp.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
 <html lang="zh-CN">
 
 <head>
@@ -19,6 +22,7 @@
     <TRAK:HEAD />
     <DHCPHARMACY:COMMONLIB />
     <DHCAPP:PHARBOOTSTRAP />
+    <PHAPRINTCOM/>
     <Server language="CACHE" runat="Server">
         s Application=%request.Application
         s InPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("IA")
@@ -28,6 +32,7 @@
     </script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.phaxmlprint.js">
     </script>
+    <script type="text/javascript" src="#(Application)#scripts/pha/op/v4/previewpresc.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmprintcom.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.hmtrialprescdisp.js">
     </script>
@@ -58,7 +63,7 @@
             <div class="row ">
                 <div class="col-lg-12 col-md-12">
                     <button class="btn btn-default btn_button btn_important" id="btn-disp"
-                        onclick="javascript:ConfirmDisp()"><img
+                        onclick="javascript:PressConfirmDisp()"><img
                             src="#(Application)#scripts/pharmacy/images/dispprint-default.png"
                             class="dhcpha-btn-image"><br><strong>∑¢“©</strong></button>
                     <button class="btn btn-default btn_button btn_common" id="btn-allfy"
@@ -85,6 +90,13 @@
                         onclick="javascript:DirectReturn()"><img
                             src="#(Application)#scripts/pharmacy/images/return-default.png"
                             class="dhcpha-btn-image"><br><strong>÷±Ω”ÕÀ“©</strong></button>
+                    <div class="dhcpha-window-right">
+						<span style="margin-left:15px;">≈‰“©»À£∫<lable id="currentpyuser"></lable></span>
+						<div class="btn-group" style="margin-left:30px;">  
+							<span class="fa fa-exchange dhcpha-btn-icon-common dhcpha-btn-icon-normal" id="img-change"></span>
+							<button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-change">«–ªª≈‰“©»À</button>
+						</div>
+					</div>   
                 </div>
             </div>
         </div>
@@ -196,6 +208,7 @@
     </div>
     </div>
     <csp:Include Page="dhcpha.inpha.presc.csp" />
+    <csp:Include Page="dhcpha.inpha.hmtrialdispenser.csp">
     <csp:Include Page="dhcpha.inpha.refusedispreason.csp" />
 </body>
 

@@ -1,0 +1,231 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>HTML表单查看</title>
+
+</head>
+
+<body style="background-color:#ccc;margin:0px;">
+	<script language="cache" runat="server">
+		set archiveRecordId=$g(%request.Data("archiveRecordId",1))
+		
+		set archiveContentStr=""
+		if ('##class(CIS.AN.ArchiveRecord).%ExistsId(archiveRecordId))
+		{
+			w "<div>表单未提交，请提交</div>"
+		}
+		else
+		{
+			set archiveRecordObj=##class(CIS.AN.ArchiveRecord).%OpenId(archiveRecordId)
+			set archiveContentStr=archiveRecordObj.ArchiveDataContent.Read(1000000)
+			
+			set json=##class(%DynamicAbstractObject).%FromJSON(archiveContentStr)
+			
+			set pageWidth=1100, pageHeight=1500
+			set count=0
+			set pages=json.pages
+			set iter=pages.%GetIterator()
+   			while iter.%GetNext(.key, .page) 
+   			{ 
+   				w "<div style=""background-color:white;width:"_pageWidth_"px;height:"_pageHeight_"px;border:1px solid #ccc;"">"
+   				set count=count+1
+   				set printData=page.printData
+   				set iter2=printData.%GetIterator()
+	   			while iter2.%GetNext(.key2, .singlePrintData) 
+	   			{ 
+	   				set action=singlePrintData.%Get("action")
+	   				if (action="drawString")
+	   				{
+		   				set text=singlePrintData.%Get("text")
+		   				set startPos=singlePrintData.%Get("startPos")
+		   				set startPosX=startPos."0"
+		   				set startPosY=startPos."1"
+		   				set fill=singlePrintData.%Get("fill")
+		   				set fontSize=singlePrintData.%Get("fontSize")
+		   				set fontWeight=singlePrintData.%Get("fontWeight")
+		   				set fontName=singlePrintData.%Get("fontName")
+		   				
+		   				set startPosY=startPosY+(pageHeight*(count-1))
+		   				
+		   				w "<div "
+		   				w "style=""position:absolute;left:"_startPosX_"px;top:"_startPosY_"px;"
+		   				w "font-size:"_fontSize_"px;"
+		   				w "color:"_fill_";"
+		   				w """>"_text_"</div>",!
+		   			}
+		   			elseif (action="drawVerticalString")
+		   			{
+			   			set text=singlePrintData.%Get("text")
+		   				set startPos=singlePrintData.%Get("startPos")
+		   				set startPosX=startPos."0"
+		   				set startPosY=startPos."1"
+		   				set fill=singlePrintData.%Get("fill")
+		   				set fontSize=singlePrintData.%Get("fontSize")
+		   				set fontWeight=singlePrintData.%Get("fontWeight")
+		   				set fontName=singlePrintData.%Get("fontName")
+		   				
+		   				set startPosY=startPosY+(pageHeight*(count-1))
+		   				
+		   				w "<div "
+		   				w "style=""position:absolute;left:"_startPosX_"px;top:"_startPosY_"px;"
+		   				w "font-size:"_fontSize_"px;"
+		   				w "color:"_fill_";"
+		   				w "width:"_fontSize_"px;"
+		   				w "letter-spacing:0.1em;"
+		   				w "writing-mode:lr-tb;"
+		   				w """>"_text_"</div>",!
+			   		}
+		   			elseif (action="drawLine")
+		   			{
+			   			set startPos=singlePrintData.%Get("startPos")
+			   			set startPosX=startPos."0"
+		   				set startPosY=startPos."1"
+			   			set endPos=singlePrintData.%Get("endPos")
+			   			set endPosX=endPos."0"
+		   				set endPosY=endPos."1"
+			   			set stroke=singlePrintData.%Get("stroke")
+			   			
+			   			set startPosY=startPosY+(pageHeight*(count-1))
+			   			
+			   			set width=endPosX-startPosX
+			   			//if endPosY=startPosY set width=endPosX-startPosX
+			   			set height=endPosY-startPosY
+			   			//if endPosX=startPosX set height=endPosY-startPosY
+			   			
+			   			if (width=0)||(height=0)
+			   			{
+				   			w "<div "
+			   				w "style=""position:absolute;left:"_startPosX_"px;top:"_startPosY_"px;"
+			   				if width>0 
+			   				{
+				   				w "width:"_width_"px;"
+				   				w "border-bottom: 1px solid "_stroke_";"
+				   			}
+				   			if height>0
+				   			{
+					   			w "height:"_height_"px;"
+				   				w "border-left: 1px solid "_stroke_";"
+					   		}
+			   				w """></div>",!
+				   		}
+				   		else
+				   		{
+					   		w "<div "
+			   				w "style=""position:absolute;left:"_startPosX_"px;top:"_startPosY_"px;"
+			   				w "width:"_width_"px;"
+			   				w "height:"_height_"px;"
+			   				w "background-color:"_stroke_";"
+			   				w """></div>",!
+					   	}
+			   		}
+			   		elseif (action="drawDashLine")
+		   			{
+			   			set startPos=singlePrintData.%Get("startPos")
+			   			set startPosX=startPos."0"
+		   				set startPosY=startPos."1"
+			   			set endPos=singlePrintData.%Get("endPos")
+			   			set endPosX=endPos."0"
+		   				set endPosY=endPos."1"
+			   			set stroke=singlePrintData.%Get("stroke")
+			   			
+			   			set startPosY=startPosY+(pageHeight*(count-1))
+			   			
+			   			set width=0
+			   			if endPosY=startPosY set width=endPosX-startPosX
+			   			set height=0
+			   			if endPosX=startPosX set height=endPosY-startPosY
+			   			w "<div "
+		   				w "style=""position:absolute;left:"_startPosX_"px;top:"_startPosY_"px;"
+		   				if width>0 
+		   				{
+			   				w "width:"_width_"px;"
+			   				w "border-bottom: 1px dashed "_stroke_";"
+			   			}
+			   			if height>0
+			   			{
+				   			w "height:"_height_"px;"
+			   				w "border-left: 1px dashed "_stroke_";"
+				   		}
+		   				w """></div>",!
+			   		}
+			   		elseif (action="drawRectangle")
+		   			{
+			   			set rect=singlePrintData.%Get("rect")
+			   			set left=rect."0"
+		   				set top=rect."1"
+		   				set width=rect."2"
+		   				set height=rect."3"
+			   			set lineWidth=singlePrintData.%Get("lineWidth")
+			   			set stroke=singlePrintData.%Get("stroke")
+			   			
+			   			set top=top+(pageHeight*(count-1))
+			   			
+			   			w "<div "
+		   				w "style=""position:absolute;left:"_left_"px;top:"_top_"px;"
+		   				w "width:"_width_"px;"
+		   				w "height:"_height_"px;"
+		   				w "border: 1px solid "_stroke_";"
+		   				w """></div>",!
+		   			}elseif (action="fillRectangle"){
+			   			set rect=singlePrintData.%Get("rect")
+			   			set left=rect."0"
+		   				set top=rect."1"
+		   				set width=rect."2"
+		   				set height=rect."3"
+			   			set lineWidth=singlePrintData.%Get("lineWidth")
+			   			set fill=singlePrintData.%Get("fill")
+			   			
+			   			set top=top+(pageHeight*(count-1))
+			   			
+			   			w "<div "
+		   				w "style=""position:absolute;left:"_left_"px;top:"_top_"px;"
+		   				w "width:"_width_"px;"
+		   				w "height:"_height_"px;"
+		   				w "background-color:"_fill_";"
+		   				w """></div>",!
+		   				
+			   		}elseif (action="drawCircle"){
+			   			set postion=singlePrintData.%Get("postion")
+			   			set postionX=postion."0"
+		   				set postionY=postion."1"
+		   				set radius=singlePrintData.%Get("radius")
+		   				set angle=singlePrintData.%Get("angle")
+			   			set stroke=singlePrintData.%Get("stroke")
+			   			set fill=singlePrintData.%Get("fill")
+			   			
+			   			set postionY=postionY+(pageHeight*(count-1))
+			   			
+			   			w "<div "
+		   				w "style=""position:absolute;left:"_(postionX-radius)_"px;top:"_(postionY-radius)_"px;"
+		   				w "width:"_(radius*2)_"px;"
+		   				w "height:"_(radius*2)_"px;"
+		   				w "background-color:"_fill_";"
+		   				w "border: 1px solid "_stroke_";"
+		   				w "border-radius:50%;"
+		   				w """></div>",!
+			   		}elseif (action="drawImage"){
+			   			set rect=singlePrintData.%Get("rect")
+			   			set left=rect."0"
+		   				set top=rect."1"
+		   				set width=rect."2"
+		   				set height=rect."3"
+			   			set src=singlePrintData.%Get("src")
+			   			
+			   			set top=top+(pageHeight*(count-1))
+			   			
+			   			w "<img "
+			   			w "src="_src_" "
+			   			w "width="_width_""
+			   			w " height="_height_""
+		   				w " style=""position:absolute;left:"_left_"px;top:"_top_"px;"
+		   				w """/>",!
+			   		}
+	   			}
+	   			w "</div>"
+   			}
+		}
+	
+	</script>
+</body>
+</html>

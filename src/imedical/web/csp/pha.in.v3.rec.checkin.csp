@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--
+    入库 - 查询
+    csp:  csp/pha.in.v3.rec.checkin.csp
+    js:   scripts/pha/in/v3/rec/checkin.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        #winFindRec {
+            overflow: hidden;
+        }
+
+        .pha-rec-query-control {
+            display: none;
+        }
+
+        #btnDelete {
+            display: none;
+        }
+        #btnCheckIn{
+            display:none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" border="false" id="layout-rec-checkin">
+                <div data-options="region:'north',height:500,split:true,title:'入库单',collapsible:true,bodyCls:'panel-body-gray',headerCls:'panel-header-gray',iconCls:'icon-paper'" id="layout-rec-checkin-panel">
+                    <table id="gridMain"></table>
+                </div>
+                <div data-options="region:'center',title:'单据明细',bodyCls:'panel-body-gray',headerCls:'panel-header-gray',iconCls:'icon-paper-info'">
+                    <table id="gridItm"></table>
+                </div>
+    
+            </div>
+        </div>
+        <div id="gridMainBar">
+            <table class="pha-con-table" id="qCondition">
+                <tr>
+                    <td class="r-label">
+                        <label for="startDate">#(..Get("开始日期"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="startDate" data-pha="class:'hisui-datebox',clear:true,query:true,required:true">
+                    </td>
+                    <td class="r-label">
+                        <label for="loc">#(..Get("入库科室"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,query:true,required:true">
+                    </td>
+                    <td class="r-label">
+                        <label for="status">#(..Get("入库状态"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="status" data-pha="class:'hisui-combobox',clear:true,query:true,required:true">
+                    </td>
+                    <td class="r-label">
+                        <label for="no">#(..Get("单号"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="no" data-pha="class:'hisui-validatebox',clear:true,query:true">
+                    </td>
+                    <td class="r-label" id="tdMzjy1"><label for="mzjy" >#(..Get("麻醉精一"))#</label></td>
+                	<td id="tdMzjy2" ><input id="mzjy"  class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+                    <td class="r-label" >
+                        <a class="hisui-linkbutton" id="btnFind">查询</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">
+                        <label for="endDate">#(..Get("结束日期"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="endDate" data-pha="class:'hisui-datebox',clear:true,query:true,required:true">
+                    </td>
+                    <td class="r-label">
+                        <label for="vendor">#(..Get("经营企业"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="vendor" data-pha="class:'hisui-combobox',clear:true,query:true">
+                    </td>
+                    <td class="r-label">
+                        <label for="checkInResult">#(..Get("验收结果"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="checkInResult" data-pha="class:'hisui-combobox',clear:true,query:true,required:true">
+                    </td>
+                    <td class="r-label">
+                        <label for="filterField">#(..Get("其他"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="filterField" data-pha="class:'hisui-validatebox',clear:true,query:true">
+                    </td>
+                    <td id="tdMzjy3" />
+                    <td id="tdMzjy4" />
+                    <td class="r-label">
+                        <a class="hisui-linkbutton" id="btnClean">清屏</a>
+                    </td>
+                </tr>
+            </table>
+            <div class="pha-line"></div>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnCheckIn">验收</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'" id="btnCheckInNext">验收</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-drug-audit'" id="btnCheckMJAudit1">麻精审核1</a>
+            <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-drug-audit'" id="btnCheckMJAudit2">麻精审核2</a>
+        </div>
+    </div>
+    <div id="gridItmBar">
+        <!-- <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-set-paper'" id="btnCheckInA">批量设置勾选数据</a> -->
+    </div>
+
+    <script type="text/javascript" src="../scripts/pha/in/v3/rec/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/rec/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/rec/checkin.js"></script>
+</body>
+</body>
+
+</html>

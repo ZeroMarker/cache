@@ -9,6 +9,17 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
+	<SERVER>
+		///是否多屏幕
+		s IsOpenMoreScreen=##Class(web.DHCMDTConsultQuery).IsOpenMoreScreen()
+		s LgLocID=%session.Get("LOGON.CTLOCID")
+		s LocAdmType = ##class(DHCDoc.Order.Common).GetLocAdmType(LgLocID)
+
+		w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+		w "var IsOpenMoreScreen="""_IsOpenMoreScreen_""";"_$c(13,10)
+		w "var LocAdmType="""_$g(LocAdmType)_""";"_$c(13,10)
+		w "</SCRIPT>"
+	</SERVER>
 	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
 	<link href="../scripts/dhcnewpro/dhcmdt/css/main.css" rel="stylesheet">
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
@@ -16,6 +27,7 @@
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/print.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/main.js"></script>
+	
 	<style>
 		.layout-panel-east, .layout-panel-west, .layout-panel-center, .panel-header {
 		    z-index: 2;
@@ -27,7 +39,8 @@
 		.layout-split-east{
 			border-left:10px solid #fff;
 		}
-</style>
+	</style>
+
 </head>
 <body>
 	<div class="hisui-layout" fit="true">
@@ -36,9 +49,9 @@
 				<div data-options="region:'north',border:false" style="height:46px;overflow:hidden;">
 					<div class="item-label">
 						<div class="pf-patimg">
-							<img id="PatPhoto" src="../scripts/dhcnewpro/images/girl.png">
+							<img id="PatPhoto" src="../scripts/dhcnewpro/images/girl.png" style="width: 30px;border-radius: 15px;">
 						</div>
-						<div class="pf-patbase">
+						<div class="pf-patbase" style="position: absolute;display: inline-block;float: none;">
 							<ul class="pf-nav">
 								<li class="pf-nav-item"><span class="pf-nav-title pf-patname"><span id="PatName" class="ui-span-m"></span></span></li>
 								<li class="pf-nav-item"><span class="pf-nav-title"><span class="i-sep"></span></span></span></li>
@@ -55,17 +68,28 @@
 								<li class="pf-nav-item"><span class="pf-nav-title"><span id="PatDiagDesc" class="ui-span-m"></span></span></li>
 							</ul>
 						</div>
+						<!--<div id="PatInfoItem" class="PatInfoItem" style="line-height: 40px;margin-right: 440px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>-->
 						<div class="pf-tools">
 							<label style="">#(..Get("历次就诊"))#</label><input id="mdtadm" style="width:360px;"/>
 						</div>
 					</div>
 				</div>
-				<div data-options="region:'east',border:true,title:'MDT申请单',headerCls:'panel-header-gray',collapsible:false,split:true,iconCls:'icon-paper'" style="width:900px;overflow:hidden;">
-					<iframe id="ConsultFrame" src="" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>
-				</div>
-				<div data-options="region:'center',title:'电子病历',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="overflow:hidden;">
-					<iframe id="newWinFrame" src="" width="100%" height="100%" frameborder="0"></iframe>
-				</div>
+				
+				<!--这里要做个判断：副屏显示内容主屏幕不显示病历，病历展示到副屏幕-->
+				<SERVER>
+					if 'IsOpenMoreScreen {
+						w "<div data-options=""region:'east',border:true,title:'MDT申请单',headerCls:'panel-header-gray',collapsible:true,split:true,iconCls:'icon-paper'"" style=""width:900px;overflow:hidden;"">"
+						w "		<iframe id=""ConsultFrame"" src="""" width=""100%"" height=""100%"" frameborder=""0"" scrolling=""no""></iframe>"
+						w "</div>"
+						w "<div data-options=""region:'center',title:'电子病历',headerCls:'panel-header-gray',iconCls:'icon-paper'"" style=""overflow:hidden;"">"
+						w "		<iframe id=""newWinFrame"" src="""" width=""100%"" height=""100%"" frameborder=""0""></iframe>"
+						w "</div>"
+					}else{
+						w "<div data-options=""region:'center',border:true,title:'MDT申请单',headerCls:'panel-header-gray',collapsible:false,split:true,iconCls:'icon-paper'"" style=""overflow:hidden;"">"
+						w "		<iframe id=""ConsultFrame"" src="""" width=""100%"" height=""100%"" frameborder=""0"" scrolling=""no""></iframe>"
+						w "</div>"
+					}
+				</SERVER>
 			</div>
 		</div>
 	</div>

@@ -1,5 +1,10 @@
-<!--dhcpeprintiadminfo.hisui.csp -->
-<!--条码打印-->
+
+<!-- 
+ * FileName: dhcpeprintiadminfo.hisui.csp
+ * Anchor: xy
+ * Date: 2020-11-06
+ * Description: HISUI 条码打印
+-->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
  if ##class(websys.SessionEvents).SessionExpired() quit 1
  quit 1
@@ -11,21 +16,50 @@
 	<HISUI/>
 	<SCRIPT language="Cache" RUNAT="SERVER"> 
 	s IAdmId=$g(%request.Data("IAdmId",1))
-	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+	w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
 </SCRIPT> 
 <script type="text/javascript">
 	var IAdmId="#(IAdmId)#"
 	//alert(IAdmId)
 </script>
+<style>
+.search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	
+}
+.r-label{
+	padding-left: 10px;
+}
 
+</style>
 </HEAD>
 
 <body>
-	<div class="hisui-layout"  border="true" id="PrintIADMInfo"> 
-		<div class="hisui-panel" style="border:1px #ccc;border-radius:4px;">
-			<table class="hisui-datagrid" data-options="bodyCls:'panel-header-gray'" id="dhcpeprintiadmlist"></table>
+
+	<div class="hisui-layout" fit="true">
+	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:62px;padding:10px 10px 0 10px;">
+		<div class="hisui-panel" data-options="title:'',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:4px 4px 0 0;">
+			<table class="search-table">
+				<tr>	
+					<td class="r-label">
+						<a id="PrintAllBarCode" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">全部打印</a>
+					</td>
+										
+				</tr>
+					
+					
+			</table>
 		</div>
 	</div>
+		<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0px;border-radius:0 0 4px 4px;">
+					<table data-options="bodyCls:'panel-header-gray'" id="dhcpeprintiadmlist"></table>
+			</div>
+        </div>
+	      
+</div>
+
 	<script type="text/javascript" src="../scripts/DHCPEPrintIAdmInfo.hisui.js"></script>
 	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
 	<script type='text/javascript' src='../scripts/DHCPEPrintBarCommon.js'></script>

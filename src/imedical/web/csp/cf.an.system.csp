@@ -1,0 +1,264 @@
+<csp:method name=OnPerHttp arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q l
+	quit l
+</csp:method>
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>信息系统</title>
+<csp:content charset="UTF-8">
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<style>
+	.hisui-validatebox{border-radius:2px}
+	.form-table tr td {
+    	background-color: white!important;
+    	font-weight: normal!important;
+    	border :none!important;
+	}
+	.form-table{
+		border :none!important;
+	}
+	div.form-row .form-title {
+    	display: inline-block;
+    	text-align: center;
+    	text-align: justify;
+    	text-justify: distribute-all-lines;
+    	text-align-last: right;
+	}
+	.dialog-button {
+		padding:0 10px 10px 10px
+	}
+	div.form-row {
+    	margin:10px 10px 0 6px
+	}
+</style>
+</head>
+<body class="hisui-layout">
+	<div id="dataTools">
+		<a href="#" id="btnAdd" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addData();">新增</a>
+		<a href="#" id="btnEdit" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="javascript:editData();">修改</a>
+		<a href="#" id="btnDel" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="javascript:delData();">删除</a>
+	</div>
+	<table id="dataBox"></table>
+	<div id="dataDialog" class="hisui-dialog" data-options="modal:true,closed:true,width:537,height:167">
+		<form id="dataForm">
+			<div class="form-rows">
+				<div>
+					<div class="form-row">
+						<div class="form-title">唯一标识</div>
+						<div class="form-item">
+							<input type="text" id="Name" name="Name" class="hisui-validatebox" data-options="required:true"/>							
+						</div>
+						<div class="form-title">系统名称</div>
+						<div class="form-item" style="margin-right: 0px;">
+							<input type="text" id="Description" name="Description" class="hisui-validatebox" data-options="required:true">
+						</div>
+					</div>
+				</div>
+				<div>
+					<div class="form-row">
+						<div class="form-title">厂家</div>
+						<div class="form-item">
+							<input type="text" id="Vendor" name="Vendor" class="hisui-validatebox" data-options="required:true">
+						</div>
+						<div class="form-title">上线日期</div>
+						<div class="form-item" style="margin-right: 0px">
+							<input type="text" id="StartDate" name="StartDate" class="hisui-datebox" data-options="required:true" style="width:180px">
+						</div>
+					</div>
+				</div>
+			</div>
+			<input type="hidden" id="RowId" name="RowId" />
+		</form>
+	</div>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DataForm.js"></script>
+	<script type="text/javascript">
+var page = {
+    datagrid: null
+};
+
+$(document).ready(function() {
+    var columns = [
+        [
+            { field: "Name", title: "唯一标识", width: 120 },
+            { field: "Description", title: "系统名称", width: 100 },
+            { field: "Vendor", title: "厂家", width: 100 },
+            { field: "StartDate", title: "上线日期", width: 100 }
+        ]
+    ];
+
+    page.datagrid = $("#dataBox");
+    page.datagrid.datagrid({
+        headerCls: 'panel-header-gray',
+        border:false,
+        columns: columns,
+        fit: true,
+        iconCls:"icon-paper",
+        singleSelect: true,
+        rownumbers: true,
+        pagination: true,
+        pageList: [10, 20, 30, 40, 50, 100, 200],
+        pageSize: 200,
+        toolbar: "#dataTools",
+        url: ANCSP.DataQuery,
+        queryParams: {
+            ClassName: ANCLS.BLL.ConfigQueries,
+            QueryName: "FindSystem",
+            ArgCnt: 0
+        },
+        onSelect: function(index, row) {
+            page.form.form("load", row);
+        },
+        onBeforeLoad: function(param) {
+            param.ArgCnt = 0;
+        },
+        onLoadSuccess: function(data) {}
+    });
+
+    page.dialog = $("#dataDialog");
+    page.dialog.dialog({
+        buttons: [{
+            text: "保存",
+            iconCls: "icon-w-save",
+            handler: function() {
+                page.form.submit();
+            }
+        }, {
+            text: "取消",
+            iconCls: "icon-w-close",
+            handler: function() {
+                page.dialog.dialog("close");
+            }
+        }],
+        onClose: function() {
+            page.form.form("clear");
+        },
+        onOpen: function() {
+            initDefaultValue();
+        }
+    });
+
+    page.form = $("#dataForm");
+    page.form.form({
+        onSubmit: function(param) {
+            var isValid = $(this).form("validate");
+            if (isValid) saveData();
+            return isValid;
+        },
+        success: function(data) {
+            //console.log("success:" + data);
+            page.form.form("clear");
+            page.datagrid.datagrid("reload");
+            if (page.dialog) {
+                page.dialog.dialog("close");
+            }
+        }
+    });
+});
+
+/**
+ * 新增按钮处理函数
+ * @param {DataForm} dataForm - 数据表单对象
+ * @author chenchangqing 20170811
+ */
+function addData() {
+    if (page.dialog) {
+        page.dialog.dialog({
+            title: "新增系统信息",
+            iconCls: "icon-w-add"
+        });
+        if (page.form[0].RowId) {
+            page.form[0].RowId.value = "";
+        }
+        page.dialog.dialog("open");
+    }
+}
+
+/**
+ * 修改按钮处理函数
+ */
+function editData() {
+    if (hasRowSelected(true)) {
+        if (page.dialog) {
+            page.dialog.dialog({
+                title: "修改系统信息",
+                iconCls: "icon-w-edit"
+            });
+            var selectedRow = page.datagrid.datagrid("getSelected");
+            page.form.form("load", selectedRow);
+            page.dialog.dialog("open")
+        } else {
+            page.form.submit();
+        }
+    }
+}
+
+/**
+ * 保存数据处理函数
+ */
+function saveData() {
+    var param = page.form.serializeJson();
+
+    dhccl.saveDatas(ANCSP.DataService, $.extend(param, {
+        ClassName: "CF.AN.System"
+    }), function(data) {
+
+    });
+
+}
+
+/**
+ * 删除按钮处理函数
+ */
+function delData() {
+    if (hasRowSelected(true)) {
+        $.messager.confirm("确认", "你的操作不可逆转，是否删除该数据记录？", function(result) {
+            if (result) {
+                var selectedRow = page.datagrid.datagrid("getSelected");
+                var rowId = selectedRow["RowId"];
+                var msg = dhccl.removeData("CF.AN.System", rowId);
+                dhccl.showMessage(msg, "删除", null, null, function() {
+                    page.form.form("clear");
+                    page.datagrid.datagrid("reload");
+                });
+            }
+        });
+    }
+}
+
+/**
+ * 查询按钮处理函数
+ */
+function queryData() {
+    page.datagrid.datagrid("reload");
+}
+
+/**
+ * 判断数据表格是否选中一行
+ * @param {string} showPrompt - 未选中行时是否提示
+ */
+function hasRowSelected(showPrompt) {
+    var result = false;
+    if (page.datagrid) {
+        var selectedRow = page.datagrid.datagrid("getSelected");
+        if (selectedRow) {
+            result = true;
+        } else {
+            result = false;
+        }
+    }
+    if (!result && showPrompt) {
+        $.messager.alert("提示", "请先选择一行再进行操作！", "warning");
+    }
+    return result;
+}
+
+function initDefaultValue(dataForm) {
+    
+}
+	</script>
+</body>
+</html>
+

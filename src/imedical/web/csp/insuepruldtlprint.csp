@@ -1,0 +1,487 @@
+<!-- 
+ * FileName: insuepruldtlprint.csp
+ * Description: 医保结算清单信息
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		.input_text{
+			border-color:#efefef; 
+			border-style:solid;
+			border-top-width:0px; 
+			border-right-width:0px; 
+			border-bottom-width:2px; 
+			border-left-width:0px;
+			text-align:center;
+		}
+		.td{
+             text-align: center;
+        }
+		.table-a table{border-right:1px solid #000000;border-bottom:1px solid #000000;border-left:1px solid #000000;border-top:1px solid #000000} 
+		.table-b table{border-right:1px solid #000000;border-left:1px solid #000000} 
+		.table-c table{border-right:1px solid #000000;border-bottom:1px solid #000000;border-left:1px solid #000000;border-top:1px solid #000000} 
+		.table-e table{border-left:1px solid #000000;} 
+		.table-h table{border-left:1px solid #000000} 
+		.table-d table{border-right:1px solid #000000;border-left:1px solid #000000;border-bottom:1px solid #000000;text-align:center} 
+		.table-h table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;text-align:center}
+		.table-e table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;}
+		.table-f table{border-left:1px solid #000000;border-right:1px solid #000000} 
+		.table-f table td{border-bottom:1px solid #000000;height:30px;}
+		.table-j table{border-left:1px solid #000000;} 
+		.table-j table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;text-align:center}
+		.table-m table{border-left:1px solid #000000;border-right:1px solid #000000}
+		.table-g table{border-left:1px solid #000000;border-top:1px solid #000000}
+		.table-g table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;text-align:center}
+		.table-n table{border-left:1px solid #000000;border-right:1px solid #000000} 
+		.table-n table td{border-bottom:1px solid #000000;height:30px;}
+		.table-i table td{border-right:1px solid #000000;height:30px;margin-left:15px}
+		.table-i table{border-left:1px solid #000000;border-bottom:1px solid #000000}
+	</style>
+	<style  media="print">
+		.input_text{
+			border-color:#efefef; 
+			border-style:solid;
+			border-top-width:0px; 
+			border-right-width:0px; 
+			border-bottom-width:2px; 
+			border-left-width:0px;
+			text-align:center;
+		}
+		.td{
+             text-align: center;
+        }
+		.table-a table{border-right:1px solid #000000;border-bottom:1px solid #000000;border-left:1px solid #000000;border-top:1px solid #000000} 
+		.table-b table{border-right:1px solid #000000;border-left:1px solid #000000} 
+		.table-c table{border-right:1px solid #000000;border-bottom:1px solid #000000;border-left:1px solid #000000;border-top:1px solid #000000} 
+		.table-e table{border-left:1px solid #000000;} 
+		.table-h table{border-left:1px solid #000000} 
+		.table-d table{border-right:1px solid #000000;border-left:1px solid #000000;border-bottom:1px solid #000000;text-align:center} 
+		.table-h table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;text-align:center}
+		.table-e table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;}
+		.table-f table{border-left:1px solid #000000;border-right:1px solid #000000} 
+		.table-f table td{border-bottom:1px solid #000000;height:30px;}
+		.table-j table{border-left:1px solid #000000;} 
+		.table-j table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;text-align:center}
+		.table-m table{border-left:1px solid #000000;border-right:1px solid #000000}
+		.table-g table{border-left:1px solid #000000;border-top:1px solid #000000}
+		.table-g table td{border-bottom:1px solid #000000;border-right:1px solid #000000;height:30px;text-align:center}
+		.table-n table{border-left:1px solid #000000;border-right:1px solid #000000} 
+		.table-n table td{border-bottom:1px solid #000000;height:30px;}
+		.table-i table td{border-right:1px solid #000000;height:30px;margin-left:15px}
+		.table-i table{border-left:1px solid #000000;border-bottom:1px solid #000000}
+	</style>
+	<script type='text/javascript' src='../scripts/dhcbill/common/dhcbill.common.js'></script>
+	<script type='text/javascript' src='../scripts/dhcbill/dhcjs/loader.js'></script>
+	<script type='text/javascript' src='../scripts/insuepruldtlprint.js'></script>
+	<script type='text/javascript' src='../scripts/dhcinsu/common/jquery.jqprint-0.3.js'></script>
+
+</head>
+<!--startprint1-->
+<body style="background-color:#F0FFF;padding:0px;">
+	<div class="hisui-layout" >
+		<div class="hisui-panel" id="printdiv" title="" style="height:650px;width:1100px" data-options="headerCls:'panel-header-card'">
+			
+			<div align="center">
+				<input name="QUERY" id="hosp_name" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+				<label style="font-size:20pt">医疗保障基金结算清单</label>
+				<a href=""  id="btn-print" style="width:100px; " >打印</a>
+			</div>
+			<div><label style="margin-left:15px"></label></div>
+
+			<table class="" >
+				<tr>
+					<td class="r-label"><label>定点医疗机构名称</label></td>
+					<td><input name="QUERY" id="fixmedins_name" type="text" style="width:200px" readonly="readonly" class="input_text"/></td>
+					<td class="r-label"><label>定点医疗机构代码</label></td>
+					<td><input name="QUERY" id="fixmedins_code" type="text" style="width:200px" readonly="readonly" class="input_text"/></td>
+					<td class="r-label"><label>医保结算等级</label></td>
+					<td><input name="QUERY" id="hi_setl_lv" type="text" style="width:150px" readonly="readonly" class="input_text"/></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label style="">医保编号</label></td>
+					<td><input name="QUERY" id="hi_no" type="text" style="width:200px" readonly="readonly" class="input_text"/></td>
+					<td class="r-label"><label style="">病案号</label></label></td>
+					<td><input name="QUERY" id="medcasno" type="text" style="width:200px" readonly="readonly" class="input_text"/></td>
+					<td class="r-label"><label style="">申报时间</label></td>
+					<td><input name="QUERY" id="dcla_time" type="text" style="width:200px" readonly="readonly" class="input_text"/></td>
+				</tr>
+				<tr></tr>
+			</table>
+			<div class="table-a">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr><td id="title" style="text-align:center;background-color:#A9CCE3;height:30px">一、基本信息</td></tr>
+					<tr></tr>
+				</table>
+			</div>
+			<div class="table-b">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<div>
+						<label style="margin-left:15px">姓名</label>
+						<input name="QUERY" id="psn_name" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">性别</label>
+						<input name="QUERY" id="gend" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">出生日期</label>
+						<input name="QUERY" id="brdy" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">年龄</label>
+						<input name="QUERY" id="age" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">国籍</label>
+						<input name="QUERY" id="ntly" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">(年龄不足1周岁)年龄</label>
+						<input name="QUERY" id="nwb_age" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">民族</label>
+						<input name="QUERY" id="naty" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">患者证件类别</label>
+						<input name="QUERY" id="patn_cert_type" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">患者证件号码</label>
+						<input name="QUERY" id="certno" type="text" style="width:150px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">职业</label>
+						<input name="QUERY" id="prfs" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">现住址</label>
+						<input name="QUERY" id="curr_addr" type="text" style="width:350px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">工作单位名称</label>
+						<input name="QUERY" id="emp_name" type="text" style="width:150px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:30px">工作单位地址</label>
+						<input name="QUERY" id="emp_addr" type="text" style="width:150px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:30px">单位电话</label>
+						<input name="QUERY" id="emp_tel" type="text" style="width:150px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:30px">邮编</label>
+						<input name="QUERY" id="poscode" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">联系人姓名</label>
+						<input name="QUERY" id="coner_name" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">关系</label>
+						<input name="QUERY" id="patn_rlts" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">地址</label>
+						<input name="QUERY" id="coner_addr" type="text" style="width:250px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">联系人电话</label>
+						<input name="QUERY" id="coner_tel" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">医保类型</label>
+						<input name="QUERY" id="hi_type" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:100px">特殊人员类型</label>
+						<input name="QUERY" id="sp_psn_type" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:80px">参保地</label>
+						<input name="QUERY" id="insuplc" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">新生儿入院类型</label>
+						<input name="QUERY" id="nwb_adm_type" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">新生儿出生体重(克)</label>
+						<input name="QUERY" id="nwb_bir_wt" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">新生儿入院体重(克)</label>
+						<input name="QUERY" id="nwb_adm_wt" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+					</div>
+					
+				</table>
+			</div>
+			<div class="table-c">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr><td id="title" style="text-align:center;background-color:#A9CCE3;height:30px">二、门诊慢特病诊疗信息</td></tr>
+				</table>
+			</div>
+			
+			<div class="table-d">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<div>
+						<label style="margin-left:15px">诊断科别</label>
+						<input name="QUERY" id="opsp_diag_caty" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:200px">就诊日期</label>
+						<input name="QUERY" id="opsp_mdtrt_date" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+					</div>
+				</table>				
+			</div>
+			
+			<div class="table-h">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">					
+					<div class="hisui-panel" title="" style="height:208px;width:1050px;padding-top:0px" >
+						<div class="hisui-datagrid" id="opspdiseinfo"></div>
+					</div>
+				</table>
+			</div>
+			
+			<div class="table-e">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr><td id="title" style="text-align:center;background-color:#A9CCE3;height:30px">三、住院诊疗信息</td></tr>
+					<tr>
+						<td style="margin-left:15px">住院医疗类型
+							<input name="QUERY" id="ipt_med_type" type="text" style="width:50px" readonly="readonly" class="input_text"/>
+						&nbsp&nbsp1.住院&nbsp&nbsp&nbsp&nbsp&nbsp2.日间手术
+						</td>
+					</tr>
+					<tr>
+						<td style="margin-left:15px">入院途径
+							<input name="QUERY" id="adm_way" type="text" style="width:50px" readonly="readonly" class="input_text"/>
+						&nbsp&nbsp1.急诊&nbsp&nbsp&nbsp&nbsp&nbsp2.门诊&nbsp&nbsp&nbsp&nbsp&nbsp3.其他医疗机构转入&nbsp&nbsp&nbsp&nbsp&nbsp4.其他
+						</td>
+					</tr>
+					<tr>
+						<td style="margin-left:15px">治疗类别
+							<input name="QUERY" id="trt_type" type="text" style="width:50px" readonly="readonly" class="input_text"/>
+						&nbsp&nbsp1.西医&nbsp&nbsp&nbsp&nbsp&nbsp2.中医(2.1中医  2.2民族医)&nbsp&nbsp&nbsp&nbsp&nbsp3.中西医
+						</td>
+					</tr>
+				</table>
+			</div>
+			
+			<div class="table-f">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td>入院时间
+						<input name="QUERY" id="adm_time" type="text" style="width:200px"  readonly="readonly" class="input_text"/>
+						</td>
+						<td>入院科别
+						<input name="QUERY" id="adm_caty" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>
+						<td>转科科别
+						<input name="QUERY" id="refldept_dept" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>
+					
+					<tr>
+						<td>出院时间
+						<input name="QUERY" id="dscg_time" type="text" style="width:200px"  readonly="readonly" class="input_text"/>
+						</td>
+						<td>出院科别
+						<input name="QUERY" id="dscg_caty" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>
+						<td>实际住院天数
+						<input name="QUERY" id="act_ipt_days" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>
+					<tr>
+						<td>门(急)诊诊断(西医诊断)
+						<input name="QUERY" id="otp_wm_dise" type="text" style="width:250px" readonly="readonly" class="input_text"/>
+						</td>
+						<td>疾病代码
+						<input name="QUERY" id="wm_dise_code" type="text" style="width:250px" readonly="readonly" class="input_text"/>
+						</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td>门(急)诊诊断(中医诊断)
+						<input name="QUERY" id="otp_tcm_dise" type="text" style="width:250px" readonly="readonly" class="input_text"/>
+						</td>
+						<td>疾病代码
+						<input name="QUERY" id="tcm_dise_code" type="text" style="width:220px" readonly="readonly" class="input_text"/>
+						</td>
+						<td></td>
+					</tr>
+				</table>
+			</div>
+			<div class="table-j">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">					
+					<div class="hisui-panel" title="" style="height:380px;width:1050px;padding-top:0px" >
+						<div class="hisui-datagrid" id="diseinfo"></div>
+					</div>
+				</table>
+			</div>
+			<div class="table-m">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td>诊断代码计数
+						<input name="QUERY" id="diag_code_cnt" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>						
+					</tr>
+				</table>
+			</div>
+			<div class="table-g">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">					
+					<div class="hisui-panel" title="" style="height:400px;width:1050px;padding-top:0px" >
+						<div class="hisui-datagrid" id="oprninfo"></div>
+					</div>
+				</table>
+			</div>
+			<div class="table-m">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td>手术及操作代码计数
+						<input name="QUERY" id="oprn_oprt_code_cnt" type="text" style="width:250px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>
+					<tr>
+						<td>呼吸机使用时间
+						<input name="QUERY" id="vent_used_dura" type="text" style="width:300px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>
+					<tr>
+						<td>颅脑损伤患者昏迷时长(入院前)
+						<input name="QUERY" id="pwcry_bfadm_coma_dura" type="text" style="width:300px" readonly="readonly" class="input_text"/>
+						</td>
+						<td>颅脑损伤患者昏迷时长(入院后)
+						<input name="QUERY" id="pwcry_afadm_coma_dura" type="text" style="width:320px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="table-g">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">					
+					<div class="hisui-panel" title="" style="height:150px;width:1050px;padding-top:0px" >
+						<div class="hisui-datagrid" id="icuinfo"></div>
+					</div>
+				</table>
+			</div>
+			<div class="table-f">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<div>
+						<label style="margin-left:15px">输血品种</label>
+						<input name="QUERY" id="bld_cat" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:80px">输血量</label>
+						<input name="QUERY" id="bld_amt" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:80px">输血计量单位</label>
+						<input name="QUERY" id="bld_unt" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">特级护理天数</label>
+						<input name="QUERY" id="spga_nurscare_days" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">一级护理天数</label>
+						<input name="QUERY" id="lv1_nurscare_days" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">二级护理天数</label>
+						<input name="QUERY" id="scd_nurscare_days" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">三级护理天数</label>
+						<input name="QUERY" id="lv3_nurscare_days" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">离院方式</label>
+						<input name="QUERY" id="dscg_way" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:80px">拟接收机构名称</label>
+						<input name="QUERY" id="acp_medins_name" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:80px">拟接收机构代码</label>
+						<input name="QUERY" id="acp_optins_code" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">是否有出院31天再住院计划</label>
+						<input name="QUERY" id="days_rinp_flag_31" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:70px">目的</label>
+						<input name="QUERY" id="days_rinp_pup_31" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">拟接收机构代码</label>
+						<input name="QUERY" id="acp_optins_code2" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+					</div>
+					<div>
+						<label style="margin-left:15px">主诊医师姓名</label>
+						<input name="QUERY" id="chfpdr_name" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						<label style="margin-left:50px">主诊医师代码</label>
+						<input name="QUERY" id="chfpdr_code" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+					</div>					
+				</table>
+			</div>
+			<div class="table-h">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr><td id="title" style="text-align:center;background-color:#A9CCE3;height:30px">四、医疗收费信息</td></tr>
+					<tr></tr>
+				</table>
+			</div>
+			<div class="table-i" >
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td style="margin-left:15px">票据代码
+						<input name="QUERY" id="bill_code" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>   
+						<td rowspan="3" colspan="4" style="margin-left:15px">结算期间
+						<input name="QUERY" id="setl_begn_date" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						-
+						<input name="QUERY" id="setl_end_date" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>
+					<tr>
+						<td style="margin-left:15px">票据号码
+						<input name="QUERY" id="bill_no" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>
+					<tr>
+						<td style="margin-left:15px">业务流水号
+						<input name="QUERY"id="biz_sn" type="text" style="width:200px" readonly="readonly" class="input_text"/>
+						</td>
+					</tr>					
+				</table>
+			</div>
+			
+			<div class="table-g">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">					
+					<div class="hisui-panel" title="" style="height:550px;width:1050px;padding-top:0px" >
+						<div class="hisui-datagrid" id="iteminfo"></div>
+					</div>
+				</table>
+			</div>
+			
+			
+			<div class="table-j">
+				<table width="1050px;height:350px" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td rowspan="4" style="width:150px" >基金支付</td>   
+						<td rowspan="4"><div class="hisui-panel" title="" style="height:350px;width:500px;padding-top:0px" >
+							<div class="hisui-datagrid" id="payinfo"></div>
+							</div>
+						</td> 
+						<td rowspan="4" style="width:150px" >个人支付</td> 
+						<td style="width:300px" >个人自付</td>
+						<td style="width:300px" ><input name="QUERY" id="psn_selfpay" type="text" style="width:100px" readonly="readonly" class="input_text"/></td>   				 
+				  </tr>
+				  <tr>				  	
+				  		<td style="width:300px" >个人自费</td> 
+				  		<td style="width:300px" ><input name="QUERY" id="psn_ownpay" type="text" style="width:100px" readonly="readonly" class="input_text"/></td>   				 
+				  </tr>
+				  <tr>				  		 
+				  		<td style="width:300px" >个人账户支付</td> 
+				  		<td style="width:300px" ><input name="QUERY" id="acct_pay" type="text" style="width:100px" readonly="readonly" class="input_text"/></td>   				 
+				  </tr>
+				  <tr>
+				  		<td style="width:300px" >个人现金支付</td> 
+				  		<td style="width:300px" ><input name="QUERY" id="psn_cashpay" type="text" style="width:100px" readonly="readonly" class="input_text"/></td>   				 
+				  </tr>
+			</table>
+						
+			</div>
+			<div class="table-e">
+				<table width="1050px" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td>医保支付方式
+						<input name="QUERY" id="hi_paymtd" type="text" style="width:100px" readonly="readonly" class="input_text"/>
+						&nbsp1.按项目&nbsp2.单病种&nbsp3.按病种分值&nbsp4.疾病诊断相关分组(DRG)&nbsp5.按床日&nbsp6.按人头&nbsp7.按定额&nbsp9.其他
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div style="margin-top:15px">
+				<label style="margin-left:15px">医疗机构填报部门</label>
+				<input name="QUERY" id="medins_fill_dept" type="text" style="width:300px" readonly="readonly" class="input_text"/>
+				<label style="">医疗机构接收部门</label>
+				<input name="QUERY" id="hsorg" type="text" style="width:300px" readonly="readonly" class="input_text"/>
+				</div>
+			<div>
+				<label style="margin-left:15px">医疗机构填报人</label>
+				<input name="QUERY" id="medins_fill_psn" type="text" style="float:center;width:300px" readonly="readonly" class="input_text"/>
+				<label style="margin-left:15px">医疗机构接收人</label>
+				<input name="QUERY" id="hsorg_opter" type="text" style="float:center;width:300px" readonly="readonly" class="input_text"/>
+			</div>
+
+		</div>
+	</div>
+<!--endprint1-->
+
+</body>
+		<!--
+		<div media="print">
+			<div id="printdiv2" closed="true"></div>
+			<iframe id="printframe" src=""  width="100%" frameborder="0" scrolling="no"></iframe>
+			<a href="" class="hisui-linkbutton" id="btn-print" style="width:100px;" data-options="iconCls:'icon-w-find'">打印</a>
+		</div>
+		-->
+</html>
+
+

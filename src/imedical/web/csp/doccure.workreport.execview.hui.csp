@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!--治疗站治疗记录明细浏览 doccure.workreport.execview.hui.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link type="text/css" rel="stylesheet" href="../scripts/dhcdoc/css/dhcdoccurehui.css"/>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.openwin.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.worklist.curerecordlist.js"></script>
+ <server>
+s DCARowId=$Get(%request.Data("DCARowId",1))
+s PageShowFromWay=$Get(%request.Data("PageShowFromWay",1))
+</server>
+</head> 
+<body style="padding:10px;box-sizing: border-box;">
+	<div class="hisui-panel panel-header-gray" data-options='border:true,fit:true'>
+		<table id="tabCureRecordDetail"></table>
+	</div>
+	<SCRIPT language = 'javascript'>
+	var ServerObj={
+		DCARowId:"#(DCARowId)#",
+		PageShowFromWay:"#(PageShowFromWay)#"
+	};
+	var SessionStr=com_Util.GetSessionStr();
+	var CureDetailDataGrid=$('#tabCureRecordDetail').datagrid({  
+		fit : true,
+		width : 'auto',
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : false,
+		autoRowHeight : false,
+		nowrap: false,
+		collapsible:false,
+		url : $URL+"?ClassName=DHCDoc.DHCDocCure.ExecApply&QueryName=FindCureExecList&DCARowId="+ServerObj.DCARowId+"&OnlyNoExcute=&OnlyExcute=Y&rows=9999",
+		loadMsg : '加载中..',  
+		pagination : true,
+		rownumbers : true,
+		idField:"OEORERowID",
+		pageSize : 20,
+		pageList : [20,50],
+		columns :[[ 
+			{field:'DCARowId',title:'',width:1,hidden:true}, 
+			//{field:'PapmiNo',title:'登记号',width:100},   
+			//{field:'PatientName',title:'姓名',width:80},
+			{field:'ArcimDesc',title:'治疗项目',width:200,align:'left'},  
+			{field:'OEOREExStDate',title:'要求执行时间',width:140,align:'left'},
+			{field:'OEOREQty',title:'执行数量',width:80,align:'left'} ,
+			{field:'OEOREStatus',title:'执行状态',width:80,align:'left'},
+			{field:'OEOREUpUser',title:'执行人',width:80,align:'left'},
+			{field:'DCRDetail',title:'治疗详情',width:80,align:'left',
+				formatter:function(value,row,index){
+					if(row.DCRRowId!=""){
+						return '<a href="###" '+'onclick=ShowCureRecordMapDetail(\"'+row.DCRRowId+'\",\"'+row.DCRMapID+'\");>'+"<span class='fillspan-nosave'>"+$g("单击查看")+"</span>"+"</a>"
+					}else{
+						return "";	
+					}
+				}
+			},
+			{field:'DCRIsPicture',title:'是否有图片',width:80,
+				formatter:function(value,row,index){
+					if(value=="Y"){
+						return '<a href="###" id= "'+row["DCRRowId"]+'"'+' onmouseover=workList_RecordListObj.ShowCurePopover(this);'+' onclick=workList_RecordListObj.ShowCureRecordPic(\''+row.DCRRowId+'\');>'+"<span class='fillspan-nosave'>"+$g("查看图片")+"</span>"+"</a>"
+					}else{
+	        			return "";	
+	        		}
+				},
+				styler:function(value,row){
+					return "color:blue;text-decoration: underline;"
+				}
+			},
+			{field: 'Trance', title: '过程追踪', width:80, sortable: false, align: 'left', formatter: function (value, rowData, rowIndex) {
+			      retStr = "<a href='#' title='"+$g("治疗过程追踪")+"'  onclick='com_openwin.ShowReportTrace("+"\""+rowData.DCRRowId+"\","+"\"\""+",\""+rowData.OEORERowID+"\")'><span class='icon-track' title='"+$g("治疗过程追踪")+"')>&nbsp&nbsp&nbsp&nbsp&nbsp</span></a>"
+				  return retStr;
+			  }
+			},
+			{field:'DCRCureDate',title:'治疗时间',width:140,align:'left'} ,
+			{field:'DCRContent',title:'治疗记录内容',width:300,align:'left'} ,
+			{field:'DCRResponse',title:'治疗反应',width:200,align:'left'} ,
+			{field:'DCREffect',title:'治疗效果',width:200,align:'left'} ,
+			{field:'OEOREExDate',title:'操作时间',width:140,align:'left'} ,
+			{field:'OEOREType',title:'医嘱类型',width:100,align:'left'} ,
+			{field:'OEORERowID',ExecID:'ID',width:50,align:'left',hidden:true}  
+		]],
+		onBeforeLoad:function(param){
+			$.extend(param,{DCARowId:ServerObj.DCARowId,SessionStr:SessionStr});
+			$HUI.datagrid("#tabCureRecordDetail").unselectAll();
+		}
+	});
+	
+	function ShowCureRecordMapDetail(DCRRowID,DCRMapID){
+		if(DCRRowID==""){
+			$.messager.alert('提示','未获取到治疗记录ID信息!','warning');
+			return false;
+		}
+		var argObj={
+			DHCDocCureRecordLinkPage:"", //ServerObj.DHCDocCureRecordLinkPage,
+			DCRRowId:DCRRowID,
+			DCATempId:DCRMapID,
+			PageShowFromWay:"ShowFromEmrList"
+		}
+		com_openwin.ShowCureRecordDiag(argObj);
+	}
+	</SCRIPT>
+</body>
+</html>

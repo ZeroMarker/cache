@@ -1,0 +1,68 @@
+<!--门诊病历归档 自动打印 
+	csp:pha.op.v4.prescprint.csp
+	--> 
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <Server language="CACHE" runat="Server">
+        s Application=%request.Application
+   </Server>
+    <PHAPRINTCOM />
+    <server>
+        s admId = $Get(%request.Data("EpisodeID",1),"")
+		s zfFlag = $Get(%request.Data("zfFlag",1),"")
+		s prtType =  $Get(%request.Data("prtType",1),"")
+		s UseFlag = $Get(%request.Data("UseFlag",1),"")
+        s prescNoStr=##class(PHA.OP.PrescPrint.Query).GetAdmPresc(admId)
+    </server> 
+</head>
+<body >
+<SCRIPT Language="Javascript">
+	var zfFlag = '#(zfFlag)#';
+	var prtType = '#(prtType)#';
+	var UseFlag = '#(UseFlag)#';
+	var prescNoStr = '#(prescNoStr)#';
+	document.body.onload = BodyLoadHandler;
+	function BodyLoadHandler(){
+		setTimeout("PrescPrint();", 300 )
+	}
+	function PrescPrint(){
+		if(prescNoStr == "") return;
+		var prescNoArr=prescNoStr.split("^");
+		for(var i=0;i<prescNoArr.length;i++){
+            var prescNo=prescNoArr[i];
+			var prtData = tkMakeServerCall("PHA.OP.COM.Print", "PrescPrintData", prescNo, zfFlag, prtType, UseFlag);
+			if (prtData == "{}") {
+				continue;
+			} else if (prtData == "-1") {
+				continue;
+			} else {
+				var prtJson = JSON.parse(prtData);
+				var xmlTrmplate = prtJson.Templet || "";					
+				PRINTCOM.XML({
+					printBy: 'lodop',
+					XMLTemplate: xmlTrmplate,
+					data: prtJson
+				});
+			}
+			// 调用归档每份完成方法
+			if(typeof parent.finishOneItemJobAsyn=="function"){
+				//单张处方暂时注释
+				parent.finishOneItemJobAsyn();
+			} 
+        }	
+        setTimeout("parent.printNext();", 1000 )
+	}
+</SCRIPT>
+</body>
+</html>

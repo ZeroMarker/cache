@@ -1,0 +1,163 @@
+<csp:method name=OnPerHttp arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q l
+	quit l
+</csp:method>
+<html>
+<head>
+
+<!-- cf.an.casigntest.csp -->
+<title>CA签名测试</title>
+<csp:content charset="UTF-8">
+<HISUI css="wesys.menugroup.css"></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<style>
+th {
+	height:27px;
+	text-align:left;
+}
+.lable-right{
+	text-align:right;
+	width:251px;
+	padding-right:10px;	
+}
+.hisui-validatebox{border-radius:2px;}
+table{
+	border-bottom:dashed 1px #ccc;
+	border-collapse:separate;
+	border-spacing:0px 8px;
+}
+</style>
+</head>
+
+<body style="background-color:#fff;padding:0px 10px">
+	<div>
+		<table>
+			<tr>
+				<th>签名信息</th>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="VenderCode">签名厂商代码</label></td>
+				<td><input type="text" id="VenderCode" disabled name="VenderCode" class="hisui-validatebox" style="width:300px;"/></td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="SignType">签名类型</label></td>
+				<td><input type="text" id="SignType" disabled name="SignType" class="hisui-validatebox" style="width:300px;"/></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<th>签名入参</th>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="UserCode">用户工号</label></td>
+				<td><input type="text" id="UserCode" name="UserCode" class="hisui-validatebox" style="width:300px;"/></td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="toSignData">签名数据</label></td>
+				<td><textarea id="toSignData" class="hisui-validatebox" style="width:300px;height:50px;"></textarea></td>
+			</tr>
+			<tr>
+				<td style="text-align:center" colspan="2">
+					<a href="#" id="btnTest" class="hisui-linkbutton" data-options="iconCls:'icon-w-run'">签名测试</a>
+					<a href="#" id="btnUserSignImage" class="hisui-linkbutton" data-options="iconCls:'icon-w-img'" style="margin-left:30px">用户签名图片</a>
+				</td>
+			</tr>
+		</table>
+		<table style="border:0px">
+			<tr>
+				<th>签名结果</td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="userCertCode">用户证书唯一标识(一般是身份证号,必须)</label></td>
+				<td><input type="text" id="userCertCode" name="userCertCode" class="hisui-validatebox" style="width:300px;"/></td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="hashData">签名数据Hash值(可选)</label></td>
+				<td><input type="text" id="hashData" name="hashData" class="hisui-validatebox" style="width:300px;"/></td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="signData">签名后数据值(必须)</label></td>
+				<td><textarea id="signData" class="hisui-validatebox" style="width:300px;height:50px;"></textarea></td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="certNo">证书编号(必须)</label></td>
+				<td><input type="text" id="certNo" name="certNo" class="hisui-validatebox" style="width:300px;"/></td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="timestamp">时间戳(可选)</label></td>
+				<td><input type="text" id="timestamp" name="timestamp" class="hisui-validatebox" style="width:300px;"/></td>
+			</tr>
+			<tr>
+				<td class="lable-right"><label for="signImage">用户签名图片</label></td>
+				<td><img id="signImage" style="width:307px;height:50px;"/></td>
+			</tr>
+		</table>
+	</div>
+</body>
+<script language="cache" runat=server>
+	set VenderCode=%request.Get("VenderCode")
+	set SignType=%request.Get("SignType")
+    do ##class(CIS.AN.CA.SignService).OutputCASignTestJsPath(VenderCode,SignType)
+</script>
+<script type="text/javascript">
+	$(function(){
+		var VenderCode = decodeURI(dhccl.getQueryString("VenderCode"));
+		var SignType = decodeURI(dhccl.getQueryString("SignType"));
+		var SignDesc = decodeURI(dhccl.getQueryString("SignDesc"));
+		
+		$("#VenderCode").val(VenderCode);
+		$("#SignType").val(SignType);
+		$("#toSignData").val("测试数据");
+		
+        
+        $("#btnTest").linkbutton({
+        	onClick:function(){
+	        	
+	        	var signCode = "";
+        		var toSignData = $("#toSignData").val();
+        		var userCode = $("#UserCode").val();
+        		
+        		if(!toSignData){
+	        		$.messager.alert("提示", "签名数据不能为空", "error");
+	        		return;
+	        	}
+	        	if(!userCode){
+	        		$.messager.alert("提示", "用户工号不能为空", "error");
+	        		return;
+	        	}
+	        	
+	        	ca_key.LoginForm({
+		            signCode: signCode,
+		            userCode: userCode,
+		            toSignData: toSignData,
+		            callback: function(cartn){
+		                var userCertCode = cartn.userCertCode;  //用户证书唯一标识，一般指身份证
+		                var hashData = cartn.hashData;
+		                var signedData = cartn.signData;
+		                var certNo = cartn.certNo;  //证书编号
+		                var timestamp = cartn.timestamp;  //时间戳，可选
+		                var signImage = cartn.signImage;  //用户签名图片
+		                
+		                $("#userCertCode").val(userCertCode);
+		                $("#hashData").val(hashData);
+		                $("#signedData").val(signedData);
+		                $("#certNo").val(certNo);
+		                $("#timestamp").val(timestamp);
+		                $("#signImage").attr("src",signImage);
+		            }
+		        });
+        	}
+	    }); 
+	    
+	    $("#btnUserSignImage").linkbutton({
+        	onClick:function(){
+	        	var userCode = $("#UserCode").val();
+	        	var signImage = dhccl.runServerMethodNormal("CIS.AN.CA.SignService", "GetSignImageByUserCode", userCode);
+		        if (signImage) {
+		            $("#signImage").attr("src", "data:image/png;base64," + signImage);
+		        }
+        	}
+	    }); 
+	});
+</script>
+</html>

@@ -1,8 +1,8 @@
-<!-- 
+﻿<!-- 
  * FileName: insuauditip.hui.csp
  * Creator: DingSH
  * Date: 2020-02-25
- * Description: סԺҽ��ҽ�����
+ * Description: 住院医保医嘱审核
 -->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
@@ -19,7 +19,7 @@
 <link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.css'/>
 <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
 <script type="text/javascript" src="../scripts/insuauditip.hui.js" charset='GB18030'></script>
-<script type="text/javascript" src="../scripts/DHCINSUPort.js" charset='GB18030'></script>
+<script type="text/javascript" src="../scripts/DHCInsuPort.js" charset='GB18030'></script>
 <style>
 	.layout>.panel>.panel-header {
 	    -moz-border-radius: 4px 4px 0 0;
@@ -29,62 +29,68 @@
 	#aaaId>.layout-panel-north {
 		padding-bottom: 10px;
 	}
+	.panel-body.panel-body-noheader.panel-body-noborder.layout-body{
+		border-radius: 0px 0px 0px 0px;
+	}
+	.datagrid-header{
+		border-bottom-color:#E2E2E2;
+	}
 </style>
 </head>
 <body style="padding:10px;">
 	<div class="hisui-layout" id="aaaId" data-options="fit:true,border:false">
-		<div data-options="region:'north',title:'סԺҽ��ҽ�����',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:400px; border-radius: 0px 0px 4px 4px;">
+		<div data-options="region:'north',title:'住院医保医嘱审核',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:400px; border-radius: 0px 0px 4px 4px;">
 			<div class="hisui-layout" fit="true">
-				<div data-options="region:'north',collapsible:false,border:false" style="height:91px;border-bottom-width:1px;border-bottom-color:#cccccc;">
-					<table class="search-table" style="width:90%;">
+				<div data-options="region:'north',collapsible:false,border:false" style="height:91px;border-bottom-width:1px;border-bottom-color:#E2E2E2;">
+					<table class="search-table" >
 						<tr>
-							<td class="r-label">��ʼ����</td>
-							<td><input id='stDate' class="hisui-datebox textbox" data-options="required:true"></input></td>
-							<td class="r-label">�ǼǺ�</td>
+							<td class="r-label">开始日期</td>
+							<td ><input id='stDate' class="hisui-datebox textbox" data-options="required:true" ></input></td>
+							<td class="r-label r-label-20">登记号</td>
 							<td><input id="regNo" class="textbox"/></td>
-							<td class="r-label">��ѯ����</td>
+							<td class="r-label r-label-20">查询类型</td>
 							<td>
 							  <select id="searchType" class="hisui-combobox textbox">
-						          <option value="1">��Ժ</option>
-						          <option value="2">��Ժδ����</option>
-					        	  <option value="3">�Ѳ������</option>
+						          <option value="1">在院</option>
+						          <option value="2">出院未结算</option>
+					        	  <option value="3">已财务结算</option>
 					         </select>
 							</td>
-							<td style='padding-left:15px'>
-								<a id="btnSearch" href="#" class="hisui-linkbutton" iconCls="icon-w-find" onClick='QryChkPatInfo()'>��ѯ</a> 
+							<td style='padding-left:20px'>
+								<a id="btnSearch" href="#" class="hisui-linkbutton" iconCls="icon-w-find" onClick='QryChkPatInfo()'>查询</a> 
 							</td>
 							<td style='padding-left:20px'>
-								<a id="btnAuditSt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">��ʼ���</a> 
+								<a id="btnAuditSt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">开始审核</a> 
 							</td>
-							<td style='padding-left:15px'>
-								<a id="btnSearchAutoSt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clock'">��ʼ�Զ���ѯ</a> 
+							<td style='padding-left:20px'>
+								<a id="btnSearchAutoSt" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clock',stopAllEventOnDisabled:true">开始自动查询</a> 
 							</td>
-						   <td style='padding-left:15px'>
-								<a id="btnAuditReset" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'">�������</a>  
+						   <td style='padding-left:20px'>
+								<a id="btnAuditReset" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'">重新审核</a>  
 							</td>
 						</tr>
 						<tr>
-							<td class="r-label">��������</td>
+							<td class="r-label">结束日期</td>
 							<td><input id='edDate' class="hisui-datebox textbox" data-options="required:true"/></td>
-							<td class="r-label">������</td>
+							<td class="r-label r-label-20">病案号</td>
 								<td><input id="medicareNo" class="textbox"/></td>
-						 	<td class="r-label">���״̬</td>
+						 	<td class="r-label r-label-20">审核状态</td>
 							<td>
 							  <select id="chkType" class="hisui-combobox textbox">
-						          <option value="1">�����</option>
-						          <option value="2">�����</option>
-					        	  <option value="3">���</option>
-					        	  <option value="">ȫ��</option>
+						          <option value="1">待审核</option>
+						          <option value="2">审核中</option>
+					        	  <option value="3">完成</option>
+					        	  <option value="">全部</option>
 					         </select>
 							</td>
-							<td style='padding-left:15px'>
-								<a id="btnSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save">����</a> 
+							<td style='padding-left:20px'>
+								<a id="btnSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save">保存</a> 
 							</td>
 							<td style='padding-left:20px'>
-								<a id="btnAudit" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">������</a> 
+								<a id="btnAudit" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">审核完成</a> 
 							</td>
-							<td style='padding-left:15px'>
-								<a id="btnSearchAutoStp" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">ֹͣ�Զ���ѯ</a> 
+							<td style='padding-left:20px'>
+								<a id="btnSearchAutoStp" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">停止自动查询</a> 
 							</td>
 						</tr>
 					</table>
@@ -94,11 +100,11 @@
 				</div>
 			</div>
 		</div>		
-		<div data-options="region:'center',title:'ҽ����ϸ�б�(����Ϊ�Էѿɱ༭)',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-report-switch'" style = "border-radius: 0px 0px 4px 4px;">
+		<div data-options="region:'center',title:'医嘱明细列表(调整为自费可编辑)',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-report-switch'" style = "border-radius: 0px 0px 4px 4px;">
 			<table id="chkpatOrddg" class="hisui-datagrid"></table> 
 		</div>
 		
-         <!--�����Ϣչʾ-->	
+         <!--诊断信息展示-->	
 	     <div id="DiagWin" style='padding:10px'>
 	     
 	         <div class="hisui-layout" fit="true">
@@ -107,10 +113,10 @@
 	             </div>
 	    	 </div>		
         </div>
-       <!--ҽ����ϸ�б�-->
+       <!--医嘱详细列表-->
 	   <div id="PatOrdLstWin" style='padding:10px'>
 	   	   <div class="hisui-layout" fit="true">
-	           <div  id="PatOrdLstWinPanel"  fit='true' data-options="region:'center',headerCls:'panel-header-gray'" style="border-color:#cccccc;border-radius:4px 4px 4px 4px;">
+	           <div  id="PatOrdLstWinPanel"  fit='true' data-options="region:'center',headerCls:'panel-header-gray'" style="border-color:#E2E2E2;border-radius:4px 4px 4px 4px;">
 	               <table id="patordlstdg" class="hisui-datagrid" style="height:340px;"></table>
 	                <div id="lstTarDr" style='display:none'></div>
 	            </div>

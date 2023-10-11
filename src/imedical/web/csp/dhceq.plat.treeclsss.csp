@@ -1,0 +1,97 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<HTML>
+<HEAD>
+	<TITLE>
+		<TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</TITLE>
+	<TRAK:HEAD></TRAK:HEAD>	
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<ADDINS require="CmdShell"></ADDINS>
+</HEAD>
+<script language=Cache runat=server>
+	s ReadOnly=$Get(%request.Data("ReadOnly",1))
+	s HospFlag=##class(web.DHCEQCommon).GetSysInfo("990051")
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109")
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026") //多选查询使用
+</script>
+<body class="hisui-layout"> 
+	<csp:if condition='HospFlag="2"'>
+		<div data-options="region:'north',border:false,split:true" style="height:45px;padding:10px 10px 0 10px;">
+			<label id="_HospListLabel" style="color:red;padding-left:10px;" class='r-label'>医院</label>
+			<input class="hisui-validatebox"  id="_HospList" type="text">
+			<a id="_HospBtn" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">数据关联医院</a>	
+		</div>
+	</csp:if>
+	<div data-options="region:'center',border:false,split:true">
+		<div class="hisui-layout" data-options="fit:true,border:false">
+			<div class="hisui-panel" title='科室级别树' data-options="region:'west',split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="width:250px;padding:10px 5px 10px 10px;">
+					<div id="treeviewarea" data-options="fit:true,border:true"></div>	
+			</div>
+			<div class="hisui-panel" title='子节点' data-options="region:'center',split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="padding:10px 5px 10px 10px;">
+					<table id="DHCEQTreeChildren" data-options="fit:true,border:true,toolbar:'#BDelete'"></table>
+					<a id='BDelete' href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
+			</div>
+		<div class="hisui-panel" title='科室列表' data-options="region:'east',split:true,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="padding:10px 10px 10px 5px;width:800px;">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:5px">
+					<div class="eq-table">
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label" ><label id="cParDept" for="ParDept">父科室</label></div>
+									<div class="eq-table-td eq-table-input" style="padding-right: 10px;"><input class="hisui-validatebox"  id="ParDept"></div>
+									<div class="eq-table-td">
+										<a id="BSave" href="#" class="hisui-linkbutton" iconCls="icon-w-save" data-options="stopAllEventOnDisabled:true">增加</a>
+										<a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a>	<!--	MZY0149	3124629		2023-01-09	-->
+									</div>
+								</div>
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label"><label id="cDept" for="Dept">科室</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Dept"></div>
+									<div class="eq-table-td">
+										<a id="BExport" href="#" class="hisui-linkbutton" iconCls="icon-w-export" data-options="stopAllEventOnDisabled:true">导出</a>
+										<a id="BLoc" href="#" class="hisui-linkbutton" iconCls="icon-w-arrow-left" data-options="stopAllEventOnDisabled:true">定位</a>
+									</div>
+								</div>
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label"><label id="cDeptLevel" for="DeptLevel">是否包含科室层级</label></div>
+									<div class="eq-table-td eq-table-input"><input id="DeptLevel" class="hisui-validatebox"></div>										
+									<div class="eq-table-td">
+										<a id="BColSet" href="#" onclick="websys_lu('websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCColSet&TableName=Department',false,'width=1000,height=800,title=导出列设置,hisui=true');return false;" class="hisui-linkbutton" iconCls="icon-w-config" data-options="stopAllEventOnDisabled:true">导出列设置</a>
+									</div>									
+								</div>								
+							</div>
+						</div>
+						<div data-options="region:'center',border:false" style="position:relative;">
+							<table id="DHCEQCDepartment"></table>
+						</div>  
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="ReadOnly" value="#(ReadOnly)#">
+			<INPUT type="hidden" id="TMSourceType">
+			<INPUT type="hidden" id="TMType">
+			<INPUT TYPE="hidden" name="Job" id="Job" value=#($Job)#>
+			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT TYPE="hidden" name="GetTempData" id="GetTempData" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveList.GetStoreMoveStat")))#>
+			<INPUT TYPE="hidden" name="GetTempDataRows" id="GetTempDataRows" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveList.GetStoreMoveStat")))#>
+			<INPUT TYPE="hidden" name="vData" id="vData" value=#(##class(web.DHCEQCommon).UnEscape(%request.Get("vData")))#>			
+			<INPUT type="hidden" id="SplitNumCode" value=#(SplitNumCode)#>  <!--多选查询-->
+			<INPUT type="hidden" id="ChromeFlag" value=#(ChromeFlag)#>
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhceq/function/combotreecommon.js"></script> 
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script> <!--导出-->
+	<script type="text/javascript" src="../scripts/dhceq/plat/treeclass.js"></script>
+</body>
+</html>

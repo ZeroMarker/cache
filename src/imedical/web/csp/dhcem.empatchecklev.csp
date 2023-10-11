@@ -1,3 +1,7 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <html>
 <head>
 <script Language="Javascript">
@@ -11,10 +15,16 @@
 	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
 </script>
 <HISUI/>
+<script Language="Javascript">	
+	var CONTEXT="#(%session.Get("CONTEXT"))#"; 
+	var session=new Array();
+	if (session && "undefined"==typeof session['CONTEXT']) session['CONTEXT']="#(%session.Get("CONTEXT"))#";
+</script>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery.json.js" charset="utf-8"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>	
-<title>	更改患者分级 </title>
+<title>#(..Get("更改患者分级"))#</title>
 <style>
 * {
 	font-size: 14px;
@@ -33,36 +43,39 @@
 <body>
 	
 	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north'" style="border:none;height:40px">
+			<csp:Include Page="dhcdoc.patinfo.banner.csp">
+		</div>
 		<div data-options="region:'center'" style="border:none;padding:10px">
-			<div class="hisui-panel" title="更改患者分级" style="" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true">
+			<div class="hisui-panel" title="#(..Get("更改患者分级"))#" style="" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true">
 				<div class="lineItm">
-					<span style="margin-right:10px">初始分级</span>
+					<span style="margin-right:10px">#(..Get("初始分级"))#</span>
 					<input class="textbox" id="nursCheck" style="width: 163px;" disabled></input>
 				</div>
 				<div class="lineItm">
-					<span style="margin-right:10px">当前分级</span>
+					<span style="margin-right:10px">#(..Get("当前分级"))#</span>
 					<input class="textbox" id="docCheck" style="width: 163px;" disabled></input>
 				</div>
 				<div class="lineItm">
-					<span style="margin-right:10px">修改分级</span>
+					<span style="margin-right:10px">#(..Get("修改分级"))#</span>
 					<input class="hisui-combobox" id="DocLevel" style="width: 170px;" disbled></input>
 				</div>
 				<div class="lineItm">
-					<span style="margin-right:10px">修改原因</span>
+					<span style="margin-right:10px">#(..Get("修改原因"))#</span>
 					<input type="text" id="CheckLevCause" style="width: 170px;"/>
 				</div>
 				<div class="lineItm">
-					<span style="margin-right:10px">分级评估</span>
+					<span style="margin-right:10px">#(..Get("分级评估"))#</span>
 					<input type="text" id="NurCheckAssess" style="width: 170px;"/>
 				</div>
 				<div class="lineItm">
-					<span vertical-align="top" style="margin-right:10px;vertical-align: top;position:relative;top:2px;">评估说明</span>
+					<span vertical-align="top" style="margin-right:10px;vertical-align: top;position:relative;top:2px;">#(..Get("评估说明"))#</span>
 					<textarea class="textbox" placeholder="Message" id="NurCheckComments" style="width: 163px;height: 150px;resize:none;overflow:auto;"></textarea>
 				</div>	
 				
-				<div style="" class="lineItm">
-					<a href="#" class="hisui-linkbutton" iconCls="">保存</a>
-					<a href="#" class="hisui-linkbutton" iconCls="" style="margin-left:5px">取消</a>
+				<div style="" class="lineItm"style="padding-bottom:10px;">
+					<a href="#" class="hisui-linkbutton" iconCls="" id="saveLev">保存</a>
+					<a href="#" class="hisui-linkbutton" iconCls="" id="cancLev" style="margin-left:5px">取消</a>
 				</div>
 			</div>
 		</div>

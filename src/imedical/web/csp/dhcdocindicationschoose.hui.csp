@@ -29,15 +29,15 @@
 </head>
 <body class="hisui-layout" data-options="fit:true,border:false">
   	<div data-options="region:'center',border:false,split:false" style="padding:10px 10px 0 10px;"> 
-   		 <div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-radius:0 0 4px 4px;margin:0 auto;">
+   		 <div class="hisui-panel" fit="true" data-options="bodyCls:'panel-body-gray'" style="height:100%;border-radius:4px;margin:0 auto;">
    		 	<table id="InsurListTab"></table>
    		 </div>
   	</div>
   	<div data-options="region:'south',border:false,split:false" style="height:50px;">
   		<div id="panel-footer">
-			<a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">确认</a>
+			<a href="#" id="BSave" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">确认</a>
 			<div style="display:inline-block;margin:0 20px;"></div>
-			<a href="#" id="BClose" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">取消</a>
+			<a href="#" id="BClose" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">取消</a>
 		</div>
   	</div>
   	<SCRIPT language = 'javascript' >
@@ -51,6 +51,9 @@
 			$("#BClose").click(function(){
 				websys_showModal('options').CallBackFunc();
 			});
+			if (websys_showModal('options').showCancelBtnFlag=="N") {
+				$("#BClose").hide();
+			}
 		});
 		function InitInsurListTab(){
 			var Columns=[[
@@ -73,11 +76,12 @@
 				autoRowHeight : false,
 				//url : $URL+"?ClassName=web.DHCDocDiagnosEntryV8&QueryName=GetDeathTypeICDList&desc="+$("#Text_InputStr").val()+"&EpisodeID="+EpisodeID,
 				loadMsg : '加载中..',  
-				pagination : true,  
+				pagination : false,  
 				pageSize: 20,
 				pageList : [20,50,100],
 				columns :Columns,
 		    	idField:'ConType',
+				nowrap:false, 
 		    	onLoadSuccess:function(data){
 			    	$(this).datagrid('unselectAll');
 			    },

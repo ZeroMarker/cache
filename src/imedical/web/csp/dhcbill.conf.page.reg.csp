@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.conf.page.reg.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-11-05
  * Description: 住院登记页面配置
 -->
@@ -11,8 +11,7 @@
 </csp:method>
 <html>
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
 	<style>
@@ -22,78 +21,115 @@
 		.textbox.tb250 {
 			width: 250px;
 		}
+		.layout>.panel>.panel-header {
+		    -moz-border-radius: 4px 4px 0 0;
+		    -webkit-border-radius: 4px 4px 0 0;
+		    border-radius: 4px 4px 0 0;
+		}
+		.layout>.panel>.panel-body {
+		    -moz-border-radius: 0 0 4px 4px;
+		    -webkit-border-radius: 0 0 4px 4px;
+		    border-radius: 0 0 4px 4px;
+		}
+		.layout-panel-west {
+		    padding-right: 10px;
+		}
+		.tip-class li{
+			border-bottom: 1px solid #ddd;
+			padding: 5px 10px;
+			white-space: nowrap;
+		}
+		.tip-class li span {
+			margin:0 10px;
+		}
 	</style>
 	<server>
 		set pageId=+%request.Get("PageId")
-		set showInsuCode="SHOWINSU"
+		set DOMShowInsuCode="SHOWINSU"
 		set DOMSEQCode="DOMSEQ"
-		set codeStr=showInsuCode_"^"_DOMSEQCode
-		w "<script type=""text/javascript"">",!
-		w "	var GV = {",!
-		w "		PageId: "_pageId_",",!
-		w "		CodeStr: """_codeStr_""",",!
-		w "		ShowInsuCode: """_showInsuCode_""",",!
-		w "		DOMSEQCode: """_DOMSEQCode_""",",!
-		w "		PCSite: """",",!
-		w "		PCSiteDR: """"",!
-		w "	};",!
-		w "</script>"
+		set DOMCodeStr=DOMShowInsuCode_"^"_DOMSEQCode
+		set ParamSite="HOSPITAL"
+		set ParamFullBedAdmin="FullBedAdmin"
+		set ParamSocStatMtchInsType="SocStatMtchInsType"
+		set ParamEditAccompany="EditAccompany"
+		set ParamCodeStr=ParamFullBedAdmin_"^"_ParamSocStatMtchInsType_"^"_ParamEditAccompany
 	</server>
+	<script type="text/javascript">
+		var GV = {
+			PageId: "#(pageId)#",
+			DOMCodeStr: "#(DOMCodeStr)#",
+			DOMShowInsuCode: "#(DOMShowInsuCode)#",
+			DOMSEQCode: "#(DOMSEQCode)#",
+			PCSite: "",
+			PCSiteDR: "",
+			ParamFullBedAdmin: "#(ParamFullBedAdmin)#",
+			ParamSocStatMtchInsType: "#(ParamSocStatMtchInsType)#",
+			ParamEditAccompany: "#(ParamEditAccompany)#",
+			ParamCodeStr: "#(ParamCodeStr)#",
+			ParamSite: "#(ParamSite)#"
+		};
+	</script>
 </head>
 
-<body>
+<body style="padding:10px;">
 	<div class="hisui-layout" data-options="fit:true">
-		<div data-options="region:'north',border:false" style="height:50px;">
-			<div class="messager-popover info" style="padding:5px;top:10px;float:left;left:10px;right:10px;">
-				<span class="messager-popover-icon info"></span>
-				<span>若住院登记页面元素有变动，需先删除配置记录并刷新住院登记页面缓存DOM元素后重新配置</span>
+		<div data-options="region:'north',border:false">
+			<div>
+				<label style="padding-right:7px;">医院</label>
+				<input id="hospital" class="hisui-combobox textbox"/>
 			</div>
 		</div>
-		<div data-options="region:'center',border:false">
+		<div data-options="region:'center',border:false" style="padding-top:10px;">
 			<div class="hisui-layout" data-options="fit:true">
-				<div data-options="region:'north',border:false">
-					<div style="padding:0 0 10px 10px;">
-						<label style="padding-right:7px;">医院</label>
-						<input id="hospital" class="hisui-combobox textbox"/>
-					</div>
-				</div>
-				<div data-options="region:'west',border:false" style="width:430px;padding-right:10px;">
+				<div data-options="region:'west',title:'页面元素配置',collapsible:false,iconCls:'icon-batch-cfg',headerCls:'panel-header-gray',tools:'#dl-tools'" style="width:700px;">
 					<div class="hisui-layout" data-options="fit:true">
-						<div data-options="region:'center',border:false" style="padding: 0 0 10px 10px;">
-							<div id="dl-tb" style="padding-top:3px;">
-								<table cellspacing="0" cellpadding="0">
-									<tbody>
-										<tr>
-											<td colspan="3">
-												<label style="padding-left:10px;padding-right:7px;">入院登记和医保登记是否在同一页面操作</label>
-												<div id="showInsuFlag"></div>
-											</td>
-										</tr>
-										<tr>
-											<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-arrow-top" id="btn-moveUp" plain="true">上移</a></td>
-											<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-arrow-bottom" id="btn-moveDown" plain="true">下移</a></td>
-											<td><span style="color:#FF0000;padding-left:20px;">提示：上下移动可调整回车跳转顺序</span></td>
-										</tr>
-									</tbody>
-								</table>
+						<div data-options="region:'west',border:false" style="width:390px;padding-left:10px;">
+							<div class="hisui-panel" data-options="title:'DOM元素',fit:true,headerCls:'panel-header-card-gray'" >
+								<div id="dl-tb" style="padding-top:10px;">
+									<label style="padding-left:10px;padding-right:7px;">入院登记和医保登记是否在同一页面操作</label>
+									<div id="showInsuFlag"></div>
+									<table cellspacing="0" cellpadding="0">
+										<tbody>
+											<tr>
+												<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-arrow-top" id="btn-moveUp" plain="true">上移</a></td>
+												<td><a href="javascript:;" class="hisui-linkbutton" iconCls="icon-arrow-bottom" id="btn-moveDown" plain="true">下移</a></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<table id="domList"></table>
 							</div>
-							<table id="domList"></table>
+							<div id="dl-tools">
+								<a href="javascript:;" class="icon-tip" id="btn-tipDOM" style="margin-right:7px;"></a>
+								<a href="javascript:;" class="icon-save" id="btn-saveDOM"></a>
+							</div>
+						</div>
+						<div data-options="region:'center',border:false" style="padding-right:10px;">
+							<div class="hisui-panel" data-options="title:'配置记录列表',fit:true,headerCls:'panel-header-card-gray'" style="padding-top:10px;">
+								<table id="pageConfList"></table>
+							</div>
 						</div>
 					</div>
 				</div>
-				<div data-options="region:'center',border:false">
-					<div class="hisui-panel" data-options="border:false,fit:true" style="padding:0 10px 10px 0;">
-						<table id="pageConfList"></table>
-						<div id="pl-tb">
-							<a href="javascript:;" id="btn-delete" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a>
-						</div>
+				<div data-options="region:'center',headerCls:'panel-header-gray',iconCls:'icon-batch-cfg',title:'参数配置',tools:'#pl-tools'" style="padding:0 10px 10px 0;">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>病区床位已满是否可办理入院</label></td>
+							<td><div id="fullBedAdmin"></div></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>是否校验患者类别与费别对照</label></td>
+							<td><div id="socStatMtchInsType"></div></td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>是否需要维护陪护人信息</label></td>
+							<td><div id="editAccompany"></div></td>
+						</tr>
+					</table>
+					<div id="pl-tools">
+						<a href="javascript:;" class="icon-save" id="btn-saveParam"></a>
 					</div>
 				</div>
-			</div>
-		</div>
-		<div data-options="region:'south',border:false">
-			<div style="text-align:center;padding-bottom:10px;">
-				<a href="javascript:;" id="btn-save" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
 			</div>
 		</div>
 	</div>

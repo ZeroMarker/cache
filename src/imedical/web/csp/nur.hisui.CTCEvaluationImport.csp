@@ -1,0 +1,363 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q ""
+</csp:method>
+<html>
+<head>
+
+<link rel="stylesheet" href="../scripts_lib/Bootstrap-3.3.6/css/bootstrap.min.css"></link>
+<script type="text/javascript" src="../scripts_lib/jQuery/jquery.js"></script>
+<script type="text/javascript" src="../scripts_lib/vue.js"></script>
+<script type="text/javascript" src="../scripts_lib/SheetJs/xlsx.full.min.js"></script>
+<!-- 兼容IE支持promise对象 -->
+<script type="text/javascript" src="../scripts_lib/SheetJs/babel-polyfill.js"></script>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<HISUI/>
+
+<style>.icon{width: 20px;height: 20px;margin-right: 10px;float: right;}</style>
+<style>
+
+	* {
+		margin: 0;
+		padding: 0;
+	}
+
+	html {
+		height: 100%;
+		width: 100%;
+	}
+
+	body {
+		font-family: "微软雅黑";
+		min-height: 95%;
+		width: 100%;background: white;
+		background: url('../images/importReminder.png') no-repeat fixed center;
+	}
+	.input-group .form-control:last-child,.input-group .form-control:last-child:focus{box-shadow: none;border-left: 0;}
+.glyphicon-folder-open:before {
+    content: "";
+}
+.input-group-btn{border: 1px solid #9ed2f2;border-right: 0;height: 30px;border-radius: 2px 0 0 2px;line-height: 1;}
+.btn-info:hover,.btn-info {color: #fff;border-radius: 0;background-color: #40A2DE;border-color: #40A2DE;padding: 0 15px;height: 28px;}
+.btn-info>i{line-height: 26px;}
+.input-group-btn:first-child>.btn:focus{outline: none;}
+.form-control {height: 30px;padding: 4px 10px;}
+span.combo{height: 30px!important;}
+span.combo>input{height: 28px!important;line-height: 28px!important;}
+</style>
+</head>
+
+<body>
+	<input type="file" id="FileInput" hidden="hidden" style="display: none;" onchange="readfls(this.files)" />
+	<!-- <div style="width: 350px;"> -->
+		<!-- <input class="hisui-filebox" name="file2" data-options="width:350,buttonText:'选择',prompt:'excel文件：*.xls,*.xlsx',plain:true,onChange:function(nv,ov){console.log(arguments);}" accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /> -->
+		<!-- <input class="hisui-filebox" name="file2" data-options="width:350,buttonText:'选择',prompt:'excel文件：*.xls,*.xlsx',plain:true,onChange:readfls(this.files)" accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /> -->
+		<!-- <input class="hisui-filebox" name="file3" data-options="width:400,plain:true,buttonText:'选择',onChange:function(nv,ov){alert('改变:新:'+nv+',旧:'+ov);console.log(nv,ov);}" /> -->
+	<!-- </div> -->
+	<div id="app">
+		<div class="nav-bar">
+			<div class="btn-toolbar" role="toolbar" style="margin-bottom:10px;">
+			  <!-- onchange="readfls(this.files)" -->
+				<div class="input-group" style="width: 350px;" onclick="$('#FileInput')[0].click()">
+					<span class="input-group-btn">
+		        <button class="btn btn-info" type="button" ><i class="glyphicon glyphicon-folder-open"></i>选择</button>
+		      </span>
+					<input type="text" class="form-control" readonly placeholder="请选择Excel文件" v-model="fileInfo.name" style="background: transparent;border-radius: 2px;">
+				</div>
+				<!-- <input id="f6" name="f6" /> -->
+
+
+				<div class="input-group" style="width: 650px;">
+					<span style="line-height: 30px;">
+						<span id="_HospListLabel" style="line-height: 100%;margin-left: 5px;margin-right: 5px;">所属医院</span>
+						<select id="_HospList" style="width:220px;height:34px;"></select>
+					</span>
+					<span style="line-height: 30px;">
+						<!-- <input style="width: 70px;height:34px;border-radius:2px;margin-left: 430px;margin-top: -34px;" class="form-control btn-primary" type="button" id ="saveBtn" value="保存" onclick="Save();" /> -->
+						<a href="#" class="hisui-linkbutton" id="btn1" onclick="Save();" style="margin-left: 10px;">保存</a>
+					</span>
+					<a href="../service/NURNIS/Template/CTC导入模板V1.0.xlsx" download="CTC导入模板V1.0.xlsx" class="hisui-linkbutton" data-options="iconCls:'icon-w-download'" id="download" style="margin-left: 10px;color: white;">模板下载</a>
+
+					<!-- <a href="../service/NURNIS/Template/CTC导入模板V1.0.xlsx" download="CTC导入模板V1.0.xlsx" style="color: black;margin-left: 95px;text-decoration: underline;">模板下载</a> -->
+					<!-- <a href="../service/NURNIS/Template/CTC导入模板V1.0.xlsx" target="_blank" style="color: black;margin-left: 95px;text-decoration: underline;">模板下载</a> -->
+				</div>
+			</div>
+		</div>
+		<!-- <div id="demo" style="overflow: auto;" v-if="tableDemo.tbody.length>0">
+			<table class="table table-bordered" style="min-width: 100%;">
+				<thead>
+					<tr>
+						<th v-for="i in tableDemo.thead">
+							{{i}}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="(i,index) in tableDemo.tbody">
+						<td v-for="j in tableDemo.thead">{{i[j]}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div> -->
+	</div>
+	
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script>
+		$(function(){
+			// $('#f6').filebox({
+			// 	width: 400,
+			// 	prompt: '请选择文件',
+			// 	buttonText: '选择',
+			// 	buttonAlign: 'left',
+			// 	plain: true
+			// })
+      $("#download").click(function (argument) {
+          window.location.href="../service/NURNIS/Template/CTC导入模板V1.0.xlsx";
+      });
+			var cbox = $HUI.combobox("#Group",{
+			valueField:'id',
+			textField:'text',
+			multiple:false,
+			selectOnNavigation:false,
+			panelHeight:"auto",
+			editable:false,
+			data:[
+				{id:'1',text:'问题分类'},
+				{id:'2',text:'措施分类'},
+				{id:'3',text:'频次'},
+				{id:'4',text:'护理问题'},
+				{id:'5',text:'护理目标'},
+				{id:'6',text:'护理措施'},
+				{id:'7',text:'问题对措施'},
+				{id:'8',text:'措施小项'},
+				{id:'9',text:'措施对小项'},
+				{id:'10',text:'评估对问题'}
+			]
+		});
+		  });
+var hospID;
+$(function() {
+	// if (parseInt(multiFlag)) {
+		hospComp = GenHospComp("Nur_IP_CTCEvaluate",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+		///var hospComp = GenHospComp("ARC_ItemCat")
+		// console.log(hospComp.getValue());     //获取下拉框的值
+		hospID=hospComp.getValue();
+		hospComp.options().onSelect = function(i,d){
+			// 	HOSPDesc: "东华标准版数字化医院[总院]"
+			// HOSPRowId: "2"
+			console.log(arguments);
+			hospID=d.HOSPRowId;
+		}  ///选中事件
+	// } else {
+	// 	hospID=session['LOGON.HOSPID'];
+	// }
+	console.log(hospID);
+})
+	</script>
+
+	<script>
+		var ImportFile = null;
+		function readfls(fls) {
+			console.log(fls);
+			if (fls && fls.length > 0) {
+				ImportFile = fls[0];
+				var fileX = ImportFile.name.split(".").reverse()[0];
+				var fileXyes = false;
+				["xlsx", "xlc", "xlm", "xls", "xlt", "xlw", "csv"].forEach(function (value, index, array) {
+					if (fileX === value) {
+						fileXyes = true;
+					}
+				});
+				if (fileXyes) {
+					app.fileInfo.name = ImportFile.name;
+					app.fileInfo.size = ImportFile.size;
+					file2Xce(ImportFile).then(function (t) {
+						console.log("执行完毕");
+						//清空file，否则产生缓存
+						var obj = document.getElementById('FileInput');
+						obj.value='';
+						if (t && t.length > 0) {
+							var tmpHead = [];
+							var pmodel = {};
+							for (var itm in t[0]) {
+								tmpHead.push(itm);
+								pmodel[itm] = itm;
+							}
+							app.tableDemo.thead = tmpHead;
+							app.tableDemo.tbody = t;
+						} else {
+							app.tableDemo.thead = [];
+							app.tableDemo.tbody = [];
+						}
+					});
+				} else {
+					$.messager.popover({msg: '格式错误！请重新选择！',type:'error'});
+				}
+			}
+		}
+		
+		//解决不支持IE 自定义extend FileReader
+		if (!FileReader.prototype.readAsBinaryString) {
+		    FileReader.prototype.readAsBinaryString = function (fileData) {
+		       var binary = "";
+		       var pt = this;
+		       var reader = new FileReader();      
+		       reader.onload = function (e) {
+		           var bytes = new Uint8Array(reader.result);
+		           var length = bytes.byteLength;
+		           for (var i = 0; i < length; i++) {
+		               binary += String.fromCharCode(bytes[i]);
+		           }
+		        //pt.result  - readonly so assign binary
+		        pt.content = binary;
+		        $(pt).trigger('onload');
+		    }
+		    	reader.readAsArrayBuffer(fileData);
+		    }
+		}
+		
+		var wb; //读取完成的数据　
+		function file2Xce(f) {
+			return new Promise(function (resolve, reject) {
+				var reader = new FileReader();
+				reader.readAsBinaryString(f);
+				reader.onload = function (e) {
+					var bsVersion = IEVersion();
+					if(bsVersion == "" || bsVersion == "-1"){//不是IE浏览器
+						var data = reader.result;
+					}else{
+						var data = reader.content;
+					}
+					if (app.rABS) {
+						wb = XLSX.read(btoa(fixdata(data)), { //手动转化
+							type: 'base64'
+						});
+					} else {
+						wb = XLSX.read(data, {
+							type: 'binary'
+						});
+					}
+					console.log(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+					resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+				};
+			});
+		};
+
+		function fixdata(data) { //文件流转BinaryString
+			var o = "",
+				l = 0,
+				w = 10240;
+			for (; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)));
+			o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)));
+			return o;
+		}
+
+		var app = new Vue({
+			el: "#app",
+			data: {
+				rABS: false, //是否将文件读取为二进制字符串
+				fileInfo: {
+					name: "",
+					size: 0
+				},
+				tableDemo: {
+					thead: [],
+					tbody: []
+				}
+			}
+		});
+		
+		function Save (){
+			console.log(JSON.stringify(app.tableDemo.tbody))
+			if (!app.tableDemo.tbody.length) {
+				$.messager.popover({msg:'未有要保存的数据，请选择文件。',type:'error'});
+				return;
+			}
+			// return;请选择文件
+			var data = [],m=-1,n=0;
+			for(var i=2,len=app.tableDemo.tbody.length;i<len;i++){
+				var item = app.tableDemo.tbody[i];
+				if (item["评价系统"]) {
+					m++;
+					data[m]={
+						sysCode:item["评价系统"]||'',
+						sysDesc:item["__EMPTY"]||'',
+						hospDR:hospID,
+						children:[]
+					}
+					n=0;
+				}
+				data[m].children[n]={
+					adrsCode:item["__EMPTY_1"]||'',
+					adrsDesc:item["__EMPTY_2"]||'',
+					definition:item["标准内容"]||'',
+					extendedNotes:item["__EMPTY_3"]||'',
+					children:[]
+				}
+				for (var j = 1; j < 6; j++) {
+					if (item["__EMPTY_"+(2*j+2)]||item["__EMPTY_"+(2*j+3)]) {
+						data[m].children[n].children.push({
+							gradeNum:j,
+							gradeDesc:item["__EMPTY_"+(2*j+2)]||'',
+							measure:item["__EMPTY_"+(2*j+3)]||''
+						})
+					}
+				}
+				n++;
+			}
+			$.messager.confirm("保存", "数据会覆盖处理，确定保存?", function (r) {
+				if (r) {
+					//发起请求
+					$.cm({
+			      ClassName: 'Nur.NIS.Service.CTC.Config',
+						MethodName: 'SaveImportedData',
+						data: JSON.stringify(data)
+					},
+					function(data){
+						if(data==0){
+							// window.location.reload()
+							$.messager.popover({msg:"数据保存成功！",type:'success'});
+							$('body')[0].style.background="url('../images/importSuccess.png') no-repeat fixed center";
+							app.tableDemo.tbody=[];
+						}else{
+							$.messager.popover({msg:data,type:'error'});
+							$('body')[0].style.background="background: url('../images/importFail.png') no-repeat fixed center";
+						}
+					});
+				}
+			});
+		}
+		
+		function IEVersion() {
+            var userAgent = navigator.userAgent; //取得浏览器的userAgent字符串  
+            var isIE = userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1; //判断是否IE<11浏览器  
+            var isEdge = userAgent.indexOf("Edge") > -1 && !isIE; //判断是否IE的Edge浏览器  
+            var isIE11 = userAgent.indexOf('Trident') > -1 && userAgent.indexOf("rv:11.0") > -1;
+            if(isIE) {
+                var reIE = new RegExp("MSIE (\\d+\\.\\d+);");
+                reIE.test(userAgent);
+                var fIEVersion = parseFloat(RegExp["$1"]);
+                if(fIEVersion == 7) {
+                    return 7;
+                } else if(fIEVersion == 8) {
+                    return 8;
+                } else if(fIEVersion == 9) {
+                    return 9;
+                } else if(fIEVersion == 10) {
+                    return 10;
+                } else {
+                    return 6;//IE版本<=7
+                }   
+            } else if(isEdge) {
+                return 'edge';//edge
+            } else if(isIE11) {
+                return 11; //IE11  
+            }else{
+                return -1;//不是ie浏览器
+            }
+        }
+	</script>
+</body>
+</html>

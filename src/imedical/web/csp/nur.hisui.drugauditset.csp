@@ -1,0 +1,171 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.drugauditset.csp 领药审核配置--> 
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	.wrap{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;
+    	background-color: #fff;	
+    	padding:10px;
+    	overflow:hidden;
+	}
+	.wrap>table td{
+		padding-bottom:10px;	
+	}
+	#main{
+		height:calc(100% - 40px);
+	}
+	#main>div{
+		height:calc(50% - 3px);	
+	}
+	
+	#top{
+		padding-bottom:3px;
+		display:flex;		
+	}
+	
+	#bottom{
+		padding-top:3px;	
+		display:flex;
+	}
+	#main>div>div{		
+		flex:1;
+		padding-right:5px;	
+	}
+	#accPanel2 td{
+		padding-bottom:10px;	
+	}
+</style>
+</head>
+
+<body>
+	<div class="wrap">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="r-label">所属医院</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+			</tr>
+		</table>
+		<div id="main">
+			<div id="top">
+				<div>
+					<table id="dg" title="查询条件" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+				<div>
+					<table id="dg2" title="药品查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>
+				<div style="padding-right:0;">
+					<table id="dg3" title="明细查询" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table>
+				</div>								
+			</div>
+			<div id="bottom">
+				<div><table id="dg4" title="审核控制" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true"></table></div>
+				<div>
+					<div class="hisui-panel" id="accPanel" title="查询设置" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="padding:0 10px 10px;">
+						<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" style="margin:3px 0 3px -10px" onclick="saveTime('durgauditnew','period')"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text" style="margin:0;padding:0 10px 0 31px;line-height:22px;">保存</span><span class="l-btn-icon icon-save" style="width:26px;height:22px;line-height:22px;margin-left:5px;">&nbsp;</span></span></a>
+				        <p class="title" style="padding-top:0;padding-bottom:10px;font-weight:bold;">默认查询时间</p>
+				        <table cellpadding="0" cellspacing="0">
+				        	<tr>
+				        		<td class="r-label" style="padding-bottom:10px;">开始日期</td>
+				        		<td class="r-label" style="padding-bottom:10px;">
+				        			<input id="rowid" type="hidden" value="">
+				        			<input class="hisui-numberbox textbox" id="start" style="width:80px;" />
+				        		</td>
+				        		<td class="r-label" style="padding-bottom:10px;">开始时间</td>
+				        		<td style="padding-bottom:10px;">
+				        			<input class="hisui-timespinner" id="startTime" style="width:80px;">
+				        		</td>
+				        	</tr>
+				        	<tr>
+				        		<td class="r-label">结束日期</td>
+				        		<td class="r-label">
+				        			<input class="hisui-numberbox textbox" id="end" style="width:80px;" />
+				        		</td>
+				        		<td class="r-label">结束时间</td>
+				        		<td>
+				        			<input class="hisui-timespinner" id="endTime" style="width:80px;">
+				        		</td>
+				        	</tr>
+				        </table>
+					</div>
+				</div>
+				<div style="padding-right:0;">
+					<div class="hisui-panel" id="accPanel2" title="其他设置" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true" style="padding:0 10px">
+						<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" style="margin:3px 0 3px -10px" onclick="saveOther('durgauditnew','other')"><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text" style="margin:0;padding:0 10px 0 31px;line-height:22px;">保存</span><span class="l-btn-icon icon-save" style="width:26px;height:22px;line-height:22px;margin-left:5px;">&nbsp;</span></span></a>
+						<table cellpadding="0" cellspacing="0">
+				        	<tr>
+				        		<td><input id="rowid2" type="hidden" value=""><input id="rowid3" type="hidden" value=""><input id="cb" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="成组审核"></td>
+				        	</tr>
+				        	<tr>
+				        		<td>
+				        			<input id="cb2" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right',onUnchecked:stockAlertUnCheck" label="库存提示">
+				        			<input id="cb3" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right',onChecked:stockControlCheck" label="库存控制">
+				        		</td>
+				        	</tr>
+				        	<tr>
+				        		<td>
+				        			<input id="cb4" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right',onUnchecked:inTheWayAlertUnCheck" label="包含已审未发提示">
+				        			<input id="cb5" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right',onChecked:inTheWayControlCheck" label="包含已审未发控制">
+				        		</td>
+				        	</tr>
+				        	<!--tr>
+				        		<td><input id="cb6" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="领药审核前需处理医嘱"></td>
+				        	</tr-->
+				        	<tr>
+				        		<!--td><input id="cb7" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="今日新开医嘱处理接受后自动领药审核"></td-->
+				        		<td>
+				        			<label style="vertical-align:inherit;margin-right:10px;">今日新开医嘱处理接受后自动领药审核</label><input id="cb12" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="长期">
+				        			<input id="cb13" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="临时">
+				        		</td>
+				        	</tr>
+				        	<tr>
+				        		<!--td><input id="cb8" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="今日新开医嘱撤销处理后自动撤销领药审核"></td-->
+				        		<td>
+				        			<label style="vertical-align:inherit;margin-right:10px;">今日新开医嘱撤销处理后自动撤销领药审核</label><input id="cb14" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="长期">
+				        			<input id="cb15" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="临时">
+				        		</td>
+				        	</tr>
+				        	<tr>
+				        		<td>
+				        			<input id="cb16" class="hisui-checkbox" type="checkbox" data-options="boxPosition:'right'" label="静配领药审核时间需早于要求执行时间">
+				        		</td>
+				        	</tr>
+				        	<tr>
+				        		<td>
+				        			<label>是否显示未处理医嘱</label><div id="cb9" class="hisui-switchbox" style="margin:0 10px;vertical-align:text-top;" data-options="onText:'是',offText:'否',size:'mini',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:switchChangeHandle,checked:false"></div>
+				        			<input id="cb10" name="alert" class="hisui-radio" type="radio" data-options="boxPosition:'right',requiredSel:true" disabled label="提示未处理">
+				        			<input id="cb11" name="alert" class="hisui-radio" type="radio" data-options="boxPosition:'right',requiredSel:true" disabled label="不提示">
+				        		</td>
+				        	</tr>
+				        </table>
+					</div>
+				</div>	
+			</div>
+		</div>	
+		<!--div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+			<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+		</div-->
+	</div>	
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.drugauditset.js"></script>
+</body>
+</html>

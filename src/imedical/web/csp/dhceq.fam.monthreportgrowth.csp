@@ -1,0 +1,128 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<DHCEQ:Report></DHCEQ:Report>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
+</HEAD>
+<body class="hisui-layout">
+    <div data-options="region:'center',border:false" style="padding:10px;">
+        <div class="hisui-panel" title="资产同比增长情况表" data-options="'eqtitle':'maintitle',fit:true">
+            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;" >
+                <div data-options="region:'north',border:false" style="height:50px">
+                    <div class="eq-table" style=#(ReportStyle)# id='tQueryPanel'>
+                        <div class="eq-table-tr">
+                        <div class="eq-table-td eq-table-label"><lable  for="MonthStr">统计月份</lable></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MonthStr" data-options='validParams:"YM"' value=#(CurMonth)#></div>
+                        <!--div class="eq-table-td eq-table-label"><lable for="EndMonth" >到</lable></div>
+                        <div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndMonth" data-options='validParams:"YM"' value=#(CurMonth)#></div-->
+                        <div class="eq-table-td eq-table-label"></div>
+                        <div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton">查询</a></div>
+                        <div class="eq-table-td eq-table-label"><a id="BPrint" href="#" class="hisui-linkbutton">打印</a></div>
+                    </div>
+                </div>
+                
+            </div>
+        <!--润乾报表显示位置-->
+            <div data-options="region:'center',border:false" style="overflow:hidden;">
+             <iframe id="ReportFile" name="ReportFile" src=#(ReportFileSrc)# width=100% height=100% scrolling="no"></iframe>
+            <iframe id="ReportFilePrint" name="ReportFilePrint" src=#(ReportFilePrintSrc)# width=100% height=0%></iframe>       
+        </div>
+      </div>
+    </div>
+        <!--隐藏元素-->
+        <div id="hiddenEncrypt" style="width:0;height:0;">
+            <form name="DHCEQ">
+                <INPUT TYPE="hidden" name="ReportFileName" id="ReportFileName" value=#(ReportFileName)#>
+                <INPUT TYPE="hidden" name="PrintFlag" id="PrintFlag" value=#(PrintFlag)#>
+                <INPUT TYPE="hidden" name="ReportFileSrc" id="ReportFileSrc" value=#(ReportFileSrc)#>
+                <INPUT TYPE="hidden" name="ReportFilePrintSrc" id="ReportFilePrintSrc" value=#(ReportFilePrintSrc)#>            
+                <INPUT TYPE="hidden" name="PreMonthStr" id="PreMonthStr">
+                <INPUT TYPE="hidden" name="FundsTypeDR" id="FundsTypeDR">
+                <INPUT TYPE="hidden" name="HospID" id="HospID">
+                <INPUT TYPE="hidden" name="CurGroupID" id="CurGroupID">
+                <INPUT TYPE="hidden" name="QXType" id="QXType" value=#(QXType)#>
+                <INPUT TYPE="hidden" name="CurLocID" id="CurLocID">
+                <INPUT TYPE="hidden" name="CurUserID" id="CurUserID">
+                <INPUT TYPE="hidden" name="AccountShape" id="AccountShape">
+                <!--Add By DJ 2017-07-14 -->
+                <!--INPUT TYPE="hidden" name="initRunQian" id="initRunQian" value="##class(web.DHCEQ.Util.RQServerConfig).GetApplet()"--> <!-- modify by wl 2019-12-30 WL0043>
+                <!--调用后台方法隐藏元素
+                <INPUT TYPE="hidden" name="SetPaybzclass" id="SetPaybzclass" value='<%=##class(%CSP.Page).Encrypt($lb("web.UDHCJFCASHIER.SetPaybz"))%>' />
+                -->
+            </form>
+        </div>
+    </div>
+</body>
+<script type='text/javascript'>
+MonthBox('MonthStr');
+setElement("HospID",SessionObj.GHOSPID)
+setElement("CurGroupID",SessionObj.GGROURPID)
+setElement("CurLocID",SessionObj.GLOCID)
+setElement("CurUserID",SessionObj.GUSERID)
+setElement("AccountShape",0)
+
+setPreMonthStrValue();
+
+/*
+var obj=document.getElementById("MonthStr");
+if (obj)
+{
+    obj.onchange=setPreMonthStrValue;
+}*/
+//jQuery("#MonthStr").change(setPreMonthStrValue())
+function setPreMonthStrValue()
+{
+    var MonthStr=getElementValue("MonthStr")
+    MonthStr=MonthStr.split("-")
+    var Year=MonthStr[0]
+    var Month=MonthStr[1]
+    var PreMonthStr=(Year-1)+ '-' + Month
+    setElement("PreMonthStr",PreMonthStr)
+}
+
+function BFind_Clicked()
+{    //add  by wl 2020-04-01 增加润乾背景色
+    setPreMonthStrValue()
+    var ColTColor=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","902001");
+    var DataColor=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","902002");
+    var SumColor=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","902003");
+    var Colorstr="&ColTColor="+ColTColor+"&DataColor="+DataColor+"&SumColor="+SumColor;
+    var ReportFileName=jQuery("#ReportFileName").val();
+    var PrintFlag=getElementValue("PrintFlag");
+    var PrintStr=""
+    var lnk="";
+    $("input").each(function(){
+        var id=$(this)[0].id;
+        var objClassInfo=$("#"+id).prop("class");
+        var options=jQuery("#"+id).attr("data-options");
+        if ((id!="")&&(id!="PrintFlag")&&(id!="ReportFileSrc")&&(id!="ReportFilePrintSrc")&&(id!="ReportFileName"))
+        {
+            if (objClassInfo.indexOf("hisui-datebox")>=0)
+            {
+                lnk=lnk+"&"+id+"="+GetJQueryDate("#"+id);
+            }
+            else
+            {
+                lnk=lnk+"&"+id+"="+getElementValue(id);
+            }
+        }
+    })
+    if (PrintFlag==2) PrintStr="&PrintFlag=1"
+    
+    document.getElementById('ReportFile').src="dhccpmrunqianreport.csp?reportName="+ReportFileName+lnk+PrintStr+Colorstr; //modify  by wl 2020-04-01
+    //V8.2之后可直接隐藏打印,无须显示打印模版分开
+    //if (PrintFlag==1) document.getElementById('ReportFilePrint').src="dhccpmrunqianreport.csp?reportName="+ReportFileName+lnk+"&PrintFlag=1";
+}
+</script>
+</HTML>

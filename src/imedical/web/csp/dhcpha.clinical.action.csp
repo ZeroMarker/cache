@@ -1,4 +1,7 @@
-
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ q 1
+</csp:method>
 <csp:content charset="utf-8">
 <script language="cache" runat="server">
 
@@ -1203,6 +1206,10 @@
 	.s grpId=$Get(%request.Data("grpId",1)) 
 	.d ##class(web.DHCSTPHCMCOMMON).GetGroupUser(grpId)
 	
+	i action = "jsonGetSSUser" d 
+	.s input=$Get(%request.Data("q",1))			//combobox mode设置为remote时，会传递一个名称为q的参数，内容时输入框中内容
+	.d ##class(web.DHCSTPHCMCOMMON).jsonGetSSUser(input)
+	
    	//查询主题
 	i action = "SelAllTheme" d
 	.d ##class(web.DHCSTPHCMCOMMON).SelAllTheme()
@@ -1856,7 +1863,7 @@
 	i action = "GetPatEssInfo" d
 	.s PatientID=$Get(%request.Data("PatientID",1))
 	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
-	.w ##class(web.DHCSTPHCMADRREPORT).GetPatEssInfo(PatientID,EpisodeID)
+	.w ##class(web.DHCSTPHCMCOMMON).GetPatInfoEss(PatientID,EpisodeID)
 	
     //报告审批
 	i action = "AuditAdrReport" d
@@ -2498,7 +2505,7 @@
 	.s rows=$Get(%request.Data("rows",1))
 	.s page=$Get(%request.Data("page",1))
 	.s EpisodeID=$Get(%request.Data("EpisodeID",1))
-	.w ##class(web.DHCSTCNTANTIBACTERIAL).GetPatOpList(rows, page, EpisodeID)
+	.w ##class(web.DHCSTPHCMOperMedimon).GetPatOpList(rows, page, EpisodeID)
 	.
 
       // 删除主题项目参数记录
@@ -2571,4 +2578,16 @@
 
 	i action = "ListIsActiveSub" d
 	.d ##class(web.DHCPHGuiScope).ListIsActiveSub()
+	
+		///获取病人基本就诊信息
+	i action = "GetPatInfoByPatNo" d
+	.s PatientNo=$Get(%request.Data("PatientNo",1))
+	.s hospId=$Get(%request.Data("hospId",1))
+	.w ##Class(web.DHCSTPHCMCOMMON).GetPatInfoByPatNo(PatientNo,hospId)
+	
+	///获取病人基本就诊信息
+	i action = "GetPatInfoByCardNo" d
+	.s PatCardNo=$Get(%request.Data("PatCardNo",1))
+	.s hospId=$Get(%request.Data("hospId",1))
+	.w ##Class(web.DHCSTPHCMCOMMON).GetPatInfoByCardNo(PatCardNo,hospId)
 </script>

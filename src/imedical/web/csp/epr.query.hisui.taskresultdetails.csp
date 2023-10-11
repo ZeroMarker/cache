@@ -1,0 +1,45 @@
+<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+<title>病历查询后台任务查询结果</title>
+	<script language="cache" runat="server">
+		s GUID = $Get(%request.Data("GUID",1),"")
+		s limit = ##Class(EPRservice.BLL.Query.BLMedicalQueryTasklist).GetInfoByGUID(GUID)
+		s userName 	= %session.Get("LOGON.USERNAME")
+		s userID = %session.Get("LOGON.USERID")
+	</script>
+	<script type="text/javascript" language="javascript">
+		var returnValue = {"dataLength":"-1","status":"-1","conditionsDesc":""};
+		var conditionsDesc = "入院日期";
+		var resultColumn = "";
+		var queryType = "";
+		var GUID = '#(GUID)#';
+		var limit = #(limit)#;
+		if (limit != "")
+		{
+			queryType = limit.QueryType;
+			if (queryType == "DischDate") conditionsDesc = "出院日期"
+			conditionsDesc = conditionsDesc+limit.ConditionsDesc;
+			resultColumn = limit.ResultColumn;
+		}
+		var userName  = '#(userName)#';
+		var userId  = '#(userID)#';
+		returnValue.conditionsDesc = conditionsDesc;
+	</script>
+</head>
+
+<body style="padding:0px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div class="hisui-panel gridgap" data-options="region:'south',border:false" style="height:40px;">
+			<div style="float:right;padding-right:10px">
+				<a href="#" id="exportAllData" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true">#(..Get("导出"))#</a>
+			</div>
+		</div>
+		<div class="hisui-panel gridgap" data-options="region:'center',border:false" style="padding:10px">
+			<table id="taskResult" style="width:100%"></table>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/epr/js/query.hisui.taskresultdetails.js"></script>
+</body>
+</html>

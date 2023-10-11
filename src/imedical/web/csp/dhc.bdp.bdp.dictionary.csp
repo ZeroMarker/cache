@@ -1,5 +1,5 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired()  
+ i ##Class(websys.SessionEvents).SessionExpired()  q 1 
  q 1
  // dhc.bdp.bdp.dictionary.csp
  // 名称: 基础数据平台配置-通用字典
@@ -14,7 +14,13 @@
  <HISUI/>
  <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
  <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
- <script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_DataDictionary.js"> </script>
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/exportExcel/IEAndChormExportExcel.js"></script> 
+ <!--导出/导入Excel文件，支持加样式-->
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/xlsx.extendscript.js"> </script>
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/xlsx-style/xlsx.full.min.js"> </script>
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/xlsx/export.js"> </script>
+ 
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDP_DataDictionary.js"> </script> 
  <style type="text/css">
  .icon-export{
        background: url('../scripts_lib/hisui-0.1.0/dist/css/icons/export.png') no-repeat center center;
@@ -77,7 +83,7 @@
     
  
   <!---新增字典时的对话框--->   
-   <div id="dlgEdit" style="width:650px;height:420px;padding:10px;display:none;">    
+   <div id="dlgEdit" style="width:660px;height:460px;padding:10px;display:none;">    
     <div id="dictab" class="hisui-tabs tabs-gray" style="width:630px;height:320px;" >   
     <div title="基本信息" style="padding:10px;" >    
       <form id="form-save2" method="post" data-options="fit:true,border:false,plain:true"> 
@@ -129,7 +135,7 @@
  </div>
  </div>
  
- <div id="myWin" style="width:450px;height:400px;padding:10px;display:none;">    
+ <div id="myWin" style="width:460px;height:430px;padding:10px;display:none;">    
    <div id="tt" class="hisui-tabs tabs-gray" style="width:430px;height:300px;"  border="true">   
     <div title="基本信息" style="padding:10px;" >   
       <form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
@@ -182,7 +188,7 @@
        <div onclick="removes()" iconCls="icon-cancel" id="PropertyDelete">删除目录</div> 
     </div> 
   
- <div id="importExcel"  title="数据导入" style="height:390px;width:650px;padding:10px;10px;0px;10px;" data-options="headerCls:''">
+ <div id="importExcel"  title="数据导入" style="height:450px;width:750px;padding:10px;10px;0px;10px;" data-options="headerCls:''">
         <div >  
             <table  cellpadding="3"> 
                 <tr>
@@ -197,26 +203,22 @@
             </table>
          </div>
         <div style="padding:10px 0 0 0"> </div>
-        <div class="hisui-panel" style="border-width:1px;border-radius:5px; width:630px;height:240px;background:#E3F7FF;padding:10px 10px 10px 10px;" > 
+        <div class="hisui-panel" style="border-width:1px;border-radius:5px; width:720px;height:260px;background:#E3F7FF;padding:10px 10px 10px 10px;" > 
                <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"><font color=#1278b8> <b> 注意事项:</b></font> </a>
                <div>  
                    <ul style="padding:10px 10px 0px 10px;">
-                     <li class="notediv"><font color=#1278b8>1.需在IE下执行操作，请先确认本机有安装office软件，并且要读取的表格文件不是受保护视图。打开IE,在[internet选项]-[安全]-[受信任的站点]-[站点]中添加开始界面到可信任的站点，然后在[自定义级别]中对[没有标记为安全的ActiveX控件进行初始化和脚本运行]这一项设置为启用，确定后，重启浏览器。</font></li> 
-                     <li class="notediv"><font color=#1278b8>2.下载下来的模板请勿随意修改，否则会影响数据导入！</font></li>
-                     <li class="notediv"><font color=#1278b8>3.csv录入时要严格遵循示例格式。</font></li> 
-                     <li class="notediv"><font color=#1278b8>4.若下载时提示文件不存在，说明服务器上没有该模板，请联系开发人员。</font></li>
-                     <li class="notediv"><font color=#1278b8>5.若导入模板过程中报错或插入失败，请仔细检查录入数据是否正确。修改后的数据可在相应界面手动录入，也可重新导一遍。</font></li>
+                     <li class="notediv"><font color=#1278b8>1.请先下载正确的导入模板。</font></li> 
+                     <li class="notediv"><font color=#1278b8>2.导入正式库前请先在测试库上进行导入测试，确保数据没有问题。导入成功的数据请勿重复导入。</font></li>
+                     <li class="notediv"><font color=#1278b8>3.请注意，如表格里涉及“日期”、“时间”，请确认已将表格列的单元格格式设置为“文本”！！！日期时间格式与界面保持一致 ！</font></li>  
                  </ul> 
            </div>
         </div>  
-  </div>
-
-    <!--进度条弹框-->
-    <div id="importload"  title="完成进度" style="width:300px;height:150px;"> 
-        <div style="padding: 30px 30px 10px 30px"> 
-            <div id="pro"  class="hisui-progressbar" style="width:200px;"></div>
-        </div>  
-    </div> 
+  </div> 
+    
+    <!--进度条-->
+    <div id="prowin" style="width:300px;height:24px;background-color:#40A2DE;display:none;">
+        <div id="pro" style="width:300px;"></div>
+    </div>
     
 </body>
  

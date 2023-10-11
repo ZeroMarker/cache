@@ -1,0 +1,67 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<meta http-equiv="X-UA-Compatible" content="IE=11" />
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s TMENU = %request.Get("TMENU")
+	s title=##Class("web.DHCEQCommon").GetMenuInfo(TMENU,"Name")
+	s HospitalDesc=##Class(web.DHCEQCommon).GetHospitalDesc()
+</script>
+<body class="hisui-layout" >
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title=#(title)# data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #E2E2E2;border-radius: 0px;padding-bottom:10px;">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cPaymentNoticeNo" for="PaymentNoticeNo">通知单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="PaymentNoticeNo"></div>
+						<div class="eq-table-td eq-table-label"><label id="cLocDR_CTLOCDesc" for="LocDR_CTLOCDesc">库房</label></div>
+						<div class="eq-table-td eq-table-input"><input id="LocDR_CTLOCDesc" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Loc'"></div>
+						<div class="eq-table-td eq-table-label"><label for="Status">状态</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-combobox textbox" id="Status"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查找</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cPNProviderDR_VDesc" for="PNProviderDR_VDesc">供应商</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" data-options="'component':'PLAT.L.Vendor'" id="PNProviderDR_VDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cBeginDate" for="InvoiceNo">发票号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="InvoiceNo"></div>
+						<div class="eq-table-td eq-table-label"></div>
+						<div class="eq-table-td eq-table-input"></div>
+						<div class="eq-table-td eq-table-label15"><a id="BAdd" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">新增</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cBeginDate" for="StartDate">通知单日期</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="StartDate"></div>
+						<div class="eq-table-td eq-table-label"><label id="cEndDate" for="EndDate">至</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate"></div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="tDHCEQPaymentNoticeFind" class="hisui-datagrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="LocDR">
+			<INPUT type="hidden" id="PNProviderDR">
+			<INPUT type="hidden" id="HospitalDesc" value=#(HospitalDesc)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/paymentnoticefind.js
+'></script>
+</body>
+</html>

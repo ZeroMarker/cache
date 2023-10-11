@@ -4,69 +4,159 @@
  </csp:method>
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>	
-		<HISUI/>
-    	<DHCHAI:HEAD></DHCHAI:HEAD>
-    	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
-			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
-		</SCRIPT>
-		<CSP:IF CONDITION="IsADDINS=1">
-			<ADDINS require="DHCOPPrint"/>
-		</CSP:IF>
-		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
-		<server>
-			//取配置状态列表
-			Set StatusList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusList()
-			Set StatusDicList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusDicList()
-   		</server>
-	</head>
-	<body>
-		
-		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
-	  	<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/EnviHy/EnviHyResult/Gui.js"></script>
-		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/EnviHy/EnviHyResult/Event.js"></script>
-		<!--------------easyui导出js---------->
-		<script type='text/javascript' src='../scripts/DHCMA/HAI/Units/datagrid-export.js'></script>
-		<!--------------条码打印相关---------->
-		<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
-		<!-------------------------------->
-		<script language="Cache" runat="server">
-		 Set Encrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))	//加密字符串
-		 // 获取打印控件配置信息
-		 // CLASSID|CODEBASE
-		 Set CLASSID="CLSID:F30DC1D4-5E29-4B89-902F-2E3DC81AE46D"
-		 Set CODEBASE="../addins/client/DHCOPPrint.CAB#version=1,0,0,56"
-		 Set barControlInfo ="CLASSID="""_CLASSID_""" CODEBASE="""_CODEBASE_""""
-	   </script>
-		<script language="javascript" type="text/javascript">
-			var Encrypt   = '#(Encrypt)#';
-			var barControlInfo = '#(barControlInfo)#';
-			// 条码打印需要的控件
-			var PrintControlHtml='<div id="hiddenEncrypt" style="width:0;height:0;">'
-			PrintControlHtml +='<form name="DHCHAIEVBAR">'
-			PrintControlHtml +='<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value="'+Encrypt+'">'
-			PrintControlHtml +='</form></div>'
-			PrintControlHtml +='<object ID="barPrintControl" WIDTH=0 HEIGHT=0 '+barControlInfo+' VIEWASTEXT></object>'
-		    
-		    //全局请求后台服务对象
-			var ServerObj={
-				StatusList:"#(StatusList)#",
-				StatusDicList:"#(StatusDicList)#"
+    <head>
+        <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>   
+        <HISUI css="dhcma.hai.common.css"></HISUI>
+        <DHCHAI:HEAD></DHCHAI:HEAD>
+        <SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+            Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
+        </SCRIPT>
+        <CSP:IF CONDITION="IsADDINS=1">
+            <ADDINS require="DHCOPPrint"></ADDINS>
+        </CSP:IF>
+        <link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+        <style>
+
+			#winStatusList .datagrid-wrap{
+				border-color: #E2E2E2 !important;
 			}
-			$(document).ready(function(){
-				var url = "../scripts/DHCMA/HAI/IR/EnviHy/EnviHyResult/Layout.html"
-        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
-   					if(statusTxt=="success") {
-	   					$("body").append(PrintControlHtml);
-	   					InitviewScreen();
-   					} else if (statusTxt=="error") {
-	   					alert("Error: "+xhr.status+": "+xhr.statusText);
-	   				}
-	        	});
-			});
-		</script>
-	</body>
+			#Maintabs .tabs-panels{
+				height: 86px !important; 
+				padding-bottom:3px !important;
+			}
+			#Maintabs {
+			height: 124px !important; 
+			
+			}
+			#txtBarcode {
+				margin-top: 8px;
+			}
+			
+			#tableEnterResult .combo{
+				width:145px !important;
+				margin-right: -17px !important;
+				margin-bottom:8px !important ;
+			}
+			#tableEnterResult .RstType{
+				width:81px !important;
+				margin-left:23px;
+			}
+			.window .panel-header-noborder{
+				margin-bottom:-2px !important ;
+			}
+			#tableEnterResult .textbox{
+				margin-bottom:8px !important ;
+			}
+			#winEnterResult .dialog-button{
+				margin-bottom:1px !important ;
+				margin-top:-9px !important ;
+			}
+
+	  </style>
+        <server>
+         //lodop打印
+            d ##class(web.DHCXMLPConfig).LODOPInit()
+            //取配置状态列表
+            Set StatusList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusList()
+            Set StatusDicList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusDicList()
+            //获取控制设置参数
+			Set IsSupportRQ2018 = ##class(DHCHAI.BT.Config).GetValByCode("IsSupportRQ2018","")
+			If (IsSupportRQ2018'=1) {
+		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
+	        }
+        </server>
+    
+    </head>
+    <body>
+        <script language='Cache' runat='SERVER'>
+           set menuCode="DHCHAIEnviHy-Result"
+           set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+           set groupId=$g(%session.Data("LOGON.GROUPID"))
+           set OperAdmin = $g(%request.Data("ParamAdmin",1))
+           set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
+           Set IsValidReason=##class(DHCHAI.BT.Config).GetValByCode("IsValidReason")
+            Set xmlPrintFlag=##class(DHCHAI.BT.Config).GetValByCode("XMLPrint")
+       </script>
+        <script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+        <script type="text/javascript" src="../scripts/DHCMA/HAI/IR/EnviHy/EnviHyResult/Gui.js"></script>
+        <script type="text/javascript" src="../scripts/DHCMA/HAI/IR/EnviHy/EnviHyResult/Event.js"></script>
+        <!--------------easyui导出js---------->
+        <script type='text/javascript' src='../scripts/DHCMA/HAI/Units/datagrid-export.js'></script>
+        <!--------------条码打印相关---------->
+        <script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
+        <!-------------------------------->
+        <script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+        <!-------------------------------->
+        <script language="Cache" runat="server">
+		 Set Encrypt=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))	//加密字符串
+         // 获取打印控件配置信息
+         // CLASSID|CODEBASE
+         Set CLASSID="CLSID:F30DC1D4-5E29-4B89-902F-2E3DC81AE46D"
+         Set CODEBASE="../addins/client/DHCOPPrint.CAB#version=1,0,0,56"
+         Set barControlInfo ="CLASSID="""_CLASSID_""" CODEBASE="""_CODEBASE_""""
+       </script>
+       <csp:Include Page="dhcma.hai.ir.envihyresult.show.csp">
+        
+        <script language="Cache" runat="server">
+            Set EnviHyMaxSpecimen= ##class(DHCHAI.BT.Config).GetValByCode("EnviHyMaxSpecimen")  
+            write "<div id='winEnterResult' class='hisui-dialog' data-options='closed:true'  style='border:none;overflow:auto;width:655px;max-height:450px;top:100px;'>",!
+            write " <table id='tableEnterResult' style='padding:10px 0px 0px 0px;text-align:left'>",!
+            write "     <tr><td class='r-label'><label for='txtRstItem'><span>项目名称</span></label></td>",!
+            write "         <td colspan=3><input class='textbox' id='txtRstItem' style='width:238px;' type='text' /></td>",!
+            write "         <td class='r-label'><label for='txtRstObject'><span>检测对象</span></label> </td>",!
+            write "         <td><input class='textbox' id='txtRstObject' style='width:233px' type='text' /></td>",!
+            write "     </tr>",!
+            if (+EnviHyMaxSpecimen>0){
+                for indexx=1:1:+EnviHyMaxSpecimen {
+                    write "     <tr>"
+                    write "      <td class='r-label' style='margin-left:4px;'><label id='lblItemNum"_indexx_"'>项目值"_indexx_"</label></td><td><input class='textbox RstType' id='cboRstType"_indexx_"' style='width:150px' type='text'/></td><td></td>",!
+                    write "      <td><input class='textbox RstType' id='txtResult"_indexx_"' style='width:80px' type='text'/></td><td class='r-label'><label>致病菌</label></td>",!
+                    write "      <td><input id='txtRstBactID"_indexx_"' class='RstBac' type='hidden' value=''><input id='txtRstBactDesc"_indexx_"' class='textbox RstBactDesc' style='width:240px' type='text'/></td>",!
+                    write "     </tr>"
+                }
+            }
+            write "     <tr>",!
+            write "         <td class='r-label'><label for='txtResume'><span>备注:</span></label></td><td colspan=3><input class='textbox' id='txtResume' style='width:238px' type='text' /></td>",!
+            write "     </tr></table></div>",!
+        </script>
+        
+
+        <script language="javascript" type="text/javascript">
+            var Encrypt   = '#(Encrypt)#';
+            var xmlPrintFlag='#(xmlPrintFlag)#';
+            var barControlInfo = '#(barControlInfo)#';
+            var EnviHyMaxSpecimen= '#(EnviHyMaxSpecimen)#'
+            // 条码打印需要的控件
+            var PrintControlHtml='<div id="hiddenEncrypt" style="width:0;height:0;">'
+            PrintControlHtml +='<form name="DHCHAIEVBAR">'
+            PrintControlHtml +='<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value="'+Encrypt+'">'
+            PrintControlHtml +='</form></div>'
+            PrintControlHtml +='<object ID="barPrintControl" WIDTH=0 HEIGHT=0 '+barControlInfo+' VIEWASTEXT></object>'
+            
+            //全局请求后台服务对象
+            var ServerObj={
+                StatusList:"#(StatusList)#",
+                StatusDicList:"#(StatusDicList)#",
+                IsValidReason:'#(IsValidReason)#'
+            }
+            $(window).load(function() {
+                $("body").append(PrintControlHtml);
+                InitviewScreen();
+            })
+            
+            /*$(document).ready(function(){
+                var url = "../scripts/DHCMA/HAI/IR/EnviHy/EnviHyResult/Layout.html"
+                $("body").load(url,null,function(responseTxt,statusTxt,xhr){
+                    if(statusTxt=="success") {
+                        $("body").append(PrintControlHtml);
+                        InitviewScreen();
+                    } else if (statusTxt=="error") {
+                        alert("Error: "+xhr.status+": "+xhr.statusText);
+                    }
+                });
+            });*/
+        </script>
+    </body>
 </html>

@@ -1,11 +1,12 @@
-
-<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <html lang="en" >
 <head>
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8 ">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title></title>
 <HISUI/>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js" charset="gb2312"></script>
 <script src="../scripts/dhcnewpro/dhcem/skinTest.js" charset="gb2312"></script>
  <script language="Javascript">
@@ -21,15 +22,20 @@
 	var oeoreId='#($g(%request.Data("oeoreId",1)))#'          //医嘱ID 
 	var adm='#($g(%request.Data("adm",1)))#'                  //就诊ID 
 	var Allgryflag='#($g(%request.Data("Allgryflag",1)))#'    //过敏标志  2016-10-26
+	var LgParams=LgHospID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgUserID
 </script>
 <SERVER>  
-	s ISSHOWATTACH=+##class(web.DHCEMNurExe).GetConfigBySession("SKINNEEDPC")  //皮试是否需要记录批次
+	s ISSHOWATTACH=+##class(web.DHCEMNurExe).GetConfigBySession("SKINNEEDPC")   //皮试是否需要记录批次
 	s SKINNEEDSIGN=##class(web.DHCEMNurExe).GetConfigBySession("SKINNEEDSIGN")  //置皮试结果时是否需要签名
 	s SKINAUTOEXE=##class(web.DHCEMNurExe).GetConfigBySession("SKINAUTOEXE")	//原液医嘱置结果时是否取消自动执行(医生站接口返回1也当成原液)
+	s SKINSINGTWOUSER=##class(web.DHCEMNurExe).GetConfigBySession("SKINSINGTWOUSER")  //皮试签名用户和复核用户允许为同一个用户
+	s SKINSIGNNUM=##class(web.DHCEMNurExe).GetConfigBySession("SKINSIGNNUM")  // 皮试签名 次数
 	w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
 	w "var ISSHOWATTACH="""_ISSHOWATTACH_""";"_$c(13,10)
 	w "var SKINNEEDSIGN="""_SKINNEEDSIGN_""";"_$c(13,10)
 	w "var SKINAUTOEXE="""_SKINAUTOEXE_""";"_$c(13,10)
+	w "var SKINSINGTWOUSER="""_SKINSINGTWOUSER_""";"_$c(13,10)
+	w "var SKINSIGNNUM="""_SKINSIGNNUM_""";"_$c(13,10)
 	w "</SCRIPT>"
 </SERVER>
  <style>
@@ -37,13 +43,11 @@
  #mainPanel td{padding:2px;}
  #mainPanel .btn-group-justified{padding-left:5px;padding-right:0px;padding-top:5px}
 
-.panel-body div{
-	font-family: "微软雅黑";
-		
-}
-
 .spantext{
 	width:70px;
+	text-align:right; /*hxy 2023-01-06 st*/
+	padding-right:6px;
+	padding-left:10px;/*ed*/
 }
 .inputtext{
 	width:150px;
@@ -84,127 +88,166 @@
 	margin-left:0px;	
 }
 .magic-checkbox{
-	margin-left:5px;	
+	margin-left:5px;
+	position:relative;/*hxy 2023-01-05*/
+	top:1px;	     /*hxy 2023-01-05*/
 }
 .col-sm-1{
 	margin-top:10px;
 	width:90px;	
 }
-
+.span-ten{/*hxy 2023-01-05*/
+	padding-right:6px;
+}
+.dhcc-btn-gray {
+    height: 25px;
+    width: auto;
+    min-width: 40px;
+    color: #666666;
+    cursor: pointer;
+    font-family: Arial,"Microsoft Yahei";
+    background-color: #EFEFEF;
+    border: solid 1px #EFEFEF;
+    border-radius: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-left: 3px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+.dhcc-btn-gray:hover {
+    background-color: #F1F9FF;
+    color: #017BCE;
+}
+#sTR0+label{font-size:18px;color:red;}
+#sTR1+label{font-size:18px;color:green;}
 </style>
 </head>
-<body style="">
-    <div class="col-md-12" >
-        <div id="mainPanel" class=" " >
-            <div class="">
-            	<div id="allergymess" style="color:red;display:none;">该病人属于过敏体质,皮试时请注意！</div>
-				<div style ="height:50px;border:1px solid #AFD1EF;margin-bottom:5px;">
-					
-					<div class="input-group"style="display: inline-table;float:left;margin-top:10px;">
-						<span>皮试方法： </span> 
+<body class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'center',title:'',split:true,border:false" style="padding:10px;">
+	    <div class="hisui-layout" style="" data-options="fit:true">
+	    	<div data-options="region:'north',title:'',split:false,showCollapsedTitle:true,iconCls:'icon-w-list',border:false" style="height:261px;">
+		    	<div id="allergymess" style="color:red;display:none;"><span>#(..Get("该病人属于过敏体质,皮试时请注意！"))#</span><span id="skinRs" style="padding-left:10px;"></span></div>
+				<div style ="height:32px;border:0px solid #AFD1EF;">
+					<div class="input-group"style="display: inline-table;float:left;">
+						<span class="span-ten">#(..Get("皮试方法"))#</span> 
 					    <input id="TestMethodSel" class="hisui-combobox" style="width:150px;">
 					    </select> 
 					</div>
-					<div style="margin-left:10px;height: 20px;line-height: 20px;float:left;margin-top:15px;">
-						<input name="ObserveTime" id="OT0" class="magic-checkbox" type="checkbox" value="0">
-                		<label for="OT0">10分钟</label>
-            			<input name="ObserveTime" id="OT1" class="magic-checkbox" type="checkbox" value="1">
-                		<label for="OT1">15分钟</label>
+					<div style="margin-left:10px;height: 20px;line-height: 20px;float:left;">
+		        		<input class='hisui-radio' type="radio" label=#(..Get("10分钟"))# name='ObserveTime' value='0'>
+						<input class='hisui-radio' type="radio" label=#(..Get("15分钟"))# name='ObserveTime' value='1'>
+						<input class='hisui-radio' type="radio" label=#(..Get("20分钟"))# name='ObserveTime' value='2'>
+						<input class='hisui-radio' type="radio" label=#(..Get("30分钟"))# name='ObserveTime' value='5'>
+						<input class='hisui-radio' type="radio" label=#(..Get("48小时"))# name='ObserveTime' value='3'>
+						<input class='hisui-radio' type="radio" label=#(..Get("72小时"))# name='ObserveTime' value='4'>
+						<!--input name="ObserveTime" id="OT0" class="magic-checkbox" type="checkbox" value="0">
+		        		<label for="OT0">10分钟</label>
+		    			<input name="ObserveTime" id="OT1" class="magic-checkbox" type="checkbox" value="1">
+		        		<label for="OT1">15分钟</label>
 						<input name="ObserveTime" id="OT2" class="magic-checkbox" type="checkbox" value="2">
-                		<label for="OT2">20分钟</label>
-            			<input name="ObserveTime" id="OT3" class="magic-checkbox" type="checkbox" value="3">
-                		<label for="OT3">48小时</label>
-            			<input name="ObserveTime" id="OT4" class="magic-checkbox" type="checkbox" value="4">
-                		<label for="OT4">72小时</label>
+		        		<label for="OT2">20分钟</label>
+		        		<input name="ObserveTime" id="OT5" class="magic-checkbox" type="checkbox" value="5"><!--hxy 2022-11-16->
+		        		<label for="OT5">30分钟</label>
+		    			<input name="ObserveTime" id="OT3" class="magic-checkbox" type="checkbox" value="3">
+		        		<label for="OT3">48小时</label>
+		    			<input name="ObserveTime" id="OT4" class="magic-checkbox" type="checkbox" value="4">
+		        		<label for="OT4">72小时</label-->
 						
-						<input class="textbox"style="width:50px;" id="ObserveDefine" type="text" placeholder="" >分钟
-						<td style="padding-left:30px"><a id="btnStartSkinTest" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="StartSkinTest()">计时</a></td>
+						<input class="textbox"style="width:50px;" id="ObserveDefine" type="text" placeholder="" >#(..Get("分钟"))#
+						<td style="padding-left:30px"><a id="btnStartSkinTest" href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="StartSkinTest()">#(..Get("计时"))#</a></td>
 					</div>						
-        		</div>
-				<div >
+				</div>
+				
 					<div class="" style ="background-color: #FFFFFF;height:200px;float:left;padding-left:0px;width:50%">
-						<div>皮试结果：</div>
-						<div class="skinResult" style="border:1px solid #AFD1EF;margin-left:0px;height:50px;line-height:50px;">
-							<span style="height:20px;line-height:20px;">
-								<input name="skinTestResult" id="sTR0" class="magic-checkbox" type="checkbox" value="Y">
-			            		<label for="sTR0">皮试阳性</label>
+						<div class="kw-chapter"><a></a>#(..Get("皮试结果"))#</div><!--hxy 2023-01-17-->
+						<!--button class="dhcc-btn-gray">皮试结果</button><hxy 2023-01-05-->
+						<!--div class="skinResult" style="border:1px solid #AFD1EF;margin-left:0px;height:50px;line-height:50px;"-->
+						<div class="hisui-panel panel-header-gray" title="" data-options="" style="height:50px;"><!--hxy 2023-01-06-->
+							<span style="height:40px;line-height:40px;padding-left:12px">
+								<input id="sTR0" class='hisui-radio' type="radio" label=#(..Get("皮试阳性"))# name='skinTestResult' value='Y'>
+								<input id="sTR1" class='hisui-radio' type="radio" label=#(..Get("皮试阴性"))# name='skinTestResult' value='N'>
+								<!--input name="skinTestResult" id="sTR0" class="magic-checkbox" type="checkbox" value="Y">
+			            		<label for="sTR0" style="font-size:18px;color:red;">皮试阳性</label>
 								<input name="skinTestResult" id="sTR1" class="magic-checkbox" type="checkbox" value="N">
-			            		<label for="sTR1">皮试阴性</label>
-			            		<span class="spantext skinSizeItm" style ="display:none;margin-left:20px;background-color: #FF0000">皮试批次:</span>
-								<span class="inputtext skinSizeItm" style="display:none;"><input  class="textbox" type="text" id="skinSize"></span>
+			            		<label for="sTR1" style="font-size:18px;color:green;">皮试阴性</label-->
+			            		<span class="spantext skinSizeItm" style ="display:none;margin-left:20px;background-color: #FF0000;position: relative;top:3px">#(..Get("皮试批号"))#</span>
+								<span class="inputtext skinSizeItm" style="display:none;position: relative;top:3px"><input  class="textbox" type="text" id="skinSize"></span>
 		            		</span>
 						</div>
-						<div class="skinPas">用户密码：</div>
-						<div class="skinPas" style="border:1px solid #AFD1EF;margin-left:0px;height:110px;">
-							<div style="height:50px;padding-top:10px">
+						<div class="kw-chapter"><a></a>#(..Get("用户密码"))#</div><!--hxy 2023-01-17-->
+						<!--div class="skinPas">用户密码：</div-->
+						<!--button class="dhcc-btn-gray">用户密码</button><hxy 2023-01-05-->
+						<!--div class="skinPas" style="border:1px solid #AFD1EF;margin-left:0px;height:110px;"-->
+						<div class="hisui-panel panel-header-gray" title="" data-options="" style="height:92px;"><!--hxy 2023-01-06-->
+							<div style="height:40px;padding-top:10px">
 								<div style="">
-									<span class="spantext">皮试用户:</span>
+									<span class="spantext">#(..Get("皮试用户"))#</span>
 									<span class="inputtext"><input  class="textbox" type="text" id="userCode"></span>
-									<span class="spantext">密&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;码:</span>
+									<span class="spantext" style="padding-left:38px">#(..Get("密码"))#</span>
 									<span class="inputtext"><input  class="textbox" type="password" id="passWord"></span>
-									<td style="padding-left:30px"><a href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="butUpdateFn()">确认</a></td>
+									<span style="padding-left:10px"><a href="#" class="hisui-linkbutton" data-options="iconCls:''" onclick="butUpdateFn()" style="position:relative;top:-1">确认</a></span>
 								</div>
 							</div>
 							
-							<div style="">
-								<span class="spantext">复核用户:</span>
+							<div id="auditdiv">
+								<span class="spantext">#(..Get("复核用户"))#</span>
 								<span class="inputtext"><input  class="textbox" type="text" id="userCodeAudit"></span>
-								<span class="spantext">复核密码:</span>
+								<span class="spantext">#(..Get("复核密码"))#</span>
 								<span class="inputtext"><input  class="textbox" type="password" id="passWordAudit"></span>		
 							</div>
 						</div>
 					</div>
-					<div class="col-sm-6" style ="background-color: #FFFFFF;height:200px;float:left;margin-left:0px;padding-right:0px;width:50%" id="pddDiv">
-						<div>PPD实验结果：</div>
-						<div style="border:1px solid #AFD1EF;margin-left:0px;height:180px;line-height:180px;">
-							<div style="height: 40px;line-height: 40px;">
-								<span class="spantext" >皮肤硬结:</span>
+					<div class="col-sm-6" style ="background-color: #FFFFFF;height:182px;float:left;margin-left:0px;padding-right:0px;width:50%;box-sizing: border-box;border-left:10px solid #fff" id="pddDiv">
+						<div class="kw-chapter"><a></a>#(..Get("PPD实验结果"))#</div><!--hxy 2023-01-17-->
+						<!--button class="dhcc-btn-gray">PPD实验结果</button><hxy 2023-01-05-->
+						<!--div style="border:1px solid #AFD1EF;margin-left:0px;height:180px;line-height:180px;"-->
+						<div class="hisui-panel panel-header-gray" title="" data-options="" style="height:182px;"><!--hxy 2023-01-06-->
+							<div style="height: 40px;line-height: 40px;padding-top:5px">
+								<span class="spantext" >#(..Get("皮肤硬结"))#</span>
 								<input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNoteText1">mm
 								<span style="margin-left:10px;margin-right:10px;">*</span>
 								<span><input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNoteText2">mm</span>
 							</div>
 							<div style="height: 40px;line-height: 40px;">
-								<span class="spantext">局部水泡:</span>
+								<span class="spantext">#(..Get("局部水泡"))#</span>
 								<input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote1Text1">mm
 								<span style="margin-left:10px;margin-right:10px;">*</span>
 								<span><input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote1Text2">mm</span>								
 								<span style="margin-left:10px;height: 20px;line-height: 20px;">
-									<input name="AbnormalNote" id="AN0" class="magic-checkbox" type="checkbox" value="0">
+									<input id="AN0" class='hisui-radio' type="radio" label=#(..Get("单个"))# name='AbnormalNote' value='0'>
+									<input id="AN1" class='hisui-radio' type="radio" label=#(..Get("散在"))# name='AbnormalNote' value='1'>
+									<!--input name="AbnormalNote" id="AN0" class="magic-checkbox" type="checkbox" value="0">
 				            		<label for="AN0">单个</label>
 									<input name="AbnormalNote" id="AN1" class="magic-checkbox" type="checkbox" value="1">
-				            		<label for="AN1">散在</label>
+				            		<label for="AN1">散在</label-->
 								</span>
 							</div>
 							<div style="height: 40px;line-height: 40px;">
-								<span class="spantext">红&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;肿:</span>
+								<span class="spantext" style="padding-left:38px">#(..Get("红肿"))#</span>
 								<input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote4Text1">mm
 								<span style="margin-left:10px;margin-right:10px;">*</span>
 								<span><input class="textbox" style="width:50px" type="text" onblur ="valiNumber()" onkeyup="this.value=this.value.replace(/[^0-9\.-]+/,'');" id="AbnormalNote4Text2">mm</span>								
-								<span class="spantext">PPD结果:</span>
+								<span class="spantext">#(..Get("PPD结果"))#</span>
 								<input class="textbox" style="width:80px" type="text" disabled=true id="PPDResult" readonly='true'>							
 							</div>
 							<div  style="height: 40px;line-height: 40px;width:200px;text-align:center">
 								<span style="height: 20px;line-height: 20px;">
 									<input name="AbnormalNote2" id="AN10" class="magic-checkbox" type="checkbox" value="10">
-				            		<label for="AN10">坏死</label>
+				            		<label for="AN10">#(..Get("坏死"))#</label>
 									<input name="AbnormalNote3" id="AN11" class="magic-checkbox" type="checkbox" value="11">
-				            		<label for="AN11">淋巴管炎</label>
+				            		<label for="AN11">#(..Get("淋巴管炎"))#</label>
 								</span>	
 							</div>
 						</div>				
 					</div>
-					<div  style ="width:100%;background-color: #FFFFFF;float:left;margin-top:10px;">
-						<div>
-							<div>
-								
-							</div>
-						</div>
-						<div>当前皮试结果:<span id="skinRs"></span></div>
-						<table id="skinTesttb"></table>
-					</div>
-            	</div>
-        	</div>
-        </div>
+				</div>
+				
+			<div data-options="region:'center',split:true,border:false">
+				<table id="skinTesttb"></table>
+			</div>
+		</div>
     </div>
 </body>
 </html>

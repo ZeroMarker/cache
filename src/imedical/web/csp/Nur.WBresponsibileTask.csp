@@ -7,108 +7,136 @@
 <head>
 
 <!-- Put your page Title here -->
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta charset="utf-8"/>
     <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
     <HISUI />
     <style>
-    .lifeArea,.nurArea{
-	    position:absolute;
-	    top:50px;
-	    width:calc(50% - 5px);
-	    bottom:0px;
-	    overflow:auto;
-	    left:0px;
-	    border-right:1px solid #ddd;
-    }
-    .nurArea{
-	 	left:calc(50% + 10px);
-		border-left:1px solid #ddd;
-    }
-    .panel-body{
-		border-color:transparent;  
-    }
+    
+    .topline{
+		border-bottom: 1px dashed #ccc;
+		width:100%;
+	}
+    
     #itemEditDialog .tipText{
 		text-align:right;
-		width:80px;
-		height:28px;
-		line-height:28px;
-		padding-right:5px;
+		width:63px;
+		height:30px;
+		line-height:30px;
+		padding-right:10px;
+	}
+	#itemEditDialog .tipText .mastFill{
+		color:red;
 	}
 	#itemEditDialog .oneline{
-		width:100%;
+		width:cacl(100% - 20px);
 		display:flex;
-		padding-bottom:5px;
+		margin:10px 0px 0px 10px;
 		flex-wrap: nowrap;
+	}
+	.textContent{
+		width:470px;
+		height:40px;
+		border-radius:2px;
+		border:solid 1px lightgray;
+		background-color: #f7f7f7;
+   		color: #999;
+   		padding-left:5px;
+   		overflow:auto;
 	}
 	#itemEditDialog .dialog-button{
 		padding-top:0px;
 	}
+	.dialogTable:focus,.dialogTable :focus{
+		outline-width:0px;
+	}
+	#itemEditDialog textarea:disabled,#itemEditDialog .textbox:disabled{
+		border-color:lightgray;
+	}
+	.panel.datagrid:focus,.panel.datagrid :focus{
+		outline-width:0px;
+	}
    </style>
+    <script language="cache" RUNAT="SERVER">
+  		s multiFlag=1
+	</script>
 </head>
 
-<body style="background-color:white">
-	<div data-options="region:'north',border:false" style="height: 44px;padding:0px 10px 0 10px">
-	 	<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+<body style="background-color:white;"><div class="hisui-layout" fit="true">
+	<csp:if condition='1=multiFlag'>
+		<div data-options="region:'north',border:false">
+			<div style="padding:10px;height:34px;">
+				<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+			</div>
+		</div>
+	</csp:if>
+	<div data-options="region:'west',border:false,headerCls:'panel-header-gray'" style="width:623px;padding:0px 5px 10px 10px">
+		<table id="lifeTB" class="hisui-datagrid" title="体征任务" data-options="fitColumns:true,fit:true,headerCls:'panel-header-gray',fit:true,iconCls: 'icon-paper',singleSelect: true,toolbar: '#lifetb',onClickRow: lifeTableClick"></table>
 	</div>
-	<div id="lifeArea" class="lifeArea"></div>
-	<div id="nurArea" class="nurArea"></div>
+	<div data-options="region:'center',border:false,headerCls:'panel-header-gray'" style="padding:0px 10px 10px 5px;"> 
+		<table id="nurTB" class="hisui-datagrid" title="评估任务" data-options="fitColumns:true,fit:true,headerCls:'panel-header-gray',fit:true,iconCls: 'icon-paper',singleSelect: true,toolbar: '#nurtb',onClickRow: nurTableClick"></table>	 
+	</div>
 	<div id="lifetb" style="height:auto">
 		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="lifeAppendCell()">新增</a>
-		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="lifeEditCell()">编辑</a>
-		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="lifeRemoveCell()">删除</a>
+		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="lifeEditCell()">修改</a>
+		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="lifeRemoveCell()">删除</a>
 	</div>
 	<div id="nurtb" style="height:auto">
 		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="nurAppendCell()">新增</a>
-		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="nurEditCell()">编辑</a>
-		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="nurRemoveCell()">删除</a>
+		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="nurEditCell()">修改</a>
+		<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="nurRemoveCell()">删除</a>
 	</div>
-	<div id="itemEditDialog" class="hisui-dialog" title="编辑" style="width:500px;height:600px;top:0px;left:100px;padding:10px;padding-bottom:0px;"data-options="resizable:true,modal:true,closed:'true',buttons:[{text:'保存',handler:function(){itemEditDialogSave()}},{text:'取消',handler:function(){$HUI.dialog('#itemEditDialog').close();}}]">   
+	
+	<div id="itemEditDialog" class="hisui-dialog" title="修改" style="width:570px;height:624px;padding:0px;"data-options="modal:true,closed:'true',buttons:[{text:'保存',handler:function(){itemEditDialogSave()}},{text:'关闭',handler:function(){$HUI.dialog('#itemEditDialog').close();}}]">   
 		<div class="oneline">
-			<div class="tipText">项目名称</div>
-			<select id="itemNameDom" class="hisui-combobox" name="dept" style="width:380px;" data-options="textField:'warddesc',enterNullValueClear:false,onSelect:selectItemNameHandler,blurValidValue:true">
+			<div class="tipText"><span class="mastFill">*</span>项目名称</div>
+			<select id="itemNameDom" class="hisui-combobox" style="width:477px;" data-options="textField:'warddesc',enterNullValueClear:false,onSelect:selectItemNameHandler,blurValidValue:true,defaultFilter:6">
 			</select>
 		</div>
 		<div class="oneline">
-			<div class="tipText">排序</div>
-			<input id="itemOrder" type="text" class="hisui-numberbox" style="width:375px;height:28px" data-options="min:1,precision:0">
+			<div class="tipText"><span class="mastFill">*</span>排序</div>
+			<input id="itemOrder" class="hisui-numberbox textbox" style="width:477px;height:30px" data-options="isKeyupChange:true,min:1,precision:0">
 		</div>
 		<div class="oneline">
 			<div class="tipText">适用科室</div>
-			<textarea id="wardApply" style="width:380px;height:40px"></textarea>
+			<div id="wardApply" class="textContent"></div>
 		</div>
 		<div class="oneline">
 			<div class="tipText">不适用</div>
-			<textarea id="wardUnapply" style="width:380px;height:40px"></textarea>
+			<div id="wardUnapply" class="textContent"></div>
+			
 		</div>
-		<div style="width:470px;height:340px;">
-			<table id="wardMast" data-options="toolbar:'#ToolBar',singleSelect:true" style="height:330px;"></table>
-			<div id="ToolBar" style="padding:2px" >			
-				<input class="hisui-searchbox" id="searchbox" style="width:465px;" data-options="prompt:'检索'" />				 
+		<div class="oneline">
+			<div class="tipText"></div>
+			<div style="border:solid 1px lightgray;width:475px;border-radius:4px;" class="dialogTable">
+		    	<div style="height:340px">
+					<table id="wardMast" border="false" data-options="fitColumns:true,toolbar:'#ToolBar',singleSelect:true" style="height:340px;"></table>
+					<div id="ToolBar" style="display:flex;padding:10px;padding-right:0px;" >
+						<div style="height:30px;line-height:30px;margin-right:10px">关键字</div>
+	 					<input id="dialogSearch" placeholder="请输入关键字查询" class="textbox" style="height:28px;margin-right:10px;width:298px;"/>
+	 					<a id="dialogSearchBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" style="height:30px;">查询</a>
+					</div>
+				</div>
 			</div>
+			
 		</div>
-	</div>
-	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+		
+	</div></div>
 	<script type="text/javascript">
 		var editIndex = undefined,type;
 		var wardArr,lifeArr,nurArr,lifeNameArr,nurNameArr;
-		
-		baseSetup();
+		var multiFlag = "#($g(multiFlag))#";
+		var hospComp;
+		$(document).ready(function () {
+			baseSetup();
+		});
 		function baseSetup(){
-			hospCompSelected();//初始化院区
-			
-			var lifeArea = document.getElementById('lifeArea');
-			var nurArea = document.getElementById('nurArea');
-			var width = nurArea.clientWidth - 20;
-			var height = nurArea.clientHeight - 10;
-			var locWidth = width*0.5 - 120;
-			lifeArea.innerHTML = '<table id="lifeTB" class="hisui-datagrid" title="体征任务" style="width:'+width+
-				'px;height:'+height+'px" data-options="iconCls: \'icon-edit\',singleSelect: true,toolbar: \'#lifetb\',onClickRow: lifeTableClick"></table>';
-			nurArea.innerHTML = '<table id="nurTB" class="hisui-datagrid" title="评估任务" style="width:'+width+
-				'px;height:'+height+'" data-options="iconCls: \'icon-edit\',singleSelect: true,toolbar: \'#nurtb\',onClickRow: nurTableClick"></table>';
-			var arr = [{field:'obsname',title: '项目名称',align:'center',width:170},	
+			if (parseInt(multiFlag)) {
+				hospCompSelected();//初始化院区
+			}
+			var arr = [{field:'obsname',title: '项目名称',width:170},	
 					{field:'order',title: '排序',align:'center',width:50},
-					{field:'ward',title: '适用科室',align:'center',width:locWidth},
-					{field:'nward',title: '不适用',align:'center',width:locWidth}];
+					{field:'ward',title: '适用科室',width:200},
+					{field:'nward',title: '不适用',width:200}];
 			$('#lifeTB').datagrid({
 				columns:[arr]
 			});
@@ -118,17 +146,15 @@
 			$('#wardMast').datagrid({       
 			    columns:[[    
 					{field:'warddesc',title:'病区',width:290},
-					{field:'wardid',title:'适用科室',width:80,formatter: function (value, data, index) 
+					{field:'wardid',title:'适用科室',align:'center', width:80,formatter: function (value, data, index) 
 						{var s = '<input id="apply-'+index+'" data-value="apply-'+value+'" type="checkbox" onclick="wardCellChecked()">';return s;}},
-					{field:'wardno',title:'不适用',width:70,formatter: function (value, data, index) 
+					{field:'wardno',title:'不适用',align:'center',width:70,formatter: function (value, data, index) 
 						{var s = '<input id="unapply-'+index+'" data-value="unapply-'+value+'" type="checkbox" onclick="wardCellChecked()">';return s;}}
 			    ]]
 			});
-			//dialog内的搜索
-			$('#searchbox').searchbox({ 
-				searcher:function(value,name){ 
-					getAllWard();
-				}
+			//编辑框上的搜索
+			$("#dialogSearchBtn").click(function (argument) {
+				getAllWard();
 			});
 			getLifeList();
 			getNurList();
@@ -138,8 +164,8 @@
 		}
 		//新增 编辑 接口
 		function saveOneCell(itemname,order,apply,unapply,id){
-			var hospid=$HUI.combogrid('#_HospList').getValue();
-			console.log(methodStr,itemname,order,apply,unapply,id,hospid);
+			var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
+			//console.log(methodStr,itemname,order,apply,unapply,id,hospid);
 			var methodStr = 'SavePGTask';
 			if(type == 'lifeTB'){//体征
 				methodStr = 'SaveOBTask';
@@ -199,7 +225,7 @@
 		
 		//获取体征任务表
 		function getLifeList(){
-			var hospid=$HUI.combogrid('#_HospList').getValue();
+			var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
 			$cm({
 				ClassName:'CF.NUR.DWB.TaskItem',
 				MethodName:"GetAllOBTask",
@@ -215,16 +241,21 @@
 					var orderB = parseInt(b.order);
 					return orderA - orderB;
 				});
-				/*
+				
 				for(var i = 0; i < lifeArr.length;i++){
 					var dict = lifeArr[i];
-					if(dict['ward']){
+					/*if(dict['ward']){
 						dict['ward'] = dict['ward'].replace(/,/g,'<br />');	
 					}
 					if(dict['nward']){
 						dict['nward'] = dict['nward'].replace(/,/g,'<br />');
+					}*/
+					var ward = dict['ward'];
+					var nward = dict['nward']
+					if((ward == undefined || ward=="") && (nward == undefined || nward=="")){
+						dict['ward'] = '全院'
 					}
-				}*/
+				}
 				$('#lifeTB').datagrid({
 					data: lifeArr
 				});
@@ -232,7 +263,7 @@
 		}
 		//获取体征任务项目名称下拉
 		function getLifeNameList(){
-			var hospid=$HUI.combogrid('#_HospList').getValue();
+			var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
 			$cm({
 				ClassName:'CF.NUR.DWB.TaskItem',
 				QueryName:"QueryOBItem",
@@ -250,7 +281,7 @@
 		}
 		//获取评估任务表
 		function getNurList(){
-			var hospid=$HUI.combogrid('#_HospList').getValue();
+			var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
 			$cm({
 				ClassName:'CF.NUR.DWB.TaskItem',
 				MethodName:"GetAllPGTask",
@@ -266,16 +297,22 @@
 					var orderB = parseInt(b.order);
 					return orderA - orderB;
 				});
-				/*
+				
 				for(var i = 0; i < nurArr.length;i++){
 					var dict = nurArr[i];
-					if(dict['ward']){
+					/*if(dict['ward']){
 						dict['ward'] = dict['ward'].replace(/,/g,'<br />');	
 					}
 					if(dict['nward']){
 						dict['nward'] = dict['nward'].replace(/,/g,'<br />');
+					}*/
+					
+					var ward = dict['ward'];
+					var nward = dict['nward']
+					if((ward == undefined || ward=="") && (nward == undefined || nward=="")){
+						dict['ward'] = '全院'
 					}
-				}*/
+				}
 				$('#nurTB').datagrid({
 					data: nurArr
 				});
@@ -283,10 +320,11 @@
 		}
 		//获取评估任务项目名称下拉
 		function getNurNameList(){
-			var hospid=$HUI.combogrid('#_HospList').getValue();
+			var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
 			$cm({
 				ClassName:'CF.NUR.DWB.TaskItem',
-				MethodName:"GetPGList" 
+				MethodName:"GetPGList",
+				hospid:hospid
 			},function(jsonData){
 				console.log('评估下拉数据',jsonData)
 				if(!jsonData.data){
@@ -305,14 +343,22 @@
 				$('#nurTB').datagrid('unselectRow', editIndex);
 			}
 			type = 'lifeTB';
-			editIndex = index
+			if($('#lifeTB').datagrid('getSelected') == null){
+				editIndex = undefined;
+			}else{
+				editIndex = index
+			}
 		}
 		function nurTableClick(index){
 			if(type == 'lifeTB' && editIndex != undefined){
 				$('#lifeTB').datagrid('unselectRow', editIndex);
 			}
 			type = 'nurTB';
-			editIndex = index
+			if($('#nurTB').datagrid('getSelected') == null){
+				editIndex = undefined;
+			}else{
+				editIndex = index
+			}
 		}
 		
 		//新增
@@ -326,6 +372,12 @@
 			type = 'lifeTB';
 			editIndex = undefined;
 			clearOrUpdateDialog(undefined);
+			$HUI.dialog("#itemEditDialog",{
+				iconCls:'icon-w-add',
+				title:'新增',
+				modal:true,
+				buttonAlign : 'center'
+			});
 			$('#itemEditDialog').dialog('open');
 		}
 		function nurAppendCell(){
@@ -338,6 +390,12 @@
 			type = 'nurTB';
 			editIndex = undefined;
 			clearOrUpdateDialog(undefined);
+			$HUI.dialog("#itemEditDialog",{
+				iconCls:'icon-w-add',
+				title:'新增',
+				modal:true,
+				buttonAlign : 'center'
+			});
 			$('#itemEditDialog').dialog('open');
 		}
 		
@@ -356,10 +414,16 @@
 						return		
 					}
 					clearOrUpdateDialog(jsonData);
+					$HUI.dialog("#itemEditDialog",{
+						iconCls:'icon-w-edit',
+						title:'修改',
+						modal:true,
+						buttonAlign : 'center'
+					});
 					$('#itemEditDialog').dialog('open');
 				});
 			}else{
-				$.messager.popover({msg: '请选择要编辑的行',type:'alert'});
+				$.messager.popover({msg: '请选择要修改的行',type:'alert'});
 			}
 		}
 		function nurEditCell(){
@@ -376,24 +440,38 @@
 						return		
 					}
 					clearOrUpdateDialog(jsonData);
+					$HUI.dialog("#itemEditDialog",{
+						iconCls:'icon-w-edit',
+						title:'修改',
+						modal:true,
+						buttonAlign : 'center'
+					});
 					$('#itemEditDialog').dialog('open');
 				});
 			}else{
-				$.messager.popover({msg: '请选择要编辑的行',type:'alert'});
+				$.messager.popover({msg: '请选择要修改的行',type:'alert'});
 			}
 		}
 		
 		//删除
 		function lifeRemoveCell(){
 			if(type == 'lifeTB' && editIndex != undefined){
-				deleteOneCell();
+				$.messager.confirm("删除", "确定删除吗?", function (r) {
+					if (r) {
+						deleteOneCell();
+					}
+				});
 			}else{
 				$.messager.popover({msg: '请选择要删除的行',type:'alert'});
 			}
 		}
 		function nurRemoveCell(){
 			if(type == 'nurTB' && editIndex != undefined){
-				deleteOneCell();
+				$.messager.confirm("删除", "确定删除吗?", function (r) {
+					if (r) {
+						deleteOneCell();
+					}
+				});
 			}else{
 				$.messager.popover({msg: '请选择要删除的行',type:'alert'});
 			}
@@ -402,6 +480,15 @@
 		//新增前清空dialog 编辑前填充dialog
 		function clearOrUpdateDialog(dict){
 			//console.log('clearOrUpdateDialog',dict);
+			var searchStr = document.getElementById('dialogSearch').value
+			if(searchStr != ''){
+				document.getElementById('dialogSearch').value=""
+				$('#wardMast').datagrid({
+					data:[]
+				});
+				getAllWard(1);
+			}
+			
 			if(type == 'lifeTB'){
 				if(lifeNameArr != undefined){	
 					$('#itemNameDom').combobox({textField: 'text',valueField:'value'});				
@@ -417,45 +504,60 @@
 					getNurNameList();
 				}
 			}
-			var itemOrder = document.getElementById('itemOrder');
+			
 			var wardApply = document.getElementById('wardApply');
 			var wardUnapply = document.getElementById('wardUnapply');
 			$('#wardMast').datagrid({       
 			    columns:[[    
 					{field:'warddesc',title:'名称',width:290},
-					{field:'wardid',title:'适用科室',width:80,formatter: function (value, data, index) 
+					{field:'wardid',title:'适用科室',align:'center',width:80,formatter: function (value, data, index) 
 						{
-							var s = '<input id="apply-'+index+'" data-value="apply-'+value+'" type="checkbox" onclick="wardCellChecked()">';
+							var s = '<input id="apply-'+index+'" data-value="apply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
 							if(dict && dict['ward'] != '' && dict['ward'] != undefined && isArrStrContainStr(dict['ward'],value)){
-								s = '<input id="apply-'+index+'" checked data-value="apply-'+value+'" type="checkbox" onclick="wardCellChecked()">';
+								s = '<input id="apply-'+index+'" checked data-value="apply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
 							}
 							return s;}},
-					{field:'wardno',title:'不适用',width:70,formatter: function (value, data, index) 
+					{field:'wardno',title:'不适用',align:'center',width:70,formatter: function (value, data, index) 
 						{
-							var s = '<input id="unapply-'+index+'" data-value="unapply-'+value+'" type="checkbox" onclick="wardCellChecked()">';
+							var s = '<input id="unapply-'+index+'" data-value="unapply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
 							if(dict && dict['nward'] != ''&& dict['nward'] != undefined && isArrStrContainStr(dict['nward'],value)){
-								s = '<input id="unapply-'+index+'" checked data-value="unapply-'+value+'" type="checkbox" onclick="wardCellChecked()">';
+								s = '<input id="unapply-'+index+'" checked data-value="unapply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
 							}
 							return s;}}
 			    ]]
 			}); 
 			if(dict){
 				if(dict['ward'] == undefined){dict['ward'] = ''};
+				if(dict['wardDesc'] == undefined){dict['wardDesc'] = ''};
 				if(dict['nward'] == undefined){dict['nward'] = ''};
+				if(dict['nwardDesc'] == undefined){dict['nwardDesc'] = ''};
 				if(type == 'lifeTB'){
 					$('#itemNameDom').combobox("setValue",dict['obsid']);
 				}else{
 					$('#itemNameDom').combobox("setValue",dict['guid']);
 				}
 				
-				itemOrder.value = dict['order'];
-				wardApply.value = dict['ward'];
-				wardUnapply.value = dict['nward'];
+				$('#itemOrder').numberbox('setValue', dict['order']);
+				wardApply.setAttribute('data-value',dict['ward']);
+				wardApply.innerText = dict['wardDesc'];
+				wardUnapply.setAttribute('data-value',dict['nward']);
+				wardUnapply.innerText = dict['nwardDesc'];
+				
 			}else{
 				$('#itemNameDom').combobox("setValue",'');
-				itemOrder.value = '';
-				wardApply.value = '';
-				wardUnapply.value = '';
+				var order = 1;
+				if(type == 'lifeTB' && lifeArr != undefined && lifeArr.length > 0){
+					order = parseInt(lifeArr[lifeArr.length - 1]['order']) + 1;
+				}else if(type == 'nurTB' && nurArr != undefined && nurArr.length > 0){
+					order = parseInt(nurArr[nurArr.length - 1]['order']) + 1;
+				}
+				
+				$('#itemOrder').numberbox('setValue', order);
+				wardApply.innerText = '';
+				wardUnapply.innerText = '';
+				wardApply.setAttribute('data-value','');
+				wardUnapply.setAttribute('data-value','');
+				
 			}
 		}
 		
@@ -467,23 +569,32 @@
 			var type = indexArr[0];
 			var index = indexArr[1];
 			var wardid = target.getAttribute('data-value');
+			var warddesc = target.getAttribute('data-desc');
 			var wardApply = document.getElementById('wardApply');
-			var applyStr = wardApply.value;
+			var applyDescStr = wardApply.innerText;
+			var applyStr = wardApply.getAttribute('data-value');
 			var wardUnapply = document.getElementById('wardUnapply');
-			var unappStr = wardUnapply.value;
+			var unappDescStr = wardUnapply.innerText;
+			var unappStr = wardUnapply.getAttribute('data-value');
 			var itemEditDialog = document.getElementById('itemEditDialog');
 			if(type == 'apply'){
 				wardid = wardid.substring(6,wardid.length);
 				if(target.checked == false){
-					wardApply.value = deleteStrFromArrStr(applyStr,wardid);
+					var tempDict = deleteStrFromArrStr(applyStr,applyDescStr,wardid);
+					wardApply.innerText = tempDict.desc;
+					wardApply.setAttribute('data-value',tempDict.value);
+					
 					return;	
 				}
 				if(applyStr == ''){
 					applyStr = wardid;
+					applyDescStr = warddesc;
 				}else if(!isArrStrContainStr(applyStr,wardid)){
 					applyStr += '@' +wardid;
+					applyDescStr += ',' +warddesc;
 				}
-				wardApply.value = applyStr;
+				wardApply.setAttribute('data-value',applyStr);
+				wardApply.innerText = applyDescStr;
 				if(unappStr != ''){
 					var arr = unappStr.split('@');
 					var inputIdArr = [];
@@ -499,19 +610,31 @@
 						var str = '#'+inputIdArr[i];
 						$(str).click();
 					}
+					if(wardUnapply.getAttribute('data-value') != ''){
+						wardUnapply.setAttribute('data-value','');
+						wardUnapply.innerText = '';
+					}
+				}else{
+					//wardApply.placeholder="默认全院"
 				}
 			}else {
 				wardid = wardid.substring(8,wardid.length);
 				if(target.checked == false){
-					wardUnapply.value = deleteStrFromArrStr(unappStr,wardid);
+					var tempDict = deleteStrFromArrStr(unappStr,unappDescStr,wardid);
+					wardUnapply.innerText = tempDict.desc;
+					wardUnapply.setAttribute('data-value',tempDict.value);
+					
 					return;	
 				}
 				if(unappStr == ''){
 					unappStr = wardid;
+					unappDescStr = warddesc;
 				}else if(!isArrStrContainStr(unappStr,wardid)){
 					unappStr += '@' +wardid;
+					unappDescStr += ',' +warddesc;
 				}	
-				wardUnapply.value = unappStr;	
+				wardUnapply.innerText = unappDescStr;
+				wardUnapply.setAttribute('data-value',unappStr);	
 				if(applyStr != ''){
 					var arr = applyStr.split('@');
 					var inputIdArr = [];
@@ -527,16 +650,22 @@
 						var str = '#'+inputIdArr[i];
 						$(str).click();
 					}
+					if(wardApply.getAttribute('data-value') != ''){
+						wardApply.setAttribute('data-value','');
+						wardApply.innerText = '';
+					}
 				}
+				
 			}	
 		}
 		
 		//编辑框的保存按钮点击事件
 		function itemEditDialogSave(){
 			var nameStr = $('#itemNameDom').combobox("getValue");
+			console.log('nameStr',nameStr);
 			var itemOrder = document.getElementById('itemOrder').value;
-			var wardApply = document.getElementById('wardApply').value;
-			var wardUnapply = document.getElementById('wardUnapply').value;
+			var wardApply = document.getElementById('wardApply').getAttribute('data-value');
+			var wardUnapply = document.getElementById('wardUnapply').getAttribute('data-value');
 			if(nameStr == ''){
 				$.messager.popover({msg: '项目名称不能为空',type:'alert'});
 				return
@@ -545,23 +674,34 @@
 				$.messager.popover({msg: '排序不能为空',type:'alert'});
 				return
 			}else{//排序不能重复
+				var keyStr = 'obsid';
 				var arr = lifeArr;
-				if(type == 'nurTB'){arr = nurArr} 
+				if(type == 'nurTB'){
+					arr = nurArr;
+					keyStr = 'guid';
+				} 
+				console.log('nameStr',nameStr);
 				if(arr != undefined){
 					for(var i = 0; i < arr.length;i++){
 						var order = arr[i]['order'] + '';
-						if(order == itemOrder){
+						if(order == itemOrder && i != editIndex){
 							$.messager.popover({msg: '排序不能重复',type:'alert'});
 							return
+						}
+						var obId = arr[i][keyStr];
+						
+						if(obId == nameStr && i != editIndex){
+							$.messager.popover({msg: '项目不能重复',type:'alert'});
+							return;
 						}
 					}
 				}
 			}
 			
-			//必须选适用病区或者不适用
+			//必须选适用病区或者不适用 都不选择表示适用全部病区
 			if(wardApply == '' && wardUnapply == ''){
-				$.messager.popover({msg: '请选择适用病区或不适用病区',type:'alert'});
-				return
+				//$.messager.popover({msg: '请选择适用病区或不适用病区',type:'alert'});
+				//return
 			}
 			
 			var idStr = '';
@@ -575,32 +715,73 @@
 		
 		//项目名称选择
 		function selectItemNameHandler(item){
-			console.log(item);
+			console.log('item',item)
+			var arr = lifeArr;
+			var nameStr = item.text;
+			var idStr = item.value;
+			var keyStr = 'obsid';
+			if(type == 'nurTB'){
+				arr = nurArr;
+				nameStr = item.Name
+				idStr = item.Indentity;
+				keyStr = 'guid';
+			}
+			if(arr != undefined){
+				for(var i = 0; i < arr.length;i++){
+					var obsname = arr[i]['obsname'];
+					if(obsname == nameStr&& i != editIndex){
+						var obId = arr[i][keyStr];
+						if(idStr == obId ){
+							$.messager.popover({msg: '项目不能重复',type:'alert'});
+							$('#itemNameDom').combobox("setValue",'');
+							return
+						}
+					}
+				}
+			}
 		}
 		
 		//选择院区
 		function hospCompSelected(){ 
-			var hospComp = GenHospComp("ARC_ItemCat"); 
+			hospComp = GenHospComp("Nur_IP_TaskItem"); 
 			$('#_HospList').combogrid({
 		   		onSelect:function(value){
+			   		editIndex = undefined
+			   		type = undefined
+					wardArr = undefined
+					lifeArr = undefined
+					nurArr = undefined
+					lifeNameArr = undefined
+					nurNameArr = undefined
 			   		$('#lifeTB').datagrid({
 						data: []
 					});
 					$('#nurTB').datagrid({
 						data: []
 					});
+					$('#itemNameDom').combobox("loadData",[]);
+					$('#wardMast').datagrid({
+						data:[]
+					});
+					
+					getLifeList();
+					getNurList();
+					getAllWard();
+					getLifeNameList();
+					getNurNameList();
 		   		}	 
 	   		});
 		}
 		//病区搜索
 		function getAllWard(){
-			var hospid=$HUI.combogrid('#_HospList').getValue();
-			var desc = $('#searchbox').searchbox('getValue');
+			var hospid=hospComp?hospComp.getValue():session['LOGON.HOSPID'];
+			var desc = document.getElementById('dialogSearch').value
 			$cm({
 				ClassName:'Nur.DWB.Service.BedChartService',
 				QueryName:"GetallWard",
 				desc:desc,
-				hospid:hospid
+				hospid:hospid,
+				rows:99999
 			},function(jsonData){
 				if(jsonData.msg){
 					return		
@@ -617,11 +798,35 @@
 				$('#wardMast').datagrid({
 					data:wardArr
 				});
+				
+			var wardStr = document.getElementById('wardApply').getAttribute('data-value');
+			var uwardStr = document.getElementById('wardUnapply').getAttribute('data-value');
+			$('#wardMast').datagrid({       
+			    columns:[[    
+					{field:'warddesc',title:'名称',width:290},
+					{field:'wardid',title:'适用科室',align:'center',width:80,formatter: function (value, data, index) 
+						{
+							var s = '<input id="apply-'+index+'" data-value="apply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
+							if(wardStr != '' && isArrStrContainStr(wardStr,value)){
+								s = '<input id="apply-'+index+'" checked data-value="apply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
+							}
+							return s;}},
+					{field:'wardno',title:'不适用',align:'center',width:70,formatter: function (value, data, index) 
+						{
+							var s = '<input id="unapply-'+index+'" data-value="unapply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
+							if(uwardStr != '' && isArrStrContainStr(uwardStr,value)){
+								s = '<input id="unapply-'+index+'" checked data-value="unapply-'+value+'" data-desc="'+data['warddesc']+'" type="checkbox" onclick="wardCellChecked()">';
+							}
+							return s;}}
+			    ]]
+			}); 
+				
+				
 			});	
 		}
 		
 		function isArrStrContainStr(arrStr,str){
-			if(arrStr == ''){
+			if(arrStr == '' || arrStr == null || arrStr == undefined){
 				return false;
 			}
 			var arr = arrStr.split('@');
@@ -634,21 +839,27 @@
 			return false;
 		}
 	
-		function deleteStrFromArrStr(arrStr,str){
+		function deleteStrFromArrStr(arrStr,descStr,str){
 			var arr = arrStr.split('@');
+			var descarr = descStr.split(',');
 			for(var i = 0; i < arr.length;i++){
 				var tempStr = arr[i];
 				if(tempStr == str){
 					arr.splice(i,1);
+					if(descarr.length > 0 && descarr.length >= i - 1){
+						descarr.splice(i,1);
+					}
+					
 					break;
 				}
 			}
 			if(arr.length == 0){
-				return '';
+				return {value:'',desc:''};
 			}else{
-				return arr.join('@');
+				return {value:arr.join('@'),desc:descarr.join(',')};
 			}
 		}
+		
 	</script>
 </body>
 </html>

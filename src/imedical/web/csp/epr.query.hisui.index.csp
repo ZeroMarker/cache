@@ -1,20 +1,25 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired()
+	q 1
+	
+	if ($g(%session.Data("LOGON.USERID")) = "")
+	{
+		s rtn = ##Class(websys.SessionLogon).Logon()
+		s %response.ServerSideRedirect = "epr.query.hisui.index.csp"
+	}
+	
+</csp:method>
 <html>
 <head>
-	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-		if ($g(%session.Data("LOGON.USERID")) = "")
-		{
-			s rtn = ##Class(websys.SessionLogon).Logon()
-			s %response.ServerSideRedirect = "epr.query.hisui.index.csp"
-		}
-		i ##Class(websys.SessionEvents).SessionExpired() q 1
-		q 1
-	</csp:method>
+	<ExtHealth:Head/>   <!--调用平台提供签名方法需增加此标签-->
 	<title>电子病历综合查询</title>
 	<HISUI/>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 	<link rel="stylesheet" type="text/css" href="../scripts/epr/css/query.css"/>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 	<script language="cache" runat="server">
  		s userID 	= %session.Get("LOGON.USERID")
+		s userCode  = %session.Get("LOGON.USERCODE")
 	 	s userName 	= %session.Get("LOGON.USERNAME")
 		s ctLocID 	= %session.Get("LOGON.CTLOCID")
 		s ssGroupID	= %session.Get("LOGON.GROUPID")
@@ -34,9 +39,13 @@
 				s canBuildQueryCase = "Y"   //Y:有权限添加查询条件、结果列，保存、修改方案;
 			}
 		}
+		s canViewAllLoc = $Get(%request.Data("CanViewAllLoc",1),"")
+		s ctLocDesc = ""
+		s:(ctLocID '= "") ctLocDesc = $p(^CTLOC(ctLocID),"^",2)
 	</script>
 	<script language="javascript">
 		var userID	  = '#(userID)#';
+		var userCode  = '#(userCode)#'
 		var userName  = '#(userName)#';
 		var ctLocID   = '#(ctLocID)#';
 		var ssGroupID = '#(ssGroupID)#';
@@ -53,82 +62,97 @@
 			SaveUserName: ""
 		}
 		var canBuildQueryCase = '#(canBuildQueryCase)#';
+		var canViewAllLoc = '#(canViewAllLoc)#';
+		var ctLocDesc = '#(ctLocDesc)#';
 	</script>
 	 <script type="text/javascript" src="../scripts/epr/js/hisui.dateformat.js"></script>
 	 <script type="text/javascript" src="../scripts/epr/js/tools.js"></script>
 </head>
-<body class="hisui-layout">
-    <div data-options="region:'west',title:'查询条件设置',headerCls:'panel-header-gray'" style="width:456px;padding:3px;">
+<body style="padding:10px">
+<div class="hisui-layout" data-options="fit:true">
+    <div data-options="region:'west',title:'查询条件设置',headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:502px;padding:0px;">
     	<div class="hisui-layout" data-options="border:false,fit:true">
-    		<div data-options="region:'north',border:false" style="height:325px;">
-		    	<div id="main" class="hisui-tabs tabs-gray" data-options="fit:true,border:false">      
+    		<div data-options="region:'north',border:false" style="height:380px;padding:10px">
+		    	<div id="main" class="hisui-tabs tabs-gray" data-options="fit:true">      
 					<div title="简单查询">
 						<div class="hisui-layout" data-options="fit:true">
-							<div data-options="region:'north',border:false" style="height:37px;padding:3px 2px 0 0;" >
-								<div class="btn-group" >
-									<button id="btSimpleList" type="button" class="btn btn-default focus">#(..Get("简单条件"))#</button>
-						  			<button id="btSimpleString" type="button" class="btn btn-default">#(..Get("输入号串"))#</button>
+							<div data-options="region:'north',border:false" style="height:45px;padding-top:5px;" >
+								<div class="btn-group" id="ListAndStringKeyWord" >
+								<!-- 	<button id="btSimpleList" type="button" class="btn btn-default focus">#(..Get("简单条件"))#</button>
+						  			<button id="btSimpleString" type="button" class="btn btn-default">#(..Get("输入号串"))#</button> -->
 								</div>
 							</div>
 							<div data-options="region:'center',border:false" style="padding-left:5px;">
 								<div  class="hisui-layout" data-options="fit:true" >
-									<div data-options="region:'south',border:false" style="height:36px;padding-top:2px;">
+									<div data-options="region:'south',border:false" style="height:36px;">
 									   	<a id="btnCommit" href="#" class="hisui-linkbutton fright">#(..Get("提交查询"))#</a>
 									   	<a href="#" id="resetSimpleCondition" class="hisui-linkbutton fright">#(..Get("重置"))#</a>
-									   	<div class="fright">
+<!--									   	<div class="fright">
 									   	<select id="cdxExportSimple" class="hisui-combobox" name="state" style="width:100px;" data-options="onSelect:selectHandler">
 											<option value="all" selected>#(..Get("导出所有"))#</option>
 											<option value="current">#(..Get("导出当前页"))#</option>
 										</select>
 										<a href="#" id="simpleExcel" class="hisui-linkbutton"  onclick="exportData()" style="vertical-align:middle;">#(..Get("导出excel"))#</a>
 										
-									   	</div>
+									   	</div>  -->
 									   	<div id="hiddenSimpleGUID"></div>
 									</div>
 									<div data-options="region:'center',border:false" style="overflow:hidden" >
 										<div id="simpleList">
-											<table class="" style="width:100%; height:100%" >
-												<tr >
-													<td >#(..Get("患者姓名"))#</td>
-													<td ><input id="txtPatientName" class="textbox"/></td>
-													<td >#(..Get("登记号"))#</td>
-													<td ><input id="txtRegNo" class="textbox"/></td>
-												<tr >
-												<tr >
-													<td >#(..Get("病案号"))#</td>
-													<td ><input id="MedicareNo" class="textbox"/></td>
-													<td >#(..Get("就诊号"))#</td>
-													<td ><input id="txtEpisodeNo" class="textbox"/></td>
-												<tr >
-												<tr >
-													<td >#(..Get("就诊类型"))#</td>
-													<td ><input id="cbxRegType" class="hisui-combobox"/></td>
-													<td >#(..Get("诊断"))#</td>
-													<td ><input id="txtDiagnose" class="textbox"/></td>
-												<tr >
-												<tr >
-													<td >#(..Get("科室"))#</td>
-													<td ><input id="cbxLoc" class="hisui-combogrid"/></td>
-													<td >#(..Get("病区"))#</td>
-													<td ><input id="cbxWard" class="hisui-combogrid"/></td>
-												<tr >
-												<tr >
-													<td >#(..Get("入院起始"))#</td>
-													<td ><input id="dtAdmBeginDate" class="hisui-datebox"/></td>
-													<td >#(..Get("入院截止"))#</td>
-													<td ><input id="dtAdmEndDate" class="hisui-datebox"/></td>
-												<tr >
-												<tr >
-													<td >#(..Get("出院起始"))#</td>
-													<td ><input id="dtDisBeginDate" class="hisui-datebox"/></td>
-													<td >#(..Get("出院截止"))#</td>
-													<td ><input id="dtDisEndDate" class="hisui-datebox"/></td>
-												<tr >
-											</table>
+											<div class="div-table">
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("患者姓名"))#</label></div>
+													<div class="row-item-input"><input id="txtPatientName" class="textbox"/></div>
+												</div>
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("登记号"))#</label></div>
+													<div class="row-item-input"><input id="txtRegNo" class="textbox"/></div>
+												</div>
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("病案号"))#</label></div>
+													<div class="row-item-input"><input id="MedicareNo" class="textbox"/></div>
+												</div>
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("就诊号"))#</label></div>
+													<div class="row-item-input"><input id="txtEpisodeNo" class="textbox"/></div>
+												</div>
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("就诊类型"))#</label></div>
+													<div class="row-item-input"><input id="cbxRegType" class="hisui-combobox"/></div>
+												</div>
+												<div class="row-item">	
+													<div class="row-item-label"><label>#(..Get("诊断"))#</label></div>
+													<div class="row-item-input"><input id="txtDiagnose" class="textbox"/></div>
+												</div>
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("当前科室"))#</label></div>
+													<div class="row-item-input"><input id="cbxLoc" class="hisui-combogrid"/></div>
+												</div>
+												<div class="row-item">	
+													<div class="row-item-label"><label>#(..Get("当前病区"))#</label></div>
+													<div class="row-item-input"><input id="cbxWard" class="hisui-combogrid"/></div>
+												</div>
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("入院起始"))#</label></div>
+													<div class="row-item-input"><input id="dtAdmBeginDate" class="hisui-datebox"/></div>
+												</div>
+												<div class="row-item">	
+													<div class="row-item-label"><label>#(..Get("入院截止"))#</label></div>
+													<div class="row-item-input"><input id="dtAdmEndDate" class="hisui-datebox"/></div>
+												</div>
+												<div class="row-item">
+													<div class="row-item-label"><label>#(..Get("出院起始"))#</label></div>
+													<div class="row-item-input"><input id="dtDisBeginDate" class="hisui-datebox"/></div>
+												</div>
+												<div class="row-item">	
+													<div class="row-item-label"><label>#(..Get("出院截止"))#</label></div>
+													<div class="row-item-input"><input id="dtDisEndDate" class="hisui-datebox"/></div>
+												</div>
+											</div>
 										</div>
 										<div id="simpleString">
 											<div class="condition"><label>#(..Get("号串类型"))#</label><input id="cbxNumberType" class="hisui-combobox" /><label class="attention">#(..Get("注: 多个号码以#分隔"))#</label></div>
-											<textarea id="numbers" rows="8" class="text" maxlength="600" ></textarea>
+											<textarea id="numbers" rows="9" class="text" maxlength="600" ></textarea>
 										</div>
 									</div>
 								</div>
@@ -138,39 +162,51 @@
 					<div title="高级查询">
 						<div id="divCondition" style="width:100%;height:100%;overflow:hidden;overflow-x:hidden;">
 							<div class="hisui-layout" data-options="fit:true">
-								<div data-options="region:'north',border:false" style="height:35px;padding-top:2px;padding-left:4px;">
+								<div data-options="region:'north',border:false" style="height:45px;padding:10px 0 0 10px;">
 									<a href="#" id="btnSelectCase" class="hisui-linkbutton">#(..Get("选择已有方案"))#</a>
 									<a href="#" id="btnModifyCase" class="hisui-linkbutton fright">#(..Get("修改方案"))#</a>
 				       				<a href="#" id="btnSaveCase" class="hisui-linkbutton fright">#(..Get("保存方案"))#</a>
 				       			</div>
-								<div data-options="region:'south',border:false" style="height:35px;padding-top:2px;">
-				       				<a href="#" id="btnCommitAdvanced" class="hisui-linkbutton fright">#(..Get("提交查询"))#</a>
-				       				<a href="#" id="btAddCondition" class="hisui-linkbutton fright">#(..Get("添加条件"))#</a>
-				       				<a href="#" id="btResetCondition" class="hisui-linkbutton fright">#(..Get("重置"))#</a>
-				       					<div>
+								<div data-options="region:'south',border:false" style="height:45px;">
+				       				<div style="margin-left:10px;">
+				       					<a href="#" id="btnCommitAdvanced" class="hisui-linkbutton fright">#(..Get("提交查询"))#</a>
+				       					<a href="#" id="btAddCondition" class="hisui-linkbutton fright">#(..Get("添加条件"))#</a>
+				       					<a href="#" id="btResetCondition" class="hisui-linkbutton fright">#(..Get("重置"))#</a>
+									</div>
+<!-- 				       					<div>
 											<input id="exportAdvance" class="hisui-combobox" style="width:100px;"/>
 											<a href="#" id="advanceExcel" class="hisui-linkbutton"  onclick="exportData()" style="vertical-align:middle;">#(..Get("导出excel"))#</a>
-									   	</div>
+									   	</div>-->
+									<div style="padding-left:10px;">
+										<a href="#" id="btnTaskList" class="hisui-linkbutton">#(..Get("后台任务"))#</a>
+										<span style="margin-left:7px;"></span>
+										<a href="#" id="btnAddTask" class="hisui-linkbutton">#(..Get("添加任务"))#</a>
+									</div>
 				       				<div id="hiddenAdvancedGUID"></div>
 				       			</div>
-				       			<div data-options="region:'center',border:false">
-									<table id="tblCondition" class="tbCondition"></table>
+				       			<div data-options="region:'center',border:false" style="padding-top:10px">
+									<div id="tblCondition" class="tbCondition div-table"></div>
 								</div>
 							</div>
 						</div>
 					</div> 
 				</div>
     		</div>
-       		<div data-options="region:'center',border:false"> 
+       		<div data-options="region:'center',border:false" style="padding:0px 10px 10px 10px"> 
        			<div class="hisui-layout" data-options="fit:true">
-	       			<div data-options="region:'south',border:false" style="height:34px;padding-top:3px;">
+ 	       			<div data-options="region:'south'" style="height:50px;padding-top:10px;">
 	       				<a href="#" id="btAddResultCol" class="hisui-linkbutton fright">#(..Get("添加结果列"))#</a>
 	       				<a href="#" id="btResetResultCol" class="hisui-linkbutton fright">#(..Get("重置"))#</a>
-	       			</div>
+	       			</div> 
+	       			
 	       			<div data-options="region:'center',border:false">
-			       		<div class="hisui-tabs tabs-gray" data-options="border:false,fit:true"> 
+			       		<div class="hisui-tabs tabs-gray" data-options="fit:true" style="border-bottom:1px solid #cccccc;"> 
 				       		<div title="定义结果列">
 				       			<div id="divResultCols"></div>
+<!-- 				       			<div id="divResultColsBtn">
+				       				<a href="#" id="btAddResultCol" class="hisui-linkbutton fright">#(..Get("添加结果列"))#</a>
+	       							<a href="#" id="btResetResultCol" class="hisui-linkbutton fright">#(..Get("重置"))#</a>				       				
+				       			</div> -->
 			       			</div>
 		       			</div>	
 	       			</div>
@@ -178,9 +214,42 @@
        		</div> 
     	</div>
     </div>  
-    <div data-options="region:'center',border:false" style="padding:0 3px 0 3px;">
-    	<table id="dgResultGrid"></table>
+    <div id="centerDiv" data-options="region:'center',border:false" style="padding-left:10px;">
+	    <div class="hisui-layout" data-options="border:false,fit:true">
+		    <!-- <div data-options="region:'north',border:false" style="height:36px">
+		    	<div id="simpleExportDiv">
+				    <input id="exportSimple" class="hisui-combobox" style="width:100px;"/>
+				    <span style="margin-left:10px;"></span>
+					<a href="#" id="simpleExcel" class="hisui-linkbutton"  onclick="exportData()" style="vertical-align:middle;">#(..Get("导出excel"))#</a>
+		    	</div>
+		    	<div id="advanceExportDiv" style="display:none">
+					<input id="exportAdvance" class="hisui-combobox" style="width:100px;"/>
+					<span style="margin-left:10px;"></span>
+					<a href="#" id="advanceExcel" class="hisui-linkbutton"  onclick="exportData()" style="vertical-align:middle;">#(..Get("导出excel"))#</a>
+				</div>
+			</div> -->
+			<div data-options="region:'center',title:'查询结果',headerCls:'panel-header-gray',iconCls:'icon-paper'">
+	    		<div class="hisui-layout" data-options="border:false,fit:true">
+	    			<div data-options="region:'north',border:false" style="height:50px;padding:10px">
+			    		<div id="simpleExportDiv">
+						    <input id="exportSimple" class="hisui-combobox" style="width:100px;"/>
+						    <span style="margin-left:10px;"></span>
+							<a href="#" id="simpleExcel" class="hisui-linkbutton"  onclick="exportData()" style="vertical-align:middle;">#(..Get("导出excel"))#</a>
+				    	</div>
+				    	<div id="advanceExportDiv" style="display:none">
+							<input id="exportAdvance" class="hisui-combobox" style="width:100px;"/>
+							<span style="margin-left:10px;"></span>
+							<a href="#" id="advanceExcel" class="hisui-linkbutton"  onclick="exportData()" style="vertical-align:middle;">#(..Get("导出excel"))#</a>
+						</div>
+	    			</div>
+	    			<div data-options="region:'center',border:false,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border-radius:0px;border-top:1px solid #E2E2E2;">
+	    				<table id="dgResultGrid"></table>
+	    			</div>
+	    		</div>
+	    	</div>
+	    </div>
     </div>
     <script type="text/javascript" src="../scripts/epr/js/query.hisui.index.js"></script>
+ </div>    
 </body>
 </html>

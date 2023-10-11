@@ -9,36 +9,23 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard"/> 
+<DOCCARD medStepCode="Cure"></DOCCARD>
 <link rel="stylesheet" type="text/css" href="../scripts/dhcdoc/css/dhcdoccurehui.css" />
 <style>
-body {
-	background:#fff;
-}
-.search-table{
-	border-collapse:separate;
-	border-spacing:0 10px;
-}
-.first-r-label{
-	padding-left: 10px;
-	text-align:right;
-}
-.r-label{
-	padding-left: 30px;
-}
-.panel-header{
-	border-bottom:0;
-}
 </style>
 <Server>
-s DocCureUseBase=+(##class(web.DHCDocConfig).GetConfigNode("DocCureUseBase"))
+s DocCureUseBase=+(##class(DHCDoc.DHCDocCure.VersionControl).UseBaseControl(%session.Get("LOGON.HOSPID")))
 s PrintBath=##class(web.UDHCJFCOMMON).getpath()
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+s DHCDocCureLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureLinkPage",%session.Get("LOGON.HOSPID"))
+s DHCDocCureRecordLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureRecordLinkPage",%session.Get("LOGON.HOSPID"))
+s DHCDocCureAssLinkPage=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureAssLinkPage",%session.Get("LOGON.HOSPID"))
+/*d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)*/
 </Server>
 </head> 
-<body>
+<body style="padding:10px;box-sizing: border-box;">
 	<csp:Include Page="doccure.workreport.patientcure.show.hui.csp">
 	<SCRIPT language = 'javascript' >
 		//全局请求后台服务对象
@@ -46,11 +33,14 @@ w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' valu
 			PrintBath:"#(PrintBath)#",
 			DocCureUseBase:"#(DocCureUseBase)#",
 			myTriage:"",
+			DHCDocCureLinkPage:"#(DHCDocCureLinkPage)#"
 		};
 	</SCRIPT>
 	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.openwin.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.worklist.curerecordlist.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/workreport.patientcure.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.readcard.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/workreport.inititem.js"></script>

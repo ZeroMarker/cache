@@ -24,35 +24,36 @@ body{
 }
 </style>
 <Server>
+	;取药医嘱
+	s OneOrderPriorRowid=$O(^OECPR(0,"Code","ONE",0))
+	;外用用法
+	s WYInstr=##Class(web.DHCDocConfig).GetConfigNode("WYInstr")
+	if WYInstr'="" s WYInstr="^"_WYInstr_"^"
 </Server>
  </head>
-<body class="hisui-layout" data-options="fit:false,border:false">
-<div data-options="region:'center',border:false" >
-	<div class="hisui-layout" data-options="fit:true,border:false" > 
-	   <div class="hisui-panel" data-options="region:'north',border:false,border:false" style="height:95px;padding:10px 10px 0 10px;" >
-	   		<div class="hisui-panel" fit="true" data-options="title:'常用用法维护',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-bottom-style:dashed;border-radius:0;">
-		    	<table class="search-table" id ="Butttable" name="Butttable" ALIGN="left" >
-		    		<tr>
-		    			<td class="r-label">
-		    				<label for="ARCItemSearch">医嘱名称</label>
-		    			</td>
-					 	<td>
-					 		<input  type="textbox" id="ARCItemSearch" name="ARCItemSearch" data-options="" style="width:220px;">
-					 	</td>
-					 	<td class="r-label">
-					 		<a id="BARCItemSearch" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-					 	</td>
-		             </td>
-		    		</tr>
-		    	</table>
-	    	</div>
-	    </div>
-	   	<div data-options="region:'center', split:true, iconCls:'icon-add',collapsible:false,border:false" style="padding:0 10px 10px 10px;">
-			<div class="hisui-panel" fit="true" style="height:100%;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-				<table id="tabItemDefault"></table>
-			</div>
+<body style="padding:10px;box-sizing: border-box;">
+<div class="hisui-panel" fit="true" data-options="title:'常用用法维护',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:55px;border-bottom:1px dashed #e2e2e2;">
+			<table class="search-table" id ="Butttable" name="Butttable" ALIGN="left" >
+				<tr>
+					<td class="r-label">
+						<label for="ARCItemSearch">#(..Get("医嘱名称"))#</label>
+					</td>
+					<td>
+						<input  type="textbox" id="ARCItemSearch" name="ARCItemSearch" data-options="" style="width:220px;">
+					</td>
+					<td class="r-label">
+						<a id="BARCItemSearch" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+					</td>
+				</td>
+				</tr>
+			</table>
 		</div>
-	</div> 
+		<div data-options="region:'center',border:false">
+			<table id="tabItemDefault"></table>
+		</div>
+	</div>
 </div>
 
 <SCRIPT language = 'javascript' >
@@ -62,20 +63,23 @@ body{
 	     script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird 文件地址
 	     document.getElementsByTagName('head')[0].appendChild(script);
 	}
+	var WYInstr='#(WYInstr)#';
 	var editRow;
 	var PageLogicObj={
 		m_selARCIMRowid:"",
 		m_ItemDefaultDataGrid:""
 	}
 	$(function(){
-		$('#BARCItemSearch').click(loadItemDefaultDataGrid)
+		$('#BARCItemSearch').click(function (){
+			PageLogicObj.m_ItemDefaultDataGrid.datagrid("load")
+			})
 		InitARCItemSearch();
 		PageLogicObj.m_ItemDefaultDataGrid=InittabItemDefault();
-		loadItemDefaultDataGrid();
+		//loadItemDefaultDataGrid();
 	});
 	function InittabItemDefault(){
 		var ItemDefaultToolBar = [{
-            text: '增加',
+            text: '新增',
             iconCls: 'icon-add',
             handler: function() { //添加列表的操作按钮添加,修改,删除等
 				if ((editRow!=="")&&(typeof editRow!="undefined")){
@@ -203,13 +207,15 @@ body{
 				if (TPAAdmType=="急诊") {var TPAAdmType="E"}
 				var ExceedReasonDR=rows.ExceedReasonDR;
 				if (ExceedReasonDR==undefined){ExceedReasonDR=""}
-				if (PHFreqDR=='') {
-					$.messager.alert('提示',"请选择医嘱录入频次");
-					return;
-				}
-				if (InstrDR=='') {
-					$.messager.alert('提示',"请选择医嘱用法");
-					return;
+				if(#(OneOrderPriorRowid)#!=PriorityDR){
+					if (PHFreqDR=='') {
+						$.messager.alert('提示',"请选择医嘱录入频次");
+						return;
+					}
+					if (InstrDR=='') {
+						$.messager.alert('提示',"请选择医嘱用法");
+						return;
+					}
 				}
 				var SpeedFlowRate=editors[15].target.val();
 				if (SpeedFlowRate==undefined){SpeedFlowRate=""};
@@ -238,14 +244,14 @@ body{
 				if (RecLocDr==undefined){RecLocDr=""}
 				var OrderFreqTimeDoseStr=rows.OrderFreqTimeDoseStr?rows.OrderFreqTimeDoseStr:"";
 				if (OrderFreqTimeDoseStr!="") Dose="";
-				var OrderFreqWeekStr=rows.OrderFreqWeekStr?rows.OrderFreqWeekStr:"";
+				var OrderFreqDispTimeStr=rows.OrderFreqDispTimeStr?rows.OrderFreqDispTimeStr:"";
 				var PackUomDR=rows.PackUomDR;
 				if (PackUomDR==undefined){PackUomDR=""}
 				var ContralStr=ARCIMDR+"^"+ContralTypeCode+"^"+ContralKey+"^"+PriorityDR+"^"+Dose+"^"+DoseUomDR;
 			    ContralStr=ContralStr+"^"+InstrDR+"^"+PHFreqDR+"^"+DuratDR+"^"+PackQty+"^"+SkinTest;
 			    ContralStr=ContralStr+"^"+SkinActionDR+"^"+OrderMasterSeqNo+"^"+OrderSeqNo+"^"+Notes+"^"+TPAAdmType+"^"+ExceedReasonDR;
 			    ContralStr=ContralStr+"^"+SpeedFlowRate+"^"+FlowRateUnitDr+"^"+RecLocDr;
-			    ContralStr=ContralStr+"^"+OrderFreqTimeDoseStr+"^"+OrderFreqWeekStr+"^"+PackUomDR;
+			    ContralStr=ContralStr+"^"+OrderFreqTimeDoseStr+"^"+OrderFreqDispTimeStr+"^"+PackUomDR;
 				var UserID=session["LOGON.USERID"];
 				if (Rowid==""){
 					var value=tkMakeServerCall("web.DHCDocItemDefault","Insert",ContralStr,UserID)
@@ -284,7 +290,7 @@ body{
         	}
         }, {
             text: '取消编辑',
-            iconCls: 'icon-arrow-right-top',
+            iconCls: 'icon-cancel-order',
             handler: function() {
 	            if ((editRow!=="")&&(typeof editRow !="undefined")){
 	            	PageLogicObj.m_ItemDefaultDataGrid.datagrid("rejectChanges");
@@ -328,12 +334,18 @@ body{
 									rows.SameFreqDifferentDosesFlag=rowData.SameFreqDifferentDosesFlag;
 									var EditDoseUomObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:editRow,field:'DoseUom'});
 									EditDoseUomObj.target.combobox('reload');
+									EditDoseUomObj.target.combobox("setText","")
+									EditDoseUomObj.target.combobox("setValue","");
 									
 									var RecLocObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:editRow,field:'RecLoc'});
 									RecLocObj.target.combobox('reload');
+									RecLocObj.target.combobox("setText","")
+									RecLocObj.target.combobox("setValue","");
 									
 									var PackUomObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:editRow,field:'PackUom'});
 									PackUomObj.target.combobox('reload');
+									PackUomObj.target.combobox("setText","")
+									PackUomObj.target.combobox("setValue","");
 									
 								},
 								onClickRow: function (rowIndex, rowData){
@@ -361,7 +373,7 @@ body{
 									}else{
 										//return false;
 									}
-									param = $.extend(param,{Alias:desc});
+									param = $.extend(param,{Alias:desc,TYPE:"R"});
 								}
                     		}
 	        			  }
@@ -461,7 +473,7 @@ body{
 									if (ARCIMDR == undefined){
 										ARCIMDR="";
 									}
-									param = $.extend(param,{ARCIMRowid:ARCIMDR});
+									param = $.extend(param,{ARCIMRowid:ARCIMDR,HOSPID:session['LOGON.HOSPID']});
 								},
 								loadFilter:function(data){
 								    return data['rows'];
@@ -495,7 +507,6 @@ body{
 								url:$URL+"?ClassName=web.DHCDocItemDefault&QueryName=FindGlobal&rows=9999", //PUBLIC_CONSTANT.URL.QUERY_COMBO_URL,
 								valueField:'RowId',
 								textField:'Desc',
-								mode:"remote",
 								required:true,
 								enterNullValueClear:false,
 								onBeforeLoad:function(param){
@@ -508,7 +519,7 @@ body{
 									if (param['q']) {
 										var desc=param['q'];
 									}
-									param = $.extend(param,{GlobalName:"^PHCIN(",DescNum:"1^2",Type:AdmType,Alias:desc});
+									param = $.extend(param,{GlobalName:"^PHCIN(",DescNum:"1^3",Type:AdmType,Alias:desc});
 								
 								},
 								loadFilter:function(data){
@@ -517,6 +528,11 @@ body{
 								onSelect:function(rec){
 									var rows=PageLogicObj.m_ItemDefaultDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
 	                                rows.InstrDR=rec.RowId;
+									if ((WYInstr!="")&&(WYInstr.indexOf("^"+rec.RowId+"^")>=0)){
+										var ed=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:editRow,field:'Dose'});
+										$(ed.target).val('');
+										rows.OrderFreqTimeDoseStr="";
+									}
 								},
 								onChange:function(newValue, oldValue){
 									if (!newValue) newValue="";
@@ -524,6 +540,10 @@ body{
 										var rows=PageLogicObj.m_ItemDefaultDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
 	                                    rows.InstrDR="";
 									}
+								},
+								filter: function(q, row){
+									q=q.toUpperCase();
+									return (row["Desc"].toUpperCase().indexOf(q) >= 0)||(row["Code"].toUpperCase().indexOf(q) >= 0);
 								},
 								onHidePanel:function(){
 									var rows=PageLogicObj.m_ItemDefaultDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
@@ -562,6 +582,9 @@ body{
 								onBeforeLoad:function(param){
 									var rows=PageLogicObj.m_ItemDefaultDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
 									var AdmType=rows.TPAAdmType;
+									if (AdmType=="住院") {AdmType="I"}
+									if (AdmType=="门诊") {AdmType="O"}
+									if (AdmType=="急诊") {AdmType="E"}
 									if (AdmType==undefined) var AdmType=""
 									param = $.extend(param,{GlobalName:"^PHCFR(",DescNum:"3",Type:AdmType});
 								},
@@ -573,6 +596,7 @@ body{
 	                                rows.PHFreqDR=rec.RowId;
 	                                var Split_Value = rec.Code.split("^");
 									var WeekFlag = Split_Value[8];
+									rows.FreeTimeFreqFlag = Split_Value[12];
 	                                rows.WeekFlag=WeekFlag;
 								},
 								onChange:function(newValue, oldValue){
@@ -580,7 +604,7 @@ body{
 									if (newValue==""){
 										var rows=PageLogicObj.m_ItemDefaultDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
 	                                    rows.PHFreqDR="";
-	                                    rows.OrderFreqWeekStr="";
+	                                    rows.OrderFreqDispTimeStr="";
 	                                    rows.WeekFlag="";
 									}
 								},
@@ -589,29 +613,58 @@ body{
 									if (!$.isNumeric($(this).combobox('getValue'))) return;
 									rows.PHFreqDR=$(this).combobox('getValue');
 									rows.PHFreq=$(this).combobox('getText');
+									var OrderFreqRowid=rows.PHFreqDR;
 									if (rows.WeekFlag=="Y") {
 										new Promise(function(resolve,rejected){
-											var OrderFreqRowid=rows.PHFreqDR;
 											var OrderFreqDispTimeStr=""; //rows.OrderFreqWeekStr?rows.OrderFreqWeekStr:"";
 											GetOrderFreqWeekStr(OrderFreqRowid,OrderFreqDispTimeStr,resolve);
 										}).then(function(OrderFreqWeekInfo){
 											var OrderFreqDispTimeStr=OrderFreqWeekInfo.split("^")[0];
 											if (OrderFreqDispTimeStr==""){
-									            $.messager.alert("提示","周频次请务必选择使用周数!");
-									            rows.PHFreqDR="";rows.PHFreq="";
-									            rows.OrderFreqWeekStr="";
+									            $.messager.alert("提示","周频次请务必选择使用周数!","info",function(){
+										            rows.PHFreqDR="";rows.PHFreq="";
+									            	rows.OrderFreqDispTimeStr="";
+													var PHFreqObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:editRow,field:'PHFreq'});
+													PHFreqObj.target.combobox('reload');
+													PHFreqObj.target.combobox("setText","")
+													PHFreqObj.target.combobox("setValue","");
+										        });
 									            return;
 											}
-											rows.OrderFreqWeekStr=OrderFreqDispTimeStr;
+											rows.OrderFreqDispTimeStr=OrderFreqDispTimeStr;
 											var OrderFreqWeekDesc=OrderFreqWeekInfo.split("^")[1];
 											rows.PHFreq=rows.PHFreq+" "+OrderFreqWeekDesc;
 											var editPHFreqObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:editRow,field:'PHFreq'});
 											editPHFreqObj.target.combobox('setText',rows.PHFreq);
+											ChangeOrderFreqTimeDoseStr(editRow);
+										})
+									}else if (rows.FreeTimeFreqFlag=="Y"){
+										new Promise(function(resolve,rejected){
+											//不规则分发时间
+											var OrderFreqDispTimeStr="";
+											GetOrderFreqFreeTimeStr(OrderFreqRowid,OrderFreqDispTimeStr,resolve);
+										}).then(function(OrderFreqFreeTimeInfo){
+											var OrderFreqDispTimeStr=OrderFreqFreeTimeInfo.split("^")[0];
+											if (OrderFreqDispTimeStr==""){
+									            $.messager.alert("提示","不规则分发时间频次请务必选择分发时间!","info",function(){
+										            rows.PHFreqDR="";rows.PHFreq="";
+									            	rows.OrderFreqDispTimeStr="";
+										        });
+									            return;
+											}
+											var OrderFreqFactor=OrderFreqDispTimeStr.split("|").length;
+											var OrderFreqWeekDesc=OrderFreqFreeTimeInfo.split("^")[1];
+											rows.OrderFreqDispTimeStr=OrderFreqDispTimeStr;
+											rows.PHFreq=rows.PHFreq+" "+OrderFreqWeekDesc;
+											var editPHFreqObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:editRow,field:'PHFreq'});
+											editPHFreqObj.target.combobox('setText',rows.PHFreq);
+											ChangeOrderFreqTimeDoseStr(editRow);
 										})
 									}else{
-										rows.OrderFreqWeekStr="";
+										rows.OrderFreqDispTimeStr="";
+										ChangeOrderFreqTimeDoseStr(editRow);
 									}
-									ChangeOrderFreqTimeDoseStr(editRow);
+									
 								}
 							  }
      					  },
@@ -620,7 +673,7 @@ body{
 						  }
 					},
 					{field:'WeekFlag',hidden:true},
-					{field:'OrderFreqWeekStr',hidden:true},
+					{field:'OrderFreqDispTimeStr',hidden:true},
 		 			{field:'DuratDR',hidden:true},
 		 			{field:'Durat',title:'疗程',width:50,editor:{
 							type:'combobox',  
@@ -747,7 +800,7 @@ body{
 	                                valueField:'id',
 									textField:'desc',
 									required:false,
-									data:[{"id":"Y","desc":"是"},{"id":"N","desc":"否"}],
+									data:[{"id":"Y","desc":$g("是")},{"id":"N","desc":$g("否")}],
 									onSelect:function(rec){
 										var rows=PageLogicObj.m_ItemDefaultDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
 		                                rows.SkinTest=rec.id;
@@ -762,9 +815,9 @@ body{
 	                            }
                     },formatter:function(value, record){
 							if (value=="Y"){
-								return "是" 
+								return $g("是")
 							}else if(value=="N"){
-								return "否"
+								return $g("否")
 							}else{
 								return ""
 							}
@@ -987,6 +1040,7 @@ body{
 			columns :ItemDefaultColumns,
 	    	toolbar :ItemDefaultToolBar,
 	    	idField:'Rowid',
+	    	url : $URL+"?ClassName=web.DHCDocItemDefault&QueryName=Find",
 			onDblClickRow:function(rowIndex, rowData){
 				if ((editRow!=undefined)&&(editRow!=rowIndex)){
 					$.messager.alert('提示',"只允许编辑一行数据");
@@ -995,11 +1049,26 @@ body{
 				editRow=rowIndex;
 				PageLogicObj.m_ItemDefaultDataGrid.datagrid("beginEdit", rowIndex);
 				var editDoseObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:rowIndex,field:'Dose'});
-				if (rowData.Dose.indexOf("-")>=0) {
+				if (rowData.SameFreqDifferentDosesFlag =="Y") {
 					editDoseObj.target.prop("readonly",true);
 					OrdDoseQtyBindClick(editRow);
-				}
+				}else{
+					rowData.OrderFreqTimeDoseStr="";
+					}
 			},
+			onBeforeLoad:function(param){
+				if ($("#ARCItemSearch").lookup('getText')=="") PageLogicObj.m_selARCIMRowid="";
+				var value=PageLogicObj.m_selARCIMRowid;
+				if (typeof value =="undefined") {value="";}
+				if ((value.indexOf("||")==-1)&&(value!="")){
+					value=value+"||1";
+				}
+				if (value==undefined){value=""}
+				param = $.extend(param,{ UserID:session['LOGON.USERID'], ItemDescRowid:value,
+			    ItemContralTypeID:"", ItemDose:"", ItemDoseUomRowid:"", ItemInstrRowid:"", ItemPHFreqRowid:"",
+			    ItemDuratRowid:"", ItemPackQty:"", ItemSkinTest:"", ItemSkinActionRowid:"", ItemRelevanceNo:"", PAAdmType:"",
+			    LogonLocDr:session['LOGON.CTLOCID']});
+				},
 			onLoadSuccess:function(data){
 				editRow=undefined;
 				
@@ -1062,6 +1131,8 @@ body{
 	};
 	function loadItemDefaultDataGrid(){
 		editRow=undefined;
+		PageLogicObj.m_ItemDefaultDataGrid.datagrid("load")
+		return ;
 		//ItemDefaultDataGrid.datagrid('reload');
 		if ($("#ARCItemSearch").lookup('getText')=="") PageLogicObj.m_selARCIMRowid="";
 		var value=PageLogicObj.m_selARCIMRowid;
@@ -1105,7 +1176,7 @@ body{
 	        onBeforeLoad:function(param){
 		        var desc=param['q'];
 		        if (desc=="") return false;
-				param = $.extend(param,{Alias:desc});
+				param = $.extend(param,{Alias:desc,TYPE:"R"});
 		    },onSelect:function(ind,item){
 			    PageLogicObj.m_selARCIMRowid=item['ArcimRowID'];
 			}
@@ -1220,6 +1291,12 @@ body{
 		var rowData=PageLogicObj.m_ItemDefaultDataGrid.datagrid("getData").rows[rowIndex];
 		var OrderFreqRowid=rowData.PHFreqDR;
 		var SameFreqDifferentDosesFlag=rowData.SameFreqDifferentDosesFlag;
+		var OrderFreqDispTimeStr=rowData.OrderFreqDispTimeStr;
+		if (!OrderFreqDispTimeStr) OrderFreqDispTimeStr="";
+		if (OrderFreqDispTimeStr) {
+			OrderFreqDispTimeStr=OrderFreqDispTimeStr.replace(/\#/g,String.fromCharCode(2));
+			OrderFreqDispTimeStr=OrderFreqDispTimeStr.replace(/\!/g,String.fromCharCode(1));
+		}
 	    if (SameFreqDifferentDosesFlag=="Y"){
 		    OrdDoseQtyBindClick(rowIndex);
 		    var editDoseObj=PageLogicObj.m_ItemDefaultDataGrid.datagrid('getEditor', {index:rowIndex,field:'Dose'});
@@ -1228,6 +1305,7 @@ body{
 			    ClassName:"web.DHCOEOrdItemView",
 			    MethodName:"GetFreqFreqDispTimeStr",
 			    OrderFreqRowid:OrderFreqRowid,
+			    OrderFreqDispTimeStr:OrderFreqDispTimeStr,
 			    type:"text"
 			},false);
 			if (FreqDispTimeStr.split("!").length==1) {
@@ -1272,7 +1350,7 @@ body{
 		var lnk = "dhcdocshowfreq.csp?FreqDispTimeStr=" + FreqDispTimeStr+"&FreqDispTimeDoseQtyStr="+FreqDispTimeDoseQtyStr+"&OrderDoseUOM="+OrderDoseUOM;
 		websys_showModal({
 			url:lnk,
-			title:OrderName+' 剂量填写',
+			title:OrderName+$g(' 剂量填写'),
 			width:400,height:300,
 			closable:false,
 			CallBackFunc:function(result){
@@ -1316,6 +1394,30 @@ body{
 		})
 	}
 	//周频次相关--end
+	/**
+	* @description: 让用户选择不规则分发时间频次的分发时间并返回
+	* @param {String} 
+	* @return: {String} 
+	*/
+	function GetOrderFreqFreeTimeStr(OrderFreqRowid,OrderFreqDispTimeStr,callBackFun){
+		var OrderFreqDispTimeStr=OrderFreqDispTimeStr.split(String.fromCharCode(1)).join("A");
+		OrderFreqDispTimeStr=OrderFreqDispTimeStr.split(String.fromCharCode(2)).join("B");
+		OrderFreqDispTimeStr=OrderFreqDispTimeStr.replace(/:/g,"C");
+		websys_showModal({
+			url:"dhcdoc.freq.disptime.csp?OrderFreqDispTimeStr=" + OrderFreqDispTimeStr+"&OrderFreqRowid="+OrderFreqRowid,
+			title:'分发时间选择',
+			width:370,height:410,
+			closable:false,
+			CallBackFunc:function(result){
+				websys_showModal("close");
+				if (typeof result=="undefined"){
+					result="";
+				}
+				callBackFun(result);
+			}
+		})
+		
+	}
    </SCRIPT>
   
 </body>

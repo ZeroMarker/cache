@@ -10,8 +10,10 @@
 
 <TITLE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 <style type="text/css"></style>
 <script type='text/javascript' src='../scripts/dhceq/em/busmmaintrequest.js'></script>
 <script type='text/javascript' src='../scripts/dhceq/raty/jquery.raty.min.js'></script>
@@ -45,14 +47,19 @@
 	Set MaintType=$Get(%request.Data("MaintType",1))	//add by CZF0075 2020-02-25	
 	s LoginLoc=##Class(web.DHCEQCommon).getMapIDBySource("deptname",%session.Get("LOGON.CTLOCID"))
 	s PreviewRptFlag=##class(web.DHCEQCommon).GetSysInfo("990075")
+	//Add By QW20210913 BUG:QW0147 增加补打标记	begin
+	s PrintBuss=##class(web.DHCEQCommon).GetSysInfo("990087")
+	s PrintNumFlag=##Class(web.DHCEQCommon).Find(PrintBuss,"31","N")
+	//Add By QW20210913 BUG:QW0147 增加补打标记	end
 </Script>
 <body class="hisui-layout">
-	<div data-options="region:'north',border:false" style="height:48px;overflow:hidden;">
+	<!--Modify by zx 2021-05-19 增加边距处理-->
+	<div data-options="region:'north',border:false" style="height:20px;overflow:hidden;">
 		<!--Modify By zx 2020-02-18 BUG ZX0074 ifram中src在csp中定义影响界面加载且调试会报错-->
 		<!--dhceq.plat.banner.csp?&EquipDR=-->
-		<iframe id="Banner" frameborder="0" src="" style="width:100%;"></iframe>
+		<iframe id="Banner" frameborder="0" src="" style="width:100%;height:40px;padding-top:10px;"></iframe>
 	</div>
-	<div data-options="region:'center',border:false" style="padding:0 5px 5px 5px;">
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;">
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'north',border:false" align="center" style="height:40px;overflow:hidden;">
 				<ul id="ApproveSchedule"></ul>
@@ -60,25 +67,26 @@
 			<div id="tMaintHistory" data-options="region:'west',split:true"  style="width:150px;" title="维修历史记录">
 				<div class="eq-times" style="margin-top:10px;overflow-x:hidden;"><ul id="tMaintHistorytree" style="margin-top:-5px;"></ul></div>
 			</div>
-			<div id="tMaintTabs" data-options="region:'center',split:true" style="border:1px;" class="hisui-tabs">
+			<div id="tMaintTabs" data-options="region:'center',split:true" style="border:1px; padding:0 0px 0px 5px;" class="hisui-tabs">
 				<div id="tMaintBuss" title="维修业务">
 					<div class="hisui-layout" data-options="fit:true" style="width:100%;">
 						<div class="eq-h-btn" data-options="region:'south',border:false" style="margin-top:10px;height:60px;overflow:hidden;" align="center">
 							<table style="margin-top:10px;">
 								<td><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">更新</a></td>
-								<td><a id="BSubmit" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">提交</a></td>
-								<!--modify by lmm 2019-11-22 LMM0050-->
-								<td><a id="BCancelSubmit" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">退回</a></td>
-								<td><a id="BDelete" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">删除</a></td>
-								<td><a id="BPrint" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">打印</a></td> <!-- add by sjh 2019-12-03 BUG00018-->
-								<td><a id="BApprove1" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核1</a></td>
-								<td><a id="BApprove2" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核2</a></td>
-								<td><a id="BApprove6" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核6</a></td>
-								<td><a id="BApprove3" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核3</a></td>
-								<td><a id="BApprove4" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核4</a></td>
-								<td><a id="BApprove5" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">审核5</a></td>
+								<td><a id="BSubmit" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">提交</a></td>
+								<td><a id="BCancelSubmit" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">退回</a></td>		<!--modify by lmm 2019-11-22 LMM0050-->
+								<td><a id="BDelete" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">删除</a></td>
+								<td><a id="BSelfCancelSubmit" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">自发撤回</a></td>  <!--modefied by zc0118 20220525 UI需求 --><!-- add by mwz 2021-01-18 MWZ0048 -->
+								<td><a id="BPrint" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">打印</a></td> <!-- add by sjh 2019-12-03 BUG00018-->
+								<td><a id="BApprove1" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">审核1</a></td>
+								<td><a id="BApprove2" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">审核2</a></td>
+								<td><a id="BApprove6" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">审核6</a></td>
+								<td><a id="BApprove3" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">审核3</a></td>
+								<td><a id="BApprove4" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">审核4</a></td>
+								<td><a id="BApprove5" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">审核5</a></td>
 								<!--td><a id="BMaintUser" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">多人协助</a></td-->
-								<td><a id="BCancel" href="#" class="hisui-linkbutton" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">作废</a></td>
+								<td><a id="BCancel" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true">作废</a></td>
+								<td><a id="BAppendFile" href="#" class="hisui-linkbutton" style="margin-left:10px;" data-options="stopAllEventOnDisabled:true,iconCls:'icon-w-paper'">电子资料</a></td>
 							</table>
 						</div>
 						<div data-options="region:'center',border:false" style="padding:10px;">
@@ -93,16 +101,18 @@
 									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MRRequestNo" disabled="true"></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRRequestDate" for="MRRequestDate">申请日期</label></div>
 									<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRRequestDate" disabled="true" value=#(CurDate)#></div>
-									<div class="eq-table-td eq-table-label"><label id="cMRSourceType" for="MRSourceType">来源类型</label></div>		<!--add by CZF0075 2020-02-26-->
-									<div class="eq-table-td eq-table-input"><input id="MRSourceType" class="hisui-combobox textbox" data-required="true" data-options="prompt:'必填项'"></div>
+									<!--<div class="eq-table-td eq-table-label"><label id="cMRSourceType" for="MRSourceType">来源类型</label></div>		
+									<div class="eq-table-td eq-table-input"><input id="MRSourceType" class="hisui-combobox textbox" data-required="true" data-options="prompt:'必填项'"></div>-->
+									<div class="eq-table-td eq-table-label"><label><a class="eq-attribute-label">来源类型</a></label></div><!--modified by wy 2022-4-7-->
+							        <div id="MRSourceType" class="eq-table-input"></div>
 									<!--div class="eq-table-td eq-table-label"><label id="cMRRequestLocDR_LocDesc" for="MRRequestLocDR_LocDesc">申请科室</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MRRequestLocDR_LocDesc" class="hisui-validatebox textbox" disabled="true" value=#(LoginLoc)#></div-->
 								</div>
 								<div class="eq-table-tr">
 									<div class="eq-table-td eq-table-label"><label id="cMRObjLocDR_LocDesc" for="MRObjLocDR_LocDesc">使用科室</label></div>
-									<div class="eq-table-td eq-table-input"><input id="MRObjLocDR_LocDesc" class="hisui-validatebox textbox" data-options="component:'PLAT.L.Loc'"></input></div>
+									<div class="eq-table-td eq-table-input"><input id="MRObjLocDR_LocDesc" class="hisui-validatebox textbox" data-options="component:'PLAT.L.Loc',paras:[{name:'LocDesc',type:'4',value:'MRObjLocDR_LocDesc'},{name:'LinkLocID',type:'4',value:'MRRequestLocDR'}]"></input><input id="AllLocFalg" class="hisui-checkbox" type="checkbox"><label id="cAllLocFalg" for="AllLocFalg">全部</label></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRExObjDR_ExObj" for="MRExObjDR_ExObj">设备名称</label></div>
-									<div class="eq-table-td eq-table-input"><input id="MRExObjDR_ExObj" class="hisui-validatebox textbox" data-options="component:'EM.L.Equip',paras:[{name:'Equip',type:'4',value:'MRExObjDR_ExObj'},{name:'VUseLoc',type:'4',value:'MRObjLocDR'},{name:'FacilityFlag',type:'4',value:'MRSourceTypeDR'}]"></input></div>
+									<div class="eq-table-td eq-table-input"><input id="MRExObjDR_ExObj" class="hisui-validatebox textbox" data-options="component:'EM.L.Equip',paras:[{name:'Equip',type:'4',value:'MRExObjDR_ExObj'},{name:'VUseLoc',type:'4',value:'MRObjLocDR'},{name:'FacilityFlag',type:'4',value:'FacilityFlag'}]"></input></div>
 									<div class="eq-table-td eq-table-label"><label id="cMREquipStatusDR_ESDesc" for="MREquipStatusDR_ESDesc">设备状态</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MREquipStatusDR_ESDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.EquipStatus'"></input></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRPlace" for="MRPlace">地点</label></div>
@@ -132,24 +142,24 @@
 							</div>
 							<div class="eq-table">
 								<div class="eq-table-tr">
-									<div class="eq-table-td eq-table-label"><label id="cMRAssignDR_UserName" for="MRAssignDR_UserName">派 单 人</label></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRAssignDR_UserName" for="MRAssignDR_UserName">派单人</label></div>
 									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MRAssignDR_UserName" disabled="true"></div>
-									<div class="eq-table-td eq-table-label"><label id="cMRAssignDate" for="MRAssignDate">派单日期</label></div>
-									<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRAssignDate" disabled="true" value=#(CurDate)#></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRAcceptDate" for="MRAcceptDate">受理日期</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRAcceptDate" disabled="true" value=#(CurDate)#></div>
 									<div class="eq-table-td eq-table-label"><label id="cMREmergencyLevelDR_ELDesc" for="MREmergencyLevelDR_ELDesc">紧急级别</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MREmergencyLevelDR_ELDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.EmergencyLevel'"></input></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRSeverityLevelDR_SLDesc" for="MRSeverityLevelDR_SLDesc">严重级别</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MRSeverityLevelDR_SLDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.SeverityLevel'"></input></div>
 								</div>
 								<div class="eq-table-tr">
-									<div class="eq-table-td eq-table-label"><label id="cMRMaintGroupDR_MGDesc" for="MRMaintGroupDR_MGDesc">维 修 组</label></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRAssignDate" for="MRAssignDate">派单日期</label></div>
+									<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRAssignDate" disabled="true" value=#(CurDate)#></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRMaintGroupDR_MGDesc" for="MRMaintGroupDR_MGDesc">维修组</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MRMaintGroupDR_MGDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.MaintGroup'"></input></div>
-									<div class="eq-table-td eq-table-label"><label id="cMRAcceptUserDR_UserName" for="MRAcceptUserDR_UserName">维 修 人</label></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRAcceptUserDR_UserName" for="MRAcceptUserDR_UserName">维修人</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MRAcceptUserDR_UserName" class="hisui-validatebox textbox" data-options="component:'EM.L.MaintUser'"></input></div>
 									<div class="eq-table-td eq-table-label"><label id="cMREstimateWorkHour" for="MREstimateWorkHour">分配工时</label></div>
 									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MREstimateWorkHour"></div>
-					        		<div class="eq-table-td eq-table-label"><label id="cMRAcceptDate" for="MRAcceptDate">受理日期</label></div>
-									<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRAcceptDate" disabled="true" value=#(CurDate)#></div>
 								</div>
 							</div>
 							<div class="eq-table">
@@ -159,8 +169,9 @@
 							</div>
 							<div class="eq-table">
 								<div class="eq-table-tr">
-									<div class="eq-table-td eq-table-label"><label id="cMRMaintModeDR_MMDesc" for="MRMaintModeDR_MMDesc">维修方式</label></div>
-									<div class="eq-table-td eq-table-input"><input id="MRMaintModeDR_MMDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.MaintMode'"></input></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRFaultReasonDR_FRDesc" for="MRFaultReasonDR_FRDesc">故障原因</label></div>
+									<div class="eq-table-td eq-table-input"><input id="MRFaultReasonDR_FRDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.FaultReason'"></input></div>
+									
 									<div class="eq-table-td eq-table-label"><label id="cMRServiceDR_SVName" for="MRServiceDR_SVName">服务商</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MRServiceDR_SVName" class="hisui-validatebox textbox" data-options="component:'EM.L.Service'"></input></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRFaultTypeDR_FTDesc" for="MRFaultTypeDR_FTDesc">故障类型</label></div>
@@ -169,8 +180,8 @@
 									<div class="eq-table-td eq-table-input"><input id="MRInsurFlag" class="hisui-checkbox" type="checkbox"></div>
 								</div>
 								<div class="eq-table-tr">
-									<div class="eq-table-td eq-table-label"><label id="cMRFaultReasonDR_FRDesc" for="MRFaultReasonDR_FRDesc">故障原因</label></div>
-									<div class="eq-table-td eq-table-input"><input id="MRFaultReasonDR_FRDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.FaultReason'"></input></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRMaintModeDR_MMDesc" for="MRMaintModeDR_MMDesc">维修方式</label></div>
+									<div class="eq-table-td eq-table-input"><input id="MRMaintModeDR_MMDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.MaintMode'"></input></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRDealMethodDR_DMDesc" for="MRDealMethodDR_DMDesc">解决方法</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MRDealMethodDR_DMDesc" class="hisui-validatebox textbox" data-options="component:'EM.L.DealMethod'"></input></div>
 									<div class="eq-table-td eq-table-label"><label id="cMREndDate" for="MREndDate">完成日期</label></div>
@@ -185,6 +196,10 @@
 									<div class="eq-table-td eq-table-input"><textarea id="MRDealMethodRemark" class="textbox"></textarea></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRWorkHour" for="MRWorkHour">实际工时</label></div>
 									<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="MRWorkHour"></div>
+									<!--add by ZC2022-04-12  begin-->
+									<div class="eq-table-td eq-table-label"><label id="cEmergencyFlag" for="EmergencyFlag">是否急单</label></div>
+									<div class="eq-table-td eq-table-input" id="EmergencyInfo"><input id="EmergencyFlag" class="hisui-checkbox" type="checkbox"></div>
+									<!--add by ZC2022-04-12  end-->
 									<!--Modify by zx 2020-02-25 BUG ZX0077 暂时影藏处理-->
 									<!--div class="eq-table-td eq-table-label"><label id="cMRAccessoryOriginalDR_AODesc" for="MRAccessoryOriginalDR_AODesc">配件来源</label></div>
 									<div class="eq-table-td eq-table-input"><input id="MRAccessoryOriginalDR_AODesc" class="hisui-validatebox textbox" data-options="component:'EM.L.AccessoryOriginal'"></input></div-->
@@ -206,7 +221,19 @@
 									<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="MRAccountDate"></div>
 									<div class="eq-table-td eq-table-label"><label id="cMRAssessment" for="MRAssessment">设备科评估</label></div>
 									<div class="eq-table-td"><textarea id="MRAssessment" class="textbox"></textarea></div>		<!--add by CZF0072 2020-02-25 end-->
+									<div class="eq-table-td eq-table-label"><label id="cRejectReason" for="RejectReason">拒绝原因</label></div><!--//add by wy 2022-7-22 2766212 拒绝意见-->
+									<div class="eq-table-td eq-table-input"><textarea id="RejectReason" class="textbox"></textarea></div>								
 								</div>
+								<!--add by ZC2022-04-12  begin-->
+								<div class="eq-table-tr">
+									<div class="eq-table-td eq-table-label"><label id="cMRRetrieveFlag" for="MRRetrieveFlag">是否取回</label></div>
+									<div class="eq-table-td eq-table-input" id="RetrieveFlag"><input id="MRRetrieveFlag" class="hisui-checkbox" type="checkbox"><label><a id="RetrieveInfo" class="eq-cursor-pointer">取回记录</a></label><a id="ReturnInfo" class="eq-cursor-pointer">归还记录</a></label></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRReplaceFlag" for="MRReplaceFlag">存在替代设备</label></div>
+									<div class="eq-table-td eq-table-input" id="ReplayInfo"><input id="MRReplaceFlag" class="hisui-checkbox" type="checkbox"></div>
+									<div class="eq-table-td eq-table-label"><label id="cMRDisuesdFlag" for="MRDisuesdFlag">无价值,报废</label></div>
+									<div class="eq-table-td eq-table-input" id="DisusedInfo"><input id="MRDisuesdFlag" class="hisui-checkbox" type="checkbox"></div>
+								</div>
+								<!--add by ZC2022-04-12  end-->
 							</div>
 						</div>
 					</div>
@@ -222,10 +249,10 @@
 				</div>
 				<div id="tCostAllot" style="overflow:hidden;" title="维修费用分摊">
 					<!--add by CZF0076 2020-02-26-->
-					<iframe id="CostAllot" frameborder="0" src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCostAllotNew&SourceID=#(RowID)#&Types=2" style="width:100%;height:100%;"></iframe>
+					<iframe id="CostAllot" frameborder="0" src="dhceq.em.costallot.csp?&CAHold2=#(RowID)#&CATypes=2&MWToken=#(%session.SessionId)#" style="width:100%;height:100%;"></iframe>
 				</div>
 			</div>
-			<div id="tOtherTabs" data-options="region:'east',split:true" class="hisui-tabs" style="width:230px;border:1px;">
+			<div id="tOtherTabs" data-options="region:'east',split:true" class="hisui-tabs" style="width:230px;border:1px;padding:0 5px 0px 5px;">
 				<div id="tKnowledge" title="知识库" style="margin-left:10px;">
 					<ul id="tKnowledgetree" class="hisui-tree" data-options="lines:true">
 					</ul>
@@ -308,6 +335,9 @@
 			<INPUT type="hidden" id="MRAccessoryOriginalDR">
 			<INPUT type="hidden" id="MRMaintType" value=#(MaintType)#>
 			<input type="hidden" id="PreviewRptFlag" value="#(PreviewRptFlag)#">
+			<INPUT type="hidden" id="MRManageTypeDR"><!--Modified BY QW20211229-->
+			<INPUT type="hidden" id="FacilityFlag"><!--add By WY 2022-4-12-->
+			<INPUT type="hidden" id="PrintNumFlag" value=#(PrintNumFlag)#>   <!--Add By QW20210913 BUG:QW0147 增加补打标记 -->
 		</form>
 	</div>
 	<div id="ApproveFlowWin" class="hisui-window" closed="true" title="审批流向" style="width:230px;height:180px;">

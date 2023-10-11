@@ -10,7 +10,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>	
+	<HISUI/>
+	<ADDINS require="DHCOPPrint"/>
+	<script language="Cache" runat="server">
+		d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+		d ##class(web.DHCXMLPConfig).LODOPInit()
+	</script>
+	<!--------------打印相关---------->
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
+	<script type='text/javascript' src='../scripts/DHCPrtComm.js'></script>
 	<script type="text/javascript" src="../scripts/framework/easyui-1.3.6/jquery.tabs.js" charset="utf-8"></script>
 	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
 	<link href="../scripts/dhcnewpro/dhcmdt/css/conslistmain.css" rel="stylesheet">
@@ -20,15 +28,29 @@
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>		
 	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
-	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/conslistmain.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/print.js"></script>
 	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/cadigitalsign.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/conslistmain.js"></script>
 	<server>
 	  D ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
 	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  s LgLocID=%session.Get("LOGON.CTLOCID")
+	  s LgUserID=%session.Get("LOGON.USERID")
+	  s LgGroupID=%session.Get("LOGON.GROUPID")
+	  s LgParams=LgHospID_"^"_LgLocID_"^"_LgUserID_"^"_LgGroupID
+	  s IsOpenMoreScreen=##Class(web.DHCMDTConsultQuery).IsOpenMoreScreen()
+	  
 	  /// 是否有疑难病会诊中心
-	  s HasCenter=##Class(web.DHCMDTCom).GetEmSysConfig("HASCENTER",LgHospID)
+	  s HasCenter=##Class(web.DHCMDTCom).GetEmSysConfig("HASCENTER",LgParams)
+	  ///打印方式(1：LODOP打印HTML可多页，其他：XML打印一页)
+	  s PrintWay=##Class(web.DHCMDTCom).GetEmSysConfig("PRINTMODEL",LgParams)
+	  ///是否只能取消本人完成的会诊(1：是，其他：不是)
+	  s CANCOMPSELF=##Class(web.DHCMDTCom).GetEmSysConfig("CANCOMPSELF",LgParams)
 	  w "<script Language=""JavaScript"">"_$c(13,10)
 	  w "var HasCenter="""_$g(HasCenter)_""";"_$c(13,10)
+	  w "var PrintWay="""_$g(PrintWay)_""";"_$c(13,10)
+	  w "var CANCOMPSELF="""_$g(CANCOMPSELF)_""";"_$c(13,10)
+	  w "var IsOpenMoreScreen="""_IsOpenMoreScreen_""";"_$c(13,10)
 	  w "</script>"
    </server>
 </head>
@@ -36,42 +58,73 @@
 	<div class="hisui-layout" fit="true">
 		<div data-options="region:'center',title:''" style="border:0;padding:10px 10px 10px 10px;">
 			<div class="hisui-layout" fit="true">
-				<div data-options="region:'north',title:'会诊执行',headerCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="height:220px;">
+				<!--<div data-options="region:'north',title:'会诊执行',headerCls:'panel-header-gray',hodyCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="height:85px;overflow-y:hidden;">
 					<div id="pf-hd">
 						<label style="padding-right:5px;">#(..Get("快捷查询"))#</label>
-						<a id="cstUserNum" href="#" class="hisui-linkbutton btn-select" onclick="qrySelfSend('1');">本人申请</a>
-						<a id="csUserNum" href="#" class="hisui-linkbutton" onclick="qrySelfSend('2');">本人会诊</a>
-					    <a id="GroupUserNum" href="#" class="hisui-linkbutton" onclick="qrySelfSend('3');">本组会诊</a>
+						<span id="cstUserNum" class="qryItmSpan" onclick="qrySelfSend('1');"><span>#(..Get("本人申请"))#</span><span id="cstUserCount"></span></span>
+						<span id="cstLocNum" class="qryItmSpan" onclick="qrySelfSend('4');"><span>#(..Get("本科申请"))#</span><span id="cstLocCount"></span></span>
+						<span id="csUserNum" class="qryItmSpan" onclick="qrySelfSend('2');"><span>#(..Get("本人会诊"))#</span><span id="csUserCount"></span></span>
+					    <span id="GroupUserNum" class="qryItmSpan" onclick="qrySelfSend('3');"><span>#(..Get("本组会诊"))#</span><span id="groupUserCount"></span></span>
 			        </div>
-			        <div class="dashline-div"></div>
-			        <div id="pf-hc">
-						<div>
-							<label style="padding-right:5px;margin-right:10px;">#(..Get("开始日期"))#</label><input id="startDate" class="hisui-datebox textbox" style="margin-left:10px;">
-			        		<label style="margin-left:53px;margin-right:10px;">#(..Get("会诊状态"))#</label>
-							<input id="consStatus" class="hisui-combobox" style="margin-left:10px;width:140px;height:30px;line-height:30px;"/>
-			        		<label style="margin-left:53px;margin-right:10px;">#(..Get("病人ID"))#</label><input id="regNo" class="hisui-validatebox" style="margin-left:10px;">
-							<a href="#" style="margin-top:3px;margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="qryConsList()">查询</a>
+			     </div>-->
+
+				<div data-options="region:'north',title:'会诊执行',headerCls:'panel-header-gray',hodyCls:'panel-header-gray',iconCls:'icon-paper',collapsible:false" style="width:100%;height:194px;border-radius:0px;">
+					 <div id="pf-hc" style="margin: 10px 10px 6px 5px;">
+						<div style="">
+							<label style="padding-right:5px;">#(..Get("快捷查询"))#</label>
+							<span id="cstUserNum" class="qryItmSpan" onclick="qrySelfSend('1');"><span>#(..Get("本人申请"))#</span><span id="cstUserCount"></span></span>
+							<span id="cstLocNum" class="qryItmSpan" onclick="qrySelfSend('4');"><span>#(..Get("本科申请"))#</span><span id="cstLocCount"></span></span>
+							<span id="csUserNum" class="qryItmSpan" onclick="qrySelfSend('2');"><span>#(..Get("本人会诊"))#</span><span id="csUserCount"></span></span>
+						    <span id="GroupUserNum" class="qryItmSpan" onclick="qrySelfSend('3');"><span>#(..Get("本组会诊"))#</span><span id="groupUserCount"></span></span>
 						</div>
-						<div class="pf-toolhc">
-				        	<label style="padding-right:5px;margin-right:10px;">#(..Get("结束日期"))#</label><input id="endDate" class="hisui-datebox textbox" style="margin-left:10px;">
-							<label style="margin-left:53px;margin-right:10px;">#(..Get("疑难病种"))#</label>
-							<input id="mdtDisGrp" class="hisui-combobox" style="margin-left:10px;width:140px;height:30px;line-height:30px;"/>
-			        		<label style="margin-left:67px;margin-right:10px;">#(..Get("姓名"))#</label><input id="PatName" class="hisui-validatebox" style="margin-left:10px;">
+						
+						<div style="margin:6px 0 4px 0">
+							<label style="padding-right:5px;">#(..Get("开始日期"))#</label>
+							<input id="startDate" class="hisui-datebox textbox" style="margin-left:10px;">
+			        		<label style="margin-left:10px;">#(..Get("会诊状态"))#</label>
+							<input id="consStatus" class="hisui-combobox" style="width:140px;height:30px;line-height:30px;"/>
+			        		<label style="margin-left:10px;">#(..Get("病人ID"))#</label>
+			        		<input id="regNo" class="hisui-validatebox">
+			        		<label style=" ">#(..Get("收费状态"))#</label>
+			        		<input class="hisui-radio" type="radio" label="所有" name="stateOfCharge" value="" data-options="radioClass:'',requiredSel:true,checked:true">
+			        		<input class="hisui-radio" type="radio" label="已收费" name="stateOfCharge" value="Y" data-options="radioClass:'',requiredSel:true">
+							<input class="hisui-radio" type="radio" label="未收费" name="stateOfCharge" value="N" data-options="radioClass:'',requiredSel:true">
+			        		<a href="#" style="margin-top:3px;margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="qryConsList()">查询</a>
+		        		</div>
+						<div class="pf-toolhc" style="margin-top:0;">
+				        	<label style="padding-right:5px;">#(..Get("结束日期"))#</label>
+				        	<input id="endDate" class="hisui-datebox textbox" style="">
+							<label style="margin-left:10px;">#(..Get("疑难病种"))#</label>
+							<input id="mdtDisGrp" class="hisui-combobox" style="width:140px;height:30px;line-height:30px;"/>
+			        		<label style="margin-left:19px;">#(..Get("姓名"))#</label><input id="PatName" class="hisui-validatebox" style="margin-left:10px;">
 							<!--<a href="#" style="margin-top:3px;margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" onclick="Print()">打印</a>-->
 						</div>
 			        </div>
-			        <div class="dashline-div"></div>
+			        <div style="height: 1px;border-top: 1px dashed #ccc;clear:both;overflow: hidden;"></div>
 					<div class="pf-tools">
-						<a href="#" style="margin-top:3px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-cancel'" onclick="cancelMdtCons()" id="bt_cancel">取消会诊</a>
+						<a href="#" style="" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-cancel'" onclick="cancelMdtCons()" id="bt_cancel">取消会诊</a>
 						<a href="#" style="margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-write-order'" onclick="modProWin()" id="bt_Revisionexp">修改专家</a>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-upload',plain:true" onclick="mdtUpload()" id="bt_upload">上传文件</a>
+						<a href="javascript:void(0)" id="mbedit" class="hisui-menubutton" data-options="menu:'#mmedit',iconCls:'icon-print'">打印</a>
+						<a href="#" style="margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-paper-stat'" onclick="matRev()" id="bt_mat">资料审查</a>
+						<!--
 						<a href="#" style="margin-top:3px;margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-edit'" onclick="mdtHandleWin('P')" id="bt_acc">评估</a>
-						<a href="#" style="margin-top:3px;margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-edit'" onclick="mdtHandleWin('E')" id="bt_exe">执行</a>
-						<a href="#" style="margin-top:3px;margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-wrench-blue'" onclick="mdtCsHandle()" id="bt_make">处理</a>
-						<a href="#" style="margin-top:3px;margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-emr-cri'" onclick="PatBaseWin()" id="bt_patemr">查看病历</a>
-						<a href="#" style="margin-top:3px;margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-book'" onclick="mdtHandleWin('L')" id="bt_csr">会诊病历</a>
+						<a href="#" style="margin-top:3px;margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-back'" onclick="mCancelEva()" id="bt_RevAcc">取消评估</a>
+						-->
+						<a href="#" style=";margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-wrench-blue'" onclick="mdtCsHandle()" id="bt_make">处理</a>
+						<a href="#" style="margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-ok'" onclick="mdtHandleWin('E')" id="bt_exe">完成</a>
+						<a href="#" style="margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-back'" onclick="mCancelExe()" id="bt_RevExe">取消完成</a>
+						<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-edit'" onclick="OpenConssig()" style="margin-left:2px;" id="bt_conssig">签到</a>
+						<a href="#" style="margin-left:10px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-edit'" onclick="feedBackWin('F')" id="bt_feedback">会诊反馈</a>
+						<a href="#" style="margin-left:10px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-edit'" onclick="feedBackWin('R')" id="bt_Reply">会诊回复</a>
+						<a href="#" style="margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-emr-cri'" onclick="PatBaseWin()" id="bt_patemr">查看病历</a>
+						<a href="#" style="margin-left:2px;" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-book'" onclick="mdtHandleWin('L')" id="bt_csr">会诊记录单</a>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-pat-write',plain:true" onclick="OpenEmrWin()" id="bt_emrwin" style="">编写病历</a>
 					</div>
 				</div>
-				<div data-options="region:'center',headerCls:'panel-header-gray'">
+
+
+				<div data-options="region:'center',headerCls:'panel-header-gray',hodyCls:'panel-header-gray',collapsible:false" style="border-radius:0 0 4px 4px;">
 					<table id="PatList"></table>
 				</div>
 			</div>
@@ -79,33 +132,39 @@
 	</div>
 	
     <!-- mdt会诊查看窗口 -->
-	<div id="mdtPopWin">
+	<div id="mdtPopWin" class="hisui-window" data-options="closed:true">
 		<iframe id="mdtPopFrame" src="" width="100%" height="99%" frameborder="0"></iframe>
 	</div>
 	<!-- mdt病例评估 -->
-	<div id="mdtPopAccWin">
+	<div id="mdtPopAccWin" class="hisui-window" data-options="closed:true">
 		<iframe id="mdtPopAccFrame" src="" width="100%" height="99%" frameborder="0"></iframe>
-		 <!-- 
-		 <div style="margin:10px 0px;">
-			<label style="font-weight:bold;margin-left:10px;">评估内容</label>
-			<div style="padding:8px;">
-				<textarea id="CstRefReason"  style="width:980px;height:200px;resize:none;"></textarea>
-			</div>
-		</div>
-		-->
 	</div>
 	<!-- mdt会诊处理窗口 -->
-	<div id="newRefOpWin" style="padding:0px 1px;">
-		 <div style="margin:10px 0px;">
-			<label style="font-weight:bold;margin-left:10px;">#(..Get("不能参加原因"))#</label>
+	<div id="newRefOpWin" style="padding:0px 1px;" class="hisui-window" data-options="closed:true">
+		<div style="margin:10px 0px;">
+			<div style="margin:5px 0px;">
+				<div style="padding:8px 8px 0px 8px;">
+					<label style="font-weight:bold;margin-left:2px;margin-right:10px;">#(..Get("指定接替专家"))#</label>
+					<input id="mdtRepExpert" class="hisui-combobox" style="margin-left:10px;width:260px;height:30px;line-height:30px;"/>
+				</div>
+			</div>
+			<label style="font-weight:bold;margin-left:10px;">#(..Get("不能参加原因"))#</label> 
+			<span id="NowStatus"></span>
 			<div style="padding:8px 8px 0px 8px;">
 				<textarea id="CstRefReason" class="textbox" style="width:573px;height:160px;resize:none;"></textarea>
 			</div>
 		</div>
 		<div id="mdtWinTools" style="text-align: right;text-align:center">
 			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'" onclick="AcceptCstNo()" style="margin-left:15px">接收</a>
-			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" onclick="RefCstNo()" style="margin-left:30px">回复</a>
+			<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-back'" onclick="RefCstNo()" style="margin-left:30px">拒绝</a>
 		</div>
+	</div>
+	
+	<div id="mmedit" style="width:150px;">
+	    <div data-options="iconCls:'icon-print'" onclick="Print()">打印</div>
+	    <div data-options="iconCls:'icon-print'" onclick="printInfoSing()">打印告知单</div>
+	    <div data-options="iconCls:'icon-print'" onclick="PrintInfoCons()">知情同意书</div>
+	    <div data-options="iconCls:'icon-print'" onclick="PrintConfApp()">预约确认单</div>
 	</div>
 </body> 
 </html>

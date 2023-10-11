@@ -10,8 +10,10 @@
 
 <TITLE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 begin-->
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<!--Modified By QW20201207 QW0083 修改csp引用顺序 end-->
 	<style type="text/css">
 	.eq-table {display:table; width:100%; border-collapse:collapse; margin-bottom:5px;}
 	.eq-table-tr {display:table-row;}
@@ -25,8 +27,16 @@
 </HEAD>
 <SCRIPT language="Cache" RUNAT="SERVER">
 	Set RowID=$Get(%request.Data("RowID",1))
+	s HospFlag=##class(web.DHCEQCommon).GetSysInfo("990051")	//CZF0138
 </Script>
 <body class="hisui-layout" style="height:100%;">
+		<csp:if condition='HospFlag="2"'>	<!--CZF0138-->
+			<div data-options="region:'north',border:false,split:true" style="height:45px;padding:10px 10px 0 10px;">
+				<label id="_HospListLabel" style="color:red;padding-left:10px;" class='r-label'>医院</label>
+				<input class="hisui-validatebox"  id="_HospList" type="text">
+				<a id="_HospBtn" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">数据关联医院</a>	
+			</div>
+		</csp:if>
 		<div data-options="region:'center',border:false" style="padding:10px">
 			<div class="hisui-panel" title="部门" data-options="eqtitle:'maintitle',fit:true">
 				<div class="eq-table">
@@ -101,6 +111,7 @@
 			<INPUT type="hidden" id="ARowID">
 		</form>
 	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>		<!--CZF0138-->
 	<script type='text/javascript' src='../scripts/dhceq/plat/ctdepartment.js'></script>
 </body>
 </HTML>

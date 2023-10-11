@@ -1,0 +1,87 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>门诊病历扫描</title>
+	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")
+		s:(userID = "") userID = "159"
+		s userLocID = %session.Get("LOGON.CTLOCID")
+		s:(userLocID="") userLocID="9"
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var userLocID = '#(userLocID)#';
+	</script>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/JQuery/themes/icon.css">
+	<script type="text/javascript" src="../scripts/epr/JQuery/jquery.min.js"></script>
+	<script type="text/javascript" src="../scripts/epr/JQuery/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../scripts/epr/JQuery/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="../scripts/epr/js/fs.scan.query4out.js"></script>
+	<style type="text/css">
+	input[type="checkbox"] {
+		vertical-align: middle;
+		margin-left:20px;
+	}
+	.rowtb {
+		padding:5px;
+	}
+	.rowcb label {
+		margin-right:10px;
+	}
+	.rowcb .easyui-linkbutton {
+		margin-right:10px;
+	}
+	.rowtext label {
+		display: inline-block;
+		width: 60px;
+		text-align: right;
+		vertical-align: middle;
+	}
+	.tbtextbox {
+		border: 1px solid #95B8E7;
+		vertical-align: middle;
+	}
+	</style>
+</head>
+<body class="easyui-layout">
+	<div data-options="region:'west',collapsible:false" title="科室病人列表" style="width:360px;">
+		<div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'north'" style="height:200px;padding:5px;">
+				<div class="rowtb rowtext">
+					<label for="inputStartDate">就诊日期</label>
+					<input id="inputStartDate" class="easyui-datebox" style="width:100px;" />
+					<span>至</span>
+					<input id="inputEndDate" class="easyui-datebox" style="width:100px;">
+				</div>
+				<div class="rowtb rowtext">
+					<label for="inputRegNo">登记号</label>
+					<input id="inputRegNo" type="text" class="tbtextbox" style="width:220px;height:24px;" />
+				</div>
+				<div class="rowtb rowtext">
+					<label for="inputMedRecordNo">病案号</label>
+					<input id="inputMedRecordNo" type="text" class="tbtextbox" style="width:220px;height:24px;" />
+				</div>
+				<div class="rowtb rowtext">
+					<label for="inputPatName">姓名</label>
+					<input id="inputPatName" type="text" class="tbtextbox" style="width:220px;height:24px;" />
+				</div>
+				<div class="rowtb rowcb">
+					<a href="#" id="btnSearch" class="easyui-linkbutton" data-options="iconCls:'icon-search'" style="width:80px;">查询</a>
+					<a href="#" id="btnScan" class="easyui-linkbutton" data-options="iconCls:'icon-add'" style="width:80px;">扫描</a>
+				</div>
+			</div>
+			<div data-options="region:'center',border:false">
+				<table id="episodeListTable"></table>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center'">
+		<iframe id="iframeScan" src="" frameBorder="0" scrolling="no" style="height:100%;width:100%"></iframe>
+	</div>
+</body>
+</html>

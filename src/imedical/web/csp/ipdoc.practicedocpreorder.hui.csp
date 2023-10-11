@@ -11,7 +11,7 @@
 <style>
 .search-table{
 	border-collapse:separate;
-	border-spacing:0 10px;
+	border-spacing:10px;
 	/*padding: 0 10px;*/
 }
 </style>
@@ -20,22 +20,29 @@
 	s PPRowId=%request.Get("PPRowId")
 	s PatientID=$p(^PAADM(EpisodeID),"^",1)
 	s mradm=$p($g(^PAADM(EpisodeID)),"^",61)
+	s CureAssScoreID=%request.Get("CureAssScoreID")
 	s PracticeFlag=##class(web.DHCDocCommon).IsPracticeDoctor(%session.Get("LOGON.USERID"))
 	s PageType=%request.Get("PageType")
 	if PageType="" s PageType="R"
 	//未确认数量
-	s GetPracticeOrdNum=##class(web.DHCPracticeDocPreOrder).GetPracticeOrdNum(EpisodeID,"N",PageType)
+	s GetPracticeOrdNum=##class(web.DHCPracticeDocPreOrder).GetPracticeOrdNum(EpisodeID,"N",PageType,CureAssScoreID)
 	//需处理医嘱数量
  	s VerifyStyleNum=##class(web.DHCPracticeDocPreOrder).GetVerifyStyleNum(EpisodeID)
- 	if (PageType'="Cure") {
+ 	if (PageType="CureAdvise") {
+	 	//治疗评估-建议医嘱
+	 	s GetPracticeOrdNumA=##class(web.DHCPracticeDocPreOrder).GetPracticeOrdNum(EpisodeID,"A",PageType,CureAssScoreID)
+	 	s GetPracticeOrdNum=GetPracticeOrdNum+GetPracticeOrdNumA
+	 	s PracticeLabNum=0,PracticeCureNum=0
+ 	}elseif (PageType'["Cure") {
 	 	//待确认检验检查病理申请
 	 	s PracticeLabNum=##Class(web.DHCAPPExaReportQuery).QueryExaReqHisListCount("30","1",EpisodeID_"^^I^"_%session.Get("LOGON.HOSPID"))
 	 	//待确认治疗申请
-	 	s PracticeCureNum=##class(web.DHCPracticeDocPreOrder).GetPracticeOrdNum(EpisodeID,"N","Cure")
+	 	s PracticeCureNum=##class(web.DHCPracticeDocPreOrder).GetPracticeOrdNum(EpisodeID,"N","Cure^CureAdvise",CureAssScoreID)
  	}else{
 	 	//当是治疗申请-实习医生列表弹出框时，不显示待确认检验检查病理申请、待确认治疗申请
 	 	s PracticeLabNum=0,PracticeCureNum=0
 	}
+	s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
 </Server>
 </head>
 <body>
@@ -46,10 +53,12 @@
 			EpisodeID:"#(EpisodeID)#",
 			PatientID:"#(PatientID)#",
 			mradm:"#(mradm)#",
+			PAAdmType:"#(PAAdmType)#",
 			PPRowId:"#(PPRowId)#",
 			PracticeFlag:"#(PracticeFlag)#",
 			GetPracticeOrdNum:"#(GetPracticeOrdNum)#",
 			PageType:"#(PageType)#",
+			CureAssScoreID:"#(CureAssScoreID)#",
 			VerifyStyleNum:"#(VerifyStyleNum)#",
 			PracticeLabNum:"#(PracticeLabNum)#",
 			PracticeCureNum:"#(PracticeCureNum)#"

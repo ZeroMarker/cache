@@ -1,0 +1,216 @@
+<!-- 
+ * FileName: dhcpe.ct.reportsetting.csp
+ * Anchor: yupeng
+ * Date: 2021.08.15
+ * Description: 体检报告配置
+--> 
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0px 10px;
+    
+}
+.r-label{
+    padding-left: 10px;
+}
+
+.newclsInvalid{
+    border-color: red;
+    color: red;
+}
+.panel-header{
+    border-bottom: 0;
+}
+
+</style>
+</head>
+<body>
+<div class="hisui-layout" data-options="fit:true" border="false" id="layout">
+        <div data-options="region:'north',split:false,collapsible:false,headerCls:'panel-header-gray' " title="" border="false" style="height:168px">
+           <input type="hidden" id="SelectLocID"/>
+        <table class='search-table'>
+                
+                <tr>
+                    <td class="r-label"><label for="LocList">科室</label></td>
+                    <td>
+                        <input class="hisui-combobox" type="text" Id="LocList" style="width:155px">
+                    </td>
+                    
+                    
+                    <td class="r-label"><label for="PhotoFTP">检查报告上传ftp</label></td>
+                    <td>
+                        <input class="textbox" id="PhotoFTP"/>
+                    </td>
+                    
+                    <td class="r-label"><label for="ReportFTP">体检报告ftp</label></td>
+                    <td>
+                        <input class="textbox" id="ReportFTP"/>
+                    </td>   
+                    
+                    <td class="r-label"><label for="NewVerReport">体检报告格式</label></td>
+                    <td>
+                        <select id="NewVerReport" class="hisui-combobox" style="width:155px;" editable="false">
+                        <option value="Lodop">Lodop</option>
+                        <option value="Word">Word</option>
+                        </select>
+                     </td>      
+                
+                 </tr>  
+                
+                <tr>        
+                    <td class="r-label"><label for="ReportCode">报告代码</label></td>
+                    <td>
+                        <input class="textbox" id="ReportCode"/>
+                    </td>
+                    
+                    <td class="r-label"><label for="MainReportPrint">复查打印报告</label></td>    
+                    <td>
+                        <div id="MainReportPrint" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    <td class="r-label"><label for="LisReportMerge">合并标本号打印化验</label></td>  
+                    <td>
+                        <div id="LisReportMerge" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td> 
+                    <td class="r-label"><label for="NetReport">网上查看报告</label></td>  
+                    <td>
+                        <div id="NetReport" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                      
+               </tr>
+               
+               <tr>
+                    <td class="r-label"><label for="ShowEDDiagnosisSign">显示建议结论符号</label></td>  
+                    <td>
+                        <div id="ShowEDDiagnosisSign" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    <td class="r-label"><label for="SplitSummary">结论建议分开</label></td>  
+                    <td>
+                        <div id="SplitSummary" class="hisui-switchbox" data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>
+                    
+                    
+                     <td class="r-label"><label for="RisReportMerge">合并检查号打印检查</label></td>  
+                    <td>
+                        <div id="RisReportMerge" class="hisui-switchbox"  data-options="onText:'启用',offText:'禁用',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+                    </td>   
+                    
+               </tr>
+
+                <tr>
+                    <td colspan='8' align="center" >
+                        <a id="BSave" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+                    </td>
+                
+                </tr>   
+                        
+            </table>
+            
+         </div>      
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false" style="border-top:1px solid #ddd;">
+            <table data-options="fit:true" id="ReportSettingGrid"></table> 
+        </div>      
+    </div> 
+  
+<!--检查报告上传ftp弹窗 start-->
+  <div id="PhotoFTPWin" style="width:350px;height:330px;padding:10px;display:none;">   
+        <form id="PhotoFTPform-save" method="post" data-options="fit:true,border:false,plain:true">
+            <table class="search-table">
+                <tr>  
+                    <td class="r-label"><label>IP</label></td>
+                    <td>
+                        <input class="textbox" id="PhotoFTPWinIP"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="r-label"><label>用户</label></td>
+                    <td>
+                        <input class="textbox" id="PhotoFTPWinUser"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="r-label"><label>密码</label></td>
+                    <td>
+                        <input class="textbox"  type="password"  id="PhotoFTPWinPassWord"/>
+                    </td>
+                  </tr>
+            
+                 <tr>
+                    <td class="r-label"><label>端口</label></td>
+                    <td>
+                        <input class="textbox" id="PhotoFTPWinPort"/>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="r-label"><label>文件夹</label></td>
+                    <td>
+                        <input class="textbox"   id="PhotoFTPWinFile"/>
+                    </td>
+                 </tr>
+        
+        </table>
+    </form>
+</div>
+<!--检查报告上传ftp弹窗 end-->
+    
+<!--体检报告上传ftp弹窗 start-->
+ <div id="ReportFTPWin" style="width:350px;height:330px;padding:10px;display:none;">   
+    <form id="ReportFTPform-save" method="post" data-options="fit:true,border:false,plain:true">
+        <table class="search-table">
+            <tr>
+                <td class="r-label"><label>IP</label></td>
+                 <td>
+                    <input class="textbox" id="ReportFTPWinIP"/>
+                  </td>
+               </tr>
+               <tr> 
+                    <td class="r-label"><label>用户</label></td>
+                    <td>
+                        <input class="textbox" id="ReportFTPWinUser"/>
+                    </td>
+               </tr>
+               <tr>
+                    
+                    <td class="r-label"><label>密码</label></td>
+                    <td>
+                        <input class="textbox"  type="password"  id="ReportFTPWinPassWord"/>
+                    </td>
+      
+                </tr>
+                <tr>
+                    <td class="r-label"><label>端口</label></td>
+                    <td>
+                        <input class="textbox" id="ReportFTPWinPort"/>
+                    </td>
+                </tr>
+                <tr> 
+                    <td class="r-label"><label>文件夹</label></td>
+                    <td>
+                        <input class="textbox" id="ReportFTPWinFile"/>
+                    </td>
+                 </tr>
+        
+        </table>
+    </form>
+</div>
+ <!--体检报告上传ftp弹窗 end-->       
+<script type="text/javascript" src="../scripts/dhcpe/ct/reportsetting.js"></script>
+<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+  
+  
+</body>     
+</html>

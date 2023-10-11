@@ -39,6 +39,9 @@
 					<td class="r-label">
 						<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
 					</td>
+					<td class="r-label">
+						<a id="BConfig" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'">扩展设置</a>
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -58,7 +61,7 @@
 			<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-print'" plain="true" id="PrintSchedule">打印排班</a></td>
 			<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-export'" plain="true" id="ExportSchedule">导出排班</a></td>
 			<td><div class="datagrid-btn-separator"></div></td>
-			<td class="ImportantFont">单元格点击响应模式:&nbsp;&nbsp;</td>
+			<td class="ImportantFont">单元格点击响应模式:</td>
 			<td>
 				<input value="1" class='hisui-radio' type="radio" data-options="label:'模板维护',name:'ClickType',disable:false,checked:true">
 			</td>
@@ -87,7 +90,7 @@
 						<td><input id="AdmDoc" class="hisui-combobox textbox"/></td>
 						<td class="r-label"><label class="clsRequired">挂号职称</label></td>
 						<td><input id="DocSession" class="hisui-combobox textbox"/></td>
-						<td class="r-label">亚专业</td>
+						<td class="r-label">专业组</td>
 						<td><input id="ClinicGroup" class="hisui-combobox textbox"/></td>
 					</tr>
 					<tr>
@@ -104,18 +107,34 @@
 						
 					</tr>
 					<tr>	
-						<td class="r-label"><label class="clsRequired">正号限额</label></td>
-						<td><input id="PositiveMax" type="text" class="hisui-numberbox textbox" data-options="min:1,max:9999"></td>
-						<td class="r-label">预约限额</td>
-						<td><input id="ApptMax" type="text" class="hisui-numberbox textbox" data-options="min:0,max:9999"></td>				
-						<td class="r-label"><font color="red">加号限额</font></td>
-						<td><input id="AddtionMax" type="text" class="hisui-numberbox textbox" data-options="min:0,max:9999"></td>
-						<td class="r-label">起始号</td>
-						<td><input id="EStartPrefix" type="text" class="hisui-numberbox textbox" data-options="min:0,max:9999"></td>
+						<td class="r-label">
+							<label class="clsRequired" for="PositiveMax">正号限额</label>
+						</td>
+						<td>
+							<input id="PositiveMax" type="text" class="hisui-numberbox textbox" data-options="min:1">
+						</td>
+						<td class="r-label">
+							<label for="ApptMax">预约限额</label>
+						</td>
+						<td>
+							<input id="ApptMax" type="text" class="hisui-numberbox textbox" data-options="min:0">
+						</td>				
+						<td class="r-label">
+							<label style="" for="EStartPrefix">预约起始号</label>
+						</td>
+						<td>
+							<input id="EStartPrefix" type="text" class="hisui-numberbox textbox" data-options="min:0">
+						</td>
+						<td class="r-label">
+							<label style="" for="AddtionMax">加号限额</label>
+						</td>
+						<td>
+							<input id="AddtionMax" type="text" class="hisui-numberbox textbox" data-options="min:0">
+						</td>
 					</tr>
 					<tr>
 						
-						<td class="r-label"><font color="red">诊室</font></td>
+						<td class="r-label"><font color="">诊室</font></td>
 						<td><input id="LocArea" class="hisui-combobox  textbox"/></td>	
 						<td class="r-label" for="ScheduleGenerFlag">激活</td>
 						<td>
@@ -124,6 +143,14 @@
 						<td class="r-label" for="TRFlag">分时段</td>
 						<td>
 							<input id="TRFlag" class='hisui-checkbox' type="checkbox" data-options="label:'',name:'TRFlag'">
+						</td>
+							<td class="r-label">
+							<a id="t1" href="#" title="勾选后正号限额可维护无穷大,但挂号时不会生成挂号序号,一般适用于核酸检测等需大量号源的使用场景" class="hisui-tooltip" data-options="position:'bottom'">
+								<label for="">便捷排班</label>
+							</a>
+						</td>
+						<td>
+							<input id="NoLimitLoadFlag" class='hisui-checkbox' type="checkbox" data-options="label:'',name:'NoLimitLoadFlag'">
 						</td>
 					</tr>
 					<!--tr>
@@ -148,6 +175,7 @@
 							<a class="hisui-linkbutton" id="BtnAddSess" data-options="iconCls:'icon-w-add'">新增</a>
 							<a class="hisui-linkbutton" id="BtnSaveSess" data-options="iconCls:'icon-w-edit'">修改</a>
 							<a class="hisui-linkbutton" id="BtnDeleteSess" data-options="iconCls:'icon-w-cancel'">删除</a>
+							<a class="hisui-linkbutton" id="BtnExtendConfig" data-options="iconCls:'icon-w-config'">扩展设置</a>
 						</td>
 					</tr>
 				</table>
@@ -165,8 +193,15 @@
 			    		<div data-options="region:'center',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock',title:'分时段信息'">
 			    			<table id="tabTRInfo"></table>
 			    		</div>
-			    		<div data-options="region:'east',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock-record',collapsible:false,title:'分时段预约方式'" style="width:320px;">
-			    			<table id="tabTRAppMethodInfo"></table>
+			    		<div data-options="region:'east',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock-record',collapsible:false,title:''" style="width:340px;">
+			    			<div class="hisui-layout" fit="true">
+					    		<div data-options="region:'center',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock-record',collapsible:false,title:'分时段预约方式'" >
+					    			<table id="tabTRAppMethodInfo"></table>
+							    </div>
+							    <div data-options="region:'east',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock',title:'分时段专业组'" style="width:160px;">
+					    			<table id="tabTRClinicGroupInfo"></table>
+					    		</div>
+					    	</div>
 					    </div>
 			    	</div>
 			    </div>
@@ -179,13 +214,13 @@
      <div id="mm-weekclose">删除排版</div>
  </div>
 <div id="TRGenWin" class="hisui-window" title="分时段信息生成" style="width:300px;"
-    data-options="iconCls:'icon-w-edit',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
+    data-options="iconCls:'icon-w-edit',shadow:false,modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
 	<table class="search-table">
 		<tr>
 			<td class="r-label">生成方式</td>
 			<td colSpan="2">
-				<input class='hisui-radio' type="radio" data-options="label:'选择模板',name:'GenTRRadio',checked:true,onChecked:GenWayChecked" value='GenTRTemp'>
-	            <input class='hisui-radio' type="radio" data-options="label:'间隔时间均分',name:'GenTRRadio',onChecked:GenWayChecked" value='GenTRDefault'>
+				<input id="selTempl" class='hisui-radio' type="radio" data-options="label:'选择模板',name:'GenTRRadio',checked:true,onChecked:GenWayChecked" value='GenTRTemp'>
+	            <input id="selIntervalTime" class='hisui-radio' type="radio" data-options="label:'间隔时间均分',name:'GenTRRadio',onChecked:GenWayChecked" value='GenTRDefault'>
 			</td>
 		</tr>
 		<tr name="GenTRDefault">
@@ -207,9 +242,17 @@
 		</tr>
 	</table>
 </div>
-<div id="TRTempSaveWin" class="hisui-window" title="分时段模板保存" style="width:280px;"
+<div id="TRTempSaveWin" class="hisui-window" title="分时段模板保存" style="width:440px;"
     data-options="iconCls:'icon-w-save',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
 	<table class="search-table">
+		<tr>
+			<td class="r-label">权限类型</td>
+			<td><input id="TempListType" class="textbox"></td>
+		</tr>
+		<tr>
+			<td class="r-label">模板权限</td>
+			<td><input id="TempListDesc" class="hisui-combobox"></td>
+		</tr>
 		<tr>
 			<td class="r-label">模板名称</td>
 			<td><input id="TempName" class="textbox"></td>
@@ -220,4 +263,8 @@
 			<td>
 		</tr>
 	</table>
+</div>
+<div id="TRExtendConfigWin" class="hisui-window" title="扩展设置" style="width:380px;top:20px; "
+    data-options="iconCls:'icon-w-save',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
+	<div id="ExtendConfigpanle"></div>
 </div>

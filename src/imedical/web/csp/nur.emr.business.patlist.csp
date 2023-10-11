@@ -1,0 +1,95 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<script language="cache" runat="server">
+	// 是否通过病人列表的点击事件往头菜单传递病人信息（1:传递，非1:不传递）
+	s PassToMenuFlag=$G(%request.Data("PassToMenuFlag", 1))
+	// 护理分组权限标记（Y:开启）
+	s GroupFlag=$g(^NurGroupSetting("switch",$g(%session.Data("LOGON.HOSPID"))))
+	s orderLocs=##class(NurMp.Service.Patient.LocGroup).orderLocs($g(%session.Data("LOGON.HOSPID")))
+	// 是否显示查询日期，用于治疗科室中病人列表按照医嘱和接收科室分类（1:显示，非1:隐藏）
+	s ShowSearchDate=$s(("^"_orderLocs_"^")[("^"_$g(%session.Data("LOGON.CTLOCID"))_"^"):1,1:0)
+	// 是否显示多选框
+	s PatCheckFlag=$G(%request.Data("PatCheckFlag", 1))
+</script>
+
+<!--nur.emr.business.patlist.csp-->
+<!--病人列表通用样式-->
+<STYLE type='text/css'>
+	.emrunman {
+		background: url(../images/unman.png) no-repeat;
+		background-size: contain;
+	}
+	.emrman {
+	    background: url(../images/man.png) no-repeat;
+	    background-size: contain;
+	}
+	.emrwoman {
+	    background: url(../images/woman.png) no-repeat;
+	    background-size: contain;
+	}
+	.patient-find {
+		height: 73px;
+		border-top: none;
+		border-left: none;
+		border-right: none; 
+	}
+	.patient-find-date {
+		height:107px;
+		border-top: none;
+		border-left: none;
+		border-right: none;
+	}
+	.patient-find_table {
+		border-collapse: separate;
+		border-spacing: 4px;
+		border: none;
+	}
+	.patient-tree {
+		padding: 0px 4px;
+	}
+	.patient-tree-menu {
+		width:120px;
+	}
+</STYLE>
+
+<!--引入js脚本-->
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/records/patlist.js" charset=gbk></script>
+<script language="javascript">
+    var PassToMenuFlag="#(PassToMenuFlag)#";
+    var GroupFlag="#(GroupFlag)#";
+    var ShowSearchDate="#(ShowSearchDate)#";
+    var PatCheckFlag="#(PatCheckFlag)#";
+</script>
+
+<div class="hisui-layout" data-options="fit:true">
+	<script language="cache" runat="server">
+		i $g(ShowSearchDate)=1 {
+			w "<div data-options=""region:'north',split:false,border:false"" class=""patient-find-date"">"
+			w "<table class=""patient-find_table""><tr><td><input id=""pat-st-date"" class=""hisui-datebox textbox datebox"" data-options=""required:true"" style=""width:110px;"">&nbsp;<input id=""pat-ed-date"" class=""hisui-datebox textbox datebox"" data-options=""required:true"" style=""width:110px;""></td></tr>"
+		} else {
+			w "<div data-options=""region:'north',split:false,border:false"" class=""patient-find"">"
+			w "<table class=""patient-find_table"">"
+		}
+	</script>
+			<tr>
+				<td>
+					<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("姓名、登记号"))#'" style="width:155px;"/>
+					<div id="wardPatientCondition" class="hisui-switchbox" data-options="onText:'#(..Get("全部"))#',offText:'#(..Get("责组"))#',size:'small',animated:true,onClass:'primary',offClass:'gray'"></div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input id="combotreeFilter" class="hisui-combotree" placeholder="#(..Get("请选择查询条件"))#" style="width:240px;"/>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!--病人树结构-->
+	<div class="patient-tree" data-options="region:'center',split:true,border:false,iconCls:'icon-patient'">
+		<ul id="patientTree" data-options="animate:true"></ul>
+		<div id="menuTree" class="hisui-menu patient-tree_menu"></div>
+	</div> 
+</div>
+

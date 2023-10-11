@@ -1,0 +1,184 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+<HISUI/>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
+<title>dhcem.waitout.csp</title>
+<script Language="Javascript">
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#";        //医院ID
+	var LgUserID="#(%session.Get("LOGON.USERID"))#"; 
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; 
+	</script>
+</head>
+<body>
+<!-- 等待超时处理 hxy 2019-11-13 -->
+<div id="WaitOutWin" style="overflow:hidden">
+	<input type="hidden" id="DealPatName"  value=#(%request.Get("PatName"))#>
+	<input type="hidden" id="DealNurseLevel"  value=#(%request.Get("NurseLevel"))#>
+	<input type='hidden' id="DealEmPCLvID" value=#(%request.Get("EmPCLvID"))#>
+    <div>
+    	<span style="padding-left:75px;padding-right:10px">#(..Get("处理结果"))#</span>
+	    <input class='hisui-radio' type="radio" label='更改分级' name='DealResult' value='更改分级'  data-options="checked:true">
+	    <input class='hisui-radio' type="radio" label='优先' name='DealResult' value='优先'>
+	    <input class='hisui-radio' type="radio" label='继续等待' name='DealResult' value='继续等待'>
+    </div>
+    <div style="padding-top:10px"><span style="padding-left:75px;padding-right:10px">#(..Get("患者姓名"))#</span><span id="CurPatName"></span></div>
+    <div style="padding-top:10px"><span style="padding-left:75px;padding-right:10px">#(..Get("预检分级"))#</span><span id="CurLev"></span></div>
+	<div style="padding-top:10px">
+		<span style="padding-left:75px;padding-right:10px">#(..Get("病情分级"))#</span>
+		<span style='color: #f00;font-weight: bold;'>
+			  <input  class='hisui-radio' label="Ⅰ级" type="radio"  name='DealNurseLevel'  value='1'>
+		</span>
+		<span style='color: orange;font-weight: bold;'>
+			  <input  class='hisui-radio' label="Ⅱ级" type="radio"  name='DealNurseLevel' value='2'>
+		</span>
+		<span style='color: #f9bf3b;font-weight: bold;'>
+			  <input  class='hisui-radio' label="Ⅲ级" type="radio"  name='DealNurseLevel' value='3'>
+		</span>
+		<span style='color: #13987e;font-weight: bold;'>
+			  <input  class='hisui-radio' label="Ⅳa" type="radio"  name='DealNurseLevel' value='4' >
+		</span>
+		<span style='color: #13987e;font-weight: bold;width:50px'>
+			  <input  class='hisui-radio' label="Ⅳb" type="radio"  name='DealNurseLevel' value='5' >
+		</span>
+		<div id="nurbody" style="margin:10px 0px 0px 48px;">
+			<span style="padding-right:10px">#(..Get("分级变更原因"))#</span><input id="EmNurReaDeal" style="width:180px;"/>
+		</div>
+		<div id="nurbody" style="margin:10px 0px 0px 48px;">
+			<span style="padding-right:10px">#(..Get("继续等待原因"))#</span><input id="NoDealRea" class="hisui-validatebox" type="text" style="width:172px;" disabled/>
+		</div>
+		<div style="margin:10px 0px 0px 0px;text-align:center;">
+			<button id="DealCancel" onclick="javascript:$('#OutWindow').window('close')" class="hisui-linkbutton" iconCls="icon-w-cancel">取消</button>
+			<button id="DealOk" onclick="saveDeal()" class="hisui-linkbutton" iconCls="icon-w-ok">确认</button>
+		</div>
+	</div>
+	
+</div>
+<script type="text/javascript">
+$(document).ready(function(){
+	  $('#EmNurReaDeal').combobox({
+		//url:'dhcapp.broker.csp?ClassName=web.DHCEMPatCheckLevQuery&MethodName=jsonEmUpdLevReson&HospID='+LgHospID,
+		url:'dhcapp.broker.csp?ClassName=web.DHCEMPatCheckLevQuery&MethodName=jsonEmDocUpdReson&HospID='+LgHospID+'&Type=Nur',
+		valueField: 'value',
+		textField: 'text',
+		blurValidValue:true
+	  })
+	  //hxy 超时提醒是否可用控制 2019-11-14
+      $HUI.radio("[name='DealResult']",{
+            onChecked:function(e,value){
+	           //清空
+	           $("input[type='radio'][name$='DealNurseLevel']").radio('setValue',false)
+	           $('#EmNurReaDeal').combobox('setValue',"");
+	           $('#NoDealRea').val("");
+	           //是否可用
+	           var DealResult=$('input[name="DealResult"]:checked').attr("label");
+	           if(DealResult=="继续等待"){
+		           $("#NoDealRea").removeAttr('disabled');
+		      	   $('input[name="DealNurseLevel"]').attr("disabled", true);
+		           $('#EmNurReaDeal').combobox({disabled:true});
+		           $("[name='DealNurseLevel']:checked").radio("uncheck");
+		           $("[name='DealNurseLevel']").radio({"disabled":true})
+		       }
+		       if(DealResult=="更改分级"){
+			       $("#NoDealRea").attr('disabled','disabled');
+		      	   $('input[name="DealNurseLevel"]').attr("disabled", false);
+		           $('#EmNurReaDeal').combobox({disabled:false});   
+		            $("[name='DealNurseLevel']").radio({"disabled":false})
+		       }
+		       if(DealResult=="优先"){
+			       $("#NoDealRea").attr('disabled','disabled');
+		      	   $('input[name="DealNurseLevel"]').attr("disabled", true);
+		           $('#EmNurReaDeal').combobox({disabled:true});
+		           $("[name='DealNurseLevel']:checked").radio("uncheck");
+		           $("[name='DealNurseLevel']").radio({"disabled":true})
+		       }
+						   
+            }
+      });
+
+	  setTimeout(initValue,500);	
+
+});
+function initValue(){
+	$("#CurPatName").text($("#DealPatName").val());
+	var CurLev=$("#DealNurseLevel").val();
+	if(CurLev=="1"){
+		$("#CurLev").css("color","red");
+	}else if(CurLev=="2"){ 
+		$("#CurLev").css("color","orange"); 
+	}else if(CurLev=="3"){
+		$("#CurLev").css("color","#f9bf3b");
+	}else{
+		$("#CurLev").css("color","green");
+	}
+	CurLev=LevFormat(CurLev)
+	$("#CurLev").text(CurLev);
+}
+//hxy 2019-11-12
+function LevFormat(value){
+	if(value=="1"){value=$g("Ⅰ级");}
+	if(value=="2"){value=$g("Ⅱ级");}
+	if(value=="3"){value=$g("Ⅲ级");}
+	if(value=="4"){value=$g("Ⅳa级");}
+	if(value=="5"){value=$g("Ⅳb级");}
+	return value;
+}
+
+//确认
+function saveDeal(){
+	
+	if(!$("input[name='DealResult']:checked").length){
+		$.messager.alert('提示','处理结果未勾选！','info');
+		return;
+	}
+	
+	//$(".messager-body").window('close');return;
+	var DealEmPCLvID=$("#DealEmPCLvID").val();
+	var DealParams="";
+	var DealNurseLevelLabel=$("input[name='DealNurseLevel']:checked").attr("label") //处理分级
+	var DealNurseLevel=$("input[name='DealNurseLevel']:checked").val() //处理分级
+	var EmNurReaDeal=$('#EmNurReaDeal').combobox('getValue'); //更改分级原因id
+	var NoDealRea=$('#NoDealRea').val(); //继续等待原因
+	
+	var DealResult=$("input[name='DealResult']:checked").attr("label") //处理结果
+	
+	if((DealResult=="更改分级")&&((DealNurseLevel=="")||(EmNurReaDeal==""))){
+		$.messager.alert('提示','更改分级请选择 病情分级 和 分级变更原因','info');
+		return;
+	}
+	//alert($("#CurLev").text()+"*"+DealNurseLevelLabel+"*"+DealNurseLevel)
+	if((DealResult=="更改分级")&&($("#CurLev").val()==DealNurseLevelLabel)){
+		$.messager.alert('提示','分级未变更','info');
+		return;
+	}
+	if((DealResult=="继续等待")&&(NoDealRea=="")){
+		$.messager.alert('提示','继续等待请填写 继续等待原因','info');
+		return;
+	}
+	DealParams=DealResult+"^"+DealNurseLevel+"^"+EmNurReaDeal+"^"+NoDealRea; //处理结果 修改分级 修改分级原因 继续等待原因
+	runClassMethod("web.DHCEMPatCheckLev",
+		"DealWaitOutPat",
+		{'EmPCLvID':DealEmPCLvID,'LgUserID':LgUserID,'DealParams':DealParams,'LgGroupID':LgGroupID},
+		function(data){
+			if(data==0){
+				$.messager.alert('提示','保存成功！','info');
+				$('#OutWindow').window('close');
+				$(".messager-body").window('close');
+				checkPatTestTime(); //重新查
+			}else{
+				if(data==-1){
+					$.messager.alert('提示','请维护配置','info');
+				}else{
+					$.messager.alert('提示','保存失败！','info');
+				}
+			}
+	},"json")	
+	
+}//ed
+
+</script>	
+</body>
+</html>

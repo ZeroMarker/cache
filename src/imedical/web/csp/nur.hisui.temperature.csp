@@ -30,14 +30,19 @@
     </head>
     <ADDINS require="PrintChart"/>
     <server>
+    Set PatientListPage=""
+    Set ifColorPrint = "false"    
 	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
 	if EpisodeID'="" {
+		set chartID=##class(Nur.NIS.Service.Chart.API.TemperatureChart).getChartID("1",EpisodeID)
+		set ifColorPrint=##class(Nur.NIS.Service.Chart.DAO.Chart).getIfColorPrint(chartID)
 		Set PatientID = +^PAADM(EpisodeID)
 		Set mradm = $P(^PAADM(EpisodeID),"^",61)
 		Set %request.Data("PatientID",1) = PatientID
 		Set %request.Data("mradm",1) = mradm
 		Set Page=$g(%request.Data("page",1))
 	}
+	s ECPIP = ##class(ext.util.String).ServerIP()
 	s dllstr="../addins/plugin/Temperature/PrintChart.cab"
 	w "<OBJECT id=""PrintChartCAB"" style=""display:none"" classid=""clsid:AEC49948-438A-40BF-8306-DC4B72EEA892"" codebase="""_dllstr_"""  VIEWASTEXT></OBJECT>"
    </server>
@@ -74,15 +79,20 @@
         </div>
         <div data-options="region:'east',border:true,split:false,headerCls:'panel-header-gray',border:false" style="width:380px;padding:5px 5px 10px 10px;">
             <csp:Include Page="nur.hisui.singleEntry.csp">
+			<!-- 患者事件 -->
+			<csp:Include Page="nur.hisui.patientevent.csp">
+			<!-- 数据明细 -->
+			<csp:Include Page="nur.hisui.vsdatadetail.csp">
             <!--录入生命体征
             <a href="#" id="printTempBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" >打印</a>  -->
         </div>
         
         <script type="text/javascript">
             var episodeID="#(EpisodeID)#";
+            var ifColorPrint="#(ifColorPrint)#";
             var userID = session['LOGON.USERID'];
             var locID = session['LOGON.CTLOCID'];
-            var webIP=window.location.href.split('/imedical/web')[0];
+            var webIP=window.location.href.split('/imedical/web')[0]; //window.location.href.split('://')[0]+"://"+"#(ECPIP)#"; //window.location.href.split('/imedical/web')[0];
             var page="#(Page)#"==""?1:"#(Page)#";
             var totalPage="";
             var iframeUrl="";
@@ -146,7 +156,7 @@
                     // episodeID=frm.EpisodeID.value;
                     iframeUrl="../../../dhcmg/webchart/IndexForm.aspx?chartType=1&episodeID="+episodeID
                         +"&webIP="+webIP+"&userID="+userID+"&locID="+locID+"&v="+new Date().getTime()+"&rate="+rate+"&fontRate="+fontRate;
-                    document.getElementById('iframePicture').src=iframeUrl+"&page="+page+"&chartID="; 
+                    document.getElementById('iframePicture').src=iframeUrl+"&page="+page+"&chartID=&ifColorPrint="+ifColorPrint; 
                     if(ifLoad){
                     	loading();
                     }
@@ -166,7 +176,7 @@
             }
             function printCurrPageBtnClick(){
 	            if(!!window.ActiveXObject || "ActiveXObject" in window){
-			        PrintChartCAB.printPreview("1", episodeID, page, page, webIP, userID,  locID, "");
+			        PrintChartCAB.printPreview("1", episodeID, page, page, webIP, userID,  locID, "",ifColorPrint);
 	           		return ;
 		        }
 		        else{
@@ -184,7 +194,7 @@
 					}else{		
 						//DoctorSheet.TopMost = true;
 						PrintChart.notReturn=1
-						PrintChart.printPreview("1", episodeID, page, page, webIP, userID,  locID, ""); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+						PrintChart.printPreview("1", episodeID, page, page, webIP, userID,  locID, "",ifColorPrint); //中间件运行,此处的DoctorSheet为配置界面的调用ID
 						//window.close();
 					}
 			    }	      		
@@ -198,11 +208,11 @@
 	        function printAll(ifPreview){
 		        if(!!window.ActiveXObject || "ActiveXObject" in window){
 			        if(ifPreview){
-			           PrintChartCAB.printPreview("1", episodeID,"1", totalPage,  webIP, userID,  locID, "");
+			           PrintChartCAB.printPreview("1", episodeID,"1", totalPage,  webIP, userID,  locID, "",ifColorPrint);
 	            	   return ;
 			        }
 			        else{
-				       PrintChartCAB.printOut("1", episodeID,"1", totalPage,  webIP, userID,  locID, "");
+				       PrintChartCAB.printOut("1", episodeID,"1", totalPage,  webIP, userID,  locID, "",ifColorPrint);
 	            	   return ;
 				    }
 		        }
@@ -220,7 +230,7 @@
 		                for (i=0;i<totalPage;i++)
 		                {
 		                    var pageNum=i+1;
-		                    var imgUrl=iframeUrl+"&page="+pageNum+"&chartID="+"&ifPrint=true";
+		                    var imgUrl=iframeUrl+"&page="+pageNum+"&chartID="+"&ifColorPrint="+ifColorPrint;
 		                    //LODOP.ADD_PRINT_URL(0,0,"100%","100%",iframeUrl+"&page="+pageNum); //document.getElementById('iframePicture').src);
 		                    LODOP.ADD_PRINT_IMAGE(0, 0, 210*40, 297*40, "<img border='0' src='"+imgUrl+"'/>")
 		                    LODOP.SET_PRINT_STYLEA(0,"HtmWaitMilSecs",5000)//设置上面打印项延迟
@@ -236,10 +246,10 @@
 						//DoctorSheet.TopMost = true;
 						PrintChart.notReturn=1
 						if(ifPreview){
-		                	PrintChart.printPreview("1", episodeID, "1", totalPage, webIP, userID,  locID, ""); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+		                	PrintChart.printPreview("1", episodeID, "1", totalPage, webIP, userID,  locID, "",ifColorPrint); //中间件运行,此处的DoctorSheet为配置界面的调用ID
 		                }
 		                else{
-			            	PrintChart.printOut("1", episodeID, "1", totalPage, webIP, userID,  locID, ""); //中间件运行,此处的DoctorSheet为配置界面的调用ID
+			            	PrintChart.printOut("1", episodeID, "1", totalPage, webIP, userID,  locID, "",ifColorPrint); //中间件运行,此处的DoctorSheet为配置界面的调用ID
 			            }						
 						//window.close();
 					}
@@ -266,7 +276,7 @@
             }
             function prePageBtnClick(){
                 if(page>1){
-                    page=page-1
+                    page=parseInt(page)-1
                 }
                 else{
                     $.messager.popover({msg: '已经是首页，无法往前咯^_^',type:'alert'});
@@ -276,7 +286,9 @@
                 hrefRefresh(true);
             }
             function nextPageBtnClick(){
-                if(page<totalPage){page=page+1}
+                if(page<totalPage){
+	                page=parseInt(page)+1
+	            }
                 else{
                     $.messager.popover({msg: '已经是最后一页，无法往后咯^_^',type:'alert'});
                     return;
@@ -348,7 +360,7 @@
 			function getImageBase64() {
 				var d=document.getElementById('pagesBase64');				
 				var postUrl="../../../dhcmg/webchart/GetBase64.ashx?chartType=1&episodeID="+episodeID
-                        +"&webIP="+webIP+"&userID="+userID+"&locID="+locID+"&v="+new Date().getTime()+"&page="+page+"&chartID=&ifPrint=true";
+                        +"&webIP="+webIP+"&userID="+userID+"&locID="+locID+"&v="+new Date().getTime()+"&page="+page+"&chartID=&ifColorPrint="+ifColorPrint;
 				$.ajax({
 					url:postUrl,
 					type:"GET",	

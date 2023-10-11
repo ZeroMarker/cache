@@ -1,0 +1,62 @@
+<!--
+Body 项目格式2
+dhcpe/djd/dhcpe.djdbodyer.formatter2.csp
+ -->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	w "<table>",!
+	// 这里用来定义每列宽度
+	w "<tr>",!
+	w "<th style='width:130pt; background-color:#ccc;' align='center'>分类指引</th>",!
+	w "<th style='width:330pt; background-color:#ccc;' align='center'>体检项目</th>",!
+	w "<th style='width:120pt; background-color:#ccc;' align='center'>确认签名</th>",!
+	w "</tr>",!
+	
+	s length=BodyData.%Size()
+	f i=1:1:length {
+		s TypeInfo=BodyData.%Get(i-1)
+		
+		w "<tr style='height:2pt;'><td></td><td></td><td></td></tr>",!
+		
+		// 分类
+		s add=1
+		s:TypeInfo.TypeNotice'="" add=2
+		w "<tr>",!
+		w "<td rowspan="_(TypeInfo.ItemNum+add)_" style='border-right:0.5pt dashed #ccc;'><b>&ensp;"_TypeInfo.TypeName_"</b></td>",!
+		w "</tr>",!
+		
+		s SignDesc=$case(TypeInfo.DocFlag,"Y":"&ensp;医护签名",:"")
+		s SignDesc=SignDesc_$s(SignDesc'="":"<br>",1:"")_$case(TypeInfo.PatSign,"Y":"&ensp;受检者签名",:"")
+		
+		
+		// 标本
+		s SpecList=TypeInfo.SpecList
+		s specLen=SpecList.%Size()
+		s stripeNum=0
+		f j=1:1:specLen {
+			s borderInfo="border-bottom:0.5pt dashed #ccc;"
+			s:j=specLen borderInfo="border-bottom:0.5pt solid #777;"
+			// 项目
+			s specItemNum=SpecList.%Get(j-1).SpecItemNum
+			s ItemList=SpecList.%Get(j-1).ItemList
+			s itemLen=ItemList.%Size()
+			f k=1:1:itemLen {
+				s stripeNum=stripeNum+1
+				s bgColor=""
+				s:stripeNum#2=0 bgColor="background-color:#f0f0f0;"  // 条纹
+				
+				s bobo=$s(((specLen'=j)&&(itemLen=k)):""_borderInfo_"",1:"")
+				w "<tr>",!
+				w "<td style='border-right:0.5pt dashed #ccc;"_bgColor_""_bobo_"'>&ensp;"_ItemList.%Get(k-1).ItemName_"</td>",!
+				w:k=1 "<td rowspan="_specItemNum_" style='border-bottom:0.5pt dashed #ccc;'>"_SignDesc_"</td>",!
+				w "</tr>",!
+			}
+			
+			i ((specLen=j)&&(TypeInfo.TypeNotice'="")) {
+				w "<tr><td colspan=2 style='padding:2pt 0 0 6pt; font-size:11pt; border-top:0.5pt dashed #ccc;'><b>"_TypeInfo.TypeNotice_"</b></td></tr>",!
+			}
+			
+			w:specLen=j "<tr><td colspan=3 style='height:2pt;"_borderInfo_"'></td></tr>",!
+		}
+	}
+	w "</table>",!
+</SCRIPT>

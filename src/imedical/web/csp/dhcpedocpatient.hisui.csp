@@ -13,9 +13,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
 <script language="JavaScript"> 
 
 </script>
@@ -24,6 +24,16 @@ s PAADM=%request.Get("PAADM")
 i PAADM="" s PAADM=%request.Get("EpisodeID")
 s CFlag="N" ;已检标记
 i (PAADM'="")&&($D(^DHCPERLT(0,"ADM",PAADM))) s CFlag="Y"
+
+s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+i UIVersion="lite" s LineColor="border-top:1px solid #E2E2E2;border-radius:0px; background: url(../images/no_data_lite.png) center center no-repeat;"
+e  s LineColor="border-top:1px solid #CCCCCC;border-radius:0px; background: url(../images/no_data.png) center center no-repeat;"
+
+i UIVersion="lite" s LineColor1="border:1px solid #E2E2E2; border-radius:4px;"
+e  s LineColor1="border:1px solid #CCCCCC; border-radius:4px;"
+
+
+
 </SCRIPT> 
 <script type="text/javascript">
 var OtherPAADM="#(PAADM)#"
@@ -39,50 +49,57 @@ var CheckFlag="#(CFlag)#"
 
 
 .sline, .infoLabel {
-	color: #787878;
+    color: #787878;
 }
 
 .patientInfo {
-	padding-bottom: 10px;
-	padding-left: 60px;
-	display: inline-block;
-	position: absolute;
-	top: 10px;
+    padding-bottom: 10px;
+    padding-left: 60px;
+    display: inline-block;
+    position: absolute;
+    top: 10px;
 }
 
 .patientInfo span {
-	padding-left: 5px;
+    padding-left: 5px;
 }
 
 .patName {
-	font-size: 16px;
-	margin-right: 15px;
+    font-size: 16px;
+    margin-right: 15px;
 }
  
 .man {
- 	background:url(../images/man.png) no-repeat;
- 	background-position: center center;
- 	width: 30px;
- 	height: 30px;
- 	position: absolute;
+    background:url(../images/man.png) no-repeat;
+    background-position: center center;
+    width: 30px;
+    height: 30px;
+    position: absolute;
     top: 4px;
     left: 20px;
 }
 
 .woman {
- 	background: url(../images/woman.png) no-repeat;
- 	background-position: center center;
- 	width: 30px;
- 	height: 30px;
- 	position: absolute;
-	top: 4px;
-	left: 20px;
+    background: url(../images/woman.png) no-repeat;
+    background-position: center center;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    top: 4px;
+    left: 20px;
 }
 .icon-w-update{
 background:url("") no-repeat;
 }
-
-
+.r-label{
+    padding-left: 10px;
+}
+.r-label-1{
+    padding-left: 40px;
+}
+.r-label-2{
+    padding-left: 20px;
+}
 </style>
 
 <script language="JavaScript"> 
@@ -93,126 +110,141 @@ self.resizeTo(screen.availWidth,screen.availHeight)
 </script>
 
 </head>
-<body id="DocPanel" class="hisui-layout">
-  <div id="PersonTab" class="hisui-tabs" data-options="region:'west',onCollapse:function(){setFramSize(1);},onExpand:function(){setFramSize(0);}" style="width:285px;padding:4px 4px 4px 4px;">
-  	 <div title="叫号列表">
-  	 <div style="height:8%">
-  	 <input type="hidden" id="RoomID"/>
-  	 <input type="hidden" id="EpisodeID"/>
-  	 
-  	  <form class="form">
-      <table style="width:100%;">
-      <tr>
-         <td>
-          <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
-      </td>
+<body>
+<div class="hisui-layout" id="DocPanel" border="false" fit="true">
 
+  <div id="PersonTab" class="hisui-tabs tabs-gray" data-options="region:'west',onCollapse:function(){setFramSize(1);},onExpand:function(){setFramSize(0);}" style="border:0;width:285px;padding:4px 4px 6px 4px;background-color: inherit;">
+     <div title="叫号列表">
+     
+     <div class="hisui-layout" fit="true" border="false">
+     
+      <div data-options="region:'north',split:false,collapsible:false,border:false" style="height:80px">
+        <input type="hidden" id="RoomID"/>
+        <input type="hidden" id="EpisodeID"/>
+     
+      <table style="border-collapse:separate; border-spacing:10px 10px;">
+      <tr>
       <td>
-        <div><input class="hisui-validatebox" type="text" Id="CallRegNo" data-options="prompt:'登记号'" style="width:120px;" /></div></td>
-      <td>
-       <div><a id="CallQuery" href="#" class="hisui-linkbutton" style="width:80px;">查询</a></div></td>
+       <input class="hisui-validatebox" type="text" Id="CallRegNo" data-options="prompt:'登记号'" style="width:120px;"/>
+        </td>
+      <td class="r-label">
+       <a id="CallQuery" href="#" class="hisui-linkbutton" style="width:80px;">查询</a>
+       </td>
       </tr>
        <tr>
       <td colspan="2">
-        <div><label id="WaitInfo" style="color:#FF5809;"></label></div></td>
+        <label id="WaitInfo" style="color:#FF5809;">信息:</label></td>
       
       </tr>
       
-  	  </table>
-  	  </form>
-  	 </div>
-  	 <div style="height:92%"> 	
-  	 <table id='CallVoiceList' toolbar='#cvtb' headerCls='panel-header-gray' class='hisui-datagrid' border='false' autoSizeColumn='false'></table>
-  	 </div>
-  	  </div>
-  	 <div title="体检列表">
-  	  <form class="form">
-      <table style="width:100%;border-collapse:separate; border-spacing:10px 4px;">
+      </table>
+     </div>
+      <div data-options="region:'center',border:false">   
+      
+      <div class="hisui-panel" fit="true" data-options="bodyCls:'panel-body-gray'" style="border:0;border-radius:0px 0px 4px 4px;">
+           <table toolbar='#cvtb' data-options="bodyCls:'panel-body-gray'" id="CallVoiceList"></table>
+      </div>
+     </div>
+      </div>
+      </div>
+     <div title="体检列表">
+     
+      <div class="hisui-layout" fit="true" border="false">
+      <div data-options="region:'north',split:false,collapsible:false,border:false" style="height:210px">
+      <table style="width:100%;border-collapse:separate; border-spacing:0px 4px;">
       <tr>
-      <td align="right" style="width:80px;">
-         <label for="RegNo">登记号</label></td> 
+      <td class="r-label">
+         <label for="RegNo">#(..Get("登记/体检号"))#</label></td> 
          
-      <td align="left">
+      <td>
         <div><input class="hisui-validatebox textbox" type="text" Id="RegNo" data-options="prompt:'登记号'" style="width:149px;" /></div> </td>
       
       </tr>
-	
+    
      <tr>
-      <td align="right" style="width:80px;">
-         <label for="Name">姓名</label></td> 
+      <td class="r-label">
+         <label for="Name">#(..Get("姓名"))#</label></td> 
          
-      <td align="left">
+      <td>
         <div><input class="hisui-validatebox textbox" type="text" Id="Name" data-options="prompt:'姓名'" style="width:149px;" /></div> </td>
       
       </tr>
 
       <tr>
-       <td align="right" style="width:80px;">
-         <label for="VIP">VIP等级</label></td>
+       <td class="r-label">
+         <label for="VIP">#(..Get("VIP等级"))#</label></td>
       <td align="left">
-     	<div><input class="hisui-combobox" type="text" Id="VIP" data-options="prompt:'VIP等级'" style="width:156px;" /></div> </td>
+        <div><input class="hisui-combobox" type="text" Id="VIP" data-options="prompt:'VIP等级'" style="width:156px;" /></div> </td>
       </tr>
       
       <tr>
-      <td align="right" style="width:80px;">
-         <label for="BDate">开始日期</label></td>
-      <td align="left">
-        <div><input class="hisui-datebox" type="text" Id="BDate" style="width:155px;" data-options="prompt:'开始日期'" /></div></div> </td>
+      <td class="r-label">
+         <label for="BDate">#(..Get("开始日期"))#</label></td>
+      <td>
+        <div><input class="hisui-datebox" type="text" Id="BDate" style="width:156px;" data-options="prompt:'开始日期'" /></div></div> </td>
       </tr>
       
       <tr>
-      <td align="right" style="width:180px;">
-         <label for="EDate">结束日期</label></td>
-      <td align="left">
-        <div><input class="hisui-datebox" type="text" Id="EDate" style="width:155px;" data-options="prompt:'结束日期'" /></div></div> </td>
+      <td class="r-label">
+         <label for="EDate">#(..Get("结束日期"))#</label></td>
+      <td>
+        <div><input class="hisui-datebox" type="text" Id="EDate" style="width:156px;" data-options="prompt:'结束日期'" /></div></div> </td>
       
       </tr>
+       </table>
+       <table>
        <tr>
-       <td align="center">
-       <div><a id="Query" href="#" class="hisui-linkbutton" style="width:80px;">查询</a></div></td>
-       <td align="center">
-       <div><a id="NowData" href="#" class="hisui-linkbutton" style="width:80px;background-color:#66CD00;">当天</a></div></td>
+       <td class="r-label-1"><a id="Query" href="#" class="hisui-linkbutton" style="width:80px;">查询</a></td>
+       <td class="r-label-2"><a id="NowData" href="#" class="hisui-linkbutton" style="width:80px;background-color:#66CD00;">当天</a></td>
        </tr>
-  	  </table>
-  	  </form>
-  	 	
-  	 <div id="CheckListAc" class="hisui-accordion accordion-gray" style="width:268px;height:480px;float:left;" data-options="border:false">  
-  	 <div title="未检队列" data-options="iconCls:'icon-wating'" style="overflow:auto;padding:4px;background-color:#EBEBEB;">   
+      </table>
+      </div>
+      <div fit="true" data-options="region:'center',border:false" style="border:0;border-radius:0;">     
+     <div id="CheckListAc" class="hisui-accordion accordion-gray" data-options="border:false" style="width:275px;height:528px;float:left;border-radius:0;">  
+     <div title="未检队列" data-options="iconCls:'icon-wating'" data-options="border:false" style="overflow:auto;background-color:#EBEBEB;">   
       <div id='NoCheckList' headerCls='panel-header-gray' class='hisui-datagrid' border='false' autoSizeColumn='false'></div>
      </div>   
-  	 <div title="已检队列" data-options="iconCls:'icon-done'" style="overflow:auto;padding:4px;background-color:#EBEBEB;">   
+     <div title="已检队列" data-options="iconCls:'icon-done'" data-options="border:false" style="overflow:auto;background-color:#EBEBEB;">   
        <div id='HadCheckList' headerCls='panel-header-gray' class='hisui-datagrid' border='false' autoSizeColumn='false'></div>
+     </div>
+     </div>  
      </div> 
-     </div> 
-  	 </div>
-  	 </div>
+     </div>
+     </div>
   </div>
- <div class="hisui-layout" data-options="region:'center', title:'',headerCls:'panel-header-gray',fit:true" style="padding:4px 4px 4px 4px;">
-    <div class="hisui-panel" data-options="region:'north',title:'',headerCls:'panel-header-gray',collapsible:false" style="height:50px;">
-		<div id="sex"></div>
-		<div class="patientInfo">
-		<span class="patName" id="patName"></span>
-		<span class="infoLabel">性别:</span><span id="sexName"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">年龄:</span><span id="Age"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel" id="PatNoName">登记号:</span><span id="PatNo"></span>
-		<span class="sline" id="tPEDateLine">/</span>
-		<span class="infoLabel" id="tPEDate">体检日期:</span><span id="PEDate"></span>
-		<span class="sline" id="tVIPLevelLine">/</span>
-		<span class="infoLabel" id="tVIPLevel">VIP等级:</span><span id="VIPLevel"></span>
-		<span class="sline" id="tRemark">/</span>
-		<span class="infoLabel" id="tRemark">备注:</span><font color=red><span id="ReMark"></span></font>
-		<!--span><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_right.png"  title="展开" border="0" onclick="$('#DocPanel').layout('expand','west');"></span-->
-		</div>
-	<input type="hidden" id="PAADM_Hidden">	
+  
+ <div id="DocCenter" class="hisui-panel" data-options="region:'center',border:false" style="padding:4px 8px 8px 0px;background-color: inherit;">
+
+ 
+    <div class="hisui-layout" fit="true" style="#(LineColor1)#">
+    <div class="hisui-panel" data-options="region:'north',border:false,headerCls:'panel-header-gray',collapsible:false" style="height:50px">
+        <div id="sex"></div>
+        <div class="patientInfo">
+        <span class="patName" id="patName"></span>
+        <span class="infoLabel">#(..Get("性别"))#:</span><span id="sexName"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel">#(..Get("年龄"))#:</span><span id="Age"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel" id="PatNoName">#(..Get("登记号"))#:</span><span id="PatNo"></span>
+        <span class="sline" id="tPEDateLine">/</span>
+        <span class="infoLabel" id="tPEDate">#(..Get("体检日期"))#:</span><span id="PEDate"></span>
+        <span class="sline" id="tVIPLevelLine">/</span>
+        <span class="infoLabel" id="tVIPLevel">#(..Get("VIP等级"))#:</span><span id="VIPLevel"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel">#(..Get("团体名称"))#:</span><span id="GName"></span>
+        <span class="sline" id="tRemark">/</span>
+        <span class="infoLabel" id="tRemark">#(..Get("备注"))#:</span><font color=red><span id="ReMark"></span></font>
+        <!--span><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_right.png"  title="展开" border="0" onclick="$('#DocPanel').layout('expand','west');"></span-->
+        </div>
+   
     </div>
 
-  	<div id="StationTab" class="hisui-tabs" data-options="region:'center',border:false">
-  	</div>
+    <div id="StationTab" class="hisui-tabs tabs-gray" fit="true" data-options="region:'center',border:false" style="#(LineColor)#">
+    </div>
+ 
   </div>
-
-
+ </div>
+ <input type="hidden" id="PAADM_Hidden"> 
   <script type="text/javascript" src="../scripts/dhcpedocpatient.hisui.js"></script>
   <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
   <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>
@@ -222,11 +254,12 @@ self.resizeTo(screen.availWidth,screen.availHeight)
   <script type="text/javascript" src="../scripts/DHCCPM_DOMComm.js"></script>
   <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
   <script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>
+  </div>
 </body>
 </html>
-<div id="cvtb" style="width:100%;">
-	<a onclick="Call();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-ring',plain:true" style="width:60px;">呼叫</a>
-	<a onclick="Delay();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-arrow',plain:true" style="width:60px;">顺延</a>
-	<a onclick="Pass();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-skip-no',plain:true" style="width:60px;">过号</a>
-	<a onclick="BComplete();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-home',plain:true" style="width:80px;">科室确认</a>
+<div id="cvtb" style="border:0;width:100%;border-top:1px dashed #C0C0C0;">
+    <a onclick="Call();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-ring',plain:true" style="width:60px;">呼叫</a>
+    <a onclick="Delay();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-book-arrow',plain:true" style="width:60px;">顺延</a>
+    <a onclick="Pass();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-skip-no',plain:true" style="width:60px;">过号</a>
+    <a onclick="BComplete();" class="hisui-linkbutton big" data-options="iconCls:'icon-big-home',plain:true" style="width:80px;">科室确认</a>
 </div>

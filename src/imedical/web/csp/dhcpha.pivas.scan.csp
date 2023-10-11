@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!--
+    配液扫描执行
+	csp: csp/dhcpha.pivas.scan.csp
+	js:  scripts/pharmacy/pivas/scan.js
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<HTML XMLNS=TRAK>
+
+<HEAD>
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD> </TRAK:HEAD>
+    <HISUI />
+    <PHAPRINTCOM />
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
+
+    <style>
+        .pha-scan-warning {
+            background-color: #AA91D6 !important;
+            color: #ffffff;
+        }
+
+        .pha-scan-success {
+            background-color: #00BCA4 !important;
+            color: #ffffff;
+        }
+
+        .pha-scan-error {
+            background-color: #F6704E !important;
+            color: #ffffff;
+        }
+
+        .pha-scan-ward {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        #labelResult {
+            width: 100%;
+            text-align: center;
+            line-height: 38px;
+            font-weight: bold;
+            background-color: #00B9A0;
+            color: white;
+        }
+
+        .datagrid-row [field] {
+            vertical-align: top;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        .pivas-prt-panel div {
+            line-height: 30px;
+        }
+
+    </style>
+</HEAD>
+
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true" border="false">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'west',width:428,title:'配液扫描执行',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-pivas-execute'">
+                    <div class="hisui-layout" fit="true" border="false">
+                        <div data-options="region:'center',headerCls:'panel-header-gray',border:false">
+                            <table id="gridWard"></table>
+                        </div>
+                        <!-- <div data-options="region:'south',height:40,border:false,split:false" style="text-align:center">
+                            <a class="hisui-linkbutton" plain="false" iconCls='icon-w-find' id="btnRefresh">查询</a>
+                        </div> -->
+                    </div>
+                </div>
+                <div data-options="region:'center',title:'',border:false,headerCls:'panel-header-gray'">
+                    <div class="hisui-layout" fit="true" border="false">
+                        <div data-options="region:'east',width:400,title:'条码扫描',split:true,border:true,headerCls:'panel-header-gray',iconCls:'icon-gen-barcode',collapsible:false">
+                            <div class="hisui-layout" fit="true" border="false">
+                                <div data-options="region:'north',height:50" border="false" style="overflow:hidden;padding:10px;padding-bottom: 6px;">
+                                    <div>
+                                        <img id='imgScaning' src="..\scripts_lib\hisui-0.1.0\dist\css\icons\scanning.png" style="position: absolute;top:17px;left:15px;">
+                                        <input id="txtBarCode" class="hisui-validatebox" type="text" style="width:340px;padding-left:25px;" />
+                                    </div>
+                                </div>
+                                <div data-options="region:'center'" border="false" class="newScroll" style="border-top-left-radius: 0px !important;border-top-right-radius: 0px !important;">
+                                    <div id="totalStat" style="line-height:38px;padding:0px;;">
+                                        <div style="width:100%;text-align: center;line-height: 38px;height:38px;font-weight: bold;background-color: #00A4DF;color:white;">
+                                            <div style="width:100%">
+                                                <span id='txtGeneNo'>[ 单号 ]</span>
+                                                <span id='txtScaned' style="padding-left:50px">[ 已扫 ]</span>
+                                                <span style="padding-left:10px">/</span>
+                                                <span id='txtScanTotal' style="padding-left:10px">[ 合计 ]</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="scanStat" style="line-height:38px;padding-top:2px">
+                                        <div id="labelResult">
+                                            [ 扫描结果 ]
+                                        </div>
+                                    </div>
+
+                                    <div id="labelContent" style="padding:10px;">
+                                        <div style="width:100%; text-align:center; overflow:hidden;">
+                                            <!-- img src="../scripts/pharmacy/common/image/bg-label-nodata.png" width="360px" -->
+                                            <div style="margin-top:20px;">
+                                                <img src="../scripts/pharmacy/common/image/nodata-small.png" width="60px" height="60px;">
+                                            </div>
+                                            <div style="margin-top:10px; color:#999999; font-size:16px;">
+                                                没有数据哦，扫描标签看看吧！
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div id="tabsScan" class="hisui-tabs tabs-gray" fit="true">
+                                <div id="allScan" data-options="title:'扫描明细',selected:true">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridLabel"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="unScaned" data-options="title:'实时未扫',selected:true">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridLabelUnScaned"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="scaned" data-options="title:'实时已扫',selected:true">
+                                    <div class="hisui-layout" fit="true" border="false">
+                                        <div data-options="region:'center'" border="false">
+                                            <table id="gridLabelScaned"></table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="gridLabelBar">
+
+        <div style="float:left;padding-left:5px;">
+            <div id="kwScanStat"></div>
+        </div>
+        <div style="float:left;padding-top:4px">
+            <a class="hisui-linkbutton" plain="true" iconCls='icon-print' id="btnPrint">打印交接单</a>
+
+        </div>
+        <div style="clear:both"></div>
+    </div>
+    <div id="gridLabelUnScanedBar">
+        <a class="hisui-linkbutton" plain="true" iconCls='icon-search' id="btnFindUnScaned">查询</a>
+    </div>
+    <div id="gridLabelScanedBar">
+        <a class="hisui-linkbutton" plain="true" iconCls='icon-search' id="btnFindScaned">查询</a>
+    </div>
+
+    <div id="prtSelectDiv" class="hisui-dialog" title='打印交接单' data-options="width:275,closable:false,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-print',
+	buttons:[{
+        text:'确认',
+        id:'btnPrtSelectDivOk'
+	},{
+		text:'取消',
+		handler:function(){
+                $('#prtSelectDiv').window('close')
+		}
+    }]">
+        <div style="overflow: hidden;text-align:center;padding-top: 10px;">
+            <div class="pivas-prt-panel">
+                <div><input class="hisui-radio" type="radio" label="打印病区批次合计" name="prtPOGSWay" value="0"></div>
+                <div><input class="hisui-radio" type="radio" label="打印药品数量汇总" name="prtPOGSWay" value="1"></div>
+                <!--div><input class="hisui-radio" type="radio" label="按医嘱明细" name="prtPOGSWay" value="2"></div-->
+            </div>
+        </div>
+    </div>
+    <div id="gridWardToolbar" style="border-radius:0;padding:0">
+        <table class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label>#(..Get("用药日期"))#</label>
+                </td>
+                <td>
+                    <input id="conStartDate" class="hisui-datebox" style="width:148px" />
+                </td>
+                <td>
+                    <label>#(..Get("至"))#</label>
+                </td>
+                <td>
+                    <input id="conEndDate" class="hisui-datebox" style="width:148px" />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="conPivaStat">#(..Get("配液状态"))#</label>
+                </td>
+                <td colspan="3">
+                    <input id="conPivaStat" />
+                </td>
+            </tr>
+
+            <tr>
+                <td class="r-label">
+                    <label>#(..Get("配液大类"))#</label>
+                </td>
+                <td colspan="3">
+                    <input id="conPivaCat" />
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label><span style="visibility: hidden;">#(..Get("配液"))#</span>#(..Get("批次"))#</label>
+                </td>
+                <td colspan="3">
+                    <input id="conBatNo" />
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align:center" colspan=4>
+                    <a class="hisui-linkbutton" plain="false" iconCls='icon-w-find' id="btnFind">查询</a>
+                    <a class="hisui-linkbutton" plain="false" iconCls='icon-w-clean' id="btnClean" style="margin-left:8px;">清屏</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/makelabel.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/pivas/scan.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/qrcode/qrcode.min.js"></script>
+
+    <csp:Include Page="dhcpha.pivas.temp.label.csp"></csp:Include>
+</body>
+
+</HTML>

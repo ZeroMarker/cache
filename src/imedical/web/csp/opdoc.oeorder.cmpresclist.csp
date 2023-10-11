@@ -7,8 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
 <HISUI></HISUI>
+<ADDINS require="RWCard"/>
+<DOCCARD medStepCode="Order"></DOCCARD>
 <style>
 .search-table{
 	border-collapse:separate;
@@ -20,6 +21,7 @@
 </style>
 <Server>
  s (EpisodeID,PatientID)=""
+ s PageShowFromWay=%request.Get("PageShowFromWay")
  s EpisodeID=%request.Get("EpisodeID") 
  s PatientID="",mradm=""
  if (EpisodeID'=""){
@@ -29,12 +31,15 @@
  s sysDateFormat=##class("websys.Conversions").DateFormat()
  s CurrentDate=$zd(+$h,sysDateFormat)
  s defStartDate=$zd(+$h-3,sysDateFormat)
- w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
- w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
- w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
- d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+ /*w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+ w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+ w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+ d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
  ;协定处方允许增加草药
  s FormulaCanAppendItem=##Class(web.DHCDocConfig).GetConfigNode("FormulaCanAppendItem")
+ ///是否为实习生
+ s DoctorID=##class(web.SSUser).GetDefaultCareProvider(%session.Get("LOGON.USERID"))
+ s practiceFlag=##class(web.DHCOEOrdItem).practice(DoctorID)
 </Server>
   </head>
 <body>
@@ -49,7 +54,8 @@
 	         CurrentDate:"#(CurrentDate)#",
 	         defStartDate:"#(defStartDate)#",
 	         sysDateFormat:"#(sysDateFormat)#",
-	         FormulaCanAppendItem:"#(FormulaCanAppendItem)#"
+	         FormulaCanAppendItem:"#(FormulaCanAppendItem)#",
+	         PageShowFromWay:"#(PageShowFromWay)#"
 		};
 		//页面加载完之后在赋值，防止事件未定义导致报错
 		$(function(){

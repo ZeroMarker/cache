@@ -13,9 +13,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
 <script language="JavaScript"> 
 
 </script>
@@ -23,6 +23,15 @@
 s MainDoctor=%request.Get("MainDoctor")
 s OnlyRead=%request.Get("OnlyRead")
 s PAADM=%request.Get("EpisodeID")
+
+s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+i UIVersion="lite" s LineColor="border-top:1px solid #E2E2E2;border-radius:0px; background: url(../images/no_data_lite.png) center center no-repeat;"
+e  s LineColor="border-top:1px solid #CCCCCC;border-radius:0px; background: url(../images/no_data.png) center center no-repeat;"
+
+i UIVersion="lite" s LineColor1="border:1px solid #E2E2E2; border-radius:4px;"
+e  s LineColor1="border:1px solid #CCCCCC; border-radius:4px;"
+
+
 </SCRIPT> 
 <script type="text/javascript">
 var MainDoctor="#(MainDoctor)#"
@@ -39,99 +48,133 @@ var OtherPAADM="#(PAADM)#"
 
 
 .sline, .infoLabel {
-	color: #787878;
+    color: #787878;
 }
 
 .patientInfo {
-	padding-bottom: 10px;
-	padding-left: 60px;
-	display: inline-block;
-	position: absolute;
-	top: 10px;
+    padding-bottom: 10px;
+    padding-left: 60px;
+    display: inline-block;
+    position: absolute;
+    top: 10px;
 }
 
 .patientInfo span {
-	padding-left: 5px;
+    padding-left: 5px;
 }
 
 .patName {
-	font-size: 16px;
-	margin-right: 15px;
+    font-size: 16px;
+    margin-right: 15px;
 }
  
 .man {
- 	background:url(../images/man.png) no-repeat;
- 	background-position: center center;
- 	width: 30px;
- 	height: 30px;
- 	position: absolute;
+    background:url(../images/man.png) no-repeat;
+    background-position: center center;
+    width: 30px;
+    height: 30px;
+    position: absolute;
     top: 4px;
     left: 20px;
 }
 
 .woman {
- 	background: url(../images/woman.png) no-repeat;
- 	background-position: center center;
- 	width: 30px;
- 	height: 30px;
- 	position: absolute;
-	top: 4px;
-	left: 20px;
+    background: url(../images/woman.png) no-repeat;
+    background-position: center center;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    top: 4px;
+    left: 20px;
 }
-
+.man_lite {
+    background:url(../images/man_lite.png) no-repeat;
+    background-size:cover;
+    position: absolute;
+    left:10px;
+    top:5px;
+    width:30px;
+    height:30px;
+    border-radius:30px;
+    border:none;
+}
+.woman_lite {
+    background: url(../images/woman_lite.png) no-repeat;
+    background-size:cover;
+    position: absolute;
+    left:10px;
+    top:5px;
+    width:30px;
+    height:30px;
+    border-radius:30px;
+    border:none;
+}
 .icon-w-update{
 background:url("") no-repeat;
 }
 
+.r-label{
+    padding-left: 10px;
+}
+.r-label-1{
+    padding-left: 20px;
+}
 </style>
 </head>
-<body id="DiagnosisPanel" class="hisui-layout">
-  <div class="hisui-layout" id="PersonPanel" data-options="region:'west',onCollapse:function(){setFramSize(1);},onExpand:function(){setFramSize(0);},title:'患者列表'" style="width:290px;padding:4px;">
-  	 <div data-options="region:'north',title:''" style="height:305px;border: 1px solid #ccc;">
-  	  <form class="form">
-      <table style="width:100%;border-collapse:separate; border-spacing:10px 4px;">
+<body>
+
+<div class="hisui-layout" id="DiagnosisPanel" border="false" fit="true">
+
+
+  <div border="false" data-options="region:'west',onCollapse:function(){setFramSize(1);},onExpand:function(){setFramSize(0);}" style="width:290px;padding:4px 4px 6px 4px;background-color: inherit;">
+     
+      <div class="hisui-panel" data-options="fit:true" style="#(LineColor1)#">
+     <div class="hisui-layout" data-options="headerCls:'panel-header-gray',border:false,fit:true">
+     <div id="PersonPanel" data-options="region:'north',split:false,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',collapsible:false,title:'患者列表',border:false" style="height:340px;">
+      <form class="form">
+      <table style="border-collapse:separate; border-spacing:5px 4px;">
       <tr>
-      <td align="right" style="width:100px;">
-         <label for="RegNo">登记号</label></td>
-      <td align="left">
-        <div><input class="hisui-validatebox" type="text" Id="RegNo" data-options="prompt:'登记号'" style="width:151px;" /></div> </td>
+      <td class="r-label">
+         <label for="RegNo">#(..Get("登记/体检号"))#</label></td>
+      <td>
+        <input class="hisui-validatebox" type="text" Id="RegNo" data-options="prompt:'登记号'" style="width:143px;" /></td>
       
       </tr>
 
        <tr>
-      <td align="right" style="width:100px;">
-         <label for="Name">姓名</label></td>
+      <td class="r-label">
+         <label for="Name">#(..Get("姓名"))#</label></td>
       <td align="left">
-        <div><input class="hisui-validatebox" type="text" Id="Name" data-options="prompt:'姓名'" style="width:151px;" /></div> </td>
+        <div><input class="hisui-validatebox" type="text" Id="Name" data-options="prompt:'姓名'" style="width:143px;" /></div> </td>
       
       </tr>
        <tr>
-      <td align="right" style="width:100px;">
-         <label for="Group">团体名称</label></td>
+      <td class="r-label">
+         <label for="Group">#(..Get("团体名称"))#</label></td>
       <td align="left">
-        <div><input class="hisui-combobox" type="text" Id="Group" data-options="prompt:'团体名称'" style="width:156px;" /></div> </td>
+        <div><input class="hisui-combobox" type="text" Id="Group" data-options="prompt:'团体名称'" style="width:150px;" /></div> </td>
       
       </tr>
 
       <tr>
-       <td align="right" style="width:100px;">
-         <label for="VIP">VIP等级</label></td>
+       <td class="r-label">
+         <label for="VIP">#(..Get("VIP等级"))#</label></td>
       <td align="left">
-     	<div><input class="hisui-combobox" type="text" Id="VIP" data-options="prompt:'VIP等级'" style="width:156px;" /></div> </td>
+        <div><input class="hisui-combobox" type="text" Id="VIP" data-options="prompt:'VIP等级'" style="width:150px;" /></div> </td>
       </tr>
       
        <tr>
-      <td align="right" style="width:100px;">
-         <label for="BDate">开始日期</label></td>
+      <td class="r-label">
+         <label for="BDate">#(..Get("开始日期"))#</label></td>
       <td align="left">
-        <div><input class="hisui-datebox" type="text" Id="BDate" style="width:158px;" data-options="prompt:'开始日期'" /></div></div> </td>
+        <div><input class="hisui-datebox" type="text" Id="BDate" style="width:150px;" data-options="prompt:'开始日期'" /></div></div> </td>
       
       </tr>
       <tr>
-      <td align="right" style="width:100px;">
-         <label for="EDate">结束日期</label></td>
+      <td class="r-label">
+         <label for="EDate">#(..Get("结束日期"))#</label></td>
       <td align="left">
-        <div><input class="hisui-datebox" type="text" Id="EDate" style="width:158px;" data-options="prompt:'结束日期'" /></div></div> </td>
+        <div><input class="hisui-datebox" type="text" Id="EDate" style="width:150px;" data-options="prompt:'结束日期'" /></div></div> </td>
       
       </tr>
       
@@ -151,44 +194,56 @@ background:url("") no-repeat;
        <td colspan="2" align="center">
        <div><a id="Query" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div></td>
        </tr>
-  	  </table>
-  	  </form>
-  	 </div>	
-  	   <div data-options="region:'center',title:''" style="border: 1px solid #ccc;">
-  	 	<table id='CanDiagnosisList' headerCls='panel-header-gray' class='hisui-datagrid' border='false' autoSizeColumn='false'></table>
-  	 </div>
+      </table>
+      </form>
+     </div> 
+       
+     
+      <div data-options="region:'center',border:false">
+      <div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray',border:false">
+        <table class="hisui-datagrid" id="CanDiagnosisList" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table> 
+        </div>
+     
+      </div>
+     
+     
+     
   </div>
- <div class="hisui-layout" fit="true" data-options="region:'center', title:'',headerCls:'panel-header-gray',border:false">
-    <div class="hisui-panel" data-options="region:'north',title:'',headerCls:'panel-header-gray',collapsible:false" style="height:40px;">
-		<div id="sex"></div>
-		<div class="patientInfo">
-		<span class="patName" id="patName"></span>
-		<span class="infoLabel">性别:</span><span id="sexName"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">年龄:</span><span id="Age"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel" id="PatNoName">登记号:</span><span id="PatNo"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">体检日期:</span><span id="PEDate"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">VIP等级:</span><span id="VIPLevel"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">团体名称:</span><span id="GName"></span>
-		<span class="sline">/</span>
-		<span class="infoLabel">高危备注:</span><font color=red><span id="Remark"></span></font>
-		<!--span><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_right.png"  title="展开" border="0" onclick="$('#DiagnosisPanel').layout('expand','west');"></span-->
-		
-		</div>
-		<input type="hidden" id="PAADM_Hidden">
+  </div>
+  </div>
+ <div id="DiagPanel" class="hisui-panel" data-options="region:'center',border:false" style="padding:4px 8px 8px 0px;background-color: inherit;">
+
+    <div class="hisui-layout" fit="true" style="#(LineColor1)#">
+    <div class="hisui-panel" data-options="region:'north',border:false,headerCls:'panel-header-gray',collapsible:false" style="height:40px">
+     
+        <div id="sex" style="position:absolute;left:10px;"></div>
+        <div class="patientInfo">
+        <span class="patName" id="patName"></span>
+        <span class="infoLabel">#(..Get("性别"))#:</span><span id="sexName"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel">#(..Get("年龄"))#:</span><span id="Age"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel" id="PatNoName">#(..Get("登记号"))#:</span><span id="PatNo"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel">#(..Get("体检日期"))#:</span><span id="PEDate"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel">#(..Get("VIP等级"))#:</span><span id="VIPLevel"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel">#(..Get("团体名称"))#:</span><span id="GName"></span>
+        <span class="sline">/</span>
+        <span class="infoLabel">#(..Get("高危备注"))#:</span><font color=red><span id="Remark"></span></font>
+        <!--span><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/arrow_right.png"  title="展开" border="0" onclick="$('#DiagnosisPanel').layout('expand','west');"></span-->
+        
+        </div>
+        <input type="hidden" id="PAADM_Hidden">
     </div>
 
-  	<div id="DiagnosisTab" class="hisui-tabs" data-options="region:'center',border:false">
-  		
-  	</div>
+    <div id="DiagnosisTab" fit="true" class="hisui-tabs tabs-gray" data-options="region:'center',border:false" style="#(LineColor)#">
+    </div> 
   </div>
-
-
-	
+</div>
+</div>
+    
   <script type="text/javascript" src="../scripts/dhcpediagnosispatient.hisui.js"></script>
   <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
   <script type="text/javascript" src="../scripts/DHCWeb.OPCommon.js"></script>

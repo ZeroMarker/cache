@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液大类维护
+<!--
+	配液大类收费设置
 	csp: csp/dhcpha.pivas.orderlinkord.csp
 	js:  scripts/pharmacy/pivas/orderlinkord.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -11,8 +16,8 @@
     </title>
     <TRAK:HEAD></TRAK:HEAD>
     <HISUI />
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css">
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/pivas/css/ui.css">
+    <DHCPHAPIVASLIB css="none" />
+    <PHAPIVASV1 />
 </HEAD>
 <style>
     .panel-body.panel-body-noheader {
@@ -26,31 +31,56 @@
         border-bottom: 0;
         border-radius: 4px 4px 0px 0px;
     }
+
+    .pha-body {
+        background-color: #fff;
+    }
+
+    .layout {
+        background-color: #fff;
+    }
 </style>
 
-<body style="background:white;">
-    <div class="dhcpha-win-mask">
-        <img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-    </div>
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'center'" class="dhcpha-hisui-container">
+<body style="overflow:hidden;">
+    <div class="dhcpha-win-mask"><img></div>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true">
                 <div data-options="region:'west',width:300,title:'配液大类',headerCls:'panel-header-gray',iconCls:'icon-panel-orderlink',split:true,collapsible:false">
                     <table id="gridOrderLink"></table>
                 </div>
-                <div data-options="region:'center',border:false" style="border-radius: 4px;">
-                    <div id="tabsOrdLink" class="hisui-tabs tabs-gray" fit="true" data-options="tabPosition:'top'" style="border-radius: 4px;">
-                        <div id="tabsOrdLinkOrd" data-options="title:'收费设置'">
+                <div data-options="region:'center',border:false">
+                    <div id="tabsOrdLink" class="hisui-tabs tabs-gray" fit="true" data-options="tabPosition:'top'">
+                        <div id="tabsOrdLinkOrd" data-options="title:'收费设置',selected:true">
                             <div class="hisui-layout" fit="true" border="false">
                                 <div data-options="region:'center',border:false">
                                     <table id="gridOrdLinkOrd"></table>
                                 </div>
                             </div>
                         </div>
-                        <div data-options="title:'关联收费规则',selected:false">
-                            <div class="hisui-layout" fit="true" border="false">
-                                <div data-options="region:'center',border:false">
-                                    <table id="gridFeeRule"></table>
+                        <div id="tabsOrdLinkRule" data-options="title:'关联收费规则'">
+                            <div class="hisui-layout" fit="true" border="false" id="lyFeeRule">
+                                <div data-options="region:'west',split:false,width:100,border:false" style="padding:10px;padding-right:10px;">
+                                    <div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray',title:'已关联'">
+                                        <table id="gridFeeRule"></table>
+                                    </div>
+                                </div>
+                                <div data-options="region:'center',border:false" style="overflow: hidden;">
+                                    <div style="text-align: center;height: 100%;position: relative;top:40%;">
+                                        <div>
+                                            <a class="hisui-linkbutton" style="padding-right:10px" id="btnAddFeeRule">&lt;增加　</a>
+                                        </div>
+                                        <div style="margin-top: 20px;">
+                                            <a class="hisui-linkbutton red" style="padding-left:10px" id="btnDeleteFeeRule">删除&gt;</a>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <div data-options="region:'east',split:false,width:100,border:false" style="padding:10px;padding-left:10px;">
+                                    <div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,bodyCls:'panel-body-gray',title:'未关联'">
+                                        <table id="gridFeeRuleDict"></table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -60,16 +90,26 @@
         </div>
     </div>
 
+    <div id="gridOrdLinkBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label id="_HospListLabel" style="display:none;">医院</label>
+                <input id="_HospList">
+            </div>
+        </div>
+    </div>
     <div id="gridOrdLinkOrdBar">
-        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPolo">增加</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddPolo">新增</a>
         <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSavePolo">保存</a>
-        <a class="hisui-linkbutton" plain='true' iconCls="icon-remove" id="btnDelPolo">删除</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelPolo">删除</a>
     </div>
     <div id="gridFeeRuleBar">
-        <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveFeeRule">保存</a>
+        <!-- <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSaveFeeRule">保存</a> -->
     </div>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
+    <script type="text/javascript" src="../scripts/pharmacy/plugins/datagrid-view/datagrid-detailview.js"></script>
+
     <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
     <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/orderlinkord.js"></script>

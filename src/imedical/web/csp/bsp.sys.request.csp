@@ -1,0 +1,115 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<server>
+	
+	
+	</server>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="padding:10px;height:51px;">
+		<input type="text" class="textbox" id="search" />
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px;" >
+		<table id="list"></table>
+	</div>
+	
+	<div id="win" class="hisui-dialog" data-options="closed:true,modal:true" style="width:630px;height:630px;padding-top:10px;">
+		<input type="hidden" id="TId"/>
+		<table style="width:100%">
+		<tr>
+			<td class="r-label" style="padding:10px">代码</td>
+			<td ><input type="text" class="textbox hisui-validatebox" required=true id="TReqCode"/></td>
+			<td class="r-label" style="padding:10px">名称</td>
+			<td ><input type="text" class="textbox hisui-validatebox" required=true id="TReqDesc"/></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px"><a class="hisui-tooltip" href="javascript:void(0);" title="当选择了三方服务，服务器IP/域名、端口、是否HTTPS不可用即使维护也不生效">三方服务名</a></td>
+			<td ><input type="text" class="textbox" id="TTPSServerName"/></td>
+			<td class="r-label" style="padding:10px">三方服务参数</td>
+			<td ><input type="text" class="textbox" id="TTPSServerParam" disabled="disabled" /></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px">服务IP/域名</td>
+			<td ><input type="text" class="textbox hisui-validatebox" required=true  id="TServerIP"/></td>
+			<td class="r-label" style="padding:10px">端口</td>
+			<td ><input type="text" class="textbox hisui-validatebox" required=true  id="TServerPort"/></td>
+		</tr>
+		
+		<tr>
+			<td class="r-label" style="padding:10px">服务Url</td>
+			<td colspan="3"><input type="text" class="textbox hisui-validatebox" required=true id="TServerUrl" style="width:460px;"/></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px"><a class="hisui-tooltip" href="javascript:void(0);" title="在三方服务处维护的参数值和此字段，三方服务处的参数值优先级更高">固定参数</a></td>
+			<td colspan="3"><input type="text" class="textbox" id="TConstParams" style="width:460px;"/></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px">是否HTTPS</td>
+			<td ><input type="text" class="hisui-checkbox" id="TIsHttps" type="checkbox"/></td>
+			<td class="r-label" style="padding:10px">HTTPS配置名</td>
+			<td ><input type="text" class="textbox" id="THttpsCfgName"/></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px">验证服务器身份</td>
+			<td ><input type="text" class="hisui-checkbox" id="TSSLCheckServerIdentity" type="checkbox"/></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px">HTTP方法</td>
+			<td>
+				<select type="text" class="textbox hisui-combobox" id="TMethodType" data-options="required:true,editable:false,panelHeight:'auto'"/>
+					<option value="POST">POST</option>
+					<option value="GET">GET</option>
+				</select>
+			</td>
+			<td class="r-label" style="padding:10px">数据类型</td>
+			<td >
+				<select type="text" class="textbox hisui-combobox" id="TContentType" data-options="required:true,editable:false,panelHeight:'auto'"/>
+					<option value="form-urlencoded">form-urlencoded</option>
+					<option value="json">json</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px">备注</td>
+			<td colspan="3"><input type="text" class="textbox" id="TNote" style="width:460px;"/></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px">启用</td>
+			<td ><input type="text" class="hisui-checkbox" id="TActive" type="checkbox"/></td>
+			<td class="r-label" style="padding:10px">超时(秒)</td>
+			<td ><input type="text" class="textbox hisui-numberbox" data-options="min:1,max:999,required:true" id="TTimeout"/></td>
+		</tr>
+		
+		<tr>
+			<td class="r-label" style="padding:10px">测试参数</td>
+			<td colspan="3"><input type="text" class="textbox" id="TTestParams" style="width:460px;"/></td>
+		</tr>
+		<tr>
+			<td class="r-label" style="padding:10px">Json模板</td>
+			<td colspan="3"><textarea type="text" class="textbox" id="TJsonTmpl" style="width:460px;height:50px;line-height:25px;"></textarea></td>
+		</tr>
+		</table>
+	</div>
+	<div id="json-tmpl-win" class="hisui-dialog" data-options="closed:true,modal:true" style="width:630px;height:540px;padding:10px 10px 0 10px; ">
+		<div style="padding-bottom:10px;border-bottom:1px dashed #bbb;">
+			1.Json模板当接口为post+json格式时生效<br>
+			2.模板中的变量采用${key}形式定义，解析模板时根据key去取传进来的参数值<br>
+			3.如果不维护Json模板，请求体内容为所有参数组成一个Json
+		</div>
+		<input type="hidden" id="reqid"/>
+		<textarea type="text" class="textbox" id="oneJsonTmpl" style="margin-top:10px;width:600px;height:300px;line-height:25px;"></textarea>
+	</div>
+	<script src="../scripts/bsp.sys.commedit.js" type="text/javascript" ></script>
+	<script src="../scripts/bsp.sys.keyvaluebox.js" type="text/javascript" ></script>
+	<script src="../scripts/bsp.sys.request.js" type="text/javascript" ></script>
+</body>
+</html>

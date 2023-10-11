@@ -1,0 +1,605 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.nurexcuteset.csp 护士执行设置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.accordion-header {
+		border-radius:4px!important;
+	}
+	.accordion-header-selected {
+		border-radius:4px 4px 0 0 !important;
+	}
+	.accordion-body {
+		border-radius:0 0 4px 4px !important;
+	}
+	.layout-split-west {
+		border-right-width:10px;
+	}
+	form table td {
+		padding:0;
+	}
+	/*过滤条件*/
+	.filter-set .content {
+		width:100%;
+		height:calc(50% - 6px);
+		display:flex;	
+	}
+	.filter-set .content:nth-child(1) {
+		padding-bottom:10px;
+	}
+	.filter-set .content>div{		
+		flex:1;
+		padding-right:10px;	
+	}
+	.filter-set .content>div .datagrid-wrap{
+		border-color:#ccc;
+	}
+	.filter-set .content>div:nth-child(4),.filter-set .content>div:last-child{
+		padding-right:0;	
+	}
+	.filter-set .content .search{
+		padding:4px;
+		border-bottom:1px solid #ccc;
+	}
+	.filter-set .content .table{
+		width:100%;
+		height:calc(100% - 39px);
+	}
+	.deletecls {
+		margin-top:-7px;
+	}
+	/*其他设置*/
+	.config-title {
+		font-weight:bold;
+	}
+	/*医嘱执行双签维护*/
+	#doublesign-dialog a.icon{
+		display:inline-block;
+		width:30px;
+		height:30px;	
+	}
+	#doublesign-dialog .subType{
+		display:none;	
+	}
+	#doublesign-dialog .linkOrder,.linkOrder2{
+		display:none;	
+	}
+	.doublesignList{
+		height:calc(100% - 55px);
+	}
+	.dialog .panel-body{
+		border-color:#ddd;
+	}
+	.sheetSetPanel .accordion > .panel {
+		position:relative;
+	}
+</style>
+</head>
+
+<body>
+	<div id="Loading" style="position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#ffffff;text-align:center;padding-top:25%;filter:alpha(opacity=80);opacity:1;">
+		<img src="../scripts/bdp/Framework/icons/mkb/page_loading.gif"/>
+	</div>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:false,border:false" style="height:50px;">
+			<table class="search-table">
+	  	 	 	<tr>
+		            <td class="r-label">
+		              <label id="_HospListLabel" for="_HospList" style="color:red;">医院</label>
+		            </td>
+		            <td>
+		              <input id="_HospList"/>
+		            </td>
+		            <td class="r-label">
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'" onclick="setBtn()">按钮维护</a>
+					</td>
+					<td>
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'" onclick="setCol()">列定义维护</a>
+					</td>
+					<td class="r-label">
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-config'" onclick="doubleSignSet()">医嘱执行双签维护</a>
+					</td>
+		          </tr>
+	  	 	 </table>
+		</div>
+		<div data-options="region:'west',split:false,border:false" style="width:260px;padding:0 10px 10px 10px;">
+			<div class="hisui-panel" title="单据" data-options="iconCls:'icon-paper-info',headerCls:'panel-header-gray',fit:true">
+				<table id="dg" data-options="border:false"></table>
+			</div>
+		</div>
+		<div class="sheetSetPanel" data-options="region:'center',split:false,border:false" style="padding:0 10px 10px 0;">
+			<div class="hisui-accordion accordion-gray" style="" data-options="border:false,fit:true">   
+			    <div title="按钮、列" data-options="iconCls:'icon-two-recta-gear'" style="overflow:auto;padding:10px;">   
+			        <div class="hisui-layout" data-options="fit:true,border:false">
+			        	<div data-options="region:'west',split:true,border:false" style="width:370px;">
+			        		<table id="dg-btn" title="按钮（可拖动调整顺序）" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info'"></table>
+			        	</div>
+			        	<div data-options="region:'center',split:false,border:false" style="">
+			        		<table id="dg-col" title="列（可拖动调整顺序）" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info'"></table>
+			        	</div>
+			        </div>
+			    </div>   
+			    <div class="filter-set" title="过滤条件" data-options="iconCls:'icon-two-recta-gear'" style="padding:10px;">   
+			    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="HandleFilterSet()" style="position:absolute;top:8px;right:45px;">保存</a>
+					<div class="hisui-layout btnColConfig-layout" data-options="fit:true,border:false">
+			        	<div data-options="region:'west',split:true,border:false" style="width:240px;">
+			        		<div class="hisui-layout" data-options="fit:true,border:false">
+			        			<div data-options="region:'center',split:true,border:false">
+			        				<div class="hisui-panel" title="过滤医嘱项" data-options="iconCls:'icon-two-recta-gear',headerCls:'panel-header-gray',fit:true" style="">
+					        			<div class="hisui-layout" data-options="fit:true,border:false">
+					        				<div data-options="region:'north',split:false,border:false" style="height:39px;border-bottom:1px solid #ccc;">
+					        					<table class="search-table" style="border-spacing:0 4px;">
+										  	 	 	<tr>
+											            <td  class="r-label" style="padding:0 4px;">
+											              <input id="arcimList" class="textbox" style="width:158px;"/>
+											            </td>
+											            <td>
+															<a href="#" class="hisui-linkbutton" onclick="addFilterArcim()">新增</a>
+														</td>
+											          </tr>
+										  	 	 </table>
+					        				</div>
+					        				<div data-options="region:'center',split:false,border:false" style="">
+					        					<table id="arcim-filter"></table>
+					        				</div>
+					        			</div>
+					        		</div>	  
+			        			</div>
+			        			<div data-options="region:'south',split:false,border:false" style="height:183px;padding-top:10px;">
+			        				<div class="hisui-panel" title="其他过滤" data-options="iconCls:'icon-two-recta-gear',headerCls:'panel-header-gray',fit:true">
+					        			<table class="search-table">
+											<tr>
+												<td style="padding-left:10px;text-align:right;">
+													<input class="hisui-checkbox" type="checkbox" label="过滤预住院医嘱" id="sheetFilterPreOrd" data-options="boxPosition:'right'"/>
+												</td>
+											</tr>
+											<tr>
+												<td style="padding-left:10px;text-align:right;">
+													<input class="hisui-checkbox" type="checkbox" label='医生/护士医嘱条件适用子医嘱' id="sheetDocNurFilterSubOrd" data-options="boxPosition:'right'"/>
+												</td>
+											</tr>
+											<tr>
+												<td style="padding-left:10px;text-align:right;">
+													<input class="hisui-checkbox" type="checkbox" label='仅显示接收科室为本科室医嘱' id="sheetOnlyShowCurRecLocOrd" data-options="boxPosition:'right'"/>
+												</td>
+											</tr>
+											<tr>
+												<td style="padding-left:10px;text-align:right;">
+													<input class="hisui-checkbox" type="checkbox" label='显示麻醉师所有医嘱阶段医嘱' id="sheetShowAnaestheAllStageOrd" data-options="boxPosition:'right'"/>
+												</td>
+											</tr>
+										</table>
+					        		</div>
+			        			</div>
+			        		</div>
+			        	</div>
+			        	<div data-options="region:'center',split:false,border:false" style="">
+			        		<div class="content">
+								<div><table id="dg2"></table></div>
+								<div><table id="dg3"></table></div>
+								<div><table id="dg5"></table></div>
+								<div><table id="dg7"></table></div>
+							</div>
+							<div class="content">
+								<div class="hisui-panel" title="医嘱分类" data-options="headerCls:'panel-header-gray',fit:true">
+									<div class="search"><input href="#" class="hisui-searchbox" data-options="searcher:searchOrdCat" style="width:162px;"/></div>
+									<div class="table"><table id="dg4" data-options="border:false"></table></div>
+								</div>
+								<div class="hisui-panel" title="医嘱用法" data-options="headerCls:'panel-header-gray',fit:true">
+									<div class="search"><input href="#" class="hisui-searchbox" data-options="searcher:searchInstr" style="width:162px;"/></div>
+									<div class="table"><table id="dg6" data-options="border:false"></table></div>
+								</div>
+								<div class="hisui-panel" title="标本名称" data-options="headerCls:'panel-header-gray',fit:true">
+									<div class="search"><input href="#" class="hisui-searchbox" data-options="searcher:searchSpec" style="width:162px;"/></div>
+									<div class="table"><table id="dg8" data-options="border:false"></table></div>
+								</div>
+								<div class="hisui-panel" title="接收科室" data-options="headerCls:'panel-header-gray',fit:true">
+									<div class="search"><input href="#" class="hisui-searchbox" data-options="searcher:searchRecLoc" style="width:162px;"/></div>
+									<div class="table"><table id="dg9" data-options="border:false"></table></div>
+								</div>
+								<div style="display:none;"><table id="dg10"></table></div>
+							</div>
+			        	</div>
+			        </div>
+			    </div>   
+			    <div title="医嘱排序" data-options="iconCls:'icon-two-recta-gear'" style="padding:0 10px 10px 10px;">
+					<div class="hisui-layout" data-options="fit:true,border:false">
+						<div data-options="region:'north',split:true,border:false" style="height:46px;overflow:hidden;">
+							<table class="search-table">
+								<tr>
+									<td>
+										<label>启用医嘱排序</label>
+									</td>
+									<td class="r-label">
+										<div id="sheetOrdSortSwitch" class="hisui-switchbox" data-options="onText:'启用',offText:'关闭',
+											size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:sheetOrdSortSwitch">
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',split:false,border:false">
+			        		<table id="sheetOrdSortTab"></table>
+			        	</div>
+					</div>
+			    </div>
+			    <div title="其他设置" data-options="iconCls:'icon-two-recta-gear'" style="padding:10px;"> 
+			    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="HandleOtherSet()" style="position:absolute;top:8px;right:45px;">保存</a>  
+			        <div class="hisui-layout" data-options="fit:true,border:false">
+			        	<div data-options="region:'north',split:true,border:false" style="height:342px;">
+			        		<div style="float:left;">
+				        		<div class="area-div" style="height:108px;">
+					        		<div class="config-title" style="margin:0;">
+										医嘱查询时间默认配置
+									</div>
+									<table class="search-table">
+										<tr>
+											<td class="r-label">
+												<label>开始日期</label>
+											</td>
+											<td>
+												<input id="start" class="hisui-numberbox textbox" data-options="isKeyupChange:true,min:0" style="width:30px;"/>
+											</td>
+											<td class="r-label">
+												<label>开始时间</label>
+											</td>
+											<td>
+												<input id="startTime" class="hisui-timespinner" data-options="showSeconds:false" style="border-radius: 2px;width:80px;">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">
+												<label>结束日期</label>
+											</td>
+											<td>
+												<input id="end" class="hisui-numberbox textbox" data-options="isKeyupChange:true,min:0" style="width:30px;"/>
+											</td>
+											<td class="r-label">
+												<label>结束时间</label>
+											</td>
+											<td>
+												<input id="endTime" class="hisui-timespinner" data-options="showSeconds:false" style="border-radius: 2px;width:80px;">
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div class="area-div" style="height:60px;">
+					        		<div class="config-title" style="margin:0;">
+										执行记录信息提示
+									</div>
+									<table class="search-table">
+										<tr>
+											<td class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="执行次数" id="cb7">
+											</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" label="发药状态" id="cb8">
+											</td>
+											<td class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="绑定医嘱明细" id="cb12">
+											</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" label="打印标记" id="cb9">
+											</td>
+											<td class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="CA签名" id="cb10">
+											</td>
+											<td>
+												<input class="hisui-checkbox" type="checkbox" label="静配" id="cb11">
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div class="area-div" style="height:90px;">
+					        		<div class="config-title" style="margin:0;">
+										默认展示
+										<span class="note" style="color:red;">*需处理不需设置</span>
+										<span class="note1" style="color:red;">*变更医嘱不需设置</span>
+									</div>
+									<table class="search-table">
+										<tr>
+											<td class="r-label">
+												<label>护士执行默认展示模式</label>
+											</td>
+											<td>
+												<input class="hisui-radio" type="radio" label="医嘱模式" name="flodMode" id="OrdMode" checked data-options="onCheckChange:OrdModeCheckChange,requiredSel:true">
+											</td>
+											<td class="r-label">
+												<input class="hisui-radio" type="radio" label="执行记录模式" name="flodMode" id="OrdExecMode" data-options="requiredSel:true">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">
+												<label>医嘱模式下执行记录详情默认展开</label>
+											</td>
+											<td>
+												<div id="OrdExecFold" class="hisui-switchbox" data-options="onText:'开启',offText:'关闭',size:'mini',animated:true,onClass:'primary',offClass:'gray',checked:false"></div>
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div class="area-div" style="height:60px;">
+					        		<div class="config-title" style="margin:0;">
+										执行弹框配置
+										<span class="note" style="color:red;">*需处理不需设置</span>
+										<span class="note1" style="color:red;">*变更医嘱不需设置</span>
+									</div>
+									<table class="search-table">
+										<tr>
+											<td class="r-label">
+												<label>电脑执行原因</label>
+											</td>
+											<td>
+												<div id="PCExecFlag" class="hisui-switchbox" data-options="onText:'开启',offText:'关闭',size:'mini',animated:true,onClass:'primary',offClass:'gray'"></div>
+											</td>
+										</tr>
+									</table>
+								</div>
+								<div class="area-div" style="height:19px;">
+					        		<div class="config-title" style="margin:0;">
+										医嘱附加信息
+									</div>
+								</div>
+							</div>
+							<div style="float:left;margin-left:10px;">
+								<div class="area-div" style="height:60px;">
+					        		<div class="config-title" style="margin:0;">
+										查询/筛选条件设置
+									</div>
+									<table class="search-table">
+										<tr>
+											<td class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="日期快捷切换" data-options="boxPosition:'right'" id="cb13">
+											</td>
+										</tr>
+										<tr>
+											<td  class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="今日新开、今日新停筛选" data-options="boxPosition:'right'" id="cb17">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="未确认、已确认筛选" data-options="boxPosition:'right'" id="cb18">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="已打印筛选" data-options="boxPosition:'right',onCheckChange:PrintCheckChange" id="cb19">
+											</td>
+											<td>
+												<input id="cb22" class="textbox" />
+											</td>
+										</tr>
+										<tr>
+											
+											<td class="r-label">
+												<label>多个打印标记</label>
+											</td>
+											<td>
+												<input class="hisui-radio" type="radio" label="且" name="printedFlagFilterRule" data-options="boxPosition:'right',required:true,requiredSel:true" id="cb25">
+												<input class="hisui-radio" type="radio" label="或" name="printedFlagFilterRule" data-options="boxPosition:'right',required:true,requiredSel:true" id="cb26">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">
+												<input class="hisui-checkbox" type="checkbox" label="未打印筛选" data-options="boxPosition:'right',onCheckChange:notPrintCheckChange" id="cb20">
+											</td>
+											<td>
+												<input id="cb23" class="textbox" />
+											</td>
+										</tr>
+										<tr>
+											
+											<td class="r-label">
+												<label>多个打印标记</label>
+											</td>
+											<td>
+												<input class="hisui-radio" type="radio" label="且" name="noPrintFlagFilterRule" data-options="boxPosition:'right',required:true,requiredSel:true" id="cb27">
+												<input class="hisui-radio" type="radio" label="或" name="noPrintFlagFilterRule" data-options="boxPosition:'right',required:true,requiredSel:true" id="cb28">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">
+												<input id="cb24" class="hisui-checkbox" type="checkbox" label="未执行(未处理筛选)" data-options="boxPosition:'right'">
+											</td>
+										</tr>
+										<tr>
+											<td class="r-label">
+												<input id="cb21" class="hisui-checkbox" type="checkbox" label="加急医嘱筛选" data-options="boxPosition:'right'">
+											</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+			        	</div>
+			        	<div data-options="region:'center',split:false,border:false">
+			        		<table id="ordAddition"></table>
+			        	</div>
+			        </div>
+			    </div>   
+			</div>
+		</div>
+	</div>
+	<!--新增/修改单据弹窗-->
+	<div id="sheet-dialog" class="hisui-dialog dialog" title="编辑" style="width:300px;height:247px;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				text:'保存',
+				handler:function(){ handleSheet('SAVE',''); }
+			},
+			{
+				text:'取消',
+				handler:function(){$HUI.dialog('#sheet-dialog').close();}
+			}
+		]">
+		<div class="hisui-panel" title="" style="overflow:hidden;" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+			<form id="sheet-form" method="post" >
+				<table class="search-table">
+					<tr>
+						<td class="r-label"><label class="clsRequired">代码</label></td>
+						<td>
+							<input name="Rowid" id="rowid" type="hidden" value="">
+							<input name="Code" class="hisui-validatebox textbox" id="code" data-options="required:true" style="width:178px" /> <!--onblur="onChangeSheet()"-->
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label"><label class="clsRequired">名称</label></td>
+						<td>
+							<input name="Name" class="hisui-validatebox textbox" id="name" data-options="required:true" style="width:178px" /> 
+						</td>
+					</tr>
+					<tr style="display:none;">
+						<td class="r-label"><label>开单科室</label></td>
+						<td>
+							<select id="ordDepType" style="width:177px"></select> 
+						</td>
+					</tr>
+					<tr style="display:none;">
+						<td class="r-label">输液单</td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="infusionFlag" name="InfusionFlag">
+						</td>
+					</tr>
+					<!--tr>
+						<td class="r-label"><label>执行记录单据</label></td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="execRecordFlag" name="ExecRecordFlag">
+						</td>
+					</tr-->
+					<tr>
+						<td class="r-label"><label class="clsRequired">单据类型</label></td>
+						<td>
+							<select id="sheetType" class="hisui-combobox" style="width:183px;" data-options="editable:false,onSelect:onChangeSheetType">
+								<option value="DefaultSee">需关注</option>
+								<option value="BGYZD">变更医嘱</option>
+								<option value="Other">其它</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label"><label class="clsRequired">适用业务</label></td>
+						<td>
+							<select id="ApplyServiceList" class="hisui-combobox" style="width:183px;" data-options="rowStyle:'checkbox',editable:false,multiple:true">
+								<option value="NurExecute">护士执行</option>
+								<option value="PDA">PDA执行记录</option>
+								<option value="MobileDevices">移动端</option>
+							</select>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</div>
+	<!--按钮维护-->
+	<div id="dialog-setbtn" class="hisui-dialog dialog" title="按钮维护" style="width:1120px;height:600px;padding:10px" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+		<table id="dg-setbtn"></table>
+	</div>
+	<!--列定义维护-->
+	<div id="dialog-setcol" class="hisui-dialog dialog" title="列定义维护" style="width:720px;height:500px;padding:10px" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+		<table id="dg-setcol"></table>
+	</div>
+	<!--电脑执行原因维护-->
+	<div id="pcexecset-dialog" class="hisui-dialog dialog" title="电脑执行原因维护" style="width:500px;height:400px;" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+		<table id="dg-pcexecset"></table>
+	</div>
+	<!--医嘱执行双签维护-->
+	<div id="doublesign-dialog" class="hisui-dialog dialog" title="医嘱执行双签维护" style="width:1000px;height:500px;padding:0 10px 10px;" data-options="iconCls:'icon-w-config',shadow:false,modal:true,closed:true">
+		<form id="doublesign" method="post">
+			<table cellpadding="0" cellspacing="0" style="padding:10px 0;">
+				<tr>
+					<td><label class="clsRequired">描述</label></td>
+					<td class="r-label">
+						<input name="Desc" class="hisui-validatebox textbox" id="desc" style="width:120px;" />
+					</td>
+					<td><label class="clsRequired">类型</label></td>
+					<td class="r-label">
+						<select name="Type" id="signType" style="width:100px;"></select> 
+					</td>
+					<td><label class="clsRequired">值</label></td>
+					<td class="r-label linkValue">
+						<select name="Value" id="linkValue" style="width:200px;"></select>  
+					</td>
+					<td class="linkOrder">
+						<select name="Value2" id="linkOrder" style="width:200px;"></select>  
+					</td>
+					<td class="r-label">
+						<a href="javascript:void(0)" class="icon icon-plus" style="font-weight:bolder;color:#40A2DE;text-align:center;font-size:21px;" onclick="addSubType()">+</a>
+					</td>						
+					<td><a href="#" class="hisui-linkbutton" onclick="HandleDoubleSignInfo('SAVE',1)">新增</a></td>
+					<td class="r-label"><a href="#" class="hisui-linkbutton" onclick="HandleDoubleSignInfo('SAVE','')">修改</a></td>
+					<td><a href="#" class="hisui-linkbutton" onclick="HandleDoubleSignInfo('DELETE','')">删除</a></td>
+					<td class="r-label"><a href="#" class="hisui-linkbutton" onclick="ClearForm()">清空</a></td>
+				</tr>
+				<tr class="subType">
+					<td class="r-label" colspan="3" style="padding-top:10px;">类型</td>
+					<td class="r-label" style="padding-top:10px;">
+						<select name="SubType" id="signType2" style="width:100px;"></select> 
+					</td>
+					<td class="r-label">值</td>
+					<td class="r-label linkValue2" style="padding-top:10px;">
+						<select name="SubValue" id="linkValue2" style="width:200px;"></select> 
+					</td>
+					<td class="r-label linkOrder2" style="padding-top:10px;">
+						<select name="SubValue2" id="linkOrder2" style="width:200px;"></select> 
+					</td>
+					<td colspan="5" style="padding-top:10px;">
+						<a href="javascript:void(0)" class="icon icon-minus" onclick="deleteSubType()"></a>
+					</td>
+				</tr>
+			</table>
+		</form>
+		<div class="doublesignList"><table id="dg-doublesign"></table></div>			
+	</div>
+	<!--新增按钮-->
+	<div id="dialog-addbtn" class="hisui-dialog dialog" title="新增按钮" style="width:880px;height:530px;padding:10px 10px 0 10px;" data-options="iconCls:'icon-w-add',shadow:false,modal:true,closed:true,buttons:[
+		{
+			text:'确定',
+			handler:function(){sureAddBtnCol('B','btn')}
+		},
+		{
+			text:'取消',
+			handler:function(){$HUI.dialog('#dialog-addbtn').close();}
+		}
+	]">
+		<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+			<table id="dg-addbtn"></table>
+		</div>
+	</div>	
+	<!--新增列-->
+	<div id="dialog-addcol" class="hisui-dialog dialog" title="新增列" style="width:620px;height:530px;padding:10px 10px 0 10px;" data-options="iconCls:'icon-w-add',shadow:false,modal:true,closed:true,buttons:[
+		{
+			text:'确定',
+			handler:function(){ sureAddBtnCol('C','col'); }
+		},
+		{
+			text:'取消',
+			handler:function(){$HUI.dialog('#dialog-addcol').close();}
+		}
+	]">
+		<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+			<table id="dg-addcol"></table>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/common/tanslatecomponent.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.nurexcuteset.js"></script>
+</body>
+</html>

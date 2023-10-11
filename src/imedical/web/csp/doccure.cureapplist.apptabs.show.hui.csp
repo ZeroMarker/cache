@@ -1,0 +1,96 @@
+<div id="tabpanel" class="hisui-panel" style="padding:10px" data-options="headerCls:'panel-header-gray',fit:true,border:false">
+    <div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true" >	
+		<input name="DCARowId" id="DCARowId" type="hidden"  value="#($g(%request.Data("DCARowId",1)))#">
+		<input name="DCARowIdStr" id="DCARowIdStr" type="hidden"  value="#($g(%request.Data("DCARowIdStr",1)))#">
+		<input name="OperateType" id="OperateType" type="hidden"  value="#("ZLYY")#">
+		<input name="AppDate" id="AppDate" type="hidden"  value="#($g(%request.Data("AppDate",1)))#">
+    	<div id="Apply_Execlist" title="直接执行">
+    		<div class="hisui-layout" data-options="fit:true,border:false,collapsible:true">
+				<div data-options="region:'north',split:false,border:false" style="padding:10px;height:50px;">
+					<label for="Exec_StartDate" class="fr-label">#(..Get("执行开始日期"))#</label>
+					<input id="Exec_StartDate" class="hisui-datebox" type="text" name="cureAppStartDate"/>
+					<label for="Exec_EndDate" class="r-label">#(..Get("结束日期"))#</label>
+					<input id="Exec_EndDate" class="hisui-datebox" type="text" name="cureAppEndDate"/>
+					<label class="r-label"></label>
+					<input class='hisui-checkbox' type="checkbox" id="OnlyNoExcute" checked label="#(..Get("仅显示未执行"))#"/>
+				</div>
+				<div data-options="region:'center',border:true" class="panel-header-gray cure-p-bd-t-tdash">
+				    <!--治疗执行记录列表-->
+				    <table id="tabCureExecList" toolbar="#CureExecList-bar"></table>  
+				    <div id="win_ReportTrace"></div>
+			    </div>
+			    <div id="CureExecList-bar">
+				    <a href="#" class="hisui-linkbutton" iconCls="icon-exe-order" plain="true" onclick="appList_execObj.UpdateExec('E')">执行</a>
+				    <a href="#" class="hisui-linkbutton" iconCls="icon-cancel-order" plain="true" onclick="appList_execObj.UpdateExec('C')">撤销执行</a>
+				    <a href="#" class="hisui-linkbutton" iconCls="icon-stop-order" plain="true" onclick="appList_execObj.UpdateExec('S')">停止执行</a>
+				    <!--<a href="#" class="hisui-linkbutton" iconCls="icon-mutpaper-tri" plain="true" onclick="appList_execObj.GenAddCureRecord()">批量执行</a>-->
+				    <a href="#" class="hisui-linkbutton" iconCls="icon-eye" plain="true" onclick="appList_execObj.DetailExecView()">浏览执行</a>
+			    </div>			
+			</div>
+    	</div>
+    	<csp:if condition='DocCureUseBase="0"'>
+    		<csp:if condition='CureAppVersion="V1"'>
+	        	<div id="Apply_Reslist" title="预约">
+					<div class="hisui-layout" data-options="fit:true,border:false,clickExpand:true">   
+						<div data-options="region:'west',title:'预约资源',headerCls:'panel-header-gray panel-header-cure-high',iconCls:'icon-apply-check',split:true,showCollapsedTitle:true,tools:'#appres-panel-tools'"
+						style="border-right:1px solid #DCDCDC;padding:0px;width:980px;">
+							<csp:if condition='ScheuleGridListOrTab="0"'>
+								<div id="ScheduleTab" class="hisui-tabs tabs-gray" data-options="tabPosition:'top',fit:true,border:false"></div>  
+							<csp:else>
+								<div id="p-ScheduleList" class="hisui-panel" data-options="fit:true,border:false">
+									<table id="ScheduleList"></table>
+								</div>
+							</csp:if>
+						</div>   
+						<div data-options="region:'center',split:true,closable:false,border:false,collapsible:true"
+						style="border-left:1px solid #DCDCDC">
+					    	<div class="hisui-panel" title="预约列表" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-table',fit:true,border:false">
+						    	<input name="XMLObject" id="XMLObject" type="hidden"  value="#(XMLObject)#">							    
+							    <table id="tabCureApplyApp" toolbar="#CureApplyApp-bar"></table> 	
+							</div>
+							<div id="CureApplyApp-bar">
+							    <a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnDelete" plain="true" onclick="appList_appListObj.GenCancelCureAppoint()">#(..Get("取消预约"))#</a>
+							    <a href="#" class="hisui-linkbutton" iconCls="icon-print" id="BtnPrint" plain="true" onclick="appList_appListObj.BtnPrintApplyClick();">#(..Get("打印预约治疗凭证"))#</a>
+							    <!--<a href="#" class="hisui-linkbutton" iconCls="icon-cancel" id="BtnPrint" plain="true" onclick="appList_appListObj.GenCancelCureAppoint();">批量取消预约记录</a>-->
+							    <input class='hisui-checkbox' type="checkbox" id="OnlyApp" checked label="#(..Get("仅显示预约"))#">
+						    </div>	
+					    </div>  
+					    <div id="appres-panel-tools">
+							<span id="more-container" class="menu-container">
+								<span class="span-b-text">
+									<label for="Apply_StartDate" class="fr-label">#(..Get("预约开始日期"))#</label>
+									<input id="Apply_StartDate" class="hisui-datebox" type="text" name="cureAppStartDate" style="width:130px;"/>
+								</span>
+								<span class="span-b-btn">
+									<csp:if condition='ScheuleGridListOrTab="1"'>
+										<span style="color:red">#(..Get("双击单元格预约"))#</span>
+									<csp:else>
+										<a href="javascript:void(0)" id="btnApp" style="width:80px;height:30px" class="hisui-linkbutton">#(..Get("预约"))#</a>
+									</csp:if>
+								</span>
+							</span>
+						</div>
+					</div>  
+	        	</div>
+	        </csp:if>
+        </csp:if>
+        <div id="Apply_Asslist" title="治疗评估" style="padding:0px">			
+    		<div class="hisui-panel" data-options="fit:true,border:false,collapsible:true">
+		    	<input name="XMLObject" id="XMLObject" type="hidden"  value="#(XMLObject)#">							    
+			    <table class="triagepanel" id="tabCureAssessmentList"></table> 	
+			</div>
+    	</div>	
+ 	</div>
+ </div>
+ <div id="appreslist-dialog" class="hisui-dialog"  title="预约资源" data-options="iconCls:'icon-w-list',shadow:false,modal:true,closed:true">
+	<div class="hisui-layout" data-options="fit:true,border:false,collapsible:true">
+		<div data-options="region:'north',split:true,border:false" style="padding:10px 10px 0px 10px;height:40px;">
+			<label id="LeftAppCount" style="font-size:16px;font-weight:bold;color:red"></label>
+		</div>
+		<div data-options="region:'center',split:true,border:false" > 
+			<div id="gridpanel" class="hisui-panel" data-options="iconCls:'icon-edit',fit:true,closable:false, collapsible:false,minimizable:false,maximizable:false"> 
+		    	<table id="tabCureAppResScheduleList"></table>    
+		    </div>	
+	    </div>			
+	</div>
+</div>

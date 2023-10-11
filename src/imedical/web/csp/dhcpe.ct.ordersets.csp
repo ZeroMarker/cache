@@ -1,0 +1,402 @@
+<!--
+ * FileName: dhcpe.ct.ordersets.csp
+ * Anchor: zhongricheng
+ * Date: 2021-11-06
+ * Description: HISUI 体检医嘱套维护
+-->
+
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	quit 1
+</csp:method>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script language="JavaScript"> 
+		self.moveTo(0,0) 
+		self.resizeTo(screen.availWidth,screen.availHeight)
+	</script>
+	<SCRIPT language="Cache" RUNAT="SERVER">
+ 		s curDate=+$h
+	</SCRIPT>
+	<style>
+	.paddingtd{
+		padding: 0 0 0 10px;
+	}
+	.paddingtd1{
+		padding: 0 0 0 6px;
+	}
+	</style>
+</head>
+<body>
+	<div class="hisui-panel" border="false" fit="true" style="padding:10px;">
+		<div class="hisui-layout" id="OrderSets" border="false" data-options="collapsible:false,fit:true">
+			<!-- 体检医嘱套维护 -->
+			<div class="hisui-layout" data-options="region:'west'" id="OrderSetsSearch" style="width: 750px; border:1px solid #ccc; border-radius:4px;">
+				<div data-options="title:'体检医嘱套维护',region:'north',headerCls:'panel-header-gray',iconCls:'icon-add-note',collapsible:false" border="false" style="height: 110px;border-bottom:1px dashed #C0C0C0;">
+					<div>
+						<table style="border-spacing: 10px 4px;">
+							<tr>
+								<td align="right"><label for="Category">大类</label></td>
+			         			<td><input class="hisui-validatebox textbox" id="Category" name="Category" type="text" disabled="disabled" style="width:100px;"></td>
+
+								<td align="right" class="paddingtd"><label for="csubCatID">子类</label></td>
+			         			<td><input class="hisui-validatebox textbox" id="csubCatID" name="csubCatID" type="text" disabled="disabled" style="width:90px;"></td>
+								
+								<!--td align="right" class="paddingtd"><label for="Code">代码</label></td>
+			         				<td><input class="hisui-validatebox textbox" id="Code" name="Code" type="text" disabled="disabled" style="width:80px;"></td-->
+								
+								<td align="right" class="paddingtd"><label for="Conditiones">条件</label></td>
+								<td><input class="hisui-combobox" id="Conditiones" name="Conditiones" type="text" style="width:97px;"></td>
+
+								<td class="paddingtd"><a class="hisui-linkbutton hover-dark" id="BSearch" data-options="iconCls:'icon-w-find'" href="#">查询</a></td>
+							</tr>
+							<tr>
+								<td align="right"><label for="Desc">描述</label></td>
+								<td><input class="hisui-validatebox textbox" id="Desc" name="Desc" type="text" style="width:100px;"></td>
+								
+								<td align="right" class="paddingtd"><label for="Alias">别名</label></td>
+								<td><input class="hisui-validatebox textbox" id="Alias" name="Alias" type="text" style="width:90px;"></td>
+								
+								<td align="right"><label for="LocList">科室</label></td>
+								<td><input id="LocList" class="hisui-combobox textbox" style="width:97px;"></td>
+							
+								<td class="paddingtd"><a class="hisui-linkbutton hover-dark" id="BClear" data-options="iconCls:'icon-w-clean'" href="#">清屏</a></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" id="OrderSetsDiv" border="false">
+					<table id="OrderSetsList" border="false"></table>
+				</div>
+			</div>	
+			
+			<div class="hisui-layout" data-options="region:'center'" border="false" style="">
+				<div data-options="region:'center'" border="false" style="padding:0 2px 10px 10px;">
+					<!-- 体检医嘱套明细 --> 
+					<div class="hisui-layout" fit="true" border="false" style="border:1px solid #ccc; border-radius:4px;">
+						<div data-options="title:'体检医嘱套明细',region:'center',headerCls:'panel-header-gray',iconCls:'icon-add-note',collapsible:false" border="false" id="OrderSetsDetailDiv">
+							<table id="OrderSetsDetailList"></table>
+						</div>
+					</div> 
+				</div>
+				<div data-options="region:'south'" border="false" style="height:430px;padding:0 0px 0px 10px;">
+					<div class="hisui-tabs tabs-gray" id="QryItem" fit="true">
+						<!-- 检查项目 start -->  
+						<div title="检查项目" id="QryRisItem" border="false" style="overflow:hidden;">
+							<div class="hisui-layout" fit="true" border="false">
+								<div data-options="region:'north'" border="false" style="height:51px;border-bottom:1px solid #CCC;">
+									<table style="border-spacing: 10px;">
+										<tr>
+											<td align="right"><label for="Station">站点</label></td>
+											<td style="padding: 0 0 0 5px;"><input class="hisui-combobox" id="Station" name="Station" type="text" style=""></td>
+											
+											<td align="right" class="paddingtd"><label for="RisItem">项目</label></td>
+											<td style="padding: 0 0 0 5px;"><input class="hisui-validatebox textbox" id="RisItem" name="RisItem" type="text" style="" oninput="BSearchItem_click('R')" onpropertychange="OnPropChanged(event,'R')"></td>
+											
+											<td class="paddingtd" style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSearchRisItem" data-options="iconCls:'icon-w-find'" href="#">查询</a></td>
+										</tr>
+									</table>
+								</div>
+								<div id="QryRisItemDiv" border="false" data-options="region:'center'"> 
+				 					<table id="QryRisItemList"></table>
+				 				</div>
+							</div>
+						</div>
+						<!-- 检查项目 end --> 
+								
+						<!-- 检验项目 start -->  
+						<div title="检验项目" id="QryLisItem" border="false" style="overflow:hidden;">
+							<div class="hisui-layout" fit="true" border="false">
+								<div data-options="region:'north'" border="false" style="height:51px;border-bottom:1px solid #CCC;">
+									<table style="border-spacing: 10px;">
+										<tr>
+											<td align="right"><label for="LisItem">检验项目</label></td>
+											<td style="padding: 0 0 0 5px;"><input class="hisui-validatebox textbox" id="LisItem" name="LisItem" type="text" oninput="BSearchItem_click('L')" onpropertychange="OnPropChanged(event,'L')"></td>
+											<td class="paddingtd" style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSearchLisItem" data-options="iconCls:'icon-w-find'" href="#">查询</a></td>
+										</tr>
+									</table>
+								</div>
+								<div id="QryLisItemDiv" border="false" data-options="region:'center'"> 
+									<table id="QryLisItemList"></table>
+								</div>
+							</div>
+						</div>
+						<!-- 检验项目 end --> 
+						
+						<!-- 药品项目 start -->  
+						<div title="药品项目" id="QryMedicalItem" border="false" style="overflow:hidden;">
+							<div class="hisui-layout" fit="true" border="false">
+								<div data-options="region:'north'" border="false" style="height:51px;border-bottom:1px solid #CCC;">
+									<table style="border-spacing: 10px;">
+										<tr>
+											<td align="right"><label for="MedicalItem">药品项目</label></td>
+											<td style="padding: 0 0 0 5px;"><input class="hisui-validatebox textbox" id="MedicalItem" name="MedicalItem" type="text" oninput="BSearchItem_click('M')" onpropertychange="OnPropChanged(event,'M')"></td>
+											<td class="paddingtd" style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSearchMedicalItem" data-options="iconCls:'icon-w-find'" href="#">查询</a></td>
+										</tr>
+									</table>
+								</div>
+								<div id="QryMedicalItemDiv" border="false" data-options="region:'center'"> 
+									<table id="QryMedicalItemList"></table>
+								</div>
+							</div>
+						</div>
+						<!-- 药品项目 end -->  
+						
+						<!-- 其他项目 start -->  
+						<div title="其他项目" id="QryOtherItem" border="false" style="overflow:hidden;">
+							<div class="hisui-layout" fit="true" border="false">
+								<div data-options="region:'north'" border="false" style="height:51px;border-bottom:1px solid #CCC;">
+									<table style="border-spacing: 10px;">
+										<tr>
+											<td align="right"><label for="OtherItem">其他项目</label></td>
+											<td style="padding: 0 0 0 5px;"><input class="hisui-validatebox textbox" id="OtherItem" name="OtherItem" type="text" oninput="BSearchItem_click('O')" onpropertychange="OnPropChanged(event,'O')"></td>
+											<td class="paddingtd" style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSearchOtherItem" data-options="iconCls:'icon-w-find'" href="#">查询</a></td>
+										</tr>
+									</table>
+								</div>
+								<div id="QryOtherItemDiv" border="false" data-options="region:'center'"> 
+									<table id="QryOtherItemList"></table>
+								</div>
+							</div>
+						</div> 
+						<!-- 其他项目 end -->  
+						
+						<!-- 套餐项目 start -->  
+						<div title="套餐项目" id="QryOrdSets" border="false" style="overflow:hidden;">
+							<div class="hisui-layout" fit="true" border="false">
+								<div data-options="region:'north'" border="false" style="height:51px;border-bottom:1px solid #CCC;">
+									<table style="border-spacing: 10px;">
+										<tr>
+											<td align="right"><label for="OtherItem">套餐名称</label></td>
+											<td style="padding: 0 0 0 5px;"><input class="hisui-validatebox textbox" id="OrdSets" name="OrdSets" type="text" oninput="BSearchOS_click();" onpropertychange="OnPropChanged(event,'OS');"></td>
+											<td class="paddingtd" style="text-align:center;"><a class="hisui-linkbutton hover-dark" id="BSearchOrdSets" data-options="iconCls:'icon-w-find'" href="#">查询</a></td>
+										</tr>
+									</table>
+								</div>
+								<div id="QryOrdSetsDiv" border="false" data-options="region:'center'"> 
+									<table id="QryOrdSetsList"></table>
+								</div>
+							</div>
+						</div>
+						<!-- 套餐项目 end -->   
+						
+					</div>		
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--增改弹窗-->
+	<div id="OrderSetsWin" style="width:660px;height:307px;padding:0 10px 10px 10px;display:none;">   
+		<table id="AddOSTable" style="border-spacing: 10px;margin:0 auto;">
+			<tr>
+				<td align="right"><label for="CategoryWin">大类</label></td>
+		       	<td><input class="hisui-validatebox textbox" id="CategoryWin" name="CategoryWin" type="text" disabled="disabled" style="width:80px;"></td>
+		       	
+				<td align="right" class="paddingtd"><label for="csubCatIDWin">子类</label></td>
+		        <td><input class="hisui-validatebox textbox" id="csubCatIDWin" name="csubCatIDWin" type="text" disabled="disabled" style="width:140px;"></td>
+		       	
+				<td align="right" class="paddingtd"><label for="CodeWin">代码</label></td>
+		        <td><input class="hisui-validatebox textbox" id="CodeWin" name="CodeWin" type="text" disabled="disabled" style="width:140px;"></td>
+		    </tr>
+			<tr>
+				<td align="right"><label for="ConditionesWin">条件</label></td>
+				<td><input class="hisui-combobox textbox" id="ConditionesWin" name="ConditionesWin" type="text" style="width:87px;"></td>
+				
+				<td align="right" class="paddingtd"><label for="DescWin">描述</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="required:true" id="DescWin" name="DescWin" type="text" style="width:140px;"></td>			
+				
+				<td align="right" class="paddingtd"><label for="AliasWin">别名</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="required:true" id="AliasWin" name="AliasWin" type="text" style="width:140px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="SortWin">显示顺序</label></td>
+				<td><input class="hisui-numberbox textbox" data-options="" id="SortWin" name="SortWin" type="text" style="width:87px; color:#0000ff; text-align:right; padding-right: 10px;"></td>
+				
+				<td align="right" class="paddingtd"><label for="EffDateBeginWin">开始日期</label></td>
+				<td><input class="hisui-datebox" id="EffDateBeginWin" name="EffDateBeginWin" type="text" style="width:147px;"></td>
+				
+				<td align="right" class="paddingtd"><label for="EffDateEndWin">截止日期</label></td>
+				<td><input class="hisui-datebox" id="EffDateEndWin" name="EffDateEndWin" type="text" style="width:147px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="OrderSetSexWin">对应性别</label></td>
+				<td><input class="hisui-combobox" id="OrderSetSexWin" name="OrderSetSexWin" type="text" style="width:87px;"></td>
+				
+				<td align="right" class="paddingtd"><label for="OrderSetVIPWin">套餐等级</label></td>
+				<td colspan="3"><input class="hisui-combobox" id="OrderSetVIPWin" name="OrderSetVIPWin" type="text" style="width:380px;"></td>
+			</tr>
+			<tr>	
+				<td align="right"><label for="OrderSetsPGBIWin">可用团体</label></td>
+				<td colspan="5"><input class='hisui-combobox' id="OrderSetsPGBIWin" name="OrderSetsPGBIWin" type="text" style="width:553px;"></td>
+			</tr>
+			<!--tr>	
+				<td align="right"><label for="IsBreakWin">是否拆分</label></td>
+				<td><input class='hisui-checkbox' id="IsBreakWin" name="IsBreakWin" type="checkbox"></td>
+				
+				<!--td align="right" class="paddingtd"><label for="IsDeitWin">是否有早餐</label></td>
+				<td><input class='hisui-checkbox' id="IsDeitWin" name="IsDeitWin" type="checkbox"></td- ->
+			</tr-->
+		</table>
+		<div>
+			<input class="hisui-validatebox textbox" id="curDateWin" name="curDateWin" type="hidden" value=#(curDate)#>
+			<input class="hisui-validatebox textbox" id="CategoryIDWin" name="subCatIDWin" type="hidden">
+			<input class="hisui-validatebox textbox" id="subCatIDWin" name="subCatIDWin" type="hidden">
+		</div>
+	</div>
+		
+	<!-- 价格弹窗 -->
+	<div id="OrderSetsPriceWin" style="width:500px;height:250px;padding:10px;display:none;">   
+		<table id="OSPriceTable" style="border-spacing: 10px;margin:0 auto;">
+			<tr>
+				<td align="right"><label for="OSDateWin">当前日期</label></td>
+		       	<td><input class="hisui-validatebox textbox" id="OSDateWin" name="OSDateWin" type="text" disabled="disabled" style="width:140px;" value="#($zd(+$h,3))#"></td>	
+		       	
+				<td align="right" class="paddingtd"><label for="OSDescWin">套餐描述</label></td>
+		       	<td><input class="hisui-validatebox textbox" id="OSDescWin" name="OSDescWin" type="text" disabled="disabled" style="width:140px;"></td>	
+			</tr>
+			<tr>
+				<td align="right"><label for="OSAmountWin">套餐原价</label></td>
+		        <td><input class="hisui-numberbox textbox" data-options="min:0,precision:2,disabled:true" id="OSAmountWin" name="OSAmountWin" type="text" style="width:147px; color:#ff0000; text-align:right; padding-right: 10px;"></td>
+				
+				<td align="right" class="paddingtd"><label for="OSPriceWin">套餐定价</label></td>
+		        <td><input class="hisui-numberbox textbox" data-options="min:0,precision:2,disabled:true" id="OSPriceWin" name="OSPriceWin" type="text" style="width:147px; color:#ff0000; text-align:right; padding-right: 10px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="OSAmtWin">销售定价</label></td>
+		        <td><input class="hisui-numberbox textbox" data-options="min:0,precision:2" id="OSAmtWin" name="OSAmtWin" type="text" style="width:147px; color:#0000ff; text-align:right; padding-right: 10px;" onchange="Price_change('Amt')"></td>
+				
+				<td align="right" class="paddingtd"><label for="OSDiscountWin">销售折扣</label></td>
+		       	<td>
+		       		<input class="hisui-numberbox textbox" data-options="min:0,precision:2" id="OSDiscountWin" name="OSDiscountWin" type="text" style="width:128px; color:#0000ff; text-align:right; padding-right: 10px;" onchange="Price_change('Dis')">
+		       		%
+		       	</td>
+			</tr>
+		</table>
+	</div>
+	
+	
+	
+	<!-- 增加药品项目弹窗 start -->
+	<div id="AddMedItemWin" style="width:456px;height:295px;display:none;">
+		<table style="border-spacing: 10px; margin:0 auto;">
+			<tr>
+				<td align="right">项目名称</td>
+				<td colspan=3><input class="hisui-validatebox textbox" disabled="disabled" id="ItemDescWin" name="ItemDescWin" type="text" style="width:343px;"></td>
+			</tr>
+			<tr>
+				<td align="right">剂量</td>
+				<td><input class="hisui-numberbox textbox" id="ItemDoseQtyWin" name="ItemDoseQtyWin" data-options="min:0,precision:2,fix:false" type="text" style="width:137px;"></td>
+		       	
+				<td align="right"><label for="ItemUOMWin">剂量单位</label></td>
+				<td><input class="hisui-combobox" id="ItemUOMWin" name="ItemUOMWin" type="text" style="width:137px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="ItemFrequenceWin">频次</label></td>
+				<td><input class="hisui-combobox" id="ItemFrequenceWin" name="ItemFrequenceWin" type="text" style="width:137px;"></td>
+		       	
+				<td align="right"><label for="ItemInstructionWin">用法</label></td>
+				<td><input class="hisui-combobox" id="ItemInstructionWin" name="ItemInstructionWin" type="text" style="width:137px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="ItemDurationWin">疗程</label></td>
+				<td><input class="hisui-combobox" id="ItemDurationWin" name="ItemDurationWin" type="text" style="width:137px;"></td>
+		       	
+				<td align="right">关联</td>
+				<td><input class="hisui-validatebox textbox" id="ItemLinkDoctorWin" name="ItemLinkDoctorWin" type="text" style="width:130px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="ItemRemarkWin">备注</label></td>
+				<td colspan=3><input class="hisui-combobox" id="ItemRemarkWin" name="ItemRemarkWin" type="text" style="width:350px;"></td>
+		       	
+				<!--
+				<td align="right"><label for="ItemPriorRemarksWin">附加说明</label></td>
+				<td><input class="hisui-combobox" id="ItemPriorRemarksWin" name="ItemPriorRemarksWin" type="text" style="width:137px;"></td>
+				-->
+			</tr>
+		</table>
+	</div>
+	<!-- 增加药品项目弹窗 end -->
+	
+	<!-- 复制套餐项目弹窗 start -->
+	<div id="CopyOSItemWin" border="false" style="display:none;padding:10px;"> 
+		<div class="hisui-layout" data-options="" border="false" style="width:770px;height:630px;border:1px solid #CCC;">
+			<div data-options="region:'north'" border="false" style="height:51px;border-bottom:1px solid #CCC;">
+				<table style="border-spacing: 10px;">
+					<tr>
+						<td style="text-align:center;">
+							<a class="hisui-linkbutton hover-dark" id="BCopyOSItem" data-options="iconCls:'icon-w-copy'" href="#">复制项目</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div id="CopyOSItemDiv" border="false" data-options="region:'center'"> 
+				<table id="CopyOSItemList"></table>
+			</div>
+		</div>
+	</div>
+	<!-- 复制套餐项目弹窗 end -->
+
+	<!-- 网上套餐维护  add by wanngguoying  -->
+	<div id="NetSetsCfgWin" class="hisui-window" title="网上套餐维护" style="width:430px;height:271px;"	
+		data-options="iconCls:'icon-w-config',resizable:false,modal:true,isTopZindex:true,closed:true,maximizable:false,minimizable:false">
+		<input type="hidden" id="H_NetOrdSetsId" >
+		<input type="hidden" id="H_HisOrdSetsId">
+		<table style="border-spacing: 10px; margin: 0 auto;">
+			<tr>
+				<td align="right"><label for="Win_NetDesc">描述</label></td>
+		       	<td colspan=3><input class="hisui-validatebox textbox" id="Win_NetDesc" name="Win_NetDesc" type="text"  style="width:341px;"></td>
+			
+		  
+																					
+																														 
+			</tr>
+   
+			<tr style="display:none">
+				<td align="right"><label for="Win_NetLevel">套餐等级</label></td>
+		        <td colspan=3><input class="hisui-combobox textbox" data-options="required:true" id="Win_NetLevel" name="Win_NetLevel" type="text" style="width:348px;"></td>
+			</tr>
+			<tr>  	
+				<td align="right"><label for="Win_NetSort">序号</label></td>
+		        <td><input class="hisui-numberbox textbox" id="Win_NetSort" name="Win_NetSort" type="text"  style="width:129px;"></td>
+				
+				<td align="right"><label for="Win_NetSex">性别</label></td>
+				<td><input class="hisui-combobox textbox" id="Win_NetSex" name="Win_NetSex" type="text" style="width:129px;"></td>
+			</tr>
+			<tr>
+				<td align="right"><label for="Win_NetRemark">简介</label></td>
+				<td colspan=3><textarea class="hisui-validatebox textbox" data-options="" id="Win_NetRemark" name="Win_NetRemark" type="text" style="width:341px;height:60px;"></textarea></td>			
+			</tr>	
+			<tr>	
+				<td align="right"><label for="Win_NetActive">激活</label></td>
+				<td><input class='hisui-checkbox' id="Win_NetActive" name="Win_NetActive" type="checkbox"></td>
+				<td align="right"><label for="Win_NetGroup">仅团体可用</label></td>
+				<td><input class='hisui-checkbox' id="Win_NetGroup" name="Win_NetGroup" type="checkbox"></td>
+		 
+			</tr>
+			<tr>
+				<td colspan=4 align="center">
+					<a class="hisui-linkbutton" onclick="update_netsets()" data-options="iconCls:'icon-w-ok'" href="#" >确定</a>
+					<a class="hisui-linkbutton" style="margin-left:10px;" onclick="cancel_netsets()" data-options="iconCls:'icon-w-cancel'" href="#" >取消</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!-- //网上套餐维护 end  add by wanngguoying  -->
+
+	<div>
+		<input class="hisui-validatebox textbox" id="subCatID" name="subCatID" type="hidden">
+		<input class="hisui-validatebox textbox" id="SelFavRowid" name="SelFavRowid" type="hidden">
+		<input class="hisui-validatebox textbox" id="SelARCOSRowid" name="SelARCOSRowid" type="hidden">
+	</div>
+	
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.ordersets.js"></script>
+	<script type="text/javascript" src="../scripts/dhcpe/ct/dhcpe.ct.common.js"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+</body>
+</html>

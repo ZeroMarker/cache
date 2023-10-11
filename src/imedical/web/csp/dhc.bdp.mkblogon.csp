@@ -1,0 +1,504 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<title>医学知识库构建平台</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<script type="text/javascript" src="/csp/broker/cspbroker.js"></script>
+<script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script>
+<SCRIPT SRC="../scripts/websys.js" charset="GB18030"></SCRIPT>
+<EXTHEALTH:EXT321></EXTHEALTH:EXT321>
+<BOOTSTRAP303/>
+<link type="text/css" rel="stylesheet" href="../scripts_lib/font-awesome/font-awesome.min.css" />
+<link type="text/css" rel="stylesheet" href="../skin/default/css/logon.css" />
+<script type="text/javascript" src="../scripts_lib/bootstrap-3.0.3/dist/js/jquery.backgroundcover.js"></script>
+<script language=cache runat=server>
+	;dhc.bdp.logon.csp
+	Set LogonPageTitle="医学知识库构建平台"
+	if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Configuration||LogonPageTitle"){
+		Set LogonPageTitle = ##class(websys.Configuration).GetFieldValue("LogonPageTitle")
+		if LogonPageTitle="" Set LogonPageTitle="医学知识库构建平台"
+	}
+</script>
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ //登录后才同步时间,相差超一分钟
+ Set ClientDate = $g(%request.Data("ClientDate",1))
+ Set ClientTime = $g(%request.Data("ClientTime",1))
+ Set ServerDate = +$h
+ Set ServerTime = $p($h,",",2)
+ Set ModifyTimeFlag = 0
+ ;&& ($g(%session.Data("LOGON.USERCODE"))'="")
+ If (ClientDate'="")&&(ClientTime'="") {
+	Set ClientDate = $zdh(ClientDate,3)
+	Set ClientTime = $zth(ClientTime)
+	If (ClientDate'=ServerDate) || (60<(ClientTime-ServerTime)) ||(-60>(ClientTime-ServerTime)) {
+		Set ModifyTimeFlag=1
+	}
+ }
+ ;if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ ;s preSessionId=##Class(websys.SessionLogonmkb).LogonBefore()
+ ;s preSessionId=0
+ ;if (preSessionId=0) {
+	 //判断是否CAS单点登录
+	 s caslogin = $g(%request.Data("caslogin",1))
+	 if ('caslogin){
+		 s returnval=##Class(websys.SessionLogonmkb).Logon()  ///update by chenying
+	 }else{
+		 s returnval = ##Class(websys.SessionLogonmkb).CASLogon()
+	 }
+	 ; ab 18.04.07 63052 - override timeout to 60 secs to free license
+	 ;w "<br>"_$g(lic)_"<br>",!
+	 s %session.AppTimeout=60*45
+	 s sc=%session.Login("_system","SYS",1)
+	 s:$System.Status.IsError(sc) ^TempLogon($h)=$system.Status.GetErrorText(sc)
+	 s ^Temp("ClientName")=$J_" "_$ZUTIL(67,12,$j)_" "_$zu(67,15,$j)
+	 q returnval
+ ;}else{
+	 q 1
+ ;}
+</csp:method>
+ <csp:method name=OnPostHTTP arguments="">
+	k STATUS,username,password,department,ValidUser,welcometitle,copyright,traktooltip1
+	;w !,%session.NewSession_"  新的",!
+</csp:method>
+<SCRIPT language='javascript'>
+function isRunProcess(exeName){
+	try
+	{
+		var t;
+		var locator = new ActiveXObject ("WbemScripting.SWbemLocator");
+		var service = locator.ConnectServer(".");
+		var properties = service.ExecQuery("SELECT * FROM Win32_Process");
+		var np = new Enumerator (properties);
+		var num = 0;
+		for (;!np.atEnd();np.moveNext())
+		{
+		    t=t + np.item().Name + "\n"; //ProcessId
+		   if (np.item().Name.indexOf(exeName)>-1) num++;
+		}
+		return num;
+	}
+	catch(e)
+	{
+		//alert(e.message)
+		return 1;
+		
+	}
+}
+function singleSession(){
+	var preSessionId = "#($g(preSessionId))#";
+	var username = "#($g(username))#"; 
+	if(0!=preSessionId){
+		//四川一个用户只能在线一份会话
+		if(confirm(username+" 已经在 #($g(LOGADDRIP))# 登录了系统!会话ID:#($g(LOGADDRSessionId))#,你确定替换登录?")){
+			#server(websys.SessionLogonmkb.ForceLogoutByUser(username))#
+		}else{
+			window.location.href="dhc.bdp.mkbclosesession.csp?relogon=1";
+		}
+	}
+	if(false && isRunProcess("iexplore.exe")>2){
+		alert("请关闭所有IE再登录系统");
+		window.close(); 
+		return ;
+		//协和一台电脑只能登录一个用户
+		//if(confirm("#($g(username))# 已经登录了系统,你确定重新登录?")==true){
+		//	#server(websys.SessionLogon.ForceLogoutPreSession())#
+		//	window.location.href="dhc.bdp.mkblogon.csp";
+		//}else{
+		//	window.close();
+		//}
+	}
+}
+singleSession();
+function ChangePassword(obj) {
+	var doc="websys.default.csp?WEBSYS.TCOMPONENT=SSUser.EditPassword&ID="+session['LOGON.USERID']; 
+	if ("undefined"!==typeof websys_getMWToken){
+		doc += "&MWToken="+websys_getMWToken()
+	}
+	window.open(doc,'new','scrollbars=no,toolbar=no,width=410,height=310,top=200,left=500');
+	
+}
+function ChangeDefultDept(obj)
+{
+	var doc="websys.default.csp?WEBSYS.TCOMPONENT=SSUser.UpdateDefaultDept&ID="+session['LOGON.USERID']+"&UserName="+document.getElementById("USERNAME").value; 
+	if ("undefined"!==typeof websys_getMWToken){
+		doc += "&MWToken="+websys_getMWToken()
+	}
+	window.open(doc,'new','scrollbars=no,toolbar=no,width=350,height=300,top=200,left=500');
+}
+function resetSize()  {
+  var posX=screen.availWidth;
+  var posY=screen.availHeight;
+  websys_move(0,0,posX,posY);
+}
+function unlockonunload() {
+	websys_onunload();
+	if (window.event) {
+		if ((!islogon) && (window.event.clientY < 0)) {
+		   	window.location.href="dhc.bdp.mkbclosesession.csp";
+		}
+	}
+	return true;
+}
+window.onunload=unlockonunload;
+var islogon = 0;
+</SCRIPT>
+<style>
+html, body {
+    overflow: hidden;
+}
+/*chenying*/
+.img_banner1_2
+{
+	background:url("../scripts/bdp/Framework/icons/mkb/01-banner-2.jpg");
+}
+
+.img_banner2
+{
+	background:url("../scripts/bdp/Framework/icons/mkb/02-banner-2.jpg");
+}
+.login_carousel{
+	width:100%;
+	height:60%;
+}
+.loginboxP_cq {
+    top: 45%;
+}
+.loginboxP_cq .tcq {
+    border-bottom: 1px dashed #ccc;
+}
+</style>
+</head>
+<body>
+<CSP:IF condition="$g(lic)=1">
+	<SCRIPT language="Cache" RUNAT="SERVER">
+	 set LICENSE="iMedical License to ",IsDirty=1,TWKFL="",TWKFLI=""
+	</SCRIPT>
+	  <div class="index">
+	    <!--LOGO-->
+	    <div class="login_header">
+	      <div class="hospital">
+	      <img style="margin-top:3px;margin-right:20px;width:50px;height:50px;" src="../scripts/bdp/Framework/icons/mkb/mkp_logo.png"/>
+	      #(LogonPageTitle)#</div>
+	    </div>
+	    <!--LOGO-->
+
+	    <!--轮播图-->
+	    <div class="login_carousel">
+	      <div id="carousel-example-generic" class="carousel_200 carousel slide login_carousel_picture" data-ride="carousel">
+	        <!-- Indicators -->
+	        <ol class="carousel-indicators login_indicators">
+	          <server>
+	          if ##class(%Dictionary.CompiledMethod).%ExistsId("websys.Holiday||GetImg")
+	          {
+	         	Set hldImg = ##class(websys.Holiday).GetImg()
+	          }
+	          else
+	          {
+		      	Set hldImg =""
+	          }
+	          Set defaultActive = "active"
+	          if (hldImg'="") Set defaultActive = ""
+	          </server>
+	          <li data-target="#carousel-example-generic" data-slide-to=0 class="#(defaultActive)#"></li>
+	          <li data-target="#carousel-example-generic" data-slide-to=1></li>
+	          <csp:if condition=hldImg'="">
+	          <li data-target="#carousel-example-generic" data-slide-to=2 class="active"></li>
+	          </csp:if>
+	        </ol>     
+	        <!-- Wrapper for slides  update by chenying-->
+	        <div class="carousel-inner" role="listbox">
+	          <div class="item #(defaultActive)#"> <div class="in_img img_banner1_2"></div> </div>
+	          <div class="item"> <div class="in_img img_banner2"></div> </div>
+		      <csp:if condition=hldImg'="">
+	          <div class="item active">
+	          	<div class="in_img" style="background-image:url('../skin/default/images/logon/#(hldImg)#')"></div>
+	          </div>
+	          </csp:if>
+	        </div>  
+	             
+	        <!-- Controls -->
+	        <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+	          <i class="fa fa-chevron-left" aria-hidden="true"></i>
+	          <span class="sr-only">Previous</span>
+	        </a>
+	        <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+	          <i class="fa fa-chevron-right" aria-hidden="true"></i>
+	          <span class="sr-only">Next</span>
+	        </a>
+	      </div>
+	    </div>
+	    <!--轮播图-->
+	  <form ACTION="websys.csp" method="post" name="fSSUserLogon" id="fSSUserLogon">
+	    <!--登录框 SCQ-->
+	    <INPUT TYPE="HIDDEN" NAME="TFORM" VALUE="SSUserLogon">
+		<INPUT TYPE="HIDDEN" NAME="TPAGID" VALUE='#($i(^websys.Counters("tpagid")))#'>
+		<INPUT TYPE="HIDDEN" NAME="TEVENT" VALUE="">
+		<INPUT TYPE="HIDDEN" NAME="TOVERRIDE" VALUE="">
+		<INPUT TYPE="HIDDEN" NAME="TDIRTY" VALUE='#($g(IsDirty))#'>
+		<INPUT TYPE="HIDDEN" NAME="TWKFL" VALUE='#($g(TWKFL))#'>
+		<INPUT TYPE="HIDDEN" NAME="TWKFLI" VALUE='#($g(TWKFLI))#'>
+		<INPUT TYPE="HIDDEN" NAME="TWKFLL" VALUE='#(%request.Get("TWKFLL"))#'>
+		<INPUT TYPE="HIDDEN" NAME="TWKFLJ" VALUE='#(%request.Get("TWKFLJ"))#'>
+		<INPUT TYPE="HIDDEN" NAME="TREPORT" VALUE='#(%request.Get("TREPORT"))#'>
+		<INPUT TYPE="HIDDEN" NAME="TRELOADID" VALUE='#($g(TRELOADNEW))#'>
+		<INPUT TYPE="HIDDEN" NAME="TFRAME" VALUE="">
+		<INPUT TYPE="HIDDEN" NAME="TCONTEXT" VALUE='#($g(%request.Data("TCONTEXT",1)))#'>
+		<INPUT type="hidden" name="CacheNoRedirect" value="1">
+		<INPUT type="hidden" name="CacheUserName" value="dhsyslogin">
+		<INPUT type="hidden" name="CachePassword" value="1q2w3e4r%T6y7u8i9o0p">
+		<INPUT TYPE="HIDDEN" id="IPAddress" NAME="IPAddress" VALUE=""/>
+		<INPUT TYPE="HIDDEN" id="DNSHostName" NAME="DNSHostName" VALUE=""/>
+		<INPUT TYPE="HIDDEN" id="MACAddr" NAME="MACAddr" VALUE=""/>
+		<INPUT TYPE="HIDDEN" id="ClientDate" NAME="ClientDate" VALUE=""/>
+		<INPUT TYPE="HIDDEN" id="ClientTime" NAME="ClientTime" VALUE=""/>
+		<input id="RELOGON" name="RELOGON" type="hidden" value='#($g(%request.Data("RELOGON",1)))#'>
+		<input id="LocationListFlag" name="LocationListFlag" type="hidden" value='#(##Class(web.SSUserOtherLogonLoc).CheckUserOtherLocation(%request.Get("USERNAME")))#'>
+		<input id="SSUSERGROUPDESC" name="SSUSERGROUPDESC" type="hidden" value='#($g(%request.Data("SSUSERGROUPDESC",1)))#'>
+		<input id="changeinlogonhosp" name="changeinlogonhosp" type="hidden" value='#($g(%request.Data("changeinlogonhosp",1)))#'>
+		<input id="Hospital" name="Hospital" type="hidden" value="#($g(%request.Data("Hospital",1)))#">
+		<input id="ADErrMessage" name="ADErrMessage" type="hidden" value="#($g(%request.Data("ADErrMessage",1)))#">
+		<input name="isADEmployee" id="isADEmployee" type="hidden" value="1"/>
+		<csp:if condition='ModifyTimeFlag=1'><object ID='CLSSETTIME' CLASSID='CLSID:6F4558E4-72DA-4CCD-963C-9EED2ECD14A9' CODEBASE='../addins/client/SetTime.CAB#version=1,0,0,0' height="0" width="0"></object></csp:if>
+		<!--CA单点登录用-->
+		<input name="caslogin" id="caslogin" type="hidden" value='#($g(%request.Data("caslogin",1)))#'>
+		<input name="ticket" id="ticket" type="hidden" value='#($g(%request.Data("ticket",1)))#'>
+		<input name="directpage" id="directpage" type="hidden" value='#($g(%request.Data("directpage",1)))#'>
+		<input name="DEPARTMENTAlias" id="DEPARTMENTAlias" type="hidden" value='#($g(%request.Data("DEPARTMENTAlias",1)))#'>
+	    <div class="loginboxP_cq loginbox_cq">
+	      <div class="tcq">欢迎登录</div>
+	      <!-- fa-minus-circle-->
+	      <csp:if condition=$g(STATUS)'="">
+	     	 <div class="alert alert-danger" role="alert"><i class="fa" style="font-family:'microsoft yahei'">#(STATUS)#</i></div>
+	      </csp:if>
+	      <div class="form-group">
+	        <div class="input-group">
+	          <div class="input-group-addon"><i class="fa fa-user"></i></div>
+	          <input name="USERNAME" id="USERNAME" tabIndex="1" value='#(%request.Get("USERNAME"))#' type="text" autocomplete="off" class="form-control" style="ime-mode:disabled;" placeholder="请输入用户名...">
+	        </div>
+	      </div>
+	      <div class="form-group">
+	        <div class="input-group">
+	          <div class="input-group-addon"><i class="fa fa-lock"></i></div>
+	          <input name="PASSWORD" id="PASSWORD" tabIndex="2" value='#(%request.Get("PASSWORD"))#' type="password" autocomplete="off" class="form-control" style="ime-mode:disabled;" placeholder="请输入密码...">
+	        </div>
+	      </div>
+	      <div class="form-group">
+	        <div class="input-group">
+	          <div class="input-group-addon"><i class="fa fa-group"></i></div>
+	          <input class="form-control" name="DEPARTMENT" tabIndex="3" autocomplete="off" id="DEPARTMENT" title="请选择登录科室" value='#(%request.Get("DEPARTMENT"))#' placeholder="请选择科室...">
+	        </div>
+	      </div>
+	      <button href="#" id="Logon" name="Logon" tabIndex="4" href="javascript:void(0);" type="button" class="btn btn-primary btn-lg btn-block">登录</button>
+	      <server>
+	      if ($g(ValidUser)){
+	      	w "<a id=""CHANGEPASSWORD"" name=""CHANGEPASSWORD"" href=""#"" class=""edit_pw"">修改密码</a>"
+	      	w "<a id=""ChangDefaultDept"" name=""ChangDefaultDept"" href=""#"" class=""edit_loc"">修改默认科室</a>"
+	      }
+	      </server>
+	    </div>
+    <!--登录框 ECQ-->
+    </form>
+    
+    <!--详细信息-->
+    <div class="login_row">
+      <div class="row login_row_4">
+        <ul>
+          <li>
+            <i class="fa fa-gears login_icon_1"></i><span></span><strong>整合</strong>
+            <div class="login_br">统一用户管理
+              <div>单点登陆</div>
+              <div>工作流引擎</div>
+            </div>
+          </li>
+          <li>
+            <i class="fa fa-laptop login_icon_2"></i><span></span><strong>一站式平台</strong>
+            <div class="login_br">聚集应用
+              <div>梳理业务流程</div>
+              <div>信息驱动工作</div>
+            </div>
+          </li>
+          <li>
+            <i class="fa fa-suitcase login_icon_3"></i><span></span><strong>B2E个人热点</strong>
+            <div class="login_br">我的资质档案
+              <div>工资条、绩效指标</div>
+              <div>企业即时信息</div>
+            </div>
+          </li>
+          <li>
+            <i class="fa fa-user-md login_icon_4"></i><span></span><strong>医生工作站</strong>
+            <div class="login_br">医生秘书
+              <div>临床指南+临床路径</div>
+              <div>电子病历</div>
+            </div>
+          </li>
+        </ul>
+        <div class="login_QRcode"><img src="../skin/default/images/logon/QRcode.png" />
+          <div class="login_br">扫一扫关注</div>
+        </div>
+      </div>
+    </div>
+    <!--详细信息-->
+    <!--页脚-->
+   <!-- <div class="login_footer">
+      <div class="log_f">
+        <div class="login_logo"><img src="../skin/default/images/logon/logo1.png" /><i class="fa fa-registered"></i></div>
+        <div class="login_logo"><img src="../skin/default/images/logon/logo2.png" /></div>
+        <i class="fa fa-copyright"></i>
+        <span>2014-2016</span>
+        <span>东华软件股份公司版权所有</span><span>|</span>
+        <span>联系我们</span><span>|</span>
+        <span>加入我们</span><span>|</span>
+        <span>页面改进意见</span>
+        <a href="#" class="red"><i class="fa fa-thumbs-o-up login_up_color"></i>点赞（19）</a>
+        <a href="#" class="green"><i class="fa fa-thumbs-o-down login_down_color"></i>不喜欢（1）</a>
+      </div>
+    </div>-->
+      <!--页脚-->
+  </div>
+  <script type="text/javascript">
+  	var EnableCALogon="#($G(EnableCALogon))#";
+	var forcePasswordChange='#($g(forcePasswordChange))#';
+	var readonly = '#($g(readonly))#';
+	var locIsDisabled = '#($g(locIsDisabled))#';
+	var ValidUser = '#($g(ValidUser))#';
+	var logonround = '#($g(logonround))#';
+	var ModifyTimeFlag = #(ModifyTimeFlag)#;
+	
+</script>
+<script type='text/javascript' src='../scripts/framework/dhcc.icare.lu.js'></script>
+<script type='text/javascript' src='../scripts/websys.encrypt.js'></script>
+<SCRIPT Language="JavaScript">
+function disableDep(){
+	$("#DEPARTMENT").removeClass("logininput-dep").addClass("disabledField").attr("readOnly",true).attr("disabled",false); 
+	//.attr("disabled",true); -- disabled后,submit不会提交DEPARTMENT
+}
+function enableDep(){
+	$("#DEPARTMENT").removeClass("disabledField").addClass("logininput-dep").attr("readOnly",false).attr("disabled",false);
+	$("#ChangDefaultDept").show();
+	$("#CHANGEPASSWORD").show();
+}
+
+var frm=document.forms['fSSUserLogon'];
+frm.action="dhc.bdp.mkblogon.csp";    ///update by chenying
+var objUser=document.getElementById('USERNAME'); //frm.elements['USERNAME'];
+var objPswd=document.getElementById('PASSWORD'); //frm.elements['PASSWORD'];
+var objDept=document.getElementById('DEPARTMENT'); //frm.elements['DEPARTMENT'];
+var objRound=document.getElementById('ROUND'); //frm.elements['ROUND'];
+var objListFlag=document.getElementById('LocationListFlag'); //frm.elements['LocationListFlag'];
+var btnLogon=document.getElementById('Logon');
+var objDefaultDept=document.getElementById("ChangDefaultDept");
+var objCHANGEPASSWORD=document.getElementById("CHANGEPASSWORD");
+if (readonly=='READONLY') {
+	if (objUser) {
+		$(objUser).addClass('disabledField').attr("readOnly",true);
+	}
+	if (objPswd) {
+		$(objPswd).addClass("disabledField").attr("readOnly",true);
+	}
+}
+var listflag=0;
+if(objListFlag) listflag=objListFlag.value;
+if(objListFlag && listflag!=1){
+	$("#DEPARTMENT").removeClass("logininput-dep");
+} else {
+	enableDep();
+}
+if (parseInt(locIsDisabled)) {
+	disableDep();
+} else {
+	$("#DEPARTMENT").removeClass("disabledField");
+}
+if (!parseInt(ValidUser)) {
+	$("#DEPARTMENT").val("");
+	disableDep();
+	$("#ChangDefaultDept").hide();
+	$("#CHANGEPASSWORD").hide();
+}
+if (!logonround) {
+	if (objRound) {
+		objRound.readOnly=true;
+		objRound.className='disabledField';
+		var roundobj=document.getElementById('ld1473iROUND');
+		if (roundobj) { roundobj.style.visibility='hidden' }
+	}
+}
+//if ((forcePasswordChange)&&(!ValidUser)) ChangePassword();
+</SCRIPT>
+  </CSP:IF>
+<script type="text/javascript">
+	$(function(){
+		$(window).resize(function(){
+			/* 轮播图片高度 DY */
+			$(".carousel_200 .carousel-inner .item div").css("height",$("#carousel-example-generic").height()+'px');
+			/* LOGO字体竖直居中 CQ */
+			$(".hospital").css("padding-top",(($(".login_header").height())/2-23)+'px');
+		});
+		$(window).resize();
+		/* IE8下图片自适应兼容 CQ */
+		$(".in_img").backgroundcover();
+		(function(){
+			if (ModifyTimeFlag) {
+				var serverDate = "#($zd(+$h,3))#";
+				var serverTime = "#($zt($p($h,",",2)))#";
+				var dateArr = serverDate.split("-");
+				var timeArr = serverTime.split(":");
+				var SetSysTime = "";
+				try{
+					SetSysTime = new ActiveXObject("PrjSetTime.CLSSETTIME")
+					if(SetSysTime){
+						SetSysTime.VYear = dateArr[0];
+						SetSysTime.VMonth = dateArr[1]; 
+						SetSysTime.VDay = dateArr[2];
+						SetSysTime.VHour = timeArr[0]-8;
+						SetSysTime.VMinute = timeArr[1];
+						SetSysTime.VSecond = timeArr[2];
+						SetSysTime.SetTime();
+					}
+				}catch(e){}
+			}
+		})();
+	});
+</script>
+<SCRIPT SRC="../scripts/bdp/MKB/Framework/dhc.bdp.mkblogon.js"></SCRIPT>
+
+<!--**获取本地IP地址,只适用于IE  2013.12.02-->
+<SCRIPT language=JScript event=OnObjectReady(objObject,objAsyncContext) for=foo>
+   if(objObject.IPEnabled != null && objObject.IPEnabled != "undefined" && objObject.IPEnabled == true)
+   {
+    if(objObject.MACAddress != null && objObject.MACAddress != "undefined")
+    MACAddr = objObject.MACAddress;
+    if(objObject.IPEnabled && objObject.IPAddress(0) != null && objObject.IPAddress(0) != "undefined")
+    IPAddr = objObject.IPAddress(0);
+    if(objObject.DNSHostName != null && objObject.DNSHostName != "undefined")
+    sDNSName = objObject.DNSHostName;
+    }
+</SCRIPT>
+<SCRIPT language=JScript event="OnCompleted(hResult,pErrorObject, pAsyncContext)" for=foo>
+ 	document.getElementById("IPAddress").value=unescape(IPAddr);
+ 	document.getElementById("DNSHostName").value=unescape(sDNSName);
+ 	document.getElementById("MACAddr").value=unescape(MACAddr);
+</SCRIPT>
+<OBJECT id=locator classid=CLSID:76A64158-CB41-11D1-8B02-00600806D9B6 VIEWASTEXT  style="display:none;"></OBJECT>
+<OBJECT id=foo classid=CLSID:75718C9A-F029-11d1-A1AC-00C04FB6C223  style="display:none;"></OBJECT>
+<SCRIPT language=JScript>
+	try
+	{
+		var service = locator.ConnectServer();
+		var MACAddr ;
+		var IPAddr ;
+		var DomainAddr;
+		var sDNSName;
+		service.Security_.ImpersonationLevel=3;
+		service.InstancesOfAsync(foo, 'Win32_NetworkAdapterConfiguration');
+	}
+	catch(e)
+	{
+		//alert(e.message)
+		
+	}
+</SCRIPT>
+</body>
+</html>

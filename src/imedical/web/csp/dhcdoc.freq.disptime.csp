@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!--dhcdoc.freq.disptime.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{
+	background: #fff;
+}
+.datagrid-body{
+	/*height:240px !important;*/
+}
+.panel-header{
+	border-bottom: 0;
+}
+</style>
+<Server>
+	s OrderFreqRowid=$G(%request.Data("OrderFreqRowid",1))
+	s OrderFreqDispTimeStr=$G(%request.Data("OrderFreqDispTimeStr",1))
+	s LinkedMasterOrderFreFactor=$G(%request.Data("LinkedMasterOrderFreFactor",1))
+	s OrderFreqDispTimeStr=$TR(OrderFreqDispTimeStr,"A",$C(1))
+	s OrderFreqDispTimeStr=$TR(OrderFreqDispTimeStr,"B",$C(2))
+	s OrderFreqDispTimeStr=$TR(OrderFreqDispTimeStr,"C",":")
+	s OrderFreqFactor=$P($g(^PHCFR(OrderFreqRowid)),"^",2)
+	Set langid=##class(DHCDoc.Util.RegisteredObject).%LanguageID()
+	s OrderFreqDesc=$P($G(^PHCFR(OrderFreqRowid)),"^",4)
+	s OrderFreqDesc=##class(User.PHCFreq).GetTranByDesc("PHCFRDesc2",OrderFreqDesc,langid)
+	//分发时间串，用于自动选中分发时间
+	s OrderFreqFreeTimeStr=""
+	if (OrderFreqDispTimeStr'=""){
+		s OrderFreqFreeTimeInfo=##Class(web.DHCOEOrdItem).GetOrderFreqFreeTimeInfo(OrderFreqRowid,OrderFreqDispTimeStr)
+		s OrderFreqFreeTimeStr=$P(OrderFreqFreeTimeInfo,"^",1)
+	}
+	s Tips=""
+	if (OrderFreqFactor'=""){
+		s Tips=##class(websys.Translation).Get("dhcdoc.freq.disptime.csp","(每日")_OrderFreqFactor_##class(websys.Translation).Get("dhcdoc.freq.disptime.csp","次)")
+	}
+	s Arr=[]
+	s PHCDTSubDr=0
+	for {
+		s PHCDTSubDr=$O(^PHCFR(OrderFreqRowid,"DT",PHCDTSubDr))
+		q:(PHCDTSubDr="")
+		s DispTime=$P(^PHCFR(OrderFreqRowid,"DT",PHCDTSubDr),"^",1)
+		s DispDesc=$P(^PHCFR(OrderFreqRowid,"DT",PHCDTSubDr),"^",2)
+		s DispDesc=##class(User.PHCDispensingTime).GetTranByDesc("PHCDTTimeDesc",DispDesc,langid)
+		s Obj={}
+		do Obj.%Set("DispTime",$ZT(DispTime,2))
+		do Obj.%Set("DispDesc",DispDesc)
+		do Obj.%Set("PHCDTRowID",OrderFreqRowid_"_"_PHCDTSubDr)
+		do Obj.%Set("LogicalDispTime",DispTime)
+		d Arr.%Push(Obj,"")
+	}
+	s FreqFreeTimeJson=Arr.%ToJSON()
+	s GetOrderFreqFreeTimeInfoMethod=##class(websys.Page).Encrypt($lb("web.DHCOEOrdItem.GetOrderFreqFreeTimeInfo"))
+</Server>
+</head>
+<body class="hisui-layout" data-options="fit:true,border:false">
+	<div  data-options="region:'center'" style="border:0px;padding:10px;">
+		<table id="FreqFreeTimeTable"></table>
+	</div>
+	<div data-options="region:'south',border:false" style="height:40px;padding-top:0px;text-align:center;overflow:hidden;">
+		<a href="#" id="OKBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-ok'" >确定</a>
+		<a href="#" id="CloseBtn" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-close'" >取消</a> 
+	</div>
+<SCRIPT language = 'javascript' >
+	var ServerObj={
+		OrderFreqRowid:"#(OrderFreqRowid)#",
+		GetOrderFreqFreeTimeInfoMethod:"#(GetOrderFreqFreeTimeInfoMethod)#",
+		FreqFreeTimeJson:#(FreqFreeTimeJson)#,
+		OrderFreqFactor:"#(OrderFreqFactor)#",
+		OrderFreqFreeTimeStr:"#(OrderFreqFreeTimeStr)#",
+		LinkedMasterOrderFreFactor:"#(LinkedMasterOrderFreFactor)#"
+	}
+	window.returnValue=undefined;
+	$(function(){
+		InitFreqFreeTimeDataGrid();
+		$("#OKBtn").click(OKBtnClickHandler);
+		$("#CloseBtn").click(function(){
+			if (websys_showModal("options").CallBackFunc) {
+				websys_showModal("options").CallBackFunc("");
+			}else{
+				window.returnValue=rtnValue;
+				window.close();
+			}
+		});
+	});
+	function OKBtnClickHandler(){
+		var FreeTimeArr=$("#FreqFreeTimeTable").datagrid('getChecked');
+		FreeTimeArr.sort(function(obj1,obj2){
+			return parseFloat(obj1.LogicalDispTime)-parseFloat(obj2.LogicalDispTime);
+		});
+		if (FreeTimeArr.length==0){
+			$.messager.alert("提示","请选择需要使用的分发时间");
+			return false;
+		}
+		if ((ServerObj.OrderFreqFactor!="")&&(FreeTimeArr.length<ServerObj.OrderFreqFactor)){
+			$.messager.alert("提示",$g("该频次系数为")+ServerObj.OrderFreqFactor+$g(",请选择")+ServerObj.OrderFreqFactor+$g("条记录!"));
+			return false;
+		}
+		var CalOrderFreqDispTimeStr="";
+		for (var i=0;i<FreeTimeArr.length;i++){
+			var OneFreeTimeStr=FreeTimeArr[i].DispTime+String.fromCharCode(2)+String.fromCharCode(2)+FreeTimeArr[i].PHCDTRowID;
+			if (CalOrderFreqDispTimeStr==""){
+				CalOrderFreqDispTimeStr=OneFreeTimeStr
+			}else{
+				CalOrderFreqDispTimeStr=CalOrderFreqDispTimeStr+String.fromCharCode(1)+OneFreeTimeStr;
+			}
+		}
+		var OrderFreqFreeTimeInfo = cspRunServerMethod(ServerObj.GetOrderFreqFreeTimeInfoMethod, ServerObj.OrderFreqRowid, CalOrderFreqDispTimeStr);
+		
+		var OrderFreqFreeTimeDesc=OrderFreqFreeTimeInfo.split("^")[1];
+		var rtnValue=CalOrderFreqDispTimeStr+"^"+OrderFreqFreeTimeDesc;
+		if (websys_showModal("options").CallBackFunc) {
+			websys_showModal("options").CallBackFunc(rtnValue);
+		}else{
+			window.returnValue=rtnValue;
+			window.close();
+		}
+	}
+	function InitFreqFreeTimeDataGrid(){
+		var FreeTimeColumns=[[ 
+ 			{field:'CheckFreq',title:'选择',checkbox:'true',width:80},
+ 			{field:'DispDesc',title:'描述',width:150},
+			{field:'DispTime',title:'时间',width:150},
+			{field:'LogicalDispTime',hidden:true},
+			{field:'PHCDTRowID',hidden:true}
+		]];
+		//初始化不规则分发时间频次选择表格
+		$("#FreqFreeTimeTable").datagrid({  
+			title:'#(OrderFreqDesc)# #(Tips)#',
+			headerCls:'panel-header-gray',
+			fit : true,
+			border : true,
+			striped : true,
+			singleSelect : false,
+			fitColumns : true,
+			autoRowHeight : false,
+			rownumbers:false,
+			showFooter:false,
+			pagination : false, 
+			idField:'PHCDTRowID',
+			columns :FreeTimeColumns,
+			onCheck:function(rowIndex, rowData){
+			},
+			onBeforeSelect:function(index, row){
+				var Selections=$("#FreqFreeTimeTable").datagrid('getChecked');
+				if ((ServerObj.OrderFreqFactor!="")&&(Selections.length>=ServerObj.OrderFreqFactor)){
+					if(!dhcsys_confirm($g("勾选数已到该频次系数")+ServerObj.OrderFreqFactor+$g(",继续勾选将会取消一条勾选记录,是否继续?"))){
+						$("#FreqFreeTimeTable").datagrid('uncheckRow',index);
+						return false;
+					}
+					CancelFirstCheckRow();
+				}
+				if ((ServerObj.LinkedMasterOrderFreFactor!="")&&(Selections.length>=ServerObj.LinkedMasterOrderFreFactor)){
+					if(!dhcsys_confirm($g("勾选数已到该医嘱对应主医嘱频次系数")+ServerObj.LinkedMasterOrderFreFactor+$g(",继续勾选将会取消一条勾选记录,是否继续?"))){
+						$("#FreqFreeTimeTable").datagrid('uncheckRow',index);
+						return false;
+					}
+					CancelFirstCheckRow();
+				}
+				return true;
+				function CancelFirstCheckRow(){
+					var firstRowIndex=$("#FreqFreeTimeTable").datagrid('getRowIndex',Selections[0]);
+					$("#FreqFreeTimeTable").datagrid('uncheckRow',firstRowIndex).datagrid('unselectRow',firstRowIndex);
+				}
+			},
+			onLoadSuccess:function(data){
+				if (ServerObj.OrderFreqFreeTimeStr==""){return;}
+				data.rows.forEach(function(item, index){
+					if (ServerObj.OrderFreqFreeTimeStr.indexOf(item.DispTime)>=0){
+						$("#FreqFreeTimeTable").datagrid('selectRow',index);
+					}
+				});
+			}
+		});
+		var FreqFreeTimeGridData={
+			total:ServerObj.FreqFreeTimeJson.length,
+			rows:ServerObj.FreqFreeTimeJson
+		}
+		$("#FreqFreeTimeTable").datagrid('loadData',FreqFreeTimeGridData);
+		if ((ServerObj.OrderFreqFactor!="")&&(FreqFreeTimeGridData['total']>parseInt(ServerObj.OrderFreqFactor))){
+			$(".datagrid-header-check input").attr("disabled","disabled");
+		}
+		if ((ServerObj.LinkedMasterOrderFreFactor)&&(FreqFreeTimeGridData['total']>parseInt(ServerObj.LinkedMasterOrderFreFactor))) {
+			$(".datagrid-header-check input").attr("disabled","disabled");
+		}
+	}
+   </SCRIPT>
+</body>
+</html>

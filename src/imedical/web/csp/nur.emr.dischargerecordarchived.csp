@@ -1,0 +1,321 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<!--nur.emr.dischargerecordarchived.csp-->
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js" ></script>
+	<style type="text/css">
+		body {padding:10px 10px;}
+		#accPanel td {
+			padding:0px 5px;
+		}
+		#accPanel {
+			border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border-bottom-style: dashed;
+			border-bottom-color: #e2e2e2;
+		}
+		#patientListDiv .panel-body-noheader{
+			border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border-top-width: 0px;
+		}
+   </style>
+</head>
+
+<body>
+	<div style="width:100%;height:100%;">
+	<div id="searchDiv" style="height:85px;">
+	<div id="accPanel" class="hisui-panel"  title="出院病历提交" style="padding:10px 5px;" data-options="fit:true,headerCls:'panel-header-gray',closable: false,iconCls: 'icon-paper'">
+		<table style="border-spacing:0px">
+			<tr>
+				<td><label>#(..Get("病区"))#</label></td>
+				<td>
+					<select id="locBox" class="hisui-combobox" name="loc" style="width:150px;" data-options="blurValidValue:true">
+						<option value="">请选择</option>
+					</select>
+				</td>
+				<td><label>#(..Get("护士提交"))#</label></td>
+				<td>
+					 <select id="submitArchivedBox" class="hisui-combobox" name="submitArchived" style="width:100px;" data-options="blurValidValue:true">
+						<option value="">请选择</option>
+					</select>
+				</td>
+				<td><label>#(..Get("出院时间"))#</label></td>
+				<td><input id="dtb1" class="hisui-datebox textbox datebox-f combo-f" data-options="required:true" style="display: none;"></td>
+				<td><label>至</label></td>
+				<td><input id="dtb2" class="hisui-datebox textbox datebox-f combo-f" data-options="required:true" style="display: none;"></td>
+				<td><label>#(..Get("登记号"))#</label></td>
+				<td><input id="regNo" class="hisui-validatebox textbox" data-options="" style="width:100px"></td>
+				<td><label>#(..Get("姓名"))#</label></td>
+				<td><input class="hisui-validatebox textbox" data-options="" style="width:100px" id="patName"></td>
+				<td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="submitSearch">查询</a></td>
+			</tr>
+		</table>
+	</div>
+	</div>
+	<div id="patientListDiv" style="width:calc(100% - 20px);top:95px;bottom:10px;position:absolute;">
+	<table id="dg" class="hisui-datagrid" title="" data-options="fit:true">
+		<thead>   
+			<tr>
+				<th data-options="field:'episodeID',width:100,checkbox:true"></th>
+				<th data-options="field:'SubmitDesc',width:100">护士提交</th>
+				<th data-options="field:'IsPDF',width:100">是否生成PDF</th>   
+				<th data-options="field:'regNo',width:100">登记号</th>   
+				<th data-options="field:'bedCode',width:100">床号</th>
+				<th data-options="field:'patName',width:100">姓名</th>
+				<th data-options="field:'age',width:100">年龄</th>
+				<th data-options="field:'sex',width:100">性别</th>   
+				<th data-options="field:'AdmDate',width:100">就诊时间</th>  
+				<th data-options="field:'DischgDate',width:100">出院时间</th>
+				<th data-options="field:'ctlocDesc',width:100">科室</th>
+				<th data-options="field:'MainDoctor',width:100">医生</th>
+				<th data-options="field:'SubmitDate',width:100">护士提交时间</th>
+				<th data-options="field:'SubmitUser',width:100">提交人</th>
+			</tr>   
+		</thead>   
+	</table>
+	<div id="tbtoolbar">
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ok',plain:true" id="btn1">护士提交归档</a>
+		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-arrow-left-top',plain:true" id="btn2">护士撤销提交</a>
+	</div>
+	</div>
+	</div>
+	</div>
+	<script type="text/javascript">	
+	var applyDatas = {"total":0,"rows":[]};
+	function MsgIsOK(msg){return msg.status == "0";}
+	
+	$(document).ready(function () {
+		$("#dtb1").datebox("setValue",getNowDate());
+		$("#dtb2").datebox("setValue",getNowDate());
+		initLoc();
+		initSubmitArchivedBox();
+		
+		$("#regNo").keydown(function(event){
+			if (event.keyCode==13){
+				var tempregNo = $.trim($(this).val());
+				var completionZeroNum = 10 - tempregNo.toString().length;
+				var newVal = "";
+				for(var i = 0;i<completionZeroNum;i++)
+				{
+					newVal += "0"
+				}
+				newVal += $.trim($(this).val());
+				$("#regNo").val(newVal);
+			}
+		});
+		function submitSearch(pageStart,pageEnd){
+			var LocId = $("#locBox").combobox("getValue");
+            var Submit = $("#submitArchivedBox").combobox("getValue");
+            var RegNo  = $("#regNo").val();
+            var DisStaDate = $("#dtb1").datebox("getValue");
+            var DisEndDate = $("#dtb2").datebox("getValue");
+            var patName = $("#patName").val();
+                     
+            var msgData = $cm({
+					ClassName:"NurMp.Discharge.Submit",
+					MethodName:"getOutSubmitData",
+					LocId:LocId,
+					Submit:Submit,
+					DisStaDate:DisStaDate,
+					DisEndDate:DisEndDate,
+					RegNo:RegNo,
+					Name:patName,
+					PageStart:pageStart,
+					PageEnd:pageEnd
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					applyDatas.total = msgData.data.total;
+					applyDatas.rows = msgData.data.rows;
+					$.each(applyDatas.rows, function(i, row){
+					  	if(!!row.AdmDate){
+							var tempArr = row.AdmDate.split(",");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.AdmDate = tempArr.join(" ");
+						}
+						if(!!row.DischgDate){
+							var tempArr = row.DischgDate.split(",");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.DischgDate = tempArr.join(" ");
+						}
+						if(!!row.SubmitDate){
+							var tempArr = row.SubmitDate.split(",");
+							tempArr[0] = $.fn.datebox.defaults.formatter(new Date(tempArr[0]));
+							row.SubmitDate = tempArr.join(" ");
+						}
+					});
+					$('#dg').datagrid('clearChecked');
+					$('#dg').datagrid('loadData',applyDatas);
+					
+					var pageNumber = !!$("#dg").data("nurPageNumber") ? $("#dg").data("nurPageNumber") : 1;
+			        var pageSize = !!$("#dg").data("nurPageSize") ? $("#dg").data("nurPageSize") : op.pageSize;
+
+					$("#dg").datagrid('getPager').pagination('refresh', {
+					            pageNumber: pageNumber,
+					            pageSize: pageSize,
+					            total: applyDatas.total
+			        });
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+		}
+		$('#dg').datagrid({
+			toolbar: '#tbtoolbar',
+			data: applyDatas,
+			pagination:true,
+			pageSize:20,
+			nowrap:false,
+			selectOnCheck:true,
+			checkOnSelect:true,
+			idField:"episodeID",
+			pageList:[20,30,40,50],
+		});
+		
+		$('#dg').datagrid('getPager').pagination({
+		onSelectPage:function(pageNumber, pageSize){
+				var pageStart=(pageNumber-1)*pageSize+1;
+				var pageEnd=pageNumber*pageSize;
+				$('#dg').data('nurPageNumber', pageNumber);
+				$('#dg').data('nurPageSize', pageSize);
+				submitSearch(pageStart,pageEnd);
+			}
+		});
+		
+		$("#submitSearch").click(function (event) {
+			var op = $("#dg").datagrid("options");
+            var pageSize = !!$("#dg").data("nurPageSize") ? $("#dg").data("nurPageSize") : op.pageSize;
+            $('#dg').data('nurPageNumber', 1);
+            $('#dg').data('nurPageSize', pageSize);
+            submitSearch(1,pageSize);
+        });
+        
+        $("#btn1").click(function (argument) {
+	        var patIDs= "";
+            var rows = $("#dg").datagrid("getChecked");
+            var tempIDs = $.map( rows, function(n){
+  					return n.episodeID;
+			});
+            patIDs =  tempIDs.toString();
+            if (patIDs == "")
+            {
+	            $.messager.alert($g("提示"), $g("请选择要提交归档的患者记录"), 'info');
+	            return false;
+	        }
+	        
+	        
+	    	var msgData = $cm({
+					ClassName:"NurMp.Discharge.Submit",
+					MethodName:"Submit",
+					episodeID:patIDs,
+					UserId:session['LOGON.USERID'],
+					LocId:session['LOGON.CTLOCID']
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					$.messager.alert($g("提示"), $g("提交成功"), 'success');
+					var pageNumber = $('#dg').data('nurPageNumber');
+			        var pageSize = $('#dg').data('nurPageSize');
+			        var pageStart=(pageNumber-1)*pageSize+1;
+					var pageEnd=pageNumber*pageSize;
+					submitSearch(pageStart,pageEnd);			
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+	    });
+        $("#btn2").click(function (argument) {
+	    	var patIDs= "";
+            var rows = $("#dg").datagrid("getChecked");
+            var tempIDs = $.map( rows, function(n){
+  					return n.episodeID;
+			});
+            patIDs =  tempIDs.toString();
+            if (patIDs == "")
+            {
+	            $.messager.alert($g("提示"), $g("请选择要撤销归档的患者记录"), 'info');
+	            return false;
+	        }
+	        
+	        
+	    	var msgData = $cm({
+					ClassName:"NurMp.Discharge.Submit",
+					MethodName:"cancelSubmit",
+					episodeID:patIDs,
+					UserId:session['LOGON.USERID'],
+			},false);
+		
+			if (!!msgData){
+				if (MsgIsOK(msgData)){
+					$.messager.alert($g("提示"), $g("撤销成功"), 'success');
+					var pageNumber = $('#dg').data('nurPageNumber');
+			        var pageSize = $('#dg').data('nurPageSize');
+			        var pageStart=(pageNumber-1)*pageSize+1;
+					var pageEnd=pageNumber*pageSize;
+					submitSearch(pageStart,pageEnd);	
+				}
+				else
+					$.messager.alert($g("提示"), $g(msgData.msg), 'error');
+			}
+	    });
+        
+        $("#submitSearch").click();
+	});
+	
+	function initLoc()
+	{
+		$HUI.combobox("#locBox",{
+			valueField:'id',
+			textField:'name',
+			disabled:true
+		});
+		
+		var hopLocJson = $cm({
+				ClassName:"NurMp.Discharge.Authority",
+				MethodName:"getLocData"
+		},false);
+		if (!!hopLocJson && MsgIsOK(hopLocJson))
+		{
+			var logonLocData = $.map(hopLocJson.data, function(n){
+			  if (n.id == session['LOGON.CTLOCID'])
+			  	return n;
+			});
+			$("#locBox").combobox("loadData",logonLocData);
+			$('#locBox').combobox('select', session['LOGON.CTLOCID']);
+		}
+	}
+	function initSubmitArchivedBox()
+	{
+		$HUI.combobox("#submitArchivedBox",{
+			valueField:'id',
+			textField:'name',
+		});
+		var submitJson = $cm({
+				ClassName:"NurMp.Discharge.Submit",
+				MethodName:"getSubmitStatus"
+		},false);
+		if (!!submitJson && MsgIsOK(submitJson))
+		{
+			$("#submitArchivedBox").combobox("loadData",submitJson.data);
+			$('#submitArchivedBox').combobox('select', 'all');
+		}
+	}
+	function getNowDate(){
+		var date = (new Date()).format("yyyy-MM-dd");
+		return date;
+	}
+   </script>
+</body>
+</html>

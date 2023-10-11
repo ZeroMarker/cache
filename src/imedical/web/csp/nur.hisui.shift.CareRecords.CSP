@@ -1,0 +1,286 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<NURHISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+        }
+ 		.panel-body, .panel-header {
+			border-color: #ccc;
+		}
+		.datagrid-wrap.panel-body.panel-body-noheader{
+	        border-color:#ccc;
+	        border-top-right-radius:0;
+	        border-top-left-radius:0;
+        }
+	    .btn_right {
+	    	float: right;
+	    }
+		#templateGrid, #dataGrid {
+			border-color:#ccc
+		}  
+		.searchForm {
+			border-collapse: separate;
+			border-spacing: 0px 2px;
+			border: none;
+			width: 100%;
+			height: 100%;
+			padding: 0 4px;
+		}
+	</STYLE>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+<script language="cache" runat="SERVER">
+     s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+</head>
+
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<!--条件-->
+		<div data-options="region:'north',split:true,border:false" style="height:45px">
+			<table class="searchForm">
+				<tr>
+					<td style="width:50px; left:30px">#(..Get("模板"))#</td>
+					<td style="width:215px; left:100px">
+						<input id="templates" class="textbox"/>
+					</td>
+					<td>
+						<a id="btnSearch" class="hisui-linkbutton hover-dark ">#(..Get("查询"))#</a>
+					</td>
+					<td>
+					<a id="btnWriteIn" class="hisui-linkbutton btn_right" data-options="iconCls:'icon-w-edit'">#(..Get("写入"))#</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options='region:"west",split:true' style='width:265px'>
+					<table id="templateGrid" data-options="fit:true"></table>
+				</div>
+				<div data-options="region:'center',split:true">
+					<table id="dataGrid" data-options="fit:true"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+var EpisodeID = "#(EpisodeID)#";
+$(function() {
+// 定义全局变量
+var GLOBAL = {
+	HospitalID: session['LOGON.HOSPID'],
+	requestInfo: $cm({
+		ClassName: 'Nur.SHIFT.Emr.RefSetting',
+	    MethodName: 'getReferTabConfig', 
+	    HospitalID: session['LOGON.HOSPID'],
+	    Code: 'Record2' 
+	},false)
+};
+/**
+ * @description: 初始化界面
+ */
+function initUI() {
+	initCondition();
+	initData();
+	listenEvents();
+}
+/**
+ * @description: 初始化查询条件
+ */
+function initCondition() {
+	var url = $URL + "?ClassName=Nur.SHIFT.Emr.CareRecordsRef&MethodName=GetTemplatesJson&HospitalID=" + GLOBAL.HospitalID + "&LocID=" + session['LOGON.CTLOCID'] + "&EpisodeID=" + EpisodeID;
+	if('undefined'!==typeof websys_getMWToken)
+	{
+		url+="&MWToken="+websys_getMWToken()
+	}
+	$("#templates").lookup({
+		width:200,
+		panelWidth:500,
+		panelHeight:420,
+		url: url,
+		mode:'remote',
+		idField:'Guid',
+		textField:'Text',
+		columns:[[  
+			{field:'Text',title:$g('名称'),width:200},
+			{field:'Guid',title:'GUID',width:200},    
+			{field:'Id',title:'ID',width:50}  
+		]],
+		pagination:true,
+		pageSize: 10,
+		pageList: [10],
+		onSelect:function(index,rowData){
+			initData(rowData.Guid);
+		},
+		onBeforeLoad: function(param){
+			param.SearchInfo=param.q;
+			return true;
+		},
+		isCombo:true,
+		enableNumberEvent:true,
+		minQueryLen:3,
+	});
+}
+	/**
+	 * @description: 护理记录2模板加载
+	 */
+	function initData(guid) {
+//		var url = $URL
+//		if('undefined'!==typeof websys_getMWToken)
+//		{
+//			url+="&MWToken="+websys_getMWToken()
+//		}
+		$HUI.datagrid('#templateGrid',{
+			url: $URL,
+			queryParams: {
+				ClassName: GLOBAL.requestInfo.queryParams.ClassName,
+				QueryName: GLOBAL.requestInfo.queryParams.QueryName,
+				Guid: guid,
+				HospitalID: GLOBAL.HospitalID,
+				LocID: session['LOGON.CTLOCID']
+			},
+			columns:[[
+				{field:'ElementLabel',title:$g('元素描述'),width:150},
+				{field:'ItemKey',title:$g('关键字'),width:100},
+				{field:'ElementCode',title:$g('元素代码'),width:200},
+				{field:'Guid',title:'GUID',width:250}
+			]],
+			pagination: true,
+			pageSize: 15,
+			pageList: [15, 30, 50],
+			rownumbers:true,
+			singleSelect:true,
+			width:500,
+			onClickRow: function(index,rowData){
+				initDataDetail(guid,rowData.ItemKey);
+			}
+		});	
+	}
+	/**
+	 * @description: 护理记录2内容加载
+	 */
+	function initDataDetail(guid,itemKey) {
+//		var url = $URL
+//		if('undefined'!==typeof websys_getMWToken)
+//		{
+//			url+="&MWToken="+websys_getMWToken()
+//		}
+		$HUI.datagrid('#dataGrid',{
+			url: $URL,
+			queryParams: {
+				ClassName: GLOBAL.requestInfo.resultParams.ClassName,
+				QueryName: GLOBAL.requestInfo.resultParams.QueryName,
+				EpisodeID: EpisodeID,
+				Guid: guid,
+				ItemKey: itemKey,
+				Sort: GLOBAL.requestInfo.gridProperty.isRever == "true" ? -1 : 1
+			},
+			columns: [[
+				{field:'Date',title:$g('日期'),width:90},
+				{field:'Time',title:$g('时间'),width:70},
+				{field:'Value',title:$g('值'),width:120},
+				{field:'Id',title:'ID',width:60}
+			]],
+			pagination: true,
+			pageSize: 15,
+			pageList: [15, 30, 50],
+			rownumbers:true,
+			singleSelect:true,
+			width:500
+		});
+	}
+	/**
+	 * @description: 选中内容,带入右侧内容Pannel
+	 */
+	function writeIn() {
+		var result = '';
+		var erows = $('#templateGrid').datagrid('getSelections');
+		if (erows.length == 0) {
+			$.messager.popover({msg: $g('请选中元素！'), type: 'error'});
+			return;
+		}
+ 		var rows = $('#dataGrid').datagrid('getSelections');
+		if (rows.length == 0) {
+			$.messager.popover({msg: $g('请选中记录！'), type: 'error'});
+			return;
+		}
+		var labelDesc = erows[0].ElementLabel;
+		var lastChar = labelDesc.substr(labelDesc.length-1);
+		if ((lastChar == ':')||(lastChar == '：')) {
+			labelDesc = labelDesc.substr(0,labelDesc.length-1);
+		}
+		var value = rows[0].Value;
+		if ((value.indexOf('CA') > -1)&&(value.indexOf('*') > -1)) {
+			value = value.replace('CA','').split('*')[0];
+		}
+		result = labelDesc + ":" + value;
+		//var editContent = $('#textEdit', parent.document).val();
+	    //var contentTxt = !editContent ? result : editContent + '，' + result;
+	   	//$('#textEdit', parent.document).val(contentTxt);
+	   	updatePreview($("#textEdit",parent.document)[0], result, getCursortPosition($("#textEdit",parent.document)[0]));
+	}
+			/**
+	 * @description: 获取选中元素的文本
+	 * @param {obj} 
+	 * @return: 光标位置 
+	 */
+	function getCursortPosition(obj) {
+	    var cursorIndex = 0;
+	    if (document.selection) {
+	        // IE Support
+	        obj.focus();
+	        var range = document.selection.createRange();
+	        range.moveStart('character', -obj.value.length);
+	        cursorIndex = range.text.length;
+	    } else if (obj.selectionStart || obj.selectionStart == 0) {
+	        // another support
+	        cursorIndex = obj.selectionStart;
+	    }
+	    return cursorIndex;
+	}
+	/**
+	 * @description: 更新引用信息
+	 * @param {curElement, editContent, curPosition} 
+	 */
+	function updatePreview(curElement, editContent, curPosition) {
+		var startText = curPosition == 0 ? '' : curElement.value.substring(0, curPosition);
+	    if (startText.trim() == '/') {
+	        startText = '';
+	    }
+	    var endText = curElement.value.substring(curPosition);
+	    $("#textEdit",parent.document).val(startText + editContent + endText);  //在原有文本追加
+	}
+
+	/**
+	 * @description: 写入预览
+	 * @param {content} 
+	 */
+	function writToPreview(content) {
+		updatePreview($("#textEdit", parent.document)[0], content, getCursortPosition($("#textEdit", parent.document)[0]));
+	}
+	/**
+	 * @description: 监听事件
+	 */
+	function listenEvents() {
+		$('#btnSearch').bind('click',function() {
+			initData();
+		});
+		$('#btnWriteIn').bind('click',writeIn);
+	}
+	initUI();
+});
+</script>
+</html>

@@ -19,14 +19,15 @@
 	Set CheckTypeDR=$Get(%request.Data("CheckTypeDR",1))	//新设备验收；维修验收；改造验收
 	Set AssetType=$Get(%request.Data("AssetTypeList",1))
 	Set CancelOper=$Get(%request.Data("CancelOper",1))
+	Set MWToken=$GET(%request.Data("MWToken",1)) //modify by zyq 2023-02-21
 	;Set DHCEQMWindow=$Get(%request.Data("DHCEQMWindow",1))
-	i RowID=""  d
+	If RowID=""  Do
 	.Set Component=##class(web.DHCEQCommon).GetAssetTypeComponent(AssetType,0)
-	.set lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_Component_"&killcache=1&RowID="_RowID_"&CurRole="_CurRole_"&Type="_Type_"&ReadOnly="_ReadOnly_"&AssetType="_AssetType_"&CheckTypeDR="_CheckTypeDR_"&CancelOper="_CancelOper	  //hisui改造 modify by lmm 2018-08-22
-	e  d
-	.Set StatDR=$Piece($Get(^DHCEQOpenCheckRequest(RowID)),"^",4)		//Modfiy DJ 2015-07-28 DJ0151
+	.Set lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_Component_"&killcache=1&RowID="_RowID_"&CurRole="_CurRole_"&Type="_Type_"&ReadOnly="_ReadOnly_"&AssetType="_AssetType_"&CheckTypeDR="_CheckTypeDR_"&CancelOper="_CancelOper_"&MWToken="_MWToken
+	e  Do
+	.Set StatDR=$PIECE($GET(^DHCEQOpenCheckRequest(RowID)),"^",4)		//Modfiy DJ 2015-07-28 DJ0151
 	.Set Component=##class(web.DHCEQCommon).GetAssetTypeComponentByStat(StatDR,0)
-	.set lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_Component_"&RowID="_RowID_"&CurRole="_CurRole_"&Type="_Type_"&ReadOnly="_ReadOnly_"&CancelOper="_CancelOper	  //hisui改造 modify by lmm 2018-08-22
+	.Set lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT="_Component_"&RowID="_RowID_"&CurRole="_CurRole_"&Type="_Type_"&ReadOnly="_ReadOnly_"&CancelOper="_CancelOper_"&MWToken="_MWToken	  // modify by zyq 2023-02-21
 </server>
 <frameset rows="*">
 	<frame name=#(Component)# src=#(lnk)#  framespacing="0" frameBorder="no" noresize>

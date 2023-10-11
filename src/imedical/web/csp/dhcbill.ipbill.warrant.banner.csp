@@ -21,30 +21,39 @@
 }
 
 .unman {
- 	background:url(../images/unman.png) no-repeat;
+ 	background-image: url(../images/unman.png);
  	background-position: center center;
+	background-size: contain;
+	background-repeat: no-repeat;
  	width: 30px;
  	height: 30px;
+ 	border-radius: 30px;
  	position: absolute;
  	top: 3px;
     left: 10px;
 }
 
 .man {
- 	background:url(../images/man.png) no-repeat;
+ 	background-image: url(../images/man.png);
  	background-position: center center;
+	background-size: contain;
+	background-repeat: no-repeat;
  	width: 30px;
  	height: 30px;
+ 	border-radius: 30px;
  	position: absolute;
  	top: 3px;
     left: 10px;
 }
 
 .woman {
- 	background: url(../images/woman.png) no-repeat;
+ 	background: url(../images/woman.png);
  	background-position: center center;
+	background-size: contain;
+ 	background-repeat: no-repeat;
  	width: 30px;
  	height: 30px;
+ 	border-radius: 30px;
  	position: absolute;
  	top: 3px;
 	left: 10px;
@@ -57,27 +66,20 @@
  * @method setBannerPatInfo
  * @author ZhYW
  */
-function setBannerPatInfo(patientNo) {
-	$.m({
-		ClassName: 'web.DHCOPBillWarrant',
-		MethodName: 'GetPatInfoByRegNo',
-		patientNo: patientNo,
-		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
-	}, function (rtn) {
-		var myAry = rtn.split('^');
-		var patientNo = myAry[1];
-		var patName = myAry[2];
-		var sex = myAry[3];
-		var patAge = myAry[4];
-		if (sex == '男') {
-			$('#bn-sex').removeClass('unman man woman').addClass('man');
-		} else if (sex == '女') {
-			$('#bn-sex').removeClass('unman man woman').addClass('woman');
-		}else {
-			$('#bn-sex').removeClass('unman man woman').addClass('unman');
+function setBannerPatInfo(patientId) {
+	$.cm({
+		ClassName: "BILL.COM.PAPatMas",
+		MethodName: "GetPatientInfo",
+		patientId: patientId
+	}, function (json) {
+		$sex = $("#bn-sex");
+		$sex.removeClass("unman man woman").addClass(json.SexIconCls);
+		if (HISUIStyleCode == "lite") {
+			//极简样式的图标
+			$sex.css({"background-image": "url(" + "../images/" + json.SexIconCls + "_lite.png" + ")"});
 		}
-		$('#bn-patName').text(patName);
-		$('#bn-patAge').text(patAge);
+		$("#bn-patName").text(json.PatName);
+		$("#bn-patAge").text(json.Age);
 	});
 }
 
@@ -88,27 +90,41 @@ function setBannerPatInfo(patientNo) {
  */
 function setBannerPatPayInfo(episodeId) {
 	$.m({
-		ClassName: 'web.UDHCJFZYDB',
-		MethodName: 'GetPatPayInfoByAdm',
+		ClassName: "web.UDHCJFZYDB",
+		MethodName: "GetPatPayInfoByAdm",
 		episodeId: episodeId
 	}, function (rtn) {
 		var myAry = rtn.split('^');
-		var deposit = myAry[0];
-		var patFee = myAry[1];
-		var leftAmt = myAry[3];
-		var noBillAmt = myAry[4];
-		var totalFee = myAry[5];
-		var warrAmt = myAry[6];
-		var admDept =  myAry[7];
+		var deposit = myAry[0] || "";
+		var patFee = myAry[1] || "";
+		var leftAmt = myAry[3] || "";
+		var noBillAmt = myAry[4] || "";
+		var totalFee = myAry[5] || "";
+		var warrAmt = myAry[6] || "";
+		var admDept =  myAry[7] || "";
 		
-		$('#bn-admDept').text(admDept);
-		$('#bn-deposit').text(deposit);
-		$('#bn-warrAmt').text(warrAmt);
-		$('#bn-totalFee').text(totalFee);
-		$('#bn-patFee').text(patFee);
-		$('#bn-leftAmt').text(leftAmt);
-		//$('#bn-noBillAmt').text(noBillAmt);
+		$("#bn-admDept").text(admDept);
+		$("#bn-deposit").text(deposit);
+		$("#bn-warrAmt").text(warrAmt);
+		$("#bn-totalFee").text(totalFee);
+		$("#bn-patFee").text(patFee);
+		$("#bn-leftAmt").text(leftAmt);
+		//$("#bn-noBillAmt").text(noBillAmt);
 	});
+}
+
+/**
+* 2023-04-06
+* ZhYW
+*/
+function showPatSexBGImg() {
+	var $sex = $("#bn-sex");
+	var bgImg = "unman";
+	$sex.removeClass().addClass(bgImg);
+	if (HISUIStyleCode == "lite") {
+		//极简样式的图标
+		$sex.css({"background-image": "url(" + "../images/" + bgImg + "_lite.png" + ")"});
+	}
 }
 </script>
 
@@ -117,20 +133,23 @@ function setBannerPatPayInfo(episodeId) {
 	<div id="bn-sex"></div>
 	<div class="patientInfo">
 		<span class="patName" id="bn-patName"></span>
-		<span class="infoLabel">年龄:</span><span id="bn-patAge"></span>
+		<span class="infoLabel">#(..Get("年龄"))#:</span><span id="bn-patAge"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">就诊科室:</span><span id="bn-admDept"></span>
+		<span class="infoLabel">#(..Get("就诊科室"))#:</span><span id="bn-admDept"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">押金总额:</span><span id="bn-deposit"></span>
+		<span class="infoLabel">#(..Get("押金总额"))#:</span><span id="bn-deposit"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">担保金额:</span><span id="bn-warrAmt"></span>
+		<span class="infoLabel">#(..Get("担保金额"))#:</span><span id="bn-warrAmt"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">总费用:</span><span id="bn-totalFee"></span>
+		<span class="infoLabel">#(..Get("总费用"))#:</span><span id="bn-totalFee"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">自付费用:</span><span id="bn-patFee"></span>
+		<span class="infoLabel">#(..Get("自付费用"))#:</span><span id="bn-patFee"></span>
 		<span class="sline">/</span>
-		<span class="infoLabel">押金余额:</span><span id="bn-leftAmt"></span>
+		<span class="infoLabel">#(..Get("押金余额"))#:</span><span id="bn-leftAmt"></span>
 		<!--<span class="sline">/</span>
-		<span class="infoLabel">待记账费用:</span><span id="bn-noBillAmt"></span>-->
+		<span class="infoLabel">#(..Get("待记账费用"))#:</span><span id="bn-noBillAmt"></span>-->
 	</div>
 </div>
+<script type="text/javascript">
+	showPatSexBGImg();
+</script>

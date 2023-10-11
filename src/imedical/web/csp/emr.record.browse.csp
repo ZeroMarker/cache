@@ -2,6 +2,9 @@
 <head>
 	<!--add by guozongtao on 2014-9-2-->
 	<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+	
 	if $g(%session.Data("LOGON.USERID"))=""
 	{
 		s rtn=##class(websys.SessionLogon).Logon()
@@ -20,10 +23,13 @@
 	    d ##Class(EMRservice.SystemParameter).GetImportResource()
 		s episodeID = $Get(%request.Data("EpisodeID",1),"")
 		s patientID = $Get(%request.Data("PatientID",1),"")
+		s action = $Get(%request.Data("Action",1),"")
+		s:(action = "") action = "browse"
   </script>
 	<script language="javascript">
 	  var patientID = '#(patientID)#';
 	  var episodeID = '#(episodeID)#';
+        var action = '#(action)#';
    </script>
 	<title>病历浏览</title>
 </head>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--处方类型维护
+	csp: csp/pha.op.v4.presctype.csp
+	js:  scripts/pha/op/v4/presctype.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <PHALIBV1 />
+    <PHAOPV4 />
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" id="lyCenter">
+            <table id="gridPrescType"></table>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridPrescTypeBar">
+        <div class="pha-row">
+            <div class="pha-col">
+     
+                <label id="_HospListLabel">#(..Get("医院"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="_HospList"  class="hisui-combobox textbox"/>
+            </div>
+             <div class="pha-col">
+                <label>#(..Get("医生科室"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="conLoc" style="width:200px;" >
+            </div>
+            <div class="pha-col">
+            	<a class="hisui-linkbutton" plain='false' iconCls="icon-w-find" id="btnFind">查询</a>
+            </div>
+        </div>
+        <div class="pha-line" style='margin-bottom:1px'></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEdit">修改</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelete">删除</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-help" id="btnHelp">帮助</a>            
+        </div>
+    </div>
+    <!-- 参数值维护 -->
+    <div id="diagPrescType" class="hisui-dialog" data-options="closed:true,width:310,height:250,title:'',iconCls:'icon-w-add',
+     buttons:[{
+         text:'保存',
+         handler:function(){
+             SavePrescType();
+         }
+     },{
+         text:'继续新增',
+         id:'diagPT_btnAdd',
+         handler:function(){
+            SavePrescType(1);
+         }
+     },{
+         text:'关闭',
+         handler:function(){
+             $('#diagPrescType').dialog('close');
+         }
+     }]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" style="overflow:hidden;">
+            	<table class='pha-con-table'>
+               		<tr>
+               			<td class="r-label">
+                    		<label for="prescType"><span style="color:red">*</span>#(..Get("处方类型"))#</label>
+                		</td>
+                		<td colspan=3>
+                    		<input id="prescType" class="hisui-combobox" data-pha='class:"hisui-combobox",requied:true' style="width:200px;" spellcheck="false">
+                		</td>
+               		</tr>
+               		<tr>
+               			<td class="r-label">
+                    		<label for="docLoc">#(..Get("医生科室"))#</label>
+                		</td>
+                		<td colspan=3>
+                    		<input id="docLoc" class="hisui-combobox" data-pha='class:"hisui-combobox"' style="width:200px;" spellcheck="false">
+                		</td>
+               		</tr>
+               		<tr>
+               			<td class="r-label">
+                    		<label for="frRangeAge">#(..Get("年龄范围(岁)"))#</label>
+                		</td>
+                		<td>
+                			<input id="frRangeAge" class="hisui-numberbox" data-pha='class:"hisui-numberbox"' style="width:80px;" spellcheck="false">
+                    	</td>
+                		<td >	
+                			<label>至</label>
+                    	</td>
+                		<td>	
+                			<input id="toRangeAge" class="hisui-numberbox" data-pha='class:"hisui-numberbox"' style="width:83px;" spellcheck="false">
+               			</td>
+               		</tr>
+               		<tr>
+               			<td class="r-label">
+                    		<label for="phcPoison">#(..Get("管制分类"))#</label>
+                		</td>
+                		<td colspan=3>
+                    		<input id="phcPoison" class="hisui-combobox" data-pha='class:"hisui-combobox"' style="width:200px;" spellcheck="false">
+                		</td>
+               		</tr>
+               	</table>
+            </div>
+        </div>
+    </div>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/op/v4/presctype.js"></script>
+</body>
+
+</html>

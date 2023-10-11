@@ -10,17 +10,18 @@ s SourceID=$G(%request.Data("SourceID",1))
 s OCType=##Class(web.DHCEQCommon).GetSysInfo("201003")  ///modify by lmm 350826
 s Name="DHCEQLifeInfo"
 s Link=""
+s LifeInfoFlag=1
 i SourceType="11" //¿ªÏäÑéÊÕ
 {
 	i OCType'=0 //ÅúÁ¿ÑéÊÕ	 MZY0027	1289729		2020-05-21
 	{
 		s RowID=$p($g(^DHCEQOpenCheckList(SourceID)),"^",1)
-		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheckRequest&RowID="_RowID_"&ReadOnly=1"
+		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheckRequest&RowID="_RowID_"&ReadOnly=1&LifeInfoFlag="_LifeInfoFlag
 	}
 	else //µ¥Éè±¸ÑéÊÕ
 	{
 		s RowID=SourceID
-		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheck&RowID="_RowID_"&ReadOnly=1"
+		s Link="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheck&RowID="_RowID_"&ReadOnly=1&LifeInfoFlag="_LifeInfoFlag
 	}
 }
 i SourceType="21" //Èë¿â
@@ -53,13 +54,17 @@ i SourceType="31" //Î¬ÐÞ
 	;s EquipDR=$p($g(^DHCEQMaintRequest(RowID)),"^",1)
 	;s Link="dhceqmaintrequestnew.csp?&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
 	;ÐèÇóÐòºÅ:	414543		Mozy	20170731	Ôö¼Ó´«ÈëStatus²ÎÊý
-	s Link="dhceq.em.mmaintrequest.csp?RowID="_RowID_"&ReadOnly=1&Status=2"
+	//modified by ZY20230210  bug:ÐÞ¸ÄÉúÃüÖÜÆÚÎ¬ÐÞ½çÃæcspÁ´½Ó
+	s Link="dhceq.em.maintrequest.csp?RowID="_RowID_"&ReadOnly=1&Status=2"
 }
 i SourceType="32" //±£Ñø
 {
 	s RowID=SourceID
 	s EquipDR=$p($g(^DHCEQMaint(RowID)),"^",1)
-	s Link="dhceq.em.maint.csp?BussType=1&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
+	// MZY0091	2083796		2021-08-26	Ô¤·ÀÐÔÎ¬»¤¼ÇÂ¼
+	;s Link="dhceq.em.maint.csp?BussType=1&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
+	s Link="dhceq.em.preventivemaint.csp?&BussType=1&RowID="_RowID_"&EquipDR="_EquipDR_"&ReadOnly=1"
+
 }
 i SourceType="33" //¼ì²é
 {
@@ -108,7 +113,9 @@ i SourceType="51" //Éè±¸µ÷ÕË
 {	
 	s RowID=SourceID
 	s EquipDR=$p($g(^DHCEQChangeAccount(RowID)),"^",1)
-	s Link="dhceqchangeaccount.csp?&RowID="_EquipDR_"&ReadOnly=1"
+    //modified by ZY20230306 bug:3259364
+    //s Link="dhceqchangeaccount.csp?&RowID="_EquipDR_"&ReadOnly=1"
+    s Link="dhceq.em.changeaccount.csp?&RowID="_EquipDR_"&ReadOnly=1"
 }
 i SourceType="61" //Êý¾Ýµ÷Õû add by wy 2017-9-27
 {		
@@ -137,11 +144,11 @@ i SourceType="94" //Éè±¸ºÏÍ¬ÉúÃüÖÜÆÚ	//add by ZY0165 2018-04-26  ÉúÃüÖÜÆÚÔö¼ÓºÏÍ
 
 	if (ContractType=1)
     {
-	   s Link="dhceq.con.contractformaint.csp?RowID="_ContractID_"&ReadOnly=1&ContractType="_ContractType
+	   s Link="dhceq.con.contractformaint.csp?RowID="_ContractID_"&ReadOnly=1&ContractType="_ContractType_"&CopyFlag=1"  ///Modefied by ZC0081 2020-09-07  Ìí¼ÓÄÜ·ñ¸´ÖÆ±êÊ¶
     }
     else
 	{
-		s Link="dhceq.con.contract.csp?RowID="_ContractID_"&ReadOnly=1&ContractType="_ContractType
+		s Link="dhceq.con.contract.csp?RowID="_ContractID_"&ReadOnly=1&ContractType="_ContractType_"&CopyFlag=1"  ///Modefied by ZC0081 2020-09-07  Ìí¼ÓÄÜ·ñ¸´ÖÆ±êÊ¶
 	}
 }
 //add by ZY0165 2018-04-26  ÉúÃüÖÜÆÚÔö¼ÓÉêÇë¡¢¼Æ»®¡¢ÕÐ±êµÄ½Úµã
@@ -160,6 +167,12 @@ i SourceType="93"
 {
     s RowID=SourceID
 	s Link="dhceq.em.ifbnew.csp?RowID="_RowID_"&ReadOnly=1"     
+}
+i SourceType="55" //²ð·Ö czf 2021-07-28 2014955
+{
+	//s RowID=$p($g(^DHCEQSplitList(SourceID)),"^",1)
+	s RowID=SourceID
+	s Link="dhceq.em.split.csp?RowID="_RowID_"&ReadOnly=1&Type=1"
 }
 </Script>
 <SCRIPT language="javascript">

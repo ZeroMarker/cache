@@ -1,0 +1,118 @@
+﻿<html>
+    <head>
+        <title> 门诊病历查询补打页面 </title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
+        <ADDINS require="RWCard,PublicReadPerson"/>
+        <HISUI/>
+        <DOCCARD medStepCode="EMR"></DOCCARD>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.tools.js"></script>
+        <!-- 读卡 -->
+        <script type="text/javascript" src="../scripts/websys.js"></script>
+        <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
+        <script language="cache" runat="server">
+            s patientID = $Get(%request.Data("PatientID",1),"")
+            s episodeID = $Get(%request.Data("EpisodeID",1),"")
+            s mradm = ""
+            s:(episodeID'="") mradm=$p($g(^PAADM(episodeID)),"^",61)
+            s:((episodeID'="")&&(patientID="")) patientID = $p($g(^PAADM(episodeID)),"^",1)
+            s sessionID = %session.SessionId
+            s langID = $Get(%session.Data("LOGON.LANGID"),"20")
+            s loginID = $Get(%session.Data("LOGON.SSUSERLOGINID"))
+            s ssgroupID = %session.Get("LOGON.GROUPID")
+            s hospitalID = %session.Get("LOGON.HOSPID")
+            s userID = %session.Get("LOGON.USERID")
+            s userCode = %session.Get("LOGON.USERCODE")
+            s userName = %session.Get("LOGON.USERNAME")
+            s userLocID = %session.Get("LOGON.CTLOCID")
+            s userLocCode = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",1))
+            s userLocName = $Case(userLocID,"":"",:$p(^CTLOC(userLocID),"^",2))
+            s printType = $Get(%request.Data("printType", 1), "PATCH")
+            s pmdType = $Get(%request.Data("pmdType",1),"EMR")
+            s pmdCode = $Get(%request.Data("pmdCode",1),"")
+            s product = $Get(%request.Data("product",1),"OP")
+            s sysOption = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_SYSOPTIONS","params":[{"name":"infoMessage","defaultValue":{}},{"name":"patientNoLength","defaultValue":""},{"name":"revise","defaultValue":{"del":{"show":"0"},"add":{"show":"0"},"style":{"show":"0"}}}]})
+            s dateFormat = ##Class(EMR.DOC.SRV.AbstractActionCommon).GetActionFactory({"product":(product),"action":"GET_DATEFORMAT","params":{"langID":(langID)}})
+        </script>
+         <script language="javascript">
+            var patInfo = {
+                patientID: "#(patientID)#",
+                episodeID: "#(episodeID)#",
+                mradm: "#(mradm)#",
+                sessionID: "#(sessionID)#",
+                langID: "#(langID)#",
+                ssgroupID: "#(ssgroupID)#",
+                hospitalID: "#(hospitalID)#",
+                userID: "#(userID)#",
+                userCode: "#(userCode)#",
+                userName: "#(userName)#",
+                userLocID: "#(userLocID)#",
+                userLocCode: "#(userLocCode)#",
+                userLocName: "#(userLocName)#",
+                ipAddress: "",
+                pmdType: "#(pmdType)#",
+                pmdCode: "#(pmdCode)#"
+            };
+            var envVar = {
+                documentID: "",
+                printType: "#(printType)#",
+                product: "#(product)#",
+                printDocument: new Array(),
+                printMessage: 0
+            };
+            var sysOption = #(sysOption)#;
+            var dateFormat = #(dateFormat)#;
+            var pluginType = "";
+            var langID = "#(langID)#";
+            var loginID = "#(loginID)#";
+        </script>
+    </head>
+    <body class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+        <div data-options="region:'north',title:'门诊病历打印情况查询',closedTitle:'门诊病历打印情况查询'" style="overflow:hidden;height:180px;">
+            <table style="border-spacing:10px;margin:5px auto;">
+                <tr>
+                    <td class="r-label">#(..Get("登记号"))#</td>
+                    <td class="r-label">
+                        <input id="regNoSearch" class="hisui-searchbox" data-options="fit:true,border:false" style="width:200px;"/>
+                    </td>
+                    <td class="r-label">#(..Get("就诊日期(起始)"))#</td>
+                    <td class="r-label">
+                        <input id="startDate" class="hisui-datebox" data-options="formatter:dateformatter,fit:true,border:false,required:false,editable:false" style="width:200px;"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">#(..Get("患者姓名"))#</td>
+                    <td class="r-label">
+                        <input id="nameSearch" class="hisui-searchbox" data-options="fit:true,border:false" style="width:200px;"/>
+                    </td>
+                    <td class="r-label">#(..Get("就诊日期(终止)"))#</td>
+                    <td class="r-label">
+                        <input id="endDate" class="hisui-datebox" data-options="formatter:dateformatter,fit:true,border:false,required:false,editable:false" style="width:200px;"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="r-label">#(..Get("就诊卡号"))#</td>
+                    <td class="r-label">
+                        <input id="cardNoSearch" class="hisui-searchbox hover-dark" data-options="fit:true,border:false" style="width:200px;"/>
+                    </td>
+                    <td class="r-label">
+                        <a href="#" id="btnSetQuery" class="hisui-linkbutton" onclick="queryData()">#(..Get("查询"))#</a>
+                    </td>
+                    <td class="r-label">
+                        <a href="#" id="readCard" class="hisui-linkbutton" onclick="readCardEvent()">#(..Get("读卡"))#</a>
+                        <a href="#" id="printSelect" class="hisui-linkbutton" onclick="printSelect()" style="margin-left:30px;">#(..Get("多选打印"))#</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div data-options="region:'center',title:'门诊病历打印情况列表'" style="padding:3px;">
+            <table id="patientListData"></table>
+        </div>
+
+        <script type="text/javascript" src="../scripts/emr/js/bs.op.search.print.js"></script>
+    </body>
+</html>

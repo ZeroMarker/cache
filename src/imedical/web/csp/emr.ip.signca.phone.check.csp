@@ -1,0 +1,292 @@
+﻿<div id="divCheck" style="text-align:center;margin:auto;width:230px;">
+		<table style="text-align:center;vertical-align:middle;">
+			<tr>
+				<td colspan=2 class="userName" id="divUserName"></td>
+			</tr>
+			<tr>
+				<td align="left" colspan=2>
+					<span>#(..Get("当前签名单元"))# </span><span id="signCell"></span>
+				</td>
+			</tr>
+			<CSP:IF condition=isEnableSelectUserLevel="Y">
+			<tr id="trLevel">
+				<td align="left">#(..Get("签名角色"))#&nbsp&nbsp&nbsp&nbsp</td>
+				<td><input id="txtLevel" name="txtlevel" class="hisui-combobox level" style="width:120px;"/></td>
+			</tr>
+			</CSP:IF>
+			<tr>
+				<td colspan=2 class="button"> 
+					<a href="#" class="hisui-linkbutton" id="checkSure" onclick="checkSureClick();">#(..Get("确定"))#</a>
+					<a href="#" class="hisui-linkbutton" id="checkCancel" onclick="checkCancelClick();">#(..Get("取消"))#</a>
+					<a href="#" class="hisui-linkbutton" id="checkRevoke" onclick="checkRevokeClick();">#(..Get("撤销签名"))#</a>
+				</td>
+			</tr>						
+		</table>
+	</div>
+	
+	
+	<script language = "javascript">
+    
+    
+    var _UserLocID = "";
+    var _OriSignatureLevel = "";
+    var _EpisodeID = "";
+    
+    var _UserID = "";
+    var _UserName = "";
+    var _UserCode = ""
+    var _LoginCertInfo = "";
+    
+    function initCheckInfo(userLocID, episodeID, oriSignatureLevel, cellName) {
+	    _UserLocID = userLocID;
+	    _OriSignatureLevel = oriSignatureLevel;
+	    _EpisodeID = episodeID;
+	    $("#signCell")[0].innerText = decodeURI(utf8to16(base64decode(cellName)));
+    }
+    
+	function initCheckUser(userID, userName, userCode, loginCertInfo) {
+		_UserID = userID;
+		_UserName = userName;
+		_UserCode = userCode;
+		_LoginCertInfo = loginCertInfo
+		
+		$("#divUserName")[0].innerText = userName;
+		//判断是否可选级别
+		if (isEnableSelectUserLevel == "Y")
+		{
+			getUserLevel(userID);
+		}
+	}
+	
+	//-------------- 修改医师级别 ------------------------------
+	function setLevelRange(data,userlevel)
+	{
+		$("#txtLevel").combobox({
+			valueField:'LevelCode',                        
+			textField:'LevelDesc',
+			width:120,
+			panelHeight:120,
+			data:data,
+		    onLoadSuccess:function(d){
+		    	$('#txtLevel').combobox('select',userlevel);
+		    	$('#txtLevel').combobox('enable');
+			}
+		});
+	}
+	
+	//获取当前UsrCertCode关联的UserID
+	function GetUsrIdByKey(UsrCertCode) {
+		var result = "";
+	    $.ajax({
+	        type: 'GET',
+	        dataType: 'text',
+	        url: "../EMRservice.Ajax.common.cls",
+	        async: false,
+	        cache: false,
+	        data: {
+	    		"OutputType":"String",
+				"Class":"CA.UsrSignatureInfo",
+				"Method":"GetUsrIdByKey",
+				"p1":UsrCertCode
+	        },
+	        success: function(ret) 
+	        {
+	  			result = ret;
+	        },
+	        error: function(ret) {}
+	    });
+	    return result;
+	}
+	
+	///跟据UserID获取用户签名角色范围
+	function getUserLevel(usrIdByKey)
+	{
+		//新接口包含职务相关信息
+		if (isNewUserLevel == "1")
+		{
+			$.ajax({
+				type: "Post",
+				dataType: "text",
+				url: "../EMRservice.Ajax.common.cls",
+				async: false,
+				data: {
+					"OutputType":"String",
+					"Class":"EMRservice.BL.BLSignRole",
+					"Method":"GetSignCharacter",
+					"p1":_OriSignatureLevel,
+					"p2":usrIdByKey,
+					"p3":_UserLocID,
+					"p4":_EpisodeID
+				},
+				success: function(d) {
+					if (d == "") return;
+					var strs = d.split("^"); 
+					var data = eval("("+strs[2]+")");
+					var userlevel = strs[0];
+					setLevelRange(data,userlevel);
+				},
+				error : function(d) { 
+					alert("getUserLevel error");
+				}
+			});
+		}
+		else
+		{
+			var userlevel = "";
+			
+			$.ajax({
+				type: "Post",
+				dataType: "text",
+				url: "../EMRservice.Ajax.common.cls",
+				async: false,
+				data: {
+					"OutputType":"String",
+					"Class":"EMRservice.BL.BLSignRole",
+					"Method":"GetUserLevel",
+					"p1":usrIdByKey,
+					"p2":_EpisodeID
+				},
+				success: function(d) {
+					if(d != "") userlevel = d.split("^")[0];
+				},
+				error : function(d) { 
+					alert("getUserLevel error");
+				}
+			});
+			
+			$.ajax({
+				type: "Post",
+				dataType: "text",
+				url: "../EMRservice.Ajax.common.cls",
+				async: false,
+				data: {
+					"OutputType":"String",
+					"Class":"EMRservice.BL.BLUserLevel",
+					"Method":"GetUserLevelRangeJson",
+					"p1":userlevel
+				},
+				success: function(d) {
+					if(d != "") {
+						var data = eval("["+d+"]");
+						setLevelRange(data,userlevel);
+					}
+				},
+				error : function(d) { 
+					alert("initUserLevel error");
+				}
+			});
+		}
+	}
+	
+	//确定用户签名信息
+	function checkSureClick()
+	{
+		
+		var certObj = getUserCert();
+		if (certObj == "") return;
+		
+		var userInfo = getUserInfo(certObj);
+		if (userInfo == "") return;
+		
+		var ret = {
+			"action": "sign",
+			"userInfo": userInfo,
+			"cert": certObj
+		}
+		
+		parent.closeWindow(ret);
+	}
+	
+	function checkCancelClick() {
+		parent.closeWindow(""); 
+	}
+	
+	function checkRevokeClick() {
+		var certObj = getUserCert();
+		if (certObj == "") return;
+		
+		var userInfo = getUserInfo(certObj);
+		if (userInfo == "") return;
+		
+		var ret = {
+			"action": "revoke",
+			"userInfo": userInfo,
+			"cert": certObj
+		}
+		
+		parent.closeWindow(ret);
+	}
+	
+	function getUserCert() {
+		_LoginCertInfo = _LoginCertInfo || "";
+		if (_LoginCertInfo == "") {
+			alert("CA认证信息为空");
+			return "";
+		}
+		
+		if (typeof(_LoginCertInfo) != "object") {
+			_LoginCertInfo = JSON.parse(_LoginCertInfo);
+		}
+		if (_LoginCertInfo.retCode != "0") {
+			alert("CA认证失败，错误信息：" + _LoginCertInfo.retMsg);
+			return "";
+		}
+		
+		return _LoginCertInfo;
+	}
+	
+	function getUserInfo(certObj) {
+		
+		var userInfo = "";
+		
+		$.ajax({
+	        type: 'post',
+	        dataType: 'json',
+	        url: "../EMRservice.Ajax.common.cls",
+	        async: false,
+	        cache: false,
+	        data: {
+	        		"OutputType":"String",
+					"Class":"EMRservice.BL.BLEMRSign",
+					"Method":"CALogin",
+					"pa":"",
+					"pb":certObj.userCertCode,
+	            	"pc":"",
+	            	"pd":certObj.certNo,
+	            	"pe":certObj.signCert,
+	            	"pf":_UserLocID,
+	            	"pg":"inpatient",
+	            	"ph":_EpisodeID,
+	            	"pi":Const_Sign_Type,
+	            	"pj":Const_Vender_Code,
+	            	"pk":_OriSignatureLevel
+	        },
+	        success: function(ret) {
+	            if (ret && ret.Err) {
+	                alert('GetUserInfo' + ret.Err);
+	            } else {
+		            userInfo = ret;
+	            }
+	        },
+	        error: function(err) {
+	            alert(err.message || err);
+	        }
+	    });
+
+		if (userInfo == "") return "";
+		
+		if (isEnableSelectUserLevel == "Y")
+		{
+			if (isNewUserLevel == "1"){
+				userInfo.characterCode = $('#txtLevel').combobox('getValue');
+				userInfo.characterDesc = $("#txtLevel").combobox('getText');
+			}else {
+				userInfo.UserLevel = $('#txtLevel').combobox('getValue');
+				userInfo.LevelDesc = $("#txtLevel").combobox('getText');
+			}
+		}
+		
+		return userInfo;
+	}
+	
+</script>

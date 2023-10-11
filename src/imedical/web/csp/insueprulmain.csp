@@ -1,0 +1,129 @@
+ <!-- 
+ * FileName: insueprulmain.csp
+ * Anchor: Jiang
+ * Date: 2021-03-15
+ * Description: 患者结算清单查询
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCBILL/>
+
+	<style>
+	.linkinfo{
+		display: inline-block;
+		color: #40A2DE;
+		width:60px;
+		height:28px;
+		line-height:28px;
+		border-radius: 8px;
+		cursor: pointer;
+	}
+	.linkinfolite{
+		display: inline-block;
+		color: #339EFF;
+		width:60px;
+		height:28px;
+		line-height:28px;
+		border-radius: 8px;
+		cursor: pointer;
+	}
+	.layout-body{
+		border-radius:0px !important;
+	}
+	.print_invlite:before {
+    	font-family: Mw_mifonts;
+    	content: "\f272";
+	}
+	.textbox{width:130px !important}
+	</style>
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.css'/>
+	<script type='text/javascript' src='../scripts/dhcbill/common/dhcbill.common.js'></script>
+	<!--<script type='text/javascript' src='../scripts/dhcbill/dhcjs/loader.js'></script>-->
+	<script type='text/javascript' src='../scripts/dhcinsu/common/dhcinsu.common.js'></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+</head>
+<server>
+	 //d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_DICDATA")
+</server>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false,collapsible:false" style="height:205px;">
+			<div class="hisui-panel" data-options="title:'基金结算清单信息上传',fit:true,headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border-bottom-style:none;border-radius:0;">
+				<table class="search-table" >
+				    <tr>
+					    <td class="r-label"><label id="_HospUserListLabel" style="color:red;">医院</label></td>
+					    <td colspan="3" id="HospIdTd"><input id="_HospUserList"/></td>
+			     	</tr>
+					<tr>
+						<td class="r-label td-first-col"><label>日期选择</label></td>
+						<td><input id="DateFlag" class="textbox"></td>
+						<td class="r-label">开始日期</td>
+						<td><input id="SDate" class="textbox"/></td>
+						<td class="r-label">登记号</td>
+						<td><input id="PatNo" class="textbox"/></td>
+						<td class="r-label">上传标志</td>
+						<td><input id="UpFlag" class="textbox"/>	
+	                   	<td class="r-label">参保类型</td>
+						<td><input id="CenterType" class="textbox" style="width:120px"/></td>
+						<td><a href="" class="hisui-linkbutton" id="btn-up" style="width:150px;margin-left:20px" data-options="iconCls:'icon-w-ok'">上传</a></td>	
+						<td><a href="" class="hisui-linkbutton" id="btn-submit" style="width:150px;margin-left:20px" data-options="iconCls:'icon-w-ok'">审核</a></td>
+					</tr>
+					<tr>
+						<td class="r-label"><label>医保类型</label></td>
+						<td><input id="InsuType" class="textbox"/></td>
+						<td class="r-label"><label>结束日期</label></td>
+						<td><input id="EDate" class="textbox"/></td>
+						<td class="r-label"><label>医保结算id</label></td>
+						<td><input id="Djlsh" class="textbox"/></td>	
+						<td class="r-label " ><label>险种</label></td>
+						<td><input id="PatType" class="textbox"/></td>
+						<td/><td/>	
+						<td><a href="" class="hisui-linkbutton" id="btn-find" style="width:150px;margin-left:20px" data-options="iconCls:'icon-w-find'">查询</a></td>	
+						<td><a href="" class="hisui-linkbutton" id="btn-del" style="width:150px;margin-left:20px" data-options="iconCls:'icon-w-cancel'">撤销</a></td>												
+					</tr>
+					<tr>				
+						<td class="r-label"><label>病案号</label></td>
+						<td><input id="MedNo" class="textbox"/></td>
+						<td class="r-label"><label>就诊类型</label></td>
+						<td><input id="OptType" class="textbox"/></td>
+						<td class="r-label"><label>医保就诊id</label></td>
+						<td><input id="Zylsh" class="textbox"/></td>
+						<td class="r-label"><label>状态分类</label></td>
+						<td><input id="StasType" class="textbox"/></td>
+						<td/><td/>							
+						<!--td><a href="" class="hisui-linkbutton" id="btn-del" style="width:100px;margin-left:20px" data-options="iconCls:'icon-w-cancel'">撤销</a></td-->
+						<td><a href="" class="hisui-linkbutton" id="btn-seltFind" style="width:150px;margin-left:20px" data-options="iconCls:'icon-w-find'">查询清单信息</a></td>
+						<td><a href="" class="hisui-linkbutton" id="btn-qltctrlFind" style="width:150px;margin-left:20px" data-options="iconCls:'icon-w-find'">查询质控结果</a></td>												
+					</tr>							
+				</table>				
+			</div>
+		</div>
+		<div data-options="region:'center',border:false">
+			<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-header-gray'" style="border-top-style:solid;border-radius:0 0 4px 4px;">
+				<table class="hisui-datagrid" id="mainDtlList"></table>
+			</div>
+	  	</div>
+	</div>
+	
+	 <!--弹窗-->
+	 <div id="InfoWin" class="hisui-dialog" title="详细内容" style="width:700px;height:550px;padding:10px 0 0 10px"data-options="resizable:false,modal:true,closed:true,iconCls:'icon-w-paper'">
+		<div class="hisui-panel" data-options="bodyCls:'panel-header-gray'"style="height:453px;width:680px;border-radius:4px">
+			<div id="info" style="padding:10px"></div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../scripts/insueprulmain.js"></script>
+	<!--<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>-->
+	<!--<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.print.js"></script>-->
+	<script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
+	<!--<DHCBILLINSUCloud/>-->
+</body>
+</html>

@@ -1,0 +1,53 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<html>
+	<head>
+        <title>环节质控查询</title>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>    
+	</head>
+	
+	<body class="hisui-layout" data-options="fit:true,border:false" style=""> 
+
+	<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark"  iconCls="icon-paper-pen" onclick="CommitEntryItems()" style="margin:3px 0px 0px 1%;width:15%;height:100%;">病历缺陷评价</a>	
+	<a id="btnSureZeroError" href="#" class="hisui-linkbutton hover-dark" iconCls="icon-paper-ok" onclick="SureZeroError()" style="margin:3px 0px 0px 1%;width:15%;height:100%;">确认质控无缺陷</a>	 
+	<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark"  iconCls="icon-search" onclick="GetProblemList()" style="margin:3px 0px 0px 1%;width:15%;height:100%;">质控缺陷查看</a>
+	<a id="revision" href="#" class="hisui-linkbutton hover-dark" onclick="changeRevisionStatus()"  data-options=""  style="margin:3px 0px 0px 1%;width:15%;height:100%;" >关闭留痕</a>
+
+ 	<script language="cache" runat="server">
+ 		s RuleID=1
+		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+		s SignUserID = $g(%session.Data("LOGON.USERID"))
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s CTLocatID = $g(%session.Data("LOGON.CTLOCID"))
+		s action = $Get(%request.Data("action",1))
+		s TriggerDate = $zd(+$h,3)
+		s Score = ##Class(EPRservice.Quality.BOManualCheck).GetScoreByEpisodeID(EpisodeID,SSGroupID,CTLocatID,action)
+		s InstanceId = $Get(%request.Data("InstanceId",1),"")
+		s emrDocId = $Get(%request.Data("emrDocId",1),"")
+		s YSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("YSSGroup")
+		s KSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("KSSGroup")
+ 	</script>
+ 	<script type="text/javascript">
+		var RuleID = '#(RuleID)#'
+		var EpisodeID = '#(EpisodeID)#'
+		var SignUserID = '#(SignUserID)#'
+		var SSGroupID = '#(SSGroupID)#'
+		var CTLocatID = '#(CTLocatID)#'
+		var TriggerDate = '#(TriggerDate)#'
+		var Score = '#(Score)#'
+		var action = '#(action)#'
+		var InstanceId = '#(InstanceId)#'
+		var emrDocId = '#(emrDocId)#'
+		var YSSGroup = '#(YSSGroup)#'
+		var KSSGroup = '#(KSSGroup)#'
+	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.EntryGridWide.js"></script>
+</body>
+</html>

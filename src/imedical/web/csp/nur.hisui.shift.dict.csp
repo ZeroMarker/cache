@@ -1,0 +1,234 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<!-- nur.hisui.shift.dict.csp -->
+	<title>数据字典</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px!important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+        #shiftTime td{
+	    	width:50%;
+	    	height:50%;  
+	    	border: 1px solid #ddd;  
+	    }
+	    #shiftTime td div.config{
+	    	
+    		display: inline-block;
+    		height: 100%;
+    		width: 100%;    
+	    }
+	    #shiftTime td div.config-name{
+	    	text-align: center;
+    		font-size: 18px;
+    		font-weight: bold;
+	    }
+	    .config-item{
+			margin-top:10px;    
+		}
+		.config-text{
+			width: 100px;
+    		display: inline-block;	
+		}
+		div.config-content.show{
+			display:block;
+		}
+		div.config-content.hidden{
+			display:none;
+		}
+	</STYLE>
+</head>
+<body>
+
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',border:false" style="height:40px;">
+			
+				<input class="hisui-searchbox"  id="desc" name="desc">  													
+			
+		</div>
+		
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-panel" title="" style="padding:0px;overflow: hidden;" data-options="split:true,fit:true,iconCls:'icon-set-col',headerCls:'panel-header-gray'">
+				<table id="dictList"></table>	
+			</div>
+		</div>
+	</div>
+	
+	<div id="dialogRefer"></div>
+	<SCRIPT language = 'javascript'>
+	// 全局请求后台服务对象
+	var ServerObj={
+	};
+</SCRIPT>
+<script language="javascript">
+	$.fn.watch = function (callback) {
+        return this.each(function () {
+            //缓存以前的值
+            $.data(this, 'originVal', $(this).val());
+            $(this).on('keyup paste input propertychange', function () {
+                var originVal = $.data(this, 'originVal');
+                var currentVal = $(this).val();
+                if (originVal !== currentVal) {
+                    $.data(this, 'originVal', $(this).val());
+                    callback(currentVal,originVal,$(this));
+                }
+            });
+        });
+    }
+
+</script>
+<script type="text/javascript">
+	$(function(){
+		$method.datagrid("dictList")
+		$("input[name=desc]").watch(function(value,oldval,ele) {
+			$method.gridData("dictList")
+		})
+	})
+	
+	var $method={
+		datagrid:function(tableID){
+			$('#'+tableID).datagrid({
+				fit:true,
+				singleSelect : true,
+				fitColumns:true,
+				idField:"ID",
+				rownumbers : true,
+				toolbar :$method.toolBar(tableID),
+				columns :[[
+					//{field:'ID',title:'ID',width:80},
+					{field:'DictDescription',title:'描述',width:100},
+					{field:'DictType',title:'类型',width:100},
+					{field:'DictLabel',title:'标签名',width:150},
+					{field:'DictValue',title:'数据值',width:80},
+					
+					
+					
+					{field:'DictSort',title:'排序',width:100},
+				]],
+				onClickRow:function(index,row){
+					
+				}
+			});	
+			$method.gridData(tableID)
+		},
+		gridData:function(gid){
+			var desc=$("input[name=desc]").val()
+			runClassMethod("Nur.SHIFT.Config.ShiftDict","GetShiftDictList",{"desc":desc},function(rtn){
+					$("#"+gid).datagrid("unselectAll");
+					$("#"+gid).datagrid('loadData', rtn)	
+			},'json',true);	
+		},
+		toolBar:function(gid){
+			var ToolBar = [{
+		        text: '新增',
+		        iconCls: 'icon-add',
+		        handler: function() {
+			        $method.insertView(gid,1)
+			    }
+		    },{
+		        text: '修改',
+		        iconCls: 'icon-write-order',
+		        handler: function() {
+			        $method.insertView(gid,2)
+			    }
+		    },{
+		        text: '复制',
+		        iconCls: 'icon-write-order',
+		        handler: function() {
+			        $method.insertView(gid,3)
+			    }
+		    },{
+		        text: '删除',
+		        iconCls: 'icon-cancel',
+		        handler: function() {
+		            var row = $("#"+gid).datagrid("getSelected");
+		            
+					if (!row) {
+						$.messager.alert("提示","请选择需要删除的记录！");
+						return false;
+					} 
+					runClassMethod("Nur.SHIFT.Config.ShiftDict","DeleteShiftDetailById",{id:row.ID},function(rtn){
+						if(rtn == 0) {
+							$.messager.popover({msg:'删除成功！',type:'success'});
+							$method.datagrid()
+						} else {
+							
+						}
+						
+					},'json',false);
+		        }
+		    }];
+			return ToolBar
+		},
+		insertView:function(gid,saveFlag){
+			var id=""
+			if(saveFlag==2 || saveFlag==3){
+				var row = $("#"+gid).datagrid("getSelected");
+				if(!row){
+					return false;	
+				}
+				id=row.ID
+			}
+			
+			var url="nur.hisui.shift.dict.insert.csp?id="+id
+			$('#dialogRefer').dialog({    
+	    		title: "字典配置",    
+	    		width: 600,    
+	    		height: 500,    
+	    		closed: false,    
+	    		cache: false,
+		        content: "<iframe id='iframeRefer' scrolling='auto' frameborder='0' src='" + url + "' style='width:100%; height:100%; display:block;'></iframe>",
+	    		modal: true ,
+	    		buttons:[{
+					text:'关闭',
+					iconCls:'icon-w-close',
+					id: 'btnClose',
+					handler:function(){
+						$('#dialogRefer').dialog('close');	
+					}
+				},{
+					text:'保存',
+					iconCls:'icon-w-edit',
+					id: 'btnRefer',
+					handler:function(){
+						var $iframe = $('#iframeRefer')[0].contentWindow
+						var rsTxt = ""
+						if(saveFlag==3){
+							rsTxt=$iframe.saveFunLib(2)
+						}else{
+							rsTxt=$iframe.saveFunLib(1)	
+						}
+						
+						if(rsTxt==""){
+							$.messager.popover({msg:'保存成功！',type:'success'});
+							$method.gridData(gid)
+							$('#dialogRefer').dialog('close');	
+						}else{
+							$.messager.alert('提示',rsTxt , "info");	
+						}
+					}
+				}]  
+			});   
+			$("#dialogRefer").dialog("open");
+		}
+	}
+
+</script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+</body>
+</html>

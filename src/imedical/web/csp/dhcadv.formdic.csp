@@ -2,6 +2,7 @@
 <head>
 <title></title>
 <HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script><!--多院区改造 cy 2021-04-09-->
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/jquery/jquery.json.js" charset="utf-8"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/common.js"></script>
 	<script type="text/javascript" src="../scripts/dhcadvEvt/jqueryplugins/component.js"></script>
@@ -16,6 +17,8 @@
 		var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
 		var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
 		var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+		var session=new Array(); <!--多院区改造 cy 2021-04-09 st-->
+		session['LOGON.HOSPID']="#(%session.Get("LOGON.HOSPID"))#"; <!--ed-->
 	</script>
 
 	<script type="text/javascript">
@@ -45,6 +48,9 @@
 		    border-radius: 0 0 4px 4px !important;
 		   
 		}
+		/*多院区改造 cy 2021-04-09 */
+		#_HospList+span{max-width:154px}
+		#_HospList+span >input{max-width:120px}
 	</style>
 </head>
 <body>
@@ -57,25 +63,20 @@
 			<div id="toolbar" class="datagrid-toolbar">
 				<div style="margin-top:10px;margin-bottom:10px;">
 					<tr>
+					<td class="textLabel" style="display:none;"><span style="margin-left:10px;display:none;"></span><label id="_HospListLabel" style="display:none;">医院</label><span style="margin-left:10px;display:none;"></span><input type="text" id="_HospList" name="hosp" style="display:none;"></input> </td> <!--多院区改造 cy 2021-04-09 -->
 					<td><span id="quetype" style="margin-left:10px;">类型<span style="margin-left:10px;"></span><input style="width:120px" name="queryStyle" class='hisui-combobox' 
 				      	  					data-options="valueField:'value',
 				      	  								  textField:'text',
 				      	  								  url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormType',
 				      	  								  onSelect: function(rec){    
-               												commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})		
+               												QueryDataGrid();		
         												  }" id="queryStyle" /></span></td>
-					<td ><span style="margin-left:10px;">表单<span style="margin-left:10px;"></span><input style="width:120px" name="queryForm" class='hisui-combobox' 
-				      	  					data-options="valueField:'value',
-				      	  								  textField:'text',
-				      	  								  url:'dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listCombo',
-				      	  								  onSelect: function(rec){    
-               												commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})		
-        												  }" id="queryForm" /></span></td>
+					<td ><span style="margin-left:10px;">表单<span style="margin-left:10px;"></span><input style="width:120px" name="queryForm" class="hisui-combobox" id="queryForm" /></span></td>
 					<td ><span style="margin-left:10px;">表单标题<span style="margin-left:10px;"></span><input name="queryField" id="queryField" class="textbox" style="width:120px"/></span></td>
 					<td ><span id="dicele"><input class='hisui-radio' type="radio" name='queryType' value='Y' id="queryTypey" label="字典元素"></span>
 						<span id="allele"><input class='hisui-radio' type="radio" name='queryType' value='N' id="queryTypen" checked="true" label="全部"></span>
 				   	  	 <input name="userEdit" id="userEdit" value="#(%request.Get("userEdit"))#" type="hidden" /></td>
-					<td ><a style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})">查询</a> </td>					
+					<td ><a style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="javascript:QueryDataGrid()">查询</a> </td>					
 					</tr>								
 				</div>
 				<div class="tool-bar-line" style="border-bottom-color:#cccccc; border-bottom-width: 1px; border-bottom-style: dashed;">	</div>
@@ -151,6 +152,22 @@
 													required:true,
 													onSelect:function(data){  
 															$('#datagrid').datagrid('getSelected').cat=data.value
+													},
+													onHidePanel : function() {
+														var cat=$('#datagrid').datagrid('getSelected').cat;
+														var _options = $(this).combobox('options');
+														var _data = $(this).combobox('getData');/* 下拉框所有选项 */
+														var _value = $(this).combobox('getValue');/* 用户输入的值 */
+														var _b = false;/* 标识是否在下拉列表中找到了用户输入的字符 */
+														for (var i = 0; i < _data.length; i++) {
+															if ((_data[i][_options.valueField] == _value)&&(cat!='')) {
+																_b=true;
+																break;
+															}
+														}
+														if(!_b){
+															$(this).combobox('setValue', '');
+														}
 													}
 												}
 											}">元素分类</th>
@@ -346,7 +363,7 @@
 				<td align="right">可以复制</td>
 				<td ><input id="canCopy" class='hisui-combobox' data-options="valueField:'value',textField:'text',data: [{text: '是',value:'Y'},{text: '否',value:'N'}]" /></td>
 				<td align="right">显示顺序</td>
-				<td ><input id="seq" type="text" value=1 class="textbox" /></td>				
+				<td ><input id="seq" type="text" value=0 class="textbox" /></td>				
 			</tr>
 			<tr>
 				<td align="right">隐藏元素</td>

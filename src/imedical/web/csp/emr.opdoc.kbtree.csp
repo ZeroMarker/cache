@@ -1,11 +1,17 @@
 ﻿<html>
     <head>
         <title> 知识库 </title>
+        <ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
         <HISUI/>
+        <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+            i ##Class(websys.SessionEvents).SessionExpired()
+            q 1
+        </csp:method>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <link rel="stylesheet" type="text/css" href="../scripts/emr/css/opdoc.resource.kbtree.css"/>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.resource.common.head.js"></script>
 		<script type="text/javascript" src="../scripts/emr/js/opdoc.tools.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/opdoc.tools_convertPinyin.js"></script>
         <script language="cache" runat="server">
             s isCanEdit = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("KBNodeEdit")
             s:(isCanEdit = "") isCanEdit = "Y"
@@ -32,10 +38,10 @@
     </head>
     <body class="hisui-layout" data-options="fit:true,border:false" style="width:100%;height:100%;overflow:hidden;">
         <div class="hisui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
-            <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
-                <div class="hisui-panel" data-options="region:'north',border:false" style="height:42px;padding:10 0 0 8;">
+            <div id="kbtreeLayout" class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+                <div id="kbtreeNorth" class="hisui-panel" data-options="region:'north',border:false" style="height:42px;padding:10 0 0 8;">
                     <span>
-                        <input id="searchBox" href="#" class="hisui-searchbox" style="width:350px;"></input>
+                        <input id="searchBox" href="#" class="hisui-searchbox" style="width:300px;"></input>
                     </span>
                     <span>
                         <div id="switch" class="hisui-switchbox" style="margin-left:5px" data-options="onText:emrTrans('显示全部'),offText:emrTrans('折叠全部'),size:'small',checked:false,animated:true,onSwitchChange:function(event,value){SwitchChange(event,value);}"></div>
@@ -55,7 +61,7 @@
         </div>
         
         <div id ="mm" class="hisui-menu" style="width:240px;font-size:12px;display:none;">
-            <div id="addKBTree">#(..Get("新增个人模板"))#</div>
+            <div id="addKBTree">#(..Get("新增个人知识库"))#</div>
             <div id="addKBNode">#(..Get("新增节点"))#</div>
             <div id="editKBNode">#(..Get("编辑知识库节点"))#</div>
             <div id="editTreeName">#(..Get("修改目录名称"))#</div>
@@ -64,10 +70,23 @@
             <div id="replaceKBNode">#(..Get("替换知识库节点"))#</div>
             <div id="shareKBNode">#(..Get("分享个人知识库"))#</div>
             <div id="cancelshareKBNode">#(..Get("取消分享知识库"))#</div>
+            <div id="toSaveKBTreeByShareKBNode">#(..Get("另存为个人知识库"))#</div>
             <div class="menu-sep"></div>
             <div id="appendKBNode">#(..Get("追加知识库节点"))#</div>
             <div id="moveUpKBNode">#(..Get("上移"))#</div>
             <div id="moveDownKBNode">#(..Get("下移"))#</div>
+        </div>
+        <div id="selKBTree" style="display:none;padding:10px;width:240px;">
+            <div id="path" style="margin:10px 0px;">
+                <span>#(..Get("另存为个人知识库的目录位置"))#</span>
+            </div>
+            <div class="hisui-panel panel-header-gray" data-options="headerCls:'panel-header-gray',noheader:true" style="width:220px;height:300px;padding:10px;overflow:auto;">
+                <ul id="personalKBTree" class="hisui-tree" data-options="lines:true"></ul>  
+            </div>
+            <div id="tool" style="width:220px;text-align:center;margin:10px auto;">
+                <a href="#" class="hisui-linkbutton" id="btnConfirm">#(..Get("确定"))#</a>
+                <a href="#" class="hisui-linkbutton" id="btnCancel">#(..Get("取消"))#</a>
+            </div>
         </div>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.common.js"></script>
         <script type="text/javascript" src="../scripts/emr/js/opdoc.resource.kbtree.js"></script>

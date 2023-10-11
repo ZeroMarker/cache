@@ -1,0 +1,716 @@
+<!-- 体征趋势图 -->
+<style>
+	.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+	#tcStartDate+.datebox>input,#tcEndDate+.datebox>input{width: 83px!important;}
+	#mainChart{
+		/* width:100%; */
+		height:calc(100% - 60px);	
+    margin: 0 10px 10px;
+    border-top: 0;
+	}
+	#mainChart>div{
+    border: 1px solid #cccccc;
+		box-sizing: border-box;
+    border-radius: 4px;
+		width: 980px!important;
+		height:calc(100% - 1px)!important;	
+	}
+	#mainChart .tabs-header{
+		border-radius:0;
+		border-left:0;
+		border-right:0;	
+		border-top: 0;
+	}
+	#mainChart .tabs-panels{
+		border:0;	
+	}
+  table {border-collapse: collapse;}
+  form table td, form table th {padding: 0;}
+	#mainChart #tabs>.tabs-panels>.panel>div{overflow: hidden;}
+</style>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/echarts.min.js"></script>
+<div id="tcModal" class="hisui-dialog" title="#(..Get("体征趋势图"))#" style="width: 1000px;height:700px;" data-options="iconCls:'icon-w-img',resizable:true,modal:true,closed:true"> 
+	<!-- <div style="position: relative;line-height: 28px;height: 30px;margin-bottom: 8px;" class="bptcBar">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div> -->
+	<div style="height:100%;">
+		<form id="tcForm" style="padding:10px;">
+			<table cellpadding="0" cellspacing="0">
+				<tr>
+					<td class="r-label">
+						#(..Get("开始日期"))#
+					</td>
+					<td class="r-label">
+				    <input id="tcStartDate" style="width: 120px;" class="hisui-datebox textbox" data-options="required:true"></input>
+					</td>
+					<td class="r-label">
+						#(..Get("结束日期"))#
+					</td>
+					<td>
+				    <input id="tcEndDate" style="width: 120px;" class="hisui-datebox textbox" data-options="required:true"></input>
+					</td>
+					<td class="r-label">
+	          			<!--input class="hisui-radio" type="radio" label="按天" name="timeType" value="1" checked data-options="required:true">
+	          			<input class="hisui-radio" type="radio" label="按小时" name="timeType" value="2" data-options="onCheckChange:getBptcChartData,required:true"-->
+					</td>
+					<td class="r-label">
+		        		<a href="#" class="hisui-linkbutton hover-dark" onclick="searchChart();">#(..Get("查询"))#</a>
+					</td>
+				</tr>
+			</table>
+		</form>
+		<div id="mainChart">
+			<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true,onSelect:SwitchTab">   
+				<div title="体温" style="padding:10px;">   
+					<div id="temperatureChart" style="width: 100%;height: 100%;"></div>   
+				</div>   
+				<div title="脉搏" style="overflow:auto;padding:10px;">   
+					<div id="pulseChart" style="width: 100%;height: 100%;"></div>    
+				</div>   
+				<div title="呼吸" style="padding:10px;">   
+					<div id="breathChart" style="width: 100%;height: 100%;"></div>     
+				</div>  
+				<div title="血压" style="padding:10px;">  
+					<div id="bpChart" style="width: 100%;height: 100%;"></div>    
+				</div> 
+				<div title="疼痛" style="padding:10px;">   
+					<div id="painIntenChart" style="width: 100%;height: 100%;"></div>     
+				</div> 
+				<div title="大便次数" style="padding:10px;">   
+					<div id="defFreqChart" style="width: 100%;height: 100%;"></div>     
+				</div> 
+				<div title="出入量" style="padding:20px;">   
+					<div id="liquidInOutChart" style="width: 100%;height: 100%;"></div>     
+				</div> 
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+var bpConfig={},myChart,dateformat,colorArr=["#6abfef","#afd17e","#ff5c5c"];  // 蓝、绿、红
+function searchChart(){
+	var tabs = $('#tabs').tabs('getSelected');
+	var curTab = tabs.panel('options').tab;
+	var curTitle=curTab[0].innerText;
+	var index = $('#tabs').tabs('getTabIndex',tabs);
+	SwitchTab(curTitle,index);
+}
+
+// 切换体征项页签
+function SwitchTab(title,index){
+	var startDate=$("#tcStartDate").datebox("getValue");
+	var endDate=$("#tcEndDate").datebox("getValue");
+	if(startDate=="" && endDate=="") return;
+	if(title=="体温"){
+		drawChart("temperatureChart",startDate,endDate,"temperature^rectemperature^oraltemperature",1,title);	
+	}
+	if(title=="脉搏"){
+		drawChart("pulseChart",startDate,endDate,"pulse",10,title);	
+	}
+	if(title=="呼吸"){
+		drawChart("breathChart",startDate,endDate,"breath",5,title);	
+	}
+	if(title=="血压"){
+		drawBPChart(startDate,endDate);		
+	}
+	if(title=="疼痛"){
+		drawChart("painIntenChart",startDate,endDate,"painInten",1,title);	
+	}
+	if(title=="大便次数"){
+		drawChart("defFreqChart",startDate,endDate,"defFreq",1,title);	
+	}
+	if(title=="出入量"){
+		drawChart("liquidInOutChart",startDate,endDate,"liquidln^liquidOut",300,title);	
+	}
+}
+
+function drawChart(chartId,startDate,endDate,ItemCodeStr,obsGap,title){
+	var ItemCodeArr=ItemCodeStr.split("^");
+	if(title=="大便次数"){
+		var chartConfig={"obsGap":1,"obsHigh":3,"obsHighColor":"#fda732","obsLow":1,"obsLowColor":"#87e887","obsMax":4,"obsMin":0}	
+	}else if(title=="出入量"){
+		var chartConfig={"obsGap":300,"obsHigh":3000,"obsHighColor":"#fda732","obsLow":1000,"obsLowColor":"#87e887","obsMax":3000,"obsMin":0}		
+	}else{		
+		var chartConfig=$cm({
+		  	ClassName: 'Nur.NIS.Service.VitalSign.Temperature',
+		  	MethodName: 'GetObsConfig',
+			ItemCode:ItemCodeArr[0],
+			obsGap:obsGap
+		}, false);
+		["obsGap","obsMax","obsMin","obsHigh","obsLow"].map(function(k, i) {
+			if (chartConfig[k]) chartConfig[k]=parseFloat(chartConfig[k]);
+		})
+	}
+	for(var i=0;i<ItemCodeArr.length;i++){
+		var code=ItemCodeArr[i];
+		chartConfig[code+"Color"]=colorArr[i];	
+	}
+	$cm({
+	    ClassName: 'Nur.NIS.Service.VitalSign.Temperature',
+	    MethodName: 'GetSignTrendImg',
+		EpisodeID:EpisodeID,
+		DateList:JSON.stringify([startDate,endDate]),
+		ItemCodeStr:ItemCodeStr
+	}, function (data) {
+		console.log("=================")
+	  	console.log(data);
+	  	console.log("=================");		  
+  		var series=[],legend=[],markLineData=[];
+  		for (var i = 0; i < data.length; i++) {
+  			var v=data[i],dayData=[];
+				data[i].name=$g(v.name);
+  			legend.push(v.name);
+			var d=v.signData;
+			var color=chartConfig[v.code+"Color"];
+  			for (var j = 0, len = d.length; j < len; j++) {
+	  			var obsValue=d[j].obsValue;
+	  			var realValue=obsValue;
+	  			if(title=="出入量" && obsValue>chartConfig.obsMax) obsValue=chartConfig.obsMax;
+				dayData.push({
+	  				date:d[j].date,
+	  				time:d[j].updateTime,
+	  				value:[standardizeDate(d[j].date)+' '+d[j].updateTime,obsValue],
+	  				realValue:[standardizeDate(d[j].date)+' '+d[j].updateTime,realValue],
+	  				nurse:d[j].updateUser,
+	  				name:v.name
+	  			})
+			}
+  			series.push({
+  				name: v.name,
+        		type: 'line',
+        		connectNulls: true,
+        		data: dayData,
+        		color: color,
+        		itemStyle : { normal: {label : {show: true}}},
+        		
+  			})
+  		}
+  		var flag=0;
+  		var dateTime=[
+	  		standardizeDate(startDate), standardizeDate(endDate)
+  		];
+  		var yAxisData=[chartConfig.obsMin];
+  		var obsGap=chartConfig.obsGap;
+  		var obsMax=chartConfig.obsMax;
+  		while(true) {
+  			var yPoint=yAxisData[yAxisData.length-1]+obsGap;
+  			if (yPoint<obsMax) {
+  				yAxisData.push(yPoint);
+  			} else {
+  				yAxisData.push(obsMax);
+  				break;
+  			}
+  		}
+  		["obsHigh","obsLow"].map(function(k, i) {
+	  		if (chartConfig[k]) {
+	  			var val=chartConfig[k];
+	  			for (var m = 1; m < yAxisData.length; m++) {
+	  				if ((val>yAxisData[m-1])&&(val<yAxisData[m])) {
+	  					yAxisData.splice(m,0,val);
+	  					break;
+	  				}
+	  			}
+	  			console.log(yAxisData)
+	  			var serie={
+		      		name: '',
+		      		type: 'line',
+          			symbol: 'none',
+		      		// ---------------按天，按小时------------------
+		      		data: [{
+		  				date:'',
+		  				time:flag?'24:00':'00:00',
+		  				value:[dateTime[flag],val],
+		  				nurse:''
+		      		}],
+		      		// ---------------按天，按小时------------------
+		      		markLine: (title=="大便次数" || title=="出入量") ? {}: {
+		        		data: [[
+		          			{
+                				symbol: 'none',
+                				// x: dateTime[0],
+                				x: '5%',
+                				yAxis: val
+              				}, 
+              				{
+                				symbol: 'none',
+                				label: {
+	                  				position: 'end',
+	                  				formatter: val.toString(),
+	                  				color: chartConfig[k+'Color']
+                				},
+                				x: '97%',
+                				yAxis: val,
+			        		}
+		        		]],
+		        		lineStyle: {
+					    	type:'solid',
+		        			color: {
+						    	x: 0,
+						    	y: 0,
+						    	x2: 0,
+						    	y2: 1,
+						    	colorStops: [{
+					        		offset: 0, color: chartConfig[k+'Color'] // 0% 处的颜色
+						    	}, {
+					        		offset: 1, color: chartConfig[k+'Color'] // 100% 处的颜色
+						    	}]
+							}
+		       	 		}
+		      		}
+	  			}
+	  			if (flag) {
+	  				series.push(serie);
+	  			} else {
+	  				series.unshift(serie);
+	  			}
+	  			flag=1;
+	  		}
+  		})
+
+    	if(myChart) myChart.clear();
+    	myChart = echarts.init(document.getElementById(chartId));
+    	// 指定图表的配置项和数据
+    	var option = {
+	    	title: {
+        		text:$g(title+'趋势图'),
+        		x:'center',
+        		y:'top',
+        		textAlign:'left'
+	    	},
+	    	tooltip:{
+		    	trigger:'item',
+		    	axisPointer:{
+			    	type:'shadow'	
+			    },
+					extraCssText: "padding:10px;",
+    			formatter: function (v,i) {	
+        			if (!v.data.value || !v.data.value[0]) return;
+        			console.log(v);
+					var content=v.data.name+$g("：")+v.data.value[1]+'<br>';
+					content+=formattingDate(v.data.date)+' '+v.data.time+'<br>';
+					content+=$g("采集人：")+v.data.nurse+'<br>';
+					return content;
+				}
+		   	},
+	    	legend: {
+        		data: legend,
+        		x:'center',
+	      		y:'top',
+	      		padding:[35,20,0,0]
+	    	},
+	    	grid: {
+        		left: '3%',
+        		right: '4%',
+        		bottom: '3%',
+        		containLabel: true
+	    	},
+	    	toolbox: {
+        		feature: {
+          			saveAsImage: {}
+        		}
+	    	},
+	    	xAxis: {
+        		type: 'time',
+        		interval: 24*3600*1000,
+        		boundaryGap: false,
+       		 	axisLabel:{
+          			formatter: function (value, index) {
+				    	var date = new Date(value);
+				    	var time=date.toString().split(' ')[4].slice(0,5);
+				    	if(time=="00:00"){
+				    		return date.toLocaleDateString().replace(/\//g, '-');
+				    	}else{
+					    	return ""
+				    	}
+					}
+        		},
+        		splitLine:{
+			    	show:false
+				}
+	    	},
+	    	yAxis: title=="大便次数" ? {
+		    	//name:"单位：次",
+		    	//nameTextStyle:{color:"#6abfef"},
+		    	type:"category",
+		    	data:["0次","1次","2次","3次","3次以上"],
+		    	boundaryGap:false,
+			    splitLine:{
+				    show:true,
+			    	lineStyle: {
+			        	color: "#d9d9d9",
+			        	width: 0.8,
+			        	opacity: 0.4
+		      		}
+				}
+		    }:{
+        		type: 'value',
+        		max: chartConfig.obsMax,
+        		min: chartConfig.obsMin,
+        		splitNumber:(chartConfig.obsMax-chartConfig.obsMin)/chartConfig.obsGap,
+        		data: yAxisData,
+        		splitLine:{
+			    	lineStyle: {
+			        	color: "#d9d9d9",
+			        	width: 0.8,
+			        	opacity: 0.4
+		      		}
+				}
+	    	},
+	    	series: series
+		};
+    	// 使用刚指定的配置项和数据显示图表。
+    	myChart.setOption(option);
+  	});
+}
+
+// 血压趋势图
+function drawBPChart(startDate,endDate){
+	$cm({
+	    ClassName: 'Nur.NIS.Service.VitalSign.Temperature',
+	    MethodName: 'GetSignTrendImg',
+		EpisodeID:EpisodeID,
+		DateList:JSON.stringify([startDate,endDate]),
+		ItemCodeStr:"diaPressure^sysPressure"
+	}, function (data) {
+		console.log("=================")
+	  	console.log(data);
+	  	console.log("=================");		  
+  		var series=[],legend=[],markLineData=[],diaData=[],sysData=[];
+  		// PP 110
+  		if (data[0].name.indexOf($g('舒张压'))>-1) {
+  			diaData=data[0].signData;
+  			sysData=data[1].signData;
+  		} else {
+  			diaData=data[1].signData;
+  			sysData=data[0].signData;
+  		}
+  		sysData.map(function(e, i) {
+  			if (""!==e.obsValue) {
+  				for (var i = 0, len = diaData.length; i < len; i++) {
+  					var d=diaData[i];
+  					if ((""!==d.obsValue)&&(e.date==d.date)&&(e.updateTime==d.updateTime)) {
+  						var gap=e.obsValue-d.obsValue;
+  						if ((gap>=bpConfig.presGapHigh)||(gap<=bpConfig.presGapLow)) {
+  							var dateTime=standardizeDate(e.date)+" "+e.updateTime;
+  							var average=(e.obsValue+d.obsValue)/2;
+  							markLineData.push([
+				          		{
+				          			coord: [dateTime, e.obsValue],
+									symbol: "none"
+				          		},
+				          		{
+				          			coord:[dateTime, d.obsValue],
+									symbol: "none"
+				          		}
+		          			]);
+  							markLineData.push([
+			          			{
+			          				coord: [dateTime, average],
+			          				label: {
+			          					formatter: "PP "+gap, 
+			          					position: "middle",
+			          				},
+								  	symbol: "none"
+			          			},
+			          			{
+			          				coord:[dateTime, average],
+								  	symbol: "none"
+			          			}
+		          			]);
+  						}
+						break;
+  					}
+  				}
+  			}
+  		})
+
+  		for (var i = 0; i < data.length; i++) {
+  			var v=data[i],dayData=[];
+  			legend.push(v.name);
+			var d=v.signData;
+			var color;
+  			if (v.name.indexOf($g('舒张压'))>-1) {
+  				color=bpConfig.diaPresColor;
+  				for (var j = 0, len = d.length; j < len; j++) {
+					dayData.push({
+		  				date:d[j].date,
+		  				time:d[j].updateTime,
+		  				value:[standardizeDate(d[j].date)+' '+d[j].updateTime,d[j].obsValue],
+		  				nurse:d[j].updateUser,
+		  				type:$g("舒张压")
+		  			})
+  				}
+  			} else {
+  				color=bpConfig.sysPresColor;
+  				for (var j = 0, len = d.length; j < len; j++) {
+					dayData.push({
+		  				date:d[j].date,
+		  				time:d[j].updateTime,
+		  				value:[standardizeDate(d[j].date)+' '+d[j].updateTime,d[j].obsValue],
+		  				nurse:d[j].updateUser,
+		  				type:$g("收缩压")
+		  			})
+  				}
+  			}
+  			series.push({
+  				name: v.name,
+					type: 'line',
+					tooltip: {
+						trigger: 'item',
+						extraCssText: "padding:10px;",
+						formatter: function (params) {	
+							console.log(params)       		
+							if (!v.data.value||!v.data.value[1]) return;
+							var content="",type=$g("舒张压");
+							if (i.indexOf($g('收缩压'))>-1) {
+								type=$g("收缩压");
+							}
+							content+=type+$g("：")+v.data.value[1]+'(mmHg)<br>';
+							content+=formattingDate(v.data.date)+' '+v.data.time+'<br>';
+							content+=$g("采集人：")+v.data.nurse+'<br>';
+							return content;
+						}
+					},
+					connectNulls: true,
+					data: dayData,
+					color: color,
+					itemStyle : { normal: {label : {show: true}}},
+					markLine: {
+						// 脉压差
+						data: markLineData,
+						label: {
+							distance: [20, 8]
+						},
+						lineStyle:{
+							color:"#cccccc",
+						// cap:'square'
+						}
+					}
+  			})
+  		}
+  		var flag=0;
+  		var dateTime=[
+	  		standardizeDate(startDate), standardizeDate(endDate)
+  		];
+  		var yAxisData=[bpConfig.bpMin];
+  		var bpGap=bpConfig.bpGap;
+  		var bpMax=bpConfig.bpMax;
+  		while(true) {
+  			var yPoint=yAxisData[yAxisData.length-1]+bpGap;
+  			if (yPoint<bpMax) {
+  				yAxisData.push(yPoint);
+  			} else {
+  				yAxisData.push(bpMax);
+  				break;
+  			}
+  		}
+  		["diaPresHigh","diaPresLow","sysPresHigh","sysPresLow"].map(function(k, i) {
+	  		if (bpConfig[k]) {
+	  			var val=bpConfig[k];
+	  			for (var m = 1; m < yAxisData.length; m++) {
+	  				if ((val>yAxisData[m-1])&&(val<yAxisData[m])) {
+	  					yAxisData.splice(m,0,val);
+	  					break;
+	  				}
+	  			}
+	  			var serie={
+		      		name: '',
+		      		type: 'line',
+          			symbol: 'none',
+		      		// ---------------按天，按小时------------------
+		      		data: [{
+		  				date:'',
+		  				time:flag?'24:00':'00:00',
+		  				value:[dateTime[flag],val],
+		  				nurse:''
+		      		}],
+		      		// ---------------按天，按小时------------------
+		      		markLine: {
+		        		data: [[
+		          			{
+                				symbol: 'none',
+                				// x: dateTime[0],
+                				x: '5%',
+                				yAxis: val
+              				}, 
+              				{
+                				symbol: 'none',
+                				label: {
+                  				position: 'end',
+                  				formatter: (k.indexOf('dia')>-1?'DB':'SB')+' '+val,
+                  					color: bpConfig[k+'Color']
+                				},
+                				x: '95%',
+                				yAxis: val,
+			        		}
+		        		]],
+		        		lineStyle: {
+					    	type:'solid',
+		        			color: {
+						    	x: 0,
+						    	y: 0,
+						    	x2: 0,
+						    	y2: 1,
+						    	colorStops: [{
+					        		offset: 0, color: bpConfig[k+'Color'] // 0% 处的颜色
+						    	}, {
+					        		offset: 1, color: bpConfig[k+'Color'] // 100% 处的颜色
+						    	}]
+							}
+		       	 		}
+		      		}
+	  			}
+	  			if (flag) {
+	  				series.push(serie);
+	  			} else {
+	  				series.unshift(serie);
+	  			}
+	  			flag=1;
+	  		}
+  		})
+		if(myChart) myChart.clear();
+    	myChart = echarts.init(document.getElementById('bpChart'));
+    	// 指定图表的配置项和数据
+    	var option = {
+	    	title: {
+        		text: $g('血压趋势图'),
+        		x:'center',
+        		y:'top',
+        		textAlign:'left'
+	    	},
+	    	tooltip: {
+					trigger: 'axis',
+					extraCssText: "padding:10px;",
+					formatter: function (v,i) {	
+        		console.log(v)	
+        		return;
+        			if (!v.data.value||!v.data.value[1]) return;
+		    		var content="",type=$g("舒张压");
+		    		if (i.indexOf($g('收缩压'))>-1) {
+		    			type=$g("收缩压");
+		    		}
+						content+=type+$g("：")+v.data.value[1]+'(mmHg)<br>';
+						content+=formattingDate(v.data.date)+' '+v.data.time+'<br>';
+						content+=$g("采集人：")+v.data.nurse+'<br>';
+						return content;
+					}
+	    	},
+	    	legend: {
+        		data: legend,
+        		x:'center',
+	      		y:'top',
+	      		padding:[35,20,0,0]
+	    	},
+	    	grid: {
+        		left: '3%',
+        		right: '4%',
+        		bottom: '3%',
+        		containLabel: true
+	    	},
+	    	toolbox: {
+        		feature: {
+          			saveAsImage: {}
+        		}
+	    	},
+	    	xAxis: {
+        		type: 'time',
+        		interval: 24*3600*1000,
+        		boundaryGap: false,
+       		 	axisLabel:{
+          			formatter: function (value, index) {
+				    	var date = new Date(value);
+				    	var time=date.toString().split(' ')[4].slice(0,5);
+				    	if(time=="00:00"){
+				    		return date.toLocaleDateString().replace(/\//g, '-');
+				    	}else{
+					    	return ""
+				    	}
+					}
+        		},
+        		splitLine:{
+			    	show:false
+				}
+	    	},
+	    	yAxis: {
+        		type: 'value',
+        		max: bpConfig.bpMax,
+        		min: bpConfig.bpMin,
+        		splitNumber:(bpConfig.bpMax-bpConfig.bpMin)/bpConfig.bpGap,
+        		data: yAxisData,
+        		splitLine:{
+			    	lineStyle: {
+			        	color: "#d9d9d9",
+			        	width: 0.8,
+			        	opacity: 0.4
+		      		}
+				}
+	    	},
+	    	series: series
+		};
+    	// 使用刚指定的配置项和数据显示图表。
+    	myChart.setOption(option);
+  	});
+}
+
+// 更新模态框位置
+function updateModalPos(id) {
+  var offsetLeft=(window.innerWidth-$('#'+id).parent().width())/2;
+  var offsetTop=(window.innerHeight-$('#'+id).parent().height())/2;
+  $('#'+id).dialog({
+    left: offsetLeft,
+    top: offsetTop
+  }).dialog("open");
+}
+function openBptcModal() {
+  updateModalPos("tcModal");
+	// $('#tcModal').dialog("open");
+	// 获取日期格式
+	var res=$cm({
+		ClassName: 'Nur.NIS.Service.System.Config',
+	    MethodName: 'GetSystemConfig'
+	}, false);
+	dateformat=res.dateformat;
+	bpConfig=$cm({
+	  	ClassName: 'Nur.NIS.Service.VitalSign.BloodPressure',
+	  	MethodName: 'GetBPConfig',
+		hospDR:session['LOGON.HOSPID']
+	}, false);
+	["bpGap","bpMax","bpMin","diaPresHigh","diaPresLow","period","presGapHigh","presGapLow","sysPresHigh","sysPresLow"].map(function(k, i) {
+		if (bpConfig[k]) bpConfig[k]=parseFloat(bpConfig[k]);
+	})
+	var startDate=dateCalculate(new Date(), 1-parseInt(bpConfig.period));
+	var endDate=formatDate(new Date())
+	$('#tcStartDate').datebox('setValue', startDate);
+	$('#tcEndDate').datebox('setValue', endDate);
+	$('#tabs').tabs('select',"体温");
+	drawChart("temperatureChart",startDate,endDate,"temperature^rectemperature^oraltemperature",1,"体温");	
+}
+// 判断数组对象中是否有某个值
+function findElem(array, attr, val) {
+    for (var i = 0; i < array.length; i++) {
+        if (array[i][attr] == val) {
+            return i; //返回当前索引值
+        }
+    }
+    return -1;
+};
+// 标准化日期
+function standardizeDate(day) {
+	var y=dateformat.indexOf('YYYY');
+	var m=dateformat.indexOf('MM');
+	var d=dateformat.indexOf('DD');
+	var str=day.slice(y,y+4)+'/'+day.slice(m,m+2)+'/'+day.slice(d,d+2);
+	return str;
+}
+// 格式化日期
+function formattingDate(day) {
+	var s=dateformat||'YYYY-MM-DD';
+	var y=s.indexOf('YYYY');
+	var m=s.indexOf('MM');
+	var d=s.indexOf('DD');
+	s=s.replace('YYYY',day.substr(y, 4));
+	s=s.replace('MM',day.substr(m, 2));
+	s=s.replace('DD',day.substr(d, 2));
+	return s;
+}
+</script>

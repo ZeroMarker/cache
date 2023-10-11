@@ -1,0 +1,234 @@
+<html>
+<head>
+	<HISUI/>
+	<DHCCKB/>
+	<link rel="stylesheet" href="../scripts/dhcnewpro/dhcckb/css/common.css"><!-- 禁止复制 -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<!-- <script type="text/javascript" src="../scripts/dhcadvEvt/common.js"></script> -->
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/rule.index1.js"></script>
+<style>
+/*页面表格样式*/
+.form-table{
+	border-collapse:collapse;
+	border:1px solid #95B8E7;
+	width:100%;
+	border:none;
+}
+
+.form-table td{
+	border:1px solid #95B8E7;
+	padding:5px 5px;
+	font-size: 13px;
+}
+#ExaCatCode{padding:3px 0px;margin:0}
+.tb_td_bk{
+	width:100px;
+	background:rgb(238, 247, 254);
+}
+.tb_td_required{
+	font-weight:bold;
+	color: red;
+}
+.tb_td_bold{
+	font-weight:bold;
+}
+/* 兼容WebKit核心和IE核心的浏览器 */
+.ui-input {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    height: 25px;
+    width:200px;
+    border:1px solid #95B8E7;
+}
+input:focus{ 
+	background-color:#AFEEEE;
+}
+#icw_bt a.l-btn-plain,#pw_bt a.l-btn-plain,#uicw_bt a.l-btn-plain{
+	/*  background-color:#ffa8a8; */
+	border:1px solid #95B8E7;
+}
+</style>
+
+</head>
+<body class="hisui-layout">
+<script language="Cache" runat="server">
+		w $$$cspStrictJavaScriptStart
+		//s LgUserId=0
+		//s:$d(%session) LgUserId=+$g(%session).Get("LOGON.USERID")
+		w "var AddRuleFlag="_##class(web.DHCCKBCommon).GetAddRuleFlag()_";"
+		w "var DrugData="_##class(web.DHCCKBCommon).GetDrugData()_";"
+		//w "var LgUserId="_LgUserId_";"
+		w "var globalparref="_##class(web.DHCCKBCommon).GetGlobalData()_";"
+		w $$$cspJavaScriptEnd										
+</script>
+	<div id="lifeDia" class="hisui-dialog" title="规则生命周期" 
+    	data-options="iconCls:'icon-w-list',maximized:true,closed:true"><!--图标修改,原：icon-save-->
+    </div>	
+<div data-options="region:'west',title:''"  style="width:400px; padding:10px 10px 10px 10px;" border=0>
+	   <div id="ruleTabs" class="hisui-tabs tabs-gray" data-options="tools:'#tab-tools'" fit=true >
+				<!-- <div title="规则列表" >   
+					<table id="dicTable"></table>
+					<div id="toolbar" style="padding:10 0 10 15">
+						类型 &nbsp;&nbsp;<input id="dicLookUp" class="textbox" />
+						<input id="queryCode" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/>
+					</div>
+				</div>   --> 
+				<div title="模板录入" >
+					<div id="modelToolbar" style="padding:10 0 10 5">
+						<div>
+							模板&nbsp&nbsp<input id="modelTree" class="hisui-combotree" placeholder='请选择模板' style="width:300px" />
+						</div>
+						<div style="margin-top:5px;">
+							查询&nbsp&nbsp<input id="queryrules" href="#" class="hisui-searchbox" prompt='请输入药品描述' style="width:207px" />
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a>
+						</div>
+						<!-- <div style="padding-top:5">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addModelRow()">增加行</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:addModelKeyWord()">增加到规则</a>
+						</div> -->
+						
+					</div>
+					<table id="modelTable"></table>
+				</div>
+				<div title="子规则定义" >   
+					<ul id="commonRuleTree"></ul>		
+							
+					<!-- 树右键菜单 -->
+					<div id="commonRuleMenu" class="hisui-menu" style="">
+							<div onclick="AddRule('commonRuleTree')" data-options="iconCls:'icon-add'">新增规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="DeleteComRule('commonRuleTree')" data-options="iconCls:'icon-cancel'">删除规则</div>
+					</div> 
+				</div>
+				<div title="全局规则" >  
+					<div>
+				    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="add_btn" onclick="editGlobalItm('A')">新增</a>
+				    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true,stopAllEventOnDisabled:true" id="edit_btn" onclick="editGlobalItm('E')">修改</a>
+				    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="del_btn" onclick="delGlobalItm()">删除</a>    	
+				    </div>  
+					<ul id="globalRuleTree"></ul>
+					<div id="globalRuleMenu" class="hisui-menu" style="">
+							<div onclick="AddRule('globalRuleTree')" data-options="iconCls:'icon-add'">新增规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="DeleteComRule('globalRuleTree')" data-options="iconCls:'icon-cancel'">删除规则</div>
+					</div> 	
+					<!-- 全局规则树维护 -->				
+					<div id="globalWin" style="display:none">
+						<table border="1" cellspacing="0" cellpadding="1" class="form-table" style="margin-top:10px">
+							<tr>
+								<td align="right" class="tb_td_bk">代码：</td>
+								<td><input id="itmCode" class="ui-input"/></td>
+							</tr>
+							<tr>
+								<td align="right" class="tb_td_bk">名称：</td>
+								<td><input id="itmDesc" class="ui-input"/></td>
+							</tr>
+							<tr style="display:none;">
+								<td align="right" class="tb_td_bk">ID：</td>
+								<td><input id="itmId" class="ui-input" disabled="disabled"/></td>
+							</tr>								
+						</table>
+						<div id="icw_bt" style="float:right;margin-top:10px;margin-right:100px;">						
+							<a href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="saveGlobalItm()">保存</a>
+							<a href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="closeGlobalWin()">取消</a>
+						</div>
+					</div>
+				</div>
+				
+		</div>
+
+	</div>
+	<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:10px 10px 10px 0px;">
+		<div class="hisui-layout" fit=true id="ruleLayout">
+
+			<div data-options="region:'west',title:''"  style="width:200px;padding:0 10 0 0;" border=0>
+				<div class="hisui-panel" data-options="title:'目录',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">		
+						<ul id="ruleTree"></ul>		
+						
+						<!-- 树右键菜单 -->
+						<div id="treeMenu" class="hisui-menu" style="">
+							<div onclick="CreateRule()" data-options="iconCls:'icon-add'">新增规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="DeleteRule()" data-options="iconCls:'icon-cancel'">删除规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="MoveRule()" data-options="iconCls:'icon-reload'">移动规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="VerRule()" data-options="iconCls:'icon-accept'">核实规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="AuthRule()" data-options="iconCls:'icon-key'">授权规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="CopyRule()" data-options="iconCls:'icon-copy'">复制规则</div>
+							<div class="menu-sep"></div>
+							<div onclick="ReleaseStatus('Release')" data-options="iconCls:'icon-lock'">批量发布</div>
+							<div class="menu-sep"></div>
+							<div onclick="ReleaseStatus('CancelRelease')" data-options="iconCls:'icon-unlock'">批量取消发布</div>
+						</div> 
+						<!-- 移动规则 -->
+						<div id="ruleMoveWin" style="padding:0px 1px;display:none;">   
+							<div style="padding:8px;">
+								<div  style="margin:12px 10px;display:none;">
+									<label style="margin:0px 10px 0px 50px;">目录ID</label><input id="catId" class="textbox" />
+								</div>
+								<div  style="margin:12px 10px;">
+									<label style="margin:0px 10px 0px 50px;">目录描述</label><input id="catDesc" class="hisui-combobox" />
+								</div>
+						    </div>
+						    <div style="padding:2px;">
+						    	<a style="margin-left:67px;" href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="saveMoveRules()">保存</a>
+								<a style="margin-left:42px;" href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="closeMoveWin()">取消</a>
+						    </div>
+					    </div>
+				</div>
+			</div>
+			<div id="CopyRuleWin" class="hisui-dialog" title="复制规则" style="width:650px;height:250px;top:250px;left:500px;padding:10px;"
+			 data-options="iconCls:'icon-save',resizable:true,modal:true,closed:true,toolbar:[
+				{
+					text:'帮助',
+					iconCls:'icon-help',
+					handler:function(){alert('复制规则，谨慎操作！')}
+				}],buttons:[{
+					text:'保存',
+					id:'SaveParrefData',
+					handler:function(){SaveCopyRuleData()}
+				},{
+					text:'关闭',
+					handler:function(){$HUI.dialog('#CopyRuleWin').close();}
+				}]">   
+				<!-- 复制规则字典以及规则所属选择-->
+						<form>
+						  <table>
+							<tr >
+								<!--<td>将规则号为<text id="rulecopy"></td>-->
+								<td>将选中规则复制到</td> 
+								<td><input class="hisui-combobox" href="#" id="newDicDrug" /></td> 
+								<!--<td><input class="hisui-combobox" href="#" id="ParentRule" /></td> -->
+								 <td>的规则目录下</td>   
+							</tr>
+							</table>
+						</form>
+
+			</div>
+			<div data-options="region:'center',title:''"  border=0>
+				<div class="hisui-panel" data-options="title:'规则维护0',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">		
+					<div class="hisui-layout" fit=true>
+						<div data-options="region:'north',title:''" style="height:50px;display:none" border=0>
+							<div class="kw-section">
+								<ul class="kw-section-list keywords" id="selectKeyWords">
+								</ul>
+							</div>
+						</div>
+						<div data-options="region:'center',title:''"  border=0>
+							<!--iframe id="ruleFrame" width="100%" height="100%" frameBorder="0"   src="dhcckb.rule.edit.csp?file=2" ></frame-->
+							<iframe id="ruleFrame" width="100%" height="100%" frameBorder="0"   src="dhcckb.rule.editor.csp?file=2" ></frame>
+						</div>
+					</div>
+				</div>
+			</div>	
+		</div>	
+	</div>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--
+    采购计划 - 制单
+    csp:  csp/pha.in.v3.plan.create.csp
+    js:   scripts/pha/in/v3/plan/create.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        .pha-plan-create-hide {
+            display: none;
+        }
+
+        .messager-popover .content {
+            height: auto
+        }
+        
+        #qCondition a{
+            min-width:90px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options = "region:'center',border:false,split:true">
+                    <div  class = "hisui-panel" data-options="region:'center',title:'采购计划 / 制单'" id="layout-plan-create-panel">
+                        <table id="gridItm"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridItmBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="loc">#(..Get("采购部门"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+
+                <td class="r-label">
+                    <label for="operateType">#(..Get("采购类型"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="operateType" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:true">
+                </td>
+
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnSelect">查询单据</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnClean">清屏</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnPrint">打印</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnSelectMould">查询模板</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnCreateByConsume">查询业务消耗</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="stkCatGrp">#(..Get("类组"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="stkCatGrp" data-pha="class:'hisui-combobox',clear:true,save:true,query:true,required:false">
+                </td>
+                <td class="r-label">
+                    <label for="remarks">#(..Get("备注"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class='hisui-validatebox' id="remarks" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnSave">保存</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnFinish">完成</a>
+                    <a data-pha-btn class="hisui-linkbutton pha-btn-cancel" id="btnFinishCancel">取消完成</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton pha-btn-delete" id="btnDelete">删除</a>
+                </td>
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnSaveAsMould">另存模板</a>
+                </td>
+
+                <td class="r-label">
+                    <a data-pha-btn class="hisui-linkbutton" id="btnCreateByStock">查询标准库存</a>
+                </td>
+            </tr>
+            <tr style="display:none;">
+                <td>
+                    <input type="checkbox" class="hisui-checkbox" id="mouldFlag" data-pha="class:'hisui-checkbox',clear:true,save:true,query:true ">
+                </td>
+            </tr>
+        </table>
+        <div class="pha-banner-container">
+            <div id="planBanner"></div>
+        </div>
+
+        <div class="pha-line"></div>
+        <div class="pha-table-toolbar-button">
+            <div style="float: left;">
+                <a data-pha-btn class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-add'" id="btnAddItm">新增一行</a>
+                <a data-pha-btn class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'" id="btnDeleteItm">删除勾选行</a>
+            </div>
+            <div style="float:right">
+                <div id="keyToolInput" class="hisui-keywords" data-options="items:[{text:'申购科室默认取上一条记录',id:'DefaultReqLoc',selected:true}]"></div>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+    <div id="tmpWin">
+
+    </div>
+    <div id="winFindPlanMould" class="js-pha-com-window-sign">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" class="pha-body pha-body-white">
+                <div class="hisui-layout" fit="true" border="false">
+                    <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',height:350,split:true,title:'采购计划 / 模板',collapsible:true,showCollapsedTitle:true">
+                        <table id="gridMain-m"></table>
+                    </div>
+                    <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',title:'明细'">
+                        <table id="gridItm-m"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="gridMain-mBar">
+            <table class="pha-con-table" id="qCondition-m">
+                <tr>
+                    <td class="r-label">
+                        <label for="loc-m">#(..Get("采购科室"))#</label>
+                    </td>
+                    <td class="r-label">
+                        <input type="text" id="loc-m" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                    </td>
+                    <td class="r-label">
+                        <a class="hisui-linkbutton" id="btnFind-m">查询</a>
+                    </td>
+                    <td class="r-label">
+                        <a class="hisui-linkbutton" id="btnSelect4Create-m">使用模板制单</a>
+                    </td>
+                    <td class="r-label">
+                        <a class="hisui-linkbutton" id="btnSelect4Edit-m">修改模板</a>
+                    </td>
+                    <td class="r-label" style="display: none;">
+                        <a class="hisui-linkbutton" id="btnClose-m">关闭</a>
+                    </td>
+
+                </tr>
+            </table>
+        </div>
+    </div>
+    <!-- 加载本页面js -->
+
+    <!-- <script type="text/javascript" src="../scripts/pha/plugins/datagrid-view/datagrid-scrollview.js"></script> -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/print.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/create.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/mould.js"></script>
+    <!-- 查询 -->
+    <div id="winFindPlan" class="js-pha-com-window-sign"></div>
+    <script type="text/javascript" src="../scripts/pha/in/v3/plan/query.js"></script>
+    <csp:Include Page="pha.in.v3.plan.query.template.csp"></csp:Include>
+    <script type="text/javascript">
+        $('#winFindPlan').append($('#template-plan-query').html())
+        $('#mainDiv-q').css('background-color', 'white');
+        $.parser.parse($('#lyMainView-q').parent());
+        
+    </script>
+</body>
+
+</html>

@@ -1,47 +1,35 @@
+ï»¿<server>
+	w "<input id='transferFlag' type='hidden' value='"_%request.Get("TransferFlag")_"'/>",!
+</server>
 <div class="hisui-layout" data-options="fit:true">
-	<div data-options="region:'north',border:false" style="height:'auto';">
+	<div data-options="region:'north',border:false" style="height:'auto';overflow:hidden;">
 		<table class="search-table">
 			<tr>
-				<td class="r-label td-first-col-58"><label>½ğ¶î</label></td>
-				<td><input id="payAmt" class="hisui-numberbox textbox" data-options="precision:2,min:0,validType:'checkMaxAmt'" style="color: #FF0000;font-weight: bold;"/></td>
-				<td class="r-label r-label-1"><label>Ö§¸¶·½Ê½</label></td>
-				<td><input id="payMode" class="hisui-combobox textbox"/></td>
-				<td class="r-label r-label-1"><label>Ñº½ğÀàĞÍ</label></td>
+				<td class="r-label"><label>#(..Get("é‡‘é¢"))#</label></td>
+				<td><input id="payAmt" class="hisui-numberbox textbox" data-options="precision:2,validType:['checkNegativeAmt','checkMaxAmt']" value="#(%request.Get("PayAmt"))#" style="color: #FF0000;font-weight: bold;"/></td>
+				<td class="r-label r-label-1"><label>#(..Get("å½“å‰ç¥¨å·"))#</label></td>
+				<td><input id="payRcptNo" class="textbox" style="font-weight: bold;" disabled/><a href="javascript:;" id="btn-payRcptTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="display:none;"></a></td>
+				<td class="r-label r-label-1"><label>#(..Get("æŠ¼é‡‘ç±»å‹"))#</label></td>
 				<td><input id="payDepositType" class="hisui-combobox textbox"/></td>
 			</tr>
 			<tr>
-				<td class="r-label"><label>µ±Ç°Æ±ºÅ</label></td>
-				<td><input id="payRcptNo" class="textbox" style="font-weight: bold;" disabled/><a href="javascript:;" id="btn-payRcptTip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a></td>
-				<td class="r-label r-label-1"><label>ÒøĞĞ</label></td>
-				<td><input id="bank" class="hisui-combobox textbox"/></td>
-				<td class="r-label r-label-1"><label>Ö§ĞĞ</label></td>
-				<td><input id="bankBranch" class="textbox"/></td>
-			</tr>
-			<tr>
-				<td class="r-label"><label>Ö§Æ±ºÅ</label></td>
-				<td><input id="checkNo" class="textbox"/></td>
-				<td class="r-label r-label-1"><label>ÕË»§ºÅ</label></td>
-				<td><input id="payAccNo" class="textbox"/></td>
-				<td class="r-label r-label-1"><label>µ¥Î»</label></td>
-				<td><input id="company" class="textbox"/></td>
+				<td class="r-label"><label>#(..Get("å¤‡æ³¨"))#</label></td>
+				<td colspan="3"><input id="payRemark" class="textbox tb-colspan"/></td>
 			</tr>
 		</table>
 		<div style="text-align:center;padding-bottom:10px;">
-			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-pay">½»Ñº½ğ(F9)</a>
+			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-pay">äº¤æŠ¼é‡‘(F9)</a>
 			<div style="display:inline-block;margin:0 5px;"></div>
-			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-reprint">²¹´òÊÕ¾İ</a>
+			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-reprint">è¡¥æ‰“æ”¶æ®</a>
 			<div style="display:inline-block;margin:0 5px;"></div>
-			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-abort">×÷·Ï</a>
+			<csp:if condition=(ReceiptType'=1)>
+			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-voidInvNo">è·³å·</a>
 			<div style="display:inline-block;margin:0 5px;"></div>
-			<a href="javascript:;" class="hisui-linkbutton dep-panel-btn" id="btn-voidInvNo">ÌøºÅ</a>
+			</csp:if>
 		</div>
 	</div>
-	<div data-options="region:'center',border:false" style="border-top:1px solid #cccccc;">
+	<div data-options="region:'center',border:false" style="border-top:1px solid #cccccc;border-radius:0px;">
 		<table id="payDepList"></table>
 	</div>
 </div>
-<form method="get">
-	<input id='requiredFlag' name='requiredFlag' type='hidden'/>
-	<input id='transferFlag' name='transferFlag' type='hidden'/>
-</form>
-<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.deposit.pay.js"></script>
+<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.deposit.pay.js"></script>

@@ -1,11 +1,13 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
 <html>
 <head>
 <HISUI/>
+<script type='text/javascript' src='../scripts/websys.js' charset='gb2312'></script>
 <script type="text/javascript" src="../scripts/dhcnewpro/dhcem/quote.js"></script>
 <style>
-.panel-body, .panel-header {
-    border-color: #ccc;
-}
 .tabs-header, .tabs-panels{
 	border:0 !important;
 }
@@ -15,9 +17,10 @@
 .layout-panel-center, .layout-body{
 	border-radius: 4px 4px 4px 4px !important;
 }
+.div-tool td{line-height:34px}
+.div-tool label{padding:0 11px 0 2px}
 </style>
 </head>
-
 <body>
 	<input type=hidden id="EpisodeID" value=#(%request.Get("EpisodeID"))# >  
 	<input type=hidden id="ElementId" value=#(%request.Get("ElementId"))# >
@@ -28,11 +31,13 @@
 		w "<input type=hidden id='date' value='"_value_"' >" 
    </server>
 	<div id="quoteTab" class="hisui-tabs tabs-gray" fit=true data-options="isBrandTabs:true" style="border:0;">
-		<div title="#(..Get("资源列表"))#" data-options="iconCls:'icon-add-note'" style="padding:20px;"></div>   
-		<div title="#(..Get("诊断"))#" data-options="closable:false" style="padding:5px 5px 0 5px;" >  
+		<div title="#(..Get("资源列表"))#" data-options="iconCls:''" style="padding:20px;"></div>   
+		<div title="#(..Get("诊断"))#" data-options="closable:false" style="" > 
+		 	<div style="width:100%;height:100%;border-bottom:1px solid #e2e2e2;box-sizing:border-box">
 			<div id="DiaDatagrid"></div>
+			</div>
 		</div>
-		<div title="#(..Get("检验"))#" style="padding:5px 5px 0 5px;" >   
+		<div title="#(..Get("检验"))#" style="padding:10px 10px 0 10px;" >   
 			<div class="hisui-layout" fit="true">
 			    <div data-options="region:'north',border:false,title:'',split:true" style="height:250px;">
 			    	<div id="LisDatagrid"></div>
@@ -42,7 +47,7 @@
 			    </div>
 			</div>
 		</div>   
-		<div title="#(..Get("检查"))#" data-options="closable:false" style="overflow:auto;padding:5px 5px 0 5px;">   
+		<div title="#(..Get("检查"))#" data-options="closable:false" style="overflow:auto;padding:10px 10px 0 10px;">   
 			 <div class="hisui-layout" fit="true">
 			    <div data-options="region:'north',title:'',border:false,split:true" style="height:250px;">
 			    	<div id="PacsDatagrid"></div>
@@ -52,10 +57,12 @@
 			    </div>
 			</div>
 		</div>   
-		<div title="#(..Get("医嘱"))#" data-options="closable:false" style="padding:5px 5px 0 5px;" >  
+		<div title="#(..Get("医嘱"))#" data-options="closable:false" style="" >
+			<div style="width:100%;height:100%;border-bottom:1px solid #e2e2e2;box-sizing:border-box">
 				<div id="OrderDatagrid"></div>
+			</div>
 		</div>
-		<div title="#(..Get("病理"))#" data-options="closable:false" style="padding:5px 5px 0 5px;" >  
+		<div title="#(..Get("病理"))#" data-options="closable:false" style="padding:10px 10px 0 10px;" >  
 			 <div class="hisui-layout" fit="true">
 			    <div data-options="region:'north',title:'',border:false,split:true" style="height:250px;">
 			    	<div id="PatHologyDatagrid"></div>
@@ -66,7 +73,7 @@
 			</div>
 		</div>    
 	</div>
-	<div id="LisDatagridTB" class="datagrid-toolbar">
+	<div id="LisDatagridTB" class="datagrid-toolbar div-tool">
 		<table>
 			<tr>
 			<!--
@@ -86,7 +93,7 @@
 			</tr>
 		</table>
 	</div>
-	<div id="PacsDatagridTB" class="datagrid-toolbar">
+	<div id="PacsDatagridTB" class="datagrid-toolbar div-tool">
 		<table>
 			<tr>
 			<td>			
@@ -99,8 +106,9 @@
 			</td>
 			<!--
 			<td><input type="checkbox" name="queryPacsNT" value="NT" ><label><font style="color:red">NT</font></label></input></td>
-			-->			    	
-			<td><input type="radio" name="queryType" value="lastadm"><label>#(..Get("上次就诊"))#</label></input></td>
+			-->	
+			<td><span style="font-size: 20px;font-weight: 100;color:#DDD">|</span></td>			    	
+			<td><input type="radio" name="queryPacsType" value="lastadm"><label>#(..Get("上次就诊"))#</label></input></td>
 			<td><input type="radio" name="queryPacsType" checked="checked" value="adm"><label>#(..Get("本次就诊"))#</label></input></td>
 			<td><input type="radio" name="queryPacsType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
 			<td id="admPacsListTD" style="display:none"><input id="admPacsListCombogrid" ></td>                				
@@ -108,9 +116,8 @@
 		</table>
 	</div>
 	
-	<div id="OrderDatagridTB" class="datagrid-toolbar">
-		<div style="margin-top:5px;margin-bottom:5px;">
-			<table>
+	<div id="OrderDatagridTB" class="datagrid-toolbar div-tool">
+		<table>
 			<tr>
 			<!--
 			<td><a href="#"  class="hisui-linkbutton"  style="width:70px" id="quoteOrderBTN" >引用</a></td>
@@ -121,10 +128,9 @@
 			<td><input type="radio" name="queryOrderType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
 			<td id="admOrderListTD" style="display:none"><input id="admOrderListCombogrid" ></td>                					
 			</tr>
-			</table>								
-		</div>
+		</table>								
 	</div>
-	<div id="DiaDatagridTB" class="datagrid-toolbar">
+	<div id="DiaDatagridTB" class="datagrid-toolbar div-tool">
 		<table>
 			<tr>
 			<!--
@@ -136,7 +142,7 @@
 			</tr>
 		</table>
 	</div>
-	<div id="PatHologyDatagridTB" class="datagrid-toolbar">
+	<div id="PatHologyDatagridTB" class="datagrid-toolbar div-tool">
 		<table>
 			<tr>
 			<td>
@@ -147,7 +153,8 @@
 				<!--
 				<a href="#"  class="hisui-linkbutton"  style="width:70px" id="quotePatHologyBTN" >引用</a>
 				-->
-			</td>		    	
+			</td>
+			<td><span style="font-size: 20px;font-weight: 100;color:#DDD">|</span></td>		    	
 			<td><input type="radio" name="queryPatHologyType" checked="checked" value="adm"><label>#(..Get("本次就诊"))#</label></input></td>
 			<td><input type="radio" name="queryPatHologyType" value="all"><label>#(..Get("所有就诊"))#</label></input></td>
 			<td id="admPatHologyTD" style="display:none"><input id="admPatHologyListCombogrid" ></td>                				

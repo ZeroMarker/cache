@@ -9,6 +9,7 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
 <ADDINS require="RWCard"/>
+<DOCCARD medStepCode="AdmQuery"></DOCCARD>
 <link rel="stylesheet" href="../scripts/dhcdoc/ipdoc/jquery.webui-popover.min.css">
 <style>
 
@@ -132,10 +133,10 @@
 w "<SCRIPT Language=""Javascript"">"
 	d ##class(web.DHCDocOrderListCommon).GetMessageArray("oupatientlist.csp",%session.Get("LOGON.LANGID"))
 w "</SCRIPT>"
-w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
-w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+/*w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+w "<input id='ReadCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()*/
 s sysDateFormat=##class("websys.Conversions").DateFormat()
 s openWinName=%request.Get("openWinName")
 s UserRowID=%session.Get("LOGON.USERID")
@@ -145,6 +146,11 @@ s OPDefDisplayMoreContions=##class(web.DHCDocConfig).GetConfigNode1("OPDefDispla
 if (+OPDefDisplayMoreContions=0){
 	s OPDefDisplayMoreContions=##class(web.DHCDocConfig).GetConfigNode1("OPDefDisplayMoreContions",GroupRowID)
 }
+s LocID=%session.Get("LOGON.CTLOCID")
+s StatusInfo=##class(DHCDoc.OPDoc.PatientListConfig).GetOutPatientConfigStr(LocID)
+if (StatusInfo=""){
+	d ##class(DHCDoc.OPDoc.PatientListConfig).InsertNewHosp(%session.Get("LOGON.HOSPID"))
+	}
 </Server>
 </head>
 <body>

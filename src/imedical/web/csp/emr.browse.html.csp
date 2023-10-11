@@ -1,0 +1,33 @@
+<!--<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>-->
+<html >
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>	≤°¿˙‰Ø¿¿ </title>
+	<server>
+	s instanceId = $G(%request.Data("instanceId",1))
+	s instanceId = $TR(instanceId,"--","||")
+	s actType = $G(%request.Data("actType",1))
+	s isExport= $G(%request.Data("isExport",1))
+	
+	///url??
+	s AESKey="GlobalEMR"
+	Set url = "../service/browser/index.html"
+	Set timeStamp = ##class(BSP.SYS.UTIL.String).NowTimeStamp()
+	Set Param = "instanceId="_instanceId_"&actType="_actType_"&timeStamp="_timeStamp
+	Set Salt = timeStamp_AESKey
+	Set Sign = ##class(web.Util.Encryption).HMACSHA256Sign(Param,AESKey,Salt)
+	Set NewUrl = url_"?"_Param_"&isExport="_isExport_"&signature="_Sign
+	
+	</server>
+</head>
+<body>
+	<div style="width:100%;height:100%;overflow:hidden;">
+		<!--<object id='browse' data='/imedical/web/service/browser/index.html' width='100%' height='100%'></object>-->
+		<!--<iframe id='browse' src='../service/browser/index.html?instanceId=#(instanceId)#&actType=#(actType)#&isExport=#(isExport)#' width='100%' height='100%' frameborder=0 ></iframe>-->
+		<iframe id='browse' src='#(NewUrl)#' width='100%' height='100%' frameborder=0 ></iframe>
+	</div>
+</body>
+</html>

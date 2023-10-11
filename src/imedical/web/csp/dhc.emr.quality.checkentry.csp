@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
+<html>
+	<head>
+        <title>环节质控评价</title>
+        <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    	<HISUI/> 
+        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        
+	</head>
+	
+	<body class="hisui-layout" data-options="fit:true,border:false" style="border-top:none;">
+	<div data-options="region:'center',fit:true,headerCls:'panel-header-gray',border:false" style="height:45px;padding:5px">
+		<div class="hisui-panel" title="手工评分" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-star'">
+			<div id="TableTBar" style="padding:5px;height:30">	
+				<div style="float:left;">
+					<select id="comboQualiytStruct" name="qualiytStruct" class="hisui-combobox" style="width:200px;"></select>
+ 				</div>
+ 				<div style="float:left;margin-left:5px;">
+					<input id="selectDec" name="textbox" class="hisui-searchbox"  style="width:100px;">
+ 				</div>
+	 			
+			</div>
+			<div data-options="border:false" style="height:50%;border: 1px #cccccc solid;border-left:none;border-right:none;">
+				<div class="hisui-datagrid" id="dgStructEntry" data-options="border:false,fit:true"></div>
+			</div>
+			<div id="TableTBar" style="padding:5px;height:30">	
+				<div style="float:left;">
+					<span style="color:red;font-size:15px">病案得分：</span>
+					<span id="score"></span>
+ 				</div>
+ 				<div style="float:right;">
+	 				<a id="btnProblem" href="#" class="hisui-linkbutton hover-dark" onclick="CommitEntryItems()"  style="width:100px;">评分</a>	
+	 			</div>
+			</div>
+			<div data-options="border:false" style="height:31%;border: 1px #cccccc solid;border-left:none;border-right:none;">
+				<div class="hisui-datagrid" id="dgCurQualityResult"  data-options="border:false,fit:true"></div>
+			</div>
+			<div id="TableTBar" style="padding:5px;height:30">	
+				<div style="float:right;">
+	 				<a id="btnSendMsg" href="#" class="hisui-linkbutton hover-dark" onclick="SendMsg()"  style="width:150px ;">发送质控消息</a>	
+	 				<td></td>
+ 				</div>
+			</div>
+		</div>
+	</div>
+
+ 	<script language="cache" runat="server">
+ 		s RuleID=1
+		s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+		s SignUserID = $g(%session.Data("LOGON.USERID"))
+		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s CTLocatID = $g(%session.Data("LOGON.CTLOCID"))
+		s action = "A"
+		s TriggerDate = $zd(+$h,3)
+		s Score = ##Class(EPRservice.Quality.BOManualCheck).GetScoreByEpisodeID(EpisodeID,SSGroupID,CTLocatID,action)
+		s InstanceId = $Get(%request.Data("InstanceId",1),"")
+		s Path=$Get(%request.Data("Path",1),"")
+		s emrDocId = $Get(%request.Data("emrDocId",1),"")
+		s YSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("YSSGroup")
+		s KSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("KSSGroup")
+ 	</script>
+ 	<script type="text/javascript">
+		var RuleID = '#(RuleID)#'
+		var EpisodeID = '#(EpisodeID)#'
+		var SignUserID = '#(SignUserID)#'
+		var SSGroupID = '#(SSGroupID)#'
+		var CTLocatID = '#(CTLocatID)#'
+		var TriggerDate = '#(TriggerDate)#'
+		var Score = '#(Score)#'
+		var action = '#(action)#'
+		var InstanceId = '#(InstanceId)#'
+		var emrDocId = '#(emrDocId)#'
+		var YSSGroup = '#(YSSGroup)#'
+		var KSSGroup = '#(KSSGroup)#'
+		var Path='#(Path)#'
+	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.CheckEntry.js"></script>
+
+</body>
+</html>

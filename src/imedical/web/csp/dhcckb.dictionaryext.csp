@@ -1,0 +1,172 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ </csp:method>
+<html>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<head>
+<title>临床知识库外部代码数据维护</title>
+<HISUI/>
+<DHCCKB/>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/component.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcckb/dictionaryext.js"></script>
+	<style type="text/css">
+		.no-data{
+			width: 100%;
+    		height: 100%;
+   			background: url(../scripts/dhcnewpro/dhcckb/images/noselect-warn.png) center center no-repeat;
+			}
+		.layout-panel-center{
+			padding: 10px;
+		}
+		.layout-panel-west{
+			padding: 10px 0px 10px 10px;
+		}
+   </style>
+</head>
+
+<body >	
+<div class="hisui-layout"  fit="true">
+
+	<!--查询条件区-->
+	<div data-options="region:'west',title:''"  style="width:500px;" border=0>				
+		<div class="hisui-panel" data-options="title:'项目字典目录-外部字典',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">	
+			<div id="toolbar">		
+				<div  style="padding:10px 10px 0px 10px;">			
+					<td><input id="queryCode" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/>	
+					<td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="find" onclick = 'QueryDicList()'>查询</a> </td>
+			
+				</div>	
+				<div class="tool-bar-line" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>	
+									
+				<table>
+					<td ><a  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="insert">新增</a> </td>
+					<td ><a  href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="savedata">保存</a> </td>
+				</table>
+			</div>
+		<div id="diclist" toolbar="#toolbar"  border="false"></div>
+    	</div>					
+	</div>
+	<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'">
+		<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true" >    
+			<div title="字典数据" data-options="selected:true" style="">					
+				<div class="no-data" style="display:none"></div>
+				
+				<!-- grid类型-->					
+				<div id="griddiv" style="height:100%;">
+					<div id="subdiclist" toolbar="#subtoolbar"></div>							
+				</div>
+				
+				<!-- tree类型-->
+				<div id="treediv"  class="hisui-layout layout" fit="true">						
+					<!-- 查询条件区域-->
+					<div data-options="region:'north',title:''" style="height:80px;padding:10px 0px 0px 10px;" border=0 >	
+						<table>						
+	    					<tr>
+						    	<td class="tdlabel">检索</td>
+					    		<td><input style="width:165px;" class='hisui-searchbox' id="FindTreeText" missingMessage="请输入查找内容"></td>
+					    		<td class="tdlabel-b">
+									<a href="#" id="btnSearch" class="hisui-linkbutton" onclick="reloadTree()" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true">查询</a>
+								</td>
+								<td class="tdlabel-b">
+									<a href="#" id="btnRefresh" class="hisui-linkbutton" onclick="ClearData()" data-options="iconCls:'icon-w-clean',stopAllEventOnDisabled:true">清屏</a>
+								</td>
+							</tr>
+						</table >	
+						<!--工具栏区域-->
+						<table>
+							<tr >
+								<td><a class="hisui-linkbutton" onclick="AddDataTree()" id="insert" data-options="iconCls:'icon-add',plain:true">新增</a></td>
+								<td><a class="hisui-linkbutton" onclick="UpdateDataTree()" id="save" data-options="iconCls:'icon-save',plain:true">修改</a></td>
+								<td><a class="hisui-linkbutton" onclick="DelDataTree()" id="deletetreedata" data-options="iconCls:'icon-cancel',plain:true">删除</a></td>
+							</tr> 
+						</table >
+						<div style="margin-top:0px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>					
+					</div>
+					<!--内容展示区域 -->
+					<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray'" style="padding:0px 10px 0px 0px;">
+						<ul data-options="fit:true" id="dictree" border="false" class="hisui-tree" toolbar="#mybar"></ul> 
+					</div>	 
+				</div>				
+			</div>
+			<div title="附加属性" data-options="" style="overflow:auto;" border=0>
+				<iframe id="tabscont" scrolling="yes" width=100% height=100%  frameborder="0" src="" ></iframe>	
+				<!-- <div id="addattrlist" toolbar="#attrtb" border="false"></div> -->
+			</div> 
+		</div>		
+	</div> 
+</div>
+<div id="subtoolbar" class="toolbar">
+	<table cellspacing="0" cellpadding="0" style="padding:10px">
+		<tr>
+		     <td><input id="subQueryCode" href="#" class="hisui-searchbox" prompt='请输入代码/名称/拼音码'/></td>
+		     	<td style="padding-left:5px;padding-right:5px">医院</td>
+				<td>
+					<input id="HospId" class="hisui-combobox textbox"/>
+				</td>
+				<td ><a style="margin-left:10px;" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick = 'SubQueryDicList()'>查询</a> </td>
+	    </tr>
+	</table>
+	<div style="border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div>		
+	<table>
+		<tr>			
+			 <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" id="insertsub">新增</a> </td>
+			 <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" id="savesubdata">保存</a> </td>
+			 <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" id="detsub">删除</a></td> 
+			 <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-ref',plain:true" id="updTreeDic">字典归属</a> </td>
+		</tr>
+	</table>
+</div>
+<!-- 修改字典归属窗口 -->
+<div id="UpdDicWin" style="display:none;">   
+	<div  style="margin:10px;position:relative;">
+		<div style="margin:auto;width: 200px;height: 30px;">
+			<label style="margin-right:5px;">字典</label><input id="dicDesc" class="hisui-combobox" />
+		</div>
+    </div>
+    <div style="text-align: center;font-size: 0;">
+    	<a style="margin-right:10px" href="#" class="hisui-linkbutton" iconCls="icon-w-save" onclick="saveDiction()">保存</a>
+		<a href="#" class="hisui-linkbutton" iconCls="icon-w-cancel" onclick="closeDicWin()">取消</a>
+    </div>
+</div>
+
+<div id="myWin" style="width:360px;height:400px;padding:10px;display:none;">   
+	<form id="form-save" method="post" data-options="fit:true,border:false,plain:true"> 
+		<table style="width:90%">
+			<tr style="display:inline">
+	 			<td></td>
+	   			<td ><input id="treeID" type="text" class="textbox hisui-validatebox"></td>
+	 		</tr>
+			<tr>
+	           <td class="tdlabel"><font color=red>*</font>代码</td>
+			   <td><input id="treeCode" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+			 </tr>
+			<tr>
+			   <td class="tdlabel"><font color=red>*</font>描述</td>
+			   <td><input id="treeDesc" type="text" class="textbox hisui-validatebox" data-options="required:true"></td>
+			</tr>
+			<tr>
+			   <td  class="tdlabel">上级分类</td>
+			   <td><input id="parref" type="text" class="textbox hisui-combotree"></td>
+			</tr>
+		</table >
+	</form>
+</div>
+      		
+<!-- 属性树右键菜单 -->
+<div id="right" class="hisui-menu" style="">
+	<div onclick="AddSameDataTree()" iconCls="icon-add" data-options="">添加本级</div>
+	<div onclick="AddDataTree()" iconCls="icon-add" data-options="">添加下级</div>
+	<div onclick="UpdateDataTree()" iconCls="icon-write-order" data-options="">修改</div>
+	<div onclick="DelDataTree()" iconCls="icon-cancel" data-options="">删除</div>
+	<!-- <div class="menu-sep"></div>	 -->
+</div>
+
+
+
+</body>
+</html>

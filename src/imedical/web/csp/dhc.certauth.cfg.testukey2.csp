@@ -1,0 +1,366 @@
+﻿<html>
+<head>
+<HISUI/>
+    <title>测试UKey签名</title>
+	<script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+	<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js"></script>
+	
+	<style type="text/css">
+		table tr td{
+			padding:2px;
+		}
+		.message{
+			padding:10px;
+			font-size:16px;
+			overflow-y:auto;
+			;overflow-x:hidden;
+			display:none;
+		}
+	</style>
+	
+	<server>
+    	s SignTypeCode = "UKEY"
+    	s VenderCode = $Get(%request.Data("venderCode",1),"")
+    	d ##Class(CA.DigitalSignatureService).CASessionDataInit(SignTypeCode,VenderCode)	
+    	s jsPath = ##Class(CA.DSService).GetJSPath(SignTypeCode,VenderCode)
+		w "<script type=""text/javascript"" src="""_jsPath_"""></script>",!
+    </server>
+	
+  <script type="text/javascript" language="javascript">
+  		
+        //获取当前日期时间 格式 yyyy-MM-dd HH:MM:SS
+        function getCurrentTime() {
+            var date = new Date();
+            var seperator = ":";
+            
+            var currentdate = date.getHours() + seperator + date.getMinutes() + seperator + date.getSeconds();
+            return currentdate;
+        }
+        
+         function getTime() {
+            var date = new Date();
+            return date.getTime();
+        }
+        
+  
+  		var strServerRan = "#($g(%session.Data("ServerRan")))#";
+		var strServerCert = "#($G(^CF("CA","ServerCert")))#";
+		var strServerSignedData = "#($g(%session.Data("ServerSignedData")))#"; 
+		var signTypeCode = "#(SignTypeCode)#";
+		var venderCode = "#(VenderCode)#";
+		
+  		var hisUserName = "";
+  		var hisUserID = "";
+  		var content = "";
+  		var hash = "";
+  		var signedData = "";
+  		var cert = "";
+  		var certNo = "";
+  		var userCertCode = "";
+  		
+  
+  		//开始签名流程
+		function caSign() 
+		{
+			var key = $('#keys').combobox('getValue');
+			if ("" == key)
+			{
+			    displayError("请选择UKey");
+		    	return;
+			}
+			
+			var pwd = $('#txtPassword').val();
+			if ("" == pwd)
+			{
+				displayError("请输入密码");
+		    	return;
+			}
+			
+			console.log('开始'+getCurrentTime());//输出到控制台	
+			var time1 = getTime();
+			var objForm = document.getElementById('caAuditForm');
+			if (!Login(objForm, key, pwd))
+			{
+				displayError("登录失败");
+				return;
+			}
+			console.log('登录后'+getCurrentTime());//输出到控制台
+			var time2 = getTime();	
+			var takeTime = time2 - time1
+			console.log('登录耗时:'+ takeTime +'毫秒');
+			content = "123abcABC";
+			hash = HashData(content);
+			if ("" == hash) 
+			{
+				displayError("Hash接口返回为空");
+				return;
+			}
+			console.log('Hahs后'+getCurrentTime());//输出到控制台
+			var time3 = getTime();
+			var takeTime = time3 - time2	
+			console.log('Hash耗时:'+ takeTime +'毫秒')		
+			signedData = SignedData(hash,key);
+			if ("" == signedData) 
+			{
+				displayError("数据签名失败");
+				return;
+			}
+			console.log('签名后'+getCurrentTime());//输出到控制台	
+			var time4 = getTime();	
+			var takeTime = time4 - time3	
+			console.log('签名耗时:'+ takeTime +'毫秒')	
+			cert = GetSignCert(key);
+			if ("" == cert) 
+			{
+				displayError("获取证书失败");
+				return;
+			}
+			console.log('获取证书后'+getCurrentTime());//输出到控制台	
+			var time5 = getTime();	
+			var takeTime = time5 - time4	
+			console.log('获取证书接口耗时:'+ takeTime +'毫秒')	
+			certNo = GetCertNo(key)
+			if ("" == certNo) 
+			{
+				displayError("获取证书唯一标识失败");
+				return;
+			}
+			console.log('获取证书唯一标识后'+getCurrentTime());//输出到控制台	
+			var time6 = getTime();
+			var takeTime = time6 - time5		
+			console.log('获取证书唯一标识耗时:'+ takeTime +'毫秒')	
+			userCertCode = GetUniqueID(cert,key);
+			if ("" == userCertCode) 
+			{
+				displayError("获取用户唯一标识失败");
+				return;
+			}
+			console.log('获取用户唯一表示后'+getCurrentTime());//输出到控制台	
+			var time7 = getTime();	
+			var takeTime = time7 - time6	
+			console.log('好去用户唯一标识耗时:'+ takeTime +'毫秒')	
+			var data = ajaxDATA("String","CA.DigitalSignatureService","Login2","",userCertCode,"","",certNo,cert,signTypeCode,venderCode);
+			ajaxPOSTSync(
+				data,
+				function(ret)
+				{
+					var json =JSON.parse(ret);
+					if (json.retCode == "0") {
+						hisUserName = json.hisUserName;
+						hisUserID = json.hisUserID;
+						//调用后台方法做验签及生成时间戳
+						SignInfo(time7);
+					} else {
+						displayError(json.retMsg);
+					}
+				},
+				function(ret){
+					displayError(ret);
+				}
+			);
+		}
+		
+		//调用后台服务验签并生成时间戳
+		function SignInfo(time7)
+		{
+			console.log('后台登陆后'+getCurrentTime());//输出到控制台	
+			var time8 = getTime();	
+			var takeTime = time8 - time7	
+			console.log('后台验证证书有效性耗时:'+ takeTime +'毫秒')	
+			var data = ajaxDATA("String","CA.DigitalSignatureService","Sign",userCertCode,"TEST",hash,signedData,certNo);
+			ajaxPOSTSync(
+				data,
+				function(ret)
+				{
+					var flag = ret.split('^')[0];
+					var result = ret.split('^')[1];
+					if (flag == "0") {
+						displayError(result);
+					} else if (flag == "1") {
+						var signInfoID = result;
+						//签名成功，展示相关数据
+						ShowSucessInfo(signInfoID,time8);
+					} else {
+						displayError("未知错误："+ret);
+					}
+				},
+				function(ret){
+					displayError(ret);
+				}
+			);
+		}
+		
+		//签名成功后展示相关数据
+		function ShowSucessInfo(signInfoID,time8)
+		{
+			console.log('后台验证签名生成时间戳后'+getCurrentTime());//输出到控制台	
+			var time9 = getTime();
+			var takeTime = time9 - time8		
+			console.log('后台验签及生成时间戳耗时:'+ takeTime +'毫秒')	
+			var data = ajaxDATA("String","CA.DigitalSignatureService","GetDigitalSignatureInfo",signInfoID);
+			ajaxPOSTSync(
+				data,
+				function(ret)
+				{
+					if (ret == "")
+					{
+						displayError("获取签名数据及时间戳失败");
+					}
+					else
+					{
+						var json =JSON.parse(ret);
+						var signValue = json.SignValue;
+						var timeStamp = json.TimeStamp;
+						
+						var SignInfo = "【Hash前签名数据】：" + "\n" + content + "\n";
+						SignInfo = SignInfo + "\n"+ "【Hash算法生成值】：" + "\n" + hash + "\n";
+						SignInfo = SignInfo + "\n"+ "【CA用户签名证书】：" + "\n" + cert + "\n";
+						SignInfo = SignInfo + "\n"+ "【CA证书唯一标识】：" + "\n" + certNo + "\n";
+						SignInfo = SignInfo + "\n"+ "【CA用户唯一标识】：" + "\n" + userCertCode + "\n";
+						SignInfo = SignInfo + "\n"+ "【CA客户端签名值】：" + "\n" + signedData + "\n";
+						SignInfo = SignInfo + "\n"+ "【CA服务端时间戳】：" + "\n" + timeStamp + "\n";
+						SignInfo = SignInfo + "\n"+ "【验证后CA签名值】：" + "\n" + signValue + "\n";
+						SignInfo = SignInfo + "\n"+ "【关联HIS用户ID】：" + "\n" + hisUserID + "\n";
+						SignInfo = SignInfo + "\n"+ "【关联HIS用户名】：" + "\n" + hisUserName;
+						displayOK(SignInfo);
+					}
+				},
+				function(ret){
+					displayError(ret);
+				}
+			);
+		}
+		
+		///获取并填充证书列表
+		function GetCAUserList()
+		{
+			console.log('获取证书列表'+getCurrentTime());//输出到控制台	
+			var time01 = getTime();				
+		    var lst = GetUserList();
+		    console.log('获取证书列表后'+getCurrentTime());//输出到控制台	
+			var time02 = getTime();
+			var takeTime = time02 - time01
+			console.log('获取证书列表耗时:'+ takeTime +'毫秒')	
+		    var arrUsers = lst.split('&&&');
+		    if ('' == lst || 0 == arrUsers.length) 
+		    {
+			    displayError("未检测到证书");
+		    	return;
+			}
+
+		    var data = new Array();
+		    for (var i = 0; i < arrUsers.length; i++) 
+		    {
+		        var user = arrUsers[i];
+		        if (user != "") {
+		            var keyName = user.split('||')[0];
+		            var uniqueID = user.split('||')[1];  
+					data.push({"id":uniqueID,"text":keyName});
+		        }
+		    }
+		    $('#keys').combobox('loadData', data);
+		}
+		
+		//展示成功信息
+		function displayOK(ok) 
+		{
+			$("#caTip").hide();
+			$("#SignInfo").show();
+			document.getElementById("caTip").innerText = "";
+			document.getElementById("SignInfo").innerText = ok;
+		}
+		
+		//展示错误信息
+		function displayError(error) 
+		{
+			$("#caTip").show();
+			$("#SignInfo").hide();
+			document.getElementById("caTip").innerText = error;
+			document.getElementById("SignInfo").innerText = "";
+		}
+		
+		//重置页面
+		function reload()
+		{
+			hisUserName = "";
+			hisUserID = "";
+			content = "";
+			hash = "";
+			signedData = "";
+			cert = "";
+			certNo = "";
+			userCertCode = "";
+			$('#txtPassword').val("");
+			$('#keys').combobox('clear');
+			
+			GetCAUserList();
+			$("#caTip").hide();
+			$("#SignInfo").hide();
+			document.getElementById("caTip").innerText = "";
+			document.getElementById("SignInfo").innerText = "";	
+		}
+		
+		window.onload = function() {
+			$('#keys').combobox({
+				valueField: 'id',
+				textField: 'text',
+				editable: false,
+				panelHeight: 'auto'
+			});
+			
+			///开始签名
+			$("#submit").click(function()
+			{ 
+				caSign();
+			});
+
+			///重新填充证书
+			$("#load").click(function()
+			{
+				GetCAUserList(); 
+			});
+			
+			///重置页面
+			$("#reload").click(function()
+			{
+				reload();
+			});
+			
+			//页面加载完成后，自动加载UKey列表
+			GetCAUserList();
+		}
+    </script>
+ </head>
+    
+<body>    
+	<div id="cadiv" align="center" valign="middle" style="overflow:auto;width:100%;height:200px;padding-top:30px;">
+	    <form id="caAuditForm" name="caAuditForm" width="100%" height="100%" style="margin-right: 0px;margin-bottom: 0px;margin-top: 0px;">
+	    	<table>
+			    <tr align="center" valign="center">
+			    	<td>选择证书:</td>
+			    	<td>
+			    		<input id="keys" name="keys" class="hisui-combobox key"/>
+			    	</td>
+			    </tr>
+			    
+			    <tr align="center" valign="center">
+			    	<td>证书口令:</td>
+			    	<td>
+			    		<input id="txtPassword" class="hisui-validatebox validatebox-text password" type="password" name="password"/></td>
+			    	</td>
+			    </tr>
+		    	
+		    	<tr>
+					<td colspan=2 class="button"> 
+						<a href="#" class="hisui-linkbutton" id="submit" >确定</a>
+						<a href="#" class="hisui-linkbutton" id="load">加载证书</a>
+						<a href="#" class="hisui-linkbutton" id="reload">重置页面</a>
+					</td>
+				</tr>
+		    </table> 
+	    </form>
+    </div>
+    <div id='caTip' class='message' style="color:red;text-align:center;height:50px;">错误提示</div>    
+    <div id='SignInfo' class='message' style="margin-left:300px;text-align:left;height:auto;width:800px;">信息</div>
+</body>
+</html>

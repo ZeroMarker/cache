@@ -1,0 +1,230 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	If ##Class(websys.SessionEvents).SessionExpired() Quit 1
+	Quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetDataImport.csp 交班数据引入配置-->
+<HTML lang="zh-CN">
+
+<HEAD>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<TITLE>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI></HISUI>
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+	<style>
+		body {
+			background: white;
+			padding: 0;
+			overflow: hidden;
+		}
+
+		hr.solid {
+			border-top: 0;
+			border-bottom: 1px solid #ccc;
+		}
+
+		div.hGap {
+			height: 10px;
+		}
+
+		div.vGap {
+			width: 10px;
+		}
+
+		.selfBtn .l-btn-plain {
+			padding: 0;
+			border: 0;
+			margin-top: 3px;
+			margin-bottom: 3px;
+		}
+
+		.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {
+			line-height: 22px;
+			padding: 0 10px 0 31px;
+			margin: 0;
+			color: #666;
+		}
+
+		.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {
+			left: 5px;
+			height: 22px;
+			width: 26px;
+		}
+
+		.combo .combo-text {
+			box-sizing: border-box;
+		}
+
+		#_HospList+.combo>.combo-text {
+			width: 320px !important;
+		}
+
+		.l-btn:focus {
+			outline: none;
+		}
+
+		td.datagrid-value-changed {
+			background: transparent;
+		}
+
+		.icon {
+			padding-left: 20px;
+			background-position: left 0px center;
+			display: inline-block;
+			font-size: 12px;
+			cursor: pointer;
+		}
+
+		@keyframes shine {
+			0% {
+				background-position: -1px -1px;
+			}
+
+			100% {
+				background-position: -12px -12px;
+			}
+		}
+
+		#bloodBagList tr {
+			border-bottom: 1px solid #cccccc;
+			height: 30px;
+		}
+
+		#bloodBagList tr>th {
+			text-align: center;
+			background: #f9f9fa;
+		}
+
+		#bloodBagList tr>td {
+			text-align: center;
+		}
+
+		#bloodBagList tr>td:first-of-type {
+			text-align: left;
+			padding-left: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div>
+		<table cellpadding="0" style="margin: 10px;border-collapse:collapse;">
+			<tr>
+				<td class="r-label">开始日期</td>
+				<td class="r-label">
+					<input id="startDate" class="hisui-datebox textbox" style="width: 115px;"></input>
+				</td>
+				<td class="r-label">结束日期</td>
+				<td class="r-label">
+					<input id="endDate" class="hisui-datebox textbox" style="width: 115px;"></input>
+				</td>
+				<td class="r-label">
+					<input id="keyword" class="hisui-validatebox textbox" type="text" placeholder="输入关键字">
+				</td>
+				<td class="r-label">
+					<a href="#" id="recycleBtn" class="hisui-linkbutton hover-dark" style="margin-right: 10px;"
+						data-options="iconCls:'icon-w-find'" onclick="getBloodBagList(1)">查询</a>
+				</td>
+			</tr>
+		</table>
+
+		<table id="bloodBagList" cellpadding="0"
+			style="width: 100%;border-collapse: collapse;margin-top: -0.5em;display: none;" class="hisui-datagrid"
+			data-options="headerCls:'panel-header-gray',autoSizeColumn:true,fitColumns:true,pagination:true,pageSize:20,pageList:[20,50,100,200]" border="false">
+			<thead>
+				<tr>
+					<th data-options="field:'number',width:30">序号</th>
+					<th data-options="field:'warddesc',width:30">病区</th>
+					<th data-options="field:'patname',width:30">患者姓名</th>
+					<th data-options="field:'registerNum',width:30">登记号</th>
+					<th data-options="field:'bedcode',width:30">床号</th>
+					<th data-options="field:'patBldType',width:30">患者血型</th>
+					<th data-options="field:'bldProduct',width:30">血制品</th>
+					<th data-options="field:'bldType',width:30">血液血型</th>
+					<th data-options="field:'nurse',width:30">护工</th>
+					<th data-options="field:'datetime',width:30">时间</th>
+				</tr>
+			</thead>
+		</table>
+	</div>
+
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript">
+		var page = 1, pageSize = 20, saveFlag = true;
+		$(function () {
+			$('#startDate').datebox('setValue', formatDate(new Date()));
+			$('#endDate').datebox('setValue', formatDate(new Date()));
+			// 获取血袋列表
+			getBloodBagList();
+			updateDomSize();
+		});
+		function getBloodBagList(p) {
+			if (p) page = p;
+			saveFlag = false;
+			var startDate = $('#startDate').datebox('getValue');
+			var endDate = $('#endDate').datebox('getValue');
+			$cm({
+				ClassName: 'Nur.BloodBagRecive',
+				QueryName: 'GetBloodBagList',
+				page: page,
+				rows: pageSize,
+				keyword: $("#keyword").val(),
+				startDate: startDate,
+				endDate: endDate,
+			}, function (data) {
+				console.log(data);
+				// wardsData = data.rows;
+				$('#bloodBagList').datagrid({
+					data: data
+				});
+				$('#bloodBagList').datagrid("getPager").pagination({
+					onSelectPage: function (p, size) {
+						console.log(p, size);
+						console.log(saveFlag);
+						page = p;
+						pageSize = size;
+						if (saveFlag) {
+							getBloodBagList();
+						} else {
+							saveFlag = true;
+						}
+					},
+					onRefresh: function (p, size) {
+						console.log(p, size);
+						page = p;
+						pageSize = size;
+						getBloodBagList();
+					},
+					onChangePageSize: function (size) {
+						console.log(size);
+						page = 1;
+						pageSize = size;
+						getBloodBagList();
+					}
+				}).pagination('select', page);
+			});
+		}
+		function setDateboxOption() {
+			var startDate = $("#startDate").datebox('getValue'), stopDate = $("#stopDate").datebox('getValue');
+			var startOpt = $("#startDate").datebox('options'), stopOpt = $("#stopDate").datebox('options');
+			if (startDate) stopOpt.minDate = startDate;
+			if (stopDate) startOpt.maxDate = stopDate;
+		}
+		function updateDomSize() {
+			$('#bloodBagList').datagrid('resize', {
+				width: window.innerWidth,
+				height: window.innerHeight - 50
+			});
+		}
+		window.addEventListener("resize", updateDomSize);
+
+	</script>
+</body>
+
+</html>

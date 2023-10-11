@@ -1,0 +1,35 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/App/BDPSystem/timeline/css/style.css">
+</head>
+<body id="body">
+ <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() q 1
+  q 1
+</csp:method>
+ <SERVER>
+ s ClassN= $g(%request.Data("ClassN",1))   
+ s OBJDESC=$g(%request.Data("OBJDESC",1))  
+ s ObjectDESC=$g(%request.Data("ObjectDesc",1))  
+ s actiontype=$g(%request.Data("actiontype",1))
+ s classdesc=$g(%request.Data("ClassDesc",1))
+ s id=$g(%request.Data("id",1)) 
+ if (actiontype="timeline")
+ {
+    if (ClassN="^DHCTarC")
+    {
+       d ##class(web.DHCBL.MKB.MKBDataChangeLog).ProduceTimeLine(ClassN,OBJDESC,ObjectDESC,classdesc)   
+    }
+    else
+    {
+       d ##class(web.DHCBL.MKB.MKBDataChangeLog).ProduceTimeLine(ClassN,OBJDESC,ObjectDESC)
+    }
+ }
+ if (actiontype="datadetail")
+ {
+    d ##class(web.DHCBL.MKB.MKBDataChangeLog).ProductTable(id)  
+ }
+</SERVER>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!--库存调整建单
+	csp:csp/pha.in.v3.adj.audit.csp
+	js: scripts/pha/in/v3/Adj/Audit.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+	d ##Class(websys.SessionEvents).SessionExpired() q 1
+	
+</csp:method>
+
+<HEAD>
+	<!-- iMedical版本标题 -->
+	<title>
+		<TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+	</title>
+	<TRAK:HEAD></TRAK:HEAD>
+	<HISUI />
+	<PHALIBV1 />
+	<PHAPRINTCOM />
+	<!-- 样式扩展 -->
+    <style>
+    	.Cond-text-width{
+	    	width:153px;
+	    }
+	    .Cond-Date-width{
+	    	width:158px;
+	    }
+    </style>
+
+</HEAD>
+<body>
+	<div class = "hisui-layout" fit = "true">
+		<div data-options = "region:'center',border:false" class = "pha-body">
+			<div class = "hisui-layout" fit = "true" id="layout-adj-audit">
+				<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'north',height:200, split:true, title:'库存调整单',showCollapsedTitle:true" >
+                    <table id="gridAdjMain"></table>
+                </div>
+                <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center', title:'单据明细'">
+                    <table id="gridAdjDetail"></table>
+                </div>
+			</div>		
+		</div>
+	</div> 
+	<div id = "gridAdjMainBar" >
+		<table id = "qCondition" class = "pha-con-table">
+			<tr>
+				<td class = "r-label">
+					<label for = "stDate">#(..Get("开始日期"))#</label>
+				</td>
+				<td>
+					<input id = 'stDate' class = "hisui-datebox Cond-Date-width" data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "adjLoc">#(..Get("调整科室"))#</label>
+				</td>
+				<td>
+					<input id = 'adjLoc' class = "hisui-combobox" data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "buisProcess">#(..Get("预审流程"))#</label>
+				</td>
+				<td>
+					<input id = 'buisProcess' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "stkGroup">#(..Get("类组"))#</label>
+				</td>
+				<td>
+					<input id = 'stkGroup' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				
+				<td>
+					<a class = "hisui-linkbutton pha-button-word4" style = "width:100%" data-options = "iconCls:'icon-w-find'" data-options = "stopAllEventOnDisabled:true" id = 'btnFind'>查询</a>
+				</td>
+				
+				<td>
+					<a class = "hisui-linkbutton pha-button-word4" style = "width:100%" data-options = "iconCls:'icon-w-print'" data-options = "stopAllEventOnDisabled:true" id = 'btnPrint'>打印</a>
+				</td>
+			</tr>
+			<tr>
+				<td class = "r-label">
+					<label for = "endDate">#(..Get("结束日期"))#</label>
+				</td>
+				<td>
+					<input id = 'endDate' class = "hisui-datebox Cond-Date-width"  data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "adjRea">#(..Get("调整原因"))#</label>
+				</td>
+				<td>
+					<input id = 'adjRea' class = "hisui-combobox"  data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+				</td>
+				<td class = "r-label">
+					<label for = "statusResult">#(..Get("流程状态"))#</label>
+				</td>
+				<td>
+					<input id = 'statusResult' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true,required:true'>
+				</td>
+				<td>
+					
+				</td>
+				<td>
+					
+				</td>
+				<td>
+					<a class = "hisui-linkbutton pha-button-word4" style = "width:100%" data-options = "iconCls:'icon-w-Clean'" data-options = "stopAllEventOnDisabled:true" id = 'btnClean'>清屏</a>
+				</td>
+			</tr>
+		</table>
+		<div class = "pha-line"></div>
+		<div>
+			<a class = "hisui-linkbutton" plain = 'true' iconCls = "icon-ok" data-options = "stopAllEventOnDisabled:true" id = 'btnAudit'>审核通过</a>
+			<a class = "hisui-linkbutton" plain = 'true' iconCls = "icon-no" data-options = "stopAllEventOnDisabled:true" id = 'btnRefuseAudit'>审核拒绝</a>
+			<a class = "hisui-linkbutton" plain = 'true' iconCls = "icon-undo" data-options = "stopAllEventOnDisabled:true" id = 'btnCancelAudit'>取消审核</a>
+		</div>
+	</div>
+	<!-- 药库公共 -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/com/js/store.js"></script>
+	<!-- 本页js -->
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/adj/audit.js"></script>
+	<script type = "text/javascript" src = "../scripts/pha/in/v3/adj/print.js"></script>
+</body>
+</html>

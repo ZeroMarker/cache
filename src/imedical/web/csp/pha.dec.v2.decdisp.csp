@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--煎药-煎药发放
+	csp:pha.dec.v2.decdisp.csp
+	js: scripts/pha/dec/v2/decdisp.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHADECV2/>
+	<ADDINS require="RWCard,WebsysTool" />
+	<DOCCARD medStepCode="Other" ></DOCCARD>
+    <server>
+		d ##class(PHA.COM.ReadCard).LoadPlugin()
+	</server>
+	
+	<style>
+	.layout-expand-west{
+		background-color:#fff
+	}
+	</style>
+</HEAD>
+<body>
+	<div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div style="width:0px;height:0px">
+				<server>
+				 	d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+				</server>
+			</div>
+			<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">
+				<div data-options="region:'center',split:true,headerCls:'panel-header-gray',iconCls:'icon-blue-drug-ok'" class="pha-body" title="煎药发放">
+					<div id="mainLayout" class="hisui-layout" fit="true" >
+						<div data-options="region:'north',border:false,split:true" class="dhcpha-north-tbl-2" style="overflow:hidden">
+                            <table class="pha-con-table nopadding">
+								<tr>
+									<td class="r-label">
+										<label for="dateStart">#(..Get("开始日期"))#</label>
+									</td>
+									<td>
+										<input id="dateStart" type="text" class="hisui-datebox" style="width:120px;" />
+									</td>
+									<td>
+										<input id="timeStart" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90"/>
+									</td>
+									<td class="r-label">
+										<label for="cmbDecLoc">#(..Get("煎药室"))#</label>
+									</td>
+									<td>
+										<input id="cmbDecLoc" class="hisui-combobox" style="width:100px;" />
+									</td>
+									<td class="r-label">
+										<label for="cmbAdmType">#(..Get("就诊类型"))#</label>
+									</td>
+									<td>
+										<input id="cmbAdmType" class="hisui-combobox" />
+									</td>
+									<td class="r-label">
+										<label for="txtPatNo">#(..Get("登记号"))#</label>
+									</td>
+									<td>
+										<input id="txtPatNo" class="hisui-validatebox" />
+									</td>
+									<td>
+										<span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-find' id="btnSearch" onclick="javascript:query()">查询</a></span>
+									</td>
+									
+								</tr>
+								<tr>
+									<td class="r-label">
+										<label for="dateEnd">#(..Get("截止日期"))#</label>
+									</td>
+									<td>
+										<input id="dateEnd" type="text" class="hisui-datebox" style="width:120px;" />
+									</td>
+									<td>
+										<input id="timeEnd" type="text" class="hisui-timespinner" showSeconds="true" data-options="width:90">
+									</td>
+									<td class="r-label">
+										<label for="cmbPhaLoc">#(..Get("药房科室"))#</label>
+									</td>
+									<td>
+										<input id="cmbPhaLoc" class="hisui-combobox" style="width:100px;" />
+									</td>
+									<td class="r-label" style="margin-left:10px;">
+										<label for="dateEnd">#(..Get("卡号"))#</label>
+									</td>
+									<td colspan="1">
+										<input id="txtCardNo" class="hisui-validatebox" />
+									</td>
+									<td colspan="2">
+										<span><a class="hisui-linkbutton" plain="false" data-options="iconCls:'icon-w-card'" id="readCard">读卡</a></span>
+									</td>
+									<td>
+										<span><a class="hisui-linkbutton" plain="false" iconCls='icon-w-clean' id="btnClear" onclick="javascript:Clear()">清屏</a></span>
+									</td>
+								</tr>
+							</table>
+                        </div>
+						
+						<div data-options="region:'center',split:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray',minWidth:600" style="border-radius: 4px;" border="false">
+							<div id="dispTab" class="hisui-tabs tabs-gray" fit="true">
+								<div id="tabScanDisp" data-options="title:'扫码发放'">
+				            		<div class="hisui-layout" fit="true" border="false">
+				        				<div data-options="region:'center',split:false,bodyCls:'panel-body-gray'" border="false">
+											<table id="gridScanPresc"></table>
+										</div>
+									</div>
+				            	</div>
+				            	<div id="tabDispBatch" data-options="title:'批量发放'">
+				            		<div class="hisui-layout" fit="true" border="false">
+				                        <div data-options="region:'center'" border="false">
+				                        	<table id="gridBatchPresc"></table>
+				                        </div>
+				                    </div>
+				            	</div>
+				            	<div id="tabDisped" data-options="title:'已发放查询'">
+				            		<div class="hisui-layout" fit="true" border="false">
+				                        <div data-options="region:'center'" border="false">
+				                        	<table id="gridDispedPresc"></table>
+				                        </div>
+				                    </div>
+				            	</div>
+				            </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>			
+	<div id="gridScanDispBar">
+		<div class="pha-row" style="margin-top:7px;margin-bottom:7px;">
+			<div class="pha-col">
+		     	<label for="labelBarCode">#(..Get("处方号"))#</label>
+		    </div>
+		    <div class="pha-col">
+		        <input id="txtBarCode" type="text" class="hisui-validatebox textbox" />
+		    </div>
+		    <div class="pha-col">
+	        	<span><a class="hisui-linkbutton" plain="true" iconCls='icon-ok' id="btnDisp" onclick="javascript:Disp()">确认发放</a></span>
+	        </div>
+        </div>
+    </div>
+	<div id="gridDispBatchBar">
+        <span><a class="hisui-linkbutton" plain="true" iconCls='icon-ok' id="btnDispBatch" onclick="javascript:DispBatch()">确认发放</a></span>
+    </div>
+    <!--pha common js-->
+    <script type="text/javascript" src="../scripts/pha/com/v1/js/com.js"></script>
+	<script type="text/javascript" src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/xmlprint.js"></script>
+    <script type="text/javascript" src="../scripts/pha/dec/v2/preview.js"></script>
+	<script type="text/javascript" src="../scripts/pha/dec/v2/decdisp.js"></script>
+</body>
+</HTML>

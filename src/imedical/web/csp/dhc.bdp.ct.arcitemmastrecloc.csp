@@ -1,0 +1,168 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+/*
+ // dhc.bdp.ct.arcitemmastrecloc.csp
+ 	ARC_ItmMastRecLoc.js
+// 名称: 接收科室生成
+// 描述: 基础数据-医嘱与结果-医嘱项接收科室
+// 编写者: 基础数据平台组-钟荣枫
+// 编写日期: 2022-6-20
+ */ 
+
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+
+</HEAD>
+<style>
+
+.accordion>.panel>.panel-header, .layout>.panel>.panel-header, 
+.panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, 
+.panel.window>.panel-header, 
+.tabs-panels>.panel>.panel-header{
+    border-radius: 5px 5px 0px 0px;
+}
+
+.tbclass{
+	    text-align: right;
+   }
+ .layout-split-west {
+    border-right: 10px solid #fff;
+}
+.layout-split-north {
+     border-bottom: 0px ;
+}
+</style>
+<BODY>
+	<script type="text/javascript" src="../scripts/bdp/AppHISUI/OrderItem/ARC_ItemMastRecLoc.js"></script>
+	<div class="hisui-layout" data-options="fit:true" border="false">
+		<div border="true"  data-options="region:'west',headerCls:'panel-header-gray',iconCls:'icon-paper',split:true" title="医嘱项" style="width:565px;margin-right:10px;border-radius:0px 0px 5px 5px">
+			<table data-options="fit:true,headerCls:'panel-header-gray'" id="ItemMast" border="false"></table>
+		</div>
+		<div data-options="region:'center',split:true,bodyCls:'panel-body-gray'" border="true" style="border-radius:5px;padding:10px:">
+			<div class="hisui-layout" data-options="fit:true" id="layoutW">
+				<div data-options="region:'north',split:true,collapsible:false" style="overflow-y: hidden;border-bottom-width: 0px;height:200px" border="false">
+					<table cellspacing=10 >
+				   	 <tr>
+				   	 	<td class="tbclass">病人科室</td>
+						<td>
+							<input id="PatLoc" type="text" class="textbox hisui-combobox" style="">
+						</td>
+						<td class="tbclass"><font color=red>*</font>接收科室</td>
+						<td>
+							<input id="RecLoc" type="text" class="textbox hisui-combobox" style="">
+						</td>
+						<td class="tbclass"><font color=red>*</font>功能</td>
+						<td>
+							<input id="Function" type="text" class="textbox hisui-combobox" style="">
+						</td>
+				   	 	
+					</tr>
+					<tr>
+				    	<td class="tbclass"><font color=red>*</font>开始日期</td>
+				    	
+						<td>
+							<input id="DateFrom"  class="textbox hisui-datebox"  data-options="" style=""/>
+						</td>
+						<td class="tbclass">开始时间</td>
+						<td>
+							<input id="TimeFrom"  class="hisui-timespinner" data-options="showSeconds:true" style="">
+						</td>
+						<td class="tbclass">默认</td>
+						<td>
+							<input class='hisui-checkbox' data-options="" type="checkbox" id="DefaultFlag"  >
+						</td>
+					</tr>
+					<tr>
+				    	<td class="tbclass">结束日期</td>
+				    	
+						<td>
+							<input id="DateTo"  class="textbox hisui-datebox"  data-options="" style=""/>
+						</td>
+						<td class="tbclass">结束时间</td>
+						<td>
+							<input id="TimeTo"  class="hisui-timespinner" data-options="showSeconds:true" style="">
+						</td>
+						<td class="tbclass">医院</td>
+						<td>
+							<input id="Hospital" type="text" class="textbox hisui-combobox" style="">
+						</td>
+					</tr>
+					<tr>
+						<td class="tbclass">就诊类型</td>
+						<td>
+							<input id="ClinicType" type="text" class="textbox hisui-combobox" style="">
+						</td>
+						<td class="tbclass">医嘱优先级</td>
+						<td>
+							<input id="Priority" type="text" class="textbox hisui-combobox" style="">
+						</td>
+						
+					 </tr> 
+					</table>
+					<div style="margin-bottom:10px;text-align:center" >
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add',stopAllEventOnDisabled:true" style="margin-right:6px" id="btnAdd">新增</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" style="margin-right:6px" id="btnUpdate">修改</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel',stopAllEventOnDisabled:true" style="margin-right:6px" id="btnDelete">删除</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" style="margin-right:6px" id="btnSearch">查询</a>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" style="margin-right:6px" id="btnReset">重置</a>
+					</div>
+		
+				</div>
+				<div data-options="region:'center',split:true" border="false" style="margin-top: 10px;">
+					<table data-options="fit:true,headerCls:'panel-header-gray'" id="RecLocGrid" border="false" toolbar="" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--医嘱项-->   
+    <div id="mastbar">
+	   <table  cellspacing=10>
+	   	 <tr>
+	   	 	<td class="tbclass">医院</td>
+			<td>
+				<input id="MastHosp" type="text" class="hisui-combobox" style="width:80px">
+			</td>
+	   	 	<td class="tbclass">代码</td>
+			<td>
+				<input id="MastCode" type="text" class="hisui-validatebox" style="width:73px">
+			</td>
+			
+			<td class="tbclass">名称</td>
+	    	<td>
+				<input id="MastDesc" type="text" class="hisui-validatebox" style="width:73px">
+			</td>
+			<td style="">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',stopAllEventOnDisabled:true" id="btnMastSearch">查询</a>
+			</td>
+	    	
+	    </tr>
+	    <tr>
+			
+			<td class="tbclass">医嘱大类</td>
+			<td>
+				<input id="MastSub" type="text" class="hisui-validatebox" style="width:80px">
+			</td>
+			<td class="tbclass">医嘱子类</td>
+			<td>
+				<input id="MastCat" type="text" class="hisui-combobox" style="width:80px">
+			</td>
+			<td colspan="2">&nbsp;</td>
+			<td style="">
+				<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset',stopAllEventOnDisabled:true" id="btnMastReset">重置</a>
+			</td>
+					
+		 </tr> 
+
+		</table>
+	</div> 
+
+    </BODY>
+</HTML>

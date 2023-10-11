@@ -1,0 +1,270 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/switch.css">
+	<style type='text/css'>
+		.switchTable td:first-child {
+			padding-left: 0px !important;
+		}
+	</style>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/switch/func.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/switch/ca.js" charset=gbk></script>
+</head>
+<body> 
+	<div class="hisui-layout" data-options="fit:true">
+		<div class="regHosp" data-options="region:'north',border:false">
+			<table class="HospTable">
+				<tr>
+					<td>
+						<label id="_HospListLabel">医院</label>
+					</td>
+					<td colspan=3>
+						<input id="_HospList" class="textbox"/>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false">
+			<table class="switchTable">
+				<tr>
+					<td>
+						<label>签名密码验证</label>
+					</td>
+					<td>
+						<div id="SignPWDSwitchFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox" 
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>启用后可使用自定义的签名密码验证方式</label>
+					</td>
+				</tr>
+				<tr class="cmTr" style="display:none;">
+					<td></td>
+					<td colspan=2>
+						<input id="SignPWDClassFunc"
+							class="hisui-textbox textbox cmTr"
+							style="width:600px;display:none;"
+							type="textbox"
+							placeholder="请输入类方法">
+						</input>
+					</td>
+				</tr>
+				<tr class="cmTr" style="display:none;">
+					<td></td>
+					<td colspan=2>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>开启"签名密码验证"后，此处维护密码验证的类和方法，格式为：类*方法</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>护士CA签名</label>
+					</td>
+					<td>
+						<div id="SwitchFlag" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"  
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>开启后护理病历可以使用CA的相关功能</label>
+					</td>
+				</tr>
+				<tr class="realCATr" style="display:none;">
+					<td>
+						<label>签名图片</label>
+					</td>
+					<td> 
+						<div id="PictureFlag" 
+							class="hisui-switchbox nurseSwitch realCATr"
+							type="switchbox"
+							style="display:none;"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>开启后可显示CA签名图片，需要在图片尺寸中设置尺寸</label>
+					</td>
+				</tr>
+				<tr class="realCATr" style="display:none;">
+					<td>
+						<label>严格模式</label>
+					</td>
+					<td>
+						<div id="ValidateFlag" 
+							class="hisui-switchbox nurseSwitch realCATr"
+							type="switchbox"
+							style="display:none;"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>开启后必须严格匹配签名验证，否则显示文字，包含打印和HIS护理病历</label>
+					</td>
+				</tr>
+				<tr class="realCATr" style="display:none;">
+					<td>
+						<label>强制CA验证</label>
+					</td>
+					<td>
+						<div id="StrictFlag" 
+							class="hisui-switchbox nurseSwitch realCATr"
+							type="switchbox"
+							style="display:none;"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>开启后护士每次操作都需要重复验证，即使Key一直插着</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>假CA签名</label>
+					</td>
+					<td>
+						<div id="CAPuppet" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>启用后，可使用"假CA"功能</label>
+					</td>
+				</tr>
+				<tr class="fakeCATr" style="display:none;">
+					<td></td>
+					<td colspan=2>
+						<input id="CAPuppetClassFunc"
+							class="hisui-textbox textbox fakeCATr"
+							style="width:300px;display:none;"
+							type="textbox"
+							placeholder="请输入类方法">
+						</input>
+					</td>
+				</tr>
+				<tr class="fakeCATr" style="display:none;">
+					<td></td>
+					<td colspan=2>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>开启"假CA签名"后，不验证只显示签名图片,需要维护假CA验证的类方法，格式为：类*方法</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>患者手写板厂商<label>
+					</td>
+					<td>
+						<select id="TabletValue" class="hisui-combobox nurseCombo" type="combobox" defValue="none"></select>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>选择手写板对应的厂商，即开启患者CA签名</label>
+					</td>
+				</tr>
+				<tr class="serverIpTr" style="display:none;">
+					<td></td>
+					<td colspan=2>
+						<input id="ServiceIp" 
+							class="hisui-textbox textbox serverIpTr"
+							style="width:600px;display:none;"
+							type="textbox"
+							placeholder="请输入此CA服务地址">
+					</td>
+				</tr>
+				<tr class="serverIpTr" style="display:none;">
+					<td></td>
+					<td colspan=2>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>选择“患者手写板厂商”后，需要在图片尺寸中设置患者签名轨迹、头像、指纹的尺寸，默认无</label>
+					</td>
+				</tr>
+				<tr class="BJCAStrictIdentityTr" style="display:none;">
+					<td >
+						<label>严格身份模式</label>
+					</td>
+					<td colspan=2>
+						<input id="BJCAStrictIdentity" class="hisui-radio" type="radio" name="BJCAStrictIdentity" data-options="checked:false,radioClass:'hischeckbox_square-blue'">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>签名方式</label>
+					</td>
+					<td>
+						<select id="SignType" class="hisui-combobox nurseCombo" type="combobox" defValue="none"></select>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>CA服务厂商</label>
+					</td>
+					<td>
+						<select id="ServerFactory" class="hisui-combobox nurseCombo" type="combobox" defValue=""  placeholder="无"></select>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<label>同步调用</label>
+					</td>
+					<td>
+						<div id="CallStyle" 
+							class="hisui-switchbox nurseSwitch"
+							type="switchbox"
+							data-options="onText:'启用',offText:'禁用',checked:false,size:'small',animated:true,onClass:'primary',offClass:'gray'">
+						</div>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>平台封装的CA接口（dhcsys_getcacert）因项目而存在版本差异，启用该配置可兼容低版本的同步调用方式，默认异步调用</label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label>患者签名登录方式<label>
+					</td>
+					<td>
+						<select id="CAPatientPDFShowLogonType" class="hisui-combobox nurseCombo" type="combobox" defValue="PDFPad"></select>
+					</td>
+					<td>
+						<i class="icon-tip">&nbsp;&nbsp;&nbsp;&nbsp;</i>
+						<label>选择患者签名登录方式： 1：小程序（必须弹框） 2:pad (多于一种以上签名类型时弹框，否则可以不弹框) </label>
+					</td>
+				</tr>
+				<tr class="nurse_blankrow"></tr>
+				<tr>
+					<td></td>
+					<td colspan=2><a id="btnSave" class="hisui-linkbutton hover-dark">保存</a></td>
+				</tr>   
+			</table>
+		</div>
+	</div>	 
+</body>
+
+</html>

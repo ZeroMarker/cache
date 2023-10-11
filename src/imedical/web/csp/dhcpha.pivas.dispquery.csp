@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<!--配液发药查询
-	csp:dhcpha.pivas.dispquery.csp
-	js:scripts/pharmacy/pivas/dispquery.js
+<!--
+    配液发药查询
+	csp: csp/dhcpha.pivas.dispquery.csp
+	js:	 scripts/pharmacy/pivas/dispquery.js
 -->
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
-    d ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
 </csp:method>
 <HTML XMLNS=TRAK>
 
@@ -15,71 +17,84 @@
     <TRAK:HEAD>
     </TRAK:HEAD>
     <HISUI/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
-    <style type="text/css">
-
-    </style>
+    <PHAPIVASV1 />
 </HEAD>
 
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+	<div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
             <div class="hisui-layout" fit="true" border="false">
-                <div data-options="region:'north',title:'配液发药查询',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-pivas-query',collapsible:false" class="dhcpha-north-r2">
-                    <table class="dhcpha-north-tbl">
+                <div data-options="region:'north',title:'配液发药查询',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-pivas-query',collapsible:false" class="pha-pivas-row-2">
+                    <table class="pha-con-table">
                         <tr>
+                            <td class="r-label">
+                                <label for="dateDispStart">#(..Get("发药开始时间"))#</label>
+                            </td>
                             <td>
-                                <label for="dateDispStart">发药开始时间</label>
                                 <input id="dateDispStart" class="hisui-datebox" data-options="width:120" />
                                 <input id="timeDispStart" class="hisui-timespinner" showSeconds="true" data-options="width:100" />
                             </td>
-                            <td>
-                                <label for="cmbPivasLoc">配液中心</label>
-                                <input id="cmbPivasLoc" />
+                            <td class="r-label">
+                                <label for="cmbPivasLoc">#(..Get("配液中心"))#</label>
                             </td>
                             <td>
-                                <label for="txtPatNo">登记号</label>
-                                <input id="txtPatNo" class="hisui-validatebox" />
+                                <input id="cmbPivasLoc" />
+                            </td>
+                            <td class="r-label">
+                                <label for="txtPatNo">#(..Get("登记号"))#</label>
+                            </td>
+                            <td>
+                                <input id="txtPatNo" class="hisui-validatebox" style="width:250px"/>
                             </td>
                             <td>
                                 <input class='hisui-checkbox' type="checkbox" id="chkOnlyPiva" label="仅配液中心" data-options="checked:true" />
                             </td>
                             <td>
-                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">查询病区</a>
-                            </td>
-                            <td>
-                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrint">打印</a>
+                            	<a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">查询</a>
                             </td>
                         </tr>
                         <tr>
+                            <td class="r-label">
+                                <label for="dateDispEnd">#(..Get("发药结束时间"))#</label>
+                            </td>
                             <td>
-                                <label for="dateDispEnd">发药结束时间</label>
                                 <input id="dateDispEnd" class="hisui-datebox" data-options="width:120" />
                                 <input id="timeDispEnd" class="hisui-timespinner" showSeconds="true" data-options="width:100" />
                             </td>
+                            <td class="r-label">
+                                <label for="cmbWard">#(..Get("病区"))#</label>
+                            </td>
                             <td>
-                                <label for="cmbWard">病区</label>
                                 <input id="cmbWard" />
                             </td>
 
-                            <td colspan=2>
-                                <label for="cmbWard">药品</label>
+                            <td class="r-label">
+                                <label for="cmbWard">#(..Get("药品"))#</label>
+                            </td>
+                            <td>
                                 <input id="cmgIncItm" />
                             </td>
+                            <td></td>
                             <td>
-                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFindDetail">查询明细</a>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrint">打印</a>
                             </td>
-                            <td>
+                            <td style="display:none">
                                 <a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" id="btnClear">清屏</a>
-                            </td>
+                            </td>                          
+
                         </tr>
                     </table>
                 </div>
                 <div data-options="region:'west',title:'病区列表',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-ward',width:275">
-                    <table id="gridWard"></table>
+                    <div class="hisui-layout" fit="true" border="false">
+                        <div data-options="region:'center'" border="false">
+                            <table id="gridWard"></table>
+                        </div>
+                        <div data-options="region:'south'" border="false" style="text-align:center;padding-bottom:10px">
+                            <a class="hisui-linkbutton" iconCls='icon-w-find' plain="false" style="overflow:hidden;" id="btnFindDetail">查询</a>
+                        </div>
+                    </div>
                 </div>
                 <div data-options="region:'center',title:'发药明细',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-common'">
                     <table id="gridDispDetail"></table>

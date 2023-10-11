@@ -1,0 +1,175 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+	.eq-invbind-text
+	{
+		font-size:16px;
+		line-height: 32px;
+	}
+	.eq-invbind-text span
+	{
+		font-size: 16px;
+	}
+	.eq-invbind-status
+	{
+		display:inline-block;
+		height:24px;
+		line-height:24px;
+		width:52px;
+		color: #ffffff;
+		border-radius: 5px;
+		font-size: 14px;
+		font-weight:700;
+		text-align: center;
+		margin-left: 5px;
+	}
+	/*绿  盘盈*/
+	.eq-invbind-color1
+	{
+		background-color:#00CC33;
+	}
+	/*蓝 待查找*/
+	.eq-invbind-color2
+	{
+		background-color:#199ED8;
+	}
+	/*紫 盘亏*/
+	.eq-invbind-color3
+	{
+		background-color:#CC33FF;
+	}
+	/*黄 未盘*/
+	.eq-invbind-color4
+	{
+		background-color:#FFCC00;
+	}
+	/*灰 报废*/
+	.eq-invbind-color5
+	{
+		background-color:#868686;
+	}
+	.eq-invbind-tablebtn
+	{
+		text-align:right;
+	}
+	.eq-invbind-tablebtn a
+	{
+		width:100px;
+		margin-left:10px;
+		border-radius:10px;
+		background-color:#CCCCCC;
+	}
+	.eq-invbind-tablebtn a:first-child
+	{
+		background-color:#40A2DE;
+	}
+</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s ExceptionID=$Get(%request.Data("ExceptionID",1))
+	s TempID=$Get(%request.Data("TempID",1))
+	s BindInfo=##Class(web.DHCEQ.EM.BUSInventory).GetBindEquipInfo(ExceptionID)
+	s EquipName=$p(BindInfo,"^",1)
+	s EquipNo=$p(BindInfo,"^",2)
+	s Model=$p(BindInfo,"^",3)
+	s LeaveFactoryNo=$p(BindInfo,"^",4)
+	s PlanName=$p(BindInfo,"^",5)
+	s StoreLoc=$p(BindInfo,"^",6)
+	s Location=$p(BindInfo,"^",7)
+</Script>
+<body class="hisui-layout">
+    <div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+    <div data-options="region:'center',border:false" style="padding:10px;">
+        <div class="hisui-panel" data-options="fit:true,border:false">
+            <div class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'west',border:false" style="width:360px;">
+                    <div class="hisui-panel" data-options="eqtitle:'defaulttitle',fit:true,title:'被绑定设备'" style="padding:10px;">
+                    	<!--左侧图片 begin-->
+                        <div style="height:280px;border:1px dashed #DCDCDC;padding:10px;">
+                            <img id="Image" src="" height="100%" width="100%" style="display:none;"/>
+                            <div id="DefaultImage" style="width:100%;height:100%;line-height:100%;background-color:#F5F7F5;text-align:center;position:relative;">
+                                <div style="position:absolute;left:50%;top:50%;transform:translate(-50%);">
+                                    <sapn style='padding:20px;background:url(../images/eq-defualt.png) no-repeat center;'></sapn>
+                                    <span style="font-size:20px;color:#666;">暂无图片</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!--左侧图片 end-->
+                        <!--左侧文本 begin-->
+                        <div style="padding-top:20px;">
+                        	<p style="font-size:18px;font-weight:700;">#(EquipName)#</p>
+                        	<p class="eq-invbind-text"><span>设备编号：</span><span id="">#(EquipNo)#</span></p>
+                        	<p class="eq-invbind-text"><span>规格型号：</span><span id="">#(Model)#</span></p>
+                        	<p class="eq-invbind-text"><span>出厂编号：</span><span id="">#(LeaveFactoryNo)#</span></p>
+                        	<p class="eq-invbind-text"><span>盘点计划：</span><span id="">#(PlanName)#</span><span class="eq-invbind-status eq-invbind-color1">盘盈</span></p>
+                        	<p class="eq-invbind-text"><span>科室：</span><span id="">#(StoreLoc)#</span></p>
+                        	<p class="eq-invbind-text"><span>存放地点：</span><span id="">#(Location)#</span></p>
+                        </div>
+                        <!--左侧文本 end-->
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false" style="padding-left:10px;">
+                    <div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'可绑定设备'">
+                    	<div class="hisui-layout" data-options="fit:true,border:false">
+	                        <div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;padding:10px;">
+	                            <div class="eq-table">
+	                                <div class="eq-table-tr">
+	                                   	<div class="eq-table-td eq-table-label"><label for="InPlan">是否计划内</label></div>
+										<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox"  id="InPlan" checked="checked"></div>
+										<div class="eq-table-td eq-table-label"><label id="cStoreLocDR_DDesc" for="StoreLocDR_DDesc">使用科室</label></div>
+										<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="StoreLocDR_DDesc" data-options="'component':'PLAT.L.Loc'"  ></div>
+										<div class="eq-table-td eq-table-label"><label id="cEquipName" for="EquipName">设备名称</label></div>
+										<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EquipName"></div>
+										<div class="eq-table-td eq-table-label"><label id="cModel" for="Model">规格型号</label></div>
+										<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Model" data-options="'component':'PLAT.L.Model'"></div>
+										<div class="eq-table-td"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-search" style="margin-left:50px;" data-options="stopAllEventOnDisabled:true">查询</a></div>
+	                                </div>
+	                            </div>
+	                        </div>
+	                        <div data-options="region:'center',border:false">
+	                            <div class="hisui-panel" data-options="fit:true,border:false">
+	                            	<div class="hisui-layout" data-options="fit:true,border:false">
+		                                <div data-options="region:'north',border:false" style="padding:5px;">
+		                                    <div class="eq-invbind-tablebtn">
+	                                            <a id="InvAll" onclick="invStatusSearch(this,'InvAll')" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">全部设备</a>
+	                                            <a id="InvLoss" onclick="invStatusSearch(this,'InvLoss')" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">盘亏</a>
+	                                            <!--a id="InvUn" onclick="invStatusSearch(this,'InvUn')" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">未盘</a-->
+	                                            <a id="InvFind" onclick="invStatusSearch(this,'InvFind')" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">待查找</a>
+		                                    </div>
+		                                </div>
+		                                <div data-options="region:'center',border:false">
+		                                    <table id="tDHCEQInventoryBindList" class="hisui-datagrid"></table>
+		                                </div>
+		                        	</div>
+	                            </div>
+	                        </div>
+	                	</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCEQ">	
+            <input id="MasterItemDR" name="MasterItemDR" type="hidden">
+            <input id="StoreLocDR" name="StoreLocDR" type="hidden">
+            <input id="ModelDR" name="ModelDR" type="hidden">
+            <input id="DisplayFlag" name="DisplayFlag" type="hidden">
+            <INPUT type="hidden" id="ExceptionID" value="#(ExceptionID)#">
+            <INPUT type="hidden" id="TempID" value="#(TempID)#">
+		</form>
+	</div>
+    <script type="text/javascript" src="../scripts/dhceq/em/inventorybind.js"></script>
+</body>
+</html>

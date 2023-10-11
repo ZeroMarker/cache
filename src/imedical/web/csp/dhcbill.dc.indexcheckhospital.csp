@@ -1,0 +1,144 @@
+<!-- 
+ * FileName: dhcbill.dc.indexcheckhospital.csp
+ * Author: Lizhi
+ * Date: 2022-08-03
+ * Description: 指标分配院区
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+		<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+
+	<style>
+		.layout>.panel>.panel-header {
+		    -moz-border-radius: 4px 4px 0 0;
+		    -webkit-border-radius: 4px 4px 0 0;
+		    border-radius: 4px 4px 0 0;
+		}
+		.layout>.panel>.panel-body {
+		    -moz-border-radius: 0 0 4px 4px;
+		    -webkit-border-radius: 0 0 4px 4px;
+		    border-radius: 0 0 4px 4px;
+		}
+		.no-data {
+			width: 100%;
+			height: 100%;
+			background: url(../images/no_data.png) center center no-repeat;
+		}
+		.layout-panel-west {
+		    padding-right: 10px;
+		}
+		label.checkbox {
+		    margin-left: -6px;
+		}
+		.textbox.tb320 {
+			width: 320px;
+		}
+	</style>
+</head>
+
+<body style="padding:10px;background-color:#ffffff;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',title:'指标信息',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper-info'" style="width:949px;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="border-radius:0px;">
+					<table class="search-table">
+							<tr>
+								<td><label class='r-label'>业务类型</label></td>
+								<td><input id="QBusinessType" class="textbox" ></input></td>
+								<td><label class='r-label r-label-20'>核查分类</label></td>
+								<td><input id="QCheckType" class="textbox"></input></td>
+								<td class="r-label r-label-20"><a id="btnQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onClick='loadConfPage()'>查询</a></td>
+							</tr>
+							<tr>
+								<td><label class='r-label'>异常等级</label></td>
+								<td><input id="QExceptionLeval" class="textbox"></input></td>
+								<td  class='r-label r-label-20'><label>关键字</label></td>
+								<td><input placeholder="输入指标名称检索" id="search1" class="searchbox textbox"/></td>
+								<td class="r-label r-label-20"><a id="btnQClear" href="#" class="hisui-linkbutton" onclick="clearQform()" data-options="iconCls:'icon-w-clean'" >清屏</a> </td>
+							</tr>
+					</table> 
+				</div>
+				<div data-options="region:'center',bodyCls:'panel-header-gray'"style="border-left:none;border-right:none;border-bottom:none">
+					<table id="ckDet"></table>
+				</div>
+			</div>
+		</div>
+		<div data-options="region:'center',title:'院区信息',headerCls:'panel-header-gray',iconCls:'icon-paper-info'" style="overflow:hidden;">
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="border-radius:0px;border-bottom:1px solid #cccccc;overflow:hidden">
+					<table class="search-table">
+							<tr>
+								<td class='r-label'><a id="btnAddHisVer"  onclick="AddNewHISVer()"  href="#" class="hisui-linkbutton" disabled="true" style="width:130px;" data-options="iconCls:'icon-w-add'" >增加新版本</a></td>
+								<td class='r-label  r-label-20'><a id="btnSave"  onclick="btnSave()"  href="#" class="hisui-linkbutton" style="width:100px;" data-options="iconCls:'icon-w-save'" >保存</a></td>
+								<!-- <td><label class='r-label'>院区关键字</label></td>
+								<td><div><input placeholder="输入关键字回车检索" id="search2" class="searchbox textbox" style="width:232px;"/></div></td> -->
+							</tr>
+					</table>  
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="dg" style="width:200px;"></table>
+				</div> 
+			</div>
+		</div>
+	</div>
+	<div id="dhcinsutarEdit" class="hisui-window" title="修改-指标维护" data-options="iconCls:'icon-w-save',top:'10px',closed:true,
+	modal:true,maximizable:false,minimizable:false,draggabl:false,resizable:false,collapsible:false" 
+	style="width:850px;height:360px;text-align:center;">
+		<form id="ff1" method="post" accept-charset="utf-8">  
+			<div>  
+			<table class='search-table editinfo'>
+				<tr hidden>
+					<td class="r-label"><label>医院名称</label></td>
+					<td ><input id="HOSPDesc" readonly="readonly" class="textbox"/></td>
+					<td  class="r-label"><label>医院代码</label></td>
+					<td ><input id="HOSPRowId" readonly="readonly" class="textbox"/></input></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label>核查分类</label></td>
+					<td ><input id="CheckType"  class="textbox"/></td>
+					<td  class="r-label"><label>业务类型</label></td>
+					<td ><input id="BusinessTypeCode" class="textbox"/></input></td>
+					<td class='r-label'><label>指标代码</label></td>
+					<td><input id="Code" class="hisui-validatebox textbox" required="required" missingMessage="请输入指标"/></td>
+				</tr>
+				<tr >
+					<td class="r-label"><label>指标名称</label></td>
+					<td><input id="Name"  class="textbox"/></td>
+					<td class="r-label"><label>异常等级</label></td>
+					<td><input id="EXlevelId"  class="textbox"/></td>
+					<td class="r-label"><label>监控点说明</label></td>
+					<td><input id="Description"  class="textbox"/></td>
+				</tr>
+				<tr>
+					<td  class="r-label"><label >是否有效</label></td>
+					<td><input id="ActiveFlag"  class="textbox"/></td>
+					<td  class="r-label"><label>指标类型</label></td>
+					<td ><input id="IndicatorTypeId" class="textbox"/></input></td>
+					<td  class="r-label"><label >执行类名</label></td>
+					<td colspan=3><input id="ExecClass"   class="textbox"/></td>
+				</tr>
+				<tr>
+					<td  class="r-label"><label >执行方法名</label></td>
+					<td><input id="ExecClassMethod"  class="textbox"/></td>
+				</tr>
+			</table>
+			</div>
+	        <div style="text-align:center;">
+				<a class="hisui-linkbutton" data-options="iconCls:'icon-w-save'"  onclick="DetailSave()" id="DetailSaveBtn">保存</a>
+			</div>
+	    </form>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/indexcheckhospital.js"></script>
+</body>
+</html>

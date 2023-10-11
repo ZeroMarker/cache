@@ -10,42 +10,55 @@
 		<HISUI/>
 		<DHCMA:HEAD></DHCMA:HEAD>
 		<link rel="stylesheet" type="text/css" href="../scripts/DHCMA/CPW/CSS/CPW.css" />
+		<style>
+			.dialog-button{
+				padding:0px 0 10px 0;	
+			}
+		</style>
 	</head>
 	<body>
 	    <script type="text/javascript" src="../scripts/DHCMA/Util/Component.js"></script>
+	    <script type="text/javascript" src="../scripts/DHCMA/CPW/CP/CPImpl/Print.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CPW/CP/CPImpl/Gui.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CPW/CP/CPImpl/Event.js"></script>
+		<script type='text/javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
 	    <script language="Cache" RUNAT="SERVER">		
            Set EpisodeID =$g(%request.Data("EpisodeID",1))
+		   Set Code =##class(DHCMA.CPW.BT.Survey).GetSQCode()
            Set LogUser=$g(%session.Data("LOGON.USERID"))
            Set SYSDr=##class(DHCMA.Util.BTS.SYSTEMSrv).GetSYSDr("")
            Set UserType=##class(DHCMA.CPW.CPS.ImplementSrv).GetUserType(LogUser_"!!"_SYSDr)
 		   If (EpisodeID'["!!") {
 		    	Set EpisodeID=EpisodeID_"!!"_SYSDr
 		    }
-		    
-          Set CPWStatus=##class(DHCMA.CPW.CPS.InterfaceSrv).GetCPWStatus(EpisodeID)
+		   Set DischInfo=##class(DHCMA.Util.IO.FromHisSrv).GetDischInfo(EpisodeID,1)		//出院日期信息
+           Set CPWStatus=##class(DHCMA.CPW.CPS.InterfaceSrv).GetCPWStatus(EpisodeID)
+
+		   //检查配置是否启用基于临床路径的病种控费模块  add by yankai 2020-06-28
+		   Set IsOpenPCSDMod=##class(DHCMA.Util.BT.Config).GetValueByCode("SDIsOpenPCModBaseCPW",%session.Get("LOGON.HOSPID"))
+		   
+		   //检查配置是否启用作废按钮  add by zqy 2022-07-13
+		   Set IsOpenUCancel=##class(DHCMA.Util.BT.Config).GetValueByCode("CPWIsOpenUCancel",%session.Get("LOGON.HOSPID"))
 	   </script>
 	   
 	    <script language="javascript" type="text/javascript">
 	        var EpisodeID='#(EpisodeID)#'
 			var UserType='#(UserType)#'
 			var CPWStatus='#(CPWStatus)#'
+			var IsOpenPCSDMod = '#(IsOpenPCSDMod)#'
+			var Code = '#(Code)#'
+			var DischInfo='#(DischInfo)#'
+			var IsOpenUCancel = '#(IsOpenUCancel)#'
 			
 			$(document).ready(function(){
-				var url = "../scripts/DHCMA/CPW/CP/CPImpl/Layout.html"
-				if((CPWStatus!="I")&&(CPWStatus!="O")&&(CPWStatus!="C")){
-					url = "../scripts/DHCMA/CPW/CP/CPImpl/Layout_NoCPW.html"
-				}
-        		$("body").load(url,null,function(responseTxt,statusTxt,xhr){
-   					if(statusTxt=="success") {
-	   					InitCPImplWin();
-   					} else if (statusTxt=="error") {
-	   					alert("Error: "+xhr.status+": "+xhr.statusText);
-	   				}
-	        	});
+				InitCPImplWin();
 			});
 		</script>
-		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<CSP:IF CONDITION='(CPWStatus="T")||(CPWStatus="")'>
+			<csp:Include Page="dhcma.cpw.cp.cpimpl.nocpw.csp"> 
+		<CSP:ELSE >
+			<csp:Include Page="dhcma.cpw.cp.cpimpl.show.csp"> 
+		</CSP:IF>
+		
 	</body>
 </html>

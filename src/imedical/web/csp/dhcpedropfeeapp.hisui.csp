@@ -2,7 +2,7 @@
  * FileName: dhcpedropfeeapp.hisui.csp
  * Anchor: xy
  * Date: 2018-10-10
- * Description: 体检退费审核
+ * Description: 体检退费申请
 -->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
@@ -15,126 +15,137 @@
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
 	<ADDINS/>
+	<DOCCARD medStepCode="PEBill"></DOCCARD>	
 	<style>
-	#box-td {
-			box-sizing:border-box;
-			-moz-box-sizing:border-box; /* Firefox */
-			-webkit-box-sizing:border-box; /* Safari */
+		.td-r-label {
+			text-align: right;
 		}
-	.menu-btn {
-			text-align: center;
-			margin-left: auto;
-			margin-right: auto;
-		}
-	.search-table{
+		.search-table{
 			border-collapse:separate;
-			border-spacing:0 10px;
-			/*padding: 0px 0px 0px 0px;*/
+			border-spacing:10px;
 		}
-	.r-label{
-			padding-left: 10px;
+		.textWidth{
+			width:120px;
 		}
-	.l-label{
-			padding-right: 0px;
+		.boxWidth{
+			width:127px;
 		}
-	
-	
-	
-</style>
+		/*处理炫彩/极简五方布局中自定义增加的边框颜色问题*/
+		.inherit-border>div:first-child  {
+			border-color: inherit;
+		}
+		.inherit-border-div {
+			border-bottom-width: 1px;
+			border-radius:0!important;
+			border-color: inherit!important;
+		}
+	</style>
 	<script type='text/javascript' src='../scripts/DHCWeb.OPCommonManageCard.js'></script>
 	<server>
-		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+		//do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		//w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
 		w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
-	
+		//w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+		//w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
 	</server>
 </head>
 
-<body class="hisui-layout" data-options="fit:true">
-	<div data-options="region:'west',border:false" style="width:510px;padding:10px 10px 10px 10px;">
-		<div class="hisui-layout" data-options="fit:true">
-			<div data-options="region:'north',border:false" style="height:300px;">
-				<div class="hisui-panel" data-options="title:'体检收据查询',fit:true,tools:'#search-panel-tools',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-top:0;border-radius:0;padding-right:0px;">
-					<table class="search-table">
-						<tr>
-							<td class="r-label"><label>卡号</label></td>
-							<td colspan="3" id="box-td">
-								<input id="CardNo" class="textbox" placeholder="刷卡/请输入卡号" style="width:156px;margin-right:10px;"/>
-								<input id="CardTypeNew" class="textbox" placeholder="卡类型" style="width:112px;"/>
-								<a href="#" class="hisui-linkbutton" id="BReadCard" data-options="iconCls:'icon-w-card'" style="margin-left:10px;">读卡</a>
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label"><label>开始日期</label></td>
-							<td><input id="BeginDate" class="hisui-datebox textbox" style="width:162px;"/></td>
-							<td class="r-label"><label>结束日期</label></td>
-							<td class="l-label"><input id="EndDate" class="hisui-datebox textbox" style="width:162px;"/></td>
-						</tr>
-						<tr>
-							<td class="r-label"><label>发票号</label></td>
-							<td><input id="InvNo" class="textbox" style="width:156px;"/></td>
-							<td class="r-label"><label>登记号</label></td>
-							<td class="l-label" ><input id="RegNo" class="textbox" style="width:156px;"/></td>
-						</tr>
-						<tr>
-							<td class="r-label"><label>患者姓名</label></td>
-							<td><input id="PatName" class="textbox" style="width:156px;"/></td>
-							<td class="r-label"><label>收费员</label></td>
-							<td class="l-label"><input id="User" class="textbox"  style="width:156px;"/></td>
-						</tr>
-						<tr>
-							<td class="r-label"><label for="RPFlag">日结标志</label></td>
-          					<td>
-            					<input class="hisui-combobox" type="text" Id="RPFlag" style="width:163px;">
-         			 		</td>		
-						</tr>
-					</table>
-					<div id="panel-footer" style="text-align:center;">
- 						<a href="#" class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">查询</a>
- 						<div style="display:inline-block;margin:0 10px;"></div>
-						<a href="#" class="hisui-linkbutton" id="Bclear" data-options="iconCls:'icon-w-clean'">清屏</a>
+<body>
+	<div class="hisui-panel" border="false" fit="true" style="padding:10px; background-color: inherit;">
+		<div class="hisui-layout" data-options="collapsible:false,fit:true,border:false">
+			<div class="hisui-layout" data-options="region:'west',border:false" style="width: 484px;padding-right:10px; background-color: inherit;">
+				<div class="hisui-layout inherit-border" data-options="title:'#(..Get("体检收据查询"))#',region:'center',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
+					<div class="inherit-border-div" data-options="region:'north',border:false" style="height:251px;">
+						<table class="search-table">
+							<tr>
+								<td class="td-r-label"><label>#(..Get("卡号"))#</label></td>
+								<td colspan="3">
+									<table style="border-collapse:separate; border-spacing:0px;">
+										<tr>
+											<td class="r-label"><input id="CardNo" class="textbox textWidth"/></td>
+											<td class="r-label"><input id="CardTypeNew" class="textbox" style="width:116px;"/></td>
+											<td><a href="#" class="hisui-linkbutton" id="BReadCard" data-options="iconCls:'icon-w-card'" style="width:88px;">#(..Get("读卡"))#</a></td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td class="td-r-label"><label>#(..Get("开始日期"))#</label></td>
+								<td><input id="BeginDate" class="hisui-datebox textbox boxWidth"/></td>
+								<td class="td-r-label"><label>#(..Get("结束日期"))#</label></td>
+								<td><input id="EndDate" class="hisui-datebox textbox boxWidth"/></td>
+							</tr>
+							<tr>
+								<td class="td-r-label"><label>#(..Get("发票号"))#</label></td>
+								<td><input id="InvNo" class="textbox textWidth"/></td>
+								<td class="td-r-label"><label>#(..Get("登记号"))#</label></td>
+								<td><input id="RegNo" class="textbox textWidth"/></td>
+							</tr>
+							<tr>
+								<td class="td-r-label"><label>#(..Get("患者姓名"))#</label></td>
+								<td><input id="PatName" class="textbox textWidth"/></td>
+								<td class="td-r-label"><label>#(..Get("收费员"))#</label></td>
+								<td><input id="User" class="textbox textWidth"/></td>
+							</tr>
+							<tr>
+								<td class="td-r-label"><label for="RPFlag">#(..Get("日结标志"))#</label></td>
+								<td><input class="hisui-combobox textbox boxWidth" type="text" id="RPFlag"></td>
+								<td class="td-r-label"></td>
+								<td></td>	
+							</tr>
+							<tr>
+								<td colspan=4 style="text-align:center; height:30px;">
+									<a href="#" class="hisui-linkbutton" id="BFind" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>
+									<div style="display:inline-block;margin:0 5px;"></div>
+									<a href="#" class="hisui-linkbutton" id="Bclear" data-options="iconCls:'icon-w-clean'">#(..Get("清屏"))#</a>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div data-options="region:'center',split:true,border:false,bodyCls:'panel-header-gray'">
+						<table class="hisui-datagrid" id="invList"></table>
 					</div>
 				</div>
 			</div>
-			<div data-options="region:'center',border:false" style="">
-				<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top:0;border-radius:0 0 4px 4px;">
-					<table class="hisui-datagrid" id="invList"></table>
-				</div>
-        	</div>
-		</div>
-	</div>
-	<div data-options="region:'center',border:false">
-		<div class="hisui-layout" data-options="fit:true">
-    		<div data-options="region:'north',border:false" style="height:168px;padding:10px 10px 10px 0;">
-				<div class="hisui-panel" data-options="title:'体检退费申请',fit:true,headerCls:'panel-header-gray',iconCls:'icon-fee'">
+			
+			<div class="hisui-layout" data-options="region:'center',border:false" style="background-color: inherit;">
+				<div data-options="title:'#(..Get("体检退费申请"))#',region:'north',headerCls:'panel-header-gray',collapsible:false,iconCls:'icon-return-paid'" style="height:172px;">
 					<table class="search-table">
 						<tr>
-							<td class="r-label"><label>退费金额</label></td>
+							<td class="td-r-label"><label>#(..Get("退费金额"))#</label></td>
 							<td><input id="BackAmount" class="textbox" style="width:80px;" disabled/></td>
-							<td class="r-label"></td>
-							<td class="r-label"><a href="#" class="hisui-linkbutton" id="BAllRefundApp" data-options="iconCls:'icon-w-paper'">全退申请</a></td>
-							<td class="r-label"><a href="#" class="hisui-linkbutton" id="BPrint" data-options="iconCls:'icon-w-print'">打印退费单</a></td>
+							<td style="padding-left:10px;">
+								<input class='hisui-checkbox' type="checkbox" id="AllRefundApp" label=#(..Get("已全退申请"))# disabled></label>
+							</td>
+							<td style="padding-left:20px;"><a href="#" class="hisui-linkbutton" id="BAllRefundApp" data-options="iconCls:'icon-w-inv',stopAllEventOnDisabled:true">#(..Get("全退申请"))#</a></td>
+							<td></td>
+							<td><a href="#" class="hisui-linkbutton" id="BPrint" data-options="iconCls:'icon-w-print'">#(..Get("打印退费单"))#</a></td>
 							<td><input type="hidden" id="InvPrtId"/></td>
 						</tr>
 						<tr>
-							<td class="r-label"><label>退费原因</label></td>
-						 	<td colspan='4'>
-								<textarea id="RefundRmark" class="textbox" style="width:375px; height:40px;"> </textarea>
+							<td class="td-r-label"><label>#(..Get("退费原因"))#</label></td>
+						 	<td colspan=4>
+								<textarea id="RefundRmark" class="textbox" style="width:337px; height:40px;"></textarea>
 							</td>
+							<td><a href="#" class="hisui-linkbutton" id="BCancelRefundApp" data-options="iconCls:'icon-w-reset'" style="width:130px;">#(..Get("撤销申请"))#</a></td>
+						</tr>
 						<tr>
+							<td colspan=8 style="padding-right:10px;"><label>#(..Get("部分退费："))#</label><label style="color:#FF0000;">#(..Get("只需勾选待退费的项目"))#</label></td>
+						</tr>
 					</table>
 				</div>
-        	</div>
-        	<div data-options="region:'center',border:false" style="padding:0px 10px 10px 0px;">
-				<table class="hisui-datagrid"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'"  title="医嘱明细"  id="ordItmList"></table>
-        	</div>
-    	</div>
+				<div data-options="region:'center',collapsible:false,border:false" style="background-color: inherit; padding-top:10px;">
+					<div class="hisui-panel" data-options="title:'#(..Get("医嘱明细"))#',headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+						<table id="ordItmList" border="false"></table>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 	<script type="text/javascript" src="../scripts/DHCPEDropItemApp.hisui.js"></script>
 	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/websys.jquery.js"></script>
 	<script type="text/javascript" src="../scripts/DHCPEPrintReportCommon.js"></script>
+	<script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
 </body>
 </html>

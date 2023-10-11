@@ -1,0 +1,50 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<ADDINS required="CmdShell"></ADDINS>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+	if ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109") 
+	s title="批量设备信息修改"
+	s Job=$j
+	s ModelOperMethod=##class(web.DHCEQCommon).GetSysInfo("201004")
+	s ManuFactoryOperMethod=##class(web.DHCEQCommon).GetSysInfo("201005")
+	s ProviderOperMethod=##class(web.DHCEQCommon).GetSysInfo("201006")
+	s LocationOperMethod=##class(web.DHCEQCommon).GetSysInfo("201008")
+</SCRIPT>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title=#(title)# data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div  class="eq-total-sum" data-options="region:'center',border:false" style="position:relative;padding:0x;">
+					<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,border:false">
+						<table id="tDHCEQBatchEQModify" class="hisui-datagrid"></table>
+						<span id="sumTotal" style="position:absolute;right:10px;top:5px;"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="Job" value="#(Job)#">
+			<INPUT type="hidden" id="ChromeFlag" value="#(ChromeFlag)#">
+			<input type="hidden" id="ModelOperMethod" value=#(ModelOperMethod)#>
+			<input type="hidden" id="ProviderOperMethod" value=#(ProviderOperMethod)#>
+			<input type="hidden" id="ManuFactoryOperMethod" value=#(ManuFactoryOperMethod)#>
+			<input type="hidden" id="LocationOperMethod" value=#(LocationOperMethod)#>
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/em/batchequipmodify.js"></script>
+</body>
+</html>

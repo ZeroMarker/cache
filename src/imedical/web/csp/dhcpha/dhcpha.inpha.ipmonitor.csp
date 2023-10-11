@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <!--
-	医嘱审核 
-	csp: csp/dhcpha/dhcpha.inpha.ipmonitor.csp
-	js:  scripts/pharmacy/inpha/dhcpha.inpha.ipmonitor.js
+    医嘱审核 
+    csp: csp/dhcpha/dhcpha.inpha.ipmonitor.csp
+    js:  scripts/pharmacy/inpha/dhcpha.inpha.ipmonitor.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
 <html lang="zh-CN">
 
 <head>
@@ -19,14 +22,20 @@
     <Server language="CACHE" runat="Server">
         s Application=%request.Application
         s gPatNo = $G(%request.Data("gPatNo",1))
+        s gOeori=$Get(%request.Data("gOeori",1)) 
+        s gAppealFlag = $G(%request.Data("gAppleal",1))
+        s gDateRange = $G(%request.Data("gDateRange",1))
         s IEVersion=##class(web.DHCSTKUTIL).GetIEVersion()
         s InPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("IA")
     </Server>
     <SCRIPT Language="Javascript">
         DHCPHA_CONSTANT.DEFAULT.INPHAWAY = "#(InPhaWay)#";
         var LoadPatNo = "#(gPatNo)#"
+        var LoadOrdItmId= "#(gOeori)#";
+        var LoadAppealFlag = "#(gAppealFlag)#"
+        var gDateRange = "#(gDateRange)#"
         if ((("#(IEVersion)#") < 11) && (LoadPatNo != "")) {
-            window.location.href = "#(Application)#csp/dhcpha.inpha.ipmonitor.csp?gPatNo=" + LoadPatNo
+            window.location.href = "#(Application)#csp/dhcpha.inpha.ipmonitor.csp?gPatNo=" + LoadPatNo + '&gAppleal='+LoadAppealFlag+'&gOeori='+LoadOrdItmId
         }
     </script>
     <!--css-->
@@ -64,11 +73,13 @@
     <link rel="stylesheet" type="text/css" href="../CUSTOM/PassJs/McCssAll.css" />
     <script type="text/javascript" src="../CUSTOM/PassJs/McConfigPharmacy.js"></script>
     <script type="text/javascript" src="../CUSTOM/PassJs/McJsAll.js"></script>
+    <DHCPHARMACYLANG/>
     <!--dhcpha common js-->
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.phcmpass.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.js"></script>
     <!--dhcpha js-->
+    
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/inpha/dhcpha.inpha.ipmonitor.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.monitorlog.js"></script>
 
@@ -90,6 +101,18 @@
             font-size: 15px;
             font-weight: bolder;
         }
+        .ui-jqgrid tr.jqgrow td {
+            padding:0px 8px;    
+        }
+        .pha-med-book:hover{
+            text-decoration: underline !important;
+        }
+        .dhcpha-col-split{
+            border-left:0px;    
+        }
+        .ui-th-ltr, .ui-jqgrid .ui-jqgrid-htable th.ui-th-ltr {
+            border-left: 1px solid #ccc;
+        }
     </style>
 </head>
 
@@ -105,25 +128,25 @@
                 <div class="col-lg-12 col-md-12">
                     <button class="btn btn-default btn_button btn_important" id="btn-pass"><img
                             src="#(Application)#scripts/pharmacy/images/pass-default.png"
-                            class="dhcpha-btn-image"><br><strong>通过</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("通过"))#</strong></button>
                     <button class="btn btn-default btn_button btn_refuse" id="btn-refuse"><img
                             src="#(Application)#scripts/pharmacy/images/refuse-default.png"
-                            class="dhcpha-btn-image"><br><strong>拒绝</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("拒绝"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-prepresc"><img
                             src="#(Application)#scripts/pharmacy/images/prescadd-default.png"
-                            class="dhcpha-btn-image"><br><strong>医嘱审核</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("医嘱审核"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common" id="btn-analysis"><img
                             src="#(Application)#scripts/pharmacy/images/analysis-default.png"
-                            class="dhcpha-btn-image"><br><strong>处方分析</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("处方分析"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-viewlog"><img
                             src="#(Application)#scripts/pharmacy/images/log-default.png"
-                            class="dhcpha-btn-image"><br><strong>查看日志</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("查看日志"))#</strong></button>
                     <button style="display:none;" class="btn btn-default btn_button btn_common dhcpha-col-border-left"
                         id="btn-redir-return"><img src="#(Application)#scripts/pharmacy/images/return-default.png"
-                            class="dhcpha-btn-image"><br><strong>退药</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("退药"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common dhcpha-col-border-left"
-                        id="btn-autorefresh"><img src="#(Application)#scripts/pharmacy/images/autorefresh-default.png"
-                            class="dhcpha-btn-image"><br><strong>自动刷新</strong></button>
+                        id="btn-autorefresh" code="startRefresh"><img src="#(Application)#scripts/pharmacy/images/autorefresh-default.png"
+                            class="dhcpha-btn-image"><br><strong>#(..Get("自动刷新"))#</strong></button>
                 </div>
             </div>
         </div>
@@ -132,20 +155,20 @@
             <div class="row row_style ">
                 <form class="form-inline">
                     <div class="input-group">
-                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>药房</strong></span>
+                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("药房"))#</strong></span>
                         <select class="form-control in_select" id="sel-phaloc">
                         </select>
                     </div>
                     <div class="input-group">
                         <span for="date-start"
-                            class="input-group-addon dhcpha-input-group-addon-in"><strong>医嘱日期</strong></span>
+                            class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("医嘱日期"))#</strong></span>
                         <input id="date-start" class="form-control input_style" type="text"
                             style="border-right:none;width:86px" placeholder="请选择日期">
                         <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
                             <i class="fa fa-calendar"></i>
                         </span>
                     </div>
-                    <span><strong>至</strong></span>
+                    <span><strong>#(..Get("至"))#</strong></span>
                     <div class="input-group">
                         <input id="date-end" class="form-control input_style" type="text"
                             style="border-right:none;width:86px" placeholder="请选择日期">
@@ -165,20 +188,20 @@
                     </div>
                     <div class="input-group">
                         <input type="checkbox" id="chk-outdrug">
-                        <lable for="chk-outdrug"><strong>出院带药</strong></lable>
+                        <lable for="chk-outdrug"><strong>#(..Get("出院带药"))#</strong></lable>
                     </div>
                     <div class="input-group" style="padding-left:5px">
                         <input type="checkbox" id="chk-audit">
-                        <lable for="chk-audit"><strong>已审核</strong></lable>
+                        <lable for="chk-audit"><strong>#(..Get("已审核"))#</strong></lable>
                     </div>
                     <div class="input-group" style="padding-left:5px">
                         <input type="checkbox" id="chk-refuse">
-                        <lable for="chk-refuse"><strong>已拒绝</strong></lable>
+                        <lable for="chk-refuse"><strong>#(..Get("已拒绝"))#</strong></lable>
                     </div>
-                    <div class="btn-group" style="position: absolute;right: 2em;">
+                    <div class="btn-group" style="padding-left:10px;">
                         <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
                         <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
-                            id="btn-find">查询</button>
+                            id="btn-find">#(..Get("查询"))#</button>
                     </div>
                 </form>
             </div>
@@ -194,15 +217,15 @@
                             <ul id="tab-ipmonitor" class="nav nav-tabs nav_tabs_style">
                                 <li class="active">
                                     <a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false"
-                                        id="tab-ward">病区</a>
+                                        id="tab-ward">#(..Get("病区"))#</a>
                                 </li>
                                 <li>
                                     <a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false"
-                                        id="tab-wardpat">病区/病人</a>
+                                        id="tab-wardpat">#(..Get("病区病人"))#</a>
                                 </li>
                                 <li>
                                     <a data-toggle="tab" href="#" style="border-radius:0px;" aria-expanded="false"
-                                        id="tab-patno">登记号</a>
+                                        id="tab-patno">#(..Get("登记号"))#</a>
                                 </li>
                             </ul>
                         </div>
@@ -211,7 +234,7 @@
                         <div id="monitor-condition">
                             <div id="div-ward-condition">
                                 <div class="panel div_content">
-                                    <div class="panel-heading"><span class="pal_style"><strong>病区列表</strong></span>
+                                    <div class="panel-heading"><span class="pal_style"><strong>#(..Get("病区列表"))#</strong></span>
                                     </div>
                                     <table id="grid-wardlist" class="table table-bordered table_style">
                                     </table>
@@ -221,7 +244,7 @@
                             </div>
                             <div id="div-wardpat-condition">
                                 <div class="panel div_content">
-                                    <div class="panel-heading"><span class="pal_style"><strong>病区/病人列表</strong></span>
+                                    <div class="panel-heading"><span class="pal_style"><strong>#(..Get("病区病人列表"))#</strong></span>
                                     </div>
                                     <table id="grid-wardpatlist" class="table table-bordered table_style">
                                     </table>
@@ -233,7 +256,7 @@
                                     <div class="panel-heading">
                                         <div style="padding-left:4px;margin-top:-3px">
                                             <input id="txt-patno" class="form-control input_style" type="text"
-                                                style="width:13em;height:25px;font-size:14px" placeholder="登记号...">
+                                                style="width:13em;height:25px;font-size:14px" placeholder="#(..Get("登记号"))#...">
                                         </div>
                                     </div>
                                     <table id="grid-admlist" class="table table-bordered table_style">
@@ -246,7 +269,7 @@
             </div>
             <div class="col-lg-9 col-md-9 col-sm-9 dhcpha-col">
                 <div class="panel div_content" style="margin-top:1px">
-                    <div class="panel-heading"><span class="pal_style"><strong>医嘱明细</strong></span>
+                    <div class="panel-heading"><span class="pal_style"><strong>#(..Get("医嘱明细"))#</strong></span>
                     </div>
                     <table id="grid-orderdetail" class="table table-bordered table_style">
                     </table>

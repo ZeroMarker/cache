@@ -8,19 +8,35 @@
 		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>	
-		<HISUI/>
+		<HISUI css="dhcma.hai.common.css"></HISUI>
 		<DHCHAI:HEAD></DHCHAI:HEAD>
 			<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
 		</SCRIPT>
 		<CSP:IF CONDITION="IsADDINS=1">
-			<ADDINS require="DHCOPPrint"/>
+			<ADDINS require="DHCOPPrint"></ADDINS>
 		</CSP:IF>
 		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+		<style>
+			#winStatusList .datagrid-wrap{
+				border-color: #E2E2E2 !important;
+			}
+			#winStatusList .datagrid-body{
+				overflow:hidden !important ;
+			}
+			#EnterResult  #RstItem{
+				width:193px !important ;
+			}
+
+			#EnterResult  #RstObject{
+				width:190px !important ;
+			}
+	  </style>
 		<server>
 			//取配置状态列表
 			Set StatusList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusList()
 			Set StatusDicList = ##class(DHCHAI.IRS.EnviHyReportSrv).GetStatusDicList()
+            Set IsValidReason=##class(DHCHAI.BT.Config).GetValByCode("IsValidReason")
    		</server>
 	</head>
 	<body>
@@ -35,12 +51,17 @@
 		<!-------------------------------->
 
 		<script language="Cache" runat="server">
-		 Set Encrypt=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))	//加密字符串
+		 Set Encrypt=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))	//加密字符串
 		 // 获取打印控件配置信息
 		 // CLASSID|CODEBASE
 		 Set CLASSID="CLSID:F30DC1D4-5E29-4B89-902F-2E3DC81AE46D"
 		 Set CODEBASE="../addins/client/DHCOPPrint.CAB#version=1,0,0,56"
 		 Set barControlInfo ="CLASSID="""_CLASSID_""" CODEBASE="""_CODEBASE_""""
+		 set menuCode="DHCHAIEnviHy-Check"
+         set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
+         set groupId=$g(%session.Data("LOGON.GROUPID"))
+         set OperAdmin = $g(%request.Data("ParamAdmin",1))
+		 set:OperAdmin="" operaJson=##class(DHCMed.SSService.Main).GetMenuOperSecurity2(menuId,"HAIManage",groupId)
 	   </script>
 		<script language="javascript" type="text/javascript">
 			var Encrypt   = '#(Encrypt)#';
@@ -54,7 +75,8 @@
 			//全局请求后台服务对象
 			var ServerObj={
 				StatusList:"#(StatusList)#",
-				StatusDicList:"#(StatusDicList)#"
+				StatusDicList:"#(StatusDicList)#",
+		                IsValidReason:'#(IsValidReason)#'
 			}
 			$(document).ready(function(){
 				var url = "../scripts/DHCMA/HAI/IR/EnviHy/EnviHyCheck/Layout.html"

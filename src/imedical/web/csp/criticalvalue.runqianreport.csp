@@ -1,0 +1,265 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/dhccriticalvalue/common.js"></script>
+	<style>
+		.form-table{
+			width:100%;	
+		}
+		.form-table td{
+			padding:5px 0;	
+		}
+		.form-table td.r-label{
+			padding-right:10px;
+		}
+		.form-table td.l-value{
+			padding-right:20px;
+		}
+		.search-table{
+			width:auto;	
+		}
+		.search-table td{
+			padding:5px 0;	
+		}
+		.search-table td.r-label{
+			padding-right:10px;
+		}
+		.search-table td.l-value{
+			padding-right:20px;
+		}
+		body{
+			background:#fff;	
+		}
+	</style>
+	<server>
+		set dateDef=##class(websys.Conversions).DateLogicalToHtml(+$h-1)
+		s HospControl=%request.Get("HospControl")  //院区控制 LOGON当前登录院区，ALL所有院区，CUSTOM选择院区
+		s HospDesc=""
+		if %session.Get("LOGON.HOSPID")>0 s HospDesc=$p(^CT("HOSP",%session.Get("LOGON.HOSPID")),"^",2)
+		
+	</server>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'north',border:false" style="height:51px;padding:5px 10px;">
+		<table class="search-table" cellspacing="0" cellpadding="0" border="0">
+			<tr>
+				<td class="r-label">开始日期</td>
+				<td class="l-value"><input type="text" class="textbox hisui-datebox" id="SDate" /></td>
+				<td class="r-label">结束日期</td>
+				<td class="l-value"><input type="text" class="textbox hisui-datebox" id="EDate" /></td>
+				
+				<csp:if condition=HospControl="CUSTOM">
+					<td class="r-label">#(..Get("院区"))#</td>
+					<td ><input class="textbox" id="pHospId" /></td>
+				</csp:if>
+				
+				
+				<td style="padding-left:10px;"><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a></td>
+			</tr>
+		
+		</table>
+	</div>
+	<div data-options="region:'center',border:false" style="padding:0 10px 10px 10px;">
+		<server>
+			s reqKey="",len=0
+			for {
+				s reqKey=$o(%request.Data(reqKey))
+				q:reqKey=""
+				
+				s lastChar= $e(reqKey,$l(reqKey))
+				s key=$e(reqKey,1,$l(reqKey)-1)
+				continue:key=""
+				
+				if $IsValidNum(lastChar) {
+					s repList(lastChar,key)= %request.Get(reqKey)
+					
+					if key="reportName",%request.Get(reqKey)'="" s len=len+1
+				}
+			}
+			
+			if len=0,%request.Get("reportName")'="" {
+				k repList
+				for {
+					s reqKey=$o(%request.Data(reqKey))
+					q:reqKey=""
+					continue:reqKey="HospControl"
+					continue:"^LayoutManager^ServerSideRedirect^TMENU^TMENUOPENFRM^TPAGID^a"[("^"_reqKey_"^")
+					
+					s repList(0,reqKey)= %request.Get(reqKey)
+				}
+				s len=1
+			}
+			
+			//zw repList
+			s divend="</div>"
+			
+			if len>1 {
+				
+				w "<div id=""mytabs1"" class=""hisui-tabs tabs-gray"" data-options=""fit:true"">   ",!
+				s ind=""
+				for{
+					s ind=$o(repList(ind))
+					q:ind=""
+					
+					s argName="",oneName="",oneTitle="",oneArgStr=""
+					for {
+						s argName=$o(repList(ind,argName))
+						q:argName=""
+						s argValue=repList(ind,argName)
+						if argName="reportName" s oneName=argValue continue
+						if argName="reportTitle" s oneTitle=argValue continue
+						s oneArgStr=oneArgStr_"&"_argName_"="_argValue
+					}
+					continue:oneName=""
+					
+					if oneTitle="" s oneTitle=oneName
+					
+					w "<div title="""_oneTitle_""" style=""overflow:hidden;"">",!
+					w "<iframe data-raq="""_oneName_""" data-arg=""&SDate={SDate}&EDate={EDate}&HospId={HospId}&HospDesc={HospDesc}"_oneArgStr_""" class=""cv-raq"" style=""width: 100%;height: 100%; margin:0; border: 0;"" scrolling=""auto""></iframe>",!
+					w divend,!
+				}
+				w divend,!
+			}elseif len=1{
+				w "<div id=""mypanel1"" class=""hisui-panel"" data-options=""fit:true,title:'',border:false"" style=""overflow:hidden;"">   ",!
+				
+				s ind=""
+				for{
+					s ind=$o(repList(ind))
+					q:ind=""
+					if $g(repList(ind,"reportName"))'="" q
+				}
+				s argName="",oneName="",oneTitle="",oneArgStr=""
+				for {
+					s argName=$o(repList(ind,argName))
+					q:argName=""
+					s argValue=repList(ind,argName)
+					if argName="reportName" s oneName=argValue continue
+					if argName="reportTitle" s oneTitle=argValue continue
+					s oneArgStr=oneArgStr_"&"_argName_"="_argValue
+				}
+				if oneTitle="" s oneTitle=oneName
+				
+				w "<iframe data-raq="""_oneName_""" data-arg=""&SDate={SDate}&EDate={EDate}&HospId={HospId}&HospDesc={HospDesc}"_oneArgStr_""" class=""cv-raq"" style=""width: 100%;height: 100%; margin:0; border: 0;"" scrolling=""auto""></iframe>",!
+				w divend,!
+			}else{
+				w "<div style=""color:red;font-size:16px;text-align:center;padding-top:20px;"" >"
+				w "菜单参数配置错误"	
+				w divend,!
+			}
+			
+		</server>
+	</div>
+	
+	<script type="text/javascript" >
+		;(function ($) {
+			$.fn.combogrid.methods.setRemoteValue=function (jq,param) {
+		    	return jq.each(function(){
+			    	if (typeof param=="string"){
+				    	$(this).combogrid('setValue',param);
+				    }else{
+					    var val=param['value']||'';
+					    var text=param['text']||'';
+					    $(this).combogrid('options').keyHandler.query.call(this,text);
+						$(this).combogrid('setValue',val).combogrid('setText',text);
+					}
+			    })
+		    }
+		})(jQuery);
+		
+		if(typeof GV=="undefined") var GV={};
+		GV.HospId="#(%session.Get("LOGON.HOSPID"))#";
+		GV.HospControl="#($zcvt(HospControl,"O","JS"))#";
+		GV.HospDesc="#($zcvt(HospDesc,"O","JS"))#";
+		$(function(){
+			function formatByJson(template,data){
+				if ("string" == typeof data ){
+					data = $.parseJSON(data);
+				}
+				// template + data生成数据html
+				return template.replace(/\{(.+?)\}/ig,function(m,i,d){
+						return data[i]||'';
+				}) ;
+			}
+			
+			$('#pHospId').combogrid({
+				panelWidth:450,
+				width:200,
+				delay: 500,
+				mode: 'remote',
+				url:$URL+"?ClassName=web.CTHospital&QueryName=List",
+				onBeforeLoad:function(param){
+					param.desc=param.q;
+					return true;
+				},
+				onSelect:function(row){
+					
+				},
+				onLoadSuccess:function(data){
+
+				},
+				idField:"HOSPRowId",textField:"HOSPDesc",
+				columns:[[{field:'HOSPDesc',title:'医院名称',width:200},{field:'HOSPCode',title:'医院代码',width:200}]],
+				pagination:true
+			})
+			
+			if ($('#pHospId').length>0) { //默认当前登录院区
+				$('#pHospId').combogrid('setRemoteValue',{value:GV.HospId,text:GV.HospDesc});
+			}
+			
+			var getHospIdAndDesc=function(){
+				var hospId='',hospDesc='';
+				if ($('#pHospId').length>0) {
+					hospId=$('#pHospId').combogrid('getValue');
+					hospDesc=$('#pHospId').combogrid('getText');
+				}else{
+					if (GV.HospControl=='ALL'){
+						hospId='';
+						hospDesc=''
+					}else{
+						hospId=GV.HospId||'';
+						hospDesc=GV.HospDesc||'';
+					}
+					
+				}
+				return {hospId:hospId,hospDesc:hospDesc};
+			}
+			
+			var search=function(){
+				var obj={};
+				obj.SDate=$('#SDate').datebox('getValue');
+				obj.EDate=$('#EDate').datebox('getValue');
+				var hospObj=getHospIdAndDesc();
+				obj.HospId=hospObj.hospId;
+				obj.HospDesc=hospObj.hospDesc;
+				
+				$('.cv-raq').each(function(){
+					var raqName=$(this).data('raq');
+					var raqArg=	$(this).data('arg');
+					
+					var raqUrl = 'dhccpmrunqianreport.csp?reportName=' + raqName + raqArg;
+					raqUrl=formatByJson(raqUrl,obj);
+					raqUrl=common.getTokenUrl(raqUrl);
+					console.log(raqUrl);
+					$(this).attr('src',raqUrl);
+					
+				})
+			}	
+			
+			$('#btnFind').click(search);
+			$('#SDate').datebox('setValue','#(dateDef)#');
+			$('#EDate').datebox('setValue','#(dateDef)#');
+			search();
+			
+		})
+	</script>
+	</script>
+</body>
+</html>

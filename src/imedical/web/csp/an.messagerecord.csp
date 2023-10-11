@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>短信发送记录</title>
+  <dhcclinic:easyui></dhcclinic:easyui>
+	<dhcclinic:head></dhcclinic:head>
+</head>
+<body>
+  <table id="messageBox"></table>
+  <div id="messageTool">
+    <div class="form-rows">
+      <div>
+        <div class="form-row">
+          <div class="form-title-right4">开始日期</div>
+          <div class="form-item-normal">
+            <input type="text" id="startDate">
+          </div>
+          <div class="form-title-right4">结束日期</div>
+          <div class="form-item-normal">
+            <input type="text" id="endDate">
+          </div>
+          <div class="form-title-right2">科室</div>
+          <div class="form-item-normal">
+            <select id="dept"></select>
+          </div>
+          <div class="form-title-right4">短信内容</div>
+          <div class="form-item-normal">
+            <input type="text" id="content" class="textbox">
+          </div>
+          <span class="form-btn">
+            <a href="#" id="btnSearch">查询</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    function initPage(){
+      initMsgTool();
+      initMsgBox();
+      
+    }
+
+    function initMsgBox(){
+      $("#messageBox").datagrid({
+        title:"短信发送记录",
+        iconCls:"icon-paper",
+        toolbar:"#messageTool",
+        headerCls:"panel-header-gray",
+        fit:true,
+        singleSelect:true,
+        pagination:true,
+        url:ANCSP.MethodService,
+        rownumbers:true,
+        pageSize:50,
+        columns:[[
+            {field:"PatDeptDesc",title:"科室",width:120},
+            {field:"PatName",title:"患者姓名",width:80},
+            {field:"PatGender",title:"性别",width:50},
+            {field:"RegNo",title:"登记号",width:100},
+            {field:"PatPhoneNumber",title:"手机号",width:100},
+            {field:"Content",title:"短信内容",width:480},
+            {field:"SendUserDesc",title:"发送人",width:80},
+            {field:"SendDT",title:"发送时间",width:140}
+        ]],
+        onBeforeLoad:function(param){
+            param.ClassName=ANCLS.BLL.PhoneMessage;
+            param.MethodName="GetPhoneMessages";
+            var startDate=$("#startDate").datebox("getValue");
+            var endDate=$("#endDate").datebox("getValue");
+            var deptId=$("#dept").combobox("getValue");
+            var content=$("#content").val();
+            param.Arg1=startDate;
+            param.Arg2=endDate;
+            param.Arg3=deptId;
+            param.Arg4=content;
+            console.log(param);
+            param.Arg5=param.page;
+            param.Arg6=param.rows;
+            param.ArgCnt=6;
+        }
+      });
+    }
+
+    function initMsgTool(){
+      $("#startDate,#endDate").datebox();
+      var today=(new Date()).format("yyyy-MM-dd");
+      $("#startDate,#endDate").datebox("setValue",today);
+
+      $("#dept").combobox({
+        url: ANCSP.DataQuery,
+        onBeforeLoad: function(param) {
+            param.ClassName = CLCLS.BLL.Admission;
+            param.QueryName = "FindLocationOld";
+            param.Arg1 = param.q?param.q:"";
+            param.Arg2="INOPDEPT^OUTOPDEPT^EMOPDEPT";
+            param.ArgCnt=2;
+        },
+        valueField: "RowId",
+        textField: "Description",
+        mode: "remote",
+        width:160
+      });
+
+      $("#btnSearch").linkbutton({
+        iconCls:"icon-w-find",
+        onClick:function(){
+          $("#messageBox").datagrid("reload");
+        }
+      })
+    }
+
+    $(document).ready(initPage);
+  </script>
+</body>
+</html>

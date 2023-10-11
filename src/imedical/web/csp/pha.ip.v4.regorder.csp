@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--
+    备用药品使用登记
+	csp: csp/pha.ip.v4.regorder.csp
+	js:  scripts/pha/ip/v4/regorder.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <server language="CACHE" runat="Server">
+        s LoadEpisodeID = $G(%request.Data("EpisodeID",1))
+    </server>
+    <SCRIPT language="javascript">
+        // 接收参数
+        var LoadEpisodeID = "#(LoadEpisodeID)#" || "";
+    </script>
+    <style>
+        .dialog-button {
+            padding-top: 0px;
+        }
+        #btnCancelReg{
+            display: none;
+        }
+        #divPatients>div.panel.layout-panel.layout-panel-north.layout-split-north>div,
+        #divPatients>div.panel.layout-panel.layout-panel-center.layout-split-center>div {
+            border-top-left-radius: 0px !important;
+            border-top-right-radius: 0px !important;
+        }
+        .pha-hisui-datebox{
+            width:120px !important;
+        }
+        .pha-body{
+            background-color: #fff;;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <!-- 病区使用最好有此功能, 但急于发布, 先使用登记号检索的形式, 2023-04-17, yunhaibao -->
+                <!-- <csp:Include Page="nur.hisui.common.patientlistnew.csp?pageConfigCode=DrugRequest&ifMultiCheck=1" /> -->
+                <div data-options="region:'center',title:'备用药品使用登记',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',iconCls:'icon-write-order'">
+                    <table id="gridOrder"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gridOrderBar">
+        <table class="pha-con-table qCondition" >
+            <tr>
+                <td class="r-label">
+                    #(..Get("要求执行开始时间"))#
+                </td>
+                <td>
+                    <input type="text" id="startDate" class="hisui-datebox pha-hisui-datebox" data-pha="class:'hisui-datebox',query:true">
+                </td>
+                <td>
+                    <input type="text" id="startTime" class="hisui-timespinner" data-options="showSeconds:true,width:120" data-pha="class:'hisui-timespinner',query:true">
+                </td>
+                <td class="r-label">
+                    #(..Get("登记状态"))#
+                </td>
+                <td>
+                    <input type="text" id="regStatus" data-pha="class:'hisui-combobox',query:true,clear:true">
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnFind">查询</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    #(..Get("要求执行结束时间"))#
+                </td>
+                <td>
+                    <input type="text" id="endDate" class="hisui-datebox pha-hisui-datebox" data-pha="class:'hisui-datebox',query:true">
+                </td>
+                <td>
+                    <input type="text" id="endTime" class="hisui-timespinner pha-hisui-timespinner" data-options="showSeconds:true,width:120" data-pha="class:'hisui-timespinner',query:true">
+                </td>
+                <td class="r-label">
+                    #(..Get("登记号"))#
+                </td>
+                <td>
+                    <input type="text" class="hisui-validatebox" id="patNo" data-pha="class:'hisui-validatebox',query:true,clear:true" style="width:153px;">
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClear">清屏</a>
+                </td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-ok" id="btnReg">登记</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnUpdateRecLoc">修改接收科室为本科室</a>
+
+        <!-- 取消登记的功能待定 -->
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-undo" id="btnCancelReg">取消登记</a>
+    </div>
+    
+    <!-- 本页面js -->
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/regorder.js"></script>
+</body>
+
+</html>

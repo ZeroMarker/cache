@@ -1,6 +1,4 @@
-<csp:method name=OnPreHTTP
-            arguments=""
-            returntype=%Boolean>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
     i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
     q 1
 </csp:method>
@@ -13,91 +11,77 @@
 	</title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
-	<script type="text/javascript"
-			src="../scripts/nurse/hisui-0.1.0/dist/js/config/nurseTemplateConfig.js" charset=gbk></script>
-	<STYLE type='text/css'>
-		body {
-            background-color: #fff;
-            padding:5px!important;
-        }
-        .td_label {
-        	text-align:right;
-        	height: 40px;
-        	padding:0 5px 0 10px;
-        }
-        .td_item {
-        	height: 40px;
-        }
-        .datagrid-wrap.panel-body.panel-body-noheader{
-	        border-color:#ccc;
-	        border-top-right-radius:0;
-	        border-top-left-radius:0;
-	        border-right:0;
-	        border-left:0;
-	        border-bottom:0;
-        }
-	</STYLE>
+	<!--nur.hisui.nurseTemplateConfig.csp-->
+	<link rel="stylesheet" type="text/css" href="../scripts/nurse/hisui-0.1.0/dist/css/custom/common.css">
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/util.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/nurseTemplateConfig.js" charset=gbk></script>
 </head>
-<body>
-	<div class="hisui-layout" 
-		 style="width:600px;height:400px;" 
-		 data-options="fit:true,border:false">
-		<div data-options="region:'north',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper',border:false" 
-			 style="height:60px;padding:5px;">
-			<table cellpadding="20">
+<body class="s_body">
+	<div class="hisui-layout" data-options="fit:true">
+		<div class="single_row_layout_north" data-options="region:'north',title:'',border:false">
+			<table class="search_table">
 				<tr>
-					<td class="td_label">科室</td>
-					<td class="td_item">
-						<select id="comboDepartment" 
-								class="hisui-combobox" 
-								style="width:200px;">
-						</select>
+					<td>
+						<label id="_HospListLabel">医院</label>
 					</td>
-					<td class="td_label">类型</td>
-					<td class="td_item">
-						<select id="comboFilter" 
-								class="hisui-combobox" 
-								style="width:100px;">
-						</select>
+					<td>
+						<input id="_HospList" class="hisui-combobox m_hospcombo"/>
 					</td>
-					<td class="td_label">模板名称</td>
-					<td class="td_item">
-						<input id="textTemplateName" href="#" class="hisui-searchbox"/>
+					<td>
+						<input class="hisui-radio" type="radio" label="全院" id="ALL" name="radioType" value="A" data-options="required:true,checked:true">
+						<input class="hisui-radio" type="radio" label="住院" id="IP" name="radioType" value="I" data-options="required:true">
+						<input class="hisui-radio" type="radio" label="其它" id="OP" name="radioType" value="O" data-options="required:true">
+						<input class="hisui-radio" type="radio" label="科室" id="LOC" name="radioType" value="L" data-options="required:true">
 					</td>
-					<td class="td_label">
+					<td>科室</td>
+					<td>
+						<select id="comboDepartment" placeholder="请选择科室" class="hisui-combogrid" style="width:150px;"></select>
+					</td>
+					<td>类型</td>
+					<td>
+						<select id="comboFilter" class="hisui-combobox" style="width:80px;"></select>
+					</td>
+					<td>名称</td>
+					<td>
+						<input id="textTemplateName" href="#" class="hisui-searchbox" data-options="prompt:'名称、关键字或GUID'" style="width:150px;"/>
+					</td>
+					<td>
 						<a id="btnSearch" class="hisui-linkbutton hover-dark">查询</a>
 					</td>
-					<td class="td_label">
-						<a id="btnSync" title="点击可把旧版的模板配置数据导入到新版模板配置" class="hisui-linkbutton hover-dark hisui-tooltip" data-options="iconCls:'icon-w-import'">导入旧版配置</a>
+					<td>
+						<a id="btnSync" title="点击可把旧版的模板配置数据导入到新版模板配置" class="hisui-linkbutton hover-dark hisui-tooltip">导入旧版</a>
 					</td>
 				</tr>
 			</table>
 		</div>
-		<div id="hospitalDiv" data-options="region:'west',title:'模板列表',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" 
-		     style="width:400px;padding:10px;">
+		<div id="hospitalDiv" data-options="region:'west',title:'当前院区所有科室可见',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:400px;padding:10px;">
 			<div id="leftTemplateTree" 
 			     data-options="fit:true,animate:true">
 			</div>
 		</div> 		
-		<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray'">
+		<div data-options="region:'center',title:'',split:true,bodyCls:'panel-body-gray'" style="border-radius:4px;">
 			<table id="allTemplatesGrid" 
 				   class="hisui-datagrid"
-				   data-options="fit:true">
+				   data-options="fit:true,border:false">
 			</table>
 		</div>
 		<div id="divAdd"
 			 class="hisui-dialog" 
-			 style="width:300px;height:250px;top:120px;left:350px;padding:10px"	
-			 data-options="iconCls:'icon-w-save',resizable:true,modal:false,isTopZindex:true,closed:true">
+			 style="width:380px;height:240px;top:120px;left:350px;padding:10px"	
+			 data-options="iconCls:'icon-w-save',resizable:true,modal:true,isTopZindex:true,closed:true">
 			<table cellpadding="20">
 				<tr>
-					<td class="td_title">权限</td>
+					<td class="td_title" style="width:110px;">权限</td>
 					<td class="td_item">
 						<select id="comboGroup" 
 								class="hisui-combobox" 
 								style="width:150px;">
-							<option value="A">全院</option>
-							<option value="L">本科室</option>
+							<option value="ALL">全院</option>
+							<option value="IP">住院</option>
+							<option value="OP">其它</option>
+							<option value="LOC">科室</option>
 						</select>
 					</td>
 				</tr>
@@ -118,9 +102,51 @@
 				</tr>
 			</table> 
 		</div>
+		<div id="divProperty"
+			 class="hisui-dialog" 
+			 style="width:380px;height:300px;top:120px;left:350px;padding:10px"	
+			 data-options="iconCls:'icon-w-save',resizable:true,modal:true,isTopZindex:true,closed:true">
+			<table cellpadding="20">
+				<tr>
+					<td class="td_title" style="width:80px;">名称:</td>
+					<td class="td_item">
+						<label id="modelName"
+							   class="textbox"
+							   style="width:220px;">
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="td_title" style="width:80px;">关键字:</td>
+					<td class="td_item">
+						<label id="modelKey"
+							   class="textbox"
+							   style="width:220px;">
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<td class="td_title" style="width:80px;">Guid:</td>
+					<td class="td_item">
+						<label id="modelGuid"
+							   class="textbox"
+							   style="width:220px;">
+						</label>
+					</td>
+				</tr>
+			</table> 
+		</div>
 		<div id="directoryDiv" 
 			 class="hisui-dialog" 
 			 data-options="closed:true,model:false">
+		</div>
+		<div id="dialogShare" 
+			 class="hisui-dialog" 
+			 data-options="closed:true, model:true">
+			<table id="hospGrid" 
+				   class="hisui-datagrid"
+				   data-options="fit:true">
+			</table>
 		</div>
 		<div id="menu" class="hisui-menu" style="width:120px;">
 		</div>

@@ -14,7 +14,7 @@
 			Set IsADDINS=##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl")
 		</SCRIPT>
 		<CSP:IF CONDITION="IsADDINS=1">
-			<ADDINS require="CmdShell"/>
+			<ADDINS require="CmdShell"></ADDINS>
 		</CSP:IF>
 		<link rel="stylesheet" href="../scripts/DHCMA/css/base.css">
 		<server>
@@ -51,6 +51,11 @@
 			Set EducationInfo = ##class(DHCMed.SSService.DictionarySrv).GetDicByDesc("DTHEducation","初中及以下",1)
    	  		//获取建卡登记字典对照信息
    	        Set DicInfo=##class(DHCMA.Util.BTS.DictionaryMapSrv).GetDicInfo(EpisodeID,"DTH")
+			 // 获取户口地址
+   	        Set RegAdress=##Class(EMRservice.HISInterface.PatientInfoAssist).HuKouAddressNew(PatientID,"")
+   	        if (RegAdress'=""){
+	   	        Set RegAdress = $p($p(RegAdress,"!",1),"^",3)_$p($p(RegAdress,"!",2),"^",3)_$p($p(RegAdress,"!",3),"^",3)
+	   	    }
    	   </server>
 	</head>
 	<body>  
@@ -59,6 +64,7 @@
 		<script type="text/javascript" src="../scripts/DHCMA/DTH/report/Gui.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/DTH/report/Event.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/DTH/report/Print.js"></script>
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
 		
 		<script language="Cache" RUNAT="SERVER">
 			set menuCode="DTHReportList"
@@ -135,8 +141,10 @@
 				MReportID:"#(MReportID)#",
 				MaritalInfo:"#(MaritalInfo)#",
 				EducationInfo:"#(EducationInfo)#",
-				DicInfo:"#(DicInfo)#"
+				DicInfo:"#(DicInfo)#",
+				RegAdress:"#(RegAdress)#"
 			}
 		</script>
+		<OBJECT ID='ClsSaveBase64IMG' CLASSID='CLSID:F6E5F767-D0E0-4311-AAFF-5EB0385F68A8' CODEBASE='../addins/client/ClsSaveBase64IMG.CAB#version=1,0,0,5'></OBJECT>
 	</body>
 </html>

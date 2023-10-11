@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<!--药房药库-草药管理-草药配送信息
+	csp:pha.herb.v2.delivery.csp
+	js: pha/herb/v2/delivery.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <Server language="CACHE" runat="Server">
+		s gPrescNo = $g(%request.Data("gPrescNo",1))
+		s gPrescForm = $g(%request.Data("gPrescForm",1))
+		s gPapmi = $g(%request.Data("gPapmi",1))
+	</Server>
+   		<script language=javascript>
+   		var gLoadPrescNo = "#(gPrescNo)#"
+   		var gLoadPrescForm = "#(gPrescForm)#"
+   		var gPapmi = "#(gPapmi)#"
+	</script>
+    <HISUI />
+    <PHALIBV1 />
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" id="lyBody">
+                <div data-options="region:'north',border:false,split:true" style="width:350px;height:175px;">
+					 <div class="hisui-panel" title="处方及地址信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+						<div class="pha-row">
+							<div class="pha-col" style="margin-left:13px;">
+								<label for="deliveryPrescNo">#(..Get("处方号"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id="deliveryPrescNo" class='hisui-validatebox' disabled="true" data-pha="class:'hisui-validatebox'" style="width:153px">
+							</div>
+							<div class="pha-col" style="margin-left:100px;">
+								<label for="prescTakeMode">#(..Get("取药方式"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id='prescTakeMode' data-pha />
+							</div>
+						</div>
+						<div class="pha-row">
+							<div class="pha-col">
+								<label for="conProvince">#(..Get("所在地区"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id='conProvince' data-pha />
+							</div>
+							<div class="pha-col">
+								<input id='conCity' data-pha />
+							</div>
+							<div class="pha-col">
+								<input id='conCityArea' data-pha />
+							</div>
+						</div>
+						<div class="pha-row">
+							<div class="pha-col">
+								<label for="conAddressDetail">#(..Get("详细地址"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id="conAddressDetail" class='hisui-validatebox' data-pha="class:'hisui-validatebox'" style="width:495px">
+							</div>
+						</div>
+					 </div>	             
+				</div>
+                <div data-options="region:'center',border:false,split:true">
+					<div class="hisui-panel" title="历史邮寄地址" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+						<table id="gridDeliveryAddress"></table>
+					 </div>     
+				</div> 				
+				<div data-options="region:'south',border:false,split:true" style="width:350px;height:215px;">								
+					 <div class="hisui-panel" title="其他配送信息" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true,bodyCls:''">
+						<div class="pha-row">
+							<div class="pha-col">
+								<label for="deliveryDate">#(..Get("配送日期"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id="deliveryDate" class='hisui-datebox'>
+							</div>
+							<div class="pha-col">
+								<label for="conDeliveryPeriod">#(..Get("配送时段"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id='conDeliveryPeriod' data-pha />
+							</div>
+						</div>
+						<div class="pha-row">
+							<div class="pha-col" style="margin-left:13px;">
+								<label for="conReceiveUser">#(..Get("收件人"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id="conReceiveUser" class='hisui-validatebox' data-pha="class:'hisui-validatebox'" style="width:153px">
+							</div>
+							<div class="pha-col">
+								<label for="conPhoneNo">#(..Get("联系电话"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id="conPhoneNo" class='hisui-validatebox' data-pha="class:'hisui-validatebox'" style="width:153px">
+							</div>
+						</div>
+						<div class="pha-row">
+							<div class="pha-col">
+								<label for="conTaboo">#(..Get("膏方禁忌"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id='conTaboo' data-pha />
+							</div>
+							<div class="pha-col">
+								<label for="conPackMaterial">#(..Get("包装材料"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id='conPackMaterial' data-pha />
+							</div>
+							<div class="pha-col">
+								<label for="chkProcessFlag">#(..Get("是否加工"))#</label>
+							</div>
+							<div class="pha-col" style="margin-left:-10px;">
+								<input id="chkProcessFlag" type="checkbox" class="hisui-checkbox">
+							</div>
+						</div>
+						<div class="pha-row">
+							<div class="pha-col">
+								<label for="conDeliveryNote">#(..Get("备注信息"))#</label>
+							</div>
+							<div class="pha-col">
+								<input id="conDeliveryNote" class='hisui-validatebox' data-pha="class:'hisui-validatebox'" style="width:495px">
+							</div>
+						</div>
+					</div>					
+				 </div>	            
+			</div>
+        </div>
+		<div data-options="region:'south',border:false" style="text-align:center;height:38px;">	
+			<div class="pha-col">
+				<a class="hisui-linkbutton" id="btnSaveDelivery">确定</a> 
+			</div>	
+			<div class="pha-col">
+				<a class="hisui-linkbutton" id="btnCancelDelivery">取消</a> 
+			</div>	
+		</div>
+    </div>
+    
+	<script type="text/javascript" src="../scripts/pha/herb/v2/store.js" ></script>
+    <!-- 本页面js -->
+    <script src="../scripts/pha/herb/v2/delivery.js"></script>
+</body>
+
+</html>

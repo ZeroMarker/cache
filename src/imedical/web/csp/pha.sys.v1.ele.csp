@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!--
+	desc: 药房药库-元素定义
+	csp:  pha.sys.v1.ele.csp
+	js:   pha/sys/v1/ele.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <style>
+    	.pha-body {
+		    background-color: #fff;
+		}
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'west',border:false,split:true,width:400">
+                    <div id="panel" class="hisui-panel" title="#(..Get("元素"))#"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-template',fit:true,bodyCls:''">
+                        <table id="treegridEle"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div id="panel" class="hisui-panel" title="#(..Get("元素属性"))#"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-set-col',fit:true,bodyCls:''">
+                        <table id="gridEleItm"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="treegridEleBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddEle">#(..Get("新增同级"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddEleSub">#(..Get("新增下级"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditEle">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelEle">#(..Get("删除"))#</a>
+    </div>
+    <div id="gridEleItmBar">
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAddEleItm">#(..Get("新增"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-write-order" id="btnEditEleItm">#(..Get("修改"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDelEleItm">#(..Get("删除"))#</a>
+        <a class="hisui-linkbutton" plain='true' iconCls="icon-help" id="btnHelp">#(..Get("帮助"))#</a>
+    </div>
+    
+    <!-- 元素窗体 -->
+    <div id="diagEle" class="hisui-dialog" data-options="closed:true,width:263,height:167,
+		buttons:[{
+			text:'#(..Get("保存"))#',
+			handler:function(){
+				SaveEle();
+			}
+		},{
+			text:'#(..Get("继续新增"))#',
+			id:'diagEle_btnAdd',
+			handler:function(){
+				SaveEle(1);
+			}
+		},{
+			text:'#(..Get("关闭"))#',
+			handler:function(){
+				$('#diagEle').dialog('close');
+			}
+		}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" class="">
+                <div class="pha-row">
+                    <div class="pha-col" style="text-align:right;width:41px;">
+                        <label for="eleCode">
+                            <span style="color:red">*</span>#(..Get("代码"))#
+                        </label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleCode" class='hisui-validatebox' data-pha="class:'hisui-validatebox',requied:true" style="width:180px;">
+                    </div>
+                </div>
+                <div class="pha-row" style="margin-bottom:0px;">
+                    <div class="pha-col" style="text-align:right;width:41px;">
+                        <label for="eleDesc">
+                            <span style="color:red">*</span>#(..Get("名称"))#
+                        </label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleDesc" class='hisui-validatebox' data-pha="class:'hisui-validatebox',requied:true" style="width:180px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 元素属性窗体 -->
+    <div id="diagEleItm" class="hisui-dialog" data-options="closed:true,width:320,height:360,
+		buttons:[{
+			text:'#(..Get("保存"))#',
+			handler:function(){
+				SaveEleItm();
+			}
+		},{
+			text:'#(..Get("继续新增"))#',
+			id:'diagEleItm_btnAdd',
+			handler:function(){
+				SaveEleItm(1);
+			}
+		},{
+			text:'#(..Get("关闭"))#',
+			handler:function(){
+				$('#diagEleItm').dialog('close');
+			}
+		}]">
+        <div class="hisui-layout" fit="true">
+            <div data-options="region:'center',border:false" class="">
+                <div class="pha-row" style="display:none;">
+                	<div class="pha-col">
+                        <label for="eleItmId"><span style="color:red">*</span>ID</label>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmId" class='hisui-validatebox' data-pha="class:'hisui-validatebox',requied:true" />
+                    </div>
+                </div>
+                <div class="pha-row">
+                	<div class="pha-col">
+                		<div style="text-align:right;width:56px;">
+                        	<label class="input-label" for="eleItmCode"><span style="color:red">*</span>#(..Get("代码"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmCode" class='hisui-validatebox' data-pha="class:'hisui-validatebox',requied:true" style="width:200px;" />
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col">
+                    	<div style="text-align:right;width:56px;">
+                        	<label class="input-label" for="eleItmDesc"><span style="color:red">*</span>#(..Get("名称"))#</label>
+                    	</div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmDesc" class='hisui-validatebox' data-pha="class:'hisui-validatebox',requied:true" style="width:200px;" />
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col">
+                    	<div style="text-align:right;width:56px;">
+                        	<label class="input-label" for="eleItmValType"><span style="color:red">*</span>#(..Get("类型"))#</label>
+                    	</div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmValType" class='hisui-combobox' data-pha="class:'hisui-combobox',requied:true">
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col">
+                    	<div style="text-align:right;width:56px;">
+                        	<label class="input-label" for="eleItmDefVal">#(..Get("默认值"))#</label>
+                    	</div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmDefVal" class='hisui-validatebox' data-pha="class:'hisui-validatebox'" style="width:200px;">
+                    </div>
+                </div>
+                <div class="pha-row">
+                    <div class="pha-col">
+                    	<div style="text-align:right;width:56px;">
+                        	<label class="input-label" for="eleItmMemo">#(..Get("说明"))#</label>
+                        </div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmMemo" class='hisui-validatebox' data-pha="class:'hisui-validatebox'" style="width:200px;">
+                    </div>
+                </div>
+                <div class="pha-row" style="margin-bottom:0px;">
+                    <div class="pha-col">
+                    	<div style="text-align:right;width:56px;">
+                        	<label class="input-label" for="eleItmActive">#(..Get("启用"))#</label>
+                    	</div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmActive" type="checkbox" class='hisui-checkbox' data-pha="class:'hisui-checkbox'">
+                    </div>
+                </div>
+                <div class="pha-row" style="margin-bottom:0px;">
+                    <div class="pha-col">
+                    	<div style="text-align:right;width:56px;">
+                        	<label class="input-label" for="eleItmActive">#(..Get("通用属性"))#</label>
+                    	</div>
+                    </div>
+                    <div class="pha-col">
+                        <input id="eleItmComFlag" type="checkbox" class='hisui-checkbox' data-pha="class:'hisui-checkbox'">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/sys/v1/ele.js"></script>
+</body>
+
+</html>

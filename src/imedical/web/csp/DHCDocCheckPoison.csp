@@ -15,6 +15,45 @@
 	s PatientID=$p(^PAADM(EpisodeID),"^",1)
 	s PatDobDate=##class(web.DHCDoc.OP.AjaxInterface).GetPatDob($g(PatientID))
 	s PatSex=##class(DHCDoc.OPDoc.AjaxInterface).GetPatSex($g(PatientID))
+	s USERID=%session.Get("LOGON.USERID")
+	;开医嘱人的身份证号
+	s UserIDCardNo=$p(^SSU("SSUSR",USERID),"^",122) 
+	s UserPhone=$p(^SSU("SSUSR",USERID),"^",99)
+	;常规设置-允许开医嘱人给自己开毒麻药品
+	s AllowUserEnrtyOwnDMDrug=##Class(web.DHCDocConfig).GetConfigNode("AllowUserEnrtyOwnDMDrug")
+	;常规设置-开立毒麻药品时办人信息必填
+	s RequiredAgencyInfoWhenDMDrug=##Class(web.DHCDocConfig).GetConfigNode("RequiredAgencyInfoWhenDMDrug")
+	;证件类型数据
+    s HospID=%session.Get("LOGON.HOSPID")
+    s PatientNo=$p(^PAPER(PatientID,"PAT",1),"^",1)
+    s CardInfo=##class(web.DHCOPAdmReg).GetCardNoByPatientNo(PatientNo,HospID)
+    s CardTypeID=$p(CardInfo,"^",2)
+    s RCredTpeJson=##Class(web.UDHCOPOtherLB).ReadCredTypeExp("GetCredTypeToHUIJson","",HospID)
+    s CredTpeJson=##Class(web.UDHCOPOtherLB).ReadCredTypeExp("GetCredTypeToHUIJson","",HospID,CardTypeID)
+    ;联系人信息
+	s RelationFlag=0
+	s RelationName = $p($g(^PAPER(PatientID,"PER",2)),"^",13)   
+	s RelationPhone =$p($g(^PAPER(PatientID,"ALL")),"^",4)
+	s RelationCredNo =$p($g(^PAPER(PatientID,"PER",2)),"^",4)
+	s RelationCredTypeDR =$p($g(^PAPER(PatientID,"ALL")),"^",25)
+	if (RelationName'="")&&(RelationPhone'="")&&(RelationCredNo'="") s RelationFlag=1
+	if (RelationFlag=0){
+		s RelationName = $P(SupplyStr,"^",2)
+		s RelationPhone = $P(SupplyStr,"^",4)
+		s RelationCredNo = $P(SupplyStr,"^",3)
+		s RelationCredTypeDR = $P($P(SupplyStr,"^",5),"$",1)
+	}
+	if (RelationName'="")&&(RelationPhone'="")&&(RelationCredNo'="") s RelationFlag=1
+	if (RelationCredTypeDR'="") s RelationCredTypeCode=$p(^PAC("CARD",RelationCredTypeDR),"^",1)
+
+	s hasAllIdentityFlag=0
+	s PAPMIDVANumber = $P(SupplyStr,"^",1)
+	s PAPMIDCredTypeDr = $P(SupplyStr,"^",6)
+	if (PAPMIDVANumber'="")&&(RelationName'="")&&(RelationPhone'="")&&(RelationCredNo'="") s hasAllIdentityFlag=1
+
+	s RelationInfo=RelationName_"^"_RelationPhone_"^"_RelationCredNo_"^"_RelationCredTypeDR_"$"_$g(RelationCredTypeCode)
+	//PAPMIDVANumber+"^"+AgencyName+"^"+AgencyCredNo+"^"+AgencyTel+"^"+PAPMICredTypeId+"^"+AgencyCredTypeId;
+	s PatInfo=PAPMIDVANumber_"^"_RelationName_"^"_RelationCredNo_"^"_RelationPhone_"^"_PAPMIDCredTypeDr_"^"_RelationCredTypeDR
 </server>
 <STYLE type='text/css'>
 .search-table{
@@ -30,63 +69,85 @@
 }
 </STYLE>
 <body class="hisui-layout" fit="true">
-<div data-options="region:'center',border:false,collapsible:false" style="">
+<div data-options="region:'center',border:false,collapsible:false" style="padding:10px 10px 0 10px; overflow:hidden;">
    <table class="search-table">
 		<tr>
 			<td class="r-label">
-				<label>证件类型</label>
+				<label>#(..Get("患者本人证件类型"))#</label>
 			</td>
 			<td>
 				<input class="hisui-validatebox textbox" id="PAPMICredType"/>
 			</td>
 			
-		    <td class="r-label"><label>本人证件号</label></td>
+		    <td class="r-label"><label>#(..Get("患者本人证件号"))#</label></td>
 			<td>
-				<!-- onkeyup="value=value.replace(/[^0-9\X]/g,'') " -->
 				<input class="hisui-validatebox textbox" id="PAPMIDVANumber" autofocus onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"/>
 			</td> 
 		</tr>
 		<tr>
+			<td colspan="4">
+				<div style="border-top:1px dashed #ccc;margin:0 10px"></div>
+			</td>
+		</tr>
+		<tr>
 			<td class="r-label">
-				<label>证件类型</label>
+				<label>#(..Get("代办人证件类型"))#</label>
 			</td>
 			<td>
 				<input class="hisui-validatebox textbox" id="AgencyCredType"/>
 			</td>
-		    <td class="r-label"><label>代办人证件号</label></td>
+		    <td class="r-label"><label>#(..Get("代办人证件号"))#</label></td>
 			<td>
 				<!-- onkeyup="value=value.replace(/[^0-9\X]/g,'') " -->
 				<input class="hisui-validatebox textbox" id="AgencyCredNo" autofocus onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"/>
 			</td> 
 		</tr>
 		<tr>
-		    <td class="r-label"><label>代办人姓名</label></td>
-			<td  colspan="3">
+		    <td class="r-label"><label>#(..Get("代办人姓名"))#</label></td>
+			<td>
 				<input class="hisui-validatebox textbox" id="AgencyName" autofocus onkeydown="if(event.keyCode==13)event.keyCode=9"/>
 			</td> 
-		</tr>
-		<tr>
-		    <td class="r-label"><label>代办人电话</label></td>
-			<td colspan="3">
+		    <td class="r-label"><label>#(..Get("代办人电话"))#</label></td>
+			<td>
 				<!-- onkeyup="value=value.replace(/[^\0-9\-]/g,'') " -->
 				<input class="hisui-validatebox textbox" id="AgencyTel" autofocus onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"/>
 			</td> 
 		</tr>
-		<tr>
-		   <td colspan="4" align=center>
-		   	  <a id="update" name="update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">确认</a>
-	 	   	  <a id="clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="margin-left:20px;">清除</a>
-	 	   	  <a id="close" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:20px;">关闭</a>
-	 	   </td>
-		</tr>
    </table>
 </div> 
+<div data-options="region:'south',border:false" style="height:55px;">
+	<div style="margin:10px auto;text-align:center;">
+		<a id="update" name="update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">#(..Get("确认"))#</a>
+		<a id="clear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="margin-left:10px;">#(..Get("清除"))#</a>
+		<!--a id="close" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'" style="margin-left:10px;">#(..Get("关闭"))#</a-->
+		<a href="javascript:void(0)" id="mbedit-blue" class="hisui-menubutton" style="width:150px;margin-left:10px;" data-options="otherCls:'menubutton-blue',menu:'#mm3',iconCls:'icon-w-pen-paper'">#(..Get("引用"))#</a>
+		<div id="mm3" style="width:100px;" class='menu-no-icon'>   <!--menu-no-icon让菜单更紧凑-->
+			<csp:if condition='UserIDCardNo=""'>
+			<csp:else>
+				<div id="QuoteLoginInfo">#(..Get("引用登录用户信息"))#</div> 
+		 	</csp:if>
+		 	<csp:if condition='RelationFlag="1"'>
+		 		<div id="QuoteRelationInfo">#(..Get("引用联系人信息"))#</div> 
+		 	</csp:if>	
+		</div>
+	</div>
+</div>
 
 <script type='text/javascript'>
+	var RelationInfo="#(RelationInfo)#";
+	var RelationFlag="#(RelationFlag)#";
+	var UserIDCardNo="#(UserIDCardNo)#";
+	var UserPhone="#(UserPhone)#";
+	var AllowUserEnrtyOwnDMDrug="#(AllowUserEnrtyOwnDMDrug)#";
+	var RequiredAgencyInfoWhenDMDrug="#(RequiredAgencyInfoWhenDMDrug)#";
 	var PatientID="#(PatientID)#";
 	var PatDobDate="#(PatDobDate)#";
 	var PatSex="#(PatSex)#";
-	var PatInfo="";
+	var EpisodeID="#(EpisodeID)#";
+	var PatInfo="#(PatInfo)#";
+	var hasAllIdentityFlag="#(hasAllIdentityFlag)#";
+    var RCredTpeJson=#(RCredTpeJson)#;
+    var CredTpeJson=#(CredTpeJson)#;
 	var m_IDCredTypePlate="01"; //身份证代码字段
 	var m_IDDefaultCredType="";
 	function BodyLoadHandler(){
@@ -94,8 +155,27 @@
 		$("#update").click(update_onclick);
 		$("#clear").click(clear_onclck);
 		$("#close").click(close_onclck);
+		$("#QuoteLoginInfo").click(QuoteLoginInfoClick);
+		$("#QuoteRelationInfo").click(QuoteRelationInfoClick);
 		LoadCredType();
 		InitInfo();
+		if ((UserIDCardNo=="")&&(RelationFlag==0)) $("#mbedit-blue").hide();
+	}
+	function QuoteLoginInfoClick(){
+		InitAgencyCredType();
+		$("#AgencyName").val(session['LOGON.USERNAME']);
+		$("#AgencyCredNo").val(UserIDCardNo);
+		$("#AgencyTel").val(UserPhone);
+	}
+	function QuoteRelationInfoClick(){
+		InitAgencyCredType();
+		var RelationInfoArr=RelationInfo.split("^");
+		$("#AgencyName").val(RelationInfoArr[0]);
+		$("#AgencyCredNo").val(RelationInfoArr[2]);
+		$("#AgencyTel").val(RelationInfoArr[1]);
+		if (RelationInfoArr[3].split("$")[0] !="") {
+			$("#AgencyCredType").combobox('select',RelationInfoArr[3].replace("$","^"));
+		}
 	}
 	function InitInfo(){
 		var SupplyStr="#(SupplyStr)#";
@@ -110,23 +190,32 @@
 		}
 		var PAPMIDCredTypeDr=SupplyStrArr[5];
 		if ((PAPMIDCredTypeDr!="")&&(SupplyStrArr[0]!="")){
-			$("#PAPMICredType").combobox('select',AgencyCredTypeDr.replace("$","^"));
+			$("#PAPMICredType").combobox('select',PAPMIDCredTypeDr.replace("$","^"));
 		}
 	}
 	function LoadCredType(){
-		var Data=$.m({
+		/*var Data=$.m({
 			ClassName:"web.UDHCOPOtherLB",
 			MethodName:"ReadCredTypeExp",
 			JSFunName:"GetCredTypeToHUIJson",
 			ListName:""
 		},false);
-		var Data=JSON.parse(Data);
-		var cbox = $HUI.combobox("#PAPMICredType,#AgencyCredType", {
+		var Data=JSON.parse(Data);*/
+		var cbox = $HUI.combobox("#PAPMICredType", {
 				valueField: 'id',
 				textField: 'text',
 				blurValidValue:true, 
 				editable:false,
-				data:Data 
+				data:CredTpeJson ,
+				panelHeight:140,
+		 });
+         var cbox = $HUI.combobox("#AgencyCredType", {
+				valueField: 'id',
+				textField: 'text',
+				blurValidValue:true, 
+				editable:false,
+				data:RCredTpeJson ,
+				panelHeight:95
 		 });
 		 var selData=$("#PAPMICredType").combobox('getValue');
 		 if (!selData) {
@@ -137,7 +226,11 @@
     }
     function InitCredType(){
 	    //默认证件类型为身份证
-	    var Data=$("#PAPMICredType").combobox('getData');
+	    InitPAPMICredType();
+	    InitAgencyCredType();
+	}
+	function InitPAPMICredType(){
+		var Data=$("#PAPMICredType").combobox('getData');
 		var selData=$("#PAPMICredType").combobox('getValue');
 		if (selData){
 			 var code=selData.split("^")[1];
@@ -145,7 +238,24 @@
 				 for (var i=0;i<Data.length;i++){
 					 var id=Data[i].id;
 					 if (id.split("^")[1]==m_IDDefaultCredType){
-						 $("#PAPMICredType,#AgencyCredType").combobox('setValue',id);
+						 $("#PAPMICredType").combobox('setValue',id);
+						 break;
+					 }
+				 }
+			 }
+		}
+	}
+	function InitAgencyCredType(){
+		var Data=$("#AgencyCredType").combobox('getData');
+		var selData=$("#AgencyCredType").combobox('getValue');
+		if (selData){
+			 var code=selData.split("^")[1];
+			 if (code!=m_IDDefaultCredType){
+				 for (var i=0;i<Data.length;i++){
+					 var id=Data[i].id;
+					 if (id.split("^")[1]==m_IDDefaultCredType){
+						 $("#AgencyCredType").combobox('setValue',id);
+						 break;
 					 }
 				 }
 			 }
@@ -157,7 +267,10 @@
 		var AgencyCredNo=$("#AgencyCredNo").val();
 		var AgencyName=$("#AgencyName").val();
 		var AgencyTel=$("#AgencyTel").val();
-		if((PAPMIDVANumber=="")&&((AgencyCredNo=="")||(AgencyName=="")||(AgencyTel==""))){
+		if ((RequiredAgencyInfoWhenDMDrug=="1")&&((AgencyCredNo=="")||(AgencyName=="")||(AgencyTel==""))){
+			$.messager.alert("提示","代办人信息不完整,请填写完整信息!");
+			return false;
+		}else if((PAPMIDVANumber=="")&&((AgencyCredNo=="")||(AgencyName=="")||(AgencyTel==""))){
 			$.messager.alert("提示","信息不完整,请填写完整信息!");
 			return false;
 		}else{
@@ -175,16 +288,18 @@
 			   		    return false;
 					}
 					var IDSex=IDNoInfoStr[3]
-					if(PatSex!=IDSex){
-						$.messager.alert("提示","身份证号:"+PAPMIDVANumber+"对应的性别是【"+IDSex+"】,与患者本人性别不同!","info",function(){
-							$('#PAPMIDVANumber').next('span').find('input').focus();
+					if($g(PatSex)!=$g(IDSex)){
+						$.messager.alert("提示",$g("身份证号:")+PAPMIDVANumber+$g("对应的性别是【")+$g(IDSex)+$g("】,与患者本人性别不同!"),"info",function(){
+							$('#PAPMIDVANumber').focus();
 						});
 						return false;
 					}
 					var myage=getAge(PAPMIDVANumber)
 					if ((!isNaN(myage))&&(myage!="")){
 						if (parseInt(myage)>=parseInt(176)){
-							$.messager.alert("提示","本人年龄不能超过176岁!");
+							$.messager.alert("提示","本人年龄不能超过176岁!","info",function(){
+								$("#PAPMIDVANumber").focus()
+							});
 							return false;
 						}
 					}
@@ -196,7 +311,15 @@
 						CredTypeDR:$("#PAPMICredType").combobox('getValue').split("^")[0]
 					},false);
 					if (Data==1) {
-						$.messager.alert("提示",PAPMIDVANumber+" 此身份证号码已经被使用!");
+						$.messager.alert("提示",PAPMIDVANumber+$g(" 此身份证号码已经被使用!"),"info",function(){
+							$("#PAPMIDVANumber").focus()
+						});
+						return false;
+					}
+					if ((AllowUserEnrtyOwnDMDrug !=1)&&(UserIDCardNo == PAPMIDVANumber)){
+						$.messager.alert("提示",PAPMIDVANumber+$g(" 此身份证号码与开医嘱人身份证号相同,不能自己为自己开立毒麻、精一类处方!"),"info",function(){
+							$("#PAPMIDVANumber").focus()
+						});
 						return false;
 					}
 				}
@@ -226,8 +349,18 @@
 				PatInfo=PAPMIDVANumber+"^"+AgencyName+"^"+AgencyCredNo+"^"+AgencyTel+"^"+PAPMICredTypeId+"^"+AgencyCredTypeId;
 			}
 		}
+		var rtn=$.cm({
+			    ClassName : "web.DHCDocCheckPoison",
+			    MethodName : "UpdateAgencyInfo",
+			    EpisodeID:EpisodeID, PatInfo:PatInfo,
+			    dataType:"text"
+			},false)
+		if (rtn!=0) {
+			$.messager.alert("提示",$g("保存失败!")+rtn);
+			return false;
+		}
 		if (websys_showModal("options").CallBackFunc) {
-			websys_showModal("options").CallBackFunc(PatInfo);
+			websys_showModal("options").CallBackFunc("true");
 		}else{
 			window.returnValue =PatInfo;
     		window.close();	
@@ -235,8 +368,10 @@
 	}
 	function close_onclck(){
 		if (websys_showModal("options").CallBackFunc) {
+			//websys_showModal("options").CallBackFunc(hasAllIdentityFlag==1?"true":"");
 			websys_showModal("options").CallBackFunc("");
 		}else{
+			//window.returnValue =PatInfo;
 			window.returnValue ="";
     		window.close();	
 		}

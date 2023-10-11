@@ -1,0 +1,39 @@
+<html>
+<head>
+	<title>PDFÒ³Ãæ</title>
+	<script language="cache" runat="server">
+	s MREpisodeID = $Get(%request.Data("MREpisodeID",1),"")
+	s DataServiceUrl = $Get(%request.Data("DataServiceUrl",1),"")
+	s MRVerItemsIDs = $Get(%request.Data("MRVerItemsIDs",1),"")
+	s DBVersion = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBVersion")
+	s DBUserPassword = ##Class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBUserPassword")
+	</script>
+	<script type="text/javascript">
+	var MREpisodeID = '#(MREpisodeID)#';
+	var DataServiceUrl = '#(DataServiceUrl)#';
+	var MRVerItemsIDs = '#(MRVerItemsIDs)#';
+	var DBVersion = '#(DBVersion)#';
+	var DBUserPassword = '#(DBUserPassword)#';
+	</script>
+</head>
+<body>
+	<div id="DIVPDF" style="width:100%;height:100%;">
+		<object id="objPDF" height="100%" width="100%" classid="clsid:3C7CDA10-1178-4c80-BDB0-A49955500094" codebase="http://127.0.0.1/dthealth/web/addins/client/PDFViewer.cab#version=2018,1,1"></object>
+	</div>
+	<script type="text/javascript">
+	document.body.onload = BodyLoadHandler;
+	function BodyLoadHandler() {
+		var obj = document.getElementById("objPDF");
+		obj.ShowLeftNavg(false);
+		obj.ShowBottomNavg(true);
+		//obj.ShowWaterMark(false);
+		obj.ShowNotification(false);
+		if ((DBVersion == "2015") || (DBVersion == "2016"))
+		{
+			obj.DBUserPassword(DBVersion, DBUserPassword);
+		}
+		obj.InitParamMr1(MRVerItemsIDs, MREpisodeID,DataServiceUrl,1);
+	}
+	</script>
+</body>
+</html>

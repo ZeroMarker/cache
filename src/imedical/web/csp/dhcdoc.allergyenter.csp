@@ -5,15 +5,22 @@
 <title></title>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI/>
- <script src="../scripts/dhcdoc/allergyenter.js" charset="gb2312"></script>
+ <script src="../scripts/dhcdoc/allergyenter.js"></script>
  <script type="text/javascript" src="../scripts/dhcdoc/common/common.js" ></script>
-<link rel="stylesheet" href="../scripts_lib/jquery-easyui-1.3.2/themes/icon.css" />
 <script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>
+<!--东华CDSS交互-->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
 <Server>
 // 是否只显示过敏记录列表(供病历浏览用)
 s IsOnlyShowPAList=%request.Get("IsOnlyShowPAList")
 i IsOnlyShowPAList'="Y" s IsOnlyShowPAList="N"
 s EpisodeID=$g(%request.Data("EpisodeID",1))
+s PatientID=$g(%request.Data("PatientID",1))
+s RegNo=$g(%request.Data("RegNo",1))
+if (EpisodeID'="") {
+	s PatientID=$P(^PAADM(EpisodeID),"^",1)
+	s RegNo=$p(^PAPER(PatientID,"PAT",1),"^",1)
+}
 s Opener=$g(%request.Data("Opener",1))
 s PAAdmType=##class(web.DHCDocOrderEntry).GetPAAdmType(EpisodeID)
 s ShowEMRBtn=$g(%request.Data("ShowEMRBtn",1)) //"N"
@@ -26,9 +33,9 @@ if (Opener="EMR") {
 s ALGCheckConflictOpen=##Class(web.DHCDocConfig).GetConfigNode("ALGCheckConflictOpen")
 </Server>
  <script language="Javascript">
-	var RegNo = '#($g(%request.Data("RegNo",1)))#';//登记号 
-	var EpisodeID='#($g(%request.Data("EpisodeID",1)))#';           //就诊ID 
-	var PatientID='#($g(%request.Data("PatientID",1)))#';           //就诊ID 
+	var RegNo = '#(RegNo)#';//登记号 
+	var EpisodeID='#(EpisodeID)#';           //就诊ID 
+	var PatientID='#(PatientID)#';           //就诊ID 
 	var LgUserID="#(%session.Get("LOGON.USERID"))#";        //用户ID
 	var IsOnlyShowPAList="#(IsOnlyShowPAList)#"
 	var ALGCheckConflictOpen="#(ALGCheckConflictOpen)#";
@@ -72,13 +79,13 @@ font-family: 'Microsoft YaHei';
 <body class="bor-lay" style="background-color:#fff;">
 	<div class="hisui-layout" data-options="fit:true"> 
 		<csp:if condition='IsOnlyShowPAList="N"'>  
-			<div data-options="region:'west',title:'',border:false,split:true,headerCls:'panel-header-gray'" style="width:267px;padding:10px;padding-right:5px">
+			<div data-options="region:'west',title:'',border:false,headerCls:'panel-header-gray'" style="width:267px;padding:10px;padding-right:5px">
 			  <div class="hisui-panel panel-header-gray" title="" data-options="fit:true"><!--hxy 2018-10-19 要灰色panel-->
 				<input type="hidden" id="allergyID" />
 				<!--div class="panel-left" -->
 					<table class="search-table" >	
 						<tr >
-							<td class="r-label">开始日期</td>
+							<td class="r-label">#(..Get("开始日期"))#</td>
 							<td class="lefttext">
 								<input id="ALGOnsetDate" class="hisui-datebox" data-options="width:150"></input>
 							</td>
@@ -91,21 +98,28 @@ font-family: 'Microsoft YaHei';
 							</td>
 						</tr-->
 						<tr>
-							<td class="r-label">过敏原分类</td>
+							<td class="r-label">#(..Get("过敏原分类"))#</td>
 							<td class="lefttext">
 								<select id="ALGMRCCat" class="hisui-combobox" style="width:150px;">
 								</select>
 							</td>
 						</tr>
 						<tr>
-							<td class="r-label">过敏原</td>
+							<td class="r-label">#(..Get("过敏原"))#</td>
 							<td class="lefttext">
 								<select id="ALGDescCT" class="hisui-combobox" style="width:150px;">
 								</select>
 							</td>
 						</tr>
 						<tr>
-							<td class="r-label">过敏项目</td>
+							<td class="r-label">#(..Get("过敏原补充"))#</td>
+							<td class="lefttext">
+								<input id="ALGDescAdd" class="textbox" style="width:145px;">
+								</input>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label">#(..Get("过敏项目"))#</td>
 							<td class="lefttext">
 								<!--select id="ALGItem" class="hisui-combobox" style="width:150px;">
 								</select-->
@@ -116,16 +130,19 @@ font-family: 'Microsoft YaHei';
 							</td>
 						</tr>
 						<tr>
-							<td class="lefttext" colspan=2 ><span style="font-size: 14px;color:#000;">过敏情况补充</span></td>
+							<td class="lefttext" colspan=2 ><span style="font-size: 14px;color:#000;">#(..Get("过敏情况补充"))#</span></td>
 						</tr>
 						<tr>
-							<td class="lefttext" colspan=2 ><textarea  rows=10 placeholder="Message" id="ALGComments" style="width:225px"></textarea></td>
+							<td class="lefttext" colspan=2 ><textarea  rows=10 placeholder="#(..Get("请录入补充信息"))#" id="ALGComments" style="width:225px"></textarea></td>
 						</tr>
+						<!--tr>	该配置已无效
+							<td class="lefttext" colspan=2 ><input name="ALGCheckConflict" class="hisui-checkbox" label="#(..Get("过敏冲突检测开启"))#" id="ALGCheckConflict" type="checkbox" value="on"></td>
+						</tr-->
 						<tr>
-							<td class="lefttext" colspan=2 ><input name="ALGCheckConflict" class="hisui-checkbox" label="过敏冲突检测开启" id="ALGCheckConflict" type="checkbox" value="on"></td>
-						</tr>
-						<tr>
-							<td class="lefttext" colspan=2 align="center" ><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="UpdateOnClick()">保存</a></td>
+							<td class="lefttext" colspan=2 align="center" >
+								<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="UpdateOnClick()">#(..Get("保存"))#</a>
+								<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" onclick="ClearOnClick()" style="margin-left:20px;">#(..Get("清屏"))#</a>
+							</td>
 						</tr>
 					</table>
 					<!--div style="width:230px;margin-left:5px">
@@ -145,7 +162,7 @@ font-family: 'Microsoft YaHei';
 				<table id="allergytb"></table>
 			</div>
 		<csp:else>	
-			 <div data-options="region:'center',title:'',border:false,headerCls:'panel-header-acc'" style="padding:10px;">
+			 <div data-options="region:'center',title:'',border:false,headerCls:'panel-header-acc'" style="">
 				<table id="allergytb"></table>
 			</div>   
 		</csp:if>

@@ -1,0 +1,73 @@
+﻿<html>
+<head>
+
+<title>	基础平台证书登录及签名测试 </title>
+
+<script type="text/javascript" src="../scripts/dhccertauth/lib/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+<script type="text/javascript" src="../scripts/websys.js"></script>
+
+<script language="cache" runat="server">
+  	
+  	//d ##class(CA.DigitalSignatureService).OutPutSecXCommon("PHONE","")
+  	
+</script>
+
+<script language="javascript">	
+
+function test(){
+	
+	//01: 调用平台登录认证方法
+	var rtn = dhcsys_getcacert();
+	
+	//02：查看是否登录成功
+	if (!rtn.IsSucc) {
+		alert("证书未登录,请重新登录证书!");
+		return ;
+	}
+	if ((rtn.ContainerName || "") == "") {
+		alert("未开启CA,使用HIS系统签名!");
+		return ;
+	}
+	
+	var toSignData = "待签名数据";
+	if (rtn.ContainerName!=""){ 
+		//03：对签名原文做Hash操作
+		var hashData = rtn.ca_key.HashData(toSignData);
+		alert("Hash:\r\n" + hashData);
+		
+		//04: 签名
+		//var signOrdData = rtn.ca_key.SignedData(hashData,rtn.ContainerName,episodeID); //北京友谊使用此方法
+		var signData = rtn.ca_key.SignedData(hashData,rtn.ContainerName);
+		if (signData ==""){
+			alert("SignedData 方法失败 签名值为空!");
+			return ;
+		} else {
+			alert("签名值"+signData);
+			
+			//调用后台类方法##Class(CA.DigitalSignatureService).Sign(), 保存签名数据,
+			//参看《07_东华_数字证书认证接口_业务系统调用规范V2.0.doc》的【2.2.2.2 Sign】小节
+			//##Class(CA.DigitalSignatureService).Sign()需要的参数：
+			//		原文Hash
+			//		签名值
+			//		ca用户唯一标识，下面的userCertCode变量
+			//		ca证书唯一标识，下面的certNo变量
+			//		产品代码，比如EMR\DOC\NUR
+			var userCertCode = rtn.CAUserCertCode;
+			var certNo = rtn.CACertNo;
+			alert("ca用户唯一标识：" + userCertCode);
+			alert("ca证书唯一标识：" + certNo);
+		}
+	}
+}
+</script>
+</head>
+
+<body>
+
+	<div id="divTest" style="padding:15px;font-size:20px;text-align:center;">
+	       <a id="test" href="#" style="text-align:center;color:black;line-height:20px;" onclick="testPhone();">证书登录及签名测试</a>
+	</div>
+	    
+</body>
+</html>

@@ -5,25 +5,34 @@
 	q 1
 </csp:method>
 <html>
-
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Content-Type" content="text/html;">
 	<title>
 		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
 	</title>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI />
 	<NURHISUI />
+	<ADDINS require="RWCard,CmdShell"/>
+	<DOCCARD medStepCode="Other"></DOCCARD>
+	<Server>
+	s SwitchSysPat=$G(%request.Data("SwitchSysPat", 1))
+	s execSetting=##class(Nur.NIS.Service.OrderExcute.QueryOrder).GetExecConfig(%session.Get("LOGON.HOSPID"))
+	s DefHospId=##class(DHCDoc.Common.Hospital).GetDefHospIdByTableName("Nur_IP_TechOrdExcuteCfg",%session.Get("LOGON.HOSPID"))
+ 	s TechOrdExcuteCfgInfo=##class(CF.NUR.NIS.TechOrdExcuteCfg).GetConfig(DefHospId)
+ 	s LoginPageDefaultQuery=$p(TechOrdExcuteCfgInfo,$C(1),3)
+   </Server>
+	<!--script type="text/javascript" src="/csp/broker/cspxmlhttp.js"></script-->
+	<script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 	<script type="text/javascript" src="../scripts/nurse/hisui/nur.orderexcute.js" charset='gbk'></script>
 	<STYLE type='text/css'>
 		.accordion>.panel>.panel-header, .layout>.panel>.panel-header, .panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, .panel.window>.panel-header, .tabs-panels>.panel>.panel-header {
 		    -moz-border-radius: 0;
 		    -webkit-border-radius: 0;
-		    border-radius: 5px 5px 0 0;
 		    padding: 5px;
 		}
 		.td-btn {
-			padding-left: 20px;
+			padding-left: 10px;
 		}
 
 		.table-border {
@@ -37,86 +46,208 @@
 		    float: left;
 		    margin-top: -1px;
 		}
+		.search-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.r-label1{
+			text-align: right;
+			padding:0 10px;
+		}
 		.r-label{
 			text-align: right;
-    		padding:10px 10px 10px 20px;
+    		padding:0 10px;
 		}
 		.span-label{
 			text-align: right;
-    		padding:10px 9px 10px 20px;
+    		padding-right:10px;
+    		vertical-align:middle;
 		}
 		.combo-p>.panel-body.panel-body-noheader {
 			max-height:410px;
 		}
+		.textbox{
+			width:118px !important;
+		}
+		.combo{
+			width:123px !important;
+		}
+		#executeDialog {
+			border:0;
+		}
+		#executeDialog .dialog-button {
+			padding-top:0;
+		}
+		.webui-popover .webui-popover-content{
+			padding:0;
+			margin:4px;
+			border:1px solid #ccc;
+			border-radius:4px;
+		}
+	    .divisionline{
+			display:inline-block;
+			height:21px;
+			border-right:1px solid #ccc;
+			vertical-align:middle;
+		}
+		#main >.panel.layout-panel>.panel-header {
+			border-radius:4px 4px 0 0;
+		}
 	</STYLE>
 </head>
 
-<body class="hisui-layout">
-	<csp:Include Page="nur.hisui.commonreadcard.csp">
-		<div data-options="region:'center',border:false" style="padding:10px">
-			<div id="main" class="hisui-layout" fit=true>
-				<div data-options="region:'north',title:'患者查询',headerCls:'panel-header-gray',collapsible:false,iconCls:'icon-patient'" style="border-bottom-style:dashed;height:135px;padding:5px">
-					<table cellpadding="5">
-						<tr>
-							<td class="r-label">登记号</td>
-							<td>
-								<input id="regNoInput" class="textbox">
-							</td>
-							<td class="r-label">病案号</td>
-							<td>
-								<input id="medNoInput" class="textbox">
-							</td>
-							<td class="r-label">卡号</td>
-							<td>
-								<input id="cardNoInput" class="textbox">
-							</td>
-							<td class="r-label">就诊类型</td>
-							<td ><input id="patTypeBox" class="hisui-combobox" name="patTypeBox" style="width:80px;" data-options="enterNullValueClear:false,panelHeight:'auto'"></input></td>
-							<td class="td-btn">
-								<a id="readCardBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
-							</td>
-						</tr>
-						<tr>
-							<td class="r-label">科室</td>
-							<td>
-								<input id="otherLoginLocs" class="hisui-combobox textbox" name="otherLoginLocs"  data-options="enterNullValueClear:false,panelHeight:'auto'"></input>
-							</td>
-							<td class="r-label">开始日期</td>
-							<td>
-								<input id="startDate" class="hisui-datebox textbox">
-							</td>
-							<td class="r-label">结束日期</td>
-							<td>
-								<input id="endDate" class="hisui-datebox textbox">
-							</td>
-							<td class="r-label">已执行</td>
-							<td><input id="ifExced" class='hisui-checkbox' type="checkbox" label=""></td>
-							<td class="td-btn">
-								<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='queryOrderBtn'>查询</a>
-							</td>
-						</tr>
-					</table>
-				</div>
-				<div data-options="region:'center',title:'',iconCls:'icon-write-order'" style="border-width: 1px;border-style: dashed solid solid;border-color:#ccc;border-radius: 0px 0px 5px 5px;" >
-					<div id="center" class="hisui-layout" fit=true border=false>
-						<div data-options="region:'center',iconCls:'icon-w-list',headerCls:'panel-header-gray'" title="" border=false>
-							<!-- style="border-width: 1px;border-style: dashed solid solid;border-color:#ccc;border-radius: 0px 0px 4px 4px;" -->
-							<table id='ordGrid' class="hisui-datagrid" border=false title="" fit=true data-options="headerCls:'panel-header-gray',toolbar:'#custtb',">
-							</table>
-							<div id="custtb" style="padding:10px 10px 10px 20px">
-								<span class="span-label">患者</span>
-								<input id="patComBoBox" class="hisui-combobox" name="patComBoBox" style="width:155px" data-options="enterNullValueClear:false,panelHeight:'auto',panelMaxHeight:'410px'"></input>
-								<!-- <input class='hisui-checkbox' type="checkbox" label="已收费">
-							<input class='hisui-checkbox' type="checkbox" label="已执行"> -->
-								<a id="execOrdsBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-accept',plain:true">执行</a>
-								<a id="cancelOrdsBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel-order',plain:true">撤销执行</a>
-								<span id="summeryInfo" style="float:right;"></span>
-							</div>
+<body style="padding:4px;box-sizing: border-box;">
+	<div class="hisui-panel" fit="true" data-options="title:'医技执行医嘱',headerCls:'panel-header-gray',iconCls:'icon-write-order'">
+		<div id="main" class="hisui-layout" fit=true>
+			<div data-options="region:'north',collapsible:false,iconCls:'icon-patient',border:false" style="border-radius:0;border-bottom-style:dashed;height:170px;">
+				<table class="search-table"style="font-size:0;">
+					<tr>
+						<td class="r-label">#(..Get("登记号"))#</td>
+						<td>
+							<input id="regNoInput" class="textbox">
+						</td>
+						<td class="r-label">#(..Get("病案号"))#</td>
+						<td>
+							<input id="medNoInput" class="textbox">
+						</td>
+						
+						<td class="r-label">#(..Get("就诊类型"))#</td>
+						<td ><input id="patTypeBox" class="hisui-combobox" name="patTypeBox" style="" data-options="enterNullValueClear:false,panelHeight:'auto'"></input></td>
+						<td class="r-label">#(..Get("卡号"))#</td>
+						<td>
+							<input id="cardNoInput" class="textbox">
+						</td>
+						<td class="td-btn">
+							<a id="readCardBtn" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id='clearBtn'>清屏</a>
+						</td>
+						
+					</tr>
+					<tr>
+						<td class="r-label">#(..Get("开单医生"))#</td>
+						<td>
+							<input id="searchDoctor" class="hisui-combobox textbox">
+						</td>
+						<td class="r-label">#(..Get("开单科室"))#</td>
+						<td>
+							<input id="searchUserLoc" class="hisui-combobox textbox" name="searchOrdAddLoc"  data-options="enterNullValueClear:false,panelHeight:'auto'"></input>
+						</td>
+						<td class="r-label">#(..Get("接收科室"))#</td>
+						<td>
+							<input id="otherLoginLocs" class="hisui-combobox textbox" name="otherLoginLocs"  data-options="enterNullValueClear:false,panelHeight:'auto'"></input>
+						</td>
+						<td class="r-label">#(..Get("就诊科室"))#</td>
+						<td>
+							<input id="searchPatAdmLoc" class="hisui-combobox textbox" name="searchPatAdmLoc"  data-options="enterNullValueClear:false,panelHeight:'auto'"></input>
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='queryOrderBtn'>查询</a>
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" id='orderPrintBtn'>打印</a>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">#(..Get("账单状态"))#</td>
+						<td>
+							<input id="searchBillStatus" class="hisui-combobox textbox">
+						</td>
+						<td class="r-label">#(..Get("执行状态"))#</td>
+						<td>
+							<input id="searchExecedStatus" class="hisui-combobox textbox">
+						</td>
+						<td class="r-label">#(..Get("开始日期"))#</td>
+						<td>
+							<input id="startDate" class="hisui-datebox textbox">
+						</td>
+						
+						<!--td class="r-label">已执行</td>
+						<td><input id="ifExced" class='hisui-checkbox' type="checkbox" label=""></td-->
+						<td class="r-label">#(..Get("结束日期"))#</td>
+						<td>
+							<input id="endDate" class="hisui-datebox textbox">
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'" id='exportBtn'>导出</a>
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">#(..Get("诊断"))#</td>
+						<td>
+							<input id="diagnosisInput" class="textbox">
+						</td>
+						<td class="r-label">#(..Get("医嘱项"))#</td>
+						<td>
+							<input id="searchArcim" class="hisui-combobox textbox">
+						</td>
+						<td class="r-label">#(..Get("医嘱类型"))#</td>
+						<td>
+							<input id="searchOrdType" class="hisui-combobox textbox" name="searchOrdType"  data-options="enterNullValueClear:false,panelHeight:'auto'"></input>
+						</td>
+						<td class="r-label">#(..Get("申请单号"))#</td>
+						<td>
+							<input id="applyNoInput" class="textbox">
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',border:false" style="border-top: 1px dashed #ccc;border-radius:0 0 4px 4px;" >
+				<div id="center" class="hisui-layout" fit=true border=false>
+					<div data-options="region:'center',iconCls:'icon-w-list',headerCls:'panel-header-gray'" title="" border=false>
+						<!-- style="border-width: 1px;border-style: dashed solid solid;border-color:#ccc;border-radius: 0px 0px 4px 4px;" -->
+						<table id='ordGrid' class="hisui-datagrid" border=false title="" fit=true data-options="headerCls:'panel-header-gray',toolbar:'#custtb',">
+						</table>
+						<div id="custtb" style="padding:2px 10px 2px 38px;font-size:0;">
+							<span class="span-label">#(..Get("患者"))#</span>
+							<input id="patComBoBox" class="hisui-combobox" name="patComBoBox" style="width:155px" data-options="enterNullValueClear:false,panelHeight:'auto',panelMaxHeight:'410px'"></input>
+							<!-- <input class='hisui-checkbox' type="checkbox" label="已收费">
+						<input class='hisui-checkbox' type="checkbox" label="已执行"> -->
+							<div class="divisionline" style="margin-left:10px;"></div>
+							<a id="execOrdsBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-accept',plain:true">执行</a>
+							<a id="cancelOrdsBtn" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel-order',plain:true">撤销执行</a>
+							<div class="divisionline" style="margin-right:10px;"></div>
+							<input class="hisui-checkbox" type="checkbox" label="按下医嘱时间排序" id="orderByOrdDate" data-options="onCheckChange:ordGridReload">
+							<span id="summeryInfo" style="float:right;line-height:30px;"></span>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</div>	
+	</div>
+	<div id="executeDialog" class="hisui-dialog" title="医技执行" style="width:341px;height:165px;overflow-y:hidden;" data-options="iconCls:'icon-w-edit',shadow:false,modal:true,closed:true,buttons:[
+		{
+			text:'执行',
+			handler:function(){}
+		},
+		{
+			text:'取消',
+			handler:function(){$HUI.dialog('#executeDialog').close();}
+		}
+	]">
+			<table class="search-table">
+				<tr>
+					<td class="r-label1">#(..Get("开始日期"))#</td>
+					<td>
+						<input id="executeDate" class="hisui-datebox textbox">
+					</td>
+					<td class="r-label1">
+						<input id="executeTime" class="hisui-timespinner" data-options="showSeconds:true" style="width:120px;">
+					</td>
+				</tr>
+				<tr>
+					<td class="r-label1">#(..Get("执行人"))#</td>
+					<td>
+						<input id="executeUser" class="textbox" disabled>
+					</td>
+				</tr>
+			</table>
+	</div>
 </body>
-
+<SCRIPT language = 'javascript'>
+	var SwitchSysPat="#(SwitchSysPat)#"
+	var execSetting=#(execSetting)#
+	var LoginPageDefaultQuery="#(LoginPageDefaultQuery)#"
+</SCRIPT>
 </html>

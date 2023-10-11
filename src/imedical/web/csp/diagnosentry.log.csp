@@ -1,0 +1,68 @@
+<!--diagnosentry.log.csp-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{
+    background:white;
+    padding:10px 0px;
+    overflow-x:hidden;
+}
+.vstep-container ul.vstep-container-steps li .title {
+    max-width: 265px;
+    white-space: nowrap;
+}
+.vstep-container ul.vstep-container-steps li .content {
+    margin-left: 10px;
+    display: block;
+    width: 270px;
+    padding: 0;
+    margin-top: 0px;
+    margin-bottom: 8px;
+}
+.vstep-container ul.vstep-container-steps li .content .content-detail {
+    float: none;
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+}
+</style>
+<server>
+    s rows=##class(DHCDoc.Diagnos.Common).GetEditLog(%request.Get("DiagRowids"),"obj").%ToJSON()
+</server>
+</HEAD>
+<body>
+    <div id="EditLogStep" style="height:100%;width:100%"></div>
+</body>
+<SCRIPT language = 'javascript' >
+    $(function(){
+        var rows=#(rows)#;
+        var items=new Array();
+		for(var i=0;i<rows.length;i++){
+			var titile=rows[i].Date+' '+rows[i].Time+' '+rows[i].User+' '+rows[i].OperateType+$g('Õï¶Ï');
+			var Changes=rows[i].Changes;
+			var $context=$('<div class="content"></div>');
+			for(var j=0;j<Changes.length;j++){
+				var property=Changes[j].Property;
+				var oldValue=Changes[j].OldValue;
+				var newValue=Changes[j].NewValue;
+				$context.append('<div class="content-detail">'+property+':'+oldValue+'->'+newValue+'</div>');
+			}
+			items.push({title:titile,context:$context.prop('outerHTML')});
+		}
+		$("#EditLogStep").vstep({currentInd:items.length,items:items});
+		if($('#EditLogStep').find('div.cnode').size()){
+			var progressHeight=$('#EditLogStep').find('div.cnode:last').offset().top-$('#EditLogStep').find('div.cnode:first').offset().top;
+			$("#EditLogStep").find('.vstep-progress,.vstep-progress-bar').height(progressHeight);
+		}
+		var scrollHeight = $('body').prop("scrollHeight");
+      	$('body').scrollTop(scrollHeight);
+    });
+</SCRIPT>
+</HTML>

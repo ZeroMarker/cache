@@ -1,0 +1,101 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<meta http-equiv="x-ua-compatible" content="edge">
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
+
+<TITLE>设备存放地点</TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+	<style type="text/css">
+	.eq-table {display:table; width:100%; border-collapse:collapse; margin-bottom:5px;}
+	.eq-table-tr {display:table-row;}
+	.eq-table-td {display:table-cell; height:100%; padding-top:5px;}
+	.eq-table-label{width:8%;text-align:right;padding-right:5px;}
+	.eq-table-input{width:14%;}
+	.eq-table-button{width:12%;}
+	.eq-table-inputre{width:40%;}
+	.eq-table-item{font-weight:900;}
+	</style>
+</HEAD>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	Set RowID=$Get(%request.Data("RowID",1))
+	s HospFlag=##class(web.DHCEQCommon).GetSysInfo("990051")	//CZF0138
+</Script>
+<body class="hisui-layout" style="height:100%;">
+		<csp:if condition='HospFlag="2"'>	<!--CZF0138-->
+			<div data-options="region:'north',border:false,split:true" style="height:45px;padding:10px 10px 0 10px;">
+				<label id="_HospListLabel" style="color:red;padding-left:10px;" class='r-label'>医院</label>
+				<input class="hisui-validatebox"  id="_HospList" type="text">
+				<a id="_HospBtn" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">数据关联医院</a>	
+			</div>
+		</csp:if>
+		<div data-options="region:'center',border:false" style="padding:10px">
+			<div class="hisui-panel" title="存放地点查询" data-options="eqtitle:'maintitle',fit:true">
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cLCode" for="LCode">代码</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LCode"></div>
+						<div class="eq-table-td eq-table-label"><label id="cLDesc" for="LDesc">描述</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LDesc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cLHospital" for="LHospital">医院</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LHospital" data-options="component:'PLAT.L.Hospital'"></div>
+						<div class="eq-table-td eq-table-button"><a id="BAdd" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">增加</a></div>
+					    <div class="eq-table-td eq-table-button"><a id="BSave" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">保存</a></div>
+					    <div class="eq-table-td eq-table-button"><a id="BDelete" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">删除</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label id="cLPlace" for="LPlace">地址</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LPlace"></div>
+						<div class="eq-table-td eq-table-label"><label id="cLRemark" for="LRemark">备注</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LRemark"></div>
+						<div class="eq-table-td eq-table-label"><label id="cLLoc" for="LLoc">科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="LLoc" data-options="component:'PLAT.L.Loc',paras:[{name:'Type',type:2,value:'0'},{name:'LocDesc',type:1,value:'LLoc'},{name:'vgroupid',type:2,value:''},{name:'LocType',type:2,value:''},{name:'notUseFlag',type:2,value:''},{name:'CTLocAllFlag',type:2,value:'Y'}]"></div> <!--modified by csj 20190827 添加所有科室参数-->
+						<div class="eq-table-td eq-table-button"><a id="BFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">查询</a></div>
+					    <div class="eq-table-td eq-table-button"><a id="BClear" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">清屏</a></div>
+					</div>
+				</div>
+				<div data-options="border:false,fit:true" style="border-top:solid 1px #ccc;">
+						<table id="maindatagrid" data-options="border:false">
+        				</table>
+        		</div>
+			</div>
+		</div>
+		<!--div data-options="region:'center',border:false" style="height:auto;padding:10px;">
+			
+		</div-->
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<!--INPUT type="hidden" id="QXType" value=#(QXType)#-->
+			<INPUT type="hidden" id="LRowID">
+			<INPUT type="hidden" id="LBuilding">
+			<INPUT type="hidden" id="LBuildingUnitName">
+			<INPUT type="hidden" id="LType">
+			<INPUT type="hidden" id="LArea">
+			<INPUT type="hidden" id="LManageLoc">
+			<INPUT type="hidden" id="LManageUser">
+			<INPUT type="hidden" id="LTPurposeType">
+			<INPUT type="hidden" id="LEquip">
+			<INPUT type="hidden" id="LFloor">
+			<INPUT type="hidden" id="LDateActiveFrom">
+			<INPUT type="hidden" id="LDateActiveTo">
+			<INPUT type="hidden" id="LPurposeTypeDR">
+			<INPUT type="hidden" id="LManageUserDR">
+			<INPUT type="hidden" id="LManageLocDR">
+			<INPUT type="hidden" id="LEquipDR">
+			<INPUT type="hidden" id="LLocDR">
+			<INPUT type="hidden" id="LBuildingUnitDR">
+			<INPUT type="hidden" id="LHospitalDR">
+			<INPUT type="hidden" id="LBuildDR">
+		</form>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>		<!--CZF0138-->
+	<script type='text/javascript' src='../scripts/dhceq/plat/ctlocation.js'></script>
+</body>
+</HTML>

@@ -1,0 +1,112 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+ /*
+	@CSP:dhc.bdp.cdss.baiducdss.csp
+	@JS:
+	@Title:CDSS
+	@Description:
+	@Creator:基础数据平台组 - 丁亚男
+	@CreateDate:2019-06-17
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+  <link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+ <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+ <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" charset="utf-8"></script>
+ <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+ <script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+  	<!--link rel="stylesheet" href="http://01api.baidu.com/sdk/static/index.css"/>
+	<script src="http://01api.baidu.com/sdk/static/index.js"></script-->
+	<link rel="stylesheet" href="http://172.16.82.119:8703/cdss/standard/sdk/static/index.css"/>
+	<script src="http://172.16.82.119:8703/cdss/standard/sdk/static/index.js"></script>
+ <style type="text/css">
+</style>
+</HEAD>
+<BODY>
+	<div class="hisui-layout" data-options="fit:true,collapsible:false" border="false" >
+    	<div id="container" style="width:420px;height:460px;background:#fff;border:1px solid #ccc;padding:0px;overflow-y: scroll;">
+		</div>
+	</div> 
+	<!--弹窗>
+    <div id="myWin" style="width:1100px;height:550px;padding:4px;display:none;">   		
+	</div-->
+	<script type="text/javascript">
+	var data=""
+	/// 调用CDSS函数，刷新智能辅助诊断页面
+	InvokeCDSS=function(cdss_data){
+		data=cdss_data
+		//cdss.refresh(data);
+		refresh(data);
+		
+	}
+	
+	/// 页面初始化函数
+	function initPageDefault(){
+		// 01cdss.baidu.com是联调开发环境，正式环境必须替换为医院内网地址
+		var server = 'http://172.16.82.119:8703';
+
+		// 初始化
+		var cdss = new CDSS( {
+		    container : '#container',
+		    bridge: server,
+		    api : server + '/cdss/standard/sdk/bridge',
+		    ak : 'HguZMmzjgw1Kog1HlQxpcdxtHSDzD6dV',
+		    sk : 'nDS00DDYPxxHt7xiMnhETOndrax9yrRj'
+		} );
+		
+		
+		function updateEMRData(response) {
+			
+			var newEMRData = {};
+			return newEMRData;
+		}
+
+		
+		// 监听数据回写  data是插件传回的数据
+		cdss.on('cdss-evt', function(evt, response) {
+			  
+			  var newEMRData = updateEMRData(response);
+			  cdss.refresh(newEMRData);
+			
+		});
+		    
+		
+        /*cdss.on('cdss_evt', function (evt, data) {
+            if(data.type=="detail")
+            {
+            	window.open(data.data,"",'width=800,height=600,top=100,left=100,resizable=yes,location=no');
+            }
+        });
+		cdss.on('done',function(evt,data){
+			//console.log('完成了',evt,data)
+		});*/
+		// 写入数据到插件 cdss_evt 电子病历数据 user 用户数据
+        //alert(data);
+        refresh=function (data){
+			cdss.refresh(data);
+		}
+		//refresh();
+	}
+	$(function(){ initPageDefault();})
+  </script>
+</BODY>
+</HTML>
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	Cache Server Page </title>
+
+</head>
+
+<body>
+
+		<!-- Put your page code here -->
+		My page body
+</body>
+</html>

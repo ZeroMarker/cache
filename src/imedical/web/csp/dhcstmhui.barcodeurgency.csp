@@ -9,6 +9,7 @@
 	//d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
 	d ##class(web.DHCBillPrint).InvBillPrintCLSID()
 	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+	w ##class(web.DHCSTMHUI.Common.UtilCommon).EncryptInput()
 </SERVER>
 <head>
 	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
@@ -17,108 +18,111 @@
 	<DHCSTMHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div class="GridPadding" style="overflow:hidden;" data-options="region:'north',border:false">
-		<div class="hisui-layout" style="padding:2px 0;" data-options="fit:true,border:false">
-			<div class="hisui-panel panel-header-gray" style="float:left;width:650px;" data-options="region:'west',border:false">
-				<div class="hisui-panel panel-header-gray">
-					<table id="MainConditions" class="Condition">
-						<input id="Inci" name="Inci" type="hidden">
-						<input ID="InvPrintEncrypt" type="hidden" value="#(##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML")))#">
-						<tr>
-							<td>条码</td>
-							<td><input id="BarCodeText" name="BarCodeText" class="textbox"></td>
-							<td>类组</td>
-							<td><input id="ScgStk" name="ScgStk" class="textbox hisui-stkscgcombotree"></td>
-							<td><a href="#" id="CopyBatNoBT" class="hisui-linkbutton" style="width:120px;">填充效期批号</a></td>
-						</tr>
-						<tr>
-							<td>起始日期</td>
-							<td><input id="StartDate" name="StartDate" class="hisui-datebox textbox"></td>
-							<td>物资名称</td>
-							<td><input id="InciDesc" name="InciDesc" class="textbox"></td>
-							<td><a href="#" id="SaveBT" class="hisui-linkbutton" style="width:120px;">保存条码信息</a></td>
-						</tr>
-						<tr>
-							<td>截止日期</td>
-							<td><input id="EndDate" name="EndDate" class="hisui-datebox textbox"></td>
-							<td>已入库</td>
-							<td class="CkPadding">
-								<input id="Status" name="Status" class='hisui-checkbox' type="checkbox" value="Enable">
-							</td>
-							<td>
-								<a href="#" id="Print" class="hisui-menubutton menubutton-blue" style="width:120px;" data-options="menu:'#mm-Print'">打印条码</a>
-								<div id="mm-Print" style="width:120px;" class="menu-no-icon">
-									<div name="PrintBarCode">打印条码</div>
-									<div name="PrintPage">打印本页条码</div>
-									<div name="PrintBarCode2">打印条码2次</div>
-									<div name="PrintPage2">打印本页条码2次</div>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<td>供应商</td>
-							<td><input id="FVendorBox" name="FVendorBox" class="textbox hisui-combobox"></td>
-							<td colspan="2">
-								<a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-								<a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</div>
-
-			<div class="hisui-panel panel-header-gray" style="float:left;overflow:hidden;padding-left:10px;" data-options="region:'center',border:false">
-				<div class="hisui-panel panel-header-gray">
-					<table id="IngrConditions" class="Condition">
-						<tr>
-							<td>入库科室</td>
-							<td><input id="InGdRecLocId" name="InGdRecLocId" class="hisui-combobox" style="width:145px;" disabled></td>
-							<td><a href="#" id="SaveInGdRecBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">生成入库单</a></td>
-						</tr>
-						<tr>
-							<td>请求科室</td>
-							<td><input id="InGdReqLocId" name="InGdReqLocId" class="hisui-combobox" style="width:145px;"></td>
-							<td><a href="#" id="PrintHVColBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">入库单打印</a></td>
-						</tr>
-						<tr>
-							<td>供应商</td>
-							<td><input id="InGdReqVendor" name="InGdReqVendor" class="hisui-combobox" style="width:145px;"></td>
-						</tr>
-						<tr>
-							<td>资金来源</td>
-							<td><input id="Source" name="Source" class="hisui-combobox" style="width:145px;"></td>
-						</tr>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div data-options="region:'center',border:false" class="GridPadding" style="padding-top:0">
-		<div class="hisui-layout" data-options="fit:true">
-			<div id="HVEurgencytabs" class="hisui-tabs tabs-gray"  data-options="tools:'#tab-tools',fit:true">
-				<div title="条码信息"  class="hisui-layout" data-options="headerCls:'panel-header-gray',fit:true">
-					<table id="BarCodeGrid"></table>
-				</div>
-				<div title="入库信息" data-options="headerCls:'panel-header-gray',fit:true">
-					<div class="hisui-layout" data-options="fit:true"> 
-						<div class="GridPadding" data-options="region:'west',border:false" style="width:450px;">
-								<div class="hisui-panel" title="入库单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
-									<table id="IngrMainGrid"></table>
-								</div>
-						</div> 
-						<div class="GridPadding" data-options="region:'center',border:false" style="padding-left:0px;">
-								<div class="hisui-panel" title="入库明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
-									<table id="IngrDetailGrid"></table>
-								</div>
+	<div class="hisui-panel GridPadding" data-options="region:'center',border:false,fit:true">
+		<div id="HVEurgencytabs" class="hisui-tabs tabs-gray" data-options="region:'center',border:true,fit:true">
+			<div title="条码信息">
+				<div class="hisui-layout" data-options='fit:true'>
+					<div class="BorderLine" data-options="region:'north'">
+					<div class="hisui-layout" data-options='fit:true'>
+						<div data-options="region:'west',border:false" style="width:800px">
+							<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+								<input id="Inci" name="Inci" type="hidden">
+								<tr>
+									<td>条码</td>
+									<td><input id="BarCodeText" name="BarCodeText" class="textbox"></td>
+									<td>类组</td>
+									<td><input id="ScgId" name="ScgId" class="textbox hisui-stkscgcombotree"></td>
+									<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+									<td><a href="#" id="CopyBatNoBT" class="hisui-linkbutton" style="width:130px;">填充效期批号</a></td>
+								</tr>
+								<tr>
+									<td>起始日期</td>
+									<td><input id="StartDate" name="StartDate" class="hisui-datebox textbox"></td>
+									<td>物资名称</td>
+									<td><input id="InciDesc" name="InciDesc" class="textbox"></td>
+									<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+									<td><a href="#" id="SaveBT" class="hisui-linkbutton" style="width:130px;">保存条码信息</a></td>
+								</tr>
+								<tr>
+									<td>截止日期</td>
+									<td><input id="EndDate" name="EndDate" class="hisui-datebox textbox"></td>
+									<td>已入库</td>
+									<td class="CkPadding">
+										<input id="Status" name="Status" class='hisui-checkbox' type="checkbox" value="Enable">
+									</td>
+									<td></td>
+									<td>
+										<a href="#" id="Print" class="hisui-menubutton menubutton-blue" style="width:130px;" data-options="menu:'#mm-Print'">打印条码</a>
+										<div id="mm-Print" style="width:130px;" class="menu-no-icon">
+											<div name="PrintBarCode">打印条码</div>
+											<div name="PrintPage">打印本页条码</div>
+											<div name="PrintBarCode2">打印条码2次</div>
+											<div name="PrintPage2">打印本页条码2次</div>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>供应商</td>
+									<td><input id="VendorId" name="VendorId" class="textbox hisui-combobox"></td>
+									<td></td>
+								</tr>
+							</table>
+						</div>
+						<div data-options="region:'center',border:false" style="float:left;">
+							<div style="float:left;width:1px;background-color:#E2E2E2;margin-top:10px;height:150px"></div>
+								<table id="IngrConditions" class="Condition">
+									<tr>
+										<td>入库科室</td>
+										<td><input id="InGdRecLocId" name="InGdRecLocId" class="hisui-combobox textbox" disabled></td>
+										<td><a href="#" id="SaveInGdRecBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">生成入库单</a></td>
+									</tr>
+									<tr>
+										<td>请求科室</td>
+										<td><input id="InGdReqLocId" name="InGdReqLocId" class="hisui-combobox textbox"></td>
+									</tr>
+									<tr>
+										<td>供应商</td>
+										<td><input id="InGdReqVendor" name="InGdReqVendor" class="hisui-combobox textbox"></td>
+									</tr>
+									<tr>
+										<td>资金来源</td>
+										<td><input id="Source" name="Source" class="hisui-combobox textbox"></td>
+									</tr>
+								</table>
+							</div>
 						</div>
 					</div>
-				</div> 
+					<div data-options="region:'center',border:false">
+						<table id="BarCodeGrid"></table>
+					</div>
+				</div>
 			</div>
+			<div title="入库信息">
+				<div class="hisui-layout" data-options="fit:true"> 
+					<div data-options="region:'north',border:false" style="padding-top:10px;">
+						<table align="center">
+							<tr>
+								<td><a href="#" id="PrintHVColBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">入库单打印</a></td>
+							</tr>
+						</table>
+					</div>
+					<div class="GridPadding" data-options="region:'west',border:false" style="width:450px;pading-top:0px;">
+						<div class="hisui-panel" title="入库单" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+							<table id="IngrMainGrid"></table>
+						</div>
+					</div> 
+					<div class="GridPadding" data-options="region:'center',border:false" style="pading-top:0px;padding-left:0px;">
+						<div class="hisui-panel" title="入库明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+							<table id="IngrDetailGrid"></table>
+						</div>
+					</div>
+				</div>
+			</div> 
 		</div>
 	</div>
 
-	<div id="BatExpWin" class="hisui-dialog BatExpWin" data-options="closed:'true'" title="批号效期" style="width:220px;"> 
-		<table id="BatExpCondition" class="Condition">
+	<div id="BatExpWin" class="hisui-dialog" data-options="closed:'true',modal:true" title="批号效期" style="width:220px;"> 
+		<table id="BatExpCondition" class="Condition" align="center" style="padding-right:10px">
 			<tr>
 				<td>批号</td>
 				<td><input id="BatNo" name="BatNo" class="textbox"></td>
@@ -135,7 +139,7 @@
 			</tr>
 			<tr>
 				<td colspan="2" style="text-align:center;">
-					<a href="#" id="BatExpSureBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+					<a href="#" id="BatExpSureBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">填充</a>
 				</td>
 			</tr>
 		</table>

@@ -3,164 +3,178 @@
 <!-- Put your page Title here -->
 <title>手术列表</title>
 <csp:content charset="UTF-8">
-<dhcclinic:easyui></dhcclinic:easyui>
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
 <dhcclinic:head></dhcclinic:head>
+<script language="Cache" runat=server method="Get" arguments="item:%String" returntype="%String">
+   quit ##class(CIS.AN.COM.Html).Get(item)
+</script>
 <style>
+	*{
+		margin: 0;
+		padding: 0;
+	}
 	.required-color { color:red}
 	.validatebox-invalid {
 		background-image: none;
 		background-color: #fff;
 	}
+    .datagrid-toolbar {
+    	padding: 1px 2px;
+    }
 </style>
 <script type="text/javascript" src="../service/dhcanop/js/json2.js"></script>
 <!--link rel="stylesheet" type="text/css" href="../service/dhcanop/css/main.css" /-->
 <link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operationlist.css" />
 </head>
-<body class="hisui-layout">
-    <div data-options="region:'center',headerCls:'panel-header-gray'" style="padding:10px;">
-    	<table id="operlistBox"></table>
-    	<div id="operlistTool">
-    		<form id="conditionForm">
-    			<div class="form-row-group">
-		    		<div class="form-rows">
-		    			<div>
-		    				<div class="form-row">
-		    					<div class="form-title-right4">开始日期</div>
-		    					<span class="form-item">
-		    						<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox" data-permission="All"/>
-		    					</span>
-		    					<div class="form-title-right4">申请科室</div>
-		    					<span class="form-item">
-		    						<select type="text" id="AppDept" name="AppDept" class="hisui-combobox" data-permission="All"></select>
-		    					</span>
-		    					<!--<div class="form-title">手术楼层</div>
-		    					<span class="form-item">
-		    						<select type="text" id="OperFloor" name="OperFloor" class="hisui-combobox" data-permission="All"></select>
-		    					</span>-->
-		    					<div class="form-title-right4">手术间</div>
-		    					<span class="form-item">
-		    						<select id="OperRoom" name="OperRoom" class="hisui-combobox" data-permission="All"></select>
-		    					</span>
-		    					<div class="form-title-right3">登记号</div>
-		    					<span class="form-item">
-		    						<input type="text" id="RegNo" name="RegNo" class="textbox" />
-		    					</span>
-		    					<span class="form-item"><input class='hisui-checkbox' type="checkbox" id="chkIsDayOper" label="日间手术" 
-					data-options="onChecked:function(event,value){
-	                        	DayOrOut(event,value);
-	                        }"></span>
-		    					<span class="form-btn">
-		    						<a href="#" id="btnQuery" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" data-permission="All">查询</a>
-		    					</span>
-		    					<!--<span class="form-btn">
-		    						<a href="#" id="btnExport" class="hisui-linkbutton" data-options="iconCls:'icon-excel'">导出</a>
-		    					</span>-->
-		    				</div>
-		    			</div>
-		    			<div>
-		    				<div class="form-row">
-		    					<div class="form-title-right4">结束日期</div>
-		    					<span class="form-item">
-		    						<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox" data-permission="All"/>
-		    					</span>
-		    					<div class="form-title-right4">患者病区</div>
-		    					<span class="form-item">
-		    						<select type="text" id="PatWard" name="PatWard" class="hisui-combobox" data-permission="All"></select>
-		    					</span>
-		    					<div class="form-title-right4">手术状态</div>
-		    					<span class="form-item">
-		    						<select id="OperStatus" name="OperStatus" class="hisui-combobox" data-permission="All"></select>
-		    					</span>
-		    					<div class="form-title-right3">住院号</div>
-		    					<span class="form-item">
-		    						<input type="text" id="MedcareNo" name="MedcareNo" class="textbox" data-permission="All"/>
-		    					</span>
-		    					<span class="form-item"><input class='hisui-checkbox' type="checkbox" id="IsOutOper" label="门诊手术"
-						data-options="onChecked:function(event,value){
-	                        	OutOrDay(event,value);
-	                        }"
-						></span>
-		    					<span class="form-btn">
-		    						<a id="btnClean" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-clean'" data-permission="All">清空</a>
-		    					</span>
-		    				</div>
-		    			</div>
-		    		</div>
-		    	</div>
-		    	<div class="form-row-group" style="padding:3px 0">
-		    		<a href="#" id="btnEditDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">修改日间手术</a>
-		    		<a href="#" id="btnConfirmDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术确认</a>
-		    		<a href="#" id="btnPreDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术术前麻醉评估</a>
-		    		<a href="#" id="btnPostDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术术后评估</a>
-		    		<a href="#" id="btnOutDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术出院评估</a>
-		    		<a href="#" id="btnMaterialStastics" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">器械材料统计</a>
-		    		<a href="#" id="btnEditOutOper" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">门诊手术修改</a>
-					<a href="#" id="btnRegOutOper" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">门诊手术登记</a>
-		    		<a href="#" id="btnClearOpArrange" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">清空排班</a>
-		    		<a href="#" id="btnEditOperation" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">修改手术</a>
-		    		<a href="#" id="btnCancelOperation" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'">取消手术</a>
-		    		<a href="#" id="btnAuditOperation" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-stamp'">审核手术</a>
-		    		<a href="#" id="btnLinkEMRecords" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper'">关联病历</a>
-		    		<a href="#" id="btnAnaestRecord" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper'">麻醉记录</a>
-		    		<a href="#" id="btnExport" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-export'">导出列表</a>
-		    		<a href="#" id="btnPrint" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-print'">打印通知单</a>
-		    		<a href="#" id="btnPrintOutOper" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">打印门诊预约单</a>
-		    	</div>
-	    	</form>
-    	</div>
-    	<div id="moduleDialog" class="hisui-dialog" data-options="modal:true,closed:true,width:840,height:680,title:'手术申请'">
-    	</div>
-    	<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'修改日间手术',modal:true" id="editDaySurgeryApp" style="padding-left:5px;">
-    	</div>
-     	<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'日间手术确认',modal:true" id="confirmDaySurgeryApp" style="padding-left:5px;">
-    	</div>
-   		<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'日间评估',modal:true" id="PreDaySurgery" style="padding-left:5px;">
-    	</div>
-		<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'器械材料统计',modal:true" id="MaterialStastics" style="padding-left:5px;">
-    	</div>
-		<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'门诊手术修改',modal:true" id="OutOperShow" style="padding-left:5px;">
-    	</div>
-    	
-    	<div class="hisui-dialog" data-options="closed:true,width:295,height:270,title:'手术取消原因',modal:true" id="operCancelReason">
-    		<form id="reasonForm" method="post">
-    			<div class="form-rows">
-    				<div>
-    					<div class="form-row">
-    						<div class="form-title-right4">原因选择</div>
-    						<div class="form-item-normal" style="margin-right:10px;">
-    							<select id="ReasonOptions" name="ReasonOptions" class="hisui-combobox" data-options="width:207,valueField:'RowId',textField:'Description'">
-                    			</select>
-    						</div>
-    					</div>
-    				</div>
-    				<div>
-    					<div class="form-row">
-    						<div class="form-title-right4">原因描述</div>
-    						<div class="form-item-normal" style="margin-right:10px;">
-    							<textarea id="CancelReason" name="CancelReason" class="textbox" style="width:200px;height:120px;"></textarea>
-    						</div>
-    					</div>
-    				</div>
-    			</div>
-				<input type="hidden" id="OperScheduleID" name="OperScheduleID">
-    		</form>
-    	</div>
-    	<!--<div id="cancelReasonButtons" style="padding-top:0">
-    		<a id="btnSaveReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
-    		
-    	</div>-->
-    	<!--<a id="btnExitReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'">退出</a>-->
-    	<div class="hisui-dialog" data-options="closed:true,width:1064,height:800,title:'修改手术',modal:true" id="editOperApplication" style="padding-left:5px;">
-    	</div>
-    	
-    	 <!--关联电子病历文书-->
-	    <div id="EMRDialog" class="hisui-dialog" data-options="closed:true,width:600,height:400,iconCls:'icon-paper',title:'关联病历文书',buttons:'#EMRButtons',modal:true">
-			<table id="EMRBox"></table>
-	    </div>
-	    <div id="EMRButtons">
-	    	<a href="#" class="hisui-linkbutton" id="btnConfirmEMR" data-options="iconCls:'icon-w-save'">确认</a>
-			<a href="#" class="hisui-linkbutton" id="btnCloseEMR" data-options="iconCls:'icon-w-close'">关闭</a>
-	    </div>
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'center',headerCls:'panel-header-gray',bodyCls:'panel-header-gray'">
+			<table id="operlistBox"></table>
+			<div id="operlistTool">
+				<form id="conditionForm">
+					<div class="form-row-group">
+						<div class="form-rows">
+							<div style="margin-top:4px;">
+								<div class="form-row">
+									<div class="form-title-right4">#(..Get("开始日期"))#</div>
+									<span class="form-item">
+										<input type="text" id="OperStartDate" name="OperStartDate" class="hisui-datebox" data-permission="All"/>
+									</span>
+									<div class="form-title-right4">#(..Get("申请科室"))#</div>
+									<span class="form-item">
+										<select type="text" id="AppDept" name="AppDept" class="hisui-combobox" data-permission="All"></select>
+									</span>
+									<!--<div class="form-title">#(..Get("手术楼层"))#</div>
+									<span class="form-item">
+										<select type="text" id="OperFloor" name="OperFloor" class="hisui-combobox" data-permission="All"></select>
+									</span>-->
+									<div class="form-title-right4">#(..Get("手术间"))#</div>
+									<span class="form-item">
+										<select id="OperRoom" name="OperRoom" class="hisui-combobox" data-permission="All"></select>
+									</span>
+									<div class="form-title-right3">#(..Get("登记号"))#</div>
+									<span class="form-item">
+										<input type="text" id="RegNo" name="RegNo" class="hisui-validatebox" />
+									</span>
+									<span class="form-item">
+										<input class='hisui-checkbox' type="checkbox" id="chkIsDayOper" label="日间手术" data-options="onChecked:function(event,value){
+											DayOrOut(event,value);}">
+									</span>
+									<span class="form-btn">
+										<a href="#" id="btnQuery" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" data-permission="All">查询</a>
+									</span>
+									<!--<span class="form-btn">
+										<a href="#" id="btnExport" class="hisui-linkbutton" data-options="iconCls:'icon-excel'">导出</a>
+									</span>-->
+								</div>
+							</div>
+							<div style="margin-top:0px;margin-bottom:5px;">
+								<div class="form-row">
+									<div class="form-title-right4">#(..Get("结束日期"))#</div>
+									<span class="form-item">
+										<input type="text" id="OperEndDate" name="OperEndDate" class="hisui-datebox" data-permission="All"/>
+									</span>
+									<div class="form-title-right4">#(..Get("患者病区"))#</div>
+									<span class="form-item">
+										<select type="text" id="PatWard" name="PatWard" class="hisui-combobox" data-permission="All"></select>
+									</span>
+									<div class="form-title-right4">#(..Get("手术状态"))#</div>
+									<span class="form-item">
+										<select id="OperStatus" name="OperStatus" class="hisui-combobox" data-permission="All"></select>
+									</span>
+									<div class="form-title-right3">#(..Get("住院号"))#</div>
+									<span class="form-item">
+										<input type="text" id="MedcareNo" name="MedcareNo" class="hisui-validatebox" data-permission="All"/>
+									</span>
+									<span class="form-item"><input class='hisui-checkbox' type="checkbox" id="IsOutOper" label="门诊手术"
+							data-options="onChecked:function(event,value){
+									OutOrDay(event,value);
+								}"
+							></span>
+									<span class="form-btn">
+										<a id="btnClean" class="hisui-linkbutton" href="#" data-options="iconCls:'icon-w-clean'" data-permission="All">清空</a>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="form-row-group" style="padding:0px">
+						<a href="#" id="btnEditDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">修改日间手术</a>
+						<a href="#" id="btnConfirmDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术确认</a>
+						<a href="#" id="btnPreDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术术前麻醉评估</a>
+						<a href="#" id="btnPostDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术术后评估</a>
+						<a href="#" id="btnOutDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">日间手术出院评估</a>
+						<a href="#" id="btnMaterialStastics" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">器械材料统计</a>
+						<a href="#" id="btnEditOutOper" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">门诊手术修改</a>
+						<a href="#" id="btnRegOutOper" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">门诊手术登记</a>
+						<a href="#" id="btnClearOpArrange" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-clear-screen'">清空排班</a>
+						<a href="#" id="btnEditOperation" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">修改手术</a>
+						<a href="#" id="btnCancelOperation" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'">取消手术</a>
+						<a href="#" id="btnAuditOperation" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-stamp'">审核手术</a>
+						<a href="#" id="btnLinkEMRecords" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper'">关联病历</a>
+						<a href="#" id="btnAnaestRecord" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper'">麻醉记录</a>
+						<a href="#" id="btnExport" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-export'">导出列表</a>
+						<a href="#" id="btnPrint" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-print'">打印通知单</a>
+						<a href="#" id="btnPrintOutOper" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">打印门诊预约单</a>
+					</div>
+				</form>
+			</div>
+			<div id="moduleDialog" class="hisui-dialog" data-options="modal:true,closed:true,width:840,height:680,title:'手术申请'">
+			</div>
+			<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'修改日间手术',modal:true" id="editDaySurgeryApp" style="padding-left:5px;">
+			</div>
+			<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'日间手术确认',modal:true" id="confirmDaySurgeryApp" style="padding-left:5px;">
+			</div>
+			<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'日间评估',modal:true" id="PreDaySurgery" style="padding-left:5px;">
+			</div>
+			<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'器械材料统计',modal:true" id="MaterialStastics" style="padding-left:5px;">
+			</div>
+			<div class="hisui-dialog" data-options="closed:true,width:1069,height:800,title:'门诊手术修改',modal:true" id="OutOperShow" style="padding-left:5px;">
+			</div>
+			
+			<div class="hisui-dialog" data-options="closed:true,width:293,height:257,title:'手术取消原因',modal:true" id="operCancelReason">
+				<form id="reasonForm" method="post">
+					<div class="form-rows">
+						<div>
+							<div class="form-row" style="margin:10px 0px 5px 10px">
+								<div class="form-title-right4">原因选择</div>
+								<div class="form-item-normal" style="margin-right:0px">
+									<select id="ReasonOptions" name="ReasonOptions" class="hisui-combobox" data-options="width:207,valueField:'RowId',textField:'Description'">
+									</select>
+								</div>
+							</div>
+						</div>
+						<div style="margin-bottom:0px">
+							<div class="form-row" style="margin:5px 0px 0px 10px">
+								<div class="form-title-right4">原因描述</div>
+								<div class="form-item-normal" style="margin-right:0px">
+									<textarea id="CancelReason" name="CancelReason" class="textbox" style="width:200px;height:120px;"></textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+					<input type="hidden" id="OperScheduleID" name="OperScheduleID">
+				</form>
+			</div>
+			<!--<div id="cancelReasonButtons" style="padding-top:0">
+				<a id="btnSaveReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				
+			</div>-->
+			<!--<a id="btnExitReason" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel'">退出</a>-->
+			<div class="hisui-dialog" data-options="closed:true,width:1064,height:800,title:'修改手术',modal:true" id="editOperApplication" style="padding-left:5px;">
+			</div>
+			
+			 <!--关联电子病历文书-->
+			<div id="EMRDialog" class="hisui-dialog" data-options="closed:true,width:600,height:400,iconCls:'icon-paper',title:'关联病历文书',buttons:'#EMRButtons',modal:true">
+				<table id="EMRBox"></table>
+			</div>
+			<div id="EMRButtons">
+				<a href="#" class="hisui-linkbutton" id="btnConfirmEMR" data-options="iconCls:'icon-w-save'">确认</a>
+				<a href="#" class="hisui-linkbutton" id="btnCloseEMR" data-options="iconCls:'icon-w-close'">关闭</a>
+			</div>
+		</div>
     </div>
     <script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
 	<script type="text/javascript" src="../service/dhcanop/js/dhcan.datetime.js"></script>

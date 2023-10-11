@@ -40,15 +40,24 @@
 	    clear:both;
 		overflow: hidden;
 	}
+	.datagrid-row-over.datagrid-row-selected, .datagrid-row-selected{
+		background:#ffe48d !important;
+	}	
 	</style>
+	<SERVER>
+		s IsOpenMoreScreen=##Class(web.DHCMDTConsultQuery).IsOpenMoreScreen()
+		w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
+		w "var IsOpenMoreScreen="""_IsOpenMoreScreen_""";"_$c(13,10)
+		w "</SCRIPT>"
+	</SERVER>
 	<!-- 会诊配置 -->  
 </head>
 <body>
 <server>
 	  d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
       d ##class(web.UDHCCardCommLinkRegister).GetPersonInfoJSFunction()
-	  s ReadAccEncrypt= ##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLS.getcardnofrompapmino"))
-	  s ReadAccExpEncrypt= ##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+	  s ReadAccEncrypt= ##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLS.getcardnofrompapmino"))
+	  s ReadAccExpEncrypt= ##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
 	  s LgHospID=%session.Get("LOGON.HOSPID")
 	  /// 是否有疑难病会诊中心
 	  s HasCenter=##Class(web.DHCMDTCom).GetEmSysConfig("HASCENTER",LgHospID)
@@ -56,10 +65,13 @@
 	  s QryType=##Class(web.DHCMDTCom).GetEmSysConfig("QUERYTYPE",LgHospID)
 	  ///打印方式(1：LODOP打印HTML可多页，其他：XML打印一页)
 	  s PrintWay=##Class(web.DHCMDTCom).GetEmSysConfig("PRINTMODEL",LgHospID)
+	  //是否多屏幕
+	  s IsOpenMoreScreen=##Class(web.DHCMDTConsultQuery).IsOpenMoreScreen()
 	  w "<script Language=""JavaScript"">"_$c(13,10)
 	  w "var HasCenter="""_$g(HasCenter)_""";"_$c(13,10)
 	  w "var QryType="""_$g(QryType)_""";"_$c(13,10)
 	  w "var PrintWay="""_$g(PrintWay)_""";"_$c(13,10)
+	  w "var IsOpenMoreScreen="""_IsOpenMoreScreen_""";"_$c(13,10)
 	  w "</script>"
 	</server>
 	<input type="hidden" id="RowId" >
@@ -68,7 +80,7 @@
 	<div class="hisui-layout" fit="true">
 		<div data-options="region:'center',title:''" style="border:0;padding:10px 10px 10px 10px;">
 			<div class="hisui-layout" fit="true">
-				<div data-options="region:'north',headerCls:'panel-header-gray',title:'MDT会诊处理',collapsible:false,iconCls:'icon-paper'" style="height:160px;">
+				<div data-options="region:'north',headerCls:'panel-header-gray',title:'中心查询',collapsible:false,iconCls:'icon-paper'" style="height:160px;">
 					<div style="margin:8px 10px;">
 						<label>#(..Get("开始日期"))#</label>
 						<input id="StartDate" class="hisui-datebox textbox" style="width:140px;height:30px;line-height:30px;" >
@@ -96,22 +108,18 @@
 					<div class="dashline-div"></div>
 					<div>
 						<SERVER>							
-							i HasCenter=1 d
-							.w "<a href='#' class='hisui-linkbutton' plain='true' data-options='iconCls:""icon-checkin""' onclick='mdtHandleWin(""P"")' style='margin-left:2px;'>安排</a>"
-					   </SERVER>
-					   	<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-edit'" onclick="mdtHandleWin('W')" style="margin-left:2px;">签到</a>
-						<SERVER>							
-							i HasCenter=1 d
-							.w "<a href='#' class='hisui-linkbutton' plain='true' data-options='iconCls:""icon-print""' onclick='printZQTYS()' style='margin-left:2px;'>打印告知单</a>"
-					   </SERVER>
-						<a style="display:none" href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-print'" onclick="Print()" style="margin-left:2px;">打印</a>
-						<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-write-order'" onclick="modProWin()" style="margin-left:2px;">修改专家</a>
+							;有中心或者超融合模式
+							i (HasCenter=1)||(IsOpenMoreScreen=1) d
+							.w "<a href='#' class='hisui-linkbutton' plain='true' data-options='iconCls:""icon-checkin""' onclick='TakPlan()' style='margin-left:2px;'>安排</a>"
+							.w "<a href='#' class='hisui-linkbutton' plain='true' data-options='iconCls:""icon-paper-arrow""' onclick='RetMakRes()' style='margin-left:2px;'>取消安排</a>"					   
+						</SERVER>
+					   	<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-write-order'" onclick="modProWin()" style="margin-left:2px;">修改专家</a>
 						<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-write-order'" onclick="mdtHandleWin('R')" style="margin-left:2px;">修改资源</a>
-						<SERVER>							
-							i HasCenter=1 d
-							.w "<a href='#' class='hisui-linkbutton' plain='true' data-options='iconCls:""icon-paper-arrow""' onclick='RetMakRes()' style='margin-left:2px;'>取消安排</a>"
-					   </SERVER>
+					   	<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-edit'" onclick="mdtHandleWin('W')" style="margin-left:2px;">签到</a>
+						<a style="display:none" href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-print'" onclick="Print()" style="margin-left:2px;">打印</a>
+						<a style="display:none" href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-print'" onclick="printZQTYS()" style="margin-left:2px;">打印告知单</a>
 						<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-add-note'" onclick="AddNotes()" style="margin-left:2px;">备注</a>
+						<!--<a href="#" class="hisui-linkbutton" plain="true" data-options="iconCls:'icon-add-note'" onclick="refuseREQ()" style="margin-left:2px;">驳回</a>-->
 					</div>
 				</div>
 				<div data-options="region:'center',headerCls:'panel-header-gray',title:''">
@@ -150,7 +158,7 @@
 	<!--------------打印相关---------->
 	<div id="hiddenEncrypt" style="width:0;height:0;">
 		<form name="DHCIPBILL">
-			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+			<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 		</form>
 	</div>
 	<!-------------------------------->

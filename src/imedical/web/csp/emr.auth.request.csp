@@ -33,7 +33,7 @@
 		s AuthRequestByPriented = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("AuthRequestByPriented","N")
 		if (AuthRequestByPriented = "Y")&&(episodeID '= "")
 		{
-			s IsCopyed = ##class(DHCWMR.IO.ToOutService).GetIsCopy(episodeID)
+			s IsCopyed = ##class(MA.IPMR.IO.OutService).GetIsCopy(episodeID)
 		}
 		s flag = ""
 		s Allow = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName("AllowDefault")
@@ -45,7 +45,19 @@
 		{
 			s flag = "false"	
 		}
+		s AuthRequestReasonsSelectOnly = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("AuthRequestReasonsSelectOnly","N")
+		s AuthRequestReasons = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("AuthRequestReasons","")
 	</script>
+	<style>
+		.searchInput{
+			color:#999;
+			width:247px;
+		}
+		.checkBoxDiv
+		{
+			margin-bottom:5px
+		}
+   </style>
 	<script type="text/javascript">
 		var episodeID = '#(episodeID)#';
 		var patientID = '#(patientID)#';
@@ -98,51 +110,104 @@
 				befReqConFL = '修改后内容font color=FF0000(必填,至少' + LimitMust[2] + '个字)font';
 			}
 		}
+		var RequestReasonsData = "";
+		var AuthRequestReasons = '#(AuthRequestReasons)#';
+		var reasons = AuthRequestReasons.split("#");
+		for (var i=0;i<reasons.length ;i++ )
+	    {
+			var item = '{"id":"' + i + '","num":"' + (i+1) + '","text":"' + reasons[i] + '"}';
+			
+			if (i > 0)
+			{
+				RequestReasonsData = RequestReasonsData + "," + item;
+			}
+			else
+			{
+				RequestReasonsData = "[" + item;
+				//RequestReasonsData = item;
+			}
+		}
+		var AuthRequestReasonsSelectOnly = '#(AuthRequestReasonsSelectOnly)#';
+		if (AuthRequestReasonsSelectOnly == "N")
+		{
+			var count = reasons.length + 1;
+			var item = '{"id":"other","num":"' + count + '","text":"其他"}';
+			if (RequestReasonsData == "")
+			{
+				RequestReasonsData = "[" + item + "]";
+			}
+			else
+			{
+				RequestReasonsData = RequestReasonsData + "," + item;
+			}
+		}
+		RequestReasonsData = RequestReasonsData + "]";
 	</script>
 </HEAD>
 
-<BODY class="hisui-layout" data-options="fit:true">
-    <div class="hisui-panel" data-options="region:'center',fit:true,border:false" style="overflow:hidden;padding:5px;">
+<BODY style="padding:10px;background-color:#fff">
+<div class="hisui-layout" data-options="fit:true">
+    <div class="hisui-panel" data-options="region:'center',border:false" style="overflow:hidden;">
         <div class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
         
-            <div id="west" class="hisui-panel" data-options="region:'west',border:true,split:true,title:'病历目录',headerCls:'panel-header-gray',iconCls:'icon-book',collapsible:false" style="width:650px;">
-                <div class="hisui-layout" style="overflow:hidden;padding:5px;">
-                    <!--a href="#" class="hisui-linkbutton" id="selectall" data-options="iconCls:'icon-all-select',plain:true">全选</a-->
-                    <!--a href="#" class="hisui-linkbutton" id="unselectall" data-options="iconCls:'icon-transfer',plain:true">全不选</a-->
+            <div id="west" class="hisui-panel" data-options="region:'west',border:true,title:'病历目录',headerCls:'panel-header-gray',iconCls:'icon-book',collapsible:false" style="width:650px;overflow:hidden;">
+                <div class="hisui-layout" style="overflow:hidden;padding:10px">
                     <a href="#" class="hisui-linkbutton" id="expandall" data-options="iconCls:'icon-download',plain:true">#(..Get("展开"))#</a>
                     <a href="#" class="hisui-linkbutton" id="collapseall" data-options="iconCls:'icon-upload',plain:true">#(..Get("折叠"))#</a>
-                	<a href="#" class="hisui-linkbutton" id="requestHistory" data-options="iconCls:'icon-paper',plain:true" style="float:right;margin-right:3px;">#(..Get("申请记录"))#</a>
+                	<a href="#" class="hisui-linkbutton" id="selectall" data-options="iconCls:'icon-all-select',plain:true">#(..Get("全选(已写病历)"))#</a>
+                    <a href="#" class="hisui-linkbutton" id="unselectall" data-options="iconCls:'icon-all-unselect',plain:true">#(..Get("全不选(已写病历)"))#</a>
+                    <a href="#" class="hisui-linkbutton" id="requestHistory" data-options="iconCls:'icon-paper',plain:true" style="float:right;margin-right:3px;">#(..Get("申请记录"))#</a>
+                    <div style="margin-top:10px">
+<!--           			    <input type="text" class="hisui-validatebox validatebox-text searchInput" id="searchInput" value="输入名称搜索！" onclick="my_click(this,'searchInput');" onBlur="my_blur(this,'searchInput');" />
+						<a id="searchRecord" href="#" class="hisui-linkbutton hover-dark search" data-options="iconCls:'icon-w-find'"></a>        -->
+						<input type="text" class="hisui-searchbox" id="searchRecord" style="width:160px;height:28px" data-options="prompt:emrTrans('输入名称搜索！')" />
+                    </div> 					
+                	
                 </div>
-                <div class="hisui-layout" style="overflow:hidden;padding:5px;">
-                    <div style="width:100%;height:450px;overflow:auto">
+                <div class="hisui-layout" style="overflow:hidden;border-top:1px dashed #cccccc">
+                    <div style="width:100%;height:450px;overflow:auto;padding:10px">
                         <ul id="emrTree" class="hisui-tree" data-options="lines:true" style="overflow:hidden;"></ul>
                     </div>
                 </div>
             </div>	
             
-            <div id="center" class="hisui-panel" data-options="region:'center',border:true,split:true,title:'申请内容',headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="overflow:auto;">
-                <div class="hisui-layout" data-options="fit:true,border:false" style="height:100%;">
-                
-                    <div id="centerNorth" class="hisui-panel" data-options="region:'north',border:false" style="height:70px;padding-top:20px;">
+            <div id="center" class="hisui-panel" data-options="region:'center',border:false" style="overflow:auto;padding-left:10px">
+                <div class="hisui-layout" data-options="fit:true,border:false" style="height:100%;"> 
+                    <div class="hisui-panel" data-options="region:'center',border:true,title:'申请内容',headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="overflow:auto;">   
+                    <div class="hisui-layout" data-options="fit:true,border:false"> 
+                    <div id="centerNorth" class="hisui-panel" data-options="region:'north',border:false" style="height:67px;padding:10px 10px 5px 10px;">
                         <span>
-                            <div style="float:left;width:18%;text-align:right;padding-right:5px;">#(..Get("权限类型"))#</div>
+                            <div style="float:left;width:70px;text-align:right;padding-right:10px;">#(..Get("权限类型"))#</div>
                         </span>
                         <span>
                             <div>
-                                <span id="privColumn0" style="float:left;width:19%;">
+                                <span id="privColumn0" style="float:left;width:50px;margin-right:10px">
                                     <div>
                                         <input class='hisui-checkbox' type="checkbox" id="allAction" label="全选" data-options="onCheckChange:function(event,value){allActionChange(event,value)}">
                                     </div>
                                 </span>
-                                <span id="privColumn1" style="float:left;width:19%;"></span>
-                                <span id="privColumn2" style="float:left;width:19%;"></span>
-                                <span id="privColumn3" style="float:left;width:19%;"></span>
+                                <div id="privColumn1" style="float:left;width:50px;margin-right:10px"></div>
+                                <div id="privColumn2" style="float:left;width:50px;margin-right:10px"></div>
+                                <div id="privColumn3" style="float:left;width:50px;margin-right:10px"></div>
                             </div>
                         </span>
                     </div>
                     
-                    <div id="centerCenter" class="hisui-panel" data-options="region:'center',border:false" style="overflow:auto;">
-                        <div class="hisui-panel" data-options="border:false" style="height:70px;">
+                    <div id="centerCenter" class="hisui-panel" data-options="region:'center',border:false" style="overflow:auto;padding:0px 10px 10px 10px">
+						<div class="hisui-panel" data-options="border:false" style="height:33px;">
+                            <div style="float:left;width:70px;text-align:right;padding-right:10px;">#(..Get("申请的原因"))#</div><input id="cbxRequestReason" class="hisui-combobox"/>
+                        </div>
+						<div id="TextRequestReasonDiv" class="hisui-panel" data-options="border:false" style="height:72px;">
+							<span>
+                                <div style="float:left;width:70px;text-align:right;padding:10px 10px 0 0;"></div>
+                            </span>
+                            <span>
+                                <div style="padding-top:8px;">
+                                    <input class="textbox" id="TextRequestReason" placeholder="在此录入申请原因" style="width:300px;height:62px;">
+                                </div>
+                            </span>
+                        </div>
+                        <!--div class="hisui-panel" data-options="border:false" style="height:70px;">
                             <span>
                                 <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("申请的原因"))#</div>
                             </span>
@@ -151,42 +216,44 @@
                                     <input class="textbox" id="requestReason" style="width:78%;height:60px;">
                                 </div>
                             </span>
-                        </div>
-                        <div class="hisui-panel" data-options="border:false" style="height:70px;">
+                        </div-->
+                        <div class="hisui-panel" data-options="border:false" style="height:72px;">
                             <span>
-                                <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("修改前内容"))#</div>
+                                <div style="float:left;width:70px;text-align:right;padding:10px 10px 0 0;">#(..Get("修改前内容"))#</div>
                             </span>
                             <span>
-                                <div style="padding-top:3px;">
-                                    <input class="textbox" id="beforeRequestContent" style="width:78%;height:60px;">
+                                <div style="padding-top:10px;">
+                                    <input class="textbox" id="beforeRequestContent" style="width:300px;height:60px;">
                                 </div>
                             </span>
                         </div>
-                        <div class="hisui-panel" data-options="border:false" style="height:70px;">
+                        <div class="hisui-panel" data-options="border:false" style="height:74px;">
                             <span>
-                                <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("修改后内容"))#</div>
+                                <div style="float:left;width:70px;text-align:right;padding:10px 10px 0 0;">#(..Get("修改后内容"))#</div>
                             </span>
                             <span>
-                                <div style="padding-top:3px;">
-                                    <input class="textbox" id="afterRequestContent" style="width:78%;height:60px;">
+                                <div style="padding-top:10px;">
+                                    <input class="textbox" id="afterRequestContent" style="width:300px;height:62px;">
                                 </div>
                             </span>
                         </div>
-			<div class="hisui-panel" data-options="border:false" style="height:70px;">
+						<div class="hisui-panel" id="requestNumberDiv" data-options="border:false" style="height:72px;">
                             <span>
-                                <div style="float:left;width:18%;text-align:right;padding:8px 5px 0 0;">#(..Get("申请人电话"))#</div>
+                                <div style="float:left;width:70px;text-align:right;padding:10px 10px 0 0;">#(..Get("申请人电话"))#</div>
                             </span>
                             <span>
-                                <div style="padding-top:3px;">
-                                    <input class="textbox" id="requestNumber" style="width:78%;height:60px;">
+                                <div style="padding-top:10px;">
+                                    <input class="textbox" id="requestNumber" style="width:300px;height:60px;">
                                 </div>
                             </span>
                         </div>
-                        <div class="hisui-panel" data-options="border:false" align="center" style="height:45px;padding-top:5px;">
+                        <div class="hisui-panel" data-options="border:false" align="center" style="height:45px;padding-top:10px;">
                             <a href="#" class="hisui-linkbutton" id="btnCancel">#(..Get("取消"))#</a>
                             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                             <a href="#" class="hisui-linkbutton" id="btnCommit" style="background:#21BA45;">#(..Get("提交"))#</a>
                         </div>
+                    </div>
+                    </div>
                     </div>
                     
                 </div>
@@ -194,6 +261,7 @@
             
         </div>
     </div>
+</div>
 	<script type="text/javascript" src="../scripts/emr/js/auth.request.js"></script>
 </BODY>
 </HTML>

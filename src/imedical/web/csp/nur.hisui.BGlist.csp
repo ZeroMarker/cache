@@ -1,0 +1,314 @@
+<!-- 血糖单 -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+	Set AuthorityFlag = $GET(%request.Data("AuthorityFlag", 1))
+	Set DefaultCode = $GET(%request.Data("DefaultCode", 1))
+	Set EpisodeID = $GET(%request.Data("EpisodeID", 1))
+	Set SinglePatient = $GET(%request.Data("SinglePatient", 1))
+	Set IsStandardEdition = $GET(%request.Data("IsStandardEdition", 1))
+	s IsShowPatList = $G(%request.Data("IsShowPatList", 1))
+	s IsShowPatInfoBannner = $G(%request.Data("IsShowPatInfoBannner", 1))
+</script>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/echarts.min.js"></script>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script>
+<style type='text/css' class="eduExeStyle">
+body {background-color: #fff;padding: 4px!important;display: flex;overflow: hidden;}
+/*
+.panel-header, .panel-body{width: auto!important;}
+*/
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;margin: 0;}
+#startDate+.datebox>input,#endDate+.datebox>input{width: 80px!important;}
+.combo.datebox{box-sizing: border-box;}
+.ctcContent .panel-body.panel-body-noheader {border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+label.checkbox, label.radio{height: auto;}
+.l-btn-small{outline: none;}
+i.dot{display: inline-block;width: 10px;height: 10px;border-radius: 10px;margin-right: 10px;background: red;}
+.helpInfo{position: relative;}
+.helpInfo>.helpFlag{font-size: 0;width: 58px;height: 18px;}
+.helpInfo>.helpFlag>span.icon{display: inline-block;width: 18px;}
+.helpInfo>.helpDetail{position: absolute;border-radius: 4px;z-index: 10;overflow: visible;box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);background: #fff;border: 1px solid #cccccc;padding: 10px;width: 300px;right: -12px;top: 25px;display: none;}
+.helpInfo:hover>.helpDetail{display: block;}
+.helpInfo>.helpDetail:after {position: absolute;content: "";width: 10px;height: 10px;border-left: 1px solid #cccccc;border-top: 1px solid #cccccc;transform: rotate(45deg);background: white;top: -6px;right: 15px;}
+.helpInfo>.helpDetail.short{right: -290px;}
+.helpInfo>.helpDetail.short:after{right: 293px;}
+.helpInfo>.helpDetail>p {line-height: 20px;overflow: hidden;display: flex;}
+.helpInfo>.helpDetail>p>i.dot {margin-top: 5px;}
+.helpInfo>.helpDetail>p>span{text-align: left;flex: 1;}
+.severity{display: inline-block;padding: 5px 10px;border-radius: 4px;cursor: pointer;background: white;user-select:none;}
+.severity+.severity{margin-left: 5px;}
+.labelStar{color: red;vertical-align: bottom;line-height: 100%;}
+#testDate+span>input{width: 95px!important;}
+#assessStartDate+span>input,#assessEndDate+span>input{width: 82px!important;}
+#testTime{width: 70px!important;}
+#wardPatientSearchBox+span>input{width: 345px!important;padding-left: 7px;}
+#bgWarn tr td span {line-height: 18px;}
+.patientInfo .datagrid-wrap.panel-body.panel-body-noheader{border-color: #cccccc;}
+.kw-section-list>li:first-of-type{margin-left: 0;}
+#patFrame{height:40px;}
+#patFrame>div, #patFrame>div>div, #patFrame>div>div>div {width:100%!important;}
+</style>
+<script language="javascript">
+  var EpisodeID = "#(EpisodeID)#";
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+  var IsStandardEdition = "#(IsStandardEdition)#";
+  IsStandardEdition="Y"==IsStandardEdition?true:false;
+  var IsShowPatList = "#(IsShowPatList)#";
+  var IsShowPatInfoBannner = "#(IsShowPatInfoBannner)#";
+  IsShowPatList="Y"==IsShowPatList?true:false;
+  IsShowPatInfoBannner="Y"==IsShowPatInfoBannner?true:false;
+</script>
+</head>
+<body>
+<csp:if condition='"Y"=IsShowPatList'>
+	<div style="width: 450px;" class="patientInfo">
+		<table cellpadding="0" style="width: 100%;margin-bottom: 4px;border-collapse: collapse;">
+			<tr style="height: 36px;">
+				<td>
+					<div id="redkw"></div>
+				</td>
+			</tr>
+			<tr style="line-height: 22px;">
+				<td>
+					<input id="wardPatientSearchBox" class="hisui-searchbox" data-options="prompt:'#(..Get("请输入患者姓名或登记号"))#'" style="width:385px;"/>
+				</td>
+			</tr>
+		</table>
+		<table class="hisui-datagrid" id="patients" style="width:446px;height:calc(100% - 80px);" 
+					data-options="autoSizeColumn:false,fitColumns:true,iconCls:'icon-paper',onClickRow: selectPatient,singleSelect:true,pagination:true,pageSize:20,pageList:[20,50,100,200]
+			">   
+			<thead>   
+				<tr>
+					<th data-options="field:'bedCode',width:60">#(..Get("床号"))#</th>
+					<th data-options="field:'regNo',width:100">#(..Get("登记号"))#</th>
+					<th data-options="field:'name',width:110">#(..Get("姓名"))#</th>
+					<th data-options="field:'wardDesc',width:132">#(..Get("病区"))#</th>
+					<th data-options="field:'mainDoc',width:76">#(..Get("管床医生"))#</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+</csp:if>
+<div style="width: 100%;" class="ctcContent">
+	<csp:if condition='"Y"=IsShowPatInfoBannner'>
+		<div id="patFrame">
+			<csp:Include Page="dhcdoc.patinfo.banner.csp">
+		</div>
+	</csp:if>
+	<div style="padding: 1px;">
+		<div id="adrsPanel" class="hisui-panel" title="血糖录入" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" style="overflow-y: hidden;">
+			<table cellpadding="0" style="border-collapse: collapse;width: 100%;">
+		    <tr>
+		    	<td>
+		    		<table cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+		    			<tr>
+								<td class="r-label">
+					        #(..Get("查询范围"))#
+								</td>
+								<td>
+					        <input id="startDate" class="hisui-datebox textbox" style="width: 118px;" onchange="setDateboxOption(1)"></input>
+								</td>
+								<td style="padding: 0 5px;">#(..Get("至"))#</td>
+								<td class="r-label">
+					        <input id="endDate" class="hisui-datebox textbox" style="width: 118px;" onchange="setDateboxOption(2)"></input>
+								</td>
+								<td class="r-label">
+					        <a href="#" class="hisui-linkbutton hover-dark" onclick="getBGRecordByDays()">#(..Get("查询"))#</a>
+								</td>
+								<td class="r-label">
+					        <a href="#" class="hisui-linkbutton hover-dark" onclick="openBGTrendChart()">#(..Get("趋势图"))#</a>
+					        <!-- <a href="#" class="hisui-linkbutton hover-dark" onclick="saveBGData()">#(..Get("打印预览"))#</a> -->
+								</td>
+		    			</tr>
+		    		</table>
+		    	</td>
+		    </tr>
+		  </table>
+		  <hr class="dashed">
+			<table cellpadding="0" style="width: 100%;border-collapse: collapse;">
+		    <tr>
+		    	<td style="line-height: 22px;">
+						<table cellpadding="0" id="bgConfig" style="border-collapse:collapse;margin-top: 5px;">
+					    <tr>
+								<td class="r-label" style="padding-left: 10px;">
+					        <input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:checkAllBG,checked:true" label="全选" id="checkAll">
+								</td>
+								<!-- <td class="r-label">
+					        <input class="hisui-checkbox" type="checkbox"  label="空腹血糖" id="KFXT">
+								</td> -->
+					    </tr>
+					  </table>
+		    	</td>
+		    </tr>
+				<csp:if condition=IsStandardEdition'="Y">
+			    <tr>
+			    	<td>
+							<table cellpadding="0" style="display: inline-block;" id="bgWarn">
+						    <tr>
+									<td class="r-label">
+									</td>
+									<td class="r-label">
+		                <div class="helpInfo">
+	                    <a href="javascript:void(0);" class="helpFlag">
+	                      <span class="icon icon-help">&nbsp;</span>
+	                    </a>
+	                    <div class="helpDetail">
+	                    </div>
+		                </div>
+									</td>
+						    </tr>
+						  </table>
+			    	</td>
+			    </tr>
+				</csp:if>
+		  </table>
+			<table id="bloodGlucose"></table>
+		</div>
+	</div>
+</div>
+<!-- 复测模态框 -->
+<div id="retestModal" class="hisui-dialog" title="血糖" style="top: 50px;left: 50px;padding: 5px 10px 0;width: 500px;" 
+data-options="iconCls:'icon-w-batch-cfg',modal:true,closed:true,buttons:[{
+		id:'cancelCtcAE',
+		text:$g('关闭'),
+		handler:function(){$HUI.dialog('#retestModal').close();}
+	}]"> 
+	<form id="retestForm">
+		<table cellpadding="0" class="modalTable">
+			<col width="90">
+			<tr>
+				<td class="r-label">
+					#(..Get("采集时间"))#
+				</td>
+				<td>
+					<input id="testDate" class="hisui-datebox textbox" style="width: 130px;" disabled>
+					<input id="testTime" style="width: 100px;" class="hisui-timespinner">
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+					<span class="labelStar">*</span>#(..Get("血糖值"))#
+				</td>
+        <td>
+          <input id="bgValue" class="hisui-validatebox textbox" placeholder="">
+        </td>
+			</tr>
+			<csp:if condition=IsStandardEdition'="Y">
+				<tr>
+					<td class="r-label">
+						#(..Get("处理措施"))#
+					</td>
+					<td id="measure">
+						
+					</td>
+				</tr>
+			</csp:if>
+		</table>
+	</form>
+  <table id="obsTable" class="hisui-datagrid"
+		data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+			iconCls: 'icon-add',
+			text:$g('保存'),
+			handler:saveObsRow
+		},{
+			iconCls: 'icon-clear-screen',
+			text:$g('清空'),
+			handler:clearObsRow
+		},{
+			iconCls: 'icon-remove',
+			text:$g('删除'),
+			handler:removeObsRow
+		}],
+		onClickRow:selectObsRow
+	">
+		<thead>   
+			<tr>
+				<th data-options="field:'date',width:120">#(..Get("录入日期"))#</th>
+				<th data-options="field:'Time',width:80">#(..Get("采集时间"))#</th>
+				<th data-options="field:'value',width:80">#(..Get("血糖值"))#</th>
+				<csp:if condition=IsStandardEdition'="Y">
+					<th data-options="field:'retest',width:80,formatter:function(value,row){
+							return 'Y'==value?'√':'';
+						}">#(..Get("复测标记"))#</th>
+					<th data-options="field:'Note',width:180">#(..Get("处理措施"))#</th>
+				</csp:if>
+				<th data-options="field:'Nurse',width:80">#(..Get("采集人"))#</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>   
+	</table>
+</div>
+<!-- 血糖趋势图 -->
+<div id="adrsCurveModal" class="hisui-dialog" title="血糖趋势图" style="top: 50px;left: 50px;padding: 5px 0 0;width: 1300px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true,buttons:[{
+		text:$g('关闭'),
+		handler:function(){$HUI.dialog('#adrsCurveModal').close();}
+	}]"> 
+	<div>
+        <div id="patFrame" style="margin:0 10px;">
+			<csp:Include Page="dhcdoc.patinfo.banner.csp">
+		</div>
+		<div>
+			<hr class="dashed" style="margin:0 10px 10px;">
+			<table id="gradeSearch" cellpadding="0" style="border-collapse: collapse;margin-left: 10px;">
+				<tr>
+					<td class="r-label">#(..Get("开始日期"))#</td>
+					<td class="r-label">
+						<input id="assessStartDate" class="hisui-datebox textbox" style="width: 118px;"></input>
+					</td>
+					<td class="r-label">#(..Get("结束日期"))#</td>
+					<td class="r-label">
+						<input id="assessEndDate" class="hisui-datebox textbox" style="width: 118px;"></input>
+					</td>
+					<td class="r-label">
+						<input class="hisui-radio" type="radio" label="#(..Get("按日期"))#" name="trendType" data-options="onCheckChange:getBGRecordData" value="1" checked>
+						<input class="hisui-radio" type="radio" label="#(..Get("按天"))#" name="trendType" data-options="onCheckChange:getBGRecordData" value="0">
+					</td>
+					<td class="r-label">
+						<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="getBGRecordData();">#(..Get("查询"))#</a>
+					</td>
+				</tr>
+			</table>
+			<table cellpadding="0" id="bgConfigModal" style="display: none;">
+		    <tr>
+					<td class="r-label" style="padding-left: 5px;">
+		        <input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:checkAllBGModal,checked:true" label="全选" id="checkAll">
+					</td>
+					<!-- <td class="r-label">
+		        <input class="hisui-checkbox" type="checkbox"  label="空腹血糖" id="KFXT">
+					</td> -->
+		    </tr>
+		  </table>
+			<div id="adrsGradeCurve" style="width: 1250px;height: 460px;position: relative;border: 1px solid #cccccc;margin-top: 10px;border-radius: 4px;margin-left: 10px;"></div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.BGlist.js" charset=gbk></script>
+</body>
+</html>

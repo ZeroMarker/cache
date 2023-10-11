@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<!--配液流程单据记录
-	csp:dhcpha.pivas.printrecord.csp
-	js:scripts/pharmacy/pivas/printrecord.js
+<!--
+    配液流程单据记录
+	csp: csp/dhcpha.pivas.printrecord.csp
+	js:	 scripts/pharmacy/pivas/printrecord.js
 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <HTML XMLNS=TRAK>
 
 <HEAD>
@@ -10,78 +15,122 @@
         <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
     </title>
     <TRAK:HEAD></TRAK:HEAD>
-    <HISUI/>
-    <PHAPRINTCOM/>
-    <link rel="stylesheet" type="text/css" href="../scripts/pharmacy/common/css/dhcpha.hisui.css"></link>
+    <HISUI />
+    <PHAPRINTCOM />
+    <DHCPHAPIVASLIB css="none"/>
+    <PHAPIVASV1 />
+    <style>
+        .datagrid-row [field] {
+            vertical-align: top;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        [class="datagrid-pager pagination"]>table {
+            display: none
+        }
+    </style>
 </HEAD>
+
 <body style="overflow:hidden;">
-	<div class="dhcpha-win-mask">
-		<img src="../scripts/pharmacy/common/image/page-loading.gif"></img>
-	</div>
+    <div class="dhcpha-win-mask"><img></div>
     <div class="hisui-layout" fit="true">
-        <div data-options="region:'center',split:true,headerCls:'panel-header-gray'" class="dhcpha-hisui-container">
-    <div class="hisui-layout" fit="true" border="false">
-        <div data-options="region:'north',title:'流程单据打印记录',split:true,headerCls:'panel-header-gray',iconCls:'icon-print',collapsible:false" class="dhcpha-north-r2">
-            <table class="dhcpha-north-tbl">
-                <tr>
-                    <td>
-                        <label for="datePrtStart">操作开始时间</label>
-                        <input id="datePrtStart" class="hisui-datebox" data-options="width:120" />
-                        <input id="timePrtStart" class="hisui-timespinner" showSeconds="true" data-options="width:100" />
-                    </td>
-                    <td>
-                        <input id="cmbPivasLoc" />
-                    </td>
-                    <td>
-                        <input id="cmbWard" />
-                    </td>
-                    <td>
-                        <input id="txtPatNo" class="hisui-validatebox" placeholder="登记号..." />
-                    </td>
-                    <td>
-                        <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">查询</a>
-                        <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrint">补打勾选标签</a>
-                        <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrintArrange">补打排药单</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label for="datePrtEnd">操作结束时间</label>
-                        <input id="datePrtEnd" class="hisui-datebox" data-options="width:120" />
-                        <input id="timePrtEnd" class="hisui-timespinner" showSeconds="true" data-options="width:100" />
-                    </td>
-                    <td>
-                        <input id="cmbWorkType" type="text" />
-                    </td>
-                    <td>
-                    	<input id="cmbPivaStat" type="text" />
-                    </td>
-                    <td>
-                        <input id="txtPNo" class="hisui-validatebox" placeholder="打印序号(1-99)..." />
-                    </td>
-                    <td>
-                        <a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" id="btnClear">清屏</a>
-                        <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrintAll">补打全部标签</a>
-                   		<a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrintWardBat">补打交接单</a>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div data-options="region:'west',title:'单据记录',split:true,headerCls:'panel-header-gray',width:530,iconCls:'icon-panel-print-record'">
-            <table id="gridPrint"></table>
-        </div>
-        <div data-options="region:'center',title:'标签明细',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-label'">
-            <table id="gridOrdExe"></table>
+        <div data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true" border="false">
+                <div data-options="region:'north',title:'流程单据打印记录',split:true,headerCls:'panel-header-gray',iconCls:'icon-print',collapsible:false" class="pha-pivas-row-2">
+                    <table class="pha-con-table">
+                        <tr>
+                            <td class="r-label">
+                                <label for="datePrtStart">#(..Get("操作开始时间"))#</label>
+                            </td>
+                            <td>
+                                <input id="datePrtStart" class="hisui-datebox" data-options="width:120" />
+                            </td>
+                            <td>  
+                                <input id="timePrtStart" class="hisui-timespinner" showSeconds="true" data-options="width:100" />
+                            </td>
+                            <td>
+                                <input id="cmbPivaStat" type="text" />
+                            </td>
+                            <td>
+                                <input id="cmbWard" />
+                            </td>
+                            <td>
+                                <input id="txtPatNo" class="hisui-validatebox" placeholder="#(..Get("登记号"))#..." />
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-find" id="btnFind">查询</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrint">补打勾选标签</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrintArrange">补打排药单</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="r-label">
+                                <label for="datePrtEnd">#(..Get("操作结束时间"))#</label>
+                            </td>
+                            <td>
+                                <input id="datePrtEnd" class="hisui-datebox" data-options="width:120" />
+                            </td>
+                            <td>
+                                <input id="timePrtEnd" class="hisui-timespinner" showSeconds="true" data-options="width:100" />
+                            </td>
+                            <td>
+                                <input id="cmbWorkType" type="text" />
+                            </td>
+                            <td>
+                                <input id="txtPogsNo" class="hisui-searchbox" placeholder="#(..Get("流程单号"))#..." style="width:154px">
+                            </td>
+                            <td>
+                                <input id="txtPNo" class="hisui-validatebox" placeholder="打印序号(1-99)..." />
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-clean" id="btnClear">清屏</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrintAll">补打全部标签</a>
+                            </td>
+                            <td>
+                                <a class="hisui-linkbutton" plain="false" iconCls="icon-w-print" id="btnPrintWardBat">补打交接单</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div data-options="region:'west',title:'单据记录',split:true,headerCls:'panel-header-gray',width:725,iconCls:'icon-panel-print-record'">
+                    <table id="gridPrint"></table>
+                </div>
+                <div data-options="region:'center',title:'标签明细',split:true,headerCls:'panel-header-gray',iconCls:'icon-panel-label'">
+                    <table id="gridOrdExe"></table>
+                </div>
+            </div>
         </div>
     </div>
+    <div id="prtSelectDiv" class="hisui-dialog" title='补打交接单' data-options="width:275,closable:false,modal:true,closed:true,collapsible:false,resizable:true,cache: false,iconCls:'icon-w-print',
+		buttons:[{
+	        text:'确认',
+	        id:'btnPrtSelectDivOk'
+		},{
+			text:'取消',
+			handler:function(){
+	            $('#prtSelectDiv').window('close')
+			}
+	    }]">
+        <div style="overflow: hidden;text-align:center;height:63.44px">
+            <div>
+                <div style="padding-top:10px;">
+                    <input class="hisui-radio" type="radio" label="打印病区批次合计" name="prtPOGSWay" value="0">
+                </div>
+                <div style="padding-top:10px;">
+                    <input class="hisui-radio" type="radio" label="打印药品数量汇总" name="prtPOGSWay" value="1">
+                </div>
+                <!--div><input class="hisui-radio" type="radio" label="按医嘱明细" name="prtPOGSWay" value="2"></div-->
+            </div>
         </div>
     </div>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.extend.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/common/js/dhcpha.hisui.com.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/common.js"></script>
-    <script type="text/javascript" src="../scripts/DHCSTXMLPrint.js"></script>
-    <script type="text/javascript" src="../scripts/pharmacy/pivas/print.js"></script>
     <script type="text/javascript" src="../scripts/pharmacy/pivas/printrecord.js"></script>
-    <script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
 </body>
+
 </HTML>

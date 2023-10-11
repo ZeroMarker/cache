@@ -1,0 +1,165 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+  // dhc.bdp.ct.authorizedata.csp
+ // 名称:功能元素授权hisui
+ // 编写者:基础数据平台组 - zrf 
+ // 编写日期:2021-11-24 
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <style type="text/css">.Authorize{}</style>
+ <style>
+
+body{
+    moz-user-select: -moz-none;
+	-moz-user-select: none;
+	-o-user-select:none;
+	-khtml-user-select:none;
+	-webkit-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+    }
+#accordionpanel .datagrid-toolbar{
+	 	padding:10px;
+	 }
+     
+ </style>
+ <script type="text/javascript" src="../scripts/bdp/AppHISUI/BDPSystem/BDPAuthorizeUI.js"></script>
+</HEAD>
+<BODY style="padding:4px">
+<div class="hisui-layout" data-options="fit:true" border="false"> 
+	<div data-options="region:'west',headerCls:'panel-header-gray'" style="width:230px;overflow:hidden;" border="false" split="true">  
+		<div id="accordionpanel" class="hisui-accordion accordion-gray" data-options="fit:true" border="false">  
+			<div id="group" title="安全组" data-options="selected:true" style="width:270px;" >   
+		        <table  id="groupgrid" border="false"  style="width:270px;" data-options="showPageList:false,showRefresh:false,displayMsg:'',fit:true"></table> 
+			</div>   
+		    <div id="loc" title="科室" style="width:270px;" >   
+		       <table  id="locgrid" border="false" style="width:270px;" data-options="showPageList:false,showRefresh:false,displayMsg:'',fit:true"></table> 
+		    </div>   
+		    <div id="user" title="用户"  style="width:270px;">   
+		        <table  id="usergrid" border="false"  style="width:270px;" data-options="showPageList:false,showRefresh:false,displayMsg:'',fit:true"></table> 
+		    </div>  
+		</div>       
+	</div>
+    <div data-options="region:'center',headerCls:'panel-header-gray'" border="false">   
+    	<div class="hisui-layout" data-options="fit:true" border="false" > 
+	    	<div title="授权页面" data-options="region:'west',headerCls:'panel-header-gray',collapsible:false" style="width:250px;padding:4px 0 0 4px;" split="true">   
+				<ul id="itemtree" border="false"></ul>       
+			</div> 
+			<div id="itemdiv" title="功能元素授权"  data-options="region:'center',headerCls:'panel-header-gray'" style="overflow-x: hidden;"> 
+				<div class="hisui-layout" data-options="fit:true" border="false" style=""> 
+					<div data-options="region:'north',headerCls:'panel-header-gray'" border="false" style="border-bottom:1px solid #ccc">   
+						<table >
+					        <tr>
+					        	  <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" id="btnSaveEnableItem">保存</a></td>
+								  <td><a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-reset'" id="btnRefreshItem">清空不可编辑</a></td>			   
+							</tr>
+				        </table>
+					</div>
+					<div data-options="region:'center',headerCls:'panel-header-gray'" border="false" style="overflow-x: hidden;">   
+						<table style="width:100%;height:100%;padding:0 4px;box-sizing:border-box;">
+				   			<tr >
+						    	<td style="">
+						    		<div id="Editablegrid" title="可编辑元素" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="text-align:center;">
+									</div>
+						    	</td>
+						    	<td  style="">
+						    		<table align="center">   
+						    			<tr >
+						    				<td><a class="hisui-linkbutton" href="javascript:void(0)" id="addOne" name="addOne" style="width:45px">&gt;</a></td>
+						    			</tr>
+						    			<tr >
+						    				<td><a class="hisui-linkbutton" href="javascript:void(0)" id="addAll" name="addAll" style="width:45px">&gt;&gt;</a></td>
+						    			</tr>
+						    			<tr ><td>&nbsp;</td></tr>
+						    			<tr>
+											<td><a class="hisui-linkbutton" href="javascript:void(0)" id="delOne" name="delOne" style="width:45px">&lt;</a></td>
+						    			</tr>
+						    			<tr>
+											<td><a class="hisui-linkbutton" href="javascript:void(0)" id="delAll" name="delAll" style="width:45px">&lt;&lt;</a></td>
+						    			</tr>
+						    		</table>
+								</td>
+								<td style="">
+							    	<div id="Diseditablegrid" title="不可编辑元素" data-options="border:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="text-align:center;">  	  
+									</div> 
+						    	</td>
+				   			</tr>
+			   			</table>
+					</div>
+				</div> 
+			
+			</div>
+		</div>	
+	</div> 
+	
+	<!--可编辑元素列表工具栏-->			    
+	<div id="ableitembar">
+	 <table>
+		<tr>
+			<td>
+				<input id="AbleItemDesc" type="text" class="textbox hisui-searchbox" style="">
+			</td>
+			<td>
+		 		<a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnAbleItemRefresh"></a>
+		 	</td>
+		</tr>
+	  </table>      
+	</div>
+	<!--不可编辑元素列表工具栏-->			    
+	<div id="disableitembar">
+	 <table>
+		<tr>
+			<td>
+				<input id="DisableItemDesc" type="text" class="textbox hisui-searchbox" style="">
+			</td>
+			<td>
+		 		<a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnDisbleItemRefresh"></a>
+		 	</td>
+		</tr>
+	  </table>      
+	</div>
+	
+	<!--安全组工具栏-->
+	<div id="groupbar" style="padding: 1px; height: auto ;  background:#fafafa ">
+	    <div style="margin-bottom:1px">
+	       <table cellpadding=3>
+	        <tr>
+	        	   <td> <input id="textgroup" class="hisui-searchbox" data-options="prompt:'搜索'" style="width:190px;margin-right:-8px;"/></td>
+				   <td><a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnGroupRefresh"></a></td>			   
+			</tr>
+	        </table>
+	    </div>
+	</div>
+	<!--科室工具栏-->
+	<div id="locbar" style="padding: 1px; height: auto ;  background:#fafafa ">
+	    <div style="margin-bottom:1px">
+	       <table cellpadding=3>
+	        <tr>
+	        	   <td> <input id="textloc" class="hisui-searchbox" data-options="prompt:'搜索'" style="width:190px;margin-right:-8px;"/></td>
+				   <td><a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnLocRefresh"></a></td>			   
+			</tr>
+	        </table>
+	    </div>
+	</div>
+	<!--用户工具栏-->
+	<div id="userbar" style="padding: 1px; height: auto ;  background:#fafafa ">
+	    <div style="margin-bottom:1px">
+	       <table cellpadding=3>
+	        <tr>
+	        	   <td> <input id="textuser" class="hisui-searchbox" data-options="prompt:'搜索'" style="width:190px;margin-right:-8px;"/></td>
+				   <td><a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnUserRefresh"></a></td>			   
+			</tr>
+	        </table>
+	    </div>
+	</div>
+</div>	
+</BODY>
+</HTML>

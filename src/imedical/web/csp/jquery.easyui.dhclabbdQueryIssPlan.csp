@@ -1,0 +1,271 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired()
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<meta charset="utf-8" /> 
+<HEAD>
+<TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+<!-- <TRAK:HEAD></TRAK:HEAD> -->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+
+<SERVER>
+ s USERID=$G(%session.Data("LOGON.USERID"))
+ s USERCODE = $G(%session.Data("LOGON.USERCODE"))
+ s USERNAME = $G(%session.Data("LOGON.USERNAME"))
+ s HOSPID=$G(%session.Data("LOGON.HOSPID"))
+ s (HospCode,LocCode,LocName,HospName)=""
+ i $l(HOSPID) s HospCode=$p($g(^CT("HOSP",HOSPID)),"^",1)
+ i $l(HOSPID) s HospName=$p($g(^CT("HOSP",HOSPID)),"^",2)
+ s AdmNo=%request.Get("AdmNo")
+ //处理医院信息 
+ s HospitalDR=""
+ i $l(HospCode) s HospitalDR=##Class(DHCLIS.DHCCommon).GetHospitalDR(HospCode,HospName)
+ //处理用户信息
+ i $l(USERCODE) s CollectUserDR=##Class(DHCLIS.DHCCommon).GetUserDR(USERCODE,USERNAME,HospitalDR)
+
+//获取当前登录人员主题设置
+  s HISUIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion") 
+  s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.css""/>"   //默认炫彩
+  i HISUIVersion="lite" s hrefstr="<link rel=""stylesheet"" type=""text/css"" href=""../scripts_lib/hisui-0.1.0/dist/css/hisui.lite.min.css""/>"  
+  w hrefstr
+</SERVER>
+<!-- Put your page Title here -->
+<title>知情同意书</title>
+	<!--link rel="stylesheet" type="text/css" href="../scripts_lib/hisui-0.1.0/dist/css/hisui.css" /-->
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" ></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/locale/hisui-lang-zh_CN.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/CTSCommon.js" charset="utf-8"></script>
+
+    
+</head>
+<body class="hisui-layout">
+    <div data-options="region:'center',split:false,border:false" style="">
+        <div id="div_wholepanel" class="hisui-panel" title="" data-options="headerCls:'panel-header-gray',iconCls:'icon-search',closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true,border:false" style="">
+            <div id="ids" class="hisui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'center',border:false" style="">
+                    <div class="hisui-panel" data-options="closable:false,collapsible:false,minimizable:false,maximizable:false,fit:true,titile:'',bodyCls:'panel-header-gray',border:false" style="">
+                        <table id="dg_BDISSList">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ISS_window" class="hisui-window" data-options="closed:true" title="所有申请单" style="width: 1150px; height: 600px;">
+        <iframe id="if_ISS" src="" style="height: 99%; width: 99%"></iframe>
+    </div>
+   
+    <script type="text/javascript">
+	
+		var me = {
+            findType: '0'
+        };
+         var AdmNo =#((AdmNo))#
+        //全局打印地址
+         var ServerConnectString = window.parent.ServerConnectString;
+        $(function () {
+            //初始化datagrid
+            $("#dg_BDISSList").datagrid({
+                fit: true,
+                fitColumns: false,
+                headerCls: 'panel-header-gray',
+                title:"发血单列表",
+                pagination: true,
+                nowrap: true,
+                pageSize: 20,
+                pageList: [20, 50, 100, 200],
+                singleSelect: true,
+                checkOnSelect: false,
+                selectOnCheck: false,
+                rownumbers: true,
+                remoteSort: false,
+                border: true,
+                iconCls:'icon-paper',
+                toolbar:[],
+				
+				columns: [[
+					{ field: 'RecordNo', title: '发血单号', width: 150, align: 'left' 
+					
+						//formatter: function (value, rowdata, rowindex) {
+                            //return '<a id=\"danhao' + rowdata.RecordNo + '\"' + 'href=\"#\" onclick=\"ISSPrint(&quot;' + value + '&quot;)\" style=\"color:blue;\">' + value + '</a>';
+                        //}
+					},
+					
+					{ field: 'IssueDate', title: '发血日期', width: 100, align: 'left' },
+					{ field: 'IssueTime', title: '发血时间', width: 100, align: 'left' },
+					{ field: 'PackID', title: '献血码', width: 100, align: 'left' },
+					{ field: 'BloodProductName', title: '血产品', width: 100, align: 'left' },
+					{ field: 'PackType', title: '血成分', width: 100, align: 'left' },
+					{ field: 'packVol', title: '血量', width: 100, align: 'left' },
+					{ field: 'MedicalRecordNo', title: '病案号', width: 100, align: 'left' },
+					{ field: 'patName', title: '患者姓名', width: 100, align: 'left' },
+					{ field: 'PatType', title: '患者类型', width: 100, align: 'left' },
+					{ field: 'LocationDesc', title: '就诊科室', width: 100, align: 'left' },
+					{ field: 'BedNo', title: '床号', width: 100, align: 'left' }
+				]]
+            });
+            $("#dg_BDISSList").datagrid("loadData", []);
+            SataISS();
+            //初始化日期
+            /*var thisDate = GetCurentDate();
+            $("#db_SttDate").datebox('setValue', thisDate);
+            $("#db_EndDate").datebox('setValue', thisDate);
+
+            //初始化申请科室
+            $("#cg_Location").combogrid({
+                //url: '../../sys/ashx/ashBTLocation.ashx?method=Find',
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryWard&FunModul=JSON',
+                method: 'get',
+                panelWidth: 300,
+                multiple: true,
+                idField: 'RowID',
+                textField: 'CName',
+                columns: [[
+                    { field: 'RowID', title: 'ID', width: 40, sortable: true, align: 'center' },
+                    { field: 'Code', title: '代码', width: 70, sortable: true, align: 'center' },
+                    { field: 'CName', title: '名称', width: 150, sortable: true, align: 'center' }
+                ]]
+            });
+            
+           //初始化创建人
+            $("#cb_AddUser").combogrid({
+                //url: '../../sys/ashx/ashCodeTable.ashx?Model=SYSUser&GlobalParam=&Method=Query&page=1&rows=20&sort=RowID&order=asc',
+                url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryUser&FunModul=JSON',
+                valueField: 'RowID',
+                idField: 'CName',
+                method: 'get',
+                panelWidth: 300,
+                multiple: true,
+                columns: [[
+                    { field: 'RowID', title: 'ID', width: 40, sortable: true, align: 'center' },
+                    { field: 'Code', title: '代码', width: 70, sortable: true, align: 'center' },
+                    { field: 'CName', title: '名称', width: 150, sortable: true, align: 'center' }
+                ]]
+            });
+            //快速查询
+            $('#ISS_RecordNo').keypress(function (event) {
+                if (event.keyCode == "13") {
+                    SataISS();
+                }
+            });
+
+            //清空按钮的执行，清空所有文本框的值
+            $('#btn_clear').click(function () {
+                $('#dg_BDISSList').datagrid('loadData', { total: 0, rows: [] });
+                var Locations = $("#cg_Location").combogrid("setValue", "");
+                
+                var ISSNo = $("#ISS_RecordNo").val("");
+                var AddUser = $("#cb_AddUser").combogrid("setValue", "");
+                var Status = $("#cb_Status").combobox("setValue", "");
+               
+            });*/
+        });
+        //快速选择日期
+        function mnuDateTypeClick(value) {
+            var curDate = GetCurentDate();
+            alert(curDate);
+            if (value == "1") {
+                $('#db_SttDate').datebox('setValue', curDate);
+                $('#db_EndDate').datebox('setValue', curDate);
+                $('#btn_ThisDay').linkbutton('select');
+                $('#btn_7Day').linkbutton('unselect');
+                $('#btn_30Day').linkbutton('unselect');
+            } else if (value == "7") {
+                sttDate = DateParser("d-6");
+                $('#db_SttDate').datebox('setValue', DateFormatter(sttDate));
+                $('#db_EndDate').datebox('setValue', curDate);
+                $('#btn_7Day').linkbutton('select');
+                $('#btn_ThisDay').linkbutton('unselect');
+                $('#btn_30Day').linkbutton('unselect');
+            } else if (value == "30") {
+                sttDate = DateParser("d-29");
+                alert(sttDate);
+                $('#db_SttDate').datebox('setValue', DateFormatter(sttDate));
+                $('#db_EndDate').datebox('setValue', curDate);
+                $('#btn_30Day').linkbutton('select');
+                $('#btn_7Day').linkbutton('unselect');
+                $('#btn_ThisDay').linkbutton('unselect');
+            }
+            SataISS();
+        }
+        //选择查询的按钮
+        function mnuFindFastClick(value, icon, name) {
+            me.findFlag = value;
+            $('#mnu_FindFast').menubutton({ menu: '#mnu_FindFastType', iconCls: icon, text: name });
+            $('#ISS_RecordNo').focus();
+            $('#ISS_RecordNo').select();
+        }
+        //统计发血单
+        function SataISS() {
+           /* var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var Locations = $("#cg_Location").combogrid("getValues").toString();
+            var AddUser = $("#cb_AddUser").combogrid("getValues").toString();
+            var Status ="";// $("#cb_Status").combobox("getValues").toString();
+           
+
+            var RegNo = $('#PatID').val();
+            var SurName = "";
+            var ISSNo = "";
+            var Labno = "";
+            var FindTxt = $('#ISS_RecordNo').val();
+            var FindType = me.findFlag;
+            switch (FindType) {
+                case "RegNo":
+                    RegNo = FindTxt;
+                    break;
+                case "Labno":
+                    Labno = FindTxt;
+                    break;
+                case "SurName":
+                    SurName = FindTxt;
+                    break;
+                default:
+                    ISSNo = FindTxt;
+                    break;
+            }*/
+
+            $("#dg_BDISSList").datagrid({
+                //url: "../ashx/ashQueryBDReqForm.ashx?method=StatBDISS&SttDate=" + SttDate + "&EndDate=" + EndDate + "&FISSNo=" + ISSNo + "&FAddUserDR=" + AddUser + "&FLocationDR=" + Locations + "&FRegNo="  + RegNo + "&FSurName=" + SurName
+				url:'jquery.easyui.dhclabclassjson.csp?ClassName=DHCLIS.DHCBDQueryComnInfo&QueryName=QryBdIssueByDate&FunModul=JSON&P6='+AdmNo
+			})
+			
+        }
+        function QryReqFormInfo(RegNo) {
+            var SttDate = $("#db_SttDate").datebox('getValue');
+            var EndDate = $("#db_EndDate").datebox('getValue');
+            var RegNocol = '.RegNo' + RegNo;
+            console.log(RegNocol);
+            $(RegNocol).attr("style", "color:red;");
+            $("#ReqForm_window").window('open');
+
+            $("#if_ReqForm").attr("src", 'frmQueryBDReqFormbyRegNo.aspx?RegNo=' + RegNo + '&SttDate=' + SttDate + '&EndDate=' + EndDate);
+
+        }
+        function QryISSfodetail(ISSRowID) {
+            var danhao = '#danhao' + ISSRowID;
+            $(danhao).attr("style", "color:red;");
+            $("#ISSInfo_window").window('open');
+            $("#if_ISSInfo").attr("src", "../../cts/form/frmQueryXMIssInfo.aspx?ReqFormDR=" + ReqRowID);
+        }
+        function ISSPrint(value){
+			param = "DOCTOR"
+			var UserParam = UserID + "" + "";//^HospID
+			var printType = "PrintPreview";
+			var Param = "1@" + ServerConnectString + "@" + value + "@" + UserParam + "@" + printType + "@" + param + "@HIS.DHCReportPrintXMMethodReport@QueryPrintData";
+			window.parent.parent.PrintCommon(Param);
+		}
+		function PrintCommon(Param) {
+			var printUrl = "../../lisprint/print2HIS/ResultPrintForHis.application?Param=" + Param;
+			document.location.href = printUrl;
+		}
+		</script>
+	
+</body>
+
+</html>
+

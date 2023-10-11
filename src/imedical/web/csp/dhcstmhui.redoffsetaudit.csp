@@ -1,0 +1,77 @@
+<!--红冲单审核-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html lang="zh-CN">
+ <SERVER>
+ 	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet()  //润乾打印
+ 	d ##class(web.DHCXMLPConfig).LODOPInit()  //Lodop打印
+	s TabParams=$G(%request.Data("TabParams",1))
+</SERVER>
+<head>
+	<script language=javascript>
+		var gTabParams='#(TabParams)#';
+	</script>
+	<title><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCSTMHISUI/>
+</head>
+<body class="hisui-layout" data-options="fit:true">
+	<div class="GridPadding" data-options="region:'center',border:false,collapsible:false">
+		<div class="hisui-panel" data-options="title:'红冲单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'"> 
+			<div class="hisui-layout" data-options="fit:true">
+				<div class="BorderLine" data-options="region:'north',collapsible:false">
+					<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
+						<input id="CompFlag" name="CompFlag" value="Y" type="hidden">
+						<input id="Inci" name="Inci" type="hidden">
+						<tr>
+							<td>红冲科室</td>
+							<td><input id="RedLoc" name="RedLoc" class="hisui-combobox textbox"></td>							
+							<td>起始日期</td>
+							<td><input id="StartDate" name="StartDate" class="hisui-datebox textbox"></td>
+							<td>制单人</td>
+							<td><input id="CreateUser" name="CreateUser" class="hisui-combobox textbox"></td>
+							<td><input class="hisui-radio" type="radio" label="全部" name="AuditFlag" value=""></td>
+							<td><input class="hisui-radio" type="radio" label="未审核" name="AuditFlag" value="N" data-options="checked:true"></td>
+							<td><input class="hisui-radio" type="radio" label="已审核" name="AuditFlag" value="Y"></td>
+							<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+							<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+
+						</tr>
+						<tr>
+							<td>供应商</td>
+							<td><input id="Vendor" name="Vendor" class="hisui-combobox textbox"></td>
+							<td>截止日期</td>
+							<td><input id="EndDate" name="EndDate" class="hisui-datebox textbox"></td>
+							<td>红冲单号</td>
+							<td><input id="RedNo" name="RedNo" class="textbox"></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td><a href="#" id="AuditBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-stamp'">审核</a></td>
+						</tr>
+						<tr>
+							<td>物资名称</td>
+							<td><input id="InciDesc" name="InciDesc" class="textbox"></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false,collapsible:false">
+					<table id="RedMainGrid"></table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="GridPadding" data-options="region:'south',border:false,collapsible:false" style="padding-top:0;height:250px;">
+		<div class="hisui-panel" title="红冲单明细" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',fit:true">
+			<table id="RedDetailGrid"></table>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/Common/commonPrint.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/RedOffset/RedCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/RedOffset/RedOffsetAudit.js"></script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>证书详细信息页</title>
+    <base target= "_self">
+    <HISUI/>
+    
+    <ADDINS require="EMRImageUtil"></ADDINS>
+    
+    <script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+   	<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js" ></script>
+    <script type="text/javascript" src="../scripts/dhccertauth/js/cfg.certreg.js"></script>
+    <script type="text/javascript" src="../scripts/dhccertauth/iutil/CA_ImageUtil.js"></script>
+    
+    <server>
+    	s UsrSignInfoID = $Get(%request.Data("ViewCertID",1),"")
+    	s SignTypeCode = $Get(%request.Data("SignTypeCode",1),"")
+    	s VenderCode = $Get(%request.Data("VenderCode",1),"")
+    	s UserCode = $Get(%request.Data("UserCode",1),"")
+    	s HospID = $Get(%request.Data("HospID",1),"")
+    	
+        if (UsrSignInfoID = "")
+        {
+            s:(SignTypeCode = "") SignTypeCode = ##class(CA.ConfigCommon).GetValueByName("DefaultSignType",HospID)
+            s:(UsrSignInfoID '= "") SignTypeCode = ""
+            
+            s:(VenderCode = "")||(VenderCode = "undefined") VenderCode = ##class(CA.DSService).GetCAVenderCode("",SignTypeCode,HospID)
+            s jsPath = ##Class(CA.DSService).GetJSPath(SignTypeCode,VenderCode)
+            w "<script type=""text/javascript"" src="""_jsPath_"""></script>",!
+            
+            s enableConvertImage = "0", convertImageFlag = "", convertImageHeight = ""
+            s PhoneImageConvertFlag = ##class(CA.ConfigCommon).GetValueWithDefault("PhoneImageConvertFlag","",HospID)
+            if (PhoneImageConvertFlag = "1")
+            {
+                s enableConvertImage = "1"
+                s convertImageFlag = "Y|Y|N|N"
+                s convertImageHeight = "120"
+            }
+                
+            s isLimitImageNull = ##class(CA.ConfigCommon).GetValueByName("IsLimitImageNull",HospID)
+            s isLimitImageSize = ##class(CA.ConfigCommon).GetValueByName("IsLimitImageSize",HospID)
+        }
+        else
+        {
+            s enableConvertImage = ""
+            s convertImageFlag = ""
+            s convertImageHeight = ""
+            s isLimitImageNull = ""
+            s isLimitImageSize = ""
+        }
+           
+		s userID = %session.Get("LOGON.USERID")
+        s ssGroupID = %session.Get("LOGON.GROUPID")
+        s userLocID = %session.Get("LOGON.CTLOCID")
+    </server>
+    
+    <script type="text/javascript">
+    
+    	var logonInfo = {
+           	UserID: "#(userID)#",
+            GroupID: "#(ssGroupID)#",
+            CTLocID: "#(userLocID)#",
+            HospID: "#(HospID)#"
+        };   
+            
+    	var caInfo = {
+	    	SignTypeCode : "#(SignTypeCode)#",
+	    	VenderCode : "#(VenderCode)#",
+	    	UserCode: "#(UserCode)#",
+	    	UsrSignInfoID: "#(UsrSignInfoID)#"
+    	}; 
+    	
+    	var sysInfo = {
+	    	EnableConvertImage: "#(enableConvertImage)#",
+	    	ConvertImageFlag: "#(convertImageFlag)#",
+	    	ConvertImageHeight: "#(convertImageHeight)#",
+	    	IsLimitImageNull: "#(isLimitImageNull)#",
+            IsLimitImageSize: "#(isLimitImageSize)#"
+    	};
+   </script>
+    
+    
+</head>
+<body>
+        <div class="hisui-panel" data-options="region:'center',split:true" style="padding:10px">
+        
+        	<!--CSP:IF condition=enableConvertImage="1">
+        		<div style="width:1px;height:1px;">
+    				<object id='emrImageUtil' name='emrImageUtil' style="width:1px;height:1px;display:none;" classid='clsid:946E2CE5-A392-4744-A94B-02A1ED68DC9F' codeBase='#(codeBase)#'></object>
+    			</div>
+    		</CSP:IF-->
+    
+            <table cellpadding="5">
+                <tr>
+                    <td class="label">用户工号</td>
+                    <td>
+                        <input id="tbxUserCode" class="textbox" style="width:200px;">
+                    </td>
+                    <td>
+                        <a id="btnViewCert" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-muti-key'">查看证书</a>
+                    </td>
+                    <td>
+                        <a id="btnUsrCertReg" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-muti-key'">关联</a>
+                    </td>
+                </tr>
+                <csp:if condition=(UsrSignInfoID'="")>
+                <tr>
+                    <td class="label">关联日期</td>
+                    <td>
+                        <input id="CreateDate" class="textbox" disabled="true" style="width:200px;">
+                    </td>
+                    <td class="label">关联时间</td>
+                    <td>
+                        <input id="CreateTime" class="textbox" disabled="true" style="width:200px;">
+                    </td>
+                </tr>
+                </CSP:IF>
+                <CSP:IF condition=SignTypeCode="UKEY">
+                <tr>
+                    <td class="label">证书列表</td>
+                    <td>
+                        <select id="cbxCertLst" class="hisui-combobox" data-options="valueField:'id',textField:'text'" style="width:208px;" />
+                    </td>
+                </tr>
+                </CSP:IF>
+                <csp:if condition=((SignTypeCode="PHONE")||(SignTypeCode="FACE"))>
+                <tr>
+                    <td class="label">CA-ID</td>
+                    <td>
+                        <input id="tbxCAID" class="textbox" style="width:200px;" />
+                    </td>
+                </tr>
+                </CSP:IF>
+                <tr>
+                    <td class="label">CA签名类型</td>
+                    <td>
+                        <input id="SignTypeCode" class="textbox" disabled="true" style="width:200px;disabled:true">
+                    </td>
+                    <td class="label">CA厂商代码</td>
+                    <td>
+                        <input id="VenderCode" class="textbox" disabled="true" style="width:200px;disabled:disabled">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">CA用户唯一标识</td>
+                    <td>
+                        <input id="UserCertCode" class="hisui-validatebox textbox" data-options="required:true" style="width:200px;">
+                    </td>
+                    <td class="label">CA证书唯一标识</td>
+                    <td>
+                        <input id="CertNo" class="hisui-validatebox textbox" data-options="required:true" style="width:200px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">证书序列号</td>
+                    <td>
+                        <input id="CertSN" class="hisui-validatebox textbox" data-options="required:true" style="width:200px;">
+                    </td>
+                    <td class="label">证书持有者</td>
+                    <td>
+                        <input id="CertCN" class="hisui-validatebox textbox" data-options="required:true" style="width:200px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">证书容器号</td>
+                    <td>
+                        <input id="CtnrNo" class="hisui-textbox" data-options="required:false" style="width:200px;">
+                    </td>
+                    <td class="label">硬件序列号</td>
+                    <td>
+                        <input id="CtnrSN" class="hisui-textbox" data-options="required:false" style="width:200px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">身份证号</td>
+                    <td colspan="3">
+                        <input id="IdentityID" class="hisui-textbox" data-options="required:false" style="width:580px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">签名证书</td>
+                    <td colspan="3">
+                        <input id="SignCert" class="hisui-textbox" data-options="multiline:true,required:true" style="width:580px;height:100px;word-wrap: break-word">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">签名图片(Base64)</td>
+                    <td colspan="2">
+                        <!--input id="SignImgBase64" class="hisui-textbox" data-options="multiline:true,required:true" style="width:380px;height:100px;word-wrap: break-word"-->
+                        <textarea id="SignImgBase64" class="hisui-textbox" data-options="multiline:true,required:true" style="width:380px;height:100px;word-wrap: break-word"></textarea>
+                    </td>
+                   	<td colspan="1">
+                        <img id="SignImg" style="height:100px;width:280px;" src=""/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

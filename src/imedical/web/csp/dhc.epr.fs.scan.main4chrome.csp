@@ -1,0 +1,62 @@
+<html XMLNS=TRAK>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ quit 1
+</csp:method>
+<head>
+	<HISUI/>
+	<ADDINS require="ScanActiveX"></ADDINS>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>病案扫描</title>
+	<script language="cache" runat="server">
+	s EpisodeID = $Get(%request.Data("EpisodeID",1),"")
+	s UserID = %session.Get("LOGON.USERID")
+	s LocID = %session.Get("LOGON.CTLOCID")
+	s DataServiceUrl = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("DataServiceURL")
+	s DBVersion = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBVersion")
+	s DBUserPassword = ##class(DHCEPRFS.BL.BLSysOption).GetValueByName("DBUserPassword")
+	</script>
+</head>
+	
+<body>
+	<div id="divScan" style="width:100%;height:100%;">
+		<object id="objScan" height="100%" width="100%" classid="clsid:B2A1ECAD-32CE-4EA6-89E3-E2EA5126EC76" codebase="https://114.242.246.254:1443/imedical/web/addins/client/DHCEPRFSScanActiveX.cab#version=4,1,0"></object>
+	</div>
+	<script type="text/javascript">
+	var EpisodeID = '#(EpisodeID)#';
+	var UserID = '#(UserID)#';
+	var LocID = '#(LocID)#';
+	var DataServiceUrl = '#(DataServiceUrl)#';
+	var DBVersion = '#(DBVersion)#';
+	var DBUserPassword = '#(DBUserPassword)#';
+	document.body.onload = BodyLoadHandler;
+	if((LocID=="")||(UserID==""))
+	{
+		var LocID="4";
+		var UserID = "6";
+	}
+	function BodyLoadHandler() {
+			if (("undefined"==typeof(EnableLocalWeb))||( 0== EnableLocalWeb ))
+			{
+				//未开启使用中间件 或 老项目，然仍用老的方式运行
+				var obj = document.getElementById("objScan");
+
+				if ((DBVersion == "2015") || (DBVersion == "2016"))
+				{
+					obj.DBUserPassword(DBVersion, DBUserPassword);
+				}
+				obj.LoadByEpisodeID(EpisodeID, UserID, LocID, DataServiceUrl);
+			}
+			else
+			{
+				
+				ScanActiveX.DBUserPassword(DBVersion, DBUserPassword);
+				ScanActiveX.LoadByEpisodeID(EpisodeID, UserID, LocID, DataServiceUrl);
+				
+
+			}
+		
+		
+	}
+	</script>
+</body>
+</html>

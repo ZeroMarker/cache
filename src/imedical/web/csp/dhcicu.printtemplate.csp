@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+<TITLE>重症Lodop打印模板设计</TITLE>
+<csp:content charset="UTF-8">
+<dhcicu:easyui></dhcicu:easyui>
+<dhcicu:head></dhcicu:head>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/icu/css/iconan.css" />
+<link rel="stylesheet" type="text/css" href="../scripts/dhcclinic/icu/css/custom.css" />
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Constant.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Datetime.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.Framework.js" ></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.SystemConfig.js" ></script>
+<link rel="stylesheet" href="../scripts/dhcclinic/icu/js/PrintTemplate/codemirror/codemirror.css">
+
+<script language="Cache" method="OnPreHTTP" returntype="%Boolean">
+   
+   // 转化用户ID
+   set userId=%request.Get("userId")
+   
+   //转换科室ID
+   set deptId=%request.Get("deptId")
+   
+   // 将医院ID和安全组ID设置为固定值
+   set hospId=2
+   
+   set groupId=%request.Get("groupId")
+   
+   if (##class(User.SSUser).%ExistsId(userId))
+   {
+	   set %session.Data("LOGON.USERID")=userId
+	   set SSUser=##class(User.SSUser).%OpenId(userId)
+	   set %session.Data("LOGON.USERCODE")=SSUser.SSUSRInitials
+	   set %session.Data("LOGON.USERName")=SSUser.SSUSRName
+   }
+   
+   if (##class(User.CTLoc).%ExistsId(deptId))
+   {
+		set %session.Data("LOGON.CTLOCID")=deptId   
+   }
+   
+   if (##class(User.SSGroup).%ExistsId(groupId))
+   {
+		set %session.Data("LOGON.GROUPID")=userId   
+   }
+   
+   if (##class(User.CTHospital).%ExistsId(hospId))
+   {
+		set %session.Data("LOGON.HOSPID")=hospId   
+   }
+    
+   quit 1
+   
+</script>
+	
+</HEAD>
+
+<body class="hisui-layout">
+	<div data-options="region:'north'" style="height:35px;">
+		<div id="buttonPanel" style="float:left;width:220px;">
+			<input type="file" id="files" style="display:none"/>
+			
+			<a id="btnUploadJson" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true"></a>
+			<a id="btnLodopPrint" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-print',plain:true"></a>
+			<a id="btnEditJson" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-blue-edit',plain:true"></a>
+			<a id="btnPageSettingEditor" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-set-paper',plain:true"></a>
+			<a id="btnRefresh" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-reload',plain:true"></a>
+			<a id="btnScriptEditor" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-alert-pen',plain:true"></a>
+		</div>
+		<div id="pageNoTabs" style="float:left;width:820px;height:30px;border: 1px solid #ccc;background-color:#ccc;">
+						
+		</div>
+		<div id="mousePointInfo" style="float:right;width:340px;height:30px;background-color:#FFF;">
+			<a id="btnUndo" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-undo',plain:true"></a>
+			<a id="btnTopAlign" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-move-up-most',plain:true"></a>
+			<a id="btnBottomAlign" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-down-blue',plain:true"></a>
+			<a id="btnLeftAlign" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-trian-recta-left',plain:true"></a>
+			<a id="btnRightAlign" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-trian-recta-right',plain:true"></a>
+		</div>
+	</div>  
+	<div data-options="region:'east'" style="width:340px;">
+		<div id="propertyEditor"></div>
+	</div>  
+	<div data-options="region:'west'" style="width:220px;">
+		<div id="copyButtonPanel">
+			<a id="btnCopyItem" href="#" disabled class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true">(复制)项目</a>
+		</div>
+		<div id="sheetItemControlPanel"></div>
+	</div>  
+	<div data-options="region:'center'" style="padding:10px;background-color:gray;">
+		<canvas id="myCanvas" width="790" height="1120" style="border: 1px solid #ccc;background-color:white;"></canvas>
+	</div>  
+	
+</body>
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/json2.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/LodopFuncs.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/dhcan.canvas.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/datagrid-cellediting.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/dhcan.archivecontext.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/CIS.AN.RecordBrowser.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/JsBarcode.all.min.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/jr-qrcode.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/codemirror/codemirror.js"></script>
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.aceeditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.complextableview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.richtexteditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.editplugin.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.editpluginmanager.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.templateconfig.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.pagenotabsview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.lodopprinttemplate.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.drawitemcontrolpanel.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.addnewpageeditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.propertyeditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.templatecontext.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.displaysheet.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.lodopprintview.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.templateeditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.pagesettingeditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.styleeditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.tablecolumnseditor.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.imagereader.js"></script>
+
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhcicu.sheetcontext.js"></script>
+<script type="text/javascript" src="../scripts/dhcclinic/icu/js/PrintTemplate/dhccl.printtemplate.js"></script>	
+
+</HTML>

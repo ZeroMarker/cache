@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ ;i ##Class(Nur.CSPDebug).setSession() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<!-- nur.svg.temperature.csp -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>	体温单预览</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ 	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/nurse/temperature/svg/svg27.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/temperature/svg/svgUtils.js" charset="gbk"></script></head>
+	<!-- 兼容IE支持promise对象 -->
+	<script type="text/javascript" src="../scripts_lib/SheetJs/babel-polyfill.js"></script>
+<server>
+    Set ifColorPrint = "false" 
+    Set missBeatColor="blue"  
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
+	Set:EpisodeID="" EpisodeID = $g(%request.Data("episodeID",1)),PatientID="",mradm="",Page=""
+	if EpisodeID'="" {
+		set chartID=##class(Nur.NIS.Service.Chart.API.TemperatureChart).getChartID("1",EpisodeID)
+		set ifColorPrint=##class(Nur.NIS.Service.Chart.DAO.Chart).getIfColorPrint(chartID)
+		set missBeatColor=##class(Nur.NIS.Service.Chart.DAO.Chart).getMissBeatColor(chartID)
+		set skinTestTextColor=##class(Nur.NIS.Service.Chart.DAO.Chart).getSkinTestTextColor(chartID)
+		set skinTestYText=$p(skinTestTextColor,"^",1)
+		set skinTestYColor=$p(skinTestTextColor,"^",2)
+		set skinTestNText=$p(skinTestTextColor,"^",3)
+		set skinTestNColor=$p(skinTestTextColor,"^",4)
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+		Set Page=$g(%request.Data("page",1))
+	}	
+</server>
+<body style="background-color:#fff;">
+	<div id="drawing" align="center" style="width:100%;height:100%;position:relative;" >
+		<div id="tooltip" style="display:none;position:absolute;background:rgba(0,0,0,0.6);color:#fff;padding:5px;border-radius:4px;text-align:left;font-size:12px;">
+			<p></p>
+			<p></p>
+			<p></p>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+var episodeID="#(EpisodeID)#";
+var chartID="#(chartID)#";
+var ifColorPrint="#(ifColorPrint)#";
+var missBeatColor="#(missBeatColor)#";
+var skinTestYText="#(skinTestYText)#";
+var skinTestYColor="#(skinTestYColor)#";
+var skinTestNText="#(skinTestNText)#";
+var skinTestNColor="#(skinTestNColor)#";
+var userID = session['LOGON.USERID'];
+var locID = session['LOGON.CTLOCID'];
+var page="#(Page)#"==""?1:"#(Page)#";
+var CHARTYPE="1";
+var langID=session['LOGON.LANGID'];
+if (SVG.supported) {
+	if(!!window.ActiveXObject || "ActiveXObject" in window){
+        //alert("ie");
+        document.body.style.height="1000px";
+    }
+} else {
+  alert('SVG not supported')
+}
+</script>
+<script type="text/javascript" src="../scripts/nurse/temperature/svg/drawChart.js" charset="gbk"></script>
+<script type="text/javascript" src="../scripts/nurse/temperature/svg/requestData.js" charset="gbk"></script>
+
+</html>

@@ -1,0 +1,123 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+
+<html>
+<head>
+
+<!-- Put your page Title here -->
+	<meta charset="utf-8"/>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI />
+    <style>
+    	body{background: white;}
+   		hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;}
+    </style>
+</head>
+
+<script language="cache" RUNAT="SERVER">
+  s multiFlag=##class(Nur.SHIFT.Service.ShiftBiz).#MULTIHOSP
+</script>
+<SCRIPT language = 'javascript'>
+var multiFlag = "#($g(multiFlag))#";
+</SCRIPT>
+<body style="overflow: hidden;">
+	<table cellpadding="0">
+		<tr>
+		<csp:if condition='1=##class(Nur.SHIFT.Service.ShiftBiz).#MULTIHOSP'>
+			<td>
+				<div data-options="region:'north',border:false" style="height: 44px;padding:10px 10px 0 10px">
+	 				<csp:Include Page="nur.hisui.common.hosp.combobox.csp">
+	 			</div>
+	 		</td>
+	 	</csp:if>
+	 	<td>
+	 		<label style="padding:0 10px 0 10px">病区</label>
+			<select id="wardBox" style="width:200px;"></select>
+		</td>
+		<td>
+        	<a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'" style="" onclick="getTreeData()">查询</a>
+		</td>
+		</tr>
+	</table>
+	<hr class="dashed">
+	<div id="dataArea" class="hisui-panel" style="padding:10px;display: flex">
+		<div style="flex:1">
+		    <div class="hisui-panel" title="明细列配置" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		    	<div style="padding:2px;">
+		    		<a href="#" class="hisui-linkbutton" id="btn1" onclick="addSetting();">新增</a>
+		    		<a href="#" class="hisui-linkbutton red" id="btn1" onclick="DelSetting();">删除</a>
+		    	</div>
+		    	<ul id="columns" class="hisui-tree" data-options="lines:true">    
+    			</ul>
+		    </div>
+		</div>
+		<div style="width:10px;"></div>
+		<div style="flex:6">
+			<div class="hisui-panel" title="内容配置" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+				<form id="ff" method="post">
+					<input id="columnID" type="hidden">  
+        			<div style="padding:10px;">  
+            			<label for="columnWidth">列宽</label>  
+            			<input class="easyui-validatebox" type="text" name="columnWidth" id="columnWidth" data-options="required:true" />  
+        				<input class="hisui-checkbox" type="checkbox" label="允许编辑" id="canEdit" name="canEdit">
+        			</div>  
+        			<div style="padding:10px;">  
+        				 <label for="storagePosition">数据列</label>  
+        				 <select id="storagePosition" class="hisui-combobox" name="storagePosition" style="width:200px;" data-options="enterNullValueClear:true,blurValidValue:true">
+							<option value="">无</option>
+							<option value="SPRDiagnose">诊断</option>
+							<option value="ISBARS">数据1</option>
+							<option value="ISBARB">数据2</option>
+							<option value="ISBARA">数据3</option>
+							<option value="ISBARR">数据4</option>
+						</select>
+        			</div>
+        			<div style="padding:10px;">
+        				<div>
+        					模板格式
+        					<a href="javascript:void(0)" class="l-btn l-btn-small l-btn-plain" group="" id="" onclick="addDisplaceMark();">
+								<span class="l-btn" style="height: 21.3px;">
+									<span class="l-btn-text" style="line-height: 21.3px;">{}</span>
+								</span>
+							</a>
+        				</div>
+						<div>
+							<textarea id="templateArea" cols="30" rows="10" style="width: 100%;border-radius: 4px;resize: none;border-color: #cccccc;box-sizing: border-box;padding: 5px 10px;overflow: auto;"></textarea>
+						</div>
+        			</div>
+        			<div style="padding:5px;">
+        				<a href="javascript:void(0)" class="l-btn" style="display:block;margin:0 auto;width:100px;" group="" id="" onclick="saveSetting();">
+								<span class="l-btn">
+									<span class="l-btn-text" style="line-height: 21.3px;">保存</span>
+								</span>
+							</a>
+        			</div>
+   				</form>  
+			</div>
+		</div>
+	</div>
+	<div id="modalAdd" class="hisui-dialog" title="新增节点" style="width:250px;height:160px;top:250px;left:500px;padding:10px;" data-options="iconCls:'icon-save',resizable:true,modal:true,closed:true,buttons:[{
+    		text:'保存',
+    		handler:addSettingHandler
+    	},{
+    		text:'关闭',
+    		handler:function(){$HUI.dialog('#modalAdd').close();}
+    	}]">   
+    	<table>
+    		<tr>
+    			<td>
+    				<span>列名</span>
+    			</td>
+    			<td>
+    				<input id="maColumnName"></input>
+    			</td>
+    		</tr>
+    	</table>
+    </div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.shiftColumn.js"></script>
+</body>
+
+</html>

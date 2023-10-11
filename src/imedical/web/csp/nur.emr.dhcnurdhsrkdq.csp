@@ -1,0 +1,390 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    s isPermission = ##Class(NurMp.Service.Template.Model).editAuthority(%request.Get("EpisodeID"),$g(%session.Data("LOGON.CTLOCID")),"DHCNURDHSRKDQ")
+    i isPermission'="0"
+    {
+    s utfo = $ZCONVERT(isPermission,"O","UTF8")
+    s urlo = $ZCONVERT(utfo,"O","URL")
+    s %response.ServerSideRedirect = "nur.emr.permissiondenied.csp?isPermission="_urlo
+    q 1
+    }
+    else
+    {
+    q 1
+    }
+</csp:method>
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type = "text/css" href = "../skin/default/css/websys.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts/nurse/hisui-0.1.0/dist/css/jquery.contextMenu.css" />
+
+<style type="text/css">.datagrid-row-mp-printed
+{
+background:#CDC9A5;
+}
+.marker
+{
+position:absolute;border-radius:50%;z-index:999;
+}
+body * 
+{
+font-family:微软雅黑;font-size:14px
+}
+.commonModalDialog .dialog-content
+{
+overflow:hidden;
+}
+#element_Ul li label.checkbox
+{
+display:inline;
+}
+.datagrid-row-selected
+{
+background: #fced89 !important;color: #000000;
+}
+.datagrid-row-editting
+{
+background: #abbd65;color: #000000;
+}
+.tooltipTable
+{
+border-collapse:collapse;border: 1px solid #509de1;
+}
+.tooltipTable td
+{
+border: 1px solid #509de1;
+}
+.tooltipTable th
+{
+border: 1px solid #509de1;
+}
+ </style></head>
+   <body style="background-color:white;padding:0px;width:100%">
+<div LineNo="1" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_2" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:863px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_2" style="height:96px;width:863px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_3" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:70px;padding-left:0px;padding-right:0px">
+<div id="LableElement_3" style="height:18.48px;width:70px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">压疮来源：</div>
+</div>
+<div id="div_RadioElement_4" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:52px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_4'  name='RadioElement_4'  class='hisui-radio'  type='radio'  label='院外'  value='1'  NumberValue='1'  oldVal=''  SaveField='Item1'  data-options="checked:true,radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_5" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:52px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_5'  name='RadioElement_4'  class='hisui-radio'  type='radio'  label='科外'  value='2'  NumberValue='2'  SaveField='Item1'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_6" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:52px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_6'  name='RadioElement_4'  class='hisui-radio'  type='radio'  label='科内'  value='3'  NumberValue='3'  SaveField='Item1'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_LableElement_7" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:84px;padding-left:35px;padding-right:0px">
+<div id="LableElement_7" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">压疮发生日期</div>
+</div>
+<div id="div_DateElement_8" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:127px;padding-left:0px;padding-right:0px">
+<input id="DateElement_8" name="DateElement_8" oldVal="" SaveField="Item2" format="yyyy-MM-dd" style="height:30px;width:127px" />
+</div>
+<div id="div_RadioElement_9" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:66px;padding-left:40px;padding-right:0px">
+<input  id='RadioElement_9'  name='RadioElement_9'  class='hisui-radio'  type='radio'  label='已上报'  value='1'  NumberValue='1'  oldVal=''  SaveField='Item3'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_10" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:66px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_10'  name='RadioElement_9'  class='hisui-radio'  type='radio'  label='未上报'  value='2'  NumberValue='2'  SaveField='Item3'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_11" style="float:left;height:18.48px;padding-Top:2.76px;padding-bottom:2.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_11" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">转归：</div>
+</div>
+<div id="div_RadioElement_12" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:28px;padding-right:0px">
+<input  id='RadioElement_12'  name='RadioElement_12'  class='hisui-radio'  type='radio'  label='1干燥'  value='1'  NumberValue='1'  oldVal=''  SaveField='Item4'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_13" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_13'  name='RadioElement_12'  class='hisui-radio'  type='radio'  label='2结痂'  value='2'  NumberValue='2'  SaveField='Item4'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_14" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_14'  name='RadioElement_12'  class='hisui-radio'  type='radio'  label='3愈合'  value='3'  NumberValue='3'  SaveField='Item4'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_15" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_15'  name='RadioElement_12'  class='hisui-radio'  type='radio'  label='4未愈'  value='4'  NumberValue='4'  SaveField='Item4'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_16" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_16'  name='RadioElement_12'  class='hisui-radio'  type='radio'  label='5出院'  value='5'  NumberValue='5'  SaveField='Item4'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div id="div_RadioElement_17" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='RadioElement_17'  name='RadioElement_12'  class='hisui-radio'  type='radio'  label='6死亡'  value='6'  NumberValue='6'  SaveField='Item4'  data-options="radioClass:'hischeckbox_square-blue'"  /> 
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:3px">
+<div id="div_LableElement_18" style="float:left;height:18.48px;padding-Top:2.76px;padding-bottom:2.76px;width:79.36px;padding-left:0px;padding-right:0px">
+<div id="LableElement_18" style="height:18.48px;width:79.36px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">转归(多选)：</div>
+</div>
+<div id="div_CheckElement_19" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_19'  class='hisui-checkbox'  name='CheckElement_19'  oldVal='' SaveField='Item5'  type='checkbox'  label='1干燥'  value='1'  NumberValue='1'  /> 
+</div>
+<div id="div_CheckElement_20" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_20'  class='hisui-checkbox'  name='CheckElement_19'  SaveField='Item5'  type='checkbox'  label='2结痂'  value='2'  NumberValue='2'  data-options='checked:true'  /> 
+</div>
+<div id="div_CheckElement_21" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_21'  class='hisui-checkbox'  name='CheckElement_19'  SaveField='Item5'  type='checkbox'  label='3愈合'  value='3'  NumberValue='3'  /> 
+</div>
+<div id="div_CheckElement_22" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_22'  class='hisui-checkbox'  name='CheckElement_19'  SaveField='Item5'  type='checkbox'  label='4未愈'  value='4'  NumberValue='4'  /> 
+</div>
+<div id="div_CheckElement_23" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_23'  class='hisui-checkbox'  name='CheckElement_19'  SaveField='Item5'  type='checkbox'  label='5出院'  value='5'  NumberValue='5'  /> 
+</div>
+<div id="div_CheckElement_24" style="float:left;height:24px;padding-Top:0px;padding-bottom:0px;width:60.21px;padding-left:0px;padding-right:0px">
+<input  id='CheckElement_24'  class='hisui-checkbox'  name='CheckElement_19'  SaveField='Item5'  type='checkbox'  label='6死亡'  value='6'  NumberValue='6'  /> 
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_25" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_25" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">签名</div>
+</div>
+<div id="div_TextElement_26" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_26" name="TextElement_26" class="textbox" oldVal="" Signature="Common" SignatureAuto="True" SignatureShow="FIFO" SignatureSplit="," SaveField="Item6" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div id="div_ButtonElement_27" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:10px;padding-right:10px">
+<a id="ButtonElement_27" href="javascript:void();" class="hisui-linkbutton hover-dark" buttonType="savebutton" GatherSpecifyFiledsData="" gatherFun="" style="height:30px;width:58px">保存</a>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_29" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_29" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">下拉</div>
+</div>
+<div id="div_DropListElement_28" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id="DropListElement_28" name="DropListElement_28" oldVal="" dhccLableFor="LableElement_29" SaveField="Item7" style="height:30px;width:200px"><option value="" /></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_31" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_31" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">下拉多选</div>
+</div>
+<div id="div_DropCheckboxElement_30" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropCheckboxElement_30' name='DropCheckboxElement_30' oldVal='' dhccLableFor='LableElement_31' SaveField='Item8' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="5" style="padding:5px 10px 5px 10px">
+<div id="div_LableElement_33" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_33" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">下拉单选</div>
+</div>
+<div id="div_DropRadioElement_32" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:200px;padding-left:0px;padding-right:0px">
+<select id='DropRadioElement_32' name='DropRadioElement_32' oldVal='' dhccLableFor='LableElement_33' SaveField='Item9' style='height:30px;width:200px;'></select>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+ <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-cellediting.js?ver=2022-05-23_155420" ></script>
+
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </SCRIPT>
+   <SCRIPT Language="Javascript">
+  var HighRiskReportEnable='#(##class(NurMp.Template.EventSet).isReport("542a203e78b84f0799ca8d341ebb649a"))#';
+  var WebIp='';
+  var EpisodeID='#(%request.Get("EpisodeID"))#';
+  var TemplateGUID="542a203e78b84f0799ca8d341ebb649a";
+  var TemplateIndentity="DHCNURDHSRKDQ";
+  var dtformat = "";
+  var WindowCompleted = false;
+  var HiddenNoSubmit = false;
+  var RequiredAlter = false;
+  var HideSavedAlter = false;
+  var ShowLeaveMark = false;
+   </SCRIPT>
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.CA.DHCNurCAComm).CAEnvironmentInit()
+   d ##class(NurMp.CA.DHCNurCAComm).ConfigEnvironmentInit()
+   </SCRIPT>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/HisUITableEdit.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/rightClickHandler.js?ver=2022-05-23_155420" charset="gbk" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/validateboxType.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/ElementUtility.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Foundation.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Condition.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Cascading.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript">
+var LoadFormElements = [
+'DateElement_8','RadioElement_4','RadioElement_9','RadioElement_12','CheckElement_19','TextElement_26','DropListElement_28','DropCheckboxElement_30','DropRadioElement_32'
+];
+
+
+
+$(document).ready(function () {InnerNetDebug();
+if ($.type(window.ItemBeforeInit) === 'function') {window.ItemBeforeInit();}
+ $('#DateElement_8').dateboxq({ID:'DateElement_8' });
+ $('#TextElement_26').validatebox({ID:'TextElement_26',Signature:'Common',SignatureAuto:'True' });
+ $('#TextElement_26').on('blur', function(){ElementUtility.TextElement.banding('TextElement_26', $(this).attr('SignatureFullVal'),true); });
+ $('#TextElement_26').on('focus', function(){$(this).val(''); });
+ $('#TextElement_26').on('keyup', function(){RestrictNumerical($(this)); });
+ $('#TextElement_26').keydown(function(event){if (event.keyCode == 13)  JobNumEnterToName($(this),false);if (event.keyCode == 46)  ClearSign($(this)); });
+$('#ButtonElement_27').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_27').click(function () {Save('','','',null); });
+ $('#DropListElement_28').combobox({ID:'DropListElement_28',panelHeight:'auto',enterNullValueClear:true,allowNull:true,defaultFilter:4,valueField:'Value',textField:'Text' });
+$('#DropListElement_28').data('NumberValues',{1:"1",2:"2",3:"3",4:"4",5:"5",6:"6"});
+ $('#DropCheckboxElement_30').combobox({ID:'DropCheckboxElement_30',enterNullValueClear:true,selectOnNavigation:false,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',multiple: true,allSelectButtonPosition:'top',rowStyle: 'checkbox' });
+$('#DropCheckboxElement_30').data('NumberValues',{1:"1",2:"2",3:"3",4:"4",5:"5",6:"6"});
+ $('#DropRadioElement_32').DropDropRadio({ID:'DropRadioElement_32',enterNullValueClear:true,panelHeight:'auto',editable: true,defaultFilter:4,valueField:'Value',textField:'Text',allowNull:true });
+$('#DropRadioElement_32').data('NumberValues',{1:"1",2:"2",3:"3",4:"4",5:"5",6:"6"});
+if ($.type(window.ItemAfterInit) === 'function') {window.ItemAfterInit();}
+if ($.type(window.ItemBeforeSetValue) === 'function') {window.ItemBeforeSetValue();}
+SetOneValue('RadioElement_4',[{Text:"院外",Value: '1'}]);
+SetOneValue('DateElement_8',GetCurrentDate());
+
+SetOneValue('CheckElement_19',[{Text: "2结痂",Value: '2'}]);
+SetOneValue('DropListElement_28',{source:[{Text: "1干燥",Value: '1'},{Text: "2结痂",Value: '2'},{Text: "3愈合",Value: '3'},{Text: "4未愈",Value: '4'},{Text: "5出院",Value: '5'},{Text: "6死亡",Value: '6'}],values:[{Text: "2结痂",Value: '2'}]});
+SetOneValue('DropCheckboxElement_30',{source:[{Text: "1干燥",Value: '1'},{Text: "2结痂",Value: '2'},{Text: "3愈合",Value: '3'},{Text: "4未愈",Value: '4'},{Text: "5出院",Value: '5'},{Text: "6死亡",Value: '6'}],values:[{Text: "2结痂",Value: '2'},{Text: "3愈合",Value: '3'}]});
+SetOneValue('DropRadioElement_32',{source:[{Text: "1干燥",Value: '1'},{Text: "2结痂",Value: '2'},{Text: "3愈合",Value: '3'},{Text: "4未愈",Value: '4'},{Text: "5出院",Value: '5'},{Text: "6死亡",Value: '6'}],values:[{Text: "2结痂",Value: '2'}]});
+
+InitHiddenField();
+InitDynamicTableTitleLabel();
+ShortcutFormElementFocus();
+setTimeout(function(){
+GetDataFromService(null,null,null,null,false);
+if ($.type(window.ItemAfterSetValue) === 'function') {window.ItemAfterSetValue();}
+
+InitHandover();
+InitHighRiskReport();
+setTimeout(function(){
+UpdateCAOldFormData();
+InitAutoSignature();
+InitTableCellPopover();
+BindingLeaveMarkLogEvent();
+WindowCompleted = true;
+setTimeout(PrintActivexUpgrade, 100); 
+setTimeout(function(){
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/shim.min.js?ver=2022-05-23_155420');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js?ver=2022-05-23_155420');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/clipboard.min.js?ver=2022-05-23_155420');
+}, 100); 
+RealTimeSave(+0*1000);
+GetLeaveMarkLogs();
+}, 10); 
+}, 0); 
+ });
+$(window).load(function () {
+$('body').append('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+if ($.type(window.WindowLoadCallBack) === 'function') { window.WindowLoadCallBack(); }
+ });
+
+</script> <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/custom.js?ver=2022-05-23_155420" ></script>
+ <script type="text/javascript" src="../scripts_gen/DHCNURDHSRKDQ.js?ver=2022-05-23_155420" ></script>
+<script for="PrintActiveX" event="CheckUpgradeEvent(msg)" language="javascript">
+function PrintActiveX::CheckUpgradeEvent(msg) {
+console.log(msg);
+var reMsg = JSON.parse(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+else if (reMsg.status == "-1") {//升级失败
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+}
+</script>
+<script type='text/template' id='dialogReferTemplate'>
+<div id="dialogRefer" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose'
+	},{
+		text:'清屏',
+		iconCls:'icon-w-clean',
+		id: 'btnClear'
+	},{
+		text:'引用',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='dialogSpecialCharTemplate'>
+<div id="dialogSpecialChar" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnCharClose'
+	},{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnCharRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='menuTemplate'>
+<div id="menu" class="hisui-menu" style="width:100px;"></div>
+</script>
+<script type='text/template' id='HisUITableMenuTemplate'>
+<div id="hisUITableMenu" class="hisui-menu" data-options="onClick:OnHisUiTableMenuHandler" style="width:100px;"></div>
+</script>
+<script type='text/template' id='RePrintSetDialogTemplate'>
+<div id="rePrintDialog" class="hisui-dialog" title="补打设置" style="width:350px;height:300px;" data-options="closed:true,onOpen:function(){RePrintGetPrintinfo();},modal:true,
+	buttons:[
+	{text:'确定',handler:function(){RePrint();}},
+	{text:'取消',handler:function(){$HUI.dialog('#rePrintDialog').close();}}
+	]">
+    <div style="width:350px;height:213px;display:table-cell;vertical-align:middle;text-align:center;">
+        <div style="display:inline-block;">
+            <span id="IsPrint">未打印</span>  <br>
+            打印信息：<span id="PrintInfo">无</span>
+            <br>
+            <br>
+            开始页：<input id="startPageNo" class="hisui-numberbox textbox" data-options="required:true">
+            <br>
+            <br>
+            开始行：<input id="startRowNo" class="hisui-numberbox textbox" data-options="required:true">
+        </div>
+    </div>
+</div>
+</script>
+<script type='text/template' id='CancelHighRisKReportDialogTemplate'>
+<div id='cancelReportDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		撤销原因：
+	   <select id='reasonBox' name='reason' class='hisui-combobox' style='width:200px;'>
+	   	    <option value='撤销'>撤销</option>
+	    		<option value='出院'>出院</option>
+	    		<option value='死亡'>死亡</option>
+	    		<option value='转出'>转出</option>
+	    </select>
+	   <br/>
+	   撤销日期：
+	   <input id="cancelReportDate" class="hisui-datebox textbox datebox-f combo-f" data-options="">
+	   <br/>
+	   撤销时间：
+	   <input id="cancelReportTime" class="hisui-timespinner" data-options="" style="border-radius: 2px;">
+  </div>
+</div>
+</script>
+<script type='text/template' id='SignPWDVerifyDialogTemplate'>
+<div id='signPWDVerifyDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		 密码：<input id="signPWD" class="textbox" type="password">
+  </div>
+</div>
+</script>
+</body>
+</html>

@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <!--
-	住院退药 
-	csp: csp/dhcpha/dhcpha.inpha.return.csp
-	js:  scripts/pharmacy/inpha/dhcpha.inpha.return.js
+    住院退药 
+    csp: csp/dhcpha/dhcpha.inpha.return.csp
+    js:  scripts/pharmacy/inpha/dhcpha.inpha.return.js
 -->
-
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
 <html lang="zh-CN">
 
 <head>
@@ -20,6 +23,14 @@
         s Application=%request.Application
     </Server>
     <DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
+    <style type="text/css">
+        .checkboxpadding {
+            padding-left: 5px;
+        }
+        lable strong {
+            padding-left: 5px;
+        }
+   </style>
     <!--css-->
     <link rel="stylesheet" type="text/css"
         href="#(Application)#scripts_lib/jquery.jqGrid-4.6.0/css/themes/ui.multiselect.css">
@@ -53,6 +64,7 @@
     <!--jqgrid样式与医生站统一-->
     <link rel="stylesheet" type="text/css" href="#(Application)#scripts/pharmacy/common/css/dhcpha.jqGrid.css">
     </script>
+    <DHCPHARMACYLANG/>
     <!--dhcpha common js-->
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.plugins.js"></script>
     <script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.common.js"></script>
@@ -70,16 +82,16 @@
                 <div class="col-lg-9 col-md-9 col-sm-9">
                     <button class="btn btn-default btn_button btn_important" id="btn-return"><img
                             src="#(Application)#scripts/pharmacy/images/return-default.png"
-                            class="dhcpha-btn-image"><br><strong>退药</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("退药"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common" id="btn-clear"><img
                             src="#(Application)#scripts/pharmacy/images/clear-default.png"
-                            class="dhcpha-btn-image"><br><strong>清屏</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("清屏"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common dhcpha-col-border-left"
                         id="btn-redir-return"><img src="#(Application)#scripts/pharmacy/images/returnbyreq-default.png"
-                            class="dhcpha-btn-image"><br><strong>申请单退药</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("申请单退药"))#</strong></button>
                     <button class="btn btn-default btn_button btn_common" id="btn-redir-returnquery"><img
                             src="#(Application)#scripts/pharmacy/images/dispquery-default.png"
-                            class="dhcpha-btn-image"><br><strong>退药单查询</strong></button>
+                            class="dhcpha-btn-image"><br><strong>#(..Get("退药单查询"))#</strong></button>
                 </div>
                 <div class="col-lg-3 col-md-3 col-sm-3" id="dhcpha-patinfo">
                 </div>
@@ -90,20 +102,20 @@
             <div class="row row_style">
                 <form class="form-inline">
                     <div class="input-group">
-                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>退药科室</strong></span>
+                        <span class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("退药科室"))#</strong></span>
                         <select class="form-control in_select" id="sel-phaloc">
                         </select>
                     </div>
                     <div class="input-group">
                         <span for="date-start"
-                            class="input-group-addon dhcpha-input-group-addon-in"><strong>起止日期</strong></span>
+                            class="input-group-addon dhcpha-input-group-addon-in"><strong>#(..Get("起止日期"))#</strong></span>
                         <input id="date-start" class="form-control input_style" type="text"
                             style="border-right:none;width:86px" placeholder="请选择日期">
                         <span class="input-group-addon span_style" style="cursor:pointer;background-color:#fff;">
                             <i class="fa fa-calendar"></i>
                         </span>
                     </div>
-                    <span><strong>至</strong></span>
+                    <span><strong>#(..Get("至"))#</strong></span>
                     <div class="input-group">
                         <input id="date-end" class="form-control input_style" type="text"
                             style="border-right:none;width:86px" placeholder="请选择日期">
@@ -113,11 +125,11 @@
                     </div>
                     <div class="form-group dhcpha-col-split">
                     </div>
-                    <input class="form-control input_style" type="text" id="txt-patno" style="" placeholder="请输入登记号">
+                    <input class="form-control input_style" type="text" id="txt-patno" style="" placeholder="#(..Get("请输入登记号"))#">
                     <div class="btn-group dhcpha-btn-right">
                         <span class="fa fa-search dhcpha-btn-icon-common dhcpha-btn-icon-normal"></span>
                         <button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button"
-                            id="btn-find">查询</button>
+                            id="btn-find">#(..Get("查询"))#</button>
                     </div>
                 </form>
             </div>
@@ -125,10 +137,38 @@
         <div class="row dhcpha-row-split"></div>
     </div>
     <div class="panel div_content">
-        <div class="panel-heading"><span class="pal_style"><strong>药品详细列表</strong></span></div>
+        <div class="panel-heading"><span class="pal_style"><strong>#(..Get("药品详细列表"))#</strong></span></div>
         <table id="grid-return" class="table table-bordered table_style">
         </table>
         <!--div id="jqGridPager"></div-->
+    </div>
+    <!-- 打印方式选择 -->
+    <div class="modal fade" id="modal-returnprinttype" tabindex="-1" role="dialog" aria-hidden="false" style="padding-top:150px;">
+        <div class="modal-dialog" style="width:260px">
+            <div class="modal-content" style="height:240px">
+                <div class="modal-header modal_header_style">
+                     <button type="button" class="close" data-dismiss="modal" aria-label="Close" ><span style="color:#fff;" aria-hidden="true">&times;</span></button>
+                     <span class="modal-title" style="background-color:#556983;"><i class="fa fa-medkit" aria-hidden="true"></i>　　#(..Get("选择打印方式"))#</span>
+                </div>
+                <div class="modal-body" align="center" style="padding:30px;padding-top:0px;">
+                    <div class="input-group checkboxpadding" style="margin-top:25px">
+                        <input type="checkbox" id="chk-prtdefault">
+                        <lable for="chk-prtdefault"><strong>#(..Get("默认打印"))#</strong></lable>
+                    </div>
+                    <div class="input-group checkboxpadding" style="margin-top:10px">
+                        <input type="checkbox" id="chk-prttotal">
+                        <lable for="chk-prttotal"><strong>#(..Get("打印汇总"))#</strong></lable>
+                    </div>
+                    <div class="input-group checkboxpadding" style="margin-top:10px">
+                        <input type="checkbox" id="chk-prtdetail">
+                        <lable for="chk-prtdetail"><strong>#(..Get("打印明细"))#</strong></lable>
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <button class="btn btn-primary dhcpha-btn-common dhcpha-btn-normal" id="btn-print-sure">#(..Get("确定"))#</button>
+                </div>
+            </div>
+        </div>
     </div>
     <!--include 文件至于最后-->
     <csp:Include Page="dhcpha.inpha.returnreason.csp" />

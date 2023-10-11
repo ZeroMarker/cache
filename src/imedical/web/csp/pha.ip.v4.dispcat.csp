@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 发药类别维护
+	csp: csp/pha.ip.v4.dispcat.csp
+	js:  scripts/pha/ip/v4/dispcat.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <style>
+        .pha-arccat div {
+            float: left;
+        }
+
+        .pha-contain {
+            font-size: 12px;
+            padding-left: 4px;
+            padding-right: 4px;
+            border-radius: 2px;
+        }
+        .pha-include{
+            background-color: #e2ffde;
+            color: #3c763d;
+        }
+        .pha-exclude{
+            background-color: #ffe3e3 ;
+            color: #ff3d2c;
+        }
+        tbody td:hover {
+            cursor: pointer;
+        }
+        .pha-body {
+		    background-color: #fff;
+		}
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'north',border:false,split:true,height:410">
+                    <div class="hisui-panel" title="发药类别" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-group',fit:true,bodyCls:''" id="panelDispCat">
+                        <table id="gridDispCat"></table>
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div class="hisui-layout" fit="true">
+                        <div data-options="region:'west',border:false,split:true,width:333">
+                            <div class="hisui-panel" title="关联医嘱子类 - 双击取消关联" data-options="headerCls:'panel-header-gray',iconCls:'icon-ref',fit:true,bodyCls:''">
+                                <table id="gridDispCatItm"></table>
+                            </div>
+                        </div>
+                        <div data-options="region:'center',border:false">
+                            <div class="hisui-panel" title="可选医嘱子类 - 双击关联" id="panelLoc" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-info',fit:true,bodyCls:''">
+                                <table id="gridArcCat"></table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridDispCatBar">
+        <div class="pha-row">
+            <div class="pha-col">
+                <label id="_HospListLabel">#(..Get("医院"))#</label>
+            </div>
+            <div class="pha-col">
+                <input id="_HospList">
+            </div>
+            <div class="pha-col">
+                <div class="pha-tip-info" style="width:100%;line-height: 28px;top:10px;right: 10px;letter-spacing:1px;padding-left:28px;">
+                    <!-- 　<b>草药</b>代码约定为 【ZCY】，<b>出院带药</b>代码约定为 【OUT】，<b>打印函数</b>为个性化控制 -->
+                    【出院带药】代码约定为【OUT】
+                </div>
+            </div>
+        </div>
+        <div class="pha-line"></div>
+        <div>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd">新增</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave">保存</a>
+            <a class="hisui-linkbutton" plain='true' iconCls="icon-cancel" id="btnDel">删除</a>
+        </div>
+    </div>
+
+
+    <!-- 本页面js -->
+    <script src="../scripts/hisui/websys.comm.js"></script>
+    <script src="../scripts/pha/ip/v4/com.js"></script>
+    <script src="../scripts/pha/ip/v4/dispcat.js"></script>
+</body>
+
+</html>

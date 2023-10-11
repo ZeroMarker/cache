@@ -1,0 +1,183 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ //i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.kb.dhcknoinstructions.csp
+	@JS:
+	@Title:全说明书浏览器
+	@Description:全说明书浏览界面
+	@Creator:基础数据平台组 - 谷雪萍
+	@CreateDate:2020-07-30
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>		
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script> 
+<style type="text/css">
+
+</style>
+
+</HEAD>
+<BODY>
+	<server>
+    	s InputStr=%request.Get("InputStr")
+   </server> 
+<div class="hisui-layout" data-options="fit:true" border="false" id="layout">
+	<div data-options="region:'center',split:true,headerCls:'panel-header-gray'" border="false">
+	 	<iframe id="myiframe" src="" frameborder="0" width="100%" height="100%" scrolling="no"></iframe>
+ 	</div>
+ </div>
+  <script type="text/javascript">
+  		//InputStr="药品通用名代码^剂型代码^药品商品名代码^检验通用名代码^检验标本代码^检查/心电/治疗项目的医嘱项代码^部位代码^手术通用名代码"
+        var  InputStr="#(InputStr)#"    
+		var InputStrInfo=InputStr.split("^")
+		var DrugCode=InputStrInfo[0];  //药品通用名代码
+		var FormCode=InputStrInfo[1];   //剂型代码
+		var ProCode=InputStrInfo[2];    //药品商品名代码
+		var LabCode=InputStrInfo[3];    //检验通用名代码
+		var SpecCode=InputStrInfo[4];    //检验标本代码
+		var ARCCode=InputStrInfo[5];    //检查/心电/治疗项目的医嘱项代码
+		var PartCode=InputStrInfo[6];    //部位代码
+		var OperCode=InputStrInfo[7];    //手术通用名代码
+		var DiaDesc=InputStrInfo[8];    //诊断名称
+		var SymptomDesc=InputStrInfo[9];    //症状名称
+		var CheckDesc=InputStrInfo[10];    //检查名称
+		var LabDesc=InputStrInfo[11];    //检验名称
+		var OperDesc=InputStrInfo[12];    //手术名称
+		var url=""
+		
+		var BDPKBVersion =tkMakeServerCall("web.DHCBL.BDP.BDPConfig","GetConfigValue","BDPKBVersion");  //获取平台配置配置项
+		
+		if (BDPKBVersion=="1")  //第一版临床知识库
+		{
+			if ((DrugCode!="")||(ProCode!=""))  //药品
+			{
+				var parm = "GenCode="+encodeURI(DrugCode) + "&PointerCode="+encodeURI(FormCode)+ "&ProCode="+ encodeURI(ProCode)
+				url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_DrugBrowser&"+parm
+			}
+	   		else if (LabCode!="")  //检验
+			{
+				var parm = "GenCode="+encodeURI(LabCode) + "&PointerCode="+ encodeURI(SpecCode)
+				url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_LABBrowser&"+parm
+			}
+			else if(OperCode!="")  //手术
+			{
+				var parm = "GenCode="+encodeURI(OperCode) + "&PointerCode="+ encodeURI(PartCode)
+				url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_OPERBrowser&"+parm	
+			}
+			else  //检查
+			{
+			    var LibCode =tkMakeServerCall("web.DHCBL.KB.DHCBusMain","GetLibCodeByHisCode",ARCCode);  //根据his通用名代码获取知识库标识
+				var parm = "GenCode="+encodeURI(ARCCode) + "&PointerCode="+ encodeURI(PartCode)
+				if (LibCode=="ULTR") //超声
+				{
+					url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_ULTRBrowser&"+parm	
+				}
+				else if (LibCode=="RADI") //放射
+				{
+					url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_RADIBrowse&"+parm	
+				}
+				else if (LibCode=="ENDO") //内镜
+				{
+					url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_GASTBrowser&"+parm	
+				}
+				else if (LibCode=="ELECT") //心电
+				{
+					url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_ELECTBrowser&"+parm	
+				}
+				else if (LibCode=="TREAT") //治疗
+				{
+					url="../csp/dhc.bdp.ext.default.csp?extfilename=App/KB/Bus/DHC_TREATBrowser&"+parm	
+				}
+				else
+				{
+					url="../csp/dhc.bdp.kb.dhchisinstructions.csp?"+parm	
+				}
+			}
+		}
+		else if (BDPKBVersion=="3")  //医为百科
+		{
+			var termDesc=""
+			if (DiaDesc!="")
+			{
+				termDesc=DiaDesc	
+			}
+			else if (SymptomDesc!="")
+			{
+				termDesc=SymptomDesc	
+			}
+			else if (CheckDesc!="")
+			{
+				termDesc=CheckDesc	
+			}
+			else if (LabDesc!="")
+			{
+				termDesc=LabDesc	
+			}
+			else if (OperDesc!="")
+			{
+				termDesc=OperDesc	
+			}
+			url="../csp/dhc.bdp.cdss.cmkb.encyclopedia.csp?termDesc="+encodeURI(termDesc)
+		}
+		else   //第二版临床知识库
+		{
+			if ((DrugCode!="")||(ProCode!=""))  //药品
+			{
+				var parm = "GenCode="+encodeURI(DrugCode) + "&PointerCode="+encodeURI(FormCode)+ "&ProCode="+ encodeURI(ProCode)
+				url="../csp/dhc.bdp.kb.dhcdrugbrowser.csp?"+parm
+			}
+	   		else if (LabCode!="")  //检验
+			{
+				var parm = "GenCode="+encodeURI(LabCode) + "&PointerCode="+ encodeURI(SpecCode)
+				url="../csp/dhc.bdp.kb.dhclabbrowser.csp?"+parm
+			}
+			else if(OperCode!="")  //手术
+			{
+				var parm = "GenCode="+encodeURI(OperCode) + "&PointerCode="+ encodeURI(PartCode)
+				url="../csp/dhc.bdp.kb.dhcoperbrowser.csp?"+parm	
+			}
+			else
+			{
+			    var LibCode =tkMakeServerCall("web.DHCBL.KB.DHCBusMain","GetLibCodeByHisCode",ARCCode);  //根据his通用名代码获取知识库标识
+				var parm = "GenCode="+encodeURI(ARCCode) + "&PointerCode="+ encodeURI(PartCode)
+				if (LibCode=="ULTR") //超声
+				{
+					url="../csp/dhc.bdp.kb.dhcultrbrowser.csp?"+parm	
+				}
+				else if (LibCode=="RADI") //放射
+				{
+					url="../csp/dhc.bdp.kb.dhcradibrowser.csp?"+parm	
+				}
+				else if (LibCode=="ENDO") //内镜
+				{
+					url="../csp/dhc.bdp.kb.dhcgastbrowser.csp?"+parm	
+				}
+				else if (LibCode=="ELECT") //心电
+				{
+					url="../csp/dhc.bdp.kb.dhcelectbrowser.csp?"+parm	
+				}
+				else if (LibCode=="TREAT") //治疗
+				{
+					url="../csp/dhc.bdp.kb.dhctreatbrowser.csp?"+parm	
+				}
+				else
+				{
+					url="../csp/dhc.bdp.kb.dhchisinstructions.csp?"+parm	
+				}
+			}
+		}
+		
+		$('#myiframe').attr("src",url); 
+     
+  </script>
+
+</BODY>
+</HTML>

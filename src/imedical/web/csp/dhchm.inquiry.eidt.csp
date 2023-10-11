@@ -1,0 +1,160 @@
+<!--
+ * Description: 问诊知识库维护界面
+ * FileName: dhchm.inquiry.eidt.csp
+ * Anchor: wangguoying
+ * Date: 2021-05-08
+-->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		.hisui-table{
+			border-collapse:separate;
+			border-spacing:0 10px;
+		}
+		.labelTd{
+			padding:0 10px;
+			text-align:right;
+		}
+		.btnTd{
+			width:120px;
+			text-align:left;
+		}
+   </style>
+</head>
+<body class="hisui-layout" fit="true" >
+	<!-- 西方布局  -->
+	<div  data-options="region:'west',headerCls:'panel-header-gray',border:false" style="width:580px;">
+		<!-- 内部五方  -->
+		<div class="hisui-layout" fit="true">
+			<!-- 北方布局  -->
+			<div  data-options="region:'north',headerCls:'panel-header-gray',border:false" style="padding:10px;height:350px;">
+				<div  class="hisui-panel" title="问诊类型"  fit="true"  data-options="headerCls:'panel-header-gray',iconCls:'icon-slice-only',closable:false,collapsible:false,minimizable:false,maximizable:false">
+					<table style="height:50px;">
+						<tr>
+							<td class="labelTd">代码</td>	
+							<td><input id="S_TypeCode" class="hisui-validatebox textbox"  type="text" style="width:120px;" ></td>
+							<td class="labelTd">描述</td>
+							<td><input id="S_TypeDesc" class="hisui-validatebox textbox"  type="text" style="width:120px;" ></td>			
+							<td style="padding-left:10px;"><a href="#"  onclick="type_find_onclick();" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</tr>
+					</table>
+					<div style="border-top:1px dotted #ccc;height:calc(100% - 51.5px);">
+						<table id="TypeList" ></table>	
+					</div>
+				</div> 
+			</div>
+			<!-- //北方布局  -->
+			
+			<!-- 中心布局  -->
+			<div  data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:0 10px 10px 10px;height:350px;">
+				<div  class="hisui-panel" title="问诊结果"  fit="true"  data-options="headerCls:'panel-header-gray',iconCls:'icon-return',closable:false,collapsible:false,minimizable:false,maximizable:false">
+					<table style="height:50px;">
+						<tr>
+							<td class="labelTd">代码</td>	
+							<td><input id="S_ResultCode" class="hisui-validatebox textbox"  type="text" style="width:120px;" ></td>
+							<td class="labelTd">描述</td>
+							<td><input id="S_ResultDesc" class="hisui-validatebox textbox"  type="text" style="width:120px;" ></td>			
+							<td style="padding-left:10px;"><a href="#"  onclick="result_find_onclick();" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
+						</tr>
+					</table>
+					<div style="border-top:1px dotted #ccc;height:calc(100% - 51.5px);">
+						<table id="ResultList" ></table>	
+					</div>
+				</div> 
+			</div>
+			<!-- //中心布局  -->
+		</div>
+		<!-- //内部五方  -->
+	</div>
+	<!--//西方布局  -->
+	
+	
+	<!-- 中心布局  -->
+	<div  data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:10px 10px 10px 0;">
+		<div  class="hisui-panel" title="详细"  fit="true"  data-options="headerCls:'panel-header-gray',iconCls:'icon-compare',closable:false,collapsible:false,minimizable:false,maximizable:false">
+			<!-- 内部五方  -->
+			<div class="hisui-layout" fit="true">
+				<!-- 北方布局  -->
+				<div  data-options="region:'north',headerCls:'panel-header-gray',border:false" style="padding:10px 10px 0 10px;height:150px;">
+					<div  class="hisui-panel" title="基本介绍"  fit="true" style="padding:20px 10px 10px 10px;border-radius:4px;"  data-options="headerCls:'panel-header-card-gray'">
+						<textarea id="Introduce" style="width:calc(100% - 10px);height:calc(100% - 10px)"></textarea>
+					</div> 
+				</div>
+				<!-- //北方布局  -->
+				
+				<!-- 中心布局  -->
+				<div  data-options="region:'center',headerCls:'panel-header-gray',border:false" style="">
+					<!-- 内部五方  -->
+					<div class="hisui-layout" fit="true">
+						<div  data-options="region:'center',headerCls:'panel-header-gray',border:false" style="padding:0 10px;">
+							<div  class="hisui-panel" title="健康建议"  fit="true" style="padding:20px 10px 10px 10px;border-radius:4px;"  data-options="headerCls:'panel-header-card-gray'">
+								<textarea id="Advice" style="width:calc(100% - 10px);height:calc(100% - 10px)"></textarea>
+							</div> 
+						</div>
+						<div  data-options="region:'south',headerCls:'panel-header-gray',border:false" style="padding:0 10px;height:200px;">
+							<div  class="hisui-panel" title="备注"  fit="true" style="padding:20px 10px 10px 10px;border-radius:4px;"  data-options="headerCls:'panel-header-card-gray'">
+								<textarea id="Remark" style="width:calc(100% - 10px);height:calc(100% - 10px)"></textarea>
+							</div> 
+						</div>
+					</div>
+				</div>
+				<!-- //中心布局  -->
+				
+				<!-- 南方布局  -->
+				<div  data-options="region:'south',headerCls:'panel-header-gray',border:false" style="padding:0 10px 10px 10px; text-align:center">
+					<a href="#"  onclick="detail_save();" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+				</div>
+				<!-- //南方布局  -->
+			</div>
+			<!-- //内部五方  -->
+		</div>	
+	</div>
+	<!-- 中心布局  -->
+
+	<!-- 维护窗口 -->
+	<div id="TypeEidtDialog" class="hisui-dialog" title="问诊类型" style="width:450px;height:258px;"
+		data-options="iconCls:'icon-slice-only',resizable:false,modal:true,closed:true,buttons:[{
+				iconCls:'icon-w-save',
+				text:'保存',
+				handler:function(){win_save();}
+			},{
+				iconCls:'icon-w-cancel',
+				text:'关闭',
+				handler:function(){$HUI.dialog('#TypeEidtDialog').close();}
+			}]">   
+			<input type="hidden" id="Win_H_Type" >
+			<input type="hidden" id="Win_H_ID" >
+			<table class="hisui-table">
+				<tr>
+					<td class="labelTd">代码</td>	
+					<td><input id="Win_Code" class="hisui-validatebox textbox" data-options="required:true" type="text" style="width:350px;" ></td>
+				</tr>
+				<tr>
+					<td class="labelTd">描述</td>
+					<td><input id="Win_Desc" class="hisui-validatebox textbox" data-options="required:true"  type="text" style="width:350px;" ></td>			
+				</tr>
+				<tr>
+					<td class="labelTd">顺序号</td>	
+					<td><input id="Win_Sort" class="hisui-numberbox textbox" data-options="required:true,min:0"  type="text" style="width:356px;" ></td>
+				</tr>
+				<tr id="RelateTR">
+					<td class="labelTd">关联方法:</td>	
+					<td ><input class="hisui-combotree" style="width:175px;"  id="Win_Class" >
+					<input class="hisui-combobox" style="width:175px;margin-left:20px;"  id="Win_Method" ></td>
+				</tr>
+			</table>
+	</div>
+	<!-- //类型维护窗口 -->
+	<div id="RelateWin" style="overflow:hidden"></div>
+  	<script type="text/javascript" src="../scripts/dhchm.inquiry.eidt.js"></script> 
+  	<script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
+</body>
+</html>

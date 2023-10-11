@@ -1,0 +1,299 @@
+<!-- 数据导入 dhceq.tools.equipimport.csp -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
+<style type="text/css">
+	p {
+	  padding:5px;
+	  text-indent:25px;
+	  font-size:13px;
+	}
+	.spannote {
+		padding-left:10px;
+	}
+	.note{
+		margin:10px;
+		font-size:16px;
+		/*width:95%;*/
+	}
+	.fs_border{
+	   border:1px solid #E2E2E2;
+	   height:45px;
+	   margin-top:10px;
+	   padding-top:10px;
+	   padding-left:30px;
+	}
+	.lg_ft{
+		color:red;
+		margin-left:10px;
+	}
+</style>
+</head>
+<body>
+<div id="MainPanel" class="hisui-layout" fit="true">
+	<div class="hisui-tabs tabs-gray" id="TabsData" data-options="region:'west'" style='width:710px;padding:10px 10px 10px 10px;border-right:0px;'>
+		<div data-options="title:'新加数据导入',selected:true">
+			<div style="margin:10px;">
+				<form action="" method="get">
+					<fieldset class="fs_border" style="height:105px;">
+		    			<legend class="lg_ft">第一步：导入数据</legend>
+		    			<label style="margin-right:5px;">1.通过系统工具导入Excel文件</label>
+		    			<br/>
+		    			<label>2.通过Kettle工具导入</label>
+		    			<br/>
+		    			<a id="BImport" href="#" style="width:100px;margin:10px 10px 10px 0px;" class="hisui-linkbutton">导入数据</a>
+						<a id="BDownLoad" href="#" style="width:100px;margin:10px;" class="hisui-linkbutton">模板下载</a>
+					</fieldset>
+					<fieldset class="fs_border" style="height:125px;">
+		    			<legend class="lg_ft">第二步：初始化折旧</legend>
+						<label style="margin-right:5px;">执行方法：<br/>
+							<i>w ##Class(web.DHCEQMonthDepre).InitEquipDepre(vDate , EquipTypeIDS , StoreLocDR , DepreTypeDR , KeepDepreFee)</i>
+						</label>
+						<!--br/><br/>
+					    <b style="font-size:12px;">参数说明：</b><br/>
+					    <label style="font-size:12px;">
+					    1.vDate：初始化折旧到该日期，为导入数据的上个会计期末。<br/>
+					    2.EquipTypeIDS：初始化的类组串，其中类组间用","分割,为空初始化全部类组。<br/>
+					    3.StoreLocDR：要初始化的库房及其所管理的科室，为空初始化所有科室数据。<br/>
+					    4.DepreTypeDR：折旧类型，默认为主折旧1。<br/>
+					    5.KeepDepreFee：是否保留原累计折旧 。0或空：不保留，1：保留。若医院整理数据中提供累计折旧数则为”1”，否则为””。<br/>
+					    </label-->
+					    <br/>
+					    <a id="BInitDepre" href="#" style="width:100px;margin:10px 0px 10px 0px;" class="hisui-linkbutton">初始化折旧</a>
+					</fieldset>
+					<fieldset class="fs_border" style="height:105px;">
+		    			<legend class="lg_ft">第三步：初始化快照</legend>
+						<label style="margin-right:5px;">执行方法：<br/>
+							<i>w ##Class(web.DHCEQSnapShot).Snap()</i>
+						</label>
+						<br/>
+					    <a id="BInitSnap" href="#" style="width:100px;margin:10px 0px 10px 0px;" class="hisui-linkbutton">初始化快照</a>
+					</fieldset>
+					<fieldset class="fs_border" style="height:105px;">
+		    			<legend class="lg_ft">第四步：初始化月报</legend>
+						<label style="margin-right:5px;">执行方法：<br/>
+							<i>w ##Class(web.DHCEQInit).InitReport(IsCurMonth , EquipTypeIDS , StoreLocDR)</i>
+						</label>
+						<!--br/><br/>
+					    <b style="font-size:12px;">参数说明：</b><br/>
+					    <label style="font-size:12px;">
+					    1.IsCurMonth：0为上月，1为当月，此处当月或上月都是以会计周期为准界定。<br/>
+					    2.EquipTypeIDS：初始化的类组串，其中类组间用","分割,为空初始化全部类组。<br/>
+					    3.StoreLocDR：要初始化的库房及其所管理的科室，为空初始化所有科室。<br/>
+					    </label-->
+					    <br/>
+					    <a id="BInitReport" href="#" style="width:100px;margin:10px 0px 10px 0px;" class="hisui-linkbutton">初始化月报</a>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+		<div data-options="title:'追加数据导入'">
+			<div style="margin:10px;">
+				<form action="" method="get">
+					<fieldset class="fs_border" style="height:105px;">
+		    			<legend class="lg_ft">第一步：导入数据</legend>
+		    			<label style="margin-right:5px;">1.通过系统工具导入Excel文件</label>
+		    			<br/>
+		    			<label>2.通过Kettle工具导入</label>
+		    			<br/>
+		    			<a id="BImport" href="#" style="width:100px;margin:10px 10px 10px 0px;" class="hisui-linkbutton">导入数据</a>
+						<a id="BDownLoad" href="#" style="width:100px;margin:10px;" class="hisui-linkbutton">模板下载</a>
+					</fieldset>
+					<fieldset class="fs_border" style="height:125px;">
+		    			<legend class="lg_ft">第二步：初始化折旧</legend>
+						<label style="margin-right:5px;">执行方法：<br/>
+							<i>w ##Class(web.DHCEQInit).InitDepre(vDate , EquipTypeIDS , StoreLocDR , DepreTypeDR , KeepDepreFee
+							MinEquipID , MaxEquipID , DepreMonthNum , AdjustFlag , InputFlag)</i>
+						</label>
+						<!--br/><br/>
+					    <b style="font-size:12px;">参数说明：</b><br/>
+					    <label style="font-size:12px;">
+					    1.vDate：初始化折旧到该日期，为导入数据的上个会计期末。<br/>
+					    2.EquipTypeIDS：初始化的类组串，其中类组间用","分割,为空初始化全部类组。<br/>
+					    3.StoreLocDR：要初始化的库房及其所管理的科室，为空初始化所有科室数据。<br/>
+					    4.DepreTypeDR：折旧类型，默认为主折旧1。<br/>
+					    5.KeepDepreFee：是否保留原累计折旧 。0或空：不保留，1：保留。若医院整理数据中提供累计折旧数则为”1”，否则为””。<br/>
+					    6.MinEquipID：开始设备ID，不传默认从第一个设备开始初始化。<br/>
+					    7.MaxEquipID：结束设备ID，不传默认空。<br/>
+					    8.DepreMonthNum：补提折旧月数，不传默认0，所有的折旧都补提传999。<br/>
+					    9.AdjustFlag：是否写数据调整记录，记到新增数据调整中。<br/>
+					    10.InputFlag：是否只初始化导入的台帐，默认Y，只初始化导入的数据，改成N，就初始化所有的。<br/>
+					    </label-->
+					    <br/>
+					    <a id="BAddInitDepre" href="#" style="width:100px;margin:10px 10px 10px 0px;" class="hisui-linkbutton">初始化折旧</a>
+					</fieldset>
+					<div style="margin-top:15px;">
+						<input class="hisui-checkbox" type="checkbox" id="IsManageLocData">
+						<label id="cIsManageLocData" for="IsManageLocData" style="color:#E35E0E;">整个管理科室数据追加</label>
+					</div>
+					<fieldset id="AddAdjust" class="fs_border" style="height:125px;">
+						<legend class="lg_ft">第三步：新增数据调整</legend>
+					    <label>
+					    调整说明：<br/>
+					    1.步骤二中数据调整参数(AdjustFlag)设置为1，此步骤只需对生成的调整单进行审核。<br/>
+					    2.若步骤二中没有生成数据调整单，需手动进行新增数据调整。<br/>
+					    </label>
+					    <a id="BAdustData" href="#" style="width:100px;margin:10px 10px 10px 0px;" class="hisui-linkbutton">数据调整</a>
+					    <a id="BDownLoadAdustdata" href="#" style="width:100px;margin:10px;" class="hisui-linkbutton">模板下载</a>
+					</fieldset>
+					<fieldset id="AddInitReport" class="fs_border" style="height:105px;display:none;">
+		    			<legend class="lg_ft">第三步：初始化月报</legend>
+						<label style="margin-right:5px;">
+							执行方法：<br/>
+							<i>w ##Class(web.DHCEQInit).InitReport(IsCurMonth , EquipTypeIDS , StoreLocDR)</i>
+						</label>
+						<!--br/><br/>
+					    <b style="font-size:12px;">参数说明：</b><br/>
+					    <label style="font-size:12px;">
+					    1.IsCurMonth：0为上月，1为当月，此处当月或上月都是以会计周期为准界定。<br/>
+					    2.EquipTypeIDS：初始化的类组串，其中类组间用","分割,为空初始化全部类组。<br/>
+					    3.StoreLocDR：要初始化的库房及其所管理的科室，为空初始化所有科室。<br/>
+					    </label-->
+					    <br/>
+					    <a id="BAddInitReport" href="#" style="width:100px;margin:10px 10px 10px 0px;" class="hisui-linkbutton">初始化月报</a>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'center',title:'',collapsible:false,headerCls:'panel-header-gray'">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north'" style='height:245px;padding:10px 10px 10px 0px;border:0px;'>
+				<div class="hisui-panel" data-options="title:'注意事项',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">		
+					<div class="tb_td_required note">
+						<p>1、数据导入后初始化之前需配置部分系统参数（990021、990023、990066、990061、901001、901002、990070、990071、990076、990029），具体参照《固定资产服务器程序部署.doc》。</p>
+						<p>2、需按顺序执行每一步骤，任一步骤执行结果有误需解决后方可执行后续步骤。</p>
+						<p>3、执行每一任务时需仔细阅读各参数含义，再次执行同一任务时请认真核对之前的初始化任务执行日志。</p>
+						<p>4、追加导入数据时，若为整个管理科室数据导入，则不需进行新增数据调整，需要做月报初始化；否则需做新增数据调整，不需要月报初始化。</p>
+						<p>5、初始化前后请做好数据备份。</p>
+					</div>
+				</div>
+			</div>
+			<div data-options="region:'center'" style='padding:0px 10px 10px 0px;border-left:0px;'>
+				<div class="hisui-panel" data-options="title:'初始化任务执行日志',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">		
+					<div id="tDHCEQInitTask" class="hisui-datagrid"></div>
+					<!--div style='height:50%;width:100%;'>
+						<div style='float:left;height:100%;width:100%;'>
+							<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="初始化折旧日志">
+								<div id="tDHCEQInitDepre" class="hisui-datagrid"></div>
+							</div>
+						</div>
+					</div>
+					<div style='height:50%;width:100%;'>
+						<div style='float:left;height:100%;width:60%;'>
+							<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="初始化月报日志">
+								<div id="tDHCEQInitReport" class="hisui-datagrid"></div>
+							</div>
+						</div>
+						<div style='float:left;height:100%;width:39%;margin-left:1%'>
+							<div class="hisui-panel" data-options="headerCls:'panel-header-card',fit:true" title="初始化快照日志">
+								<div id="tDHCEQInitSnap" class="hisui-datagrid"></div>
+							</div>
+						</div>
+					</div-->	
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!--折旧初始化弹窗-->
+<div id="DepreWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="padding:0px 0px 10px 0px;overflow:hidden;">
+	<div data-options="fit:true">
+		<div class="eq-table">
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cvDate" for="vDate">折旧至该日期</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-datebox textbox" id="vDate" placeholder="折旧至该日期"><span class="spannote">vDate：初始化折旧到该日期，为导入数据的上个会计期末</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cEquipType" for="EquipType">管理类组</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="EquipType" placeholder="类组ID串"><span class="spannote">EquipTypeIDS：初始化的类组串，其中类组间用","分割,为空初始化全部类组</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cStoreLoc" for="StoreLoc">初始化科室</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="StoreLoc" placeholder="初始化科室"><span class="spannote">StoreLocDR：要初始化的库房及其所管理的科室，为空初始化所有科室数据</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cDepreType" for="DepreType">折旧类型</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="DepreType" placeholder="折旧类型"><span class="spannote">DepreTypeDR：折旧类型，默认为主折旧1</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cKeepDepreFee" for="KeepDepreFee">是否保留累计折旧</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="KeepDepreFee" placeholder="是否保留累计折旧"><span class="spannote">KeepDepreFee：是否保留原累计折旧 。0或空：不保留，1：保留。若医院整理数据中提供累计折旧数则为”1”，否则为””</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cMinEquipID" for="MinEquipID">开始设备ID</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="MinEquipID" placeholder="开始设备ID"><span id="miniddesc" class="spannote">MinEquipID：开始设备ID，不传默认从第一个设备开始初始化</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cMaxEquipID" for="MaxEquipID">结束设备ID</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="MaxEquipID" placeholder="结束设备ID"><span id="maxiddesc" class="spannote">MaxEquipID：结束设备ID，不传默认空</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cDepreMonthNum" for="DepreMonthNum">补提折旧月数</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="DepreMonthNum" placeholder="补提折旧月数"><span id="deprenumdesc" class="spannote">DepreMonthNum：补提折旧月数，不传默认0，所有的折旧都补提传999</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cAdjustFlag" for="AdjustFlag">是否调整数据</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="AdjustFlag" placeholder="是否调整数据"><span id="adjustdesc" class="spannote">AdjustFlag：是否写数据调整记录，记到新增数据调整中</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cInputFlag" for="InputFlag">只初始化导入数据</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="InputFlag" placeholder="只初始化导入数据"><span id="inputdesc" class="spannote">InputFlag：是否只初始化导入的台帐，默认Y，只初始化导入的数据，改成N，就初始化所有的</span></div>
+			</div>
+		</div>
+		<div style="position:relative;left:45%;margin-top:10px;">
+			<a id="BExeInitDepre" href="#" class="hisui-linkbutton">执行</a>
+			<a id="BCloseDepre" href="#" style="margin-left:20px;" class="hisui-linkbutton">关闭</a>
+		</div>
+		<div id="hiddenEncrypt" style="display:hidden">
+			<form name="DHCEQ">
+				<INPUT type="hidden" id="DepreTypeDR">
+				<INPUT type="hidden" id="StoreLocDR">
+			</form>
+		</div>
+	</div>
+</div>
+<!--月报初始化弹窗-->
+<div id="ReportWin" class="hisui-dialog" data-options="closed:'true',modal:true" style="padding:0px 0px 10px 0px;overflow:hidden;">
+	<div data-options="fit:true">
+		<div class="eq-table">
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cIsCurMonth" for="IsCurMonth">初始化月份</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="IsCurMonth" placeholder="初始化月份"><span class="spannote">IsCurMonth：0为上月，1为当月，此处当月或上月都是以会计周期为准界定</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cReportEquipType" for="ReportEquipType">管理类组</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="ReportEquipType" placeholder="设备类组ID串"><span class="spannote">EquipTypeIDS：初始化的类组串，其中类组间用","分割,为空初始化全部类组</span></div>
+			</div>
+			<div class="eq-table-tr">
+				<div class="eq-table-td eq-table-label-first"><label id="cReportStoreLoc" for="ReportStoreLoc">初始化科室</label></div>
+				<div class="eq-table-td"><input type="text" class="hisui-validatebox textbox" id="ReportStoreLoc" placeholder="初始化科室"><span class="spannote">StoreLocDR：要初始化的库房及其所管理的科室，为空初始化所有科室</span></div>
+			</div>
+		</div>
+		<div style="position:relative;left:42%;margin-top:10px;">
+			<a id="BExeInitReport" href="#" class="hisui-linkbutton">执行</a>
+			<a id="BCloseReport" href="#" style="margin-left:20px;" class="hisui-linkbutton">关闭</a>
+		</div>
+	</div>
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="ReportStoreLocDR">
+		</form>
+	</div>
+</div>
+<div id="hiddenEncrypt" style="display:hidden">
+	<form name="DHCEQ">
+		<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+	</form>
+</div>
+<script type="text/javascript" src="../scripts/dhceq/tools/equipimport.js"></script>
+</body>
+</html>

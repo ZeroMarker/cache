@@ -1,0 +1,139 @@
+<!-- 
+ * FileName: bill.einv.einvtopaper.csp
+ * Author: DuWc
+ * Date: 2019-09-25
+ * Function: 电子票据纸质换开--jQuery hisui
+ * Description: 定义主体框架
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+<meta http-equiv="x-ua-compatible" content="edge">
+<TRAK:HEAD></TRAK:HEAD>
+	<JQUERY:EASYUI135></JQUERY:EASYUI135>
+	<style>
+		html,body{ 
+			padding: 0;
+			margin: 0;
+		}
+		div,input{
+			border-radius:5px;
+		}
+   </style>
+<HISUI/>
+	<!--
+	<script type="text/javascript" src="../scripts/einvprint/bs/industry-proxy-app.js"></script>
+	<script type="text/javascript" src="../scripts/industry-proxy-app.js"></script> -->
+	<script type="text/javascript" src="../scripts/bill.einv.einvtopaper.js"></script>
+	<!--script type="text/javascript" src="../scripts/bill.einv.commonprint.js"></script>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js' ></script>
+	<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script-->
+	<!--
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.print.js"></script>
+	<script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js' ></script>
+	 -->
+	
+	<!--script language="Cache" runat="server">
+		do ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //走HIS打印时使用
+	</script-->
+	
+<!-- Put your page Title here -->
+<title>	Cache Server Page </title>
+
+</head>
+
+<body>
+	<div id="pagelayout" class="hisui-layout" data-options="clickExpand:true,fit:true">
+		<div data-options="region:'north',title:'电子票据上传信息查询',split:true,showCollapsedTitle:true,collapsible:false,headerCls:'panel-header-gray'" style="height:200px;">
+				<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top-style:dashed;border-radius:0 0 4px 4px;">
+					<table cellpadding="5px" cellspacing="10px">
+						<tr>
+							<td   class="r-label">开始日期</td>
+							<td>
+								<input id ="stDate" class="hisui-datebox textbox" data-options="">
+							</td>
+							
+							<td   class="r-label">就诊类型</td>
+							<td>
+								<input id ="AdmType" class="hisui-combobox textbox" data-options="">
+							</td>
+							<td   class="r-label">收据类型</td>
+							<td><input id ="IUDPayAdmType" class="hisui-combogrid textbox" data-options=""></td>
+							<td   class="r-label">登记号</td>
+							<td><input id ="rmarkNo" class="hisui-validatebox textbox" data-options=""></td>
+							
+							<td>
+								<!--a href="#" id="ReadCard" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a--> 
+							</td>
+							<td>
+								<a href="#" id="Find" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">查询</a>
+							</td>
+						</tr>
+						<tr>
+							<td   class="r-label">结束日期</td>
+							<td><input id ="edDate" class="hisui-datebox textbox" data-options=""></td>
+								<td   class="r-label">操作员</td>
+								<td>
+									<input id ="operator" class="hisui-combobox textbox" data-options="">
+								</td>
+								
+								<td   class="r-label">票据代码</td>
+								<td>
+									<input id ="IUDBillBatchNo" class="hisui-validatebox textbox" data-options="">
+								</td>
+								<td   class="r-label">当前票据号</td>
+								<td>
+									<input id ="PresentNo" class="hisui-validatebox textbox" data-options="">
+								</td>
+								<td>	</td>
+								<td>
+									<a href="#" id="Clear" class="hisui-linkbutton" data-options="iconCls:'icon-search'">清屏</a>
+								</td>
+						</tr>
+						<tr>
+				
+								<td></td>
+								<td>
+									<a href="#" id="exBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:180px">换开纸质票据</a> 
+								</td>
+								<td></td>
+								<td>
+									<a href="#" id="queryBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:180px">重新换开纸质票据</a>
+								</td>
+								
+								<td></td>
+								<td>
+									<a href="#" id="blankBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:180px">作废空白纸质票据</a>
+								</td>
+								<td></td>
+								<td>
+									<a href="#" id="ReTurnEPaperBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:180px">换开电子票据</a>
+								</td>
+								<td></td>
+								<td>
+									<a href="#" id="clsBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" style="width:120px;display:none;">原号补打</a>
+									<span id="ErrMsgInfo" style='color:red;'>&nbsp;</span>
+								</td>
+						</tr>
+					</table>
+			    </div>	
+		</div>
+		<div data-options="region:'center',border:false,headerCls:'panel-header-gray'">
+			<div class="hisui-panel panel-header-gray" data-options="fit:true,headerCls:'panel-header-gray'" style="border-top-style:dashed;border-radius:0 0 4px 4px;">
+				<table class="hisui-datagrid" id="DataList" ></table>
+			</div>
+	  	</div>
+    </div>
+    
+    <!--XML打印时增加下面代码-->
+    <!--div id="hiddenEncrypt" style="width:0;height:0;">
+		<form name="DHCIPBILL">
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		</form>
+	</div-->
+</body>
+</html>

@@ -1,4 +1,5 @@
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ // d %response.SetCookie("sessionid",%session.SessionId,"","/","",1,0,"None")
  if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
  if ##Class(websys.SessionEvents).SessionExpired() q 1
  quit 1
@@ -7,11 +8,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<SCRIPT SRC="../scripts/SysSound.js" type='text/javascript' charset='utf8'></SCRIPT>
 	<EXTHEALTH:HEAD SoundScenes="HeaderMenu"></EXTHEALTH:HEAD>
+	<link rel="shortcut icon" type="image/png" href="../logo.png">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="../scripts_lib/bootstrap/css/bootstrap.min.css"/>
-	<HISUI/>
+	<HISUI css="epr.frames.css"></HISUI>
 	<ADDINS/>
+	<script type="text/javascript" src="../scripts_lib/bootstrap-3.0.3/dist/js/bootstrap.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts_lib/bootstrap-3.0.3/dist/js/jquery.backgroundcover.js"></script>
+	<script type="text/javascript">/*会冲突hisui-tooltip*/	$.fn.popover.noConflict();	$.fn.tooltip.noConflict();	</script>
 	<server>
 	 Set IEVersion = ##class(ext.util.String).GetIEVersion()
 	 if IEVersion="IE11" {
@@ -20,28 +26,21 @@
 	 	Set IEVersion = "IE8"
 	 }
 	 Set ActiveSkinRowId = $o(^websys.SkinI("ActiveIndex","Y",""))
+	 Set lbgColor = "#47A8FF",rbgColor="#0979DE"
 	 If ActiveSkinRowId>0{	
 		Set skinObj = ##class(websys.Skin).%OpenId(ActiveSkinRowId)
 		Set MenuBGColor = skinObj.MenuBGColor ;017BCE
-		
-		s lbgColorG = $zhex($e(MenuBGColor,2,3))+53 
-		i lbgColorG>255 set lbgColorG=255 
-		i lbgColorG<0 set lbgColorG="00"
-		s lbgColorG = $zhex(lbgColorG) if $l(lbgColorG)=1 set lbgColorG="0"_lbgColorG
-		
-		s lbgColorR = $zhex($e(MenuBGColor,4,5))-17
-		i lbgColorR>255 set lbgColorR=255 
-		i lbgColorR<0 set lbgColorR="00"
-		s lbgColorR = $zhex(lbgColorR) if $l(lbgColorR)=1 set lbgColorR="0"_lbgColorR
-		
-		s lbgColorB = $zhex($e(MenuBGColor,6,7))-15
-		i lbgColorB>255 set lbgColorB=255 
-		i lbgColorB<0 set lbgColorB="00"
-		s lbgColorB = $zhex(lbgColorB) if $l(lbgColorB)=1 set lbgColorB="0"_lbgColorB
-
+		If $zcvt(MenuBGColor,"L")="#ff0000"{
+			Set lbgColor="#EF4444",rbgColor="#7F1D1D"
+		}
+		If $zcvt(MenuBGColor,"L")="#00ff00"{
+			Set lbgColor="#10b981",rbgColor="#064e3b" // green
+			//Set lbgColor="#F59E0B",rbgColor="#78350F" yellow
+		}
+		If $zcvt(MenuBGColor,"L")="#0000ff"{
+			Set lbgColor="#3B82F6",rbgColor="#1E3A8A"
+		}
 		Set LeftMenuBGColor = "#026cb4" //"#"_lbgColorG_lbgColorR_lbgColorB	;366abf
-		//Set ^Wanghc("gbcolor",1,$zhex(lbgColorG),$zhex(lbgColorR),$zhex(lbgColorB))=LeftMenuBGColor
-		;Set RightMenuBGColor = $e(MenuBGColor,1,2)_$e(MenuBGColor,3,4)_$e(MenuBGColor,5,6) 	; 3FA2DF
 		Set MenuSelectedBGColor = skinObj.MenuSelectedBGColor
 		Set skinObj=""
 	 }
@@ -49,9 +48,50 @@
 	 Set iconVolumeOffText = ..Get("关闭消息提示音")
 	 Set OtherMenuTan = ##class(websys.Translation).Get("DIC","其它")
 	 Set NormalTan = ##class(websys.Translation).Get("DIC","正常")
-	 Set MediWayLan =##class(websys.Translation).Get("DIC","医为医疗")
+	 Set MediWayLan = ##class(websys.Translation).Get("DIC","医为医疗")
 	 Set ExitTipLan = ..Get("您确定退出系统")
 	 Set CurYear = $p($zd(+$h,3),"-")
+	 Set MenuHeight = 36
+	 Set IsWideScreen = 0
+	 if $d(%session.Data("LOGON.IsWideScreen"))#2 Set IsWideScreen=%session.Data("LOGON.IsWideScreen")
+	 If IsWideScreen {
+		 Set MenuHeight = 46
+	 }
+	 Set AccessToken = %session.Get("LOGON.AUTH2TOCKEN")
+	 Set CASTypeCode = %session.Get("LOGON.CASTypeCode")
+	 Set MWHOSAuth2Logon = 0
+	 If CASTypeCode="MWHOSAuth2",AccessToken'=""{
+		Set MWHOSAuth2Logon = 1
+	 }
+	 Set CTLodId = %session.Data("LOGON.CTLOCID")
+	Set GroupId = %session.Data("LOGON.GROUPID")
+	Set GroupDesc = $p(^SSU("SSGRP",GroupId),"^",1)
+	Set PostId = 0
+	If $d(%session.Data("LOGON.ACCPOSTID"))#2 Set PostId = %session.Data("LOGON.ACCPOSTID")
+	Set PostDesc = "",PostDictCode="",PostDictDesc=""
+	if PostId>0,$d(^CT.BDP.CT.HOSPostD(PostId))#2 {
+		Set PostDesc = $Lg(^CT.BDP.CT.HOSPostD(PostId),3)
+		Set PostDictId = $Lg(^CT.BDP.CT.HOSPostD(PostId),5)
+		If PostDictId>0{
+			Set PostDictCode = $lg(^CT.BDP.CT.HOSPostDictD(PostDictId),2)
+			Set PostDictDesc = $lg(^CT.BDP.CT.HOSPostDictD(PostDictId),3)
+		}
+	}
+	Set GroupSetId = ##class(epr.GroupSettings).GetIdFromGroupId(GroupId)
+	Set GroupMutilTabMenu = $lg(^ooGroupSettingsD(GroupSetId),116)
+	Set GroupShowPanelMenu = $lg(^ooGroupSettingsD(GroupSetId),117)
+	Set MenuCode=$G(%request.Data("MenuCode",1),"")
+	Set MenuIdByCode = ##class(websys.Menu).GetIdFromCodeOrDescription(MenuCode)
+	// MenuCode=DHC.IP.Doctor.OrdExec
+	// DHC.Consult.Manager.IPDoc  dhcem.consultmain.csp
+	// CIS.AN.OPM cis.an.operapplication.csp
+	Set ViewCode = $g(%request.Data("ViewCode",1))
+	If (ViewCode=""){
+		Set menuJson = ##class(websys.Menu).Json(MenuIdByCode,GroupId)
+	}else{
+		Set menuJson = "[]"
+		Set MenuHeight = 0 /*视图方式时不显示头菜单*/
+	}
 	</server>
 <style>
 /*#0063A7*/
@@ -61,29 +101,46 @@ body {
   font-size: 16px;
   line-height: 1.7;
   color: #333;
-  background-color: #017BCE;
+  background-color: transparent; /*#017BCE;*/
   padding:0; /*2018-7-6*/
+}
+.layout-panel-center{
+	background-color: transparent; /*#017BCE;*/
 }
 .navbarhead a {
   color: #ffffff;
 }
 .centerPanel {
   overflow: hidden;
-  background-color: #ffffff;
+  /*background-color: #ffffff;*/
+  background-color: transparent;
   position: absolute;
   width:100%;
-  height:50px;
+  height:600px;
+}
+.eastPanel-wanghc-layout{
+    position: absolute;
+    background-color:#ffffff;
+    height:100%;
+    top: 0px;
+    right: 0px;
 }
 .navbar-fixed-top {
   border-width: 0px;
 }
 .navbarhead .navbar {
-  min-height: 35px;
+  min-height: #(MenuHeight)#px;
   margin-bottom: 0px;
 }
 .navbarhead .navbar-default {
+  /*color: #fff;
+  background-color: #(MenuBGColor)#; 
+  */
   color: #fff;
-  background-color: #(MenuBGColor)#; /*#017BCE; 背景色*/
+  background: linear-gradient(270deg, #(lbgColor)# 0%, #(rbgColor)# 100%);
+  opacity: 1;
+  border-radius: 0px;
+  z-index:8999; /*9003; hisui-window从9000开始,9003会覆盖hisui-window*/ 
 }
 .navbarhead .navbar-default a.navbar-brand {
   color: #ffffff;
@@ -106,8 +163,8 @@ body {
 .navbarhead .navbar-default .navbar-nav > li > a {
   color: #ffffff;
   padding: 10px;
-  line-height: 30px;
-  font-size: 16px;
+  line-height: #(MenuHeight-20)#px;
+  font-size: 14px;
 }
 
 .navbarhead .navbar-default .navbar-inner .navbar-nav > .clickactive > a {
@@ -116,12 +173,15 @@ body {
   /*margin-top: 2px;
   padding-top: 8px;*/
 }
-.navbarhead .navbar-default .navbar-container .navbar-buttons .navbar-nav {
+/*.navbarhead .navbar-default .navbar-container .navbar-buttons .navbar-nav {
   margin-right: 5px;
-}
+}*/
 .navbarhead .navbar-default .navbar-container .navbar-buttons .navbar-nav li:first > a {
   padding-left: 15px;
   padding-right: 15px;
+}
+.badge{
+	z-index:90;
 }
 .navbarhead .navbar-default .navbar-container .navbar-buttons .nullMessage {
   padding-bottom: 15px;
@@ -203,6 +263,10 @@ body {
   left: auto;
   right:98%;
 }
+.pull-right .navbar-nav > li.dhc-menu > .dropdown-menu {
+  right:0;
+  left: auto;
+}
 .dropdown-submenu:hover > a:after {
   border-left-color: #ffffff;
 }
@@ -239,21 +303,60 @@ body {
 	position:relative;
 	padding-left:25px;
 }
+.aboutMiddle{
+	width: 480px;
+	height: 374px;
+	border: 0px;
+	border-style: solid;
+	border-color: #ffffff;
+	border-top: 1px;
+	margin: 0 auto;
+}
+.aboutMiddle-left-mid{
+	float: left;
+	width: 162px;
+	height: 374px;
+	padding: 110px 40px 179px 40px;
+	background-image: url("../skin/default/images/websys/aboutlogo.png");
+	background-repeat:no-repeat;
+	background-position: 40px 110px;
+}
 .aboutbody ul>li{
-	margin-top:3px;
+	margin-top:5px;
+}
+.aboutbody{
+	float: left;
+	width: 295px;
+	height: 374px;
+	background-image: url("../skin/default/images/websys/logo.png");
+	background-repeat:no-repeat;
+	background-position: 0px 29px;
+}
+.aboutul{
+	margin-top: 105px;
+	font-size:8px
+	font-family: 'MicrosoftYaHei';
+}
+.aboutul span{
+	word-break: break-all;
 }
 .aboutfooter{
-	background-color:#F7F7F7;
-	width:458px;
+	background-color:#f7f7f7;
+	width:493px;
 	height:35px;
-	position:absolute;
 	left: 0px;
 	font-size:12px;
-	color:#8a8aea; /*#B5B5B5;*/
-	padding-left:100px;
-	padding-top:5px;
+	margin-top:7px;
+	color:#999999; /*#B5B5B5;*/
+	position: absolute;
+	padding:8px 0px 0px 150px;
 	border-bottom-left-radius: 5px;
 	border-bottom-right-radius: 5px;
+	bottom: 0px;
+	border-top:1px solid #cccccc;
+}
+.ca-aboutbody li{
+	padding-top:6px;
 }
 .panel-body{
 	padding:0px;
@@ -271,12 +374,12 @@ body {
 	opacity:0.8;
 }
 .navbarhead .navbar-default .navbar-nav > LI {
-	height:50px;
+	height:#(MenuHeight)#px;
 }
 .navbarhead .navbar-default .navbar-nav > LI > A.rightMainMenu{
 	/*box-sizing:border-box;*/
 	padding-top:12px;
-	height:50px;
+	height:#(MenuHeight)#px;
 }
 .navbar-container a:focus{
 	outline:none;
@@ -310,12 +413,12 @@ body {
 .navbarhead .navbar-default .navbar-nav > .open > a,
 /*.navbarhead .navbar-default .navbar-nav > .open > a:focus,*/
 .navbarhead .navbar-default .navbar-nav > .open > a:hover {
-  color: #000000;
-  background-color: #ffffff;
+  color: #ffffff;
+  background-color:  #(MenuSelectedBGColor)#;
 }
 /*下拉菜单选中色*/
  /*.navbarhead .dropdown-menu > li > a:focus*/
-.navbarhead .dropdown-menu > li > a:hover{
+.navbarhead .dropdown-menu > li > a:hover,.navbarhead .dropdown-menu > li.selected a{
 	color: #ffffff; /*#000000;*/
     background-color: #20BB44 ; /*#ffffff;*/
 }
@@ -341,14 +444,14 @@ body {
 }
 .dhc-fa-icon-large{
 	background-repeat:no-repeat;
-	display:block;
-	width:24px;
-	height:24px;
+	display:inline-block;
+	width:16px;
+	height:16px;
 	/*position: absolute;*/
 }
 .dhc-fa-icon-small{
 	background-repeat:no-repeat;
-	display:block;
+	display:inline-block;
 	width:14px;
 	height:14px;
     position: absolute;
@@ -358,11 +461,94 @@ body {
 .icon-user-md{
 	position: absolute;
 }
+a.dhc-submenu{
+	position: relative;
+}
+.dhc-menucount{
+    top: 0px;
+    left: 0px;
+    position: absolute;
+    background-color: red;
+    padding: 2px 3px;
+    border-radius: 10px;
+    line-height: 0.8;
+    min-width: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 10px;
+}
+span.dhc-menustar {
+    height: 8px;
+    background: red;
+    vertical-align: top;
+    width: 8px;
+    display: inline-block;
+    border-radius: 4px;
+}
+#SystemHeaderMenuHelp .dhc-menu{
+	position: relative;
+}
+/*.dropdown-submenu:hover > a:after {
+    border-left-color: #20BB44;
+}*/
+#SystemHeaderMenuHelp .dhc-menu:hover .dropdown-menu{
+	display:block;
+	left:auto;
+	right:98%;
+	top:-8px;
+	
+}
 </style>
-
+<csp:if condition=IsWideScreen>
+	<style type="text/css">
+	.navbarhead .navbar-default .navbar-nav > LI > A.rightMainMenu-user{
+		padding-top:16px;
+	}
+	</style>
+</csp:if>
+<csp:if condition=IsWideScreen>
+	<style type="text/css">
+	.lockScreen .in_img.img1{
+		background:url(../images/websys/lockScreen_bg_wide.png)  no-repeat!important;
+		width: 100%;
+	    	height: 100%;
+	}
+	.lockScreen .in_img.img2{
+		background:url(../images/websys/lockScreen_bg2_wide.png)  no-repeat!important;
+		width: 100%;
+	    height: 100%;
+	}
+	.lockScreen .in_img.img3{
+		background:url(../images/websys/lockScreen_bg3_wide.png)  no-repeat!important;
+		width: 100%;
+	    height: 100%;
+	}
+	</style>
+<csp:else>
+	<style type="text/css">
+	.lockScreen .in_img.img1{
+		background:url(../images/websys/lockScreen_bg.png)  no-repeat!important;
+		width: 100%;
+	    	height: 100%;
+	}
+	.lockScreen .in_img.img2{
+		background:url(../images/websys/lockScreen_bg2.png)  no-repeat!important;
+		width: 100%;
+	    height: 100%;
+	}
+	.lockScreen .in_img.img3{
+		background:url(../images/websys/lockScreen_bg3.png)  no-repeat!important;
+		width: 100%;
+	    height: 100%;
+	}
+	</style>
+</csp:if>
 <style type="text/css">
-.lockScreen .bg{
-	background:url(../images/websys/lockScreen_bg.png) no-repeat!important;
+.lockScreen .carousel-inner ,.lockScreen .carousel-inner .item{
 	width: 100%;
     height: 100%;
 }
@@ -464,16 +650,25 @@ body {
 	font-size: 26px;
 	padding-left: 20px;
 }
+/*../skin/default/images/logon/ca_sound_mphone.png*/
+.icon-syssound{
+    background: url('../images/fa/fa-record-disable.png');
+    background-size: 16px 16px;
+ }
+ .record-open>.icon-syssound { 
+    background: url('../images/fa/fa-record-enable.gif');
+    background-size: 16px 16px;
+ }
 </style>
 <server>
 	w "<style>"
-	for cssname = "th-large","envelope","user-md"{
+	for cssname = "th-large","envelope","user-md","notice","secondscreen","singlescreen","findwebsysmenu","dts"{
 		w ".dhc-menu.open .icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-000.png') ;}",!
-		w ".icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-fff.png') ;}",!
+		w ".icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-fff.png') ;background-size: 16px 16px;}",!
 	}
 	for cssname="question-sign","volume-off","volume-up","question-sign","cog","key","exchange","reply","off"{
-		w "a.dhc-submenu:hover .icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-fff.png') ;}",!
-		w ".icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-000.png') ;}",!
+		w "a.dhc-submenu:hover .icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-fff.png') ;background-size: 16px 16px;}",!
+		w ".icon-"_cssname_"{background:url('../images/fa/fa-"_cssname_"-000.png') ;background-size: 16px 16px;}",!
 	}
 	w "</style>"
 	
@@ -496,7 +691,7 @@ body {
 }
 .box .cont {
     position: relative;
-    padding: 20px 0 0px 24px;
+    padding: 15px 0 0px 20px;
 }
 .box ul.clearfix {
     display: block;
@@ -507,7 +702,7 @@ body {
     padding-right: 2px;
     padding-bottom: 10px;
 }
-.ltitlebox{text-align:right;width:15%;position:relative;float:left;padding-top:4px;}
+.ltitlebox{text-align:right;width:15%;position:relative;float:left;/*padding-top:4px;*/}
 .sublist>li h3.ltitle {
     background-color: #FFFFFF;
     margin-right: 10px;
@@ -524,7 +719,7 @@ body {
     padding-left: 10px;
     margin-top: 0;
     width:85%;
-    border-left:1px solid #666;
+    border-left:1px solid #CCCCCC;
     position:relative;
     float:left;
 }
@@ -534,8 +729,8 @@ body {
     float: left;
 }
 .sublist>li div.lbody a:hover {
-    background-color: #20BB44; /*#ededed;*/
-    color:#fff;
+    background-color: #DCDCDC;
+    color: #000000;
 }
 .sublist>li div.lbody a {
     width:100%;
@@ -562,6 +757,30 @@ body {
 }
 .box .dropdown-submenu > a:after{
 	margin-right: 0px;
+}
+a:focus{
+	color:#FFFFFF;  /*hisui-alert提示按钮字体颜色被bootstrap覆盖了，重写回来*/
+}
+.panel-tool a:focus{  /*由于前面定义了a:focus颜色，导致了hisui panel工具按钮当按住拖拽一下后 按钮看不到了*/
+  color: #7E7E7E;	
+}
+
+.sysMenuFindTxt{
+	height: 35px;
+    margin: 1px 0;
+    background: #ffffff;
+    border: 1px solid #0664ba;
+    padding-left: 5px;
+    color: #000000;
+    float:left;
+    width:140px;
+}
+.sysMenuFindTxt:hover,.sysMenuFindTxt:focus{
+    background: #ffffff;
+    color: #000000;
+}
+.sysMenuFindCont{
+	width:176px;
 }
 </style>
 
@@ -601,16 +820,13 @@ body {
 </style>	
 </csp:if>
 </head>
-<body>
-
+<body class='hisui-layout' style="background-color: transparent;">
+<div data-options='region:"center",title:"",split:true' style="background-color: transparent;border-color:transparent; border-radius:0px;"> 
+ <csp:method name=GetTrans arguments="CN,PN,Key">
+ Quit ##class(websys.TranslationEPR).GetTrans(CN,PN,"",Key)
+</csp:method>
 <SERVER>
-	Set CTLodId = %session.Data("LOGON.CTLOCID")
-	Set GroupId = %session.Data("LOGON.GROUPID")
-	Set GroupDesc = $p(^SSU("SSGRP",GroupId),"^",1)
-	Set GroupSetId = ##class(epr.GroupSettings).GetIdFromGroupId(GroupId)
-	Set GroupMutilTabMenu = $lg(^ooGroupSettingsD(GroupSetId),116)
-	Set GroupShowPanelMenu = $lg(^ooGroupSettingsD(GroupSetId),117)
-	set menuJson = ##class(websys.Menu).Json("",GroupId)
+	
 	Set HelpMenuId = ##class(websys.Menu).GetIdFromCodeOrDescription("System.HeaderMenu.Help")
 	Set HeaderMenuDesc = ##class(websys.Translation).Get("DIC","帮助文档")
 	Set HeaderMenuHelpJson = "[]"
@@ -627,7 +843,7 @@ body {
 		if EnableExitAlert="" Set EnableExitAlert=0
 	}
 	/*工作站 wanghc 2017-03-08*/
-	Set WorkStationDesc = ##class(websys.DHCWorkstationLnkGrp).GetWorkstation(GroupId)
+	Set WorkStationDesc = ##class(websys.DHCWorkstationLnkGrp).GetWorkstation(GroupId, CTLodId)
 	If (WorkStationDesc=""){
 		Set WorkStationDesc = MediWayLan
 	}
@@ -646,7 +862,7 @@ body {
 	}
 	Set EncryptCmpCode = ##class(websys.License).EncryptCmpCode()
 	; 消息配置
-	Set messageShowFlag = 1,MsgSearchInterval=3,iconVolumeCls="",iconVolumeText="",EnableMsgAudio="false"
+	Set messageShowFlag = 1,MsgSearchInterval=3,iconVolumeCls="",iconVolumeText="",EnableMsgAudio="false",MsgShowByCatgory=""
 	//If (##class(websys.Conversions).IsValidMethodName("web.DHCBL.Authorize.CTLocAut","IsAutCTLoc")){
 	//	if '##class(web.DHCBL.Authorize.CTLocAut).IsAutCTLoc(CTLodId) {
 	If (##class(websys.Conversions).IsValidMethodName("websys.DHCMessageConfig","MsgBtnIsDisabled")){
@@ -666,6 +882,9 @@ body {
 		}else{
 			Set iconVolumeCls = "icon-volume-up", iconVolumeText=iconVolumeOffText, EnableMsgAudio="true"
 		}
+		If (##class(websys.Conversions).IsValidMethodName("websys.DHCMessageConfig","GetShowByCatgory")){
+			s MsgShowByCatgory=##class(websys.DHCMessageConfig).GetShowByCatgory()	
+		}
 	}
 	n LogonFromVB
 	s (LogonFromVB)=""
@@ -676,14 +895,71 @@ body {
 	s securitymsg=""
 	i $d(%request.Data("RELOGON",1))'="" d
 	. s securitymsg=##Class(web.SSUser).GetSystemSecurityMessage(%session.Get("LOGON.USERID"))
-</SERVER>
-
-<server>
 	;i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s ^zTRAK("cjb","epr.menu.csp")=$g(%request.Data("LogonFromVB",1))
-	n str,LogonPatientID,LogonEpisodeID
-	s (str,LogonPatientID,LogonEpisodeID)=""
+	n str,LogonPatientID,LogonEpisodeID,LogonMradm,LogonAnaesthesiaID
+	s (str,LogonPatientID,LogonEpisodeID,LogonMradm,LogonAnaesthesiaID)=""
 	i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s str=$p($g(%request.Data("LogonFromVB",1)),"^",2)
 	i str'="" s LogonPatientID=$p(str,":",3),LogonEpisodeID=$p(str,":",4)
+	/*处理参数,RegNo中取ID,如果传RegNo与AdmTimes时,循环算出EpisodeID*/
+	Set PatientNo = $g(%request.Data("RegNo",1))
+	if (PatientNo'="") Set LogonPatientID=$O(^PAPERi("PAPMI_PatNo",PatientNo,""))
+	If $G(%request.Data("EpisodeID",1))'="" Set LogonPatientID = $G(%request.Data("EpisodeID",1))
+	Set LogonAnaesthesiaID = $g(%request.Data("AnaesthesiaID",1))
+	if (""'=$G(%request.Data("EpisodeID",1))) {
+		Set LogonEpisodeID = $G(%request.Data("EpisodeID",1))
+		Set LogonPatientID = $P($G(^PAADM(LogonEpisodeID)),"^",1)
+		Set LogonMradm = $P($G(^PAADM(LogonEpisodeID)),"^",61)
+	}
+	If LogonEpisodeID="",LogonPatientID'=""{
+		Set LogonEpisodeID=$O(^PAPERdr(LogonPatientID,"ADM","I",""),-1)
+		If LogonEpisodeID="" Set LogonEpisodeID=$O(^PAPERdr(LogonPatientID,"ADM","O",""),-1)
+		If LogonEpisodeID="" Set LogonEpisodeID=$O(^PAPERdr(LogonPatientID,"ADM","E",""),-1)
+		if (PatientNo'=""){
+			If LogonPatientID'="",$g(%request.Data("AdmTimes",1))'=""{
+				Set PAAdm="",AdmTimes = $g(%request.Data("AdmTimes",1))
+				Set ind=0
+				For  Set PAAdm=$O(^PAPERdr(LogonPatientID,"ADM","I",PAAdm)) Quit:(PAAdm="")&&(ind=AdmTimes)  Do
+				.Set ind=ind+1
+				.Quit:ind=AdmTimes
+				Set LogonEpisodeID = PAAdm
+			}
+		}
+	}
+	If LogonEpisodeID'="" Set %request.Data("EpisodeID",1)=LogonEpisodeID
+	If LogonPatientID'="" Set %request.Data("PatientID",1)=LogonPatientID
+	If LogonMradm'="" Set %request.Data("mradm",1) = LogonMradm
+	// 不再从登录时传req过来, 超时后logonrefesh.csp时没办法传req。 20211208 wanghc
+	S IsSideMenu = "false"  
+	if ##Class(epr.GroupSettings).GetStartPage($g(%session.Data("LOGON.GROUPID")))=""{
+		S IsSideMenu = "true"
+	}
+	S %request.Data("IsSideMenu",1)=IsSideMenu
+	/*处理参数*/	
+	Set Url = $g(%request.Data("TDIRECTPAGE",1))
+	If (Url=""){Set Url = "epr.default.csp"}
+	if (Url'=""){
+		if Url'["?" Set Url = Url_"?a=a"
+		Set key = "" For {
+			Set key = $O(%request.Data(key))
+			Quit:key=""
+			Continue:key="TDIRECTPAGE"
+			Continue:key="CacheNoRedirect"
+			Continue:key="CachePassword"
+			Continue:key="CacheUserName"
+			Continue:key="LayoutManager"
+			Continue:key="PASSWORD"
+			Continue:key="CSPRQN" //稱"1m_$c(m3,01m)_m"
+			Continue:"^DEPARTMENT^Hospital^SSUSERGROUPDESC^"[("^"_key_"^")
+			Continue:"^TPSID^ViewCode^"[("^"_key_"^")
+			Set Url = Url_"&"_key_"="_$G(%request.Data(key,1))
+		}
+	}
+	If (ViewCode=""),(MenuIdByCode>0){Set Url="" /*直接到某菜单组时,不走工作流Url,让js点击第一个头菜单*/}
+	Set HosAssemblyType = $g(%request.Data("assemblyType",1))
+	
+	Set ReqDisabledMutilScreen = $g(%request.Data("DisabledMutilScreen",1))
+	If HosAssemblyType="embedded" Set ReqDisabledMutilScreen=1 /*嵌入组件禁用多屏*/
+	//	Set Url = "epr.default.csp?EpisodeID="_LogonEpisodeID_"&PatientID="_LogonPatientID_"&MWToken="_($G(%request.Data("MWToken",1)))_"&mradm="_LogonMradm_"&IsSideMenu="_$g(%request.Data("IsSideMenu",1),"false")
 	n comp
 	s comp=##Class(websys.Component).OpenName("epr.Menu.Messages")
 	i comp d comp.LoadTrans(),comp.%Close()
@@ -691,13 +967,18 @@ body {
 	; Dump out all the translated captions
 	s code=""  f  s code=$o(t(code))  q:code=""  d
 	. w "t['"_code_"']="_..QuoteJS($p($g(t(code),code),"^",1))_";",$c(13,10)
-	w "</SCRIPT>",$c(13,10),!
+	if ##class(websys.Conversions).IsValidMethodName("CF.BSP.SYS.BL.OpenEvent","GetOpenEvent"){
+	 	Write "var OpenEventJson = "
+	 	d ##class(CF.BSP.SYS.BL.OpenEvent).GetOpenEvent()
+ 	}
+ 	Set CreateChatForMultiDevice = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","CreateChatForMultiDevice")
+ 	w !,"var EnableMultiScreenDisplay="""_##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnableMultiScreenDisplay")_""";"
+ 	w !,"var CreateChatForMultiDevice="""_CreateChatForMultiDevice_""";"
+ 	w "</SCRIPT>",$c(13,10),!
 </server>
 
 
 <server>
- 
- S IsSideMenu = $g(%request.Data("IsSideMenu",1),"false")
  s CfgLayoutNameSpace = ##class(websys.Configuration).GetLayoutManager() 	;##Class(web.DHCTHREEEX).GetServerNameSpace()
  s ServerNameSpace = "cn_iptcp:"_##class(ext.util.String).ServerIP()_"["_##class(ext.util.String).GetConnPort()_"]:DHC-APP"
  
@@ -706,12 +987,16 @@ body {
  	S CacheDetails = ##class(websys.DHCCache).CacheDetails(%session.Data("LOGON.GROUPID"),%session.Data("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))
  }
  s Loc=%session.Data("LOGON.CTLOCID")
+ s LocCode =$P($G(^CTLOC(Loc)),"^",1)
  s LocDesc=$P($G(^CTLOC(Loc)),"^",2)
- i $P(LocDesc,"-",2)'="" s LocDesc= $P(LocDesc,"-",2)
+ Set SplitDepDescDash = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","SplitDepDescDash") 
+ If (SplitDepDescDash="")||(SplitDepDescDash=1){
+	i $P(LocDesc,"-",2)'="" s LocDesc= $P(LocDesc,"-",2)
+ }
  s UserId=%session.Data("LOGON.USERID")
- s Str=##Class(web.DHCLCNUREXCUTE).GetUserWardId(UserId,Loc)
- s WardStr=$P(Str,"|")
- s WardId=$P(WardStr,"^",2)
+ s HospId=%session.Data("LOGON.HOSPID")
+ s HospCode = $P(^CT("HOSP",HospId),"^",1)
+ s WardId=$O(^PAWARD(0,"WARD_LocationDR",Loc,""),-1) //$P(WardStr,"^",2)
 
  Set LockSrcTimeout=0 // 不启用锁屏
  if ##class(%Dictionary.PropertyDefinition).%ExistsId("websys.Configuration||LockScrTimeOut"){
@@ -722,6 +1007,31 @@ body {
 	 	if eprGrpObj.LockScrTimeOut>0 Set LockSrcTimeout = eprGrpObj.LockScrTimeOut
 	 }
  }
+ Set MenuHoverHiddenEPREditorNum = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","MenuHoverHiddenEPREditorNum")
+ Set CALogonTypeList = ##class(websys.CAInterface).GetLogonTypeList(Loc,"")
+ Set CALogonDefaultType = $p($P(CALogonTypeList,"^",$p(CALogonTypeList,"$",2)),"|")
+ Set LogonType=""
+ if $d(%session.Data("CALogonType"),LogonType){
+	// 20221028 使用ca登录了非CA科室后,再切换到CA科室时,需要资源校验证书是否正常
+	if (LogonType'="") d ##class(websys.CAInterface).IsAndLoadJs(LogonType,Loc,"","","",%session.Data("LOGON.HOSPID"))
+ }
+ set cdssType=""
+ s ctpcprowid=$P(^SSU("SSUSR",UserId),"^",14),CTCPTName="",CTCPTInternalType=""
+ if (ctpcprowid'=""),$d(^CTPCP(ctpcprowid,1)) {
+	 s CTPCPCarPrvTpDR = $p(^CTPCP(ctpcprowid,1),"^",4)
+	 if CTPCPCarPrvTpDR'="" {
+		 s CTCPTInternalType = $p(^CT("CPT",CTPCPCarPrvTpDR),"^",4)
+		 S CTCPTName = $p(^CT("CPT",CTPCPCarPrvTpDR),"^",1)
+	 }
+ }
+Set EnablePostLogon = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","EnablePostLogon")
+Set rightMainMenuTitle = ..GetTrans("User.SSGroup","SSGRPDesc",GroupDesc)_"/"_..GetTrans("User.CTLoc","CTLOCDesc",LocDesc)
+if EnablePostLogon { 
+	Set rightMainMenuTitle = ..GetTrans("CT.BDP.CT.HOSPost","POSTDesc",$G(PostDesc))_"（"_rightMainMenuTitle_"）"
+}
+
+ Set hideBrand = $g(%request.Data("hideBrand",1))
+ Set showHosTitle=$g(%request.Data("showTitle",1))
 </server>
 <SCRIPT Language="Javascript">
  /*
@@ -729,12 +1039,13 @@ body {
  ServerNameSpace是web对应后台的Cache库的连接串,
  CfgLayoutNameSpace是[配置管理界面]配置的Cache连接串
  */
- var ServerNameSpace = "#(ServerNameSpace)#";
+ ;var ServerNameSpace = "#(ServerNameSpace)#";
  var CfgLayoutNameSpace = "#(CfgLayoutNameSpace)#";
- /*缓存明细*/
+ /*缓存明细*/;
  var gCacheDetails = #(CacheDetails)#;  
  var WardId="#(WardId)#";
  var LocDesc="#(LocDesc)#";
+ var LocCode = "#(LocCode)#";
  var LicVer="#(LicVer)#"
  var LicExpDate="#(LicExpDate)#"
  var LicVerSummary="#(LicVerSummary)#"
@@ -746,6 +1057,7 @@ body {
  var EncryptCmpCode="#(EncryptCmpCode)#";
  var IsSideMenu = #(IsSideMenu)#;
  var popsw = "#(##class(dhc.dao.SSUser).Encode())#";
+ var isValidUserEncypt = "#(##class(websys.Page).Encrypt($lb("web.SSUser.IsValidUserMd5Password")))#";
  var lockScreenOpt = {"encodeKey":"#(%session.SessionId)#","popsw":popsw,"timeout":#(LockSrcTimeout*60)#,"username":"#(%session.Data("LOGON.USERNAME"))#"};
  var groupMutilTabMenu = "#(GroupMutilTabMenu)#";
  var menuJson = {records:#(menuJson)#};
@@ -755,6 +1067,23 @@ body {
  var iconVolumeOnText = "#(iconVolumeOnText)#";
  var iconVolumeOffText = "#(iconVolumeOffText)#";
  var GroupShowPanelMenu = '#(GroupShowPanelMenu)#';
+ var MenuHoverHiddenEPREditorNum = "#(MenuHoverHiddenEPREditorNum)#";
+ var CALogonDefaultType = "#(CALogonDefaultType)#"
+ var LastCALogonType = "#(LogonType)#";
+ session["LOGON.CTLOCCODE"] = "#(LocCode)#";
+ session["LOGON.CTLOCDESC"] = "#(LocDesc)#";
+ session["LOGON.CTCPTINType"] = "#(CTCPTInternalType)#";
+ var showHosTitle = "#(showHosTitle)#";
+ var ViewCode = "#(ViewCode)#";
+ var menuHeight = "#(MenuHeight)#";
+ var LogonEpisodeID = "#(LogonEpisodeID)#";
+ var LogonPatientID  = "#(LogonPatientID)#";
+ var LogonMradm = "#(LogonMradm)#";
+ var LogonAnaesthesiaID = "#(LogonAnaesthesiaID)#";
+ var HosAssemblyType = "#(HosAssemblyType)#";
+ var ReqDisabledMutilScreen = "#(ReqDisabledMutilScreen)#";
+ var HomePageUrl = "#($zcvt(Url,"O","JS"))#";
+ var PostDictCode = "#(PostDictCode)#";
 </SCRIPT>
 <SCRIPT SRC="../scripts/epr.menu.js"></SCRIPT>
 
@@ -785,17 +1114,29 @@ window.onunload=unlockonunload;                        //add by wuqk 2011-12-31
  // ab 19.12.07 65893 - check 'keepopen' flag rather than mouse cursor position
 // keepopen flag is set on click of a 'home' menu
 function unlockonunload() {
+	if (navigator.sendBeacon) {
+		navigator.sendBeacon("websys.closesession.csp?MWToken=#($G(%request.Data("MWToken",1)))#");
+    }
 	websys_onunload(); //关闭界面时,打开的界面也关闭
+	if ('undefined'!=typeof CreateChatForMultiDevice && CreateChatForMultiDevice==1){
+		if (HosAssemblyType!="embedded") websys_leaveChatClient();
+	}
 	if (!keepopen) {
 		   try {unloadHandler();} catch(e) {}
+		   window.logoutWebsysCDSS&&logoutWebsysCDSS();
 		   //确定退出后,把before事件置空,IE11兼容到IE5后,加载新界面会再次触发before事件
 		   window.onbeforeunload=function(){}
+		   if(window.SysSoundInstc){
+				window.SysSoundInstc.stopRecording();
+			}
 		   if (websys_isIE){
 			   window.location.href="websys.closesession.csp";
 		   }else{
+				// window.open("websys.closesession.csp","TRAK_hidden"); //单步调试时可以关闭锁,但直接运行时有时不行
 		   		// 处理chrome系统浏览器上不运行closese...csp问题
-		   		window.open("websys.closesession.csp","_blank","top=1200,left=0,width=20,height=20");
+		   		//window.open("websys.closesession.csp","_blank","top=1200,left=0,width=20,height=20");
 		   }
+		   
 	}
 	return true;
 }
@@ -950,8 +1291,8 @@ function SetKeepOpen(url,newwin) {
 <FORM name="fEPRMENU">
 	<!--TN:23-Apr-2002:added field MultipleIDs for multiple selected IDs for generic looping workflows-->
 	<INPUT TYPE="hidden" name="PatientID" id="PatientID" value="#($g(%request.Data("PatientID",1)))#">
-	<INPUT TYPE="hidden" name="EpisodeID" value="#($g(%request.Data("EpisodeID",1)))#">
-	<INPUT TYPE="hidden" name="mradm" value="#($g(%request.Data("mradm",1)))#">
+	<INPUT TYPE="hidden" name="EpisodeID" id="EpisodeID" value="#($g(%request.Data("EpisodeID",1)))#">
+	<INPUT TYPE="hidden" name="mradm" id="mradm" value="#($g(%request.Data("mradm",1)))#">
 	<INPUT TYPE="hidden" name="Decease" value="">
 	<INPUT TYPE="hidden" name="MultipleIDs" value="">
 	<!-- WAITINGLIST -->
@@ -971,7 +1312,7 @@ function SetKeepOpen(url,newwin) {
 	<INPUT TYPE="hidden" name="FollowUpAppt" value="">
 	<INPUT TYPE="hidden" name="apptID" value="">
 	<INPUT TYPE="hidden" name="OperRoomID" value="">
-	<INPUT TYPE="hidden" name="AnaesthesiaID" value=""> <!--OR_Anaesthesia用于在医嘱表加上麻醉表指针//-->
+	<INPUT TYPE="hidden" id="AnaesthesiaID" name="AnaesthesiaID"  value="#($g(%request.Data("AnaesthesiaID",1)))#"> <!--OR_Anaesthesia用于在医嘱表加上麻醉表指针//-->
 	<!-- 现在需要再加一个手术表OR_Anaest_Operation（麻醉表的子表）的ID，也在医嘱表中存,需要通过顶部菜单传手术表ID //-->
 	<INPUT TYPE="hidden" name="AnaestOperationID" value=""> 
 	
@@ -994,24 +1335,27 @@ function SetKeepOpen(url,newwin) {
 	<!--会计核算成品-帐套-->
 	<INPUT TYPE="hidden" name="AcctBookID" id="AcctBookID" value="">
 	<INPUT TYPE="hidden" name="AcctBookName" id="AcctBookName" value="">
-	<INPUT TYPE="hidden" id="checkNewMessage" value='<%=##Class(%CSP.Page).Encrypt($LB("web.SSMessageRecipient.countNewMessages"))%>'>
+	<INPUT TYPE="hidden" id="checkNewMessage" value='<%=##class(websys.Page).Encrypt($lb("web.SSMessageRecipient.countNewMessages"))%>'>
 	<!-- 业务上正在做某事,菜单不能切换   DoingSthName为提示信息,为空表示可以切换-->
 	<input Type="hidden" id="DoingSth" name="DoingSth" value="">
 	<!-- 医技申请单号 PACSApplyNo -->
 	<INPUT TYPE="hidden" name="PACSApplyNo" id="PACSApplyNo" value="">
 </FORM>
 <div class="navbarhead">
-	<nav class="navbar navbar-default navbar-fixed-top" id="menuPanel" style="height:50px;">
+	<!---navbar-fixed-top wanghclayout-->
+	<nav class="navbar navbar-default" id="menuPanel" style="height:#(MenuHeight)#px;border:0px;">
+		<csp:if condition=(ViewCode="")> <!--隐藏菜单导航条-->
 		<div class="navbar-container">
-			<div class="navbar-header pull-left" style="background-color:#(LeftMenuBGColor)#;height:50px;">
-				<a href="#" class="navbar-brand" style="font-size:16px;color:#e8fffe;display: inline-block;width:140px;height:50px;">
-					<ul style="margin-top:2px;">
-						<li style="margin-bottom:3px;"><img src="../skin/default/images/websys/logo_imedical.png"/></li>
-						<li>#(WorkStationDesc)#</li>
-					</ul>
+			<csp:if condition=hideBrand'=1>
+			<div class="navbar-header pull-left" style="height:#(MenuHeight)#px;">
+				<a href="#" class="navbar-brand" style="font-size:16px;color:#e8fffe;display: inline-block;width:140px;height:#(MenuHeight)#px;line-height:#(MenuHeight)#px;padding-top:0px;">
+					<div><img src="../skin/default/images/websys/HO.svg"/></div>
 				</a>
+				<div style="display: inline-block;height: #(MenuHeight)#px;line-height: #(MenuHeight)#px;font-weight: bold;padding-right:30px;">#(WorkStationDesc)#</div>
 				<!--<span style="font-size:10px;" class="glyphicon glyphicon-registration-mark"></span>-->
 			</div>
+
+			</csp:if>
 			<!--header menu start//-->
 			<div class="navbar-inner">
 				<ul class="nav navbar-nav" id="left-menu">
@@ -1021,8 +1365,22 @@ function SetKeepOpen(url,newwin) {
 			<div class="navbar-header navbar-buttons pull-right" role="navigation">
 				<ul class="nav navbar-nav">
 				<!--style="padding:6px;display: inline-block;width: 30px; height: 30px; border: 1px #7BC2F2 solid; margin-top: 10px;background: #3FA2DF;"-->
-					
-				
+					<li class='dhc-menu'>						
+						<input class="sysMenuFindTxt" autocomplete=off placeholder="查询菜单" style="display: none;"/>
+						<a id="sysMenuFindBtn" href="#" data-imodal='true' data-ilink="javascript:sysMenuFindHandler();" class="rightMainMenu dhc-submenu" style="display:inline-block;">
+							<span class="dhc-fa-icon-large icon-findwebsysmenu" style="font-size:23px;"></span>
+						</a>
+					</li>
+					<!--<li class="dhc-menu">
+						<a id="dts" href="#" data-imodal='true' data-ilink="javascript:dtsBtnClickHandler();" class="rightMainMenu dhc-submenu" >
+							<span class="dhc-fa-icon-large icon-dts" style="font-size:23px;"></span>
+						</a>
+					</li>-->
+					<li class='dhc-menu'>
+						<a id="sysSountBtn" href="#" data-imodal='true' data-ilink="javascript:sysSoundBtnClickHandler();" class="rightMainMenu dhc-submenu" >
+							<span class="dhc-fa-icon-large icon-syssound" style="font-size:23px;"></span>
+						</a>
+					</li>
 					<li class="dhc-menu">
 						<!-- class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown"-->
 						<a href="#" class="rightMainMenu">
@@ -1030,25 +1388,25 @@ function SetKeepOpen(url,newwin) {
 						</a>
 						<ul class="dropdown-menu">
 							<li id="SystemHeaderMenuHelp">
-								<a href="#" data-ilink="javascript:showHelp();" class="dhc-submenu">
+								<a href="#" data-imodal='true' data-ilink="javascript:showHelp();" class="dhc-submenu">
 									<i class="dhc-fa-icon-small icon-question-sign"></i>
 									#(##class(websys.Translation).Get("DIC","帮助文档"))#
 									</a>
 							</li>
 							<li>
-								<a href="#" data-ilink="javascript:showConfig();" class="dhc-submenu">
+								<a href="#" data-imodal='true' data-ilink="javascript:showConfig();" class="dhc-submenu">
 									<i class="dhc-fa-icon-small icon-cog"></i>
 									#(##class(websys.Translation).Get("DIC","页面设置"))#
 								</a>
 							</li>
 							<csp:if condition=messageShowFlag=1>
 								<li>
-									<a href="#" data-ilink="javascript:toggleMsgAudio();" id="toggleMsgAudioA" class="dhc-submenu">
+									<a href="#" data-imodal='true' data-ilink="javascript:toggleMsgAudio();" id="toggleMsgAudioA" class="dhc-submenu">
 										<i class="dhc-fa-icon-small #(iconVolumeCls)#"></i><span>#(iconVolumeText)#</span></a>
 								</li>
 							</csp:if>
 							<li>
-								<a href="#" data-ilink="javascript:showAbout();" class="dhc-submenu">
+								<a href="#" data-imodal='true' data-ilink="javascript:showAbout();" class="dhc-submenu">
 									<i class="dhc-fa-icon-small icon-question-sign"></i> #(##class(websys.Translation).Get("DIC","关于"))#</a>
 							</li>
 							<!--
@@ -1072,32 +1430,54 @@ function SetKeepOpen(url,newwin) {
 					<csp:if condition=messageShowFlag=1>
 						<li class="dhc-menu">
 							<!--data-ilink="dhc.message.csp" data-itarget="#WinModal" data-iblankOpt="title:'消息列表',width:900,height:500,showbefore:ShowDHCMessageCount" data-imodal='true'-->
-							<a id="DHCMessageBtn" href="#" data-ilink="javascript:msgBtnClickHandler();" class="rightMainMenu dhc-submenu nullMessage" >
+							<a id="DHCMessageBtn" href="#" data-imodal='true' data-ilink="javascript:msgBtnClickHandler();" class="rightMainMenu dhc-submenu nullMessage" >
 								<span class="dhc-fa-icon-large icon-envelope" style="font-size:23px;"></span>
 								<span class="badge messagecount" > </span>
 							</a>
 						</li>
+						
+						<csp:if condition=MsgShowByCatgory="Y">
+							<li class="dhc-menu">
+								<a id="DHCMessageBtnNotice" href="#" data-imodal='true' data-ilink="javascript:msgBtnClickHandler('','N');" class="rightMainMenu dhc-submenu nullMessage" >
+									<span class="dhc-fa-icon-large icon-notice" style="font-size:23px;"></span>
+									<span class="badge messagecount" > </span>
+								</a>
+							</li>
+						</csp:if>
 					</csp:if>
+					<csp:if condition=hideBrand'=1>
 					<li class="dhc-menu">
 						<!--class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" -->
-						<a href="#" class="rightMainMenu">
+						<a href="#" class="rightMainMenu hisui-tooltip rightMainMenu-user" data-options='position:"left"' title="#(rightMainMenuTitle)#">
 							<span class="dhc-fa-icon-large icon-user-md" style="font-size:23px;"></span>
 							<span class="userlocinfo">
-								<span class="userinfo"><strong>#(%session.Data("LOGON.USERNAME"))#</strong> &nbsp;&nbsp;#(GroupDesc)#</span>
-								<span class="locinfo">#(LocDesc)#</span>
+								<span class="userinfo">#(%session.Data("LOGON.USERNAME"))#</span>
 							</span>
 						</a>
 						<ul class="dropdown-menu">
 							<li>
 								<a href="#" data-ilink="websys.user.settings.csp" 
-								data-itarget="#WinModalEasyUI" data-iblankOpt="title:'修改用户设置',width:750,height:400,isTopZindex:true" data-imodal='true' class="dhc-submenu">
+								data-itarget="#WinModalEasyUI" data-iblankOpt="width:750,height:450,isTopZindex:true" data-imodal='true' class="dhc-submenu">
 									<i class="dhc-fa-icon-small icon-cog"></i> #(##class(websys.Translation).Get("DIC","个人中心"))#</a>
 							</li>
 							<li>
-								<a href="#" data-ilink="dhc.logon.otherloc.csp" data-itarget="#WinModalEasyUI" data-iblankOpt="title:'切换科室',width:800,height:500" data-imodal='true' class="dhc-submenu">
+								<a href="#" data-ilink="websys.default.hisui.csp?WEBSYS.TCOMPONENT=websys.localnetinfo" 
+								data-itarget="#WinModalEasyUI" data-iblankOpt="width:750,height:400,isTopZindex:true" data-imodal='true' class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-cog"></i> #(##class(websys.Translation).Get("DIC","网络信息"))#</a>
+							</li>
+							<csp:if Condition=0=MWHOSAuth2Logon>
+							<li>
+								<a href="#" data-ilink="dhc.logon.otherloc.csp" data-itarget="#WinModalEasyUI" data-iblankOpt="width:800,height:500" data-imodal='true' class="dhc-submenu">
 									<i class="dhc-fa-icon-small icon-exchange"></i>#(..Get("切换科室"))#</a>
 							</li>
-							<li role="separator" class="divider"></li>
+							</csp:if>
+							<li>
+								<a href="#" data-ilink="javascript:lockScreenOpt.lockScrn();" 
+								data-itarget="#WinModalEasyUI" data-imodal='true' class="dhc-submenu">
+									<i class="dhc-fa-icon-small icon-off"></i> #(##class(websys.Translation).Get("DIC","立即锁屏"))#</a>
+							</li>
+							<csp:if Condition=0=MWHOSAuth2Logon>
+							<li role="separator" class="divider"></li>		
 							<li>
 								<a href="#" data-ilink="javascript:SetKeepOpen('websys.csp?TMENU=#(CloseSessionMenuId)#&relogon=1','')" data-itarget="TRAK_main" data-iblankOpt="" class="dhc-submenu">
 									<i class="dhc-fa-icon-small icon-reply"></i>#(##class(websys.Translation).Get("DIC","重新登录"))#</a>
@@ -1107,16 +1487,18 @@ function SetKeepOpen(url,newwin) {
 									<!--icon-signout-->
 									<i class="dhc-fa-icon-small icon-off"></i>#(##class(websys.Translation).Get("DIC","退出系统"))#</a>
 							</li>
+							</csp:if>
 						</ul>
 					</li>
-
+					</csp:if>
 				</ul>
 			</div>
 		</div>
+		</csp:if> <!--隐藏菜单导航条end-->
 	</nav>
 	</div>
-	<div id="centerPanel" class="centerPanel" >
-		<iframe name="TRAK_main" src="epr.default.csp?IsSideMenu=#($g(%request.Data("IsSideMenu",1),"false"))#" width="100%" height="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+	<div id="centerPanel" class="centerPanel" stylepp="border-right: 6px solid #509de1;" >
+		<iframe name="TRAK_main" src="#(Url)#" width="100%" height="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0 allowtransparency='true'>
 		</iframe>
 	</div>
 	<div style="height:0px"  id="southPanel">
@@ -1124,15 +1506,23 @@ function SetKeepOpen(url,newwin) {
 		</iframe>
 	</div>
 	<div id="WinModalEasyUI" style="padding:0px;overflow:hidden;" data-options="isTopZindex:true"></div>
-
+	</div><!--中部区结束-->
 
 	<script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
 	<script type="text/javascript" src="../scripts/epr.frames.js"></script>
 	<script type="text/javascript" src='../scripts/websys.jquery.js'></script>
-	<csp:if condition=LockSrcTimeout>0>
+
 	<script type="text/javascript" src='../scripts/websys.encrypt.js'></script>
 	<script type="text/javascript" src='../scripts/websys.lockscreen.js'></script>
-	</csp:if>
+
+ 	<SCRIPT type="text/javascript">
+ 		/*$("body").on("click",".dhc-submenu",function(){
+	 		if (websys_emit){
+				websys_emit("onHISLogonSuccess",{usercode:"YS01"});
+				
+			}		
+	 	})*/
+ 	</SCRIPT>
 	<SCRIPT type="text/javascript">
 		var IEVersion = "#(IEVersion)#";
 		var navbar,preSelectedMenu;
@@ -1156,7 +1546,92 @@ function SetKeepOpen(url,newwin) {
 			$("#Loading").fadeOut("fast");
 			//ShowDHCMessageCount();
 		}*/
+		function tkMakeServerCall(tkclass,tkmethod) {
+			if ((tkclass=='')||(tkmethod=='')) return '';
+			var reqdata = {ClassName:tkclass,MethodName:tkmethod};
+			for (var i=2; i<tkMakeServerCall.arguments.length; i++) {
+				reqdata["P_"+(i-1)] = tkMakeServerCall.arguments[i];
+			}
+			var retval=$m(reqdata,false);
+			return retval;
+		}
+		Object.defineProperty(document.getElementById('EpisodeID'), 'value',{
+			set:function(v){
+				
+				this._value = v;
+				if ((v!="") && menuJson.records){
+					$cm({ClassName:"websys.Menu",MethodName:"Json",MenuId:"#(MenuIdByCode)#", GroupId:"#(GroupId)#",EpisodeID:v},function(menus){
+						menuJson.records = menus;
+						renderMenu($(document).width()-(eastPanelWidth||0));
+					})
+				}
+				/*信息同步HOS*/
+				var obj = {type: 'postFromProd',messageList:[{key: 'EpisodeID',value: v}]};
+				if(window.parent && 'function'==typeof window.parent.postMessage) window.parent.postMessage(obj, "*")
+			},
+			get:function(){
+				return this._value;
+			}
+		});
+		Object.defineProperty(document.getElementById('AnaesthesiaID'), 'value',{
+			set:function(v){
+				this._value = v;
+				/*信息同步HOS*/
+				var obj = {type: 'postFromProd',messageList:[{key: 'AnaesthesiaID',value: v}]};
+				if(window.parent && 'function'==typeof window.parent.postMessage) window.parent.postMessage(obj, "*")
+			},
+			get:function(){
+				return this._value;
+			}
+		});
+		Object.defineProperty(document.getElementById('PatientID'), 'value',{
+			set:function(v){
+				this._value = v;
+				/*信息同步HOS*/
+				var obj = {type: 'postFromProd',messageList:[{key: 'PatientID',value: v}]};
+				if(window.parent && 'function'==typeof window.parent.postMessage) window.parent.postMessage(obj, "*")
+			},
+			get:function(){
+				return this._value;
+			}
+		});
+		/*html中为EpisodeID赋值不会触发Object.defineProperty的set方法*/
+		SetEpisodeDetails(LogonPatientID,LogonEpisodeID,LogonMradm,"","","","","","","","","","","","","","","","","","","","","",LogonAnaesthesiaID,"","");
 	</SCRIPT>
+	<csp:if condition=(ViewCode="")>
 	<script type="text/javascript" src='../scripts/DHCMessageEngine.js'></script>
+	</csp:if>
+	<server>
+	if ##class(websys.Conversions).IsValidMethodName("BSP.GlobalPhrases.COM.PhrasesRules","GetPhrasesRulesBYID") {
+	  if ##class(BSP.GlobalPhrases.COM.PhrasesRules).GetPhrasesRulesBYID(%session.Data("LOGON.USERID"),%session.Data("LOGON.CTLOCID"),%session.Data("LOGON.GROUPID")){
+	    w "<script type=""text/javascript"" src='../scripts/emr/js/phrase.contextmanager.js'></script>"
+	  }
+	}
+	/*if ##class(websys.Conversions).IsValidMethodName("web.DHCBL.BDP.BDPCDSSDeptUserAut","GetCDSSUserAutFlag") {
+	  if ##class(web.DHCBL.BDP.BDPCDSSDeptUserAut).GetCDSSUserAutFlag(%session.Data("LOGON.CTLOCID"),%session.Data("LOGON.USERID")){
+	    ;;w "<script type=""text/javascript"" src=""../scripts/dhcdoc/CDSSInterface.js""></script>"
+	    w "<script type=""text/javascript"" src=""../scripts/bdp/CDSSVue/Public/DHCBDP_CDSS.js""></script>"
+	  }
+	}*/
+	</server>
+	<server>
+	 if ((CreateChatForMultiDevice=1)&&(HosAssemblyType'="embedded")) {
+		W "<script type=""text/javascript"" src='../scripts_lib/chat-client-1.9.1.js' charset='utf-8'></script>"
+	 }
+	</server>
+	<server>
+	if HosAssemblyType'="embedded", ##class(websys.Conversions).IsValidMethodName("CF.BSP.SYS.SRV.CDSSService","InitCDSSJS"){
+		d ##class(CF.BSP.SYS.SRV.CDSSService).InitCDSSJS(%session.Data("LOGON.CTLOCID"),%session.Data("LOGON.USERID"))
+	}
+	</server>
+	<Server>
+	if ##class(websys.Conversions).IsValidMethodName("CF.BSP.MSG.SRV.AlertAction","hasAlertAction"),##class(CF.BSP.MSG.SRV.AlertAction).hasAlertAction(GroupId){
+		S RollTime = +(##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","AlertRollTimes"))
+		S DefaultPosition = ##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","AlertDefaultPosition")
+		W "<script type=""text/javascript"">var websysAlertCfg = {rollTime:"_RollTime_",DefaultPosition:"""_DefaultPosition_"""}"_"</script>"
+		W "<link rel=""stylesheet"" type=""text/css"" href=""../skin/default/css/websys.alert.css""/>",!
+		W "<script type=""text/javascript"" src=""../scripts/websys.alert.js""></script>"
+	}
+	</Server>
 </body>
 </html>	

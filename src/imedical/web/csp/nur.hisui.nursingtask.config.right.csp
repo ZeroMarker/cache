@@ -1,0 +1,219 @@
+<!--csp:nur.hisui.taskoverview.config.csp-->
+
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+
+
+	<style>
+	body{opacity: 0; transition: opacity 0.2s}
+    body.active{opacity: 1}
+	body{
+		background-color:#FFF;	
+	}
+	.search-table{
+		border-collapse:separate;
+		border-spacing:0 10px;
+	}
+	.r-label{
+		padding-left: 10px;
+	}
+	.tdlabel{
+		text-align:right;
+		width:140px;	
+		padding-right: 20px;
+	}
+	.ant-form-item-required:before {
+	    display: inline-block;
+	    margin-right: 4px;
+	    color: #f5222d;
+	    font-size: 14px;
+	    font-family: SimSun,sans-serif;
+	    line-height: 1;
+	    content: "*";
+	}
+	#myWin tr{
+		display:block;
+		margin-top:5px;	
+	}
+	#form-save div.panel{
+		margin-top:10px !important;
+	}
+	span.exeRule{
+		border: 1px solid #40A2DE;
+	    display: inline-block;
+	    width: 60px;
+	    text-align: center;
+	    height: 30px;
+	    line-height: 30px;
+	    cursor: pointer;
+		
+	}
+	.bgselect{
+		background-color:#40A2DE;
+		border: 1px solid #40A2DE !important;
+		color:#fff;
+	}
+	
+</style>
+<script language="cache" runat="SERVER">
+	s pid = $G(%request.Data("pid", 1))
+    s taskId = $G(%request.Data("taskId", 1))
+	s hospId = $G(%request.Data("hospId", 1))
+	s taskType = $G(%request.Data("taskType", 1))
+	s relationType = $G(%request.Data("relationType", 1))
+	
+</script>
+<script language="javascript">
+     	var pid="#(pid)#";
+	    var taskId = "#(taskId)#";
+		var hospId = "#(hospId)#";
+		var taskType = "#(taskType)#";
+		var relationType = "#(relationType)#";
+	</script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingtask.item.js" charset=gbk></script>
+</head>
+<body>
+	
+	
+<form id="form-save" method="post" data-options="fit:true,border:false,plain:true">
+	
+	<div class="hisui-panel" title="基本配置" style="width:560px;" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',closable:false,collapsible:false,minimizable:false,maximizable:false">
+		<table id="topCondion" style="width:100%">
+		</table>
+	</div>
+	
+	<div>
+		<table class="search-table" style="width:100%;display:none;">
+			<tr>
+				<td class="r-label">
+					<a class="hisui-linkbutton" id="BFind" onClick="saveFunLib()" data-options="iconCls:'icon-w-add'">保存</a>  
+				</td>
+				<td class="r-label" style="text-align: left;">
+					<a class="hisui-linkbutton" id="BUpdate" onClick="saveFunLib()" data-options="iconCls:'icon-w-edit'">修改</a>  
+				</td>
+			</tr>
+		</table>
+	</div>
+</form>
+
+<div class="vsReminder" style="display:none;">
+	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true"></a>
+
+
+</div>
+<div style="margin-bottom: 5px;display:none; " id="comboxSearch">
+	<table>
+		<tr>
+			<td>
+				<input type="text" class="textbox hisui-validatebox startDayReport" style="width:170px;" />
+			</td>
+
+			<td>
+				<a class="hisui-linkbutton btnTaskSearch"  data-options="iconCls:'icon-w-find'">查询</a>  
+			</td>
+		</tr>
+	</table>
+</div>
+
+<script type="text/javascript">
+//控件属性 id需保持和表结构字段一致
+var xcTopContorsA=[
+	{'id':'NTONTaskDesc','type':'text','title':'任务描述','style':'width:300px;'},
+	{'id':'NTONTaskItem','type':'comboxGrid','title':'体征任务项','queryName':'GetSignsItem','required':'true','style':'width:307px;'},
+
+]
+var xcTopContorsB=[
+	{'id':'NTONTaskDesc','type':'text','title':'任务描述','style':'width:300px;'},
+	{'id':'NTONTaskItem','type':'comboxGrid','title':'评估任务项','queryName':'GetAssessItems','required':'true','style':'width:307px;'},
+	{'id':'NTONAssessDate','type':"text",'title':'评估日期字段','required':'true','style':'width:300px;','reminder':'请输入评估单的字段'},
+	{'id':'NTONAssessTime','type':"text",'title':'评估时间字段','required':'true','style':'width:300px;','reminder':'请输入评估单的字段'},
+	{'id':'NTONAssessValue','type':"text",'title':'评估值字段','required':'true','style':'width:300px;','reminder':'请输入评估单的字段'},
+
+]
+var xcTopContorsC=[
+	{'id':'NTONTaskDesc','type':'text','title':'任务描述','style':'width:300px;'},
+	{'id':'NTONTaskItem','type':'comboxGrid','title':'医嘱任务项','queryName':'GetDocAdvice','required':'true','style':'width:307px;'},
+
+]
+var entity=""
+var xcTopContors=""
+$(function(){
+	$('body').addClass('active')
+	if(taskId!=""){
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","GetTaskRuleItemDefineById",{id:taskId},function(rtn){
+			entity=rtn
+		},'json',false);
+	}
+	
+	if(taskType==1){
+		xcTopContors=xcTopContorsA
+		
+	}
+	if(taskType==2){
+		xcTopContors=xcTopContorsB
+	}
+	if(taskType==3){
+		xcTopContors=xcTopContorsC
+	}
+	for(var i=0;i<xcTopContors.length;i++){
+		var key = xcTopContors[i].id
+		createInputHtml("topCondion",xcTopContors,key,0)
+	}
+	console.log("最后给控件赋值")
+	///setContorValue()
+	///控件赋值setContorlsValue(list[i])
+	///runClassMethod("","",{},function(data){
+	///})
+	//$("#NTONRelationTodayExeRule").combobox("setValue",2)
+})
+function saveFunLib(){
+	var parms = ""
+	var topParms = resultParms(xcTopContors)
+	var downParms = ""
+	var rsTxt=""
+	debugger;
+	if(topParms!=""){
+		var rtnParms=setAllParms([parms,topParms,downParms])
+		rtnParms.NTONTaskAttr=taskType
+		rtnParms.NTONRelationType=relationType
+		rtnParms.NTONHospital=hospId
+		rtnParms.taskId=taskId
+		rtnParms.pid=pid
+		rtnParms.NTONOperateUserDR=session['LOGON.USERID']
+	
+		runClassMethod("Nur.NIS.Service.NursingTask.TaskOptions","AddOrUpdateTaskRuleItem",{data:JSON.stringify(rtnParms)},function(rtn){
+			if(rtn == 0) {
+				
+		
+			} else if(rtn == 1){
+				//$.messager.alert('提示','保存失败！'+ rtn , "info");
+				rsTxt = "保存失败！"
+			}else if(rtn == 2){
+				rsTxt = "保存失败，存在相同的组名"
+			}
+			
+		
+		},'json',false);
+	
+		
+	}else{
+		rsTxt = "保存失败,存在必填项为空！"
+	}
+	return rsTxt
+}
+function setContorValue(){
+
+}
+
+</script>
+	
+</body>
+</html>
+

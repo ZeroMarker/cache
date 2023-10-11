@@ -1,0 +1,801 @@
+﻿<html>
+
+<head>
+
+<title>	二维码登录 </title>
+<ExtHealth:Head/>   <!--调用平台提供相关方法需增加此标签-->
+<HISUI/>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(websys.SessionEvents).SessionExpired()
+    q 1
+</csp:method>
+        
+<script type="text/javascript" src="../scripts/dhccertauth/lib/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/lib/qrcode.min.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/lib/base64.min.js"></script>
+<script type="text/javascript" src="../scripts/dhccertauth/js/common.data.js"></script>
+
+<script language="cache" runat="server">
+    //获取院区ID
+  	s hospID = %session.Get("LOGON.HOSPID")
+  	s userLocID = %session.Get("LOGON.CTLOCID")
+  	s:(hospID = "")&&(userLocID '= "") hospID = ##Class(CA.BL.HospitalMgr).GetHospitIDByLocID(userLocID)
+    
+  	s userCode = ""
+	s userID = %session.Get("LOGON.USERID")
+	if (userID '= "")
+	{
+		s userCode = ##class(CA.Util.HISInfo).GetUserCode(userID)
+	}
+	
+  	s random = $r(999999999999999)
+	s qrCode = ""
+	s signGUID = ""
+	s qrCode = ""
+	s isImage = "1"
+	
+	s ConstRollCountConfig = 60
+	s ConstRollTimeSapn = 2000
+	
+	s isNeedCallBack = $Get(%request.Data("isNeedCallBack",1),"")
+	s venderCode = $Get(%request.Data("venderCode",1),"")
+	s signType = $Get(%request.Data("signType",1),"")
+	s debugLevel = $Get(%request.Data("debugLevel",1),"0")
+	
+	//登录二维码类型，值域：IMAGE 或 TEXT, 默认：IMAGE
+	//登录二维码是否需要指定用户工号才能创建，值域：1 或 0，默认：0
+	//是否可以使用Pin码登录，值域：1 或 0，默认：0
+	//是否可以使用人脸识别登录，值域：1或0，默认：0
+	s QRCodeType = "", QRCodeNeedUserCode = ""
+	s EnablePinLogon = "0"
+	s EnableFaceLogon = "0"
+	s EnablePushSign = "0"
+	//获取扫码APP名称
+	s ScanQRCodeAPPName = ""
+	
+	s serviceID = ##class(CA.ConfigService).GetIDByCode(venderCode, signType)
+	s serviceObj = ##class(CA.ConfigService).%OpenId(serviceID)
+	if (serviceObj '= "")
+	{
+		s QRCodeType = serviceObj.QRCodeType
+		s QRCodeNeedUserCode = serviceObj.QRCodeNeedUserCode
+		s EnablePinLogon = serviceObj.EnablePinLogon
+		s EnableFaceLogon = serviceObj.EnableFaceLogon
+		s EnablePushSign = serviceObj.EnablePushSign
+		s ScanQRCodeAPPName = serviceObj.ScanQRCodeAPPName
+	}
+	s:(QRCodeType = "") QRCodeType = "IMAGE"
+	s:(QRCodeNeedUserCode = "") QRCodeNeedUserCode = "0"
+	s:(EnablePinLogon = "") EnablePinLogon = "0"
+	s:(EnableFaceLogon = "") EnableFaceLogon = "0"
+	s:(EnablePushSign = "") EnablePushSign = "0"
+	s:(ScanQRCodeAPPName="") ScanQRCodeAPPName="医为科技APP"
+	
+	//默认登录认证方式，值域：QRCODE 或 PIN，默认：QRCODE
+	s CurrentAuthType = "QRCODE"
+	//是否支持多种认证方式，方便下面初始化相应页面组件
+	s MultiAuthType = (EnablePinLogon = "1")||(EnableFaceLogon = "1")||(EnablePushSign = "1")
+	
+	s LoginedCertInfo = "",HasLoginedCert = "0", LoginedHisUserName = ""
+	s loginedCert = ##class(CA.Ajax.DS).GetData("GetLoginedInfo",venderCode,signType)
+	s jsonObj = ##class(CA.Util.Json).FromJson(loginedCert)
+	if (jsonObj.GetAt("retCode") = "0")&&(jsonObj.GetAt("certContainer") '= "")&&(jsonObj.GetAt("signToken") '= "")
+	{
+        s tokenIsValid = ##class(CA.Ajax.DS).GetData("GetTokenIsValid",venderCode,signType,jsonObj.GetAt("certContainer"),jsonObj.GetAt("signToken"))
+        s tokenJsonObj = ##class(CA.Util.Json).FromJson(tokenIsValid)
+        if ((jsonObj.GetAt("retCode") = "0")&&(jsonObj.GetAt("isTokenValid") = "true"))
+        {
+            s HasLoginedCert = "1"
+            s LoginedCertInfo = loginedCert
+            s LoginedHisUserName = jsonObj.GetAt("hisUserCode")_" "_jsonObj.GetAt("hisUserName")
+        }
+    }
+	//获取默认签名方式
+	s DefaultSignType = ##class(CA.ConfigCommon).GetValueWithDefault("DefaultSignType","PHONE",hospID)
+</script>
+
+<script language="javascript">	
+	
+	//js全局变量初始化：调用登录页面时传入的参数
+	var argWindow = window.dialogArguments;
+	argWindow = argWindow || "";
+	if (argWindow != "") {
+		var Const_Vender_Code = argWindow.VenderCode;
+		var Const_Sign_Type = argWindow.SignType;
+	} else {
+		var Const_Vender_Code = "#(venderCode)#";
+		var Const_Sign_Type = "#(signType)#";
+	}
+	var debugLevel = "#(debugLevel)#";
+	var isNeedCallBack = "#(isNeedCallBack)#"; 
+	
+	//js全局变量初始化：HIS当前登录用户工号
+	var userCode = "#(userCode)#";
+	
+	//js全局变量初始化：当前登录证书信息
+	if ("#(HasLoginedCert)#" =="1"){
+		var LoginedCertInfo = $.parseJSON('#(LoginedCertInfo)#');
+	}else{
+		var LoginedCertInfo = "";
+	}
+	var LoginedHisUserName = "#(LoginedHisUserName)#";
+	
+	//js全局变量初始化：证书登录方式相关的信息
+	//---是否支持多种认证方式、多种认证方式的共用变量
+	var CurrentAuthType = "#(CurrentAuthType)#";
+	var MultiAuthType = "#(MultiAuthType)#";
+	var signGUID = "#(signGUID)#";
+	var ConstRollTimeSapn = "#(ConstRollTimeSapn)#";
+	var ConstRollCountConfig = "#(ConstRollCountConfig)#";
+	var rollCount = "#(ConstRollCountConfig)#";
+	var rtnLogin = "";
+	var userCertCode = "";
+	//---二维码
+	var QRCodeType = "#(QRCodeType)#";
+	var QRCodeNeedUserCode = "#(QRCodeNeedUserCode)#";
+	var random = "#(random)#";
+	var qrCode = "#(qrCode)#";
+	var isImage = "#(isImage)#";
+	var imageCode = "";
+	var qrcodeMaker = "";
+	var authUrl = "";
+	var errMsg = "";
+	//---Pin码
+	var EnablePinLogon = "#(EnablePinLogon)#";
+	//---人脸识别
+	var EnableFaceLogon = "#(EnableFaceLogon)#";
+	var faceAuthUrl = "";
+	//---推送签名
+	var EnablePushSign = "#(EnablePushSign)#";
+	
+	//默认签名方式
+	var DefaultSignType = "#(DefaultSignType)#";
+	//---------------------- 公共函数 ------------------------
+	function iGetData(Func,P1,P2,P3,P4,P5,P6,P7,P8,P9) {
+    	
+    	var result = "";
+    	
+    	var para = {
+	  		CAFunc: Func,
+	  		CAVenderCode:Const_Vender_Code,
+	  		CASignType:Const_Sign_Type,
+	  		P1:P1||"",
+	  		P2:P2||"",
+	  		P3:P3||"",
+	  		P4:P4||"",
+	  		P5:P5||"",
+	  		P6:P6||"",
+	  		P7:P7||"",
+	  		P8:P8||"",
+	  		P9:P9||""
+  		};
+  		
+  		$.ajax({
+    		url: "../CA.Ajax.DS.cls",
+    		type: "POST",
+    		dataType: "JSON",
+    		async: false,
+    		data: para,
+    		success: function(ret) {
+	    		/*
+            	if (ret && ret.retCode == "0") {
+                	result = ret;
+            	} else {
+	            	alert(ret.retMsg);
+            	}
+            	*/
+            	if (ret && ret.retCode != "") {
+                	result = ret;
+            	} else {
+	            	alert(ret.retMsg);
+            	}
+            },
+        	error: function(err) {
+            	alert(err.retMsg || err);
+        	}
+  		});
+  		
+  		return result;
+    }
+    
+	
+	
+	function serverLogin(rtn) {
+		//usrID As %String, UsrCertCode As %String, serverRan As %String, userSignedData As %String, certNo As %String, userCert As %String, signType As %String = "", venderCode As %String = ""
+		var isok = false;
+		var data = ajaxDATA("String","CA.DigitalSignatureService","Login2","",rtn.userCertCode,"","",rtn.certNo,rtn.signCert,Const_Sign_Type,Const_Vender_Code);
+		ajaxPOSTSync(
+			data,
+			function(ret){
+				var  json =JSON.parse(ret);
+				if (json.retCode == "0") {
+					rtn["hisUserName"] = json.hisUserName;
+					rtn["hisUserID"] = json.hisUserID;
+					isok = true;
+				} else {
+					displayError(json.retMsg);
+				}
+			},
+			function(ret){
+				displayError(ret);
+			}
+		)
+		
+		return isok;
+	}
+	
+	function regSession(rtn) {
+		//signType, containerName, containerPin, userCertCode, certNo, signToken
+		var isok = false;
+		var userCertCode = rtn.userCertCode || "";
+		var certNo = rtn.certNo || ""
+		var signToken = rtn.signToken || "";
+		
+		var data = ajaxDATA("String","CA.DigitalSignatureService","RegSession", Const_Sign_Type, rtn.certContainer, "", userCertCode,certNo,signToken);
+		ajaxPOSTSync(
+			data,
+			function(ret){
+				//alert("regsessin: " + ret)
+				var json = JSON.parse(ret);
+				if (json.retCode == "0") {
+					isok = true;
+				} else {
+					displayError(json.retMsg);
+				}
+			},
+			function(ret){
+				displayError(ret);
+			}
+		)
+		
+		return isok;
+	}
+	
+	function displayError(error) {
+		$("#caTip").show();
+        if ((error !== '')&&(CurrentAuthType == "QRCODE")) {
+			$("#divqrcodegen").hide();
+			$("#divqrcodeimg").hide();
+			$("#divqrcodeexp").show();
+		}
+		document.getElementById("caTip").innerText = error;
+	}
+	
+	//---------------------- 直接使用当前已登录证书信息 -------------
+	function loginedCertClick() {
+		WinClose(JSON.stringify(LoginedCertInfo));
+	}
+	
+	//---------------------- 切换多种认证方式 -------------------
+	function authTypeClick(type){
+		if (CurrentAuthType == type) {
+			return;
+		}
+		CurrentAuthType = type;
+		
+		$("#caTip").hide();
+		
+		if (type == "QRCODE") {
+			showDiv(true,false,false,false);
+			if (QRCodeNeedUserCode != "1") {
+       			qrcodeLogon();
+			}
+		} else if (type == "PIN") {
+			showDiv(false,true,false,false);
+		} else if (type == "FACE") {
+			showDiv(false,false,true,false);
+			faceAuthLogon();
+		} else if (type == "PUSHSIGN") {
+			showDiv(false,false,false,true);
+		} else {
+			showDiv(true,false,false,false);
+			if (QRCodeNeedUserCode != "1") {
+       			qrcodeLogon();
+			}
+		}
+	}
+	
+	function showDiv(showQR,showPin,showFace,showPush) {
+		if (showQR) {
+			$("#divQR").show();
+		} else {
+			$("#divQR").hide();
+		}
+		
+		if (EnablePinLogon == "1") {
+			if (showPin) {
+				$("#divPIN").show();
+			} else {
+				$("#divPIN").hide();
+			}
+		}
+		
+		if (EnableFaceLogon == "1") {
+			if (showFace) {
+				$("#divFACE").show();
+			} else {
+				$("#divFACE").hide();
+			}
+		}
+		
+		if (EnablePushSign == "1") {
+			if (showPush) {
+				$("#divPUSHSIGN").show();
+			} else {
+				$("#divPUSHSIGN").hide();
+			}
+		}
+	}
+	
+	//-------------------- 二维码登录 ----------------------
+	function refreshQrcodeClick(){
+		qrcodeLogon();
+	}
+	
+	function genQrcodeClick(){
+		qrcodeLogon();
+	}
+	
+	function qrcodeLogon(){
+		
+		if (QRCodeNeedUserCode == "1") {
+			userCertCode = $("#userCertCode").val() || "";
+			if (userCertCode == "") {
+				alert("请输入用户ID");
+				return;
+			}
+		}
+		
+		$("#divqrcodeexp").hide();
+		$("#divqrcodeimg").hide();
+		$("#divqrcodegen").show();
+		displayError("");
+		
+		if (!getQRCode()) {
+			displayError("获取二维码异常："+errMsg);
+			errMsg = ""
+			$("#divqrcodegen").hide();
+			$("#divqrcodeexp").show();
+			return;
+		} 
+		
+		showQRCode();
+		$("#divqrcodegen").hide();
+		$("#divqrcodeimg").show();
+		
+  		rollCount = ConstRollCountConfig;
+		rollQRResult();
+	}
+	
+	function getQRCode() {
+		signGUID = "";
+		qrCode = "";
+		imageCode = "";
+		isImage = "1";
+		authUrl = "";
+		
+		var rtn = iGetData("GetLoginQR",random,"",userCertCode);
+		if (rtn.retCode == "0") {
+			signGUID = rtn.signGUID;
+			qrCode = rtn.qrCode;
+			isImage = rtn.isImage;
+			imageCode = rtn.imageCode || "";
+			authUrl = rtn.authUrl || "";
+			return true;
+		} else {
+			errMsg = rtn.retMsg;
+			return false;
+		}
+	}
+	
+	function getQRCodeResult() {
+		
+		var rtn = iGetData("GetLoginQRResult",signGUID);
+		return rtn;
+	}
+	
+	function showQRCode() {
+		if (QRCodeType == "URL") {
+			var frameUrl  = '<iframe allowtransparency="true" src="'+ authUrl +'" scrolling="auto" width="100%" height="100%" frameborder="0"></iframe>';
+      		$("#qrcodeimg").html(frameUrl);
+		} else {
+			if (isImage == "1") {
+				var qrcodeimg = document.getElementById("qrcodeimg");
+				if (imageCode == "") {
+					var imgdata = "data:image/jpeg;base64," + qrCode;
+					qrcodeimg.src = imgdata;
+				} else {
+					qrcodeimg.src = imageCode;
+				}
+			} else {
+				if (qrcodeMaker == "") {
+					//qrcodeMaker = new QRCode(document.getElementById("qrcodeimg"),{width:150,height:150,colorDark:"#000000",colorLight : "#ffffff"});
+					qrcodeMaker = new QRCode(document.getElementById("qrcodeimg"),{width:200,height:200,correctLevel:QRCode.CorrectLevel.L});
+				} 
+				qrcodeMaker.clear()
+				qrcodeMaker.makeCode(qrCode);	
+			}
+		}
+	}
+	
+	function rollQRResult(){
+		if (CurrentAuthType == "PIN") {
+			return;
+		}
+		
+		rollCount--;
+		if (rollCount<1) {
+			$("#divqrcodeimg").hide();
+			$("#divqrcodeexp").show();
+			return ;
+		}
+		
+		var rtn = getQRCodeResult();
+		if (rtn.retCode == "0") {
+			if (rtn.signStatus == "FINISH") {
+				rtnLogin = rtn;
+				if (debugLevel >= 1) {
+					alert("扫码结果 finish:\r\n"+JSON.stringify(rtn));
+				}
+				if (serverLogin(rtn)) {
+					var jsonStr = JSON.stringify(rtn);
+					if (debugLevel >= 1) {
+						alert("扫码结果 finish serverLogin:\r\n" + jsonStr);
+					}
+					
+					var tmpToken = rtn.signToken || "";
+					if (tmpToken != "") {
+						regSession(rtn);
+					}
+					WinClose(jsonStr);
+				} else {
+					$(".divqrcodeimg").hide();
+					$(".divqrcodeexp").show();
+				}
+			} else if (rtn.signStatus == "EXPIRE") {
+				var jsonStr = JSON.stringify(rtn);
+				if (debugLevel >= 1) {
+					alert("扫码结果 expire:\r\n" + jsonStr);
+				}
+				$("#divqrcodeimg").hide();
+				$("#divqrcodeexp").show();
+			} else {
+				if (debugLevel >= 2) {
+					var jsonStr = JSON.stringify(rtn);
+					alert("扫码结果 tosign:\r\n" + jsonStr);
+				}
+				setTimeout(rollQRResult,ConstRollTimeSapn);
+			}
+		} else {
+			displayError(rtn.retMsg);
+		}
+	}
+	
+	//--------------------------Pin码登录-----------------------------------
+	function pinLogin() {
+		var tmpCode = $("#pinUserCertCode").val();
+		var tmpPin  = $("#pinPassword").val();
+		tmpPin = Base64.encode(tmpPin);
+		
+		var rtn = iGetData("PhonePinLogin",tmpCode, tmpPin);
+		if (rtn.retCode == "0") {
+			if (rtn.signStatus == "FINISH") {
+				rtnLogin = rtn;
+				if (debugLevel >= 1) {
+					alert("PIN码登录结果 finish:\r\n"+JSON.stringify(rtn));
+				}
+				if (serverLogin(rtn)) {
+					var jsonStr = JSON.stringify(rtn);
+					if (debugLevel >= 1) {
+						alert("PIN码登录结果 finish serverLogin:\r\n" + jsonStr);
+					}
+					
+					var tmpToken = rtn.signToken || "";
+					if (tmpToken != "") {
+						regSession(rtn);
+					}
+					
+					WinClose(jsonStr);
+				}
+			} else {
+				displayError(rtn.retMsg);
+			}
+		} else {
+			displayError(rtn.retMsg);
+		}
+	}
+	
+	function pinLogonClick(){
+		pinLogin();
+	}
+	
+	//--------------------------人脸识别登录------------------------------------
+	function faceAuthLogon(){
+		displayError("");
+		
+		if (!getFaceAuth()) {
+			displayError("获取人脸认证地址异常："+errMsg);
+			errMsg = "";
+			return;
+		} 
+		
+		showFaceAuth();
+		
+  		rollCount = ConstRollCountConfig;
+		rollFaceResult();
+	}
+	
+	function getFaceAuth() {
+		signGUID = "";
+		faceAuthUrl = "";
+		
+		var rtn = iGetData("GetLoginFACE",random,"",userCertCode);
+		if (rtn.retCode == "0") {
+			signGUID = rtn.signGUID;
+			faceAuthUrl = rtn.authURL;
+			return true;
+		} else {
+			errMsg = rtn.retMsg;
+			return false;
+		}
+	}
+	
+	function getFaceAuthResult() {
+		
+		var rtn = iGetData("GetLoginFACEResult",signGUID);
+		return rtn;
+	}
+	
+	function showFaceAuth() {
+		var ifrm = document.getElementById("iframeFace");
+		ifrm.src = faceAuthUrl;
+	}
+	
+	function rollFaceResult(){
+		
+		rollCount--;
+		if (rollCount<1) {
+			displayError("人脸认证超时");
+			return ;
+		}
+		
+		var rtn = getFaceAuthResult();
+		if (rtn.retCode == "0") {
+			if (rtn.signStatus == "FINISH") {
+				rtnLogin = rtn;
+				if (debugLevel >= 1) {
+					alert("扫码结果 finish:\r\n"+JSON.stringify(rtn));
+				}
+				if (serverLogin(rtn)) {
+					var jsonStr = JSON.stringify(rtn);
+					if (debugLevel >= 1) {
+						alert("扫码结果 finish serverLogin:\r\n" + jsonStr);
+					}
+					
+					var tmpToken = rtn.signToken || "";
+					if (tmpToken != "") {
+						regSession(rtn);
+					}
+
+					WinClose(jsonStr);
+				}
+			} else if (rtn.signStatus == "EXPIRE") {
+				var jsonStr = JSON.stringify(rtn);
+				if (debugLevel >= 1) {
+					alert("扫码结果 expire:\r\n" + jsonStr);
+				}
+				displayError("人脸认证超时");
+			} else {
+				if (debugLevel >= 2) {
+					var jsonStr = JSON.stringify(rtn);
+					alert("扫码结果 tosign:\r\n" + jsonStr);
+				}
+				setTimeout(rollFaceResult,ConstRollTimeSapn);
+			}
+		} else {
+			displayError(rtn.retMsg);
+		}
+	}
+	
+	//--------------------------推送签名------------------------------------
+	function pushSignClick() {
+		var tmpUserCode = $("#pushHISUserCode").val();
+		var tmpUserID = "";
+		
+		var rtn = iGetData("GetBindCertByUserID",tmpUserID, tmpUserCode);
+		if (rtn.retCode == "0") {
+			if (rtn.certContainer != "") {
+				rtn.SignMethod = "PUSHSIGN";
+				if (debugLevel >= 1) {
+					alert("推送签名登录结果 finish:\r\n"+JSON.stringify(rtn));
+				}
+				WinClose(JSON.stringify(rtn));
+				
+			} else {
+				displayError(rtn.retMsg);
+			}
+		} else {
+			displayError(rtn.retMsg);
+		}
+	}
+	
+	function WinClose(value){
+		if (isNeedCallBack == "1")
+		{
+			returnValue = value;
+			parent.closeDialog("loginQrcode");
+		}
+		else
+		{
+			window.returnValue = value;
+			window.opener=null;
+			window.open('','_self');
+			window.close();	
+		}
+	}
+	
+	//回车事件
+    document.onkeydown = function() {
+		var pwd = $("#pinPassword").val();
+		if ((userCode != "")&&(EnablePinLogon == "1")&&(pwd != "")&&(pwd != "undefined")&&(13==event.keyCode)) {
+			pinLogonClick();
+		}
+	}
+    
+    function showDivByDefaultSignType() {
+	    if (DefaultSignType == "PINPHONE")
+	    {
+            $('#typePIN').prop("checked","checked");
+		    authTypeClick('PIN');
+		}
+	    else
+	    {
+            $('#typeQR').prop("checked","checked");
+		    //展示登录二维码
+			if (QRCodeNeedUserCode != "1") {
+	       		qrcodeLogon();
+			}
+		}			
+	}
+
+	//-------------- 页面加载完成、默认展示登录二维码 ------------------------------
+	window.onload = function() {
+		//初始化工号相关信息
+		if ((userCode != "")&&(QRCodeNeedUserCode == "1")) {
+			$("#userCertCode").val(userCode)
+            genQrcodeClick();
+		}
+		if ((userCode != "")&&(EnablePinLogon == "1")) {
+			$("#pinUserCertCode").val(userCode)
+		}
+		//如果已有登录证书信息，则不需主动展示二维码
+		if (LoginedHisUserName != "") {
+			return;
+		}
+        
+        showDivByDefaultSignType();
+        
+    };
+    
+</script>
+
+</head>
+
+<body>
+	<!--已登录证书信息-->
+    <CSP:IF condition=HasLoginedCert="1">
+	    <div id="divLoginedCert" style="padding:15px;font-size:20px;text-align:center;">
+	    	<label>已登录证书用户: #(LoginedHisUserName)#</label>
+	    	<a id="loginedCert" href="#" style="text-align:center;color:black;line-height:20px;" onclick="loginedCertClick();">确定</a>
+	    </div>
+    </CSP:IF>
+   	<!--初始化登录方式-->
+    <CSP:IF condition=MultiAuthType="0">
+        <div id="caOperTip" style="padding:15px;color:red;text-align:center;"> 
+	    	<span style="font-size:20px;">
+			请使用<a href="##" style="display:inline-block;font-size:20px;">#(ScanQRCodeAPPName)#</a>扫码登录
+			</span>
+		</div>
+    <CSP:ELSE>
+	    <div id="divAuthType" style="padding:15px;font-size:20px;text-align:center;">
+	    	<input class="remmber" name="flagFR" id="typeQR"  type="radio" value="1" onclick="authTypeClick('QRCODE');">扫码登录</input>
+	        <CSP:IF condition=EnablePinLogon="1">
+	        	<input class="remmber" name="flagFR" id="typePIN" type="radio" value="0" onclick="authTypeClick('PIN');">PIN码登录</input>
+	        </CSP:IF>
+	         <CSP:IF condition=EnableFaceLogon="1">
+	        	<input class="remmber" name="flagFR" id="typeFACE" type="radio" value="0" onclick="authTypeClick('FACE');">人脸识别登录</input>
+	        </CSP:IF>
+	        <CSP:IF condition=EnablePushSign="1">
+	        	<input class="remmber" name="flagFR" id="typePUSHSIGN" type="radio" value="0" onclick="authTypeClick('PUSHSIGN');">推送签名</input>
+	        </CSP:IF>
+	    </div>
+    </CSP:IF>
+    <!--二维码登录-->
+    <div id="divQR" style="text-align:center;">
+    	<CSP:IF condition=(HasLoginedCert="1")&&(QRCodeNeedUserCode="0")>
+	    	<a id="qrCodeGenAgain" href="#" style="text-align:center;color:black;line-height:20px;" onclick="showDivByDefaultSignType();">使用其他证书签名</a>
+	    </CSP:IF>
+	    <CSP:IF condition=QRCodeNeedUserCode="1">
+		    <div id="divUserCertCode" style="padding:15px;font-size:20px;text-align:center;">
+		    	<label>用户ID:</label>
+		    	<input id="userCertCode" type="text" disabled="disabled" style="width:80px; height:26px;font-size:18px"/>
+		    	<a id="qrCodeGen" href="#" style="text-align:center;color:black;line-height:20px;" onclick="genQrcodeClick();">二维码登录</a>
+		    </div>
+	    </CSP:IF>
+        <div id="divqrcodeimg" style="text-align:center;vertical-align:middle;">
+            <CSP:IF condition=QRCodeType="IMAGE">
+                <img id="qrcodeimg" style="width:280px;height:280px;" src=""/>
+            </CSP:IF>
+            <CSP:IF condition=QRCodeType="TEXT" style="display:none;">
+                <div id="qrcodeimg" style="width:210px;height:220px;margin:0 auto;"></div>
+            </CSP:IF>
+			<CSP:IF condition=QRCodeType="URL" style="display:none;">
+                <div id="qrcodeimg" style="width:700px;height:550px;text-align:center;vertical-align:middle;margin:0 auto"></div>
+            </CSP:IF>
+            
+        </div>
+        <div id="divqrcodeexp" style="height:280px;text-align:center;vertical-align:middle;background:#000000;display:none;">
+            <a href="#" style="text-align:center;color:red;line-height:160px;" onclick="refreshQrcodeClick();">二维码失效，点我刷新</a>
+        </div>
+        <div id="divqrcodegen" style="height:280px;text-align:center;vertical-align:middle;background:#000000;display:none;">
+            <h1 style="line-height:160px"><font color="#15425B">二维码生成中...</font></h1>
+        </div>
+    </div> 
+    <!--Pin码登录-->
+    <CSP:IF condition=EnablePinLogon="1">
+    <div id="divPIN" style="text-align:center;vertical-align:middle;display:none;">          
+		    <table class="tabledate" cellpadding="10" style="text-align:center; margin:0px auto;"> 
+                <tr>
+                    <td>
+                        <span>用户ID:</span>
+                    </td>
+                    <td>
+                    	<input id="pinUserCertCode" type="text" style="width:80px; height:26px;font-size:20px"/>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span>PIN码:</span>
+                    </td>
+                    <td>
+                    	<input id="pinPassword" type="password" style="width:80px; height:26px;font-size:20px"/>
+                    </td>
+                    <td>
+                    	<a id="pinLogon" href="#" style="text-align:center;color:black;line-height:20px;" onclick="pinLogonClick();">登录</a>
+                    </td>
+                </tr>
+            </table>
+	</div>
+	</CSP:IF>
+	<!--人脸识别登录-->
+    <CSP:IF condition=EnableFaceLogon="1">
+    <div id="divFACE" style="text-align:center;vertical-align:middle;display:none;">          
+		    <iframe id="iframeFace" style="width:100%; height:100%;" src=""></iframe>
+	</div>
+	</CSP:IF>
+	<!--推送签名-->
+	<CSP:IF condition=EnablePushSign="1">
+    <div id="divPUSHSIGN" style="text-align:center;vertical-align:middle;display:none;">          
+		    <table class="tabledate" cellpadding="10" style="text-align:center; margin:0px auto;"> 
+                <tr>
+                    <td>
+                        <span>HIS用户工号:</span>
+                    </td>
+                    <td>
+                    	<input id="pushHISUserCode" type="text" style="width:80px; height:26px;font-size:20px"/>
+                    </td>
+                    <td>
+                    	<a id="pushSignConfirm" href="#" style="text-align:center;color:black;line-height:20px;" onclick="pushSignClick();">确定</a>
+                    </td>
+                </tr>
+            </table>
+	</div>
+	</CSP:IF>
+	<!--错误提示-->
+    <div id='caTip' style="padding:10px;color:red;font-size:16px;text-align:center;height:50px;overflow-y:auto;overflow-x:hidden;display:none;">错误提示</div>
+</body>
+	
+</html>

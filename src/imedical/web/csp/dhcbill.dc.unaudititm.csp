@@ -1,0 +1,214 @@
+<!-- 
+ * FileName: dhcbill.dc.unaudititm.csp
+ * Creator: tangzf
+ * Date: 2022-5-11
+ * Description: 未审核项目配置
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+	<link rel='stylesheet' type='text/css' href='../scripts/dhcinsu/themes/dhcinsu.css' />
+	<ADDINS require="CmdShell"></ADDINS>
+	<style type="text/css">
+   	#_HospList{
+		width:348px !important	
+	}
+	/*.hisui-toolbar.datagrid-toolbar{border-bottom-width:0px !important;}*/
+	#_HospUserList{
+		width:348px !important	
+	}
+  	#editForm1 .textbox{
+    	width:148px	!important; /* 文本框宽度减小 tangzf 2019-8-12*/ 
+	}  
+	.Redword {color:red;}
+	</style>
+</head>
+<server>
+	//d ##class(web.DHCBL.Authorize.Executables).DHCGetDataByDefaultSession("btnAdd")
+	d ##class(web.DHCBL.BDP.BDPExecutables).BuildAutAry("INSU_DICDATA")
+</server>
+<body  >
+	<div class="hisui-layout" fit="true" sytle="border-radius:0px;">  
+		<div data-options="region:'north'" style="overflow:hidden;border-radius:0px;border-bottom:1px dashed #cccccc;">
+			<table class="search-table">
+					<tr>
+						<td class='r-label'><label>院区</label></td>
+						<td colspan=3><input id="hospital" class="textbox" style="width:356px;" placeholder=""/></td>
+						<td class='r-label'><label>分类</label></td>
+						<td><input id="defendbypro" class="textbox" style="width:130px"></input></td>
+					</tr>
+					<tr>
+						<td class='r-label'><label>项目</label></td>
+						<td><input id="diccbx" class="textbox" style="width:150px" name="ccdic" ></input></td>
+						<td  class="r-label addproject"><label>业务类型</label></td>
+						<td class="addproject"><input id="BusinessTypeCodeQ" class="textbox" style="width:130px"/></input></td>
+						<td class='r-label'><label>审核标志</label></td> 
+						<td>
+							<select class="hisui-combobox" id="ExamineFlag" style="width:130px" editable="false" >
+								<option value="">全部</option>
+								<option value="Y">审核通过</option>
+								<option value="N">审核拒绝</option>
+								<option value="W">未审核</option>
+							</select>
+						</td>
+						<td class='r-label'><label>关键字</label></td> 
+						<td><input id="dicKey" class="textbox" style="width:230px" placeholder='输入指标名称/项目名称回车查询'></input></td>
+						<td class="r-label"><a id="btnQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onClick='Querydic()'>查询</a></td>
+						<td class="r-label"><a id="btnClearCho" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" >清屏</a> </td> 
+						<!-- <td class='r-label'><label>分类</label></td>
+						<td><input id="diccbx" class="textbox" style="width:180px" name="ccdic" ></input></td>
+						<td  class="r-label"><label>业务类型</label></td>
+						<td ><input id="BusinessTypeCodeQ" class="textbox" style="width:130px"/></input></td>
+						<td class='r-label'><label>指标</label></td>
+						<td><input id="IndicatorIdQ" style="width:252px" class="hisui-validatebox textbox" missingMessage="请选择指标"/></td>
+						<td class='r-label'><label>关键字</label></td>
+						<td><input id="dicKey" class="textbox" style="width:130px" placeholder='输入关键字回车查询'></input></td>
+						<td class="r-label"><a id="btnQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onClick='Querydic()'>查询</a></td>
+						<td class="r-label"><a id="btnClearCho" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" >清屏</a>   -->
+					</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',border:false"  style="margin-left: 1px;">
+			<div id="dg" data-options="region:'center',border:false"></div>
+		</div>
+		<div id="editForm1" data-options="region:'south'"  style="height:92px;border-top-width:1px" >
+			<table id="editinfo"  class='search-table'  >
+				<tr >
+					<td class="r-label"><label><label class='Redword'>*</label>分类</label></td>
+					<td><input id="CateCode"  class="textbox"/></td>
+					<td  class="r-label"><label id="projectvalue"><label class='Redword'>*</label>配置值</label></td>
+					<td><input id="ConfigValue" style="width:252px" class="hisui-validatebox textbox" required="required" placeholder="请选择配置值" missingMessage="请选择配置值"/></td>
+					<td class="r-label" hidden><label>备注</label></td>
+					<td hidden><input id="ConfigDesc" style="width:245px !important;" class="textbox" required="required"/></td>
+					<td  class="r-label" hidden><label ><label class='Redword'>*</label>有效标志</label></td>
+					<td hidden><input id="ActiveFlag"  class="textbox"/></td>
+					<td class="r-label"><label>分类数据集合</label></td>
+					<td><input id="CateDataSrc"  class="textbox" style="width:153px"  disabled/></td>
+					<!-- <td/><td/>-->
+					<td class="r-label">
+						<a id="btnClear" href="#" class="hisui-linkbutton"  data-options="iconCls:'icon-w-clean'" >清屏</a>  
+					</td>
+		 			<td> 
+						<a id="btnUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" >保存</a>  
+					</td> 
+<!-- 					<td class="r-label">
+						<a id="btnDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" >删除记录</a>  
+					</td> -->
+					<td class="r-label">
+						<a id="btnStop" href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">停用</a>  
+					</td>
+					<td>
+						<a id="btnOpen" href="#"  class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">启用</a>  
+					</td>
+				</tr>
+				<tr class='addproject'>
+					<td class="r-label"><label><label class='Redword'>*</label>业务类型</label></td>
+					<td><input id="BusinessTypeCode" class="textbox "/></input></td>
+					<td class='r-label'><label><label class='Redword'>*</label>指标</label></td>
+					<td ><input id="IndicatorId" style="width:252px" class="hisui-validatebox textbox" required="required" missingMessage="请选择指标"/></td>
+					<td  class="r-label addproject"><label>分类描述</label></td>
+					<td  class='addproject'><input id="CateDesc" class="textbox" ></input></td>
+				</tr>
+				
+			</table>
+		</div>
+	</div>
+	<div id="toolbar" class="hisui-toolbar"  sytle="border-radius:0px;">
+		<table cellspacing="0" cellpadding="0" >
+			<tr>
+	<!--				<td hidden id="ExamineTd" hidden><a href="#" class="hisui-linkbutton" iconCls="icon-key" id="Examine" plain="true" onClick='Examine("0")'>审核通过</a></td>	
+				<td hidden id="NotExamineTd" hidden><a href="#" class="hisui-linkbutton" iconCls="icon-key" id="Examine" plain="true" onClick='Examine("1")'>审核拒绝</a></td>	
+ 						<td><a href="#" class="hisui-linkbutton" iconCls="icon-copy" id="btnCopy"  plain="true" onClick='CopyUnaudititm()'>单条复制</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-copy" id="btnAllCopy" plain="true" onClick='AllCopyIndexTarItem()'>全部复制</a></td>	
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-transfer" id="oneprojectadd" plain="true" onClick='oneprojectadd()'>按分类维护</a></td> -->
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-import" id="btnImport" plain="true" onClick='Import("")' >导入项目</a></td>
+				<td><a href="#" class="hisui-linkbutton" iconCls="icon-export" id="btnExport" plain="true" onClick='Export("")' >导出项目</a></td>
+				<!-- <td><a href="#" class="hisui-linkbutton" iconCls="icon-help" id="btnTip"  plain="true">说明</a></td> -->
+			</tr>
+		</table> 
+	</div>
+	<div id="CopyUnaudititm" style="width:630px;height:350px;display:none;">
+		<table class="search-table" align="center">
+			<tr>
+				<td colspan=4 style="text-align:center"><label>说明：此操作是将原免审项添加到新指标里。</label></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>免审项ID</label></td>
+				<td><input id="CopyID" class="hisui-validatebox textbox" disabled="true"/></td>
+				<td class="r-label"><label>免审项目</label></td>
+				<td><input id="CopyTarDesc" class="hisui-validatebox textbox" disabled="true" style="width:252px"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>原业务类型</label></td>
+				<td><input id="OldBusinessType" class="hisui-validatebox textbox" disabled="true"/></td>
+				<td class="r-label"><label>原指标</label></td>
+				<td><input id="OldIndex" class="hisui-validatebox textbox" disabled="true" style="width:252px"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>原分类代码</label></td>
+				<td><input id="OldCateCode" class="hisui-validatebox textbox" disabled="true"/></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label><label class='Redword'>*</label>1.新业务类型</label></td>
+				<td><input id="NewBusinessType" class="hisui-validatebox textbox" data-options="required:true" placeholder="必选项" missingMessage="请选择业务类型"/></td>
+				<td class="r-label"><label><label class='Redword'>*</label>2.新指标</label></td>
+				<td><input id="NewIndex" class="hisui-validatebox textbox"  required="required"  placeholder="必选项，可多选" missingMessage="请选择指标" style="width:252px"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label><label class='Redword'>*</label>3.新分类代码</label></td>
+				<td><input id="NewCateCode" class="hisui-validatebox textbox"  required="required"/></td>
+				<td></td>
+				<td></td>
+			</tr>
+		</table>
+	</div>
+	<div id="AllCopyIndexTarItem" style="width:630px;height:300px;display:none;">
+		<table class="search-table" align="center">
+			<tr>
+				<td colspan=4 style="text-align:center"><label>说明：此操作是将原指标下的<font color='#f16e57'>所有</font>免审项添加到新指标里。</label></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>原业务类型</label></td>
+				<td><input id="OldBusinessType2" class="hisui-validatebox textbox" disabled="true"/></td>
+				<td class="r-label"><label>原指标</label></td>
+				<td><input id="OldIndex2" class="hisui-validatebox textbox" disabled="true" style="width:252px"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>原分类代码</label></td>
+				<td><input id="OldCateCode2" class="hisui-validatebox textbox" disabled="true"/></td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label><label class='Redword'>*</label>1.新业务类型</label></td>
+				<td><input id="NewBusinessType2" class="hisui-validatebox textbox" data-options="required:true" placeholder="必选项" missingMessage="请选择业务类型"/></td>
+				<td class="r-label"><label><label class='Redword'>*</label>2.新指标</label></td>
+				<td><input id="NewIndex2" class="hisui-validatebox textbox"  required="required"  placeholder="必选项" missingMessage="请选择指标" style="width:252px"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label><label class='Redword'>*</label>3.新分类代码</label></td>
+				<td><input id="NewCateCode2" class="hisui-validatebox textbox"  required="required"/></td>
+				<td></td>
+				<td></td>
+			</tr>
+		</table>
+	</div>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/unaudititm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/publicimportexceltoarr.js"></script>
+	<script type="text/javascript" src="../scripts/dhcbill/dc/xlsx.full.min.js"></script>
+	<!--<DHCBILLINSUCloud/>-->
+</body>
+</html>

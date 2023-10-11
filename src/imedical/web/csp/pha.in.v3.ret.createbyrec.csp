@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+    退货 - 制单 - 依据入库
+	csp:  csp/pha.in.v3.ret.createbyrec.csp
+	js:   scripts/pha/in/v3/ret/createbyrec.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <style>
+        #qCondition a {
+            width: auto
+        }
+
+        #btnSave {
+            display: none;
+        }
+        #gridMainBar #qCondition a {
+            width: inherit !important
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div id="mainDiv-rec" data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',split:true,border:false">
+                    <div class="hisui-layout pha-body-layout" fit="true" border="false" >
+                        <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'west',width:510,split:true,title:'入库单',collapsible:true,showCollapsedTitle:true">
+                            <table id="gridMain"></table>
+                        </div>
+                        <div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center',title:'单据明细'">
+                            <table id="gridItm"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="gridMainBar">
+        <table class="pha-con-table" id="qCondition">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("开始日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="startDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="endDate">#(..Get("结束日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="endDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="loc">#(..Get("入库科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="loc" data-pha="class:'hisui-combobox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="no">#(..Get("入库单号"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="no" data-pha="class:'hisui-validatebox',query:true,clear:true">
+                </td>
+
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="vendor">#(..Get("经营企业"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="vendor" data-pha="class:'hisui-combobox',query:true,clear:true">
+                </td>
+                <td class="r-label">
+                    <label for="invNo">#(..Get("发票号"))#</label>
+                </td>
+                <td class="r-label">
+                    <input id="invNo" data-pha="class:'hisui-validatebox',query:true,clear:true" class="hisui-validatebox">
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="r-label"style="text-align: right;">
+                    <a class="hisui-linkbutton" id="btnFind">查询</a>
+                </td>
+                <td class="r-label"  style="text-align: left;">
+                    <a class="hisui-linkbutton" id="btnClean">清屏</a>
+                </td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+    <div id="gridItmBar">
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-save'" id="btnSave">勾选记录保存为退货单</a>
+        <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-copy'" id="btnCopyGo">复制勾选记录到制单界面</a>
+        <!-- <a class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-save'" id="btnSetReason">批量选择退货原因</a> -->
+    </div>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/ret/createbyrec.js"></script>
+</body>
+
+</body>
+
+</html>

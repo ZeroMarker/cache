@@ -1,0 +1,90 @@
+﻿<html>
+    <head>
+        <title>院外资料 </title>
+        <HISUI/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/qwebchannel.js"></script>
+        <script language="cache" runat="server">
+            s userID = %session.Get("LOGON.USERID")
+			s ssgroupID = %session.Get("LOGON.GROUPID")
+			s userLocID = %session.Get("LOGON.CTLOCID")
+			s USERCODE= %session.Get("LOGON.USERCODE")
+        	s USERNAME= %session.Get("LOGON.USERNAME")
+       	 	s episodeID = $Get(%request.Data("EpisodeID",1),"")
+        	s patientID = $Get(%request.Data("PatientID",1),"")
+        	s:(patientID="")&&(EpisodeID'="") patientID = ##class(EMRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
+        </script>
+        <script language="javascript">
+            var userCode = "#(USERCODE)#";
+        	var userName = "#(USERNAME)#";
+        	var patInfo = parent.patInfo;
+        	var episodeID="#(episodeID)#" || patInfo.EpisodeID;			//就诊号
+        	var patientID="#(patientID)#" || patInfo.PatientID; 
+        	var ftpUrl="";			    //ftpurl
+         	var picMax="";              //图片上传最大数量
+        	var sort = "";				//图片排序
+        	//BEGIN SETUP
+			//拍照数据（base64）
+			var baseUrl;
+			var socket;
+			//储存图片路径的变量和数组
+			var imgPath = "";
+			var imgPathArray = new Array(); 
+        </script>
+    </head>
+    <body class="hisui-layout">
+      	<div data-options="region:'east',title:'图片上传',iconCls:'icon-w-list',split:true,split:true" 
+		style="width:500px;padding:10px;">
+				<div align="center">
+					<div id="container" type="application/x-eloamplugin" style="width:470px;height:440px;border:1px solid #232323;overflow-y:auto;"></div>
+					<br>
+					<br>
+					<a href="#" class="hisui-linkbutton" onclick="checkAll()">全选</a>
+					<a href="#" class="hisui-linkbutton" onclick="unCheckAll()">取消选中</a>
+					<a href="#" class="hisui-linkbutton" onclick="toggleCheck()">反选</a>
+					<a id="uploadFile" href="#" class="hisui-linkbutton">上传</a>
+					<a id="deleteFile" href="#" class="hisui-linkbutton">删除</a> 
+					<br/>
+					<br/>
+					<div align="center">
+				 		<input class="hisui-radio" type="radio" label="默认" name="sort" checked value="Default">
+            			<input class="hisui-radio" type="radio" label="病历" name="sort" value="Emr">
+            			<input class="hisui-radio" type="radio" label="检查" name="sort" value="Pacs">
+            			<input class="hisui-radio" type="radio" label="检验" name="sort" value="Lis">
+            			<input class="hisui-radio" type="radio" label="头像" name="sort" value="Avatar">
+					</div> 
+				</div>			  					
+				
+		</div>   
+		<div data-options="region:'center',title:'拍照',split:true" style="padding:10px;">
+				<div style="padding:0 10px 10px;overflow:hidden;">
+					<div align="center" style='float:left;border:1px solid #232323;'>
+						<h4>主视频</h4>
+						<img id="bigPriDev" width="470" height="480" /></img>
+					</div>
+    				<div align="center" style='float:right;border:1px solid #232323;'>
+    					<h4>副视频</h4>
+    					<img id="bigSubDev" width="470" height="480" /></img>	
+    				</div>
+    			</div>				
+				<label id="lab1" class="btnsize">设备1</label>
+				<select id="priModelList" style="width: 90px" name="device"></select>
+				<select id="priResolutionList" style="width: 90px" name="subType"></select>
+				设置尺寸<select id="setScanSize" style="width: 90px" name="selRes"></select>
+				<a id="openPriVideo" href="#" class="hisui-linkbutton" >打开主视频</a>
+				<a id="closePriVideo" href="#" class="hisui-linkbutton" >关闭主视频</a>
+				<a id="photographPri" href="#" class="hisui-linkbutton" >主头拍照</a>
+				<br>
+				<br>
+				<label id="lab2" class="btnsize">设备2</label>
+				<select id="subModelList" style="width: 90px" ></select>
+				<select id="subResolutionList" style="width: 90px" ></select> 
+				<a id="openSubVideo" href="#" class="hisui-linkbutton" >打开副视频</a>
+				<a id="closeSubVideo" href="#" class="hisui-linkbutton" >关闭副视频</a>
+				<a id="photographSub" href="#" class="hisui-linkbutton" >副头拍照</a>
+		</div>   
+        <script type="text/javascript" src="../scripts/emr/js/pictureManage.js"></script>
+    </body>
+</html>

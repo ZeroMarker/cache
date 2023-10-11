@@ -1,0 +1,44 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.Conversions).IsValidClassName("websys.Filter") d ##class(websys.Filter).InjectionFilter()
+ if ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+	<head>
+		<TITLE>ThirdScreen</TITLE>
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<HISUI></HISUI>
+	</head>
+	<body>
+		<div style="margin:200px auto 10px;width:500px;">
+			<div>
+				<span>欢迎您！</span><span style='font-size:18px;font-weight: 700;'>#(%session.Data("LOGON.USERNAME"))#</span>
+			</div>
+			<div style="margin-top:10px;">
+			<span>当前登录信息：</span><span style='font-size:18px;font-weight: 700;'>#(%session.Data("LOGON.CTLOCDESC"))#，#(%session.Data("LOGON.GROUPDESC"))#（角色）</span>
+			</div>
+		</div>
+		<div style="margin:40px auto;width:500px;height:400px;background-repeat: no-repeat; background-image: url(../skin/default/images/screen_welcome.svg);background-size: cover;">
+		</div>
+		<div style="margin:40px auto;width:200px;">欢迎使用东华医为科技信息系统</div>
+		<div id="msg">
+		</div>
+		<!--<a class="hisui-linkbutton" id="sendbtn"> 发消息给诊疗/病历 </a>-->
+		<script type="text/javascript">
+			websys_on({
+				"onSelectIPPatient":function(obj){
+					$("#msg").html(JSON.stringify(obj));
+				},"onOpenIPTab":function(obj){
+					$("#msg").html(JSON.stringify(obj));
+				}
+			});
+			$(function(){
+				$("#sendbtn").click(function(){
+					websys_emit("onHomePageClick",{"usercode":"#(%request.Data("usercode",1))#",msg:$("#msg").html()});
+				});
+			});
+		</script>
+	</body>
+</html>

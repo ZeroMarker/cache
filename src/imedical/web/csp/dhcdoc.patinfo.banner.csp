@@ -1,0 +1,245 @@
+<!--dhcdoc.patinfo.banner.csp-->
+<style type='text/css'>
+    .pat-info-panel{
+        display: flex;
+        align-items: center;
+        height: 100%;
+        width:100%;
+    }
+    .pat-info-container{
+        height:100%;
+        width:100%;
+        display: flex;
+        align-items:center;
+        overflow: hidden;
+    }
+    .pat-info-item{
+        margin: 0px 5px;
+        line-height: 100%;
+        white-space:nowrap;
+        flex-shrink:0;
+        display: flex;
+    }
+    .pat-info-img{
+        width: 30px;
+        height: 30px;
+        border-radius: 30px;
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+    .pat-info-split{
+        color:#bbb;
+    }
+    .pat-info-title{
+        color:#666;
+        margin-right: 5px;
+    }
+    .patinfo-hover-content{
+        display: flex;
+        flex-wrap:wrap;
+        align-items:center;
+    }
+    .pat-info-value{
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .pat-info-over{
+        color:#888;
+    }
+    #PatListBtn{
+        background-color: #2ab66a;
+		color: #fff;
+    }
+</style>
+<server>
+    s:$G(PatientListPage)="" PatientListPage = $g(%request.Data("PatientListPage",1))
+    s InitPatListType=%request.Get("InitPatListType")
+    if (PatientListPage'=""){
+        if (PatientListPage'["MWToken"){
+            i PatientListPage["?" s PatientListPage=PatientListPage_"&"
+            e  s PatientListPage=PatientListPage_"?"
+            s PatientListPage=PatientListPage_"MWToken="_%session.SessionId
+        }
+        s PatientListPage=PatientListPage_"&InitPatListType="_InitPatListType
+    }
+    s:$G(PatientListWinOpts)="" PatientListWinOpts=$g(%request.Data("PatientListWinOpts",1))
+    s:PatientListWinOpts="" PatientListWinOpts={}
+    s:'$IsObject(PatientListWinOpts) PatientListWinOpts={}.%FromJSON(PatientListWinOpts)
+    s PatListWinTitle=PatientListWinOpts.title
+    s:PatListWinTitle="" PatListWinTitle="患者列表"
+</server>
+<div class="pat-info-panel">
+     <div class="pat-info-container"></div>
+     <csp:if condition=(PatientListPage'="")>
+        <div style="width:100px;">
+            <a id="PatListBtn" href="#" class="hisui-linkbutton">#(..Get(PatListWinTitle))#</a>
+        </div>
+    </csp:if>
+</div>
+<csp:if condition=(PatientListPage'="")>
+	<div id="PatListWin" class="hisui-window" title="#(PatListWinTitle)#"
+	    data-options="iconCls:'icon-w-list',modal:true,minimizable:false,maximizable:true,collapsible:false,closed:true,onOpen:PatListWinOpen,onClose:PatListWinClose,onRestore:showPatListWin" style="overflow:hidden;">  
+	    <iframe id="PatListFrm" name='PatListFrm' width='100%' height='100%' frameborder="0" scrolling="no" src=''></iframe>
+	</div>
+</csp:if>
+<SCRIPT language = 'javascript' >
+$(function(){
+    $('#PatListBtn').click(showPatListWin);
+});
+function InitPatInfoBanner(EpisodeID,PatientID)
+{   
+    $('.pat-info-container').css('width','100%').empty();
+    $('.pat-info-over').remove();
+    if(!EpisodeID&&!PatientID){
+        var frm = dhcsys_getmenuform();
+        if (frm) EpisodeID = frm.EpisodeID.value;
+    }
+    if(!EpisodeID&&!PatientID){
+        if(window.showPatListWin) showPatListWin();
+        return false;
+    }
+    $.cm({
+        ClassName:"web.DHCDoc.OP.AjaxInterface",
+        MethodName:"GetPatInfoBar",
+        EpisodeID:EpisodeID,
+        PatientID:PatientID||"",
+        CONTEXT:session['CONTEXT']
+    },function(data){
+        $('.pat-info-container').css('width','100%').empty();
+        $('.pat-info-over').remove();
+        var imgName="";
+        switch(data.sexCode){
+            case "1":imgName="man";break;
+            case "2":imgName="woman";break;
+            default:imgName="unman";break;
+        }
+        if(HISUIStyleCode=='lite') imgName=imgName+"_lite";
+        var $container=$('.pat-info-container');
+        $container.append("<div class='pat-info-item pat-info-img' style='background-image:url(../images/"+imgName+".png);'></div>");
+        $.each(data.rows,function(index,obj){
+            if(index>0){
+                 $container.append($('<div></div>').text('/').addClass('pat-info-split'));
+            }
+            var $unit=$('<div></div>').attr('id',obj.id).addClass('pat-info-item');
+            if(obj.name) $unit.append('<div class="pat-info-title">'+obj.name+':</div>');
+            $unit.append("<div class='pat-info-value' style='"+obj.style+"'>"+obj.value+'</div>');
+           $container.append($unit);
+        });
+        try{$container.popover('destroy');}catch(e){}
+        //整体超宽悬浮提示
+        if($container[0].clientWidth<$container[0].scrollWidth){
+            $container.popover({
+                width:$container.width(),
+                trigger:'hover',
+                arrow:false,
+                isTopZindex:true,
+                placement:'bottom',
+                content:"<div class='patinfo-hover-content'>"+$('.pat-info-container').html()+"</div>"
+            });
+            $('.pat-info-container').css('width','calc(100% - 8px)').after('<div class="pat-info-over">...</div>');
+        }
+        //单个值超宽悬浮提示
+        $('.pat-info-value').each(function(){
+             if(this.clientWidth<this.scrollWidth){
+                $(this).tooltip({
+                    content:$(this).html().split(';').join('<br/>'),
+                    onShow:function(){
+                        try{$container.popover('hide');}catch(e){}
+                    }
+                });
+             }
+        });
+        //resize自适应布局
+        var resizeTimer=null;
+        $(window).off('resize.patinfobar').on('resize.patinfobar',function(e){
+            clearTimeout(resizeTimer);
+            resizeTimer=setTimeout(function(){
+                InitPatInfoBanner(EpisodeID,PatientID);
+            },200);
+        });
+    });
+    return true;
+}
+function showPatListWin()
+{
+    if(!$('#PatListWin').length) return;
+    var PatientListWinOpts=#(PatientListWinOpts.%ToJSON())#;
+    var winOpts=$.extend({isTopZindex:true},PatientListWinOpts);
+    var winTop,winLeft;
+    var frm = dhcsys_getmenuform();
+    var adm=frm.EpisodeID.value;
+    if(adm||(PatientListWinOpts.height&&PatientListWinOpts.width)){
+        var bodyHeight=$('body').innerHeight(),bodyWidth=$('body').innerWidth();
+        var winHeight=winOpts.height?winOpts.height:(bodyHeight-50);
+        var winWidth=winOpts.width?winOpts.width:((bodyWidth-10)>1600?1600:bodyWidth);
+        winTop=(typeof winOpts.top!='undefined')?winOpts.top:40;
+        winLeft=(typeof winOpts.left!='undefined')?winOpts.left:(bodyWidth-winWidth-5);
+        $.extend(winOpts,{
+            maximizable:true,
+            closable:true,
+            maximized:false,
+            width:winWidth,
+            height:winHeight
+        });
+    }else{
+        $.extend(winOpts,{maximizable:false,closable:false,maximized:true});
+    }
+    $('#PatListWin').window(winOpts).window('open');
+    if(typeof winTop!='undefined' && typeof winLeft!='undefined'){
+        $('#PatListWin').window('move',{top:winTop,left:winLeft});
+        LoadPatientDataGrid();
+    }
+}
+function LoadPatientDataGrid()
+{
+    var win=window.frames['PatListFrm'];
+    if(win&&(typeof win.LoadOutPatientDataGrid=='function')){
+        win.LoadOutPatientDataGrid();
+    }
+}
+function hidePatListWin()
+{
+    if(!$('#PatListWin').length) return;
+    $('#PatListWin').window('close');
+}
+function PatListWinOpen()
+{
+    if($('#PatListFrm').attr('src')==''){
+        $('#PatListFrm').attr('src','#(PatientListPage)#');
+    }
+    $('#PatListWin').panel('header').off('dblclick').on('dblclick',function(){
+        var frm = dhcsys_getmenuform();
+        if(!frm.EpisodeID.value) return;
+        if($('#PatListWin').window('options').maximized){
+            //$('#PatListWin').window('restore');
+            showPatListWin();
+        }else{
+            $('#PatListWin').window('maximize');
+        }
+    });
+}
+function PatListWinClose()
+{
+}
+function UpdateWaitTip(data)
+{
+    var $table=$('<table></table>').css({'border-collapse':'separate','border-spacing':'10px'});
+    $table.append('<tr><td class="r-label">'+$g('待就诊')+'</td><td>'+data.RegQue+'</td></tr>');
+    $table.append('<tr><td class="r-label">'+$g('已就诊')+'</td><td>'+data.Complete+'</td></tr>');
+    $table.append('<tr><td class="r-label">'+$g('未报到')+'</td><td>'+data.Report+'</td></tr>');
+    $table.append('<tr><td class="r-label">'+$g('已完成')+'</td><td>'+data.DocComplete+'</td></tr>');
+    var popoverTarge=$("#PatListBtn").attr('data-target');
+    if(popoverTarge&&popoverTarge.indexOf('webuiPopover')>-1){
+        $("#PatListBtn").popover('setContent',$table);
+    }else{
+        $("#PatListBtn").popover({title:'',trigger:'hover',content:$table});
+    }
+    var WaitPatNum=parseInt(data.RegQue);
+    if(WaitPatNum>0){
+        var content=WaitPatNum>99?99:WaitPatNum;
+        $('#PatListBtn').linkbutton('addTip',content);
+    }else{
+        $('#PatListBtn').linkbutton('deleteTip');
+    }
+}
+</SCRIPT>

@@ -1,0 +1,169 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<!--nur.hisui.shiftSetDataImport.csp 交班数据引入配置--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{background: white;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;margin-bottom: 0;margin-top: 10px;}
+div.hGap{height: 10px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+.datagrid-toolbar{width: 100%;}
+
+#bpConfig tr{height: 40px;}
+#bpConfig tr td{width: 195px;}
+#bpConfig tr td:nth-of-type(2n+1){text-align: right;padding-right: 10px;width: 150px;}
+#bpConfig tr.title td{text-align: left;padding-left: 10px;font-weight: bold;}
+input.textbox{padding: 0 5px;}
+</style>
+</head>
+<body style="overflow: hidden;padding: 0;">
+	<div style="position: relative;padding-top: 10px;">
+		<table cellpadding="0" style="margin-left: 10px;border-collapse: collapse;">
+	    <tr>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+	    </tr>
+	  </table>
+	  <hr class="dashed">
+	</div>
+	<!-- <div id="bpPanel" class="hisui-panel" title="血压趋势图配置"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'"> -->
+		<form action="" id="bpForm">
+			<table id="bpConfig">
+				<tr class="title">
+					<td>血压颜色设置</td>
+				</tr>
+				<tr>
+					<td>收缩压颜色</td>
+					<td>
+							<input id="sysPresColor" class="hisui-validatebox textbox" data-options="required:true" type="color">
+							<a href="javascript:void(0);" class="handFilling" onclick="handFillingColor(this);">手填</a>
+					</td>
+					<td>舒张压颜色</td>
+					<td>
+							<input id="diaPresColor" class="hisui-validatebox textbox" data-options="required:true" type="color">
+							<a href="javascript:void(0);" class="handFilling" onclick="handFillingColor(this);">手填</a>
+					</td>
+				</tr>
+				<tr class="title">
+					<td>纵坐标血压设置</td>
+				</tr>
+				<tr>
+					<td>最大值</td>
+					<td>
+						<input id="bpMax" class="hisui-numberbox textbox" data-options="fix:false,required:true,max:500,min:0">
+						<input id="id" type="hidden">
+					</td>
+					<td>最小值</td>
+					<td>
+						<input id="bpMin" class="hisui-numberbox textbox" data-options="fix:false,required:true,max:500,min:0">
+					</td>
+					<td>间隔值</td>
+					<td>
+						<input id="bpGap" class="hisui-numberbox textbox" data-options="fix:false,required:true,min:10">
+					</td>
+				</tr>
+				<tr class="title">
+					<td>血压预警设置</td>
+				</tr>
+				<tr>
+					<td>收缩压预警高值</td>
+					<td>
+						<input id="sysPresHigh" class="hisui-numberbox textbox" data-options="fix:false,max:500,min:0">
+					</td>
+					<td>收缩压高值预警线颜色</td>
+					<td>
+							<input id="sysPresHighColor" class="hisui-validatebox textbox" data-options="required:true" type="color">
+							<a href="javascript:void(0);" class="handFilling" onclick="handFillingColor(this);">手填</a>
+					</td>
+				</tr>
+				<tr>
+					<td>收缩压预警低值</td>
+					<td>
+						<input id="sysPresLow" class="hisui-numberbox textbox" data-options="fix:false,max:500,min:0">
+					</td>
+					<td>收缩压低值预警线颜色</td>
+					<td>
+							<input id="sysPresLowColor" class="hisui-validatebox textbox" data-options="required:true" type="color">
+							<a href="javascript:void(0);" class="handFilling" onclick="handFillingColor(this);">手填</a>
+					</td>
+				</tr>
+				<tr>
+					<td>舒张压预警高值</td>
+					<td>
+						<input id="diaPresHigh" class="hisui-numberbox textbox" data-options="fix:false,max:500,min:0">
+					</td>
+					<td>舒张压高值预警线颜色</td>
+					<td>
+							<input id="diaPresHighColor" class="hisui-validatebox textbox" data-options="required:true" type="color">
+							<a href="javascript:void(0);" class="handFilling" onclick="handFillingColor(this);">手填</a>
+					</td>
+				</tr>
+				<tr>
+					<td>舒张压预警低值</td>
+					<td>
+						<input id="diaPresLow" class="hisui-numberbox textbox" data-options="fix:false,max:500,min:0">
+					</td>
+					<td>舒张压低值预警线颜色</td>
+					<td>
+							<input id="diaPresLowColor" class="hisui-validatebox textbox" data-options="required:true" type="color">
+							<a href="javascript:void(0);" class="handFilling" onclick="handFillingColor(this);">手填</a>
+					</td>
+				</tr>
+				<tr>
+					<td>脉压差预警高值</td>
+					<td>
+						<input id="presGapHigh" class="hisui-numberbox textbox" data-options="fix:false,max:500,min:0">
+					</td>
+				</tr>
+				<tr>
+					<td>脉压差预警低值</td>
+					<td>
+						<input id="presGapLow" class="hisui-numberbox textbox" data-options="fix:false,max:500,min:0">
+					</td>
+				</tr>
+				<tr class="title">
+					<td>日期区间默认查询设置</td>
+				</tr>
+				<tr>
+					<td>
+						<select id="period" class="hisui-combobox" name="state" style="width:115px;" data-options="enterNullValueClear:false,blurValidValue:true,required:true">
+							<option value="1">1天</option>
+							<option value="3">3天</option>
+							<option value="7">7天</option>
+							<option value="14">14天</option>
+							<option value="21">21天</option>
+							<option value="30">1月</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="6" style="text-align: center;">
+			      <a href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-save'" onclick="saveBPConfig();">保存</a>
+					</td>
+				</tr>
+			</table>
+		</form>
+	<!-- </div> -->
+  <canvas id="colorPicker" width="320" height="320" style="display: none;position: absolute;"></canvas>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.bpchartconfig.js"></script>
+</body>
+</html>

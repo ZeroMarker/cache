@@ -15,23 +15,21 @@
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 	<HISUI/>
-       <ADDINS/>
- 
- 
+    <ADDINS/>
+	<DOCCARD medStepCode="PEBill"></DOCCARD>
+	
 <style>
+
 .search-table{
 	border-collapse:separate;
 	border-spacing:0 10px;
-	/*padding: 0 10px;*/
+	
 }
 .r-label{
+	padding-left: 20px;
+}
+.r-labelnew{
 	padding-left: 10px;
-}
-.r-label-1{
-	padding-left: 30px;
-}
-.r-label-11{
-	padding-left: 30px;
 }
 .newclsInvalid{
 	border-color: red;
@@ -45,24 +43,32 @@
 </style>
 
 	<server>
-		do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
-		w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
+		s FormStyle=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+		if (FormStyle="lite"){
+			s bordercolor="#e2e2e2"
+			
+		}else{
+			s bordercolor="#ccc"
+		}
+		//do ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+		//w "<input id='ReadAccExpEncrypt' name='InsuPatTypeCheck' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))_"'>",$C(13,10)
 		w "<input id='CardTypeRowID' name='CardTypeRowID' type='hidden' value=''>",$C(13,10)
-		w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
-		w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
+		//w "<input id='GetCardTypeEncrypt' name='GetCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))_"'>",$C(13,10)
+		//w "<input id='ReadCardTypeEncrypt' name='ReadCardTypeEncrypt' type='hidden' value='"_##Class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))_"'>",$C(13,10)
         d ##Class(web.DHCBillPrint).InvBillPrintCLSID()
-		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
-	</server>
+		w "<input id='InvPrintEncrypt' name='InvPrintEncrypt' type='hidden' value='"_##class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))_"'>",$c(13,10)
+	</server>	
 </head>
+
+
 <body>
-<div class="hisui-layout" fit="true">
-	<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:95px;">
-		<div data-options="region:'north',split:false,border:false" style="height:75px;padding:10px 10px 0 10px;">
-			<div class="hisui-panel" data-options="title:'集中打印',headerCls:'panel-header-gray',iconCls:'icon-print'" style="border:1px solid #ccc;border-radius:0 0 4px 4px;">
+	<div class="hisui-layout" fit="true" style="background-color:inherit;">
+		<div data-options="region:'north',split:false,border:false" style="height:95px;padding:10px 10px 0 10px;background-color:inherit;">
+			<div class="hisui-panel" data-options="title:'集中打印',headerCls:'panel-header-gray',iconCls:'icon-print'" style="border:1px solid #(bordercolor)#;border-radius:0 0 4px 4px;">
 				<table class="search-table">
 					<tr>
-						<td class="r-label"><label for="InvName">发票名称</label></td>
-						<td>
+						<td class="r-labelnew"><label for="InvName">#(..Get("发票名称"))#</label></td>
+						<td class="r-labelnew">
 							<input class="textbox" id="InvName" style="width:385px"/>
 						</td>
 						<!--td class="r-label r-label-1"></td>
@@ -73,15 +79,15 @@
 						<td>
 							<input class='hisui-checkbox' type="checkbox" id="InsuPay" disabled/><label for="InsuPay">医保结算</label>
 						</td-->
-						<td class="r-label r-label-1"><label for="CurInvNo">当前发票号</label></td>
+						<td class="r-label"><label for="CurInvNo">#(..Get("当前发票号"))#</label></td>
 						<td>
 							<input class="textbox" id="CurInvNo" style="width:200px" disabled/>
 						</td>
-						<td class="r-label r-label-1">
+						<td class="r-label">
 							<a id="BPrintInv" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印发票</a>
 							<!--a id="BCancelPrint" href="#" class="hisui-linkbutton" style="display:none;" data-options="iconCls:'icon-w-cancel'">撤销集中打印</a-->
 						</td>
-						<td class="r-label r-label-1">
+						<td class="r-labelnew">
 							<a id="BPrintDetail" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'">打印明细</a>
 						</td>
 					</tr>
@@ -94,85 +100,78 @@
 						<td class="r-label"><label for="AdmReason">费别</label></td>
 						<td>
 							<input class="hisui-combobox" type="text" id="AdmReason" style="width:200px"/>
-						</td>
-						
-						
-						
+						</td>	
 					</tr-->
 				</table>
-			</div>
+			
 		</div>
 		
 	</div>
-	<div data-options="region:'center',border:false" style="padding:10px 10px 10px 10px;border:0;">
-		<div data-options="region:'north',border:false,collapsible:false" style="height:125px;">
-		 	<div class="hisui-panel" data-options="title:'发票查询',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #ccc;border-radius:0;">
-				<table class="search-table">
-		 				<tr>
-		 				    
-		 				    <td class="r-label"><label for="InvNo">发票号</label></td>
-							<td>
-								<input class="textbox" id="InvNo"/>
-							</td>
+	<div  data-options="region:'center',split:true,headerCls:'panel-header-gray',border:false" style="background-color:inherit;">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',split:false,border:false,title:'',collapsible:false" style="height:135px;padding:10px 10px 0 10px;background-color:inherit;">
+				<div class="hisui-panel" data-options="title:'发票查询',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="border:1px solid #(bordercolor)#;border-radius:0;">
+				  <table class="search-table">
+					<input type="hidden" id="InvID"/>
+		 			<tr>	    
+		 				<td class="r-labelnew"><label for="InvNo">#(..Get("发票号"))#</label></td>
+						<td class="r-labelnew">
+							<input class="textbox" id="InvNo"/>
+						</td>
 							
-							<td class="r-label r-label-11"><label for="BeginDate">开始时间</label></td>
-							<td>
-								<input class="hisui-datebox textbox" id="BeginDate"/>
-							</td>
+						<td class="r-label"><label for="BeginDate">#(..Get("开始时间"))#</label></td>
+						<td>
+							<input class="hisui-datebox textbox" id="BeginDate"/>
+						</td>
 							
-							<td class="r-label r-label-11"><label for="CardTypeNew">卡类型</label></td>
-							<td>
-								<input class="textbox" disabled id="CardTypeNew"/> 
-							</td>
+						<td class="r-label"><label for="CardTypeNew">#(..Get("卡类型"))#</label></td>
+						<td>
+							<input class="textbox" disabled id="CardTypeNew"/> 
+						</td>
 
-							<td class="r-label r-label-11"><label for="InvType">发票类型</label></td>
-							<td>
-								<input class="hisui-combobox" id="InvType"/>
-							</td>
+						<td class="r-label"><label for="InvType">#(..Get("发票类型"))#</label></td>
+						<td>
+							<input class="hisui-combobox" id="InvType"/>
+						</td>
 							
-         			 		<td class="r-label r-label-11">
-								<a id="BReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
-							</td>
+         			 	<td class="r-label">
+							<a id="BReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a>
+						</td>	
+					</tr>
+					<tr>
+						<td class="r-labelnew"><label for="RegNo">#(..Get("登记号"))#</label></td>
+						<td class="r-labelnew">
+							<input class="textbox" id="RegNo"/>
+						</td>
+							
+						<td class="r-label"><label for="EndDate">#(..Get("结束时间"))#</label></td>
+						<td>
+							<input class="hisui-datebox textbox" id="EndDate"/>
+						</td>
+							
+						<td class="r-label"><label for="CardNo">#(..Get("卡号"))#</label></td>
+						<td>
+							<input class="textbox" id="CardNo"/>
+						</td>
 
-							
-							<td><input type="hidden" id="InvID"/></td>	
-							
-						</tr>
-						<tr>
-							<td class="r-label"><label for="RegNo">登记号</label></td>
-							<td>
-								<input class="textbox" id="RegNo"/>
-							</td>
-							
-							<td class="r-label r-label-11"><label for="EndDate">结束时间</label></td>
-							<td>
-								<input class="hisui-datebox textbox" id="EndDate"/>
-							</td>
-							
-							<td class="r-label r-label-11"><label for="CardNo">卡号</label></td>
-							<td>
-								<input class="textbox" id="CardNo"/>
-							</td>
-
-							<td class="r-label r-label-11"><label for="FocusStat">集中打印状态</label></td>
-							<td>
-								<input class="hisui-combobox" id="FocusStat"/>
-							</td>
-							<td class="r-label">
-								<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
-							</td>
-						</tr>
-						
-                   </table>
-		 		</div>
-			</div>
-				<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'">
-			<div class="hisui-panel" fit="true" style="height:525px;border:1px solid #ccc;border-top:0;border-radius:0 0 4px 4px;">
-				<table id="INVFocusPrtTab"></table>
-			</div>
-		</div>
-		 		
-			</div>		
+						<td class="r-label"><label for="FocusStat">#(..Get("集中打印状态"))#</label></td>
+						<td>
+							<input class="hisui-combobox" id="FocusStat"/>
+						</td>
+						<td class="r-label">
+							<a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+						</td>
+					</tr>
+                  </table>
+                </div>
+             </div>  
+		 	<div data-options="region:'center',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="padding:0 10px 10px 10px;">
+				<div class="hisui-panel" fit="true" style="border:1px solid #(bordercolor)#;border-top:0;border-radius:0 0 4px 4px;">
+					<table data-options="bodyCls:'panel-header-gray'" id="INVFocusPrtTab"></table>
+				</div>
+        	</div>    
+        </div>
+     </div>             		
 </div>
 
 <script type="text/javascript" src="../scripts/DHCPEINVFocusPrt.hisui.js"></script>
@@ -182,8 +181,6 @@
 <script type="text/javascript" src="../scripts/DHCWeb.OPCommonManageCard.js"></script>
 <script type="text/javascript" src="../scripts/DHCInsuPort.js"></script>
 <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="UIF-8"></script>
-
-
 
 </body>		
 </html>

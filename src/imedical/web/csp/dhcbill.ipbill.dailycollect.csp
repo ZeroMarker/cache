@@ -1,8 +1,7 @@
-<!-- 
+   <!-- 
  * FileName: dhcbill.ipbill.dailycollect.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-03-16
- * Function: 
  * Description: 住院收费日结汇总
 -->
 <!DOCTYPE html>
@@ -13,58 +12,64 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
-	<link rel='stylesheet' type='text/css' href='../scripts/dhcbill/themes/default/dhcbill.dailyhand.css'/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.dailyhand.css"/>
 	<server>
-	set groupId=$g(%session.Data("LOGON.GROUPID"))
-	set hospId=$g(%session.Data("LOGON.HOSPID"))
-	set baseConfig=##class(web.UDHCOPGSConfig).ReadCFByGRowID(groupId, hospId)
-	set receFlag=$p(baseConfig,"^",21)
+		set groupId=%session.Get("LOGON.GROUPID")
+		set hospId=%session.Get("LOGON.HOSPID")
+		set baseConfig=##class(web.UDHCOPGSConfig).ReadCFByGRowID(groupId, hospId)
+		set receFlag=$p(baseConfig,"^",21)
+		w "<input id='receId' type='hidden'/>",!
 	</server>
 </head>
 
-<body style="padding:10px;">
+<body style="padding:10px">
 	<div class="hisui-layout" data-options="fit:true,border:false">
 		<div data-options="region:'center',border:false">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',collapsible:false,title:'住院收费日结汇总',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:129px;border-radius:0;">
-					<table class="search-table" style="margin:0 auto;">
+				<div data-options="region:'north',collapsible:false,title:'住院收费日结汇总',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:127px;border-radius:0;">
+					<table class="search-table">
 						<tr>
-							<td class="r-label"><label>开始日期</label></td>
-							<td><input id="stDate" class="hisui-datebox textbox"/></td>
-							<td class="r-label r-label-1">操作员</td>
-							<td><input id="userCombo" class="hisui-combobox textbox"/></td>
-							<td class="r-label-1">
+							<td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+							<td><input id="stDate" class="hisui-datebox textbox tb250"/></td>
+							<td class="r-label r-label-20">#(..Get("操作员"))#</td>
+							<td><input id="userCombo" class="hisui-combobox textbox tb250"/></td>
+							<td class="r-label r-label-20">
 								<csp:if condition='receFlag="1"'>
-									<input class="hisui-checkbox" type="checkbox" id="checkReceive" label="接收历史"/>
+									<input class="hisui-checkbox" type="checkbox" id="checkReceive" label="#(..Get("接收历史"))#"/>
 								</csp:if>
+							</td>
+							<td class="r-label-20">
+								<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btnFind" data-options="iconCls:'icon-w-find'" style="margin-right:10px;">查询</a>
+								<csp:if condition='receFlag="1"'>
+									<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btnReset" data-options="iconCls:'icon-w-reset'" style="margin-right:10px;">重置</a>
+								</csp:if>
+								<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btnVerify" style="margin-right:10px;">核销</a>
 							</td>
 						</tr>
 						<tr>
-							<td class="r-label"><label>结束日期</label></td>
-							<td><input id="endDate" class="hisui-datebox textbox"/></td>
-							<td></td>
-							<td></td>
-							<td class="r-label-1"><a href="javascript:;" class="hisui-linkbutton" id="btnFind" data-options="iconCls:'icon-w-find'">查询</a></td>
-							<td class="r-label">
-								<csp:if condition='receFlag="1"'>
-									<a href="javascript:;" class="hisui-linkbutton" id="btnReceive" data-options="iconCls:'icon-w-paid'">接收</a>
+							<td class="r-label"><label>#(..Get("结束日期"))#</label></td>
+							<td><input id="endDate" class="hisui-datebox textbox tb250"/></td>
+							<td class="r-label r-label-20"><label id="verifyCombolab">#(..Get("核销状态"))#</label></td>
+							<td><input id="verifyCombo" class="hisui-combobox textbox tb250"/></td>
+							<td class="r-label r-label-20"></td>
+							<td class="r-label-20">
+								<csp:if condition='receFlag="1"'>	
+									<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btnReceive" data-options="iconCls:'icon-w-paid'" style="margin-right:10px;">接收</a>
 								</csp:if>
+								<a href="javascript:;" class="hisui-linkbutton l-btn-bigger" id="btnCancelVerify" style="margin-right:10px;">取消核销</a>
 							</td>
 						</tr>
 			    	</table>
 				</div>
-				<div data-options="region:'center',border:false" style="overflow:hidden;">
-					<iframe id="tabMain" scrolling="auto" width="100%" height="100%" frameborder="0" src="dhcbill.dailymaintabs.csp?&businessType=IPC"></iframe>
+				<div data-options="region:'center',border:false" style="overflow:hidden;border-radius:0 0 4px 4px;">
+					<iframe id="tabMain" scrolling="auto" width="100%" height="100%" frameborder="0" src="dhcbill.dailymaintabs.csp?MWToken=#(%request.Get("MWToken"))#&businessType=IPC"></iframe>
 				</div>
 			</div>
 		</div>
 	</div>
-	<form>
-		<input id="receId" name="receId" type="hidden">
-	</form>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.dailycollect.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.dailycollect.js"></script>
 </body>
 </html>

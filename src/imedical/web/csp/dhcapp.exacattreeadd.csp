@@ -11,6 +11,7 @@
 <script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>	
 <script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
 <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/layout.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/tanslatecomponent.js"></script>
 <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/listcomponent.js"></script>
 <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/exacattreeadd.js"></script>
 <script Language="Javascript">
@@ -68,11 +69,41 @@ span.d-label{
 	padding:0 10px 0 0;
 	color:#666;
 }
-
+ body {background:#fff;}
+ #jzul li {margin-bottom:5px;padding:5px;border-radius:4px;}
+ .c-span,.c-span2 {margin-right:5px;}
+ .c-span2 {margin-left:20px;}
+ #jzul li:hover {cursor:pointer;background:#D9E7F1;color:#000;border-radius:4px;}
+ .c-search {padding:10px;border-top:1px solid #ccc;}
+ .left {float:left;padding:10px;height:90%;width:300px;}
+ .right {float:left;padding:10px;height:90%;width:300px;}
+ .mzul {padding:20px 10px;}
+ .zyul {padding:5px 10px;float:left;width:45%;}
+ .zyul2 {padding:5px 10px;float:left;}
+ .hidden {display:none;}
+ .active {background:#509DE1;color:#fff;}
+ .select {padding:22px 10px 3px 10px;}
+ .selected {background:#E50027;}
+ .default {color:#E50027;}
+ .set {color:#509DE1}
+ .tip {color:#E50027;}
+ .search-table{
+	border-collapse:separate;
+	border-spacing:0 10px;
+	/*padding: 0 10px;*/
+}
+.r-label{
+	padding-left: 20px;
+}
 </style>
 <!-- 新旧版本兼容配置 -->
 <SERVER>
-  s version=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+ // s version=##Class(web.DHCAPPExaReportQuery).GetConfigBySession("Version")
+  s HospID=%session.Get("LOGON.HOSPID")
+  s Opentree=##Class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("Opentree",HospID)
+  if (Opentree="notopen"){s expFlag=0}else{s expFlag=1}
+  s TreeTypeBody=##Class(DHCDoc.DHCApp.BasicConfig).GetConfigNode("TreeTypeBody",HospID)
+  if (TreeTypeBody="TreeTypeBody"){s version=0}else{s version=1}
   w "<SCRIPT Language=""JavaScript"">"_$c(13,10)
   w "var version="""_$g(version)_""";"_$c(13,10)
   w "</SCRIPT>"
@@ -110,8 +141,27 @@ span.d-label{
 		</div>
 	</div>
 	<div data-options="region:'center',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'"  style='padding:10px 10px 10px 0px;'>
-		<div class="hisui-panel" data-options="title:'检查方法<font color=red font-weight=bold font-size=12pt >【双击即可编辑】</font>',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">		
-			<div id="itemlist" toolbar="#arctb"></div>
+		<div class="hisui-panel" data-options="title:'检查项目<font color=red font-weight=bold font-size=12pt >【双击即可编辑】</font>',fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="border:1px solid #ccc;border-top:0px;border-radius:0px;">		
+			<div id ="queryFormlay" class="hisui-layout" fit="true">
+			<div data-options="region:'north',border:false,collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-reset'" style="height:55px;">
+				<div class="hisui-panel" id ="queryFormlaypanel" style="border:0;border-bottom:0px dashed #ccc;border-radius:0;">
+				<div id="queryForm" style="margin:10 0 10 10;">
+					<table cellspacing="0" cellpadding="0" >
+						<tr>
+							<td >名称/拼音码 <input style="margin-left:5px;" type="text" id="desc" class="hisui-searchbox" placeholder="请输入名称/拼音码"></input> </td>
+							<!--<td><a style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="find">查询</a> </td>
+							<td><a style="margin-left:10px;" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="reset">重置</a> </td>
+							-->
+						</tr>
+					</table>
+				</div>
+				<!--div id="bottom" style="margin-top:10px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;">	</div-->
+				</div>
+			</div>
+			<div data-options="region:'center',border:false" style="height:90%;border:0;border-top:1px dashed #ccc;border-radius:0;">
+				<div id="itemlist" toolbar="#arctb"></div>
+			</div>
+			</div>
 		</div>
 	</div>
 	<div data-options="region:'east',title:'',border:false,collapsible:false,headerCls:'panel-header-gray'" style='width:460px;padding:10px 10px 10px 0px;'>
@@ -126,6 +176,7 @@ span.d-label{
 	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a></td>
 	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a> </td>
 	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">删除</a></td>	
+	      <td><a class="hisui-linkbutton" data-options="iconCls:'icon-paper-cfg',plain:true">科室授权</a></td>	
 	      <!--td><a class="hisui-linkbutton" data-options="iconCls:'icon-paper-cfg',plain:true">授权</a></td-->	
 	    </tr>
 	</table>
@@ -140,7 +191,7 @@ span.d-label{
 	</table>
 </div>
 <!-- 分类树右键菜单 -->
-<div id="right" class="hisui-menu" style="">
+<div id="right" class="hisui-menu" style="width:auto;">
 	<div onclick="newCreateItmCat('S')" data-options="iconCls:'icon-add'">新增同级分类</div>
 	<div onclick="newCreateItmCat('C')" data-options="iconCls:'icon-add'">新增子分类</div>
 	<div onclick="newCreatePart()" data-options="iconCls:'icon-add'" style="display:none">新增部位</div>
@@ -148,6 +199,8 @@ span.d-label{
 	<div onclick="delItmCat()" data-options="iconCls:'icon-cancel'">删除分类</div>
 	<div class="menu-sep"></div>
 	<div onclick="newCreateUpdItmCat()" data-options="iconCls:'icon-reload'">更新分类</div>
+	<div onclick="LocSelectShow('TreeAdd')" data-options="iconCls:'icon-paper-cfg'">科室授权</div>
+	<!--div onclick="ranslateword()" data-options="iconCls:'icon-translate-word'">翻译</div-->
 	<!-- 
 	<div class="menu-sep"></div>
 	<div onclick="delTreeCat()" data-options="iconCls:'icon-remove'">删除分类</div>
@@ -272,7 +325,24 @@ span.d-label{
     </div>
     <table id="menu-security-win-list"></table>
 </div>
-
+<!--科室授权-->
+<div id="dialog-LocSelect" class="hisui-dialog" title="科室授权" style="width:280px;height:680px;padding:10px;" data-options="iconCls:'icon-w-save',resizable:true,modal:true,closed:true">   
+  <table ALIGN="center" class="search-table">
+    <div class="hisui-panel" style="width:260px;height:573px;">
+		<div class='select'>
+			<input id="i-select" class="hisui-checkbox" type="checkbox"/><span class="tip">全选/反选</span>
+		</div>
+		<ul id="jzul" class="zyul">
+		</ul>
+		<!--ul id="jzul-set" class="zyul2">
+			
+		</ul-->
+	</div>
+	<td class="r-label">
+		<a id="i-config" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+	</td>
+  </table>
+</div>
 </body>
 </html>
 

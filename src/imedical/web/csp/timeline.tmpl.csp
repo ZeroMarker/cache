@@ -6,20 +6,20 @@
         <table border="0" cellpadding="0" cellspacing="0">
             <tr>
             	{{if OneItem==""}}
-                <td style="padding-left:0;"><span class="settings">设置</span></td>
+                <td style="padding-left:0;"><span class="settings">#(..Get("设置"))#</span></td>
                 {{else}}
                 <td style="padding-left:0;" rowspan=2><span class="tl-patInfo-Name">${name}</span></td>
                 {{/if}}
-                <td ><span class="color-gray">性别：</span>${sex}</td>
-                <td ><span class="color-gray">年龄：</span>${age}</td>
-                <td style="padding-left:30px;"><span class="color-gray">医生：</span>${paDoctor}</td>
+                <td ><span class="color-gray">#(..Get("性别"))#：</span>${sex}</td>
+                <td ><span class="color-gray">#(..Get("年龄"))#：</span>${age}</td>
+                <td style="padding-left:30px;"><span class="color-gray">#(..Get("医生"))#：</span>${paDoctor}</td>
             </tr>
             <tr>
             	{{if OneItem==""}}
                 <td style="padding-left:0;"><span class="tl-patInfo-Name">${name}</span></td>
             	{{/if}}
-                <td ><span class="color-gray">住院日期：</span>${inDate}</td>
-                <td colspan="2"><span class="color-gray">科室：</span>${inDept}</td>
+                <td ><span class="color-gray">#(..Get("住院日期"))#：</span>${inDate}</td>
+                <td colspan="2"><span class="color-gray">#(..Get("科室"))#：</span>${inDept}</td>
             </tr>
         </table>
     </div>
@@ -30,10 +30,10 @@
     <div class="tl-patInfo-right out">
         <table border="0" cellpadding="0" cellspacing="0">
             <tr>
-                <td style="padding-left:0;"><span class="settings">设置</span></td>
-                <td rowspan=2 style="padding-left:20px;"><span class="color-gray">登记号：</span>${PAPMINO}</td>
-                <td rowspan=2 style="padding-left:20px;"><span class="color-gray">性别：</span>${sex}</td>
-                <td rowspan=2 style="padding-left:20px;"><span class="color-gray">年龄：</span>${age}</td>
+                <td style="padding-left:0;"><span class="settings">#(..Get("设置"))#</span></td>
+                <td rowspan=2 style="padding-left:20px;"><span class="color-gray">#(..Get("登记号"))#：</span>${PAPMINO}</td>
+                <td rowspan=2 style="padding-left:20px;"><span class="color-gray">#(..Get("性别"))#：</span>${sex}</td>
+                <td rowspan=2 style="padding-left:20px;"><span class="color-gray">#(..Get("年龄"))#：</span>${age}</td>
             </tr>
             <tr>
                 <td style="padding-left:0;"><span class="tl-patInfo-Name">${name}</span></td>
@@ -49,7 +49,7 @@
         <div class="tl-admHistory-title" >${title}</div>
         <div class="tl-admHistory-selector">
         	<div class="tl-admHistory-selector-prev {{if listStartIndex==0}} disabled{{/if}}"></div>
-        	<div class="tl-admHistory-selector-list">
+        	<div class="tl-admHistory-selector-list" style=" {{if listWidth>0}}width:${listWidth}px; {{/if}} ">
         		<table cellspacing="0" cellpadding="0" border="0" style="position:absolute;left:${left}px" data-list-start-index="${listStartIndex}" data-list-max-index="${admList.length-4}">
         			<tr>
 		        	{{each admList}}
@@ -66,7 +66,7 @@
 	        		</tr>
 	        	</table>
         	</div>
-        	<div class="tl-admHistory-selector-next {{if listStartIndex>=admList.length-4}} disabled{{/if}}"></div>
+        	<div class="tl-admHistory-selector-next {{if listStartIndex>=admList.length-pageSize}} disabled{{/if}}"></div>
         </div>
     </div>
 </script> 
@@ -93,7 +93,7 @@
 	<div class="tl-row-header" data-for="${code}">
 		<span class="collapse"></span>
 		{{if type!='C'}}
-			<span class="title {{if headerLink}}headerLink{{/if}}">${text}</span> {{if headerSetting }}<span class="settings">设置</span>{{/if}}
+			<span class="title {{if headerLink}}headerLink{{/if}}">${text}</span> {{if headerSetting }}<span class="settings">#(..Get("设置"))#</span>{{/if}}
 		{{/if}}
 	</div>
 	<div class="tl-row-header-collapsed hidden" data-for="${code}" >
@@ -124,7 +124,16 @@
   <script id="itemLabelTmpl" type="text/x-jquery-tmpl"> 
 	<div class="tl-itemLabel" style="width:${GV.dayWidth-7}px">
 	   <div class="tl-itemLabel-arrow"  style="left:${left}px"></div>
-	   <div class="tl-itemLabel-text{{if isOrderViewTrigger}} orderview-trigger{{/if}}" data-ord="${ordId}" data-options="ordViewType:'${ordViewType}',ordViewBizId:'${ordViewBizId}'" >${text}</div>
+	   {{if texts}}
+			<div class="tl-itemLabel-text-c {{if isOrderViewTrigger}} orderview-trigger{{/if}}"  data-ord="${ordId}" data-options="ordViewType:'${ordViewType}',ordViewBizId:'${ordViewBizId}'" >
+				{{each texts}}
+				<div class="tl-itemLabel-text" >${$value}</div>
+				{{/each}}
+			</div>
+	   {{else}}
+	   		 <div class="tl-itemLabel-text{{if isOrderViewTrigger}} orderview-trigger{{/if}}" data-ord="${ordId}" data-options="ordViewType:'${ordViewType}',ordViewBizId:'${ordViewBizId}'" >${text}</div>
+	   {{/if}}
+	  
 	</div>
 </script> 
 	<!--  itemLabelNoArrow  -->
@@ -153,6 +162,7 @@
 </script> 
 	
 	<!--  itemLine 长期药品线  -->
+	<!-- 开始: ${startDoc} ${startDate} ${startTime}  、   停止: ${endDoc} ${endDate} ${endTime}  -->
   <script id="itemLineTmpl" type="text/x-jquery-tmpl"> 
 	<div class="tl-itemLine" style="">
 	   <div class="tl-itemLine-bg {{if isOrderViewTrigger}} orderview-trigger{{/if}}" data-ord="${ordId}" data-options="ordViewType:'${ordViewType}',ordViewBizId:'${ordViewBizId}'" style="width:${width}px;left:${left}px;background-color:${bgcolor}">
@@ -163,13 +173,15 @@
 	   </div>
 	</div>
 </script> 
+
 	<!--  itemLine 长期药品线  -->
   <script id="itemLineHoverTmpl" type="text/x-jquery-tmpl"> 
   	<div class="tl-itemLine-popover">
-		<div><span class="color-gray">规格：</span><span>${specification}</span></div>
-		<div><span class="color-gray">用法：</span><span>${usage}</span></div>
-		<div><span class="color-gray">开始时间：</span><span>${startDate} ${startTime}</span></div>
-		<div><span style="color:red">结束时间：</span><span style="color:red">${endDate} ${endTime}</span></div>
+		<div><span class="color-gray">#(..Get("规格"))#：</span><span>${specification}</span></div>
+		<div><span class="color-gray">#(..Get("用法"))#：</span><span>${usage}</span></div>
+		<div><span class="color-gray">#(..Get("频次"))#：</span><span>${freq}</span></div>
+		<div><span class="color-gray">#(..Get("开始时间"))#：</span><span>${startDate} ${startTime}</span></div>
+		<div><span style="color:red">#(..Get("结束时间"))#：</span><span style="color:red">${endDate} ${endTime}</span></div>
 	</div>
 </script> 
 	<!--  itemTable 表格 血压 尿量 等  -->
@@ -190,10 +202,24 @@
 	<!-- ckTable 表格 血压 尿量 等  -->
   <script id="ckTableTmpl" type="text/x-jquery-tmpl"> 
 	<table class="ckTableTmpl" style="width:100%;">
-	  {{each list}}
-	   	{{if $index%cols==0}}<tr style="height:30px;">{{/if}}
-	   	<td><input class="hisui-checkbox" data-options="label:'${$value.text}',checked:${$value.checked}" type="checkbox"  value="${$value.value}"/></td>
-	   	{{if $index%cols==cols-1}}</tr>{{/if}}
-	  {{/each}}
+	  {{if newList}}
+	  	  {{each(ind1,item1) newList}}
+	  	  	<tr style="height:30px;" class="ck-table-cat-tr {{if ind1>0}}ck-table-cat-tr2{{/if}}"><td colspan="${cols}"><span class="ck-table-cat-wrap"><input class="hisui-checkbox ck-table-cat-select-all" data-options="label:'${item1.text}',checked:${item1.checked}" type="checkbox"  value="${item1.value}"/></span></td></tr>
+	  	  	{{each(ind2,item2) item1.list}}
+			   	{{if ind2%cols==0}}<tr style="height:30px;">{{/if}}
+			   	<td><input class="hisui-checkbox ck-table-item-cat-${item1.value}" data-options="label:'${item2.text}',checked:${item2.checked}" type="checkbox"  value="${item2.value}"/></td>
+			   	{{if ind2%cols==cols-1}}</tr>{{/if}}
+	  	  	{{/each}}
+	  	  {{/each}}
+	  {{else}}
+		  {{each list}}
+		   	{{if $index%cols==0}}<tr style="height:30px;">{{/if}}
+		   	<td><input class="hisui-checkbox" data-options="label:'${$value.text}',checked:${$value.checked}" type="checkbox"  value="${$value.value}"/></td>
+		   	{{if $index%cols==cols-1}}</tr>{{/if}}
+		  {{/each}}	
+	  {{/if}}
+	
+	
+
 	</table >
 </script> 

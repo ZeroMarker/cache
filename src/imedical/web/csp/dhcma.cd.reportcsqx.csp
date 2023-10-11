@@ -32,12 +32,13 @@
 		<script type="text/javascript" src="../scripts/DHCMA/CD/reportcsqx/Gui.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CD/reportcsqx/Event.js"></script>
 		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
 
 		<script language="Cache" RUNAT="SERVER">
             If (IsSupportRQ2018'=1) {
 		    	d ##class(web.DHCSTMHUI.Util.RQServerConfig).GetApplet() //润乾打印
             }
-		    
+		    Set LagCode = $g(%session("LOGON.LANGCODE"))
 			Set menuCode="CDQryRepCSQX"
 			Set menuId=$o(^DHCMed.SS.MenusI("MenuCodeIndex"," "_$zcvt(menuCode,"U"),0))
 			Set groupId=$g(%session.Data("LOGON.GROUPID"))
@@ -47,14 +48,19 @@
 			Set EpisodeID=$g(%request.Data("EpisodeID",1))
 			Set LocID=$g(%session.Data("LOGON.CTLOCID"))
 			Set LocDesc=$p($g(^CTLOC(+LocID)),"^",2)
+			Set:LocDesc'="" LocDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTLoc","CTLOCDesc",LagCode,LocDesc)
+			Set LocFlag=+$g(%request.Data("LocFlag",1))
 			
 			set LogonHospID=$g(%session.Data("LOGON.HOSPID"))
 		    set objHosp=##class(DHCMed.Base.Hospital).GetObjById(LogonHospID)
 		    Set HospDesc=""
 		    If ($IsObject(objHosp)) {
 		    	Set HospDesc=objHosp.Descs
+				Set HospDesc = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTHospital","HOSPDesc",LagCode,HospDesc)
 		    }
-		    
+		     Set DocName=$g(%session.Data("LOGON.USERNAME"))
+		    Set DocName = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTCareProv","CTPCPDesc",LagCode,DocName)
+			
 			Set ReportID=""""_$g(ReportID)_""""
 			Set PatientID=""""_$g(PatientID)_""""
 			Set EpisodeID=""""_$g(EpisodeID)_""""
@@ -64,6 +70,7 @@
 			Set HospDesc=""""_$g(HospDesc)_""""
 			Set EmrOpen=+$g(%request.Data("EmrOpen",1))   //是否由病历浏览打开
 			Set:EmrOpen="" EmrOpen=""""""
+			Set DocName=""""_$g(DocName)_""""
 	   </script>
 	  
 	    <script language="javascript" type="text/javascript">
@@ -75,6 +82,8 @@
             var LogonHospID=#(LogonHospID)#;
             var HospDesc=#(HospDesc)#;
 			var EmrOpen=#(EmrOpen)#;
+			var LocFlag=#(LocFlag)#;
+			var DocName=#(DocName)#;
 			//全局请求后台服务对象
 			var ServerObj={
 				PatCurrAddress:"#(PatCurrAddress)#",

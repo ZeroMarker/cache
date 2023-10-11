@@ -1,0 +1,165 @@
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<NURHISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui/datagrid-cellediting.js" charset='gbk'></script>
+	<!--<script type="text/javascript">
+		var now = new Date().getTime();
+		document.write('<script charset="gbk" src="../scripts/nurse/hisui/nur.narcoticdrugs.js?v=' + now + '"><\/script\>');
+	</script>-->
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.narcoticdrugs.js" charset='gbk'></script>
+	<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" ></script>
+	<STYLE type='text/css'>
+		.accordion>.panel>.panel-header, .layout>.panel>.panel-header, .panel.combo-p>.panel-header, .panel.lookup-p>.panel-header, .panel.window>.panel-header, .tabs-panels>.panel>.panel-header {
+		    -moz-border-radius: 0;
+		    -webkit-border-radius: 0;
+		    border-radius: 5px 5px 0 0;
+		    padding: 5px;
+		}
+		.td-btn {
+			padding-left: 10px;
+		}
+		.table-border {
+			border-width: 1px;
+			border-style: dashed solid solid;
+			border-color: #ccc;
+			border-radius: 0px 0px 4px 4px;
+		}
+		.messager-popover .content {
+	        height:100%;
+		    float: left;
+		    margin-top: -1px;
+		}
+		.r-label{
+			text-align: right;
+    		padding:0 10px;
+		}
+		.span-label{
+			text-align: right;
+    		padding:10px 9px 10px 20px;
+		}
+		.combo-p>.panel-body.panel-body-noheader {
+			max-height:410px;
+		}
+		#outLocDialog>.dialog-button {
+			padding-top: 5.5px;
+		}
+	</STYLE>
+</head>
+
+<body style="padding:4px;box-sizing: border-box;">
+	<div class="hisui-panel" fit="true" data-options="title:'病区麻醉及精神药品使用管理登记',headerCls:'panel-header-gray',iconCls:'icon-write-order'">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'north',title:'',border:false" style="height:51px;border-bottom: 1px solid #e2e2e2;border-radius:0;">
+				<table style="border-collapse:separate;border-spacing:0 10px;" >
+					<tr>
+						<td class="r-label">#(..Get("登记号"))#</td>
+						<td>
+							<input id="regNoInput" class="textbox" style="width:100px;">
+						</td>
+						<td class="r-label">#(..Get("医嘱名称"))#</td>
+						<td>
+							<input id="ordNameInput" class="textbox" style="width:100px;">
+						</td>
+						<td class="r-label">#(..Get("开始日期"))#</td>
+						<td>
+							<input id="startDate" class="hisui-datebox textbox" style="width:120px;">
+						</td>
+						<td class="r-label">#(..Get("结束日期"))#</td>
+						<td>
+							<input id="endDate" class="hisui-datebox textbox" style="width:120px;">
+						</td>
+						<td class="r-label">
+							<input class="hisui-checkbox" type="checkbox" label="#(..Get("已出院"))#" id="ifDischarge">
+						</td>
+						<!--td style="padding-left: 3px">
+							<input id="ifDischarge" class='hisui-checkbox'  type="checkbox" label="">
+						</td>
+						<td class="r-label" style="">#(..Get("已出院"))#</td-->
+						<td>
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id='queryOrderBtn'>查询</a>
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" id='execOrdsBtn'>保存</a>
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-pen-paper'" id='CheckUserBtn'>核对人签字</a>
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-print'" id='PrintBtn'>打印</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',title:'',border:false" style="" >
+				<div id="center" class="hisui-layout" fit=true border=false>
+					<div data-options="region:'center',iconCls:'icon-w-list',headerCls:'panel-header-gray'" title="" border=false>
+						<table id='ordGrid' class="hisui-datagrid" rownumbers="true" data-options="fit:true,border:false,headerCls:'panel-header-gray',pagination:false,toolbar:'#custtb'">
+						<thead data-options="frozen:true">
+							<tr>
+								<th data-options="field:'EpisodeID',hidden:true">EpisodeID</th>
+								<th data-options="field:'patName',width:80">姓名</th>
+								<th data-options="field:'MedCareNo',width:80">住院号</th>
+								<th data-options="field:'regNo',width:100">登记号</th>
+								<th data-options="field:'PatSex',width:50">性别</th>
+								<th data-options="field:'Age',width:50">年龄</th>
+								<th data-options="field:'DrugType',width:75">药品种类</th>
+								<th data-options="field:'SttDateTime',width:100">日期/时间</th>
+								<th data-options="field:'ArcimDesc',width:300">医嘱名称</th>
+								<th data-options="field:'doseQtyUnit',width:75">剂量</th>
+								<th data-options="field:'PhcinDesc',width:75">用法</th>
+								<th data-options="field:'prescNo',width:120">处方号</th>
+								<th data-options="field:'Qty',width:50">数量</th>
+								<th data-options="field:'execUser',width:135">执行/核对护士签字</th>
+								<th data-options="field:'checkCol',width:30,checkbox: true">选择</th>
+							</tr>
+						</thead>
+						<thead>
+							<tr>
+								<th data-options="field:'Usage',width:150,editor:{type:'textarea'}">空安瓿/废贴回收数量</th>
+								<th data-options="field:'Batch',width:80,editor:{type:'text'}">批号</th>
+								<th data-options="field:'DealMehtod',width:150,editor:{type:'textarea'}">余量及处置方式</th>
+								<th data-options="field:'EmrUser',width:100">医嘱执行人签字</th>
+								<th data-options="field:'CheUser',width:100">医嘱核对人签字</th>
+								<th data-options="field:'oeoreID',width:0">oeoreID</th>
+								<th data-options="field:'rw',width:0">rw</th>
+							</tr>
+						</thead>
+						</table>
+					</div>
+					<div id="outLocDialog" class="hisui-dialog" title="核对人签字" style="width:255px;height:181px;" closed="true"
+	 					data-options="iconCls:'icon-w-pen-paper',resizable:true,modal:true">
+						<form id="outLocDialogForm" method="post">
+							<table style="border-collapse:separate;border-spacing:0 10px;" >
+								<tr>
+									<td class="r-label">#(..Get("核对人工号"))#</td>
+									<td>
+										<input id="transUserCode" class="hisui-validatebox textbox" data-options="required:true">
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label">#(..Get("核对人密码"))#</td>
+									<td>
+										<input id="transUserPass" type="password" class="hisui-validatebox textbox" data-options="required:true">
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

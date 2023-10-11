@@ -1,0 +1,47 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1 
+ q 1
+</csp:method>
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <EXTHEALTH:EXT321/>
+ <EXTHEALTH:BDPHEAD></EXTHEALTH:BDPHEAD>
+ <HISUI/> 
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/App/BDPSystem/timeline/css/style.css">
+ <div id='logdetailwin' class="easyui-dialog">  </div> 
+</HEAD>
+<body>    
+   
+ <SERVER>
+ s actiontype=$g(%request.Data("actiontype",1))
+ if (actiontype="timeline")
+ {   
+ 	s ClassN= $g(%request.Data("ClassN",1))   
+ 	s OBJDESC=$g(%request.Data("OBJDESC",1))
+ 	s ObjectDESC=""
+ 	s:%request.Data("ObjectDesc",1)'="" ObjectDESC=$g(DECODE(%request.Data("ObjectDesc",1))) 
+ 	//s ObjectDESC=$g(DECODE(%request.Data("ObjectDesc",1))) 
+    s classdesc=$g(%request.Data("ClassDesc",1))
+
+    if (ClassN="^DHCTarC")
+    {  
+       d ##class(web.DHCBL.MKB.MKBDataChangeLog).ProduceTimeLine(ClassN,OBJDESC,ObjectDESC,classdesc)  
+    }
+    else
+    {  
+       d ##class(web.DHCBL.MKB.MKBDataChangeLog).ProduceTimeLine(ClassN,OBJDESC,ObjectDESC)
+    }
+ }
+ if (actiontype="datadetail")
+ {  
+    s id=$g(%request.Data("id",1)) 
+ 	;s ^xk("111")=$lb(id)
+ 	d ##class(web.DHCBL.MKB.MKBDataChangeLog).ProductTable(id) 
+ }
+</SERVER>
+
+ 	
+</body>
+</html>

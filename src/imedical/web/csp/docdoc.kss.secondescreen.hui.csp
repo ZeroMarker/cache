@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!--docdoc.kss.secondescreen.hui.csp--> 
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<link rel="stylesheet" type="text/css" href="../scripts/dhcdocant/css/dhcant.icon.css">
+<STYLE type='text/css'>
+.panel-header>div.panel-tool>a.layout-button-left{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-down{
+	display:none
+}
+.panel-header>div.panel-tool>a.layout-button-up{
+	display:none
+}
+label{
+	margin-left:10px;
+}
+</STYLE>
+<Server>
+	s (PageShowFromWay,ApplyId,EpisodeID,ArcimId,PoisonCode,Process,PatientID,PAAdmType)=""
+	;界面展示来源：Apply(抗菌药物申请)、ListEntry(抗菌药物列表\审核列表)
+	s PageShowFromWay=$g(%request.Data("PageShowFromWay",1))		
+	;s ShowTabStr=$g(%request.Data("ShowTabStr",1))		
+	;ApplyId、EpisodeID至少有一个必须有值
+	s ApplyId=$g(%request.Data("ApplyId",1))		;抗菌药物列表\审核列表
+	s EpisodeID=$g(%request.Data("EpisodeID",1))	;抗菌药物申请
+	i ApplyId'="" d
+	.s EpisodeID=$p(^DHCDAA("ANT",ApplyId),"^",1)
+	.s ArcimId=$p(^DHCDAA("ANT",ApplyId),"^",2)
+	.s PoisonCode=##class(DHCAnt.KSS.Common.Method).GetKssCate(ArcimId)
+	.s Process=$p($g(^DHCDAA("ANT",ApplyId,1)),"^",36)		;当前流程
+	s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	s PAAdmType=$p(^PAADM(EpisodeID),"^",2)
+	s AdmDate=$p(^PAADM(EpisodeID),"^",6)
+	s CuDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	s PreDate=##class(websys.Conversions).DateLogicalToHtml(AdmDate)
+</Server>
+</head>
+<body>
+<script type="text/javascript" src="../scripts/dhcdocant/kss_hui/eaysui-tool.js"></script>
+<csp:Include Page="docdoc.kss.secondescreen.show.hui.csp">
+<script type="text/javascript">
+	var ServerObj={
+		PageShowFromWay:"#(PageShowFromWay)#",
+		EpisodeID:"#(EpisodeID)#",
+		PatientID:"#(PatientID)#",
+		PAAdmType:"#(PAAdmType)#",
+		ApplyId:"#(ApplyId)#",
+		ArcimId:"#(ArcimId)#",
+		PoisonCode:"#(PoisonCode)#",
+		Process:"#(Process)#",
+		CuDate:"#(CuDate)#",
+		PreDate:"#(PreDate)#"
+	};
+</SCRIPT>
+
+<script type="text/javascript" src="../scripts/dhcdoc/common/common.js" ></script>
+<script type="text/javascript" src="../scripts/dhcdoc/common/commonfun.js"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+<script type="text/javascript" src="../scripts/dhcdoc/oeorder.kss.secondescreen.js"></script>
+<script type="text/javascript" src="../scripts/dhcdocant/kss_hui/applydatagrid.js"></script>
+</body>
+</html>

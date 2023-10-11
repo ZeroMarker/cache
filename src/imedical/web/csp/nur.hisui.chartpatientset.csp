@@ -1,0 +1,205 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<!--设置 nur.hisui.chartpatientset.csp 体温单患者列表配置--> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html XMLNS=TRAK>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Content-Type" content="text/html;"/>
+<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+	.wrap{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;
+    	background-color: #fff;	
+    	overflow:hidden;
+	}
+	#main{
+		height:calc(100% - 60px);
+		padding:10px 10px 0 10px;
+	}
+	#main>div{
+		border-top:1px dashed #ccc;
+		padding:10px 0;
+	}
+	#main>div>p.title{
+		padding-bottom:10px;
+		font-weight:bold;
+	}
+	#main>div.zoneSet table td{
+		padding-right:10px;
+	}
+	.panel-body, .panel-header{
+		border-color:#ccc;	
+	}
+	.hisui-dialog td{
+		padding-bottom:10px;	
+	}
+	.dialog-button{
+		padding-top:0;	
+	}
+</style>
+</head>
+
+<body>
+	<div class="wrap">
+		<table cellpadding="0" cellspacing="0" style="padding:10px;">
+			<tr>
+				<td class="r-label">所属医院</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+				<td>
+					<a id="search" href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="savePatientZoneSet()">保存</a>
+				</td>
+			</tr>
+		</table>
+		<div id="main">	
+			<div class="patientSetting zoneSet">
+				<p class="title">区域配置</p>
+				<table cellpadding="0" cellspacing="0">
+					<tr>
+						<td>在院转科</td>
+						<td><div id="Transing" class="hisui-switchbox" data-options="onText:'显示',offText:'隐藏',checked:true,animated:true,size:'small',onClass:'primary',offClass:'gray'"></div></td>
+						<td>显示</td>
+						<td><input class="hisui-numberbox textbox" id="TransDays" data-options="min:1" style="width:60px;" /></td>
+						<td>天内在院转科患者</td>
+						<td>出院</td>
+						<td><div id="Discharge" class="hisui-switchbox" data-options="onText:'显示',offText:'隐藏',checked:true,animated:true,size:'small',onClass:'primary',offClass:'gray'"></div></td>
+						<td>显示</td>
+						<td><input class="hisui-numberbox textbox" id="DischargeDays" data-options="min:1" style="width:60px;" /></td>
+						<td>天内出院患者</td>
+					</tr>
+				</table>
+			</div>	
+			<div class="patientSetting fieldSet">
+				<p class="title">显示信息内容</p>	
+				<div style="height:280px;"><table id="dg"></table></div>
+			</div>
+			<div class="patientSetting colorSet" style="height:calc(100% - 431px)">
+				<p class="title">显示信息颜色</p>	
+				<div style="height:calc(100% - 32px)"><table id="dg2"></table></div>
+			</div>
+		</div>		
+	</div>
+	
+	<div id="field-dialog" class="hisui-dialog" title="显示信息内容" style="width:280px;height:330px;padding:10px 10px 0 10px;" data-options="iconCls:'icon-w-batch-cfg',shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				text:'保存',
+				handler:function(){ saveFields(); }
+			},
+			{
+				text:'取消',
+				handler:function(){$HUI.dialog('#field-dialog').close();}
+			}
+		]">
+		<div class="hisui-panel" title="" style="padding:0 10px" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+			<form id="field-form">
+				<table cellpadding="0" cellspacing="0">	
+					<!--tr>
+						<td class="r-label"><label class="clsRequired">顺序</label></td>
+						<td>
+							<input name="fieldID" id="filedID" type="hidden" value="">
+							<input class="hisui-numberbox textbox" id="sortNo" data-options="min:1,required:true" style="width:167px;" />
+						</td>
+					</tr-->											
+					<tr>
+						<input name="fieldID" id="fieldID" type="hidden" value="">
+						<td class="r-label"><label class="clsRequired">列名</label></td>
+						<td>
+							<input name="fieldName" id="fieldName" class="hisui-validatebox textbox" data-options="required:true" style="width:160px;" /> 
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label"><label class="clsRequired">列宽</label></td>
+						<td>
+							<input class="hisui-numberbox textbox" name="fieldWidth" id="fieldWidth" data-options="min:50,required:true" style="width:167px;" />
+						</td>
+					</tr>					
+					<tr>
+						<td class="r-label"><label class="clsRequired">数据源</label></td>
+						<td>
+							<select placeholder="请选择" name="fieldSource" id="fieldSource" data-options="required:true" style="width:167px;"></select> 
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">适用区域</td>
+						<td>
+							<select name="applyArea" id="applyArea" data-options="multiple:true" style="width:167px;"></select> 
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">固定列</td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="ifFixedCol">
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label">排序切换</td>
+						<td>
+							<input class="hisui-checkbox" type="checkbox" data-options="checked:false" id="ifSortCol">
+						</td>
+					</tr>									
+				</table>
+			</form>
+		</div>
+	</div>
+	
+	<div id="color-dialog" class="hisui-dialog" title="显示信息颜色" style="width:290px;height:270px;padding:10px 10px 0 10px;" data-options="iconCls:'icon-w-batch-cfg',shadow:false,modal:true,closed:true,
+		buttons:[
+			{
+				text:'保存',
+				handler:function(){ saveColorSet(); }
+			},
+			{
+				text:'取消',
+				handler:function(){$HUI.dialog('#color-dialog').close();}
+			}
+		]">
+		<div class="hisui-panel" title="" style="padding:0 10px" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+			<form id="color-form">
+				<table cellpadding="0" cellspacing="0">											
+					<tr>
+						<input name="colorID" id="colorID" type="hidden" value="">
+						<td class="r-label"><label class="clsRequired">项目名称</label></td>
+						<td>
+							<input name="itemName" id="itemName" class="hisui-validatebox textbox" data-options="required:true" style="width:160px;" /> 
+						</td>
+					</tr>					
+					<tr>
+						<td class="r-label"><label class="clsRequired">数据源</label></td>
+						<td>
+							<select placeholder="请选择" name="itemSource" id="itemSource" data-options="required:true" style="width:167px;"></select> 
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label"><label class="clsRequired">适用列</label></td>
+						<td>
+							<select placeholder="请选择" name="applyCol" id="applyCol" data-options="required:true" style="width:167px;"></select> 
+						</td>
+					</tr>
+					<tr>
+						<td class="r-label"><label class="clsRequired">颜色</label></td>
+						<td>
+							<input name="itemColor" id="itemColor" class="textbox" /> 
+						</td>
+					</tr>									
+				</table>
+			</form>
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/jquery.color.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.chartpatientset.js"></script>
+</body>
+</html>

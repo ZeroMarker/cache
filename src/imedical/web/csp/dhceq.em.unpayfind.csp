@@ -1,0 +1,70 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</HEAD>
+<Style type="text/css">
+.messager-popover
+{
+	font-weight: normal;
+}
+.eqbutton
+{
+	margin-left:15px;
+}
+</Style>
+<SCRIPT language="Cache" RUNAT="SERVER">
+	s SplitNumCode=##class(web.DHCEQCommon).GetSysInfo("990026")
+	s SplitRowCode=##class(web.DHCEQCommon).GetSysInfo("990025")
+	s PrintFlag=##class(web.DHCEQCommon).GetSysInfo("990062")
+	s GetRepPath=##Class(web.DHCEQStoreMoveSP).GetPath()
+	s QXType=$g(%request.Data("QXType",1))	//czf 2021-11-18 2215015
+</Script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,title:'未付款查询'">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 1px #ccc;padding-bottom:10px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label-first"><label id="cPayFromType" for="PayFromType">付款类型</label></div>
+							<div class="eq-table-td eq-table-input"><input id="PayFromType" class="hisui-combobox  hisui-validatebox"  data-options=" prompt:'必填项'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cSourceType" for="SourceType">业务类型</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-combobox  hisui-validatebox" id="SourceType"   data-options=" prompt:'必填项'"></div>
+							<div class="eq-table-td eq-table-label-new"><label id="cProviderDR_VDesc" for="ProviderDR_VDesc">供应商</label></div>
+							<div class="eq-table-td eq-table-input"><input class="hisui-validatebox textbox" id="ProviderDR_VDesc" data-options="'component':'PLAT.L.Vendor'"></div>
+							<div class="eq-table-td eq-table-label-button"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find" data-options="stopAllEventOnDisabled:true">查询</a></div>
+							<div class="eq-table-td eq-table-label-lbutton"><a id="BExport" href="#" class="hisui-linkbutton" iconCls="icon-w-export" data-options="stopAllEventOnDisabled:true">导出</a></div>
+							<div class="eq-table-td eq-table-label-lbutton"><a id="BColSet" href="#" class="hisui-linkbutton" iconCls="icon-w-export" data-options="stopAllEventOnDisabled:true">导出列设置</a></div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',border:false" style="position:relative;">
+					 <table id="DHCEQUnPayFind" class="hisui-datagrid" data-options="border:false,fit:true"></table>
+					 <div class="messager-popover info" style="position:absolute;right:0px;top:2px;margin:2px 10px 2px 0;padding:5px 10px;">
+					    <span id="sumTotalicon" class="messager-popover-icon info"></span>
+					    <span id="sumTotal"></span>
+				    </div>	
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="ProviderDR" value="">
+			<INPUT type="hidden" id="GetRepPath" value=#(GetRepPath)#>
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/unpayrequestfind.js'></script> <!--Add By QW20210220 BUG:QW0093-->
+	<script type='text/javascript' src='../scripts/dhceq/common/export.common.js'></script> <!--MZY0116	2474977,2475599		2022-03-14-->
+</body>
+</html>

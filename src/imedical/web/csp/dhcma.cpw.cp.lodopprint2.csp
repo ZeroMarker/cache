@@ -1,0 +1,382 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en" style="background-color:#FFF;">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
+		<STYLE type="text/css">
+		*{
+			font-size:5mm;
+			line-height:6mm;
+		}
+		table .td-content {
+       
+    }
+		</STYLE>
+	</head>
+	<body style="margin:0;background-color:#FFF;">
+	<script language="Cache" RUNAT="SERVER">
+	    Set LogonLocID=$g(%session.Data("LOGON.CTLOCID"))
+	    Set EpisodeID=$g(%request.Data("EpisodeID",1))
+	    
+	    Set HeadInfo=##Class(DHCMA.CPW.CPS.LodopSrv).GetHeadInfo(EpisodeID)
+	    Set CPWDesc=$Lg(HeadInfo,1)
+	    Set CPWAdmit=$Lg(HeadInfo,2)
+	    Set PatInfo=$Lg(HeadInfo,3)
+	    Set DaysInfo=$Lg(HeadInfo,4)
+	    
+	    Set ImplInfo=##Class(DHCMA.CPW.CPS.LodopSrv).GetImplInfo(EpisodeID)
+	    Set EpisCount=$Lg(ImplInfo,1)	//阶段个数
+	    Set EpisDescList=$Lg(ImplInfo,2)
+	    Set TimeList=$Lg(ImplInfo,3)
+	    Set DocSignList=$Lg(ImplInfo,4)
+	    Set NurSignList=$Lg(ImplInfo,5)
+	    Set ItemZLList=$Lg(ImplInfo,6)
+	    Set ItemYZList=$Lg(ImplInfo,7)
+	    Set ItemHLList=$Lg(ImplInfo,8)
+	    Set VarList=$Lg(ImplInfo,9)
+	    
+	    Set ColCount=3					//每页纸打印列数
+	    Set LoopCount=(EpisCount\ColCount)
+	    Set:(EpisCount#ColCount)>0 LoopCount=LoopCount+1
+	    Set LoopCount=LoopCount-1
+   </script>
+	<div id="FirstPage" style="width:210mm;height:280mm;">
+		<div style="text-align:center;"><b>#(CPWDesc)#</b></div>
+		<div style="width:200mm;border:1px solid #000;margin-bottom:-1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">#(CPWAdmit)#</div>
+		<div style="width:200mm;border:1px solid #000;margin-bottom:-1px;">#(PatInfo)#</div>
+		<div style="width:200mm;border:1px solid #000;margin-bottom:-1px;">#(DaysInfo)#</div>
+		<table cellspacing="0" cellpadding="0" style="width:200mm;height:255mm;border-collapse:collapse;" border=1 bordercolor="#000">
+			<tr style="height:6mm;">
+				<td width="10%" style="text-align:center;">步骤</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set EpisDesc=$S(EpisNo>0:$Lg(EpisDescList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+						   #(EpisDesc)#
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr style="height:6mm;">
+				<td width="10%" style="text-align:center;">时间</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set TimeInfo=$S(EpisNo>0:$Lg(TimeList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="text-align:center;">
+						   #(TimeInfo)#
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">主要<br />诊疗<br />工作</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set ItemZL=$S(EpisNo>0:$Lg(ItemZLList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align:top;"><span style=" display: block;max-height: 50mm;overflow: hidden;">
+						   <CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="2" TO=#($Ll(ItemZL))#>
+								<CSP:IF CONDITION="+$Lg(ItemZL,ZLInd)=1">
+									<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemZL,ZLInd+1))#
+								<br />
+							</CSP:LOOP></span>
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">重点<br />医嘱</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set ItemYZ=$S(EpisNo>0:$Lg(ItemYZList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align:top;"><span style=" display: block;max-height: 80mm;overflow: hidden;">
+						  <CSP:LOOP COUNTER="YZInd" FROM="1" STEP="2" TO=#($Ll(ItemYZ))#>
+								<CSP:IF CONDITION="+$Lg(ItemYZ,YZInd)=1">
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemYZ,YZInd+1))#
+								<br />
+							</CSP:LOOP></span>
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">主要<br />护理<br />工作</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set ItemHL=$S(EpisNo>0:$Lg(ItemHLList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align:top;"><span style=" display: block;max-height: 50mm;overflow: hidden;">
+						   <CSP:LOOP COUNTER="HLInd" FROM="1" STEP="2" TO=#($Ll(ItemHL))#>
+								<CSP:IF CONDITION="+$Lg(ItemHL,HLInd)=1">
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemHL,HLInd+1))#
+								<br />
+							</CSP:LOOP></span>
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">变异<br />情况</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set xVarList=$S(EpisNo>0:$Lg(VarList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align: top;"><span style=" display: block;max-height: 30mm;overflow: hidden;">
+						<CSP:LOOP COUNTER="VarInd" FROM="1" TO=#($Ll(xVarList))#>
+							#(VarInd)#、#($Lg(xVarList,VarInd))#
+							<br />
+						</CSP:LOOP></span>
+					</td>
+				 </CSP:LOOP>
+			</tr>
+			<tr style="height:15mm;">
+				<td width="10%" style="text-align:center;height:6mm;">护士<br />签名</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set NurSign=$S(EpisNo>0:$Lg(NurSignList,EpisNo),1:"")
+			    			Set UserID=$Lg(NurSign,1)
+			    			Set ImgBase64=##class(DHCMA.CPW.CPS.LodopSrv).GetUserImg(UserID)
+					</script>
+			    		  <td width="30%" style="vertical-align:middle;">
+						  #($Lg(NurSign,2))# <img src="" name="TDSign" UserID=#(UserID)# ImgBase64=#(ImgBase64)# style="width:9em;height:3em">
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr style="height:15mm;">
+				<td width="10%" style="text-align:center;height:6mm;">医师<br />签名</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set EpisNo=+$S(EpisInd'>EpisCount:EpisInd,1:"")
+			    			Set DocSign=$S(EpisNo>0:$Lg(DocSignList,EpisNo),1:"")
+			    			Set UserID=$Lg(DocSign,1)
+			    			Set ImgBase64=##class(DHCMA.CPW.CPS.LodopSrv).GetUserImg(UserID)
+					</script>
+			    		  <td width="30%" style="vertical-align:middle;">
+						  #($Lg(DocSign,2))# <img src="" name="TDSign" UserID=#(UserID)# ImgBase64=#(ImgBase64)# style="width:9em;height:3em">
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+		</table>
+	</div>
+	
+	<CSP:LOOP COUNTER="LoopInd" FROM="1" TO=#(LoopCount)#>
+	<div class="EpisTable" style="width:210mm;height:280mm;">
+		<table cellspacing="0" cellpadding="0" style="width:200mm;height:280mm;border-collapse:collapse;" border=1 bordercolor="#000">
+			<tr style="height:6mm;">
+				<td width="10%" style="text-align:center;">步骤</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set EpisDesc=$S(EpisNo>0:$Lg(EpisDescList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+						   #(EpisDesc)#
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr style="height:6mm;">
+				<td width="10%" style="text-align:center;">时间</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set TimeInfo=$S(EpisNo>0:$Lg(TimeList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="text-align:center;">
+						   #(TimeInfo)#
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">主要<br />诊疗<br />工作</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set ItemZL=$S(EpisNo>0:$Lg(ItemZLList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align:top;"><span style=" display: block;max-height: 50mm;overflow: hidden;">
+						   <CSP:LOOP COUNTER="ZLInd" FROM="1" STEP="2" TO=#($Ll(ItemZL))#>
+								<CSP:IF CONDITION="+$Lg(ItemZL,ZLInd)=1">
+									<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemZL,ZLInd+1))#
+								<br />
+							</CSP:LOOP></span>
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">重点<br />医嘱</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set ItemYZ=$S(EpisNo>0:$Lg(ItemYZList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align:top;"><span style=" display: block;max-height: 80mm;overflow: hidden;">
+						  <CSP:LOOP COUNTER="YZInd" FROM="1" STEP="2" TO=#($Ll(ItemYZ))#>
+								<CSP:IF CONDITION="+$Lg(ItemYZ,YZInd)=1">
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemYZ,YZInd+1))#
+								<br />
+							</CSP:LOOP></span>
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">主要<br />护理<br />工作</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set ItemHL=$S(EpisNo>0:$Lg(ItemHLList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align:top;"><span style=" display: block;max-height: 50mm;overflow: hidden;">
+						   <CSP:LOOP COUNTER="HLInd" FROM="1" STEP="2" TO=#($Ll(ItemHL))#>
+								<CSP:IF CONDITION="+$Lg(ItemHL,HLInd)=1">
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;position:relative;top:5px;left:5px;"><span style="position:relative;top:-4px;font-weight:bold;">√</span></div>
+    							<CSP:ELSE >
+    								<div style="display:inline-block;border:1px solid #000;width:0.6em;height:0.6em;margin-left:5px;margin-top:3px;"></div>
+    							</CSP:IF>
+								#($Lg(ItemHL,HLInd+1))#
+								<br />
+							</CSP:LOOP></span>
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr>
+				<td width="10%" style="text-align:center;vertical-align:middle;">变异<br />情况</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set xVarList=$S(EpisNo>0:$Lg(VarList,EpisNo),1:"")
+					</script>
+			    		  <td width="30%" style="vertical-align: top;"><span style=" display: block;max-height: 30mm;overflow: hidden;">
+						<CSP:LOOP COUNTER="VarInd" FROM="1" TO=#($Ll(xVarList))#>
+							#(VarInd)#、#($Lg(xVarList,VarInd))#
+							<br />
+						</CSP:LOOP></span>
+					</td>
+				 </CSP:LOOP>
+			</tr>
+			<tr style="height:15mm;">
+				<td width="10%" style="text-align:center;height:6mm;">护士<br />签名</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set NurSign=$S(EpisNo>0:$Lg(NurSignList,EpisNo),1:"")
+			    			Set UserID=$Lg(NurSign,1)
+			    			Set ImgBase64=##class(DHCMA.CPW.CPS.LodopSrv).GetUserImg(UserID)
+					</script>
+			    		  <td width="30%" style="vertical-align:middle;">
+						  #($Lg(NurSign,2))# <img src="" name="TDSign" UserID=#(UserID)# ImgBase64=#(ImgBase64)# style="width:9em;height:3em">
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+			<tr style="height:15mm;">
+				<td width="10%" style="text-align:center;height:6mm;">医师<br />签名</td>
+				<CSP:LOOP COUNTER="EpisInd" FROM="1" TO="3">
+			    		<script language="Cache" RUNAT="SERVER">
+			    			Set xEpisInd=LoopInd*3+EpisInd
+			    			Set EpisNo=+$S(xEpisInd'>EpisCount:xEpisInd,1:"")
+			    			Set DocSign=$S(EpisNo>0:$Lg(DocSignList,EpisNo),1:"")
+			    			Set UserID=$Lg(DocSign,1)
+			    			Set ImgBase64=##class(DHCMA.CPW.CPS.LodopSrv).GetUserImg(UserID)
+					</script>
+			    		  <td width="30%" style="vertical-align:middle;">
+						  #($Lg(DocSign,2))# <img src="" name="TDSign" UserID=#(UserID)# ImgBase64=#(ImgBase64)# style="width:9em;height:3em">
+					  </td>
+				 </CSP:LOOP>
+			</tr>
+		</table>
+		</div>
+	</CSP:LOOP>
+	
+	<div style="position: fixed;top: 240px;right: 100px;">
+		<button type="button" onclick="javascript:PrintForm();"><b>直接打印</b></button>
+	</div> 
+
+	
+    <script language="javascript" type="text/javascript">
+        var IsCASign=true;
+        
+        if(IsCASign){
+	        var TDSignArr=document.getElementsByName("TDSign");
+	        for(ind=0,len=TDSignArr.length;ind<len;ind++){
+	        	var theTD=TDSignArr[ind];
+	        	var UserID=theTD.getAttribute("UserID");
+	        	var ImgBase64=theTD.getAttribute("ImgBase64");
+	        	//console.log(UserID)
+	        	//console.log(ImgBase64)
+	        	if(ImgBase64){
+	        		var BaseImg= new ActiveXObject("Base64IMGSave.ClsSaveBase64IMG");
+					var sReigstNo = UserID;
+					var sFiletype= "jpg"
+			       var rtn=BaseImg.WriteFile(sReigstNo,ImgBase64,sFiletype);
+			       if(rtn){
+			           var imgUrl="c:\\"+UserID+".jpg"
+    					theTD.setAttribute("src",imgUrl)
+			       } 
+	        	}
+	        }
+        }
+        
+        
+		var LODOP="";
+		function PrintForm(){
+			LODOP.PRINT_INIT("打印临床路径执行单");
+			LODOP.ADD_PRINT_HTM("10mm","5mm","100%","100%",document.getElementById("FirstPage").innerHTML);
+			
+			var arrTable=document.getElementsByClassName("EpisTable");
+		       for(var i=0;i<arrTable.length;i++){
+			       LODOP.NewPage();
+		       	LODOP.ADD_PRINT_TABLE("10mm","5mm","100%","100%",arrTable[i].innerHTML);
+		       }
+		       
+			LODOP.PRINT();			
+		};
+		
+		var myVar = setInterval(function(){
+					 LODOP=getLodop();
+					 if(LODOP){
+						clearInterval(myVar);
+					 	PrintForm();
+					 	window.close()
+					 }
+					}, 1000);
+		
+	</script>
+	
+	<OBJECT ID='ClsSaveBase64IMG' CLASSID='CLSID:F6E5F767-D0E0-4311-AAFF-5EB0385F68A8' CODEBASE='../addins/client/ClsSaveBase64IMG.CAB#version=1,0,0,5'></OBJECT>
+	</body>
+</html>

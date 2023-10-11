@@ -12,6 +12,8 @@ The <b>EXTHEALTH:HEAD</b> tag defines defines standard header info and initialis
 <csr:attribute name=HelpCaption description="帮助文档描述" type="Caption:STRING" >
 <csr:attribute name=DisableSound description="禁用声纹功能" type="Caption:BOOLEAN" >
 <csr:attribute name=SoundScenes description="当前场景,如头菜单,医嘱录入" type="Caption:STRING" >
+<csr:attribute name=AppName description="系统代码,如HIS" type="Caption:STRING" >
+
 <csr:action>
 	<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
 	d ##Class(websys.Configuration).Head()
@@ -20,6 +22,7 @@ The <b>EXTHEALTH:HEAD</b> tag defines defines standard header info and initialis
 	s HelpStyle=##'element.GetAttribute("helpstyle")'##
 	s DisableSound=##'element.GetAttribute("DisableSound")'##	
 	s SoundScenes=##'element.GetAttribute("SoundScenes")'##	
+	s AppName=##'element.GetAttribute("AppName")'##	
 	Set TMenu = $g(%request.Data("TMENU",1))
  	If (TMenu>0){
 	 	if (HelpCode=""){ Set HelpCode = $lg(^websys.MenuD(TMenu),31) } 
@@ -28,7 +31,8 @@ The <b>EXTHEALTH:HEAD</b> tag defines defines standard header info and initialis
  	}
 	D:$g(HelpCode)'="" ##class(websys.Help).Init(HelpCode,HelpCaption,HelpStyle)
 	If DisableSound'=1 {
-		if SoundScenes'="" do ##class(websys.Sound).Init(SoundScenes)
+		if $G(AppName)="" Set AppName="HIS"
+		if SoundScenes'="" do ##class(websys.Sound).Init(SoundScenes,1,AppName)
 	}
 	</SCRIPT>
 </csr:action>

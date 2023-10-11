@@ -1,0 +1,82 @@
+﻿<html>
+<head>
+	<HISUI/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<link rel="stylesheet" type="text/css" href="../scripts/emr/css/auth.css"/>
+	<script type="text/javascript" src="../scripts/emr/lib/JQuery/datagrid-detailview.js"></script>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+ 	<title>拒绝原因</title>
+	<script language="cache" runat="server">
+		s AuthRefuseReasons = ##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("AuthRefuseReasons","")
+	</script>
+	<script type="text/javascript">
+		var RefuseReasonsData = "";
+		var AuthRefuseReasons = '#(AuthRefuseReasons)#';
+		var reasons = AuthRefuseReasons.split("#");
+		for (var i=0;i<reasons.length ;i++ )
+	    {
+			var item = '{"id":"' + i + '","text":"' + reasons[i] + '"}';
+			
+			if (i > 0)
+			{
+				RefuseReasonsData = RefuseReasonsData + "," + item;
+			}
+			else
+			{
+				RefuseReasonsData = "[" + item;
+			}
+		}
+		
+		RefuseReasonsData = RefuseReasonsData + "]";
+		
+		returnValue = "";
+	</script>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:0,split:true" style="padding:3px;">
+		<div class="hisui-panel" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-paper'">
+				<div style="padding:10px;">
+					<a>#(..Get("拒绝原因"))#</a>
+					<input id="cbxRefuseReason" class="hisui-combobox" style="width:300px;">
+				</div>
+				<div style="text-align:center;padding-top:130px;">
+					<a id="btnOK" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-ok'">#(..Get("确定"))#</a>
+					<a id="btnCancel" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">#(..Get("取消"))#</a>
+				</div>							
+		</div>
+	</div>
+	<script type="text/javascript">
+		$('#cbxRefuseReason').combobox({
+			data: eval("(" + RefuseReasonsData + ")"),
+			valueField:'id',
+			textField:'text',
+			editable:false,
+			panelHeight:'185'
+		});	
+		
+		$("#btnOK").click(function(){
+		    var reasonText = $('#cbxRefuseReason').combobox('getText');
+			if (reasonText == "")
+			{
+				$.messager.alert("简单提示", "确定前拒绝原因不能为空！", 'info');
+			}
+			else
+			{
+				returnValue = reasonText;
+				close();
+			}
+		});
+		
+		$("#btnCancel").click(function(){
+		    returnValue = "";
+			close();
+		});
+		
+		function close()
+		{
+			var id = "dialogRefuseReason";
+			parent.closeDialog(id);
+		}
+	</script>
+</body>
+</html>

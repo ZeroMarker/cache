@@ -1,8 +1,8 @@
 <!--工作台门户-->
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- i ##Class(websys.SessionEvents).SessionExpired() q 1
- q 1
+	i ##Class(websys.SessionEvents).SessionExpired() q 1
+	q 1
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -12,18 +12,189 @@
 	<CSSDHISUI/>
 </head>
 <style>
- ul,ol{
-	 list-style-type:disc
-	 }
+.panel-header-card-gray+.panel-body {
+	border-radius: 5px;
+}
+.panel-header-card-gray + .panel-body{
+	border-width:2px
+}
+.UnApplyConfirm{
+	background-color:rgb(184, 210, 199, 0.2);
+	border-color:rgba(184, 210, 199);
+}
+.UnClean{
+	background-color:rgb(245, 232, 200,0.2);
+	border-color:rgba(245, 232, 200);
+}
+.UnPack{
+	background-color:rgb(198, 179, 142,0.2);
+	border-color:rgba(198, 179, 142);
+}
+.UnSter{
+	background-color:rgb(164, 216, 194,0.2);
+	border-color:rgba(164, 216, 194);
+}
+.UnDisp{
+	background-color:rgb(243, 217, 153,0.2);
+	border-color:rgba(243, 217, 153);
+}
+.Callback{
+	float:left;height:100%;width:42%;
+	background: url(../scripts/cssd/menu/images/callback.png);
+	background-repeat: no-repeat;
+}
+.Clean{
+	float:left;height:100%;width:45%;
+	background: url(../scripts/cssd/menu/images/clean.png);
+	background-repeat: no-repeat;
+}
+.Pack{
+	float:left;height:100%;width:45%;
+	background: url(../scripts/cssd/menu/images/pack.png);
+	background-repeat: no-repeat;
+}
+.Ster{
+	float:left;height:100%;width:45%;
+	background: url(../scripts/cssd/menu/images/ster.png);
+	background-repeat: no-repeat;
+}
+.Disp{
+	float:left;height:100%;width:45%;
+	background: url(../scripts/cssd/menu/images/disp.png);
+	background-repeat: no-repeat;
+}
+.cssdexpirate {
+	background: url(../scripts/cssd/menu/images/cssdexp.png);
+	background-repeat: no-repeat;
+}
+.locexpirate {
+	background: url(../scripts/cssd/menu/images/locexp.png);
+	background-repeat: no-repeat;
+}
+.warn-font-about {
+	color: #ffa500;
+	font-size: 30px;
+	margin-right: 30px;
+}
+.warn-font-about:hover {
+	color: #04088c;
+}
+.warn-font-expired {
+	color: #e11d1d;
+	font-size: 30px;
+	margin-right: 30px;
+}
+.warn-font-expired:hover {
+	color: #04088c;
+}
+.title {
+	line-height: 40px;
+	font-size: 18px;
+	color: #d17c0f;
+}
+
+.Dbtitle{
+	font-size: 18px;
+	color: #8f8fb9;
+	padding:10px;
+	line-height: 50px;
+}
+.Num{
+	padding:10px;
+	font-size: 28px;
+	color: mediumvioletred;
+}
+.Click{
+	color: darkgray;
+}
+.Click:hover {
+	color: blue;
+}
 </style>
-<body class="hisui-layout" data-options="fit:true">
-	<div id="pp" data-options="region:'center',headerCls:'panel-header-gray',border:false" style="height:500px">
-		<div style="width:30%;"></div>
-		<div style="width:70%;"></div>
+<body class="hisui-layout" data-options="fit:true" style="overflow:auto;">
+	<div style='height:100%;width:98%;padding:1%;' data-options="fit:true">
+		<div style='height:110px;width:100%;' data-options="fit:true">
+			<div style='float:left;height:100%;width:18.7%;'>
+				<div class="hisui-panel UnApplyConfirm" data-options="headerCls:'panel-header-card-gray',fit:true">
+					<p id="MaintControl" class="Callback"></p>
+					<b class="Dbtitle">待确认申请单</b>
+					<ul id="Callback"></ul>
+				</div>
+			</div>
+			<div style='float:left;height:100%;width:17.9%;margin-left:2.4%;'>
+				<div class="hisui-panel UnClean" data-options="headerCls:'panel-header-card-gray',fit:true">
+					<div id="MaintControl" class="Clean"></div>
+					<b class="Dbtitle">待清洗明细</b>
+					<ul id="Clean"></ul>
+				</div>
+			</div>
+			<div style='float:left;height:100%;width:17.9%;margin-left:2.5%;'>
+				<div class="hisui-panel UnPack" data-options="headerCls:'panel-header-card-gray',fit:true">
+					<div id="MaintControl" class="Pack"></div>
+					<b class="Dbtitle">待包装明细</b>
+					<ul id="Pack"></ul>
+				</div>
+			</div>
+			<div style='float:left;height:100%;width:18%;margin-left:2.5%;'>
+				<div class="hisui-panel UnSter" data-options="headerCls:'panel-header-card-gray',fit:true">
+					<div id="MaintControl" class="Ster"></div>
+					<b class="Dbtitle">待灭菌包</b>
+					<ul id="Ster"></ul>
+				</div>
+			</div>
+			<div style='float:left;height:100%;width:17.9%;margin-left:2%;'>
+				<div class="hisui-panel UnDisp" data-options="headerCls:'panel-header-card-gray',fit:true">
+					<div id="MaintControl" class="Disp"></div>
+					<b class="Dbtitle">待发放包</b>
+					<ul id="Disp"></ul>
+				</div>
+			</div>
+		</div>
+		<div class="hisui-panel" data-options="headerCls:'panel-header-card-gray;'" style='height:440px;margin-top:1%;background:#fbf9fa;border-color:#e5e8e8;border-width: 2px;'>
+			<div style='padding:10px;padding-bottom:0;height:8%;'>
+				<div style='float:right;'>
+					<input class='hisui-radio' type="radio" label='当天' name='DateType' value='1'>
+					<input class='hisui-radio' type="radio" label='近七日' name='DateType' value='2' data-options="checked:true">
+					<input class='hisui-radio' type="radio" label='近一月' name='DateType' value='3'>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+					<input class='hisui-radio' type="radio" label='全部' name='AttributeDesc' value='' data-options="checked:true">
+					<input class='hisui-radio' type="radio" label='标牌追溯包' name='AttributeDesc' value='1'>
+					<input class='hisui-radio' type="radio" label='普通循环包' name='AttributeDesc' value='2'>
+					<input class='hisui-radio' type="radio" label='非循环包' name='AttributeDesc' value='7'>
+				</div>
+			</div>
+			<div style='float:left;height:89%;width:70%;margin-right:1%;'>
+				<div id="EmergencyControl" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="工作量统计">
+				</div>
+			</div>
+			<div style='float:right;height:89%;width:29%;'>
+				<div id="EmergencyControl2" class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" title="包数量">
+				</div>
+			</div>
+		</div>
+		<div style='height:130px;width:100%;margin-top:0.5%;' data-options="fit:true">
+			<div style='float:left;height:100%;width:48%;margin-right:4%;'>
+				<div class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" style="background-color:rgb(251, 180, 104, 0.1);border-color:#D0D0D9">
+					<div style='float:left;height:100%;width:45%;'class="cssdexpirate"></div>
+					<b class="title">供应中心过期提醒</b>
+					<ul id="Supexpired"></ul>
+					<ul id="Supabout"></ul>
+				</div>
+			</div>
+			<div style='float:left;height:100%;width:48%;'>
+				<div class="hisui-panel" data-options="headerCls:'panel-header-card-gray',fit:true" style="background-color:rgb(251, 180, 104, 0.1);border-color:#D0D0D9">
+					<div style='float:left;height:100%;width:45%;'class="locexpirate"></div>
+					<b class="title">科室过期提醒</b>
+					<ul id="Locexpired"></ul>
+					<ul id="Locabout"></ul>
+				</div>
+			</div>
+		</div>
 	</div>
-   	<script type="text/javascript" src="../scripts/cssd/Common/echarts/echarts.js"></script>	
-   	<script type="text/javascript" src="../scripts/cssd/Common/jquery.tmpl.js"></script>	
-	<script type="text/javascript" src="../scripts/cssd/ExtUX/jquery.portal.js"></script>	    
+</div>
+	
+	<script type="text/javascript" src="../scripts/cssd/Common/echarts/echarts.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/jquery.tmpl.js"></script>
+	<script type="text/javascript" src="../scripts/cssd/Common/echarts/macarons.js"></script>
 	<script type="text/javascript" src="../scripts/cssd/menu/Portal.js"></script>
 </body>
 </html>

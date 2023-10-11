@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<!--生产企业信息维护
+	csp:csp/pha.in.v3.config.phmanf.csp
+	js: scripts/pha/in/v3/Config/PhManf.js
+-->
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+<HEAD>
+	<!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI/>
+    <PHALIBV1 />
+    <style>
+		.Text-width {
+			width: 243px;
+		}
+		.Date-width {
+			width: 248px !important;
+		}
+		.Condition-width {
+			width: 140px;
+		}
+		.winText-width {
+			width: 153px;
+		}
+		.winText-width2 {
+			width: 143px;
+		}
+		.check-text{
+			margin-left:-6px;
+			display: inline-block;
+			padding-top: 5px;
+		}
+		.checkbox{
+			padding-top: 4px;
+		}
+	</style>   
+</HEAD>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false" style="background-color:white">
+			<div class="hisui-layout" fit="true" >
+                <div data-options="region:'west',width:600, border:false,split:true">
+                    <div id="panel" class="hisui-panel" title="生产企业列表"
+                        data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-drug',fit:true,bodyCls:''">	
+                        <table id="GridPhManf"></table>				                            
+                    </div>
+                </div>
+                <div data-options="region:'center',border:false">
+                    <div id="tabPrt" class="hisui-tabs tabs-gray" fit="true" >   
+						<div id="tabDrugPropLable" title="基本信息" data-options="closable:false,border:false,selected:true" > 
+							<div class="hisui-layout" fit="true">
+								<div class="datagrid-toolbar" style="border-bottom:0" data-options="region:'north',border:false">
+									<a class="hisui-linkbutton" plain='true' iconCls="icon-add" id="btnAdd" onclick="javascript:AddPhManf()">#(..Get("新增"))#</a>
+									<a class="hisui-linkbutton" plain='true' iconCls="icon-save" id="btnSave" onclick="javascript:SavePhManf()">#(..Get("保存"))#</a>
+									
+								</div>	
+											
+								<div id="basicInfo" data-options="region:'center',border:false">
+								<div class="pha-line"></div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<input id="PhManfId"   type="hidden" class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",clear:true,query:0'/>
+											<label for="ManfCodei">&emsp;&emsp;#(..Get("代码"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="ManfCodei" placeholder="请输入代码..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",requied:true,save:true,clear:true,query:1'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="ManfNamei">&emsp;&emsp;#(..Get("名称"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="ManfNamei" placeholder="请输入名称..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",requied:true,save:true,clear:true,query:2'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="Tel">&emsp;&emsp;#(..Get("电话"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Tel" placeholder="请输入电话..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:3'/>
+										</div>
+									</div>
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="Address">&emsp;&emsp;#(..Get("地址"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Address" placeholder="请输入地址..."  class="hisui-validatebox Text-width" data-pha='class:"hisui-validatebox",save:true,clear:true,query:4'/>
+										</div>
+									</div>
+
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="ParManf">#(..Get("上级生产企业"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="ParManf" placeholder="请选择上级生产企业..." class=" hisui-combobox Date-width"  data-pha='class:"hisui-combobox",save:true,clear:true,query:5'/>
+										</div>
+									</div>								
+									<div class="pha-row">	
+										<div class="pha-col">
+											<label for="Status">#(..Get("使用状态"))#</label>
+										</div>
+										<div class="pha-col">
+											<input id="Status" placeholder="请选择使用状态..." class="hisui-combobox Date-width" data-pha='class:"hisui-combobox",save:true,clear:true,query:6'/>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div> 
+						<div id="tabPHCGeLable" title="资质信息" data-options="closable:false">
+							<table id="GridCert"></table>
+						</div>   
+					</div>
+	            </div>
+			</div>
+		</div>
+    </div>
+    
+    <!--资质信息列表工具栏-->
+	<div id="GridCertBar">
+		<div class="pha-line-bar">
+            <a href="#" id="AddCertBT" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="javascript:AddCert()">#(..Get("新增"))#</a>
+			<a href="#" id="UpdateCertBT" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="javascript:UpdateCert()">#(..Get("修改"))#</a>
+        </div>
+	</div>
+
+	<!--生产企业列表工具栏-->
+	<div id="GridPhManfBar">
+		
+		<table id="qCondition" class="pha-con-table">
+			<tr>
+                <td class="r-label">
+                     <label id='_HospListLabel'>#(..Get("医院"))#</label>
+                </td>
+                <td colspan = 3>
+                    <input id='_HospList' />
+                </td>
+                <td colspan = 2>
+                    <a id='_HospBtn'></a>
+                </td>
+            </tr>
+		 	<tr>
+                <td class="r-label">
+                   <label for="ManfCode">#(..Get("代码"))#</label>
+                </td>
+                <td>
+                    <input id="ManfCode" placeholder="请输入代码..."  class="hisui-validatebox Condition-width "  data-pha='class:"hisui-validatebox",clear:true,query:0'/>
+                </td>
+                <td>
+                    <label for="ManfState">#(..Get("状态"))#</label>
+                </td>
+                <td>
+                    <input id="ManfState" class="Condition-width" data-pha='class:"hisui-combobox",clear:true,query:1'/>
+                </td>
+                <td>
+                    <a id="btnFind" class="hisui-linkbutton" data-options="iconCls:'icon-w-find',plain:false" onclick="javascript:queryPhManf()">查询</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                  	<label for="ManfName">#(..Get("名称"))#</label>
+                </td>
+                <td>
+                   <input id="ManfName" placeholder="请输入名称..."  class="hisui-validatebox Condition-width" data-pha='class:"hisui-validatebox",clear:true,query:2'/>
+                </td>
+            </tr>
+        </table>
+    </div>
+	<!--资质弹出窗口-->
+	<div id="diagAddCert" class="hisui-dialog" data-options="closed:'true',modal:true" title="资质编辑" style="width:470px;height:246px;">
+		<div class="pha-row">	
+			<div class="pha-col">
+				<input id="CERTRowId"   type="hidden" class="hisui-validatebox winText-width" data-pha='class:"hisui-validatebox",clear:true,query:true'/>
+				<label for="CERTType">#(..Get("证件类型"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTType"   class="hisui-combobox winText-width" data-pha='class:"hisui-combobox",requied:true,clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<label for="CERTText">#(..Get("证件编号"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTText"  class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",requied:true,clear:true,query:true' style="width:148px"/>
+			</div>
+		</div>
+		<div class="pha-row">	
+			<div class="pha-col">
+				<label for="CERTDateFrom">#(..Get("效期开始"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTDateFrom" class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:true'/>
+			</div>
+			<div class="pha-col">
+				<label for="CERTDateTo">#(..Get("效期截止"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTDateTo"  class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",save:true,clear:true,query:true'/>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col">
+				<label for="CERTIssuedDept">#(..Get("发证机关"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTIssuedDept"  class="hisui-validatebox winText-width2" data-pha='class:"hisui-validatebox",clear:true,query:true' style="width:148px"/>
+			</div>
+			<div class="pha-col">
+				<label for="CERTIssuedDate">#(..Get("发证日期"))#</label>
+			</div>
+			<div class="pha-col">
+				<input id="CERTIssuedDate"class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",disabled:true,save:true,clear:true,query:true'/>
+			</div>
+		</div>
+		<div class="pha-row">
+			<div class="pha-col">
+				<label >&emsp;&emsp;#(..Get("标志"))#</label>
+			</div>
+			<div class="pha-col" style="margin-left:-4px">
+				<input id="CERTBlankedFlag" type="checkbox" class="hisui-checkbox"   data-pha='class:"hisui-checkbox",save:true,clear:true,query:true'>	
+				<label class="check-text" for="CERTBlankedFlag" disabled="true">#(..Get("长期"))#</label>	
+			</div>
+			<div class="pha-col">
+				<input id="CERTDelayFlag" type="checkbox" class="hisui-checkbox"   data-pha='class:"hisui-checkbox",save:true,clear:true,query:true'>
+				<label class="check-text" for="CERTDelayFlag" disabled="true">#(..Get("延期"))#</label>
+			</div>
+			<div class="pha-col" style="padding-left:74px;">
+				<label for="CERTDelayDateTo">#(..Get("延期至"))#</label>
+			</div>
+			<div class="pha-col" >
+				<input id="CERTDelayDateTo"  class="hisui-datebox dhcpha-date winText-width" data-pha='class:"hisui-datebox",disabled:true,save:true,clear:true,query:true'/>
+			</div>
+		</div>
+		<!--div class="pha-row">	
+			<div class="pha-col">
+				<input id="CERTShowFlag" type="checkbox" class="hisui-checkbox" data-pha='class:"hisui-checkbox",save:true,clear:true,query:10'>
+				<label for="CERTShowFlag" disabled="true">是否展示</label>
+			</div>
+		</div-->
+		<div data-options="region:'south'" border="false" style="text-align:center">
+		    <a href="#" id="SaveCertBT" align="center" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="javascript:SaveCert()">#(..Get("保存"))#</a>
+		</div>
+	</div>
+
+    <script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/Config/PhManf.js"></script>
+
+</body>
+</HTML>

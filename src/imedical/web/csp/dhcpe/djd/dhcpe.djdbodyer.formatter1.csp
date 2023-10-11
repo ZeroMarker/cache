@@ -1,0 +1,67 @@
+<!--
+Body 项目格式1
+dhcpe/djd/dhcpe.djdbodyer.formatter1.csp
+ -->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	w "<table>",!
+	// 这里用来定义每列宽度
+	w "<tr style='height:0pt;'>",!
+	w "<td style='width:295pt;'></td>"
+	w "<td style='width:80pt;'></td>"
+	w "<td style='width:50pt;'></td>"
+	w "<td style='width:65pt;'></td>"
+	w "<td style='width:50pt;'></td>"
+	w "</tr>",!
+	
+	s length=BodyData.%Size()
+	f i=1:1:length {
+		s TypeInfo=BodyData.%Get(i-1)
+		// 分类行
+		w "<tr>",!
+		w "<td colspan=5>",!
+		w "<table>",!
+		w "<tr>",!
+		w "<td valign='top' style='width:120pt;'><span style='font-size:14pt;'><b>&ensp;"_TypeInfo.TypeName_"</b></span></td>",!
+		w "<td>"_TypeInfo.TypeNotice_"</td>",!
+		w "</tr>",!
+		w "</table>",!
+		w "</td>",!
+		w "</tr>",!
+		
+		// 标本行
+		s stripeNum=0
+		s SpecList=TypeInfo.SpecList
+		s specLen=SpecList.%Size()
+		f j=1:1:specLen {
+			// 项目行
+			s ItemList=SpecList.%Get(j-1).ItemList
+			s itemLen=ItemList.%Size()
+			f k=1:1:itemLen {
+				s stripeNum=stripeNum+1
+				s bgColor=""
+				s:stripeNum#2=0 bgColor="background-color:#E1E1E1;"  // 条纹
+				
+				w "<tr>",!
+				w "<td style='"_bgColor_"'>&emsp;&emsp;"_ItemList.%Get(k-1).ItemName_"</td>",!
+				;w "<td align='right'>"_$case(TypeInfo.DocFlag,"Y":"医生/护士签名",:"")_"</td>",!
+				;w "<td"_$case(TypeInfo.DocFlag,"Y":" style='border-bottom:1px solid #000;'",:"")_"></td>",!
+				;w "<td align='right'>"_$case(TypeInfo.PatSign,"Y":"受检者签名",:"")_"</td>",!
+				;w "<td"_$case(TypeInfo.PatSign,"Y":" style='border-bottom:1px solid #000;'",:"")_"></td>",!
+				
+				if ((j=specLen)&&(k=itemLen)){
+					w "<td align='right' style='"_bgColor_"'>"_$case(TypeInfo.DocFlag,"Y":"医生/护士签名",:"")_"</td>",!
+					w "<td style='"_bgColor_$case(TypeInfo.DocFlag,"Y":"border-bottom:1px solid #000;",:"")_"'></td>",!
+					w "<td align='right' style='"_bgColor_"'>"_$case(TypeInfo.PatSign,"Y":"受检者签名",:"")_"</td>",!
+					w "<td style='"_bgColor_$case(TypeInfo.PatSign,"Y":"border-bottom:1px solid #000;",:"")_"'></td>",!
+				} else {
+					w "<td colspan=4 style='"_bgColor_"'></td>",!
+				}
+				w "</tr>",!
+			}
+		}
+		w "<tr style='height:1.5pt;'><td colspan=5></td></tr>",!
+		w "<tr><td colspan=5 style='border-bottom:0.5pt solid #000;'></td></tr>",!
+		w "<tr style='height:3.5pt;'><td colspan=5></td></tr>",!
+	}
+	w "</table>",!
+</SCRIPT>

@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>全文检索</title>
+	<HISUI/>
+	<link rel="stylesheet" type="text/css" href="../scripts/epr/search/fulltextsearchnew.css">
+	<script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+	<script type="text/javascript" src="../scripts/epr/search/fulltextsearchnew.js"></script>
+	<script language="cache" runat="server">
+		s userID = %session.Get("LOGON.USERID")
+		s:(userID = "") userID = "34"
+		s ctLocID = %session.Get("LOGON.CTLOCID")
+		s ssGroupID = %session.Get("LOGON.GROUPID")
+		s hospID = %session.Get("LOGON.HOSPID")
+		s solrUrl = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("SolrUrl")
+		s queryOption = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("QueryOption")
+		s dataServiceUrl = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("DataServiceUrl")
+		s wordCollect = ##class(DHCEPRSearch.BL.BLSystemOption).GetValueByName("WordCollect")
+	</script>
+	<script type="text/javascript">
+		var userID = '#(userID)#';
+		var ctLocID = '#(ctLocID)#';
+		var ssGroupID = '#(ssGroupID)#';
+		var hospID = '#(hospID)#';
+		var solrUrl = '#(solrUrl)#';
+		var queryOption = '#(queryOption)#';
+		var dataServiceUrl = '#(dataServiceUrl)#';
+		var cspBaseUrl = dataServiceUrl + 'csp/';
+		var wordCollect = '#(wordCollect)#';
+	</script>
+	<!-- ajax-solr基础类 -->
+	<script src="../scripts/epr/search/core/Core.js"></script>
+	<script src="../scripts/epr/search/core/AbstractManager.js"></script>
+	<script src="../scripts/epr/search/managers/Manager.jquery.js"></script>
+	<script src="../scripts/epr/search/core/Parameter.js"></script>
+	<script src="../scripts/epr/search/core/ParameterStore.js"></script>
+	<script src="../scripts/epr/search/core/AbstractWidget.js"></script>
+	<script src="../scripts/epr/search/core/AbstractFacetWidget.js"></script>
+	<!-- 返回结果过滤 -->
+	<script src="../scripts/epr/search/widgets/ResultWidgetNew.js"></script>
+	<!-- 分页 -->
+	<script src="../scripts/epr/search/widgets/PagerWidget.js"></script>
+</head>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',bodyCls:'panel-body-gray'" style="height:82px;padding:10px;">
+				<!--<div class="logo"><img src="../scripts/epr/search/images/logo.jpg" alt="logo" /></div>-->
+				<div class="shop">
+					<a href="#" id="myDocButton" class="hisui-linkbutton big" data-options="iconCls:'icon-big-favorite',plain:true">我的文库</a>
+					<!--<a href="#" id="importButton" class="hisui-linkbutton big" data-options="iconCls:'icon-big-paper-search',plain:true">导入结果</a>-->
+				</div>
+				<div class="search"><input id="query" href="#" class="hisui-searchbox" style="width:500px;" /><input id="saveQuery" type="hidden" /></div>
+			</div>
+			<div data-options="region:'center',bodyCls:'panel-body-gray'">
+				<div id="docs" class="docResult"></div>
+			</div>
+			<div data-options="region:'south',bodyCls:'panel-body-gray'" style="height:42px;padding:5px 10px;background-color:#f5f5f6;">
+				<ul id="pager" class="docPager"></ul>
+			</div>
+		</div>
+	</div>
+	<div data-options="region:'east',title:'过滤条件',iconCls:'icon-filter',headerCls:'panel-header-gray'" style="width:360px;">
+		<div id="fqpg" class="hisui-accordion accordion-gray"></div>
+	</div>
+	<div id="myDocWin" style="width:800px;height:500px;">
+		<table id="myDocTable"></table>
+	</div>
+	<div id="importWin" style="width:800px;height:500px;">
+		<table id="importTable"></table>
+	</div>
+	<div id="saveWin" style="width:400px;height:350px;">
+		<table class="favorform">
+			<tr>
+				<td class="form-r-label"><label for="name">名称</label></td>
+				<td><input id="name" type="text" class="textbox" style="width:300px;" /></td>
+			</tr>
+			<tr>
+				<td class="form-r-label"><label for="category">分类</label></td>
+				<td><input id="category" type="text" class="textbox" style="width:300px;" /></td>
+			</tr>
+			<tr>
+				<td class="form-r-label"><label for="tags">标签</label></td>
+				<td><input id="tags" type="text" class="textbox" style="width:300px;" /></td>
+			</tr>
+			<tr>
+				<td class="form-r-label form-t-label"><label for="notes">备注</label></td>
+				<td><textarea id="notes" class="textbox hisui-validatebox" style="width:300px;height:90px;"></textarea></td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>

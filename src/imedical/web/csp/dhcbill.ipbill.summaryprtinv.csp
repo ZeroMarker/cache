@@ -1,0 +1,95 @@
+<!-- 
+ * FileName: dhcbill.ipbill.summaryprtinv.csp
+ * Author: ZhYW
+ * Date: 2021-04-26
+ * Description: 住院集中打印发票
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<ADDINS/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.ipbill.summaryprtinv.css"/>
+	<server>
+		set PatientId=%request.Get("PatientId")
+	</server>
+	<script type="text/javascript">
+		if (websys_isIE) {
+			$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+		}
+		
+		//常量
+		var CV = {
+			PatientId: "#(PatientId)#"
+		};
+		
+		//全局变量
+		var GV = {};
+	</script>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-layout" data-options="fit:true">
+			<div data-options="region:'north',bodyCls:'panel-header-gray'" style="height:52px;border-radius:4px 4px 0 0;">
+				<table class="search-table">
+					<tr>
+						<td class="r-label"><label>#(..Get("就诊科室"))#</label></td>
+						<td><input id="admList" class="hisui-combobox textbox"/></td>
+						<td class="r-label r-label-20"><label>#(..Get("开始日期"))#</label></td>
+						<td><input id="stDate" class="hisui-datebox textbo"/></td>
+						<td class="r-label r-label-20"><label>#(..Get("结束日期"))#</label></td>
+						<td><input id="endDate" class="hisui-datebox textbox"/></td>
+					</tr>
+				</table>
+			</div>
+			<div data-options="region:'center',bodyCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;">
+				<table id="payList"></table>
+			</div>
+			<div data-options="region:'south',border:false" style="height:190px;">
+				<div class="hisui-layout" data-options="fit:true,border:false">
+					<div data-options="region:'center',border:false" style="padding-top:10px;">
+						<table id="invList"></table>
+					</div>
+					<div data-options="region:'east',border:false" style="width:850px;padding-right:100px;">
+						<table class="search-table" style="width:100%">
+							<tr>
+								<td class="r-label"><label>#(..Get("当前票据号"))#</label></td>
+								<td><input id="receiptNo" class="textbox text-bold" disabled/><a href="javascript:;" id="btn-tip" class="hisui-linkbutton" data-options="iconCls:'icon-tip',plain:true" style="margin-left:2px;"></a></td>
+								<td class="r-label"><label>#(..Get("发票总费用"))#</label></td>
+								<td><input id="totalSum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td><a href="javascript:;" class="hisui-linkbutton print-btn green" id="btn-print" style="height:30px;">打印(F9)</a></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("医保支付总额"))#</label></td>
+								<td><input id="insuTotalSum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td class="r-label"><label>#(..Get("医保账户支付"))#</label></td>
+								<td><input id="insuAccPaySum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td><a href="javascript:;" class="hisui-linkbutton print-btn" id="btn-skipNo" style="height:30px;">跳号</a></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("医保统筹支付"))#</label></td>
+								<td><input id="insuPaySum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+								<td class="r-label"><label>#(..Get("个人自付总额"))#</label></td>
+								<td><input id="selfPaySum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><label>#(..Get("押金总额"))#</label></td>
+								<td><input id="depositSum" class="hisui-numberbox textbox text-bold" data-options="precision:2,disabled:true"/></td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.summaryprtinv.js"></script>
+</body>
+</html>

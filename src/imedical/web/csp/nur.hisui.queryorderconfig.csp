@@ -1,0 +1,212 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{background: white;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;}
+.selfBtn .l-btn-plain {padding: 0;border: 0;margin-top: 3px;margin-bottom: 3px;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-text {line-height: 22px;padding: 0 10px 0 31px;margin: 0;color: #666;}
+.selfBtn .l-btn-plain .l-btn-icon-left .l-btn-icon {left: 5px;height: 22px;width: 26px;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+#ctcConfig{padding-left: 10px;}
+#ctcConfig>div{flex: 1;margin-right: 10px;}
+.gradeBtn{position: inherit;background-color: transparent;cursor: pointer;}
+#tbEvaluate .l-btn-text,#tbADRs .l-btn-text{padding: 0 10px;}
+.datagrid-toolbar{width: 100%;}
+.panel.datagrid>.panel-body.panel-body-noheader{border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+</style>
+</head>
+<body style="overflow: hidden;padding: 10px;">
+	<!-- <div style="position: relative;padding-top: 10px;">
+		<table cellpadding="0" style="margin-left: 10px;border-collapse: collapse;">
+	    <tr>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>#(..Get("所属医院"))#
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+	    </tr>
+	  </table>
+	  <hr class="dashed" style="margin: 10px 0;">
+	</div> -->
+	<div class="hisui-panel" title="医嘱查询配置" style="padding:10px 0" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+		<div id="ctcConfig" style="overflow-x: hidden;display: flex;justify-content: space-between;">
+			<div class="evaluate">
+				<div class="hisui-panel" title="病区列表"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+					<table id="tbEvaluate" cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+						<tr>
+							<td>
+								<input id="evaluateInput" style="width: 150px;" class="hisui-searchbox" data-options="prompt:$g('病区名称'),searcher:getESTableData">
+							</td>
+						</tr>
+					</table>
+				  <table id="evaluateSystem" class="hisui-datagrid"
+						data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,onClickRow: selectESRow">
+						<thead>   
+							<tr>
+								<th data-options="field:'wardid',width:40">ID</th>   
+								<th data-options="field:'warddesc',width:140">病区名称</th>
+								<th data-options="field:'wardcode',width:100">code</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>   
+					</table>
+				</div>
+			</div>
+			<div class="ADRs">
+				<div class="hisui-panel" title="病区查询医嘱"  data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+					<table id="tbADRs" cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+						<tr>
+							<td class="r-label">
+								<select id="hideDepart" class="hisui-combobox" style="width:250px;"></select>
+							</td>
+							<td class="r-label">
+								<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-add'" onclick="addADRsRow();">新增</a>
+							</td>
+							<td class="r-label">
+								<a href="javascript:void(0);" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-cancel'" onclick="deleteADRsRow();">删除</a>
+							</td>
+						</tr>
+					</table>
+				  <table id="ADRsTable" class="hisui-datagrid"
+						data-options="rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false">
+						<thead>   
+							<tr>
+								<th data-options="field:'code',width:120">code</th>   
+								<th data-options="field:'desc',width:160">医嘱</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>   
+					</table>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript">
+var hospID=session["LOGON.HOSPID"];
+$(function() {
+	// hospComp = GenHospComp("Nur_IP_QueryOrderCfg",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+	// hospID=hospComp.getValue();
+	// hospComp.options().onSelect = function(i,d){
+	// 	console.log(arguments);
+	// 	hospID=d.HOSPRowId;
+	// 	getESTableData();
+	// }  ///选中事件
+	getESTableData();
+})
+function getESTableData() {
+	// 获取放化疗评价系统数据
+  $cm({
+      ClassName: 'Nur.NIS.Service.Base.Ward',
+      QueryName: 'GetallWardNew',
+      rows: 999999999999999,
+      desc: $("#evaluateInput").searchbox('getValue'),
+      hospid: hospID,
+      bizTable: "Nur_IP_QueryOrderCfg",
+  }, function (data) {
+		data.rows.unshift({warddesc: $g("全院"), wardcode: "", wardid: "0"})
+		$('#evaluateSystem').datagrid({data: data.rows});
+  });
+	$("#hideDepart").combobox({
+		valueField:'id', 
+        textField:'desc',
+		mode:'remote',
+        onBeforeLoad: function(param){
+            param.ARCIMDesc = param.q;
+            delete param.q;
+        },
+        loadFilter: function(data){
+            return data.rows;
+        },
+		url:$URL+"?ClassName=Nur.NIS.Service.TaskOverview.Normal&QueryName=GetDocAdvice&rows=200&page=1&hospDR="+hospID,
+		defaultFilter:6,
+	});
+}
+function selectESRow(curInd,row) {
+	$cm({
+		ClassName: 'Nur.Custom.NeedUnit.guardianshipOrderSheet',
+		MethodName: 'getWardOrder',
+		wardId: row.wardid,
+		hospDR: hospID
+  	}, function(data) {
+		$('#ADRsTable').datagrid({data: data});
+		$('#hideDepart').combobox('clear');
+  	});
+}
+function addADRsRow(type) {
+	var row=$('#evaluateSystem').datagrid('getSelected');
+	if (!row) return $.messager.popover({msg: $g('请先选择病区！'),type:'alert'});
+	var orderId=$('#hideDepart').combobox('getValue');
+	if (!orderId) return $.messager.popover({msg: $g('请先选择需要添加的医嘱！'),type:'alert'});
+  	$cm({
+		ClassName: 'Nur.Custom.NeedUnit.guardianshipOrderSheet',
+		MethodName: 'saveWardOrder',
+		dataType: "text",
+		wardId:row.wardid,
+		orderId:orderId,
+		hospDR:hospID,
+  	}, function(res) {
+		if (0==res) {
+			selectESRow(0,row);
+			$('#hideDepart').combobox('reload');
+		} else {
+			$.messager.popover({msg: res,type:'alert'});
+		}
+  	});
+}
+function deleteADRsRow(type) {
+	var row=$('#evaluateSystem').datagrid('getSelected');
+	if (!row) return $.messager.popover({msg: $g('请先选择病区！'),type:'alert'});
+	var itemRow=$('#ADRsTable').datagrid('getSelected');
+	if (!itemRow) return $.messager.popover({msg: $g('请先选择需要删除的项目！'),type:'alert'});
+	console.log(itemRow);
+  $cm({
+    ClassName: 'Nur.Custom.NeedUnit.guardianshipOrderSheet',
+    MethodName: 'deleteWardOrder',
+    dataType: "text",
+    id:itemRow.id,
+  }, function(res) {
+		if (0==res) {
+			selectESRow(0,row)
+		} else {
+			$.messager.popover({msg: $g('删除失败，请稍后重试。'),type:'alert'});
+		}
+  });
+}
+function resizeTableHeight() {
+	var innerHeight=window.innerHeight;
+	$('#evaluateSystem').datagrid('resize',{
+		height:innerHeight-160
+	});
+	$('#ADRsTable').datagrid('resize',{
+		height:innerHeight-160
+	});
+	setTimeout(function(){
+	  $('.evaluate .datagrid-view .datagrid-body,.ADRs .datagrid-view .datagrid-body').css('height',innerHeight-190+'px');
+	},100);
+}
+setTimeout(resizeTableHeight,100);
+window.addEventListener("resize",resizeTableHeight);
+	</script>
+</body>
+</html>

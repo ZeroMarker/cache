@@ -1,0 +1,137 @@
+<!doctype html>
+<!--dhcdoc.insusupervison.advice.csp 国家医保监管事前提醒、事中警醒-->
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge; charset=UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<style>
+	html,body{
+		margin:0;
+		padding:0;	
+		height:100%;
+	}
+</style>
+<Server>
+	;s retObj=[{"judge_result_detail_dtos":[{"vola_item_type":"1","mdtrt_id":"20220408170927677270","jrd_id":"58f0952b-3e4a-4af3-8571-058ead35e016","patn_id":"82121456303798152","rx_id":"","vola_amt":null}],"rule_id":"410000202112311644461000093054","vola_evid":"部分地市医保部门日常管理要求","mdtrt_id":"20220408170927677270","rule_name":"男性患者就诊妇产科_事前","vola_amt_stas":"1","jr_id":"1a77ae7b-4e58-41dc-9e01-9d37cf96eaaf","patn_id":"82121456303798152","sev_deg":"2","vola_amt":0.0,"vola_bhvr_type":"1","vola_cont":"根据参保人信息显示为【男】，但挂了【妇产科】"},{"judge_result_detail_dtos":[{"vola_item_type":"1","mdtrt_id":"20220408170927677270","jrd_id":"c4bba387-c44f-40c3-ac46-12a2feb35b96","patn_id":"82121456303798152","rx_id":"","vola_amt":null}],"rule_id":"JA00000001030070000","vola_evid":"基本临床诊疗规范","mdtrt_id":"20220408170927677270","rule_name":"男性患者就诊妇产科_事前","vola_amt_stas":"1","jr_id":"a638a47c-1a00-4760-ac8f-5d38b6cf321b","patn_id":"82121456303798152","sev_deg":"2","vola_amt":0.0,"vola_bhvr_type":"1","vola_cont":"根据参保人信息显示为【男】，但挂了【妇产科】"},{"judge_result_detail_dtos":[{"vola_item_type":"1","mdtrt_id":"20220408170927677270","jrd_id":"a528ea13-6900-4ca8-8955-e9e064ba02fb","patn_id":"82121456303798152","rx_id":"","vola_amt":null}],"rule_id":"410000202109162313391000044038","vola_evid":"部分地市医保部门日常管理要求","mdtrt_id":"20220408170927677270","rule_name":"男性患者就诊妇产科_事前","vola_amt_stas":"1","jr_id":"4bd07e4f-7ee0-46f6-bfbe-e30e72bd47b5","patn_id":"82121456303798152","sev_deg":"2","vola_amt":0.0,"vola_bhvr_type":"1","vola_cont":"根据参保人信息显示为【男】，但挂了【妇产科】"}]
+	;s InsuArr=retObj.%ToJSON()
+	s InsuArr=%request.Get("advicestr")
+	s ^temp("yibaojianguanalert")=InsuArr
+</Server>
+</head>
+<body>
+	<div class="hisui-panel" data-options="fit:true,headerCls:'panel-header-gray',bodyCls:'panel-body-gray'">
+		<table id='tabOrdDetailInfo' style=''></table>
+	</div>
+	<script type="text/javascript">
+		debugger;
+		var advicestr=websys_showModal('options').advicestr;
+		advicestr=JSON.parse(advicestr)
+		//var advicestr=[{"jr_id":"95f4a894-a5c9-4f5d-9f60-51887987ed65","judge_result_detail_dtos":[{"jrd_id":"e86eb5ec-7f04-4fdf-ac56-fa9a2cb5007f","mdtrt_id":"7289752","patn_id":"4366473","rx_id":"","vola_amt":"null","vola_item_type":"1"}],"mdtrt_id":"7289752","patn_id":"4366473","rule_id":"JA00000001030070000","rule_name":"男性患者就诊妇产科_事前","sev_deg":"2","vola_amt":"0.0","vola_amt_stas":"1","vola_bhvr_type":"1","vola_cont":"根据参保人信息显示为【男】，但挂了【妇产科】","vola_evid":"基本临床诊疗规范"}]  
+		$(function(){
+			var OrdDetailColumns=[[
+				{field:'task_id',title:'任务ID',hidden:true},
+				{field:'mdtrt_id',title:'就诊id',hidden:true},
+				{field:'rule_id',title:'规则ID',align:'center',width:285,auto:false,hidden:true},
+				{field:'sev_deg',title:'严重程度',align:'center',width:100,auto:false,
+						formatter:function(value,rec){ 
+							var Display=value
+				   			switch(value)
+							{
+								case "1":
+									Display="明确违规"
+									break;
+								case "2":
+									Display="高度可疑"	
+									break;
+								case "3":
+									Display="轻度可疑"	
+									break;
+								default:
+									break;
+							}
+		 				    return Display;
+						}
+				},
+		 		{field:'rule_name',title:'规则名称',align:'center',width:285,auto:false},
+				{field:'vola_cont',title:'违规内容',align:'center',width:350,auto:false},
+				{field:'judge_result_detail_dtos',title:'judge_result_detail_dtos',align:'center',width:285,auto:false,hidden:true},
+				{field:'violdetails',title:'违规明细',align:'center',width:150,auto:false,
+						formatter:function(value,rec,index){  
+		 				   var btn=""
+		 				   if (value!=""){  
+		                   		var btn = '<a class="editcls" onclick="InsuViolationDetailsShow(\'' +index+ '\')">'+"<font color='light blue'>"+"违规明细</font>"+'</a>';
+		 				   }
+		 				   return btn;
+                        }},
+				{field:'vola_amt',title:'违规金额',align:'center',width:150,auto:false},
+				{field:'vola_amt_stas',title:'违规金额计算状态',align:'center',width:120,auto:false,
+						formatter:function(value,rec){ 
+							var Display=value
+				   			switch(value)
+							{
+								case "0":
+									Display="异常"
+								break;
+								case "1":
+									Display="正常"	
+								break;
+								default:
+								break;
+							}
+		 				    return Display;
+						}
+				},
+				{field:'vola_evid',title:'违规依据',align:'center',width:285,auto:false},
+				{field:'vola_bhvr_type',title:'违规行为分类',align:'center',width:100,auto:false,
+						formatter:function(value,rec){ 
+							var Display=value
+				   			switch(value)
+							{
+								case "1":
+									Display="就诊类"
+									break;
+								case "2":
+									Display="项目类"	
+									break;
+								default:
+									break;
+							}
+		 				    return Display;
+						}
+				},
+			]]
+			OrdDetailInfoDataGrid=$("#tabOrdDetailInfo").datagrid({  
+				fit : true,
+				border : true,
+				striped : true,
+				singleSelect : true,
+				fitColumns : false,
+				autoRowHeight : false,
+				rownumbers:false,
+				pagination : true, 
+				showGroup: true,
+				pageSize: 9999, 
+				idField:'task_id',
+				data:advicestr,
+				columns :OrdDetailColumns,
+				autoSizeColumn:true
+			});
+		})
+		function InsuViolationDetailsShow(index){
+			var row=$('#tabOrdDetailInfo').datagrid('getRows')[index];
+			var DetailObj=row.judge_result_detail_dtos
+			if(typeof(DetailObj)!="object") return;
+			var DetailJson=JSON.stringify(DetailObj)
+			websys_showModal({
+				url:"dhcdoc.insusupervison.advice.detail.csp?DetailJson="+encodeURIComponent(DetailJson),
+				title:'医保监管违规明细查看',
+				width:880,height:250
+			});
+		}
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+    住院药房 - 拒绝发药查询
+    csp: csp/pha.ip.v4.query.refuse.csp
+    js:  scripts/pha/ip/v4/query.refuse.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    <PHAIPV4 />
+    <server language="CACHE" runat="Server">
+        s EpisodeID = $g(%request.Data("EpisodeID",1))
+        s FromIconProfile = $g(%request.Data("FromIconProfile",1))
+    </server>
+    <script Language="Javascript">
+        var URL_PHA_EpisodeID = "#(EpisodeID)#" || "";
+        var URL_PHA_FromIconProfile = "#(FromIconProfile)#" || "";
+    </script>
+    <style>
+        /* #pha_ip_v4_query_refuse{
+            border-radius: 4px;
+        } */
+    </style>
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-panel" data-options="title:'拒绝发药查询',headerCls:'panel-header-gray',bodyCls:'panel-body-gray',fit:true" id="pha_ip_v4_query_refuse">
+                <table id="gridRefuse"></table>
+            </div>
+            <!-- <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',title:'拒绝发药查询',headerCls:'panel-header-gray',bodyCls:'panel-body-gray'" id="pha_ip_v4_query_refuse">
+                    <table id="gridRefuse"></table>
+                </div>
+            </div> -->
+        </div>
+    </div>
+    <!-- 表格工具栏 -->
+    <div id="gridRefuseBar" class="pha-con-datagrid-toolbar">
+        <table class="pha-con-table qCondition">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("拒绝开始日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-datebox " id="startDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="phaLoc">#(..Get("发药科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-combobox " id="phaLoc" data-pha="class:'hisui-combobox',query:true,clear:true,required:false">
+                </td>
+                <td class="r-label">
+                    <label for="patNo">#(..Get("登记号"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-validatebox " id="patNo" data-pha="class:'hisui-validatebox',query:true,clear:true">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" iconCls="icon-w-find" id="btnFind">查询</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" iconCls="icon-w-clean" id="btnClean">清屏</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" iconCls="icon-w-back" id="btnUndo">取消</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="r-label">
+                    <label for="endDate">#(..Get("拒绝结束日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-datebox " id="endDate" data-pha="class:'hisui-datebox',query:true,clear:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="takeLoc">#(..Get("取药科室"))#</label>
+                </td>
+                <td class="r-label">
+                    <input class="hisui-combobox " id="takeLoc" data-pha="class:'hisui-combobox',query:true,clear:true">
+                </td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+    <!-- 本页面js -->
+    <script src="../scripts/pha/ip/v4/query.refuse.js"></script>
+</body>
+
+</html>

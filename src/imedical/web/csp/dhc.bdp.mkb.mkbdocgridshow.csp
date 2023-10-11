@@ -1,0 +1,264 @@
+
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+    @CSP：dhc.bdp.mkb.mkbdocgridshow.csp
+    @Title：文献查询
+    @Creator:石萧伟
+    @Description:文献查询
+    @CreateDate：2018-04-11
+*/
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+<script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+<style>
+</style>
+</HEAD>
+<server>
+    s username=%request.Get("username")
+    s password = %request.Get("password")
+</server> 
+<BODY>
+     <div class="hisui-layout" data-options="fit:true" border="false" id="layout">
+     	<div data-options="region:'north',split:false" border="false" style="padding:50px 4px 4px 4px;height:100px;text-align:center">
+     		疾病：<input class="hisui-combobox" style="width:307px" id="dise" /> 文献关键字：<input id="docname" class="hisui-validatebox" style="width:300px;padding-right:10px"/>
+     		<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-search',plain:true,stopAllEventOnDisabled:true" id="searchBtn">搜索</a>
+
+		</div>  
+		<div data-options="region:'center',split:false" border="false" style="padding-top:10px;padding-left:100px;padding-right:100px">
+			<div id="div-img" style="width:100%;height:100%;text-align:center;"><img src="../scripts/bdp/Framework/icons/mkb/contextnodatatip.png" alt="没有数据奥，选条数据看看把"  /></div>
+			<table data-options="fit:true,bodyCls:'panel-header-gray'" id="mygrid" border="true" style="display:none"></table>
+		</div>      
+ 	</div> 
+	 <!--预览弹窗--> 
+	<div id="win"></div>
+
+</BODY>
+<script type="text/javascript">
+	$(function(){
+	var  password="#(password)#"
+	var  username = "#(username)#"
+	if(username != "xinchanpin"||password != "xcp2021"){
+		$('body').html('<font color=red style="font-size:20px">用户名密码不正确</font>')
+		return
+	}
+    var columns = [[
+    	{
+            field: 'RowId', title: 'id', sortable: true, width: 180,hidden:true
+        },
+        {
+            field: 'DocuDesc', title: '文献名称', sortable: true, width: 180,
+            formatter: function (value, row, index) {
+                var content = '<span href="#" title="' + value + '" class="mytooltip">' + value + '</span>';
+                return content;
+            }
+        },
+        { field: 'DocuPath', title: '文献路径', sortable: true, width: 40, hidden:true },
+        {
+            field: 'DocuEngDesc', title: '英文文献名称', sortable: true, width: 180,
+            formatter: function (value, row, index) {
+                var content = '<span href="#" title="' + value + '" class="mytooltip">' + value + '</span>';
+                return content;
+            }
+        },
+		{
+			field: 'desc1', title: '预览', width: 20, sortable: true,
+			formatter: function (value, row, index) {
+				var btn = '<a href="#"  id="[A]' + row.DocuPath + '" class="preview" style="border:0px;cursor:pointer">预览</a>';
+				return btn;
+			}
+		},
+		{
+			field: 'desc2', title: '下载', width: 20, sortable: true,
+			formatter: function (value, row, index) {
+				var btn = '<a href="#" id="[B]' + row.DocuPath + '"  class="download load" style="border:0px;cursor:pointer">下载</a>';
+				return btn;
+			}
+		}
+    ]];
+    var mygrid = $HUI.datagrid("#mygrid", {
+//	        url: $URL,
+//	        queryParams: {
+//	            ClassName: "web.CDSS.CMKB.DocuManage",
+//	            QueryName: "GetList"
+//	        },
+		data:[],
+        columns: columns,  //列信息
+        pagination: true,   //pagination	boolean	设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+        pageSize: PageSizeMain,
+        pageList: [5, 10, 15, 20, 25, 30, 50, 75, 100, 200, 300, 500, 1000],
+        singleSelect: true,
+        remoteSort: false,
+        idField: 'RowId',
+        rownumbers: true,    //设置为 true，则显示带有行号的列。
+        fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+        onClickRow: function (index, row) {
+        },
+        onLoadSuccess: function (data) {
+            $(this).prev().find('div.datagrid-body').prop('scrollTop', 0);
+            $(this).datagrid('columnMoving');
+
+            $('.mytooltip').tooltip({
+                trackMouse: true,
+                onShow: function (e) {
+                    $(this).tooltip('tip').css({
+                        width: 250, top: e.pageY + 20, left: e.pageX - (250 / 2)
+                    });
+                }
+
+            });
+            //预览和下载
+			$(".preview").click(function (e) {
+				//var path=$(this).parent().text();
+				var path = $(this).attr("id").split("[A]")[1]
+				previewFile(path);
+
+			})
+			$(".download").click(function (e) {
+				//var path=$(this).parent().text();
+				var path = $(this).attr("id").split("[B]")[1]
+				// alert(path)
+				DownLoadFile(path);
+			})
+        }
+
+    });
+    //关联诊断检索框
+	$("#dise").combobox({
+	    url:$URL+"?ClassName=web.CDSS.CMKB.DiseaseDict&QueryName=GetDataForCmb1&ResultSetType=array",
+	    valueField: 'DiseaseDR',
+	    textField: 'DiseaseName',
+	    mode:'remote'
+	})
+    $('#searchBtn').click(function(e){
+	    var desc = $("#docname").val();
+	    var dise = $('#dise').combobox('getValue')
+	    if(desc==""&&dise==""){
+		    $.messager.popover({ msg: '请选择疾病并且输入文献关键字！', type: 'alert' });
+		    $('#div-img').show()
+		    return
+		}
+		
+        /*$('#mygrid').datagrid('load', {
+            ClassName: "web.CDSS.CMKB.DocuManage",
+            QueryName: "GetList",
+            'Desc': desc,
+            'Disease':dise
+        });*/
+		var data = $.cm({
+            ClassName: "web.DHCBL.MKB.MKBDocGridShow",
+            QueryName: "GetDocList",
+            'Desc': desc,
+            'Disease':dise
+		}, false)
+		if(data.rows.length<1){
+			$.messager.popover({ msg: '无检索内容！', type: 'alert' });
+		    $('#div-img').show()
+
+		}else{
+			$('#div-img').hide()
+			$('#mygrid').datagrid('loadData',data)
+		}
+		saveLog("新产品",'查询','疾病：'+$('#dise').combobox('getText')+'&文献：'+desc)
+	})
+    ///保存日志
+    function saveLog(user,type,desc) {
+	    var data = tkMakeServerCall("web.DHCBL.MKB.MKBDocGridShow","SaveData",user,type,desc)
+    }
+	 //点击下载按钮
+	 function DownLoadFile(fileName)
+	 {
+		 saveLog("新产品",'下载',fileName)
+		 if(fileName)
+		 {
+			 var isExists=$.m({ClassName:"web.DHCBL.BDP.BDPUploadFile",MethodName:"IsExistsFile",filePath:"scripts\\bdp\\MKB\\Doc\\Doc\\"+fileName},false);
+			 var filepath = "../scripts/bdp/MKB/Doc/Doc/"+fileName;
+			 if(isExists==1 && fileName!="")
+			 {
+				 $(".load").attr("href",filepath);
+				 $(".load").attr("download",fileName);
+				 //判断浏览器是否支持a标签 download属性
+				 var isSupportDownload = 'download' in document.createElement('a');
+				 if(!isSupportDownload){
+					 var fileType = fileName.split(".")[fileName.split(".").length-1];
+					 if((fileType!="pdf")&&(fileType!="PDF")){
+						 objIframe=document.createElement("IFRAME");
+						 document.body.insertBefore(objIframe);
+						 objIframe.outerHTML=   "<iframe   name=a1   style='width:0;hieght:0'   src="+$(".load").attr("href")+"></iframe>";
+						 pic   =   window.open($(".load").attr("href"),"a1");
+						 document.all.a1.removeNode(true)
+					 }else{
+						 alert("此浏览器使用另存下载");
+						 $(".load").attr("target","_blank");
+					 }
+				 }
+			 }else{
+				   /*$.messager.show
+				   ({ 
+					   title: '提示消息', 
+					   msg: '该文件不存在！', 
+					   showType: 'show', 
+					   timeout: 1500, 
+					   style: { 
+					   right: '', 
+					   bottom: ''
+					 } 
+				 }); */
+				 $.messager.popover({msg: '该文件不存在！',type:'alert'});   
+			 }       
+		 }else{
+			 $.messager.alert('错误提示','请先选择一条记录!',"error");
+		 }
+	 }
+	 //点击预览按钮
+	 function previewFile(fileName)
+	 {
+		 saveLog("新产品",'预览',fileName)
+	   
+		 if(fileName)
+		 {
+			 var fileType = fileName.split(".")[(fileName).split(".").length-1];
+			 var PDFisExists=$.m({ClassName:"web.DHCBL.BDP.BDPUploadFile",MethodName:"IsExistsFile",filePath:"scripts\\bdp\\MKB\\Doc\\Doc\\"+fileName.replace(fileType,"pdf")},false);
+			 if(PDFisExists==1)
+			 {
+				 var filepath = "../scripts/bdp/MKB/Doc/Doc/"+fileName.replace(fileType,"pdf");
+				 var previewWin=$("#win").window({
+						 width:$(window).width()*9.7/10,
+						 height:$(window).height()*9/10,
+						 top:$(document).scrollTop()+20,
+						 modal:true,
+						 title:fileName
+						 
+					 });
+				  $('#win').html('<object id="PDFViewObject" type="application/pdf" width="100%" height="100%" data='+filepath+' style="display:block"> <div id="PDFNotKnown">你需要先安装pdf阅读器才能正常浏览文件，请点击<a href="http://get.adobe.com/cn/reader/download/?installer=reader_11.0_chinese_simplified_for_windows" target="_blank">这里</a>下载.</div> </object>');
+				   previewWin.show();
+			 }else{
+				   /*$.messager.show({ 
+						 title: '提示消息', 
+						 msg: '不存在pdf预览文件！', 
+						 showType: 'show', 
+						 timeout: 1000, 
+						 style: { 
+						 right: '', 
+						 bottom: ''
+					 } 
+				 }); */
+				 $.messager.popover({msg: '不存在pdf预览文件！',type:'alert'});   
+			 }       
+		 }else{
+			 $.messager.alert('错误提示','请先选择一条记录!',"error");
+		 }
+	 }
+
+
+	})
+</script>
+</HTML>

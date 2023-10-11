@@ -1,0 +1,232 @@
+<html>
+<head>
+    <title>UKey登录</title>
+    
+    <script type="text/javascript" src="../scripts/dhccertauth/lib/jquery-1.8.0.min.js"></script>
+	<script type="text/javascript" src="../scripts/dhccertauth/lib/json2.js"></script>
+	<script type="text/javascript" src="../scripts/dhccertauth/imanageduser/common.data.js"></script>
+	
+<script language="cache" runat="server">
+	s signTypeCode = "UKEY"
+	s venderCode = $Get(%request.Data("venderCode",1),"")
+	s debugLevel = $Get(%request.Data("debugLevel",1),"")
+	
+	s containerName = ""
+	s userCertCode = ""
+	s certNo = ""
+	
+	if ($g(%session) '= "")
+	{
+		s containerName = %session.Get("ContainerName")
+		s userCertCode = %session.Get("CAUserCertCode")
+		s certNo = %session.Get("CACertNo")
+	}
+    </script>
+	
+  <script type="text/javascript" language="javascript">
+  
+  	var signTypeCode = '#(signTypeCode)#';
+  	var venderCode = '#(venderCode)#';
+  	
+	var argFun = window.dialogArguments;
+	argFun = argFun || "";
+	
+	function checkFun() {
+		if (argFun == "") return false;
+		return true;
+	}
+	
+	function caLogin() {
+		debugger;
+		
+		displayError("");
+		
+		//校验用户UKey及口令
+		var key =  document.getElementById("cbxKey").value;
+		var pwd = document.getElementById("txtPassword").value;
+		if ("" == key) {
+			displayError("请选择UKey");
+			return;
+		}
+		if ("" == pwd) {
+			displayError("请输入密码");
+			return;
+		}
+		 	
+		var checkTip = argFun.CheckPWD(key, pwd);
+		if (checkTip != "") {
+			displayError(checkTip);
+			return;
+		}
+		
+		var cert = argFun.GetSignCert(key);
+		if (cert == "") {
+			displayError("获取证书失败");
+			return;
+		}
+		var certNo = argFun.GetCertNo(key)
+		if (cert == "") {
+			displayError("获取证书唯一标识失败");
+			return;
+		}
+		var userCertCode = argFun.GetUniqueID(cert,key);
+		if (cert == "") {
+			displayError("获取用户唯一标识失败");
+			return;
+		}
+		
+		var loginObj = {
+			retCode: '0',
+			retMsg: 'success',
+			signStatus: 'FINISH',
+			signToken: '',
+			certContainer: key,
+			userCertCode: userCertCode,
+			certNo: certNo,
+			signCert: cert,
+			signToken: key
+		};
+		
+		if (serverLogin(loginObj)) {
+			var jsonStr = JSON.stringify(loginObj);
+			if (debugLevel >= 1) {
+				alert("PIN码登录结果 finish serverLogin:\r\n" + jsonStr);
+			}
+			
+			var tmpToken = loginObj.signToken || "";
+			if (tmpToken != "") {
+				regSession(rtn);
+			}
+			
+			window.returnValue = jsonStr;
+			window.close();
+		}
+	}
+	
+	function serverLogin(rtn) {
+		//usrID As %String, UsrCertCode As %String, serverRan As %String, userSignedData As %String, certNo As %String, userCert As %String, signType As %String = "", venderCode As %String = ""
+		var isok = false;
+		var data = ajaxDATA("String","CA.DigitalSignatureService","Login2","",rtn.userCertCode,"","",rtn.certNo,rtn.signCert,Const_Sign_Type,Const_Vender_Code);
+		ajaxPOSTSync(
+			data,
+			function(ret){
+				var  json =JSON.parse(ret);
+				if (json.retCode == "0") {
+					rtn["hisUserName"] = json.hisUserName;
+					rtn["hisUserID"] = json.hisUserID;
+					isok = true;
+				} else {
+					displayError(json.retMsg);
+				}
+			},
+			function(ret){
+				displayError(ret);
+			}
+		)
+		
+		return isok;
+	}
+	
+	function regSession(rtn) {
+		//signType, containerName, containerPin, userCertCode, certNo, signToken
+		var isok = false;
+		var userCertCode = rtn.userCertCode || "";
+		var certNo = rtn.certNo || ""
+		var signToken = rtn.signToken || "";
+		
+		var data = ajaxDATA("String","CA.DigitalSignatureService","RegSession", Const_Sign_Type, rtn.certContainer, "", userCertCode,certNo,signToken);
+		ajaxPOSTSync(
+			data,
+			function(ret){
+				//alert("regsessin: " + ret)
+				var json = JSON.parse(ret);
+				if (json.retCode == "0") {
+					isok = true;
+				} else {
+					displayError(json.retMsg);
+				}
+			},
+			function(ret){
+				displayError(ret);
+			}
+		)
+		
+		return isok;
+	}
+	
+	//获取用户证书列表，可能同时有多个证书
+	function LoadCAUserList() {
+		if (!checkFun()) {
+			displayError("UKey接口未定义");
+			return;
+		}
+		if (venderCode == "") {
+			displayError("UKey签名厂商代码未定义");
+			return;
+		}
+		
+		var keyCombo = document.getElementById("cbxKey").options;
+		keyCombo.length = 0;
+		var lst = argFun.GetUserList();  //CA JS API
+		var arrUsers = lst.split('&&&');
+		for (var i = 0; i < arrUsers.length; i++) {
+			var user = arrUsers[i];
+			if (user != "") {
+				var keyName = user.split('||')[0];
+				var uniqueID = user.split('||')[1];
+				var opt = new Option(keyName, uniqueID);
+				keyCombo.options[keyCombo.length] = opt;
+			}
+		}
+	}
+	
+	function displayError(error) {
+		$("#caTip").show();
+		document.getElementById("caTip").innerText = error;
+	}
+	
+	//页面加载完成后，自动加载UKey列表
+	window.onload = function () {
+		LoadCAUserList();
+	};
+    </script>
+    
+ </head>
+    
+<body>    
+    
+	<div id="cadiv" align="center" valign="middle" style="overflow:auto;width:100%;height:250px">
+
+    <form id="caAuditForm" name="caAuditForm" style="height:200px; margin-right:0px; margin-bottom:0px; margin-top:0px;">
+    
+    	<table>
+    	
+	    <tr align="center" valign="center">
+	    <td>选择证书:</td>
+	    <td>
+	    <select name="cbxKey" id="cbxKey" style="width: 130px; height:50px; margin-right: 0px;margin-bottom: 10px;margin-top: 0px;"></select>
+	    </td>
+    
+	    </tr>
+	    <tr align="center" valign="center">
+	    <td>证书口令:</td>
+	    <td>
+	    <input type="password" id="txtPassword" name="txtPassword" style="width: 130px; height:50px; margin-right: 0px;margin-bottom: 10px;margin-top: 0px;"/>
+	    </td>
+	    </tr>
+    
+	    <tr>
+	    <td align="center" colspan="2">
+	    <input type="button" id="submit" name="submit" onclick="caLogin()" value="确  定" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+	    </td>
+	    </tr>
+    
+	    </table> 
+    </form>
+    
+    </div>
+    
+    <div id='caTip' style="padding:10px;color:red;font-size:16px;text-align:center;height:50px;overflow-y:auto;overflow-x:hidden;display:none;">错误提示</div>    
+</body>
+
+</html>

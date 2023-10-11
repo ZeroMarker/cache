@@ -1,0 +1,2106 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Filter||InjectionFilter")
+ {
+ 	d ##class(websys.Filter).InjectionFilter()
+ }
+#; i ##Class(websys.SessionEventsmkb).SessionExpired() q 1
+#; quit 1
+ i ##Class(websys.SessionEvents).SessionExpired()
+  q 1
+</csp:method>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="stylesheet" type="text/css" href="../scripts_lib/font-awesome/font-awesome.min.css"/>
+    <link rel="stylesheet" type="text/css" href="../scripts_lib/bootstrap/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="../scripts_lib/bootstrap/js/jquery.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../scripts_lib/bootstrap/js/bootstrap.min.js" charset="utf-8"></script> 
+    
+     <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/default/easyui.css" />
+     <link rel="stylesheet" type="text/css" href="../scripts_lib/jquery-easyui-1.3.2/themes/icon.css" />
+     <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/jquery.easyui.min.js" charset="utf-8"></script>
+     <script type="text/javascript" src="../scripts_lib/jquery-easyui-1.3.2/locale/easyui-lang-zh_CN.js" charset="utf-8"></script>
+     <link rel="stylesheet" type="text/css" href="../skin/default/css/websys.easyui.1.3.2.css" />
+    <!--<JQUERY:EASYUI132/>-->
+    <script type="text/javascript" src="../scripts/websys.jquery.js"></script>
+    <script type="text/javascript" src="../scripts/bdp/MKB/Framework/websys.jquery.js"></script>
+    <script src="../scripts/bdp/Framework/assets/jquery.contextmenu.js"></script>
+    
+    <server>
+    ;epr.frames.csp
+     Set IEVersion = ##class(ext.util.String).GetIEVersion()
+     if IEVersion="IE11" {
+         Set IEVersion = "IE11"
+     }ELSE{
+        Set IEVersion = "IE8"
+     }
+     Set ActiveSkinRowId = $o(^websys.SkinI("ActiveIndex","Y",""))
+     If ActiveSkinRowId>0{  
+        Set skinObj = ##class(websys.Skin).%OpenId(ActiveSkinRowId)
+        Set MenuBGColor = skinObj.MenuBGColor ;017BCE
+        
+        s lbgColorG = $zhex($e(MenuBGColor,2,3))+53 
+        i lbgColorG>255 set lbgColorG=255 
+        i lbgColorG<0 set lbgColorG="00"
+        s lbgColorG = $zhex(lbgColorG) if $l(lbgColorG)=1 set lbgColorG="0"_lbgColorG
+        
+        s lbgColorR = $zhex($e(MenuBGColor,4,5))-17
+        i lbgColorR>255 set lbgColorR=255 
+        i lbgColorR<0 set lbgColorR="00"
+        s lbgColorR = $zhex(lbgColorR) if $l(lbgColorR)=1 set lbgColorR="0"_lbgColorR
+        
+
+        
+        Set skinObj=""
+     }
+    </server>
+<style>
+body {
+  overflow: hidden;
+  font-family: "Microsoft YaHei";
+  font-size: 16px;
+  line-height: 1.7;
+  color: #333;
+  
+}
+BODY INPUT:focus
+{
+    background-color:#F5FBFF;
+}
+
+.navbarhead a {
+  color: #ffffff;
+}
+.centerPanel {
+  overflow: hidden;
+  background-color: #ffffff;
+  position: absolute;
+  width:100%;
+}
+.navbar-fixed-top {
+  border-width: 0px;
+}
+.navbarhead .navbar {
+  min-height: 35px;
+  margin-bottom: 0px;
+}
+.navbarhead .navbar-default {
+  color: #fff;
+ 
+  background: url(../scripts/bdp/Framework/icons/mkb/navhead.png) repeat-y;
+  background-size: 100%;
+}
+.navbarhead .navbar-default a.navbar-brand {
+  color: #ffffff;
+}
+.navbarhead .navbar-default a:hover.navbar-brand {
+  color: #ffffff;
+}
+.navbarhead .navbar-default .navbar-brand {
+  height: 35px;
+  padding: 5px 5px 0 5px;
+}
+.navbarhead .navbar-default .navbar-nav {
+ 
+}
+.navbarhead .navbar-default .navbar-nav > .active > a {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+
+.navbarhead .navbar-default .navbar-nav > li > a {
+  color: #ffffff;
+  padding: 3px 10px;  /*chenying 20180418*/
+  line-height: 30px;
+  font-size: 16px;
+}
+
+
+/*MenuSelectedBGColor*/
+.navbarhead .navbar-default .navbar-inner .navbar-nav > .clickactive > a {
+  color: #fff;
+  background-color: #0063a7;
+}
+
+.navbarhead .navbar-default .navbar-container .navbar-buttons .navbar-nav {
+  margin-right: 5px;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .navbar-nav li:first > a {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+/*.navbarhead .navbar-default .navbar-container .navbar-buttons .nullMessage {
+  padding-bottom: 15px;
+}*/
+.navbarhead .navbar-default .navbar-container .navbar-buttons .nullMessage .badge {
+  display: none;
+  position: relative;
+  top: 5px; /*-6px*/
+  left: -10px;
+  line-height: 0.9;
+  padding: 3px;
+  color: #ffffff;
+  background-color: red;
+}
+/*.navbarhead .navbar-default .navbar-container .navbar-buttons .hasMessage {
+  padding-right: 4px;
+}*/
+.navbarhead .navbar-default .navbar-container .navbar-buttons .hasMessage .badge {
+  display: inline-block;
+  /*position: relative;
+  top: -6px;
+  left: -10px;
+  */
+  line-height: 0.9;
+  padding: 3px;
+  color: #ffffff;
+  background-color: red;
+  position: absolute;
+  top: 5px; /*-6*/
+  left: 22px;
+}
+
+
+
+.navbarhead .navbar-default .navbar-container .navbar-buttons .fontsettings {
+  margin-left: 20px;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .fontsettings span {
+  cursor: pointer;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .userlocinfo {
+  display: inline-block;
+  zoom: 1;
+  font-size: 13px;
+  line-height: 15px;
+  overflow: hidden;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .userinfo {
+  display: block;
+}
+.navbarhead .navbar-default .navbar-container .navbar-buttons .locinfo {
+  float:right; /*right---ie11兼容下对不齐*/
+}
+.navbar-toggle {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+/*三级菜单*/
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu:hover > .dropdown-menu {
+  display: block;
+}
+.dropdown-submenu > .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  -webkit-border-radius: 0 6px 6px 6px;
+  -moz-border-radius: 0 6px 6px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover > a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu > a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #ccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left > .dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  -webkit-border-radius: 6px 0 6px 6px;
+  -moz-border-radius: 6px 0 6px 6px;
+  border-radius: 6px 0 6px 6px;
+}
+/*下拉菜单背景色 #FEFEFE*/
+.navbar-nav>li>.dropdown-menu, li.dropdown-submenu>ul.dropdown-menu{
+    background-color:#FEFEFE;
+    min-width:140px;
+}
+.dropdown-menu>li>a{
+    /*color:#ffffff;*/
+    position:relative;
+    padding-left:25px;
+}
+.aboutbody ul>li{
+    margin-top:3px;
+}
+.aboutfooter{
+    background-color:#F7F7F7;
+    width:458px;
+    height:35px;
+    position:absolute;
+    left: 0px;
+    font-size:12px;
+    color:#8a8aea; /*#B5B5B5;*/
+    padding-left:100px;
+    padding-top:5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+.panel-body{
+    padding:0px;
+}
+.modal-header{
+    padding:8px;
+    background-color:#556983;
+    color:#ffffff;
+}
+.close,.close:hover{
+    color:#ffffff;
+    opacity:0.8;
+}
+.navbarhead .navbar-default .navbar-nav > LI {
+    height:36px;
+    float:left;
+}
+a.rightMainMenu{
+    font-size:14px !important;
+}
+.navbar-container a:focus{
+    outline:none;
+}
+/*.navbarhead .dropdown-menu > li > a:focus,*/ 
+.navbarhead .dropdown-menu > li > a:hover
+{
+  /*color: #ffffff;*/
+  background-color: #21BA45;
+}
+/*chenying 20180418 
+.navbarhead .navbar-default .navbar-nav > li > a.rightMainMenu>img
+{
+    margin-top: 6px
+}*/
+
+/*.navbarhead .navbar-default .navbar-nav > .active > a:focus,*/
+.navbarhead .navbar-default .navbar-nav > .active > a:hover {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+/**/
+/*.navbarhead .navbar-default .navbar-nav > li > a:focus,  点击不要变色效果*/
+.navbarhead .navbar-default .navbar-inner> .navbar-nav > li > a:hover { 
+    text-decoration:none;
+    background-color: #4d34aa;
+}
+.navbarhead .navbar-default .navbar-nav > .open > a,
+/*.navbarhead .navbar-default .navbar-nav > .open > a:focus,*/
+.navbarhead .navbar-default .navbar-nav > .open > a:hover {
+  color: #000000;
+  background-color: #ffffff;
+}
+.navbarhead .navbar-default .navbar-inner> .navbar-nav > li > a:click { 
+  background-color: #4d34aa;
+}
+
+
+
+
+/*下拉菜单选中色*/
+ /*.navbarhead .dropdown-menu > li > a:focus*/
+.navbarhead .dropdown-menu > li > a:hover{
+    color: #ffffff; /*#000000;*/
+    background-color: #017BCE ; /*CHENYING  #20BB44  #ffffff;*/
+}
+.navbarhead .navbar-default .navbar-nav > li > a.dhc-icon-th{
+    padding: 6px;
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 1px #7BC2F2 solid;
+    margin-top: 10px;
+    background: #3FA2DF;
+}
+.navbarhead .navbar-default .navbar-nav > li > a.dhc-icon-user{
+    border-radius: 15px;
+}
+.navbarhead .navbar-default .navbar-nav > .open > a.dhc-icon-th,
+.navbarhead .navbar-default .navbar-nav > .open > a.dhc-icon-th:hover {
+  border: 1px #40a2de solid;
+  color:#ffffff;
+  background-color: #0063a7;
+}
+
+
+.dhc-fa-icon-large{
+    background-repeat:no-repeat;
+    display:block;
+    width:24px;
+    height:24px;
+    /*position: absolute;*/
+}
+.dhc-fa-icon-small{
+    background-repeat:no-repeat;
+    display:block;
+    width:14px;
+    height:14px;
+    position: absolute;
+    left: 10px;
+    top: 5px;
+}
+.icon-user-md{
+    position: absolute;
+}
+
+
+/* 对顶部菜单图标不加样式 chenying*/
+.navbarhead .navbar-default .navbar-nav > .open > a,
+.navbarhead .navbar-default .navbar-nav > .open > a:hover {
+  color:#ffffff;
+  background-color:#38C7CD;
+}
+.opennow{
+  background-color:#4d34aa;  
+}
+#MenuDataType > a,
+#MenuDataType > a:hover {
+    color: #fff;
+    background-color:transparent
+}
+
+/*chenghegui--start*/
+    /*---滚动条默认显示样式--*/  
+::-webkit-scrollbar-thumb{  
+   background-color:#018EE8;  
+   height:5px;  
+   outline-offset:-2px;  
+   outline:2px solid #fff;  
+   -webkit-border-radius:4px;  
+   border: 2px solid #fff;  
+}
+/*---鼠标点击滚动条显示样式--*/  
+::-webkit-scrollbar-thumb:hover{  
+   background-color:#FB4446;  
+   height:8px;  
+   -webkit-border-radius:4px;  
+}
+/*---滚动条大小--*/  
+::-webkit-scrollbar{  
+   width:8px;  
+   height:8px;  
+}
+/*---滚动框背景样式--*/  
+::-webkit-scrollbar-track-piece{  
+   background-color:#fff;  
+   -webkit-border-radius:0;  
+}
+.clearfix:after {
+    content: "";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden
+}
+
+.clearfix {
+    display: inline-table
+}
+*html .clearfix {
+    height: 1%
+}
+
+.clearfix {
+    display: block
+}
+
+*+html .clearfix {
+    min-height: 1%
+}
+
+.box .list a {
+    float: left;
+    display: block;
+    width: 125px;
+    height: 42px;
+    text-align: center;
+    font: bold 14px/30px "微软雅黑";
+    color: #fff;
+}
+
+.box .list a:hover {
+    color: #FFA304;
+}
+
+.box .list a:hover,.nav .list .now {
+    color: #0005FF;
+    background: #fff;
+}
+
+.box {
+    position: absolute;
+    left: 8%;
+    top: 36px;
+    /*width: 1006px;*/  /*1*/  
+    width: 1000px;
+    -webkit-border-radius:3px;
+    -moz-border-radius:3px;
+    border-radius:3px;
+    -webkit-box-shadow:1px 1px 10px #666;
+    -moz-box-shadow:1px 1px 10px #666;
+    box-shadow: 1px 1px 10px #666;
+    background-color: #FFFFFF;
+    overflow:auto !important;
+    max-height: 500px;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    border-bottom: 1px none #074c52;
+    z-index:99;
+}
+
+.box .cont {
+    position: relative;
+    padding: 25px 0 0px 24px;
+}
+/* sublist */
+.sublist li {
+    float: left;
+    width: 97.5%;
+    padding-right: 2px;
+    padding-bottom: 20px;
+}
+
+.sublist li h3.mcate-item-hd{
+    background-color:#FFFFFF;
+    margin-right:10px;
+    margin-top:10px;
+    -webkit-border-radius:2px;
+    -moz-border-radius:2px;
+    border-radius:2px;
+    font-weight:bold;
+    font-family: '微软雅黑';
+    font-size: 14px;
+    color:#333;
+    border-bottom: 1px none #666666;
+}
+.sublist li h3.mcate-item-hd a{
+    background-color:#FFFFFF;
+    -webkit-border-radius:2px;
+    -moz-border-radius:2px;
+    border-radius:2px;
+    font-family: '微软雅黑';
+    font-size: 14px;
+    font-weight:bold;
+    padding:2px 10px 2px 10px;
+    color:#333;
+    border-bottom: 1px none #666666;
+}
+
+.sublist li h3.mcate-item-hd :hover {
+     background-color:#ededed;
+     text-decoration: none;
+}
+.sublist li div.mcate-item-bd {
+    padding-left: 10px;
+    margin-top:0; 
+}
+.sublist li div.mcate-item-bd a{
+    width:19%;
+    padding:2px 0 2px 10px;
+    margin-left: 5px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    display: inline-block;
+    white-space:nowrap;
+}
+ 
+
+.sublist li div.mcate-item-bd a:hover {
+    color: #333;
+    text-decoration: none;
+    background-color:#ededed;
+    padding:2px 0 2px 10px;
+}
+
+/* chenying */
+#myMainTab {
+    background-color: #F4F2F3!important;
+    top:0;
+}
+
+
+/* 激活标签背景色白色*/
+#myMainTab li.active {
+   background-color: #fff; 
+    
+}
+
+#myMainTab li a {
+
+    color:#000;
+    height:30px;
+    font-size:14px;
+    line-height:14px;
+    padding-top: 5px;
+    margin-right:0;
+}
+
+#myMainTab >li.active >a {
+    /* 激活菜单下边加渐变边框   chenyng 2018-04-20*/
+    border-bottom-width: 3px;
+    border-image: linear-gradient(to right, #7427d9 0%, #00bcbe 100%) 0 0 8 0;
+    border-left-width: 0;
+    border-right-width: 0;
+}
+
+.btn-theme  {
+  color: #fff;
+  background-color: #4F92AF;
+  border-color: #4F92AF;
+}
+.btn-theme:hover  {
+  color: #fff;
+  background-color: #444;
+  border-color: #444;
+}
+.totaldataul
+{
+	margin-left: 80px;
+	list-style:none;
+}
+.css2
+{
+	height: 100px;
+}
+.licd
+{
+    /*display: inline-block; IE下不好使 */
+    padding: 6px 0px;
+    width: 250px;
+    display: inline;
+    zoom:1;
+    float: left;
+}
+.dddd
+{
+    float:left;
+    
+}
+.licdiv
+{
+    text-align: left;
+    float: left;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+.nicon
+{
+    width:50px;
+}
+
+.flagdiv
+{
+    font-size:15px;color:#000;
+}
+
+.countdiv
+{
+    display:block;
+    font-size:18px;
+    font-weight:400;
+    color:#3AC592;
+}
+
+
+/*考虑ie8下样式兼容性*/
+.dhc-menuie8
+{
+    float:left!important;
+    display:list-item!important;    
+}
+
+.dhc-menuie8>a,.dhc-menuie8 > a:hover,
+.dhc-menuie8 > a:hover {
+  color: #fff;
+  background-color:transparent
+}
+/*chenying 搜索框背景色 还是蓝色*/
+#topTextboxli > a,
+#topTextboxli > a:hover {
+  color: #fff;
+  background-color:transparent
+}
+
+#topTextbox
+{
+    background: transparent;
+    color: #fff;
+    width: 160px;
+    font-size: 14px;
+    border-color: #FFF; 
+    border-style: solid; 
+    border-top-width: 0px;
+    border-right-width: 0px; 
+    border-bottom-width: 1px;
+    border-left-width: 0px;
+    outline:none;
+    outline:medium
+}
+#topTextbox:visited,
+#topTextbox:active,
+#topTextbox:hover,
+#topTextbox:focus
+{
+	
+    outline:none;
+    border-top-width: 0px;
+    border-right-width: 0px; 
+    border-bottom-width: 1px;
+    border-left-width: 0px;
+    background-color: transparent;
+}
+
+/*#topTextbox::selection{background:transparent; }
+#topTextbox::-moz-selection{background:transparent; }*/
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+   color:    #777777;
+}
+::-webkit-input-placeholder {
+    color: #777777;
+}
+::-moz-placeholder {
+   color:    #777777;
+   opacity:  1;
+}
+
+/*chenying 搜索框检索出来的菜单  上移下移选择改变样式*/
+.mysssssselected {
+  color: #ffffff !important;
+  background-color: #017BCE !important;
+}
+
+
+#freqmenu
+{
+    min-width: 320px;
+}  
+
+#freqmenu a
+{
+    color:#000000;
+    text-decoration: none;  
+    padding:2px 4px;
+    white-space:nowrap;
+    
+}
+#freqmenu a:hover
+{
+    color:#000000;
+    background-color:#EDEDED;
+}
+
+#myMainTab li:hover .closeicon
+{
+    color:red;
+}
+.navbar-nav>li>a>img
+{
+    margin: 6px 0;
+}
+
+.navbar-header .a
+{
+    
+}
+
+.contextsearch
+{
+	border-color: #40a2de;
+	background-color: #40a2de;
+	display: inline-block;
+	white-space: nowrap;
+	margin: 0;
+	padding: 0;
+	border-width: 1px;
+	border-style: solid;
+	overflow: hidden;
+	vertical-align: middle;
+}
+
+#homeTextbox
+{
+	padding-left: 15px;
+	width:800px;
+	height:48px;
+	font-size: 16px;
+}
+    
+.contextsearch a
+{
+    text-align:center;
+    text-decoration: none;
+    padding:0 30px;
+    color:white;
+}  
+
+div.systemdata
+{
+	margin-top:70px;
+	padding-left:120px;
+	padding-right:120px;
+}
+
+div.systemdata a
+{
+	text-decoration: none;
+	font-size:13px;
+	font-weight:bold;
+	color:#000;
+	border-left:4px solid #40A2DE;
+	padding-left: 10px;
+}
+
+</style>
+
+<csp:if condition=IEVersion="IE8">
+<style>
+a:hover {
+  color: #fff;
+  background-color:transparent
+}
+
+/*IE低版本布局乱，是li的float莫名其妙没了*/
+.navbar-nav>li{
+    float:left!important;
+    display:list-item!important;
+    /*display:inline-block!important;
+    float:none!important;*/
+}
+/*IE低版本莫名其妙有了margin*/
+/*IE8需要floatleft,IE7却不需要*/
+.navbar-nav{
+    margin:0!important;
+    float:left!important;
+}
+
+.tab-content .tab-pane {
+    display: none;
+}
+
+.tab-content .active {
+    display: block;
+}
+
+#mymaintab li a {
+    padding: 3px 15px;
+}
+/*IE低版本生成三角号*/
+.caret-in {
+    display: block;
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #ccc;
+    margin-top: -18px;
+    margin-right: 10px;
+}
+/*分隔线显示不对，在js中增加一class*/
+.dropdown-menu .divider-ie{
+    margin:-9px 0 0 0;
+    width:100%;
+}
+
+.dhc-menuie8
+{
+    float:left!important;
+    display:list-item!important;
+    padding:5px 8px 0 8px;   
+}
+a:hover
+{
+	text-decoration:none;	
+}
+
+.totaldataul
+{
+	margin-left: 240px;
+}
+/* ie8*/
+.dropdown-menuie8 {
+  display: block;
+}
+
+</style>    
+</csp:if>
+
+<link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" rel="stylesheet" />
+</head>
+<body>
+
+<SERVER>
+
+    Set CTLodId = %session.Data("LOGON.CTLOCID")
+    Set GroupId = %session.Data("LOGON.GROUPID")
+    Set GroupDesc = $p($g(^SSU("SSGRP",GroupId)),"^",1)
+    //set menuJson = ##class(websys.Menu).Json("",GroupId)  //chenying
+    //set menuJson = "[{""link"":""websys.csp?a=a&extfilename=App/BDPSystem/BDPMain&TMENU=53239&TPAGID=146828092"",""target"":""TRAK_main"", ""blankOpt"":"""",""text"":""基础数据""},{""link"":""websys.csp?a=a&TMENU=55269&TPAGID=146828094"",""target"":""TRAK_main"", ""blankOpt"":"""",""text"":""开发工具管理""}]"
+    //set menuJson = "[{""link"":"""",""target"":""TRAK_main"", ""blankOpt"":"""",""text"":""医学知识库""},{""link"":"""",""target"":""TRAK_main"", ""blankOpt"":"""",""text"":""系统配置""}]"
+    s seq=""
+    s menuJson=""
+    
+    ///注意， 项目第一次部署时，需要重新生成菜单索引   d ##class(User.BDPMenu).%BuildIndices()
+    s strAutMenu=##class(web.DHCBL.Authorize.Menu).DHCGetDataByDefaultSession()  //获取授权JSON
+    for
+    {
+        s seq= $o(^User.BDPMenuI("ParSeqIndex",-100000000000000,seq)) q:seq=""
+        s rowid=""
+        for
+        {
+            s rowid=$o(^User.BDPMenuI("ParSeqIndex",-100000000000000,seq,rowid)) q:rowid=""
+            s desc=$LISTGET($g(^User.BDPMenuD(rowid)),3)
+            s myActiveFlag = $LISTGET($g(^User.BDPMenuD(rowid)),16)
+            s IsMKBMenu=$LISTGET($g(^User.BDPMenuD(rowid)),21)
+            continue:(IsMKBMenu'="Y")||($p(myActiveFlag,"^",1)'="1")
+            //获取授权JSON
+            s strMenu="{ID:"_rowid_"}"
+            if ((strAutMenu[strMenu)||(1=GroupId)) s myMenuEnable=1
+            else  s myMenuEnable=0
+            if (+myMenuEnable){  //判断菜单是否有权显示
+                s:menuJson'="" menuJson=menuJson_","_"{""link"":"""",""target"":""TRAK_main"", ""blankOpt"":"""",""text"":"""_desc_"""}"
+                s:menuJson="" menuJson="{""link"":"""",""target"":""TRAK_main"", ""blankOpt"":"""",""text"":"""_desc_"""}"
+            }
+        }
+    }
+    s menuJson="["_menuJson_"]"
+    /*wanghc*/
+    set CloseSessionMenuId = ##class(websys.Menu).GetIdFromCodeOrDescription("Main.Close")
+    
+    Set EnableExitAlert = 0
+    if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.Configuration||EnableExitAlert"){
+        Set EnableExitAlert = ##class(websys.Configuration).GetFieldValue("EnableExitAlert")
+        if EnableExitAlert="" Set EnableExitAlert=0
+    }
+    /*工作站 wanghc 2017-03-08*/
+    if ##class(%Dictionary.CompiledProperty).%ExistsId("websys.DHCWorkstationLnkGrp||GetWorkstation"){
+         Set WorkStationDesc = ##class(websys.DHCWorkstationLnkGrp).GetWorkstation(GroupId)
+    }
+    else
+    {
+	    Set WorkStationDesc = "东华医疗" 
+    }
+   
+    Set LicInfo = ""  //##class(websys.License).GetInfo()  //chenying
+    Set LicVer = $p($g(^CF("SM",1)),"^",5)
+    Set LicExpDate = $P(LicInfo,"^",2)
+    Set LicVerSummary = $P(LicInfo,"^",3)
+    Set LicUserName = $P(LicInfo,"^",5)
+    Set LicPrj = $P(LicInfo,"^",6)
+    ; 消息配置
+    Set messageShowFlag = 1,MsgSearchInterval=3,iconVolumeCls="",iconVolumeText="",EnableMsgAudio="false"
+    //If (##class(websys.Conversions).IsValidMethodName("web.DHCBL.Authorize.CTLocAut","IsAutCTLoc")){
+    //  if '##class(web.DHCBL.Authorize.CTLocAut).IsAutCTLoc(CTLodId) {
+    /*If (##class(websys.Conversions).IsValidMethodName("websys.DHCMessageConfig","MsgBtnIsDisabled")){
+        if (##class(websys.DHCMessageConfig).MsgBtnIsDisabled(CTLodId)){
+            Set messageShowFlag = 0
+        }
+    }elseif(##class(websys.Conversions).IsValidMethodName("web.DHCBL.Authorize.CTLocAut","IsAutCTLoc")){
+        if '##class(web.DHCBL.Authorize.CTLocAut).IsAutCTLoc(CTLodId) {
+            Set messageShowFlag = 0
+        }
+    }
+    If (messageShowFlag=1){
+        Set MsgSearchInterval = +$lg($g(^websys.DHCMessageConfigD(1)),2)
+        if MsgSearchInterval=0 Set MsgSearchInterval=3
+        If (##class(websys.Conversions).IsValidMethodName("websys.DHCMessageConfig","MsgAudioIsDisabled")){
+	        
+        if ##class(websys.DHCMessageConfig).MsgAudioIsDisabled(%session.Get("LOGON.USERID")) {
+            Set iconVolumeCls = "icon-volume-off", iconVolumeText="开启消息提示音", EnableMsgAudio="false"
+        }else{
+            Set iconVolumeCls = "icon-volume-up", iconVolumeText="关闭消息提示音", EnableMsgAudio="true"
+        }
+        }
+    }*/
+    n LogonFromVB
+    s (LogonFromVB)=""
+    i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s LogonFromVB=$g(%request.Data("LogonFromVB",1))
+    
+    ;KK 18/jul/2002 Log 23459 To display the system security message    
+    n securitymsg
+    s securitymsg=""
+    i $d(%request.Data("RELOGON",1))'="" d
+    . s securitymsg=##Class(web.SSUser).GetSystemSecurityMessage(%session.Get("LOGON.USERID"))
+</SERVER>
+
+<server>
+    ;i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s ^zTRAK("cjb","dhc.bdp.epr.menu.csp")=$g(%request.Data("LogonFromVB",1))
+    n str,LogonPatientID,LogonEpisodeID
+    s (str,LogonPatientID,LogonEpisodeID)=""
+    i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s str=$p($g(%request.Data("LogonFromVB",1)),"^",2)
+    i str'="" s LogonPatientID=$p(str,":",3),LogonEpisodeID=$p(str,":",4)
+    n comp
+    s comp=##Class(websys.Component).OpenName("epr.Menu.Messages")
+    i comp d comp.LoadTrans(),comp.%Close()
+    w "<SCRIPT>",$c(13,10)
+    ; Dump out all the translated captions
+    s code=""  f  s code=$o(t(code))  q:code=""  d
+    . w "t['"_code_"']="_..QuoteJS($p($g(t(code),code),"^",1))_";",$c(13,10)
+    w "</SCRIPT>",$c(13,10),!
+</server>
+
+
+<server>
+ 
+ S IsSideMenu = $g(%request.Data("IsSideMenu",1),"false")
+ s CfgLayoutNameSpace = ##class(websys.Configuration).GetLayoutManager()    ;##Class(web.DHCTHREEEX).GetServerNameSpace()
+ s ServerNameSpace = "cn_iptcp:"_##class(ext.util.String).ServerIP()_"[1972]:DHC-APP"
+ 
+ S CacheDetails = "{}"
+ if ##class(websys.Conversions).IsValidMethodName("websys.DHCCache","CacheDetails"){
+    S CacheDetails = ##class(websys.DHCCache).CacheDetails(%session.Data("LOGON.GROUPID"),%session.Data("LOGON.CTLOCID"),%session.Get("LOGON.USERID"))
+ }
+ s Loc=%session.Data("LOGON.CTLOCID")
+ s LocDesc=$P($G(^CTLOC(Loc)),"^",2)
+ i $P(LocDesc,"-",2)'="" s LocDesc= $P(LocDesc,"-",2)
+ s UserId=%session.Data("LOGON.USERID")
+ s Str=##Class(web.DHCLCNUREXCUTE).GetUserWardId(UserId,Loc)
+ s WardStr=$P(Str,"|")
+ s WardId=$P(WardStr,"^",2)
+</server>
+<SCRIPT Language="Javascript">
+ /*
+ VB,C#,C++连接Cache连接串 
+ ServerNameSpace是web对应后台的Cache库的连接串,
+ CfgLayoutNameSpace是[配置管理界面]配置的Cache连接串
+ */
+ var ServerNameSpace = "#(ServerNameSpace)#";
+ var CfgLayoutNameSpace = "#(CfgLayoutNameSpace)#";
+ /*缓存明细*/
+ var gCacheDetails = #(CacheDetails)#;  
+ var WardId="#(WardId)#";
+ var LocDesc="#(LocDesc)#";
+ var LicVer="#(LicVer)#"
+ var LicExpDate="#(LicExpDate)#"
+ var LicVerSummary="#(LicVerSummary)#"
+ var LicUserName="#(LicUserName)#"
+ var LicPrj="#(LicPrj)#"
+ var IsSideMenu = #(IsSideMenu)#;
+</SCRIPT>
+<SCRIPT SRC="../scripts/epr.menu.js"></SCRIPT>
+
+<SCRIPT language="Javascript">
+var securitymsg="#(securitymsg)#";
+if (securitymsg!="") alert(securitymsg);
+
+self.moveTo(0,0);
+self.resizeTo(screen.availWidth,screen.availHeight);
+var keepopen=false;
+if (#(EnableExitAlert)#){
+    window.onbeforeunload = unlockbeforeunload ;
+}
+function unlockbeforeunload(){
+    var DoingSthDesc = $("#DoingSth").val();
+    if (DoingSthDesc!=""){
+        if(window.event) window.event.returnValue = DoingSthDesc;
+        return DoingSthDesc;
+    }
+    if(!keepopen){
+        return "您确定退出系统";
+    }
+}
+window.onunload=unlockonunload;                        //add by wuqk 2011-12-31
+ 
+ // ab 19.12.07 65893 - check 'keepopen' flag rather than mouse cursor position
+// keepopen flag is set on click of a 'home' menu
+function unlockonunload() {
+    if (!keepopen) {
+           try {
+	   	unloadHandler();
+		window.location.href="dhc.bdp.mkbclosesession.csp";
+	   } 
+	   catch(e) 
+	   {
+	   
+	   }
+           
+    }
+    return true;
+}
+ 
+//This is a workaround to try and distinguish between reloading the frame and closing the window
+/*
+function unlockonunload() {
+    if (window.event) {
+        if (window.event.clientY < 0) {
+            try {unloadHandler();} catch(e) {}
+            //alert("The browser is closing...");
+            window.location.href="dhc.bdp.mkbclosesession.csp";
+        } else {
+            //alert("The user is refreshing or navigating away...");
+        }
+    }
+}
+*/
+
+function unloadHandler() {
+
+    // SA 13.8.02 - log 26697: Function written in order to close Medicode 
+    // when Medtrak is closed. While this code is only relevant to RIE, because 
+    // there is no single component associated with this code, SP and I have agreed
+    // that this code needs to be here rather than in a custom javascript.
+    // This code also appears in websys.frames.csp
+
+    // DDE object
+    var objDDE;
+    try {
+        objDDE = new ActiveXObject("tkDDEInterface.clsConnect");
+        objDDE.DDELinkTopic = "OINSIGHT|MW_MAINFORM.TXT_HOST_ID";
+        objDDE.DDELinkMode = 2;
+        objDDE.DDELinkItem = "TEXT";
+        objDDE.DDEText = "MEDICODE_EXIT"
+        objDDE.DDEPoke();
+    } catch(e) {}
+    
+    // cjb 04/04/2006 58809 - unload SimpleCode when unloading web session
+    var obj;
+    try {
+        obj = new ActiveXObject("tkPSimpleCode.clstkPSimpleCode");
+        obj.ItemPath = "";
+        obj.ClosePSimpleCodeWindow();
+        obj="";
+    } catch(e) {}
+
+}
+
+var DivBedSelected = "";
+var isMenuLoaded = 0;
+var isMainLoaded = 0;
+var elementID="";
+var elementValue="";
+
+//TN: added multipleIDs parameter to pass to MultipleIDs fields for multiple selection. This is to store the main id of those items selected
+//ie. off the episode list... multipleIDs will be "EpisodeID^episID1^episID2^episID3".... etc
+//ie. off the orders workbench... multipleIDs will be "OEOrdItemID^oeoriID1^oeoriID2^oeoriID3".... etc
+////////////////////////////////////////////////////////////////////
+//IMPORTANT!!! TN: when adding new fields to be passed to this function, please remember to add to the Clear function below as well
+////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+////modify by wuqk 2010-05-20    begin
+////////////////////////////////////////////////////////////////////
+function SetEpisodeDetails(patID,episID,mradm,titleName,apptID,waitinglistID,OEOrdItemIDs,SinglePatientFlag,WardID,PAAdmCodingID,multipleIDs,OEORIItemStatus,BillRowIds,BillTypes,wlstatus,ARCIMDesc,FollowUpApptID,ItemApptStatus,Decease,ReqIDs,ReqVolIDs,canGiveBirth,MultiEpisodeID,OperRoomID,AnaesthesiaID,NokID,attendID) {
+    //var win=top.frames['eprmenu'];
+    //if (win) {
+        //if (titleName=="") titleName='##--(%session.Get("TITLE"))--##';
+        //websys_setTitleBar(titleName);
+        //var frm = win.document.forms['fEPRMENU'];
+        var frm = document.forms['fEPRMENU'];
+        if (frm) {
+            //HORRIBLE BUT SAFE SO CAN'T GET MIXED IDs... clear then set values
+            for (var i=0; i<frm.elements.length; i++) {
+                frm.elements[i].value="";
+            }
+            //
+            frm.PatientID.value = patID;
+            frm.EpisodeID.value = episID;
+            frm.mradm.value = mradm;
+            //alert("SetEpisodeDetails"+OperRoomID);
+            if (apptID) frm.apptID.value=apptID;
+            if (OperRoomID) frm.OperRoomID.value=OperRoomID;
+            if (waitinglistID) frm.WaitingListID.value=waitinglistID;
+            if (OEOrdItemIDs) frm.OEOrdItemID.value=OEOrdItemIDs;
+            if (SinglePatientFlag) frm.SinglePatientFlag.value=SinglePatientFlag;
+            if (WardID) frm.WardID.value=WardID;
+            if (PAAdmCodingID) frm.PAAdmCodingID.value=PAAdmCodingID;
+            if (multipleIDs) frm.MultipleIDs.value=multipleIDs;
+            if (OEORIItemStatus) frm.OEORIItemStatus.value=OEORIItemStatus;
+            if (BillRowIds) frm.BillRowIds.value=BillRowIds;
+            if (BillTypes) frm.BillTypes.value=BillTypes;
+            if (wlstatus) frm.WLWaitListStatusDR.value=wlstatus;
+            if (ARCIMDesc) frm.ARCIMDesc.value=ARCIMDesc;
+            if (FollowUpApptID) frm.FollowUpAppt.value=FollowUpApptID;
+            if (ItemApptStatus) frm.ItemApptStatus.value=ItemApptStatus;
+            if (Decease) frm.Decease.value=Decease;
+            if (ReqIDs) frm.ReqIDs.value=ReqIDs;
+            if (ReqVolIDs) frm.ReqVolIDs.value=ReqVolIDs;
+            if (canGiveBirth) frm.canGiveBirth.value=canGiveBirth;
+            if (MultiEpisodeID) frm.MultiEpisodeID.value=MultiEpisodeID;
+            /*for (i in HEADERBUFFER) {
+                if (frm.elements[i]) frm.elements[i].value=HEADERBUFFER[i];
+            }*/
+            if (NokID) frm.NokID.value=NokID;   // cjb 22/02/2006 56793
+            if (AnaesthesiaID) frm.AnaesthesiaID.value=AnaesthesiaID;
+            if (attendID) frm.attendID.value=attendID;  //log 61395 TedT
+        }
+    //}
+}
+
+function SetSingleField(fldname,val) {
+    //var win=top.frames['eprmenu'];
+    //if (win) {
+        var frm = document.forms['fEPRMENU'];
+        if (frm) {
+            var fld=frm.elements[fldname];
+            if (fld) fld.value=val;
+        }
+    //}
+
+}
+//created one clear function so will need to update just the one function instead of everywhere.
+function MainClearEpisodeDetails() {
+    //don't need this anymore, does a form loop
+    //SetEpisodeDetails("","","","","","","","","","","","","","","","","","","","","","","","");
+    //
+    
+        var frm = document.forms['fEPRMENU'];
+        for (var i=0; i<frm.elements.length; i++) {
+            frm.elements[i].value="";
+        }
+        //window.frames["eprmenu"].MENU_TRELOADPAGE='';
+        //window.frames["eprmenu"].MENU_TRELOADID='';
+    
+}
+
+//SA 4.1.01 - log 22468: Added mPiece function.
+function mPiece(s1,sep,n) {
+    //Getting wanted piece, passing (string,separator,piece number)
+    //First piece starts from 0
+    //Split the array with the passed delimeter
+    delimArray = s1.split(sep);
+    //If out of range, return a blank string
+    if ((n <= delimArray.length-1) && (n >= 0)) return delimArray[n];
+}
+function SetKeepOpen(url,newwin) {
+    keepopen = true;
+    parent.keepopen = true;
+    parent.location.href = url;
+
+}
+var  menuJson = {records:#(menuJson)#};
+</SCRIPT>
+<FORM name="fEPRMENU">
+    <!--TN:23-Apr-2002:added field MultipleIDs for multiple selected IDs for generic looping workflows-->
+    <INPUT TYPE="hidden" name="PatientID" id="PatientID" value="">
+    <INPUT TYPE="hidden" name="EpisodeID" value="">
+    <INPUT TYPE="hidden" name="mradm" value="">
+    <INPUT TYPE="hidden" name="Decease" value="">
+    <INPUT TYPE="hidden" name="MultipleIDs" value="">
+    <!-- WAITINGLIST -->
+    <INPUT TYPE="hidden" name="WaitingListID" value="">
+    <INPUT TYPE="hidden" name="WLWaitListStatusDR" value="">
+    <!-- ORDERITEM -->
+    <INPUT TYPE="hidden" name="OEOrdItemID" value="">
+    <INPUT TYPE="hidden" name="OEORIItemStatus" value="">
+    <INPUT TYPE="hidden" name="ARCIMDesc" value="">
+    <INPUT TYPE="hidden" name="ItemApptStatus" value="">
+    <!-- CODING -->
+    <INPUT TYPE="hidden" name="PAAdmCodingID" value="">
+    <!-- BILLING -->
+    <INPUT TYPE="hidden" name="BillRowIds" value="">
+    <INPUT TYPE="hidden" name="BillTypes" value="">
+    <!-- BOOKING -->
+    <INPUT TYPE="hidden" name="FollowUpAppt" value="">
+    <INPUT TYPE="hidden" name="apptID" value="">
+    <INPUT TYPE="hidden" name="OperRoomID" value="">
+    <INPUT TYPE="hidden" name="AnaesthesiaID" value="">
+    <!-- MEDRECORD -->
+    <INPUT TYPE="hidden" name="ReqIDs" value="">
+    <INPUT TYPE="hidden" name="ReqVolIDs" value="">
+    <!-- EPISODE -->
+    <INPUT TYPE="hidden" name="MultiEpisodeID" value="">
+    <INPUT TYPE="hidden" name="WardID" value="">
+    <!-- MATERNITY -->
+    <INPUT TYPE="hidden" name="canGiveBirth" value="">
+    <!-- NEXT OF KIN - cjb 22/02/2006 56793 -->
+    <INPUT TYPE="hidden" name="NokID" value="">
+    <!-- Attendance - 61395 Tedt 01/07 -->
+    <INPUT TYPE="hidden" name="attendID" value="">
+    <INPUT TYPE="hidden" name="SpecificID" value="">
+    <INPUT TYPE="hidden" name="SinglePatientFlag" value="">
+    <!-- 药理实验项目指针 -->
+    <INPUT TYPE="hidden" name="PPRowId" value="">
+    <!--会计核算成品-帐套-->
+    <INPUT TYPE="hidden" name="AcctBookID" id="AcctBookID" value="">
+    <INPUT TYPE="hidden" name="AcctBookName" id="AcctBookName" value="">
+    <INPUT TYPE="hidden" id="checkNewMessage" value='<%=##Class(%CSP.Page).Encrypt($LB("web.SSMessageRecipient.countNewMessages"))%>'>
+    <!-- 业务上正在做某事,菜单不能切换   DoingSthName为提示信息,为空表示可以切换-->
+    <input Type="hidden" id="DoingSth" name="DoingSth" value="">
+    <audio  id="newMsgAudio" preload="preload">
+        <!--source src="../audio/newmsg.WAV" type="audio/mpeg">
+        <source src="../audio/newmsg.mp3" type="audio/mpeg"-->
+    </audio>
+</FORM>
+<div class="navbarhead">
+    <nav class="navbar navbar-default navbar-fixed-top" id="menuPanel" style="height:36px">
+        <div class="navbar-container">
+            <div class="navbar-header pull-left">
+            	<!--<a href="#" class="navbar-brand" style="font-size:16px;color:#F0F0F0;display: inline-block;">
+                    <img style="margin-top: 5px;" src="../scripts/bdp/Framework/icons/mkb/imedical-logo.png"/>
+                </a>-->
+                <a href="#" class="navbar-brand" style="font-size:16px;color:#F0F0F0;display: inline-block;">
+                    <img src="../scripts/bdp/Framework/icons/mkb/mkp_logo_1_24.png"/>
+                </a>
+                <a href="#" style="text-decoration: none;margin-right:15px;line-height:35px;text-align:center;">
+                    医学知识库构建平台
+                </a>
+                <!--chenying-->
+            </div>
+            
+            <!--header menu start//-->
+            <div class="navbar-inner" id="navlist">
+                <ul class="nav navbar-nav navbar-navie8" id="left-menu" style="list-style:none;">
+                </ul>
+            </div>
+            <!--chenghegui add20180404 start-->
+            <div class="box ie8box" id="navbox" style="height:0;opacity:0;">
+            <server>
+                    Set GroupId = %session.Data("LOGON.GROUPID")
+                     s strAutMenu=##class(web.DHCBL.Authorize.Menu).DHCGetDataByDefaultSession()  //获取授权JSON
+                     s seq=""
+                     for{
+                            s seq= $o(^User.BDPMenuI("ParSeqIndex",-100000000000000,seq)) q:seq=""
+                            s rowid=""
+                            for{
+                                s rowid=$o(^User.BDPMenuI("ParSeqIndex",-100000000000000,seq,rowid)) q:rowid=""
+                                s Desc = $LISTGET($g(^User.BDPMenuD(rowid)),3)
+                                s myActiveFlag = $LISTGET($g(^User.BDPMenuD(rowid)),16)
+                                s IsMKBMenu=$LISTGET($g(^User.BDPMenuD(rowid)),21)
+                                continue:(IsMKBMenu'="Y")||($p(myActiveFlag,"^",1)'="1")
+                                s strMenu="{ID:"_rowid_"}"
+                                if ((strAutMenu[strMenu)||(1=GroupId)) s myMenuEnable=1
+                                else  s myMenuEnable=0
+                                continue:myMenuEnable'="1"
+                                 w "<div class='cont' style='display:none;'><ul class='sublist clearfix'>"
+                                 s secondseq=""
+                                 for
+                                 {
+                                     s secondseq= $o(^User.BDPMenuI("ParSeqIndex",rowid,secondseq)) q:secondseq=""
+                                         s secondrowid=""
+                                           for
+                                            {
+                                                s secondrowid=$o(^User.BDPMenuI("ParSeqIndex",rowid,secondseq,secondrowid)) q:secondrowid=""
+                                                s myActiveFlag = $LISTGET($g(^User.BDPMenuD(secondrowid)),16)
+                                                s IsMKBMenuSecond=$LISTGET($g(^User.BDPMenuD(secondrowid)),21)
+                                                continue:(IsMKBMenuSecond'="Y")||($p(myActiveFlag,"^",1)'="1")
+                                                s strMenus="{ID:"_secondrowid_"}"
+                                                if ((strAutMenu[strMenus)||(1=GroupId)) s myMenuEnables=1
+                                                else  s myMenuEnables=0
+                                                continue:myMenuEnables'="1"
+                                                s seconddesc=$LISTGET($g(^User.BDPMenuD(secondrowid)),3)
+                                                s secondurl = $LISTGET($g(^User.BDPMenuD(secondrowid)),5)
+                                                s secondimgurl=$LISTGET($g(^User.BDPMenuD(secondrowid)),6) 
+                                                if (secondurl'=""){
+                                                    s secondurl="dhc.bdp.ext.sys.csp?BDPMENU="_secondrowid
+                                                }                 
+                                                if (secondurl'=""){
+                                                     w "<li><div style='text-align:right;width:15%;position:relative;float:left;padding-top:4px;'><h3 class='mcate-item-hd'><a href='#' onclick=showNavTab("_secondrowid_",'"_seconddesc_"','"_secondurl_"','"_secondimgurl_"')>"_seconddesc_"</a></h3></div>"
+                                                }else{  
+                                                     w "<li><div style='text-align:right;width:15%;position:relative;float:left;padding-top:4px;'><h3 class='mcate-item-hd'>"_seconddesc_"</h3></div>"
+                                                }
+                                                w "<div class='mcate-item-bd' style='width:85%;border-left:1px solid #666;position:relative;float:left'>"
+                                                s thirdseq=""
+                                                for
+                                                {
+                                                     s thirdseq =$o(^User.BDPMenuI("ParSeqIndex",secondrowid,thirdseq)) q:thirdseq=""
+                                                     s thirdrowid = ""
+                                                     for
+                                                     {
+                                                          s thirdrowid=$o(^User.BDPMenuI("ParSeqIndex",secondrowid,thirdseq,thirdrowid)) q:thirdrowid=""
+                                                          s myActiveFlag = $LISTGET($g(^User.BDPMenuD(thirdrowid)),16)
+                                                          s IsMKBMenuThird=$LISTGET($g(^User.BDPMenuD(thirdrowid)),21)
+                                                          continue:(IsMKBMenuThird'="Y")||($p(myActiveFlag,"^",1)'="1")
+                                                          s strMenut="{ID:"_thirdrowid_"}"
+                                                          if ((strAutMenu[strMenut)||(1=GroupId)) s myMenuEnablet=1
+                                                          else  s myMenuEnablet=0
+                                                          continue:myMenuEnablet'="1"
+                                                          s thirddescAll=$LISTGET($g(^User.BDPMenuD(thirdrowid)),3)  //完整的菜单描述
+                                                          s:thirddescAll[" " thirddescAll=$tr(thirddescAll," ","")
+                                                          s thirdurl = $LISTGET($g(^User.BDPMenuD(thirdrowid)),5)
+                                                          s thirdimgurl=$LISTGET($g(^User.BDPMenuD(thirdrowid)),6) 
+                                                          if (thirdurl'="")
+                                                          {
+                                                                s thirdurl="dhc.bdp.ext.sys.csp?BDPMENU="_thirdrowid
+                                                          }   
+                                                          s thirddesc=thirddescAll   //菜单里展示的描述
+                                                          s thirddescTips=""        //菜单悬浮提示
+                                                          if ($L(thirddesc)>10)  //超过10个字符用..
+                                                          { 
+                                                          	s thirddesc=$e(thirddesc,1,10)_".."
+                                                          	s thirddescTips=thirddescAll
+                                                          }
+                                                          w "<a href='#' title='"_thirddescTips_"' onclick=showNavTab("_thirdrowid_",'"_thirddescAll_"','"_thirdurl_"','"_"')>"_thirddesc_"</a>"
+                                                    	  
+                                                    }
+                                                }
+                                                w "</div></li>"
+                                         }
+                                    
+                                  }
+                             w "</ul></div>"
+                            }
+                         }
+                </server>
+            </div>
+            <!--chenghegui add20180404 end-->
+            <!--header menu end//-->
+            <div class="navbar-header navbar-buttons pull-right" role="navigation">
+                <ul class="nav navbar-nav">
+                <!--style="padding:6px;display: inline-block;width: 30px; height: 30px; border: 1px #7BC2F2 solid; margin-top: 10px;background: #3FA2DF;"-->
+                    <!--菜单和数据检索框-->
+                    <li id="MenuDataType" class="dhc-menu" style="float:left!important;">
+                        <a id="MenuData" href="#" class="rightMainMenu">
+                            菜单
+                            <img style="margin-top:3px" src='../scripts/bdp/Framework/icons/mkb/mini-dropdown.png' /> 
+                        </a>
+                        <ul class="dropdown-menu" style="min-width:74px;">
+                            <li>
+                                <a href="#" data-ilink="javascript:ChangeMenuData('菜单');" class="dhc-submenu" style="font-size:14px">菜单</a>
+                            </li>
+                            <li>
+                                <a href="#" data-ilink="javascript:ChangeMenuData('数据');" class="dhc-submenu" style="font-size:14px">数据
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li id="topTextboxli" class="dhc-menu" style="float:left!important;">
+                        <a  href="#"  class="rightMainMenu">
+                            <input id="topTextbox" style="" type="textbox">  <!-- placeholder="请输入搜索内容..."-->
+                        </a>
+                    </li>
+                    <!--放大镜按钮 020190306去掉-->
+                    <!--li class="dhc-menu dhc-menuie8">
+                        <a href="#" onclick="showSearchbox()" class="rightMainMenu" >
+                            <img src='../scripts/bdp/Framework/icons/mkb/searchi.png' /> 
+                        </a>
+                    </li--->
+                    
+            
+                            
+                    <!--常用菜单检索-->
+                    <li class="dhc-menu dhc-menuie8" style="">
+                        <!-- class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown"-->
+                        <a id="quickmenu" href="#" class="rightMainMenu">
+                            <img src='../scripts/bdp/Framework/icons/mkb/oftenmenu.png' /> 
+                        </a>
+                        <table id="freqmenu" class="dropdown-menu" style="left:-160px;">
+                            <tr>
+					 			<td>
+						 			<span class="label" style="font-size:14px;color:#000" data-val="16">
+	                                    <img  src="../scripts/bdp/Framework/icons/mkb/history.png" alt="" />
+	                                    历史记录
+	                                </span>
+	                                <table id="historyul" style="padding: 3px 10px;width:160px;">
+		                            </table>
+                                </td>
+					   			<td>
+						   			<span class="label" style="font-size:14px;color:#000" data-val="16">
+	                                    <img  src="../scripts/bdp/Framework/icons/mkb/freq.png" alt="" />
+	                                    使用频次
+	                                </span> 
+	                                <table id="frequl" style="padding: 3px 10px;border-left: 1px solid #E4E4E4;width:160px;">
+	                                </table>
+					   			</td>
+					 		</tr>
+                        </table>
+                    </li>
+                    
+                    <!--任务集-->
+                    <li class="dhc-menu dhc-menuie8">
+                        <a href="#" class="rightMainMenu" >
+                            <img src='../scripts/bdp/Framework/icons/mkb/tasks.png' /> 
+                        </a>
+                    </li>
+                    <li class="dhc-menu dhc-menuie8">
+                        <a href="#" class="rightMainMenu">
+                            <img src='../scripts/bdp/Framework/icons/mkb/sysconfig.png' />
+                            <!--<span class="glyphicon glyphicon-cog" style="font-size:17px;" aria-hidden="true"></span>-->
+                        </a>
+                    </li>
+                    <csp:if condition=messageShowFlag=1>
+                        <li class="dhc-menu dhc-menuie8">
+                            <!--data-ilink="dhc.message.csp" data-itarget="#WinModal" data-iblankOpt="title:'消息列表',width:900,height:500,showbefore:ShowDHCMessageCount" data-imodal='true'-->
+                            <a class="rightMainMenu dhc-submenu nullMessage" id="DHCMessageBtn" href="#" data-ilink="javascript:msgBtnClickHandler();" >
+                                <img src='../scripts/bdp/Framework/icons/mkb/messagei.png' />
+                                <span class="badge messagecount" > </span>
+                            </a>
+                        </li>
+                    </csp:if>
+                    <li class="dhc-menu  dhc-menuie8">
+                        <!--class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" -->
+                        <a href="#" class="rightMainMenu">
+                            <img style="margin-top:-5px;" src='../scripts/bdp/Framework/icons/mkb/people.png' /> 
+                            <span class="userlocinfo">
+                                <!--<span class="userinfo"><strong>#(%session.Data("LOGON.USERNAME"))#</strong> &nbsp;&nbsp;#(GroupDesc)#</span>
+                                <span class="locinfo">#(LocDesc)#</span>-->
+                                
+                                #(%session.Data("LOGON.USERNAME"))# &nbsp; #(LocDesc)#
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <!--dhc.usersettings.csp-->
+                                <!--websys.default.jquery.csp?WEBSYS.TCOMPONENT=DHCUserInfoSetting&ID=#(%session.Data("LOGON.USERID"))#-->
+                                <a href="#" data-ilink='websys.default.csp?WEBSYS.TCOMPONENT=SSUser.UpdateDefaultDept&ID=#(%session.Data("LOGON.USERID"))#&UserName=#(%session.Data("LOGON.USERNAME"))#' 
+                                data-itarget="#WinModalEasyUI" data-iblankOpt="title:' ',width:500,height:250" data-imodal='true' class="dhc-submenu">
+                                    <i class="icon-cog"></i> 修改默认科室</a>
+                            </li>
+                            <li>
+                                <a href="#" data-ilink='websys.default.csp?WEBSYS.TCOMPONENT=SSUser.EditPassword&ID=#(%session.Data("LOGON.USERID"))#' 
+                                data-itarget="#WinModalEasyUI" data-iblankOpt="title:' ',width:410,height:310" data-imodal='true' class="dhc-submenu">
+                                    <i class="icon-key"></i> 修改登录密码</a>
+                            </li>
+                            
+                            <!--li>
+                                <a href="#" data-ilink="dhc.logon.otherloc.csp" data-itarget="#WinModalEasyUI" data-iblankOpt="title:' ',top:100,left:200,width:800,height:500" data-imodal='true' class="dhc-submenu">
+                                    <i class="icon-exchange"></i> 切换科室</a>
+                            </li-->
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <a href="#" data-ilink="javascript:SetKeepOpen('dhc.bdp.mkbclosesession.csp?relogon=1','')" data-itarget="TRAK_main" data-iblankOpt="" class="dhc-submenu">
+                                    <i class="dhc-fa-icon-small icon-reply"></i> 重新登录</a>
+                            </li>
+                            <li>
+                                <a href="#" data-ilink="javascript:SetKeepOpen('dhc.bdp.mkbclosesession.csp','')" data-itarget="TRAK_main" data-iblankOpt="" class="dhc-submenu">
+                                    <i class="dhc-fa-icon-small icon-off"></i> 退出系统</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    </div>
+    <div id="centerPanel" class="centerPanel">
+        <div class="main-container " id="main-container">
+            <div class="main-content">
+                <div id="pageContent" class="page-content" style="position:relative; overflow-y:auto;padding:0">                     
+                        <table style="width:100%">
+                            <tr>
+							 	<td style="background-color:#F4F2F3!important;">
+			                      	<ul id="myMainTab" class="nav nav-tabs no-border" style="width:100%">
+			                            <li class="active" style="float: left" id="li_home">
+			                                <a onclick="tabChange('home')" href="#content_home" data-toggle="tab">
+			                                    <img src="../scripts/bdp/Framework/icons/mkb/home-gray.png" />&nbsp;&nbsp;主页&nbsp;&nbsp;
+			                                </a>
+			                            </li>
+			                        </ul>
+		                       	 </td>
+                       	 	</tr>
+                        <tr>
+	                      <td>
+							<div id="myTabContent" class="tab-content no-border padding-0" style="width:100%">
+	                            <div class="tab-pane in active" id="content_home" style="background-color:#ffffff">
+	                                <div class="container" style="padding-top: 36px;">
+	                                    <div class="row" >
+	                                        <div style="text-align:center;padding: 20px;">
+	                                            <div style="display: inline;zoom:1;">
+	                                                <img  src="../scripts/bdp/Framework/icons/mkb/mkp_logo.png" alt="" style="width:40px;margin-bottom:10px;margin-right: 20px;" />
+	                                            </div>
+	                                            <a class="" style="font-size:32px;color:#42A3DE;text-decoration: none;"> 医学知识库构建平台</a>
+                                           
+	                                        </div>
+                                        
+	                                        <div style="text-align:center;" >
+	                                            <span class="contextsearch" >
+	                                                <input type="text" id="homeTextbox" placeholder="诊断/检查/检验/药品/手术...">
+	                                                <a herf="#" onclick=TabToearchContext($.trim($("#homeTextbox").val()))>搜索一下</a>
+	                                            </span>
+                                       
+	                                        </div>
+	                                        <div class="systemdata"> 
+	                                            <a href="#">系统数据量</a>                   
+	                                        </div>
+	                                        <hr style="margin: 20px 110px;" />
+	                                        <div id="totaldata" style="text-align:center;">
+                                            
+	                                        </div>
+                                       
+	                                    </div>
+                                   
+	                                </div>
+	                            </div>
+	                        </div> 
+	                        </td>
+	                       </tr>
+                        </table>  
+                </div><!-- /.page-content -->
+            </div><!-- /.main-content -->
+              
+        </div><!-- /.main-container -->
+    </div>
+    <div style="height:0px"  id="southPanel">
+        <iframe name="TRAK_hidden" src="" width="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0>
+        </iframe>
+    </div>
+   <div id="mm" class="contextMenu" style="width: 150px;" title="多标签右键菜单">
+        <ul>
+        <li id="tabCloseOther" style="font-size:14px;">关闭其它</li>
+        <li id="tabCloseAll" style="font-size:14px;">关闭全部</li>
+        </ul>
+    </div>
+   
+    <div id="WinModal" class="modal fade" tabindex="-1" aria-hidden="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--<i class="icon-cog"></i>-->
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <div class="modal-title"></div>
+                 </div>
+                <div class="modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="WinModalEasyUI" style="padding:0px;"></div>
+    <div id="MessageWin" class="easyui-window" title="消息列表" style="padding:0px;" 
+    data-options='modal:true,closed:true,collapsible:false,width:1166,height:538,closable:true,content:"<iframe src=\"dhc.message.csp\" scrolling=no frameborder=0 style=\"width:100%;height:100%;\"></iframe>",iconCls:"icon-message"'>
+    </div>
+    <div id="ExecMessageWin" class="easyui-dialog" title="须处理" 
+    data-options='modal:true,fit:true,closed:true,collapsible:false,width:1100,height:500,closable:true,minimizable:false,maximizable:false,draggable:false,resizable:false,content:"<iframe name=\"dhcmessageexec\" id=\"dhcmessageexec\" scrolling=no frameborder=0 style=\"width:100%;height:100%;\"></iframe>",iconCls:"icon-message"'>
+    </div>
+    <script type="text/javascript" src="../scripts_lib/jQuery/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" src="../scripts/bdp/MKB/Framework/dhc.bdp.epr.frames.js"></script>
+    <script language='javascript' src='../scripts/websys.jquery.js'></script>
+    <SCRIPT type="text/javascript">
+        var cursor=0;
+        var IEVersion = "#(IEVersion)#";
+        var messageLastDate=0,messageLastTime=0;
+        var EnableMsgAudio = #(EnableMsgAudio)#;   // 开启消息提示音
+        var navbar,preSelectedMenu;
+        var msgJObj = "", findDHCMessageBtnCount = 10;; //信息按钮jquery对象
+        var msgTimeoutQhanlder = "";
+        var LevelTypeFlag = "D,V,I,G"; // {"D":true,"V":true,"I":true,"G":true};   //默认查询所有别
+        var newMsgAudioObj = document.getElementById("newMsgAudio");
+        ///点击消息按钮,显示消息内容
+        var msgBtnClickHandler = function(){
+            if( $('#MessageWin').is(":visible")) return false;
+            //ShowDHCMessageCount();
+            var xy = $("#DHCMessageBtn").offset();
+            var width = 1200;
+            var height = 650;
+            var left = xy.left-width+150;
+            if (left<0) left = 0; 
+            $("#MessageWin").window("move",{left:left,top:xy.top+50}).window("open");
+            return false;
+        } 
+        function HideExecMsgWin (){
+            $("#ExecMessageWin").window("close");
+        };
+        var ShowExecMsgWin = function(DetailsId,OtherJson){
+            var ExecMsgWinJObj = $("#ExecMessageWin");
+            if( ExecMsgWinJObj.is(":visible")) return false;
+            ExecMsgWinJObj.window("open");
+            //if("undefined"!=typeof console){ console.log(OtherJson["link"]);}
+            document.getElementById("dhcmessageexec").src = OtherJson["link"]; 
+            //"dhc.message.exec.csp?link="+encodeURIComponent(OtherJson["link"])+"&DetailsId="+DetailsId;
+            return false;       
+        }
+        var totaldataul=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","TagAndNum")
+        $("#totaldata").append(totaldataul)
+        
+        
+        $("#quickmenu").hover(function(){
+	        $('#frequl').empty();
+            $('#historyul').empty();
+            var data=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","GetHistoryMenu");
+            if (data!="")
+            {
+                var menuli=new Array();
+                var myMenuArray=data.split("&%");
+                for(var i=0;i<myMenuArray.length;i++)
+                {
+                    var myMenustr=myMenuArray[i];
+                    var myMenu=myMenustr.split("^");
+                    menuli.push('<tr><td style="padding:3px 5px;"><a class="sdhc-submenu"  href="#" onclick="showNavTab(&quot;'+myMenu[0]+'&quot;,&quot;'+myMenu[1]+'&quot;,&quot;'+myMenu[2]+'&quot;,&quot;'+'&quot;)" >'+myMenu[1]+'</a></td></tr>');
+                }
+                var str=menuli.join("");
+                $('#historyul').append(str);
+            }
+            
+            var data=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","GetFreqMenu");
+            if (data!="")
+            {
+                var menuli=new Array();
+                var myMenuArray=data.split("&%");
+                for(var i=0;i<myMenuArray.length;i++)
+                {
+                    var myMenustr=myMenuArray[i];
+                    var myMenu=myMenustr.split("^");
+                    menuli.push('<tr><td style="padding:3px 5px;"><a class="sdhc-submenu"  href="#" onclick="showNavTab(&quot;'+myMenu[0]+'&quot;,&quot;'+myMenu[1]+'&quot;,&quot;'+myMenu[2]+'&quot;,&quot;'+'&quot;)" >'+myMenu[1]+'</a></td></tr>');
+                }
+                var str=menuli.join("");
+                $('#frequl').append(str);
+            }
+            
+        },function(){
+          
+        });
+        
+        
+    </SCRIPT>
+<script type="text/javascript">
+    
+    
+function ChangeMenuData(text)
+{
+    document.getElementById("MenuData").innerHTML=text+"<img style='padding-left:6px;margin-top:3px' src='../scripts/bdp/Framework/icons/mkb/mini-dropdown.png' /> " ;
+    $('#topTextbox').val('');
+    $("#topTextbox").focus();
+    $("#searchResultdiv").remove(); 
+    
+}
+function showSearchbox()
+{   
+    if($("#MenuDataType").css("display")=="none")
+    {
+        $("#MenuDataType").css("display", "block");
+        $("#topTextboxli").css("display", "block");
+    }
+    else
+    {
+        $("#MenuDataType").css("display", "none");
+        $("#topTextboxli").css("display", "none");
+    }
+    $('#topTextbox').val('');
+    $("#topTextbox").focus();
+    $("#searchResultdiv").remove(); 
+}
+
+///检索框按回车跳转到全文检索页面
+//登录进来页面最右上角检索框
+$('#topTextbox').bind('keyup',function(event){
+    if(event.keyCode=="13")    
+    {
+	    if (document.getElementById("MenuData").innerHTML.indexOf("数据")>-1)
+        {
+           TabToearchContext($.trim($("#topTextbox").val()))
+        }
+        else if (document.getElementById("MenuData").innerHTML.indexOf("菜单")>-1)
+        {
+	        if ($("#searchResultdiv li a.mysssssselected").text()=="")  //通过上移下移选择符合条件的菜单
+            {
+            	///如果是菜单，则出现一个下拉菜单选择框
+                if ($(this).val()!="")
+                {
+                    $("#searchResultdiv").remove();
+                    var data=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","GetMKBMenu",$('#topTextbox').val())
+                    if (data!="")
+                    {
+                        var menuli=new Array();
+                        var myMenuArray=data.split("&%");
+                        for(var i=0;i<myMenuArray.length;i++)
+                        {
+                            var myMenustr=myMenuArray[i];
+                            var myMenu=myMenustr.split("^");
+                            menuli.push('<li><a href="#" onclick="showNavTab(&quot;'+myMenu[0]+'&quot;,&quot;'+myMenu[1]+'&quot;,&quot;'+myMenu[2]+'&quot;,&quot;'+'&quot;)" style="font-size:14px">'+myMenu[1]+'</a></li>'); 
+                        }
+                        var str=menuli.join("");
+                        $('#topTextboxli').append('<div id="searchResultdiv"><ul class="dropdown-menu" style="min-width: 162px;display:block;margin-left: 10px;margin-top: -12px;">'+str+'</ul></div>');
+                        cursor=-1;
+                    }
+                }
+            }
+            else{    //如果通过上移下移选择符合条件的菜单后，点回车 就直接跳转
+                
+                $("#searchResultdiv li a.mysssssselected").click()
+            }           
+        }
+       
+    }
+    if (event.keyCode=="38")  //上箭头
+    {
+        $("#searchResultdiv li a").removeClass("mysssssselected");
+        cursor=cursor-1;
+        if (cursor<=0)
+        {
+            cursor=0
+            $("#searchResultdiv li a:eq("+cursor+")").addClass("mysssssselected");  
+        }
+        else
+        {
+            $("#searchResultdiv li a:eq("+cursor+")").addClass("mysssssselected");
+        }
+        
+    }
+    
+    if ((event.keyCode=="40"))  ///下箭头
+    {
+        $("#searchResultdiv li a").removeClass("mysssssselected");
+        cursor=cursor+1;
+        if (cursor>=$("#searchResultdiv li").length)
+        {
+            cursor=$("#searchResultdiv li").length-1
+            $("#searchResultdiv li a:eq("+cursor+")").addClass("mysssssselected");
+        }
+        else
+        {
+           $("#searchResultdiv li a:eq("+cursor+")").addClass("mysssssselected");
+        }
+        
+    }
+    
+    if ($.trim($("#topTextbox").val())=="")
+    {
+        if (document.getElementById("MenuData").innerHTML.indexOf("菜单")>-1)
+        {
+            $("#searchResultdiv").remove(); 
+        }
+    }
+});
+$('#topTextbox').bind('click',function(event){
+	if($.trim($("#topTextbox").val())=="")
+	{
+		if (document.getElementById("MenuData").innerHTML.indexOf("菜单")>-1)
+        {
+	        if ($('#searchResultdiv').length>0){
+		        	$("#searchResultdiv").remove();
+		     }
+		     else
+		     {
+		        if ($("#searchResultdiv li a.mysssssselected").text()=="")  //通过上移下移选择符合条件的菜单
+	            {
+		            ///查询最近十条菜单点击历史记录
+	            	$("#searchResultdiv").remove();
+	                var data=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","GetMKBMenu","")
+	                if (data!="")
+	                {
+	                    var menuli=new Array();
+	                    var myMenuArray=data.split("&%");
+	                    for(var i=0;i<myMenuArray.length;i++)
+	                    {
+	                        var myMenustr=myMenuArray[i];
+	                        var myMenu=myMenustr.split("^");
+	                        menuli.push('<li><a href="#" onclick="showNavTab(&quot;'+myMenu[0]+'&quot;,&quot;'+myMenu[1]+'&quot;,&quot;'+myMenu[2]+'&quot;,&quot;'+'&quot;)" style="font-size:14px">'+myMenu[1]+'</a></li>'); 
+	                    }
+	                    var str=menuli.join("");
+	                    $('#topTextboxli').append('<div id="searchResultdiv"><ul class="dropdown-menu" style="min-width: 162px;display:block;margin-left: 10px;margin-top: -12px;">'+str+'</ul></div>');
+	                    cursor=-1;
+	                }
+                
+	            }
+	            else{    //如果通过上移下移选择符合条件的菜单后，点回车 就直接跳转
+                
+	                $("#searchResultdiv li a.mysssssselected").click()
+	            } 
+		     }          
+        }
+	}
+	else
+	{
+		$('#topTextbox').focus().select();
+		$("#searchResultdiv").remove();
+	    var data=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","GetMKBMenu",$('#topTextbox').val())
+	    if (data!="")
+	    {
+	        var menuli=new Array();
+	        var myMenuArray=data.split("&%");
+	        for(var i=0;i<myMenuArray.length;i++)
+	        {
+	            var myMenustr=myMenuArray[i];
+	            var myMenu=myMenustr.split("^");
+	            menuli.push('<li><a href="#" onclick="showNavTab(&quot;'+myMenu[0]+'&quot;,&quot;'+myMenu[1]+'&quot;,&quot;'+myMenu[2]+'&quot;,&quot;'+'&quot;)" style="font-size:14px">'+myMenu[1]+'</a></li>'); 
+	        }
+	        var str=menuli.join("");
+	        $('#topTextboxli').append('<div id="searchResultdiv"><ul class="dropdown-menu" style="min-width: 162px;display:block;margin-left: 10px;margin-top: -12px;">'+str+'</ul></div>');
+	        cursor=-1;
+	    }
+	}
+})
+$('#topTextbox').bind('blur',function(event){
+    //if ($('#searchResultdiv').length>0){$("#searchResultdiv").remove();}
+})
+///HOME页检索框
+$('#homeTextbox').bind('keypress',function(event){
+    if(event.keyCode=="13")
+    {
+        TabToearchContext($(this).val())
+    }
+});
+//跳转到全文检索页面
+function TabToearchContext(val)
+{
+    var data=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","GetSearchContextMenu")
+    var myMenuArray=data.split("^")
+    //alert(myMenuArray[2])
+    showNavTab(myMenuArray[0], myMenuArray[1], encodeURI("dhc.bdp.mkb.mkbcontextsearch.csp"+"?searchtext="+val), "")
+}
+
+/*$("#topTextbox").blur(function(){
+    $("#searchResultdiv").remove();
+});*/
+//登录进来页面最右上角检索框
+$("#topTextbox").bind("input propertychange", function() {
+    if (document.getElementById("MenuData").innerHTML.indexOf("菜单")>-1)
+    {
+        ///如果是菜单，则出现一个下拉菜单选择框
+        if ($(this).val()!="")
+        {
+            $("#searchResultdiv").remove();
+            var data=tkMakeServerCall("web.DHCBL.MKB.MKBInterface","GetMKBMenu",$('#topTextbox').val())
+            if (data!="")
+            {
+                var menuli=new Array()
+                var myMenuArray=data.split("&%")
+                for(var i=0;i<myMenuArray.length;i++)
+                {
+                    var myMenustr=myMenuArray[i]
+                    var myMenu=myMenustr.split("^")
+                    menuli.push('<li><a href="#" onclick="showNavTab(&quot;'+myMenu[0]+'&quot;,&quot;'+myMenu[1]+'&quot;,&quot;'+myMenu[2]+'&quot;,&quot;'+'&quot;)" class="dhc-submenu" style="font-size:14px">'+myMenu[1]+'</a></li>') 
+                }
+                var str=menuli.join("")
+                $('#topTextboxli').append('<div id="searchResultdiv"><ul class="dropdown-menu" style="min-width: 162px;display:block;margin-left: 10px;margin-top: -12px;">'+str+'</ul></div>')  
+                cursor=-1
+            }
+        }           
+    }
+    
+});
+
+///iframe获取屏幕高度
+function getiFrameHeight() {
+	var outerHeight=""
+	if(IEVersion=="IE8")
+	{
+    	var winHeight=Math.max(document.documentElement.clientHeight,document.body.clientHeight)
+	}
+	else
+	{
+		
+		var winHeight=Math.max(document.documentElement.clientHeight,document.body.clientHeight)
+    	var winHeight=Math.max(winHeight,$(window).height())
+    	//var winHeight=$(window).height()
+	}
+	var outerHeight=winHeight -$("#menuPanel").height() -$("#myMainTab").height()   //2018-06-07 考虑菜单页签换行  ///$("#myMainTab").height()=29
+	//update 20181126 chenying
+	return outerHeight
+}
+
+///2018-11-26 chenying
+///iframe自适应屏幕高度
+///拖拽或者缩放时调整iframe高度
+$(window).resize(function(){
+	setTimeout(function(){
+		var outerHeight=getiFrameHeight()
+        ///update 20181126 chenying
+		$("iframe[id^='iframe_']").height(outerHeight)   
+	},100);
+});
+
+/**********chenghegui*********************/
+   ///点击导航菜单出现此菜单对应的tab界面
+function showNavTab(RowID, MenuName, URL, iconurl) {
+   var nav = $("#content_" + RowID).get(0);
+    //alert($("#myaddtabs"))
+   if ($.isEmptyObject(nav)) {//检查是否已经存在打开的菜单
+        var htm = '';
+        htm += '<li style="float:left;" id="li_' + RowID + '">';
+        htm += '<a onclick="tabChange('+RowID+')" data-toggle="tab" href="#content_' + RowID + '">';
+        /*if (iconurl==""){
+            htm += "<img src='../scripts/bdp/Framework/icons/mkb/details.png' /> ";
+        }else{
+            htm += "<img src='../scripts/bdp/Framework/BdpIconsLib/"+iconurl+"' /> ";
+        }*/
+        htm += MenuName;
+        htm += '<i class="closeicon" style="cursor:pointer;padding-left:10px;">x</i>';
+        htm += '</a>';
+        htm += '</li>';
+        //alert( $("#myMainTab"))
+        $("#myMainTab").append(htm);
+        
+        var Height=getiFrameHeight(); 
+        htm = '';
+        htm += '<div id="content_' + RowID + '" class="tab-pane" >';
+        htm += '<iframe id="iframe_' + RowID + '" src="' + URL + '"  width="100%" height="'+Height+'" frameborder="0" >';
+        htm += '系统使用了框架技术，但是您的浏览器不支持框架，请升级您的浏览器以便正常访问。';
+        htm += '</iframe>';
+        htm += '</div>';
+        $("#myTabContent").append(htm);  
+        navTabStyle(RowID);
+        /* chenying 保存点击频次和历史记录 */
+        var SaveDataStr="BDPMKBMenuClick^"+RowID+"^"+MenuName;
+        var SaveFrequency =tkMakeServerCall("web.DHCBL.BDP.BDPDataFrequency","SaveData",SaveDataStr+"^^");
+        var SaveHistory =tkMakeServerCall("web.DHCBL.BDP.BDPDataHistory","SaveData",SaveDataStr);
+        
+    }
+    else
+    {
+        ///全文检索菜单 重新打开时 ，如果url searchtext 不为空，需要重新检索。
+        if (URL.indexOf("dhc.bdp.mkb.mkbcontextsearch.csp")>-1)
+        {
+            document.getElementById("iframe_"+ RowID).src=URL
+        }
+        if (RowID!="home")
+	    {
+		    try
+		    {
+				var Height=getiFrameHeight()
+			    document.getElementById('iframe_' + RowID).height=Height
+		    }
+		    catch(e)
+		    {
+			    
+		    }
+	    }
+    }
+    
+    displayNavTab(RowID);
+    $("#navmenu").find("li").removeClass("active");
+    //$("#li_parent_" + parentRowID).addClass("active");
+    $("#" + RowID).parent("li").addClass("active");
+    
+    if ($('#searchResultdiv').length>0){$("#searchResultdiv").remove();}
+}
+
+var navNow="";
+///点击tab的触发事件，用来解决有组件的界面，打开两个tab出现界面空白的问题
+function tabChange(id){
+	if (id!=""){
+    var Flag =tkMakeServerCall("web.DHCBL.BDP.BDPMenuDefine","IFComp",id);
+    if (Flag=="Y"){
+        if((id!=navNow)&(id!="home")){  
+            try
+            {
+                var url=document.getElementById("iframe_"+ id).src;
+                var urlArr=url.split("/");
+                var src=urlArr[urlArr.length-1];
+                $("#iframe_" + id).attr("src",src);
+            }
+            catch(e)
+            {
+                
+                
+            }
+            
+        }
+    }   
+    navNow=id
+    
+    if (id!="home")
+    {
+	    try
+	    {
+		    var Height=getiFrameHeight()
+		    document.getElementById('iframe_' + id ).height=Height
+	    }
+	    catch(e)
+	    {
+		    
+	    }
+    }
+ }
+}
+///打开指定的页面
+function displayNavTab(RowID) {
+    $("#myMainTab").find("li").removeClass("active");
+    $("#myTabContent").find(".tab-pane").removeClass("active");
+    $('a[href=#content_' + RowID + ']').parent("li").addClass("active");
+    $("#content_" + RowID).addClass("active");
+    $("#li_" + RowID).addClass("active");
+}
+///横向导航的样式控制
+function navTabStyle(RowID) {
+    $("#li_" + RowID).find(".icon-remove").hover(
+        function () {
+            $(this).addClass("badge badge-danger");
+        },
+        function () {
+            $(this).removeClass("badge badge-danger");
+        }
+    );
+
+    $("#li_" + RowID).find(".closeicon").click(
+        function () {
+            closeNavTab(RowID);
+        }
+    );
+    $("#li_" + RowID).contextMenu('mm', {
+        bindings: {
+            'tabClose': function (t) {
+                if (RowID == 'home') {
+                } else {
+                    closeNavTab(RowID);
+                }
+            },
+            'tabCloseOther': function (t) {
+                $("#myMainTab").children("li").each(function (i, e) {
+                    if (e.id != "li_home" && e.id != "li_" + RowID) {
+                        $(e).remove();
+                    }
+                });
+                $("#myTabContent").children("div").each(function (i, e) {
+                    if (e.id != "content_home" && e.id != "content_" + RowID) {
+                        $(e).remove();
+                    }
+                });
+                displayNavTab(RowID);
+            },
+            'tabCloseAll': function (t) {
+                $("#myMainTab").children("li").each(function (i, e) {
+                    if (e.id != "li_home") {
+                        $(e).remove();
+                    }
+                });
+                $("#myTabContent").children("div").each(function (i, e) {
+                    if (e.id != "content_home") {
+                        $(e).remove();
+                    }
+                });
+                displayNavTab("home");
+            }
+        }
+    });
+}
+///关闭Tab
+function closeNavTab(RowID) {
+    ///如果关闭的是当前正打开的tab页，则需要先打开一个前面紧挨着的页面，然后再关闭
+    try
+    {
+	    if ($("#li_" + RowID).hasClass("active")) {
+	        var li = $('a[href=#content_' + RowID + ']').parent("li").prev();
+	        var preRowID = li.attr("id").split("_")[1];
+	        displayNavTab(preRowID);
+	        if(preRowID!="home"){   //解决关闭其他标签，home页报错
+	            var Flag =tkMakeServerCall("web.DHCBL.BDP.BDPMenuDefine","IFComp",preRowID);
+	            if (Flag=="Y"){
+	                var url=document.getElementById("iframe_"+ preRowID).src;
+	                var urlArr=url.split("/");
+	                var src=urlArr[urlArr.length-1];
+	                $("#iframe_" + preRowID).attr("src",src);   
+	            }
+	        }
+	    }
+    }
+    catch(e)
+    {
+	    displayNavTab("home")
+    }
+    if (RowID != "home") {
+        $("#li_" + RowID).remove();
+        $("#content_" + RowID).remove();
+    }
+}
+
+</script>
+</body>
+</html> 

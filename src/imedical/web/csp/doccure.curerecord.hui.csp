@@ -8,6 +8,7 @@
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <HISUI></HISUI>
+<DHCDOCCURE></DHCDOCCURE>
 <STYLE type='text/css'>
 .form_table {
 	margin: 0px 0px;
@@ -23,22 +24,84 @@
 .form_table td.btn {
 	text-align: center;
 }
-
-textarea{
-	width:655px	
+.t-hidden{
+	display:none	
 }
-#dpan div{
-	margin: 0px auto;
-	padding:10px;
-	height: 30px;
-	width: 500px;
-	/*x方向的位移 y方向的位移 羽化与半径 影子颜色
-	box-shadow:0px 0px 3px #888888;	*/
+textarea{
+	width:90%	
+}
+.m-left-20{margin-left:20px}
+.btn-lightred{background-color:#F16E57 !important;border:1px solid #F16E57;}
+.btn-lightgreen{background-color:#40C27B !important;border:1px solid #40C27B;}
+.btn-lighttempgreen{background-color:#6495ED !important;border:1px solid #40C27B;}
+.btn-lightSlateGray {background-color:#708090 !important;border:1px solid #40C27B;}
+.kw-section-list > li {
+    margin: 0px;
+}
+#patient-label label{
+	width:100px;	
+}
+
+#patient-label ul,.form-table tr td ul{
+	list-style-type: none;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: center;
 }
 </STYLE>
+<Server>
+s DCAARowIdStr=$g(%request.Data("DCAARowIdStr",1))
+s OEORERowIDS=$g(%request.Data("OEORERowIDS",1))
+s DCRRowId=$g(%request.Data("DCRRowId",1))
+s CurrentDateTime=##class(DHCDoc.DHCDocCure.Common).GetCurrendDateTime()
+;此方法可以获取上次保存的治疗记录内容
+;s CureRecordContent=##Class(DHCDoc.DHCDocCure.Record).GetCureRecordContent(DCAARowIdStr,OEORERowIDS,%session.Get("LOGON.HOSPID"))
+s CureRecordContent=##Class(DHCDoc.DHCDocCure.Config).GetCureConfigPara("CureRecordContent",%session.Get("LOGON.HOSPID"))
+s CureRecordContent=$tr(CureRecordContent,$c(10),"^")
+s:CureRecordContent="0" CureRecordContent=""
+s DDCISRowidStr=##class(DHCDoc.DHCDocCure.CureItemSet).GetDDCISRowidStr(DCAARowIdStr,OEORERowIDS,DCRRowId)
+s CureLocReconfirm=##class(DHCDoc.DHCDocCure.Config).GetCureLocConfig("","CureLocReconfirm",%session.Get("LOGON.CTLOCID"),%session.Get("LOGON.HOSPID"))
+s EpisodeID=""
+if DCAARowIdStr'=""{
+	s DCARowID=+DCAARowIdStr
+}elseif OEORERowIDS'=""{
+	s OEORERowID=$p(OEORERowIDS,"^",1)
+	s OrderId=$p(OEORERowID,"||",1,2)
+	s DCARowID=$o(^DHCDocCure(0,"OEORI",OrderId,""))
+}elseif DCRRowId'=""{
+	s DCARowID=+DCRRowId
+}
+if DCARowID>0{
+	s EpisodeID=$p($g(^DHCDocCure(DCARowID)),"^",1)
+}
+</Server>
 </head> 
 <body>
 	<csp:Include Page="doccure.curerecord.show.hui.csp">
+	<SCRIPT language = 'javascript' >
+		//全局请求后台服务对象
+		var ServerObj={
+			CurrentDateTime:"#(CurrentDateTime)#",
+			OEORERowIDS:"#(OEORERowIDS)#",
+			DCAARowIdStr:"#(DCAARowIdStr)#",
+			CureRecordContent:"#(CureRecordContent)#",
+			DDCISRowidStr:"#(DDCISRowidStr)#",
+			EpisodeID:"#(EpisodeID)#",
+			DCARowID:"#(DCARowID)#",
+			DCRRowId:"#(DCRRowId)#",
+			CureLocReconfirm:"#(CureLocReconfirm)#"
+		}
+	</SCRIPT>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/CRCommon.js"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/plugin/datagrid-scrollview.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/opdoc/OPDocPatInfoBar.js"></script>
 	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.curerecord.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/record.common.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/asstemp/comAssConsTrePro.js"></script>
+	<!--初始化CA服务环境-->
+	<script defer="defer" type="text/javascript" src="../scripts/dhcdoc/DHCDoc.CASign.js"></script>
 </body>
 </html>

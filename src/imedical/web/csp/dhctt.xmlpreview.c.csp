@@ -1,0 +1,273 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<!DOCTYPE html>
+<html>
+<head>
+<title>打印预览</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<!--<meta name="viewport" content="width=device-width,initial-scale=1">-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<!--	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/ObjTree.js" charset='utf-8'></script>-->
+<script type="text/javascript" src="../scripts/websys.jquery.js"></SCRIPT>
+<script type="text/javascript" src="../scripts_lib/qrcode/qrcode.min.js"></SCRIPT>
+<script type="text/javascript" src="../scripts_lib/jspdf.js"></SCRIPT>
+<script type="text/javascript" src="http://localhost:8000/CLodopfuncs.js?priority=1"></script>
+<script type="text/javascript" src="http://localhost:18000/CLodopfuncs.js?priority=0"></script>
+<script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+<server>
+	Set XMLFlagName = $G(%request.Data("xmlName",1))
+	Set XMLTxtData=$G(%request.Data("XMLTxtData",1))
+	Set XMLListData = $G(%request.Data("XMLListData",1))
+	Set showPrintBtn = $g(%request.Data("showPrintBtn",1))
+	Set ReqCreatePDFBase64 =  $G(%request.Data("createPDFBase64",1))
+	Set ReqPDFDownload = $G(%request.Data("pdfDownload",1))
+	//reqOpt.NativePrintFlag,tableBorder=1,rowHeightExpand=1,xmldsigner=1,showPrintBtn=1,xmlName
+	//xmlName=DHCXMLPrintTest&showPrintBtn=1&xmldesigner=1&rowHeightExpand=1&tableBorder=1&NativePrintFlag=1
+	// 如果前一界面是UTF8编码那就通过下面的参数传过来
+	Set InputCharSet = $g(%request.Data("InputCharSet",1))
+	
+	if InputCharSet = "UTF8" {
+		set XMLTxtData=$zcvt($zcvt(XMLTxtData,"O","GB18030"),"I","UTF8")
+		SEt XMLListData = $zcvt($zcvt(XMLListData,"O","GB18030"),"I","UTF8")
+	}
+	Set XMLId = $O(^User.DHCXMLPConfigI("XPCFlagIndex"," "_$ZCVT(XMLFlagName,"U"),0))
+	Set XMLQName="",XMLMName=""
+	if XMLFlagName'=""{
+		Set XMLClassQueryList = ##class(web.DHCXMLPConfig).GetXMLInfo(XMLFlagName)
+		Set XMLMCName = $lg(XMLClassQueryList,1)
+		Set XMLMName = $lg(XMLClassQueryList,2)
+		Set XMLQCName = $lg(XMLClassQueryList,3)
+		Set XMLQName = $lg(XMLClassQueryList,4)
+	}
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+	W "<script type=""text/javascript"">"
+	w "var XMLFlagName="""_XMLFlagName_""";var listInfo="""";"
+	w:XMLQName'="" ##class(web.DHCPlatformPrint).RunQuery(XMLQCName,XMLQName)
+	w ";var paraInfo = """_XMLTxtData_"^"
+	W:XMLMName'="" ##class(web.DHCPlatformPrint).RunClass(XMLMCName,XMLMName)
+	w """;var reqOpt = {"
+	Set reqInd=0
+	Set rkey = "" for{
+		Set rkey = $O(%request.Data(rkey))
+		quit:rkey=""
+		If reqInd'=0 W ","
+		Set reqInd = reqInd+1
+		w """"_rkey_""":"""_$g(%request.Data(rkey,1))_""""
+	}
+	w "};"
+	w "</script>"
+	
+</server>
+<style>
+.preview-container canvas{
+	border:2px solid #cccccc;
+	
+}
+</style>
+</head>
+<body style="background-color:#f8f8f8;padding:0px;margin:0px;">
+	<!-- width = '1200' height = '825' width:800px;height:550px; -->
+	<!--<canvas id ='XMLLayout' style="padding:0px;margin:0px;" ></canvas >-->
+	<div id="XMLLayoutContainer" class="preview-container">
+	
+	</div>
+	<script type="text/javascript" src="../scripts/dhctt/xmldesigner/xmlPreviewByCanvas.js" charset='utf-8'></SCRIPT>
+	<script type="text/javascript">
+		/**
+		 * @returns 获得device pixel ratio 
+		 * 返回真实px与css-px的比例，大屏幕下>1。 本机为1.5
+		 */
+		/*function getDPR(){
+			return window.devicePixelRatio||1;
+		}
+		$(function(){
+			var c2 = String.fromCharCode(2);
+			var inpara = "Name"+c2+"汪小二刘小二张\n小二^Age"+c2+"18";
+			var listpara = "版本1^最大值17个字符^1^条码语句默认是Auto类型自适应宽度或高度，默认Auto属性^abcdefghijklmn我人有的和^abcdefghijklmn我人有的和"+ c2+
+			"版本2^最大值32个字符^2^条码语句默认是Auto类型自适应宽度或高度，默认Auto属性"+c2+
+			"版本3^最大值53个字符^3^条码语句默认是Auto类型自适应宽度或高度，默认Auto属性"; c2+
+			"版本5^最大值106个字符^4^条码语句默认是Auto类型自适应宽度或高度，默认Auto属性"+c2+
+			"版本7^最大值154个字符^5^条码语句默认是Auto类型自适应宽度或高度，默认Auto属性"+c2+
+			"版本10^最大值135个汉字 271个字符^6^条码语句默认是Auto类型自适应宽度或高度，默认Auto属性"+c2+
+			"版本14^最大值229个汉字，458个字符^7^条码语句默认是Auto类型自适应宽度或高度，默认Auto属性";
+			var mycanvas = document.getElementById("XMLLayout"); // EvalTest DHCRisBill_CT1
+			// viewScale : window.devicePixelRatio; 预览时放大比率，位置、字体都会放大
+			// exportScale : 导出时放大比例，默认1,表示导成图片base64串
+			var cfg = {
+				viewScale: 1||getDPR(),
+				exportScale:1,
+				tabelBroder:2,
+				rowContentFit: false,   // 默认 false 行内容是否自动换行
+				rowHeightExpand : false,  // 默认 false 是否推动表格后面元素位置
+				pdfDownload:'#(ReqPDFDownload)#'==1?true:false
+			};
+			if ("#(ReqCreatePDFBase64)#"){
+				cfg.onCreatePDFBase64=function(b){
+					debugger;
+					if(opener && opener.XMLPreviewOnCreatePDFBase64) opener.XMLPreviewOnCreatePDFBase64(b);
+					if (!cfg.pdfDownload) window.close();
+				}
+			}
+			//'//'DHCXMLPrintTest' //'DHCRisBill_CT1'
+			DHC_PreviewByCanvas(mycanvas,"#(XMLTxtData)#","#(XMLListData)#",[],'#(XMLFlagName)#',cfg);
+		});
+		*/
+		/**
+		 * @returns 获得device pixel ratio 
+		 * 返回真实px与css-px的比例，大屏幕下>1。 本机为1.5
+		 */
+		function getDPR(){
+			return window.devicePixelRatio||1;
+		}
+		var init = function(inpara,inlist,jsonArr,flagName,opt){
+			//var mycanvas = document.getElementById("XMLLayout"); // EvalTest DHCRisBill_CT1
+			// viewScale : window.devicePixelRatio; 预览时放大比率，位置、字体都会放大
+			// exportScale : 导出时放大比例，默认1,表示导成图片base64串
+			// http://127.0.0.1/dthealth/web/csp/dhctt.xmlpreview.c.csp?
+			// xmlName=DHCXMLPrintTest&showPrintBtn=1&xmldesigner=1&rowHeightExpand=1&tableBorder=1&rowContentFit=true&rowHeightExpand=true
+			var cfg = {
+				viewScale: 1||getDPR(),
+				exportScale:1,
+				windowCloseOnBase64:true,
+				tabelBroder:opt.tableBorder||0,         //broder->border
+				rowContentFit: false, //false,   // 默认 false 行内容是否自动换行
+				rowHeightExpand : false,  // 默认 false 是否推动表格后面元素位置
+				pdfDownload:opt.pdfDownload==1?true:false
+			};
+			var optNew = {};
+			$.extend(optNew,cfg,opt);
+			if (opt && opt.onCreatePDFBase64){
+				optNew.onCreatePDFBase64 = function(b){
+					opt.onCreatePDFBase64(b);
+					if (opt.windowCloseOnBase64 && !optNew.pdfDownload) window.close();
+				}
+			}
+			//'//'DHCXMLPrintTest' //'DHCRisBill_CT1'
+			//alert(window.inpara);
+			//DHC_PreviewByCanvas(mycanvas,inpara,inlist,[],flagName,optNew);
+			pbyObj = new DHC_PreviewByCanvas("",inpara,inlist,[],flagName,optNew);
+			pbyObj.init();
+		}
+		$(function(){
+			/*reqOpt.onCreateIMGBase64 = function(base64){
+				G_BAE64 = base64;
+				//LODOP = getLodop();
+				//LODOP.ADD_PRINT_IMAGE(0,0,400,100,base64);
+				//LODOP.PRINT();
+			}
+			reqOpt.onCreatePDFBase64 = function(base64){
+				G_PDFBAE64 = base64;
+				//LODOP = getLodop();
+				//LODOP.ADD_PRINT_IMAGE(0,0,400,100,base64);
+				//LODOP.PRINT();
+			}*/
+			/*
+			G_MMPrintData = pbyObj.printInParaData;
+			// px转成mm单位
+			var transUnit = 3.78*(1||getDPR());
+			var tomm = function(item) {
+				if (item.xcol) item.xcol /= transUnit;
+				if (item.yrow) item.yrow /= transUnit;
+				if (item.fontsize) item.fontsize /= transUnit/3.78;
+				if (item.width) item.width /= transUnit;
+				if (item.height) item.height /= transUnit;
+				if (item.BeginX) item.BeginX /= transUnit;
+				if (item.BeginY) item.BeginY /= transUnit;
+				if (item.EndX) item.EndX /= transUnit;
+				if (item.EndY) item.EndY /= transUnit;
+				return item;
+			}
+			G_MMPrintData.forEach(function (item) {
+				//tomm(item);
+			});
+			*/
+			reqOpt.windowCloseOnBase64 = false;
+			if (""!=XMLFlagName) init(paraInfo,listInfo,[],XMLFlagName,reqOpt);
+		});
+		function next(){
+			pbyObj.nextPage();
+		}
+		function pre(){
+			pbyObj.prePage();
+		}
+		var printOut = function(){
+			DHCP_GetXMLConfig("",XMLFlagName);
+			LODOP = getLodop();
+			LODOP.SET_LICENSES('\u4E1C\u534E\u533B\u4E3A\u79D1\u6280\u6709\u9650\u516C\u53F8',"4EF6E3D5AB0D478F5A07D05CDDDE2365","\u6771\u83EF\u91AB\u70BA\u79D1\u6280\u6709\u9650\u516C\u53F8","7C4A2B70D17D01CCD5CB2A3A6B4D3200");
+	        LODOP.SET_LICENSES("THIRD LICENSE","","DHC Medical Science & Technology Co., Ltd.","604523CF08513643CB90BACED8EFF303");
+			var mystr="";
+			for (var i= 0; i<PrtAryData.length;i++){
+				mystr=mystr + PrtAryData[i];
+			}
+			var docobj = DHC_parseXml(mystr);
+			if (docobj){
+				if (docobj.parsed){
+					//LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);    //宽度溢出缩放
+					var inv = docobj.documentElement.childNodes[0];
+					LODOP.PRINT_INIT(XMLFlagName);
+					LODOP_CreateInv(LODOP,inv,"","",[],reqOpt);
+					if ("undefined"==typeof reqOpt.NativePrintFlag|| reqOpt.NativePrintFlag==0){
+						var objList = document.getElementsByTagName('canvas');
+						for (var i=0;i<objList.length;i++){
+							LODOP.ADD_PRINT_IMAGE("0mm","0mm","RightMargin:0mm","BottomMargin:0mm"
+							,objList[i].toDataURL('image/jpeg', 1));
+							LODOP.NEWPAGE();
+						}
+						//LODOP.ADD_PRINT_IMAGE("0mm","0mm","RightMargin:0mm","BottomMargin:0mm",G_BAE64);
+					}else{
+						var transUnit = 3.78*(1||getDPR());
+						var tomm = function(item) {
+							if (item.xcol) item.xcol /= transUnit;
+							if (item.yrow) item.yrow /= transUnit;
+							if (item.fontsize) item.fontsize /= transUnit/3.78;
+							if (item.width) item.width /= transUnit;
+							if (item.height) item.height /= transUnit;
+							if (item.BeginX) item.BeginX /= transUnit;
+							if (item.BeginY) item.BeginY /= transUnit;
+							if (item.EndX) item.EndX /= transUnit;
+							if (item.EndY) item.EndY /= transUnit;
+							return item;
+						}
+						pbyObj.printInParaData.forEach(function (item) {
+							LODOP_PrintItem(LODOP,tomm(item));
+						});
+					}
+					LODOP.PRINT();
+				}
+			}
+			//
+	 		//DHC_PrintByLodop(getLodop(),paraInfo,listInfo,[],XMLFlagName,reqOpt);
+	 		//websys_printout(XMLFlagName,);
+		}
+	</script>
+	<div>
+     	注：预览与打印的效果可能会偏差,单据以实际打印效果为准
+     </div>
+     <div>
+      	<!--<div style="margin-right:10px; position: fixed; right:10px;bottom:100px;">
+	     	<csp:if condition="$g(showPrintBtn)=1">
+	     	<a href="#" class="i-btn" onclick="pre();return false;">
+	     		<img src="../images/uiimages/blacktop.png"/>上一页
+	     	</a>
+	     	</csp:if>
+ 		</div>
+     	<div style="margin-right:10px; position: fixed; right:10px;bottom:50px;">
+	     	<csp:if condition="$g(showPrintBtn)=1">
+	     	<a href="#" class="i-btn" onclick="next();return false;">
+	     		<img src="../images/uiimages/blackbottom.png"/>下一页
+	     	</a>
+	     	</csp:if>
+ 		</div>--->
+     	<div style="margin-right:10px; position: fixed; right:10px;bottom:10px;">
+	     	<csp:if condition="$g(showPrintBtn)=1">
+	     	<a href="#" class="i-btn" onclick="printOut();return false;">
+	     		<img src="../images/uiimages/print.png"/>打印单据
+	     	</a>
+	     	</csp:if>
+ 		</div>
+ 	</div>
+</body>
+</html>

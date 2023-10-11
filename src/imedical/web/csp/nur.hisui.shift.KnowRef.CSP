@@ -1,0 +1,769 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    q 1
+</csp:method>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<NURHISUI />
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:5px!important;
+        }
+        .td_label {
+	    	width: 30px;
+	    }
+	    .btn_right {
+	    	float: right;
+	    }
+	    .dialogO {
+			width: 280px;
+			height: 70px !important;
+			padding:10px;
+		}
+		.dialogM {
+			width: 400px;
+			height: 200px !important;
+			padding:10px;
+		}
+		.dialogD {
+			width: 240px;
+			height: 130px !important;
+			padding:10px;
+		}
+		.dialogN {
+			width: 220px;
+			height: 70px !important;
+			padding:10px;
+		}
+		.searchForm {
+			border-collapse: separate;
+			border-spacing: 0px 2px;
+			border: none;
+			width: 100%;
+			height: 100%
+		}
+		.tableForm {
+			border-collapse:separate;
+			border-spacing:0px 5px;
+			border:none;
+			width:100%;
+		}
+		#panelDomM {
+			padding: 0px;
+			margin: 0px;
+			width: 100%;
+			height: 80% !important;
+		}
+		.dialogCombo {
+			width: 250px;
+		}
+		#ulDom li label {
+	        display:inline;
+	    }
+		#tree-left {
+			width: 280px;
+			border-color: #ccc;
+			border-radius: 4px;
+			padding: 4px;
+		}
+		#tree-right {
+			border-color: #ccc;
+			border-radius: 4px;
+			padding: 8px;
+		}
+	</STYLE>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+<script language="cache" runat="SERVER">
+     s EpisodeID = $G(%request.Data("EpisodeID", 1))
+</script>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true">
+		<!--查询条件-->
+		<div data-options="region:'north',split:true,border:false" style="height:45px">
+			<table class="searchForm">
+				<tr>
+					<td class="td_label">#(..Get("病区"))#</td>
+					<td>
+						<select id="comboLoc" class="hisui-combobox" style="width:240px;"></select>
+					</td>
+					<td>
+						<input id="sbTree" class="hisui-searchbox" data-options="prompt:'请输入检索内容'" style="width:230px;"/>
+					</td>
+					<td>
+						<a id="btnWriteIn" class="hisui-linkbutton btn_right" data-options="iconCls:'icon-w-edit'">#(..Get("写入"))#</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options='region:"west",split:true' id='tree-left' style='width:264.40000000000003'>
+					<div id="knowledgeTree" data-options="fit:true,animate:true,border:false"></div>
+				</div>
+				<div data-options="region:'center',split:true" id="tree-right">
+					<div id="panelPreview" style="border-color:#ccc">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="dialogDomO" class="hisui-dialog dialogO" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomO'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomO').close();}
+	}]">
+		<select id="comboDom" class="hisui-combobox" style="width:280px;"></select>
+	</div>
+	<div id="dialogDomM" class="hisui-dialog dialogM" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomM'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomM').close();}
+	}]">
+		<div class="hisui-panel" id="panelDomM" data-options="border:false">
+			<ul id="ulDom" style="list-style-tupe:none;"></ul>
+		</div>
+	</div>
+	<div id="dialogDomD" class="hisui-dialog dialogD" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomD'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomD').close();}
+	}]">
+		<table class="tableForm">
+			<tr id="row1">
+				<td >
+					#(..Get("日期"))#：
+				</td>
+				<td>
+					<input id="dateDomD" class="hisui-datebox textbox"></input>
+				</td>
+			</tr>
+			<tr id="row2">
+				<td>
+					#(..Get("时间"))#：
+				</td>
+				<td>
+					<input id="timeDomD" class="hisui-timespinner textbox"></input>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div id="dialogDomN" class="hisui-dialog dialogN" data-options="closed:true,buttons:[{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnOkDomN'
+	},{
+		text:'取消',
+		iconCls:'icon-w-close',
+		handler:function(){$HUI.dialog('#dialogDomN').close();}
+	}]">
+		#(..Get("数值"))#：<input class="hisui-validatebox textbox" data-options="validType:'number'" id="txtNumber">	
+	</div>
+</body>
+<script type="text/javascript">
+var EpisodeID = "#(EpisodeID)#";
+var ModelId = ""
+$(function () {
+	// 定义全局变量
+	var GLOBAL = {
+		code: 'Know',
+		hospitalID: session['LOGON.HOSPID'],
+		className: 'Nur.SHIFT.Emr.RefHandle',
+		currentDomID: '',
+		multWrite: $cm({
+			ClassName: 'Nur.SHIFT.Emr.RefConfig',
+			MethodName: 'getDomValue',
+			HospitalID: session['LOGON.HOSPID'],
+			DomID: 'KnowMultWrite',
+			LocID: session['LOGON.CTLOCID'],
+			ModelID: ModelId
+		}, false),
+		knowWindow: $cm({
+			ClassName: 'Nur.SHIFT.Emr.RefConfig',
+			MethodName: 'getDomValue',
+			HospitalID: session['LOGON.HOSPID'],
+			DomID: 'KnowWindow',
+			LocID: session['LOGON.CTLOCID'],
+			ModelID: ModelId
+		}, false),
+		requestInfo: $cm({
+			ClassName: 'Nur.SHIFT.Emr.RefSetting',
+			MethodName: 'getReferTabConfig',
+			HospitalID: session['LOGON.HOSPID'],
+			Code: 'Know'
+		}, false)
+	};
+
+	/**
+	 * @description: 初始化界面
+	 */
+	function initUI() {
+		initCondition();
+		initKnowledgeTree();
+		listenEvents();
+	}
+	/**
+	 * @description: 初始化查询条件
+	 */
+	function initCondition() {
+		var defaultLoc = $m({
+			ClassName: GLOBAL.className,
+			MethodName: 'getDefaultLoc',
+			LocID: session['LOGON.CTLOCID']
+		}, false);
+//		var url = ;
+//		if('undefined'!==typeof websys_getMWToken)
+//		{
+//			url+="&MWToken="+websys_getMWToken()
+//		} 
+		$HUI.combobox('#comboLoc', {
+			valueField: 'id',
+			textField: 'text',
+			url: $URL + '?ClassName=' + GLOBAL.className + '&MethodName=GetKnowledgeLocs&HospitalID=' + session['LOGON.HOSPID'] + '&LocId=' + session['LOGON.CTLOCID'],
+			value: defaultLoc,
+			onSelect: function (record) {
+				$('#panelPreview').empty();
+				$HUI.tree('#knowledgeTree', 'reload');
+			}
+		});
+	}
+	/**
+	 * @description: 初始化知识库树结构
+	 */
+	function initKnowledgeTree() {
+		$HUI.tree('#knowledgeTree', {
+			loader: function (param, success, error) {
+				$cm({
+					ClassName: GLOBAL.requestInfo.queryParams.ClassName,
+					MethodName: GLOBAL.requestInfo.queryParams.MethodName,
+					LocId: $('#comboLoc').combobox('getValue'),
+					HospitalID: GLOBAL.hospitalID,
+					Filter: $('#sbTree').searchbox('getValue'),
+					ModelID: ModelId
+				}, function (treeData) {
+					success(treeData);
+				});
+			},
+			autoNodeHeight: true,
+			checkbox: GLOBAL.multWrite,
+			onClick: function (node) {
+				$(this).tree(node.state === 'closed' ? 'expand' : 'collapse', node.target);
+				loadKnowContent(node);
+			},
+			onCheck: function (node, checked) {
+				var nodeText = '';
+				var nodes = $('#knowledgeTree').tree('getChecked');
+				for (var i = 0; i < nodes.length; i++) {
+					if (typeof nodes[i].children != 'undefined') continue;
+					var subText = '';
+					var content = $cm({
+						ClassName: GLOBAL.requestInfo.resultParams.ClassName,
+						MethodName: GLOBAL.requestInfo.resultParams.MethodName,
+						KnowledgeID: nodes[i].id
+					}, false);
+					var eleCount = content.length;
+					if (eleCount > 0) {
+						for (var j = 0; j < eleCount; j++) {
+							var eleText = content[j].title;
+							subText = !!subText ? subText + eleText : eleText;
+						}
+					}
+					nodeText = !!nodeText ? nodeText + ',' + subText : subText;
+				}
+				$('#textEdit', parent.document).val(nodeText);
+			}
+		});
+	}
+	/**
+	 * @description: 加载知识库具体内容
+	 * @param {node} 节点
+	 */
+	function loadKnowContent(node) {
+		if (node.children) {
+			return;
+		}
+		$cm({
+			ClassName: GLOBAL.requestInfo.resultParams.ClassName,
+			MethodName: GLOBAL.requestInfo.resultParams.MethodName,
+			KnowledgeID: node.id,
+			EpisodeID: EpisodeID
+		}, function (content) {
+			// 包含动态元素的内容创建html，否则直接带入内容
+			$('#panelPreview').empty();
+			if (content.length > 0) {
+				$.each(content, function (i, c) {
+					var eleItem = loadHtmlDom(c);
+					if (GLOBAL.knowWindow) {
+						if (!!eleItem) {
+							$('#panelPreview').append($(eleItem));
+						}
+						$('#' + c.id).bind('click', c, eleClickHandler);
+					}
+				});
+			} else {
+				if (GLOBAL.knowWindow) {
+					$('#panelPreview').empty();
+				}
+			}
+		});
+	}
+	/**
+	 * @description: 组装元素
+	 */
+	function elFactory(prop) {
+		var el = document.createElement(prop.type);
+		$.each(prop, function (key, value) {
+			if ((key != 'type') && (!!value)) {
+				if (key == 'style') {
+					$.each(value, function (i, v) {
+						if (!!v) {
+							el.style[i] = v;
+						}
+					});
+				} else if (key == 'options') {
+					$.each(value, function (i, v) {
+						el.setAttribute(i, v);
+					});
+				} else if (key == 'validateRule') {
+					$(el).validatebox(value);
+				} else {
+					el[key] = value;
+				}
+			}
+		});
+		$('#panelPreview').append(el);
+		$.parser.parse('#panelPreview');
+	}
+	/**
+	 * @description: 加载dom元素
+	 * @param {object} c
+	 * @return {string} html
+	 */
+	function loadHtmlDom(c) {
+		var eleHtml = '';
+		var desc = '';
+		if (!!c.sourceData) {
+			if ($.isPlainObject(c.sourceData)) {
+				if (Array.isArray(c.sourceData.values)) {
+					$.each(c.sourceData.values, function (i, v) {
+						desc = !!desc ? desc + ',' + v.Text : v.Text;
+					});
+				} else if (!!c.sourceData.values) {
+					desc = c.sourceData.values;
+				} else {
+					desc = c.title;
+				}
+			} else {
+				desc = c.sourceData;
+			}
+		} else {
+			desc = c.title;
+		}
+		if (GLOBAL.knowWindow) {
+			if (c.type == 'O') {
+				eleHtml = "<span style='background-color:#509de1;border:1px dotted black'><a href='javascript:void(0);' id=" + c.id + " style='color:white;'>" + desc + "</a></span>";
+			} else if (c.type == 'M') {
+				eleHtml = "<span style='background-color:#EE7942;border:1px dotted black'><a href='javascript:void(0);' id=" + c.id + " style='color:white;'>" + desc + "</a></span>";
+			} else if (c.type == 'D') {
+				eleHtml = "<span style='background-color:#4EEE94;border:1px dotted black'><a href='javascript:void(0);' id=" + c.id + " style='color:white;'>" + desc + "</a></span>";
+			} else if (c.type == 'N') {
+				eleHtml = "<span style='background-color:#8552a1;border:1px dotted black'><a href='javascript:void(0);' id=" + c.id + " style='color:white;'>" + desc + "</a></span>";
+			} else if (c.type == 'I') {
+				//分隔符
+			} else {
+				var reg = new RegExp('\r\n', 'g');
+				desc = String(c.title).replace(reg, '<br>');
+				eleHtml = "<span id='" + c.id + "'>" + desc + "</span>";
+			}
+		} else {
+			var strRefTo = '';
+			if ((typeof c.refTo != "undefined") && (c.refTo.length > 0)) {
+				$.each(c.refTo, function (index, ref) {
+					strRefTo = !!strRefTo ? strRefTo + "," + ref.Text : ref.Text;
+				});
+			}
+
+			var prop = new Object();
+			//个性化属性
+			switch (c.type) {
+				case 'O': {
+					prop = {
+						type: 'select',
+						className: 'hisui-combobox',
+						style: {
+							width: '100px',
+							margin: '4px'
+						}
+					}
+					break;
+				}
+				case 'M': {
+					prop = {
+						type: 'select',
+						className: 'hisui-combobox',
+						style: {
+							width: '150px',
+							margin: '4px'
+						}
+					}
+					break;
+				}
+				case 'D': {
+					var className = 'hisui-datetimebox textbox combo-f datetimebox-f';
+					var width = '180px';
+					var borderRadius = '';
+					if ((c.dateFlag == "Y") && (c.timeFlag == "N")) {
+						className = 'hisui-datebox textbox datebox-f combo-f';
+						width = '120px';
+					} else if ((c.dateFlag == "N") && (c.timeFlag == "Y")) {
+						className = 'hisui-timespinner';
+						width = '80px';
+						borderRadius: '2px';
+					}
+					prop = {
+						type: 'input',
+						className: className,
+						style: {
+							width: width,
+							borderRadius: borderRadius
+						}
+					}
+					break;
+				}
+				case 'N': {
+					prop = {
+						type: 'input',
+						className: 'hisui-validatebox textbox',
+						style: {
+							width: '70px',
+							margin: '4px'
+						},
+						validateRule: {
+							validType: 'number'
+						}
+
+					}
+					break;
+				}
+				default: {
+					var reg = new RegExp('\r\n', 'g');
+					prop = {
+						type: 'span',
+						innerHTML: String(c.title).replace(reg, "<br>"),
+						style: {
+							fontSize: '16px',
+							margin: '4px'
+						}
+					}
+					break;
+				}
+			}
+			//公共属性
+			prop.id = c.id;
+			prop.value = desc;
+			prop.options = {
+				placeholder: c.title,
+				refFrom: c.refFrom,
+				refTo: strRefTo
+			};
+			elFactory(prop);
+
+			if ((c.type == 'O') || (c.type == 'M')) {
+				$('#' + c.id).combobox('clear');
+				var checkedId = [];
+				var checkedArr = String(desc).split(',');
+				$.each(c.sourceData.source, function (index, data) {
+					if ($.inArray(String(data.Text), checkedArr) > -1) {
+						checkedId.push(data.Value);
+						if (c.type == 'O') {
+							return false;
+						}
+					}
+				});
+				var multiple = c.type == 'O' ? false : true;
+				var rowStyle = c.type == 'O' ? '' : 'checkbox';
+				$('#' + c.id).combobox({
+					valueField: 'Value',
+					textField: 'Text',
+					data: c.sourceData.source,
+					value: checkedId,
+					multiple: multiple,
+					rowStyle: rowStyle,
+					defaultFilter: 4
+				});
+				if ((checkedId.length == 0) && (checkedArr.length > 0)) {
+					setTimeout(function(){
+						$('#' + c.id).combobox('setText', desc);
+					},200);
+				}
+			}
+		}
+		return eleHtml;
+	}
+	/**
+	 * @description: 选中知识库内容
+	 */
+	function eleClickHandler(e) {
+		GLOBAL.currentDomID = e.data.id;
+		var currentText = $('#' + e.data.id)[0].innerText.replace(/\s+/g, '');
+		if (!e.data.type) {
+			$.message.popover({ msg: $g('DOM元素类型为空！'), type: 'error', timeout: 500 });
+			return;
+		}
+		if (e.data.type == 'O') {
+			$('#comboDom').empty();
+			$('#comboDom').combobox({
+				valueField: 'Value',
+				textField: 'Text',
+				data: e.data.sourceData.source,
+				value: currentText,
+				defaultFilter: 4
+			});
+		} else if (e.data.type == 'N') {
+			$('#txtNumber').val(currentText);
+		} else if (e.data.type == 'M') {
+			$('#ulDom').empty();
+			currentText = currentText.replace(new RegExp("，", ("gm")), ",");
+			var checkedArr = currentText.split(',');
+			$.each(e.data.sourceData.source, function (index, data) {
+				var ifChecked = $.inArray(data.Text, checkedArr) >= 0 ? 'checked' : '';
+				$('#ulDom').append("<li><input class='hisui-checkbox' type='checkbox' " + ifChecked + " label='" + data.Text + "'></li>");
+			});
+			$.parser.parse('#panelDom' + e.data.type);
+
+		} else if (e.data.type == 'D') {
+			//赋初值
+			var displayValue = $('#' + e.data.id)[0].innerText;
+			var curDateTime = displayValue.split(/\s/);
+			if (curDateTime.length > 1) {
+				$('#dateDomD').datebox('setValue', curDateTime[0]);
+				$('#timeDomD').timespinner('setValue', curDateTime[1]);
+			} else if (e.data.dateFlag == 'Y') {
+				$('#dateDomD').datebox('setValue', curDateTime[0]);
+			} else {
+				$('#timeDomD').timespinner('setValue', curDateTime[0]);
+			}
+			//控制显示
+			if (e.data.dateFlag != e.data.timeFlag) {
+				if (e.data.dateFlag == 'Y') {
+					$('#row1').css('display', 'block');
+				} else {
+					$('#row1').css('display', 'none');
+				}
+				if (e.data.timeFlag == 'Y') {
+					$('#row2').css('display', 'block');
+				} else {
+					$('#row2').css('display', 'none');
+				}
+			} else {
+				$('#row1').css('display', 'block');
+				$('#row2').css('display', 'block');
+			}
+		}
+		$('#dialogDom' + e.data.type).dialog({
+			title: e.data.title,
+			cache: false,
+			modal: true,
+			closed: false,
+			onOpen: function () {
+				if ($('#txtNumber').length > 0) {
+					$('#txtNumber').focus();
+					$('#txtNumber').bind('keypress', function (event) {
+						if (event.keyCode == "13") {
+							$('#btnOkDom' + e.data.type).click();
+						}
+					});
+				}
+			}
+		});
+
+		//$('#dialogDom' + e.data.type).dialog('open');
+
+		//监听确定取消事件
+		$('#btnOkDom' + e.data.type).bind('click', {
+			appendId: e.data.id,
+			typ: e.data.type,
+			data: e.data.sourceData,
+			dateFlag: e.data.dateFlag,
+			timeFlag: e.data.timeFlag
+		}, domClickHandler);
+	}
+	/**
+	* @description: 元素的点击事件
+	* @param {e} 
+	*/
+	function domClickHandler(e) {
+		if (e.data.appendId == GLOBAL.currentDomID) {
+			if (e.data.typ == 'O') {
+				var comboText = $('#comboDom').combobox('getText');
+				$('#' + e.data.appendId)[0].innerText = comboText;
+			} else if (e.data.typ == 'M') {
+				var checkboxText = '';
+				$('#ulDom li input').each(function (index, element) {
+					if (element.checked == true) {
+						checkboxText = checkboxText == '' ? element.id : checkboxText + ',' + element.id;
+					}
+				});
+				$('#' + e.data.appendId)[0].innerText = checkboxText;
+			} else if (e.data.typ == 'D') {
+				var datetimeText = '';
+				var dateText = '';
+				var timeText = '';
+				var dateText = $('#dateDomD').datebox('getValue');
+				var timeText = $('#timeDomD').spinner('getValue');
+				datetimeText = dateText + ' ' + timeText;
+				if ((e.data.dateFlag == 'Y') && (e.data.timeFlag == 'N')) {
+					datetimeText = dateText;
+				}
+				if ((e.data.dateFlag == 'N') && (e.data.timeFlag == 'Y')) {
+					datetimeText = timeText;
+				}
+				$('#' + e.data.appendId)[0].innerText = datetimeText;
+			} else if (e.data.typ == 'N') {
+				var numberValue = $('#txtNumber').val();
+				$('#' + e.data.appendId)[0].innerText = numberValue;
+			}
+		}
+		$('#dialogDom' + e.data.typ).dialog('close');
+	}
+	/**
+	 * @description: 选中知识库内容
+	 */
+	function writeIn() {
+		var result = '';
+		var childs = $('#panelPreview').children();
+		if (GLOBAL.knowWindow) {
+			$.each(childs, function (index, child) {
+				var text = child.innerText.replace('{', '').replace('}', '');
+				result = result == '' ? text : result + text;
+			});
+		} else {
+			for (var i = 0; i < childs.length; i++) {
+				var text = childs[i].innerText.replace('{', '').replace('}', '');
+				var type = childs[i].id.substring(0, 1);
+				if (type == "D") {
+					text = $("#" + childs[i].id).datebox('getValue');
+				} else if ((type == "O") || (type == "M")) {
+					text = $("#" + childs[i].id).combobox('getText');
+				} else if (type == "N") {
+					text = $("#" + childs[i].id).val();
+				}
+				if ((childs[i].firstChild) && (childs[i].firstChild.id) && (childs[i].firstChild.id.substring(0, 1) == "D")) {
+					text = $("#" + childs[i].firstChild.id).spinner('getValue');
+				}
+				var isHideFlag = false;
+				if (type == "F") {
+					var refFrom = childs[i].getAttribute("refFrom");
+					for (var j = 0; j < childs.length; j++) {
+						if (j == i) continue;
+						var stype = childs[j].id.substring(0, 1);
+						if (stype == type) continue;
+						var refTo = childs[j].getAttribute("refTo");
+						if ((childs[j].firstChild) && (childs[j].firstChild.id) && (childs[j].firstChild.id.substring(0, 1) == "D")) {
+							refTo = childs[j].firstChild.getAttribute("refTo");
+						}
+						if (!refTo) continue;
+						var arrRefTo = String(refTo).split(',');
+						if ($.inArray(refFrom, arrRefTo) < 0) continue;
+						var stext = childs[j].innerText.replace('{', '').replace('}', '');
+						if (stype == "D") {
+							stext = $("#" + childs[j].id).datebox('getValue');
+						} else if ((stype == "O") || (stype == "M")) {
+							stext = $("#" + childs[j].id).combobox('getText');
+						}
+						if ((childs[j].firstChild) && (childs[j].firstChild.id) && (childs[j].firstChild.id.substring(0, 1) == "D")) {
+							stext = $("#" + childs[j].firstChild.id).spinner('getValue');
+						}
+						if (!stext) {
+							isHideFlag = true;
+						}
+					}
+				}
+				if (!isHideFlag) {
+					result = result == '' ? text : result + text;
+				}
+			}
+		}
+		var oriText = $('#textEdit', parent.document).text();
+		if ((!oriText) && (result.substring(0, 2) == "\r\n")) {
+			result = result.substring(2);
+		}
+		//var resultTxt = !!oriText ? oriText + ' ' + result : result;
+		//$('#textEdit',parent.document).val(resultTxt);
+		updatePreview($("#textEdit", parent.document)[0], result, getCursortPosition($("#textEdit", parent.document)[0]));
+	}
+			/**
+	 * @description: 获取选中元素的文本
+	 * @param {obj} 
+	 * @return: 光标位置 
+	 */
+	function getCursortPosition(obj) {
+	    var cursorIndex = 0;
+	    if (document.selection) {
+	        // IE Support
+	        obj.focus();
+	        var range = document.selection.createRange();
+	        range.moveStart('character', -obj.value.length);
+	        cursorIndex = range.text.length;
+	    } else if (obj.selectionStart || obj.selectionStart == 0) {
+	        // another support
+	        cursorIndex = obj.selectionStart;
+	    }
+	    return cursorIndex;
+	}
+	/**
+	 * @description: 更新引用信息
+	 * @param {curElement, editContent, curPosition} 
+	 */
+	function updatePreview(curElement, editContent, curPosition) {
+		var startText = curPosition == 0 ? '' : curElement.value.substring(0, curPosition);
+	    if (startText.trim() == '/') {
+	        startText = '';
+	    }
+	    var endText = curElement.value.substring(curPosition);
+	    $("#textEdit",parent.document).val(startText + editContent + endText);  //在原有文本追加
+	}
+
+	/**
+	 * @description: 写入预览
+	 * @param {content} 
+	 */
+	function writToPreview(content) {
+		updatePreview($("#textEdit", parent.document)[0], content, getCursortPosition($("#textEdit", parent.document)[0]));
+	}
+	/**
+	 * @description: 监听事件
+	 */
+	function listenEvents() {
+		$('#sbTree').searchbox({
+			searcher: function (value) {
+				$HUI.tree('#knowledgeTree', 'reload');
+			}
+		});
+		$('#btnWriteIn').bind('click', writeIn);
+	}
+	initUI();
+});
+</script>
+
+</html>

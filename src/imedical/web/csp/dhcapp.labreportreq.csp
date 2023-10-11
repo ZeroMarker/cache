@@ -13,6 +13,13 @@
 <script language="Cache" runat="server">
 	d ##class(web.DHCXMLPConfig).LODOPInit()
 	d ##Class(web.DHCBillPrint).InvBillPrintCLSID()  //打印时使用
+	s EpisodeID=%request.Get("EpisodeID")
+	s HospID=%session.Get("LOGON.HOSPID")
+	s LgParam=HospID_"^"_%session.Get("LOGON.CTLOCID")
+	s AutoPrint=##Class(web.DHCAPPExaReportQuery).GetAutoPrintFlag(EpisodeID,LgParam,"Lab")
+</script>
+<script language="JavaScript"> 
+	var AutoPrint="#(AutoPrint)#";
 </script>
 <!--------------打印相关---------->
 <script type='text/javascript' src='../scripts/DHCWeb.OPCommon.js'></script>
@@ -26,26 +33,34 @@
 <script type="text/javascript" src="../scripts/dhcdoc/common/hiscomponent.js"></script>
 <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/reporttarwin.js"></script>
 <script type="text/javascript" src="../scripts/dhcdoc/dhcapp/labreportreq.js"></script>
+<script defer="defer" type="text/javascript" src="../scripts/DHCMA/SS/interface/ToDoctor.js"></script>
+<!--东华CDSS交互-->
+<script type="text/javascript" src="../scripts/dhcdoc/DHCDSS.js"></script>
 </head>
 <body>
 <div id="MainPanel" class="hisui-layout" fit="true">
-	<div data-options="region:'center',title:'检验项目',headerCls:'panel-header-gray'"  border="true">
+	<div data-options="region:'center',title:'检验项目',headerCls:'panel-header-gray'"  border="true" style="border-right:0;border-left:0;border-bottom:0;">
 		<div class="hisui-layout" fit="true">
-			<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" border="false">
-                <label style="margin:0px 5px;">#(..Get("项目检索"))#</label><input id="item" style="width:245px;border:1px solid #95B8E7;margin:2px 3px;height:25px;" placeholder='#(..Get("请输入名称/拼音码"))#'/>
-                <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
-                </table>
+			<div data-options="region:'center',title:'',bodyCls:'panel-header-gray',headerCls:'panel-header-gray'" border="true" style="padding:0px 0px 0px 0px;border-top:0;border-radius:0 0 4px 4px;">
+                <div class="hisui-layout" fit="true">
+					<div data-options="region:'north',title:'',bodyCls:'panel-header-gray',headerCls:'panel-header-gray'" style='height:35px;' border="false">
+	                	 <label style="margin:0px 5px;">#(..Get("项目检索"))#</label><input id="item" style="width:245px;border:1px solid #95B8E7;margin:4px 3px;height:25px;" placeholder='#(..Get("请输入名称/拼音码"))#'/>
+	                </div>
+	                <div id="SelPanel" data-options="region:'center',title:'',bodyCls:'panel-header-gray',headerCls:'panel-header-gray'" style="border-right:0;border-left:0;border-bottom:0;">
+		                <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">
+		                </table>
+	                </div>
+	            </div>
 			</div>
-			<div data-options="region:'south',title:'',headerCls:'panel-header-gray'" style='height:420px;' border="false">
+			<div data-options="region:'south',title:'',headerCls:'panel-header-gray'" style='height:420px;padding:5px 0px 0px 0px;' border="false">
 				<div class="hisui-layout" fit="true">
-					<div id="SelPanel" data-options="region:'center',title:'已开项目列表',headerCls:'panel-header-gray'" style="border-right:0;border-left:0;">
+					<div id="SelPanel" data-options="region:'center',title:'已开项目列表',headerCls:'panel-header-gray'" style="border-top:0;border-radius:0 0 4px 4px;">
 						<div id="ItemSelList" border="false"></div>
 					</div>
-					<div data-options="region:'south',title:'注意事项',collapsible:false,headerCls:'panel-header-gray'" style='height:200px;' border="false">
+					<div data-options="region:'south',title:'',collapsible:false" style='height:200px;padding:5px 0px 0px 0px' border="false">
 						<div class="hisui-layout" fit="true">
-							<div data-options="region:'center',title:'',headerCls:'panel-header-gray'" style="border-right:0;border-left:0;border-top:0;">
-								<div id="noteContent" style="background-color:#fff;margin: 0 auto;width: 97%;padding-top:10px;height:100px;">
-								</div>
+							<div data-options="region:'center',title:'注意事项',headerCls:'panel-header-gray'" style="border-radius:0 0 4px 4px;padding:0px 0px 0px 0px;">
+								<div id="noteContent" style=" "></div>
 							</div>
 							<div data-options="region:'south',title:'',headerCls:'panel-header-gray'" style='height:45px;' border="false">
 								<div class="pt-butttom" style="padding-top:5px;padding-left:60px;">
@@ -68,7 +83,7 @@
 <!--------------打印相关---------->
 <div id="hiddenEncrypt" style="width:0;height:0;">
 	<form name="DHCIPBILL">
-		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(%CSP.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
+		<INPUT TYPE="hidden" name="InvPrintEncrypt" id="InvPrintEncrypt" value='<%=##Class(websys.Page).Encrypt($lb("web.DHCXMLIO.ReadXML"))%>'>
 	</form>
 </div>
 <!-------------------------------->

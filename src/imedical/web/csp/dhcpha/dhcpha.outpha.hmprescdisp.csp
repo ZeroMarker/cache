@@ -2,9 +2,8 @@
 <!--门诊草药发药 js:pharmacy/outpha/dhcpha.outpha.hmprescdisp.js--> 
 <!DOCTYPE html>
 <csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
- //i ##Class(websys.SessionEvents).SessionExpired()
- i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
-q 1
+ d ##Class(websys.SessionEvents).SessionExpired() q 1
+
 </csp:method>
 <html lang="zh-CN">
 <head>
@@ -17,17 +16,21 @@ q 1
 	<DHCPHARMACY:COMMONLIB></DHCPHARMACY:COMMONLIB>
 	<DHCAPP:PHARBOOTSTRAP/>
 	<ADDINS/>
+	<PHAPRINTCOM/>
 	<server>
 		s Application=%request.Application
 		s gPatNo = $G(%request.Data("gPatNo",1))
+    	s gOeori=$Get(%request.Data("gOeori",1)) 
 		s OutPhaWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("OA")
-		s ReadAccExpEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
-		s GetCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
-		s ReadCardTypeEncrypt=##Class(%CSP.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
+		s ReadAccExpEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCAccManageCLSIF.getaccinfofromcardno"))
+		s GetCardTypeEncrypt=##class(websys.Page).Encrypt($lb("DHCDoc.OPDoc.PatientList.GessCardType"))
+		s ReadCardTypeEncrypt=##class(websys.Page).Encrypt($lb("web.UDHCOPOtherLB.ReadCardTypeDefineListBroker"))
 	</server>
 	 <SCRIPT Language="Javascript">
        	var OutPhaWay="#(OutPhaWay)#";
        	var LoadPatNo="#(gPatNo)#";
+   		var LoadOrdItmId= "#(gOeori)#";
+       	$.fn.modal.Constructor.prototype.enforceFocus = function () { };  //modal中select2才能编辑(z-index)
    </SCRIPT>
 	<!--dhcpha common js-->
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/common/js/dhcpha.print.js" ></script>
@@ -37,6 +40,7 @@ q 1
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.hmprintcom.js"></script>
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.prescinfo.js"></script>
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.printcom.js"></script>
+	<script type="text/javascript" src="#(Application)#scripts/pha/op/v4/previewpresc.js"></script>
 	<script type="text/javascript" src="#(Application)#scripts/pharmacy/outpha/dhcpha.outpha.hmprescdisp.js" ></script>
 </head>
 <STYLE>
@@ -45,10 +49,11 @@ q 1
 	top: 1px;
 	right:1px;
 }
+/*
 *.modal-dialog {
     position: absolute;
     top: 50%;
-    left: 35%;
+    left: 50%;
     z-index: 3;
     margin: auto; 
     -webkit-transform: translate(-50%, -50%) !important;
@@ -57,6 +62,7 @@ q 1
     -o-transform: translate(-50%, -50%) !important;
     transform: translate(-50%, -50%) !important;
 }
+*/
 .table_dispdetail th, .table_dispdetail td {
 	vertical-align: middle!important;
 }
@@ -79,8 +85,8 @@ q 1
 		</div>
 		<div class="container-fluid dhcpha-condition-container">
 		    <div class="row">
-		    	<div class="col-lg-12 col-md-12 col-sm-12">
-		    	    <button class="btn btn-default btn_button btn_important" id="btn-fy" onclick="javascript:ExecuteFY()"><img src="#(Application)#scripts/pharmacy/images/disp-default.png" class="dhcpha-btn-image"><br><strong>发药</strong></button>
+		    	<div class="col-lg-8 col-md-8 col-sm-8">
+		    	    <button class="btn btn-default btn_button btn_important" id="btn-fy" onclick="javascript:ClickDispBtn()"><img src="#(Application)#scripts/pharmacy/images/disp-default.png" class="dhcpha-btn-image"><br><strong>发药</strong></button>
 		    	    <button class="btn btn-default btn_button btn_common" id="btn-redir-return" onclick="javascript:ReturnDisp()"><img src="#(Application)#scripts/pharmacy/images/return-default.png" class="dhcpha-btn-image"><br><strong>退药</strong></button>
 		    	    <button class="btn btn-default btn_button btn_common" id="btn-allfy" onclick="javascript:ExecuteAllFY()"><img src="#(Application)#scripts/pharmacy/images/dispall-default.png" class="dhcpha-btn-image"><br><strong>全发</strong></button>
 				    <button class="btn btn-default btn_button btn_refuse dhcpha-col-border-left" id="btn-reffy"><img src="#(Application)#scripts/pharmacy/images/refdisp-default.png" class="dhcpha-btn-image"><br><strong>拒绝发药</strong></button>
@@ -89,6 +95,18 @@ q 1
 		    		<button class="btn btn-default btn_button btn_common" id="btn-cook-exchange" onclick="javascript:ExchangeCookType()"><img src="#(Application)#scripts/pharmacy/images/mbcchange-default.png" class="dhcpha-btn-image"><br><strong>煎药转换</strong></button>
 		    		<!--<button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-afresh-send" onclick="javascript:AfreshSend()"><img src="#(Application)#scripts/pharmacy/images/analysis-default.png" class="dhcpha-btn-image"><br><strong>重推处方</strong></button>-->
 		    		<button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-clear" onclick="javascript:ClearConditions()"><img src="#(Application)#scripts/pharmacy/images/clear-default.png" class="dhcpha-btn-image"><br><strong>清屏</strong></button>
+		    		<button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-agreeret" onclick="javascript:SaveAgreeRet()"><img src="#(Application)#scripts/pharmacy/images/agree-return.png" class="dhcpha-btn-image"><br><strong>置为可退</strong></button>
+		    		<button class="btn btn-default btn_button btn_common dhcpha-col-border-left" id="btn-delivery" onclick="javascript:ReShowDeliveryDiag()"><img src="#(Application)#scripts/pharmacy/images/paperbox-big.png" class="dhcpha-btn-image"><br><strong>配送信息</strong></button>
+		    	</div>
+		    	<div class="col-lg-4 col-md-4 col-sm-4">
+					<div class="dhcpha-window-right">
+						<span style="margin-left:5px;">#(..Get("配药人"))#：<lable id="currentpyuser"></lable></span>
+						<span style="margin-left:5px;">#(..Get("发药人"))#：<lable id="currentfyuser"></lable></span>
+						<div class="btn-group" style="margin-left:10px;">  
+						<span class="fa fa-exchange dhcpha-btn-icon-common dhcpha-btn-icon-normal" id="img-change"></span>
+						<button class="btn btn-primary  dhcpha-icon-btn-common dhcpha-icon-btn-normal" type="button" id="btn-change">#(..Get("切换人员"))#</button>
+						</div>
+					</div>
 		    	</div>
 		    </div>
 		 </div>
@@ -152,6 +170,8 @@ q 1
 <csp:Include Page="dhcpha.pha.permission.csp">
 <csp:Include Page="dhcpha.outpha.presc.csp">
 <csp:Include Page="dhcpha.outpha.hmaddprescinfo.csp">
+<csp:Include Page="dhcpha.inpha.hmagreereturn.csp" />
+<csp:Include Page="dhcpha.outpha.hmphauser.csp" />
   <!-- system modal end -->
 <csp:Include Page="dhcpha.pha.style.csp">
 </body>

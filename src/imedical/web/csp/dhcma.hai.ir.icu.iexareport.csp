@@ -1,0 +1,151 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+		<HISUI/>
+		<DHCHAI:HEAD></DHCHAI:HEAD>
+		<link rel="stylesheet" href="../scripts/DHCMA/HAI/css/base.css">
+	</head>
+	<body> 
+		<!--插拔管评估表-->
+		<div class="hisui-layout" data-options="fit:true">
+    		<div data-options="region:'center',fit:true,border:false,collapsible:false">
+        		<div class="page-body" id="divbody" style="width:1230px;">
+            		<div class="report-header">
+                		<span id="txtTitle"></span>
+           	 		</div>
+    	        	<div class="report-content">
+        	        	<div class="hisui-panel" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'">
+            	        	<!--静脉插管|呼吸机|导尿管评估表数目-->
+                	    	<div style="padding:5px 10px 5px 10px">
+                    			<a class="hisui-linkbutton" data-options="plain:true" id="btnPICC" href="#" style="width: 190px;border-radius: 5px;"><img src=" ../scripts/dhchai/img/静脉插管.png" align="absmiddle"><span style="padding-left:10px;">#(..Get("中央血管导管督查表"))#</span></a>
+                    			<span id="tipPICC" style="position: relative; min-width: 14px; height: 14px; line-height: 13px; margin-top: 0px; padding: 0 5px; font-weight: normal; color: white; text-align: center; background: red; border-radius: 6px; font-size: 13px; left: -10px;top:1px;">0</span>
+                    		
+                    			<a class="hisui-linkbutton" data-options="plain:true" id="btnVAP" href="#" style="width: 160px;border-radius:5px;"> <img src=" ../scripts/dhchai/img/呼吸机.png" align="absmiddle"><span style="padding-left:10px;">#(..Get("呼吸机督查表"))#</span></a>
+	                    		<span id="tipVAP" style="position: relative; min-width: 14px; height: 14px; line-height: 13px; margin-top: 0px; padding: 0 5px; font-weight: normal; color: white; text-align: center; background: red; border-radius: 6px; font-size: 13px; left: -10px;top:1px;">0</span>
+                    		
+    	                		<a class="hisui-linkbutton" data-options="plain:true" id="btnUC" href="#" style="width: 160px;border-radius:5px;"><img src=" ../scripts/dhchai/img/导尿管.png" align="absmiddle"><span style="padding-left:10px;">#(..Get("导尿管督查表"))#</span></a>
+        	            		<span id="tipUC" style="position: relative; min-width: 14px; height: 14px; line-height: 13px; margin-top: 0px; padding: 0 5px; font-weight: normal; color: white; text-align: center; background: red; border-radius: 6px; font-size: 13px; left: -10px;top:1px;">0</span>
+            	        		
+                	    		<a class="hisui-linkbutton" data-options="plain:true" id="OEItem" href="#" style="width: 160px;border-radius:5px;"><img src=" ../scripts/DHCMA/HAI/img/医嘱.png" align="absmiddle"><span style="padding-left:10px;">#(..Get("三管医嘱信息"))#</span></a>
+                    		</div>
+                    		<span style="display: block; border-bottom: 1px solid #ccc;margin: 1px 0;border-bottom-style:dashed;clear:both;"></span>
+	                    	<!--患者基本信息-->
+    	                	<div id="ImgSex"></div>
+        	            	<div class="PatInfo">
+            	            	<span class="patName"></span><span id="txtName"></span>
+                	        	<span class="sline">/</span>
+                    	    	<span class="infoLabel"></span><span id="txtSex"></span>
+                        		<span class="sline">/</span>
+                        		<span class="infoLabel"></span><span id="txtAge"></span>
+ 	    	                   	<span class="sline">/</span>
+    	                    	<span class="infoLabel">#(..Get("登记号"))#:</span><span id="txtPapmiNo"></span>
+            	            	<span class="sline">/</span>
+                	        	<span class="infoLabel">#(..Get("病案号"))#:</span><span id="txtMrNo"></span>
+                    	    	<span class="sline">/</span>
+                       		 	<span class="infoLabel">#(..Get("入院日期"))#:</span><span id="txtAdmDate"></span>
+                        		<span class="sline">/</span>
+    	                    	<span class="infoLabel">#(..Get("入院病区"))#:</span><span id="txtAdmWard"></span>
+        	                	<span class="sline">/</span>
+            	            	<span class="infoLabel">#(..Get("出院日期"))#:</span><span id="txtDisDate"></span>
+                	        	<span class="sline">/</span>
+                    	    	<span class="infoLabel">#(..Get("出院病区"))#:</span><span id="txtDisWard"></span>
+                    		</div>
+    	                	<!--插管基本信息-->
+        	            	<table class="report-tab">
+            	            	<tr class="report-tr">
+                	            	<td style="padding-left:15px;">#(..Get("评估类型"))#:</td>
+                    	        	<td><input class="textbox readonly-noborder" id="txtMainDiag" style="width: 150px;" readonly="readonly" /></td>
+                        	    	<td class="report-td">#(..Get("诊断"))#:</td>
+                            		<td colspan=4><input class="textbox readonly-noborder" id="txtAdmitDiag" style="width:450px;" readonly="readonly" /></td>
+  	                     	 	</tr>
+    	                    	<tr class="report-tr">
+        	                   	 	<td style="padding-left:10px;">#(..Get("插管类型"))#:</td>
+            	                	<td><input id="cboIntuType" class="hisui-combobox textbox" style="width:160px;" /></td>
+                	            	<td class="report-td">#(..Get("置管日期"))#:</td>
+                    	        	<td><input class="hisui-datebox textbox" id="txtIntuDate" style="width:160px" /></td>
+                        	    	<td class="report-td">#(..Get("拔管日期"))#:</td>
+                            		<td>
+                                		<input class="hisui-datebox textbox" id="txtExtuDate" style="width:160px" />
+                                		<a id="btnUpdate" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">更新</a>
+      	                         	 	<a id="btnExport" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'">导出</a>
+        	                    	</td>
+            	                	<td style="padding-left:180px;">
+                	                	<a id="btnPrior" class="hisui-linkbutton">上页</a>
+                    	            	<a id="btnNext" class="hisui-linkbutton">下页</a>
+                        	    	</td>
+                        		</tr>
+                	    	</table>
+                	    	<div id="DivReason">
+                	    		<span style="display: block; border-bottom: 1px solid #ccc;margin: 1px 0;border-bottom-style:dashed;clear:both;"></span>
+	                    		<!--留置原因-->
+    	                		<div id="RetReason" style="padding: 5px 10px 5px 10px;"></div>
+                	    	</div>
+        	        	</div>
+            	    	<!--评估表具体项目-->
+            	    	<div id="divRep">
+                			<table id="gridIntuRep"></table>
+            	    	</div>
+    	        	</div>
+       		 	</div>
+	    	</div>
+		</div>
+		<!-- '患者'插拔管评估表[弹出框] -->
+		<div id="LayerIExA" style="overflow:hidden;padding:10px;display:none;">
+   	 		<div id="custsubtb1">
+    			<table class="report-tab">
+        			<tr class="report-tr">
+           	 			<td class="report-td"><font color="red">*</font>#(..Get("插管类型"))#:</td>
+            			<td>
+	            			<input id="cboBuildType" class="hisui-combobox textbox" style="width:150px;" />
+    	        		</td>
+        	    		<td class="report-td"><font color="red">*</font>#(..Get("置管日期"))#:</td>
+            			<td>
+            				<input class="hisui-datebox textbox" id="txtBuildDate" style="width:150px" />
+            			</td>
+  	    	      		<td class="report-td">
+    	        			<input class='hisui-radio' type="radio" label='显示全部' name='chkStatunit' value="1" data-options="radioClass:'hischeckbox_square-blue'" id="chkStatunit">
+            			</td>
+           	 			<td class="report-td">
+           	 				<a id="btnBuild" class="hisui-linkbutton" style="background-color:red">新增</a>
+           	 			</td>
+           	 			<td class="report-td">
+            				<a id="btnINFLabSync" class="hisui-linkbutton">三管医嘱</a>
+            			</td>		
+        			</tr>
+    			</table>
+	   	 	</div>
+    		<table id="gridIExAReport" data-options="fit:true,toolbar:'#custsubtb1'"></table>
+		</div>
+		<!-- 插管医嘱[弹出框] -->
+		<div id="LayerHisOEOrdItem" style="overflow:hidden;padding:10px;display:none;">
+    		<table id="gridHisOEOrdItem"></table>
+		</div>
+
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/PubFunction.js"></script>
+		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/datagrid-export.js"></script>
+	  	<script type="text/javascript" src="../scripts/DHCMA/HAI/Units/datagrid-mergeCells.js"></script>
+	  	
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/ICU/IExAReport/Gui.js"></script>
+		<script type="text/javascript" src="../scripts/DHCMA/HAI/IR/ICU/IExAReport/Event.js"></script>
+		<SCRIPT LANGUAGE=CACHE RUNAT=SERVER>
+			Set IExAID     	= $g(%request.Data("aIExAID",1))
+			Set IsAdmin    	= $g(%request.Data("aIsAdmin",1))
+		</SCRIPT>
+	    <script language="javascript" type="text/javascript">
+	    	var IExAID		= '#(IExAID)#';
+	    	var IsAdmin 	= '#(IsAdmin)#';
+	    	$(window).load(function() {
+				InitIExARepWin();
+			});
+		</script>
+	</body>
+</html>

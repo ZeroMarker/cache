@@ -1,0 +1,68 @@
+<!-- 
+ * FileName: dhcbill.opbill.workload.csp
+ * Author: LUANZH
+ * Date: 2023-02-28
+ * Description: 门诊收费员工作量统计
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<HISUI/>
+	<DHCBILL/>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.dailyhand.css"/>
+	<server>
+		set DefDate=##class(websys.Conversions).DateLogicalToHtml(+$h)
+	</server>
+	<script type="text/javascript">
+		//常量
+		var CV = {
+			DefDate: "#(DefDate)#"
+		};
+		
+		//全局变量
+		var GV = {};
+	</script>
+</head>
+
+<body style="padding:10px;">
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'center',border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',collapsible:false,title:'门诊收费员工作量统计',headerCls:'panel-header-gray',iconCls:'icon-apply-check'" style="height:127px;border-radius:0;">
+					<table class="search-table">
+						<tr>
+							<td class="r-label"><label>#(..Get("开始日期"))#</label></td>
+							<td><input id="stDate" class="hisui-datebox textbox"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("结束日期"))#</label></td>
+							<td><input id="endDate" class="hisui-datebox textbox"/></td>
+							<td class="r-label r-label-20">#(..Get("操作员"))#</td>
+							<td><input id="userCombo" class="hisui-combobox textbox"/></td>
+							<td class="r-label-20">
+								<a href="javascript:;" class="hisui-linkbutton" id="btnFind" data-options="iconCls:'icon-w-find'" style="margin-right:10px;">查询</a>
+							</td>
+						</tr>
+						<tr>
+							<td class="r-label"><label>#(..Get("开始时间"))#</label></td>
+							<td><input id="stTime" class="hisui-timespinner textbox" data-options="showSeconds:true"/></td>
+							<td class="r-label r-label-20"><label>#(..Get("结束时间"))#</label></td>
+							<td><input id="endTime" class="hisui-timespinner textbox" data-options="showSeconds:true"/></td>
+							<td class="r-label r-label-20">#(..Get("查询方式"))#</td>
+							<td><input id="selType" class="hisui-combobox textbox"/></td>
+						</tr>
+			    	</table>
+				</div>
+				<div data-options="region:'center',border:false" style="overflow:hidden;border-radius:0 0 4px 4px;">
+					<iframe id="tabMain" scrolling="auto" width="100%" height="100%" frameborder="0" src="dhcbill.dailymaintabs.csp?MWToken=#(%session.SessionId)#&businessType=OPW"></iframe>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcopbill/dhcbill.opbill.workload.js"></script>
+</body>
+</html>

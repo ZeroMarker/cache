@@ -1,0 +1,470 @@
+<!-- 
+ * FileName: dhcinsu.hibill.csp
+ * Author: DingSH
+ * Modify: Lxy
+ * Date: 2022-03-07
+ * Description: 医保基金结算结算单
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ if ##class(websys.SessionEvents).SessionExpired() quit 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD/>
+	<!--script type='text/javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script-->
+	<HISUI/>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <link href="../scripts_lib/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../scripts/dhcinsu/themes/default/dhcinsu.hibill.css" rel="stylesheet">
+    <title>医保结算清单</title>
+    <script type='text/javascript' src='../scripts/dhcinsu/common/dhcinsu.common.js'></script>
+    <script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+    <server>
+    	//do ##class(web.DHCXMLPConfig).LODOPInit()
+    </server>
+</head>
+<body class="scrollbar" id="printdiv" >
+<div class="wrapper wrapper-content">
+    <div class="container-fluid paper" id="mrContainer">
+        <div class="row">
+            <div class="col-sm-12">
+                <table class="table table-noborder">
+                    <tr class="mr-cn">
+                        <td colspan="3" style="text-align: center;">
+                            <h2><span id="areaName"></span>医疗保障基金结算清单</h2>
+                        </td>
+                        <!--a href="#" id="btn-print" style="width:100px;" class="hiddentd">打印</a-->
+                        <a href="javascript:;" id="btn-print" style="width:100px;" class="hiddentd">打印</a>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            清单流水号<span class="field f-2x" id="setl_list_id"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            定点医疗机构名称<span class="field f-2x" id="fixmedins_name"></span>
+                        </td>
+                        <td>
+                            定点医疗机构代码<span class="field f-2x" id="fixmedins_code"></span>
+                        </td>
+                        <td>
+                            医保结算等级<span class="field f-2x" id="hi_setl_lv"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            医保编号<span class="field f-2x" id="hi_no"></span>
+                        </td>
+                        <td>
+                            病案号<span class="field f-2x" id="medcasno"></span>
+                        </td>
+                        <td>
+                            申报时间<span class="field" id="dcla_timeYear"></span>年<span class="field" id="dcla_timeMonth"></span>月<span class="field" id="dcla_timeDay"></span>日
+                        </td>
+                    </tr>
+                </table>
+                <table id="base" class="table table-border">
+                    <!-- 基本信息 -->
+                    <tr>
+                        <td colspan="10" class="section-title"><h3>一、基本信息</h3></td>
+                    </tr>
+                    <tr>
+                        <td colspan="10">
+                            <div>
+                                <div class="field">
+                                    姓名<span class="field f-2x" id="psn_name"></span>
+                                </div>
+                                <div class="field">
+                                    性别<span  class="field field-box" id="gend"></span>&nbsp;&nbsp;<span class="normal-text">1.男&nbsp;&nbsp;2.女</span>
+                                </div>
+                                <div class="field">
+                                    出生日期<span class="field" id="brdyYear"></span><span class="normal-text">年</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="brdyMonth"></span>月</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="brdyDay"></span>日</span>
+                                </div>
+                                <div class="field">
+                                    年龄<span class="field" id="age"></span>岁
+                                </div>
+                                <div class="field">
+                                    国籍<span class="field f-2x" id="ntly"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field">
+                                    (年龄不足1周岁)年龄<span  class="field" id="nwb_age"></span>天
+                                </div>
+                                <div class="field">
+                                    民族<span  class="field f-2x" id="naty"></span>
+                                </div>
+                                <div class="field">
+                                    患者证件类别<span  class="field f-2x" id="patn_cert_type"></span>
+                                </div>
+                                <div class="field">
+                                    患者证件号码<span  class="field f-4x" id="certno"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field">
+                                    职业<span  class="field f-2x" id="prfs"></span>
+                                </div>
+                                <div class="field">
+                                    现住址<span class="field" id="curr_addr_province"></span>
+                                    省（区、市）<span class="field f-2x" id="curr_addr_city"></span>
+                                    市<span class="field" id="curr_addr_country"></span>
+                                    县<span class="field f-4x" id="curr_addr_detail"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field">
+                                    工作单位及地址<span class="field f-5x" id="emp_name"></span>
+                                </div>
+                                <div class="field">
+                                    单位电话<span class="field f-2x" id="emp_tel"></span>
+                                </div>
+                                <div class="field">
+                                    邮编<span class="field f-2x" id="poscode"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field">
+                                    联系人姓名<span class="field f-1x" id="coner_name"></span>
+                                </div>
+                                <div class="field">
+                                    关系<span class="field f-1x" id="patn_rlts"></span>
+                                </div>
+                                <div class="field">
+                                    地址<span class="field" id="coner_addr_PROVINCE"></span>
+                                    省（区、市）<span class="field f-1x" id="coner_addr_CITY"></span>
+                                    市<span class="field" id="coner_addr_COUNTY"></span>
+                                    县<span class="field f-2x" id="coner_addr_DETAIL"></span>
+                                </div>
+                                <div class="field">
+                                    电话<span class="field f-2x" id="coner_tel"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field" style="width:30%;">
+                                    医保类型<span  class="field f-2x" id="hi_type_desc"></span>
+                                </div>
+                                <div class="field" style="width:30%;">
+                                    特殊人员类型<span  class="field f-2x" id="sp_psn_type"></span>
+                                </div>
+                                <div class="field" style="width:30%;">
+                                    参保地<span  class="field f-2x" id="insuplc"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field" style="width:30%;">
+                                    新生儿入院类型<span  class="field f-2x" id="nwb_adm_type"></span>
+                                </div>
+                                <div class="field" style="width:30%;">
+                                    新生儿出生体重<span  class="field f-2x" id="nwb_bir_wt"></span>克
+                                </div>
+                                <div class="field" style="width:30%;">
+                                    新生儿入院体重<span  class="field f-2x" id="nwb_adm_wt"></span>克
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <!-- 诊断信息 -->
+                <table class="table table-border" id="slowDisease">
+                    <tr>
+                        <td class="section-title" colspan="4"><h3>二、门诊慢特病诊疗信息</h3></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <div style="text-align: left;display: inline-block;">
+                                诊断科别<span  class="field f-2x" id="opsp_diag_caty"></span>
+                            </div>
+
+                            <div style="text-align: right;display: inline-block;float:right;margin-right: 20px;">
+                                就诊日期<span  class="field f-2x" id="opsp_mdtrt_date"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="title">
+                        <td>病种名称</td>
+                        <td>病种代码</td>
+                        <td>手术及操作名称</td>
+                        <td>手术及操作代码</td>
+                    </tr>
+
+                </table>
+                <table class="table table-border" id="diagInfo">
+                    <tr>
+                        <td colspan="6" class="section-title"><h3>三、住院诊疗信息</h3></td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <div class="field">
+                                住院医疗类型<span class="field field-box" id="ipt_med_type"></span>&nbsp;&nbsp;<span class="normal-text">1.住院&nbsp;&nbsp;2.日间手术</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <div class="field">
+                                入院途径<span class="field field-box" id="adm_way"></span>&nbsp;&nbsp;<span class="normal-text">1.急诊&nbsp;&nbsp;2.门诊&nbsp;&nbsp;3.其他医疗机构转入&nbsp;&nbsp;9.其他</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <div class="field">
+                                治疗类别<span class="field field-box" id="trt_type"></span>&nbsp;&nbsp;<span class="normal-text">1.西医&nbsp;&nbsp;2.中医（2.1 中医   2.2民族医）&nbsp;&nbsp;3.中西医</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <div>
+                                <div class="field">
+                                    入院时间<span class="field" id="adm_timeYear"></span><span class="normal-text">年</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="adm_timeMonth"></span>月</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="adm_timeDay"></span>日</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="adm_timeHOUR"></span>时</span>
+                                </div>
+                                <div class="field">
+                                    入院科别<span  class="field f-2x" id="adm_caty"></span>
+                                </div>
+                                <div class="field">
+                                    转科科别<span  class="field f-2x" id="refldept_dept"></span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <div>
+                                <div class="field">
+                                    出院时间<span class="field" id="dscg_timeYear"></span><span class="normal-text">年</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="dscg_timeMonth"></span>月</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="dscg_timeDay"></span>日</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="dscg_timeHOUR"></span>时</span>
+                                </div>
+                                <div class="field">
+                                    出院科别<span  class="field f-2x" id="dscg_caty"></span>
+                                </div>
+                                <div class="field">
+                                    实际住院<span  class="field f-2x" id="act_ipt_days"></span>天
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <div>
+                                <div class="field">
+                                    门（急）诊诊断（西医诊断）<span  class="field f-2x" id="otp_wm_dise"></span>
+                                </div>
+                                <div class="field">
+                                    疾病代码<span  class="field f-2x" id="wm_dise_code"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field">
+                                    门（急）诊诊断（中医诊断）<span  class="field f-2x" id="otp_tcm_dise"></span>
+                                </div>
+                                <div class="field">
+                                    疾病代码<span  class="field f-2x" id="tcm_dise_code"></span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table class="table table-border" id="diseinfo">
+
+                </table>
+                <table class="table table-border" id="oprninfo">
+
+                </table>
+
+                <table class="table table-border">
+                    <tr>
+                        <td colspan="4">
+                            <div class="field">
+                                呼吸机使用时间<span class="field" id="vent_used_dura_day"></span><span class="normal-text">天</span>
+                                <span class="mr-cn normal-text"><span  class="field" id="vent_used_dura_hour"></span>小时</span>
+                                <span class="mr-cn normal-text"><span  class="field" id="vent_used_dura_min"></span>分钟</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <div>
+                                <div class="field f-3x">颅脑损伤患者昏迷时间：</div>
+                                <div class="field">
+                                    入院前<span class="field" id="pwcry_bfadm_coma_dura_day"></span><span class="normal-text">天</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="pwcry_bfadm_coma_dura_hour"></span>小时</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="pwcry_bfadm_coma_dura_min"></span>分钟</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="field f-3x" style="visibility: hidden;">颅脑损伤患者昏迷时间：</div>
+                                <div class="field">
+                                    入院后<span class="field" id="pwcry_afadm_coma_dura_day"></span><span class="normal-text">天</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="pwcry_afadm_coma_dura_hour"></span>小时</span>
+                                    <span class="mr-cn normal-text"><span  class="field" id="pwcry_afadm_coma_dura_min"></span>分钟</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="table table-border" id="icuinfo"></table>
+
+                <table class="table table-border" id="bloodList"></table>
+
+                <table class="table table-border">
+                    <tr>
+                        <td colspan="10">
+                            <div class="field">
+                                特级护理天数<span class="field" id="spga_nurscare_days"></span>
+                            </div>
+                            <div class="field">
+                                一级护理天数<span class="field" id="lv1_nurscare_days"></span>
+                            </div>
+                            <div class="field">
+                                二级护理天数<span class="field" id="scd_nurscare_days"></span>
+                            </div>
+                            <div class="field">
+                                三级护理天数<span class="field" id="lv3_nurscare_days"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="10">
+                            <div class="field">
+                                离院方式<span  class="field field-box" id="dscg_way"></span>&nbsp;&nbsp;<span class="normal-text">1.医嘱离院</span>&nbsp;&nbsp;<span class="normal-text">2.医嘱转院，拟接收机构名称<span class="field f-5x" id="acp_medins_name_2"></span></span>
+                                &nbsp;&nbsp;<span class="normal-text">3.转医嘱转社区卫生服务机构/乡镇卫生院，拟接收机构名称<span class="field f-5x" id="acp_medins_name_3"></span></span>
+                                &nbsp;&nbsp;<span class="normal-text">4.非医嘱离院&nbsp;&nbsp;5.死亡&nbsp;&nbsp;9其他</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="10">
+                            <div class="field">
+                                是否有出院31天内再住院计划<span class="field field-box" id="days_rinp_flag_31"></span>&nbsp;&nbsp;<span class="normal-text">1.无&nbsp;&nbsp;2.有，目的<span class="field f-5x" id="days_rinp_pup_31"></span></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">
+                            <div class="field">
+                                主诊医师姓名<span  class="field" id="chfpdr_name"></span>
+                            </div>
+                        </td>
+                        <td colspan="5">
+                            <div class="field">
+                                主诊医师代码<span  class="field" id="chfpdr_code"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">
+                            <div class="field">
+                                责任护士姓名<span  class="field" id="NURS_NAME"></span>
+                            </div>
+                        </td>
+                        <td colspan="5">
+                            <div class="field">
+                                责任护士代码<span  class="field" id="NURS_CODE"></span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="table table-border">
+                    <tr>
+                        <td colspan="6" class="section-title"><h3>四、医疗收费信息</h3></td>
+                    </tr>
+                    <tr>
+                        <td style="width:25%">
+                            <div class="field">
+                                业务流水号：<span  class="field f-2x" id="biz_sn"></span>
+                            </div>
+                            <div class="field">
+                                票据代码：<span  class="field f-2x" id="bill_code"></span>
+                            </div>
+                            <div class="field">
+                                票据号码：<span  class="field f-2x" id="bill_no"></span>
+                            </div>
+                        </td>
+                        <td colspan="5" style="width:75%;text-align:center;">
+                            <div class="field">
+                                结算期间：<span class="field" id="setl_begn_dateYear"></span><span class="normal-text">年</span>
+                                <span class="mr-cn normal-text"><span  class="field" id="setl_begn_dateMonth"></span>月</span>
+                                <span class="mr-cn normal-text"><span  class="field" id="setl_begn_dateDay"></span>日</span>
+                                — <span class="field" id="setl_end_dateYear"></span><span class="normal-text">年</span>
+                                <span class="mr-cn normal-text"><span  class="field" id="setl_end_dateMonth"></span>月</span>
+                                <span class="mr-cn normal-text"><span  class="field" id="setl_end_dateDay"></span>日</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="table table-border" id="feeList"></table>
+
+                <table class="table table-border text-center">
+                    <tr><td colspan="2" class="font-bold">医保统筹基金支付</td><td><span class="field" id="hifp_pay"></span></td><td rowspan="5" width="15%" class="font-bold">个人负担</td><td rowspan="3" width="15%">个人自付</td><td rowspan="3"><span class="field" id="psn_selfpay"></span></td></tr>
+                    <tr><td rowspan="3" width="20%" class="font-bold">补充医疗保险支付</td><td width="20%">职工大额补助</td><td width="15%"><span class="field" id="hifob_pay"></span></td></tr>
+                    <tr><td>居民大病保险</td><td><span class="field" id="hifmi_pay"></span></td></tr>
+                    <tr><td>公务员医疗补助</td><td><span class="field" id="cvlserv_pay"></span></td><td rowspan="2">个人自费</td><td rowspan="2"><span class="field" id="psn_ownpay"></span></td></tr>
+                    <tr><td colspan="2" class="font-bold">医疗救助支付</td><td><span class="field" id="maf_pay"></span></td></tr>
+                </table>
+                <table class="table table-border text-center" id="payList"></table>
+
+                <table class="table table-border">
+                    <tr>
+                        <td>
+                            <div class="field">
+                                医保支付方式
+                                <span  class="field field-box" id="hi_paymtd"></span>&nbsp;&nbsp;
+                                <span class="normal-text" id="paymentDict" style="display: inline;">1.按项目
+                                &nbsp;&nbsp;2.单病种&nbsp;&nbsp;3.按病种分值
+                                &nbsp;&nbsp;4.疾病诊断相关分组（DRG）&nbsp;&nbsp;5.按床日&nbsp;&nbsp;6.按人头……</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table class="table table-noborder">
+                    <tr>
+                        <td>
+                            定点医疗机构填报部门<span class="field f-5x" id="medins_fill_dept"></span>
+                        </td>
+                        <td>
+                            医保经办机构<span class="field f-5x" id="hsorg"></span>
+                        </td>
+                        <td>
+                            代码<span class="field f-5x" id="YB_INSTITUTIONS_CODE"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            定点医疗机构填报人<span class="field f-5x" id="medins_fill_psn"></span>
+                        </td>
+                        <td>
+                            医保机构经办人<span class="field f-5x" id="hsorg_opter"></span>
+                        </td>
+                        <td>
+                            代码<span class="field f-5x" id="YB_INSTITUTIONS_HANDER_CODE"></span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../scripts/dhcinsu/dhcinsu.hibill.js" ></script>
+</body>
+</html>
+

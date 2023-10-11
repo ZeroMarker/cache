@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!--
+	desc: 毒麻药品管理 - 科室基数台账查询
+	csp:  pha.in.v1.narcbaselog.csp
+	js:   pha/in/v1/narcbaselog.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <TITLE><TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE></TITLE>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    
+    <style>
+    	.panel-body, .panel-header {
+    		border-color: #d1d6da;
+    	}
+		.pha-con-table > tbody > tr > td:nth-child(even) {
+			padding-right: 10px;
+		}
+    </style>
+</head>
+
+<body>
+	<!-- 整体布局 -->
+	<div class="hisui-layout" fit="true" border="false">
+		<div data-options="region:'center',border:false" class="pha-body">
+			<!-- layout start -->
+			<div id="layout-main" class="hisui-layout" fit="true">
+				<div data-options="region:'north',height:400, split:true,border:false">
+					<div id="panelBaseLogTotal" class="hisui-panel" title="#(..Get("毒麻药品台账汇总"))#"
+						data-options="iconCls:'icon-house',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+						<table id="gridBaseLogTotal"></table>
+					</div>
+				</div>
+				<div data-options="region:'center', split:true,border:false">
+					<div class="hisui-panel" title="#(..Get("毒麻药品台账明细"))#"
+						data-options="iconCls:'icon-paper',headerCls:'panel-header-gray',fit:true,bodyCls:''">
+						<table id="gridBaseLogDetail"></table>
+					</div>
+				</div>
+			</div>
+			<!-- layout end -->
+		</div>
+	</div>
+	
+	<div id="gridBaseLogTotalBar">
+		<table class="pha-con-table">
+	        <tr>
+	        	<td class="r-label">
+	                <label for="startDate"><span style="color:red">*</span>#(..Get("开始日期"))#</label>
+	            </td>
+	            <td>
+	                <input id="startDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true' style="width:120px;"/>
+	            	<input id="startTime" class="hisui-timespinner" data-pha="class:'hisui-timespinner',save:true,query:true,clear:true" style="width:105px;"/>
+	            </td>
+	            <td class="r-label">
+	                <label for="endDate"><span style="color:red">*</span>#(..Get("截止日期"))#</label>
+	            </td>
+	            <td>
+	                <input id="endDate" class="hisui-datebox" data-pha='class:"hisui-datebox",requied:true,query:true' style="width:120px;"/>
+					<input id="endTime" class="hisui-timespinner" data-pha="class:'hisui-timespinner',save:true,query:true,clear:true" style="width:106px;"/>
+	            </td>
+	        	<td class="r-label">
+	                <label for="locId"><span style="color:red">*</span>#(..Get("科室"))#</label>
+	            </td>
+	            <td>
+	                <input id="locId" class="hisui-combobox" data-pha="class:'hisui-combobox',requied:true,save:true,query:true,clear:true" />
+	            </td>
+				<td>
+					<a id="btnFind" class="hisui-linkbutton" iconCls="icon-w-find">#(..Get("查询"))#</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="r-label">
+	                <label for="poisonIdStr">#(..Get("管制分类"))#</label>
+	            </td>
+	            <td>
+	                <input id="poisonIdStr" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+	            </td>
+	            <td class="r-label">
+	                <label for="qtyStatus">#(..Get("业务量"))#</label>
+	            </td>
+	            <td>
+	                <input id="qtyStatus" class="hisui-combobox" data-pha="class:'hisui-combobox',save:true,query:true,clear:true" />
+	            </td>
+	            <td class="r-label">
+	                <label for="inci">#(..Get("药品"))#</label>
+	            </td>
+	            <td>
+	                <input id="inci" class="hisui-combogrid" data-pha="class:'hisui-combogrid',save:true,query:true,clear:true" />
+	            </td>
+	            <td>
+					<a id="btnClear" class="hisui-linkbutton" iconCls="icon-w-clean">#(..Get("清屏"))#</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+	<!-- 加载本页面js -->
+	<script type="text/javascript" src="../scripts/pha/com/v1/js/grideditor.js"></script>
+	<script type="text/javascript" src="../scripts/pha/in/v1/narcbaselog.js"></script>
+</body>
+
+</html>

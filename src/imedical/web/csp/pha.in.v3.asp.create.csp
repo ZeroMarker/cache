@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+    调价 - 统一价 - 制单
+    csp:  csp/pha.in.v3.asp.create.csp
+    js:   scripts/pha/in/v3/asp/create.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q $$$OK
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+</head>
+
+<body>
+    <div class="hisui-layout" fit="true" id="lyMainView">
+        <div data-options="region:'center',border:false" class="pha-body">
+            <div class="hisui-layout" fit="true">
+                <div data-options="region:'center',title:'调价 / 制单',iconCls:'icon-paper',bodyCls:'panel-body-gray',headerCls:'panel-header-gray'" id="layout-asp-create-panel" style="border-radius:4px;">
+                    <table id="gridAsp"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表格工具栏 -->
+    <div id="gridAspBar">
+        <table id="qCondition" class="pha-con-table">
+            <tr>
+                <td class="r-label">
+                    <label for="startDate">#(..Get("开始日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="startDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="endDate">#(..Get("结束日期"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="endDate" data-pha="class:'hisui-datebox',clear:true,save:true,query:true,required:true">
+                </td>
+                <td class="r-label">
+                    <label for="stkCatGrp">#(..Get("类组"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="stkCatGrp" data-pha="class:'hisui-combobox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <label for="filterField">#(..Get("其他"))#</label>
+                </td>
+                <td class="r-label">
+                    <input type="text" id="filterField" class="hisui-validatebox" data-pha="class:'hisui-validatebox',clear:true,save:true,query:true">
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnFind">查询</a>
+                </td>
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnClean">清屏</a>
+                </td>
+
+                <td class="r-label">
+                    <a class="hisui-linkbutton" id="btnSave" data-phabtn>保存</a>
+                </td>
+                <td>
+                    <a class="hisui-linkbutton" onclick="PHA.HelpWindow({info:$('#asp_help').html()})">帮助</a>
+                </td>
+            </tr>
+
+
+        </table>
+        <div class="pha-line"></div>
+        <div class="pha-table-toolbar-button">
+            <div style="float: left;">
+                <a data-phabtn class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-add'" id="btnAdd">新增一行</a>
+                <a data-phabtn class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'" id="btnDelete">删除勾选行</a>
+            </div>
+            <div style="float:right">
+                <div id="keyToolInput" class="hisui-keywords" data-options="items:[{text:'调价原因默认取上一条记录',id:'DefaAspReason'},{text:'计划生效日期默认取上一条记录',id:'DefaPreExeDate'}]"></div>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+    <div id="asp_help">
+        <table class="pha-help-table">
+            <tr>
+                <td class="r-label"><b>#(..Get("红色单元格："))#</b></td>
+                <td>#(..Get("加成率超出常规值，需要注意"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label"><b>#(..Get("未生效记录："))#</b></td>
+                <td>#(..Get("系统仅能保留一条未生效记录，未生效时如果需要修改，需要找到原记录修改"))#</td>
+            </tr>
+            <tr>
+                <td class="r-label"><b>#(..Get("多次调价："))#</b></td>
+                <td>#(..Get("系统默认只能一天调一次价格，可通过【模块参数设置】->【调价】->【允许多次调价】参数放开限制"))#</td>
+            </tr>
+        </table>
+    </div>
+    <!-- 加载本页面js -->
+    <link rel="stylesheet" type="text/css" href="../scripts/pha/in/v3/com/css/ui.lite.css" />
+    <script type="text/javascript" src="../scripts/pha/in/v3/asp/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/asp/component.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/asp/create.js"></script>
+</body>
+
+</html>

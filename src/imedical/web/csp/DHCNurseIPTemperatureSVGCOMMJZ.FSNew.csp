@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ ;i ##Class(Nur.CSPDebug).setSession() q 1
+ quit 1
+</csp:method>
+<html>
+<head>
+	<!-- nur.svg.temperature.csp -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>	体温单预览</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ 	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery.hisui.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+	<script type="text/javascript" src="../scripts/nurse/temperature/svg/svg27.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/temperature/svg/svgUtils.js" charset="gbk"></script></head>
+	<!-- 兼容IE支持promise对象 -->
+	<script type="text/javascript" src="../scripts_lib/SheetJs/babel-polyfill.js"></script>
+<server>
+    Set ifColorPrint = "false"    
+	Set EpisodeID = $g(%request.Data("EpisodeID",1)),PatientID="",mradm="",Page=""
+	Set:EpisodeID="" EpisodeID = $g(%request.Data("episodeID",1)),PatientID="",mradm="",Page=""
+	if EpisodeID'="" {
+		set chartID=##class(Nur.NIS.Service.Chart.API.TemperatureChart).getChartID("1",EpisodeID)
+		set ifColorPrint=##class(Nur.NIS.Service.Chart.DAO.Chart).getIfColorPrint(chartID)
+		set totalPage=##class(Nur.NIS.Service.Chart.DAO.Chart).getChartPages(EpisodeID)
+		Set PatientID = +^PAADM(EpisodeID)
+		Set mradm = $P(^PAADM(EpisodeID),"^",61)
+		Set %request.Data("PatientID",1) = PatientID
+		Set %request.Data("mradm",1) = mradm
+		Set Page=$g(%request.Data("page",1))
+	}	
+	
+	d ##class(web.DHCXMLPConfig).LODOPInit()
+</server>
+<body style="background-color:#fff;">
+	<div id="drawing" align="center" style="width:100%;height:100%;position:relative;" >
+		<div id="tooltip" style="display:none;position:absolute;background:rgba(0,0,0,0.6);color:#fff;padding:5px;border-radius:4px;text-align:left;font-size:12px;">
+			<p></p>
+			<p></p>
+			<p></p>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+var episodeID="#(EpisodeID)#";
+var chartID="#(chartID)#";
+var ifColorPrint="#(ifColorPrint)#";
+var userID = session['LOGON.USERID'];
+var locID = session['LOGON.CTLOCID'];
+var page="#(Page)#"==""?1:"#(Page)#";
+var totalPage="#(totalPage)#";
+var CHARTYPE="1";
+if (SVG.supported) {
+	if(!!window.ActiveXObject || "ActiveXObject" in window){
+        //alert("ie");
+        document.body.style.height="1000px";
+    }
+} else {
+  alert('SVG not supported')
+}
+</script>
+<script type="text/javascript">
+var A4W=210; // A4宽
+var A4H=297; //  A4高 
+var FONTRATE=3;  //文字转换比例
+var POINTRATE=2;  //文字转换比例
+var KLINE=-1; //填充斜线的斜率
+var BGAP=1; //填充斜线的截距差
+/*
+ * @Date: 2021-05-13 14:17:48
+ * @LastEditors: SongChao
+ * @LastEditTime: 2021-05-14 10:10:56
+ * @FilePath: /mediway/imedical/web/scripts/nurse/temperature/svg/requestData.js
+ */
+if (SVG.supported) {
+    var draw = SVG('drawing').style({height:'100%',width:'100%',overflow:'visible'});//fill('#f03');
+    draw.viewbox({ x: 0, y: 0, width: A4W, height: A4H }); 
+    var table=draw.group().attr("id","table");    
+    //var tabStyle=JSON.parse(json);
+    getTable();
+    multiRequest(totalPage,3,true);
+    ////getCurData(page);
+    //getContent();
+    //getCurve();    
+} else {
+    alert('SVG not supported')
+}
+function getTable(){
+    $cm({
+        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+        MethodName:"getTable",
+        ChartTpye:CHARTYPE, 
+        EpisodeID:episodeID, 
+        Page:page, 
+        UserID:userID,  
+        LocID:locID,  // 科室ID
+        ChartID:chartID
+    },function(tabStyle){
+        darwTable(tabStyle);
+    });
+}
+
+function getCurData(page){
+	$(".content").css("visibility",'hidden');
+	var contentElem=$("#content-"+page);
+	if(contentElem.length>0){
+		contentElem.remove();
+	}
+	contentElem=draw.group().attr("id","content-"+page).attr("class","content");	
+	getContentCurve(page,contentElem);	
+}
+
+function getContent(page,contentElem){
+	var tabContent=$cm({
+        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+        MethodName:"getContent",
+        ChartTpye:CHARTYPE, 
+        EpisodeID:episodeID, 
+        Page:page, 
+        UserID:userID,  
+        LocID:locID,  // 科室ID
+        ChartID:chartID
+    },false);
+    darwContent(tabContent,contentElem);
+    /*$cm({
+        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+        MethodName:"getContent",
+        ChartTpye:CHARTYPE, 
+        EpisodeID:episodeID, 
+        Page:page, 
+        UserID:userID,  
+        LocID:locID,  // 科室ID
+        ChartID:chartID
+    },function(tabContent){
+        darwContent(tabContent,contentElem);
+        // console.log(tabContent);
+    });*/
+}
+
+function getCurve(page,contentElem){
+	var tabCurve=$cm({
+        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+        MethodName:"getCurve",
+        ChartTpye:CHARTYPE, 
+        EpisodeID:episodeID, 
+        Page:page, 
+        UserID:userID,  
+        LocID:locID,  // 科室ID
+        ChartID:chartID
+    },false);
+    darwCurve(tabCurve,contentElem);
+    /*$cm({
+        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+        MethodName:"getCurve",
+        ChartTpye:CHARTYPE, 
+        EpisodeID:episodeID, 
+        Page:page, 
+        UserID:userID,  
+        LocID:locID,  // 科室ID
+        ChartID:chartID
+    },function(tabCurve){
+        darwCurve(tabCurve,contentElem);
+        // console.log(tabCurve);
+    });*/
+}
+
+function getContentCurve(page,contentElem){
+    $cm({
+        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+        MethodName:"getContentCurve",
+        ChartTpye:CHARTYPE, 
+        EpisodeID:episodeID, 
+        Page:page, 
+        UserID:userID,  
+        LocID:locID,  // 科室ID
+        ChartID:chartID
+    },function(ret){
+	    darwContent(ret.content,contentElem);
+        darwCurve(ret.curve,contentElem);        
+    });
+}
+
+function multiRequest(total,maxNum,ifPreview) {
+	//var myDate=new Date();
+	//var start=myDate.getTime();
+	// 请求总数量
+	var len = total;
+	if(total<maxNum) maxNum=total;
+	// 根据请求数量创建一个数组来保存请求的结果
+	var result = [];
+	for(var i=0;i<len;i++){
+		result.push(false);	
+	}
+	// 当前完成的数量
+	var count = 0;
+	return new Promise(function(resolve, reject){
+		// 请求maxNum个
+		while (count < maxNum) {
+			next(); 
+		}
+		function next() {
+			var current = count++;
+			// 处理边界条件
+			if (current >= len) {	
+				//var myDate2=new Date();
+				//var end=myDate2.getTime();
+				//console.log("diff: "+(end-start)/1000);		
+				// 请求全部完成就将promise置为成功状态, 然后将result作为promise值返回 
+				!result.includes(false) && resolve(result);
+				//return; 
+				if(!result.includes(false)){
+					printAll(ifPreview);
+					return;			
+				}								
+			}			
+			var pagenum=current+1;
+			if(pagenum>total) return;
+			var contentElem=draw.group().attr("id","content-"+pagenum).attr("class","content");	
+			$("#content-"+pagenum).css("visibility",'hidden');
+			$cm({
+		        ClassName:"Nur.NIS.Service.Chart.API.TemperatureChart",
+		        MethodName:"getContentCurve",
+		        ChartTpye:CHARTYPE, 
+		        EpisodeID:episodeID, 
+		        Page:pagenum, 
+		        UserID:userID,  
+		        LocID:locID,  // 科室ID
+		        ChartID:chartID
+		    },function(ret){
+			    darwContent(ret.content,contentElem);
+		        darwCurve(ret.curve,contentElem);
+		        // 保存请求结果 
+				result[current] = true;				
+				// 请求没有全部完成, 就递归
+				if (current < len) {
+					next(); 
+				} 
+		    });
+		} 
+	});
+}
+
+function printAll(ifPreview){
+	var LODOP=getLodop();
+	LODOP.PRINT_INIT("体温单");
+	LODOP.SET_PRINT_PAGESIZE(1, 2100,2970,"A4");
+	LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT", "Full-Page");            
+	for(var i=0;i<totalPage;i++){
+		$("#drawing .content").css("visibility",'hidden');
+		$("#drawing #content-"+(i+1)).css("visibility","");	
+        var printData = document.getElementById("drawing").innerHTML;
+        if(ifColorPrint=="false") {
+        	printData=printData.replace(/#.{6}/g,'#000000');
+        }		                
+        LODOP.ADD_PRINT_HTML(0,0,"100%", "100%",printData);   
+        LODOP.NewPage();
+    }
+    if(ifPreview){
+        LODOP.PREVIEW();
+    }
+    else{
+        LODOP.PRINT();
+        //LODOP.PRINTA();
+    }
+}
+
+
+/// 绘制体温单///////////////////////////////////////
+function darwTable(tabStyle){
+    if (tabStyle.lines!=null&&tabStyle.lines.length > 0)
+    {
+        drawLines(tabStyle.lines,table);
+    }
+    if (tabStyle.texts != null&&tabStyle.texts.length > 0)
+    {
+        drawTexts(tabStyle.texts,table);
+    }    
+    if (tabStyle.images != null && tabStyle.images.length > 0)
+    {
+        drawImages(tabStyle.images,table);
+    }
+}
+
+function darwContent(tabContent,elem){
+    if (tabContent.lines!=null&&tabContent.lines.length > 0)
+    {
+        drawLines(tabContent.lines,elem);
+    }
+    if (tabContent.texts != null&&tabContent.texts.length > 0)
+    {
+        drawTexts(tabContent.texts,elem);
+    }
+    return;
+}
+function darwCurve(tabCurve,elem){
+    if (tabCurve.lines!=null&&tabCurve.lines.length > 0)
+    {
+        drawLines(tabCurve.lines,elem);
+    }
+    if (tabCurve.texts != null&&tabCurve.texts.length > 0)
+    {
+        drawTexts(tabCurve.texts,elem);
+    }
+    if (tabCurve.points != null&&tabCurve.points.length > 0)
+    {
+        drawPoints(tabCurve.points,elem);
+    }
+    if (tabCurve.paths != null&&tabCurve.paths[0] != null&&tabCurve.paths[0].length > 0){
+        fillPath(tabCurve.paths,elem);
+    }
+    return;
+}
+function drawLines(lines,elem){
+    var i=0;
+    lines.forEach(function(line){
+        if(line.breakLineFlag=="N"){
+            var currentLine=elem.line(line.x1, line.y1, line.x2, line.y2).stroke({ width: line.width,color:line.color }).attr('id','chartline'+i);
+            if(line.lineStyle=="Dash"){
+	        	currentLine.stroke({dasharray:'1,1'})    
+	        }
+            i++;
+        }
+            
+    });
+}
+
+function drawTexts(texts,elem){
+    var i=0;
+    texts.forEach(function(text){
+        drawText(elem,text.content+"",text.width,text.fontFamily,text.fontSize/FONTRATE,text.alignment,text.fontColor,parseFloat(text.x),parseFloat(text.y),"",text.fontStyle,"text"+i);
+        i++;    
+    });
+}
+
+function drawImages(images,elem){
+    var i=0;
+    images.forEach(function(image){
+        var imageSVG=elem.image(image.image, image.width, image.height);
+        imageSVG.move(image.x,image.y);
+        // drawText(draw,text.content+"",text.width,text.fontFamily,text.fontSize/FONTRATE,text.alignment,text.fontColor,text.x,text.y,"",text.fontStyle,"text"+i);
+        i++;
+    });
+}
+/*
+* 绘制图标点
+*/
+function drawPoints(points,elem){
+	var obj={};
+	points.forEach(function(point){
+		var key=point.x+"_"+point.y;
+		var desc=point.obsName+"："+point.obsValue;
+		var name=point.userName;
+		var dtime=point.date+" "+point.time;
+		if(obj[key]){
+			if(obj[key].obs.indexOf(desc)==-1){
+				obj[key].obs.push(desc);	
+			}
+			if(obj[key].user.indexOf(name)==-1){
+				obj[key].user.push(name);	
+			}	
+		}else{
+			obj[key]={
+				obs:[desc],
+				user:[name],
+				dtime:dtime		
+			}	
+		}	
+	})
+    var i=0;
+    points.forEach(function(point){
+	    var key=point.x+"_"+point.y;
+	    drawPoint(elem,point.icon,point.size/POINTRATE,point.x,point.y,point.color,"point_"+point.x+"_"+point.y,obj[key]);
+        i++;    
+    });
+}
+
+/*
+* 绘制短绌斜线(斜线填充)
+*/
+function fillPath(paths,elem){
+    //填充斜线的公式使用 y=kx+b
+    for (var i=0;i<paths.length;i++)
+    {
+       if(paths[0]&&paths[0].length>0&&paths[0][0].hatchStyle&&paths[0][0].hatchStyle=='BackwardDiagonal'){
+        	calcIntersection(paths[i],elem);
+       }
+       if(paths[0]&&paths[0].length>0&&paths[0][0].hatchStyle&&paths[0][0].hatchStyle=='Vertical'){
+        	calcIntersectionVertical(paths[i],elem);
+       }
+    }
+}
+/**
+ * 计算填充线和上边线交点(斜线）
+ */
+ function calcIntersection(paths,elem){
+    //draw.line(70, 123.75, 80, 113.75).stroke({ width: 0.15,color:"green" }).attr('id','slantline');
+    //填充斜线的公式使用 y=kx+b
+    var stArray=[];
+    var bSpace=getMaxMinB(paths);
+    var b0=bSpace.min; //起始斜线的截距
+    //if(paths.length%2==0){
+        var bEnd=bSpace.max; //paths[Math.ceil(paths.length/2)].y-KLINE*paths[Math.ceil(paths.length/2)].x;  //截止线截距
+        for(var bDr=b0+BGAP;bDr<bEnd+50;bDr=bDr+BGAP){
+            var xMax=0;
+            var j=1;
+            var x1=-1,y1=-1,x2=-1,y2=-1;
+            for (var i=0;i<paths.length;i++)
+            {
+                var pSt=paths[i];   //直线起点
+                var pEnd=paths[0];  //直线终点  
+                if(i<(paths.length-1)){
+                    var pEnd=paths[i+1];  //直线终点   
+                }
+                var point=calcCrossPoint(pSt,pEnd,bDr);
+                if(point){
+                    stArray.push(point);
+                }
+            }
+            sortArrayByX(stArray);
+            drawSlantLine(stArray,elem);
+            stArray=[];
+        } 
+}
+
+/**
+ * 计算填充线和上边线交点（直线）
+ */
+ function calcIntersectionVertical(paths,elem){
+    //draw.line(70, 123.75, 80, 113.75).stroke({ width: 0.15,color:"green" }).attr('id','slantline');
+    //填充直线的公式使用 x=b
+    var stArray=[];
+    var bSpace=getMaxMinBV(paths);
+    //if(paths.length%2==0){
+	var eachTopLength=0; // 记录另外一条线的已经遍历的长度
+	var eachBottomLength=0; // 记录先遍历的那条线的长度
+	var BGAP=1;
+    var xEnd=0;//bSpace.max; //paths[Math.ceil(paths.length/2)].y-KLINE*paths[Math.ceil(paths.length/2)].x;  //截止线截距
+        var x1=-1,y1=-1,x2=-1,y2=-1;
+        for (var i=0;i<paths.length;i++)
+        {
+            var pSt=paths[i];   //直线起点
+            var pEnd=paths[0];  //直线终点  
+            if(i<(paths.length-1)){
+                var pEnd=paths[i+1];  //直线终点   
+            }
+            if(0==(pEnd.x-pSt.x)) continue;
+            var k=(pEnd.y-pSt.y)/(pEnd.x-pSt.x);
+	        var b=pSt.y-k*pSt.x;
+            var x0=pSt.x; //起始直线   
+            if(x0==bSpace.max) BGAP=-BGAP;
+            if(BGAP>0){
+	            for(var xDr=x0+BGAP;xDr<=pEnd.x;xDr=xDr+BGAP){	            
+		        	var x=xDr;
+		        	var y=k*x+b;
+		        	var point={"x":x,"y":y,"bDr":xDr,"st":pSt,"end":pEnd};
+		            if(point){
+		                stArray.push(point);
+		                eachBottomLength=eachBottomLength+1;
+		            }
+	    		} 
+            }
+            else{
+	            var l=eachBottomLength-eachTopLength;
+	            for(var j=(l-1);j>=0;j=j-1){	            
+		        	var x=stArray[j].x;
+		        	if(x<pEnd.x){
+			        	break;
+			        }else{
+			        	eachTopLength=eachTopLength+1;
+			        }
+		        	var y=k*x+b;
+		        	var point={"x":x,"y":y,"bDr":x,"st":pSt,"end":pEnd};
+		            if(point){
+		                stArray.push(point);
+		            }
+	    		} 
+            }
+        }
+        sortArrayByX(stArray);
+        drawSlantLine(stArray,elem);
+        stArray=[];
+}
+/**
+ * 获得最大和最小截距
+ */
+function getMaxMinB(paths)
+{
+    var minB=paths[0].y-KLINE*paths[0].x;
+    var maxB=paths[Math.ceil(paths.length/2)].y-KLINE*paths[Math.ceil(paths.length/2)].x;  //截止线截距
+    for(var i=1;i<paths.length;i++){
+        var b=paths[i].y-KLINE*paths[i].x
+        if(b<minB){
+            minB=b;
+        }
+        if(b>maxB){
+            maxB=b;
+        }
+    }
+    return {"min":minB,"max":maxB}
+}
+/**
+ * 获得最大和最小截距(直线填满）
+ */
+function getMaxMinBV(paths)
+{
+    var minB=paths[0].x;
+    var maxB=paths[Math.ceil(paths.length/2)].x
+    for(var i=1;i<paths.length;i++){
+        var b=paths[i].x
+        if(b<minB){
+            minB=b;
+        }
+        if(b>maxB){
+            maxB=b;
+        }
+    }
+    return {"min":minB,"max":maxB}
+}
+/**
+ * 根据x坐标升序排列交点
+ */
+function sortArrayByX(arr){
+    for(var i = 1; i < arr.length; i++) {
+        for (var j=0; j < arr.length-i; j++) {
+            if (arr[j].x > arr[j+1].x) {
+                var temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}
+function drawSlantLine(stArray,elem){
+    for(var i=0;i<stArray.length;i=i+2)
+    {
+        var pSt=stArray[i];   //直线起点
+        // var pEnd=stArray[0];  //直线终点  
+        if(i<(stArray.length-1)){
+            var pEnd=stArray[i+1];  //直线终点 
+            elem.line(pSt.x, pSt.y, pEnd.x, pEnd.y).stroke({ width: 0.15,color:"blue" }).attr('id','slantline'+i);
+            // drawText(draw,pSt.x,30,"宋体",4,"Center","Red",pSt.x, pSt.y,"","","aaaa"+i);
+        }           
+    }
+}
+function calcCrossPoint(pSt,pEnd,bDr){
+    if (pEnd.x!=pSt.x){
+        var k=(pEnd.y-pSt.y)/(pEnd.x-pSt.x);
+        var b=pSt.y-k*pSt.x;
+        var x=(bDr-b)/(k-KLINE);
+        var y=KLINE*x+bDr;
+        if ((pEnd.x>pSt.x&&x>=pSt.x&&x<=pEnd.x)||(pEnd.x<pSt.x&&x<=pSt.x&&x>=pEnd.x)) {
+            return {"x":x,"y":y,"bDr":bDr,"st":pSt,"end":pEnd};//x1=x;y1=y;
+        }        
+    }
+    else{
+        if(pSt.y!=pEnd.y){
+            var x=pSt.x
+            var y=KLINE*x+bDr;
+            if ((pEnd.y>pSt.y&&y>=pSt.y&&y<=pEnd.y)||(pEnd.y<pSt.y&&y<=pSt.y&&y>=pEnd.y)){
+                return {"x":x,"y":y,"bDr":bDr,"st":pSt,"end":pEnd};
+            }            
+        }        
+    }
+}
+</script>
+
+</html>

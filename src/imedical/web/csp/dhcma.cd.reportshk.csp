@@ -42,6 +42,7 @@
 		<script type="text/javascript" src="../scripts/DHCMA/CD/reportshk/Event.js"></script>
 		<script type="text/javascript" src="../scripts/DHCMA/CD/reportshk/Print.js"></script>
 		<script type="text/javascript" src="../scripts/DHCCPMRQCommon.js"></script>
+		<script language='javascript' src='../scripts_lib/lodop/LodopFuncs.js'></script>
 
 		<script language="Cache" RUNAT="SERVER">
 		    If (IsSupportRQ2018'=1) {
@@ -56,18 +57,23 @@
 			Set PatientID=$g(%request.Data("PatientID",1))
 			Set EpisodeID=$g(%request.Data("EpisodeID",1))
 			set LogonHospID=$g(%session.Data("LOGON.HOSPID"))
+			Set LocFlag=+$g(%request.Data("LocFlag",1))
 		    set objHosp=##class(DHCMed.Base.Hospital).GetObjById(LogonHospID)
 		    Set HospDesc=""
 		    If ($IsObject(objHosp)) {
 		    	Set HospDesc=objHosp.Descs
 		    }
-		    
+		    Set LagCode = $g(%session("LOGON.LANGCODE"))
+		    Set DocName=$g(%session.Data("LOGON.USERNAME"))
+		    Set DocName = ##class(web.DHCBL.Authorize.BDPTranslation).GetTransDesc("User.CTCareProv","CTPCPDesc",LagCode,DocName)
+			
 			Set ReportID=""""_$g(ReportID)_""""
 			Set PatientID=""""_$g(PatientID)_""""
 			Set EpisodeID=""""_$g(EpisodeID)_""""
 			Set HospDesc=""""_$g(HospDesc)_""""
 			Set EmrOpen=+$g(%request.Data("EmrOpen",1))   //是否由病历浏览打开
 			Set:EmrOpen="" EmrOpen=""""""
+			Set DocName=""""_$g(DocName)_""""
 	   </script>
 	  
 	    <script language="javascript" type="text/javascript">
@@ -77,6 +83,8 @@
             var LogonHospID=#(LogonHospID)#;
             var HospDesc=#(HospDesc)#;
 			var EmrOpen=#(EmrOpen)#;
+			var LocFlag=#(LocFlag)#;
+			var DocName=#(DocName)#;
 			var ServerObj={
 				CRQTZY:"#(CRQTZY)#",
 				CRQTYY:"#(CRQTYY)#",

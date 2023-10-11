@@ -1,6 +1,10 @@
 <csp:content charset="utf-8">
 <script language="Cache" runat="server">
-s Path=##class(web.DHCEQCommon).GetSysInfo("990004")_%request.Data("Path",1)
+s Path=%request.Data("Path",1)
+s MediaType=%request.Data("MediaType",1)
+s PathSysCode=$CASE(MediaType,"pic":"990004","file":"990005","video":"990080","audio":"990081",:"")
+s Postfix=%request.Data("Postfix",1)
+s Path=##class(web.DHCEQCommon).GetSysInfo(PathSysCode)_Path_"."_Postfix
 s FileStream=%request.Content
 set result=##Class(web.DHCEQ.Process.DHCEQPictureList).UploadByFtpStream(Path,FileStream)
 w result

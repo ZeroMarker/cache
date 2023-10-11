@@ -1,0 +1,166 @@
+<!-- 
+ * FileName: dictionaryitemnew2.csp
+ * Creator: zjb
+ * Date: 2022-08-18
+ * Description: 通用字典项目维护
+-->
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<html>
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<style>
+		.layout>.panel>.panel-header {
+		    -moz-border-radius: 4px 4px 0 0;
+		    -webkit-border-radius: 4px 4px 0 0;
+		    border-radius: 4px 4px 0 0;
+		}
+		.layout>.panel>.panel-body {
+		    -moz-border-radius: 0 0 4px 4px;
+		    -webkit-border-radius: 0 0 4px 4px;
+		    border-radius: 0 0 4px 4px;
+		}
+		.no-data {
+			width: 100%;
+			height: 100%;
+			background: url(../images/no_data.png) center center no-repeat;
+		}
+		.layout-panel-west {
+		    padding-right: 10px;
+		}
+		.layout-panel-center.panel-header-gray-parent{
+		    padding-bottom: 10px;
+		}
+		label.checkbox {
+		    margin-left: -6px;
+		}
+		.textbox.tb320 {
+			width: 320px;
+		}
+   </style>
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.importorexport.js"></script>
+	<script type="text/javascript" src="../scripts/hisui/websys.hisui.js"></script>  
+	<script type="text/javascript" src="../scripts/dhcinsu/common/json2.js"></script> 
+	<script type="text/javascript" src="../scripts/dhcbill/common/dhcbill.common.js"></script> 
+	<link  rel="stylesheet" type="text/css" href="../scripts/dhcbill/themes/default/dhcbill.css"/> 
+</head>
+
+<body style="padding:10px;background-color:#ffffff">
+	<div class="hisui-layout" data-options="fit:true">
+		<div data-options="region:'west',title:'字典类型',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-paper-info'" style="width:341px;" text='414'>
+			<div class="hisui-layout" data-options="fit:true">
+				<div data-options="region:'north',border:false" style="padding:0px;border-bottom:1px solid #E2E2E2;border-radius:0;height:91px;">
+					<table  class="search-table">
+						<tr>
+							<td class='r-label'><label>院区</label></td>
+							<td ><input id="hospital" class="textbox" style="width:271px;" placeholder=""/></td>
+						</tr>
+						<tr>
+							<td colspan=2 style="padding-left: 10px;"><input id="searchTree" class="textbox" placeholder='输入代码或汉字回车查询' style="width:309px;"/></td>
+						</tr>
+					</table>
+				</div>
+				<div data-options="region:'center',border:false">
+					<table id="SYSTree"></table>
+				</div>
+			</div>
+		</div>
+		<div class="hisui-layout"  data-options="region:'center',border:false">
+			<!-- <div class="hisui-layout" data-options="fit:true"> -->
+				<div data-options="region:'center',title:'字典明细',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-write-order'" style="height:420px;">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="padding:10px;border-bottom:1px solid #E2E2E2;border-radius:0;">
+							<div><input id="searchDicList" class="textbox" placeholder='输入代码或汉字回车查询'  style="width:240px;"/></div>
+						</div> 
+						<div data-options="region:'center',border:false" style="height:412px"><!--style="height:375px"-->
+							<table id="DicList"  ></table> <!--style="width:300px;height:200px"-->
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'south',title:'字典编辑',collapsible:false,headerCls:'panel-header-gray',iconCls:'icon-write-order'"  style="height:207px;">
+					
+					<table  class="search-table" > <!-- cellpadding="10px" cellspacing="10px" -->
+						<tr>
+							<td class="r-label">字典编码</td>
+							<td>
+								<input id ="DicCode" class="hisui-validatebox textbox" required="required" style="width:140px;" missingMessage="请输入代码"/>
+							</td>
+							<td   class="r-label">默认值</td>
+							<td>
+								<input id ="DefaultValue" class="hisui-validatebox textbox" style="width:110px;" data-options="">
+							</td>
+							<td class="r-label"><label>有效标志</label></td>
+							<td><input id="ActFlag" class="hisui-validatebox textbox" style="width:137px;"></td>
+							
+							<!-- <td >
+								<a href="#" id="clearBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清空</a>
+							</td> -->
+							<!-- <td>
+								<a href="#" id="DeleteBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a> 
+							</td> -->
+						</tr>
+						<tr>
+							<td   class="r-label">字典描述</td>
+							<td>
+								<input id ="DicDesc" class="hisui-validatebox textbox" required="required" style="width:140px;" missingMessage="请输入名称"/>
+							</td>
+							
+							<td   class="r-label">开始日期</td>
+							<td>
+								<input id="StartDate" class="hisui-datebox textbox" style="width:116px;"/>
+							</td>
+							
+							<td   class="r-label" ><label id="ModeStr" >数据源检索模式</label></td>
+							<td>
+								<input id ="DataSrcFilterMode" class="hisui-validatebox textbox"  style="width:130px;" data-options="">
+							</td>
+							
+						<!-- 	<td  >
+								<a href="#" id="UpdateBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">更新</a>
+							</td> -->
+							
+							
+						</tr>
+						<tr>
+							<td   class="r-label">使用场景</td>
+							<td>
+								<input id ="DicMemo" class="hisui-validatebox textbox" required="required" style="width:140px;" data-options="">
+							</td>
+							<td   class="r-label">结束日期</td>
+							<td>
+								<input id="EndDate" class="hisui-datebox textbox" style="width:116px;"/>
+							</td>
+							<td   class="r-label" ><label  id="PropertyStr"  >数据源表名及字段名</label></td>
+							<td>
+								<input id ="DataSrcTableProperty" class="hisui-validatebox textbox"  style="width:130px;" data-options="">
+							</td>
+							<!-- <td   class="r-label">创建人</td>
+							<td>
+								<input id ="Creator" class="hisui-validatebox textbox" data-options=""  style="width:108px;">
+							</td> -->
+							<!-- <td >
+								<a href="#" id="ImportBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">导入</a>
+							</td> -->
+						</tr>
+						
+					</table>
+					<div data-options="region:'south',border:false">
+						<div style="text-align:center;padding-bottom:10px;">
+							<a href="#" id="clearBtn" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清空</a>
+							<a href="#" id="UpdateBtn" class="hisui-linkbutton" style="margin-left: 10px;" data-options="iconCls:'icon-w-update'">更新</a>
+							<a href="#" id="ImportBtn" class="hisui-linkbutton" style="margin-left: 10px;" data-options="iconCls:'icon-w-import'">导入</a>
+						</div>
+					</div>
+			</div>	
+				
+				<!-- </div> -->
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/dictionaryitemnew2.js"></script>
+</body>
+</html>

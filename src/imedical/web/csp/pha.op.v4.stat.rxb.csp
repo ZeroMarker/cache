@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!--门诊药房hisui--日消耗统计
+    csp:csp/pha.op.v4.stat.rxb.csp
+    js: scripts/pha/op/v4/stat.rxb.js
+-->
+<!-- 验证session过期 -->
+<csp:method name = OnPreHTTP arguments = "" returntype = %Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+    
+</csp:method>
+
+<HEAD>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id = title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI css="websys.menugroup.css"></HISUI>
+    <PHALIBV1 />
+    <PHAPRINTCOM />
+    <PHAOPV4 />
+    <!-- 样式扩展 -->
+    <style>
+    
+    </style>
+
+</HEAD>
+<body>
+    <div class = "hisui-layout" fit = "true">
+        <div data-options = "region:'center',border:false" class = "pha-body">
+            <div class = "hisui-layout" id ="qcondPanel" data-options = "headerCls:'panel-header-gray',region:'center',border:true,split:true,title:'工作量统计'" >
+                <table id="gridDailyConsume"></table>   
+            </div>  
+        </div>      
+    </div> 
+    <div id = "gridDailyConsumeBar" >
+        <table id = "qCondition" class = "pha-con-table">
+            <tr>
+                <td class = "r-label">
+                    <label>#(..Get("开始时间"))#</label>
+                </td>
+                <td>
+                    <input id = 'stDate' class = "hisui-datebox" data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+                    <input id = 'stTime' class = "hisui-timespinner" data-pha = 'class:"hisui-timespinner",clear:true,query:true' data-options="showSeconds:true" >
+                </td>
+                <td class = "r-label">
+                    <label for = "incCatId">#(..Get("库存分类"))#</label>
+                </td>
+                <td>
+                    <input id = 'incCatId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+                </td>
+                <td class = "r-label">
+                    <label for = "inci">#(..Get("药品名称"))#</label>
+                </td>
+                <td>
+                    <input id = 'inci' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+                </td>
+                <td class = "r-label">
+                    <label for = "fyUserId">#(..Get("发药人"))#</label>
+                </td>
+                <td>
+                    <input id = 'fyUserId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+                </td>
+                <td>
+                    <input id = 'price' class = "hisui-validatebox" data-pha = 'class:"hisui-validatebox",clear:true,query:true' placeholder = "请输入药品价格">
+                </td>
+                <td>
+                    <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-find'" id = 'btnFind'>查询</a>
+                </td>
+                <td>
+                    <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-clean'" id = 'btnClean'>清屏</a>
+                </td>
+            </tr>
+            <tr>
+                <td class = "r-label">
+                    <label>#(..Get("结束时间"))#</label>
+                </td>
+                <td>
+                    <input id = 'endDate' class = "hisui-datebox"  data-pha = 'class:"hisui-datebox",clear:true,query:true,required:true'>
+                    <input id = 'endTime' class = "hisui-timespinner" data-pha = 'class:"hisui-timespinner",clear:true,query:true' data-options="showSeconds:true" >
+                </td>
+                <td class = "r-label">
+                    <label for = "phcCatId">#(..Get("药学分类"))#</label>
+                </td>
+                <td colspan = 3 >
+                    <input id ="phcCatId" class="hisui-triggerbox" style = "width:100%" data-pha = 'class:"hisui-triggerbox",clear:true,query:true' />
+                </td>
+                
+                <td class = "r-label">
+                    <label for = "manGrpId">#(..Get("盘点组"))#</label>
+                </td>
+                <td>
+                    <input id = 'manGrpId' class = "hisui-combobox " data-pha = 'class:"hisui-combobox",clear:true,query:true'>
+                </td>
+                <td>
+                    <input id="manageFlag" class='hisui-checkbox' type="checkbox" label="管理药" data-pha = 'class:"hisui-checkbox",clear:true,query:true' >
+                </td>
+                <td>
+                    <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-print'" id = 'btnPrint'>打印</a>
+                </td>
+                <td>
+                    <a class = "hisui-linkbutton" style = "width:100%" data-options = "iconCls:'icon-w-export'" id = 'btnExport'>导出</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!-- 发药明细台账 -->
+    <div title="发退记录" id="winOrder" style="padding:10px">
+        <table id="gridOrder"></table>
+    </div>
+    <script type="text/javascript" src="../scripts/pha/op/v4/stat.rxb.js"></script>
+</body>
+</html>

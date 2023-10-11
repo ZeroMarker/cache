@@ -1,0 +1,83 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ 	i ##Class(websys.SessionEvents).SessionExpired() 
+	q 1
+</csp:method>
+<html>
+	<head>
+	<ExtHealth:Head/>
+        <title>科室终末质控</title>
+        <HISUI/>
+        <script type="text/javascript" src="../scripts/websys.jquery.js" charset="utf-8"></script>
+        <script type="text/javascript" src="../../dist/plugin/datagrid-scrollview.js"></script>
+        <script src="../scripts/epr/JQuery/datagrid-detailview.js"></script>
+        <script type="text/javascript" src="../scripts/emr/lib/tool/json2.js"></script>
+		<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
+		<script type="text/javascript" src="../scripts/websys.js"></script>
+		<style>
+		span.combo.datebox{
+	       	   width:160px !important;	   
+	       }
+	    .panel-body.panel-body-noheader{
+				-webkit-border-radius:0;
+				border-radius:0;
+			}
+		</style>
+	</head>
+<body class="hisui-layout" data-options="fit:true,border:false" style="overflow:hidden;">
+	<div class="lite_back" data-options="region:'center',fit:true,border:false" style="padding:4px;">
+		<div class="hisui-panel" title="科室终末质控" data-options="fit:true,headerCls:'panel-header-gray',iconCls:'icon-paper'">
+			<div class="hisui-layout" data-options="border:false,fit:true" style="overflow:hidden;">
+            	<div data-options="region:'north',border:false" style="height:90px;overflow:hidden;">
+				<form id="SearchBarForm">
+					<div id="messageListTableTBarTop" style="padding:10px;padding-bottom:0;height:30">	
+					<span style="margin-right:10px;">#(..Get("显示类型"))#</span><select id="Type" class="hisui-combobox" style="width:150px;"></select>
+					<span style="margin-left:10px;margin-right:10px;">#(..Get("起始日期"))#</span><input id="inputCreateDateStart" class="hisui-datebox" style="120px" />
+			 		<span style="margin-left:10px;margin-right:10px;">#(..Get("截止日期"))#</span><input id="inputCreateDateEnd" class="hisui-datebox" />
+			 		<span style="margin-left:15px;margin-right:10px;">#(..Get("医生提交"))#</span><select id="DocCommit" class="hisui-combobox" style="width:102.5px;"></select>
+			 		<span style="margin-left:10px;margin-right:10px;">#(..Get("护士提交"))#</span><select id="NurCommit" class="hisui-combobox" style="width:102.5px;"></select>
+			 		<span style="margin-left:10px;margin-right:10px;">#(..Get("PDF生成"))#</span><select id="PDFCreated" class="hisui-combobox" style="width:102.5px;"></select>
+					<span style="margin-left:10px;margin-right:10px;">#(..Get("回收"))#</span><select id="RcFlag" class="hisui-combobox" style="width:102.5px;"></select>
+					</div>
+					<div id="messageListTableTBarBottom" style="padding:10px;padding-bottom:0px;height:30">	
+					<span style="margin-left:14px;margin-right:10px;">#(..Get("病案号"))#</span><input id="MedRecordNo" class="textbox" style="width:143px;">
+					<span style="margin-left:24px;margin-right:10px;">#(..Get("登记号"))#</span><input id="RegNo" class="hisui-validatebox textbox" style="width:155px;">
+					<span style="margin-left:38px;margin-right:10px;">#(..Get("姓名"))#</span><input id="Name" class="hisui-validatebox textbox" style="width:155px;">
+					<span style="margin-left:15px;margin-right:10px;">#(..Get("主治医生"))#</span><select id="ssUser" class="hisui-combobox" style="width:102.5px;"></select>
+					<span style="margin-left:10px;margin-right:0px;"></span><a id="btnReset" href="#" class="hisui-linkbutton hover-dark" onclick="$('#SearchBarForm').form('clear')" data-options="iconCls:'icon-w-update'" style="width:90px;">重置</a>
+					<span style="margin-left:24px;margin-right:0px;"></span><a id="btnSearch" href="#" class="hisui-linkbutton hover-dark" onclick="doSearch()" data-options="iconCls:'icon-w-find'" style="width:90px;">查询</a>
+					<span style="margin-left:24px;margin-right:0px;"></span><a id="btnPass" href="#" class="hisui-linkbutton hover-dark" onclick="doPass()" data-options="iconCls:'icon-w-ok'" style="width:120px;">审核通过</a>
+					<span style="margin-left:24px;margin-right:0px;"></span><a id="btnDocRetreat" href="#" class="hisui-linkbutton hover-dark" onclick="doDocRetreat()" data-options="iconCls:'icon-w-cancel'" style="width:120px;">退回医生</a>
+					<!--span style="margin-left:5px;margin-right:0px;"></span><a id="btnNurRetreat" href="#" class="hisui-linkbutton hover-dark" onclick="doNurRetreat()" data-options="iconCls:'icon-w-cancel'" style="width:120px;">退回护士</a>
+					<span style="margin-left:5px;margin-right:0px;"></span><a id="btnRetreat" href="#" class="hisui-linkbutton hover-dark" onclick="doRetreat()" data-options="iconCls:'icon-w-cancel'" style="width:120px;">全部退回</a-->
+					</div>	
+				</form>
+			 	</div>
+			 	<div data-options="region:'center',border:false" style="border: 1px #cccccc solid;border-left:none;border-right:none">
+					<table class="hisui-datagrid" id="patientListTable" data-options="border:false,fit:true" ></table>
+				</div>
+			</div>
+		</div>
+	</div>
+ 	<script language="cache" runat="server">
+ 		s SSGroupID=$g(%session.Data("LOGON.GROUPID"))
+		s UserID = %session.Get("LOGON.USERID")
+  		s UserLocID = %session.Get("LOGON.CTLOCID")
+  		s DocID = ""
+ 		s:(UserID '= "") DocID = ##Class(web.SSUser).GetDefaultCareProvider(UserID)
+		s HospitalName = ##Class(EPRservice.BOSysOption).GetValueByName("HospitalName")
+		s HospitalID = %session.Get("LOGON.HOSPID")
+ 	</script>
+ 	<script language="javascript">
+ 		var docID = '#(DocID)#';
+		var userID = '#(UserID)#';
+		var userLocID = '#(UserLocID)#';
+		var HospitalName = '#(HospitalName)#';
+		var SSGroupID = '#(SSGroupID)#';
+		var HospitalID = '#(HospitalID)#';
+		var Action="MD"
+ 	</script>
+	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.DepDisPatientList.js"></script>	
+	
+</body>
+
+</html>

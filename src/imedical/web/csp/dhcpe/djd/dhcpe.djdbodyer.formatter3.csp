@@ -1,0 +1,55 @@
+<!--
+Body 项目格式2
+dhcpe/djd/dhcpe.djdbodyer.formatter3.csp
+ -->
+<SCRIPT language="Cache" RUNAT="SERVER">
+	w "<table>",!
+	// 这里用来定义每列宽度
+	w "<tr style='height:0pt;'>",!
+	w "<td style='width:100pt;'></td>",!
+	w "<td style='width:90pt;'></td>",!
+	w "<td style='width:190pt;'></td>",!
+	w "<td style='width:190pt;'></td>",!
+	w "</tr>",!
+	
+	s length=BodyData.%Size()
+	f i=1:1:length {
+		s TypeInfo=BodyData.%Get(i-1)
+		// 分类行
+		w "<tr>",!
+		w "<td valign='top'><span style='font-size:14pt;'><b>&ensp;"_TypeInfo.TypeName_"</b></span></td>",!
+		w "<td colspan=3>"_TypeInfo.TypeNotice_"</td>",!
+		w "</tr>",!
+		
+		s showcol=3  // 显示列数
+		// 标本行
+		s stripeNum=0
+		s SpecList=TypeInfo.SpecList
+		s specLen=SpecList.%Size()
+		f j=1:1:specLen {
+			
+			// 项目行
+			s ItemList=SpecList.%Get(j-1).ItemList
+			s itemLen=ItemList.%Size()
+			f k=1:1:itemLen {
+				s stripeNum=stripeNum+1
+				s bgColor=""
+				;s:stripeNum#2=0 bgColor="background-color:#f0f0f0;"  // 条纹
+				
+				if (stripeNum#showcol=1) {
+					w "<tr>",!
+					w "<td colspan=2>&emsp;"_ItemList.%Get(k-1).ItemName_"</td>",!
+				} elseif (stripeNum#showcol=0) {
+					w "<td>&emsp;"_ItemList.%Get(k-1).ItemName_"</td>",!
+					w "</tr>",!
+				} else {
+					w "<td>&emsp;"_ItemList.%Get(k-1).ItemName_"</td>",!
+				}
+			}
+		}
+		w "<tr style='height:1.5pt;'><td></td></tr>",!
+		w "<tr><td colspan=4 style='border-bottom:0.5pt solid #000;'></td></tr>",!
+		w "<tr style='height:3.5pt;'><td></td></tr>",!
+	}
+	w "</table>",!
+</SCRIPT>

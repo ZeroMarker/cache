@@ -18,6 +18,8 @@
 }
 .r-label{
 	padding-left: 10px;
+	width:70px;
+	white-space: nowrap;
 }
 .panel-title{
 	overflow:hidden;
@@ -32,11 +34,12 @@
 </STYLE>
 <server>
 	s OEORIRowid=%request.Get("OEORIRowid")
+	Set langid=##class(DHCDoc.Util.RegisteredObject).%LanguageID()
 	s ArcimDr=$P($G(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),1)),"^",2)
 	s DoseUOM=$P($G(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),2)),"^",3)
 	
 	s OrderFreqRowid=$P($G(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),2)),"^",4)
-	s FreqDispTimeStr=##Class(web.DHCOEOrdItemView).GetFreqFreqDispTimeStr(OrderFreqRowid)
+	s FreqDispTimeStr=##Class(web.DHCOEOrdItem).GetOrdItemFreqDispTimeStr(OEORIRowid)
 	
 	for i=1:1:$l(FreqDispTimeStr,"!")	{
 		s OneFreqDispTime=$p(FreqDispTimeStr,"!",i)
@@ -48,7 +51,9 @@
 	s FreqDispTimeDoseQtyStr=$P(^OEORD(+OEORIRowid,"I",$P(OEORIRowid,"||",2),"DHC"),"^",59)
 	s ArcimDesc=$P(^ARCIM(+ArcimDr,$P(ArcimDr,"||",2),1),"^",2)
 	s OrderDoseUOM=$P(^CT("UOM",DoseUOM),"^",2)
-	s title="医嘱:"_ArcimDesc_"&nbsp计划使用剂量"
+	s ArcimDesc=##class(User.ARCItmMast).GetTranByDesc("ARCIMDesc",ArcimDesc,langid)
+	s OrderDoseUOM=##class(User.CTUOM).GetTranByDesc("CTUOMDesc",OrderDoseUOM,langid)
+	s title=##class(websys.Translation).Get("ipdoc.order.doseqtystr.edit.hui.csp","医嘱:")_ArcimDesc_"&nbsp"_##class(websys.Translation).Get("ipdoc.order.doseqtystr.edit.hui.csp","计划使用剂量")
 	
 	s sysDateFormat=##class(websys.Conversions).DateFormat()
 	s DefaultDoseStrSttDate=##Class(web.DHCOEOrdItemDoseQty).GetDefaultDoseStrSttDate(OEORIRowid)

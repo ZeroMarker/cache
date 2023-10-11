@@ -1,0 +1,18 @@
+<csp:content charset="utf-8">
+<script language="Cache" runat="server">
+	d %session.Unlock()
+	s className=%request.Get("ClassName"),methodName=%request.Get("MethodName"),(result,x)=""
+	i (##class(%Dictionary.MethodDefinition).%ExistsId(className_"||"_methodName)) d
+	.d ##class(CT.NUR.MNIS.H8D5P.Base).GetMethodParameters(.parameters,className_"."_methodName)
+	.s x="s result=##class("_className_")."_methodName_"("
+	.s i=0 f  s i=$o(parameters(i)) q:(i="")  d
+	..s parameter=$g(parameters(i)),@parameter=%request.Get(parameter)
+	..i (i>1) s x=x_","
+	..s x=x_parameter
+	.s x=x_")"
+	i (x'="") x x
+	i ($isobject(result)) d
+	.i (result.%ClassName()="%ArrayOfDataTypes")!(result.%ClassName()="%ListOfDataTypes") d ##class(Nur.JSON).EncodeByWrite(result)
+	e  d
+	.w result
+</script>

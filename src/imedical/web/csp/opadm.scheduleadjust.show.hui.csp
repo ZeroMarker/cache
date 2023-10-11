@@ -53,7 +53,20 @@
      						<td>
      							<input class="hisui-datebox textbox" id="StartDate" data-options="formatter:myformatter,parser:myparser"/>
      						</td>
-     						<td><input class='hisui-checkbox' type="checkbox" id ="PlanSchedule" label="仅显示计划性出诊"></td>
+     						<td class="r-label"><label >时段</label></td>
+							<td>
+								<input class="hisui-combobox textbox" id="STimeRange" style="width:100px"/>
+							</td>
+							<td class="r-label"><label >职称</label></td>
+							<td>
+								<input class="hisui-combobox textbox" id="SDocSession" style="width:100px"/>
+							</td>
+							<td class="r-label"><label >状态</label></td>
+							<td>
+								<input class="hisui-combobox textbox" id="Stuates" style="width:100px"/>
+							</td>
+							<td><input class='hisui-checkbox' type="checkbox" id ="PlanSchedule" label="仅显示计划性出诊"></td>
+							<td><input class='hisui-checkbox' type="checkbox" id ="SingleSelect" label="单选"></td>
      						<td class="r-label">
      							<a href="#" id="Find" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
      						</td>
@@ -67,7 +80,7 @@
 	 	</div>
 	</div>
 </div>
-<div id="EditWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false,closed:true,modal:true,onBeforeClose:EditWinBeforeClose" style="width:995px;height:700px;">
+<div id="EditWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false,closed:true,modal:true,onBeforeClose:EditWinBeforeClose" style="width:1055px;height:700px;">
 	<input id="ASRowID" type="text" style="display:none"></input>
 	<div class="hisui-layout" data-options="fit:true">
 		<div data-options="region:'north',border:false,split:false" style="height:210px;">
@@ -93,7 +106,7 @@
 						
 				</tr>
 				<tr>
-					<td class="r-label"><font color="red">诊室</td>
+					<td class="r-label"><font color="">诊室</td>
 					<td>
 						<input class="hisui-combobox textbox" id="LocArea"/>
 					</td>
@@ -111,27 +124,27 @@
 					</td>
 				</tr>
 				<tr>
-					<td class="r-label">亚专业</td>
+					<td class="r-label">专业组</td>
 					<td>
 						<input class="hisui-combobox textbox" id="ClinicGroup"/>
 					</td>
 					<td class="r-label"><label class="clsRequired">正号限额</label></td>
 					<td>
-						<input id="PositiveMax" type="text" class="hisui-numberbox textbox" data-options="min:1,max:999">
+						<input id="PositiveMax" type="text" class="hisui-numberbox textbox" data-options="min:0">
 					</td>
 					<td class="r-label">预约限额</td>
 					<td>
-						<input id="ApptMax" type="text" class="hisui-numberbox textbox" data-options="min:0,max:999">
+						<input id="ApptMax" type="text" class="hisui-numberbox textbox" data-options="min:0">
 					</td>
-					<td class="r-label">起始号</td>
+					<td class="r-label">预约起始号</td>
 					<td>
-						<input id="EStartPrefix" type="text" class="hisui-numberbox textbox" data-options="min:0,max:999">
+						<input id="EStartPrefix" type="text" class="hisui-numberbox textbox" data-options="min:0">
 					</td>	
 				</tr>
 				<tr>
-					<td class="r-label"><font color="red">加号限额<font></td>
+					<td class="r-label"><font color="">加号限额<font></td>
 					<td>
-						<input id="AddtionMax" type="text" class="hisui-numberbox textbox" data-options="min:1,max:999">
+						<input id="AddtionMax" type="text" class="hisui-numberbox textbox" data-options="min:0">
 					</td>
 					
 					<td class="r-label">停正号</td>
@@ -142,6 +155,14 @@
 					<td>
 						<input id="TRFlag" class='hisui-checkbox' type="checkbox" data-options="label:'',name:'TRFlag',onCheckChange:function(event,value){TRFlag_Click();
 		Calc_TRInfo();}">
+					</td>
+					<td class="r-label">
+						<a id="t1" href="#" title="勾选后正号限额可维护无穷大,但挂号时不会生成挂号序号,一般适用于核酸检测等需大量号源的使用场景" class="hisui-tooltip" data-options="position:'bottom'">
+							<label for="">便捷排班</label>
+						</a>
+					</td>
+					<td>
+						<input id="NoLimitLoadFlag" class='hisui-checkbox' type="checkbox" data-options="label:'',name:'NoLimitLoadFlag'">
 					</td>
 				</tr>
 				<!--tr>
@@ -181,6 +202,7 @@
 				<tr>
 					<td colspan="8" align=center>
 						<a class="hisui-linkbutton" id="BSave" data-options="iconCls:'icon-w-save'">保存</a>
+						<a class="hisui-linkbutton" id="BtnExtendConfig" data-options="iconCls:'icon-w-config'">扩展设置</a>
 					</td>
 				</tr>
 			</table>
@@ -197,8 +219,15 @@
 			    		<div data-options="region:'center',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock',title:'分时段信息'">
 			    			<table id="tabTRInfo"></table>
 			    		</div>
-			    		<div data-options="region:'east',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock-record',collapsible:false,title:'分时段预约方式'" style="width:400px;">
-			    			<table id="tabTRAppMethodInfo"></table>
+			    		<div data-options="region:'east',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock-record',collapsible:false,title:''" style="width:380px;">
+			    			<div class="hisui-layout" fit="true">
+					    		<div data-options="region:'center',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock-record',collapsible:false,title:'分时段预约方式'" >
+					    			<table id="tabTRAppMethodInfo"></table>
+							    </div>
+							    <div data-options="region:'east',border:true,headerCls:'panel-header-gray',iconCls:'icon-clock',title:'分时段专业组'" style="width:160px;">
+					    			<table id="tabTRClinicGroupInfo"></table>
+					    		</div>
+					    	</div>
 					    </div>
 			    	</div>
 			    </div>
@@ -207,7 +236,7 @@
 	</div>		
 </div>
 <!--停诊弹出框-->
-<div id="StopWin" class="hisui-window" data-options="title:'停诊',iconCls:'',collapsible:false,minimizable:false,maximizable:false" style="width:265px;height:207px;" closed=true modal=true>
+<div id="StopWin" class="hisui-window" data-options="title:'停诊',iconCls:'',collapsible:false,minimizable:false,maximizable:false" style="width:265px;height:247px;" closed=true modal=true>
 	<table class="search-table" style="width:100%;">
 		<tr>
 			<td class="r-label">
@@ -223,6 +252,14 @@
 			</td>
 			<td>
 				<input class="hisui-combobox textbox" id="ELeader"/>
+			</td>
+		</tr>
+		<tr id="Stopmore" class="" style="margin:0 10px;display:none;">
+			<td class="r-label">
+				<label >备注</label>
+			</td>
+			<td>
+				<input class="textbox" id="EStopRemark"/>
 			</td>
 		</tr>
 		<tr>
@@ -242,7 +279,7 @@
 	<input id="StopASRowIDStr" type="hidden"></input>
 </div>
 <!--替诊弹出框-->
-<div id="ReplaceWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="排班替诊" style="width:505px;height=300px;background:#fafafa" closed=true modal=true>
+<div id="ReplaceWin" class="hisui-window" data-options="collapsible:false,minimizable:false,maximizable:false" title="排班替诊" style="width:505px;height=360px;background:#fafafa" closed=true modal=true>
 	<table class="search-table" style="width:100%;">
 		<tr>
 		    <td class="r-label">
@@ -270,6 +307,18 @@
 			</td>
 			<td>
 				<input class="hisui-combobox textbox" id="ERepReason"/>
+			</td>
+		</tr>
+		<tr id="Repmore" class="" style="margin:0 10px;display:none;">
+			<td class="r-label">
+				<label class="">备注</label>
+			</td>
+			<td>
+				<input class="textbox" id="ERepRemark"/>
+			</td>
+			<td>
+			</td>
+			<td>
 			</td>
 		</tr>
 		<tr>
@@ -354,7 +403,7 @@
 	</table>	
 </div>
 <div id="TRGenWin" class="hisui-window" title="分时段信息生成" style="width:300px;"
-    data-options="iconCls:'icon-w-edit',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
+    data-options="iconCls:'icon-w-edit',shadow:false,modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true,closable:false">
 	<table class="search-table">
 		<tr>
 			<td class="r-label">生成方式</td>
@@ -382,9 +431,17 @@
 		</tr>
 	</table>
 </div>
-<div id="TRTempSaveWin" class="hisui-window" title="分时段模板保存" style="width:280px;"
+<div id="TRTempSaveWin" class="hisui-window" title="分时段模板保存" style="width:440px;"
     data-options="iconCls:'icon-w-save',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
-	<table class="search-table">
+	<table class="search-table">	
+		<tr>
+			<td class="r-label">权限类型</td>
+			<td><input id="TempListType" class="textbox"></td>
+		</tr>
+		<tr>
+			<td class="r-label">模板权限</td>
+			<td><input id="TempListDesc" class="hisui-combobox"></td>
+		</tr>
 		<tr>
 			<td class="r-label">模板名称</td>
 			<td><input id="TempName" class="textbox"></td>
@@ -398,3 +455,7 @@
 </div>
 
 <div id="ColorSynopsis"></div>
+<div id="TRExtendConfigWin" class="hisui-window" title="扩展设置" style="width:380px;top:20px;"
+    data-options="iconCls:'icon-w-save',modal:true,minimizable:false,maximizable:false,collapsible:false,closed:true">
+	<div id="ExtendConfigpanle"></div>
+</div>

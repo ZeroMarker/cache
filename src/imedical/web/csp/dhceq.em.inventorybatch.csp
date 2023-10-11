@@ -1,0 +1,119 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<meta http-equiv="X-UA-Compatible" content="IE=11" />
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	s StatusDR=$Get(%request.Data("StatusDR",1))
+	s IAStatusDR=$Get(%request.Data("IAStatusDR",1))
+	s QXType=$Get(%request.Data("QXType",1))
+	s StoreLocDR=$Get(%request.Data("StoreLocDR",1))
+	s ManageLocDR=$Get(%request.Data("ManageLocDR",1))
+	s IRowID=$Get(%request.Data("IRowID",1))
+</script>
+<style type="text/css">
+.eq-total-sum
+{
+	font-size:120%;
+	color:#F00;
+	float:right;
+}
+</style>
+<body class="hisui-layout">
+	<div id='Loading' class="eq-loading"><h1><img src="../skin/default/images/loading.gif"><font>加载中···</font></h1></div>
+	<div data-options="region:'center',border:false" style="padding:5px 10px 0px 10px;">
+		<div class="hisui-panel" data-options="fit:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:dashed 0px #ccc;height:220px;">
+					<div data-options="region:'north',border:false" style="position:relative;">
+						<div class="eq-table">
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="IInventoryNo">盘点单号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IInventoryNo" disabled="true" style="width:148px;"></div>
+								<div class="eq-table-td eq-table-label"><label id="cIManageLocDR_CTLOCDesc" for="IManageLocDR_CTLOCDesc">管理部门</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="IManageLocDR_CTLOCDesc" disabled="true"></div>
+								<div class="eq-table-td eq-table-label"><label for="ISelfFlag">科室自盘</label></div>
+								<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox" id="ISelfFlag" disabled="true"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="IDate">日期</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="IDate" disabled="true" style="width:148px;"></div>
+								<div class="eq-table-td eq-table-label"><label id="cIEquipType" for="IEquipType">管理类组</label></div>
+								<div class="eq-table-td eq-table-input"><input id="IEquipType" class="hisui-combogrid textbox"></div>
+								<div class="eq-table-td eq-table-label"><label for="ILocIncludeFlag">包含子科室</label></div>
+								<div class="eq-table-td eq-table-input"><input class='hisui-checkbox' type="checkbox" id="ILocIncludeFlag" disabled="true"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="ITime">时间</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="ITime" disabled="true" style="width:148px;"></div>
+								<div class="eq-table-td eq-table-label"><label for="IStoreLocDR_CTLOCDesc">库房</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="IStoreLocDR_CTLOCDesc" disabled="true"></div>
+								<div class="eq-table-td eq-table-label"><label for="IHospitalDR_HDesc">院区</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Hospital'" id="IHospitalDR_HDesc"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="AllCheckNum">全部总数量(台)</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="AllCheckNum" disabled="true" style="width:148px;color:green"></div>
+								<div class="eq-table-td eq-table-label"><label for="UnCheckNum">未盘点数量(台)</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="UnCheckNum" disabled="true" style="width:148px;color:red"></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label for="EQNo">设备编号</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQNo" style="width:148px"></div>
+								<div class="eq-table-td eq-table-label"><label for="EQName">设备名称</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="EQName" style="width:148px"></div>
+								<div class="eq-table-td eq-table-label"></div>
+								<div class="eq-table-td"><a id="BExactFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:20px;margin-right:20px">精确查询</a></div>
+							</div>
+							<div class="eq-table-tr">
+								<div class="eq-table-td eq-table-label"><label id="cILStatus_Desc" for="ILStatus_Desc">盘点状态</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.Inventory.StatusList',prompt:'必填项'" id="ILStatus_Desc"></div>
+								<div class="eq-table-td eq-table-label"><label for="ILCondition_Desc">完好状态</label></div>
+								<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'EM.L.Inventory.ConditionList'" id="ILCondition_Desc"></div>
+								<div class="eq-table-td eq-table-label"></div>
+								<div class="eq-table-td"><a id="BBatchUpdate" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" style="margin-left:20px;margin-right:20px">全部更新</a></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="eq-total-sum" data-options="region:'center',border:false" style="position:relative;padding:0x;">
+					<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true">
+						<table id="DHCEQInventoryList" class="hisui-datagrid" data-options="onClickRow:onClickRow,border:false,fit:true"></table>
+					</div>
+			    </div>
+		   </div>
+		</div>
+	</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="StatusDR" value="#(StatusDR)#">
+			<INPUT type="hidden" id="IAStatusDR" value="#(IAStatusDR)#">
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="StoreLocDR" value="#(StoreLocDR)#">
+			<INPUT type="hidden" id="ManageLocDR" value="#(ManageLocDR)#">
+			<INPUT type="hidden" id="IRowID" value="#(IRowID)#">
+			<INPUT type="hidden" id="IStoreLocDR">
+			<INPUT type="hidden" id="IEquipTypeIDs">
+			<INPUT type="hidden" id="IStatCatDR">
+			<INPUT type="hidden" id="IOriginDR">
+			<INPUT type="hidden" id="IManageLocDR">
+			<INPUT type="hidden" id="IHospitalDR">
+			<INPUT type="hidden" id="ILStatus">
+			<INPUT type="hidden" id="ILCondition">		
+			
+		</form>
+	</div>
+	<script type='text/javascript' src='../scripts/dhceq/em/inventorybatch.js'></script>
+	<script type='text/javascript' src='../scripts/hisui/DHCEQCommon.js'></script>
+</body>
+</html>

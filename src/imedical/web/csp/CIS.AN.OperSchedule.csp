@@ -1,0 +1,127 @@
+<html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+I ##Class(websys.SessionEvents).SessionExpired() q 1
+quit 1
+</csp:method>
+<head>
+<!-- Put your page Title here -->
+<title>日间手术日程</title>
+<csp:content charset="UTF-8">
+<!--<dhcclinic:easyui></dhcclinic:easyui>-->
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<dhcclinic:head></dhcclinic:head>
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/fullcalendar.min.css" />
+<script type="text/javascript" src="../service/dhcanop/js/moment.min.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/fullcalendar.min.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/fullcalendar-zh-cn.js"></script>
+<script type="text/javascript" >
+
+</script>
+<style>
+#operlistTool .form-row .calendertitlesmall {
+    display: inline-block;
+    width: 50px;
+    text-align: right;
+    margin-right: 10px;
+}
+#operlistTool .form-row .calendertitlebig {
+    display: inline-block;
+    width: 60px;
+    text-align: right;
+    margin-right: 10px;
+    padding-left:0px;
+}
+
+#operlistTool .form-row-group .form-row
+{
+	padding:10px 0;
+}
+</style>
+</head>
+<body class="hisui-layout">
+   <div id="west" data-options="region:'west',split:false,border:false" style="width:400px;padding:10px 0 10px 10px;">
+   		<div class="hisui-panel" data-options="title:'手术日程',iconCls:'icon-cal-pen',fit:true,headerCls:'panel-header-gray'">
+   			<div id="calendar" style="margin:5px;"></div>
+   		</div>
+   </div>
+   <div data-options="region:'center',border:false" style="padding:10px;">
+   		<table id="operlistBox"></table>
+   		<div id="operlistTool" >
+   		
+    		<form id="conditionForm">
+    			<div id="UpPanel" name="UpPanel" style="height:49px;">
+		    				<div class="form-row" style="padding:4px 0 5px 0;margin-left:0">
+		    					<div class="calendertitlesmall">登记号</div>
+		    					<div class="form-item-normal" style="">
+		    						<input type="text" id="filterRegNo" name="filterRegNo" class="hisui-validatebox" style="width:113px" />
+		    						
+		    					</div>
+		    					<div class="calendertitlebig" style="">患者姓名</div>
+		    					<div class="form-item-normal">
+		    						<input type="text" id="filterName" name="filterName" class="hisui-validatebox" style="width:113px;" />
+		    						
+		    					</div>
+		    					<div>
+		    					<input class='hisui-radio' type="radio" label='本人手术' name='search' id='self' >
+		    					</div>
+		    					<div style="margin-left:20px">
+		    					<input class='hisui-radio' type="radio" label='本科手术' name='search' id='loc'>
+		    					</div>
+		    					<div style="margin-left:20px">
+		    					<input class='hisui-radio' type="radio" label='全院手术' name='search' id='all'>
+		    					</div>
+		    				</div>
+		    			</div>
+		    		<div id="btnPanel" class="" style="padding: 0">
+		    		<a href="#" id="btnEditDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">修改日间手术</a>
+		    		<a href="#" id="btnConfirmDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-ok'">日间手术确认</a>
+		    		<a href="#" id="btnPreDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper-table'">日间手术术前麻醉评估</a>
+		    		<a href="#" id="btnPostDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper-table'">日间手术术后评估</a>
+		    		<a href="#" id="btnOutDaySurgery" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-paper-table'">日间手术出院评估</a>
+					<a href="#" id="btnCancelDayOper" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-cancel'">退出日间手术</a>
+		    		<a href="#" id="btnOperFollowup" class="hisui-linkbutton" data-options="plain:true,iconCls:'icon-edit'">术后随访</a>
+		    		</div>
+				<div class="hisui-dialog" data-options="closed:true,width:1130,height:800,title:'修改日间手术',modal:true" id="editDaySurgeryApp">
+    			</div>
+    			
+    			</div>
+
+		    	<div id="actionList" class="">
+		    		<!--#(##class(CIS.AN.BL.OperScheduleList).GetOperActions(%session.Get("AN.ModuleID"),%session.Get("LOGON.GROUPID"),"actionList"))#-->
+		    	</div>
+	    	</form>
+	    	</div>
+    	
+   </div>
+   <div id="DSNoteDialog" class="hisui-dialog" data-options="closed:true,modal:true,width:400,height:230,buttons:'#DSButtons',iconCls:'icon-edit'">
+   		<form id="DSNoteForm">
+   			<div class="form-rows">
+   				<div>
+   					<div class="form-row">
+   						<div class="form-title-normal">
+   							日间备注
+   						</div>
+   						<div class="form-title-normal">
+   							<textarea id="DaySurgeryNote" style="width:300px;height:100px;"></textarea>
+   						</div>
+   					</div>
+   				</div>
+   			</div>
+   		</form>
+   </div>
+   <div id="DSButtons">
+   		<a href="#" id="btnSaveDSNote" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+   		<a href="#" id="btnExistDSDialog" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">退出</a>
+   </div>
+    <script type="text/javascript" src="../service/dhcanop/lib/nicescroll/jquery.nicescroll.min.js"></script>
+    <script type="text/javascript" src="../service/dhcanop/js/datagrid-groupview.js"></script>
+   <script type="text/javascript" src="../service/dhcanop/js/LodopFuncs.js"></script>
+   <script type="text/javascript" src="../service/dhcanop/js/xlsx.core.min.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.Excel.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.PhoneMessage.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/CIS.AN.DaySurgeryCalendar.js"></script>
+   <script type="text/javascript">
+  </script>
+</body>
+</html>

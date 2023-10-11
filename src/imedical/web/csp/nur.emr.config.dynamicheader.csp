@@ -1,0 +1,202 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    i ##Class(ext.websys.SessionEvents).SessionExpired() q 1 
+    q 1
+</csp:method>
+<html lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type"
+		  content="text/html; charset=utf-8">
+	<title><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/multhosp.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/config/dynamicheader.js" charset=gbk></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/comm/editgrid.js" charset=gbk></script>
+	<STYLE type='text/css'>
+		body {
+            background-color: #fff;
+            padding:10px !important;
+        }
+        .panel-body.panel-body-noheader{
+			border-color: #ccc;
+		}
+        .datagrid .panel-body{
+			border: none;
+			border-radius: 0;
+		}
+		.blankTd {
+			width:30px;
+		}
+		.searchTable {
+			border-collapse: separate; 
+			border-spacing: 10px;
+			border:none;
+		}
+		.sbType {
+			width:250px;
+		}
+		#kwType li{
+			margin: 10px 5px 0px 10px;
+		}
+		#dialogAddType, #dialogAddRec {
+			padding:10px 10px 0px 10px;
+		}
+		.tbAdd {
+			border-collapse: separate; 
+			border-spacing: 10px;
+			border:1px solid #ccc;
+			width:100%;
+			border-top-left-radius:5px;
+			border-top-right-radius:5px;
+			border-bottom:none;
+		}
+		.tbAdd td, .tbAdd th {
+			margin: 0px !important;
+			padding: 0px !important;
+		}
+		.layout {
+			width:100% !important;
+			height:100% !important;
+		}
+	</STYLE>
+</head>
+<body>
+	<div class="hisui-layout" data-options="fit:true,border:false">
+		<div data-options="region:'north',split:true,border:false" style="height:40px;">
+			<table>
+				<tr>
+					<td>
+						<label id="_HospListLabel" class='r-label'>医院</label>
+					</td>
+					<td>
+						<input id="_HospList" class="textbox"/>
+					</td>
+					<td class="blankTd"></td>
+					<td>
+						<label class='r-label'>表单</label>
+					</td>
+					<td>
+						<input id="cbtreeModel" class="hisui-combotree" placeholder='请选择动态表头表单' style="width:400px;"/>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div data-options="region:'center',split:true,border:false">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'west',split:true,border:false" style="width:650px;">
+					<div class="hisui-layout" data-options="fit:true,border:false">
+						<div data-options="region:'north',split:true,border:false" style="height:90px;">
+							<div id="panelSearch" class="hisui-panel" data-options="title:'类别',fit:true,headerCls:'panel-header-gray',iconCls:'icon-rectangle-flow'" style="border-top:0;border-radius:0;">
+								<table class="searchTable">
+									<tr>
+										<td><input id="sbType" class="hisui-searchbox" data-options="prompt:'请输入科室或诊断'"/></td>
+										<td><a id="btnSearchType" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询</a></td>
+										<td><a id="btnAddType" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-add'">新增</a></td>
+										<td><a id="btnRemoveType" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-cancel'">删除</a></td>
+									</tr>
+								</table>
+							</div>
+						</div>
+						<div data-options="region:'center',border:false">
+							<div id="acRecommend" class="hisui-accordion accordion-gray" data-options="fit:true,border:false">
+								<div title="科室表头" data-options="iconCls:'icon-home-gray'">									
+									<table id='gridL' class="hisui-datagrid" data-options="fit:true"></table>
+								</div>
+								<div title="诊断表头" data-options="iconCls:'icon-add-diag'">
+									<table id='gridD' class="hisui-datagrid" data-options="fit:true"></table>
+								</div>
+								<div title="推荐表头（科室+诊断）" data-options="iconCls:'icon-ref'">
+									<table id='gridR' class="hisui-datagrid" data-options="fit:true"></table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div data-options="region:'center',split:true,border:false" style="padding-left:5px;">
+					<div id="panelHeader" class="hisui-panel" data-options="title:'表头',fit:true,headerCls:'panel-header-gray',iconCls:'icon-all-select'">
+						<table id="gridHeader" class="hisui-datagrid" data-options="fit:true,headerCls:'panel-header-gray',toolbar:'#menuTool'"></table>
+						<div id="menuTool">
+							<a id="btnAddHeader" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true" href="javascript:void(0)">新增</a>
+							<a id="btnRemoveHeader" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" href="javascript:void(0)">删除</a>
+							<a id="btnResetHeader" class="hisui-linkbutton" data-options="iconCls:'icon-reset',plain:true" href="javascript:void(0)">重置</a>
+							<a id="btnSaveHeader" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true" href="javascript:void(0)">保存</a>
+						</div>
+					</div>
+				</div>
+				<div id="dialogAddType" class="hisui-dialog" data-options="iconCls:'icon-w-add',shadow:false,modal:true,closed:true">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'north',border:false" style="height:51px;">
+							<table class="tbAdd">
+								<tr>
+									<td class="l-label" style="width:29px;">名称</td>
+									<td style="width:250px;">
+										<input id="sbAddType" class="hisui-searchbox" data-options="prompt:'请输入名称'" style="width:262px;"/>
+									</td>
+									<td>
+										<a id="btnSearchAddType" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询</a>
+									</td>
+								</tr>				
+							</table>
+						</div>
+						<div data-options="region:'center',border:false">
+							<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray'" style="border-top-left-radius:0;border-top-right-radius:0;">
+								<table id='gridAddType' class="hisui-datagrid" data-options="fit:true,border:false">
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="dialogAddRec" class="hisui-dialog" data-options="iconCls:'icon-w-add',shadow:false,modal:true,closed:true">
+					<div class="hisui-layout" data-options="fit:true">
+						<div data-options="region:'west',split:true,border:false" style="width:433px;">
+							<div class="hisui-layout" data-options="fit:true">
+								<div data-options="region:'north',border:false" style="height:51px;">
+									<table class="tbAdd">
+										<tr>
+											<td style="width:250px;">
+												<input id="sbAddLoc" class="hisui-searchbox" data-options="prompt:'请输入科室名称'" style="width:262px;"/>
+											</td>
+											<td>
+												<a id="btnSearchAddLoc" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询</a>
+											</td>
+										</tr>				
+									</table>
+								</div>
+								<div data-options="region:'center',border:false">
+									<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray'" style="border-top-left-radius:0;border-top-right-radius:0;">
+										<table id='gridAddLoc' class="hisui-datagrid" data-options="fit:true,border:false">
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-options="region:'center',border:false" style="padding-left:5px;">
+							<div class="hisui-layout" data-options="fit:true">
+								<div data-options="region:'north',border:false" style="height:51px;">
+									<table class="tbAdd">
+										<tr>
+											<td style="width:250px;">
+												<input id="sbAddDiag" class="hisui-searchbox" data-options="prompt:'请输入诊断名称'" style="width:262px;"/>
+											</td>
+											<td>
+												<a id="btnSearchAddDiag" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">查询</a>
+											</td>
+										</tr>				
+									</table>
+								</div>
+								<div data-options="region:'center',border:false">
+									<div class="hisui-panel" data-options="fit:true,bodyCls:'panel-body-gray'" style="border-top-left-radius:0;border-top-right-radius:0;">
+										<table id='gridAddDiag' class="hisui-datagrid" data-options="fit:true,border:false">
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

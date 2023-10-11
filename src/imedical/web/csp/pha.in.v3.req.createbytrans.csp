@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!--库存请求制单(依据转移入库)
+	csp:  csp/pha.in.v3.req.createbytrans.csp
+	js:   scripts/pha/in/v3/req/createbytrans.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD></TRAK:HEAD>
+    <HISUI />
+    <PHALIBV1 />
+    
+	<!-- 样式扩展 -->
+    <style>
+    	.button-width {
+			width: 90px;
+		}
+        #originFlag {
+            margin-left: 4px;
+        }
+    </style>
+    
+</head>
+
+<body>
+    <!-- 整体布局 -->
+    <div class="hisui-layout" fit="true" id="lyMainView" >
+         <div data-options="region:'center'" class="pha-body" border="false">
+         	<div class="hisui-layout" fit="true">
+	            <div data-options="region:'center',border:false,split:true">
+                    <div id="panelTrans">
+						<table id="gridTrans"></table>
+					</div>	
+				</div>
+			</div>
+		</div>
+	</div>
+    
+    <!-- 表格工具栏 -->
+	<div id="gridTransBar" >
+		<table id="qCondition" class="pha-con-table">
+		 	<tr>
+		 		<td class="r-label"><label for="recLocId">#(..Get("请求科室"))#</label></td>
+                <td><input id="recLocId"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+                <td><label for="startDate">#(..Get("开始日期"))#</label></td>
+                <td><input id="startDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="scg">#(..Get("类组"))#</label></td>
+                <td><input id="scg"  class="hisui-combobox text-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+            	<td style="text-align:right"><label for="days" style="text-align:right" >#(..Get("参考天数"))#</label></td>
+            	<td><input id='days'  class="hisui-numberbox text-width" data-pha='class:"hisui-numberbox",required:true,clear:true,query:true'></td>
+            	<td><a class="hisui-linkbutton button-width"  onclick="javascript:Query()">查询</a></td>
+            	<td><a id="btnSave" class="hisui-linkbutton button-width"  onclick="javascript:Save()">保存</a></td>
+            </tr>
+            <tr>
+		 		<td class="r-label"><label for="proLocId">#(..Get("供给科室"))#</label></td>
+                <td><input id="proLocId"  class="Condition-width" data-pha='class:"hisui-combobox",required:true,clear:true,query:true'/></td>
+                <td><label for="endDate">#(..Get("结束日期"))#</label></td>
+                <td><input id="endDate" class="hisui-datebox dhcpha-date text-width" type="text" data-pha='class:"hisui-datebox",required:true,clear:true,query:true'/></td>
+            	<td class="r-label"><label for="stkcatId">#(..Get("库存分类"))#</label></td>
+                <td><input id="stkcatId"  class="hisui-combobox text-width" data-pha='class:"hisui-combobox",clear:true,query:true'/></td>
+            	<td/>
+            	<td/>
+            	<td><a class="hisui-linkbutton button-width"  onclick="javascript:Clear()">清屏</a></td>
+            </tr>
+        </table>
+        <div class="pha-line"></div>
+        <div id="kw" style="height:36px;padding-left:8px"></div>
+	</div>
+
+    <!-- 加载本页面js -->
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/com.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/compoment.js"></script>
+    <script type="text/javascript" src="../scripts/pha/in/v3/req/createbytrans.js"></script>
+</body>
+
+</html>

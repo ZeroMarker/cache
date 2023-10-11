@@ -1,0 +1,82 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!-- dhcmdt.matreview.csp 资料审查 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<server>
+	  s LgHospID=%session.Get("LOGON.HOSPID")
+	  /// 是否有疑难病会诊中心
+	  s HASCENTER=##Class(web.DHCMDTCom).GetEmSysConfig("HASCENTER",LgHospID)
+	  /// 无中心模式安排权限
+	  s NOCENTPLANPAT=##Class(web.DHCMDTCom).GetEmSysConfig("NOCENTPLANPAT",LgHospID)
+	  w "<script Language=""JavaScript"">"_$c(13,10)
+	  w "var HASCENTER="""_$g(HASCENTER)_""";"_$c(13,10)
+	  w "var NOCENTPLANPAT="""_$g(NOCENTPLANPAT)_""";"_$c(13,10)
+	  w "</script>"
+	</server>
+	<HISUI/>
+	<link href="../scripts/dhcnewpro/dhcmdt/css/base.css" rel="stylesheet">
+	<link href="../scripts/dhcnewpro/dhcmdt/css/matreview.css" rel="stylesheet">
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/commonfun.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/js/hiscomponent.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/consfuncom.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcapp/layout.js"></script>
+	<script type="text/javascript" src="../scripts/dhcnewpro/dhcmdt/matreview.js"></script>
+</head>
+<body class="background-warp">
+	<server>
+	  s EpisodeID=$Get(%request.Data("EpisodeID",1)) /// 就诊ID
+	  s PatientID=$Get(%request.Data("PatientID",1)) /// 病人ID
+	  s IsConsCentPlan=$Get(%request.Data("IsConsCentPlan",1)) /// 是否会诊中心安排
+	  i PatientID="" s PatientID=$p(^PAADM(EpisodeID),"^",1)
+	  s ID=$Get(%request.Data("ID",1))       /// 会诊ID
+	  s MdtMakResID=$p($g(^DHCMDTCON(+ID)),"^",18)   /// 预约资源ID
+	  s MWToken=$Get(%request.Data("MWToken",1)) 
+	  s HideTabs=$Get(%request.Data("HideTabs",1)) /// 需要隐藏的tab签
+	  s HistLink = "dhcmdt.matreviewhist.csp?EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&ID="_ID_"&IsConsCentPlan="_IsConsCentPlan_"&HideTabs="_HideTabs_"&MWToken="_MWToken
+	  s mArrLink = "dhcmdt.consarrange.csp?EpisodeID="_EpisodeID_"&PatientID="_PatientID_"&ID="_ID_"&IsConsCentPlan="_IsConsCentPlan_"&mdtMakResID="_MdtMakResID_"&MWToken="_MWToken
+	</server>
+	   
+	<div id="contentLayout" class="hisui-layout" style="" data-options="clickExpand:true,fit:true">   
+		<div data-options="region:'center',title:'',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="padding:10px;border:none;">
+			<iframe id="tab_arrange" src="#(HistLink)#" width="100%" height="100%" frameborder="0" style="display:block" data-src="#(HistLink)#"></iframe>
+		</div>   
+		<div data-options="region:'east',title:'',split:true,border:false" style="width:650px;padding:10px 10px 10px 0px;">
+			<div class="hisui-panel" title="审核结果" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper'" fit="true">
+				<iframe id="tab_arrange" src="#(mArrLink)#" width="100%" height="100%" frameborder="0" style="display:block" data-src="#(mArrLink)#"></iframe>
+			</div>
+		</div>   
+	</div>
+	
+	<!-- mdt会诊专家窗口 -->
+	<div id="mdtWin" style="overflow:hidden;">
+		<iframe id="mdtFrames" src="" width="100%" height="100%" frameborder="0" style="display:block;"></iframe>
+	</div>
+	
+	
+	<!-- mdt修改资源窗口 -->
+	<div id="mdtResWin">
+		<div class="hisui-layout" fit="true">
+			<div data-options="region:'center',headerCls:'panel-header-gray',title:''" style="overflow:hidden;">
+				<iframe id="mdtResFrame" src="" width="100%" height="100%" frameborder="0" style="display:block;"></iframe>
+				<input id="mdtPreDate" class="hisui-validatebox" style="width:100px;display:none;"/>
+				<input id="mdtPreTime" class="hisui-validatebox" style="width:40px;display:none;"/>
+				<input id="mdtPreTimeRange" class="hisui-validatebox" style="width:46px;display:none;"/>
+				<input id="mdtMakResID" class="hisui-validatebox" style="width:100px;display:none;"/>
+				<input id="mdtID" class="hisui-validatebox" style="width:100px;display:none;"/>
+			</div>
+			<div data-options="region:'south',headerCls:'panel-header-gray',title:'',collapsible:false" style="height:50px;border:none;">
+				<div id="mdtWinTools" style="text-align: right;padding-top:10px;text-align:center">
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'" onclick="ClsWin()" style="margin-left:15px">取消</a>
+					<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" onclick="TakMakResDate()" style="margin-left:30px">确认</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

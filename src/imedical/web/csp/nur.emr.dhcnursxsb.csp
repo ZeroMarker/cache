@@ -1,0 +1,1476 @@
+﻿<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+     i ##Class(websys.SessionEvents).SessionExpired() q 1
+    s isPermission = ##Class(NurMp.Service.Template.Model).editAuthority(%request.Get("EpisodeID"),$g(%session.Data("LOGON.CTLOCID")),"DHCNURsxsb")
+    i isPermission'="0"
+    {
+    s utfo = $ZCONVERT(isPermission,"O","UTF8")
+    s urlo = $ZCONVERT(utfo,"O","URL")
+    s %response.ServerSideRedirect = "nur.emr.permissiondenied.csp?isPermission="_urlo
+    q 1
+    }
+    else
+    {
+    q 1
+    }
+</csp:method>
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel="stylesheet" type = "text/css" href = "../skin/default/css/websys.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts_lib/hisui-0.1.0/dist/css/hisui.min.css" />
+
+<link rel="stylesheet" type = "text/css" href = "../scripts/nurse/hisui-0.1.0/dist/css/jquery.contextMenu.css" />
+
+<style type="text/css">.datagrid-row-mp-printed
+{
+background:#CDC9A5;
+}
+.marker
+{
+position:absolute;border-radius:50%;z-index:999;
+}
+body * 
+{
+font-family:微软雅黑;font-size:14px
+}
+.commonModalDialog .dialog-content
+{
+overflow:hidden;
+}
+#element_Ul li label.checkbox
+{
+display:inline;
+}
+.datagrid-row-selected
+{
+background: #fced89 !important;color: #000000;
+}
+.datagrid-row-editting
+{
+background: #abbd65;color: #000000;
+}
+.tooltipTable
+{
+border-collapse:collapse;border: 1px solid #509de1;
+}
+.tooltipTable td
+{
+border: 1px solid #509de1;
+}
+.tooltipTable th
+{
+border: 1px solid #509de1;
+}
+img[src = ""]
+{
+opacity: 0;
+}
+ </style></head>
+   <body style="background-color:white;padding:0px;width:100%">
+<div LineNo="1" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_520" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:976px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_520" style="height:57.81px;width:976px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_521" style="float:left;height:22.81px;padding-Top:0px;padding-bottom:0px;width:265.46px;padding-left:325px;padding-right:0px">
+<div id="LableElement_521" style="height:22.81px;width:265.46px;text-align:center;font-family:宋体;font-size:20px;padding:0px;color:#000000;font-weight:bold">#(..Get("东华标准版数字化医院[总院]"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:3px">
+<div id="div_LableElement_522" style="float:left;height:22.81px;padding-Top:0px;padding-bottom:0px;width:158.73px;padding-left:405px;padding-right:0px">
+<div id="LableElement_522" style="height:22.81px;width:158.73px;text-align:center;font-family:宋体;font-size:20px;padding:0px;color:#000000;font-weight:bold">#(..Get("输血护理记录单"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="2" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_16" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:937px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_16" style="height:36px;width:937px">
+<div LineNo="1" style="padding:3px">
+<div id="div_LableElement_17" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_17" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("科室："))#</div>
+</div>
+<div id="div_TextElement_18" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_18" name="TextElement_18" class="textbox" oldVal="" dhccLableFor="ButtonElement_15" Signature="None" SaveField="Item6" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div id="div_LableElement_19" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:5px;padding-right:0px">
+<div id="LableElement_19" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("床号："))#</div>
+</div>
+<div id="div_TextElement_20" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:79.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_20" name="TextElement_20" class="textbox" oldVal="" dhccLableFor="LableElement_17" Signature="None" SaveField="Item7" ToolTipContent="False" style="height:28px;width:72.24001px" />
+</div>
+<div id="div_LableElement_21" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:5px;padding-right:0px">
+<div id="LableElement_21" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("姓名："))#</div>
+</div>
+<div id="div_TextElement_22" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:71.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_22" name="TextElement_22" class="textbox" oldVal="" dhccLableFor="DateElement_7" Signature="None" SaveField="Item8" ToolTipContent="False" style="height:28px;width:64.24001px" />
+</div>
+<div id="div_LableElement_23" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:5px;padding-right:0px">
+<div id="LableElement_23" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("性别："))#</div>
+</div>
+<div id="div_TextElement_24" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:49.24001px;padding-left:0px;padding-right:0px">
+<input id="TextElement_24" name="TextElement_24" class="textbox" oldVal="" dhccLableFor="CheckElement_11" Signature="None" SaveField="Item9" ToolTipContent="False" style="height:28px;width:42.24001px" />
+</div>
+<div id="div_LableElement_25" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:42px;padding-left:5px;padding-right:0px">
+<div id="LableElement_25" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("年龄："))#</div>
+</div>
+<div id="div_TextElement_26" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:103.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_26" name="TextElement_26" class="textbox" oldVal="" dhccLableFor="ButtonElement_13" Signature="None" SaveField="Item10" ToolTipContent="False" style="height:28px;width:96.24001px" />
+</div>
+<div id="div_LableElement_27" style="float:left;height:18.48px;padding-Top:5.76px;padding-bottom:5.76px;width:56px;padding-left:5px;padding-right:0px">
+<div id="LableElement_27" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("病案号："))#</div>
+</div>
+<div id="div_TextElement_28" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:155.24px;padding-left:0px;padding-right:0px">
+<input id="TextElement_28" name="TextElement_28" class="textbox" oldVal="" dhccLableFor="LableElement_19" Signature="None" SaveField="Item11" ToolTipContent="False" style="height:28px;width:148.24px" />
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="3" style="padding:5px 10px 5px 10px">
+<div id="div_ContainerElement_4" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:978px;padding-left:0px;padding-right:0px">
+<div id="ContainerElement_4" style="height:36px;width:978px">
+<div LineNo="1" style="padding:3px">
+<div id="div_ButtonElement_5" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:0px;padding-right:5px">
+<a id="ButtonElement_5" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="" style="height:30px;width:58px">#(..Get("新建"))#</a>
+</div>
+<div id="div_ButtonElement_6" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:5px;padding-right:5px">
+<a id="ButtonElement_6" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_6" style="height:30px;width:58px">#(..Get("修改"))#</a>
+</div>
+<div id="div_DateElement_7" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:113.8px;padding-left:15px;padding-right:0px">
+<input id="DateElement_7" name="DateElement_7" querybanding="RowToColDataTableElement_29:DateElement_184" oldVal="" SaveField="Item1" format="yyyy-MM-dd" style="height:30px;width:113.8px" />
+</div>
+<div id="div_TimeElement_8" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:69px;padding-left:5px;padding-right:0px">
+<input id="TimeElement_8" name="TimeElement_8" querybanding="RowToColDataTableElement_29:TimeElement_186" oldVal="" SaveField="Item2" style="height:30px;width:69px" />
+</div>
+<div id="div_DateElement_9" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:113.8px;padding-left:5px;padding-right:0px">
+<input id="DateElement_9" name="DateElement_9" querybanding="RowToColDataTableElement_29:DateElement_184" oldVal="" SaveField="Item3" format="yyyy-MM-dd" style="height:30px;width:113.8px" />
+</div>
+<div id="div_TimeElement_10" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:69px;padding-left:5px;padding-right:0px">
+<input id="TimeElement_10" name="TimeElement_10" querybanding="RowToColDataTableElement_29:TimeElement_186" oldVal="" SaveField="Item4" style="height:30px;width:69px" />
+</div>
+<div id="div_CheckElement_11" style="float:left;height:24px;padding-Top:3px;padding-bottom:3px;width:52px;padding-left:5px;padding-right:0px">
+<input  id='CheckElement_11'  class='hisui-checkbox'  name='CheckElement_11'  querybanding='RowToColDataTableElement_29:RecCancel'  oldVal='' SaveField='Item5'  type='checkbox'  label='#(..Get("作废"))#'  value='1'  NumberValue='#(..Get("1"))#'  /> 
+</div>
+<div id="div_ButtonElement_12" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:59px;padding-left:5px;padding-right:5px">
+<a id="ButtonElement_12" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_12" style="height:30px;width:59px">#(..Get("查询"))#</a>
+</div>
+<div id="div_ButtonElement_13" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:10px;padding-right:0px">
+<a id="ButtonElement_13" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_13" style="height:30px;width:58px">#(..Get("作废"))#</a>
+</div>
+<div id="div_ButtonElement_14" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:58px;padding-left:10px;padding-right:5px">
+<a id="ButtonElement_14" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="Gather_ButtonElement_14" style="height:30px;width:58px">#(..Get("恢复"))#</a>
+</div>
+<div id="div_ButtonElement_15" style="float:left;height:30px;padding-Top:0px;padding-bottom:0px;width:86px;padding-left:5px;padding-right:0px">
+<a id="ButtonElement_15" href="javascript:void();" class="hisui-linkbutton hover-dark" gatherFun="" style="height:30px;width:86px">#(..Get("打印全部"))#</a>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<div LineNo="4" style="padding:5px 10px 5px 10px">
+<div id="div_RowToColDataTableElement_29" style="float:left;height:auto;padding-Top:0px;padding-bottom:0px;width:951px;padding-left:0px;padding-right:0px">
+<table id="RowToColDataTableElement_29" cols="9" name="RowToColDataTableElement_29" BasicInfo="{'TemplateIndentity':'DHCNURssslr','StartColId':3,'EndColId':0,'CancelRecShowRed':false,'SortOrder':'desc','WinInfo':{'width':'1000','height':'1000'},'UpdateVerifyRelatedSignField':'','Rows':[{'field':'DateElement_233__TimeElement_313','align':'center','signShow':'FIFO','splitStr':','},{'field':'DropRadioElement_235','align':'center','signShow':'FIFO','splitStr':','},{'field':'DropRadioElement_237','align':'center','signShow':'FIFO','splitStr':','},{'field':'TimeElement_243','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_245','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_247','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_249','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_251__NumberElement_254','align':'center','signShow':'FIFO','splitStr':'/'},{'field':'DropRadioElement_255','align':'center','signShow':'FIFO','splitStr':','},{'field':'DropRadioElement_257','align':'center','signShow':'FIFO','splitStr':','},{'field':'DropRadioElement_259','align':'center','signShow':'FIFO','splitStr':','},{'field':'TextElement_261','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_263','align':'center','signShow':'FIFO','splitStr':','},{'field':'TextElement_265','align':'center','signShow':'FIFO','splitStr':','},{'field':'TimeElement_267','align':'center','signShow':'FIFO','splitStr':','},{'field':'TextElement_270','align':'center','signShow':'FIFO','splitStr':','},{'field':'TextElement_272','align':'center','signShow':'FIFO','splitStr':','},{'field':'TimeElement_274','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_277','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_279','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_281','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_283__NumberElement_285','align':'center','signShow':'FIFO','splitStr':'/'},{'field':'TimeElement_286','align':'center','signShow':'FIFO','splitStr':','},{'field':'TimeElement_290','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_292','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_294','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_296','align':'center','signShow':'FIFO','splitStr':','},{'field':'NumberElement_298__NumberElement_300','align':'center','signShow':'FIFO','splitStr':'/'},{'field':'RadioElement_304','align':'center','signShow':'FIFO','splitStr':','},{'field':'TimeElement_307','align':'center','signShow':'FIFO','splitStr':','},{'field':'DropListElement_309','align':'center','signShow':'FIFO','splitStr':','},{'field':'TextElement_311','align':'center','signShow':'FIFO','splitStr':','}]}" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-spacing:0px;border:1px solid Black">
+<tr id="TableRow_30">
+<td id="TableCell_573" colspan="3" style="height:32px;vertical-align:middle;border:1px solid Black">
+<div style="width:34px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_600" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_600" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("日期"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_35" style="height:32px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_443" style="height:32px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_36" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_37" style="height:32px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_38" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_39" style="height:32px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_479">
+<td id="TableCell_574" colspan="3" style="height:29px;vertical-align:middle;border:1px solid Black">
+<div style="width:48px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_696" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_696" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输血史"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_483" style="height:29px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_484" style="height:29px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_485" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_486" style="height:29px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_487" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_488" style="height:29px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_432">
+<td id="TableCell_575" colspan="3" style="height:29px;vertical-align:middle;border:1px solid Black">
+<div style="width:104px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_697" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:98px;padding-left:0px;padding-right:0px">
+<div id="LableElement_697" style="height:18.48px;width:98px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输血不良反应史"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_436" style="height:29px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_446" style="height:29px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_437" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_438" style="height:29px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_439" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_440" style="height:29px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_602">
+<td id="TableCell_603" rowspan="5" style="width:98px;vertical-align:middle;border:1px solid Black">
+<div style="width:99px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_MutiLableElement_698" style="float:left;height:55.44px;padding-Top:0px;padding-bottom:0px;width:93px;padding-left:0px;padding-right:0px">
+<p id="MutiLableElement_698" style="height:55.44px;width:93px;margin:0px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("生命体征测量（输血开始前60分钟内）"))#<br /></p>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_604" colspan="2" style="height:29px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_729" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_729" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("测量时间"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_606" style="height:29px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_607" style="height:29px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_608" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_609" style="height:29px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_610" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_611" style="height:29px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_612">
+<td id="TableCell_614" colspan="2" style="height:27px;vertical-align:middle;border:1px solid Black">
+<div style="width:57.36px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_730" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:51.36px;padding-left:0px;padding-right:0px">
+<div id="LableElement_730" style="height:18.48px;width:51.36px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("体温(℃)"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_616" style="height:27px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_617" style="height:27px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_618" style="height:27px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_619" style="height:27px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_620" style="height:27px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_621" style="height:27px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_632">
+<td id="TableCell_634" colspan="2" style="height:29px;vertical-align:middle;border:1px solid Black">
+<div style="width:86.66px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_731" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:80.66px;padding-left:0px;padding-right:0px">
+<div id="LableElement_731" style="height:18.48px;width:80.66px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("脉搏(次/分）"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_636" style="height:29px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_637" style="height:29px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_638" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_639" style="height:29px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_640" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_641" style="height:29px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_642">
+<td id="TableCell_644" colspan="2" style="height:29px;vertical-align:middle;border:1px solid Black">
+<div style="width:86.66px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_732" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:80.66px;padding-left:0px;padding-right:0px">
+<div id="LableElement_732" style="height:18.48px;width:80.66px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("呼吸(次/分）"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_646" style="height:29px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_647" style="height:29px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_648" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_649" style="height:29px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_650" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_651" style="height:29px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_622">
+<td id="TableCell_624" colspan="2" style="height:29px;vertical-align:middle;border:1px solid Black">
+<div style="width:89.39px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_733" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:83.39px;padding-left:0px;padding-right:0px">
+<div id="LableElement_733" style="height:18.48px;width:83.39px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("血压(mmHg)"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_626" style="height:29px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_627" style="height:29px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_628" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_629" style="height:29px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_630" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_631" style="height:29px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_719">
+<td id="TableCell_720" rowspan="9" style="width:98px;vertical-align:middle;border:1px solid Black">
+<div style="width:76px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_759" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:70px;padding-left:0px;padding-right:0px">
+<div id="LableElement_759" style="height:18.48px;width:70px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输血开始时"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_721" colspan="2" style="height:32px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_744" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_744" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输注途径"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_723" style="height:32px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_724" style="height:32px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_725" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_726" style="height:32px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_727" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_728" style="height:32px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_734">
+<td id="TableCell_736" colspan="2" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:34px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_745" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_745" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("血型"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_738" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_739" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_740" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_741" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_742" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_743" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_496">
+<td id="TableCell_498" colspan="2" style="height:32px;vertical-align:middle;border:1px solid Black">
+<div style="width:25.97px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_518" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:19.97px;padding-left:0px;padding-right:0px">
+<div id="LableElement_518" style="height:18.48px;width:19.97px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("RH"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_500" style="height:32px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_501" style="height:32px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_502" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_503" style="height:32px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_504" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_505" style="height:32px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_507">
+<td id="TableCell_509" colspan="2" style="height:30px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_519" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_519" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("血液种类"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_511" style="height:30px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_512" style="height:30px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_513" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_514" style="height:30px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_515" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_516" style="height:30px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_709">
+<td id="TableCell_711" colspan="2" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_746" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_746" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("血液剂量"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_713" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_714" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_715" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_716" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_717" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_718" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_699">
+<td id="TableCell_701" colspan="2" style="height:33px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_747" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_747" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("剂量单位"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_703" style="height:33px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_704" style="height:33px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_705" style="height:33px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_706" style="height:33px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_707" style="height:33px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_708" style="height:33px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_748">
+<td id="TableCell_750" colspan="2" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:90px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_758" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_758" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输血开始时间"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_752" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_753" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_754" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_755" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_756" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_757" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_177">
+<td id="TableCell_179" rowspan="2" style="width:89px;vertical-align:middle;border:1px solid Black">
+<div style="width:90px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_MutiLableElement_180" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:84px;padding-left:0px;padding-right:0px">
+<p id="MutiLableElement_180" style="height:18.48px;width:84px;margin:0px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("床旁核对签名"))#<br /></p>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_181" style="height:30px;width:89px;vertical-align:middle;border:1px solid Black">
+<div style="width:48px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_182" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_182" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("执行者"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_183" style="height:30px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_459" style="height:30px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_184" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_185" style="height:30px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_186" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_187" style="height:30px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_189">
+<td id="TableCell_192" style="height:31px;width:89px;vertical-align:middle;border:1px solid Black">
+<div style="width:48px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_193" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:42px;padding-left:0px;padding-right:0px">
+<div id="LableElement_193" style="height:18.48px;width:42px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("核对者"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_194" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_460" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_195" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_196" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_197" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_198" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_200">
+<td id="TableCell_587" rowspan="5" style="width:98px;vertical-align:middle;border:1px solid Black">
+<div style="width:98px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_MutiLableElement_785" style="float:left;height:55.44px;padding-Top:0px;padding-bottom:0px;width:92px;padding-left:0px;padding-right:0px">
+<p id="MutiLableElement_785" style="height:55.44px;width:92px;margin:0px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("生命体征测量（输血初始15分钟）"))#<br /></p>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_203" colspan="2" style="height:34px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_204" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_204" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("测量时间"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_206" style="height:34px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_461" style="height:34px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_207" style="height:34px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_208" style="height:34px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_209" style="height:34px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_210" style="height:34px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_652">
+<td id="TableCell_654" colspan="2" style="height:30px;vertical-align:middle;border:1px solid Black">
+<div style="width:57.36px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_760" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:51.36px;padding-left:0px;padding-right:0px">
+<div id="LableElement_760" style="height:18.48px;width:51.36px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("体温(℃)"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_656" style="height:30px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_657" style="height:30px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_658" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_659" style="height:30px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_660" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_661" style="height:30px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_663">
+<td id="TableCell_665" colspan="2" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:86.66px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_761" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:80.66px;padding-left:0px;padding-right:0px">
+<div id="LableElement_761" style="height:18.48px;width:80.66px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("脉搏(次/分）"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_667" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_668" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_669" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_670" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_671" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_672" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_674">
+<td id="TableCell_676" colspan="2" style="height:30px;vertical-align:middle;border:1px solid Black">
+<div style="width:86.66px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_762" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:80.66px;padding-left:0px;padding-right:0px">
+<div id="LableElement_762" style="height:18.48px;width:80.66px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("呼吸(次/分）"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_678" style="height:30px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_679" style="height:30px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_680" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_681" style="height:30px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_682" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_683" style="height:30px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_685">
+<td id="TableCell_687" colspan="2" style="height:30px;vertical-align:middle;border:1px solid Black">
+<div style="width:89.39px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_763" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:83.39px;padding-left:0px;padding-right:0px">
+<div id="LableElement_763" style="height:18.48px;width:83.39px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("血压(mmHg)"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_689" style="height:30px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_690" style="height:30px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_691" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_692" style="height:30px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_693" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_694" style="height:30px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_268">
+<td id="TableCell_593" style="height:29px;width:98px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_764" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_764" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输血结束"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_271" colspan="2" style="height:29px;vertical-align:middle;border:1px solid Black">
+<div style="width:90px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_272" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:84px;padding-left:0px;padding-right:0px">
+<div id="LableElement_272" style="height:18.48px;width:84px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输血结束时间"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_274" style="height:29px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_467" style="height:29px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_275" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_276" style="height:29px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_277" style="height:29px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_278" style="height:29px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_554">
+<td id="TableCell_599" rowspan="5" style="width:98px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_0" /></div>
+</td>
+<td id="TableCell_555" colspan="2" style="height:28px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_806" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_806" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("测量时间"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_557" style="height:28px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_558" style="height:28px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_559" style="height:28px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_560" style="height:28px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_561" style="height:28px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_562" style="height:28px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_765">
+<td id="TableCell_767" colspan="2" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:57.36px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_807" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:51.36px;padding-left:0px;padding-right:0px">
+<div id="LableElement_807" style="height:18.48px;width:51.36px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("体温(℃)"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_769" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_770" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_771" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_772" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_773" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_774" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_775">
+<td id="TableCell_777" colspan="2" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:86.66px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_808" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:80.66px;padding-left:0px;padding-right:0px">
+<div id="LableElement_808" style="height:18.48px;width:80.66px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("脉搏(次/分）"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_779" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_780" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_781" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_782" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_783" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_784" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_786">
+<td id="TableCell_788" colspan="2" style="height:34px;vertical-align:middle;border:1px solid Black">
+<div style="width:86.66px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_809" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:80.66px;padding-left:0px;padding-right:0px">
+<div id="LableElement_809" style="height:18.48px;width:80.66px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("呼吸(次/分）"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_790" style="height:34px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_791" style="height:34px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_792" style="height:34px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_793" style="height:34px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_794" style="height:34px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_795" style="height:34px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_796">
+<td id="TableCell_798" colspan="2" style="height:34px;vertical-align:middle;border:1px solid Black">
+<div style="width:89.39px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_810" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:83.39px;padding-left:0px;padding-right:0px">
+<div id="LableElement_810" style="height:18.48px;width:83.39px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("血压(mmHg)"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_800" style="height:34px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_801" style="height:34px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_802" style="height:34px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_803" style="height:34px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_804" style="height:34px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_805" style="height:34px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_811">
+<td id="TableCell_812" rowspan="3" style="width:98px;vertical-align:middle;border:1px solid Black">
+<div style="width:98px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_MutiLableElement_852" style="float:left;height:36.96px;padding-Top:0px;padding-bottom:0px;width:92px;padding-left:0px;padding-right:0px">
+<p id="MutiLableElement_852" style="height:36.96px;width:92px;margin:0px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("输血不良反应观察"))#<br /></p>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_813" colspan="2" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:39.98px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_851" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:33.98px;padding-left:0px;padding-right:0px">
+<div id="LableElement_851" style="height:18.48px;width:33.98px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("有/无"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_815" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_816" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_817" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_818" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_819" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_820" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_821">
+<td id="TableCell_823" colspan="2" style="height:30px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_853" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<div id="LableElement_853" style="height:18.48px;width:56px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("发生时间"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_825" style="height:30px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_826" style="height:30px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_827" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_828" style="height:30px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_829" style="height:30px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_830" style="height:30px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_831">
+<td id="TableCell_833" colspan="2" style="height:32px;vertical-align:middle;border:1px solid Black">
+<div style="width:34px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_LableElement_854" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:28px;padding-left:0px;padding-right:0px">
+<div id="LableElement_854" style="height:18.48px;width:28px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("种类"))#</div>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_835" style="height:32px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_836" style="height:32px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_837" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_838" style="height:32px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_839" style="height:32px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_840" style="height:32px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+<tr id="TableRow_841">
+<td id="TableCell_842" colspan="3" style="height:31px;vertical-align:middle;border:1px solid Black">
+<div style="width:62px;margin:0 auto"><div LineNo="1" style="padding:3px">
+<div id="div_MutiLableElement_855" style="float:left;height:18.48px;padding-Top:0px;padding-bottom:0px;width:56px;padding-left:0px;padding-right:0px">
+<p id="MutiLableElement_855" style="height:18.48px;width:56px;margin:0px;text-align:left;font-family:微软雅黑;font-size:14px;padding:0px;color:#000000">#(..Get("护士签名"))#<br /></p>
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+</div>
+</td>
+<td id="TableCell_845" style="height:31px;width:106px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_3" /></div>
+</td>
+<td id="TableCell_846" style="height:31px;width:114px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_4" /></div>
+</td>
+<td id="TableCell_847" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_5" /></div>
+</td>
+<td id="TableCell_848" style="height:31px;width:111px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_6" /></div>
+</td>
+<td id="TableCell_849" style="height:31px;width:112px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_7" /></div>
+</td>
+<td id="TableCell_850" style="height:31px;width:110px;vertical-align:middle;border:1px solid Black">
+<div style="margin:0 auto"><span class="col_8" /></div>
+</td>
+</tr>
+</table><div id="RowToColDataTableElement_29Pager" style="background:#efefef;border:1px solid #ccc;"></div> 
+
+</div>
+<div class='clearboth' style='clear:both'></div>
+</div>
+
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI/>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/plugin/datagrid-cellediting.js?ver=2023-04-11_141340" ></script>
+
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+   </SCRIPT>
+   <SCRIPT Language="Javascript">
+  var HighRiskReportEnable='#(##class(NurMp.Template.EventSet).isReport("f26af5bd459f490886c63df1994dfff5"))#';
+  var WebIp='';
+  var EpisodeID='#(%request.Get("EpisodeID"))#';
+  var TemplateGUID="f26af5bd459f490886c63df1994dfff5";
+  var TemplateIndentity="DHCNURsxsb";
+  var CAPatientPDF = false;
+  var dtformat = "";
+  var WindowCompleted = false;
+  var HiddenNoSubmit = false;
+  var RequiredAlter = false;
+  var HideSavedAlter = false;
+  var ShowLeaveMark = false;
+   </SCRIPT>
+    <script language = "Cache" runat = "server">
+   d ##class(NurMp.Service.Template.Model).InitEnvironment(%request.Get("ModelId"),%session.Data("LOGON.CTLOCID"))
+   </SCRIPT>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/HisUITableEdit.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/business/rightClickHandler.js?ver=2023-04-11_141340" charset="gbk" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/validateboxType.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Dateformat.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/ElementUtility.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Foundation.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Condition.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Cascading.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/PrintProvider.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript">
+var LoadFormElements = [
+'TextElement_18','TextElement_20','TextElement_22','TextElement_24','TextElement_26','TextElement_28','DateElement_7','TimeElement_8','DateElement_9','TimeElement_10','CheckElement_11'
+];
+
+
+
+$(document).ready(function () {InnerNetDebug();
+CallItemBeforeInit();
+ $('#TextElement_18').validatebox({ID:'TextElement_18' });
+RefHandler('TextElement_18',false,false,true);
+ $('#TextElement_20').validatebox({ID:'TextElement_20' });
+RefHandler('TextElement_20',false,false,true);
+ $('#TextElement_22').validatebox({ID:'TextElement_22' });
+RefHandler('TextElement_22',false,false,true);
+ $('#TextElement_24').validatebox({ID:'TextElement_24' });
+RefHandler('TextElement_24',false,false,true);
+ $('#TextElement_26').validatebox({ID:'TextElement_26' });
+RefHandler('TextElement_26',false,false,true);
+ $('#TextElement_28').validatebox({ID:'TextElement_28' });
+RefHandler('TextElement_28',false,false,true);
+$('#ButtonElement_5').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_5').click(function () {New('','Callback_ButtonElement_5','DHCNURssslr',{"width":"1000","height":"1000"}); });
+$('#ButtonElement_6').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_6').click(function () {Update('Gather_ButtonElement_6','Callback_ButtonElement_6','DHCNURssslr',{"width":"850","height":"875"}); });
+ $('#DateElement_7').dateboxq({ID:'DateElement_7' });
+ $('#TimeElement_8').timespinner({ID:'TimeElement_8' });
+if (/^edit/.test('TimeElement_8') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_8'))) {
+$('#TimeElement_8').unbind("keydown.spinner");
+}
+
+ $('#DateElement_9').dateboxq({ID:'DateElement_9' });
+ $('#TimeElement_10').timespinner({ID:'TimeElement_10' });
+if (/^edit/.test('TimeElement_10') && !IsTableCellEdit(GetTableIdByIndentity('TimeElement_10'))) {
+$('#TimeElement_10').unbind("keydown.spinner");
+}
+
+$('#ButtonElement_12').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_12').click(function () {RecQuery('Gather_ButtonElement_12','Callback_ButtonElement_12','',null); });
+$('#ButtonElement_13').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_13').click(function () {RecCancel('Gather_ButtonElement_13','Callback_ButtonElement_13','',null); });
+$('#ButtonElement_14').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_14').click(function () {RecRecover('Gather_ButtonElement_14','Callback_ButtonElement_14','',null); });
+$('#ButtonElement_15').linkbutton({  stopAllEventOnDisabled: 'true'}); 
+ $('#ButtonElement_15').click(function () {PrintAll('','','DHCNURMoudPrnsxhljld',null); });
+$('#RowToColDataTableElement_29Pager').pagination({
+total: 1,
+pageSize: 6 ,
+pageList: [6],
+onSelectPage:function(pageNumber, pageSize){
+var PageStart=(pageNumber-1)*pageSize+1;
+var PageEnd=pageNumber*pageSize;
+$('#RowToColDataTableElement_29').data('nurPageNumber', pageNumber);
+var queryParam=$('#RowToColDataTableElement_29').attr('queryInfo');
+GetDataFromService(null,["RowToColDataTableElement_29"],'PageStart='+PageStart+'&PageEnd='+PageEnd,queryParam);
+}
+});
+OnRowToColDataTableHandler('RowToColDataTableElement_29')
+CallItemAfterInit();
+CallItemBeforeSetValue();
+SetOneValue('DateElement_7',GetDayminus_7());
+
+SetOneValue('TimeElement_8','00:01');
+
+SetOneValue('DateElement_9',GetTomorrowDate());
+
+SetOneValue('TimeElement_10','23:59');
+
+
+InitHiddenField();
+InitDynamicTableTitleLabel();
+ShortcutFormElementFocus();
+setTimeout(function(){
+$('#RadioElement_29').next().css('font-Size','14px');
+$('#RadioElement_29').next().css('font-family','微软雅黑');
+$('#RadioElement_29').next().css('font-weight','bold');
+$('#RadioElement_30').next().css('font-Size','14px');
+$('#RadioElement_30').next().css('font-family','微软雅黑');
+$('#RadioElement_30').next().css('font-weight','bold');
+$('#RadioElement_31').next().css('font-Size','14px');
+$('#RadioElement_31').next().css('font-family','微软雅黑');
+$('#RadioElement_31').next().css('font-weight','bold');
+$('#RadioElement_29').next().css('font-Size','14px');
+$('#RadioElement_29').next().css('font-family','微软雅黑');
+$('#RadioElement_29').next().css('font-weight','bold');
+$('#RadioElement_30').next().css('font-Size','14px');
+$('#RadioElement_30').next().css('font-family','微软雅黑');
+$('#RadioElement_30').next().css('font-weight','bold');
+$('#RadioElement_31').next().css('font-Size','14px');
+$('#RadioElement_31').next().css('font-family','微软雅黑');
+$('#RadioElement_31').next().css('font-weight','bold');
+if (window.HISUIStyleCode == 'lite'){
+$('#DateElement_7').css('width',($('#DateElement_7').css('width').replace('px','')-7)+'px');
+$('#DateElement_9').css('width',($('#DateElement_9').css('width').replace('px','')-7)+'px');
+}
+GetDataFromService(null,null,null,null,false);
+CallItemAfterSetValue();
+DBTableFirstLoadData('RowToColDataTableElement_29',false);
+
+InitPatientPDF();
+InitHandover();
+InitHighRiskReport();
+setTimeout(function(){
+UpdateCAOldFormData();
+InitAutoSignature();
+InitTableCellPopover();
+InitSignDomain();
+BindingLeaveMarkLogEvent();
+WindowCompleted = true;
+setTimeout(PrintActivexUpgrade, 100); 
+setTimeout(function(){
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/shim.min.js?ver=2023-04-11_141340');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/xlsx.full.min.js?ver=2023-04-11_141340');
+loadJS('../scripts/nurse/hisui-0.1.0/dist/js/clipboard.min.js?ver=2023-04-11_141340');
+}, 100); 
+RealTimeSave(+0*1000);
+GetLeaveMarkLogs();
+}, 10); 
+}, 0); 
+ });
+$(window).load(function () {
+$('body').append('<OBJECT id="PrintActiveX" name="PrintActiveX" classid="clsid:8A76F30F-F63A-43D7-B1A1-BD42B708E9D1" codebase="../service/DHCMG/NurMPPrint.cab" style="height:0px;float:left;"></OBJECT>')
+if ($.type(window.WindowLoadCallBack) === 'function') { window.WindowLoadCallBack(); }
+ });
+function Callback_ButtonElement_5()
+{
+DBTableFirstLoadData('RowToColDataTableElement_29',false);
+}
+function Callback_ButtonElement_6()
+{
+DBTableLoadData('RowToColDataTableElement_29');
+}
+function Gather_ButtonElement_6()
+{
+var gatherElements = ['RowToColDataTableElement_29'];
+var gatherImportMap = 'RowToColDataTableElement_29^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_12()
+{
+return ['RowToColDataTableElement_29'];
+}
+function Gather_ButtonElement_12()
+{
+var gatherElements = ['DateElement_7','TimeElement_8','DateElement_9','TimeElement_10','CheckElement_11'];
+var gatherImportMap = 'DateElement_7^,TimeElement_8^,DateElement_9^,TimeElement_10^,CheckElement_11^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_13()
+{
+return ['RowToColDataTableElement_29'];
+}
+function Gather_ButtonElement_13()
+{
+var gatherElements = ['RowToColDataTableElement_29'];
+var gatherImportMap = 'RowToColDataTableElement_29^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+function Callback_ButtonElement_14()
+{
+return ['RowToColDataTableElement_29'];
+}
+function Gather_ButtonElement_14()
+{
+var gatherElements = ['RowToColDataTableElement_29'];
+var gatherImportMap = 'RowToColDataTableElement_29^';
+return GatherImportAssemble(gatherElements,gatherImportMap);
+}
+
+</script> <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/custom.js?ver=2023-04-11_141340" ></script>
+ <script type="text/javascript" src="../scripts_gen/DHCNURsxsb.js?ver=2023-04-11_141340" ></script>
+<script for="PrintActiveX" event="CheckUpgradeEvent(msg)" language="javascript">
+function PrintActiveX::CheckUpgradeEvent(msg) {
+console.log(msg);
+var reMsg = JSON.parse(msg);
+if (MsgIsOK(reMsg)) {//升级成功
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+else if (reMsg.status == "-1") {//升级失败
+$.messager.alert($g("提示"), reMsg.msg, "info");
+}
+}
+</script>
+<script type='text/template' id='dialogReferTemplate'>
+<div id="dialogRefer" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnClose'
+	},{
+		text:'清屏',
+		iconCls:'icon-w-clean',
+		id: 'btnClear'
+	},{
+		text:'引用',
+		iconCls:'icon-w-edit',
+		id: 'btnRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='dialogSpecialCharTemplate'>
+<div id="dialogSpecialChar" class="hisui-dialog" data-options="closed:true,buttons:[{
+		text:'关闭',
+		iconCls:'icon-w-close',
+		id: 'btnCharClose'
+	},{
+		text:'确定',
+		iconCls:'icon-w-edit',
+		id: 'btnCharRefer'
+	}]">
+</div>
+</script>
+<script type='text/template' id='menuTemplate'>
+<div id="menu" class="hisui-menu" style="width:100px;"></div>
+</script>
+<script type='text/template' id='HisUITableMenuTemplate'>
+<div id="hisUITableMenu" class="hisui-menu" data-options="onClick:OnHisUiTableMenuHandler" style="width:100px;"></div>
+</script>
+<script type='text/template' id='RePrintSetDialogTemplate'>
+<div id="rePrintDialog" class="hisui-dialog" title="补打设置" style="width:350px;height:300px;" data-options="closed:true,onOpen:function(){RePrintGetPrintinfo();},modal:true,
+	buttons:[
+	{text:'确定',handler:function(){RePrint();}},
+	{text:'取消',handler:function(){$HUI.dialog('#rePrintDialog').close();}}
+	]">
+    <div style="width:350px;height:213px;display:table-cell;vertical-align:middle;text-align:center;">
+        <div style="display:inline-block;">
+            <span id="IsPrint">#(..Get("未打印"))#</span>  <br>
+            #(..Get("打印信息："))#<span id="PrintInfo">#(..Get("无"))#</span>
+            <br>
+            <br>
+            #(..Get("开始页："))#<input id="startPageNo" class="hisui-numberbox textbox" data-options="required:true">
+            <br>
+            <br>
+            #(..Get("开始行："))#<input id="startRowNo" class="hisui-numberbox textbox" data-options="required:true">
+        </div>
+    </div>
+</div>
+</script>
+<script type='text/template' id='CancelHighRisKReportDialogTemplate'>
+<div id='cancelReportDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		撤销原因：
+	   <select id='reasonBox' name='reason' class='hisui-combobox' style='width:200px;'>
+	   	    <option value='撤销'>撤销</option>
+	    		<option value='出院'>出院</option>
+	    		<option value='死亡'>死亡</option>
+	    		<option value='转出'>转出</option>
+	    </select>
+	   <br/>
+	   撤销日期：
+	   <input id="cancelReportDate" class="hisui-datebox textbox datebox-f combo-f" data-options="">
+	   <br/>
+	   撤销时间：
+	   <input id="cancelReportTime" class="hisui-timespinner" data-options="" style="border-radius: 2px;">
+  </div>
+</div>
+</script>
+<script type='text/template' id='SignPWDVerifyDialogTemplate'>
+<div id='signPWDVerifyDialog' class="hisui-dialog" data-options="closed:true,modal:true">
+	<div style="margin-top:10px;text-align:center">
+		 密码：<input id="signPWD" class="textbox" type="password">
+  </div>
+</div>
+</script>
+</body>
+</html>

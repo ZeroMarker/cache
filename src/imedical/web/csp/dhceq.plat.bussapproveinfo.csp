@@ -1,0 +1,85 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI/>
+	<DHCEQ:HISUI></DHCEQ:HISUI>
+</head>
+<script language=Cache runat=server>
+	i ##class(websys.Conversions).IsValidClassName("websys.AddInsTmpl") d ##class(websys.AddInsTmpl).WriteInvokeJsCode("CmdShell")
+	s ChromeFlag=##class(web.DHCEQCommon).GetSysInfo("991109") 
+	s Job=$j
+	s QXType=$g(%request.Data("QXType",1))
+	s BussTypeIDs=$g(%request.Data("BussTypeIDs",1))
+</script>
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px;">
+		<div class="hisui-panel" title="业务单据审批进度" data-options="eqtitle:'maintitle',fit:true">
+			<div class="hisui-layout" data-options="fit:true,border:false">
+				<div data-options="region:'north',border:false" style="border-bottom:solid 1px #ccc;height:115px;">
+					<div class="eq-table">
+						<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="BussType">业务类型</label></div>
+							<div class="eq-table-td eq-table-input"><input id="BussType" class="hisui-combobox textbox"></div>
+							<div class="eq-table-td eq-table-label"><label for="BussNo">业务单号</label></div>
+							<div class="eq-table-td eq-table-input"><input id="BussNo" class="hisui-validatebox textbox"></div>
+							<div class="eq-table-td eq-table-label"><label for="Status">单据状态</label></div>
+							<div class="eq-table-td eq-table-input"><input id="Status" class="hisui-combobox textbox"></div>
+							<div class="eq-table-td eq-table-label"><label for="ApproveUserDR_SSUserDesc">审批人</label></div>
+							<div class="eq-table-td eq-table-input"><input id="ApproveUserDR_SSUserDesc" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.EQUser'"></div>
+							<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" iconCls="icon-w-find"  data-options="stopAllEventOnDisabled:true">查询</a></div>
+	           			</div>
+	           			<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="RequestDateFrom">申请日期</label></div>
+							<div class="eq-table-td eq-table-input"><input id="RequestDateFrom" class="hisui-datebox textbox"></div>
+							<div class="eq-table-td eq-table-label"><label for="RequestDateTo">至</label></div>
+							<div class="eq-table-td eq-table-input"><input id="RequestDateTo" class="hisui-datebox textbox"></div>
+							<div class="eq-table-td eq-table-label"><label for="AuditDateFrom">审批日期</label></div>
+							<div class="eq-table-td eq-table-input"><input id="AuditDateFrom" class="hisui-datebox textbox"></div>
+							<div class="eq-table-td eq-table-label"><label for="AuditDateTo">至</label></div>
+							<div class="eq-table-td eq-table-input"><input id="AuditDateTo" class="hisui-datebox textbox"></div>
+							<div class="eq-table-td eq-table-label"><!--a id="BSaveExcel" href="#" class="hisui-linkbutton" iconCls="icon-w-export"  data-options="stopAllEventOnDisabled:true">导出</a--></div>
+	           			</div>
+	           			<!--Add By QW20211110 BUG:QW0154 增加角色动作 begin-->
+	           			<div class="eq-table-tr">
+							<div class="eq-table-td eq-table-label"><label for="ApproveRoleDR_Desc">角色</label></div>
+							<div class="eq-table-td eq-table-input"><input id="ApproveRoleDR_Desc" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.RoleAction'"></div>
+							<div class="eq-table-td eq-table-label"><label for="ApproveActionDR_Desc">动作</label></div>
+							<div class="eq-table-td eq-table-input"><input id="ApproveActionDR_Desc" class="hisui-validatebox textbox" data-options="'component':'PLAT.L.RoleAction'"></div>
+							<div class="eq-table-td eq-table-label"><label for="APPStatus">审批状态</label></div>
+							<div class="eq-table-td eq-table-input"><input id="APPStatus" class="hisui-combobox textbox"></div>
+	           			</div>
+	           			<!--Add By QW20211110 BUG:QW0154 增加角色动作 end-->
+	            	</div>
+	            </div>
+				<div  class="eq-total-sum" data-options="region:'center',border:false" style="position:relative;padding:0x;">
+					<div class="hisui-panel" data-options="eqtitle:'maintitle',fit:true,border:false">
+						<table id="tDHCEQBussAppList" class="hisui-datagrid"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--隐藏元素-->
+	<div id="hiddenEncrypt" style="display:hidden">
+		<form name="DHCEQ">
+			<INPUT type="hidden" id="Job" value="#(Job)#">
+			<INPUT type="hidden" id="ChromeFlag" value="#(ChromeFlag)#">
+			<INPUT type="hidden" id="ApproveUserDR">
+			<INPUT type="hidden" id="ApproveRoleDR"><!--Add By QW20211110 BUG:QW0154 增加角色-->
+			<INPUT type="hidden" id="ApproveActionDR"> <!--Add By QW20211110 BUG:QW0154 增加动作-->
+			<INPUT TYPE="hidden" name="GetNum" id="GetNum" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQ.Plat.LIBMessages.GetNum")))#>
+			<INPUT TYPE="hidden" name="GetList" id="GetList" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQ.Plat.LIBMessages.GetList")))#>
+			<INPUT TYPE="hidden" name="GetRepPath" id="GetRepPath" value=#(##Class(websys.Page).Encrypt($lb("web.DHCEQStoreMoveSP.GetPath")))#>
+			<INPUT type="hidden" id="QXType" value="#(QXType)#">
+			<INPUT type="hidden" id="BussTypeIDs" value="#(BussTypeIDs)#">
+		</form>
+	</div>
+<script type="text/javascript" src="../scripts/dhceq/plat/bussapproveinfo.js"></script>
+</body>
+</html>

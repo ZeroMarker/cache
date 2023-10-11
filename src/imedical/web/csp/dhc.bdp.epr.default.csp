@@ -1,0 +1,58 @@
+<!-- Copyright (c) 2010 DHC Software Co.,Ltd. ALL RIGHTS RESERVED. --> 
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<HTML XMLNS=TRAK>
+<HEAD>
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<SERVER>
+	;epr.default.csp
+	n str,LogonPatientID,LogonEpisodeID,MainChartBook,MainChart
+	s (str,LogonPatientID,LogonEpisodeID,MainChartBook,MainChart)=""
+	i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s str=$p($g(%request.Data("LogonFromVB",1)),"^",2) ;s ^zTRAK("cjb","epr.default.csp")=str
+	i str'="" s LogonPatientID=$p(str,":",3),LogonEpisodeID=$p(str,":",4),MainChartBook=$p(str,":",5),MainChart=$p(str,":",6)
+	
+	n wfl,def,wfli
+	;;k %request.Data ;clear all existing page data???
+	;get start workflow id
+	s wfl=##Class(epr.GroupSettings).GetStartPage($g(%session.Data("LOGON.GROUPID")))
+	k %request.Data("DONOTGOBACK")
+	s %request.Data("TWKFL",1)=wfl
+	s %request.Data("TWKFLI",1)=0
+	//TN:22-May-2002: using javascript to page jump instead of using %response.ServerSideRedirect to 
+	//allow javascript call to clear selected patient in menu frame
+	//d %session.Set("epr.default.csp",1)
+	//s %response.ServerSideRedirect="websys.csp"
+	//d ##Class(websys.Conversions).SaveRequest()
+	//q
+	w "<SCRIPT>",$c(13,10)
+	w "var winf = null; if (window.parent != window.self) winf = window.parent;",$c(13,10)
+	w "if ((winf)&&(winf.frames['eprmenu'])) {",$c(13,10)
+	w "  winf.MainClearEpisodeDetails();",$c(13,10)
+	//i str'="" w "  winf.SetEpisodeDetails("_LogonPatientID_","_LogonEpisodeID_","""","""","""","""","""","""","""","""","""","""","""","""","""","""","""","""","""","""","""");",$c(13,10)
+	w "  with (winf.frames['eprmenu']) {",$c(13,10)
+	//if current display eprmenu header belongs to a different security group, change the header.
+	w "    if ((document.readyState=='complete')&&(session['LOGON.GROUPID']!='"_$g(%session.Data("LOGON.GROUPID"))_"')) location.reload();"
+	//clear highlighted menu
+	w "    if ((document.readyState=='complete')&&(tlbar!='')) {var el=document.getElementById(tlbar);if (el) el.style.visibility='hidden'; el=document.getElementById(tlbarbtn);if (el) el.style.border=''; tlbar='';tlbarbtn='';}",$c(13,10)
+	w "    if (document.readyState=='complete') {SelectWorkflow('"_wfl_"')}",$c(13,10)
+	w "  }"
+	w "}",$c(13,10)
+	
+	/// 转到医用知识库home页 chenying2018-04-03
+	w "window.location='dhc.bdp.mkbhome.csp';",$c(13,10)
+	/// 使用工作流  zhaocz 2009-06-18
+	//w "window.location='websys.csp?TEPRSTART=TEPRSTART&TWKFL="_wfl_"&TWKFLI=0';",$c(13,10)
+	// wanghc 8.1.1 侧菜单显示到下面
+	/*if $g(%request.Data("IsSideMenu",1),"false")="true" { 
+		w "window.location='websys.frames.csp';",$c(13,10)
+	}
+	i MainChart'="" w "window.location='epr.chart.csp?PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&ChartID="_MainChart_"';",$c(13,10)
+	i MainChartBook'="" w "window.location='epr.chartbook.csp?PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&ChartBookID="_MainChartBook_"';",$c(13,10)
+	*/
+	w "</SCRIPT>",$c(13,10)
+</SERVER>
+</head>
+</html>

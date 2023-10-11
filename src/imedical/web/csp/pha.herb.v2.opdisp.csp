@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--门诊草药处方发药
+	csp:pha.herb.v2.opdisp.csp
+	js: pha/herb/v2/opdisp.js
+-->
+<html>
+<!-- 验证session过期 -->
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+    d ##Class(websys.SessionEvents).SessionExpired() q 1
+</csp:method>
+
+<head>
+    <!-- iMedical版本标题 -->
+    <title>
+        <TRAK:TRANSLATE id=title>##(%session.Get("TITLE"))##</TRAK:TRANSLATE>
+    </title>
+    <TRAK:HEAD>
+    </TRAK:HEAD>
+    <HISUI/>
+	<ADDINS require="RWCard,WebsysTool" />
+	<DOCCARD medStepCode="CMDisp" ></DOCCARD>
+	<PHAHERBV2/>
+	<server>
+		s gPatNo = $G(%request.Data("gPatNo",1))
+		s gOeori = $G(%request.Data("gOeori",1))
+		s RefuseWay=##Class(web.DHCSTCNTSCOMMON).GetWayIdByCode("HERBR")
+		d ##class(PHA.COM.ReadCard).LoadPlugin()
+	</server>
+	<SCRIPT Language="Javascript">
+       	var RefuseWay="#(RefuseWay)#";
+       	var LoadPatNo="#(gPatNo)#";
+		var LoadOeori = "#(gOeori)#";
+   </SCRIPT>
+</head>
+
+<body>       
+    <div class="hisui-layout" fit="true">
+		<div data-options="region:'center',split:false,headerCls:'panel-header-gray'" class="pha-body" border="false">
+			<div class="hisui-layout" fit="true" border="false" style="border-radius: 4px;">		
+				<div data-options="region:'center',title:'门诊草药处方发药',iconCls:'icon-paper-table',split:true,headerCls:'panel-header-gray'" id = "pha_herb_v2_opdisp">
+					<div class="hisui-layout" fit="true">	
+						<div data-options="region:'north',border:false,split:false" style="overflow:hidden">							
+							<div>
+                                <div width="60%" class="pha-herb-window-left">
+                                    <table class="pha-con-table nopadding">
+                                        <tr>
+                                            <td class="r-label">
+                                                <label for="dateStart">#(..Get("开始日期"))#</label>
+                                            </td>
+                                            <td class="r-label">
+                                                <input id="dateColStart" class="hisui-datebox phaherb-datebox"></input>
+                                            </td>
+                                            <td class="r-label">
+												<input id="timeColStart" class="hisui-timespinner phaherb-timespinner" showSeconds="true"></input>
+                                            </td>
+                                            <td class="r-label">#(..Get("卡号"))#</td>
+                                            <td class="r-label">
+												<input id="txtCardNo" type="text" class="hisui-validatebox textbox"/>
+                                            </td>
+											<td class="r-label">
+												<a class="hisui-linkbutton" plain="false" data-options="iconCls:'icon-w-card'" id="readCard">读卡</a>
+											</td>
+                                            <td class="r-label">
+                                                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" id="btnQuery" onclick="javascript:QueryOutPrescList()">查询</a>
+                                            </td>
+                                            <td class="r-label">
+                                                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" id="btnClear" onclick="javascript:Clear()">清屏</a>
+                                            </td>
+                                            <td class="r-label">
+                                                <a class="hisui-linkbutton" data-options="iconCls:'icon-w-card'" id="btnDelivery" onclick="javascript:ReShowDeliveryDiag()">配送信息</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="r-label">
+                                                <label for="dateEnd">#(..Get("截止日期"))#</label>
+                                            </td>
+                                            <td class="r-label">
+                                                <input id="dateColEnd" class="hisui-datebox phaherb-datebox"></input>
+                                            </td>
+                                            <td class="r-label">
+                                                <input id="timeColEnd" class="hisui-timespinner phaherb-timespinner" showSeconds="true"></input>
+                                            </td>
+                                            <td class="r-label">#(..Get("登记号"))#</td>
+                                            <td colspan="1">
+                                                <input id="txtBarCode" type="text" class="hisui-validatebox textbox"/>
+                                            </td>
+                                            <td colspan="2">
+                                                <input id="chk-disp" class='hisui-checkbox' type="checkbox" label="#(..Get("已发药"))#" />
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div width="40%" class="pha-herb-window-right">
+                                    <table style="margin-top:10px;">
+										<tr>
+											<td>
+												<span>#(..Get("当前窗口："))#<lable id="currentWinLable"></lable></span>
+											</td>
+	                                        <td colspan="1" style="width:80px;">
+	                                            <lable id="currentWin"></lable>
+	                                        </td>
+	                                        <td colspan="2">
+	                                            <a class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" type="button" id="btn-ChangeWindow">切换发药窗口</a>
+	                                        </td>
+										</tr>
+										<tr>
+											<td>
+												<span>#(..Get("配药药师："))#<lable id="pyUserNameLable"></lable></span>
+											</td>
+	                                        <td colspan="1" style="width:80px;">
+	                                            <lable id="pyUserName"></lable>
+	                                        </td>
+	                                        <td colspan="2">
+	                                            <a class="hisui-linkbutton" data-options="iconCls:'icon-w-update',buttonAlign:'right'" type="button" id="btn-ChangePYUser">切换配药药师</a>
+	                                        </td>
+										</tr>
+                                    </table>
+                                </div>
+                            </div>
+
+						</div>
+						<div data-options = "region:'center',border:false,split:true" style="border-radius: 4px;padding:10px;padding-top:0px">
+							<div class = "hisui-layout" fit = "true" id="layout-herb—grid">
+								<div data-options = "headerCls:'panel-header-gray',iconCls:'icon-paper-eye-r',region:'west',split:true,border:true,title:'处方预览'">
+									<iframe id="ifrm-PreViewPresc" src="" style="border:0px;width:100%;height:99%;"></iframe> 
+								</div>
+								<div data-options = "region:'center',border:false">
+									<div class = "hisui-layout" fit = "true" id="layout-herb—grid-list">
+										<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'center', split:true, title:'处方列表'" >
+											<table id="gridOutPrescList"></table>
+										</div>
+										<div data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',region:'south', height:280, split:true, title:'待发药列表'" >
+											<table id="gridWaitList"></table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+		    </div>
+        </div>
+    </div>
+	
+	<!-- 表格工具栏 -->
+    <div id="gridOutPrescListBar" style="height:30px;padding-top:2px;">
+		<div style="float:left">
+			<a class="hisui-linkbutton" iconCls='icon-herb-next' plain="true" id="btnDisp">发药</a>
+			<a class="hisui-linkbutton" iconCls='icon-herb-ok' plain="true" id="btnDispAll">全发</a>
+			<a class="hisui-linkbutton" iconCls='icon-herb-no' plain="true" id="btnDispRefuse">拒发药</a>			
+			<a class="hisui-linkbutton" iconCls='icon-decoct-herb' plain="true" id="btnApplyCook">煎药申请</a>
+		</div>	
+		<div class="datagrid-btn-sepatator"></div>
+		<div style="float:left">
+			<a class="hisui-linkbutton" iconCls='icon-decoct-change' plain="true" id="btnChangeCook">煎药转换</a>
+			<a class="hisui-linkbutton" iconCls='icon-herb-pre' plain="true" id="btnSaveAgreeRet">置可退</a>
+			<a class="hisui-linkbutton" iconCls='icon-add-item' plain="true" id="btnAddCookFee">补录煎药费</a>
+		</div>
+    </div>
+    
+    <!-- 表格工具栏 -->
+    <div id="gridWaitListBar" style="height:30px;padding-top:2px">
+		<a class="hisui-linkbutton" iconCls='icon-reset' plain="true" id="btnFresh">刷新</a>
+    </div>
+
+	<!-- 选择发药窗口js -->
+	<script type="text/javascript" src="../scripts/pha/herb/v2/dispwindow.js"></script>
+	<!-- 选择配药药师js -->
+	<script type="text/javascript" src="../scripts/pha/herb/v2/pyuser.js"></script>
+    <!-- 本页面js -->
+    <script type="text/javascript" src="../scripts/pha/herb/v2/opdisp.js"></script>
+	
+
+<csp:Include Page="pha.herb.v2.cookfee.csp" />
+<csp:Include Page="pha.herb.v2.dispwindow.csp" />
+<csp:Include Page="pha.herb.v2.pyuser.csp" />
+</body>
+
+</html>

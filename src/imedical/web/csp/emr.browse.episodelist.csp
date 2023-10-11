@@ -1,30 +1,45 @@
-﻿<div data-options="region:'west',border:false" style="width:255px;padding:10px 3px 10px 10px;">
-    <table id="episodeList" class="hisui-datagrid" title="病历浏览-就诊列表" data-options="headerCls:'panel-header-gray',fit:true,iconCls:'icon-add-note',toolbar:'#tb'"></table>
-    <div id="tb" style="padding:5px 0 5px 8px">
-        <div style="padding-top:3px;">  
-            <span>#(..Get("就诊类型"))#</span>
-            <input id="episodeType" name="episodeType" style="width:165px;"></input>
+﻿<style type="text/css">
+.labtap{margin-right:5px;margin-left:3px}
+</style>
+<div data-options="region:'west',border:false,title:'病历浏览-就诊列表',headerCls:'panel-header-gray',iconCls:'icon-add-note',split:true,border:true" style="width:255px;">
+    <table id="episodeList" class="hisui-datagrid" title="" data-options="headerCls:'panel-header-gray',border:false,fit:true,toolbar:'#tb'"></table>
+    <div id="tb" style="padding:5px 0 5px 5px">
+        <div style="padding-top:5px;">  
+            <span class="labtap">#(..Get("就诊类型"))#</span>
+            <input id="episodeType" name="episodeType" style="width:167px;"></input>
         </div>
-        <div style="padding-top:3px;">
-            <span>#(..Get("开始日期"))#</span>
-            <input id="startDate" class="hisui-datebox textbox" data-options="width:165"/>
+        <div style="padding-top:10px;">
+            <span class="labtap">#(..Get("开始日期"))#</span>
+            <input id="startDate" class="hisui-datebox textbox" data-options="width:167"/>
         </div>
-        <div style="padding-top:3px;">
-            <span>#(..Get("结束日期"))#</span>
-            <input id="endDate" class="hisui-datebox textbox" data-options="width:165"/>
+        <div style="padding-top:10px;">
+            <span class="labtap">#(..Get("结束日期"))#</span>
+            <input id="endDate" class="hisui-datebox textbox" data-options="width:167"/>
         </div>
-        <div style="padding-top:3px;">
-            <span>#(..Get("诊断内容"))#</span>
-            <input id="diagnosDesc" class="hisui-validatebox textbox" type="text" placeholder="请输入诊断内容" style="vertical-align:middle;width:158px;"></input>
+        <div style="padding-top:10px;">
+            <span class="labtap">#(..Get("诊断内容"))#</span>
+            <input id="diagnosDesc" class="hisui-validatebox textbox" type="text" placeholder="请输入诊断内容" style="vertical-align:middle;width:160px;"></input>
         </div>
-        <div style="padding:3px 14px 0 75px;">
+        <div style="padding-top:10px;">
+            <span style="padding-left:28px;" class="labtap" >#(..Get("医生"))#</span>
+            <input id="cbxUser" class="hisui-combobox" style="width:167px;"></input>
+        </div>
+        <div id="ctHosp" style="padding-top:10px;display:none;">
+            <span style="padding-left:28px;" class="labtap">#(..Get("院区"))#</span>
+            <input id="cbxCTHosp" class="hisui-combobox" style="width:167px;"></input>
+        </div>
+        <div style="padding: 10px 0px 5px 0px;text-align: center;">
             <a id="episodeSeek" href="#" class="hisui-linkbutton hover-dark" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a>  
         </div>
     </div>
 </div>
+<script language="cache" runat="server">
+    s showShareHospital=##Class(EMRservice.BL.BLSysOption).GetOptionValueByName2("ShowShareHospital","N")
+</script>
 <script type="text/javascript">
     var patientID = "";
     var episodeID = "";
+    var showShareHospital = '#(showShareHospital)#';
 $(function(){
     var frm = dhcsys_getmenuform();
     if (frm) { 
@@ -41,7 +56,8 @@ $(function(){
                 {"id":"O","text":emrTrans("门诊")},
                 {"id":"E","text":emrTrans("急诊")},
                 {"id":"I","text":emrTrans("住院")},
-                {"id":"H","text":emrTrans("体检")}
+                {"id":"H","text":emrTrans("体检")},
+                {"id":"IP","text":emrTrans("预住院")}
              ],
         onLoadSuccess:function()
         {
@@ -62,18 +78,19 @@ $(function(){
         columns:[[ 
             {field:'EpisodeType',title:'类型',width:38,formatter:formatter,styler:formatColor}, 	     
             {field:'EpisodeDate',title:'就诊日期',width:90},
+            {field:'EpisodeDeptDesc',title:'科室',width:100}, 
             {field:'DischargeDate',title:'出院日期',width:90},
-            {field:'EpisodeDeptDesc',title:'科室',width:100},   
             {field:'MainDocName',title:'主治医生',width:65}, 
             {field:'Diagnosis',title:'诊断',width:100}, 
             {field:'MedicareNo',title:'病案号',width:65},
+            {field:'HospitalDesc',title:'院区',width:200},
             {field:'EpisodeID',title:'就诊号',width:40,hidden:true},
             {field:'EpisodeDeptID',title:'科室ID',width:30,hidden:true}
         ]],
         onDblClickRow:function(rowIndex,rowData){
            $("#episodeList").datagrid('unselectAll');
            $("#episodeList").datagrid('selectRow',rowIndex);
-           switchPatient(patientID,rowData.EpisodeID,rowData.mradm);
+           switchPatient(patientID,rowData.EpisodeID,rowData.MrAdm);
         },
         onLoadSuccess: function(data) {
             var rowsLength = data.rows.length;
@@ -82,7 +99,7 @@ $(function(){
                 if (data.rows[i].EpisodeID == episodeID)
                 {
                     $("#episodeList").datagrid('selectRow',i);
-                    switchPatient(patientID,data.rows[i].EpisodeID,data.rows[i].mradm);
+                    switchPatient(patientID,data.rows[i].EpisodeID,data.rows[i].MrAdm);
                     break;
                 }
             }
@@ -96,15 +113,44 @@ $(function(){
         showPageList:false,
         displayMsg:''
     });
+    
+    //医生
+    $("#cbxUser").combobox({
+        method: "GET",
+        url: "../EMRservice.Ajax.common.cls?OutputType=Stream&Class=EMRservice.Ajax.hisData&Method=getDoctorList",
+        valueField: "UserID",
+        textField: "UserName",
+        filter: function(q, row){
+            if (q == "") return true;
+            if ((row.UserName.indexOf(q.toUpperCase())>=0)||(row.JaneSpell.indexOf(q.toUpperCase())>=0)) return true;
+            return false;
+        }
+    });
+    
+    //开启多院区时显示院区筛选下拉框
+    if (showShareHospital != "N"){
+        document.getElementById("ctHosp").style.display = "block";
+        $("#cbxCTHosp").combobox({
+            method: "GET",
+            url: "../EMRservice.Ajax.common.cls?OutputType=Stream&Class=EMRservice.Ajax.hisData&Method=getCTHospList",
+            valueField: "HOSPRowID",
+            textField: "HOSPDesc",
+            filter: function(q, row){
+                if (q == "") return true;
+                if ((row.HOSPDesc.indexOf(q.toUpperCase())>=0)||(row.JaneSpell.indexOf(q.toUpperCase())>=0)) return true;
+                return false;
+            }
+        });
+    }
 });
 
 function formatColor(val,row)
 {
-    if (row.EpisodeType == "住院")
+    if ((row.EpisodeType == "住院")||(row.EpisodeType == "inpatient"))
     {
         return 'color:#FFFFFF;background-color:#FB9A42;';
     }
-    else if (row.EpisodeType == "门诊")
+    else if ((row.EpisodeType == "门诊")||(row.EpisodeType == "OP"))
     {
         return 'color:#FFFFFF;background-color:#07B69C;align:center;';
     }
@@ -115,16 +161,20 @@ function formatColor(val,row)
     else if (row.EpisodeType == "体检")
     {
         return 'color:#FFFFFF;background-color:#33C910;align:center;';
+    }
+    else if (row.EpisodeType == "预住院")
+    {
+        return 'color:#FFFFFF;background-color:#CC9966;align:center;';
     }	
 }
 
 function formatter(val,row)
 {
-    if (row.EpisodeType == "住院")
+    if ((row.EpisodeType == "住院")||(row.EpisodeType == "inpatient"))
     {
         return '<span style="padding-left:3px;">#(..Get("住"))#</span>';
     }
-    else if (row.EpisodeType == "门诊")
+    else if ((row.EpisodeType == "门诊")||(row.EpisodeType == "OP"))
     {
         return '<span style="padding-left:3px;">#(..Get("门"))#</span>';
     }
@@ -135,6 +185,10 @@ function formatter(val,row)
     else if (row.EpisodeType == "体检")
     {
         return '<span style="padding-left:3px;">#(..Get("体"))#</span>'
+    }
+    else if (row.EpisodeType == "预住院")
+    {
+        return '<span style="padding-left:3px;">#(..Get("预"))#</span>'
     }
 }
 
@@ -162,13 +216,17 @@ function queryData()
 		$('#endDate').datebox('setValue',nowDate);
 		endDate=nowDate;
 	}
+    var selUserID = $("#cbxUser").combobox("getValue");
+    var selCTHospID = $("#cbxCTHosp").combobox("getValue") || "";
     $("#episodeList").datagrid('load', {
         Action: "GetEpisodeList",
         PatientID: patientID,
         QueryItem: (queryItem == "请输入诊断内容")? "":queryItem,
         EpisodeType: $('#episodeType').combobox('getValue'),
         StartDate: startDate,
-        EndDate: endDate
+        EndDate: endDate,
+        SelUserID: selUserID,
+        SelCTHospID: selCTHospID
     });	
 }
 function Dateformatter(date)

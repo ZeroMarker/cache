@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!--
+	creator: Huxt 2020-08-01
+	desc: 药房药库 - 图标预览
+	csp:  pha.sys.v1.iconpreview.csp
+-->
+<html>
+<head>
+
+<title>	图标预览 </title>
+<style>
+	body {
+		font-size: 14px;
+		font-family: 微软雅黑
+	}
+	.tr-cls {
+		margin: 10px;
+		height: 62px;
+		
+	}
+	.tr-cls:hover {
+		background-color: #f1f1f1;
+	}
+</style>
+<script type="text/javascript" src="../scripts_lib/hisui-0.1.0/dist/js/jquery-1.11.3.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+	<table cellpadding="5" cellspacing="0">
+		<server>
+			s selectedIcon = $g(%request.Data("selectedIcon", 1))
+			// 图片的物理路径
+			s imedicalPath = "/imedical/web/"
+			s physicalPath = ##class(ext.util.String).GetPhysicalPath(imedicalPath) // "D:\DtHealth\app\dthis\web\"
+			s physicalPath = $replace(physicalPath, "\", "/")
+			s physicalPathDir = physicalPath_"scripts/pha/sys/v1/icons/"
+			
+			// 图标中英对照
+			s nameArr("doc-excel") = "文档-excel文档图标"
+			s nameArr("doc-pdf") = "文档-pdf文档图标"
+			s nameArr("doc-ppt") = "文档-ppt文档图标"
+			s nameArr("doc-word") = "文档-word文档图标"
+			
+			s nameArr("lnk-addrbook") = "快捷连接-通讯录图标"
+			s nameArr("lnk-mail") = "快捷连接-邮箱图标"
+			s nameArr("lnk-oa") = "快捷连接-OA登录图标"
+			
+			s nameArr("todo-adj") = "待办事项-待处理库存调整"
+			s nameArr("todo-adrsaudit") = "待办事项-药品不良反应事件待审核"
+			s nameArr("todo-appeal") = "待办事项-待处理医生申诉"
+			s nameArr("todo-decflow") = "待办事项-煎药室各流程待处理数量"
+			s nameArr("todo-docfeedback") = "待办事项-医生对用药建议的反馈"
+			s nameArr("todo-drugquality") = "待办事项-药品质量事件待审核"
+			s nameArr("todo-in") = "待办事项-待处理入库单"
+			s nameArr("todo-ipretreq") = "待办事项-住院药房待处理退药申请"
+			s nameArr("todo-opretreq") = "待办事项-门诊药房待处理退药申请"
+			s nameArr("todo-out") = "待办事项-待处理出库单"
+			s nameArr("todo-phaconsulting") = "待办事项-药学咨询待解答"
+			s nameArr("todo-pivasflow") = "待办事项-静配中心各流程待处理数量"
+			s nameArr("todo-purplan") = "待办事项-待处理采购计划"
+			s nameArr("todo-ret") = "待办事项-待处理退货"
+			s nameArr("todo-scrap") = "待办事项-待处理库存报损"
+			
+			s nameArr("data-dateexp") = "数据提醒-效期过期提醒"
+			s nameArr("data-lowstock") = "数据提醒-库存低于下限"
+			s nameArr("data-exestop") = "数据提醒-配液中心停执行记录"
+			s nameArr("data-venderexp") = "数据提醒-资质过期供应商"
+			s nameArr("data-qualityaudit") = "数据提醒-药品质量事件待审核填报数量"
+			s nameArr("data-reactionaudit") = "数据提醒-药物不良反应事件待审核和填报"
+			s nameArr("data-rencentdoc") = "数据提醒-最近上传的文献列表"
+			s nameArr("data-numofpat1") = "数据提醒-手术用药预警人数"
+			s nameArr("data-numofpat2") = "数据提醒-各监护级别患者人数"
+			s nameArr("data-numofpat3") = "数据提醒-血药浓度监测各项目患者人数"
+			s nameArr("data-numofpat4") = "数据提醒-药物基因检测各项目患者人数"
+			s nameArr("data-numofpat5") = "数据提醒-用药预警各监测项目人数"
+			
+			// 遍历文件夹文件
+			s imgCount = 0
+			s rs = ##class(%ResultSet).%New("%File:FileSet")
+			s sc = rs.Execute(physicalPathDir)
+			while (rs.%Next()) {
+				s fileName = rs.GetDataByName("Name")
+				s fileName = $replace(fileName,"\","/")
+				s fileName = $replace(fileName, physicalPath, imedicalPath)
+				s itemName = rs.GetDataByName("ItemName")
+				s itemName = $replace(itemName,".png","")
+				s itemName = $replace(itemName,".jpg","")
+				s itemName = $replace(itemName,".gif","")
+				s itemDesc = $g(nameArr(itemName))
+				s:(itemDesc = "") itemDesc = itemName
+				continue:(itemName'["todo-")&&(itemName'["data-")&&(itemName'["doc-")&&(itemName'["lnk-")
+				continue:(itemName["empty-data")
+				s sortIndex = 9
+				s:(itemName [ "todo-") sortIndex = 1
+				s:(itemName [ "data-") sortIndex = 2
+				s:(itemName [ "doc-") sortIndex = 3
+				s:(itemName [ "lnk-") sortIndex = 4
+				s:(itemName = selectedIcon) sortIndex = 0
+				s trHtmlStr = ""
+				s trHtmlStr = trHtmlStr _ "<tr class='tr-cls'>"
+				s trHtmlStr = trHtmlStr _ "<td style='text-align:center;'>"
+				s trHtmlStr = trHtmlStr _ "<img src='" _ fileName _ "'/>"
+				s trHtmlStr = trHtmlStr _ "</td>"
+				s trHtmlStr = trHtmlStr _ "<td>"
+				s trHtmlStr = trHtmlStr _ "<label>" _ itemName _ "</label>"
+				s trHtmlStr = trHtmlStr _ "</td>"
+				s trHtmlStr = trHtmlStr _ "<td>"
+				s trHtmlStr = trHtmlStr _ "<label>" _ itemDesc _ "</label>"
+				s trHtmlStr = trHtmlStr _ "</td>"
+				s trHtmlStr = trHtmlStr _ "</tr>"
+				s imgCount = imgCount + 1
+				s sortData(sortIndex, imgCount) = trHtmlStr
+		    }
+		    s sortIndex = ""
+		    for {
+			    s sortIndex = $o(sortData(sortIndex))
+			    q:(sortIndex = "")
+			    s imgCount = ""
+			    for {
+				    s imgCount = $o(sortData(sortIndex, imgCount))
+				    q:(imgCount = "")
+				    w sortData(sortIndex, imgCount),!
+				}
+			}
+		</server>
+	</table>
+</body>
+</html>
+
+<script type="text/javascript">
+	var selectedIcon = '#(selectedIcon)#';
+	var selectedIndex = -1;
+	$(function(){
+		$('tr').on('click', function(e){
+			$('tr').css('background-color', '');
+			$(this).css('background-color', 'rgb(219, 221, 224)');
+			var iconCode = $(this).children().eq(1).children().eq(0).text();
+			$('#icon', window.parent.document).val(iconCode);
+		});
+		$('tr').on('dblclick', function(e){
+			window.parent.PHA_HOMEPAGE.CloseIconWin();
+		});
+		
+		if (selectedIcon != '') {
+			$('tr').each(function(){
+				selectedIndex = selectedIndex + 1;
+				var iconCode = $(this).children().eq(1).children().eq(0).text();
+				if (selectedIcon == iconCode) {
+					$(this).click();
+				}
+			});
+		}
+	});
+</script>

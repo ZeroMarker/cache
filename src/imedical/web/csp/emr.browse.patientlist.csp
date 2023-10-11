@@ -4,6 +4,7 @@
 	<HISUI/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" type="text/css" href="../scripts/emr/css/browse.patientlist.css"/>
+	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>
 	<script language="cache" runat="server">
     	s PatientNoLength = ##Class(EMRservice.BOSysOption).GetValueByName("PatientNoLength")
     	s:(PatientNoLength = "") PatientNoLength = 10
@@ -22,6 +23,7 @@
 	    		s expectlocID = $p(expectlocID,"^",3)
 		    }
 	    }
+		s wardID = $g(%session.Data("LOGON.WARDID"),"")
    </script> 
     <script language = "javascript">
     	var PatientNoLength = '#(PatientNoLength)#';
@@ -31,6 +33,7 @@
 		var locID = '#(locID)#';
 		var expectlocID = '#(expectlocID)#';
 		var userIsNur = '#(userIsNur)#';
+		var wardID = '#(wardID)#';
     </script>
     <title>患者列表</title>
 </head>
@@ -44,22 +47,22 @@
 				      	<td>#(..Get("患者姓名"))#&nbsp; <input class="hisui-validatebox inputbox" id="patientName"/></td>
 				        <td>#(..Get("登记号"))#&nbsp; <input class="hisui-validatebox inputbox" id="patientNo"/></td>
 			 	        <td>#(..Get("就诊起时"))#&nbsp; <input class="hisui-datebox datebox-f combo-f" id="startDate" data-options="width:160"/></td>
-			 	        <td>#(..Get("类型"))#&nbsp; <input id="cboAdmType" class="hisui-combobox"/></td> 
-				         <td></td>	        
+			 	        <td>#(..Get("类型"))#&nbsp; <input id="cboAdmType" class="hisui-combobox" style="width:167px"/></td> 
+				        <td>病情&nbsp;&nbsp;<input id="Illness" class="hisui-combobox"/></td>	        
 				      </tr>
 				      <tr>
 						<td>#(..Get("身份证号"))#&nbsp; <input class="hisui-validatebox inputbox" id="IDCardNo" /></td>
 						<td>#(..Get("病案号"))#&nbsp; <input class="hisui-validatebox inputbox" id="medicareNo"/></td>	        
 				        <td>#(..Get("就诊止时"))#&nbsp; <input class="hisui-datebox datebox-f combo-f" id="endDate" data-options="width:160"/></td>
-				       	<td>#(..Get("状态"))#&nbsp; <input id="cboAdmStatus"  class="hisui-combobox"/></td>
-				       	<td>&nbsp;&nbsp;MRN <input class="hisui-validatebox inputbox" id="MRN" style="width:100px;"/></td>
+				       	<td>#(..Get("状态"))#&nbsp; <input id="cboAdmStatus"  class="hisui-combobox" style="width:167px"/></td>
+				       	<td>MRN&nbsp;<input class="hisui-validatebox inputbox" id="MRN" style="width:132px;"/></td>
 				         <td></td>
 				      </tr>
 				      <tr>
 				      	<td>#(..Get("健康卡号"))#&nbsp; <input class="hisui-validatebox inputbox" id="cFCardNo" /></td>
 			 	        <td>#(..Get("医保号"))#&nbsp; <input class="hisui-validatebox inputbox" id="medicalInsuranceNo" /></td>
 			 	       	<td>#(..Get("出院起时"))#&nbsp; <input class="hisui-datebox datebox-f combo-f" id="outStartDate" data-options="width:160"/></td>	       	
-				       	<td>#(..Get("医生"))#&nbsp; <input class="hisui-combobox" id="cbxUser" /></td>
+				       	<td class="patientDoc">#(..Get("医生"))#&nbsp; <input class="hisui-combobox" id="cbxUser" style="width:167px"/></td>
 				        <td><input class="hisui-checkbox" type="checkbox" id="chkLoc" label="本科患者"></input></td>
 				       </tr>
 				       <tr>
@@ -67,7 +70,7 @@
 				        <td>#(..Get("病区"))#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select id="wardcombo" class="hisui-combobox"></select></td>
 				       	<td>#(..Get("出院止时"))#&nbsp; <input class="hisui-datebox datebox-f combo-f" id="outEndDate" data-options="width:160"/></td>	
 				     
-				       	<td>#(..Get("诊断"))#&nbsp; <input id="diagnosDesc" class="hisui-validatebox validatebox-text" type="text" value="请输入诊断内容"  onclick="my_click(this,'diagnosDesc');"  onBlur="my_blur(this,'diagnosDesc');" style="vertical-align:middle;color:#999;"></input></td>
+				       	<td>#(..Get("诊断"))#&nbsp; <input id="diagnosDesc" class="hisui-validatebox validatebox-text" type="text" data-options="placeholder:emrTrans('请输入诊断内容')"  onclick="my_click(this,'diagnosDesc');"  onBlur="my_blur(this,'diagnosDesc');" style="vertical-align:middle;color:#999;width:160px"></input></td>
 				       	<td><a id="PatientListQuery" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a> </td>
 				       </tr>
 				    </table>			

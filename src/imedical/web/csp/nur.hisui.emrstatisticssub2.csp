@@ -1,0 +1,120 @@
+<!doctype html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+	;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+	i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+	q 1
+</csp:method>
+<script language="cache" runat="SERVER">
+            s JobId = $G(%request.Data("JobId", 1))
+            s NurseLoc = $G(%request.Data("NurseLoc", 1))
+            s EmrCode = $G(%request.Data("EmrCode", 1))
+            s MaxCount = $G(%request.Data("MaxCount", 1))
+</script>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>
+		<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+	</title>
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<HISUI />
+	<script type="text/javascript" src="../scripts/nurse/hisui/plugins/datagrid-export.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/utils.js" charset='gbk'></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nur.emrstatisticssub2.js" charset='gbk'></script>
+	<STYLE type='text/css'>
+		.accordion>.panel>.panel-header,
+		.layout>.panel>.panel-header,
+		.panel.combo-p>.panel-header,
+		.panel.lookup-p>.panel-header,
+		.panel.window>.panel-header,
+		.tabs-panels>.panel>.panel-header {
+			-moz-border-radius: 0;
+			-webkit-border-radius: 0;
+			border-radius: 5px 5px 0 0;
+			padding: 5px;
+		}
+
+		.td-btn {
+			padding-left: 20px;
+		}
+
+		.table-border {
+			border-width: 1px;
+			border-style: dashed solid solid;
+			border-color: #ccc;
+			border-radius: 0px 0px 4px 4px;
+		}
+
+		.messager-popover .content {
+			height: 100%;
+			float: left;
+			margin-top: -1px;
+		}
+
+		.r-label {
+			text-align: right;
+			padding: 0 10px;
+		}
+
+		.span-label {
+			text-align: right;
+			padding: 10px 9px 10px 20px;
+		}
+
+		.combo-p>.panel-body.panel-body-noheader {
+			max-height: 410px;
+		}
+	</STYLE>
+</head>
+
+<body class="hisui-layout">
+	<div data-options="region:'center',border:false" style="padding:10px">
+		<div id="main" class="hisui-layout" fit=true>
+			<div data-options="region:'north',title:'明细数据 [双击行可跳转到护理病历界面]',headerCls:'panel-header-gray',collapsible:false,iconCls:'icon-patient'"
+				style="border-bottom-style:solid;height:91px;padding:10px">
+				<table>
+					<tr>
+						<td class="r-label" style="padding-left:0px">#(..Get("登记号"))#</td>
+						<td>
+							<input id="regNoInput" class="textbox">
+						</td>
+						<td class="r-label">#(..Get("姓名"))#</td>
+						<td>
+							<input id="nameInput" class="textbox">
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'"
+								id='findBtn'>查询</a>
+						</td>
+						<td class="td-btn">
+							<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-export'"
+								id='Export'>导出</a>
+						</td>
+					</tr>
+
+				</table>
+			</div>
+			<div data-options="region:'center',title:'',iconCls:'icon-write-order'"
+				style="border-width: 1px;border-style: dashed solid solid;border-color:#ccc;border-radius: 0px 0px 5px 5px;">
+				<div id="center" class="hisui-layout" fit=true border=false>
+					<div data-options="region:'center',iconCls:'icon-w-list',headerCls:'panel-header-gray'" title=""
+						border=false>
+						<table id='EmrSubGrid' class="hisui-datagrid" border=false title="" fit=true
+							data-options="headerCls:'panel-header-gray',">
+						</table>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script language="javascript">
+		var JobId = "#(JobId)#";
+		var NurseLoc = "#(NurseLoc)#";
+		var EmrCode = "#(EmrCode)#";
+		var MaxCount = "#(MaxCount)#";
+	</script>
+</body>
+
+</html>

@@ -9,41 +9,44 @@
 <meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
 <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-<DHCEQ:HISUI></DHCEQ:HISUI>
 <HISUI/>
+<DHCEQ:HISUI></DHCEQ:HISUI>
 <SCRIPT language="Cache" RUNAT="SERVER">
+	s QXType=$g(%request.Data("QXType",1))	//czf 2021-11-18 2221492
 </Script>
 </HEAD>
 
 <body class="hisui-layout">
 		<div data-options="region:'center',border:false" style="padding:10px">
-		<div class="hisui-panel" data-options="fit:true,eqtitle:'maintitle'">
+		<div class="hisui-panel" title="租赁明细" data-options="fit:true,border:true,eqtitle:'maintitle'">
 			<div class="hisui-layout" data-options="fit:true,border:false">
-				<div data-options="region:'north',border:false">
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label for="RequestNo">申请单号</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RequestNo"></div>
-					<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Name"></div>
-					<div class="eq-table-td eq-table-label"><label for="BeginDate">申请日期</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BeginDate"></div>
-					<div class="eq-table-td eq-table-label"><label for="StatusDR">状态</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="StatusDR"></div>
-					<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
-				</div>
-				<div class="eq-table-tr">
-					<div class="eq-table-td eq-table-label"><label for="RequestLoc">申请科室</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="RequestLoc"></div>
-					<div class="eq-table-td eq-table-label"><label id="cStatCat" for="FromLoc">所属科室</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="FromLoc"></div>
-					<div class="eq-table-td eq-table-label"><label for="EndDate">至</label></div>
-					<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate" value=#(CurDate)# ></div>
+				<!--modify by lmm 2022-05-24 2612999-->
+				<div data-options="region:'north',border:false" style="padding-bottom:5px;width:150%;border-bottom:solid 1px #ccc;">
+				<div class="eq-table">
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="RequestNo">申请单号</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="RequestNo"></div>
+						<div class="eq-table-td eq-table-label"><label for="Name">设备名称</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="Name"></div>
+						<div class="eq-table-td eq-table-label"><label for="BeginDate">调出日期</label></div>  <!--Modefied by zc0107 2021-11-14 将申请日期改成调出日期-->
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="BeginDate"></div>
+						<div class="eq-table-td eq-table-label"><label for="StatusDR">状态</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" id="StatusDR"></div>
+						<div class="eq-table-td eq-table-label"><a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+					</div>
+					<div class="eq-table-tr">
+						<div class="eq-table-td eq-table-label"><label for="RequestLoc">申请科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="RequestLoc"></div>
+						<div class="eq-table-td eq-table-label"><label id="cStatCat" for="FromLoc">所属科室</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-validatebox" data-options="'component':'PLAT.L.Loc'" id="FromLoc"></div>
+						<div class="eq-table-td eq-table-label"><label for="EndDate">至</label></div>
+						<div class="eq-table-td eq-table-input"><input class="hisui-datebox textbox" id="EndDate" value=#(CurDate)# ></div>
+					</div>
 				</div>
 			</div>
-			<div data-options="region:'center',border:false" style="padding:0px;position:relative">
-				<table id="tDHCEQRentList" data-options="border:false"></table>
-				<span id="sumTotal" class="eq-total-sum" style="position:absolute;right:10px;top:5px;"></span>	
-				<div class="eq-table-td eq-table-input"></div>	
+			<!--modify by lmm 2022-05-24 2612999-->
+			<div data-options="region:'center',border:false">
+				<table id="tDHCEQRentList" data-options="fit:true,border:false"></table>
 			</div>
     	</div>
 	</div>
@@ -53,9 +56,9 @@
 		<form name="DHCEQ">
 			<INPUT TYPE="hidden" id="RequestLocDR">
 			<INPUT TYPE="hidden" id="FromLocDR">
+			<INPUT type="hidden" id="QXType" value=#(QXType)#>
 		</form>
 	</div>
 	<script type='text/javascript' src='../scripts/dhceq/rm/rentlist.js'></script>
 </body>
 </HTML>
-

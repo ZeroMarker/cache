@@ -12,8 +12,8 @@
 	<DHCSTMHISUI/>
 </head>
 <body class="hisui-layout" data-options="fit:true">
-	<div data-options="region:'north',headerCls:'panel-header-gray',border:false" class="BorderLine"> 
-		<table id="MainConditions" class="Condition">
+	<div data-options="region:'north',headerCls:'panel-header-gray'" class="BorderLine"> 
+		<table id="MainConditions" class="Condition" onkeydown="if(event.keyCode==13){QueryBT.click()}">
 			<input id="RowId" name="RowId" type="hidden">
 			<tr>
 				<td>盘点科室</td>
@@ -23,8 +23,9 @@
 				<td>制单日期</td>
 				<td><input id="Date" name="Date" class="textbox hisui-datebox" data-options="disabled:true" style=""></td>
 				<td><a href="#" id="QueryBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></td>
-				<td><a href="#" id="CreateBT" class="hisui-linkbutton" style="width:114px">生成账盘单</a></td>
+				<td><a href="#" id="CreateBT" class="hisui-linkbutton" style="width:100px">生成账盘单</a></td>
 				<td><a href="#" id="CountComBT" class="hisui-linkbutton" style="width:114px">实盘完成</a></td>
+				<td><a href="#" id="PrintBT" class="hisui-linkbutton" style="width:114px">打印</a></td>
 			</tr>
 			<tr>
 				<td>类组</td>
@@ -34,20 +35,24 @@
 				<td>制单时间</td>
 				<td><input id="Time" name="Time" class="hisui-timespinner" data-options="disabled:true" style="width:156px"></td>
 				<td><a href="#" id="ClearBT" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a></td>
+				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:100px">删除</a></td>
 				<td><a href="#" id="ComBT" class="hisui-linkbutton" style="width:114px">账盘完成</a></td>
 				<td><a href="#" id="CountCanComBT" class="hisui-linkbutton">取消实盘完成</a></td>
 			</tr>
 			<tr>
 				<td>库存分类</td>
-				<td><input id="StkCat" name="StkCat" class="textbox hisui-combobox" style=""></td>			
-				<td colspan="4">
+				<td><input id="StkCat" name="StkCat" class="textbox hisui-combobox" style=""></td>
+				<td>器械管理类别</td>
+				<td><input id="Supervision" name="Supervision" class="textbox hisui-combobox"></td>		
+				<td colspan="3" align="left">
 				<input id="Completed" name="Completed" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="账盘完成">
 				<input id="CountCompleted" name="CountCompleted" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="实盘完成">
 				<input id="AdjCompleted" name="AdjCompleted" class='hisui-checkbox' data-options="disabled:true" type="checkbox" value="Y" label="调整完成">
 				</td>
-				<td><a href="#" id="DelBT" class="hisui-linkbutton" data-options="iconCls:''" style="width:88px">删除</a></td>
+				<td><a href="#" id="AdjBT" class="hisui-linkbutton" style="width:100px">调整完成</a></td>
+				
 				<td><a href="#" id="CanComBT" class="hisui-linkbutton">取消账盘完成</a></td>
-				<td><a href="#" id="AdjBT" class="hisui-linkbutton" style="width:114px">调整完成</a></td>
+				
 			</tr>
 		</table>
 		
@@ -55,10 +60,10 @@
 	<div data-options="region:'center',border:false">
 		<table id="StkGrid"></table>
 	</div>
-	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询盘点单"> 
+	<div id="FindWin" class="hisui-dialog FindWin" data-options="closed:'true',modal:true" title="查询盘点单">
 		<div class="hisui-layout" data-options="fit:true">   
 			<div data-options="region:'north',border:false">
-				<table id="FindConditions" class="Condition">
+				<table id="FindConditions" class="Condition" onkeydown="if(event.keyCode==13){FQueryBT.click()}">
 					<tr>
 						<td>起始日期</td>
 						<td><input id="StartDate" name="StartDate" class="textbox hisui-datebox" style=""></td>
@@ -72,33 +77,32 @@
 					</tr>
 				</table>
 			</div>
-			<div data-options="region:'west',border:false" style="padding:5px 5px 5px 5px;width:500px;">
+			<div data-options="region:'west',border:false" class="GridPadding" style="width:500px;padding-top:0">
 				<div class="hisui-panel" data-options="title:'盘点单',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
 					<table id="StkMainGrid"></table>
 				</div>
 			</div>
-			<div class="hisui-panel" data-options="region:'center',border:false" style="padding:5px 5px 5px 0px;">
+			<div class="hisui-panel" data-options="region:'center',border:false" class="GridPadding" style="padding-left:0;padding-top:0;">
 				<div class="hisui-panel" data-options="title:'明细',iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'">
 					<table id="StkDetailGrid"></table>
 				</div>
 			</div>
 		</div>
 	</div>
- 	<div id="TB" style="padding:2px;">
+	<div id="TB" style="padding:2px;">
 		<input id="Inci" name="Inci" type="hidden">
-        <a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
-        <a href="#" id="SetZeroBT" class="hisui-linkbutton" data-options="iconCls:'icon-mnypaper-cfg',plain:true">设置未填数为0</a>
-        <a href="#" id="SetFreBT" class="hisui-linkbutton" data-options="iconCls:'icon-mnypaper-cfg',plain:true">设置未填数为账盘数</a>
+		<a href="#" id="SaveBT" class="hisui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+		<a href="#" id="SetZeroBT" class="hisui-linkbutton" data-options="iconCls:'icon-set-zero',plain:true">设置未填数为0</a>
+		<a href="#" id="SetFreBT" class="hisui-linkbutton" data-options="iconCls:'icon-set-paper',plain:true">设置未填数为账盘数</a>
 		<input class="hisui-radio" type="radio" label="全部" name="CountStatus" value="" data-options="checked:true">
 		<input class="hisui-radio" type="radio" label="仅盘盈" name="CountStatus" value="1">
 		<input class="hisui-radio" type="radio" label="仅盘亏" name="CountStatus" value="2">
 		<input class="hisui-radio" type="radio" label="仅有实盘数" name="CountStatus" value="3">
 		<input id="InciDesc" name="InciDesc" class="textbox" style="">
-        <a href="#" id="FilerBT" class="hisui-linkbutton" data-options="iconCls:'icon-filter',plain:true">过滤</a>
-    </div>
-   
+		<a href="#" id="FilerBT" class="hisui-linkbutton" data-options="iconCls:'icon-filter',plain:true">过滤</a>
+	</div>
 	
-	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/INRequestCommon.js"></script>
+	<script type="text/javascript" src="../scripts/dhcstmhisui/INRequest/InRequestCommon.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/ReqLocStktk/ReqLocStktkFind.js"></script>
 	<script type="text/javascript" src="../scripts/dhcstmhisui/ReqLocStktk/ReqLocStktk.js"></script>
 </body>

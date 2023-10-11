@@ -9,18 +9,44 @@
 <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
 <SERVER>
 	
-	n str,LogonPatientID,LogonEpisodeID,MainChartBook,MainChart
-	s (str,LogonPatientID,LogonEpisodeID,MainChartBook,MainChart)=""
+	n str,LogonPatientID,LogonEpisodeID,MainChartBook,MainChart,mradm,AnaesthesiaID
+	s (str,LogonPatientID,LogonEpisodeID,MainChartBook,MainChart,mradm,AnaesthesiaID)=""
 	i $p($g(%request.Data("LogonFromVB",1)),"^",1)=1 s str=$p($g(%request.Data("LogonFromVB",1)),"^",2) ;s ^zTRAK("cjb","epr.default.csp")=str
 	i str'="" s LogonPatientID=$p(str,":",3),LogonEpisodeID=$p(str,":",4),MainChartBook=$p(str,":",5),MainChart=$p(str,":",6)
-	
+	if (""'=$G(%request.Data("EpisodeID",1))) {
+		Set LogonEpisodeID = $G(%request.Data("EpisodeID",1))
+		Set LogonPatientID = +$G(^PAADM(LogonEpisodeID))
+		Set mradm = $P($G(^PAADM(LogonEpisodeID)),"^",61)
+		Set %request.Data("PatientID",1) = LogonPatientID
+		Set %request.Data("mradm",1) = mradm
+		Set AnaesthesiaID = $g(%request.Data("AnaesthesiaID",1))
+	}
+	Set UrlQuery = "&a=a"
+	Set key = "" For {
+		Set key = $O(%request.Data(key))
+		Quit:key=""
+		Continue:key="TDIRECTPAGE"
+		Continue:key="CacheNoRedirect"
+		Continue:key="CachePassword"
+		Continue:key="CacheUserName"
+		Continue:key="LayoutManager"
+		Continue:key="PASSWORD"
+		Continue:key="CSPRQN" //稱"1m_$c(m3,01m)_m"
+		Continue:"^DEPARTMENT^Hospital^SSUSERGROUPDESC^"[("^"_key_"^")
+		Continue:"^TPSID^ViewCode^"[("^"_key_"^")
+		Continue:key="CASTypeCode"
+		Set UrlQuery = UrlQuery_"&"_key_"="_$G(%request.Data(key,1))
+	}
 	n wfl,def,wfli
 	;;k %request.Data ;clear all existing page data???
 	;get start workflow id
 	s wfl=##Class(epr.GroupSettings).GetStartPage($g(%session.Data("LOGON.GROUPID")))
+	if $G(%request.Data("WorkFlowId",1),"")'="" Set wfl=$G(%request.Data("WorkFlowId",1),"")
 	k %request.Data("DONOTGOBACK")
 	s %request.Data("TWKFL",1)=wfl
 	s %request.Data("TWKFLI",1)=0
+	Set MWToken = $G(%request.Data("MWToken",1))
+	
 	//TN:22-May-2002: using javascript to page jump instead of using %response.ServerSideRedirect to 
 	//allow javascript call to clear selected patient in menu frame
 	//d %session.Set("epr.default.csp",1)
@@ -41,13 +67,16 @@
 	w "  }"
 	w "}",$c(13,10)
 	/// 使用工作流  zhaocz 2009-06-18
-	w "window.location='websys.csp?TEPRSTART=TEPRSTART&TWKFL="_wfl_"&TWKFLI=0';",$c(13,10)
+	w "window.location='websys.csp?TEPRSTART=TEPRSTART&TWKFL="_wfl_"&TWKFLI=0"_UrlQuery_"';",$c(13,10)
+	// PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&mradm="_mradm_"&AnaesthesiaID="_AnaesthesiaID_"&TEPRSTART=TEPRSTART&TWKFL="_wfl_"&TWKFLI=0&MWToken="_MWToken_"';",$c(13,10)
+	// _UrlQuery 
+	//PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&mradm="_mradm_"&AnaesthesiaID="_AnaesthesiaID_"&TEPRSTART=TEPRSTART&TWKFL="_wfl_"&TWKFLI=0&MWToken="_MWToken_"';",$c(13,10)
 	// wanghc 8.1.1 侧菜单显示到下面
 	if $g(%request.Data("IsSideMenu",1),"false")="true" { 
-		w "window.location='websys.frames.csp';",$c(13,10)
+		w "window.location='websys.frames.csp?MWToken="_MWToken_UrlQuery_"';",$c(13,10)
 	}
-	i MainChart'="" w "window.location='epr.chart.csp?PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&ChartID="_MainChart_"';",$c(13,10)
-	i MainChartBook'="" w "window.location='epr.chartbook.csp?PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&ChartBookID="_MainChartBook_"';",$c(13,10)
+	i MainChart'="" w "window.location='epr.chart.csp?PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&ChartID="_MainChart_"&MWToken="_MWToken_"';",$c(13,10)
+	i MainChartBook'="" w "window.location='epr.chartbook.csp?PatientID="_LogonPatientID_"&EpisodeID="_LogonEpisodeID_"&ChartBookID="_MainChartBook_"&MWToken="_MWToken_"';",$c(13,10)
 	w "</SCRIPT>",$c(13,10)
 </SERVER>
 </head>

@@ -1,6 +1,6 @@
 <!-- 
  * FileName: dhcbill.ipbill.patcostinquriy.csp
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-03-26
  * Description: 科室费用查询
 -->
@@ -12,18 +12,30 @@
 <html>
 <head>
 	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+	<EXTHEALTH:HEAD/>
 	<HISUI/>
 	<DHCBILL/>
-	<script type='text/javascript'>
+	<link rel="stylesheet" type="text/css" href="#(##class(BILL.Util.Library).#CSSPath)#dhcbill.ipbill.patcostinquriy.css"/>
+	<server>
+		set EpisodeID=%request.Get("EpisodeID")
+		set BillRowID=%request.Get("BillNo")
+		set PatientListPage=%request.Get("PatientListPage")
+	</server>
+	<script type="text/javascript">
+	var patientListPage = "#(PatientListPage)#";
+	
+	//全局变量
 	var GV = {
-		EpisodeID: getParam('EpisodeID'),
-		BillRowID: getParam('BillNo')
+		EpisodeID: "#(EpisodeID)#",
+		BillRowID: "#(BillRowID)#"
 	};
 	</script>
 </head>
 
 <body class="hisui-layout">
+	<csp:if condition=($g(PatientListPage)'="")>
+		<div class="window-mask alldom" style="width:100%;height:100%;display:block;z-index:3;top:0px;left:0px;position:absolute;filter:alpha(opacity=40);opacity: 0.40;font-size:1px;"></div>
+	</csp:if>
 	<div data-options="region:'north',border:false" style="height:36px;overflow:hidden;">
 		<csp:Include Page="dhcbill.inpatient.banner.csp">
 	</div>
@@ -31,36 +43,38 @@
 		<div class="hisui-layout" data-options="fit:true">
 			<div data-options="region:'west',border:false" style="width:415px;">
 				<div class="hisui-layout" data-options="fit:true">
-					<div data-options="region:'north',border:false" style="padding:0 10px 10px 0;height:95px;overflow:hidden;">
-						<div class="hisui-panel" data-options="title:'患者科室费用查询',fit:true,tools:'#search-panel-tools',headerCls:'panel-header-gray',iconCls:'icon-apply-check'">
-							<table class="search-table">
-								<tr>
-									<td class="r-label"><input id="stDate" class="hisui-datebox" style="width:137px;" placeholder="开始日期"/></td>
-									<td><input id="endDate" class="hisui-datebox" style="width:137px;" placeholder="结束日期"/></td>
-									<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">查询</a></td>
-								</tr>
-							</table>
-						</div>
+					<div data-options="region:'north',title:'患者科室费用查询',headerCls:'panel-header-gray',iconCls:'icon-apply-check',collapsible:false" style="height:127px;overflow:hidden;border-radius: 0 0 4px 4px;">
+						<table class="search-table">
+							<tr>
+								<td class="r-label"><input id="stDate" class="hisui-datebox textbox tb140" placeholder="#(..Get("开始日期"))#"/></td>
+								<td><input id="endDate" class="hisui-datebox textbox tb140" placeholder="#(..Get("结束日期"))#"/></td>
+							</tr>
+							<tr>
+								<td class="r-label"><input id="userDept" class="hisui-combobox textbox tb140" placeholder="#(..Get("开单科室"))#"/></td>
+								<td><input id="recDept" class="hisui-combobox textbox textbox tb140" placeholder="#(..Get("接收科室"))#"/></td>
+								<td class="r-label"><a href="javascript:;" class="hisui-linkbutton" id="btn-find" data-options="iconCls:'icon-w-find'">#(..Get("查询"))#</a></td>
+							</tr>
+						</table>
 					</div>
-					<div data-options="region:'center',border:false" style="padding-right:10px;">
+					<div data-options="region:'center',border:false" style="padding-top:10px;">
 						<div id="tabItem" class="hisui-tabs tabs-gray" data-options="fit:true,isBrandTabs:true">
 							<div title="科室费用浏览" data-options="iconCls:'icon-add-note'"></div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div data-options="region:'center',border:false">
+			<div data-options="region:'center',border:false" style="padding-left:10px;">
 				<div class="hisui-layout" data-options="fit:true">
-    				<div data-options="region:'north',border:false" style="height:270px;padding-bottom:10px;">
-						<table class="hisui-datagrid" id="ordItmList"></table>
-        			</div>
         			<div data-options="region:'center',border:false">
-						<table class="hisui-datagrid" id="oeItmList"></table>
+						<table id="ordItmList"></table>
+        			</div>
+        			<div data-options="region:'south',border:false" style="height:300px;padding-top:10px;">
+						<table id="oeItmList"></table>
         			</div>
     			</div>
 			</div>
 		</div>
 	</div>
-	<script type="text/javascript" src="../scripts/dhcbill/dhcipbill/dhcbill.ipbill.patcostinquriy.js"></script>
+	<script type="text/javascript" src="#(##class(BILL.Util.Library).#JSPath)#dhcipbill/dhcbill.ipbill.patcostinquriy.js"></script>
 </body>
 </html>

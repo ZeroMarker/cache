@@ -1,0 +1,494 @@
+<!-- dhcem.special.quality.doc.csp hos急诊医生第二屏 -->
+<html>
+<head>
+
+<title>	hos门户使用-急诊十大专项报表 </title>
+<script type="text/javascript" src="../scripts/dhcnewpro/plugins/jquery/jquery-1.8.3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/common.js" ></script><!--hxy 2022-11-11-->
+<script type="text/javascript" src="../scripts/dhcnewpro/js/echarts.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="../scripts/dhcnewpro/js/format.echarts.js" charset="gb2312"></script>
+
+<style type="text/css">
+
+	.echarts-box{display: inline-block;width: 19.5%;height: 100%;}
+	.hos-charts-box{background:rgba(0,0,0,0);width:100%;height:100%;}
+	.full-parent{width:100%;height:100%;}
+	.rowView{background: rgba(0,0,0,.5);}
+	.viewTitle{width: 16.6%;height: 100%;float: left;}
+	.rowView{display: flex;justify-content: space-between;background:rgba(0,0,0,0);}
+	.rowItem{height:100%;background:rgba(0,0,0,0.5);}
+	/*.oneItemPlain{width:50%;height:100%;float:left}*/
+	.oneItemPlain{width:100%;height:100%;float:left}/*hxy 2022-11-25 三块改六块*/
+	.twoItemPlain{height:100%;}
+	/*.imageViewPie{background: url('../images/dhcnewpro/pie.png');background-repeat: no-repeat;background-position: center;background-size: auto 63%;}*/
+	/*.imageViewPiewText{margin: 60px 0 0 0;color: #e5e5e5;text-align: center;font-size: 48px;letter-spacing: 8px;}*/
+	.imageViewPiewText{margin: 60px 0 0 0;color: #fff;text-align: center;font-size: 62px;letter-spacing: 8px;}
+	.imageViewPiewTitle{line-height: 80px;text-align: center;color: #fff;font-size: 20px;background: rgba(0 0 0 /30%)}
+	
+	.hosnews{font-size: 0;height: 40px;display: inline-block;background-color:rgba(0, 0, 0, 0.5);box-shadow:0px 3px 6px rgba(0, 0, 0, 0.16);cursor: pointer;display: flex;justify-content: center;align-items: center;}
+	.hosnews:last-of-type{margin-right: 0;}
+	.hosnews>img{margin-right: 15px;vertical-align: middle;margin-left: 20px;width:45px}
+	.hosnews>div{display: inline-block;vertical-align: middle;}
+	.hosnews>div>p{font-family: 'Source Han Sans CN';color: #ffffff;font-size: 14px;line-height: 0px;}
+	.hosnews>div>p:first-of-type{font-size: 20px;}
+		
+</style>
+<script Language="Javascript">
+	var LgGroupID="#(%session.Get("LOGON.GROUPID"))#"; //安全组ID
+	var LgGroupDesc="#(%session.Get("LOGON.GROUPDESC"))#"; //安全组
+	var LgUserID="#(%session.Get("LOGON.USERID"))#"; //用户ID
+	var LgUserCode="#(%session.Get("LOGON.USERCODE"))#"; //用户工号
+	var LgUserName="#(%session.Get("LOGON.USERNAME"))#"; //用户姓名
+	var LgCtLocID="#(%session.Get("LOGON.CTLOCID"))#";      //科室ID
+	var LgCtLocDesc="#(%session.Get("LOGON.CTLOCDESC"))#";  //科室描述
+	var LgHospID="#(%session.Get("LOGON.HOSPID"))#"; //医院ID
+</script>
+</head>
+
+<body style="width:100%;height:100%;overflow:hidden;">
+	<div class="layout-north" style="height:110px;">
+		<!--<div style="height:50px"></div>-->
+		<div id="viewHeader" style="height:100px;display: flex;justify-content: space-between;">
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelOne.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevOne">0</p>
+			      <p>Ⅰ级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelTwo.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevTwo">0</p>
+			      <p>Ⅱ级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelThree.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevThr">0</p>
+			      <p>Ⅲ级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelFour.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevFou">0</p>
+			      <p>Ⅳa级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/LevelFive.png" alt="">
+			    <div>
+			      <p class="lev-num" id="LevFiv">0</p>
+			      <p>Ⅳb级患者人数</p>
+			    </div>
+			</div>
+			<div class="viewItem hosnews" style="height:100px">
+			    <img src="../images/dhcnewpro/TriageAll" alt="">
+			    <div>
+			      <p class="lev-num" id="LevAll">0</p>
+			      <p>分诊总计人数</p>
+			    </div>
+			</div>
+		</div>
+	</div>  
+	<div id="layout-center" class="layout-center">
+		<div id="viewContent" class="full-parent">
+			<div style="height:33.33%;">
+				<div id="oneRow" class="rowView">
+					<div class="oneRowItem rowItem">
+						<div id="main3" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main4" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main5" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main6" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main7" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main8" class="oneItemPlain"></div>
+					</div>
+					<!--div class="oneRowItem rowItem">
+						<div id="main3" class="oneItemPlain"></div>
+						<div id="main4" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main5" class="oneItemPlain"></div>
+						<div id="main6" class="oneItemPlain"></div>
+					</div>
+					<div class="oneRowItem rowItem">
+						<div id="main7" class="oneItemPlain"></div>
+						<div id="main8" class="oneItemPlain"></div>
+					</div-->
+				</div>
+			</div>
+			<div style="height:33.33%;">
+				<div class="rowView">
+					<div class="twoRowItem rowItem">
+						<div id="main9" class="echarts-box hos-charts-box"></div>
+					</div>
+					<div id="twoItemRight" class="twoRowItem " style="display: flex;justify-content: space-between;">  <!--2022-11-25 rowItem-->
+					  <div class="oneRowItem-one rowItem">  <!--2022-11-25-->
+						<div id="main10" class="twoItemPlain imageViewPie">
+							<div class="imageViewPiewTitle">平均门药时间</div>
+							<div id="MioDrug" class="imageViewPiewText">
+								0
+							</div>
+						</div>
+					  </div>
+					  <div class="oneRowItem-one rowItem"> <!--2022-11-25-->
+						<div id="main11" class="twoItemPlain imageViewPie">
+							<div class="imageViewPiewTitle">平均门球时间</div>
+							<div id="MioBall" class="imageViewPiewText">
+								0
+							</div>
+						</div>
+					  </div>
+					  <div class="oneRowItem-one rowItem"> <!--2022-11-25-->
+						<div id="main12" class="twoItemPlain"></div>
+					  </div>
+					  <div class="oneRowItem-one rowItem"> <!--2022-11-25-->
+						<div id="main13" class="twoItemPlain"></div>
+					  </div>
+					</div>
+				</div>
+			</div>
+			<div style="height:33.33%;">
+				<div class="rowView">
+					<div class="threeLeftRowItem rowItem">
+						<div id="main2" class="echarts-box hos-charts-box"></div>
+					</div>
+					<div class="threeRightRowItem rowItem">
+						<div id="main1" class="echarts-box hos-charts-box"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+<script type="text/javascript">
+	
+	$(function(){
+		
+		initViewPage();	
+		
+		initCharts();
+		
+		initData(); //初始化数据
+	})
+
+	function initViewPage(){
+		var bodyHeight = $("body").height();
+		var centerHeight = bodyHeight-110+'px';
+		$('#layout-center').css({'height':centerHeight});
+		
+		var parHeight = $('#viewContent').height();
+		var headerWidth = $('#viewHeader').width();
+		
+		var rowViewHeight=parseInt(parHeight/3)-10+'px';
+		var oneViewWidht = parseInt(headerWidth/6)-10+'px';
+		var oneRowWidth = $('#oneRow').width();
+		//var oneRowItemWidth = parseInt(oneRowWidth/3)-8+'px';
+		var oneRowItemWidth = parseInt(oneRowWidth/6)-10+'px'; //hxy 2022-11-25 三块改六块
+		var twoRowItemWidth = parseInt(oneRowWidth/2)-6+'px';
+//		var threeLeftRowItemWidth = parseInt(oneRowWidth/2)+410+'px';
+//		var threeRightRowItemWidth = parseInt(oneRowWidth/2)-425+'px';
+		var threeLeftRowItemWidth = parseInt((oneRowWidth-12)/2)+'px';
+		var threeRightRowItemWidth = parseInt((oneRowWidth-12)/2)+'px';
+
+		
+		$('.rowView').css({'height':rowViewHeight});
+		$('.viewItem').css({'width':oneViewWidht});
+		$('.oneRowItem').css({'width':oneRowItemWidth});
+		$('.twoRowItem').css({'width':twoRowItemWidth});
+		$('.threeLeftRowItem').css({'width':threeLeftRowItemWidth});
+		$('.threeRightRowItem').css({'width':threeRightRowItemWidth});
+		
+		
+		var twoItemRightWidth = $('#twoItemRight').width();
+		$('.oneRowItem-one').css({'width':parseInt((twoItemRightWidth-30)/4-1)}); //2011-11-25 add
+		var twoItemPlainWidth = parseInt((twoItemRightWidth-30)/4)-1+'px';
+		//var twoItemPlainWidth = parseInt(twoItemRightWidth/4)-10+'px';
+		$('.twoItemPlain').css({'width':twoItemPlainWidth});
+		
+	}
+	
+	function initData(){
+		//获取病人信息
+		runClassMethod("web.DHCEMDocMessageInterface","getLevNum",{"HOSPID":LgHospID},function (data){
+			if(data == null){
+				return;
+			}else{
+				$('.lev-num').each(function(){
+					$(this).text(data[this.id]);
+				})
+			}
+		})
+		
+	}
+	
+	function initCharts(){
+		runClassMethod("web.DHCEMDocMessageInterface","getStatisNum",{"HOSPID":LgHospID},function (data){
+			if(data == null){
+				return;
+			}else{
+				ChartsViewDial('main3','医患比',data.Ratio);
+				ChartsViewDial('main4','ROSC成功率',data.ROSCRatio);
+				ChartsViewDial('main5','手术死亡率',data.SurDeathRatio);
+				ChartsViewDial('main6','抢救死亡率',data.SalDeaRatio);
+				ChartsViewDial('main7','非计划重返率',data.ReturnRatio);
+				ChartsViewDial('main8','急诊分诊率',data.ChkRatio);
+				//showEchartsQPlain('main3','医患比',data.Ratio);	
+//				showEchartsQPlain('main4','ROSC成功率',data.ROSCRatio);
+//				showEchartsQPlain('main5','手术死亡率',data.SurDeathRatio);
+//				showEchartsQPlain('main6','抢救死亡率',data.SalDeaRatio);
+//				showEchartsQPlain('main7','非计划重返率',data.ReturnRatio);
+//				showEchartsQPlain('main8','急诊分诊率',data.ChkRatio);
+			}
+		})
+		//showEchartsBar('main1','本周工作量',['周一', '周二', '周三', '周四', '周五', '周六' ,'周末'],[66, 59, 40, 35, 50, 70 ,56]);	
+		var LgParams=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID;
+		runClassMethod("web.DHCEMDocMessageInterface","getStatis",{"Params":LgParams},function (data){
+			if(data == null){
+				return;
+			}else{
+				showEchartsBar('main1','本周工作量',['周一', '周二', '周三', '周四', '周五', '周六' ,'周末'],data.WorkLoad);
+				showEchartsLine('main2','留观患者',data.Obs,data.ObsData);
+				showEchartsPie('main13',"特殊人群",data.PatTypeNum);
+				showEchartsPie('main12',"患者来源",data.PatSource);
+				$("#MioBall").text(data.MioBall);
+				$("#MioDrug").text(data.MioDrug);
+				showMoreLineView(data);
+
+			}
+		})
+		
+		//showEchartsLine('main2','留观患者',['22年1月', '22年2月', '22年3月', '22年4月', '22年5月', '22年6月' ,'22年7月','22年8月','22年9月','22年10月'],[330, 217, 199, 219, 321, 201 ,161,220,281,391,171]);
+		
+//		showEchartsQPlain('main3','医患比','510');	
+//		showEchartsQPlain('main4','ROSC成功率','74');
+//		showEchartsQPlain('main5','手术死亡率','27');
+//		showEchartsQPlain('main6','抢救死亡率','33');
+//		showEchartsQPlain('main7','非计划重返率','15');
+//		showEchartsQPlain('main8','急诊分诊率','97');
+		//showMoreLineView();
+		
+		//showEchartsPie('main12',"患者来源", [{value:1 ,name: '120'},{value:0 ,name: '救助站'},{value:2 ,name: '外院'},{value:43 ,name: '自行来院'},{value:8 ,name: '未知'}]);
+		//showEchartsPie('main13',"特殊人群", [{value:11 ,name: '小孩'},{value:3 ,name: '孕妇'},{value:17 ,name: '老人'},{value:3 ,name: '孕妇'},{value:1 ,name: '残疾人'}]);
+	}
+
+
+	function showMoreLineView(data){
+		
+		// 基于准备好的dom，初始化echarts实例
+		var myChart = echarts.init(document.getElementById('main9'));
+		
+		option = {
+		  //color: ['#80FFA5', '#00DDFF', '#37A2FF', '#FF0087', '#FFBF00'],
+		  color: ['#45BCE7', '#3FDABA', '#7DCD7B', '#DEDF63', '#9070E6'],
+		  title: {
+		    text: '',
+		    textStyle:{
+				color:'#fff'
+			}
+		  },
+		  tooltip: {
+		    trigger: 'axis',
+		    axisPointer: {
+		      type: 'cross',
+		      label: {
+		        backgroundColor: '#6a7985',
+		        color:'#fff'
+		      }
+		    }
+		  },
+		  legend: {
+		    data: ['西药', '中药', '检验', '检查', '其他']
+		    
+		  },
+		  toolbox: {
+		    feature: {
+		      saveAsImage: {}
+		    }
+		  },
+		  grid: {
+		    left: '3%',
+		    right: '4%',
+		    bottom: '3%',
+		    containLabel: true
+		  },
+		  xAxis: [
+		    {
+		      type: 'category',
+		      axisLabel:{
+				color:'#fff'
+			  },
+		      boundaryGap: false,
+		      data: data.XAxisStr  ///['22年1月','22年2月','22年3月','22年4月', '22年5月', '22年6月', '22年7月', '22年8月', '22年9月', '22年10月']
+		    }
+		  ],
+		  yAxis: [
+		    {
+		      type: 'value',
+		      axisLabel:{
+				color:'#fff'
+			  }
+		    }
+		  ],
+		  series: [
+		    {
+		      name: '西药',
+		      type: 'line',
+		      stack: 'Total',
+		      smooth: true,
+		      lineStyle: {
+		        width: 0
+		      },
+		      showSymbol: false,
+		      areaStyle: {
+		        opacity: 0.8,
+		        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+		          {
+		            offset: 0,
+		            color: 'rgb(72, 187, 226,0.8)' //rgb(128, 255, 165)
+		          },
+		          {
+		            offset: 1,
+		            color: 'rgb(72, 187, 226,0.8)' //rgb(1, 191, 236)
+		          }
+		        ])
+		      },
+		      emphasis: {
+		        focus: 'series'
+		      },
+		      data: data.XStr //[188,200,234,140, 232, 101, 264, 90, 340, 250]
+		    },
+		    {
+		      name: '中药',
+		      type: 'line',
+		      stack: 'Total',
+		      smooth: true,
+		      lineStyle: {
+		        width: 0
+		      },
+		      showSymbol: false,
+		      areaStyle: {
+		        opacity: 0.8,
+		        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+		          {
+		            offset: 0,
+		            color: 'rgb(59, 220, 190,0.8)' //rgb(0, 221, 255)
+		          },
+		          {
+		            offset: 1,
+		            color: 'rgb(59, 220, 190,0.8)' //rgb(77, 119, 255)
+		          }
+		        ])
+		      },
+		      emphasis: {
+		        focus: 'series'
+		      },
+		      data: data.ZStr //[199,320,188,120, 282, 111, 234, 220, 340, 310]
+		    },
+		    {
+		      name: '检验',
+		      type: 'line',
+		      stack: 'Total',
+		      smooth: true,
+		      lineStyle: {
+		        width: 0
+		      },
+		      showSymbol: false,
+		      areaStyle: {
+		        opacity: 0.8,
+		        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+		          {
+		            offset: 0,
+		            color: 'rgb(125, 206, 125)' //rgb(55, 162, 255)
+		          },
+		          {
+		            offset: 1,
+		            color: 'rgb(125, 206, 125)' //rgb(116, 21, 219)
+		          }
+		        ])
+		      },
+		      emphasis: {
+		        focus: 'series'
+		      },
+		      data: data.YStr //[288,123,342,320, 132, 201, 334, 190, 130, 220]
+		    },
+		    {
+		      name: '检查',
+		      type: 'line',
+		      stack: 'Total',
+		      smooth: true,
+		      lineStyle: {
+		        width: 0
+		      },
+		      showSymbol: false,
+		      areaStyle: {
+		        opacity: 0.8,
+		        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+		          {
+		            offset: 0,
+		            color: 'rgb(215, 217, 102)' //rgb(255, 0, 135)
+		          },
+		          {
+		            offset: 1,
+		            color: 'rgb(215, 217, 102)' //rgb(135, 0, 157)
+		          }
+		        ])
+		      },
+		      emphasis: {
+		        focus: 'series'
+		      },
+		      data: data.CStr //[234,125,421,220, 402, 231, 134, 190, 230, 120]
+		    },
+		    {
+		      name: '其他',
+		      type: 'line',
+		      stack: 'Total',
+		      smooth: true,
+		      lineStyle: {
+		        width: 0
+		      },
+		      showSymbol: false,
+		      label: {
+		        show: true,
+		        position: 'top'
+		      },
+		      areaStyle: {
+		        opacity: 0.8,
+		        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+		          {
+		            offset: 0,
+		            color: 'rgb(144, 112, 230)' //rgb(255, 191, 0)
+		          },
+		          {
+		            offset: 1,
+		            color: 'rgb(144, 112, 230)' //rgb(224, 62, 76)
+		          }
+		        ])
+		      },
+		      emphasis: {
+		        focus: 'series'
+		      },
+		      data: data.OStr //[184,321,354,220, 302, 181, 234, 210, 290, 150]
+		    }
+		  ]
+		};
+		// 使用刚指定的配置项和数据显示图表。
+		myChart.setOption(option);
+	}
+
+	
+</script>
+</html>

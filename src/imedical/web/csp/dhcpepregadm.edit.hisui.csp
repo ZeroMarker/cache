@@ -13,20 +13,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
-	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
-	<HISUI/>
-	<ADDINS/>
-<!--dhcpepregadm.edit.hisui.csp-->	
-	
+    <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+    <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/>
+    <ADDINS/>
+    <DOCCARD medStepCode="PEReg"></DOCCARD> 
+<style>
+.search-table{
+    border-collapse:separate;
+    border-spacing:0 10px;
+    
+}
+.search-table1{
+    border-collapse:separate;
+    border-spacing:10px 7px;
+    
+}
+.r-label{
+    padding-left: 10px;
+}
+.r-label-1{
+    padding-left: 20px;
+}
+</style>    
+    
 <script language="JavaScript"> 
 
 self.moveTo(0,4) 
 self.resizeTo(screen.availWidth,screen.availHeight) 
 
-</script>	
+</script>   
 <SCRIPT language="Cache" RUNAT="SERVER"> 
-d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
+//d ##class(web.UDHCCardCommLinkRegister).GetCardHardJSFunction()
 s ID=$g(%request.Data("ParRef",1))
 s OperType=$g(%request.Data("OperType",1))
 
@@ -38,6 +56,32 @@ e  s TeamHeight="height:360px;"
 s Default=$g(^DHCPESetting("DHCPE","CashierSystem",%session.Get("LOGON.CTLOCID")))
 s GiftFlag=##class(web.DHCPE.PreIADM).GetGiftFlagByID(ID,"G")
 s DietFlag=##class(web.DHCPE.PreIADM).GetDietFlagByID(ID,"G")
+
+s UIVersion=##class(websys.StandardTypeItem).GetIdFromCodeOrDescription("websys","HISUIDefVersion")
+i UIVersion="lite" s LineColor="background-color:#24c24e;"
+e  s LineColor=""
+
+i UIVersion="lite" s LineColor1="border:1px solid #E2E2E2;border-radius:4px 4px 0 0;"
+e  s LineColor1="border:1px solid #CCCCCC;border-radius:4px 4px 0 0;"
+
+i UIVersion="lite" s LineColor2="height:490px;border:1px solid #E2E2E2;border-top:0;border-radius:0px 0px 4px 4px;"
+e  s LineColor2="height:490px;border:1px solid #CCCCCC;border-top:0;border-radius:0px 0px 4px 4px;"
+
+ 
+i UIVersion="lite" s LineColor3="border:1px solid #E2E2E2; border-radius:4px;"
+e  s LineColor3="border:1px solid #CCCCCC; border-radius:4px;"
+
+i UIVersion="lite" s LineColor4="border-top:1px solid #E2E2E2;border-radius:0;"
+e  s LineColor4="border-top:1px solid #CCCCCC;border-radius:0;"
+
+i UIVersion="lite" s LineColor5="height:49px;border-bottom:1px solid #E2E2E2;border-radius:0;"
+e  s LineColor5="height:51px;border-bottom:1px solid #CCCCCC;border-radius:0;"
+
+i UIVersion="lite" s LineColor6="height:270px;border-bottom:1px solid #E2E2E2;border-radius:0;"
+e  s LineColor6="height:270px;border-bottom:1px solid #CCCCCC;border-radius:0;"
+
+i UIVersion="lite" s LineColor7="height:165px;border:1px solid #E2E2E2;border-top:0;border-radius:0px 0px 4px 4px;"
+e  s LineColor7="height:165px;border:1px solid #CCCCCC;border-top:0;border-radius:0px 0px 4px 4px;"
 </SCRIPT> 
 <script type="text/javascript">
 
@@ -45,379 +89,341 @@ var OperType="#(OperType)#"
 
 var Default="#(Default)#"
 var GiftFlag="#(GiftFlag)#"
-var DietFlag="#(DietFlag)#"	
+var DietFlag="#(DietFlag)#" 
 var GroupID="#(ID)#"
 </script> 
 </head>
-<body class="hisui-layout">
+<body>
 <div id='Loading' style="display:none;position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;filter:alpha(opacity=70);opacity: 0.70;"><h1><image src='../skin/default/images/loading.gif'/><font color="#15428B">处理中···</font></h1></div>
-<div class="hisui-layout" data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-add-note'">
- <div id="GroupTab" class="hisui-tabs tabs-gray" style="padding:10px;">
-  <div title="团体预约">
-  <form class="form" id="groupform" style=#(GroupHeight)#>
-  <input type="hidden" id="ID"/>
-  <input type="hidden" id="PGBI_RowId"/>
-  <input type="hidden" id="PGADM_RowId"/>
-  <input type="hidden" id="PGTRowId"/>
-  <input type="hidden" id="PGTChildSub"/>
-  <input type="hidden" id="Status"/>
-  <input type="hidden" id="PIADM_RowId"/>
-  <input type="hidden" id="PIBI_RowId"/>
-  <input type="hidden" id="TeamPEDeskClerkNameID"/>
-  <input type="hidden" id="PEDeskClerkNameID"/>
 
-  		
-  		
-      <table style="width:1100px;border-collapse:separate; border-spacing:10px 8px;">
+  
+<div class="hisui-panel" border="false" fit="true" style="padding:10px;background-color: inherit;">
+    <div id="GroupTab" class="hisui-tabs tabs-gray" fit="true">
+      <div title="团体预约" style="padding:3px 10px 10px 0px;">
+        <div class="hisui-layout" fit="true" border="false">
+          <div border="false" data-options="region:'center'">
+            <form class="form" id="groupform">  
+  
+  				<input type="hidden" id="ID"/>
+  				<input type="hidden" id="PGBI_RowId"/>
+  				<input type="hidden" id="PGADM_RowId"/>
+  				<input type="hidden" id="PGTRowId"/>
+  				<input type="hidden" id="PGTChildSub"/>
+  				<input type="hidden" id="Status"/>
+  				<input type="hidden" id="PIADM_RowId"/>
+  				<input type="hidden" id="PIBI_RowId"/>
+ 				<input type="hidden" id="TeamPEDeskClerkNameID"/>
+ 			    <input type="hidden" id="PEDeskClerkNameID"/>
+
+        
+        
+      <table style="width:1100px;border-collapse:separate; border-spacing:10px 7px;">
         <tr>
-          <td align="right" style="width:90px;">
-   		  <label for="CardNo">卡号</label></td>
-   		  
-   		  <td align="left" style="width:100px;">
+          <!--td align="right" style="width:90px;">
+          <label for="CardNo">#(..Get("卡号"))#</label></td>
+          
+          <td align="left" style="width:100px;">
             <div>
-              <input class="hisui-validatebox" type="text" Id="CardNo" style="width:100px;" /></div>
+              <input class="textbox" Id="CardNo" style="width:106px;" /></div>
           </td>
-  		  <td align="left" style="width:100px;">
+          <td align="left" style="width:100px;">
             <div>
               <select class="hisui-combobox" type="text" Id="CardType" name="CardType" style="width:100px;" editable="false"></select></div>
           </td>
           
           <td style="width:100px;" align="left">
             <div>
-              <a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></div>
+              <a id="ReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">#(..Get("读卡"))#</a></div>
+          </td-->
+          <td align="right"><label>#(..Get("登记号"))#</label></td>
+          <td>
+              <input class="textbox" Id="PAPMINo" style="width:173px;" />
           </td>
           
-           <td align="right" style="width:90px;">
-            <label for="GroupDesc">团体名称</label></td>
-           <td style="width:200px;">
-            <div>
-              <input class="textbox" type="text" Id="GroupDesc" style="width:180px;" /></div>
-          </td>
-           <td align="right" style="width:90px;">
-            <label for="PAPMINo">登记号</label></td>
-           <td style="width:200px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="PAPMINo" style="width:180px;" /></div>
+         
+          <td align="right"><label>#(..Get("团体名称"))#</label></td>
+          <td>
+            <input class="textbox" type="text" Id="GroupDesc" style="width:180px;" /></div>    
           </td>
           
-          
+          <td align="right"><label>#(..Get("所属合同"))#</label></td>
+          <td colspan="2">
+             <select class="hisui-combobox" type="text" Id="Contract" name="Contract" style="width:188px;"></select>
+          </td>
+         
         </tr>
         <tr>
-          <td align="right">
-            <label for="BookDateBegin">
-              <font color="red">*</font>体检起始日期</label></td>
-          <td colspan="2">
-            <div>
-              <input class="hisui-datebox" type="text" Id="BookDateBegin" style="width:225px;" data-options="required:true" /></div>
-          </td>
-          <td></td>
-          
-          <td align="right">
-            <label for="BookDateEnd">
-              <font color="red">*</font>截止日期</label></td>
+          <td align="right"><label><font color="red">*</font>#(..Get("体检起始日期"))#</label></td>
           <td>
-            <div>
-              <input class="hisui-datebox" type="text" Id="BookDateEnd" style="width:180px;" data-options="required:true" /></div>
+              <input class="hisui-datebox" type="text" Id="BookDateBegin" style="width:180px;" data-options="required:true" />
           </td>
           
-          <td align="right" style="width:90px;">
-            <label for="Linkman">联系人1</label></td>
-           <td style="width:200px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="Linkman" style="width:180px;" disabled="disabled"/></div>
+          <td align="right"><label><font color="red">*</font>#(..Get("截止日期"))#</label></td>     
+          <td>
+              <input class="hisui-datebox" type="text" Id="BookDateEnd" style="width:180px;" data-options="required:true" />
+          </td>
+          
+          <td align="right"><label>#(..Get("联系人1"))#</label></td> 
+          <td>
+          	<input class="textbox" Id="Linkman" style="width:180px;" disabled="disabled"/>
+          </td>
+          
+        </tr>
+      
+         <tr>
+          <td align="right"><label>#(..Get("结算方式"))#</label></td> 
+          <td>
+              <select id="DisChargedMode" class="hisui-combobox" name="DisChargedMode" style="width:180px;" data-options="enterNullValueClear:false">
+              <option value="GD">#(..Get("统结"))#</option>
+              <option value="ID">#(..Get("自结"))#</option>
+              </select>
+          </td>
+
+          <td align="right"><label>#(..Get("团体编码"))#</label></td> 
+          <td>
+              <input class="textbox" Id="GroupCode" style="width:173px;" />
+          </td>
+          
+          <td align="right"><label>#(..Get("联系人1电话"))#</label></td>
+           <td>
+              <input class="textbox" Id="Tel1" style="width:180px;" disabled="disabled"/>
           </td>
           
         </tr>
         
-        
          <tr>
-          <td align="right">
-            <label for="DisChargedMode">结算方式</label></td>
-          <td colspan="2">
-              <select id="DisChargedMode" class="hisui-combobox" name="DisChargedMode" style="width:225px;" data-options="enterNullValueClear:false">
-              <option value="GD">统结</option>
-			  <option value="ID">自结</option>
+         
+          <td align="right"><font color="red">*</font><label>#(..Get("团体报告发送"))#</label></td>
+          <td>
+              <select class="hisui-combobox" type="text" Id="GReportSend" name="GReportSend" style="width:180px;" editable="false">
+                <option value='AC'>#(..Get("挂账可取"))#</option>
+                <option value='DC'>#(..Get("结账取"))#</option>
               </select>
           </td>
           
-          
-          <td></td>
-          
-          <td align="right">
-            <label for="GroupCode">团体编码</label></td>
+          <td align="right"> <font color="red">*</font><label>#(..Get("个人报告领取"))#</label></td>
           <td>
-            <div>
-              <input class="hisui-validatebox" type="text" Id="GroupCode" style="width:174px;" /></div>
-          </td>
-          
-          <td align="right" style="width:90px;">
-            <label for="Tel1">联系人1电话</label></td>
-           <td style="width:200px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="Tel1" style="width:180px;" disabled="disabled"/></div>
-          </td>
-          
-        </tr>
-        
-        
-         <tr>
-          <td align="right">
-            <font color="red">*</font><label for="GReportSend">团体报告发送</label></td>
-          <td colspan="2">
-            <div>
-              <select class="hisui-combobox" type="text" Id="GReportSend" name="GReportSend" style="width:225px;" editable="false">
-              
-              	<option value='AC'>挂账可取</option>
-				<option value='DC'>结账取</option>
-              </select></div>
-          </td>
-          <td></td>
-          
-          <td align="right">
-            <font color="red">*</font><label for="IReportSend">个人报告领取</label></td>
-          <td>
-            <div>
               <select class="hisui-combobox" type="text" Id="IReportSend" name="IReportSend" style="width:180px;" editable="false">
-              	<option value='GS'>统取</option>
-				<option value='IS'>自取</option>
-              </select></div>
+                <option value='GS'>#(..Get("统取"))#</option>
+                <option value='IS'>#(..Get("自取"))#</option>
+              </select>
           </td>
           
-          <td align="right" style="width:90px;">
-            <label for="Tel2">联系人2电话</label></td>
-           <td style="width:200px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="Tel2" style="width:180px;" disabled="disabled"/></div>
+          <td align="right"><label>#(..Get("联系人2电话"))#</label></td>
+           <td>
+              <input class="textbox" Id="Tel2" style="width:180px;" disabled="disabled"/>
           </td>
           
         </tr>
-        
-        
-        
+       
          <tr>
-          <td align="right">
-            <label for="DelayDate">延期日期</label></td>
-          <td colspan="2">
-            <div>
-             <input class="hisui-datebox" type="text" Id="DelayDate" style="width:225px;" /></div>
-          </td>
-          <td></td>
-          
-          <td align="right">
-            <label for="BookTime">预约时间</label></td>
+          <td align="right"> <label>#(..Get("延期日期"))#</label></td>
           <td>
-            <div>
-              <input class="hisui-timespinner" type="text" Id="BookTime" style="width:180px;" /></div>
+             <input class="hisui-datebox" type="text" Id="DelayDate" style="width:180px;" /></div>
           </td>
           
-          <td align="right" style="width:90px;">
-            <label for="Postalcode">邮政编码</label></td>
-           <td style="width:200px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="Postalcode" style="width:180px;" disabled="disabled"/></div>
+          <td align="right"><label>#(..Get("预约时间"))#</label></td> 
+          <td>
+              <input class="hisui-timespinner" type="text" Id="BookTime" style="width:180px;" />
+          </td>
+          
+          <td align="right"><label>#(..Get("邮政编码"))#</label></td> 
+           <td>
+              <input class="textbox" Id="Postalcode" style="width:180px;" disabled="disabled"/>
           </td>
           
         </tr>
         
         
         <tr>
-          <td align="right">
-            <label for="PEDeskClerkName">接待人</label></td>
-          <td colspan="2">
-            <div>
-             <select class="textbox" type="text" Id="PEDeskClerkName" name="PEDeskClerkName" style="width:225px;"></select></div>
-          </td>
-          <td></td>
-          
-          <td align="right">
-            <label for="Sales">业务员</label></td>
+          <td align="right"><label>#(..Get("接待人"))#</label></td>
           <td>
-            <div>
-              <select class="textbox" type="text" Id="Sales" name="Sales" style="width:180px;"></select></div>
+             <select class="textbox" type="text" Id="PEDeskClerkName" name="PEDeskClerkName" style="width:180px;"></select>
           </td>
+         
+          <td align="right"><label>#(..Get("业务员"))#</label></td> 
+          <td>
+              <select class="textbox" type="text" Id="Sales" name="Sales" style="width:180px;"></select>
+          </td>
+          
           <td></td>
          
            <td align="left"> 
-            <div>
-              <input class='hisui-checkbox' type="checkbox" label="视同收费" Id="AsCharged" />
-              <input class='hisui-checkbox' type="checkbox" label="公费加项" Id="AddOrdItem" data-options="onCheckChange:function(event,value){AddOrdItem_click(value)}" /></div>  
-              
+              <input class='hisui-checkbox' type="checkbox" label="视同收费" Id="AsCharged" />&nbsp;&nbsp;
+              <input class='hisui-checkbox' type="checkbox" label="公费加项" Id="AddOrdItem" data-options="onCheckChange:function(event,value){AddOrdItem_click(value)}" /> 
           </td>
           
         </tr>
         
         
         <tr>
-          <td align="right">
-            <label for="GetReportDate">取报告日期</label></td>
-          <td colspan="2">
-            <div>
-             <input class="hisui-datebox" type="text" Id="GetReportDate" style="width:225px;" /></div>
-          </td>
-          <td></td>
-          
-          <td align="right">
-            <label for="GetReportTime">取报告时间</label></td>
+          <td align="right"> <label>#(..Get("取报告日期"))#</label></td>
           <td>
-            <div>
-              <input class="hisui-timespinner" type="text" Id="GetReportTime" style="width:180px;" /></div>
+             <input class="hisui-datebox" type="text" Id="GetReportDate" style="width:180px;" />
           </td>
-          <td></td>
+          
+          <td align="right"> <label>#(..Get("取报告时间"))#</label></td>
+          <td>
+              <input class="hisui-timespinner" type="text" Id="GetReportTime" style="width:180px;" />
+          </td>
+         
+         <td></td>
+         
          <td align="left"> 
-            <div>
-              <input class='hisui-checkbox' type="checkbox" label="允许开药" Id="AddPhcItem" />
-              <input class='hisui-checkbox' type="checkbox" label="允许重复" Id="AllowCF" /></div>  
-              
+              <input class='hisui-checkbox' type="checkbox" label="允许开药" Id="AddPhcItem" />&nbsp;&nbsp;
+              <input class='hisui-checkbox' type="checkbox" label="允许重复" Id="AllowCF" />   
+          </td>
+        </tr>
+        
+         <tr>
+         
+          <td align="right"><labe>#(..Get("体检类别"))#</label></td> 
+          <td>
+              <select class="hisui-combobox" type="text" Id="PatFeeTypeName" name="PatFeeTypeName" style="width:180px;" editable="false"></select>
+          </td>
+          
+           <td></td><td></td> <td>
+           
+           <td align="left"> 
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("客户就餐"))# Id="DietFlag"/>&nbsp;&nbsp;
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("赠品"))# Id="GiftFlag" />  
           </td>
           
         </tr>
         
-         <tr>
-          <td align="right">
-            <label for="Contract">所属合同</label></td>
-          <td colspan="2">
-            <div>
-             <select class="hisui-combobox" type="text" Id="Contract" name="Contract" style="width:225px;"></select></div>
-          </td>
-          <td></td>
-          
-          <td align="right">
-            <label for="PatFeeTypeName">体检类别</label></td>
+        <tr>
+          <td align="right"><label>#(..Get("限制加项金额"))#</label></td>
           <td>
-            <div>
-              <select class="hisui-combobox" type="text" Id="PatFeeTypeName" name="PatFeeTypeName" style="width:180px;" editable="false"></select></div>
+             <input class='hisui-checkbox' type="checkbox"  Id="AddOrdItemLimit" data-options="onCheckChange:function(event,value){AddOrdItemLimit_click(value)}" />
+          </td>
+          
+          <td align="right"><label>#(..Get("加项金额"))#</label></td>
+          <td>
+             <input class="textbox" Id="AddOrdItemAmount" style="width:173px;" />
           </td>
           
          <td></td>
-           <td align="left"> 
-            <div>
-              <input class='hisui-checkbox' type="checkbox" label="客户就餐" Id="DietFlag" />
-              <input class='hisui-checkbox' type="checkbox" label="赠品" Id="GiftFlag" /></div>  
-              
-          </td>
-          
-        </tr>
-        
-        <tr>
-          <td align="right">
-            </td>
-          <td colspan="2">
-            <div>
-             <input class='hisui-checkbox' type="checkbox" label="限制加项金额" Id="AddOrdItemLimit" data-options="onCheckChange:function(event,value){AddOrdItemLimit_click(value)}" /></div>
-          </td>
-          <td></td>
-          
-          <td align="right">
-            <label for="AddOrdItemAmount">加项金额</label></td>
-          <td>
-            <div>
-             <input class="hisui-validatebox" type="text" Id="AddOrdItemAmount" style="width:174px;" /></div>
-          </td>
-          
          
+          <td align="left"> 
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("导入以往团体人员名单"))# Id="ImportOldFlag" /> 
+          </td>
           
           
         </tr>
         
          <tr>
-           <td align="right">
-            <label for="Remark">备注</label></td>
-          <td colspan="7">
-        	<div>
-              <textarea id="Remark"  style="width:850px;height:100px;"></textarea></div>	
+           <td align="right"><label>#(..Get("备注"))#</label></td>
+            
+          <td colspan="5">
+              <textarea id="Remark" class="textbox"  style="width:900px;height:100px;"></textarea>  
           </td>
         
         </tr>
         
         </table>
-        <table style="width:800px;border-collapse:separate; border-spacing:10px 10px;">
+        
+        <table style="border-collapse:separate; border-spacing:20px 20px;">
        
         <tr>
-        	<td style="width:200px;"></td>
-        
-           <td align="center">
-        	  <div>
-              <a id="Update" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a></div></td>
+           <td style="width:200px;"></td>
+ 
+            <td align="center">
+                <a id="Update" href="#" class="hisui-linkbutton" style="#(LineColor)#" data-options="iconCls:'icon-w-save'">保存</a>
+           </td>
+           
            <td align="center">    
-              <div>
-              <a id="GroupTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-list'">团体分组</a></div></td>
+                <a id="GroupTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-list'">团体分组</a>
+           </td>
+           
            <td align="center">    
-              <div>
-              <a id="PreGImport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">导入人员</a></div></td>
-           <td colspan="5" align="center">   
-              <div>
-              <a id="ImportCheck" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cal'">信息验证</a></div></td>
-          
+              <a id="PreGImport" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-import'">导入人员</a>
+           </td>
+           
+           <td  align="center">   
+              <a id="BClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'">清屏</a>
+           </td> 
         
         </tr>
         </table>
       
   </form>     
-  </div>	
-  <div title="团体分组" style="padding:10px 10px 10px 10px;width:98%;">
-  		<div class="hisui-panel" data-options="title:'团体分组',headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="height:262px;">
-  		
-  		<div style="height:43px;padding-top:4px;">
-          <form class="form">
-            <table>
-              <tr>
-                 <td style="width:10px;"></td>
+  </div>
+   </div>  
+  </div>     
+ <div title="团体分组" style="padding:10px;">
+        <div class="hisui-layout" fit="true" border="false" style="#(LineColor3)#">
+          <div class="hisui-layout" data-options="region:'north',title:'团体分组',headerCls:'panel-header-gray',iconCls:'icon-add-note'" border="false" collapsible="false" style="#(LineColor6)#">
+              <div data-options="region:'north'" style="#(LineColor5)#" border="false">
+                <!-- 遮罩层 -->
+                    <div id='PELoading' style="display:none;position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;filter:alpha(opacity=85);opacity: 0.85;">
+                        <h1>
+                        <image src='../images/dhcpe/loading.gif'/><font><div id="LoadMsg">处理中···</div></font>
+                        </h1>
+                    </div>
+                <!-- //遮罩层 -->
+        
+                <table style="border-collapse:separate; border-spacing:10px;">
+                <tr>
+                 
                  <td>
                   <div>
-                    <a id="BNew" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新建分组</a></div>
-                </td>
-                <td style="width:5px;"></td>
-                 <td>
+                    <a id="BNew" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add',stopAllEventOnDisabled:true" disabled>新建分组</a></div>
+                 </td>
                 
+
+                 <td>
                   <div>
-                    <a id="RapidNew" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-new'">快速分组</a></div>
+                    <a id="RapidNew" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-new',stopAllEventOnDisabled:true" disabled>快速分组</a></div>
                 </td>
-                <td style="width:5px;"></td>
+               
                 <td>
                   <div>
                     <a id="BCopyTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy',stopAllEventOnDisabled:true" disabled>复制分组</a></div>
                 </td>
-                <td style="width:5px;"></td>
+               
                 <td>
                   <div>
                     <a id="BDelete" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel',stopAllEventOnDisabled:true" disabled>删除分组</a></div>
                 </td>
-                <td style="width:5px;"></td>
+                
                 <td>
                   <div>
                     <a id="BNewItem" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" disabled>公费加项</a></div>
                 </td>
-                <td style="width:5px;"></td>
+
+                <td>
+                  <div>
+                    <a id="BAddItems" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" disabled>自费加项</a></div>
+                </td>
+
                  <td>
                   <div>
-                    <a id="BRegister" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'">登记</a></div>
+                    <a id="BRegister" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update',stopAllEventOnDisabled:true" disabled>登记</a></div>
                 </td>
-                <td style="width:5px;"></td>
-                
+             
                 <td>
-               <div>
-               	<a id="TCancelPE" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">取消体检</a></div>
-           		 </td>
-                 <td style="width:5px;"></td>
+                <div>
+                <a id="TCancelPE" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel',stopAllEventOnDisabled:true" disabled>取消体检</a></div>
+                 </td>
+               
                 <td>
                   <div>
-                     <a id="BPrintPatItem" href="#" class="hisui-linkbutton" style="background-color:#24c24e;">打印导诊单</a></div>
+                     <a id="BPrintPatItem" href="#" class="hisui-linkbutton"  data-options="stopAllEventOnDisabled:true" disabled>打印导诊单</a></div>
                 </td>
-                <td style="width:5px;"></td>
+                
                 <!--td>
                   <div>
-                     <a id="PrintTeamPerson" href="#" class="hisui-linkbutton" style="background-color:#66CD00;">打印分组凭条</a></div>
+                     <a id="PrintTeamPerson" href="#" class="hisui-linkbutton" style="background-color:#66CD00;" disabled>打印分组凭条</a></div>
                 </td>
-                
-		<td style="width:5px;"></td>
+
                 <td>
                   <div>
-                     <a id="ContinuePrintTeamPer" href="#" class="hisui-linkbutton" style="background-color:#66CD00;">凭条续打</a></div>
+                     <a id="ContinuePrintTeamPer" href="#" class="hisui-linkbutton" style="background-color:#66CD00;" disabled>凭条续打</a></div>
                 </td>
                 <td style="width:5px;"></td-->
-		 
-		 		<td>
-                <div><input class="hisui-validatebox" type="text" Id="AA" style="display:none"/></div>
+         
+                <td>
+                <div><input class="textbox" Id="AA" style="display:none"/></div>
                 </td>
 
                 <!--td><label for="ContinueRegNo">续打体检号</label></td>
@@ -432,50 +438,51 @@ var GroupID="#(ID)#"
                 
               </tr>
             </table>
-          </form>
         </div>
-        <div style="height:79%;border:1px solid #ccc;border-bottom:0;border-left:0;border-right:0;border-radius:0;"> 
-		<table id="TeamGrid" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>
-		</div>
-  		
-  		</div>
-  		<div style="height:10px;"> </div>
-  		<div class="hisui-panel" data-options="title:'分组信息',headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="padding-top:4px;">
-  		 <div style="height:82px;">
+         
+           <div data-options="region:'center',border:false">
+            <div class="hisui-panel" fit="true" data-options="border:false">
+                    <table data-options="bodyCls:'panel-header-gray'" id="TeamGrid"></table>
+            </div>
+        </div>   
+              
+          </div>
+       <div id="TeamDetailDiv" class="hisui-layout" data-options="region:'center',title:'分组信息',headerCls:'panel-header-gray',iconCls:'icon-add-note'" border="false" > 
+          <div data-options="region:'north'" border="false" style="height:98px;">
           <form class="form">
-            <table style="border-collapse:separate; border-spacing:4px 4px;">
+            <table style="border-collapse:separate; border-spacing:10px;">
             <tr>
-          		<td align="right" style="width:60px;">
-   		 		<label for="PCardNo">卡号</label></td>
-   		  
-   		  	<td align="left">
+                <td align="right" style="width:28px;">
+                <label for="PCardNo">#(..Get("卡号"))#</label></td>
+          
+            <td align="left">
             <div>
-              <input class="hisui-validatebox" type="text" Id="PCardNo" style="width:80px;" /></div>
-          	</td>
-  		  	<td align="left">
+              <input class="textbox" Id="PCardNo" style="width:80px;" /></div>
+            </td>
+            <td align="left">
             <div>
               <select class="hisui-combobox" type="text" Id="PCardType" name="PCardType" style="width:100px;" editable="false"></select></div>
-          	</td>
+            </td>
           
             <td style="width:100px;" align="left">
             <div>
               <a id="PReadCard" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-card'">读卡</a></div>
-          	</td>
-          	
-          	<td align="right" style="width:90px;">
-            <label for="RegNo">登记号</label></td>
-            <td style="width:120px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="RegNo" style="width:160px;" /></div>
             </td>
             
-            <td align="right" style="width:100px;"> 
+            <td align="right" style="width:42px;">
+            <label for="RegNo">#(..Get("登记号"))#</label></td>
+            <td style="width:120px;">
             <div>
-              <input class='hisui-checkbox' type="checkbox" label="预约" Id="PREREG" /></div>
+              <input class="textbox" Id="RegNo" style="width:160px;" /></div>
             </td>
-            <td style="width:100px;"> 
+            
+            <td align="right" style="width:60px;"> 
             <div>
-              <input class='hisui-checkbox' type="checkbox" label="登记" Id="REGISTERED" /></div>  
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("预约"))# Id="PREREG" /></div>
+            </td>
+            <td style="padding-left:10px;width:60px;"> 
+            <div>
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("登记"))# Id="REGISTERED" /></div>  
             </td>
             
             <td>
@@ -486,99 +493,101 @@ var GroupID="#(ID)#"
                <div style="width:140px;">
                <a id="PNewItem" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" disabled>公费加项</a></div>
             </td>
-          	<td>
+            <td>
                <div style="width:140px;">
                <a id="BAddItem" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit',stopAllEventOnDisabled:true" disabled>自费加项</a></div>
             </td>
             
             <td>
                <div style="width:140px;">
-               <a id="BMoveTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-switch'">转组</a></div>
+               <a id="BMoveTeam" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-switch',stopAllEventOnDisabled:true" disabled>转组</a></div>
             </td>
            </tr>
            <tr>
-          	<td align="right" style="width:60px;">
-   		 		<label for="DepartName">部门</label></td>
-   		  
-   		  	<td align="left" colspan="3">
+            <td align="right" style="width:28px;">
+                <label for="DepartName">#(..Get("部门"))#</label></td>
+          
+            <td align="left" colspan="3">
              <div>
-              <input class="hisui-combobox" type="text" Id="DepartName" style="width:191px;"></div>
-          	</td>
-          	
-          	<td align="right" style="width:60px;">
-   		 		<label for="PatName">姓名</label></td>
-   		  
-   		  	<td align="left" style="width:166px;">
+              <input class="hisui-combobox" type="text" Id="DepartName" style="width:197px;"></div>
+            </td>
+            
+            <td align="right" style="width:42px;">
+                <label for="PatName">#(..Get("姓名"))#</label></td>
+          
+            <td align="left" style="width:166px;">
              <div>
               <input class="hisui-combogrid" type="text" Id="PatName" style="width:166px;"></div>
-          	</td>
-          	<td align="right" style="width:100px;"> 
+            </td>
+            <td align="right" style="width:60px;"> 
             <div>
-              <input class='hisui-checkbox' type="checkbox" label="到达" Id="ARRIVED" /></div>
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("到达"))# Id="ARRIVED" /></div>
             </td>
             <td></td>
             
             
              <td>
                <div style="width:140px;">
-               <a id="BFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a></div>
+               <a id="BFind" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>查询</a></div>
             </td>
             <td>
                <div style="width:140px;">
-               <a id="BSelectPre" href="#" class="hisui-linkbutton">选取已预约人员</a></div>
+               <a id="BSelectPre" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>选取已预约人员</a></div>
             </td>
             <td>
                <div style="width:140px;">
-               <a id="BCancelSelect" href="#" class="hisui-linkbutton">撤销已预约人员</a></div>
+               <a id="BCancelSelect" href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" disabled>撤销已预约人员</a></div>
             </td>
-          	<!--td>
+            <!--td>
                <div style="width:140px;">
-               <a id="PrintTeamSelf" href="#" class="hisui-linkbutton" style="background-color:#24c24e;">打印个人凭条</a></div>
+               <a id="PrintTeamSelf" href="#" class="hisui-linkbutton" style="background-color:#24c24e;" disabled>打印个人凭条</a></div>
             </td-->
             <td>
                <div style="width:140px;">
-               <a id="BCancelPE" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">取消体检</a></div>
+               <a id="BCancelPE" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel',stopAllEventOnDisabled:true" disabled>取消体检</a></div>
             </td>
            </tr>
            
             </table>
           </form>
         </div>
-        <div style="border:1px solid #ccc;border-bottom:0;border-left:0;border-right:0;border-radius:0;" style=#(TeamHeight)#> 
-        <table id="TeamPersonGrid" data-options="bodyCls:'panel-header-gray',fit:true,rownumbers:true,singleSelect:false,border:false"></table>
+         <div data-options="region:'center'" border="false" style="#(LineColor4)#">
+                 <table id="TeamPersonGrid"
+                data-options="bodyCls:'panel-header-gray',fit:true,rownumbers:true,singleSelect:false,border:false"></table>
+
+              </div>
+            </div>
         </div>
-  		
-  		</div>
-  </div>	
+  </div>    
  </div>
 </div> 
 
 
 <div id="RapidNewWin" class="hisui-layout" data-options="iconCls:'icon-w-paper'" style="width:800px;">
   <div data-options="region:'north',border:false,headerCls:'panel-header-gray',iconCls:'icon-add-note'" style="height:520px;padding:10px;">
-   <form class="form" style="border:1px solid #ccc;">	
-	<table style="width:800px;border-collapse:separate; border-spacing:4px 10px;">
+   <form class="form" style="border:1px solid #ccc;">   
+    <table style="width:800px;border-collapse:separate; border-spacing:4px 10px;">
         <tr>
           <td align="right" style="width:50px;">
-           <label for="RapidBookDateBegin">起始日期</label></td>
-   		  
-   		   <td align="left" style="width:180px;">
+           <label for="RapidBookDateBegin">#(..Get("起始日期"))#</label></td>
+          
+           <td align="left" style="width:180px;">
             <div>
               <input class="hisui-datebox" type="text" Id="RapidBookDateBegin" style="width:180px;" /></div>
           </td>
          
            <td align="right" style="width:50px;">
-           <label for="RapidBookDateEnd">结束日期</label></td>
-   		  
-   		   <td align="left" style="width:180px;">
+           <label for="RapidBookDateEnd">#(..Get("结束日期"))#</label></td>
+          
+           <td align="left" style="width:180px;">
             <div>
               <input class="hisui-datebox" type="text" Id="RapidBookDateEnd" style="width:180px;" /></div>
           </td>
           
           <td align="right" style="width:50px;">
-           <label for="RapidBookTime">预约时间</label></td>
-   		  
-   		   <td align="left" style="width:100px;">
+           <label for="RapidBookTime">#(..Get("预约时间"))#</label></td>
+          
+           <td align="left" style="width:100px;">
             <div>
               <input class="hisui-timespinner" type="text" Id="RapidBookTime" style="width:100px;" /></div>
           </td>
@@ -588,17 +597,17 @@ var GroupID="#(ID)#"
         
          <tr>
            <td align="right" style="width:50px;">
-           <label for="RapidDisChargedMode">结算方式</label></td>
-   		  
-   		   <td align="left" style="width:180px;">
+           <label for="RapidDisChargedMode">#(..Get("结算方式"))#</label></td>
+          
+           <td align="left" style="width:180px;">
             <select id="RapidDisChargedMode" class="hisui-combobox" name="RapidDisChargedMode" style="width:180px;" data-options="enterNullValueClear:false">
               <option value="GD">统结</option>
-			  <option value="ID">自结</option>
+              <option value="ID">自结</option>
             </select>
            </td>
          
            <td align="right">
-            <label for="RapidPatFeeTypeName">体检类别</label></td>
+            <label for="RapidPatFeeTypeName">#(..Get("体检类别"))#</label></td>
           <td>
             <div>
               <select class="hisui-combobox" type="text" Id="RapidPatFeeTypeName" name="RapidPatFeeTypeName" style="width:180px;" editable="false"></select></div>
@@ -608,15 +617,15 @@ var GroupID="#(ID)#"
         
         <tr>
            <td align="right" style="width:50px;">
-           <label for="AgeBoundary">年龄界限</label></td>
-   		  
-   		   <td align="left" style="width:180px;">
+           <label for="AgeBoundary">#(..Get("年龄界限"))#</label></td>
+          
+           <td align="left" style="width:180px;">
             <div>
-              <input class="hisui-validatebox" type="text" Id="AgeBoundary" style="width:174px;" /></div>
+              <input class="textbox" Id="AgeBoundary" style="width:174px;" /></div>
            </td>
          
            <td align="right">
-            <label for="RapidVIPLevel">VIP等级</label></td>
+            <label for="RapidVIPLevel">#(..Get("VIP等级"))#</label></td>
           <td>
             <div>
               <select class="hisui-combobox" type="text" Id="RapidVIPLevel" name="RapidVIPLevel" style="width:180px;" editable="false"></select></div>
@@ -624,38 +633,38 @@ var GroupID="#(ID)#"
         </tr>
         <tr>
          <td colspan="6">
-            <input class='hisui-radio' type="radio" label='一个组（全体人员）' name='TeamNum' value='Team_One'>
+            <input class='hisui-radio' type="radio" label=#(..Get("一个组（全体人员）"))# name='TeamNum' value='Team_One'>
            
         </td>
          </tr>
         <tr>
          <td colspan="6">
             
-            <input class='hisui-radio' type="radio" label='二个组（男、女）' name='TeamNum' value='Team_Two'>
+            <input class='hisui-radio' type="radio" label=#(..Get("二个组（男、女）"))# name='TeamNum' value='Team_Two'>
             
         </td>
          </tr> 
         <tr>
          <td colspan="6">
             
-            <input class='hisui-radio' type="radio" label='三个组（男、已婚女、未婚女）' name='TeamNum' value='Team_Three'>
+            <input class='hisui-radio' type="radio" label=#(..Get("三个组（男、已婚女、未婚女）"))# name='TeamNum' value='Team_Three'>
           
          </tr>
          <tr>
          <td colspan="6">
            
-            <input class='hisui-radio' type="radio" label='四个组（N岁以上男、N岁以下男、N岁以下女、N岁以上女）' name='TeamNum' value='Team_Four'>
+            <input class='hisui-radio' type="radio" label=#(..Get("四个组（N岁以上男、N岁以下男、N岁以下女、N岁以上女）"))# name='TeamNum' value='Team_Four'>
             
         </td>
          </tr>
          <tr>
          <td colspan="6">
             
-            <input class='hisui-radio' type="radio" label='五个组（N岁以上男、N岁以下男、未婚女、N岁以下已婚女、N岁以上已婚女）' name='TeamNum' value='Team_Five'>
+            <input class='hisui-radio' type="radio" label=#(..Get("五个组（N岁以上男、N岁以下男、未婚女、N岁以下已婚女、N岁以上已婚女）"))# name='TeamNum' value='Team_Five'>
         </td>
          </tr> 
       </table>  
-      	<table style="width:800px;border-collapse:separate; border-spacing:4px 10px;">
+        <table style="width:800px;border-collapse:separate; border-spacing:4px 10px;">
         <tr> 
          <td align='center'>
            <div>
@@ -663,235 +672,229 @@ var GroupID="#(ID)#"
           </td>
         </tr> 
       </table> 
-      </form>	
+      </form>   
   </div> 
    <div data-options="region:'center',title:'',headerCls:'panel-header-gray',iconCls:'icon-add-note'">
     
     </div> 
 </div> 
-<div id="NewWin" class="hisui-layout" data-options="iconCls:'icon-w-paper'" style="width:900px;">
-	<div data-options="region:'north',border:false" style="height:600px;padding:10px;">
-    <form class="form" style="border:1px solid #ccc;">	
-      <table style="width:850px;border-collapse:separate; border-spacing:10px 6px;">
+
+<div id='NewWin' style="display:none;">
+     <div data-options="split:false,border:false" style="height:305px;padding:10px;">
+        <div style="#(LineColor1)#">
+        <table class="search-table">
         <tr>
-          <td align="right" style="width:90px;">
-           <label for="ParRef_Name">团体名称</label></td>
-   		  
-   		  <td colspan="3" align="left" style="width:152px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="ParRef_Name" style="width:153px;" /></div>
+          <td class="r-label"><label for="ParRef_Name">#(..Get("团体名称"))#</label></td>
+
+          <td colspan="3">
+              <input class="textbox" Id="ParRef_Name" style="width:153px;" editable="true"/>
           </td>
           
-          <td align="right" style="width:90px;">
-           <label for="VIPLevel">VIP等级</label></td>
-   		  
-   		  <td align="left" style="width:180px;">
-            <div>
-             <select class="hisui-combobox" type="text" Id="VIPLevel" name="VIPLevel" style="width:180px;" editable="false"></select></div>
+          <td class="r-label"><label for="VIPLevel">#(..Get("VIP等级"))#</label></td>
+          
+          <td>
+             <select class="hisui-combobox" type="text" Id="VIPLevel" name="VIPLevel" style="width:181px;" editable="false"></select>
           </td>
           
-          <td style="width:30px;"></td>
+          <td class="r-label"></td>
           
           <td id="sexlist" >
-            <input class='hisui-radio' type="radio" label='男' name='TeamSex' value='M' id='TeamSexM'>
-            <input class='hisui-radio' type="radio" label='女' name='TeamSex' value='F' id='TeamSexF'>
-            <input class='hisui-radio' type="radio" label='不限' name='TeamSex' value='N' id='TeamSexN'>
+            <input class='hisui-radio' type="radio" label=#(..Get("男"))# name='TeamSex' value='M' id='TeamSexM'>
+            <input class='hisui-radio' type="radio" label=#(..Get("女"))# name='TeamSex' value='F' id='TeamSexF'>
+            <input class='hisui-radio' type="radio" label=#(..Get("不限"))#  name='TeamSex' value='N' id='TeamSexN'>
         </td>
         </tr>  
         
          <tr>
-          <td align="right" style="width:90px;">
-           <label for="TeamDesc"><font color="red">*</font>分组名称</label></td>
-   		  
-   		  <td colspan="3" align="left" style="width:152px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="TeamDesc" style="width:153px;" /></div>
+          <td class="r-label"><label for="TeamDesc"><font color="red">*</font>#(..Get("分组名称"))#</label></td>      
+          
+          <td colspan="3">
+              <input class="textbox" Id="TeamDesc" style="width:153px;"/>
           </td>
           
-          <td align="right" style="width:90px;">
-           <label for="RoomPlace">诊室位置</label></td>
-   		  
-   		  <td align="left" style="width:180px;">
-            <div>
-             <select class="hisui-combobox" type="text" Id="RoomPlace" name="RoomPlace" style="width:180px;" editable="false"></select></div>
+          <td class="r-label"><label for="RoomPlace">#(..Get("诊室位置"))#</label></td> 
+          <td align="left" style="width:180px;">
+             <select class="hisui-combobox" type="text" Id="RoomPlace" name="RoomPlace" style="width:181px;" editable="false"></select>
           </td>
            <td style="width:30px;"></td>
           <td id="Marriedlist" >
-            <input class='hisui-radio' type="radio" label='未婚' name='TeamMarried' value='UM' id='TeamMarriedUM'>
-            <input class='hisui-radio' type="radio" label='已婚' name='TeamMarried' value='M' id='TeamMarriedM'>
-            <input class='hisui-radio' type="radio" label='不限' name='TeamMarried' value='N' id='TeamMarriedN'>
+            <input class='hisui-radio' type="radio" label=#(..Get("未婚"))# name='TeamMarried' value='UM' id='TeamMarriedUM'>
+            <input class='hisui-radio' type="radio" label=#(..Get("已婚"))# name='TeamMarried' value='M' id='TeamMarriedM'>
+            <input class='hisui-radio' type="radio" label=#(..Get("不限"))#  name='TeamMarried' value='N' id='TeamMarriedN'>
         </td>
         </tr>  
         
         
         <tr>
-          <td align="right" style="width:90px;">
-           <label>年龄范围</label></td>
-   		  
-   		  <td align="left" style="width:55px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="LowerLimit" style="width:55px;" /></div>
+          <td class="r-label"> <label>#(..Get("年龄范围"))#</label></td>
+         
+          <td align="left" style="width:57px;">
+              <input class="textbox" Id="LowerLimit" style="width:58px;"/>
           </td>
-          <td align="right" style="width:5px;">
-           <label>至</label></td>
-   		  
-   		  <td align="left" style="width:55px;">
-            <div>
-              <input class="hisui-validatebox" type="text" Id="UpperLimit" style="width:55px;" /></div>
+          <td align="left" style="width:5px;padding-left:0px;"><label style="width:5px;">#(..Get("至"))#</label></td>
+
+          <td align="left" style="width:57px;padding-left:10px;"> 
+              <input class="textbox" Id="UpperLimit" style="width:59px;"/>
           </td>
           
           
-          <td align="right">
-            <label for="TeamPatFeeTypeName">体检类别</label></td>
+          <td class="r-label">
+            <label for="TeamPatFeeTypeName">#(..Get("体检类别"))#</label></td>
           <td>
-            <div>
-              <select class="hisui-combobox" type="text" Id="TeamPatFeeTypeName" name="TeamPatFeeTypeName" style="width:180px;" editable="false"></select></div>
+              <select class="hisui-combobox" type="text" Id="TeamPatFeeTypeName" name="TeamPatFeeTypeName" style="width:181px;" editable="false"></select>
           </td>
           <td style="width:30px;"></td>
           <td align="left"> 
-            <div>
-              <input class='hisui-checkbox' type="checkbox" label="不包括在团体" Id="NoIncludeGroup" /></div></td>
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("不包括在团体"))# Id="NoIncludeGroup" /></td>
            <td> 
           
         </tr>  
         
         <tr>
-          <td align="right" style="width:90px;">
-           <label for="TeamBookDateBegin">起始日期</label></td>
-   		  
-   		   <td colspan="3" align="left" style="width:160px;">
-            <div>
-              <input class="hisui-datebox" type="text" Id="TeamBookDateBegin" style="width:160px;" /></div>
+          <td class="r-label"><label for="TeamBookDateBegin">#(..Get("起始日期"))#</label></td>
+          
+           <td colspan="3">
+              <input class="hisui-datebox" type="text" Id="TeamBookDateBegin" style="width:160px;" />
           </td>
          
-           <td align="right" style="width:90px;">
-           <label for="TeamBookDateEnd">结束日期</label></td>
-   		  
-   		   <td align="left" style="width:180px;">
-            <div>
-              <input class="hisui-datebox" type="text" Id="TeamBookDateEnd" style="width:180px;" /></div>
+           <td class="r-label"> <label for="TeamBookDateEnd">#(..Get("结束日期"))#</label></td>
+           <td align="left" style="width:180px;">
+              <input class="hisui-datebox" type="text" Id="TeamBookDateEnd" style="width:181px;" />
           </td>
-          <td style="width:30px;"></td>
+          <td ></td>
           <td> 
-            <div>
-              <input class='hisui-checkbox' type="checkbox" label="公费加项" Id="TeamAddOrdItem" data-options="onCheckChange:function(event,value){TeamAddOrdItem_click(value)}" /></div>  
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("公费加项"))# Id="TeamAddOrdItem" data-options="onCheckChange:function(event,value){TeamAddOrdItem_click(value)}" />
               
           </td>
         </tr> 
         
        <tr>
-          <td align="right" style="width:90px;">
-           <label for="TeamGReportSend">团体报告发送</label></td>
-   		  
-   		   <td colspan="3" align="left" style="width:160px;">
+          <td class="r-label">
+           <label for="TeamGReportSend">#(..Get("团体报告发送"))#</label></td>
+          
+           <td colspan="3">
            <div>
               <select class="hisui-combobox" type="text" Id="TeamGReportSend" name="TeamGReportSend" style="width:160px;" editable="false">
-              	<option value='AC'>挂账可取</option>
-				<option value='DC'>结账取</option>
+                <option value='AC'>挂账可取</option>
+                <option value='DC'>结账取</option>
               </select></div>
           </td>
          
-           <td align="right" style="width:90px;">
-           <label for="TeamIReportSend">个人报告领取</label></td>
-   		  
-   		   <td align="left" style="width:180px;">
+           <td class="r-label"><label for="TeamIReportSend">#(..Get("个人报告领取"))#</label></td>
+           <td align="left">
            <div>
-              <select class="hisui-combobox" type="text" Id="TeamIReportSend" name="TeamIReportSend" style="width:180px;" editable="false">
-              	<option value='GS'>统取</option>
-				<option value='IS'>自取</option>
-			  </select></div>
+              <select class="hisui-combobox" type="text" Id="TeamIReportSend" name="TeamIReportSend" style="width:181px;" editable="false">
+                <option value='GS'>统取</option>
+                <option value='IS'>自取</option>
+              </select></div>
           </td>
-          <td style="width:30px;"></td>
+          <td class="r-label"></td>
           <td align="left"> 
-            <div>
-              <input class='hisui-checkbox' type="checkbox" label="允许开药" Id="TeamAddPhcItem" /></div></td>
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("允许开药"))# Id="TeamAddPhcItem" /></td>
            <td> 
         </tr>  
         <tr>
-          <td align="right" style="width:90px;">
-           <label for="TeamPEDeskClerkName">接待人</label></td>
-   		  
-   		   <td colspan="3" align="left" style="width:160px;">
-           <div>
-              <select class="hisui-combogrid" type="text" Id="TeamPEDeskClerkName" name="TeamPEDeskClerkName" style="width:160px;"></select></div>
+          <td class="r-label"> <label for="TeamPEDeskClerkName">#(..Get("接待人"))#</label></td>
+           <td colspan="3" align="left" style="width:160px;">
+              <select class="hisui-combogrid" type="text" Id="TeamPEDeskClerkName" name="TeamPEDeskClerkName" style="width:160px;"></select>
           </td>
          
-           <td align="right" style="width:90px;">
-           <label for="TeamDisChargedMode">结算方式</label></td>
-   		  
-   		   <td align="left" style="width:180px;">
-            <select id="TeamDisChargedMode" class="hisui-combobox" name="TeamDisChargedMode" style="width:180px;" data-options="enterNullValueClear:false">
+           <td class="r-label"><label for="TeamDisChargedMode">#(..Get("结算方式"))#</label></td>
+           <td>
+            <select id="TeamDisChargedMode" class="hisui-combobox" name="TeamDisChargedMode" style="width:181px;" data-options="enterNullValueClear:false">
               <option value="GD">统结</option>
-			  <option value="ID">自结</option>
+              <option value="ID">自结</option>
             </select>
            </td>
            <td style="width:30px;"></td>
            <td align="left"> 
-            <div>
-              <input class='hisui-checkbox' type="checkbox" label="限制加项金额" Id="TeamAddOrdItemLimit" data-options="onCheckChange:function(event,value){TeamAddOrdItemLimit_click(value)}" /></div>
+              <input class='hisui-checkbox' type="checkbox" label=#(..Get("限制加项金额"))# Id="TeamAddOrdItemLimit" data-options="onCheckChange:function(event,value){TeamAddOrdItemLimit_click(value)}" />
           </td>
            
           
         </tr>
         
         <tr>
-          <td align="right" style="width:90px;">
-           <label for="OMEType">检查种类</label></td>
-   		  
-   		   <td colspan="3" align="left" style="width:160px;">
-           <div>
-              <select class="hisui-combobox" type="text" Id="OMEType" name="OMEType" style="width:160px;"></select></div>
+          <td class="r-label">
+           <label for="OMEType">#(..Get("检查种类"))#</label></td>
+          
+           <td colspan="3" align="left" style="width:160px;">
+              <select class="hisui-combobox" type="text" Id="OMEType" name="OMEType" style="width:160px;"></select>
           </td>
          
            
-          <td align="right">
-            <label for="TeamAddOrdItemAmount">加项金额</label></td>
+          <td class="r-label">
+            <label for="TeamAddOrdItemAmount">#(..Get("加项金额"))#</label></td>
           <td>
-            <div>
-             <input class="hisui-validatebox" type="text" Id="TeamAddOrdItemAmount" style="width:174px;" /></div>
+             <input class="textbox" Id="TeamAddOrdItemAmount" style="width:174px;"/>
           </td>
         </tr>
-         
 
-       
         <tr>
-           <td align="right">
-            <label for="HarmInfo">危害因素</label></td>
+           <td class="r-label">
+            <label for="HarmInfo">#(..Get("危害因素"))#</label></td>
           <td colspan="8">
-            <div><input class="hisui-combotree" type="text" Id="HarmInfo" style="width:451px;"/></div>
+            <div><input class="hisui-combotree" type="text" Id="HarmInfo" style="width:444px;"/></div>
           </td>
-
         </tr>
-      </table>    
-    <table style="width:780px;border-collapse:separate; border-spacing:10px 10px;">
-     <tr align="center">
-          
-           <td align="center">
-           <div>
-              <a id="TeamUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" style="width:100px;">更新</a>
-              <a id="TeamClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:100px;">清屏</a>
-              <a id="SaveTemplate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:150px;">存为预置</a>
-             </div>  
+
+    <tr>
+          <td class="r-label"><label for="LPreGRebate">#(..Get("预约折扣率"))#</label></td>
+           <td colspan="3">
+              <input class="hisui-numberbox textbox" data-options="precision:2" Id="PreGRebate" style="width:140px;" /><label style="padding-left:5px;">%</label>
           </td>
-      </tr>    
-    </table> 
-    </form>
-    <div style="height:10px;"> 
-        
-    </div>
-    
-     <div style="height:170px;border:1px solid #ccc;border-radius:0;"> 
-        <table id="TempSet" data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false"></table>
-    </div>
-    
-    </div>  
-     <div data-options="region:'center'">
-	</div>
+         
+          <td class="r-label"><label for="LAddGRebate">#(..Get("公加折扣率"))#</label></td>
+           <td colspan="3">
+              <input class="hisui-numberbox textbox"  data-options="precision:2" Id="AddGRebate" style="width:160px;" /><label style="padding-left:5px;">%</label>
+          </td>
+       
+       </tr>
+
+    <tr>
+          <td class="r-label"><label for="LAddIRebate">#(..Get("自加折扣率"))#</label></td>
+           <td colspan="3">
+              <input class="hisui-numberbox textbox"  data-options="precision:2" Id="AddIRebate" style="width:140px;" /><label style="padding-left:5px;">%</label>
+          </td> 
+          
+          <td class="r-label"><label for="ParentTeam">#(..Get("父层分组"))#</label></td>
+          
+           <td colspan="3">
+           <div>
+              <select class="hisui-combobox" type="text" Id="ParentTeam" name="ParentTeam" style="width:180px;" editable="false"></select></div>
+          </td>
+          
+          
+       </tr>
+ 
+      </table>    
+    <table align="center" style="border-spacing:10 0px;border-collapse:separate;padding-bottom:10px;">
+        <tr>
+           <td>
+              <a id="TeamUpdate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-update'" style="width:120px;">更新</a>  
+          </td>
+          <td class="r-label-1">
+              <a id="TeamClear" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-clean'" style="width:120px;">清屏</a>
+           </td>
+           <td class="r-label-1">
+              <a id="SaveTemplate" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'" style="width:120px;">存为预置</a>  
+          </td>
+    <tr>
+    </table>   
 </div>
+<div style="#(LineColor7)#">
+            <table data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" id="TempSet"></table>
+        </div>      
+        
+     </div>
+
+ </div>
+
+
 <div id='ItemWin'>
 
 </div>
-<div id='GIAdmEditWin'>
+<div id='GIAdmEditWin' style="overflow: hidden;">
 
 </div>
 <div id='BaseWin'>
@@ -908,18 +911,68 @@ var GroupID="#(ID)#"
 
 
 <div id="SelectTemplate" title="模板选择" class="hisui-window"  style="width:400px;height:100px;padding:10px;"
-		data-options="iconCls:'icon-all-select',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
-		<table>
-			<tr>
-				<td><input class="hisui-filebox" id="fileNew" data-options="width:300,buttonText:'',buttonIcon:'icon-folder',plain:true,prompt:'excel文件：*.xls,*.xlsx'"
-					accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></td>
-				<td style="padding-left: 10px;">
-					<a href="#" onclick="confirm_file();" class="hisui-linkbutton">确定</a>
-				</td>
-			</tr>
-		</table>	
-		<input type="hidden" id="tempType" value="">	
-	</div>
+        data-options="iconCls:'icon-all-select',resizable:false,modal:true,isTopZindex:true,minimizable:false,maximizable:false,collapsible:false,closed:true">   
+        <table>
+            <tr>
+                <td><input class="hisui-filebox" id="fileNew" data-options="width:300,buttonText:'',buttonIcon:'icon-folder',plain:true,prompt:'excel文件：*.xls,*.xlsx'"
+                    accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></td>
+                <td style="padding-left: 10px;">
+                    <a href="#" onclick="confirm_file();" class="hisui-linkbutton">确定</a>
+                </td>
+            </tr>
+        </table>    
+        <input type="hidden" id="tempType" value="">    
+    </div>
+    <div id='ImportGWin' style="overflow: hidden;"></div>
+
+<!--选取已预约人员窗口-->
+ <div id='SelectPreInfoWinNew' style="display:none;">
+     <div style="height:65px;padding:10px;">
+        <div style="#(LineColor1)#">
+            <table class="search-table">
+        
+            <tr>
+                <td class="r-label"><label for="PreRegNo">#(..Get("登记号"))#</label></td>
+                <td>
+                    <input class="textbox" id="PreRegNo"/>
+                </td>
+                
+                <td class="r-label"><label for="PreName">#(..Get("姓名"))#</label></td>
+                <td>
+                    <input class="textbox" id="PreName"/>
+                </td>
+                
+                <td style="padding-left:10px">
+                    <a id="PreBFind" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+                </td>   
+                
+                <td style="padding-left:10px">
+                    <a id="PreBAdd" href="#" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+                </td>   
+                
+            </tr>
+        
+        </table>
+    </div>
+    
+        <div style="#(LineColor2)#">
+            <table data-options="bodyCls:'panel-header-gray',fit:true,singleSelect:true,border:false" id="SelectPreInfoGrid"></table>
+        </div>      
+        
+     </div>
+
+ </div>
+
+<!--项目明细弹窗-->
+<div id="IADMItemDetailWin" style="display:none;height:430px;width:500px;padding:10px;">
+        <div class="hisui-panel" data-options="bodyCls:'panel-header-gray',fit:true" style="border-radius:4px;">
+              <table data-options="bodyCls:'panel-header-gray'" id="IADMItemDetailGrid"></table>
+        </div>
+</div> 
+
+<!--修改预约项目弹窗-->
+<div id="ItemEditWin" style="overflow:hidden;"></div>
+
   <script type="text/javascript" src="../scripts/DHCPEPreGADM.EditHISUI.js"></script>
   <script type="text/javascript" src="../scripts/DHCPEImportGInfoHISUI.js"></script> 
   <script type="text/javascript" src="../scripts/DHCPECommon.js"></script>
@@ -935,14 +988,18 @@ var GroupID="#(ID)#"
   <script type="text/javascript" src="../scripts/websys.listrows.js"></script>
   <script type="text/javascript" src="../scripts/websys.List.js"></script>
   <script type="text/javascript" src="../scripts/websys.List.Tools.js"></script>
-  <script type="text/javascript" src="../scripts/DHCPrtComm.JS"></script>
+ 
   <script type="text/javascript" src="../scripts/dhtmlXCombo.js"></script>
   <script type="text/javascript" src="../scripts/dhtmlXCommon.js"></script>
+
+  <script type="text/javascript" src="../scripts/DHCPEExcelTool.js"></script>
   <script type="text/javascript" src="../scripts/DHCPEExcelPublic.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPrtComm.js"></script>
+  <script type="text/javascript" src="../scripts/DHCPEPrintCommon.js"></script>
   <script type="text/javascript" src="../scripts/DHCPEIAdmItemStatusAdms.PatItemPrint.js"></script>
   <script type="text/javascript" src="../scripts/DHCPEPrintDJDCommon.js"></script>
-  
-  <script type="text/javascript" src="../scripts/DHCPEExcelTool.js"></script>
+  <script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset="UIF-8"></script>
+
   <script type="text/javascript" src="../scripts/pha/plugins/xlsx/xlsx.full.min.js"></script>
 </body>
 </html>

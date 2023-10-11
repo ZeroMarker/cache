@@ -1,0 +1,161 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+ /*
+	@CSP:dhc.bdp.mkb.mkbglobalalias.csp
+	@JS:MKB_GlobalAlias.js
+	@Title:全局化词表别名模块展示
+ 	@Creator:基础数据平台组 - 范文凯
+ 	@Description:医用知识库--全局化词表--别名模块展示
+ 	@CreateDate:2019-10-18 
+ */
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="en">
+<HEAD>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+ <EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+ <HISUI/>
+ <link rel="stylesheet" type="text/css" href="../scripts/bdp/Framework/css/styleUI.css" />
+ <script type="text/javascript" src="../scripts/bdp/Framework/scripts/FunLibUI.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_KnoExpression.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/MKB/SDS/StructTagCommon.js"></script>
+ <script type="text/javascript" src="../scripts/bdp/MKB/MKP/MKB_GlobalAlias.js"></script>
+    <server>
+    	s GlobalID=%request.Get("GlobalID")
+    	s AliasId=%request.Get("AliasId")
+    	//s GetTagTemplate=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.MKB.MKBGlobal.GetTagTemplate")) //获取诊断标记模板
+        s GetTagTemplate="web.DHCBL.MKB.MKBGlobal#GetTagTemplate" //获取诊断标记模板
+        s LoadTagSearchMethod="web.DHCBL.MKB.MKBGlobal#GetTagList" //获取诊断标记快速检索列表，参数与此Query保持一致
+   </server> 
+ 
+  <style type="text/css"> 
+   textarea:not(#textareadom){
+   			height:28px;
+ 		}  
+ 		
+.menu-rightarrow {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    right: 0;
+    top: 50%;
+    margin-top: -12px;
+    transform: rotate(90deg); 
+}  
+#DiagForm,#TagForm
+{
+    min-width: 280px;
+    /*  border-collapse 设置表格的边框是否被合并为一个单一的边框，还是象在标准的HTML中分开显示。 */
+    border-collapse: collapse;
+    /*border: 1px solid #bbbbbb;*/
+}
+#DiagForm tr,#TagForm tr{
+    height: 35px;
+}
+/* 单元格边框 */
+#DiagForm td, th
+{
+    border:1px solid #bbbbbb;
+}
+#TagForm td, th
+{
+    border:1px solid #bbbbbb;
+}
+  
+ </style>
+</HEAD>
+<BODY>
+
+   <div class="hisui-layout" data-options="fit:true">    	 
+      	<div data-options="region:'center',bodyCls:'panel-header-gray'" title="" id="aliascenter" style="border-top:1px solid #ffffff;"> 
+	 		<table data-options="fit:true" id="aliascenterlistgrid" border="false" ></table> 
+	  	</div> 
+   </div>
+   
+   <!--<div id="aliasTools">
+        <a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true" id="aliasadd_btn">新增</a>
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true" id="aliasupdate_btn">修改</a> 
+    	<a href="#" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" id="aliasdel_btn">删除</a>
+    	<div id="switch1" >
+    </div>
+   </div>-->
+   <!--诊断标记弹窗-->
+ 	<div id='myTaglist' class="easyui-resizable" style='position:absolute;background:#FFFFFF;border:1px solid #C0C0C0;width:800px;max-width:870px;height:270px;padding:4px;z-index:9;border-radius:8px;box-shadow:0 5px 10px rgba(0,0,0,.2);display:none;'>
+		<div id='mytaglayout' class="hisui-layout" data-options="fit:true" border="false">
+			<div data-options="region:'center',border:false,split:true" style="">
+				<csp:Include Page="dhc.bdp.sds.structtagcommon.csp">
+			</div>
+			<div data-options="region:'south',collapsible:false,border:false" style="height:35px;margin-top:4px">
+				<table id="mytagbtn" style="margin:0 auto">
+		        	<tr>
+		        		<td ><a href="#" class="hisui-linkbutton" style="width:90px;" id="confirm_btn_Tag">确定</a></td>
+		        		<td ><a href="#" class="hisui-linkbutton" style="width:90px;margin-left:10px" id="cancel_btn_Tag">取消</a></td>
+		        	</tr>
+		        </table>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	var  GlobalID="#(GlobalID)#"
+	var  AliasId="#(AliasId)#"
+     if ((GlobalID==undefined)||(GlobalID==null))
+     {
+	      GlobalID=""
+     }
+     if ((AliasId==undefined)||(AliasId==null))
+     {
+	      AliasId=""
+     }
+     var ServerObject={
+			GetTagTemplate:"#(GetTagTemplate)#",
+			LoadTagSearchMethod:"#(LoadTagSearchMethod)#"		} 
+	var flagSaveFreq=false; //是否保存频次标识: false
+	var flagMKBTable="MKB_Globalend" //全局化词表调用公共标记列表tablename标识
+	var baseTag=tkMakeServerCall("web.DHCBL.MKB.MKBTermBase","GetIdByDesc","全局化词表标记"); //知识库注册中诊断标记id
+	
+ 	var documentWidth= window.screen.availWidth //$(window).width(); // $(document).width();
+	var documentHeight=window.screen.availHeight // $(window).height() // $(document).height();
+	var myProWidth=documentWidth*(1/2);
+	var myProHeight=documentHeight*(3/8);
+	
+	var myProWest=document.getElementById('mypropertywest');//属性列表最左侧布局
+	//myProWest.style.width=myProWidth*(1/4)+'px';
+	$('#mypropertywest').css({
+		width:	myProWidth*(1/4)+'px'
+	})
+	var myProSearch=document.getElementById('Form_DiagPropertySearchText');
+
+	//myProSearch.style.width=myProWidth*(1/4)-40+"px";
+	$('#Form_DiagPropertySearchText').css({
+		width:	myProWidth*(1/4)-40+"px"
+	})
+	var myProEast=document.getElementById('mypropertyeast');//属性列表最右侧布局
+	//myProEast.style.width=myProWidth*(9/20)+'px';
+	$('#mypropertyeast').css({
+		width:	myProWidth*(9/20)+'px'
+	})
+	$("#myprobtn").css({"margin-left": (myProWidth-200)/2 + "px"}); //属性列表确定取消按钮
+
+	var myTagWest=document.getElementById('mytagwest');//标记列表最左侧布局
+	//myTagWest.style.width=myProWidth*(1/4)+'px';
+	$('#mytagwest').css({
+		width:	myProWidth*(1/4)+'px'
+	})
+	var myTagSearch=document.getElementById('Form_TagSearchText');
+	//myTagSearch.style.width=myProWidth*(1/4)-40+"px";
+	$('#Form_TagSearchText').css({
+		width:	myProWidth*(1/4)-40+"px"
+	})
+	var myTagEast=document.getElementById('mytageast');//标记列表最右侧布局
+	//myTagEast.style.width=myProWidth*(9/20)+'px';
+	$('#mytageast').css({
+		width:	myProWidth*(9/20)+'px'
+	})
+	$("#mytagbtn").css({"margin-left": (myProWidth-200)/2 + "px"}); //标记列表确定取消按钮
+
+     
+ </script>	
+</BODY>
+</HTML>

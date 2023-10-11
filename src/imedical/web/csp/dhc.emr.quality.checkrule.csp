@@ -1,9 +1,96 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+  i ##Class(websys.SessionEvents).SessionExpired() 
+ q 1
+</csp:method>
 <!DOCTYPE html>
 <html>
 <head>
-	<HISUI/>
-	<TITLE>璐ㄦ帶璇勪环鐣岄潰</TITLE>
-	<script language="cache" runat="server">
+	<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+    <HISUI/> 
+	<TITLE>质控评价界面</TITLE>
+	
+    <style>
+     .patientbar{
+		overflow:hidden;
+		padding:10px 10px 0 10px;
+	 }
+	 .PatInfoItem {
+		font-size: 0;
+		line-height: 40px;
+		overflow:hidden;
+		position: relative;
+		margin-left:10px;
+	 }
+	 .patinfo-hover-content{
+	 	font-size: 0;
+	 }
+	 .PatInfoItem span, .patinfo-hover-content span{
+		 margin:0;
+		 line-height:30px;
+	 }
+	 .PatInfoItem lable, .patinfo-hover-content lable,.patinfo-hover-content img{
+		 color:#666;
+		 margin-right:5px;
+	 }
+	 .PatInfoItem img{
+		 color:white;
+		 margin-left:5px;
+		 margin-right:5px;
+	 }
+	 .PatInfoItem a img{
+		 margin-top:4px;
+	 }
+	 .patinfo-hover-content span{
+		 line-height:30px;
+	 }
+	 .man{
+		 background:url(../images/man.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .woman{
+		 background:url(../images/woman.png) no-repeat;
+		 background-size:cover;
+	 }
+	 .unman {
+		background: url(../images/unman.png) no-repeat;
+		background-size: cover;
+	 }
+	 .border-div{
+		border:1px solid #E2E2E2;	 
+		height:35px;
+		position:fixed;
+		top:2px;
+		left:10px;
+		right:10px;
+		background: transparent;
+	 }
+	 .PatInfoItem div:first-child{
+		left:20px;	 
+	 }
+	 .panel-body{
+		 border-color:#fff
+	 }
+	 
+  </style>
+</head>
+<body class="hisui-layout" id = "checkRuleLayout" data-options="border:false">
+	<div class="patientbar" data-options="region:'north',border:false" style="height:40px;">
+		<csp:Include Page="dhcdoc.patinfo.banner.csp">
+	</div>
+	<div data-options="region:'center',border:false" style="overflow:hidden;margin:5px 10px 10px 5px;padding-bottom:10px;">
+		<iframe id="recordQuality" frameborder="0" width="100%" height="100%"></iframe>
+		
+	</div> 
+	
+	<div data-options="region:'east',border:false" style="width:590px;overflow:hidden;padding:10px;">
+		<iframe  id="qualityEntrygrid" frameborder="0" width="100%" height="100%"></iframe>
+	</div>  
+
+	<div id="browselogdialog" class="hisui-dialog" title="操作记录明细" style="width:950px;height:500px;padding:0;margin:0;" data-options="iconCls:'icon-w-list',modal:true,isTopZindex:true,closed:true">
+        <iframe id="browselogiframe" frameborder="0" src="" style="width:100%;height:99%;padding:0;margin:0;"></iframe>
+    </div>
+    
+    <script language="cache" runat="server">
 		s episodeID = $Get(%request.Data("EpisodeID",1))
 		//s patientID = $Get(%request.Data("patientID",1))
 		s patientID = ##class(EPRservice.HISInterface.PatientInfoAssist).GetPapmiDR(episodeID)
@@ -11,7 +98,24 @@
 		s CTLocatID=$g(%session.Data("LOGON.CTLOCID"))
 		s SSUserID=$g(%session.Data("LOGON.USERID"))
 		s action = $Get(%request.Data("action",1))
-	
+		s IsBSQualityEnable=##Class(EPRservice.Quality.CommonHelper).IsBSQualityEnable()  //BS版本质控维护程序是否启用
+		if (IsBSQualityEnable'="Y")
+		{
+			s QuaSetPage = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("QuaSetPage")
+		}
+		else
+		{
+			s QuaSetPage = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCodeNew("QuaSetPage")
+		}
+		s:(QuaSetPage="") QuaSetPage=1
+		if (IsBSQualityEnable'="Y")
+		{
+			s PilotSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCode("PilotSSGroup")
+		}
+		else
+		{
+			s PilotSSGroup = ##Class(EPRservice.Quality.DataAccess.BOQualityParams).GetValuebyCodeNew("PilotSSGroup")
+		}
 	</script>
 	
 	<script language="javascript">
@@ -22,22 +126,11 @@
         var CTLocatID ='#(CTLocatID)#';
         var SSUserID ='#(SSUserID)#';
 		var action ='#(action)#';
+		var QuaSetPage = '#(QuaSetPage)#';
+		var PilotSSGroup = '#(PilotSSGroup)#';
+		var pilotSSGroup=PilotSSGroup.split('^');
+		var pilotView=pilotSSGroup.indexOf(SSGroupID)
     </script>
-    
-</head>
-<body class="hisui-layout" id = "checkRuleLayout" data-options="border:false">
-	<div data-options="region:'center',border:false" style="padding:2px;">
-		<object id="recordQuality" data="" width="100%" height="99%"></object>
-		
-	</div> 
-	
-	<div data-options="region:'east',border:false,split:true" style="width:600px;padding:2 2 2 0px;">
-		<object  id="qualityEntrygrid" data="" width="100%" height="100%"></object>
-	</div>  
-
-	<div id="browselogdialog" class="hisui-dialog" title="鎿嶄綔璁板綍鏄庣粏" style="width:950px;height:500px;padding:0;margin:0;" data-options="iconCls:'icon-w-list',modal:true,isTopZindex:true,closed:true">
-        <iframe id="browselogiframe" frameborder="0" src="" style="width:100%;height:99%;padding:0;margin:0;"></iframe>
-    </div>
     
 	<script type="text/javascript" src="../scripts/DHC.EMR.Quality.CheckRule.js"></script>
 	<script type="text/javascript" src="../scripts/emr/js/tools.js"></script>

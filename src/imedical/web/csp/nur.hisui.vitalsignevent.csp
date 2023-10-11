@@ -1,0 +1,513 @@
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ ;d ##Class(Nur.CSPDebug).setSession() q 1 ;
+ i ##Class(websys.SessionEvents).SessionExpired() q 1
+ quit 1
+</csp:method>
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI></HISUI>
+<style>
+body{background: white;overflow: hidden;padding: 0;}
+hr.dashed{border-top: 0;border-bottom: 1px dashed #ccc;}
+.combo .combo-text{box-sizing: border-box;}
+#_HospList+.combo>.combo-text{width: 320px!important;}
+.l-btn:focus{outline: none;}
+td.datagrid-value-changed{background: transparent;}
+.icon{padding-left: 20px;background-position: left 0px center;display: inline-block;font-size: 12px;cursor: pointer;}
+.datagrid-toolbar{width: 100%;}
+.panel.datagrid>.panel-body.panel-body-noheader{border-radius: 0;border: 0;border-color: #cccccc;}
+</style>
+<script type="text/javascript">
+var eventTypes=[
+	{id:"入院",desc:"入院"},
+	{id:"出院",desc:"出院"},
+	{id:"死亡",desc:"死亡"},
+	{id:"转科",desc:"转科"},
+	{id:"转科分床",desc:"转科分床"},
+	{id:"转病区",desc:"转病区"},
+	{id:"转病区分床",desc:"转病区分床"},
+	{id:"分娩",desc:"分娩"},
+	{id:"出生",desc:"出生"},
+	{id:"手术开始",desc:"手术开始"},
+	{id:"外出",desc:"外出"},
+	{id:"医嘱开始",desc:"医嘱开始"},
+	{id:"医嘱执行",desc:"医嘱执行"},
+	{id:"入观",desc:"入观"},
+	{id:"出观",desc:"出观"},
+];
+var judges=[
+	{id:1,desc:"是"},
+	{id:0,desc:"否"},
+];
+var orderCats=[],orderCatObj={};
+</script>
+</head>
+<body>
+	<div style="position: relative;">
+		<table cellpadding="0" style="border-collapse: collapse;margin: 10px;">
+	    <tr>
+				<td class="r-label">
+					<span id="_HospListLabel" style="color: red;vertical-align: bottom;line-height: 100%;">*</span>所属医院
+				</td>
+				<td class="r-label">
+					<select id="_HospList"></select>
+				</td>
+	    </tr>
+	  </table>
+	  <hr class="dashed" style="margin: 10px 0 0;">
+	</div>
+	 <!-- title="体温单事件代码列表" -->
+  <table id="evaluateSystem" class="hisui-datagrid"
+		data-options="headerCls:'panel-header-gray',iconCls:'icon-paper',rownumbers:true,singleSelect:true,autoSizeColumn:false,fitColumns:true,pagination:false,toolbar: [{
+			iconCls: 'icon-add',
+			text:'新增',
+			handler: addESRow
+		},{
+			iconCls: 'icon-cancel',
+			text:'删除',
+			handler: deleteESRow
+		},{
+			iconCls: 'icon-save',
+			text:'保存',
+			handler: saveESRow
+		}],
+		onDblClickRow:editESRow
+	">
+		<thead>   
+			<tr>
+				<th data-options="field:'TYP_ROWID',width:80">ID</th>
+				<th data-options="field:'TYP_CODE',width:100,editor:{type:'text'}">事件代码</th>
+				<th data-options="field:'TYP_DESC',width:120,editor:{type:'text'}">事件描述</th>
+				<!-- <th data-options="field:'TYP_TYPE',width:200,editor:{type:'text'}">事件类型</th> -->
+				<th data-options="field:'TYP_TYPE',width:120,editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'id',
+						textField:'desc',
+						data:eventTypes,
+						onSelect:changeOpeRights,
+						blurValidValue:true
+					}
+				}">事件类型</th>
+				<!-- <th data-options="field:'TYP_TYPE_CODE',width:200,editor:{type:'text'}">医嘱项代码</th> -->
+				<th data-options="field:'orderItemsDesc',width:190,editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'id',
+						textField:'desc',
+						multiple:true,
+						mode:'remote',
+						loader: docAdviceloader,
+						onSelect:getOrderItmsVal,
+						onUnselect:delOrderItmsVal,
+						onHidePanel:setOrderItmsVal,
+						onChange:checkOrderItmsVal,
+						blurValidValue:true
+					}
+				}">医嘱项</th>
+				<th data-options="field:'orderCats',width:130,
+				formatter:function(value,row,index){
+					if(''==value) return value;
+					var ids=value.split(','),str='';
+					for(var i=0;i<ids.length;i++){
+						if(''==str){
+							str=orderCatObj[ids[i]];
+						}else{
+							str+=','+orderCatObj[ids[i]];
+						}
+					}
+					return str;
+				},
+				editor:{
+					type:'combobox',
+					options:{
+						defaultFilter:6,
+						valueField:'ARCICRowId',
+						textField:'ARCICDesc',
+						multiple:true,
+						data:orderCats,
+						blurValidValue:true
+					}
+				}">医嘱子类</th>
+				<th data-options="field:'editFlag',width:104,
+				formatter:function(value,row,index){
+					return 1==value?'是':'否';
+				},
+				editor:{
+					type:'combobox',
+					options:{
+						valueField:'id',
+						textField:'desc',
+						data:judges,
+						panelHeight:'auto',
+						blurValidValue:true
+					}
+				}">是否允许编辑</th>
+				<th data-options="field:'enableFlag',width:50,
+				formatter:function(value,row,index){
+					return 1==value?'是':'否';
+				},
+				editor:{
+					type:'combobox',
+					options:{
+						valueField:'id',
+						textField:'desc',
+						data:judges,
+						panelHeight:'auto',
+						blurValidValue:true
+					}
+				}">启用</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>   
+	</table>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript">
+$.extend($.fn.datagrid.methods, {
+  getEditingRowIndexs: function(jq) {
+    var rows = $.data(jq[0], "datagrid").panel.find('.datagrid-row-editing');
+    var indexs = [];
+    rows.each(function(i, row) {
+      var index = row.sectionRowIndex;
+      if (indexs.indexOf(index) == -1) {
+          indexs.push(index);
+      }
+    });
+    return indexs;
+  }
+});
+// -----------------------------------------------------
+var hospID = session['LOGON.HOSPID'],docAdvicesObj = {};
+var orderItmsVal=[],orderItmObj={};
+var editESIndex,esTableData={"total":0,"rows":[]};
+var docAdviceloader = function (param, success, error) {
+  var q = param.q || "";
+	if (q.indexOf(',')>-1) {
+		q=q.split(',');
+		q=q[q.length-1];
+	}
+  var delimiter = String.fromCharCode(12);
+  var key = q;
+  if ("" === key) key = delimiter;
+  if (!docAdvicesObj[key]) {
+    var docAdvices = $cm(
+      {
+        ClassName: "Nur.NIS.Service.TaskOverview.Normal",
+        QueryName: "GetDocAdvice",
+        rows: 50,
+        ARCIMDesc: q,
+        hospDR: hospID,
+      },
+      false
+    );
+    docAdvicesObj[key] = docAdvices.rows;
+  }
+  if (orderItmsVal.length) {
+		for (var i = 0; i < orderItmsVal.length; i++) {
+			var id = orderItmsVal[i];
+			var exist = false;
+			$.map(docAdvicesObj[key], function (e) {
+				if (id == e.id) exist = true;
+			});
+			if (!exist)
+				docAdvicesObj[key].push({
+					id: id,
+					desc: orderItmObj[id],
+				});
+		}
+    success(docAdvicesObj[key]);
+  } else {
+    success(docAdvicesObj[key]);
+  }
+};
+$(function() {
+	hospComp = GenHospComp("Nur_IP_DHCQTRECTYP",session["LOGON.USERID"]+'^'+session["LOGON.GROUPID"]+'^'+session["LOGON.CTLOCID"]+'^'+session["LOGON.HOSPID"]);
+	hospID=hospComp.getValue();
+	hospComp.options().onSelect = function(i,d){
+		hospID=d.HOSPRowId;
+		getOrderCats();
+	}  ///选中事件
+	getOrderCats();
+})
+function getESTableData() {
+	// 获取放化疗评价系统数据
+  $cm({
+      ClassName: 'Nur.NIS.Service.VitalSign.Event',
+      QueryName: 'FindEventType',
+      rows: 999999999999999,
+      HospitalRowId: hospID
+  }, function (data) {
+    esTableData=data;
+	  $('#evaluateSystem').datagrid({data: esTableData.rows});
+		if ($('td[field="TYP_TYPE"]>div #eventTypeTip').length<1) {
+			$('td[field="TYP_TYPE"]>div').append('<a href="#" id="eventTypeTip" class="hisui-linkbutton" data-options="iconCls:\'icon-help\',plain:true"></a>')
+			var content="<p>"+$g('“入院”类型针对住院患者，插入时间为患者入院时间，关联出入转设置的出院时间，不包括分娩记录中登记的新生儿；')+"</p>"
+			content+="<p>"+$g('“出院”类型针对住院患者，插入时间为患者出院时间，关联出入转设置的出院时间；')+"</p>"
+			content+="<p>"+$g('“死亡”类型插入时间为患者死亡时间，关联医生填写的死亡时间；')+"</p>"
+			content+="<p>"+$g('“转科”类型插入时间为转科前转科操作时间；')+"</p>"
+			content+="<p>"+$g('“转科分床”类型插入时间为转科后首次分床时间；')+"</p>"
+			content+="<p>"+$g('“转病区”类型插入时间为原病区转病区操作时间；')+"</p>"
+			content+="<p>"+$g('“转病区分床”类型插入时间为转病区后首次分床时间；')+"</p>"
+			content+="<p>"+$g('“分娩”类型插入时间为分娩记录最早创建时间；')+"</p>"
+			content+="<p>"+$g('“出生”类型针对分娩记录中登记的新生儿，插入时间为分娩记录的新生儿出生时间；')+"</p>"
+			content+="<p>"+$g('“手术开始”类型插入时间为麻醉记录上填写的手术开始时间；')+"</p>"
+			content+="<p>"+$g('“外出”类型插入时间为外出记录出病区时间，添加外出记录后增加一条外出类型事件；')+"</p>"
+			content+="<p>"+$g('“医嘱开始”类型需要配置医嘱项或医嘱子类，插入时间为医嘱开始时间；')+"</p>"
+			content+="<p>"+$g('“医嘱执行”类型需要配置医嘱项或医嘱子类，插入时间为医嘱执行时间；')+"</p>"
+			content+="<p>"+$g('“入观”类型针对急诊留观患者，插入时间为急诊留观护士第一次分床时间即入留观时间；')+"</p>"
+			content+="<p>"+$g('“出观”类型针对急诊留观患者，插入时间为护士办理出院或更改患者状态为离院时填写的离院时间。')+"</p>"
+			$("#eventTypeTip").linkbutton().popover({
+				trigger:'hover',
+				content:content,
+				style:'inverse'
+			});
+		}
+		if ($('td[field="editFlag"]>div #editFlagTip').length<1) {
+			$('td[field="editFlag"]>div').append('<a href="#" id="editFlagTip" class="hisui-linkbutton" data-options="iconCls:\'icon-help\',plain:true"></a>')
+			var content="<p>"+$g('包括新增、编辑和删除')+"</p>"
+			$("#editFlagTip").linkbutton().popover({
+				trigger:'hover',
+				content:content,
+				style:'inverse'
+			});
+		}
+  });
+}
+function getOrderCats() {
+	docAdvicesObj = {};
+	// 获取放化疗评价系统数据
+  $cm({
+      ClassName: 'web.DHCBL.CT.ARCItemCat',
+      QueryName: 'GetList',
+      rows: 999999999999999,
+      hospid: hospID
+  }, function (data) {
+		console.log(data);
+    orderCats=data.rows;
+		orderCatObj
+		for (var i = 0; i < orderCats.length; i++) {
+			const element = orderCats[i];
+			orderCatObj[orderCats[i].ARCICRowId]=orderCats[i].ARCICDesc;
+		}
+		getESTableData();
+  });
+}
+function editESRow(curInd,row) {
+	// 当双击另一行时，先保存正在编辑的行
+	if ($('#evaluateSystem').datagrid('getEditingRowIndexs').length) {
+		return $.messager.popover({msg: '请先保存！',type:'alert'});
+		return;
+	}
+	if (row.orderItems) {
+		orderItmsVal=row.orderItems.split(',');
+		var itmDescs=row.orderItemsDesc.split(',');
+		for (var i = 0; i < orderItmsVal.length; i++) {
+			orderItmObj[orderItmsVal[i]]=itmDescs[i];
+		}
+	}else{
+		orderItmsVal=[];
+	}
+	$('#evaluateSystem').datagrid('beginEdit', curInd);
+	var rowEditors=$('#evaluateSystem').datagrid('getEditors',curInd);
+	$(rowEditors[4].target).combobox('loadData',orderCats);
+	if (''===row.editFlag) $(rowEditors[5].target).combobox('clear');
+	if (''===row.enableFlag) $(rowEditors[6].target).combobox('clear');
+	$(rowEditors[3].target).combobox('setValues',orderItmsVal);
+	// if ("开立医嘱"!=row.TYP_TYPE) {
+	if (row.TYP_TYPE.indexOf("医嘱")<0) {
+		$(rowEditors[3].target).combobox('disable');
+		$(rowEditors[4].target).combobox('disable');
+	}
+}
+function changeOpeRights(d) {
+	var index=$('#evaluateSystem').datagrid('getEditingRowIndexs')[0];
+	var rowEditors=$('#evaluateSystem').datagrid('getEditors',index);
+	// if ("开立医嘱"==d.id) {
+	if (d.id.indexOf("医嘱")>-1) {
+		$(rowEditors[3].target).combobox('enable');
+		$(rowEditors[4].target).combobox('enable');
+	} else {
+		$(rowEditors[3].target).combobox('disable');
+		$(rowEditors[4].target).combobox('disable');
+	}
+}
+function getOrderItmsVal(d) {
+	orderItmsVal.push(d.id);
+	orderItmObj[d.id]=d.desc;
+	orderItmObj[d.desc]=d.id;
+	setOrderItmsVal(d);
+}
+function delOrderItmsVal(d) {
+	var ind=orderItmsVal.indexOf(d.id);
+	if (ind>-1) {
+		orderItmsVal.splice(ind,1);
+	}
+	delete orderItmObj[d.id];
+	delete orderItmObj[d.desc];
+}
+function checkOrderItmsVal(d) {
+	console.log(d);
+	console.log(d[0]);
+	if (d[0]&&(d[0].indexOf('||')>-1)) return;
+	// if ((1==d.length)&&(d[0].indexOf(',')>-1)) d=d[0].split(',');
+	if (d[0]&&(d[0].indexOf(',')>-1)) d=d[0].split(',');
+	for (var i = 0; i < orderItmsVal.length; i++) {
+		var orderId = orderItmsVal[i];
+		if (d.indexOf(orderItmObj[orderId])<0) {
+			orderItmsVal.splice(i,1);
+			i--;
+		}
+	}
+}
+function setOrderItmsVal(d) {
+	var index=$('#evaluateSystem').datagrid('getEditingRowIndexs')[0];
+	var rowEditors=$('#evaluateSystem').datagrid('getEditors',index);
+	$(rowEditors[3].target).combobox('setValues',orderItmsVal);
+}
+function addESRow() {
+	if ($('#evaluateSystem').datagrid('getEditingRowIndexs').length) {
+		return $.messager.popover({msg: '请先保存！',type:'alert'});
+		return;
+	}
+	editESIndex=$('#evaluateSystem').datagrid('getRows').length;
+	var row={
+		TYP_ROWID: "",
+		TYP_CODE: "",
+		TYP_DESC: "",
+		TYP_TYPE: "",
+		orderItems: "",
+		orderCats: "",
+		editFlag: "",
+		enableFlag: "",
+	}
+	$('#evaluateSystem').datagrid("insertRow", { 
+		row: row
+  }).datagrid("selectRow", editESIndex);
+  editESRow(editESIndex,row);
+}
+function saveESRow(flag) {
+	if (flag&&!$('#evaluateSystem').datagrid('getEditingRowIndexs').length) {
+		return $.messager.popover({msg: '无需要保存的项！',type:'alert'});
+	}
+	var index=$('#evaluateSystem').datagrid('getEditingRowIndexs')[0];
+	if (undefined===index) return true;
+	var curRow=$('#evaluateSystem').datagrid('getRows')[index];
+	var rowEditors=$('#evaluateSystem').datagrid('getEditors',index);
+	var TYP_ROWID=curRow.TYP_ROWID||'';
+	var TYP_CODE=$(rowEditors[0].target).val();
+	var TYP_DESC=$(rowEditors[1].target).val();
+	var TYP_TYPE=$(rowEditors[2].target).combobox('getValue');
+	var orderItems=$(rowEditors[3].target).combobox('getValues').join();
+	var orderCats=$(rowEditors[4].target).combobox('getValues').join();
+	var editFlag=$(rowEditors[5].target).combobox('getValue');
+	var enableFlag=$(rowEditors[6].target).combobox('getValue');
+	// if ("开立医嘱"!=TYP_TYPE) {
+	if (TYP_TYPE.indexOf("医嘱")<0) {
+		orderItems="";
+		orderCats="";
+	}else{
+		if (!orderItems&&!orderCats) {
+			$.messager.popover({msg: '请选择医嘱项或医嘱子类！',type:'alert'});
+			return false;
+		}
+	}
+	if (!TYP_CODE||!TYP_DESC) {
+		$.messager.popover({msg: '请填写事件代码和事件描述！',type:'alert'});
+		return false;
+	}
+	if (''===editFlag) {
+		$.messager.popover({msg: '请选择是否允许编辑！',type:'alert'});
+		return false;
+	}
+	if (''===enableFlag) {
+		$.messager.popover({msg: '请选择启用！',type:'alert'});
+		return false;
+	}
+	for (var i = 0; i < esTableData.rows.length; i++) {
+		if ((TYP_ROWID!=esTableData.rows[i].TYP_ROWID)&&(TYP_CODE==esTableData.rows[i].TYP_CODE)) {
+			return $.messager.popover({msg: '事件代码已存在！',type:'alert'});
+		}
+	}
+	var xhrObj={
+	    ClassName: 'Nur.NIS.Service.VitalSign.Event',
+	    MethodName: 'InsertEventType',
+	    dataType: 'text',
+			TYPCODE:TYP_CODE,
+			TYPDESC:TYP_DESC,
+			TYPTYPE:TYP_TYPE,
+			TYPTYPECODE:"",
+			orderItems:orderItems,
+			orderCats:orderCats,
+			editFlag:editFlag,
+			enableFlag:enableFlag,
+			HOSPITALID:hospID
+	  }
+	if (TYP_ROWID) {
+    xhrObj.MethodName= 'UpdateEventType';
+		xhrObj.TYPROWID=TYP_ROWID;
+	}
+  var res=$cm(xhrObj, false);
+	if ((TYP_ROWID&&(0==res))||(!TYP_ROWID&&(res>0))) {
+		$.messager.popover({msg: '保存成功！',type:'success'});
+		getESTableData();
+		return true;
+	} else {
+		$.messager.popover({msg: res,type:'alert'});
+		return false;
+	}
+}
+function deleteESRow() {
+	var esObj = $('#evaluateSystem');
+	var row=esObj.datagrid('getSelected');
+	if (row) {
+		$.messager.confirm("删除", "确定要删除选中的数据?", function (r) {
+			if (r) {
+				if (row.TYP_ROWID) {
+			    var res=$cm({
+		        ClassName: 'Nur.NIS.Service.VitalSign.Event',
+		        MethodName: 'DeleteEventType',
+		        TYPROWID:row.TYP_ROWID
+			    }, false);
+		    	console.log(res);
+		    	if (0==res) {
+		    		$.messager.popover({msg: '删除成功！',type:'success'});
+						esTableData.rows.map(function(elem,index) {
+							if (row.TYP_ROWID==elem.TYP_ROWID) {
+								esTableData.rows.splice(index,1);
+							}
+						});
+					  $('#evaluateSystem').datagrid({data: esTableData.rows});
+		    	} else {
+		    		$.messager.popover({msg: res,type:'alert'});
+		    		return false
+		    	}
+				}else{
+					var curInd =esObj.datagrid('getRowIndex',row);
+					esObj.datagrid('deleteRow',curInd);
+				}
+			}
+		});
+	} else {
+		$.messager.popover({msg: '请先选择要删除的行！',type:'alert'});
+	}
+}
+function resizeTableHeight() {
+	var innerHeight=window.innerHeight;
+  $('#evaluateSystem').datagrid('resize',{
+    height:innerHeight-75
+	});
+}
+setTimeout(resizeTableHeight,100);
+window.addEventListener("resize",resizeTableHeight);
+	</script>
+</body>
+</html>

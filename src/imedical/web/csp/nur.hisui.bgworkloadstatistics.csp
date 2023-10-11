@@ -1,0 +1,125 @@
+<!-- µ¥ÈËÑªÌÇ -->
+<csp:method name=OnPreHTTP
+            arguments=""
+            returntype=%Boolean>
+    If ##Class(ext.websys.SessionEvents).SessionExpired() Quit 1 
+    Quit 1
+</csp:method>
+<script language="cache" runat="SERVER">
+	Set PatientListPage=""
+	Set locTrend = $GET(%request.Data("locTrend", 1))
+	Set locMonth = $GET(%request.Data("locMonth", 1))
+	Set locNurse = $GET(%request.Data("locNurse", 1))
+	Set hlByTime = $GET(%request.Data("hlByTime", 1))
+	Set hlByLoc = $GET(%request.Data("hlByLoc", 1))
+
+
+	Set AuthorityFlag = $GET(%request.Data("AuthorityFlag", 1))
+	Set DefaultCode = $GET(%request.Data("DefaultCode", 1))
+	Set SinglePatient = $GET(%request.Data("SinglePatient", 1))
+	Set IsShowPatList = $GET(%request.Data("IsShowPatList", 1))
+	Set IsShowPatInfoBannner = $GET(%request.Data("IsShowPatInfoBannner", 1))
+	Set IsStandardEdition = $GET(%request.Data("IsStandardEdition", 1))
+	If (##class(websys.Conversions).IsValidMethodName("NurMp.Config","WriteChromePrintCompatibleADDINS")) {
+		Do ##class(NurMp.Config).WriteChromePrintCompatibleADDINS()
+  }
+</script>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>
+	<EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE>
+</title>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<AINURPRINT></AINURPRINT>
+<HISUI/>
+<script type="text/javascript" charset=gbk src="../scripts/nurse/hisui-0.1.0/dist/js/echarts-3.6.2.min.js"></script>
+<script type="text/javascript" src="../scripts/DHC.WMR.PinYinHead.js"></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/utils.js"></script>
+<!-- <script type="text/javascript" src="../scripts/nurse/hisui-0.1.0/dist/js/Common.js"></script> -->
+<style type='text/css'>
+body {background-color: #fff;margin: 4px!important;height: calc(100% - 8px)!important;padding: 0;}
+#locTrend+span{margin-right: 10px;}
+#locYear+span{margin-right: 10px;}
+#locNurse+span, #locNurseYear+span{margin-right: 10px;}
+#hlByTime+span, #hlByTimeYear+span{margin-right: 10px;}
+#hlByLocYear+span{margin-right: 10px;}
+.panel-header, .panel-body{width: auto!important;}
+.panel.datagrid>.panel-body.panel-body-noheader{border-radius: 0;border-left: 0;border-right: 0;border-bottom: 0;border-color: #cccccc;}
+</style>
+<script language="javascript">
+  var locTrend = "#(locTrend)#";
+  locTrend="Y"==locTrend?true:false;
+  var locMonth = "#(locMonth)#";
+  locMonth="Y"==locMonth?true:false;
+  var locNurse = "#(locNurse)#";
+  locNurse="Y"==locNurse?true:false;
+  var hlByTime = "#(hlByTime)#";
+  hlByTime="Y"==hlByTime?true:false;
+  var hlByLoc = "#(hlByLoc)#";
+  hlByLoc="Y"==hlByLoc?true:false;
+
+  var AuthorityFlag = "#(AuthorityFlag)#";
+  var DefaultCode = "#(DefaultCode)#";
+  var SinglePatient = "#(SinglePatient)#";
+  var IsShowPatList = "#(IsShowPatList)#";
+  var IsShowPatInfoBannner = "#(IsShowPatInfoBannner)#";
+  IsShowPatList="Y"==IsShowPatList?true:false;
+  IsShowPatInfoBannner="Y"==IsShowPatInfoBannner?true:false;
+  var IsStandardEdition = "#(IsStandardEdition)#";
+  IsStandardEdition="Y"==IsStandardEdition?true:false;
+
+</script>
+<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+<script type="text/javascript" src="../scripts_lib/lodop/LodopFuncs.js" charset=gbk></script>
+<script type="text/javascript" src="../scripts/nurse/hisui/nur.hisui.bgworkloadstatistics.js" charset=gbk></script>
+</head>
+<body>
+<div id="bgStatistics" class="hisui-panel" title="ÑªÌÇÍ³¼Æ" data-options="headerCls:'panel-header-gray',iconCls:'icon-paper-chart'" style="padding: 0 10px;overflow-y: hidden;">
+	<csp:if condition='"Y"=locTrend'>
+    <div style="text-align: right;font-size: 0;margin-top: 10px;">
+      <select id="locTrend" class="hisui-combobox" style="width:280px;" data-options="required:true,onChange:getBGStatisticsByLocYear"></select>
+      <select id="yearTrend" class="hisui-combobox" style="width:130px;" data-options="required:true,onChange:getBGStatisticsByLocYear"></select>
+    </div>
+    <div id="locTrendChart"></div>
+	</csp:if>	
+	<csp:if condition='"Y"=locMonth'>
+    <div style="text-align: right;font-size: 0;margin-top: 10px;">
+      <select id="locYear" class="hisui-combobox" style="width:130px;" data-options="required:true,onChange:getLocBGWorkloadByMonth"></select>
+      <select id="locMonth" class="hisui-combobox" style="width:80px;" data-options="required:true,onChange:getLocBGWorkloadByMonth"></select>
+    </div>
+    <div id="locMonthChart"></div>
+	</csp:if>	
+	<csp:if condition='"Y"=locNurse'>
+    <div style="text-align: right;font-size: 0;margin-top: 10px;">
+      <select id="locNurse" class="hisui-combobox" style="width:280px;" data-options="required:true,onChange:getNurseBGWorkloadByLocMonth"></select>
+      <select id="locNurseYear" class="hisui-combobox" style="width:130px;" data-options="required:true,onChange:getNurseBGWorkloadByLocMonth"></select>
+      <select id="locNurseMonth" class="hisui-combobox" style="width:80px;" data-options="required:true,onChange:getNurseBGWorkloadByLocMonth"></select>
+    </div>
+    <div id="locNurseChart"></div>
+	</csp:if>	
+	<csp:if condition='"Y"=hlByTime'>
+    <div style="text-align: right;font-size: 0;margin-top: 10px;">
+      <select id="hlByTime" class="hisui-combobox" style="width:280px;" data-options="required:true,onChange:getHLBGWorkloadByLocMonth"></select>
+      <select id="hlByTimeYear" class="hisui-combobox" style="width:130px;" data-options="required:true,onChange:getHLBGWorkloadByLocMonth"></select>
+      <select id="hlByTimeMonth" class="hisui-combobox" style="width:80px;" data-options="required:true,onChange:getHLBGWorkloadByLocMonth"></select>
+    </div>
+    <div id="hlByTimeChart"></div>
+	</csp:if>	
+	<csp:if condition='"Y"=hlByLoc'>
+    <div style="text-align: right;font-size: 0;margin-top: 10px;">
+      <select id="hlByLocYear" class="hisui-combobox" style="width:130px;" data-options="required:true,onChange:getLocHLBGWorkloadByMonth"></select>
+      <select id="hlByLocMonth" class="hisui-combobox" style="width:80px;" data-options="required:true,onChange:getLocHLBGWorkloadByMonth"></select>
+    </div>
+    <div id="hlByLocChart"></div>
+	</csp:if>	
+</div>
+<!-- ÑªÌÇÀý´ÎÃ÷Ï¸Ä£Ì¬¿ò -->
+<div id="bgCasesModal" class="hisui-dialog" title="#(..Get("ÑªÌÇÀý´ÎÃ÷Ï¸"))#" style="top: 50px;left: 300px;padding: 10px;width: 1000px;" 
+data-options="iconCls:'icon-w-batch-cfg',resizable:true,modal:true,closed:true">
+	<div class="bgCasesTable">
+		<table id="bgCases"></table>
+	</div>
+</div>
+</body>
+</html>

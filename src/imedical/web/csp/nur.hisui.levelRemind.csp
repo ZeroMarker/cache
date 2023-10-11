@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<csp:method name=OnPreHTTP arguments="" returntype=%Boolean>
+ i ##Class(ext.websys.SessionEvents).SessionExpired() q 1
+ q 1
+</csp:method>
+<head>
+
+<!-- nur.hisui.levelRemind.csp -->
+<TITLE><EXTHEALTH:TRANSLATE id=title>##(%session.Get("TITLE"))##</EXTHEALTH:TRANSLATE></TITLE>
+<meta charset="utf-8"/>
+<EXTHEALTH:HEAD></EXTHEALTH:HEAD>
+<HISUI />
+<NURHISUI />
+<style>
+	.wrap{
+		top:0;
+		bottom:0;
+		left:0;
+		right:0;
+		position:absolute;
+    	background-color: #fff;	
+    	overflow:hidden;
+    	padding:10px;
+	}
+	.wrap>table td{
+		padding-bottom:10px;	
+	}
+	#tabs{
+		width:100%!important;
+		height:calc(100% - 40px)!important;	
+	}
+	#tabs .tabs-panels{
+		height:calc(100% - 38px)!important;
+	}
+	.button-group{
+		margin: 2px 0;	
+	}
+	#tabs .tabs-panels>.panel, #tabs .tabs-panels>.panel>div, .threshold .datagrid{
+		height:100%!important;	
+	}
+	.hisui-dialog form td{
+		padding-top: 0;
+		padding-bottom: 10px;
+	}
+	/* 护理级别提醒规则配置 */
+	.rules{
+		padding:4px;	
+	}
+	#layout{
+		width:100%;
+		height:calc(100% - 8px);	
+	}
+	#layout .layout-body{
+		border:0;
+	}
+	.layout-panel-west, .layout-panel-west>div, .layout-panel-west>div>div{
+		width:100%;
+		height:100%;	
+	}
+	.layout-panel-west>div>div .hisui-panel{
+		height:calc(100% - 36px)!important;	
+	}
+	.layout-panel-center>div>div{
+		width:100%;
+		height:50%;	
+	}
+	.layout-panel-center>div>div .panel{
+		height:100%;
+	}
+	.north-panel .panel{
+		height:calc(100% - 5px)!important;	
+	}
+	.layout-panel-center>div>div .panel-header{
+		width:calc(100% - 12px)!important;
+	}
+	.layout-panel-center>div>div .hisui-panel{
+		width:calc(100% - 2px)!important;
+		height:calc(100% - 36px)!important;
+	}
+	#layout .datagrid{
+		width:100%!important;
+		height:100%!important;	
+	}
+	.icon {
+	    padding-left: 20px;
+	    background-position: left 0px center;
+	    display: inline-block;
+	    font-size: 12px;
+	    padding-top:20px;
+	}
+	.icon-help {
+	    background: url(../images/uiimages/help.png) center center no-repeat;
+	}
+	.hisui-dialog form{
+		padding:10px 10px 0 10px;	
+	}
+	.has-switch label{
+		width:33%;	
+	}
+</style>
+</head>
+<body>
+	<div class="wrap">	
+		<table cellspacing="0" cellpadding="0">
+			<tr>
+				<td class="r-label">所属医院</td>
+				<td class="r-label">
+					<select id="_HospList"></select> 
+				</td>
+				<td class="r-label">表单名称</td>
+				<td class="r-label">
+					<input placeholder="请输入表单名称" name="Keyword" class="hisui-validatebox textbox" id="keyword" style="width:230px;" /> 
+				</td>
+				<td>
+					<a id="search" href="javascript:void(0);" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'" onclick="searchData()">查询</a>
+				</td>
+			</tr>
+		</table>
+		<div id="tabs" class="hisui-tabs tabs-gray">
+			<div title="阈值配置" class="threshold">   
+				<div id="toolbar">
+					<div class="button-group">
+						<a id="btn-add" href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-write-order',plain:true" onclick="updateData()">修改</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-copy',plain:true" onclick="copyData()">复制</a>
+						<a href="javascript:void(0)" class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true" onclick="delData()">删除</a>
+					</div>
+				</div>	
+				<table id="thresholdGrid" border="0"></table>
+				<div id="add-dialog" class="hisui-dialog" title="阈值配置" style="width:360px;height:287px;" data-options="iconCls:'icon-w-batch-cfg',shadow:false,modal:true,closed:true,
+					buttons:[
+						{
+							text:'保存',
+							handler:function(){ saveData(); }
+						},
+						{
+							text:'取消',
+							handler:function(){$HUI.dialog('#add-dialog').close();}
+						}
+					]">
+					<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+						<form id="form" method="post" >
+							<table cellpadding="0" cellspacing="0">
+								<tr>
+									<td class="r-label"><label class="clsRequired">表单名称</label></td>
+									<td>
+										<input name="Rowid" id="rowid" type="hidden" value="">
+										<select placeholder="请选择" class="formSel" name="Name" id="name" style="width:237px;"></select> 
+									</td>
+								</tr>								
+								<tr>
+									<td class="r-label"><label class="clsRequired">分值字段</label></td>
+									<td>
+										<input placeholder="请输入" name="ScoreField" class="hisui-validatebox textbox" id="scoreField" style="width:230px;" /> 
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label"><label class="clsRequired">编码</label></td>
+									<td>
+										<input placeholder="请输入" name="Code" class="hisui-validatebox textbox" id="code" style="width:230px;" /> 
+									</td>
+								</tr>
+								<tr>
+									<td class="r-label"><label class="clsRequired">阈值表达式</label></td>
+									<td>
+										<input placeholder="请输入" name="Expression" class="hisui-validatebox textbox" id="expression" style="width:230px;" /> 
+									</td>
+								</tr>										
+								<tr>
+									<td class="r-label" style="padding-bottom:0;">阈值描述</td>
+									<td style="padding-bottom:0;">
+										<input placeholder="请输入" name="Desc" class="hisui-validatebox textbox" id="desc" style="width:230px;" /> 
+									</td>
+								</tr>								
+							</table>
+						</form>
+					</div>
+				</div>
+			</div>   
+			<div title="护理级别提醒规则配置" class="rules">   
+				<div id="layout" class="hisui-layout"> 
+					<div data-options="region:'west',split:true" style="width:400px;">
+						<div class="hisui-panel" title="护理级别医嘱配置" data-options="headerCls:'panel-header-gray',iconCls:'icon-mnypaper-cfg'">
+							<table id="orderGrid" border="0"></table>
+							<div id="add-dialog-order" class="hisui-dialog" title="护理级别医嘱配置" style="width:360px;height:200px;" data-options="iconCls:'icon-w-batch-cfg',shadow:false,modal:true,closed:true,
+								buttons:[
+									{
+										text:'保存',
+										handler:function(){ saveOrdData(); }
+									},
+									{
+										text:'取消',
+										handler:function(){$HUI.dialog('#add-dialog-order').close();}
+									}
+								]">
+								<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+									<form id="order-form" method="post" >
+										<table cellpadding="0" cellspacing="0">
+											<tr>
+												<td class="r-label"><label class="clsRequired">医嘱描述</label></td>
+												<td>
+													<input name="OrdRowid" id="ordRowid" type="hidden" value="">
+													<input placeholder="请输入" name="OrdDesc" class="hisui-validatebox textbox" id="ordDesc" style="width:255px;" /> 
+												</td>
+											</tr>
+											<tr>
+												<td class="r-label"><label class="clsRequired">关联医嘱</label></td>
+												<td>
+													<select placeholder="请选择" name="LinkOrd" id="linkOrd" style="width:262px;"></select> 
+												</td>
+											</tr>
+											<tr>
+												<td class="r-label" style="padding-bottom:0;">启用状态</td>
+												<td style="padding-bottom:0;">
+													<div id="status" class="hisui-switchbox" data-options="onText:'启用',offText:'停用',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,obj){console.log(event);console.log(obj);}"></div>
+												</td>
+											</tr>							
+										</table>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>     
+					<div data-options="region:'center',split:true">
+						<div class="north-panel">
+							<div class="hisui-panel" title="提醒规则配置" data-options="headerCls:'panel-header-gray',iconCls:'icon-mnypaper-cfg'">
+								<table id="ruleGrid" border="0"></table>
+								<div id="add-dialog-rule" class="hisui-dialog" title="提醒规则配置" style="width:352px;height:247px;" data-options="iconCls:'icon-w-batch-cfg',shadow:false,modal:true,closed:true,
+									buttons:[
+										{
+											text:'保存',
+											handler:function(){ saveRuleData(); }
+										},
+										{
+											text:'取消',
+											handler:function(){$HUI.dialog('#add-dialog-rule').close();}
+										}
+									]">
+									<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+										<form id="rule-form" method="post" >
+											<table cellpadding="0" cellspacing="0">
+												<tr>
+													<td class="r-label">护理级别</td>
+													<td colspan="2">
+														<input name="RuleRowid" id="ruleRowid" type="hidden" value="">
+														<input placeholder="请输入" name="NurLevel" class="hisui-validatebox textbox" id="nurLevel" disabled style="width:230px;" /> 
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label"><label class="clsRequired">编码</label></td>
+													<td colspan="2">
+														<input placeholder="请输入" name="RuleCode" class="hisui-validatebox textbox" id="ruleCode" style="width:230px;" /> 
+													</td>
+												</tr>
+												<tr>
+													<td class="r-label"><span style="vertical-align:top"><label class="clsRequired">触发条件</label></span><a href="#" title="触发条件：选择阈值规则，同一触发条件包含多个阈值，关系为and" class="hisui-tooltip" data-options="position:'top'" style="margin-left:5px;vertical-align:bottom;line-height:100%;display:inline-block;width:16px;"><span class="icon icon-tip"></span></a></td>
+													<td>
+														<select placeholder="请选择" name="Condition" id="condition" style="width:237px;"></select>
+													</td>													
+												</tr>
+												<tr>
+													<td class="r-label" style="padding-bottom:0;"><span style="vertical-align:top">提醒表单</span><a href="#" title="提醒表单：判断哪些病历表单保存时触发护理级别提醒" class="hisui-tooltip" data-options="position:'top'" style="margin-left:5px;vertical-align:bottom;line-height:100%;display:inline-block;width:16px;"><span class="icon icon-tip"></span></a></td>
+													<td style="padding-bottom:0;">
+														<select placeholder="请选择" class="formSel" name="RemindTmpl" id="remindTmpl" style="width:237px;"></select> 
+													</td>
+												</tr>							
+											</table>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div>
+							<div class="hisui-panel" title="病历必填配置" data-options="headerCls:'panel-header-gray',iconCls:'icon-mnypaper-cfg'">
+								<table id="caseGrid" border="0"></table>
+								<div id="add-dialog-case" class="hisui-dialog" title="病历必填配置" style="width:420px;height:340px;" data-options="iconCls:'icon-w-batch-cfg',shadow:false,modal:true,closed:true,
+									buttons:[
+										{
+											text:'保存',
+											handler:function(){ saveCaseData(); }
+										},
+										{
+											text:'取消',
+											handler:function(){$HUI.dialog('#add-dialog-case').close();}
+										}
+									]">
+									<div class="hisui-panel" title="" data-options="border:false,headerCls:'panel-header-card-gray',fit:true,closable:true, collapsible:false,minimizable:false,maximizable:false">
+										<form id="case-form" method="post" >
+											<table cellpadding="0" cellspacing="0">												
+												<tr>
+													<td class="r-label"><label class="clsRequired">表单名称<label></td>
+													<td>
+														<input name="CaseRowid" id="caseRowid" type="hidden" value="">
+														<select placeholder="请选择" class="formSel" name="TmplName" id="tmplName" style="width:307px;"></select> 
+													</td>
+												</tr>
+												<!--tr>
+													<td class="r-label">生效科室</td>
+													<td>
+														<input placeholder="请输入" name="ValidLocs" class="hisui-validatebox textbox" id="validLocs" disabled style="width:230px;" /> 
+													</td>
+												</tr-->
+												<tr>
+													<td class="r-label" style="padding-bottom:0;vertical-align:top;"><label class="clsRequired">必填项字段</label></td>
+													<td style="padding-bottom:0;">
+														<textarea name="RequiredField" id="requiredField" class="textbox hisui-validatebox" style="width:300px;height:200px;line-height:22px;" placeholder="请输入护理维护程序中当前表单对应的元素ID(如：NumberElement_10),多个以回车换行。"></textarea>
+													</td>
+												</tr>							
+											</table>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>  
+				</div> 
+			</div>   
+		</div>
+	</div>
+	<script type="text/javascript" src="../scripts/hisui/websys.comm.js"></script>
+	<script type="text/javascript" src="../scripts/dhcdoc/dhcdoccure_hui/common.util.js"></script>
+	<script type="text/javascript" src="../scripts/nurse/hisui/nursingLevelRemind.js"></script>
+</body>
+</html>
